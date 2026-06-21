@@ -31,10 +31,10 @@ describe('each superpower deck is a complete 60-cell grid', () => {
     expect(deck.filter((c) => c.aspect === 'outer')).toHaveLength(30)
   })
 
-  it('ids are unique across all six decks', () => {
+  it('ids are unique across all superpower decks', () => {
     const all = SUPERPOWERS.flatMap((sp) => superpowerDeck(sp).map((c) => c.id))
     expect(new Set(all).size).toBe(all.length)
-    expect(all).toHaveLength(360)
+    expect(all).toHaveLength(SUPERPOWERS.length * 60) // 7 × 60 = 420
   })
 })
 

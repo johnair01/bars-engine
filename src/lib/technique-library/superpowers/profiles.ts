@@ -118,4 +118,18 @@ export const SUPERPOWER_PROFILES: Record<Superpower, SuperpowerProfile> = {
       show_up: { verb: 'Name', inner: 'what this means to you', outer: 'what this means, for the room' },
     },
   },
+  coach: {
+    key: 'coach',
+    label: 'The Coach',
+    gift: "Calling people up — reminding them of the power they've forgotten and the level they've outgrown.",
+    giftShort: 'calling people up',
+    shadow: 'the Taskmaster — dragging instead of calling up, creating dependence.',
+    rows: {
+      wake_up: { verb: 'Notice', inner: "the level you've outgrown", outer: "the power they've forgotten they have" },
+      open_up: { verb: 'Receive', inner: 'your own resistance to being called up', outer: 'what they are capable of, not just what they are doing' },
+      clean_up: { verb: 'Clear', inner: 'the story keeping you on a dead level', outer: 'the story that keeps them small' },
+      grow_up: { verb: 'Build', inner: 'your capacity to call up without dragging', outer: 'their next level, at their pace' },
+      show_up: { verb: 'Call', inner: 'yourself up to the next level', outer: 'them up — name the level and the why' },
+    },
+  },
 }

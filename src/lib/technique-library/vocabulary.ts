@@ -32,8 +32,13 @@ export type {
 export type { MoveAspect, AllyshipTarget } from '@/lib/quest-grammar/types'
 
 /**
- * The six Superpowers — a player's *method of impact* (MTGOA Part III).
+ * The seven Superpowers — a player's *method of impact* (MTGOA Part III + Coach).
  * Channel-agnostic by design: any superpower can run any emotional channel.
+ *
+ * NOTE: `coach` (the 7th) is added per the Superpower System Reconciliation
+ * (.specify/specs/superpower-system-reconciliation/reconciliation.md). At merge
+ * with the quiz branch, the canonical home becomes `src/lib/superpowers/types.ts`
+ * and this module re-exports it; until then this is the local source of truth.
  */
 export type Superpower =
   | 'strategist'
@@ -42,6 +47,7 @@ export type Superpower =
   | 'disruptor'
   | 'alchemist'
   | 'storyteller'
+  | 'coach'
 
 export const SUPERPOWERS: readonly Superpower[] = [
   'strategist',
@@ -50,6 +56,7 @@ export const SUPERPOWERS: readonly Superpower[] = [
   'disruptor',
   'alchemist',
   'storyteller',
+  'coach',
 ] as const
 
 /**

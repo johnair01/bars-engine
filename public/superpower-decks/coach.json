@@ -1,20 +1,20 @@
 {
-  "deck_slug": "superpower-escape_artist",
-  "superpower": "escape_artist",
-  "label": "The Escape Artist",
-  "gift": "Honoring the wisdom of fear — finding the exit, the trapdoor, the well-timed retreat.",
+  "deck_slug": "superpower-coach",
+  "superpower": "coach",
+  "label": "The Coach",
+  "gift": "Calling people up — reminding them of the power they've forgotten and the level they've outgrown.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-21T19:04:10.214Z",
+  "generatedAt": "2026-06-21T19:04:10.219Z",
   "count": 60,
   "cards": [
     {
-      "id": "sp-escape_artist-WAKE-SHAMAN-INNER",
-      "slug": "escape_artist-wake_up-shaman-inner",
-      "name": "Notice what your fear is protecting — Sense",
-      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-WAKE-SHAMAN-INNER",
+      "slug": "coach-wake_up-shaman-inner",
+      "name": "Notice the level you've outgrown — Sense",
+      "essence": "In yourself: calling people up, sensing what is here.",
       "steps": [
         "Notice what is actually here — sensing what is here.",
-        "Turn it inward: what your fear is protecting."
+        "Turn it inward: the level you've outgrown."
       ],
       "source": {
         "origin": "ai",
@@ -30,33 +30,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-SHAMAN-OUTER",
-      "slug": "escape_artist-wake_up-shaman-outer",
-      "name": "Notice the trap closing on someone — Sense",
-      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-WAKE-SHAMAN-OUTER",
+      "slug": "coach-wake_up-shaman-outer",
+      "name": "Notice the power they've forgotten they have — Sense",
+      "essence": "For others: calling people up, sensing what is here.",
       "steps": [
         "Notice what is actually here — sensing what is here.",
-        "Bring it to others: the trap closing on someone."
+        "Bring it to others: the power they've forgotten they have."
       ],
       "source": {
         "origin": "ai",
@@ -72,33 +72,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-CHALLENGER-INNER",
-      "slug": "escape_artist-wake_up-challenger-inner",
-      "name": "Notice what your fear is protecting — Edge",
-      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-WAKE-CHALLENGER-INNER",
+      "slug": "coach-wake_up-challenger-inner",
+      "name": "Notice the level you've outgrown — Edge",
+      "essence": "In yourself: calling people up, at the edge, naming what resists.",
       "steps": [
         "Notice what is actually here — at the edge, naming what resists.",
-        "Turn it inward: what your fear is protecting."
+        "Turn it inward: the level you've outgrown."
       ],
       "source": {
         "origin": "ai",
@@ -114,33 +114,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-CHALLENGER-OUTER",
-      "slug": "escape_artist-wake_up-challenger-outer",
-      "name": "Notice the trap closing on someone — Edge",
-      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-WAKE-CHALLENGER-OUTER",
+      "slug": "coach-wake_up-challenger-outer",
+      "name": "Notice the power they've forgotten they have — Edge",
+      "essence": "For others: calling people up, at the edge, naming what resists.",
       "steps": [
         "Notice what is actually here — at the edge, naming what resists.",
-        "Bring it to others: the trap closing on someone."
+        "Bring it to others: the power they've forgotten they have."
       ],
       "source": {
         "origin": "ai",
@@ -156,33 +156,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-REGENT-INNER",
-      "slug": "escape_artist-wake_up-regent-inner",
-      "name": "Notice what your fear is protecting — Steward",
-      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-WAKE-REGENT-INNER",
+      "slug": "coach-wake_up-regent-inner",
+      "name": "Notice the level you've outgrown — Steward",
+      "essence": "In yourself: calling people up, stewarding it over time.",
       "steps": [
         "Notice what is actually here — stewarding it over time.",
-        "Turn it inward: what your fear is protecting."
+        "Turn it inward: the level you've outgrown."
       ],
       "source": {
         "origin": "ai",
@@ -198,33 +198,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-REGENT-OUTER",
-      "slug": "escape_artist-wake_up-regent-outer",
-      "name": "Notice the trap closing on someone — Steward",
-      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-WAKE-REGENT-OUTER",
+      "slug": "coach-wake_up-regent-outer",
+      "name": "Notice the power they've forgotten they have — Steward",
+      "essence": "For others: calling people up, stewarding it over time.",
       "steps": [
         "Notice what is actually here — stewarding it over time.",
-        "Bring it to others: the trap closing on someone."
+        "Bring it to others: the power they've forgotten they have."
       ],
       "source": {
         "origin": "ai",
@@ -240,89 +240,75 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-ARCHITECT-INNER",
-      "slug": "escape_artist-wake_up-architect-inner",
-      "name": "Spot Your Dodge",
-      "essence": "Notice the step you're avoiding because doing it makes the need real.",
-      "steps": [
-        "Scan for the task you keep sliding past.",
-        "Feel the avoidance in your body.",
-        "Name the dodge out loud and take the smallest next step."
-      ],
-      "source": {
-        "origin": "gm",
-        "name": "Authored hero cell",
-        "author": "Wendell Britt"
-      },
-      "moves": [
-        "wake_up"
-      ],
-      "operations": [
-        "architect"
-      ],
-      "domains": [],
-      "channels": [
-        "metal"
-      ],
-      "aspect": "inner",
-      "superpowers": [
-        "escape_artist"
-      ],
-      "capabilities": [
-        "exploration"
-      ],
-      "primaryQuestion": "What am I not letting myself see because seeing it commits me?",
-      "campaignQuestion": "What key step am I quietly dodging?",
-      "optimizesFor": "Seeing the avoided move before it silently sinks the effort.",
-      "forbiddenMoves": [
-        "Calling the dodge 'being busy'",
-        "Guilt-spiraling instead of acting",
-        "Vanishing into research"
-      ],
-      "failureModes": [
-        "The task you never open",
-        "Motion without the key move"
-      ],
-      "remediation": "Open the avoided thing for 5 minutes only.",
-      "tell": {
-        "working": "You name the dodge and touch it.",
-        "performed": "You make a new to-do list to avoid the old one."
-      },
-      "contraindications": [
-        "When you genuinely need rest, not another push"
-      ],
-      "example": "You keep 'forgetting' the key task; you open it for five minutes.",
-      "tier": "canonical",
-      "status": "published"
-    },
-    {
-      "id": "sp-escape_artist-WAKE-ARCHITECT-OUTER",
-      "slug": "escape_artist-wake_up-architect-outer",
-      "name": "Notice the trap closing on someone — Structure",
-      "essence": "For others: the wisdom of fear, building it into structure.",
+      "id": "sp-coach-WAKE-ARCHITECT-INNER",
+      "slug": "coach-wake_up-architect-inner",
+      "name": "Notice the level you've outgrown — Structure",
+      "essence": "In yourself: calling people up, building it into structure.",
       "steps": [
         "Notice what is actually here — building it into structure.",
-        "Bring it to others: the trap closing on someone."
+        "Turn it inward: the level you've outgrown."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "coach"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-coach-WAKE-ARCHITECT-OUTER",
+      "slug": "coach-wake_up-architect-outer",
+      "name": "Notice the power they've forgotten they have — Structure",
+      "essence": "For others: calling people up, building it into structure.",
+      "steps": [
+        "Notice what is actually here — building it into structure.",
+        "Bring it to others: the power they've forgotten they have."
       ],
       "source": {
         "origin": "ai",
@@ -338,33 +324,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Structure level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Structure level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-DIPLOMAT-INNER",
-      "slug": "escape_artist-wake_up-diplomat-inner",
-      "name": "Notice what your fear is protecting — Bridge",
-      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "id": "sp-coach-WAKE-DIPLOMAT-INNER",
+      "slug": "coach-wake_up-diplomat-inner",
+      "name": "Notice the level you've outgrown — Bridge",
+      "essence": "In yourself: calling people up, across difference and relationship.",
       "steps": [
         "Notice what is actually here — across difference and relationship.",
-        "Turn it inward: what your fear is protecting."
+        "Turn it inward: the level you've outgrown."
       ],
       "source": {
         "origin": "ai",
@@ -380,33 +366,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Bridge level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Bridge level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-DIPLOMAT-OUTER",
-      "slug": "escape_artist-wake_up-diplomat-outer",
-      "name": "Notice the trap closing on someone — Bridge",
-      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "id": "sp-coach-WAKE-DIPLOMAT-OUTER",
+      "slug": "coach-wake_up-diplomat-outer",
+      "name": "Notice the power they've forgotten they have — Bridge",
+      "essence": "For others: calling people up, across difference and relationship.",
       "steps": [
         "Notice what is actually here — across difference and relationship.",
-        "Bring it to others: the trap closing on someone."
+        "Bring it to others: the power they've forgotten they have."
       ],
       "source": {
         "origin": "ai",
@@ -422,33 +408,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Bridge level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Bridge level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-SAGE-INNER",
-      "slug": "escape_artist-wake_up-sage-inner",
-      "name": "Notice what your fear is protecting — Whole",
-      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-WAKE-SAGE-INNER",
+      "slug": "coach-wake_up-sage-inner",
+      "name": "Notice the level you've outgrown — Whole",
+      "essence": "In yourself: calling people up, integrating the whole field.",
       "steps": [
         "Notice what is actually here — integrating the whole field.",
-        "Turn it inward: what your fear is protecting."
+        "Turn it inward: the level you've outgrown."
       ],
       "source": {
         "origin": "ai",
@@ -464,33 +450,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-WAKE-SAGE-OUTER",
-      "slug": "escape_artist-wake_up-sage-outer",
-      "name": "Notice the trap closing on someone — Whole",
-      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-WAKE-SAGE-OUTER",
+      "slug": "coach-wake_up-sage-outer",
+      "name": "Notice the power they've forgotten they have — Whole",
+      "essence": "For others: calling people up, integrating the whole field.",
       "steps": [
         "Notice what is actually here — integrating the whole field.",
-        "Bring it to others: the trap closing on someone."
+        "Bring it to others: the power they've forgotten they have."
       ],
       "source": {
         "origin": "ai",
@@ -506,33 +492,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I not letting myself notice here?",
       "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Reacting before you have actually looked",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Blind spots you swear aren't there"
       ],
       "remediation": "Name one thing you hadn't let yourself see.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-SHAMAN-INNER",
-      "slug": "escape_artist-open_up-shaman-inner",
-      "name": "Feel the fear without obeying it — Sense",
-      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-OPEN-SHAMAN-INNER",
+      "slug": "coach-open_up-shaman-inner",
+      "name": "Receive your own resistance to being called up — Sense",
+      "essence": "In yourself: calling people up, sensing what is here.",
       "steps": [
         "Receive it without flinching — sensing what is here.",
-        "Turn it inward: the fear without obeying it."
+        "Turn it inward: your own resistance to being called up."
       ],
       "source": {
         "origin": "ai",
@@ -548,33 +534,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-SHAMAN-OUTER",
-      "slug": "escape_artist-open_up-shaman-outer",
-      "name": "Feel another’s need to get out — Sense",
-      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-OPEN-SHAMAN-OUTER",
+      "slug": "coach-open_up-shaman-outer",
+      "name": "Receive what they are capable of, not just what they are doing — Sense",
+      "essence": "For others: calling people up, sensing what is here.",
       "steps": [
         "Receive it without flinching — sensing what is here.",
-        "Bring it to others: another’s need to get out."
+        "Bring it to others: what they are capable of, not just what they are doing."
       ],
       "source": {
         "origin": "ai",
@@ -590,33 +576,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-CHALLENGER-INNER",
-      "slug": "escape_artist-open_up-challenger-inner",
-      "name": "Feel the fear without obeying it — Edge",
-      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-OPEN-CHALLENGER-INNER",
+      "slug": "coach-open_up-challenger-inner",
+      "name": "Receive your own resistance to being called up — Edge",
+      "essence": "In yourself: calling people up, at the edge, naming what resists.",
       "steps": [
         "Receive it without flinching — at the edge, naming what resists.",
-        "Turn it inward: the fear without obeying it."
+        "Turn it inward: your own resistance to being called up."
       ],
       "source": {
         "origin": "ai",
@@ -632,33 +618,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-CHALLENGER-OUTER",
-      "slug": "escape_artist-open_up-challenger-outer",
-      "name": "Feel another’s need to get out — Edge",
-      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-OPEN-CHALLENGER-OUTER",
+      "slug": "coach-open_up-challenger-outer",
+      "name": "Receive what they are capable of, not just what they are doing — Edge",
+      "essence": "For others: calling people up, at the edge, naming what resists.",
       "steps": [
         "Receive it without flinching — at the edge, naming what resists.",
-        "Bring it to others: another’s need to get out."
+        "Bring it to others: what they are capable of, not just what they are doing."
       ],
       "source": {
         "origin": "ai",
@@ -674,33 +660,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-REGENT-INNER",
-      "slug": "escape_artist-open_up-regent-inner",
-      "name": "Feel the fear without obeying it — Steward",
-      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-OPEN-REGENT-INNER",
+      "slug": "coach-open_up-regent-inner",
+      "name": "Receive your own resistance to being called up — Steward",
+      "essence": "In yourself: calling people up, stewarding it over time.",
       "steps": [
         "Receive it without flinching — stewarding it over time.",
-        "Turn it inward: the fear without obeying it."
+        "Turn it inward: your own resistance to being called up."
       ],
       "source": {
         "origin": "ai",
@@ -716,33 +702,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-REGENT-OUTER",
-      "slug": "escape_artist-open_up-regent-outer",
-      "name": "Feel another’s need to get out — Steward",
-      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-OPEN-REGENT-OUTER",
+      "slug": "coach-open_up-regent-outer",
+      "name": "Receive what they are capable of, not just what they are doing — Steward",
+      "essence": "For others: calling people up, stewarding it over time.",
       "steps": [
         "Receive it without flinching — stewarding it over time.",
-        "Bring it to others: another’s need to get out."
+        "Bring it to others: what they are capable of, not just what they are doing."
       ],
       "source": {
         "origin": "ai",
@@ -758,33 +744,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-ARCHITECT-INNER",
-      "slug": "escape_artist-open_up-architect-inner",
-      "name": "Feel the fear without obeying it — Structure",
-      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "id": "sp-coach-OPEN-ARCHITECT-INNER",
+      "slug": "coach-open_up-architect-inner",
+      "name": "Receive your own resistance to being called up — Structure",
+      "essence": "In yourself: calling people up, building it into structure.",
       "steps": [
         "Receive it without flinching — building it into structure.",
-        "Turn it inward: the fear without obeying it."
+        "Turn it inward: your own resistance to being called up."
       ],
       "source": {
         "origin": "ai",
@@ -800,33 +786,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Structure level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Structure level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-ARCHITECT-OUTER",
-      "slug": "escape_artist-open_up-architect-outer",
-      "name": "Feel another’s need to get out — Structure",
-      "essence": "For others: the wisdom of fear, building it into structure.",
+      "id": "sp-coach-OPEN-ARCHITECT-OUTER",
+      "slug": "coach-open_up-architect-outer",
+      "name": "Receive what they are capable of, not just what they are doing — Structure",
+      "essence": "For others: calling people up, building it into structure.",
       "steps": [
         "Receive it without flinching — building it into structure.",
-        "Bring it to others: another’s need to get out."
+        "Bring it to others: what they are capable of, not just what they are doing."
       ],
       "source": {
         "origin": "ai",
@@ -842,89 +828,75 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Structure level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Structure level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-DIPLOMAT-INNER",
-      "slug": "escape_artist-open_up-diplomat-inner",
-      "name": "Receive Without Bracing",
-      "essence": "Let help land without bracing for the catch.",
-      "steps": [
-        "Notice the brace in your body when someone offers.",
-        "Breathe; let the offer in one inch further than feels safe.",
-        "Say a clean 'thank you' without deflecting."
-      ],
-      "source": {
-        "origin": "gm",
-        "name": "Authored hero cell",
-        "author": "Wendell Britt"
-      },
-      "moves": [
-        "open_up"
-      ],
-      "operations": [
-        "diplomat"
-      ],
-      "domains": [],
-      "channels": [
-        "metal"
-      ],
-      "aspect": "inner",
-      "superpowers": [
-        "escape_artist"
-      ],
-      "capabilities": [
-        "connection"
-      ],
-      "primaryQuestion": "What am I protecting by refusing help — and is it still worth the cost?",
-      "campaignQuestion": "Whose offered help am I deflecting out of habit?",
-      "optimizesFor": "Actually receiving the support people offer.",
-      "forbiddenMoves": [
-        "Deflecting the offer",
-        "Over-explaining why you don't really need it",
-        "Attaching strings to received help"
-      ],
-      "failureModes": [
-        "'I'm fine' when you're not",
-        "Turning help into a debt you must repay"
-      ],
-      "remediation": "If you deflect, circle back: 'Actually — yes, that would help.'",
-      "tell": {
-        "working": "You feel the brace soften.",
-        "performed": "You accept but immediately plan to pay it back double."
-      },
-      "contraindications": [
-        "When the 'help' has real strings you're right to refuse"
-      ],
-      "example": "Someone offers to pitch in; instead of 'oh you don't have to,' say 'thank you — that genuinely helps.'",
-      "tier": "canonical",
-      "status": "published"
-    },
-    {
-      "id": "sp-escape_artist-OPEN-DIPLOMAT-OUTER",
-      "slug": "escape_artist-open_up-diplomat-outer",
-      "name": "Feel another’s need to get out — Bridge",
-      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "id": "sp-coach-OPEN-DIPLOMAT-INNER",
+      "slug": "coach-open_up-diplomat-inner",
+      "name": "Receive your own resistance to being called up — Bridge",
+      "essence": "In yourself: calling people up, across difference and relationship.",
       "steps": [
         "Receive it without flinching — across difference and relationship.",
-        "Bring it to others: another’s need to get out."
+        "Turn it inward: your own resistance to being called up."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "coach"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-coach-OPEN-DIPLOMAT-OUTER",
+      "slug": "coach-open_up-diplomat-outer",
+      "name": "Receive what they are capable of, not just what they are doing — Bridge",
+      "essence": "For others: calling people up, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching — across difference and relationship.",
+        "Bring it to others: what they are capable of, not just what they are doing."
       ],
       "source": {
         "origin": "ai",
@@ -940,33 +912,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Bridge level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Bridge level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-SAGE-INNER",
-      "slug": "escape_artist-open_up-sage-inner",
-      "name": "Feel the fear without obeying it — Whole",
-      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-OPEN-SAGE-INNER",
+      "slug": "coach-open_up-sage-inner",
+      "name": "Receive your own resistance to being called up — Whole",
+      "essence": "In yourself: calling people up, integrating the whole field.",
       "steps": [
         "Receive it without flinching — integrating the whole field.",
-        "Turn it inward: the fear without obeying it."
+        "Turn it inward: your own resistance to being called up."
       ],
       "source": {
         "origin": "ai",
@@ -982,33 +954,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-OPEN-SAGE-OUTER",
-      "slug": "escape_artist-open_up-sage-outer",
-      "name": "Feel another’s need to get out — Whole",
-      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-OPEN-SAGE-OUTER",
+      "slug": "coach-open_up-sage-outer",
+      "name": "Receive what they are capable of, not just what they are doing — Whole",
+      "essence": "For others: calling people up, integrating the whole field.",
       "steps": [
         "Receive it without flinching — integrating the whole field.",
-        "Bring it to others: another’s need to get out."
+        "Bring it to others: what they are capable of, not just what they are doing."
       ],
       "source": {
         "origin": "ai",
@@ -1024,89 +996,75 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What am I actually feeling, underneath?",
       "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Knowing without feeling"
       ],
       "remediation": "Let it land for one breath before you respond.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-SHAMAN-INNER",
-      "slug": "escape_artist-clean_up-shaman-inner",
-      "name": "Wise Retreat or Just Scared?",
-      "essence": "Sort a genuine reason not to act from plain exposure-fear.",
-      "steps": [
-        "Feel the flinch and locate it in the body.",
-        "Ask the Escape Artist's question: what is this fear protecting?",
-        "Sort: a real reason (name it) vs. just being seen needing help (proceed anyway)."
-      ],
-      "source": {
-        "origin": "gm",
-        "name": "Authored hero cell",
-        "author": "Wendell Britt"
-      },
-      "moves": [
-        "clean_up"
-      ],
-      "operations": [
-        "shaman"
-      ],
-      "domains": [],
-      "channels": [
-        "metal"
-      ],
-      "aspect": "inner",
-      "superpowers": [
-        "escape_artist"
-      ],
-      "capabilities": [
-        "exploration"
-      ],
-      "primaryQuestion": "Is this 'no' wisdom, or is it just fear wearing wisdom's coat?",
-      "campaignQuestion": "Where am I calling avoidance 'discernment'?",
-      "optimizesFor": "Not abandoning a good move because being seen needing help feels exposing.",
-      "forbiddenMoves": [
-        "Dressing avoidance as discernment",
-        "Going quiet to dodge the feeling",
-        "Carrying others' guilt about your need"
-      ],
-      "failureModes": [
-        "Perpetual 'not the right time'",
-        "Researching instead of acting"
-      ],
-      "remediation": "Set a 10-minute timer; take one real step before it rings.",
-      "tell": {
-        "working": "You name the fear and move.",
-        "performed": "You generate three more reasons to wait."
-      },
-      "contraindications": [
-        "When the retreat really is the wise move — then rest without guilt"
-      ],
-      "example": "You feel dread about posting the ask; you sort it: not danger, just exposure — you post.",
-      "tier": "canonical",
-      "status": "published"
-    },
-    {
-      "id": "sp-escape_artist-CLEAN-SHAMAN-OUTER",
-      "slug": "escape_artist-clean_up-shaman-outer",
-      "name": "Sort the false exit from the real one — Sense",
-      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-CLEAN-SHAMAN-INNER",
+      "slug": "coach-clean_up-shaman-inner",
+      "name": "Clear the story keeping you on a dead level — Sense",
+      "essence": "In yourself: calling people up, sensing what is here.",
       "steps": [
         "Transform the charge — sensing what is here.",
-        "Bring it to others: the false exit from the real one."
+        "Turn it inward: the story keeping you on a dead level."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "coach"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-coach-CLEAN-SHAMAN-OUTER",
+      "slug": "coach-clean_up-shaman-outer",
+      "name": "Clear the story that keeps them small — Sense",
+      "essence": "For others: calling people up, sensing what is here.",
+      "steps": [
+        "Transform the charge — sensing what is here.",
+        "Bring it to others: the story that keeps them small."
       ],
       "source": {
         "origin": "ai",
@@ -1122,33 +1080,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-CHALLENGER-INNER",
-      "slug": "escape_artist-clean_up-challenger-inner",
-      "name": "Sort wise retreat from mere flight — Edge",
-      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-CLEAN-CHALLENGER-INNER",
+      "slug": "coach-clean_up-challenger-inner",
+      "name": "Clear the story keeping you on a dead level — Edge",
+      "essence": "In yourself: calling people up, at the edge, naming what resists.",
       "steps": [
         "Transform the charge — at the edge, naming what resists.",
-        "Turn it inward: wise retreat from mere flight."
+        "Turn it inward: the story keeping you on a dead level."
       ],
       "source": {
         "origin": "ai",
@@ -1164,33 +1122,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-CHALLENGER-OUTER",
-      "slug": "escape_artist-clean_up-challenger-outer",
-      "name": "Sort the false exit from the real one — Edge",
-      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-CLEAN-CHALLENGER-OUTER",
+      "slug": "coach-clean_up-challenger-outer",
+      "name": "Clear the story that keeps them small — Edge",
+      "essence": "For others: calling people up, at the edge, naming what resists.",
       "steps": [
         "Transform the charge — at the edge, naming what resists.",
-        "Bring it to others: the false exit from the real one."
+        "Bring it to others: the story that keeps them small."
       ],
       "source": {
         "origin": "ai",
@@ -1206,33 +1164,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-REGENT-INNER",
-      "slug": "escape_artist-clean_up-regent-inner",
-      "name": "Sort wise retreat from mere flight — Steward",
-      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-CLEAN-REGENT-INNER",
+      "slug": "coach-clean_up-regent-inner",
+      "name": "Clear the story keeping you on a dead level — Steward",
+      "essence": "In yourself: calling people up, stewarding it over time.",
       "steps": [
         "Transform the charge — stewarding it over time.",
-        "Turn it inward: wise retreat from mere flight."
+        "Turn it inward: the story keeping you on a dead level."
       ],
       "source": {
         "origin": "ai",
@@ -1248,33 +1206,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-REGENT-OUTER",
-      "slug": "escape_artist-clean_up-regent-outer",
-      "name": "Sort the false exit from the real one — Steward",
-      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-CLEAN-REGENT-OUTER",
+      "slug": "coach-clean_up-regent-outer",
+      "name": "Clear the story that keeps them small — Steward",
+      "essence": "For others: calling people up, stewarding it over time.",
       "steps": [
         "Transform the charge — stewarding it over time.",
-        "Bring it to others: the false exit from the real one."
+        "Bring it to others: the story that keeps them small."
       ],
       "source": {
         "origin": "ai",
@@ -1290,33 +1248,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-ARCHITECT-INNER",
-      "slug": "escape_artist-clean_up-architect-inner",
-      "name": "Sort wise retreat from mere flight — Structure",
-      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "id": "sp-coach-CLEAN-ARCHITECT-INNER",
+      "slug": "coach-clean_up-architect-inner",
+      "name": "Clear the story keeping you on a dead level — Structure",
+      "essence": "In yourself: calling people up, building it into structure.",
       "steps": [
         "Transform the charge — building it into structure.",
-        "Turn it inward: wise retreat from mere flight."
+        "Turn it inward: the story keeping you on a dead level."
       ],
       "source": {
         "origin": "ai",
@@ -1332,33 +1290,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Structure level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Structure level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-ARCHITECT-OUTER",
-      "slug": "escape_artist-clean_up-architect-outer",
-      "name": "Sort the false exit from the real one — Structure",
-      "essence": "For others: the wisdom of fear, building it into structure.",
+      "id": "sp-coach-CLEAN-ARCHITECT-OUTER",
+      "slug": "coach-clean_up-architect-outer",
+      "name": "Clear the story that keeps them small — Structure",
+      "essence": "For others: calling people up, building it into structure.",
       "steps": [
         "Transform the charge — building it into structure.",
-        "Bring it to others: the false exit from the real one."
+        "Bring it to others: the story that keeps them small."
       ],
       "source": {
         "origin": "ai",
@@ -1374,33 +1332,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Structure level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Structure level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-DIPLOMAT-INNER",
-      "slug": "escape_artist-clean_up-diplomat-inner",
-      "name": "Sort wise retreat from mere flight — Bridge",
-      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "id": "sp-coach-CLEAN-DIPLOMAT-INNER",
+      "slug": "coach-clean_up-diplomat-inner",
+      "name": "Clear the story keeping you on a dead level — Bridge",
+      "essence": "In yourself: calling people up, across difference and relationship.",
       "steps": [
         "Transform the charge — across difference and relationship.",
-        "Turn it inward: wise retreat from mere flight."
+        "Turn it inward: the story keeping you on a dead level."
       ],
       "source": {
         "origin": "ai",
@@ -1416,33 +1374,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Bridge level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Bridge level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-DIPLOMAT-OUTER",
-      "slug": "escape_artist-clean_up-diplomat-outer",
-      "name": "Sort the false exit from the real one — Bridge",
-      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "id": "sp-coach-CLEAN-DIPLOMAT-OUTER",
+      "slug": "coach-clean_up-diplomat-outer",
+      "name": "Clear the story that keeps them small — Bridge",
+      "essence": "For others: calling people up, across difference and relationship.",
       "steps": [
         "Transform the charge — across difference and relationship.",
-        "Bring it to others: the false exit from the real one."
+        "Bring it to others: the story that keeps them small."
       ],
       "source": {
         "origin": "ai",
@@ -1458,33 +1416,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Bridge level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Bridge level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-SAGE-INNER",
-      "slug": "escape_artist-clean_up-sage-inner",
-      "name": "Sort wise retreat from mere flight — Whole",
-      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-CLEAN-SAGE-INNER",
+      "slug": "coach-clean_up-sage-inner",
+      "name": "Clear the story keeping you on a dead level — Whole",
+      "essence": "In yourself: calling people up, integrating the whole field.",
       "steps": [
         "Transform the charge — integrating the whole field.",
-        "Turn it inward: wise retreat from mere flight."
+        "Turn it inward: the story keeping you on a dead level."
       ],
       "source": {
         "origin": "ai",
@@ -1500,33 +1458,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-CLEAN-SAGE-OUTER",
-      "slug": "escape_artist-clean_up-sage-outer",
-      "name": "Sort the false exit from the real one — Whole",
-      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-CLEAN-SAGE-OUTER",
+      "slug": "coach-clean_up-sage-outer",
+      "name": "Clear the story that keeps them small — Whole",
+      "essence": "For others: calling people up, integrating the whole field.",
       "steps": [
         "Transform the charge — integrating the whole field.",
-        "Bring it to others: the false exit from the real one."
+        "Bring it to others: the story that keeps them small."
       ],
       "source": {
         "origin": "ai",
@@ -1542,33 +1500,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What charge am I carrying that needs to move?",
       "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Venting the charge onto someone else",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The same charge, discharged again"
       ],
       "remediation": "Name what you are feeling out loud before you act.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-SHAMAN-INNER",
-      "slug": "escape_artist-grow_up-shaman-inner",
-      "name": "Build your tolerance for staying — Sense",
-      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-GROW-SHAMAN-INNER",
+      "slug": "coach-grow_up-shaman-inner",
+      "name": "Build your capacity to call up without dragging — Sense",
+      "essence": "In yourself: calling people up, sensing what is here.",
       "steps": [
         "Build the capacity — sensing what is here.",
-        "Turn it inward: your tolerance for staying."
+        "Turn it inward: your capacity to call up without dragging."
       ],
       "source": {
         "origin": "ai",
@@ -1584,33 +1542,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-SHAMAN-OUTER",
-      "slug": "escape_artist-grow_up-shaman-outer",
-      "name": "Build more ways out than one — Sense",
-      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-GROW-SHAMAN-OUTER",
+      "slug": "coach-grow_up-shaman-outer",
+      "name": "Build their next level, at their pace — Sense",
+      "essence": "For others: calling people up, sensing what is here.",
       "steps": [
         "Build the capacity — sensing what is here.",
-        "Bring it to others: more ways out than one."
+        "Bring it to others: their next level, at their pace."
       ],
       "source": {
         "origin": "ai",
@@ -1626,33 +1584,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-CHALLENGER-INNER",
-      "slug": "escape_artist-grow_up-challenger-inner",
-      "name": "Build your tolerance for staying — Edge",
-      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-GROW-CHALLENGER-INNER",
+      "slug": "coach-grow_up-challenger-inner",
+      "name": "Build your capacity to call up without dragging — Edge",
+      "essence": "In yourself: calling people up, at the edge, naming what resists.",
       "steps": [
         "Build the capacity — at the edge, naming what resists.",
-        "Turn it inward: your tolerance for staying."
+        "Turn it inward: your capacity to call up without dragging."
       ],
       "source": {
         "origin": "ai",
@@ -1668,33 +1626,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-CHALLENGER-OUTER",
-      "slug": "escape_artist-grow_up-challenger-outer",
-      "name": "Build more ways out than one — Edge",
-      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-GROW-CHALLENGER-OUTER",
+      "slug": "coach-grow_up-challenger-outer",
+      "name": "Build their next level, at their pace — Edge",
+      "essence": "For others: calling people up, at the edge, naming what resists.",
       "steps": [
         "Build the capacity — at the edge, naming what resists.",
-        "Bring it to others: more ways out than one."
+        "Bring it to others: their next level, at their pace."
       ],
       "source": {
         "origin": "ai",
@@ -1710,33 +1668,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-REGENT-INNER",
-      "slug": "escape_artist-grow_up-regent-inner",
-      "name": "Build your tolerance for staying — Steward",
-      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-GROW-REGENT-INNER",
+      "slug": "coach-grow_up-regent-inner",
+      "name": "Build your capacity to call up without dragging — Steward",
+      "essence": "In yourself: calling people up, stewarding it over time.",
       "steps": [
         "Build the capacity — stewarding it over time.",
-        "Turn it inward: your tolerance for staying."
+        "Turn it inward: your capacity to call up without dragging."
       ],
       "source": {
         "origin": "ai",
@@ -1752,33 +1710,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-REGENT-OUTER",
-      "slug": "escape_artist-grow_up-regent-outer",
-      "name": "Build more ways out than one — Steward",
-      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-GROW-REGENT-OUTER",
+      "slug": "coach-grow_up-regent-outer",
+      "name": "Build their next level, at their pace — Steward",
+      "essence": "For others: calling people up, stewarding it over time.",
       "steps": [
         "Build the capacity — stewarding it over time.",
-        "Bring it to others: more ways out than one."
+        "Bring it to others: their next level, at their pace."
       ],
       "source": {
         "origin": "ai",
@@ -1794,33 +1752,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-ARCHITECT-INNER",
-      "slug": "escape_artist-grow_up-architect-inner",
-      "name": "Build your tolerance for staying — Structure",
-      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "id": "sp-coach-GROW-ARCHITECT-INNER",
+      "slug": "coach-grow_up-architect-inner",
+      "name": "Build your capacity to call up without dragging — Structure",
+      "essence": "In yourself: calling people up, building it into structure.",
       "steps": [
         "Build the capacity — building it into structure.",
-        "Turn it inward: your tolerance for staying."
+        "Turn it inward: your capacity to call up without dragging."
       ],
       "source": {
         "origin": "ai",
@@ -1836,33 +1794,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Structure level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Structure level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-ARCHITECT-OUTER",
-      "slug": "escape_artist-grow_up-architect-outer",
-      "name": "Build more ways out than one — Structure",
-      "essence": "For others: the wisdom of fear, building it into structure.",
+      "id": "sp-coach-GROW-ARCHITECT-OUTER",
+      "slug": "coach-grow_up-architect-outer",
+      "name": "Build their next level, at their pace — Structure",
+      "essence": "For others: calling people up, building it into structure.",
       "steps": [
         "Build the capacity — building it into structure.",
-        "Bring it to others: more ways out than one."
+        "Bring it to others: their next level, at their pace."
       ],
       "source": {
         "origin": "ai",
@@ -1878,33 +1836,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Structure level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Structure level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-DIPLOMAT-INNER",
-      "slug": "escape_artist-grow_up-diplomat-inner",
-      "name": "Build your tolerance for staying — Bridge",
-      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "id": "sp-coach-GROW-DIPLOMAT-INNER",
+      "slug": "coach-grow_up-diplomat-inner",
+      "name": "Build your capacity to call up without dragging — Bridge",
+      "essence": "In yourself: calling people up, across difference and relationship.",
       "steps": [
         "Build the capacity — across difference and relationship.",
-        "Turn it inward: your tolerance for staying."
+        "Turn it inward: your capacity to call up without dragging."
       ],
       "source": {
         "origin": "ai",
@@ -1920,33 +1878,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Bridge level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Bridge level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-DIPLOMAT-OUTER",
-      "slug": "escape_artist-grow_up-diplomat-outer",
-      "name": "Build more ways out than one — Bridge",
-      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "id": "sp-coach-GROW-DIPLOMAT-OUTER",
+      "slug": "coach-grow_up-diplomat-outer",
+      "name": "Build their next level, at their pace — Bridge",
+      "essence": "For others: calling people up, across difference and relationship.",
       "steps": [
         "Build the capacity — across difference and relationship.",
-        "Bring it to others: more ways out than one."
+        "Bring it to others: their next level, at their pace."
       ],
       "source": {
         "origin": "ai",
@@ -1962,33 +1920,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Bridge level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Bridge level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-SAGE-INNER",
-      "slug": "escape_artist-grow_up-sage-inner",
-      "name": "Build your tolerance for staying — Whole",
-      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-GROW-SAGE-INNER",
+      "slug": "coach-grow_up-sage-inner",
+      "name": "Build your capacity to call up without dragging — Whole",
+      "essence": "In yourself: calling people up, integrating the whole field.",
       "steps": [
         "Build the capacity — integrating the whole field.",
-        "Turn it inward: your tolerance for staying."
+        "Turn it inward: your capacity to call up without dragging."
       ],
       "source": {
         "origin": "ai",
@@ -2004,33 +1962,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-GROW-SAGE-OUTER",
-      "slug": "escape_artist-grow_up-sage-outer",
-      "name": "Build more ways out than one — Whole",
-      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-GROW-SAGE-OUTER",
+      "slug": "coach-grow_up-sage-outer",
+      "name": "Build their next level, at their pace — Whole",
+      "essence": "For others: calling people up, integrating the whole field.",
       "steps": [
         "Build the capacity — integrating the whole field.",
-        "Bring it to others: more ways out than one."
+        "Bring it to others: their next level, at their pace."
       ],
       "source": {
         "origin": "ai",
@@ -2046,33 +2004,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "Who do I need to become for this?",
       "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Forcing growth or skipping the rep",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "Busywork mistaken for growth"
       ],
       "remediation": "Pick one small rep and do it once.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-SHAMAN-INNER",
-      "slug": "escape_artist-show_up-shaman-inner",
-      "name": "Open the exit you actually need — Sense",
-      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-SHOW-SHAMAN-INNER",
+      "slug": "coach-show_up-shaman-inner",
+      "name": "Call yourself up to the next level — Sense",
+      "essence": "In yourself: calling people up, sensing what is here.",
       "steps": [
         "Take the concrete act — sensing what is here.",
-        "Turn it inward: the exit you actually need."
+        "Turn it inward: yourself up to the next level."
       ],
       "source": {
         "origin": "ai",
@@ -2088,33 +2046,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-SHAMAN-OUTER",
-      "slug": "escape_artist-show_up-shaman-outer",
-      "name": "Open a door for someone else — Sense",
-      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "id": "sp-coach-SHOW-SHAMAN-OUTER",
+      "slug": "coach-show_up-shaman-outer",
+      "name": "Call them up — name the level and the why — Sense",
+      "essence": "For others: calling people up, sensing what is here.",
       "steps": [
         "Take the concrete act — sensing what is here.",
-        "Bring it to others: a door for someone else."
+        "Bring it to others: them up — name the level and the why."
       ],
       "source": {
         "origin": "ai",
@@ -2130,89 +2088,75 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Sense level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Sense level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-CHALLENGER-INNER",
-      "slug": "escape_artist-show_up-challenger-inner",
-      "name": "Stay for the Ask",
-      "essence": "Don’t vanish in the sixty seconds before you make the ask.",
-      "steps": [
-        "Feel the urge to flee right before you act.",
-        "Set a 10-minute timer; name the fear out loud.",
-        "Make one ask before it rings."
-      ],
-      "source": {
-        "origin": "gm",
-        "name": "Authored hero cell",
-        "author": "Wendell Britt"
-      },
-      "moves": [
-        "show_up"
-      ],
-      "operations": [
-        "challenger"
-      ],
-      "domains": [],
-      "channels": [
-        "metal"
-      ],
-      "aspect": "inner",
-      "superpowers": [
-        "escape_artist"
-      ],
-      "capabilities": [
-        "agency"
-      ],
-      "primaryQuestion": "Is my urge to bolt protecting me from real danger, or just from being seen needing help?",
-      "campaignQuestion": "Which ask am I one click away from making but keep escaping?",
-      "optimizesFor": "Making the ask — the move that could actually increase life — instead of fleeing it.",
-      "forbiddenMoves": [
-        "Calling avoidance 'timing'",
-        "Suddenly reorganizing your whole plan to avoid acting",
-        "Pressuring yourself into freeze"
-      ],
-      "failureModes": [
-        "Perpetual 'not the right moment'",
-        "Researching instead of asking"
-      ],
-      "remediation": "Shrink it: make the ask to one safe person first.",
-      "tell": {
-        "working": "You name the fear and act anyway.",
-        "performed": "You produce three more reasons to wait."
-      },
-      "contraindications": [
-        "When pausing is genuinely wiser — but be honest"
-      ],
-      "example": "Timer set: make one ask before 10 minutes pass.",
-      "tier": "canonical",
-      "status": "published"
-    },
-    {
-      "id": "sp-escape_artist-SHOW-CHALLENGER-OUTER",
-      "slug": "escape_artist-show_up-challenger-outer",
-      "name": "Open a door for someone else — Edge",
-      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "id": "sp-coach-SHOW-CHALLENGER-INNER",
+      "slug": "coach-show_up-challenger-inner",
+      "name": "Call yourself up to the next level — Edge",
+      "essence": "In yourself: calling people up, at the edge, naming what resists.",
       "steps": [
         "Take the concrete act — at the edge, naming what resists.",
-        "Bring it to others: a door for someone else."
+        "Turn it inward: yourself up to the next level."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "coach"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-coach-SHOW-CHALLENGER-OUTER",
+      "slug": "coach-show_up-challenger-outer",
+      "name": "Call them up — name the level and the why — Edge",
+      "essence": "For others: calling people up, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act — at the edge, naming what resists.",
+        "Bring it to others: them up — name the level and the why."
       ],
       "source": {
         "origin": "ai",
@@ -2228,33 +2172,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Edge level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Edge level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-REGENT-INNER",
-      "slug": "escape_artist-show_up-regent-inner",
-      "name": "Open the exit you actually need — Steward",
-      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-SHOW-REGENT-INNER",
+      "slug": "coach-show_up-regent-inner",
+      "name": "Call yourself up to the next level — Steward",
+      "essence": "In yourself: calling people up, stewarding it over time.",
       "steps": [
         "Take the concrete act — stewarding it over time.",
-        "Turn it inward: the exit you actually need."
+        "Turn it inward: yourself up to the next level."
       ],
       "source": {
         "origin": "ai",
@@ -2270,33 +2214,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-REGENT-OUTER",
-      "slug": "escape_artist-show_up-regent-outer",
-      "name": "Open a door for someone else — Steward",
-      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "id": "sp-coach-SHOW-REGENT-OUTER",
+      "slug": "coach-show_up-regent-outer",
+      "name": "Call them up — name the level and the why — Steward",
+      "essence": "For others: calling people up, stewarding it over time.",
       "steps": [
         "Take the concrete act — stewarding it over time.",
-        "Bring it to others: a door for someone else."
+        "Bring it to others: them up — name the level and the why."
       ],
       "source": {
         "origin": "ai",
@@ -2312,89 +2256,75 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Steward level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Steward level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-ARCHITECT-INNER",
-      "slug": "escape_artist-show_up-architect-inner",
-      "name": "Pre-Commit the Rest",
-      "essence": "Decide in advance when you'll rest, so you don't bolt mid-push.",
-      "steps": [
-        "Name the point where you'll pause (after the work goes out, not before).",
-        "Schedule the rest like an appointment.",
-        "When the urge to vanish hits early, feel it, point to the scheduled rest, and keep going."
-      ],
-      "source": {
-        "origin": "gm",
-        "name": "Authored hero cell",
-        "author": "Wendell Britt"
-      },
-      "moves": [
-        "show_up"
-      ],
-      "operations": [
-        "architect"
-      ],
-      "domains": [],
-      "channels": [
-        "earth"
-      ],
-      "aspect": "inner",
-      "superpowers": [
-        "escape_artist"
-      ],
-      "capabilities": [
-        "rest"
-      ],
-      "primaryQuestion": "Am I about to call quitting 'self-care' to escape the exposure?",
-      "campaignQuestion": "What sustainable rhythm lets me keep showing up without burning out or bolting?",
-      "optimizesFor": "Staying in the work by resourcing rest, so the effort can increase life rather than drain you.",
-      "forbiddenMoves": [
-        "Disguising flight as self-care",
-        "Pushing with no rest until you crash",
-        "Ghosting without a return plan"
-      ],
-      "failureModes": [
-        "Bolting right before the finish",
-        "Burnout framed as boundaries"
-      ],
-      "remediation": "If you bolted, name the real fear and set the next small step.",
-      "tell": {
-        "working": "You rest on schedule and return.",
-        "performed": "You 'rest' the moment it gets exposing."
-      },
-      "contraindications": [
-        "When you truly need to stop — then stop, cleanly"
-      ],
-      "example": "Plan: do the next batch of work, then take the weekend off, then resume Monday.",
-      "tier": "canonical",
-      "status": "published"
-    },
-    {
-      "id": "sp-escape_artist-SHOW-ARCHITECT-OUTER",
-      "slug": "escape_artist-show_up-architect-outer",
-      "name": "Open a door for someone else — Structure",
-      "essence": "For others: the wisdom of fear, building it into structure.",
+      "id": "sp-coach-SHOW-ARCHITECT-INNER",
+      "slug": "coach-show_up-architect-inner",
+      "name": "Call yourself up to the next level — Structure",
+      "essence": "In yourself: calling people up, building it into structure.",
       "steps": [
         "Take the concrete act — building it into structure.",
-        "Bring it to others: a door for someone else."
+        "Turn it inward: yourself up to the next level."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "coach"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-coach-SHOW-ARCHITECT-OUTER",
+      "slug": "coach-show_up-architect-outer",
+      "name": "Call them up — name the level and the why — Structure",
+      "essence": "For others: calling people up, building it into structure.",
+      "steps": [
+        "Take the concrete act — building it into structure.",
+        "Bring it to others: them up — name the level and the why."
       ],
       "source": {
         "origin": "ai",
@@ -2410,89 +2340,75 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Structure level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Structure level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-DIPLOMAT-INNER",
-      "slug": "escape_artist-show_up-diplomat-inner",
-      "name": "Name the Cost of Staying",
-      "essence": "Name what staying in the work actually costs you, so the cost is chosen, not leaked.",
-      "steps": [
-        "Feel where the work drains you.",
-        "Name the real cost out loud (time, pride, exposure).",
-        "Decide if it's worth it — and if yes, stay on purpose."
-      ],
-      "source": {
-        "origin": "gm",
-        "name": "Authored hero cell",
-        "author": "Wendell Britt"
-      },
-      "moves": [
-        "show_up"
-      ],
-      "operations": [
-        "diplomat"
-      ],
-      "domains": [],
-      "channels": [
-        "earth"
-      ],
-      "aspect": "inner",
-      "superpowers": [
-        "escape_artist"
-      ],
-      "capabilities": [
-        "rest"
-      ],
-      "primaryQuestion": "What is staying in this costing me that I haven't named?",
-      "campaignQuestion": "What do I need to acknowledge about the cost so I can keep showing up honestly?",
-      "optimizesFor": "Chosen, sustainable presence instead of silent depletion.",
-      "forbiddenMoves": [
-        "Pretending it costs nothing",
-        "Becoming a martyr",
-        "Turning your cost into others' obligation"
-      ],
-      "failureModes": [
-        "Unnamed depletion becomes disappearance",
-        "Resentment poisons the gratitude"
-      ],
-      "remediation": "Name the cost to one trusted person; let it be witnessed.",
-      "tell": {
-        "working": "You stay clear-eyed about the price and stay anyway.",
-        "performed": "You keep score of what staying costs."
-      },
-      "contraindications": [
-        "When the cost is too high — then it's okay to step back"
-      ],
-      "example": "Admit the work bruises your pride; name it, and choose to keep going.",
-      "tier": "canonical",
-      "status": "published"
-    },
-    {
-      "id": "sp-escape_artist-SHOW-DIPLOMAT-OUTER",
-      "slug": "escape_artist-show_up-diplomat-outer",
-      "name": "Open a door for someone else — Bridge",
-      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "id": "sp-coach-SHOW-DIPLOMAT-INNER",
+      "slug": "coach-show_up-diplomat-inner",
+      "name": "Call yourself up to the next level — Bridge",
+      "essence": "In yourself: calling people up, across difference and relationship.",
       "steps": [
         "Take the concrete act — across difference and relationship.",
-        "Bring it to others: a door for someone else."
+        "Turn it inward: yourself up to the next level."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "coach"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-coach-SHOW-DIPLOMAT-OUTER",
+      "slug": "coach-show_up-diplomat-outer",
+      "name": "Call them up — name the level and the why — Bridge",
+      "essence": "For others: calling people up, across difference and relationship.",
+      "steps": [
+        "Take the concrete act — across difference and relationship.",
+        "Bring it to others: them up — name the level and the why."
       ],
       "source": {
         "origin": "ai",
@@ -2508,33 +2424,33 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Bridge level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Bridge level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-SAGE-INNER",
-      "slug": "escape_artist-show_up-sage-inner",
-      "name": "Open the exit you actually need — Whole",
-      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-SHOW-SAGE-INNER",
+      "slug": "coach-show_up-sage-inner",
+      "name": "Call yourself up to the next level — Whole",
+      "essence": "In yourself: calling people up, integrating the whole field.",
       "steps": [
         "Take the concrete act — integrating the whole field.",
-        "Turn it inward: the exit you actually need."
+        "Turn it inward: yourself up to the next level."
       ],
       "source": {
         "origin": "ai",
@@ -2550,33 +2466,33 @@
       "channels": [],
       "aspect": "inner",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
     },
     {
-      "id": "sp-escape_artist-SHOW-SAGE-OUTER",
-      "slug": "escape_artist-show_up-sage-outer",
-      "name": "Open a door for someone else — Whole",
-      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "id": "sp-coach-SHOW-SAGE-OUTER",
+      "slug": "coach-show_up-sage-outer",
+      "name": "Call them up — name the level and the why — Whole",
+      "essence": "For others: calling people up, integrating the whole field.",
       "steps": [
         "Take the concrete act — integrating the whole field.",
-        "Bring it to others: a door for someone else."
+        "Bring it to others: them up — name the level and the why."
       ],
       "source": {
         "origin": "ai",
@@ -2592,21 +2508,21 @@
       "channels": [],
       "aspect": "outer",
       "superpowers": [
-        "escape_artist"
+        "coach"
       ],
       "primaryQuestion": "What is the one act I keep avoiding?",
       "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Whole level.",
+      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Whole level.",
       "forbiddenMoves": [
         "Hinting or prepping forever instead of acting",
-        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "failureModes": [
         "The move that never quite happens"
       ],
       "remediation": "Do the smallest real version today.",
       "contraindications": [
-        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
       ],
       "tier": "canonical",
       "status": "draft"
