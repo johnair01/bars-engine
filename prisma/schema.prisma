@@ -92,6 +92,9 @@ model Player {
   pronouns                       String?
   attendance                     String?
   gmFaceLevel                    Int                         @default(1)
+  superpowerInner                String?
+  superpowerOuter                String?
+  quizCompletedAt                DateTime?
   createdAt                      DateTime                    @default(now())
   spriteUrl                      String?                     @map("sprite_url")
   lastForgeTimestamp             DateTime?

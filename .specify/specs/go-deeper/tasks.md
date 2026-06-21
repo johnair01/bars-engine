@@ -2,15 +2,19 @@
 
 API-first, five slices. Reuse auth/entitlements/deck-UI/technique-library. Only schema change = three additive `Player` fields. Spec: [spec.md](spec.md).
 
-## Slice 1 — Loadout foundation (server/data, no UI)
-- [ ] **T1** Prisma: add `Player.superpowerInner String?`, `superpowerOuter String?`, `quizCompletedAt DateTime?`.
-- [ ] **T2** `npx prisma migrate dev --name player_superpower_loadout`; commit migration + schema; `npm run db:generate` + `db:record-schema-hash`.
-- [ ] **T3** `src/lib/technique-library/index.ts`: export `BASE_POOL` (canonical base techniques; excludes `sp-*` pack cards).
-- [ ] **T4** `src/lib/player-entitlements/loadout.ts`: `getPlayerLoadout(playerId)`, `getOwnedSuperpowers(playerId)` (capability → Superpower map).
-- [ ] **T5** `src/actions/superpower.ts`: `saveSuperpowerLoadout(inner, outer)` — requires login; persists; deferred inner-pack grant when `deck-digital` held (idempotent).
-- [ ] **T6** Tests: loadout round-trip; deck-owner save grants `superpower-<inner>-pack`; non-owner grants nothing; `getOwnedSuperpowers` mapping.
+> **Status (2026-06-20):** Slice 1 implemented on `claude/admiring-shannon-wlddtw`. 100 tests pass; tsc + eslint clean. Ownership is derived from the `Entitlement.sku` pattern `superpower-<sp>-pack` (pure `superpower-skus.ts`), so Slice 1 is **fully decoupled from `offers.ts`** (which is being reworked on the quiz branch) — Slice 3 SKUs land at merge.
+>
+> **Slice 2 (quiz) is OWNED by `claude/determined-ramanujan-rfq6a4`** (full `superpower-quiz-design` + `scoreQuiz`). Do not rebuild here — consume its output and map to `{inner,outer}` per the reconciliation doc (M1). See `.specify/specs/superpower-system-reconciliation/reconciliation.md`.
 
-## Slice 2 — The quiz
+## Slice 1 — Loadout foundation (server/data, no UI)
+- [x] **T1** Prisma: add `Player.superpowerInner String?`, `superpowerOuter String?`, `quizCompletedAt DateTime?`.
+- [x] **T2** Migration `20260620120000_player_superpower_loadout` (additive `ALTER TABLE "players" ADD COLUMN …`; hand-written since no DB in this env — `migrate deploy` applies it). `prisma generate` + `record-schema-hash` run.
+- [x] **T3** `src/lib/technique-library/base-pool.ts` → `BASE_POOL` (excludes `sp-*` pack cards); re-exported from index.
+- [x] **T4** `src/lib/player-entitlements/{superpower-skus.ts (pure), loadout.ts (server)}`: `getPlayerLoadout`, `getOwnedSuperpowers` (sku-pattern → Superpower).
+- [x] **T5** `src/actions/superpower.ts`: `saveSuperpowerLoadout(inner, outer)` — login-required; persists; deferred inner-pack grant when `deck-digital` held (guarded against double-grant).
+- [x] **T6** Tests: sku round-trip (incl. coach), `superpowersFromEntitlements` (dedupe/ignore unknown), `loadoutFromPlayer` (valid/null/invalid). *(DB-bound wrappers + action are integration-tested when a DB is available.)*
+
+## Slice 2 — The quiz — DEFERRED to Branch B (see status note)
 - [ ] **T7** `src/lib/superpowers/quiz.ts`: `QUIZ_QUESTIONS` (inner-axis + outer-axis) + pure `scoreQuiz(answers) → {inner, outer}` (two sub-scales; deterministic tie-break).
 - [ ] **T8** Tests for `scoreQuiz` (each axis resolves; ties deterministic).
 - [ ] **T9** `src/components/superpowers/SuperpowerQuiz.tsx`: anon-capable quiz + result (inner/outer + one taste card) + "log in to save" → `saveSuperpowerLoadout`.
