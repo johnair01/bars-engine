@@ -38,6 +38,12 @@ For each superpower description, ask:
   reports **primary + secondary**, so a near-Coach reads honestly as "Coach with a
   Strategist secondary," not a forced single label.
 
+## Re-check log
+- **2026-06-20 (voice pass, T2.3 reveal copy):** descriptions re-authored in
+  Wendell's register. Re-verified: each gift stays behavioral, each shadow stays
+  real and rejectable (no favorability equalizing), no two-sided hedges
+  introduced. Findings table above still holds.
+
 ## Action items
 - [ ] Optional: live A/B — show testers a foreign type's description during the
       verification quest; confirm they rate their own as a better fit.

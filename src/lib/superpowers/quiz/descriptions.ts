@@ -7,7 +7,7 @@
  * authority/AI cosplay. Result is a lens, not a verdict; taker is the authority.
  */
 import type { Superpower } from '../types'
-import { SUPERPOWERS } from '../types'
+import { SUPERPOWERS, SUPERPOWER_DEFS } from '../types'
 import type { QuizResult } from './types'
 
 export interface SuperpowerDescription {
@@ -23,55 +23,54 @@ export interface SuperpowerDescription {
 export const SUPERPOWER_DESCRIPTIONS: Record<Superpower, SuperpowerDescription> = {
   connector: {
     superpower: 'connector',
-    gift: 'You see the invisible threads between people before anyone names them — the right introduction at the right moment. Your work is often invisible precisely because it works.',
-    shadow: 'You over-mediate, take responsibility for everyone’s bonds, and burn out absorbing feelings that aren’t yours.',
-    atBest: 'Grounded enough to connect the right people, not everyone.',
+    gift: 'You see the invisible threads between people before anyone else does — and you pull the right one at the right moment. Half your best work looks, from the outside, like nothing happened at all.',
+    shadow: "Left unchecked, you take on everyone's relationships as your job, mediate fights that were never yours, and quietly burn out as the sponge for the whole room.",
+    atBest: 'Grounded enough to connect the right people — not everyone — and to let a bond you started grow without you.',
   },
   storyteller: {
     superpower: 'storyteller',
-    gift: 'You shape meaning — you can move people from rage to triumph and grief to purpose by reframing the story they’re trapped inside.',
-    shadow: 'The Manipulator who bends the truth for engagement — or the Lost Author who won’t claim a voice and lets others own the narrative.',
-    atBest: 'You reveal; you don’t control.',
+    gift: "You shape what things mean. You can carry a room from rage to triumph, or grief to purpose, by re-telling the story they're trapped inside.",
+    shadow: 'Two ways it curdles: the Manipulator who bends the truth to land the hit, or the Lost Author who never picks up the pen and lets worse storytellers win.',
+    atBest: "You reveal — you don't spin. The story serves the cause, not your ego.",
   },
   strategist: {
     superpower: 'strategist',
-    gift: 'You see the whole board and the move three steps out — you find the leverage and build the plan that holds.',
-    shadow: 'Analysis paralysis, gripping too tight, treating people as chess pieces — or refusing to act until the plan is "perfect."',
+    gift: 'You see the whole board three moves out, and you find the lever nobody noticed. The crises you quietly prevent look, infuriatingly, like crises that were never real.',
+    shadow: 'Pushed too far you grip — overplanning into paralysis, moving people like pieces — or you refuse to act until the plan is flawless, which it never is.',
     atBest: 'Foresight in service of people, not control.',
   },
   disruptor: {
     superpower: 'disruptor',
-    gift: 'You feel the fire when something’s broken and you’re willing to name it — you make space by breaking what no longer works.',
-    shadow: 'The Chaos Bringer who burns everything (and every ally) — or the Caged Rebel, bitter and waiting for permission.',
-    atBest: 'Precise, not reckless; you clear the way for something better.',
+    gift: "You feel the fire when something's broken, and you're willing to say so out loud. You make room by breaking what's quietly rotting.",
+    shadow: 'Unrefined, it is the Chaos Bringer who torches every bridge (and every ally) — or the Caged Rebel, bitter and waiting for a permission that never comes.',
+    atBest: 'Precise, not reckless — you clear the ground so something better can be built.',
   },
   alchemist: {
     superpower: 'alchemist',
-    gift: 'You don’t just feel emotion — you move it, turning grief into meaning and rage into momentum, in yourself and in a room.',
-    shadow: 'Emotional Overload (a sponge that cracks) — or the Detached Observer who analyzes feelings from the shore.',
-    atBest: 'You swim — present without drowning.',
+    gift: "You don't just feel emotion — you move it. Grief into meaning, rage into momentum, in yourself and in a whole room.",
+    shadow: 'It tips into Emotional Overload — the sponge that finally cracks — or the Detached Observer, narrating feelings from a safe, useless distance.',
+    atBest: 'You swim: fully in the water, and not drowning.',
   },
   escape_artist: {
     superpower: 'escape_artist',
-    gift: 'You see the cage before the walls close in, and you know leaving can be a skill, not a failure.',
-    shadow: 'The Martyr who stays too long out of guilt — or the Ghost who bolts at the first discomfort and never belongs anywhere.',
-    atBest: 'You leave well, and help others see their own open door.',
+    gift: 'You see the cage before the door clicks shut, and you know that leaving — cleanly, on time — is a skill, not a failure.',
+    shadow: 'Two failure modes: the Martyr who stays years too long out of guilt, or the Ghost who bolts at the first friction and never belongs anywhere.',
+    atBest: 'You leave well — and you help others spot their own open door.',
   },
   coach: {
     superpower: 'coach',
-    gift: 'You help people remember their own power by helping them abandon the level they’ve outgrown — and the story that keeps them there. The softened Disruptor: frustration at wasted potential, re-aimed into someone’s Triumph.',
-    shadow: 'The Taskmaster who drags instead of calls up (and breeds dependence) — or the Empty Cheerleader who only affirms and never delivers the honest nudge.',
-    atBest: 'You hand power back; they climb, and they credit themselves.',
+    gift: "You hand people back the power they forgot they had — by helping them abandon the level they've outgrown, and the story keeping them there. The Disruptor's fire, softened and aimed at a person's excuse.",
+    shadow: 'It sours into the Taskmaster who drags instead of calls up (and breeds dependence), or the Empty Cheerleader who only ever claps and never says the hard, true thing.',
+    atBest: 'You give the power back; they make the climb, and they credit themselves.',
   },
 }
 
 /** Shown with every result — the anti-Barnum, lens-not-verdict frame (FR6). */
 export const RESULT_FRAMING =
-  'This is a lens, not a verdict — computed from 12 questions, a snapshot of a ' +
-  'current pattern, not a fixed identity. You’re the authority on you. Your top ' +
-  'two are below with how close they are. Does the top one fit? If not, the ' +
-  'second is right there. No type is better than another, and none of this ' +
-  'labels, limits, or scores you.'
+  'A reading, not a sentence. We tallied twelve quick choices into a pattern — a ' +
+  'lens for your next move, not a cage you live in. You are the final authority on ' +
+  'you: if the top one does not fit, the second is right there. No superpower ' +
+  'outranks another, and nothing here labels, limits, or scores you.'
 
 export interface ResultCopy {
   primary: SuperpowerDescription
@@ -93,7 +92,7 @@ export function composeResultCopy(result: QuizResult): ResultCopy {
     secondary,
     marginPct: Math.round(result.margin * 100),
     confident: result.confident,
-    tryAdjacent: `Not quite you? Your secondary is ${secondary.superpower} — try it on.`,
+    tryAdjacent: `Not quite you? Your second wind is the ${SUPERPOWER_DEFS[result.secondary].label}. Try it on.`,
     framing: RESULT_FRAMING,
   }
 }

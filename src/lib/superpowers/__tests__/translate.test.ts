@@ -10,9 +10,9 @@ import { SUPERPOWER_TRANSLATION } from '../matrix'
 import { translateCardForSuperpower } from '../translate'
 import {
   SUPERPOWERS,
+  SUPERPOWER_DEFS,
   orientationToMoveAspect,
   orientationToSubject,
-  type Superpower,
   type SuperpowerOrientation,
 } from '../types'
 import {
@@ -122,7 +122,7 @@ function testComposeResultCopy() {
   assert.equal(copy.secondary.superpower, r.secondary)
   assert.equal(copy.marginPct, Math.round(r.margin * 100))
   assert.equal(copy.framing, RESULT_FRAMING)
-  assert.ok(copy.tryAdjacent.includes(r.secondary))
+  assert.ok(copy.tryAdjacent.includes(SUPERPOWER_DEFS[r.secondary].label))
 }
 
 const tests = [
