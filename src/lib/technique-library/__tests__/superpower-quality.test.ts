@@ -44,6 +44,12 @@ describe('car-campaign quality harness', () => {
     expect(score.campaignReadyCells).toBe(24)
   })
 
+  it('coach/coach loadout is lifted too (12 L4, 24 ready)', () => {
+    const score = scoreLoadoutOverCampaign({ inner: 'coach', outer: 'coach' }, baseCards)
+    expect(score.byLevel[4]).toBe(12) // 6 inner + 6 outer authored coach hero cells
+    expect(score.campaignReadyCells).toBe(24)
+  })
+
   it('no published superpower card scores below L3 (publish gate)', () => {
     for (const sp of SUPERPOWERS) {
       for (const c of superpowerDeck(sp)) {

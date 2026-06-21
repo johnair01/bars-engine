@@ -4,21 +4,23 @@
   "label": "The Coach",
   "gift": "Calling people up — reminding them of the power they've forgotten and the level they've outgrown.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-21T19:04:10.219Z",
+  "generatedAt": "2026-06-21T20:22:38.936Z",
   "count": 60,
   "cards": [
     {
       "id": "sp-coach-WAKE-SHAMAN-INNER",
       "slug": "coach-wake_up-shaman-inner",
-      "name": "Notice the level you've outgrown — Sense",
-      "essence": "In yourself: calling people up, sensing what is here.",
+      "name": "See the Level You've Outgrown",
+      "essence": "Notice the level you keep playing on that you've actually outgrown.",
       "steps": [
-        "Notice what is actually here — sensing what is here.",
-        "Turn it inward: the level you've outgrown."
+        "Notice where the game feels too small or stale.",
+        "Feel the boredom or itch in your body — it's data.",
+        "Name the level you've outgrown out loud."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "wake_up"
@@ -27,40 +29,54 @@
         "shaman"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "fire"
+      ],
       "aspect": "inner",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What am I not letting myself notice here?",
-      "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Sense level.",
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "What level am I still playing on that I've already outgrown?",
+      "campaignQuestion": "Where am I staying small out of habit?",
+      "optimizesFor": "Catching your own outgrown level before it quietly caps you.",
       "forbiddenMoves": [
-        "Reacting before you have actually looked",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Mistaking comfort for fit",
+        "Pressuring yourself to level up before you see it",
+        "Calling restlessness failure"
       ],
       "failureModes": [
-        "Blind spots you swear aren't there"
+        "Staying on a dead level",
+        "Numbing the itch"
       ],
-      "remediation": "Name one thing you hadn't let yourself see.",
+      "remediation": "Name one level you've outgrown; sit with the discomfort for a breath.",
+      "tell": {
+        "working": "You feel the itch and name it.",
+        "performed": "You declare a new level to look impressive."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When you actually need to consolidate, not level up"
       ],
+      "example": "The work bores you; instead of grinding, you name the level you've outgrown.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-WAKE-SHAMAN-OUTER",
       "slug": "coach-wake_up-shaman-outer",
-      "name": "Notice the power they've forgotten they have — Sense",
-      "essence": "For others: calling people up, sensing what is here.",
+      "name": "See the Power They've Forgotten",
+      "essence": "Notice the power the person in front of you has forgotten they have.",
       "steps": [
-        "Notice what is actually here — sensing what is here.",
-        "Bring it to others: the power they've forgotten they have."
+        "Look past what they're doing to what they're capable of.",
+        "Feel where they've gone small.",
+        "Name the strength you see, specifically."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "wake_up"
@@ -69,27 +85,39 @@
         "shaman"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "fire"
+      ],
       "aspect": "outer",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What am I not letting myself notice here?",
-      "campaignQuestion": "What does this situation need someone to see?",
-      "optimizesFor": "Seeing what is actually there before reacting — your calling people up at the Sense level.",
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "Am I seeing their capacity or just their current performance?",
+      "campaignQuestion": "What power has this person forgotten they have?",
+      "optimizesFor": "Seeing people at their capacity, not their slump.",
       "forbiddenMoves": [
-        "Reacting before you have actually looked",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Fixing them",
+        "Flattery (the Empty Cheerleader)",
+        "Pressuring them to perform"
       ],
       "failureModes": [
-        "Blind spots you swear aren't there"
+        "Seeing only the deficit",
+        "Empty cheerleading"
       ],
-      "remediation": "Name one thing you hadn't let yourself see.",
+      "remediation": "Name one specific strength you genuinely see in them.",
+      "tell": {
+        "working": "They stand a little taller.",
+        "performed": "You compliment to be liked."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When they need practical help, not a pep read"
       ],
+      "example": "You tell a discouraged friend the specific strength you've watched them use.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-WAKE-CHALLENGER-INNER",
@@ -850,15 +878,17 @@
     {
       "id": "sp-coach-OPEN-DIPLOMAT-INNER",
       "slug": "coach-open_up-diplomat-inner",
-      "name": "Receive your own resistance to being called up — Bridge",
-      "essence": "In yourself: calling people up, across difference and relationship.",
+      "name": "Meet Your Own Resistance",
+      "essence": "Let yourself feel your resistance to being called up, without obeying it.",
       "steps": [
-        "Receive it without flinching — across difference and relationship.",
-        "Turn it inward: your own resistance to being called up."
+        "Notice the part that wants to stay where it's safe.",
+        "Feel the resistance in your body.",
+        "Thank it, and choose to move anyway."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "open_up"
@@ -867,40 +897,54 @@
         "diplomat"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "fire"
+      ],
       "aspect": "inner",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What am I actually feeling, underneath?",
-      "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Bridge level.",
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "What am I protecting by refusing to level up?",
+      "campaignQuestion": "What resistance in me is keeping me small?",
+      "optimizesFor": "Moving up without bulldozing your own fear.",
       "forbiddenMoves": [
-        "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Forcing past the fear",
+        "Pressuring yourself into shame",
+        "Calling caution cowardice"
       ],
       "failureModes": [
-        "Knowing without feeling"
+        "Self-flagellation as motivation",
+        "Freeze"
       ],
-      "remediation": "Let it land for one breath before you respond.",
+      "remediation": "Name the resistance; take one small step with it, not against it.",
+      "tell": {
+        "working": "You move with the fear, not over it.",
+        "performed": "You shame yourself into a sprint."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When the resistance is wisdom, not fear"
       ],
+      "example": "You feel the urge to hide; you name it and send the thing anyway.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-OPEN-DIPLOMAT-OUTER",
       "slug": "coach-open_up-diplomat-outer",
-      "name": "Receive what they are capable of, not just what they are doing — Bridge",
-      "essence": "For others: calling people up, across difference and relationship.",
+      "name": "Receive Their Resistance",
+      "essence": "Hear the person’s resistance to being called up without overriding it.",
       "steps": [
-        "Receive it without flinching — across difference and relationship.",
-        "Bring it to others: what they are capable of, not just what they are doing."
+        "Ask what makes the next level feel risky for them.",
+        "Feel their fear as legitimate, not an obstacle.",
+        "Reflect it back before you invite the step."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "open_up"
@@ -909,27 +953,39 @@
         "diplomat"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "water"
+      ],
       "aspect": "outer",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What am I actually feeling, underneath?",
-      "campaignQuestion": "What is the other person or group really reaching for?",
-      "optimizesFor": "Receiving the charge instead of bracing against it — your calling people up at the Bridge level.",
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "Am I honoring their fear or steamrolling it?",
+      "campaignQuestion": "What makes leveling up feel unsafe for them?",
+      "optimizesFor": "Calling people up at a pace they can actually take.",
       "forbiddenMoves": [
-        "Numbing or performing the feeling instead of feeling it",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Dragging them past their no",
+        "Guilt-tripping them upward",
+        "Dismissing the fear"
       ],
       "failureModes": [
-        "Knowing without feeling"
+        "Creating dependence",
+        "Pushback and shutdown"
       ],
-      "remediation": "Let it land for one breath before you respond.",
+      "remediation": "Name their fear in their words; ask what would make one step feel safe.",
+      "tell": {
+        "working": "They feel met, then willing.",
+        "performed": "You push and they comply resentfully."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When they've clearly said not now"
       ],
+      "example": "You ask what feels scary about the bigger role before nudging them toward it.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-OPEN-SAGE-INNER",
@@ -1102,15 +1158,17 @@
     {
       "id": "sp-coach-CLEAN-CHALLENGER-INNER",
       "slug": "coach-clean_up-challenger-inner",
-      "name": "Clear the story keeping you on a dead level — Edge",
-      "essence": "In yourself: calling people up, at the edge, naming what resists.",
+      "name": "Drop the Story Keeping You Small",
+      "essence": "Clear the story that keeps you on a level you've outgrown.",
       "steps": [
-        "Transform the charge — at the edge, naming what resists.",
-        "Turn it inward: the story keeping you on a dead level."
+        "Write the story you tell about why you can't move up.",
+        "Feel where it's fear wearing fact's clothes.",
+        "Rewrite it as the version that isn't certain."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "clean_up"
@@ -1119,40 +1177,54 @@
         "challenger"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "fire"
+      ],
       "aspect": "inner",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What charge am I carrying that needs to move?",
-      "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Edge level.",
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "What story is keeping me on a dead level?",
+      "campaignQuestion": "What belief about myself is capping me here?",
+      "optimizesFor": "Freeing yourself from the script that caps you.",
       "forbiddenMoves": [
-        "Venting the charge onto someone else",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Defending the story",
+        "Toxic positivity over it",
+        "Pressuring a breakthrough"
       ],
       "failureModes": [
-        "The same charge, discharged again"
+        "Identifying with the limit",
+        "Affirmations with no contact"
       ],
-      "remediation": "Name what you are feeling out loud before you act.",
+      "remediation": "Say the story aloud, then the part you actually don't know is true.",
+      "tell": {
+        "working": "The story loosens.",
+        "performed": "You slap an affirmation over it."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When the limit is real and worth respecting"
       ],
+      "example": "You name 'I'm not a leader' as a story, then test it once.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-CLEAN-CHALLENGER-OUTER",
       "slug": "coach-clean_up-challenger-outer",
-      "name": "Clear the story that keeps them small — Edge",
-      "essence": "For others: calling people up, at the edge, naming what resists.",
+      "name": "Name the Story That Keeps Them Small",
+      "essence": "Surface the story keeping the other person on a level they've outgrown.",
       "steps": [
-        "Transform the charge — at the edge, naming what resists.",
-        "Bring it to others: the story that keeps them small."
+        "Reflect the limiting story you hear them tell ('I'm just the…').",
+        "Feel for whether they're ready to question it.",
+        "Offer the question, not the answer: 'is that still true?'"
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "clean_up"
@@ -1161,27 +1233,39 @@
         "challenger"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "fire"
+      ],
       "aspect": "outer",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What charge am I carrying that needs to move?",
-      "campaignQuestion": "What needs to be metabolized before we move together?",
-      "optimizesFor": "Metabolizing the charge so it stops leaking — your calling people up at the Edge level.",
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "Am I imposing my read or surfacing theirs?",
+      "campaignQuestion": "What story is keeping this person from their next level?",
+      "optimizesFor": "Loosening the script without doing their work for them.",
       "forbiddenMoves": [
-        "Venting the charge onto someone else",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Telling them who to be",
+        "Pressuring the reframe",
+        "Ripping the story away before they're ready"
       ],
       "failureModes": [
-        "The same charge, discharged again"
+        "Creating dependence on your insight",
+        "Defensiveness"
       ],
-      "remediation": "Name what you are feeling out loud before you act.",
+      "remediation": "Ask 'is that story still serving you?' and let them answer.",
+      "tell": {
+        "working": "They question the story themselves.",
+        "performed": "You hand them your conclusion."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When trust isn't there yet"
       ],
+      "example": "You gently ask a teammate if 'I'm bad at this' is still true.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-CLEAN-REGENT-INNER",
@@ -1690,15 +1774,17 @@
     {
       "id": "sp-coach-GROW-REGENT-INNER",
       "slug": "coach-grow_up-regent-inner",
-      "name": "Build your capacity to call up without dragging — Steward",
-      "essence": "In yourself: calling people up, stewarding it over time.",
+      "name": "Coach Yourself Without Dragging",
+      "essence": "Build the capacity to call yourself up steadily, without self-tyranny.",
       "steps": [
-        "Build the capacity — stewarding it over time.",
-        "Turn it inward: your capacity to call up without dragging."
+        "Set one stretch that's just past comfortable.",
+        "Feel the difference between challenge and self-punishment.",
+        "Practice the rep; rest is part of it."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "grow_up"
@@ -1707,40 +1793,54 @@
         "regent"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "earth"
+      ],
       "aspect": "inner",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "Who do I need to become for this?",
-      "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Steward level.",
+      "capabilities": [
+        "rest"
+      ],
+      "primaryQuestion": "Am I calling myself up or just driving myself?",
+      "campaignQuestion": "What sustainable practice grows me without burning me?",
+      "optimizesFor": "Self-development that lasts, not a crash diet of willpower.",
       "forbiddenMoves": [
-        "Forcing growth or skipping the rep",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Becoming your own Taskmaster",
+        "No-rest grinding",
+        "Pressuring yourself past sense"
       ],
       "failureModes": [
-        "Busywork mistaken for growth"
+        "Burnout dressed as discipline",
+        "All-or-nothing"
       ],
-      "remediation": "Pick one small rep and do it once.",
+      "remediation": "Pick one stretch and one rest; do both.",
+      "tell": {
+        "working": "You stretch and recover.",
+        "performed": "You flog yourself and call it growth."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When you need recovery more than a stretch"
       ],
+      "example": "You set a stretch goal and schedule the rest that makes it sustainable.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-GROW-REGENT-OUTER",
       "slug": "coach-grow_up-regent-outer",
-      "name": "Build their next level, at their pace — Steward",
-      "essence": "For others: calling people up, stewarding it over time.",
+      "name": "Grow Them at Their Pace",
+      "essence": "Steward another's growth over time without creating dependence.",
       "steps": [
-        "Build the capacity — stewarding it over time.",
-        "Bring it to others: their next level, at their pace."
+        "Find the next stretch that's theirs, not yours.",
+        "Feel where you're tempted to do it for them.",
+        "Hand back the rep; let them carry it."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "grow_up"
@@ -1749,27 +1849,39 @@
         "regent"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "wood"
+      ],
       "aspect": "outer",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "Who do I need to become for this?",
-      "campaignQuestion": "What capacity does this work need us to build?",
-      "optimizesFor": "Building the capacity the work keeps asking for — your calling people up at the Steward level.",
+      "capabilities": [
+        "participation"
+      ],
+      "primaryQuestion": "Am I building their capacity or my indispensability?",
+      "campaignQuestion": "What's their next right stretch, at their pace?",
+      "optimizesFor": "People who can do it without you.",
       "forbiddenMoves": [
-        "Forcing growth or skipping the rep",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Rescuing",
+        "Pressuring their pace",
+        "Making them depend on you"
       ],
       "failureModes": [
-        "Busywork mistaken for growth"
+        "The Taskmaster — dependence",
+        "Doing their reps for them"
       ],
-      "remediation": "Pick one small rep and do it once.",
+      "remediation": "Name one thing you'll stop doing for them this week.",
+      "tell": {
+        "working": "They need you less over time.",
+        "performed": "They need you more."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When they genuinely need you to step in now"
       ],
+      "example": "You let a mentee struggle through the task you could finish in a minute.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-GROW-ARCHITECT-INNER",
@@ -2110,15 +2222,17 @@
     {
       "id": "sp-coach-SHOW-CHALLENGER-INNER",
       "slug": "coach-show_up-challenger-inner",
-      "name": "Call yourself up to the next level — Edge",
-      "essence": "In yourself: calling people up, at the edge, naming what resists.",
+      "name": "Call Yourself Up",
+      "essence": "Name the level you’re stepping to, and step — out loud, on the record.",
       "steps": [
-        "Take the concrete act — at the edge, naming what resists.",
-        "Turn it inward: yourself up to the next level."
+        "Name the next level specifically.",
+        "Feel the fear and commit anyway.",
+        "Take the first concrete action toward it today."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "show_up"
@@ -2127,40 +2241,54 @@
         "challenger"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "fire"
+      ],
       "aspect": "inner",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What is the one act I keep avoiding?",
-      "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Edge level.",
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "What level am I committing to, and what's the first move?",
+      "campaignQuestion": "What's the step up I keep deferring?",
+      "optimizesFor": "Crossing into the next level instead of admiring it.",
       "forbiddenMoves": [
-        "Hinting or prepping forever instead of acting",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Declaring without doing",
+        "Waiting to feel ready",
+        "Pressuring a leap with no footing"
       ],
       "failureModes": [
-        "The move that never quite happens"
+        "All talk, no step",
+        "Leap with no landing"
       ],
-      "remediation": "Do the smallest real version today.",
+      "remediation": "Take the smallest real action toward the level today.",
+      "tell": {
+        "working": "You take a concrete step.",
+        "performed": "You announce the level and stall."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When you need a plan before a leap"
       ],
+      "example": "You commit to the harder role and send one email that starts it.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-SHOW-CHALLENGER-OUTER",
       "slug": "coach-show_up-challenger-outer",
-      "name": "Call them up — name the level and the why — Edge",
-      "essence": "For others: calling people up, at the edge, naming what resists.",
+      "name": "Call Them Up",
+      "essence": "Name the level you see them ready for, and the why — then invite the step.",
       "steps": [
-        "Take the concrete act — at the edge, naming what resists.",
-        "Bring it to others: them up — name the level and the why."
+        "Name the level you see them ready for, specifically.",
+        "Say why you believe it — name the evidence you’ve felt, not flattery.",
+        "Invite one concrete step — and let them choose."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "show_up"
@@ -2169,27 +2297,39 @@
         "challenger"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "fire"
+      ],
       "aspect": "outer",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What is the one act I keep avoiding?",
-      "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Edge level.",
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "Am I calling them up or pushing them where I want them?",
+      "campaignQuestion": "What level is this person ready for that no one has named?",
+      "optimizesFor": "The moment someone steps up because you named what they couldn't see.",
       "forbiddenMoves": [
-        "Hinting or prepping forever instead of acting",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Flattery without a step",
+        "Pressuring the yes",
+        "Naming a level for your benefit"
       ],
       "failureModes": [
-        "The move that never quite happens"
+        "Empty cheerleading",
+        "The Taskmaster's demand"
       ],
-      "remediation": "Do the smallest real version today.",
+      "remediation": "Pair the belief with one concrete, optional next step.",
+      "tell": {
+        "working": "They step up of their own will.",
+        "performed": "They comply to please you."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When they haven't asked and trust is thin"
       ],
+      "example": "'You're ready to lead this — here's why. Want to take the first piece?'",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-SHOW-REGENT-INNER",
@@ -2446,15 +2586,17 @@
     {
       "id": "sp-coach-SHOW-SAGE-INNER",
       "slug": "coach-show_up-sage-inner",
-      "name": "Call yourself up to the next level — Whole",
-      "essence": "In yourself: calling people up, integrating the whole field.",
+      "name": "Become Someone Who Calls Up",
+      "essence": "Integrate the shift: become a person who levels up and brings themselves whole.",
       "steps": [
-        "Take the concrete act — integrating the whole field.",
-        "Turn it inward: yourself up to the next level."
+        "Name who you're becoming by taking this level.",
+        "Feel whether it’s integration or just ambition.",
+        "Carry the part of you that was scared; don't leave it behind."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "show_up"
@@ -2463,40 +2605,54 @@
         "sage"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "fire"
+      ],
       "aspect": "inner",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What is the one act I keep avoiding?",
-      "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Whole level.",
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "Who am I becoming by calling myself up?",
+      "campaignQuestion": "What's the durable identity shift here, not just the win?",
+      "optimizesFor": "Growth that integrates, not a new mask.",
       "forbiddenMoves": [
-        "Hinting or prepping forever instead of acting",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Leaving your scared parts behind",
+        "Performing the upgraded self",
+        "Pressuring an identity"
       ],
       "failureModes": [
-        "The move that never quite happens"
+        "A shinier mask",
+        "Self left behind"
       ],
-      "remediation": "Do the smallest real version today.",
+      "remediation": "Finish: 'I'm becoming someone who can ____ and still ____.'",
+      "tell": {
+        "working": "The new level feels like you.",
+        "performed": "You cosplay the upgrade."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When you're mid-change and naming it freezes it"
       ],
+      "example": "You name the leader you're becoming and keep the tender part along.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-coach-SHOW-SAGE-OUTER",
       "slug": "coach-show_up-sage-outer",
-      "name": "Call them up — name the level and the why — Whole",
-      "essence": "For others: calling people up, integrating the whole field.",
+      "name": "Leave Them More Capable",
+      "essence": "Coach so that, when you're gone, they're stronger and freer — not dependent.",
       "steps": [
-        "Take the concrete act — integrating the whole field.",
-        "Bring it to others: them up — name the level and the why."
+        "Aim for them to outgrow needing you.",
+        "Feel where you're holding on for your own sake.",
+        "Hand over what they can now carry; celebrate it."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "show_up"
@@ -2505,27 +2661,39 @@
         "sage"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "wood"
+      ],
       "aspect": "outer",
       "superpowers": [
         "coach"
       ],
-      "primaryQuestion": "What is the one act I keep avoiding?",
-      "campaignQuestion": "What concrete act would actually help right now?",
-      "optimizesFor": "Taking the one concrete act that moves things — your calling people up at the Whole level.",
+      "capabilities": [
+        "participation"
+      ],
+      "primaryQuestion": "Will they be more capable after me, or more dependent?",
+      "campaignQuestion": "What capacity do I want to leave behind in them?",
+      "optimizesFor": "People who carry it without you — the Coach's win.",
       "forbiddenMoves": [
-        "Hinting or prepping forever instead of acting",
-        "Sliding into the Taskmaster — dragging instead of calling up, creating dependence."
+        "Making yourself indispensable",
+        "Hoarding the credit",
+        "Guilt-binding them to you"
       ],
       "failureModes": [
-        "The move that never quite happens"
+        "The Taskmaster — dependence",
+        "Coaching as control"
       ],
-      "remediation": "Do the smallest real version today.",
+      "remediation": "Name one responsibility to fully hand over now.",
+      "tell": {
+        "working": "They thrive without you.",
+        "performed": "They can't function without you."
+      },
       "contraindications": [
-        "Overusing this becomes the Taskmaster — dragging instead of calling up, creating dependence."
+        "When they still genuinely need scaffolding"
       ],
+      "example": "You hand a mentee the thing you've always done, and step back.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     }
   ]
 }

@@ -8,9 +8,11 @@ import type { Technique } from '../../types'
 import { CONNECTOR_OVERRIDES } from './connector'
 import { ESCAPE_ARTIST_OVERRIDES } from './escape-artist'
 import { STORYTELLER_OVERRIDES } from './storyteller'
+import { COACH_OVERRIDES } from './coach'
 
 export const SUPERPOWER_OVERRIDES: Record<string, Technique> = {
   ...CONNECTOR_OVERRIDES,
   ...ESCAPE_ARTIST_OVERRIDES,
   ...STORYTELLER_OVERRIDES,
+  ...COACH_OVERRIDES,
 }
