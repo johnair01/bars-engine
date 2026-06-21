@@ -1,17 +1,19 @@
 'use server'
 
 /**
- * Superpower discovery intake — server action (campaign Phase 2, FR6).
+ * Superpower discovery intake — server action (campaign Phase 2/3, FR6 + T3.5a).
  * Spec: .specify/specs/mobility-quest-superpower-campaign/spec.md
  *       .specify/specs/superpower-quiz-design/spec.md
  *
- * Scores the discovery quiz and returns the routing result + reveal copy. The
- * scoring is deterministic and offline (no AI). NO email gate, no DB write here:
- * per-campaign persistence of the result lands in Phase 4 on
- * `CampaignMembership.superpower` / `.superpowerOrientation` (additive migration).
- * Until then this is a stateless scoring endpoint the reveal UI consumes.
+ * Scores the discovery quiz (deterministic, offline — no AI), returns routing +
+ * reveal copy, and — best-effort — persists the result PER CAMPAIGN on the
+ * player's CampaignMembership (creating a MEMBER membership if needed). NO email
+ * gate. Persistence never blocks the reveal: a logged-out player or an unknown
+ * campaignRef simply gets the result with `persisted: false`.
  */
 import { z } from 'zod'
+import { getCurrentPlayer } from '@/lib/auth'
+import { db } from '@/lib/db'
 import { resolveSuperpowerIntake, type SuperpowerIntakeOutcome } from '@/lib/superpowers/routing'
 
 const answerSchema = z.object({
@@ -22,13 +24,47 @@ const answerSchema = z.object({
 const submitSchema = z.object({
   answers: z.array(answerSchema).min(1, 'Answer at least one question.'),
   orientation: z.enum(['internal', 'external']).nullish(),
-  /** Per-campaign context; reserved for Phase 4 persistence. */
+  /** Per-campaign context for persisting the result on CampaignMembership. */
   campaignRef: z.string().trim().min(1).max(64).optional(),
 })
 
 export type SubmitSuperpowerIntakeResult =
-  | { ok: true; outcome: SuperpowerIntakeOutcome }
+  | { ok: true; outcome: SuperpowerIntakeOutcome; persisted: boolean }
   | { ok: false; error: string }
+
+/**
+ * Best-effort: store the result on the player's per-campaign membership.
+ * Returns whether anything was written. Never throws (logs + returns false).
+ */
+async function persistResult(
+  campaignRef: string | undefined,
+  playerId: string,
+  outcome: SuperpowerIntakeOutcome,
+): Promise<boolean> {
+  if (!campaignRef) return false
+  try {
+    const campaign = await db.campaign.findFirst({ where: { slug: campaignRef }, select: { id: true } })
+    if (!campaign) return false
+    await db.campaignMembership.upsert({
+      where: { campaignId_playerId: { campaignId: campaign.id, playerId } },
+      update: {
+        superpower: outcome.routing.superpower,
+        superpowerOrientation: outcome.routing.orientation,
+      },
+      create: {
+        campaignId: campaign.id,
+        playerId,
+        role: 'MEMBER',
+        superpower: outcome.routing.superpower,
+        superpowerOrientation: outcome.routing.orientation,
+      },
+    })
+    return true
+  } catch (e) {
+    console.error('[submitSuperpowerIntake] persist failed', e)
+    return false
+  }
+}
 
 export async function submitSuperpowerIntake(raw: unknown): Promise<SubmitSuperpowerIntakeResult> {
   const parsed = submitSchema.safeParse(raw)
@@ -39,10 +75,11 @@ export async function submitSuperpowerIntake(raw: unknown): Promise<SubmitSuperp
     }
   }
 
-  const { answers, orientation } = parsed.data
+  const { answers, orientation, campaignRef } = parsed.data
   const outcome = resolveSuperpowerIntake(answers, orientation ?? null)
 
-  // Phase 4: persist `outcome.routing` on CampaignMembership for `campaignRef`
-  // (additive migration). Intentionally not written yet — see file header.
-  return { ok: true, outcome }
+  const player = await getCurrentPlayer()
+  const persisted = player ? await persistResult(campaignRef, player.id, outcome) : false
+
+  return { ok: true, outcome, persisted }
 }

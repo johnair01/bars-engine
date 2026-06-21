@@ -66,8 +66,11 @@
       fallback; excludes claimed/done) + `summarizeNeeds` (per-unit progress,
       internal/external split — Six Faces: unit-typed, never blended, no
       multiplier). Tested needs.test.ts 6/6. (FR9/FR10 core)
-- [ ] **T3.1** Seed/author the **Mobility Quest** `Campaign` (slug, allyshipDomain,
-      wake-up/show-up copy) + its `CampaignMilestone`s if not present. (FR8)
+- [~] **T3.1** `scripts/seed-mobility-quest.ts` (`npm run seed:mobility-quest`) —
+      seeds 4 `CampaignMilestone`s + 10 `MilestoneNeed`s (all 7 superpowers, both
+      orientations, all 3 units) keyed by ref `mobility-quest`, idempotent
+      (deterministic ids; preserves progress). Full Campaign/Instance row (needs
+      instanceId+createdById) deferred. Apply migration, then run the seed. (FR8)
 - [x] **T3.2** `src/actions/milestone-needs.ts` — `listMilestoneNeedsForPlayer`
       (Tier 1 superpower+orientation via engine, Tier 2 open fallback; lens from
       arg or CampaignMembership), `claimMilestoneNeed`, `completeMilestoneNeed`.
@@ -86,9 +89,10 @@
       (`{ superpower, orientation, cardId, unit, value }`) for Mobility Quest;
       steward picks unit to match the milestone target, cannot weight one action
       over another. (FR11)
-- [ ] **T3.5a** Persist the **per-campaign** superpower result on
-      `CampaignMembership` (Phase 3: ride existing storage; Phase 4: typed
-      columns) — not on global `Player`. (Resolved Q: per-campaign)
+- [x] **T3.5a** `submitSuperpowerIntake` now persists the result per-campaign on
+      `CampaignMembership.superpower`/`.superpowerOrientation` (best-effort upsert,
+      creates a MEMBER membership if needed; never blocks the reveal; returns
+      `persisted`). tsc-verified vs the generated client. (Resolved Q: per-campaign)
 - [ ] **T3.6** Integration test: matched player sees Tier-1 needs; completing one
       advances the milestone; unmatched capacity falls back to Tier 2.
 - [ ] **T3.7** Gate: `npm run build` && `npm run check`.

@@ -145,6 +145,7 @@
     "seed:cert:donation-honor": "tsx scripts/seed-event-donation-honor-cert.ts",
     "seed:cert:mtgoa-menu-redesign": "tsx scripts/seed-cert-mtgoa-menu-redesign.ts",
     "seed:barn": "tsx scripts/seed-barn-raising.ts",
+    "seed:mobility-quest": "tsx scripts/with-env.ts \"tsx scripts/seed-mobility-quest.ts\"",
     "seed:barn-sendoff": "tsx scripts/seed-barn-sendoff.ts",
     "seed:cert:barn-raising-live": "tsx scripts/seed-cert-barn-raising-live.ts",
     "test:barn": "tsx src/lib/event/__tests__/barn-raising.test.ts && tsx src/lib/launch/__tests__/barn-credit.test.ts",
