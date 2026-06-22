@@ -46,9 +46,9 @@
 - [ ] **T3.2** Confirm the campaign reveal renders primary + secondary + margin
       band + shadow + mechanism disclosure, **no email gate**, WCAG-accessible.
       (FR7 — implemented in parent spec)
-- [ ] **T3.3** `scripts/seed-cert-superpower-quiz.ts` — `cert-superpower-quiz-v1`
-      (Twine + `CustomBar`, `isSystem:true`, `visibility:'public'`, idempotent),
-      fundraiser-framed; add `seed:cert:superpower-quiz` npm script. (FR8)
+- [x] **T3.3** `cert-superpower-quiz-v1` Twine+CustomBar cert seeded via
+      `scripts/seed-cert-mobility-superpower.ts` (`npm run seed:cert:superpower`),
+      isSystem+public, idempotent, fundraiser-framed. tsc+eslint clean. (FB)
 - [ ] **T3.4** Gate: `npm run build` && `npm run check`; run the cert end-to-end.
 
 ## Backlog sync

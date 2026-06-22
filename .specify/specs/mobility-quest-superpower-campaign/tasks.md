@@ -120,10 +120,11 @@
       `npm run db:record-schema-hash` per CLAUDE.md. (FR12)
 - [ ] **T4.5** Human-glance the generated `migration.sql` (additive, not destructive).
 - [ ] **T4.6** Migrate Phase-3 ad-hoc storage onto the new columns/model.
-- [ ] **T4.7** Verification Quest: `scripts/seed-cert-mobility-superpower.ts`
-      (Twine + `CustomBar` `cert-mobility-superpower-v1`, `isSystem: true`,
-      `visibility: 'public'`, idempotent), fundraiser-framed; add
-      `seed:cert:mobility-superpower` npm script. (FR13)
+- [x] **T4.7** Verification Quests — `scripts/seed-cert-mobility-superpower.ts`
+      (`npm run seed:cert:superpower`): two idempotent Twine+CustomBar certs,
+      `isSystem`+public, fundraiser-framed — `cert-superpower-quiz-v1` (the intake)
+      and `cert-mobility-superpower-v1` (discover→claim→complete loop). tsc+eslint
+      clean. Run in a DB env. (FR13)
 - [ ] **T4.8** Gate: `npm run build` && `npm run check`; run the verification quest
       end-to-end (the 6 reveal→claim→complete steps).
 
