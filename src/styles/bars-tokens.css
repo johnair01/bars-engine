@@ -1,0 +1,56 @@
+/* BARS Engine — design tokens (color + typography), wired globally.
+ * Source: Mobility Quest design handoff (tokens/colors.css + typography.css),
+ * mirroring src/lib/ui/card-tokens.ts. Components read these vars; never hardcode.
+ */
+:root {
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  --bars-bg-base:          #0a0908;
+  --bars-surface-card:     #1a1a18;
+  --bars-surface-elevated: #242420;
+  --bars-surface-inset:    #111110;
+
+  /* ── Text (warm grayscale) ────────────────────────────────────────────── */
+  --bars-text-primary:   #e8e6e0;
+  --bars-text-secondary: #a09e98;
+  --bars-text-muted:     #6b6965;
+
+  /* ── Hairlines & wells ────────────────────────────────────────────────── */
+  --bars-line:        rgba(255, 255, 255, 0.07);
+  --bars-line-strong: rgba(255, 255, 255, 0.12);
+  --bars-line-dashed: #2a2a27;
+  --bars-inset-top:   rgba(255, 255, 255, 0.06);
+
+  /* ── Vibeulon / gold (modifier foil) ──────────────────────────────────── */
+  --bars-gold:      #c9a84c;
+  --bars-gold-lite: #e8c878;
+
+  /* ── Liminal / primary action (RESERVED — never an element) ───────────── */
+  --bars-liminal:      #7c3aed;
+  --bars-liminal-glow: #a855f7;
+
+  /* ── Wuxing element palette (frame / glow / gem + gradient pair) ──────── */
+  --bars-fire-frame: #c1392b; --bars-fire-glow: #e8671a; --bars-fire-gem: #e74c3c; --bars-fire-grad-from: #431407; --bars-fire-grad-to: #1c0700;
+  --bars-water-frame: #1a3a5c; --bars-water-glow: #1a7a8a; --bars-water-gem: #2980b9; --bars-water-grad-from: #0c1e3e; --bars-water-grad-to: #020c1f;
+  --bars-wood-frame: #4a7c59; --bars-wood-glow: #27ae60; --bars-wood-gem: #2ecc71; --bars-wood-grad-from: #052e16; --bars-wood-grad-to: #011309;
+  --bars-metal-frame: #8e9aab; --bars-metal-glow: #bdc3c7; --bars-metal-gem: #bdc3c7; --bars-metal-grad-from: #1e2530; --bars-metal-grad-to: #0d1017;
+  --bars-earth-frame: #b5651d; --bars-earth-glow: #d4a017; --bars-earth-gem: #e0a93b; --bars-earth-grad-from: #451a03; --bars-earth-grad-to: #1a0a00;
+
+  /* ── Default element (player with no nation) ──────────────────────────── */
+  --bars-element-frame: var(--bars-earth-frame);
+  --bars-element-glow:  var(--bars-earth-glow);
+  --bars-element-gem:   var(--bars-earth-gem);
+
+  /* ── Type families ────────────────────────────────────────────────────── */
+  --bars-font-display: 'Jost', 'Futura PT', 'Futura', system-ui, sans-serif;
+  --bars-font-body:    'Nunito', ui-rounded, 'Segoe UI Rounded', system-ui, sans-serif;
+  --bars-font-mono:    'Space Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* Element scopes — set data-element on any subtree/card root to bind the
+   generic --bars-element-* vars to one element. */
+[data-element="fire"]    { --bars-element-frame: var(--bars-fire-frame);  --bars-element-glow: var(--bars-fire-glow);  --bars-element-gem: var(--bars-fire-gem);  --bars-element-grad-from: var(--bars-fire-grad-from);  --bars-element-grad-to: var(--bars-fire-grad-to);  }
+[data-element="water"]   { --bars-element-frame: var(--bars-water-frame); --bars-element-glow: var(--bars-water-glow); --bars-element-gem: var(--bars-water-gem); --bars-element-grad-from: var(--bars-water-grad-from); --bars-element-grad-to: var(--bars-water-grad-to); }
+[data-element="wood"]    { --bars-element-frame: var(--bars-wood-frame);  --bars-element-glow: var(--bars-wood-glow);  --bars-element-gem: var(--bars-wood-gem);  --bars-element-grad-from: var(--bars-wood-grad-from);  --bars-element-grad-to: var(--bars-wood-grad-to);  }
+[data-element="metal"]   { --bars-element-frame: var(--bars-metal-frame); --bars-element-glow: var(--bars-metal-glow); --bars-element-gem: var(--bars-metal-gem); --bars-element-grad-from: var(--bars-metal-grad-from); --bars-element-grad-to: var(--bars-metal-grad-to); }
+[data-element="earth"]   { --bars-element-frame: var(--bars-earth-frame); --bars-element-glow: var(--bars-earth-glow); --bars-element-gem: var(--bars-earth-gem); --bars-element-grad-from: var(--bars-earth-grad-from); --bars-element-grad-to: var(--bars-earth-grad-to); }
+[data-element="liminal"] { --bars-element-frame: var(--bars-liminal); --bars-element-glow: var(--bars-liminal-glow); --bars-element-gem: var(--bars-liminal-glow); --bars-element-grad-from: #2a2150; --bars-element-grad-to: #140e2a; }
