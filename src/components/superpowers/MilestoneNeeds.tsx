@@ -12,12 +12,13 @@ import { useState, type CSSProperties } from 'react'
 import { AllyshipCard, type AllyshipCardData, type AllyshipCardMod, type CardStatus } from './AllyshipCard'
 import { claimMilestoneNeed, completeMilestoneNeed, releaseMilestoneNeed } from '@/actions/milestone-needs'
 
+// Global design tokens (src/styles/bars-tokens.css) with literal fallbacks.
 const C = {
-  bg: '#0a0908',
-  card: '#1a1a18',
-  inset: '#111110',
-  line: 'rgba(255,255,255,0.07)',
-  insetTop: 'rgba(255,255,255,0.06)',
+  bg: 'var(--bars-bg-base, #0a0908)',
+  card: 'var(--bars-surface-card, #1a1a18)',
+  inset: 'var(--bars-surface-inset, #111110)',
+  line: 'var(--bars-line, rgba(255,255,255,0.07))',
+  insetTop: 'var(--bars-inset-top, rgba(255,255,255,0.06))',
 }
 
 export type MNUnit = 'action' | 'currency' | 'hours'
