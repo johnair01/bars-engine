@@ -5,7 +5,7 @@
  *
  * Returns the bounded set of active BARs the player is "carrying" in the
  * spatial world. This is the "hand" — limited inventory accessible without
- * leaving the play space. The Vault (legacy /hand page) is the unbounded
+ * leaving the play space. The Vault (legacy /vault page) is the unbounded
  * storage accessed by leaving play.
  *
  * Hand contents (current heuristic):

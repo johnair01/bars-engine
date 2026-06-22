@@ -6,6 +6,8 @@ import { getActiveDaemonMoves } from '@/actions/daemons'
 import { getAppConfig } from '@/actions/config'
 import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
+import { isValidAspectTarget } from '@/lib/quest-grammar/move-aspect'
+import type { MoveAspect, AllyshipTarget } from '@/lib/quest-grammar/types'
 
 // ---------------------------------------------------------------------------
 // Types (MVP schemas stored in DB as JSON strings)
@@ -290,7 +292,7 @@ export async function moveQuestToGraveyard(questId: string, confirmCostPaid: boo
 
     revalidatePath('/')
     revalidatePath('/bars/available')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     return { success: true }
   } catch (error) {
     console.error('[nation-moves] moveQuestToGraveyard failed:', error)
@@ -386,6 +388,32 @@ export async function applyNationMoveWithState(_prev: ApplyNationMoveState | nul
 
     if (!questId) return { error: 'Missing questId' }
     if (!moveKey) return { error: 'Missing moveKey' }
+
+    // IOA base layer: a Nation move is an overlay expression of a base move, so the
+    // optional inner/outer aspect is stamped on the base CustomBar this move creates
+    // (Layer 0 stays the single source of truth). Aspect is optional/Nation-free in shape.
+    const rawAspect = (formData.get('aspect') as string | null)?.trim() || ''
+    const rawTarget = (formData.get('allyshipTarget') as string | null)?.trim() || ''
+    let moveAspect: MoveAspect | null = null
+    let allyshipTarget: AllyshipTarget | null = null
+    if (rawAspect) {
+      if (rawAspect !== 'inner' && rawAspect !== 'outer') return { error: `Invalid aspect: ${rawAspect}` }
+      if (rawTarget && rawTarget !== 'individual' && rawTarget !== 'collective' && rawTarget !== 'system') {
+        return { error: `Invalid target: ${rawTarget}` }
+      }
+      const t = (rawTarget || undefined) as AllyshipTarget | undefined
+      if (!isValidAspectTarget(rawAspect, t)) {
+        return {
+          error: rawAspect === 'outer'
+            ? 'Outer (allyship) moves require a target (individual, collective, or system).'
+            : 'Inner moves are self-directed and cannot carry a target.',
+        }
+      }
+      moveAspect = rawAspect
+      allyshipTarget = t ?? null
+    } else if (rawTarget) {
+      return { error: 'A target requires an outer aspect.' }
+    }
 
     const quest = await db.customBar.findUnique({
       where: { id: questId },
@@ -503,6 +531,8 @@ export async function applyNationMoveWithState(_prev: ApplyNationMoveState | nul
           inputs: '[]',
           parentId: questId,
           rootId: 'temp',
+          moveAspect,
+          allyshipTarget,
         }
       })
 
@@ -520,6 +550,9 @@ export async function applyNationMoveWithState(_prev: ApplyNationMoveState | nul
           createdBarId: bar.id,
           inputsJson: JSON.stringify(validated.inputs),
           effectsJson: JSON.stringify(effects),
+          // Echo of the base CustomBar's aspect (canonical home is bar.moveAspect).
+          moveAspect,
+          allyshipTarget,
         }
       })
 
@@ -543,7 +576,7 @@ export async function applyNationMoveWithState(_prev: ApplyNationMoveState | nul
     revalidatePath('/')
     revalidatePath('/bars')
     revalidatePath('/bars/available')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
 
     return {
       ok: true,

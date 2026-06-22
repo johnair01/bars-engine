@@ -82,10 +82,10 @@ export async function runVaultCompost(input: {
         return { ok: false, error: msg }
     }
 
-    revalidatePath('/hand')
-    revalidatePath('/hand/drafts')
-    revalidatePath('/hand/quests')
-    revalidatePath('/hand/compost')
+    revalidatePath('/vault')
+    revalidatePath('/vault/drafts')
+    revalidatePath('/vault/quests')
+    revalidatePath('/vault/compost')
     revalidatePath('/bars')
 
     return { ok: true }

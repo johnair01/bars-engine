@@ -150,7 +150,7 @@ export function ChargeCaptureForm({
     startTransition(async () => {
       const result = await createQuestFromSuggestion(activeId, index)
       if ('error' in result) { setError(result.error); setCreatingIndex(null); return }
-      router.push(`/hand?quest=${result.questId}`)
+      router.push(`/vault?quest=${result.questId}`)
     })
   }
 

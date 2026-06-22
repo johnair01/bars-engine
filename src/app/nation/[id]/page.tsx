@@ -16,11 +16,9 @@ import { NationHeroBanner } from '@/components/nation/NationHeroBanner'
  * @example /nation/argyra
  * @agentDiscoverable false
  */
-export default async function NationByIdPage({ params }: { params: { id: string } }) {
-    // Await params as required in Next.js 15+ (or recent 14 changes)? Assuming yes or standard access
-    // Next 15 might require awaiting params if they are promises? Stick to standard for now.
-    // If build fails, I'll fix key access.
-    const { id } = await params // Await just in case
+export default async function NationByIdPage({ params }: { params: Promise<{ id: string }> }) {
+    // Next.js 15: route params are async and must be awaited.
+    const { id } = await params
 
     // Check if ID is a name (e.g. "Argyra") or ID.
     // Try finding by ID first, then Name.

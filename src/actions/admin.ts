@@ -744,7 +744,7 @@ export async function getAdminNation(id: string) {
     return db.nation.findUnique({ where: { id } })
 }
 
-export async function updateNation(id: string, data: { description?: string; imgUrl?: string; wakeUp?: string; cleanUp?: string; growUp?: string; showUp?: string }) {
+export async function updateNation(id: string, data: { description?: string; imgUrl?: string; wakeUp?: string; openUp?: string; cleanUp?: string; growUp?: string; showUp?: string }) {
     await checkAdmin()
     await db.nation.update({
         where: { id },
@@ -752,6 +752,7 @@ export async function updateNation(id: string, data: { description?: string; img
             description: data.description,
             imgUrl: data.imgUrl,
             wakeUp: data.wakeUp,
+            openUp: data.openUp,
             cleanUp: data.cleanUp,
             growUp: data.growUp,
             showUp: data.showUp,
@@ -766,7 +767,7 @@ export async function getAdminArchetype(id: string) {
     return db.archetype.findUnique({ where: { id } })
 }
 
-export async function updateArchetype(id: string, data: { description?: string; content?: string; centralConflict?: string; vibe?: string; energy?: string; primaryQuestion?: string; examples?: string; shadowSignposts?: string; lightSignposts?: string; wakeUp?: string; cleanUp?: string; growUp?: string; showUp?: string; emotionalFirstAid?: string }) {
+export async function updateArchetype(id: string, data: { description?: string; content?: string; centralConflict?: string; vibe?: string; energy?: string; primaryQuestion?: string; examples?: string; shadowSignposts?: string; lightSignposts?: string; wakeUp?: string; openUp?: string; cleanUp?: string; growUp?: string; showUp?: string; emotionalFirstAid?: string }) {
     await checkAdmin()
     await db.archetype.update({
         where: { id },
@@ -785,6 +786,7 @@ export async function updateArchetype(id: string, data: { description?: string; 
 
             // Flavor Text
             wakeUp: data.wakeUp,
+            openUp: data.openUp,
             cleanUp: data.cleanUp,
             growUp: data.growUp,
             showUp: data.showUp,

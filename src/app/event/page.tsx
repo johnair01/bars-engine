@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { BARN_CAMPAIGN_REF } from '@/lib/event/barn-raising'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
 import {
@@ -261,6 +262,15 @@ export default async function EventPage() {
             >
               {instance.donationButtonLabel?.trim() || 'Donate'}
             </CampaignDonateButton>
+            {instance.campaignRef === BARN_CAMPAIGN_REF && (
+              <Link
+                href="/event/barn"
+                className="inline-block text-sm font-semibold underline-offset-2 hover:underline"
+                style={{ color: 'var(--ep-text-secondary)' }}
+              >
+                See the three walls — car, pre-sale &amp; runway →
+              </Link>
+            )}
           </div>
         </section>
       )}

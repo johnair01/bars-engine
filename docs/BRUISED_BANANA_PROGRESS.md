@@ -8,7 +8,7 @@ This page summarizes what players see on the **dashboard** and **campaign hub** 
 2. **Fundraising bar** — When `goalAmountCents` is set, the strip shows raised vs goal (from `currentAmountCents`).
 3. **Suggested next step** — A deterministic hint, not coercion:
    - Finish **onboarding** (welcome + first quests) before other links take priority.
-   - If the **vault** is at capacity for drafts or unplaced quests → **Vault compost** (`/hand/compost`) first (no shame — space is a real constraint).
+   - If the **vault** is at capacity for drafts or unplaced quests → **Vault compost** (`/vault/compost`) first (no shame — space is a real constraint).
    - If you haven’t engaged the **gameboard** yet (no steward/bid/aid on slots) → **Gameboard**.
    - Otherwise → **Campaign hub** (8 spokes), plus secondary links (event, market, story) up to three actions.
 

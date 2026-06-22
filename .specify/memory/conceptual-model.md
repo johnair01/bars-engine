@@ -25,18 +25,50 @@ Schema: `CustomBar.allyshipDomain`, `Player.campaignDomainPreference`
 
 **Parser context**: For AI classification (book analysis), see `src/lib/allyship-domains-parser-context.ts`.
 
-## The 4 Moves (Personal Throughput)
+### Inner / Outer (the 8-cell board)
 
-How people get things done. Distinct from allyship domains.
+Each domain has an **inner** (left-hand: I/We interiors) and **outer** (right-hand: It/Its exteriors, incl. acting with/for others) cell → `AllyshipAspect = 'inner' | 'outer'`. The 5 WAVE moves are the **inner column** (self-development); the **outer column is allyship**. Encoded as `MoveCellAffinity` (`quest-grammar/types.ts`).
+
+| Domain | Inner | Outer (allyship) |
+|--------|-------|------------------|
+| Gather Resource | open to emotional energy (Open Up); build capacity (Grow Up) | acquire resources; help others gather inner resource |
+| Raise Awareness | storytelling, meaning-making (Wake Up) | marketing |
+| Skillful Organizing | parts work, self-governance (Clean Up) | organize structures/systems |
+| Direct Action | aligned doing (Show Up) | right-quadrant action in the world |
+
+Specs: [`integral-axes`](../specs/integral-axes/spec.md) (board), [`inner-outer-allyship-moves`](../specs/inner-outer-allyship-moves/spec.md) (outer column move grammar).
+
+**Three orthogonal axes:** horizontal = the 5 WAVE moves; **altitudinal = the 6 Game Master faces** (= Integral altitude levels Magenta→Teal); the board = domains × inner/outer. The **aspect** axis (inner ↔ outer) is below. See `FOUNDATIONS.md`.
+
+### Move × aspect grammar (IOA)
+
+Each WAVE move has an inner (self-development) and an outer (allyship) expression — `MoveAspect = 'inner' | 'outer'` (alias of `AllyshipAspect`). Outer moves act on an `AllyshipTarget = 'individual' | 'collective' | 'system'` and **require** a target; inner moves are self-directed. An `EnactedMove { move, aspect, target? }` is rendered deterministically by `describeMove` (authored matrix, no AI) in `quest-grammar/move-aspect.ts`.
+
+| Move | Inner | Outer (allyship) |
+|------|-------|------------------|
+| Wake Up | see for yourself | help others see — witness & amplify |
+| Open Up | receive energy/possibility within | hold space (receptive) — make room for another's resource |
+| Clean Up | parts work, self-governance | repair the systems |
+| Grow Up | build your own capacity | mentor & resource (generative) — build others' capacity |
+| Show Up | aligned doing (your action) | direct action with/for the cause |
+
+All move × target combos are valid (coarse by design); the with/for modifier is deferred. Types in `quest-grammar/types.ts`; grammar in `quest-grammar/move-aspect.ts`.
+
+## The 5 Moves (Personal Throughput)
+
+How people get things done. Distinct from allyship domains. WAVE order: **Wake → Open → Clean → Grow → Show**.
 
 | Move | Meaning |
 |------|---------|
 | **Wake Up** | See more of what's available (who, what, where, how) |
+| **Open Up** | Open to receive (others, feedback, input), open possibilities (reveal hidden options), and open to emergence (let something new come through) — the receptive/generative phase after noticing a charge |
 | **Clean Up** | Get more emotional energy; unblock vibeulon-generating actions |
 | **Grow Up** | Increase skill capacity through developmental lines |
 | **Show Up** | Do the work of completing quests |
 
-Schema: `Nation.wakeUp`, `Nation.cleanUp`, etc.; `CustomBar.moveType`
+Moves are **independent of the 5 elements** — adding Open Up does not force a 5-move-to-5-element alignment.
+
+Schema/grammar: `CustomBar.moveType`; `PersonalMoveType` / `WaveStage` in `src/lib/quest-grammar/types.ts`. `Nation.openUp` is not yet a field (deferred — see `.specify/specs/fifth-move-open-up`).
 
 ## Relationship
 
@@ -47,7 +79,7 @@ Schema: `Nation.wakeUp`, `Nation.cleanUp`, etc.; `CustomBar.moveType`
 
 ## Emotional Alchemy (Narrative Movement)
 
-Energy economy, not morality. 5 elements (Metal=Fear, Water=Sadness, Wood=Joy, Fire=Anger, Earth=Neutrality). WAVE: Wake → Clean → Grow → Show. 15 canonical moves: 5 Transcend (+2), 5 Generative (+1), 5 Control (-1). Control = high-cost precision, not negative.
+Energy economy, not morality. 5 elements (Metal=Fear, Water=Sadness, Wood=Joy, Fire=Anger, Earth=Neutrality). The elemental energy WAVE keeps its four stages here (Wake → Clean → Grow → Show) with 15 canonical moves: 5 Transcend (+2), 5 Generative (+1), 5 Control (-1). Control = high-cost precision, not negative. (Personal-throughput adds **Open Up** as a fifth move — Wake → Open → Clean → Grow → Show — but the 15 elemental moves are **not** remapped to it; moves and elements stay independent.)
 
 **Transcend vs Translate**: Transcend = altitude within channel (dissatisfied→satisfied). Translate = channel-to-channel. Generative and Control are translate moves (in/out of alignment).
 

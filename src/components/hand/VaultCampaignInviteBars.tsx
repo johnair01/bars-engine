@@ -4,7 +4,7 @@ import { CampaignInviteBarSendCard } from '@/components/hand/CampaignInviteBarSe
 
 /**
  * Lists event_invite BARs for campaign owners/stewards (and creators). BBR P0.
- * Placement: **Hand → Vault** (`/hand`), directly under the four-move room grid.
+ * Placement: **Hand → Vault** (`/vault`), directly under the four-move room grid.
  */
 export function VaultCampaignInviteBars({ bars }: { bars: VaultEventInviteBarRow[] }) {
   return (
@@ -14,7 +14,7 @@ export function VaultCampaignInviteBars({ bars }: { bars: VaultEventInviteBarRow
           Campaign invitation BARs
         </h2>
         <Link
-          href="/hand/forge-invitation"
+          href="/vault/forge-invitation"
           className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-fuchsia-400/90"
         >
           Forge new →

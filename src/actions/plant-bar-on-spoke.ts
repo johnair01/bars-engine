@@ -148,7 +148,7 @@ export async function plantBarOnSpoke(input: {
 
   revalidatePath('/campaign/hub')
   revalidatePath(`/world/${input.instanceSlug}`)
-  revalidatePath('/hand')
+  revalidatePath('/vault')
 
   return { success: true, planted }
 }

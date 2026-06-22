@@ -17,7 +17,7 @@ export default async function DaemonSeedDetailPage({ params }: { params: Promise
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="flex items-center gap-4">
           <Link
-            href="/hand"
+            href="/vault"
             className="p-2 bg-zinc-900 rounded-full hover:bg-zinc-800 transition-colors text-sm"
           >
             ←
@@ -73,7 +73,7 @@ export default async function DaemonSeedDetailPage({ params }: { params: Promise
         )}
 
         <div className="flex flex-wrap gap-4 text-sm text-zinc-500 pt-4 border-t border-zinc-800">
-          <Link href="/hand" className="hover:text-white transition">Hand</Link>
+          <Link href="/vault" className="hover:text-white transition">Hand</Link>
           <Link href="/bars" className="hover:text-white transition">My BARs</Link>
         </div>
       </div>

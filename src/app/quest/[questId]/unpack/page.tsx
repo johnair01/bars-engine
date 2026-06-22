@@ -47,7 +47,7 @@ export default async function UnpackQuestPage({
     <div className="min-h-screen bg-black text-zinc-200 font-sans">
       <div className="max-w-lg mx-auto px-4 py-12 space-y-8">
         <header className="space-y-1">
-          <Link href="/hand" className="text-xs text-zinc-600 hover:text-zinc-400 transition">
+          <Link href="/vault" className="text-xs text-zinc-600 hover:text-zinc-400 transition">
             ← Vault
           </Link>
           <p className="text-[10px] uppercase tracking-widest text-purple-500 mt-2">Unpack</p>

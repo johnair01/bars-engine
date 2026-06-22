@@ -35,9 +35,9 @@ export async function countUnplacedVaultQuests(playerId: string): Promise<number
 
 export const VAULT_CAP_MESSAGES = {
     privateDraftsAtCapacity: (max: number) =>
-        `Your Vault is full for private drafts (${max} max). Open Vault → Drafts or use Vault Compost (/hand/compost) to salvage and archive items.`,
+        `Your Vault is full for private drafts (${max} max). Open Vault → Drafts or use Vault Compost (/vault/compost) to salvage and archive items.`,
     unplacedQuestsAtCapacity: (max: number) =>
-        `Your Vault is full for unplaced personal quests (${max} max). Place a quest in a thread or gameboard from the Quests room, or use Vault Compost (/hand/compost) to clear space.`,
+        `Your Vault is full for unplaced personal quests (${max} max). Place a quest in a thread or gameboard from the Quests room, or use Vault Compost (/vault/compost) to clear space.`,
 } as const
 
 export async function assertCanCreatePrivateDraft(

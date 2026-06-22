@@ -82,7 +82,7 @@ export async function emitBarFromPassage(input: {
 
     revalidatePath('/', 'layout')
     revalidatePath('/bars')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
 
     await appendCyoaArtifactBar(input.adventureId, {
       barId: bar.id,

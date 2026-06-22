@@ -128,6 +128,22 @@ AI features (Book analysis, I Ching quest generation) require `OPENAI_API_KEY`. 
 3. **Verify**: Run `npm run smoke` — it checks for `OPENAI_API_KEY` presence.
 4. **Key format**: Valid keys start with `sk-` or `sk-proj-`. If rotated or expired, create a new key and update env.
 
+### RESEND_API_KEY / EMAIL_FROM (transactional email)
+
+Outbound email (Chapter One delivery, `/awaken` RSVP confirmations) sends via
+[Resend](https://resend.com) behind the single service at `src/lib/email`.
+
+| Variable | Required | Meaning |
+|----------|----------|---------|
+| `RESEND_API_KEY` | yes (to send) | Secret key from the Resend dashboard → API Keys. |
+| `EMAIL_FROM` | yes (to send) | Verified sender on your authenticated domain, e.g. `Wendell · Mastering Allyship <hello@send.masteringallyship.com>`. |
+| `EMAIL_REPLY_TO` | optional | A human inbox so replies reach a person, e.g. `wendell@masteringallyship.com`. |
+
+1. **Local**: add the three to `.env.local`.
+2. **Vercel**: Dashboard → Settings → Environment Variables (Production + Preview). Redeploy after adding.
+3. **Graceful degradation**: when `RESEND_API_KEY`/`EMAIL_FROM` are unset, sends are **logged and skipped** rather than throwing — the funnel still saves the lead, it just can't deliver yet.
+4. **Deliverability is gated on DNS**: `EMAIL_FROM`'s domain must be verified in Resend with **SPF, DKIM, and DMARC** records, or mail lands in spam. See Resend → Domains for the exact records.
+
 ### STRAND_CREATOR_PLAYER_ID (FastAPI / bars-agents)
 
 Strand and MCP-generated BARs attach to a **dedicated agent `Player`**, not an arbitrary first user.
@@ -155,7 +171,7 @@ Per [.specify/specs/vault-page-experience/spec.md](../.specify/specs/vault-page-
 
 Unset or empty env uses the default. Invalid values fall back to the default.
 
-**Vault Compost (Phase C):** Player flow at **`/hand/compost`** — salvage lines are stored on `CompostLedger`; eligible items are private drafts and unplaced personal quests (see `src/lib/vault-queries.ts` `compostEligibleWhere`). Batch size cap is `COMPOST_MAX_SOURCES` in `src/lib/vault-compost.ts` (not env in v1).
+**Vault Compost (Phase C):** Player flow at **`/vault/compost`** — salvage lines are stored on `CompostLedger`; eligible items are private drafts and unplaced personal quests (see `src/lib/vault-queries.ts` `compostEligibleWhere`). Batch size cap is `COMPOST_MAX_SOURCES` in `src/lib/vault-compost.ts` (not env in v1).
 
 ## GitHub Codespaces
 

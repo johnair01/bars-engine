@@ -85,7 +85,7 @@ export async function createFaceMoveBar(
     })
 
     revalidatePath('/')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     revalidatePath('/bars/available')
 
     return { success: true, barId: bar.id }
@@ -147,7 +147,7 @@ export async function createFaceMoveBarAs(
     })
 
     revalidatePath('/')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     revalidatePath('/bars/available')
 
     return { success: true, barId: bar.id }

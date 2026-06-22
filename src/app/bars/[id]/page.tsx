@@ -10,10 +10,17 @@ import { BarPhotoForm } from '@/components/bars/BarPhotoForm'
 import { BarDetailClient } from './BarDetailClient'
 import { CampaignInvitationAccept } from './CampaignInvitationAccept'
 import { BarFaceBackTabs } from '@/components/bars/BarFaceBackTabs'
+import { CanvasPreview } from '@/components/bars/CanvasPreview'
 import { GrowFromBar } from '@/components/bars/GrowFromBar'
+import { OfferToCampaign } from '@/components/bars/OfferToCampaign'
+import { listAttachableCampaigns } from '@/actions/campaign-attach'
 import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
+import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
+import { readHandDb } from '@/lib/hand-service'
+import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
+import { isHandVaultMovable } from '@/lib/hand-movement'
 
 /**
  * @page /bars/:id
@@ -57,11 +64,31 @@ export default async function BarDetailPage({
     const { bar, isOwner, isRecipient, recipientShare } = result
     const tags = bar.storyContent ? bar.storyContent.split(',').map(t => t.trim()).filter(Boolean) : []
 
+    // Canvas-capture display channels: layout (stickers), element (nation), charge (intensity 1–5).
+    const canvasLayout = bar.canvasLayout ?? null
+    const element = bar.nation ?? null
+    const charge = bar.intensity && /^[1-5]$/.test(bar.intensity) ? Number(bar.intensity) : null
+
     // Fetch recipients for the send form (only if owner)
     const recipients = isOwner ? await getBarRecipients() : []
 
     // Pending campaign role invitation for this BAR (if current user is target)
     const campaignInvitation = await getCampaignInvitationForBar(bar.id, player.id)
+
+    // TSG Phase 2 — campaigns this player can offer the BAR to (owner only).
+    const attachableCampaigns = isOwner ? await listAttachableCampaigns() : []
+
+    // Hand ↔ Vault movement (owner only). The toggle is offered on capture-type,
+    // non-planted BARs; Hand membership is read from HandSlot inline (no extra
+    // server action). Fork B restricts which maturities are movable.
+    const barMaturity = effectiveMaturity(parseSeedMetabolization(bar.seedMetabolization))
+    const canMoveHandVault =
+        isOwner &&
+        (bar.type === 'bar' || bar.type === 'charge_capture') &&
+        isHandVaultMovable(barMaturity)
+    const hand = canMoveHandVault ? await readHandDb(player.id) : null
+    const inHand = hand ? hand.slots.some(s => s.barId === bar.id) : false
+    const handFull = hand ? hand.filledCount >= hand.size : false
 
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
@@ -117,6 +144,16 @@ export default async function BarDetailPage({
                     )}
                 </div>
 
+                {/* Canvas preview — the frozen polaroid of placed stickers (canvas BARs only) */}
+                {canvasLayout && (
+                    <CanvasPreview
+                        canvasLayout={canvasLayout}
+                        element={element}
+                        charge={charge}
+                        title={bar.title}
+                    />
+                )}
+
                 {/* Card: Face | Back */}
                 <BarFaceBackTabs
                     description={bar.description}
@@ -125,6 +162,9 @@ export default async function BarDetailPage({
                     tags={tags}
                     isOwner={isOwner}
                     barId={bar.id}
+                    canvasLayout={canvasLayout}
+                    element={element}
+                    charge={charge}
                 />
 
                 {/* Pending external shares (owner only) */}
@@ -189,9 +229,35 @@ export default async function BarDetailPage({
                     </section>
                 )}
 
+                {/* Hold in Hand / Return to Vault (owner only, non-planted) */}
+                {canMoveHandVault && (
+                    <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6 flex items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-sm font-bold text-white">
+                                {inHand ? 'In your Hand' : 'In your Vault'}
+                            </h2>
+                            <p className="text-xs text-zinc-500 mt-1">
+                                {inHand
+                                    ? 'Carried into play. Return it to the Vault to free a slot.'
+                                    : 'Stored. Hold it in your Hand to work it with your daily charge and moves.'}
+                            </p>
+                        </div>
+                        <HandLocationToggle barId={bar.id} inHand={inHand} handFull={handFull} />
+                    </section>
+                )}
+
                 {/* Grow from this BAR (owner or recipient) — bar and charge_capture can become quests */}
                 {(isOwner || isRecipient) && (bar.type === 'bar' || bar.type === 'charge_capture') && (
                     <GrowFromBar barId={bar.id} />
+                )}
+
+                {/* Offer to a campaign (owner only) — the personal→collective bridge */}
+                {isOwner && (
+                    <OfferToCampaign
+                        barId={bar.id}
+                        currentCampaignRef={bar.campaignRef ?? null}
+                        campaigns={attachableCampaigns}
+                    />
                 )}
 
                 {/* Inspirations (social links) */}

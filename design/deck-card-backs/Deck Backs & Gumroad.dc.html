@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/cards.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+<script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  .seclabel { font-family: var(--bars-font-mono); font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: #6b6862; }
+  .frlabel { font-family: var(--bars-font-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #8a877f; }
+  .frnote { font-family: var(--bars-font-body); font-size: 12.5px; color: #9a978f; max-width: 460px; line-height: 1.5; }
+  @keyframes floaty { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
+  @keyframes foilshift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+  @keyframes sheensweep { 0%{transform:translateX(-160%) skewX(-18deg);} 60%,100%{transform:translateX(260%) skewX(-18deg);} }
+  .foil-anim { animation: foilshift 7s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .foil-anim { animation: none; } }
+</style>
+</helmet>
+
+<div style="{{ rootStyle }}">
+
+  <!-- ============================ HEADER ============================ -->
+  <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width:920px;">
+      <span class="seclabel" style="color:#b09a4e;">Mastering the Game of Allyship · Deck assets</span>
+      <h1 style="margin:10px 0 0;font-family:var(--bars-font-display);font-weight:700;font-size:40px;letter-spacing:-.018em;color:#26231d;">Card backs &amp; Gumroad images</h1>
+      <p style="margin:12px 0 0;font-family:var(--bars-font-body);font-size:16px;line-height:1.55;color:#5f5c55;max-width:680px;">Four directions for the back of every card — each built around the real MTGOA logo — plus a matching set of product-page images. Card fronts here use the deck's real typographic layout (no art needed).</p>
+    </div>
+  </sc-if>
+
+  <!-- ============================ ROW 1 · CARD BACKS ============================ -->
+  <div style="{{ rowStyle }}">
+    <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}">
+      <div style="flex-basis:100%;"><span class="seclabel">01 — Card backs · pick a direction</span></div>
+    </sc-if>
+
+    <!-- BACK A · SPOTLIGHT -->
+    <sc-if value="{{ visBack1 }}" hint-placeholder-val="{{ true }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">A · Spotlight — the mark, glowing</span></sc-if>
+        <div data-ex="back1" style="position:relative;width:460px;height:644px;border-radius:18px;overflow:hidden;border:3px solid var(--gold);background:radial-gradient(120% 80% at 50% 42%, #161220 0%, #0a0810 60%, #060509 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 34px 1px color-mix(in srgb,var(--bars-liminal) 26%,transparent),0 30px 64px -28px rgba(0,0,0,.95);">
+          <!-- substrate tooth -->
+          <div style="{{ substrateStyle }}"></div>
+          <!-- guilloche engraved field -->
+          <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;opacity:.5;" fill="none">
+            <sc-for list="{{ g1Rings }}" as="d" hint-placeholder-count="9">
+              <path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 17%,transparent)" stroke-width="0.7"></path>
+            </sc-for>
+          </svg>
+          <!-- concentric hexagon spotlight -->
+          <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;" fill="none">
+            <polygon points="230,82 438,202 438,442 230,562 22,442 22,202" stroke="color-mix(in srgb,var(--gold) 26%,transparent)" stroke-width="1.4"/>
+            <polygon points="230,129 397,225 397,418 230,515 63,418 63,225" stroke="color-mix(in srgb,var(--bars-fire-gem) 32%,transparent)" stroke-width="1.4"/>
+            <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 30%,transparent)" stroke-width="1.4"/>
+            <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 34%,transparent)" stroke-width="1.4"/>
+            <polygon points="230,266 278,294 278,350 230,378 182,350 182,294" stroke="color-mix(in srgb,var(--gold) 32%,transparent)" stroke-width="1.4"/>
+          </svg>
+          <div style="position:absolute;top:44px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.34em;color:color-mix(in srgb,var(--gold) 82%,transparent);">◆ THE ALLYSHIP DECK ◆</span></div>
+          <!-- mark -->
+          <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:360px;height:360px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 62%);"></div>
+          <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:368px;height:368px;object-fit:contain;filter:drop-shadow(0 0 26px color-mix(in srgb,var(--bars-liminal) 55%,transparent));">
+          <!-- spot-gloss sheen sweep over mark -->
+          <div style="position:absolute;left:0;right:0;top:130px;height:360px;overflow:hidden;pointer-events:none;">
+            <div style="position:absolute;top:0;bottom:0;left:0;width:90px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);animation:sheensweep 6.5s ease-in-out infinite;"></div>
+          </div>
+          <!-- emboss / glow underlay for frame -->
+          <div style="position:absolute;inset:14px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(0,0,0,.5),0 0 16px -3px color-mix(in srgb,var(--gold) 50%,transparent),inset 0 0 22px -10px color-mix(in srgb,var(--gold) 60%,transparent);"></div>
+          <!-- foil gradient ring -->
+          <div class="{{ foilClass }}" style="position:absolute;inset:14px;border-radius:11px;padding:3px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+          <!-- corner hexagon gems · element color pops -->
+          <svg width="18" height="20" viewBox="0 0 28 32" style="position:absolute;top:40px;left:40px;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--bars-fire-glow) 80%,transparent));"><polygon points="14,1.5 26,8.75 26,23.25 14,30.5 2,23.25 2,8.75" fill="var(--bars-fire-gem)"/></svg>
+          <svg width="18" height="20" viewBox="0 0 28 32" style="position:absolute;top:40px;right:40px;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--bars-water-glow) 80%,transparent));"><polygon points="14,1.5 26,8.75 26,23.25 14,30.5 2,23.25 2,8.75" fill="var(--bars-water-gem)"/></svg>
+          <svg width="18" height="20" viewBox="0 0 28 32" style="position:absolute;bottom:40px;left:40px;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--bars-wood-glow) 80%,transparent));"><polygon points="14,1.5 26,8.75 26,23.25 14,30.5 2,23.25 2,8.75" fill="var(--bars-wood-gem)"/></svg>
+          <svg width="18" height="20" viewBox="0 0 28 32" style="position:absolute;bottom:40px;right:40px;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--bars-earth-glow) 80%,transparent));"><polygon points="14,1.5 26,8.75 26,23.25 14,30.5 2,23.25 2,8.75" fill="var(--bars-earth-gem)"/></svg>
+        </div>
+      </figure>
+    </sc-if>
+
+    <!-- BACK B · GOLD SEAL + FIVE SIGILS -->
+    <sc-if value="{{ visBack2 }}" hint-placeholder-val="{{ false }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">B · Gold Seal — mark + five nations</span></sc-if>
+        <div data-ex="back2" style="position:relative;width:460px;height:644px;border-radius:18px;overflow:hidden;border:2px solid var(--gold);background:radial-gradient(120% 80% at 50% 40%, #14111c, #08070a 78%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 34px 1px color-mix(in srgb,var(--gold) 16%,transparent),0 30px 64px -28px rgba(0,0,0,.95);">
+          <div style="position:absolute;inset:16px;border-radius:11px;border:1px solid color-mix(in srgb,var(--gold) 34%,transparent);"></div>
+          <div style="position:absolute;inset:24px;border-radius:8px;border:1px solid color-mix(in srgb,var(--gold) 12%,transparent);"></div>
+          <div style="position:absolute;top:44px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:10.5px;letter-spacing:.36em;color:color-mix(in srgb,var(--gold) 74%,transparent);">FIVE NATIONS · ONE ROAD</span></div>
+          <!-- thin gold ring connecting sigils -->
+          <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;" fill="none">
+            <circle cx="230" cy="322" r="186" stroke="color-mix(in srgb,var(--gold) 14%,transparent)" stroke-width="1"/>
+            <polygon points="230,158 386,278 326,470 134,470 74,278" stroke="color-mix(in srgb,var(--gold) 22%,transparent)" stroke-width="1.2"/>
+          </svg>
+          <!-- five sigils -->
+          <span style="position:absolute;left:230px;top:158px;transform:translate(-50%,-50%);font-family:var(--bars-font-body);font-size:30px;color:var(--bars-fire-gem);text-shadow:0 0 16px color-mix(in srgb,var(--bars-fire-glow) 80%,transparent);">火</span>
+          <span style="position:absolute;left:386px;top:278px;transform:translate(-50%,-50%);font-family:var(--bars-font-body);font-size:30px;color:var(--bars-wood-gem);text-shadow:0 0 16px color-mix(in srgb,var(--bars-wood-glow) 80%,transparent);">木</span>
+          <span style="position:absolute;left:326px;top:470px;transform:translate(-50%,-50%);font-family:var(--bars-font-body);font-size:30px;color:var(--bars-metal-gem);text-shadow:0 0 16px color-mix(in srgb,var(--bars-metal-glow) 80%,transparent);">金</span>
+          <span style="position:absolute;left:134px;top:470px;transform:translate(-50%,-50%);font-family:var(--bars-font-body);font-size:30px;color:var(--bars-water-gem);text-shadow:0 0 16px color-mix(in srgb,var(--bars-water-glow) 80%,transparent);">水</span>
+          <span style="position:absolute;left:74px;top:278px;transform:translate(-50%,-50%);font-family:var(--bars-font-body);font-size:30px;color:var(--bars-earth-gem);text-shadow:0 0 16px color-mix(in srgb,var(--bars-earth-glow) 80%,transparent);">土</span>
+          <!-- central logo -->
+          <div style="position:absolute;left:50%;top:322px;transform:translate(-50%,-50%);width:210px;height:210px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 24%,transparent), transparent 66%);"></div>
+          <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:322px;transform:translate(-50%,-50%);width:230px;height:230px;object-fit:contain;filter:drop-shadow(0 0 18px color-mix(in srgb,var(--bars-liminal) 50%,transparent));">
+          <div style="position:absolute;bottom:48px;left:0;right:0;text-align:center;font-family:var(--bars-font-display);font-weight:600;font-size:15px;letter-spacing:.04em;color:#e7e2d6;">Pave the Yellow Brick Road</div>
+        </div>
+      </figure>
+    </sc-if>
+
+    <!-- BACK C · VIOLET RETAIL -->
+    <sc-if value="{{ visBack3 }}" hint-placeholder-val="{{ false }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">C · Violet — the logo's native world</span></sc-if>
+        <div data-ex="back3" style="position:relative;width:460px;height:644px;border-radius:18px;overflow:hidden;border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);background:radial-gradient(115% 75% at 50% 38%, #2c2046 0%, #150f28 56%, #0a0714 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 30px 64px -28px rgba(0,0,0,.95);">
+          <!-- gold corner brackets -->
+          <div style="position:absolute;top:26px;left:26px;width:46px;height:46px;border-top:2px solid var(--gold);border-left:2px solid var(--gold);border-radius:6px 0 0 0;opacity:.8;"></div>
+          <div style="position:absolute;top:26px;right:26px;width:46px;height:46px;border-top:2px solid var(--gold);border-right:2px solid var(--gold);border-radius:0 6px 0 0;opacity:.8;"></div>
+          <div style="position:absolute;bottom:26px;left:26px;width:46px;height:46px;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold);border-radius:0 0 0 6px;opacity:.8;"></div>
+          <div style="position:absolute;bottom:26px;right:26px;width:46px;height:46px;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold);border-radius:0 0 6px 0;opacity:.8;"></div>
+          <div style="position:absolute;top:54px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:10.5px;letter-spacing:.34em;color:color-mix(in srgb,var(--gold) 76%,transparent);">AN ORACLE DECK FOR ALLIES</span></div>
+          <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:300px;transform:translate(-50%,-50%);width:336px;height:336px;object-fit:contain;filter:drop-shadow(0 0 24px rgba(124,58,237,.5));">
+          <div style="position:absolute;bottom:78px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:21px;letter-spacing:-.01em;color:#f3eee4;">Knowing isn’t doing.</span></div>
+          <div style="position:absolute;bottom:50px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.3em;color:color-mix(in srgb,var(--gold) 60%,transparent);">120 CARDS · 5 MOVES</span></div>
+        </div>
+      </figure>
+    </sc-if>
+
+    <!-- BACK D · POSTER -->
+    <sc-if value="{{ visBack4 }}" hint-placeholder-val="{{ false }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">D · Poster — mark + tagline stack</span></sc-if>
+        <div data-ex="back4" style="position:relative;width:460px;height:644px;border-radius:18px;overflow:hidden;border:2px solid var(--gold);background:radial-gradient(120% 60% at 50% 0%, #1a1424 0%, #0b0810 56%, #060509 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 30px 1px color-mix(in srgb,var(--bars-liminal) 22%,transparent),0 30px 64px -28px rgba(0,0,0,.95);">
+          <div style="position:absolute;inset:16px;border-radius:11px;border:1px solid color-mix(in srgb,var(--gold) 28%,transparent);"></div>
+          <!-- logo top -->
+          <div style="position:absolute;left:50%;top:206px;transform:translate(-50%,-50%);width:230px;height:230px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 26%,transparent), transparent 64%);"></div>
+          <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:206px;transform:translate(-50%,-50%);width:286px;height:286px;object-fit:contain;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--bars-liminal) 52%,transparent));">
+          <!-- divider -->
+          <div style="position:absolute;left:50%;top:372px;transform:translateX(-50%);width:120px;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 70%,transparent),transparent);"></div>
+          <!-- tagline -->
+          <div style="position:absolute;left:0;right:0;top:402px;text-align:center;padding:0 44px;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:30px;line-height:1.06;letter-spacing:-.015em;color:#f5f0e6;">Draw a card.<br>Make one move.</span></div>
+          <!-- five sigil rail -->
+          <div style="position:absolute;left:0;right:0;bottom:84px;display:flex;justify-content:center;gap:24px;">
+            <span style="font-family:var(--bars-font-body);font-size:20px;color:var(--bars-fire-gem);text-shadow:0 0 12px var(--bars-fire-glow);">火</span>
+            <span style="font-family:var(--bars-font-body);font-size:20px;color:var(--bars-water-gem);text-shadow:0 0 12px var(--bars-water-glow);">水</span>
+            <span style="font-family:var(--bars-font-body);font-size:20px;color:var(--bars-wood-gem);text-shadow:0 0 12px var(--bars-wood-glow);">木</span>
+            <span style="font-family:var(--bars-font-body);font-size:20px;color:var(--bars-metal-gem);text-shadow:0 0 12px var(--bars-metal-glow);">金</span>
+            <span style="font-family:var(--bars-font-body);font-size:20px;color:var(--bars-earth-gem);text-shadow:0 0 12px var(--bars-earth-glow);">土</span>
+          </div>
+          <div style="position:absolute;bottom:48px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.3em;color:color-mix(in srgb,var(--gold) 58%,transparent);">MASTERING THE GAME OF ALLYSHIP</span></div>
+        </div>
+      </figure>
+    </sc-if>
+  </div>
+
+  <!-- ============================ ROW 2 · GUMROAD ============================ -->
+  <div style="{{ rowStyle }}">
+    <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}">
+      <div style="flex-basis:100%;"><span class="seclabel">02 — Gumroad product images</span></div>
+    </sc-if>
+
+    <!-- COVER 16:9 -->
+    <sc-if value="{{ visCover }}" hint-placeholder-val="{{ true }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">Cover / hero banner · 1280×720</span></sc-if>
+        <div data-ex="cover" style="position:relative;width:1280px;height:720px;overflow:hidden;background:radial-gradient(120% 100% at 16% 0%, #1a1622 0%, #0a090c 64%);display:flex;align-items:center;">
+          <div style="position:absolute;inset:0;background-image:radial-gradient(closest-side at 78% 52%, color-mix(in srgb,var(--bars-liminal) 22%,transparent), transparent);"></div>
+          <!-- left copy -->
+          <div style="position:relative;z-index:2;padding:0 0 0 96px;max-width:620px;">
+            <span style="font-family:var(--bars-font-mono);font-size:14px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);">An oracle deck for allies</span>
+            <h2 style="margin:20px 0 0;font-family:var(--bars-font-display);font-weight:700;font-size:66px;line-height:.98;letter-spacing:-.02em;color:#fff;">Knowing isn't<br>the same<br>as doing.</h2>
+            <p style="margin:24px 0 0;font-family:var(--bars-font-body);font-size:20px;line-height:1.5;color:#b8b6b0;max-width:480px;">Draw a card. Get one concrete move sized to your real life. Take it. 120 cards across five moves.</p>
+            <div style="display:flex;align-items:center;gap:14px;margin-top:34px;">
+              <span style="font-family:var(--bars-font-display);font-weight:700;font-size:18px;color:#fff;background:var(--bars-liminal);padding:14px 26px;border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 10px 26px -10px var(--bars-liminal);">Get the deck</span>
+              <span style="font-family:var(--bars-font-mono);font-size:14px;letter-spacing:.04em;color:#cfcdc7;">$22 digital · $65 physical</span>
+            </div>
+          </div>
+          <!-- right · struck gold deck -->
+          <div style="position:absolute;right:96px;top:50%;transform:translateY(-50%);width:540px;height:560px;z-index:1;">
+            <!-- halo -->
+            <div style="position:absolute;left:280px;top:280px;transform:translate(-50%,-50%);width:470px;height:470px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 32%,transparent), transparent 64%);"></div>
+            <!-- floor glow -->
+            <div style="position:absolute;left:280px;top:486px;transform:translateX(-50%);width:420px;height:74px;border-radius:50%;background:radial-gradient(ellipse, color-mix(in srgb,var(--bars-liminal) 34%,transparent), transparent 70%);filter:blur(8px);"></div>
+            <!-- tuck box behind -->
+            <div style="position:absolute;left:34px;top:118px;width:250px;height:358px;transform:rotate(-9deg);">
+              <div style="position:absolute;inset:0;border-radius:13px;overflow:hidden;border:3px solid var(--gold);background:linear-gradient(158deg, #1c1730 0%, #140f22 55%, #0e0a18 100%);box-shadow:0 40px 70px -26px rgba(0,0,0,.92),0 0 44px -2px color-mix(in srgb,var(--bars-liminal) 48%,transparent),inset 0 1px 0 rgba(255,255,255,.1);">
+                <div style="{{ substrateStyle }}"></div>
+                <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:.5;" fill="none"><sc-for list="{{ g1Rings }}" as="d" hint-placeholder-count="9"><path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 15%,transparent)" stroke-width="1"></path></sc-for></svg>
+                <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;" fill="none">
+                  <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 24%,transparent)" stroke-width="1.6"/>
+                  <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 28%,transparent)" stroke-width="1.6"/>
+                </svg>
+                <div style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 64%);"></div>
+              </div>
+              <div style="position:absolute;left:0;top:0;bottom:0;width:52px;border-radius:13px 0 0 13px;background:linear-gradient(90deg, rgba(0,0,0,.42), rgba(0,0,0,0));"></div>
+              <div style="position:absolute;inset:11px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 0 0 1px rgba(0,0,0,.5);"></div>
+              <div class="{{ foilClass }}" style="position:absolute;inset:11px;border-radius:8px;padding:2.5px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+              <div style="position:absolute;left:0;right:0;top:50px;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:.3em;color:color-mix(in srgb,var(--gold) 80%,transparent);">THE ALLYSHIP DECK</span></div>
+              <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:186px;height:186px;object-fit:contain;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--bars-liminal) 52%,transparent));">
+            </div>
+            <!-- hero back card -->
+            <div style="position:absolute;left:206px;top:64px;width:298px;height:417px;transform:rotate(7deg);border-radius:16px;overflow:hidden;border:3px solid var(--gold);background:radial-gradient(120% 80% at 50% 42%, #161220 0%, #0a0810 60%, #060509 100%);box-shadow:0 48px 80px -26px rgba(0,0,0,.95),0 0 46px -2px color-mix(in srgb,var(--bars-liminal) 46%,transparent),inset 0 1px 0 rgba(255,255,255,.08);">
+              <div style="{{ substrateStyle }}"></div>
+              <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:.5;" fill="none"><sc-for list="{{ g1Rings }}" as="d" hint-placeholder-count="9"><path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 16%,transparent)" stroke-width="0.9"></path></sc-for></svg>
+              <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;" fill="none">
+                <polygon points="230,82 438,202 438,442 230,562 22,442 22,202" stroke="color-mix(in srgb,var(--gold) 26%,transparent)" stroke-width="1.4"/>
+                <polygon points="230,129 397,225 397,418 230,515 63,418 63,225" stroke="color-mix(in srgb,var(--bars-fire-gem) 32%,transparent)" stroke-width="1.4"/>
+                <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 30%,transparent)" stroke-width="1.4"/>
+                <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 34%,transparent)" stroke-width="1.4"/>
+              </svg>
+              <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:240px;height:240px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 62%);"></div>
+              <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:248px;height:248px;object-fit:contain;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--bars-liminal) 55%,transparent));">
+              <div style="position:absolute;left:0;right:0;top:28px;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:.32em;color:color-mix(in srgb,var(--gold) 82%,transparent);">◆ THE ALLYSHIP DECK ◆</span></div>
+              <div style="position:absolute;inset:12px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(0,0,0,.5),inset 0 0 20px -9px color-mix(in srgb,var(--gold) 60%,transparent);"></div>
+              <div class="{{ foilClass }}" style="position:absolute;inset:12px;border-radius:11px;padding:2.5px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+              <div style="position:absolute;left:0;right:0;top:110px;height:240px;overflow:hidden;pointer-events:none;"><div style="position:absolute;top:0;bottom:0;left:0;width:60px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:sheensweep 6.5s ease-in-out infinite;"></div></div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </sc-if>
+
+    <!-- FAN 1:1 -->
+    <sc-if value="{{ visFan }}" hint-placeholder-val="{{ false }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">Card fan · 1080×1080</span></sc-if>
+        <div data-ex="fan" style="position:relative;width:1080px;height:1080px;overflow:hidden;background:radial-gradient(100% 80% at 50% 34%, #181421 0%, #09080b 72%);">
+          <div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:360px;height:360px;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 26%,transparent), transparent 66%);"></div>
+          <div style="position:absolute;top:88px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:16px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);">The Allyship Deck</span></div>
+          <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-46%);width:1px;height:1px;">
+            <sc-for list="{{ fanFive }}" as="c" hint-placeholder-count="5">
+              <div style="{{ c.fanStyle }}">
+                <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top left, color-mix(in srgb, {{ c.glow }} 24%, transparent), transparent 60%);"></div>
+                <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+                  <div style="padding:16px 17px 11px;border-bottom:1px solid color-mix(in srgb, {{ c.frame }} 40%, transparent);"><h3 style="margin:0;font-family:var(--bars-font-display);font-weight:600;font-size:21px;line-height:1.05;color:#fff;">{{ c.title }}</h3></div>
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:13px 17px 0;"><span style="{{ c.pipStyle }}">{{ c.moveIcon }}</span><span style="{{ c.faceBadge }}">{{ c.faceMono }}</span></div>
+                  <div style="padding:10px 17px 0;"><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:{{ c.gem }};">◇ {{ c.domainLabel }}</span></div>
+                  <div style="flex:1;padding:11px 17px 0;"><p style="margin:0;font-family:var(--bars-font-body);font-size:13px;line-height:1.42;color:#dcdad4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;">{{ c.ask }}</p></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 17px 15px;border-top:1px solid color-mix(in srgb, {{ c.frame }} 30%, transparent);"><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:.08em;color:#8a877f;">{{ c.minutes }} MIN</span><span style="font-family:var(--bars-font-mono);font-size:14px;color:var(--bars-earth-gem);">♦ {{ c.reward }}</span></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="position:absolute;bottom:96px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-display);font-weight:600;font-size:26px;color:#efe9dd;">One card. One concrete move.</span></div>
+        </div>
+      </figure>
+    </sc-if>
+
+    <!-- BACK + BOX 1:1 -->
+    <sc-if value="{{ visBox }}" hint-placeholder-val="{{ false }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">What you get · 1080×1080</span></sc-if>
+        <div data-ex="box" style="position:relative;width:1080px;height:1080px;overflow:hidden;background:radial-gradient(110% 85% at 50% 22%, #221c30 0%, #0e0b16 72%);">
+          <div style="position:absolute;top:84px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:15px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);">Physical &amp; digital</span></div>
+          <!-- floor glow -->
+          <div style="position:absolute;left:50%;bottom:188px;transform:translateX(-50%);width:660px;height:150px;border-radius:50%;background:radial-gradient(ellipse, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 70%);filter:blur(10px);"></div>
+          <!-- tuck box -->
+          <div style="position:absolute;left:300px;top:330px;width:300px;height:430px;transform:rotate(-3deg);">
+            <!-- body + textures (clipped) -->
+            <div style="position:absolute;inset:0;border-radius:14px;overflow:hidden;border:3px solid var(--gold);background:linear-gradient(158deg, #1c1730 0%, #140f22 55%, #0e0a18 100%);box-shadow:0 44px 80px -26px rgba(0,0,0,.92),0 0 54px -2px color-mix(in srgb,var(--bars-liminal) 52%,transparent),inset 0 1px 0 rgba(255,255,255,.1);">
+              <div style="{{ substrateStyle }}"></div>
+              <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:.5;" fill="none">
+                <sc-for list="{{ g1Rings }}" as="d" hint-placeholder-count="9"><path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 15%,transparent)" stroke-width="1"></path></sc-for>
+              </svg>
+              <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;" fill="none">
+                <polygon points="230,129 397,225 397,418 230,515 63,418 63,225" stroke="color-mix(in srgb,var(--bars-fire-gem) 26%,transparent)" stroke-width="1.6"/>
+                <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 24%,transparent)" stroke-width="1.6"/>
+                <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 28%,transparent)" stroke-width="1.6"/>
+              </svg>
+              <div style="position:absolute;left:50%;top:218px;transform:translate(-50%,-50%);width:210px;height:210px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 64%);"></div>
+            </div>
+            <!-- spine shading -->
+            <div style="position:absolute;left:0;top:0;bottom:0;width:62px;border-radius:14px 0 0 14px;background:linear-gradient(90deg, rgba(0,0,0,.42), rgba(0,0,0,0));"></div>
+            <!-- emboss underlay -->
+            <div style="position:absolute;inset:12px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(0,0,0,.5),inset 0 0 18px -8px color-mix(in srgb,var(--gold) 60%,transparent);"></div>
+            <!-- foil ring -->
+            <div class="{{ foilClass }}" style="position:absolute;inset:12px;border-radius:9px;padding:2.5px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+            <!-- sheen -->
+            <div style="position:absolute;left:0;right:0;top:118px;height:200px;overflow:hidden;pointer-events:none;"><div style="position:absolute;top:0;bottom:0;left:0;width:60px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);animation:sheensweep 6.5s ease-in-out infinite;"></div></div>
+            <div style="position:absolute;left:0;right:0;top:58px;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:10.5px;letter-spacing:.32em;color:color-mix(in srgb,var(--gold) 82%,transparent);">THE ALLYSHIP DECK</span></div>
+            <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:218px;transform:translate(-50%,-50%);width:222px;height:222px;object-fit:contain;filter:drop-shadow(0 0 16px color-mix(in srgb,var(--bars-liminal) 55%,transparent));">
+            <div style="position:absolute;left:0;right:0;bottom:54px;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:.34em;color:color-mix(in srgb,var(--gold) 74%,transparent);">120 CARDS · 5 MOVES</span></div>
+          </div>
+          <!-- single card leaning in front -->
+          <div style="position:absolute;left:560px;top:392px;width:248px;height:347px;transform:rotate(6deg);border-radius:14px;overflow:hidden;border:3px solid var(--gold);background:linear-gradient(158deg, #1f1838 0%, #160f28 60%, #100c20 100%);box-shadow:0 40px 66px -24px rgba(0,0,0,.92),0 0 40px -6px color-mix(in srgb,var(--bars-liminal) 42%,transparent),inset 0 1px 0 rgba(255,255,255,.08);">
+            <div style="{{ substrateStyle }}"></div>
+            <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:.5;" fill="none">
+              <sc-for list="{{ g1Rings }}" as="d" hint-placeholder-count="9"><path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 15%,transparent)" stroke-width="1"></path></sc-for>
+            </svg>
+            <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;" fill="none">
+              <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 26%,transparent)" stroke-width="1.8"/>
+              <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 30%,transparent)" stroke-width="1.8"/>
+            </svg>
+            <div style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:160px;height:160px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 28%,transparent), transparent 64%);"></div>
+            <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:182px;height:182px;object-fit:contain;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--bars-liminal) 52%,transparent));">
+            <div style="position:absolute;inset:9px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 0 0 1px rgba(0,0,0,.45);"></div>
+            <div class="{{ foilClass }}" style="position:absolute;inset:9px;border-radius:8px;padding:2px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+          </div>
+          <div style="position:absolute;bottom:104px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-body);font-size:19px;color:#b8b6b0;">120 oracle cards · deck box · lifetime card-app access</span></div>
+        </div>
+      </figure>
+    </sc-if>
+
+    <!-- PRODUCT THUMBNAIL 1:1 -->
+    <sc-if value="{{ visThumb }}" hint-placeholder-val="{{ false }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">Product thumbnail · 1080×1080</span></sc-if>
+        <div data-ex="thumb" style="position:relative;width:1080px;height:1080px;overflow:hidden;background:radial-gradient(108% 90% at 50% 32%, #1b1526 0%, #0a0810 70%);">
+          <!-- ambient halo behind card -->
+          <div style="position:absolute;left:50%;top:360px;transform:translate(-50%,-50%);width:620px;height:620px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 64%);"></div>
+          <!-- floor glow -->
+          <div style="position:absolute;left:50%;top:734px;transform:translateX(-50%);width:520px;height:90px;border-radius:50%;background:radial-gradient(ellipse, color-mix(in srgb,var(--bars-liminal) 34%,transparent), transparent 70%);filter:blur(8px);"></div>
+          <!-- struck-gold back, hero -->
+          <div style="position:absolute;left:305px;top:64px;width:470px;height:658px;transform:rotate(-3deg);border-radius:20px;overflow:hidden;border:3px solid var(--gold);background:radial-gradient(120% 80% at 50% 42%, #161220 0%, #0a0810 60%, #060509 100%);box-shadow:0 56px 90px -30px rgba(0,0,0,.95),0 0 50px -2px color-mix(in srgb,var(--bars-liminal) 46%,transparent),inset 0 1px 0 rgba(255,255,255,.08);">
+            <div style="{{ substrateStyle }}"></div>
+            <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:.5;" fill="none">
+              <sc-for list="{{ g1Rings }}" as="d" hint-placeholder-count="9"><path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 16%,transparent)" stroke-width="0.8"></path></sc-for>
+            </svg>
+            <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;" fill="none">
+              <polygon points="230,82 438,202 438,442 230,562 22,442 22,202" stroke="color-mix(in srgb,var(--gold) 26%,transparent)" stroke-width="1.4"/>
+              <polygon points="230,129 397,225 397,418 230,515 63,418 63,225" stroke="color-mix(in srgb,var(--bars-fire-gem) 32%,transparent)" stroke-width="1.4"/>
+              <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 30%,transparent)" stroke-width="1.4"/>
+              <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 34%,transparent)" stroke-width="1.4"/>
+              <polygon points="230,266 278,294 278,350 230,378 182,350 182,294" stroke="color-mix(in srgb,var(--gold) 32%,transparent)" stroke-width="1.4"/>
+            </svg>
+            <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:360px;height:360px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 62%);"></div>
+            <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:378px;height:378px;object-fit:contain;filter:drop-shadow(0 0 26px color-mix(in srgb,var(--bars-liminal) 55%,transparent));">
+            <div style="position:absolute;left:0;right:0;top:40px;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.34em;color:color-mix(in srgb,var(--gold) 82%,transparent);">◆ THE ALLYSHIP DECK ◆</span></div>
+            <div style="position:absolute;inset:14px;border-radius:13px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(0,0,0,.5),inset 0 0 22px -10px color-mix(in srgb,var(--gold) 60%,transparent);"></div>
+            <div class="{{ foilClass }}" style="position:absolute;inset:14px;border-radius:13px;padding:3px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+            <div style="position:absolute;left:0;right:0;top:130px;height:380px;overflow:hidden;pointer-events:none;"><div style="position:absolute;top:0;bottom:0;left:0;width:90px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);animation:sheensweep 6.5s ease-in-out infinite;"></div></div>
+          </div>
+          <!-- title block -->
+          <div style="position:absolute;left:0;right:0;top:806px;text-align:center;padding:0 90px;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:60px;line-height:1.0;letter-spacing:-.02em;color:#f5f0e6;">Knowing isn’t doing.</span></div>
+          <div style="position:absolute;left:0;right:0;top:902px;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:16px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);">An oracle deck for allies · 120 cards</span></div>
+        </div>
+      </figure>
+    </sc-if>
+
+    <!-- FRONT+BACK PAIRING 1:1 -->
+    <sc-if value="{{ visPair }}" hint-placeholder-val="{{ false }}">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}"><span class="frlabel">Front + back · 1080×1080</span></sc-if>
+        <div data-ex="pair" style="position:relative;width:1080px;height:1080px;overflow:hidden;background:radial-gradient(100% 80% at 50% 30%, #171320 0%, #08070a 74%);">
+          <div style="position:absolute;top:90px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:15px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);">Two sides of every card</span></div>
+          <!-- back · struck gold -->
+          <div style="position:absolute;left:150px;top:340px;width:330px;height:462px;transform:rotate(-6deg);border-radius:16px;overflow:hidden;border:3px solid var(--gold);background:radial-gradient(125% 95% at 50% 2%, #161220, #0a090c 72%);box-shadow:0 40px 70px -30px rgba(0,0,0,.95),0 0 30px -8px color-mix(in srgb,var(--bars-liminal) 34%,transparent);">
+            <div style="{{ substrateStyle }}"></div>
+            <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:.5;" fill="none">
+              <sc-for list="{{ g1Rings }}" as="d" hint-placeholder-count="9"><path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 15%,transparent)" stroke-width="0.9"></path></sc-for>
+            </svg>
+            <svg viewBox="0 0 460 644" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0;" fill="none">
+              <polygon points="230,129 397,225 397,418 230,515 63,418 63,225" stroke="color-mix(in srgb,var(--bars-fire-gem) 30%,transparent)" stroke-width="1.4"/>
+              <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 28%,transparent)" stroke-width="1.4"/>
+              <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 32%,transparent)" stroke-width="1.4"/>
+            </svg>
+            <div style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:210px;height:210px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 64%);"></div>
+            <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:238px;height:238px;object-fit:contain;filter:drop-shadow(0 0 18px color-mix(in srgb,var(--bars-liminal) 55%,transparent));">
+            <div style="position:absolute;inset:11px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(0,0,0,.5),inset 0 0 20px -9px color-mix(in srgb,var(--gold) 60%,transparent);"></div>
+            <div class="{{ foilClass }}" style="position:absolute;inset:11px;border-radius:11px;padding:2.5px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+            <div style="position:absolute;left:0;right:0;top:120px;height:260px;overflow:hidden;pointer-events:none;"><div style="position:absolute;top:0;bottom:0;left:0;width:66px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);animation:sheensweep 6.5s ease-in-out infinite;"></div></div>
+            <div style="position:absolute;top:34px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:.3em;color:color-mix(in srgb,var(--gold) 80%,transparent);">◆ THE ALLYSHIP DECK ◆</span></div>
+            <div style="position:absolute;bottom:34px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:.32em;color:color-mix(in srgb,var(--gold) 70%,transparent);">120 CARDS · 5 MOVES</span></div>
+          </div>
+          <!-- front -->
+          <div style="position:absolute;right:150px;top:300px;width:340px;height:476px;transform:rotate(5deg);border-radius:16px;overflow:hidden;border:2px solid var(--gold);background:radial-gradient(120% 90% at 78% 8%, {{ pairFront.gradFrom }}, {{ pairFront.gradTo }} 64%);box-shadow:0 40px 70px -30px rgba(0,0,0,.95),0 0 32px -6px color-mix(in srgb, {{ pairFront.glow }} 42%,transparent);">
+            <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top left, color-mix(in srgb, {{ pairFront.glow }} 24%, transparent), transparent 60%);"></div>
+            <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+              <div style="padding:22px 24px 16px;border-bottom:1px solid color-mix(in srgb, {{ pairFront.frame }} 40%, transparent);"><h3 style="margin:0;font-family:var(--bars-font-display);font-weight:600;font-size:28px;line-height:1.04;color:#fff;">{{ pairFront.title }}</h3></div>
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:18px 24px 0;"><span style="display:flex;flex-direction:column;align-items:center;gap:6px;"><span style="{{ pairFront.pipStyle }}">{{ pairFront.moveIconBig }}</span><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:{{ pairFront.gem }};">{{ pairFront.moveLabel }}</span></span><span style="display:flex;flex-direction:column;align-items:center;gap:6px;"><span style="{{ pairFront.faceBadge }}">{{ pairFront.faceMono }}</span><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b8b6b0;">{{ pairFront.faceLabel }}</span></span></div>
+              <div style="padding:16px 24px 0;"><span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:{{ pairFront.gem }};">◇ {{ pairFront.domainLabel }}</span></div>
+              <div style="flex:1;padding:14px 24px 0;"><p style="margin:0;font-family:var(--bars-font-body);font-size:16px;line-height:1.5;color:#e6e4de;">{{ pairFront.ask }}</p></div>
+              <div style="padding:16px 24px 20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid color-mix(in srgb, {{ pairFront.frame }} 30%, transparent);"><span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.08em;color:#8a877f;">{{ pairFront.minutes }} MIN · #{{ pairFront.num }}</span><span style="font-family:var(--bars-font-mono);font-size:15px;color:var(--bars-earth-gem);">♦ {{ pairFront.reward }}</span></div>
+            </div>
+          </div>
+          <div style="position:absolute;bottom:108px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-display);font-weight:600;font-size:24px;color:#efe9dd;">A concrete move on the face. The road on the back.</span></div>
+        </div>
+      </figure>
+    </sc-if>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:900},&quot;goldTone&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C9A84C&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;paperTone&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#efe7d6&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  moves = [
+    { key:'wake', label:'Wake Up', el:'earth' },
+    { key:'clean', label:'Clean Up', el:'water' },
+    { key:'grow', label:'Grow Up', el:'wood' },
+    { key:'show', label:'Show Up', el:'fire' },
+    { key:'open', label:'Open Up', el:'liminal' },
+  ];
+  faceColor = { shaman:'#6fd0d0', challenger:'#e8896f', regent:'#e0c25a', architect:'#9fb2c8', diplomat:'#6fc795', sage:'#a99ae0' };
+  movePaths = {
+    wake:['M14 44 H50','M24 44 A8 8 0 0 1 40 44','M32 22 V14','M44 25 L48 21','M20 25 L16 21'],
+    clean:['M32 13 L36 28 L51 32 L36 36 L32 51 L28 36 L13 32 L28 28 Z'],
+    grow:['M32 51 V27','M32 34 C24 34 20 27 20 18','M32 30 C40 30 44 24 44 15','M22 53 H42'],
+    show:['M17 51 V25 Q32 11 47 25 V51','M27 51 L29 39 Q32 35 35 39 L37 51'],
+    open:['M27 16 Q15 32 27 48','M37 16 Q49 32 37 48','M32 30 V24','M26 33 L22 29','M38 33 L42 29'],
+  };
+  cards = [
+    { num:'047', title:'Take Your First Action', move:'show', el:'fire', face:'challenger', faceLabel:'Challenger', domain:'Direct Action', reward:2, minutes:10, ask:'Complete one small, concrete action to contribute right now — the imperfect one beats the unmade one.' },
+    { num:'112', title:'The Empty Cup', move:'open', el:'liminal', face:'diplomat', faceLabel:'Diplomat', domain:'Gather Resources', reward:3, minutes:5, ask:'Name a resource you won\u2019t let yourself want. Then ask one person for a sliver of it.' },
+    { num:'068', title:'Share a Resource', move:'grow', el:'wood', face:'architect', faceLabel:'Architect', domain:'Gather Resources', reward:2, minutes:10, ask:'Contribute something useful to the commons — a link, a tool, a contact, a template.' },
+    { num:'039', title:'Reflect and Report', move:'clean', el:'water', face:'sage', faceLabel:'Sage', domain:'Raise Awareness', reward:1, minutes:10, ask:'Take a few minutes to metabolize what happened, then name one outcome or learning out loud.' },
+    { num:'003', title:'What\u2019s Worth Funding', move:'wake', el:'earth', face:'regent', faceLabel:'Regent', domain:'Gather Resources', reward:2, minutes:15, ask:'Of all that is depleted, what actually deserves resourcing first? Rank the top three.' },
+  ];
+
+  state = { only: null };
+
+  componentDidMount() {
+    this.syncHash();
+    this._h = () => this.syncHash();
+    window.addEventListener('hashchange', this._h);
+  }
+  componentWillUnmount() { if (this._h) window.removeEventListener('hashchange', this._h); }
+  syncHash() {
+    const m = (location.hash || '').replace(/^#/, '').trim();
+    this.setState({ only: m || null });
+  }
+
+  theme(el) {
+    if (el === 'liminal') return { gradFrom:'#241a3e', gradTo:'#100a1f', glow:'var(--bars-liminal)', gem:'var(--bars-liminal-glow)', frame:'var(--bars-liminal)' };
+    return { gradFrom:'var(--bars-'+el+'-grad-from)', gradTo:'var(--bars-'+el+'-grad-to)', glow:'var(--bars-'+el+'-glow)', gem:'var(--bars-'+el+'-gem)', frame:'var(--bars-'+el+'-frame)' };
+  }
+  moveIcon(move, size, color) {
+    const ds = this.movePaths[move] || [];
+    const fill = move === 'clean';
+    return React.createElement('svg', { width:size, height:size, viewBox:'0 0 64 64', fill: fill ? color : 'none', stroke:color, strokeWidth: fill ? 1.5 : 3.6, strokeLinecap:'round', strokeLinejoin:'round' },
+      ds.map((d,i)=>React.createElement('path',{ key:i, d })));
+  }
+  pip(el, sz) {
+    const t = this.theme(el); const dim = sz || 32;
+    return 'display:flex;align-items:center;justify-content:center;width:'+dim+'px;height:'+dim+'px;border-radius:50%;background:linear-gradient(150deg,'+t.glow+','+t.frame+');box-shadow:0 0 10px -3px '+t.glow+';flex:none;';
+  }
+  faceBadge(face, sz) {
+    const dim = sz || 34; const c = this.faceColor[face];
+    return 'display:flex;align-items:center;justify-content:center;width:'+dim+'px;height:'+dim+'px;border-radius:9px;font-family:var(--bars-font-display);font-weight:700;font-size:'+(dim*0.42)+'px;color:'+c+';background:color-mix(in srgb,'+c+' 14%,transparent);border:1px dashed color-mix(in srgb,'+c+' 60%,transparent);flex:none;';
+  }
+  cardBase(el, w) {
+    const t = this.theme(el);
+    return 'width:'+w+'px;aspect-ratio:2.5/3.5;border-radius:14px;overflow:hidden;border:2px solid var(--gold);background:radial-gradient(120% 90% at 78% 8%,'+t.gradFrom+','+t.gradTo+' 64%);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 26px 1px color-mix(in srgb,'+t.glow+' 38%,transparent),0 18px 40px -20px rgba(0,0,0,.9);';
+  }
+  cardObj(c, w) {
+    const t = this.theme(c.el);
+    return {
+      num:c.num, title:c.title, ask:c.ask, reward:c.reward, minutes:c.minutes,
+      moveLabel: (this.moves.find(m=>m.key===c.move)||{}).label || '',
+      domainLabel:c.domain, faceLabel:c.faceLabel, faceMono:c.faceLabel[0],
+      gem:t.gem, glow:t.glow, frame:t.frame, gradFrom:t.gradFrom, gradTo:t.gradTo,
+      moveIcon: this.moveIcon(c.move, 18, '#150a04'),
+      moveIconBig: this.moveIcon(c.move, 26, '#150a04'),
+      pipStyle: this.pip(c.el, 34),
+      faceBadge: this.faceBadge(c.face, 36),
+      base: this.cardBase(c.el, w),
+    };
+  }
+  fan(cards, w, specs) {
+    return cards.map((c,i)=>{
+      const o = this.cardObj(c, w);
+      const s = specs[i] || { rot:0, x:0, y:0, z:1 };
+      o.fanStyle = 'position:absolute;left:50%;top:50%;z-index:'+s.z+';transform:translate(-50%,-50%) rotate('+s.rot+'deg) translateX('+s.x+'px) translateY('+s.y+'px);' + this.cardBase(c.el, w);
+      return o;
+    });
+  }
+
+  rosette(cx, cy, baseR, amp, petals, phase) {
+    const steps = 260, p = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps * Math.PI * 2;
+      const rr = baseR + amp * Math.cos(petals * t + phase);
+      p.push((cx + rr * Math.cos(t)).toFixed(1) + ',' + (cy + rr * Math.sin(t)).toFixed(1));
+    }
+    return 'M' + p.join('L') + 'Z';
+  }
+  guilloche(cx, cy, r0, r1, rings, amp, petals) {
+    const a = [];
+    for (let i = 0; i < rings; i++) {
+      const f = rings === 1 ? 0 : i / (rings - 1);
+      const baseR = r0 + (r1 - r0) * f;
+      a.push(this.rosette(cx, cy, baseR, amp, petals, (i % 2) * Math.PI / petals));
+    }
+    return a;
+  }
+
+  renderVals() {
+    const only = this.state.only;
+    const isGallery = !only;
+    const vis = (id) => isGallery || only === id;
+
+    const rootStyle = isGallery
+      ? 'display:flex;flex-direction:column;gap:72px;width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:56px;background:#e7e5df;font-family:var(--bars-font-body);--gold:'+(this.props.goldTone ?? '#C9A84C')+';--ink:#2a211a;--paper:'+(this.props.paperTone ?? '#efe7d6')+';'
+      : 'display:block;width:max-content;background:transparent;padding:0;margin:0;font-family:var(--bars-font-body);--gold:'+(this.props.goldTone ?? '#C9A84C')+';--ink:#2a211a;--paper:'+(this.props.paperTone ?? '#efe7d6')+';';
+    const rowStyle = isGallery
+      ? 'display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;'
+      : 'display:block;';
+
+    return {
+      rootStyle, rowStyle, isGallery,
+      visBack1: vis('back1'), visBack2: vis('back2'), visBack3: vis('back3'), visBack4: vis('back4'),
+      substrateStyle: "position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 1px,transparent 1px 3px);",
+      foilClass: 'foil-anim',
+      g1Rings: this.guilloche(230, 322, 64, 250, 11, 9, 18),
+      visCover: vis('cover'), visFan: vis('fan'), visBox: vis('box'), visThumb: vis('thumb'), visPair: vis('pair'),
+      coverFan: this.fan([this.cards[0], this.cards[1], this.cards[2]], 200, [
+        { rot:-13, x:-120, y:24, z:1 },
+        { rot:0, x:0, y:-8, z:3 },
+        { rot:13, x:120, y:24, z:2 },
+      ]),
+      fanFive: this.fan(this.cards, 224, [
+        { rot:-26, x:-340, y:96, z:1 },
+        { rot:-13, x:-176, y:18, z:2 },
+        { rot:0, x:0, y:-12, z:3 },
+        { rot:13, x:176, y:18, z:2 },
+        { rot:26, x:340, y:96, z:1 },
+      ]),
+      pairFront: this.cardObj(this.cards[0], 0),
+    };
+  }
+}
+</script>
+</body>
+</html>

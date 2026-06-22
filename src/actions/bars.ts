@@ -13,6 +13,8 @@ import {
 } from '@/lib/bar-seed-metabolization'
 import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 import { CAPTURE_BAR_TYPES } from '@/lib/vault-ui'
+// Plain module (no 'use server') — safe to import from this server-action file.
+import { addBarToHandForPlayer } from '@/lib/hand-service'
 
 // Element channel ('nation' column) — valid capture-time field-tint values.
 // Mirrors ElementKey in src/lib/ui/card-tokens.ts (kept inline to avoid pulling
@@ -156,7 +158,7 @@ export async function createBarForUpload(data: {
 
         revalidatePath('/bars')
         revalidatePath('/bars/garden')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/')
         return { barId: bar.id }
     } catch (e: unknown) {
@@ -166,6 +168,7 @@ export async function createBarForUpload(data: {
     }
 }
 
+/** @deprecated Use captureBarFromCanvas via /bars/capture instead. */
 export async function createPlayerBar(prevState: { error?: string; success?: boolean } | null, formData: FormData) {
     const playerId = await getPlayerId()
     if (!playerId) return { error: 'Not logged in' }
@@ -237,7 +240,7 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
 
         revalidatePath('/bars')
         revalidatePath('/bars/garden')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/')
         return { success: true, barId: bar.id }
     } catch (e: unknown) {
@@ -846,7 +849,7 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
         }
 
         revalidatePath('/')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath(`/bars/${barId}`)
         return { questId: quest.id }
     } catch (e) {
@@ -978,10 +981,260 @@ export async function createSupportingBarForQuest(
       },
     })
 
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     return { success: true, barId: bar.id }
   } catch (e) {
     console.error('[createSupportingBarForQuest]', e)
     return { error: e instanceof Error ? e.message : 'Failed to create BAR' }
   }
+}
+
+// ---------------------------------------------------------------------------
+// CAPTURE BAR FROM CANVAS (BSCW — Seed Capture Whiteboard)
+// ---------------------------------------------------------------------------
+
+export type CanvasItemType = 'text' | 'photo' | 'voice' | 'link'
+
+export interface CanvasItem {
+  id: string
+  type: CanvasItemType
+  x: number
+  y: number
+  rot: number
+  // text sticker
+  text?: string
+  tint?: string | null
+  size?: number
+  // media
+  assetId?: string | null
+  // link
+  url?: string
+  label?: string
+}
+
+export interface CaptureBarFromCanvasInput {
+  items: CanvasItem[]
+  fieldTint: string | null
+  charge: 1 | 2 | 3 | 4 | 5
+  provenance?: string
+  storyContent?: string      // → CustomBar.storyContent (intent/tags)
+  campaignRef?: string       // → CustomBar.campaignRef
+  provenanceSource?: string  // appended to contextLines
+}
+
+function deriveCanvasTitle(items: CanvasItem[]): string {
+  const firstText = items.find(i => i.type === 'text' && i.text?.trim())
+  if (!firstText?.text) return 'Untitled seed'
+  const firstLine = firstText.text.trim().split('\n')[0].trim()
+  return firstLine.slice(0, 120) || 'Untitled seed'
+}
+
+function deriveCanvasDescription(items: CanvasItem[]): string {
+  const texts = items
+    .filter(i => i.type === 'text' && i.text?.trim())
+    .map(i => i.text!.trim())
+  return texts.join('\n\n') || ''
+}
+
+function serializeCanvasInputs(items: CanvasItem[]): string {
+  const links = items
+    .filter(i => i.type === 'link' && i.url)
+    .map(i => ({ type: 'link', url: i.url, label: i.label || i.url }))
+  return JSON.stringify(links)
+}
+
+export async function captureBarFromCanvas(
+  payload: CaptureBarFromCanvasInput
+): Promise<
+  | { barId: string; title: string; placedIn: 'hand' | 'vault' }
+  | { error: string }
+> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+
+  const { items, fieldTint, charge, provenance, storyContent, campaignRef, provenanceSource } = payload
+
+  const hasContent =
+    items.some(i => i.type === 'text' && i.text?.trim()) ||
+    items.some(i => i.type === 'photo' || i.type === 'voice' || i.type === 'link')
+
+  if (!hasContent) return { error: 'Add something to the canvas first' }
+
+  const title = deriveCanvasTitle(items)
+  const description = deriveCanvasDescription(items)
+  const nation = normalizeFieldTint(fieldTint)
+  const intensity = String(charge)
+  const inputs = serializeCanvasInputs(items)
+  const canvasLayout = JSON.stringify(items)
+  const seedMetabolization = CAPTURE_SEED_METABOLIZATION
+
+  const contextParts = [provenance, provenanceSource].filter(Boolean)
+  const contextLines = contextParts.length > 0 ? contextParts.join(' · ') : null
+
+  try {
+    const bar = await db.customBar.create({
+      data: {
+        creatorId: playerId,
+        title,
+        description: description || title,
+        type: 'bar',
+        reward: 0,
+        visibility: 'private',
+        status: 'active',
+        inputs,
+        rootId: 'temp',
+        nation,
+        intensity,
+        canvasLayout,
+        seedMetabolization,
+        contextLines,
+        storyContent: storyContent?.trim() || null,
+        campaignRef: campaignRef || null,
+      },
+    })
+
+    await db.customBar.update({
+      where: { id: bar.id },
+      data: { rootId: bar.id },
+    })
+
+    // The whiteboard is the "make something now" surface — a fresh canvas
+    // capture is held in the Hand. If the Hand is full we keep the BAR in the
+    // Vault (no HandSlot bound) and let the caller surface a fallback toast;
+    // capture is never blocked. (Fork A — silent Vault fallback.)
+    let placedIn: 'hand' | 'vault' = 'vault'
+    const handResult = await addBarToHandForPlayer(playerId, bar.id)
+    if ('success' in handResult && handResult.success) {
+      placedIn = 'hand'
+    }
+
+    revalidatePath('/bars')
+    revalidatePath('/bars/garden')
+    revalidatePath('/hand')
+    revalidatePath('/')
+
+    return { barId: bar.id, title, placedIn }
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error'
+    console.error('[BAR] Canvas capture failed:', message)
+    return { error: 'Failed to capture seed. Please try again.' }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// TUNE BAR — Capture → Keep → Tune flow
+// ---------------------------------------------------------------------------
+
+const VALID_MOVE_TYPES = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp'] as const
+type MoveType = (typeof VALID_MOVE_TYPES)[number]
+
+const VALID_ALTITUDES = ['dissatisfied', 'neutral', 'satisfied'] as const
+
+export interface TuneBarInput {
+    nation?: string              // element key (fire | water | wood | metal | earth)
+    intensity?: string           // altitude (dissatisfied | neutral | satisfied)
+    emotionalAlchemyTag?: string // charge name / feeling tag
+    moveType?: string            // wakeUp | openUp | cleanUp | growUp | showUp
+}
+
+export type TuneBarResult =
+    | { success: true; maturity: MaturityPhase }
+    | { error: string }
+
+/**
+ * Tune a BAR's three channels and advance maturity accordingly.
+ * Maturity only moves forward (never back). Channel completion determines the
+ * next maturity phase:
+ *   nation set               → context_named
+ *   intensity + alchemyTag   → elaborated
+ *   moveType set             → shared_or_acted
+ */
+export async function tuneBar(barId: string, patch: TuneBarInput): Promise<TuneBarResult> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const bar = await db.customBar.findUnique({
+        where: { id: barId },
+        select: {
+            id: true,
+            creatorId: true,
+            type: true,
+            seedMetabolization: true,
+            nation: true,
+            intensity: true,
+            emotionalAlchemyTag: true,
+            moveType: true,
+        },
+    })
+    if (!bar) return { error: 'BAR not found' }
+    if (bar.creatorId !== playerId) return { error: 'Not authorized' }
+    if (!['bar', 'charge_capture'].includes(bar.type)) {
+        return { error: 'This BAR type does not support tuning' }
+    }
+
+    // Merge patch into current state — only accept valid values
+    const nextNation = patch.nation
+        ? (ELEMENT_KEYS as readonly string[]).includes(patch.nation.toLowerCase())
+            ? patch.nation.toLowerCase()
+            : bar.nation
+        : bar.nation
+
+    const nextIntensity = patch.intensity
+        ? (VALID_ALTITUDES as readonly string[]).includes(patch.intensity)
+            ? patch.intensity
+            : bar.intensity
+        : bar.intensity
+
+    const nextAlchemyTag =
+        patch.emotionalAlchemyTag !== undefined
+            ? (patch.emotionalAlchemyTag || '').trim().slice(0, 60) || null
+            : bar.emotionalAlchemyTag
+
+    const nextMoveType = patch.moveType
+        ? (VALID_MOVE_TYPES as readonly string[]).includes(patch.moveType)
+            ? patch.moveType
+            : bar.moveType
+        : bar.moveType
+
+    // Derive target maturity from channel completion
+    let targetMaturity: MaturityPhase = 'captured'
+    if (nextNation) targetMaturity = 'context_named'
+    if (nextIntensity && nextAlchemyTag) targetMaturity = 'elaborated'
+    if (nextMoveType) targetMaturity = 'shared_or_acted'
+
+    // Maturity only moves forward — clamp to max(current, target)
+    const PHASES: MaturityPhase[] = [
+        'captured', 'context_named', 'elaborated', 'shared_or_acted', 'integrated',
+    ]
+    const currentMaturity = effectiveMaturity(parseSeedMetabolization(bar.seedMetabolization))
+    const currentIdx = PHASES.indexOf(currentMaturity)
+    const targetIdx = PHASES.indexOf(targetMaturity)
+    const nextMaturity = PHASES[Math.max(currentIdx, targetIdx)]
+
+    try {
+        await db.customBar.update({
+            where: { id: barId },
+            data: {
+                nation: nextNation,
+                intensity: nextIntensity,
+                emotionalAlchemyTag: nextAlchemyTag,
+                moveType: nextMoveType,
+                seedMetabolization: mergeSeedMetabolization(bar.seedMetabolization, {
+                    maturity: nextMaturity,
+                }),
+            },
+        })
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Unknown error'
+        console.error('[tuneBar] update failed:', message)
+        return { error: 'Failed to tune BAR. Please try again.' }
+    }
+
+    revalidatePath('/bars')
+    revalidatePath(`/bars/${barId}`)
+    revalidatePath(`/bars/${barId}/tune`)
+    revalidatePath('/bars/garden')
+    revalidatePath('/vault')
+
+    return { success: true, maturity: nextMaturity }
 }

@@ -1,23 +1,12 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { StarterQuestBoard } from '@/components/StarterQuestBoard'
-
-import { QuestThread } from '@/components/QuestThread'
-import { QuestPack } from '@/components/QuestPack'
 import { ensureWallet } from '@/actions/economy'
 import { getAppConfig } from '@/actions/config'
-import { getPlayerThreads } from '@/actions/quest-thread'
-import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
-import { CollapsibleSection } from '@/components/dashboard/CollapsibleSection'
-import { DashboardActionButtons } from '@/components/dashboard/DashboardActionButtons'
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
-import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
-import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
-import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
 import { parseCampaignDomainPreference, ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
+import { BARN_CAMPAIGN_REF } from '@/lib/event/barn-raising'
 // DashboardAvatarWithModal is now internal to DashboardHeader
 import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
@@ -26,56 +15,7 @@ import { RecentChargeSection } from '@/components/charge-capture/RecentChargeSec
 import { getTodayCheckIn } from '@/actions/alchemy'
 import { SetupRequired } from '@/components/SetupRequired'
 import { DatabaseUnreachable } from '@/components/DatabaseUnreachable'
-import { listMyCampaignSeeds } from '@/actions/campaign-bar'
-import { CampaignSeedReadyCard } from '@/components/dashboard/CampaignSeedReadyCard'
-import { getCampaignsForPlayer } from '@/actions/campaign-overview'
-import { CampaignsResponsibleSection } from '@/components/dashboard/CampaignsResponsibleSection'
-import { DashboardTwoChannelHub } from '@/components/dashboard/DashboardTwoChannelHub'
-import { OrientationCompass } from '@/components/dashboard/OrientationCompass'
-import { NationProvider } from '@/lib/ui/nation-provider'
-import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
-import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
-import { derivePlayerMoveContext } from '@/lib/player-move-context'
-import {
-  campaignHomePath,
-  needsCampaignOnboardingRoute,
-  resolveDefaultCampaignRef,
-} from '@/lib/campaign-player-home'
-import {
-  buildMilestoneSnapshot,
-  type CampaignMilestoneGuidance,
-  type GuidedAction,
-  type InstanceLikeForSnapshot,
-} from '@/lib/bruised-banana-milestone'
-
-/** Prefer full BBMT guidance; otherwise show fundraising + donate CTA when an active BB/event instance exists. */
-function residencyProgressForDashboardHeader(
-  guidance: CampaignMilestoneGuidance | null,
-  instance: InstanceLikeForSnapshot | null | undefined,
-  campaignRef: string
-): CampaignMilestoneGuidance | null {
-  if (guidance) return guidance
-  if (!instance) return null
-  const isBb =
-    campaignRef === 'bruised-banana' ||
-    (instance.campaignRef ?? '') === 'bruised-banana' ||
-    (instance.slug ?? '') === 'bruised-banana'
-  if (!instance.isEventMode && !isBb) return null
-  const snapshot = buildMilestoneSnapshot(instance, { campaignRefOverride: campaignRef })
-  if (!snapshot) return null
-  const q = encodeURIComponent(campaignRef)
-  const guidedActions: GuidedAction[] = [
-    {
-      kind: 'event',
-      label: 'Support the residency',
-      href: `/event/donate/wizard?ref=${q}&source=now`,
-      hint: 'Honor reporting, wizard paths for money / time / space, and fundraiser context.',
-    },
-    { kind: 'event', label: 'Event hub', href: `/event?ref=${q}` },
-    { kind: 'campaign', label: 'Campaign', href: `/campaign?ref=${q}` },
-  ]
-  return { snapshot, guidedActions }
-}
+import { NowHome } from '@/components/now/NowHome'
 
 function isPrismaConnectionError(err: unknown): boolean {
   const e = err as { code?: string; name?: string; message?: string }
@@ -85,34 +25,19 @@ function isPrismaConnectionError(err: unknown): boolean {
   return false
 }
 
-/**
- * @page /
- * @entity PLAYER
- * @description Home page dashboard with journey threads, quest packs, and charge capture
- * @permissions authenticated (redirects to /arrival if not authenticated)
- * @searchParams ritualComplete:string (optional, indicates onboarding completion)
- * @searchParams focusQuest:string (optional, highlights specific quest)
- * @searchParams ref:string (optional, referral source)
- * @energyCost 0 (read-only view)
- * @dimensions WHO:currentPlayer, WHAT:PLAYER, WHERE:allyshipDomain, ENERGY:vibulon
- * @relationships displays player's active QUESTs, shows appreciation feed, charge capture
- * @example /?focusQuest=quest_123&ref=campaign_invite
- * @agentDiscoverable false
- */
-export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
+export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string; focusQuest?: string; ref?: string }> }) {
   const searchParams = await props.searchParams
   const campaignRef = searchParams.ref ?? null
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
 
-  // Safe DB calls — these run before auth check and must not crash the page
+  // Safe DB calls — run before auth check, must not crash the page
   let appConfig: any = {}
   let activeInstance: any = null
   try {
     appConfig = await getAppConfig()
     activeInstance = await getActiveInstance()
   } catch (err) {
-    // DB unreachable — continue with defaults
     if (process.env.NODE_ENV === 'development') {
       console.warn('[Home] DB unreachable for config/instance lookup:', (err as any)?.message)
     }
@@ -130,6 +55,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const eventCurrent = activeInstance?.currentAmountCents ?? 0
   const eventPct = eventGoal > 0 ? Math.max(0, Math.min(1, eventCurrent / eventGoal)) : 0
 
+  // ── Unauthenticated landing ───────────────────────────────────────────────
   if (!playerId) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-black text-white font-mono flex-col gap-8 p-8">
@@ -169,14 +95,21 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link
-            href="/pricing"
+            href="/awaken"
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
+          >
+            Start here — wake up &amp; show up
+          </Link>
+
+          <Link
+            href="/launch"
+            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
             Explore the book, deck &amp; game
           </Link>
 
           <Link
-            href="/game/"
+            href="/game/index.html"
             className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
             Play the game
@@ -184,7 +117,11 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
           <div className="flex gap-3">
             <Link
-              href={`/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
+              href={
+                activeInstance?.campaignRef === BARN_CAMPAIGN_REF
+                  ? '/event/barn'
+                  : `/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`
+              }
               className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
             >
               Support
@@ -205,6 +142,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     )
   }
 
+  // ── Player fetch ──────────────────────────────────────────────────────────
   const commonPlayerInclude = {
     nation: true,
     roles: { include: { role: true } },
@@ -218,21 +156,12 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   try {
     player = await db.player.findUnique({
       where: { id: playerId },
-      include: {
-        ...commonPlayerInclude,
-        archetype: true,
-      }
+      include: { ...commonPlayerInclude, archetype: true },
     })
   } catch (err: unknown) {
-    // P2021 = table missing; P2022 = column missing — DB needs migrations (e.g. custom_bars.partifulUrl)
     const code = (err as { code?: string })?.code
-    if (code === 'P2021' || code === 'P2022') {
-      return <SetupRequired />
-    }
-    if (isPrismaConnectionError(err)) {
-      return <DatabaseUnreachable />
-    }
-    // Fallback for temporary schema drift (different columns)
+    if (code === 'P2021' || code === 'P2022') return <SetupRequired />
+    if (isPrismaConnectionError(err)) return <DatabaseUnreachable />
     try {
       player = await db.player.findUnique({
         where: { id: playerId },
@@ -240,53 +169,33 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           ...commonPlayerInclude,
           archetype: {
             select: {
-              id: true,
-              name: true,
-              description: true,
-              moves: true,
-              content: true,
-              centralConflict: true,
-              primaryQuestion: true,
-              vibe: true,
-              energy: true,
-              shadowSignposts: true,
-              lightSignposts: true,
-              examples: true,
-              wakeUp: true,
-              cleanUp: true,
-              growUp: true,
-              showUp: true,
-              createdAt: true,
-            }
+              id: true, name: true, description: true, moves: true, content: true,
+              centralConflict: true, primaryQuestion: true, vibe: true, energy: true,
+              shadowSignposts: true, lightSignposts: true, examples: true,
+              wakeUp: true, cleanUp: true, growUp: true, showUp: true, createdAt: true,
+            },
           },
         },
       })
     } catch (innerErr: unknown) {
-      if (isPrismaConnectionError(innerErr) || isPrismaConnectionError(err)) {
-        return <DatabaseUnreachable />
-      }
+      if (isPrismaConnectionError(innerErr) || isPrismaConnectionError(err)) return <DatabaseUnreachable />
       throw err
     }
   }
 
   if (!player) {
-    // Cookie references a player that no longer exists — clear it and redirect to login
     const cookieStore2 = await cookies()
     cookieStore2.delete('bars_player_id')
     redirect('/login')
   }
 
-  // Force incomplete profiles through guided setup UNLESS they have an active orientation thread.
-  // If an orientation thread is assigned, the thread system handles onboarding on the dashboard.
+  // ── Orientation thread logic ──────────────────────────────────────────────
   const orientationInclude = {
     thread: {
       include: {
-        quests: {
-          orderBy: { position: 'asc' as const },
-          include: { quest: true }
-        }
-      }
-    }
+        quests: { orderBy: { position: 'asc' as const }, include: { quest: true } },
+      },
+    },
   } as const
   const orientationWhere = { playerId, completedAt: null, thread: { threadType: 'orientation' as const } }
 
@@ -306,7 +215,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       })
     }
 
-    // AUTO-TRIGGER: Complete the "Arrival" quest upon sign-in
     if (!player.hasSeenWelcome) {
       const { fireTrigger } = await import('@/actions/quest-engine')
       await fireTrigger('SIGN_IN', { skipRevalidate: true })
@@ -320,11 +228,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     if (process.env.NODE_ENV === 'development') {
       console.warn('[Home] Orientation block failed:', (err as Error)?.message)
     }
-    // Continue with hasActiveOrientationThread = null — dashboard will still render
   }
 
-  // Sticky /conclave/onboarding redirect when an orientation thread is active is deprecated;
-  // nation/playbook gates still skip while orientation is in progress.
+  // ── Profile gates ─────────────────────────────────────────────────────────
   if (!player.nationId && !hasActiveOrientationThread) {
     redirect('/conclave/guided?step=nation_select')
   }
@@ -332,430 +238,16 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     redirect('/conclave/guided?step=playbook_select')
   }
 
-  const ritualComplete = searchParams.ritualComplete === 'true'
-  const focusQuest = searchParams.focusQuest
-  const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
-
+  // ── Vibulon count ─────────────────────────────────────────────────────────
   let vibulons = 0
   try {
     await ensureWallet(playerId)
     vibulons = await db.vibulon.count({ where: { ownerId: playerId } })
   } catch (err) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[Home] Wallet/vibeulon query failed:', (err as Error)?.message)
+      console.warn('[Home] Wallet/vibulon query failed:', (err as Error)?.message)
     }
   }
 
-  const potentialDelegates = await db.player.findMany({
-    where: { id: { not: playerId } },
-    select: { id: true, name: true },
-    orderBy: { name: 'asc' }
-  }).catch(() => [] as { id: string; name: string }[])
-  // Derive quest state from PlayerQuest table
-  const completedBars = player.quests
-    .filter(q => q.status === 'completed')
-    .map(q => ({
-      id: q.questId,
-      inputs: q.inputs ? JSON.parse(q.inputs) : {}
-    }))
-
-  const activeBars = player.quests
-    .filter(q => q.status === 'assigned')
-    .map(q => q.questId)
-
-  // Ensure system feedback is always "active" for the player
-  if (!activeBars.includes('system-feedback')) {
-    activeBars.push('system-feedback')
-  }
-
-  // Fetch user-created bars:
-  // - Public bars that are unclaimed
-  // - Bars claimed by current player (these are in activeBars)
-  // - Private bars created by current player (drafts)
-  // - Explicitly include any active quests (assigned to player) regardless of visibility
-  const customBars = await db.customBar.findMany({
-    where: {
-      OR: [
-        { visibility: 'public', claimedById: null, status: 'active' },
-        { id: { in: activeBars } },
-        { isSystem: true, status: 'active' },
-        { id: { in: completedBars.map(b => b.id) } },
-        { visibility: 'private', creatorId: playerId, claimedById: null, status: 'active' },
-      ]
-    },
-    include: { microTwine: true },
-    orderBy: { createdAt: 'desc' }
-  }).catch(() => [] as any[])
-
-  const ichingReadings = await db.playerBar.findMany({
-    where: { playerId, source: 'iching' },
-    include: { bar: true },
-    orderBy: { acquiredAt: 'desc' }
-  }).catch(() => [] as any[])
-
-  const onboardingStatus = await getOnboardingStatus().catch(() => ({ error: 'unavailable' } as const))
-
-  // FILTER BARS BY TRIGRAM (Playbook Gating)
-  const visibleCustomBars = customBars.filter(bar => {
-    if (!bar.allowedTrigrams || bar.allowedTrigrams === '[]') return true // Public if no gating
-    try {
-      const allowed = JSON.parse(bar.allowedTrigrams)
-      return player.archetype && allowed.includes(player.archetype.name)
-    } catch {
-      return true // Fallback to visible if error
-    }
-  })
-
-  // Fetch dashboard data — each with defensive fallback so one failure doesn't crash the page
-  const [threads, packs, appreciationResult, chargeResult, archiveResult, todayCheckIn, myCampaignSeeds, campaignsResponsible] = await Promise.all([
-    getPlayerThreads().catch(() => []),
-    getPlayerPacks().catch(() => []),
-    getAppreciationFeed(10).catch(() => ({ appreciations: [] })),
-    getTodayCharge().catch(() => ({ bar: null })),
-    getChargeArchive(10).catch(() => ({ bars: [] })),
-    getTodayCheckIn(playerId).catch(() => null),
-    listMyCampaignSeeds(playerId).catch(() => []),
-    getCampaignsForPlayer(playerId).catch(() => []),
-  ]) as [
-    Awaited<ReturnType<typeof getPlayerThreads>>,
-    Awaited<ReturnType<typeof getPlayerPacks>>,
-    any, any, any,
-    Awaited<ReturnType<typeof getTodayCheckIn>> | null,
-    Awaited<ReturnType<typeof listMyCampaignSeeds>>,
-    Awaited<ReturnType<typeof getCampaignsForPlayer>>,
-  ]
-  const appreciations = 'success' in appreciationResult ? appreciationResult.appreciations : (appreciationResult.appreciations ?? [])
-  const todayCharge = 'success' in chargeResult ? chargeResult.bar : (chargeResult.bar ?? null)
-  const chargeArchive = 'success' in archiveResult ? archiveResult.bars : (archiveResult.bars ?? [])
-
-  let milestoneGuidance = null as Awaited<ReturnType<typeof getCampaignMilestoneGuidance>>
-  try {
-    milestoneGuidance = await getCampaignMilestoneGuidance(playerId)
-  } catch {
-    milestoneGuidance = null
-  }
-
-  const defaultCampaignRefEarly = resolveDefaultCampaignRef(activeInstance?.campaignRef)
-
-  // Derive move context via shared utility (G17 — single source of truth)
-  const moveCtx = derivePlayerMoveContext({
-    quests: player.quests,
-    hasChargeToday: !!todayCharge,
-    activeQuestCount: activeBars.length,
-    nationId: player.nationId,
-    archetypeId: player.archetypeId,
-  })
-
-  const { completedMoveTypes } = moveCtx
-
-  const compassProps = {
-    completedMoveTypes: moveCtx.completedMoveTypes,
-    isFirstSession: moveCtx.isFirstSession,
-    hasChargeToday: moveCtx.hasChargeToday,
-    activeQuestCount: moveCtx.activeQuestCount,
-    isSetupIncomplete: moveCtx.isSetupIncomplete,
-  }
-
-  const isSetupIncomplete = !player.nationId || !player.archetypeId
-
-  const defaultCampaignRef = defaultCampaignRefEarly
-  const residencyProgressStrip = residencyProgressForDashboardHeader(
-    milestoneGuidance,
-    activeInstance,
-    defaultCampaignRef
-  )
-  const useCampaignOnboarding = needsCampaignOnboardingRoute(player, hasActiveOrientationThread)
-  const playerCampaignHomeHref = campaignHomePath({
-    campaignRef: defaultCampaignRef,
-    useOnboardingCampaignRoute: useCampaignOnboarding,
-  })
-
-  // Campaign Entry: show when player has bruised-banana thread and hasn't dismissed
-  const bbThread = threads.find(
-    (t: { id: string }) =>
-      t.id === 'bruised-banana-orientation-thread' || t.id.startsWith('bruised-banana-orientation-')
-  )
-  const showCampaignEntry = bbThread && !(player as { hasSeenCampaignEntry?: boolean }).hasSeenCampaignEntry
-  let intendedImpactLabels: string[] = []
-  if (showCampaignEntry) {
-    const LENS_LABELS: Record<string, string> = { allyship: 'Allyship', creative: 'Creative', strategic: 'Strategic', community: 'Community' }
-    let state: { lens?: string; campaignDomainPreference?: unknown } | undefined
-    if (player.storyProgress) {
-      try {
-        const parsed = JSON.parse(player.storyProgress) as { state?: Record<string, unknown> }
-        state = parsed?.state
-      } catch { /* ignore */ }
-    }
-    if (state?.lens && typeof state.lens === 'string') {
-      const label = LENS_LABELS[state.lens.toLowerCase()]
-      if (label) intendedImpactLabels = [label]
-    }
-    if (intendedImpactLabels.length === 0) {
-      const domains = parseCampaignDomainPreference(player.campaignDomainPreference)
-      intendedImpactLabels = domains
-        .map((key) => ALLYSHIP_DOMAINS.find((d) => d.key === key)?.label ?? '')
-        .filter((s) => s.length > 0)
-    }
-  }
-
-  return (
-    <NationProvider element={player.nation?.element ?? null} archetypeName={player.archetype?.name ?? null}>
-    <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-12 space-y-8 sm:space-y-12 max-w-4xl mx-auto">
-
-      {/* 1. HEADER & IDENTITY — compass directly after identity (PMI G1 / PHOS T5.1) */}
-      <header className="space-y-6">
-        <DashboardHeader
-          player={{
-            name: player.name,
-            avatarConfig: player.avatarConfig,
-            pronouns: player.pronouns,
-            nation: player.nation ? { name: player.nation.name, element: player.nation.element } : null,
-            archetype: player.archetype ? { name: player.archetype.name } : null,
-          }}
-          vibulons={vibulons}
-          todayCheckIn={todayCheckIn ? {
-            sceneId: todayCheckIn.sceneId ?? null,
-            thresholdEncounterId: todayCheckIn.thresholdEncounterId ?? null,
-            channel: todayCheckIn.channel,
-            altitude: todayCheckIn.altitude,
-            sceneTypeChosen: todayCheckIn.sceneTypeChosen ?? null,
-          } : null}
-          playerId={playerId}
-          questCount={completedBars.length}
-        />
-
-        {/* 2. ORIENTATION COMPASS — session governor; charge → 321 → BAR → plant in spoke */}
-        <OrientationCompass
-          {...compassProps}
-          hasCheckedIn={!!todayCheckIn}
-          residencyEventsHref={defaultCampaignRef === 'bruised-banana' ? '/event' : null}
-        />
-
-        <DashboardTwoChannelHub
-          activeInstanceId={activeInstance?.id ?? null}
-          campaignHomeHref={playerCampaignHomeHref}
-        />
-
-        {residencyProgressStrip && (
-          <CampaignMilestoneStrip data={residencyProgressStrip} variant="dashboard" />
-        )}
-
-        <p className="text-xs text-zinc-600">
-          Check in · capture what&apos;s charged · follow the compass to your next move ·{' '}
-          <Link href="/wiki/handbook" className="text-zinc-500 hover:text-zinc-300 underline-offset-2 hover:underline">
-            Player handbook
-          </Link>
-          <span className="text-zinc-700"> · </span>
-          <Link
-            href="/event"
-            className="text-amber-400/95 hover:text-amber-300 font-semibold underline-offset-2 hover:underline"
-          >
-            Residency events
-          </Link>
-        </p>
-
-        {/* Campaign leader signals (high-priority, before social) */}
-        {myCampaignSeeds.some((s) => s.isComplete && !s.promotedInstance) && (
-          <CampaignSeedReadyCard seeds={myCampaignSeeds} />
-        )}
-        {campaignsResponsible.length > 0 && (
-          <CampaignsResponsibleSection
-            campaigns={campaignsResponsible}
-            defaultCampaignRef={defaultCampaignRef}
-            needsCampaignOnboardingRoute={useCampaignOnboarding}
-          />
-        )}
-
-        {/* Today's Charge + Archive */}
-        <RecentChargeSection todayCharge={todayCharge} archive={chargeArchive} />
-
-        {appreciations.length > 0 && (
-          <AppreciationsReceived items={appreciations} maxItems={2} />
-        )}
-
-      </header>
-
-      {/* RITUAL SUCCESS BANNER */}
-      {ritualComplete && (
-        <section className="bg-purple-900/30 border border-purple-500/50 rounded-2xl p-8 text-center space-y-4 animate-in zoom-in-95 duration-700">
-          <div className="text-4xl">🌟</div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">The Ritual is Complete</h2>
-          <p className="text-purple-200 text-sm max-w-md mx-auto leading-relaxed">
-            You have successfully navigated the first gates of the Conclave.
-            The collective field is now open to you. Go forth and weave.
-          </p>
-          <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <Link href="/" className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-900/40">
-              Enter the Flow
-            </Link>
-            <Link href="/game-map" className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl font-bold transition-all text-sm">
-              Explore the Game Map
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {/* WELCOME SCREEN (if not seen yet) */}
-      {!('error' in onboardingStatus) && !onboardingStatus.hasSeenWelcome && (
-        <WelcomeScreen />
-      )}
-
-      {/* ONBOARDING CHECKLIST (if not complete) */}
-      {!('error' in onboardingStatus) && !onboardingStatus.isComplete && (
-        <OnboardingChecklist status={onboardingStatus} />
-      )}
-
-      {/* INCOMPLETE SETUP BANNER */}
-      {isSetupIncomplete && (
-        <section className="bg-yellow-900/20 border border-yellow-900/50 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-4 text-center sm:text-left">
-            <div className="text-3xl">⚡</div>
-            <div>
-              <h3 className="text-yellow-400 font-bold">Complete Your Setup</h3>
-              <p className="text-yellow-200/60 text-sm">
-                {hasActiveOrientationThread
-                  ? 'Continue your onboarding journey below to choose your Nation and Archetype.'
-                  : 'Your character profile is missing its Nation or Archetype resonance.'
-                }
-              </p>
-            </div>
-          </div>
-          {!hasActiveOrientationThread && (
-            <div className="flex gap-2">
-              <Link
-                href="/onboarding"
-                className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
-              >
-                Quick Setup →
-              </Link>
-              <Link
-                href="/conclave/guided?reset=true"
-                className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg transition-colors whitespace-nowrap text-sm"
-              >
-                Guided Story
-              </Link>
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* QUEST JOURNEYS (Threads & Packs) */}
-      {(threads.length > 0 || packs.length > 0) && (() => {
-        const activeThreads = threads.filter(t => !(t.playerProgress as any)?.isArchived)
-        const journeysCount = activeThreads.length + packs.length
-        return (
-          <CollapsibleSection
-            title="Journeys"
-            count={journeysCount}
-            defaultExpanded={journeysCount <= 3}
-            titleClassName="text-purple-500/70"
-            variant="button"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeThreads.map(thread => (
-                <QuestThread
-                  key={thread.id}
-                  thread={thread as any}
-                  completedMoveTypes={completedMoveTypes}
-                  isSetupIncomplete={isSetupIncomplete}
-                  focusQuest={focusQuest}
-                  campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)}
-                  isAdmin={isAdmin}
-                />
-              ))}
-              {packs.map(pack => (
-                <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} focusQuest={focusQuest} isAdmin={isAdmin} />
-              ))}
-            </div>
-          </CollapsibleSection>
-        )
-      })()}
-
-      {/* ACTION BUTTONS — Full width across screen */}
-      <section className="mb-10">
-        <DashboardActionButtons />
-      </section>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        <div className="space-y-10">
-          {/* 2. ACTIVE BARS (Current) */}
-          <CollapsibleSection
-            title="Active Quests"
-            count={activeBars.length}
-            defaultExpanded={activeBars.length <= 5}
-            titleClassName="text-yellow-500/70"
-            id="active-quests"
-            variant="button"
-          >
-            <StarterQuestBoard
-              completedBars={completedBars}
-              activeBars={activeBars.length > 5 ? activeBars.slice(0, 5) : activeBars}
-              // Filter out 'inspiration' type for the main list; when >5 active, only pass bars for first 5
-              customBars={visibleCustomBars.filter(b => b.type !== 'inspiration')}
-              ichingBars={ichingReadings}
-              potentialDelegates={potentialDelegates}
-              playerId={playerId}
-              userRoles={player.roles.map(r => r.role.key)}
-              view="active"
-            />
-            {activeBars.length > 5 && (
-              <div className="mt-4">
-                <Link
-                  href="/hand"
-                  className="inline-flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 font-medium"
-                >
-                  View Vault →
-                </Link>
-                <p className="text-xs text-zinc-500 mt-1">Organize and manage your active quests</p>
-              </div>
-            )}
-          </CollapsibleSection>
-        </div>
-
-        <div className="space-y-10">
-          {/* 4. GRAVEYARD (Completed Bars & Journeys) */}
-          {(() => {
-            const completedThreads = threads.filter(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived)
-            const completedPacks = packs.filter(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)
-            const graveyardCount = completedThreads.length + completedPacks.length + completedBars.length
-            return (
-              <CollapsibleSection
-                title="💀 Graveyard"
-                count={graveyardCount}
-                defaultExpanded={graveyardCount <= 3}
-                titleClassName="text-zinc-400"
-                variant="button"
-              >
-                <div className="opacity-60 hover:opacity-100 transition duration-500 space-y-6">
-                  {/* Completed Journeys (Threads & Packs) */}
-                  {(completedThreads.length > 0 || completedPacks.length > 0) && (
-                    <div>
-                      <h3 className="text-xs text-zinc-600 uppercase tracking-widest mb-3">Completed Journeys</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {completedThreads.map(thread => (
-                          <QuestThread key={thread.id} thread={thread as any} campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)} isAdmin={isAdmin} />
-                        ))}
-                        {completedPacks.map(pack => (
-                          <QuestPack key={pack.id} pack={pack as any} focusQuest={focusQuest} isAdmin={isAdmin} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Completed Individual Quests */}
-                  <StarterQuestBoard
-                    completedBars={completedBars}
-                    activeBars={activeBars}
-                    customBars={customBars as any}
-                    view="completed"
-                  />
-                </div>
-              </CollapsibleSection>
-            )
-          })()}
-        </div>
-      </div>
-    </div >
-    </NationProvider>
-  )
+  return <NowHome playerId={playerId} vibulons={vibulons} />
 }

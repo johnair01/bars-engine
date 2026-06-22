@@ -111,7 +111,7 @@ export default async function SpokeSeedsPage(props: {
         />
 
         <div className="flex flex-wrap gap-4 text-sm">
-          <Link href="/hand" className="text-amber-400/90 hover:text-amber-300">
+          <Link href="/vault" className="text-amber-400/90 hover:text-amber-300">
             Open vault →
           </Link>
           <Link href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`} className="text-purple-400 hover:text-purple-300">

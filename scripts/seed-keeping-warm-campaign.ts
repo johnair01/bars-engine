@@ -134,7 +134,7 @@ async function main() {
   console.log(`     → Add intake passages + set startNodeId`)
   console.log(`     → Set playbookTemplate (intake routing weights)`)
   console.log(`  2. Seed spoke adventures with campaignRef: keeping-warm`)
-  console.log(`  3. Forge a Keeping Warm event invite BAR from /hand/forge-invitation`)
+  console.log(`  3. Forge a Keeping Warm event invite BAR from /vault/forge-invitation`)
   console.log(`     → Set eventSlug: keeping-warm`)
 }
 

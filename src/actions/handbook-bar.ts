@@ -77,7 +77,7 @@ export async function createHandbookBar(
     })
 
     revalidatePath('/bars')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     revalidatePath('/')
     return { success: true, barId: bar.id }
   } catch (e) {

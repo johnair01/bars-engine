@@ -12,9 +12,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
         let active: boolean
         if (path === '/') {
             active = pathname === '/'
-        } else if (path === '/hand') {
+        } else if (path === '/vault') {
             // VAULT: active across all player-possession routes
-            active = pathname.startsWith('/hand') ||
+            active = pathname.startsWith('/vault') ||
                      pathname.startsWith('/bars') ||
                      pathname.startsWith('/wallet') ||
                      pathname.startsWith('/daemons') ||
@@ -38,9 +38,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             NOW
                         </Link>
                         <Link
-                            href="/hand"
+                            href="/vault"
                             title="Your private studio: charges, quests, drafts, invitations — metabolize what you are carrying."
-                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/hand')}`}
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/vault')}`}
                         >
                             VAULT
                         </Link>
@@ -59,9 +59,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             PLAY
                         </Link>
                         <Link
-                            href="/bars/create"
+                            href="/bars/capture"
                             title="Forge a BAR: turn a charged moment into an artifact you can grow into a quest."
-                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars/create')}`}
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars/capture')}`}
                         >
                             + BAR
                         </Link>
@@ -70,9 +70,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                 {!isAuthenticated && (
                     <>
                         <Link
-                            href="/pricing"
+                            href="/launch"
                             title="The book, the deck, and the game — start here."
-                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/pricing')}`}
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/launch')}`}
                         >
                             START
                         </Link>
@@ -84,7 +84,14 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             BOOK
                         </Link>
                         <Link
-                            href="/game/"
+                            href="/deck/sales"
+                            title="The Allyship Deck — 120 cards. See what's inside."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/deck')}`}
+                        >
+                            DECK
+                        </Link>
+                        <Link
+                            href="/game/index.html"
                             title="Play Mastering the Game of Allyship in your browser. No account needed."
                             className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/game')}`}
                         >
@@ -116,12 +123,21 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                     </>
                 )}
                 {!isAuthenticated && (
-                    <Link
-                        href="/login"
-                        className="text-zinc-500 hover:text-zinc-300 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest text-[10px] sm:text-xs"
-                    >
-                        Log in
-                    </Link>
+                    <>
+                        <Link
+                            href="/redeem"
+                            title="Bought something? Redeem your code to unlock it."
+                            className="text-zinc-500 hover:text-zinc-300 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest text-[10px] sm:text-xs"
+                        >
+                            Redeem
+                        </Link>
+                        <Link
+                            href="/login"
+                            className="text-zinc-500 hover:text-zinc-300 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest text-[10px] sm:text-xs"
+                        >
+                            Log in
+                        </Link>
+                    </>
                 )}
             </div>
         </nav>

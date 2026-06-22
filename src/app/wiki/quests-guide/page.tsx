@@ -138,13 +138,13 @@ export default function QuestsGuidePage() {
       <section className="border-t border-zinc-800 pt-6 space-y-3">
         <h2 className="text-sm uppercase tracking-widest text-zinc-500">What to do next</h2>
         <div className="flex flex-wrap gap-3">
-          <Link href="/hand/quests" className="text-xs px-3 py-2 rounded-lg border border-amber-800/50 text-amber-400 hover:bg-amber-950/30 transition-colors">
+          <Link href="/vault/quests" className="text-xs px-3 py-2 rounded-lg border border-amber-800/50 text-amber-400 hover:bg-amber-950/30 transition-colors">
             View your quests →
           </Link>
           <Link href="/wiki/iching" className="text-xs px-3 py-2 rounded-lg border border-sky-800/50 text-sky-400 hover:bg-sky-950/30 transition-colors">
             Try an I Ching reading →
           </Link>
-          <Link href="/bars/create" className="text-xs px-3 py-2 rounded-lg border border-zinc-700 text-zinc-400 hover:bg-zinc-800 transition-colors">
+          <Link href="/bars/capture" className="text-xs px-3 py-2 rounded-lg border border-zinc-700 text-zinc-400 hover:bg-zinc-800 transition-colors">
             Create a BAR →
           </Link>
         </div>

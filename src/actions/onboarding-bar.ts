@@ -53,7 +53,7 @@ export async function createOnboardingBar(payload: OnboardingBarPayload): Promis
         const cap = await assertCanCreatePrivateDraft(playerId)
         if (!cap.ok) return { error: cap.error }
 
-        // Private draft + unclaimed matches `draftWhere` in Vault (/hand) — same lane as Forge → private BARs.
+        // Private draft + unclaimed matches `draftWhere` in Vault (/vault) — same lane as Forge → private BARs.
         const newBar = await db.customBar.create({
             data: {
                 creatorId: playerId,
@@ -81,7 +81,7 @@ export async function createOnboardingBar(payload: OnboardingBarPayload): Promis
         })
 
         revalidatePath('/')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/bars')
         revalidatePath('/bars/available')
         return { success: true, barId: newBar.id }

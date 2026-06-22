@@ -11,6 +11,7 @@ import { ResidencyEventsCallout } from '@/components/campaign/ResidencyEventsCal
 import { GmFaceMovesPanel } from '@/components/campaign/GmFaceMovesPanel'
 import type { CampaignMilestoneGuidance } from '@/lib/bruised-banana-milestone'
 import type { CampaignContributionProgress } from '@/actions/campaign-contributions'
+import type { DeclaredContribution } from '@/actions/campaign-attach'
 import type { GmFaceStageMove } from '@/lib/gm-face-stage-moves'
 import { zoneBackgroundStyle } from '@/lib/ui/zone-surfaces'
 import { elementCssVars, altitudeCssVars } from '@/lib/ui/card-tokens'
@@ -47,6 +48,11 @@ type Props = {
    * Null when not available (fail-soft — hub still renders without it).
    */
   contributionProgress?: CampaignContributionProgress | null
+  /**
+   * BARs the player has explicitly offered to this campaign (TSG Phase 2 bridge).
+   * Empty/undefined → section hidden.
+   */
+  myDeclaredContributions?: DeclaredContribution[]
   recentCapture?: RecentCapture
   intakeAdventureId?: string | null
   showFundraisingSettings?: boolean
@@ -83,6 +89,7 @@ export function CampaignHubView({
   data,
   milestoneGuidance,
   contributionProgress,
+  myDeclaredContributions,
   recentCapture,
   intakeAdventureId,
   showFundraisingSettings,
@@ -127,6 +134,13 @@ export function CampaignHubView({
                   Fundraising settings
                 </CampaignOutlineNavButton>
               ) : null}
+              {showFundraisingSettings ? (
+                <CampaignOutlineNavButton
+                  href={`/campaign/${encodeURIComponent(campaignRef)}/milestones`}
+                >
+                  Milestones
+                </CampaignOutlineNavButton>
+              ) : null}
               <CampaignOutlineNavButton href={`/campaign/twine?ref=${campaignRef}`}>
                 Campaign story
               </CampaignOutlineNavButton>
@@ -168,6 +182,28 @@ export function CampaignHubView({
               progress={contributionProgress}
               campaignRef={campaignRef}
             />
+          )}
+
+          {/* TSG Phase 2 — BARs the player has offered to this campaign */}
+          {myDeclaredContributions && myDeclaredContributions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-sky-400">Offered by you</p>
+              <ul className="space-y-1.5">
+                {myDeclaredContributions.map((c) => (
+                  <li key={c.barId}>
+                    <Link
+                      href={`/bars/${c.barId}`}
+                      className="flex items-baseline justify-between gap-3 text-xs text-zinc-300 hover:text-white transition-colors"
+                    >
+                      <span className="truncate">🤝 {c.label}</span>
+                      <span className="text-[10px] text-zinc-500 shrink-0">
+                        {c.completed ? 'completed' : 'in progress'}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
           {bookMilestoneRollup && bookMilestoneRollup.chapters.length > 0 && (
@@ -221,7 +257,7 @@ export function CampaignHubView({
               ) : null}
               <div className="flex flex-wrap gap-x-4 gap-y-1 items-center">
                 <Link
-                  href="/hand"
+                  href="/vault"
                   className="text-[10px] text-emerald-600 hover:text-emerald-400 transition min-h-[44px] inline-flex items-center"
                 >
                   See all your BARs →

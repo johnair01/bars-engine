@@ -10,6 +10,7 @@ import type { PersonalMoveType } from './types'
 
 const WAVE_NAMES: Record<PersonalMoveType, string> = {
   wakeUp: 'Wake Up',
+  openUp: 'Open Up',
   cleanUp: 'Clean Up',
   growUp: 'Grow Up',
   showUp: 'Show Up',

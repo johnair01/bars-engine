@@ -39,6 +39,7 @@ export type CardStatus = 'authored' | 'generated'
 
 export interface MoveCard {
   id: string // `${MOVE_ABBR}-${DOMAIN_ABBR}-${OPERATION}` e.g. "OPEN-GR-SHAMAN"
+  num: string // zero-padded position in deck e.g. "001"
   kind: 'move'
   move: BasicMove
   operation: Operation

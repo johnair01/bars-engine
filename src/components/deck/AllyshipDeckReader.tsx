@@ -1,377 +1,629 @@
-"use client";
+'use client'
 
-import { useEffect, useMemo, useState } from "react";
-import { COLOR, FONT } from "@/lib/handbook/tokens";
+import { useEffect, useMemo, useState, useCallback, type CSSProperties } from 'react'
+import Link from 'next/link'
+import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'
+import {
+  DECK_FONTS,
+  DECK_GOLD,
+  LIMINAL,
+  MOVE_LABELS,
+  OPERATION_LABELS,
+  DOMAIN_LABELS,
+} from '@/lib/allyship-deck/card-visuals'
 import type {
   AllyshipDeck,
-  AllyshipCard,
   MoveCard,
-  InstructionCard,
   BasicMove,
   Operation,
   AllyshipDomain,
-} from "@/lib/allyship-deck/types";
+} from '@/lib/allyship-deck/types'
+import { AllyshipCard, type CardSubject } from './AllyshipCard'
+import { DeckCardBack } from './DeckCardBack'
+import { SendToBarsButton } from './SendToBarsButton'
+import { FindYourPath } from './FindYourPath'
+import { recordDraw, type DeckStats } from '@/actions/deck-journal'
 
-type Mode = "draw" | "browse" | "consult" | "guide";
-type Subject = "self" | "campaign";
+type AppView = 'draw' | 'browse' | 'path' | 'collection'
+type DrawMode = 'single' | 'spread'
 
-const MOVE_LABELS: Record<BasicMove, string> = {
-  wake_up: "Wake Up",
-  open_up: "Open Up",
-  clean_up: "Clean Up",
-  grow_up: "Grow Up",
-  show_up: "Show Up",
-};
-const OP_LABELS: Record<Operation, string> = {
-  shaman: "Shaman",
-  challenger: "Challenger",
-  regent: "Regent",
-  architect: "Architect",
-  diplomat: "Diplomat",
-  sage: "Sage",
-};
-const DOMAIN_LABELS: Record<AllyshipDomain, string> = {
-  GATHERING_RESOURCES: "Gather Resources",
-  RAISE_AWARENESS: "Raise Awareness",
-  DIRECT_ACTION: "Direct Action",
-  SKILLFUL_ORGANIZING: "Skillful Organizing",
-};
+const isMove = (c: AllyshipDeck['cards'][number]): c is MoveCard => c.kind === 'move'
 
-const isMove = (c: AllyshipCard): c is MoveCard => c.kind === "move";
-const isInstruction = (c: AllyshipCard): c is InstructionCard => c.kind === "instruction";
+/**
+ * The Allyship Deck app (gated `/deck`).
+ *   • Draw   — daily single card or 3-card spread gateway.
+ *   • Deck   — browse all 120 cards with move/domain/face filters.
+ *   • Find your path — CYOA situation reading → 3-card spread result.
+ *   • Collection — server-persisted journal, streak, Vibeulons.
+ *
+ * @see .specify/specs/allyship-deck-experience/spec.md
+ */
+export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats | null }) {
+  const [deck, setDeck] = useState<AllyshipDeck | null>(null)
+  const [error, setError] = useState(false)
+  const [view, setView] = useState<AppView>('draw')
+  const [subject, setSubject] = useState<CardSubject>('self')
 
-export function AllyshipDeckReader() {
-  const [deck, setDeck] = useState<AllyshipDeck | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("draw");
-  const [subject, setSubject] = useState<Subject>("self");
-  const [selected, setSelected] = useState<MoveCard | null>(null);
+  // Draw
+  const [shuffling, setShuffling] = useState(false)
+  const [drawn, setDrawn] = useState<MoveCard | null>(null)
+  const [drawMode, setDrawMode] = useState<DrawMode>('single')
 
   // Browse filters
-  const [fMove, setFMove] = useState<BasicMove | "all">("all");
-  const [fOp, setFOp] = useState<Operation | "all">("all");
-  const [fDomain, setFDomain] = useState<AllyshipDomain | "all">("all");
+  const [fMove, setFMove] = useState<BasicMove | 'all'>('all')
+  const [fOp, setFOp] = useState<Operation | 'all'>('all')
+  const [fDomain, setFDomain] = useState<AllyshipDomain | 'all'>('all')
 
-  // Consult selection
-  const [problemId, setProblemId] = useState<string | null>(null);
+  // Card detail overlay
+  const [selected, setSelected] = useState<MoveCard | null>(null)
+
+  // Stats (optimistic update on draw)
+  const [stats, setStats] = useState<DeckStats | null>(initialStats)
 
   useEffect(() => {
-    fetch("/allyship-deck/allyship-deck.json")
+    fetch('/allyship-deck/allyship-deck.json')
       .then((r) => {
-        if (!r.ok) throw new Error("Could not load the deck.");
-        return r.json() as Promise<AllyshipDeck>;
+        if (!r.ok) throw new Error('load')
+        return r.json() as Promise<AllyshipDeck>
       })
       .then(setDeck)
-      .catch(() => setError("The deck could not be loaded."));
-  }, []);
+      .catch(() => setError(true))
+  }, [])
 
-  const moveCards = useMemo(() => (deck ? deck.cards.filter(isMove) : []), [deck]);
+  const moveCards = useMemo(() => (deck ? deck.cards.filter(isMove) : []), [deck])
 
   const browsed = useMemo(
     () =>
       moveCards.filter(
         (c) =>
-          (fMove === "all" || c.move === fMove) &&
-          (fOp === "all" || c.operation === fOp) &&
-          (fDomain === "all" || c.domain === fDomain)
+          (fMove === 'all' || c.move === fMove) &&
+          (fOp === 'all' || c.operation === fOp) &&
+          (fDomain === 'all' || c.domain === fDomain),
       ),
-    [moveCards, fMove, fOp, fDomain]
-  );
+    [moveCards, fMove, fOp, fDomain],
+  )
 
-  const draw = () => {
-    if (!moveCards.length) return;
-    const c = moveCards[Math.floor(Math.random() * moveCards.length)];
-    setSelected(c);
-  };
+  const draw = useCallback(() => {
+    if (!moveCards.length || shuffling) return
+    setShuffling(true)
+    setDrawn(null)
+    window.setTimeout(async () => {
+      const card = moveCards[Math.floor(Math.random() * moveCards.length)]
+      setDrawn(card)
+      setShuffling(false)
+      // optimistic stats update
+      setStats((prev) => prev ? {
+        ...prev,
+        totalDrawn: prev.totalDrawn + 1,
+        vibeulons: prev.vibeulons + 1,
+        entries: [{ id: 'pending', cardId: card.id, drawnAt: new Date(), vibeulons: 1 }, ...prev.entries],
+      } : null)
+      // fire-and-forget server record
+      await recordDraw({ cardId: card.id })
+    }, 420)
+  }, [moveCards, shuffling])
 
-  const question = (c: MoveCard) =>
-    subject === "campaign" ? c.campaignQuestion : c.primaryQuestion;
+  const switchView = (v: AppView) => {
+    setView(v)
+    setSelected(null)
+    window.scrollTo(0, 0)
+  }
 
-  if (error) return <Centered>{error}</Centered>;
-  if (!deck) return <Centered>Shuffling…</Centered>;
+  if (error) return <Centered>The deck could not be loaded.</Centered>
+  if (!deck) return <Centered>Shuffling…</Centered>
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", color: COLOR.parchOnDark }}>
-      <div style={{ maxWidth: 640, margin: "0 auto", padding: "20px 16px 64px" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 14 }}>
-          <p style={kicker}>Mastering Allyship Moves</p>
-          <h1 style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 26, color: COLOR.paperHi, margin: "4px 0 0" }}>
-            The Allyship Deck
-          </h1>
-        </div>
+    <main style={{ minHeight: '100vh', background: SURFACE_TOKENS.bgBase }}>
+      {/* ── App top bar ── */}
+      <header style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 20,
+        background: SURFACE_TOKENS.bgBase,
+        borderBottom: '1px solid rgba(255,255,255,.1)',
+        boxShadow: 'inset 0 -1px 0 rgba(255,255,255,.04)',
+      }}>
+        <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 16px', height: 52, display: 'flex', alignItems: 'center', gap: 16 }}>
+          {/* Brand mark */}
+          <Link href="/deck/sales" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flex: 'none' }}>
+            <span style={{ width: 28, height: 28, borderRadius: 6, background: DECK_GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: DECK_FONTS.display, fontWeight: 800, fontSize: 15, color: '#150a04' }}>B</span>
+            <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: SURFACE_TOKENS.textSecondary }}>BARS · DECK</span>
+          </Link>
 
-        {/* Subject toggle — read each move as inner work, or in service of others */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 6 }}>
-          <Toggle active={subject === "self"} onClick={() => setSubject("self")}>Allyship for self</Toggle>
-          <Toggle active={subject === "campaign"} onClick={() => setSubject("campaign")}>Allyship for others</Toggle>
-        </div>
-        <p style={{ fontFamily: FONT.body, fontSize: 12, color: COLOR.steel, textAlign: "center", margin: "0 0 16px" }}>
-          {subject === "self"
-            ? "Reading each move as your own inner work."
-            : "Reading each move for a campaign, milestone, or relationship in service of others."}
-        </p>
+          {/* Tab nav */}
+          <nav style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: 2 }}>
+            {([
+              { id: 'draw',       label: 'Draw'           },
+              { id: 'browse',     label: 'Deck'           },
+              { id: 'path',       label: 'Find your path' },
+              { id: 'collection', label: 'Collection'     },
+            ] as { id: AppView; label: string }[]).map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => switchView(id)}
+                style={{
+                  fontFamily: DECK_FONTS.mono,
+                  fontSize: 11,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  padding: '7px 13px',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: view === id ? '#150a04' : SURFACE_TOKENS.textSecondary,
+                  background: view === id ? DECK_GOLD : 'transparent',
+                  fontWeight: view === id ? 700 : 400,
+                  transition: 'background .15s, color .15s',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
 
-        {/* Mode tabs */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
-          {(["draw", "browse", "consult", "guide"] as Mode[]).map((m) => (
-            <Tab key={m} active={mode === m} onClick={() => { setMode(m); setSelected(null); }}>
-              {m === "draw" ? "Draw" : m === "browse" ? "Browse" : m === "consult" ? "Consult" : "Guide"}
-            </Tab>
-          ))}
-        </div>
-
-        {/* Selected card overlay (shared across modes) */}
-        {selected ? (
-          <CardDetail card={selected} question={question(selected)} subject={subject} onBack={() => setSelected(null)} />
-        ) : (
-          <>
-            {mode === "draw" && (
-              <div style={{ textAlign: "center", padding: "32px 0" }}>
-                <p style={{ fontFamily: FONT.body, fontSize: 16, color: COLOR.steelLt, marginBottom: 22 }}>
-                  Draw a move at random. Read its question. Do its practice.
-                </p>
-                <button style={primaryBtn} onClick={draw}>Draw a card</button>
-              </div>
-            )}
-
-            {mode === "browse" && (
+          {/* Streak + balance */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
+            {stats && (
               <>
-                <Filters
-                  fMove={fMove} setFMove={setFMove}
-                  fOp={fOp} setFOp={setFOp}
-                  fDomain={fDomain} setFDomain={setFDomain}
-                />
-                <p style={countLine}>{browsed.length} cards</p>
-                <Grid cards={browsed} onPick={setSelected} q={question} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: DECK_FONTS.mono, fontSize: 11, color: SURFACE_TOKENS.textSecondary }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: DECK_GOLD }} />
+                  {stats.streak}d
+                </span>
+                <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 11, color: DECK_GOLD }}>
+                  ♦ {stats.vibeulons}
+                </span>
               </>
             )}
+          </div>
+        </div>
+      </header>
 
-            {mode === "consult" && (
-              <ConsultView
-                deck={deck}
-                moveCards={moveCards}
-                problemId={problemId}
-                setProblemId={setProblemId}
-                onPick={setSelected}
-                q={question}
-              />
+      {/* ── Subject toggle ── */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '12px 16px 0' }}>
+        <Chip active={subject === 'self'} onClick={() => setSubject('self')}>Allyship for self</Chip>
+        <Chip active={subject === 'campaign'} onClick={() => setSubject('campaign')}>Allyship for others</Chip>
+      </div>
+
+      {/* ── View body ── */}
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '20px 16px 80px' }}>
+
+        {/* ── Draw ── */}
+        {view === 'draw' && (
+          <div style={{ maxWidth: 760, margin: '0 auto' }}>
+            {/* Streak strip + reminder */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginBottom: 16 }}>
+              {stats && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: DECK_FONTS.mono, fontSize: 11, color: SURFACE_TOKENS.textSecondary, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: DECK_GOLD }} />
+                  {stats.streak} –day streak
+                </span>
+              )}
+              <ReminderToggle />
+            </div>
+
+            {/* Draw mode toggle */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 24 }}>
+              <ModeChip active={drawMode === 'single'} onClick={() => setDrawMode('single')}>Daily · 1 card</ModeChip>
+              <ModeChip active={drawMode === 'spread'} onClick={() => setDrawMode('spread')}>Spread · 3 cards</ModeChip>
+            </div>
+
+            {drawMode === 'spread' ? (
+              /* Spread mode — gateway into CYOA */
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} style={{
+                      width: 120,
+                      height: 168,
+                      borderRadius: 10,
+                      border: '2px dashed rgba(255,255,255,.1)',
+                      background: SURFACE_TOKENS.surfaceCard,
+                    }} />
+                  ))}
+                </div>
+                <p style={{ fontFamily: DECK_FONTS.body, fontSize: 14, color: SURFACE_TOKENS.textSecondary, maxWidth: 380, margin: '0 auto 20px', lineHeight: 1.5 }}>
+                  A spread reads your situation. The deck can only lay them once it knows the moment being asked of you.
+                </p>
+                <button type="button" style={primaryBtn} onClick={() => switchView('path')}>
+                  Begin the reading →
+                </button>
+              </div>
+            ) : (
+              /* Single mode */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+                {drawn ? (
+                  <>
+                    <h2 style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 22, color: '#fff', textAlign: 'center', margin: 0 }}>
+                      Pull today&rsquo;s card
+                    </h2>
+                    <div key={drawn.id} className="deck-card-flip-in" style={{ width: 'min(380px, 92vw)' }}>
+                      <AllyshipCard
+                        card={drawn}
+                        variant="full"
+                        subject={subject}
+                        footerSlot={<SendToBarsButton cardId={drawn.id} subject={subject} />}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button type="button" style={secondaryBtn} onClick={draw}>Draw again</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2 style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 22, color: '#fff', textAlign: 'center', margin: 0 }}>
+                      Pull today&rsquo;s card
+                    </h2>
+                    <p style={{ fontFamily: DECK_FONTS.body, fontSize: 14, color: SURFACE_TOKENS.textSecondary, textAlign: 'center', margin: 0 }}>
+                      One card, one concrete move. Shuffle when you&rsquo;re ready.
+                    </p>
+                    <DeckCardBack width={240} pulsing={shuffling} />
+                    <button type="button" style={{ ...primaryBtn, opacity: shuffling ? 0.6 : 1 }} onClick={draw} disabled={shuffling}>
+                      {shuffling ? 'Shuffling…' : 'Shuffle & draw'}
+                    </button>
+                  </>
+                )}
+              </div>
             )}
+          </div>
+        )}
 
-            {mode === "guide" && <GuideView cards={deck.cards.filter(isInstruction)} />}
-          </>
+        {/* ── Browse / Deck ── */}
+        {view === 'browse' && (
+          <div style={{ maxWidth: 1060, margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
+              <h2 style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 24, color: '#fff', margin: 0 }}>The deck</h2>
+              <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted }}>{browsed.length} of {moveCards.length} cards</span>
+            </div>
+            <ChipGroup label="Move"   value={fMove}   setValue={setFMove}   options={Object.entries(MOVE_LABELS)      as [BasicMove, string][]} />
+            <ChipGroup label="Domain" value={fDomain} setValue={setFDomain} options={Object.entries(DOMAIN_LABELS)    as [AllyshipDomain, string][]} />
+            <ChipGroup label="Face"   value={fOp}     setValue={setFOp}     options={Object.entries(OPERATION_LABELS) as [Operation, string][]} />
+            <CardGrid cards={browsed} subject={subject} onPick={setSelected} />
+          </div>
+        )}
+
+        {/* ── Find your path ── */}
+        {view === 'path' && (
+          <FindYourPath cards={moveCards} subject={subject} onSelectCard={setSelected} />
+        )}
+
+        {/* ── Collection ── */}
+        {view === 'collection' && (
+          <CollectionView stats={stats} cards={moveCards} subject={subject} onSelectCard={setSelected} />
         )}
       </div>
-    </div>
-  );
-}
 
-/* ─── sub-views ─────────────────────────────────────────────── */
-
-function ConsultView({
-  deck, moveCards, problemId, setProblemId, onPick, q,
-}: {
-  deck: AllyshipDeck;
-  moveCards: MoveCard[];
-  problemId: string | null;
-  setProblemId: (id: string | null) => void;
-  onPick: (c: MoveCard) => void;
-  q: (c: MoveCard) => string;
-}) {
-  const problem = deck.problems.find((p) => p.id === problemId) || null;
-  const cards = problem ? moveCards.filter((c) => problem.cardIds.includes(c.id)) : [];
-
-  return (
-    <>
-      <p style={{ fontFamily: FONT.body, fontSize: 15, color: COLOR.steelLt, marginBottom: 12, textAlign: "center" }}>
-        What are you facing?
-      </p>
-      <div style={{ display: "grid", gap: 8, marginBottom: 18 }}>
-        {deck.problems.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => setProblemId(p.id === problemId ? null : p.id)}
-            style={{ ...rowBtn, ...(p.id === problemId ? rowBtnActive : null) }}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-      {problem && (
-        <>
-          <p style={countLine}>{cards.length} cards for &ldquo;{problem.label}&rdquo;</p>
-          <Grid cards={cards} onPick={onPick} q={q} />
-        </>
-      )}
-    </>
-  );
-}
-
-function GuideView({ cards }: { cards: InstructionCard[] }) {
-  const topics = Array.from(new Set(cards.map((c) => c.topic)));
-  return (
-    <div style={{ display: "grid", gap: 14 }}>
-      {topics.map((t) => (
-        <div key={t}>
-          <p style={kicker}>{t}</p>
-          {cards.filter((c) => c.topic === t).map((c) => (
-            <div key={c.id} style={{ ...panel, marginTop: 8 }}>
-              <div style={{ fontFamily: FONT.label, fontSize: 15, color: COLOR.paperHi }}>{c.title}</div>
-              <div style={{ fontFamily: FONT.body, fontSize: 14, color: COLOR.steelLt, marginTop: 4, lineHeight: 1.55 }}>{c.body}</div>
-            </div>
-          ))}
+      {/* ── Detail overlay ── */}
+      {selected && (
+        <div
+          onClick={() => setSelected(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.72)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 50 }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(400px, 92vw)' }}>
+            <AllyshipCard
+              card={selected}
+              variant="full"
+              subject={subject}
+              footerSlot={<SendToBarsButton cardId={selected.id} subject={subject} />}
+            />
+            <button type="button" onClick={() => setSelected(null)} style={closeBtn}>Close</button>
+          </div>
         </div>
-      ))}
-    </div>
-  );
-}
-
-function CardDetail({
-  card, question, subject, onBack,
-}: { card: MoveCard; question: string; subject: Subject; onBack: () => void }) {
-  return (
-    <div style={panel}>
-      <button onClick={onBack} style={backBtn}>← back</button>
-      <p style={kicker}>
-        {OP_LABELS[card.operation]} · {MOVE_LABELS[card.move]} · {DOMAIN_LABELS[card.domain]}
-        {card.status === "generated" && <span style={{ color: COLOR.muteInk }}> · draft</span>}
-      </p>
-      <h2 style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 24, color: COLOR.paperHi, margin: "6px 0 10px" }}>
-        {card.title}
-      </h2>
-      <div style={{ ...fieldLabel, color: COLOR.cinnabar, marginBottom: 4 }}>
-        {subject === "campaign" ? "Allyship for others" : "Allyship for self"}
-      </div>
-      <p style={{ fontFamily: FONT.body, fontStyle: "italic", fontSize: 18, color: COLOR.goldLt, lineHeight: 1.45, marginBottom: 14 }}>
-        {question}
-      </p>
-      <Field label="Optimizes for" text={card.optimizesFor} />
-      <FieldList label="Forbidden moves" items={card.forbiddenMoves} />
-      <FieldList label="Failure modes" items={card.failureModes} />
-      <Field label="Practice" text={card.remediation} highlight />
-      {card.flavor && (
-        <p style={{ fontFamily: FONT.body, fontStyle: "italic", fontSize: 14, color: COLOR.steel, marginTop: 14, borderTop: `1px solid ${COLOR.midnight}`, paddingTop: 10 }}>
-          {card.flavor}
-        </p>
       )}
-      <div style={{ marginTop: 12, display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {card.capabilities.map((cap) => (
-          <span key={cap} style={chip}>restores: {cap}</span>
-        ))}
-        <span style={{ ...chip, background: "transparent", borderColor: COLOR.steel }}>→ {card.outputBar} BAR</span>
-      </div>
-    </div>
-  );
+    </main>
+  )
 }
 
-/* ─── primitives ────────────────────────────────────────────── */
+// ─── Collection view ─────────────────────────────────────────────────────────
 
-function Grid({ cards, onPick, q }: { cards: MoveCard[]; onPick: (c: MoveCard) => void; q: (c: MoveCard) => string }) {
+function CollectionView({
+  stats,
+  cards,
+  subject,
+  onSelectCard,
+}: {
+  stats: DeckStats | null
+  cards: MoveCard[]
+  subject: CardSubject
+  onSelectCard: (c: MoveCard) => void
+}) {
+  const [reminderOn, setReminderOn] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('deck-reminder-enabled') === 'true'
+  })
+
+  const toggleReminder = () => {
+    const next = !reminderOn
+    setReminderOn(next)
+    window.localStorage.setItem('deck-reminder-enabled', String(next))
+  }
+
+  if (!stats) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px 0' }}>
+        <p style={{ fontFamily: DECK_FONTS.body, color: SURFACE_TOKENS.textSecondary }}>Sign in to see your collection.</p>
+      </div>
+    )
+  }
+
+  const cardMap = new Map(cards.map((c) => [c.id, c]))
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
+    <div style={{ maxWidth: 1060, margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18 }}>
+        <h2 style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 28, color: '#fff', margin: 0 }}>Your collection</h2>
+        <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted }}>{stats.totalDrawn} cards drawn</span>
+      </div>
+
+      {/* Stats strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+        <StatTile label="Current streak" value={`${stats.streak} days`} />
+        <StatTile label="Vibeulons" value={`♦ ${stats.vibeulons}`} />
+        <div style={{ ...statTileBase, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted }}>Reminder</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              type="button"
+              onClick={toggleReminder}
+              aria-pressed={reminderOn}
+              style={{
+                width: 34, height: 18, borderRadius: 99, border: 'none', cursor: 'pointer', padding: 0, position: 'relative',
+                background: reminderOn ? LIMINAL.frame : SURFACE_TOKENS.surfaceInset,
+                transition: 'background .2s',
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 2, left: reminderOn ? 16 : 2, width: 14, height: 14,
+                borderRadius: '50%', background: '#fff', transition: 'left .2s',
+              }} />
+            </button>
+            <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 11, color: reminderOn ? SURFACE_TOKENS.textPrimary : SURFACE_TOKENS.textMuted }}>
+              {reminderOn ? 'On · 8:00 AM' : 'Off'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Journal grid */}
+      {stats.entries.length === 0 ? (
+        <div style={{ border: '2px dashed rgba(255,255,255,.1)', borderRadius: 14, padding: '48px 24px', textAlign: 'center' }}>
+          <p style={{ fontFamily: DECK_FONTS.body, color: SURFACE_TOKENS.textSecondary, marginBottom: 12 }}>No cards drawn yet.</p>
+          <button type="button" style={secondaryBtn}>Go draw →</button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(178px, 1fr))', gap: 14 }}>
+          {stats.entries.map((entry) => {
+            const card = cardMap.get(entry.cardId)
+            if (!card) return null
+            return (
+              <div key={entry.id}>
+                <p style={{ ...kicker, color: SURFACE_TOKENS.textMuted, fontSize: 9, marginBottom: 6 }}>
+                  {whenLabel(entry.drawnAt)}
+                </p>
+                <AllyshipCard
+                  card={card}
+                  variant="grid"
+                  subject={subject}
+                  onClick={() => onSelectCard(card)}
+                  footerSlot={
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); copyShareLink(card.id) }}
+                      style={{ fontFamily: DECK_FONTS.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: SURFACE_TOKENS.textMuted, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      Share
+                    </button>
+                  }
+                />
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={statTileBase}>
+      <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted, fontSize: 9 }}>{label}</span>
+      <span style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 28, color: '#fff', marginTop: 6, display: 'block' }}>{value}</span>
+    </div>
+  )
+}
+
+const statTileBase: CSSProperties = {
+  background: SURFACE_TOKENS.surfaceCard,
+  borderRadius: 12,
+  padding: '16px 18px',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06)',
+  border: '1px solid rgba(255,255,255,.08)',
+}
+
+function whenLabel(drawnAt: Date): string {
+  const now = new Date()
+  const diff = Math.floor((now.getTime() - new Date(drawnAt).getTime()) / 86400000)
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Yesterday'
+  if (diff < 30) return `${diff} days ago`
+  return new Date(drawnAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function copyShareLink(cardId: string) {
+  navigator.clipboard.writeText(`https://masteringallyship.com/c/${cardId}`)
+}
+
+// ─── Reminder toggle (inline on draw view) ───────────────────────────────────
+
+function ReminderToggle() {
+  const [on, setOn] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('deck-reminder-enabled') === 'true'
+  })
+
+  const toggle = () => {
+    const next = !on
+    setOn(next)
+    window.localStorage.setItem('deck-reminder-enabled', String(next))
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+    >
+      <span style={{
+        width: 34, height: 18, borderRadius: 99, padding: 2, position: 'relative', display: 'block',
+        background: on ? LIMINAL.frame : SURFACE_TOKENS.surfaceInset,
+        border: `1px solid ${on ? LIMINAL.frame : 'rgba(255,255,255,.16)'}`,
+        transition: 'background .2s',
+      }}>
+        <span style={{ position: 'absolute', top: 2, left: on ? 16 : 2, width: 14, height: 14, borderRadius: '50%', background: '#fff', transition: 'left .2s' }} />
+      </span>
+      <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: SURFACE_TOKENS.textSecondary }}>
+        {on ? 'Remind me · 8:00 AM' : 'Remind me'}
+      </span>
+    </button>
+  )
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function CardGrid({ cards, subject, onPick }: { cards: MoveCard[]; subject: CardSubject; onPick: (c: MoveCard) => void }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(178px, 1fr))', gap: 12 }}>
       {cards.map((c) => (
-        <button key={c.id} onClick={() => onPick(c)} style={gridCard}>
-          <div style={{ fontFamily: FONT.mono, fontSize: 9, letterSpacing: "0.1em", color: COLOR.gold, textTransform: "uppercase" }}>
-            {OP_LABELS[c.operation]} · {MOVE_LABELS[c.move]}
-          </div>
-          <div style={{ fontFamily: FONT.label, fontSize: 14, color: COLOR.paperHi, marginTop: 4 }}>{c.title}</div>
-          <div style={{ fontFamily: FONT.body, fontSize: 12, color: COLOR.steel, marginTop: 4, lineHeight: 1.4 }}>
-            {q(c).slice(0, 80)}{q(c).length > 80 ? "…" : ""}
-          </div>
-        </button>
+        <AllyshipCard key={c.id} card={c} variant="grid" subject={subject} onClick={() => onPick(c)} />
       ))}
     </div>
-  );
+  )
 }
 
-function Filters({
-  fMove, setFMove, fOp, setFOp, fDomain, setFDomain,
+function ChipGroup<T extends string>({
+  label,
+  value,
+  setValue,
+  options,
 }: {
-  fMove: BasicMove | "all"; setFMove: (v: BasicMove | "all") => void;
-  fOp: Operation | "all"; setFOp: (v: Operation | "all") => void;
-  fDomain: AllyshipDomain | "all"; setFDomain: (v: AllyshipDomain | "all") => void;
+  label: string
+  value: T | 'all'
+  setValue: (v: T | 'all') => void
+  options: [T, string][]
 }) {
   return (
-    <div style={{ display: "grid", gap: 8, marginBottom: 12 }}>
-      <Select value={fMove} onChange={setFMove} all="All moves" options={Object.entries(MOVE_LABELS)} />
-      <Select value={fOp} onChange={setFOp} all="All operations" options={Object.entries(OP_LABELS)} />
-      <Select value={fDomain} onChange={setFDomain} all="All domains" options={Object.entries(DOMAIN_LABELS)} />
-    </div>
-  );
-}
-
-function Select<T extends string>({
-  value, onChange, all, options,
-}: { value: T | "all"; onChange: (v: T | "all") => void; all: string; options: [string, string][] }) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value as T | "all")}
-      style={{ fontFamily: FONT.label, fontSize: 14, padding: "8px 10px", borderRadius: 8, background: COLOR.midnight, color: COLOR.paperHi, border: `1px solid ${COLOR.steel}` }}
-    >
-      <option value="all">{all}</option>
-      {options.map(([k, label]) => (
-        <option key={k} value={k}>{label}</option>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+      <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted, width: 54, flex: 'none' }}>{label}</span>
+      <Chip active={value === 'all'} onClick={() => setValue('all')}>All</Chip>
+      {options.map(([k, lbl]) => (
+        <Chip key={k} active={value === k} onClick={() => setValue(value === k ? 'all' : k)}>{lbl}</Chip>
       ))}
-    </select>
-  );
-}
-
-function Field({ label, text, highlight }: { label: string; text: string; highlight?: boolean }) {
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={fieldLabel}>{label}</div>
-      <div style={{ fontFamily: FONT.body, fontSize: 15, lineHeight: 1.5, color: highlight ? COLOR.paperHi : COLOR.steelLt }}>{text}</div>
     </div>
-  );
+  )
 }
 
-function FieldList({ label, items }: { label: string; items: string[] }) {
-  if (!items?.length || (items.length === 1 && items[0] === "— author —")) return null;
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={fieldLabel}>{label}</div>
-      <ul style={{ margin: 0, paddingLeft: 18 }}>
-        {items.map((it, i) => (
-          <li key={i} style={{ fontFamily: FONT.body, fontSize: 14, lineHeight: 1.5, color: COLOR.steelLt }}>{it}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function Tab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button onClick={onClick} style={{ fontFamily: FONT.label, fontSize: 14, padding: "7px 14px", borderRadius: 8, cursor: "pointer", border: `1px solid ${active ? COLOR.gold : COLOR.steel}`, background: active ? "rgba(200,163,90,0.16)" : "transparent", color: active ? COLOR.goldLt : COLOR.parchOnDark }}>
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        fontFamily: DECK_FONTS.mono,
+        fontSize: 11,
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase',
+        padding: '6px 11px',
+        borderRadius: 999,
+        cursor: 'pointer',
+        color: active ? '#150a04' : SURFACE_TOKENS.textSecondary,
+        background: active ? DECK_GOLD : SURFACE_TOKENS.surfaceInset,
+        border: active ? 'none' : '1px solid rgba(255,255,255,.12)',
+        fontWeight: active ? 700 : 400,
+      }}
+    >
       {children}
     </button>
-  );
+  )
 }
 
-function Toggle({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function ModeChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} style={{ fontFamily: FONT.mono, fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", padding: "6px 12px", borderRadius: 999, cursor: "pointer", border: `1px solid ${active ? COLOR.cinnabar : COLOR.steel}`, background: active ? "rgba(168,64,46,0.18)" : "transparent", color: active ? COLOR.goldLt : COLOR.steel }}>
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        fontFamily: DECK_FONTS.mono,
+        fontSize: 11,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        padding: '8px 16px',
+        borderRadius: 8,
+        cursor: 'pointer',
+        color: active ? '#150a04' : SURFACE_TOKENS.textSecondary,
+        background: active ? DECK_GOLD : SURFACE_TOKENS.surfaceInset,
+        border: active ? 'none' : '1px solid rgba(255,255,255,.14)',
+        fontWeight: active ? 700 : 500,
+      }}
+    >
       {children}
     </button>
-  );
+  )
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ height: "100%", display: "grid", placeItems: "center", color: COLOR.steelLt, fontFamily: FONT.body }}>
+    <div style={{ minHeight: '70vh', display: 'grid', placeItems: 'center', background: SURFACE_TOKENS.bgBase, color: SURFACE_TOKENS.textSecondary, fontFamily: DECK_FONTS.body }}>
       {children}
     </div>
-  );
+  )
 }
 
-/* ─── style tokens ──────────────────────────────────────────── */
-const kicker: React.CSSProperties = { fontFamily: FONT.mono, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: COLOR.gold };
-const fieldLabel: React.CSSProperties = { fontFamily: FONT.mono, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: COLOR.muteInk, marginBottom: 3 };
-const countLine: React.CSSProperties = { fontFamily: FONT.mono, fontSize: 11, color: COLOR.steel, margin: "0 0 10px" };
-const panel: React.CSSProperties = { background: COLOR.card, border: `1px solid ${COLOR.midnight}`, borderRadius: 12, padding: 18 };
-const gridCard: React.CSSProperties = { textAlign: "left", background: COLOR.card, border: `1px solid ${COLOR.midnight}`, borderRadius: 10, padding: 12, cursor: "pointer", color: COLOR.parchOnDark };
-const rowBtn: React.CSSProperties = { textAlign: "left", fontFamily: FONT.body, fontSize: 15, padding: "11px 14px", borderRadius: 10, cursor: "pointer", border: `1px solid ${COLOR.steel}`, background: "transparent", color: COLOR.parchOnDark };
-const rowBtnActive: React.CSSProperties = { borderColor: COLOR.gold, background: "rgba(200,163,90,0.14)", color: COLOR.goldLt };
-const primaryBtn: React.CSSProperties = { fontFamily: FONT.label, fontSize: 16, padding: "14px 28px", borderRadius: 10, border: "none", cursor: "pointer", background: COLOR.cinnabar, color: COLOR.paperHi };
-const backBtn: React.CSSProperties = { fontFamily: FONT.mono, fontSize: 11, color: COLOR.steel, background: "transparent", border: "none", cursor: "pointer", padding: 0, marginBottom: 8 };
-const chip: React.CSSProperties = { fontFamily: FONT.mono, fontSize: 10, letterSpacing: "0.06em", padding: "3px 8px", borderRadius: 999, background: "rgba(200,163,90,0.14)", border: `1px solid ${COLOR.gold}`, color: COLOR.goldLt };
+// ─── Style tokens ─────────────────────────────────────────────────────────────
+
+const kicker: CSSProperties = {
+  fontFamily: DECK_FONTS.mono,
+  fontSize: 11,
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+}
+
+const primaryBtn: CSSProperties = {
+  fontFamily: DECK_FONTS.display,
+  fontWeight: 700,
+  fontSize: 16,
+  padding: '14px 30px',
+  borderRadius: 12,
+  border: 'none',
+  cursor: 'pointer',
+  color: '#fff',
+  background: LIMINAL.frame,
+  boxShadow: `inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px -10px ${LIMINAL.frame}`,
+}
+
+const secondaryBtn: CSSProperties = {
+  fontFamily: DECK_FONTS.display,
+  fontWeight: 600,
+  fontSize: 15,
+  padding: '12px 22px',
+  borderRadius: 12,
+  cursor: 'pointer',
+  color: SURFACE_TOKENS.textPrimary,
+  background: 'transparent',
+  border: '1px solid rgba(255,255,255,.16)',
+}
+
+const closeBtn: CSSProperties = {
+  display: 'block',
+  width: '100%',
+  marginTop: 12,
+  padding: '11px',
+  borderRadius: 8,
+  border: '1px solid rgba(255,255,255,.16)',
+  background: 'transparent',
+  color: SURFACE_TOKENS.textSecondary,
+  fontFamily: DECK_FONTS.display,
+  fontWeight: 600,
+  fontSize: 14,
+  cursor: 'pointer',
+}

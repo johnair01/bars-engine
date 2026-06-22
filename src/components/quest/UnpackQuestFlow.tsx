@@ -53,7 +53,7 @@ const MOVE_DIRECTION: Record<
     cta: {
       label: 'Open Emotional First Aid Kit',
       href: (questId) =>
-        `/emotional-first-aid?questId=${encodeURIComponent(questId)}&returnTo=${encodeURIComponent('/hand')}`,
+        `/emotional-first-aid?questId=${encodeURIComponent(questId)}&returnTo=${encodeURIComponent('/vault')}`,
     },
   },
   grow_up: {
@@ -181,7 +181,7 @@ export function UnpackQuestFlow({
         )}
 
         <Link
-          href="/hand"
+          href="/vault"
           className="block w-full text-center py-3 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 transition"
         >
           Done &mdash; go to Vault

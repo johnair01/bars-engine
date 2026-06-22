@@ -134,7 +134,7 @@ export default async function CampaignLandingPage(props: {
           >
             Open gameboard →
           </Link>
-          <Link href="/hand" className="text-sm text-amber-400/90 hover:text-amber-300">
+          <Link href="/vault" className="text-sm text-amber-400/90 hover:text-amber-300">
             Vault →
           </Link>
         </div>

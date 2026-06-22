@@ -76,6 +76,7 @@ const CHANNEL_TO_ELEMENT: Record<string, ElementKey> = {
 
 const WAVE_MOVE_LABEL: Record<PersonalMoveType, string> = {
   wakeUp: 'Wake Up',
+  openUp: 'Open Up',
   cleanUp: 'Clean Up',
   growUp: 'Grow Up',
   showUp: 'Show Up',

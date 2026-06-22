@@ -10,6 +10,7 @@ interface Playbook {
     moves: string
     content?: string | null
     wakeUp?: string | null
+    openUp?: string | null
     cleanUp?: string | null
     growUp?: string | null
     showUp?: string | null
@@ -98,6 +99,7 @@ export function ArchetypeHandbookContent({ playbook, playbookMoves = [] }: { pla
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <MoveCard title="Wake Up" desc={playbook.wakeUp} icon="👁" color="text-yellow-400" border="border-yellow-900/30" bg="bg-yellow-900/10" />
+                        <MoveCard title="Open Up" desc={playbook.openUp} icon="🌀" color="text-sky-400" border="border-sky-900/30" bg="bg-sky-900/10" />
                         <MoveCard title="Clean Up" desc={playbook.cleanUp} icon="🧹" color="text-orange-400" border="border-orange-900/30" bg="bg-orange-900/10" />
                         <MoveCard title="Grow Up" desc={playbook.growUp} icon="🌲" color="text-green-400" border="border-green-900/30" bg="bg-green-900/10" />
                         <MoveCard title="Show Up" desc={playbook.showUp} icon="🎯" color="text-purple-400" border="border-purple-900/30" bg="bg-purple-900/10" />

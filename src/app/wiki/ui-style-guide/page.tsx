@@ -100,11 +100,11 @@ export default function UIStyleGuidePage() {
             The Vault is a <strong className="text-zinc-200">place with rooms</strong>, not a single scroll. Nested routes exist for each engagement type:
           </p>
           <ul className="list-disc list-inside space-y-1 text-zinc-300 text-sm font-mono text-xs">
-            <li><code>/hand/charges</code> — felt signal → quest</li>
-            <li><code>/hand/quests</code> — placement & throughput</li>
-            <li><code>/hand/drafts</code> — shaping & publishing</li>
-            <li><code>/hand/invitations</code> — relational delivery</li>
-            <li><code>/hand/compost</code> — release & salvage</li>
+            <li><code>/vault/charges</code> — felt signal → quest</li>
+            <li><code>/vault/quests</code> — placement & throughput</li>
+            <li><code>/vault/drafts</code> — shaping & publishing</li>
+            <li><code>/vault/invitations</code> — relational delivery</li>
+            <li><code>/vault/compost</code> — release & salvage</li>
           </ul>
           <p className="text-zinc-500 text-sm">
             Each room has a <strong className="text-zinc-200">← Vault</strong> breadcrumb back to the lobby via <code className="text-zinc-600">VaultRoomHeader</code>.

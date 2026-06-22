@@ -258,7 +258,7 @@ function testAuthenticatedCompilerGates() {
   const consequence = authed.nodes.find((n) => n.beatType === 'consequence')
   if (!consequence) throw new Error('Should have consequence node')
   assert(consequence.choices.length === 1, 'Authed: one final choice')
-  assert(consequence.choices[0]!.targetId === 'redirect:/hand', 'Authed: Vault redirect')
+  assert(consequence.choices[0]!.targetId === 'redirect:/vault', 'Authed: Vault redirect')
   assert(
     !consequence.choices[0]!.text.toLowerCase().includes('create my account'),
     'Authed: no Create my account label'

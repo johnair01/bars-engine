@@ -98,6 +98,7 @@ model Player {
   alchemyCheckIns                AlchemyCheckIn[]
   alchemyPlayerState             AlchemyPlayerState?
   alchemySceneEvents             AlchemySceneEvent[]
+  handSlots                      HandSlot[]
   bookSectionApprovals           ApprovalEvent[]
   assets                         Asset[]
   submittedBacklogItems          BacklogItem[]               @relation("BacklogItemSubmittedBy")
@@ -182,6 +183,7 @@ model Player {
   questProposals                 QuestProposal[]
   redemptionPacks                RedemptionPack[]
   entitlements                   Entitlement[]
+  deckJournalEntries             DeckJournalEntry[]
   roomPresences                  RoomPresence[]
   sceneAtlasGuidedDrafts         SceneAtlasGuidedDraft[]
   shadow321Sessions              Shadow321Session[]
@@ -318,6 +320,11 @@ model CustomBar {
   rootId                               String?
   allowedNations                       String?
   allyshipDomain                       String?
+  /// IOA base layer: inner (self-development) | outer (allyship). Sibling of moveType —
+  /// the base move's aspect, recorded Nation-free. See specs/inner-outer-allyship-moves/data-model.md.
+  moveAspect                           String?
+  /// IOA base layer: who an outer move acts on — individual | collective | system. Null for inner.
+  allyshipTarget                       String?
   nation                               String?
   archetype                            String?
   lockType                             String?
@@ -356,6 +363,8 @@ model CustomBar {
   contextLines                         String?
   /// BSM (BAR Seed Metabolization): JSON { soilKind?, contextNote?, maturity?, compostedAt?, releaseNote? }
   seedMetabolization                   String?
+  /// BSCW: canvas layout JSON for seed capture whiteboard { items: CanvasItem[] }
+  canvasLayout                         String?
   isExemplar                           Boolean                @default(false)
   spokeSessionId                       String?
   /// CSHE: clothing-swap listing excluded from public gallery (host/co-host moderation)
@@ -416,9 +425,30 @@ model CustomBar {
   spokeMoveBedKernelSources            SpokeMoveBedKernel[]   @relation("SpokeMoveBedKernelSource")
   spokeMoveBedAnchor                   SpokeMoveBed?          @relation("SpokeMoveBedAnchor")
   threadQuests                         ThreadQuest[]
+  handSlots                            HandSlot[]
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
+}
+
+/// Bounded in-world inventory ("hand"). Each player has up to 6 ordered slots
+/// binding a CustomBar they carry into the spatial rooms. Slot 0 is the active
+/// "carrying" slot. The vault is everything active NOT bound to a HandSlot.
+/// See .specify/specs/hand-vault-bounded-inventory/spec.md
+model HandSlot {
+  id         String     @id @default(cuid())
+  playerId   String
+  slotIndex  Int // 0–5; slot 0 = active/carrying slot
+  barId      String?
+  isCarrying Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  bar        CustomBar? @relation(fields: [barId], references: [id], onDelete: SetNull)
+
+  @@unique([playerId, slotIndex])
+  @@index([barId])
+  @@map("hand_slots")
 }
 
 /// Attachments uploaded to a BAR (blob URL + metadata).
@@ -456,32 +486,35 @@ model BarForgeRecord {
 
 /// Emergent campaign from BAR interview (ECI) — structured path through invite CYOA before child campaign exists.
 model LatentAllyshipIntake {
-  id                String    @id @default(cuid())
-  customBarId       String
+  id                    String    @id @default(cuid())
+  customBarId           String
   /// Logged-in submitter when available.
-  playerId          String?
+  playerId              String?
   /// Browser-stable id (localStorage) for anonymous correlation / dedupe hints.
-  clientSessionId   String?
+  clientSessionId       String?
   /// `EventInviteStory.id` at submit time (template versioning).
-  storyId           String
+  storyId               String
   /// Last passage id (usually ending).
-  endingPassageId   String
+  endingPassageId       String
   /// JSON: { steps: { passageId, choiceLabel, nextPassageId }[] }
-  pathJson          String
+  pathJson              String
   /// Denormalized from invite URL ?note= for steward context.
-  senderNote        String?
-  status            String    @default("submitted")
+  senderNote            String?
+  status                String    @default("submitted")
   /// When set, this intake was watered into a child campaign instance.
-  spawnedInstanceId String?   @map("spawned_instance_id")
-  wateredAt         DateTime? @map("watered_at")
-  wateredByPlayerId String?   @map("watered_by_player_id")
-  stewardNotes      String?   @map("steward_notes")
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  customBar         CustomBar @relation(fields: [customBarId], references: [id], onDelete: Cascade)
-  player            Player?   @relation(fields: [playerId], references: [id])
-  spawnedInstance   Instance? @relation("AllyshipIntakeSpawnedInstance", fields: [spawnedInstanceId], references: [id])
-  wateredBy         Player?   @relation("AllyshipIntakeWateredBy", fields: [wateredByPlayerId], references: [id])
+  spawnedInstanceId     String?   @map("spawned_instance_id")
+  wateredAt             DateTime? @map("watered_at")
+  wateredByPlayerId     String?   @map("watered_by_player_id")
+  stewardNotes          String?   @map("steward_notes")
+  /// Superpower discovery result captured at submit (additive, nullable).
+  superpower            String?   @map("superpower")
+  superpowerOrientation String?   @map("superpower_orientation")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  customBar             CustomBar @relation(fields: [customBarId], references: [id], onDelete: Cascade)
+  player                Player?   @relation(fields: [playerId], references: [id])
+  spawnedInstance       Instance? @relation("AllyshipIntakeSpawnedInstance", fields: [spawnedInstanceId], references: [id])
+  wateredBy             Player?   @relation("AllyshipIntakeWateredBy", fields: [wateredByPlayerId], references: [id])
 
   @@index([customBarId, createdAt])
   @@index([playerId])
@@ -1287,6 +1320,7 @@ model Nation {
   imgUrl      String?
   archived    Boolean      @default(false)
   wakeUp      String?
+  openUp      String?
   cleanUp     String?
   growUp      String?
   showUp      String?
@@ -1396,19 +1430,23 @@ model MoveUse {
 }
 
 model QuestMoveLog {
-  id           String     @id @default(cuid())
-  questId      String
-  moveId       String
-  playerId     String
-  createdBarId String?
-  inputsJson   String?
-  effectsJson  String?
-  createdAt    DateTime   @default(now())
-  outcome      String?
-  createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
-  move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
-  player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  quest        CustomBar  @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
+  id             String     @id @default(cuid())
+  questId        String
+  moveId         String
+  playerId       String
+  createdBarId   String?
+  inputsJson     String?
+  effectsJson    String?
+  createdAt      DateTime   @default(now())
+  outcome        String?
+  /// IOA: inner (self-development) | outer (allyship). Nullable — legacy logs predate the aspect. See specs/inner-outer-allyship-moves.
+  moveAspect     String?
+  /// IOA: who an outer move acts on — individual | collective | system. Null for inner (self-directed).
+  allyshipTarget String?
+  createdBar     CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
+  move           NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  player         Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  quest          CustomBar  @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
 
   @@index([questId, createdAt])
   @@index([playerId, createdAt])
@@ -1429,6 +1467,7 @@ model Archetype {
   lightSignposts    String?
   examples          String?
   wakeUp            String?
+  openUp            String?
   cleanUp           String?
   growUp            String?
   showUp            String?
@@ -3590,6 +3629,8 @@ model CampaignMilestone {
   targetValue        Float?
   currentValue       Float                   @default(0)
   status             String                  @default("proposed")
+  /// Optional barn-raising wall this milestone backs: 'car' | 'presale' | 'runway'.
+  wallKey            String?
   proposedByPlayerId String
   approvedByPlayerId String?
   approvedAt         DateTime?
@@ -3597,9 +3638,44 @@ model CampaignMilestone {
   approvedBy         Player?                 @relation("MilestoneApprovals", fields: [approvedByPlayerId], references: [id])
   proposedBy         Player                  @relation("MilestoneProposals", fields: [proposedByPlayerId], references: [id], onDelete: Cascade)
   contributions      MilestoneContribution[]
+  needs              MilestoneNeed[]
 
   @@index([campaignRef, status])
+  @@index([campaignRef, wallKey])
   @@map("campaign_milestones")
+}
+
+/// A superpower-typed, well-scoped NEED a milestone decomposes into (Mobility
+/// Quest tiered donation). A matched player (superpower + orientation) sees it
+/// as a scoped quest; completion records a MilestoneContribution.
+/// Six Faces ruling: unit-typed (action|currency|hours), NO per-action multiplier.
+model MilestoneNeed {
+  id                String            @id @default(cuid())
+  milestoneId       String
+  /// Denormalized for cross-instance listing (mirrors other campaign tables).
+  campaignRef       String
+  /// 'connector'|'storyteller'|'strategist'|'disruptor'|'alchemist'|'escape_artist'|'coach'
+  superpower        String
+  /// 'internal' | 'external'
+  orientation       String
+  /// Base allyship card this need translates (deck.json stays source of truth).
+  cardId            String
+  /// 'action' | 'currency' | 'hours' — units never blended; default action.
+  unit              String            @default("action")
+  value             Float             @default(1)
+  /// 'open' | 'claimed' | 'done'
+  status            String            @default("open")
+  /// Player id who claimed/completed (denormalized; no FK to keep Player lean).
+  claimedByPlayerId String?
+  title             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  milestone         CampaignMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@index([campaignRef, status])
+  @@index([milestoneId])
+  @@index([claimedByPlayerId])
+  @@map("milestone_needs")
 }
 
 /// A contribution toward a CampaignMilestone (donation, pledge, action).
@@ -3881,15 +3957,20 @@ model Campaign {
 /// Phase 3: Campaign membership — who is a member/steward/owner
 /// See .specify/specs/phase-3-stewardship/SPEC.md
 model CampaignMembership {
-  id           String         @id @default(cuid())
-  campaignId   String
-  playerId     String
-  role         MembershipRole
+  id                    String         @id @default(cuid())
+  campaignId            String
+  playerId              String
+  role                  MembershipRole
   /// null unless role = STEWARD; FULL = general steward
-  stewardScope StewardScope?
-  createdAt    DateTime       @default(now())
-  campaign     Campaign       @relation("CampaignMemberships", fields: [campaignId], references: [id], onDelete: Cascade, map: "campaign_memberships_campaign_id_fkey")
-  player       Player         @relation("PlayerMemberships", fields: [playerId], references: [id], onDelete: Cascade, map: "campaign_memberships_player_id_fkey")
+  stewardScope          StewardScope?
+  /// Per-campaign superpower result (Mobility Quest discovery quiz). Additive,
+  /// nullable. 'connector'|'storyteller'|'strategist'|'disruptor'|'alchemist'|'escape_artist'|'coach'.
+  superpower            String?
+  /// 'internal' | 'external' (the addendum's orientation polarity).
+  superpowerOrientation String?
+  createdAt             DateTime       @default(now())
+  campaign              Campaign       @relation("CampaignMemberships", fields: [campaignId], references: [id], onDelete: Cascade, map: "campaign_memberships_campaign_id_fkey")
+  player                Player         @relation("PlayerMemberships", fields: [playerId], references: [id], onDelete: Cascade, map: "campaign_memberships_player_id_fkey")
 
   @@unique([campaignId, playerId])
   @@index([campaignId])
@@ -4223,6 +4304,21 @@ model ChapterMilestone {
   @@map("chapter_milestones")
 }
 
+/// Allyship Deck draw journal — one row per card drawn, server-persisted cross-device.
+/// Streak is computed from consecutive calendar days in drawnAt (player's local TZ via client).
+/// Vibeulons start at 1 per draw; real rewards from the BAR layer added later.
+model DeckJournalEntry {
+  id        String   @id @default(cuid())
+  playerId  String
+  cardId    String
+  drawnAt   DateTime @default(now())
+  vibeulons Int      @default(1)
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, drawnAt(sort: Desc)])
+  @@map("deck_journal_entries")
+}
+
 /// CHS campaign backbone: fixed 52 or 64 content slots; draw uses only bound slots (see campaign-hub-spoke-landing-architecture spec).
 enum CampaignDeckTopology {
   CAMPAIGN_DECK_52
@@ -4284,4 +4380,24 @@ enum NarrativeTemplateKind {
   KOTTER
   ORIENTATION
   CUSTOM
+}
+
+/// Awaken funnel lead capture — chapter-one email signups and July weekend
+/// event RSVPs from the public /awaken guided flow. Intentionally standalone
+/// (no Player FK) so brand-new, unauthenticated visitors can convert.
+model FunnelSignup {
+  id        String   @id @default(cuid())
+  /// "chapter" (download Chapter One) | "event" (RSVP to weekend events)
+  intent    String
+  email     String
+  name      String?
+  /// Event keys the visitor RSVP'd to (empty for chapter intent).
+  events    String[] @default([])
+  /// Where the signup originated (defaults to the awaken funnel).
+  source    String   @default("awaken")
+  createdAt DateTime @default(now())
+
+  @@index([intent, createdAt])
+  @@index([email])
+  @@map("funnel_signups")
 }

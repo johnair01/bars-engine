@@ -73,12 +73,13 @@ const KOTTER_BEATS: KotterBeatType[] = [
 
 const WAVE_LABELS: Record<PersonalMoveType, string> = {
   wakeUp: 'Wake Up',
+  openUp: 'Open Up',
   cleanUp: 'Clean Up',
   growUp: 'Grow Up',
   showUp: 'Show Up',
 }
 
-const ALL_WAVE_MOVES: PersonalMoveType[] = ['wakeUp', 'cleanUp', 'growUp', 'showUp']
+const ALL_WAVE_MOVES: PersonalMoveType[] = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp']
 
 const CHANNEL_KEYWORDS: Record<EmotionalChannel, string[]> = {
   Fear: ['anxious', 'anxiety', 'scared', 'scary', 'worried', 'worry', 'afraid', 'fear', 'nervous'],
@@ -306,7 +307,7 @@ function generateChoices(
   const isFinal = beatType === 'consequence' || beatType === 'anchor'
   if (isFinal) {
     if (isAuthenticated) {
-      return [{ text: 'Continue to your Vault', buttonLabel: 'Vault: Continue to your Sanctuary', targetId: 'redirect:/hand' }]
+      return [{ text: 'Continue to your Vault', buttonLabel: 'Vault: Continue to your Sanctuary', targetId: 'redirect:/vault' }]
     }
     return [{ text: 'Create my account', buttonLabel: 'Sect: Create my account', targetId: 'signup' }]
   }

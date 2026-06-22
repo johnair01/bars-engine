@@ -46,7 +46,7 @@ const MOVES = [
     detail:
       'Encounter the limit of your current worldview and step through it with effort, not comfort. Quests that ask for this are growth quests — they are supposed to be uncomfortable.',
     action: 'Unpack a quest',
-    actionHref: '/hand/quests',
+    actionHref: '/vault/quests',
     whenYoureDoingThis:
       'You are asked to hold a larger perspective than is currently easy — and you stay with it.',
     borderClass: 'border-violet-800/50',
