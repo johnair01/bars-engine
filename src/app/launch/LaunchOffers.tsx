@@ -16,6 +16,8 @@ import { CultivationCard } from '@/components/ui/CultivationCard'
 import { ELEMENT_TOKENS, STAGE_TOKENS } from '@/lib/ui/card-tokens'
 import {
   offersByGroup,
+  offerByKey,
+  isSuperpowerPackKey,
   formatPrice,
   isOfferLive,
   type LaunchOffer,
@@ -163,7 +165,10 @@ function OfferCard({ offer }: { offer: LaunchOffer }) {
 
 export function LaunchOffers() {
   const bundle = offersByGroup('bundle')
-  const digital = offersByGroup('digital')
+  const allDigital = offersByGroup('digital')
+  const digital = allDigital.filter((o) => !isSuperpowerPackKey(o.key))
+  const packs = allDigital.filter((o) => isSuperpowerPackKey(o.key))
+  const loadoutBundle = offerByKey('loadout-bundle')
   const physical = offersByGroup('physical')
 
   return (
@@ -194,6 +199,30 @@ export function LaunchOffers() {
           ))}
         </div>
       </section>
+
+      {/* Superpower packs — expansions */}
+      {packs.length > 0 && (
+        <section aria-labelledby="packs-heading">
+          <h2
+            id="packs-heading"
+            className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400"
+          >
+            Superpower packs · expansions
+          </h2>
+          {loadoutBundle && (
+            <div id="loadout-bundle" className="mx-auto mb-6 max-w-xl scroll-mt-24">
+              <OfferCard offer={loadoutBundle} />
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {packs.map((offer) => (
+              <div key={offer.key} id={offer.key} className="scroll-mt-24">
+                <OfferCard offer={offer} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Physical — preorder */}
       <section aria-labelledby="physical-heading">

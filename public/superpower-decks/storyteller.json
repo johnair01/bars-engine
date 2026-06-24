@@ -1,0 +1,2700 @@
+{
+  "deck_slug": "superpower-storyteller",
+  "superpower": "storyteller",
+  "label": "The Storyteller",
+  "gift": "Poignance — weaving loss into meaning and grief into belonging.",
+  "version": "0.1.0-draft",
+  "generatedAt": "2026-06-21T20:22:38.933Z",
+  "count": 60,
+  "cards": [
+    {
+      "id": "sp-storyteller-WAKE-SHAMAN-INNER",
+      "slug": "storyteller-wake_up-shaman-inner",
+      "name": "Catch the Story You're Telling",
+      "essence": "Notice the story you're already telling yourself before it runs the show.",
+      "steps": [
+        "Catch the narration running under the moment.",
+        "Feel where it grips in your body.",
+        "Name it as a story, not a fact — 'I'm telling myself that…'."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "exploration"
+      ],
+      "primaryQuestion": "What story am I already inside, and is it true?",
+      "campaignQuestion": "What story is quietly shaping how I see this?",
+      "optimizesFor": "Catching the narrative before it drives the move.",
+      "forbiddenMoves": [
+        "Mistaking the story for the facts",
+        "Performing a tidier story than the real one",
+        "Pressuring the feeling into a neat arc"
+      ],
+      "failureModes": [
+        "Living inside an old script",
+        "Spectacle over truth"
+      ],
+      "remediation": "Say the story out loud, then ask what part you actually know.",
+      "tell": {
+        "working": "You can feel the story loosen its grip.",
+        "performed": "You polish the story instead of questioning it."
+      },
+      "contraindications": [
+        "When you need to act now, not narrate"
+      ],
+      "example": "You notice you're telling yourself 'no one will care' — you name it as a story, not truth.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-WAKE-SHAMAN-OUTER",
+      "slug": "storyteller-wake_up-shaman-outer",
+      "name": "Sense the Meaning Surfacing",
+      "essence": "Sense the meaning trying to surface in the room before you shape it.",
+      "steps": [
+        "Listen for what the moment is reaching toward.",
+        "Feel the charge in the room in your body.",
+        "Name the meaning lightly, as a question, not a verdict."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "Am I imposing my meaning, or sensing theirs?",
+      "campaignQuestion": "What meaning is the group reaching for that no one has named?",
+      "optimizesFor": "Surfacing shared meaning instead of imposing a script.",
+      "forbiddenMoves": [
+        "Hijacking the room's story",
+        "Performing insight",
+        "Pressuring people into your frame"
+      ],
+      "failureModes": [
+        "The narrator who centers themselves",
+        "Spectacle over truth"
+      ],
+      "remediation": "Offer the meaning as 'I wonder if this is about…' and let them correct you.",
+      "tell": {
+        "working": "People say 'yes, that's it.'",
+        "performed": "You narrate over them."
+      },
+      "contraindications": [
+        "When the room needs action, not interpretation"
+      ],
+      "example": "In a tense meeting you name 'I wonder if this is really about feeling unseen' — and the room exhales.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-WAKE-CHALLENGER-INNER",
+      "slug": "storyteller-wake_up-challenger-inner",
+      "name": "Notice the story you are already telling — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Turn it inward: the story you are already telling."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-CHALLENGER-OUTER",
+      "slug": "storyteller-wake_up-challenger-outer",
+      "name": "Notice the meaning trying to surface — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Bring it to others: the meaning trying to surface."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-REGENT-INNER",
+      "slug": "storyteller-wake_up-regent-inner",
+      "name": "Notice the story you are already telling — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here — stewarding it over time.",
+        "Turn it inward: the story you are already telling."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-REGENT-OUTER",
+      "slug": "storyteller-wake_up-regent-outer",
+      "name": "Notice the meaning trying to surface — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here — stewarding it over time.",
+        "Bring it to others: the meaning trying to surface."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-ARCHITECT-INNER",
+      "slug": "storyteller-wake_up-architect-inner",
+      "name": "Notice the story you are already telling — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Notice what is actually here — building it into structure.",
+        "Turn it inward: the story you are already telling."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-ARCHITECT-OUTER",
+      "slug": "storyteller-wake_up-architect-outer",
+      "name": "Notice the meaning trying to surface — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Notice what is actually here — building it into structure.",
+        "Bring it to others: the meaning trying to surface."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-DIPLOMAT-INNER",
+      "slug": "storyteller-wake_up-diplomat-inner",
+      "name": "Notice the story you are already telling — Bridge",
+      "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here — across difference and relationship.",
+        "Turn it inward: the story you are already telling."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-DIPLOMAT-OUTER",
+      "slug": "storyteller-wake_up-diplomat-outer",
+      "name": "Notice the meaning trying to surface — Bridge",
+      "essence": "For others: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here — across difference and relationship.",
+        "Bring it to others: the meaning trying to surface."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-SAGE-INNER",
+      "slug": "storyteller-wake_up-sage-inner",
+      "name": "Notice the story you are already telling — Whole",
+      "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here — integrating the whole field.",
+        "Turn it inward: the story you are already telling."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-SAGE-OUTER",
+      "slug": "storyteller-wake_up-sage-outer",
+      "name": "Notice the meaning trying to surface — Whole",
+      "essence": "For others: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here — integrating the whole field.",
+        "Bring it to others: the meaning trying to surface."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-SHAMAN-INNER",
+      "slug": "storyteller-open_up-shaman-inner",
+      "name": "Feel the grief beneath the story — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Receive it without flinching — sensing what is here.",
+        "Turn it inward: the grief beneath the story."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-SHAMAN-OUTER",
+      "slug": "storyteller-open_up-shaman-outer",
+      "name": "Feel what this loss means to others — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Receive it without flinching — sensing what is here.",
+        "Bring it to others: what this loss means to others."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-CHALLENGER-INNER",
+      "slug": "storyteller-open_up-challenger-inner",
+      "name": "Feel the grief beneath the story — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Turn it inward: the grief beneath the story."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-CHALLENGER-OUTER",
+      "slug": "storyteller-open_up-challenger-outer",
+      "name": "Feel what this loss means to others — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Bring it to others: what this loss means to others."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-REGENT-INNER",
+      "slug": "storyteller-open_up-regent-inner",
+      "name": "Feel the grief beneath the story — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching — stewarding it over time.",
+        "Turn it inward: the grief beneath the story."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-REGENT-OUTER",
+      "slug": "storyteller-open_up-regent-outer",
+      "name": "Feel what this loss means to others — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching — stewarding it over time.",
+        "Bring it to others: what this loss means to others."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-ARCHITECT-INNER",
+      "slug": "storyteller-open_up-architect-inner",
+      "name": "Feel the grief beneath the story — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Receive it without flinching — building it into structure.",
+        "Turn it inward: the grief beneath the story."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-ARCHITECT-OUTER",
+      "slug": "storyteller-open_up-architect-outer",
+      "name": "Feel what this loss means to others — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Receive it without flinching — building it into structure.",
+        "Bring it to others: what this loss means to others."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-DIPLOMAT-INNER",
+      "slug": "storyteller-open_up-diplomat-inner",
+      "name": "Feel the Grief Under It",
+      "essence": "Let yourself feel the loss beneath the story before you tell anyone.",
+      "steps": [
+        "Drop under the storyline to the feeling.",
+        "Let the grief or tenderness be in your body without fixing it.",
+        "Stay until it has something to say."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "What am I grieving that the story is covering?",
+      "campaignQuestion": "What loss underneath this haven't I let myself feel?",
+      "optimizesFor": "Telling from real feeling, not performed emotion.",
+      "forbiddenMoves": [
+        "Skipping to the moral",
+        "Performing grief you don't feel",
+        "Turning your pain into others' obligation"
+      ],
+      "failureModes": [
+        "A polished story with no pulse",
+        "Spectacle over truth"
+      ],
+      "remediation": "Put words to the feeling for yourself first, privately.",
+      "tell": {
+        "working": "The feeling moves and clarifies.",
+        "performed": "You rehearse how the grief will look."
+      },
+      "contraindications": [
+        "When you're not safe enough to open yet"
+      ],
+      "example": "Before sharing why this matters, you sit with the actual loss for three breaths.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-OPEN-DIPLOMAT-OUTER",
+      "slug": "storyteller-open_up-diplomat-outer",
+      "name": "Hold What It Means to Them",
+      "essence": "Receive what this means to the people in it before shaping a story.",
+      "steps": [
+        "Ask what it means to them and actually listen.",
+        "Feel their meaning land in your body.",
+        "Reflect it back in their words, not yours."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "Am I making space for their meaning or mine?",
+      "campaignQuestion": "What does this mean to the people most affected?",
+      "optimizesFor": "A story rooted in their truth and consent, not your spin.",
+      "forbiddenMoves": [
+        "Speaking for people",
+        "Using their pain as content",
+        "Implying they owe you their story"
+      ],
+      "failureModes": [
+        "Extractive storytelling",
+        "Spectacle over truth"
+      ],
+      "remediation": "Ask 'did I get that right?' and let them rewrite it.",
+      "tell": {
+        "working": "They feel accurately seen.",
+        "performed": "You collect a better anecdote."
+      },
+      "contraindications": [
+        "When they haven't consented to share"
+      ],
+      "example": "You ask someone what the moment meant to them, then echo their exact words back.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-OPEN-SAGE-INNER",
+      "slug": "storyteller-open_up-sage-inner",
+      "name": "Feel the grief beneath the story — Whole",
+      "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching — integrating the whole field.",
+        "Turn it inward: the grief beneath the story."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-SAGE-OUTER",
+      "slug": "storyteller-open_up-sage-outer",
+      "name": "Feel what this loss means to others — Whole",
+      "essence": "For others: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching — integrating the whole field.",
+        "Bring it to others: what this loss means to others."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-SHAMAN-INNER",
+      "slug": "storyteller-clean_up-shaman-inner",
+      "name": "Find your own true meaning first — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Transform the charge — sensing what is here.",
+        "Turn it inward: your own true meaning first."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-SHAMAN-OUTER",
+      "slug": "storyteller-clean_up-shaman-outer",
+      "name": "Find the thread from loss to belonging — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Transform the charge — sensing what is here.",
+        "Bring it to others: the thread from loss to belonging."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-CHALLENGER-INNER",
+      "slug": "storyteller-clean_up-challenger-inner",
+      "name": "Find your own true meaning first — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge — at the edge, naming what resists.",
+        "Turn it inward: your own true meaning first."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-CHALLENGER-OUTER",
+      "slug": "storyteller-clean_up-challenger-outer",
+      "name": "Find the thread from loss to belonging — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge — at the edge, naming what resists.",
+        "Bring it to others: the thread from loss to belonging."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-REGENT-INNER",
+      "slug": "storyteller-clean_up-regent-inner",
+      "name": "Find your own true meaning first — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Transform the charge — stewarding it over time.",
+        "Turn it inward: your own true meaning first."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-REGENT-OUTER",
+      "slug": "storyteller-clean_up-regent-outer",
+      "name": "Find the thread from loss to belonging — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Transform the charge — stewarding it over time.",
+        "Bring it to others: the thread from loss to belonging."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-ARCHITECT-INNER",
+      "slug": "storyteller-clean_up-architect-inner",
+      "name": "Find your own true meaning first — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Transform the charge — building it into structure.",
+        "Turn it inward: your own true meaning first."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-ARCHITECT-OUTER",
+      "slug": "storyteller-clean_up-architect-outer",
+      "name": "Find the thread from loss to belonging — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Transform the charge — building it into structure.",
+        "Bring it to others: the thread from loss to belonging."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-DIPLOMAT-INNER",
+      "slug": "storyteller-clean_up-diplomat-inner",
+      "name": "Find your own true meaning first — Bridge",
+      "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Transform the charge — across difference and relationship.",
+        "Turn it inward: your own true meaning first."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-DIPLOMAT-OUTER",
+      "slug": "storyteller-clean_up-diplomat-outer",
+      "name": "Find the thread from loss to belonging — Bridge",
+      "essence": "For others: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Transform the charge — across difference and relationship.",
+        "Bring it to others: the thread from loss to belonging."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-SAGE-INNER",
+      "slug": "storyteller-clean_up-sage-inner",
+      "name": "Find Your True Meaning First",
+      "essence": "Distill what this actually means to you before you offer meaning to anyone.",
+      "steps": [
+        "Sift the event for the one true thing it taught you.",
+        "Feel whether it rings true in the body.",
+        "Write it as one honest sentence."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "exploration"
+      ],
+      "primaryQuestion": "What's the real meaning here, under the meaning I'd perform?",
+      "campaignQuestion": "What durable truth am I taking from this?",
+      "optimizesFor": "Meaning that's earned, not manufactured.",
+      "forbiddenMoves": [
+        "Forcing a tidy lesson",
+        "Performing wisdom",
+        "Pressuring an arc onto raw experience"
+      ],
+      "failureModes": [
+        "A moral that isn't true yet",
+        "Spectacle over truth"
+      ],
+      "remediation": "If the sentence feels like a slogan, sit longer.",
+      "tell": {
+        "working": "The sentence lands quietly true.",
+        "performed": "You reach for the quotable version."
+      },
+      "contraindications": [
+        "When it's too soon to know the meaning"
+      ],
+      "example": "Instead of 'everything happens for a reason,' you write the smaller true thing you learned.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-SAGE-OUTER",
+      "slug": "storyteller-clean_up-sage-outer",
+      "name": "Weave Loss into Belonging",
+      "essence": "Find the thread that turns a shared loss into shared meaning and belonging.",
+      "steps": [
+        "Name what was lost, honestly.",
+        "Find what it reveals that still matters to everyone.",
+        "Offer the thread that lets people hold both, and feel whether it lands."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "Am I bypassing the grief to get to the uplift?",
+      "campaignQuestion": "What meaning lets this community carry the loss together?",
+      "optimizesFor": "Collective meaning that honors the loss instead of erasing it.",
+      "forbiddenMoves": [
+        "Premature silver-linings",
+        "Spinning loss into a brand",
+        "Guilt-tripping people into hope"
+      ],
+      "failureModes": [
+        "Toxic positivity",
+        "Spectacle over truth"
+      ],
+      "remediation": "Let the grief be witnessed before offering the meaning.",
+      "tell": {
+        "working": "People feel both held and moved.",
+        "performed": "You skip to the inspirational close."
+      },
+      "contraindications": [
+        "When the wound is too fresh for meaning-making"
+      ],
+      "example": "At a hard moment you name the loss fully, then the bond it revealed — not a tidy lesson.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-GROW-SHAMAN-INNER",
+      "slug": "storyteller-grow_up-shaman-inner",
+      "name": "Deepen your honesty over performance — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Build the capacity — sensing what is here.",
+        "Turn it inward: your honesty over performance."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-SHAMAN-OUTER",
+      "slug": "storyteller-grow_up-shaman-outer",
+      "name": "Deepen the shared story’s roots — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Build the capacity — sensing what is here.",
+        "Bring it to others: the shared story’s roots."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-CHALLENGER-INNER",
+      "slug": "storyteller-grow_up-challenger-inner",
+      "name": "Deepen your honesty over performance — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity — at the edge, naming what resists.",
+        "Turn it inward: your honesty over performance."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-CHALLENGER-OUTER",
+      "slug": "storyteller-grow_up-challenger-outer",
+      "name": "Deepen the shared story’s roots — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity — at the edge, naming what resists.",
+        "Bring it to others: the shared story’s roots."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-REGENT-INNER",
+      "slug": "storyteller-grow_up-regent-inner",
+      "name": "Deepen Your Honest Voice",
+      "essence": "Practice telling it true over time, so honesty outgrows performance.",
+      "steps": [
+        "Notice where you reach for effect instead of truth.",
+        "Tell one story this week stripped of polish.",
+        "Feel the difference in your body afterward."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "participation"
+      ],
+      "primaryQuestion": "Where am I performing instead of telling it true?",
+      "campaignQuestion": "What practice grows my honest voice?",
+      "optimizesFor": "A voice people trust because it's true, not slick.",
+      "forbiddenMoves": [
+        "Practicing the performance",
+        "Chasing applause",
+        "Pressuring yourself to be profound"
+      ],
+      "failureModes": [
+        "Polished but hollow",
+        "Spectacle over truth"
+      ],
+      "remediation": "Cut the most impressive line; keep the truest one.",
+      "tell": {
+        "working": "It costs a little and feels more real.",
+        "performed": "You workshop the applause line."
+      },
+      "contraindications": [
+        "When rawness would harm, not serve"
+      ],
+      "example": "You tell a story without the punchline you usually lean on, and it lands deeper.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-GROW-REGENT-OUTER",
+      "slug": "storyteller-grow_up-regent-outer",
+      "name": "Steward the Shared Story",
+      "essence": "Tend the group's story over time so it stays true as things change.",
+      "steps": [
+        "Notice where the shared story has gone stale or false.",
+        "Update it with the people, not for them — feel where it still rings true.",
+        "Keep the thread that still holds; let the rest evolve."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "participation"
+      ],
+      "primaryQuestion": "Am I clinging to a story that no longer serves us?",
+      "campaignQuestion": "How do we keep our story honest as we grow?",
+      "optimizesFor": "A living narrative the group still recognizes as theirs.",
+      "forbiddenMoves": [
+        "Freezing the founding myth",
+        "Rewriting history alone",
+        "Guilt-tripping people with the old story"
+      ],
+      "failureModes": [
+        "A stale legend nobody believes",
+        "Spectacle over truth"
+      ],
+      "remediation": "Invite the group to retell it in their own words.",
+      "tell": {
+        "working": "People feel ownership of the story.",
+        "performed": "You defend your version of the legend."
+      },
+      "contraindications": [
+        "When the old story is load-bearing and shouldn't change yet"
+      ],
+      "example": "You gather the crew to retell why you started — and let the story update.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-GROW-ARCHITECT-INNER",
+      "slug": "storyteller-grow_up-architect-inner",
+      "name": "Deepen your honesty over performance — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Build the capacity — building it into structure.",
+        "Turn it inward: your honesty over performance."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-ARCHITECT-OUTER",
+      "slug": "storyteller-grow_up-architect-outer",
+      "name": "Deepen the shared story’s roots — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Build the capacity — building it into structure.",
+        "Bring it to others: the shared story’s roots."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-DIPLOMAT-INNER",
+      "slug": "storyteller-grow_up-diplomat-inner",
+      "name": "Deepen your honesty over performance — Bridge",
+      "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Build the capacity — across difference and relationship.",
+        "Turn it inward: your honesty over performance."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-DIPLOMAT-OUTER",
+      "slug": "storyteller-grow_up-diplomat-outer",
+      "name": "Deepen the shared story’s roots — Bridge",
+      "essence": "For others: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Build the capacity — across difference and relationship.",
+        "Bring it to others: the shared story’s roots."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-SAGE-INNER",
+      "slug": "storyteller-grow_up-sage-inner",
+      "name": "Deepen your honesty over performance — Whole",
+      "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Build the capacity — integrating the whole field.",
+        "Turn it inward: your honesty over performance."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-SAGE-OUTER",
+      "slug": "storyteller-grow_up-sage-outer",
+      "name": "Deepen the shared story’s roots — Whole",
+      "essence": "For others: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Build the capacity — integrating the whole field.",
+        "Bring it to others: the shared story’s roots."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-SHAMAN-INNER",
+      "slug": "storyteller-show_up-shaman-inner",
+      "name": "Name what this means to you — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Take the concrete act — sensing what is here.",
+        "Turn it inward: what this means to you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-SHAMAN-OUTER",
+      "slug": "storyteller-show_up-shaman-outer",
+      "name": "Name what this means, for the room — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Take the concrete act — sensing what is here.",
+        "Bring it to others: what this means, for the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-CHALLENGER-INNER",
+      "slug": "storyteller-show_up-challenger-inner",
+      "name": "Name what this means to you — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act — at the edge, naming what resists.",
+        "Turn it inward: what this means to you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-CHALLENGER-OUTER",
+      "slug": "storyteller-show_up-challenger-outer",
+      "name": "Name what this means, for the room — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act — at the edge, naming what resists.",
+        "Bring it to others: what this means, for the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-REGENT-INNER",
+      "slug": "storyteller-show_up-regent-inner",
+      "name": "Name what this means to you — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Take the concrete act — stewarding it over time.",
+        "Turn it inward: what this means to you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-REGENT-OUTER",
+      "slug": "storyteller-show_up-regent-outer",
+      "name": "Name what this means, for the room — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Take the concrete act — stewarding it over time.",
+        "Bring it to others: what this means, for the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-ARCHITECT-INNER",
+      "slug": "storyteller-show_up-architect-inner",
+      "name": "Name what this means to you — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Take the concrete act — building it into structure.",
+        "Turn it inward: what this means to you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-ARCHITECT-OUTER",
+      "slug": "storyteller-show_up-architect-outer",
+      "name": "Name what this means, for the room — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Take the concrete act — building it into structure.",
+        "Bring it to others: what this means, for the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-DIPLOMAT-INNER",
+      "slug": "storyteller-show_up-diplomat-inner",
+      "name": "Tell It Without Centering Yourself",
+      "essence": "Tell the story in a way that serves the room, not your image.",
+      "steps": [
+        "Check your motive: am I sharing to serve or to be seen?",
+        "Feel the nerves without letting them drive performance.",
+        "Tell it plainly, then get out of the way."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "Am I telling this for them or for me?",
+      "campaignQuestion": "How do I tell this so the focus stays where it belongs?",
+      "optimizesFor": "A telling that points at the cause, not the teller.",
+      "forbiddenMoves": [
+        "Making yourself the hero",
+        "Fishing for sympathy",
+        "Pressuring the room to react"
+      ],
+      "failureModes": [
+        "The self-centered share",
+        "Spectacle over truth"
+      ],
+      "remediation": "Cut every line that's about how you look.",
+      "tell": {
+        "working": "Afterward the room talks about the cause, not you.",
+        "performed": "You scan for who was impressed."
+      },
+      "contraindications": [
+        "When your own story IS the point and consent is clear"
+      ],
+      "example": "You share your part briefly, then turn the room toward the people it's about.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-SHOW-DIPLOMAT-OUTER",
+      "slug": "storyteller-show_up-diplomat-outer",
+      "name": "Name What This Means, for the Room",
+      "essence": "Give the room a story it can hold and act from — true, shared, and inviting.",
+      "steps": [
+        "Name the meaning in one clear line everyone can feel and carry.",
+        "Make room for others to add their thread.",
+        "End with an opening to act, not a mic-drop."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "primaryQuestion": "Is this a story that includes them, or a performance at them?",
+      "campaignQuestion": "What story gives this group something true to rally around?",
+      "optimizesFor": "A shared story that invites participation, with consent.",
+      "forbiddenMoves": [
+        "Monologuing",
+        "Using anyone's story without consent",
+        "Guilt-tripping the room into action"
+      ],
+      "failureModes": [
+        "The speech that impresses but doesn't move",
+        "Spectacle over truth"
+      ],
+      "remediation": "Ask 'what would you add?' and mean it.",
+      "tell": {
+        "working": "People pick up the story and run with it.",
+        "performed": "You land the applause line and stop."
+      },
+      "contraindications": [
+        "When the room needs quiet, not a story"
+      ],
+      "example": "You name the one thing it's really about — then invite others to add why it matters to them.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-SHOW-SAGE-INNER",
+      "slug": "storyteller-show_up-sage-inner",
+      "name": "Tell the Story You'll Stand Behind",
+      "essence": "Tell it so you can stand behind it tomorrow — true past the moment's heat.",
+      "steps": [
+        "Ask if you'll believe this telling next week.",
+        "Feel whether it's true or just effective.",
+        "Tell the version that ages well."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "exploration"
+      ],
+      "primaryQuestion": "Will I stand behind this story when the moment cools?",
+      "campaignQuestion": "What's the telling I won't regret?",
+      "optimizesFor": "Durable truth over a moment's impact.",
+      "forbiddenMoves": [
+        "Exaggerating for effect",
+        "Bending facts to land harder",
+        "Pressuring belief with drama"
+      ],
+      "failureModes": [
+        "The viral lie you can't walk back",
+        "Spectacle over truth"
+      ],
+      "remediation": "Trim any claim you couldn't defend later.",
+      "tell": {
+        "working": "It holds up on a reread.",
+        "performed": "You optimize for the reaction, not the record."
+      },
+      "contraindications": [
+        "When precision matters more than narrative"
+      ],
+      "example": "You resist the tempting exaggeration and tell the true version that still moves people.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-storyteller-SHOW-SAGE-OUTER",
+      "slug": "storyteller-show_up-sage-outer",
+      "name": "Leave a Story That Lasts",
+      "essence": "Tell it so something true remains after you're gone from the room.",
+      "steps": [
+        "Name the meaning worth remembering — the one you feel in your gut.",
+        "Put it where it can outlive the moment (a record, a ritual, a retelling).",
+        "Hand it to others to carry."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "capabilities": [
+        "participation"
+      ],
+      "primaryQuestion": "What story do I want to outlast me here?",
+      "campaignQuestion": "What meaning should remain when this campaign ends?",
+      "optimizesFor": "A lasting narrative artifact, not a spent performance.",
+      "forbiddenMoves": [
+        "Ephemeral spectacle",
+        "Hoarding the story",
+        "Guilt-tripping the next generation with it"
+      ],
+      "failureModes": [
+        "A great night no one remembers",
+        "Spectacle over truth"
+      ],
+      "remediation": "Write it down and give it away.",
+      "tell": {
+        "working": "Others retell it without you.",
+        "performed": "You perform a finale and leave nothing."
+      },
+      "contraindications": [
+        "When the moment should stay ephemeral"
+      ],
+      "example": "You turn the effort's story into a short written piece others can share.",
+      "tier": "canonical",
+      "status": "published"
+    }
+  ]
+}

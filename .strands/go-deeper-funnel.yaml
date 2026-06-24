@@ -1,0 +1,49 @@
+name: go-deeper-funnel
+description: >-
+  End-to-end "Go Deeper" funnel: a free anonymous superpower quiz (produces an
+  inner+outer loadout, login to save) -> deck purchase that includes the buyer's
+  inner pack (deferred grant on loadout-save) -> on any Allyship Deck card, a
+  Go Deeper affordance that surfaces the player's matching superpower move
+  (owner) or cites it with an outer-pack upsell (non-owner). Wires the existing
+  technique-library resolver/citation to the live deck UI, auth, and entitlement
+  spine. Packaging: loadout bundle (deck + both packs, discounted) is the
+  headline; outer pack is the post-deck upsell.
+type: feature
+status: active
+created_at: '2026-06-20T22:54:47.911809+00:00'
+updated_at: '2026-06-20T22:54:47.911809+00:00'
+fork_space:
+  allowed_paths:
+  - .specify/specs/go-deeper/
+  - .specify/backlog/prompts/
+  - src/lib/technique-library/
+  - src/lib/player-entitlements/
+  - src/lib/launch/
+  - src/actions/
+  - src/components/deck/
+  - src/components/superpowers/
+  - prisma/
+  excluded_paths:
+  - '**/__pycache__/'
+  - '*.pyc'
+  file_patterns:
+  - '*.ts'
+  - '*.tsx'
+  - '*.md'
+  - '*.prisma'
+  read_only_paths:
+  - docs/
+  - public/allyship-deck/
+metadata:
+  branch: claude/admiring-shannon-wlddtw
+  builds_on:
+  - superpower-move-decks
+  - superpower-deck-quality
+  - allyship-technique-vocabulary
+  - allyship-deck-experience
+  - book-launch-paywall
+  decisions:
+    quiz_timing: free-hook-before-purchase
+    pack_packaging: loadout-bundle
+    first_go_deeper: deck-includes-inner-pack
+linked_issues: []
