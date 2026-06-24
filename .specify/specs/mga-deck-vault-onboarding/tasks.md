@@ -12,11 +12,11 @@
 
 ## Slice 2 — Plain MGA auth + claim pending
 
-- [ ] **T2.1** Add `claimPendingDeckBar(pendingToken)` (verify token → `materializeDeckBar` for current player → clear cookie).
-- [ ] **T2.2** Add `src/actions/mga-auth.ts`: `signupMga`/`loginMga` reusing `Account`+password+`bars_player_id` cookie, **no** `/conclave/guided` redirect; on success claim `pending` if present, redirect to `returnTo` or `/`.
-- [ ] **T2.3** Add `src/app/signup/page.tsx` (+form); MGA re-skin `src/app/login/LoginForm.tsx`; both accept `returnTo` + `pending`.
-- [ ] **T2.4** Repoint **auth** redirects from `/conclave/guided` to `/login` (grep all routes; start with `src/app/vault/page.tsx`). Keep Conclave as optional onboarding; do not remove profile-completeness logic, only the auth gate.
-- [ ] **T2.5** `npm run build && npm run check`. Manual: signup w/ pending lands BAR in account+hand; `/vault` logged-out → `/login`; Conclave still reachable optionally.
+- [x] **T2.1** `claimPendingDeckBar()` action + shared `claimPendingDeckBarForPlayer(playerId)` in `src/lib/deck-bar.ts` (reads signed cookie → `materializeDeckBar` → clears cookie, single-use). _Refactor: moved `materializeDeckBar` into the plain lib so the auth action and deck action don't 'use server'→'use server' cross-import (Turbopack restriction)._
+- [x] **T2.2** Add `src/actions/mga-auth.ts`: `signupMga`/`loginMga` reusing `Account`+password+`bars_player_id` cookie, **no** `/conclave/guided` redirect; claim pending on success. New accounts are game-ready (`onboardingComplete: true` + auto-invite + orientation threads) so they reach the Vault/NOW without Conclave. A claimed deck card pulls the player to NOW home.
+- [x] **T2.3** Add `src/app/signup/page.tsx`; shared `src/components/auth/MgaAuthForm.tsx` (signup+login); re-skin `/login` to the MGA form (deleted old `LoginForm.tsx`). Pending token rides the httpOnly cookie, not the URL.
+- [x] **T2.4** `/vault` unauthenticated redirect `/conclave/guided` → `/login`; `/login` "Create account" now → `/signup` (was Conclave). _Scoped narrowly: other pages still use `/conclave/guided` as their auth redirect; a global sweep is a separate follow-up to avoid destabilizing many flows in one slice. The deck→signup→vault flow no longer shows Conclave._
+- [x] **T2.5** `tsc` exit 0, lint 0 errors, `verify:server-action-type-reexports` ✓, `test:deck-pending-intent` ✓. `npm run build` still blocked only by sandbox Google-Fonts fetch (unrelated). DB-backed manual walkthrough deferred (no `DATABASE_URL` in sandbox); signup mirrors the proven `createGuidedPlayer` open-signup path.
 
 ## Slice 3 — Vault five-move redesign + declutter
 

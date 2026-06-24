@@ -27,7 +27,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     const searchParams = await props.searchParams
     const highlightQuestId = searchParams.quest ?? null
     const player = await getCurrentPlayer()
-    if (!player) redirect('/conclave/guided')
+    if (!player) redirect('/login')
     if (!isGameAccountReady(player)) redirect('/conclave/guided')
 
     const playerId = player.id

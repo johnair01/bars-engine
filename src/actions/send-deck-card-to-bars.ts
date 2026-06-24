@@ -1,88 +1,23 @@
 'use server'
 
-import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { cookies } from 'next/headers'
-import { revalidatePath } from 'next/cache'
-import { assembleDeck } from '@/lib/allyship-deck/assemble'
-import { buildDeckSeed, type SeedSubject } from '@/lib/allyship-deck/seed'
-import { addBarToHandForPlayer } from '@/lib/hand-service'
+import {
+  findDeckCard,
+  materializeDeckBar,
+  claimPendingDeckBarForPlayer,
+} from '@/lib/deck-bar'
+import { signPendingIntent } from '@/lib/deck-pending-intent'
 import {
   PENDING_DECK_COOKIE,
   PENDING_DECK_TTL_MS,
-  signPendingIntent,
 } from '@/lib/deck-pending-intent'
-import type { AllyshipDeck, MoveCard } from '@/lib/allyship-deck/types'
+import type { SeedSubject } from '@/lib/allyship-deck/seed'
 
 export type SendDeckCardResult =
   | { success: true; barId: string; placedInHand: boolean }
   | { needsAuth: true; pendingToken: string }
   | { error: string }
-
-/** Authoritative deck, assembled deterministically (no AI/DB) and memoized per process. */
-let cachedDeck: AllyshipDeck | null = null
-function deck(): AllyshipDeck {
-  return (cachedDeck ??= assembleDeck())
-}
-
-/** Resolve a card id to its authoritative move card (server-side, never client-trusted). */
-function findCard(cardId: string): MoveCard | undefined {
-  return deck().cards.find((c): c is MoveCard => c.kind === 'move' && c.id === cardId)
-}
-
-/**
- * Materialize a deck card into a *ready-to-practice* BAR owned by `playerId`.
- *
- * Deck cards skip the seed → plant → claim → grow ceremony: the BAR is created
- * self-claimed (`claimedById = playerId`) and `active`, then we attempt to place
- * it in an open Hand slot. Provenance is stamped from the authoritative card.
- *
- * Shared by the authenticated "Send to BARS" branch and the post-signup claim
- * path (`claimPendingDeckBar`) so both land identically.
- *
- * @see .specify/specs/mga-deck-vault-onboarding/spec.md (slice 1)
- */
-export async function materializeDeckBar(
-  playerId: string,
-  cardId: string,
-  subject: SeedSubject,
-): Promise<{ success: true; barId: string; placedInHand: boolean } | { error: string }> {
-  const card = findCard(cardId)
-  if (!card) return { error: 'Card not found' }
-
-  const seed = buildDeckSeed(card, subject)
-
-  try {
-    const bar = await db.customBar.create({
-      data: {
-        creatorId: playerId,
-        title: seed.title,
-        description: seed.description,
-        type: 'vibe',
-        reward: 1,
-        visibility: 'private',
-        status: 'active',
-        claimedById: playerId, // self-claimed — ready to practice, no plant step
-        inputs: JSON.stringify([]),
-        rootId: seed.rootId,
-        agentMetadata: JSON.stringify(seed.provenance),
-      },
-    })
-
-    // Try to drop it straight into the Hand; if full, it stays in the Vault.
-    const placed = await addBarToHandForPlayer(playerId, bar.id)
-    const placedInHand = 'success' in placed && placed.success === true
-
-    revalidatePath('/')
-    revalidatePath('/vault')
-    revalidatePath('/bars')
-    revalidatePath('/hand')
-
-    return { success: true, barId: bar.id, placedInHand }
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Failed to send to BARS' }
-  }
-}
 
 /**
  * "Send to BARS" — capture a deck card as a ready-to-practice BAR.
@@ -96,7 +31,7 @@ export async function materializeDeckBar(
  * Card text is read from the authoritative `assembleDeck()` (not the client), so
  * the captured BAR is trustworthy.
  *
- * @see .specify/specs/mga-deck-vault-onboarding/spec.md (slice 1)
+ * @see .specify/specs/mga-deck-vault-onboarding/spec.md (slices 1–2)
  */
 export async function sendDeckCardToBars(input: {
   cardId: string
@@ -105,7 +40,7 @@ export async function sendDeckCardToBars(input: {
   const subject: SeedSubject = input.subject === 'campaign' ? 'campaign' : 'self'
 
   // Card must exist regardless of auth — fail fast on a bad id.
-  if (!findCard(input.cardId)) return { error: 'Card not found' }
+  if (!findDeckCard(input.cardId)) return { error: 'Card not found' }
 
   const player = await getCurrentPlayer()
 
@@ -124,4 +59,15 @@ export async function sendDeckCardToBars(input: {
   }
 
   return materializeDeckBar(player.id, input.cardId, subject)
+}
+
+/**
+ * Claim a pending deck-card BAR after the player has authenticated. Thin action
+ * wrapper over the shared claim helper; the auth actions call the helper
+ * directly (they already know the player id).
+ */
+export async function claimPendingDeckBar(): Promise<SendDeckCardResult | { skipped: true }> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not logged in' }
+  return claimPendingDeckBarForPlayer(player.id)
 }
