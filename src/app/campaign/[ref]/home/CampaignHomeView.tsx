@@ -165,6 +165,40 @@ export function CampaignHomeView({
         )}
       </main>
 
+      {/* ── Superpower discovery + scoped contribution ──────────────────── */}
+      <section className="px-6 sm:px-10 pb-2 max-w-2xl mx-auto w-full">
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.2em] mb-3"
+          style={{ color: 'var(--cs-text-secondary,#9090c0)' }}
+        >
+          Bring your superpower
+        </h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <Link
+            href={`/superpower?ref=${encodeURIComponent(data.campaign.slug)}`}
+            className="flex-1 py-3 px-5 rounded-xl text-sm font-medium transition-colors text-center"
+            style={{
+              background: 'var(--cs-cta-secondary-bg, rgba(200, 160, 255, 0.15))',
+              color: 'var(--cs-cta-secondary-text, #c8a0ff)',
+              border: '1px solid var(--cs-cta-secondary-border, rgba(200, 160, 255, 0.4))',
+            }}
+          >
+            Discover your superpower
+          </Link>
+          <Link
+            href={`/campaign/${encodeURIComponent(data.campaign.slug)}/needs`}
+            className="flex-1 py-3 px-5 rounded-xl text-sm font-medium transition-colors text-center"
+            style={{
+              background: 'var(--cs-cta-secondary-bg, rgba(200, 160, 255, 0.15))',
+              color: 'var(--cs-cta-secondary-text, #c8a0ff)',
+              border: '1px solid var(--cs-cta-secondary-border, rgba(200, 160, 255, 0.4))',
+            }}
+          >
+            Ways to help
+          </Link>
+        </div>
+      </section>
+
       {/* ── Footer navigation (thumb-first: nav in bottom zone) ─────────── */}
       <footer className="px-6 sm:px-10 py-6 max-w-2xl mx-auto w-full">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
