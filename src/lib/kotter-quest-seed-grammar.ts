@@ -165,7 +165,7 @@ function clampStage(n: number): number {
 }
 
 function trigramPairEssence(upper: Trigram, lower: Trigram): string {
-  return `${TRIGRAM_ESSENCE[upper]} meeting ${TRIGRAM_ESSENCE[lower]}`
+  return `${TRIGRAM_ESSENCE[upper]} expressing outward, driven from beneath by ${TRIGRAM_ESSENCE[lower]}`
 }
 
 /**

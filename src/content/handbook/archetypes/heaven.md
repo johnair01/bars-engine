@@ -50,4 +50,24 @@ You're the energy that gets things moving. Not directing others, but being so co
 
 ---
 
+## Inner Expression (World of Thoughts)
+
+Clarity of vision. The Bold Heart sees the move before making it; the initiative lives first as inner certainty.
+
+## Outer Expression (World of Senses)
+
+Action without announcement. Momentum becomes the communication, and others understand the direction because the move is already happening.
+
+## Developmental Spectrum
+
+### Young / Forming
+
+Acts before reading the room. Momentum arrives without discernment, and speed can be mistaken for precision.
+
+### Developed / Full Expression
+
+Acts with the full force of creative conviction. Others trust the move because the track record is real and the timing has been earned.
+
+---
+
 *The Bold Heart: When you embody creative yang energy with such clarity that movement becomes inevitable.*

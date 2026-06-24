@@ -50,4 +50,24 @@ You're the one who shifts perspectives, who gradually moves pieces into place, w
 
 ---
 
+## Inner Expression (World of Thoughts)
+
+Identifying the crack in the system. The Subtle Influence knows which direction to push before the push begins.
+
+## Outer Expression (World of Senses)
+
+Persistent gradual pressure. Change accumulates invisibly until the system discovers it has already shifted.
+
+## Developmental Spectrum
+
+### Young / Forming
+
+Invisible to the point of ineffectiveness. Subtlety becomes avoidance, and patience can become a cover for not acting.
+
+### Developed / Full Expression
+
+Persistent directional pressure that accumulates into transformation. The Subtle Influence knows the difference between patient and stuck.
+
+---
+
 *The Subtle Influence: When you're so persistent in your gentleness that walls become doors.*

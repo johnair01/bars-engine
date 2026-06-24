@@ -50,4 +50,24 @@ You're the energy that breaks through when everyone's overthinking. Not the plan
 
 ---
 
+## Inner Expression (World of Thoughts)
+
+Feeling the charge building. The Decisive Storm knows when the moment is arriving before anything has visibly changed.
+
+## Outer Expression (World of Senses)
+
+The strike. Action happens, and the system reorganizes around it.
+
+## Developmental Spectrum
+
+### Young / Forming
+
+Strikes when the moment has not arrived. Urgency is confused with timing.
+
+### Developed / Full Expression
+
+Perfect timing. The strike lands because the ground was ready, and disruption becomes surgical.
+
+---
+
 *The Decisive Storm: When you're so attuned to the moment that your boldness becomes precision.*

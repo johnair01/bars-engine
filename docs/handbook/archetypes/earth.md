@@ -50,4 +50,24 @@ You're the one who makes sure everyone's okay. Who notices when someone needs su
 
 ---
 
+## Inner Expression (World of Thoughts)
+
+Holding. The Devoted Guardian receives and processes others' needs internally before responding.
+
+## Outer Expression (World of Senses)
+
+Grounding presence. Support is enacted rather than explained, and the room steadies because care has taken form.
+
+## Developmental Spectrum
+
+### Young / Forming
+
+Self-erases in service. Holding space becomes absorbing others' reality, and care loses its own boundary.
+
+### Developed / Full Expression
+
+Devoted without dissolving. The support is genuinely sustainable because the Guardian knows what they can hold.
+
+---
+
 *The Devoted Guardian: When you love others so fiercely that your softness becomes unbreakable strength.*

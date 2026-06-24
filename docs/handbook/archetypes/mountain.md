@@ -50,4 +50,24 @@ You're the one who says "Wait." Who stops the crew before they make a fatal mist
 
 ---
 
+## Inner Expression (World of Thoughts)
+
+Genuine stillness. The Still Point's boundary begins as internal discernment.
+
+## Outer Expression (World of Senses)
+
+Holding position in the world. The Still Point refuses what should be refused.
+
+## Developmental Spectrum
+
+### Young / Forming
+
+Frozen, not still. Refusal comes from fear rather than discernment.
+
+### Developed / Full Expression
+
+Chooses stillness. The Still Point holds position from genuine knowing, and the boundary has authority.
+
+---
+
 *The Still Point: When you're so still that your stopping becomes the most powerful move.*

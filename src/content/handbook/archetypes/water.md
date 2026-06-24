@@ -50,4 +50,24 @@ You're the one who thrives when plans fall apart. When everything goes sideways,
 
 ---
 
+## Inner Expression (World of Thoughts)
+
+Sitting with depth and complexity without needing to resolve it. The Danger Walker can stay present where the answer has not surfaced yet.
+
+## Outer Expression (World of Senses)
+
+Movement through chaos. The form adapts to the obstacle, and uncertainty becomes navigable terrain.
+
+## Developmental Spectrum
+
+### Young / Forming
+
+Seeks danger for its own sake. Chaos is mistaken for depth, and intensity can become the proof of aliveness.
+
+### Developed / Full Expression
+
+Goes deep because depth is where the answer is. The Danger Walker returns with what was found.
+
+---
+
 *The Danger Walker: When you're so fluid that danger becomes just another current to ride.*

@@ -50,4 +50,24 @@ You're the one who makes friends out of strangers, who turns tense situations pl
 
 ---
 
+## Inner Expression (World of Thoughts)
+
+Receiving and reflecting beauty. The Joyful Connector knows delight inwardly before sharing it.
+
+## Outer Expression (World of Senses)
+
+Opening exchange. Joy becomes contagious through contact, and connection starts moving.
+
+## Developmental Spectrum
+
+### Young / Forming
+
+Openness without boundary. Delight becomes performance, and joy needs an audience to feel real.
+
+### Developed / Full Expression
+
+Authentic exchange. The joy is self-sustaining, and connection deepens rather than disperses.
+
+---
+
 *The Joyful Connector: When you're so genuinely joyful that connection becomes contagious.*

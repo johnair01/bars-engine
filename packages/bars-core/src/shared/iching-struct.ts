@@ -18,6 +18,15 @@ interface HexagramStruct {
     lower: Trigram
 }
 
+/**
+ * Calrunia gameplay reading:
+ * - Upper trigram = expressing outward; the visible/presenting force in the situation.
+ * - Lower trigram = driving from beneath; the motivating or grounding force under the expression.
+ *
+ * This positional rule is intentionally part of the bars-engine lore layer. The same two
+ * trigrams produce different situations when their upper/lower positions are reversed.
+ */
+
 // Full 64 mapping (simplified for MVP - I will fill 1-64 based on standard King Wen or just programmatic logic if I had the algo, but explicit map is safer)
 // Since I don't have the full 64 map in memory, I'll generate a placeholder pattern or fill common ones.
 // User said "randomly generated set of 64". The MAPPING itself is fixed (Hex 1 is Heaven/Heaven).

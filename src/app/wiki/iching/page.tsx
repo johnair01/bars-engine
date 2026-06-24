@@ -75,6 +75,9 @@ export default async function IChingWikiPage() {
                     <p className="text-sm text-zinc-400">
                         Public canonical reference: hexagram → upper/lower trigram → trigram <Link href="/wiki/archetypes" className="text-amber-400 hover:text-amber-300">archetypes</Link>.
                     </p>
+                    <p className="text-sm text-zinc-400">
+                        Calrunia reads the upper trigram as the visible/presenting force and the lower trigram as the motivating force driving from beneath.
+                    </p>
                     <div className="text-xs text-zinc-500">
                         Data source: canonical hexagram structure + <Link href="/wiki/handbook" className="text-amber-400 hover:text-amber-300">handbook</Link>-backed archetypes.
                     </div>

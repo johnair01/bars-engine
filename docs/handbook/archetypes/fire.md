@@ -50,4 +50,24 @@ You're the one who sees what's really happening beneath the surface. Who cuts th
 
 ---
 
+## Inner Expression (World of Thoughts)
+
+Seeing what is actually true in the situation before speaking it. The light begins as perception.
+
+## Outer Expression (World of Senses)
+
+Illumination. What was hidden becomes visible to the room, and the situation can no longer pretend not to know.
+
+## Developmental Spectrum
+
+### Young / Forming
+
+Truth without tact. Illumination becomes exposure, and the light cannot yet be modulated.
+
+### Developed / Full Expression
+
+Sees clearly and chooses what to illuminate and when. Clarity serves the situation rather than merely proving itself.
+
+---
+
 *The Truth Seer: When you're so attached to truth that your clarity illuminates everything.*
