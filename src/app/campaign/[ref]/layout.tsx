@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { resolveCampaignPageSkin, toSerializableSkin } from '@/lib/ui/resolve-campaign-skin'
 import { CampaignSkinProvider } from '@/lib/ui/campaign-skin-provider'
+import { THE_CROSSING_CAMPAIGN_REF } from '@/lib/the-crossing-support-moves'
 
 /**
  * Campaign layout — resolves the campaign skin server-side and wraps
@@ -41,7 +42,8 @@ export default async function CampaignRefLayout({
 
   // Resolve campaign skin server-side (DB + static skin merge)
   // Returns null if campaign doesn't exist — child page handles notFound()
-  const resolvedSkin = await resolveCampaignPageSkin(slug)
+  const resolvedSkin =
+    slug === THE_CROSSING_CAMPAIGN_REF ? null : await resolveCampaignPageSkin(slug)
 
   // Convert to serializable form for client boundary crossing
   const serializedSkin = resolvedSkin ? toSerializableSkin(resolvedSkin) : null
