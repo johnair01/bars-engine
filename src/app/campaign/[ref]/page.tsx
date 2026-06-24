@@ -114,7 +114,6 @@ async function getApprovedCampaign(slug: string): Promise<CampaignPageData | nul
     instanceId: campaign.instanceId,
     instanceName: campaign.instance.name,
     createdByName: campaign.createdBy.name,
-    shareUrl: campaign.shareUrl,
     theme: campaign.theme
       ? {
           bgGradient: campaign.theme.bgGradient,
