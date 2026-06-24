@@ -4,6 +4,10 @@ import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { getCampaignSkin } from '@/lib/ui/campaign-skin'
 import { CampaignLanding } from './CampaignLanding'
+import {
+  THE_CROSSING_CAMPAIGN_REF,
+  THE_CROSSING_PARENT_CAMPAIGN_REF,
+} from '@/lib/the-crossing-support-moves'
 
 /**
  * @page /campaign/:slug
@@ -34,6 +38,8 @@ export type CampaignPageData = {
   instanceName: string
   createdByName: string | null
   shareUrl: string | null
+  parentCampaignRef?: string | null
+  parentCampaignName?: string | null
   theme: {
     bgGradient: string | null
     bgDeep: string | null
@@ -124,12 +130,40 @@ async function getApprovedCampaign(slug: string): Promise<CampaignPageData | nul
   }
 }
 
+function getTheCrossingFallbackCampaign(slug: string): CampaignPageData | null {
+  if (slug !== THE_CROSSING_CAMPAIGN_REF) return null
+
+  return {
+    id: 'static-the-crossing',
+    slug: THE_CROSSING_CAMPAIGN_REF,
+    name: 'The Crossing Car Fundraiser',
+    description:
+      'A reliable car is the next practical bridge: getting Wendell back on the road while the Mastering the Game of Allyship launch + barn raising keeps moving.',
+    allyshipDomain: 'GATHERING_RESOURCES',
+    wakeUpContent:
+      'The car died at the exact moment the work is starting to gather real momentum. The fundraising side is moving, and now the next bottleneck is practical: find the actual car, reduce the risk, and keep the campaign in motion.',
+    showUpContent:
+      'You can help by sending car leads, evaluating listings, making warm introductions, sharing the ask, offering encouragement, donating money, or contributing time and resources.',
+    storyBridgeCopy: null,
+    startDate: null,
+    endDate: null,
+    instanceId: 'static-mtgoa-barn-raising',
+    instanceName: 'Mastering the Game of Allyship Launch + Barn Raising',
+    createdByName: 'Wendell Britt',
+    shareUrl: null,
+    parentCampaignRef: THE_CROSSING_PARENT_CAMPAIGN_REF,
+    parentCampaignName: 'Mastering the Game of Allyship Launch + Barn Raising',
+    theme: null,
+  }
+}
+
 export async function generateMetadata(props: {
   params: Promise<{ ref: string }>
 }): Promise<Metadata> {
   const { ref } = await props.params
   const slug = decodeURIComponent(ref)
-  const campaign = await getApprovedCampaign(slug)
+  const campaign =
+    getTheCrossingFallbackCampaign(slug) ?? (await getApprovedCampaign(slug))
 
   if (!campaign) {
     return { title: 'Campaign Not Found' }
@@ -185,12 +219,13 @@ async function resolveVisitorStatus(
 
 export default async function CampaignPage(props: {
   params: Promise<{ ref: string }>
-  searchParams: Promise<{ invite?: string }>
+  searchParams: Promise<{ invite?: string; thanks?: string; error?: string; role?: string }>
 }) {
   const { ref } = await props.params
-  const { invite: inviteToken } = await props.searchParams
+  const { invite: inviteToken, thanks, error, role } = await props.searchParams
   const slug = decodeURIComponent(ref)
-  const campaign = await getApprovedCampaign(slug)
+  const campaign =
+    getTheCrossingFallbackCampaign(slug) ?? (await getApprovedCampaign(slug))
 
   if (!campaign) {
     notFound()
@@ -208,6 +243,7 @@ export default async function CampaignPage(props: {
       staticSkin={staticSkin}
       visitorStatus={visitorStatus}
       inviteToken={inviteToken}
+      supportStatus={{ thanks: thanks === '1', error: error ?? null, role: role ?? null }}
     />
   )
 }
