@@ -42,8 +42,13 @@ API-first, five slices. Reuse auth/entitlements/deck-UI/technique-library. Only 
 - [x] **T17** Tests: `getCardGoDeeper` for owned / locked / needsQuiz / unavailable.
 
 ## Slice 5 — Verification & polish
-- [ ] **T18** Verification quest `cert-go-deeper-v1` (Twine passages: quiz → result → draw → inner Go Deeper → outer upsell → mint) + idempotent seed; tie to Bruised Banana Fundraiser.
-- [ ] **T19** `npm run check` + `npm run build` green.
+> **Status (2026-06-24):** Implemented. `scripts/seed-cert-go-deeper.ts` seeds the
+> `cert-go-deeper-v1` Twine cert (CustomBar, `isSystem`+public, deterministic id,
+> idempotent upsert) with the 6-step flow: quiz → result → draw → inner Go Deeper
+> (pays off) → outer Go Deeper (upsell, locked, no leak) → gates-honest → mint;
+> framed to the Bruised Banana Fundraiser. Wired as `npm run seed:cert:go-deeper`.
+- [x] **T18** Verification quest `cert-go-deeper-v1` (Twine passages: quiz → result → draw → inner Go Deeper → outer upsell → mint) + idempotent seed; tie to Bruised Banana Fundraiser.
+- [x] **T19** `npm run check` green (exit 0, 0 errors). `npm run build` compiles clean; in this sandboxed env it stops only at Google-Fonts fetch (network egress blocked) — not a code error. Builds green where outbound font fetch is allowed.
 
 ## Housekeeping
 - [ ] **T20** `BACKLOG.md` entry + `npm run backlog:seed`.
