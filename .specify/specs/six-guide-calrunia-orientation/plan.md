@@ -198,3 +198,52 @@ Acceptance criteria:
 - `/inner-garden/shaman?barId=...` rejects ineligible BARs.
 - Completing the Shaman form creates a new Vault BAR linked to the source.
 - Normal Pixi world traffic redirects to Inner Garden unless the prototype flag is enabled.
+
+## Phase 7 — Inner Garden Chapter 1: Answer The Call
+
+This phase turns the bridge into the first playable Mastering the Game of Allyship chapter.
+
+Product frame:
+
+- Chapter 1 is **The Call to Play / Answer the Call**.
+- It is a threshold ritual, not a lore reader.
+- It teaches the first allyship practice: notice the signal, name the charge/resistance, and choose one concrete first move.
+- It uses the Shaman loop because the first thing the player must learn is that charged inner material is playable, not disqualifying.
+
+Implementation decisions:
+
+- Add `/inner-garden/chapter-1` as the authenticated playable route.
+- Let a player start from either:
+  - an existing eligible raw Hand/Vault BAR, or
+  - a new "Call to Play" BAR created from the Chapter 1 form.
+- Store all output in `CustomBar`.
+- Do not introduce campaign progress tables in v1.
+- Use `questSource: "inner_garden_chapter_1"` to distinguish Chapter 1 completions from generic Shaman runs.
+- Set Chapter 1 result metadata:
+  - `gameMasterFace: "shaman"`
+  - `campaignRef: "mtgoa-chapter-1"`
+  - `allyshipDomain: "RAISE_AWARENESS"`
+  - `moveType: "wakeUp"`
+  - `sourceBarId` when a source BAR exists or is created
+  - `agentMetadata` with signal, resistance, emotion, cultivation action, seed quality, harvested insight, and first move
+- Link MTGOA Spoke I to `/inner-garden/chapter-1` so the public hub's first card opens the playable chapter instead of only a reading surface.
+
+Runtime files:
+
+```text
+src/lib/inner-garden/chapter-one.ts
+src/actions/inner-garden.ts
+src/app/inner-garden/page.tsx
+src/app/inner-garden/chapter-1/page.tsx
+src/lib/mastering-allyship/spoke-funnel-map.ts
+src/lib/inner-garden/__tests__/chapter-one.test.ts
+```
+
+Acceptance criteria:
+
+- `/inner-garden/chapter-1` requires auth.
+- The page lists eligible raw Hand/Vault BARs and also supports creating a new Chapter 1 source BAR.
+- Completing the Chapter 1 form creates exactly one result BAR and, when needed, one source BAR.
+- The result BAR is linked to the source BAR, tagged as Shaman + Chapter 1, and includes the player's first outer-world move.
+- MTGOA hub Spoke I points to the playable Inner Garden Chapter 1 route.
+- Pure tests prove the Chapter 1 metadata and BAR draft builders are stable.

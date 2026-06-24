@@ -89,6 +89,27 @@ export default async function InnerGardenPage({
           </div>
         )}
 
+        <section className="rounded-xl border border-emerald-900/60 bg-emerald-950/20 p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-400">
+                Mastering Allyship · Chapter 1
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-emerald-50">Answer the Call</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-emerald-200/70">
+                Begin the first playable Inner Garden chapter by naming the signal, tending the
+                charge, and choosing one outer-world move.
+              </p>
+            </div>
+            <Link
+              href="/inner-garden/chapter-1"
+              className="inline-flex shrink-0 items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600"
+            >
+              Play Chapter 1
+            </Link>
+          </div>
+        </section>
+
         {!hasAny ? (
           <section className="rounded-xl border border-dashed border-zinc-800 p-10 text-center">
             <h2 className="text-lg font-semibold text-zinc-200">No raw captures are ready</h2>
@@ -146,4 +167,3 @@ export default async function InnerGardenPage({
     </main>
   )
 }
-

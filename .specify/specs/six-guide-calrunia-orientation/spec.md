@@ -324,6 +324,12 @@ This does not require a full character sheet in the first slice, but the orienta
 
 **Acceptance**: I Ching output can identify visible/hidden forces, relevant sect discipline, and one outer-world move.
 
+### P5: I can play Chapter 1 inside Inner Garden
+
+**As a new Mastering the Game of Allyship player**, I want Chapter 1 to give me a short playable threshold ritual, so I can answer the call to allyship by naming what brought me here and choosing one real first move.
+
+**Acceptance**: `/inner-garden/chapter-1` lets an authenticated player either use an eligible raw Hand/Vault BAR or create a new "Call to Play" BAR, complete a Shaman-flavored cultivation step, and receive a linked result BAR in Vault with a concrete outer-world first move.
+
 ## Functional Requirements
 
 ### FR1: Define the orientation ladder
@@ -378,6 +384,18 @@ BAR capture and basic productivity must remain usable without Calrunian lore.
 
 No first-run experience should require players to understand nations, sects, hexagrams, or full Calrunian history before creating value.
 
+### FR8: Make Chapter 1 playable as an Inner Garden threshold
+
+The first playable Chapter 1 slice must:
+
+- use the MTGOA Chapter 1 frame: **Answer the Call / The Call to Play**
+- be Shaman-first but not require the player to know the six Guide system
+- accept an existing eligible raw BAR or create a new raw BAR from the player's call
+- ask for the signal, the resistance/charge, a harvested insight, and one immediate outer-world move
+- create the completed artifact as a new `CustomBar` result linked to its source BAR
+- tag the result with `gameMasterFace: "shaman"`, `questSource: "inner_garden_chapter_1"`, `campaignRef: "mtgoa-chapter-1"`, and `moveType: "wakeUp"`
+- avoid new tables in v1
+
 ## Non-Goals
 
 - Implement the Guide campaign UI in this spec.
@@ -394,6 +412,7 @@ No first-run experience should require players to understand nations, sects, hex
 - Lore depth is tied to player action and app capability.
 - Sects become legible as disciplines after nations/emotional terrain are established.
 - The I Ching has a clear role as a bridge artifact between outer-world problem, inner-world narrative data, and outer-world move.
+- A player can complete Chapter 1 inside Inner Garden and leave with a Vault BAR that names both an insight and a first real-world move.
 
 ## Open Questions
 
