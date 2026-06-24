@@ -104,9 +104,9 @@ inner/outer split feels off in playtest.
 ## Action items
 
 **On the merged line (whoever integrates):**
-- [ ] Make `src/lib/superpowers/types.ts` the canonical `Superpower` (7); have `technique-library/vocabulary.ts` re-export it; add no-drift test.
-- [ ] Decide M1 vs M2 (OQ1); implement the quiz→`{inner,outer}` mapping.
-- [ ] Retire or adapter-wrap Branch B `translate.ts` in favor of the resolver.
+- [x] Make `src/lib/superpowers/types.ts` the canonical `Superpower` (7); have `technique-library/vocabulary.ts` re-export it; no-drift test still holds. *(commit 36d09b2)*
+- [x] **OQ1 decided = M1.** `quizResultToLoadout` (`src/lib/superpowers/quiz-loadout.ts`) maps `orientation internal → {inner: primary, outer: secondary}`, `external → swap`, `null → internal default`. Accepts both `QuizResult` and `SuperpowerRoutingResult`. *(commit 36d09b2)*
+- [ ] Retire or adapter-wrap Branch B `translate.ts` in favor of the resolver. *(OQ4 — deferred)*
 
 **Branch A (technique-library):**
 - [ ] Add `coach` profile; regenerate to 420 cards; fix count tests + quality baseline.
@@ -114,9 +114,9 @@ inner/outer split feels off in playtest.
 - [ ] Keep decks/resolver/quality as the content engine.
 
 **Branch B (quiz/intake):**
-- [ ] Persist mapped `{inner,outer}` to `Player` (use go-deeper Slice 1 fields).
+- [x] Persist mapped `{inner,outer}` to `Player` (use go-deeper Slice 1 fields). `submitSuperpowerIntake` now calls `saveSuperpowerLoadout` (best-effort, logged-in only) — also fires the deferred inner-pack grant for deck owners; result gains `loadoutSaved`. *(commit 36d09b2)*
 - [ ] Adopt the shared aspect/subject vocabulary at the boundary.
-- [ ] Coordinate `offers.ts`: superpower pack SKUs land in their structure.
+- [ ] Coordinate `offers.ts`: superpower pack SKUs land in their structure. *(go-deeper Slice 3)*
 
 **Merge order (suggested):** land the shared `Superpower` enum + Coach in the deck
 system first (unblocks both) → merge Branch B's quiz/offers → wire go-deeper
@@ -125,8 +125,9 @@ system first (unblocks both) → merge Branch B's quiz/offers → wire go-deeper
 ---
 
 ## Open questions
-- **OQ1 — quiz→loadout mapping:** M1 (orientation places primary) vs M2 (separate
-  inner/outer axes)? *(Rec: M1 for v1.)*
+- **OQ1 — quiz→loadout mapping:** ✅ **RESOLVED = M1** (orientation places the
+  primary). Implemented in `quiz-loadout.ts` (commit 36d09b2). Revisit M2 only if
+  the inner/outer split feels off in playtest.
 - **OQ2 — Coach's emotional channel / domain emphasis:** Branch B's `SUPERPOWER_DEFS.coach`
   defines a profile; confirm its `verb/inner/outer` row for the deck generator.
 - **OQ3 — does Coach get an expansion pack** like the other 6 (7 packs), or is it
