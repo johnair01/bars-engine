@@ -145,6 +145,8 @@ When a student makes a risky allyship move and the outcome is uncertain, the tab
 
 You **Wake Up** when you try to understand what is really happening.
 
+You **Open Up** when you risk honest contact, reveal a need, or receive support.
+
 You **Clean Up** when you repair harm, own impact, or restore integrity.
 
 You **Grow Up** when you stay with discomfort, feedback, complexity, or limits.

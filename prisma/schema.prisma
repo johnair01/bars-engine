@@ -439,14 +439,14 @@ model CustomBar {
 /// "carrying" slot. The vault is everything active NOT bound to a HandSlot.
 /// See .specify/specs/hand-vault-bounded-inventory/spec.md
 model HandSlot {
-  id         String    @id @default(cuid())
+  id         String     @id @default(cuid())
   playerId   String
   slotIndex  Int // 0–5; slot 0 = active/carrying slot
   barId      String?
-  isCarrying Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  player     Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  isCarrying Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
   bar        CustomBar? @relation(fields: [barId], references: [id], onDelete: SetNull)
 
   @@unique([playerId, slotIndex])
@@ -489,32 +489,35 @@ model BarForgeRecord {
 
 /// Emergent campaign from BAR interview (ECI) — structured path through invite CYOA before child campaign exists.
 model LatentAllyshipIntake {
-  id                String    @id @default(cuid())
-  customBarId       String
+  id                    String    @id @default(cuid())
+  customBarId           String
   /// Logged-in submitter when available.
-  playerId          String?
+  playerId              String?
   /// Browser-stable id (localStorage) for anonymous correlation / dedupe hints.
-  clientSessionId   String?
+  clientSessionId       String?
   /// `EventInviteStory.id` at submit time (template versioning).
-  storyId           String
+  storyId               String
   /// Last passage id (usually ending).
-  endingPassageId   String
+  endingPassageId       String
   /// JSON: { steps: { passageId, choiceLabel, nextPassageId }[] }
-  pathJson          String
+  pathJson              String
   /// Denormalized from invite URL ?note= for steward context.
-  senderNote        String?
-  status            String    @default("submitted")
+  senderNote            String?
+  status                String    @default("submitted")
   /// When set, this intake was watered into a child campaign instance.
-  spawnedInstanceId String?   @map("spawned_instance_id")
-  wateredAt         DateTime? @map("watered_at")
-  wateredByPlayerId String?   @map("watered_by_player_id")
-  stewardNotes      String?   @map("steward_notes")
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  customBar         CustomBar @relation(fields: [customBarId], references: [id], onDelete: Cascade)
-  player            Player?   @relation(fields: [playerId], references: [id])
-  spawnedInstance   Instance? @relation("AllyshipIntakeSpawnedInstance", fields: [spawnedInstanceId], references: [id])
-  wateredBy         Player?   @relation("AllyshipIntakeWateredBy", fields: [wateredByPlayerId], references: [id])
+  spawnedInstanceId     String?   @map("spawned_instance_id")
+  wateredAt             DateTime? @map("watered_at")
+  wateredByPlayerId     String?   @map("watered_by_player_id")
+  stewardNotes          String?   @map("steward_notes")
+  /// Superpower discovery result captured at submit (additive, nullable).
+  superpower            String?   @map("superpower")
+  superpowerOrientation String?   @map("superpower_orientation")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  customBar             CustomBar @relation(fields: [customBarId], references: [id], onDelete: Cascade)
+  player                Player?   @relation(fields: [playerId], references: [id])
+  spawnedInstance       Instance? @relation("AllyshipIntakeSpawnedInstance", fields: [spawnedInstanceId], references: [id])
+  wateredBy             Player?   @relation("AllyshipIntakeWateredBy", fields: [wateredByPlayerId], references: [id])
 
   @@index([customBarId, createdAt])
   @@index([playerId])
@@ -1430,23 +1433,23 @@ model MoveUse {
 }
 
 model QuestMoveLog {
-  id           String     @id @default(cuid())
-  questId      String
-  moveId       String
-  playerId     String
-  createdBarId String?
-  inputsJson   String?
-  effectsJson  String?
-  createdAt    DateTime   @default(now())
-  outcome      String?
+  id             String     @id @default(cuid())
+  questId        String
+  moveId         String
+  playerId       String
+  createdBarId   String?
+  inputsJson     String?
+  effectsJson    String?
+  createdAt      DateTime   @default(now())
+  outcome        String?
   /// IOA: inner (self-development) | outer (allyship). Nullable — legacy logs predate the aspect. See specs/inner-outer-allyship-moves.
-  moveAspect   String?
+  moveAspect     String?
   /// IOA: who an outer move acts on — individual | collective | system. Null for inner (self-directed).
   allyshipTarget String?
-  createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
-  move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
-  player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  quest        CustomBar  @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
+  createdBar     CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
+  move           NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  player         Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  quest          CustomBar  @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
 
   @@index([questId, createdAt])
   @@index([playerId, createdAt])
@@ -3638,10 +3641,44 @@ model CampaignMilestone {
   approvedBy         Player?                 @relation("MilestoneApprovals", fields: [approvedByPlayerId], references: [id])
   proposedBy         Player                  @relation("MilestoneProposals", fields: [proposedByPlayerId], references: [id], onDelete: Cascade)
   contributions      MilestoneContribution[]
+  needs              MilestoneNeed[]
 
   @@index([campaignRef, status])
   @@index([campaignRef, wallKey])
   @@map("campaign_milestones")
+}
+
+/// A superpower-typed, well-scoped NEED a milestone decomposes into (Mobility
+/// Quest tiered donation). A matched player (superpower + orientation) sees it
+/// as a scoped quest; completion records a MilestoneContribution.
+/// Six Faces ruling: unit-typed (action|currency|hours), NO per-action multiplier.
+model MilestoneNeed {
+  id                String            @id @default(cuid())
+  milestoneId       String
+  /// Denormalized for cross-instance listing (mirrors other campaign tables).
+  campaignRef       String
+  /// 'connector'|'storyteller'|'strategist'|'disruptor'|'alchemist'|'escape_artist'|'coach'
+  superpower        String
+  /// 'internal' | 'external'
+  orientation       String
+  /// Base allyship card this need translates (deck.json stays source of truth).
+  cardId            String
+  /// 'action' | 'currency' | 'hours' — units never blended; default action.
+  unit              String            @default("action")
+  value             Float             @default(1)
+  /// 'open' | 'claimed' | 'done'
+  status            String            @default("open")
+  /// Player id who claimed/completed (denormalized; no FK to keep Player lean).
+  claimedByPlayerId String?
+  title             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  milestone         CampaignMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@index([campaignRef, status])
+  @@index([milestoneId])
+  @@index([claimedByPlayerId])
+  @@map("milestone_needs")
 }
 
 /// A contribution toward a CampaignMilestone (donation, pledge, action).
@@ -3923,15 +3960,20 @@ model Campaign {
 /// Phase 3: Campaign membership — who is a member/steward/owner
 /// See .specify/specs/phase-3-stewardship/SPEC.md
 model CampaignMembership {
-  id           String         @id @default(cuid())
-  campaignId   String
-  playerId     String
-  role         MembershipRole
+  id                    String         @id @default(cuid())
+  campaignId            String
+  playerId              String
+  role                  MembershipRole
   /// null unless role = STEWARD; FULL = general steward
-  stewardScope StewardScope?
-  createdAt    DateTime       @default(now())
-  campaign     Campaign       @relation("CampaignMemberships", fields: [campaignId], references: [id], onDelete: Cascade, map: "campaign_memberships_campaign_id_fkey")
-  player       Player         @relation("PlayerMemberships", fields: [playerId], references: [id], onDelete: Cascade, map: "campaign_memberships_player_id_fkey")
+  stewardScope          StewardScope?
+  /// Per-campaign superpower result (Mobility Quest discovery quiz). Additive,
+  /// nullable. 'connector'|'storyteller'|'strategist'|'disruptor'|'alchemist'|'escape_artist'|'coach'.
+  superpower            String?
+  /// 'internal' | 'external' (the addendum's orientation polarity).
+  superpowerOrientation String?
+  createdAt             DateTime       @default(now())
+  campaign              Campaign       @relation("CampaignMemberships", fields: [campaignId], references: [id], onDelete: Cascade, map: "campaign_memberships_campaign_id_fkey")
+  player                Player         @relation("PlayerMemberships", fields: [playerId], references: [id], onDelete: Cascade, map: "campaign_memberships_player_id_fkey")
 
   @@unique([campaignId, playerId])
   @@index([campaignId])

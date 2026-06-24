@@ -72,6 +72,66 @@ export function themeForMove(move: BasicMove): CardTheme {
   return { gradFrom: t.gradFrom, gradTo: t.gradTo, glow: t.glow, gem: t.gem, frame: t.frame }
 }
 
+// ─── Card back — "Struck Gold" treatment ─────────────────────────────────────
+// The premium print-and-store back of every card (design handoff: Struck Gold /
+// Back A). Built in the canonical 460×644 card space; scale the whole thing with a
+// CSS transform to keep every layer pixel-faithful at any size.
+
+/** Canonical card-back geometry (2.5:3.5). All back layers are authored in this space. */
+export const CARD_BACK = { width: 460, height: 644 } as const
+
+/** The MTGOA mark used on every back surface (transparent PNG, served from /public). */
+export const MTGOA_MARK_SRC = '/allyship-deck/mtgoa-logo-transparent.png'
+
+/** Simulated gold-foil gradient (115°) — the frame ring + foil chrome. */
+export const FOIL_GRADIENT =
+  'linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28)'
+
+/**
+ * Woven-rosette guilloché ring as an SVG path. `r(θ) = baseR + amp·cos(petals·θ + phase)`,
+ * sampled around the circle. The engraved field is a stack of these (see `guillocheField`).
+ */
+export function rosettePath(
+  cx: number,
+  cy: number,
+  baseR: number,
+  amp: number,
+  petals: number,
+  phase: number,
+): string {
+  const steps = 260
+  const pts: string[] = []
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * Math.PI * 2
+    const rr = baseR + amp * Math.cos(petals * t + phase)
+    pts.push(`${(cx + rr * Math.cos(t)).toFixed(1)},${(cy + rr * Math.sin(t)).toFixed(1)}`)
+  }
+  return `M${pts.join('L')}Z`
+}
+
+/**
+ * The engraved guilloché field behind the mark — concentric woven rings, alternating
+ * phase. Defaults match the Struck Gold back (`guilloche(230,322, r0 64→r1 250, 11 rings,
+ * amp 9, petals 18)`).
+ */
+export function guillocheField(
+  cx = 230,
+  cy = 322,
+  r0 = 64,
+  r1 = 250,
+  rings = 11,
+  amp = 9,
+  petals = 18,
+): string[] {
+  const out: string[] = []
+  for (let i = 0; i < rings; i++) {
+    const f = rings === 1 ? 0 : i / (rings - 1)
+    const baseR = r0 + (r1 - r0) * f
+    out.push(rosettePath(cx, cy, baseR, amp, petals, ((i % 2) * Math.PI) / petals))
+  }
+  return out
+}
+
 /** Operation ("face") monogram color. Faces are channel-agnostic — this is identity only. */
 export const FACE_COLOR: Record<Operation, string> = {
   shaman: '#6fd0d0',

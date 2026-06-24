@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+import { listMovableVaultBars, promoteVaultBarToHand, type MovableVaultBar } from '@/actions/hand'
 
 const MATURITY_LABELS: Record<string, string> = {
   captured: 'Captured',
@@ -41,6 +43,9 @@ type HandGlanceProps = {
 
 export function HandGlance({ slots, filledCount, vaultCount, gardenCount }: HandGlanceProps) {
   const [collapsed, setCollapsed] = useState(false)
+  // Empty-slot Vault picker (bottom sheet). `pickerSlot` is the target slot.
+  const router = useRouter()
+  const [pickerSlot, setPickerSlot] = useState<number | null>(null)
 
   return (
     <section>
@@ -101,9 +106,10 @@ export function HandGlance({ slots, filledCount, vaultCount, gardenCount }: Hand
 
             if (!slot.barId || !slot.title) {
               return (
-                <Link
+                <button
                   key={slot.slotIndex}
-                  href="/bars/create"
+                  type="button"
+                  onClick={() => setPickerSlot(slot.slotIndex)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -115,12 +121,14 @@ export function HandGlance({ slots, filledCount, vaultCount, gardenCount }: Hand
                     color: '#6b6965',
                     fontSize: 20,
                     fontWeight: 300,
-                    textDecoration: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
                     transition: 'box-shadow 0.2s, color 0.2s',
+                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   +
-                </Link>
+                </button>
               )
             }
 
@@ -236,6 +244,121 @@ export function HandGlance({ slots, filledCount, vaultCount, gardenCount }: Hand
           })}
         </div>
       )}
+
+      {pickerSlot !== null && (
+        <EmptySlotSheet
+          slotIndex={pickerSlot}
+          onClose={() => setPickerSlot(null)}
+          onPicked={() => {
+            setPickerSlot(null)
+            router.refresh()
+          }}
+        />
+      )}
     </section>
+  )
+}
+
+/**
+ * Bottom sheet for an empty Hand slot: pull an existing Vault BAR in, or
+ * capture a new one. Vault BARs are lazy-loaded when the sheet opens.
+ */
+function EmptySlotSheet({
+  slotIndex,
+  onClose,
+  onPicked,
+}: {
+  slotIndex: number
+  onClose: () => void
+  onPicked: () => void
+}) {
+  const [bars, setBars] = useState<MovableVaultBar[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  useEffect(() => {
+    let active = true
+    listMovableVaultBars().then(res => {
+      if (!active) return
+      if ('error' in res) setError(res.error)
+      else setBars(res)
+    })
+    return () => { active = false }
+  }, [])
+
+  const pull = (barId: string) => {
+    startTransition(async () => {
+      const res = await promoteVaultBarToHand({ barId, targetSlot: slotIndex })
+      if ('error' in res) {
+        setError(res.error)
+        return
+      }
+      onPicked()
+    })
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 50,
+        background: 'rgba(5,4,3,0.86)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 18,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ borderRadius: 18, background: '#242420', boxShadow: '0 24px 48px -16px rgba(0,0,0,0.9)', padding: 20, maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h3 style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 17, letterSpacing: '-0.015em', margin: 0, color: '#e8e6e0' }}>
+            Fill this slot
+          </h3>
+          <Link href="/bars/capture" style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#c4b5fd', textDecoration: 'none' }}>
+            + Capture new
+          </Link>
+        </div>
+
+        {error && (
+          <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: 12, color: '#e74c3c', margin: '0 0 10px' }}>{error}</p>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
+          {bars === null && !error && (
+            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: 12, color: '#6b6965', margin: 0 }}>Loading your Vault…</p>
+          )}
+          {bars && bars.length === 0 && (
+            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: 12, color: '#6b6965', margin: 0 }}>
+              No Vault BARs to pull in. Capture a new one above.
+            </p>
+          )}
+          {bars?.map(b => {
+            const el = isElementKey(b.element) ? ELEMENT_TOKENS[b.element] : null
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => pull(b.id)}
+                disabled={pending}
+                style={{
+                  textAlign: 'left', cursor: pending ? 'not-allowed' : 'pointer', border: 'none',
+                  display: 'flex', alignItems: 'center', gap: 11, padding: '11px 12px', borderRadius: 8,
+                  background: '#111110', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.1)',
+                  opacity: pending ? 0.5 : 1, WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <span style={{ flex: '0 0 auto', width: 8, height: 8, borderRadius: '50%', background: el ? el.gem : '#7c3aed', boxShadow: `0 0 7px 1px ${el ? el.glow : '#7c3aed'}88` }} />
+                <span style={{ flex: 1, minWidth: 0, fontFamily: 'Nunito, sans-serif', fontSize: 12, color: '#e8e6e0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {b.title}
+                </span>
+                <span style={{ flex: '0 0 auto', fontFamily: 'Space Mono, monospace', fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#6b6965' }}>
+                  → Hand
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
   )
 }

@@ -1,3 +1,5 @@
+import '@/styles/allyship-deck.css'
+
 // Full-screen shell for the Allyship Deck app. Loads the deck-experience fonts
 // (Jost / Nunito / Space Mono) scoped to this route — the cultivation-card aesthetic
 // from the design handoff. The rest of the app uses Geist.
