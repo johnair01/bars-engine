@@ -37,7 +37,18 @@ export async function requirePlayer() {
     return player.id
 }
 
-/** Player has invite + completed orientation; can access game world. */
-export function isGameAccountReady(player: { inviteId: string; onboardingComplete: boolean } | null): boolean {
-    return !!player && !!player.inviteId && player.onboardingComplete === true
+/**
+ * Player can access the game world: has an invite and has completed *either*
+ * track's readiness step — Conclave orientation (`onboardingComplete`) or the
+ * MTGOA-native practice orientation (`practiceOrientationComplete`). Keeping both
+ * lets the two onboarding tracks stay separate while sharing one access gate.
+ */
+export function isGameAccountReady(
+    player: { inviteId: string; onboardingComplete: boolean; practiceOrientationComplete?: boolean } | null,
+): boolean {
+    return (
+        !!player &&
+        !!player.inviteId &&
+        (player.onboardingComplete === true || player.practiceOrientationComplete === true)
+    )
 }

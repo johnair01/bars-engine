@@ -19,11 +19,10 @@ import { cookies } from 'next/headers'
 import { StoryReader } from './components/StoryReader'
 import { getStoryNode, resetOnboarding } from '@/actions/guided-onboarding'
 import { StoryProgress } from './types'
-import { GuidedAuthForm } from './components/GuidedAuthForm'
 import { getCurrentPlayerSafe } from '@/lib/auth-safe'
 
 export default async function GuidedModePage({ searchParams }: { searchParams: Promise<{ step?: string, reset?: string, ref?: string, returnTo?: string }> }) {
-    const { step, reset, ref: campaignRef, returnTo } = await searchParams
+    const { step, reset, returnTo } = await searchParams
 
     const { player, dbError } = await getCurrentPlayerSafe()
     // If already logged in, this page is deprecated. Go to dashboard.
@@ -42,12 +41,12 @@ export default async function GuidedModePage({ searchParams }: { searchParams: P
 
     return (
         <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex items-center justify-center">
-            <GuidedStoryLoader requestedStep={step} campaignRef={campaignRef ?? undefined} returnTo={returnTo ?? undefined} />
+            <GuidedStoryLoader requestedStep={step} returnTo={returnTo ?? undefined} />
         </div>
     )
 }
 
-async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { requestedStep?: string, campaignRef?: string, returnTo?: string }) {
+async function GuidedStoryLoader({ requestedStep, returnTo }: { requestedStep?: string, returnTo?: string }) {
     const { playerId, player, dbError, errorMessage } = await getCurrentPlayerSafe()
 
     if (dbError) {
@@ -67,7 +66,10 @@ async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { req
     }
 
     if (!playerId) {
-        return <GuidedAuthForm campaignRef={campaignRef} returnTo={returnTo} />
+        // MGA is the one true signup path. Logged-out visitors create their
+        // account via /signup; Conclave nation/archetype remains an optional
+        // post-signup step (the story nodes below, once authenticated).
+        redirect(returnTo ? `/signup?returnTo=${encodeURIComponent(returnTo)}` : '/signup')
     }
 
     if (!player) redirect('/login')
