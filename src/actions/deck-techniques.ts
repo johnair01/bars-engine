@@ -14,13 +14,14 @@ import { assembleDeck } from '@/lib/allyship-deck/assemble'
 import { getCurrentPlayer } from '@/lib/auth'
 import { getPlayerLoadout, getOwnedSuperpowers } from '@/lib/player-entitlements/loadout'
 import { superpowerPackSku } from '@/lib/player-entitlements/superpower-skus'
+import { offerHref } from '@/lib/launch/offers'
 import { buildGoDeeper, type GoDeeperResult } from '@/lib/technique-library/superpowers'
 
 export type CardGoDeeper =
   | { state: 'not_found' }
   | { state: 'needs_login' }
   | { state: 'needs_quiz' }
-  | (GoDeeperResult & { upsellSku: string | null })
+  | (GoDeeperResult & { upsellSku: string | null; upsellHref: string | null })
 
 /** Resolve the Go Deeper affordance for one card, in the given subject reading. */
 export async function getCardGoDeeper(cardId: string, subject: Subject): Promise<CardGoDeeper> {
@@ -38,8 +39,10 @@ export async function getCardGoDeeper(cardId: string, subject: Subject): Promise
   const owned = await getOwnedSuperpowers(player.id)
   const result = buildGoDeeper(card, loadout, subject, owned)
 
+  const upsellSku = result.upsellSuperpower ? superpowerPackSku(result.upsellSuperpower) : null
   return {
     ...result,
-    upsellSku: result.upsellSuperpower ? superpowerPackSku(result.upsellSuperpower) : null,
+    upsellSku,
+    upsellHref: upsellSku ? offerHref(upsellSku) : null,
   }
 }

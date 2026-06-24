@@ -24,6 +24,7 @@ export default defineConfig({
       'src/lib/technique-library/__tests__/go-deeper.test.ts',
       'src/lib/player-entitlements/__tests__/superpower-skus.test.ts',
       'src/lib/superpowers/__tests__/quiz-loadout.test.ts',
+      'src/lib/launch/__tests__/superpower-offers.test.ts',
     ],
   },
   resolve: {

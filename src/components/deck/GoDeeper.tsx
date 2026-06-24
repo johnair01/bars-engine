@@ -63,7 +63,7 @@ export function GoDeeper({ cardId, subject }: { cardId: string; subject: 'self' 
   if (data.state === 'needs_quiz') {
     return (
       <div style={box}>
-        Go Deeper: <a href="/launch" style={link}>find your superpower</a> to unlock the move for this card.
+        Go Deeper: <a href="/superpower" style={link}>find your superpower</a> to unlock the move for this card.
       </div>
     )
   }
@@ -75,7 +75,7 @@ export function GoDeeper({ cardId, subject }: { cardId: string; subject: 'self' 
       <div style={box}>
         <strong>Go Deeper — your {label} has a move here.</strong>
         <div style={{ marginTop: 6 }}>
-          <a href="/launch" style={link}>Unlock the {label} deck</a> to see it.
+          <a href={data.upsellHref ?? '/launch'} style={link}>Unlock the {label} pack</a> to see it.
         </div>
       </div>
     )

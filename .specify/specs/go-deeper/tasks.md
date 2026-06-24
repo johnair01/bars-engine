@@ -21,12 +21,21 @@ API-first, five slices. Reuse auth/entitlements/deck-UI/technique-library. Only 
 - [ ] **T10** Entry points: landing hook, onboarding step, lazy prompt at Go Deeper.
 
 ## Slice 3 — SKUs & entitlements
-- [ ] **T11** `src/lib/launch/offers.ts`: add `superpower-<x>-pack` (×6) + `loadout-bundle` OfferKeys (Gumroad links).
-- [ ] **T12** `src/lib/launch/grants.ts`: SKU→capability + a `capability → Superpower` map consumed by `getOwnedSuperpowers`; confirm `deck-digital` path.
-- [ ] **T13** Helper `superpowerPackSku(sp)` + reverse; unit test the round-trip.
+> **Status (2026-06-24):** Implemented. `OfferKey` widened with a template-literal
+> `superpower-${Superpower}-pack` type + `loadout-bundle`; the 7 packs are generated
+> from `SUPERPOWER_DEFS` (Coach included — no second-class slot). Pack OfferKey is
+> byte-identical to `superpowerPackSku`. `grants.ts` keeps core records keyed to the
+> new `CoreOfferKey`; packs/bundle resolve via `skuToSuperpower` fallback (perpetual,
+> single-charge/idempotent). Go Deeper upsell now resolves a real `upsellHref`
+> (`offerHref` → live Gumroad or `/launch#<sku>` anchor); `/launch` renders the packs
+> + loadout bundle. 8 catalog tests; tsc + eslint clean.
+- [x] **T11** `src/lib/launch/offers.ts`: `superpower-<x>-pack` (×7) + `loadout-bundle` OfferKeys (Gumroad env links, "setup pending" when unset).
+- [x] **T12** `src/lib/launch/grants.ts`: pack confers itself (`skuToSuperpower` = the capability→Superpower bridge `getOwnedSuperpowers` uses); bundle confers `deck-digital`; single-charge invariant documented.
+- [x] **T13** Helper `superpowerPackOfferKey(sp)` (= `superpowerPackSku`) + reverse; round-trip + catalog tests in `superpower-offers.test.ts`.
 
 ## Slice 4 — Go Deeper
-> **Status (2026-06-20):** Implemented. Pure `buildGoDeeper` (technique-library/superpowers/go-deeper.ts) decides ok/locked/unavailable, gated to published L3+ cells; `getCardGoDeeper` server action (auth → loadout → owned, +needs_login/needs_quiz/not_found); `GoDeeper.tsx` wired into the deck detail overlay. 105 tests pass; tsc + eslint clean. Locked path never leaks content (citation only). Upsell links to /launch as placeholder until pack SKUs land (Slice 3 / merge).
+> **Status (2026-06-20):** Implemented. Pure `buildGoDeeper` (technique-library/superpowers/go-deeper.ts) decides ok/locked/unavailable, gated to published L3+ cells; `getCardGoDeeper` server action (auth → loadout → owned, +needs_login/needs_quiz/not_found); `GoDeeper.tsx` wired into the deck detail overlay. 105 tests pass; tsc + eslint clean. Locked path never leaks content (citation only).
+> **Update (2026-06-24, Slice 3):** the upsell is now real — `getCardGoDeeper` adds `upsellHref` (`offerHref(upsellSku)` → live Gumroad or `/launch#<sku>`); the locked state links to the specific pack (not the `/launch` placeholder); `needs_quiz` now points at `/superpower` (the merged quiz).
 - [x] **T14** `src/actions/deck-techniques.ts`: `getCardGoDeeper(cardId, subject)` → owned content (published, highest level) | citation + `upsellSku` | `needsQuiz`/`needsLogin`; `available:false` when no published card.
 - [x] **T15** `src/components/deck/GoDeeper.tsx`: overlay affordance — render move (owner) / inline Paywall upsell (non-owner) / quiz prompt (no loadout); shown only when `available`.
 - [x] **T16** Wire `GoDeeper` into `AllyshipDeckReader` card overlay, reading the active subject.
