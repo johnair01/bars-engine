@@ -50,6 +50,24 @@ describe('car-campaign quality harness', () => {
     expect(score.campaignReadyCells).toBe(24)
   })
 
+  it('strategist/strategist loadout is lifted too (12 L4, 24 ready)', () => {
+    const score = scoreLoadoutOverCampaign({ inner: 'strategist', outer: 'strategist' }, baseCards)
+    expect(score.byLevel[4]).toBe(12) // 6 inner + 6 outer authored strategist hero cells
+    expect(score.campaignReadyCells).toBe(24)
+  })
+
+  it('disruptor/disruptor loadout is lifted too (12 L4, 24 ready)', () => {
+    const score = scoreLoadoutOverCampaign({ inner: 'disruptor', outer: 'disruptor' }, baseCards)
+    expect(score.byLevel[4]).toBe(12) // 6 inner + 6 outer authored disruptor hero cells
+    expect(score.campaignReadyCells).toBe(24)
+  })
+
+  it('alchemist/alchemist loadout is lifted too (12 L4, 24 ready)', () => {
+    const score = scoreLoadoutOverCampaign({ inner: 'alchemist', outer: 'alchemist' }, baseCards)
+    expect(score.byLevel[4]).toBe(12) // 6 inner + 6 outer authored alchemist hero cells
+    expect(score.campaignReadyCells).toBe(24)
+  })
+
   it('no published superpower card scores below L3 (publish gate)', () => {
     for (const sp of SUPERPOWERS) {
       for (const c of superpowerDeck(sp)) {
