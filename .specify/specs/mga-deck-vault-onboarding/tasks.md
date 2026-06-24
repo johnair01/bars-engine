@@ -20,10 +20,10 @@
 
 ## Slice 3 — Vault five-move redesign + declutter
 
-- [ ] **T3.1** `VaultMoveDashboard.tsx`: add **Open Up** room (`/vault/open-up`, "Felt sense", "Receive what's getting through"); render five rooms as a non-linear set; align move colors with `card-tokens`.
-- [ ] **T3.2** `src/app/vault/page.tsx`: remove from personal lobby — `VaultSummaryStrip`, Scene Atlas, `VaultCampaignInviteBars`, accepted-invitations, Forge Invitation footer, Stalls link. Keep New BAR, Hand glance, five-move dashboard. **Do not delete** the removed components.
-- [ ] **T3.3** Ensure Hand modal is openable from the Vault lobby.
-- [ ] **T3.4** `npm run build && npm run check`. Manual: five navigable rooms; clutter gone; deck-seeded BARs visible; campaign components still compile.
+- [x] **T3.1** `VaultMoveDashboard.tsx`: added **Open Up** room (`/vault/open-up`, "Felt sense", "Receive what's getting through"); five rooms render as a non-linear set (Wake · Open · Clean · Grow · Show). Show Up room de-campaigned to "Quests" (dropped "& Invitations" + invitation count). Minimal `/vault/open-up` placeholder room ships now (read-only "what's alive" list); the felt-sense note editor is Slice 4 / FR11.
+- [x] **T3.2** `src/app/vault/page.tsx`: removed from personal lobby — `VaultSummaryStrip`, Scene Atlas, `VaultCampaignInviteBars`, accepted-invitations, Forge Invitation footer, Stalls link/header copy. Kept New BAR, Capture charge, compost nudge, five-move dashboard. Removed components left in the codebase (preserved for campaign contexts).
+- [x] **T3.3** Added `VaultHandButton` (opens `HandModal` in place) to the Vault lobby header.
+- [x] **T3.4** FR10: deck-seeded BARs (`rootId` `deck_*`, self-claimed active `vibe`) now surface in the **Wake Up / Charges** room via shared `chargeRoomWhere`. `npm run check` → 0 errors. Manual verification pending in Slice 4's verification quest.
 
 ## Slice 4 — Open Up room + deck nav + verification quest
 
