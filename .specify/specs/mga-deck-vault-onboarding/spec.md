@@ -139,37 +139,39 @@ Reuses existing `Account` + password verification from `conclave-auth.ts`, but *
 
 ## Open Up / Felt Sense — Design In Progress
 
-> **Status (2026-06-24): model not settled. Do not build the interaction.** Open Up is the newest of the basic moves; we are moving at the speed of the creator's understanding. The room stays a viewing space until the mechanic clicks. This section is the scratch space we refine in conversation.
+> **Status (2026-06-24): core model locked; interaction still unbuilt.** Open Up is the newest of the basic moves; we move at the speed of the creator's understanding. The room stays a viewing space until the *aperture derivation* + *persistence* questions settle. This section is the scratch space we refine in conversation.
 
 **What "felt sense" actually is.** Eugene Gendlin's term (*Focusing*): the vague, pre-verbal, *bodily* sense of a situation that can "shift" when attended to. Everyone has them; almost no one has the word. So the UI must never ask the player to "write a felt sense" — that produces either a bounce or an *analysis*, and analysis is the cognitive opposite of the interior move. Open Up has to be **felt**, not journaled.
 
-**The throughput model (creator's framing).** The moves are a metabolic pipeline on a **charge**:
+**The throughput model (LOCKED 2026-06-24).** The moves are a metabolic pipeline on a **charge** that holds one hidden total magnitude, split between *locked* and *workable* material:
 
 | Move | Does | On the charge |
 |------|------|---------------|
-| **Wake Up** | Notice it exists | A raw charge appears |
-| **Open Up** | Experience its magnitude — set the *aperture* | Loosen it so it can be worked |
-| **Clean Up** | Transform it into usable material | Metabolize what the aperture let in |
+| **Wake Up** | Notice it exists | A raw charge appears — mostly **density** (locked), a thin skin of **volume** (workable) |
+| **Open Up** | Turn toward it — *unlock* | Converts some **density → volume**. Adds nothing; releases what was already there |
+| **Clean Up** | Transform it into usable material | Eats **volume**, yields energy; the charge shrinks |
 
-- A charge has a magnitude ≈ **volume × density**.
-- **Density = stuckness / armor** (compressed, hard, unworkable). **Volume = loose, workable material.**
-- **Clean Up can only process volume** — you can't compost a rock, only what's already broken down.
-- **Open Up is the move that loosens density into volume** ("soften toward it, widen the aperture so the truth can land" — this is *already* the Open Up copy in `src/components/bars/MoveGenerator.tsx`).
+- One hidden magnitude `M = volume + density`. **Density = stuckness / armor** (locked, unworkable). **Volume = loose, workable material.**
+- **Clean Up only eats volume** — you can't compost a rock, only what's already broken down.
+- **Open Up converts density → volume** — a single quantity moving, not two independent stats ("soften toward it, widen the aperture so the truth can land" — already the Open Up copy in `src/components/bars/MoveGenerator.tsx`).
+- A charge is fully metabolized only when both reach zero — and **density can leave only by first becoming volume (via Open Up).**
 
-**The load-bearing rule (candidate):**
+**The rule — an amplifier, a dial, not a wall (LOCKED):**
 
-> **You can only clean up what you've opened up to.**
+> **The more you've opened up, the more there is to clean up.**
 
-Make this literally true in the numbers and Open Up stops being decorative: Clean Up's yield is gated by Open Up. A big charge you never opened to composts into almost nothing — it stays stuck / returns later. This teaches felt sense *by consequence*, with zero vocabulary.
+Clean Up is **never gated** — it always runs on whatever volume is currently unlocked. Closed off, you strip the thin skin and metabolize a little; the dense core just sits there. So a charge cleaned *without* opening **plateaus** — and that plateau **is the residue**: unconverted density, still on the charge, heavy, waiting for you to turn toward it. No separate "stuck marker" system is needed; the leftover density *is* the stuckness. This teaches felt sense *by consequence*, with zero vocabulary — and stays true to life (closed-off people still metabolize, just poorly).
 
-**Measuring openness without reading someone's insides.** You don't self-report aperture; the interaction *produces* it from the **act of turning toward** — a couple of dead-simple somatic inputs (where do you feel it; tight vs diffuse; does staying with it change anything). **Engagement is aperture.** Fully no-AI, no jargon, works at a party (dual-track safe).
+**Measuring openness without reading someone's insides.** You don't self-report aperture; the interaction *produces* the unlock amount from the **act of turning toward** — dead-simple somatic inputs (where do you feel it; tight vs diffuse; does staying with it change). **Engagement is aperture.** Fully no-AI, no jargon, works at a party (dual-track safe).
 
-**Open questions to resolve before building:**
-1. **Gate vs amplifier** — is Open Up a hard prerequisite for Clean Up (must open first), or does Clean Up work without it but Open Up boosts yield?
-2. **Aperture derivation** — what behavioral signals become the aperture number (time-with, inputs given, a felt-shift confirmation)? Keep it honest, not gameable-by-rushing.
-3. **Density ↔ volume** — does Open Up *convert* density into volume (one quantity moving), or are both tracked independently on the charge?
-4. **Residue** — does unmetabolized charge persist as a "stuck" marker and return later? (This is what makes the rule have teeth.)
-5. **Persistence shape** — this is **not** a freeform note. It's a small **structured read on the charge** (e.g. magnitude/aperture/location), which couples to the existing energy economy. Decide the exact fields only after 1–4 settle. May still need no migration if it fits `CustomBar` metadata.
+**Resolved:**
+- ✅ **Gate vs amplifier** → **amplifier** (dial, not wall). Clean Up always runs; Open Up raises available volume.
+- ✅ **Density ↔ volume** → **one hidden magnitude**; density = locked remainder, Open Up *converts* density → volume; Clean Up consumes volume.
+- ✅ **Residue** → falls out of the model for free: unconverted density is the residue; a charge cleaned without opening plateaus on its dense core.
+
+**Still open before building:**
+1. **Aperture derivation** — how does the *act of turning toward* produce the unlock amount, honestly (not gameable by rushing/spamming)? Candidate: each Open Up session unlocks a *fraction of remaining density*, scaled by genuine engagement, with **diminishing returns** so dense cores take repeated visits over time (true to life — big stuck things loosen gradually). Decide the exact somatic inputs and the unlock curve.
+2. **Persistence shape** — **not** a freeform note. A small **structured read on the charge** (total magnitude, current volume, locked density; maybe a body-location/quality tag). Likely fits `CustomBar` metadata with **no migration**. Decide exact fields after (1) settles.
 
 
 ## Non-Functional Requirements
