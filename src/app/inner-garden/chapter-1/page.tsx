@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { completeInnerGardenChapterOneRun, listInnerGardenEligibleBars } from '@/actions/inner-garden'
 import { getCurrentPlayer } from '@/lib/auth'
+import { CHAPTER_ONE_STARTER_SCENARIOS } from '@/lib/inner-garden/chapter-one'
 import type { InnerGardenEligibleBar } from '@/lib/inner-garden/bridge'
 
 const EMOTIONS = [
@@ -115,8 +116,8 @@ export default async function InnerGardenChapterOnePage({
                 Starting material
               </h2>
               <p className="mt-1 text-xs leading-relaxed text-zinc-600">
-                Use something raw you are already carrying, or let Chapter 1 create the source BAR
-                from the signal you name here.
+                Use something raw you are already carrying, choose a starter situation, or let
+                Chapter 1 create the source BAR from the signal you name here.
               </p>
             </div>
 
@@ -139,6 +140,61 @@ export default async function InnerGardenChapterOnePage({
               </div>
             </label>
 
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Starter situations
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+                  Pick one when you want to play quickly without bringing a private example first.
+                </p>
+              </div>
+              <label className="block cursor-pointer rounded-lg border border-zinc-800 bg-zinc-950/70 p-4 transition hover:border-emerald-700/70">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="starterScenarioId"
+                    value=""
+                    defaultChecked
+                    className="mt-1 accent-emerald-500"
+                    aria-label="Bring my own situation"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-zinc-100">
+                      Bring my own situation
+                    </span>
+                    <span className="mt-1 block text-xs leading-relaxed text-zinc-500">
+                      Use the signal and resistance fields to name what is alive for you.
+                    </span>
+                  </span>
+                </div>
+              </label>
+              {CHAPTER_ONE_STARTER_SCENARIOS.map((scenario) => (
+                <label
+                  key={scenario.id}
+                  className="block cursor-pointer rounded-lg border border-zinc-800 bg-zinc-950/70 p-4 transition hover:border-emerald-700/70"
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="starterScenarioId"
+                      value={scenario.id}
+                      className="mt-1 accent-emerald-500"
+                      aria-label={`Use starter situation: ${scenario.title}`}
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-zinc-100">
+                        {scenario.title}
+                      </span>
+                      <span className="mt-1 block text-xs leading-relaxed text-zinc-500">
+                        {scenario.resistance}
+                      </span>
+                    </span>
+                  </div>
+                </label>
+              ))}
+            </div>
+
             {eligibleBars.length > 0 && (
               <div className="space-y-3">
                 {eligibleBars.map((bar) => (
@@ -153,10 +209,9 @@ export default async function InnerGardenChapterOnePage({
               <span className="block text-zinc-300">Signal</span>
               <textarea
                 name="signal"
-                required
                 minLength={3}
                 rows={3}
-                placeholder="What signal brought you to allyship work?"
+                placeholder="What signal brought you to allyship work? Leave blank if you chose a starter situation."
                 className="w-full resize-y rounded-lg border border-zinc-800 bg-black px-3 py-2 text-zinc-100 placeholder:text-zinc-700"
               />
             </label>
@@ -165,10 +220,9 @@ export default async function InnerGardenChapterOnePage({
               <span className="block text-zinc-300">Charge or resistance</span>
               <textarea
                 name="resistance"
-                required
                 minLength={3}
                 rows={3}
-                placeholder="What part of this feels charged, tender, doubtful, or alive?"
+                placeholder="What part of this feels charged, tender, doubtful, or alive? Leave blank if you chose a starter situation."
                 className="w-full resize-y rounded-lg border border-zinc-800 bg-black px-3 py-2 text-zinc-100 placeholder:text-zinc-700"
               />
             </label>
@@ -237,6 +291,50 @@ export default async function InnerGardenChapterOnePage({
                 minLength={3}
                 rows={3}
                 placeholder="What is one honest move you are willing to make now?"
+                className="w-full resize-y rounded-lg border border-zinc-800 bg-black px-3 py-2 text-zinc-100 placeholder:text-zinc-700"
+              />
+            </label>
+
+            <div className="grid gap-4 border-t border-zinc-900 pt-5 sm:grid-cols-2">
+              <label className="space-y-2 text-sm">
+                <span className="block text-zinc-300">Usefulness for real life</span>
+                <select
+                  name="usefulnessRating"
+                  defaultValue=""
+                  className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-zinc-100"
+                >
+                  <option value="">Skip</option>
+                  <option value="5">5 · immediately useful</option>
+                  <option value="4">4 · useful</option>
+                  <option value="3">3 · mixed</option>
+                  <option value="2">2 · not yet useful</option>
+                  <option value="1">1 · missed me</option>
+                </select>
+              </label>
+
+              <label className="space-y-2 text-sm">
+                <span className="block text-zinc-300">Clarity of the game loop</span>
+                <select
+                  name="clarityRating"
+                  defaultValue=""
+                  className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-zinc-100"
+                >
+                  <option value="">Skip</option>
+                  <option value="5">5 · very clear</option>
+                  <option value="4">4 · mostly clear</option>
+                  <option value="3">3 · uneven</option>
+                  <option value="2">2 · confusing</option>
+                  <option value="1">1 · lost</option>
+                </select>
+              </label>
+            </div>
+
+            <label className="space-y-2 text-sm">
+              <span className="block text-zinc-300">What was confusing?</span>
+              <textarea
+                name="confusingPart"
+                rows={2}
+                placeholder="Optional playtest note"
                 className="w-full resize-y rounded-lg border border-zinc-800 bg-black px-3 py-2 text-zinc-100 placeholder:text-zinc-700"
               />
             </label>

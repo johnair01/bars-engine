@@ -216,6 +216,7 @@ Implementation decisions:
 - Let a player start from either:
   - an existing eligible raw Hand/Vault BAR, or
   - a new "Call to Play" BAR created from the Chapter 1 form.
+- Provide three starter situations for first playtests so a player can try the loop without bringing private material or already knowing BAR capture.
 - Store all output in `CustomBar`.
 - Do not introduce campaign progress tables in v1.
 - Use `questSource: "inner_garden_chapter_1"` to distinguish Chapter 1 completions from generic Shaman runs.
@@ -226,6 +227,7 @@ Implementation decisions:
   - `moveType: "wakeUp"`
   - `sourceBarId` when a source BAR exists or is created
   - `agentMetadata` with signal, resistance, emotion, cultivation action, seed quality, harvested insight, and first move
+- Store optional playtest feedback in `agentMetadata` so the team can assess whether Chapter 1 felt clear and useful outside the app.
 - Link MTGOA Spoke I to `/inner-garden/chapter-1` so the public hub's first card opens the playable chapter instead of only a reading surface.
 
 Runtime files:
@@ -243,7 +245,9 @@ Acceptance criteria:
 
 - `/inner-garden/chapter-1` requires auth.
 - The page lists eligible raw Hand/Vault BARs and also supports creating a new Chapter 1 source BAR.
+- The page offers starter situations for first-time playtesters.
 - Completing the Chapter 1 form creates exactly one result BAR and, when needed, one source BAR.
 - The result BAR is linked to the source BAR, tagged as Shaman + Chapter 1, and includes the player's first outer-world move.
+- The result BAR preserves optional playtest feedback in `agentMetadata`.
 - MTGOA hub Spoke I points to the playable Inner Garden Chapter 1 route.
 - Pure tests prove the Chapter 1 metadata and BAR draft builders are stable.

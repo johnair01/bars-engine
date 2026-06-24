@@ -330,6 +330,8 @@ This does not require a full character sheet in the first slice, but the orienta
 
 **Acceptance**: `/inner-garden/chapter-1` lets an authenticated player either use an eligible raw Hand/Vault BAR or create a new "Call to Play" BAR, complete a Shaman-flavored cultivation step, and receive a linked result BAR in Vault with a concrete outer-world first move.
 
+For first playtests, Chapter 1 must also offer starter situations so a new player can complete the loop without already understanding BAR capture. The result BAR should preserve optional playtest feedback so the team can learn whether the loop was clear and useful in outer-world terms.
+
 ## Functional Requirements
 
 ### FR1: Define the orientation ladder
@@ -391,9 +393,11 @@ The first playable Chapter 1 slice must:
 - use the MTGOA Chapter 1 frame: **Answer the Call / The Call to Play**
 - be Shaman-first but not require the player to know the six Guide system
 - accept an existing eligible raw BAR or create a new raw BAR from the player's call
+- offer starter situations for players who need a quick way into the chapter
 - ask for the signal, the resistance/charge, a harvested insight, and one immediate outer-world move
 - create the completed artifact as a new `CustomBar` result linked to its source BAR
 - tag the result with `gameMasterFace: "shaman"`, `questSource: "inner_garden_chapter_1"`, `campaignRef: "mtgoa-chapter-1"`, and `moveType: "wakeUp"`
+- store optional playtest feedback in `agentMetadata`
 - avoid new tables in v1
 
 ## Non-Goals

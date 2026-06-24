@@ -57,6 +57,8 @@
 - [x] T33: Add authenticated `/inner-garden/chapter-1` route with eligible BAR selection and create-from-call flow.
 - [x] T34: Link MTGOA Spoke I to `/inner-garden/chapter-1`.
 - [x] T35: Add pure tests for Chapter 1 builders and run targeted verification.
+- [x] T36: Add three Chapter 1 starter situations for first-time playtesters who do not bring a raw BAR.
+- [x] T37: Capture optional Chapter 1 playtest feedback in result BAR metadata.
 
 ## Acceptance Review
 

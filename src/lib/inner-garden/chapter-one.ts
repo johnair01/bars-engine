@@ -6,6 +6,29 @@ export const MTGOA_CHAPTER_ONE_CAMPAIGN_REF = 'mtgoa-chapter-1'
 export const MTGOA_CHAPTER_ONE_ALLYSHIP_DOMAIN = 'RAISE_AWARENESS'
 export const MTGOA_CHAPTER_ONE_MOVE_TYPE = 'wakeUp'
 
+export const CHAPTER_ONE_STARTER_SCENARIOS = [
+  {
+    id: 'stayed_quiet',
+    title: 'I noticed something unfair but stayed quiet.',
+    signal: 'I noticed something unfair but stayed quiet.',
+    resistance: 'I was worried that naming it would make me difficult or derail the moment.',
+  },
+  {
+    id: 'dont_know_lane',
+    title: "I want to help but do not know my lane.",
+    signal: "I want to help in a situation that matters, but I am not sure what role is mine to play.",
+    resistance: 'I do not want to overstep, disappear, or make the moment about me.',
+  },
+  {
+    id: 'make_it_worse',
+    title: "I am worried I will make it worse.",
+    signal: 'I can feel a real invitation to act, but I am afraid my move could create more harm.',
+    resistance: 'The fear of making a mistake is pulling me toward silence.',
+  },
+] as const
+
+export type ChapterOneStarterScenarioId = (typeof CHAPTER_ONE_STARTER_SCENARIOS)[number]['id']
+
 export type ChapterOneDraft = {
   signal: string
   resistance: string
@@ -14,6 +37,10 @@ export type ChapterOneDraft = {
   cultivationAction: string
   harvestedInsight: string
   firstMove: string
+  starterScenarioId?: string
+  usefulnessRating?: number | null
+  clarityRating?: number | null
+  confusingPart?: string
 }
 
 export type ChapterOneSourceBarDraft = {
@@ -68,7 +95,13 @@ export function normalizeChapterOneText(value: FormDataEntryValue | null, max = 
   return String(value ?? '').trim().slice(0, max)
 }
 
-export function buildChapterOneSourceBarDraft(draft: Pick<ChapterOneDraft, 'signal' | 'resistance'>): ChapterOneSourceBarDraft {
+export function findChapterOneStarterScenario(id: string) {
+  return CHAPTER_ONE_STARTER_SCENARIOS.find((scenario) => scenario.id === id) ?? null
+}
+
+export function buildChapterOneSourceBarDraft(
+  draft: Pick<ChapterOneDraft, 'signal' | 'resistance' | 'starterScenarioId'>
+): ChapterOneSourceBarDraft {
   const signal = draft.signal.trim()
   const resistance = draft.resistance.trim()
 
@@ -93,6 +126,7 @@ export function buildChapterOneSourceBarDraft(draft: Pick<ChapterOneDraft, 'sign
       campaignRef: MTGOA_CHAPTER_ONE_CAMPAIGN_REF,
       signal,
       resistance,
+      starterScenarioId: draft.starterScenarioId,
     }),
   }
 }
@@ -151,6 +185,12 @@ export function buildChapterOneResultBarDraft(input: {
       cultivationAction: input.draft.cultivationAction,
       harvestedInsight,
       firstMove,
+      starterScenarioId: input.draft.starterScenarioId,
+      playtestFeedback: {
+        usefulnessRating: input.draft.usefulnessRating ?? null,
+        clarityRating: input.draft.clarityRating ?? null,
+        confusingPart: input.draft.confusingPart ?? '',
+      },
       completedAt: input.completedAt,
     }),
   }

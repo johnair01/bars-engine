@@ -19,6 +19,7 @@ import {
 import {
   buildChapterOneResultBarDraft,
   buildChapterOneSourceBarDraft,
+  findChapterOneStarterScenario,
   normalizeChapterOneText,
   type ChapterOneDraft,
 } from '@/lib/inner-garden/chapter-one'
@@ -47,6 +48,12 @@ const BAR_SELECT = {
 function asCandidate(bar: Awaited<ReturnType<typeof findCandidateBar>>): InnerGardenBarCandidate | null {
   if (!bar) return null
   return bar
+}
+
+function normalizeRating(value: FormDataEntryValue | null): number | null {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return null
+  return Math.min(5, Math.max(1, Math.round(parsed)))
 }
 
 async function findCandidateBar(barId: string) {
@@ -210,14 +217,20 @@ export async function completeInnerGardenChapterOneRun(formData: FormData): Prom
   if (!player) redirect('/login')
 
   const sourceBarId = normalizeChapterOneText(formData.get('sourceBarId'), 120)
+  const starterScenarioId = normalizeChapterOneText(formData.get('starterScenarioId'), 80)
+  const starterScenario = findChapterOneStarterScenario(starterScenarioId)
   const draft: ChapterOneDraft = {
-    signal: normalizeChapterOneText(formData.get('signal')),
-    resistance: normalizeChapterOneText(formData.get('resistance')),
+    signal: normalizeChapterOneText(formData.get('signal')) || starterScenario?.signal || '',
+    resistance: normalizeChapterOneText(formData.get('resistance')) || starterScenario?.resistance || '',
     emotionId: normalizeChapterOneText(formData.get('emotionId'), 60),
     seedQuality: normalizeSeedQuality(formData.get('seedQuality')),
     cultivationAction: normalizeChapterOneText(formData.get('cultivationAction'), 120),
     harvestedInsight: normalizeChapterOneText(formData.get('harvestedInsight')),
     firstMove: normalizeChapterOneText(formData.get('firstMove')),
+    starterScenarioId: starterScenario?.id,
+    usefulnessRating: normalizeRating(formData.get('usefulnessRating')),
+    clarityRating: normalizeRating(formData.get('clarityRating')),
+    confusingPart: normalizeChapterOneText(formData.get('confusingPart'), 600),
   }
 
   if (
