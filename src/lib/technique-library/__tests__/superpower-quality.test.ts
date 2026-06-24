@@ -68,6 +68,15 @@ describe('car-campaign quality harness', () => {
     expect(score.campaignReadyCells).toBe(24)
   })
 
+  it('connector and escape_artist now have BOTH aspects at L4 (full parity)', () => {
+    // Each at full parity: 6 inner + 6 outer authored hero cells on the same coords.
+    for (const sp of ['connector', 'escape_artist'] as const) {
+      const score = scoreLoadoutOverCampaign({ inner: sp, outer: sp }, baseCards)
+      expect(score.byLevel[4], `${sp}/${sp} should surface 12 L4 cells`).toBe(12)
+      expect(score.campaignReadyCells).toBe(24)
+    }
+  })
+
   it('no published superpower card scores below L3 (publish gate)', () => {
     for (const sp of SUPERPOWERS) {
       for (const c of superpowerDeck(sp)) {

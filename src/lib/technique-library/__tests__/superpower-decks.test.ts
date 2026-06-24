@@ -79,10 +79,10 @@ describe('ownership-gated resolution', () => {
 
   it('only published hero cells enter the default pool', () => {
     const pub = publishedDeck('connector')
-    expect(pub.length).toBe(6) // the six authored Connector hero cells
+    expect(pub.length).toBe(12) // the twelve authored Connector hero cells (6 inner + 6 outer)
     expect(pub.every((c) => c.status === 'published')).toBe(true)
     expect(poolWithSuperpowers(CANONICAL_TECHNIQUES, ['connector'])).toHaveLength(
-      CANONICAL_TECHNIQUES.length + 6,
+      CANONICAL_TECHNIQUES.length + 12,
     )
   })
 })
