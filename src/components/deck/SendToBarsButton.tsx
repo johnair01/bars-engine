@@ -7,9 +7,12 @@ import { DECK_FONTS, LIMINAL } from '@/lib/allyship-deck/card-visuals'
 import type { CardSubject } from './AllyshipCard'
 
 /**
- * The card's one move: Send to BARS. Seeds a private quest from the card (provenance
- * stamped server-side) and routes the player to `/bars/{id}` — where the BAR flow lives
- * (capture charge / 3·2·1 happen on the bloomed quest, not the seed).
+ * The card's one move: Send to BARS — capture the card as a ready-to-practice BAR.
+ *
+ * - Logged in → the BAR lands in the Hand; we route to NOW home (`/`).
+ * - Logged out → no dead end: the intent is captured server-side and we route to
+ *   MGA signup; the BAR is materialized after the account is created.
+ * - Genuine failures → inline message (never "Not logged in").
  */
 export function SendToBarsButton({ cardId, subject, label = 'Send to BARS →' }: { cardId: string; subject: CardSubject; label?: string }) {
   const router = useRouter()
@@ -20,10 +23,12 @@ export function SendToBarsButton({ cardId, subject, label = 'Send to BARS →' }
     setError(null)
     startTransition(async () => {
       const res = await sendDeckCardToBars({ cardId, subject })
-      if ('error' in res) {
+      if ('needsAuth' in res) {
+        router.push('/signup?returnTo=/deck')
+      } else if ('error' in res) {
         setError(res.error)
       } else {
-        router.push(`/bars/${res.barId}`)
+        router.push('/')
       }
     })
   }

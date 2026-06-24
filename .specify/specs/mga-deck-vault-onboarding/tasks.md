@@ -4,11 +4,11 @@
 
 ## Slice 1 — Intake fix + pending capture
 
-- [ ] **T1.1** Add `src/lib/deck-pending-intent.ts`: `signPendingIntent({cardId,subject})` + `verifyPendingIntent(token)` (HMAC, short TTL, cookie `bars_deck_pending`). Document any new env var in `docs/ENV_AND_VERCEL.md`.
-- [ ] **T1.2** Extract `materializeDeckBar(player, cardId, subject)` in `send-deck-card-to-bars.ts`: rebuild card from `assembleDeck()`, create `CustomBar` (`claimedById = player.id`, `status: 'active'`), attempt hand placement, return `{ barId, placedInHand }`.
-- [ ] **T1.3** Rewrite `sendDeckCardToBars`: logged-out → `{ needsAuth, pendingToken }` (sign intent, no DB write); logged-in → call `materializeDeckBar`, return `{ success, barId, placedInHand }`.
-- [ ] **T1.4** Update `SendToBarsButton.tsx`: `success` → `router.push('/')`; `needsAuth` → `/signup?returnTo=/deck&pending=<token>`; `error` → inline (real failures only). Remove the "Not logged in" dead-end.
-- [ ] **T1.5** `npm run build && npm run check`. Manual: logged-in capture lands on NOW with BAR in hand; logged-out routes to signup with token.
+- [x] **T1.1** Add `src/lib/deck-pending-intent.ts`: `signPendingIntent({cardId,subject})` + `verifyPendingIntent(token)` (HMAC, short TTL, cookie `bars_deck_pending`). Document any new env var in `docs/ENV_AND_VERCEL.md`. _(env: `DECK_PENDING_SECRET`; unit test `test:deck-pending-intent`)_
+- [x] **T1.2** Extract `materializeDeckBar(player, cardId, subject)` in `send-deck-card-to-bars.ts`: rebuild card from `assembleDeck()`, create `CustomBar` (`claimedById = player.id`, `status: 'active'`), attempt hand placement, return `{ barId, placedInHand }`.
+- [x] **T1.3** Rewrite `sendDeckCardToBars`: logged-out → `{ needsAuth, pendingToken }` (sign intent, no DB write); logged-in → call `materializeDeckBar`, return `{ success, barId, placedInHand }`.
+- [x] **T1.4** Update `SendToBarsButton.tsx`: `success` → `router.push('/')`; `needsAuth` → `/signup?returnTo=/deck`; `error` → inline (real failures only). Removed the "Not logged in" dead-end. _(token carried by httpOnly cookie, not URL)_
+- [x] **T1.5** `npm run check` (lint 0 errors, `tsc` exit 0) + `test:deck-pending-intent` pass. `npm run build` blocked **only** by Google-Fonts fetch in the sandbox (unrelated to this slice); no compile/type errors. Manual run deferred to Slice 2 (`/signup` route lands there).
 
 ## Slice 2 — Plain MGA auth + claim pending
 
