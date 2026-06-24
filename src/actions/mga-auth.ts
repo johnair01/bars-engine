@@ -91,9 +91,10 @@ export async function signupMga(input: {
               contactType: 'email',
               contactValue: email,
               onboardingMode: 'mga',
-              // Game-ready immediately: no Conclave gate for MGA accounts.
-              onboardingComplete: true,
-              onboardingCompletedAt: new Date(),
+              // Game-ready immediately via the MTGOA-native practice-orientation
+              // flag — kept separate from Conclave's onboardingComplete track.
+              practiceOrientationComplete: true,
+              practiceOrientationCompletedAt: new Date(),
             },
           },
         },

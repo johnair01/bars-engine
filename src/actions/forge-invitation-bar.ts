@@ -21,7 +21,7 @@ export async function forgeInvitationBar(
 
     const player = await db.player.findUnique({
         where: { id: playerId },
-        select: { inviteId: true, onboardingComplete: true, nationId: true },
+        select: { inviteId: true, onboardingComplete: true, practiceOrientationComplete: true, nationId: true },
     })
     if (!player) return { error: 'Player not found' }
     if (!isGameAccountReady(player)) return { error: 'Complete onboarding before forging invitations' }
