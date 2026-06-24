@@ -187,6 +187,7 @@ model Player {
   roomPresences                  RoomPresence[]
   sceneAtlasGuidedDrafts         SceneAtlasGuidedDraft[]
   shadow321Sessions              Shadow321Session[]
+  tapTheVeinDailySessions        TapTheVeinDailySession[]
   spokeMoveBedKernelsPlanted     SpokeMoveBedKernel[]        @relation("SpokeMoveBedKernelPlantedBy")
   spokeMoveBedsAnchored          SpokeMoveBed[]              @relation("SpokeMoveBedAnchoredBy")
   spokeSessions                  SpokeSession[]              @relation("SpokeSessions")
@@ -562,6 +563,79 @@ model Shadow321Session {
   @@index([playerId])
   @@index([outcome])
   @@map("shadow_321_sessions")
+}
+
+/// TTV Slice 2 — daily ritual session (one per morning ritual per player).
+/// Captures the lenses state at session-start (face, level, category, intention text snapshot)
+/// so we can replay what seeded this day even if lenses state changes later.
+model TapTheVeinDailySession {
+  id                        String           @id @default(cuid())
+  playerId                  String
+  createdAt                 DateTime         @default(now())
+  sessionDate               DateTime         @db.Date
+  // Lenses context snapshot at session start
+  lensLevel                 String? // yearly|quarterly|monthly|weekly|daily
+  lensCategory              String? // health|relationships|career|money|custom
+  lensFaceKey               String? // FaceKey at session start (chosen by player, defaults from lens config)
+  lensIntentionTextSnapshot String? // snapshot of the active intention text — survives lens edits
+  // Daily ritual payload (raw)
+  rawEntry                  String           @db.Text
+  wordCount                 Int
+  // EA analysis (computed client-side per spec, stored for replay)
+  eaChannel                 String? // Metal|Fire|Water|Wood|Earth
+  chargeStrength            String? // high|medium|low
+  // Brainstorm output
+  brainstormCandidateCount  Int              @default(0)
+  committedTaskCount        Int              @default(0)
+  // Session lifecycle
+  status                    String           @default("open") // open|sealed|abandoned
+  sealedAt                  DateTime?
+  // Links
+  tasks                     TapTheVeinTask[]
+  player                    Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, sessionDate])
+  @@index([playerId, status])
+  @@map("tap_the_vein_daily_sessions")
+}
+
+/// TTV Slice 2 — a single committed task within a daily session.
+/// Lifecycle: committed → in_progress → (completed | carried_over | composted | assigned_to_campaign | upgraded_to_quest).
+/// Player is the authority on completion — no auto-transitions.
+model TapTheVeinTask {
+  id                        String                 @id @default(cuid())
+  playerId                  String
+  dailySessionId            String
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+  completedAt               DateTime?
+  // Origin
+  source                    String                 @default("brainstorm") // brainstorm|user_added
+  originalText              String                 @db.Text
+  // Lenses linkage (optional — brainstormed without explicit lens ref is allowed)
+  lensLevel                 String?
+  lensCategory              String?
+  lensFaceKey               String?
+  // Lifecycle state
+  status                    String                 @default("committed") // committed|in_progress|completed|carried_over|composted|assigned_to_campaign|upgraded_to_quest
+  // Carryover tracking (loop rule: explicit push, never implicit)
+  carriedFromDailySessionId String?
+  carryCount                Int                    @default(0)
+  // Composting (explicit discard with reason)
+  compostReason             String?
+  compostedAt               DateTime?
+  // Campaign assignment (visibility = campaign-private by default per privacy rule)
+  campaignId                String?
+  visibility                String? // null=private; "campaign"=visible to campaign stewards
+  // Quest upgrade
+  questId                   String?
+  // Phase 3 wiring (links back to daily session)
+  dailySession              TapTheVeinDailySession @relation(fields: [dailySessionId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, status])
+  @@index([playerId, carryCount])
+  @@index([campaignId, visibility])
+  @@map("tap_the_vein_tasks")
 }
 
 /// Append-only log: human 321 name resolution teaches matching NPCs (creatorType agent) by nation + archetype.
