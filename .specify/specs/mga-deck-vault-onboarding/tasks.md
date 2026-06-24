@@ -32,10 +32,10 @@
 - [ ] ~~**T4.1** Persistence decision for the felt-sense note~~ — **withdrawn**; the interaction is not a freeform note. Persisted shape (structured charge read) decided after the mechanic clicks.
 - [ ] ~~**T4.2** `FeltSenseNote` model + migration~~ — **withdrawn**; likely no migration (fits `CustomBar` metadata).
 - [ ] ~~**T4.3** Felt-sense note editor in `/vault/open-up`~~ — **parked**; room stays a contemplative viewing space (lists live charges, mutates nothing) until the Open Up mechanic is designed.
-- [ ] **T4.0 (new)** **Design Open Up**: resolve the five open questions in `spec.md` § *Open Up / Felt Sense — Design In Progress* (gate vs amplifier, aperture derivation, density↔volume, residue, persistence shape) in conversation with the creator **before** any build.
-- [ ] **T4.4** `src/app/deck/page.tsx`: add persistent Hand-modal affordance + link back to NOW (`/`).
-- [ ] **T4.5** Verification quest: Twine passages (6 steps from spec) + `CustomBar` (`isSystem`, `visibility: 'public'`, id `cert-mga-deck-vault-onboarding-v1`); `scripts/seed-cert-mga-deck-vault-onboarding.ts` (idempotent) + npm script `seed:cert:mga-deck-vault-onboarding` (model on `scripts/seed-cyoa-certification-quests.ts`).
-- [ ] **T4.6** Run seed; walk the verification quest end-to-end. `npm run build && npm run check`.
+- [x] **T4.0** **Design Open Up**: core model + gesture locked with the creator (amplifier; single-magnitude density→volume conversion; somatic sliders over felt-shift report; residue falls out for free). Only mechanical persistence-field confirmation remains. See `spec.md` § *Open Up / Felt Sense — Design In Progress*.
+- [x] **T4.4** Deck nav (FR12): `AllyshipDeckReader` top bar gains a persistent **🎒 Hand** button (opens `HandModal` in place, authed-only) and a **NOW →** link back to `/`. `authed` plumbed from `deck/page.tsx`.
+- [x] **T4.5** Verification quest: `scripts/seed-cert-mga-deck-vault-onboarding.ts` (idempotent upsert of TwineStory + `CustomBar`, `isSystem`, `visibility: 'public'`, id `cert-mga-deck-vault-onboarding-v1`, 6 steps; Open Up step softened to "viewing") + npm script `seed:cert:mga-deck-vault-onboarding`. Typechecks/lints clean; fails cleanly only on missing `DATABASE_URL` in this env.
+- [ ] **T4.6** Run seed + walk the quest end-to-end **in an environment with a DB** (this remote env has no `DATABASE_URL`). `npm run check` is green; full `npm run build` pending the DB-backed run.
 
 ## Cross-cutting / done criteria
 - [ ] No path ever shows "Not logged in" as a dead end on a deck card.

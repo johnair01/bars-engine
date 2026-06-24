@@ -32,5 +32,5 @@ export default async function DeckPage() {
   }
 
   const initialStats = await getDeckStats()
-  return <AllyshipDeckReader initialStats={initialStats} />
+  return <AllyshipDeckReader initialStats={initialStats} authed={access.authed} />
 }

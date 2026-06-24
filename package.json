@@ -136,6 +136,7 @@
     "seed:quest-map": "tsx scripts/seed_bruised_banana_quest_map.ts",
     "seed:onboarding": "tsx scripts/seed-onboarding-thread.ts",
     "seed:cert:cyoa": "tsx scripts/seed-cyoa-certification-quests.ts",
+    "seed:cert:mga-deck-vault-onboarding": "tsx scripts/seed-cert-mga-deck-vault-onboarding.ts",
     "seed:cert:inner-outer-allyship": "tsx scripts/seed-cyoa-certification-quests.ts",
     "seed:cert:game-loop-tighten": "tsx scripts/seed-cyoa-certification-quests.ts",
     "seed:cert:admin-books-compass": "tsx scripts/seed-cyoa-certification-quests.ts",

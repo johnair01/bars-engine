@@ -23,6 +23,7 @@ import { DeckCardBack } from './DeckCardBack'
 import { SendToBarsButton } from './SendToBarsButton'
 import { FindYourPath } from './FindYourPath'
 import { recordDraw, type DeckStats } from '@/actions/deck-journal'
+import { HandModal } from '@/components/world/HandModal'
 
 type AppView = 'draw' | 'browse' | 'path' | 'collection'
 type DrawMode = 'single' | 'spread'
@@ -38,8 +39,10 @@ const isMove = (c: AllyshipDeck['cards'][number]): c is MoveCard => c.kind === '
  *
  * @see .specify/specs/allyship-deck-experience/spec.md
  */
-export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats | null }) {
+export function AllyshipDeckReader({ initialStats, authed = false }: { initialStats: DeckStats | null; authed?: boolean }) {
   const [deck, setDeck] = useState<AllyshipDeck | null>(null)
+  // Hand modal — keep the deck connected to the player's active inventory (FR12).
+  const [handOpen, setHandOpen] = useState(false)
   const [error, setError] = useState(false)
   const [view, setView] = useState<AppView>('draw')
   const [subject, setSubject] = useState<CardSubject>('self')
@@ -162,7 +165,7 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
             ))}
           </nav>
 
-          {/* Streak + balance */}
+          {/* Streak + balance + Hand / NOW (FR12) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
             {stats && (
               <>
@@ -175,9 +178,37 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
                 </span>
               </>
             )}
+            {authed && (
+              <button
+                type="button"
+                onClick={() => setHandOpen(true)}
+                title="Open your Hand"
+                style={{
+                  fontFamily: DECK_FONTS.mono, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                  padding: '6px 11px', borderRadius: 8, cursor: 'pointer',
+                  color: SURFACE_TOKENS.textSecondary, background: 'transparent',
+                  border: '1px solid rgba(255,255,255,.16)',
+                }}
+              >
+                🎒 Hand
+              </button>
+            )}
+            <Link
+              href="/"
+              title="Back to NOW"
+              style={{
+                fontFamily: DECK_FONTS.mono, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                padding: '6px 11px', borderRadius: 8, textDecoration: 'none',
+                color: SURFACE_TOKENS.textSecondary, border: '1px solid rgba(255,255,255,.16)',
+              }}
+            >
+              NOW →
+            </Link>
           </div>
         </div>
       </header>
+
+      {handOpen && <HandModal onClose={() => setHandOpen(false)} carryingBarId={null} />}
 
       {/* ── Subject toggle ── */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '12px 16px 0' }}>
