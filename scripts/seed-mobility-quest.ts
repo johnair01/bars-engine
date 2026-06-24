@@ -59,6 +59,22 @@ async function seed() {
   const creator = await db.player.findFirst()
   if (!creator) throw new Error('No player found for proposedByPlayerId — seed players first.')
 
+  const blurb =
+    'Gathering resources for an accessible vehicle — so the book tour can actually reach the people it’s for.'
+
+  // Instance + Campaign so /campaign/mobility-quest resolves and lens lookup works.
+  const instance = await db.instance.upsert({
+    where: { slug: CAMPAIGN_REF },
+    update: { name: 'Mobility Quest', campaignRef: CAMPAIGN_REF },
+    create: { slug: CAMPAIGN_REF, name: 'Mobility Quest', domainType: 'gathering_resources', campaignRef: CAMPAIGN_REF },
+  })
+  const campaign = await db.campaign.upsert({
+    where: { slug: CAMPAIGN_REF },
+    update: { name: 'Mobility Quest', status: 'LIVE', allyshipDomain: 'GATHERING_RESOURCES', description: blurb, instanceId: instance.id },
+    create: { slug: CAMPAIGN_REF, name: 'Mobility Quest', status: 'LIVE', allyshipDomain: 'GATHERING_RESOURCES', description: blurb, instanceId: instance.id, createdById: creator.id },
+  })
+  console.log(`✅ campaign ${campaign.slug} (instance ${instance.id})`)
+
   for (const m of MILESTONES) {
     await db.campaignMilestone.upsert({
       where: { id: m.id },
