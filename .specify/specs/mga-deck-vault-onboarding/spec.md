@@ -139,7 +139,7 @@ Reuses existing `Account` + password verification from `conclave-auth.ts`, but *
 
 ## Open Up / Felt Sense — Design In Progress
 
-> **Status (2026-06-24): core model locked; interaction still unbuilt.** Open Up is the newest of the basic moves; we move at the speed of the creator's understanding. The room stays a viewing space until the *aperture derivation* + *persistence* questions settle. This section is the scratch space we refine in conversation.
+> **Status (2026-06-24): model + interaction design locked; ready to build a v1 on the creator's go.** The metabolic model (amplifier, single-magnitude conversion) and the Open Up gesture (somatic sliders) are both decided. Only a mechanical persistence-field confirmation remains, resolvable at build time. The room stays a viewing space until the creator says build. This section is the scratch space we refined in conversation.
 
 **What "felt sense" actually is.** Eugene Gendlin's term (*Focusing*): the vague, pre-verbal, *bodily* sense of a situation that can "shift" when attended to. Everyone has them; almost no one has the word. So the UI must never ask the player to "write a felt sense" — that produces either a bounce or an *analysis*, and analysis is the cognitive opposite of the interior move. Open Up has to be **felt**, not journaled.
 
@@ -168,10 +168,23 @@ Clean Up is **never gated** — it always runs on whatever volume is currently u
 - ✅ **Gate vs amplifier** → **amplifier** (dial, not wall). Clean Up always runs; Open Up raises available volume.
 - ✅ **Density ↔ volume** → **one hidden magnitude**; density = locked remainder, Open Up *converts* density → volume; Clean Up consumes volume.
 - ✅ **Residue** → falls out of the model for free: unconverted density is the residue; a charge cleaned without opening plateaus on its dense core.
+- ✅ **Aperture derivation** → **somatic sliders, NOT felt-shift self-report.** Asking an untrained person to report a felt shift presumes the skill it's trying to measure — useless without training. The slider instead *walks the player into the body* ("where do you feel this?" + a tight↔diffuse read), and the somatic contact happens as a side effect of answering. See *The gesture* and *Why not felt-shift* below.
+
+**The gesture (Open Up v1).** Pick a charge, then a tiny somatic check-in:
+- **Where do you feel it?** — coarse body anchor (head / throat / chest / gut / limbs / whole-body). This is the get-into-your-body move; the *point*, not metadata.
+- **Tight or diffuse?** — a `tight ↔ loose` slider. This is the **density read** for this sitting.
+- *(optional)* **How big/loud?** — an intensity read for magnitude.
+
+The slider is a **reading you re-take each visit**, not a completion you drag to done. The unlock per session is **small and capped** (a fraction of remaining density, diminishing returns) — so you *cannot* one-shot a dense core regardless of where you drag, and the trend toward "loose" *over repeated visits* is the metabolization. Big things loosen gradually, like real grief.
+
+**The payload is the gesture, not the accounting.** The density→volume→energy economy exists to **motivate a repeated embodied check-in**; the actual change vector is interoception training — locating a charge in the body, on a phone, again and again. The numbers serve the habit, not vice versa. So a "small" unlock is fine: the somatic link is the win.
+
+**The embodiment ladder (roadmap, not v1).** The slider is rung one. As the interface matures, Open Up gets *increasingly sophisticated ways to get people into their bodies on a phone* — breath pacing, hold-to-feel, haptics, and eventually the **felt-shift check** itself (now earnable, because the somatic link already exists). Felt-shift isn't cut; it's deferred up the ladder.
+
+**Why not felt-shift (v1).** Self-reporting a felt shift with no training produces a bounce or an intellectualization. Build the somatic link first; let the richer interior reads arrive once players have a body-on-the-phone practice to report *from*.
 
 **Still open before building:**
-1. **Aperture derivation** — how does the *act of turning toward* produce the unlock amount, honestly (not gameable by rushing/spamming)? Candidate: each Open Up session unlocks a *fraction of remaining density*, scaled by genuine engagement, with **diminishing returns** so dense cores take repeated visits over time (true to life — big stuck things loosen gradually). Decide the exact somatic inputs and the unlock curve.
-2. **Persistence shape** — **not** a freeform note. A small **structured read on the charge** (total magnitude, current volume, locked density; maybe a body-location/quality tag). Likely fits `CustomBar` metadata with **no migration**. Decide exact fields after (1) settles.
+1. **Persistence shape** — **not** a freeform note. A small **structured read on the charge**: `magnitude`, `density` (locked remainder), `volume` (workable), plus the latest somatic read (`bodyLocation`, `tightness`). Likely fits `CustomBar` metadata JSON with **no migration**. Confirm the field can hold it; decide exact keys at build time.
 
 
 ## Non-Functional Requirements
