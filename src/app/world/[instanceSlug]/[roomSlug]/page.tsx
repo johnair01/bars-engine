@@ -49,6 +49,18 @@ export default async function WorldRoomPage({
   if (!player) redirect('/conclave/guided')
   if (!isGameAccountReady(player)) redirect('/conclave/guided')
 
+  const pixiPrototypeEnabled =
+    process.env.ENABLE_PIXI_WORLD_PROTOTYPE === '1' ||
+    process.env.ENABLE_PIXI_WORLD_PROTOTYPE === 'true'
+  if (!pixiPrototypeEnabled) {
+    const qs = new URLSearchParams({
+      instanceSlug,
+      roomSlug,
+      retiredRuntime: 'pixi',
+    })
+    redirect(`/inner-garden?${qs.toString()}`)
+  }
+
   const instance = await dbBase.instance.findUnique({
     where: { slug: instanceSlug },
     include: {
