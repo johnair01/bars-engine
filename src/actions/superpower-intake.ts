@@ -15,6 +15,8 @@ import { z } from 'zod'
 import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { resolveSuperpowerIntake, type SuperpowerIntakeOutcome } from '@/lib/superpowers/routing'
+import { quizResultToLoadout } from '@/lib/superpowers/quiz-loadout'
+import { saveSuperpowerLoadout } from '@/actions/superpower'
 
 const answerSchema = z.object({
   itemId: z.string().min(1),
@@ -29,8 +31,24 @@ const submitSchema = z.object({
 })
 
 export type SubmitSuperpowerIntakeResult =
-  | { ok: true; outcome: SuperpowerIntakeOutcome; persisted: boolean }
+  | { ok: true; outcome: SuperpowerIntakeOutcome; persisted: boolean; loadoutSaved: boolean }
   | { ok: false; error: string }
+
+/**
+ * Best-effort: map the quiz outcome to a two-slot loadout (M1) and persist it on
+ * the Player (Go Deeper Slice 1 fields), also firing the deferred inner-pack
+ * grant for deck owners. Never throws — a failure just returns false.
+ */
+async function persistLoadout(outcome: SuperpowerIntakeOutcome): Promise<boolean> {
+  try {
+    const { inner, outer } = quizResultToLoadout(outcome.routing)
+    const res = await saveSuperpowerLoadout(inner, outer)
+    return res.success
+  } catch (e) {
+    console.error('[submitSuperpowerIntake] loadout persist failed', e)
+    return false
+  }
+}
 
 /**
  * Best-effort: store the result on the player's per-campaign membership.
@@ -80,6 +98,7 @@ export async function submitSuperpowerIntake(raw: unknown): Promise<SubmitSuperp
 
   const player = await getCurrentPlayer()
   const persisted = player ? await persistResult(campaignRef, player.id, outcome) : false
+  const loadoutSaved = player ? await persistLoadout(outcome) : false
 
-  return { ok: true, outcome, persisted }
+  return { ok: true, outcome, persisted, loadoutSaved }
 }
