@@ -32,9 +32,9 @@ export default async function VaultOpenRoomPage() {
             <div className="rounded-xl border border-cyan-900/45 bg-cyan-950/15 p-4 space-y-1.5">
                 <p className="text-[10px] uppercase tracking-widest text-cyan-500/90">The practice</p>
                 <p className="text-sm text-cyan-100/80 leading-relaxed">
-                    Pick something below and just feel into it — emotion, body, what it points at. This is a
-                    non-destructive move: feeling into a charge never changes its state. Saving felt-sense notes
-                    arrives in the next update.
+                    Sit with what&apos;s alive below. Don&apos;t fix it, name it, or act on it yet — just turn toward
+                    it and notice how big it is, where it lives, how tight or loose it feels. Nothing you do in this
+                    room changes a charge. This is a quiet space on purpose: the rest of Open Up is still being shaped.
                 </p>
             </div>
 

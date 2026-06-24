@@ -105,8 +105,8 @@ Reuses existing `Account` + password verification from `conclave-auth.ts`, but *
 **Acceptance**: Vault lobby shows five move-rooms (Wake Up, Open Up, Clean Up, Grow Up, Show Up), enterable in any order; Scene Atlas, summary-strip counts, and campaign/invite features are removed from the personal lobby; my deck-seeded BARs are visible here.
 
 ### P2: Open Up — feel into a charge without changing it
-**As a** practitioner, **I want** to open a captured charge/BAR and record the felt sense (emotion, body, what it points at) without altering its state, **so** I can receive what's getting through before I metabolize it.
-**Acceptance**: From the Open Up room I can select a captured charge/BAR, write a felt-sense note, and save it; the underlying BAR's status/maturity is unchanged.
+**As a** practitioner, **I want** to enter the Open Up room and sit with my live charges, **so** I can receive what's getting through before I metabolize it.
+**Acceptance (current)**: From the Open Up room I can see my live charges and sit with them; nothing I do here changes a charge's state. *(The interaction beyond viewing is deferred — see "Open Up / Felt Sense — Design In Progress". The earlier "write and save a felt-sense note" acceptance is retired.)*
 
 ### P2: Deck connects to home and hand
 **As a** practitioner reading the deck, **I want** to open my Hand and return to NOW from `/deck`, **so** the deck isn't an island.
@@ -134,8 +134,43 @@ Reuses existing `Account` + password verification from `conclave-auth.ts`, but *
 - **FR10**: Ensure deck-seeded BARs surface in the Vault (they are `active`, self-claimed CustomBars by the creator).
 
 ### Phase 4 — Open Up room + deck navigation (Slice 4)
-- **FR11**: Build the **Open Up / Felt sense** room: list captured charges/BARs; selecting one opens a non-destructive felt-sense note editor (emotion, body, what-it-points-at); saving persists the note **without** mutating the BAR's status/maturity.
+- **FR11** *(deferred — design in progress, do not build the interaction yet)*: The **Open Up** room ships for now as a **contemplative viewing space** — it lists your live charges so you can sit with them; it does **not** yet have an editor. The interaction is being designed (see *Open Up / Felt Sense — Design In Progress* below). The earlier "felt-sense note editor (emotion/body/what-it-points-at)" framing is **retired**: a freeform note box turns an interior move into cognitive homework and demands a term (*felt sense*) the newcomer doesn't have.
 - **FR12**: Add to `/deck`: a persistent affordance to open the **Hand modal** and a link back to **NOW home**.
+
+## Open Up / Felt Sense — Design In Progress
+
+> **Status (2026-06-24): model not settled. Do not build the interaction.** Open Up is the newest of the basic moves; we are moving at the speed of the creator's understanding. The room stays a viewing space until the mechanic clicks. This section is the scratch space we refine in conversation.
+
+**What "felt sense" actually is.** Eugene Gendlin's term (*Focusing*): the vague, pre-verbal, *bodily* sense of a situation that can "shift" when attended to. Everyone has them; almost no one has the word. So the UI must never ask the player to "write a felt sense" — that produces either a bounce or an *analysis*, and analysis is the cognitive opposite of the interior move. Open Up has to be **felt**, not journaled.
+
+**The throughput model (creator's framing).** The moves are a metabolic pipeline on a **charge**:
+
+| Move | Does | On the charge |
+|------|------|---------------|
+| **Wake Up** | Notice it exists | A raw charge appears |
+| **Open Up** | Experience its magnitude — set the *aperture* | Loosen it so it can be worked |
+| **Clean Up** | Transform it into usable material | Metabolize what the aperture let in |
+
+- A charge has a magnitude ≈ **volume × density**.
+- **Density = stuckness / armor** (compressed, hard, unworkable). **Volume = loose, workable material.**
+- **Clean Up can only process volume** — you can't compost a rock, only what's already broken down.
+- **Open Up is the move that loosens density into volume** ("soften toward it, widen the aperture so the truth can land" — this is *already* the Open Up copy in `src/components/bars/MoveGenerator.tsx`).
+
+**The load-bearing rule (candidate):**
+
+> **You can only clean up what you've opened up to.**
+
+Make this literally true in the numbers and Open Up stops being decorative: Clean Up's yield is gated by Open Up. A big charge you never opened to composts into almost nothing — it stays stuck / returns later. This teaches felt sense *by consequence*, with zero vocabulary.
+
+**Measuring openness without reading someone's insides.** You don't self-report aperture; the interaction *produces* it from the **act of turning toward** — a couple of dead-simple somatic inputs (where do you feel it; tight vs diffuse; does staying with it change anything). **Engagement is aperture.** Fully no-AI, no jargon, works at a party (dual-track safe).
+
+**Open questions to resolve before building:**
+1. **Gate vs amplifier** — is Open Up a hard prerequisite for Clean Up (must open first), or does Clean Up work without it but Open Up boosts yield?
+2. **Aperture derivation** — what behavioral signals become the aperture number (time-with, inputs given, a felt-shift confirmation)? Keep it honest, not gameable-by-rushing.
+3. **Density ↔ volume** — does Open Up *convert* density into volume (one quantity moving), or are both tracked independently on the charge?
+4. **Residue** — does unmetabolized charge persist as a "stuck" marker and return later? (This is what makes the rule have teeth.)
+5. **Persistence shape** — this is **not** a freeform note. It's a small **structured read on the charge** (e.g. magnitude/aperture/location), which couples to the existing energy economy. Decide the exact fields only after 1–4 settle. May still need no migration if it fits `CustomBar` metadata.
+
 
 ## Non-Functional Requirements
 - **Dual-track**: entire loop works with no LLM. Deck stays deterministic.
@@ -147,19 +182,7 @@ Reuses existing `Account` + password verification from `conclave-auth.ts`, but *
 
 > Likely **no schema change** for Slices 1–3. The deck path reuses `CustomBar`; pending intent lives in a signed cookie, not a table.
 
-**Open question for Slice 4 (Open Up felt-sense note):** decide persistence before building.
-
-| Option | Note |
-|--------|------|
-| Reuse existing journal/note field on `CustomBar` (e.g. an `agentMetadata`/notes JSON or existing collection-journal model) | Preferred if a felt-sense/journal field already exists — **no migration** |
-| New `FeltSenseNote` model (`id, barId, playerId, emotion, body, pointsAt, createdAt`) | Only if no suitable field exists — **requires migration** |
-
-| Check | Done |
-|-------|------|
-| Confirm whether an existing note/journal field can hold the felt-sense note (avoid a new model if possible) | ☐ |
-| If new model: `npx prisma migrate dev --name felt_sense_note`, commit `prisma/migrations/…` with `schema.prisma` | ☐ |
-| `npm run db:sync` after any schema edit; `npm run check` | ☐ |
-| Human glanced at `migration.sql` (additive) | ☐ |
+**Open Up persistence — blocked on design, not on a table choice.** The earlier "felt-sense note" persistence question (reuse a `CustomBar` note field vs. new `FeltSenseNote` model with `emotion/body/pointsAt`) is **withdrawn**: the interaction is no longer a freeform note. Once the *Open Up / Felt Sense — Design In Progress* model settles (gate vs amplifier, aperture derivation, density↔volume, residue), the persisted shape is expected to be a small **structured read on the charge** (magnitude / aperture / location), most likely fitting `CustomBar` metadata with **no migration**. Decide fields only after the mechanic clicks.
 
 **Do not** rely on `db push` for anything merging to main.
 
@@ -173,7 +196,7 @@ Reuses existing `Account` + password verification from `conclave-auth.ts`, but *
   3. Create an account → confirm you land on **NOW home** with the card's BAR **in your Hand**.
   4. Open the **Hand modal** from NOW; confirm the BAR is present.
   5. Open the **Vault**; confirm five move-rooms (Wake Up · Open Up · Clean Up · Grow Up · Show Up) and that your new BAR is visible.
-  6. Enter **Open Up**, feel into a charge, save a felt-sense note; confirm the BAR's state is unchanged.
+  6. Enter **Open Up**; confirm you can see your live charges and sit with them. *(Interaction beyond viewing is deferred — see "Open Up / Felt Sense — Design In Progress". Re-add the "feel into a charge" step once that mechanic ships.)*
 - **Structure**: TwineStory + CustomBar, `isSystem: true`, `visibility: 'public'`, deterministic id `cert-mga-deck-vault-onboarding-v1`, idempotent seed script `seed:cert:mga-deck-vault-onboarding`.
 - Reference: [.specify/specs/cyoa-certification-quests/](../cyoa-certification-quests/), [scripts/seed-cyoa-certification-quests.ts](../../../scripts/seed-cyoa-certification-quests.ts).
 

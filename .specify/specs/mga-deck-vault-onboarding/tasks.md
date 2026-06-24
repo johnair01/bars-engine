@@ -25,11 +25,14 @@
 - [x] **T3.3** Added `VaultHandButton` (opens `HandModal` in place) to the Vault lobby header.
 - [x] **T3.4** FR10: deck-seeded BARs (`rootId` `deck_*`, self-claimed active `vibe`) now surface in the **Wake Up / Charges** room via shared `chargeRoomWhere`. `npm run check` → 0 errors. Manual verification pending in Slice 4's verification quest.
 
-## Slice 4 — Open Up room + deck nav + verification quest
+## Slice 4 — deck nav + verification quest
 
-- [ ] **T4.1** **Persistence decision**: confirm whether an existing note/journal field on `CustomBar`/collection-journal can hold the felt-sense note. Record the decision in `spec.md` § Persisted data.
-- [ ] **T4.2** *(only if no field fits)* Add `FeltSenseNote` model → `npx prisma migrate dev --name felt_sense_note` → commit `prisma/migrations/…` with `schema.prisma` → `npm run db:sync` → `npm run db:record-schema-hash`.
-- [ ] **T4.3** Add `src/app/vault/open-up/page.tsx`: list captured charges/BARs; felt-sense note editor (emotion/body/points-at); saving must **not** mutate BAR status/maturity.
+> **Open Up interaction is parked.** Per the 2026-06-24 design conversation we move at the speed of understanding; the Open Up room ships as a viewing space (already built in Slice 3) until the aperture / density→volume mechanic settles. T4.1–T4.3 below are **superseded** by the design work in `spec.md` § *Open Up / Felt Sense — Design In Progress* and are **not** to be built yet. The buildable Slice 4 work is the deck nav (T4.4) and the verification quest (T4.5–T4.6, with the Open Up step softened to "viewing").
+
+- [ ] ~~**T4.1** Persistence decision for the felt-sense note~~ — **withdrawn**; the interaction is not a freeform note. Persisted shape (structured charge read) decided after the mechanic clicks.
+- [ ] ~~**T4.2** `FeltSenseNote` model + migration~~ — **withdrawn**; likely no migration (fits `CustomBar` metadata).
+- [ ] ~~**T4.3** Felt-sense note editor in `/vault/open-up`~~ — **parked**; room stays a contemplative viewing space (lists live charges, mutates nothing) until the Open Up mechanic is designed.
+- [ ] **T4.0 (new)** **Design Open Up**: resolve the five open questions in `spec.md` § *Open Up / Felt Sense — Design In Progress* (gate vs amplifier, aperture derivation, density↔volume, residue, persistence shape) in conversation with the creator **before** any build.
 - [ ] **T4.4** `src/app/deck/page.tsx`: add persistent Hand-modal affordance + link back to NOW (`/`).
 - [ ] **T4.5** Verification quest: Twine passages (6 steps from spec) + `CustomBar` (`isSystem`, `visibility: 'public'`, id `cert-mga-deck-vault-onboarding-v1`); `scripts/seed-cert-mga-deck-vault-onboarding.ts` (idempotent) + npm script `seed:cert:mga-deck-vault-onboarding` (model on `scripts/seed-cyoa-certification-quests.ts`).
 - [ ] **T4.6** Run seed; walk the verification quest end-to-end. `npm run build && npm run check`.
