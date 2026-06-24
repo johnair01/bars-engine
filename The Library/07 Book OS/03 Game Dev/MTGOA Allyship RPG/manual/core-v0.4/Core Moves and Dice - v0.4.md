@@ -2,7 +2,7 @@
 
 Status: playable draft
 
-Purpose: provide the core roll procedure, school-owned stats, four Basic Moves, and the token loop for playtesting.
+Purpose: provide the core roll procedure, school-owned stats, five Basic Moves, and the token loop for playtesting.
 
 ## The Core Loop
 
@@ -19,13 +19,14 @@ Only roll when the action matters.
 
 Do not roll to see whether a character can do ordinary student life. Roll when a move could change trust, safety, resources, consent, pressure, belonging, leverage, or the mission.
 
-## The Four Basic Moves
+## The Five Basic Moves
 
-Every risky allyship action enters through one of four Basic Moves.
+Every risky allyship action enters through one of five Basic Moves.
 
 | Basic Move | Use It When You... | Core Question |
 |---|---|---|
 | **Wake Up** | notice, read, ask, reveal, orient, or diagnose | What is really happening? |
+| **Open Up** | reveal, receive, ask for help, risk trust, or create honest contact | What becomes possible if you let yourself be known? |
 | **Clean Up** | repair, own impact, restore trust, close a loop | What needs repair? |
 | **Grow Up** | stay with discomfort, feedback, complexity, or limits | What capacity is being built? |
 | **Show Up** | act, intervene, resource, organize, witness, or follow through | What needs to happen now? |
@@ -70,6 +71,7 @@ If you name your impact honestly after a 6-, also mark 1 Growth.
 Ask what the action is trying to do.
 
 - If the student is trying to understand the situation, use **Wake Up**.
+- If the student is trying to risk honest contact, receive support, or let themselves be known, use **Open Up**.
 - If the student is trying to repair harm or restore integrity, use **Clean Up**.
 - If the student is trying to build capacity under pressure, use **Grow Up**.
 - If the student is trying to change the situation through action, use **Show Up**.
@@ -79,6 +81,8 @@ If two Basic Moves fit, ask what would make the scene more honest.
 Example:
 
 If a student says, "I tell the captain the plan is harming the refugees," this might be Wake Up if the goal is to reveal a hidden pattern, Grow Up if the goal is to hold a line under authority pressure, or Show Up if the goal is to stop the plan now.
+
+If a student says, "I tell my crew I am too angry to speak cleanly and need someone else to ask the next question," this might be Open Up if the goal is honest contact and support, or Grow Up if the focus is staying with the discomfort without acting from it.
 
 ## Choosing The Stat
 
@@ -136,6 +140,37 @@ Wake Up costs:
 - The truth arrives before the room is ready.
 - You learn that the first problem was only a symptom.
 - You take 1 Tension because the signal is hard to stay with.
+
+## Open Up
+
+When you reveal a need, limit, fear, desire, stake, or truth that makes honest contact possible, roll +stat.
+
+On a **10+**, choose 2.
+
+On a **7-9**, choose 1, and the Guide adds 1 cost.
+
+On a **6-**, your opening is met imperfectly, too late, or by the wrong person. Gain 1 Adversity. If you name what the moment cost you, mark 1 Growth.
+
+Options:
+
+- Someone knows what you actually need.
+- You receive support without turning it into debt.
+- A relationship becomes more honest.
+- You name a limit before crossing it.
+- You invite help without giving away agency.
+- You reveal the stake without making yourself the center.
+- You reduce 1 Tension by saying the true thing.
+- Another student gains +1 forward if they respond to what you revealed.
+
+Open Up costs:
+
+- The truth changes how someone sees you.
+- Someone offers help that is partial, clumsy, or costly.
+- You reveal more than you intended.
+- The wrong person hears enough to matter.
+- Your self-sabotaging belief gets louder.
+- You must ask for a concrete response, not just understanding.
+- You take 1 Tension if you confuse vulnerability with permission to spill impact onto others.
 
 ## Clean Up
 
@@ -245,13 +280,13 @@ Gain 1 Adversity when:
 - a Belief wound move meaningfully complicates your action
 - the Guide offers Adversity for accepting a harder truth, ugly choice, or delayed consequence
 
-Spend 1 Adversity to:
+Spend Adversity to:
 
-- add +1 to your own roll after rolling
-- add +1 to another student's roll if your character can help
-- ask one honest question about the scene
-- introduce a useful but costly resource
-- activate a move that requires Adversity
+- spend 1 to add +1 to your own roll after rolling
+- spend 1 to add +1 to another student's roll if your character can help
+- spend 1 to ask one honest question about the scene
+- spend 1 to introduce a useful but costly resource
+- activate a move that requires Adversity, including a Belief Power Move with a listed Adversity cost
 
 Adversity can turn a miss into a partial or a partial into a 10+, but you must narrate what previous failure taught you.
 
@@ -360,6 +395,18 @@ You check in with the student whose story was shared without consent and ask wha
 
 You are using Bridge training to repair through care.
 
+### Open Up + Steady
+
+You tell the crew you are close to crossing your Line and need someone else to take the next public exchange.
+
+You are using Oath training to name a limit before it becomes harm.
+
+### Open Up + Tend
+
+You ask a teammate for support and name what kind of care would actually help instead of waiting for them to guess.
+
+You are using Bridge training to receive without vanishing or overpaying.
+
 ### Clean Up + Speak
 
 You correct the public record after your team took credit for work done by locals.
@@ -421,7 +468,7 @@ Example:
 School of the Body move  
 Before you roll, name the body signal driving your action. If the table agrees the signal is honest, gain 1 Clarity. If you ignore the signal, take 1 Tension.
 
-This does not replace Wake Up, Clean Up, Grow Up, or Show Up. It changes how a Body-trained student enters those moves.
+This does not replace Wake Up, Open Up, Clean Up, Grow Up, or Show Up. It changes how a Body-trained student enters those moves.
 
 ## Guide Principles For Rolls
 
@@ -448,6 +495,7 @@ Roll when a risky allyship move is uncertain.
 Basic Moves:
 
 - **Wake Up**: understand what is happening.
+- **Open Up**: risk honest contact and receive support.
 - **Clean Up**: repair harm and restore integrity.
 - **Grow Up**: build capacity under pressure.
 - **Show Up**: take action that changes the situation.

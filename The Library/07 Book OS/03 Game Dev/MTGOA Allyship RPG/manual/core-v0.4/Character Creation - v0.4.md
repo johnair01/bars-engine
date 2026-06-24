@@ -128,9 +128,11 @@ Your Ensemble Role is your function on the mission team.
 
 This is the five-person team structure.
 
-Choose one:
+It is not your superpower. Your Role describes what the team tends to rely on you for. Your superpower is a separate mythic capacity developed through the Beliefs and Superpowers rules.
 
-### Ace
+Choose one. If your table likes TV ensemble language, think of these as Ace, Leader, Engineer, Rookie, and Veteran in a more MTGOA-native register.
+
+### Spark
 
 Function:
 
@@ -148,7 +150,7 @@ Starting move:
 
 **Flash of Brilliance:** Once per episode, when you take a risky action using your strongest approach, add +1. On a miss, your brilliance draws attention or creates a new cost.
 
-### Leader
+### Anchor
 
 Function:
 
@@ -166,7 +168,7 @@ Starting move:
 
 **Name the Direction:** Once per episode, when the group is divided, name the shared objective. If everyone accepts it, each player takes +1 forward when acting toward it.
 
-### Engineer
+### Builder
 
 Function:
 
@@ -184,7 +186,7 @@ Starting move:
 
 **Useful Apparatus:** Once per episode, describe a tool, plan, method, or structure you prepared. It works, but the Guide names one limitation.
 
-### Rookie
+### Scout
 
 Function:
 
@@ -202,7 +204,7 @@ Starting move:
 
 **Beginner's Question:** Once per episode, ask a plain question that cuts through expert fog. If the table answers honestly, gain 1 Clarity.
 
-### Veteran
+### Witness
 
 Function:
 

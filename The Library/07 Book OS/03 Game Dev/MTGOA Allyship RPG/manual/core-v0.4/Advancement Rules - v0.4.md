@@ -53,6 +53,7 @@ Options:
 - 3 Growth: revise Offer, Cost, Line, or Bond after a meaningful scene
 - 4 Growth: increase one stat by +1, max +3
 - 5 Growth: unlock a new move from your House, Role, or Belief subclass
+- listed Adversity cost: unlock or activate a Belief Power Move when its requirements are met
 - variable: increase School Rank if requirements are met
 
 ## School Rank
@@ -229,6 +230,12 @@ Temporary rule:
 
 When your belief triggers and you choose the growth move instead of the wound move, mark Growth.
 
+Wound Moves should be easier in the moment but create durable consequences.
+
+Growth Moves should cost something in real time but create sustainable outcomes.
+
+Power Moves should be earned through Belief growth and bought or activated with Adversity tokens.
+
 After doing this three times, write a new sentence:
 
 **I used to believe ___. I am learning ___.**
@@ -274,7 +281,7 @@ After 3 Role progress marks, upgrade your Role move.
 
 Example:
 
-Ace's Flash of Brilliance no longer automatically draws attention on a miss; instead, the Guide chooses attention or cost.
+Spark's Flash of Brilliance no longer automatically draws attention on a miss; instead, the Guide chooses attention or cost.
 
 ## Legacy
 
