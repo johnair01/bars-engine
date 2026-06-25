@@ -16,8 +16,7 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
-
-export const MAX_TASKS_PER_DAY = 5
+import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 
 /** Lifecycle: committed → in_progress → (terminal exit states). Player is the authority. */
 const EXIT_STATES = new Set([

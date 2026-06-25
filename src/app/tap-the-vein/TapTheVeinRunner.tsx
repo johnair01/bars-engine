@@ -18,7 +18,6 @@ import {
   type TtvToday,
   type TtvTaskDTO,
   type TtvCampaignOption,
-  MAX_TASKS_PER_DAY,
   saveBrainstorm,
   commitTask,
   updateTaskStatus,
@@ -26,6 +25,7 @@ import {
   upgradeTaskToQuest,
   sealSession,
 } from '@/actions/tap-the-vein'
+import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import type { ElementKey } from '@/lib/ui/card-tokens'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { CultivationCard } from '@/components/ui/CultivationCard'
