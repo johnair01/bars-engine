@@ -8,6 +8,7 @@ import {
 export const BARS_TO_INNER_GARDEN_SCHEMA_VERSION = 'bars-inner-garden.v1'
 export const INNER_GARDEN_TO_BARS_SCHEMA_VERSION = 'inner-garden-bars.v1'
 export const INNER_GARDEN_SHAMAN_SOURCE = 'inner_garden_shaman'
+export const INNER_GARDEN_CHAPTER_1_SOURCE = 'inner_garden_chapter_1'
 
 export const INNER_GARDEN_CAPTURE_TYPES = ['bar', 'charge_capture'] as const
 export type InnerGardenCaptureType = (typeof INNER_GARDEN_CAPTURE_TYPES)[number]
@@ -57,6 +58,9 @@ export type InnerGardenCompletionPayload = {
   seedQuality: number
   cultivationAction: string
   harvestedInsight: string
+  resultText?: string
+  campaignRef?: string | null
+  completedAt?: string
 }
 
 export type InnerGardenBarCandidate = {
@@ -168,4 +172,3 @@ export function buildShamanResultSeedMetabolization(
     contextNote: harvestedInsight,
   })
 }
-

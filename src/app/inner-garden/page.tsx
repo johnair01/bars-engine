@@ -33,7 +33,7 @@ function LocationPill({ bar }: { bar: InnerGardenEligibleBar }) {
 function BarRow({ bar }: { bar: InnerGardenEligibleBar }) {
   return (
     <Link
-      href={`/inner-garden/shaman?barId=${encodeURIComponent(bar.id)}`}
+      href={`/inner-garden/play?chapter=1&barId=${encodeURIComponent(bar.id)}`}
       className="block rounded-lg border border-zinc-800 bg-zinc-950/70 p-4 transition hover:border-emerald-700/70 hover:bg-zinc-900"
     >
       <div className="flex items-start justify-between gap-3">
@@ -47,7 +47,7 @@ function BarRow({ bar }: { bar: InnerGardenEligibleBar }) {
           <h2 className="truncate text-sm font-semibold text-zinc-100">{bar.title}</h2>
           <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">{bar.description}</p>
         </div>
-        <span className="shrink-0 text-xs text-emerald-400">Enter</span>
+        <span className="shrink-0 text-xs text-emerald-400">Play</span>
       </div>
     </Link>
   )
@@ -146,4 +146,3 @@ export default async function InnerGardenPage({
     </main>
   )
 }
-
