@@ -2,11 +2,9 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { ensureWallet } from '@/actions/economy'
-import { getAppConfig } from '@/actions/config'
 import Link from 'next/link'
 import { getActiveInstance } from '@/actions/instance'
 import { parseCampaignDomainPreference, ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
-import { BARN_CAMPAIGN_REF } from '@/lib/event/barn-raising'
 // DashboardAvatarWithModal is now internal to DashboardHeader
 import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
@@ -26,25 +24,19 @@ function isPrismaConnectionError(err: unknown): boolean {
 }
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string; focusQuest?: string; ref?: string }> }) {
-  const searchParams = await props.searchParams
-  const campaignRef = searchParams.ref ?? null
+  await props.searchParams
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
 
   // Safe DB calls — run before auth check, must not crash the page
-  let appConfig: any = {}
   let activeInstance: any = null
   try {
-    appConfig = await getAppConfig()
     activeInstance = await getActiveInstance()
   } catch (err) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[Home] DB unreachable for config/instance lookup:', (err as any)?.message)
+      console.warn('[Home] DB unreachable for instance lookup:', (err as any)?.message)
     }
   }
-
-  const heroTitle = appConfig?.heroTitle || 'BARS ENGINE'
-  const heroSubtitle = appConfig?.heroSubtitle || 'A quest system for the vibrational convergence'
 
   const formatUsdCents = (cents: number) => new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -57,13 +49,48 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   // ── Unauthenticated landing ───────────────────────────────────────────────
   if (!playerId) {
+    const venmoUrl = 'https://venmo.com/u/Wendell-Britt'
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-black text-white font-mono flex-col gap-8 p-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl tracking-tighter font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-500 bg-clip-text text-transparent">
-            {heroTitle}
+        <div className="text-center space-y-4 max-w-2xl">
+          <h1 className="text-4xl sm:text-5xl tracking-tighter font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-500 bg-clip-text text-transparent">
+            Mastering the Game of Allyship
           </h1>
-          <p className="text-zinc-400 text-lg">{heroSubtitle}</p>
+          <p className="text-zinc-400 text-base sm:text-lg">
+            Allyship is hard, lonely work that rarely comes with a map. This turns it into a game you
+            can actually play — a book, a deck, and a living practice for showing up, together.
+          </p>
+        </div>
+
+        {/* ── Priority: The Crossing car fundraiser ─────────────────────────── */}
+        <div className="w-full max-w-md rounded-2xl border border-amber-500/40 bg-gradient-to-b from-amber-950/40 to-zinc-950 p-6 shadow-lg shadow-amber-900/20">
+          <div className="text-[10px] uppercase tracking-widest text-amber-400/80 mb-2">
+            Help me get a car · The Crossing
+          </div>
+          <h2 className="text-xl font-bold text-white leading-snug">
+            The car died. The work didn&apos;t.
+          </h2>
+          <p className="mt-2 text-sm text-zinc-300 leading-relaxed">
+            A reliable car is the next practical bridge — getting me back on the road while the
+            Mastering the Game of Allyship launch keeps moving. Money helps, and so do car leads,
+            intros, and signal boosts.
+          </p>
+          <div className="mt-5 flex flex-col gap-3">
+            <a
+              href={venmoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-bold rounded-lg text-center transition-all shadow-lg shadow-amber-900/30"
+            >
+              Donate now via Venmo
+            </a>
+            <Link
+              href="/campaign/the-crossing"
+              className="w-full py-3 px-6 bg-zinc-900 border border-amber-600/50 hover:border-amber-500 hover:bg-zinc-800 text-amber-100 font-bold rounded-lg text-center transition-all text-sm"
+            >
+              See the campaign &amp; other ways to help →
+            </Link>
+          </div>
         </div>
 
         {activeInstance?.isEventMode && (
@@ -93,7 +120,15 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           </Link>
         )}
 
+        {/* ── Explore the work ──────────────────────────────────────────────── */}
         <div className="flex flex-col gap-4 w-full max-w-xs">
+          <Link
+            href="/launch"
+            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
+          >
+            Explore the book &amp; deck
+          </Link>
+
           <Link
             href="/awaken"
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
@@ -102,41 +137,16 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           </Link>
 
           <Link
-            href="/launch"
-            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
+            href="/login"
+            className="w-full py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
           >
-            Explore the book, deck &amp; game
+            Log In
           </Link>
-
-          <Link
-            href="/game/index.html"
-            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
-          >
-            Play the game
-          </Link>
-
-          <div className="flex gap-3">
-            <Link
-              href={
-                activeInstance?.campaignRef === BARN_CAMPAIGN_REF
-                  ? '/event/barn'
-                  : `/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`
-              }
-              className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
-            >
-              Support
-            </Link>
-            <Link
-              href="/login"
-              className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
-            >
-              Log In
-            </Link>
-          </div>
         </div>
 
-        <div className="text-xs text-zinc-600 mt-8 text-center max-w-md">
-          New here? Start with the book, deck, and game — most of it is free, no account needed. Existing players can log in to continue.
+        <div className="text-xs text-zinc-600 mt-4 text-center max-w-md">
+          New here? Start with the book and deck — most of it is free, no account needed. Existing
+          players can log in to continue.
         </div>
       </div>
     )
