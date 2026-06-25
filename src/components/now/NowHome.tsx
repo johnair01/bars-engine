@@ -5,6 +5,8 @@ import { parseSeedMetabolization, effectiveMaturity } from '@/lib/bar-seed-metab
 import { HAND_SIZE } from '@/lib/hand-service'
 import { HandGlance, type HandSlotData } from '@/components/now/HandGlance'
 import { DailyChargePanel } from '@/components/now/DailyChargePanel'
+import { TapTheVeinPanel } from '@/components/now/TapTheVeinPanel'
+import { getTodayPanelSummary } from '@/actions/tap-the-vein'
 import { CaptureBox } from '@/components/now/CaptureBox'
 
 type NowHomeProps = {
@@ -13,7 +15,7 @@ type NowHomeProps = {
 }
 
 export async function NowHome({ playerId, vibulons }: NowHomeProps) {
-  const [handSlots, chargeTargets, barCounts] = await Promise.all([
+  const [handSlots, chargeTargets, barCounts, ttvSummary] = await Promise.all([
     db.handSlot.findMany({
       where: { playerId },
       orderBy: { slotIndex: 'asc' },
@@ -23,7 +25,12 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
     }),
     getTodayChargeTargets(),
     fetchBarCounts(playerId),
+    getTodayPanelSummary(),
   ])
+
+  const ttvPanel = 'error' in ttvSummary
+    ? { status: 'not_started' as const, setForToday: 0, carried: 0, completed: 0, sealedAt: null }
+    : ttvSummary
 
   // Build all 6 slots (filled + empty)
   const slotMap = new Map(handSlots.map(s => [s.slotIndex, s]))
@@ -112,6 +119,9 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
             vaultCount={barCounts.vaultCount}
             gardenCount={barCounts.gardenCount}
           />
+
+          {/* Tap the Vein — daily ritual (sibling of Daily Charge, above it) */}
+          <TapTheVeinPanel summary={ttvPanel} />
 
           {/* Daily charge */}
           <DailyChargePanel

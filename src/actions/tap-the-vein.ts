@@ -366,6 +366,90 @@ export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ ta
   return updateTaskStatus({ taskId, status: 'upgraded_to_quest' })
 }
 
+/**
+ * Read-only summary for the NOW-hub panel. Does NOT create a session
+ * (viewing the home screen must not start the ritual).
+ */
+export type TtvPanelSummary = {
+  status: 'not_started' | 'in_progress' | 'sealed'
+  setForToday: number // committed/in_progress/completed/assigned/upgraded — excludes composted + carried_over
+  carried: number // carried-in, still live
+  completed: number
+  sealedAt: string | null
+}
+
+export async function getTodayPanelSummary(): Promise<TtvResult<TtvPanelSummary>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+  try {
+    const session = await db.tapTheVeinDailySession.findUnique({
+      where: { playerId_sessionDate: { playerId: player.id, sessionDate: startOfDay() } },
+      select: {
+        status: true,
+        rawEntry: true,
+        sealedAt: true,
+        tasks: { select: { status: true, carryCount: true, carriedFromDailySessionId: true } },
+      },
+    })
+
+    if (!session) {
+      return { status: 'not_started', setForToday: 0, carried: 0, completed: 0, sealedAt: null }
+    }
+
+    const setForToday = session.tasks.filter(
+      (t) => t.status !== 'composted' && t.status !== 'carried_over',
+    ).length
+    const carried = session.tasks.filter(
+      (t) => t.status !== 'composted' && t.status !== 'carried_over' && (t.carryCount > 0 || !!t.carriedFromDailySessionId),
+    ).length
+    const completed = session.tasks.filter((t) => t.status === 'completed').length
+
+    if (session.status === 'sealed') {
+      return { status: 'sealed', setForToday, carried, completed, sealedAt: session.sealedAt?.toISOString() ?? null }
+    }
+
+    // Open but untouched (no tasks, empty free-write) reads as "not started" to the player.
+    const hasActivity = setForToday > 0 || session.rawEntry.trim().length > 0
+    return {
+      status: hasActivity ? 'in_progress' : 'not_started',
+      setForToday,
+      carried,
+      completed,
+      sealedAt: null,
+    }
+  } catch (e) {
+    console.error('[ttv:getTodayPanelSummary]', e)
+    return { error: 'Failed to load summary' }
+  }
+}
+
+/** Campaigns the player can assign a task to (read-only; from instance memberships). */
+export type TtvCampaignOption = { id: string; name: string }
+
+export async function listPlayerCampaigns(): Promise<TtvResult<{ campaigns: TtvCampaignOption[] }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+  try {
+    const memberships = await db.instanceMembership.findMany({
+      where: { playerId: player.id },
+      select: { instance: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'desc' },
+    })
+    const seen = new Set<string>()
+    const campaigns: TtvCampaignOption[] = []
+    for (const m of memberships) {
+      if (m.instance && !seen.has(m.instance.id)) {
+        seen.add(m.instance.id)
+        campaigns.push({ id: m.instance.id, name: m.instance.name })
+      }
+    }
+    return { campaigns }
+  } catch (e) {
+    console.error('[ttv:listPlayerCampaigns]', e)
+    return { error: 'Failed to load campaigns' }
+  }
+}
+
 /** Phase E — seal the day. */
 export async function sealSession(): Promise<TtvResult<{ status: string }>> {
   const player = await getCurrentPlayer()

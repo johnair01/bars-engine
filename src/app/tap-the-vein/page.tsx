@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
-import { getToday } from '@/actions/tap-the-vein'
+import { db } from '@/lib/db'
+import { getToday, listPlayerCampaigns } from '@/actions/tap-the-vein'
+import type { ElementKey } from '@/lib/ui/card-tokens'
 import { TapTheVeinRunner } from './TapTheVeinRunner'
 
 /**
@@ -14,28 +16,50 @@ import { TapTheVeinRunner } from './TapTheVeinRunner'
  * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:morning_ritual, ENERGY:metabolize
  * @agentDiscoverable false
  *
- * Layer A: this route + the server actions in src/actions/tap-the-vein.ts are the
- * working engineering skeleton. The VISUAL layer (cards, pre-card well, ritual
- * states, NOW panel) is owned by the design spec and replaces the placeholder
- * markup in TapTheVeinRunner:
- *   docs/plans/2026-06-24-tap-the-vein-ui-design-spec.md
+ * Layer A route. UI skinned to the Claude Design handoff
+ * (docs/plans/2026-06-24-tap-the-vein-ui-design-spec.md). Tier 1: the working
+ * ritual + task lifecycle. Tier 2 (♦ economy, inline 3·2·1 thread, idea
+ * storm/vault, daemon-upgrade ceremony) is deferred — see the design handoff.
  */
 export const dynamic = 'force-dynamic'
+
+const VALID_ELEMENTS: ReadonlySet<string> = new Set(['fire', 'water', 'wood', 'metal', 'earth'])
+function normalizeElement(raw: string | null | undefined): ElementKey {
+  const v = (raw ?? '').toLowerCase()
+  return (VALID_ELEMENTS.has(v) ? v : 'earth') as ElementKey
+}
 
 export default async function TapTheVeinPage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
-  const today = await getToday()
+  const [today, campaignsRes] = await Promise.all([getToday(), listPlayerCampaigns()])
+
   if ('error' in today) {
     return (
-      <div className="min-h-screen bg-black text-zinc-200 font-sans flex items-center justify-center p-6">
-        <p className="text-sm text-zinc-400">{today.error}</p>
+      <div
+        className="flex items-center justify-center p-6"
+        style={{ minHeight: '100dvh', background: 'var(--bars-bg-base)' }}
+      >
+        <p style={{ fontFamily: 'var(--bars-font-body)', fontSize: 14, color: 'var(--bars-text-secondary)' }}>{today.error}</p>
       </div>
     )
   }
 
+  let vibulons = 0
+  try {
+    vibulons = await db.vibulon.count({ where: { ownerId: player.id } })
+  } catch {
+    // wallet not provisioned yet — show 0
+  }
+
   return (
-    <TapTheVeinRunner initial={today} nationElement={player.nation?.element ?? null} />
+    <TapTheVeinRunner
+      initial={today}
+      element={normalizeElement(player.nation?.element)}
+      nationName={player.nation?.name ?? null}
+      vibulons={vibulons}
+      campaigns={'error' in campaignsRes ? [] : campaignsRes.campaigns}
+    />
   )
 }
