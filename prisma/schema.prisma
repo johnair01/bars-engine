@@ -629,6 +629,9 @@ model TapTheVeinTask {
   visibility                String? // null=private; "campaign"=visible to campaign stewards
   // Quest upgrade
   questId                   String?
+  // Core-loop bridge (CGLA H1): the CustomBar this task projects into, so a task
+  // can be tuned / charged / 3·2·1'd / grown like any BAR. Soft pointer.
+  barId                     String?
   // Phase 3 wiring (links back to daily session)
   dailySession              TapTheVeinDailySession @relation(fields: [dailySessionId], references: [id], onDelete: Cascade)
 

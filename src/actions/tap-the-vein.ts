@@ -17,6 +17,45 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
+import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
+import { growQuestFromBar } from '@/actions/bars'
+
+/** Maturity/provenance for a TTV task's projected BAR (mirrors captureBar). */
+const TTV_BAR_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
+  maturity: 'captured',
+  soilKind: 'holding_pen',
+})
+
+/**
+ * CGLA H1 — project a committed task into a CustomBar so it joins the core loop
+ * (tune / charge / 3·2·1 / grow). Returns the new bar id, or null on failure
+ * (a BAR is a convenience projection — never block the commit on it).
+ */
+async function createBarForTask(playerId: string, text: string): Promise<string | null> {
+  try {
+    const title = text.length <= 80 ? text : text.slice(0, 77) + '...'
+    const bar = await db.customBar.create({
+      data: {
+        creatorId: playerId,
+        title: title || 'Tap the Vein task',
+        description: text,
+        type: 'bar',
+        reward: 0,
+        visibility: 'private',
+        status: 'active',
+        inputs: '[]',
+        rootId: 'temp',
+        seedMetabolization: TTV_BAR_SEED_METABOLIZATION,
+      },
+      select: { id: true },
+    })
+    await db.customBar.update({ where: { id: bar.id }, data: { rootId: bar.id } })
+    return bar.id
+  } catch (e) {
+    console.error('[ttv:createBarForTask]', e)
+    return null
+  }
+}
 
 /** Lifecycle: committed → in_progress → (terminal exit states). Player is the authority. */
 const EXIT_STATES = new Set([
@@ -51,6 +90,7 @@ export type TtvTaskDTO = {
   campaignId: string | null
   visibility: string | null
   questId: string | null
+  barId: string | null
   completedAt: string | null
   createdAt: string
 }
@@ -88,6 +128,7 @@ function toTaskDTO(t: {
   campaignId: string | null
   visibility: string | null
   questId: string | null
+  barId: string | null
   completedAt: Date | null
   createdAt: Date
 }): TtvTaskDTO {
@@ -101,6 +142,7 @@ function toTaskDTO(t: {
     campaignId: t.campaignId,
     visibility: t.visibility,
     questId: t.questId,
+    barId: t.barId,
     completedAt: t.completedAt ? t.completedAt.toISOString() : null,
     createdAt: t.createdAt.toISOString(),
   }
@@ -116,6 +158,7 @@ const TASK_SELECT = {
   campaignId: true,
   visibility: true,
   questId: true,
+  barId: true,
   completedAt: true,
   createdAt: true,
 } as const
@@ -221,13 +264,21 @@ export async function commitTask(input: {
       },
       select: TASK_SELECT,
     })
+
+    // CGLA H1 — project the task into a BAR so it joins the core loop.
+    const barId = await createBarForTask(player.id, text)
+    const task = barId
+      ? await db.tapTheVeinTask.update({ where: { id: created.id }, data: { barId }, select: TASK_SELECT })
+      : created
+
     await db.tapTheVeinDailySession.update({
       where: { id: session.id },
       data: { committedTaskCount: { increment: 1 } },
     })
 
     revalidatePath('/tap-the-vein')
-    return { task: toTaskDTO(created) }
+    revalidatePath('/vault')
+    return { task: toTaskDTO(task) }
   } catch (e) {
     console.error('[ttv:commitTask]', e)
     return { error: 'Failed to commit task' }
@@ -357,12 +408,46 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
 }
 
 /**
- * Phase D — upgrade a task to a quest.
- * NOTE: actual Quest creation is Layer-B+ (wires into the quest-creation action).
- * For now this records the lifecycle transition; questId stays null until wired.
+ * Phase D — upgrade a task to a real Quest (CGLA H1).
+ * Grows a quest from the task's projected BAR via the existing `growQuestFromBar`,
+ * then records the transition + questId. Falls back to a status-only update for
+ * legacy tasks created before the BAR bridge (no `barId`).
  */
 export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ task: TtvTaskDTO }>> {
-  return updateTaskStatus({ taskId, status: 'upgraded_to_quest' })
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  try {
+    const task = await db.tapTheVeinTask.findUnique({
+      where: { id: taskId },
+      select: { id: true, playerId: true, status: true, barId: true },
+    })
+    if (!task) return { error: 'Task not found' }
+    if (task.playerId !== player.id) return { error: 'Forbidden' }
+
+    const allowed = ALLOWED_TRANSITIONS[task.status]
+    if (!allowed || !allowed.has('upgraded_to_quest')) {
+      return { error: `Cannot upgrade a ${task.status} task` }
+    }
+
+    let questId: string | null = null
+    if (task.barId) {
+      const res = await growQuestFromBar(task.barId)
+      if (res.error) return { error: res.error }
+      questId = res.questId ?? null
+    }
+
+    const updated = await db.tapTheVeinTask.update({
+      where: { id: task.id },
+      data: { status: 'upgraded_to_quest', questId },
+      select: TASK_SELECT,
+    })
+    revalidatePath('/tap-the-vein')
+    return { task: toTaskDTO(updated) }
+  } catch (e) {
+    console.error('[ttv:upgradeTaskToQuest]', e)
+    return { error: 'Failed to upgrade task' }
+  }
 }
 
 /**

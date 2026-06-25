@@ -17,6 +17,7 @@
  * NationProvider in this tree).
  */
 
+import Link from 'next/link'
 import { CultivationCard, type ElementKey, type AlchemyAltitude } from '@/components/ui/CultivationCard'
 import { ELEMENT_TOKENS, type CardStage } from '@/lib/ui/card-tokens'
 import type { TtvTaskDTO } from '@/actions/tap-the-vein'
@@ -154,6 +155,15 @@ export function TaskCard({
             <p className="mt-1" style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.08em', color: 'var(--bars-text-muted)' }}>
               reason · {REASON_LABEL[task.compostReason] ?? task.compostReason}
             </p>
+          )}
+          {task.barId && task.status !== 'composted' && (
+            <Link
+              href={`/bars/${task.barId}`}
+              className="inline-block mt-1"
+              style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bars-text-secondary)' }}
+            >
+              ↗ open BAR · tune · charge · 3·2·1
+            </Link>
           )}
         </div>
 
