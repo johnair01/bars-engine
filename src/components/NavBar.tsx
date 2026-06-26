@@ -38,6 +38,13 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             NOW
                         </Link>
                         <Link
+                            href="/observatory"
+                            title="The Observatory: zoom through time — orientation, vision, year, quarter, month, week, today."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/observatory')}`}
+                        >
+                            OBSERVATORY
+                        </Link>
+                        <Link
                             href="/vault"
                             title="Your private studio: charges, quests, drafts, invitations — metabolize what you are carrying."
                             className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/vault')}`}

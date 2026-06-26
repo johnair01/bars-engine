@@ -50,3 +50,88 @@ export async function ensureTodayLens(playerId: string): Promise<DailyLens | nul
 export function personalGardenId(playerId: string): string {
   return `personal:${playerId}`
 }
+
+// ─── Calendar lens scaffolding (LENS1 — Observatory cold-start) ───────────────
+// Calendar lenses (today/week/month/quarter/year) are auto-seeded deterministically;
+// vision + orientation are player-authored. Each calendar level has a canonical
+// periodKey so get-or-create dedupes to one row per period.
+
+export const LENS_LEVELS = ['orientation', 'vision', 'yearly', 'quarterly', 'monthly', 'weekly', 'daily'] as const
+export type LensLevel = (typeof LENS_LEVELS)[number]
+/** The auto-seeded calendar levels (vision/orientation are authored, not seeded). */
+export const CALENDAR_LEVELS: LensLevel[] = ['yearly', 'quarterly', 'monthly', 'weekly', 'daily']
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+function isoWeek(d: Date): { year: number; week: number } {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  const dayNum = (date.getUTCDay() + 6) % 7
+  date.setUTCDate(date.getUTCDate() - dayNum + 3)
+  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4))
+  const week = 1 + Math.round(((date.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7)
+  return { year: date.getUTCFullYear(), week }
+}
+
+/** Canonical { periodKey, title } for a calendar level on date d. */
+export function calendarIdentity(level: LensLevel, d: Date = new Date()): { periodKey: string; title: string } {
+  const y = d.getFullYear()
+  switch (level) {
+    case 'daily':
+      return { periodKey: dailyPeriodKey(d), title: dailyTitle(d) }
+    case 'weekly': {
+      const { year, week } = isoWeek(d)
+      return { periodKey: `weekly:${year}-W${String(week).padStart(2, '0')}`, title: `Week ${week} · ${year}` }
+    }
+    case 'monthly':
+      return { periodKey: `monthly:${y}-${String(d.getMonth() + 1).padStart(2, '0')}`, title: `${MONTHS[d.getMonth()]} ${y}` }
+    case 'quarterly': {
+      const q = Math.floor(d.getMonth() / 3) + 1
+      return { periodKey: `quarterly:${y}-Q${q}`, title: `Q${q} ${y}` }
+    }
+    case 'yearly':
+      return { periodKey: `yearly:${y}`, title: `${y}` }
+    default:
+      // vision / orientation are singletons keyed by their type.
+      return { periodKey: level, title: level === 'vision' ? 'Vision' : 'Orientation' }
+  }
+}
+
+type LensRow = { id: string; type: string; title: string; periodKey: string | null; parentLensId: string | null }
+
+async function upsertLensRow(
+  playerId: string,
+  type: LensLevel,
+  periodKey: string,
+  title: string,
+  parentLensId: string | null,
+): Promise<LensRow> {
+  return db.lens.upsert({
+    where: { playerId_type_periodKey: { playerId, type, periodKey } },
+    update: { parentLensId },
+    create: { playerId, type, title, periodKey, parentLensId },
+    select: { id: true, type: true, title: true, periodKey: true, parentLensId: true },
+  })
+}
+
+/**
+ * Get-or-create the calendar lens scaffold for today (year→quarter→month→week→day),
+ * wiring the parent chain. Returns the rows by level. Best-effort; idempotent.
+ */
+export async function ensureCalendarLenses(playerId: string, d: Date = new Date()): Promise<Record<string, LensRow> | null> {
+  try {
+    const yId = calendarIdentity('yearly', d)
+    const yearly = await upsertLensRow(playerId, 'yearly', yId.periodKey, yId.title, null)
+    const qId = calendarIdentity('quarterly', d)
+    const quarterly = await upsertLensRow(playerId, 'quarterly', qId.periodKey, qId.title, yearly.id)
+    const mId = calendarIdentity('monthly', d)
+    const monthly = await upsertLensRow(playerId, 'monthly', mId.periodKey, mId.title, quarterly.id)
+    const wId = calendarIdentity('weekly', d)
+    const weekly = await upsertLensRow(playerId, 'weekly', wId.periodKey, wId.title, monthly.id)
+    const dId = calendarIdentity('daily', d)
+    const daily = await upsertLensRow(playerId, 'daily', dId.periodKey, dId.title, weekly.id)
+    return { yearly, quarterly, monthly, weekly, daily }
+  } catch (e) {
+    console.error('[lenses:ensureCalendarLenses]', e)
+    return null
+  }
+}
