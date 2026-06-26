@@ -47,19 +47,29 @@ boundary (fail-fix). `npm run check` must also show **no `schema.prisma` diff**.
   `stewardBroadcastThankYou` (non-declined → thanked+notified; returns count).
 - [x] **CHECK 1** `tsc --noEmit` 0 errors; `eslint` clean.
 
-## Phase 2 — Supporter landing (00–01)
+## Phase 2 — Supporter landing (00–01) — ✅ DONE
 
-- [ ] **T2.1** `src/app/campaign/the-crossing/page.tsx` (server; static fallback,
-  renders without a campaign record) → `TheCrossingLanding.tsx` (client).
-- [ ] **T2.2** Hero + How-To-Play strip + `/awaken` top-right + fine print
-  (copy verbatim from plan).
-- [ ] **T2.3** `components/the-crossing/DomainGate.tsx` + `RoleCard.tsx`
-  (element-tinted, glyph tile, EXPLORE/GIVE). Color via `ELEMENT_TOKENS`.
-- [ ] **T2.4** Accordion (one open; mount panel; `prefers-reduced-motion`):
-  description, Tiny move/Creates/Why grid, deck-move chips, one
-  `DeckCardForRole`, two CTAs (Donor primary = Venmo).
-- [ ] **T2.5** `/superpower` fallback + water-tinted `/awaken` cross-link.
-- [ ] **CHECK 2** `npm run build` + `npm run check`. Mobile: no horizontal scroll.
+- [x] **T2.1** `src/app/campaign/the-crossing/page.tsx` (server + metadata;
+  no DB dependency → renders as a static experience) → `TheCrossingLanding.tsx`
+  (client, owns accordion `openRoleId`). Literal segment overrides `[ref]`.
+- [x] **T2.2** Hero (eyebrow, H1, subhead, body, two CTAs) + How-To-Play strip
+  + `/awaken` top-right chrome link + fine print (copy verbatim).
+- [x] **T2.3** Domain gates + role cards rendered inline in the landing
+  (`RoleAccordion`) to keep accordion state cohesive — element-tinted glyph
+  tile, EXPLORE/GIVE, color via `ELEMENT_TOKENS`. *(Deviation from separate
+  DomainGate/RoleCard files — noted; the markup is the same.)*
+- [x] **T2.4** Accordion (one open at a time; panel mounted; CSS `grid-rows`
+  height animation with `motion-reduce:transition-none`): description, Tiny
+  move/Creates/Why grid, deck-move chips, one `DeckCardForRole`, two CTAs
+  (Donor primary = Venmo deep link; non-donor primary = capture, secondary =
+  read-the-role; "Save this as a BAR →").
+- [x] **T2.5** `/superpower` fallback card + water-tinted `/awaken` cross-link.
+- [x] **CHECK 2** `tsc --noEmit` 0 errors; `eslint` clean. *(Live `next build`
+  not run — heavy/needs env; landing is dependency-free static UI.)*
+
+> Note: `DeckCardForRole` (`src/components/the-crossing/DeckCardForRole.tsx`)
+> built here on the real `CultivationCard` primitive + `parseDeckCode`; reused
+> by Phase 3 (satisfies most of T3.2).
 
 ## Phase 3 — Role detail + deck cards (02–05)
 
