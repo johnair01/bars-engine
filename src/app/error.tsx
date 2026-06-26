@@ -14,9 +14,13 @@ export default function GlobalError({
         <p className="text-sm text-zinc-400">
           An unexpected error occurred. This has been logged.
         </p>
-        {process.env.NODE_ENV === 'development' && error?.message && (
-          <pre className="text-xs text-red-400 bg-red-950/30 rounded p-3 text-left overflow-auto max-h-40">
+        {/* TEMPORARY diagnostic: surface the real error in production while we
+            chase the Tap the Vein crash. Revert to the NODE_ENV==='development'
+            gate once captured. */}
+        {(error?.message || error?.digest) && (
+          <pre className="text-xs text-red-400 bg-red-950/30 rounded p-3 text-left overflow-auto max-h-60">
             {error.message}
+            {error.digest ? `\n\ndigest: ${error.digest}` : ''}
           </pre>
         )}
         <div className="flex flex-col gap-2">
