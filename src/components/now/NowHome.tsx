@@ -120,6 +120,37 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
             gardenCount={barCounts.gardenCount}
           />
 
+          {/* Observatory — folded into Now: zoom through time across your lenses */}
+          <Link
+            href="/observatory"
+            style={{
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: '13px 16px',
+              borderRadius: 10,
+              background: '#1a1a18',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.08)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+              <span style={{ fontSize: 16, color: '#7c3aed', textShadow: '0 0 12px #7c3aed', lineHeight: 1 }}>
+                ◎
+              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 13, color: '#e8e6e0', lineHeight: 1 }}>
+                  Observatory
+                </span>
+                <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#6b6965', lineHeight: 1 }}>
+                  Zoom through time · your lenses
+                </span>
+              </div>
+            </div>
+            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, color: '#6b6965' }}>→</span>
+          </Link>
+
           {/* Tap the Vein — daily ritual (sibling of Daily Charge, above it) */}
           <TapTheVeinPanel summary={ttvPanel} />
 

@@ -282,6 +282,100 @@ export async function getEventCalendarExport(
   return { success: true, ics }
 }
 
+/** Visibility values that make an event discoverable to all logged-in players. */
+export const DISCOVERABLE_VISIBILITIES = ['public', 'discoverable'] as const
+
+export type PlayerEventOverviewItem = {
+  id: string
+  title: string
+  description: string
+  startTime: Date | null
+  endTime: Date | null
+  timezone: string | null
+  locationType: string
+  locationDetails: string | null
+  instanceId: string | null
+  visibility: string
+  status: string
+}
+
+const PLAYER_EVENT_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  startTime: true,
+  endTime: true,
+  timezone: true,
+  locationType: true,
+  locationDetails: true,
+  instanceId: true,
+  visibility: true,
+  status: true,
+} as const
+
+/**
+ * Events surface for the EVENTS nav: events the current player is subscribed to
+ * (RSVP'd or invited) plus events made discoverable to everyone. Replaces the
+ * hardcoded single-instance (Bruised Banana) event page as the nav target.
+ */
+export async function getPlayerEventsOverview(): Promise<{
+  subscribed: PlayerEventOverviewItem[]
+  discoverable: PlayerEventOverviewItem[]
+}> {
+  const player = await getCurrentPlayer()
+  const empty = { subscribed: [], discoverable: [] }
+  if (!player) return empty
+
+  try {
+    const HIDDEN_STATUSES = ['draft', 'archived']
+
+    // Subscribed: player has RSVP'd yes, or has a non-declined invite.
+    const [participantRows, inviteRows] = await Promise.all([
+      db.eventParticipant.findMany({
+        where: { participantId: player.id, participantState: 'RSVP_yes' },
+        select: { event: { select: PLAYER_EVENT_SELECT } },
+      }),
+      db.eventInvite.findMany({
+        where: { actorId: player.id, inviteStatus: { not: 'declined' } },
+        select: { event: { select: PLAYER_EVENT_SELECT } },
+      }),
+    ])
+
+    const subscribedById = new Map<string, PlayerEventOverviewItem>()
+    for (const row of [...participantRows, ...inviteRows]) {
+      const ev = row.event
+      if (!ev || HIDDEN_STATUSES.includes(ev.status)) continue
+      subscribedById.set(ev.id, ev)
+    }
+
+    // Discoverable: visible to everyone, not draft/archived, upcoming or undated.
+    const now = new Date()
+    const discoverableRows = await db.eventArtifact.findMany({
+      where: {
+        visibility: { in: [...DISCOVERABLE_VISIBILITIES] },
+        status: { notIn: HIDDEN_STATUSES },
+        OR: [{ startTime: null }, { startTime: { gte: now } }],
+      },
+      orderBy: { startTime: 'asc' },
+      select: PLAYER_EVENT_SELECT,
+    })
+
+    const subscribed = [...subscribedById.values()].sort(sortByStartTime)
+    const discoverable = discoverableRows.filter((ev) => !subscribedById.has(ev.id))
+
+    return { subscribed, discoverable }
+  } catch (e: unknown) {
+    console.error('[event-artifact] getPlayerEventsOverview failed:', e)
+    return empty
+  }
+}
+
+function sortByStartTime(a: PlayerEventOverviewItem, b: PlayerEventOverviewItem): number {
+  const at = a.startTime ? a.startTime.getTime() : Number.POSITIVE_INFINITY
+  const bt = b.startTime ? b.startTime.getTime() : Number.POSITIVE_INFINITY
+  return at - bt
+}
+
 /**
  * Mark event complete.
  */
