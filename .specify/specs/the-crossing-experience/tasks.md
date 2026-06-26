@@ -5,44 +5,47 @@ order.** **No Prisma migration** (reuse `CustomBar`; state in `contextLines`).
 Check off as completed; run `npm run build` + `npm run check` at each phase
 boundary (fail-fix). `npm run check` must also show **no `schema.prisma` diff**.
 
-## Phase 0 — Role model & tokens *(foundational)*
+## Phase 0 — Role model & tokens *(foundational)* — ✅ DONE
 
-- [ ] **T0.1** Rename `car_person` → `car_expert` in
+- [x] **T0.1** Rename `car_person` → `car_expert` in
   `src/lib/the-crossing-support-moves.ts` (id, label "Car Expert", union type);
-  add alias map so `getTheCrossingSupportRole('car_person')` still resolves.
-- [ ] **T0.2** Add per-role fields: `element: ElementKey`, `isDonor?`,
+  alias map so `getTheCrossingSupportRole('car_person')` still resolves.
+- [x] **T0.2** Per-role fields: `element: ElementKey`, `isDonor`,
   `exploreVerb`, `filterKey`, and `capture` copy (`contactPlaceholder`,
-  `offerLabel`, `offerPlaceholder`, `detailPlaceholder`) — values from the
-  prototype (see plan / extraction). Map domain→element (gather=earth,
-  organize=wood, aware=metal, direct=fire).
-- [ ] **T0.3** Add constants: `THE_CROSSING_FUND {goal:4800,base:3225}`,
-  `THE_CROSSING_VENMO_HANDLE` (placeholder), `THE_CROSSING_CHANNELS`,
-  `THE_CROSSING_FILTERS`, `STATUS_COLORS`.
-- [ ] **T0.4** Add pure helpers: `parseContribution(bar)`, `computeFund`,
-  `computeStewardStats`, `recipientsOf`. Default legacy BARs (`status='new'`,
-  `channel='text'`, `amount=null`, `notes=[]`, `notified=false`).
-- [ ] **T0.5** Unit tests `src/lib/__tests__/the-crossing-support-moves.test.ts`:
+  `offerLabel`, `offerPlaceholder`, `detailPlaceholder`). Domain→element via
+  `DOMAIN_ELEMENT` (gather=earth, organize=wood, aware=metal, direct=fire).
+- [x] **T0.3** Constants: `THE_CROSSING_FUND {goal:4800,base:3225}`,
+  `THE_CROSSING_VENMO_HANDLE` (confirmed `wendell-britt`) + `theCrossingVenmoUrl`,
+  `THE_CROSSING_CHANNELS` + `channelLabel`, `THE_CROSSING_FILTERS`,
+  `THE_CROSSING_STATUSES` + `STATUS_META` (status colors).
+- [x] **T0.4** Pure helpers: `parseContribution(bar)`, `computeFund`,
+  `computeStewardStats`, `recipientsOf`, `filterCounts`. Legacy BARs default
+  (`status='new'`, `channel='text'`, `amount=null`, `notes=[]`, `notified=false`).
+- [x] **T0.5** Unit tests `src/lib/__tests__/the-crossing-support-moves.test.ts`:
   alias resolution, `computeFund` (base+amounts, cap 100%),
-  `parseContribution` legacy defaults.
-- [ ] **CHECK 0** `npm run check`.
+  `parseContribution` legacy + full defaults, recipients/filter counts. **Pass.**
+- [x] **CHECK 0** `tsc --noEmit` (0 errors), `eslint` clean, unit test passes.
+  *(Full `npm run check`'s `next build` not run here — heavy/needs DB; the
+  type+lint+test gates are green.)*
 
-## Phase 1 — API (actions before UI)
+## Phase 1 — API (actions before UI) — ✅ DONE
 
-- [ ] **T1.1** Add `submitTheCrossingMove(formData)` in
-  `src/actions/the-crossing-support.ts` (keep `submitTheCrossingSupport` as a
-  thin alias). Read `channel`, `amount`; set initial `status` (donor→accepted,
-  else new), `notes:[]`, `notified:false`; write into `contextLines`; redirect
-  → `…/move/<role>/saved?bar=<id>`.
-- [ ] **T1.2** `assertSteward(playerId, campaignRef)` helper (reuse steward
-  resolution + `assertCanEditInstanceDonation`).
-- [ ] **T1.3** `stewardTransitionContribution({barId,action,message?})` —
-  status table in plan; `log_message` appends `You: "…"` + advances new→contacted;
+- [x] **T1.1** `submitTheCrossingMove(formData)` in
+  `src/actions/the-crossing-support.ts` (legacy `submitTheCrossingSupport`
+  retained, both via shared `createContributionBar`). Reads `channel`, donor
+  `amount`; sets initial `status` (donor→accepted, else new), `notes:[]`,
+  `notified:false`; redirects → `…/move/<role>/saved?bar=<id>`.
+- [x] **T1.2** `assertSteward(playerId, campaignRef)` (reuses `findStewardPlayerId`
+  + `assertCanEditInstanceDonation`); `findStewardPlayerId` exported. **Steward
+  actions read the player from the session cookie — never a client arg.**
+- [x] **T1.3** `stewardTransitionContribution({barId,action,message?})` — status
+  table per plan; `log_message` appends `You: "…"` + advances new→contacted;
   `revalidatePath`.
-- [ ] **T1.4** Campaign-state singleton `CustomBar`
+- [x] **T1.4** Campaign-state singleton `CustomBar`
   (`id:'the-crossing-campaign-state'`, `evidenceKind:'campaign_state'`):
-  `getCampaignState()`, `stewardMarkCarPurchased`, `stewardBroadcastThankYou`
-  (non-declined → thanked+notified; returns recipient count).
-- [ ] **CHECK 1** `npm run check`.
+  `getCampaignState()`, `writeCampaignState`, `stewardMarkCarPurchased`,
+  `stewardBroadcastThankYou` (non-declined → thanked+notified; returns count).
+- [x] **CHECK 1** `tsc --noEmit` 0 errors; `eslint` clean.
 
 ## Phase 2 — Supporter landing (00–01)
 
