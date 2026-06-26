@@ -38,6 +38,7 @@ attribution **without** any notion of developmental stage. (The existing
 | [tap-the-vein-tier-2](../tap-the-vein-tier-2/spec.md) | **Reshaped.** Daily TTV attaches to today's **Lens**; **TTVE** (♦ economy) must populate the new Vibeulon attribution (lens/channel/growthSource); **TTVS/TTV3** run inside the lens flow. Re-scope Tier 2 after Lens P2/P4 land. |
 | [bar-seed-metabolization](../bar-seed-metabolization/spec.md) | **Unchanged and not elevated.** `maturity` stays an optional, play-emergent property — the core loop does not require it. Garden membership is tracked by `gardenId`, **not** by a stage enum. |
 | Vibulon model | Gains attribution fields; `mintVibulon` refit. |
+| [living-world-experience](../living-world-experience/spec.md) | The **experience/UI layer** over this model — Observatory nav, the five destinations, Garden growth language, and the provenance living-timeline UI. |
 
 ## Conceptual Model (WHO / WHAT / WHERE / Energy / Throughput)
 
