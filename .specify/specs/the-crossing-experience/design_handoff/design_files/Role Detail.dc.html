@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0a0908}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+
+<div style="{{ rootVars }}">
+  <div style="min-height:100vh;background:radial-gradient(120% 50% at 50% -6%, var(--gf) 0%, #0a0908 44%), #0a0908;font-family:'Nunito',sans-serif;color:#e8e6e0;padding:18px 18px 80px;">
+    <div style="max-width:680px;margin:0 auto;">
+
+      <!-- ══ BACK / BREADCRUMB ══ -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 2px 22px;">
+        <a href="/campaign/the-crossing" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#a09e98;text-decoration:none;">← The Crossing</a>
+        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gem);">{{ role.domainLabel }}</span>
+      </div>
+
+      <!-- ══ HEADER ══ -->
+      <header style="position:relative;border:1px solid var(--frame);border-radius:18px;background:radial-gradient(140% 120% at 90% -16%, var(--gf), var(--gt) 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);padding:24px 22px;overflow:hidden;">
+        <span aria-hidden="true" style="position:absolute;right:-14px;bottom:-30px;font-size:170px;line-height:1;color:var(--g10);pointer-events:none;">{{ role.sigil }}</span>
+        <div style="position:relative;display:flex;align-items:center;gap:10px;">
+          <span aria-hidden="true" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gem);background:var(--g10);box-shadow:inset 0 0 0 1px var(--g28);">{{ role.sigil }}</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gem);">{{ role.domainLabel }} · Path</span>
+        </div>
+        <h1 style="position:relative;font-family:'Jost',sans-serif;font-weight:700;font-size:42px;line-height:1;letter-spacing:-.02em;color:#f4f2ec;margin:16px 0 0;">{{ role.label }}</h1>
+        <p style="position:relative;font-family:'Nunito',sans-serif;font-size:16px;line-height:1.55;color:#d6d4cd;margin:14px 0 0;max-width:48ch;text-wrap:pretty;">{{ role.overview }}</p>
+      </header>
+
+      <!-- ══ DO THIS NOW ══ -->
+      <section style="margin-top:14px;border:1px solid var(--g28);border-radius:16px;background:#111110;padding:20px 22px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#6b6965;">Do this now</div>
+        <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:19px;color:#f1efe9;margin-top:8px;">{{ role.tinyMove }}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:11px;align-items:center;margin-top:16px;">
+          <a href="{{ role.primaryHref }}" style="font-family:'Jost',sans-serif;font-weight:700;font-size:15px;color:var(--gemInk);background:linear-gradient(150deg,var(--gemLite),var(--gem));border-radius:11px;padding:13px 22px;text-decoration:none;box-shadow:0 10px 24px -12px var(--glow);">{{ role.primaryLabel }} →</a>
+          <a href="{{ role.secondaryHref }}" style="font-family:'Jost',sans-serif;font-weight:600;font-size:14px;color:#a09e98;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:1px;">{{ role.secondaryLabel }}</a>
+        </div>
+      </section>
+
+      <!-- ══ WHY IT MATTERS ══ -->
+      <section style="margin-top:34px;">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6965;">Why it matters</div>
+        <p style="font-family:'Nunito',sans-serif;font-size:16px;line-height:1.6;color:#cfcdc6;margin:12px 0 0;max-width:56ch;text-wrap:pretty;">{{ role.impact }}</p>
+        <div style="margin-top:14px;display:flex;align-items:flex-start;gap:9px;border-left:2px solid var(--g28);padding:2px 0 2px 13px;">
+          <span style="font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;color:#a09e98;">{{ role.boundary }}</span>
+        </div>
+      </section>
+
+      <!-- ══ MOVES YOU CAN MAKE ══ -->
+      <section style="margin-top:34px;">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6965;">What moves can I make?</div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:11px;">
+          <sc-for list="{{ role.examples }}" as="ex" hint-placeholder-count="3">
+            <div style="display:flex;align-items:flex-start;gap:11px;">
+              <span aria-hidden="true" style="flex-shrink:0;margin-top:6px;width:7px;height:7px;border-radius:2px;background:var(--gem);box-shadow:0 0 8px var(--glow);"></span>
+              <span style="font-family:'Nunito',sans-serif;font-size:15px;line-height:1.5;color:#d6d4cd;">{{ ex }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <!-- ══ ALLYSHIP DECK CARDS ══ -->
+      <section style="margin-top:36px;">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6965;">Moves from the Allyship Deck</div>
+        <p style="font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;color:#8f8d87;margin:9px 0 0;max-width:52ch;">These are the deck moves this path draws on. Each one is a small, real action you can log.</p>
+        <div style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;align-items:start;">
+          <dc-import name="AllyshipCard" card="{{ role.card1 }}" mod="{{ role.mod1 }}" status="signedout" collapsible="{{ false }}" defaultExpanded="{{ true }}" hint-size="100%,452px"></dc-import>
+          <dc-import name="AllyshipCard" card="{{ role.card2 }}" mod="{{ role.mod2 }}" status="signedout" collapsible="{{ false }}" defaultExpanded="{{ true }}" hint-size="100%,452px"></dc-import>
+        </div>
+      </section>
+
+      <!-- ══ SAVE THIS CONTRIBUTION ══ -->
+      <section style="margin-top:36px;border:1px solid rgba(124,58,237,.36);border-radius:16px;background:radial-gradient(130% 120% at 88% -16%, #211a3d, #120e22 72%);padding:22px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#a78bfa;">Make it count</div>
+        <h2 style="font-family:'Jost',sans-serif;font-weight:700;font-size:21px;color:#f4f2ec;margin:8px 0 0;">Save this contribution</h2>
+        <p style="font-family:'Nunito',sans-serif;font-size:14.5px;line-height:1.55;color:#b9b2d6;margin:8px 0 0;max-width:50ch;">Create your BARS Engine account so your move is tracked, credited, and followed up on — it becomes a BAR the campaign can build on.</p>
+        <a href="/login?next=/campaign/the-crossing" style="display:inline-block;margin-top:16px;font-family:'Jost',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(150deg,#8b5cf6,#7c3aed);border-radius:11px;padding:13px 22px;text-decoration:none;box-shadow:0 10px 26px -12px #7c3aed,inset 0 1px 0 rgba(255,255,255,.18);">Save this contribution →</a>
+      </section>
+
+      <!-- ══ SUPERPOWER QUIZ FALLBACK ══ -->
+      <section style="margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:13px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:#111110;padding:18px 22px;">
+        <div style="min-width:0;">
+          <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:16px;color:#f1efe9;">Not sure this is your role?</div>
+          <div style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.45;color:#a09e98;margin-top:3px;">The Superpower Quiz points you to where you’re strongest.</div>
+        </div>
+        <a href="/superpower" style="font-family:'Jost',sans-serif;font-weight:600;font-size:13.5px;color:#cdbff5;border:1px solid rgba(124,58,237,.42);border-radius:10px;padding:10px 16px;text-decoration:none;white-space:nowrap;">Take the quiz →</a>
+      </section>
+
+      <p style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.6;color:#6b6965;margin:28px 2px 0;max-width:56ch;text-wrap:pretty;">Part of The Crossing — the community route into the Allyship Launch + Barn Raising. Care becomes a role, a role becomes a move, a move becomes evidence.</p>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:960},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;car_scout&quot;,&quot;car_expert&quot;,&quot;connector&quot;,&quot;signal_booster&quot;,&quot;encourager&quot;,&quot;donor&quot;],&quot;default&quot;:&quot;car_scout&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;venmoHandle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;wendell-britt&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  EL = {
+    earth: { frame:'#b5651d', glow:'#d4a017', gem:'#e0a93b', gf:'#451a03', gt:'#1a0a00', sigil:'土' },
+    wood:  { frame:'#4a7c59', glow:'#27ae60', gem:'#2ecc71', gf:'#052e16', gt:'#011309', sigil:'木' },
+    metal: { frame:'#8e9aab', glow:'#bdc3c7', gem:'#cdd2d6', gf:'#1e2530', gt:'#0d1017', sigil:'金' },
+    fire:  { frame:'#c1392b', glow:'#e8671a', gem:'#e8694a', gf:'#431407', gt:'#1c0700', sigil:'火' },
+    water: { frame:'#1a3a5c', glow:'#1a7a8a', gem:'#3a93c8', gf:'#0c1e3e', gt:'#020c1f', sigil:'水' },
+  };
+  DOMAIN = {
+    gather:   { el:'earth', label:'Gather Resources' },
+    organize: { el:'wood',  label:'Skillful Organizing' },
+    aware:    { el:'metal', label:'Raise Awareness' },
+    direct:   { el:'fire',  label:'Direct Action' },
+  };
+
+  ROLES = {
+    car_scout: {
+      dom:'gather', label:'Car Scout',
+      overview:'You find viable cars, listings, and vehicle paths — turning an open question into real options Wendell can act on.',
+      tinyMove:'Send one promising car listing.',
+      impact:'A car fund with no leads stays stuck. Every concrete option you surface turns waiting into a decision Wendell can actually make.',
+      boundary:'Use this path when you’ve spotted a car or a vehicle lead.',
+      examples:[
+        'Drop a Marketplace or Craigslist link that fits the budget and need.',
+        'Flag a dealer you trust with reliable, well-priced used cars.',
+        'Send a known-good make and model plus its going price range.',
+      ],
+      primaryLabel:'Send a car lead', primaryHref:'mailto:wendell@masteringallyship.com?subject=Car%20lead%20for%20The%20Crossing',
+      secondaryLabel:'Save this as a BAR →', secondaryHref:'/login?next=/campaign/the-crossing',
+      card1:{ id:'OPEN-GR-ARCHITECT', num:'041', title:'Map the Field', move:'open', moveLabel:'Open', face:'architect', faceLabel:'Architect', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Where could a reliable car actually come from?', yield:2 },
+      mod1:{ spKey:'strategist', spLabel:'Scout', contribution:'Surface one concrete car lead Wendell can act on.', artifact:'A listing link + one line on why it fits.', ask:'1 lead' },
+      card2:{ id:'WAKE-SO-ARCHITECT', num:'047', title:'Name the Constraint', move:'wake', moveLabel:'Wake Up', face:'architect', faceLabel:'Architect', el:'wood', domain:'organize', domainLabel:'Skillful Organizing', q:'What actually limits which cars are viable?', yield:2 },
+      mod2:{ spKey:'strategist', spLabel:'Scout', contribution:'Name the real budget, timing, or reliability limit.', artifact:'One sentence on the true constraint.', ask:'1 note' },
+    },
+    car_expert: {
+      dom:'organize', label:'Car Expert',
+      overview:'You evaluate listings, repairs, title risk, and buying strategy — making sure a good decision happens and a costly one doesn’t.',
+      tinyMove:'Sanity-check one listing.',
+      impact:'A wrong car drains the fund twice. Your judgment lowers the risk and lets a good decision happen faster and with more confidence.',
+      boundary:'Use this path when you know cars or can vet a specific option.',
+      examples:[
+        'Read a listing and call out title, mileage, or odometer risk.',
+        'Estimate the likely repair costs from the photos and description.',
+        'Suggest a fair max offer and a clear walk-away price.',
+      ],
+      primaryLabel:'Offer car judgment', primaryHref:'mailto:wendell@masteringallyship.com?subject=Car%20judgment%20for%20The%20Crossing',
+      secondaryLabel:'Save this as a BAR →', secondaryHref:'/login?next=/campaign/the-crossing',
+      card1:{ id:'SHOW-SO-ARCHITECT', num:'066', title:'Pressure-Test the Plan', move:'show', moveLabel:'Show Up', face:'architect', faceLabel:'Architect', el:'wood', domain:'organize', domainLabel:'Skillful Organizing', q:'Does this car, price, and title actually hold up?', yield:3 },
+      mod1:{ spKey:'strategist', spLabel:'Mechanic', contribution:'Vet one listing for repairs, title, and scams.', artifact:'A short go / no-go with reasons.', ask:'1 review' },
+      card2:{ id:'WAKE-DA-CHALLENGER', num:'029', title:'Spot the Red Flag', move:'wake', moveLabel:'Wake Up', face:'challenger', faceLabel:'Challenger', el:'fire', domain:'direct', domainLabel:'Direct Action', q:'What would make this a bad buy?', yield:2 },
+      mod2:{ spKey:'disruptor', spLabel:'Mechanic', contribution:'Flag the one thing that would make this a no.', artifact:'A blunt heads-up before money moves.', ask:'1 flag' },
+    },
+    connector: {
+      dom:'gather', label:'Connector',
+      overview:'You make warm human introductions that unlock resources — building the bridge between Wendell and the person who can help.',
+      tinyMove:'Make one warm introduction.',
+      impact:'Most help arrives through someone who knows someone. A single warm intro can open a door that no amount of searching would.',
+      boundary:'Use this path when you know someone who should talk to Wendell.',
+      examples:[
+        'Introduce Wendell to a mechanic or car-savvy friend.',
+        'Connect him to someone who sells reliable used cars.',
+        'Loop in a community member who has a funding lead.',
+      ],
+      primaryLabel:'Make an intro', primaryHref:'mailto:wendell@masteringallyship.com?subject=Warm%20intro%20for%20The%20Crossing',
+      secondaryLabel:'Save this as a BAR →', secondaryHref:'/login?next=/campaign/the-crossing',
+      card1:{ id:'WAKE-GR-DIPLOMAT', num:'005', title:'Who Holds the Keys', move:'wake', moveLabel:'Wake Up', face:'diplomat', faceLabel:'Diplomat', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Who in your network could move this forward?', yield:2 },
+      mod1:{ spKey:'connector', spLabel:'Connector', contribution:'Make one warm introduction toward a car or funds.', artifact:'A warm intro + one line of context.', ask:'1 intro' },
+      card2:{ id:'SHOW-GR-DIPLOMAT', num:'012', title:'Open the Door', move:'show', moveLabel:'Show Up', face:'diplomat', faceLabel:'Diplomat', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Who can you actually put in the room?', yield:2 },
+      mod2:{ spKey:'connector', spLabel:'Connector', contribution:'Bring two people together with a clear ask.', artifact:'An intro thread with the why up top.', ask:'1 thread' },
+    },
+    signal_booster: {
+      dom:'aware', label:'Signal Booster',
+      overview:'You share the ask strategically, with context — reaching the people Wendell can’t and telling them why it matters.',
+      tinyMove:'Share the post with one sentence on why it matters.',
+      impact:'The campaign can only travel as far as its reach. Your share, with your voice on it, extends it to people who’d never see it otherwise.',
+      boundary:'Use this path when your most useful move is reaching your people.',
+      examples:[
+        'Repost the ask with one line about why it matters to you.',
+        'Send it to a group chat or list that would care.',
+        'Tag two people who always show up for things like this.',
+      ],
+      primaryLabel:'Share the ask', primaryHref:'/campaign/the-crossing/share',
+      secondaryLabel:'Save this as a BAR →', secondaryHref:'/login?next=/campaign/the-crossing',
+      card1:{ id:'SHOW-RA-DIPLOMAT', num:'088', title:'Carry the Signal', move:'show', moveLabel:'Show Up', face:'diplomat', faceLabel:'Diplomat', el:'metal', domain:'aware', domainLabel:'Raise Awareness', q:'Who needs to hear this that hasn’t yet?', yield:1 },
+      mod1:{ spKey:'storyteller', spLabel:'Amplifier', contribution:'Share the ask with one sentence on why it matters.', artifact:'A post or story with the link.', ask:'1 share' },
+      card2:{ id:'SHOW-RA-SAGE', num:'091', title:'Frame the Why', move:'show', moveLabel:'Show Up', face:'sage', faceLabel:'Sage', el:'metal', domain:'aware', domainLabel:'Raise Awareness', q:'What context makes people actually care?', yield:1 },
+      mod2:{ spKey:'storyteller', spLabel:'Amplifier', contribution:'Add the one detail that makes the ask land.', artifact:'A caption that frames the stakes.', ask:'1 caption' },
+    },
+    encourager: {
+      dom:'direct', label:'Encourager',
+      overview:'You reach out, reflect momentum, and encourage aligned action — keeping the person, and the next move, alive.',
+      tinyMove:'Send one check-in or encouragement.',
+      impact:'Hard stretches end in isolation, not failure. A timely note reminds Wendell he isn’t doing this alone and keeps the next move possible.',
+      boundary:'Use this path when your gift is helping people stay in motion.',
+      examples:[
+        'Text Wendell that you’ve got his back this week.',
+        'Voice-note someone on the team to keep momentum up.',
+        'Leave a comment that keeps the thread alive and warm.',
+      ],
+      primaryLabel:'Send encouragement', primaryHref:'mailto:wendell@masteringallyship.com?subject=Encouragement%20for%20The%20Crossing',
+      secondaryLabel:'Save this as a BAR →', secondaryHref:'/login?next=/campaign/the-crossing',
+      card1:{ id:'SHOW-DA-REGENT', num:'073', title:'Keep the Engine Warm', move:'show', moveLabel:'Show Up', face:'regent', faceLabel:'Regent', el:'fire', domain:'direct', domainLabel:'Direct Action', q:'Who needs to know they’re not doing this alone?', yield:1 },
+      mod1:{ spKey:'coach', spLabel:'Encourager', contribution:'Send one note that keeps momentum alive.', artifact:'A check-in message.', ask:'1 note' },
+      card2:{ id:'OPEN-GR-DIPLOMAT', num:'009', title:'Widen the Circle', move:'open', moveLabel:'Open', face:'diplomat', faceLabel:'Diplomat', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Who else should know they can help?', yield:1 },
+      mod2:{ spKey:'coach', spLabel:'Encourager', contribution:'Invite one more person into the effort.', artifact:'A nudge that brings someone in.', ask:'1 invite' },
+    },
+    donor: {
+      dom:'gather', label:'Donor', isDonor:true,
+      overview:'Money, time, expertise, space, tools, or temporary transport — donations of all kinds count. Give the way you actually can.',
+      tinyMove:'Donate, lend, or share the link.',
+      impact:'This is the most direct fuel for the car-replacement effort — but a borrowed car, a free repair, or a place to work counts just as much.',
+      boundary:'Use this path when you can materially support the campaign.',
+      examples:[
+        'Send any amount on Venmo — every bit is fuel.',
+        'Lend a reliable car for a week while he searches.',
+        'Offer a garage, tools, or an afternoon of hands-on help.',
+      ],
+      primaryLabel:'Send Venmo',
+      secondaryLabel:'Offer another resource →', secondaryHref:'mailto:wendell@masteringallyship.com?subject=Resource%20offer%20for%20The%20Crossing',
+      card1:{ id:'SHOW-GR-ARCHITECT', num:'052', title:'Add Real Fuel', move:'show', moveLabel:'Show Up', face:'architect', faceLabel:'Architect', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'What can you put in that moves this now?', yield:2 },
+      mod1:{ spKey:'connector', spLabel:'Patron', contribution:'Contribute money, time, tools, or transport.', artifact:'A contribution + a note on what it is.', ask:'Any' },
+      card2:{ id:'WAKE-GR-DIPLOMAT', num:'005', title:'Who Holds the Keys', move:'wake', moveLabel:'Wake Up', face:'diplomat', faceLabel:'Diplomat', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Who holds resources or permission here?', yield:2 },
+      mod2:{ spKey:'connector', spLabel:'Patron', contribution:'Point your resource at the clearest need.', artifact:'A gift matched to what’s missing.', ask:'1 match' },
+    },
+  };
+
+  _rgb(h){ const n = parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+  rgba(h,a){ const [r,g,b]=this._rgb(h); return 'rgba('+r+','+g+','+b+','+a+')'; }
+  mix(h1,h2,t){ const a=this._rgb(h1), b=this._rgb(h2); const m=i=>Math.round(a[i]*t+b[i]*(1-t)); return 'rgb('+m(0)+','+m(1)+','+m(2)+')'; }
+
+  venmoHref(){
+    const h = (this.props.venmoHandle || 'wendell-britt').trim();
+    if (/^https?:\/\//i.test(h)) return h;
+    return 'https://venmo.com/u/' + h.replace(/^@/,'');
+  }
+
+  renderVals(){
+    const id = this.ROLES[this.props.role] ? this.props.role : 'car_scout';
+    const r = this.ROLES[id];
+    const dom = this.DOMAIN[r.dom];
+    const c = this.EL[dom.el];
+    const rootVars = {
+      '--frame':c.frame, '--glow':c.glow, '--gem':c.gem, '--gf':c.gf, '--gt':c.gt,
+      '--g10':this.rgba(c.gem,0.10), '--g28':this.rgba(c.gem,0.28),
+      '--gemLite':this.mix(c.gem,'#ffffff',0.84), '--gemInk':this.mix(c.gem,'#0a0805',0.14),
+    };
+    return {
+      rootVars,
+      role: {
+        label:r.label, domainLabel:dom.label, sigil:c.sigil,
+        overview:r.overview, tinyMove:r.tinyMove, impact:r.impact, boundary:r.boundary,
+        examples:r.examples,
+        primaryLabel:r.primaryLabel,
+        primaryHref: r.isDonor ? this.venmoHref() : r.primaryHref,
+        secondaryLabel:r.secondaryLabel, secondaryHref:r.secondaryHref,
+        card1:r.card1, mod1:r.mod1, card2:r.card2, mod2:r.mod2,
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

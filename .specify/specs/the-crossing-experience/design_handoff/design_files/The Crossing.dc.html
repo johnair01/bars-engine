@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0a0908}
+  @keyframes xfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @keyframes xglow{0%,100%{opacity:.5}50%{opacity:.85}}
+  @keyframes xfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(120% 60% at 50% -8%, #16121f 0%, #0a0908 46%), #0a0908;font-family:'Nunito',sans-serif;color:#e8e6e0;padding:18px 18px 80px;">
+  <div style="max-width:760px;margin:0 auto;">
+
+    <!-- ══ CHROME BAR ══ -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 2px 26px;">
+      <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#a09e98;">The Crossing</span>
+      <a href="/awaken" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7c7a74;text-decoration:none;">Book-launch weekend →</a>
+    </div>
+
+    <!-- ══ HERO ══ -->
+    <header style="position:relative;padding:6px 2px 8px;">
+      <a href="/campaign/mtgoa-barn-raising" style="display:inline-flex;align-items:center;gap:7px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#a78bfa;text-decoration:none;">
+        <span style="color:#7c3aed;">◇</span> Part of the Allyship Launch · Barn Raising
+      </a>
+      <h1 style="font-family:'Jost',sans-serif;font-weight:700;font-size:54px;line-height:.98;letter-spacing:-.03em;color:#f4f2ec;margin:16px 0 0;">The Crossing</h1>
+      <p style="font-family:'Jost',sans-serif;font-weight:500;font-size:23px;line-height:1.25;letter-spacing:-.01em;color:#e8e6e0;margin:18px 0 0;max-width:30ch;">Wendell needs a reliable car to keep showing up.</p>
+      <p style="font-family:'Nunito',sans-serif;font-size:15.5px;line-height:1.6;color:#a09e98;margin:12px 0 0;max-width:52ch;">Every kind of help moves this forward. Choose the path that fits what you can actually offer.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:11px;margin-top:24px;">
+        <a href="#paths" style="font-family:'Jost',sans-serif;font-weight:600;font-size:15px;color:#fff;background:linear-gradient(150deg,#8b5cf6,#7c3aed);border-radius:11px;padding:13px 22px;text-decoration:none;box-shadow:0 10px 26px -12px #7c3aed,inset 0 1px 0 rgba(255,255,255,.18);">Choose Your Move →</a>
+        <a href="#story" style="font-family:'Jost',sans-serif;font-weight:600;font-size:15px;color:#cdbff5;background:transparent;border:1px solid rgba(124,58,237,.42);border-radius:11px;padding:13px 22px;text-decoration:none;">Read the full story</a>
+      </div>
+    </header>
+
+    <!-- ══ STORY PREVIEW ══ -->
+    <section id="story" style="margin-top:46px;border-top:1px solid rgba(255,255,255,.07);padding-top:26px;">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6965;">The Story</div>
+      <p style="font-family:'Nunito',sans-serif;font-size:16px;line-height:1.62;color:#cfcdc6;margin:14px 0 0;max-width:58ch;text-wrap:pretty;">Wendell’s car finally gave out — the one that carried him to every room where this work happens. The Crossing is how his community helps replace it, together, in time for the launch. Not charity. Fuel for showing up.</p>
+      <a href="/campaign/the-crossing/story" style="display:inline-block;margin-top:14px;font-family:'Jost',sans-serif;font-weight:600;font-size:14px;color:#a78bfa;text-decoration:none;">Read the whole story →</a>
+    </section>
+
+    <!-- ══ HOW TO PLAY ══ -->
+    <section style="margin-top:40px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:#111110;padding:20px 20px 22px;">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6965;">How to Play</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px;">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <span style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#0a0908;background:#d4a017;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;">1</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.4;color:#cfcdc6;">Pick the path that fits your real capacity.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <span style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#0a0908;background:#2ecc71;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;">2</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.4;color:#cfcdc6;">Each path gives you one small, concrete move.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <span style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#0a0908;background:#a855f7;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;">3</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.4;color:#cfcdc6;">Your move becomes a <span style="color:#e8e6e0;font-weight:700;">BAR</span> the campaign can follow up on.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CHOOSE A PATH ══ -->
+    <section id="paths" style="margin-top:48px;">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6965;">Choose a Path</div>
+      <h2 style="font-family:'Jost',sans-serif;font-weight:700;font-size:30px;letter-spacing:-.02em;color:#f4f2ec;margin:10px 0 0;">Choose your move.</h2>
+      <p style="font-family:'Nunito',sans-serif;font-size:15px;line-height:1.55;color:#a09e98;margin:10px 0 0;max-width:54ch;">Six ways in, grouped by the four domains of allyship. Tap a path to see the move — and the starter card it draws.</p>
+
+      <div style="margin-top:26px;display:flex;flex-direction:column;gap:30px;">
+        <sc-for list="{{ sections }}" as="section" hint-placeholder-count="4">
+          <div>
+            <!-- gate header -->
+            <sc-if value="{{ section.isGate }}" hint-placeholder-val="{{ true }}">
+              <div style="{{ section.headVars }}">
+                <div style="display:flex;align-items:center;gap:12px;padding:0 2px 14px;">
+                  <span style="font-family:'Nunito',sans-serif;font-size:26px;line-height:1;color:var(--gem);text-shadow:0 0 16px var(--g45);flex-shrink:0;">{{ section.sigil }}</span>
+                  <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+                    <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gem);">{{ section.label }}</span>
+                    <span style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.4;color:#8f8d87;">{{ section.blurb }}</span>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- role cards -->
+            <div style="display:flex;flex-direction:column;gap:11px;">
+              <sc-for list="{{ section.roles }}" as="role" hint-placeholder-count="2">
+                <div style="{{ role.vars }}">
+                  <button onClick="{{ role.onToggle }}" aria-expanded="{{ role.open }}" style="display:flex;width:100%;align-items:center;gap:13px;text-align:left;cursor:pointer;border:1px solid var(--frame);border-radius:15px;background:radial-gradient(135% 130% at 90% -14%, var(--gf), var(--gt) 72%);padding:15px 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);-webkit-tap-highlight-color:transparent;color:#e8e6e0;font-family:'Nunito',sans-serif;">
+                    <span aria-hidden="true" style="width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:23px;color:var(--gem);background:var(--g10);box-shadow:inset 0 0 0 1px var(--g28);">{{ role.sigil }}</span>
+                    <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+                      <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <span style="font-family:'Jost',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.01em;color:#f1efe9;white-space:nowrap;">{{ role.label }}</span>
+                        <sc-if value="{{ role.showDomainBadge }}" hint-placeholder-val="">
+                          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--gem);background:var(--g10);border:1px solid var(--g28);border-radius:99px;padding:2px 7px;">{{ role.domainLabel }}</span>
+                        </sc-if>
+                      </span>
+                      <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.4;color:#a09e98;">{{ role.tinyMove }}</span>
+                    </span>
+                    <span style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                      <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gem);white-space:nowrap;">{{ role.exploreShort }}</span>
+                      <span style="font-family:'Space Mono',monospace;font-size:11px;color:#8c8a83;white-space:nowrap;">{{ role.chev }}</span>
+                    </span>
+                  </button>
+
+                  <sc-if value="{{ role.open }}" hint-placeholder-val="">
+                    <div style="animation:xfade .28s ease-out;border:1px solid var(--g28);border-top:none;border-radius:0 0 15px 15px;margin:-4px 5px 0;background:#111110;padding:18px 18px 18px;">
+                      <p style="font-family:'Nunito',sans-serif;font-size:15px;line-height:1.55;color:#cfcdc6;margin:0;text-wrap:pretty;">{{ role.desc }}</p>
+
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Tiny move</span>
+                          <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.4;color:#e8e6e0;">{{ role.tinyMove }}</span>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Creates</span>
+                          <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.4;color:var(--gem);">{{ role.artifact }}</span>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:4px;grid-column:1 / -1;">
+                          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Why it matters</span>
+                          <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.45;color:#cfcdc6;">{{ role.impact }}</span>
+                        </div>
+                      </div>
+
+                      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Deck moves</span>
+                        <sc-for list="{{ role.codes }}" as="code" hint-placeholder-count="2">
+                          <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.04em;color:#cdcbc4;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:3px 8px;">{{ code }}</span>
+                        </sc-for>
+                      </div>
+
+                      <sc-if value="{{ role.showCard }}" hint-placeholder-val="{{ true }}">
+                        <div style="margin-top:18px;">
+                          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6b6965;">Starter card · Allyship Deck</div>
+                          <div style="margin-top:11px;max-width:320px;">
+                            <dc-import name="AllyshipCard" card="{{ role.card }}" mod="{{ role.mod }}" status="signedout" collapsible="{{ false }}" defaultExpanded="{{ true }}" hint-size="100%,452px"></dc-import>
+                          </div>
+                        </div>
+                      </sc-if>
+
+                      <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:11px;align-items:center;">
+                        <a href="{{ role.primaryHref }}" style="font-family:'Jost',sans-serif;font-weight:700;font-size:14.5px;color:var(--gemInk);background:linear-gradient(150deg,var(--gemLite),var(--gem));border-radius:10px;padding:11px 18px;text-decoration:none;box-shadow:0 8px 20px -10px var(--glow);">{{ role.primaryLabel }} →</a>
+                        <a href="{{ role.secondaryHref }}" style="font-family:'Jost',sans-serif;font-weight:600;font-size:13.5px;color:#a09e98;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:1px;">{{ role.secondaryLabel }}</a>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ══ SUPERPOWER QUIZ FALLBACK ══ -->
+    <section style="margin-top:44px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:#111110;padding:20px 22px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+      <div style="min-width:0;">
+        <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:17px;color:#f1efe9;">Not sure this is your role?</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.45;color:#a09e98;margin-top:4px;">The Superpower Quiz points you to where you’re strongest.</div>
+      </div>
+      <a href="/superpower" style="font-family:'Jost',sans-serif;font-weight:600;font-size:14px;color:#cdbff5;background:transparent;border:1px solid rgba(124,58,237,.42);border-radius:10px;padding:11px 18px;text-decoration:none;white-space:nowrap;">Take the Superpower Quiz →</a>
+    </section>
+
+    <!-- ══ AWAKEN CROSS-LINK ══ -->
+    <a href="/awaken" style="display:block;text-decoration:none;margin-top:14px;border:1px solid rgba(42,122,138,.34);border-radius:16px;background:radial-gradient(130% 120% at 88% -14%, #0c1e3e, #06121f 72%);padding:20px 22px;">
+      <div style="display:flex;align-items:center;gap:13px;">
+        <span aria-hidden="true" style="width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;color:#3a93c8;background:rgba(58,147,200,.1);box-shadow:inset 0 0 0 1px rgba(58,147,200,.3);">水</span>
+        <div style="min-width:0;flex:1;">
+          <div style="font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#5f8fa6;">The wider weekend</div>
+          <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:17px;color:#f1efe9;margin-top:3px;">Here for the book launch?</div>
+          <div style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.45;color:#a8b6bf;margin-top:3px;">Three gatherings July 17–19 and Chapter One, free — over at <span style="color:#7fc4e0;">/awaken</span>.</div>
+        </div>
+        <span style="font-family:'Space Mono',monospace;font-size:14px;color:#5f8fa6;flex-shrink:0;">→</span>
+      </div>
+    </a>
+
+    <!-- ══ FINE PRINT ══ -->
+    <p style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.6;color:#6b6965;margin:30px 2px 0;max-width:58ch;text-wrap:pretty;">An early BARS Engine experience in the wild: care becomes a role, a role becomes a move, and a move becomes evidence the campaign can follow up on.</p>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:920},&quot;domainGates&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showStarterCards&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;venmoHandle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;wendell-britt&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  EL = {
+    earth: { frame:'#b5651d', glow:'#d4a017', gem:'#e0a93b', gf:'#451a03', gt:'#1a0a00', sigil:'土' },
+    wood:  { frame:'#4a7c59', glow:'#27ae60', gem:'#2ecc71', gf:'#052e16', gt:'#011309', sigil:'木' },
+    metal: { frame:'#8e9aab', glow:'#bdc3c7', gem:'#cdd2d6', gf:'#1e2530', gt:'#0d1017', sigil:'金' },
+    fire:  { frame:'#c1392b', glow:'#e8671a', gem:'#e8694a', gf:'#431407', gt:'#1c0700', sigil:'火' },
+    water: { frame:'#1a3a5c', glow:'#1a7a8a', gem:'#3a93c8', gf:'#0c1e3e', gt:'#020c1f', sigil:'水' },
+  };
+
+  DOMAIN = {
+    gather:   { el:'earth', label:'Gather Resources',   blurb:'Bring something real into the field — leads, people, fuel.' },
+    organize: { el:'wood',  label:'Skillful Organizing', blurb:'Bring the know-how that turns options into a good decision.' },
+    aware:    { el:'metal', label:'Raise Awareness',    blurb:'Carry the signal past Wendell’s own reach.' },
+    direct:   { el:'fire',  label:'Direct Action',      blurb:'Move first — keep momentum and people in motion.' },
+  };
+
+  ROLES = {
+    car_scout: {
+      dom:'gather', label:'Car Scout', explore:'Explore',
+      desc:'Find viable cars, listings, and vehicle paths. You turn an open question into options Wendell can actually act on.',
+      tinyMove:'Send one promising car listing.',
+      artifact:'Listing lead',
+      impact:'Turns the open field into concrete options.',
+      codes:['OPEN-GR-ARCHITECT','WAKE-SO-ARCHITECT'],
+      primaryLabel:'Send a car lead', primaryHref:'/campaign/the-crossing/role/car-scout',
+      secondaryLabel:'Save this as a BAR', secondaryHref:'/awaken',
+      card:{ id:'OPEN-GR-ARCHITECT', num:'041', title:'Map the Field', move:'open', moveLabel:'Open', face:'architect', faceLabel:'Architect', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Where could a reliable car actually come from?', yield:2 },
+      mod:{ spKey:'strategist', spLabel:'Scout', contribution:'Surface one concrete car lead Wendell can act on.', artifact:'A listing link + one line on why it fits.', ask:'1 lead' },
+    },
+    car_expert: {
+      dom:'organize', label:'Car Expert', explore:'Explore',
+      desc:'Evaluate listings, repairs, title risk, and buying strategy. You make sure a good decision happens — and a bad one doesn’t.',
+      tinyMove:'Sanity-check one listing.',
+      artifact:'Listing review',
+      impact:'Reduces risk so a good decision happens faster.',
+      codes:['SHOW-SO-ARCHITECT','WAKE-DA-CHALLENGER'],
+      primaryLabel:'Offer car judgment', primaryHref:'/campaign/the-crossing/role/car-expert',
+      secondaryLabel:'Save this as a BAR', secondaryHref:'/awaken',
+      card:{ id:'SHOW-SO-ARCHITECT', num:'066', title:'Pressure-Test the Plan', move:'show', moveLabel:'Show Up', face:'architect', faceLabel:'Architect', el:'wood', domain:'organize', domainLabel:'Skillful Organizing', q:'Does this car, price, and title actually hold up?', yield:3 },
+      mod:{ spKey:'strategist', spLabel:'Mechanic', contribution:'Vet one listing for repairs, title, and scams.', artifact:'A short go / no-go with reasons.', ask:'1 review' },
+    },
+    connector: {
+      dom:'gather', label:'Connector', explore:'Explore',
+      desc:'Make warm human introductions that unlock resources. You build the bridge between Wendell and the person who can help.',
+      tinyMove:'Make one warm introduction.',
+      artifact:'Warm intro',
+      impact:'Builds a person-to-person bridge that didn’t exist before.',
+      codes:['WAKE-GR-DIPLOMAT','SHOW-GR-DIPLOMAT'],
+      primaryLabel:'Make an intro', primaryHref:'/campaign/the-crossing/role/connector',
+      secondaryLabel:'Save this as a BAR', secondaryHref:'/awaken',
+      card:{ id:'WAKE-GR-DIPLOMAT', num:'005', title:'Who Holds the Keys', move:'wake', moveLabel:'Wake Up', face:'diplomat', faceLabel:'Diplomat', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Who in your network could move this forward?', yield:2 },
+      mod:{ spKey:'connector', spLabel:'Connector', contribution:'Make one warm introduction toward a car or funds.', artifact:'A warm intro + one line of context.', ask:'1 intro' },
+    },
+    signal_booster: {
+      dom:'aware', label:'Signal Booster', explore:'Explore',
+      desc:'Share the ask strategically, with context. You reach the people Wendell can’t — and tell them why it matters.',
+      tinyMove:'Share the post with one sentence on why it matters.',
+      artifact:'Signal boost',
+      impact:'Extends the campaign past Wendell’s own reach.',
+      codes:['SHOW-RA-DIPLOMAT','SHOW-RA-SAGE'],
+      primaryLabel:'Share the ask', primaryHref:'/campaign/the-crossing/role/signal-booster',
+      secondaryLabel:'Save this as a BAR', secondaryHref:'/awaken',
+      card:{ id:'SHOW-RA-DIPLOMAT', num:'088', title:'Carry the Signal', move:'show', moveLabel:'Show Up', face:'diplomat', faceLabel:'Diplomat', el:'metal', domain:'aware', domainLabel:'Raise Awareness', q:'Who needs to hear this that hasn’t yet?', yield:1 },
+      mod:{ spKey:'storyteller', spLabel:'Amplifier', contribution:'Share the ask with one sentence on why it matters.', artifact:'A post or story with the link.', ask:'1 share' },
+    },
+    encourager: {
+      dom:'direct', label:'Encourager', explore:'Explore',
+      desc:'Reach out, reflect momentum, and encourage aligned action. You keep the person — and the next move — alive.',
+      tinyMove:'Send one check-in or encouragement.',
+      artifact:'Encouragement note',
+      impact:'Reduces isolation and keeps the next move alive.',
+      codes:['SHOW-DA-REGENT','OPEN-GR-DIPLOMAT'],
+      primaryLabel:'Send encouragement', primaryHref:'/campaign/the-crossing/role/encourager',
+      secondaryLabel:'Save this as a BAR', secondaryHref:'/awaken',
+      card:{ id:'SHOW-DA-REGENT', num:'073', title:'Keep the Engine Warm', move:'show', moveLabel:'Show Up', face:'regent', faceLabel:'Regent', el:'fire', domain:'direct', domainLabel:'Direct Action', q:'Who needs to know they’re not doing this alone?', yield:1 },
+      mod:{ spKey:'coach', spLabel:'Encourager', contribution:'Send one note that keeps momentum alive.', artifact:'A check-in message.', ask:'1 note' },
+    },
+    donor: {
+      dom:'gather', label:'Donor', explore:'Give', isDonor:true,
+      desc:'Money, time, expertise, space, tools, or temporary transport. Donations of all kinds count — give the way you can.',
+      tinyMove:'Donate, lend, or share the link.',
+      artifact:'Contribution',
+      impact:'Adds real fuel to the car-replacement effort.',
+      codes:['WAKE-GR-DIPLOMAT','SHOW-GR-ARCHITECT'],
+      primaryLabel:'Send Venmo',
+      secondaryLabel:'Offer another resource', secondaryHref:'/campaign/the-crossing/role/donor',
+      card:{ id:'SHOW-GR-ARCHITECT', num:'052', title:'Add Real Fuel', move:'show', moveLabel:'Show Up', face:'architect', faceLabel:'Architect', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'What can you put in that moves this now?', yield:2 },
+      mod:{ spKey:'connector', spLabel:'Patron', contribution:'Contribute money, time, tools, or transport.', artifact:'A contribution + a note on what it is.', ask:'Any' },
+    },
+  };
+
+  GROUPED = [
+    { dom:'gather',   roles:['car_scout','connector','donor'] },
+    { dom:'organize', roles:['car_expert'] },
+    { dom:'aware',    roles:['signal_booster'] },
+    { dom:'direct',   roles:['encourager'] },
+  ];
+  FLAT = ['car_scout','car_expert','connector','signal_booster','encourager','donor'];
+
+  state = { open: null };
+
+  _rgb(h){ const n = parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+  rgba(h,a){ const [r,g,b]=this._rgb(h); return 'rgba('+r+','+g+','+b+','+a+')'; }
+  mix(h1,h2,t){ const a=this._rgb(h1), b=this._rgb(h2); const m=i=>Math.round(a[i]*t+b[i]*(1-t)); return 'rgb('+m(0)+','+m(1)+','+m(2)+')'; }
+
+  varsFor(elKey){
+    const c = this.EL[elKey] || this.EL.earth;
+    return {
+      '--frame':c.frame, '--glow':c.glow, '--gem':c.gem, '--gf':c.gf, '--gt':c.gt,
+      '--g10':this.rgba(c.gem,0.10), '--g28':this.rgba(c.gem,0.28), '--g45':this.rgba(c.gem,0.45),
+      '--gemLite':this.mix(c.gem,'#ffffff',0.84), '--gemInk':this.mix(c.gem,'#0a0805',0.14),
+    };
+  }
+
+  venmoHref(){
+    const h = (this.props.venmoHandle || 'wendell-britt').trim();
+    if (/^https?:\/\//i.test(h)) return h;
+    return 'https://venmo.com/u/' + h.replace(/^@/,'');
+  }
+
+  flowHref(roleId, go){
+    return 'The%20Crossing%20-%20Flow.dc.html?role=' + encodeURIComponent(roleId) + '&go=' + (go || 'capture');
+  }
+
+  buildRole(id){
+    const r = this.ROLES[id];
+    const dom = this.DOMAIN[r.dom];
+    const open = this.state.open === id;
+    return {
+      id, label:r.label, domainLabel:dom.label, sigil:this.EL[dom.el].sigil,
+      tinyMove:r.tinyMove, artifact:r.artifact, impact:r.impact, desc:r.desc, codes:r.codes,
+      vars:this.varsFor(dom.el),
+      open,
+      onToggle:()=>this.setState(s=>({ open: s.open===id ? null : id })),
+      exploreShort: r.isDonor ? 'Give' : 'Explore',
+      showDomainBadge: this.props.domainGates === false,
+      chev: open ? '▴ close' : '▾ open',
+      showCard: this.props.showStarterCards !== false,
+      card:r.card, mod:r.mod,
+      primaryLabel:r.primaryLabel,
+      primaryHref: r.isDonor ? this.venmoHref() : this.flowHref(id,'capture'),
+      secondaryLabel: r.secondaryLabel + ' →',
+      secondaryHref: this.flowHref(id,'capture'),
+    };
+  }
+
+  renderVals(){
+    const grouped = this.props.domainGates !== false;
+    let sections;
+    if (grouped){
+      sections = this.GROUPED.map(g=>{
+        const dom = this.DOMAIN[g.dom];
+        return {
+          isGate:true, label:dom.label, sigil:this.EL[dom.el].sigil, blurb:dom.blurb,
+          headVars:this.varsFor(dom.el),
+          roles:g.roles.map(id=>this.buildRole(id)),
+        };
+      });
+    } else {
+      sections = [{ isGate:false, label:'', sigil:'', blurb:'', headVars:{}, roles:this.FLAT.map(id=>this.buildRole(id)) }];
+    }
+    return { sections };
+  }
+}
+</script>
+</body>
+</html>

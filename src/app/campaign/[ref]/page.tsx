@@ -219,10 +219,10 @@ async function resolveVisitorStatus(
 
 export default async function CampaignPage(props: {
   params: Promise<{ ref: string }>
-  searchParams: Promise<{ invite?: string; thanks?: string; error?: string; role?: string }>
+  searchParams: Promise<{ invite?: string }>
 }) {
   const { ref } = await props.params
-  const { invite: inviteToken, thanks, error, role } = await props.searchParams
+  const { invite: inviteToken } = await props.searchParams
   const slug = decodeURIComponent(ref)
   const campaign =
     getTheCrossingFallbackCampaign(slug) ?? (await getApprovedCampaign(slug))
@@ -243,7 +243,6 @@ export default async function CampaignPage(props: {
       staticSkin={staticSkin}
       visitorStatus={visitorStatus}
       inviteToken={inviteToken}
-      supportStatus={{ thanks: thanks === '1', error: error ?? null, role: role ?? null }}
     />
   )
 }

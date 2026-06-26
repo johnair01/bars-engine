@@ -5,8 +5,6 @@ import type { CampaignPageData, VisitorStatus } from './page'
 import type { CampaignSkin } from '@/lib/ui/campaign-skin'
 import { buildSkinVars, resolveFontClass } from '@/lib/ui/build-skin-vars'
 import { useCampaignSkin } from '@/lib/ui/campaign-skin-provider'
-import { THE_CROSSING_CAMPAIGN_REF } from '@/lib/the-crossing-support-moves'
-import { TheCrossingSupportSection } from './TheCrossingSupportSection'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -55,13 +53,11 @@ export function CampaignLanding({
   staticSkin,
   visitorStatus = 'unauthenticated',
   inviteToken,
-  supportStatus,
 }: {
   campaign: CampaignPageData
   staticSkin: CampaignSkin | null
   visitorStatus?: VisitorStatus
   inviteToken?: string | null
-  supportStatus?: { thanks?: boolean; error?: string | null; role?: string | null }
 }) {
   // Use campaign skin from provider (layout-level resolution) when available;
   // fall back to direct buildSkinVars for backward compatibility.
@@ -198,12 +194,6 @@ export function CampaignLanding({
           </section>
         )}
 
-        {campaign.slug === THE_CROSSING_CAMPAIGN_REF && (
-          <TheCrossingSupportSection
-            thanksRole={supportStatus?.thanks ? supportStatus.role : null}
-            error={supportStatus?.error}
-          />
-        )}
       </main>
 
       {/* ── CTA Footer (thumb-first: primary actions in bottom 40%) ───── */}

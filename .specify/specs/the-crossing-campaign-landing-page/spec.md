@@ -1,5 +1,13 @@
 # Spec: The Crossing Campaign Landing Page
 
+> **Superseded (experiential layer)** by
+> [`the-crossing-experience`](../the-crossing-experience/spec.md), which
+> implements the returned Claude Design package — the full CYOA experience +
+> steward dashboard that this spec's non-goals deferred. The roles lib, capture
+> action, lineage contract, and steward resolution below remain the foundation
+> and are reused (not replaced). `DESIGN_HANDOFF.md` is the brief that produced
+> that package.
+
 ## Status
 
 Implementation spec for the first public shareable slice.
