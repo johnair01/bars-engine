@@ -23,6 +23,7 @@ import {
   updateTaskStatus,
   carryTask,
   promoteTaskToBar,
+  plantTask,
   upgradeTaskToQuest,
   sealSession,
 } from '@/actions/tap-the-vein'
@@ -105,6 +106,8 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
             return carryTask(id)
           case 'keep':
             return promoteTaskToBar(id)
+          case 'plant':
+            return plantTask(id)
           case 'upgrade':
             return upgradeTaskToQuest(id)
           case 'compost':

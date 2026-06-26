@@ -45,6 +45,13 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             VAULT
                         </Link>
                         <Link
+                            href="/garden"
+                            title="Your Garden: the BARs you've planted, growing under your lenses."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/garden')}`}
+                        >
+                            GARDEN
+                        </Link>
+                        <Link
                             href="/event"
                             title="Residency nights, donate, invite bingo — show up for the campaign."
                             className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/event')}`}

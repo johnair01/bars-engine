@@ -19,6 +19,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
 import { growQuestFromBar } from '@/actions/bars'
+import { ensureTodayLens, personalGardenId } from '@/lib/lenses/ensure'
 
 /** Maturity/provenance for a TTV task's projected BAR (mirrors captureBar). */
 const TTV_BAR_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
@@ -43,6 +44,8 @@ async function ensureBarForTask(
   try {
     const text = task.originalText
     const title = text.length <= 80 ? text : text.slice(0, 77) + '...'
+    // Attach the BAR to today's lens (LENS first slice; best-effort).
+    const lens = await ensureTodayLens(playerId)
     return await db.$transaction(async (tx) => {
       const bar = await tx.customBar.create({
         data: {
@@ -55,6 +58,7 @@ async function ensureBarForTask(
           status: 'active',
           inputs: '[]',
           rootId: 'temp',
+          lensId: lens?.id ?? null,
           seedMetabolization: TTV_BAR_SEED_METABOLIZATION,
         },
         select: { id: true },
@@ -458,6 +462,39 @@ export async function promoteTaskToBar(taskId: string): Promise<TtvResult<{ barI
     return { barId }
   } catch (e) {
     console.error('[ttv:promoteTaskToBar]', e)
+    return { error: 'Failed to plant task' }
+  }
+}
+
+/**
+ * Plant gesture (LENS first slice) — promote the task to a BAR (if needed) and
+ * place it in the player's Garden (set gardenId). The BAR already carries today's
+ * lensId from promotion. Idempotent.
+ */
+export async function plantTask(taskId: string): Promise<TtvResult<{ barId: string }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+  try {
+    const task = await db.tapTheVeinTask.findUnique({
+      where: { id: taskId },
+      select: { id: true, playerId: true, barId: true, originalText: true },
+    })
+    if (!task) return { error: 'Task not found' }
+    if (task.playerId !== player.id) return { error: 'Forbidden' }
+
+    const barId = await ensureBarForTask(player.id, task)
+    if (!barId) return { error: 'Failed to plant task' }
+
+    await db.customBar.update({
+      where: { id: barId },
+      data: { gardenId: personalGardenId(player.id) },
+    })
+
+    revalidatePath('/tap-the-vein')
+    revalidatePath('/garden')
+    return { barId }
+  } catch (e) {
+    console.error('[ttv:plantTask]', e)
     return { error: 'Failed to plant task' }
   }
 }
