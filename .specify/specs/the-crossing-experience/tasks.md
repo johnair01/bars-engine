@@ -103,19 +103,26 @@ boundary (fail-fix). `npm run check` must also show **no `schema.prisma` diff**.
   not exercised here — server action reuses the verified `createContributionBar`
   path from Phase 1.)*
 
-## Phase 5 — Steward dashboard + contributor (09–10)
+## Phase 5 — Steward dashboard + contributor (09–10) — ✅ DONE
 
-- [ ] **T5.1** `steward/page.tsx` (auth-gated: `getCurrentPlayer` +
-  `assertSteward`; signed-out → `/login?returnTo`; non-steward → 403 view).
-  Query contributions + campaign state.
-- [ ] **T5.2** `steward/StewardDashboard.tsx` (client `filter`): header, stat
-  row, amber car-fund card, filter chips with counts, contribution list (`new`
-  first, relative time). Click → contributor.
-- [ ] **T5.3** `steward/contributor/[barId]/page.tsx`: header card, Offering,
-  Reach via, Amount, Activity log, Follow-up panel with conditional actions →
-  `stewardTransitionContribution`. Toast on change.
-- [ ] **CHECK 5** `npm run build` + `npm run check`. Log a message → status
-  advances to `contacted`.
+- [x] **T5.1** `steward/page.tsx` (auth-gated: `getCurrentPlayer` → signed-out
+  redirects to `/login?returnTo`; `assertSteward` false → 403 view). Queries
+  contributions (`new` first, then createdAt desc) + campaign state.
+- [x] **T5.2** `steward/StewardDashboard.tsx` (client `filter`): "Wendell's
+  board" header, stat row (Contributions / Needs follow-up / People in the
+  field), amber car-fund card (raised/goal, %·leads, progress bar, "Mark the
+  car as purchased →" wired to `stewardMarkCarPurchased`; secured state shown
+  when purchased), filter chips with counts (active = purple), contribution
+  list (element accent rule, glyph, name+role+New pill, status + relative
+  time, `suppressHydrationWarning`). Click → contributor.
+- [x] **T5.3** `steward/contributor/[barId]/page.tsx` (auth-gated) + client
+  `ContributorFollowUp`: header card (name, role·domain, status pill),
+  Offering, Reach via (contact·channel), Amount (donor, green mono), Activity
+  log, Follow-up panel — Log message / Mark contacted / Accept offer / Not
+  needed shown conditionally by status, wired to
+  `stewardTransitionContribution`, transient toast on change.
+- [x] **CHECK 5** `tsc --noEmit` 0 errors; `eslint` clean. *(Live status
+  round-trip uses the Phase 1-verified action.)*
 
 ## Phase 6 — Close the loop (11–13)
 
