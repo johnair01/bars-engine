@@ -1,38 +1,27 @@
 'use client'
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import Link from 'next/link'
 import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'
-import {
-  DECK_FONTS,
-  DECK_GOLD,
-  MOVE_LABELS,
-  OPERATION_LABELS,
-  DOMAIN_LABELS,
-} from '@/lib/allyship-deck/card-visuals'
-import type {
-  AllyshipDeck,
-  MoveCard,
-  BasicMove,
-  Operation,
-  AllyshipDomain,
-} from '@/lib/allyship-deck/types'
+import { DECK_FONTS, DECK_GOLD } from '@/lib/allyship-deck/card-visuals'
+import type { AllyshipDeck, MoveCard } from '@/lib/allyship-deck/types'
+import { pickDeckSample } from '@/lib/allyship-deck/sample'
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
 
 const isMove = (c: AllyshipDeck['cards'][number]): c is MoveCard => c.kind === 'move'
+const SAMPLE_SIZE = 12
 
 /**
- * Unauthenticated gallery of all 120 move cards using the high-fidelity `AllyshipCard`.
- * Powers `/deck/preview` — a design-review surface (no paywall, reads the public JSON),
- * and the visual proof of the card primitive. Filters by move/operation/domain + the
- * self/others subject toggle; click a card to open it full.
+ * Unauthenticated *sample* gallery for `/deck/preview` — a teaser showing a
+ * representative handful of cards (not all 120; the full deck is the paid product
+ * at `/deck`). Reads the public JSON, samples deterministically via `pickDeckSample`,
+ * keeps the self/others subject toggle, and points buyers to `/launch`. Click a
+ * card to open it full.
  */
 export function DeckPreviewGallery() {
   const [deck, setDeck] = useState<AllyshipDeck | null>(null)
   const [error, setError] = useState(false)
   const [subject, setSubject] = useState<CardSubject>('self')
-  const [fMove, setFMove] = useState<BasicMove | 'all'>('all')
-  const [fOp, setFOp] = useState<Operation | 'all'>('all')
-  const [fDomain, setFDomain] = useState<AllyshipDomain | 'all'>('all')
   const [selected, setSelected] = useState<MoveCard | null>(null)
 
   useEffect(() => {
@@ -46,16 +35,7 @@ export function DeckPreviewGallery() {
   }, [])
 
   const moveCards = useMemo(() => (deck ? deck.cards.filter(isMove) : []), [deck])
-  const shown = useMemo(
-    () =>
-      moveCards.filter(
-        (c) =>
-          (fMove === 'all' || c.move === fMove) &&
-          (fOp === 'all' || c.operation === fOp) &&
-          (fDomain === 'all' || c.domain === fDomain),
-      ),
-    [moveCards, fMove, fOp, fDomain],
-  )
+  const sample = useMemo(() => pickDeckSample(moveCards, SAMPLE_SIZE), [moveCards])
 
   if (error) return <Centered>The deck could not be loaded.</Centered>
   if (!deck) return <Centered>Shuffling…</Centered>
@@ -63,17 +43,17 @@ export function DeckPreviewGallery() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 16px 80px' }}>
       <header style={{ textAlign: 'center', marginBottom: 18 }}>
-        <p style={{ ...kicker, color: DECK_GOLD }}>Design preview · no account needed</p>
+        <p style={{ ...kicker, color: DECK_GOLD }}>Sample · no account needed</p>
         <h1 style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 30, color: '#fff', margin: '6px 0 0' }}>
-          The Allyship Deck — all {moveCards.length} cards
+          A taste of the Allyship Deck
         </h1>
         <p style={{ fontFamily: DECK_FONTS.body, fontSize: 14, color: SURFACE_TOKENS.textSecondary, margin: '8px 0 0' }}>
-          5 moves × 4 domains × 6 faces. Click a card to open it.
+          {sample.length} of {moveCards.length} cards — 5 moves × 4 domains × 6 faces. Click a card to open it.
         </p>
       </header>
 
       {/* subject toggle */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 18 }}>
         <Chip active={subject === 'self'} onClick={() => setSubject('self')}>
           Allyship for self
         </Chip>
@@ -82,21 +62,21 @@ export function DeckPreviewGallery() {
         </Chip>
       </div>
 
-      {/* filters */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginBottom: 18 }}>
-        <FilterRow value={fMove} setValue={setFMove} all="All moves" options={Object.entries(MOVE_LABELS) as [BasicMove, string][]} />
-        <FilterRow value={fDomain} setValue={setFDomain} all="All domains" options={Object.entries(DOMAIN_LABELS) as [AllyshipDomain, string][]} />
-        <FilterRow value={fOp} setValue={setFOp} all="All faces" options={Object.entries(OPERATION_LABELS) as [Operation, string][]} />
-      </div>
-
-      <p style={{ ...kicker, color: SURFACE_TOKENS.textSecondary, textAlign: 'center', marginBottom: 14 }}>
-        {shown.length} of {moveCards.length} cards
-      </p>
-
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(178px, 1fr))', gap: 12 }}>
-        {shown.map((c) => (
+        {sample.map((c) => (
           <AllyshipCard key={c.id} card={c} variant="grid" subject={subject} onClick={() => setSelected(c)} />
         ))}
+      </div>
+
+      {/* Buy CTA — the full deck lives behind the purchase */}
+      <div style={{ textAlign: 'center', marginTop: 36 }}>
+        <p style={{ fontFamily: DECK_FONTS.body, fontSize: 15, color: SURFACE_TOKENS.textSecondary, margin: '0 auto 16px', maxWidth: 460 }}>
+          This is a sample. Unlock all {moveCards.length} cards with the deck purchase,
+          the game subscription, or the Founding Ally bundle.
+        </p>
+        <Link href="/launch" style={buyCta}>
+          Get all {moveCards.length} cards
+        </Link>
       </div>
 
       {selected && (
@@ -121,41 +101,6 @@ export function DeckPreviewGallery() {
         </div>
       )}
     </div>
-  )
-}
-
-function FilterRow<T extends string>({
-  value,
-  setValue,
-  all,
-  options,
-}: {
-  value: T | 'all'
-  setValue: (v: T | 'all') => void
-  all: string
-  options: [T, string][]
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => setValue(e.target.value as T | 'all')}
-      style={{
-        fontFamily: DECK_FONTS.mono,
-        fontSize: 12,
-        padding: '7px 10px',
-        borderRadius: 6,
-        background: SURFACE_TOKENS.surfaceInset,
-        color: SURFACE_TOKENS.textPrimary,
-        border: '1px solid rgba(255,255,255,.12)',
-      }}
-    >
-      <option value="all">{all}</option>
-      {options.map(([k, label]) => (
-        <option key={k} value={k}>
-          {label}
-        </option>
-      ))}
-    </select>
   )
 }
 
@@ -196,6 +141,19 @@ const kicker: CSSProperties = {
   fontSize: 11,
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
+}
+
+const buyCta: CSSProperties = {
+  display: 'inline-block',
+  padding: '13px 28px',
+  borderRadius: 999,
+  background: DECK_GOLD,
+  color: '#150a04',
+  fontFamily: DECK_FONTS.display,
+  fontWeight: 700,
+  fontSize: 15,
+  textDecoration: 'none',
+  boxShadow: '0 10px 30px -12px rgba(201,168,76,.7)',
 }
 
 const closeBtn: CSSProperties = {

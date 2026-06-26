@@ -8,6 +8,7 @@ import { DailyChargePanel } from '@/components/now/DailyChargePanel'
 import { TapTheVeinPanel } from '@/components/now/TapTheVeinPanel'
 import { getTodayPanelSummary } from '@/actions/tap-the-vein'
 import { CaptureBox } from '@/components/now/CaptureBox'
+import { Plant321Launcher } from '@/components/now/Plant321Launcher'
 
 type NowHomeProps = {
   playerId: string
@@ -53,9 +54,9 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
     : chargeTargets
 
   const tools = [
-    { href: '/wiki/first-aid', icon: '✚', iconColor: '#2980b9', iconGlow: '#1a7a8a', label: 'First Aid', sub: 'soothe the charge', mono: false },
-    { href: '/wiki/321', icon: '3·2·1', iconColor: '#7c3aed', iconGlow: '#7c3aed', label: 'Clean Up', sub: 'metabolize it', mono: true },
-    { href: '/wiki/iching', icon: '☰', iconColor: '#d4a017', iconGlow: '#d4a017', label: 'I Ching', sub: 'consult the lines', mono: false },
+    { kind: 'link' as const, href: '/emotional-first-aid', icon: '✚', iconColor: '#2980b9', iconGlow: '#1a7a8a', label: 'First Aid', sub: 'soothe the charge', mono: false },
+    { kind: 'plant321' as const, href: '', icon: '3·2·1', iconColor: '#7c3aed', iconGlow: '#7c3aed', label: 'Clean Up', sub: 'metabolize it', mono: true },
+    { kind: 'link' as const, href: '/iching', icon: '☰', iconColor: '#d4a017', iconGlow: '#d4a017', label: 'I Ching', sub: 'consult the lines', mono: false },
   ]
 
   return (
@@ -135,40 +136,52 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
               When you're activated
             </span>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              {tools.map(tool => (
-                <Link
-                  key={tool.href}
-                  href={tool.href}
-                  style={{
-                    flex: 1,
-                    textDecoration: 'none',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 5,
-                    padding: '13px 12px',
-                    borderRadius: 8,
-                    background: '#1a1a18',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.08)',
-                  }}
-                >
-                  <span style={{
-                    fontFamily: tool.mono ? 'Space Mono, monospace' : 'Jost, sans-serif',
-                    fontWeight: 800,
-                    fontSize: tool.mono ? 15 : 17,
-                    lineHeight: 1,
-                    color: tool.iconColor,
-                    textShadow: `0 0 12px ${tool.iconGlow}`,
-                  }}>
-                    {tool.icon}
-                  </span>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 12, color: '#e8e6e0' }}>
-                    {tool.label}
-                  </span>
-                  <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#6b6965' }}>
-                    {tool.sub}
-                  </span>
-                </Link>
-              ))}
+              {tools.map(tool =>
+                tool.kind === 'plant321' ? (
+                  <Plant321Launcher
+                    key={tool.label}
+                    icon={tool.icon}
+                    iconColor={tool.iconColor}
+                    iconGlow={tool.iconGlow}
+                    label={tool.label}
+                    sub={tool.sub}
+                    mono={tool.mono}
+                  />
+                ) : (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    style={{
+                      flex: 1,
+                      textDecoration: 'none',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 5,
+                      padding: '13px 12px',
+                      borderRadius: 8,
+                      background: '#1a1a18',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <span style={{
+                      fontFamily: tool.mono ? 'Space Mono, monospace' : 'Jost, sans-serif',
+                      fontWeight: 800,
+                      fontSize: tool.mono ? 15 : 17,
+                      lineHeight: 1,
+                      color: tool.iconColor,
+                      textShadow: `0 0 12px ${tool.iconGlow}`,
+                    }}>
+                      {tool.icon}
+                    </span>
+                    <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 12, color: '#e8e6e0' }}>
+                      {tool.label}
+                    </span>
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#6b6965' }}>
+                      {tool.sub}
+                    </span>
+                  </Link>
+                )
+              )}
             </div>
           </div>
         </main>
