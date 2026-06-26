@@ -18,6 +18,7 @@ export type SheetAction =
   | { kind: 'start' }
   | { kind: 'complete' }
   | { kind: 'carry' }
+  | { kind: 'keep' }
   | { kind: 'upgrade' }
   | { kind: 'compost'; reason: string }
   | { kind: 'assign'; campaignId: string; visibility: 'campaign' | null }
@@ -127,6 +128,7 @@ export function TaskActionSheet({
             )}
             <ActionRow icon="✓" iconColor={gem} label="Complete" hint="pave a brick · ♦+1" disabled={busy} onClick={() => onAction({ kind: 'complete' })} />
             <ActionRow icon="↻" label="Carry to tomorrow" hint="keeps the thread" disabled={busy} onClick={() => onAction({ kind: 'carry' })} />
+            <ActionRow icon="❖" label="Keep as a BAR" hint="plant in the loop" disabled={busy} onClick={() => onAction({ kind: 'keep' })} />
             <ActionRow icon="↩" label="Compost" hint="return to field" disabled={busy} onClick={() => setMode('compost')} />
             <ActionRow icon="◇" label="Assign to campaign" hint="private by default" disabled={busy} onClick={() => setMode('assign')} />
             <ActionRow

@@ -45,13 +45,16 @@ visible in one place.
 Ordered by leverage — each is independently shippable.
 
 ### H1 — TTV tasks become BARs *(highest leverage; unblocks the loop for TTV)*
-A committed `TapTheVeinTask` should create a linked `CustomBar` (type `bar`,
-maturity `captured`) so the task can then be tuned, charged, 3·2·1'd, grown to a
-quest, or become a daemon — i.e., TTV feeds the loop instead of dead-ending.
+A `TapTheVeinTask` can become a linked `CustomBar` (type `bar`, maturity
+`captured`) so the task can then be tuned, charged, 3·2·1'd, grown to a quest, or
+become a daemon — i.e., TTV feeds the loop instead of dead-ending.
 - **Prisma**: `TapTheVeinTask.barId String?` (soft link; `CustomBar` stays the
-  projection, the task stays canonical for lifecycle — per the TTV migration spec).
-- **API**: extend `commitTask` to also create the BAR (reusing the `captureBar`
-  create path) and store `barId`; idempotent (create only when `barId` null).
+  projection, the task stays canonical for lifecycle).
+- **API (lazy — decided via Six GM panel)**: a BAR is minted only on a **deliberate
+  gesture (keep / plant / upgrade)** — `promoteTaskToBar` / `upgradeTaskToQuest` —
+  **never on every commit** (avoids Vault flooding + task↔BAR drift). Promotion is
+  **atomic** (one transaction); **idempotent** (no-op if `barId` set); composting a
+  task **composts its BAR** (archive, not delete).
 - **UI**: task cards link to their BAR; "upgrade to quest" routes through
   `growQuestFromBar(task.barId)` instead of the current status-only stub.
 

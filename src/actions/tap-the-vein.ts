@@ -27,32 +27,44 @@ const TTV_BAR_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
 })
 
 /**
- * CGLA H1 — project a committed task into a CustomBar so it joins the core loop
- * (tune / charge / 3·2·1 / grow). Returns the new bar id, or null on failure
- * (a BAR is a convenience projection — never block the commit on it).
+ * CGLA H1 (lazy) — promote a task into a CustomBar so it joins the core loop
+ * (tune / charge / 3·2·1 / grow). **Idempotent + atomic**: returns the existing
+ * barId if already promoted, else creates the BAR and links it in one transaction.
+ *
+ * BARs are minted by a deliberate gesture (keep / plant / upgrade), NOT on every
+ * commit — this keeps the Vault from flooding with micro-task BARs and avoids
+ * task↔BAR drift (decided via the Six GM panel; reverses the eager H1).
  */
-async function createBarForTask(playerId: string, text: string): Promise<string | null> {
+async function ensureBarForTask(
+  playerId: string,
+  task: { id: string; barId: string | null; originalText: string },
+): Promise<string | null> {
+  if (task.barId) return task.barId
   try {
+    const text = task.originalText
     const title = text.length <= 80 ? text : text.slice(0, 77) + '...'
-    const bar = await db.customBar.create({
-      data: {
-        creatorId: playerId,
-        title: title || 'Tap the Vein task',
-        description: text,
-        type: 'bar',
-        reward: 0,
-        visibility: 'private',
-        status: 'active',
-        inputs: '[]',
-        rootId: 'temp',
-        seedMetabolization: TTV_BAR_SEED_METABOLIZATION,
-      },
-      select: { id: true },
+    return await db.$transaction(async (tx) => {
+      const bar = await tx.customBar.create({
+        data: {
+          creatorId: playerId,
+          title: title || 'Tap the Vein task',
+          description: text,
+          type: 'bar',
+          reward: 0,
+          visibility: 'private',
+          status: 'active',
+          inputs: '[]',
+          rootId: 'temp',
+          seedMetabolization: TTV_BAR_SEED_METABOLIZATION,
+        },
+        select: { id: true },
+      })
+      await tx.customBar.update({ where: { id: bar.id }, data: { rootId: bar.id } })
+      await tx.tapTheVeinTask.update({ where: { id: task.id }, data: { barId: bar.id } })
+      return bar.id
     })
-    await db.customBar.update({ where: { id: bar.id }, data: { rootId: bar.id } })
-    return bar.id
   } catch (e) {
-    console.error('[ttv:createBarForTask]', e)
+    console.error('[ttv:ensureBarForTask]', e)
     return null
   }
 }
@@ -265,20 +277,15 @@ export async function commitTask(input: {
       select: TASK_SELECT,
     })
 
-    // CGLA H1 — project the task into a BAR so it joins the core loop.
-    const barId = await createBarForTask(player.id, text)
-    const task = barId
-      ? await db.tapTheVeinTask.update({ where: { id: created.id }, data: { barId }, select: TASK_SELECT })
-      : created
-
+    // CGLA H1 (lazy): committing does NOT create a BAR. A task becomes a BAR
+    // only on a deliberate gesture — keep/plant (promoteTaskToBar) or upgrade.
     await db.tapTheVeinDailySession.update({
       where: { id: session.id },
       data: { committedTaskCount: { increment: 1 } },
     })
 
     revalidatePath('/tap-the-vein')
-    revalidatePath('/vault')
-    return { task: toTaskDTO(task) }
+    return { task: toTaskDTO(created) }
   } catch (e) {
     console.error('[ttv:commitTask]', e)
     return { error: 'Failed to commit task' }
@@ -299,7 +306,7 @@ export async function updateTaskStatus(input: {
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: input.taskId },
-      select: { id: true, playerId: true, status: true },
+      select: { id: true, playerId: true, status: true, barId: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
@@ -330,7 +337,28 @@ export async function updateTaskStatus(input: {
       data,
       select: TASK_SELECT,
     })
+
+    // Lifecycle sync (H1): composting a task composts its projected BAR too —
+    // archive it (composted, not deleted: "nothing wasted").
+    if (input.status === 'composted' && task.barId) {
+      try {
+        await db.customBar.update({
+          where: { id: task.barId },
+          data: {
+            archivedAt: new Date(),
+            seedMetabolization: mergeSeedMetabolization(TTV_BAR_SEED_METABOLIZATION, {
+              compostedAt: new Date().toISOString(),
+              releaseNote: input.compostReason ?? null,
+            }),
+          },
+        })
+      } catch (e) {
+        console.error('[ttv:updateTaskStatus] BAR compost sync failed', e)
+      }
+    }
+
     revalidatePath('/tap-the-vein')
+    revalidatePath('/vault')
     return { task: toTaskDTO(updated) }
   } catch (e) {
     console.error('[ttv:updateTaskStatus]', e)
@@ -408,10 +436,36 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
 }
 
 /**
+ * Keep/plant gesture (CGLA H1, lazy) — promote a task into a BAR so it joins the
+ * core loop. Idempotent; returns the (existing or new) barId.
+ */
+export async function promoteTaskToBar(taskId: string): Promise<TtvResult<{ barId: string }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+  try {
+    const task = await db.tapTheVeinTask.findUnique({
+      where: { id: taskId },
+      select: { id: true, playerId: true, barId: true, originalText: true },
+    })
+    if (!task) return { error: 'Task not found' }
+    if (task.playerId !== player.id) return { error: 'Forbidden' }
+
+    const barId = await ensureBarForTask(player.id, task)
+    if (!barId) return { error: 'Failed to plant task as a BAR' }
+
+    revalidatePath('/tap-the-vein')
+    revalidatePath('/vault')
+    return { barId }
+  } catch (e) {
+    console.error('[ttv:promoteTaskToBar]', e)
+    return { error: 'Failed to plant task' }
+  }
+}
+
+/**
  * Phase D — upgrade a task to a real Quest (CGLA H1).
- * Grows a quest from the task's projected BAR via the existing `growQuestFromBar`,
- * then records the transition + questId. Falls back to a status-only update for
- * legacy tasks created before the BAR bridge (no `barId`).
+ * Lazily promotes the task to a BAR if needed, grows a quest from it via the
+ * existing `growQuestFromBar`, then records the transition + questId.
  */
 export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ task: TtvTaskDTO }>> {
   const player = await getCurrentPlayer()
@@ -420,7 +474,7 @@ export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ ta
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: taskId },
-      select: { id: true, playerId: true, status: true, barId: true },
+      select: { id: true, playerId: true, status: true, barId: true, originalText: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
@@ -430,12 +484,13 @@ export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ ta
       return { error: `Cannot upgrade a ${task.status} task` }
     }
 
-    let questId: string | null = null
-    if (task.barId) {
-      const res = await growQuestFromBar(task.barId)
-      if (res.error) return { error: res.error }
-      questId = res.questId ?? null
-    }
+    // Lazy promotion: mint the BAR now if this task doesn't have one yet.
+    const barId = await ensureBarForTask(player.id, task)
+    if (!barId) return { error: 'Could not prepare a BAR to grow from' }
+
+    const res = await growQuestFromBar(barId)
+    if (res.error) return { error: res.error }
+    const questId = res.questId ?? null
 
     const updated = await db.tapTheVeinTask.update({
       where: { id: task.id },

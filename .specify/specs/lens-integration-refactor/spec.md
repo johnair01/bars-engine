@@ -60,6 +60,12 @@ A new app section `/observatory` for **temporal navigation**. Seven levels, each
 Each level is backed by one or more **Lens** rows. **Today** is the daily attach
 point for Tap the Vein. Routes: `/observatory` (overview) + `/observatory/[level]`.
 
+**Cold-start (decided)**: **auto-seed the calendar lenses** (today / this week /
+month / quarter / year) deterministically on first visit — they have canonical
+calendar identities, so the hierarchy is never empty. **Vision** and
+**orientation** are **player-authored** (gentle prompts, never auto-filled — they
+are felt, not generated). The Observatory always has a populated time-scaffold.
+
 ## New entity — Lens
 
 ```prisma
@@ -91,8 +97,17 @@ Add to `CustomBar` (all **nullable** — the core loop works without them):
 - `lensId String?` — the Lens this BAR was grown under (FK to `Lens`).
 - `gardenId String?` — which Garden it's planted in (membership = planted). No
   developmental stage; planted is simply "has a `gardenId`."
-- `experienceIntent String?` — the felt intent behind the BAR *(open decision:
-  enum vs free text — § Open decisions)*.
+- **EA-triad** (the unpacking mechanics — *required for lens/campaign alignment +
+  emotional-alchemy moves*; reuse `unpacking-constants` vocab):
+  - `experienceIntent String?` — the **desired outcome** the BAR is aimed at.
+  - `dissatisfaction String?` — the **current dissatisfaction** (EA "from" state).
+  - `satisfaction String?` — the **desired satisfaction** (EA "to" state).
+  These are captured at the plant gate (see New flow) and align a BAR up its lens
+  and power EA moves (`dissatisfaction → satisfaction` *is* the transformation).
+- **Lazy BAR creation (decided)**: TTV tasks become BARs only on a deliberate
+  gesture (keep / plant / upgrade), **never on every commit** — avoids Vault
+  flooding + task↔BAR drift. Promotion is atomic; composting a task composts its
+  BAR (archive, not delete).
 - Provenance is **normalized** (see Provenance graph) using existing `parentId`/
   `rootId`/`forkedFromId`/`mergedFromIds` **plus** new `lensId` + `parentQuestId`
   + `campaignRef` (exists). `provenanceChain` is a **derived query**, not a stored
@@ -116,8 +131,8 @@ are persisted; cultivate/harvest are ordinary loop activity.
 | Capture | `captureBar` (`src/actions/capture-bar.ts`) | exists |
 | Tune | `/bars/[id]/tune` (CGLA H6: inline) | exists |
 | Choose Lens | pick the Lens to grow under → set `lensId` | **new** |
-| Six Questions | the **Six Unpacking Questions** as the planting reflection gate (decided — reuses the spec-kit ontology: WHO/WHAT/WHERE…) | **new (reuse)** |
-| Plant | set `gardenId` (membership) | **new** |
+| Six Questions | the **unpacking mechanics** — captures the **EA triad** (desired outcome + current dissatisfaction + desired satisfaction; reuse `unpacking-constants` vocab). Load-bearing for lens/campaign alignment + EA moves. Present *light*, but the data is required. | **new** |
+| Plant | lazily promote the task→BAR (if needed) + set `gardenId` (membership) | **new** |
 | Garden | appears in the Garden (has `gardenId`) | extends `/bars/garden` |
 | Cultivate | loop moves on the BAR — 3·2·1 (H3), grow-to-quest/daemon, charge (H4) | exists (wire) |
 | Harvest | completion → mints attributed Vibeulons | **new** |
@@ -163,25 +178,39 @@ developmental level):
 - `completedBARId String?`, `lensId String?`, `campaignId String?`,
   `emotionalChannel String?`, `growthSource String?`.
 - `growthSource ∈ { Quest, TapTheVein, 321, Conversation, Harvest, Repair, Friendcraft }`.
-- Keep `originSource/originId/originTitle` for back-compat (or migrate).
-- **Refits TTVE** (Tier 2): the mint-on-complete must populate these.
+- **Minimal/additive (decided)**: fields are **nullable** and populated **only on
+  loop/harvest mints** (TTV/harvest path). Do **NOT** refit the other ~7
+  `mintVibulon` callers (onboarding, donate, conclave, forge, admin, campaign) —
+  they keep `originSource/originId/originTitle` and leave the new fields null.
+- **TTVE** (Tier 2) populates these on the loop mint.
 
 ## Future hooks (out of scope now; design so they fit)
 3·2·1 on a BAR (CGLA H3) · Tap the Vein on a BAR · Lens switching · Friendship
 Gardens · Guild Gardens · Campaign Gardens · **nation & developmental-level
 overlays acquired through play** (layer onto, never gate, the core model).
 
+## First slice (decided — build this before the full chain)
+
+The thinnest end-to-end loop that proves the feel, to validate before committing
+to the whole chain: **daily Lens + lazy player-planted BAR + a minimal Garden
+view.** Needs only `Lens` (daily) + `CustomBar.lensId` + `gardenId` + a Garden
+list. No Observatory viz, no economy/attribution, no nav overhaul, no provenance
+UI. Ship it, feel it, then proceed.
+
 ## Phasing
 
 - **P1 — Lens + Observatory skeleton**: `Lens` model + migration; `/observatory`
-  with 7 navigable levels; auto-mint today's daily Lens. No BAR changes.
-- **P2 — BAR.lensId**: add `lensId` (+ `experienceIntent`) column + migration;
-  Daily TTV `commitTask` sets `lensId`. **No stage column.**
+  with 7 navigable levels; **auto-seed calendar lenses** (today/week/month/quarter/
+  year), vision/orientation authored. No BAR changes.
+- **P2 — BAR.lensId + EA triad**: add `lensId` + `experienceIntent` +
+  `dissatisfaction` + `satisfaction` columns + migration; Daily TTV `commitTask`
+  sets `lensId` (no auto-BAR — lazy). **No stage column.**
 - **P3 — Garden first-class + Plant flow**: `Garden` entity + `gardenId`;
-  Choose-Lens → Six Unpacking Questions → Plant (set `gardenId`); Garden shows
-  BARs with a `gardenId`.
+  Choose-Lens → capture the **EA triad** (light) → **lazily promote task→BAR** +
+  set `gardenId`; Garden shows BARs with a `gardenId`.
 - **P4 — Provenance graph + Vibeulon attribution**: `ProvenanceLink` +
-  `parentQuestId`; `getBarProvenance`; Vibeulon fields; refit TTVE mint.
+  `parentQuestId`; `getBarProvenance`; **additive** Vibeulon fields (loop/harvest
+  mints only — no broad refit).
 - **P5 — Cultivate/Harvest activity + future hooks**: harvest mint; wire
   3·2·1-on-BAR / TTV-on-BAR. (No stored stage transitions.)
 
@@ -189,17 +218,21 @@ overlays acquired through play** (layer onto, never gate, the core model).
 
 1. **provenanceChain** — derived query (recommended) vs a stored JSON snapshot
    field on `CustomBar`. Affects P4.
-2. **experienceIntent** — enum (e.g. emotional-alchemy channels) vs free text? meaning/usage?
-3. **"Replace the current planning flow"** — what concretely is removed? (the
+2. **"Replace the current planning flow"** — what concretely is removed? (the
    `/adventures` planning surfaces? the TTV `lens*` string fields?) Scope of deletion.
-4. **Lens auto-creation** — daily lens auto-minted; are higher levels
-   (vision/year/…) player-authored, templated, or auto-seeded?
-5. **Garden multiplicity timing** — ship one personal Garden in P3 (`gardenId`
+3. **Garden multiplicity timing** — ship one personal Garden in P3 (`gardenId`
    nullable) and defer multi-garden to future hooks?
 
-> **Resolved:** developmental stage is **not** modeled (core stays
-> nation/developmental-level agnostic; overlays emerge through play). The plant
-> "Six Questions" **reuse the Six Unpacking Questions**.
+> **Resolved (Six GM panel):** developmental stage is **not** modeled (core stays
+> nation/developmental-level agnostic; overlays emerge through play). The plant gate
+> **preserves the unpacking mechanics — the EA triad** (desired outcome + current
+> dissatisfaction + desired satisfaction), required for lens/campaign alignment +
+> EA moves. **Lazy** task→BAR promotion (keep/plant/upgrade), atomic + compost-sync.
+> **Calendar lenses auto-seeded**; vision/orientation authored. Vibeulon attribution
+> is **additive, loop/harvest-only** (no broad refit). **White-hat gamification is
+> embraced** (streaks/progress/celebration; mint on reflection) — see
+> [living-world-experience](../living-world-experience/spec.md); only black-hat
+> manipulation is avoided.
 
 ## Verification
 - Per phase: `npm run build` + `npm run check`; a `cert-*` verification quest for

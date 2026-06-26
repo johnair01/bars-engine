@@ -58,8 +58,10 @@ persistent Capture (decided via the Six GM analysis):
 - **Capture is never a destination but always reachable** — a **persistent
   one-tap Capture** affordance (thumb zone); capture must never be gated.
 - **World = instance.** An **Instance** is the narrative flavor of the world.
-  **Campaigns can live inside an instance (flavored by it) or outside any
-  instance (standalone)** — World surfaces both (`Campaign.instanceId` nullable).
+  Every player has a **personal Instance**; a campaign "outside" a shared instance
+  simply belongs to the personal one. `Campaign.instanceId` stays **required** (no
+  nulls — decided via the GM panel; avoids null-handling across the codebase). World
+  surfaces the player's instance(s) + their campaigns.
 - **Covenant reconciliation [Architect/Regent finding]**: `UI_COVENANT.md` Law 15
   names nav as **six GM spatial zones** (Shaman/Challenger/Regent/Architect/
   Diplomat/Sage). The six faces are a **role/lens** system, **distinct** from these
@@ -81,12 +83,13 @@ Enter Today → Tap the Vein → charge generated → five BARs selected
    → BARs planted → Garden updates → Vibeulons minted → Daily Reflection
 ```
 
-- Built on shipped **H1** (TTV tasks → BARs) + the planned plant flow + the
-  Vibeulon mint (Lens P4 attribution).
-- **Daily Reflection** (new closing beat): an end-of-day **satisfaction +
-  witness** capture — which of the satisfied states fired today, one line of
-  witness — optionally minting a small ♦. Wires the existing **SAT** backlog item
-  (Satisfaction Capture). **[ASSUMED — confirm scope/mint]**
+- Built on **H1 (lazy)** — TTV tasks become BARs on a deliberate keep/plant/upgrade
+  (not on every commit) — + the plant flow + the Vibeulon mint (Lens P4).
+- **Daily Reflection** (new closing beat): an end-of-day **satisfaction + witness**
+  capture — which satisfied state fired today, one line of witness — and it
+  **mints** (white-hat acknowledgment of the day's metabolization). Wires the
+  existing **SAT** backlog item. The plant step earlier captures the **EA triad**
+  (desired outcome + current dissatisfaction + desired satisfaction).
 
 ## Garden (text-free growth)
 
@@ -96,15 +99,20 @@ stays stage-agnostic per the Lens spec):
 
 | Visual | Derived from |
 |--------|--------------|
+| **sprouting** | charged / tended (has charge or activity) |
+| **leafing** | a 3·2·1 was done on it; EA arc moving (dissatisfaction→satisfaction) |
 | **branches** | the BAR has children (it spawned other BARs) |
 | **flowers** | it grew a quest |
-| **fruit** | it was harvested / minted ♦ |
+| **fruit** | it was harvested / completed / minted ♦ |
+| **carried** | pushed forward across days |
 | **compost** | it was composted (honored, not hidden) |
-| **needs attention** | stale / unworked / blocked (no recent activity) |
+| **needs attention** | stale / unworked (no recent activity) — gentle, not a guilt badge |
 
-**[ASSUMED — confirm]** growth = derived-from-provenance (vs a cosmetic care
-meter, vs reusing optional `maturity`). Visual density may reuse the
-`CultivationCard` stage channel (UI only — not a developmental level).
+**Decided**: growth = **derived-from-provenance/activity** — broadened to signals
+the *common* BAR actually accrues (charge, 3·2·1, EA arc, carried, completed), so
+quiet plants still differentiate, not just the rare child/quest case. To avoid
+N+1, **precompute a cheap `gardenSignal` on write** (when those events change),
+read it on render. No stored developmental stage.
 
 ## Provenance — the living timeline
 
@@ -139,10 +147,26 @@ Every surface is checked against: **does this reinforce "nothing meaningful is
 ever wasted"?** Compost is visible and dignified; abandoned/failed work still
 holds its place in the timeline; the Garden shows even compost as feeding growth.
 
+## White-hat gamification (decided — embraced)
+
+Streaks, building, visible progress, mastery, and celebration are **in** —
+**building the streak should be fun, enjoyable, and impactful**, and is a genuine
+motivator (especially for **Architects** and **Challengers**). The product already
+speaks this language ("steady accumulation is the form," "a yellow brick is
+paved"). The Daily Reflection **mints**; progress is celebrated.
+
+The only line held is **white-hat vs black-hat** — motivate, don't manipulate:
+- ✅ progress, streaks, mastery, accomplishment, epic meaning, celebration.
+- ❌ manufactured scarcity, manipulative loss-aversion / guilt, dark patterns.
+
+This is honesty, not a handicap. (Reverses the earlier "anti-treadmill" stance.)
+
 ## Integration / phasing (maps onto Lens phases)
 
-- **E1 — Navigation shell**: the five-destination nav + persistent Capture
-  (additive scaffolding; routes can be stubs that wrap existing pages).
+- **E1 — Navigation (strangler)**: add **Observatory + Garden** alongside the
+  current nav + persistent Capture; migrate authed destinations incrementally;
+  **don't touch the unauth launch/paywall funnel** until last. Routes can wrap
+  existing pages.
 - **E2 — Observatory UI**: planetarium over Lens (after Lens P1).
 - **E3 — Daily Flow + Daily Reflection**: wire TTV → plant → mint → reflection
   (after Lens P2–P3; SAT for reflection).
@@ -152,27 +176,35 @@ holds its place in the timeline; the Garden shows even compost as feeding growth
 
 Each phase: `UI_COVENANT` covenant check + a `cert-*` verification quest.
 
-## Decisions (resolved via Six GM analysis, 2026-06-26)
-1. **Garden growth = derived-from-provenance** (branch=children, flower=grew a
-   quest, fruit=harvested/minted ♦, compost=composted). Unanimous. No stored stage,
-   no cosmetic care-meter. "Needs attention" = staleness, framed as gentle invitation.
-2. **Navigation = full replacement** → **4 destinations** (Observatory / Garden /
-   Vault / World) + **Hand glance-in-NOW → `/hand` page** + **persistent Capture**.
-3. **World = the instance** (narrative flavor of the world); campaigns inside or
-   outside an instance; World surfaces both. Absorbs EVENTS + PLAY/campaign.
-4. **Daily Reflection = satisfaction-state + one witness line on today's Lens**,
-   wiring **SAT**. *(Still open: does it mint ♦? GMs lean tiny-or-none.)*
+## Decisions (Six GM panel, 2026-06-26 — final)
+1. **Garden growth = derived-from-provenance/activity**, broadened to common signals
+   (charge, 3·2·1, EA arc, carried, completed) + **precomputed `gardenSignal`** to
+   avoid N+1. No stored stage, no cosmetic meter. "Needs attention" = gentle.
+2. **Navigation = strangler / additive-first** (reverses "full replacement now"):
+   add **Observatory + Garden** alongside the current nav, migrate authed
+   destinations incrementally, **leave the unauth launch/paywall funnel untouched
+   until last**. End state: **Observatory / Garden / Vault / World** + Hand
+   glance-in-NOW → `/hand` page + persistent Capture.
+3. **World = the player's instance** (narrative flavor). Every player has a
+   **personal Instance**; "outside an instance" = the personal one; `Campaign.instanceId`
+   stays **required** (no nulls). World surfaces instance campaigns + personal ones.
+4. **Daily Reflection = satisfaction-state + witness on today's Lens, and it MINTS**
+   (white-hat acknowledgment). Wires **SAT**.
 5. **Hand**: glance in NOW + expandable `/hand` page; not a primary tab.
+6. **BAR seed-source = deck | book | charge, player-declared**. Book/Chapter
+   provenance root **deferred** (cheap future plug-in; chapters already exist as data).
+7. **Plant gate preserves the unpacking EA triad** (desired outcome + current
+   dissatisfaction + desired satisfaction) — load-bearing for alignment + EA moves;
+   reuse `unpacking-constants` vocab. (Reverses "drop the Unpacking reuse.")
+8. **White-hat gamification embraced** (streaks/progress/celebration; reflection
+   mints). Only black-hat manipulation is avoided. (Reverses "anti-treadmill.")
+9. **H1 = lazy** task→BAR promotion (keep/plant/upgrade), atomic + compost-sync.
+10. **Vibeulon attribution = additive, loop/harvest-only** (no broad refit).
+11. **First slice** (Lens spec): daily Lens + lazy planted BAR + minimal Garden —
+    ship and feel it before the full chain.
 
-6. **BAR seed-source = deck | book | charge, player-declared** (never inferred).
-   Book/Chapter as a provenance root is **deferred** (chapters exist as data, so
-   it's a cheap future plug-in tied to the planned app-funneling book draft).
-7. **Daily Reflection mint = none for now** (reflection is its own close; GMs leaned
-   tiny-or-none). Revisit if it should mint a small ♦.
-
-## Still open (need your input)
-*(none blocking — all open questions resolved above; revisit Daily Reflection mint
-and Book/Chapter root when their phases are scheduled.)*
+## Still open (non-blocking)
+*(all design questions resolved; revisit Book/Chapter provenance root when scheduled.)*
 
 ## Out of scope (now)
 Friendship/Guild/Campaign gardens, lens-switching UX, multiplayer World surfaces
