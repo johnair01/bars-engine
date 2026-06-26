@@ -232,36 +232,6 @@ export async function submitTheCrossingMove(formData: FormData) {
   redirect(`/campaign/the-crossing/move/${role.id}/saved?bar=${encodeURIComponent(barId)}`)
 }
 
-/**
- * Legacy capture used by the inline `TheCrossingSupportSection` on the
- * `/campaign/[ref]` landing. Kept for back-compat until that surface is retired
- * (see spec § Phase 7). Defaults channel=text, no donor amount.
- */
-export async function submitTheCrossingSupport(formData: FormData) {
-  const roleId = clean(formData.get('role'), 80)
-  const role = getTheCrossingSupportRole(roleId)
-  if (!role) redirect('/campaign/the-crossing?error=role')
-
-  const fields: CaptureFields = {
-    contributorName: clean(formData.get('name'), 120),
-    contributorContact: clean(formData.get('contact'), 180),
-    channel: parseChannel(formData.get('channel')),
-    offerSummary: clean(formData.get('offerSummary'), 180),
-    detail: clean(formData.get('details'), 2400),
-    url: clean(formData.get('url'), 500),
-    amount: role.isDonor ? parseAmount(formData.get('amount')) : null,
-  }
-
-  if (!fields.contributorName || !fields.contributorContact || !fields.offerSummary) {
-    redirect(`/campaign/the-crossing?role=${encodeURIComponent(role.id)}&error=missing`)
-  }
-
-  await createContributionBar(role, fields)
-
-  revalidatePath('/campaign/the-crossing')
-  redirect(`/campaign/the-crossing?thanks=1&role=${encodeURIComponent(role.id)}`)
-}
-
 // ─── Steward: status machine ─────────────────────────────────────────────────
 
 export type StewardTransitionAction = 'log_message' | 'mark_contacted' | 'accept' | 'decline'

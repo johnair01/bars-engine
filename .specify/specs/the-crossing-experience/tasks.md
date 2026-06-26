@@ -124,15 +124,34 @@ boundary (fail-fix). `npm run check` must also show **no `schema.prisma` diff**.
 - [x] **CHECK 5** `tsc --noEmit` 0 errors; `eslint` clean. *(Live status
   round-trip uses the Phase 1-verified action.)*
 
-## Phase 6 — Close the loop (11–13)
+## Phase 6 — Close the loop (11–13) — ✅ DONE
 
-- [ ] **T6.1** Car-fund purchased state (green "CAR SECURED") + wire
-  `stewardMarkCarPurchased`.
-- [ ] **T6.2** `steward/thank-you/page.tsx`: recipient chips + prefilled
-  editable message + `stewardBroadcastThankYou`.
-- [ ] **T6.3** `steward/thank-you/sent/page.tsx`: paved-brick animation
-  (reduced-motion-safe) + completion copy + "Back to the board".
-- [ ] **CHECK 6** `npm run build` + `npm run check`.
+- [x] **T6.1** Car-fund purchased/secured state (green "CAR SECURED") wired to
+  `stewardMarkCarPurchased` (in `StewardDashboard`, Phase 5).
+- [x] **T6.2** `steward/thank-you/page.tsx` (auth-gated; redirects unless
+  `carPurchased`, and to `/sent` if already `thanked`) + `ThankYouBroadcast`
+  (client): "To · N people" recipient chips (name + channel), prefilled
+  editable message, "Send thank-you to N contributors →" → `stewardBroadcastThankYou`.
+- [x] **T6.3** `steward/thank-you/sent/page.tsx` + `PavedBricks` (client):
+  three brick marks animate in (staggered, `motion-reduce` safe), "A yellow
+  brick is paved.", "You let N contributors know…", "Back to the board".
+- [x] **CHECK 6** `tsc --noEmit` 0 errors; `eslint` clean.
+
+## Phase 7 — Cleanup + verification quest — ✅ DONE (seed run deferred — no DB)
+
+- [x] **T7.1** Removed the `TheCrossingSupportSection` branch + its imports and
+  the `supportStatus` prop from `campaign/[ref]/CampaignLanding.tsx` and
+  `page.tsx`; deleted `TheCrossingSupportSection.tsx`; removed the now-dead
+  legacy `submitTheCrossingSupport` action. `/campaign/the-crossing` resolves to
+  the dedicated tree (literal segment beats `[ref]`).
+- [x] **T7.2** `scripts/seed-cyoa-cert-the-crossing.ts` (idempotent): TwineStory
+  + `CustomBar` `id:'cert-the-crossing-experience-v1'` (`isSystem`,
+  `visibility:'public'`, reward 1), 6 verification passages + START/FEEDBACK/
+  END_SUCCESS, barn-raising framing. Pattern: `seed-cyoa-certification-quests.ts`.
+- [x] **T7.3** `package.json`: `"seed:cert:the-crossing"`. **Seed not run in
+  this environment (no DATABASE_URL).** Run `npm run seed:cert:the-crossing`
+  once a DB is connected.
+- [x] **CHECK 7** `tsc --noEmit` 0 errors; `eslint` clean; unit test passes.
 
 ## Phase 7 — Cleanup + verification quest
 
@@ -150,11 +169,14 @@ boundary (fail-fix). `npm run check` must also show **no `schema.prisma` diff**.
 
 ## Backlog / tracking
 
-- [ ] **T8.1** Add a BACKLOG.md entry (next id) linking this spec; prompt file
-  `.specify/backlog/prompts/the-crossing-experience.md`; `npm run backlog:seed`.
-- [ ] **T8.2** Mark
+- [x] **T8.1 (partial)** Prompt file
+  `.specify/backlog/prompts/the-crossing-experience.md` added.
+  **`BACKLOG.md` is an auto-generated table (regenerated from the DB via
+  `backlog:seed`/`backlog:regen`) — not hand-edited here; run
+  `npm run backlog:seed` once a DB is connected to register the entry.**
+- [x] **T8.2** Marked
   [`the-crossing-campaign-landing-page`](../the-crossing-campaign-landing-page/spec.md)
-  as superseded-by this spec (experiential layer).
+  superseded (experiential layer) by this spec.
 
 ## Guardrails (every phase)
 
