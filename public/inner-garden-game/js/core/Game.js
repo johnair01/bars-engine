@@ -22,6 +22,18 @@ import { AssetLoader } from './AssetLoader.js';
 import { EmotionTypes } from '../data/Emotions.js';
 import { ADVOCATES, ADVOCATE_WORLD_SPAWNS } from '../data/CalruniaAdvocates.js';
 
+const CONTROL_TO_KEY = {
+    up: 'ArrowUp',
+    down: 'ArrowDown',
+    left: 'ArrowLeft',
+    right: 'ArrowRight',
+    a: 'e',
+    b: ' ',
+    start: 'i',
+    select: 'j',
+    back: 'Escape',
+};
+
 export class Game {
     constructor(canvas) {
         this.canvas = canvas;
@@ -174,6 +186,15 @@ export class Game {
 
         if (data.schemaVersion === 'inner-garden-control.v1') {
             const key = data.key;
+            if (!key) return;
+            if (data.action === 'press') this.input.pressVirtualKey(key);
+            if (data.action === 'release') this.input.releaseVirtualKey(key);
+            if (data.action === 'tap') this.input.tapVirtualKey(key);
+            return;
+        }
+
+        if (data.schemaVersion === 'inner-garden-control.v2') {
+            const key = CONTROL_TO_KEY[data.control];
             if (!key) return;
             if (data.action === 'press') this.input.pressVirtualKey(key);
             if (data.action === 'release') this.input.releaseVirtualKey(key);
@@ -463,6 +484,7 @@ export class Game {
     _update(deltaTime) {
         // Sync state to HUD debug display
         this._syncState();
+        this.input.beginFrame();
         
         // Safety: pressing Escape 3 times quickly forces back to playing
         const escHit = this.input.isKeyJustPressed('Escape');

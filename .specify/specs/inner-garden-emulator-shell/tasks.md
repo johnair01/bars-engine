@@ -14,12 +14,12 @@
 
 ## Phase 1 — Mobile-Control Hotfix
 
-- [ ] T7: Add `inner-garden-control.v2` semantic control handling.
-- [ ] T8: Preserve `inner-garden-control.v1` raw-key compatibility during migration.
-- [ ] T9: Replace one-frame virtual taps with durable queued input consumed by the next game update.
-- [ ] T10: Add visible Back/Escape control to the mobile shell.
-- [ ] T11: Map `a`, `b`, `start`, `select`, and `back` to the correct shell/game behaviors.
-- [ ] T12: Add a mobile control smoke check that verifies D-pad, A/B, Start, Select, and Back.
+- [x] T7: Add `inner-garden-control.v2` semantic control handling.
+- [x] T8: Preserve `inner-garden-control.v1` raw-key compatibility during migration.
+- [x] T9: Replace one-frame virtual taps with durable queued input consumed by the next game update.
+- [x] T10: Add visible Back/Escape control to the mobile shell.
+- [x] T11: Map `a`, `b`, `start`, `select`, and `back` to the correct shell/game behaviors.
+- [x] T12: Add a mobile control smoke check that verifies D-pad, A/B, Start, Select, and Back.
 
 ## Phase 2 — Cartridge Lobby
 

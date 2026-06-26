@@ -22,6 +22,7 @@ class Boot {
         
         // Create game (initializes systems, procedural assets)
         this.game = new Game(this.canvas);
+        window.innerGardenGame = this.game;
         
         await this._loadStep(40, 'Planting seeds...');
         

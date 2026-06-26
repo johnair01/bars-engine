@@ -7,6 +7,8 @@ export class Input {
     constructor() {
         this.keys = {};
         this.keysJustPressed = {};
+        this.virtualTapQueue = [];
+        this.virtualTapKeys = new Set();
         this._lastKeyTime = {};
         this.mouse = {
             x: 0,
@@ -70,11 +72,21 @@ export class Input {
     }
 
     tapVirtualKey(key) {
-        this.keysJustPressed[key] = true;
-        this.keys[key] = true;
-        requestAnimationFrame(() => {
-            this.keys[key] = false;
-        });
+        this.virtualTapQueue.push(key);
+    }
+
+    /**
+     * Promote queued virtual taps into this frame's input state.
+     * Touch controls can arrive between game frames; holding taps here ensures
+     * one-frame actions are visible to the next update before endFrame clears them.
+     */
+    beginFrame() {
+        while (this.virtualTapQueue.length > 0) {
+            const key = this.virtualTapQueue.shift();
+            this.keysJustPressed[key] = true;
+            this.keys[key] = true;
+            this.virtualTapKeys.add(key);
+        }
     }
     
     /**
@@ -84,6 +96,8 @@ export class Input {
     clearKeys() {
         this.keys = {};
         this.keysJustPressed = {};
+        this.virtualTapQueue = [];
+        this.virtualTapKeys.clear();
     }
     
     _onMouseMove(e) {
@@ -166,6 +180,10 @@ export class Input {
      * Call at the end of each frame to clear just-pressed states
      */
     endFrame() {
+        for (const key of this.virtualTapKeys) {
+            this.keys[key] = false;
+        }
+        this.virtualTapKeys.clear();
         this.keysJustPressed = {};
         this.mouse.leftJustPressed = false;
         this.mouse.rightJustPressed = false;
