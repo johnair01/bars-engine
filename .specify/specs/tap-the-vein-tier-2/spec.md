@@ -1,5 +1,10 @@
 # Spec: Tap the Vein — Tier 2 (economy, inline 3·2·1, idea storm/vault, upgrade ceremony)
 
+> **Reshaped by [lens-integration-refactor](../lens-integration-refactor/spec.md).**
+> Daily TTV will attach to today's **Lens**; **TTVE**'s mint must populate Vibeulon
+> attribution (lens/channel/growthSource); **TTVS/TTV3** run inside the lens flow.
+> Re-scope these phases after Lens P2/P4 land.
+
 ## Purpose
 
 Tier 1 shipped the working Tap the Vein daily ritual + NOW panel (the morning

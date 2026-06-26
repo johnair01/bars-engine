@@ -340,6 +340,17 @@ model CustomBar {
   campaignGoal                         String?
   successCondition                     String?
   emotionalAlchemyTag                  String?
+  /// Lens Integration Refactor (LENS) — soft pointers. lensId: the Lens this BAR
+  /// was grown under. gardenId: which Garden it's planted in (membership = planted).
+  lensId                               String?
+  gardenId                             String?
+  /// EA triad captured at the plant gate (unpacking mechanics) — required for
+  /// lens/campaign alignment + emotional-alchemy moves. Reuses unpacking vocab.
+  /// experienceIntent = desired outcome (EXPERIENCE_OPTIONS, single).
+  /// dissatisfaction = current EA "from" state(s). satisfaction = desired "to" state(s).
+  experienceIntent                     String?
+  dissatisfaction                      String?
+  satisfaction                         String?
   forkedFromId                         String?
   gameMasterFace                       String?
   twineStoryId                         String?
@@ -605,6 +616,25 @@ model TapTheVeinDailySession {
 /// TTV Slice 2 — a single committed task within a daily session.
 /// Lifecycle: committed → in_progress → (completed | carried_over | composted | assigned_to_campaign | upgraded_to_quest).
 /// Player is the authority on completion — no auto-transitions.
+/// Lens Integration Refactor (LENS1) — first-class temporal lens.
+/// Soft-pointer player scope (matches the cross-system precedent; no relation graph churn).
+model Lens {
+  id           String   @id @default(cuid())
+  playerId     String
+  type         String   // orientation | vision | yearly | quarterly | monthly | weekly | daily
+  title        String
+  description  String?  @db.Text
+  parentLensId String?
+  /// canonical calendar identity for get-or-create dedupe, e.g. "daily:2026-06-26".
+  periodKey    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([playerId, type, periodKey])
+  @@index([playerId, type])
+  @@map("lenses")
+}
+
 model TapTheVeinTask {
   id                        String                 @id @default(cuid())
   playerId                  String
@@ -632,6 +662,9 @@ model TapTheVeinTask {
   visibility                String? // null=private; "campaign"=visible to campaign stewards
   // Quest upgrade
   questId                   String?
+  // Core-loop bridge (CGLA H1): the CustomBar this task projects into, so a task
+  // can be tuned / charged / 3·2·1'd / grown like any BAR. Soft pointer.
+  barId                     String?
   // Phase 3 wiring (links back to daily session)
   dailySession              TapTheVeinDailySession @relation(fields: [dailySessionId], references: [id], onDelete: Cascade)
 
