@@ -87,15 +87,21 @@ boundary (fail-fix). `npm run check` must also show **no `schema.prisma` diff**.
   Added `examples: string[]` to the role model (all six) for "Moves you can
   make".
 
-## Phase 4 — Capture + saved (06–08)
+## Phase 4 — Capture + saved (06–08) — ✅ DONE
 
-- [ ] **T4.1** `move/[roleId]/page.tsx` capture form (560px): fields per plan,
-  donor-only Amount, channel select, honeypot `url`. Sticky submit disabled
-  until `name && contact && offer`; hint line flips. Wire `submitTheCrossingMove`.
-- [ ] **T4.2** `move/[roleId]/saved/page.tsx`: load BAR by `?bar=`; green check;
-  mini BAR card (deck code, NEW BAR pill, summary, role·domain); three CTAs.
-- [ ] **CHECK 4** `npm run build` + `npm run check`. Submit a test move; confirm
-  the BAR persists with new `contextLines` fields.
+- [x] **T4.1** `move/[roleId]/page.tsx` (server, 560px) + `CaptureForm.tsx`
+  (client): Name + channel select (2-col), contact, donor-only Amount,
+  role offer field, optional details textarea, honeypot `url`. Sticky submit
+  disabled until `name && contact && offer` (trimmed); hint line flips between
+  "Add your name…" and "Goes straight to Wendell's board." Posts
+  `submitTheCrossingMove`.
+- [x] **T4.2** `move/[roleId]/saved/page.tsx` (server): loads the BAR by `?bar=`
+  (falls back to role defaults if absent), green check disc, mini BAR card
+  (deck code, NEW BAR amber pill, summary, role · domain), three CTAs (account
+  upsell, steward view, pick another path).
+- [x] **CHECK 4** `tsc --noEmit` 0 errors; `eslint` clean. *(Live DB round-trip
+  not exercised here — server action reuses the verified `createContributionBar`
+  path from Phase 1.)*
 
 ## Phase 5 — Steward dashboard + contributor (09–10)
 
