@@ -21,6 +21,9 @@ import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
 import { growQuestFromBar } from '@/actions/bars'
 import { ensureTodayLens, personalGardenId } from '@/lib/lenses/ensure'
 
+/** Separator for multiselect EA-triad values stored as a single string (mirrors Q3_SEP). */
+const EA_SEP = ' | '
+
 /** Maturity/provenance for a TTV task's projected BAR (mirrors captureBar). */
 const TTV_BAR_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
   maturity: 'captured',
@@ -467,16 +470,28 @@ export async function promoteTaskToBar(taskId: string): Promise<TtvResult<{ barI
 }
 
 /**
- * Plant gesture (LENS first slice) — promote the task to a BAR (if needed) and
- * place it in the player's Garden (set gardenId). The BAR already carries today's
- * lensId from promotion. Idempotent.
+ * Plant gesture (LENS) — promote the task to a BAR (if needed), capture the
+ * **EA triad** (desired outcome + current dissatisfaction + desired satisfaction;
+ * load-bearing for lens/campaign alignment + EA moves), and place it in the
+ * player's Garden (set gardenId). The BAR already carries today's lensId. Idempotent.
  */
-export async function plantTask(taskId: string): Promise<TtvResult<{ barId: string }>> {
+export async function plantTask(input: {
+  taskId: string
+  experienceIntent: string
+  dissatisfaction: string[]
+  satisfaction: string[]
+}): Promise<TtvResult<{ barId: string }>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
+
+  const experienceIntent = (input.experienceIntent || '').trim()
+  if (!experienceIntent) return { error: 'Name the desired outcome' }
+  if (!input.dissatisfaction?.length) return { error: 'Name the current dissatisfaction' }
+  if (!input.satisfaction?.length) return { error: 'Name the desired satisfaction' }
+
   try {
     const task = await db.tapTheVeinTask.findUnique({
-      where: { id: taskId },
+      where: { id: input.taskId },
       select: { id: true, playerId: true, barId: true, originalText: true },
     })
     if (!task) return { error: 'Task not found' }
@@ -487,7 +502,12 @@ export async function plantTask(taskId: string): Promise<TtvResult<{ barId: stri
 
     await db.customBar.update({
       where: { id: barId },
-      data: { gardenId: personalGardenId(player.id) },
+      data: {
+        gardenId: personalGardenId(player.id),
+        experienceIntent,
+        dissatisfaction: input.dissatisfaction.join(EA_SEP),
+        satisfaction: input.satisfaction.join(EA_SEP),
+      },
     })
 
     revalidatePath('/tap-the-vein')

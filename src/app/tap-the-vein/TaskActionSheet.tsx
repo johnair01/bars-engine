@@ -12,6 +12,7 @@
 import { useState } from 'react'
 import { CultivationCard, type ElementKey } from '@/components/ui/CultivationCard'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
+import { EXPERIENCE_OPTIONS, SATISFACTION_OPTIONS, DISSATISFACTION_OPTIONS } from '@/lib/quest-grammar/unpacking-constants'
 import type { TtvTaskDTO, TtvCampaignOption } from '@/actions/tap-the-vein'
 
 export type SheetAction =
@@ -19,7 +20,7 @@ export type SheetAction =
   | { kind: 'complete' }
   | { kind: 'carry' }
   | { kind: 'keep' }
-  | { kind: 'plant' }
+  | { kind: 'plant'; experienceIntent: string; dissatisfaction: string[]; satisfaction: string[] }
   | { kind: 'upgrade' }
   | { kind: 'compost'; reason: string }
   | { kind: 'assign'; campaignId: string; visibility: 'campaign' | null }
@@ -70,9 +71,15 @@ export function TaskActionSheet({
   onAction: (a: SheetAction) => void
   onClose: () => void
 }) {
-  const [mode, setMode] = useState<'menu' | 'compost' | 'assign'>('menu')
+  const [mode, setMode] = useState<'menu' | 'compost' | 'assign' | 'plant'>('menu')
   const [campaignId, setCampaignId] = useState<string | null>(null)
   const [share, setShare] = useState(false)
+  // Plant-gate EA triad
+  const [experience, setExperience] = useState<string | null>(null)
+  const [dissat, setDissat] = useState<string[]>([])
+  const [sat, setSat] = useState<string[]>([])
+  const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
+  const canPlant = !!experience && dissat.length > 0 && sat.length > 0
   const gem = ELEMENT_TOKENS[element].gem
   const purple = 'var(--bars-liminal)'
 
@@ -130,7 +137,7 @@ export function TaskActionSheet({
             <ActionRow icon="✓" iconColor={gem} label="Complete" hint="pave a brick · ♦+1" disabled={busy} onClick={() => onAction({ kind: 'complete' })} />
             <ActionRow icon="↻" label="Carry to tomorrow" hint="keeps the thread" disabled={busy} onClick={() => onAction({ kind: 'carry' })} />
             <ActionRow icon="❖" label="Keep as a BAR" hint="plant in the loop" disabled={busy} onClick={() => onAction({ kind: 'keep' })} />
-            <ActionRow icon="❀" label="Plant in Garden" hint="grow it under today's lens" disabled={busy} onClick={() => onAction({ kind: 'plant' })} />
+            <ActionRow icon="❀" label="Plant in Garden" hint="grow it under today's lens" disabled={busy} onClick={() => setMode('plant')} />
             <ActionRow icon="↩" label="Compost" hint="return to field" disabled={busy} onClick={() => setMode('compost')} />
             <ActionRow icon="◇" label="Assign to campaign" hint="private by default" disabled={busy} onClick={() => setMode('assign')} />
             <ActionRow
@@ -281,8 +288,94 @@ export function TaskActionSheet({
             <BackRow onClick={() => setMode('menu')} />
           </div>
         )}
+
+        {mode === 'plant' && (
+          <div>
+            <Eyebrow>Plant · grow it under today&rsquo;s lens</Eyebrow>
+            <Title>What is this for?</Title>
+            <p style={{ fontFamily: body, fontSize: 12.5, lineHeight: 1.5, color: 'var(--bars-text-secondary)', margin: '6px 0 12px' }}>
+              Name the arc so it can align and metabolize — a desired outcome, where you are now, where you want to be.
+            </p>
+
+            {/* q1 — desired outcome (single) */}
+            <ChipGroup label="Desired outcome" mono={mono}>
+              {EXPERIENCE_OPTIONS.map((o) => (
+                <Chip key={o} label={o} selected={experience === o} onClick={() => setExperience(o)} />
+              ))}
+            </ChipGroup>
+
+            {/* q4 — current dissatisfaction (multi) */}
+            <ChipGroup label="Where you are now" mono={mono}>
+              {DISSATISFACTION_OPTIONS.map((o) => (
+                <Chip key={o} label={o} selected={dissat.includes(o)} onClick={() => setDissat((l) => toggle(l, o))} />
+              ))}
+            </ChipGroup>
+
+            {/* q2 — desired satisfaction (multi) */}
+            <ChipGroup label="Where you want to be" mono={mono}>
+              {SATISFACTION_OPTIONS.map((o) => (
+                <Chip key={o} label={o} selected={sat.includes(o)} onClick={() => setSat((l) => toggle(l, o))} />
+              ))}
+            </ChipGroup>
+
+            <button
+              type="button"
+              disabled={busy || !canPlant}
+              onClick={() => experience && onAction({ kind: 'plant', experienceIntent: experience, dissatisfaction: dissat, satisfaction: sat })}
+              className="w-full"
+              style={{
+                marginTop: 14,
+                minHeight: 48,
+                borderRadius: 8,
+                background: canPlant ? purple : 'var(--bars-surface-card)',
+                color: canPlant ? '#fff' : 'var(--bars-text-muted)',
+                fontFamily: display,
+                fontWeight: 800,
+                fontSize: 15,
+                boxShadow: 'inset 0 1px 0 var(--bars-inset-top)',
+                opacity: busy ? 0.6 : 1,
+              }}
+            >
+              Plant ❀
+            </button>
+            <BackRow onClick={() => setMode('menu')} />
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+function ChipGroup({ label, mono, children }: { label: string; mono: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', margin: '0 0 7px' }}>{label}</p>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
+    </div>
+  )
+}
+
+function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  const purple = 'var(--bars-liminal)'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-full"
+      style={{
+        minHeight: 32,
+        padding: '6px 12px',
+        fontFamily: 'var(--bars-font-body)',
+        fontSize: 12.5,
+        color: selected ? '#fff' : 'var(--bars-text-secondary)',
+        background: selected ? purple : 'var(--bars-surface-card)',
+        boxShadow: selected
+          ? 'inset 0 1px 0 var(--bars-inset-top)'
+          : 'inset 0 1px 0 var(--bars-inset-top), inset 0 0 0 1px var(--bars-line)',
+      }}
+    >
+      {label}
+    </button>
   )
 }
 

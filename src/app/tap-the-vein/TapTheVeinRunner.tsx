@@ -107,7 +107,12 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
           case 'keep':
             return promoteTaskToBar(id)
           case 'plant':
-            return plantTask(id)
+            return plantTask({
+              taskId: id,
+              experienceIntent: a.experienceIntent,
+              dissatisfaction: a.dissatisfaction,
+              satisfaction: a.satisfaction,
+            })
           case 'upgrade':
             return upgradeTaskToQuest(id)
           case 'compost':

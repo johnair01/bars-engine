@@ -92,8 +92,15 @@ export default async function GardenPage() {
                           {p.title}
                         </p>
                         <p style={{ fontFamily: 'var(--bars-font-mono)', fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', margin: '3px 0 0' }}>
-                          {p.composted ? 'composted · feeds the soil' : (p.maturity ?? 'seed').replace(/_/g, ' ')}
+                          {p.composted
+                            ? 'composted · feeds the soil'
+                            : p.eaArc ?? (p.maturity ?? 'seed').replace(/_/g, ' ')}
                         </p>
+                        {!p.composted && p.experienceIntent && (
+                          <p style={{ fontFamily: 'var(--bars-font-mono)', fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', color: gem, margin: '2px 0 0' }}>
+                            {p.experienceIntent}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </CultivationCard>

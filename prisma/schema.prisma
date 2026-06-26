@@ -341,6 +341,13 @@ model CustomBar {
   /// was grown under. gardenId: which Garden it's planted in (membership = planted).
   lensId                               String?
   gardenId                             String?
+  /// EA triad captured at the plant gate (unpacking mechanics) — required for
+  /// lens/campaign alignment + emotional-alchemy moves. Reuses unpacking vocab.
+  /// experienceIntent = desired outcome (EXPERIENCE_OPTIONS, single).
+  /// dissatisfaction = current EA "from" state(s). satisfaction = desired "to" state(s).
+  experienceIntent                     String?
+  dissatisfaction                      String?
+  satisfaction                         String?
   forkedFromId                         String?
   gameMasterFace                       String?
   twineStoryId                         String?
