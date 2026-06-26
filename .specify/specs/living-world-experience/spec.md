@@ -118,11 +118,19 @@ Book Chapter → Campaign → Quest → BAR → Tap the Vein → Daily Lens
 
 - Walk **up** (lens hierarchy + parent quest + campaign/instance) and **down**
   (children, resulting artifacts, minted ♦).
-- **Book/Chapter as the topmost root** = artifacts trace back to a **chapter of the
-  book** (e.g. "born from Chapter 3"). Requires chapters to exist as data.
-  **Decision pending corpus**: if the handbook is already structured as chapters,
-  add a thin "from Chapter X" link; otherwise keep the root **extensible** (a
-  chapter can slot in later) and **defer book-modeling**.
+- **BAR seed-source (player-guided) [decided]**: a BAR enters from one of three
+  seeds — the **Allyship Deck**, the **Book**, or the player's **own charge**.
+  Source is **declared by the player, never inferred**. Model a light
+  `seedSource ∈ { deck, book, charge, … }` (+ optional `seedSourceRef`, e.g. a deck
+  card id or chapter id) so the timeline can show "this began as a deck card / a
+  passage from Chapter 3 / a morning charge."
+- **Book/Chapter as a provenance root — deferred, not built now.** The handbook
+  *is* already broken into chapters, so book-as-root is a cheap future plug-in:
+  when shipped, **book-sourced** BARs (`seedSource = 'book'`, player-declared) carry
+  the chapter as their topmost root. Rationale to keep it on the roadmap: it's
+  valuable for the creator, and a planned **book draft will intelligently funnel
+  readers into the app**, where they declare a passage as the seed of a BAR. Until
+  then, keep the root **extensible** and do **no book-modeling**.
 - Presentation: a vertical constellation/timeline, not a table.
 
 ## Emotional goal (acceptance lens)
@@ -156,12 +164,15 @@ Each phase: `UI_COVENANT` covenant check + a `cert-*` verification quest.
    wiring **SAT**. *(Still open: does it mint ♦? GMs lean tiny-or-none.)*
 5. **Hand**: glance in NOW + expandable `/hand` page; not a primary tab.
 
+6. **BAR seed-source = deck | book | charge, player-declared** (never inferred).
+   Book/Chapter as a provenance root is **deferred** (chapters exist as data, so
+   it's a cheap future plug-in tied to the planned app-funneling book draft).
+7. **Daily Reflection mint = none for now** (reflection is its own close; GMs leaned
+   tiny-or-none). Revisit if it should mint a small ♦.
+
 ## Still open (need your input)
-- **Daily Reflection mint** — tiny ♦ or none?
-- **Book/Chapter provenance roots** — do artifacts trace back to **book chapters**,
-  and is the handbook already modeled as chapters in the app? If aspirational, we
-  keep provenance roots **extensible** (a chapter *can* be a root later) and **defer
-  book-modeling**. *(See § Provenance.)*
+*(none blocking — all open questions resolved above; revisit Daily Reflection mint
+and Book/Chapter root when their phases are scheduled.)*
 
 ## Out of scope (now)
 Friendship/Guild/Campaign gardens, lens-switching UX, multiplayer World surfaces
