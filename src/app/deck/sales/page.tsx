@@ -84,7 +84,7 @@ export default function DeckSalesPage() {
             Get the deck
           </Link>
           <Link href="/deck/preview" style={secondaryCta}>
-            See all 120 cards
+            See sample cards
           </Link>
         </div>
       </section>
