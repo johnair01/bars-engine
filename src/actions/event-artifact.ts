@@ -5,6 +5,10 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { validatePrimaryDomain, validateSecondaryDomain } from '@/lib/event-campaign/domains'
+import {
+  DISCOVERABLE_VISIBILITIES,
+  type PlayerEventOverviewItem,
+} from '@/lib/event-discoverability'
 
 export type CreateEventInput = {
   linkedCampaignId: string
@@ -280,23 +284,6 @@ export async function getEventCalendarExport(
     timezone: event.timezone,
   })
   return { success: true, ics }
-}
-
-/** Visibility values that make an event discoverable to all logged-in players. */
-export const DISCOVERABLE_VISIBILITIES = ['public', 'discoverable'] as const
-
-export type PlayerEventOverviewItem = {
-  id: string
-  title: string
-  description: string
-  startTime: Date | null
-  endTime: Date | null
-  timezone: string | null
-  locationType: string
-  locationDetails: string | null
-  instanceId: string | null
-  visibility: string
-  status: string
 }
 
 const PLAYER_EVENT_SELECT = {

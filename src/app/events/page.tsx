@@ -2,10 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
-import {
-  getPlayerEventsOverview,
-  type PlayerEventOverviewItem,
-} from '@/actions/event-artifact'
+import { getPlayerEventsOverview } from '@/actions/event-artifact'
+import type { PlayerEventOverviewItem } from '@/lib/event-discoverability'
 
 /**
  * @page /events
