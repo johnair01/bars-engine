@@ -43,18 +43,28 @@ first). Tailwind for layout; `cultivation-cards.css` for aesthetic.
 
 Replaces the current authed nav (NOW / VAULT / EVENTS / PLAY / + BAR) with:
 
+**Four primary destinations** + Hand (glance-in-NOW that expands to a page) +
+persistent Capture (decided via the Six GM analysis):
+
 | Destination | Is | Contains | Replaces / absorbs |
 |-------------|----|----------|--------------------|
 | **Observatory** | temporal navigation (planetarium) | the Lens hierarchy: orientation → vision → year → quarter → month → week → **today** | NOW |
 | **Garden** | what you've planted, growing | planted BARs (have a `gardenId`), text-free growth | promotes `/bars/garden` |
-| **Hand** | what you're actively carrying | the 6 carry slots | promotes the `HandGlance` inside NOW |
 | **Vault** | everything held, not planted/carried | charges, drafts, unplanted BARs, quests | VAULT |
-| **World** | the outer / allyship game **[ASSUMED — confirm]** | campaigns, events, other players (map lives inside) | EVENTS + PLAY/campaign |
+| **World** | the **instance** — the narrative flavor of the world | the player's instance(s); campaigns **inside** (instance-flavored) **or outside** (standalone) an instance; events; other players. Map lives inside. | EVENTS + PLAY/campaign |
 
+- **Hand** is **not** a primary tab: the `HandGlance` stays in NOW/Observatory and
+  **expands to a `/hand` page**. (Decided — keep Hand in NOW + an expandable page.)
 - **Capture is never a destination but always reachable** — a **persistent
-  one-tap Capture** affordance (thumb zone), since capture must never be gated.
-  **[ASSUMED — confirm]**
-- Per UI_COVENANT Law 15, navigation reads as **spatial zones**, not tabs.
+  one-tap Capture** affordance (thumb zone); capture must never be gated.
+- **World = instance.** An **Instance** is the narrative flavor of the world.
+  **Campaigns can live inside an instance (flavored by it) or outside any
+  instance (standalone)** — World surfaces both (`Campaign.instanceId` nullable).
+- **Covenant reconciliation [Architect/Regent finding]**: `UI_COVENANT.md` Law 15
+  names nav as **six GM spatial zones** (Shaman/Challenger/Regent/Architect/
+  Diplomat/Sage). The six faces are a **role/lens** system, **distinct** from these
+  **place** destinations. Law 15 must be updated to say so, or it will mislead UI
+  work. (Task: amend the covenant when E1 lands.)
 
 ## Observatory
 
@@ -106,10 +116,13 @@ Book Chapter → Campaign → Quest → BAR → Tap the Vein → Daily Lens
             → Weekly → Monthly → Quarter → Vision
 ```
 
-- Walk **up** (lens hierarchy + parent quest + campaign + **Book/Chapter**) and
-  **down** (children, resulting artifacts, minted ♦).
-- **Book/Chapter become provenance roots [ASSUMED — confirm]** (hook into existing
-  book/handbook content) so artifacts can trace to the source material.
+- Walk **up** (lens hierarchy + parent quest + campaign/instance) and **down**
+  (children, resulting artifacts, minted ♦).
+- **Book/Chapter as the topmost root** = artifacts trace back to a **chapter of the
+  book** (e.g. "born from Chapter 3"). Requires chapters to exist as data.
+  **Decision pending corpus**: if the handbook is already structured as chapters,
+  add a thin "from Chapter X" link; otherwise keep the root **extensible** (a
+  chapter can slot in later) and **defer book-modeling**.
 - Presentation: a vertical constellation/timeline, not a table.
 
 ## Emotional goal (acceptance lens)
@@ -131,13 +144,24 @@ holds its place in the timeline; the Garden shows even compost as feeding growth
 
 Each phase: `UI_COVENANT` covenant check + a `cert-*` verification quest.
 
-## Open decisions (assumed defaults above — confirm)
-1. Garden growth model — **derived-from-provenance** (assumed) vs cosmetic vs maturity-visual.
-2. Navigation — **full replacement + persistent Capture** (assumed) vs additive/phased vs Capture-inside-a-destination.
-3. **World** = **outer game; map inside** (assumed) vs map-only vs both-as-peers.
-4. **Daily Reflection** = **satisfaction + witness, optional mint** (assumed) — exact content + whether it mints.
-5. **Book/Chapter** as provenance roots (assumed) — confirm the book content to hook.
-6. **Hand** promoted to a first-class destination (assumed) vs a glance inside Observatory/Today.
+## Decisions (resolved via Six GM analysis, 2026-06-26)
+1. **Garden growth = derived-from-provenance** (branch=children, flower=grew a
+   quest, fruit=harvested/minted ♦, compost=composted). Unanimous. No stored stage,
+   no cosmetic care-meter. "Needs attention" = staleness, framed as gentle invitation.
+2. **Navigation = full replacement** → **4 destinations** (Observatory / Garden /
+   Vault / World) + **Hand glance-in-NOW → `/hand` page** + **persistent Capture**.
+3. **World = the instance** (narrative flavor of the world); campaigns inside or
+   outside an instance; World surfaces both. Absorbs EVENTS + PLAY/campaign.
+4. **Daily Reflection = satisfaction-state + one witness line on today's Lens**,
+   wiring **SAT**. *(Still open: does it mint ♦? GMs lean tiny-or-none.)*
+5. **Hand**: glance in NOW + expandable `/hand` page; not a primary tab.
+
+## Still open (need your input)
+- **Daily Reflection mint** — tiny ♦ or none?
+- **Book/Chapter provenance roots** — do artifacts trace back to **book chapters**,
+  and is the handbook already modeled as chapters in the app? If aspirational, we
+  keep provenance roots **extensible** (a chapter *can* be a root later) and **defer
+  book-modeling**. *(See § Provenance.)*
 
 ## Out of scope (now)
 Friendship/Guild/Campaign gardens, lens-switching UX, multiplayer World surfaces
