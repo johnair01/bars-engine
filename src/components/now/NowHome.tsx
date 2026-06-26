@@ -53,9 +53,9 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
     : chargeTargets
 
   const tools = [
-    { href: '/wiki/first-aid', icon: '✚', iconColor: '#2980b9', iconGlow: '#1a7a8a', label: 'First Aid', sub: 'soothe the charge', mono: false },
-    { href: '/wiki/321', icon: '3·2·1', iconColor: '#7c3aed', iconGlow: '#7c3aed', label: 'Clean Up', sub: 'metabolize it', mono: true },
-    { href: '/wiki/iching', icon: '☰', iconColor: '#d4a017', iconGlow: '#d4a017', label: 'I Ching', sub: 'consult the lines', mono: false },
+    { href: '/emotional-first-aid', icon: '✚', iconColor: '#2980b9', iconGlow: '#1a7a8a', label: 'First Aid', sub: 'soothe the charge', mono: false },
+    { href: '/tap-the-vein', icon: '3·2·1', iconColor: '#7c3aed', iconGlow: '#7c3aed', label: 'Clean Up', sub: 'metabolize it', mono: true },
+    { href: '/iching', icon: '☰', iconColor: '#d4a017', iconGlow: '#d4a017', label: 'I Ching', sub: 'consult the lines', mono: false },
   ]
 
   return (
