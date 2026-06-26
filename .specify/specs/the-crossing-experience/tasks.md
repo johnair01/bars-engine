@@ -71,15 +71,21 @@ boundary (fail-fix). `npm run check` must also show **no `schema.prisma` diff**.
 > built here on the real `CultivationCard` primitive + `parseDeckCode`; reused
 > by Phase 3 (satisfies most of T3.2).
 
-## Phase 3 — Role detail + deck cards (02–05)
+## Phase 3 — Role detail + deck cards (02–05) — ✅ DONE
 
-- [ ] **T3.1** `role/[roleId]/page.tsx` (prop-driven, all six; 404 unknown).
-  Sections per plan (header card, Do-this-now, Why-it-matters, Moves, deck
-  cards, account card, Superpower fallback).
-- [ ] **T3.2** `components/the-crossing/DeckCardForRole.tsx`: parse
-  `starterCardIds[i]` (`MOVE-DOMAIN-FACE`) + role element → `CultivationCard`
-  (signed-out action bar). Degrade gracefully if no deck-move registry.
-- [ ] **CHECK 3** `npm run build` + `npm run check`.
+- [x] **T3.1** `role/[roleId]/page.tsx` (server, prop-driven for all six;
+  `notFound()` on unknown; `generateStaticParams` + `generateMetadata`).
+  Sections: breadcrumb, element-tinted header card (faded sigil), Do-this-now
+  (Venmo for donor), Why-it-matters (impact + boundary on a left rule),
+  Moves-you-can-make (new `role.examples`), two deck cards, purple account
+  upsell, Superpower fallback, back link.
+- [x] **T3.2** `components/the-crossing/DeckCardForRole.tsx` (built in Phase 2):
+  `parseDeckCode` (`MOVE-DOMAIN-FACE`) + role element → `CultivationCard` with
+  signed-out claim bar. Degrades without a deck-move registry (labels +
+  question derive from the code).
+- [x] **CHECK 3** `tsc --noEmit` 0 errors; `eslint` clean; unit test passes.
+  Added `examples: string[]` to the role model (all six) for "Moves you can
+  make".
 
 ## Phase 4 — Capture + saved (06–08)
 

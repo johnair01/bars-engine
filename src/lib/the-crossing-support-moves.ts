@@ -112,6 +112,8 @@ export type TheCrossingSupportRole = {
   impact: string
   artifact: string
   ctaLabel: string
+  /** Concrete "moves you can make" shown on the role detail page. */
+  examples: string[]
   capture: TheCrossingCaptureCopy
   starterCardIds: string[]
 }
@@ -134,6 +136,11 @@ export const THE_CROSSING_SUPPORT_ROLES: readonly TheCrossingSupportRole[] = [
     impact: 'Turns the open field into concrete options.',
     artifact: 'Listing lead',
     ctaLabel: 'Send a car lead',
+    examples: [
+      'Send a Marketplace or Craigslist listing that fits the budget.',
+      'Flag a dealer, auction, or private-sale lead.',
+      'Pass along a car a friend is quietly selling.',
+    ],
     capture: {
       contactPlaceholder: CONTACT_DEFAULT,
       offerLabel: 'The lead',
@@ -157,6 +164,11 @@ export const THE_CROSSING_SUPPORT_ROLES: readonly TheCrossingSupportRole[] = [
     impact: 'Reduces risk and helps a good decision happen faster.',
     artifact: 'Listing review',
     ctaLabel: 'Offer car judgment',
+    examples: [
+      'Read a listing and call out the red flags.',
+      'Estimate a fair price and a walk-away price.',
+      'Advise on title, mileage, and repair risk.',
+    ],
     capture: {
       contactPlaceholder: CONTACT_DEFAULT,
       offerLabel: 'Your read',
@@ -180,6 +192,11 @@ export const THE_CROSSING_SUPPORT_ROLES: readonly TheCrossingSupportRole[] = [
     impact: 'Creates a person-to-person bridge that would not exist otherwise.',
     artifact: 'Warm intro',
     ctaLabel: 'Make an intro',
+    examples: [
+      'Introduce someone who sells or sources cars.',
+      'Connect Wendell to a trusted mechanic.',
+      'Bridge to someone with fleet or wholesale access.',
+    ],
     capture: {
       contactPlaceholder: CONTACT_DEFAULT,
       offerLabel: 'The introduction',
@@ -203,6 +220,11 @@ export const THE_CROSSING_SUPPORT_ROLES: readonly TheCrossingSupportRole[] = [
     impact: 'Extends the campaign beyond Wendell’s immediate reach.',
     artifact: 'Signal boost',
     ctaLabel: 'Share the ask',
+    examples: [
+      'Share the campaign with one sentence on why it matters.',
+      'Post it to a group chat or your stories.',
+      'Tag two people who would want to help.',
+    ],
     capture: {
       contactPlaceholder: '@handle or email',
       offerLabel: 'Your boost',
@@ -226,6 +248,11 @@ export const THE_CROSSING_SUPPORT_ROLES: readonly TheCrossingSupportRole[] = [
     impact: 'Reduces isolation and keeps the next move alive.',
     artifact: 'Encouragement note',
     ctaLabel: 'Send encouragement',
+    examples: [
+      'Send a check-in text or a voice note.',
+      'Reflect the momentum back to Wendell.',
+      'Remind him the next move is small.',
+    ],
     capture: {
       contactPlaceholder: CONTACT_DEFAULT,
       offerLabel: 'Your note',
@@ -250,6 +277,11 @@ export const THE_CROSSING_SUPPORT_ROLES: readonly TheCrossingSupportRole[] = [
     impact: 'Adds real fuel to the car replacement effort.',
     artifact: 'Contribution',
     ctaLabel: 'Send Venmo',
+    examples: [
+      'Send Venmo toward the car.',
+      'Offer a tool, a ride, or temporary space.',
+      'Share the donation link with your people.',
+    ],
     capture: {
       contactPlaceholder: CONTACT_DEFAULT,
       offerLabel: 'Your contribution',
