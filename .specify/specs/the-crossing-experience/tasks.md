@@ -1,0 +1,135 @@
+# Tasks: The Crossing — CYOA Experience + Steward Dashboard
+
+Implements [`spec.md`](./spec.md) per [`plan.md`](./plan.md). **API-first
+order.** **No Prisma migration** (reuse `CustomBar`; state in `contextLines`).
+Check off as completed; run `npm run build` + `npm run check` at each phase
+boundary (fail-fix). `npm run check` must also show **no `schema.prisma` diff**.
+
+## Phase 0 — Role model & tokens *(foundational)*
+
+- [ ] **T0.1** Rename `car_person` → `car_expert` in
+  `src/lib/the-crossing-support-moves.ts` (id, label "Car Expert", union type);
+  add alias map so `getTheCrossingSupportRole('car_person')` still resolves.
+- [ ] **T0.2** Add per-role fields: `element: ElementKey`, `isDonor?`,
+  `exploreVerb`, `filterKey`, and `capture` copy (`contactPlaceholder`,
+  `offerLabel`, `offerPlaceholder`, `detailPlaceholder`) — values from the
+  prototype (see plan / extraction). Map domain→element (gather=earth,
+  organize=wood, aware=metal, direct=fire).
+- [ ] **T0.3** Add constants: `THE_CROSSING_FUND {goal:4800,base:3225}`,
+  `THE_CROSSING_VENMO_HANDLE` (placeholder), `THE_CROSSING_CHANNELS`,
+  `THE_CROSSING_FILTERS`, `STATUS_COLORS`.
+- [ ] **T0.4** Add pure helpers: `parseContribution(bar)`, `computeFund`,
+  `computeStewardStats`, `recipientsOf`. Default legacy BARs (`status='new'`,
+  `channel='text'`, `amount=null`, `notes=[]`, `notified=false`).
+- [ ] **T0.5** Unit tests `src/lib/__tests__/the-crossing-support-moves.test.ts`:
+  alias resolution, `computeFund` (base+amounts, cap 100%),
+  `parseContribution` legacy defaults.
+- [ ] **CHECK 0** `npm run check`.
+
+## Phase 1 — API (actions before UI)
+
+- [ ] **T1.1** Add `submitTheCrossingMove(formData)` in
+  `src/actions/the-crossing-support.ts` (keep `submitTheCrossingSupport` as a
+  thin alias). Read `channel`, `amount`; set initial `status` (donor→accepted,
+  else new), `notes:[]`, `notified:false`; write into `contextLines`; redirect
+  → `…/move/<role>/saved?bar=<id>`.
+- [ ] **T1.2** `assertSteward(playerId, campaignRef)` helper (reuse steward
+  resolution + `assertCanEditInstanceDonation`).
+- [ ] **T1.3** `stewardTransitionContribution({barId,action,message?})` —
+  status table in plan; `log_message` appends `You: "…"` + advances new→contacted;
+  `revalidatePath`.
+- [ ] **T1.4** Campaign-state singleton `CustomBar`
+  (`id:'the-crossing-campaign-state'`, `evidenceKind:'campaign_state'`):
+  `getCampaignState()`, `stewardMarkCarPurchased`, `stewardBroadcastThankYou`
+  (non-declined → thanked+notified; returns recipient count).
+- [ ] **CHECK 1** `npm run check`.
+
+## Phase 2 — Supporter landing (00–01)
+
+- [ ] **T2.1** `src/app/campaign/the-crossing/page.tsx` (server; static fallback,
+  renders without a campaign record) → `TheCrossingLanding.tsx` (client).
+- [ ] **T2.2** Hero + How-To-Play strip + `/awaken` top-right + fine print
+  (copy verbatim from plan).
+- [ ] **T2.3** `components/the-crossing/DomainGate.tsx` + `RoleCard.tsx`
+  (element-tinted, glyph tile, EXPLORE/GIVE). Color via `ELEMENT_TOKENS`.
+- [ ] **T2.4** Accordion (one open; mount panel; `prefers-reduced-motion`):
+  description, Tiny move/Creates/Why grid, deck-move chips, one
+  `DeckCardForRole`, two CTAs (Donor primary = Venmo).
+- [ ] **T2.5** `/superpower` fallback + water-tinted `/awaken` cross-link.
+- [ ] **CHECK 2** `npm run build` + `npm run check`. Mobile: no horizontal scroll.
+
+## Phase 3 — Role detail + deck cards (02–05)
+
+- [ ] **T3.1** `role/[roleId]/page.tsx` (prop-driven, all six; 404 unknown).
+  Sections per plan (header card, Do-this-now, Why-it-matters, Moves, deck
+  cards, account card, Superpower fallback).
+- [ ] **T3.2** `components/the-crossing/DeckCardForRole.tsx`: parse
+  `starterCardIds[i]` (`MOVE-DOMAIN-FACE`) + role element → `CultivationCard`
+  (signed-out action bar). Degrade gracefully if no deck-move registry.
+- [ ] **CHECK 3** `npm run build` + `npm run check`.
+
+## Phase 4 — Capture + saved (06–08)
+
+- [ ] **T4.1** `move/[roleId]/page.tsx` capture form (560px): fields per plan,
+  donor-only Amount, channel select, honeypot `url`. Sticky submit disabled
+  until `name && contact && offer`; hint line flips. Wire `submitTheCrossingMove`.
+- [ ] **T4.2** `move/[roleId]/saved/page.tsx`: load BAR by `?bar=`; green check;
+  mini BAR card (deck code, NEW BAR pill, summary, role·domain); three CTAs.
+- [ ] **CHECK 4** `npm run build` + `npm run check`. Submit a test move; confirm
+  the BAR persists with new `contextLines` fields.
+
+## Phase 5 — Steward dashboard + contributor (09–10)
+
+- [ ] **T5.1** `steward/page.tsx` (auth-gated: `getCurrentPlayer` +
+  `assertSteward`; signed-out → `/login?returnTo`; non-steward → 403 view).
+  Query contributions + campaign state.
+- [ ] **T5.2** `steward/StewardDashboard.tsx` (client `filter`): header, stat
+  row, amber car-fund card, filter chips with counts, contribution list (`new`
+  first, relative time). Click → contributor.
+- [ ] **T5.3** `steward/contributor/[barId]/page.tsx`: header card, Offering,
+  Reach via, Amount, Activity log, Follow-up panel with conditional actions →
+  `stewardTransitionContribution`. Toast on change.
+- [ ] **CHECK 5** `npm run build` + `npm run check`. Log a message → status
+  advances to `contacted`.
+
+## Phase 6 — Close the loop (11–13)
+
+- [ ] **T6.1** Car-fund purchased state (green "CAR SECURED") + wire
+  `stewardMarkCarPurchased`.
+- [ ] **T6.2** `steward/thank-you/page.tsx`: recipient chips + prefilled
+  editable message + `stewardBroadcastThankYou`.
+- [ ] **T6.3** `steward/thank-you/sent/page.tsx`: paved-brick animation
+  (reduced-motion-safe) + completion copy + "Back to the board".
+- [ ] **CHECK 6** `npm run build` + `npm run check`.
+
+## Phase 7 — Cleanup + verification quest
+
+- [ ] **T7.1** Remove the `TheCrossingSupportSection` branch from
+  `campaign/[ref]/CampaignLanding.tsx`; retire the component file. Confirm
+  `/campaign/the-crossing` resolves to the new tree.
+- [ ] **T7.2** `scripts/seed-cyoa-cert-the-crossing.ts` (idempotent): TwineStory
+  (6 passages, spec § Verification Quest) + `CustomBar`
+  `id:'cert-the-crossing-experience-v1'` (`isSystem`, `visibility:'public'`),
+  barn-raising framing. Pattern: `scripts/seed-cyoa-certification-quests.ts`.
+- [ ] **T7.3** `package.json`: `"seed:cert:the-crossing"`; run it once.
+- [ ] **CHECK 7** `npm run build` + `npm run check`. Walk the full loop
+  (landing → role → capture → saved → dashboard → log → mark purchased →
+  broadcast → loop closed).
+
+## Backlog / tracking
+
+- [ ] **T8.1** Add a BACKLOG.md entry (next id) linking this spec; prompt file
+  `.specify/backlog/prompts/the-crossing-experience.md`; `npm run backlog:seed`.
+- [ ] **T8.2** Mark
+  [`the-crossing-campaign-landing-page`](../the-crossing-campaign-landing-page/spec.md)
+  as superseded-by this spec (experiential layer).
+
+## Guardrails (every phase)
+
+- No `prisma/schema.prisma` edits. `npm run check` must show no schema diff.
+- All element color from `card-tokens`; purple = action/account/close-the-loop
+  only. Status colors per spec.
+- Steward authorization re-checked server-side on every steward action/page.
+- `prefers-reduced-motion` honored for all motion.
+- Keep the unauthenticated honeypot + `clean()` trimming on capture.
+</content>

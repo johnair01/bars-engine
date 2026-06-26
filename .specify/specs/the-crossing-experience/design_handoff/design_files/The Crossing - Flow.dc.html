@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0a0908}
+  input,textarea,select{font-family:'Nunito',sans-serif}
+  textarea{resize:vertical}
+  @keyframes xfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes xpop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+  @keyframes xtoast{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes xbrick{0%{opacity:0;transform:translateY(10px) rotate(-6deg)}60%{opacity:1}100%{opacity:1;transform:translateY(0) rotate(-6deg)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(120% 50% at 50% -6%, #16121f 0%, #0a0908 46%), #0a0908;font-family:'Nunito',sans-serif;color:#e8e6e0;padding:16px 16px 70px;">
+
+  <!-- ══ PERSISTENT TOP BAR ══ -->
+  <div style="max-width:840px;margin:0 auto 6px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px;">
+    <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+      <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#cdcbc4;">The Crossing</span>
+      <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">{{ crumb }}</span>
+    </div>
+    <div style="display:flex;gap:3px;background:#1a1a18;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:3px;">
+      <button onClick="{{ goPlayer }}" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;border-radius:7px;padding:7px 13px;color:{{ playerTabColor }};background:{{ playerTabBg }};">Player</button>
+      <button onClick="{{ goSteward }}" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;border-radius:7px;padding:7px 13px;color:{{ stewardTabColor }};background:{{ stewardTabBg }};">Steward</button>
+    </div>
+  </div>
+
+  <!-- ════════════════ LANDING ════════════════ -->
+  <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width:620px;margin:0 auto;">
+      <header style="padding:18px 2px 6px;">
+        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#a78bfa;"><span style="color:#7c3aed;">◇</span> Allyship Launch · Barn Raising</span>
+        <h1 style="font-family:'Jost',sans-serif;font-weight:700;font-size:44px;line-height:1;letter-spacing:-.03em;color:#f4f2ec;margin:14px 0 0;">The Crossing</h1>
+        <p style="font-family:'Jost',sans-serif;font-weight:500;font-size:20px;line-height:1.25;color:#e8e6e0;margin:14px 0 0;max-width:30ch;">Wendell needs a reliable car to keep showing up.</p>
+        <p style="font-family:'Nunito',sans-serif;font-size:15px;line-height:1.55;color:#a09e98;margin:10px 0 0;max-width:50ch;">Choose the path that fits what you can actually offer. Every move is one small, real action.</p>
+      </header>
+      <div style="margin-top:26px;display:flex;flex-direction:column;gap:26px;">
+        <sc-for list="{{ gates }}" as="gate" hint-placeholder-count="4">
+          <div style="{{ gate.vars }}">
+            <div style="display:flex;align-items:center;gap:11px;padding:0 2px 12px;">
+              <span style="font-family:'Nunito',sans-serif;font-size:23px;line-height:1;color:var(--gem);text-shadow:0 0 16px var(--g45);">{{ gate.sigil }}</span>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gem);">{{ gate.label }}</span>
+                <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.4;color:#8f8d87;">{{ gate.blurb }}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <sc-for list="{{ gate.roles }}" as="role" hint-placeholder-count="2">
+                <button onClick="{{ role.onOpen }}" style="{{ role.vars }};display:flex;width:100%;align-items:center;gap:13px;text-align:left;cursor:pointer;border:1px solid var(--frame);border-radius:14px;background:radial-gradient(135% 130% at 90% -14%, var(--gf), var(--gt) 72%);padding:14px 15px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);color:#e8e6e0;font-family:'Nunito',sans-serif;">
+                  <span aria-hidden="true" style="width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;color:var(--gem);background:var(--g10);box-shadow:inset 0 0 0 1px var(--g28);">{{ role.sigil }}</span>
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+                    <span style="font-family:'Jost',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.01em;color:#f1efe9;white-space:nowrap;">{{ role.label }}</span>
+                    <span style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.4;color:#a09e98;">{{ role.tinyMove }}</span>
+                  </span>
+                  <span style="font-family:'Space Mono',monospace;font-size:13px;color:var(--gem);flex-shrink:0;">→</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ════════════════ ROLE ════════════════ -->
+  <sc-if value="{{ isRole }}" hint-placeholder-val="">
+    <div style="{{ ar.vars }};max-width:620px;margin:0 auto;">
+      <button onClick="{{ goPlayer }}" style="background:none;border:none;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#a09e98;padding:8px 2px 14px;">← All paths</button>
+      <header style="position:relative;border:1px solid var(--frame);border-radius:18px;background:radial-gradient(140% 120% at 90% -16%, var(--gf), var(--gt) 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);padding:22px 20px;overflow:hidden;">
+        <span aria-hidden="true" style="position:absolute;right:-14px;bottom:-28px;font-size:150px;line-height:1;color:var(--g10);">{{ ar.sigil }}</span>
+        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gem);">{{ ar.domainLabel }} · Path</span>
+        <h1 style="position:relative;font-family:'Jost',sans-serif;font-weight:700;font-size:38px;line-height:1;letter-spacing:-.02em;color:#f4f2ec;margin:12px 0 0;">{{ ar.label }}</h1>
+        <p style="position:relative;font-family:'Nunito',sans-serif;font-size:15.5px;line-height:1.55;color:#d6d4cd;margin:12px 0 0;max-width:48ch;">{{ ar.overview }}</p>
+      </header>
+
+      <div style="margin-top:24px;">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#6b6965;">Moves you can make</div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px;">
+          <sc-for list="{{ ar.examples }}" as="ex" hint-placeholder-count="3">
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <span aria-hidden="true" style="flex-shrink:0;margin-top:6px;width:7px;height:7px;border-radius:2px;background:var(--gem);box-shadow:0 0 8px var(--glow);"></span>
+              <span style="font-family:'Nunito',sans-serif;font-size:14.5px;line-height:1.5;color:#d6d4cd;">{{ ex }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#6b6965;">Starter card · Allyship Deck</div>
+        <div style="margin-top:11px;max-width:300px;">
+          <dc-import name="AllyshipCard" card="{{ ar.card }}" mod="{{ ar.mod }}" status="signedout" collapsible="{{ false }}" defaultExpanded="{{ true }}" hint-size="100%,452px"></dc-import>
+        </div>
+      </div>
+
+      <div style="position:sticky;bottom:14px;margin-top:26px;">
+        <button onClick="{{ ar.onMakeMove }}" style="width:100%;font-family:'Jost',sans-serif;font-weight:700;font-size:16px;color:var(--gemInk);background:linear-gradient(150deg,var(--gemLite),var(--gem));border:none;border-radius:13px;padding:15px;cursor:pointer;box-shadow:0 12px 28px -12px var(--glow);">{{ ar.actionLabel }} →</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ════════════════ CAPTURE ════════════════ -->
+  <sc-if value="{{ isCapture }}" hint-placeholder-val="">
+    <div style="{{ ar.vars }};max-width:560px;margin:0 auto;">
+      <button onClick="{{ ar.onBackRole }}" style="background:none;border:none;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#a09e98;padding:8px 2px 14px;">← {{ ar.label }}</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span aria-hidden="true" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gem);background:var(--g10);box-shadow:inset 0 0 0 1px var(--g28);">{{ ar.sigil }}</span>
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gem);">Make your move</div>
+          <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.01em;color:#f4f2ec;">{{ ar.label }}</div>
+        </div>
+      </div>
+      <p style="font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;color:#a09e98;margin:12px 0 0;">This becomes a BAR on Wendell’s board. He’ll follow up through the contact you leave — no account needed to make the move.</p>
+
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:15px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <label style="display:flex;flex-direction:column;gap:6px;">
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8f8d87;">Your name</span>
+            <input value="{{ form.name }}" onChange="{{ onName }}" placeholder="First name" style="background:#111110;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 12px;font-size:14px;color:#e8e6e0;outline:none;" />
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px;">
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8f8d87;">Reach you on</span>
+            <select value="{{ form.channel }}" onChange="{{ onChannel }}" style="background:#111110;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 12px;font-size:14px;color:#e8e6e0;outline:none;">
+              <option>Text</option><option>Email</option><option>Instagram</option><option>Signal</option><option>Venmo</option>
+            </select>
+          </label>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8f8d87;">{{ ar.contactLabel }}</span>
+          <input value="{{ form.contact }}" onChange="{{ onContact }}" placeholder="{{ ar.contactPlaceholder }}" style="background:#111110;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 12px;font-size:14px;color:#e8e6e0;outline:none;" />
+        </label>
+
+        <sc-if value="{{ ar.isDonor }}" hint-placeholder-val="">
+          <label style="display:flex;flex-direction:column;gap:6px;">
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8f8d87;">Amount (USD, optional)</span>
+            <input value="{{ form.amount }}" onChange="{{ onAmount }}" inputmode="numeric" placeholder="e.g. 50" style="background:#111110;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 12px;font-size:14px;color:#e8e6e0;outline:none;" />
+          </label>
+        </sc-if>
+
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8f8d87;">{{ ar.offerLabel }}</span>
+          <input value="{{ form.summary }}" onChange="{{ onSummary }}" placeholder="{{ ar.offerPlaceholder }}" style="background:#111110;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 12px;font-size:14px;color:#e8e6e0;outline:none;" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8f8d87;">Link or context (optional)</span>
+          <textarea value="{{ form.detail }}" onChange="{{ onDetail }}" rows="3" placeholder="{{ ar.detailPlaceholder }}" style="background:#111110;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 12px;font-size:14px;line-height:1.5;color:#e8e6e0;outline:none;"></textarea>
+        </label>
+      </div>
+
+      <div style="position:sticky;bottom:14px;margin-top:22px;display:flex;flex-direction:column;gap:8px;">
+        <button onClick="{{ onSubmit }}" disabled="{{ submitDisabled }}" style="width:100%;font-family:'Jost',sans-serif;font-weight:700;font-size:16px;color:{{ submitTextColor }};background:{{ submitBg }};border:none;border-radius:13px;padding:15px;cursor:{{ submitCursor }};box-shadow:0 12px 28px -14px var(--glow);">{{ ar.actionLabel }} →</button>
+        <span style="text-align:center;font-family:'Nunito',sans-serif;font-size:11.5px;color:#6b6965;">{{ submitHint }}</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ════════════════ SAVED ════════════════ -->
+  <sc-if value="{{ isSaved }}" hint-placeholder-val="">
+    <div style="max-width:540px;margin:0 auto;text-align:center;padding-top:8px;">
+      <div style="width:62px;height:62px;margin:14px auto 0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#0a0908;background:linear-gradient(150deg,#34d399,#10b981);box-shadow:0 14px 30px -12px #10b981;">✓</div>
+      <h1 style="font-family:'Jost',sans-serif;font-weight:700;font-size:28px;letter-spacing:-.01em;color:#f4f2ec;margin:18px 0 0;">Your move is saved as a BAR.</h1>
+      <p style="font-family:'Nunito',sans-serif;font-size:15px;line-height:1.55;color:#a09e98;margin:10px auto 0;max-width:42ch;">{{ savedLine }}</p>
+
+      <div style="{{ saved.vars }};margin:22px auto 0;text-align:left;max-width:440px;border:1px solid var(--frame);border-radius:14px;background:radial-gradient(130% 120% at 90% -16%, var(--gf), var(--gt) 72%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gem);">{{ saved.code }}</span>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#d4a017;background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.3);border-radius:99px;padding:2px 8px;">New BAR</span>
+        </div>
+        <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:18px;color:#f1efe9;margin-top:9px;">{{ saved.summary }}</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.45;color:#a09e98;margin-top:5px;">{{ saved.metaLine }}</div>
+      </div>
+
+      <div style="margin-top:24px;display:flex;flex-direction:column;gap:9px;max-width:440px;margin-left:auto;margin-right:auto;">
+        <button onClick="{{ onCreateAccount }}" style="width:100%;font-family:'Jost',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(150deg,#8b5cf6,#7c3aed);border:none;border-radius:12px;padding:14px;cursor:pointer;box-shadow:0 12px 28px -14px #7c3aed;">Create your BARS Engine account to track this →</button>
+        <button onClick="{{ goSteward }}" style="width:100%;font-family:'Jost',sans-serif;font-weight:600;font-size:14px;color:#cdbff5;background:transparent;border:1px solid rgba(124,58,237,.4);border-radius:12px;padding:13px;cursor:pointer;">See where it lands · Steward view →</button>
+        <a href="The%20Crossing.dc.html#paths" style="display:block;width:100%;text-align:center;box-sizing:border-box;font-family:'Jost',sans-serif;font-weight:600;font-size:13.5px;color:#a09e98;text-decoration:none;padding:8px;">← Back to The Crossing · pick another path</a>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ════════════════ DASHBOARD ════════════════ -->
+  <sc-if value="{{ isDashboard }}" hint-placeholder-val="">
+    <div style="max-width:840px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 2px 4px;">
+        <span aria-hidden="true" style="width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#d4a017;background:rgba(212,160,23,.12);box-shadow:inset 0 0 0 1px rgba(212,160,23,.34);">土</span>
+        <div style="flex:1;min-width:0;">
+          <h1 style="font-family:'Jost',sans-serif;font-weight:700;font-size:24px;letter-spacing:-.01em;color:#f4f2ec;margin:0;">Wendell’s board</h1>
+          <div style="font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#6b6965;margin-top:2px;">The Crossing · Steward dashboard</div>
+        </div>
+      </div>
+
+      <!-- stat row -->
+      <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#111110;padding:13px 15px;">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Contributions</div>
+          <div style="font-family:'Space Mono',monospace;font-weight:700;font-size:26px;color:#e8e6e0;margin-top:4px;">{{ stats.total }}</div>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#111110;padding:13px 15px;">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Needs follow-up</div>
+          <div style="font-family:'Space Mono',monospace;font-weight:700;font-size:26px;color:#d4a017;margin-top:4px;">{{ stats.pending }}</div>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#111110;padding:13px 15px;">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">People in the field</div>
+          <div style="font-family:'Space Mono',monospace;font-weight:700;font-size:26px;color:#2ecc71;margin-top:4px;">{{ stats.people }}</div>
+        </div>
+      </div>
+
+      <!-- car milestone -->
+      <div style="margin-top:12px;border:1px solid {{ car.border }};border-radius:16px;background:{{ car.bg }};padding:18px 20px;">
+        <sc-if value="{{ car.purchased }}" hint-placeholder-val="">
+          <div style="display:flex;align-items:center;gap:13px;">
+            <span aria-hidden="true" style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(46,204,113,.14);box-shadow:inset 0 0 0 1px rgba(46,204,113,.4);">🚗</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#2ecc71;">Car secured</div>
+              <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:19px;color:#f1efe9;margin-top:2px;">2019 Honda Civic — on the road</div>
+            </div>
+          </div>
+          <sc-if value="{{ car.needsThanks }}" hint-placeholder-val="">
+            <button onClick="{{ onOpenBroadcast }}" style="margin-top:15px;width:100%;font-family:'Jost',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(150deg,#8b5cf6,#7c3aed);border:none;border-radius:12px;padding:13px;cursor:pointer;box-shadow:0 12px 28px -14px #7c3aed;">Thank your contributors →</button>
+          </sc-if>
+          <sc-if value="{{ car.thanked }}" hint-placeholder-val="">
+            <div style="margin-top:13px;display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a855f7;">✦ {{ stats.people }} contributors thanked — The Crossing is complete</div>
+          </sc-if>
+        </sc-if>
+        <sc-if value="{{ car.open }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div>
+              <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#d4a017;">Car fund</div>
+              <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:23px;color:#f1efe9;margin-top:3px;">{{ car.raisedLabel }} <span style="font-size:14px;color:#8f8d87;font-weight:500;">of {{ car.goalLabel }}</span></div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:12px;color:#8f8d87;">{{ car.pctLabel }} · {{ car.leadLine }}</div>
+          </div>
+          <div style="margin-top:11px;height:9px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;">
+            <div style="height:100%;width:{{ car.pctWidth }};border-radius:99px;background:linear-gradient(90deg,#b5651d,#d4a017);"></div>
+          </div>
+          <button onClick="{{ onMarkPurchased }}" style="margin-top:15px;width:100%;font-family:'Jost',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(150deg,#8b5cf6,#7c3aed);border:none;border-radius:12px;padding:13px;cursor:pointer;box-shadow:0 12px 28px -14px #7c3aed;">Mark the car as purchased →</button>
+        </sc-if>
+      </div>
+
+      <!-- filters -->
+      <div style="margin-top:22px;display:flex;gap:7px;flex-wrap:wrap;">
+        <sc-for list="{{ filters }}" as="f" hint-placeholder-count="5">
+          <button onClick="{{ f.onClick }}" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:99px;padding:7px 12px;border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.color }};">{{ f.label }} {{ f.countLabel }}</button>
+        </sc-for>
+      </div>
+
+      <!-- contributions list -->
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ visible }}" as="c" hint-placeholder-count="5">
+          <button onClick="{{ c.onFollow }}" style="{{ c.vars }};display:flex;width:100%;align-items:center;gap:13px;text-align:left;cursor:pointer;border:1px solid rgba(255,255,255,.09);border-left:3px solid var(--frame);border-radius:13px;background:#121210;padding:14px 15px;color:#e8e6e0;font-family:'Nunito',sans-serif;">
+            <span aria-hidden="true" style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:19px;color:var(--gem);background:var(--g10);box-shadow:inset 0 0 0 1px var(--g28);">{{ c.sigil }}</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+              <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-family:'Jost',sans-serif;font-weight:700;font-size:15.5px;color:#f1efe9;white-space:nowrap;">{{ c.name }}</span>
+                <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--gem);background:var(--g10);border:1px solid var(--g28);border-radius:99px;padding:2px 6px;">{{ c.roleLabel }}</span>
+                <sc-if value="{{ c.isNew }}" hint-placeholder-val="">
+                  <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#0a0908;background:#d4a017;border-radius:99px;padding:2px 6px;">New</span>
+                </sc-if>
+              </span>
+              <span style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.4;color:#bdbbb4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.summary }}</span>
+            </span>
+            <span style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:{{ c.statusColor }};">{{ c.statusLabel }}</span>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;white-space:nowrap;">{{ c.when }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+
+      <button onClick="{{ onReset }}" style="margin:26px auto 0;display:block;background:none;border:none;cursor:pointer;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#5a5854;">↻ Reset demo data</button>
+    </div>
+  </sc-if>
+
+  <!-- ════════════════ CONTRIBUTOR ════════════════ -->
+  <sc-if value="{{ isContributor }}" hint-placeholder-val="">
+    <div style="{{ sel.vars }};max-width:600px;margin:0 auto;">
+      <button onClick="{{ goSteward }}" style="background:none;border:none;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#a09e98;padding:8px 2px 14px;">← Board</button>
+      <div style="border:1px solid var(--frame);border-radius:16px;background:radial-gradient(140% 120% at 90% -16%, var(--gf), var(--gt) 72%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);padding:20px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span aria-hidden="true" style="width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;color:var(--gem);background:var(--g10);box-shadow:inset 0 0 0 1px var(--g28);">{{ sel.sigil }}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'Jost',sans-serif;font-weight:700;font-size:22px;color:#f4f2ec;">{{ sel.name }}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gem);margin-top:2px;">{{ sel.roleLabel }} · {{ sel.domainLabel }}</div>
+          </div>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:{{ sel.statusColor }};background:{{ sel.statusBg }};border:1px solid {{ sel.statusBorder }};border-radius:99px;padding:4px 9px;white-space:nowrap;">{{ sel.statusLabel }}</span>
+        </div>
+
+        <div style="margin-top:16px;border-top:1px solid var(--g28);padding-top:15px;display:flex;flex-direction:column;gap:13px;">
+          <div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Offering</div>
+            <div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:16px;line-height:1.4;color:#f1efe9;margin-top:4px;">{{ sel.summary }}</div>
+            <sc-if value="{{ sel.hasDetail }}" hint-placeholder-val="">
+              <div style="font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;color:#bdbbb4;margin-top:6px;">{{ sel.detail }}</div>
+            </sc-if>
+          </div>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;">
+            <div>
+              <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Reach via</div>
+              <div style="font-family:'Nunito',sans-serif;font-size:14px;color:#e8e6e0;margin-top:4px;">{{ sel.contactLine }}</div>
+            </div>
+            <sc-if value="{{ sel.hasAmount }}" hint-placeholder-val="">
+              <div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">Amount</div>
+                <div style="font-family:'Space Mono',monospace;font-weight:700;font-size:15px;color:#2ecc71;margin-top:4px;">{{ sel.amountLabel }}</div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+
+      <!-- activity log -->
+      <sc-if value="{{ sel.hasNotes }}" hint-placeholder-val="">
+        <div style="margin-top:18px;">
+          <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6b6965;">Activity</div>
+          <div style="margin-top:11px;display:flex;flex-direction:column;gap:9px;">
+            <sc-for list="{{ sel.notes }}" as="n" hint-placeholder-count="1">
+              <div style="display:flex;gap:10px;align-items:flex-start;border-left:2px solid var(--g28);padding-left:12px;">
+                <span style="font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;color:#cfcdc6;">{{ n.text }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- follow-up actions -->
+      <div style="margin-top:20px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:#111110;padding:16px;">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6b6965;">Follow up</div>
+        <textarea value="{{ msgDraft }}" onChange="{{ onMsgChange }}" rows="2" placeholder="{{ sel.msgPlaceholder }}" style="margin-top:11px;width:100%;background:#0d0d0c;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 12px;font-size:14px;line-height:1.5;color:#e8e6e0;outline:none;"></textarea>
+        <div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button onClick="{{ onLogMsg }}" disabled="{{ sel.msgDisabled }}" style="font-family:'Jost',sans-serif;font-weight:700;font-size:13.5px;color:{{ sel.msgTextColor }};background:{{ sel.msgBg }};border:none;border-radius:9px;padding:10px 16px;cursor:{{ sel.msgCursor }};">Log message</button>
+          <sc-if value="{{ sel.canContact }}" hint-placeholder-val="">
+            <button onClick="{{ sel.onContacted }}" style="font-family:'Jost',sans-serif;font-weight:600;font-size:13.5px;color:#7fc4e0;background:rgba(58,147,200,.12);border:1px solid rgba(58,147,200,.35);border-radius:9px;padding:10px 14px;cursor:pointer;">Mark contacted</button>
+          </sc-if>
+          <sc-if value="{{ sel.canAccept }}" hint-placeholder-val="">
+            <button onClick="{{ sel.onAccept }}" style="font-family:'Jost',sans-serif;font-weight:600;font-size:13.5px;color:#5fd99a;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.35);border-radius:9px;padding:10px 14px;cursor:pointer;">Accept offer</button>
+          </sc-if>
+          <sc-if value="{{ sel.canDecline }}" hint-placeholder-val="">
+            <button onClick="{{ sel.onDecline }}" style="font-family:'Jost',sans-serif;font-weight:600;font-size:13.5px;color:#a09e98;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 14px;cursor:pointer;">Not needed</button>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ════════════════ BROADCAST ════════════════ -->
+  <sc-if value="{{ isBroadcast }}" hint-placeholder-val="">
+    <div style="max-width:560px;margin:0 auto;">
+      <button onClick="{{ goSteward }}" style="background:none;border:none;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#a09e98;padding:8px 2px 14px;">← Board</button>
+      <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#a78bfa;">Close the loop</span>
+      <h1 style="font-family:'Jost',sans-serif;font-weight:700;font-size:28px;letter-spacing:-.02em;color:#f4f2ec;margin:10px 0 0;">Thank everyone who crossed with you.</h1>
+      <p style="font-family:'Nunito',sans-serif;font-size:15px;line-height:1.55;color:#a09e98;margin:10px 0 0;">One message goes to all {{ stats.people }} contributors, on the channel each of them left.</p>
+
+      <div style="margin-top:18px;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#111110;padding:14px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b6965;">To · {{ stats.people }} people</div>
+        <div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap;">
+          <sc-for list="{{ recipients }}" as="r" hint-placeholder-count="6">
+            <span style="font-family:'Nunito',sans-serif;font-size:12px;color:#cfcdc6;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:99px;padding:4px 10px;">{{ r.name }} <span style="color:#6b6965;font-family:'Space Mono',monospace;font-size:9px;">{{ r.channel }}</span></span>
+          </sc-for>
+        </div>
+      </div>
+
+      <textarea value="{{ broadcastMsg }}" onChange="{{ onBroadcastChange }}" rows="6" style="margin-top:14px;width:100%;background:#111110;border:1px solid rgba(124,58,237,.3);border-radius:12px;padding:14px;font-size:15px;line-height:1.6;color:#e8e6e0;outline:none;"></textarea>
+
+      <button onClick="{{ onSendBroadcast }}" style="margin-top:14px;width:100%;font-family:'Jost',sans-serif;font-weight:700;font-size:16px;color:#fff;background:linear-gradient(150deg,#8b5cf6,#7c3aed);border:none;border-radius:13px;padding:15px;cursor:pointer;box-shadow:0 12px 28px -14px #7c3aed;">Send thank-you to {{ stats.people }} contributors →</button>
+    </div>
+  </sc-if>
+
+  <!-- ════════════════ SENT ════════════════ -->
+  <sc-if value="{{ isSent }}" hint-placeholder-val="">
+    <div style="max-width:520px;margin:0 auto;text-align:center;padding-top:20px;">
+      <div style="display:flex;justify-content:center;gap:6px;margin:6px 0 4px;">
+        <span style="width:26px;height:14px;border-radius:3px;background:#d4a017;display:inline-block;animation:xbrick .5s ease-out both;"></span>
+        <span style="width:26px;height:14px;border-radius:3px;background:#e0a93b;display:inline-block;animation:xbrick .5s ease-out .08s both;"></span>
+        <span style="width:26px;height:14px;border-radius:3px;background:#d4a017;display:inline-block;animation:xbrick .5s ease-out .16s both;"></span>
+      </div>
+      <h1 style="font-family:'Jost',sans-serif;font-weight:700;font-size:30px;letter-spacing:-.02em;color:#f4f2ec;margin:18px 0 0;">A yellow brick is paved.</h1>
+      <p style="font-family:'Nunito',sans-serif;font-size:16px;line-height:1.6;color:#cfcdc6;margin:12px auto 0;max-width:40ch;">You let <span style="color:#a855f7;font-weight:700;">{{ stats.people }} contributors</span> know the car is secured. Every move became evidence — and the campaign followed up on all of it.</p>
+      <p style="font-family:'Nunito',sans-serif;font-size:14px;line-height:1.55;color:#8f8d87;margin:14px auto 0;max-width:42ch;">The Crossing is complete. The next BAR is already waiting.</p>
+      <button onClick="{{ goSteward }}" style="margin-top:24px;font-family:'Jost',sans-serif;font-weight:600;font-size:14px;color:#cdbff5;background:transparent;border:1px solid rgba(124,58,237,.4);border-radius:11px;padding:12px 22px;cursor:pointer;">Back to the board</button>
+    </div>
+  </sc-if>
+
+  <!-- ══ TOAST ══ -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="">
+    <div style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:50;font-family:'Jost',sans-serif;font-weight:600;font-size:13.5px;color:#0a0908;background:linear-gradient(150deg,#e8e6e0,#bdbbb4);border-radius:10px;padding:11px 18px;box-shadow:0 14px 30px -10px rgba(0,0,0,.7);animation:xtoast .25s ease-out;">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:920}}">
+class Component extends DCLogic {
+  KEY = 'the-crossing-flow-v1';
+  GOAL = 4800;
+  BASE = 3225;
+
+  EL = {
+    earth: { frame:'#b5651d', glow:'#d4a017', gem:'#e0a93b', gf:'#451a03', gt:'#1a0a00', sigil:'土' },
+    wood:  { frame:'#4a7c59', glow:'#27ae60', gem:'#2ecc71', gf:'#052e16', gt:'#011309', sigil:'木' },
+    metal: { frame:'#8e9aab', glow:'#bdc3c7', gem:'#cdd2d6', gf:'#1e2530', gt:'#0d1017', sigil:'金' },
+    fire:  { frame:'#c1392b', glow:'#e8671a', gem:'#e8694a', gf:'#431407', gt:'#1c0700', sigil:'火' },
+  };
+  DOMAIN = {
+    gather:   { el:'earth', label:'Gather Resources',   blurb:'Bring something real — leads, people, fuel.' },
+    organize: { el:'wood',  label:'Skillful Organizing', blurb:'Know-how that turns options into a good decision.' },
+    aware:    { el:'metal', label:'Raise Awareness',    blurb:'Carry the signal past Wendell’s own reach.' },
+    direct:   { el:'fire',  label:'Direct Action',      blurb:'Move first — keep momentum and people in motion.' },
+  };
+
+  ROLES = {
+    car_scout:{ dom:'gather', label:'Car Scout', actionLabel:'Send a car lead',
+      tinyMove:'Send one promising car listing.',
+      overview:'You find viable cars, listings, and vehicle paths — turning an open question into options Wendell can act on.',
+      examples:['Drop a Marketplace or Craigslist link that fits the budget.','Flag a dealer you trust with reliable used cars.','Send a known-good make/model and its price range.'],
+      contactLabel:'Where to reach you', contactPlaceholder:'phone, @handle, or email',
+      offerLabel:'The lead', offerPlaceholder:'2019 Honda Civic, $6,200, clean title',
+      detailPlaceholder:'Paste the listing link and why it fits.',
+      card:{ id:'OPEN-GR-ARCHITECT', num:'041', title:'Map the Field', move:'open', moveLabel:'Open', face:'architect', faceLabel:'Architect', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Where could a reliable car actually come from?', yield:2 },
+      mod:{ spKey:'strategist', spLabel:'Scout', contribution:'Surface one concrete car lead Wendell can act on.', artifact:'A listing link + one line on why it fits.', ask:'1 lead' } },
+    car_expert:{ dom:'organize', label:'Car Expert', actionLabel:'Offer car judgment',
+      tinyMove:'Sanity-check one listing.',
+      overview:'You evaluate listings, repairs, title risk, and buying strategy — making sure a good decision happens and a costly one doesn’t.',
+      examples:['Read a listing and call out title or mileage risk.','Estimate likely repair costs from the photos.','Suggest a fair max offer and a walk-away price.'],
+      contactLabel:'Where to reach you', contactPlaceholder:'phone, @handle, or email',
+      offerLabel:'Your read', offerPlaceholder:'Looks solid — offer $5,800, walk at $6,400',
+      detailPlaceholder:'What stands out, what to check, what it’s worth.',
+      card:{ id:'SHOW-SO-ARCHITECT', num:'066', title:'Pressure-Test the Plan', move:'show', moveLabel:'Show Up', face:'architect', faceLabel:'Architect', el:'wood', domain:'organize', domainLabel:'Skillful Organizing', q:'Does this car, price, and title actually hold up?', yield:3 },
+      mod:{ spKey:'strategist', spLabel:'Mechanic', contribution:'Vet one listing for repairs, title, and scams.', artifact:'A short go / no-go with reasons.', ask:'1 review' } },
+    connector:{ dom:'gather', label:'Connector', actionLabel:'Make an intro',
+      tinyMove:'Make one warm introduction.',
+      overview:'You make warm human introductions that unlock resources — the bridge between Wendell and the person who can help.',
+      examples:['Introduce Wendell to a mechanic or car-savvy friend.','Connect him to someone who sells reliable used cars.','Loop in someone with a funding or grant lead.'],
+      contactLabel:'Where to reach you', contactPlaceholder:'phone, @handle, or email',
+      offerLabel:'The introduction', offerPlaceholder:'My cousin sells fleet cars wholesale',
+      detailPlaceholder:'Who they are and why they can help.',
+      card:{ id:'WAKE-GR-DIPLOMAT', num:'005', title:'Who Holds the Keys', move:'wake', moveLabel:'Wake Up', face:'diplomat', faceLabel:'Diplomat', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Who in your network could move this forward?', yield:2 },
+      mod:{ spKey:'connector', spLabel:'Connector', contribution:'Make one warm introduction toward a car or funds.', artifact:'A warm intro + one line of context.', ask:'1 intro' } },
+    signal_booster:{ dom:'aware', label:'Signal Booster', actionLabel:'Share the ask',
+      tinyMove:'Share with one sentence on why it matters.',
+      overview:'You share the ask strategically, with context — reaching the people Wendell can’t and telling them why it matters.',
+      examples:['Repost with one line about why it matters to you.','Send it to a group chat that would care.','Tag two people who always show up for this.'],
+      contactLabel:'Where to reach you', contactPlaceholder:'@handle or email',
+      offerLabel:'Where you shared it', offerPlaceholder:'IG stories + two group chats',
+      detailPlaceholder:'Where it went and any response so far.',
+      card:{ id:'SHOW-RA-DIPLOMAT', num:'088', title:'Carry the Signal', move:'show', moveLabel:'Show Up', face:'diplomat', faceLabel:'Diplomat', el:'metal', domain:'aware', domainLabel:'Raise Awareness', q:'Who needs to hear this that hasn’t yet?', yield:1 },
+      mod:{ spKey:'storyteller', spLabel:'Amplifier', contribution:'Share the ask with one sentence on why it matters.', artifact:'A post or story with the link.', ask:'1 share' } },
+    encourager:{ dom:'direct', label:'Encourager', actionLabel:'Send encouragement',
+      tinyMove:'Send one check-in or encouragement.',
+      overview:'You reach out, reflect momentum, and encourage aligned action — keeping the person, and the next move, alive.',
+      examples:['Text Wendell that you’ve got his back this week.','Voice-note someone on the team to keep momentum.','Leave a comment that keeps the thread warm.'],
+      contactLabel:'Where to reach you', contactPlaceholder:'phone, @handle, or email',
+      offerLabel:'Your note', offerPlaceholder:'Sent Wendell a voice note',
+      detailPlaceholder:'What you said, or want him to hear.',
+      card:{ id:'SHOW-DA-REGENT', num:'073', title:'Keep the Engine Warm', move:'show', moveLabel:'Show Up', face:'regent', faceLabel:'Regent', el:'fire', domain:'direct', domainLabel:'Direct Action', q:'Who needs to know they’re not doing this alone?', yield:1 },
+      mod:{ spKey:'coach', spLabel:'Encourager', contribution:'Send one note that keeps momentum alive.', artifact:'A check-in message.', ask:'1 note' } },
+    donor:{ dom:'gather', label:'Donor', actionLabel:'Send support', isDonor:true,
+      tinyMove:'Donate, lend, or share the link.',
+      overview:'Money, time, expertise, space, tools, or temporary transport — every kind of donation counts. Give the way you can.',
+      examples:['Send any amount on Venmo — every bit is fuel.','Lend a reliable car for a week while he searches.','Offer a garage, tools, or an afternoon of help.'],
+      contactLabel:'Where to reach you', contactPlaceholder:'phone, @handle, or email',
+      offerLabel:'What you’re giving', offerPlaceholder:'$50 toward the car / or a resource',
+      detailPlaceholder:'Anything Wendell should know about it.',
+      card:{ id:'SHOW-GR-ARCHITECT', num:'052', title:'Add Real Fuel', move:'show', moveLabel:'Show Up', face:'architect', faceLabel:'Architect', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'What can you put in that moves this now?', yield:2 },
+      mod:{ spKey:'connector', spLabel:'Patron', contribution:'Contribute money, time, tools, or transport.', artifact:'A contribution + a note on what it is.', ask:'Any' } },
+  };
+
+  GROUPED = [
+    { dom:'gather',   roles:['car_scout','connector','donor'] },
+    { dom:'organize', roles:['car_expert'] },
+    { dom:'aware',    roles:['signal_booster'] },
+    { dom:'direct',   roles:['encourager'] },
+  ];
+
+  STATUS = {
+    new:      { label:'New',        color:'#d4a017' },
+    contacted:{ label:'Contacted',  color:'#3a93c8' },
+    accepted: { label:'Accepted',   color:'#2ecc71' },
+    declined: { label:'Not needed', color:'#8e7d76' },
+    thanked:  { label:'Thanked',    color:'#a855f7' },
+  };
+
+  FILTERS = [
+    { key:'all',   label:'All' },
+    { key:'new',   label:'Needs follow-up' },
+    { key:'car_scout', label:'Leads' },
+    { key:'connector', label:'Intros' },
+    { key:'signal_booster', label:'Awareness' },
+    { key:'encourager', label:'Care' },
+    { key:'donor', label:'Donations' },
+  ];
+
+  state = { screen:'landing', activeRole:'car_scout', selId:null, contributions:[], carPurchased:false, thanked:false, loaded:false, filter:'all', toast:null,
+    form:{ name:'', contact:'', channel:'Text', summary:'', detail:'', amount:'' }, msgDraft:'',
+    broadcastMsg:'We did it — the car is secured. None of this happens without you. Thank you for crossing with me; this road is paved with your moves. — Wendell' };
+
+  seed(){
+    const now = Date.now(), H=3600e3, D=24*H;
+    const mk = (role,name,contact,channel,summary,detail,status,amount,ago) => ({
+      id:'c'+Math.random().toString(36).slice(2,8), role, name, contact, channel, summary, detail,
+      status, amount:amount||0, notified:false, createdAt:now-ago, notes:[] });
+    return [
+      mk('connector','Priya S.','@priyas','Instagram','Intro to my cousin who sells fleet cars wholesale','He has 3–4 sedans under $6k right now, clean titles.','accepted',0,5*D),
+      mk('car_scout','Maya R.','503-555-0142','Text','2019 Honda Civic — $6,200, clean title','Marketplace listing, one owner, 78k miles.','new',0,2*H),
+      mk('car_expert','Darnell K.','darnell@mail.com','Email','Vetted the Civic — offer $5,800, walk at $6,400','Service records check out; tires need ~$400 soon.','contacted',0,1*D),
+      mk('signal_booster','Theo M.','@theo.m','Instagram','Shared on IG stories + two group chats','~600 views so far; two people asked how to help.','accepted',0,3*D),
+      mk('encourager','Aunt Rose','541-555-0190','Text','Sent Wendell a voice note','“You’ve carried all of us — let us carry you.”','new',0,6*H),
+      mk('donor','Jordan L.','@jordanl','Venmo','$150 toward the car','','accepted',150,4*D),
+      mk('donor','The Okonkwo family','okonkwo@mail.com','Email','$500 + lending our spare car for 2 weeks','Come by anytime to grab the spare.','accepted',500,2*D),
+      mk('donor','Sam W.','@samw','Venmo','$40 — every bit counts','','accepted',40,9*H),
+      mk('connector','Marcus T.','503-555-0177','Text','Knows a nonprofit that does car grants','Will send the application link tonight.','new',0,3*H),
+      mk('signal_booster','Lena P.','@lenap','Instagram','Posted to the neighborhood list','','accepted',0,28*H),
+    ];
+  }
+
+  componentDidMount(){
+    let data = null;
+    try { const raw = localStorage.getItem(this.KEY); if (raw) data = JSON.parse(raw); } catch(e){}
+    const base = (data && Array.isArray(data.contributions) && data.contributions.length)
+      ? { contributions:data.contributions, carPurchased:!!data.carPurchased, thanked:!!data.thanked, loaded:true }
+      : { contributions:this.seed(), loaded:true };
+    // deep-link handoff from the marketing page (?role=car_scout&go=capture)
+    try {
+      const p = new URLSearchParams(typeof window!=='undefined' ? window.location.search : '');
+      const role = p.get('role'), go = p.get('go');
+      if (role && this.ROLES[role]) base.activeRole = role;
+      if (go==='capture') base.screen = 'capture';
+      else if (go==='role') base.screen = 'role';
+      else if (go==='steward' || go==='dashboard') base.screen = 'dashboard';
+    } catch(e){}
+    this.setState(base);
+    if (typeof window!=='undefined') window.scrollTo(0,0);
+  }
+  componentDidUpdate(_, prevState){
+    const prev = prevState || {};
+    if (this.state.loaded && (prev.contributions!==this.state.contributions || prev.carPurchased!==this.state.carPurchased || prev.thanked!==this.state.thanked)){
+      try { localStorage.setItem(this.KEY, JSON.stringify({ contributions:this.state.contributions, carPurchased:this.state.carPurchased, thanked:this.state.thanked })); } catch(e){}
+    }
+  }
+
+  _rgb(h){ const n=parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+  rgba(h,a){ const [r,g,b]=this._rgb(h); return 'rgba('+r+','+g+','+b+','+a+')'; }
+  mix(h1,h2,t){ const a=this._rgb(h1),b=this._rgb(h2); const m=i=>Math.round(a[i]*t+b[i]*(1-t)); return 'rgb('+m(0)+','+m(1)+','+m(2)+')'; }
+  varsFor(elKey){ const c=this.EL[elKey]||this.EL.earth; return {'--frame':c.frame,'--glow':c.glow,'--gem':c.gem,'--gf':c.gf,'--gt':c.gt,'--g10':this.rgba(c.gem,0.1),'--g28':this.rgba(c.gem,0.28),'--g45':this.rgba(c.gem,0.45),'--gemLite':this.mix(c.gem,'#ffffff',0.84),'--gemInk':this.mix(c.gem,'#0a0805',0.14)}; }
+  rel(ts){ const s=(Date.now()-ts)/1000; if(s<3600) return Math.max(1,Math.round(s/60))+'m ago'; if(s<86400) return Math.round(s/3600)+'h ago'; return Math.round(s/86400)+'d ago'; }
+  money(n){ return '$'+Math.round(n).toLocaleString('en-US'); }
+
+  flash(msg){ this.setState({ toast:msg }); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:null}),1900); }
+  nav(screen){ if(typeof window!=='undefined') window.scrollTo(0,0); this.setState({ screen }); }
+  setField(k,v){ this.setState(s=>({ form:{...s.form, [k]:v} })); }
+
+  submit(){
+    const r = this.ROLES[this.state.activeRole]; const f = this.state.form;
+    if(!f.name.trim() || !f.contact.trim() || !f.summary.trim()) return;
+    const amt = parseFloat((f.amount+'').replace(/[^0-9.]/g,''))||0;
+    const c = { id:'c'+Math.random().toString(36).slice(2,8), role:this.state.activeRole, name:f.name.trim(), contact:f.contact.trim(), channel:f.channel, summary:f.summary.trim(), detail:f.detail.trim(), status:r.isDonor?'accepted':'new', amount:amt, notified:false, createdAt:Date.now(), notes:[] };
+    this.setState(s=>({ contributions:[c, ...s.contributions], lastId:c.id, screen:'saved', form:{ name:'', contact:'', channel:'Text', summary:'', detail:'', amount:'' } }));
+    if(typeof window!=='undefined') window.scrollTo(0,0);
+  }
+  setStatus(id,status,note){
+    this.setState(s=>({ contributions:s.contributions.map(c=> c.id===id ? {...c, status, notes:note?[...c.notes,{text:note}]:c.notes } : c) }));
+    this.flash(note?'Logged · '+this.STATUS[status].label:'Marked '+this.STATUS[status].label.toLowerCase());
+  }
+  logMsg(){
+    const id=this.state.selId, draft=this.state.msgDraft.trim(); if(!draft) return;
+    this.setState(s=>({ contributions:s.contributions.map(c=> c.id===id ? {...c, status:(c.status==='new'?'contacted':c.status), notes:[...c.notes, {text:'You: “'+draft+'”'}] } : c), msgDraft:'' }));
+    this.flash('Message logged');
+  }
+  markPurchased(){ this.setState({ carPurchased:true }); this.flash('Car secured 🚗'); if(typeof window!=='undefined') window.scrollTo(0,0); }
+  sendBroadcast(){ this.setState(s=>({ contributions:s.contributions.map(c=>({...c, notified:true, status:(c.status==='declined'?c.status:'thanked')})), thanked:true, screen:'sent' })); if(typeof window!=='undefined') window.scrollTo(0,0); }
+  reset(){ try{ localStorage.removeItem(this.KEY); }catch(e){} this.setState({ contributions:this.seed(), carPurchased:false, thanked:false, screen:'dashboard', filter:'all' }); this.flash('Demo reset'); }
+
+  renderVals(){
+    const S = this.state, screen = S.screen;
+    const tabActive = (on)=>on?'#e8e6e0':'#7c7a74';
+    const tabBg = (on)=>on?'#2a2a27':'transparent';
+    const isPlayer = ['landing','role','capture','saved'].includes(screen);
+    const crumbMap = { landing:'Choose your move', role:'Path detail', capture:'Make your move', saved:'Saved as a BAR', dashboard:'Steward board', contributor:'Follow up', broadcast:'Thank contributors', sent:'Loop closed' };
+
+    // landing gates
+    const gates = this.GROUPED.map(g=>{ const dom=this.DOMAIN[g.dom]; const v=this.varsFor(dom.el); return {
+      label:dom.label, sigil:this.EL[dom.el].sigil, blurb:dom.blurb, vars:v,
+      roles:g.roles.map(id=>{ const r=this.ROLES[id]; return { label:r.label, tinyMove:r.tinyMove, sigil:this.EL[dom.el].sigil, vars:v, onOpen:()=>{ this.setState({activeRole:id, screen:'role'}); if(typeof window!=='undefined') window.scrollTo(0,0); } }; }),
+    }; });
+
+    // active role
+    const arId = S.activeRole, R = this.ROLES[arId], arDom = this.DOMAIN[R.dom], arV = this.varsFor(arDom.el);
+    const ar = { ...R, domainLabel:arDom.label, sigil:this.EL[arDom.el].sigil, vars:arV,
+      onMakeMove:()=>{ this.nav('capture'); }, onBackRole:()=>{ this.nav('role'); } };
+
+    // form submit gating
+    const f = S.form, canSubmit = f.name.trim() && f.contact.trim() && f.summary.trim();
+
+    // saved
+    const last = S.contributions.find(c=>c.id===S.lastId) || S.contributions[0] || null;
+    let saved = { vars:arV, code:'', summary:'', metaLine:'' }, savedLine='';
+    if(last){ const lr=this.ROLES[last.role], ld=this.DOMAIN[lr.dom]; saved={ vars:this.varsFor(ld.el), code:lr.card.id, summary:last.summary, metaLine:lr.label+' · '+ld.label }; savedLine='Wendell sees this on his board and follows up through your '+last.channel.toLowerCase()+'. No account needed — but you can claim it to track what happens.'; }
+
+    // stats
+    const cs = S.contributions;
+    const raised = this.BASE + cs.reduce((a,c)=>a+(c.amount||0),0);
+    const pct = Math.min(100, raised/this.GOAL*100);
+    const people = new Set(cs.map(c=>c.name.toLowerCase())).size;
+    const pending = cs.filter(c=>c.status==='new').length;
+    const stats = { total:cs.length, pending, people };
+
+    // car card
+    const car = {
+      purchased:S.carPurchased, open:!S.carPurchased, needsThanks:S.carPurchased&&!S.thanked, thanked:S.thanked,
+      raisedLabel:this.money(raised), goalLabel:this.money(this.GOAL), pctLabel:Math.round(pct)+'%', pctWidth:pct.toFixed(1)+'%',
+      leadLine: cs.filter(c=>c.role==='car_scout').length+' leads in',
+      border:S.carPurchased?'rgba(46,204,113,.34)':'rgba(212,160,23,.3)',
+      bg:S.carPurchased?'radial-gradient(130% 120% at 88% -16%, #082b1a, #06140d 72%)':'radial-gradient(130% 120% at 88% -16%, #2a1c06, #160f04 72%)',
+    };
+
+    // filters
+    const filters = this.FILTERS.map(fl=>{ const active=S.filter===fl.key; let n; if(fl.key==='all') n=cs.length; else if(fl.key==='new') n=pending; else n=cs.filter(c=>c.role===fl.key).length; return {
+      label:fl.label, countLabel:n?('· '+n):'', onClick:()=>this.setState({filter:fl.key}),
+      border:active?'rgba(124,58,237,.5)':'rgba(255,255,255,.1)', bg:active?'rgba(124,58,237,.16)':'transparent', color:active?'#cdbff5':'#8f8d87',
+    }; });
+
+    // visible list
+    const filt = S.filter;
+    const list = cs.filter(c=> filt==='all' ? true : filt==='new' ? c.status==='new' : c.role===filt)
+      .sort((a,b)=> (a.status==='new'?-1:0)-(b.status==='new'?-1:0) || b.createdAt-a.createdAt);
+    const visible = list.map(c=>{ const r=this.ROLES[c.role], d=this.DOMAIN[r.dom], st=this.STATUS[c.status]; return {
+      name:c.name, roleLabel:r.label, summary:c.summary, sigil:this.EL[d.el].sigil, vars:this.varsFor(d.el),
+      isNew:c.status==='new', statusLabel:st.label, statusColor:st.color, when:this.rel(c.createdAt),
+      onFollow:()=>{ this.setState({selId:c.id, screen:'contributor', msgDraft:''}); if(typeof window!=='undefined') window.scrollTo(0,0); },
+    }; });
+
+    // selected contributor
+    const sc = S.contributions.find(c=>c.id===S.selId);
+    let sel = { vars:arV };
+    if(sc){ const r=this.ROLES[sc.role], d=this.DOMAIN[r.dom], st=this.STATUS[sc.status]; const canDraft=S.msgDraft.trim().length>0;
+      sel = { vars:this.varsFor(d.el), name:sc.name, roleLabel:r.label, domainLabel:d.label, sigil:this.EL[d.el].sigil,
+        statusLabel:st.label, statusColor:st.color, statusBg:this.rgba(st.color,0.12), statusBorder:this.rgba(st.color,0.34),
+        summary:sc.summary, detail:sc.detail, hasDetail:!!sc.detail, contactLine:sc.contact+' · '+sc.channel,
+        hasAmount:sc.amount>0, amountLabel:this.money(sc.amount),
+        notes:sc.notes, hasNotes:sc.notes.length>0,
+        msgPlaceholder:'Reply to '+sc.name+'…',
+        canContact:sc.status==='new', canAccept:!['accepted','thanked','declined'].includes(sc.status), canDecline:!['declined','thanked'].includes(sc.status),
+        onContacted:()=>this.setStatus(sc.id,'contacted'), onAccept:()=>this.setStatus(sc.id,'accepted'), onDecline:()=>this.setStatus(sc.id,'declined'),
+        msgDisabled:!canDraft, msgCursor:canDraft?'pointer':'not-allowed', msgBg:canDraft?'linear-gradient(150deg,#e8e6e0,#bdbbb4)':'rgba(255,255,255,.06)', msgTextColor:canDraft?'#0a0908':'#6b6965',
+      };
+    }
+
+    // recipients for broadcast (unique by name)
+    const seen=new Set(), recipients=[];
+    cs.forEach(c=>{ const k=c.name.toLowerCase(); if(!seen.has(k)){ seen.add(k); recipients.push({ name:c.name, channel:c.channel }); } });
+
+    return {
+      crumb:crumbMap[screen]||'', 
+      playerTabColor:tabActive(isPlayer), playerTabBg:tabBg(isPlayer), stewardTabColor:tabActive(!isPlayer), stewardTabBg:tabBg(!isPlayer),
+      goPlayer:()=>this.nav('landing'), goSteward:()=>this.nav('dashboard'),
+      isLanding:screen==='landing', isRole:screen==='role', isCapture:screen==='capture', isSaved:screen==='saved',
+      isDashboard:screen==='dashboard', isContributor:screen==='contributor', isBroadcast:screen==='broadcast', isSent:screen==='sent',
+      gates, ar,
+      form:S.form, onName:e=>this.setField('name',e.target.value), onContact:e=>this.setField('contact',e.target.value),
+      onChannel:e=>this.setField('channel',e.target.value), onSummary:e=>this.setField('summary',e.target.value),
+      onDetail:e=>this.setField('detail',e.target.value), onAmount:e=>this.setField('amount',e.target.value),
+      onSubmit:()=>this.submit(), submitDisabled:!canSubmit,
+      submitBg:canSubmit?'linear-gradient(150deg,var(--gemLite),var(--gem))':'rgba(255,255,255,.07)',
+      submitTextColor:canSubmit?'var(--gemInk)':'#6b6965', submitCursor:canSubmit?'pointer':'not-allowed',
+      submitHint:canSubmit?'Goes straight to Wendell’s board.':'Add your name, contact, and what you’re offering.',
+      saved, savedLine, onCreateAccount:()=>this.flash('Account flow — mock'),
+      stats, car,
+      onMarkPurchased:()=>this.markPurchased(), onOpenBroadcast:()=>this.nav('broadcast'), onReset:()=>this.reset(),
+      filters, visible,
+      sel, msgDraft:S.msgDraft, onMsgChange:e=>this.setState({msgDraft:e.target.value}), onLogMsg:()=>this.logMsg(),
+      recipients, broadcastMsg:S.broadcastMsg, onBroadcastChange:e=>this.setState({broadcastMsg:e.target.value}), onSendBroadcast:()=>this.sendBroadcast(),
+      toast:S.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>
