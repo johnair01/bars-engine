@@ -7,7 +7,6 @@ import {
   AWAKEN_DONATE_HREF,
   AWAKEN_PRODUCTS_HREF,
   AWAKEN_NONPROFIT_HREF,
-  AWAKEN_CHAPTER_FILE_HREF,
 } from '@/lib/awaken/content'
 
 type Status = 'idle' | 'loading' | 'done' | 'error'
@@ -159,72 +158,29 @@ function DonateCard() {
   )
 }
 
-/* ── Move 2: Chapter One ── */
+/* ── Move 2: Chapter One (coming soon — capture not finished yet) ── */
 
 function ChapterCard() {
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<Status>('idle')
-  const [error, setError] = useState('')
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    setStatus('loading')
-    setError('')
-    try {
-      const res = await fetch('/api/awaken/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intent: 'chapter', email }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Something went wrong.')
-      setStatus('done')
-    } catch (err) {
-      setStatus('error')
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
-    }
-  }
-
   return (
     <Card accent="teal" badge="Move 2" title="Read Chapter One">
-      <p className="text-sm leading-relaxed text-zinc-300">
-        Start the story for free. Drop your email and we&apos;ll send the first chapter straight to
-        your inbox.
+      <div className="flex items-center gap-2">
+        <span className="rounded-full border border-teal-700/50 bg-teal-950/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-teal-300">
+          Coming soon
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-zinc-300">
+        Start the story for free. We&apos;re putting the finishing touches on Chapter One — check
+        back soon and you&apos;ll be able to read the first chapter here.
       </p>
 
-      {status === 'done' ? (
-        <div className="mt-4 rounded-xl border border-teal-700/50 bg-teal-950/30 p-4">
-          <p className="text-sm font-semibold text-teal-300">You&apos;re in. ✨</p>
-          <p className="mt-1 text-xs text-zinc-400">
-            Chapter One is on its way to your inbox.
-          </p>
-          <a
-            href={AWAKEN_CHAPTER_FILE_HREF}
-            className="mt-3 inline-flex items-center text-sm font-bold text-teal-300 underline-offset-2 hover:underline"
-          >
-            Or download it now →
-          </a>
-        </div>
-      ) : (
-        <form onSubmit={submit} className="mt-4 space-y-3">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@email.com"
-            className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-teal-500"
-          />
-          {status === 'error' && <p className="text-xs text-red-400">{error}</p>}
-          <button
-            type="submit"
-            disabled={status === 'loading'}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 px-5 py-3 font-bold text-white transition-all hover:from-teal-500 hover:to-cyan-500 disabled:opacity-60"
-          >
-            {status === 'loading' ? 'Sending…' : 'Send me Chapter One →'}
-          </button>
-        </form>
-      )}
+      <button
+        type="button"
+        disabled
+        aria-disabled="true"
+        className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl border border-teal-800/50 bg-zinc-900/60 px-5 py-3 font-bold text-zinc-500"
+      >
+        Chapter One — coming soon
+      </button>
     </Card>
   )
 }

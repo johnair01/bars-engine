@@ -37,7 +37,7 @@ export const AWAKEN_EVENTS: AwakenEvent[] = [
     date: '2026-07-17',
     where: 'Portland · TBA',
     blurb: 'The launch itself — the book steps into the world. Come be there for the beginning.',
-    partifulUrl: 'https://partiful.com/e/JTEHEkp0YslfGplWK8vS',
+    partifulUrl: 'https://partiful.com/e/eY5MfJQg7CtjdimimSxO',
   },
   {
     // Title pending — organizer to finalize.
@@ -57,7 +57,7 @@ export const AWAKEN_EVENTS: AwakenEvent[] = [
     date: '2026-07-19',
     where: 'Portland · TBA',
     blurb: 'Play the game the book is built on — live, together, to close the weekend.',
-    partifulUrl: 'https://partiful.com/e/eY5MfJQg7CtjdimimSxO',
+    partifulUrl: 'https://partiful.com/e/JTEHEkp0YslfGplWK8vS',
   },
 ]
 
