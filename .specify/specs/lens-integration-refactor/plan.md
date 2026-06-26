@@ -9,11 +9,11 @@ Resolve the relevant § Open decisions before each phase.
 - `src/actions/lenses.ts`: `getObservatory()`, `getOrCreateTodayLens()`, `getLens(level)`, `upsertLens(...)`.
 - `src/app/observatory/page.tsx` + `/observatory/[level]/page.tsx` (7 levels, independently navigable). Auth-gated.
 
-## P2 — BAR.lensId + developmentStage
-- `CustomBar`: `lensId`, `developmentStage` → migration `add_bar_lens_stage`.
-- Backfill: map `seedMetabolization.maturity` → `developmentStage` (one-shot script).
-- `commitTask` (TTV, already creates the BAR via H1): set `lensId = today's lens`, `developmentStage = 'Captured'`.
-- Stage helpers in `src/lib/development-stage/` (canonical machine + legacy mapping).
+## P2 — BAR.lensId
+- `CustomBar`: `lensId` (+ `experienceIntent`) → migration `add_bar_lens`.
+- `commitTask` (TTV, already creates the BAR via H1): set `lensId = today's lens`.
+- **No `developmentStage` column** — core model stays developmental-level agnostic;
+  the existing `maturity` is untouched and not elevated.
 
 ## P3 — Garden first-class + Plant flow
 - `Garden` model + `CustomBar.gardenId` + `experienceIntent` → migration.
@@ -26,8 +26,9 @@ Resolve the relevant § Open decisions before each phase.
 - `getBarProvenance(barId)` query helper (parents/children/artifacts/vibeulons/links).
 - Refit `mintVibulon` callers (esp. Tier 2 **TTVE**) to populate attribution.
 
-## P5 — Cultivate/Harvest + future hooks
-- Stage transitions on loop moves (3·2·1, grow-to-quest/daemon, charge) → `Cultivating`; completion → `Harvested` + attributed mint.
+## P5 — Cultivate/Harvest activity + future hooks
+- Cultivate/harvest are **ordinary loop activity**, not stored stage transitions.
+- Harvest (completion) → attributed Vibeulon mint.
 - Wire future hooks (3·2·1-on-BAR CGLA H3, TTV-on-BAR).
 
 ## Cross-cutting

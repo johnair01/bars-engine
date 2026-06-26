@@ -9,12 +9,10 @@ Each phase: migration committed with schema, `npm run build` + `npm run check`, 
 - [ ] P1.3 `/observatory` + `/observatory/[level]` — 7 independently navigable levels (auth-gated).
 - [ ] P1.4 Verification quest `cert-observatory-v1`.
 
-## P2 — BAR.lensId + developmentStage  (LENS2)
-- [ ] P2.1 `CustomBar.lensId` + `developmentStage` + migration; regenerate.
-- [ ] P2.2 `src/lib/development-stage/` canonical machine + legacy `maturity`→`developmentStage` mapping.
-- [ ] P2.3 Backfill script (maturity → developmentStage); idempotent.
-- [ ] P2.4 TTV `commitTask` sets `lensId = today's lens` + `developmentStage='Captured'`.
-- [ ] P2.5 Verification quest `cert-bar-lens-stage-v1`.
+## P2 — BAR.lensId  (LENS2)
+- [ ] P2.1 `CustomBar.lensId` (+ `experienceIntent`) + migration; regenerate. **No `developmentStage`.**
+- [ ] P2.2 TTV `commitTask` sets `lensId = today's lens` (no stage).
+- [ ] P2.3 Verification quest `cert-bar-lens-v1`.
 
 ## P3 — Garden + Plant flow  (LENS3)
 - [ ] P3.1 `Garden` model + `CustomBar.gardenId` + `experienceIntent` + migration.
@@ -28,11 +26,10 @@ Each phase: migration committed with schema, `npm run build` + `npm run check`, 
 - [ ] P4.3 Refit `mintVibulon` callers (incl. Tier 2 TTVE) to populate attribution.
 - [ ] P4.4 Verification quest `cert-provenance-graph-v1`.
 
-## P5 — Cultivate/Harvest + hooks  (LENS5)
-- [ ] P5.1 Stage transitions on loop moves (3·2·1, grow, charge) → `Cultivating`.
-- [ ] P5.2 Harvest → `Harvested` + attributed mint.
-- [ ] P5.3 Wire 3·2·1-on-BAR (CGLA H3) + TTV-on-BAR hooks.
-- [ ] P5.4 Verification quest `cert-cultivate-harvest-v1`.
+## P5 — Cultivate/Harvest activity + hooks  (LENS5)
+- [ ] P5.1 Harvest (completion) → attributed Vibeulon mint. (No stored stage transitions.)
+- [ ] P5.2 Wire 3·2·1-on-BAR (CGLA H3) + TTV-on-BAR hooks.
+- [ ] P5.3 Verification quest `cert-cultivate-harvest-v1`.
 
 ## Cross-cutting
 - [ ] X.1 After P2/P4, re-scope `tap-the-vein-tier-2` (TTVE attribution; TTVS/TTV3 lens-flow) + update BACKLOG rows.
