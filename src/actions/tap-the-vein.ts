@@ -81,7 +81,7 @@ async function createBarFromText(
 /**
  * Write the EA-triad (desired outcome + current dissatisfaction + desired
  * satisfaction) onto a BAR and place it in the player's Garden. Load-bearing for
- * lens/campaign alignment + EA moves. Shared by `plantTask` and `plantStandalone`.
+ * lens/campaign alignment + EA moves. Used by `plantTask` (the in-ritual Plant gate).
  */
 async function writePlantTriadToBar(
   playerId: string,
@@ -548,44 +548,6 @@ export async function plantTask(input: {
   } catch (e) {
     console.error('[ttv:plantTask]', e)
     return { error: 'Failed to plant task' }
-  }
-}
-
-/**
- * Standalone Plant / 3·2·1 — run the EA-triad on-demand, with **no daily session
- * and no TapTheVeinTask**. Mints a Garden BAR directly from a typed subject, then
- * writes the triad. This is the independent "do a 3·2·1 whenever" path used by the
- * NOW page launcher; it never touches TapTheVeinDailySession.
- */
-export async function plantStandalone(input: {
-  subject: string
-  experienceIntent: string
-  dissatisfaction: string[]
-  satisfaction: string[]
-}): Promise<TtvResult<{ barId: string }>> {
-  const player = await getCurrentPlayer()
-  if (!player) return { error: 'Not authenticated' }
-
-  const subject = (input.subject || '').trim()
-  const experienceIntent = (input.experienceIntent || '').trim()
-  if (!subject) return { error: 'Name what this is about' }
-  if (!experienceIntent) return { error: 'Name the desired outcome' }
-  if (!input.dissatisfaction?.length) return { error: 'Name the current dissatisfaction' }
-  if (!input.satisfaction?.length) return { error: 'Name the desired satisfaction' }
-
-  try {
-    const barId = await createBarFromText(player.id, subject)
-    await writePlantTriadToBar(player.id, barId, {
-      experienceIntent,
-      dissatisfaction: input.dissatisfaction,
-      satisfaction: input.satisfaction,
-    })
-
-    revalidatePath('/garden')
-    return { barId }
-  } catch (e) {
-    console.error('[ttv:plantStandalone]', e)
-    return { error: 'Failed to plant' }
   }
 }
 
