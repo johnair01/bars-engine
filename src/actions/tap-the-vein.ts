@@ -39,73 +39,37 @@ const TTV_BAR_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
  * commit — this keeps the Vault from flooding with micro-task BARs and avoids
  * task↔BAR drift (decided via the Six GM panel; reverses the eager H1).
  */
-/**
- * Mint a self-rooted, private CustomBar from free text, attached to today's lens
- * with the TTV "captured" seed provenance. Optionally links it back to a TTV task
- * (`linkTaskId`) in the same transaction. Shared by the in-ritual Plant gesture
- * and the standalone (no-task) 3·2·1 flow. Returns the new barId.
- */
-async function createBarFromText(
-  playerId: string,
-  text: string,
-  linkTaskId?: string,
-): Promise<string> {
-  const title = text.length <= 80 ? text : text.slice(0, 77) + '...'
-  // Attach the BAR to today's lens (LENS first slice; best-effort).
-  const lens = await ensureTodayLens(playerId)
-  return await db.$transaction(async (tx) => {
-    const bar = await tx.customBar.create({
-      data: {
-        creatorId: playerId,
-        title: title || 'Untitled',
-        description: text,
-        type: 'bar',
-        reward: 0,
-        visibility: 'private',
-        status: 'active',
-        inputs: '[]',
-        rootId: 'temp',
-        lensId: lens?.id ?? null,
-        seedMetabolization: TTV_BAR_SEED_METABOLIZATION,
-      },
-      select: { id: true },
-    })
-    await tx.customBar.update({ where: { id: bar.id }, data: { rootId: bar.id } })
-    if (linkTaskId) {
-      await tx.tapTheVeinTask.update({ where: { id: linkTaskId }, data: { barId: bar.id } })
-    }
-    return bar.id
-  })
-}
-
-/**
- * Write the EA-triad (desired outcome + current dissatisfaction + desired
- * satisfaction) onto a BAR and place it in the player's Garden. Load-bearing for
- * lens/campaign alignment + EA moves. Shared by `plantTask` and `plantStandalone`.
- */
-async function writePlantTriadToBar(
-  playerId: string,
-  barId: string,
-  triad: { experienceIntent: string; dissatisfaction: string[]; satisfaction: string[] },
-): Promise<void> {
-  await db.customBar.update({
-    where: { id: barId },
-    data: {
-      gardenId: personalGardenId(playerId),
-      experienceIntent: triad.experienceIntent,
-      dissatisfaction: triad.dissatisfaction.join(EA_SEP),
-      satisfaction: triad.satisfaction.join(EA_SEP),
-    },
-  })
-}
-
 async function ensureBarForTask(
   playerId: string,
   task: { id: string; barId: string | null; originalText: string },
 ): Promise<string | null> {
   if (task.barId) return task.barId
   try {
-    return await createBarFromText(playerId, task.originalText, task.id)
+    const text = task.originalText
+    const title = text.length <= 80 ? text : text.slice(0, 77) + '...'
+    // Attach the BAR to today's lens (LENS first slice; best-effort).
+    const lens = await ensureTodayLens(playerId)
+    return await db.$transaction(async (tx) => {
+      const bar = await tx.customBar.create({
+        data: {
+          creatorId: playerId,
+          title: title || 'Tap the Vein task',
+          description: text,
+          type: 'bar',
+          reward: 0,
+          visibility: 'private',
+          status: 'active',
+          inputs: '[]',
+          rootId: 'temp',
+          lensId: lens?.id ?? null,
+          seedMetabolization: TTV_BAR_SEED_METABOLIZATION,
+        },
+        select: { id: true },
+      })
+      await tx.customBar.update({ where: { id: bar.id }, data: { rootId: bar.id } })
+      await tx.tapTheVeinTask.update({ where: { id: task.id }, data: { barId: bar.id } })
+      return bar.id
+    })
   } catch (e) {
     console.error('[ttv:ensureBarForTask]', e)
     return null
@@ -536,10 +500,14 @@ export async function plantTask(input: {
     const barId = await ensureBarForTask(player.id, task)
     if (!barId) return { error: 'Failed to plant task' }
 
-    await writePlantTriadToBar(player.id, barId, {
-      experienceIntent,
-      dissatisfaction: input.dissatisfaction,
-      satisfaction: input.satisfaction,
+    await db.customBar.update({
+      where: { id: barId },
+      data: {
+        gardenId: personalGardenId(player.id),
+        experienceIntent,
+        dissatisfaction: input.dissatisfaction.join(EA_SEP),
+        satisfaction: input.satisfaction.join(EA_SEP),
+      },
     })
 
     revalidatePath('/tap-the-vein')
@@ -548,44 +516,6 @@ export async function plantTask(input: {
   } catch (e) {
     console.error('[ttv:plantTask]', e)
     return { error: 'Failed to plant task' }
-  }
-}
-
-/**
- * Standalone Plant / 3·2·1 — run the EA-triad on-demand, with **no daily session
- * and no TapTheVeinTask**. Mints a Garden BAR directly from a typed subject, then
- * writes the triad. This is the independent "do a 3·2·1 whenever" path used by the
- * NOW page launcher; it never touches TapTheVeinDailySession.
- */
-export async function plantStandalone(input: {
-  subject: string
-  experienceIntent: string
-  dissatisfaction: string[]
-  satisfaction: string[]
-}): Promise<TtvResult<{ barId: string }>> {
-  const player = await getCurrentPlayer()
-  if (!player) return { error: 'Not authenticated' }
-
-  const subject = (input.subject || '').trim()
-  const experienceIntent = (input.experienceIntent || '').trim()
-  if (!subject) return { error: 'Name what this is about' }
-  if (!experienceIntent) return { error: 'Name the desired outcome' }
-  if (!input.dissatisfaction?.length) return { error: 'Name the current dissatisfaction' }
-  if (!input.satisfaction?.length) return { error: 'Name the desired satisfaction' }
-
-  try {
-    const barId = await createBarFromText(player.id, subject)
-    await writePlantTriadToBar(player.id, barId, {
-      experienceIntent,
-      dissatisfaction: input.dissatisfaction,
-      satisfaction: input.satisfaction,
-    })
-
-    revalidatePath('/garden')
-    return { barId }
-  } catch (e) {
-    console.error('[ttv:plantStandalone]', e)
-    return { error: 'Failed to plant' }
   }
 }
 
