@@ -8,7 +8,8 @@ import { DailyChargePanel } from '@/components/now/DailyChargePanel'
 import { TapTheVeinPanel } from '@/components/now/TapTheVeinPanel'
 import { getTodayPanelSummary } from '@/actions/tap-the-vein'
 import { CaptureBox } from '@/components/now/CaptureBox'
-import { Plant321Launcher } from '@/components/now/Plant321Launcher'
+import { Clean321Launcher } from '@/components/clean321/Clean321Launcher'
+import { BrainstormLauncher } from '@/components/brainstorm/BrainstormLauncher'
 
 type NowHomeProps = {
   playerId: string
@@ -55,7 +56,7 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
 
   const tools = [
     { kind: 'link' as const, href: '/emotional-first-aid', icon: '✚', iconColor: '#2980b9', iconGlow: '#1a7a8a', label: 'First Aid', sub: 'soothe the charge', mono: false },
-    { kind: 'plant321' as const, href: '', icon: '3·2·1', iconColor: '#7c3aed', iconGlow: '#7c3aed', label: 'Clean Up', sub: 'metabolize it', mono: true },
+    { kind: 'clean321' as const, href: '', icon: '3·2·1', iconColor: '#7c3aed', iconGlow: '#7c3aed', label: 'Clean Up', sub: 'metabolize it', mono: true },
     { kind: 'link' as const, href: '/iching', icon: '☰', iconColor: '#d4a017', iconGlow: '#d4a017', label: 'I Ching', sub: 'consult the lines', mono: false },
   ]
 
@@ -155,6 +156,9 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
           {/* Tap the Vein — daily ritual (sibling of Daily Charge, above it) */}
           <TapTheVeinPanel summary={ttvPanel} />
 
+          {/* Brainstorm — list everything you could do before committing */}
+          <BrainstormLauncher />
+
           {/* Daily charge */}
           <DailyChargePanel
             alreadyDoneToday={chargeData.alreadyDoneToday}
@@ -168,8 +172,8 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
             </span>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
               {tools.map(tool =>
-                tool.kind === 'plant321' ? (
-                  <Plant321Launcher
+                tool.kind === 'clean321' ? (
+                  <Clean321Launcher
                     key={tool.label}
                     icon={tool.icon}
                     iconColor={tool.iconColor}
