@@ -31,8 +31,8 @@ export function whoContactVaultWhere(playerId: string) {
 }
 
 /** Charge-room contents (Wake Up): capture-type BARs plus deck-seeded practice BARs.
- * Deck cards "Sent to BARS" are self-claimed active `vibe` BARs (rootId `deck_*`), so
- * they match no draft/charge filter on their own — surface them here as "what's alive". */
+ * Deck cards "Sent to BARS" are self-claimed active `bar` BARs (rootId `deck_*`); the
+ * rootId branch keeps surfacing them here as "what's alive" regardless of type. */
 export function chargeRoomWhere(playerId: string) {
     return {
         creatorId: playerId,

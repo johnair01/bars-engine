@@ -75,7 +75,9 @@ export function AllyshipCard({
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
-          minHeight: 186,
+          // Lock the trading-card proportion (5:7) so tiles keep their shape
+          // instead of stretching to fill the grid/flex row they sit in.
+          aspectRatio: '5 / 7',
           padding: 14,
           textAlign: 'left',
           cursor: onClick ? 'pointer' : 'default',
