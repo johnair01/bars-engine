@@ -338,7 +338,7 @@ function RoleAccordion({
               className="inline-flex text-xs font-semibold"
               style={{ color: ACTION_PURPLE_LITE }}
             >
-              Save this as a BAR →
+              Save this move →
             </Link>
           </div>
         </div>

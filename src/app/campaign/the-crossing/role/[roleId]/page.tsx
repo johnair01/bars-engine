@@ -111,7 +111,7 @@ export default async function TheCrossingRolePage(props: {
               href={moveHref}
               className="flex-1 rounded-[11px] border border-white/15 px-4 py-3 text-center text-sm font-semibold text-[#cfcdc6] transition-colors hover:text-white"
             >
-              Save this as a BAR →
+              Save this move →
             </Link>
           </div>
         </section>

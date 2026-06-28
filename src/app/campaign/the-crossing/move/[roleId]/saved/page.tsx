@@ -13,7 +13,7 @@ const PAGE_BG = 'radial-gradient(120% 50% at 50% -6%, #16121f 0%, #0a0908 46%)'
 const ACTION_PURPLE = '#7c3aed'
 const ACTION_PURPLE_LITE = '#8b5cf6'
 
-export const metadata: Metadata = { title: 'Saved as a BAR | The Crossing' }
+export const metadata: Metadata = { title: 'Move saved | The Crossing' }
 
 export default async function TheCrossingSavedPage(props: {
   params: Promise<{ roleId: string }>
@@ -58,7 +58,7 @@ export default async function TheCrossingSavedPage(props: {
         </div>
 
         <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">
-          Your move is saved as a BAR.
+          Your move is saved.
         </h1>
 
         {/* Mini BAR card */}
@@ -78,7 +78,7 @@ export default async function TheCrossingSavedPage(props: {
               className="rounded-full px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em]"
               style={{ background: 'rgba(212,160,23,.16)', color: '#e0a93b' }}
             >
-              New BAR
+              New move
             </span>
           </div>
           <p className="mt-3 text-[15px] font-semibold leading-snug text-[#f4f2ec]">{summary}</p>
