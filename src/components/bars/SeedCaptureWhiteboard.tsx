@@ -616,7 +616,7 @@ function BottomChrome({ fieldTint, charge, onSetCharge, intent, onIntentChange, 
                   n <= charge && tok
                     ? `0 0 10px -2px ${tok.glow}`
                     : n <= charge
-                    ? '0 0 10px -2px rgba(168,85,247,0.6)'
+                    ? '0 0 10px -2px var(--bars-liminal-glow)'
                     : 'none',
               }}
             />
@@ -697,7 +697,7 @@ function BottomChrome({ fieldTint, charge, onSetCharge, intent, onIntentChange, 
           border: 'none',
           cursor: capturing ? 'default' : 'pointer',
           opacity: capturing ? 0.7 : 1,
-          boxShadow: '0 0 30px -6px rgba(168,85,247,0.6), inset 0 1px 0 rgba(255,255,255,0.18)',
+          boxShadow: '0 0 30px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18)',
           transition: 'opacity 0.2s',
         }}
       >
@@ -787,7 +787,7 @@ function TextEditorOverlay({
             fontWeight: 700,
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 0 20px -6px rgba(168,85,247,0.6), inset 0 1px 0 rgba(255,255,255,0.2)',
+            boxShadow: '0 0 20px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.2)',
           }}
         >
           Done
@@ -822,19 +822,35 @@ function TextEditorOverlay({
         />
       </div>
 
-      {/* Size slider */}
-      <div className="flex items-center gap-3 px-6" style={{ paddingBottom: 4 }}>
-        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 11, color: 'rgba(232,226,218,0.5)', flexShrink: 0 }}>A</span>
+      {/* Size slider — vertical, pinned to the left edge (matches prototype). */}
+      <style>{`
+        .bars-szrange { -webkit-appearance: none; appearance: none; width: 168px; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.22); outline: none; }
+        .bars-szrange::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.55); cursor: pointer; }
+        .bars-szrange::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.55); cursor: pointer; }
+      `}</style>
+      <div
+        style={{
+          position: 'absolute',
+          left: 6,
+          top: '50%',
+          transform: 'translateY(-50%) rotate(-90deg)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 11, color: 'rgba(232,226,218,0.7)', transform: 'rotate(90deg)' }}>A</span>
         <input
+          className="bars-szrange"
           type="range"
-          min={12}
-          max={80}
+          min={16}
+          max={54}
           step={1}
           value={draftSize}
           onChange={(e) => onDraftSizeChange(Number(e.target.value))}
-          style={{ flex: 1 }}
+          aria-label="Text size"
         />
-        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 22, color: 'rgba(232,226,218,0.5)', flexShrink: 0 }}>A</span>
+        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 20, color: 'rgba(232,226,218,0.7)', transform: 'rotate(90deg)' }}>A</span>
       </div>
 
       {/* Element colour rail */}
@@ -992,7 +1008,7 @@ function CapturedOverlay({ title, placedIn, onTuneNow, onBackToBoard }: Captured
             fontSize: 15.5,
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 0 30px -6px rgba(168,85,247,0.6), inset 0 1px 0 rgba(255,255,255,0.18)',
+            boxShadow: '0 0 30px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18)',
           }}
         >
           Tune now →
