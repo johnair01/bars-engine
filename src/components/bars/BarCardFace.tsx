@@ -1,7 +1,7 @@
 'use client'
 
 import { CultivationCard } from '@/components/ui/CultivationCard'
-import { ELEMENT_TOKENS, STAGE_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+import { ELEMENT_TOKENS, STAGE_TOKENS, elementLabel, type ElementKey } from '@/lib/ui/card-tokens'
 
 /**
  * Renders the Face of a BAR card — image + first line teaser.
@@ -66,6 +66,11 @@ export function BarCardFace({
       altitude="dissatisfied"
       element={el ? (element as ElementKey) : undefined}
       className={className}
+      aria-label={
+        el
+          ? `${elementLabel(element as ElementKey, { withEmotion: true })} seed — ${teaser}`
+          : teaser
+      }
     >
       <div className={`card-art-window ${st.artWindowHeight} overflow-hidden rounded-t-xl bg-black/20 relative`}>
         {imageUrl && (
@@ -76,19 +81,31 @@ export function BarCardFace({
             className={`w-full h-full object-cover object-center ${st.artOpacity}`}
           />
         )}
-        {/* Element sigil badge — only when the BAR carries an element */}
+        {/* Element sigil badge — only when the BAR carries an element.
+            Sigil is a watermark; pair it with the English name + emotion so the
+            Chinese character never stands alone. */}
         {el && !imageUrl && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
             <span
               style={{ color: el.gem, textShadow: `0 0 12px ${el.glow}`, fontSize: 38, lineHeight: 1 }}
               aria-hidden
             >
               {el.sigil}
             </span>
+            <span
+              className="font-mono text-[9px] uppercase tracking-[0.14em]"
+              style={{ color: el.gem, opacity: 0.85 }}
+            >
+              {elementLabel(element as ElementKey, { withEmotion: true })}
+            </span>
           </div>
         )}
       </div>
       <div className="p-4 relative z-10">
+        {/* Kicker — names the BAR's origin, like the prototype Face card. */}
+        <span className="block font-mono text-[7.5px] uppercase tracking-[0.1em] text-zinc-600 text-center mb-2">
+          {canvasLayout ? 'from the canvas' : 'note'}
+        </span>
         <p className="font-mono text-sm text-zinc-300 line-clamp-2 break-words text-center min-h-[40px] flex items-center justify-center">
           {teaser}
         </p>

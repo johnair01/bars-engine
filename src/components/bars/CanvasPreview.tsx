@@ -85,7 +85,7 @@ export function CanvasPreview({
     // Field background — element-driven radial glow (top) + purple glow (bottom)
     // + two faint grids over #0c0d11. Mirrors FieldBackground in the composer.
     const topGlow = el
-        ? `radial-gradient(ellipse 130% 66% at 50% 6%, color-mix(in srgb, ${el.frame} 30%, transparent), transparent 56%),`
+        ? `radial-gradient(ellipse 130% 66% at 50% 6%, color-mix(in srgb, ${el.frame} 34%, transparent), transparent 56%),`
         : ''
     const fieldBg = [
         topGlow,
@@ -256,15 +256,31 @@ export function CanvasPreview({
                 }}
             >
                 {el && (
-                    <span
-                        style={{
-                            fontSize: cqw(22),
-                            color: el.gem,
-                            textShadow: `0 0 8px ${el.glow}`,
-                            lineHeight: 1,
-                        }}
-                    >
-                        {el.sigil}
+                    <span className="flex items-center" style={{ gap: cqw(6) }}>
+                        <span
+                            style={{
+                                fontSize: cqw(22),
+                                color: el.gem,
+                                textShadow: `0 0 12px ${el.glow}`,
+                                lineHeight: 1,
+                            }}
+                        >
+                            {el.sigil}
+                        </span>
+                        {/* English name on one line — keeps the sigil translated without
+                            crowding the frozen-polaroid caption (emotion lives in the legend). */}
+                        <span
+                            className="font-mono uppercase"
+                            style={{
+                                fontSize: cqw(9),
+                                letterSpacing: '0.12em',
+                                color: el.gem,
+                                opacity: 0.85,
+                                lineHeight: 1,
+                            }}
+                        >
+                            {el.label}
+                        </span>
                     </span>
                 )}
                 {title && (

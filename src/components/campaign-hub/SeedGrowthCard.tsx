@@ -459,9 +459,9 @@ export function SeedGrowthCard({
             </span>
           </div>
           {/* Water level counter */}
-          <span className="text-[10px] font-mono text-zinc-500 tabular-nums">
+          <span className="text-[10px] font-mono text-zinc-500 tabular-nums" aria-label={`Water level ${Math.round(waterLevel)}`}>
             {Math.round(waterLevel)}
-            <span className="ml-0.5 text-zinc-600">水</span>
+            <span className="ml-0.5 text-zinc-600" title="Water (水)">水<span className="sr-only"> water</span></span>
           </span>
         </div>
 

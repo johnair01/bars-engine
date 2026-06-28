@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+import { ELEMENT_TOKENS, elementLabel, type ElementKey } from '@/lib/ui/card-tokens'
 import {
   captureBarFromCanvas,
   type CanvasItem,
 } from '@/actions/bars'
+import { ElementEmotionLegendModal } from './ElementEmotionLegend'
+import { CaptureWalkthrough } from './CaptureWalkthrough'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -27,6 +29,11 @@ const CHARGE_LABELS: Record<number, string> = {
 }
 
 const ELEMENT_ORDER: ElementKey[] = ['fire', 'water', 'wood', 'metal', 'earth']
+
+// Shown on the empty starter sticker — an invitation to write your own spark,
+// not an example to delete. Rendered muted by TextSticker; never captured as text.
+const PLACEHOLDER_PROMPT = "What's charged for\nyou right now?"
+const PLACEHOLDER_HINT = 'Tap to write'
 
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v))
@@ -53,14 +60,18 @@ function buildDefaultItems(defaultText?: string): CanvasItem[] {
       size: 27,
     }]
   }
+  // No prefill → start with an EMPTY placeholder sticker. It renders the muted
+  // prompt copy (see TextSticker) inviting the user's own words, instead of a
+  // canned example they have to notice-and-delete. Excluded from capture until
+  // the user actually types something.
   return [{
     id: 'seed-text-1',
     type: 'text',
-    x: 184,
-    y: 218,
-    rot: -2,
-    text: 'I went quiet in the\nmeeting again.',
-    tint: 'water',
+    x: 196,
+    y: 300,
+    rot: 0,
+    text: '',
+    tint: null,
     size: 27,
   }]
 }
@@ -183,9 +194,10 @@ interface ToolRailProps {
   onAddVoice: () => void
   onAddLink: () => void
   onSetElement: (el: ElementKey) => void
+  onShowLegend: () => void
 }
 
-function ToolRail({ fieldTint, onAddText, onAddPhoto, onAddVoice, onAddLink, onSetElement }: ToolRailProps) {
+function ToolRail({ fieldTint, onAddText, onAddPhoto, onAddVoice, onAddLink, onSetElement, onShowLegend }: ToolRailProps) {
   const btnBase: React.CSSProperties = {
     width: 40,
     height: 40,
@@ -238,6 +250,25 @@ function ToolRail({ fieldTint, onAddText, onAddPhoto, onAddVoice, onAddLink, onS
       {/* Divider */}
       <div style={{ width: 30, height: 1, background: 'rgba(255,255,255,0.14)', margin: '3px 5px' }} />
 
+      {/* "What do the elements mean?" — opens the element↔emotion field guide */}
+      <div className="flex items-center gap-[10px]">
+        <span
+          className="font-mono text-[8.5px] uppercase tracking-[0.14em] text-right leading-tight"
+          style={{ color: 'rgba(232,226,218,0.45)' }}
+        >
+          what do
+          <br />
+          these mean?
+        </span>
+        <button
+          onClick={onShowLegend}
+          aria-label="What do the elements mean?"
+          style={{ ...btnBase, width: 34, height: 34, fontSize: 16, fontWeight: 700 }}
+        >
+          ?
+        </button>
+      </div>
+
       {/* Element rows */}
       {ELEMENT_ORDER.map((el) => {
         const tok = ELEMENT_TOKENS[el]
@@ -245,14 +276,16 @@ function ToolRail({ fieldTint, onAddText, onAddPhoto, onAddVoice, onAddLink, onS
         return (
           <div key={el} className="flex items-center gap-[10px]">
             <span
-              className="font-mono text-[8.5px] uppercase tracking-[0.14em]"
+              className="font-mono text-[8.5px] uppercase tracking-[0.14em] text-right leading-tight"
               style={{ color: active ? tok.gem : 'rgba(232,226,218,0.55)' }}
             >
-              {el.toUpperCase()}
+              {tok.label}
+              <br />
+              <span style={{ opacity: 0.7 }}>{tok.emotion}</span>
             </span>
             <button
               onClick={() => onSetElement(el)}
-              aria-label={`Attune to ${el}`}
+              aria-label={`Attune to ${elementLabel(el, { withEmotion: true })}`}
               style={{
                 width: 34,
                 height: 34,
@@ -291,10 +324,12 @@ interface TextStickerProps {
 }
 
 function TextSticker({ item, isDragging, onPointerDown }: TextStickerProps) {
-  const color = textColor((item.tint as ElementKey | null) ?? null)
+  const isEmpty = !item.text || !item.text.trim()
+  const color = isEmpty ? 'rgba(232,226,218,0.42)' : textColor((item.tint as ElementKey | null) ?? null)
   return (
     <div
       onPointerDown={(e) => onPointerDown(e, item.id)}
+      aria-label={isEmpty ? 'Empty seed — tap to write' : undefined}
       style={{
         position: 'absolute',
         left: item.x,
@@ -307,14 +342,18 @@ function TextSticker({ item, isDragging, onPointerDown }: TextStickerProps) {
         textAlign: 'center',
         whiteSpace: 'pre-wrap',
         maxWidth: 300,
-        padding: '4px 8px',
-        borderRadius: 9,
+        padding: isEmpty ? '12px 18px' : '4px 8px',
+        borderRadius: 14,
         color,
-        textShadow: '0 2px 16px rgba(0,0,0,0.85), 0 0 1px rgba(0,0,0,0.6)',
-        cursor: 'grab',
+        textShadow: isEmpty ? 'none' : '0 2px 16px rgba(0,0,0,0.85), 0 0 1px rgba(0,0,0,0.6)',
+        cursor: isEmpty ? 'text' : 'grab',
         userSelect: 'none',
         touchAction: 'none',
         transition: isDragging ? 'none' : 'transform 0.16s cubic-bezier(0.16,1,0.3,1)',
+        // Empty placeholder gets a soft dashed frame so it reads as "tap here".
+        ...(isEmpty && !isDragging
+          ? { boxShadow: 'inset 0 0 0 1px rgba(232,226,218,0.18)', background: 'rgba(255,255,255,0.015)' }
+          : {}),
         ...(isDragging
           ? {
               filter: 'brightness(1.06) drop-shadow(0 18px 26px rgba(0,0,0,0.55))',
@@ -324,7 +363,27 @@ function TextSticker({ item, isDragging, onPointerDown }: TextStickerProps) {
           : {}),
       }}
     >
-      {item.text}
+      {isEmpty ? (
+        <>
+          {PLACEHOLDER_PROMPT}
+          <span
+            style={{
+              display: 'block',
+              marginTop: 10,
+              fontFamily: 'Space Mono, monospace',
+              fontWeight: 400,
+              fontSize: 10,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              opacity: 0.75,
+            }}
+          >
+            {PLACEHOLDER_HINT}
+          </span>
+        </>
+      ) : (
+        item.text
+      )}
     </div>
   )
 }
@@ -557,7 +616,7 @@ function BottomChrome({ fieldTint, charge, onSetCharge, intent, onIntentChange, 
                   n <= charge && tok
                     ? `0 0 10px -2px ${tok.glow}`
                     : n <= charge
-                    ? '0 0 10px -2px rgba(168,85,247,0.6)'
+                    ? '0 0 10px -2px var(--bars-liminal-glow)'
                     : 'none',
               }}
             />
@@ -638,7 +697,7 @@ function BottomChrome({ fieldTint, charge, onSetCharge, intent, onIntentChange, 
           border: 'none',
           cursor: capturing ? 'default' : 'pointer',
           opacity: capturing ? 0.7 : 1,
-          boxShadow: '0 0 30px -6px rgba(168,85,247,0.6), inset 0 1px 0 rgba(255,255,255,0.18)',
+          boxShadow: '0 0 30px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18)',
           transition: 'opacity 0.2s',
         }}
       >
@@ -728,7 +787,7 @@ function TextEditorOverlay({
             fontWeight: 700,
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 0 20px -6px rgba(168,85,247,0.6), inset 0 1px 0 rgba(255,255,255,0.2)',
+            boxShadow: '0 0 20px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.2)',
           }}
         >
           Done
@@ -763,19 +822,35 @@ function TextEditorOverlay({
         />
       </div>
 
-      {/* Size slider */}
-      <div className="flex items-center gap-3 px-6" style={{ paddingBottom: 4 }}>
-        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 11, color: 'rgba(232,226,218,0.5)', flexShrink: 0 }}>A</span>
+      {/* Size slider — vertical, pinned to the left edge (matches prototype). */}
+      <style>{`
+        .bars-szrange { -webkit-appearance: none; appearance: none; width: 168px; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.22); outline: none; }
+        .bars-szrange::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.55); cursor: pointer; }
+        .bars-szrange::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.55); cursor: pointer; }
+      `}</style>
+      <div
+        style={{
+          position: 'absolute',
+          left: 6,
+          top: '50%',
+          transform: 'translateY(-50%) rotate(-90deg)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 11, color: 'rgba(232,226,218,0.7)', transform: 'rotate(90deg)' }}>A</span>
         <input
+          className="bars-szrange"
           type="range"
-          min={12}
-          max={80}
+          min={16}
+          max={54}
           step={1}
           value={draftSize}
           onChange={(e) => onDraftSizeChange(Number(e.target.value))}
-          style={{ flex: 1 }}
+          aria-label="Text size"
         />
-        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 22, color: 'rgba(232,226,218,0.5)', flexShrink: 0 }}>A</span>
+        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 20, color: 'rgba(232,226,218,0.7)', transform: 'rotate(90deg)' }}>A</span>
       </div>
 
       {/* Element colour rail */}
@@ -787,7 +862,9 @@ function TextEditorOverlay({
           className="font-mono text-[8.5px] uppercase tracking-[0.16em]"
           style={{ color: 'rgba(232,226,218,0.5)' }}
         >
-          Attune to an element
+          {draftTint === 'none'
+            ? 'Attune to an element'
+            : `${ELEMENT_TOKENS[draftTint as ElementKey].sigil} ${elementLabel(draftTint as ElementKey, { withEmotion: true })}`}
         </span>
         <div className="flex gap-[13px]">
           {/* None swatch */}
@@ -800,7 +877,7 @@ function TextEditorOverlay({
               <button
                 key={t}
                 onClick={() => onDraftTintChange(t as ElementKey | 'none')}
-                aria-label={t === 'none' ? 'No element' : t}
+                aria-label={t === 'none' ? 'No element' : elementLabel(t as ElementKey, { withEmotion: true })}
                 style={{
                   width: 34,
                   height: 34,
@@ -931,7 +1008,7 @@ function CapturedOverlay({ title, placedIn, onTuneNow, onBackToBoard }: Captured
             fontSize: 15.5,
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 0 30px -6px rgba(168,85,247,0.6), inset 0 1px 0 rgba(255,255,255,0.18)',
+            boxShadow: '0 0 30px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18)',
           }}
         >
           Tune now →
@@ -1247,6 +1324,7 @@ export function SeedCaptureWhiteboard({
   const [reducedMotion, setReducedMotion] = useState(false)
   const [intent, setIntent] = useState('')
   const [captured, setCaptured] = useState<{ barId: string; title: string; placedIn: 'hand' | 'vault' } | null>(null)
+  const [showLegend, setShowLegend] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -1545,11 +1623,28 @@ export function SeedCaptureWhiteboard({
   // ─── Capture ───────────────────────────────────────────────────────────────
 
   const handleCapture = useCallback(async () => {
+    // Guard: a board showing only the empty placeholder sticker has no real
+    // content. Don't capture a blank seed — nudge the user to add something.
+    const hasRealContent = items.some(
+      (i) =>
+        (i.type === 'text' && !!i.text && i.text.trim().length > 0) ||
+        i.type === 'photo' ||
+        i.type === 'voice' ||
+        i.type === 'link',
+    )
+    if (!hasRealContent) {
+      setCaptureError('Write a line — or add a photo, voice note, or link — before capturing.')
+      return
+    }
     setCaptureError(null)
     setCapturing(true)
+    // Never persist an empty placeholder text sticker.
+    const captureItems = items.filter(
+      (i) => !(i.type === 'text' && (!i.text || !i.text.trim())),
+    )
     try {
       const result = await captureBarFromCanvas({
-        items,
+        items: captureItems,
         fieldTint,
         charge,
         storyContent: intent.trim() || undefined,
@@ -1788,6 +1883,7 @@ export function SeedCaptureWhiteboard({
           onAddVoice={handleAddVoice}
           onAddLink={handleAddLink}
           onSetElement={handleSetElement}
+          onShowLegend={() => setShowLegend(true)}
         />
 
         {/* Compost node (visible while dragging) */}
@@ -1836,6 +1932,12 @@ export function SeedCaptureWhiteboard({
             onBackToBoard={() => router.push('/hand')}
           />
         )}
+
+        {/* Element ↔ emotion field guide */}
+        {showLegend && <ElementEmotionLegendModal onClose={() => setShowLegend(false)} />}
+
+        {/* First-run coach-marks: write → attune → charge → capture → Hand */}
+        <CaptureWalkthrough onOpenLegend={() => setShowLegend(true)} />
       </div>
     </div>
   )

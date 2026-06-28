@@ -399,7 +399,7 @@ function StepTruths({ nowEls, truths, setTruths }: {
           What would have to be true?
         </h2>
         <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: 12, lineHeight: 1.5, color: '#a09e98', margin: '6px 0 0' }}>
-          For you to feel this way. Write freely — these become the roots of your hand.
+          For you to feel this way. Reflection is optional — write what&apos;s true. These become the roots of your hand.
         </p>
       </div>
       {nowEls.map(el => {

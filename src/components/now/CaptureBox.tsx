@@ -42,7 +42,7 @@ export function CaptureBox() {
         return
       }
       setText('')
-      showFlash(destination === 'hand' ? 'Added to hand' : 'Saved to vault')
+      showFlash(destination === 'hand' ? 'Now in your hand' : 'Paved to the Vault')
       router.refresh()
     })
   }
@@ -53,14 +53,14 @@ export function CaptureBox() {
       await resolveOverflow({ newBarId: overflow.newBarId, depositBarId })
       setOverflow(null)
       setText('')
-      showFlash('Added to hand')
+      showFlash('Now in your hand')
       router.refresh()
     })
   }
 
   const handleKeepInVault = () => {
     setOverflow(null)
-    showFlash('Saved to vault')
+    showFlash('Paved to the Vault')
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -204,7 +204,7 @@ export function CaptureBox() {
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          {pending ? '…' : 'Keep'}
+          {pending ? 'Capturing' : 'Capture'}
           {!pending && <span style={{ fontSize: 13 }}>→</span>}
         </button>
       </div>
