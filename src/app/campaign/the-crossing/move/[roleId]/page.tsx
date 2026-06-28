@@ -53,7 +53,7 @@ export default async function TheCrossingMovePage(props: {
           </p>
           <h1 className="text-[34px] font-bold leading-[1.05] tracking-[-0.02em]">{role.label}</h1>
           <p className="text-[14px] leading-relaxed text-[#cfcdc6]">
-            This becomes a BAR on Wendell’s board. He’ll follow up through the contact you leave — no
+            This goes straight to Wendell’s board. He’ll follow up through the contact you leave — no
             account needed.
           </p>
         </header>

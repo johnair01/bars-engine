@@ -162,7 +162,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
   {
     key: 'deck-digital',
     name: 'Oracle Deck — Digital Access',
-    blurb: 'The 52-card Oracle at the Edge of the Known World. (Also included with The Game.)',
+    blurb: 'The 120-move Oracle at the Edge of the Known World. (Also included with The Game.)',
     group: 'digital',
     priceCents: 1000,
     gumroadUrl: GUMROAD.deckDigital,

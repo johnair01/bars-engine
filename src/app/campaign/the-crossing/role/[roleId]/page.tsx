@@ -9,6 +9,7 @@ import {
 } from '@/lib/the-crossing-support-moves'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { DeckCardForRole } from '@/components/the-crossing/DeckCardForRole'
+import { DeckPurchaseCTA } from '@/components/launch/DeckPurchaseCTA'
 
 const PAGE_BG = 'radial-gradient(120% 50% at 50% -6%, #16121f 0%, #0a0908 46%)'
 const ACTION_PURPLE = '#7c3aed'
@@ -110,7 +111,7 @@ export default async function TheCrossingRolePage(props: {
               href={moveHref}
               className="flex-1 rounded-[11px] border border-white/15 px-4 py-3 text-center text-sm font-semibold text-[#cfcdc6] transition-colors hover:text-white"
             >
-              Save this as a BAR →
+              Save this move →
             </Link>
           </div>
         </section>
@@ -150,6 +151,12 @@ export default async function TheCrossingRolePage(props: {
           </div>
         </section>
 
+        {/* Buy the full deck — these two moves are a taste of all 120 */}
+        <DeckPurchaseCTA
+          element={role.element}
+          blurb="These two moves are from the 120-move Allyship Deck — the consultable heart of the whole game. Get the deck and you have a move for every moment."
+        />
+
         {/* Account upsell (purple — action/account channel) */}
         <section
           className="rounded-2xl border p-5"
@@ -157,8 +164,9 @@ export default async function TheCrossingRolePage(props: {
         >
           <p className="text-sm font-semibold text-white">Save this contribution</p>
           <p className="mt-1 text-[13px] leading-relaxed text-[#cfcdc6]">
-            Create your BARS Engine account to track what happens to your move — or just make it now,
-            no account needed.
+            This is the whole game in miniature: care becomes a move, a move becomes evidence you can
+            follow. Create your BARS Engine account to track what happens to your move — or just make
+            it now, no account needed.
           </p>
           <Link
             href={`/login?returnTo=${encodeURIComponent(moveHref)}`}

@@ -144,7 +144,7 @@ export function CaptureForm({
       <p className="text-[11px] text-[#6b6965]">
         Goes to{' '}
         <span className="text-[#a09e98]">Wendell’s board</span> as a {domainLabel(role.primaryDomain)}{' '}
-        BAR. He follows up through the contact you leave — no account needed.
+        move. He follows up through the contact you leave — no account needed.
       </p>
 
       {/* Sticky submit */}
