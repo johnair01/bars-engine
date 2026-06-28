@@ -13,7 +13,13 @@ type FaceKey  = 'challenger' | 'sage' | 'architect' | 'diplomat' | 'shaman' | 'r
 type DomainKey = 'gather_resources' | 'raise_awareness' | 'direct_action' | 'skillful_organizing'
 
 const SIGILS: Record<string, string> = { fire:'火', water:'水', wood:'木', metal:'金', earth:'土', liminal:'◇' }
+const EL_NAMES: Record<string, string> = { fire:'Fire', water:'Water', wood:'Wood', metal:'Metal', earth:'Earth', liminal:'Liminal' }
 const FEELINGS: Record<string, string> = { fire:'Anger', water:'Sadness', metal:'Fear', earth:'Apathy', wood:'Restlessness', liminal:'Charge' }
+/** Accessible name for a bare element sigil, e.g. "Fire · Anger". */
+function sigilAria(el: string | null | undefined): string {
+  const key = el ?? 'liminal'
+  return `${EL_NAMES[key] ?? key} · ${FEELINGS[key] ?? ''}`.replace(/ · $/, '')
+}
 const FACES: Record<FaceKey, string> = { challenger:'Challenger', sage:'Sage', architect:'Architect', diplomat:'Diplomat', shaman:'Shaman', regent:'Regent' }
 const CHARGE_WORDS = ['', 'A flicker', 'A pull', 'A weight', 'A surge', 'A storm']
 
@@ -299,12 +305,12 @@ function BoardCard({ card, work, onOpen }: { card: MoveCard; work: CardWork; onO
   return (
     <div onClick={onOpen} style={{ position:'relative', overflow:'hidden', borderRadius:13, minHeight:172, padding:'14px 14px 13px', background:`radial-gradient(ellipse 120% 80% at 50% 0%, color-mix(in srgb, ${p.frame} 13%, transparent), transparent 60%), linear-gradient(180deg, #1d1d1a 0%, #1a1a18 100%)`, boxShadow:`inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1.5px ${p.frame}, 0 0 16px -5px ${p.glow}, 0 22px 40px -28px rgba(0,0,0,0.85)`, cursor:'pointer', WebkitTapHighlightColor:'transparent', transition:'transform 0.16s ease' }}>
       {/* Watermark */}
-      <span style={{ position:'absolute', left:'50%', top:'48%', transform:'translate(-50%,-50%)', fontFamily:'Nunito, sans-serif', fontSize:84, lineHeight:1, opacity:0.12, color:p.gem, textShadow:`0 0 24px ${p.glow}`, pointerEvents:'none', userSelect:'none', zIndex:0 }}>{sigil}</span>
+      <span style={{ position:'absolute', left:'50%', top:'48%', transform:'translate(-50%,-50%)', fontFamily:'Nunito, sans-serif', fontSize:84, lineHeight:1, opacity:0.12, color:p.gem, textShadow:`0 0 24px ${p.glow}`, pointerEvents:'none', userSelect:'none', zIndex:0 }} aria-hidden>{sigil}</span>
 
       <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', height:'100%' }}>
         {/* Gem + charge label */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:6 }}>
-          <span style={{ flex:'0 0 auto', width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Nunito, sans-serif', fontSize:15, color:p.gem, background:`color-mix(in srgb, ${p.frame} 18%, #111110)`, boxShadow:`inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1.5px color-mix(in srgb, ${p.frame} 70%, transparent), 0 0 12px -2px ${p.glow}` }}>{sigil}</span>
+          <span style={{ flex:'0 0 auto', width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Nunito, sans-serif', fontSize:15, color:p.gem, background:`color-mix(in srgb, ${p.frame} 18%, #111110)`, boxShadow:`inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1.5px color-mix(in srgb, ${p.frame} 70%, transparent), 0 0 12px -2px ${p.glow}` }} role="img" aria-label={sigilAria(card.el)}>{sigil}</span>
           <span style={{ fontFamily:'Space Mono, monospace', fontSize:7.5, letterSpacing:'0.08em', textTransform:'uppercase' as const, color:p.gem }}>{card.chargeLabel}</span>
         </div>
 
@@ -346,7 +352,7 @@ function CardView({ card, work, step, howOpen, setHowOpen, domain, onBoard, setW
 
       {/* Compact card summary */}
       <div style={{ position:'relative', overflow:'hidden', display:'flex', alignItems:'center', gap:12, marginTop:14, borderRadius:12, padding:'13px 14px', background:`radial-gradient(ellipse 120% 80% at 50% 0%, color-mix(in srgb, ${p.frame} 13%, transparent), transparent 60%), linear-gradient(180deg, #1d1d1a, #1a1a18)`, boxShadow:`inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1.5px ${p.frame}, 0 0 18px -5px ${p.glow}` }}>
-        <span style={{ flex:'0 0 auto', position:'relative', zIndex:1, width:38, height:38, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Nunito, sans-serif', fontSize:19, color:p.gem, background:`color-mix(in srgb, ${p.frame} 18%, #111110)`, boxShadow:`inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1.5px color-mix(in srgb, ${p.frame} 70%, transparent), 0 0 14px -2px ${p.glow}` }}>{sigil}</span>
+        <span style={{ flex:'0 0 auto', position:'relative', zIndex:1, width:38, height:38, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Nunito, sans-serif', fontSize:19, color:p.gem, background:`color-mix(in srgb, ${p.frame} 18%, #111110)`, boxShadow:`inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1.5px color-mix(in srgb, ${p.frame} 70%, transparent), 0 0 14px -2px ${p.glow}` }} role="img" aria-label={sigilAria(card.el)}>{sigil}</span>
         <div style={{ flex:1, minWidth:0, position:'relative', zIndex:1 }}>
           <p style={{ fontFamily:'Jost, sans-serif', fontWeight:700, fontSize:14.5, lineHeight:1.2, margin:0, color:'#e8e6e0' }}>{card.title}</p>
           <span style={{ fontFamily:'Space Mono, monospace', fontSize:8, letterSpacing:'0.06em', textTransform:'uppercase' as const, color:'#6b6965' }}>
@@ -469,7 +475,7 @@ function BlockStep({ card, work, setWork }: { card: MoveCard; work: CardWork; se
       <div style={{ display:'flex', flexDirection:'column', gap:5, marginTop:10 }}>
         {/* Base row */}
         <div style={{ display:'flex', alignItems:'center', gap:11, borderRadius:12, background:'#111110', boxShadow:`inset 0 0 0 1px ${cardPal.frame}`, padding:'10px 12px' }}>
-          <span style={{ flex:'0 0 auto', width:30, height:30, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Nunito, sans-serif', fontSize:15, color:cardPal.gem, background:`color-mix(in srgb, ${cardPal.gem} 16%, transparent)` }}>{sigil}</span>
+          <span style={{ flex:'0 0 auto', width:30, height:30, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Nunito, sans-serif', fontSize:15, color:cardPal.gem, background:`color-mix(in srgb, ${cardPal.gem} 16%, transparent)` }} role="img" aria-label={sigilAria(card.el)}>{sigil}</span>
           <div style={{ flex:1, minWidth:0 }}>
             <span style={{ fontFamily:'Space Mono, monospace', fontSize:7.5, letterSpacing:'0.1em', textTransform:'uppercase' as const, color:'#6b6965' }}>The charge</span>
             <p style={{ fontFamily:'Jost, sans-serif', fontWeight:700, fontSize:13, margin:'2px 0 0', color:'#e8e6e0' }}>{card.chargeLabel}</p>

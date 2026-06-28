@@ -256,15 +256,32 @@ export function CanvasPreview({
                 }}
             >
                 {el && (
-                    <span
-                        style={{
-                            fontSize: cqw(22),
-                            color: el.gem,
-                            textShadow: `0 0 8px ${el.glow}`,
-                            lineHeight: 1,
-                        }}
-                    >
-                        {el.sigil}
+                    <span className="flex items-center" style={{ gap: cqw(6) }}>
+                        <span
+                            style={{
+                                fontSize: cqw(22),
+                                color: el.gem,
+                                textShadow: `0 0 8px ${el.glow}`,
+                                lineHeight: 1,
+                            }}
+                        >
+                            {el.sigil}
+                        </span>
+                        {/* English name + emotion — never let the sigil stand alone */}
+                        <span
+                            className="font-mono uppercase"
+                            style={{
+                                fontSize: cqw(8.5),
+                                letterSpacing: '0.12em',
+                                color: el.gem,
+                                opacity: 0.85,
+                                lineHeight: 1.15,
+                            }}
+                        >
+                            {el.label}
+                            <br />
+                            <span style={{ opacity: 0.75 }}>{el.emotion}</span>
+                        </span>
                     </span>
                 )}
                 {title && (

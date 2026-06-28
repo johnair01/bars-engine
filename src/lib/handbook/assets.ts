@@ -16,6 +16,8 @@ export const MOVE_ICONS = {
 
 /** The Headmaster's chop glyph (rendered in the `Ma Shan Zheng` web font, no image). */
 export const SEAL = "護";
+/** English gloss for the seal glyph — pair it with 護 so the character never stands alone. */
+export const SEAL_GLOSS = "Protection";
 
 /** Print-preview spread art. */
 export const SPREAD_ART = "/oracle/images/wu-a.png";

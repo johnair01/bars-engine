@@ -39,6 +39,8 @@ export type CardTier     = 1 | 2 | 3 | 4
 export const ELEMENT_TOKENS = {
   fire: {
     sigil:      '火',
+    label:      'Fire',      // English name — always render alongside the sigil
+    emotion:    'Anger',     // emotional channel this element carries
     frame:      '#c1392b',   // cinnabar
     glow:       '#e8671a',   // ember-ochre
     gem:        '#e74c3c',   // bright ember
@@ -54,6 +56,8 @@ export const ELEMENT_TOKENS = {
   },
   water: {
     sigil:      '水',
+    label:      'Water',
+    emotion:    'Sadness',
     frame:      '#1a3a5c',   // deep navy
     glow:       '#1a7a8a',   // deep teal
     gem:        '#2980b9',   // ocean blue
@@ -69,6 +73,8 @@ export const ELEMENT_TOKENS = {
   },
   wood: {
     sigil:      '木',
+    label:      'Wood',
+    emotion:    'Joy',
     frame:      '#4a7c59',   // muted sage / forest
     glow:       '#27ae60',   // jade
     gem:        '#2ecc71',   // emerald
@@ -84,6 +90,8 @@ export const ELEMENT_TOKENS = {
   },
   metal: {
     sigil:      '金',
+    label:      'Metal',
+    emotion:    'Fear',
     frame:      '#8e9aab',   // silver-slate (NOT purple — purple = primary action)
     glow:       '#bdc3c7',   // chrome
     gem:        '#bdc3c7',   // pale chrome
@@ -99,6 +107,8 @@ export const ELEMENT_TOKENS = {
   },
   earth: {
     sigil:      '土',
+    label:      'Earth',
+    emotion:    'Neutrality',
     frame:      '#b5651d',   // terracotta
     glow:       '#d4a017',   // ochre-amber
     gem:        '#d4a017',   // warm gold
@@ -114,6 +124,7 @@ export const ELEMENT_TOKENS = {
   },
 } as const satisfies Record<ElementKey, {
   sigil: string
+  label: string; emotion: string
   frame: string; glow: string; gem: string
   bg: string; border: string; borderHover: string
   textAccent: string; badgeBg: string
@@ -207,6 +218,19 @@ export const SURFACE_TOKENS = {
   tableSlateCenter: '#1d1f25', // lit center (top-left light source)
   tableSlateEdge:   '#0b0c0f', // vignette edge (darkened rim)
 } as const
+
+// ─── Helper: English label (+ optional emotion) for an element ───────────────
+// Single source of truth for rendering a sigil's English name everywhere in the
+// UI. Every place that shows a Wuxing sigil should pair it with this label so no
+// Chinese character ever appears without an English translation.
+
+export function elementLabel(
+  element: ElementKey,
+  opts: { withEmotion?: boolean } = {},
+): string {
+  const t = ELEMENT_TOKENS[element]
+  return opts.withEmotion ? `${t.label} · ${t.emotion}` : t.label
+}
 
 // ─── Helper: build CSS custom properties for a card element ──────────────────
 

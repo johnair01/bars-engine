@@ -101,7 +101,7 @@ export function BarPromptBlock({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <span style={{ fontFamily: FONT.seal, fontSize: 18, color: COLOR.gold }}>種</span>
+            <span style={{ fontFamily: FONT.seal, fontSize: 18, color: COLOR.gold }} role="img" aria-label="Seed (種)" title="Seed (種)">種</span>
             <span style={{ fontFamily: FONT.mono, fontSize: 9.5, letterSpacing: "0.14em", color: COLOR.gold }}>
               SEED PLANTED · SAVED AS A BAR
             </span>
