@@ -12,6 +12,7 @@ import { CampaignInvitationAccept } from './CampaignInvitationAccept'
 import { BarFaceBackTabs } from '@/components/bars/BarFaceBackTabs'
 import { CanvasPreview } from '@/components/bars/CanvasPreview'
 import { GrowFromBar } from '@/components/bars/GrowFromBar'
+import { PlantBarInGarden } from '@/components/bars/PlantBarInGarden'
 import { OfferToCampaign } from '@/components/bars/OfferToCampaign'
 import { listAttachableCampaigns } from '@/actions/campaign-attach'
 import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
@@ -281,6 +282,11 @@ export default async function BarDetailPage({
                 {/* Grow from this BAR (owner or recipient) — bar and charge_capture can become quests */}
                 {(isOwner || isRecipient) && (bar.type === 'bar' || bar.type === 'charge_capture') && (
                     <GrowFromBar barId={bar.id} />
+                )}
+
+                {/* Plant in the Garden (owner, not-yet-planted) — the Hand/Vault → Garden path */}
+                {canMoveHandVault && (
+                    <PlantBarInGarden barId={bar.id} />
                 )}
 
                 {/* Offer to a campaign (owner only) — the personal→collective bridge */}

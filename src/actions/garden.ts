@@ -7,10 +7,12 @@
  * provenance-derived `gardenSignal` is a later phase.
  */
 
+import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { personalGardenId } from '@/lib/lenses/ensure'
 import { parseSeedMetabolization, effectiveMaturity } from '@/lib/bar-seed-metabolization/parse'
+import { writePlantTriadToBar } from '@/lib/garden/plant'
 
 export type GardenPlant = {
   id: string
@@ -59,5 +61,48 @@ export async function getGarden(): Promise<{ plants: GardenPlant[] } | { error: 
   } catch (e) {
     console.error('[garden:getGarden]', e)
     return { error: 'Failed to load garden' }
+  }
+}
+
+/**
+ * Plant a BAR that already exists (in the Hand or Vault) into the Garden — the
+ * Hand/Vault → Garden path. Captures the EA triad, sets gardenId, matures the
+ * seed to `context_named`, and frees any Hand slot (via the shared planter).
+ */
+export async function plantBarToGarden(input: {
+  barId: string
+  experienceIntent: string
+  dissatisfaction: string[]
+  satisfaction: string[]
+}): Promise<{ barId: string } | { error: string }> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  const experienceIntent = (input.experienceIntent || '').trim()
+  if (!experienceIntent) return { error: 'Name the desired outcome' }
+  if (!input.dissatisfaction?.length) return { error: 'Name where you are now' }
+  if (!input.satisfaction?.length) return { error: 'Name where you want to be' }
+
+  try {
+    const bar = await db.customBar.findUnique({
+      where: { id: input.barId },
+      select: { id: true, creatorId: true, status: true },
+    })
+    if (!bar || bar.creatorId !== player.id) return { error: 'BAR not found' }
+    if (bar.status !== 'active') return { error: 'That BAR is no longer active' }
+
+    await writePlantTriadToBar(player.id, input.barId, {
+      experienceIntent,
+      dissatisfaction: input.dissatisfaction,
+      satisfaction: input.satisfaction,
+    })
+
+    revalidatePath('/garden')
+    revalidatePath('/vault')
+    revalidatePath('/')
+    return { barId: input.barId }
+  } catch (e) {
+    console.error('[garden:plantBarToGarden]', e)
+    return { error: 'Failed to plant' }
   }
 }

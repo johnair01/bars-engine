@@ -34,6 +34,7 @@ import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { TaskCard } from './TaskCard'
 import { TaskActionSheet, type SheetAction } from './TaskActionSheet'
+import { BrainstormFlow } from '@/components/brainstorm/BrainstormFlow'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -41,8 +42,10 @@ const display = 'var(--bars-font-display)'
 const body = 'var(--bars-font-body)'
 const purple = 'var(--bars-liminal)'
 
-type Phase = 'open' | 'brainstorm' | 'commit' | 'work' | 'seal'
-const PHASES: Phase[] = ['open', 'brainstorm', 'commit', 'work', 'seal']
+// Morning sequence: tap the vein (free-write) → brainstorm (dump → distill the
+// moves) → commit (review the committed cards) → work → seal.
+type Phase = 'open' | 'freewrite' | 'brainstorm' | 'commit' | 'work' | 'seal'
+const PHASES: Phase[] = ['open', 'freewrite', 'brainstorm', 'commit', 'work', 'seal']
 
 type Props = {
   initial: TtvToday
@@ -82,6 +85,8 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
   const carriedIn = useMemo(() => liveTasks.filter((t) => t.isCarried), [liveTasks])
   const words = countWords(rawEntry)
 
+  const [commitNote, setCommitNote] = useState<string | null>(null)
+
   const run = <T,>(fn: () => Promise<T | { error: string }>, after?: () => void) => {
     setError(null)
     setPlantedTrace(null)
@@ -92,6 +97,43 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
         return
       }
       after?.()
+      router.refresh()
+    })
+  }
+
+  // Commit one named move: persists + deals it into the Hand (or Vault if full).
+  const handleCommit = () => {
+    const text = draft.trim()
+    if (!text) return
+    setError(null)
+    setCommitNote(null)
+    startTransition(async () => {
+      const res = await commitTask({ text, lensGoalId: lensGoalId || null })
+      if ('error' in res) {
+        setError(res.error)
+        return
+      }
+      setDraft('')
+      setCommitNote(res.placedIn === 'hand' ? '→ dealt to your hand' : '→ hand full · saved to your vault')
+      router.refresh()
+    })
+  }
+
+  // Brainstorm → commit: persist each distilled "play" move, then review them.
+  const commitPlayForward = (texts: string[]) => {
+    setError(null)
+    setCommitNote(null)
+    startTransition(async () => {
+      for (const text of texts) {
+        const t = text.trim()
+        if (!t) continue
+        const res = await commitTask({ text: t, lensGoalId: lensGoalId || null })
+        if ('error' in res) {
+          setError(res.error)
+          break
+        }
+      }
+      setPhase('commit')
       router.refresh()
     })
   }
@@ -185,17 +227,17 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               carriedIn={carriedIn}
               element={element}
               nationName={nationName}
-              onBegin={() => setPhase('brainstorm')}
+              onBegin={() => setPhase('freewrite')}
             />
           )}
 
-          {phase === 'brainstorm' && (
-            <BrainstormPhase
+          {phase === 'freewrite' && (
+            <FreewritePhase
               rawEntry={rawEntry}
               setRawEntry={setRawEntry}
               words={words}
               pending={pending}
-              onContinue={() => run(() => saveBrainstorm(rawEntry), () => setPhase('commit'))}
+              onContinue={() => run(() => saveBrainstorm(rawEntry), () => setPhase('brainstorm'))}
             />
           )}
 
@@ -211,15 +253,8 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               element={element}
               nationName={nationName}
               pending={pending}
-              onCommit={() =>
-                run(
-                  async () => {
-                    const r = await commitTask({ text: draft, lensGoalId: lensGoalId || null })
-                    return r
-                  },
-                  () => setDraft(''),
-                )
-              }
+              commitNote={commitNote}
+              onCommit={handleCommit}
               onNext={() => setPhase('work')}
             />
           )}
@@ -252,6 +287,13 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
           busy={pending}
           onAction={handleAction}
           onClose={() => setMenuTask(null)}
+        />
+      )}
+
+      {phase === 'brainstorm' && (
+        <BrainstormFlow
+          onCarryForward={commitPlayForward}
+          onClose={() => setPhase('commit')}
         />
       )}
     </div>
@@ -365,7 +407,7 @@ function OpenPhase({
   )
 }
 
-function BrainstormPhase({
+function FreewritePhase({
   rawEntry,
   setRawEntry,
   words,
@@ -381,7 +423,7 @@ function BrainstormPhase({
   const pct = Math.min(1, words / WORD_FLOOR)
   return (
     <>
-      <Eyebrow>Tap the Vein · Brainstorm</Eyebrow>
+      <Eyebrow>Tap the Vein · Free-write</Eyebrow>
       <H1>What&rsquo;s alive this morning?</H1>
 
       <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', margin: '14px 0 6px' }}>
@@ -421,7 +463,7 @@ function BrainstormPhase({
 
       <div style={{ marginTop: 'auto' }}>
         <PrimaryCta onClick={onContinue} disabled={pending}>
-          Continue → name your moves
+          Continue → brainstorm the moves
         </PrimaryCta>
       </div>
     </>
@@ -439,6 +481,7 @@ function CommitPhase({
   element,
   nationName,
   pending,
+  commitNote,
   onCommit,
   onNext,
 }: {
@@ -452,6 +495,7 @@ function CommitPhase({
   element: ElementKey
   nationName: string | null
   pending: boolean
+  commitNote: string | null
   onCommit: () => void
   onNext: () => void
 }) {
@@ -560,6 +604,12 @@ function CommitPhase({
             ↓
           </button>
         </div>
+      )}
+
+      {commitNote && (
+        <p style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bars-wood-gem)', margin: '8px 0 0' }}>
+          {commitNote}
+        </p>
       )}
 
       {/* Committed seeds + empty slots */}

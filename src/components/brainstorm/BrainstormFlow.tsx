@@ -4,9 +4,11 @@
  * BrainstormFlow — the candidate-action brainstorm that was missing in BARS
  * Engine: write down everything you *could* do, then commit specific ones.
  *
- * Recreated from the Tap the Vein handoff (Idea Storm → Distill, screens 21–22)
- * and run as a self-contained bottom sheet on the NOW page. Pure presentational
- * + LOCAL STATE — nothing is persisted; no server action, no DB.
+ * Recreated from the Tap the Vein handoff (Idea Storm → Distill, screens 21–22).
+ * Runs inside the Tap the Vein ritual between the free-write and the commit step:
+ * the dump/distill is local until the player carries the distilled "play" forward,
+ * at which point the host persists them via `onCarryForward` (commitTask). When no
+ * `onCarryForward` is given it falls back to `onClose` (standalone/preview use).
  *
  * Two steps:
  *   dump    — capture raw "could-do" ideas as unframed pre-card rows (raw ≠ formed)
@@ -30,7 +32,14 @@ type Step = 'dump' | 'distill'
 type Fate = 'raw' | 'play' | 'composted'
 type Idea = { id: number; text: string; fate: Fate }
 
-export function BrainstormFlow({ onClose }: { onClose: () => void }) {
+export function BrainstormFlow({
+  onClose,
+  onCarryForward,
+}: {
+  onClose: () => void
+  /** In-ritual: persist the distilled "play" texts (e.g. each via commitTask). */
+  onCarryForward?: (texts: string[]) => void
+}) {
   const [step, setStep] = useState<Step>('dump')
   const [ideas, setIdeas] = useState<Idea[]>([])
   const [input, setInput] = useState('')
@@ -39,6 +48,11 @@ export function BrainstormFlow({ onClose }: { onClose: () => void }) {
   const raw = ideas.filter((i) => i.fate === 'raw')
   const play = ideas.filter((i) => i.fate === 'play')
   const atPlayCap = play.length >= MAX_PLAY
+
+  const carryForward = () => {
+    if (onCarryForward) onCarryForward(play.map((i) => i.text))
+    else onClose()
+  }
 
   function add() {
     const text = input.trim()
@@ -96,7 +110,7 @@ export function BrainstormFlow({ onClose }: { onClose: () => void }) {
             onUncommit={(id) => setFate(id, 'raw')}
             onCompost={(id) => setFate(id, 'composted')}
             onBack={() => setStep('dump')}
-            onDone={onClose}
+            onDone={carryForward}
           />
         )}
       </div>
