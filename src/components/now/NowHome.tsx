@@ -9,7 +9,6 @@ import { TapTheVeinPanel } from '@/components/now/TapTheVeinPanel'
 import { getTodayPanelSummary } from '@/actions/tap-the-vein'
 import { CaptureBox } from '@/components/now/CaptureBox'
 import { Clean321Launcher } from '@/components/clean321/Clean321Launcher'
-import { BrainstormLauncher } from '@/components/brainstorm/BrainstormLauncher'
 
 type NowHomeProps = {
   playerId: string
@@ -153,11 +152,10 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
             <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, color: '#6b6965' }}>→</span>
           </Link>
 
-          {/* Tap the Vein — daily ritual (sibling of Daily Charge, above it) */}
+          {/* Tap the Vein — daily ritual (sibling of Daily Charge, above it).
+              The brainstorm (dump → distill) lives INSIDE the ritual, between the
+              free-write and commit — not as a standalone NOW card. */}
           <TapTheVeinPanel summary={ttvPanel} />
-
-          {/* Brainstorm — list everything you could do before committing */}
-          <BrainstormLauncher />
 
           {/* Daily charge */}
           <DailyChargePanel

@@ -19,10 +19,9 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
 import { growQuestFromBar } from '@/actions/bars'
-import { ensureTodayLens, personalGardenId } from '@/lib/lenses/ensure'
-
-/** Separator for multiselect EA-triad values stored as a single string (mirrors Q3_SEP). */
-const EA_SEP = ' | '
+import { ensureTodayLens } from '@/lib/lenses/ensure'
+import { addBarToHandForPlayer, type OverflowContext } from '@/lib/hand-service'
+import { writePlantTriadToBar } from '@/lib/garden/plant'
 
 /** Maturity/provenance for a TTV task's projected BAR (mirrors captureBar). */
 const TTV_BAR_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
@@ -75,27 +74,6 @@ async function createBarFromText(
       await tx.tapTheVeinTask.update({ where: { id: linkTaskId }, data: { barId: bar.id } })
     }
     return bar.id
-  })
-}
-
-/**
- * Write the EA-triad (desired outcome + current dissatisfaction + desired
- * satisfaction) onto a BAR and place it in the player's Garden. Load-bearing for
- * lens/campaign alignment + EA moves. Used by `plantTask` (the in-ritual Plant gate).
- */
-async function writePlantTriadToBar(
-  playerId: string,
-  barId: string,
-  triad: { experienceIntent: string; dissatisfaction: string[]; satisfaction: string[] },
-): Promise<void> {
-  await db.customBar.update({
-    where: { id: barId },
-    data: {
-      gardenId: personalGardenId(playerId),
-      experienceIntent: triad.experienceIntent,
-      dissatisfaction: triad.dissatisfaction.join(EA_SEP),
-      satisfaction: triad.satisfaction.join(EA_SEP),
-    },
   })
 }
 
@@ -285,7 +263,7 @@ export async function commitTask(input: {
   lensLevel?: string | null
   lensCategory?: string | null
   lensFaceKey?: string | null
-}): Promise<TtvResult<{ task: TtvTaskDTO }>> {
+}): Promise<TtvResult<{ task: TtvTaskDTO; barId: string; placedIn: 'hand' | 'vault'; overflow?: OverflowContext }>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
 
@@ -320,15 +298,31 @@ export async function commitTask(input: {
       select: TASK_SELECT,
     })
 
-    // CGLA H1 (lazy): committing does NOT create a BAR. A task becomes a BAR
-    // only on a deliberate gesture — keep/plant (promoteTaskToBar) or upgrade.
     await db.tapTheVeinDailySession.update({
       where: { id: session.id },
       data: { committedTaskCount: { increment: 1 } },
     })
 
+    // A committed move is a real seed: mint its BAR now and deal it into the
+    // Hand so the loop is visible (Hand + Vault). If the Hand is full, the BAR
+    // still exists and waits in the Vault (graceful fallback, mirrors captureBar).
+    const barId = await ensureBarForTask(player.id, created)
+    let placedIn: 'hand' | 'vault' = 'vault'
+    let overflow: OverflowContext | undefined
+    if (barId) {
+      const handRes = await addBarToHandForPlayer(player.id, barId)
+      if ('success' in handRes && handRes.success) {
+        placedIn = 'hand'
+      } else if ('overflow' in handRes) {
+        overflow = handRes.overflow
+      }
+    }
+
     revalidatePath('/tap-the-vein')
-    return { task: toTaskDTO(created) }
+    revalidatePath('/vault')
+    revalidatePath('/')
+    // ensureBarForTask linked task.barId in the DB after `created` was read — reflect it.
+    return { task: toTaskDTO({ ...created, barId: barId ?? created.barId }), barId: barId ?? '', placedIn, overflow }
   } catch (e) {
     console.error('[ttv:commitTask]', e)
     return { error: 'Failed to commit task' }
@@ -382,7 +376,8 @@ export async function updateTaskStatus(input: {
     })
 
     // Lifecycle sync (H1): composting a task composts its projected BAR too —
-    // archive it (composted, not deleted: "nothing wasted").
+    // archive it (composted, not deleted: "nothing wasted") and free its Hand
+    // slot so a composted move doesn't leave a stale card in the Hand.
     if (input.status === 'composted' && task.barId) {
       try {
         await db.customBar.update({
@@ -394,6 +389,10 @@ export async function updateTaskStatus(input: {
               releaseNote: input.compostReason ?? null,
             }),
           },
+        })
+        await db.handSlot.updateMany({
+          where: { playerId: player.id, barId: task.barId },
+          data: { barId: null, isCarrying: false },
         })
       } catch (e) {
         console.error('[ttv:updateTaskStatus] BAR compost sync failed', e)
