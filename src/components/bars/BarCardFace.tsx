@@ -102,6 +102,10 @@ export function BarCardFace({
         )}
       </div>
       <div className="p-4 relative z-10">
+        {/* Kicker — names the BAR's origin, like the prototype Face card. */}
+        <span className="block font-mono text-[7.5px] uppercase tracking-[0.1em] text-zinc-600 text-center mb-2">
+          {canvasLayout ? 'from the canvas' : 'note'}
+        </span>
         <p className="font-mono text-sm text-zinc-300 line-clamp-2 break-words text-center min-h-[40px] flex items-center justify-center">
           {teaser}
         </p>

@@ -269,7 +269,7 @@ function BoardView({ cards, works, campaign, readyCount, total, onOpen }: {
         {readyCount >= total && total > 0 ? 'Every card is a BAR.' : 'Build each card into a move.'}
       </h1>
       <p style={{ fontFamily:'Nunito, sans-serif', fontSize:12, lineHeight:1.45, color:'#a09e98', margin:'9px 0 0' }}>
-        Tap a card to name its charge, name the block, and run the basic move.
+        Tap a card to name its charge, name the block, and run the basic move. Each finished card becomes a playable BAR.
       </p>
 
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:11, marginTop:18 }}>
@@ -520,7 +520,7 @@ function BlockStep({ card, work, setWork }: { card: MoveCard; work: CardWork; se
           <p style={{ fontFamily:'Nunito, sans-serif', fontSize:12, lineHeight:1.5, color:'#a09e98', margin:'7px 0 0' }}>When feelings stack three deep, the work isn't this card — it's <strong style={{ color:'#e8e6e0', fontWeight:700 }}>emotional alchemy itself</strong>. A sign to slow down and bring in support.</p>
           <div style={{ display:'flex', gap:8, marginTop:12 }}>
             <a href="/wiki/321" style={{ flex:1, textAlign:'center', textDecoration:'none', padding:10, borderRadius:8, background:'#7c3aed', color:'#fff', fontFamily:'Jost, sans-serif', fontWeight:700, fontSize:12, boxShadow:'0 0 22px -7px #7c3aed88' }}>Reach out for support →</a>
-            <a href="/wiki/321" style={{ flex:'0 0 auto', textAlign:'center', textDecoration:'none', padding:'10px 13px', borderRadius:8, background:'#242420', boxShadow:'inset 0 0 0 1px rgba(255,255,255,0.14)', color:'#a09e98', fontFamily:'Jost, sans-serif', fontWeight:700, fontSize:12 }}>Learn alchemy</a>
+            <a href="/wiki/emotional-alchemy" style={{ flex:'0 0 auto', textAlign:'center', textDecoration:'none', padding:'10px 13px', borderRadius:8, background:'#242420', boxShadow:'inset 0 0 0 1px rgba(255,255,255,0.14)', color:'#a09e98', fontFamily:'Jost, sans-serif', fontWeight:700, fontSize:12 }}>Learn alchemy</a>
           </div>
         </div>
       )}
