@@ -12,6 +12,8 @@ import {
 } from '@/lib/the-crossing-support-moves'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { DeckCardForRole } from '@/components/the-crossing/DeckCardForRole'
+import { DeckPurchaseCTA } from '@/components/launch/DeckPurchaseCTA'
+import { getMoveCardById } from '@/lib/allyship-deck/assemble'
 
 const PAGE_BG = 'radial-gradient(120% 50% at 50% -6%, #16121f 0%, #0a0908 46%)'
 const ACTION_PURPLE = '#7c3aed'
@@ -169,6 +171,11 @@ export function TheCrossingLanding() {
           </Link>
         </section>
 
+        {/* ── Buy the full deck ──────────────────────────────────────────── */}
+        <div className="mt-14">
+          <DeckPurchaseCTA blurb="Every path here is one move from the 120-move Allyship Deck. Get the whole deck and you carry a move for every moment — not just this campaign." />
+        </div>
+
         {/* ── /awaken cross-link (water) ─────────────────────────────────── */}
         <Link
           href="/awaken"
@@ -279,17 +286,20 @@ function RoleAccordion({
               </div>
             </dl>
 
-            {/* Deck-move chips */}
+            {/* Deck-move chips — real card titles, sourced from the canonical deck */}
             <div className="flex flex-wrap gap-2">
-              {role.starterCardIds.map((code) => (
-                <span
-                  key={code}
-                  className="rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em]"
-                  style={{ background: `${tokens.gem}14`, color: tokens.gem }}
-                >
-                  {code}
-                </span>
-              ))}
+              {role.starterCardIds.map((code) => {
+                const card = getMoveCardById(code)
+                return (
+                  <span
+                    key={code}
+                    className="rounded-md px-2 py-1 text-[11px] font-medium"
+                    style={{ background: `${tokens.gem}14`, color: tokens.gem }}
+                  >
+                    {card?.title ?? code}
+                  </span>
+                )
+              })}
             </div>
 
             {/* Embedded starter deck card */}

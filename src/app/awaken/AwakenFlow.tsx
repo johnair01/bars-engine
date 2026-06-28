@@ -9,6 +9,7 @@ import {
   AWAKEN_NONPROFIT_HREF,
   AWAKEN_CHAPTER_FILE_HREF,
 } from '@/lib/awaken/content'
+import { NextMoveBlock } from '@/components/funnel/NextMoveBlock'
 
 type Status = 'idle' | 'loading' | 'done' | 'error'
 
@@ -137,6 +138,26 @@ function ShowUp({ onInView }: { onInView: () => void }) {
       </div>
 
       <SecondaryLinks />
+
+      <div className="mt-12 border-t border-zinc-900 pt-8">
+        <NextMoveBlock
+          heading="Or step into the game itself"
+          moves={[
+            {
+              href: '/deck/sales',
+              label: 'Discover the game',
+              sublabel: 'The 120-move Allyship Deck — see what it is.',
+              element: 'wood',
+            },
+            {
+              href: '/campaign/the-crossing',
+              label: 'Help right now · The Crossing',
+              sublabel: 'Pick a concrete move that fits what you can offer.',
+              element: 'earth',
+            },
+          ]}
+        />
+      </div>
     </section>
   )
 }
@@ -344,6 +365,15 @@ function SecondaryLinks() {
         Go deeper
       </p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/deck/preview"
+          className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-zinc-600"
+        >
+          <div className="font-bold text-white">See the 120 moves — free</div>
+          <div className="mt-1 text-xs text-zinc-400">
+            Browse the whole Allyship Deck, no account needed →
+          </div>
+        </Link>
         <Link
           href={AWAKEN_PRODUCTS_HREF}
           className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-zinc-600"

@@ -138,3 +138,28 @@ export function assembleDeck(generatedAt = new Date().toISOString()): AllyshipDe
 
 /** Capabilities available (for UI). */
 export const CAPABILITY_KEYS: Capability[] = CAPABILITIES.map((c) => c.capability)
+
+// ── Canonical card lookup ───────────────────────────────────────────────────
+// Single source of truth for callers that need one card by id (role pages, the
+// Crossing deck cards). Lives here — not in deck-bar.ts — because this module is
+// client-safe (no next/headers, db, or fs), so client components can import it.
+
+let _cardIndex: Map<string, AllyshipCard> | null = null
+
+function cardIndex(): Map<string, AllyshipCard> {
+  if (!_cardIndex) {
+    _cardIndex = new Map(assembleDeck().cards.map((c) => [c.id, c]))
+  }
+  return _cardIndex
+}
+
+/** Look up any card (move or instruction) by its canonical id, e.g. "OPEN-GR-SHAMAN". */
+export function getCardById(id: string): AllyshipCard | undefined {
+  return cardIndex().get(id)
+}
+
+/** Look up a move card by id, narrowing out instruction cards. */
+export function getMoveCardById(id: string): MoveCard | undefined {
+  const card = cardIndex().get(id)
+  return card?.kind === 'move' ? card : undefined
+}
