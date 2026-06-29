@@ -113,7 +113,16 @@ export function AllyshipCard({
 
   // full
   return (
-    <article style={cardRootStyle(card, { padding: '20px 22px 18px' })}>
+    <article
+      style={cardRootStyle(card, {
+        padding: '20px 22px 18px',
+        // Same trading-card proportion (5:7) as the card back; longer readings
+        // scroll inside the frame instead of stretching it (overflowY overrides
+        // the base `overflow: hidden`, which still clips X for the rounded frame).
+        aspectRatio: '5 / 7',
+        overflowY: 'auto',
+      })}
+    >
       <h2 style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 24, color: '#fff', margin: 0, lineHeight: 1.15 }}>
         {card.title}
       </h2>
