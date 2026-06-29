@@ -1,0 +1,34 @@
+/*
+ * Promise Forge — interaction chrome for the I-Ching promise-move flow.
+ * Recreated from the "Promise Move Forge" design handoff. All motion honors
+ * prefers-reduced-motion (a project convention). Visual values come from
+ * the BARS Engine design tokens (src/styles/bars-tokens.css) — never literals.
+ */
+
+/* Hidden scrollbars for the forge / share scroll bodies. */
+.pf-scroll { scrollbar-width: none; }
+.pf-scroll::-webkit-scrollbar { width: 0; }
+
+/* Inputs read on the warm-near-black surfaces. */
+.pf-field:focus { outline: none; }
+.pf-field::placeholder { color: var(--bars-text-muted); }
+.pf-field { resize: none; font-family: var(--bars-font-body); }
+
+/* Option rows / chips — hover lifts the hairline, press shrinks. */
+.pf-opt {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: box-shadow .18s var(--bars-ease-out), background-color .18s, transform .12s var(--bars-ease-out);
+}
+.pf-opt:hover { box-shadow: var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line-strong); }
+.pf-opt:active { transform: scale(0.985); }
+
+/* The draw deck on the landing — hover lifts the whole stack. */
+.pf-deck { cursor: pointer; transition: transform .2s var(--bars-ease-out); }
+.pf-deck:hover { transform: translateY(-3px); }
+.pf-deck:active { transform: translateY(-1px) scale(0.99); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-opt, .pf-deck { transition: none; }
+  .pf-opt:active, .pf-deck:hover, .pf-deck:active { transform: none; }
+}

@@ -20,6 +20,15 @@
   --bars-line-dashed: #2a2a27;
   --bars-inset-top:   rgba(255, 255, 255, 0.06);
 
+  /* ── Radius / shadow / motion (shared with the design tool's bound DS) ──── */
+  --bars-radius-sm:   8px;
+  --bars-radius-md:   10px;
+  --bars-radius-lg:   14px;
+  --bars-radius-full: 999px;
+  /* Mandatory card inset highlight — pair with element rings + glows. */
+  --bars-shadow-inset-top: inset 0 1px 0 var(--bars-inset-top);
+  --bars-ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+
   /* ── Vibeulon / gold (modifier foil) ──────────────────────────────────── */
   --bars-gold:      #c9a84c;
   --bars-gold-lite: #e8c878;

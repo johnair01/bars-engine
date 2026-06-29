@@ -1,10 +1,11 @@
 /* Card-system fonts (loaded at runtime; safe for build). Jost=display,
    Nunito=body, Space Mono=mono — per the design handoff. */
-@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 @import "../styles/bars-tokens.css";
 @import "../styles/cultivation-cards.css";
 @import "../styles/event-page.css";
+@import "../styles/promise-forge.css";
 
 :root {
   --background: #ffffff;
