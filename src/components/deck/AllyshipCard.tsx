@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode, CSSProperties } from 'react'
+import Link from 'next/link'
 import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'
 import {
   themeForMove,
@@ -11,6 +12,13 @@ import {
   OPERATION_LABELS,
   DOMAIN_LABELS,
 } from '@/lib/allyship-deck/card-visuals'
+import {
+  glossaryHref,
+  moveTermId,
+  operationTermId,
+  domainTermId,
+  barTermId,
+} from '@/lib/allyship-deck/glossary'
 import type { MoveCard } from '@/lib/allyship-deck/types'
 import { MovePip } from './MovePip'
 import { FaceBadge } from './FaceBadge'
@@ -127,19 +135,31 @@ export function AllyshipCard({
         {card.title}
       </h2>
 
-      {/* marks row */}
+      {/* marks row — each term deep-links to its glossary definition */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginTop: 14 }}>
-        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+        <Link
+          href={glossaryHref(moveTermId(card.move))}
+          title={`What is ${MOVE_LABELS[card.move]}?`}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, textDecoration: 'none' }}
+        >
           <MovePip move={card.move} size={34} />
           <span style={{ ...labelStyle, color: t.gem }}>{MOVE_LABELS[card.move]}</span>
-        </span>
-        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+        </Link>
+        <Link
+          href={glossaryHref(operationTermId(card.operation))}
+          title={`What is the ${OPERATION_LABELS[card.operation]} face?`}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, textDecoration: 'none' }}
+        >
           <FaceBadge operation={card.operation} size={36} />
           <span style={labelStyle}>{OPERATION_LABELS[card.operation]}</span>
-        </span>
-        <span style={{ marginLeft: 'auto', ...labelStyle, color: t.gem, alignSelf: 'center' }}>
+        </Link>
+        <Link
+          href={glossaryHref(domainTermId(card.domain))}
+          title={`What is ${DOMAIN_LABELS[card.domain]}?`}
+          style={{ marginLeft: 'auto', ...labelStyle, color: t.gem, alignSelf: 'center', textDecoration: 'none' }}
+        >
           ◇ {DOMAIN_LABELS[card.domain]}
-        </span>
+        </Link>
       </div>
 
       {/* the question */}
@@ -191,9 +211,13 @@ export function AllyshipCard({
         <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 10, color: SURFACE_TOKENS.textMuted, letterSpacing: '0.08em' }}>
           #{card.num}
         </span>
-        <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 12, color: DECK_GOLD }}>
+        <Link
+          href={glossaryHref(barTermId(card.outputBar))}
+          title={`What is a ${card.outputBar} BAR?`}
+          style={{ fontFamily: DECK_FONTS.mono, fontSize: 12, color: DECK_GOLD, textDecoration: 'none' }}
+        >
           → {card.outputBar} ♦
-        </span>
+        </Link>
       </div>
       {/* reward/minutes: omitted until BAR layer provides real values */}
       {/* restore when wired: {card.minutes} MIN · #{card.num}   ♦ {card.reward} */}
