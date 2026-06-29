@@ -5,9 +5,10 @@
  * from the Tap the Vein design handoff (screens 16–20).
  *
  * This is the single canonical version of the 3·2·1 in BARS Engine. It runs as a
- * self-contained bottom-sheet flow on the NOW page (see Clean321Launcher) and is
- * pure presentational + LOCAL STATE — no server action, no DB, no daily session.
- * Nothing is persisted; the autosaved-thread treatment is a visual affordance.
+ * self-contained bottom-sheet flow on the NOW page (see Clean321Launcher). The
+ * thread is authored locally; on "Carry these into the day" it persists via
+ * `completeClean321` — records the session (+ Shaman witness BAR + blessed object),
+ * deals the named tasks into the Hand, and mints the ♦ charge reward.
  *
  * The exercise is one chat thread the player authors entirely themselves — the
  * system never generates a turn. Phases run 3 → 2 → 1:
@@ -19,7 +20,9 @@
  * is minted on top of the base ♦ +1 for completing the exercise.
  */
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { completeClean321 } from '@/actions/clean321'
 
 const mono = 'var(--bars-font-mono)'
 const display = 'var(--bars-font-display)'
@@ -48,6 +51,9 @@ function nowTime(): string {
 }
 
 export function Clean321Flow({ onClose }: { onClose: () => void }) {
+  const router = useRouter()
+  const [pending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<Step>('junction')
   const [chargeBefore, setChargeBefore] = useState(8)
   const [chargeAfter, setChargeAfter] = useState(3)
@@ -66,6 +72,25 @@ export function Clean321Flow({ onClose }: { onClose: () => void }) {
     if (!text) return
     setMessages((m) => [...m, { phase, voice, text, ts: nowTime() }])
     setDraft('')
+  }
+
+  // Carry forward: persist the session, deal the named tasks into the Hand, mint ♦.
+  function handleComplete() {
+    setError(null)
+    startTransition(async () => {
+      const res = await completeClean321({
+        chargeBefore,
+        chargeAfter,
+        messages: messages.map((m) => ({ phase: m.phase, voice: m.voice, text: m.text })),
+        tasks,
+      })
+      if ('error' in res) {
+        setError(res.error)
+        return
+      }
+      router.refresh()
+      onClose()
+    })
   }
 
   const phaseMessages = (phase: Phase) => messages.filter((m) => m.phase === phase)
@@ -161,7 +186,9 @@ export function Clean321Flow({ onClose }: { onClose: () => void }) {
             setTasks((prev) => [...prev, t])
             setTaskDraft('')
           }}
-          onDone={onClose}
+          busy={pending}
+          error={error}
+          onDone={handleComplete}
         />
       )}
     </FlowShell>
@@ -406,7 +433,7 @@ function PhaseStep({
         </div>
       </main>
 
-      <footer style={{ padding: '12px 18px 22px', flex: '0 0 auto', background: 'linear-gradient(180deg, transparent, var(--bars-bg-base) 30%)', display: 'flex', flexDirection: 'column', gap: 11 }}>
+      <footer style={{ padding: '12px 18px calc(64px + env(safe-area-inset-bottom))', flex: '0 0 auto', background: 'linear-gradient(180deg, transparent, var(--bars-bg-base) 30%)', display: 'flex', flexDirection: 'column', gap: 11 }}>
         {switcher && (
           <div className="flex" style={{ gap: 5, padding: 4, borderRadius: 9999, background: 'var(--bars-surface-inset)', boxShadow: 'inset 0 0 0 1px var(--bars-line)' }}>
             <VoiceTab active={switcher.value === 'you'} onClick={() => switcher.onChange('you')} tone="you">
@@ -553,6 +580,8 @@ function BridgeStep({
   taskDraft,
   setTaskDraft,
   onAddTask,
+  busy,
+  error,
   onDone,
 }: {
   chargeBefore: number
@@ -565,6 +594,8 @@ function BridgeStep({
   taskDraft: string
   setTaskDraft: (s: string) => void
   onAddTask: () => void
+  busy: boolean
+  error: string | null
   onDone: () => void
 }) {
   return (
@@ -650,15 +681,18 @@ function BridgeStep({
         ))}
       </main>
 
-      <footer style={{ padding: '12px 22px 24px', flex: '0 0 auto', background: 'linear-gradient(180deg, transparent, var(--bars-bg-base) 30%)' }}>
+      <footer style={{ padding: '12px 22px calc(64px + env(safe-area-inset-bottom))', flex: '0 0 auto', background: 'linear-gradient(180deg, transparent, var(--bars-bg-base) 30%)' }}>
+        {error && (
+          <p style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.08em', color: '#e06b6b', margin: '0 0 8px', textAlign: 'center' }}>{error}</p>
+        )}
         <button
           type="button"
           onClick={onDone}
-          disabled={tasks.length === 0}
+          disabled={tasks.length === 0 || busy}
           className="w-full flex items-center justify-center"
-          style={{ gap: 9, padding: 16, borderRadius: 12, background: purple, color: '#fff', fontFamily: display, fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', opacity: tasks.length === 0 ? 0.55 : 1, boxShadow: `inset 0 1px 0 var(--bars-inset-top), 0 0 0 1px color-mix(in srgb, ${purple} 60%, #000), 0 0 22px 0 color-mix(in srgb, ${purpleGlow} 40%, transparent)` }}
+          style={{ gap: 9, padding: 16, borderRadius: 12, background: purple, color: '#fff', fontFamily: display, fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', opacity: tasks.length === 0 || busy ? 0.55 : 1, boxShadow: `inset 0 1px 0 var(--bars-inset-top), 0 0 0 1px color-mix(in srgb, ${purple} 60%, #000), 0 0 22px 0 color-mix(in srgb, ${purpleGlow} 40%, transparent)` }}
         >
-          Carry these into the day <span style={{ fontSize: 14 }}>→</span>
+          {busy ? 'Saving…' : <>Carry these into the day <span style={{ fontSize: 14 }}>→</span></>}
         </button>
       </footer>
     </>
