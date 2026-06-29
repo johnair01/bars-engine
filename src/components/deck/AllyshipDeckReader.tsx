@@ -274,7 +274,7 @@ export function AllyshipDeckReader({ initialStats, authed = false }: { initialSt
                         card={drawn}
                         variant="full"
                         subject={subject}
-                        footerSlot={<SendToBarsButton cardId={drawn.id} subject={subject} />}
+                        footerSlot={<SendToBarsButton card={drawn} subject={subject} />}
                       />
                     </div>
                     <div style={{ display: 'flex', gap: 10 }}>
@@ -336,7 +336,7 @@ export function AllyshipDeckReader({ initialStats, authed = false }: { initialSt
               card={selected}
               variant="full"
               subject={subject}
-              footerSlot={<SendToBarsButton cardId={selected.id} subject={subject} />}
+              footerSlot={<SendToBarsButton card={selected} subject={subject} />}
             />
             <GoDeeper key={`${selected.id}:${subject}`} cardId={selected.id} subject={subject === 'self' ? 'self' : 'other'} />
             <button type="button" onClick={() => setSelected(null)} style={closeBtn}>Close</button>

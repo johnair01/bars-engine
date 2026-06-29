@@ -59,7 +59,11 @@ export async function materializeDeckBar(
         creatorId: playerId,
         title: seed.title,
         description: seed.description,
-        type: 'vibe',
+        // A "Send to BARS" card is a real, ready-to-practice BAR: type 'bar' so
+        // it opens at /bars/:id (getBarDetail only admits 'bar'/charge_capture)
+        // and lights up the interaction surfaces (Grow, Hand↔Vault). Provenance
+        // still rides on rootId 'deck_*'.
+        type: 'bar',
         reward: 1,
         visibility: 'private',
         status: 'active',
