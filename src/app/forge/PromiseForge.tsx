@@ -19,6 +19,7 @@
 
 import { useState, type CSSProperties } from 'react'
 import Link from 'next/link'
+import { publishPromiseMove, type Availability, type PromiseMovePayload } from '@/actions/promise-move'
 
 const DISPLAY = 'var(--bars-font-display)'
 const BODY = 'var(--bars-font-body)'
@@ -184,7 +185,8 @@ type Delivery = {
   handle: string
 }
 
-export default function PromiseForge() {
+export default function PromiseForge({ superpowerLabel = 'The Strategist' }: { superpowerLabel?: string }) {
+  const superpowerShort = superpowerLabel.replace(/^the\s+/i, '')
   const [phase, setPhase] = useState<Phase>('landing')
   const [uq, setUq] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({
@@ -218,6 +220,9 @@ export default function PromiseForge() {
     'Would it help to have someone find the one knot with you right now?',
   )
   const [status, setStatus] = useState('available')
+  const [publishing, setPublishing] = useState(false)
+  const [publishError, setPublishError] = useState<string | null>(null)
+  const [shareToken, setShareToken] = useState<string | null>(null)
 
   const examples = [
     'A friend’s launch plan has twelve tasks and no order.',
@@ -230,11 +235,50 @@ export default function PromiseForge() {
   const isUnpack = phase === 'unpack'
   const isPublished = phase === 'published'
 
+  async function publish() {
+    if (publishing) return
+    setPublishing(true)
+    setPublishError(null)
+    const lv = SKILL_LEVELS.find((x) => x.key === skill) || SKILL_LEVELS[1]
+    const payload: PromiseMovePayload = {
+      superpower: superpowerLabel,
+      cardTagline:
+        'I help people find the one knot that, once loosened, frees the rest — before they spend energy everywhere.',
+      scope: customizing ? scopeCustom : lv.scope,
+      standard: customizing ? standardCustom : lv.standard,
+      boundary,
+      repair,
+      consentAsk,
+      skill,
+      delivery,
+      examples,
+      satisfaction,
+      dissatisfaction,
+      beliefs,
+      answers,
+      availability: status as Availability,
+    }
+    try {
+      const res = await publishPromiseMove({ title: 'Map the Tangle', hexagramId: null, payload })
+      if ('error' in res) {
+        setPublishError(res.error)
+      } else {
+        setShareToken(res.shareToken)
+        setPhase('published')
+      }
+    } catch {
+      setPublishError('Something went wrong publishing. Please try again.')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   function next() {
     if (phase === 'unpack') {
       if (uq < QUESTIONS.length - 1) { setUq(uq + 1); return }
       setPhase('forge'); return
     }
+    if (phase === 'review') { void publish(); return }
     if (idx < PHASES.length - 1) setPhase(PHASES[idx + 1])
     else setPhase('published')
   }
@@ -322,8 +366,8 @@ export default function PromiseForge() {
       {/* scroll body */}
       <div className="pf-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 20px 22px' }}>
         <div style={{ maxWidth: 420, margin: '0 auto' }}>
-          {phase === 'landing' && <Landing onDraw={() => setPhase('reading')} />}
-          {phase === 'reading' && <Reading />}
+          {phase === 'landing' && <Landing onDraw={() => setPhase('reading')} superpowerLabel={superpowerLabel} />}
+          {phase === 'reading' && <Reading superpowerShort={superpowerShort} />}
           {isUnpack && (
             <Unpack
               q={QUESTIONS[uq]}
@@ -377,10 +421,11 @@ export default function PromiseForge() {
               answers={answers}
               status={status}
               onStatus={setStatus}
+              publishError={publishError}
             />
           )}
           {isPublished && (
-            <Published owner={delivery.name} status={status} onRestart={restart} />
+            <Published owner={delivery.name} status={status} shareToken={shareToken} onRestart={restart} />
           )}
         </div>
       </div>
@@ -395,8 +440,10 @@ export default function PromiseForge() {
           }}
         >
           <div style={{ maxWidth: 420, margin: '0 auto', display: 'flex', gap: 9 }}>
-            <button onClick={back} className="pf-opt" style={backBtnStyle} aria-label="Back">←</button>
-            <button onClick={next} style={primaryBtnStyle}>{nextLabel}</button>
+            <button onClick={back} className="pf-opt" style={backBtnStyle} aria-label="Back" disabled={publishing}>←</button>
+            <button onClick={next} style={{ ...primaryBtnStyle, opacity: publishing ? 0.6 : 1, cursor: publishing ? 'default' : 'pointer' }} disabled={publishing}>
+              {phase === 'review' && publishing ? 'Publishing…' : nextLabel}
+            </button>
           </div>
         </footer>
       )}
@@ -420,7 +467,7 @@ const backBtnStyle: CSSProperties = {
 
 // ── Phase: Landing ──────────────────────────────────────────────────────────
 
-function Landing({ onDraw }: { onDraw: () => void }) {
+function Landing({ onDraw, superpowerLabel }: { onDraw: () => void; superpowerLabel: string }) {
   return (
     <div>
       <span style={mono(9, 0.16, 'var(--bars-liminal-glow)')}>From your Superpower reveal</span>
@@ -457,7 +504,7 @@ function Landing({ onDraw }: { onDraw: () => void }) {
         <div>
           <span style={mono(8.5, 0.14, 'var(--bars-text-muted)')}>Your superpower</span>
           <p style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 17, lineHeight: 1.1, margin: '3px 0 0', color: 'var(--bars-text-primary)' }}>
-            The Strategist
+            {superpowerLabel}
           </p>
         </div>
       </div>
@@ -495,7 +542,7 @@ function Landing({ onDraw }: { onDraw: () => void }) {
 
 // ── Phase: Reading ──────────────────────────────────────────────────────────
 
-function Reading() {
+function Reading({ superpowerShort }: { superpowerShort: string }) {
   return (
     <div>
       <span style={mono(9, 0.16, 'var(--bars-metal-gem)')}>You drew</span>
@@ -538,7 +585,7 @@ function Reading() {
 
       {/* the equation */}
       <div style={{ marginTop: 18, display: 'flex', alignItems: 'stretch', gap: 8 }}>
-        <EqCell flex={1} glyph="金" glyphColor="var(--bars-metal-gem)" label="Strategist" />
+        <EqCell flex={1} glyph="金" glyphColor="var(--bars-metal-gem)" label={superpowerShort} />
         <span style={{ alignSelf: 'center', fontFamily: DISPLAY, fontSize: 18, color: 'var(--bars-text-muted)' }}>+</span>
         <EqCell flex={1} glyph="◇" glyphColor="var(--bars-text-secondary)" label="The Tangle" glyphSize={15} />
         <span style={{ alignSelf: 'center', fontFamily: DISPLAY, fontSize: 18, color: 'var(--bars-liminal-glow)' }}>=</span>
@@ -554,7 +601,7 @@ function Reading() {
           padding: 16,
         }}
       >
-        <span style={mono(8.5, 0.14, 'var(--bars-liminal-glow)')}>As a Strategist, this card points toward</span>
+        <span style={mono(8.5, 0.14, 'var(--bars-liminal-glow)')}>As a {superpowerShort}, this card points toward</span>
         <p style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16.5, lineHeight: 1.34, margin: '10px 0 0', color: 'var(--bars-text-primary)', textWrap: 'pretty' as never }}>
           &ldquo;I help people find the one knot that, once loosened, frees the rest — before they spend energy everywhere.&rdquo;
         </p>
@@ -980,9 +1027,9 @@ function Consent({ consentAsk, onConsent }: { consentAsk: string; onConsent: (v:
 
 // ── Phase: Review ───────────────────────────────────────────────────────────
 
-function Review({ consentAsk, scopeText, boundary, repair, examples, answers, status, onStatus }: {
+function Review({ consentAsk, scopeText, boundary, repair, examples, answers, status, onStatus, publishError }: {
   consentAsk: string; scopeText: string; boundary: string; repair: string; examples: string[]
-  answers: Record<string, string>; status: string; onStatus: (k: string) => void
+  answers: Record<string, string>; status: string; onStatus: (k: string) => void; publishError: string | null
 }) {
   const unpackDone = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'].every((k) => (answers[k] || '').trim().length > 0)
   const items = [
@@ -1050,14 +1097,26 @@ function Review({ consentAsk, scopeText, boundary, repair, examples, answers, st
         ))}
       </div>
       <p style={{ fontFamily: BODY, fontSize: 11.5, lineHeight: 1.45, color: 'var(--bars-text-secondary)', margin: '11px 2px 0', textWrap: 'pretty' as never }}>{statusHelp}</p>
+
+      {publishError && (
+        <div style={{ marginTop: 16, borderRadius: 'var(--bars-radius-md)', background: 'color-mix(in srgb, var(--bars-fire-frame) 12%, var(--bars-surface-card))', boxShadow: 'var(--bars-shadow-inset-top), inset 0 0 0 1px color-mix(in srgb, var(--bars-fire-frame) 45%, var(--bars-line))', padding: '12px 14px' }}>
+          <span style={mono(8.5, 0.12, 'var(--bars-fire-gem)')}>Couldn’t publish</span>
+          <p style={{ fontFamily: BODY, fontSize: 12.5, lineHeight: 1.45, color: 'var(--bars-text-primary)', margin: '6px 0 0' }}>{publishError}</p>
+          <p style={{ fontFamily: BODY, fontSize: 11.5, lineHeight: 1.4, color: 'var(--bars-text-muted)', margin: '6px 0 0' }}>
+            Forging needs you signed in. <Link href="/login" style={{ color: 'var(--bars-liminal-glow)' }}>Log in</Link> and try again — your answers are kept.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Phase: Published ────────────────────────────────────────────────────────
 
-function Published({ owner, status, onRestart }: { owner: string; status: string; onRestart: () => void }) {
-  const shareHref = `/forge/share?owner=${encodeURIComponent(owner || 'Maya')}&status=${encodeURIComponent(status)}`
+function Published({ owner, status, shareToken, onRestart }: { owner: string; status: string; shareToken: string | null; onRestart: () => void }) {
+  const shareHref = shareToken
+    ? `/forge/share?token=${encodeURIComponent(shareToken)}`
+    : `/forge/share?owner=${encodeURIComponent(owner || 'Maya')}&status=${encodeURIComponent(status)}`
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: 14 }}>
       <div

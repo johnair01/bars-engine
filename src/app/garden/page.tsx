@@ -44,13 +44,21 @@ export default async function GardenPage() {
           </span>
         </header>
 
-        <div style={{ marginBottom: 18 }}>
-          <p style={{ fontFamily: 'var(--bars-font-mono)', fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bars-wood-gem)', margin: 0 }}>
-            What you&rsquo;ve planted
-          </p>
-          <h1 style={{ fontFamily: 'var(--bars-font-display)', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em', color: 'var(--bars-text-primary)', margin: '4px 0 0' }}>
-            {plants.length > 0 ? `${plants.length} growing` : 'Your garden'}
-          </h1>
+        <div style={{ marginBottom: 18, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <p style={{ fontFamily: 'var(--bars-font-mono)', fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--bars-wood-gem)', margin: 0 }}>
+              What you&rsquo;ve planted
+            </p>
+            <h1 style={{ fontFamily: 'var(--bars-font-display)', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em', color: 'var(--bars-text-primary)', margin: '4px 0 0' }}>
+              {plants.length > 0 ? `${plants.length} growing` : 'Your garden'}
+            </h1>
+          </div>
+          <Link
+            href="/forge"
+            style={{ flex: '0 0 auto', textDecoration: 'none', padding: '9px 13px', borderRadius: 'var(--bars-radius-md, 10px)', background: 'color-mix(in srgb, var(--bars-liminal) 16%, var(--bars-surface-card))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px color-mix(in srgb, var(--bars-liminal) 45%, var(--bars-line))', fontFamily: 'var(--bars-font-mono)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bars-liminal-glow)' }}
+          >
+            ✦ Forge a move
+          </Link>
         </div>
 
         {err && <p style={{ fontFamily: 'var(--bars-font-body)', fontSize: 13, color: '#e05c2e' }}>{err}</p>}
@@ -62,7 +70,7 @@ export default async function GardenPage() {
           >
             <span style={{ fontSize: 26, color: 'var(--bars-wood-gem)' }} aria-hidden>❖</span>
             <p style={{ fontFamily: 'var(--bars-font-body)', fontSize: 13.5, lineHeight: 1.55, color: 'var(--bars-text-secondary)', margin: '14px 0 0' }}>
-              Nothing planted yet. Plant a task from <Link href="/tap-the-vein" style={{ color: 'var(--bars-liminal)' }}>Tap the Vein</Link> and it will grow here.
+              Nothing planted yet. Plant a task from <Link href="/tap-the-vein" style={{ color: 'var(--bars-liminal)' }}>Tap the Vein</Link>, or <Link href="/forge" style={{ color: 'var(--bars-liminal)' }}>forge a promise move</Link> — and it will grow here.
             </p>
           </div>
         ) : (

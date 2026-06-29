@@ -10,6 +10,7 @@
  * superpower's channel; altitude=confidence), Tailwind for layout only — zero
  * hardcoded hex.
  */
+import Link from 'next/link'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { SUPERPOWER_DEFS } from '@/lib/superpowers/types'
 import type { SuperpowerRoutingResult } from '@/lib/superpowers/routing'
@@ -87,6 +88,21 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
 
       {/* Mechanism disclosure — lens, not verdict; taker is the authority */}
       <p className="text-xs leading-relaxed opacity-60">{copy.framing}</p>
+
+      {/* Next step — turn this superpower into a requestable offer */}
+      <div className="space-y-2 rounded-lg border border-white/10 p-4">
+        <p className="text-sm leading-relaxed">
+          <span className="font-semibold">Make it a move.</span> Turn{' '}
+          {primaryDef.label.toLowerCase().startsWith('the ') ? primaryDef.label : `the ${primaryDef.label}`} into a
+          scoped, consent-forward offer someone can actually request.
+        </p>
+        <Link
+          href="/forge"
+          className="inline-flex w-full items-center justify-center rounded-md bg-[var(--bars-liminal)] px-4 py-3 text-sm font-bold text-white shadow-[0_0_26px_-7px_var(--bars-liminal-glow),inset_0_1px_0_rgba(255,255,255,0.18)]"
+        >
+          Forge a promise move →
+        </Link>
+      </div>
     </div>
   )
 }

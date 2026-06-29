@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import PromiseForge from './PromiseForge'
+import { getCurrentPlayer } from '@/lib/auth'
+import { SUPERPOWER_PROFILES } from '@/lib/technique-library/superpowers/profiles'
+import type { Superpower } from '@/lib/technique-library'
 
 /**
  * @page /forge
@@ -20,6 +23,12 @@ export const metadata: Metadata = {
   description: 'Turn a superpower into a scoped, consent-forward offer someone can request.',
 }
 
-export default function ForgePage() {
-  return <PromiseForge />
+// Reads the signed-in player's superpower to seed the landing chip.
+export const dynamic = 'force-dynamic'
+
+export default async function ForgePage() {
+  const player = await getCurrentPlayer()
+  const key = player?.superpowerInner as Superpower | undefined
+  const superpowerLabel = (key && SUPERPOWER_PROFILES[key]?.label) || 'The Strategist'
+  return <PromiseForge superpowerLabel={superpowerLabel} />
 }
