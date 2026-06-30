@@ -59,6 +59,8 @@ export interface MoveCard {
   forbiddenMoves: string[]
   failureModes: string[]
   remediation: string
+  /** The one concrete next step ("Your move"). Defaults from the submove action; AUTHORED may override. */
+  action?: string
 
   flavor?: string
   capabilities: Capability[] // latent; selected at consult time (faces are channel-agnostic)
