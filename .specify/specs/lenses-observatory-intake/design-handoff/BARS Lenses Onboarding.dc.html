@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/cards.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+  <script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+  <style>
+    html, body { margin:0; background:#0a0908; }
+    * { box-sizing:border-box; }
+    .lns-scroll::-webkit-scrollbar { width:0; height:0; }
+    .lns-scroll { scrollbar-width:none; }
+    textarea, input { font-family:inherit; }
+    @keyframes lns-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+    @keyframes lns-pulse { 0%,100% { opacity:.55; } 50% { opacity:1; } }
+    @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+  </style>
+</helmet>
+
+<div style="display:flex;align-items:flex-start;font-family:var(--bars-font-body);color:var(--bars-text-primary);min-height:100%;">
+
+  <!-- ════════ DIRECTOR RAIL ════════ -->
+  <sc-if value="{{ showRail }}" hint-placeholder-val="{{ true }}">
+  <aside style="flex:0 0 270px;width:270px;align-self:stretch;min-height:100vh;border-right:1px solid var(--bars-line);background:#0c0b0a;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;">
+    <div style="padding:26px 22px 18px;border-bottom:1px solid var(--bars-line);">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <span style="width:9px;height:9px;border-radius:50%;background:var(--bars-liminal);box-shadow:0 0 12px 2px color-mix(in srgb,var(--bars-liminal-glow) 60%,transparent);"></span>
+        <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bars-liminal-glow);">Lenses · prototype</span>
+      </div>
+      <h1 style="font-family:var(--bars-font-display);font-weight:800;font-size:22px;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:12px 0 4px;line-height:1.1;">Goal-setting onboarding</h1>
+      <p style="font-family:var(--bars-font-body);font-size:12px;line-height:1.5;color:var(--bars-text-muted);margin:0;">From a vague sense of movement to an authored year frame — one lens at a time.</p>
+    </div>
+    <nav class="lns-scroll" style="flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:2px;">
+      <sc-for list="{{ navItems }}" as="it" hint-placeholder-count="8">
+        <div onClick="{{ it.go }}" style="display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:8px;cursor:pointer;background:{{ it.bg }};transition:background .2s;" style-hover="background:rgba(255,255,255,0.045)">
+          <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.1em;color:{{ it.numColor }};width:16px;flex:0 0 auto;">{{ it.n }}</span>
+          <span style="font-family:var(--bars-font-display);font-weight:{{ it.weight }};font-size:13px;letter-spacing:-0.01em;color:{{ it.color }};">{{ it.label }}</span>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="padding:16px 18px 20px;border-top:1px solid var(--bars-line);display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--bars-text-muted);">Prototype states</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-text-secondary);">Superpower</span>
+        <div style="display:flex;background:var(--bars-surface-inset);border-radius:var(--bars-radius-full);padding:3px;box-shadow:inset 0 0 0 1px var(--bars-line);">
+          <button onClick="{{ setQuizOn }}" style="flex:1;border:0;cursor:pointer;font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;padding:7px 4px;border-radius:var(--bars-radius-full);background:{{ quizOnBg }};color:{{ quizOnColor }};transition:.2s;">With quiz</button>
+          <button onClick="{{ setQuizOff }}" style="flex:1;border:0;cursor:pointer;font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;padding:7px 4px;border-radius:var(--bars-radius-full);background:{{ quizOffBg }};color:{{ quizOffColor }};transition:.2s;">No quiz</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-text-secondary);">Free-write</span>
+        <div style="display:flex;background:var(--bars-surface-inset);border-radius:var(--bars-radius-full);padding:3px;box-shadow:inset 0 0 0 1px var(--bars-line);">
+          <button onClick="{{ setDreamFilled }}" style="flex:1;border:0;cursor:pointer;font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;padding:7px 4px;border-radius:var(--bars-radius-full);background:{{ dreamFilledBg }};color:{{ dreamFilledColor }};transition:.2s;">Filled</button>
+          <button onClick="{{ setDreamEmpty }}" style="flex:1;border:0;cursor:pointer;font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;padding:7px 4px;border-radius:var(--bars-radius-full);background:{{ dreamEmptyBg }};color:{{ dreamEmptyColor }};transition:.2s;">Empty</button>
+        </div>
+      </div>
+      <p style="font-family:var(--bars-font-body);font-size:11px;line-height:1.5;color:var(--bars-text-muted);margin:0;">Each lens: free-write 10 min → make up to 10 options → keep 5.</p>
+    </div>
+  </aside>
+  </sc-if>
+
+  <!-- ════════ PHONE STAGE ════════ -->
+  <div style="flex:1;display:flex;justify-content:center;padding:38px 28px 56px;">
+    <div style="position:relative;width:414px;flex:0 0 auto;border-radius:48px;background:#040302;padding:11px;box-shadow:0 0 0 2px rgba(255,255,255,0.06), 0 36px 90px rgba(0,0,0,0.6), var(--bars-shadow-inset-top);">
+      <div style="width:392px;height:844px;border-radius:38px;overflow:hidden;background:var(--bars-bg-base);display:flex;flex-direction:column;position:relative;">
+
+        <div style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:13px 24px 4px;">
+          <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-secondary);">9:41</span>
+          <span style="color:var(--bars-text-muted);font-size:10px;letter-spacing:0.12em;">●●●&nbsp;◗</span>
+        </div>
+        <div style="flex:0 0 auto;padding:8px 24px 0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.24em;text-transform:uppercase;color:var(--bars-liminal-glow);">Lenses</span>
+            <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-text-muted);">{{ stepLabel }}</span>
+          </div>
+          <div style="display:flex;gap:4px;margin-top:9px;">
+            <sc-for list="{{ progressSegs }}" as="seg" hint-placeholder-count="8">
+              <span style="flex:1;height:3px;border-radius:2px;background:{{ seg.bg }};box-shadow:{{ seg.glow }};transition:background .3s;"></span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div ref="{{ scrollRef }}" class="lns-scroll" style="flex:1;overflow-y:auto;overflow-x:hidden;">
+
+          <!-- ░░ SCREEN 1 · ENTRY ░░ -->
+          <sc-if value="{{ isEntry }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:18px 24px 26px;display:flex;flex-direction:column;min-height:100%;">
+            <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:28px;line-height:1.12;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:14px 0 0;text-wrap:balance;">Let's imagine the year you're moving toward.</h2>
+            <sc-if value="{{ hasQuiz }}" hint-placeholder-val="{{ true }}">
+            <p style="font-family:var(--bars-font-body);font-size:15px;line-height:1.6;color:var(--bars-text-secondary);margin:16px 0 0;text-wrap:pretty;">You'll dream your own goals here — the writing is the point. Your superpower is just a lens on how you tend to show up.</p>
+            <div style="margin-top:24px;position:relative;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line), 0 0 22px -8px color-mix(in srgb,var(--bars-liminal-glow) 40%,transparent);padding:18px;overflow:hidden;">
+              <div style="position:absolute;top:-40px;right:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--bars-liminal-glow) 22%,transparent),transparent 70%);pointer-events:none;"></div>
+              <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--bars-text-muted);">Your allyship superpower</div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:9px;">
+                <span style="font-family:var(--bars-font-display);font-weight:800;font-size:26px;letter-spacing:-0.02em;color:var(--bars-text-primary);">Connector</span>
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.1em;color:var(--bars-text-secondary);">second wind · Storyteller</span>
+              </div>
+              <div style="display:inline-flex;align-items:center;gap:7px;margin-top:14px;padding:7px 12px;border-radius:var(--bars-radius-full);background:color-mix(in srgb,var(--bars-liminal) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 40%,transparent);">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--bars-liminal-glow);box-shadow:0 0 8px 1px var(--bars-liminal-glow);"></span>
+                <span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-liminal-glow);">A lens on how you show up</span>
+              </div>
+            </div>
+            </sc-if>
+            <sc-if value="{{ noQuiz }}" hint-placeholder-val="{{ false }}">
+            <p style="font-family:var(--bars-font-body);font-size:15px;line-height:1.6;color:var(--bars-text-secondary);margin:16px 0 0;text-wrap:pretty;">No quiz, no problem. You'll dream from a blank page — no profile needed. You can add a superpower lens later.</p>
+            <div style="margin-top:24px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line-dashed);padding:18px;">
+              <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--bars-text-muted);">Lens</div>
+              <div style="font-family:var(--bars-font-display);font-weight:700;font-size:19px;letter-spacing:-0.01em;color:var(--bars-text-secondary);margin-top:8px;">Open — no superpower set</div>
+              <p style="font-family:var(--bars-font-body);font-size:13px;line-height:1.55;color:var(--bars-text-muted);margin:10px 0 0;">The page is yours. Write what you actually want.</p>
+            </div>
+            </sc-if>
+            <div style="flex:1;min-height:18px;"></div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:24px;">
+              <div onClick="{{ goVague }}" role="button" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:var(--bars-radius-md);background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top), 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 60%,#000), 0 0 24px 0 color-mix(in srgb,var(--bars-liminal-glow) 42%,transparent);cursor:pointer;transition:transform var(--bars-dur-press) var(--bars-ease-out);" style-active="transform:scale(0.975)">
+                <span style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;">Begin Lenses</span>
+                <span style="color:#fff;font-size:15px;">→</span>
+              </div>
+              <sc-if value="{{ hasQuiz }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ setQuizOff }}" style="border:0;background:transparent;cursor:pointer;padding:8px;font-family:var(--bars-font-display);font-weight:600;font-size:13.5px;color:var(--bars-text-secondary);" style-hover="color:var(--bars-text-primary)">Choose without quiz</button>
+              </sc-if>
+              <sc-if value="{{ noQuiz }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ setQuizOn }}" style="border:0;background:transparent;cursor:pointer;padding:8px;font-family:var(--bars-font-display);font-weight:600;font-size:13.5px;color:var(--bars-text-secondary);" style-hover="color:var(--bars-text-primary)">Use my superpower instead</button>
+              </sc-if>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ░░ SCREEN 2 · VAGUE MOVEMENT ░░ -->
+          <sc-if value="{{ isVague }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:18px 24px 26px;display:flex;flex-direction:column;min-height:100%;">
+            <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--bars-text-muted);margin-top:6px;">Before goals · desire</div>
+            <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:25px;line-height:1.15;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:11px 0 0;">What are you moving toward?</h2>
+            <p style="font-family:var(--bars-font-body);font-size:14px;line-height:1.55;color:var(--bars-text-secondary);margin:12px 0 0;text-wrap:pretty;">No goals yet. Just the shape of it — what would feel different if this year worked? We'll carry this feeling into each lens.</p>
+            <div style="margin-top:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);padding:4px;">
+              <textarea placeholder="Write loosely. Half-sentences are fine." value="{{ vagueText }}" onChange="{{ onVague }}" style="width:100%;min-height:140px;resize:none;border:0;outline:0;background:transparent;color:var(--bars-text-primary);font-family:var(--bars-font-body);font-size:15px;line-height:1.6;padding:14px;"></textarea>
+            </div>
+            <div style="margin-top:22px;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--bars-text-muted);">The satisfaction feeling</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:11px;">
+              <sc-for list="{{ feelings }}" as="f" hint-placeholder-count="8">
+                <button onClick="{{ f.toggle }}" style="border:0;cursor:pointer;font-family:var(--bars-font-body);font-weight:600;font-size:13px;padding:8px 14px;border-radius:var(--bars-radius-full);background:{{ f.bg }};color:{{ f.color }};box-shadow:{{ f.shadow }};transition:.2s;">{{ f.label }}</button>
+              </sc-for>
+            </div>
+            <div style="flex:1;min-height:18px;"></div>
+            <div onClick="{{ goWorkshop }}" role="button" style="margin-top:24px;display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:var(--bars-radius-md);background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top), 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 60%,#000), 0 0 24px 0 color-mix(in srgb,var(--bars-liminal-glow) 42%,transparent);cursor:pointer;transition:transform var(--bars-dur-press) var(--bars-ease-out);" style-active="transform:scale(0.975)">
+              <span style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;">Work through the five lenses</span>
+              <span style="color:#fff;font-size:15px;">→</span>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ░░ SCREEN 3 · LENS WORKSHOP ░░ -->
+          <sc-if value="{{ isWorkshop }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:16px 24px 26px;display:flex;flex-direction:column;min-height:100%;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+              <div style="display:flex;align-items:center;gap:9px;">
+                <span style="font-family:var(--bars-font-body);font-size:16px;color:var(--bars-text-secondary);">{{ lens.glyph }}</span>
+                <span style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:var(--bars-text-primary);">{{ lens.name }}</span>
+              </div>
+              <sc-if value="{{ isYearPass }}" hint-placeholder-val="{{ true }}"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-text-muted);">Lens {{ lensNum }} of 5</span></sc-if>
+              <sc-if value="{{ isDescent }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-liminal-glow);">{{ cadenceName }} pass</span></sc-if>
+            </div>
+            <sc-if value="{{ isYearPass }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:6px;margin-top:10px;">
+              <sc-for list="{{ lensDots }}" as="ld" hint-placeholder-count="5">
+                <span style="flex:1;height:4px;border-radius:2px;background:{{ ld.bg }};box-shadow:{{ ld.glow }};transition:background .3s;"></span>
+              </sc-for>
+            </div>
+            </sc-if>
+            <sc-if value="{{ isDescent }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:4px;margin-top:11px;">
+              <sc-for list="{{ cadenceLadder }}" as="cl" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
+                  <span style="flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:{{ cl.dot }};"></span>
+                  <span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:{{ cl.color }};white-space:nowrap;">{{ cl.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+            <div style="display:flex;align-items:center;gap:7px;margin-top:16px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);padding:4px;">
+              <sc-for list="{{ phaseSteps }}" as="ps" hint-placeholder-count="3">
+                <button onClick="{{ ps.go }}" style="flex:1;border:0;cursor:pointer;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:8px 4px;border-radius:var(--bars-radius-full);background:{{ ps.bg }};color:{{ ps.color }};transition:.2s;">{{ ps.label }}</button>
+              </sc-for>
+            </div>
+
+            <!-- PHASE · FREE-WRITE -->
+            <sc-if value="{{ wWrite }}" hint-placeholder-val="{{ true }}">
+            <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:23px;line-height:1.15;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:18px 0 0;">{{ lens.writeTitle }}</h2>
+            <p style="font-family:var(--bars-font-body);font-size:14px;line-height:1.5;color:var(--bars-text-secondary);margin:9px 0 0;text-wrap:pretty;">{{ lens.prompt }}</p>
+
+            <sc-if value="{{ isDescent }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:13px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 22%,transparent);padding:12px 14px;">
+              <div style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-liminal-glow);">Moving toward · {{ parentLevelLabel }}</div>
+              <div style="display:flex;flex-direction:column;gap:5px;margin-top:9px;">
+                <sc-for list="{{ parentGoals }}" as="pg" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:flex-start;gap:8px;"><span style="flex:0 0 auto;width:4px;height:4px;border-radius:50%;background:var(--bars-liminal-glow);margin-top:6px;"></span><span style="flex:1;font-family:var(--bars-font-body);font-size:12.5px;line-height:1.35;color:var(--bars-text-secondary);text-wrap:pretty;">{{ pg }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+            </sc-if>
+
+            <!-- calm timer strip -->
+            <div style="margin-top:15px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);padding:13px 15px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <span style="width:7px;height:7px;border-radius:50%;background:{{ timerDotColor }};box-shadow:0 0 8px 1px {{ timerDotColor }};animation:{{ timerPulse }};"></span>
+                  <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-text-secondary);">{{ timerLabel }}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-family:var(--bars-font-mono);font-size:22px;font-weight:700;color:{{ timerColor }};letter-spacing:0.02em;font-variant-numeric:tabular-nums;">{{ timerClock }}</span>
+                  <button onClick="{{ toggleTimer }}" style="border:0;cursor:pointer;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-secondary);background:var(--bars-surface-card);padding:7px 11px;border-radius:var(--bars-radius-full);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);" style-hover="color:var(--bars-text-primary)">{{ timerBtn }}</button>
+                </div>
+              </div>
+              <div style="height:3px;border-radius:2px;background:var(--bars-line-strong);margin-top:12px;overflow:hidden;">
+                <div style="height:100%;width:{{ timerPct }};background:linear-gradient(90deg,var(--bars-liminal),var(--bars-liminal-glow));border-radius:2px;transition:width 1s linear;"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px;flex:1;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);padding:4px;display:flex;">
+              <textarea placeholder="Just write. What do you actually want here? No editing, no goals yet — let it be messy." value="{{ writeText }}" onChange="{{ onWrite }}" style="width:100%;min-height:260px;flex:1;resize:none;border:0;outline:0;background:transparent;color:var(--bars-text-primary);font-family:var(--bars-font-body);font-size:15px;line-height:1.65;padding:14px;"></textarea>
+            </div>
+            <p style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);text-align:center;margin:13px 0 0;line-height:1.7;">No floor to clear · the page keeps nothing score<br>Stay past the timer if you're in flow</p>
+
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px;">
+              <div onClick="{{ wGoOptions }}" role="button" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:var(--bars-radius-md);background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top), 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 60%,#000), 0 0 24px 0 color-mix(in srgb,var(--bars-liminal-glow) 42%,transparent);cursor:pointer;transition:transform var(--bars-dur-press) var(--bars-ease-out);" style-active="transform:scale(0.975)">
+                <span style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;">I'm done — make options</span>
+                <span style="color:#fff;font-size:15px;">→</span>
+              </div>
+              <button onClick="{{ parkLens }}" style="border:0;background:transparent;cursor:pointer;padding:7px;font-family:var(--bars-font-display);font-weight:600;font-size:13px;color:var(--bars-text-muted);" style-hover="color:var(--bars-text-secondary)">{{ parkLabel }}</button>
+            </div>
+            </sc-if>
+
+            <!-- PHASE · OPTIONS -->
+            <sc-if value="{{ wOptions }}" hint-placeholder-val="{{ false }}">
+            <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:23px;line-height:1.15;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:18px 0 0;">Turn it into options.</h2>
+            <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.5;color:var(--bars-text-secondary);margin:8px 0 0;text-wrap:pretty;">Pull what you wrote into up to ten goal options. Dream wide — you'll narrow to five next.</p>
+
+            <sc-if value="{{ hasWrite }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);padding:12px 14px;max-height:96px;overflow-y:auto;" class="lns-scroll">
+              <div style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-text-muted);">Your free-write</div>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-secondary);margin:7px 0 0;text-wrap:pretty;">{{ writeEcho }}</p>
+            </div>
+            </sc-if>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;">
+              <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-text-secondary);">Options</span>
+              <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;color:var(--bars-text-muted);">{{ optCount }} / 10</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:11px;">
+              <sc-for list="{{ optionRows }}" as="o" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:10px;border-radius:var(--bars-radius-md);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:4px 8px 4px 13px;">
+                  <span style="flex:0 0 auto;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.06em;color:var(--bars-text-muted);">{{ o.num }}</span>
+                  <input value="{{ o.val }}" onChange="{{ o.onChange }}" placeholder="A goal you'd want…" style="flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--bars-text-primary);font-family:var(--bars-font-body);font-size:14px;padding:10px 0;" />
+                  <button onClick="{{ o.remove }}" style="flex:0 0 auto;border:0;cursor:pointer;width:28px;height:28px;border-radius:7px;background:transparent;color:var(--bars-text-muted);font-size:15px;" style-hover="color:var(--bars-text-secondary)">×</button>
+                </div>
+              </sc-for>
+              <button onClick="{{ addOption }}" style="border:0;cursor:pointer;display:flex;align-items:center;gap:8px;border-radius:var(--bars-radius-md);background:transparent;box-shadow:inset 0 0 0 1px var(--bars-line-dashed);padding:12px 14px;font-family:var(--bars-font-body);font-size:13px;color:{{ addColor }};opacity:{{ addOpacity }};" style-hover="color:var(--bars-text-secondary)"><span style="font-size:15px;">+</span> Add an option</button>
+            </div>
+
+            <div style="flex:1;min-height:16px;"></div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
+              <div onClick="{{ wGoKeep }}" role="button" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:var(--bars-radius-md);background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top), 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 60%,#000), 0 0 24px 0 color-mix(in srgb,var(--bars-liminal-glow) 42%,transparent);cursor:pointer;transition:transform var(--bars-dur-press) var(--bars-ease-out);" style-active="transform:scale(0.975)">
+                <span style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;">Choose which to keep</span>
+                <span style="color:#fff;font-size:15px;">→</span>
+              </div>
+              <button onClick="{{ wGoWrite }}" style="border:0;background:transparent;cursor:pointer;padding:7px;font-family:var(--bars-font-display);font-weight:600;font-size:13px;color:var(--bars-text-muted);" style-hover="color:var(--bars-text-secondary)">← Back to the page</button>
+            </div>
+            </sc-if>
+
+            <!-- PHASE · KEEP 5 -->
+            <sc-if value="{{ wKeep }}" hint-placeholder-val="{{ false }}">
+            <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:23px;line-height:1.15;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:18px 0 0;">Keep five.</h2>
+            <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.5;color:var(--bars-text-secondary);margin:8px 0 0;text-wrap:pretty;">Narrowing is focus, not loss. The rest stay in your dream notes for later.</p>
+            <div style="display:flex;align-items:center;gap:9px;margin-top:14px;">
+              <div style="flex:1;height:6px;border-radius:3px;background:var(--bars-line-strong);overflow:hidden;"><div style="height:100%;width:{{ keepPct }};background:linear-gradient(90deg,var(--bars-liminal),var(--bars-liminal-glow));border-radius:3px;transition:width .3s var(--bars-ease-out);"></div></div>
+              <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.08em;color:{{ keepCountColor }};font-weight:700;">{{ keptCount }} / 5 kept</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:9px;margin-top:16px;">
+              <sc-for list="{{ keepCards }}" as="k" hint-placeholder-count="6">
+                <div onClick="{{ k.toggle }}" style="display:flex;align-items:center;gap:12px;border-radius:var(--bars-radius-md);background:{{ k.bg }};box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px {{ k.ring }};padding:14px 15px;cursor:pointer;opacity:{{ k.opacity }};transition:opacity .2s,box-shadow .2s,background .2s;">
+                  <span style="flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--bars-font-mono);font-size:11px;font-weight:700;color:{{ k.badgeColor }};background:{{ k.badgeBg }};box-shadow:{{ k.badgeShadow }};">{{ k.badge }}</span>
+                  <span style="flex:1;font-family:var(--bars-font-body);font-size:14px;line-height:1.35;color:{{ k.textColor }};text-wrap:pretty;">{{ k.text }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex:1;min-height:16px;"></div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
+              <div onClick="{{ lockNext }}" role="button" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:var(--bars-radius-md);background:{{ lockBg }};box-shadow:var(--bars-shadow-inset-top), 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 60%,#000), 0 0 24px 0 color-mix(in srgb,var(--bars-liminal-glow) 42%,transparent);cursor:{{ lockCursor }};opacity:{{ lockOpacity }};transition:transform var(--bars-dur-press) var(--bars-ease-out);" style-active="transform:scale(0.975)">
+                <span style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;">{{ lockLabel }}</span>
+                <span style="color:#fff;font-size:15px;">→</span>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button onClick="{{ wGoOptions }}" style="flex:1;border:0;background:var(--bars-surface-inset);cursor:pointer;padding:11px;border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-display);font-weight:600;font-size:12.5px;color:var(--bars-text-secondary);" style-hover="color:var(--bars-text-primary)">Back to options</button>
+                <button onClick="{{ parkLens }}" style="flex:1;border:0;background:transparent;cursor:pointer;padding:11px;border-radius:var(--bars-radius-md);font-family:var(--bars-font-display);font-weight:600;font-size:12.5px;color:var(--bars-text-muted);" style-hover="color:var(--bars-text-secondary)">{{ parkLabel }}</button>
+              </div>
+            </div>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <!-- ░░ SCREEN 4 · YEAR LENS REVIEW ░░ -->
+          <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:18px 24px 26px;display:flex;flex-direction:column;min-height:100%;">
+            <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--bars-text-muted);margin-top:6px;">Your authored lenses</div>
+            <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:25px;line-height:1.15;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:10px 0 0;">The year you're moving toward.</h2>
+            <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:9px;margin-top:15px;padding:11px 14px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-liminal) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 35%,transparent);">
+              <span style="color:var(--bars-liminal-glow);font-size:15px;">◆</span>
+              <span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);">Year frame saved. It's yours to revisit any time.</span>
+            </div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:18px;">
+              <sc-for list="{{ yearGoals }}" as="g" hint-placeholder-count="5">
+                <div style="border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:15px 16px;opacity:{{ g.opacity }};transition:opacity .25s;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);">{{ g.glyph }}</span>
+                      <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-text-secondary);">{{ g.domain }}</span>
+                    </div>
+                    <span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:{{ g.statusColor }};padding:3px 9px;border-radius:var(--bars-radius-full);background:{{ g.statusBg }};box-shadow:inset 0 0 0 1px {{ g.statusRing }};">{{ g.status }}</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:7px;margin-top:12px;">
+                    <sc-for list="{{ g.kept }}" as="kt" hint-placeholder-count="5">
+                      <div style="display:flex;align-items:flex-start;gap:9px;">
+                        <span style="flex:0 0 auto;width:5px;height:5px;border-radius:50%;background:var(--bars-liminal-glow);margin-top:7px;box-shadow:0 0 6px 0 var(--bars-liminal-glow);"></span>
+                        <span style="flex:1;font-family:var(--bars-font-body);font-size:14px;line-height:1.35;color:var(--bars-text-primary);text-wrap:pretty;">{{ kt }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;gap:8px;margin-top:13px;">
+                    <button onClick="{{ g.editGo }}" style="border:0;cursor:pointer;font-family:var(--bars-font-display);font-weight:600;font-size:11.5px;color:var(--bars-text-secondary);background:var(--bars-surface-inset);padding:7px 13px;border-radius:var(--bars-radius-full);box-shadow:inset 0 0 0 1px var(--bars-line);" style-hover="color:var(--bars-text-primary)">Edit in workshop</button>
+                    <button onClick="{{ g.toggle }}" style="border:0;cursor:pointer;font-family:var(--bars-font-display);font-weight:600;font-size:11.5px;color:var(--bars-text-muted);background:transparent;padding:7px 11px;border-radius:var(--bars-radius-full);" style-hover="color:var(--bars-text-secondary)">{{ g.toggleLabel }}</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="flex:1;min-height:16px;"></div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:24px;">
+              <div onClick="{{ goQuarter }}" role="button" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:var(--bars-radius-md);background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top), 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 60%,#000), 0 0 24px 0 color-mix(in srgb,var(--bars-liminal-glow) 42%,transparent);cursor:pointer;transition:transform var(--bars-dur-press) var(--bars-ease-out);" style-active="transform:scale(0.975)">
+                <span style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;">Derive quarterly goals</span>
+                <span style="color:#fff;font-size:15px;">→</span>
+              </div>
+              <button onClick="{{ saveFrame }}" style="border:0;background:transparent;cursor:pointer;padding:8px;font-family:var(--bars-font-display);font-weight:600;font-size:13.5px;color:var(--bars-text-secondary);" style-hover="color:var(--bars-text-primary)">{{ saveLabel }}</button>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ░░ SCREEN 6 · TAP THE VEIN HANDOFF ░░ -->
+          <sc-if value="{{ isTtv }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:18px 24px 26px;display:flex;flex-direction:column;min-height:100%;">
+            <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bars-liminal-glow);margin-top:6px;">Tap the Vein · Today</div>
+            <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:24px;line-height:1.15;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:10px 0 0;">What's bubbling up?</h2>
+            <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.55;color:var(--bars-text-secondary);margin:9px 0 0;text-wrap:pretty;">Your lenses are set. Capture the day as it comes — then let the lenses show you which goal each thing is quietly serving.</p>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:9px 13px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">
+              <span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-text-muted);">Your lenses</span>
+              <div style="display:flex;align-items:center;gap:9px;flex:1;justify-content:flex-end;">
+                <sc-for list="{{ lensLegend }}" as="ll" hint-placeholder-count="5">
+                  <span style="font-family:var(--bars-font-body);font-size:14px;color:var(--bars-text-secondary);" title="{{ ll.name }}">{{ ll.glyph }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px;">
+              <sc-for list="{{ ttvTasks }}" as="t" hint-placeholder-count="5">
+                <div style="border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px {{ t.ring }};padding:14px 15px;">
+                  <div style="font-family:var(--bars-font-body);font-size:14.5px;line-height:1.35;color:var(--bars-text-primary);">{{ t.title }}</div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:10px;padding:9px 11px;border-radius:var(--bars-radius-sm);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">
+                    <span style="flex:0 0 auto;font-family:var(--bars-font-body);font-size:14px;color:var(--bars-text-secondary);">{{ t.glyph }}</span>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+                      <span style="font-family:var(--bars-font-mono);font-size:7.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);">resonates with · {{ t.lens }}</span>
+                      <span style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.3;color:var(--bars-text-secondary);text-wrap:pretty;">{{ t.goal }}</span>
+                    </div>
+                    <span style="flex:0 0 auto;font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.pullColor }};background:{{ t.pullBg }};padding:5px 9px;border-radius:var(--bars-radius-full);box-shadow:inset 0 0 0 1px {{ t.pullRing }};white-space:nowrap;">{{ t.pullLabel }}</span>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;">
+                    <button onClick="{{ t.plant }}" style="border:0;cursor:pointer;font-family:var(--bars-font-display);font-weight:700;font-size:11px;color:#fff;background:var(--bars-liminal);padding:7px 13px;border-radius:var(--bars-radius-full);box-shadow:var(--bars-shadow-inset-top), 0 0 14px 0 color-mix(in srgb,var(--bars-liminal-glow) 35%,transparent);" style-active="transform:scale(0.96)">Plant as BAR</button>
+                    <button onClick="{{ noop }}" style="border:0;cursor:pointer;font-family:var(--bars-font-display);font-weight:600;font-size:11px;color:var(--bars-text-secondary);background:var(--bars-surface-inset);padding:7px 12px;border-radius:var(--bars-radius-full);box-shadow:inset 0 0 0 1px var(--bars-line);" style-hover="color:var(--bars-text-primary)">Keep as task</button>
+                    <button onClick="{{ noop }}" style="border:0;cursor:pointer;font-family:var(--bars-font-display);font-weight:600;font-size:11px;color:var(--bars-text-muted);background:transparent;padding:7px 10px;border-radius:var(--bars-radius-full);" style-hover="color:var(--bars-text-secondary)">Park</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:18px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);padding:13px 15px;">
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.55;color:var(--bars-text-secondary);margin:0;text-wrap:pretty;">The lens doesn't assign — it helps you notice which emerging thing is quietly serving the year you're moving toward. Plant the ones worth growing.</p>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ░░ SCREEN 7 · PLANT BAR ░░ -->
+          <sc-if value="{{ isPlant }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:18px 24px 26px;display:flex;flex-direction:column;min-height:100%;" data-element="earth">
+            <sc-if value="{{ notPlanted }}" hint-placeholder-val="{{ true }}">
+            <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--bars-text-muted);margin-top:6px;">Plant a BAR</div>
+            <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:24px;line-height:1.15;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:10px 0 0;">Worth growing.</h2>
+            <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.55;color:var(--bars-text-secondary);margin:9px 0 0;text-wrap:pretty;">A planted task becomes a BAR — a seed with provenance. It carries its whole lineage with it.</p>
+            <div style="margin-top:18px;position:relative;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top), 0 0 0 2px var(--bars-element-frame), 0 0 12px 0 color-mix(in srgb,var(--bars-element-glow) 38%,transparent);padding:16px 17px;overflow:hidden;">
+              <span style="position:absolute;right:12px;bottom:6px;font-family:var(--bars-font-body);font-size:64px;line-height:1;color:var(--bars-element-gem);opacity:0.1;pointer-events:none;">土</span>
+              <div style="display:flex;align-items:center;gap:9px;">
+                <span style="font-family:var(--bars-font-body);font-size:16px;color:var(--bars-element-gem);text-shadow:0 0 10px var(--bars-element-glow);">土</span>
+                <span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:color-mix(in srgb,var(--bars-element-gem) 84%,#fff);">Earth · grounded body</span>
+                <span style="margin-left:auto;font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);">Lens · Today</span>
+              </div>
+              <div style="font-family:var(--bars-font-display);font-weight:800;font-size:22px;letter-spacing:-0.02em;color:var(--bars-text-primary);margin-top:11px;">Practice Qigong</div>
+            </div>
+            <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-text-secondary);margin:20px 0 10px;">Carries its lineage</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <sc-for list="{{ plantLineage }}" as="pl" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:11px;padding:9px 13px;border-radius:var(--bars-radius-sm);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">
+                  <span style="flex:0 0 auto;font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-element-gem);width:62px;">{{ pl.lens }}</span>
+                  <span style="flex:1;font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">{{ pl.text }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:20px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);padding:16px;">
+              <div style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-text-muted);">A light plant gate</div>
+              <div style="margin-top:12px;">
+                <div style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-secondary);">Desired outcome</div>
+                <div style="font-family:var(--bars-font-body);font-size:14.5px;color:var(--bars-text-primary);margin-top:5px;">Build a practice that carries me</div>
+              </div>
+              <div style="margin-top:15px;">
+                <div style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-secondary);">From (dissatisfaction)</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;">
+                  <sc-for list="{{ dissChips }}" as="ch" hint-placeholder-count="3">
+                    <button onClick="{{ ch.toggle }}" style="border:0;cursor:pointer;font-family:var(--bars-font-body);font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:var(--bars-radius-full);background:{{ ch.bg }};color:{{ ch.color }};box-shadow:{{ ch.shadow }};transition:.2s;">{{ ch.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="margin-top:15px;">
+                <div style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-secondary);">Toward (satisfaction)</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;">
+                  <sc-for list="{{ satChips }}" as="ch" hint-placeholder-count="3">
+                    <button onClick="{{ ch.toggle }}" style="border:0;cursor:pointer;font-family:var(--bars-font-body);font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:var(--bars-radius-full);background:{{ ch.bg }};color:{{ ch.color }};box-shadow:{{ ch.shadow }};transition:.2s;">{{ ch.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="flex:1;min-height:16px;"></div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:22px;">
+              <div onClick="{{ doPlant }}" role="button" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:var(--bars-radius-md);background:var(--bars-element-frame);box-shadow:var(--bars-shadow-inset-top), 0 0 0 1px color-mix(in srgb,var(--bars-element-frame) 70%,#000), 0 0 26px 0 color-mix(in srgb,var(--bars-element-glow) 45%,transparent);cursor:pointer;transition:transform var(--bars-dur-press) var(--bars-ease-out);" style-active="transform:scale(0.975)">
+                <span style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;">Plant BAR</span>
+                <span style="color:#fff;font-size:14px;">◆</span>
+              </div>
+              <button onClick="{{ goTtv }}" style="border:0;background:transparent;cursor:pointer;padding:8px;font-family:var(--bars-font-display);font-weight:600;font-size:13.5px;color:var(--bars-text-secondary);" style-hover="color:var(--bars-text-primary)">Keep as task</button>
+            </div>
+            </sc-if>
+            <sc-if value="{{ planted }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:100%;padding:30px 6px;">
+              <div style="position:relative;width:100%;max-width:300px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top), 0 0 0 2px var(--bars-element-frame), 0 0 24px 4px color-mix(in srgb,var(--bars-element-glow) 50%,transparent);padding:24px 20px;overflow:hidden;animation:lns-float 6s ease-in-out infinite;">
+                <span style="position:absolute;right:14px;bottom:2px;font-family:var(--bars-font-body);font-size:88px;line-height:1;color:var(--bars-element-gem);opacity:0.12;">土</span>
+                <span style="font-family:var(--bars-font-body);font-size:34px;color:var(--bars-element-gem);text-shadow:0 0 22px var(--bars-element-glow);">土</span>
+                <div style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:color-mix(in srgb,var(--bars-element-gem) 84%,#fff);margin-top:12px;">Earth · seed · planted</div>
+                <div style="font-family:var(--bars-font-display);font-weight:800;font-size:23px;letter-spacing:-0.02em;color:var(--bars-text-primary);margin-top:8px;">Practice Qigong</div>
+              </div>
+              <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:23px;letter-spacing:-0.02em;color:var(--bars-text-primary);margin:26px 0 0;">A BAR is planted.</h2>
+              <p style="font-family:var(--bars-font-body);font-size:14px;line-height:1.6;color:var(--bars-text-secondary);margin:11px 0 0;max-width:300px;text-wrap:pretty;">It carries its lineage — year to today — into Tap the Vein. You metabolize the charge into action from here.</p>
+              <div style="display:flex;flex-direction:column;gap:11px;margin-top:28px;width:100%;">
+                <div onClick="{{ goTtv }}" role="button" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:15px;border-radius:var(--bars-radius-md);background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top), 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 60%,#000), 0 0 22px 0 color-mix(in srgb,var(--bars-liminal-glow) 40%,transparent);cursor:pointer;" style-active="transform:scale(0.975)">
+                  <span style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;">Back to Today</span>
+                </div>
+                <button onClick="{{ goReview }}" style="border:0;background:transparent;cursor:pointer;padding:8px;font-family:var(--bars-font-display);font-weight:600;font-size:13px;color:var(--bars-text-secondary);" style-hover="color:var(--bars-text-primary)">Review year frame</button>
+              </div>
+            </div>
+            </sc-if>
+          </div>
+          </sc-if>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:900},&quot;chrome&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;bare&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full'|'bare'&quot;},&quot;initialScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;entry&quot;,&quot;vague&quot;,&quot;workshop&quot;,&quot;review&quot;,&quot;quarter&quot;,&quot;lineage&quot;,&quot;ttv&quot;,&quot;plant&quot;],&quot;default&quot;:&quot;entry&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;initialWorkshopLens&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:4,&quot;tsType&quot;:&quot;number&quot;},&quot;initialWorkshopPhase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;write&quot;,&quot;options&quot;,&quot;keep&quot;],&quot;default&quot;:&quot;write&quot;,&quot;tsType&quot;:&quot;'write'|'options'|'keep'&quot;},&quot;initialHasQuiz&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;initialDreamFilled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;initialSaved&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;initialPlanted&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;initialParked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const SCREENS = [
+  { key:'entry',    n:'01', label:'Entry' },
+  { key:'vague',    n:'02', label:'Vague movement' },
+  { key:'workshop', n:'03', label:'Year · author' },
+  { key:'review',   n:'04', label:'Year lens' },
+  { key:'quarter',  n:'05', label:'Quarter · author' },
+  { key:'month',    n:'06', label:'Month · author' },
+  { key:'week',     n:'07', label:'Week · author' },
+  { key:'ttv',      n:'08', label:'Tap the Vein' },
+  { key:'plant',    n:'09', label:'Plant a BAR' },
+];
+
+const FEELINGS = ['alive','settled','connected','free','proud','clear','generous','relieved'];
+
+const LENSES = [
+  { key:'relationships', name:'Relationships', glyph:'○',
+    writeTitle:'Free-write your relationships.',
+    prompt:'Who are you with? What is the quality of contact? Write toward what you actually want.',
+    write:'What I want with Ari is a sense of home that doesn\u2019t depend on everything going well. Days that feel easy. A way back when we drift. Less performing, more just being in the room together. Living together, maybe. A rhythm. Repair that\u2019s normal, not a crisis.',
+    options:['Living with Ari','A weekly repair / check-in ritual','A home rhythm we both rely on','More unstructured time in the same room','Travel together once this year','Name our values out loud together','Less performing, more presence','A standing date night'],
+    kept:[0,1,2,3,6] },
+  { key:'career', name:'Career', glyph:'◇',
+    writeTitle:'Free-write your career.',
+    prompt:'What are you making, practicing, selling, serving, or becoming known for?',
+    write:'The book matters more than anything else I\u2019m making. I want it in real hands, not just written. Conversations around it. Teaching it. Becoming known for allyship work specifically. A body of work, not one-offs.',
+    options:['Finish and publish MTGOA','10,000 books in real hands','A tour of conversations around the book','A podcast / interview rhythm','Be known for allyship work','A teachable body of work','One signature talk','A waitlist of people who want it'],
+    kept:[0,1,2,3,4] },
+  { key:'money', name:'Money', glyph:'◈',
+    writeTitle:'Free-write your money.',
+    prompt:'What flow of income, stability, generosity, or receiving would change your life?',
+    write:'I want money to stop being the loud thing. Enough, steady, honest. A monthly number I can count on. Generosity without anxiety. Receiving without guilt.',
+    options:['A steady $10,000 / month','A simple, honest income mix','Three months of runway saved','Sell book / deck / coaching as a rhythm','Give without anxiety','Stop trading hours for everything','One recurring revenue line','Receive support without guilt'],
+    kept:[0,1,3,4,6] },
+  { key:'health', name:'Health', glyph:'●',
+    writeTitle:'Free-write your health.',
+    prompt:'What body, energy, rhythm, and practice would carry you?',
+    write:'A body that shows up. A practice I don\u2019t negotiate with. Grounded, not stiff. Breath. Daily movement that survives busy weeks. Tai Chi / Qi Gong as the spine of it.',
+    options:['Practicing Tai Chi and Qi Gong daily','Movement that survives busy weeks','A breath practice each morning','Meditate most days','Walk daily','Strength twice a week','Sleep I can rely on','A body that carries the work'],
+    kept:[0,1,3,4,7] },
+  { key:'allyship', name:'Allyship', glyph:'◆',
+    writeTitle:'Free-write your allyship.',
+    prompt:'Who is better off because you showed up?',
+    write:'People practicing together, not just reading. A container. A dojo where allyship is a practice, not a post. 100 people. Recurring. Showing up for each other\u2019s growth.',
+    options:['100 people in an Allyship Dojo','A recurring practice container','Allyship as practice, not posts','A cohort that returns each month','People practicing their superpowers together','A first live dojo this quarter','Stories of people better off','A waitlist for the next cohort'],
+    kept:[0,1,2,4,5] },
+];
+
+const REVIEW_ORDER = ['relationships','health','allyship','career','money'];
+const QUARTER_MAP = {
+  'Living with Ari': ['Beijing trip with Ari','Spend a month together'],
+  'A weekly repair / check-in ritual': ['Emotional First Aid Workshop','Polarity Mapping'],
+  'A home rhythm we both rely on': ['Life Book process'],
+  'More unstructured time in the same room': ['One unplugged evening a week'],
+  'Travel together once this year': ['Plan the Beijing trip'],
+  'Name our values out loud together': ['Write a shared vision'],
+  'Less performing, more presence': ['A presence practice together'],
+  'A standing date night': ['Book the first three dates'],
+};
+const LINEAGE = [
+  { lens:'Yearly',    text:'Practicing Tai Chi and Qi Gong daily' },
+  { lens:'Quarterly', text:'Weekly Qigong / Tai Chi practice' },
+  { lens:'Monthly',   text:'Sign up for Bruce Frantzis Qigong' },
+  { lens:'Weekly',    text:'Watch · practice · meditate · walk' },
+];
+const WEEK_ACTIONS = ['Watch 5 Bruce Frantzis videos','Practice Qigong','Meditate','Go on a walk','Brush teeth 3x'];
+const TTV = [
+  { title:'Practice Qigong', glyph:'●', lens:'Health', goal:'Practicing Tai Chi and Qi Gong daily', pull:'strong', qigong:true },
+  { title:'Reach out to 50 people about $50 donation', glyph:'◆', lens:'Allyship', goal:'100 people in an Allyship Dojo', pull:'strong' },
+  { title:'Finish first chapter of MTGOA', glyph:'◇', lens:'Career', goal:'10,000 books in real hands', pull:'quiet' },
+  { title:'Have relationship check-in with Ari', glyph:'○', lens:'Relationships', goal:'A weekly repair / check-in ritual', pull:'strong' },
+  { title:'Make coaching sales page', glyph:'◈', lens:'Money', goal:'A steady $10,000 / month', pull:'quiet' },
+];
+const PLANT_LINEAGE = [
+  { lens:'Weekly',    text:'Practice Qigong' },
+  { lens:'Monthly',   text:'Sign up for Bruce Frantzis Qigong' },
+  { lens:'Quarterly', text:'Weekly Qigong / Tai Chi practice' },
+  { lens:'Yearly',    text:'Practicing Tai Chi and Qi Gong daily' },
+];
+const PHASE_LABELS = [['write','Free-write'],['options','Options'],['keep','Keep']];
+const TIMER_TOTAL = 600;
+
+// Descent passes — same free-write → options → keep loop, one cadence down.
+// Demonstrated on the Health thread so it lines up with lineage / Tap the Vein / plant.
+const DESCENT = {
+  quarter: { unit:'qh', cad:'Quarter', parentUnit:'health', parentLabel:'your kept Health year goals', next:'month',
+    writeTitle:'Free-write this quarter.',
+    prompt:'Given your kept Health goals, what could you actually do in the next 90 days to move toward them?',
+    write:'This quarter is about starting, not perfecting. Find a real teacher. Build a weekly rhythm I can keep. Keep breath and walking small so they survive busy weeks.',
+    options:['Weekly Qigong / Tai Chi practice','Find a teacher or course','A morning breath routine','Daily walk on the calendar','Two strength sessions a week','A meditation I actually keep','Set up a practice space','Block practice time before work'],
+    kept:[0,1,2,3] },
+  month: { unit:'mh', cad:'Month', parentUnit:'qh', parentLabel:'your kept quarter goals', next:'week',
+    writeTitle:'Free-write this month.',
+    prompt:'What could you do this month to move your quarter goals forward?',
+    write:'This month: just sign up and show up. Pick the Bruce Frantzis course. Watch a few videos. Do it even badly.',
+    options:['Sign up for Bruce Frantzis Qigong','Watch the intro series','Practice 3x this month','Find a local class','Set a recurring calendar block'],
+    kept:[0,1,2] },
+  week: { unit:'wh', cad:'Week', parentUnit:'mh', parentLabel:'your kept month goals', next:'ttv',
+    writeTitle:'Free-write this week.',
+    prompt:'What are the small moves this week — the ones that actually happen?',
+    write:'This week: get going. Watch the videos, do the practice a few times, keep the small anchors.',
+    options:['Watch 5 Bruce Frantzis videos','Practice Qigong','Meditate','Go on a walk','Brush teeth 3x','Sign up for the course'],
+    kept:[0,1,2,3,4] },
+};
+const DESCENT_BY_UNIT = { qh:DESCENT.quarter, mh:DESCENT.month, wh:DESCENT.week };
+const CADENCE_ORDER = ['workshop','quarter','month','week'];
+const CADENCE_LADDER = [['workshop','Year'],['quarter','Quarter'],['month','Month'],['week','Week']];
+
+function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+function unitDefaults(key){
+  if (DESCENT_BY_UNIT[key]) { var d = DESCENT_BY_UNIT[key]; return { options:d.options, kept:d.kept, write:d.write }; }
+  var L = LENSES.find(function(x){ return x.key === key; });
+  if (L) return { options:L.options, kept:L.kept, write:L.write };
+  return { options:[''], kept:[], write:'' };
+}
+
+class Component extends DCLogic {
+  state = {
+    screen: this.props.initialScreen || 'entry',
+    hasQuiz: this.props.initialHasQuiz !== false,
+    dreamFilled: this.props.initialDreamFilled !== false,
+    wLens: this.props.initialWorkshopLens != null ? Number(this.props.initialWorkshopLens) : 0,
+    wPhase: this.props.initialWorkshopPhase || 'write',
+    timer: TIMER_TOTAL,
+    timerRunning: true,
+    saved: !!this.props.initialSaved,
+    planted: !!this.props.initialPlanted,
+    parkedYear: this.props.initialParked ? { Money:true } : {},
+    locked: {},
+    write: {},
+    options: {},
+    kept: {},
+    feelings: { settled:true, connected:true },
+    vague: '',
+    qmaint: {},
+    diss: {},
+    sat: {},
+  };
+
+  componentDidMount() {
+    this._iv = setInterval(() => {
+      var s = this.state;
+      if (CADENCE_ORDER.indexOf(s.screen) >= 0 && s.wPhase === 'write' && s.timerRunning && s.timer > 0) {
+        this.setState({ timer: s.timer - 1 });
+      }
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._iv); }
+
+  go(k) { if (k === 'quarter' || k === 'month' || k === 'week') return this.enterCadence(k); this.setState({ screen:k }); this.scroll0(); }
+  scroll0() { var el = this._scroll; if (el) el.scrollTop = 0; }
+  setMap(mapKey, key, val) { this.setState(s => ({ [mapKey]: Object.assign({}, s[mapKey], { [key]: val }) })); }
+  toggleIn(mapKey, key) { this.setState(s => { var m = Object.assign({}, s[mapKey]); if (m[key]) delete m[key]; else m[key] = true; return { [mapKey]: m }; }); }
+
+  optsFor(key) {
+    var s = this.state;
+    if (s.options[key] != null) return s.options[key];
+    return s.dreamFilled ? unitDefaults(key).options.slice() : [''];
+  }
+  keptFor(key) {
+    var s = this.state;
+    var len = this.optsFor(key).length;
+    var arr = s.kept[key] != null ? s.kept[key] : (s.dreamFilled ? unitDefaults(key).kept.slice() : []);
+    return arr.filter(function(i){ return i < len; });
+  }
+
+  enterCadence(screen) {
+    this.setState({ screen:screen, wPhase:'write', timer:TIMER_TOTAL, timerRunning:true });
+    this.scroll0();
+  }
+
+  lockLens(parked) {
+    var s = this.state;
+    if (s.screen !== 'workshop') {
+      // descent pass — chain to the next cadence (or hand to Tap the Vein)
+      var d = DESCENT[s.screen];
+      if (d.next === 'ttv') { this.setState({ screen:'ttv' }); this.scroll0(); }
+      else { this.enterCadence(d.next); }
+      return;
+    }
+    var L = LENSES[s.wLens];
+    var locked = Object.assign({}, s.locked); locked[L.key] = parked ? 'parked' : 'locked';
+    var parkedYear = Object.assign({}, s.parkedYear); if (parked) parkedYear[L.name] = true; else delete parkedYear[L.name];
+    var last = s.wLens >= LENSES.length - 1;
+    if (last) { this.setState({ locked:locked, parkedYear:parkedYear, screen:'review' }); }
+    else { this.setState({ locked:locked, parkedYear:parkedYear, wLens:s.wLens + 1, wPhase:'write', timer:TIMER_TOTAL, timerRunning:true }); }
+    this.scroll0();
+  }
+
+  renderVals() {
+    var s = this.state;
+    var self = this;
+    var idx = SCREENS.findIndex(x => x.key === s.screen); if (idx < 0) idx = 0;
+
+    var navItems = SCREENS.map(function(sc) {
+      var active = sc.key === s.screen;
+      return { n:sc.n, label:sc.label, key:sc.key,
+        bg: active ? 'color-mix(in srgb, var(--bars-liminal) 16%, transparent)' : 'transparent',
+        numColor: active ? 'var(--bars-liminal-glow)' : 'var(--bars-text-muted)',
+        color: active ? 'var(--bars-text-primary)' : 'var(--bars-text-secondary)',
+        weight: active ? 700 : 500,
+        go: function() { self.go(sc.key); } };
+    });
+    var progressSegs = SCREENS.map(function(sc, i) {
+      var on = i <= idx;
+      return { bg: on ? 'var(--bars-liminal)' : 'var(--bars-line-strong)', glow: on ? '0 0 8px 1px color-mix(in srgb,var(--bars-liminal-glow) 60%,transparent)' : 'none' };
+    });
+
+    var pill = function(on) { return { bg: on ? 'var(--bars-liminal)' : 'transparent', color: on ? '#fff' : 'var(--bars-text-muted)' }; };
+    var q = pill(s.hasQuiz), nq = pill(!s.hasQuiz), df = pill(s.dreamFilled), de = pill(!s.dreamFilled);
+
+    var feelings = FEELINGS.map(function(f) {
+      var on = !!s.feelings[f];
+      return { label:f,
+        bg: on ? 'color-mix(in srgb,var(--bars-liminal) 18%,transparent)' : 'var(--bars-surface-card)',
+        color: on ? 'var(--bars-liminal-glow)' : 'var(--bars-text-secondary)',
+        shadow: on ? 'inset 0 0 0 1px color-mix(in srgb,var(--bars-liminal) 45%,transparent)' : 'var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line)',
+        toggle: function(){ self.toggleIn('feelings', f); } };
+    });
+
+    // ── workshop / descent (shared free-write → options → keep) ──
+    var L = LENSES[s.wLens] || LENSES[0];
+    var descent = DESCENT[s.screen];
+    var isDescent = !!descent;
+    var isYearPass = s.screen === 'workshop';
+    var activeKey = isDescent ? descent.unit : L.key;
+    var unit = isDescent
+      ? { name:'Health', glyph:'●', writeTitle:descent.writeTitle, prompt:descent.prompt }
+      : { name:L.name, glyph:L.glyph, writeTitle:L.writeTitle, prompt:L.prompt };
+    var writeVal = s.write[activeKey] != null ? s.write[activeKey] : (s.dreamFilled ? unitDefaults(activeKey).write : '');
+    var optsArr = this.optsFor(activeKey);
+    var keptArr = this.keptFor(activeKey);
+    var parentGoals = [];
+    if (isDescent) {
+      var pOpts = this.optsFor(descent.parentUnit), pKept = this.keptFor(descent.parentUnit);
+      parentGoals = (pKept.length ? pKept.map(function(i){ return pOpts[i]; }) : pOpts.slice(0, 5));
+    }
+    var cadIdx = CADENCE_ORDER.indexOf(s.screen);
+    var cadenceLadder = CADENCE_LADDER.map(function(c, i) {
+      var cur = i === cadIdx, done = cadIdx > i;
+      return { label:c[1],
+        color: cur ? 'var(--bars-liminal-glow)' : (done ? 'var(--bars-text-secondary)' : 'var(--bars-text-muted)'),
+        dot: cur ? 'var(--bars-liminal)' : (done ? 'color-mix(in srgb,var(--bars-liminal) 55%,transparent)' : 'var(--bars-line-strong)') };
+    });
+
+    var lensDots = LENSES.map(function(l, i) {
+      var c = s.locked[l.key]; var cur = i === s.wLens; var bg, glow = 'none';
+      if (cur) { bg = 'var(--bars-liminal)'; glow = '0 0 8px 1px color-mix(in srgb,var(--bars-liminal-glow) 55%,transparent)'; }
+      else if (c === 'locked') { bg = 'color-mix(in srgb,var(--bars-liminal) 55%,transparent)'; }
+      else { bg = 'var(--bars-line-strong)'; }
+      return { bg:bg, glow:glow };
+    });
+    var phaseSteps = PHASE_LABELS.map(function(p) {
+      var active = s.wPhase === p[0];
+      return { label:p[1], bg: active ? 'var(--bars-liminal)' : 'transparent', color: active ? '#fff' : 'var(--bars-text-muted)',
+        go: function(){ self.setState({ wPhase:p[0] }); self.scroll0(); } };
+    });
+
+    // timer
+    var mm = Math.floor(s.timer / 60), ss = s.timer % 60;
+    var timerDone = s.timer <= 0;
+    var optionRows = optsArr.map(function(txt, i) {
+      return { num: pad2(i + 1), val: txt,
+        onChange: function(e){ var a = self.optsFor(activeKey).slice(); a[i] = e.target.value; self.setMap('options', activeKey, a); },
+        remove: function(){ var a = self.optsFor(activeKey).slice(); a.splice(i, 1); if (a.length === 0) a = ['']; self.setMap('options', activeKey, a); } };
+    });
+    var canAdd = optsArr.length < 10;
+
+    var keepCards = optsArr.map(function(txt, i) {
+      var pos = keptArr.indexOf(i); var kept = pos >= 0;
+      return { text: txt || '(empty)',
+        kept: kept, badge: kept ? String(pos + 1) : '',
+        bg: kept ? 'color-mix(in srgb,var(--bars-liminal) 12%,var(--bars-surface-card))' : 'var(--bars-surface-card)',
+        ring: kept ? 'color-mix(in srgb,var(--bars-liminal) 50%,transparent)' : 'var(--bars-line)',
+        opacity: (!kept && keptArr.length >= 5) ? 0.45 : 1,
+        textColor: kept ? 'var(--bars-text-primary)' : 'var(--bars-text-secondary)',
+        badgeColor: kept ? '#fff' : 'var(--bars-text-muted)',
+        badgeBg: kept ? 'var(--bars-liminal)' : 'transparent',
+        badgeShadow: kept ? 'var(--bars-shadow-inset-top), 0 0 10px 0 color-mix(in srgb,var(--bars-liminal-glow) 45%,transparent)' : 'inset 0 0 0 1.5px var(--bars-line-strong)',
+        toggle: function(){
+          var a = self.keptFor(activeKey).slice(); var p = a.indexOf(i);
+          if (p >= 0) a.splice(p, 1); else if (a.length < 5) a.push(i);
+          self.setMap('kept', activeKey, a);
+        } };
+    });
+    var keptCount = keptArr.length;
+    var canLock = keptCount > 0;
+    var lastLens = s.wLens >= LENSES.length - 1;
+
+    // ── review ──
+    var yearGoals = REVIEW_ORDER.map(function(key) {
+      var L2 = LENSES.find(function(x){ return x.key === key; });
+      var opts = self.optsFor(key); var kept = self.keptFor(key);
+      var keptTitles = kept.length ? kept.map(function(i){ return opts[i]; }) : opts.slice(0, 5);
+      var parked = !!s.parkedYear[L2.name] || s.locked[key] === 'parked';
+      return { domain:L2.name, glyph:L2.glyph, kept:keptTitles,
+        status: parked ? 'parked' : 'active', opacity: parked ? 0.5 : 1,
+        statusColor: parked ? 'var(--bars-text-muted)' : 'var(--bars-liminal-glow)',
+        statusBg: parked ? 'transparent' : 'color-mix(in srgb,var(--bars-liminal) 14%,transparent)',
+        statusRing: parked ? 'var(--bars-line)' : 'color-mix(in srgb,var(--bars-liminal) 38%,transparent)',
+        toggleLabel: parked ? 'Make active' : 'Park',
+        toggle: function(){ self.toggleIn('parkedYear', L2.name); },
+        editGo: function(){ self.setState({ screen:'workshop', wLens: LENSES.findIndex(function(x){return x.key===key;}), wPhase:'keep' }); self.scroll0(); } };
+    });
+
+    var relKept = this.keptFor('relationships');
+    var relOpts = this.optsFor('relationships');
+    var quarterParents = relKept.map(function(oi) {
+      var title = relOpts[oi];
+      var m = !!s.qmaint[oi];
+      return { title:title, candidates: QUARTER_MAP[title] || ['Name one move this quarter'],
+        maint:m, candOpacity: m ? 0.4 : 1,
+        tag: m ? 'maintenance' : 'this quarter',
+        tagColor: m ? 'var(--bars-text-muted)' : 'var(--bars-liminal-glow)',
+        tagBg: m ? 'var(--bars-surface-inset)' : 'color-mix(in srgb,var(--bars-liminal) 12%,transparent)',
+        tagRing: m ? 'var(--bars-line)' : 'color-mix(in srgb,var(--bars-liminal) 35%,transparent)',
+        dot: m ? 'var(--bars-text-muted)' : 'var(--bars-liminal-glow)',
+        dotGlow: m ? 'none' : '0 0 7px 1px color-mix(in srgb,var(--bars-liminal-glow) 55%,transparent)',
+        toggle: function(){ self.toggleIn('qmaint', oi); } };
+    });
+    var collapsedDomains = REVIEW_ORDER.filter(function(k){ return k !== 'relationships'; }).map(function(key) {
+      var L2 = LENSES.find(function(x){ return x.key === key; }); var n = self.keptFor(key).length;
+      return { domain:L2.name, glyph:L2.glyph, title: n + ' kept goal' + (n === 1 ? '' : 's') };
+    });
+
+    var lineageRail = LINEAGE.map(function(l, i) {
+      var leaf = i === LINEAGE.length - 1;
+      return { lens:l.lens, text:l.text,
+        ring: leaf ? 'var(--bars-liminal)' : 'color-mix(in srgb,var(--bars-liminal) 45%,transparent)',
+        dot: leaf ? 'var(--bars-liminal-glow)' : 'var(--bars-liminal)',
+        glow: leaf ? '0 0 8px 1px var(--bars-liminal-glow)' : 'none',
+        lensColor: leaf ? 'var(--bars-liminal-glow)' : 'var(--bars-text-secondary)',
+        cardBg: leaf ? 'color-mix(in srgb,var(--bars-liminal) 10%,var(--bars-surface-card))' : 'var(--bars-surface-card)',
+        cardRing: leaf ? 'color-mix(in srgb,var(--bars-liminal) 30%,transparent)' : 'var(--bars-line)' };
+    });
+
+    var ttvTasks = TTV.map(function(t) {
+      var strong = t.pull === 'strong';
+      return { title:t.title, glyph:t.glyph, lens:t.lens, goal:t.goal,
+        pullLabel: strong ? 'strong pull' : 'quiet thread',
+        pullColor: strong ? 'var(--bars-liminal-glow)' : 'var(--bars-text-muted)',
+        pullBg: strong ? 'color-mix(in srgb,var(--bars-liminal) 14%,transparent)' : 'var(--bars-surface-inset)',
+        pullRing: strong ? 'color-mix(in srgb,var(--bars-liminal) 35%,transparent)' : 'var(--bars-line)',
+        ring: t.qigong ? 'color-mix(in srgb,var(--bars-liminal) 30%,transparent)' : 'var(--bars-line)',
+        plant: function(){ self.setState({ planted:false, screen:'plant' }); self.scroll0(); } };
+    });
+
+    var chipMk = function(mapKey) {
+      return function(label) {
+        var on = !!s[mapKey][label];
+        return { label:label,
+          bg: on ? 'color-mix(in srgb,var(--bars-element-glow) 20%,transparent)' : 'var(--bars-surface-card)',
+          color: on ? 'color-mix(in srgb,var(--bars-element-gem) 85%,#fff)' : 'var(--bars-text-secondary)',
+          shadow: on ? 'inset 0 0 0 1px color-mix(in srgb,var(--bars-element-frame) 55%,transparent)' : 'var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line)',
+          toggle: function(){ self.toggleIn(mapKey, label); } };
+      };
+    };
+
+    return {
+      showRail: this.props.chrome !== 'bare',
+      stepLabel: 'Step ' + (idx + 1) + ' / 8',
+      progressSegs: progressSegs, navItems: navItems,
+
+      setQuizOn: function(){ self.setState({ hasQuiz:true }); },
+      setQuizOff: function(){ self.setState({ hasQuiz:false }); },
+      setDreamFilled: function(){ self.setState({ dreamFilled:true }); },
+      setDreamEmpty: function(){ self.setState({ dreamFilled:false }); },
+      quizOnBg:q.bg, quizOnColor:q.color, quizOffBg:nq.bg, quizOffColor:nq.color,
+      dreamFilledBg:df.bg, dreamFilledColor:df.color, dreamEmptyBg:de.bg, dreamEmptyColor:de.color,
+
+      isEntry:s.screen==='entry', isVague:s.screen==='vague', isWorkshop: isYearPass || isDescent,
+      isReview:s.screen==='review', isTtv:s.screen==='ttv', isPlant:s.screen==='plant',
+      isYearPass: isYearPass, isDescent: isDescent,
+      cadenceLadder: cadenceLadder, parentGoals: parentGoals,
+      cadenceName: isDescent ? descent.cad : 'Year',
+      parentLevelLabel: isDescent ? descent.parentLabel : '',
+      parkLabel: isDescent ? 'Skip this level' : 'Park this lens for now',
+      hasQuiz:s.hasQuiz, noQuiz:!s.hasQuiz,
+
+      vagueText: s.vague, onVague: function(e){ self.setState({ vague:e.target.value }); },
+      feelings: feelings,
+
+      // workshop
+      lens: unit, lensNum: s.wLens + 1, lensDots: lensDots, phaseSteps: phaseSteps,
+      wWrite: s.wPhase==='write', wOptions: s.wPhase==='options', wKeep: s.wPhase==='keep',
+
+      writeText: writeVal, onWrite: function(e){ self.setMap('write', activeKey, e.target.value); },
+      hasWrite: !!(writeVal && writeVal.trim()), writeEcho: writeVal,
+      timerClock: mm + ':' + pad2(ss),
+      timerPct: Math.round((s.timer / TIMER_TOTAL) * 100) + '%',
+      timerColor: timerDone ? 'var(--bars-text-muted)' : 'var(--bars-text-primary)',
+      timerLabel: timerDone ? 'the ten minutes are up · stay as long as you like' : (s.timerRunning ? 'ten quiet minutes · no pressure' : 'paused'),
+      timerBtn: s.timerRunning ? 'Pause' : 'Resume',
+      timerDotColor: (s.timerRunning && !timerDone) ? 'var(--bars-liminal-glow)' : 'var(--bars-text-muted)',
+      timerPulse: (s.timerRunning && !timerDone) ? 'lns-pulse 2s ease-in-out infinite' : 'none',
+      toggleTimer: function(){ self.setState({ timerRunning: !self.state.timerRunning }); },
+
+      optionRows: optionRows, optCount: optsArr.length,
+      addOption: function(){ var a = self.optsFor(activeKey).slice(); if (a.length < 10) { a.push(''); self.setMap('options', activeKey, a); } },
+      addColor: canAdd ? 'var(--bars-text-muted)' : 'var(--bars-text-muted)', addOpacity: canAdd ? 1 : 0.4,
+
+      keepCards: keepCards, keptCount: keptCount,
+      keepPct: Math.round((Math.min(keptCount,5) / 5) * 100) + '%',
+      keepCountColor: keptCount >= 5 ? 'var(--bars-liminal-glow)' : 'var(--bars-text-secondary)',
+      lockLabel: isDescent
+        ? ('Lock in ' + keptCount + ' · ' + (descent.next === 'ttv' ? 'into Tap the Vein' : 'build the ' + descent.next))
+        : (lastLens ? ('Lock in ' + keptCount + ' & review') : ('Lock in ' + keptCount + ' · next lens')),
+      lockBg: canLock ? 'var(--bars-liminal)' : 'color-mix(in srgb,var(--bars-liminal) 40%,#000)',
+      lockOpacity: canLock ? 1 : 0.5, lockCursor: canLock ? 'pointer' : 'not-allowed',
+
+      wGoWrite: function(){ self.setState({ wPhase:'write' }); self.scroll0(); },
+      wGoOptions: function(){ self.setState({ wPhase:'options' }); self.scroll0(); },
+      wGoKeep: function(){ self.setState({ wPhase:'keep' }); self.scroll0(); },
+      lockNext: function(){ if (self.keptFor(activeKey).length > 0) self.lockLens(false); },
+      parkLens: function(){ self.lockLens(true); },
+
+      yearGoals: yearGoals,
+      saved: s.saved, saveLabel: s.saved ? 'Year frame saved ✓' : 'Save year frame',
+      quarterParents: quarterParents, collapsedDomains: collapsedDomains,
+      lensLegend: LENSES.map(function(l){ return { glyph:l.glyph, name:l.name }; }),
+      lineageRail: lineageRail, weekActions: WEEK_ACTIONS, ttvTasks: ttvTasks,
+      plantLineage: PLANT_LINEAGE,
+      dissChips: ['scattered','stiff','avoidant'].map(chipMk('diss')),
+      satChips: ['grounded','alive','clear'].map(chipMk('sat')),
+      planted: s.planted, notPlanted: !s.planted,
+
+      goVague: function(){ self.go('vague'); },
+      goWorkshop: function(){ self.setState({ screen:'workshop', wLens:0, wPhase:'write', timer:TIMER_TOTAL, timerRunning:true }); self.scroll0(); },
+      goReview: function(){ self.go('review'); },
+      goQuarter: function(){ self.go('quarter'); },
+      goMonth: function(){ self.go('month'); },
+      goWeek: function(){ self.go('week'); },
+      goTtv: function(){ self.go('ttv'); },
+      saveFrame: function(){ self.setState({ saved:true }); },
+      doPlant: function(){ self.setState({ planted:true }); self.scroll0(); },
+      noop: function(){},
+      scrollRef: function(el){ self._scroll = el; },
+    };
+  }
+}
+</script>
+</body>
+</html>
