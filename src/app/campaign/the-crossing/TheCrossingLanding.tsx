@@ -12,13 +12,18 @@ import {
 } from '@/lib/the-crossing-support-moves'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { DeckCardForRole } from '@/components/the-crossing/DeckCardForRole'
-import { DeckPurchaseCTA } from '@/components/launch/DeckPurchaseCTA'
+import { offerByKey, formatPrice } from '@/lib/launch/offers'
 import { getMoveCardById } from '@/lib/allyship-deck/assemble'
 
 const PAGE_BG = 'radial-gradient(120% 50% at 50% -6%, #16121f 0%, #0a0908 46%)'
 const ACTION_PURPLE = '#7c3aed'
 const ACTION_PURPLE_LITE = '#8b5cf6'
 const EASE = 'cubic-bezier(0.16,1,0.3,1)'
+
+// Real deck-digital price from the offer registry — never hardcode (the design
+// prototype's "$22 digital · $65 physical" predates the live SKU; there is no
+// physical-deck SKU, so we show the registry's digital price only).
+const DECK_DIGITAL_PRICE = formatPrice(offerByKey('deck-digital')?.priceCents ?? 1000)
 
 /** Domain gate order + plain-language blurb (organizing layer for the roles). */
 const GATES: { domain: AllyshipDomain; blurb: string }[] = [
@@ -171,10 +176,41 @@ export function TheCrossingLanding() {
           </Link>
         </section>
 
-        {/* ── Buy the full deck ──────────────────────────────────────────── */}
-        <div className="mt-14">
-          <DeckPurchaseCTA blurb="Every path here is one move from the 120-move Allyship Deck. Get the whole deck and you carry a move for every moment — not just this campaign." />
-        </div>
+        {/* ══ Allyship Deck cross-link (gold) ════════════════════════════════ */}
+        <Link
+          href="/deck/sales"
+          className="block"
+          style={{
+            textDecoration: 'none',
+            marginTop: 14,
+            border: '1px solid rgba(212,160,23,.34)',
+            borderRadius: 16,
+            background: 'radial-gradient(130% 120% at 88% -14%, #2a1e06, #160f02 72%)',
+            padding: '20px 22px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+            <span
+              aria-hidden
+              style={{ width: 42, height: 42, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 19, color: '#e0a93b', background: 'rgba(212,160,23,.1)', boxShadow: 'inset 0 0 0 1px rgba(212,160,23,.3)' }}
+            >
+              ♦
+            </span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontFamily: 'var(--bars-font-mono)', fontSize: 9.5, letterSpacing: '.16em', textTransform: 'uppercase', color: '#b09a4e' }}>
+                More moves you can make to help out
+              </div>
+              <div style={{ fontFamily: 'var(--bars-font-display)', fontWeight: 700, fontSize: 17, color: '#f1efe9', marginTop: 3 }}>
+                The Allyship Deck
+              </div>
+              <div style={{ fontFamily: 'var(--bars-font-body)', fontSize: 13.5, lineHeight: 1.45, color: '#bcae8a', marginTop: 3 }}>
+                Draw a card, get one concrete move sized to your real life — ways to show up well beyond this campaign.{' '}
+                <span style={{ color: '#e0a93b' }}>{DECK_DIGITAL_PRICE} digital</span>
+              </div>
+            </div>
+            <span style={{ fontFamily: 'var(--bars-font-mono)', fontSize: 14, color: '#b09a4e', flexShrink: 0 }}>→</span>
+          </div>
+        </Link>
 
         {/* ── /awaken cross-link (water) ─────────────────────────────────── */}
         <Link
