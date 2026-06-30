@@ -17,6 +17,10 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
+import { isLensDomainKey } from '@/lib/lenses/domains'
+import { buildLensGoalSnapshot, resolveLensGoalTrace } from '@/lib/lenses/lineage'
+import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
+import { ACTIVE_TTV_TASK_STATUSES, canCommitTtvTask, nextHistoricalPriorityRank } from '@/lib/tap-the-vein/commit-policy'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
 import { growQuestFromBar } from '@/actions/bars'
 import { ensureTodayLens, personalGardenId } from '@/lib/lenses/ensure'
@@ -49,6 +53,7 @@ async function createBarFromText(
   playerId: string,
   text: string,
   linkTaskId?: string,
+  lineage?: { lensGoalId: string | null; plantSnapshot: LensGoalTrace | null },
 ): Promise<string> {
   const title = text.length <= 80 ? text : text.slice(0, 77) + '...'
   // Attach the BAR to today's lens (LENS first slice; best-effort).
@@ -66,6 +71,8 @@ async function createBarFromText(
         inputs: '[]',
         rootId: 'temp',
         lensId: lens?.id ?? null,
+        lensGoalId: lineage?.lensGoalId ?? null,
+        plantSnapshot: lineage?.plantSnapshot ?? undefined,
         seedMetabolization: TTV_BAR_SEED_METABOLIZATION,
       },
       select: { id: true },
@@ -101,11 +108,18 @@ async function writePlantTriadToBar(
 
 async function ensureBarForTask(
   playerId: string,
-  task: { id: string; barId: string | null; originalText: string },
+  task: { id: string; barId: string | null; originalText: string; lensGoalId?: string | null; attachSnapshot?: unknown },
 ): Promise<string | null> {
   if (task.barId) return task.barId
   try {
-    return await createBarFromText(playerId, task.originalText, task.id)
+    const plantSnapshot = task.lensGoalId
+      ? (await buildLensGoalSnapshot(task.lensGoalId, playerId, 'plant_snapshot')) ?? (await resolveLensGoalTrace({ playerId, attachSnapshot: task.attachSnapshot }))
+      : null
+    if (task.lensGoalId && !plantSnapshot) return null
+    return await createBarFromText(playerId, task.originalText, task.id, {
+      lensGoalId: task.lensGoalId ?? null,
+      plantSnapshot,
+    })
   } catch (e) {
     console.error('[ttv:ensureBarForTask]', e)
     return null
@@ -146,8 +160,21 @@ export type TtvTaskDTO = {
   visibility: string | null
   questId: string | null
   barId: string | null
+  lensGoalId: string | null
+  lensGoalTitle: string | null
+  lensGoalDomain: string | null
+  lensGoalTrace: LensGoalTrace | null
+  priorityRank: number | null
   completedAt: string | null
   createdAt: string
+}
+
+export type TtvLensGoalOption = {
+  id: string
+  title: string
+  domain: string
+  cadence: string
+  parentGoalId: string | null
 }
 
 export type TtvToday = {
@@ -158,6 +185,7 @@ export type TtvToday = {
   wordCount: number
   committedTaskCount: number
   tasks: TtvTaskDTO[]
+  lensGoals: TtvLensGoalOption[]
 }
 
 export type TtvResult<T> = T | { error: string }
@@ -173,6 +201,15 @@ function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length
 }
 
+async function listActiveLensGoals(playerId: string): Promise<TtvLensGoalOption[]> {
+  const goals = await db.lensGoal.findMany({
+    where: { playerId, status: 'active', cadence: { in: ['week', 'month', 'quarter', 'year'] } },
+    orderBy: [{ cadence: 'asc' }, { domain: 'asc' }, { keepOrder: 'asc' }],
+    select: { id: true, title: true, domain: true, cadence: true, parentGoalId: true },
+  })
+  return goals.filter((goal) => isLensDomainKey(goal.domain))
+}
+
 function toTaskDTO(t: {
   id: string
   originalText: string
@@ -184,9 +221,13 @@ function toTaskDTO(t: {
   visibility: string | null
   questId: string | null
   barId: string | null
+  lensGoalId: string | null
+  attachSnapshot?: unknown
+  priorityRank: number | null
   completedAt: Date | null
   createdAt: Date
-}): TtvTaskDTO {
+}, goalById: Map<string, TtvLensGoalOption>, lensGoalTrace: LensGoalTrace | null): TtvTaskDTO {
+  const goal = t.lensGoalId ? goalById.get(t.lensGoalId) : null
   return {
     id: t.id,
     text: t.originalText,
@@ -198,6 +239,11 @@ function toTaskDTO(t: {
     visibility: t.visibility,
     questId: t.questId,
     barId: t.barId,
+    lensGoalId: t.lensGoalId,
+    lensGoalTitle: goal?.title ?? null,
+    lensGoalDomain: goal?.domain ?? null,
+    lensGoalTrace,
+    priorityRank: t.priorityRank,
     completedAt: t.completedAt ? t.completedAt.toISOString() : null,
     createdAt: t.createdAt.toISOString(),
   }
@@ -214,6 +260,9 @@ const TASK_SELECT = {
   visibility: true,
   questId: true,
   barId: true,
+  lensGoalId: true,
+  attachSnapshot: true,
+  priorityRank: true,
   completedAt: true,
   createdAt: true,
 } as const
@@ -233,10 +282,18 @@ async function loadOrCreateSession(playerId: string, sessionDate: Date): Promise
       include: { tasks: { select: TASK_SELECT, orderBy: { createdAt: 'asc' } } },
     }))
 
-  // Carried tasks float to the top, then by creation order.
-  const tasks = session.tasks
-    .map(toTaskDTO)
-    .sort((a, b) => Number(b.isCarried) - Number(a.isCarried))
+  const lensGoals = await listActiveLensGoals(playerId)
+  const goalById = new Map(lensGoals.map((goal) => [goal.id, goal]))
+  const tasks: TtvTaskDTO[] = []
+  for (const task of session.tasks) {
+    const lensGoalTrace = await resolveLensGoalTrace({
+      playerId,
+      lensGoalId: task.lensGoalId,
+      attachSnapshot: task.attachSnapshot,
+    })
+    tasks.push(toTaskDTO(task, goalById, lensGoalTrace))
+  }
+  tasks.sort((a, b) => Number(b.isCarried) - Number(a.isCarried))
 
   return {
     sessionId: session.id,
@@ -246,6 +303,7 @@ async function loadOrCreateSession(playerId: string, sessionDate: Date): Promise
     wordCount: session.wordCount,
     committedTaskCount: session.committedTaskCount,
     tasks,
+    lensGoals,
   }
 }
 
@@ -285,6 +343,7 @@ export async function commitTask(input: {
   lensLevel?: string | null
   lensCategory?: string | null
   lensFaceKey?: string | null
+  lensGoalId?: string | null
 }): Promise<TtvResult<{ task: TtvTaskDTO }>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
@@ -299,37 +358,65 @@ export async function commitTask(input: {
     })
     if (!session) return { error: 'No open session — reload the page' }
 
-    // "Up to 5 tasks/day" — count everything not composted.
-    const liveCount = await db.tapTheVeinTask.count({
-      where: { dailySessionId: session.id, status: { not: 'composted' } },
-    })
-    if (liveCount >= MAX_TASKS_PER_DAY) {
-      return { error: `Daily cap reached (${MAX_TASKS_PER_DAY} tasks). Compost one to make room.` }
+    let lensGoal: { id: string; domain: string; cadence: string } | null = null
+    let attachSnapshot: LensGoalTrace | null = null
+    if (input.lensGoalId) {
+      lensGoal = await db.lensGoal.findFirst({
+        where: { id: input.lensGoalId, playerId: player.id, status: 'active' },
+        select: { id: true, domain: true, cadence: true },
+      })
+      if (!lensGoal) return { error: 'That lens goal is no longer active.' }
+      attachSnapshot = await buildLensGoalSnapshot(lensGoal.id, player.id, 'attach_snapshot')
+      if (!attachSnapshot) return { error: 'That lens goal thread could not be traced. Reattach the task before keeping it.' }
     }
 
-    const created = await db.tapTheVeinTask.create({
-      data: {
-        playerId: player.id,
-        dailySessionId: session.id,
-        originalText: text,
-        source: 'brainstorm',
-        lensLevel: input.lensLevel ?? null,
-        lensCategory: input.lensCategory ?? null,
-        lensFaceKey: input.lensFaceKey ?? null,
-      },
-      select: TASK_SELECT,
+    const created = await db.$transaction(async (tx) => {
+      const liveCount = await tx.tapTheVeinTask.count({
+        where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] } },
+      })
+      if (!canCommitTtvTask(liveCount, MAX_TASKS_PER_DAY)) {
+        throw new Error('TTV_CAP_REACHED')
+      }
+      const maxRank = await tx.tapTheVeinTask.aggregate({
+        where: { dailySessionId: session.id },
+        _max: { priorityRank: true },
+      })
+      const task = await tx.tapTheVeinTask.create({
+        data: {
+          playerId: player.id,
+          dailySessionId: session.id,
+          originalText: text,
+          source: 'brainstorm',
+          lensLevel: lensGoal?.cadence ?? input.lensLevel ?? null,
+          lensCategory: lensGoal?.domain ?? input.lensCategory ?? null,
+          lensFaceKey: input.lensFaceKey ?? null,
+          lensGoalId: lensGoal?.id ?? null,
+          attachSnapshot: attachSnapshot ?? undefined,
+          priorityRank: nextHistoricalPriorityRank(maxRank._max.priorityRank),
+        },
+        select: TASK_SELECT,
+      })
+      await tx.tapTheVeinDailySession.update({
+        where: { id: session.id },
+        data: { committedTaskCount: liveCount + 1 },
+      })
+      return task
     })
 
-    // CGLA H1 (lazy): committing does NOT create a BAR. A task becomes a BAR
-    // only on a deliberate gesture — keep/plant (promoteTaskToBar) or upgrade.
-    await db.tapTheVeinDailySession.update({
-      where: { id: session.id },
-      data: { committedTaskCount: { increment: 1 } },
+    const lensGoals = await listActiveLensGoals(player.id)
+    const goalById = new Map(lensGoals.map((goal) => [goal.id, goal]))
+    const lensGoalTrace = await resolveLensGoalTrace({
+      playerId: player.id,
+      lensGoalId: created.lensGoalId,
+      attachSnapshot: created.attachSnapshot,
     })
 
     revalidatePath('/tap-the-vein')
-    return { task: toTaskDTO(created) }
+    return { task: toTaskDTO(created, goalById, lensGoalTrace) }
   } catch (e) {
+    if (e instanceof Error && e.message === 'TTV_CAP_REACHED') {
+      return { error: `Daily cap reached (${MAX_TASKS_PER_DAY} tasks). Compost one to make room.` }
+    }
     console.error('[ttv:commitTask]', e)
     return { error: 'Failed to commit task' }
   }
@@ -402,7 +489,7 @@ export async function updateTaskStatus(input: {
 
     revalidatePath('/tap-the-vein')
     revalidatePath('/vault')
-    return { task: toTaskDTO(updated) }
+    return { task: toTaskDTO(updated, new Map(), null) }
   } catch (e) {
     console.error('[ttv:updateTaskStatus]', e)
     return { error: 'Failed to update task' }
@@ -427,6 +514,8 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
         lensLevel: true,
         lensCategory: true,
         lensFaceKey: true,
+        lensGoalId: true,
+        attachSnapshot: true,
       },
     })
     if (!task) return { error: 'Task not found' }
@@ -446,6 +535,10 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
         create: { playerId: player.id, sessionDate: tomorrow, rawEntry: '', wordCount: 0 },
         select: { id: true },
       })
+      const maxRank = await tx.tapTheVeinTask.aggregate({
+        where: { dailySessionId: next.id },
+        _max: { priorityRank: true },
+      })
       await tx.tapTheVeinTask.create({
         data: {
           playerId: player.id,
@@ -457,6 +550,9 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
           lensLevel: task.lensLevel,
           lensCategory: task.lensCategory,
           lensFaceKey: task.lensFaceKey,
+          lensGoalId: task.lensGoalId,
+          attachSnapshot: task.attachSnapshot ?? undefined,
+          priorityRank: nextHistoricalPriorityRank(maxRank._max.priorityRank),
         },
       })
       await tx.tapTheVeinTask.update({
@@ -488,7 +584,7 @@ export async function promoteTaskToBar(taskId: string): Promise<TtvResult<{ barI
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: taskId },
-      select: { id: true, playerId: true, barId: true, originalText: true },
+      select: { id: true, playerId: true, barId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
@@ -516,7 +612,7 @@ export async function plantTask(input: {
   experienceIntent: string
   dissatisfaction: string[]
   satisfaction: string[]
-}): Promise<TtvResult<{ barId: string }>> {
+}): Promise<TtvResult<{ barId: string; plantSnapshot: LensGoalTrace | null }>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
 
@@ -528,7 +624,7 @@ export async function plantTask(input: {
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: input.taskId },
-      select: { id: true, playerId: true, barId: true, originalText: true },
+      select: { id: true, playerId: true, barId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
@@ -544,7 +640,8 @@ export async function plantTask(input: {
 
     revalidatePath('/tap-the-vein')
     revalidatePath('/garden')
-    return { barId }
+    const bar = await db.customBar.findFirst({ where: { id: barId, creatorId: player.id }, select: { plantSnapshot: true } })
+    return { barId, plantSnapshot: bar?.plantSnapshot && typeof bar.plantSnapshot === 'object' ? (bar.plantSnapshot as LensGoalTrace) : null }
   } catch (e) {
     console.error('[ttv:plantTask]', e)
     return { error: 'Failed to plant task' }
@@ -563,7 +660,7 @@ export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ ta
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: taskId },
-      select: { id: true, playerId: true, status: true, barId: true, originalText: true },
+      select: { id: true, playerId: true, status: true, barId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
@@ -587,7 +684,7 @@ export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ ta
       select: TASK_SELECT,
     })
     revalidatePath('/tap-the-vein')
-    return { task: toTaskDTO(updated) }
+    return { task: toTaskDTO(updated, new Map(), null) }
   } catch (e) {
     console.error('[ttv:upgradeTaskToQuest]', e)
     return { error: 'Failed to upgrade task' }

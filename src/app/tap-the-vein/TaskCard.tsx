@@ -21,6 +21,7 @@ import Link from 'next/link'
 import { CultivationCard, type ElementKey, type AlchemyAltitude } from '@/components/ui/CultivationCard'
 import { ELEMENT_TOKENS, type CardStage } from '@/lib/ui/card-tokens'
 import type { TtvTaskDTO } from '@/actions/tap-the-vein'
+import { lensTraceSourceLabel } from '@/lib/lenses/lineage-types'
 
 type StatusStyle = {
   altitude: AlchemyAltitude
@@ -52,6 +53,29 @@ const REASON_LABEL: Record<string, string> = {
 const mono = 'var(--bars-font-mono)'
 const display = 'var(--bars-font-display)'
 const body = 'var(--bars-font-body)'
+
+function LensTrace({ task }: { task: TtvTaskDTO }) {
+  const trace = task.lensGoalTrace
+  if (!trace) {
+    if (!task.lensGoalTitle || !task.lensGoalDomain) return null
+    return (
+      <p className="mt-1" style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.08em', color: 'var(--bars-text-muted)' }}>
+        lens · {task.lensGoalDomain}: {task.lensGoalTitle}
+      </p>
+    )
+  }
+  const path = [...trace.parentChain].reverse().map((node) => node.title).concat(trace.goal.title)
+  return (
+    <div className="mt-2 rounded-lg" style={{ padding: '7px 8px', background: 'color-mix(in srgb, var(--bars-liminal) 8%, transparent)', boxShadow: 'inset 0 0 0 1px var(--bars-line)' }}>
+      <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bars-liminal)', margin: 0 }}>
+        {lensTraceSourceLabel(trace.source)} · {trace.goal.domain}
+      </p>
+      <p className="truncate" style={{ fontFamily: body, fontSize: 11.5, color: 'var(--bars-text-secondary)', margin: '3px 0 0' }}>
+        {path.join(' → ')}
+      </p>
+    </div>
+  )
+}
 
 export function TaskCard({
   task,
@@ -145,6 +169,8 @@ export function TaskCard({
           >
             {task.text}
           </p>
+
+          <LensTrace task={task} />
 
           {task.status === 'completed' && (
             <p className="mt-1" style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.08em', color: gem }}>

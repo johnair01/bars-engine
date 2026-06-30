@@ -29,6 +29,7 @@ import {
 } from '@/actions/tap-the-vein'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import type { ElementKey } from '@/lib/ui/card-tokens'
+import { lensTraceSourceLabel, type LensGoalTrace } from '@/lib/lenses/lineage-types'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { TaskCard } from './TaskCard'
@@ -65,7 +66,9 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
 
   const [rawEntry, setRawEntry] = useState(initial.rawEntry)
   const [draft, setDraft] = useState('')
+  const [lensGoalId, setLensGoalId] = useState(initial.lensGoals[0]?.id ?? '')
   const [menuTask, setMenuTask] = useState<TtvTaskDTO | null>(null)
+  const [plantedTrace, setPlantedTrace] = useState<LensGoalTrace | null>(null)
 
   const sealed = initial.status === 'sealed'
   const [phase, setPhase] = useState<Phase>(() => {
@@ -81,6 +84,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
 
   const run = <T,>(fn: () => Promise<T | { error: string }>, after?: () => void) => {
     setError(null)
+    setPlantedTrace(null)
     startTransition(async () => {
       const res = await fn()
       if (res && typeof res === 'object' && 'error' in res) {
@@ -112,6 +116,9 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               experienceIntent: a.experienceIntent,
               dissatisfaction: a.dissatisfaction,
               satisfaction: a.satisfaction,
+            }).then((res) => {
+              if (!('error' in res)) setPlantedTrace(res.plantSnapshot ?? null)
+              return res
             })
           case 'upgrade':
             return upgradeTaskToQuest(id)
@@ -160,6 +167,17 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
           <p style={{ fontFamily: body, fontSize: 13, color: '#e05c2e', marginBottom: 10 }}>{error}</p>
         )}
 
+        {plantedTrace && (
+          <div style={{ marginBottom: 10, padding: '10px 12px', borderRadius: 12, background: 'color-mix(in srgb, var(--bars-liminal) 12%, transparent)', boxShadow: 'inset 0 0 0 1px var(--bars-line)' }}>
+            <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bars-liminal)', margin: 0 }}>
+              BAR planted · {lensTraceSourceLabel(plantedTrace.source)}
+            </p>
+            <p style={{ fontFamily: body, fontSize: 12.5, color: 'var(--bars-text-secondary)', margin: '4px 0 0' }}>
+              {[...plantedTrace.parentChain].reverse().map((node) => node.title).concat(plantedTrace.goal.title).join(' → ')}
+            </p>
+          </div>
+        )}
+
         {/* Phase content */}
         <main className="flex-1 flex flex-col" style={{ minHeight: 0 }}>
           {phase === 'open' && (
@@ -186,6 +204,9 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               rawEntry={rawEntry}
               draft={draft}
               setDraft={setDraft}
+              lensGoalId={lensGoalId}
+              setLensGoalId={setLensGoalId}
+              lensGoals={initial.lensGoals}
               liveTasks={liveTasks}
               element={element}
               nationName={nationName}
@@ -193,7 +214,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               onCommit={() =>
                 run(
                   async () => {
-                    const r = await commitTask({ text: draft })
+                    const r = await commitTask({ text: draft, lensGoalId: lensGoalId || null })
                     return r
                   },
                   () => setDraft(''),
@@ -411,6 +432,9 @@ function CommitPhase({
   rawEntry,
   draft,
   setDraft,
+  lensGoalId,
+  setLensGoalId,
+  lensGoals,
   liveTasks,
   element,
   nationName,
@@ -421,6 +445,9 @@ function CommitPhase({
   rawEntry: string
   draft: string
   setDraft: (s: string) => void
+  lensGoalId: string
+  setLensGoalId: (s: string) => void
+  lensGoals: TtvToday['lensGoals']
   liveTasks: TtvTaskDTO[]
   element: ElementKey
   nationName: string | null
@@ -465,9 +492,36 @@ function CommitPhase({
         </div>
       )}
 
+      {lensGoals.length > 0 && !atCap && (
+        <select
+          value={lensGoalId}
+          onChange={(e) => setLensGoalId(e.target.value)}
+          style={{
+            marginTop: 14,
+            width: '100%',
+            minHeight: 42,
+            border: '1px solid var(--bars-line)',
+            borderRadius: 8,
+            background: 'var(--bars-surface-card)',
+            padding: '0 10px',
+            fontFamily: body,
+            fontSize: 12.5,
+            color: 'var(--bars-text-primary)',
+            outline: 'none',
+          }}
+        >
+          <option value="">No Lens goal attached</option>
+          {lensGoals.map((goal) => (
+            <option key={goal.id} value={goal.id}>
+              {goal.domain} / {goal.cadence}: {goal.title}
+            </option>
+          ))}
+        </select>
+      )}
+
       {/* Compose */}
       {!atCap && (
-        <div className="flex items-center gap-2" style={{ marginTop: 14 }}>
+        <div className="flex items-center gap-2" style={{ marginTop: 10 }}>
           <span
             className="flex-none flex items-center justify-center rounded-lg"
             style={{ width: 38, height: 38, background: `color-mix(in srgb, ${gem} 14%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${gem} 45%, transparent)`, color: gem, fontSize: 16 }}
