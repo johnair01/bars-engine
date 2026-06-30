@@ -6,6 +6,7 @@
 @import "../styles/cultivation-cards.css";
 @import "../styles/event-page.css";
 @import "../styles/promise-forge.css";
+@import "../styles/superpower-quiz.css";
 
 :root {
   --background: #ffffff;

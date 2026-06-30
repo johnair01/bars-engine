@@ -1,0 +1,39 @@
+/*
+ * Superpower Quiz / `/superpower` route — motion + interaction chrome.
+ * Recreated from design_handoff_superpower_route. All motion honors
+ * prefers-reduced-motion (project convention). Visual values come from
+ * the BARS Engine design tokens; these are only keyframes + interaction states.
+ */
+
+@keyframes sp-rise {
+  from { transform: translateY(9px); }
+  to   { transform: none; }
+}
+@keyframes sp-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+/* Question card / result block entry — transform only (never animate to opacity:0). */
+.sp-rise      { animation: sp-rise .42s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.sp-rise-slow { animation: sp-rise .5s  cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* The reveal's element sigil idle-float. */
+.sp-float { animation: sp-float 5.5s ease-in-out infinite; }
+
+/* Option buttons — hover brightens the hairline, press shrinks. */
+.sp-opt {
+  transition: border-color .2s ease, background .2s ease, transform .08s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.sp-opt:hover { border-color: var(--bars-line-strong) !important; background: rgba(255, 255, 255, 0.025) !important; }
+.sp-opt:active { transform: scale(0.985); }
+
+/* Ghost mono buttons (Back / Retake). */
+.sp-ghost { transition: color .2s ease; }
+.sp-ghost:hover { color: var(--bars-text-primary) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-rise, .sp-rise-slow, .sp-float { animation: none !important; }
+  .sp-opt:active { transform: none; }
+}
