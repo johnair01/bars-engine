@@ -8,11 +8,11 @@
 - [x] **T1.5** Gate: `npm run build` + `npm run check` (lint + tsc verified for P1 files in offline env).
 
 ## Phase 2 — "Your move" surfacing
-- [ ] **T2.1** `types.ts`: add `action?: string` to `MoveCard`.
-- [ ] **T2.2** `assemble.ts`: set `action: sub.action` in `buildMoveCards()` generated object.
-- [ ] **T2.3** `AllyshipCard.tsx`: distinct "Your move · Do this" element (full view).
-- [ ] **T2.4** `seed.ts`: fold `card.action` into BAR description (guarded), both branches; update seed tests.
-- [ ] **T2.5** Gate: `npm run deck:assemble` → **commit `public/allyship-deck/allyship-deck.json`** → build → check.
+- [x] **T2.1** `types.ts`: add `action?: string` to `MoveCard`.
+- [x] **T2.2** `assemble.ts`: set `action: sub.action` in `buildMoveCards()` generated object.
+- [x] **T2.3** `AllyshipCard.tsx`: distinct "Your move" inset (full view).
+- [x] **T2.4** `seed.ts`: lead BAR description with `card.action` (guarded), both branches; updated seed.test.ts (translate.test.ts fixture has no action — unaffected).
+- [x] **T2.5** Gate: `npm run deck:assemble` → committed JSON → eslint clean + tsc baseline + node tests pass (full build/check runs in CI — Prisma engine blocked offline).
 
 ## Phase 3 — Applications (authored baseline)
 - [ ] **T3.1** `types.ts`: add `applications?: { context: string; example: string }[]`.
