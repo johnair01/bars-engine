@@ -110,6 +110,7 @@ model Player {
   barShareExternalsSent          BarShareExternal[]          @relation("BarShareExternalsSent")
   barSharesSent                  BarShare[]                  @relation("BarSharesSent")
   barSharesReceived              BarShare[]                  @relation("BarSharesReceived")
+  promiseRequestsSent            PromiseRequest[]            @relation("PromiseRequestsSent")
   barTopics                      BarTopic[]
   blessedObjectsEarned           BlessedObjectEarned[]
   bookAnalysisResumeLogs         BookAnalysisResumeLog[]
@@ -378,6 +379,13 @@ model CustomBar {
   contextLines                         String?
   /// BSM (BAR Seed Metabolization): JSON { soilKind?, contextNote?, maturity?, compostedAt?, releaseNote? }
   seedMetabolization                   String?
+  /// PMF (Promise Move Forge): JSON payload for a type='promise_move' BAR —
+  /// scope, standardOfCare, boundary, repair, consentAsk, delivery
+  /// (proximity/channels/name/handle), skillLevel, exampleEncounters,
+  /// reservations, availability, and free-text unpacking answers (q3/q5).
+  /// First-class fields (title/description/experienceIntent/satisfaction/
+  /// dissatisfaction/hexagramId/gardenId/status/visibility) live in columns.
+  promiseMove                          String?
   /// BSCW: canvas layout JSON for seed capture whiteboard { items: CanvasItem[] }
   canvasLayout                         String?
   isExemplar                           Boolean                @default(false)
@@ -391,6 +399,7 @@ model CustomBar {
   responses                            BarResponse[]
   shareExternals                       BarShareExternal[]
   shares                               BarShare[]
+  promiseRequests                      PromiseRequest[]       @relation("PromiseMoveRequests")
   socialLinks                          BarSocialLink[]
   topicAssignments                     BarTopicAssignment[]
   bountyStakes                         BountyStake[]
@@ -939,6 +948,32 @@ model BarShareExternal {
   @@index([fromUserId, createdAt])
   @@index([expiresAt])
   @@map("bar_share_externals")
+}
+
+/// PMF (Promise Move Forge): a request to receive a published Promise Move.
+/// Consent-forward — the owner is asked before anything happens, so each ask
+/// carries its own consent state. requesterId is null for anonymous/email asks
+/// arriving via a public share link; shareToken records which link it came from.
+model PromiseRequest {
+  id             String    @id @default(cuid())
+  barId          String
+  requesterId    String?
+  requesterName  String?
+  requesterEmail String?
+  note           String?
+  /// pending | accepted | declined | withdrawn
+  status         String    @default("pending")
+  /// awaiting | granted | refused — the consent handshake with the owner
+  consentState   String    @default("awaiting")
+  shareToken     String?
+  createdAt      DateTime  @default(now())
+  respondedAt    DateTime?
+  bar            CustomBar @relation("PromiseMoveRequests", fields: [barId], references: [id], onDelete: Cascade)
+  requester      Player?   @relation("PromiseRequestsSent", fields: [requesterId], references: [id])
+
+  @@index([barId, createdAt])
+  @@index([requesterId, createdAt])
+  @@map("promise_requests")
 }
 
 /// Master of Friendship: High-trust phone-based invitations using friendship deck cards
