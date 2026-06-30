@@ -56,11 +56,14 @@ export function buildDeckSeed(
   const question = subject === 'campaign' ? card.campaignQuestion : card.primaryQuestion
   const { superpower, orientation } = opts
 
+  // "Your move" — the one concrete step leads the BAR when present.
+  const move = card.action ? `Your move: ${card.action}\n\n` : ''
+
   // Backward-compatible: no lens → original behavior unchanged.
   if (!superpower || !orientation) {
     return {
       title: card.title,
-      description: `The practice: ${card.remediation}\n\n${question}`,
+      description: `${move}The practice: ${card.remediation}\n\n${question}`,
       rootId: `deck_${card.id}`,
       provenance: {
         sourceType: 'deck_card',
@@ -79,7 +82,7 @@ export function buildDeckSeed(
   return {
     title: card.title,
     description:
-      `The practice: ${card.remediation}\n\n${question}\n\n` +
+      `${move}The practice: ${card.remediation}\n\n${question}\n\n` +
       `Through your ${superpower} (${orientation}) lens: ${t.prompt}\n` +
       `Artifact: ${t.suggestedArtifact}`,
     rootId: `deck_${card.id}_${superpower}_${orientation}`,
