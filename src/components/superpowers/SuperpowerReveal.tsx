@@ -13,6 +13,7 @@
 import Link from 'next/link'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { SUPERPOWER_DEFS } from '@/lib/superpowers/types'
+import { arcAnchorElement } from '@/lib/superpowers/arc'
 import type { SuperpowerRoutingResult } from '@/lib/superpowers/routing'
 import type { ResultCopy } from '@/lib/superpowers/quiz/descriptions'
 
@@ -33,8 +34,10 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-5">
-      {/* Primary result card — element = superpower channel, altitude = confidence */}
-      <CultivationCard element={primaryDef.channel} altitude={routing.confident ? 'satisfied' : 'neutral'} stage="growing">
+      {/* Primary result card — frame uses the arc's neutral anchor element (a
+          superpower is not a single element; identity color is its accent — ADR 0002).
+          altitude = confidence. */}
+      <CultivationCard element={arcAnchorElement(primaryDef.arc)} altitude={routing.confident ? 'satisfied' : 'neutral'} stage="growing">
         <div className="space-y-3 p-4">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-lg font-bold tracking-tight">{primaryDef.label}</h2>
