@@ -26,6 +26,7 @@ import type { ElementKey, CardAltitude, CardStage } from '@/lib/ui/card-tokens'
 import type { AlchemyAltitude } from '@/lib/alchemy/types'
 import { BARN_WALLS } from '@/lib/event/barn-raising'
 import { SUPERPOWERS, SUPERPOWER_DEFS, type Superpower } from '@/lib/superpowers/types'
+import { arcAnchorElement, superpowerAccentCss } from '@/lib/superpowers/arc'
 
 /** The hand-authored launch SKUs (book, deck, handbook, subscription, bundles). */
 export type CoreOfferKey =
@@ -84,6 +85,13 @@ export interface LaunchOffer {
   stage: CardStage
   /** Hero treatment — alchemical moment + idle float (bundle only). */
   hero?: boolean
+  /**
+   * Superpower-pack identity accent (a non-Wuxing hue/gradient; ADR 0002). When
+   * present, the pack card's identity color comes from here — NOT from `element`
+   * (which, for packs, is only the arc's neutral anchor frame). Lets the seven
+   * packs read distinctly instead of collapsing onto five element colors.
+   */
+  accent?: string
 }
 
 // Gumroad URLs — referenced statically so Next.js can inline NEXT_PUBLIC_* at build.
@@ -219,8 +227,10 @@ const PACK_PRICE_CENTS = 800
 /**
  * The seven superpower expansion packs, generated from `SUPERPOWER_DEFS` so the
  * catalog can never drift from the canonical superpower set (incl. Coach — every
- * superpower has a purchasable pack; no second-class loadout slot). Element is the
- * superpower's own channel (semantic, never decorative — UI_COVENANT Law 9).
+ * superpower has a purchasable pack; no second-class loadout slot). A superpower
+ * is an arc, not a single Wuxing channel (ADR 0002): identity color comes from
+ * `accent` (its own non-element hue), while `element` is only the arc's neutral
+ * anchor frame — so the seven packs no longer collapse onto five element colors.
  */
 const SUPERPOWER_PACK_OFFERS: readonly LaunchOffer[] = SUPERPOWERS.map((sp) => {
   const def = SUPERPOWER_DEFS[sp]
@@ -237,7 +247,8 @@ const SUPERPOWER_PACK_OFFERS: readonly LaunchOffer[] = SUPERPOWERS.map((sp) => {
     priceCents: PACK_PRICE_CENTS,
     gumroadUrl: GUMROAD_PACKS[sp],
     cta: 'Buy',
-    element: def.channel as ElementKey,
+    element: arcAnchorElement(def.arc),
+    accent: superpowerAccentCss(def.arc, def.accentOverride),
     altitude: 'neutral',
     stage: 'growing',
   }
