@@ -1,0 +1,15 @@
+{
+  "name": "Inner Garden — Taoist Cultivation",
+  "engine": "canvas-2d",
+  "version": "0.2.0",
+  "description": "Personal development game where real-life emotions become seeds planted in an inner garden. A Rune Factory-style farming game meets Taoist inner alchemy.",
+  "features": [
+    "Real-life emotion journaling",
+    "Seed crystallization from emotional energy",
+    "5-stage crop growth system",
+    "6 cultivation tiers (Mortal → Immortal)",
+    "Day/night cycle with 4 seasons",
+    "9 quests across 3 chapters",
+    "NPC conversations with guidance"
+  ]
+}

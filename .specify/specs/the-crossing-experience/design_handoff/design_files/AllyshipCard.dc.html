@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+</helmet>
+
+<div style="{{ wrapStyle }}">
+
+  <!-- ══ COLLAPSED STRIP ══ -->
+  <sc-if value="{{ collapsed }}" hint-placeholder-val="">
+    <button onClick="{{ onToggle }}" aria-expanded="false" aria-label="{{ expandAria }}" style="width:100%;display:flex;align-items:stretch;gap:0;background:linear-gradient(100deg,var(--cgf),var(--cgt) 78%);border:1.5px solid var(--cframe);border-radius:13px;overflow:hidden;cursor:pointer;text-align:left;padding:0;-webkit-tap-highlight-color:transparent;box-shadow:0 10px 24px -18px rgba(0,0,0,.9);opacity:{{ stripOpacity }};">
+      <span aria-hidden="true" style="width:4px;flex-shrink:0;background:linear-gradient(var(--cgem),var(--cframe));"></span>
+      <span style="display:flex;align-items:center;gap:11px;padding:11px 13px;flex:1;min-width:0;">
+        <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;flex-shrink:0;border-radius:50%;color:var(--cgem);background:var(--gem16);box-shadow:inset 0 0 0 1px var(--gem50);">{{ movePip }}</span>
+        <span style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;">
+          <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:14.5px;line-height:1.15;color:#f1efe9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ card.title }}</span>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:#cdb86a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ stripSub }}</span>
+        </span>
+        <span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+          <span style="font-family:'Space Mono',monospace;font-weight:700;font-size:13px;color:#f1efe9;white-space:nowrap;">{{ mod.ask }}</span>
+          <span aria-hidden="true" style="font-family:'Space Mono',monospace;font-size:10px;color:#8c8a83;">▾ open</span>
+        </span>
+      </span>
+    </button>
+  </sc-if>
+
+  <!-- ══ EXPANDED POKER CARD (5:7) ══ -->
+  <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+    <div style="position:relative;width:100%;aspect-ratio:5 / 7;border-radius:16px;overflow:hidden;border:2px solid var(--cgold);background:radial-gradient(120% 90% at 80% 6%,var(--cgf),var(--cgt) 60%);box-shadow:0 22px 46px -22px rgba(0,0,0,.92),0 0 30px -16px var(--cglow);display:flex;flex-direction:column;">
+
+      <!-- sigil watermark -->
+      <div aria-hidden="true" style="position:absolute;right:-16%;bottom:-12%;color:var(--gem9);pointer-events:none;line-height:0;">{{ watermark }}</div>
+
+      <!-- title banner (title crowns) -->
+      <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:12px 14px 9px;border-bottom:1px solid var(--gem16);">
+        <h3 style="margin:0;font-family:'Jost',sans-serif;font-weight:700;font-size:24px;line-height:1.0;letter-spacing:-.015em;color:#fff;text-wrap:balance;">{{ card.title }}</h3>
+        <sc-if value="{{ collapsible }}" hint-placeholder-val="">
+          <button onClick="{{ onToggle }}" aria-label="Collapse card" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1px solid var(--gem40);background:rgba(0,0,0,.22);color:#cdb86a;font-family:'Space Mono',monospace;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">▴</button>
+        </sc-if>
+      </div>
+
+      <!-- move + face row -->
+      <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;padding:10px 16px 0;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+          <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;border-radius:50%;color:#fff;background:linear-gradient(150deg,var(--cgem),var(--cframe));box-shadow:0 4px 12px -5px #000,inset 0 1px 0 rgba(255,255,255,.18);">{{ movePip }}</span>
+          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cgem);">{{ card.moveLabel }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+          <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:33px;height:33px;border-radius:10px;color:var(--cgem);background:rgba(0,0,0,.34);border:1px solid var(--gem45);">{{ faceBadge }}</span>
+          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#cdcbc4;">{{ card.faceLabel }}</span>
+        </div>
+      </div>
+
+      <!-- body -->
+      <div style="position:relative;flex:1;display:flex;flex-direction:column;gap:8px;padding:12px 16px 0;min-height:0;">
+        <p style="margin:0;font-family:'Nunito',sans-serif;font-style:italic;font-size:12px;line-height:1.42;color:var(--txt62);">{{ card.q }}</p>
+
+        <!-- ── superpower modifier foil ── -->
+        <div style="border-radius:11px;border:1px solid rgba(201,168,76,.42);background:linear-gradient(150deg,rgba(201,168,76,.13),rgba(201,168,76,.025));box-shadow:inset 0 1px 0 rgba(255,235,170,.12);padding:10px 10px;display:flex;flex-direction:column;gap:7px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;border-radius:50%;color:#1a1206;background:linear-gradient(150deg,#e8c878,#c9a84c);">{{ modGlyph }}</span>
+            <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:#e0c878;flex:1;min-width:0;">{{ modLabel }}</span>
+            <sc-if value="{{ statusBadge }}" hint-placeholder-val="">
+              <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--cgem);background:var(--gem16);border:1px solid var(--gem45);border-radius:99px;padding:2px 7px;white-space:nowrap;">{{ statusBadge }}</span>
+            </sc-if>
+          </div>
+          <p style="margin:0;font-family:'Nunito',sans-serif;font-weight:700;font-size:14px;line-height:1.34;color:#f4ecd8;text-wrap:pretty;">{{ mod.contribution }}</p>
+          <div style="display:flex;gap:7px;align-items:baseline;">
+            <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#b09a5e;flex-shrink:0;">Make</span>
+            <span style="font-family:'Nunito',sans-serif;font-size:11px;line-height:1.4;color:#cdbf9a;text-wrap:pretty;">{{ mod.artifact }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- footer: domain + collector | ask + yield -->
+      <div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 16px;border-top:1px solid var(--gem14);">
+        <span style="display:flex;align-items:center;gap:7px;min-width:0;">
+          <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;border-radius:50%;border:1px solid rgba(201,168,76,.5);color:#c9a84c;">{{ domainGlyph }}</span>
+          <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt42);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ collector }}</span>
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#f3eee0;">
+          <span style="color:#c9a84c;">♦</span>{{ card.yield }}
+        </span>
+      </div>
+
+      <!-- action bar -->
+      <div style="position:relative;padding:0 12px 12px;">
+        <sc-if value="{{ isMine }}" hint-placeholder-val="">
+          <div style="display:flex;gap:8px;">
+            <button onClick="{{ onRelease }}" disabled="{{ pending }}" style="flex-shrink:0;font-family:'Jost',sans-serif;font-weight:600;font-size:12.5px;color:#bdbbb4;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:9px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Release</button>
+            <button onClick="{{ onComplete }}" disabled="{{ pending }}" style="flex:1;font-family:'Jost',sans-serif;font-weight:700;font-size:13.5px;color:#10160d;background:linear-gradient(150deg,var(--gemLite),var(--cgem));border:none;border-radius:9px;padding:10px 13px;cursor:pointer;box-shadow:0 6px 16px -8px var(--cglow);-webkit-tap-highlight-color:transparent;">{{ primaryLabel }}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isClaimable }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ onClaim }}" disabled="{{ pending }}" style="width:100%;font-family:'Jost',sans-serif;font-weight:700;font-size:13.5px;color:#f1efe9;background:var(--gem18d);border:1px solid var(--gem60);border-radius:9px;padding:10px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent;">{{ primaryLabel }}</button>
+        </sc-if>
+        <sc-if value="{{ isSignedOut }}" hint-placeholder-val="">
+          <button onClick="{{ onClaim }}" style="width:100%;font-family:'Jost',sans-serif;font-weight:600;font-size:12.5px;color:#cdb86a;background:transparent;border:1px dashed rgba(201,168,76,.5);border-radius:9px;padding:10px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Sign in to claim</button>
+        </sc-if>
+        <sc-if value="{{ isTaken }}" hint-placeholder-val="">
+          <div style="text-align:center;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8c8a83;padding:9px 0 4px;">Someone's on this</div>
+        </sc-if>
+        <sc-if value="{{ isDone }}" hint-placeholder-val="">
+          <div style="display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 0 4px;">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:10px;color:#10160d;background:var(--cgem);">✓</span>
+            <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--cgem);">Logged — thank you</span>
+          </div>
+        </sc-if>
+      </div>
+
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:470},&quot;card&quot;:{&quot;editor&quot;:null,&quot;default&quot;:{&quot;id&quot;:&quot;WAKE-GR-DIPLOMAT&quot;,&quot;num&quot;:&quot;005&quot;,&quot;title&quot;:&quot;Who Holds the Purse&quot;,&quot;move&quot;:&quot;wake&quot;,&quot;moveLabel&quot;:&quot;Wake Up&quot;,&quot;face&quot;:&quot;diplomat&quot;,&quot;faceLabel&quot;:&quot;Diplomat&quot;,&quot;el&quot;:&quot;earth&quot;,&quot;domain&quot;:&quot;gather&quot;,&quot;domainLabel&quot;:&quot;Gather Resources&quot;,&quot;q&quot;:&quot;Whose resources, trust, or permission actually shape this?&quot;,&quot;yield&quot;:2},&quot;tsType&quot;:&quot;any&quot;},&quot;mod&quot;:{&quot;editor&quot;:null,&quot;default&quot;:{&quot;spKey&quot;:&quot;connector&quot;,&quot;spLabel&quot;:&quot;Connector&quot;,&quot;contribution&quot;:&quot;Broker a warm intro to someone who funds adaptive vehicles.&quot;,&quot;artifact&quot;:&quot;A warm intro email + one line of context.&quot;,&quot;ask&quot;:&quot;1 intro&quot;},&quot;tsType&quot;:&quot;any&quot;},&quot;status&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;open&quot;,&quot;mine&quot;,&quot;taken&quot;,&quot;done&quot;,&quot;signedout&quot;],&quot;default&quot;:&quot;mine&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;collapsible&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;defaultExpanded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;pending&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  EL = {
+    fire:   { gf:'#431407', gt:'#1c0700', glow:'#e8671a', gem:'#e74c3c', frame:'#c1392b' },
+    water:  { gf:'#0c1e3e', gt:'#020c1f', glow:'#1a7a8a', gem:'#3a93c8', frame:'#1a3a5c' },
+    wood:   { gf:'#052e16', gt:'#011309', glow:'#27ae60', gem:'#2ecc71', frame:'#4a7c59' },
+    earth:  { gf:'#451a03', gt:'#1a0a00', glow:'#d4a017', gem:'#e0a93b', frame:'#b5651d' },
+    metal:  { gf:'#1e2530', gt:'#0d1017', glow:'#bdc3c7', gem:'#bdc3c7', frame:'#8e9aab' },
+    liminal:{ gf:'#2a2150', gt:'#140e2a', glow:'#7c3aed', gem:'#a855f7', frame:'#6d52c9' },
+  };
+  MOVE = {
+    wake:[{d:'M12 46 L52 46'},{d:'M22 46 A10 10 0 0 1 42 46'},{d:'M32 21 L32 13'},{d:'M46 26 L51 21'},{d:'M18 26 L13 21'}],
+    clean:[{d:'M30 14 L34 26 L46 30 L34 34 L30 46 L26 34 L14 30 L26 26 Z'},{d:'M47 16 L49 21 L54 23 L49 25 L47 30 L45 25 L40 23 L45 21 Z'}],
+    grow:[{d:'M32 52 L32 28'},{d:'M32 34 C22 34 18 26 18 17 C28 17 32 25 32 34 Z'},{d:'M32 30 C42 30 46 23 46 15 C36 15 32 22 32 30 Z'},{d:'M21 54 L43 54'}],
+    show:[{d:'M16 54 L16 24 Q32 9 48 24 L48 54'},{t:'circle',cx:32,cy:29,r:5},{d:'M24 54 L25.5 40 Q32 34 38.5 40 L40 54'}],
+    open:[{d:'M27 16 Q15 32 27 48'},{d:'M37 16 Q49 32 37 48'},{t:'circle',cx:32,cy:36,r:3.2},{d:'M32 28 L32 22'},{d:'M25.5 31 L21 27'},{d:'M38.5 31 L43 27'}],
+  };
+  FACE = {
+    shaman:[{d:'M15 33 Q32 53 49 33'},{d:'M32 44 L32 53'},{d:'M23 57 L41 57'},{t:'circle',cx:32,cy:19,r:4.2},{d:'M32 8 L32 12.5'},{d:'M21.5 13 L24.5 16'},{d:'M42.5 13 L39.5 16'}],
+    challenger:[{d:'M32 9 L50 16 L50 32 Q50 48 32 56 Q14 48 14 32 L14 16 Z'},{d:'M32 19 L32 45'},{d:'M23 26 L41 26'}],
+    regent:[{d:'M13 47 L15 21 L26 32 L32 15 L38 32 L49 21 L51 47 Z'},{d:'M13 47 L51 47'},{t:'circle',cx:32,cy:27,r:2.2}],
+    architect:[{t:'circle',cx:32,cy:14,r:3.4},{d:'M32 17 L20 50'},{d:'M32 17 L44 50'},{d:'M24.5 41 Q32 47 39.5 41'},{d:'M15 50 L49 50'}],
+    diplomat:[{t:'circle',cx:25,cy:32,r:12},{t:'circle',cx:39,cy:32,r:12}],
+    sage:[{d:'M32 11 L53 49 L11 49 Z'},{d:'M21 40 Q32 31 43 40 Q32 47 21 40 Z'},{t:'circle',cx:32,cy:40,r:3}],
+  };
+  DOMAIN = {
+    gather:[{d:'M16 24 L48 24 L43 46 Q32 52 21 46 Z'}],
+    aware:[{d:'M32 14 L46 44 L18 44 Z'},{d:'M32 8 L32 14'}],
+    direct:[{d:'M32 12 L48 19 L48 33 Q48 46 32 52 Q16 46 16 33 L16 19 Z'}],
+    organize:[{d:'M20 20 L44 20 L44 44 L20 44 Z'},{d:'M20 20 L44 44'},{d:'M44 20 L20 44'}],
+  };
+  SP_GLYPH = { connector:'diplomat', storyteller:'shaman', strategist:'architect', disruptor:'challenger', alchemist:'clean', coach:'regent', escape_artist:'open' };
+
+  state = { expanded: null };
+
+  _rgb(h) { const n = parseInt(h.slice(1), 16); return [(n>>16)&255, (n>>8)&255, n&255]; }
+  rgba(h, a) { const [r,g,b] = this._rgb(h); return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+  mix(h1, h2, t) { const a = this._rgb(h1), b = this._rgb(h2); const m = i => Math.round(a[i]*t + b[i]*(1-t)); return 'rgb(' + m(0) + ',' + m(1) + ',' + m(2) + ')'; }
+
+  glyph(defs, o) {
+    o = o || {};
+    const kids = (defs || []).map((p, i) => p.t === 'circle'
+      ? React.createElement('circle', { key:i, cx:p.cx, cy:p.cy, r:p.r, fill:p.f ? 'currentColor' : 'none', stroke:p.f ? 'none' : 'currentColor' })
+      : React.createElement('path', { key:i, d:p.d, fill:p.f ? 'currentColor' : 'none' }));
+    return React.createElement('svg', {
+      width:o.size||20, height:o.size||20, viewBox:'0 0 64 64', fill:'none', stroke:'currentColor',
+      strokeWidth:o.sw||2.6, strokeLinecap:'round', strokeLinejoin:'round', style:o.style||null,
+    }, kids);
+  }
+  glyphFor(map, key, o) { return this.glyph((map[key]) || [], o); }
+
+  SAMPLE_CARD = { id:'WAKE-GR-DIPLOMAT', num:'005', title:'Who Holds the Purse', move:'wake', moveLabel:'Wake Up', face:'diplomat', faceLabel:'Diplomat', el:'earth', domain:'gather', domainLabel:'Gather Resources', q:'Whose resources, trust, or permission actually shape this?', yield:2 };
+  SAMPLE_MOD = { spKey:'connector', spLabel:'Connector', contribution:'Broker a warm intro to someone who funds adaptive vehicles.', artifact:'A warm intro email + one line of context.', ask:'1 intro' };
+
+  renderVals() {
+    const card = this.props.card || this.SAMPLE_CARD;
+    const mod = this.props.mod || this.SAMPLE_MOD;
+    const status = this.props.status || 'mine';
+    const collapsible = this.props.collapsible !== false;
+    const pending = !!this.props.pending;
+    const c = this.EL[card.el] || this.EL.earth;
+
+    const def = this.props.defaultExpanded !== false;
+    const expanded = collapsible ? (this.state.expanded === null ? def : this.state.expanded) : true;
+
+    const cid = (card.id || '').toUpperCase();
+    const num = card.num ? (card.num + ' / 120') : '';
+    const spName = (mod.spLabel || '').toUpperCase();
+
+    return {
+      wrapStyle: {
+        '--cgf': c.gf, '--cgt': c.gt, '--cglow': c.glow, '--cgem': c.gem,
+        '--cframe': c.frame, '--cgold': '#c9a84c',
+        '--gem9': this.rgba(c.gem, 0.09), '--gem14': this.rgba(c.gem, 0.14),
+        '--gem16': this.rgba(c.gem, 0.16), '--gem18': this.rgba(c.gem, 0.18),
+        '--gem40': this.rgba(c.gem, 0.40), '--gem45': this.rgba(c.gem, 0.45),
+        '--gem50': this.rgba(c.gem, 0.50), '--gem60': this.rgba(c.gem, 0.60),
+        '--gemLite': this.mix(c.gem, '#ffffff', 0.88), '--gem18d': this.mix(c.gem, '#0a0805', 0.18),
+        '--txt62': this.mix('#ffffff', c.gem, 0.62), '--txt42': this.mix('#ffffff', c.gem, 0.42),
+        fontFamily: "'Jost',sans-serif", width: '100%',
+      },
+      card, mod, collapsible,
+      collapsed: !expanded,
+      expanded,
+      stripOpacity: status === 'taken' ? 0.7 : (status === 'done' ? 0.6 : 1),
+      stripSub: spName + (status === 'taken' ? ' · taken' : status === 'done' ? ' · done' : status === 'mine' ? ' · yours' : ''),
+      collector: (card.domainLabel || 'Gather Resources').toUpperCase() + (num ? ' · ' + num : ''),
+      modLabel: spName + ' · ' + (mod.internal ? 'Inner modifier' : 'Modifier'),
+      expandAria: 'Expand ' + (card.title || 'card'),
+      movePip: this.glyphFor(this.MOVE, card.move, { size:18, sw:3.4 }),
+      faceBadge: this.glyphFor(this.FACE, card.face, { size:22, sw:3 }),
+      domainGlyph: this.glyphFor(this.DOMAIN, card.domain, { size:12, sw:3.4 }),
+      modGlyph: (() => { const g = this.SP_GLYPH[mod.spKey] || 'diplomat'; const defs = this.MOVE[g] || this.FACE[g] || this.FACE.diplomat; return this.glyph(defs, { size:12, sw:3.6 }); })(),
+      watermark: this.glyphFor(this.FACE, card.face, { size:300, sw:1.5 }),
+      // status flags
+      isMine: status === 'mine',
+      isClaimable: status === 'open',
+      isSignedOut: status === 'signedout',
+      isTaken: status === 'taken',
+      isDone: status === 'done',
+      statusBadge: status === 'mine' ? 'Claimed by you' : (status === 'taken' ? 'In progress' : ''),
+      pending,
+      primaryLabel: status === 'mine'
+        ? (pending ? 'Working…' : 'Done — log it')
+        : (pending ? 'Working…' : "I'll take this"),
+      onToggle: () => { if (collapsible) this.setState(s => ({ expanded: !(s.expanded === null ? def : s.expanded) })); },
+      onClaim: () => this.props.onClaim && this.props.onClaim(card.id),
+      onComplete: () => this.props.onComplete && this.props.onComplete(card.id),
+      onRelease: () => this.props.onRelease && this.props.onRelease(card.id),
+    };
+  }
+}
+</script>
+</body>
+</html>

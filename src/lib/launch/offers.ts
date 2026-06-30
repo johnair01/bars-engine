@@ -25,8 +25,11 @@
 import type { ElementKey, CardAltitude, CardStage } from '@/lib/ui/card-tokens'
 import type { AlchemyAltitude } from '@/lib/alchemy/types'
 import { BARN_WALLS } from '@/lib/event/barn-raising'
+import { SUPERPOWERS, SUPERPOWER_DEFS, type Superpower } from '@/lib/superpowers/types'
+import { arcAnchorElement, superpowerAccentCss } from '@/lib/superpowers/arc'
 
-export type OfferKey =
+/** The hand-authored launch SKUs (book, deck, handbook, subscription, bundles). */
+export type CoreOfferKey =
   | 'book-digital'
   | 'rpg-handbook-digital'
   | 'deck-digital'
@@ -34,6 +37,23 @@ export type OfferKey =
   | 'book-physical'
   | 'rpg-handbook-physical'
   | 'founding-ally'
+
+/**
+ * Superpower expansion-pack SKU. MUST equal `superpowerPackSku(sp)` from
+ * `player-entitlements/superpower-skus.ts` — the entitlement layer derives pack
+ * ownership from this exact string pattern, so the two are one identity.
+ */
+export type SuperpowerPackKey = `superpower-${Superpower}-pack`
+
+/** The deck + both loadout packs, sold together (single-charge — see grants.ts). */
+export type LoadoutBundleKey = 'loadout-bundle'
+
+export type OfferKey = CoreOfferKey | SuperpowerPackKey | LoadoutBundleKey
+
+/** Typed pack OfferKey for a superpower — identical string to `superpowerPackSku`. */
+export function superpowerPackOfferKey(sp: Superpower): SuperpowerPackKey {
+  return `superpower-${sp}-pack`
+}
 
 export type OfferGroup = 'digital' | 'physical' | 'bundle'
 
@@ -65,6 +85,13 @@ export interface LaunchOffer {
   stage: CardStage
   /** Hero treatment — alchemical moment + idle float (bundle only). */
   hero?: boolean
+  /**
+   * Superpower-pack identity accent (a non-Wuxing hue/gradient; ADR 0002). When
+   * present, the pack card's identity color comes from here — NOT from `element`
+   * (which, for packs, is only the arc's neutral anchor frame). Lets the seven
+   * packs read distinctly instead of collapsing onto five element colors.
+   */
+  accent?: string
 }
 
 // Gumroad URLs — referenced statically so Next.js can inline NEXT_PUBLIC_* at build.
@@ -76,9 +103,22 @@ const GUMROAD = {
   bookPhysical:       process.env.NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL ?? '',
   rpgHandbookPhysical:process.env.NEXT_PUBLIC_GUMROAD_RPG_PHYSICAL_URL ?? '',
   foundingAlly:       process.env.NEXT_PUBLIC_GUMROAD_FOUNDING_ALLY_URL ?? '',
+  loadoutBundle:      process.env.NEXT_PUBLIC_GUMROAD_LOADOUT_BUNDLE_URL ?? '',
 } as const
 
-export const LAUNCH_OFFERS: readonly LaunchOffer[] = [
+// Per-pack Gumroad URLs. Static member access so Next inlines NEXT_PUBLIC_* at
+// build; absent URLs render "setup pending" (honest, never a dead link).
+const GUMROAD_PACKS: Record<Superpower, string> = {
+  connector:     process.env.NEXT_PUBLIC_GUMROAD_SP_CONNECTOR_URL ?? '',
+  storyteller:   process.env.NEXT_PUBLIC_GUMROAD_SP_STORYTELLER_URL ?? '',
+  strategist:    process.env.NEXT_PUBLIC_GUMROAD_SP_STRATEGIST_URL ?? '',
+  disruptor:     process.env.NEXT_PUBLIC_GUMROAD_SP_DISRUPTOR_URL ?? '',
+  alchemist:     process.env.NEXT_PUBLIC_GUMROAD_SP_ALCHEMIST_URL ?? '',
+  escape_artist: process.env.NEXT_PUBLIC_GUMROAD_SP_ESCAPE_ARTIST_URL ?? '',
+  coach:         process.env.NEXT_PUBLIC_GUMROAD_SP_COACH_URL ?? '',
+}
+
+const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
   {
     key: 'founding-ally',
     name: 'Founding Ally Bundle',
@@ -130,7 +170,7 @@ export const LAUNCH_OFFERS: readonly LaunchOffer[] = [
   {
     key: 'deck-digital',
     name: 'Oracle Deck — Digital Access',
-    blurb: 'The 52-card Oracle at the Edge of the Known World. (Also included with The Game.)',
+    blurb: 'The 120-move Oracle at the Edge of the Known World. (Also included with The Game.)',
     group: 'digital',
     priceCents: 1000,
     gumroadUrl: GUMROAD.deckDigital,
@@ -181,6 +221,67 @@ export const LAUNCH_OFFERS: readonly LaunchOffer[] = [
   },
 ]
 
+/** $8 add-on per superpower — the 60-card expansion model. */
+const PACK_PRICE_CENTS = 800
+
+/**
+ * The seven superpower expansion packs, generated from `SUPERPOWER_DEFS` so the
+ * catalog can never drift from the canonical superpower set (incl. Coach — every
+ * superpower has a purchasable pack; no second-class loadout slot). A superpower
+ * is an arc, not a single Wuxing channel (ADR 0002): identity color comes from
+ * `accent` (its own non-element hue), while `element` is only the arc's neutral
+ * anchor frame — so the seven packs no longer collapse onto five element colors.
+ */
+const SUPERPOWER_PACK_OFFERS: readonly LaunchOffer[] = SUPERPOWERS.map((sp) => {
+  const def = SUPERPOWER_DEFS[sp]
+  return {
+    key: superpowerPackOfferKey(sp),
+    name: `${def.label} Pack`,
+    blurb: `The 60-card ${def.label} expansion — five moves across six levels, inner and outer. Adds your ${def.label} depth to any allyship campaign.`,
+    includes: [
+      '60 superpower-move cards',
+      'Inner + outer aspects',
+      'Clickable “Go Deeper” on matching deck cards',
+    ],
+    group: 'digital',
+    priceCents: PACK_PRICE_CENTS,
+    gumroadUrl: GUMROAD_PACKS[sp],
+    cta: 'Buy',
+    element: arcAnchorElement(def.arc),
+    accent: superpowerAccentCss(def.arc, def.accentOverride),
+    altitude: 'neutral',
+    stage: 'growing',
+  }
+})
+
+/**
+ * The loadout bundle: deck access + both packs in the player's loadout. Priced as
+ * deck + two packs with a small bundle discount. SINGLE-CHARGE: a deck owner whose
+ * inner pack was auto-granted on quiz completion is not re-charged for it — the
+ * deferred grant is idempotent by SKU (see grants.ts + saveSuperpowerLoadout).
+ */
+const LOADOUT_BUNDLE_OFFER: LaunchOffer = {
+  key: 'loadout-bundle',
+  name: 'Your Loadout Bundle',
+  blurb:
+    'The deck plus both superpower packs in your loadout — inner and outer, together. The full Go Deeper experience for your two superpowers.',
+  includes: ['Digital deck access', 'Your inner superpower pack', 'Your outer superpower pack'],
+  group: 'bundle',
+  priceCents: 2000,
+  gumroadUrl: GUMROAD.loadoutBundle,
+  cta: 'Equip your loadout',
+  element: 'wood',
+  altitude: 'satisfied',
+  stage: 'growing',
+  hero: true,
+}
+
+export const LAUNCH_OFFERS: readonly LaunchOffer[] = [
+  ...CORE_LAUNCH_OFFERS,
+  ...SUPERPOWER_PACK_OFFERS,
+  LOADOUT_BUNDLE_OFFER,
+]
+
 /**
  * Launch fundraising target — the spine of the campaign. Derived from the barn's
  * **pre-sale wall** target so the two can never drift: launch sales *are* the pre-sale
@@ -200,6 +301,26 @@ export function formatPrice(cents: number): string {
 /** Offers belonging to a UI group, in registry order. */
 export function offersByGroup(group: OfferGroup): LaunchOffer[] {
   return LAUNCH_OFFERS.filter((o) => o.group === group)
+}
+
+/** Look up an offer by its SKU, or undefined if unknown. */
+export function offerByKey(key: string): LaunchOffer | undefined {
+  return LAUNCH_OFFERS.find((o) => o.key === key)
+}
+
+/** Whether an OfferKey is a superpower expansion pack (vs a core/bundle SKU). */
+export function isSuperpowerPackKey(key: string): boolean {
+  return /^superpower-.+-pack$/.test(key)
+}
+
+/**
+ * Where the buyer should be sent for a SKU: the live Gumroad product if wired,
+ * else the /launch page anchored to the offer (honest fallback, never dead).
+ */
+export function offerHref(key: string): string {
+  const offer = offerByKey(key)
+  if (offer && isOfferLive(offer)) return offer.gumroadUrl
+  return `/launch#${key}`
 }
 
 /** Whether an offer is purchasable right now (Gumroad URL wired). */

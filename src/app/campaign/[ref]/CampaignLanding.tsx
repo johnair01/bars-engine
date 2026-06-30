@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { CampaignPageData, VisitorStatus } from './page'
 import type { CampaignSkin } from '@/lib/ui/campaign-skin'
-import { buildSkinVars, resolveFontClass, DEFAULT_BG_GRADIENT } from '@/lib/ui/build-skin-vars'
+import { buildSkinVars, resolveFontClass } from '@/lib/ui/build-skin-vars'
 import { useCampaignSkin } from '@/lib/ui/campaign-skin-provider'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -193,6 +193,7 @@ export function CampaignLanding({
             </div>
           </section>
         )}
+
       </main>
 
       {/* ── CTA Footer (thumb-first: primary actions in bottom 40%) ───── */}

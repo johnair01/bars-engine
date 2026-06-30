@@ -1,0 +1,42 @@
+name: allyship-technique-vocabulary
+description: >-
+  Define the canonical shared tag vocabulary (move x operation/altitude x
+  channel/element x domain x aspect x superpower x capability), the Superpower
+  overlay (2-slot inner/outer loadout with Alchemy as the universal substrate),
+  and the Technique schema + card->technique resolution rule that links the
+  120-card Allyship Deck to a living, user-extensible technique library that
+  metabolizes practices from wisdom traditions and personal-development sources
+  into allyship contexts.
+type: feature
+status: active
+created_at: '2026-06-20T18:40:03.977799+00:00'
+updated_at: '2026-06-20T18:40:03.977799+00:00'
+fork_space:
+  allowed_paths:
+  - .specify/specs/allyship-technique-vocabulary/
+  - .specify/backlog/prompts/
+  - src/lib/allyship-deck/
+  - src/lib/quest-grammar/
+  - src/lib/technique-library/
+  excluded_paths:
+  - '**/__pycache__/'
+  - '*.pyc'
+  file_patterns:
+  - '*.ts'
+  - '*.tsx'
+  - '*.md'
+  - '*.json'
+  read_only_paths:
+  - docs/
+  - public/allyship-deck/
+linked_issues: []
+metadata:
+  branch: claude/admiring-shannon-wlddtw
+  builds_on:
+  - allyship-deck
+  - inner-outer-allyship-moves
+  - clean-up-technique-system
+  - move-ecology-emergent
+  - deck-card-move-grammar
+  - nation-move-profiles
+  - superpower-move-extensions

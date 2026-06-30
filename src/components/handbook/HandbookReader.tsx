@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { COLOR, FONT } from "@/lib/handbook/tokens";
-import { SEAL, SPREAD_ART } from "@/lib/handbook/assets";
+import { SEAL, SEAL_GLOSS, SPREAD_ART } from "@/lib/handbook/assets";
 import type { Block, Chapter } from "@/lib/handbook/content";
 import { createHandbookBar } from "@/actions/handbook-bar";
 import { addCampaignDomainPreference } from "@/actions/campaign-domain-preference";
@@ -389,7 +389,7 @@ export function HandbookReader({ chapterId }: { chapterId: string }) {
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginTop: 6 }}>
                 <div style={{ fontFamily: FONT.hand, fontWeight: 700, fontSize: 15, color: "#1d1a15", lineHeight: 0.9 }}>the Headmaster</div>
                 <div style={{ width: 26, height: 26, background: COLOR.cinnabar, borderRadius: 2, display: "grid", placeItems: "center" }}>
-                  <span style={{ fontFamily: FONT.seal, fontSize: 16, color: "#f6ece0" }}>{SEAL}</span>
+                  <span style={{ fontFamily: FONT.seal, fontSize: 16, color: "#f6ece0" }} role="img" aria-label={`Headmaster's seal — ${SEAL_GLOSS} (${SEAL})`} title={`${SEAL_GLOSS} (${SEAL})`}>{SEAL}</span>
                 </div>
               </div>
             </div>

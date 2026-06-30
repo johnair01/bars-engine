@@ -9,7 +9,7 @@ import {
 } from '@/actions/campaign-invitation'
 import type { EventArtifactListItem } from '@/lib/event-artifact-list-types'
 
-const VISIBILITY = ['campaign_visible', 'private', 'public'] as const
+const VISIBILITY = ['campaign_visible', 'private', 'public', 'discoverable'] as const
 const STATUS = ['draft', 'scheduled', 'live', 'completed', 'recorded', 'archived'] as const
 
 export function EditEventDetailsButton({

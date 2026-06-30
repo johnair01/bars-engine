@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ALL_CANONICAL_MOVES, getMoveFamily } from '@/lib/quest-grammar/move-engine'
 import { SHENG_CYCLE, KE_CYCLE } from '@/lib/alchemy/wuxing'
+import { ElementEmotionLegend } from '@/components/bars/ElementEmotionLegend'
 
 /**
  * @page /wiki/emotional-alchemy
@@ -62,6 +63,9 @@ export default function EmotionalAlchemyPage() {
           The 15 canonical moves unlock for cross-national collaboration when onboarding completes.
         </p>
       </header>
+
+      {/* Player-facing field guide — the same legend surfaced on the capture canvas. */}
+      <ElementEmotionLegend />
 
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-4">
         <h2 id="elements" className="text-lg font-bold text-white">5 Elements + Channels</h2>

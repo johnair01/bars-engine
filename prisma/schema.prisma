@@ -92,6 +92,9 @@ model Player {
   pronouns                       String?
   attendance                     String?
   gmFaceLevel                    Int                         @default(1)
+  superpowerInner                String?
+  superpowerOuter                String?
+  quizCompletedAt                DateTime?
   createdAt                      DateTime                    @default(now())
   spriteUrl                      String?                     @map("sprite_url")
   lastForgeTimestamp             DateTime?
@@ -107,6 +110,7 @@ model Player {
   barShareExternalsSent          BarShareExternal[]          @relation("BarShareExternalsSent")
   barSharesSent                  BarShare[]                  @relation("BarSharesSent")
   barSharesReceived              BarShare[]                  @relation("BarSharesReceived")
+  promiseRequestsSent            PromiseRequest[]            @relation("PromiseRequestsSent")
   barTopics                      BarTopic[]
   blessedObjectsEarned           BlessedObjectEarned[]
   bookAnalysisResumeLogs         BookAnalysisResumeLog[]
@@ -187,6 +191,7 @@ model Player {
   roomPresences                  RoomPresence[]
   sceneAtlasGuidedDrafts         SceneAtlasGuidedDraft[]
   shadow321Sessions              Shadow321Session[]
+  tapTheVeinDailySessions        TapTheVeinDailySession[]
   spokeMoveBedKernelsPlanted     SpokeMoveBedKernel[]        @relation("SpokeMoveBedKernelPlantedBy")
   spokeMoveBedsAnchored          SpokeMoveBed[]              @relation("SpokeMoveBedAnchoredBy")
   spokeSessions                  SpokeSession[]              @relation("SpokeSessions")
@@ -336,19 +341,16 @@ model CustomBar {
   campaignGoal                         String?
   successCondition                     String?
   emotionalAlchemyTag                  String?
-  /// Lenses/Observatory: temporal lens that contextualized this BAR when it was planted.
+  /// Lens Integration Refactor (LENS) — soft pointers. lensId: the Lens this BAR
+  /// was grown under. gardenId: which Garden it's planted in (membership = planted).
   lensId                               String?
-  /// Lenses/Observatory: specific authored goal this BAR serves.
-  lensGoalId                           String?
-  /// Lenses/Observatory: immutable lineage trace captured when a TTV task is planted as a BAR.
-  plantSnapshot                        Json?
-  /// Lenses/Observatory: soft garden identity, e.g. personal:<playerId>.
   gardenId                             String?
-  /// Plant-a-BAR gate: desired outcome carried forward from the lens/TTV ritual.
+  /// EA triad captured at the plant gate (unpacking mechanics) — required for
+  /// lens/campaign alignment + emotional-alchemy moves. Reuses unpacking vocab.
+  /// experienceIntent = desired outcome (EXPERIENCE_OPTIONS, single).
+  /// dissatisfaction = current EA "from" state(s). satisfaction = desired "to" state(s).
   experienceIntent                     String?
-  /// Plant-a-BAR gate: current "from" state(s), pipe-separated when multi-select.
   dissatisfaction                      String?
-  /// Plant-a-BAR gate: desired "toward" state(s), pipe-separated when multi-select.
   satisfaction                         String?
   forkedFromId                         String?
   gameMasterFace                       String?
@@ -377,6 +379,13 @@ model CustomBar {
   contextLines                         String?
   /// BSM (BAR Seed Metabolization): JSON { soilKind?, contextNote?, maturity?, compostedAt?, releaseNote? }
   seedMetabolization                   String?
+  /// PMF (Promise Move Forge): JSON payload for a type='promise_move' BAR —
+  /// scope, standardOfCare, boundary, repair, consentAsk, delivery
+  /// (proximity/channels/name/handle), skillLevel, exampleEncounters,
+  /// reservations, availability, and free-text unpacking answers (q3/q5).
+  /// First-class fields (title/description/experienceIntent/satisfaction/
+  /// dissatisfaction/hexagramId/gardenId/status/visibility) live in columns.
+  promiseMove                          String?
   /// BSCW: canvas layout JSON for seed capture whiteboard { items: CanvasItem[] }
   canvasLayout                         String?
   isExemplar                           Boolean                @default(false)
@@ -390,6 +399,7 @@ model CustomBar {
   responses                            BarResponse[]
   shareExternals                       BarShareExternal[]
   shares                               BarShare[]
+  promiseRequests                      PromiseRequest[]       @relation("PromiseMoveRequests")
   socialLinks                          BarSocialLink[]
   topicAssignments                     BarTopicAssignment[]
   bountyStakes                         BountyStake[]
@@ -706,6 +716,101 @@ model Shadow321Session {
   @@map("shadow_321_sessions")
 }
 
+/// TTV Slice 2 — daily ritual session (one per morning ritual per player).
+/// Captures the lenses state at session-start (face, level, category, intention text snapshot)
+/// so we can replay what seeded this day even if lenses state changes later.
+model TapTheVeinDailySession {
+  id                        String           @id @default(cuid())
+  playerId                  String
+  createdAt                 DateTime         @default(now())
+  sessionDate               DateTime         @db.Date
+  // Lenses context snapshot at session start
+  lensLevel                 String? // yearly|quarterly|monthly|weekly|daily
+  lensCategory              String? // health|relationships|career|money|custom
+  lensFaceKey               String? // FaceKey at session start (chosen by player, defaults from lens config)
+  lensIntentionTextSnapshot String? // snapshot of the active intention text — survives lens edits
+  // Daily ritual payload (raw)
+  rawEntry                  String           @db.Text
+  wordCount                 Int
+  // EA analysis (computed client-side per spec, stored for replay)
+  eaChannel                 String? // Metal|Fire|Water|Wood|Earth
+  chargeStrength            String? // high|medium|low
+  // Brainstorm output
+  brainstormCandidateCount  Int              @default(0)
+  committedTaskCount        Int              @default(0)
+  // Session lifecycle
+  status                    String           @default("open") // open|sealed|abandoned
+  sealedAt                  DateTime?
+  // Links
+  tasks                     TapTheVeinTask[]
+  player                    Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, sessionDate])
+  @@index([playerId, status])
+  @@map("tap_the_vein_daily_sessions")
+}
+
+/// TTV Slice 2 — a single committed task within a daily session.
+/// Lifecycle: committed → in_progress → (completed | carried_over | composted | assigned_to_campaign | upgraded_to_quest).
+/// Player is the authority on completion — no auto-transitions.
+/// Lens Integration Refactor (LENS1) — first-class temporal lens.
+/// Soft-pointer player scope (matches the cross-system precedent; no relation graph churn).
+model Lens {
+  id           String   @id @default(cuid())
+  playerId     String
+  type         String   // orientation | vision | yearly | quarterly | monthly | weekly | daily
+  title        String
+  description  String?  @db.Text
+  parentLensId String?
+  /// canonical calendar identity for get-or-create dedupe, e.g. "daily:2026-06-26".
+  periodKey    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([playerId, type, periodKey])
+  @@index([playerId, type])
+  @@map("lenses")
+}
+
+model TapTheVeinTask {
+  id                        String                 @id @default(cuid())
+  playerId                  String
+  dailySessionId            String
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+  completedAt               DateTime?
+  // Origin
+  source                    String                 @default("brainstorm") // brainstorm|user_added
+  originalText              String                 @db.Text
+  // Lenses linkage (optional — brainstormed without explicit lens ref is allowed)
+  lensLevel                 String?
+  lensCategory              String?
+  lensFaceKey               String?
+  // Lifecycle state
+  status                    String                 @default("committed") // committed|in_progress|completed|carried_over|composted|assigned_to_campaign|upgraded_to_quest
+  // Carryover tracking (loop rule: explicit push, never implicit)
+  carriedFromDailySessionId String?
+  carryCount                Int                    @default(0)
+  // Composting (explicit discard with reason)
+  compostReason             String?
+  compostedAt               DateTime?
+  // Campaign assignment (visibility = campaign-private by default per privacy rule)
+  campaignId                String?
+  visibility                String? // null=private; "campaign"=visible to campaign stewards
+  // Quest upgrade
+  questId                   String?
+  // Core-loop bridge (CGLA H1): the CustomBar this task projects into, so a task
+  // can be tuned / charged / 3·2·1'd / grown like any BAR. Soft pointer.
+  barId                     String?
+  // Phase 3 wiring (links back to daily session)
+  dailySession              TapTheVeinDailySession @relation(fields: [dailySessionId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, status])
+  @@index([playerId, carryCount])
+  @@index([campaignId, visibility])
+  @@map("tap_the_vein_tasks")
+}
+
 /// Append-only log: human 321 name resolution teaches matching NPCs (creatorType agent) by nation + archetype.
 model Npc321InnerWorkMerge {
   id                 String           @id @default(cuid())
@@ -971,6 +1076,32 @@ model BarShareExternal {
   @@index([fromUserId, createdAt])
   @@index([expiresAt])
   @@map("bar_share_externals")
+}
+
+/// PMF (Promise Move Forge): a request to receive a published Promise Move.
+/// Consent-forward — the owner is asked before anything happens, so each ask
+/// carries its own consent state. requesterId is null for anonymous/email asks
+/// arriving via a public share link; shareToken records which link it came from.
+model PromiseRequest {
+  id             String    @id @default(cuid())
+  barId          String
+  requesterId    String?
+  requesterName  String?
+  requesterEmail String?
+  note           String?
+  /// pending | accepted | declined | withdrawn
+  status         String    @default("pending")
+  /// awaiting | granted | refused — the consent handshake with the owner
+  consentState   String    @default("awaiting")
+  shareToken     String?
+  createdAt      DateTime  @default(now())
+  respondedAt    DateTime?
+  bar            CustomBar @relation("PromiseMoveRequests", fields: [barId], references: [id], onDelete: Cascade)
+  requester      Player?   @relation("PromiseRequestsSent", fields: [requesterId], references: [id])
+
+  @@index([barId, createdAt])
+  @@index([requesterId, createdAt])
+  @@map("promise_requests")
 }
 
 /// Master of Friendship: High-trust phone-based invitations using friendship deck cards

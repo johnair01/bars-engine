@@ -70,7 +70,7 @@ export function LetterBlock({
           <div style={{ position: "absolute", inset: 0, background: COLOR.cinnabar, borderRadius: 4 }} />
           <div style={{ position: "absolute", inset: 5, border: "1.5px solid rgba(247,236,224,.78)", borderRadius: 2 }} />
           <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-            <span style={{ fontFamily: FONT.seal, fontSize: 36, color: "#f6ece0" }}>{seal}</span>
+            <span style={{ fontFamily: FONT.seal, fontSize: 36, color: "#f6ece0" }} role="img" aria-label={`Headmaster's seal — Protection (${seal})`} title={`Protection (${seal})`}>{seal}</span>
           </div>
         </div>
       </div>

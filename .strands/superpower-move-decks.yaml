@@ -1,0 +1,37 @@
+name: superpower-move-decks
+description: >-
+  Define the six Superpower expansion decks (Strategist, Connector, Escape
+  Artist, Disruptor, Alchemist, Storyteller). Each is a standalone 60-card pack
+  = 5 basic moves x 6 levels (Shaman->Sage) x 2 aspects (inner/outer). These are
+  NOT merged into the 120-card base Allyship Deck or its technique pool; they are
+  add-on expansion packs. The base experience cites where a superpower card
+  applies and invites the player to get that superpower's deck. Superpowers are
+  an orienting add-on, deliberately moved out of the book/base.
+type: feature
+status: active
+created_at: '2026-06-20T19:30:47.499597+00:00'
+updated_at: '2026-06-20T19:30:47.499597+00:00'
+fork_space:
+  allowed_paths:
+  - .specify/specs/superpower-move-decks/
+  - .specify/backlog/prompts/
+  - src/lib/technique-library/
+  excluded_paths:
+  - '**/__pycache__/'
+  - '*.pyc'
+  file_patterns:
+  - '*.ts'
+  - '*.tsx'
+  - '*.md'
+  - '*.json'
+  read_only_paths:
+  - docs/
+  - public/allyship-deck/
+linked_issues: []
+metadata:
+  branch: claude/admiring-shannon-wlddtw
+  builds_on:
+  - allyship-technique-vocabulary
+  - allyship-deck
+  - superpower-move-extensions
+  - inner-outer-allyship-moves

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getPlayerHandContents, type HandContents } from '@/actions/player-hand'
+import { getPlayerHand } from '@/actions/hand'
+import type { HandContents } from '@/lib/hand-service'
 
 /**
  * HandModal — the player's bounded in-world inventory.
@@ -15,20 +16,18 @@ import { getPlayerHandContents, type HandContents } from '@/actions/player-hand'
  *     in Pokemon). Only accessible by leaving the play space (navigating to
  *     /hand, which is the legacy vault page until the rename ships).
  *
- * Hand contents (current heuristic):
- *   - The BAR currently being carried (highest priority — show first)
- *   - Active drafts (unplaced personal work)
- *   - Active unplaced quests (quests not yet bound to a campaign cell)
+ * Hand contents are read from the slot-backed source of truth — `getPlayerHand()`
+ * → the `HandSlot` table (6 ordered slots). This is the same hand that the
+ * NOW-home Hand glance, "Send to BARS", and the Hand↔Vault toggle operate on,
+ * so a BAR bound to a slot (e.g. a deck card just sent to BARS) shows up here.
+ * The older derived heuristic in `player-hand.ts` did not, which is why this
+ * modal looked disconnected from the real hand.
  *
- * Hand limit: soft cap at 6 for now (Pokemon team size). Future work will
- * formalize this against the prompt deck system (backlog 1.34 PDH).
- *
- * The modal does NOT navigate away. Players close the modal and remain in
+ * Tapping a BAR opens its detail page (`/bars/:id`); the modal closes on
+ * navigation. The "Open Vault" link DOES navigate away — that's the
  * the spatial room. The "Open Vault" link DOES navigate away — that's the
  * intended ceremony of "leaving the play space to access deep storage."
  */
-
-const HAND_LIMIT = 6
 
 type Props = {
     onClose: () => void
@@ -36,17 +35,29 @@ type Props = {
 }
 
 export function HandModal({ onClose, carryingBarId }: Props) {
-    const [data, setData] = useState<HandContents | null>(null)
+    const [data, setData] = useState<HandContents | { error: string } | null>(null)
 
     useEffect(() => {
         let cancelled = false
-        getPlayerHandContents().then((result) => {
+        // Read the real, slot-backed hand (HandSlot table) — the same source the
+        // NOW-home Hand and "Send to BARS" use. The old derived heuristic
+        // (player-hand.ts) never showed slot-bound BARs like deck cards.
+        getPlayerHand().then((result) => {
             if (!cancelled) setData(result)
         })
         return () => {
             cancelled = true
         }
     }, [])
+
+    // Prefer the live carrying state from the hand; fall back to the prop.
+    const liveCarryingBarId =
+        data && !('error' in data) ? data.carryingBarId : null
+    const shownCarryingBarId = liveCarryingBarId ?? carryingBarId
+    const handBars =
+        data && !('error' in data)
+            ? data.slots.filter((s) => s.bar).map((s) => s.bar!)
+            : []
 
     return (
         <div
@@ -77,7 +88,7 @@ export function HandModal({ onClose, carryingBarId }: Props) {
                 </header>
 
                 {/* Carrying section */}
-                {carryingBarId && (
+                {shownCarryingBarId && (
                     <section className="px-5 py-3 border-b border-zinc-800 bg-emerald-950/20">
                         <p className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">
                             Currently Carrying
@@ -85,9 +96,12 @@ export function HandModal({ onClose, carryingBarId }: Props) {
                         <p className="text-xs text-zinc-300">
                             You have a BAR in your hands. Walk to a nursery to plant it.
                         </p>
-                        <p className="text-[10px] text-zinc-500 font-mono mt-1">
-                            {carryingBarId.slice(0, 12)}...
-                        </p>
+                        <Link
+                            href={`/bars/${shownCarryingBarId}`}
+                            className="text-[10px] text-emerald-400/80 hover:text-emerald-300 font-mono mt-1 inline-block"
+                        >
+                            Open →
+                        </Link>
                     </section>
                 )}
 
@@ -104,7 +118,7 @@ export function HandModal({ onClose, carryingBarId }: Props) {
                 )}
 
                 {/* Contents */}
-                {data && 'success' in data && (
+                {data && !('error' in data) && (
                     <>
                         <section className="px-5 py-4 space-y-3">
                             <div className="flex items-baseline justify-between">
@@ -112,49 +126,41 @@ export function HandModal({ onClose, carryingBarId }: Props) {
                                     Active BARs
                                 </h3>
                                 <p className="text-[10px] text-zinc-500">
-                                    {data.bars.length} / {HAND_LIMIT}
+                                    {data.filledCount} / {data.size}
                                 </p>
                             </div>
 
-                            {data.bars.length === 0 ? (
+                            {handBars.length === 0 ? (
                                 <p className="text-xs text-zinc-600 italic text-center py-4">
-                                    Your hand is empty. Talk to an NPC or capture a charge to add a BAR.
+                                    Your hand is empty. Draw a card and Send it to BARS, or capture a charge to add one.
                                 </p>
                             ) : (
                                 <ul className="space-y-2">
-                                    {data.bars.slice(0, HAND_LIMIT).map((bar) => (
-                                        <li
-                                            key={bar.id}
-                                            className="border border-zinc-800 rounded p-2.5 bg-zinc-950/40"
-                                        >
-                                            <div className="flex items-baseline justify-between gap-2">
-                                                <p className="text-xs font-semibold text-zinc-200 truncate flex-1">
-                                                    {bar.title}
-                                                </p>
-                                                {bar.moveType && (
-                                                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 flex-shrink-0">
-                                                        {bar.moveType}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {bar.description && (
-                                                <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2">
-                                                    {bar.description}
-                                                </p>
-                                            )}
-                                            <p className="text-[9px] text-zinc-700 mt-1">
-                                                {bar.type}
-                                            </p>
+                                    {handBars.map((bar) => (
+                                        <li key={bar.id}>
+                                            <Link
+                                                href={`/bars/${bar.id}`}
+                                                onClick={onClose}
+                                                className="block border border-zinc-800 hover:border-zinc-600 rounded p-2.5 bg-zinc-950/40 transition-colors"
+                                            >
+                                                <div className="flex items-baseline justify-between gap-2">
+                                                    <p className="text-xs font-semibold text-zinc-200 truncate flex-1">
+                                                        {bar.title}
+                                                    </p>
+                                                    {bar.moveType && (
+                                                        <span className="text-[9px] uppercase tracking-wider text-zinc-500 flex-shrink-0">
+                                                            {bar.moveType}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center justify-between gap-2 mt-1">
+                                                    <span className="text-[9px] text-zinc-700">{bar.type}</span>
+                                                    <span className="text-[9px] text-zinc-500">Open →</span>
+                                                </div>
+                                            </Link>
                                         </li>
                                     ))}
                                 </ul>
-                            )}
-
-                            {data.bars.length > HAND_LIMIT && (
-                                <p className="text-[10px] text-amber-500 text-center italic">
-                                    Hand is over capacity. {data.bars.length - HAND_LIMIT} extra
-                                    BARs need to be moved to your Vault.
-                                </p>
                             )}
                         </section>
 

@@ -358,7 +358,7 @@ export function FindYourPath({
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24 }}>
           <div>
-            <SendToBarsButton cardId={move.id} subject={subject} label="Begin your adventure →" />
+            <SendToBarsButton card={move} subject={subject} label="Begin your adventure →" />
           </div>
           <button type="button" style={secondaryBtn} onClick={reset}>Read again</button>
         </div>

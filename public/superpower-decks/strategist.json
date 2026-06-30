@@ -1,0 +1,2531 @@
+{
+  "deck_slug": "superpower-strategist",
+  "superpower": "strategist",
+  "label": "The Strategist",
+  "gift": "Clarity in complexity — the cartographer who finds pattern, bottleneck, and sequence.",
+  "version": "0.1.0-draft",
+  "generatedAt": "2026-06-21T20:22:38.927Z",
+  "count": 60,
+  "cards": [
+    {
+      "id": "sp-strategist-WAKE-SHAMAN-INNER",
+      "slug": "strategist-wake_up-shaman-inner",
+      "name": "See your own overwhelm honestly — Sense",
+      "essence": "In yourself: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Notice what is actually here — sensing what is here.",
+        "Turn it inward: your own overwhelm honestly."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-SHAMAN-OUTER",
+      "slug": "strategist-wake_up-shaman-outer",
+      "name": "See the real shape of the problem — Sense",
+      "essence": "For others: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Notice what is actually here — sensing what is here.",
+        "Bring it to others: the real shape of the problem."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-CHALLENGER-INNER",
+      "slug": "strategist-wake_up-challenger-inner",
+      "name": "See your own overwhelm honestly — Edge",
+      "essence": "In yourself: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Turn it inward: your own overwhelm honestly."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-CHALLENGER-OUTER",
+      "slug": "strategist-wake_up-challenger-outer",
+      "name": "See the real shape of the problem — Edge",
+      "essence": "For others: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Bring it to others: the real shape of the problem."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-REGENT-INNER",
+      "slug": "strategist-wake_up-regent-inner",
+      "name": "See your own overwhelm honestly — Steward",
+      "essence": "In yourself: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here — stewarding it over time.",
+        "Turn it inward: your own overwhelm honestly."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-REGENT-OUTER",
+      "slug": "strategist-wake_up-regent-outer",
+      "name": "See the real shape of the problem — Steward",
+      "essence": "For others: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here — stewarding it over time.",
+        "Bring it to others: the real shape of the problem."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-ARCHITECT-INNER",
+      "slug": "strategist-wake_up-architect-inner",
+      "name": "See your own overwhelm honestly — Structure",
+      "essence": "In yourself: clarity in complexity, building it into structure.",
+      "steps": [
+        "Notice what is actually here — building it into structure.",
+        "Turn it inward: your own overwhelm honestly."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-ARCHITECT-OUTER",
+      "slug": "strategist-wake_up-architect-outer",
+      "name": "See the real shape of the problem — Structure",
+      "essence": "For others: clarity in complexity, building it into structure.",
+      "steps": [
+        "Notice what is actually here — building it into structure.",
+        "Bring it to others: the real shape of the problem."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-DIPLOMAT-INNER",
+      "slug": "strategist-wake_up-diplomat-inner",
+      "name": "See your own overwhelm honestly — Bridge",
+      "essence": "In yourself: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here — across difference and relationship.",
+        "Turn it inward: your own overwhelm honestly."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-DIPLOMAT-OUTER",
+      "slug": "strategist-wake_up-diplomat-outer",
+      "name": "See the real shape of the problem — Bridge",
+      "essence": "For others: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here — across difference and relationship.",
+        "Bring it to others: the real shape of the problem."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-SAGE-INNER",
+      "slug": "strategist-wake_up-sage-inner",
+      "name": "See your own overwhelm honestly — Whole",
+      "essence": "In yourself: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here — integrating the whole field.",
+        "Turn it inward: your own overwhelm honestly."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-WAKE-SAGE-OUTER",
+      "slug": "strategist-wake_up-sage-outer",
+      "name": "See the real shape of the problem — Whole",
+      "essence": "For others: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here — integrating the whole field.",
+        "Bring it to others: the real shape of the problem."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-SHAMAN-INNER",
+      "slug": "strategist-open_up-shaman-inner",
+      "name": "Take in the discomfort of not yet knowing — Sense",
+      "essence": "In yourself: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Receive it without flinching — sensing what is here.",
+        "Turn it inward: the discomfort of not yet knowing."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-SHAMAN-OUTER",
+      "slug": "strategist-open_up-shaman-outer",
+      "name": "Take in the messy data others avoid — Sense",
+      "essence": "For others: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Receive it without flinching — sensing what is here.",
+        "Bring it to others: the messy data others avoid."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-CHALLENGER-INNER",
+      "slug": "strategist-open_up-challenger-inner",
+      "name": "Take in the discomfort of not yet knowing — Edge",
+      "essence": "In yourself: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Turn it inward: the discomfort of not yet knowing."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-CHALLENGER-OUTER",
+      "slug": "strategist-open_up-challenger-outer",
+      "name": "Take in the messy data others avoid — Edge",
+      "essence": "For others: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Bring it to others: the messy data others avoid."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-REGENT-INNER",
+      "slug": "strategist-open_up-regent-inner",
+      "name": "Take in the discomfort of not yet knowing — Steward",
+      "essence": "In yourself: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching — stewarding it over time.",
+        "Turn it inward: the discomfort of not yet knowing."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-REGENT-OUTER",
+      "slug": "strategist-open_up-regent-outer",
+      "name": "Take in the messy data others avoid — Steward",
+      "essence": "For others: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching — stewarding it over time.",
+        "Bring it to others: the messy data others avoid."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-ARCHITECT-INNER",
+      "slug": "strategist-open_up-architect-inner",
+      "name": "Take in the discomfort of not yet knowing — Structure",
+      "essence": "In yourself: clarity in complexity, building it into structure.",
+      "steps": [
+        "Receive it without flinching — building it into structure.",
+        "Turn it inward: the discomfort of not yet knowing."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-ARCHITECT-OUTER",
+      "slug": "strategist-open_up-architect-outer",
+      "name": "Take in the messy data others avoid — Structure",
+      "essence": "For others: clarity in complexity, building it into structure.",
+      "steps": [
+        "Receive it without flinching — building it into structure.",
+        "Bring it to others: the messy data others avoid."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-DIPLOMAT-INNER",
+      "slug": "strategist-open_up-diplomat-inner",
+      "name": "Take in the discomfort of not yet knowing — Bridge",
+      "essence": "In yourself: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching — across difference and relationship.",
+        "Turn it inward: the discomfort of not yet knowing."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-DIPLOMAT-OUTER",
+      "slug": "strategist-open_up-diplomat-outer",
+      "name": "Take in the messy data others avoid — Bridge",
+      "essence": "For others: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching — across difference and relationship.",
+        "Bring it to others: the messy data others avoid."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-SAGE-INNER",
+      "slug": "strategist-open_up-sage-inner",
+      "name": "Take in the discomfort of not yet knowing — Whole",
+      "essence": "In yourself: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching — integrating the whole field.",
+        "Turn it inward: the discomfort of not yet knowing."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-OPEN-SAGE-OUTER",
+      "slug": "strategist-open_up-sage-outer",
+      "name": "Take in the messy data others avoid — Whole",
+      "essence": "For others: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching — integrating the whole field.",
+        "Bring it to others: the messy data others avoid."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-SHAMAN-INNER",
+      "slug": "strategist-clean_up-shaman-inner",
+      "name": "Cut the noise in your own head — Sense",
+      "essence": "In yourself: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Transform the charge — sensing what is here.",
+        "Turn it inward: the noise in your own head."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-SHAMAN-OUTER",
+      "slug": "strategist-clean_up-shaman-outer",
+      "name": "Cut the problem down to its leverage — Sense",
+      "essence": "For others: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Transform the charge — sensing what is here.",
+        "Bring it to others: the problem down to its leverage."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-CHALLENGER-INNER",
+      "slug": "strategist-clean_up-challenger-inner",
+      "name": "Cut the noise in your own head — Edge",
+      "essence": "In yourself: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge — at the edge, naming what resists.",
+        "Turn it inward: the noise in your own head."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-CHALLENGER-OUTER",
+      "slug": "strategist-clean_up-challenger-outer",
+      "name": "Cut the problem down to its leverage — Edge",
+      "essence": "For others: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge — at the edge, naming what resists.",
+        "Bring it to others: the problem down to its leverage."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-REGENT-INNER",
+      "slug": "strategist-clean_up-regent-inner",
+      "name": "Cut the noise in your own head — Steward",
+      "essence": "In yourself: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Transform the charge — stewarding it over time.",
+        "Turn it inward: the noise in your own head."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-REGENT-OUTER",
+      "slug": "strategist-clean_up-regent-outer",
+      "name": "Cut the problem down to its leverage — Steward",
+      "essence": "For others: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Transform the charge — stewarding it over time.",
+        "Bring it to others: the problem down to its leverage."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-ARCHITECT-INNER",
+      "slug": "strategist-clean_up-architect-inner",
+      "name": "Cut the noise in your own head — Structure",
+      "essence": "In yourself: clarity in complexity, building it into structure.",
+      "steps": [
+        "Transform the charge — building it into structure.",
+        "Turn it inward: the noise in your own head."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-ARCHITECT-OUTER",
+      "slug": "strategist-clean_up-architect-outer",
+      "name": "Cut the problem down to its leverage — Structure",
+      "essence": "For others: clarity in complexity, building it into structure.",
+      "steps": [
+        "Transform the charge — building it into structure.",
+        "Bring it to others: the problem down to its leverage."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-DIPLOMAT-INNER",
+      "slug": "strategist-clean_up-diplomat-inner",
+      "name": "Cut the noise in your own head — Bridge",
+      "essence": "In yourself: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Transform the charge — across difference and relationship.",
+        "Turn it inward: the noise in your own head."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-DIPLOMAT-OUTER",
+      "slug": "strategist-clean_up-diplomat-outer",
+      "name": "Cut the problem down to its leverage — Bridge",
+      "essence": "For others: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Transform the charge — across difference and relationship.",
+        "Bring it to others: the problem down to its leverage."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-SAGE-INNER",
+      "slug": "strategist-clean_up-sage-inner",
+      "name": "Cut the noise in your own head — Whole",
+      "essence": "In yourself: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Transform the charge — integrating the whole field.",
+        "Turn it inward: the noise in your own head."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-CLEAN-SAGE-OUTER",
+      "slug": "strategist-clean_up-sage-outer",
+      "name": "Cut the problem down to its leverage — Whole",
+      "essence": "For others: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Transform the charge — integrating the whole field.",
+        "Bring it to others: the problem down to its leverage."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-SHAMAN-INNER",
+      "slug": "strategist-grow_up-shaman-inner",
+      "name": "Sharpen your read of patterns — Sense",
+      "essence": "In yourself: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Build the capacity — sensing what is here.",
+        "Turn it inward: your read of patterns."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-SHAMAN-OUTER",
+      "slug": "strategist-grow_up-shaman-outer",
+      "name": "Sharpen the team’s shared map — Sense",
+      "essence": "For others: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Build the capacity — sensing what is here.",
+        "Bring it to others: the team’s shared map."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-CHALLENGER-INNER",
+      "slug": "strategist-grow_up-challenger-inner",
+      "name": "Sharpen your read of patterns — Edge",
+      "essence": "In yourself: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity — at the edge, naming what resists.",
+        "Turn it inward: your read of patterns."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-CHALLENGER-OUTER",
+      "slug": "strategist-grow_up-challenger-outer",
+      "name": "Sharpen the team’s shared map — Edge",
+      "essence": "For others: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity — at the edge, naming what resists.",
+        "Bring it to others: the team’s shared map."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-REGENT-INNER",
+      "slug": "strategist-grow_up-regent-inner",
+      "name": "Sharpen your read of patterns — Steward",
+      "essence": "In yourself: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Build the capacity — stewarding it over time.",
+        "Turn it inward: your read of patterns."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-REGENT-OUTER",
+      "slug": "strategist-grow_up-regent-outer",
+      "name": "Sharpen the team’s shared map — Steward",
+      "essence": "For others: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Build the capacity — stewarding it over time.",
+        "Bring it to others: the team’s shared map."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-ARCHITECT-INNER",
+      "slug": "strategist-grow_up-architect-inner",
+      "name": "Sharpen your read of patterns — Structure",
+      "essence": "In yourself: clarity in complexity, building it into structure.",
+      "steps": [
+        "Build the capacity — building it into structure.",
+        "Turn it inward: your read of patterns."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-ARCHITECT-OUTER",
+      "slug": "strategist-grow_up-architect-outer",
+      "name": "Sharpen the team’s shared map — Structure",
+      "essence": "For others: clarity in complexity, building it into structure.",
+      "steps": [
+        "Build the capacity — building it into structure.",
+        "Bring it to others: the team’s shared map."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-DIPLOMAT-INNER",
+      "slug": "strategist-grow_up-diplomat-inner",
+      "name": "Sharpen your read of patterns — Bridge",
+      "essence": "In yourself: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Build the capacity — across difference and relationship.",
+        "Turn it inward: your read of patterns."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-DIPLOMAT-OUTER",
+      "slug": "strategist-grow_up-diplomat-outer",
+      "name": "Sharpen the team’s shared map — Bridge",
+      "essence": "For others: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Build the capacity — across difference and relationship.",
+        "Bring it to others: the team’s shared map."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-SAGE-INNER",
+      "slug": "strategist-grow_up-sage-inner",
+      "name": "Sharpen your read of patterns — Whole",
+      "essence": "In yourself: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Build the capacity — integrating the whole field.",
+        "Turn it inward: your read of patterns."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-GROW-SAGE-OUTER",
+      "slug": "strategist-grow_up-sage-outer",
+      "name": "Sharpen the team’s shared map — Whole",
+      "essence": "For others: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Build the capacity — integrating the whole field.",
+        "Bring it to others: the team’s shared map."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-SHAMAN-INNER",
+      "slug": "strategist-show_up-shaman-inner",
+      "name": "Name your next right step — Sense",
+      "essence": "In yourself: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Take the concrete act — sensing what is here.",
+        "Turn it inward: your next right step."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-SHAMAN-OUTER",
+      "slug": "strategist-show_up-shaman-outer",
+      "name": "Name the path so others can walk it — Sense",
+      "essence": "For others: clarity in complexity, sensing what is here.",
+      "steps": [
+        "Take the concrete act — sensing what is here.",
+        "Bring it to others: the path so others can walk it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-CHALLENGER-INNER",
+      "slug": "strategist-show_up-challenger-inner",
+      "name": "Name your next right step — Edge",
+      "essence": "In yourself: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act — at the edge, naming what resists.",
+        "Turn it inward: your next right step."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-CHALLENGER-OUTER",
+      "slug": "strategist-show_up-challenger-outer",
+      "name": "Name the path so others can walk it — Edge",
+      "essence": "For others: clarity in complexity, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act — at the edge, naming what resists.",
+        "Bring it to others: the path so others can walk it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-REGENT-INNER",
+      "slug": "strategist-show_up-regent-inner",
+      "name": "Name your next right step — Steward",
+      "essence": "In yourself: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Take the concrete act — stewarding it over time.",
+        "Turn it inward: your next right step."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-REGENT-OUTER",
+      "slug": "strategist-show_up-regent-outer",
+      "name": "Name the path so others can walk it — Steward",
+      "essence": "For others: clarity in complexity, stewarding it over time.",
+      "steps": [
+        "Take the concrete act — stewarding it over time.",
+        "Bring it to others: the path so others can walk it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-ARCHITECT-INNER",
+      "slug": "strategist-show_up-architect-inner",
+      "name": "Name your next right step — Structure",
+      "essence": "In yourself: clarity in complexity, building it into structure.",
+      "steps": [
+        "Take the concrete act — building it into structure.",
+        "Turn it inward: your next right step."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-ARCHITECT-OUTER",
+      "slug": "strategist-show_up-architect-outer",
+      "name": "Name the path so others can walk it — Structure",
+      "essence": "For others: clarity in complexity, building it into structure.",
+      "steps": [
+        "Take the concrete act — building it into structure.",
+        "Bring it to others: the path so others can walk it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-DIPLOMAT-INNER",
+      "slug": "strategist-show_up-diplomat-inner",
+      "name": "Name your next right step — Bridge",
+      "essence": "In yourself: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Take the concrete act — across difference and relationship.",
+        "Turn it inward: your next right step."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-DIPLOMAT-OUTER",
+      "slug": "strategist-show_up-diplomat-outer",
+      "name": "Name the path so others can walk it — Bridge",
+      "essence": "For others: clarity in complexity, across difference and relationship.",
+      "steps": [
+        "Take the concrete act — across difference and relationship.",
+        "Bring it to others: the path so others can walk it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-SAGE-INNER",
+      "slug": "strategist-show_up-sage-inner",
+      "name": "Name your next right step — Whole",
+      "essence": "In yourself: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Take the concrete act — integrating the whole field.",
+        "Turn it inward: your next right step."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-strategist-SHOW-SAGE-OUTER",
+      "slug": "strategist-show_up-sage-outer",
+      "name": "Name the path so others can walk it — Whole",
+      "essence": "For others: clarity in complexity, integrating the whole field.",
+      "steps": [
+        "Take the concrete act — integrating the whole field.",
+        "Bring it to others: the path so others can walk it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "strategist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clarity in complexity at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Detached Planner — mapping instead of acting."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Detached Planner — mapping instead of acting."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    }
+  ]
+}

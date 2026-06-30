@@ -161,10 +161,13 @@ export async function playerCanAccessEventCalendar(playerId: string, eventArtifa
     where: { id: eventArtifactId },
     select: {
       instanceId: true,
+      visibility: true,
       campaign: { select: { instanceId: true } },
     },
   })
   if (!ev) return false
+  // Events made discoverable to all players are addable to calendar by anyone.
+  if (ev.visibility === 'public' || ev.visibility === 'discoverable') return true
   const inst = ev.instanceId ?? ev.campaign?.instanceId
   if (!inst) return false
   if (await canInviteToAnyEventOnInstance(playerId, inst)) return true

@@ -1,0 +1,61 @@
+{
+  "name": "Inner Garden — Elemental Palette",
+  "description": "Unified 16-bit color palette for game sprites and UI",
+  "version": "0.1.0",
+
+  "elements": {
+    "fire":    { "primary": "#e05030", "secondary": "#f07040", "dark": "#a03020", "glow": "#ff8040", "emotion": "anger" },
+    "water":   { "primary": "#3070d0", "secondary": "#4090e0", "dark": "#2040a0", "glow": "#60b0ff", "emotion": "sadness" },
+    "earth":   { "primary": "#8a7a50", "secondary": "#a09060", "dark": "#5a4a30", "glow": "#c0b070", "emotion": "neutral" },
+    "metal":   { "primary": "#a0a8b0", "secondary": "#c0c8d0", "dark": "#606870", "glow": "#e0e8f0", "emotion": "fear" },
+    "wood":    { "primary": "#50a040", "secondary": "#70c060", "dark": "#307030", "glow": "#90e080", "emotion": "joy" }
+  },
+
+  "ui": {
+    "text":          "#e8d8c0",
+    "text_dim":      "#8a8a90",
+    "text_bright":   "#f5f0e8",
+    "accent":        "#c8a96e",
+    "accent_bright": "#e8c88a",
+    "danger":        "#e05040",
+    "success":       "#70c060",
+    "info":          "#4090e0",
+    "warning":       "#e0a040",
+    "bg_dark":       "#0a0a14",
+    "bg_panel":      "rgba(10,10,20,0.75)",
+    "bg_overlay":    "rgba(0,0,0,0.5)",
+    "border":        "#3a3a50"
+  },
+
+  "characters": {
+    "skin":      "#f0c8a0",
+    "skin_shadow": "#d8a880",
+    "robe_light": "#6a5a4a",
+    "robe_dark":  "#4a3a2a",
+    "hair":      "#1a0a00",
+    "hair_light": "#3a2a1a",
+    "eye":       "#2a1a0a",
+    "eye_white": "#f0f0f0"
+  },
+
+  "world": {
+    "grass":     "#4a8a3a",
+    "grass_var": "#3a7a2a",
+    "dirt":      "#8a7a50",
+    "soil":      "#5a4a30",
+    "path":      "#7a6a48",
+    "water":     "#3068b0",
+    "water_light": "#4088d0",
+    "fence":     "#6a5a3a",
+    "stone":     "#808890",
+    "wood":      "#6a4a2a"
+  },
+
+  "crops": {
+    "seed":   "#88cc44",
+    "sprout": "#60a838",
+    "bud":    "#388820",
+    "flower": "#d0a060",
+    "fruit":  "#e08040"
+  }
+}

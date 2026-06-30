@@ -114,7 +114,7 @@ export function SimpleCaptureForm({ defaultText = '', campaignRef }: SimpleCaptu
                                     key={key}
                                     onClick={() => setElement(active ? null : key)}
                                     className="flex flex-col items-center gap-1 flex-1 py-2 rounded-lg transition-all duration-150"
-                                    title={label}
+                                    title={`${label} · ${token.emotion}`}
                                     style={{
                                         background: active ? token.cssVarColor + '22' : 'rgba(255,255,255,0.04)',
                                         border: `1px solid ${active ? token.cssVarColor : 'rgba(255,255,255,0.08)'}`,
@@ -122,10 +122,12 @@ export function SimpleCaptureForm({ defaultText = '', campaignRef }: SimpleCaptu
                                 >
                                     <span className="text-lg">{sigil}</span>
                                     <span
-                                        className="text-[10px]"
-                                        style={{ color: active ? token.cssVarColor : '#6b6965' }}
+                                        className="text-[10px] leading-tight text-center"
+                                        style={{ color: active ? token.cssVarColor : '#a09e98' }}
                                     >
                                         {label}
+                                        <br />
+                                        <span style={{ opacity: 0.7 }}>{token.emotion}</span>
                                     </span>
                                 </button>
                             )

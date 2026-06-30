@@ -10,7 +10,8 @@
  * MoveAspect). Deterministic data — no AI.
  */
 import type { MoveAspect } from '../quest-grammar/types'
-import type { AllyshipDomain, Channel } from '../allyship-deck/types'
+import type { AllyshipDomain } from '../allyship-deck/types'
+import type { EmotionArc } from './arc'
 
 export type Superpower =
   | 'connector'
@@ -77,9 +78,21 @@ export interface SuperpowerTranslation {
 export interface SuperpowerDef {
   key: Superpower
   label: string
-  /** Element channel (emotion arc noted in `emotionArc`). */
-  channel: Channel
+  /** Human-readable emotional alchemy (prose form of `arc`). */
   emotionArc: string
+  /**
+   * The superpower's emotional alchemy as a *path across elements* — not a
+   * single Wuxing channel (ADR 0002). A superpower is an arc, not a point.
+   */
+  arc: EmotionArc[]
+  /** True for the alchemist — its arc ranges over all five elements. */
+  spansAllElements?: boolean
+  /**
+   * Optional superpower-owned identity color (a non-Wuxing hue). When unset the
+   * accent is derived from the arc's element gems. See `superpowerAccentCss`.
+   * Element is never an identity color for a superpower (ADR 0002).
+   */
+  accentOverride?: string
   domains: AllyshipDomain[]
   /** Overuse shadow (leaks into internal-orientation prompts). */
   overuseShadow: string
@@ -91,8 +104,11 @@ export const SUPERPOWER_DEFS: Record<Superpower, SuperpowerDef> = {
   connector: {
     key: 'connector',
     label: 'Connector',
-    channel: 'earth',
     emotionArc: 'Neutrality→Peace (Earth) + Sadness→Poignance (Water)',
+    arc: [
+      { from: 'Neutrality', to: 'Peace', element: 'earth' },
+      { from: 'Sadness', to: 'Poignance', element: 'water' },
+    ],
     domains: ['RAISE_AWARENESS', 'GATHERING_RESOURCES'],
     overuseShadow: 'over-mediates, responsible for everyone’s bonds, absorbs all emotions',
     avoidanceShadow: 'withholds introductions — "people should figure it out"',
@@ -100,8 +116,11 @@ export const SUPERPOWER_DEFS: Record<Superpower, SuperpowerDef> = {
   storyteller: {
     key: 'storyteller',
     label: 'Storyteller',
-    channel: 'fire',
     emotionArc: 'Anger→Triumph (Fire) + Sadness→Poignance (Water)',
+    arc: [
+      { from: 'Anger', to: 'Triumph', element: 'fire' },
+      { from: 'Sadness', to: 'Poignance', element: 'water' },
+    ],
     domains: ['RAISE_AWARENESS'],
     overuseShadow: 'the Manipulator — distorts/dramatizes for engagement',
     avoidanceShadow: 'the Lost Author — won’t claim a voice, lets others own the story',
@@ -109,8 +128,8 @@ export const SUPERPOWER_DEFS: Record<Superpower, SuperpowerDef> = {
   strategist: {
     key: 'strategist',
     label: 'Strategist',
-    channel: 'metal',
     emotionArc: 'Fear→Clarity/Precision (Metal)',
+    arc: [{ from: 'Fear', to: 'Clarity', element: 'metal' }],
     domains: ['SKILLFUL_ORGANIZING'],
     overuseShadow: 'analysis paralysis, over-control, people-as-chess-pieces',
     avoidanceShadow: 'won’t act without a perfect plan',
@@ -118,8 +137,8 @@ export const SUPERPOWER_DEFS: Record<Superpower, SuperpowerDef> = {
   disruptor: {
     key: 'disruptor',
     label: 'Disruptor',
-    channel: 'fire',
     emotionArc: 'Anger→Triumph (Fire)',
+    arc: [{ from: 'Anger', to: 'Triumph', element: 'fire' }],
     domains: ['DIRECT_ACTION'],
     overuseShadow: 'the Chaos Bringer — burns everything, fights to fight',
     avoidanceShadow: 'the Caged Rebel — bitter, waits for permission, inert',
@@ -127,8 +146,12 @@ export const SUPERPOWER_DEFS: Record<Superpower, SuperpowerDef> = {
   alchemist: {
     key: 'alchemist',
     label: 'Alchemist',
-    channel: 'water',
     emotionArc: 'all elements; Sadness→Poignance→Joy (master of alchemy)',
+    arc: [
+      { from: 'Sadness', to: 'Poignance', element: 'water' },
+      { from: 'Poignance', to: 'Joy', element: 'wood' },
+    ],
+    spansAllElements: true,
     domains: ['DIRECT_ACTION'],
     overuseShadow: 'Emotional Overload — absorbs too much, burns out',
     avoidanceShadow: 'the Detached Observer — intellectualizes, stays distant',
@@ -136,8 +159,11 @@ export const SUPERPOWER_DEFS: Record<Superpower, SuperpowerDef> = {
   escape_artist: {
     key: 'escape_artist',
     label: 'Escape Artist',
-    channel: 'water',
     emotionArc: 'Sadness→Poignance (Water) + Fear→Excitement (Metal)',
+    arc: [
+      { from: 'Sadness', to: 'Poignance', element: 'water' },
+      { from: 'Fear', to: 'Excitement', element: 'metal' },
+    ],
     domains: ['DIRECT_ACTION'],
     overuseShadow: 'the Martyr — stays too long out of guilt',
     avoidanceShadow: 'the Ghost — bolts at first friction',
@@ -145,8 +171,8 @@ export const SUPERPOWER_DEFS: Record<Superpower, SuperpowerDef> = {
   coach: {
     key: 'coach',
     label: 'Coach',
-    channel: 'fire',
     emotionArc: 'Frustration→Triumph (Fire) — softened Disruptor; integrator',
+    arc: [{ from: 'Frustration', to: 'Triumph', element: 'fire' }],
     domains: ['GATHERING_RESOURCES'],
     overuseShadow: 'the Taskmaster — drags instead of calls up; creates dependence',
     avoidanceShadow: 'the Empty Cheerleader — only affirms, never nudges',

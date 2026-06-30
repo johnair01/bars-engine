@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode, CSSProperties } from 'react'
+import Link from 'next/link'
 import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'
 import {
   themeForMove,
@@ -11,6 +12,13 @@ import {
   OPERATION_LABELS,
   DOMAIN_LABELS,
 } from '@/lib/allyship-deck/card-visuals'
+import {
+  glossaryHref,
+  moveTermId,
+  operationTermId,
+  domainTermId,
+  barTermId,
+} from '@/lib/allyship-deck/glossary'
 import type { MoveCard } from '@/lib/allyship-deck/types'
 import { MovePip } from './MovePip'
 import { FaceBadge } from './FaceBadge'
@@ -75,7 +83,9 @@ export function AllyshipCard({
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
-          minHeight: 186,
+          // Lock the trading-card proportion (5:7) so tiles keep their shape
+          // instead of stretching to fill the grid/flex row they sit in.
+          aspectRatio: '5 / 7',
           padding: 14,
           textAlign: 'left',
           cursor: onClick ? 'pointer' : 'default',
@@ -111,24 +121,45 @@ export function AllyshipCard({
 
   // full
   return (
-    <article style={cardRootStyle(card, { padding: '20px 22px 18px' })}>
+    <article
+      style={cardRootStyle(card, {
+        padding: '20px 22px 18px',
+        // Same trading-card proportion (5:7) as the card back; longer readings
+        // scroll inside the frame instead of stretching it (overflowY overrides
+        // the base `overflow: hidden`, which still clips X for the rounded frame).
+        aspectRatio: '5 / 7',
+        overflowY: 'auto',
+      })}
+    >
       <h2 style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 24, color: '#fff', margin: 0, lineHeight: 1.15 }}>
         {card.title}
       </h2>
 
-      {/* marks row */}
+      {/* marks row — each term deep-links to its glossary definition */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginTop: 14 }}>
-        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+        <Link
+          href={glossaryHref(moveTermId(card.move))}
+          title={`What is ${MOVE_LABELS[card.move]}?`}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, textDecoration: 'none' }}
+        >
           <MovePip move={card.move} size={34} />
           <span style={{ ...labelStyle, color: t.gem }}>{MOVE_LABELS[card.move]}</span>
-        </span>
-        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+        </Link>
+        <Link
+          href={glossaryHref(operationTermId(card.operation))}
+          title={`What is the ${OPERATION_LABELS[card.operation]} face?`}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, textDecoration: 'none' }}
+        >
           <FaceBadge operation={card.operation} size={36} />
           <span style={labelStyle}>{OPERATION_LABELS[card.operation]}</span>
-        </span>
-        <span style={{ marginLeft: 'auto', ...labelStyle, color: t.gem, alignSelf: 'center' }}>
+        </Link>
+        <Link
+          href={glossaryHref(domainTermId(card.domain))}
+          title={`What is ${DOMAIN_LABELS[card.domain]}?`}
+          style={{ marginLeft: 'auto', ...labelStyle, color: t.gem, alignSelf: 'center', textDecoration: 'none' }}
+        >
           ◇ {DOMAIN_LABELS[card.domain]}
-        </span>
+        </Link>
       </div>
 
       {/* the question */}
@@ -180,9 +211,13 @@ export function AllyshipCard({
         <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 10, color: SURFACE_TOKENS.textMuted, letterSpacing: '0.08em' }}>
           #{card.num}
         </span>
-        <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 12, color: DECK_GOLD }}>
+        <Link
+          href={glossaryHref(barTermId(card.outputBar))}
+          title={`What is a ${card.outputBar} BAR?`}
+          style={{ fontFamily: DECK_FONTS.mono, fontSize: 12, color: DECK_GOLD, textDecoration: 'none' }}
+        >
           → {card.outputBar} ♦
-        </span>
+        </Link>
       </div>
       {/* reward/minutes: omitted until BAR layer provides real values */}
       {/* restore when wired: {card.minutes} MIN · #{card.num}   ♦ {card.reward} */}

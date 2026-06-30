@@ -21,6 +21,16 @@ import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
 import { readHandDb } from '@/lib/hand-service'
 import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
 import { isHandVaultMovable } from '@/lib/hand-movement'
+import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+
+// Charge level → human label (mirrors the Seed Capture Whiteboard).
+const CHARGE_LABELS: Record<number, string> = {
+    1: 'barely a flicker',
+    2: 'a low hum',
+    3: "it's sitting with me",
+    4: 'hard to shake',
+    5: "can't put it down",
+}
 
 /**
  * @page /bars/:id
@@ -152,6 +162,28 @@ export default async function BarDetailPage({
                         charge={charge}
                         title={bar.title}
                     />
+                )}
+
+                {/* Intent · charge line — context beneath the frozen polaroid (canvas BARs). */}
+                {canvasLayout && (
+                    <div className="flex items-baseline justify-between gap-3 px-1 font-mono text-[10px] uppercase tracking-[0.06em]">
+                        <span className="text-zinc-500 truncate">
+                            intent · {tags.length > 0 ? tags.join(' · ') : 'none'}
+                        </span>
+                        {charge && (
+                            <span
+                                className="flex-shrink-0"
+                                style={{
+                                    color:
+                                        element && element in ELEMENT_TOKENS
+                                            ? ELEMENT_TOKENS[element as ElementKey].gem
+                                            : '#a855f7',
+                                }}
+                            >
+                                charge {charge} · {CHARGE_LABELS[charge]}
+                            </span>
+                        )}
+                    </div>
                 )}
 
                 {/* Card: Face | Back */}

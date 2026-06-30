@@ -1,0 +1,2531 @@
+{
+  "deck_slug": "superpower-alchemist",
+  "superpower": "alchemist",
+  "label": "The Alchemist",
+  "gift": "Turning heavy, messy emotion into fuel.",
+  "version": "0.1.0-draft",
+  "generatedAt": "2026-06-21T20:22:38.932Z",
+  "count": 60,
+  "cards": [
+    {
+      "id": "sp-alchemist-WAKE-SHAMAN-INNER",
+      "slug": "alchemist-wake_up-shaman-inner",
+      "name": "Notice the charge in your body — Sense",
+      "essence": "In yourself: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Notice what is actually here — sensing what is here.",
+        "Turn it inward: the charge in your body."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-SHAMAN-OUTER",
+      "slug": "alchemist-wake_up-shaman-outer",
+      "name": "Notice the emotion running the room — Sense",
+      "essence": "For others: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Notice what is actually here — sensing what is here.",
+        "Bring it to others: the emotion running the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-CHALLENGER-INNER",
+      "slug": "alchemist-wake_up-challenger-inner",
+      "name": "Notice the charge in your body — Edge",
+      "essence": "In yourself: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Turn it inward: the charge in your body."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-CHALLENGER-OUTER",
+      "slug": "alchemist-wake_up-challenger-outer",
+      "name": "Notice the emotion running the room — Edge",
+      "essence": "For others: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Bring it to others: the emotion running the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-REGENT-INNER",
+      "slug": "alchemist-wake_up-regent-inner",
+      "name": "Notice the charge in your body — Steward",
+      "essence": "In yourself: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here — stewarding it over time.",
+        "Turn it inward: the charge in your body."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-REGENT-OUTER",
+      "slug": "alchemist-wake_up-regent-outer",
+      "name": "Notice the emotion running the room — Steward",
+      "essence": "For others: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here — stewarding it over time.",
+        "Bring it to others: the emotion running the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-ARCHITECT-INNER",
+      "slug": "alchemist-wake_up-architect-inner",
+      "name": "Notice the charge in your body — Structure",
+      "essence": "In yourself: emotional transmutation, building it into structure.",
+      "steps": [
+        "Notice what is actually here — building it into structure.",
+        "Turn it inward: the charge in your body."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-ARCHITECT-OUTER",
+      "slug": "alchemist-wake_up-architect-outer",
+      "name": "Notice the emotion running the room — Structure",
+      "essence": "For others: emotional transmutation, building it into structure.",
+      "steps": [
+        "Notice what is actually here — building it into structure.",
+        "Bring it to others: the emotion running the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-DIPLOMAT-INNER",
+      "slug": "alchemist-wake_up-diplomat-inner",
+      "name": "Notice the charge in your body — Bridge",
+      "essence": "In yourself: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here — across difference and relationship.",
+        "Turn it inward: the charge in your body."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-DIPLOMAT-OUTER",
+      "slug": "alchemist-wake_up-diplomat-outer",
+      "name": "Notice the emotion running the room — Bridge",
+      "essence": "For others: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here — across difference and relationship.",
+        "Bring it to others: the emotion running the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-SAGE-INNER",
+      "slug": "alchemist-wake_up-sage-inner",
+      "name": "Notice the charge in your body — Whole",
+      "essence": "In yourself: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here — integrating the whole field.",
+        "Turn it inward: the charge in your body."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-WAKE-SAGE-OUTER",
+      "slug": "alchemist-wake_up-sage-outer",
+      "name": "Notice the emotion running the room — Whole",
+      "essence": "For others: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here — integrating the whole field.",
+        "Bring it to others: the emotion running the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-SHAMAN-INNER",
+      "slug": "alchemist-open_up-shaman-inner",
+      "name": "Welcome the feeling without drowning — Sense",
+      "essence": "In yourself: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Receive it without flinching — sensing what is here.",
+        "Turn it inward: the feeling without drowning."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-SHAMAN-OUTER",
+      "slug": "alchemist-open_up-shaman-outer",
+      "name": "Welcome what others cannot yet hold — Sense",
+      "essence": "For others: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Receive it without flinching — sensing what is here.",
+        "Bring it to others: what others cannot yet hold."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-CHALLENGER-INNER",
+      "slug": "alchemist-open_up-challenger-inner",
+      "name": "Welcome the feeling without drowning — Edge",
+      "essence": "In yourself: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Turn it inward: the feeling without drowning."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-CHALLENGER-OUTER",
+      "slug": "alchemist-open_up-challenger-outer",
+      "name": "Welcome what others cannot yet hold — Edge",
+      "essence": "For others: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Bring it to others: what others cannot yet hold."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-REGENT-INNER",
+      "slug": "alchemist-open_up-regent-inner",
+      "name": "Welcome the feeling without drowning — Steward",
+      "essence": "In yourself: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching — stewarding it over time.",
+        "Turn it inward: the feeling without drowning."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-REGENT-OUTER",
+      "slug": "alchemist-open_up-regent-outer",
+      "name": "Welcome what others cannot yet hold — Steward",
+      "essence": "For others: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching — stewarding it over time.",
+        "Bring it to others: what others cannot yet hold."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-ARCHITECT-INNER",
+      "slug": "alchemist-open_up-architect-inner",
+      "name": "Welcome the feeling without drowning — Structure",
+      "essence": "In yourself: emotional transmutation, building it into structure.",
+      "steps": [
+        "Receive it without flinching — building it into structure.",
+        "Turn it inward: the feeling without drowning."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-ARCHITECT-OUTER",
+      "slug": "alchemist-open_up-architect-outer",
+      "name": "Welcome what others cannot yet hold — Structure",
+      "essence": "For others: emotional transmutation, building it into structure.",
+      "steps": [
+        "Receive it without flinching — building it into structure.",
+        "Bring it to others: what others cannot yet hold."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-DIPLOMAT-INNER",
+      "slug": "alchemist-open_up-diplomat-inner",
+      "name": "Welcome the feeling without drowning — Bridge",
+      "essence": "In yourself: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching — across difference and relationship.",
+        "Turn it inward: the feeling without drowning."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-DIPLOMAT-OUTER",
+      "slug": "alchemist-open_up-diplomat-outer",
+      "name": "Welcome what others cannot yet hold — Bridge",
+      "essence": "For others: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching — across difference and relationship.",
+        "Bring it to others: what others cannot yet hold."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-SAGE-INNER",
+      "slug": "alchemist-open_up-sage-inner",
+      "name": "Welcome the feeling without drowning — Whole",
+      "essence": "In yourself: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching — integrating the whole field.",
+        "Turn it inward: the feeling without drowning."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-OPEN-SAGE-OUTER",
+      "slug": "alchemist-open_up-sage-outer",
+      "name": "Welcome what others cannot yet hold — Whole",
+      "essence": "For others: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching — integrating the whole field.",
+        "Bring it to others: what others cannot yet hold."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-SHAMAN-INNER",
+      "slug": "alchemist-clean_up-shaman-inner",
+      "name": "Transmute your own stuck charge — Sense",
+      "essence": "In yourself: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Transform the charge — sensing what is here.",
+        "Turn it inward: your own stuck charge."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-SHAMAN-OUTER",
+      "slug": "alchemist-clean_up-shaman-outer",
+      "name": "Transmute the field’s stuck emotion — Sense",
+      "essence": "For others: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Transform the charge — sensing what is here.",
+        "Bring it to others: the field’s stuck emotion."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-CHALLENGER-INNER",
+      "slug": "alchemist-clean_up-challenger-inner",
+      "name": "Transmute your own stuck charge — Edge",
+      "essence": "In yourself: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge — at the edge, naming what resists.",
+        "Turn it inward: your own stuck charge."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-CHALLENGER-OUTER",
+      "slug": "alchemist-clean_up-challenger-outer",
+      "name": "Transmute the field’s stuck emotion — Edge",
+      "essence": "For others: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge — at the edge, naming what resists.",
+        "Bring it to others: the field’s stuck emotion."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-REGENT-INNER",
+      "slug": "alchemist-clean_up-regent-inner",
+      "name": "Transmute your own stuck charge — Steward",
+      "essence": "In yourself: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Transform the charge — stewarding it over time.",
+        "Turn it inward: your own stuck charge."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-REGENT-OUTER",
+      "slug": "alchemist-clean_up-regent-outer",
+      "name": "Transmute the field’s stuck emotion — Steward",
+      "essence": "For others: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Transform the charge — stewarding it over time.",
+        "Bring it to others: the field’s stuck emotion."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-ARCHITECT-INNER",
+      "slug": "alchemist-clean_up-architect-inner",
+      "name": "Transmute your own stuck charge — Structure",
+      "essence": "In yourself: emotional transmutation, building it into structure.",
+      "steps": [
+        "Transform the charge — building it into structure.",
+        "Turn it inward: your own stuck charge."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-ARCHITECT-OUTER",
+      "slug": "alchemist-clean_up-architect-outer",
+      "name": "Transmute the field’s stuck emotion — Structure",
+      "essence": "For others: emotional transmutation, building it into structure.",
+      "steps": [
+        "Transform the charge — building it into structure.",
+        "Bring it to others: the field’s stuck emotion."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-DIPLOMAT-INNER",
+      "slug": "alchemist-clean_up-diplomat-inner",
+      "name": "Transmute your own stuck charge — Bridge",
+      "essence": "In yourself: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Transform the charge — across difference and relationship.",
+        "Turn it inward: your own stuck charge."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-DIPLOMAT-OUTER",
+      "slug": "alchemist-clean_up-diplomat-outer",
+      "name": "Transmute the field’s stuck emotion — Bridge",
+      "essence": "For others: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Transform the charge — across difference and relationship.",
+        "Bring it to others: the field’s stuck emotion."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-SAGE-INNER",
+      "slug": "alchemist-clean_up-sage-inner",
+      "name": "Transmute your own stuck charge — Whole",
+      "essence": "In yourself: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Transform the charge — integrating the whole field.",
+        "Turn it inward: your own stuck charge."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-CLEAN-SAGE-OUTER",
+      "slug": "alchemist-clean_up-sage-outer",
+      "name": "Transmute the field’s stuck emotion — Whole",
+      "essence": "For others: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Transform the charge — integrating the whole field.",
+        "Bring it to others: the field’s stuck emotion."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-SHAMAN-INNER",
+      "slug": "alchemist-grow_up-shaman-inner",
+      "name": "Strengthen your filtration — “is this mine?” — Sense",
+      "essence": "In yourself: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Build the capacity — sensing what is here.",
+        "Turn it inward: your filtration — “is this mine?”."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-SHAMAN-OUTER",
+      "slug": "alchemist-grow_up-shaman-outer",
+      "name": "Strengthen the group’s capacity to feel — Sense",
+      "essence": "For others: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Build the capacity — sensing what is here.",
+        "Bring it to others: the group’s capacity to feel."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-CHALLENGER-INNER",
+      "slug": "alchemist-grow_up-challenger-inner",
+      "name": "Strengthen your filtration — “is this mine?” — Edge",
+      "essence": "In yourself: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity — at the edge, naming what resists.",
+        "Turn it inward: your filtration — “is this mine?”."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-CHALLENGER-OUTER",
+      "slug": "alchemist-grow_up-challenger-outer",
+      "name": "Strengthen the group’s capacity to feel — Edge",
+      "essence": "For others: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity — at the edge, naming what resists.",
+        "Bring it to others: the group’s capacity to feel."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-REGENT-INNER",
+      "slug": "alchemist-grow_up-regent-inner",
+      "name": "Strengthen your filtration — “is this mine?” — Steward",
+      "essence": "In yourself: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Build the capacity — stewarding it over time.",
+        "Turn it inward: your filtration — “is this mine?”."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-REGENT-OUTER",
+      "slug": "alchemist-grow_up-regent-outer",
+      "name": "Strengthen the group’s capacity to feel — Steward",
+      "essence": "For others: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Build the capacity — stewarding it over time.",
+        "Bring it to others: the group’s capacity to feel."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-ARCHITECT-INNER",
+      "slug": "alchemist-grow_up-architect-inner",
+      "name": "Strengthen your filtration — “is this mine?” — Structure",
+      "essence": "In yourself: emotional transmutation, building it into structure.",
+      "steps": [
+        "Build the capacity — building it into structure.",
+        "Turn it inward: your filtration — “is this mine?”."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-ARCHITECT-OUTER",
+      "slug": "alchemist-grow_up-architect-outer",
+      "name": "Strengthen the group’s capacity to feel — Structure",
+      "essence": "For others: emotional transmutation, building it into structure.",
+      "steps": [
+        "Build the capacity — building it into structure.",
+        "Bring it to others: the group’s capacity to feel."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-DIPLOMAT-INNER",
+      "slug": "alchemist-grow_up-diplomat-inner",
+      "name": "Strengthen your filtration — “is this mine?” — Bridge",
+      "essence": "In yourself: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Build the capacity — across difference and relationship.",
+        "Turn it inward: your filtration — “is this mine?”."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-DIPLOMAT-OUTER",
+      "slug": "alchemist-grow_up-diplomat-outer",
+      "name": "Strengthen the group’s capacity to feel — Bridge",
+      "essence": "For others: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Build the capacity — across difference and relationship.",
+        "Bring it to others: the group’s capacity to feel."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-SAGE-INNER",
+      "slug": "alchemist-grow_up-sage-inner",
+      "name": "Strengthen your filtration — “is this mine?” — Whole",
+      "essence": "In yourself: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Build the capacity — integrating the whole field.",
+        "Turn it inward: your filtration — “is this mine?”."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-GROW-SAGE-OUTER",
+      "slug": "alchemist-grow_up-sage-outer",
+      "name": "Strengthen the group’s capacity to feel — Whole",
+      "essence": "For others: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Build the capacity — integrating the whole field.",
+        "Bring it to others: the group’s capacity to feel."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-SHAMAN-INNER",
+      "slug": "alchemist-show_up-shaman-inner",
+      "name": "Channel the fuel into one act — Sense",
+      "essence": "In yourself: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Take the concrete act — sensing what is here.",
+        "Turn it inward: the fuel into one act."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-SHAMAN-OUTER",
+      "slug": "alchemist-show_up-shaman-outer",
+      "name": "Channel the charge into shared momentum — Sense",
+      "essence": "For others: emotional transmutation, sensing what is here.",
+      "steps": [
+        "Take the concrete act — sensing what is here.",
+        "Bring it to others: the charge into shared momentum."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-CHALLENGER-INNER",
+      "slug": "alchemist-show_up-challenger-inner",
+      "name": "Channel the fuel into one act — Edge",
+      "essence": "In yourself: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act — at the edge, naming what resists.",
+        "Turn it inward: the fuel into one act."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-CHALLENGER-OUTER",
+      "slug": "alchemist-show_up-challenger-outer",
+      "name": "Channel the charge into shared momentum — Edge",
+      "essence": "For others: emotional transmutation, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act — at the edge, naming what resists.",
+        "Bring it to others: the charge into shared momentum."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-REGENT-INNER",
+      "slug": "alchemist-show_up-regent-inner",
+      "name": "Channel the fuel into one act — Steward",
+      "essence": "In yourself: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Take the concrete act — stewarding it over time.",
+        "Turn it inward: the fuel into one act."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-REGENT-OUTER",
+      "slug": "alchemist-show_up-regent-outer",
+      "name": "Channel the charge into shared momentum — Steward",
+      "essence": "For others: emotional transmutation, stewarding it over time.",
+      "steps": [
+        "Take the concrete act — stewarding it over time.",
+        "Bring it to others: the charge into shared momentum."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-ARCHITECT-INNER",
+      "slug": "alchemist-show_up-architect-inner",
+      "name": "Channel the fuel into one act — Structure",
+      "essence": "In yourself: emotional transmutation, building it into structure.",
+      "steps": [
+        "Take the concrete act — building it into structure.",
+        "Turn it inward: the fuel into one act."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-ARCHITECT-OUTER",
+      "slug": "alchemist-show_up-architect-outer",
+      "name": "Channel the charge into shared momentum — Structure",
+      "essence": "For others: emotional transmutation, building it into structure.",
+      "steps": [
+        "Take the concrete act — building it into structure.",
+        "Bring it to others: the charge into shared momentum."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-DIPLOMAT-INNER",
+      "slug": "alchemist-show_up-diplomat-inner",
+      "name": "Channel the fuel into one act — Bridge",
+      "essence": "In yourself: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Take the concrete act — across difference and relationship.",
+        "Turn it inward: the fuel into one act."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-DIPLOMAT-OUTER",
+      "slug": "alchemist-show_up-diplomat-outer",
+      "name": "Channel the charge into shared momentum — Bridge",
+      "essence": "For others: emotional transmutation, across difference and relationship.",
+      "steps": [
+        "Take the concrete act — across difference and relationship.",
+        "Bring it to others: the charge into shared momentum."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-SAGE-INNER",
+      "slug": "alchemist-show_up-sage-inner",
+      "name": "Channel the fuel into one act — Whole",
+      "essence": "In yourself: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Take the concrete act — integrating the whole field.",
+        "Turn it inward: the fuel into one act."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-alchemist-SHOW-SAGE-OUTER",
+      "slug": "alchemist-show_up-sage-outer",
+      "name": "Channel the charge into shared momentum — Whole",
+      "essence": "For others: emotional transmutation, integrating the whole field.",
+      "steps": [
+        "Take the concrete act — integrating the whole field.",
+        "Bring it to others: the charge into shared momentum."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "alchemist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your emotional transmutation at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Sponge — absorbing what isn’t yours (or the Detached Observer who won’t feel at all)."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    }
+  ]
+}
