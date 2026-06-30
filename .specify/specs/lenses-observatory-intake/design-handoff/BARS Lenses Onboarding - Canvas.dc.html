@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/cards.css">
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+  <script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+</helmet>
+
+<div style="position:absolute;left:28px;top:0;width:1500px;">
+  <div style="display:flex;align-items:center;gap:11px;">
+    <span style="width:10px;height:10px;border-radius:50%;background:#7c3aed;box-shadow:0 0 14px 2px rgba(124,58,237,.55);"></span>
+    <span style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:0.24em;text-transform:uppercase;color:#a855f7;">Lenses · goal-setting onboarding</span>
+  </div>
+  <h1 style="font-family:var(--bars-font-display);font-weight:800;font-size:30px;letter-spacing:-0.02em;color:#1f1d1a;margin:14px 0 0;">All states · free-write → make 10 → keep 5</h1>
+</div>
+
+<!-- ROW 0 -->
+<div style="position:absolute;left:0;top:96px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">01 · Entry — superpower</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="entry" initial-has-quiz="{{ true }}" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:540px;top:96px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">02 · Entry — no quiz</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="entry" initial-has-quiz="{{ false }}" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:1080px;top:96px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">03 · Vague movement</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="vague" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:1620px;top:96px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">04 · Free-write <span style="color:#a855f7;">10-min timer</span></div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="workshop" initial-workshop-lens="0" initial-workshop-phase="write" hint-size="470px,940px"></dc-import>
+</div>
+
+<!-- ROW 1 -->
+<div style="position:absolute;left:0;top:1136px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">05 · Make options <span style="color:#a855f7;">up to 10</span></div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="workshop" initial-workshop-lens="0" initial-workshop-phase="options" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:540px;top:1136px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">06 · Keep five <span style="color:#a855f7;">narrow to 5</span></div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="workshop" initial-workshop-lens="0" initial-workshop-phase="keep" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:1080px;top:1136px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">07 · Free-write <span style="color:#a855f7;">(Health)</span></div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="workshop" initial-workshop-lens="3" initial-workshop-phase="write" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:1620px;top:1136px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">08 · Free-write — empty page</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="workshop" initial-workshop-lens="0" initial-workshop-phase="write" initial-dream-filled="{{ false }}" hint-size="470px,940px"></dc-import>
+</div>
+
+<!-- ROW 2 -->
+<div style="position:absolute;left:0;top:2176px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">09 · Year lens — saved + parked</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="review" initial-saved="{{ true }}" initial-parked="{{ true }}" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:540px;top:2176px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">10 · Quarter · author <span style="color:#a855f7;">5 year goals carried</span></div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="quarter" initial-workshop-phase="write" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:1080px;top:2176px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">11 · Quarter · keep</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="quarter" initial-workshop-phase="keep" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:1620px;top:2176px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">12 · Month · author <span style="color:#a855f7;">quarter goals carried</span></div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="month" initial-workshop-phase="write" hint-size="470px,940px"></dc-import>
+</div>
+
+<!-- ROW 3 -->
+<div style="position:absolute;left:0;top:3216px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">13 · Week · author <span style="color:#a855f7;">month goals carried</span></div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="week" initial-workshop-phase="write" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:540px;top:3216px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">14 · Tap the Vein — what's bubbling up</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="ttv" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:1080px;top:3216px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">15 · Plant gate — before planting</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="plant" hint-size="470px,940px"></dc-import>
+</div>
+<div style="position:absolute;left:1620px;top:3216px;width:470px;">
+  <div data-drags-parent="1" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#56534e;margin-bottom:10px;cursor:grab;padding-left:28px;">16 · BAR planted — lineage carried</div>
+  <dc-import name="BARS Lenses Onboarding" chrome="bare" initial-screen="plant" initial-planted="{{ true }}" hint-size="470px,940px"></dc-import>
+</div>
+</x-dc>
+</body>
+</html>
