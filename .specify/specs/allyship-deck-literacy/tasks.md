@@ -28,9 +28,9 @@
 - [ ] **T4.4** Gate: build → check.
 
 ## Phase 5 — Orientation
-- [ ] **T5.1** New `src/components/deck/DeckOrientation.tsx`: four-use modal routing via `switchView`.
-- [ ] **T5.2** `AllyshipDeckReader.tsx`: open once via `deck-orientation-seen`; top-bar "How to use" re-open button.
-- [ ] **T5.3** Gate: build → check.
+- [x] **T5.1** New `src/components/deck/DeckOrientation.tsx`: four-use modal (daily / situation / browse / collection) routing via `switchView`.
+- [x] **T5.2** `AllyshipDeckReader.tsx`: open once via `deck-orientation-seen` (post-mount effect); top-bar "?" re-open button.
+- [x] **T5.3** Gate: eslint clean + tsc baseline (build/check in CI). _(No `deck:assemble` — no data change.)_
 
 ## Cross-cutting
 - [ ] **TX.1** `scripts/seed-cert-allyship-deck-literacy.ts` + `npm run seed:cert:allyship-deck-literacy` (grow one step per phase).
