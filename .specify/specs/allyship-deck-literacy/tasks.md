@@ -15,11 +15,11 @@
 - [x] **T2.5** Gate: `npm run deck:assemble` → committed JSON → eslint clean + tsc baseline + node tests pass (full build/check runs in CI — Prisma engine blocked offline).
 
 ## Phase 3 — Applications (authored baseline)
-- [ ] **T3.1** `types.ts`: add `applications?: { context: string; example: string }[]`.
-- [ ] **T3.2** `move-library.ts`: add `applications` to selected `AUTHORED` entries (`OPEN-GR-*`, `WAKE-GR-*` first).
-- [ ] **T3.3** New `src/components/deck/CardApplications.tsx`: collapsible + deterministic fallback.
-- [ ] **T3.4** `AllyshipCard.tsx`: render `<CardApplications card subject />` in full view.
-- [ ] **T3.5** Gate: `npm run deck:assemble` → **commit JSON** → build → check.
+- [x] **T3.1** `types.ts`: add `applications?: { context: string; example: string }[]`.
+- [x] **T3.2** `move-library.ts`: added `applications` to 4 authored entries (`OPEN-GR-SHAMAN`, `OPEN-GR-CHALLENGER`, `WAKE-GR-SHAMAN`, `SHOW-RA-CHALLENGER`); more to follow.
+- [x] **T3.3** New `src/components/deck/CardApplications.tsx`: collapsible "How this shows up in real life" + deterministic fallback (domain framing + other reading).
+- [x] **T3.4** `AllyshipCard.tsx`: render `<CardApplications card subject />` in full view (after flavor).
+- [x] **T3.5** Gate: `npm run deck:assemble` → committed JSON (4 cards carry applications) → eslint clean + tsc baseline + node tests pass.
 
 ## Phase 4 — Applications (optional AI)
 - [ ] **T4.1** New `src/actions/deck-applications.ts`: `applyCardToSituation` (cached, flagged, degrades).
