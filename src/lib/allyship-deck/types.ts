@@ -61,6 +61,8 @@ export interface MoveCard {
   remediation: string
   /** The one concrete next step ("Your move"). Defaults from the submove action; AUTHORED may override. */
   action?: string
+  /** Authored real-life applications — how this move shows up in concrete situations. AUTHORED-only. */
+  applications?: { context: string; example: string }[]
 
   flavor?: string
   capabilities: Capability[] // latent; selected at consult time (faces are channel-agnostic)

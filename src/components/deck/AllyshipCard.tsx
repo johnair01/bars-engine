@@ -22,6 +22,7 @@ import {
 import type { MoveCard } from '@/lib/allyship-deck/types'
 import { MovePip } from './MovePip'
 import { FaceBadge } from './FaceBadge'
+import { CardApplications } from './CardApplications'
 
 /** Which reading of the card to show: introspective (self) or for-others (campaign). */
 export type CardSubject = 'self' | 'campaign'
@@ -223,6 +224,9 @@ export function AllyshipCard({
           {card.flavor}
         </p>
       )}
+
+      {/* how this shows up in real life — authored applications or deterministic fallback */}
+      <CardApplications card={card} subject={subject} />
 
       {/* foot */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>

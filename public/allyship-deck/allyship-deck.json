@@ -158,7 +158,17 @@
         "rest"
       ],
       "status": "authored",
-      "flavor": "Not every empty cup is the same cup."
+      "flavor": "Not every empty cup is the same cup.",
+      "applications": [
+        {
+          "context": "Burnout",
+          "example": "You feel \"broke,\" but a closer look shows the real scarcity is time and rest, not money. Name the one resource that would change everything."
+        },
+        {
+          "context": "An organization",
+          "example": "A team says it needs funding; on inspection it needs decisions. Distinguish what is depleted from what only feels depleted."
+        }
+      ]
     },
     {
       "id": "WAKE-GR-CHALLENGER",
@@ -893,7 +903,21 @@
         "rest"
       ],
       "status": "authored",
-      "flavor": "The child holding the empty cup is not a problem to solve yet. First, let yourself see the cup."
+      "flavor": "The child holding the empty cup is not a problem to solve yet. First, let yourself see the cup.",
+      "applications": [
+        {
+          "context": "Money",
+          "example": "Before drafting a fundraiser, sit with what the shortfall actually feels like — fear, shame, grief — and name it out loud before you name a number."
+        },
+        {
+          "context": "Asking for help",
+          "example": "You need a ride to an appointment. Instead of over-explaining, notice the discomfort of needing, then make the plain ask."
+        },
+        {
+          "context": "A stalled campaign",
+          "example": "A mutual-aid drive stalls. Rather than adding tactics, let the group feel what is missing — often it is rest or trust, not resources."
+        }
+      ]
     },
     {
       "id": "OPEN-GR-CHALLENGER",
@@ -926,7 +950,17 @@
         "connection"
       ],
       "status": "authored",
-      "flavor": "It never worked because the asking was fake. It was asking for rescue, not asking to be changed."
+      "flavor": "It never worked because the asking was fake. It was asking for rescue, not asking to be changed.",
+      "applications": [
+        {
+          "context": "At work",
+          "example": "You keep working weekends to avoid asking for headcount. Name the fear of looking incapable, then request the help you actually need."
+        },
+        {
+          "context": "In a friendship",
+          "example": "You want deeper support but keep things light to avoid being a burden. Make the real ask instead of the safe one."
+        }
+      ]
     },
     {
       "id": "OPEN-GR-REGENT",
@@ -3292,7 +3326,17 @@
         "agency"
       ],
       "status": "authored",
-      "flavor": "The naming is the first move."
+      "flavor": "The naming is the first move.",
+      "applications": [
+        {
+          "context": "A meeting",
+          "example": "A colleague is talked over repeatedly. Instead of a vague follow-up, say it in the room: “I want to hear the rest of what she was saying.”"
+        },
+        {
+          "context": "Online",
+          "example": "You have drafted the post three times. Publish the specific truth today, addressed to the people who need to hear it."
+        }
+      ]
     },
     {
       "id": "SHOW-RA-REGENT",
