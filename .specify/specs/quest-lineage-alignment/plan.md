@@ -10,10 +10,14 @@ The substrate already exists (`CustomBar.type='quest'`, `lensGoalId`, `plantSnap
 cadence + `parentGoalId`; `buildLensGoalSnapshot`; `PlayerQuest`). QLA is **connective tissue**, not
 new foundations. Two principles:
 
-1. **One read-model for the Vault.** Collapse `chargeRoomWhere` (vault) and `listMyBars` (/bars)
-   into `getVaultInventory`, a single owned-active-CustomBar query with a `room` discriminator
-   derived from `type` + maturity + `lensGoalId`/`shadowAcknowledgedAt`. Delete the 50-cap; add
-   cursor pagination. `/bars` list → redirect; keep detail.
+1. **One canonical inventory home — without flattening the move-rooms.** The Vault is already a
+   deliberate five-move room dashboard (`loadVaultCoreData` + `VaultMoveDashboard` →
+   `/vault/charges|open-up|drafts|quests|…`). Do **not** replace it with a flat list. Instead add a
+   canonical **"All BARs"** room (a new `getVaultInventory` read-model reusing `listMyBars`
+   semantics, with a `room` discriminator derived from `type` + maturity +
+   `lensGoalId`/`shadowAcknowledgedAt`), retire the 50-cap with cursor pagination, and **redirect
+   `/bars` → the Vault** so there is one home. Keep `/bars/[id]` detail. The existing move-rooms are
+   preserved; `getVaultInventory` powers the new room + lobby counts, not a wholesale rewrite.
 2. **One mint path.** Extract `mintQuestFromText` so TTV commit and `growQuestFromBar` create quests
    the *same* way — always copying lineage. This is where the "lineage loss" bug dies.
 

@@ -15,6 +15,8 @@ import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 import { CAPTURE_BAR_TYPES } from '@/lib/vault-ui'
 // Plain module (no 'use server') — safe to import from this server-action file.
 import { addBarToHandForPlayer } from '@/lib/hand-service'
+import { mintQuestFromText } from '@/lib/quests/mint'
+import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
 
 // Element channel ('nation' column) — valid capture-time field-tint values.
 // Mirrors ElementKey in src/lib/ui/card-tokens.ts (kept inline to avoid pulling
@@ -782,7 +784,11 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
 
     const bar = await db.customBar.findUnique({
         where: { id: barId },
-        select: { id: true, title: true, description: true, type: true, creatorId: true },
+        select: {
+            id: true, title: true, description: true, type: true, creatorId: true,
+            // Lineage — carried onto the grown quest so it keeps its lens connection (QLA).
+            lensId: true, lensGoalId: true, plantSnapshot: true,
+        },
     })
     if (!bar) return { error: 'BAR not found' }
 
@@ -808,28 +814,16 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
     if (!cap.ok) return { error: cap.error }
 
     try {
-        const quest = await db.customBar.create({
-            data: {
-                creatorId: playerId,
-                title,
-                description,
-                type: 'quest',
-                reward: 1,
-                visibility: 'private',
-                status: 'active',
-                moveType: 'showUp',
-                allyshipDomain: 'GATHERING_RESOURCES',
-                sourceBarId: barId,
-                inputs: '[]',
-                rootId: 'temp',
-            },
-        })
-        await db.customBar.update({ where: { id: quest.id }, data: { rootId: quest.id } })
-
-        await db.playerQuest.upsert({
-            where: { playerId_questId: { playerId, questId: quest.id } },
-            update: { status: 'assigned' },
-            create: { playerId, questId: quest.id, status: 'assigned', assignedAt: new Date() },
+        // Mint through the shared primitive so the quest carries the source BAR's
+        // lens lineage (previously hardcoded to null — the QLA lineage-loss bug).
+        const { questId } = await mintQuestFromText({
+            playerId,
+            title,
+            description,
+            sourceBarId: barId,
+            lensId: bar.lensId,
+            lensGoalId: bar.lensGoalId,
+            plantSnapshot: (bar.plantSnapshot ?? null) as unknown as LensGoalTrace | null,
         })
 
         if (bar.type === 'charge_capture') {
@@ -851,7 +845,7 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
         revalidatePath('/')
         revalidatePath('/vault')
         revalidatePath(`/bars/${barId}`)
-        return { questId: quest.id }
+        return { questId }
     } catch (e) {
         const msg = e instanceof Error ? e.message : 'Failed to create quest'
         return { error: msg }

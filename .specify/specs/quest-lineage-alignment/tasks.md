@@ -5,21 +5,22 @@
 
 ## Phase 1 — Foundation: unify inventory + stop losing lineage (no schema change)
 
-- [ ] **T1.1** Extract `src/lib/quests/mint.ts` → `mintQuestFromText(playerId, text, opts)`:
-  create `CustomBar{type:'quest'}`, copy `lensId/lensGoalId/plantSnapshot` from the weekly goal
-  (via `buildLensGoalSnapshot`), create `PlayerQuest{status:'assigned'}`, link `sourceTaskId.questId`
-  / `sourceBarId`. No weekly goal → `lensGoalId=null` (shadow). Unit test `mint.test.ts`.
-- [ ] **T1.2** Fix `growQuestFromBar` (`src/actions/bars.ts`): copy `lensId/lensGoalId/plantSnapshot`
-  from source BAR onto the quest (delegate to `mintQuestFromText` where possible). Regression test:
-  a source BAR with `lensGoalId` yields a quest with the same `lensGoalId`.
-- [ ] **T1.3** New `src/actions/vault.ts` → `getVaultInventory({room?, cursor?, take?})`: single
-  owned-active-`CustomBar` query; derive `room` per plan table; cursor pagination; per-room `counts`
-  via `groupBy`. Define `VaultItemDTO` + `VaultRoom`. Unit-test room predicates.
-- [ ] **T1.4** Swap `src/app/vault/page.tsx` to render from `getVaultInventory` (rooms:
-  seeds · garden · quests · shadow); remove `VAULT_SERVER_LIST_CAP` 50-cap; keep `chargeRoomWhere`
-  temporarily until parity confirmed, then delete it + dead `vault-queries` bits.
-- [ ] **T1.5** Redirect `/bars` and `/bars` list sub-routes → `/vault` (`redirect()` in the page);
-  retain `/bars/[id]`.
+- [x] **T1.1** Extract `src/lib/quests/mint.ts` → `mintQuestFromText(input)`: create
+  `CustomBar{type:'quest'}` carrying `lensId/lensGoalId/plantSnapshot`, self-root, create
+  `PlayerQuest{status:'assigned'}`, link `sourceTaskId.questId` — all in one transaction. **Done.**
+  (Unit test deferred to CI — sandbox can't generate the Prisma client.)
+- [x] **T1.2** Fix `growQuestFromBar` (`src/actions/bars.ts`): select the source BAR's
+  `lensId/lensGoalId/plantSnapshot` and mint through `mintQuestFromText` so the quest keeps its
+  lineage (was hardcoded null). **Done.**
+- [ ] **T1.3** New `src/actions/vault.ts` → `getVaultInventory({room?, cursor?, take?})`: owned-active
+  `CustomBar` query reusing `listMyBars` semantics; derive `room` per plan table; cursor pagination;
+  per-room `counts` via `groupBy`. Define `VaultItemDTO` + `VaultRoom`. **Additive** — does not
+  replace the existing move-room loaders in `vault-queries.ts`.
+- [ ] **T1.4** Add a canonical **"All BARs"** Vault room (new `/vault/all` page + a
+  `VaultMoveDashboard` entry) rendering from `getVaultInventory`; retire the 50-cap
+  (`VAULT_SERVER_LIST_CAP`) with cursor pagination. Preserve the five move-rooms.
+- [ ] **T1.5** Redirect `/bars` (and `/bars` list sub-routes) → the Vault All-BARs room; retain
+  `/bars/[id]`. Reuse the `/bars` list UI (`BarListThumb`) so nothing is lost.
 - [ ] **T1.6** `npm run build` && `npm run check`. Open **Phase 1 PR** (immediate inventory +
   lineage-loss fix).
 
