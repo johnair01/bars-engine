@@ -1,0 +1,51 @@
+/* /superpower — quiz + reveal motion and interaction states.
+ * Source: superpower-route design handoff. Aesthetic classes live here;
+ * layout stays Tailwind/inline. All color flows through --bars-* tokens.
+ */
+
+@keyframes sp-rise {
+  from { transform: translateY(9px); }
+  to   { transform: none; }
+}
+
+@keyframes sp-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+/* Question / result entry — transform only (element must stay visible). */
+.sp-rise {
+  animation: sp-rise 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Floating sigil gem on the primary reveal card. */
+.sp-float {
+  animation: sp-float 5.5s ease-in-out infinite;
+}
+
+/* Option button hover/press. */
+.sp-opt {
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.08s ease;
+}
+.sp-opt:hover {
+  border-color: var(--bars-line-strong);
+  background: rgba(255, 255, 255, 0.025);
+}
+.sp-opt:active {
+  transform: scale(0.985);
+}
+
+/* Ghost mono buttons (Back / Retake). */
+.sp-ghost {
+  transition: color 0.2s ease;
+}
+.sp-ghost:hover {
+  color: var(--bars-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-rise,
+  .sp-float {
+    animation: none !important;
+  }
+}
