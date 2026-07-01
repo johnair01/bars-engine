@@ -34,6 +34,7 @@ import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { TaskCard } from './TaskCard'
 import { TaskActionSheet, type SheetAction } from './TaskActionSheet'
+import { BrainstormFlow } from '@/components/brainstorm/BrainstormFlow'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -41,8 +42,10 @@ const display = 'var(--bars-font-display)'
 const body = 'var(--bars-font-body)'
 const purple = 'var(--bars-liminal)'
 
-type Phase = 'open' | 'brainstorm' | 'commit' | 'work' | 'seal'
-const PHASES: Phase[] = ['open', 'brainstorm', 'commit', 'work', 'seal']
+// Morning sequence: tap the vein (free-write) → brainstorm (dump → distill the
+// moves) → commit (review the committed cards) → work → seal.
+type Phase = 'open' | 'freewrite' | 'brainstorm' | 'commit' | 'work' | 'seal'
+const PHASES: Phase[] = ['open', 'freewrite', 'brainstorm', 'commit', 'work', 'seal']
 
 type Props = {
   initial: TtvToday
@@ -66,7 +69,11 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
 
   const [rawEntry, setRawEntry] = useState(initial.rawEntry)
   const [draft, setDraft] = useState('')
-  const [lensGoalId, setLensGoalId] = useState(initial.lensGoals[0]?.id ?? '')
+  // Quests hang on a WEEKLY goal (QLA). Default to the first active weekly goal;
+  // empty = commit as a shadow quest (surfaced for fold-in).
+  const [lensGoalId, setLensGoalId] = useState(
+    initial.lensGoals.find((g) => g.cadence === 'week')?.id ?? '',
+  )
   const [menuTask, setMenuTask] = useState<TtvTaskDTO | null>(null)
   const [plantedTrace, setPlantedTrace] = useState<LensGoalTrace | null>(null)
 
@@ -82,6 +89,8 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
   const carriedIn = useMemo(() => liveTasks.filter((t) => t.isCarried), [liveTasks])
   const words = countWords(rawEntry)
 
+  const [commitNote, setCommitNote] = useState<string | null>(null)
+
   const run = <T,>(fn: () => Promise<T | { error: string }>, after?: () => void) => {
     setError(null)
     setPlantedTrace(null)
@@ -92,6 +101,45 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
         return
       }
       after?.()
+      router.refresh()
+    })
+  }
+
+  // Commit one named move: persists + deals it into the Hand (or Vault if full).
+  const handleCommit = () => {
+    const text = draft.trim()
+    if (!text) return
+    setError(null)
+    setCommitNote(null)
+    startTransition(async () => {
+      const res = await commitTask({ text, lensGoalId: lensGoalId || null })
+      if ('error' in res) {
+        setError(res.error)
+        return
+      }
+      setDraft('')
+      const where = res.placedIn === 'hand' ? 'dealt to your hand' : 'hand full · saved to your vault'
+      const align = res.aligned ? 'aligned to this week' : 'shadow quest · fold into a weekly goal'
+      setCommitNote(`→ ${where} · ${align}`)
+      router.refresh()
+    })
+  }
+
+  // Brainstorm → commit: persist each distilled "play" move, then review them.
+  const commitPlayForward = (texts: string[]) => {
+    setError(null)
+    setCommitNote(null)
+    startTransition(async () => {
+      for (const text of texts) {
+        const t = text.trim()
+        if (!t) continue
+        const res = await commitTask({ text: t, lensGoalId: lensGoalId || null })
+        if ('error' in res) {
+          setError(res.error)
+          break
+        }
+      }
+      setPhase('commit')
       router.refresh()
     })
   }
@@ -185,17 +233,17 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               carriedIn={carriedIn}
               element={element}
               nationName={nationName}
-              onBegin={() => setPhase('brainstorm')}
+              onBegin={() => setPhase('freewrite')}
             />
           )}
 
-          {phase === 'brainstorm' && (
-            <BrainstormPhase
+          {phase === 'freewrite' && (
+            <FreewritePhase
               rawEntry={rawEntry}
               setRawEntry={setRawEntry}
               words={words}
               pending={pending}
-              onContinue={() => run(() => saveBrainstorm(rawEntry), () => setPhase('commit'))}
+              onContinue={() => run(() => saveBrainstorm(rawEntry), () => setPhase('brainstorm'))}
             />
           )}
 
@@ -211,15 +259,8 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               element={element}
               nationName={nationName}
               pending={pending}
-              onCommit={() =>
-                run(
-                  async () => {
-                    const r = await commitTask({ text: draft, lensGoalId: lensGoalId || null })
-                    return r
-                  },
-                  () => setDraft(''),
-                )
-              }
+              commitNote={commitNote}
+              onCommit={handleCommit}
               onNext={() => setPhase('work')}
             />
           )}
@@ -252,6 +293,13 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
           busy={pending}
           onAction={handleAction}
           onClose={() => setMenuTask(null)}
+        />
+      )}
+
+      {phase === 'brainstorm' && (
+        <BrainstormFlow
+          onCarryForward={commitPlayForward}
+          onClose={() => setPhase('commit')}
         />
       )}
     </div>
@@ -365,7 +413,7 @@ function OpenPhase({
   )
 }
 
-function BrainstormPhase({
+function FreewritePhase({
   rawEntry,
   setRawEntry,
   words,
@@ -381,7 +429,7 @@ function BrainstormPhase({
   const pct = Math.min(1, words / WORD_FLOOR)
   return (
     <>
-      <Eyebrow>Tap the Vein · Brainstorm</Eyebrow>
+      <Eyebrow>Tap the Vein · Free-write</Eyebrow>
       <H1>What&rsquo;s alive this morning?</H1>
 
       <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', margin: '14px 0 6px' }}>
@@ -421,7 +469,7 @@ function BrainstormPhase({
 
       <div style={{ marginTop: 'auto' }}>
         <PrimaryCta onClick={onContinue} disabled={pending}>
-          Continue → name your moves
+          Continue → brainstorm the moves
         </PrimaryCta>
       </div>
     </>
@@ -439,6 +487,7 @@ function CommitPhase({
   element,
   nationName,
   pending,
+  commitNote,
   onCommit,
   onNext,
 }: {
@@ -452,6 +501,7 @@ function CommitPhase({
   element: ElementKey
   nationName: string | null
   pending: boolean
+  commitNote: string | null
   onCommit: () => void
   onNext: () => void
 }) {
@@ -459,6 +509,8 @@ function CommitPhase({
   const atCap = count >= MAX_TASKS_PER_DAY
   const emptySlots = Math.max(0, MAX_TASKS_PER_DAY - count - (draft.trim() ? 1 : 0))
   const gem = ELEMENT_TOKENS[element].gem
+  // Quests attach at the WEEKLY level (QLA); month/quarter/year are roll-up targets.
+  const weeklyGoals = lensGoals.filter((g) => g.cadence === 'week')
 
   return (
     <>
@@ -492,7 +544,7 @@ function CommitPhase({
         </div>
       )}
 
-      {lensGoals.length > 0 && !atCap && (
+      {!atCap && (weeklyGoals.length > 0 ? (
         <select
           value={lensGoalId}
           onChange={(e) => setLensGoalId(e.target.value)}
@@ -510,14 +562,18 @@ function CommitPhase({
             outline: 'none',
           }}
         >
-          <option value="">No Lens goal attached</option>
-          {lensGoals.map((goal) => (
+          <option value="">No weekly goal — commit as a shadow quest</option>
+          {weeklyGoals.map((goal) => (
             <option key={goal.id} value={goal.id}>
-              {goal.domain} / {goal.cadence}: {goal.title}
+              {goal.domain}: {goal.title}
             </option>
           ))}
         </select>
-      )}
+      ) : (
+        <p style={{ marginTop: 14, fontFamily: mono, fontSize: 9, letterSpacing: '0.06em', color: 'var(--bars-text-muted)' }}>
+          No weekly goals yet — <a href="/lenses" style={{ color: purple, textDecoration: 'underline' }}>set one in Lenses</a> to align today&rsquo;s quests, or commit them as shadow quests.
+        </p>
+      ))}
 
       {/* Compose */}
       {!atCap && (
@@ -560,6 +616,12 @@ function CommitPhase({
             ↓
           </button>
         </div>
+      )}
+
+      {commitNote && (
+        <p style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bars-wood-gem)', margin: '8px 0 0' }}>
+          {commitNote}
+        </p>
       )}
 
       {/* Committed seeds + empty slots */}

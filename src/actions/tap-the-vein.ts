@@ -23,10 +23,10 @@ import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
 import { ACTIVE_TTV_TASK_STATUSES, canCommitTtvTask, nextHistoricalPriorityRank } from '@/lib/tap-the-vein/commit-policy'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
 import { growQuestFromBar } from '@/actions/bars'
-import { ensureTodayLens, personalGardenId } from '@/lib/lenses/ensure'
-
-/** Separator for multiselect EA-triad values stored as a single string (mirrors Q3_SEP). */
-const EA_SEP = ' | '
+import { ensureTodayLens } from '@/lib/lenses/ensure'
+import { addBarToHandForPlayer, type OverflowContext } from '@/lib/hand-service'
+import { writePlantTriadToBar } from '@/lib/garden/plant'
+import { mintQuestFromText } from '@/lib/quests/mint'
 
 /** Maturity/provenance for a TTV task's projected BAR (mirrors captureBar). */
 const TTV_BAR_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
@@ -82,27 +82,6 @@ async function createBarFromText(
       await tx.tapTheVeinTask.update({ where: { id: linkTaskId }, data: { barId: bar.id } })
     }
     return bar.id
-  })
-}
-
-/**
- * Write the EA-triad (desired outcome + current dissatisfaction + desired
- * satisfaction) onto a BAR and place it in the player's Garden. Load-bearing for
- * lens/campaign alignment + EA moves. Used by `plantTask` (the in-ritual Plant gate).
- */
-async function writePlantTriadToBar(
-  playerId: string,
-  barId: string,
-  triad: { experienceIntent: string; dissatisfaction: string[]; satisfaction: string[] },
-): Promise<void> {
-  await db.customBar.update({
-    where: { id: barId },
-    data: {
-      gardenId: personalGardenId(playerId),
-      experienceIntent: triad.experienceIntent,
-      dissatisfaction: triad.dissatisfaction.join(EA_SEP),
-      satisfaction: triad.satisfaction.join(EA_SEP),
-    },
   })
 }
 
@@ -344,7 +323,7 @@ export async function commitTask(input: {
   lensCategory?: string | null
   lensFaceKey?: string | null
   lensGoalId?: string | null
-}): Promise<TtvResult<{ task: TtvTaskDTO }>> {
+}): Promise<TtvResult<{ task: TtvTaskDTO; questId: string; aligned: boolean; placedIn: 'hand' | 'vault'; overflow?: OverflowContext }>> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
 
@@ -411,8 +390,42 @@ export async function commitTask(input: {
       attachSnapshot: created.attachSnapshot,
     })
 
+    // Born as a quest (QLA): a committed move IS a quest from the jump, carrying
+    // its lens lineage. Aligned when it hangs on a weekly goal; otherwise it is a
+    // shadow quest surfaced for fold-in. Deal it into the Hand (Vault on overflow).
+    const lens = await ensureTodayLens(player.id)
+    const { questId } = await mintQuestFromText({
+      playerId: player.id,
+      title: text,
+      description: text,
+      sourceTaskId: created.id,
+      questSource: 'tap_the_vein',
+      lensId: lens?.id ?? null,
+      lensGoalId: lensGoal?.id ?? null,
+      plantSnapshot: attachSnapshot,
+    })
+    const aligned = lensGoal?.cadence === 'week'
+
+    let placedIn: 'hand' | 'vault' = 'vault'
+    let overflow: OverflowContext | undefined
+    const handRes = await addBarToHandForPlayer(player.id, questId)
+    if ('success' in handRes && handRes.success) {
+      placedIn = 'hand'
+    } else if ('overflow' in handRes) {
+      overflow = handRes.overflow
+    }
+
     revalidatePath('/tap-the-vein')
-    return { task: toTaskDTO(created, goalById, lensGoalTrace) }
+    revalidatePath('/vault')
+    revalidatePath('/')
+    // mintQuestFromText set task.questId after `created` was read — reflect it.
+    return {
+      task: toTaskDTO({ ...created, questId }, goalById, lensGoalTrace),
+      questId,
+      aligned,
+      placedIn,
+      overflow,
+    }
   } catch (e) {
     if (e instanceof Error && e.message === 'TTV_CAP_REACHED') {
       return { error: `Daily cap reached (${MAX_TASKS_PER_DAY} tasks). Compost one to make room.` }
@@ -436,7 +449,7 @@ export async function updateTaskStatus(input: {
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: input.taskId },
-      select: { id: true, playerId: true, status: true, barId: true },
+      select: { id: true, playerId: true, status: true, barId: true, questId: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
@@ -468,12 +481,14 @@ export async function updateTaskStatus(input: {
       select: TASK_SELECT,
     })
 
-    // Lifecycle sync (H1): composting a task composts its projected BAR too —
-    // archive it (composted, not deleted: "nothing wasted").
-    if (input.status === 'composted' && task.barId) {
+    // Lifecycle sync: composting a task composts its artifact too — the born-as-quest
+    // (task.questId) or a legacy projected BAR (task.barId). Archive it (composted, not
+    // deleted: "nothing wasted") and free its Hand slot so no stale card lingers.
+    const artifactId = task.questId ?? task.barId
+    if (input.status === 'composted' && artifactId) {
       try {
         await db.customBar.update({
-          where: { id: task.barId },
+          where: { id: artifactId },
           data: {
             archivedAt: new Date(),
             seedMetabolization: mergeSeedMetabolization(TTV_BAR_SEED_METABOLIZATION, {
@@ -482,8 +497,12 @@ export async function updateTaskStatus(input: {
             }),
           },
         })
+        await db.handSlot.updateMany({
+          where: { playerId: player.id, barId: artifactId },
+          data: { barId: null, isCarrying: false },
+        })
       } catch (e) {
-        console.error('[ttv:updateTaskStatus] BAR compost sync failed', e)
+        console.error('[ttv:updateTaskStatus] artifact compost sync failed', e)
       }
     }
 
@@ -660,10 +679,17 @@ export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ ta
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: taskId },
-      select: { id: true, playerId: true, status: true, barId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
+      select: { id: true, playerId: true, status: true, barId: true, questId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
+
+    // Born-as-quest (QLA): the task already has a quest — idempotent no-op, never
+    // double-mint. Return the task unchanged so it stays in the day's work list.
+    if (task.questId) {
+      const existing = await db.tapTheVeinTask.findUnique({ where: { id: task.id }, select: TASK_SELECT })
+      return { task: toTaskDTO(existing!, new Map(), null) }
+    }
 
     const allowed = ALLOWED_TRANSITIONS[task.status]
     if (!allowed || !allowed.has('upgraded_to_quest')) {

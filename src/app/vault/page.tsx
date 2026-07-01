@@ -141,6 +141,18 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
 
             <div className="flex flex-wrap gap-2">
                 <Link
+                    href="/vault/all"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-900/50 bg-purple-950/25 text-sm text-purple-300 hover:text-purple-200 hover:border-purple-700/60 transition-colors"
+                >
+                    All BARs →
+                </Link>
+                <Link
+                    href="/vault/shadow"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-900/50 bg-amber-950/20 text-sm text-amber-300/90 hover:text-amber-200 hover:border-amber-700/60 transition-colors"
+                >
+                    Shadow quests →
+                </Link>
+                <Link
                     href="/vault/moves"
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
                 >

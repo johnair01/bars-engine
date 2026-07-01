@@ -348,6 +348,9 @@ model CustomBar {
   lensGoalId                           String?
   /// Lenses/Observatory: immutable lineage trace captured when a TTV task is planted as a BAR.
   plantSnapshot                        Json?
+  /// QLA: set when a player knowingly keeps a quest that is out of alignment with a weekly
+  /// lens goal (a "shadow quest"). Null = either aligned or not yet triaged.
+  shadowAcknowledgedAt                 DateTime?
   gardenId                             String?
   /// EA triad captured at the plant gate (unpacking mechanics) — required for
   /// lens/campaign alignment + emotional-alchemy moves. Reuses unpacking vocab.
@@ -456,6 +459,9 @@ model CustomBar {
   handSlots                            HandSlot[]
 
   @@index([collapsedFromInstanceId, type])
+  // QLA: Vault "All BARs" room + inventory-by-owner queries, and quest-by-goal lookups.
+  @@index([creatorId, type, status])
+  @@index([lensGoalId])
   @@map("custom_bars")
 }
 
