@@ -36,6 +36,7 @@ export type CoreOfferKey =
   | 'game-subscription'
   | 'book-physical'
   | 'rpg-handbook-physical'
+  | 'deck-physical'
   | 'founding-ally'
 
 /**
@@ -102,6 +103,7 @@ const GUMROAD = {
   gameSubscription:   process.env.NEXT_PUBLIC_GUMROAD_GAME_SUB_URL ?? '',
   bookPhysical:       process.env.NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL ?? '',
   rpgHandbookPhysical:process.env.NEXT_PUBLIC_GUMROAD_RPG_PHYSICAL_URL ?? '',
+  deckPhysical:       process.env.NEXT_PUBLIC_GUMROAD_DECK_PHYSICAL_URL ?? '',
   foundingAlly:       process.env.NEXT_PUBLIC_GUMROAD_FOUNDING_ALLY_URL ?? '',
   loadoutBundle:      process.env.NEXT_PUBLIC_GUMROAD_LOADOUT_BUNDLE_URL ?? '',
 } as const
@@ -172,7 +174,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     name: 'Oracle Deck — Digital Access',
     blurb: 'The 120-move Oracle at the Edge of the Known World. (Also included with The Game.)',
     group: 'digital',
-    priceCents: 1000,
+    priceCents: 2200,
     gumroadUrl: GUMROAD.deckDigital,
     cta: 'Buy',
     element: 'fire',
@@ -203,6 +205,19 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     gumroadUrl: GUMROAD.bookPhysical,
     cta: 'Preorder',
     element: 'earth',
+    altitude: 'neutral',
+    stage: 'growing',
+  },
+  {
+    key: 'deck-physical',
+    name: 'Oracle Deck — Physical',
+    blurb: 'The printed 120-move Oracle Deck. Preorder now; ships after the print run.',
+    group: 'physical',
+    priceCents: 6500,
+    preorder: true,
+    gumroadUrl: GUMROAD.deckPhysical,
+    cta: 'Preorder',
+    element: 'fire',
     altitude: 'neutral',
     stage: 'growing',
   },

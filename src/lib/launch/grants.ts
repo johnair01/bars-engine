@@ -28,6 +28,7 @@ export const SKU_GRANTS: Record<CoreOfferKey, GrantConfig> = {
   'game-subscription': { grantType: 'subscription', durationDays: 30 },
   'book-physical': { grantType: 'perpetual' }, // entitlement = fulfillment record
   'rpg-handbook-physical': { grantType: 'perpetual' }, // entitlement = fulfillment record
+  'deck-physical': { grantType: 'perpetual' }, // entitlement = fulfillment record
   'founding-ally': { grantType: 'perpetual' }, // lifetime app access
 }
 
@@ -50,6 +51,7 @@ export const SKU_CAPABILITIES: Record<CoreOfferKey, Capability[]> = {
   // Physical buyers also get the matching digital file to download.
   'book-physical': ['book-digital'],
   'rpg-handbook-physical': ['rpg-handbook-digital'],
+  'deck-physical': ['deck-digital'],
   // Founding Ally: lifetime app access + every digital file.
   'founding-ally': ['app-access', 'deck-digital', 'book-digital', 'rpg-handbook-digital'],
 }

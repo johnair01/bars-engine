@@ -20,10 +20,10 @@ const ACTION_PURPLE = '#7c3aed'
 const ACTION_PURPLE_LITE = '#8b5cf6'
 const EASE = 'cubic-bezier(0.16,1,0.3,1)'
 
-// Real deck-digital price from the offer registry — never hardcode (the design
-// prototype's "$22 digital · $65 physical" predates the live SKU; there is no
-// physical-deck SKU, so we show the registry's digital price only).
-const DECK_DIGITAL_PRICE = formatPrice(offerByKey('deck-digital')?.priceCents ?? 1000)
+// Deck prices from the offer registry — never hardcode, so the cross-link can
+// never drift from the live SKUs (see src/lib/launch/offers.ts).
+const DECK_DIGITAL_PRICE = formatPrice(offerByKey('deck-digital')?.priceCents ?? 2200)
+const DECK_PHYSICAL_PRICE = formatPrice(offerByKey('deck-physical')?.priceCents ?? 6500)
 
 /** Domain gate order + plain-language blurb (organizing layer for the roles). */
 const GATES: { domain: AllyshipDomain; blurb: string }[] = [
@@ -205,7 +205,7 @@ export function TheCrossingLanding() {
               </div>
               <div style={{ fontFamily: 'var(--bars-font-body)', fontSize: 13.5, lineHeight: 1.45, color: '#bcae8a', marginTop: 3 }}>
                 Draw a card, get one concrete move sized to your real life — ways to show up well beyond this campaign.{' '}
-                <span style={{ color: '#e0a93b' }}>{DECK_DIGITAL_PRICE} digital</span>
+                <span style={{ color: '#e0a93b' }}>{DECK_DIGITAL_PRICE} digital · {DECK_PHYSICAL_PRICE} physical</span>
               </div>
             </div>
             <span style={{ fontFamily: 'var(--bars-font-mono)', fontSize: 14, color: '#b09a4e', flexShrink: 0 }}>→</span>
