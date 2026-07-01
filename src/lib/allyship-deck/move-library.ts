@@ -142,6 +142,11 @@ export const AUTHORED: Record<string, Partial<MoveCard>> = {
     remediation: 'Name the sensation of lack out loud — where it sits in the body — before you make a single ask.',
     flavor: 'The child holding the empty cup is not a problem to solve yet. First, let yourself see the cup.',
     capabilities: ['connection', 'rest'],
+    applications: [
+      { context: 'Money', example: 'Before drafting a fundraiser, sit with what the shortfall actually feels like — fear, shame, grief — and name it out loud before you name a number.' },
+      { context: 'Asking for help', example: 'You need a ride to an appointment. Instead of over-explaining, notice the discomfort of needing, then make the plain ask.' },
+      { context: 'A stalled campaign', example: 'A mutual-aid drive stalls. Rather than adding tactics, let the group feel what is missing — often it is rest or trust, not resources.' },
+    ],
   },
   'OPEN-GR-CHALLENGER': {
     title: "The Ask You're Avoiding",
@@ -153,6 +158,10 @@ export const AUTHORED: Record<string, Partial<MoveCard>> = {
     remediation: 'Feel the "no" you\'re bracing against. Make the real ask anyway — for the thing you actually need.',
     flavor: 'It never worked because the asking was fake. It was asking for rescue, not asking to be changed.',
     capabilities: ['agency', 'connection'],
+    applications: [
+      { context: 'At work', example: 'You keep working weekends to avoid asking for headcount. Name the fear of looking incapable, then request the help you actually need.' },
+      { context: 'In a friendship', example: 'You want deeper support but keep things light to avoid being a burden. Make the real ask instead of the safe one.' },
+    ],
   },
   'OPEN-GR-REGENT': {
     title: 'Stay With the Need',
@@ -206,6 +215,10 @@ export const AUTHORED: Record<string, Partial<MoveCard>> = {
     remediation: 'Name the one resource that, if present, would change everything.',
     flavor: 'Not every empty cup is the same cup.',
     capabilities: ['exploration', 'rest'],
+    applications: [
+      { context: 'Burnout', example: 'You feel "broke," but a closer look shows the real scarcity is time and rest, not money. Name the one resource that would change everything.' },
+      { context: 'An organization', example: 'A team says it needs funding; on inspection it needs decisions. Distinguish what is depleted from what only feels depleted.' },
+    ],
   },
   'WAKE-GR-CHALLENGER': {
     title: "The Number You Won't Look At",
@@ -716,6 +729,10 @@ export const AUTHORED: Record<string, Partial<MoveCard>> = {
     remediation: "Say the thing today — specifically, to the people who need to hear it.",
     flavor: "The naming is the first move.",
     capabilities: ["agency"],
+    applications: [
+      { context: "A meeting", example: "A colleague is talked over repeatedly. Instead of a vague follow-up, say it in the room: “I want to hear the rest of what she was saying.”" },
+      { context: "Online", example: "You have drafted the post three times. Publish the specific truth today, addressed to the people who need to hear it." },
+    ],
   },
   'SHOW-RA-REGENT': {
     title: "Keep the Truth Alive",

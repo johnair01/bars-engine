@@ -7,10 +7,12 @@ const deck = assembleDeck()
 const card = deck.cards.find((c): c is MoveCard => c.kind === 'move' && c.id === 'OPEN-GR-SHAMAN')
 assert.ok(card, 'fixture card OPEN-GR-SHAMAN exists')
 
-// self reading uses the introspective question; description leads with the practice.
+// self reading uses the introspective question; description leads with "Your move".
 const self = buildDeckSeed(card, 'self')
 assert.strictEqual(self.title, card.title)
-assert.ok(self.description.startsWith('The practice:'), 'description leads with the practice')
+assert.ok(self.description.startsWith('Your move:'), 'description leads with the concrete move')
+assert.ok(card.action && self.description.includes(card.action), 'includes the action')
+assert.ok(self.description.includes('The practice:'), 'still carries the practice')
 assert.ok(self.description.includes(card.remediation), 'includes remediation')
 assert.ok(self.description.includes(card.primaryQuestion), 'self → primaryQuestion')
 assert.strictEqual(self.rootId, 'deck_OPEN-GR-SHAMAN')

@@ -8,18 +8,18 @@
 - [x] **T1.5** Gate: `npm run build` + `npm run check` (lint + tsc verified for P1 files in offline env).
 
 ## Phase 2 — "Your move" surfacing
-- [ ] **T2.1** `types.ts`: add `action?: string` to `MoveCard`.
-- [ ] **T2.2** `assemble.ts`: set `action: sub.action` in `buildMoveCards()` generated object.
-- [ ] **T2.3** `AllyshipCard.tsx`: distinct "Your move · Do this" element (full view).
-- [ ] **T2.4** `seed.ts`: fold `card.action` into BAR description (guarded), both branches; update seed tests.
-- [ ] **T2.5** Gate: `npm run deck:assemble` → **commit `public/allyship-deck/allyship-deck.json`** → build → check.
+- [x] **T2.1** `types.ts`: add `action?: string` to `MoveCard`.
+- [x] **T2.2** `assemble.ts`: set `action: sub.action` in `buildMoveCards()` generated object.
+- [x] **T2.3** `AllyshipCard.tsx`: distinct "Your move" inset (full view).
+- [x] **T2.4** `seed.ts`: lead BAR description with `card.action` (guarded), both branches; updated seed.test.ts (translate.test.ts fixture has no action — unaffected).
+- [x] **T2.5** Gate: `npm run deck:assemble` → committed JSON → eslint clean + tsc baseline + node tests pass (full build/check runs in CI — Prisma engine blocked offline).
 
 ## Phase 3 — Applications (authored baseline)
-- [ ] **T3.1** `types.ts`: add `applications?: { context: string; example: string }[]`.
-- [ ] **T3.2** `move-library.ts`: add `applications` to selected `AUTHORED` entries (`OPEN-GR-*`, `WAKE-GR-*` first).
-- [ ] **T3.3** New `src/components/deck/CardApplications.tsx`: collapsible + deterministic fallback.
-- [ ] **T3.4** `AllyshipCard.tsx`: render `<CardApplications card subject />` in full view.
-- [ ] **T3.5** Gate: `npm run deck:assemble` → **commit JSON** → build → check.
+- [x] **T3.1** `types.ts`: add `applications?: { context: string; example: string }[]`.
+- [x] **T3.2** `move-library.ts`: added `applications` to 4 authored entries (`OPEN-GR-SHAMAN`, `OPEN-GR-CHALLENGER`, `WAKE-GR-SHAMAN`, `SHOW-RA-CHALLENGER`); more to follow.
+- [x] **T3.3** New `src/components/deck/CardApplications.tsx`: collapsible "How this shows up in real life" + deterministic fallback (domain framing + other reading).
+- [x] **T3.4** `AllyshipCard.tsx`: render `<CardApplications card subject />` in full view (after flavor).
+- [x] **T3.5** Gate: `npm run deck:assemble` → committed JSON (4 cards carry applications) → eslint clean + tsc baseline + node tests pass.
 
 ## Phase 4 — Applications (optional AI)
 - [ ] **T4.1** New `src/actions/deck-applications.ts`: `applyCardToSituation` (cached, flagged, degrades).
@@ -28,9 +28,9 @@
 - [ ] **T4.4** Gate: build → check.
 
 ## Phase 5 — Orientation
-- [ ] **T5.1** New `src/components/deck/DeckOrientation.tsx`: four-use modal routing via `switchView`.
-- [ ] **T5.2** `AllyshipDeckReader.tsx`: open once via `deck-orientation-seen`; top-bar "How to use" re-open button.
-- [ ] **T5.3** Gate: build → check.
+- [x] **T5.1** New `src/components/deck/DeckOrientation.tsx`: four-use modal (daily / situation / browse / collection) routing via `switchView`.
+- [x] **T5.2** `AllyshipDeckReader.tsx`: open once via `deck-orientation-seen` (post-mount effect); top-bar "?" re-open button.
+- [x] **T5.3** Gate: eslint clean + tsc baseline (build/check in CI). _(No `deck:assemble` — no data change.)_
 
 ## Cross-cutting
 - [ ] **TX.1** `scripts/seed-cert-allyship-deck-literacy.ts` + `npm run seed:cert:allyship-deck-literacy` (grow one step per phase).

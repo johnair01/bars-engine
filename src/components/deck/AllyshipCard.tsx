@@ -22,6 +22,7 @@ import {
 import type { MoveCard } from '@/lib/allyship-deck/types'
 import { MovePip } from './MovePip'
 import { FaceBadge } from './FaceBadge'
+import { CardApplications } from './CardApplications'
 
 /** Which reading of the card to show: introspective (self) or for-others (campaign). */
 export type CardSubject = 'self' | 'campaign'
@@ -176,6 +177,24 @@ export function AllyshipCard({
         {question}
       </p>
 
+      {/* your move — the one concrete next step (distinct from the ongoing practice) */}
+      {card.action && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: '12px 15px',
+            borderRadius: 8,
+            background: `color-mix(in srgb, ${DECK_GOLD} 9%, ${SURFACE_TOKENS.surfaceInset})`,
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px color-mix(in srgb, ${DECK_GOLD} 34%, transparent)`,
+          }}
+        >
+          <div style={{ ...labelStyle, color: DECK_GOLD }}>Your move</div>
+          <div style={{ fontFamily: DECK_FONTS.body, fontSize: 14.5, color: '#fff', marginTop: 3, lineHeight: 1.5 }}>
+            {card.action}
+          </div>
+        </div>
+      )}
+
       {/* the practice well */}
       <div
         style={{
@@ -205,6 +224,9 @@ export function AllyshipCard({
           {card.flavor}
         </p>
       )}
+
+      {/* how this shows up in real life — authored applications or deterministic fallback */}
+      <CardApplications card={card} subject={subject} />
 
       {/* foot */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>

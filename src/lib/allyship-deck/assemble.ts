@@ -53,6 +53,8 @@ function buildMoveCards(): MoveCard[] {
           forbiddenMoves: ['— author —'],
           failureModes: ['— author —'],
           remediation: `${sub.action} — in the context of ${d.lens}.`,
+          // "Your move" — the one concrete step, from the canonical submove. AUTHORED may override via the spread below.
+          action: sub.action,
           capabilities: [],
           status: 'generated',
         }

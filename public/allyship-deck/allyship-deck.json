@@ -152,12 +152,23 @@
         "Resource tunnel-vision"
       ],
       "remediation": "Name the one resource that, if present, would change everything.",
+      "action": "Notice the signal",
       "capabilities": [
         "exploration",
         "rest"
       ],
       "status": "authored",
-      "flavor": "Not every empty cup is the same cup."
+      "flavor": "Not every empty cup is the same cup.",
+      "applications": [
+        {
+          "context": "Burnout",
+          "example": "You feel \"broke,\" but a closer look shows the real scarcity is time and rest, not money. Name the one resource that would change everything."
+        },
+        {
+          "context": "An organization",
+          "example": "A team says it needs funding; on inspection it needs decisions. Distinguish what is depleted from what only feels depleted."
+        }
+      ]
     },
     {
       "id": "WAKE-GR-CHALLENGER",
@@ -183,6 +194,7 @@
         "Budgets that omit the scary line"
       ],
       "remediation": "Write the exact amount needed. Look at it for ten seconds.",
+      "action": "Notice resistance",
       "capabilities": [
         "exploration",
         "agency"
@@ -213,6 +225,7 @@
         "Everything is \"priority\""
       ],
       "remediation": "Rank the top three needs. Fund the first before the rest.",
+      "action": "Notice stewardship",
       "capabilities": [
         "rest",
         "agency"
@@ -243,6 +256,7 @@
         "Under-leveraging a strength"
       ],
       "remediation": "Name one resource you already have that could double.",
+      "action": "Notice potential",
       "capabilities": [
         "exploration",
         "participation"
@@ -273,6 +287,7 @@
         "Stepping on a key relationship"
       ],
       "remediation": "List who must say yes for resources to move. Start there.",
+      "action": "Notice relationships",
       "capabilities": [
         "connection",
         "participation"
@@ -302,6 +317,7 @@
         "Spiritualizing systemic lack"
       ],
       "remediation": "Ask whether this lack has happened before. Name the pattern.",
+      "action": "Notice meaning",
       "capabilities": [
         "exploration",
         "connection"
@@ -332,6 +348,7 @@
         "Seeing only what confirms you"
       ],
       "remediation": "Name one thing present in the room that no one is naming.",
+      "action": "Notice the signal",
       "capabilities": [
         "exploration",
         "connection"
@@ -363,6 +380,7 @@
         "Comfort chosen over truth"
       ],
       "remediation": "Name the thing the room is working hard not to see.",
+      "action": "Notice resistance",
       "capabilities": [
         "exploration",
         "agency"
@@ -393,6 +411,7 @@
         "Spotlight on the trivial"
       ],
       "remediation": "Choose the one truth worth the room's full attention.",
+      "action": "Notice stewardship",
       "capabilities": [
         "rest",
         "connection"
@@ -423,6 +442,7 @@
         "Truth that doesn't travel"
       ],
       "remediation": "Name the one fact that, if everyone saw it, would change things.",
+      "action": "Notice potential",
       "capabilities": [
         "exploration",
         "participation"
@@ -453,6 +473,7 @@
         "Missing the silenced"
       ],
       "remediation": "Name who isn't in the conversation. Bring their voice, or make room for it.",
+      "action": "Notice relationships",
       "capabilities": [
         "connection",
         "participation"
@@ -483,6 +504,7 @@
         "Framing a pattern as a one-off"
       ],
       "remediation": "Connect this incident to the pattern it belongs to.",
+      "action": "Notice meaning",
       "capabilities": [
         "exploration",
         "connection"
@@ -512,6 +534,7 @@
         "Intervening where it's safe, not where harm is"
       ],
       "remediation": "Name the specific harm, in specific terms.",
+      "action": "Notice the signal",
       "capabilities": [
         "exploration",
         "agency"
@@ -541,6 +564,7 @@
         "Politeness as complicity"
       ],
       "remediation": "Name the line that needs drawing — the one you've been avoiding.",
+      "action": "Notice resistance",
       "capabilities": [
         "agency",
         "exploration"
@@ -571,6 +595,7 @@
         "Taking on the fight that isn't yours"
       ],
       "remediation": "Name the one harm you're actually positioned to confront.",
+      "action": "Notice stewardship",
       "capabilities": [
         "rest",
         "agency"
@@ -600,6 +625,7 @@
         "Effort that doesn't move the harm"
       ],
       "remediation": "Name the point where pressure actually shifts the outcome.",
+      "action": "Notice potential",
       "capabilities": [
         "agency",
         "exploration"
@@ -629,6 +655,7 @@
         "Action that endangers those it claims to protect"
       ],
       "remediation": "Name who bears the risk. Don't spend others' safety.",
+      "action": "Notice relationships",
       "capabilities": [
         "connection",
         "participation"
@@ -658,6 +685,7 @@
         "Addressing the instance, missing the cycle"
       ],
       "remediation": "Connect this harm to the cycle it repeats, and aim there.",
+      "action": "Notice meaning",
       "capabilities": [
         "exploration",
         "agency"
@@ -687,6 +715,7 @@
         "Missing the informal one that runs things"
       ],
       "remediation": "Name how the work actually flows right now, not how it's supposed to.",
+      "action": "Notice the signal",
       "capabilities": [
         "exploration",
         "rest"
@@ -716,6 +745,7 @@
         "The workaround becoming permanent"
       ],
       "remediation": "Name the structural problem people keep absorbing personally.",
+      "action": "Notice resistance",
       "capabilities": [
         "exploration",
         "agency"
@@ -744,6 +774,7 @@
         "Polishing the front while the foundation cracks"
       ],
       "remediation": "Name the load-bearing part that needs care first.",
+      "action": "Notice stewardship",
       "capabilities": [
         "rest",
         "participation"
@@ -774,6 +805,7 @@
         "Missing the one that would help"
       ],
       "remediation": "Name the structure that would remove the most friction.",
+      "action": "Notice potential",
       "capabilities": [
         "participation",
         "exploration"
@@ -804,6 +836,7 @@
         "Stepping on relationships"
       ],
       "remediation": "Name who actually holds decision power and trust.",
+      "action": "Notice relationships",
       "capabilities": [
         "connection",
         "participation"
@@ -832,6 +865,7 @@
         "Fixing the instance while the pattern recurs"
       ],
       "remediation": "Connect this breakdown to the pattern it repeats.",
+      "action": "Notice meaning",
       "capabilities": [
         "exploration",
         "connection"
@@ -863,12 +897,27 @@
         "Talking about \"the money\" with no body in it"
       ],
       "remediation": "Name the sensation of lack out loud — where it sits in the body — before you make a single ask.",
+      "action": "Allow experience",
       "capabilities": [
         "connection",
         "rest"
       ],
       "status": "authored",
-      "flavor": "The child holding the empty cup is not a problem to solve yet. First, let yourself see the cup."
+      "flavor": "The child holding the empty cup is not a problem to solve yet. First, let yourself see the cup.",
+      "applications": [
+        {
+          "context": "Money",
+          "example": "Before drafting a fundraiser, sit with what the shortfall actually feels like — fear, shame, grief — and name it out loud before you name a number."
+        },
+        {
+          "context": "Asking for help",
+          "example": "You need a ride to an appointment. Instead of over-explaining, notice the discomfort of needing, then make the plain ask."
+        },
+        {
+          "context": "A stalled campaign",
+          "example": "A mutual-aid drive stalls. Rather than adding tactics, let the group feel what is missing — often it is rest or trust, not resources."
+        }
+      ]
     },
     {
       "id": "OPEN-GR-CHALLENGER",
@@ -895,12 +944,23 @@
         "Saying \"no\" for people before they can answer"
       ],
       "remediation": "Feel the \"no\" you're bracing against. Make the real ask anyway — for the thing you actually need.",
+      "action": "Allow discomfort",
       "capabilities": [
         "agency",
         "connection"
       ],
       "status": "authored",
-      "flavor": "It never worked because the asking was fake. It was asking for rescue, not asking to be changed."
+      "flavor": "It never worked because the asking was fake. It was asking for rescue, not asking to be changed.",
+      "applications": [
+        {
+          "context": "At work",
+          "example": "You keep working weekends to avoid asking for headcount. Name the fear of looking incapable, then request the help you actually need."
+        },
+        {
+          "context": "In a friendship",
+          "example": "You want deeper support but keep things light to avoid being a burden. Make the real ask instead of the safe one."
+        }
+      ]
     },
     {
       "id": "OPEN-GR-REGENT",
@@ -927,6 +987,7 @@
         "White-knuckling it alone"
       ],
       "remediation": "Hold the need for sixty seconds without solving it. Then choose one stewarding act you can own.",
+      "action": "Hold responsibility",
       "capabilities": [
         "agency",
         "rest"
@@ -958,6 +1019,7 @@
         "Over-counting the future while starving the present"
       ],
       "remediation": "List three resources already within reach. Receive one of them today.",
+      "action": "Receive the resource",
       "capabilities": [
         "exploration",
         "participation"
@@ -989,6 +1051,7 @@
         "Resentment-laden giving"
       ],
       "remediation": "Offer or receive one resource with no strings — and say \"no strings\" out loud.",
+      "action": "Care for experience",
       "capabilities": [
         "connection",
         "participation"
@@ -1020,6 +1083,7 @@
         "Analysis standing in for witness"
       ],
       "remediation": "Watch the lack for three breaths without fixing it. Write the one true sentence that surfaces.",
+      "action": "Witness experience",
       "capabilities": [
         "exploration",
         "connection"
@@ -1050,6 +1114,7 @@
         "Abstraction as armor"
       ],
       "remediation": "Let the truth land for one breath before you respond.",
+      "action": "Allow experience",
       "capabilities": [
         "connection"
       ],
@@ -1079,6 +1144,7 @@
         "Outrage with no real contact"
       ],
       "remediation": "Feel the thing you've gone numb to. Then decide from there.",
+      "action": "Allow discomfort",
       "capabilities": [
         "connection",
         "agency"
@@ -1109,6 +1175,7 @@
         "Attention with no staying power"
       ],
       "remediation": "Choose one truth you'll keep in view past the news cycle.",
+      "action": "Hold responsibility",
       "capabilities": [
         "rest",
         "connection"
@@ -1138,6 +1205,7 @@
         "Awareness that deadens instead of activates"
       ],
       "remediation": "Name the energy this truth gives you. Aim it.",
+      "action": "Receive the resource",
       "capabilities": [
         "participation",
         "exploration"
@@ -1168,6 +1236,7 @@
         "Performing care"
       ],
       "remediation": "Relate to one person's reality with care, not as a case.",
+      "action": "Care for experience",
       "capabilities": [
         "connection"
       ],
@@ -1197,6 +1266,7 @@
         "Arguing reality away"
       ],
       "remediation": "Witness the truth for three breaths without rebutting it.",
+      "action": "Witness experience",
       "capabilities": [
         "exploration",
         "connection"
@@ -1226,6 +1296,7 @@
         "Reckless action driven by unfelt fear"
       ],
       "remediation": "Feel the fear before you move. Then move anyway.",
+      "action": "Allow experience",
       "capabilities": [
         "connection",
         "agency"
@@ -1256,6 +1327,7 @@
         "The moment passed"
       ],
       "remediation": "Feel what acting would cost. Weigh it against the cost of not acting.",
+      "action": "Allow discomfort",
       "capabilities": [
         "agency"
       ],
@@ -1285,6 +1357,7 @@
         "Flaring out"
       ],
       "remediation": "Stay one beat longer in the discomfort than feels possible.",
+      "action": "Hold responsibility",
       "capabilities": [
         "rest",
         "agency"
@@ -1314,6 +1387,7 @@
         "Anger that burns the actor, not the harm"
       ],
       "remediation": "Name the agency this anger gives you. Point it at the harm.",
+      "action": "Receive the resource",
       "capabilities": [
         "agency",
         "participation"
@@ -1344,6 +1418,7 @@
         "Care abandoned in the fight"
       ],
       "remediation": "Name the boundary fiercely; keep one thread of care for the human.",
+      "action": "Care for experience",
       "capabilities": [
         "connection",
         "agency"
@@ -1374,6 +1449,7 @@
         "Endless \"seeing\" as avoidance"
       ],
       "remediation": "Witness the whole field for three breaths, then act with aim.",
+      "action": "Witness experience",
       "capabilities": [
         "exploration",
         "agency"
@@ -1403,6 +1479,7 @@
         "Process fixes that ignore how it feels to live in them"
       ],
       "remediation": "Name what the current structure feels like to be inside.",
+      "action": "Allow experience",
       "capabilities": [
         "connection",
         "rest"
@@ -1432,6 +1509,7 @@
         "Everyone quietly overworked"
       ],
       "remediation": "Name the role or decision you're avoiding.",
+      "action": "Allow discomfort",
       "capabilities": [
         "agency",
         "connection"
@@ -1461,6 +1539,7 @@
         "The structure depending on one exhausted person"
       ],
       "remediation": "Hold the whole for a beat; then hand one piece to someone you trust.",
+      "action": "Hold responsibility",
       "capabilities": [
         "rest",
         "participation"
@@ -1490,6 +1569,7 @@
         "Scarcity of help while help stands unused"
       ],
       "remediation": "Name three people's capacities you haven't drawn on. Invite one.",
+      "action": "Receive the resource",
       "capabilities": [
         "participation",
         "exploration"
@@ -1520,6 +1600,7 @@
         "Extraction by spreadsheet"
       ],
       "remediation": "Design one part of the structure around how it cares for people.",
+      "action": "Care for experience",
       "capabilities": [
         "connection",
         "participation"
@@ -1549,6 +1630,7 @@
         "Rigid structure fighting the actual work"
       ],
       "remediation": "Watch how the work actually wants to move for three breaths. Organize with that.",
+      "action": "Witness experience",
       "capabilities": [
         "exploration",
         "rest"
@@ -1578,6 +1660,7 @@
         "Anger budgeting"
       ],
       "remediation": "Name the channel out loud: \"This is fear / anger / sadness about money.\"",
+      "action": "Identify channel",
       "capabilities": [
         "exploration"
       ],
@@ -1607,6 +1690,7 @@
         "Inherited shame as realism"
       ],
       "remediation": "Write the story as a sentence. Then write the version that isn't certain.",
+      "action": "Challenge interpretation",
       "capabilities": [
         "agency",
         "exploration"
@@ -1637,6 +1721,7 @@
         "Capability-blind planning"
       ],
       "remediation": "Match the block to a capability. That's the move to grow next.",
+      "action": "Identify missing move",
       "capabilities": [
         "agency",
         "rest"
@@ -1667,6 +1752,7 @@
         "Dumping anger on donors"
       ],
       "remediation": "Pick one: transcend (let it ripen), translate (e.g. fear → agency), or neutralize. Then do it.",
+      "action": "Select transformation",
       "capabilities": [
         "agency",
         "connection"
@@ -1697,6 +1783,7 @@
         "Manipulation dressed as warmth"
       ],
       "remediation": "Re-aim the ask from Connection: invite people into something good.",
+      "action": "Choose destination",
       "capabilities": [
         "connection"
       ],
@@ -1726,6 +1813,7 @@
         "Hollow takeaways"
       ],
       "remediation": "Write one sentence you'll carry into the next ask.",
+      "action": "Extract insight",
       "capabilities": [
         "exploration",
         "connection"
@@ -1755,6 +1843,7 @@
         "Grief dumped as advocacy"
       ],
       "remediation": "Name the channel before you publish a single word.",
+      "action": "Identify channel",
       "capabilities": [
         "exploration"
       ],
@@ -1784,6 +1873,7 @@
         "Truth bent to fit the story"
       ],
       "remediation": "Write the version of events that complicates your story.",
+      "action": "Challenge interpretation",
       "capabilities": [
         "exploration",
         "agency"
@@ -1813,6 +1903,7 @@
         "The knowing-doing gap left unaddressed"
       ],
       "remediation": "Name the capability awareness needs next — to act, connect, or organize.",
+      "action": "Identify missing move",
       "capabilities": [
         "agency",
         "rest"
@@ -1843,6 +1934,7 @@
         "Sanitized into meaninglessness"
       ],
       "remediation": "Pick transcend / translate / neutralize, then craft the message.",
+      "action": "Select transformation",
       "capabilities": [
         "agency",
         "connection"
@@ -1873,6 +1965,7 @@
         "Preaching only to the choir"
       ],
       "remediation": "Re-aim the message from a channel that opens people, not closes them.",
+      "action": "Choose destination",
       "capabilities": [
         "connection"
       ],
@@ -1902,6 +1995,7 @@
         "Shallow takes"
       ],
       "remediation": "Write the one insight you'll keep, beyond this moment.",
+      "action": "Extract insight",
       "capabilities": [
         "exploration",
         "connection"
@@ -1931,6 +2025,7 @@
         "Grief acted out as attack"
       ],
       "remediation": "Name the channel honestly before you intervene.",
+      "action": "Identify channel",
       "capabilities": [
         "exploration",
         "agency"
@@ -1961,6 +2056,7 @@
         "Collateral injustice"
       ],
       "remediation": "Write the version where the \"enemy\" is more complicated. Then aim true.",
+      "action": "Challenge interpretation",
       "capabilities": [
         "exploration",
         "agency"
@@ -1990,6 +2086,7 @@
         "Burnout"
       ],
       "remediation": "Name the capability the action needs next, and grow it.",
+      "action": "Identify missing move",
       "capabilities": [
         "agency",
         "rest"
@@ -2020,6 +2117,7 @@
         "Force that scatters"
       ],
       "remediation": "Pick transcend / translate / neutralize, then act from the forged state.",
+      "action": "Select transformation",
       "capabilities": [
         "agency"
       ],
@@ -2050,6 +2148,7 @@
         "Numbness that under-acts"
       ],
       "remediation": "Re-aim from resolve — an earned boundary, not blind heat.",
+      "action": "Choose destination",
       "capabilities": [
         "agency",
         "connection"
@@ -2079,6 +2178,7 @@
         "The same fight again, unlearned"
       ],
       "remediation": "Write the one lesson this confrontation taught you.",
+      "action": "Extract insight",
       "capabilities": [
         "exploration",
         "agency"
@@ -2108,6 +2208,7 @@
         "Resentment baked into the structure"
       ],
       "remediation": "Name the channel before you redesign anything.",
+      "action": "Identify channel",
       "capabilities": [
         "exploration"
       ],
@@ -2137,6 +2238,7 @@
         "Everything routed through one person"
       ],
       "remediation": "Write the story that keeps you the bottleneck. Then test it: hand one thing off.",
+      "action": "Challenge interpretation",
       "capabilities": [
         "agency",
         "participation"
@@ -2165,6 +2267,7 @@
         "More procedure, same dysfunction"
       ],
       "remediation": "Name the capability the structure needs — not another rule.",
+      "action": "Identify missing move",
       "capabilities": [
         "participation",
         "rest"
@@ -2195,6 +2298,7 @@
         "Reorg as discharge"
       ],
       "remediation": "Clear the charge first; then design from steadiness.",
+      "action": "Select transformation",
       "capabilities": [
         "rest",
         "participation"
@@ -2225,6 +2329,7 @@
         "Disengagement"
       ],
       "remediation": "Re-aim one structure from trust — give real ownership, not just tasks.",
+      "action": "Choose destination",
       "capabilities": [
         "connection",
         "participation"
@@ -2254,6 +2359,7 @@
         "Rebuilding the same flawed system"
       ],
       "remediation": "Write the one design principle this breakdown taught you.",
+      "action": "Extract insight",
       "capabilities": [
         "exploration",
         "participation"
@@ -2283,6 +2389,7 @@
         "Naming a capacity you wish for over the one actually emerging"
       ],
       "remediation": "Name the capacity one size bigger than today. Practice it once.",
+      "action": "Identify emerging capacity",
       "capabilities": [
         "participation",
         "exploration"
@@ -2312,6 +2419,7 @@
         "Pseudo-growth"
       ],
       "remediation": "Name the thing that scares you slightly. That's the edge — step to it.",
+      "action": "Identify developmental edge",
       "capabilities": [
         "agency"
       ],
@@ -2341,6 +2449,7 @@
         "Stewarding everything so nothing deepens"
       ],
       "remediation": "Choose one rep (\"make one real ask weekly\"). Schedule it.",
+      "action": "Steward growth",
       "capabilities": [
         "rest",
         "agency"
@@ -2371,6 +2480,7 @@
         "Polishing a capability you don't need"
       ],
       "remediation": "Pick the capability with the highest leverage. Train it deliberately.",
+      "action": "Amplify capacity",
       "capabilities": [
         "participation",
         "exploration"
@@ -2401,6 +2511,7 @@
         "Isolating success"
       ],
       "remediation": "Name one person your growth affects. Bring them with you.",
+      "action": "Relate growth",
       "capabilities": [
         "connection",
         "participation"
@@ -2431,6 +2542,7 @@
         "Growth that doesn't stick"
       ],
       "remediation": "Finish the sentence: \"I am becoming someone who ______.\"",
+      "action": "Integrate growth",
       "capabilities": [
         "connection",
         "participation"
@@ -2460,6 +2572,7 @@
         "Naming the capacity you wish for over the one emerging"
       ],
       "remediation": "Name the seeing or speaking capacity one size bigger than today.",
+      "action": "Identify emerging capacity",
       "capabilities": [
         "participation",
         "exploration"
@@ -2488,6 +2601,7 @@
         "Training comfortable speech, avoiding the edge"
       ],
       "remediation": "Name the sentence you're scared to say. That's the edge.",
+      "action": "Identify developmental edge",
       "capabilities": [
         "agency"
       ],
@@ -2516,6 +2630,7 @@
         "Practicing the wrong thing"
       ],
       "remediation": "Pick one rep — a weekly hard conversation. Schedule it.",
+      "action": "Steward growth",
       "capabilities": [
         "rest",
         "agency"
@@ -2545,6 +2660,7 @@
         "Growth without leverage"
       ],
       "remediation": "Pick the highest-leverage skill — clarity, story, or listening. Train it.",
+      "action": "Amplify capacity",
       "capabilities": [
         "participation",
         "exploration"
@@ -2574,6 +2690,7 @@
         "Collateral harm"
       ],
       "remediation": "Name one relationship your bolder voice affects. Tend it.",
+      "action": "Relate growth",
       "capabilities": [
         "connection",
         "participation"
@@ -2602,6 +2719,7 @@
         "Capacity gained, self un-integrated"
       ],
       "remediation": "Finish the sentence: \"I am becoming someone who can see and say ______.\"",
+      "action": "Integrate growth",
       "capabilities": [
         "connection",
         "participation"
@@ -2631,6 +2749,7 @@
         "Naming the courage you wish for over the one emerging"
       ],
       "remediation": "Name the boundary or action one size bigger than today. Take it once.",
+      "action": "Identify emerging capacity",
       "capabilities": [
         "agency",
         "participation"
@@ -2659,6 +2778,7 @@
         "Training comfort, avoiding the real confrontation"
       ],
       "remediation": "Name the confrontation that scares you slightly. Step to it.",
+      "action": "Identify developmental edge",
       "capabilities": [
         "agency"
       ],
@@ -2687,6 +2807,7 @@
         "Drilling the wrong skill"
       ],
       "remediation": "Pick one rep — a small \"no\" daily. Practice it.",
+      "action": "Steward growth",
       "capabilities": [
         "rest",
         "agency"
@@ -2716,6 +2837,7 @@
         "Growth without leverage"
       ],
       "remediation": "Pick the highest-leverage action capability. Train it.",
+      "action": "Amplify capacity",
       "capabilities": [
         "agency",
         "participation"
@@ -2744,6 +2866,7 @@
         "Bold action that isolates or endangers"
       ],
       "remediation": "Name who your bolder action affects. Move with them, not past them.",
+      "action": "Relate growth",
       "capabilities": [
         "connection",
         "participation"
@@ -2774,6 +2897,7 @@
         "Becoming what you fought"
       ],
       "remediation": "Finish the sentence: \"I am becoming someone who can act and still ______.\"",
+      "action": "Integrate growth",
       "capabilities": [
         "connection",
         "agency"
@@ -2803,6 +2927,7 @@
         "Naming the capacity you wish for over the one emerging"
       ],
       "remediation": "Name the organizing capacity one size bigger than today. Practice it once.",
+      "action": "Identify emerging capacity",
       "capabilities": [
         "participation",
         "exploration"
@@ -2832,6 +2957,7 @@
         "Clinging to doing it yourself"
       ],
       "remediation": "Name the thing you must stop doing yourself. Hand it off.",
+      "action": "Identify developmental edge",
       "capabilities": [
         "agency",
         "participation"
@@ -2861,6 +2987,7 @@
         "Practicing the wrong skill"
       ],
       "remediation": "Pick one rep — delegate one real thing weekly. Practice it.",
+      "action": "Steward growth",
       "capabilities": [
         "rest",
         "participation"
@@ -2890,6 +3017,7 @@
         "Growth without leverage"
       ],
       "remediation": "Pick the highest-leverage capability — clarity, trust, or follow-through. Build it.",
+      "action": "Amplify capacity",
       "capabilities": [
         "participation",
         "agency"
@@ -2919,6 +3047,7 @@
         "One strong organizer, a dependent group"
       ],
       "remediation": "Name one person whose capacity your growth could grow. Invest in them.",
+      "action": "Relate growth",
       "capabilities": [
         "connection",
         "participation"
@@ -2948,6 +3077,7 @@
         "Becoming the bottleneck you feared"
       ],
       "remediation": "Finish the sentence: \"I am becoming someone who can build and still ______.\"",
+      "action": "Integrate growth",
       "capabilities": [
         "connection",
         "participation"
@@ -2978,6 +3108,7 @@
         "Paralysis by optimization"
       ],
       "remediation": "Name the first concrete place the resources go this week.",
+      "action": "Choose domain",
       "capabilities": [
         "agency"
       ],
@@ -3007,6 +3138,7 @@
         "The ask that never posts"
       ],
       "remediation": "Post the ask today. Make it real and specific.",
+      "action": "Create intervention",
       "capabilities": [
         "agency"
       ],
@@ -3037,6 +3169,7 @@
         "Funds without follow-through"
       ],
       "remediation": "Set one transparency practice (a public update, a ledger). Keep it.",
+      "action": "Create stewardship",
       "capabilities": [
         "rest",
         "connection"
@@ -3067,6 +3200,7 @@
         "Scaffolding nobody uses"
       ],
       "remediation": "Add one structural lever: a milestone ladder ($200 / $400 / $800) or a match.",
+      "action": "Create structure",
       "capabilities": [
         "participation",
         "agency"
@@ -3097,6 +3231,7 @@
         "Transactional asks that sour"
       ],
       "remediation": "Invite one person with full consent and no strings. Name the dynamic aloud.",
+      "action": "Create relationship",
       "capabilities": [
         "connection",
         "participation"
@@ -3127,6 +3262,7 @@
         "Goodwill spent and not renewed"
       ],
       "remediation": "Name the artifact that outlives the campaign. Tell its story to one giver.",
+      "action": "Create legacy",
       "capabilities": [
         "connection",
         "participation"
@@ -3156,6 +3292,7 @@
         "A message to no one"
       ],
       "remediation": "Name the one audience and channel this truth goes to first.",
+      "action": "Choose domain",
       "capabilities": [
         "agency"
       ],
@@ -3184,11 +3321,22 @@
         "The truth that never gets said"
       ],
       "remediation": "Say the thing today — specifically, to the people who need to hear it.",
+      "action": "Create intervention",
       "capabilities": [
         "agency"
       ],
       "status": "authored",
-      "flavor": "The naming is the first move."
+      "flavor": "The naming is the first move.",
+      "applications": [
+        {
+          "context": "A meeting",
+          "example": "A colleague is talked over repeatedly. Instead of a vague follow-up, say it in the room: “I want to hear the rest of what she was saying.”"
+        },
+        {
+          "context": "Online",
+          "example": "You have drafted the post three times. Publish the specific truth today, addressed to the people who need to hear it."
+        }
+      ]
     },
     {
       "id": "SHOW-RA-REGENT",
@@ -3213,6 +3361,7 @@
         "Awareness that spikes and dies"
       ],
       "remediation": "Set one recurring act that keeps the truth present.",
+      "action": "Create stewardship",
       "capabilities": [
         "rest",
         "connection"
@@ -3241,6 +3390,7 @@
         "A message that can't scale or repeat"
       ],
       "remediation": "Add one structural lever: a series, a shareable artifact, or a coalition list.",
+      "action": "Create structure",
       "capabilities": [
         "participation",
         "agency"
@@ -3271,6 +3421,7 @@
         "Extraction of testimony"
       ],
       "remediation": "Amplify one affected voice with consent; name your own role honestly.",
+      "action": "Create relationship",
       "capabilities": [
         "connection",
         "participation"
@@ -3300,6 +3451,7 @@
         "Attention spent, nothing retained"
       ],
       "remediation": "Name the artifact — the documented account, the changed mind — that outlives the post.",
+      "action": "Create legacy",
       "capabilities": [
         "connection",
         "participation"
@@ -3330,6 +3482,7 @@
         "Energy scattered"
       ],
       "remediation": "Name the one place this action lands first.",
+      "action": "Choose domain",
       "capabilities": [
         "agency"
       ],
@@ -3358,6 +3511,7 @@
         "The action that never happens"
       ],
       "remediation": "Take the action today — specific, real, visible.",
+      "action": "Create intervention",
       "capabilities": [
         "agency"
       ],
@@ -3388,6 +3542,7 @@
         "Unsustained campaigns"
       ],
       "remediation": "Set one sustainable recurring commitment to keep the pressure on.",
+      "action": "Create stewardship",
       "capabilities": [
         "rest",
         "agency"
@@ -3417,6 +3572,7 @@
         "Action that can't escalate or repeat"
       ],
       "remediation": "Add one structural lever — an escalation step or a clear next demand.",
+      "action": "Create structure",
       "capabilities": [
         "agency",
         "participation"
@@ -3447,6 +3603,7 @@
         "Action that speaks over"
       ],
       "remediation": "Act with the affected, by their lead; name and protect who's at risk.",
+      "action": "Create relationship",
       "capabilities": [
         "connection",
         "participation"
@@ -3477,6 +3634,7 @@
         "The harm returns"
       ],
       "remediation": "Name the change that must outlast the action; secure it.",
+      "action": "Create legacy",
       "capabilities": [
         "agency",
         "participation"
@@ -3506,6 +3664,7 @@
         "Systems built for nothing in particular"
       ],
       "remediation": "Name the one process this structure serves first.",
+      "action": "Choose domain",
       "capabilities": [
         "agency",
         "participation"
@@ -3535,6 +3694,7 @@
         "The reorg that never happens"
       ],
       "remediation": "Make the structural change today — define one role, fix one process.",
+      "action": "Create intervention",
       "capabilities": [
         "agency",
         "participation"
@@ -3565,6 +3725,7 @@
         "Nobody tending it"
       ],
       "remediation": "Assign one owner and one review rhythm to the structure.",
+      "action": "Create stewardship",
       "capabilities": [
         "rest",
         "participation"
@@ -3594,6 +3755,7 @@
         "A structure that can't scale or survive a departure"
       ],
       "remediation": "Add one durable lever — a documented process, a clear role, a handoff.",
+      "action": "Create structure",
       "capabilities": [
         "participation",
         "agency"
@@ -3625,6 +3787,7 @@
         "Tokens without power"
       ],
       "remediation": "Distribute one piece of real ownership; name the power dynamic openly.",
+      "action": "Create relationship",
       "capabilities": [
         "connection",
         "participation"
@@ -3654,6 +3817,7 @@
         "The work collapses when you leave"
       ],
       "remediation": "Name the structure or trained people that outlast you; secure them.",
+      "action": "Create legacy",
       "capabilities": [
         "participation",
         "connection"
