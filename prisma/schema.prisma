@@ -344,6 +344,10 @@ model CustomBar {
   /// Lens Integration Refactor (LENS) — soft pointers. lensId: the Lens this BAR
   /// was grown under. gardenId: which Garden it's planted in (membership = planted).
   lensId                               String?
+  /// Lenses/Observatory: specific authored goal this BAR serves.
+  lensGoalId                           String?
+  /// Lenses/Observatory: immutable lineage trace captured when a TTV task is planted as a BAR.
+  plantSnapshot                        Json?
   gardenId                             String?
   /// EA triad captured at the plant gate (unpacking mechanics) — required for
   /// lens/campaign alignment + emotional-alchemy moves. Reuses unpacking vocab.
@@ -644,6 +648,57 @@ model Lens {
   @@map("lenses")
 }
 
+model LensGoal {
+  id                 String   @id @default(cuid())
+  stableKey          String   @unique @default(cuid())
+  playerId           String
+  lensId             String
+  domain             String
+  cadence            String   @default("year") // year | quarter | month | week
+  title              String
+  description        String?
+  satisfactionPayoff String?
+  metric             String?
+  parentGoalId       String?
+  superpowerSource   String?
+  alignmentType      String   @default("progress")
+  status             String   @default("active") // draft | active | parked | skipped | superseded | archived | complete
+  keepOrder          Int      @default(0)
+  supersededById     String?
+  archivedAt         DateTime?
+  lineageSnapshot    Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([playerId, lensId])
+  @@index([playerId, domain])
+  @@index([parentGoalId])
+  @@index([supersededById])
+  @@index([archivedAt])
+  @@map("lens_goals")
+}
+
+model LensWorkshopDraft {
+  id            String   @id @default(cuid())
+  playerId      String
+  lensId        String
+  domain        String?
+  cadence       String
+  parentGoalId  String?
+  freewrite     String?
+  options       Json
+  keptOrder     Json
+  feelings      Json?
+  vagueMovement String?
+  status        String   @default("draft")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([playerId, lensId])
+  @@index([parentGoalId])
+  @@map("lens_workshop_drafts")
+}
+
 model TapTheVeinTask {
   id                        String                 @id @default(cuid())
   playerId                  String
@@ -658,6 +713,12 @@ model TapTheVeinTask {
   lensLevel                 String?
   lensCategory              String?
   lensFaceKey               String?
+  /// Lenses/Observatory: authored goal this daily task serves.
+  lensGoalId                String?
+  /// Lenses/Observatory: immutable lineage trace captured when attached.
+  attachSnapshot            Json?
+  /// Historical daily keep order; never reused after completion/compost/carry.
+  priorityRank              Int?
   // Lifecycle state
   status                    String                 @default("committed") // committed|in_progress|completed|carried_over|composted|assigned_to_campaign|upgraded_to_quest
   // Carryover tracking (loop rule: explicit push, never implicit)
@@ -680,6 +741,8 @@ model TapTheVeinTask {
   @@index([playerId, status])
   @@index([playerId, carryCount])
   @@index([campaignId, visibility])
+  @@index([lensGoalId])
+  @@unique([dailySessionId, priorityRank])
   @@map("tap_the_vein_tasks")
 }
 
