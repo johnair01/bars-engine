@@ -20,7 +20,7 @@ import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
 import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
 import { QuestLineagePanel } from '@/components/quests/QuestLineagePanel'
-import { getQuestLineage } from '@/actions/quests'
+import { getQuestLineage, listActiveWeeklyGoals } from '@/actions/quests'
 import { readHandDb } from '@/lib/hand-service'
 import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
 import { isHandVaultMovable } from '@/lib/hand-movement'
@@ -103,10 +103,13 @@ export default async function BarDetailPage({
     const inHand = hand ? hand.slots.some(s => s.barId === bar.id) : false
     const handFull = hand ? hand.filledCount >= hand.size : false
 
-    // QLA: quests get a lineage panel (week→year) + alignment / shadow state.
+    // QLA: quests get a lineage panel (week→year) + alignment / shadow state,
+    // with fold-in / acknowledge when the quest is a shadow.
     const questLineage =
         isOwner && bar.type === 'quest' ? await getQuestLineage(bar.id) : null
     const questLineageOk = questLineage && !('error' in questLineage) ? questLineage : null
+    const shadowWeeklyGoals =
+        questLineageOk && !questLineageOk.aligned ? await listActiveWeeklyGoals() : []
 
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
@@ -162,9 +165,15 @@ export default async function BarDetailPage({
                     )}
                 </div>
 
-                {/* QLA — quest lens lineage + alignment / shadow state */}
+                {/* QLA — quest lens lineage + alignment / shadow state (fold-in when shadow) */}
                 {questLineageOk && (
-                    <QuestLineagePanel trace={questLineageOk.trace} aligned={questLineageOk.aligned} />
+                    <QuestLineagePanel
+                        trace={questLineageOk.trace}
+                        aligned={questLineageOk.aligned}
+                        questId={bar.id}
+                        weeklyGoals={shadowWeeklyGoals}
+                        acknowledged={!!bar.shadowAcknowledgedAt}
+                    />
                 )}
 
                 {/* Canvas preview — the frozen polaroid of placed stickers (canvas BARs only) */}

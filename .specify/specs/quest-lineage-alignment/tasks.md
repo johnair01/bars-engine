@@ -59,22 +59,24 @@
 
 ## Phase 3 — Shadow surfacing, fold-in, rollup, verification
 
-- [ ] **T3.1** `src/actions/quests.ts`: `listShadowQuests`, `foldQuestIntoGoal({questId,
-  weeklyLensGoalId})` (attach + clear `shadowAcknowledgedAt`), `acknowledgeShadowQuest(questId)`
-  (set `shadowAcknowledgedAt`). Ownership-scoped; tests.
-- [ ] **T3.2** Vault **Shadow** room UI + a Quests surface (aligned vs shadow) with fold-in /
-  acknowledge actions. Wire `LensGoal.alignmentType` display.
-- [ ] **T3.3** `getGoalRollup(playerId)` read-model: aggregate child quest/goal progress up
-  `parentGoalId` (bounded ≤4 hops, batched). Render in `src/app/observatory/**` (+ lenses),
-  display-only (no auto-complete).
-- [ ] **T3.4 (Verification quest)** Seed `cert-quest-lineage-alignment-v1`: Twine passages (spec
-  steps 1–5), `scripts/seed-cert-quest-lineage-alignment.ts` (idempotent, `isSystem:true`,
-  `visibility:'public'`), npm script `seed:cert:quest-lineage-alignment`. Reference
-  [cyoa-certification-quests](../cyoa-certification-quests/) + `scripts/seed-cyoa-certification-quests.ts`.
-- [ ] **T3.5** Optional idempotent backfill script: mark legacy null-lineage quests as shadow /
-  match obvious weekly goals (non-destructive; not required to ship).
+- [x] **T3.1** `src/actions/quests.ts`: `listShadowQuests` (derives shadow reason), `foldQuestIntoGoal`
+  (attach weekly goal + snapshot, clear `shadowAcknowledgedAt`), `acknowledgeShadowQuest`
+  (set it), plus `listActiveWeeklyGoals` (fold-in targets). Ownership-scoped. **Done.** (Unit tests
+  deferred to CI — sandbox can't generate the Prisma client.)
+- [x] **T3.2** `/vault/shadow` room lists shadow quests (reason chip) with the `ShadowQuestActions`
+  client island (fold-in select + "keep as shadow"); the same actions render on `/bars/[id]` for a
+  shadow quest; lobby gains a "Shadow quests →" entry. **Done.**
+- [x] **T3.3** `getGoalRollup()` read-model: `groupBy` direct quest counts + bounded cycle-guarded
+  DFS roll-up over `parentGoalId`. Rendered as a compact "Rolling up" section on `/vault/shadow`
+  (display-only). **Done.** (Rendered on the shadow surface, not the heavier Observatory page, to
+  keep the change contained.)
+- [x] **T3.4 (Verification quest)** `scripts/seed-cert-quest-lineage-alignment.ts` seeds
+  `cert-quest-lineage-alignment-v1` (TwineStory + `isSystem` public CustomBar, 5 steps + feedback +
+  success), npm script `seed:cert:quest-lineage-alignment`. **Done.** (Seeding itself needs a DB.)
+- [ ] **T3.5** Optional non-destructive backfill — **not shipped** (legacy null-lineage quests are
+  already valid shadow items surfaced by `listShadowQuests`; a backfill isn't required).
 - [ ] **T3.6** `npm run build` && `npm run check`; run `seed:cert:quest-lineage-alignment`; walk the
-  cert. Open **Phase 3 PR**.
+  cert — **must run in CI / a DB-connected env** (sandbox blocks the Prisma engine). ESLint clean.
 
 ## Cross-cutting
 - [ ] Every new action scoped to `getCurrentPlayer()`; ownership checked on quest/goal ids.

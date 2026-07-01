@@ -1,11 +1,11 @@
 import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
+import type { WeeklyGoalOption } from '@/actions/quests'
+import { ShadowQuestActions } from './ShadowQuestActions'
 
 /**
  * QuestLineagePanel — shows how a quest hangs on the lens-goal hierarchy
  * (week → month → quarter → year) and whether it is aligned or a shadow quest.
- *
- * Presentational only (QLA Phase 2). The fold-in action for shadow quests lands
- * in Phase 3 (foldQuestIntoGoal); here we show the state + the chain.
+ * When shadow (and given a questId + weekly goals), it offers fold-in / acknowledge.
  */
 
 const CADENCE_LABEL: Record<string, string> = {
@@ -18,9 +18,16 @@ const CADENCE_LABEL: Record<string, string> = {
 export function QuestLineagePanel({
   trace,
   aligned,
+  questId,
+  weeklyGoals,
+  acknowledged = false,
 }: {
   trace: LensGoalTrace | null
   aligned: boolean
+  /** When provided and the quest is shadow, render fold-in / acknowledge actions. */
+  questId?: string
+  weeklyGoals?: WeeklyGoalOption[]
+  acknowledged?: boolean
 }) {
   // Leaf (the goal the quest hangs on) first, then up the parent chain.
   const chain = trace ? [trace.goal, ...trace.parentChain] : []
@@ -66,6 +73,10 @@ export function QuestLineagePanel({
           Attached above the weekly level — a quest should hang on a <strong>week</strong> goal that
           rolls up. Re-anchor it to this week to align.
         </p>
+      )}
+
+      {!aligned && questId && weeklyGoals && (
+        <ShadowQuestActions questId={questId} acknowledged={acknowledged} weeklyGoals={weeklyGoals} />
       )}
     </div>
   )
