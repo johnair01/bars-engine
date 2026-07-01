@@ -38,19 +38,14 @@ function buildMap(): Map<string, OfferKey> {
   if (cached) return cached
   const map = new Map<string, OfferKey>()
 
-  // Source 2 (lower priority): derive permalinks from the configured product URLs.
-  const urlByKey: Partial<Record<OfferKey, string | undefined>> = {
-    'book-digital': process.env.NEXT_PUBLIC_GUMROAD_BOOK_DIGITAL_URL,
-    'rpg-handbook-digital': process.env.NEXT_PUBLIC_GUMROAD_RPG_DIGITAL_URL,
-    'deck-digital': process.env.NEXT_PUBLIC_GUMROAD_DECK_DIGITAL_URL,
-    'game-subscription': process.env.NEXT_PUBLIC_GUMROAD_GAME_SUB_URL,
-    'book-physical': process.env.NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL,
-    'rpg-handbook-physical': process.env.NEXT_PUBLIC_GUMROAD_RPG_PHYSICAL_URL,
-    'founding-ally': process.env.NEXT_PUBLIC_GUMROAD_FOUNDING_ALLY_URL,
-  }
-  for (const [key, url] of Object.entries(urlByKey)) {
-    const pl = permalinkOf(url)
-    if (pl) map.set(pl, key as OfferKey)
+  // Source 2 (lower priority): derive permalinks from each offer's configured
+  // product URL. This reads from the offer registry (offers.ts), which carries the
+  // committed link plus any NEXT_PUBLIC_GUMROAD_*_URL override — so a sale via a
+  // committed link (e.g. the digital deck) still resolves to its SKU, and every
+  // SKU with a URL (packs, bundle, physical editions) is covered automatically.
+  for (const offer of LAUNCH_OFFERS) {
+    const pl = permalinkOf(offer.gumroadUrl)
+    if (pl) map.set(pl, offer.key)
   }
 
   // Source 1 (higher priority): explicit override map.
