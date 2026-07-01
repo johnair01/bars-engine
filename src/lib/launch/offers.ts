@@ -99,7 +99,7 @@ export interface LaunchOffer {
 const GUMROAD = {
   bookDigital:        process.env.NEXT_PUBLIC_GUMROAD_BOOK_DIGITAL_URL ?? '',
   rpgHandbookDigital: process.env.NEXT_PUBLIC_GUMROAD_RPG_DIGITAL_URL ?? '',
-  deckDigital:        process.env.NEXT_PUBLIC_GUMROAD_DECK_DIGITAL_URL ?? '',
+  deckDigital:        process.env.NEXT_PUBLIC_GUMROAD_DECK_DIGITAL_URL ?? 'https://wendellbritt.gumroad.com/l/hzdgb',
   gameSubscription:   process.env.NEXT_PUBLIC_GUMROAD_GAME_SUB_URL ?? '',
   bookPhysical:       process.env.NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL ?? '',
   rpgHandbookPhysical:process.env.NEXT_PUBLIC_GUMROAD_RPG_PHYSICAL_URL ?? '',
