@@ -2,6 +2,12 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getHexagramStructure } from '@/lib/iching-struct'
 
+// Render at request time, not at build. This page queries Prisma (bars +
+// archetypes); a static prerender runs that query during the build, which fails
+// when the build has no reachable database/Data Proxy (P5000). Matches the
+// sibling wiki pages (nations, archetypes) which already defer this way.
+export const dynamic = 'force-dynamic'
+
 /**
  * @page /wiki/iching
  * @entity WIKI
