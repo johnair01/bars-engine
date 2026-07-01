@@ -19,6 +19,8 @@ import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
 import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
+import { QuestLineagePanel } from '@/components/quests/QuestLineagePanel'
+import { getQuestLineage } from '@/actions/quests'
 import { readHandDb } from '@/lib/hand-service'
 import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
 import { isHandVaultMovable } from '@/lib/hand-movement'
@@ -101,6 +103,11 @@ export default async function BarDetailPage({
     const inHand = hand ? hand.slots.some(s => s.barId === bar.id) : false
     const handFull = hand ? hand.filledCount >= hand.size : false
 
+    // QLA: quests get a lineage panel (week→year) + alignment / shadow state.
+    const questLineage =
+        isOwner && bar.type === 'quest' ? await getQuestLineage(bar.id) : null
+    const questLineageOk = questLineage && !('error' in questLineage) ? questLineage : null
+
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
         <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
@@ -154,6 +161,11 @@ export default async function BarDetailPage({
                         </div>
                     )}
                 </div>
+
+                {/* QLA — quest lens lineage + alignment / shadow state */}
+                {questLineageOk && (
+                    <QuestLineagePanel trace={questLineageOk.trace} aligned={questLineageOk.aligned} />
+                )}
 
                 {/* Canvas preview — the frozen polaroid of placed stickers (canvas BARs only) */}
                 {canvasLayout && (

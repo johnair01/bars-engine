@@ -69,7 +69,11 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
 
   const [rawEntry, setRawEntry] = useState(initial.rawEntry)
   const [draft, setDraft] = useState('')
-  const [lensGoalId, setLensGoalId] = useState(initial.lensGoals[0]?.id ?? '')
+  // Quests hang on a WEEKLY goal (QLA). Default to the first active weekly goal;
+  // empty = commit as a shadow quest (surfaced for fold-in).
+  const [lensGoalId, setLensGoalId] = useState(
+    initial.lensGoals.find((g) => g.cadence === 'week')?.id ?? '',
+  )
   const [menuTask, setMenuTask] = useState<TtvTaskDTO | null>(null)
   const [plantedTrace, setPlantedTrace] = useState<LensGoalTrace | null>(null)
 
@@ -114,7 +118,9 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
         return
       }
       setDraft('')
-      setCommitNote(res.placedIn === 'hand' ? '→ dealt to your hand' : '→ hand full · saved to your vault')
+      const where = res.placedIn === 'hand' ? 'dealt to your hand' : 'hand full · saved to your vault'
+      const align = res.aligned ? 'aligned to this week' : 'shadow quest · fold into a weekly goal'
+      setCommitNote(`→ ${where} · ${align}`)
       router.refresh()
     })
   }
@@ -503,6 +509,8 @@ function CommitPhase({
   const atCap = count >= MAX_TASKS_PER_DAY
   const emptySlots = Math.max(0, MAX_TASKS_PER_DAY - count - (draft.trim() ? 1 : 0))
   const gem = ELEMENT_TOKENS[element].gem
+  // Quests attach at the WEEKLY level (QLA); month/quarter/year are roll-up targets.
+  const weeklyGoals = lensGoals.filter((g) => g.cadence === 'week')
 
   return (
     <>
@@ -536,7 +544,7 @@ function CommitPhase({
         </div>
       )}
 
-      {lensGoals.length > 0 && !atCap && (
+      {!atCap && (weeklyGoals.length > 0 ? (
         <select
           value={lensGoalId}
           onChange={(e) => setLensGoalId(e.target.value)}
@@ -554,14 +562,18 @@ function CommitPhase({
             outline: 'none',
           }}
         >
-          <option value="">No Lens goal attached</option>
-          {lensGoals.map((goal) => (
+          <option value="">No weekly goal — commit as a shadow quest</option>
+          {weeklyGoals.map((goal) => (
             <option key={goal.id} value={goal.id}>
-              {goal.domain} / {goal.cadence}: {goal.title}
+              {goal.domain}: {goal.title}
             </option>
           ))}
         </select>
-      )}
+      ) : (
+        <p style={{ marginTop: 14, fontFamily: mono, fontSize: 9, letterSpacing: '0.06em', color: 'var(--bars-text-muted)' }}>
+          No weekly goals yet — <a href="/lenses" style={{ color: purple, textDecoration: 'underline' }}>set one in Lenses</a> to align today&rsquo;s quests, or commit them as shadow quests.
+        </p>
+      ))}
 
       {/* Compose */}
       {!atCap && (

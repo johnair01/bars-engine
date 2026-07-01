@@ -752,9 +752,10 @@ export async function getBarDetail(barId: string) {
     const isOwner = bar.creatorId === playerId
     const isRecipient = bar.shares.some(s => s.toUserId === playerId)
 
-    // Type guard: public BARs are always viewable; owners can view charge_capture type;
+    // Type guard: public BARs are always viewable; owners can view their own
+    // charge_capture seeds AND quests (QLA — quests need a home page showing lineage);
     // otherwise only 'bar' type is accessible via this route
-    const allowedType = bar.type === 'bar' || (isOwner && bar.type === 'charge_capture')
+    const allowedType = bar.type === 'bar' || (isOwner && (bar.type === 'charge_capture' || bar.type === 'quest'))
     if (!isPublic && !allowedType) return { error: 'Not a BAR' }
     // Share through which current user received this BAR (most recent if multiple)
     const recipientShare = isRecipient

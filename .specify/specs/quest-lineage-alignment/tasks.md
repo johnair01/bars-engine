@@ -27,25 +27,35 @@
 
 ## Phase 2 — Tasks born as quests + weekly attachment + quest detail
 
-- [ ] **T2.1 (Prisma)** Edit `prisma/schema.prisma`: add `CustomBar.shadowAcknowledgedAt DateTime?`;
-  add `@@index([creatorId, type, status])` and `@@index([lensGoalId])` if absent.
-- [ ] **T2.2 (Prisma)** `npx prisma migrate dev --name add_quest_shadow_alignment`; **commit**
-  `prisma/migrations/<ts>_add_quest_shadow_alignment/migration.sql` with `schema.prisma`; then
-  `npm run db:sync` (regen client) and `npm run db:record-schema-hash`. Human-glance the SQL
-  (additive only). See [prisma-migration-discipline](../../../.agents/skills/prisma-migration-discipline/SKILL.md).
-- [ ] **T2.3** `commitTask` (`src/actions/tap-the-vein.ts`): mint a **quest** via `mintQuestFromText`
-  (drop the bare-`type='bar'` path); accept `weeklyLensGoalId`; return
-  `{ task, questId, aligned, placedIn }`; set `task.questId`. Preserve Hand/Vault placement of the
-  quest (reuse `addBarToHandForPlayer`). Update the return-shape consumers.
-- [ ] **T2.4** `upgradeTaskToQuest` → idempotent no-op/redirect returning the existing `questId`
-  (back-compat; never double-mint).
-- [ ] **T2.5** TTV Commit UI (`TapTheVeinRunner.tsx` `CommitPhase`): require/encourage an **active
-  weekly goal**; when none for the chosen domain, inline "descend a weekly goal" (reuse lenses
-  descent action); thread `weeklyLensGoalId`; note aligned target + Hand/Vault placement.
-- [ ] **T2.6** `getQuestLineage(questId)` in `src/actions/quests.ts` (reuse `buildLensGoalSnapshot`).
-- [ ] **T2.7** `/bars/[id]` (`getBarDetail` + page): allow `type='quest'`; render lineage chain
-  (week→year), alignment badge, and fold-in entry when shadow.
-- [ ] **T2.8** `npm run build` && `npm run check`. Open **Phase 2 PR**.
+- [x] **T2.1 (Prisma)** `prisma/schema.prisma`: added `CustomBar.shadowAcknowledgedAt DateTime?` +
+  `@@index([creatorId, type, status])` + `@@index([lensGoalId])`. **Done.**
+- [x] **T2.2 (Prisma)** Migration **hand-authored DB-free** (engine download blocked in sandbox):
+  `prisma/migrations/20260701170000_add_quest_shadow_alignment/migration.sql` (additive — one
+  nullable column + two indexes, Prisma naming). **CI/local must run `prisma generate` +
+  `migrate deploy` + `db:record-schema-hash`.** No Phase-2 code references the new column yet, so
+  the build won't depend on a regenerated client.
+- [x] **T2.3** `commitTask` now mints a **quest** via `mintQuestFromText` (carrying lineage +
+  `questSource:'tap_the_vein'`), links `task.questId`, deals it into the Hand (Vault on overflow),
+  returns `{ task, questId, aligned, placedIn, overflow }`. `aligned = goal.cadence==='week'`.
+  Compost sync generalized to `task.questId ?? task.barId`. **Done.**
+- [x] **T2.4** `upgradeTaskToQuest` short-circuits when `task.questId` exists (idempotent, no
+  double-mint). **Done.**
+- [x] **T2.5** `CommitPhase` selector filtered to **weekly** goals (default = first weekly);
+  empty = "commit as a shadow quest"; no-weekly hint links to `/lenses`; commit note shows
+  aligned/shadow. **Done.** (Full inline "descend a weekly goal" deferred — links to Lenses for now.)
+- [x] **T2.6** `getQuestLineage(questId)` in `src/actions/quests.ts` (via `resolveLensGoalTrace`).
+  **Done.**
+- [x] **T2.7** `getBarDetail` allows owner `type='quest'`; `/bars/[id]` renders `QuestLineagePanel`
+  (week→year chain + aligned/shadow badge). **Done.** (Interactive fold-in is Phase 3.)
+- [ ] **T2.8** `npm run build` && `npm run check` — **must run in CI** (sandbox blocks Prisma
+  engine). ESLint clean on all touched files.
+
+**Deferred to Phase 3 (documented, not silently dropped):**
+- Task action sheet still offers **keep/plant** which mint a *separate* BAR even though the task is
+  already a quest — rationalize the sheet (a born-as-quest task shouldn't re-mint a bar).
+- Vault **Show Up/Quests** room (`unplacedPersonalQuestWhere`) filters on `sourceBarId`, so
+  born-as-quests (sourceBarId null) show only in `/vault/all`, not that room. `questSource` marker
+  is set for a future filter update.
 
 ## Phase 3 — Shadow surfacing, fold-in, rollup, verification
 

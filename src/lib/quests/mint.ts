@@ -26,6 +26,8 @@ export type MintQuestInput = {
   sourceBarId?: string | null
   /** When set, links `TapTheVeinTask.questId` back to the new quest in the same tx. */
   sourceTaskId?: string | null
+  /** Origin hint (e.g. 'tap_the_vein') so surfaces can group born-as-quest work. */
+  questSource?: string | null
   /** Quest shape — defaults mirror the historical `growQuestFromBar` behaviour. */
   moveType?: string
   allyshipDomain?: string
@@ -53,6 +55,7 @@ export async function mintQuestFromText(input: MintQuestInput): Promise<{ questI
         moveType: input.moveType ?? 'showUp',
         allyshipDomain: input.allyshipDomain ?? 'GATHERING_RESOURCES',
         sourceBarId: input.sourceBarId ?? null,
+        questSource: input.questSource ?? null,
         inputs: '[]',
         rootId: 'temp',
         // Lineage — never null it when a source goal exists.
