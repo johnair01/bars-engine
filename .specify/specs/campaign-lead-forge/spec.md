@@ -54,6 +54,15 @@ deterministic over AI (Superpower + Myths + domain are pure/offline; no model ca
 | **Two on-ramps** | **Cold** (`/begin`): a stranger from a social post discovers themselves → automated lead. **Warm** (`/invite/[token]/welcome`): the owner hand-picks a person and pre-loads their tasks; their link is a personalized orientation CYOA. Same destination — a created character with assigned starter quests. |
 | **Assignment is real** | On accept, `createCharacter` calls `claimCampaignLeadForPlayer` → each matched starter quest becomes a `PlayerQuest`, and the lead is marked `onboarded`. (Previously `Invite.starterQuestId` was written but never read.) |
 
+### v2 decisions (locked with owner, 2026-07-02)
+
+| Topic | Decision |
+|-------|----------|
+| **Roster ownership** | **Per-owner and private by default**, with an explicit **"publish to the collective"** action that promotes a lead (or the whole list) into a shared, campaign-visible directory other stewards can invite from. Publishing is opt-in and reversible. |
+| **Quest population** | **AI-backed.** This is an admin tool, so quests are drafted by the existing AI pipeline (`generateQuestFromContext` → `compileQuestWithAI` in the quest-grammar compiler) and then editable, rather than hand-typed. Deterministic fallback (template/seed) remains available. |
+| **Myth × Superpower × Face alignment** | **Full six-face analysis (deep).** A custom quest is authored against all three lenses: the **myth** reframe (new `myth → quest` hop), the **superpower** matched prompt + artifact (`SUPERPOWER_TRANSLATION` matrix), and a **GM face** whose opening move is drawn from `GM_FACE_STAGE_MOVES` (6 faces × 8 Kotter stages = 48). All three resolve through the shared `AllyshipDomain` vocabulary. |
+| **Branching invitee CYOA** | **Deferred to its own spec + feasibility** — see [lead-branching-cyoa](../lead-branching-cyoa/). The v1 warm invite stays a guided linear adventure for the launch test; branching (choices change the path) is assessed separately because the graph engine assumes an authenticated player and the warm invitee is anonymous until claim. |
+
 ---
 
 ## Conceptual Model
@@ -190,12 +199,28 @@ the ids the player worked through are captured on the lead.
 - **FR13**: SMS/text delivery of the tailored invite (humane notifications) — backlog.
 - **FR14**: Analytics: funnel step drop-off, source attribution from `?src=` social tags.
 
+### Phase 6 — Warm Roster + per-lead workspace (v2)
+- **FR15**: Add `goalsJson` (owner's goals for the lead) to `CampaignLead`; migration.
+- **FR16**: Roster view (the board, reframed as "your list") with an explicit **Add a lead** entry and per-lead status.
+- **FR17**: **Lead detail page** `/campaign/[ref]/leads/[leadId]` (steward-gated): set goals; add / reorder / remove matched quests; copy the warm link; preview the invitee adventure.
+- **FR18**: **Publish to collective** — `publishLeadToCollective(leadId)` promotes a lead into a shared, campaign-visible directory (`collective` flag / shared scope) other stewards can invite from; reversible (`unpublish`).
+- **FR19**: Reorder persists (ordered `starterQuestIdsJson`); "copy warm link" returns `/invite/[token]/welcome`.
+
+### Phase 7 — Quest Studio (AI, aligned) (v2)
+- **FR20**: `/campaign/[ref]/quests/new` (steward-gated) — author a campaign quest with an **AI draft** step (`generateQuestFromContext` → `compileQuestWithAI`), editable before save.
+- **FR21**: **Alignment selectors** — myth, superpower, GM face, domain. Persist alignment tags on the quest (`CustomBar` metadata: `mythId`, `superpower`, `gmFace`, `allyshipDomain`).
+- **FR22**: **Deep six-face wiring** — the chosen face seeds the quest's opening move from `GM_FACE_STAGE_MOVES[Kotter stage][face]`; the superpower pulls its `SUPERPOWER_TRANSLATION[superpower][orientation]` prompt + artifact; the myth's `reframe` seeds the aligned action. New `myth → quest` bridge module.
+- **FR23**: Authored quests join the campaign quest pool and are pickable on any lead's detail page.
+
+### Branching invitee CYOA (separate spec)
+- See **[lead-branching-cyoa](../lead-branching-cyoa/)** — spec + feasibility. Not in this spec's build scope.
+
 ---
 
 ## Non-Functional Requirements
 
 - **No email gate** on the automated funnel (parity with Superpower quiz); anonymous runs allowed via `clientSessionId`.
-- **Deterministic**: Superpower, Myths, Domain, and quest offers require no AI and work offline.
+- **Deterministic core**: the invitee-facing funnel (Superpower, Myths, Domain, offered quests) requires no AI and works offline. AI is confined to the **owner-facing Quest Studio** (v2) — draft-then-edit, cached, behind an env model override / feature flag; never on the invitee's critical path.
 - **Backward compatible**: The existing Crossing steward board keeps working; `CampaignLead` is additive.
 - **UI_COVENANT**: use `cultivation-cards.css` + `card-tokens` for game aesthetic; Tailwind for layout only; element = color, no hardcoded hues.
 - **Touch targets** ≥ 44px on funnel + board actions (mobile-first — social traffic is mobile).

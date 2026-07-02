@@ -42,6 +42,23 @@ the invitee gets a personalized orientation CYOA (the friendcraft-style ask).
 - NOTE: This is the warm on-ramp (owner invites a specific person, pre-loads their tasks);
   `/campaign/[ref]/begin` remains the cold, self-serve on-ramp. Same destination.
 
+## Phase 6 — Warm Roster + per-lead workspace (v2, decisions locked)
+- [ ] 6.1 Add `goalsJson` + `collective` (Boolean) to `CampaignLead`; migration
+- [ ] 6.2 Roster view — board reframed as "your list" + prominent Add-a-lead
+- [ ] 6.3 `/campaign/[ref]/leads/[leadId]` lead detail — goals, quest add/reorder/remove, copy link, preview
+- [ ] 6.4 `setLeadGoals`, `addLeadQuest`, `reorderLeadQuests`, `removeLeadQuest` actions (steward-gated)
+- [ ] 6.5 `publishLeadToCollective` / `unpublishLead` + shared directory read for other stewards
+
+## Phase 7 — Quest Studio (AI, aligned to myth × superpower × face) (v2)
+- [ ] 7.1 `/campaign/[ref]/quests/new` — AI draft (generateQuestFromContext → compileQuestWithAI), editable
+- [ ] 7.2 Alignment selectors (myth, superpower, GM face, domain) + persist tags on CustomBar
+- [ ] 7.3 `src/lib/campaign-leads/quest-alignment.ts` — compose myth.reframe + SUPERPOWER_TRANSLATION + GM_FACE_STAGE_MOVES into generation context
+- [ ] 7.4 New `myth → quest` bridge (only `myth.domainHint → AllyshipDomain` exists today)
+- [ ] 7.5 Authored quests join campaign pool; pickable on lead detail
+
+## Branching invitee CYOA — separate spec + feasibility
+- [ ] B.1 `.specify/specs/lead-branching-cyoa/` — spec + feasibility (Adventure/Passage engine, anonymous-play blocker)
+
 ## Follow-ups (Phase 4 / backlog)
 - Run `npx prisma migrate deploy` in a DB-connected env to apply `20260702000000_add_campaign_lead`.
 - Deep-wire create-character to `characterCreationPacket` with prefilled superpower + domain (FR12).
