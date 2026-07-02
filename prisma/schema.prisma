@@ -130,6 +130,7 @@ model Player {
   contributionRecords            ContributionRecord[]        @relation("PlayerContributions")
   claimedBars                    CustomBar[]                 @relation("ClaimedBars")
   createdBars                    CustomBar[]                 @relation("CreatedBars")
+  mythReads                      MythRead[]
   daemonSummons                  DaemonSummon[]
   daemons                        Daemon[]
   daemonPromotedFrom             Daemon?                     @relation("DaemonPromotedToNpc")
@@ -452,6 +453,7 @@ model CustomBar {
   spokeMoveBedKernelRows               SpokeMoveBedKernel?    @relation("SpokeMoveBedKernelBar")
   spokeMoveBedKernelSources            SpokeMoveBedKernel[]   @relation("SpokeMoveBedKernelSource")
   spokeMoveBedAnchor                   SpokeMoveBed?          @relation("SpokeMoveBedAnchor")
+  mythReadsCreated                     MythRead[]             @relation("MythReadCreatedBar")
   threadQuests                         ThreadQuest[]
   handSlots                            HandSlot[]
 
@@ -4608,4 +4610,32 @@ model FunnelSignup {
   @@index([intent, createdAt])
   @@index([email])
   @@map("funnel_signups")
+}
+
+/// Myths Read diagnostic — public Chapter 0 quiz result, optionally linked to
+/// a logged-in player and/or a spawned seeded BAR.
+model MythRead {
+  id                      String     @id @default(cuid())
+  userId                  String?
+  email                   String?
+  source                  String     @default("mastering-allyship-ch0")
+  responses               Json
+  mythScores              Json
+  topMyths                String[]
+  rootBeliefs             String[]   @default([])
+  recommendedDestinations String[]   @default([])
+  capturedCharge          Json?
+  seedBarDrafts           Json?
+  ctaPrimary              String     @default("deck")
+  consent                 Boolean    @default(false)
+  createdBarId            String?
+  createdAt               DateTime   @default(now())
+
+  user       Player?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdBar CustomBar? @relation("MythReadCreatedBar", fields: [createdBarId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([email])
+  @@index([source, createdAt])
+  @@map("myth_reads")
 }
