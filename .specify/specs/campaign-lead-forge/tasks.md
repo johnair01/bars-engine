@@ -28,6 +28,20 @@
       no DB/engine in the ephemeral container; run in a DB-connected env.
 - [ ] 4.2 Commit + push to `claude/dazzling-wright-d19dkh`
 
+## Phase 5 — Warm invite path (invited person's experience) ✅
+Closes the "dead wire": a forged lead's matched tasks are now actually assigned, and
+the invitee gets a personalized orientation CYOA (the friendcraft-style ask).
+- [x] 5.1 `src/lib/campaign-leads/claim.ts` — `claimCampaignLeadForPlayer(inviteId, playerId)`:
+      assigns each matched starter quest as a `PlayerQuest` + marks the lead `onboarded`.
+- [x] 5.2 Hook into `createCharacter` (`src/actions/conclave.ts`, best-effort, non-fatal).
+- [x] 5.3 `src/lib/campaign-leads/orientation.ts` — editable "how the system works" cards.
+- [x] 5.4 `/invite/[token]/welcome` — personalized CYOA: welcome → orientation → "how you're
+      helping" (the owner's matched actions + starter quests) → claim (reuses `InviteSignupForm`).
+      Falls back to `/invite/[token]` when the invite has no linked lead.
+- [x] 5.5 `createManualLead` now returns the `/invite/[token]/welcome` link.
+- NOTE: This is the warm on-ramp (owner invites a specific person, pre-loads their tasks);
+  `/campaign/[ref]/begin` remains the cold, self-serve on-ramp. Same destination.
+
 ## Follow-ups (Phase 4 / backlog)
 - Run `npx prisma migrate deploy` in a DB-connected env to apply `20260702000000_add_campaign_lead`.
 - Deep-wire create-character to `characterCreationPacket` with prefilled superpower + domain (FR12).

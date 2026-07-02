@@ -50,7 +50,9 @@ deterministic over AI (Superpower + Myths + domain are pure/offline; no model ca
 | **Domain step** | Reuse `ALLYSHIP_DOMAINS` (the four allyship domains). |
 | **Character creation** | The funnel's terminal step frames the captured result as a "created character" and hands off to the existing `/character/create` (or shows a claim CTA for anonymous runs). MVP: capture identity into the lead + `LatentAllyshipIntake`; deep-wire to `characterCreationPacket` is a follow-up. |
 | **Auth** | Owner board + manual actions gated by a generalized `assertCampaignSteward(playerId, campaignRef)` (extracted from The Crossing's `assertSteward`). Automated funnel is public (no email gate), matching the Superpower quiz. |
-| **Route shape** | Owner: `/admin/campaigns/[ref]/leads`. Automated funnel: `/campaign/[ref]/begin`. Both `ref` = `campaignRef` (e.g. `the-crossing`). |
+| **Route shape** | Owner: `/campaign/[ref]/leads` (steward-gated; NOT `/admin/*`, which hard-gates global admins). Cold funnel: `/campaign/[ref]/begin`. Warm invite: `/invite/[token]/welcome`. `ref` = `campaignRef`. |
+| **Two on-ramps** | **Cold** (`/begin`): a stranger from a social post discovers themselves → automated lead. **Warm** (`/invite/[token]/welcome`): the owner hand-picks a person and pre-loads their tasks; their link is a personalized orientation CYOA. Same destination — a created character with assigned starter quests. |
+| **Assignment is real** | On accept, `createCharacter` calls `claimCampaignLeadForPlayer` → each matched starter quest becomes a `PlayerQuest`, and the lead is marked `onboarded`. (Previously `Invite.starterQuestId` was written but never read.) |
 
 ---
 

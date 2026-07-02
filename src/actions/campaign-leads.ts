@@ -120,7 +120,9 @@ export async function createManualLead(raw: unknown): Promise<CreateManualLeadRe
   })
 
   revalidatePath(`/admin/campaigns/${input.campaignRef}/leads`)
-  return { ok: true, leadId: lead.id, inviteUrl: `${inviteBaseUrl()}/invite/${token}`, token }
+  // The warm welcome route renders the personalized orientation CYOA (falls back
+  // to the generic /invite/[token] landing when a lead is absent).
+  return { ok: true, leadId: lead.id, inviteUrl: `${inviteBaseUrl()}/invite/${token}/welcome`, token }
 }
 
 // ── submitAutomatedLead ──────────────────────────────────────────────────────
