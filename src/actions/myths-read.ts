@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
+import type { Prisma } from '@prisma/client'
 import { getCurrentPlayer } from '@/lib/auth'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
 import {
@@ -103,7 +104,7 @@ export async function saveMythRead(input: {
             intensity: String(capturedCharge.intensity),
             seedMetabolization: mergeSeedMetabolization(null, {
               maturity: 'captured',
-              soilKind: 'myths_read',
+              soilKind: 'holding_pen',
               contextNote: `${myth.short} · ${flavor.label} · ${intensityLabel}`,
             }),
             agentMetadata: JSON.stringify({
@@ -135,8 +136,10 @@ export async function saveMythRead(input: {
           topMyths: payload.topMyths,
           rootBeliefs: payload.rootBeliefs,
           recommendedDestinations: payload.recommendedDestinations,
-          capturedCharge: payload.capturedCharge,
-          seedBarDrafts: payload.seedBarDrafts,
+          ...(payload.capturedCharge
+            ? { capturedCharge: payload.capturedCharge as unknown as Prisma.InputJsonValue }
+            : {}),
+          seedBarDrafts: payload.seedBarDrafts as unknown as Prisma.InputJsonValue,
           ctaPrimary: 'deck',
           consent: Boolean(input.consent),
           createdBarId: barId,
