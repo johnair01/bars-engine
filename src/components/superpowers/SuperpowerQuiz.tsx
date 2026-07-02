@@ -23,6 +23,12 @@ import { SuperpowerReveal } from './SuperpowerReveal'
 export interface SuperpowerQuizProps {
   /** Optional campaign context, forwarded to the action (reserved for Phase 4). */
   campaignRef?: string
+  /**
+   * Fired once when scoring resolves, with the full outcome. Additive: the quiz
+   * still renders its own reveal. Used by the onboarding funnel to capture the
+   * superpower + orientation and advance to the next step.
+   */
+  onComplete?: (outcome: SuperpowerIntakeOutcome) => void
 }
 
 const TOTAL_STEPS = QUIZ_ITEMS.length + 1 // items + orientation
@@ -31,7 +37,7 @@ const MONO: CSSProperties = { fontFamily: 'var(--bars-font-mono)' }
 const DISPLAY: CSSProperties = { fontFamily: 'var(--bars-font-display)' }
 const BODY: CSSProperties = { fontFamily: 'var(--bars-font-body)' }
 
-export function SuperpowerQuiz({ campaignRef }: SuperpowerQuizProps) {
+export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps) {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
@@ -54,8 +60,10 @@ export function SuperpowerQuiz({ campaignRef }: SuperpowerQuizProps) {
         orientation: finalOrientation,
         campaignRef,
       })
-      if (res.ok) setOutcome(res.outcome)
-      else setError(res.error)
+      if (res.ok) {
+        setOutcome(res.outcome)
+        onComplete?.(res.outcome)
+      } else setError(res.error)
     })
   }
 
