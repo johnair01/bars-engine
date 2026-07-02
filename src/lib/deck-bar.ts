@@ -14,7 +14,7 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { assembleDeck } from '@/lib/allyship-deck/assemble'
 import { buildDeckSeed, type SeedSubject } from '@/lib/allyship-deck/seed'
-import { addBarToHandForPlayer } from '@/lib/hand-service'
+import { addBarToHandForPlayer, type OverflowContext } from '@/lib/hand-service'
 import {
   PENDING_DECK_COOKIE,
   verifyPendingIntent,
@@ -22,7 +22,7 @@ import {
 import type { AllyshipDeck, MoveCard } from '@/lib/allyship-deck/types'
 
 export type MaterializeResult =
-  | { success: true; barId: string; placedInHand: boolean }
+  | { success: true; barId: string; placedInHand: boolean; overflow?: OverflowContext }
   | { error: string }
 
 /** Authoritative deck, assembled deterministically (no AI/DB) and memoized per process. */
@@ -74,16 +74,20 @@ export async function materializeDeckBar(
       },
     })
 
-    // Try to drop it straight into the Hand; if full, it stays in the Vault.
+    // Try to drop it straight into the Hand. If the Hand is full, the BAR waits
+    // in the Vault and we hand the caller an OverflowContext so it can offer to
+    // compost a Hand card to the Vault to make room (never a silent landing).
     const placed = await addBarToHandForPlayer(playerId, bar.id)
     const placedInHand = 'success' in placed && placed.success === true
+    const overflow =
+      'success' in placed && placed.success === false ? placed.overflow : undefined
 
     revalidatePath('/')
     revalidatePath('/vault')
     revalidatePath('/bars')
     revalidatePath('/hand')
 
-    return { success: true, barId: bar.id, placedInHand }
+    return { success: true, barId: bar.id, placedInHand, overflow }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to send to BARS' }
   }

@@ -13,9 +13,10 @@ import {
   PENDING_DECK_TTL_MS,
 } from '@/lib/deck-pending-intent'
 import type { SeedSubject } from '@/lib/allyship-deck/seed'
+import type { OverflowContext } from '@/lib/hand-service'
 
 export type SendDeckCardResult =
-  | { success: true; barId: string; placedInHand: boolean }
+  | { success: true; barId: string; placedInHand: boolean; overflow?: OverflowContext }
   | { needsAuth: true; pendingToken: string }
   | { error: string }
 
