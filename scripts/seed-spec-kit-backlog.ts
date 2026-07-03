@@ -60,7 +60,10 @@ async function main() {
 
   const content = fs.readFileSync(BACKLOG_PATH, 'utf-8')
   const tableStart = content.indexOf('## Objective Stack')
-  const tableEnd = content.indexOf('## Bruised Banana Campaign')
+  const tableEnd =
+    content.indexOf('## Bruised Banana Campaign') >= 0
+      ? content.indexOf('## Bruised Banana Campaign')
+      : content.indexOf('## Bruise Banana Campaign')
   if (tableStart < 0 || tableEnd < 0) {
     console.error('Could not find Objective Stack table')
     process.exit(1)

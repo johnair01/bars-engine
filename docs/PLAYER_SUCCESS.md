@@ -57,6 +57,18 @@ You are established when you:
 
 ---
 
+## Bounded focus (productivity alignment)
+
+Success includes **choosing a small, honest slice of work** — not clearing an infinite list.
+
+- **Tap the Vein** caps committed daily moves at **five** — narrowing is focus, not loss.
+- **Hand** slots cap what you carry at once — the rest lives in Vault or Garden until you are ready.
+- **One next move** on NOW surfaces a single honest step (quest next action, today's TTV move, or capture) — not a dashboard of every open thread.
+
+Research authority: [.specify/specs/productivity-modality-alignment/RESEARCH.md](../.specify/specs/productivity-modality-alignment/RESEARCH.md).
+
+---
+
 ## What success is never
 
 - Doing the game perfectly or never being stuck

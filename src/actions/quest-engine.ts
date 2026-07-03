@@ -575,6 +575,15 @@ export async function completeQuestForPlayer(
             }
         }
 
+        if (!nextQuestId) {
+            const { getCascadeQuestAfterComplete } = await import('@/actions/next-action-bridge')
+            const cascade = await getCascadeQuestAfterComplete(playerId, questId)
+            if (cascade) {
+                nextQuestId = cascade.questId
+                nextQuestTitle = cascade.questTitle
+            }
+        }
+
         return {
             ...result,
             campaignImpact,
