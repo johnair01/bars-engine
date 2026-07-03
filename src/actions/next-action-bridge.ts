@@ -4,6 +4,19 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
+export type PlayerNextMove =
+  | {
+      kind: 'next_action'
+      questId: string
+      questTitle: string
+      nextAction: string
+      barId: string | null
+    }
+  | { kind: 'quest_needs_action'; questId: string; questTitle: string }
+  | { kind: 'ttv_task'; taskId: string; taskText: string }
+  | { kind: 'ttv_start' }
+  | { kind: 'capture' }
+
 /**
  * Link a BAR to a quest as "next smallest honest action."
  * One bridge per quest (replaces if exists).
@@ -82,5 +95,117 @@ export async function getNextActionForQuest(
     }
   } catch {
     return null
+  }
+}
+
+/**
+ * Star of Bethlehem — one computed "what do I do next?" signal for NOW.
+ * Priority: quest w/ next action → quest needing action → TTV task → TTV start → capture.
+ */
+export async function getPlayerNextMove(
+  playerId: string
+): Promise<PlayerNextMove | null> {
+  const assignments = await db.playerQuest.findMany({
+    where: { playerId, status: 'assigned' },
+    include: {
+      quest: {
+        select: {
+          id: true,
+          title: true,
+          nextActionBridgesAsQuest: { select: { nextAction: true, barId: true } },
+        },
+      },
+    },
+    orderBy: { assignedAt: 'asc' },
+  })
+
+  for (const a of assignments) {
+    const bridge = a.quest.nextActionBridgesAsQuest
+    if (bridge?.nextAction?.trim()) {
+      return {
+        kind: 'next_action',
+        questId: a.quest.id,
+        questTitle: a.quest.title,
+        nextAction: bridge.nextAction.trim(),
+        barId: bridge.barId,
+      }
+    }
+  }
+
+  const needsAction = assignments[0]
+  if (needsAction) {
+    return {
+      kind: 'quest_needs_action',
+      questId: needsAction.quest.id,
+      questTitle: needsAction.quest.title,
+    }
+  }
+
+  const startOfDay = new Date()
+  startOfDay.setUTCHours(0, 0, 0, 0)
+
+  const openTask = await db.tapTheVeinTask.findFirst({
+    where: {
+      playerId,
+      status: { in: ['committed', 'in_progress'] },
+      dailySession: { sessionDate: { gte: startOfDay } },
+    },
+    orderBy: [{ priorityRank: 'asc' }, { createdAt: 'asc' }],
+    select: { id: true, originalText: true },
+  })
+
+  if (openTask) {
+    return {
+      kind: 'ttv_task',
+      taskId: openTask.id,
+      taskText: openTask.originalText,
+    }
+  }
+
+  const todaySession = await db.tapTheVeinDailySession.findFirst({
+    where: { playerId, sessionDate: { gte: startOfDay } },
+    select: { status: true },
+  })
+
+  if (!todaySession || todaySession.status !== 'sealed') {
+    return { kind: 'ttv_start' }
+  }
+
+  return { kind: 'capture' }
+}
+
+/**
+ * Tandem-style cascade hint: after completing a quest, surface the next assigned
+ * quest on the same campaign (if any) that lacks a next-action bridge.
+ */
+export async function getCascadeQuestAfterComplete(
+  playerId: string,
+  completedQuestId: string
+): Promise<{ questId: string; questTitle: string } | null> {
+  const completed = await db.customBar.findUnique({
+    where: { id: completedQuestId },
+    select: { campaignRef: true },
+  })
+  if (!completed?.campaignRef) return null
+
+  const nextAssignment = await db.playerQuest.findFirst({
+    where: {
+      playerId,
+      status: 'assigned',
+      questId: { not: completedQuestId },
+      quest: {
+        campaignRef: completed.campaignRef,
+        nextActionBridgesAsQuest: { is: null },
+      },
+    },
+    include: { quest: { select: { id: true, title: true } } },
+    orderBy: { assignedAt: 'asc' },
+  })
+
+  if (!nextAssignment) return null
+
+  return {
+    questId: nextAssignment.quest.id,
+    questTitle: nextAssignment.quest.title,
   }
 }

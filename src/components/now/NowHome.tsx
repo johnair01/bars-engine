@@ -9,6 +9,8 @@ import { TapTheVeinPanel } from '@/components/now/TapTheVeinPanel'
 import { getTodayPanelSummary } from '@/actions/tap-the-vein'
 import { CaptureBox } from '@/components/now/CaptureBox'
 import { Clean321Launcher } from '@/components/clean321/Clean321Launcher'
+import { getPlayerNextMove } from '@/actions/next-action-bridge'
+import { StarOfBethlehemCard } from '@/components/now/StarOfBethlehemCard'
 
 type NowHomeProps = {
   playerId: string
@@ -16,7 +18,7 @@ type NowHomeProps = {
 }
 
 export async function NowHome({ playerId, vibulons }: NowHomeProps) {
-  const [handSlots, chargeTargets, barCounts, ttvSummary] = await Promise.all([
+  const [handSlots, chargeTargets, barCounts, ttvSummary, nextMove] = await Promise.all([
     db.handSlot.findMany({
       where: { playerId },
       orderBy: { slotIndex: 'asc' },
@@ -27,6 +29,7 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
     getTodayChargeTargets(),
     fetchBarCounts(playerId),
     getTodayPanelSummary(),
+    getPlayerNextMove(playerId),
   ])
 
   const ttvPanel = 'error' in ttvSummary
@@ -113,6 +116,8 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
 
         {/* Scrollable main area */}
         <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '6px 20px 16px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {nextMove ? <StarOfBethlehemCard move={nextMove} /> : null}
+
           {/* Hand glance */}
           <HandGlance
             slots={slots}

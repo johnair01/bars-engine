@@ -16,9 +16,9 @@
 
 ### B1 Next action + Star of Bethlehem → golden-path / CGLA
 
-- [ ] B1.1 [golden-path-next-action-bridge](../golden-path-next-action-bridge/tasks.md) — expose NextActionBridge on quest detail
-- [ ] B1.2 [golden-path-onboarding-action-loop](../golden-path-onboarding-action-loop/) — single NOW "next move" card
-- [ ] B1.3 [core-game-loop-audit](../core-game-loop-audit/tasks.md) — cascade on quest complete (Tandem adapt)
+- [x] B1.1 [golden-path-next-action-bridge](../golden-path-next-action-bridge/tasks.md) — expose NextActionBridge on quest detail (pre-existing)
+- [x] B1.2 NOW "next move" card — `getPlayerNextMove` + `StarOfBethlehemCard` on NowHome
+- [x] B1.3 Cascade hint on quest complete — `getCascadeQuestAfterComplete` in quest-engine golden-path response
 - [ ] B1.4 Verify: quest complete promotes next action when sibling quests blocked
 
 ### B2 Weekly review → Lenses
@@ -39,7 +39,7 @@
 
 ### B5 Document WIP
 
-- [ ] B5.1 Update [docs/PLAYER_SUCCESS.md](../../../docs/PLAYER_SUCCESS.md) — bounded daily focus as success pattern
+- [x] B5.1 Update [docs/PLAYER_SUCCESS.md](../../../docs/PLAYER_SUCCESS.md) — bounded daily focus as success pattern
 - [ ] B5.2 Handbook cross-link to PMA Diplomat summary
 
 ---
