@@ -47,10 +47,10 @@
 
 ## Phase C — Schema (gated on B + Regent sign-off)
 
-- [ ] C1 Pilot `waitingFor` in PlayerQuest metadataJson
-- [ ] C2 Campaign "waiting on" surface in World/campaign view
-- [ ] C3 If needed: migration per [SCHEMA_GAPS.md](./SCHEMA_GAPS.md) C1–C2
-- [ ] C4 `npm run db:sync` + `npm run check` after any schema change
+- [x] C1 Pilot `waitingFor` in PlayerQuest metadataJson — `src/lib/quest-waiting-for/`, `src/actions/quest-waiting-for.ts`, `WaitingForPanel` on quest modal
+- [x] C2 Campaign "waiting on" surface — `CampaignWaitingOnSection` on `/campaign/[ref]/home` and `/campaign/board`
+- [x] C3 Migration `20260703180000_player_quest_metadata_json` per [SCHEMA_GAPS.md](./SCHEMA_GAPS.md) C1
+- [x] C4 `npm run db:sync` + `npm run check` after any schema change
 
 ---
 

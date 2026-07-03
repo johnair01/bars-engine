@@ -60,11 +60,11 @@ Implement per [spec.md](./spec.md). Research complete in [RESEARCH.md](./RESEARC
 
 ## Phase C — Schema (gated)
 
-**Entry criteria:** Phase B complete; waiting-for still unmet in campaign UX.
+**Entry criteria:** Phase B complete — **C1 waiting-for pilot shipped** on branch.
 
 See [SCHEMA_GAPS.md](./SCHEMA_GAPS.md):
 
-1. Metadata pilot: external `waitingFor` on quest (not `playerId` delegation) — see PMA conversation + SCHEMA_GAPS C1 revision
+1. ~~Metadata pilot: external `waitingFor` on quest~~ **Done** — `PlayerQuest.metadataJson`, quest modal + campaign surfaces
 2. If query needs grow: optional columns after metadata pilot
 3. Cascade persistence only if computed cascade insufficient
 4. **Notification email** for waiting-for follow-up: defer to [humane-notifications](../humane-notifications/spec.md) `waitingForEmail` pref — in-app first

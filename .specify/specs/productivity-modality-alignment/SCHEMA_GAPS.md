@@ -1,6 +1,6 @@
 # Schema Gap Proposals — Productivity Modality Alignment
 
-**Status:** Proposals only — **no migrations** until Phase C ratified per [plan.md](./plan.md).  
+**Status:** C1 pilot **shipped** (PlayerQuest.metadataJson + UI). C2 cascade columns still proposals only.  
 **Authority:** [RESEARCH.md](./RESEARCH.md), [SIX_GAME_MASTER_REVIEW.md](./SIX_GAME_MASTER_REVIEW.md)
 
 ---

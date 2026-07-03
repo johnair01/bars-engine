@@ -1185,6 +1185,8 @@ model PlayerQuest {
   completedAt        DateTime?
   frictionType       String?
   frictionRecordedAt DateTime?
+  /// PMA Phase C: JSON { waitingFor?: { kind, label, since, askedFor?, followUpAt?, lastPingAt? } }
+  metadataJson       String?   @map("metadata_json")
   player             Player    @relation(fields: [playerId], references: [id])
   quest              CustomBar @relation(fields: [questId], references: [id])
 

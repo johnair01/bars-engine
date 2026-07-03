@@ -13,6 +13,8 @@
 
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
+import type { CampaignWaitingOnItem } from '@/actions/quest-waiting-for'
+import { getCampaignWaitingOnQuests } from '@/actions/quest-waiting-for'
 
 // ---------------------------------------------------------------------------
 // Auth helper
@@ -77,6 +79,8 @@ export type CampaignHomeData = {
   questTemplateCount: number
   /** Whether the player has Steward+ role */
   isStewardPlus: boolean
+  /** PMA Phase C: assigned quests marked waiting-on (external blocker) */
+  waitingOnQuests: CampaignWaitingOnItem[]
 }
 
 // ---------------------------------------------------------------------------
@@ -183,6 +187,9 @@ export async function getCampaignHomeData(
     isStewardPlus,
   })
 
+  const campaignRef = campaign.instance.campaignRef ?? campaign.slug
+  const waitingOnQuests = await getCampaignWaitingOnQuests(campaignRef)
+
   return {
     data: {
       campaign: {
@@ -219,6 +226,7 @@ export async function getCampaignHomeData(
       activityItems,
       questTemplateCount,
       isStewardPlus,
+      waitingOnQuests,
     },
   }
 }
