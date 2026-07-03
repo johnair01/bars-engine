@@ -19,9 +19,7 @@ export type SheetAction =
   | { kind: 'start' }
   | { kind: 'complete' }
   | { kind: 'carry' }
-  | { kind: 'keep' }
   | { kind: 'plant'; experienceIntent: string; dissatisfaction: string[]; satisfaction: string[] }
-  | { kind: 'upgrade' }
   | { kind: 'compost'; reason: string }
   | { kind: 'assign'; campaignId: string; visibility: 'campaign' | null }
 
@@ -130,18 +128,9 @@ export function TaskActionSheet({
             )}
             <ActionRow icon="✓" iconColor={gem} label="Complete" hint="pave a brick · ♦+1" disabled={busy} onClick={() => onAction({ kind: 'complete' })} />
             <ActionRow icon="↻" label="Carry to tomorrow" hint="keeps the thread" disabled={busy} onClick={() => onAction({ kind: 'carry' })} />
-            <ActionRow icon="❖" label="Keep as a BAR" hint="plant in the loop" disabled={busy} onClick={() => onAction({ kind: 'keep' })} />
-            <ActionRow icon="❀" label="Plant in Garden" hint="grow it under today's lens" disabled={busy} onClick={() => setMode('plant')} />
+            <ActionRow icon="❀" label="Plant in Garden" hint="grow this quest under today's lens" disabled={busy} onClick={() => setMode('plant')} />
             <ActionRow icon="↩" label="Compost" hint="return to field" disabled={busy} onClick={() => setMode('compost')} />
             <ActionRow icon="◇" label="Assign to campaign" hint="private by default" disabled={busy} onClick={() => setMode('assign')} />
-            <ActionRow
-              icon="✦"
-              label="Upgrade — quest or daemon"
-              hint="out of hand →"
-              highlight
-              disabled={busy}
-              onClick={() => onAction({ kind: 'upgrade' })}
-            />
           </div>
         )}
 

@@ -47,7 +47,13 @@ export function chargeRoomWhere(playerId: string) {
 export const unplacedPersonalQuestWhere = (playerId: string) => ({
     creatorId: playerId,
     type: 'quest' as const,
-    OR: [{ sourceBarId: { not: null } }, { source321SessionId: { not: null } }],
+    // Personal quests: grown from a BAR, from a 3·2·1 session, or born from a
+    // Tap-the-Vein commit (QLA — `questSource` tags the origin, e.g. 'tap_the_vein').
+    OR: [
+        { sourceBarId: { not: null } },
+        { source321SessionId: { not: null } },
+        { questSource: { not: null } },
+    ],
     parentId: null,
     status: 'active' as const,
     archivedAt: null,
