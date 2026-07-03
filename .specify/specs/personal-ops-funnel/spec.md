@@ -85,14 +85,14 @@ Define the complete personal ops system for a single practitioner (Wendell, Phas
 
 ### SPC — 750words Personal Sentiment Capture
 
-**What:** Morning pages writing surface with 750-word goal and daily streak tracking.
+**What:** Morning pages writing surface with 750-word goal and optional celebratory streak.
 
 **Where it lives:** zo.space or standalone program in Zo.
 
 **What it does:**
 - Free writing in a text area, counter showing words written
 - 750-word target with visual progress
-- Streak tracking (black-hat gamification acceptable)
+- **Streak tracking (opt-in, celebratory only)** — PMA policy: no red badges, no "streak broken", no loss framing. Player enables streak display explicitly; default off. See [productivity-modality-alignment/RESEARCH.md](../productivity-modality-alignment/RESEARCH.md) failure-mode: shame spiral.
 - Manual mood tag selection from Wuxing vocabulary (5 channels × neutral/satisfied)
 - All data private — stored in browser/localStorage only
 
@@ -250,10 +250,21 @@ POST /api/bars/from-practice
 
 **Actions available:**
 1. **Name soil** — attach campaign / thread / holding pen reference
-2. **Write next action** — what is the smallest next step with this seed?
+2. **Write next action** (required) — the smallest next step with this seed; maps to `NextActionBridge` when seed becomes a quest. Stewardship cannot complete without a non-empty next action string (PMA B4.2).
 3. **Route to LDM guide** — Lazy Dungeon Master guide path for the seed
 4. **Link to quest** — connect seed to an existing quest or start a new quest wizard
 5. **Compost** — release with optional one-sentence witness note
+
+**API contract (when implemented):**
+```ts
+// BRS completeStewardship — nextAction required
+function completeBarStewardship(input: {
+  barId: string
+  soilRef?: string
+  nextAction: string  // required, trimmed non-empty
+  questId?: string
+}): Promise<{ success: true } | { error: string }>
+```
 
 **Entry points:**
 - From POD (Personal Ops Dashboard) — active stewardship

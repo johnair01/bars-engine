@@ -66,6 +66,16 @@ calendar identities, so the hierarchy is never empty. **Vision** and
 **orientation** are **player-authored** (gentle prompts, never auto-filled — they
 are felt, not generated). The Observatory always has a populated time-scaffold.
 
+### Review cadence (PMA B2)
+
+| Cadence | Where | What happens |
+|---------|-------|--------------|
+| **Daily** | Tap the Vein close | Carry / compost today's moves (≤5 cap); optional Daily Reflection ([tap-the-vein-tier-2](../tap-the-vein-tier-2/spec.md)) |
+| **Weekly** | Observatory `week` + Lenses workshop **review** | Three-beat ritual: Clear → Current → Creative ([lenses-observatory-intake § Weekly reflection](../lenses-observatory-intake/spec.md)) |
+| **Year frame** | After yearly workshop lock-in | Review kept vs parked domains — no metric guilt |
+
+**Not in scope:** automated email reminders, streak punishment, PARA folder labels in UI.
+
 ## New entity — Lens
 
 ```prisma

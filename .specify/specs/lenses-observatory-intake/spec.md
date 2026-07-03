@@ -206,6 +206,26 @@ Avoid black-hat pressure:
 - no public accountability by default,
 - no daily guilt for domains not touched today.
 
+## Weekly reflection (GTD review — ritual, not planner)
+
+**Authority:** [productivity-modality-alignment/RESEARCH.md](../productivity-modality-alignment/RESEARCH.md) (PMA B2). Adapt Mindwtr/Tandem guided review; **never** ship inbox-zero or productivity-planner chrome.
+
+The Observatory **week close** (and optional year-frame review after workshop) is a **three-beat ritual** — not a spreadsheet audit:
+
+| Beat | GTD analog | Player-facing copy (examples) | System hooks |
+|------|------------|-------------------------------|--------------|
+| **1. Clear** | Get Clear | "What carried weight this week? Anything to compost?" | TTV carry/compost summary; compost ledger |
+| **2. Current** | Get Current | "Which quests need a next honest step?" | Orphan quests without `NextActionBridge`; shadow quests (QLA) |
+| **3. Creative** | Get Creative | "What wants to move next week? Park what can wait." | Parked `LensGoal` revisit; weekly descent picker |
+
+**Rules:**
+- Optional cadence — suggest after 7 days since last review, never punish skip.
+- One screen per beat max in v1; player can exit after any beat.
+- No "inbox zero", "behind", "streak broken", or competitor app names.
+- Daily close stays in **Tap the Vein** (carry/compost only); weekly beats live at **Observatory `/observatory/week`** or workshop **review** screen.
+
+**Verification:** Hostile copy review in [COPY_AUDIT_PMA.md](./COPY_AUDIT_PMA.md).
+
 ## Data Model Direction
 
 Keep `Lens` as the temporal container:

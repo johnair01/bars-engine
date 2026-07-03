@@ -71,6 +71,13 @@
 - [ ] Manual descent flow across multiple domains/goals: yearly -> quarterly -> monthly -> weekly -> TTV -> BAR.
 - [x] Run Claude Design prototype pass from `CLAUDE_DESIGN_PROMPT.md`.
 
+## PMA alignment — weekly reflection (B2)
+
+- [x] Document three-beat weekly reflection in spec (Clear / Current / Creative).
+- [x] Add [COPY_AUDIT_PMA.md](./COPY_AUDIT_PMA.md) — forbidden productivity-planner copy.
+- [ ] Implement review beats on Observatory week close UI (links lens-integration P5 / LWX).
+- [ ] Wire orphan-quest surfacing to `NextActionBridge` + QLA shadow list.
+
 ## Product Decisions Needed
 
 - [ ] Route name: `/lenses`, `/observatory/lenses`, or `/observatory/onboarding`.
