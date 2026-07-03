@@ -105,6 +105,22 @@ async function ensureBarForTask(
   }
 }
 
+/**
+ * The CustomBar a task's gestures (keep / plant) should act on. Since QLA, a
+ * committed task is **born as a quest** — its artifact is `task.questId`. Prefer
+ * that; fall back to a legacy projected BAR (`task.barId`); only mint a BAR for
+ * pre-QLA tasks that have neither. This is what stops keep/plant from re-minting
+ * a second, disconnected BAR beside the quest.
+ */
+async function artifactIdForTask(
+  playerId: string,
+  task: { id: string; questId: string | null; barId: string | null; originalText: string; lensGoalId?: string | null; attachSnapshot?: unknown },
+): Promise<string | null> {
+  if (task.questId) return task.questId
+  if (task.barId) return task.barId
+  return ensureBarForTask(playerId, task)
+}
+
 /** Lifecycle: committed → in_progress → (terminal exit states). Player is the authority. */
 const EXIT_STATES = new Set([
   'completed',
@@ -603,12 +619,14 @@ export async function promoteTaskToBar(taskId: string): Promise<TtvResult<{ barI
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: taskId },
-      select: { id: true, playerId: true, barId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
+      select: { id: true, playerId: true, questId: true, barId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
 
-    const barId = await ensureBarForTask(player.id, task)
+    // Born-as-quest: the artifact already exists (the quest). Return it instead of
+    // minting a second, disconnected BAR. Legacy tasks fall back to a projected BAR.
+    const barId = await artifactIdForTask(player.id, task)
     if (!barId) return { error: 'Failed to plant task as a BAR' }
 
     revalidatePath('/tap-the-vein')
@@ -643,12 +661,14 @@ export async function plantTask(input: {
   try {
     const task = await db.tapTheVeinTask.findUnique({
       where: { id: input.taskId },
-      select: { id: true, playerId: true, barId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
+      select: { id: true, playerId: true, questId: true, barId: true, originalText: true, lensGoalId: true, attachSnapshot: true },
     })
     if (!task) return { error: 'Task not found' }
     if (task.playerId !== player.id) return { error: 'Forbidden' }
 
-    const barId = await ensureBarForTask(player.id, task)
+    // Plant the task's existing artifact (the born-as-quest) — do not mint a
+    // second BAR. Writes the EA triad + gardenId onto the quest itself.
+    const barId = await artifactIdForTask(player.id, task)
     if (!barId) return { error: 'Failed to plant task' }
 
     await writePlantTriadToBar(player.id, barId, {
