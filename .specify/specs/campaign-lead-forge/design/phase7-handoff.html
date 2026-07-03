@@ -1,0 +1,341 @@
+<style>
+  .h7 {
+    --ground:#0b0a09; --panel:#131210; --panel-2:#1a1712; --panel-3:#211c15;
+    --line:rgba(244,242,236,0.09); --line-strong:rgba(244,242,236,0.16);
+    --ink:#f4f2ec; --ink-2:#b4afa3; --ink-3:#7c776c;
+    --gold:#d4a017; --purple:#8b5cf6; --purple-lite:#b6a3f5;
+    --earth:#d4a017; --fire:#e05a3d; --wood:#46b06f; --metal:#86b8cc; --water:#6f78cf; --stone:#9aa0a6; --heaven:#cbb7f0;
+    --good:#46b06f;
+    --serif:'Iowan Old Style','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+    background:radial-gradient(120% 55% at 50% -8%,#1a1524 0%,rgba(11,10,9,0) 44%),var(--ground);
+    color:var(--ink); font-family:var(--sans); line-height:1.6; -webkit-font-smoothing:antialiased;
+    min-height:100vh; padding:0 0 6rem;
+  }
+  .h7 *{box-sizing:border-box;}
+  .h7 .wrap{width:100%; max-width:960px; margin:0 auto; padding:0 1.5rem;}
+  .h7 .measure{max-width:680px;}
+  .h7 .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--gold);}
+  .h7 h1{font-family:var(--serif); font-weight:600; font-size:clamp(2rem,5.5vw,3.1rem); line-height:1.04; letter-spacing:-.015em; text-wrap:balance; margin:0;}
+  .h7 h2{font-family:var(--serif); font-weight:600; font-size:clamp(1.45rem,3.2vw,1.95rem); line-height:1.1; letter-spacing:-.01em; text-wrap:balance; margin:0;}
+  .h7 h3{font-weight:700; font-size:1rem; margin:0;}
+  .h7 p{margin:0; color:var(--ink-2);}
+  .h7 strong{color:var(--ink); font-weight:650;}
+  .h7 em{color:var(--ink); font-style:italic;}
+  .h7 .lede{font-size:1.15rem; line-height:1.55; color:var(--ink); font-family:var(--serif);}
+  .h7 code{font-family:var(--mono); font-size:.85em; color:var(--purple-lite); background:rgba(139,92,246,.09); padding:.08em .35em; border-radius:5px;}
+
+  .h7 header.mast{border-bottom:1px solid var(--line); padding:clamp(2.6rem,7vw,4.6rem) 0 2rem;}
+  .h7 .metarow{display:flex; flex-wrap:wrap; gap:.5rem 1.6rem; margin-top:1.8rem; padding-top:1.3rem; border-top:1px solid var(--line); font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--ink-3);}
+  .h7 .metarow b{color:var(--ink-2); font-weight:500;}
+
+  .h7 section{padding:clamp(2.4rem,5.5vw,3.6rem) 0 0;}
+  .h7 .sec-eyebrow{display:flex; align-items:center; gap:.7rem; margin-bottom:1rem;}
+  .h7 .sec-eyebrow::after{content:""; flex:1; height:1px; background:var(--line);}
+  .h7 .stack{display:flex; flex-direction:column; gap:1rem;}
+
+  .h7 .routes{display:grid; grid-template-columns:repeat(3,1fr); gap:.7rem; margin-top:1.3rem;}
+  @media(max-width:680px){.h7 .routes{grid-template-columns:1fr;}}
+  .h7 .route{border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; background:var(--panel);}
+  .h7 .route .p{font-family:var(--mono); font-size:11px; color:var(--gold); letter-spacing:.02em; word-break:break-all;}
+  .h7 .route h3{font-size:.92rem; margin:.4rem 0 .2rem;}
+  .h7 .route p{font-size:.85rem;}
+  .h7 .route .tag{font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--purple-lite); border:1px solid rgba(139,92,246,.4); border-radius:999px; padding:.1rem .4rem;}
+
+  .h7 .mock-wrap{margin-top:1.4rem;}
+  .h7 .device{border:1px solid var(--line-strong); border-radius:18px; overflow:hidden; background:var(--ground); box-shadow:0 24px 60px -30px rgba(0,0,0,.8);}
+  .h7 .device .bar{display:flex; align-items:center; gap:.5rem; padding:.6rem .9rem; background:var(--panel); border-bottom:1px solid var(--line);}
+  .h7 .device .dot{width:9px; height:9px; border-radius:50%; background:var(--line-strong);}
+  .h7 .device .url{margin-left:.5rem; font-family:var(--mono); font-size:10.5px; color:var(--ink-3);}
+  .h7 .screen{padding:1.15rem 1.15rem 1.4rem; background:radial-gradient(120% 45% at 50% -6%,#16121f 0%,var(--ground) 46%);}
+
+  .h7 .row{display:flex; align-items:center; gap:.6rem;}
+  .h7 .between{justify-content:space-between;}
+  .h7 .wrapf{flex-wrap:wrap;}
+  .h7 .eyebrow-sm{font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold);}
+  .h7 .label{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);}
+  .h7 .field{border:1px solid var(--line-strong); border-radius:8px; padding:.5rem .65rem; color:var(--ink-2); font-size:.86rem; background:rgba(0,0,0,.28);}
+  .h7 .btn{font-weight:650; font-size:.82rem; color:#fff; background:var(--purple); border-radius:9px; padding:.5rem .8rem; display:inline-flex; align-items:center; gap:.35rem; border:none;}
+  .h7 .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line-strong);}
+  .h7 .btn.sm{font-size:.76rem; padding:.38rem .6rem;}
+  .h7 .pin{display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--gold); color:#1a1305; font-family:var(--mono); font-size:11px; font-weight:700; flex:none;}
+  .h7 .muted{color:var(--ink-3); font-size:.85rem;}
+
+  /* lens selectors */
+  .h7 .lenses{display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem;}
+  @media(max-width:560px){.h7 .lenses{grid-template-columns:1fr;}}
+  .h7 .lens{border:1px solid var(--line-strong); border-radius:10px; padding:.6rem .7rem; background:var(--panel);}
+  .h7 .lens .lh{display:flex; align-items:center; justify-content:space-between; gap:.4rem;}
+  .h7 .lens .pick{font-family:var(--serif); font-size:.95rem; color:var(--ink); margin-top:.25rem;}
+  .h7 .swatch{width:12px; height:12px; border-radius:3px; flex:none;}
+
+  /* composed seed */
+  .h7 .seed{border:1px dashed var(--line-strong); border-radius:12px; padding:.9rem 1rem; background:rgba(212,160,23,.04); margin-top:.8rem;}
+  .h7 .seed .sh{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold);}
+  .h7 .seed ul{margin:.5rem 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:.4rem;}
+  .h7 .seed li{font-size:.86rem; color:var(--ink-2);}
+  .h7 .seed li b{color:var(--ink);}
+
+  .h7 .draft{border:1px solid rgba(139,92,246,.3); border-radius:12px; padding:.9rem 1rem; background:rgba(139,92,246,.06); margin-top:.9rem;}
+  .h7 .draft .dh{display:flex; align-items:center; justify-content:space-between;}
+  .h7 .draft .dt{font-family:var(--serif); font-size:1.05rem; color:var(--ink); margin-top:.4rem;}
+  .h7 .draft p{font-size:.87rem; margin-top:.3rem;}
+
+  /* library */
+  .h7 .qcard{border:1px solid var(--line); border-radius:12px; padding:.8rem .95rem; background:var(--panel); display:flex; flex-direction:column; gap:.5rem;}
+  .h7 .qtitle{font-family:var(--serif); font-size:1rem; color:var(--ink);}
+  .h7 .tags{display:flex; flex-wrap:wrap; gap:.35rem;}
+  .h7 .tg{font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; padding:.12rem .45rem; border-radius:999px; border:1px solid var(--line-strong); color:var(--ink-2);}
+
+  /* spine */
+  .h7 .spine{border:1px solid var(--line); border-radius:16px; padding:1.4rem; margin-top:1.4rem; background:var(--panel);}
+  .h7 .spine .sources{display:grid; grid-template-columns:repeat(3,1fr); gap:.7rem;}
+  @media(max-width:680px){.h7 .spine .sources{grid-template-columns:1fr;}}
+  .h7 .src{border:1px solid var(--line); border-radius:10px; padding:.75rem .85rem;}
+  .h7 .src .k{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;}
+  .h7 .src .v{font-family:var(--serif); font-size:.95rem; margin-top:.25rem; color:var(--ink);}
+  .h7 .src .d{font-size:.8rem; color:var(--ink-3); margin-top:.25rem;}
+  .h7 .arrow{display:block; text-align:center; color:var(--ink-3); font-size:1.1rem; padding:.3rem 0;}
+  .h7 .hub{text-align:center; border:1px dashed var(--line-strong); border-radius:10px; padding:.7rem;}
+  .h7 .hub b{color:var(--gold); font-family:var(--mono); font-size:.82rem; letter-spacing:.08em;}
+
+  /* faces */
+  .h7 .faces{display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem; margin-top:1.3rem;}
+  @media(max-width:680px){.h7 .faces{grid-template-columns:1fr 1fr;}}
+  @media(max-width:440px){.h7 .faces{grid-template-columns:1fr;}}
+  .h7 .face{border:1px solid var(--line); border-left-width:3px; border-radius:10px; padding:.7rem .8rem; background:var(--panel);}
+  .h7 .face .nm{font-family:var(--serif); font-size:1rem;}
+  .h7 .face .mv{font-size:.8rem; color:var(--ink-3); margin-top:.2rem;}
+
+  /* notes + tables */
+  .h7 .notes{margin-top:1.1rem; display:flex; flex-direction:column; gap:.6rem;}
+  .h7 .note{display:grid; grid-template-columns:1.5rem 1fr; gap:.7rem; align-items:start;}
+  .h7 .note .body{font-size:.9rem; color:var(--ink-2);}
+  .h7 .note .body b{color:var(--ink);}
+  .h7 .tbl{margin-top:1.2rem; border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .h7 .tbl .tr{display:grid; gap:1rem; padding:.75rem 1rem; border-top:1px solid var(--line); align-items:start;}
+  .h7 .tbl .tr:first-child{border-top:none; background:var(--panel);}
+  .h7 .tbl .tr.head{font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3);}
+  .h7 .tbl.c3 .tr{grid-template-columns:1.1fr 1.3fr 1.6fr;}
+  .h7 .tbl.c2 .tr{grid-template-columns:1fr 2fr;}
+  @media(max-width:680px){.h7 .tbl.c3 .tr,.h7 .tbl.c2 .tr{grid-template-columns:1fr;}}
+  .h7 .tbl .k{color:var(--ink);}
+  .h7 .tbl .k small{display:block; color:var(--ink-3); font-family:var(--mono); font-size:10.5px; margin-top:.15rem;}
+  .h7 .tbl .v{color:var(--ink-2); font-size:.9rem;}
+
+  .h7 .cols{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.2rem;}
+  @media(max-width:680px){.h7 .cols{grid-template-columns:1fr;}}
+  .h7 .q{border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem; background:var(--panel); display:grid; grid-template-columns:1.6rem 1fr; gap:.75rem;}
+  .h7 .q .qn{font-family:var(--mono); color:var(--purple-lite);}
+  .h7 .q h3{font-size:.96rem; margin-bottom:.2rem;}
+  .h7 .q p{font-size:.88rem;}
+  .h7 .q .rec{color:var(--wood); font-family:var(--mono); font-size:10.5px; margin-top:.4rem;}
+
+  .h7 ol.build{counter-reset:s; list-style:none; margin:1.2rem 0 0; padding:0;}
+  .h7 ol.build li{counter-increment:s; display:grid; grid-template-columns:2.6rem 1fr; gap:.9rem; padding:.85rem 0; border-top:1px solid var(--line);}
+  .h7 ol.build li:first-child{border-top:none;}
+  .h7 ol.build li::before{content:counter(s,decimal-leading-zero); font-family:var(--mono); font-size:.8rem; color:var(--gold); border-right:1px solid var(--line-strong); padding-top:.15rem;}
+  .h7 ol.build .body{font-size:.92rem;}
+  .h7 ol.build .body b{color:var(--ink);}
+
+  .h7 footer{margin-top:3.5rem; padding-top:1.4rem; border-top:1px solid var(--line); font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.05em;}
+  @media(prefers-reduced-motion:no-preference){.h7 .fade{animation:h7f .6s cubic-bezier(.16,1,.3,1) both;} @keyframes h7f{from{opacity:0; transform:translateY(9px);} to{opacity:1; transform:none;}}}
+</style>
+
+<div class="h7">
+  <header class="mast fade">
+    <div class="wrap">
+      <div class="eyebrow">Design Handoff · Phase 7</div>
+      <h1>The Quest Studio</h1>
+      <p class="lede measure" style="margin-top:1.3rem">Where a campaign owner authors a custom quest
+        by aiming three lenses at once — an <strong>allyship myth</strong>, a <strong>superpower</strong>,
+        and a <strong>Game-Master face</strong>. The three converge through one shared vocabulary; the AI
+        drafts from that seed; you edit and save it to the campaign, ready to match onto any lead.</p>
+      <div class="metarow">
+        <span><b>Build target</b> Phase 7 (FR20–FR23)</span>
+        <span><b>Spec</b> campaign-lead-forge</span>
+        <span><b>AI</b> owner-side, cached, flagged</span>
+        <span><b>Status</b> handoff v1 — review before build</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">The one idea</span></div>
+      <h2 class="measure">Three lenses, one quest</h2>
+      <p class="measure" style="margin-top:.8rem">You decided quests should be AI-populated and aligned
+        with the myths, the superpower intakes, and the six-face GM games. The Studio makes that a single
+        act: pick the lenses, watch them compose into a <em>seed</em>, let the AI draft a real quest from
+        it, edit, save. The saved quest joins the campaign pool — so it shows up in the “Add from campaign
+        quests” picker on every lead’s workspace (and finally lights up the “Author new…” button we
+        stubbed in Phase 6).</p>
+      <div class="routes">
+        <div class="route"><span class="tag">new</span><div class="p" style="margin-top:.4rem">/campaign/&lt;ref&gt;/quests/new</div><h3>The Composer</h3><p>Aim the lenses, AI-draft, edit, save.</p></div>
+        <div class="route"><span class="tag">new</span><div class="p" style="margin-top:.4rem">/campaign/&lt;ref&gt;/quests</div><h3>The Library</h3><p>Your authored quests + alignment tags.</p></div>
+        <div class="route"><div class="p">/campaign/&lt;ref&gt;/leads/&lt;id&gt;</div><h3>Lead Workspace</h3><p>“Author new…” now opens the Composer.</p></div>
+      </div>
+    </section>
+
+    <!-- COMPOSER -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Screen 1 · the heart</span></div>
+      <h2 class="measure">The Composer</h2>
+      <div class="mock-wrap">
+        <div class="device">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">campaign/the-crossing/quests/new</span></div>
+          <div class="screen stack">
+            <div class="eyebrow-sm">Quest Studio · The Crossing</div>
+            <div style="font-family:var(--serif); font-size:1.4rem; color:var(--ink)">Author a quest</div>
+
+            <div class="row between"><span class="label">Aim your lenses</span><span class="pin">1</span></div>
+            <div class="lenses">
+              <div class="lens"><div class="lh"><span class="label">Domain</span><span class="swatch" style="background:var(--fire)"></span></div><div class="pick">Direct Action ⌄</div></div>
+              <div class="lens"><div class="lh"><span class="label">Myth</span><span class="pin" style="width:16px;height:16px">2</span></div><div class="pick">“I have to be perfect first” ⌄</div></div>
+              <div class="lens"><div class="lh"><span class="label">Superpower</span><span>⚡</span></div><div class="pick">Connector · external ⌄</div></div>
+              <div class="lens"><div class="lh"><span class="label">GM face</span><span class="swatch" style="background:var(--fire)"></span></div><div class="pick">Challenger ⌄</div></div>
+            </div>
+
+            <div class="seed">
+              <div class="row between"><span class="sh">Composed seed <span class="pin" style="width:16px;height:16px">3</span></span><span class="muted">deterministic</span></div>
+              <ul>
+                <li><b>Reframe →</b> Start where you are; one imperfect move beats a perfect plan you never run.</li>
+                <li><b>Superpower prompt →</b> Use your gift for connection to make one real ask, out loud.</li>
+                <li><b>Face opening move →</b> <span style="color:var(--fire)">Challenger · K1</span> “Surface the unnamed cost — name the thing everyone feels but no one says.”</li>
+              </ul>
+            </div>
+
+            <div class="row" style="gap:.5rem"><span class="pin">4</span><button class="btn">✦ Draft with AI</button><button class="btn ghost sm">Assemble without AI</button></div>
+
+            <div class="draft">
+              <div class="dh"><span class="label" style="color:var(--purple-lite)">AI draft · editable</span><span class="muted">regenerate ↻</span></div>
+              <div class="dt">Make the first ask no one else will</div>
+              <p>You’ve felt the unnamed cost in the room. This quest asks you to name it — to one person, out loud, this week — and make a single concrete request that moves it. Imperfect counts. Done counts more.</p>
+              <div class="row" style="gap:.5rem; margin-top:.6rem"><span class="label">Aligned action</span></div>
+              <div class="field" style="margin-top:.3rem">Make one public ask that names a cost and requests a specific next step.</div>
+            </div>
+
+            <div class="row" style="gap:.5rem"><span class="pin">5</span><button class="btn">Save to campaign</button><span class="muted">then: add to a lead →</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note"><span class="pin">1</span><div class="body"><b>Four lenses, all optional but at least one.</b> Domain colors everything (element = color, per the covenant). Any lens you skip, the AI simply doesn’t weight. The <em>face</em> selector is where the six-GM-face depth lives.</div></div>
+        <div class="note"><span class="pin">2</span><div class="body"><b>Myth picker</b> reads <code>ALLYSHIP_MYTHS</code>. Choosing one pulls its <code>reframe</code> into the seed. This is the new <em>myth → quest</em> hop — today only <code>myth.domainHint → domain</code> exists.</div></div>
+        <div class="note"><span class="pin">3</span><div class="body"><b>The composed seed is deterministic and shown before any AI runs</b> — you see exactly what the quest is built from: the myth reframe, the <code>SUPERPOWER_TRANSLATION[power][orientation]</code> prompt, and the exact move from the <code>GM_FACE_STAGE_MOVES</code> 48-grid (face × Kotter stage). No black box.</div></div>
+        <div class="note"><span class="pin">4</span><div class="body"><b>Draft with AI</b> feeds the seed to <code>generateQuestFromContext → compileQuestWithAI</code>. <b>Assemble without AI</b> is the deterministic fallback (and offline/flag-off path) — it stitches the seed into a serviceable draft with no model call. Either way you land on an editable draft.</div></div>
+        <div class="note"><span class="pin">5</span><div class="body"><b>Save</b> writes a <code>CustomBar</code> (type <code>quest</code>, active) tagged with its alignment, joining the campaign pool. The “add to a lead” shortcut returns you to the lead you came from, quest pre-selected.</div></div>
+      </div>
+    </section>
+
+    <!-- LIBRARY -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Screen 2</span></div>
+      <h2 class="measure">The Library</h2>
+      <div class="mock-wrap">
+        <div class="device">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">campaign/the-crossing/quests</span></div>
+          <div class="screen stack">
+            <div class="row between"><div class="eyebrow-sm">Quest library · The Crossing</div><button class="btn sm">+ New quest</button></div>
+            <div class="qcard">
+              <div class="row between"><span class="qtitle">Make the first ask no one else will</span><span class="muted">edit</span></div>
+              <div class="tags"><span class="tg" style="color:var(--fire);border-color:rgba(224,90,61,.4)">Direct Action</span><span class="tg">myth · perfection</span><span class="tg">⚡ connector</span><span class="tg" style="color:var(--fire)">face · challenger</span></div>
+            </div>
+            <div class="qcard">
+              <div class="row between"><span class="qtitle">Gather the quiet contributors</span><span class="muted">edit</span></div>
+              <div class="tags"><span class="tg" style="color:var(--earth);border-color:rgba(212,160,23,.4)">Gathering Resources</span><span class="tg">myth · money</span><span class="tg">⚡ strategist</span><span class="tg" style="color:var(--stone)">face · sage</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note"><span class="pin">6</span><div class="body"><b>Alignment tags are queryable, not decorative</b> — “show me all connector quests,” “all Challenger quests for Direct Action.” That’s why they’re columns, not a blob (see contract). Edit reopens the Composer; archive keeps history without deleting.</div></div>
+      </div>
+    </section>
+
+    <!-- SPINE -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">The spine · deep six-face</span></div>
+      <h2 class="measure">How the three lenses converge</h2>
+      <p class="measure" style="margin-top:.8rem">Each lens contributes one concrete thing, and all three
+        already speak <strong>Allyship Domains</strong> — the shared vocabulary that lets them compose
+        instead of collide.</p>
+      <div class="spine">
+        <div class="sources">
+          <div class="src"><div class="k" style="color:var(--wood)">Myth</div><div class="v">the reframe</div><div class="d"><code>ALLYSHIP_MYTHS[id].reframe</code> → the quest’s stance</div></div>
+          <div class="src"><div class="k" style="color:var(--purple-lite)">Superpower</div><div class="v">prompt + artifact</div><div class="d"><code>SUPERPOWER_TRANSLATION[power][orientation]</code> → how they’ll work + what they’ll make</div></div>
+          <div class="src"><div class="k" style="color:var(--fire)">GM face</div><div class="v">the opening move</div><div class="d"><code>GM_FACE_STAGE_MOVES[stage][face]</code> → one of 48 concrete moves</div></div>
+        </div>
+        <span class="arrow">↓</span>
+        <div class="hub"><b>ALLYSHIP DOMAIN</b><div class="muted" style="margin-top:.25rem">the key all three share — and the quest’s <code>allyshipDomain</code></div></div>
+        <span class="arrow">↓</span>
+        <div class="hub" style="border-style:solid; border-color:rgba(139,92,246,.4)"><b style="color:var(--purple-lite)">SEED → AI draft → editable quest → campaign pool</b></div>
+      </div>
+    </section>
+
+    <!-- FACES -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Reference</span></div>
+      <h2 class="measure">The Six Faces &amp; their 48 moves</h2>
+      <p class="measure" style="margin-top:.8rem">Each face plays a different “game” at each of the 8 Kotter
+        stages — a 6×8 grid of 48 authored moves (<code>GM_FACE_STAGE_MOVES</code>). Picking a face sets the
+        quest’s opening move; the stage comes from where the campaign is (see design call A).</p>
+      <div class="faces">
+        <div class="face" style="border-left-color:var(--earth)"><span class="nm">Shaman</span><div class="mv">Belonging · begins in belonging</div></div>
+        <div class="face" style="border-left-color:var(--fire)"><span class="nm">Challenger</span><div class="mv">Edge · begins in action</div></div>
+        <div class="face" style="border-left-color:var(--metal)"><span class="nm">Regent</span><div class="mv">Structure · begins in order</div></div>
+        <div class="face" style="border-left-color:var(--heaven)"><span class="nm">Architect</span><div class="mv">Strategy · begins in blueprint</div></div>
+        <div class="face" style="border-left-color:var(--wood)"><span class="nm">Diplomat</span><div class="mv">Care · begins in connection</div></div>
+        <div class="face" style="border-left-color:var(--stone)"><span class="nm">Sage</span><div class="mv">Integration · begins in flow</div></div>
+      </div>
+    </section>
+
+    <!-- CONTRACT -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Contract</span></div>
+      <h2 class="measure">Controls → data → actions</h2>
+      <div class="tbl c3">
+        <div class="tr head"><div>Control</div><div>Behavior</div><div>Server action / data</div></div>
+        <div class="tr"><div class="k">Lens selectors</div><div class="v">Domain / myth / superpower+orientation / face. Live, deterministic seed preview.</div><div class="v"><code>composeAlignmentSeed(...)</code> (pure lib) → seed object</div></div>
+        <div class="tr"><div class="k">Draft with AI</div><div class="v">Loading → editable draft. Regenerate re-runs.</div><div class="v"><code>draftAlignedQuest(seed)</code> → <code>generateQuestFromContext</code> → draft (no save)</div></div>
+        <div class="tr"><div class="k">Assemble without AI</div><div class="v">Instant deterministic draft (offline / flag-off).</div><div class="v"><code>assembleAlignedQuest(seed)</code> (pure) → draft</div></div>
+        <div class="tr"><div class="k">Save to campaign</div><div class="v">Persists + joins pool. Optional “add to lead”.</div><div class="v"><code>saveAlignedQuest(draft, tags)</code> → <code>CustomBar</code> (+ alignment cols)</div></div>
+        <div class="tr"><div class="k">Library edit / archive</div><div class="v">Reopen composer; archive hides without deleting.</div><div class="v"><code>listCampaignQuests(ref)</code> · <code>archiveQuest(id)</code></div></div>
+      </div>
+      <p class="measure" style="margin-top:1rem"><b>Schema delta</b> (design call B): add nullable, queryable
+        columns to <code>CustomBar</code> — <code>gmFace</code>, <code>superpowerAffinity</code>,
+        <code>mythId</code> (<code>allyshipDomain</code> already exists). One additive migration. New lib:
+        <code>src/lib/campaign-leads/quest-alignment.ts</code> (compose + assemble, both pure).</p>
+    </section>
+
+    <!-- DESIGN CALLS -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Design calls before build</span></div>
+      <h2 class="measure">Confirm these</h2>
+      <div class="cols">
+        <div class="q"><div class="qn">A</div><div><h3>Face → move: auto-stage or pick the move?</h3><p>Pick just the <em>face</em> and let the opening move come from the campaign’s current Kotter stage (simpler), or pick <em>face + stage</em> to target one exact move of the 48.</p><div class="rec">Lean: face only; stage auto from the campaign.</div></div></div>
+        <div class="q"><div class="qn">B</div><div><h3>Alignment: columns or JSON blob?</h3><p>Explicit nullable columns on <code>CustomBar</code> (<code>gmFace</code>, <code>superpowerAffinity</code>, <code>mythId</code>) make “all connector quests” a real query. A JSON blob is looser but unqueryable.</p><div class="rec">Lean: explicit columns.</div></div></div>
+        <div class="q"><div class="qn">C</div><div><h3>AI default: draft-first or assemble-first?</h3><p>You chose AI-populated. Open with the AI draft by default, or show the deterministic assembly first and offer “✦ Draft with AI” as the upgrade?</p><div class="rec">Lean: AI draft by default; assembly is the fallback.</div></div></div>
+        <div class="q"><div class="qn">D</div><div><h3>Who can author? (scope)</h3><p>Steward+ of the campaign (matches the rest of Lead Forge), or global admins only (like the existing <code>/admin/quest-from-context</code>)?</p><div class="rec">Lean: steward+ (campaign owners), consistent with Phase 6.</div></div></div>
+      </div>
+    </section>
+
+    <!-- BUILD ORDER -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Handoff → build</span></div>
+      <h2 class="measure">Build order</h2>
+      <ol class="build measure">
+        <li><div class="body"><b>Alignment lib + schema.</b> <code>quest-alignment.ts</code> (<code>composeAlignmentSeed</code>, <code>assembleAlignedQuest</code> — both pure, unit-tested). Add <code>gmFace</code>/<code>superpowerAffinity</code>/<code>mythId</code> columns; migration.</div></li>
+        <li><div class="body"><b>Actions.</b> <code>draftAlignedQuest</code> (wraps <code>generateQuestFromContext</code> with the seed), <code>saveAlignedQuest</code>, <code>listCampaignQuests</code>, <code>archiveQuest</code> — steward-gated.</div></li>
+        <li><div class="body"><b>Composer</b> <code>/quests/new</code> — lens selectors, live seed, draft/assemble, edit, save. <code>basePath</code>-threaded + the-crossing shim (same pattern as Phase 6).</div></li>
+        <li><div class="body"><b>Library</b> <code>/quests</code> — authored quests + tags, edit/archive.</div></li>
+        <li><div class="body"><b>Wire Phase 6.</b> Light up the workspace “Author new…” button → Composer with <code>?forLead=</code>; on save, offer to add to that lead.</div></li>
+        <li><div class="body"><b>Verify.</b> tsc / eslint / validate:routes green; AI path behind a flag with the deterministic fallback proven offline.</div></li>
+      </ol>
+    </section>
+
+    <footer>Phase 7 design handoff v1 · continues the Campaign Lead Forge brief + Phase 6 handoff · grounded in GM_FACE_STAGE_MOVES (48), SUPERPOWER_TRANSLATION, ALLYSHIP_MYTHS, generateQuestFromContext. Confirm calls A–D and I build to this.</footer>
+  </div>
+</div>

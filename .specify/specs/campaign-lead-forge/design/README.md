@@ -3,8 +3,9 @@
 Design handoff for **campaign-lead-forge Phase 6** (FR15–FR19). Build target: the campaign owner's
 roster + per-lead workspace + collective directory.
 
-- **Visual handoff**: [`phase6-handoff.html`](phase6-handoff.html) — self-contained page (open locally
-  or drag into v0/Vercel). Faithful mockups + annotations + full control→data→action contracts.
+- **Phase 6 handoff**: [`phase6-handoff.html`](phase6-handoff.html) — roster + lead workspace + collective.
+- **Phase 7 handoff**: [`phase7-handoff.html`](phase7-handoff.html) — the AI Quest Studio (compose a
+  quest from a myth × superpower × GM face, deterministic seed → AI draft → save to the campaign pool).
 - **Spec**: [`../spec.md`](../spec.md) · **Tasks**: [`../tasks.md`](../tasks.md)
 
 ## Surfaces
