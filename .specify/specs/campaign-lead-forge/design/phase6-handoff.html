@@ -1,0 +1,356 @@
+<style>
+  .h6 {
+    --ground:#0b0a09; --panel:#131210; --panel-2:#1a1712; --panel-3:#211c15;
+    --line:rgba(244,242,236,0.09); --line-strong:rgba(244,242,236,0.16);
+    --ink:#f4f2ec; --ink-2:#b4afa3; --ink-3:#7c776c;
+    --gold:#d4a017; --purple:#8b5cf6; --purple-lite:#b6a3f5;
+    --earth:#d4a017; --fire:#e05a3d; --wood:#46b06f; --metal:#86b8cc; --water:#6f78cf;
+    --good:#46b06f; --warn:#d4a017;
+    --serif:'Iowan Old Style','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+    background:radial-gradient(120% 55% at 50% -8%,#1a1524 0%,rgba(11,10,9,0) 44%),var(--ground);
+    color:var(--ink); font-family:var(--sans); line-height:1.6; -webkit-font-smoothing:antialiased;
+    min-height:100vh; padding:0 0 6rem;
+  }
+  .h6 *{box-sizing:border-box;}
+  .h6 .wrap{width:100%; max-width:960px; margin:0 auto; padding:0 1.5rem;}
+  .h6 .measure{max-width:680px;}
+  .h6 .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--gold);}
+  .h6 h1{font-family:var(--serif); font-weight:600; font-size:clamp(2rem,5.5vw,3.1rem); line-height:1.04; letter-spacing:-.015em; text-wrap:balance; margin:0;}
+  .h6 h2{font-family:var(--serif); font-weight:600; font-size:clamp(1.45rem,3.2vw,1.95rem); line-height:1.1; letter-spacing:-.01em; text-wrap:balance; margin:0;}
+  .h6 h3{font-weight:700; font-size:1rem; margin:0;}
+  .h6 p{margin:0; color:var(--ink-2);}
+  .h6 strong{color:var(--ink); font-weight:650;}
+  .h6 .lede{font-size:1.15rem; line-height:1.55; color:var(--ink); font-family:var(--serif);}
+  .h6 code{font-family:var(--mono); font-size:.85em; color:var(--purple-lite); background:rgba(139,92,246,.09); padding:.08em .35em; border-radius:5px;}
+
+  .h6 header.mast{border-bottom:1px solid var(--line); padding:clamp(2.6rem,7vw,4.6rem) 0 2rem;}
+  .h6 .metarow{display:flex; flex-wrap:wrap; gap:.5rem 1.6rem; margin-top:1.8rem; padding-top:1.3rem; border-top:1px solid var(--line); font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--ink-3);}
+  .h6 .metarow b{color:var(--ink-2); font-weight:500;}
+
+  .h6 section{padding:clamp(2.4rem,5.5vw,3.6rem) 0 0;}
+  .h6 .sec-eyebrow{display:flex; align-items:center; gap:.7rem; margin-bottom:1rem;}
+  .h6 .sec-eyebrow::after{content:""; flex:1; height:1px; background:var(--line);}
+  .h6 .stack{display:flex; flex-direction:column; gap:1rem;}
+
+  /* route map */
+  .h6 .routes{display:grid; grid-template-columns:repeat(3,1fr); gap:.7rem; margin-top:1.3rem;}
+  @media(max-width:680px){.h6 .routes{grid-template-columns:1fr;}}
+  .h6 .route{border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; background:var(--panel);}
+  .h6 .route .p{font-family:var(--mono); font-size:11px; color:var(--gold); letter-spacing:.02em; word-break:break-all;}
+  .h6 .route h3{font-size:.92rem; margin:.4rem 0 .2rem;}
+  .h6 .route p{font-size:.85rem;}
+  .h6 .route .tag{font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--purple-lite); border:1px solid rgba(139,92,246,.4); border-radius:999px; padding:.1rem .4rem;}
+
+  /* mockup device */
+  .h6 .mock-wrap{display:grid; grid-template-columns:1fr; gap:1.2rem; margin-top:1.4rem;}
+  .h6 .device{border:1px solid var(--line-strong); border-radius:18px; overflow:hidden; background:var(--ground); box-shadow:0 24px 60px -30px rgba(0,0,0,.8);}
+  .h6 .device .bar{display:flex; align-items:center; gap:.5rem; padding:.6rem .9rem; background:var(--panel); border-bottom:1px solid var(--line);}
+  .h6 .device .dot{width:9px; height:9px; border-radius:50%; background:var(--line-strong);}
+  .h6 .device .url{margin-left:.5rem; font-family:var(--mono); font-size:10.5px; color:var(--ink-3);}
+  .h6 .screen{padding:1.15rem 1.15rem 1.4rem; background:radial-gradient(120% 45% at 50% -6%,#16121f 0%,var(--ground) 46%);}
+
+  /* app atoms */
+  .h6 .row{display:flex; align-items:center; gap:.6rem;}
+  .h6 .between{justify-content:space-between;}
+  .h6 .wrapf{flex-wrap:wrap;}
+  .h6 .app-h{font-family:var(--serif); color:var(--ink);}
+  .h6 .eyebrow-sm{font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold);}
+  .h6 .card{border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:.85rem .95rem;}
+  .h6 .avatar{width:34px; height:34px; border-radius:50%; flex:none; display:grid; place-items:center; font-family:var(--serif); font-weight:700; font-size:.95rem; color:#1a1305;}
+  .h6 .name{font-family:var(--serif); font-size:1.02rem; color:var(--ink);}
+  .h6 .sub{font-size:.82rem; color:var(--ink-3);}
+  .h6 .pill{font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; padding:.14rem .5rem; border-radius:999px; border:1px solid var(--line-strong); color:var(--ink-2); white-space:nowrap;}
+  .h6 .pill.new{color:var(--gold); border-color:rgba(212,160,23,.45); background:rgba(212,160,23,.08);}
+  .h6 .pill.contacted{color:var(--metal); border-color:rgba(134,184,204,.45); background:rgba(134,184,204,.07);}
+  .h6 .pill.accepted{color:var(--wood); border-color:rgba(70,176,111,.45); background:rgba(70,176,111,.07);}
+  .h6 .pill.onboarded{color:var(--purple-lite); border-color:rgba(139,92,246,.45); background:rgba(139,92,246,.08);}
+  .h6 .pill.collective{color:var(--water); border-color:rgba(111,120,207,.5); background:rgba(111,120,207,.08);}
+  .h6 .chip{font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); border:1px solid var(--line); border-radius:6px; padding:.12rem .4rem;}
+  .h6 .btn{font-weight:650; font-size:.82rem; color:#fff; background:var(--purple); border-radius:9px; padding:.5rem .8rem; display:inline-flex; align-items:center; gap:.35rem; border:none;}
+  .h6 .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line-strong);}
+  .h6 .btn.sm{font-size:.76rem; padding:.38rem .6rem;}
+  .h6 .field{border:1px solid var(--line-strong); border-radius:8px; padding:.55rem .7rem; color:var(--ink-2); font-size:.86rem; background:rgba(0,0,0,.28);}
+  .h6 .label{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);}
+  .h6 .quest{display:flex; align-items:center; gap:.55rem; border:1px solid rgba(139,92,246,.28); background:rgba(139,92,246,.06); border-radius:9px; padding:.5rem .65rem; font-size:.85rem; color:#e8e4f6;}
+  .h6 .grip{color:var(--ink-3); cursor:grab; font-size:.95rem; line-height:1;}
+  .h6 .savechip{font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--good); display:inline-flex; align-items:center; gap:.3rem;}
+  .h6 .toggle{width:38px; height:22px; border-radius:999px; background:rgba(111,120,207,.9); position:relative; flex:none;}
+  .h6 .toggle::after{content:""; position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%; background:#fff;}
+  .h6 .toggle.off{background:var(--line-strong);}
+  .h6 .toggle.off::after{right:auto; left:2px;}
+  .h6 .divider{height:1px; background:var(--line); margin:.2rem 0;}
+
+  /* annotation pins */
+  .h6 .pin{display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--gold); color:#1a1305; font-family:var(--mono); font-size:11px; font-weight:700; flex:none;}
+  .h6 .notes{margin-top:1.1rem; display:grid; grid-template-columns:1fr; gap:.6rem;}
+  .h6 .note{display:grid; grid-template-columns:1.5rem 1fr; gap:.7rem; align-items:start;}
+  .h6 .note .body{font-size:.9rem; color:var(--ink-2);}
+  .h6 .note .body b{color:var(--ink);}
+
+  /* spec tables */
+  .h6 .tbl{margin-top:1.2rem; border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .h6 .tbl .tr{display:grid; gap:1rem; padding:.75rem 1rem; border-top:1px solid var(--line); align-items:start;}
+  .h6 .tbl .tr:first-child{border-top:none; background:var(--panel);}
+  .h6 .tbl .tr.head{font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3);}
+  .h6 .tbl.c3 .tr{grid-template-columns:1.1fr 1.3fr 1.6fr;}
+  .h6 .tbl.c2 .tr{grid-template-columns:1fr 2fr;}
+  @media(max-width:680px){.h6 .tbl.c3 .tr,.h6 .tbl.c2 .tr{grid-template-columns:1fr;}}
+  .h6 .tbl .k{color:var(--ink);}
+  .h6 .tbl .k small{display:block; color:var(--ink-3); font-family:var(--mono); font-size:10.5px; margin-top:.15rem;}
+  .h6 .tbl .v{color:var(--ink-2); font-size:.9rem;}
+
+  .h6 .cols{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.2rem;}
+  @media(max-width:680px){.h6 .cols{grid-template-columns:1fr;}}
+  .h6 .q{border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem; background:var(--panel); display:grid; grid-template-columns:1.6rem 1fr; gap:.75rem;}
+  .h6 .q .qn{font-family:var(--mono); color:var(--purple-lite);}
+  .h6 .q h3{font-size:.96rem; margin-bottom:.2rem;}
+  .h6 .q p{font-size:.88rem;}
+  .h6 .q .rec{color:var(--wood); font-family:var(--mono); font-size:10.5px; margin-top:.4rem;}
+
+  .h6 ol.build{counter-reset:s; list-style:none; margin:1.2rem 0 0; padding:0;}
+  .h6 ol.build li{counter-increment:s; display:grid; grid-template-columns:2.6rem 1fr; gap:.9rem; padding:.85rem 0; border-top:1px solid var(--line);}
+  .h6 ol.build li:first-child{border-top:none;}
+  .h6 ol.build li::before{content:counter(s,decimal-leading-zero); font-family:var(--mono); font-size:.8rem; color:var(--gold); border-right:1px solid var(--line-strong); padding-top:.15rem;}
+  .h6 ol.build .body{font-size:.92rem;}
+  .h6 ol.build .body b{color:var(--ink);}
+
+  .h6 footer{margin-top:3.5rem; padding-top:1.4rem; border-top:1px solid var(--line); font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.05em;}
+  @media(prefers-reduced-motion:no-preference){.h6 .fade{animation:h6f .6s cubic-bezier(.16,1,.3,1) both;} @keyframes h6f{from{opacity:0; transform:translateY(9px);} to{opacity:1; transform:none;}}}
+</style>
+
+<div class="h6">
+  <header class="mast fade">
+    <div class="wrap">
+      <div class="eyebrow">Design Handoff · Phase 6</div>
+      <h1>The Warm Roster<br>&amp; Lead Workspace</h1>
+      <p class="lede measure" style="margin-top:1.3rem">Two screens a campaign owner lives in: the
+        <strong>roster</strong> of people they’re bringing in, and each lead’s <strong>workspace</strong> —
+        where you set their goals, curate their quests, hand them their link, and publish them to the
+        collective. Built to match; every control below maps to a real field and action.</p>
+      <div class="metarow">
+        <span><b>Build target</b> Phase 6 (FR15–FR19)</span>
+        <span><b>Spec</b> campaign-lead-forge</span>
+        <span><b>Auth</b> assertCampaignSteward</span>
+        <span><b>Status</b> handoff v1 — review before build</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- IA -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Information architecture</span></div>
+      <h2 class="measure">Three surfaces, one owner</h2>
+      <p class="measure" style="margin-top:.8rem">The roster reframes today’s lead board as “your list.”
+        Tapping a lead opens its workspace. Publishing lifts a lead into a collective directory other
+        stewards can invite from.</p>
+      <div class="routes">
+        <div class="route"><div class="p">/campaign/&lt;ref&gt;/leads</div><h3>The Roster</h3><p>Your list for this campaign. Add, scan status, jump in.</p></div>
+        <div class="route"><span class="tag">new</span><div class="p" style="margin-top:.4rem">/campaign/&lt;ref&gt;/leads/&lt;id&gt;</div><h3>Lead Workspace</h3><p>Goals, quests, invite link, publish.</p></div>
+        <div class="route"><span class="tag">new</span><div class="p" style="margin-top:.4rem">/campaign/&lt;ref&gt;/leads/collective</div><h3>The Collective</h3><p>Published leads any steward can adopt.</p></div>
+      </div>
+    </section>
+
+    <!-- SCREEN 1: ROSTER -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Screen 1</span></div>
+      <h2 class="measure">The Roster</h2>
+      <div class="mock-wrap">
+        <div class="device">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">campaign/the-crossing/leads</span></div>
+          <div class="screen stack">
+            <div class="row between wrapf">
+              <div>
+                <div class="eyebrow-sm">Lead Forge · The Crossing</div>
+                <div class="app-h" style="font-size:1.5rem; margin-top:.15rem">Your list <span class="sub" style="font-family:var(--sans)">· 6 people</span></div>
+              </div>
+              <div class="row"><span class="pin">1</span><button class="btn">+ Add a lead</button></div>
+            </div>
+
+            <div class="row wrapf" style="gap:.4rem">
+              <span class="pill new">New 2</span><span class="pill contacted">Contacted 1</span>
+              <span class="pill accepted">Accepted 1</span><span class="pill onboarded">Onboarded 1</span>
+              <span class="row" style="gap:.35rem"><span class="pin">2</span><span class="pill collective">◇ Collective 1</span></span>
+            </div>
+
+            <div class="card row between">
+              <div class="row"><span class="avatar" style="background:var(--wood)">M</span>
+                <div><div class="name">Maya R.</div><div class="sub">Direct Action · text · <span style="color:var(--ink-2)">goals set</span></div></div></div>
+              <div class="row" style="gap:.5rem"><span class="pill new">New</span><span class="sub">›</span></div>
+            </div>
+
+            <div class="card row between" style="border-color:rgba(111,120,207,.35)">
+              <div class="row"><span class="avatar" style="background:var(--metal)">J</span>
+                <div><div class="name">Jonah P. <span class="pill collective" style="margin-left:.3rem">◇ Published</span></div><div class="sub">Gathering Resources · signal</div></div></div>
+              <div class="row" style="gap:.5rem"><span class="pin">3</span><span class="pill contacted">Contacted</span><span class="sub">›</span></div>
+            </div>
+
+            <div class="card row between">
+              <div class="row"><span class="avatar" style="background:var(--purple)">✦</span>
+                <div><div class="name">Self-created player</div><div class="sub">⚡ connector · arrived from a post</div></div></div>
+              <div class="row" style="gap:.5rem"><span class="chip">cold</span><span class="pill onboarded">Onboarded</span><span class="sub">›</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note"><span class="pin">1</span><div class="body"><b>Add a lead</b> opens a lightweight quick-add (name, contact, channel, domain) — <em>not</em> the full forge form. It creates a <code>new</code> lead and drops you straight into its Workspace to set goals + quests. Rich authoring lives on the detail page, so adding stays a 5-second act.</div></div>
+        <div class="note"><span class="pin">2</span><div class="body"><b>Filter chips</b> reuse the shipped status machine + counts. The <span style="color:var(--water)">Collective</span> chip filters to leads you’ve published. Source (cold/warm) is a quiet secondary tag, never a primary filter.</div></div>
+        <div class="note"><span class="pin">3</span><div class="body"><b>Published badge</b> encodes collective state in form, not just text — a water-blue pill + tinted card border. A lead can be any status <em>and</em> published; the two are orthogonal.</div></div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: WORKSPACE -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Screen 2 · the heart</span></div>
+      <h2 class="measure">The Lead Workspace</h2>
+      <div class="mock-wrap">
+        <div class="device">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">campaign/the-crossing/leads/lead_8f2a</span></div>
+          <div class="screen stack">
+            <div class="row between wrapf">
+              <div class="row"><span class="sub">‹ Your list</span></div>
+              <div class="row" style="gap:.5rem"><span class="pin">4</span><span class="pill new">New ⌄</span></div>
+            </div>
+            <div class="row between wrapf">
+              <div class="row"><span class="avatar" style="background:var(--wood)">M</span>
+                <div><div class="name" style="font-size:1.25rem">Maya R.</div><div class="sub">Direct Action · text · maya@…</div></div></div>
+              <div class="row" style="gap:.4rem"><button class="btn ghost sm">Preview as invitee</button><button class="btn sm"><span class="pin" style="width:18px;height:18px">5</span> Copy warm link</button></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="stack" style="gap:.5rem">
+              <div class="row between"><span class="label">Your goals for Maya</span><span class="savechip"><span class="pin" style="width:16px;height:16px;background:var(--good);color:#06210f">6</span> Saved</span></div>
+              <div class="field" style="min-height:56px">Get her comfortable making one public ask, and introduce her to two local organizers before the launch party.</div>
+            </div>
+
+            <div class="stack" style="gap:.5rem">
+              <div class="row between"><span class="label">Matched quests · drag to order</span><span class="sub">2</span></div>
+              <div class="quest"><span class="grip">⠿</span> <span style="flex:1">✦ Make your first public ask</span> <span class="chip">Direct Action</span> <span class="sub">×</span></div>
+              <div class="quest"><span class="grip">⠿</span> <span style="flex:1">✦ Warm intro to a local organizer</span> <span class="chip">Skillful Org.</span> <span class="sub">×</span></div>
+              <div class="row" style="gap:.5rem"><span class="pin">7</span><button class="btn ghost sm">+ Add from campaign quests</button><button class="btn ghost sm" style="opacity:.6">Author new… <span class="chip" style="margin-left:.3rem">Phase 7</span></button></div>
+            </div>
+
+            <div class="stack" style="gap:.5rem">
+              <span class="label">Actions they should take</span>
+              <div class="field">DM three friends about the launch party</div>
+            </div>
+
+            <div class="stack" style="gap:.5rem">
+              <span class="label">Personal invite message</span>
+              <div class="field">You have a gift for making people feel seen — we need that here.</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="card row between" style="background:rgba(111,120,207,.06); border-color:rgba(111,120,207,.3)">
+              <div style="max-width:74%"><div class="row" style="gap:.4rem"><span class="pin">8</span><span class="name" style="font-size:.98rem">Publish to the collective</span></div>
+                <div class="sub" style="margin-top:.25rem; color:var(--ink-2)">Let other stewards of Mastering Allyship invite Maya too. She stays yours; they get a copy to adopt.</div></div>
+              <span class="toggle off"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note"><span class="pin">4</span><div class="body"><b>Status control</b> is the shipped transition menu (<code>transitionLead</code>) — a dropdown showing only legal next states. Terminal <code>onboarded</code> shows as a flag, no menu.</div></div>
+        <div class="note"><span class="pin">5</span><div class="body"><b>Copy warm link</b> copies <code>/invite/&lt;token&gt;/welcome</code>; button label swaps to “Copied ✓” for ~1.6s. <b>Preview as invitee</b> opens that link in a new tab.</div></div>
+        <div class="note"><span class="pin">6</span><div class="body"><b>Goals autosave</b> on blur / debounce → <code>setLeadGoals</code>. States: <span class="sub">idle → Saving… → Saved</span>. No explicit Save button; failures surface an inline “Couldn’t save — retry.”</div></div>
+        <div class="note"><span class="pin">7</span><div class="body"><b>Add from campaign quests</b> opens a picker over the campaign quest pool (domain-sorted, matching Maya’s domain first) → <code>addLeadQuest</code>. Drag reorders → <code>reorderLeadQuests</code> (persists ordered <code>starterQuestIdsJson</code>). × removes → <code>removeLeadQuest</code>. <b>Author new…</b> is disabled with a “Phase 7” chip until the Quest Studio ships.</div></div>
+        <div class="note"><span class="pin">8</span><div class="body"><b>Publish toggle</b> → <code>publishLeadToCollective</code> / <code>unpublishLead</code>. Copy names the real consequence (“She stays yours; they get a copy to adopt”). Optimistic flip; reverts + toasts on error.</div></div>
+      </div>
+    </section>
+
+    <!-- COLLECTIVE -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Screen 3</span></div>
+      <h2 class="measure">The Collective directory</h2>
+      <p class="measure" style="margin-top:.8rem">What a <em>different</em> steward sees: a browsable pool of published leads they can adopt into their own campaign — the shared people-book your decision asked for.</p>
+      <div class="mock-wrap">
+        <div class="device">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">campaign/the-crossing/leads/collective</span></div>
+          <div class="screen stack">
+            <div class="eyebrow-sm">Collective · Mastering Allyship</div>
+            <div class="app-h" style="font-size:1.35rem">People the community is inviting</div>
+            <div class="card row between">
+              <div class="row"><span class="avatar" style="background:var(--metal)">J</span>
+                <div><div class="name">Jonah P.</div><div class="sub">Gathering Resources · published by <span style="color:var(--ink-2)">Wendell</span></div></div></div>
+              <div class="row" style="gap:.5rem"><span class="pin">9</span><button class="btn sm">Adopt to my campaign</button></div>
+            </div>
+            <div class="card row between">
+              <div class="row"><span class="avatar" style="background:var(--fire)">D</span>
+                <div><div class="name">Dae K.</div><div class="sub">Raise Awareness · published by <span style="color:var(--ink-2)">Carolyn</span></div></div></div>
+              <button class="btn sm">Adopt to my campaign</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note"><span class="pin">9</span><div class="body"><b>Adopt</b> clones the published lead’s name/contact/domain into the adopting steward’s roster as a fresh <code>new</code> lead (a copy — the original stays with its owner). The adopter sets their <em>own</em> goals and quests. Private notes never travel.</div></div>
+      </div>
+    </section>
+
+    <!-- STATE + ACTION CONTRACT -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Contract</span></div>
+      <h2 class="measure">Controls → data → actions</h2>
+      <div class="tbl c3">
+        <div class="tr head"><div>Control</div><div>State / behavior</div><div>Server action → data</div></div>
+        <div class="tr"><div class="k">Add a lead<small>roster</small></div><div class="v">Quick-add modal (name, contact, channel, domain). On save → open Workspace.</div><div class="v"><code>quickAddLead</code> → new <code>CampaignLead</code> (source manual, status new)</div></div>
+        <div class="tr"><div class="k">Goals editor<small>workspace</small></div><div class="v">Autosave on blur/debounce. idle → Saving… → Saved. Inline retry on error.</div><div class="v"><code>setLeadGoals(leadId, text)</code> → <code>goalsJson</code></div></div>
+        <div class="tr"><div class="k">Add quest<small>workspace</small></div><div class="v">Picker over campaign quest pool, domain-sorted. Multi-select.</div><div class="v"><code>addLeadQuest(leadId, questId)</code> → append <code>starterQuestIdsJson</code></div></div>
+        <div class="tr"><div class="k">Reorder / remove quest</div><div class="v">Drag handle reorders; × removes. Optimistic.</div><div class="v"><code>reorderLeadQuests</code> / <code>removeLeadQuest</code> → ordered <code>starterQuestIdsJson</code></div></div>
+        <div class="tr"><div class="k">Status</div><div class="v">Dropdown of legal transitions only; terminal shows a flag.</div><div class="v"><code>transitionLead</code> (shipped) → <code>status</code></div></div>
+        <div class="tr"><div class="k">Copy / preview link</div><div class="v">Copy → “Copied ✓”. Preview opens welcome in new tab.</div><div class="v">reads <code>invite.token</code> → <code>/invite/&lt;token&gt;/welcome</code></div></div>
+        <div class="tr"><div class="k">Publish toggle</div><div class="v">Optimistic flip; reverts + toast on error.</div><div class="v"><code>publishLeadToCollective</code> / <code>unpublishLead</code> → <code>collective</code> (Boolean)</div></div>
+        <div class="tr"><div class="k">Adopt<small>collective</small></div><div class="v">Confirm → clone into adopter’s roster.</div><div class="v"><code>adoptCollectiveLead(leadId)</code> → new <code>CampaignLead</code> (copy, own owner)</div></div>
+      </div>
+      <p class="measure" style="margin-top:1rem"><b>Schema delta:</b> add <code>goalsJson String?</code> and <code>collective Boolean @default(false)</code> to <code>CampaignLead</code> (one additive migration). Everything else reuses shipped columns.</p>
+    </section>
+
+    <!-- COPY DECK + EMPTY STATES -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Copy deck</span></div>
+      <h2 class="measure">Words on the screen</h2>
+      <div class="tbl c2">
+        <div class="tr head"><div>Moment</div><div>Copy</div></div>
+        <div class="tr"><div class="k">Empty roster</div><div class="v">“No one on your list yet. Add the first person you want to bring into The Crossing.” + <b>Add a lead</b></div></div>
+        <div class="tr"><div class="k">Empty quests (workspace)</div><div class="v">“No quests matched yet. Add a few so Maya knows exactly how she’s helping.”</div></div>
+        <div class="tr"><div class="k">Goals placeholder</div><div class="v">“What do you want Maya to accomplish? Write it like you’d say it to her.”</div></div>
+        <div class="tr"><div class="k">Publish confirm toast</div><div class="v">“Published to the collective — other stewards can adopt Maya now.”</div></div>
+        <div class="tr"><div class="k">Copy link toast</div><div class="v">“Warm link copied. It opens Maya’s personal welcome.”</div></div>
+        <div class="tr"><div class="k">Save error</div><div class="v">“Couldn’t save your goals — check your connection and retry.” (retry inline; no data lost)</div></div>
+      </div>
+    </section>
+
+    <!-- OPEN QUESTIONS -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Two design calls left</span></div>
+      <h2 class="measure">Confirm before I build</h2>
+      <div class="cols">
+        <div class="q"><div class="qn">A</div><div><h3>Add-a-lead: quick vs. full?</h3><p>I’m proposing a 4-field quick-add that drops you into the Workspace, retiring the big forge form. Or keep the full forge form as the add step.</p><div class="rec">Lean: quick-add → Workspace.</div></div></div>
+        <div class="q"><div class="qn">B</div><div><h3>Adopt = copy or shared reference?</h3><p>Adopting a collective lead clones it (each steward owns their copy + goals). Alternative: a shared lead many campaigns reference. Copy is simpler and keeps notes private.</p><div class="rec">Lean: copy.</div></div></div>
+      </div>
+    </section>
+
+    <!-- BUILD ORDER -->
+    <section>
+      <div class="sec-eyebrow"><span class="eyebrow">Handoff → build</span></div>
+      <h2 class="measure">Build order</h2>
+      <ol class="build measure">
+        <li><div class="body"><b>Schema + actions.</b> Add <code>goalsJson</code>, <code>collective</code>; migration. New actions: <code>quickAddLead</code>, <code>setLeadGoals</code>, <code>addLeadQuest</code>, <code>reorderLeadQuests</code>, <code>removeLeadQuest</code>, <code>publishLeadToCollective</code>/<code>unpublishLead</code>, <code>adoptCollectiveLead</code>, <code>getLead</code>.</div></li>
+        <li><div class="body"><b>Roster.</b> Reframe the board as “your list” + quick-add modal + Collective filter chip.</div></li>
+        <li><div class="body"><b>Workspace</b> <code>/leads/[leadId]</code>. Goals autosave, quest add/reorder/remove, link copy + preview, publish toggle.</div></li>
+        <li><div class="body"><b>Collective</b> <code>/leads/collective</code> — browse + adopt.</div></li>
+        <li><div class="body"><b>Verify.</b> tsc / eslint / validate:routes green; the welcome link + <code>claimCampaignLeadForPlayer</code> still assign quests end-to-end.</div></li>
+      </ol>
+    </section>
+
+    <footer>Phase 6 design handoff v1 · continues the Campaign Lead Forge brief · every control maps to a named field + action. Confirm calls A &amp; B and I build to this.</footer>
+  </div>
+</div>
