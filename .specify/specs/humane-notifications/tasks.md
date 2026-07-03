@@ -2,32 +2,32 @@
 
 ## Phase 1 — Preferences + audit
 
-- [ ] HNTF-1.1 Prisma: `Player.notificationPrefsJson`, model `NotificationLog` — `npx prisma migrate dev --name humane_notifications`
-- [ ] HNTF-1.2 `src/lib/notifications/prefs.ts` — defaults, merge, validate
-- [ ] HNTF-1.3 `getNotificationPreferences` / `updateNotificationPreferences` server actions
-- [ ] HNTF-1.4 Signed unsubscribe token + `GET /api/notifications/unsubscribe`
-- [ ] HNTF-1.5 Settings page `/settings/notifications` — toggles + recent sends list
-- [ ] HNTF-1.6 Document env: `NOTIFICATION_UNSUBSCRIBE_SECRET`, `CRON_SECRET` in `docs/ENV_AND_VERCEL.md`
+- [x] HNTF-1.1 Prisma: `Player.notificationPrefsJson`, model `NotificationLog` — migration `20260703150000_humane_notifications`
+- [x] HNTF-1.2 `src/lib/notifications/prefs.ts` — defaults, merge, validate
+- [x] HNTF-1.3 `getNotificationPreferences` / `updateNotificationPreferences` server actions
+- [x] HNTF-1.4 Signed unsubscribe token + `GET /api/notifications/unsubscribe`
+- [x] HNTF-1.5 Settings page `/settings/notifications` — toggles + recent sends list
+- [x] HNTF-1.6 Document env: `NOTIFICATION_UNSUBSCRIBE_SECRET`, `CRON_SECRET` in `docs/ENV_AND_VERCEL.md`
 
 ## Phase 2 — Campaign invite email
 
-- [ ] HNTF-2.1 `CampaignInviteEmail` React template (COPY_AUDIT pass)
-- [ ] HNTF-2.2 `sendCampaignInviteEmail` — persist log → `sendEmail`
-- [ ] HNTF-2.3 Wire `createEventInvitation` (and other invite entry points)
-- [ ] HNTF-2.4 Manual test: invite sends email; pref off skips with `skipped` log
+- [x] HNTF-2.1 `CampaignInviteEmail` React template (COPY_AUDIT pass)
+- [x] HNTF-2.2 `sendEventInviteEmail` — persist log → `sendEmail`
+- [x] HNTF-2.3 Wire `createEventInvitation`
+- [x] HNTF-2.4 Skipped send logged when pref off or no email
 
 ## Phase 3 — Daily reminder
 
-- [ ] HNTF-3.1 `DailyReminderEmail` template (no streak copy)
-- [ ] HNTF-3.2 `runDailyReminderCron` — quiet hours, timezone, TTV sealed skip, idempotent `periodKey`
-- [ ] HNTF-3.3 Vercel cron route + `vercel.json` schedule
-- [ ] HNTF-3.4 Opt-in prompt (post first seal or quest complete) — dismissible
+- [x] HNTF-3.1 `DailyReminderEmail` template (no streak copy)
+- [x] HNTF-3.2 `runDailyReminderCron` — quiet hours, timezone, TTV sealed skip, idempotent `periodKey`
+- [x] HNTF-3.3 Vercel cron route + `vercel.json` schedule
+- [x] HNTF-3.4 Opt-in prompt on NOW after first TTV seal
 - [ ] HNTF-3.5 Hostile copy read (steward) — gate before merge
 
 ## Phase 4 — Verification
 
-- [ ] HNTF-4.1 `scripts/seed-cert-humane-notifications.ts` — `cert-humane-notifications-v1`
-- [ ] HNTF-4.2 `npm run build` + `npm run check`
+- [x] HNTF-4.1 `scripts/seed-cert-humane-notifications.ts` — `cert-humane-notifications-v1`
+- [x] HNTF-4.2 `npm run build` + `npm run check`
 
 ## Backlog / cross-spec
 

@@ -11,6 +11,8 @@ import { CaptureBox } from '@/components/now/CaptureBox'
 import { Clean321Launcher } from '@/components/clean321/Clean321Launcher'
 import { getPlayerNextMove } from '@/actions/next-action-bridge'
 import { StarOfBethlehemCard } from '@/components/now/StarOfBethlehemCard'
+import { DailyReminderOptInBanner } from '@/components/notifications/DailyReminderOptInBanner'
+import { parseNotificationPrefs } from '@/lib/notifications/prefs'
 
 type NowHomeProps = {
   playerId: string
@@ -18,7 +20,7 @@ type NowHomeProps = {
 }
 
 export async function NowHome({ playerId, vibulons }: NowHomeProps) {
-  const [handSlots, chargeTargets, barCounts, ttvSummary, nextMove] = await Promise.all([
+  const [handSlots, chargeTargets, barCounts, ttvSummary, nextMove, prefsRow] = await Promise.all([
     db.handSlot.findMany({
       where: { playerId },
       orderBy: { slotIndex: 'asc' },
@@ -30,11 +32,22 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
     fetchBarCounts(playerId),
     getTodayPanelSummary(),
     getPlayerNextMove(playerId),
+    db.player.findUnique({
+      where: { id: playerId },
+      select: { notificationPrefsJson: true },
+    }),
   ])
 
   const ttvPanel = 'error' in ttvSummary
     ? { status: 'not_started' as const, setForToday: 0, carried: 0, completed: 0, sealedAt: null }
     : ttvSummary
+
+  const notificationPrefs = parseNotificationPrefs(prefsRow?.notificationPrefsJson)
+  const showDailyReminderOptIn =
+    ttvPanel.status === 'sealed' &&
+    !notificationPrefs.dailyReminder?.enabled &&
+    !notificationPrefs.dailyReminderPromptDismissedAt &&
+    !notificationPrefs.unsubscribedAll
 
   // Build all 6 slots (filled + empty)
   const slotMap = new Map(handSlots.map(s => [s.slotIndex, s]))
@@ -117,6 +130,7 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
         {/* Scrollable main area */}
         <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '6px 20px 16px', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {nextMove ? <StarOfBethlehemCard move={nextMove} /> : null}
+          <DailyReminderOptInBanner show={showDailyReminderOptIn} />
 
           {/* Hand glance */}
           <HandGlance

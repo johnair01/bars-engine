@@ -159,6 +159,7 @@
     "seed:cert:book-paywall": "tsx scripts/with-env.ts \"tsx scripts/seed-cert-book-launch-paywall.ts\"",
     "seed:cert:throughput-spine": "tsx scripts/seed-cert-throughput-spine.ts",
     "seed:cert:quest-lineage-alignment": "tsx scripts/seed-cert-quest-lineage-alignment.ts",
+    "seed:cert:humane-notifications": "tsx scripts/seed-cert-humane-notifications.ts",
     "seed:cert:hand-vault-movement": "tsx scripts/seed-hand-vault-movement-cert.ts",
     "seed:wake-up": "tsx scripts/seed-wake-up-adventure.ts",
     "seed:mtgoa-ch1": "tsx scripts/seed-mtgoa-chapter1-cyoa.ts",

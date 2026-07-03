@@ -397,12 +397,25 @@ Cron routes check `Authorization: Bearer <CRON_SECRET>` and return `401` if it i
 | Route | Schedule | Description |
 |---|---|---|
 | `/api/cron/abandon-sessions` | `0 * * * *` (hourly) | Mark orientation sessions inactive > 24 h as abandoned. |
+| `/api/cron/daily-reminder` | `0 * * * *` (hourly) | Opt-in daily Tap the Vein reminder emails (HNTF). |
+
+### `NOTIFICATION_UNSUBSCRIBE_SECRET`
+
+| | |
+|---|---|
+| **Purpose** | Signs one-click unsubscribe links in notification emails (HNTF). |
+| **Format** | High-entropy secret. Generate with: `openssl rand -hex 32` |
+| **Vercel** | Production + Preview when email notifications are enabled. |
+| **Local** | Optional in `.env.local`; dev falls back to a fixed constant (non-production only). |
+
+See [.specify/specs/humane-notifications/spec.md](../.specify/specs/humane-notifications/spec.md).
 
 **TODO:** Add the following to `vercel.json` (create it in the repo root if it doesn't exist yet):
 ```json
 {
   "crons": [
-    { "path": "/api/cron/abandon-sessions", "schedule": "0 * * * *" }
+    { "path": "/api/cron/abandon-sessions", "schedule": "0 * * * *" },
+    { "path": "/api/cron/daily-reminder", "schedule": "0 * * * *" }
   ]
 }
 ```

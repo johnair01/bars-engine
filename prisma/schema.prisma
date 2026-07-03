@@ -95,6 +95,8 @@ model Player {
   superpowerInner                String?
   superpowerOuter                String?
   quizCompletedAt                DateTime?
+  /// HNTF: JSON notification preferences — see .specify/specs/humane-notifications/metadata-shape.md
+  notificationPrefsJson          String?                     @map("notification_prefs_json")
   createdAt                      DateTime                    @default(now())
   spriteUrl                      String?                     @map("sprite_url")
   lastForgeTimestamp             DateTime?
@@ -139,6 +141,7 @@ model Player {
   eventBingoCards                EventBingoCard[]
   eventInvitesReceived           EventInvite[]               @relation("EventInviteReceived")
   eventInvitesSent               EventInvite[]               @relation("EventInviteSent")
+  notificationLogs               NotificationLog[]
   eventParticipations            EventParticipant[]          @relation("EventParticipantAsParticipant")
   forgeSessions                  ForgeSession[]
   friendshipInvitationsCompleted FriendshipInvitation[]      @relation("FriendshipInvitationsCompleted")
@@ -2293,6 +2296,25 @@ model EventInvite {
   @@unique([eventId, actorId])
   @@index([actorId])
   @@map("event_invites")
+}
+
+/// HNTF — outbound notification audit + idempotency (email v1).
+model NotificationLog {
+  id           String    @id @default(cuid())
+  playerId     String
+  type         String
+  channel      String    @default("email")
+  status       String    @default("pending")
+  externalId   String?   @map("external_id")
+  periodKey    String?   @map("period_key")
+  sentAt       DateTime? @map("sent_at")
+  metadataJson String?   @map("metadata_json")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  player       Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@index([playerId, type, periodKey])
+  @@map("notification_logs")
 }
 
 model PartyExperience {
