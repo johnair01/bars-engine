@@ -26,7 +26,7 @@
 - [x] B2.1 [lenses-observatory-intake](../lenses-observatory-intake/spec.md) — weekly reflection beats (Clear / Current / Creative)
 - [x] B2.2 [lens-integration-refactor](../lens-integration-refactor/spec.md) — review cadence table (daily / weekly / year)
 - [x] B2.3 Copy audit: [COPY_AUDIT_PMA.md](../lenses-observatory-intake/COPY_AUDIT_PMA.md)
-- [ ] B2.4 UI: Observatory week close implements three beats (future — lens-integration / LWX)
+- [x] B2.4 UI: Observatory week close implements three beats — `WeeklyReflectionRitual` at `/observatory/weekly` (+ `/observatory/week` alias)
 
 ### B3 PARA semantics → QLA
 
