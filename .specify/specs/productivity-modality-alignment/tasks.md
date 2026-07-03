@@ -29,7 +29,7 @@
 
 ### B3 PARA semantics → QLA
 
-- [ ] B3.1 [quest-lineage-alignment](../quest-lineage-alignment/spec.md) — add Area vs Project semantics section
+- [x] B3.1 [quest-lineage-alignment](../quest-lineage-alignment/spec.md) — add Area vs Project semantics section
 - [ ] B3.2 Steward handbook: LensGoal domain = area; quest = project
 
 ### B4 POF alignment
