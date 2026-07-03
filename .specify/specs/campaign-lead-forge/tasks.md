@@ -43,11 +43,11 @@ the invitee gets a personalized orientation CYOA (the friendcraft-style ask).
   `/campaign/[ref]/begin` remains the cold, self-serve on-ramp. Same destination.
 
 ## Phase 6 — Warm Roster + per-lead workspace (v2, decisions locked)
-- [ ] 6.1 Add `goalsJson` + `collective` (Boolean) to `CampaignLead`; migration
-- [ ] 6.2 Roster view — board reframed as "your list" + prominent Add-a-lead
-- [ ] 6.3 `/campaign/[ref]/leads/[leadId]` lead detail — goals, quest add/reorder/remove, copy link, preview
-- [ ] 6.4 `setLeadGoals`, `addLeadQuest`, `reorderLeadQuests`, `removeLeadQuest` actions (steward-gated)
-- [ ] 6.5 `publishLeadToCollective` / `unpublishLead` + shared directory read for other stewards
+- [x] 6.1 Add `goals` + `collective` (Boolean) to `CampaignLead`; migration
+- [x] 6.2 Roster view — board reframed as "your list" + prominent Add-a-lead
+- [x] 6.3 `/campaign/[ref]/leads/[leadId]` lead detail — goals, quest add/reorder/remove, copy link, preview
+- [x] 6.4 `setLeadGoals`, `addLeadQuest`, `reorderLeadQuests`, `removeLeadQuest` actions (steward-gated)
+- [x] 6.5 `publishLeadToCollective` / `unpublishLead` + shared directory read for other stewards
 
 ## Phase 7 — Quest Studio (AI, aligned to myth × superpower × face) (v2)
 - [ ] 7.1 `/campaign/[ref]/quests/new` — AI draft (generateQuestFromContext → compileQuestWithAI), editable

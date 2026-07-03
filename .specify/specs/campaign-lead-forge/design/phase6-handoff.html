@@ -302,7 +302,7 @@
       <div class="tbl c3">
         <div class="tr head"><div>Control</div><div>State / behavior</div><div>Server action → data</div></div>
         <div class="tr"><div class="k">Add a lead<small>roster</small></div><div class="v">Quick-add modal (name, contact, channel, domain). On save → open Workspace.</div><div class="v"><code>quickAddLead</code> → new <code>CampaignLead</code> (source manual, status new)</div></div>
-        <div class="tr"><div class="k">Goals editor<small>workspace</small></div><div class="v">Autosave on blur/debounce. idle → Saving… → Saved. Inline retry on error.</div><div class="v"><code>setLeadGoals(leadId, text)</code> → <code>goalsJson</code></div></div>
+        <div class="tr"><div class="k">Goals editor<small>workspace</small></div><div class="v">Autosave on blur/debounce. idle → Saving… → Saved. Inline retry on error.</div><div class="v"><code>setLeadGoals(leadId, text)</code> → <code>goals</code></div></div>
         <div class="tr"><div class="k">Add quest<small>workspace</small></div><div class="v">Picker over campaign quest pool, domain-sorted. Multi-select.</div><div class="v"><code>addLeadQuest(leadId, questId)</code> → append <code>starterQuestIdsJson</code></div></div>
         <div class="tr"><div class="k">Reorder / remove quest</div><div class="v">Drag handle reorders; × removes. Optimistic.</div><div class="v"><code>reorderLeadQuests</code> / <code>removeLeadQuest</code> → ordered <code>starterQuestIdsJson</code></div></div>
         <div class="tr"><div class="k">Status</div><div class="v">Dropdown of legal transitions only; terminal shows a flag.</div><div class="v"><code>transitionLead</code> (shipped) → <code>status</code></div></div>
@@ -310,7 +310,7 @@
         <div class="tr"><div class="k">Publish toggle</div><div class="v">Optimistic flip; reverts + toast on error.</div><div class="v"><code>publishLeadToCollective</code> / <code>unpublishLead</code> → <code>collective</code> (Boolean)</div></div>
         <div class="tr"><div class="k">Adopt<small>collective</small></div><div class="v">Confirm → clone into adopter’s roster.</div><div class="v"><code>adoptCollectiveLead(leadId)</code> → new <code>CampaignLead</code> (copy, own owner)</div></div>
       </div>
-      <p class="measure" style="margin-top:1rem"><b>Schema delta:</b> add <code>goalsJson String?</code> and <code>collective Boolean @default(false)</code> to <code>CampaignLead</code> (one additive migration). Everything else reuses shipped columns.</p>
+      <p class="measure" style="margin-top:1rem"><b>Schema delta:</b> add <code>goals String?</code> and <code>collective Boolean @default(false)</code> to <code>CampaignLead</code> (one additive migration). Everything else reuses shipped columns.</p>
     </section>
 
     <!-- COPY DECK + EMPTY STATES -->
@@ -343,7 +343,7 @@
       <div class="sec-eyebrow"><span class="eyebrow">Handoff → build</span></div>
       <h2 class="measure">Build order</h2>
       <ol class="build measure">
-        <li><div class="body"><b>Schema + actions.</b> Add <code>goalsJson</code>, <code>collective</code>; migration. New actions: <code>quickAddLead</code>, <code>setLeadGoals</code>, <code>addLeadQuest</code>, <code>reorderLeadQuests</code>, <code>removeLeadQuest</code>, <code>publishLeadToCollective</code>/<code>unpublishLead</code>, <code>adoptCollectiveLead</code>, <code>getLead</code>.</div></li>
+        <li><div class="body"><b>Schema + actions.</b> Add <code>goals</code>, <code>collective</code>; migration. New actions: <code>quickAddLead</code>, <code>setLeadGoals</code>, <code>addLeadQuest</code>, <code>reorderLeadQuests</code>, <code>removeLeadQuest</code>, <code>publishLeadToCollective</code>/<code>unpublishLead</code>, <code>adoptCollectiveLead</code>, <code>getLead</code>.</div></li>
         <li><div class="body"><b>Roster.</b> Reframe the board as “your list” + quick-add modal + Collective filter chip.</div></li>
         <li><div class="body"><b>Workspace</b> <code>/leads/[leadId]</code>. Goals autosave, quest add/reorder/remove, link copy + preview, publish toggle.</div></li>
         <li><div class="body"><b>Collective</b> <code>/leads/collective</code> — browse + adopt.</div></li>

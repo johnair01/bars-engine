@@ -14,5 +14,5 @@ export const metadata: Metadata = { title: 'Leads · The Crossing | BARs' }
  * @dimensions WHO:campaign owner, WHAT:forge-and-follow-up, WHERE:the-crossing, ENERGY:show-up
  */
 export default function TheCrossingLeadsPage() {
-  return <CampaignLeadsPage campaignRef="the-crossing" />
+  return <CampaignLeadsPage campaignRef="the-crossing" basePath="/campaign/the-crossing/steward/leads" />
 }

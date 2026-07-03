@@ -15,7 +15,7 @@ roster + per-lead workspace + collective directory.
 | `/campaign/[ref]/leads/collective` | Collective directory — published leads other stewards can adopt | **new** |
 
 ## Schema delta (one additive migration)
-- `CampaignLead.goalsJson String?` — the owner's goals for the lead
+- `CampaignLead.goals String?` — the owner's goals for the lead
 - `CampaignLead.collective Boolean @default(false)` — published to the collective
 
 ## New server actions (steward-gated)

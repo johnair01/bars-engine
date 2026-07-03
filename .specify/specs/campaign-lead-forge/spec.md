@@ -200,7 +200,7 @@ the ids the player worked through are captured on the lead.
 - **FR14**: Analytics: funnel step drop-off, source attribution from `?src=` social tags.
 
 ### Phase 6 — Warm Roster + per-lead workspace (v2)
-- **FR15**: Add `goalsJson` (owner's goals for the lead) to `CampaignLead`; migration.
+- **FR15**: Add `goals` (owner's goals for the lead) to `CampaignLead`; migration.
 - **FR16**: Roster view (the board, reframed as "your list") with an explicit **Add a lead** entry and per-lead status.
 - **FR17**: **Lead detail page** `/campaign/[ref]/leads/[leadId]` (steward-gated): set goals; add / reorder / remove matched quests; copy the warm link; preview the invitee adventure.
 - **FR18**: **Publish to collective** — `publishLeadToCollective(leadId)` promotes a lead into a shared, campaign-visible directory (`collective` flag / shared scope) other stewards can invite from; reversible (`unpublish`).

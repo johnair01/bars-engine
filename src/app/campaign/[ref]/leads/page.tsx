@@ -15,5 +15,5 @@ export const metadata: Metadata = { title: 'Campaign Leads | BARs' }
  */
 export default async function LeadsRoute({ params }: { params: Promise<{ ref: string }> }) {
   const { ref } = await params
-  return <CampaignLeadsPage campaignRef={ref} />
+  return <CampaignLeadsPage campaignRef={ref} basePath={`/campaign/${ref}/leads`} />
 }

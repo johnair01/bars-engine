@@ -70,6 +70,7 @@ export interface CampaignLeadRow {
   domain: string | null
   superpower: string | null
   superpowerOrientation: string | null
+  collective: boolean
   notes: string | null
   actions: string[]
   starterQuestIds: string[]

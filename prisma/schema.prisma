@@ -583,6 +583,10 @@ model CampaignLead {
   superpowerOrientation String?
   /// Owner-private context.
   notes                 String?
+  /// The owner's goals for this lead (free text). Shapes their warm CYOA.
+  goals                 String?
+  /// Published to the campaign's collective directory (other stewards can adopt).
+  collective            Boolean   @default(false)
   /// JSON string[] of concrete aligned actions the lead should take.
   actionsJson           String?
   /// JSON string[] of CustomBar ids (starter quests) to assign on onboard.
