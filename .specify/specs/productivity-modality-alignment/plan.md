@@ -13,7 +13,7 @@ Implement per [spec.md](./spec.md). Research complete in [RESEARCH.md](./RESEARC
 | SIX_GAME_MASTER_REVIEW.md | Done |
 | SCHEMA_GAPS.md | Done |
 | spec.md / plan.md / tasks.md | Done |
-| BACKLOG PMA row | Pending seed |
+| BACKLOG PMA row | Done (`npm run backlog:seed`) |
 
 ---
 
