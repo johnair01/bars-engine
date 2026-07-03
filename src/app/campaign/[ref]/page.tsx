@@ -4,10 +4,7 @@ import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { getCampaignSkin } from '@/lib/ui/campaign-skin'
 import { CampaignLanding } from './CampaignLanding'
-import {
-  THE_CROSSING_CAMPAIGN_REF,
-  THE_CROSSING_PARENT_CAMPAIGN_REF,
-} from '@/lib/the-crossing-support-moves'
+import { currentPlayerCanEditCampaignPage } from '@/lib/campaign-page-editing'
 
 /**
  * @page /campaign/:slug
@@ -114,6 +111,7 @@ async function getApprovedCampaign(slug: string): Promise<CampaignPageData | nul
     instanceId: campaign.instanceId,
     instanceName: campaign.instance.name,
     createdByName: campaign.createdBy.name,
+    shareUrl: campaign.shareUrl,
     theme: campaign.theme
       ? {
           bgGradient: campaign.theme.bgGradient,
@@ -130,40 +128,12 @@ async function getApprovedCampaign(slug: string): Promise<CampaignPageData | nul
   }
 }
 
-function getTheCrossingFallbackCampaign(slug: string): CampaignPageData | null {
-  if (slug !== THE_CROSSING_CAMPAIGN_REF) return null
-
-  return {
-    id: 'static-the-crossing',
-    slug: THE_CROSSING_CAMPAIGN_REF,
-    name: 'The Crossing Car Fundraiser',
-    description:
-      'A reliable car is the next practical bridge: getting Wendell back on the road while the Mastering the Game of Allyship launch + barn raising keeps moving.',
-    allyshipDomain: 'GATHERING_RESOURCES',
-    wakeUpContent:
-      'The car died at the exact moment the work is starting to gather real momentum. The fundraising side is moving, and now the next bottleneck is practical: find the actual car, reduce the risk, and keep the campaign in motion.',
-    showUpContent:
-      'You can help by sending car leads, evaluating listings, making warm introductions, sharing the ask, offering encouragement, donating money, or contributing time and resources.',
-    storyBridgeCopy: null,
-    startDate: null,
-    endDate: null,
-    instanceId: 'static-mtgoa-barn-raising',
-    instanceName: 'Mastering the Game of Allyship Launch + Barn Raising',
-    createdByName: 'Wendell Britt',
-    shareUrl: null,
-    parentCampaignRef: THE_CROSSING_PARENT_CAMPAIGN_REF,
-    parentCampaignName: 'Mastering the Game of Allyship Launch + Barn Raising',
-    theme: null,
-  }
-}
-
 export async function generateMetadata(props: {
   params: Promise<{ ref: string }>
 }): Promise<Metadata> {
   const { ref } = await props.params
   const slug = decodeURIComponent(ref)
-  const campaign =
-    getTheCrossingFallbackCampaign(slug) ?? (await getApprovedCampaign(slug))
+  const campaign = await getApprovedCampaign(slug)
 
   if (!campaign) {
     return { title: 'Campaign Not Found' }
@@ -207,12 +177,20 @@ async function resolveVisitorStatus(
 
   if (!playerId) return 'unauthenticated'
 
-  const membership = await db.instanceMembership.findUnique({
-    where: {
-      instanceId_playerId: { instanceId, playerId },
-    },
-    select: { id: true },
-  })
+  let membership: { id: string } | null = null
+  try {
+    membership = await db.instanceMembership.findUnique({
+      where: {
+        instanceId_playerId: { instanceId, playerId },
+      },
+      select: { id: true },
+    })
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[resolveVisitorStatus] Falling back to visitor mode:', error)
+    }
+    return 'unauthenticated'
+  }
 
   return membership ? 'member' : 'non_member'
 }
@@ -224,8 +202,7 @@ export default async function CampaignPage(props: {
   const { ref } = await props.params
   const { invite: inviteToken } = await props.searchParams
   const slug = decodeURIComponent(ref)
-  const campaign =
-    getTheCrossingFallbackCampaign(slug) ?? (await getApprovedCampaign(slug))
+  const campaign = await getApprovedCampaign(slug)
 
   if (!campaign) {
     notFound()
@@ -236,6 +213,7 @@ export default async function CampaignPage(props: {
 
   // Determine visitor relationship to this campaign
   const visitorStatus = await resolveVisitorStatus(campaign.instanceId)
+  const canEditPage = await currentPlayerCanEditCampaignPage(campaign)
 
   return (
     <CampaignLanding
@@ -243,6 +221,7 @@ export default async function CampaignPage(props: {
       staticSkin={staticSkin}
       visitorStatus={visitorStatus}
       inviteToken={inviteToken}
+      canEditPage={canEditPage}
     />
   )
 }

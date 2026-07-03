@@ -1,5 +1,9 @@
 import type { Metadata } from 'next'
 import { TheCrossingLanding } from './TheCrossingLanding'
+import {
+  getCurrentPlayerIsAdmin,
+  getTheCrossingPageContent,
+} from '@/lib/the-crossing-page-content-server'
 
 /**
  * @page /campaign/the-crossing
@@ -24,6 +28,11 @@ export const metadata: Metadata = {
   },
 }
 
-export default function TheCrossingPage() {
-  return <TheCrossingLanding />
+export default async function TheCrossingPage() {
+  const [content, isAdmin] = await Promise.all([
+    getTheCrossingPageContent(),
+    getCurrentPlayerIsAdmin(),
+  ])
+
+  return <TheCrossingLanding content={content} isAdmin={isAdmin} />
 }
