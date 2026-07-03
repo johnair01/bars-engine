@@ -20,17 +20,25 @@ These gaps may close via existing fields + actions:
 
 ## Phase C: Proposed schema (if loop wiring insufficient)
 
-### C1 — Waiting-for / delegation
+### C1 — Waiting-for / external blocker
 
-```prisma
-// On PlayerQuest or CustomBar metadata — prefer metadata first
-// PlayerQuest.waitingOnPlayerId String?
-// PlayerQuest.delegatedAt DateTime?
-// PlayerQuest.followUpAt DateTime?
+```ts
+// Quest-level metadata (CustomBar or dedicated questOpsJson) — single-layer v1
+// waitingFor: {
+//   kind: 'person' | 'org' | 'system' | 'approval' | 'other'
+//   label: string          // "Landlord", "IRS", "Client (Acme)"
+//   since: string          // ISO
+//   askedFor?: string
+//   followUpAt?: string
+//   lastPingAt?: string    // in-app "ping" move, not push notification
+// }
 ```
 
-**Rationale:** Mindwtr `Waiting For` list; communal campaigns need delegated quest tracking.  
-**Alternative:** `metadataJson.waitingFor: { playerId, since, note }` before new columns.
+**Rationale:** GTD waiting-for = ball outside player's court. **Not** in-app player delegation in single-layer v1. Mindwtr person+date pattern adapted as free-text external party.
+
+**Multiplayer extension (defer):** `waitingOnPlayerId` on `PlayerQuest` when campaign delegation ships.
+
+**Email follow-up:** In-app first; optional email only via [humane-notifications](../humane-notifications/spec.md) `waitingForEmail` pref.
 
 ### C2 — Next-action cascade state
 
