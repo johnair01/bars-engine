@@ -68,10 +68,9 @@ export function LeadWorkspace({
   const [copied, setCopied] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
-  const warmUrl = useMemo(
-    () => (lead.inviteToken && typeof window !== 'undefined' ? `${window.location.origin}/invite/${lead.inviteToken}/welcome` : ''),
-    [lead.inviteToken],
-  )
+  // Relative path — SSR-safe, no window read at render (avoids a hydration mismatch).
+  // The absolute URL for the clipboard is built at copy-time from window.location.
+  const warmPath = lead.inviteToken ? `/invite/${lead.inviteToken}/welcome` : ''
 
   const orderedPool = useMemo(() => {
     const chosen = new Set(quests.map((q) => q.id))
@@ -80,58 +79,71 @@ export function LeadWorkspace({
     return [...avail.filter((q) => q.domain === lead.domain), ...avail.filter((q) => q.domain !== lead.domain)]
   }, [questPool, quests, lead.domain])
 
-  function run(fn: () => Promise<{ ok: boolean; error?: string }>, onOk?: () => void, setSave?: (s: SaveState) => void) {
+  /** Run a mutation; on failure surface the error and undo the optimistic change. */
+  function run(
+    fn: () => Promise<{ ok: boolean; error?: string }>,
+    opts?: { onOk?: () => void; setSave?: (s: SaveState) => void; revert?: () => void },
+  ) {
     setErr(null)
-    setSave?.('saving')
+    opts?.setSave?.('saving')
     startTransition(async () => {
       const res = await fn()
       if (res.ok) {
-        setSave?.('saved')
-        onOk?.()
-        if (setSave) setTimeout(() => setSave('idle'), 1400)
+        opts?.setSave?.('saved')
+        opts?.onOk?.()
+        if (opts?.setSave) setTimeout(() => opts.setSave!('idle'), 1400)
       } else {
-        setSave?.('error')
+        opts?.setSave?.('error')
         setErr(res.error ?? 'Something went wrong.')
+        opts?.revert?.()
       }
     })
   }
 
-  // ── quests ──
+  // ── quests (optimistic; reverted on failure) ──
   function addQuest(q: Quest) {
-    setQuests((prev) => [...prev, q])
+    const prev = quests
+    setQuests([...prev, q])
     setPickerOpen(false)
-    run(() => addLeadQuest(lead.id, q.id), undefined, undefined)
+    run(() => addLeadQuest(lead.id, q.id), { revert: () => setQuests(prev) })
   }
   function removeQuest(id: string) {
-    setQuests((p) => p.filter((q) => q.id !== id))
-    run(() => removeLeadQuest(lead.id, id), undefined, undefined)
+    const prev = quests
+    setQuests(prev.filter((q) => q.id !== id))
+    run(() => removeLeadQuest(lead.id, id), { revert: () => setQuests(prev) })
   }
   function moveQuest(idx: number, dir: -1 | 1) {
     const j = idx + dir
     if (j < 0 || j >= quests.length) return
+    const prev = quests
     const next = [...quests]
     ;[next[idx], next[j]] = [next[j]!, next[idx]!]
     setQuests(next)
-    run(() => reorderLeadQuests(lead.id, next.map((q) => q.id)), undefined, undefined)
+    run(() => reorderLeadQuests(lead.id, next.map((q) => q.id)), { revert: () => setQuests(prev) })
   }
 
   // ── status ──
   function transition(to: LeadStatus) {
+    const prev = status
     setStatus(to)
-    run(() => transitionLead(lead.id, to), () => router.refresh(), undefined)
+    run(() => transitionLead(lead.id, to), { onOk: () => router.refresh(), revert: () => setStatus(prev) })
   }
 
   // ── publish ──
   function togglePublish() {
+    const prev = collective
     const next = !collective
     setCollective(next)
-    run(() => (next ? publishLeadToCollective(lead.id) : unpublishLead(lead.id)), () => router.refresh(), undefined)
+    run(() => (next ? publishLeadToCollective(lead.id) : unpublishLead(lead.id)), {
+      onOk: () => router.refresh(),
+      revert: () => setCollective(prev),
+    })
   }
 
   async function copyLink() {
-    if (!warmUrl) return
+    if (!warmPath) return
     try {
-      await navigator.clipboard.writeText(warmUrl)
+      await navigator.clipboard.writeText(`${window.location.origin}${warmPath}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 1600)
     } catch {
@@ -180,12 +192,12 @@ export function LeadWorkspace({
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {warmUrl && (
-              <a href={warmUrl} target="_blank" rel="noreferrer" className="rounded-lg border border-white/15 px-3 py-1.5 text-[12px] font-semibold text-[#f4f2ec]">
+            {warmPath && (
+              <a href={warmPath} target="_blank" rel="noreferrer" className="rounded-lg border border-white/15 px-3 py-1.5 text-[12px] font-semibold text-[#f4f2ec]">
                 Preview as invitee ↗
               </a>
             )}
-            <button onClick={copyLink} disabled={!warmUrl} className="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-40" style={{ background: PURPLE }}>
+            <button onClick={copyLink} disabled={!warmPath} className="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-40" style={{ background: PURPLE }}>
               {copied ? 'Copied ✓' : 'Copy warm link'}
             </button>
           </div>
@@ -203,7 +215,7 @@ export function LeadWorkspace({
             className={`${inputCls} min-h-[80px]`}
             value={goals}
             onChange={(e) => setGoals(e.target.value)}
-            onBlur={() => run(() => setLeadGoals(lead.id, goals), undefined, setGoalsSave)}
+            onBlur={() => run(() => setLeadGoals(lead.id, goals), { setSave: setGoalsSave })}
             placeholder="What do you want them to accomplish? Write it like you’d say it to them."
           />
         </section>
@@ -269,7 +281,7 @@ export function LeadWorkspace({
             className={`${inputCls} min-h-[64px]`}
             value={actionsText}
             onChange={(e) => setActionsText(e.target.value)}
-            onBlur={() => run(() => setLeadActions(lead.id, actionsText.split('\n')), undefined, setActionsSave)}
+            onBlur={() => run(() => setLeadActions(lead.id, actionsText.split('\n')), { setSave: setActionsSave })}
             placeholder={'DM three friends about the launch\nBring a plus-one to the party'}
           />
         </section>
@@ -284,7 +296,7 @@ export function LeadWorkspace({
             className={`${inputCls} min-h-[64px]`}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onBlur={() => run(() => setLeadMessage(lead.id, message), undefined, setMessageSave)}
+            onBlur={() => run(() => setLeadMessage(lead.id, message), { setSave: setMessageSave })}
             placeholder="A note that greets them when they open the link."
           />
         </section>

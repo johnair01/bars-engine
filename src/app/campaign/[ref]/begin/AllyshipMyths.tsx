@@ -4,7 +4,7 @@
  * AllyshipMyths — the myth-busting beat of the onboarding funnel. Deterministic
  * CYOA cards: myth → truth → reframe. Spec: .specify/specs/campaign-lead-forge/spec.md
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getMythsForDomain } from '@/lib/allyship-myths/myths'
 import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 
@@ -24,6 +24,11 @@ export function AllyshipMyths({
   const myth = myths[i]
   const isLast = i >= myths.length - 1
 
+  // Empty catalog → advance via an effect, never a setState during render.
+  useEffect(() => {
+    if (!myth) onDone([])
+  }, [myth, onDone])
+
   function next() {
     if (isLast) {
       onDone(myths.map((m) => m.id))
@@ -33,10 +38,7 @@ export function AllyshipMyths({
     setFlipped(false)
   }
 
-  if (!myth) {
-    onDone([])
-    return null
-  }
+  if (!myth) return null
 
   return (
     <div className="flex flex-col gap-5">

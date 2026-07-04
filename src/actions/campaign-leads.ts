@@ -119,7 +119,7 @@ export async function createManualLead(raw: unknown): Promise<CreateManualLeadRe
     })
   })
 
-  revalidatePath(`/admin/campaigns/${input.campaignRef}/leads`)
+  revalidatePath(`/campaign/${input.campaignRef}/leads`)
   // The warm welcome route renders the personalized orientation CYOA (falls back
   // to the generic /invite/[token] landing when a lead is absent).
   return { ok: true, leadId: lead.id, inviteUrl: `${inviteBaseUrl()}/invite/${token}/welcome`, token }
@@ -175,7 +175,7 @@ export async function submitAutomatedLead(raw: unknown): Promise<SubmitAutomated
     select: { id: true },
   })
 
-  revalidatePath(`/admin/campaigns/${input.campaignRef}/leads`)
+  revalidatePath(`/campaign/${input.campaignRef}/leads`)
   return { ok: true, leadId: lead.id }
 }
 
@@ -463,7 +463,12 @@ export async function reorderLeadQuests(leadId: string, orderedIds: string[]): P
   if (!guard.ok) return guard
   const current = new Set(parseJsonStringArray(guard.lead.starterQuestIdsJson))
   const next = (Array.isArray(orderedIds) ? orderedIds : []).filter((id) => current.has(id))
-  if (next.length !== current.size) return { ok: false, error: 'Order must include exactly the current quests.' }
+  // Must be a true permutation of the current set — reject duplicates and omissions
+  // (e.g. ['a','a'] for {a,b} passes a length check but drops 'b' and doubles 'a').
+  const nextSet = new Set(next)
+  if (next.length !== current.size || nextSet.size !== current.size) {
+    return { ok: false, error: 'Order must include exactly the current quests.' }
+  }
   await db.campaignLead.update({ where: { id: leadId }, data: { starterQuestIdsJson: JSON.stringify(next) } })
   revalidatePath(`/campaign/${guard.lead.campaignRef}/leads/${leadId}`)
   return { ok: true }

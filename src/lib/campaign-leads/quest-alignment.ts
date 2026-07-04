@@ -56,9 +56,13 @@ export function composeAlignmentSeed(input: AlignmentInput): AlignmentSeed {
   let superpowerPrompt: string | null = null
   let superpowerArtifact: string | null = null
   if (input.superpower && input.orientation) {
-    const cell = SUPERPOWER_TRANSLATION[input.superpower][input.orientation]
-    superpowerPrompt = cell.prompt
-    superpowerArtifact = cell.suggestedArtifact
+    // Guard: `superpower` may arrive unvalidated from a server action — an unknown
+    // key must degrade gracefully, not throw on `undefined[orientation]`.
+    const cell = SUPERPOWER_TRANSLATION[input.superpower]?.[input.orientation]
+    if (cell) {
+      superpowerPrompt = cell.prompt
+      superpowerArtifact = cell.suggestedArtifact
+    }
   }
 
   let faceMoveTitle: string | null = null

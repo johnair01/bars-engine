@@ -99,11 +99,18 @@ export async function saveAlignedQuest(raw: unknown): Promise<SaveAlignedQuestRe
   const guard = await stewardFor(input.campaignRef)
   if (!guard.ok) return guard
 
+  // Fold the aligned action into the description. `contextLines` is overloaded by
+  // other features (the-crossing parses it as its own JSON shape), so we must not
+  // store a bespoke {alignedAction} object there.
+  const description = input.alignedAction
+    ? `${input.description}\n\nAligned action: ${input.alignedAction}`
+    : input.description
+
   const quest = await db.customBar.create({
     data: {
       creatorId: guard.playerId,
       title: input.title,
-      description: input.description,
+      description,
       type: 'quest',
       status: 'active',
       campaignRef: input.campaignRef,
@@ -112,7 +119,6 @@ export async function saveAlignedQuest(raw: unknown): Promise<SaveAlignedQuestRe
       superpowerAffinity: input.superpower || undefined,
       mythId: input.mythId || undefined,
       questSource: 'quest_studio',
-      contextLines: input.alignedAction ? JSON.stringify({ alignedAction: input.alignedAction }) : undefined,
     },
     select: { id: true },
   })

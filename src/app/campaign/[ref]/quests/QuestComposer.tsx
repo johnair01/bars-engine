@@ -114,8 +114,15 @@ export function QuestComposer({
         return
       }
       if (forLead) {
-        await addLeadQuest(forLead, res.questId)
-        router.push(`${basePath.replace(/\/quests$/, '/leads')}/${forLead}`)
+        const attach = await addLeadQuest(forLead, res.questId)
+        setBusy(null)
+        if (attach.ok) {
+          router.push(`${basePath.replace(/\/quests$/, '/leads')}/${forLead}`)
+        } else {
+          // The quest saved to the pool but couldn't be attached — say so; don't
+          // bounce to the lead as if it worked.
+          setErr(`Quest saved, but couldn’t add it to the lead (${attach.error}). Add it from the lead’s workspace.`)
+        }
         return
       }
       setBusy(null)
