@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { adoptCollectiveLead, type CollectiveLeadRow } from '@/actions/campaign-leads'
 import { getDomainLabel } from '@/lib/allyship-domains'
 
-const PURPLE = '#8b5cf6'
+const PURPLE = 'var(--bars-liminal)'
 
 export function CollectiveDirectory({
   leads,

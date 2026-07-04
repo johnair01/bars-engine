@@ -6,8 +6,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { assertCampaignSteward, resolveCampaignInstanceId } from '@/lib/campaign-leads/auth'
+import { assertCampaignSteward, resolveCampaignKotterStage } from '@/lib/campaign-leads/auth'
 import { QuestComposer } from './QuestComposer'
 
 export async function QuestStudioComposerPage({
@@ -31,12 +30,7 @@ export async function QuestStudioComposerPage({
     )
   }
 
-  const instanceId = await resolveCampaignInstanceId(campaignRef)
-  let kotterStage = 1
-  if (instanceId) {
-    const inst = await db.instance.findUnique({ where: { id: instanceId }, select: { kotterStage: true } })
-    kotterStage = inst?.kotterStage ?? 1
-  }
+  const kotterStage = await resolveCampaignKotterStage(campaignRef)
 
   return (
     <main

@@ -9,8 +9,7 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
-import { getCurrentPlayer } from '@/lib/auth'
-import { assertCampaignSteward, resolveCampaignInstanceId } from '@/lib/campaign-leads/auth'
+import { resolveCampaignKotterStage, stewardGuard } from '@/lib/campaign-leads/auth'
 import {
   assembleAlignedQuest,
   composeAlignmentSeed,
@@ -33,15 +32,6 @@ const lensSchema = z.object({
   gmFace: z.string().max(40).optional().nullable(),
 })
 
-async function stewardFor(campaignRef: string): Promise<{ ok: true; playerId: string } | { ok: false; error: string }> {
-  const player = await getCurrentPlayer()
-  if (!player) return { ok: false, error: 'Not signed in.' }
-  if (!(await assertCampaignSteward(player.id, campaignRef))) {
-    return { ok: false, error: 'You do not have steward access to this campaign.' }
-  }
-  return { ok: true, playerId: player.id }
-}
-
 export type DraftAlignedQuestResult =
   | { ok: true; seed: AlignmentSeed; draft: AlignedQuestDraft; aiUsed: boolean }
   | { ok: false; error: string }
@@ -52,16 +42,11 @@ export async function draftAlignedQuest(raw: unknown): Promise<DraftAlignedQuest
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
   const input = parsed.data
 
-  const guard = await stewardFor(input.campaignRef)
+  const guard = await stewardGuard(input.campaignRef)
   if (!guard.ok) return guard
 
   // Decision A: face-only — the opening move comes from the campaign's Kotter stage.
-  const instanceId = await resolveCampaignInstanceId(input.campaignRef)
-  let kotterStage = 1
-  if (instanceId) {
-    const inst = await db.instance.findUnique({ where: { id: instanceId }, select: { kotterStage: true } })
-    kotterStage = inst?.kotterStage ?? 1
-  }
+  const kotterStage = await resolveCampaignKotterStage(input.campaignRef)
 
   const seed = composeAlignmentSeed({
     domain: (input.domain as AllyshipDomainKey) || null,
@@ -96,7 +81,7 @@ export async function saveAlignedQuest(raw: unknown): Promise<SaveAlignedQuestRe
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid quest.' }
   const input = parsed.data
 
-  const guard = await stewardFor(input.campaignRef)
+  const guard = await stewardGuard(input.campaignRef)
   if (!guard.ok) return guard
 
   // Fold the aligned action into the description. `contextLines` is overloaded by
@@ -143,7 +128,7 @@ export type ListCampaignQuestsResult =
 
 export async function listCampaignQuests(campaignRef: string): Promise<ListCampaignQuestsResult> {
   if (!REF_RE.test(campaignRef)) return { ok: false, error: 'Invalid campaign.' }
-  const guard = await stewardFor(campaignRef)
+  const guard = await stewardGuard(campaignRef)
   if (!guard.ok) return guard
 
   const rows = await db.customBar.findMany({
@@ -169,13 +154,10 @@ export async function listCampaignQuests(campaignRef: string): Promise<ListCampa
 export type ArchiveQuestResult = { ok: true } | { ok: false; error: string }
 
 export async function archiveQuest(questId: string): Promise<ArchiveQuestResult> {
-  const player = await getCurrentPlayer()
-  if (!player) return { ok: false, error: 'Not signed in.' }
   const quest = await db.customBar.findUnique({ where: { id: questId }, select: { campaignRef: true } })
   if (!quest?.campaignRef) return { ok: false, error: 'Quest not found.' }
-  if (!(await assertCampaignSteward(player.id, quest.campaignRef))) {
-    return { ok: false, error: 'You do not have steward access to this campaign.' }
-  }
+  const guard = await stewardGuard(quest.campaignRef)
+  if (!guard.ok) return guard
   await db.customBar.update({ where: { id: questId }, data: { status: 'archived' } })
   revalidatePath(`/campaign/${quest.campaignRef}/quests`)
   return { ok: true }

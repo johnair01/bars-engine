@@ -9,6 +9,7 @@
  */
 import 'server-only'
 import { db } from '@/lib/db'
+import { getCurrentPlayer } from '@/lib/auth'
 import { assertCanEditInstanceDonation } from '@/actions/donation-cta'
 
 /** True when the player holds the global `admin` role. */
@@ -67,4 +68,28 @@ export async function assertCampaignSteward(
   if (instanceId) return assertCanEditInstanceDonation(playerId, instanceId)
 
   return false
+}
+
+export type StewardGuard = { ok: true; playerId: string } | { ok: false; error: string }
+
+/**
+ * The single steward chokepoint for Lead Forge actions: resolve the signed-in
+ * player and confirm they may steward `campaignRef`. Reused across every
+ * steward-gated action so the check + error strings live in one place.
+ */
+export async function stewardGuard(campaignRef: string): Promise<StewardGuard> {
+  const player = await getCurrentPlayer()
+  if (!player) return { ok: false, error: 'Not signed in.' }
+  if (!(await assertCampaignSteward(player.id, campaignRef))) {
+    return { ok: false, error: 'You do not have steward access to this campaign.' }
+  }
+  return { ok: true, playerId: player.id }
+}
+
+/** The campaign's current Kotter stage (1–8), defaulting to 1 when unresolved. */
+export async function resolveCampaignKotterStage(campaignRef: string): Promise<number> {
+  const instanceId = await resolveCampaignInstanceId(campaignRef)
+  if (!instanceId) return 1
+  const inst = await db.instance.findUnique({ where: { id: instanceId }, select: { kotterStage: true } })
+  return inst?.kotterStage ?? 1
 }

@@ -5,8 +5,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
-import { db } from '@/lib/db'
 import { getLead } from '@/actions/campaign-leads'
+import { getCampaignQuestPool } from '@/lib/campaign-leads/quest-pool'
 import { LeadWorkspace } from './LeadWorkspace'
 
 export async function LeadWorkspacePage({
@@ -31,13 +31,7 @@ export async function LeadWorkspacePage({
     )
   }
 
-  const poolRows = await db.customBar.findMany({
-    where: { type: { in: ['onboarding', 'quest'] }, status: 'active', allyshipDomain: { not: null } },
-    select: { id: true, title: true, allyshipDomain: true },
-    orderBy: { createdAt: 'desc' },
-    take: 200,
-  })
-  const questPool = poolRows.map((q) => ({ id: q.id, title: q.title, domain: q.allyshipDomain }))
+  const questPool = await getCampaignQuestPool()
 
   return <LeadWorkspace lead={res.lead} basePath={basePath} questPool={questPool} />
 }

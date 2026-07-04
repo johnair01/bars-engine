@@ -16,6 +16,8 @@ import {
   setLeadActions,
   setLeadGoals,
   setLeadMessage,
+  setLeadNotes,
+  setLeadRole,
   transitionLead,
   unpublishLead,
   type LeadDetail,
@@ -26,7 +28,7 @@ import { getDomainLabel } from '@/lib/allyship-domains'
 type Quest = { id: string; title: string; domain: string | null }
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
-const PURPLE = '#8b5cf6'
+const PURPLE = 'var(--bars-liminal)'
 const inputCls =
   'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[14px] text-[#f4f2ec] placeholder:text-[#6b6862] focus:border-[#8b5cf6] focus:outline-none'
 const labelCls = 'text-[11px] font-semibold uppercase tracking-wide text-[#a09e98]'
@@ -60,10 +62,14 @@ export function LeadWorkspace({
   const [goals, setGoals] = useState(lead.goals ?? '')
   const [actionsText, setActionsText] = useState(lead.actions.join('\n'))
   const [message, setMessage] = useState(lead.message ?? '')
+  const [notes, setNotes] = useState(lead.notes ?? '')
+  const [roleKey, setRoleKey] = useState(lead.roleKey ?? '')
 
   const [goalsSave, setGoalsSave] = useState<SaveState>('idle')
   const [actionsSave, setActionsSave] = useState<SaveState>('idle')
   const [messageSave, setMessageSave] = useState<SaveState>('idle')
+  const [notesSave, setNotesSave] = useState<SaveState>('idle')
+  const [roleSave, setRoleSave] = useState<SaveState>('idle')
   const [pickerOpen, setPickerOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -300,6 +306,36 @@ export function LeadWorkspace({
             placeholder="A note that greets them when they open the link."
           />
         </section>
+
+        {/* Role + private notes */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <section className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className={labelCls}>Campaign role (preassigned on accept)</span>
+              <SaveChip state={roleSave} />
+            </div>
+            <input
+              className={inputCls}
+              value={roleKey}
+              onChange={(e) => setRoleKey(e.target.value)}
+              onBlur={() => run(() => setLeadRole(lead.id, roleKey), { setSave: setRoleSave })}
+              placeholder="e.g. connector"
+            />
+          </section>
+          <section className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className={labelCls}>Owner notes (private)</span>
+              <SaveChip state={notesSave} />
+            </div>
+            <input
+              className={inputCls}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={() => run(() => setLeadNotes(lead.id, notes), { setSave: setNotesSave })}
+              placeholder="context just for you"
+            />
+          </section>
+        </div>
 
         {/* Publish */}
         <section

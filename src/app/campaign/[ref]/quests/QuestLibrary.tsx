@@ -8,14 +8,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { archiveQuest, type AuthoredQuestRow } from '@/actions/quest-studio'
-import { getDomainLabel } from '@/lib/allyship-domains'
-
-const DOMAIN_COLOR: Record<string, string> = {
-  GATHERING_RESOURCES: '#d4a017',
-  DIRECT_ACTION: '#e05a3d',
-  RAISE_AWARENESS: '#86b8cc',
-  SKILLFUL_ORGANIZING: '#46b06f',
-}
+import { domainGemVar, getDomainLabel } from '@/lib/allyship-domains'
 
 export function QuestLibrary({
   quests: initial,
@@ -78,11 +71,17 @@ export function QuestLibrary({
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {q.domain && (
-                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase" style={{ color: DOMAIN_COLOR[q.domain] ?? '#a09e98', borderColor: `${DOMAIN_COLOR[q.domain] ?? '#a09e98'}55` }}>
-                      {getDomainLabel(q.domain)}
-                    </span>
-                  )}
+                  {q.domain && (() => {
+                    const gem = domainGemVar(q.domain) ?? 'var(--bars-text-secondary)'
+                    return (
+                      <span
+                        className="rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase"
+                        style={{ color: gem, borderColor: `color-mix(in srgb, ${gem} 40%, transparent)` }}
+                      >
+                        {getDomainLabel(q.domain)}
+                      </span>
+                    )
+                  })()}
                   {q.mythId && <span className="rounded-full border border-white/12 px-2 py-0.5 text-[10px] uppercase text-[#a09e98]">myth · {q.mythId}</span>}
                   {q.superpower && <span className="rounded-full border border-white/12 px-2 py-0.5 text-[10px] uppercase text-[#b6a3f5]">⚡ {q.superpower}</span>}
                   {q.gmFace && <span className="rounded-full border px-2 py-0.5 text-[10px] uppercase" style={{ color: '#e05a3d', borderColor: 'rgba(224,90,61,0.4)' }}>face · {q.gmFace}</span>}

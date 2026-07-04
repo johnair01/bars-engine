@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { quickAddLead } from '@/actions/campaign-leads'
 
 const CHANNELS = ['text', 'email', 'instagram', 'signal', 'other'] as const
-const PURPLE = '#8b5cf6'
+const PURPLE = 'var(--bars-liminal)'
 const inputCls =
   'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[14px] text-[#f4f2ec] placeholder:text-[#6b6862] focus:border-[#8b5cf6] focus:outline-none'
 const labelCls = 'text-[11px] font-semibold uppercase tracking-wide text-[#a09e98]'

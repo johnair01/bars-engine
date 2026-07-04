@@ -12,7 +12,7 @@
 import { useState, type ReactNode } from 'react'
 import { ORIENTATION_CARDS } from '@/lib/campaign-leads/orientation'
 
-const PURPLE = '#8b5cf6'
+const PURPLE = 'var(--bars-liminal)'
 const btn = 'rounded-xl px-5 py-3 text-[15px] font-semibold text-white'
 
 export interface HowYouHelp {
@@ -156,7 +156,7 @@ export function LeadWelcomeCYOA({
                         <li
                           key={i}
                           className="rounded-xl border p-4 text-[14px] text-[#e6e4de]"
-                          style={{ borderColor: `${PURPLE}44`, background: 'rgba(139,92,246,0.06)' }}
+                          style={{ borderColor: 'color-mix(in srgb, var(--bars-liminal) 27%, transparent)', background: 'rgba(139,92,246,0.06)' }}
                         >
                           ✦ {t}
                         </li>

@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getMythsForDomain } from '@/lib/allyship-myths/myths'
 import type { AllyshipDomainKey } from '@/lib/allyship-domains'
 
-const PURPLE = '#8b5cf6'
+const PURPLE = 'var(--bars-liminal)'
 
 export function AllyshipMyths({
   domain,

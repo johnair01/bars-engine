@@ -6,6 +6,7 @@
  * off to the client funnel. No auth — this is the social-post landing surface.
  */
 import { db } from '@/lib/db'
+import { getCampaignQuestPool } from '@/lib/campaign-leads/quest-pool'
 import { BeginFunnel } from './BeginFunnel'
 
 async function resolveCampaignName(campaignRef: string): Promise<string> {
@@ -19,17 +20,10 @@ async function resolveCampaignName(campaignRef: string): Promise<string> {
 }
 
 export async function BeginPage({ campaignRef }: { campaignRef: string }) {
-  const [campaignName, poolRows] = await Promise.all([
+  const [campaignName, questPool] = await Promise.all([
     resolveCampaignName(campaignRef),
-    db.customBar.findMany({
-      where: { type: { in: ['onboarding', 'quest'] }, status: 'active', allyshipDomain: { not: null } },
-      select: { id: true, title: true, allyshipDomain: true },
-      orderBy: { createdAt: 'desc' },
-      take: 200,
-    }),
+    getCampaignQuestPool(),
   ])
-
-  const questPool = poolRows.map((q) => ({ id: q.id, title: q.title, domain: q.allyshipDomain }))
 
   return (
     <main

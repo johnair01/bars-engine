@@ -16,7 +16,7 @@ import { submitAutomatedLead } from '@/actions/campaign-leads'
 import { ALLYSHIP_DOMAINS, getDomainLabel, type AllyshipDomainKey } from '@/lib/allyship-domains'
 import type { SuperpowerIntakeOutcome } from '@/lib/superpowers/routing'
 
-const PURPLE = '#8b5cf6'
+const PURPLE = 'var(--bars-liminal)'
 
 interface QuestOption {
   id: string
