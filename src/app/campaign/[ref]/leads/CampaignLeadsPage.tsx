@@ -58,13 +58,22 @@ export async function CampaignLeadsPage({
           </span>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h1 className="text-[26px] font-bold text-[#f4f2ec] sm:text-[30px]">Your list</h1>
-            <Link
-              href={`${basePath}/collective`}
-              className="rounded-xl border border-white/15 px-3.5 py-2 text-[13px] font-semibold text-[#c7cbf0]"
-              style={{ borderColor: 'rgba(111,120,207,0.5)' }}
-            >
-              ◇ The collective →
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`${basePath.replace(/\/leads$/, '/quests')}`}
+                className="rounded-xl border border-white/15 px-3.5 py-2 text-[13px] font-semibold text-[#c4b5fd]"
+                style={{ borderColor: 'rgba(139,92,246,0.5)' }}
+              >
+                ⚒ Quest Studio →
+              </Link>
+              <Link
+                href={`${basePath}/collective`}
+                className="rounded-xl border border-white/15 px-3.5 py-2 text-[13px] font-semibold text-[#c7cbf0]"
+                style={{ borderColor: 'rgba(111,120,207,0.5)' }}
+              >
+                ◇ The collective →
+              </Link>
+            </div>
           </div>
           <p className="max-w-2xl text-[13.5px] text-[#a09e98]">
             Add the people you want to bring into this campaign, then open each one to set their goals

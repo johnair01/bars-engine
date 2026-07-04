@@ -49,12 +49,16 @@ the invitee gets a personalized orientation CYOA (the friendcraft-style ask).
 - [x] 6.4 `setLeadGoals`, `addLeadQuest`, `reorderLeadQuests`, `removeLeadQuest` actions (steward-gated)
 - [x] 6.5 `publishLeadToCollective` / `unpublishLead` + shared directory read for other stewards
 
-## Phase 7 — Quest Studio (AI, aligned to myth × superpower × face) (v2)
-- [ ] 7.1 `/campaign/[ref]/quests/new` — AI draft (generateQuestFromContext → compileQuestWithAI), editable
-- [ ] 7.2 Alignment selectors (myth, superpower, GM face, domain) + persist tags on CustomBar
-- [ ] 7.3 `src/lib/campaign-leads/quest-alignment.ts` — compose myth.reframe + SUPERPOWER_TRANSLATION + GM_FACE_STAGE_MOVES into generation context
-- [ ] 7.4 New `myth → quest` bridge (only `myth.domainHint → AllyshipDomain` exists today)
-- [ ] 7.5 Authored quests join campaign pool; pickable on lead detail
+## Phase 7 — Quest Studio (AI, aligned to myth × superpower × face) (v2, decisions A–D locked)
+Decisions: A face-only (stage auto from campaign Kotter stage) · B explicit CustomBar columns
+(`gmFace`, `superpowerAffinity`, `mythId`) · C AI draft default (deterministic fallback) · D steward+.
+- [x] 7.1 `/campaign/[ref]/quests/new` composer + `/quests` library (+ the-crossing shims, basePath-threaded)
+- [x] 7.2 Alignment selectors (domain, myth, superpower+orientation, GM face) + `gmFace`/`superpowerAffinity`/`mythId` columns; migration
+- [x] 7.3 `src/lib/campaign-leads/quest-alignment.ts` (pure compose+assemble) + `quest-alignment-ai.ts` (AI draft, env-guarded, fails safe)
+- [x] 7.4 `myth → quest` bridge via `composeAlignmentSeed` (pulls `myth.reframe`); actions in `src/actions/quest-studio.ts`
+- [x] 7.5 Saved quests (type 'quest', active) join the campaign pool; Phase 6 workspace "Author new…" → composer `?forLead=`
+- NOTE: AI behind `QUEST_STUDIO_AI_ENABLED` + `OPENAI_API_KEY`; the invitee path stays AI-free. AI path
+  not exercisable in this container (no key) — deterministic assemble is proven; AI code path is house-pattern.
 
 ## Branching invitee CYOA — separate spec + feasibility
 - [ ] B.1 `.specify/specs/lead-branching-cyoa/` — spec + feasibility (Adventure/Passage engine, anonymous-play blocker)

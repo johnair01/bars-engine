@@ -236,9 +236,12 @@ export function LeadWorkspace({
             <button onClick={() => setPickerOpen((o) => !o)} className="rounded-lg border border-white/15 px-3 py-1.5 text-[12px] font-semibold text-[#f4f2ec]">
               {pickerOpen ? 'Close' : '+ Add from campaign quests'}
             </button>
-            <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-1.5 text-[12px] font-semibold text-[#6b6862]">
-              Author new… <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] uppercase">Phase 7</span>
-            </span>
+            <Link
+              href={`${basePath.replace(/\/leads$/, '/quests')}/new?forLead=${lead.id}`}
+              className="inline-flex items-center gap-1 rounded-lg border border-white/15 px-3 py-1.5 text-[12px] font-semibold text-[#c4b5fd]"
+            >
+              ✦ Author new…
+            </Link>
           </div>
           {pickerOpen && (
             <div className="max-h-64 overflow-y-auto rounded-lg border border-white/10 bg-black/20 p-2">

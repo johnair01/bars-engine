@@ -328,6 +328,13 @@ model CustomBar {
   rootId                               String?
   allowedNations                       String?
   allyshipDomain                       String?
+  /// Quest Studio (campaign-lead-forge Phase 7) alignment tags — queryable.
+  /// GM face this quest opens from ('shaman'|'challenger'|'regent'|'architect'|'diplomat'|'sage').
+  gmFace                               String?
+  /// Superpower this quest is authored for (connector|storyteller|strategist|disruptor|alchemist|escape_artist|coach).
+  superpowerAffinity                   String?
+  /// Allyship-myth id this quest reframes (see src/lib/allyship-myths).
+  mythId                               String?
   /// IOA base layer: inner (self-development) | outer (allyship). Sibling of moveType —
   /// the base move's aspect, recorded Nation-free. See specs/inner-outer-allyship-moves/data-model.md.
   moveAspect                           String?
