@@ -31,6 +31,7 @@ over AI. The entire loop works with no language model.
 | **Shadow quest** | A quest with no valid, active, `week`-cadence `lensGoalId` is a **shadow quest** (out of alignment). It is surfaced (Vault "Shadow" room + Quests page) with two moves: **fold in** (attach to an existing weekly goal or descend a new one) or **acknowledge** (keep it, knowingly out of alignment). The dormant `LensGoal.alignmentType` and a new `CustomBar.shadowAcknowledgedAt` back this. |
 | **Quest detail page** | Extend `/bars/[id]` to render `type='quest'` (remove the "Not a BAR" block) so quests get a home showing the **lineage chain** (week→month→quarter→year), alignment state, and the fold-in action. No separate detail route. |
 | **Rollup** | Display-only in this spec: a `getGoalRollup` read-model aggregates child-quest/goal progress up the cadence chain for the Observatory/Lenses view. **No auto-completion** of parent goals. |
+| **PARA semantics (PMA alignment)** | **Area / horizon** = `LensGoal` at year→week cadence (ongoing domain responsibility). **Project** = active `CustomBar type='quest'` with a completion condition (`successCondition` / campaign thread). **Resources** ≈ Vault BARs not yet planted. **Archives** ≈ composted BARs + completed quests — never deleted (LWX). Do not label UI with PARA jargon; use Observatory/Garden language. |
 | **Back-compat** | Existing `type='bar'` TTV seeds and legacy quests with null `lensGoalId` are treated as **shadow** (valid state, surfaced for fold-in) — no destructive backfill. |
 
 ## Conceptual Model

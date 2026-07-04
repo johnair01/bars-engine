@@ -10,6 +10,8 @@ import {
 import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
 import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { CampaignMapChrome } from './CampaignMapChrome'
+import { getCampaignWaitingOnQuests } from '@/actions/quest-waiting-for'
+import { CampaignWaitingOnSection } from '@/components/campaign/CampaignWaitingOnSection'
 
 /**
  * @page /campaign/board
@@ -57,10 +59,11 @@ export default async function GameboardPage(props: {
   ichingParams.set('campaignRef', campaignRef)
   const ichingCampaignHref = `/iching?${ichingParams.toString()}`
 
-  const [phaseHeader, domainRegions, fieldActivity] = await Promise.all([
+  const [phaseHeader, domainRegions, fieldActivity, waitingOnQuests] = await Promise.all([
     getCampaignPhaseHeader(campaignRef),
     getDomainRegionCounts(campaignRef, period),
     getFieldActivityIndicators(campaignRef),
+    getCampaignWaitingOnQuests(campaignRef),
   ])
 
   return (
@@ -98,6 +101,8 @@ export default async function GameboardPage(props: {
           </p>
           <p className="text-zinc-400 text-sm leading-relaxed">{phaseHeader.phaseDescription}</p>
         </header>
+
+        <CampaignWaitingOnSection items={waitingOnQuests} campaignSlug={campaignRef} />
 
         <section
           className="mb-8 p-4 rounded-xl border border-zinc-800/80 bg-zinc-950/50"

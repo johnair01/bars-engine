@@ -6,6 +6,7 @@ import type { CampaignSkin } from '@/lib/ui/campaign-skin'
 import { buildSkinVars, resolveFontClass, DEFAULT_BG_GRADIENT } from '@/lib/ui/build-skin-vars'
 import { useCampaignSkin } from '@/lib/ui/campaign-skin-provider'
 import { PostJoinWelcomeBanner } from '@/components/campaign/PostJoinWelcomeBanner'
+import { CampaignWaitingOnSection } from '@/components/campaign/CampaignWaitingOnSection'
 
 // ─── Element → Color mapping (UI_COVENANT three-channel encoding) ───────────
 
@@ -116,6 +117,11 @@ export function CampaignHomeView({
           </p>
         )}
       </header>
+
+      <CampaignWaitingOnSection
+        items={data.waitingOnQuests}
+        campaignSlug={data.campaign.slug}
+      />
 
       {/* ── Activity Items (the "something to do") ──────────────────────── */}
       <main className="flex-1 px-6 sm:px-10 pb-8 max-w-2xl mx-auto w-full space-y-4">

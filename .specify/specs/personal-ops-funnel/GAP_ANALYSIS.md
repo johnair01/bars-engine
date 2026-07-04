@@ -58,7 +58,9 @@
 
 **Decision:** Build custom. A self-hosted clone avoids the $5/month 750words fee and keeps data in bars-engine DB.
 
-**Schema direction:** New `WritingSession` model — `playerId`, `content` (text), `wordCount`, `moodTags[]` (from feeling chip vocabulary), `streakDay`, `createdAt`. No AI analysis at MVP — user tags their own sentiment.
+**Streak (PMA B4.1):** Opt-in celebratory only — default off; no punitive streak UI. See [personal-ops-funnel/spec.md § SPC](../personal-ops-funnel/spec.md).
+
+**Schema direction:** New `WritingSession` model — `playerId`, `content` (text), `wordCount`, `moodTags[]` (from feeling chip vocabulary), optional `streakDay` (when opted in), `createdAt`. No AI analysis at MVP — user tags their own sentiment.
 
 ---
 

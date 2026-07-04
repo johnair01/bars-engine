@@ -6,6 +6,7 @@ import type { EventArtifactListItem } from '@/lib/event-artifact-list-types'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { eventDonationCtaOverridesSchema } from '@/lib/donation-cta-schema'
+import { sendEventInviteEmail } from '@/lib/notifications/send-email-notifications'
 
 async function getPlayerId(): Promise<string | null> {
   const cookieStore = await cookies()
@@ -1109,6 +1110,17 @@ export async function createEventInvitation(formData: FormData): Promise<CreateE
     revalidatePath('/event')
     revalidatePath('/bars')
     revalidatePath(`/bars/${bar.id}`)
+
+    void sendEventInviteEmail({
+      targetPlayerId,
+      inviterPlayerId: playerId,
+      eventTitle: eventArtifact.title,
+      eventDescription: messageText || defaultDesc,
+      barId: bar.id,
+      invitationId: invitation.id,
+    }).catch((err) => {
+      console.error('[campaign-invitation] invite email failed:', err)
+    })
 
     return { success: true, barId: bar.id, invitationId: invitation.id }
   } catch (e) {

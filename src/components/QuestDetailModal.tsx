@@ -26,6 +26,9 @@ import { getAdventuresForQuest } from '@/lib/quest-adventure'
 import { recordQuestFriction } from '@/actions/friction'
 import { FRICTION_TYPES, type FrictionType } from '@/lib/friction-types'
 import { getNextActionForQuest, linkBarToQuestAsNextAction } from '@/actions/next-action-bridge'
+import { getWaitingForForQuest } from '@/actions/quest-waiting-for'
+import { WaitingForPanel } from '@/components/quest/WaitingForPanel'
+import type { WaitingForState } from '@/lib/quest-waiting-for'
 import { collapseQuestToBar } from '@/actions/bars'
 
 interface QuestDetailModalProps {
@@ -125,6 +128,9 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const [nextActionInput, setNextActionInput] = useState('')
     const [isSettingNextAction, setIsSettingNextAction] = useState(false)
 
+    // PMA Phase C: external waiting-on metadata
+    const [waitingFor, setWaitingFor] = useState<WaitingForState | null>(null)
+
     // Visible impact (golden-path-visible-impact) — completion card with campaign impact + next quest
     const [completionResult, setCompletionResult] = useState<{
         campaignImpact?: string
@@ -150,6 +156,14 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
         } else {
             setNextAction(null)
             setNextActionInput('')
+        }
+    }, [isOpen, quest.id])
+
+    useEffect(() => {
+        if (isOpen && quest.id) {
+            getWaitingForForQuest(quest.id).then(setWaitingFor)
+        } else {
+            setWaitingFor(null)
         }
     }, [isOpen, quest.id])
 
@@ -554,6 +568,17 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 </div>
                             )}
                         </div>
+                    )}
+
+                    {!isCompleted && !isLocked && !isBlocked && (
+                        <WaitingForPanel
+                            questId={quest.id}
+                            initialWaitingFor={waitingFor}
+                            onChanged={() => {
+                                getWaitingForForQuest(quest.id).then(setWaitingFor)
+                                router.refresh()
+                            }}
+                        />
                     )}
 
                     {/* Phase 5d: Surface "I'm stuck" prominently — friction is part of play (golden-path-friction) */}

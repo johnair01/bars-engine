@@ -2,8 +2,10 @@ import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
 import { getLensLevel } from '@/actions/observatory'
+import { getWeeklyReflectionSummary } from '@/actions/weekly-reflection'
 import { LensAuthorForm } from '../LensAuthorForm'
 import { CultivationCard } from '@/components/ui/CultivationCard'
+import { WeeklyReflectionRitual } from '@/components/observatory/WeeklyReflectionRitual'
 import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
 
 /**
@@ -46,6 +48,9 @@ export default async function ObservatoryLevelPage({ params }: { params: Promise
   }
 
   const authorable = res.level === 'vision' || res.level === 'orientation'
+  const isWeekly = res.level === 'weekly'
+  const reflectionRes = isWeekly ? await getWeeklyReflectionSummary() : null
+  const reflection = reflectionRes && !('error' in reflectionRes) ? reflectionRes : null
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bars-bg-base)' }}>
@@ -72,6 +77,13 @@ export default async function ObservatoryLevelPage({ params }: { params: Promise
             initialTitle={res.authored ? res.title ?? '' : ''}
             initialDescription={res.description ?? ''}
           />
+        )}
+
+        {isWeekly && reflection && <WeeklyReflectionRitual summary={reflection} />}
+        {isWeekly && reflectionRes && 'error' in reflectionRes && (
+          <p style={{ fontFamily: body, fontSize: 13, color: 'var(--bars-text-muted)', marginTop: 16 }}>
+            {reflectionRes.error}
+          </p>
         )}
 
         {/* BARs grown under this lens */}

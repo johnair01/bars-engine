@@ -2,26 +2,14 @@ import { sendEmail, type SendEmailResult } from './send'
 import { ChapterOneEmail, chapterOneText } from './templates/ChapterOneEmail'
 import { RsvpConfirmationEmail, rsvpConfirmationText } from './templates/RsvpConfirmationEmail'
 import { AWAKEN_CHAPTER_FILE_HREF, AWAKEN_EVENTS, type AwakenEvent } from '@/lib/awaken/content'
+import { absoluteUrl } from './urls'
 
 /**
  * Awaken funnel email sends. Thin wrappers over the canonical sendEmail so the
  * route stays declarative and the absolute-URL logic lives in one place.
  */
 
-/**
- * Resolve an app-absolute URL for use in email (links must be absolute).
- * Mirrors the repo convention: NEXT_PUBLIC_BASE_URL → NEXT_PUBLIC_APP_URL →
- * VERCEL_URL, with a production fallback.
- */
-export function absoluteUrl(path: string): string {
-  const raw =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
-    'https://bars-engine.vercel.app'
-  const base = raw.replace(/\/$/, '')
-  return path.startsWith('http') ? path : `${base}${path.startsWith('/') ? '' : '/'}${path}`
-}
+export { absoluteUrl } from './urls'
 
 export async function sendChapterOneEmail(opts: {
   to: string
