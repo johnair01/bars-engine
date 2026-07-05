@@ -105,7 +105,6 @@ async function getApprovedCampaign(slug: string): Promise<CampaignPageData | nul
     wakeUpContent: campaign.wakeUpContent,
     showUpContent: campaign.showUpContent,
     storyBridgeCopy: campaign.storyBridgeCopy,
-    shareUrl: campaign.shareUrl,
     startDate: campaign.startDate?.toISOString() ?? null,
     endDate: campaign.endDate?.toISOString() ?? null,
     instanceId: campaign.instanceId,
