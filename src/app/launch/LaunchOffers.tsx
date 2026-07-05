@@ -184,7 +184,7 @@ function OfferCard({
           <p className="mt-1 text-sm font-semibold text-zinc-200">{guidance.unlocks}</p>
           <p className="mt-2 text-xs leading-relaxed text-zinc-400">{guidance.context}</p>
         </div>
-        {matched && (
+        {matched && intent && (
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-300">
             Matches: {intentLabel(content, intent)}
           </p>
@@ -564,6 +564,18 @@ function TextArea({
   )
 }
 
+/**
+ * The launch page's content model covers the curated core catalog only
+ * (LAUNCH_OFFER_KEYS). Superpower packs and the loadout bundle live in the offer
+ * registry but have no editable content here, so they are filtered out of the
+ * grids — keeping `content.offers[offer.key]` lookups both type-safe and non-empty.
+ */
+type CoreLaunchOffer = LaunchOffer & { key: (typeof LAUNCH_OFFER_KEYS)[number] }
+
+function hasLaunchContent(offer: LaunchOffer): offer is CoreLaunchOffer {
+  return (LAUNCH_OFFER_KEYS as readonly string[]).includes(offer.key)
+}
+
 export function LaunchOffers({
   content,
   isAdmin,
@@ -572,9 +584,9 @@ export function LaunchOffers({
   isAdmin: boolean
 }) {
   const [intent, setIntent] = useState<LaunchIntent | null>(null)
-  const bundle = offersByGroup('bundle')
-  const digital = offersByGroup('digital')
-  const physical = offersByGroup('physical')
+  const bundle = offersByGroup('bundle').filter(hasLaunchContent)
+  const digital = offersByGroup('digital').filter(hasLaunchContent)
+  const physical = offersByGroup('physical').filter(hasLaunchContent)
   const allOffers = [...bundle, ...digital, ...physical]
   const heroKey = intent ? HERO_BY_INTENT[intent] : 'founding-ally'
   const hero = allOffers.find((offer) => offer.key === heroKey) ?? bundle[0] ?? digital[0]
