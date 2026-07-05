@@ -1,38 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import {
   domainLabel,
   theCrossingVenmoUrl,
   THE_CROSSING_PARENT_CAMPAIGN_REF,
   THE_CROSSING_SUPPORT_ROLES,
-  type AllyshipDomain,
   type TheCrossingSupportRole,
 } from '@/lib/the-crossing-support-moves'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { DeckCardForRole } from '@/components/the-crossing/DeckCardForRole'
 import { DeckPurchaseCTA } from '@/components/launch/DeckPurchaseCTA'
 import { getMoveCardById } from '@/lib/allyship-deck/assemble'
+import type { TheCrossingPageContent } from '@/lib/the-crossing-page-content'
+import { saveTheCrossingPageContent } from '@/actions/the-crossing-page-admin'
 
 const PAGE_BG = 'radial-gradient(120% 50% at 50% -6%, #16121f 0%, #0a0908 46%)'
 const ACTION_PURPLE = '#7c3aed'
 const ACTION_PURPLE_LITE = '#8b5cf6'
 const EASE = 'cubic-bezier(0.16,1,0.3,1)'
-
-/** Domain gate order + plain-language blurb (organizing layer for the roles). */
-const GATES: { domain: AllyshipDomain; blurb: string }[] = [
-  { domain: 'GATHERING_RESOURCES', blurb: 'Bring what the campaign needs into reach — cars, money, people.' },
-  { domain: 'SKILLFUL_ORGANIZING', blurb: 'Use what you know to make a good decision happen faster.' },
-  { domain: 'RAISE_AWARENESS', blurb: 'Extend the ask past Wendell’s immediate reach.' },
-  { domain: 'DIRECT_ACTION', blurb: 'Keep the person — and the momentum — in motion.' },
-]
-
-const HOW_TO_PLAY = [
-  'Pick the path that fits your real capacity.',
-  'Each path gives you one small, concrete move.',
-  'Your move becomes a BAR the campaign can follow up on.',
-]
 
 function moveHref(role: TheCrossingSupportRole) {
   return `/campaign/the-crossing/move/${role.id}`
@@ -41,7 +28,13 @@ function roleHref(role: TheCrossingSupportRole) {
   return `/campaign/the-crossing/role/${role.id}`
 }
 
-export function TheCrossingLanding() {
+export function TheCrossingLanding({
+  content,
+  isAdmin = false,
+}: {
+  content: TheCrossingPageContent
+  isAdmin?: boolean
+}) {
   const [openRoleId, setOpenRoleId] = useState<string | null>(null)
 
   return (
@@ -52,11 +45,13 @@ export function TheCrossingLanding() {
       <div className="mx-auto w-full max-w-[680px]">
         {/* Chrome bar */}
         <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.16em] text-[#a09e98]">
-          <span style={{ color: ACTION_PURPLE_LITE }}>The Crossing</span>
-          <Link href="/awaken" className="transition-colors hover:text-[#f4f2ec]">
-            Book-launch weekend →
+          <span style={{ color: ACTION_PURPLE_LITE }}>{content.chrome.label}</span>
+          <Link href={content.awaken.href} className="transition-colors hover:text-[#f4f2ec]">
+            {content.chrome.awakenLink}
           </Link>
         </div>
+
+        {isAdmin && <TheCrossingAdminEditor content={content} />}
 
         {/* ── Hero ───────────────────────────────────────────────────────── */}
         <header className="mt-10 space-y-4">
@@ -65,17 +60,16 @@ export function TheCrossingLanding() {
             className="inline-flex font-mono text-[11px] uppercase tracking-[0.16em]"
             style={{ color: ACTION_PURPLE_LITE }}
           >
-            ◇ Part of the Allyship Launch · Barn Raising
+            {content.hero.parentLabel}
           </Link>
           <h1 className="text-[44px] font-bold leading-[1.02] tracking-[-0.03em] sm:text-[54px]">
-            The Crossing
+            {content.hero.title}
           </h1>
           <p className="text-[20px] leading-snug text-[#e8e6e0]">
-            Wendell needs a reliable car to keep showing up.
+            {content.hero.subtitle}
           </p>
           <p className="max-w-[34rem] text-[15px] leading-relaxed text-[#cfcdc6]">
-            Every kind of help moves this forward. Choose the path that fits what you can actually
-            offer.
+            {content.hero.body}
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <a
@@ -83,21 +77,21 @@ export function TheCrossingLanding() {
               className="rounded-[11px] px-[22px] py-[13px] text-sm font-semibold text-white transition-transform active:scale-[0.97]"
               style={{ background: `linear-gradient(135deg, ${ACTION_PURPLE_LITE}, ${ACTION_PURPLE})` }}
             >
-              Choose Your Move →
+              {content.hero.primaryCta}
             </a>
             <Link
               href={`/campaign/${THE_CROSSING_PARENT_CAMPAIGN_REF}`}
               className="rounded-[11px] border px-[22px] py-[13px] text-sm font-semibold text-[#cfcdc6] transition-colors hover:text-white"
               style={{ borderColor: 'rgba(124,58,237,.42)' }}
             >
-              Read the full story
+              {content.hero.secondaryCta}
             </Link>
           </div>
         </header>
 
         {/* ── How To Play ────────────────────────────────────────────────── */}
         <section className="mt-12 grid gap-3 sm:grid-cols-3">
-          {HOW_TO_PLAY.map((step, i) => (
+          {content.howToPlay.map((step, i) => (
             <div
               key={i}
               className="rounded-2xl border border-white/[0.07] p-4"
@@ -116,9 +110,9 @@ export function TheCrossingLanding() {
 
         {/* ── Choose a path ──────────────────────────────────────────────── */}
         <section id="paths" className="mt-14 space-y-10 scroll-mt-6">
-          <h2 className="text-2xl font-bold tracking-[-0.02em]">Choose a path</h2>
+          <h2 className="text-2xl font-bold tracking-[-0.02em]">{content.paths.title}</h2>
 
-          {GATES.map(({ domain, blurb }) => {
+          {content.paths.gates.map(({ domain, blurb }) => {
             const roles = THE_CROSSING_SUPPORT_ROLES.filter((r) => r.primaryDomain === domain)
             if (roles.length === 0) return null
             const element = roles[0]!.element
@@ -161,24 +155,24 @@ export function TheCrossingLanding() {
 
         {/* ── Superpower fallback ────────────────────────────────────────── */}
         <section className="mt-14 rounded-2xl border border-white/[0.07] p-5" style={{ background: '#121210' }}>
-          <p className="text-sm text-[#cfcdc6]">Not sure this is your role?</p>
+          <p className="text-sm text-[#cfcdc6]">{content.unsure.body}</p>
           <Link
-            href="/superpower"
+            href={content.unsure.href}
             className="mt-1 inline-flex text-sm font-semibold"
             style={{ color: ACTION_PURPLE_LITE }}
           >
-            Take the Superpower Quiz →
+            {content.unsure.cta}
           </Link>
         </section>
 
         {/* ── Buy the full deck ──────────────────────────────────────────── */}
         <div className="mt-14">
-          <DeckPurchaseCTA blurb="Every path here is one move from the 120-move Allyship Deck. Get the whole deck and you carry a move for every moment — not just this campaign." />
+          <DeckPurchaseCTA blurb={content.deck.blurb} />
         </div>
 
         {/* ── /awaken cross-link (water) ─────────────────────────────────── */}
         <Link
-          href="/awaken"
+          href={content.awaken.href}
           className="mt-4 flex items-center justify-between rounded-2xl border p-5 transition-colors"
           style={{ borderColor: `${ELEMENT_TOKENS.water.frame}`, background: '#0c1622' }}
         >
@@ -187,21 +181,105 @@ export function TheCrossingLanding() {
               {ELEMENT_TOKENS.water.sigil}
             </span>
             <span className="text-sm text-[#d6d4cd]">
-              Here for the book launch? The July 17–19 gatherings live on{' '}
-              <span className="font-semibold text-white">/awaken</span>.
+              {content.awaken.body}
             </span>
           </span>
           <span className="text-sm" style={{ color: ELEMENT_TOKENS.water.gem }}>
-            →
+            {content.awaken.cta}
           </span>
         </Link>
 
         <p className="mt-10 text-[12.5px] leading-relaxed text-[#6b6965]">
-          An early BARS Engine experience in the wild: care becomes a role, a role becomes a move,
-          and a move becomes evidence the campaign can follow up on.
+          {content.footer}
         </p>
       </div>
     </main>
+  )
+}
+
+function TheCrossingAdminEditor({ content }: { content: TheCrossingPageContent }) {
+  const [state, formAction, pending] = useActionState(saveTheCrossingPageContent, null)
+
+  return (
+    <details className="mt-6 rounded-2xl border border-white/[0.08] bg-[#121210] p-4">
+      <summary className="cursor-pointer text-sm font-bold" style={{ color: ACTION_PURPLE_LITE }}>
+        Edit The Crossing page copy
+      </summary>
+      <form action={formAction} className="mt-4 space-y-4">
+        <Field name="chrome.label" label="Top label" defaultValue={content.chrome.label} />
+        <Field name="chrome.awakenLink" label="Awaken link label" defaultValue={content.chrome.awakenLink} />
+        <Field name="hero.parentLabel" label="Parent label" defaultValue={content.hero.parentLabel} />
+        <Field name="hero.title" label="Hero title" defaultValue={content.hero.title} />
+        <Field name="hero.subtitle" label="Hero subtitle" defaultValue={content.hero.subtitle} />
+        <Textarea name="hero.body" label="Hero body" defaultValue={content.hero.body} />
+        <Field name="hero.primaryCta" label="Primary button" defaultValue={content.hero.primaryCta} />
+        <Field name="hero.secondaryCta" label="Secondary button" defaultValue={content.hero.secondaryCta} />
+        <Textarea name="howToPlay" label="How to play steps" defaultValue={content.howToPlay.join('\n')} />
+        <Field name="paths.title" label="Paths title" defaultValue={content.paths.title} />
+        {content.paths.gates.map((gate) => (
+          <Textarea
+            key={gate.domain}
+            name={`paths.gates.${gate.domain}.blurb`}
+            label={`${domainLabel(gate.domain)} blurb`}
+            defaultValue={gate.blurb}
+          />
+        ))}
+        <Field name="unsure.body" label="Unsure prompt" defaultValue={content.unsure.body} />
+        <Field name="unsure.cta" label="Unsure CTA" defaultValue={content.unsure.cta} />
+        <Field name="unsure.href" label="Unsure link" defaultValue={content.unsure.href} />
+        <Textarea name="deck.blurb" label="Deck CTA blurb" defaultValue={content.deck.blurb} />
+        <Textarea name="awaken.body" label="Awaken cross-link body" defaultValue={content.awaken.body} />
+        <Field name="awaken.href" label="Awaken link" defaultValue={content.awaken.href} />
+        <Field name="awaken.cta" label="Awaken CTA symbol" defaultValue={content.awaken.cta} />
+        <Textarea name="footer" label="Footer note" defaultValue={content.footer} />
+
+        {state?.error && <p className="text-sm text-red-300">{state.error}</p>}
+        {state?.ok && <p className="text-sm text-green-300">Saved.</p>}
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-[11px] px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+          style={{ background: `linear-gradient(135deg, ${ACTION_PURPLE_LITE}, ${ACTION_PURPLE})` }}
+        >
+          {pending ? 'Saving…' : 'Save The Crossing page'}
+        </button>
+      </form>
+    </details>
+  )
+}
+
+function Field({ name, label, defaultValue }: { name: string; label: string; defaultValue: string }) {
+  return (
+    <label className="block text-xs font-semibold text-[#a09e98]">
+      {label}
+      <input
+        name={name}
+        defaultValue={defaultValue}
+        className="mt-1 w-full rounded-[10px] border border-white/[0.09] bg-black/40 px-3 py-2 text-sm text-[#f4f2ec] outline-none focus:border-[#8b5cf6]"
+      />
+    </label>
+  )
+}
+
+function Textarea({
+  name,
+  label,
+  defaultValue,
+}: {
+  name: string
+  label: string
+  defaultValue: string
+}) {
+  return (
+    <label className="block text-xs font-semibold text-[#a09e98]">
+      {label}
+      <textarea
+        name={name}
+        defaultValue={defaultValue}
+        rows={3}
+        className="mt-1 w-full rounded-[10px] border border-white/[0.09] bg-black/40 px-3 py-2 text-sm text-[#f4f2ec] outline-none focus:border-[#8b5cf6]"
+      />
+    </label>
   )
 }
 

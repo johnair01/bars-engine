@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { AwakenFlow } from './AwakenFlow'
+import { getAwakenPageContent, getCurrentPlayerIsAdmin } from '@/lib/awaken/page-content-server'
 
 /**
  * @page /awaken
@@ -19,6 +20,11 @@ export const metadata: Metadata = {
     'Learn where things stand, then choose how to show up: fuel the car fund, read Chapter One, or RSVP to the July 18th weekend events.',
 }
 
-export default function AwakenPage() {
-  return <AwakenFlow />
+export default async function AwakenPage() {
+  const [content, isAdmin] = await Promise.all([
+    getAwakenPageContent(),
+    getCurrentPlayerIsAdmin(),
+  ])
+
+  return <AwakenFlow content={content} isAdmin={isAdmin} />
 }
