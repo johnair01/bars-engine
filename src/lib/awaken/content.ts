@@ -32,9 +32,8 @@ export type AwakenMoveContent = {
   title: string
   body: string
   cta: string
-  doneTitle?: string
-  doneBody?: string
-  helperTitle?: string
+  /** Optional link target for the card's primary button (internal path or external URL). */
+  href?: string
 }
 
 export type AwakenSecondaryLinkContent = {
@@ -59,8 +58,10 @@ export type AwakenPageContent = {
   }
   moves: {
     donate: AwakenMoveContent
-    chapter: AwakenMoveContent
     events: AwakenMoveContent
+    deck: AwakenMoveContent
+    book: AwakenMoveContent
+    chapter: AwakenMoveContent
   }
   events: AwakenEvent[]
   secondary: {
@@ -71,10 +72,10 @@ export type AwakenPageContent = {
 }
 
 /**
- * The three events the weekend of July 18th, 2026 (Jul 17–19).
+ * The two events the weekend of July 18th, 2026 (Jul 17–18).
  * RSVPs are handled on Partiful (partifulUrl); /awaken links out to them.
  *
- * Titles + dates + Partiful URLs are confirmed. Two titles are still marked
+ * Titles + dates + Partiful URLs are confirmed. One title is still marked
  * pending by the organizer, and venues/times are TBA — update `where` (and add
  * times to the calendar links in calendar.ts) once finalized.
  */
@@ -98,22 +99,21 @@ export const AWAKEN_EVENTS: AwakenEvent[] = [
     blurb: 'A dance party to shake the book into the world. Bring your whole body.',
     partifulUrl: 'https://partiful.com/e/de44COeykTCRP8qvGt3O',
   },
-  {
-    // Title pending — organizer to finalize.
-    key: 'jul19-send-off',
-    title: 'Mastering the Game of Allyship — Book Launch Game',
-    when: 'Sun · Jul 19',
-    date: '2026-07-19',
-    where: 'Portland · TBA',
-    blurb: 'Play the game the book is built on — live, together, to close the weekend.',
-    partifulUrl: 'https://partiful.com/e/eY5MfJQg7CtjdimimSxO',
-  },
 ]
 
 export const AWAKEN_EVENT_KEYS = new Set(AWAKEN_EVENTS.map((e) => e.key))
 
-/** Where the donate CTA points. The existing /event/donate page already works. */
+/** Legacy donate page. The car-fund CTA now points at the Crossing campaign instead. */
 export const AWAKEN_DONATE_HREF = '/event/donate'
+
+/** The Crossing car-fund campaign — where "fuel the car fund" now sends people. */
+export const AWAKEN_CROSSING_HREF = '/campaign/the-crossing'
+
+/** The Allyship Deck sales page. */
+export const AWAKEN_DECK_SALES_HREF = '/deck/sales'
+
+/** The Mastering the Game of Allyship book sales page (external). */
+export const AWAKEN_BOOK_SALES_HREF = 'https://wendellbritt.gumroad.com/l/MTGOAbook'
 
 /** Where "buy products / explore the offers" points. */
 export const AWAKEN_PRODUCTS_HREF = '/launch'
@@ -136,13 +136,13 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     eyebrow: 'Act I · The current state of things',
     title: 'Wake up.',
     paragraphs: [
-      'Right now, a real thing is happening. Not an abstraction — a person, a community, and a car that needs to keep running so the work can keep moving.',
-      "The car fund isn't charity. It's fuel. It's what turns intention into showing up — to the events, to the people, to the next chapter of a story that's already in motion.",
-      "Here's where we are today, and three honest ways you can step in. Read it, then choose how you want to show up.",
+      'For a long time, allyship felt like a test you could fail in public — something you were supposed to already be good at. So a lot of us stayed quiet, waited to feel qualified, and did nothing while the work waited too.',
+      "Here's the shift: allyship isn't a verdict on who you are. It's a game you learn by playing — a handful of moves you can practice, miss, and try again. And right now that game is real and local: a person, a community, and a car that has to keep running so the work can keep showing up.",
+      "That's the Crossing. You don't need to be an expert to step in — you need one honest move. Here's where things stand, and the moves you can make today. Read it, then choose how you want to show up.",
     ],
     stats: [
-      { key: 'weekend', label: 'Weekend', value: 'Jul 17–19' },
-      { key: 'events', label: 'Events', value: '3 nights' },
+      { key: 'weekend', label: 'Weekend', value: 'Jul 17–18' },
+      { key: 'events', label: 'Events', value: '2 nights' },
       { key: 'ask', label: 'The ask', value: 'Show up' },
     ],
     cta: "I'm awake — show me how to help ↓",
@@ -156,25 +156,36 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     donate: {
       badge: 'Move 1',
       title: 'Fuel the car fund',
-      body: 'A direct contribution keeps the wheels turning. Every dollar is fuel for showing up.',
-      cta: 'Donate to the car fund →',
-    },
-    chapter: {
-      badge: 'Move 2',
-      title: 'Read Chapter One',
-      body: "Start the story for free. Drop your email and we'll send the first chapter straight to your inbox.",
-      cta: 'Send me Chapter One →',
-      doneTitle: "You're in.",
-      doneBody: 'Chapter One is on its way to your inbox.',
+      body: 'A reliable car is what keeps the work showing up — to the events, the community, the next chapter. Chip in and join the Crossing campaign.',
+      cta: 'Donate & join the Crossing →',
+      href: AWAKEN_CROSSING_HREF,
     },
     events: {
+      badge: 'Move 2',
+      title: 'Be there · Jul 17–18',
+      body: "Two gatherings the weekend of July 18th. RSVP on Partiful for the ones you'll make.",
+      cta: 'RSVP on Partiful →',
+    },
+    deck: {
       badge: 'Move 3',
-      title: 'Be there · Jul 17–19',
-      body: "Three gatherings the weekend of July 18th. RSVP on Partiful for the ones you'll make.",
-      cta: 'Keep me posted →',
-      doneTitle: "You're on the list.",
-      doneBody: 'Check your inbox — we sent the weekend details and every RSVP link.',
-      helperTitle: 'Want reminders + the weekend details by email?',
+      title: 'Get the Allyship Deck',
+      body: '120 moves for doing the work. Draw a card, sit with the practice, and turn it into a real quest.',
+      cta: 'See the deck →',
+      href: AWAKEN_DECK_SALES_HREF,
+    },
+    book: {
+      badge: 'Move 4',
+      title: 'Pre-order the book',
+      body: 'Mastering the Game of Allyship — the book the whole weekend is built around. Pre-order your copy now.',
+      cta: 'Pre-order the book →',
+      href: AWAKEN_BOOK_SALES_HREF,
+    },
+    chapter: {
+      badge: 'Coming soon',
+      title: 'Read Chapter One',
+      body: 'Chapter One is chapter one of Mastering the Game of Allyship — coming soon. Want it sooner? Grab the book.',
+      cta: 'Get the book →',
+      href: AWAKEN_BOOK_SALES_HREF,
     },
   },
   events: AWAKEN_EVENTS,
@@ -233,8 +244,10 @@ export function normalizeAwakenPageContent(input: unknown): AwakenPageContent {
     },
     moves: {
       donate: normalizeMove(raw.moves?.donate, defaults.moves.donate),
-      chapter: normalizeMove(raw.moves?.chapter, defaults.moves.chapter),
       events: normalizeMove(raw.moves?.events, defaults.moves.events),
+      deck: normalizeMove(raw.moves?.deck, defaults.moves.deck),
+      book: normalizeMove(raw.moves?.book, defaults.moves.book),
+      chapter: normalizeMove(raw.moves?.chapter, defaults.moves.chapter),
     },
     events: defaults.events.map((fallback, index) => {
       const event = raw.events?.[index]
@@ -256,15 +269,16 @@ export function normalizeAwakenPageContent(input: unknown): AwakenPageContent {
   }
 }
 
-function normalizeMove(input: Partial<AwakenMoveContent> | undefined, fallback: AwakenMoveContent) {
+function normalizeMove(
+  input: Partial<AwakenMoveContent> | undefined,
+  fallback: AwakenMoveContent
+): AwakenMoveContent {
   return {
     badge: textOrDefault(input?.badge, fallback.badge),
     title: textOrDefault(input?.title, fallback.title),
     body: textOrDefault(input?.body, fallback.body),
     cta: textOrDefault(input?.cta, fallback.cta),
-    doneTitle: textOrDefault(input?.doneTitle, fallback.doneTitle ?? ''),
-    doneBody: textOrDefault(input?.doneBody, fallback.doneBody ?? ''),
-    helperTitle: textOrDefault(input?.helperTitle, fallback.helperTitle ?? ''),
+    href: textOrDefault(input?.href, fallback.href ?? ''),
   }
 }
 
