@@ -34,6 +34,7 @@ model Invite {
   invitationBar        CustomBar?            @relation("InviteInvitationBar", fields: [invitationBarId], references: [id])
   starterQuest         CustomBar?            @relation("InviteStarterQuest", fields: [starterQuestId], references: [id])
   players              Player[]              @relation("InviteUsed")
+  campaignLead         CampaignLead?
 
   @@map("invites")
 }
@@ -155,6 +156,8 @@ model Player {
   invitesForged                  Invite[]                    @relation("InvitesForged")
   latentAllyshipIntakes          LatentAllyshipIntake[]
   allyshipIntakesWatered         LatentAllyshipIntake[]      @relation("AllyshipIntakeWateredBy")
+  campaignLeadsForged            CampaignLead[]              @relation("CampaignLeadForgedBy")
+  campaignLeadsClaimed           CampaignLead[]              @relation("CampaignLeadClaimedBy")
   libraryRequests                LibraryRequest[]
   milestoneContributions         MilestoneContribution[]     @relation("MilestoneContributions")
   moveUses                       MoveUse[]
@@ -326,6 +329,13 @@ model CustomBar {
   rootId                               String?
   allowedNations                       String?
   allyshipDomain                       String?
+  /// Quest Studio (campaign-lead-forge Phase 7) alignment tags — queryable.
+  /// GM face this quest opens from ('shaman'|'challenger'|'regent'|'architect'|'diplomat'|'sage').
+  gmFace                               String?
+  /// Superpower this quest is authored for (connector|storyteller|strategist|disruptor|alchemist|escape_artist|coach).
+  superpowerAffinity                   String?
+  /// Allyship-myth id this quest reframes (see src/lib/allyship-myths).
+  mythId                               String?
   /// IOA base layer: inner (self-development) | outer (allyship). Sibling of moveType —
   /// the base move's aspect, recorded Nation-free. See specs/inner-outer-allyship-moves/data-model.md.
   moveAspect                           String?
@@ -551,12 +561,67 @@ model LatentAllyshipIntake {
   player                Player?   @relation(fields: [playerId], references: [id])
   spawnedInstance       Instance? @relation("AllyshipIntakeSpawnedInstance", fields: [spawnedInstanceId], references: [id])
   wateredBy             Player?   @relation("AllyshipIntakeWateredBy", fields: [wateredByPlayerId], references: [id])
+  campaignLead          CampaignLead?
 
   @@index([customBarId, createdAt])
   @@index([playerId])
   @@index([customBarId, clientSessionId])
   @@index([spawnedInstanceId])
   @@map("latent_allyship_intakes")
+}
+
+/// A prospective player ("lead") for a campaign — hand-forged by an owner (manual)
+/// or self-created through the /campaign/[ref]/begin funnel (automated). Both feed
+/// one owner follow-up board with a shared status machine.
+/// See .specify/specs/campaign-lead-forge/spec.md
+model CampaignLead {
+  id                    String    @id @default(cuid())
+  /// e.g. 'the-crossing'. Resolves to an Instance/Campaign for auth + display.
+  campaignRef           String
+  /// 'manual' | 'automated'
+  source                String    @default("manual")
+  /// new | contacted | accepted | declined | onboarded
+  status                String    @default("new")
+  name                  String?
+  contact               String?
+  /// 'text' | 'email' | 'instagram' | 'signal' | ...
+  channel               String?
+  /// AllyshipDomainKey (GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING)
+  domain                String?
+  superpower            String?
+  superpowerOrientation String?
+  /// Owner-private context.
+  notes                 String?
+  /// The owner's goals for this lead (free text). Shapes their warm CYOA.
+  goals                 String?
+  /// Published to the campaign's collective directory (other stewards can adopt).
+  collective            Boolean   @default(false)
+  /// JSON string[] of concrete aligned actions the lead should take.
+  actionsJson           String?
+  /// JSON string[] of CustomBar ids (starter quests) to assign on onboard.
+  starterQuestIdsJson   String?
+  /// JSON string[] of allyship-myth ids the player worked through (automated).
+  mythsSeenJson         String?
+  /// Owner who forged a manual lead.
+  forgedByPlayerId      String?
+  /// Player who claimed / became this lead.
+  claimedByPlayerId     String?
+  /// Manual → the tailored Invite.
+  inviteId              String?   @unique
+  /// Automated → the captured CYOA intake.
+  latentIntakeId        String?   @unique
+  clientSessionId       String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  forgedBy     Player?               @relation("CampaignLeadForgedBy", fields: [forgedByPlayerId], references: [id])
+  claimedBy    Player?               @relation("CampaignLeadClaimedBy", fields: [claimedByPlayerId], references: [id])
+  invite       Invite?               @relation(fields: [inviteId], references: [id])
+  latentIntake LatentAllyshipIntake? @relation(fields: [latentIntakeId], references: [id])
+
+  @@index([campaignRef, status])
+  @@index([campaignRef, createdAt])
+  @@map("campaign_leads")
 }
 
 model NextActionBridge {

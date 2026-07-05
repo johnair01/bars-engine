@@ -251,6 +251,19 @@ export async function createCharacter(prevState: any, formData: FormData) {
             console.log(`[Invite] Delivered BAR ${invite.invitationBarId} to new player ${player.id}`)
         }
 
+        // 8.5 Campaign Lead Forge: if this invite was a forged lead, assign the
+        // starter quests the owner matched to this invitee and mark the lead
+        // onboarded. Best-effort — never block character creation on it.
+        try {
+            const { claimCampaignLeadForPlayer } = await import('@/lib/campaign-leads/claim')
+            const claim = await claimCampaignLeadForPlayer(invite.id, player.id)
+            if (claim.claimed) {
+                console.log(`[Invite] Claimed campaign lead for ${player.id}; assigned ${claim.assignedQuestIds.length} starter quest(s)`)
+            }
+        } catch (e) {
+            console.error('[Invite] Campaign lead claim failed (non-fatal):', e instanceof Error ? e.message : e)
+        }
+
         // MVP: Seed starter vibeulons so new users can create quests immediately
         const seedAmount = parseInt(process.env.MVP_SEED_VIBEULONS || '3', 10)
         if (seedAmount > 0) {

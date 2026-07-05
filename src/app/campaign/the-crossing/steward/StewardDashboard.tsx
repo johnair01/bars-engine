@@ -102,6 +102,23 @@ export function StewardDashboard({
           </div>
         </header>
 
+        {/* Lead Forge nav */}
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/campaign/the-crossing/steward/leads"
+            className="rounded-[11px] px-3.5 py-2 text-[13px] font-semibold text-white"
+            style={{ background: `linear-gradient(135deg, ${ACTION_PURPLE_LITE}, ${ACTION_PURPLE})` }}
+          >
+            Lead board & forge →
+          </Link>
+          <Link
+            href="/campaign/the-crossing/begin"
+            className="rounded-[11px] border border-white/15 px-3.5 py-2 text-[13px] font-semibold text-[#f4f2ec]"
+          >
+            Onboarding funnel ↗
+          </Link>
+        </div>
+
         {/* Stat row */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard label="Contributions" value={stats.total} />
