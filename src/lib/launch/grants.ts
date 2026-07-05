@@ -25,6 +25,7 @@ export const SKU_GRANTS: Record<CoreOfferKey, GrantConfig> = {
   'book-digital': { grantType: 'timeboxed', durationDays: 30 },
   'rpg-handbook-digital': { grantType: 'perpetual' },
   'deck-digital': { grantType: 'perpetual' },
+  'deck-physical': { grantType: 'perpetual' }, // entitlement = fulfillment record
   'game-subscription': { grantType: 'subscription', durationDays: 30 },
   'book-physical': { grantType: 'perpetual' }, // entitlement = fulfillment record
   'rpg-handbook-physical': { grantType: 'perpetual' }, // entitlement = fulfillment record
@@ -45,6 +46,8 @@ export const SKU_CAPABILITIES: Record<CoreOfferKey, Capability[]> = {
   'book-digital': ['app-access'],
   'rpg-handbook-digital': [],
   'deck-digital': [],
+  // Physical deck buyers also get the matching digital deck access.
+  'deck-physical': ['deck-digital'],
   // The game subscription includes the digital book + digital deck access.
   'game-subscription': ['app-access', 'book-digital', 'deck-digital'],
   // Physical buyers also get the matching digital file to download.

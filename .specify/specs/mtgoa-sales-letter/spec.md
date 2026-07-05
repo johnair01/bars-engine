@@ -42,7 +42,7 @@ existing quiz/myth components + the `offers.ts` Gumroad SKUs. Deterministic (no 
 
 | Topic | Decision |
 |-------|----------|
-| **What's sold** | The **book** (`book-digital` $15 / `book-physical` $25 preorder) + the **Oracle Deck** (`deck-digital` $10). Secondary upsells: RPG Handbook, The Game (monthly), Founding Ally Bundle. All from `src/lib/launch/offers.ts`. |
+| **What's sold** | The **book** (`book-digital` $15 / `book-physical` $25 preorder) + the **Oracle Deck** (`deck-digital` $22 / `deck-physical` $65 preorder). Secondary upsells: RPG Handbook, The Game (monthly), Founding Ally Bundle. All from `src/lib/launch/offers.ts`. |
 | **Commerce** | **Gumroad** (Phase 1), via the `NEXT_PUBLIC_GUMROAD_*_URL` envs already wired in `offers.ts`. No in-app checkout. |
 | **Route** | New canonical sales page at **`/mastering-allyship`** (root is free today — only `/hub` and `/spoke` exist under it). The letter lives here; social posts point here. |
 | **The two hooks** | **Superpower quiz** (`SuperpowerQuiz`, reused) and the **Allyship Myth quiz** (see Open Dependency). Both are *lead magnets*: they personalize the pitch, then hand to the offer. |

@@ -88,7 +88,8 @@ Show Up) that makes it *accelerate* instead of exhaust you.
 ### 🔥 The Oracle Deck — *120 Moves at the Edge of the Known World*
 A consultable deck of 120 allyship moves. Draw a card, sit with the practice it names, and turn it
 into a real action. When you're stuck, the deck *is* the next move.
-**Digital access $10. (Also included with The Game.)**
+**Digital access $22 · Physical printed deck $65 (preorder — ships after the print run).**
+*(Digital access also included with The Game.)*
 
 *Take the superpower quiz above and the deck knows which of the 120 are yours.*
 
