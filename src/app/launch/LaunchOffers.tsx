@@ -20,6 +20,7 @@ import {
   offersByGroup,
   formatPrice,
   isOfferLive,
+  type CoreOfferKey,
   type LaunchOffer,
 } from '@/lib/launch/offers'
 import {
@@ -564,6 +565,10 @@ function TextArea({
   )
 }
 
+function isCoreLaunchOffer(offer: LaunchOffer): offer is LaunchOffer & { key: CoreOfferKey } {
+  return (LAUNCH_OFFER_KEYS as readonly string[]).includes(offer.key)
+}
+
 export function LaunchOffers({
   content,
   isAdmin,
@@ -572,9 +577,9 @@ export function LaunchOffers({
   isAdmin: boolean
 }) {
   const [intent, setIntent] = useState<LaunchIntent | null>(null)
-  const bundle = offersByGroup('bundle')
-  const digital = offersByGroup('digital')
-  const physical = offersByGroup('physical')
+  const bundle = offersByGroup('bundle').filter(isCoreLaunchOffer)
+  const digital = offersByGroup('digital').filter(isCoreLaunchOffer)
+  const physical = offersByGroup('physical').filter(isCoreLaunchOffer)
   const allOffers = [...bundle, ...digital, ...physical]
   const heroKey = intent ? HERO_BY_INTENT[intent] : 'founding-ally'
   const hero = allOffers.find((offer) => offer.key === heroKey) ?? bundle[0] ?? digital[0]

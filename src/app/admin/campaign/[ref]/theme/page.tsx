@@ -43,7 +43,7 @@ async function isStewardPlusForInstance(
 
 /**
  * @page /admin/campaign/:ref/theme
- * @entity CAMPAIGN_THEME
+ * @entity CAMPAIGN
  * @description L2 visual theming editor for campaign skins — color pickers, font selectors, preview panel
  * @permissions steward, owner, admin
  * @params ref:string (path, required) - campaign slug

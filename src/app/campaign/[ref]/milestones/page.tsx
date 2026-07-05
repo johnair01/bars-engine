@@ -8,6 +8,7 @@ import { MilestoneAuthoringPanel } from '@/components/campaign/MilestoneAuthorin
 
 /**
  * @page /campaign/:ref/milestones
+ * @entity CAMPAIGN
  * @description Steward surface for authoring well-crafted campaign milestones
  *   (propose → craft → approve) + their celebration narratives. TSG Phase 3.
  * @permissions steward+ (owner/steward of the backing instance, or global admin)
