@@ -135,8 +135,8 @@ function OfferCard({
   intent: LaunchIntent | null
 }) {
   const guidance = offerContent
-  const matched = intent ? guidance.intents.includes(intent) : false
-  const dimmed = intent && !matched
+  const matchedIntent = intent && guidance.intents.includes(intent) ? intent : null
+  const dimmed = intent && !matchedIntent
   const ariaLabel = `${guidance.name} — ${formatPrice(offer.priceCents)}${
     offer.recurring ? ` per ${offer.recurring}` : ''
   }${offer.preorder ? ', preorder' : ''}`
@@ -184,9 +184,9 @@ function OfferCard({
           <p className="mt-1 text-sm font-semibold text-zinc-200">{guidance.unlocks}</p>
           <p className="mt-2 text-xs leading-relaxed text-zinc-400">{guidance.context}</p>
         </div>
-        {matched && (
+        {matchedIntent && (
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-300">
-            Matches: {intentLabel(content, intent)}
+            Matches: {intentLabel(content, matchedIntent)}
           </p>
         )}
 
