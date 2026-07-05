@@ -20,6 +20,7 @@ import {
   offersByGroup,
   formatPrice,
   isOfferLive,
+  type CoreOfferKey,
   type LaunchOffer,
 } from '@/lib/launch/offers'
 import {
@@ -135,8 +136,8 @@ function OfferCard({
   intent: LaunchIntent | null
 }) {
   const guidance = offerContent
-  const matched = intent ? guidance.intents.includes(intent) : false
-  const dimmed = intent && !matched
+  const matchedIntent = intent && guidance.intents.includes(intent) ? intent : null
+  const dimmed = intent && !matchedIntent
   const ariaLabel = `${guidance.name} — ${formatPrice(offer.priceCents)}${
     offer.recurring ? ` per ${offer.recurring}` : ''
   }${offer.preorder ? ', preorder' : ''}`
@@ -184,9 +185,9 @@ function OfferCard({
           <p className="mt-1 text-sm font-semibold text-zinc-200">{guidance.unlocks}</p>
           <p className="mt-2 text-xs leading-relaxed text-zinc-400">{guidance.context}</p>
         </div>
-        {matched && intent && (
+        {matchedIntent && (
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-300">
-            Matches: {intentLabel(content, intent)}
+            Matches: {intentLabel(content, matchedIntent)}
           </p>
         )}
 
@@ -564,15 +565,7 @@ function TextArea({
   )
 }
 
-/**
- * The launch page's content model covers the curated core catalog only
- * (LAUNCH_OFFER_KEYS). Superpower packs and the loadout bundle live in the offer
- * registry but have no editable content here, so they are filtered out of the
- * grids — keeping `content.offers[offer.key]` lookups both type-safe and non-empty.
- */
-type CoreLaunchOffer = LaunchOffer & { key: (typeof LAUNCH_OFFER_KEYS)[number] }
-
-function hasLaunchContent(offer: LaunchOffer): offer is CoreLaunchOffer {
+function isCoreLaunchOffer(offer: LaunchOffer): offer is LaunchOffer & { key: CoreOfferKey } {
   return (LAUNCH_OFFER_KEYS as readonly string[]).includes(offer.key)
 }
 
@@ -584,9 +577,9 @@ export function LaunchOffers({
   isAdmin: boolean
 }) {
   const [intent, setIntent] = useState<LaunchIntent | null>(null)
-  const bundle = offersByGroup('bundle').filter(hasLaunchContent)
-  const digital = offersByGroup('digital').filter(hasLaunchContent)
-  const physical = offersByGroup('physical').filter(hasLaunchContent)
+  const bundle = offersByGroup('bundle').filter(isCoreLaunchOffer)
+  const digital = offersByGroup('digital').filter(isCoreLaunchOffer)
+  const physical = offersByGroup('physical').filter(isCoreLaunchOffer)
   const allOffers = [...bundle, ...digital, ...physical]
   const heroKey = intent ? HERO_BY_INTENT[intent] : 'founding-ally'
   const hero = allOffers.find((offer) => offer.key === heroKey) ?? bundle[0] ?? digital[0]

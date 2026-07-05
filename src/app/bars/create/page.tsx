@@ -4,8 +4,10 @@ import { SimpleCaptureForm } from '@/components/bars/SimpleCaptureForm'
 
 /**
  * @page /bars/create
+ * @entity BAR
  * @description Screen A — simple text capture. Low-friction entry point for the
  * Capture → Keep → Tune intake flow. For the full Stories canvas, use /bars/capture.
+ * @permissions authenticated
  */
 export default async function CreateBarPage(props: {
     searchParams: Promise<{ text?: string; prefill?: string; ref?: string }>

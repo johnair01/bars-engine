@@ -22,9 +22,7 @@ import {
   commitTask,
   updateTaskStatus,
   carryTask,
-  promoteTaskToBar,
   plantTask,
-  upgradeTaskToQuest,
   sealSession,
 } from '@/actions/tap-the-vein'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
@@ -156,8 +154,6 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
             return updateTaskStatus({ taskId: id, status: 'completed' })
           case 'carry':
             return carryTask(id)
-          case 'keep':
-            return promoteTaskToBar(id)
           case 'plant':
             return plantTask({
               taskId: id,
@@ -168,8 +164,6 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               if (!('error' in res)) setPlantedTrace(res.plantSnapshot ?? null)
               return res
             })
-          case 'upgrade':
-            return upgradeTaskToQuest(id)
           case 'compost':
             return updateTaskStatus({ taskId: id, status: 'composted', compostReason: a.reason })
           case 'assign':
