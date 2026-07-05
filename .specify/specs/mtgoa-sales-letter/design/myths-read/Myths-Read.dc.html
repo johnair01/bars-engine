@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+<style>
+  html, body { margin: 0; background: #080706; }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+  @keyframes mr-rise { from { transform: translateY(9px); } to { transform: none; } }
+  @keyframes mr-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  @keyframes mr-glow { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  .mr-scale:hover { border-color: rgba(224,169,42,0.55) !important; }
+  .mr-opt:hover { border-color: var(--bars-line-strong) !important; }
+  .mr-ghost:hover { color: var(--bars-text-primary) !important; }
+  .mr-cta:hover { transform: translateY(-1px); filter: brightness(1.06); }
+  .mr-card { transition: transform .55s cubic-bezier(0.16,1,0.3,1); transform-style: preserve-3d; }
+  @media (prefers-reduced-motion: reduce) { *, .mr-card { animation: none !important; transition: none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Jost',sans-serif;background:radial-gradient(130% 60% at 14% -4%, #17110b 0%, #080706 52%);color:var(--bars-text-primary);padding:44px 46px 120px;box-sizing:border-box;min-width:2680px;">
+
+  <!-- ══════════ BOARD HEADER ══════════ -->
+  <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:30px;flex-wrap:wrap;margin-bottom:40px;max-width:2560px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#e0a92a;">Mastering the Game of Allyship · Chapter 0 · Design handoff</span>
+      <h1 style="margin:0;font-family:'Jost',sans-serif;font-weight:700;letter-spacing:-.025em;line-height:.98;font-size:56px;color:var(--bars-text-primary);">Myths Read</h1>
+      <p style="margin:2px 0 0;font-family:'Nunito',sans-serif;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);max-width:640px;text-wrap:pretty;">A short diagnostic the reader hits from Chapter 0. The book no longer enumerates ten myths and asks you to self-sort — <span style="color:var(--bars-text-primary);">the game sorts them.</span> You get back your top myths and the exact place the book takes each one apart. The quiz is the counter-con: real behavior, no flattering "which ally are you."</p>
+    </div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;">
+      <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-secondary);padding:7px 13px;border:1px solid var(--bars-line-strong);border-radius:999px;">10 myths · 6 roots</span>
+      <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-secondary);padding:7px 13px;border:1px solid var(--bars-line-strong);border-radius:999px;">12 items · ~2 min</span>
+      <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#0a0908;background:#e0a92a;font-weight:700;padding:7px 13px;border-radius:999px;">Working prototype</span>
+    </div>
+  </header>
+
+  <!-- ══════════ ROW 1: interactive phone + result-map + card anatomy ══════════ -->
+  <div style="display:flex;gap:34px;align-items:flex-start;flex-wrap:nowrap;margin-bottom:64px;">
+
+    <!-- ───────── PHONE (interactive) ───────── -->
+    <section data-screen-label="Quiz flow" style="flex:none;display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--bars-text-muted);">A · The quiz flow — tap through it</span>
+      </div>
+      <div style="width:412px;min-height:872px;border-radius:38px;padding:11px;background:linear-gradient(160deg,#201913,#0d0b09);box-shadow:0 40px 90px -40px #000, inset 0 1px 0 rgba(255,255,255,0.09), 0 0 0 1px rgba(255,255,255,0.05);box-sizing:border-box;">
+        <div style="position:relative;width:100%;min-height:850px;border-radius:29px;overflow:hidden;background:radial-gradient(120% 46% at 50% -6%, #17110b 0%, var(--bars-bg-base) 54%);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04);">
+          <div style="position:absolute;top:0;left:0;right:0;height:34px;display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none;">
+            <div style="width:96px;height:6px;border-radius:99px;background:rgba(255,255,255,0.10);"></div>
+          </div>
+          <div style="position:relative;padding:46px 22px 30px;box-sizing:border-box;">
+
+            <!-- ═══ INTRO ═══ -->
+            <sc-if value="{{ isIntro }}" hint-placeholder-val="{{ true }}">
+              <div class="mr-rise" style="animation:mr-rise .5s cubic-bezier(0.16,1,0.3,1) both;display:flex;flex-direction:column;min-height:770px;">
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <span style="display:inline-flex;flex-direction:column;gap:2.5px;">
+                    <span style="width:22px;height:2.5px;border-radius:2px;background:#e0a92a;box-shadow:0 0 8px rgba(224,169,42,0.6);"></span>
+                    <span style="width:22px;height:2.5px;border-radius:2px;background:#e0a92a;display:flex;justify-content:space-between;"><i style="width:9px;height:100%;background:#e0a92a;"></i><i style="width:9px;height:100%;background:#e0a92a;"></i></span>
+                    <span style="width:22px;height:2.5px;border-radius:2px;background:#e0a92a;box-shadow:0 0 8px rgba(224,169,42,0.6);"></span>
+                  </span>
+                  <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#e0a92a;">Myths Read</span>
+                </div>
+
+                <h2 style="margin:26px 0 0;font-family:'Jost',sans-serif;font-weight:700;letter-spacing:-.02em;line-height:1.06;font-size:33px;color:var(--bars-text-primary);text-wrap:balance;">You're playing at least a few of these.</h2>
+                <p style="margin:16px 0 0;font-family:'Nunito',sans-serif;font-size:15.5px;line-height:1.62;color:var(--bars-text-secondary);text-wrap:pretty;">There are ten myths about what allyship <em style="color:var(--bars-text-primary);font-style:normal;">is</em> — each one a false claim you can spot, not a character you become. Answer honestly and the game sorts which ones you're carrying, and where the book takes each apart.</p>
+
+                <div style="margin:30px 0 0;display:flex;flex-direction:column;gap:1px;border-radius:14px;overflow:hidden;background:var(--bars-line);">
+                  <div style="display:flex;align-items:center;gap:13px;background:var(--bars-surface-card);padding:15px 16px;">
+                    <span style="font-family:'Space Mono',monospace;font-size:14px;color:#e0a92a;width:22px;">12</span>
+                    <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.45;color:var(--bars-text-secondary);">quick statements — about a minute, maybe two.</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:13px;background:var(--bars-surface-card);padding:15px 16px;">
+                    <span style="font-family:'Space Mono',monospace;font-size:14px;color:#e0a92a;width:22px;">5</span>
+                    <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.45;color:var(--bars-text-secondary);">how-often it lands — Never to Almost always. One tap.</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:13px;background:var(--bars-surface-card);padding:15px 16px;">
+                    <span style="font-family:'Space Mono',monospace;font-size:14px;color:#e0a92a;width:22px;">♦</span>
+                    <span style="font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.45;color:var(--bars-text-secondary);">honest answers only. This measures — it doesn't flatter.</span>
+                  </div>
+                </div>
+
+                <div style="flex:1;"></div>
+
+                <button type="button" class="mr-cta" onClick="{{ start }}" style="margin-top:34px;appearance:none;cursor:pointer;width:100%;box-sizing:border-box;font-family:'Jost',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.01em;color:#0a0807;background:linear-gradient(150deg,#f0c04a,#d4a017);border:none;border-radius:13px;padding:16px;box-shadow:0 16px 34px -14px rgba(212,160,23,0.7), inset 0 1px 0 rgba(255,255,255,0.35);transition:transform .16s ease, filter .16s ease;">Read my myths →</button>
+                <p style="margin:14px 0 0;text-align:center;font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">No sign-up to begin · results are free</p>
+              </div>
+            </sc-if>
+
+            <!-- ═══ QUESTION ═══ -->
+            <sc-if value="{{ isQuiz }}" hint-placeholder-val="">
+              <div style="display:flex;flex-direction:column;min-height:770px;">
+                <!-- quiet progress -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">
+                    <span>{{ stepLabel }} / 12</span>
+                    <span style="color:var(--bars-text-secondary);">honest, not fast</span>
+                  </div>
+                  <div style="display:flex;gap:4px;">
+                    <sc-for list="{{ pips }}" as="pip" hint-placeholder-count="12">
+                      <span style="flex:1;height:3px;border-radius:99px;background:{{ pip.color }};transition:background .35s ease;"></span>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <div key="{{ stepKey }}" class="mr-rise" style="animation:mr-rise .4s cubic-bezier(0.16,1,0.3,1) both;display:flex;flex-direction:column;flex:1;">
+                  <span style="margin-top:40px;font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--bars-text-muted);">How often is this true of you?</span>
+                  <h2 style="margin:16px 0 0;font-family:'Nunito',sans-serif;font-weight:700;letter-spacing:-.005em;line-height:1.34;font-size:24px;color:var(--bars-text-primary);text-wrap:pretty;">{{ itemText }}</h2>
+
+                  <div style="flex:1;"></div>
+
+                  <!-- 5-point tactile scale -->
+                  <div style="display:flex;flex-direction:column;gap:12px;margin-top:40px;">
+                    <div style="display:flex;align-items:flex-end;gap:9px;">
+                      <sc-for list="{{ scale }}" as="s" hint-placeholder-count="5">
+                        <button type="button" class="mr-scale" onClick="{{ s.onClick }}" style="{{ s.cellStyle }}">
+                          <span style="{{ s.dotStyle }}"></span>
+                          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;line-height:1.15;text-align:center;color:{{ s.labelColor }};">{{ s.label }}</span>
+                        </button>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">
+                      <span>Never</span>
+                      <span>Almost always</span>
+                    </div>
+                  </div>
+
+                  <div style="display:flex;align-items:center;justify-content:space-between;min-height:20px;margin-top:26px;">
+                    <sc-if value="{{ canBack }}" hint-placeholder-val="">
+                      <button type="button" class="mr-ghost" onClick="{{ back }}" style="appearance:none;cursor:pointer;background:none;border:none;padding:0;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);transition:color .2s ease;">← Back</button>
+                    </sc-if>
+                    <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">tap to answer</span>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- ═══ RESULT ═══ -->
+            <sc-if value="{{ isResult }}" hint-placeholder-val="">
+              <div class="mr-rise" style="animation:mr-rise .5s cubic-bezier(0.16,1,0.3,1) both;display:flex;flex-direction:column;gap:18px;">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#e0a92a;">Your read · {{ surfacedLabel }}</span>
+                  <h2 style="margin:0;font-family:'Jost',sans-serif;font-weight:700;letter-spacing:-.02em;line-height:1.08;font-size:27px;color:var(--bars-text-primary);text-wrap:balance;">These are the myths you're playing.</h2>
+                  <p style="margin:0;font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">A myth is a false claim about what allyship is — not a verdict on you. Tap a card to see the diagnosis and where the book solves it.</p>
+                </div>
+
+                <!-- surfaced myth cards -->
+                <div style="display:flex;flex-direction:column;gap:13px;">
+                  <sc-for list="{{ surfaced }}" as="m" hint-placeholder-count="3">
+                    <div onClick="{{ m.onFlip }}" style="cursor:pointer;">
+                      <!-- FACE -->
+                      <sc-if value="{{ m.showFace }}" hint-placeholder-val="{{ true }}">
+                        <div class="mr-rise" style="animation:mr-rise .32s ease both;position:relative;overflow:hidden;background:var(--bars-surface-card);border-radius:14px;padding:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(224,169,42,0.30), 0 0 26px -8px rgba(224,169,42,0.42);">
+                          <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 88% -10%, rgba(224,169,42,0.14) 0%, transparent 58%);"></div>
+                          <div style="position:relative;display:flex;flex-direction:column;gap:12px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;">
+                              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#e0a92a;">Myth · rank {{ m.rank }}</span>
+                              <span style="display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-muted);">{{ m.strengthLabel }}<span style="width:34px;height:4px;border-radius:99px;background:rgba(255,255,255,0.08);overflow:hidden;display:inline-block;"><span style="display:block;height:100%;border-radius:99px;background:#e0a92a;box-shadow:0 0 7px rgba(224,169,42,0.7);width:{{ m.pctWidth }};"></span></span></span>
+                            </div>
+                            <p style="margin:0;font-family:'Jost',sans-serif;font-weight:600;font-size:22px;line-height:1.16;letter-spacing:-.015em;color:var(--bars-text-primary);text-wrap:balance;">&ldquo;{{ m.claim }}&rdquo;</p>
+                            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">Tap to turn it over ↻</span>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <!-- REVEAL -->
+                      <sc-if value="{{ m.showReveal }}" hint-placeholder-val="">
+                        <div class="mr-rise" style="animation:mr-rise .32s ease both;position:relative;overflow:hidden;background:var(--bars-surface-inset);border-radius:14px;padding:17px 18px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(224,169,42,0.5), 0 0 30px -8px rgba(224,169,42,0.55);display:flex;flex-direction:column;gap:11px;">
+                          <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#e0a92a;">Myth · rank {{ m.rank }} · turned</span>
+                            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">↩ tap to flip back</span>
+                          </div>
+                          <div style="display:flex;flex-direction:column;gap:5px;">
+                            <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">The diagnosis</span>
+                            <p style="margin:0;font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.5;color:var(--bars-text-primary);text-wrap:pretty;">{{ m.diagnosis }}</p>
+                          </div>
+                          <div style="display:flex;flex-direction:column;gap:5px;padding-top:10px;border-top:1px solid var(--bars-line);">
+                            <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#e0a92a;">Where the book solves it · {{ m.chapter }}</span>
+                            <p style="margin:0;font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.45;color:var(--bars-text-secondary);text-wrap:pretty;">{{ m.mechanism }}</p>
+                          </div>
+                          <div style="display:flex;flex-direction:column;gap:10px;padding-top:11px;border-top:1px solid var(--bars-line);">
+                            <div style="display:flex;flex-direction:column;gap:3px;">
+                              <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">One move now</span>
+                              <p style="margin:0;font-family:'Nunito',sans-serif;font-weight:700;font-size:14px;line-height:1.35;color:var(--bars-text-primary);text-wrap:pretty;">{{ m.move }}</p>
+                            </div>
+                            <button type="button" onClick="{{ m.onPick }}" style="{{ m.pickStyle }}">{{ m.pickLabel }}</button>
+                          </div>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+
+                <!-- ═══ METABOLIZE · charge capture (bridge into the BARS Engine) ═══ -->
+                <div style="position:relative;overflow:hidden;border-radius:16px;background:linear-gradient(168deg,#0f1220 0%, #100f0d 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(124,58,237,0.26), 0 0 32px -12px rgba(124,58,237,0.45);padding:18px;">
+                  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 90% -10%, rgba(124,58,237,0.16) 0%, transparent 56%);"></div>
+                  <div style="position:relative;display:flex;flex-direction:column;gap:16px;">
+                    <div style="display:flex;flex-direction:column;gap:5px;">
+                      <span style="font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#a78bfa;">◇ Emotional Alchemy · metabolize the charge</span>
+                      <h3 style="margin:0;font-family:'Jost',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.01em;line-height:1.16;color:var(--bars-text-primary);text-wrap:balance;">A myth is just a claim until you feel the charge under it.</h3>
+                      <p style="margin:0;font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.5;color:var(--bars-text-secondary);text-wrap:pretty;">Name it — that becomes your first BAR, and the game starts from your live material instead of a generic tour.</p>
+                    </div>
+
+                    <!-- 1 · which myth -->
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                      <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">1 · The myth that's most alive</span>
+                      <div style="display:flex;flex-wrap:wrap;gap:7px;">
+                        <sc-for list="{{ chargeMythChips }}" as="c" hint-placeholder-count="3">
+                          <button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+
+                    <!-- 2 · the charge -->
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                      <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">2 · The charge under it — how does it feel?</span>
+                      <div style="display:flex;flex-direction:column;gap:7px;">
+                        <sc-for list="{{ flavorChips }}" as="f" hint-placeholder-count="5">
+                          <button type="button" onClick="{{ f.onClick }}" style="{{ f.style }}">
+                            <span style="{{ f.sigilStyle }}">{{ f.sigil }}</span>
+                            <span style="display:flex;flex-direction:column;gap:1px;text-align:left;min-width:0;">
+                              <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:13.5px;color:var(--bars-text-primary);">{{ f.label }}</span>
+                              <span style="font-family:'Nunito',sans-serif;font-size:11px;line-height:1.3;color:var(--bars-text-secondary);text-wrap:pretty;">{{ f.sub }}</span>
+                            </span>
+                          </button>
+                        </sc-for>
+                      </div>
+                    </div>
+
+                    <!-- 3 · intensity -->
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+                        <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">3 · How strong is it right now</span>
+                        <span style="font-family:'Nunito',sans-serif;font-style:italic;font-size:11.5px;color:#a78bfa;text-align:right;">{{ intensityReadout }}</span>
+                      </div>
+                      <div style="display:flex;gap:6px;">
+                        <sc-for list="{{ intensityChips }}" as="i" hint-placeholder-count="5">
+                          <button type="button" onClick="{{ i.onClick }}" style="{{ i.style }}">{{ i.label }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+
+                    <!-- seed + metabolize CTA -->
+                    <sc-if value="{{ chargeReady }}" hint-placeholder-val="">
+                      <div class="mr-rise" style="animation:mr-rise .32s ease both;display:flex;flex-direction:column;gap:12px;padding-top:14px;border-top:1px solid rgba(124,58,237,0.22);">
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#a78bfa;">♦ Your first BAR — seeded</span>
+                          <p style="margin:0;font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.5;color:var(--bars-text-primary);text-wrap:pretty;">{{ barSummary }}</p>
+                        </div>
+                        <a href="{{ metabolizeHref }}" class="mr-cta" style="text-decoration:none;text-align:center;box-sizing:border-box;font-family:'Jost',sans-serif;font-weight:700;font-size:15px;letter-spacing:-.01em;color:#fff;background:linear-gradient(150deg,#8b5cf6,#7c3aed);border-radius:12px;padding:14px;box-shadow:0 14px 30px -12px #7c3aed, inset 0 1px 0 rgba(255,255,255,0.2);transition:transform .16s ease, filter .16s ease;">{{ metabolizeLabel }}</a>
+                        <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-muted);text-align:center;">Routes to {{ metabolizeRoute }} · your charge travels with you</span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ chargeUnready }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-muted);">Name the charge and its strength to seed your BAR</span>
+                    </sc-if>
+                  </div>
+                </div>
+
+                <!-- your board (belief suppressed) -->
+                <div style="display:flex;flex-direction:column;gap:11px;background:var(--bars-surface-card);border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px var(--bars-line);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--bars-text-secondary);">The whole board · {{ litCount }} lit for you</span>
+                    <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-muted);">map, not verdict</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px;">
+                    <sc-for list="{{ boardRows }}" as="r" hint-placeholder-count="10">
+                      <div style="display:flex;align-items:center;gap:10px;opacity:{{ r.opacity }};">
+                        <span style="flex:none;width:11px;height:11px;border-radius:{{ r.markRadius }};box-sizing:border-box;background:{{ r.markBg }};border:{{ r.markBorder }};box-shadow:{{ r.markGlow }};"></span>
+                        <span style="flex:1;font-family:'Nunito',sans-serif;font-size:12px;line-height:1.3;color:{{ r.textColor }};text-wrap:pretty;">{{ r.claim }}</span>
+                        <span style="flex:none;font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-muted);">{{ r.chapter }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <p style="margin:2px 0 0;font-family:'Nunito',sans-serif;font-size:11.5px;line-height:1.5;color:var(--bars-text-muted);text-wrap:pretty;">The unlit myths aren't absent — just quiet today. Nothing here labels or scores you.</p>
+                </div>
+
+                <!-- CTAs · the funnel -->
+                <div style="display:flex;flex-direction:column;gap:12px;margin-top:2px;">
+                  <!-- primary: the deck, framed against live myths -->
+                  <div style="display:flex;flex-direction:column;gap:11px;background:var(--bars-surface-card);border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(224,169,42,0.30), 0 0 26px -10px rgba(224,169,42,0.4);">
+                    <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#e0a92a;">{{ litCount }} alive for you · where they get worked</span>
+                    <p style="margin:0;font-family:'Nunito',sans-serif;font-size:13px;line-height:1.5;color:var(--bars-text-secondary);text-wrap:pretty;">These aren't yours forever — they're what's live right now. The <strong style="color:var(--bars-text-primary);">Allyship Deck</strong> is the daily practice that metabolizes them: draw a card, make one move, pave the road.</p>
+                    <a href="Sales Page.dc.html" class="mr-cta" style="text-decoration:none;text-align:center;box-sizing:border-box;font-family:'Jost',sans-serif;font-weight:700;font-size:16px;letter-spacing:-.01em;color:#0a0807;background:linear-gradient(150deg,#f0c04a,#d4a017);border-radius:12px;padding:14px;box-shadow:0 16px 32px -14px rgba(212,160,23,0.7), inset 0 1px 0 rgba(255,255,255,0.35);transition:transform .16s ease, filter .16s ease;">Get the Allyship Deck →</a>
+                  </div>
+
+                  <!-- companion: superpower quiz -->
+                  <a href="Superpower Quiz.dc.html" class="mr-opt" style="text-decoration:none;display:flex;align-items:center;gap:13px;background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);border-radius:13px;padding:14px 15px;transition:border-color .2s ease;">
+                    <span style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;font-size:19px;color:#e0a92a;background:color-mix(in srgb, #d4a017 16%, var(--bars-surface-inset));box-shadow:inset 0 0 0 1px rgba(212,160,23,0.4), 0 0 16px -6px rgba(212,160,23,0.5);">✦</span>
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+                      <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:14.5px;color:var(--bars-text-primary);">Now see how you ally →</span>
+                      <span style="font-family:'Nunito',sans-serif;font-size:11.5px;line-height:1.38;color:var(--bars-text-secondary);text-wrap:pretty;">Two reads, one game. Discover your <strong style="color:var(--bars-text-primary);font-weight:600;">Allyship Superpower</strong> — the strength you play from once the myths are named.</span>
+                    </span>
+                  </a>
+
+                  <!-- secondary: the book -->
+                  <a href="Sales Page.dc.html#editions" style="text-decoration:none;text-align:center;box-sizing:border-box;font-family:'Jost',sans-serif;font-weight:600;font-size:14px;color:var(--bars-text-secondary);background:transparent;border:1px solid var(--bars-line);border-radius:12px;padding:12px;">Or read the manual — the book</a>
+                </div>
+
+                <!-- soft email save-point -->
+                <div style="display:flex;flex-direction:column;gap:10px;background:var(--bars-surface-inset);border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);">
+                  <sc-if value="{{ emailOpen }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;flex-direction:column;gap:9px;">
+                      <div style="display:flex;flex-direction:column;gap:3px;">
+                        <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:15px;color:var(--bars-text-primary);">Save your read</span>
+                        <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.45;color:var(--bars-text-secondary);">Keep your myths + a reading path to the right chapters. Optional — your result is already yours.</span>
+                      </div>
+                      <div style="display:flex;gap:8px;">
+                        <input type="email" placeholder="you@email.com" value="{{ emailValue }}" onInput="{{ onEmail }}" style="flex:1;min-width:0;box-sizing:border-box;font-family:'Nunito',sans-serif;font-size:14px;color:var(--bars-text-primary);background:var(--bars-bg-base);border:1px solid var(--bars-line-strong);border-radius:10px;padding:11px 13px;outline:none;" />
+                        <button type="button" onClick="{{ onSaveEmail }}" style="flex:none;appearance:none;cursor:pointer;font-family:'Jost',sans-serif;font-weight:600;font-size:14px;color:#e0a92a;background:rgba(224,169,42,0.10);border:1px solid rgba(224,169,42,0.4);border-radius:10px;padding:11px 16px;">Save</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ emailSaved }}" hint-placeholder-val="">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <span style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:11px;font-size:16px;color:#0a0807;background:linear-gradient(150deg,#f0c04a,#d4a017);box-shadow:0 0 18px -4px rgba(212,160,23,0.7);">♦</span>
+                      <div style="display:flex;flex-direction:column;gap:2px;">
+                        <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:14.5px;color:var(--bars-text-primary);">Your read is saved.</span>
+                        <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.4;color:var(--bars-text-secondary);">Reading path is on its way to {{ savedEmail }}.</span>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+
+                <button type="button" class="mr-ghost" onClick="{{ retake }}" style="align-self:center;margin-top:2px;appearance:none;cursor:pointer;background:none;border:none;padding:6px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);transition:color .2s ease;">↺ Retake the read</button>
+              </div>
+            </sc-if>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── RIGHT STACK: result-map + card anatomy ───────── -->
+    <div style="flex:none;display:flex;flex-direction:column;gap:56px;padding-top:34px;">
+
+      <!-- RESULT-VERSION MYTH MAP (belief suppressed) -->
+      <section data-screen-label="Result map" style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--bars-text-muted);">B · Myth Map — result version</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.5;color:var(--bars-text-secondary);max-width:560px;">Belief layer <em style="font-style:normal;color:var(--bars-text-primary);">suppressed</em> (WB's "one too many identities" call). The reader sees only myth → destination; their surfaced myths are lit, the rest recede. This is what sits behind the result screen.</span>
+        </div>
+        <div style="width:560px;border-radius:20px;background:radial-gradient(120% 70% at 12% 0%, #16110b 0%, #0c0a08 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line), 0 40px 80px -50px #000;padding:26px 26px 24px;box-sizing:border-box;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;">
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--bars-text-muted);">The claim you're playing</span>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--bars-text-muted);">Where it's undone</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <sc-for list="{{ resultMap }}" as="r" hint-placeholder-count="10">
+              <div style="display:flex;align-items:center;gap:14px;opacity:{{ r.opacity }};">
+                <span style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:{{ r.markRadius }};box-sizing:border-box;background:{{ r.markBg }};border:{{ r.markBorder }};box-shadow:{{ r.markGlow }};"></span>
+                <span style="flex:1;font-family:'Jost',sans-serif;font-weight:{{ r.weight }};font-size:14.5px;line-height:1.25;letter-spacing:-.01em;color:{{ r.textColor }};text-wrap:pretty;">{{ r.claim }}</span>
+                <span style="flex:none;width:56px;height:1px;background:linear-gradient(90deg, {{ r.lineColor }}, transparent);"></span>
+                <span style="flex:none;width:118px;font-family:'Nunito',sans-serif;font-size:11.5px;line-height:1.3;color:{{ r.destColor }};text-wrap:pretty;">{{ r.dest }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:20px;padding-top:15px;border-top:1px solid var(--bars-line);display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+            <span style="display:inline-flex;align-items:center;gap:7px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-secondary);"><span style="width:13px;height:13px;border-radius:4px;background:#e0a92a;box-shadow:0 0 9px rgba(224,169,42,0.7);"></span>Lit — surfaced for you</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-secondary);"><span style="width:13px;height:13px;border-radius:50%;border:1.5px solid #6b6965;box-sizing:border-box;"></span>Quiet today</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- MYTH CARD ANATOMY -->
+      <section data-screen-label="Myth card anatomy" style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--bars-text-muted);">C · Myth card — face + reveal</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.5;color:var(--bars-text-secondary);max-width:560px;">The claim on the face; the diagnosis, destination and one move on the flip side. Drawing a card, not filling a form.</span>
+        </div>
+        <div style="display:flex;gap:18px;">
+          <!-- face -->
+          <div style="width:271px;position:relative;overflow:hidden;background:var(--bars-surface-card);border-radius:14px;padding:20px;box-sizing:border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(224,169,42,0.30), 0 0 26px -8px rgba(224,169,42,0.42);">
+            <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 88% -10%, rgba(224,169,42,0.14) 0%, transparent 58%);"></div>
+            <div style="position:relative;display:flex;flex-direction:column;gap:22px;min-height:210px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#e0a92a;">Myth · face</span>
+                <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">M8</span>
+              </div>
+              <p style="margin:auto 0;font-family:'Jost',sans-serif;font-weight:600;font-size:25px;line-height:1.14;letter-spacing:-.015em;color:var(--bars-text-primary);text-wrap:balance;">&ldquo;Allyship means having the right framework.&rdquo;</p>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">Tap to turn it over ↻</span>
+            </div>
+          </div>
+          <!-- reveal -->
+          <div style="width:271px;position:relative;overflow:hidden;background:var(--bars-surface-inset);border-radius:14px;padding:19px 20px;box-sizing:border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(224,169,42,0.5), 0 0 32px -8px rgba(224,169,42,0.55);display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">The diagnosis</span>
+              <p style="margin:0;font-family:'Nunito',sans-serif;font-size:13.5px;line-height:1.5;color:var(--bars-text-primary);">The map becomes the destination.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;padding-top:11px;border-top:1px solid var(--bars-line);">
+              <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#e0a92a;">Where the book solves it · Ch 7</span>
+              <p style="margin:0;font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.45;color:var(--bars-text-secondary);">The Sage — seeing that replaces acting + Two Readings.</p>
+            </div>
+            <div style="margin-top:auto;display:flex;flex-direction:column;gap:9px;padding-top:11px;border-top:1px solid var(--bars-line);">
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--bars-text-muted);">One move now</span>
+                <p style="margin:0;font-family:'Nunito',sans-serif;font-weight:700;font-size:14px;line-height:1.35;color:var(--bars-text-primary);">Name a pattern you see clearly and still haven't moved on.</p>
+              </div>
+              <span style="align-self:flex-start;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#e0a92a;background:rgba(224,169,42,0.10);border:1px solid rgba(224,169,42,0.4);border-radius:8px;padding:8px 12px;">♦ Seed this as your first BAR</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ───────── BOOK-SPREAD MYTH MAP ───────── -->
+    <section data-screen-label="Book spread map" style="flex:none;display:flex;flex-direction:column;gap:14px;padding-top:34px;">
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--bars-text-muted);">D · Myth Map — book spread (belief layer shown)</span>
+        <span style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.5;color:var(--bars-text-secondary);max-width:640px;">The picture that replaces the paragraph the reader skims. Root belief → the myth it grows into → where the book takes it apart. Several myths share a root — that's the insight: myths are <em style="font-style:normal;color:var(--bars-text-primary);">strategies</em>, not random flaws.</span>
+      </div>
+
+      <div style="position:relative;width:1200px;height:812px;border-radius:22px;background:radial-gradient(120% 80% at 50% -6%, #15100a 0%, #0a0806 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line), 0 50px 100px -55px #000;box-sizing:border-box;overflow:hidden;">
+        <!-- soil band -->
+        <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(0deg, rgba(80,58,26,0.16), transparent);pointer-events:none;"></div>
+
+        <!-- column headers -->
+        <div style="position:absolute;left:60px;top:34px;width:270px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8e9aab;">The root belief<span style="display:block;margin-top:3px;font-family:'Nunito',sans-serif;font-size:11px;letter-spacing:0;text-transform:none;color:var(--bars-text-muted);">the source layer · discovered inside the chapters</span></div>
+        <div style="position:absolute;left:430px;top:34px;width:290px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#e0a92a;">The myth — the claim<span style="display:block;margin-top:3px;font-family:'Nunito',sans-serif;font-size:11px;letter-spacing:0;text-transform:none;color:var(--bars-text-muted);">what allyship is <em style="font-style:normal;">not</em></span></div>
+        <div style="position:absolute;left:770px;top:34px;width:360px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#f0c04a;">Where the book takes it apart<span style="display:block;margin-top:3px;font-family:'Nunito',sans-serif;font-size:11px;letter-spacing:0;text-transform:none;color:var(--bars-text-muted);">the yellow-brick destination</span></div>
+
+        <!-- connector layer -->
+        <svg viewBox="0 0 1200 812" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">
+          <!-- belief → myth (faint slate) -->
+          <g fill="none" stroke="#8e9aab" stroke-opacity="0.32" stroke-width="1.4">
+            <path d="M330,142 C382,142 380,110 430,110"></path>
+            <path d="M330,142 C382,142 380,173 430,173"></path>
+            <path d="M330,236 L430,236"></path>
+            <path d="M330,299 L430,299"></path>
+            <path d="M330,394 C382,394 380,362 430,362"></path>
+            <path d="M330,394 C382,394 380,425 430,425"></path>
+            <path d="M330,520 C382,520 380,488 430,488"></path>
+            <path d="M330,520 C382,520 380,551 430,551"></path>
+            <path d="M330,646 C382,646 380,614 430,614"></path>
+            <path d="M330,646 C382,646 380,677 430,677"></path>
+          </g>
+          <!-- myth → resolution (gold, the metabolize direction) -->
+          <g fill="none" stroke="#e0a92a" stroke-opacity="0.5" stroke-width="1.6">
+            <path d="M720,110 L770,110"></path>
+            <path d="M720,173 L770,173"></path>
+            <path d="M720,236 L770,236"></path>
+            <path d="M720,299 L770,299"></path>
+            <path d="M720,362 L770,362"></path>
+            <path d="M720,425 L770,425"></path>
+            <path d="M720,488 L770,488"></path>
+            <path d="M720,551 L770,551"></path>
+            <path d="M720,614 L770,614"></path>
+            <path d="M720,677 L770,677"></path>
+          </g>
+        </svg>
+
+        <!-- BELIEF NODES (dashed seed / recessed) -->
+        <div style="position:absolute;left:60px;top:110px;width:270px;height:64px;box-sizing:border-box;border:1px dashed #4a4a44;border-radius:12px;background:rgba(142,154,171,0.05);display:flex;flex-direction:column;justify-content:center;padding:0 16px;">
+          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#6b6965;">Root · internal</span>
+          <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:16px;color:#b7bcc4;">Not good enough</span>
+        </div>
+        <div style="position:absolute;left:60px;top:204px;width:270px;height:64px;box-sizing:border-box;border:1px dashed #4a4a44;border-radius:12px;background:rgba(142,154,171,0.05);display:flex;flex-direction:column;justify-content:center;padding:0 16px;">
+          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#6b6965;">Root · internal</span>
+          <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:16px;color:#b7bcc4;">Not ready</span>
+        </div>
+        <div style="position:absolute;left:60px;top:267px;width:270px;height:64px;box-sizing:border-box;border:1px dashed #4a4a44;border-radius:12px;background:rgba(142,154,171,0.05);display:flex;flex-direction:column;justify-content:center;padding:0 16px;">
+          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#6b6965;">Root · internal</span>
+          <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:16px;color:#b7bcc4;">Insignificant</span>
+        </div>
+        <div style="position:absolute;left:60px;top:362px;width:270px;height:64px;box-sizing:border-box;border:1px dashed #4a4a44;border-radius:12px;background:rgba(142,154,171,0.05);display:flex;flex-direction:column;justify-content:center;padding:0 16px;">
+          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#6b6965;">Root · internal</span>
+          <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:16px;color:#b7bcc4;">Not capable</span>
+        </div>
+        <div style="position:absolute;left:60px;top:488px;width:270px;height:64px;box-sizing:border-box;border:1px dashed #4a4a44;border-radius:12px;background:rgba(142,154,171,0.05);display:flex;flex-direction:column;justify-content:center;padding:0 16px;">
+          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#6b6965;">Root · internal</span>
+          <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:16px;color:#b7bcc4;">Not worthy</span>
+        </div>
+        <div style="position:absolute;left:60px;top:614px;width:270px;height:64px;box-sizing:border-box;border:1px dashed #4a4a44;border-radius:12px;background:rgba(142,154,171,0.05);display:flex;flex-direction:column;justify-content:center;padding:0 16px;">
+          <span style="font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#6b6965;">Root · internal</span>
+          <span style="font-family:'Jost',sans-serif;font-weight:600;font-size:16px;color:#b7bcc4;">Don't belong</span>
+        </div>
+
+        <!-- MYTH NODES (stuck slate) -->
+        <div style="position:absolute;left:430px;top:85px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M1</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means being good."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:148px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M8</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means having the right framework."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:211px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M2</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means saying the right words."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:274px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M3</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means helping the less powerful."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:337px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M4</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means following the right people."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:400px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M7</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means fixing the problem."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:463px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M5</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means sacrificing yourself."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:526px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M10</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means paying down what you owe."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:589px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M6</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means never causing harm."</span>
+        </div>
+        <div style="position:absolute;left:430px;top:652px;width:290px;height:50px;box-sizing:border-box;border-radius:11px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);display:flex;align-items:center;gap:11px;padding:0 13px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;color:#6b6965;">M9</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.2;color:var(--bars-text-primary);">"Allyship means being seen doing it."</span>
+        </div>
+
+        <!-- RESOLUTION NODES (lit / yellow brick) -->
+        <div style="position:absolute;left:770px;top:85px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.09);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.34);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 0</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The redefinition + the counter-con — Token / Ticket.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:148px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.42), 0 0 22px -8px rgba(224,169,42,0.5);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 7</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The Sage — seeing that replaces acting + Two Readings.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:211px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.42), 0 0 22px -8px rgba(224,169,42,0.5);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 2</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The Shaman — the felt record under the language.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:274px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.09);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.34);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 0</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The redefinition — charity vs. allyship.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:337px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.42), 0 0 22px -8px rgba(224,169,42,0.5);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 3</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The Challenger — keep your discernment or you're staff.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:400px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.09);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.34);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 0</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The Gates + Emotional Alchemy — the wound-bridge.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:463px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.09);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.34);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 0</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The Token System + self-allyship.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:526px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.09);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.34);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 0</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The infinite-game frame.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:589px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.42), 0 0 22px -8px rgba(224,169,42,0.5);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 6</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The Diplomat — the Repairer channel; repair + game frame.</span>
+        </div>
+        <div style="position:absolute;left:770px;top:652px;width:360px;height:50px;box-sizing:border-box;border-radius:11px;background:rgba(224,169,42,0.09);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(224,169,42,0.34);display:flex;align-items:center;gap:12px;padding:0 14px;">
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;color:#f0c04a;">CH 0</span>
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.25;color:var(--bars-text-secondary);">The Ticket System — optics aren't tickets.</span>
+        </div>
+
+        <!-- footnote -->
+        <div style="position:absolute;left:60px;bottom:22px;right:60px;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+          <span style="font-family:'Nunito',sans-serif;font-size:12px;line-height:1.5;color:var(--bars-text-muted);max-width:640px;">Read left to right: a belief you can't see grows the myth you can — and the book meets each myth at a specific, walkable place. On the result screen the left column is hidden; the belief is yours to find inside the chapters.</span>
+          <span style="flex:none;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#e0a92a;">belief → myth → resolution</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══════════ ROW 2: metaphor studies + token sheet ══════════ -->
+  <div style="display:flex;gap:34px;align-items:flex-start;flex-wrap:wrap;">
+
+    <!-- MAP METAPHOR EXPLORATIONS -->
+    <section data-screen-label="Map metaphors" style="flex:none;display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--bars-text-muted);">E · Map metaphor — three ways to draw it</span>
+        <span style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.5;color:var(--bars-text-secondary);max-width:760px;">You asked to see a few. The book-spread above uses <strong style="color:#e0a92a;">Inner Garden</strong> (my lean — root→growth→fruit <em style="font-style:normal;">is</em> belief→myth→resolution). Two alternates below.</span>
+      </div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;">
+
+        <!-- Inner Garden (chosen) -->
+        <div style="width:288px;border-radius:16px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(224,169,42,0.34);padding:18px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-family:'Jost',sans-serif;font-weight:700;font-size:16px;color:var(--bars-text-primary);">Inner Garden</span>
+            <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#0a0807;background:#e0a92a;font-weight:700;padding:4px 8px;border-radius:6px;">Chosen</span>
+          </div>
+          <svg viewBox="0 0 250 150" style="width:100%;height:auto;">
+            <rect x="0" y="118" width="250" height="32" fill="rgba(80,58,26,0.18)"></rect>
+            <g stroke="#8e9aab" stroke-opacity="0.5" fill="none" stroke-width="1.4">
+              <path d="M60,132 C60,100 100,96 118,72"></path>
+              <path d="M60,132 C60,110 78,96 96,72"></path>
+              <path d="M190,132 C190,104 160,96 150,72"></path>
+            </g>
+            <g stroke="#e0a92a" stroke-opacity="0.7" fill="none" stroke-width="1.4">
+              <path d="M96,68 C96,44 92,36 92,24"></path>
+              <path d="M118,68 C118,48 132,40 140,26"></path>
+              <path d="M150,68 C150,46 156,40 162,24"></path>
+            </g>
+            <circle cx="60" cy="134" r="5" fill="#8e9aab" fill-opacity="0.6"></circle>
+            <circle cx="190" cy="134" r="5" fill="#8e9aab" fill-opacity="0.6"></circle>
+            <rect x="86" y="62" width="20" height="10" rx="3" fill="#1a1a18" stroke="var(--bars-line-strong)"></rect>
+            <rect x="108" y="62" width="20" height="10" rx="3" fill="#1a1a18" stroke="var(--bars-line-strong)"></rect>
+            <rect x="140" y="62" width="20" height="10" rx="3" fill="#1a1a18" stroke="var(--bars-line-strong)"></rect>
+            <circle cx="92" cy="20" r="6" fill="#e0a92a" fill-opacity="0.85"></circle>
+            <circle cx="143" cy="21" r="6" fill="#e0a92a" fill-opacity="0.85"></circle>
+            <circle cx="162" cy="20" r="6" fill="#e0a92a" fill-opacity="0.85"></circle>
+          </svg>
+          <p style="margin:0;font-family:'Nunito',sans-serif;font-size:12px;line-height:1.5;color:var(--bars-text-secondary);text-wrap:pretty;">Seeds (belief) underground, stems (myth) at the surface, fruit (resolution) in the light. Ties to the Inner Garden world; the alive/stuck logic is literal — buried vs. blooming.</p>
+        </div>
+
+        <!-- Hexagram lattice -->
+        <div style="width:288px;border-radius:16px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);padding:18px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-family:'Jost',sans-serif;font-weight:700;font-size:16px;color:var(--bars-text-primary);">Hexagram lattice</span>
+            <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-muted);">Alt</span>
+          </div>
+          <svg viewBox="0 0 250 150" style="width:100%;height:auto;">
+            <g stroke="var(--bars-line-strong)" fill="none" stroke-width="1">
+              <path d="M125,16 L211,66 L211,116 L125,150 L39,116 L39,66 Z"></path>
+              <path d="M125,52 L180,84 L180,116 L125,138 L70,116 L70,84 Z" stroke="rgba(224,169,42,0.4)"></path>
+            </g>
+            <g fill="#6b6965">
+              <rect x="118" y="12" width="14" height="4" rx="1"></rect>
+              <rect x="118" y="20" width="6" height="4" rx="1"></rect><rect x="126" y="20" width="6" height="4" rx="1"></rect>
+              <rect x="118" y="28" width="14" height="4" rx="1"></rect>
+            </g>
+            <g fill="#e0a92a">
+              <circle cx="125" cy="86" r="7" fill-opacity="0.9"></circle>
+              <circle cx="180" cy="84" r="4" fill-opacity="0.7"></circle>
+              <circle cx="70" cy="84" r="4" fill-opacity="0.7"></circle>
+              <circle cx="125" cy="138" r="4" fill-opacity="0.7"></circle>
+            </g>
+            <g fill="#8e9aab" fill-opacity="0.6">
+              <circle cx="39" cy="66" r="3.5"></circle><circle cx="211" cy="66" r="3.5"></circle>
+              <circle cx="39" cy="116" r="3.5"></circle><circle cx="211" cy="116" r="3.5"></circle>
+            </g>
+          </svg>
+          <p style="margin:0;font-family:'Nunito',sans-serif;font-size:12px;line-height:1.5;color:var(--bars-text-secondary);text-wrap:pretty;">The six outer trigram lines = the six beliefs; inner cells = myths keyed to the deck's gates. Most on-brand to the cards, but the belief→myth→resolution <em style="font-style:normal;">arc</em> is harder to read at a glance.</p>
+        </div>
+
+        <!-- Arcade board -->
+        <div style="width:288px;border-radius:16px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);padding:18px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-family:'Jost',sans-serif;font-weight:700;font-size:16px;color:var(--bars-text-primary);">Arcade board</span>
+            <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-muted);">Alt</span>
+          </div>
+          <svg viewBox="0 0 250 150" style="width:100%;height:auto;">
+            <g stroke="rgba(224,169,42,0.35)" fill="none" stroke-width="1.4" stroke-dasharray="3 4">
+              <path d="M28,120 L60,120 L60,60 L110,60 L110,110 L160,110 L160,44 L222,44"></path>
+            </g>
+            <g>
+              <rect x="20" y="112" width="16" height="16" rx="3" fill="#8e9aab" fill-opacity="0.5"></rect>
+              <rect x="52" y="52" width="16" height="16" rx="3" fill="#1a1a18" stroke="var(--bars-line-strong)"></rect>
+              <rect x="102" y="102" width="16" height="16" rx="3" fill="#1a1a18" stroke="var(--bars-line-strong)"></rect>
+              <rect x="152" y="36" width="16" height="16" rx="3" fill="#1a1a18" stroke="var(--bars-line-strong)"></rect>
+              <circle cx="222" cy="44" r="9" fill="#e0a92a" fill-opacity="0.9"></circle>
+              <text x="222" y="48" font-size="9" text-anchor="middle" fill="#0a0807" font-family="monospace">♦</text>
+            </g>
+          </svg>
+          <p style="margin:0;font-family:'Nunito',sans-serif;font-size:12px;line-height:1.5;color:var(--bars-text-secondary);text-wrap:pretty;">A token snakes a path, lighting myth-tiles it lands on, cashing out at the resolution. Most "arcade, not module," most playful — but risks the Buzzfeed optics the counter-con warns against.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOKEN SHEET -->
+    <section data-screen-label="Token sheet" style="flex:none;width:520px;display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--bars-text-muted);">F · Token sheet — one world, deck ↔ quiz ↔ book</span>
+        <span style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.5;color:var(--bars-text-secondary);">The honest color logic, type roles, and the motifs that keep all three surfaces in one arcade.</span>
+      </div>
+      <div style="border-radius:18px;background:var(--bars-surface-card);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px var(--bars-line);padding:22px;box-sizing:border-box;display:flex;flex-direction:column;gap:22px;">
+
+        <!-- alive vs stuck -->
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--bars-text-muted);">One honest color logic — alive vs. stuck</span>
+          <div style="display:flex;gap:12px;">
+            <div style="flex:1;border-radius:11px;overflow:hidden;box-shadow:0 0 0 1px var(--bars-line);">
+              <div style="height:56px;background:linear-gradient(150deg,#f0c04a,#d4a017);box-shadow:0 0 26px -6px rgba(224,169,42,0.6);display:flex;align-items:center;justify-content:center;"><span style="width:16px;height:16px;border-radius:5px;background:#0a0807;"></span></div>
+              <div style="padding:10px 12px;background:var(--bars-surface-inset);">
+                <div style="font-family:'Jost',sans-serif;font-weight:600;font-size:13px;color:var(--bars-text-primary);">Lit · metabolized</div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--bars-text-muted);margin-top:2px;">#E0A92A · glow · filled square</div>
+              </div>
+            </div>
+            <div style="flex:1;border-radius:11px;overflow:hidden;box-shadow:0 0 0 1px var(--bars-line);">
+              <div style="height:56px;background:#1a1a18;display:flex;align-items:center;justify-content:center;"><span style="width:16px;height:16px;border-radius:50%;border:2px solid #6b6965;box-sizing:border-box;"></span></div>
+              <div style="padding:10px 12px;background:var(--bars-surface-inset);">
+                <div style="font-family:'Jost',sans-serif;font-weight:600;font-size:13px;color:var(--bars-text-primary);">Stuck · dormant</div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--bars-text-muted);margin-top:2px;">#8E9AAB desat · hollow ring</div>
+              </div>
+            </div>
+          </div>
+          <p style="margin:0;font-family:'Nunito',sans-serif;font-size:11.5px;line-height:1.5;color:var(--bars-text-muted);">Color is never the only carrier: lit = filled square + glow, stuck = hollow ring. Mirrors Emotional Alchemy — alive vs. stuck.</p>
+        </div>
+
+        <!-- ground -->
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--bars-text-muted);">Warm ground · the OS canvas</span>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;height:44px;border-radius:9px;background:#080706;box-shadow:inset 0 0 0 1px var(--bars-line);display:flex;align-items:flex-end;padding:5px 8px;"><span style="font-family:'Space Mono',monospace;font-size:8px;color:var(--bars-text-muted);">#08 canvas</span></div>
+            <div style="flex:1;height:44px;border-radius:9px;background:#1a1a18;box-shadow:inset 0 0 0 1px var(--bars-line);display:flex;align-items:flex-end;padding:5px 8px;"><span style="font-family:'Space Mono',monospace;font-size:8px;color:var(--bars-text-muted);">#1A card</span></div>
+            <div style="flex:1;height:44px;border-radius:9px;background:#111110;box-shadow:inset 0 0 0 1px var(--bars-line);display:flex;align-items:flex-end;padding:5px 8px;"><span style="font-family:'Space Mono',monospace;font-size:8px;color:var(--bars-text-muted);">#11 well</span></div>
+          </div>
+        </div>
+
+        <!-- type -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--bars-text-muted);">Type roles</span>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--bars-line);padding-bottom:12px;">
+              <span style="font-family:'Jost',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.02em;color:var(--bars-text-primary);">Jost</span>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">Display · the claim, spoken</span>
+            </div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--bars-line);padding-bottom:12px;">
+              <span style="font-family:'Nunito',sans-serif;font-weight:600;font-size:20px;color:var(--bars-text-primary);">Nunito — the read</span>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">Body · prose</span>
+            </div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;">
+              <span style="font-family:'Space Mono',monospace;font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-primary);">SPACE MONO · ♦</span>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">Chrome · labels</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- motifs -->
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--bars-text-muted);">Motif kit</span>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;aspect-ratio:1;border-radius:10px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+              <span style="display:inline-flex;flex-direction:column;gap:3px;"><i style="width:26px;height:3px;background:#e0a92a;border-radius:2px;display:block;"></i><i style="width:26px;height:3px;background:#e0a92a;border-radius:2px;display:flex;justify-content:space-between;"><b style="width:10px;height:100%;background:#e0a92a;"></b><b style="width:10px;height:100%;background:#e0a92a;"></b></i><i style="width:26px;height:3px;background:#e0a92a;border-radius:2px;display:block;"></i></span>
+              <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-muted);">Trigram</span>
+            </div>
+            <div style="flex:1;aspect-ratio:1;border-radius:10px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+              <span style="width:28px;height:28px;background:#e0a92a;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);display:flex;align-items:center;justify-content:center;"><span style="width:11px;height:11px;background:#0a0807;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);"></span></span>
+              <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-muted);">Vibeulon ♦</span>
+            </div>
+            <div style="flex:1;aspect-ratio:1;border-radius:10px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+              <span style="width:30px;height:20px;border-radius:4px;background:#1a1a18;box-shadow:0 0 0 1px rgba(224,169,42,0.4), 0 0 12px -4px rgba(224,169,42,0.6);position:relative;display:flex;align-items:center;justify-content:center;"><span style="font-family:'Jost',sans-serif;font-weight:700;font-size:9px;color:#e0a92a;">M</span></span>
+              <span style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-muted);">Myth face</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- voice -->
+        <div style="border-top:1px solid var(--bars-line);padding-top:16px;display:flex;flex-direction:column;gap:6px;">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--bars-text-muted);">Voice</span>
+          <p style="margin:0;font-family:'Nunito',sans-serif;font-size:12.5px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">Terse, first-person, no exclamation-cheer. Buttons say what they do — "Save your read," "Start playing." Never "Unlock now!" The quiz is the counter-con: it measures, it doesn't flatter.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0a0908"></rect>
+    <circle cx="50" cy="50" r="30" fill="none" stroke="#e0a92a" stroke-width="3"></circle>
+    <circle cx="50" cy="50" r="9" fill="#e0a92a"></circle>
+    <text x="50" y="86" font-size="11" text-anchor="middle" fill="#e0a92a" font-family="monospace">MYTHS</text>
+  </svg>
+</template>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:2720,&quot;height&quot;:1800},&quot;showSampleResult&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Preview&quot;},&quot;sampleMythCount&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1&quot;,&quot;2&quot;,&quot;3&quot;],&quot;default&quot;:&quot;3&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Preview&quot;}}">
+class Component extends DCLogic {
+  state = { phase: 'intro', step: 0, answers: {}, outcome: null, flipped: {}, chargeMyth: null, chargeFlavor: null, chargeIntensity: null, emailValue: '', emailSaved: false };
+
+  MAP_ORDER = ['M1','M8','M2','M3','M4','M7','M5','M10','M6','M9'];
+  CANON = ['M8','M7','M1','M5','M6','M4','M2','M3','M9','M10'];
+
+  MYTH = {
+    M1:{ claim:'Allyship means being good.', diagnosis:'A private trial where the other person becomes your evidence.', chapter:'Ch 0', mechanism:'The redefinition + the counter-con — Token / Ticket.', move:'Name the verdict you\u2019re trying to win.', dest:'Ch 0 · redefinition + counter-con' },
+    M2:{ claim:'Allyship means saying the right words.', diagnosis:'Fluency that signals safety without proving it.', chapter:'Ch 2', mechanism:'The Shaman — the felt record under the language.', move:'Name one thing you feel that you have no vocabulary for.', dest:'Ch 2 · the Shaman' },
+    M3:{ claim:'Allyship means helping the less powerful.', diagnosis:'Turns a person into a project. That\u2019s charity.', chapter:'Ch 0', mechanism:'The redefinition — charity vs. allyship.', move:'Name where the mutuality is.', dest:'Ch 0 · charity vs. allyship' },
+    M4:{ claim:'Allyship means following the right people.', diagnosis:'Discernment surrendered to someone\u2019s authority.', chapter:'Ch 3', mechanism:'The Challenger — keep your discernment or you\u2019re staff.', move:'Name one thing you disagreed with and swallowed.', dest:'Ch 3 · the Challenger' },
+    M5:{ claim:'Allyship means sacrificing yourself.', diagnosis:'Self-abandonment that sends an invoice.', chapter:'Ch 0', mechanism:'The Token System + self-allyship.', move:'Name what actually refills you.', dest:'Ch 0 · Token System + self-allyship' },
+    M6:{ claim:'Allyship means never causing harm.', diagnosis:'Innocence protected by never moving.', chapter:'Ch 6', mechanism:'The Diplomat — the Repairer channel; repair + the game frame.', move:'Name a rupture you\u2019ve been avoiding repairing.', dest:'Ch 6 · Diplomat, the Repairer' },
+    M7:{ claim:'Allyship means fixing the problem.', diagnosis:'Wanting it more than they do; help curdles to pressure.', chapter:'Ch 0', mechanism:'The Gates + Emotional Alchemy — the wound-bridge.', move:'Name the charge under your urge to fix.', dest:'Ch 0 · Gates + Emotional Alchemy' },
+    M8:{ claim:'Allyship means having the right framework.', diagnosis:'The map becomes the destination.', chapter:'Ch 7', mechanism:'The Sage — seeing that replaces acting + Two Readings.', move:'Name a pattern you see clearly and still haven\u2019t moved on.', dest:'Ch 7 · the Sage' },
+    M9:{ claim:'Allyship means being seen doing it.', diagnosis:'Optics on someone else\u2019s ledger.', chapter:'Ch 0', mechanism:'The Ticket System — optics aren\u2019t tickets.', move:'Name a move you\u2019d make if no one saw.', dest:'Ch 0 · the Ticket System' },
+    M10:{ claim:'Allyship means paying down what you owe.', diagnosis:'An inherited, unpayable debt.', chapter:'Ch 0', mechanism:'The infinite-game frame.', move:'Name what accurate accounting would actually say.', dest:'Ch 0 · the infinite-game frame' },
+  };
+
+  SHORT = { M1:'being good', M2:'right words', M3:'the less powerful', M4:'the right people', M5:'sacrificing yourself', M6:'never causing harm', M7:'fixing it', M8:'the right framework', M9:'being seen', M10:'a debt to pay' };
+
+  FLAVORS = [
+    { key:'sadness',      sigil:'\u6c34', label:'Sadness',      sub:'Heavy — grief, something feels distant',   color:'#2980b9', route:'Emotional First Aid', moveLabel:'metabolize it (3\u00b72\u00b71)' },
+    { key:'anger',        sigil:'\u706b', label:'Anger',        sub:'Heated — a boundary\u2019s been crossed',        color:'#c1392b', route:'Adventure',          moveLabel:'take the concrete move' },
+    { key:'fear',         sigil:'\u91d1', label:'Fear',         sub:'Anxious — dread, bracing for it',          color:'#8e9aab', route:'the Diplomat',       moveLabel:'open the hard conversation' },
+    { key:'numbness',     sigil:'\u571f', label:'Numbness',     sub:'Shut down — going through the motions',    color:'#9a8f6e', route:'Capture a Charge',   moveLabel:'name it so it stops running you' },
+    { key:'restlessness', sigil:'\u6728', label:'Restlessness', sub:'Forced — performing okay-ness',            color:'#2ecc71', route:'Growth Scene',       moveLabel:'rehearse the move low-stakes' },
+  ];
+
+  INTENSITY = [
+    { v:2,  label:'Faint',        read:'Faint — a background hum' },
+    { v:4,  label:'Mild',         read:'Mild — noticeable' },
+    { v:6,  label:'Live',         read:'Live — it\u2019s here' },
+    { v:8,  label:'Heavy',        read:'Heavy — it colors everything' },
+    { v:10, label:'Overwhelming', read:'Overwhelming — it runs the show' },
+  ];
+
+  ITEMS = [
+    { id:'q1', text:'When I do something for a cause, some part of me is quietly checking whether it makes me a good person.', w:{ M1:1 } },
+    { id:'q2', text:'I relax in a room once I\u2019ve heard people use the right language — I know I\u2019m safe there.', w:{ M2:1 } },
+    { id:'q3', text:'I feel most useful when I\u2019m helping someone who clearly can\u2019t help themselves.', w:{ M3:1 } },
+    { id:'q4', text:'When someone with more standing or lived experience takes a position, I go along with it even when something in me disagrees.', w:{ M4:1 } },
+    { id:'q5', text:'I gauge whether I did enough by how drained I feel afterward.', w:{ M5:1 } },
+    { id:'q6', text:'I\u2019d rather stay quiet than risk saying the wrong thing and being seen as harmful.', w:{ M6:1 } },
+    { id:'q7', text:'When someone I care about is struggling, I keep offering my solution even after they\u2019ve stopped asking for it.', w:{ M7:1 } },
+    { id:'q8', text:'Before I act, I reach for a framework or an analysis so I feel like I\u2019m standing on solid ground.', w:{ M8:1 } },
+    { id:'q9', text:'I understand my own patterns far better than I actually change them.', w:{ M8:1 } },
+    { id:'q10', text:'It matters to me that the right people notice I showed up.', w:{ M9:1, M1:0.5 } },
+    { id:'q11', text:'I carry a sense that I owe something for advantages I didn\u2019t earn, and that I have to keep paying it down.', w:{ M10:1 } },
+    { id:'q12', text:'It\u2019s hard for me to let someone struggle when I\u2019m sure I know what would help.', w:{ M7:1 } },
+  ];
+
+  SCALE = [
+    { v:0, label:'Never' }, { v:1, label:'Rarely' }, { v:2, label:'Sometimes' }, { v:3, label:'Often' }, { v:4, label:'Almost\u00a0always' },
+  ];
+
+  componentDidMount() {
+    if (this.props.showSampleResult) this.loadSample();
+  }
+
+  loadSample() {
+    const n = parseInt(this.props.sampleMythCount ?? '3', 10);
+    // craft answers that surface framework(M8) + fixer(M7) + being-good(M1), scaled by n
+    const a = {};
+    for (const it of this.ITEMS) a[it.id] = 1;
+    a.q8 = 4; a.q9 = 4;                    // M8 high
+    a.q7 = (n >= 2) ? 4 : 1; a.q12 = (n >= 2) ? 3 : 1;  // M7
+    a.q1 = (n >= 3) ? 3 : 1; a.q10 = (n >= 3) ? 3 : 1;  // M1/M9
+    this.setState({ phase:'result', step:this.ITEMS.length, answers:a, outcome:this.score(a) });
+  }
+
+  // ── scorer (port of §4) ──
+  score(answers) {
+    const ids = Object.keys(this.MYTH);
+    const raw = {}, max = {}, peak = {};
+    ids.forEach(m => { raw[m] = 0; max[m] = 0; peak[m] = 0; });
+    for (const it of this.ITEMS) {
+      for (const m in it.w) max[m] += 4 * it.w[m];
+    }
+    for (const it of this.ITEMS) {
+      const v = answers[it.id];
+      if (v == null) continue;
+      for (const m in it.w) {
+        const contrib = v * it.w[m];
+        raw[m] += contrib;
+        if (contrib > peak[m]) peak[m] = contrib;
+      }
+    }
+    let ranked = ids.map(m => ({ m, pct: max[m] > 0 ? raw[m] / max[m] : 0, raw: raw[m], peak: peak[m] }));
+    ranked.sort((a, b) => {
+      if (b.pct !== a.pct) return b.pct - a.pct;
+      if (b.peak !== a.peak) return b.peak - a.peak;
+      return this.CANON.indexOf(a.m) - this.CANON.indexOf(b.m);
+    });
+    // top 3, floor rule: #3 (and #2) must be >= 0.40, min 1 surfaced
+    let surfaced = ranked.slice(0, 3).filter((r, i) => i === 0 || r.pct >= 0.40);
+    if (surfaced.length === 0) surfaced = [ranked[0]];
+    return { ranked, surfaced: surfaced.map(r => r.m), scores: Object.fromEntries(ranked.map(r => [r.m, r.pct])) };
+  }
+
+  start() { this.setState({ phase:'quiz', step:0 }); }
+  answer(step, v) {
+    const it = this.ITEMS[step];
+    const answers = { ...this.state.answers, [it.id]: v };
+    if (step + 1 >= this.ITEMS.length) {
+      setTimeout(() => this.setState({ answers, phase:'result', outcome:this.score(answers) }), 190);
+      this.setState({ answers });
+    } else {
+      setTimeout(() => this.setState({ answers, step: step + 1 }), 190);
+      this.setState({ answers });
+    }
+  }
+  back() { this.setState(s => ({ step: Math.max(0, s.step - 1) })); }
+  retake() { this.setState({ phase:'intro', step:0, answers:{}, outcome:null, flipped:{}, chargeMyth:null, chargeFlavor:null, chargeIntensity:null, emailValue:'', emailSaved:false }); }
+  flip(i) { this.setState(s => ({ flipped: { ...s.flipped, [i]: !s.flipped[i] } })); }
+  setChargeMyth(m) { this.setState({ chargeMyth: m }); }
+  setFlavor(k) { this.setState({ chargeFlavor: k }); }
+  setIntensity(v) { this.setState({ chargeIntensity: v }); }
+  onEmail(e) { const val = e.target.value; this.setState({ emailValue: val }); }
+  saveEmail() { if ((this.state.emailValue || '').includes('@')) this.setState({ emailSaved: true }); }
+
+  strength(pct) {
+    if (pct >= 0.72) return 'Loud';
+    if (pct >= 0.55) return 'Clear';
+    return 'Faint';
+  }
+
+  renderVals() {
+    const phase = this.state.phase;
+    const gold = '#e0a92a';
+
+    // ── shared: board rows (result-version map) ──
+    const litSet = this.state.outcome ? this.state.outcome.surfaced : ['M8','M7','M1'];
+    const scores = this.state.outcome ? this.state.outcome.scores : { M8:0.82, M7:0.64, M1:0.5 };
+    const mapRow = (m) => {
+      const lit = litSet.includes(m);
+      return {
+        id:m, claim:this.MYTH[m].claim, chapter:this.MYTH[m].chapter, dest:this.MYTH[m].dest,
+        lit,
+        opacity: lit ? '1' : '0.42',
+        weight: lit ? '600' : '400',
+        markRadius: lit ? '4px' : '50%',
+        markBg: lit ? gold : 'transparent',
+        markBorder: lit ? 'none' : '1.5px solid #6b6965',
+        markGlow: lit ? '0 0 9px rgba(224,169,42,0.7)' : 'none',
+        textColor: lit ? 'var(--bars-text-primary)' : 'var(--bars-text-secondary)',
+        destColor: lit ? 'var(--bars-text-secondary)' : 'var(--bars-text-muted)',
+        lineColor: lit ? 'rgba(224,169,42,0.6)' : 'rgba(255,255,255,0.1)',
+      };
+    };
+    const resultMap = this.MAP_ORDER.map(mapRow);
+    const boardRows = this.MAP_ORDER.map(mapRow);
+    const litCount = litSet.length;
+
+    // ── quiz mode values ──
+    const step = this.state.step;
+    const cur = this.ITEMS[Math.min(step, this.ITEMS.length - 1)];
+    const curAns = this.state.answers[cur.id];
+    const scale = this.SCALE.map(s => {
+      const sel = curAns === s.v;
+      const size = 12 + s.v * 5; // 12..32
+      return {
+        label: s.label,
+        onClick: () => this.answer(step, s.v),
+        labelColor: sel ? gold : 'var(--bars-text-secondary)',
+        cellStyle: `appearance:none;cursor:pointer;flex:1;display:flex;flex-direction:column;align-items:center;gap:11px;box-sizing:border-box;padding:14px 4px 11px;border-radius:12px;background:${sel ? 'rgba(224,169,42,0.10)' : 'var(--bars-surface-card)'};border:1px solid ${sel ? 'rgba(224,169,42,0.55)' : 'var(--bars-line)'};box-shadow:inset 0 1px 0 rgba(255,255,255,0.05)${sel ? ', 0 0 20px -8px rgba(224,169,42,0.6)' : ''};transition:border-color .18s ease, background .18s ease;`,
+        dotStyle: `width:${size}px;height:${size}px;border-radius:50%;box-sizing:border-box;background:${sel ? gold : 'transparent'};border:2px solid ${sel ? gold : '#54524d'};box-shadow:${sel ? '0 0 12px rgba(224,169,42,0.7)' : 'none'};transition:all .18s ease;`,
+      };
+    });
+    const pips = this.ITEMS.map((it, i) => ({
+      color: i < step ? gold : (i === step ? 'rgba(224,169,42,0.5)' : 'rgba(255,255,255,0.08)'),
+    }));
+
+    // ── result mode values ──
+    const activeMyth = this.state.chargeMyth || (this.state.outcome ? this.state.outcome.surfaced[0] : null);
+    let surfaced = [];
+    if (this.state.outcome) {
+      surfaced = this.state.outcome.surfaced.map((m, i) => {
+        const pct = scores[m];
+        const flipped = !!this.state.flipped[i];
+        const on = m === activeMyth;
+        return {
+          id:m, rank:i + 1, claim:this.MYTH[m].claim, diagnosis:this.MYTH[m].diagnosis,
+          chapter:this.MYTH[m].chapter, mechanism:this.MYTH[m].mechanism, move:this.MYTH[m].move,
+          strengthLabel:this.strength(pct), pctWidth: Math.round(pct * 100) + '%',
+          onFlip: () => this.flip(i),
+          onPick: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.setChargeMyth(m); },
+          showFace: !flipped, showReveal: flipped,
+          pickLabel: on ? '\u2713 Working this one — metabolize below' : 'This one\u2019s alive — work it \u2193',
+          pickStyle: `appearance:none;cursor:pointer;text-align:left;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:${on ? '#0a0807' : gold};background:${on ? 'linear-gradient(150deg,#f0c04a,#d4a017)' : 'rgba(224,169,42,0.10)'};border:1px solid rgba(224,169,42,0.42);border-radius:8px;padding:9px 12px;align-self:flex-start;`,
+        };
+      });
+    }
+    const surfacedLabel = this.state.outcome
+      ? (this.state.outcome.surfaced.length === 1 ? 'one myth surfaced'
+         : this.state.outcome.surfaced.length + ' myths surfaced')
+      : '';
+
+    // ── charge capture / metabolize bridge ──
+    let chargeMythChips = [], flavorChips = [], intensityChips = [];
+    let intensityReadout = 'tap to set', chargeReady = false, barSummary = '';
+    let metabolizeLabel = 'Metabolize in the BARS Engine →', metabolizeRoute = 'the engine';
+    if (this.state.outcome) {
+      chargeMythChips = this.state.outcome.surfaced.map(m => {
+        const on = m === activeMyth;
+        return {
+          label: this.SHORT[m], onClick: () => this.setChargeMyth(m),
+          style: `appearance:none;cursor:pointer;font-family:'Jost',sans-serif;font-weight:600;font-size:12.5px;color:${on ? '#fff' : 'var(--bars-text-secondary)'};background:${on ? 'rgba(124,58,237,0.22)' : 'var(--bars-surface-inset)'};border:1px solid ${on ? 'rgba(139,92,246,0.6)' : 'var(--bars-line)'};border-radius:8px;padding:8px 11px;transition:all .16s ease;`,
+        };
+      });
+      const fk = this.state.chargeFlavor;
+      flavorChips = this.FLAVORS.map(f => {
+        const on = f.key === fk;
+        return {
+          sigil:f.sigil, label:f.label, sub:f.sub, onClick: () => this.setFlavor(f.key),
+          style: `appearance:none;cursor:pointer;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;text-align:left;padding:11px 13px;border-radius:11px;background:${on ? `color-mix(in srgb, ${f.color} 14%, var(--bars-surface-inset))` : 'var(--bars-surface-inset)'};border:1px solid ${on ? f.color : 'var(--bars-line)'};box-shadow:${on ? `0 0 18px -8px ${f.color}` : 'none'};transition:all .16s ease;`,
+          sigilStyle: `flex:none;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;font-family:'Nunito',sans-serif;font-size:17px;color:${f.color};background:color-mix(in srgb, ${f.color} 16%, transparent);text-shadow:0 0 10px ${f.color};`,
+        };
+      });
+      const iv = this.state.chargeIntensity;
+      intensityChips = this.INTENSITY.map(it => {
+        const on = it.v === iv;
+        return {
+          label: it.label, onClick: () => this.setIntensity(it.v),
+          style: `appearance:none;cursor:pointer;flex:1;font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.03em;text-transform:uppercase;color:${on ? '#fff' : 'var(--bars-text-muted)'};background:${on ? 'rgba(124,58,237,0.22)' : 'var(--bars-surface-inset)'};border:1px solid ${on ? 'rgba(139,92,246,0.6)' : 'var(--bars-line)'};border-radius:8px;padding:9px 3px;transition:all .16s ease;`,
+        };
+      });
+      const selFlavor = this.FLAVORS.find(x => x.key === fk);
+      const selIntensity = this.INTENSITY.find(x => x.v === iv);
+      intensityReadout = selIntensity ? selIntensity.read : 'tap to set';
+      chargeReady = !!(selFlavor && selIntensity);
+      if (chargeReady && activeMyth) {
+        barSummary = `\u201c${this.SHORT[activeMyth]}\u201d, held as ${selFlavor.label.toLowerCase()} at ${selIntensity.label.toLowerCase()} strength — ${selFlavor.moveLabel}.`;
+        metabolizeRoute = selFlavor.route;
+      }
+    }
+
+    return {
+      isIntro: phase === 'intro', isQuiz: phase === 'quiz', isResult: phase === 'result',
+      start: () => this.start(),
+      // quiz
+      stepLabel: String(Math.min(step + 1, this.ITEMS.length)).padStart(2, '0'),
+      itemText: cur.text, scale, pips, stepKey: 'q' + step,
+      canBack: step > 0, back: () => this.back(),
+      // result
+      surfaced, surfacedLabel, boardRows, litCount, resultMap,
+      // charge / metabolize
+      chargeMythChips, flavorChips, intensityChips, intensityReadout,
+      chargeReady, chargeUnready: !chargeReady,
+      barSummary, metabolizeLabel, metabolizeRoute,
+      metabolizeHref: 'Deck Experience.dc.html',
+      retake: () => this.retake(),
+      emailOpen: !this.state.emailSaved, emailSaved: this.state.emailSaved,
+      emailValue: this.state.emailValue, savedEmail: this.state.emailValue,
+      onEmail: (e) => this.onEmail(e), onSaveEmail: () => this.saveEmail(),
+    };
+  }
+}
+</script>
+</body>
+</html>

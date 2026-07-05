@@ -54,17 +54,42 @@ existing quiz/myth components + the `offers.ts` Gumroad SKUs. Deterministic (no 
 
 ---
 
-## Open dependency — the Myth *quiz* (needs your Claude Design artifact)
+## Reconciliation — 2026-07-05 (Claude Design handoff received)
 
-You flagged that **the myth *reframe* I built (`ALLYSHIP_MYTHS`: myth → truth → reframe cards) is NOT the
-myth *quiz* handed off from Claude Design.** That quiz is not in the repo. To wire it exactly I need it —
-paste the copy or share the Claude Design URL. Until then this spec treats the myth quiz as a **slot**
-with a defined contract:
+You uploaded `Mastering_the_Game_of_Allyship_Bookhandoff_3.zip` — the actual Claude Design project. Two
+things it settles, and one it overturns:
 
-- **Input**: reader answers a few forced-choice items.
-- **Output**: the one allyship **myth** they most believe → a reframe → a book/deck CTA.
-- **Data**: capture `mythResult` on the lead/`FunnelSignup` for segmentation.
-- The existing `ALLYSHIP_MYTHS` content can seed the *reframe copy* but the **quiz instrument** is yours.
+**1. The Myth *quiz* is now fully specified (Open Dependency CLOSED).** The authoritative handoff is
+vendored under [`design/myths-read/`](design/myths-read/): `logic_spec_reference.md` (10 myths, 6 root
+beliefs, 12 items, §4 scoring, §9 data model), `README.md` (result content contract + strength labels),
+and `Myths-Read.dc.html` (high-fidelity prototype). The content + scorer are **built and unit-tested** at
+[`src/lib/allyship-myths/myths-read.ts`](../../../src/lib/allyship-myths/myths-read.ts) — distinct from the
+`ALLYSHIP_MYTHS` reframe cards (which stay for `/campaign/[ref]/begin`). Key facts from the real quiz:
+  - It is **the counter-con**: behavioral 0–4 items, no flattering "which ally are you."
+  - Result routes **primary → the Deck** ("first yes"), secondary → the book, plus a Superpower-quiz
+    cross-link. *(This overturns the draft's "myth → book / superpower → deck" split — per the real spec,
+    both quizzes point at the Deck as the entry product.)*
+  - The result screen carries an **Emotional Alchemy charge-capture** panel that seeds the reader's first
+    **BAR** and routes into a scene (the metabolize bridge) — richer than a pure lead magnet. The
+    prototype mocks the charge→BAR persistence; that wiring is ours to build (see FR3a).
+
+**2. The sales *letter* is superseded.** My blind-drafted [`SALES_LETTER.md`](SALES_LETTER.md) is NOT the
+copy to ship. The real page is [`design/sales-page/MTGOA_SALES_PAGE_DRAFT_v1.md`](design/sales-page/MTGOA_SALES_PAGE_DRAFT_v1.md)
+— on-voice, avatar-specific (burnt-out femme nonprofit exec), and structurally different:
+  - **Opens on exhaustion / recognition** ("You started this work for a reason…"), not "You already care."
+  - **One stacked offer**, not a six-card grid: **Deck + Book + Coaching**, coaching as the "go all the
+    way" tier. Every CTA and both quizzes route to the *same* stacked offer. No dead ends.
+  - Matched **loop / spiral diagrams** as the visual spine; testimonials placed to prove specific claims.
+  - The `/launch` offer-grid page ([`design/sales-page/launch-page-handoff.md`](design/sales-page/launch-page-handoff.md))
+    is a **separate** decision-support surface — the six SKUs live there, not on the cold sales page.
+
+**Decisions this raises for you** (surfaced separately, not assumed here):
+  - Replace `SALES_LETTER.md` with the Claude Design draft as canonical? (Recommend yes.)
+  - Add a **Coaching** SKU to `offers.ts` (the third leg of the stack has no SKU today)?
+  - The draft's **Superpower quiz** surfaces a *sabotaging belief → superpower* (via "Appendix G"), which
+    is **not** the existing 7-power Connector/Storyteller `SuperpowerQuiz` and is flagged Phase B / not in
+    the zip. Keep the existing quiz for now, or block on Appendix G?
+  - How far to wire the **charge → BAR** bridge for MVP vs. stub it as the prototype does?
 
 ---
 
@@ -95,7 +120,8 @@ practice). The letter carries anyone who doesn't take a quiz straight to the off
 
 - **FR1**: Route `/mastering-allyship/page.tsx` — the sales letter (server component; public; `@entity CAMPAIGN`).
 - **FR2**: Reuse `SuperpowerQuiz` (already accepts `campaignRef` + `onComplete`) as the superpower hook; on complete, render a **deck-selling reveal** (superpower → deck + `superpower-<sp>-pack`), not character creation.
-- **FR3**: Myth-quiz component (from your Claude Design artifact) as the myth hook; on complete, render a **book-selling reframe**.
+- **FR3**: Myth-quiz component built to [`design/myths-read/`](design/myths-read/) — intro → 12 items → result. Content + scorer from [`src/lib/allyship-myths/myths-read.ts`](../../../src/lib/allyship-myths/myths-read.ts). Result surfaces 1–3 myths (flip cards), routes **primary → the Deck** ("first yes"), secondary → book, cross-links the Superpower quiz — per the real spec, NOT myth→book.
+- **FR3a** (charge bridge): the result's Emotional Alchemy charge-capture panel seeds the reader's first BAR and routes into a scene. MVP may stub the persistence (as the prototype does); full wiring = a `myth_read` record + BAR seed + scene route. Decision pending (see Reconciliation).
 - **FR4**: Offer grid driven by `getOffer()` / the `offers.ts` registry; each card links to its Gumroad URL (or "setup pending" when the env is absent — honest by default, already the pattern).
 - **FR5**: Email capture (`intent:'book'`) via the `/api/awaken/signup` pattern → `FunnelSignup`.
 - **FR6**: Make `/campaign/[ref]/begin`'s ending **ref-aware** — for `allyship-book` the payoff is the offer/CTA, not `/character/create`. (Keeps `/begin` reusable; the book funnel gets the sell ending.)
