@@ -30,6 +30,7 @@ export const SKU_GRANTS: Record<CoreOfferKey, GrantConfig> = {
   'book-physical': { grantType: 'perpetual' }, // entitlement = fulfillment record
   'rpg-handbook-physical': { grantType: 'perpetual' }, // entitlement = fulfillment record
   'founding-ally': { grantType: 'perpetual' }, // lifetime app access
+  'coaching': { grantType: 'perpetual' }, // service engagement = fulfillment record
 }
 
 /**
@@ -55,6 +56,9 @@ export const SKU_CAPABILITIES: Record<CoreOfferKey, Capability[]> = {
   'rpg-handbook-physical': ['rpg-handbook-digital'],
   // Founding Ally: lifetime app access + every digital file.
   'founding-ally': ['app-access', 'deck-digital', 'book-digital', 'rpg-handbook-digital'],
+  // Coaching: you're in the app running the campaign together — app access + the
+  // core tools (deck + book) the engagement is built around.
+  'coaching': ['app-access', 'deck-digital', 'book-digital'],
 }
 
 /**

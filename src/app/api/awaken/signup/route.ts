@@ -21,7 +21,11 @@ type Body = {
   email?: string
   name?: string
   events?: unknown
+  source?: string
 }
+
+/** Whitelisted funnel sources — keeps `source` a safe, low-cardinality segment. */
+const ALLOWED_SOURCES = new Set(['awaken', 'mastering-allyship'])
 
 export async function POST(request: NextRequest) {
   let body: Body
@@ -34,6 +38,7 @@ export async function POST(request: NextRequest) {
   const intent = body.intent === 'event' ? 'event' : 'chapter'
   const email = (body.email ?? '').trim().toLowerCase()
   const name = body.name?.trim() || null
+  const source = ALLOWED_SOURCES.has(body.source ?? '') ? (body.source as string) : 'awaken'
 
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ ok: false, error: 'Please enter a valid email.' }, { status: 400 })
@@ -56,7 +61,7 @@ export async function POST(request: NextRequest) {
   // Persist first — the lead is the thing we must not lose.
   try {
     await db.funnelSignup.create({
-      data: { intent, email, name, events, source: 'awaken' },
+      data: { intent, email, name, events, source },
     })
   } catch (err) {
     // Don't strand the visitor if persistence hiccups — log and acknowledge.

@@ -202,6 +202,42 @@ export function strengthLabel(pct: number): StrengthLabel {
   return 'Faint'
 }
 
+/**
+ * The five Wuxing charge flavors for the Emotional Alchemy bridge on the result
+ * screen (mirrors the deck's daily check-in). `element` keys the --bars-{element}
+ * tokens; `route` is the scene the metabolize CTA would carry the seeded BAR to
+ * (stubbed to the Deck for the sales-page MVP — see spec FR3a).
+ */
+export type ElementKey = 'water' | 'fire' | 'metal' | 'earth' | 'wood'
+
+export interface ChargeFlavor {
+  key: 'sadness' | 'anger' | 'fear' | 'numbness' | 'restlessness'
+  sigil: string
+  label: string
+  sub: string
+  element: ElementKey
+  route: string
+  /** Move phrasing folded into the seeded-BAR summary. */
+  move: string
+}
+
+export const CHARGE_FLAVORS: readonly ChargeFlavor[] = [
+  { key: 'sadness', sigil: '水', label: 'Sadness', sub: 'Heavy — grief, something feels distant', element: 'water', route: 'Emotional First Aid', move: 'metabolize it (3·2·1)' },
+  { key: 'anger', sigil: '火', label: 'Anger', sub: 'Heated — a boundary’s been crossed', element: 'fire', route: 'Adventure', move: 'take the concrete move' },
+  { key: 'fear', sigil: '金', label: 'Fear', sub: 'Anxious — dread, bracing for it', element: 'metal', route: 'the Diplomat', move: 'open the hard conversation' },
+  { key: 'numbness', sigil: '土', label: 'Numbness', sub: 'Shut down — going through the motions', element: 'earth', route: 'Capture a Charge', move: 'name it so it stops running you' },
+  { key: 'restlessness', sigil: '木', label: 'Restlessness', sub: 'Forced — performing okay-ness', element: 'wood', route: 'Growth Scene', move: 'rehearse the move low-stakes' },
+] as const
+
+/** The five intensity steps for the charge panel. */
+export const CHARGE_INTENSITIES = [
+  { value: 2, label: 'Faint', readout: 'barely there' },
+  { value: 4, label: 'Mild', readout: 'noticeable' },
+  { value: 6, label: 'Live', readout: 'right at the surface' },
+  { value: 8, label: 'Heavy', readout: 'it colors everything' },
+  { value: 10, label: 'Overwhelming', readout: 'hard to think past' },
+] as const
+
 export interface MythScore {
   myth: MythId
   /** raw = Σ(value × weight). */
