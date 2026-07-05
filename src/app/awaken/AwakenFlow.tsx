@@ -3,14 +3,11 @@
 import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import {
-  AWAKEN_DONATE_HREF,
-  AWAKEN_CHAPTER_FILE_HREF,
+  AWAKEN_CROSSING_HREF,
   type AwakenMoveContent,
   type AwakenPageContent,
 } from '@/lib/awaken/content'
 import { saveAwakenPageContent } from '@/actions/awaken-page-admin'
-
-type Status = 'idle' | 'loading' | 'done' | 'error'
 
 export function AwakenFlow({
   content,
@@ -123,153 +120,62 @@ function ShowUp({ content, onInView }: { content: AwakenPageContent; onInView: (
         {content.show.eyebrow}
       </p>
       <h2 className="mt-3 text-3xl font-bold tracking-tight text-white">{content.show.title}</h2>
-      <p className="mt-2 text-sm text-zinc-400">
-        {content.show.subtitle}
-      </p>
+      <p className="mt-2 text-sm text-zinc-400">{content.show.subtitle}</p>
 
       <div className="mt-8 space-y-6">
-        <DonateCard content={content.moves.donate} />
-        <ChapterCard content={content.moves.chapter} />
+        {/* Move 1 — Fuel the car fund → the Crossing campaign */}
+        <LinkMoveCard content={content.moves.donate} accent="emerald" />
+        {/* Move 2 — Attend a launch event */}
         <EventsCard content={content} />
+        {/* Move 3 — Purchase the deck */}
+        <LinkMoveCard content={content.moves.deck} accent="teal" />
+        {/* Move 4 — Pre-order the book */}
+        <LinkMoveCard content={content.moves.book} accent="amber" />
+        {/* Chapter One — coming soon, funnels to the book */}
+        <LinkMoveCard content={content.moves.chapter} accent="indigo" />
       </div>
 
       <SecondaryLinks content={content} />
+      <ClosingCrossing />
     </section>
   )
 }
 
-/* ── Move 1: Donate ── */
+/* ── Link move card: a card whose primary action is a single link (donate,
+   deck, book, chapter). External URLs open in a new tab. ── */
 
-function DonateCard({ content }: { content: AwakenMoveContent }) {
-  return (
-    <Card accent="emerald" badge={content.badge} title={content.title}>
-      <p className="text-sm leading-relaxed text-zinc-300">
-        {content.body}
-      </p>
-      <Link
-        href={AWAKEN_DONATE_HREF}
-        className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-3 font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500"
-      >
-        {content.cta}
-      </Link>
-    </Card>
-  )
-}
-
-/* ── Move 2: Chapter One ── */
-
-function ChapterCard({ content }: { content: AwakenMoveContent }) {
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<Status>('idle')
-  const [error, setError] = useState('')
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    setStatus('loading')
-    setError('')
-    try {
-      const res = await fetch('/api/awaken/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intent: 'chapter', email }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Something went wrong.')
-      setStatus('done')
-    } catch (err) {
-      setStatus('error')
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
-    }
-  }
+function LinkMoveCard({ content, accent }: { content: AwakenMoveContent; accent: string }) {
+  const href = content.href && content.href.trim() ? content.href : '#'
+  const external = href.startsWith('http')
+  const btn =
+    'mt-4 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-3 font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500'
 
   return (
-    <Card accent="teal" badge={content.badge} title={content.title}>
-      <p className="text-sm leading-relaxed text-zinc-300">
-        {content.body}
-      </p>
-
-      {status === 'done' ? (
-        <div className="mt-4 rounded-xl border border-teal-700/50 bg-teal-950/30 p-4">
-          <p className="text-sm font-semibold text-teal-300">{content.doneTitle}</p>
-          <p className="mt-1 text-xs text-zinc-400">
-            {content.doneBody}
-          </p>
-          <a
-            href={AWAKEN_CHAPTER_FILE_HREF}
-            className="mt-3 inline-flex items-center text-sm font-bold text-teal-300 underline-offset-2 hover:underline"
-          >
-            Or download it now →
-          </a>
-        </div>
+    <Card accent={accent} badge={content.badge} title={content.title}>
+      <p className="text-sm leading-relaxed text-zinc-300">{content.body}</p>
+      {external ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" className={btn}>
+          {content.cta}
+        </a>
       ) : (
-        <form onSubmit={submit} className="mt-4 space-y-3">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@email.com"
-            className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-teal-500"
-          />
-          {status === 'error' && <p className="text-xs text-red-400">{error}</p>}
-          <button
-            type="submit"
-            disabled={status === 'loading'}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 px-5 py-3 font-bold text-white transition-all hover:from-teal-500 hover:to-cyan-500 disabled:opacity-60"
-          >
-            {status === 'loading' ? 'Sending…' : content.cta}
-          </button>
-        </form>
+        <Link href={href} className={btn}>
+          {content.cta}
+        </Link>
       )}
     </Card>
   )
 }
 
-/* ── Move 3: Events (RSVP on Partiful + optional list capture) ── */
+/* ── Move 2: Events (RSVP on Partiful) ── */
 
 function EventsCard({ content }: { content: AwakenPageContent }) {
-  const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
-  const [status, setStatus] = useState<Status>('idle')
-  const [error, setError] = useState('')
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    setStatus('loading')
-    setError('')
-    try {
-      const res = await fetch('/api/awaken/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          intent: 'event',
-          email,
-          name,
-          // List signup is for the whole weekend; confirmation carries all three.
-          events: content.events.map((ev) => ev.key),
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Something went wrong.')
-      setStatus('done')
-    } catch (err) {
-      setStatus('error')
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
-    }
-  }
-
   return (
     <Card accent="green" badge={content.moves.events.badge} title={content.moves.events.title}>
-      <p className="text-sm leading-relaxed text-zinc-300">
-        {content.moves.events.body}
-      </p>
+      <p className="text-sm leading-relaxed text-zinc-300">{content.moves.events.body}</p>
 
       <div className="mt-4 space-y-2">
         {content.events.map((ev) => (
-          <div
-            key={ev.key}
-            className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3"
-          >
+          <div key={ev.key} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-white">{ev.title}</span>
               <span className="text-[11px] font-semibold text-green-400">{ev.when}</span>
@@ -286,46 +192,6 @@ function EventsCard({ content }: { content: AwakenPageContent }) {
             </a>
           </div>
         ))}
-      </div>
-
-      <div className="mt-5 border-t border-zinc-800 pt-4">
-        {status === 'done' ? (
-          <div className="rounded-xl border border-green-700/50 bg-green-950/30 p-4">
-            <p className="text-sm font-semibold text-green-300">{content.moves.events.doneTitle}</p>
-            <p className="mt-1 text-xs text-zinc-400">
-              {content.moves.events.doneBody}
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={submit} className="space-y-3">
-            <p className="text-sm font-semibold text-white">
-              {content.moves.events.helperTitle}
-            </p>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name (optional)"
-              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-green-500"
-            />
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@email.com"
-              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-green-500"
-            />
-            {status === 'error' && <p className="text-xs text-red-400">{error}</p>}
-            <button
-              type="submit"
-              disabled={status === 'loading'}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-zinc-800 px-5 py-3 font-bold text-white transition-all hover:bg-zinc-700 disabled:opacity-60"
-            >
-              {status === 'loading' ? 'Adding you…' : content.moves.events.cta}
-            </button>
-          </form>
-        )}
       </div>
     </Card>
   )
@@ -345,23 +211,45 @@ function SecondaryLinks({ content }: { content: AwakenPageContent }) {
           className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-zinc-600"
         >
           <div className="font-bold text-white">{content.secondary.products.title}</div>
-          <div className="mt-1 text-xs text-zinc-400">
-            {content.secondary.products.body}
-          </div>
+          <div className="mt-1 text-xs text-zinc-400">{content.secondary.products.body}</div>
         </Link>
         <Link
           href={content.secondary.nonprofit.href}
           className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-zinc-600"
         >
           <div className="font-bold text-white">{content.secondary.nonprofit.title}</div>
-          <div className="mt-1 text-xs text-zinc-400">
-            {content.secondary.nonprofit.body}
-          </div>
+          <div className="mt-1 text-xs text-zinc-400">{content.secondary.nonprofit.body}</div>
         </Link>
       </div>
     </div>
   )
 }
+
+/* ── Closing reinforcement: the Crossing lives at the bottom too, and lands
+   on the same car-fund campaign as Move 1. ── */
+
+function ClosingCrossing() {
+  return (
+    <div className="mt-12 border-t border-zinc-900 pt-8">
+      <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-green-400">
+        Help right now
+      </p>
+      <h3 className="mt-2 text-xl font-bold text-white">The Crossing</h3>
+      <p className="mt-2 text-sm text-zinc-400">
+        Every kind of help moves the campaign. Fuel the car fund or pick another move that fits what
+        you can offer.
+      </p>
+      <Link
+        href={AWAKEN_CROSSING_HREF}
+        className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-3 font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500"
+      >
+        Enter the Crossing →
+      </Link>
+    </div>
+  )
+}
+
+/* ─────────────────────────────── Admin editor ──────────────────────────── */
 
 function AwakenAdminEditor({ content }: { content: AwakenPageContent }) {
   const [state, formAction, pending] = useActionState(saveAwakenPageContent, null)
@@ -395,8 +283,15 @@ function AwakenAdminEditor({ content }: { content: AwakenPageContent }) {
         <Field name="show.subtitle" label="Show subtitle" defaultValue={content.show.subtitle} />
 
         <MoveFields prefix="moves.donate" label="Donate card" content={content.moves.donate} />
+        <MoveFields
+          prefix="moves.events"
+          label="Events card"
+          content={content.moves.events}
+          showHref={false}
+        />
+        <MoveFields prefix="moves.deck" label="Deck card" content={content.moves.deck} />
+        <MoveFields prefix="moves.book" label="Book card" content={content.moves.book} />
         <MoveFields prefix="moves.chapter" label="Chapter card" content={content.moves.chapter} />
-        <MoveFields prefix="moves.events" label="Events card" content={content.moves.events} />
 
         {content.events.map((event, index) => (
           <div key={event.key} className="rounded-xl border border-zinc-800 p-3">
@@ -441,10 +336,12 @@ function MoveFields({
   prefix,
   label,
   content,
+  showHref = true,
 }: {
   prefix: string
   label: string
   content: AwakenMoveContent
+  showHref?: boolean
 }) {
   return (
     <div className="rounded-xl border border-zinc-800 p-3">
@@ -453,19 +350,7 @@ function MoveFields({
       <Field name={`${prefix}.title`} label="Title" defaultValue={content.title} />
       <Textarea name={`${prefix}.body`} label="Body" defaultValue={content.body} />
       <Field name={`${prefix}.cta`} label="CTA" defaultValue={content.cta} />
-      {'doneTitle' in content && (
-        <Field name={`${prefix}.doneTitle`} label="Done title" defaultValue={content.doneTitle ?? ''} />
-      )}
-      {'doneBody' in content && (
-        <Field name={`${prefix}.doneBody`} label="Done body" defaultValue={content.doneBody ?? ''} />
-      )}
-      {'helperTitle' in content && (
-        <Field
-          name={`${prefix}.helperTitle`}
-          label="Form helper"
-          defaultValue={content.helperTitle ?? ''}
-        />
-      )}
+      {showHref && <Field name={`${prefix}.href`} label="Link" defaultValue={content.href ?? ''} />}
     </div>
   )
 }
@@ -511,6 +396,8 @@ const ACCENT: Record<string, string> = {
   emerald: 'from-green-500/15 to-emerald-500/5 border-green-800/50',
   teal: 'from-teal-500/15 to-cyan-500/5 border-teal-800/50',
   green: 'from-green-500/15 to-emerald-500/5 border-green-800/50',
+  amber: 'from-amber-500/15 to-orange-500/5 border-amber-800/50',
+  indigo: 'from-indigo-500/15 to-blue-500/5 border-indigo-800/50',
 }
 
 function Card({
