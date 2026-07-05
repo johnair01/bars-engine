@@ -25,7 +25,7 @@ export function DeckPurchaseCTA({
 }) {
   const tokens = ELEMENT_TOKENS[element]
   const deck = offerByKey('deck-digital')
-  const price = deck ? formatPrice(deck.priceCents) : '$10'
+  const price = deck ? formatPrice(deck.priceCents) : '$22'
   const href = offerHref('deck-digital')
 
   return (

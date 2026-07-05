@@ -172,7 +172,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     name: 'Oracle Deck — Digital Access',
     blurb: 'The 120-move Oracle at the Edge of the Known World. (Also included with The Game.)',
     group: 'digital',
-    priceCents: 1000,
+    priceCents: 2200,
     gumroadUrl: GUMROAD.deckDigital,
     cta: 'Buy',
     element: 'fire',
