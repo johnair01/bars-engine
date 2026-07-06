@@ -109,7 +109,7 @@ export function recommendChargeMetabolismMove(
     desiredState,
   })
 
-  if (vectorStatus !== 'full') {
+  if (!presentState || !desiredState) {
     return {
       vectorStatus,
       missingFields,
