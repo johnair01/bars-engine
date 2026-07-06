@@ -90,7 +90,9 @@ export function RedeemForm({ initialCode, next }: { initialCode: string; next?: 
           )}
           {!ok && 'needsAuth' in result && result.needsAuth && (
             <Link
-              href="/login?callbackUrl=/redeem"
+              href={`/login?returnTo=${encodeURIComponent(
+                `/redeem?${new URLSearchParams({ code, ...(next ? { next } : {}) }).toString()}`,
+              )}`}
               className="mt-2 inline-block font-bold text-amber-100 underline-offset-2 hover:underline"
             >
               Sign in →

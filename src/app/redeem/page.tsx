@@ -25,7 +25,8 @@ export default async function RedeemPage({ searchParams }: Props) {
     ...(initialCode ? { code: initialCode } : {}),
     ...(next ? { next } : {}),
   }).toString()}`
-  const loginHref = `/login?callbackUrl=${encodeURIComponent(selfHref)}`
+  // /login only reads `returnTo` (see src/lib/safe-return-to.ts) — not `callbackUrl`.
+  const loginHref = `/login?returnTo=${encodeURIComponent(selfHref)}`
 
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-16">
