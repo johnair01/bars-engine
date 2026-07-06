@@ -21,6 +21,7 @@
 import type { Metadata } from 'next'
 import type { CSSProperties } from 'react'
 import { LoopDiagram, SpiralDiagram, LineupDiagram, RoadDiagram } from './SalesDiagrams'
+import { PortraitSlot } from './PortraitSlot'
 
 export const metadata: Metadata = {
   title: 'Mastering the Game of Allyship',
@@ -246,26 +247,7 @@ export default function MasteringAllyshipPage() {
               </p>
             </div>
             <figure style={{ flex: 'none', width: 260, margin: 0 }}>
-              <div
-                style={{
-                  position: 'relative',
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                  border: '1px solid rgba(217,168,240,.25)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06),0 24px 50px -24px rgba(0,0,0,.8)',
-                  aspectRatio: '4 / 5',
-                  background: '#1a1226',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 24,
-                }}
-              >
-                {/* Portrait slot — swap for a real candid <img> of Wendell (mid-sentence, ~4:5). */}
-                <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.1em', lineHeight: 1.7, textAlign: 'center', color: '#7c6b90' }}>
-                  Drop a candid photo of Wendell — mid-sentence, not a headshot
-                </span>
-              </div>
+              <PortraitSlot src="/mastering-allyship/wendell.jpg" alt="Wendell Britt, in the middle of it" />
               <figcaption style={{ margin: '12px 2px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: '#a48ec0' }}>
                 Wendell Britt · in the middle of it
               </figcaption>

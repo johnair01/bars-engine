@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { NavBar } from "@/components/NavBar";
+import { Chrome } from "@/components/Chrome";
 import { AdminIdentitySwitcher } from "@/components/AdminIdentitySwitcher";
 import { DevIdentitySwitcher } from "@/components/DevIdentitySwitcher";
 
@@ -54,10 +54,13 @@ export default async function RootLayout({
             ⚠️ Database unreachable. See docs/ENV_AND_VERCEL.md or run vercel env pull .env.local
           </div>
         )}
-        <NavBar isAdmin={isAdmin} isAuthenticated={!!playerId} />
-        <div className={`pt-14 ${dbError && process.env.NODE_ENV !== 'production' ? 'mt-6' : ''}`}>
+        <Chrome
+          isAdmin={isAdmin}
+          isAuthenticated={!!playerId}
+          dbError={!!dbError && process.env.NODE_ENV !== 'production'}
+        >
           {children}
-        </div>
+        </Chrome>
         {/* Production Switcher (Admin Gated) */}
         {isAdmin && <AdminIdentitySwitcher />}
 
