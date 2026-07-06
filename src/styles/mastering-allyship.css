@@ -1,0 +1,174 @@
+/* /mastering-allyship — the MTGOA cold sales page + the Myths Read quiz.
+ * Source: Claude Design handoff (design_handoff_myths_read/, MTGOA_SALES_PAGE_DRAFT_v1).
+ * Aesthetic classes + page-local accent hex live here; layout stays Tailwind/inline.
+ * Shared surfaces/type/liminal flow through --bars-* tokens (bars-tokens.css).
+ *
+ * Two page-local accents the sales letter defines (not Wuxing elements — brand
+ * accents for the letter's diagrams + signal states, kept out of components):
+ *   - signal gold  : the "lit / metabolized" accent on the quiz (myth prototype)
+ *   - coral        : the single sales-letter accent (the "charge" motif / the loop)
+ *   - teal         : appears ONLY inside the solution diagram (the spiral)
+ */
+:root {
+  --mr-gold:      #e0a92a;
+  --mr-gold-lite: #f0c04a;
+  --mr-gold-deep: #d4a017;
+  --mr-gold-soft: rgba(224, 169, 42, 0.1);
+  --mr-gold-ring: rgba(224, 169, 42, 0.3);
+  --mr-gold-glow: rgba(224, 169, 42, 0.45);
+
+  --mtgoa-coral:      #e0623c;
+  --mtgoa-coral-soft: rgba(224, 98, 60, 0.12);
+  --mtgoa-teal:       #2aa198;
+  --mtgoa-teal-soft:  rgba(42, 161, 152, 0.12);
+}
+
+/* ── Motion ──────────────────────────────────────────────────────────────── */
+@keyframes mr-rise {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: none; }
+}
+.mr-rise { animation: mr-rise 0.4s var(--bars-ease-out) both; }
+
+/* Section reveal on the long-form letter (opacity+rise, transform-only motion). */
+.mtgoa-section { animation: mr-rise 0.5s var(--bars-ease-out) both; }
+
+/* ── The gold "signal" primary CTA (intro start, Deck CTA) ───────────────── */
+.mr-gold-btn {
+  background: linear-gradient(150deg, var(--mr-gold-lite), var(--mr-gold-deep));
+  color: #0a0807;
+  border-radius: 13px;
+  box-shadow:
+    0 16px 34px -14px var(--mr-gold-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s var(--bars-ease-out), filter 0.15s var(--bars-ease-out);
+}
+.mr-gold-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.mr-gold-btn:active { transform: translateY(0) scale(0.99); }
+.mr-gold-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ── The liminal-purple "metabolize" CTA (charge bridge) ─────────────────── */
+.mr-liminal-btn {
+  background: linear-gradient(150deg, var(--bars-liminal-glow), var(--bars-liminal));
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 14px 30px -12px var(--bars-liminal);
+  transition: transform 0.15s var(--bars-ease-out), filter 0.15s var(--bars-ease-out);
+}
+.mr-liminal-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.mr-liminal-btn:active { transform: translateY(0) scale(0.99); }
+.mr-liminal-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ── Quiz scale cell (0–4 frequency) ─────────────────────────────────────── */
+.mr-scale-cell {
+  background: var(--bars-surface-card);
+  border: 1px solid var(--bars-line);
+  border-radius: 12px;
+  box-shadow: var(--bars-shadow-inset-top);
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.08s ease, box-shadow 0.18s ease;
+}
+.mr-scale-cell:hover { border-color: var(--bars-line-strong); background: rgba(255, 255, 255, 0.025); }
+.mr-scale-cell:active { transform: scale(0.98); }
+.mr-scale-cell[aria-pressed='true'] {
+  background: var(--mr-gold-soft);
+  border-color: rgba(224, 169, 42, 0.55);
+  box-shadow: var(--bars-shadow-inset-top), 0 0 20px -8px var(--mr-gold-glow);
+}
+.mr-scale-cell:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* The scale dot — diameter grows with value (set inline via --mr-dot). */
+.mr-dot {
+  width: var(--mr-dot, 12px);
+  height: var(--mr-dot, 12px);
+  border-radius: 999px;
+  border: 2px solid #54524d;
+  transition: all 0.18s ease;
+}
+.mr-scale-cell[aria-pressed='true'] .mr-dot {
+  background: var(--mr-gold);
+  border-color: var(--mr-gold);
+  box-shadow: 0 0 12px var(--mr-gold-glow);
+}
+
+/* Progress pips. */
+.mr-pip { height: 3px; border-radius: 99px; background: rgba(255, 255, 255, 0.08); transition: background 0.35s; }
+.mr-pip[data-state='answered'] { background: var(--mr-gold); }
+.mr-pip[data-state='current']  { background: rgba(224, 169, 42, 0.5); }
+
+/* ── Surfaced myth card (gold-lit) ───────────────────────────────────────── */
+.mr-myth-card {
+  background: var(--bars-surface-card);
+  border-radius: 14px;
+  box-shadow:
+    var(--bars-shadow-inset-top),
+    0 0 0 1px var(--mr-gold-ring),
+    0 0 26px -8px var(--mr-gold-glow);
+  transition: transform 0.15s var(--bars-ease-out);
+}
+.mr-myth-card:hover { transform: translateY(-1px); }
+.mr-myth-card:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.mr-myth-reveal {
+  background: var(--bars-surface-inset);
+  border-radius: 14px;
+  box-shadow:
+    var(--bars-shadow-inset-top),
+    0 0 0 1px rgba(224, 169, 42, 0.5),
+    0 0 30px -8px var(--mr-gold-glow);
+}
+/* The strength meter track + fill. */
+.mr-strength-track { background: var(--bars-line-strong); border-radius: 99px; overflow: hidden; }
+.mr-strength-fill  { background: var(--mr-gold); height: 100%; border-radius: 99px; }
+
+/* ── Charge-capture panel (liminal, the metabolize bridge) ───────────────── */
+.mr-charge-panel {
+  background: linear-gradient(168deg, #0f1220, #100f0d 60%);
+  border-radius: 16px;
+  box-shadow:
+    var(--bars-shadow-inset-top),
+    0 0 0 1px rgba(124, 58, 237, 0.26),
+    0 0 32px -12px rgba(124, 58, 237, 0.45);
+}
+.mr-chip {
+  background: var(--bars-surface-card);
+  border: 1px solid var(--bars-line);
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+.mr-chip:hover { border-color: var(--bars-line-strong); }
+.mr-chip[aria-pressed='true'] {
+  color: #fff;
+  background: rgba(124, 58, 237, 0.22);
+  border-color: rgba(139, 92, 246, 0.6);
+}
+.mr-chip:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ── Sales-letter surfaces ───────────────────────────────────────────────── */
+.mtgoa-card {
+  background: var(--bars-surface-card);
+  border-radius: var(--bars-radius-lg);
+  box-shadow: var(--bars-shadow-inset-top), 0 0 0 1px var(--bars-line);
+}
+.mtgoa-quote {
+  border-left: 2px solid var(--mtgoa-coral);
+  background: var(--mtgoa-coral-soft);
+  border-radius: 0 10px 10px 0;
+}
+.mtgoa-coral { color: var(--mtgoa-coral); }
+.mtgoa-teal  { color: var(--mtgoa-teal); }
+
+/* Ghost text buttons (Back / Retake / quiet links). */
+.mr-ghost { transition: color 0.2s ease, opacity 0.2s ease; }
+.mr-ghost:hover { color: var(--bars-text-primary); opacity: 0.85; }
+.mr-ghost:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 4px; }
+
+/* ── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .mr-rise,
+  .mtgoa-section {
+    animation: none !important;
+  }
+  .mr-gold-btn,
+  .mr-liminal-btn,
+  .mr-myth-card,
+  .mr-scale-cell { transition: none !important; }
+}

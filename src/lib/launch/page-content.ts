@@ -166,6 +166,30 @@ export const LAUNCH_DEFAULT_CONTENT: LaunchPageContent = {
       heroImage: '/launch/rpg-book-cover-1280x720.png',
       intents: ['practice', 'shelf'],
     },
+    'deck-physical': {
+      name: 'Oracle Deck — Physical',
+      blurb: 'The printed 120-card deck, in your hands. Preorder now; ships after the print run.',
+      bestFor: 'Wants the deck in hand',
+      unlocks: 'Physical Allyship Deck preorder',
+      context: 'Choose this when you want to draw a real card off a real table, not a screen.',
+      kicker: 'Physical preorder',
+      image: '/launch/allyship-deck-thumbnail-1080x1080.png',
+      heroImage: '/launch/allyship-deck-cover-1280x720.png',
+      intents: ['tool', 'shelf'],
+    },
+    'coaching': {
+      name: 'Coaching — Your Allyship Game Master',
+      blurb:
+        'The one only Wendell does: someone in the fire with you, running the campaign at your side and turning the saboteurs into allies.',
+      bestFor: 'Wants to go all the way',
+      unlocks: '1:1 coaching + deck and digital book access',
+      context:
+        'Choose this when you want a partner in the work, not another framework — the deprogramming, done together.',
+      kicker: 'By application',
+      image: '/launch/founders-bundle-thumbnail-1080x1080.png',
+      heroImage: '/launch/founders-bundle-cover-1280x720.png',
+      intents: ['practice'],
+    },
   },
 }
 
