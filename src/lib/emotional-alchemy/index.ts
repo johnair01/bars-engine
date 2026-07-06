@@ -17,6 +17,7 @@ import type {
 import { EMOTIONAL_ALCHEMY_TOOLS } from './registry'
 
 export * from './types'
+export * from './vector'
 export { EMOTIONAL_ALCHEMY_TOOLS, HARD_GUARDS, SPIRIT_STEPS, EMOTION_TO_ELEMENT } from './registry'
 
 const RATING_ORDER: Record<ToolRating, number> = {
