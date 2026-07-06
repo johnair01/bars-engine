@@ -1,34 +1,31 @@
 # Mastering the Game of Allyship — Practice Atlas
 
-**Status**: Design doctrine (v2). Bridges the book, the Allyship Deck, Emotional Alchemy, and bars-engine.
-**Canonical tool layer**: [`docs/EMOTIONAL_ALCHEMY_TOOL_TAXONOMY.md`](EMOTIONAL_ALCHEMY_TOOL_TAXONOMY.md) — full protocols, ratings, and completion criteria for the ten tools live there. The Atlas composes them into play; where the two disagree, the taxonomy wins.
-**Grounding**: `src/lib/allyship-deck/move-library.ts` (120-card grammar, channels, satisfaction states), `src/lib/technique-library/canonical.ts` (Tier-1 alchemy techniques), `specs/doctrine/emotional-alchemy-321.md` (321 invariant, tension vector), `docs/FELT_SENSE_321_PRAXIS.md` (felt-sense praxis, non-clinical boundary), `src/lib/emotional-first-aid.ts` (EFA tools), `.specify/specs/allyship-deck-literacy/spec.md` (legibility rules).
-**Rule for this document**: every practice names a timebox and a recordable output. Anything labeled *(inference)* is a design proposal, not established canon. No book citations are invented; where the codebase attributes a tool to the book, the citation is to the code file, not to a page.
+**Status**: Design doctrine (v3). Bridges the book, the Allyship Deck, Emotional Alchemy, and bars-engine.
+**v3 change basis**: [`docs/MTGOA_PRACTICE_ATLAS_GAP_ANALYSIS.md`](MTGOA_PRACTICE_ATLAS_GAP_ANALYSIS.md) — every hostile-review finding (M1–M8, I1–I5, D1–D6, P1–P6) is resolved here or explicitly deferred there. Finding IDs are cited inline as `[M4]` etc.
+**Canonical tool layer**: [`docs/EMOTIONAL_ALCHEMY_TOOL_TAXONOMY.md`](EMOTIONAL_ALCHEMY_TOOL_TAXONOMY.md) (T01–T11, v1.1) — protocols, ratings, completion criteria. Where the two disagree, the taxonomy wins.
+**Grounding**: `src/lib/allyship-deck/move-library.ts`, `src/lib/technique-library/canonical.ts`, `specs/doctrine/emotional-alchemy-321.md`, `docs/FELT_SENSE_321_PRAXIS.md`, `src/lib/emotional-first-aid.ts`, `.specify/specs/allyship-deck-literacy/spec.md`.
+**Rule for this document**: every practice names a timebox and a recordable output. Anything labeled *(inference)* is a design proposal, not established canon. No book citations are invented.
 
 ---
 
 ## 0. Terminology Bridge
 
-The Atlas uses the play-facing vocabulary. The codebase uses an overlapping but not identical vocabulary. This table is the contract between them.
-
 | Atlas term | Meaning | Codebase term | Where |
 |---|---|---|---|
-| **Move** | The emotional transformation needed (e.g., Anger at 8 → Triumph) | The channel transformation; `CapabilityDef` dissatisfied → satisfaction | `move-library.ts` `CAPABILITIES` |
-| **Move role** | How the tool serves the move: **metabolize** (digest the charge), **translate** (route it to another channel), **transcend** (lift it to its channel's satisfaction state) *(role definitions are inference; the ratings are canonical in the taxonomy)* | Taxonomy Compact Matrix 2 | `EMOTIONAL_ALCHEMY_TOOL_TAXONOMY.md` |
+| **Move** | The emotional transformation needed (e.g., Anger at 8 → Triumph) | `CapabilityDef` dissatisfied → satisfaction | `move-library.ts` `CAPABILITIES` |
+| **Role path** | Descriptive annotation of what a session did, derived after tool choice — never a selector `[M1]`: running a Transform/Contact-class tool logs `metabolize`; the target then logs `transcend` (same channel) or `translate` (cross-channel). Matrix 2 ratings are a rank tiebreak only (§4.1). | Taxonomy Compact Matrix 2 | `EMOTIONAL_ALCHEMY_TOOL_TAXONOMY.md` |
 | **Submove** | One WAVE phase: Wake Up, Open Up, Clean Up, Grow Up, Show Up | `BasicMove` | `move-library.ts` `MOVES` |
-| **Tool** | A named, timeboxed protocol that performs a submove (T01–T10) | `Technique` / EFA tool / taxonomy tool | taxonomy; `technique-library/`; `emotional-first-aid.ts` |
+| **Tool** | A named, timeboxed protocol that performs a submove (T01–T11) | `Technique` / EFA tool / taxonomy tool | taxonomy; `technique-library/`; `emotional-first-aid.ts` |
 | **Card** | Submove × Operation × Domain (120 total) | `MoveCard` | `assemble.ts` |
-| **Emotional vector** | `{channel, intensity, altitude, target}` — see §1.2 | *(not yet a type — implementation target #2)* | — |
-| **Satisfaction spirit** | The target state: Peace, Triumph, Poignance, Bliss, Wonder — it inflects how a tool is run (each taxonomy tool has per-spirit variations, item 18) | `CapabilityDef.satisfaction` | `move-library.ts` |
-| **Playable recommendation** | emotional vector + move role + submove + tool + satisfaction spirit + blocker/story/domain context | *(implementation target #3)* | — |
+| **Emotional vector** | `{channel, intensity, altitude, target}` — §1.2 | *(implementation target #2)* | — |
+| **Blocker shape** | A situational classification that biases tool ranking (§4.1) — computed, shown, one-tap editable, never silent | *(implementation target #3)* | — |
+| **Thread** | A player-named blocker identity linking sessions `[M6]` | *(implementation target #4)* | — |
+| **Satisfaction spirit** | The target state; mechanically it adds exactly one fill-in-the-blank protocol step (§5.3) `[P5]` | `CapabilityDef.satisfaction` | `move-library.ts` |
+| **Playable recommendation** | vector + submove + tool + spirit step + Show Up options + output form, with rolePath logged | *(implementation target #3)* | — |
 
-⚠ **Naming collisions to resolve before shipping UI copy:**
+⚠ **Naming collisions** (unchanged from v2, still needing canon decisions before UI copy): (1) "submove" = WAVE phase here vs Move×Operation in `SUBMOVES` — proposal: WAVE phase = submove, Move×Operation = **stance**; (2) WAVE the arc vs `tech-wave` the breath tool — proposal: fold the breath tool into T07 as a reset mode; (3) deck "Transcend/Translate/**Neutralize**" vs role path "metabolize/translate/transcend" — proposal: Neutralize ≈ metabolize. All three *(inference)*.
 
-1. The codebase calls Submove × Operation a "submove" (30 of them, in `SUBMOVES`). The Atlas calls the WAVE phase a submove. Pick one; recommendation: WAVE phase = **submove**, submove × operation = **stance** *(inference)*.
-2. `tech-wave` in `canonical.ts` is a one-breath tool (**W**elcome, **A**cknowledge, **V**alidate, **E**xhale), and `emotional-first-aid.ts` has a WAVE placeholder. The Atlas uses WAVE for the five-phase arc. Same name, different things; onboarding will suffer. Recommendation: keep WAVE for the arc, fold the breath tool into T07 Return to the Body as one of its reset modes *(inference)*.
-3. The deck's Clean Up × Architect stance asks "Transcend, Translate, or **Neutralize**?" while the taxonomy's move roles are metabolize / translate / **transcend**. These two triads overlap but are not identical. Proposed mapping *(inference, needs a canon decision)*: deck "Neutralize" ≈ role "metabolize" (digest in place); "Translate" = "translate"; "Transcend" = "transcend". One triad should win in UI copy.
-
-**Channel constants** (already canonical in `move-library.ts` — the Atlas does not modify these):
+**Channel constants** (canonical in `move-library.ts`):
 
 | Channel | Element | Dissatisfied emotion | Capability | Satisfaction |
 |---|---|---|---|---|
@@ -38,7 +35,7 @@ The Atlas uses the play-facing vocabulary. The codebase uses an overlapping but 
 | Joy | Wood | Joy (stuck) | Participation — "I can participate." | **Bliss** |
 | Neutrality | Earth | Neutrality | Rest — "I can rest." | **Peace** |
 
-The channel gives the **default** satisfaction target. A player may aim a charge at a different destination — that is the translate move role, and it is exactly the Clean Up × Diplomat stance ("Choose destination: which channel would better serve this situation?"). Cross-channel routing is a feature, not an error, but it must be a **player choice**, never an app inference (§8).
+The channel gives the **default** target. Cross-channel routing (the `translate` role) is a player choice via a visible, editable default — never a silent inference (§8.1).
 
 ---
 
@@ -47,373 +44,407 @@ The channel gives the **default** satisfaction target. A player may aim a charge
 ### 1.1 The core law
 
 > A tool without a move is inert. A move without a tool is too abstract.
-> A recommendation is **playable** only when it binds:
-> **emotional vector + move role + WAVE submove + tool + satisfaction spirit + blocker/story/domain context**
-> …and names one inspectable output.
+> A recommendation is **playable** only when the player can execute it from the rendered card alone (§5 shows one in full), it fits the declared timebox, and it names one inspectable output.
 
-### 1.2 The emotional vector, operationally
-
-"Emotional vector" is not a mood. It is four fields:
+### 1.2 The emotional vector
 
 ```
 EmotionalVector {
   channel:    anger | sadness | fear | joy | neutrality
-  intensity:  0–10           // player-rated, asked not inferred
-  altitude:   dissatisfied | neutral | satisfied
-  target:     peace | triumph | poignance | bliss | wonder   // defaults from channel, player may override
+  intensity:  0–10           // player-rated
+  altitude:   dissatisfied | neutral | satisfied      // visible default, editable [I2]
+  target:     peace | triumph | poignance | bliss | wonder   // visible default from channel, editable
 }
 ```
 
-The vector plus target implies the **move role**: same channel at higher altitude → transcend; different channel → translate; charge digested where it stands → metabolize *(inference, see §0 collision 3)*. The 321 doctrine already produces the vector's qualitative twin — the tension vector (`maskName`, `desire`, `fear`, …) — so the two compose: the emotional vector routes the session; the tension vector is what a deep session emits.
+`rolePath: ('metabolize'|'translate'|'transcend')[]` is **derived, not chosen** `[M1]`: append `metabolize` when a Transform/Contact-class tool runs; append `transcend` or `translate` from target vs channel. It is logged for telemetry and matrix tuning, and it never gates selection.
 
-### 1.3 The pipeline (player-facing, ≤3 questions before a recommendation)
+### 1.3 The pipeline
 
-1. **Draw** — the player draws an Allyship Deck card (or is dealt one by a spread/path). The card fixes the **WAVE submove**, the **stance question** (e.g., Clean Up × Challenger: "What story am I believing?"), and the **domain** context.
-2. **Name the blocker** — one sentence of situation. Free text. Stored verbatim. Per the felt-sense praxis, the capture prompt invites a pause first ("Notice where in your body the charge lives") — location optional, never required.
-3. **Diagnose the vector** — three taps, never inferred: channel ("mad / sad / scared / flat / bright-but-stuck / **I can't tell**"), intensity (0–10), time available (2 / 10 / 30 min). "I can't tell" is a first-class answer that routes to T02 Find the Felt Thread before anything else. Altitude defaults to *dissatisfied* when intensity ≥ 4.
-4. **Capture the story** — "What are you telling yourself about the blocker?" One sentence. The story is raw material for Clean Up tools and is stored separately from the blocker (situation ≠ interpretation — the whole engine turns on that distinction).
-5. **Resolve** — a deterministic composer picks the tool and assembles the protocol:
-   `recommendPractice(card, vector, fuel, time) → { tool, moveRole, timebox, protocol, internalShowUp, externalShowUp, output }`
-   Selection logic: the card's submove filters tools by the taxonomy's Tool × WAVE ratings (§2); the vector's channel filters by Tool × Channel fit (§4); the target's move role filters by Tool × Move Role; intensity and time gate what's safe and possible (intensity ≥ 7 → T07 Return to the Body first; 2 minutes → capture/reset tools only). The satisfaction spirit inflects the protocol text (each taxonomy tool declares per-spirit variations).
-6. **Play** — the player runs the tool inside its timebox and records the named output (Taxonomy Compact Matrix 4 declares each tool's BAR-loggable output).
-7. **Show Up check** — the app offers one internal and one external Show Up option (§1.4). The player picks, schedules, or declines — declining is logged, not shamed.
-8. **Close the loop** — re-rate intensity 0–10. The delta is the session's honest score. Output artifacts route to existing sinks: BAR, quest seed, daemon, board item, commitment.
-9. **Graceful exit, always available** — per the felt-sense praxis: "this feels too big for a quest right now — that's useful signal too." Exiting mid-protocol is a logged, honorable outcome, not an abandonment.
+**Question budget** *(honest accounting, replacing v2's "≤3 questions")*: **4 taps** (channel, intensity, time, temporal) + **3 visible-editable defaults** (altitude, target, blocker shape — zero taps to accept, one to change) + **conditional forks** (at most 2 ever shown: flat-fork, layer check, safety, recipient — each fires only on its trigger). The crisis affordance is always visible and costs nothing.
 
-AI is additive at steps 5–7 (tailoring language to the situation); the deterministic path is first-class per the deck-literacy dual-track rule.
+1. **Capture the blocker** — one sentence, free text, client-side (§1.6). The prompt invites the somatic pause per the felt-sense praxis ("Notice where in your body the charge lives" — optional, never required).
+2. **Draw** — the card fixes the WAVE submove, the stance question, and the domain.
+   **2b. Resonance Check** `[M4][D4]` — one tap: *"Does this card land? (yes / not this one)"*. "Not this one" → one redraw; the original is **banked** to the player's hand. If the diagnostic (step 4) later shows the card's submove is unsafe for the vector (e.g., Show Up or Grow Up card at intensity ≥ 7), the composer inserts a bridge — T07 plus a Clean Up mini-tool — runs that now, and banks the card's practice as a scheduled aim with a date. The card is never silently overridden and never forces a hot player into action.
+3. **Thread check** `[M6][D3]` — *"New blocker, or one you're already working?"* Existing thread → the composer shows history ("last time: T04, delta +1") and applies the demotion rule (§8.3).
+4. **Diagnose** — channel (picker v3, §3.1, including *I can't tell*), intensity 0–10, time (2/10/30), temporal (*happening now / replaying the past / coming up*) `[D2]`; then the three visible defaults: altitude, target, blocker shape. Conditional forks fire here if triggered (§8).
+5. **Capture the story** — "What are you telling yourself about the blocker?" One sentence, client-side. Situation ≠ interpretation; the story feeds Clean Up tools.
+6. **Resolve** — the composer runs the §4.1 algorithm and renders the practice card (§5): tool protocol + stance question + spirit step + timebox + output form.
+7. **Play** — visible timer `[M7]`. Expiry always routes to output capture ("close with what you have — write the output line now"); one +50% extension allowed; never silently extends.
+8. **Show Up check** — one internal and one external option rendered from the template table (§5.2). Pick, schedule, or decline; declining is logged, not shamed.
+9. **Close the loop** — re-rate intensity; branch per §1.5.
+10. **Graceful exit — available at every step** `[D1]`: "this feels too big for a practice right now — that's useful signal too." Logged as an honorable outcome.
 
-### 1.4 The Show Up distinction (load-bearing)
+AI is additive at steps 6–8 (tailoring language); the deterministic path is complete without it — §5 proves it by example.
 
-- **Show Up ≠ external.** Show Up means *the charge becomes embodied*: a commitment, artifact, communication, ritual, boundary, ask, quest seed, or action.
-- **Internal Show Up** is still a move: a rehearsed line spoken aloud, a signed self-contract with a date, a 24-hour vow, a ritual performed (T10). It is not another journal entry. Every taxonomy tool declares both an internal and an external Show Up example (item 17) — the output schema must support internal commitment artifacts as first-class (taxonomy gap 5).
-- **External ≠ Show Up.** Venting at someone is external and is not Show Up; it's a leak.
-- **Reflection artifacts (journal text, insight notes) are Clean Up outputs.** They only become Show Up when bound to a recipient, a date, or a public artifact.
-- **Gate**: external Show Up options are offered only when intensity has dropped below ~4 or the player explicitly overrides ("I need to act while it's hot" is legitimate for boundary moves — but it's a choice, asked, not defaulted).
+### 1.4 Fuel and time gating `[M7]`
 
----
+Fuel (depleted / steady / charged) is asked with intensity. **Depleted** → timebox capped at 5 min; candidate tools restricted to T07, T03-quick, T09 (guards permitting); and the composer offers "rest is the move": a calendar rest block, which counts as an internal Show Up. **Time = 2 min** → T03-quick or T07 only.
 
-## 2. The Tool Roster and Matrix A: WAVE Submove × Tool
+### 1.5 Close the loop — branch table `[M5]`
 
-### 2.0 Tool roster (digest — protocols live in the taxonomy)
+| Re-rate delta | Composer behavior |
+|---|---|
+| ≤ −2 (worse) | T07 now; graceful exit offered; session flagged `escalated`; the thread demotes this tool (§8.3) |
+| −1 … +1 (flat) | Offer **one** switch to the next-ranked tool, or a capture-only close. Never more than one switch per session. |
+| ≥ +2 (moved) | Proceed to Show Up check |
 
-| ID | Tool (BARS name) | Generic name | Native submoves (strong) | Timebox | Output | Signature misuse |
-|---|---|---|---|---|---|---|
-| T01 | **321 Charge Dialogue** | Structured Part Dialogue | Wake Up, Clean Up, Grow Up | 7–15 min (mini: 3) | Part name + part quote + owned-energy sentence + optional quest seed | Over-identifying with a part; making external claims from internal dialogue |
-| T02 | **Find the Felt Thread** | Felt-Sense Tracking | Wake Up, Open Up, Clean Up | 3–8 min | Body location + felt handle + fit signal + one sentence | Forcing an answer too quickly (the felt sense needs its 20–30 s) |
-| T03 | **BAR Capture** | Reflective Capture | Wake Up, Grow Up | 5–10 min (quick: 90 s) | BAR seed + named blocker + next artifact | Writing around the move instead of producing an output |
-| T04 | **Story Turnaround** | Belief Inquiry | Clean Up, Grow Up | 8–15 min | Belief + cost + turnarounds + replacement + experiment | Arguing the player out of legitimate desire, threat, or grief |
-| T05 | **Put It On The Board** | Field Mapping | Wake Up, Grow Up | 10–20 min (fast: 5) | Field map + classified blocker + next-move location | Mapping as avoidance |
-| T06 | **Clean Line** | Clean Ask / Boundary Script | Grow Up, Show Up | 5–12 min | Ask/no/offer/limit/repair script + outcome | Premature confrontation before the signal is clean |
-| T07 | **Return to the Body** | Regulation Reset | Open Up | 1–5 min | Before/after activation rating + reset mode + next signal | Calming down to avoid truth |
-| T08 | **One True Next Move** | Command Bridge | Show Up | 3 min to choose + ≤10 to execute | Mission sentence + chosen action + completion note | Forcing action before metabolization |
-| T09 | **Happy Apples** | Appreciation / Resource Scan | Open Up | 2–5 min | Three apples + one received + share/log choice | Premature positivity |
-| T10 | **Make It Real** | Ritual Container | Open Up, Show Up | 5–15 min | Ritual sentence + symbolic action + integration note | Performance without contact |
+Deltas are displayed, never scored or rewarded — reward the *logging*, never the *number*, or players learn to inflate the before-rating.
 
-Notes against the original eleven-tool list:
+### 1.6 Privacy model `[I1]`
 
-- **IFS Parts Dialogue** is folded into T01 (Structured Part Dialogue covers parts work and 3-2-1 in one protocol; `3-2-1 Mini` is its short form).
-- **Focusing / Felt Thread** → T02 **Find the Felt Thread**; **Journaling / BAR Capture** → T03 **BAR Capture** (canonical names).
-- **Return to the Body (T07)** is new to the roster and closes what v1 of this atlas flagged as its worst gap (no somatic option for hot charge). It wraps the existing Grounding Sequence, Grounding Cord, Breath Reset, and Basic Qi Gong Reset.
-- **Make It A Game** is **not in the taxonomy**. Two scenarios below (S6, S10) depend on it. Proposal *(inference)*: add it as **T11 Game Reframe** (general lineage: gamification/deliberate-practice design; core mechanic: recast a blocker or practice edge as win condition + reps + score; native submove Grow Up; misuse: gamifying grief or real physical risk). Until canonized, treat it as an Atlas extension.
+Aligned with the 321 doctrine (`specs/doctrine/emotional-alchemy-321.md`): **persisted** = structured fields only (vector, tool id, rolePath, structured output slots, thread label, delta, flags like `escalated`/`exited_gracefully`). **Client-session only by default** = raw blocker text, raw story text, raw protocol answers. A per-session **"save my words"** opt-in persists raw text when the player explicitly chooses. Thread labels are short player-authored names, not raw text.
 
-### Matrix A — Tool × WAVE submove (canonical ratings; source: taxonomy Compact Matrix 1)
+### 1.7 The Show Up distinction (load-bearing, unchanged)
 
-| Tool | Wake Up | Open Up | Clean Up | Grow Up | Show Up |
-|---|---|---|---|---|---|
-| T01 321 Charge Dialogue | strong | medium | strong | strong | medium |
-| T02 Find the Felt Thread | strong | strong | strong | medium | weak |
-| T03 BAR Capture | strong | medium | medium | strong | medium |
-| T04 Story Turnaround | medium | weak | strong | strong | medium |
-| T05 Put It On The Board | strong | medium | medium | strong | medium |
-| T06 Clean Line | medium | weak | medium | strong | strong |
-| T07 Return to the Body | medium | strong | medium | medium | weak |
-| T08 One True Next Move | medium | weak | weak | medium | strong |
-| T09 Happy Apples | medium | strong | weak | medium | medium |
-| T10 Make It Real | weak | strong | medium | medium | strong |
-
-Read the columns honestly: **Show Up has exactly three strong tools** (Clean Line, One True Next Move, Make It Real) — the whole embodiment end of the engine rests on them. And Grow Up's five "strong" ratings all produce *reflection or single acts*; nothing yet produces a **rep structure** (§7 G1, §9.1).
+Show Up ≠ external; external ≠ Show Up. Show Up = the charge becomes embodied: commitment, artifact, communication, ritual, boundary, ask, quest seed, or action. Internal Show Up is a real move (rehearsed line, 24-hour rule, ritual, vow with a date) — not another journal entry. Reflection artifacts are Clean Up outputs; they become Show Up only when bound to a recipient, a date, or a public artifact. External options require the §8.5 recipient check and the §1.5 gate (intensity < 4, or an explicit asked-not-defaulted hot-action override).
 
 ---
 
-## 3. Matrix B — Emotional Channel × Basic Transformation Need
+## 2. Tool Roster and Matrix A
 
-| Channel | What the charge is reporting | The question it asks | Basic transformation need | Satisfaction | Signature bypass (what fake-processing looks like) |
-|---|---|---|---|---|---|
-| **Anger** (Fire) | A boundary is crossed or a desire is blocked | "What do I want, and what's in the way?" | Clean force: a boundary held, a decisive act, an intervention made without collateral damage | **Triumph** | Suppressing into politeness (leaks as resentment/sarcasm) — or venting (discharge without a move) |
-| **Sadness** (Water) | Something cared-for is lost or distant | "What did I love, and where did it go?" | Grieve fully; honor what mattered; restore flow to the care that has nowhere to go | **Poignance** | Cheer-up, busyness, premature meaning-making ("everything happens for a reason") |
-| **Fear** (Metal) | An unassessed threat or risk | "What exactly is the danger, and what protects me?" | Orient: separate real risk from imagined; build protection; then explore the edge | **Wonder** | Reassurance-seeking, avoidance — or bravado that skips the risk assessment |
-| **Joy** (Wood) | Aliveness wants participation and isn't getting it (stuck joy) | "What wants to be played, shared, celebrated?" | Express, share, participate; let the win land; convert aliveness into engagement | **Bliss** | Deferral ("celebrate after the next milestone"), guilt about feeling good while others suffer |
-| **Neutrality** (Earth) | The system wants order, clarity, rest — **or** it is numb and mislabeled | "What needs sorting, and is this actually peace?" | Structure and balance if genuine; if flat/numb, *diagnose what froze* before treating it as Earth | **Peace** | The biggest one in the system: calling numbness "peace." Flat affect is often frozen Fear or Sadness (§8, §9.2) |
+Roster digest (protocols, completion criteria, and misuse notes live in the taxonomy):
 
----
+| ID | Tool | Native submoves (strong) | Timebox | Output |
+|---|---|---|---|---|
+| T01 | 321 Charge Dialogue | Wake, Clean, Grow | 7–15 min (mini 3) | part name + quote + owned-energy sentence + optional quest seed |
+| T02 | Find the Felt Thread | Wake, Open, Clean | 3–8 min | body location + handle + fit signal + sentence |
+| T03 | BAR Capture | Wake, Grow | 5–10 min (quick 90 s) | BAR seed + blocker + next artifact |
+| T04 | Story Turnaround | Clean, Grow | 8–15 min | belief + cost + turnarounds + replacement + experiment |
+| T05 | Put It On The Board | Wake, Grow | 10–20 min (fast 5) | map + classified blocker + next-move location |
+| T06 | Clean Line | Grow, Show | 5–12 min | script + outcome |
+| T07 | Return to the Body | Open | 1–5 min | before/after rating + reset mode + next signal |
+| T08 | One True Next Move | Show | 3 + ≤10 min | mission + action + completion note |
+| T09 | Happy Apples | Open | 2–5 min | three apples + one received + share/log |
+| T10 | Make It Real | Open, Show | 5–15 min | ritual sentence + action + integration note |
+| T11 | Make It A Game *(canonized v1.1)* | Grow | 15 min + rep ≤15 | game card + rep 1 log |
 
-## 4. Matrix C — Tool × Emotional Channel Fit
-
-Canonical ratings from taxonomy Compact Matrix 3, plus the Atlas's enforcement guards (the guards are resolver rules, not footnotes — §9.2).
-
-| Tool | Anger | Sadness | Fear | Joy | Neutrality | Guard (resolver-enforced) |
-|---|---|---|---|---|---|---|
-| T01 321 Charge Dialogue | strong | strong | strong | medium | medium | Intensity ≥ 7 → run T07 first ("too activated to keep perspective") |
-| T02 Find the Felt Thread | medium | strong | strong | medium | strong | Never when immediate safety/logistics are needed; the numbness disambiguator (§8.4) |
-| T03 BAR Capture | medium | strong | medium | medium | strong | Same sentence 3× = rumination; stop and switch tools |
-| T04 Story Turnaround | strong | medium | strong | weak | medium | **Blocked on fresh grief** — inquiry that argues a player out of loss is self-gaslighting |
-| T05 Put It On The Board | strong | weak | strong | weak | strong | Every board item needs a dated next move or the map is avoidance |
-| T06 Clean Line | strong | weak | strong | weak | strong | Blocked while the player is punishing, recruiting guilt, or controlling an outcome |
-| T07 Return to the Body | strong | weak | strong | weak | strong | Not a complete sadness move; not a substitute for needed anger or action |
-| T08 One True Next Move | strong | weak | medium | medium | strong | Blocked on early sadness — grief doesn't need a next action, it needs room |
-| T09 Happy Apples | weak | weak | medium | strong | strong | **Blocked at Anger/Sadness intensity ≥ 5** (toxic-positivity paint) |
-| T10 Make It Real | medium | strong | weak | strong | medium | Not for urgent fear/anger logistics; requires a metabolized charge as input |
-| (T11 Game Reframe, proposed) | weak | ⚠ | medium | strong | medium | **Never gamify grief; never gamify real physical risk** (protest safety is a risk inventory, not a game) |
-
-**Selection heuristic** *(inference, encodes the matrices for the composer)*:
-`intensity ≥ 7` → T07 before any Transform tool. `time = 2 min` → T03 quick capture or T07 only. `channel = "I can't tell"` → T02 before routing. `submove = show_up ∧ intensity ≥ 4` → internal option first. Move role narrows further: metabolize → T01/T02/T04; translate → T01/T05; transcend → T02/T09/T10 (per taxonomy Matrix 2).
+**Matrix A — Tool × WAVE submove** (canonical; taxonomy Compact Matrix 1 + T11): unchanged from the taxonomy — see that document. The honest readings stand: Show Up has exactly three strong tools (T06, T08, T10), and Grow Up's strong ratings all produce reflection or single acts — the rep-ladder mechanic remains gap G1.
 
 ---
 
-## 5–6. Twelve Golden Scenarios
+## 3. Matrix B — Channel × Transformation Need, and the Picker
 
-Format per scenario: want → blocker → story → feeling → vector (with move role) → deck practice (real card grammar: Submove × Operation × Domain) → tool → internal Show Up → external Show Up → inspectable output. These twelve are also the acceptance fixtures for the recommendation composer (§10, target 3).
+Matrix B is unchanged from v2 (Anger→clean force→Triumph; Sadness→grieve/restore flow→Poignance; Fear→orient/protect/explore→Wonder; Joy→express/participate→Bliss; Neutrality→structure/rest **or misdiagnosed numbness**→Peace), each with its signature bypass. The operative change is the instrument:
+
+### 3.1 Channel picker v3 `[I5]`
+
+Chips: **mad · sad · scared · flat or numb · bright-but-stuck · I can't tell**
+
+- *I can't tell* → T02-Guided (§5.5) before any routing. A first-class answer, per the felt-sense praxis's pre-focusing level.
+- *flat or numb* → the **flat fork** (one follow-up, four answers):
+
+| Answer | Reading | Route |
+|---|---|---|
+| "Rested-calm — genuinely okay" | Real Peace | Peace-check close; celebrate; optionally declare a rest window (internal Show Up) |
+| "Walled-off — something's behind it" | Frozen charge | T02 to find what froze (the S12 path) |
+| "Buried — too many things" | Earth overload | Neutrality channel, overload shape (the S11 path) |
+| "Grey — missing aliveness" | Joy-starved | Joy channel, stuck-joy reading (the S10 path) |
+
+The app never maps flat → Peace automatically; the fork is mandatory before Neutrality can carry a Peace target.
 
 ---
 
-### S1 · The Interrupted Colleague — Anger → Triumph
+## 4. Matrix C and the Selection Algorithm
 
-- **I want** to intervene when Maya gets talked over in meetings **so I can feel Triumph** — clean action taken where it counts.
-- **I am blocked by** my freeze response in rooms with senior people.
-- **The story I'm telling** is "It's not my place — I'd just make it about me."
-- **I feel** angry (at the room, and at myself for staying quiet). Intensity 6, dissatisfied.
-- **Vector**: Anger 6 → Triumph · role: **transcend**.
-- **Deck practice**: Show Up × Challenger × Direct Action — "Create intervention: what must change?"
-- **Tool**: **T06 Clean Line** (script type: ask; 5–12 min, read aloud once, then 3 rehearsals).
-- **Internal Show Up**: the line — "I want to hear Maya finish her point." — spoken aloud three times; a 24-hour rule signed: *at the next interruption, I say it*; the meeting calendared.
-- **External Show Up**: say the line in the meeting, then log what happened within 24h.
-- **Inspectable output**: the written line + the post-meeting log (sent/held/practiced + outcome). Re-rate intensity.
+**Matrix C — Tool × Channel** ratings are canonical in the taxonomy (Compact Matrix 3 + T11). The Atlas adds the **hard guards**, which the composer enforces as blocks, not footnotes:
 
-### S2 · The Invisible Labor Ledger — Anger → Peace (cross-channel, player-chosen)
+| Guard | Rule |
+|---|---|
+| Hot charge | intensity ≥ 7 → T07 prepended before any other tool, always `[M3]` |
+| Joy-tool block | T09, T11 blocked at Anger or Sadness intensity ≥ 5 |
+| Grief-inquiry block | T04 blocked on fresh Sadness; on the *received-harm* branch, T04 restricted to agency-restoring turnarounds (§8.6) |
+| No gamified risk | T11 blocked when the blocker involves physical risk; risk goes to T05 as an inventory with mitigations |
+| Action-on-grief block | T08 blocked on early Sadness |
+| Clean-line readiness | T06 blocked while the intent is punish / recruit guilt / control outcome (taxonomy item 14) |
+| External gate | external Show Up options require §8.5 recipient check + §1.7 intensity gate or explicit override |
 
-- **I want** the mutual-aid group's work distributed **so I can feel Peace** — I choose Peace over Triumph because I want structure, not victory.
-- **I am blocked by** being the only one who does logistics, again.
-- **The story I'm telling** is "If I don't do it, nobody will, and everyone's fine with that."
-- **I feel** resentful (anger, slow-burn). Intensity 5, dissatisfied.
-- **Vector**: Anger 5 → Peace · role: **translate**.
-- **Deck practice**: Clean Up × Challenger × Skillful Organizing — "Challenge interpretation: what story am I believing?"
-- **Tool**: **T04 Story Turnaround** (8–15 min) — "I cannot stop doing everything because nobody will step up": is that completely true? Who was never actually asked? Follow-on: **T08 One True Next Move**.
-- **Internal Show Up**: turnaround sheet done; the testable replacement ("people do what's structured, not what's implied") adopted for 24 hours.
-- **External Show Up**: bring the rotation proposal to Thursday's meeting as an agenda item, not a complaint.
-- **Inspectable output**: belief + cost + turnarounds + replacement + the experiment (the submitted agenda item).
+### 4.1 The selection algorithm `[M2]`
 
-### S3 · Called In — Anger (masking) → Peace
+Deterministic, ordered. Ratings: strong = 2, medium = 1, weak = 0 (excluded).
 
-- **I want** to repair after being called in for a microaggression **so I can feel Peace** — the charge resolved without self-flagellation or defensiveness.
-- **I am blocked by** the hot defensive flare every time I replay the moment.
-- **The story I'm telling** is "They think I'm one of the bad ones now."
-- **I feel** angry-defensive. Intensity 7, dissatisfied. *(Diagnostic note: layered charge — fear of exile likely underneath; the app asks one layer-check question, no more: §8.)*
-- **Vector**: Anger 7 → Peace · role: **metabolize, then translate**.
-- **Deck practice**: Open Up × Challenger — "Allow discomfort: what am I avoiding feeling?"
-- **Tool**: **T07 Return to the Body** first (intensity 7; 2 min, longer-exhale rounds, re-rate), then **T01 321 Charge Dialogue** on the part called "The Judge" (7–15 min): what is it protecting? Speak as it; write the owned-energy sentence.
-- **Internal Show Up**: owned-energy sentence captured; draft a one-sentence acknowledgment with zero self-flagellation and zero defense ("You were right about the impact; thank you for telling me directly.").
-- **External Show Up**: deliver the sentence to the person within 48h, then stop talking (no reassurance-fishing).
-- **Inspectable output**: before/after activation + part name + part quote + owned-energy sentence + the sent acknowledgment with 48h check-off.
+```
+recommendPractice(card, vector, ctx {time, fuel, temporal, shape, thread, flags}):
+
+0. Crisis flag set                     → resources path (§8.4); no tool. STOP.
+1. intensity ≥ 7                       → prepend T07 (1–5 min); shrink time budget.
+1b. card.submove ∈ {show_up, grow_up} AND intensity ≥ 7
+                                       → bridge: T07 + best Clean Up mini; bank card as scheduled aim [M4].
+2. channel = can't-tell                → T02-Guided (§5.5). STOP (session = locate + capture).
+3. Candidates = tools rated strong for card.submove (Matrix A).
+   If, after step 4, the set is empty  → admit medium-rated tools.
+4. Remove hard-guard-blocked tools (table above + temporal rules:
+   now+interpersonal → smallest tool; upcoming → rehearsal bias T04/T05/T06).
+5. Score each candidate:
+     score = channelFit × 2  +  submoveFit  +  (shapeBonus: +3 if the blocker shape names this tool)
+   Shape → tool map: interpersonal-live → T06 · imagined/replayed other → T01 ·
+   two-voices-at-war → T01 · belief-in-one-sentence → T04 · many-items-swirl → T05 ·
+   win-that-won't-land → T09 · practice-edge → T11 · unclear-heavy-body → T02 ·
+   ready-to-act → T08.
+   Thread demotion: −2 to any tool with a flat/negative delta on this thread (§8.3).
+6. Tiebreaks, in order: aim fit (Matrix 2, transcend/translate) → shortest timebox
+   that fits the budget → registry order.
+7. If the chosen tool is not Show-Up-strong and time remains → attach the best-fit
+   Show Up bridge (T06/T08/T10) via the §5.2 templates.
+```
+
+The blocker **shape** is the one computed value that touches routing. It is computed from the blocker/story text, **shown as a chip, and one-tap editable** — computed-and-confirmed, never silent (gap G8 tracks the classifier heuristics).
+
+**Weights are v3 seeds** `[G9]`: chosen because they reproduce all sixteen fixtures (§6) when hand-run; they are to be re-fit from session logs, not taste. The sixteen fixtures are the composer's regression suite — a change to weights or guards that breaks a fixture is a canon change and must be made deliberately.
+
+---
+
+## 5. The Rendered Practice Card `[P1]` — and the Deterministic Machinery Behind It
+
+### 5.1 Worked example: S2, end to end, no AI
+
+Player draws **CLEAN-SO-CHALLENGER** (Clean Up × Challenger × Skillful Organizing).
+
+> **Card**: *Challenge interpretation — "What story am I believing?"*
+> **[Does this card land?]** → yes
+> **[New blocker or existing thread?]** → new · label it: `logistics-resentment`
+> **Blocker** (stays on your device): "I'm the only one who does logistics for the group, again."
+> **[Which is closest?]** mad · **[How strong, 0–10?]** 5 · **[Time?]** 10 min · **[When is this?]** happening now
+> **Defaults shown**: altitude *dissatisfied* ✓ · target *Triumph* → player changes to **Peace** · shape *belief-in-one-sentence* ✓
+> **Story** (stays on your device): "If I don't do it, nobody will."
+>
+> *(Composer: no crisis flag; intensity 5 < 7; candidates for Clean Up = T01/T02/T04; anger guards pass; scores — T04: 2×2+2+3 = 9, T01: 6, T02: 4. T04 wins. Target Peace ≠ channel Anger → aim translate. rolePath will log [metabolize, translate].)*
+>
+> ---
+> **Your practice: Story Turnaround — 10 minutes. Timer starts when you do.**
+> 1. Write the story as one sentence: "I cannot ___ because ___."
+> 2. Is this completely true right now? (yes / no / not completely)
+> 3. When you believe it, what happens? One line each: body / action / emotion.
+> 4. Who would you be for 10 minutes without this thought? One line.
+> 5. Write three turnarounds. *(Example shape: "Nobody will" → "Nobody has been asked with a date attached.")*
+> 6. Pick the one replacement you could test **today**.
+> 7. **Peace step**: "What would let this settle is ___."
+>
+> **Output form** (this is what's saved): belief · cost lines · 3 turnarounds · replacement · experiment · peace line.
+> **Show Up — pick one, or decline:**
+> - *Internal*: Hold "[replacement]" for 24 hours; log evidence tonight at [time].
+> - *External*: Run the ≤10-minute experiment — "[experiment]" — before [date]. *(Anyone involved? → recipient check runs.)*
+> **Re-rate: how strong is the charge now, 0–10?**
+
+Every bracketed slot is filled from the diagnostic or the tool's own output fields. Nothing above requires a language model.
+
+### 5.2 Show Up template table `[P2]`
+
+Deterministic: slots come from the tool's structured output plus at most two player-supplied values (**recipient**, **date/time**).
+
+| Tool | Internal template | External template |
+|---|---|---|
+| T01 | Vow: "I will honor **[part]** by **[one conduct rule]** for 24h." | Send one ask written from "**[owned-energy sentence]**" to **[recipient]** by **[date]**. |
+| T02 | Save "**[handle]**" as a BAR seed for a later quest. | Ask one curiosity question about **[handle]** to **[recipient]** by **[date]**. |
+| T03 | Adopt "**[next artifact]**" as a 24-hour practice; check off at **[time]**. | Send/publish **[next artifact]** to **[recipient/venue]** by **[date]**. |
+| T04 | Hold "**[replacement]**" for 24h; log evidence at **[time]**. | Run the ≤10-min experiment "**[experiment]**" before **[date]**. |
+| T05 | Hold the edge: "**[circled move]**" is the only work on this today. | Make the ask to **[resource item]** by **[date]**. |
+| T06 | Keep "**[line]**" as a 24-hour rule. | Deliver "**[line]**" to **[recipient]** at **[event/date]**. |
+| T07 | Pause-before-reply rule until **[time]**. | Rejoin **[task]** and do one ≤10-min action now. |
+| T08 | Mission lock: "**[mission]**" — refuse other missions for 1 hour. | Do "**[action]**" now, or at **[scheduled time]**. |
+| T09 | Permission slip: "**[apple]** counts." | Share **[apple]** with **[recipient/channel]** by **[date]**. |
+| T10 | Perform **[ritual action]** privately at **[time]**; log the shift. | Create/share **[artifact]** with **[recipient]** by **[date]**. |
+| T11 | Play round one solo tonight; log the score. | Recruit **[partner]** for rep 1 on **[date]**. |
+
+### 5.3 Spirit steps `[P5]`
+
+A satisfaction spirit adds **exactly one fill-in-the-blank step** to any protocol — nothing else. The five steps:
+
+| Spirit | Added step |
+|---|---|
+| Peace | "What would let this settle is ___." |
+| Triumph | "The clean power I want to use here is ___." |
+| Poignance | "What I care about under this is ___." |
+| Bliss | "What wants to be shared or played here is ___." |
+| Wonder | "The question that makes this interesting is ___." |
+
+The taxonomy's per-tool spirit notes (item 18) are guidance for *authoring* tool-specific variants later; until playtested, only these five generic steps ship `[G9]`.
+
+### 5.4 Operational checks for fuzzy criteria `[P3][P6]`
+
+| Fuzzy criterion | Operational check (rendered in-protocol) |
+|---|---|
+| Owned-energy sentence (T01) | Must name a quality **you** want to use; must not mention the other person. ✗ "The clean energy is that Marcus should listen." ✓ "The clean energy I can reclaim is my directness." |
+| Clean Line "short and true" (T06) | Stranger test: would a stranger reading only this sentence know exactly what is being asked or declined? |
+| "One true sentence" (T02) | Body test as an explicit step: read it aloud; if the body loosens, keep it; if it tightens or nothing happens, try once more, then keep the best of the two. Bounded — two attempts, not a perfection loop. |
+| Role sized to risk (S8) | If any *real* threat on the board lacks a mitigation with an owner → remote/support role. All mitigated → on-street with buddy. Player override allowed and logged. |
+
+### 5.5 T02-Guided — the "I can't tell" scaffold `[P4]`
+
+For pre-focusing players (per `FELT_SENSE_321_PRAXIS.md` level 1), plain T02 assumes skill they don't have yet. T02-Guided replaces open questions with choices:
+
+1. 20–30 s pause (the app holds the silence — a visible slow timer, no text).
+2. "Where does it sit?" — chips: head / throat / chest / belly / elsewhere / nowhere I can find.
+3. The app offers **three handle words** for that location (authored per location, e.g. chest: *tight · heavy · fluttery*) plus "none of these."
+4. "Say the word to yourself. Does your body go *more open*, *tighter*, or *nothing*?" — that one question **is** the checking skill being trained.
+5. Output: location + best handle (or "no handle formed yet" — a valid completion) + one sentence if one comes.
+
+---
+
+## 6. Sixteen Fixture Scenarios
+
+S1–S12 are the golden path; S13–S16 are adversarial `[M8]`. All sixteen are the composer's test suite; each was hand-run through §4.1. Role paths are the logged annotation, not a selector.
+
+### S1 · The Interrupted Colleague — Anger → Triumph *(rewritten: safety fork fires `[I3][M3]`)*
+
+- **I want** to intervene when Maya gets talked over in meetings **so I can feel Triumph**.
+- **Blocked by** my freeze response in rooms with senior people. **Story**: "It's not my place — I'd make it about me."
+- **I feel** mad · 6 · dissatisfied. **Vector**: Anger 6 → Triumph. Shape: *interpersonal-live*.
+- **Safety fork fires** (workplace, power gradient): "Does acting on this involve your boss, your livelihood, or someone with power over you?" → *"Senior people, yes."* → composer leads internal, frames external as opt-in with stakes named.
+- **Deck practice**: Show Up × Challenger × Direct Action. **Tool**: T06 Clean Line (score 6 + shape bonus; T08 loses tiebreak).
+- **Internal Show Up** (led): the line — "I want to hear Maya finish her point." — spoken aloud 3×; 24-hour rule signed; meeting calendared.
+- **External Show Up** (opt-in, stakes named): recipient check runs → *power-over risk acknowledged* → the option renders with the risk stated and a fallback ("if the room punishes it, the follow-up is a 1:1 with Maya, not silence"). Player chooses.
+- **Output**: the line + post-meeting log + re-rate. **rolePath**: [transcend].
+
+### S2 · The Invisible Labor Ledger — Anger → Peace (player-chosen translate)
+
+As rendered in full in §5.1. **Tool**: T04 + T08 follow-on. **rolePath**: [metabolize, translate]. Standing guard applies: *"Neutralizing because it's complete — or because anger is unwelcome here?"* is asked when an Anger player retargets to Peace.
+
+### S3 · Called In — Anger (layered) → Peace
+
+Unchanged from v2 in substance: intensity 7 → **T07 prepend fires** (step 1), then T01 on "The Judge" (shape: *imagined/replayed other*). Layer check offered once. Internal: owned-energy sentence + drafted acknowledgment ("You were right about the impact; thank you for telling me directly."). External: deliver within 48h, then stop talking. **rolePath**: [metabolize, translate]. This is also the **own-conduct branch** exemplar (§8.6).
 
 ### S4 · After the Ballot Measure Failed — Sadness → Poignance
 
-- **I want** to honor eighteen months of volunteer work that lost **so I can feel Poignance** — the grief carrying the love, not replacing it.
-- **I am blocked by** a flat heaviness that makes even opening the campaign Slack feel impossible.
-- **The story I'm telling** is "It was all wasted."
-- **I feel** sad. Intensity 6, dissatisfied.
-- **Vector**: Sadness 6 → Poignance · role: **transcend**.
-- **Deck practice**: Open Up × Sage × Direct Action — "Witness experience: what happens when I stop fighting it?"
-- **Tool**: **T02 Find the Felt Thread** (3–8 min): 20–30 s pause first; locate the heaviness; test three handles against the body; keep the one that fits; write "What this whole thing feels like is ___." *(T04 Story Turnaround is guard-blocked here — §4.)*
-- **Internal Show Up**: the handle sentence becomes a BAR; a small **T10 Make It Real** ritual — light a candle, read the volunteer roster aloud once (3 min), log what changed.
-- **External Show Up**: post a public thank-you naming what the campaign built that survives the loss — relationships, lists, skills — by Sunday.
-- **Inspectable output**: body location + felt handle + shift sentence + ritual note + the posted thank-you link. Re-rate.
+Unchanged: T02 (3–8 min; T04 guard-blocked on fresh grief), one-true-sentence with the §5.4 body test; T10 candle-and-roster ritual as internal Show Up; public thank-you by Sunday as external. **rolePath**: [metabolize, transcend].
 
 ### S5 · The Ruptured Friendship — Sadness → Poignance
 
-- **I want** to decide what this friendship is now, after he defended the thing I stood against **so I can feel Poignance** — clear about what was real even if it changes.
-- **I am blocked by** two parts at war: one wants to cut him off, one misses him.
-- **The story I'm telling** is "If I still love him, I'm betraying my values."
-- **I feel** sad (with anger's edges). Intensity 5, dissatisfied.
-- **Vector**: Sadness 5 → Poignance · role: **metabolize**.
-- **Deck practice**: Grow Up × Diplomat — "Relate growth: how does this affect others?"
-- **Tool**: **T01 321 Charge Dialogue**, run twice (7–15 min each, or minis): once with The Gatekeeper (protects values), once with The One Who Misses Him (protects love). Each part gets named, quoted, and asked what it protects; each yields an owned-energy sentence.
-- **Internal Show Up**: both owned-energy sentences on paper; write the decision both parts can live with (boundary + door: "I won't discuss X with you, and I'm not leaving").
-- **External Show Up**: send the two-truth message — the boundary and the care, both stated plainly (a **T06 Clean Line** repair-type script).
-- **Inspectable output**: two part names + quotes + owned-energy sentences + the decision line + sent/not-sent status with a date.
+Unchanged: T01 run twice (shape: *two-voices-at-war*) — The Gatekeeper, The One Who Misses Him; decision line both parts can live with; T06 repair-type script as external. **rolePath**: [metabolize, transcend].
 
 ### S6 · First Workshop Terror — Fear → Wonder
 
-- **I want** to facilitate my first allyship workshop **so I can feel Wonder** — at the edge of my capability instead of behind it.
-- **I am blocked by** fear of saying something harmful in front of the people I want to serve.
-- **The story I'm telling** is "One wrong sentence and I'm disqualified forever."
-- **I feel** afraid. Intensity 6, dissatisfied.
-- **Vector**: Fear 6 → Wonder · role: **transcend**.
-- **Deck practice**: Grow Up × Architect × Raise Awareness — "Amplify capacity: what capability wants strengthening?"
-- **Tool**: **T11 Game Reframe** *(Atlas extension — §2.0)*: design "Recovery Reps" (15 min) — the win condition is not a flawless workshop, it's *one clean recovery from a mistake*. Rep 1: a practice segment with two friends instructed to throw one curveball each.
-- **Internal Show Up**: game card written (rule, win condition, rep dates); rep 1 on the calendar.
-- **External Show Up**: run rep 1 this week; log the curveball and the recovery.
-- **Inspectable output**: game card + rep 1 log (curveball, recovery, what it taught).
+Unchanged, T11 now canonical: "Recovery Reps" — win = one clean recovery from a mistake, not a flawless workshop (shape: *practice-edge*, bonus makes T11 beat T01/T04). Rep 1 with two curveball-throwing friends this week. **rolePath**: [transcend].
 
 ### S7 · The Ask I Keep Not Making — Fear → Wonder
 
-- **I want** to ask three lapsed donors to fund the winter drive **so I can feel Wonder** — discovering what's actually on the other side of asking.
-- **I am blocked by** the imagined "no" and what I've decided it would mean.
-- **The story I'm telling** is "Asking again makes us look desperate and burns the relationship."
-- **I feel** afraid. Intensity 5, dissatisfied.
-- **Vector**: Fear 5 → Wonder · role: **metabolize → transcend**.
-- **Deck practice**: Open Up × Challenger × Gather Resources — the authored card **"The Ask You're Avoiding"**: "What resource am I afraid to ask for — and what am I avoiding feeling about needing it?"
-- **Tool**: **T01 321 Charge Dialogue** on the part called "The Donor Who Says No" (7–15 min): what is it protecting, wanting, refusing? Speak as it; own the clean energy (usually: care about the relationship).
-- **Internal Show Up**: owned-energy sentence + draft the real ask (the thing actually needed, not the safe smaller thing) as a **T06 Clean Line** ask-type script.
-- **External Show Up**: send one ask by Friday. One, not three — T08 sizing.
-- **Inspectable output**: part name + quote + owned-energy sentence + the sent ask + the actual answer logged next to the imagined one.
+Unchanged: temporal = *coming up*; shape: *imagined other* → T01 on "The Donor Who Says No"; T06 ask-script; one ask sent by Friday; imagined "no" logged next to the actual answer. **rolePath**: [metabolize, transcend].
 
-### S8 · Before the March — Fear → Peace (cross-channel, player-chosen)
+### S8 · Before the March — Fear → Peace *(rewritten: hot-charge gate fires `[M3]`)*
 
-- **I want** to attend Saturday's march with my eyes open **so I can feel Peace** — fear converted into protection and a clear role, not suppressed.
-- **I am blocked by** a swirl of undifferentiated danger: arrests, doxxing, crowd crush, all at once.
-- **The story I'm telling** is "If I'm scared, I shouldn't go; if I go, I shouldn't be scared."
-- **I feel** afraid. Intensity 7, dissatisfied.
-- **Vector**: Fear 7 → Peace · role: **translate**.
-- **Deck practice**: Clean Up × Shaman × Direct Action — "Identify channel: which channel is active?" then the risk sort.
-- **Tool**: **T05 Put It On The Board** (10 min, fast version): facts in the field box, interpretations in the blocker box; mark each item fact / story / threat / resource; every *real* threat gets a mitigation with an owner; circle where the move is possible now. *(T11 is guard-blocked — physical risk is never gamified: §4.)*
-- **Internal Show Up**: board complete; choose a role sized to the assessed risk (buddy pair, support car, remote comms are all legitimate).
-- **External Show Up**: confirm the buddy pair and share the safety plan with them by Thursday.
-- **Inspectable output**: the map (facts vs stories, threats + mitigations) + the chosen role + the buddy message.
+- **I feel** scared · **7** · dissatisfied. **Vector**: Fear 7 → Peace (player-chosen). Shape: *many-items-swirl*. Temporal: *coming up*.
+- **Step 1 fires**: T07 Return to the Body, 2 min (longer-exhale rounds), re-rate → 5. Then:
+- **Deck practice**: Clean Up × Shaman × Direct Action. **Tool**: T05 (shape bonus; T04 guard-blocked — external danger is real, per its own when-not-to-use). T11 guard-blocked (physical risk).
+- Board: facts vs stories; every real threat gets a mitigation **with an owner**; role sized by the §5.4 rule.
+- **Internal**: board + chosen role. **External**: buddy pair confirmed + safety plan shared by Thursday.
+- **Output**: T07 before/after + the board + role + buddy message. **rolePath**: [metabolize, translate].
 
 ### S9 · The Win Nobody Toasted — Joy (stuck) → Bliss
 
-- **I want** to actually celebrate that the Ramirez family got housed **so I can feel Bliss** — letting the win land instead of sliding to the next crisis.
-- **I am blocked by** the reflex that celebration is self-indulgent while the waitlist is still 200 deep.
-- **The story I'm telling** is "Feeling good now means I've stopped caring."
-- **I feel** joy that can't land (stuck joy). Intensity 5 (as agitation), dissatisfied.
-- **Vector**: Joy 5 → Bliss · role: **transcend**.
-- **Deck practice**: Show Up × Sage × Gather Resources — "Create legacy: what artifact remains?"
-- **Tool**: **T09 Happy Apples** (2–5 min): name the current charge honestly first; three real goods ("keys in Rosa's hand, her kid picked his room…"); receive one for a full 30 seconds; choose share/use/log.
-- **Internal Show Up**: three apples logged; a permission slip written ("celebration is fuel, not defection").
-- **External Show Up**: post the win in the org channel with the volunteers named; call a 20-minute celebration at the next meeting — timeboxed so the grind-guardians can tolerate it.
-- **Inspectable output**: three apples + the received apple + the posted celebration.
+Unchanged: T09 (shape: *win-that-won't-land*; the Anger/Sadness ≥ 5 guard does not apply — channel is Joy). Three apples; 30-second receive; org-channel post + 20-minute timeboxed celebration. **rolePath**: [transcend].
 
-### S10 · The Grim Duty Problem — Joy (starved) → Bliss
+### S10 · The Grim Duty Problem — Joy (starved) → Bliss *(picker path fixed `[I5]`)*
 
-- **I want** my organizing life to have play in it again **so I can feel Bliss** — participation that feeds me instead of only costing me.
-- **I am blocked by** a calendar where every commitment is heavy and none are alive.
-- **The story I'm telling** is "Serious problems require a serious person; play is for after the revolution."
-- **I feel** stuck joy presenting as dull dread. Intensity 4, dissatisfied.
-- **Vector**: Joy 4 → Bliss · role: **transcend**.
-- **Deck practice**: Grow Up × Shaman — "Identify emerging capacity: what wants to grow?"
-- **Tool**: **T11 Game Reframe** *(Atlas extension)*: take the dreariest recurring task (data entry after canvassing) and redesign it — pairs, timer, absurd team names, score kept in Happy Apples. 15 min design.
-- **Internal Show Up**: game card written; one solo round played tonight.
-- **External Show Up**: recruit one playtest partner for the next canvass debrief (a **T08 One True Next Move**-sized invite).
-- **Inspectable output**: game card + round-one score + partner's name and date.
+- Player taps **flat or numb** → flat fork → **"Grey — missing aliveness"** → channel reads Joy (starved), intensity 4.
+- **Deck practice**: Grow Up × Shaman. **Tool**: T11 (shape: *practice-edge/play*; Joy-tool guard passes — no hot Anger/Sadness). Redesign the dreariest task as a game; score in Happy Apples.
+- **Internal**: game card + one solo round tonight. **External**: recruit one playtest partner (T08-sized invite).
+- **Output**: game card + round-one score + partner and date. **rolePath**: [transcend].
 
-### S11 · Three Orgs, Zero Sleep — Neutrality → Peace
+### S11 · Three Orgs, Zero Sleep — Neutrality → Peace *(picker path fixed `[I5]`)*
 
-- **I want** a commitment load I can actually carry **so I can feel Peace** — order restored, rest legitimate.
-- **I am blocked by** seventeen standing commitments across three organizations and no criteria for choosing.
-- **The story I'm telling** is "Stepping back from any of it means abandoning people."
-- **I feel** flat, foggy, overloaded — genuine Earth overload (verified by the §8 numbness fork: it's clutter, not frozen grief).
-- **Vector**: Neutrality 6 → Peace · role: **transcend**.
-- **Deck practice**: Wake Up × Regent × Skillful Organizing — "Notice stewardship: what deserves attention?"
-- **Tool**: **T05 Put It On The Board** (10–20 min): every commitment as one item, classified; mark **keep** (max 5), **hand off**, **end**; circle where the first move is possible. Follow-on: **T08 One True Next Move** for the first hand-off.
-- **Internal Show Up**: the board done; a rest block placed on the calendar with the same standing as any meeting.
-- **External Show Up**: send the two step-back messages — with a named successor or a clean end date, not a fade-out.
-- **Inspectable output**: the board (17 items, each marked) + 2 sent messages + the calendar rest block.
+- Player taps **flat or numb** → flat fork → **"Buried — too many things"** → genuine Earth overload, intensity 6.
+- **Deck practice**: Wake Up × Regent × Skillful Organizing. **Tool**: T05 (shape: *many-items-swirl*), keep max 5 / hand off / end; T08 follow-on for the first hand-off.
+- **Internal**: board + calendar rest block with meeting-grade standing. **External**: two step-back messages with named successors or clean end dates.
+- **Output**: the board (17 items marked) + 2 messages + rest block. **rolePath**: [transcend].
 
-### S12 · The Nothing — Neutrality (suspected frozen charge) → true reading first
+### S12 · The Nothing — flat, unverified
 
-- **I want** to know whether my flatness about the news is peace or a freeze **so I can feel** whatever is actually true — Peace if it's genuine rest, or the first thaw toward Poignance/Wonder if something froze.
-- **I am blocked by** feeling nothing where I used to feel everything.
-- **The story I'm telling** is "I've finally developed healthy detachment." *(Maybe. That's the question.)*
-- **I feel** neutral — unverified. Intensity: unratable, which is itself the signal (the "I can't tell" branch of §1.3 step 3).
-- **Vector**: Neutrality ? → *diagnose before targeting* · role: undetermined until the channel is verified. The app must not accept "Peace" as the target until then (§8, §9.2).
-- **Deck practice**: Wake Up × Shaman — "Notice the signal: what is here?"
-- **Tool**: **T02 Find the Felt Thread** (3–8 min): 20–30 s pause; find where "the nothing" sits; test handles — including "rest" and "wall" — against the body; keep what fits. Then **T03 BAR Capture** (90-second quick capture) for whatever thawed. "No handle has formed yet" is a valid completion per the taxonomy.
-- **Internal Show Up**: a BAR naming the verdict ("the nothing is a wall in my chest; behind it, grief about the deportations") — or an honest verdict of genuine rest, which is a legitimate, celebrated result.
-- **External Show Up**: if a frozen channel surfaced: one re-engagement act sized to actual fuel (read one article and tell one person one feeling about it). If genuine rest: tell an accountability partner "I'm resting on purpose until [date]" — rest made legible is Show Up.
-- **Inspectable output**: body location + handle + the verdict BAR (frozen-X vs genuine rest) + the sized act or the declared rest window.
+- Player taps **flat or numb** → fork → **"Walled-off — something's behind it."** Target stays *undetermined*; the app refuses a Peace target until the channel is verified.
+- **Deck practice**: Wake Up × Shaman. **Tool**: T02 (or T02-Guided if the player also can't rate intensity) + T03 quick capture for whatever thaws. "No handle formed yet" is a valid completion.
+- **Internal**: verdict BAR ("the nothing is a wall in my chest; behind it, grief about the deportations") — or *rested-calm re-verdict*, celebrated. **External**: one re-engagement act sized to fuel, or a declared rest window.
+- **Output**: location + handle + verdict BAR + sized act or rest window. **rolePath**: [metabolize] (+ later aim once the channel is known).
 
----
+### S13 · Guard fixture — "Just give me the good-vibes tool" `[M8]`
 
-**Coverage check**: channels 3 Anger / 2 Sadness / 3 Fear / 2 Joy / 2 Neutrality; all five WAVE submoves as the drawn card; all four domains; all five satisfaction spirits including two player-chosen cross-channel destinations (S2, S8); all three move roles; all ten taxonomy tools appear as primary or follow-on, plus proposed T11 twice (S6, S10).
+- Setup: player taps mad · **8** · asks for Happy Apples by name ("I want to feel good").
+- **Expected composer behavior**: step 1 prepends T07. T09 is **hard-blocked** (Anger ≥ 5); the block is *explained, not silent*: "Happy Apples on top of hot anger tends to paint over it — let's cool the charge and meet it first; apples after." Offer: T07 → T01. Player may still capture-only close.
+- **Output**: T07 before/after + either T01 outputs or a capture-only close. Fixture passes only if T09 never renders as the practice.
+
+### S14 · Exit fixture — grief too big mid-tool `[M8]`
+
+- Setup: S4-like player, mid-T02, taps the always-visible "I need more than a practice."
+- **Expected**: protocol halts without a completion demand; graceful-exit copy ("too big for a practice right now — that's useful signal too"); resources card offered (§8.4); session logged `exited_gracefully` with no penalty state; thread preserved; nothing extra persisted.
+- Fixture passes only if the exit is reachable in ≤ 1 tap from every protocol step.
+
+### S15 · Safety fixture — the boss `[M8]`
+
+- Setup: blocker names the player's manager; intensity 6; card Show Up × Challenger.
+- **Expected**: safety fork fires on capture (power-over). External-toward-boss options are **not rendered by default**; the composer leads with internal (T06 line as a held rule) and offers a *support-directed* external (rehearse the line with a trusted peer by [date]) instead. Confront-the-boss appears only behind an explicit "I want to act on this directly" tap, which re-runs the recipient check with stakes named.
+- Fixture passes only if no default option targets the person holding power over the player.
+
+### S16 · Target-of-harm fixture — received, not witnessed `[M8][D6]`
+
+- Setup: player received a slur at an organizing meeting; taps mad · 7; card Open Up × Diplomat.
+- **Expected**: the ally-or-target question fires (identity-harm trigger); answer *received* → the **received-harm branch** (§8.6): T07 prepend (intensity 7); tool T01 or T02 for the player's own charge; **no rendered option suggests educating, repairing toward, or managing the harmer**; external options default to support people ("tell [trusted person] what happened by [date]") and boundaries ("the T06 line names what you won't absorb, delivered only if and when you choose"); T04, if reached later, restricted to agency-restoring turnarounds — never one that assigns the player fault for harm received.
+- Fixture passes only if every default external points toward support or boundary, none toward the harmer.
+
+**Coverage**: all five submoves as drawn cards, all four domains, all five spirits, both translate cases (S2, S8), every tool T01–T11 as primary or follow-on, every hard guard, both fork paths of the flat chip, the safety fork, the received-harm branch, and the graceful exit.
 
 ---
 
-## 7. Gaps in the Current Tool System
+## 7. Gaps — v3 status
 
-- **G1 — Grow Up has ratings but no rep structure.** Five tools rate "strong" for Grow Up, yet each produces reflection or a single act. "Who must I become?" without reps, rungs, and evidence is Clean Up wearing Grow Up's badge. Missing: a **Rep Ladder** mechanic (capability, current rung, next rung, rep schedule, evidence log) — proposed T11 Game Reframe covers part of this; the ladder itself is still uninvented *(inference)*.
-- **G2 — No dyadic/relational tool.** Every protocol is solo, but allyship is relational. Clean Line is one-way transmission; T01 is internal dialogue (its own misuse note warns against making external claims from it). Missing: a **repair-conversation rehearsal** tool (script both sides, practice *receiving* the hard response) and a feedback-receiving protocol. S3 and S5 currently exit the tool system exactly where the hardest move begins.
-- **G3 — Sadness-native flow tool** (taxonomy gap 4). T10 Make It Real is the closest, and T04 is guard-blocked on grief. Sadness needs a dedicated restoring-flow protocol for care-at-a-distance that isn't cognitive, action-oriented, or regulation-oriented — S4's candle-and-roster ritual, standardized *(inference)*. This is also taxonomy research question 5.
-- **G4 — Three tool registries.** The taxonomy (T01–T10), `CANONICAL_TECHNIQUES` in `technique-library/canonical.ts` (W.A.V.E., Rose Tool, Contract Burning, Conscious Complaining, Fuel Check, Ember Breath, Charge Diagnostic…), and `emotional-first-aid.ts` (Grounding Sequence, Boundary Shield, Command Bridge…) overlap heavily under different names. The taxonomy's mapping table is the reconciliation plan; it must land in code as **one registry** (§10 target 1) or the UI ships three vocabularies.
-- **G5 — No completion check wired in.** T07 is the only tool whose protocol includes before/after rating. The taxonomy declares completion criteria per tool; nothing yet *records* them. Before/after intensity re-rating should be a required field of every session (§1.3 step 8, §10 target 5).
-- **G6 — Make It A Game is orphaned.** In the original tool list and two golden scenarios, absent from the taxonomy. Decide: canonize as T11 Game Reframe or cut and re-route S6/S10 (both could limp along on T08, losing the rep structure).
-- **G7 — No fuel/time gating in tool selection.** Fuel Check exists in `canonical.ts`; timeboxes exist per tool; nothing consults them at recommendation time. A 20-minute tool recommended to a depleted player at 11pm is a failure the system currently can't prevent.
-
----
-
-## 8. Ask, Don't Infer
-
-Points where the app must present a question rather than compute an answer:
-
-1. **Channel.** Never classify emotion from the blocker text. One tap: *mad / sad / scared / flat / bright-but-stuck / **I can't tell***. "I can't tell" routes to T02 Find the Felt Thread — per the felt-sense praxis, pre-focusing players genuinely cannot label yet, and the interface should slow down rather than force a pick. Free text is stored; it never overrides the tap.
-2. **Layer check — exactly one.** After Anger, offer once: "Sometimes anger guards fear or grief. Want to check underneath? (Fine to say no.)" One layer, player-initiated. Recursive auto-excavation is both invasive and unreliable.
-3. **Intensity (0–10) and fuel (depleted/steady/charged).** Both self-report. Both gate tool choice (§4 heuristic, G7).
-4. **The numbness fork.** When channel = flat: "Does this feel like rest, or like a wall?" — the S12 question. The app must never map flat → Earth → Peace automatically; that's the system's single largest bypass vector.
-5. **Target satisfaction state.** Channel supplies the default; the player confirms or redirects (S2, S8). Cross-channel routing is the translate role and belongs to the player.
-6. **Ally or target?** Whether the player *witnessed* harm or *received* it changes every recommendation. Never infer from wording; ask when the blocker involves identity-based harm.
-7. **Safety and power before any external Show Up.** "Does acting on this involve your boss, your housing, your safety, or someone with power over you?" Yes → internal options first, external framed as opt-in with stakes named. The app never infers that confrontation is safe.
-8. **Readiness for external.** "Has the charge dropped below a 4, or do you need to act while it's hot?" — asked, with hot-action legitimate for boundary moves, chosen not defaulted.
-9. **Time available (2/10/30).** Asked every session; it's the cheapest question with the highest routing value.
-10. **Whether transformation is wanted at all.** Sometimes the player needs capture only. "Work this now, or just get it down?" Journaling-only is a complete, honorable session.
-11. **The graceful exit, offered not buried.** Per the felt-sense praxis non-clinical boundary: if intense material surfaces, the app says "this feels too big for a quest right now — that's useful signal too," logs the exit, and does not press. BARS is a skill practice, not therapy, and is not the trained companion Gendlin recommends for players in active treatment.
-
-This set is also the working answer to taxonomy research question 3 (minimum player input): **three taps + free-text blocker + story sentence**, with forks 2/4/6/7 appearing only when triggered. Everything else — tool, move role, timebox, output type, Show Up options — the composer computes and shows *with its reasoning inspectable*, and every computed field is player-editable.
+| ID | Gap | Status |
+|---|---|---|
+| G1 | Grow Up rep-ladder mechanic (reps, rungs, evidence) | **OPEN** — T11 covers the game-shaped subset only |
+| G2 | Dyadic/relational tool (repair rehearsal, feedback receiving) | **OPEN** — candidate T12; S3/S5 still exit the system where the hardest move begins |
+| G3 | Sadness-native flow tool | **OPEN** — taxonomy research question 5; T10 is the stopgap; the UI should say so rather than route grief silently to a mediocre fit |
+| G4 | Three tool registries in code | **OPEN** — implementation target 1 |
+| G5 | Completion check | **CLOSED** — §1.5 branch table + session log (target 5) |
+| G6 | Make It A Game orphaned | **CLOSED** — T11 canonized in taxonomy v1.1 |
+| G7 | Fuel/time gating | **CLOSED** — §1.4 + timer mechanic |
+| G8 | Blocker-shape classifier heuristics + confirm UI | **OPEN** *(new)* — the one computed value touching routing; mitigated by computed-and-confirmed display |
+| G9 | Scoring weights and spirit steps unvalidated | **OPEN** *(new)* — declared seeds; tune from session logs |
+| G10 | Region-configurable crisis resources content | **OPEN** *(new)* — product/ops decision |
 
 ---
 
-## 9. Hostile Review
+## 8. Ask, Don't Infer — v3 question inventory
 
-### 9.1 Where it's handwavy
+Core (always): channel tap · intensity 0–10 · time · temporal `[D2]`. Visible-editable defaults (never silent `[I2]`): altitude · target · blocker shape. Conditional forks (max 2 shown per session):
 
-- **"Emotional vector" was vibes until §1.2.** No repo type exists for it. If it isn't `{channel, intensity, altitude, target}` in code, every downstream promise ("the vector routes the session") is decoration. Ship the type or drop the word.
-- **The move-role triad is undefined at the definition level.** The taxonomy rates every tool for metabolize/translate/transcend but never defines the roles; the deck uses a *different* triad (Transcend/Translate/Neutralize). §0 collision 3 proposes a mapping — until someone canonizes it, "move role" is a column of ratings pointing at an unnamed thing.
-- **"Satisfaction spirit" now does real mechanical work** — every taxonomy tool declares per-spirit protocol variations (item 18), which answers v1's complaint. But those variations are one sentence each; the protocol composer (§10 target 3) has to render them into actual prompt text, and nobody has verified that "poignance asks what care is underneath" composes coherently with every stance question. Playtest before authoring 50 spirit-variant strings.
-- **Grow Up makes a developmental claim with no measurement** (G1). Ratings say five tools are "strong" for Grow Up; outputs say otherwise — every output is a sentence or a single act. Without reps and evidence, the engine has four working phases and one aspiration.
-- **"Charge" intensity is self-reported and gamable.** Fine — but then the system must never *reward* high deltas (no XP for intensity drops) or players will learn to inflate the before-number within a week.
+1. **Defaults rule.** A default is *asked* if it is visible, pre-selected, and one-tap editable before anything downstream uses it. Silent computation of any emotional field is forbidden; blocker shape is the sole computed routing input and carries a confirm chip (G8).
+2. **Layer check** `[I4]` — once, any channel, intensity ≥ 5, phrased per channel: anger → "sometimes anger guards fear or grief"; sadness → "…guards anger"; fear → "…guards anger or a desire". One layer. Player-initiated descent only.
+3. **Threads** `[M6][D3]` — "New blocker or existing thread?" Existing → show last tool + delta; tools with flat/negative deltas on this thread take a −2 rank penalty; the **internal-only ratchet** (3 sessions on one thread with internal-only Show Ups → "this one may be asking for a move in the world — want to look at what's in the way of that?") runs on threads, gently, once.
+4. **Crisis** `[D1]` — always-visible "I need more than a practice" affordance; intensity 10 additionally triggers "Do you need support beyond a practice right now?" Yes → region-configured resources card (G10), honorable close, no tool, nothing extra persisted. BARS is a skill practice, not therapy, and is not the trained companion the Focusing lineage recommends for players in active treatment.
+5. **Recipient check** `[D5]` — before any external interpersonal option: "Can [recipient] be reached, and is it safe to send this?" → *yes* → render; *power-over risk* → safety branch (internal-first, stakes named, S15); *can't reach* → internal or T10 artifact route.
+6. **Ally or target** `[D6]` — asked when the blocker involves identity-based harm, never inferred from wording. Branches:
+   - **Witnessed (ally)**: full tool set; external options may address the situation and actors (intervention, repair, amplification).
+   - **Received (target)**: no default option directs the player's labor at the harmer (no educate-the-harmer, no repair-toward-harmer); externals default to support people and boundaries; T04 restricted to agency-restoring turnarounds; direct confrontation available only behind an explicit choice, which re-runs the safety fork. (S16.)
+   - **Own conduct**: the S3 repair path — acknowledgment without self-flagellation, delivered then released.
+7. **Numbness fork** — §3.1; mandatory before Neutrality can carry a Peace target.
+8. **Hot-action override** — "Has the charge dropped below a 4, or do you need to act while it's hot?" Asked; hot boundary moves are legitimate, chosen not defaulted.
+9. **Capture-only option** — "Work this now, or just get it down?" Journaling-only is a complete session.
+10. **Resonance check** `[D4]` — §1.3 step 2b; one redraw, banked card.
 
-### 9.2 Where it bypasses sadness, fear, anger
-
-- **The numbness→Peace slide** (S12, §8.4) is the biggest structural bypass: Neutrality is the only channel whose dissatisfied and satisfied states *feel similar from inside*. Without the rest-or-wall fork, the system will certify frozen grief as achieved Peace.
-- **Sadness is the weakest column in the canonical channel matrix.** Six of ten tools rate weak for Sadness; the two strong non-capture options (T01, T02) are both inward-facing, and the taxonomy itself names the gap (its question 5). Until a sadness-native flow tool exists (G3), the system structurally under-serves grief — say so in the UI rather than routing grief to a mediocre fit silently.
-- **Allyship culture pressure will over-neutralize anger.** In a politeness-normed community, players will route Anger → Peace by default to stay likable. The translate choice needs a standing guard question: *"Neutralizing because it's complete — or because anger is unwelcome here?"* Anger that should become a boundary and instead becomes acceptance is the specific failure mode of nice activists.
-- **T09 and T11 are bypass instruments when mistimed** (§4 guards). The composer must hard-block Joy tools at Anger/Sadness intensity ≥ 5, not merely deprioritize them. Likewise T07's own misuse note — "calming down to avoid truth" — means regulation is a *gate* to transformation, never a substitute for it.
-- **T04 on grief is self-gaslighting** and the taxonomy's misuse note agrees ("arguing the player out of legitimate desire, threat, or grief"). Contraindication must be enforced in the composer, not footnoted in a doc.
-- **Fear gets two seconds of respect and then a productivity plan.** T08 and T05 are excellent for paralysis, but S8's protest fear is *information about real danger*. The system must honor fear's protective intelligence (risk inventory with mitigations) before converting it to action, or it's training players to override their own alarms.
-
-### 9.3 Where it confuses reflection with action
-
-- **The BAR pipeline makes reflection feel like completion.** Capturing an insight produces a satisfying artifact — which is precisely why the system must refuse to count it as Show Up. Enforced rule (§1.4): no recipient, no date, no public artifact → it's a Clean Up output. The 321 doctrine already states the collapse condition ("becomes journaling rather than psychotechnology"); the taxonomy generalizes it — every tool's misuse note is its collapse condition, and the composer should surface it in-protocol.
-- **T05 is where charges go to feel handled.** A board item without a dated next move is deferred avoidance with good UX. The board tool must refuse to close without dates.
-- **T01's misuse note names the subtlest confusion**: "making external claims from internal dialogue." A 321 session about your co-organizer is *your* material; it licenses an owned-energy sentence, not a diagnosis of them. The internal Show Up is a vow about your own conduct; the external one goes through T06's no-blame filter.
-- **Internal Show Up will be abused as the comfortable default.** It's legitimate (rehearsal, vow, ritual, 24-hour rule) — and it needs a ratchet: an internal option that repeats across 3 sessions on the same blocker without an external step triggers a gentle escalation question, not silence. (This is the working answer to taxonomy research question 4: internal artifacts are first-class *and* counted, so the pattern is visible.)
-
-### 9.4 Where it overcomplicates the player experience
-
-- **The playable recommendation now binds seven components** (vector + role + submove + tool + spirit + blocker/story + domain); a dissatisfied human can hold about two. The player path must be: draw → three taps → one tool → one output. The full tuple lives in the data model and the inspectable session record, never in the player's working memory.
-- **Vocabulary debt is already at the redline.** Charge, channel, vector, altitude, spirit, mask, part, BAR, daemon, submove, stance, operation, domain, move role — the deck-literacy spec exists precisely because of this. Standing rule: no new term ships without a glossary entry and a one-tap deep link, and the three naming collisions (§0) get resolved before any of this reaches UI copy.
-- **120 cards × 10 tools × 5 channels × 3 altitudes × 3 roles is combinatorially honest and experientially crushing.** The matrices are for the composer. The player sees one recommendation and an "offer me a different tool" button. Depth on demand, defaults everywhere else.
-- **Three tool registries (G4) means three vocabularies in the UI** the day someone wires them together. Reconcile before, not after.
-- **The non-clinical boundary is a UX requirement, not a disclaimer.** Per the felt-sense praxis: scaffolding copy invites the pause, never explains it at length; over-explanation activates cognition and defeats the tool. The composer's rendered protocols must stay terse — the taxonomy's step lists are already close to the ceiling.
+Everything else the composer computes and displays *with its reasoning inspectable*, every computed field player-editable.
 
 ---
 
-## 10. Next Five Implementation Targets for bars-engine
+## 9. Residual Risks (post-v3)
 
-1. **The unified tool registry — `EmotionalAlchemyTool`.** Implement the taxonomy's proposed type (id, genericName, barsName, waveRatings, moveRoleRatings, channelRatings, outputKind, protocolTemplate, completionCriteria, whenNotToUse) in `src/lib/emotional-alchemy/` and seed it with T01–T10. Reconcile `CANONICAL_TECHNIQUES` and `emotional-first-aid.ts` against it per the taxonomy's mapping table (G4): existing tools become entries or reset-modes (Grounding/Breath Reset → T07 modes; Boundary Shield/Rose Tool → T06 lineage). One source of truth for book, deck, and app.
-2. **`EmotionalVector` type + Charge Diagnostic flow.** `{channel, intensity, altitude, target}` plus the three-tap diagnostic (channel with "I can't tell" / intensity / time) and the §8 forks (numbness check, layer check, safety check, graceful exit) as a reusable component wired into the deck draw and `/capture`. Turns `tech-charge-diagnostic` from prose into software; depends on nothing, unblocks everything.
-3. **The protocol composer.** `recommendPractice(card, vector, fuel, time)` → `{tool, moveRole, timebox, protocol, internalShowUp, externalShowUp, output}` as a pure deterministic function over the registry's ratings plus the §4 guards (T04 blocked on fresh grief; T09 blocked at Anger/Sadness ≥ 5; T07-first at intensity ≥ 7; no gamified physical risk). It renders taxonomy protocol steps + stance question + satisfaction-spirit inflection into one terse practice card. **The twelve golden scenarios are its test fixtures** — each is an input/expected-output pair in `__tests__`. AI tailoring layers on top per the dual-track rule; the composer is the always-on baseline.
-4. **321 Charge Dialogue as the first typed tool end-to-end** (the taxonomy's recommended first implementation). Wire T01 through the composer into the existing `/shadow/321` surface: accept a composed recommendation in, emit the typed output (part name, part quote, owned-energy sentence, optional quest seed) out, routing through the existing sinks (`createQuestFrom321Metadata` precedent). Alongside it, the **Show Up commitment artifact**: `{kind: internal|external, recipient?, date?, doneCheck}` as a first-class output type distinct from reflection artifacts — enforcing §1.4 and making the §9.3 ratchet (3 internal-only sessions on one blocker → escalation question) implementable.
-5. **Session log with before/after re-rating.** Every tool run records `{vector_before, tool, moveRole, output_artifact_id, vector_after, timebox_kept, exited_gracefully}`. Closes G5, feeds the 321 doctrine's planned "session depth signal," answers taxonomy research question 1 in practice (the typed fields above become `MoveAttempt` fields; everything else stays freeform BAR metadata), and gives the matrices ground truth for tuning. Guard from §9.1: deltas are displayed, never scored or rewarded.
+The v2 hostile review's structural findings are resolved per the gap analysis; these risks remain true and must be held open-eyed:
+
+1. **Delta gaming.** Intensity is self-reported. Display deltas, never score them; reward logging streaks, never magnitudes (§1.5).
+2. **Sadness is still the weakest column.** Structural until G3 closes. The UI should name it ("grief tools are our thinnest — here's the best we have") rather than fake fit.
+3. **Anger over-neutralization.** Politeness-normed allyship culture will route Anger → Peace to stay likable. The standing guard question in S2 ships with every Anger→Peace retarget.
+4. **Vocabulary debt.** Charge, channel, vector, thread, shape, spirit, stance, part, BAR… No term ships without a glossary entry and one-tap deep link; the §0 collisions get resolved first.
+5. **The shape classifier is a soft spot by design** (G8). Computed-and-confirmed is the mitigation, not a solution; watch the edit rate on the confirm chip as the health metric.
+6. **Terseness is a clinical boundary, not a style choice.** Over-explained scaffolding activates cognition and defeats the tools (felt-sense praxis). The §5.1 rendering is near the ceiling; resist copy growth.
+7. **Sixteen fixtures are necessary, not sufficient.** They pin the mechanics; they cannot pin tone. Playtest transcripts, not fixtures, will reveal whether rendered cards read as practice or poetry.
 
 ---
 
-*Everything in this atlas that contradicts play-tested reality loses to reality. Update the matrices from session logs, not from taste.*
+## 10. Implementation Targets (v3)
+
+Per the spec-kit discipline (`.agents/skills/spec-kit-translator/SKILL.md`), each target gets a `.specify/specs/<name>/` kit (spec/plan/tasks) before implementation; targets 2–4 are user-facing and therefore require Verification Quests. API-first: the signatures below are the contracts.
+
+1. **Unified tool registry.** `src/lib/emotional-alchemy/registry.ts` implementing the taxonomy's `EmotionalAlchemyTool` type, seeded T01–T11, reconciling `CANONICAL_TECHNIQUES` and `emotional-first-aid.ts` per the taxonomy mapping table (G4). Adds the v3 fields the composer needs: `hardGuards`, `shapeBonusKeys`, `showUpTemplates {internal, external}`, `operationalChecks`.
+2. **`EmotionalVector` + Diagnostic flow.** The §1.2 type plus the full v3 instrument: picker with flat fork and can't-tell, intensity, time, temporal, fuel, visible-editable defaults, layer check, crisis affordance, thread picker, resonance check. `runDiagnostic(): Promise<DiagnosticResult>` — pure UI + one server action; raw text never leaves the client (§1.6).
+3. **The composer.** `recommendPractice(card, vector, ctx): Recommendation` — pure, deterministic, implementing §4.1 verbatim, rendering §5 cards from registry protocols + stance question + spirit step + Show Up templates. **Test suite = the sixteen fixtures**, each an input/expected-output pair; guards are individually unit-tested (a T09-at-Anger-8 request must fail loudly). AI tailoring is a separate, optional layer.
+4. **321 end-to-end + Show Up artifact.** Wire T01 through the composer into `/shadow/321`; emit typed outputs to existing sinks (`createQuestFrom321Metadata` precedent). `ShowUpArtifact {kind: internal|external, recipient?, date?, doneCheck}` as a first-class type distinct from reflection artifacts, enforcing §1.7; the thread ratchet becomes implementable.
+5. **Session log.** `{vector_before, tool, rolePath, output_artifact_id, vector_after, timebox_kept, escalated, exited_gracefully, thread_id}` — structured fields only per §1.6, opt-in raw text. Feeds the 321 doctrine's "session depth signal," the thread demotion rule, and the G9 weight tuning. Deltas displayed, never rewarded.
+
+---
+
+*Everything in this atlas that contradicts play-tested reality loses to reality. Update the weights from session logs, not from taste.*

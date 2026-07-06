@@ -310,6 +310,34 @@ External lineages are named as **general lineage** unless explicitly supported b
 17. **Show Up examples**: External: create or share a care artifact. Internal: make a private vow or release ritual and log it.
 18. **Satisfaction spirit changes**: peace completes and settles; triumph marks earned passage; poignance honors care and distance; bliss celebrates embodied aliveness; wonder opens a threshold.
 
+### T11. Game Reframe (v1.1 addendum)
+
+> Added to canonize the previously orphaned "Make It A Game" (Practice Atlas gap G6). Ratings follow the same key.
+
+1. **Generic name**: Game Reframe
+2. **BARS translation**: Make It A Game
+3. **Source lineage / inspiration**: existing MTGOA play usage; general lineage: gamification, deliberate-practice design.
+4. **Core mechanic**: Recast a blocker or practice edge as a designed game: win condition, reps, score, playtest partner.
+5. **WAVE ratings**: Wake Up weak; Open Up medium; Clean Up weak; Grow Up strong; Show Up medium.
+6. **Move roles**: metabolize weak; translate medium; transcend strong for joy and fear practice edges.
+7. **Best channels**: joy, fear (practice edges), neutrality (dreary recurring tasks).
+8. **Weak channels / misuse**: never gamify grief; never gamify real physical risk; misuse is designing the game forever instead of playing round one.
+9. **Protocol**:
+   - Name the edge or task being reframed.
+   - Define a win condition that rewards recovery, not perfection.
+   - Define one rep of 15 minutes or less.
+   - Choose a score unit (Happy Apples allowed).
+   - Schedule rep 1 — play it or put it on the calendar with a date.
+10. **Timebox**: 15 minutes design; rep 1 is 15 minutes or less.
+11. **Expected output**: game card (name, rule, win condition, score unit, rep 1 date) + rep 1 log.
+12. **BAR reflection**: "The game is ___. The win is ___. Rep 1 happened on ___; the score was ___."
+13. **Completion criteria**: rep 1 is played or scheduled with a date.
+14. **When not to use**: grief; physical-risk assessment; when play would mock stakes that are real for someone else involved.
+15. **Prefer another tool when**: the risk is real, use Put It On The Board; the charge is unmetabolized anger/sadness at 5+, use 321 or Felt Thread first.
+16. **Example recommendation**: fear to wonder + Grow Up + Make It A Game + wonder spirit: "Design the rep where recovering from a mistake is the win condition."
+17. **Show Up examples**: External: play rep 1 with a recruited partner. Internal: play one solo round tonight and log the score.
+18. **Satisfaction spirit changes**: peace designs the simplifying game; triumph designs the leverage rep; poignance is contraindicated (do not gamify grief); bliss maximizes play; wonder designs the experiment rep.
+
 ## Compact Matrix 1: Tool x WAVE Submove
 
 | Tool | Wake Up | Open Up | Clean Up | Grow Up | Show Up |
@@ -324,6 +352,7 @@ External lineages are named as **general lineage** unless explicitly supported b
 | One True Next Move | medium | weak | weak | medium | strong |
 | Happy Apples | medium | strong | weak | medium | medium |
 | Make It Real | weak | strong | medium | medium | strong |
+| Make It A Game | weak | medium | weak | strong | medium |
 
 ## Compact Matrix 2: Tool x Move Role
 
@@ -339,6 +368,7 @@ External lineages are named as **general lineage** unless explicitly supported b
 | One True Next Move | weak | medium | medium |
 | Happy Apples | weak | medium | strong |
 | Make It Real | medium | medium | strong |
+| Make It A Game | weak | medium | strong |
 
 ## Compact Matrix 3: Tool x Emotional Channel
 
@@ -354,6 +384,7 @@ External lineages are named as **general lineage** unless explicitly supported b
 | One True Next Move | strong | weak | medium | medium | strong |
 | Happy Apples | weak | weak | medium | strong | strong |
 | Make It Real | medium | strong | weak | strong | medium |
+| Make It A Game | weak | not recommended | medium | strong | medium |
 
 ## Compact Matrix 4: Tool x BAR-Loggable Output
 
@@ -369,6 +400,7 @@ External lineages are named as **general lineage** unless explicitly supported b
 | One True Next Move | mission sentence + chosen action + completion note |
 | Happy Apples | three apples + received apple + share/log choice |
 | Make It Real | ritual sentence + symbolic action + integration note |
+| Make It A Game | game card (name, rule, win, score, rep 1 date) + rep 1 log |
 
 ## MVP Tool Shortlist
 
