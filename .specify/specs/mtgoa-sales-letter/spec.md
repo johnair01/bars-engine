@@ -59,12 +59,21 @@ existing quiz/myth components + the `offers.ts` Gumroad SKUs. Deterministic (no 
 You uploaded `Mastering_the_Game_of_Allyship_Bookhandoff_3.zip` — the actual Claude Design project. Two
 things it settles, and one it overturns:
 
-**1. The Myth *quiz* is now fully specified (Open Dependency CLOSED).** The authoritative handoff is
-vendored under [`design/myths-read/`](design/myths-read/): `logic_spec_reference.md` (10 myths, 6 root
-beliefs, 12 items, §4 scoring, §9 data model), `README.md` (result content contract + strength labels),
-and `Myths-Read.dc.html` (high-fidelity prototype). The content + scorer are **built and unit-tested** at
-[`src/lib/allyship-myths/myths-read.ts`](../../../src/lib/allyship-myths/myths-read.ts) — distinct from the
-`ALLYSHIP_MYTHS` reframe cards (which stay for `/campaign/[ref]/begin`). Key facts from the real quiz:
+**1. The Myth *quiz* is now fully specified (Open Dependency CLOSED) — and BUILT ON `main`.** The
+authoritative handoff is vendored under [`design/myths-read/`](design/myths-read/): `logic_spec_reference.md`
+(10 myths, 6 root beliefs, 12 items, §4 scoring, §9 data model), `README.md` (result content contract +
+strength labels), and `Myths-Read.dc.html` (high-fidelity prototype).
+
+> **Reconciled 2026-07-06:** while this spec was in flight, **PR #167 merged a complete Myths Read into
+> `main`** from the same handoff — `src/lib/mastering-allyship/myths-read.ts` (content + `scoreMyths` +
+> `buildMythReadPersistencePayload`), the `/mastering-allyship/myths-read` route + `MythsReadClient.tsx`,
+> the `saveMythRead` server action, and the `MythRead` model (real persistence + first-BAR seed — i.e.
+> FR3a is already REAL on `main`, not stubbed). A parallel content/scorer this branch briefly built was
+> **composted** in favor of main's; the `/mastering-allyship` sales page here now **embeds
+> `MythsReadClient`** rather than duplicating it. The reframe cards (`ALLYSHIP_MYTHS` in
+> `src/lib/allyship-myths/myths.ts`) are a separate thing and stay for `/campaign/[ref]/begin`.
+
+Key facts from the real quiz:
   - It is **the counter-con**: behavioral 0–4 items, no flattering "which ally are you."
   - Result routes **primary → the Deck** ("first yes"), secondary → the book, plus a Superpower-quiz
     cross-link. *(This overturns the draft's "myth → book / superpower → deck" split — per the real spec,
@@ -120,8 +129,8 @@ practice). The letter carries anyone who doesn't take a quiz straight to the off
 
 - **FR1**: Route `/mastering-allyship/page.tsx` — the sales letter (server component; public; `@entity CAMPAIGN`).
 - **FR2**: Reuse `SuperpowerQuiz` (already accepts `campaignRef` + `onComplete`) as the superpower hook; on complete, render a **deck-selling reveal** (superpower → deck + `superpower-<sp>-pack`), not character creation.
-- **FR3**: Myth-quiz component built to [`design/myths-read/`](design/myths-read/) — intro → 12 items → result. Content + scorer from [`src/lib/allyship-myths/myths-read.ts`](../../../src/lib/allyship-myths/myths-read.ts). Result surfaces 1–3 myths (flip cards), routes **primary → the Deck** ("first yes"), secondary → book, cross-links the Superpower quiz — per the real spec, NOT myth→book.
-- **FR3a** (charge bridge): the result's Emotional Alchemy charge-capture panel seeds the reader's first BAR and routes into a scene. MVP may stub the persistence (as the prototype does); full wiring = a `myth_read` record + BAR seed + scene route. Decision pending (see Reconciliation).
+- **FR3**: Myth-quiz component — **satisfied by `main`'s `MythsReadClient`** (PR #167), which the sales page embeds. Result surfaces 1–3 myths, routes **primary → the Deck** ("first yes"), cross-links the Superpower quiz. This branch does NOT ship a second quiz.
+- **FR3a** (charge bridge): **already REAL on `main`** — `saveMythRead` persists a `MythRead` record and seeds the first BAR. No stub needed; embedding `MythsReadClient` inherits it.
 - **FR4**: Offer grid driven by `getOffer()` / the `offers.ts` registry; each card links to its Gumroad URL (or "setup pending" when the env is absent — honest by default, already the pattern).
 - **FR5**: Email capture (`intent:'book'`) via the `/api/awaken/signup` pattern → `FunnelSignup`.
 - **FR6**: Make `/campaign/[ref]/begin`'s ending **ref-aware** — for `allyship-book` the payoff is the offer/CTA, not `/character/create`. (Keeps `/begin` reusable; the book funnel gets the sell ending.)

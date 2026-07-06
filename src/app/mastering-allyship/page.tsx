@@ -22,7 +22,7 @@ import type { Metadata } from 'next'
 import type { CSSProperties, ReactNode } from 'react'
 import { offerHref } from '@/lib/launch/offers'
 import { SuperpowerQuiz } from '@/components/superpowers/SuperpowerQuiz'
-import { MythsReadQuiz } from './MythsReadQuiz'
+import { MythsReadClient } from './myths-read/MythsReadClient'
 import { ChapterOneCapture } from './ChapterOneCapture'
 import { LoopDiagram, SpiralDiagram } from './Diagrams'
 import { OfferStack } from './OfferStack'
@@ -76,7 +76,6 @@ function Quote({ children, claim }: { children: ReactNode; claim?: string }) {
 
 export default function MasteringAllyshipPage() {
   const deckHref = offerHref('deck-digital')
-  const bookHref = offerHref('book-digital')
 
   return (
     <main
@@ -216,7 +215,9 @@ export default function MasteringAllyshipPage() {
                 playing — then where the book takes it apart.
               </p>
             </div>
-            <MythsReadQuiz deckHref={deckHref} bookHref={bookHref} superpowerHref="#superpower" />
+            <div className="mx-auto w-full max-w-[430px]">
+              <MythsReadClient />
+            </div>
           </div>
 
           <div id="superpower" className="mt-8 flex flex-col gap-3 scroll-mt-8">
