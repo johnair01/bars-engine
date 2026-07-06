@@ -226,6 +226,7 @@ export function planBeginnerRouteHand(
     if (fallback) {
       return {
         ...fallback,
+        mode: 'growth',
         roles: fallback.moves.map((move, index) => beginnerRoleForEdge(move, fallback.moves.length === 1 && index === 0)),
       }
     }
