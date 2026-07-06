@@ -1,0 +1,42 @@
+# Tasks
+
+- [x] Create spec kit for charge metabolism move attempts.
+- [x] Audit current charge-metabolism surfaces and map data ownership.
+- [x] Decide first MVP host: Allyship Deck.
+- [x] Decide MVP persistence path: service-first move-attempt draft snapshots before a database model.
+- [x] Define `MoveAttemptSource`, `MoveAttemptStatus`, and shared input/output types.
+- [x] Implement recommendation service that accepts full/partial/no-vector context.
+- [x] Add tests for full vector recommendation, partial vector missing fields, and no-vector campaign mode.
+- [x] Add create/choose/skip/complete lifecycle helpers.
+- [x] Add tests proving recommendation does not equal completion.
+- [x] Create Allyship Deck "Work this card" UX contract.
+- [x] Wire first UI host to create a move attempt snapshot.
+- [x] Add completion/reflection capture for first UI host.
+- [x] Smoke test Allyship Deck Work This Card prototype.
+- [x] Update Allyship Deck Work This Card intake from typed present/desired charge to guided dissatisfaction buttons.
+- [x] Add tests proving guided intake can create full vectors without typed emotional-state strings.
+- [x] Update desired charge UI to fixed satisfaction-state choices only.
+- [x] Update optional blocker UI to self-sabotage belief or allyship-domain need.
+- [x] Add tests for optional blocker context modifying recommendation domain without being required for vector resolution.
+- [x] Walk through the 5 x 5 guided dissatisfaction/satisfaction matrix and document recommendation sanity findings.
+- [x] Update recommendation service contract to return metabolize and satisfaction recommendations.
+- [x] Update MoveAttempt draft shape to identify recommendation role.
+- [x] Update Work This Card recommendation UI to show two recommended cards, not one card with two steps.
+- [x] Add tests for two-card recommendation behavior across representative vectors.
+- [x] Rename recommendation skip to "Skip both for now" and add set-level skip lifecycle coverage.
+- [x] Re-smoke Work This Card with anger, sadness, fear, joy, and neutrality dissatisfaction entries.
+- [x] Review all 25 two-card outputs and classify product quality.
+- [x] Analyze why current Wu Xing graph routing does not match beginner route-hand grammar.
+- [x] Add beginner route-hand planner: metabolize -> direct translate -> transcend.
+- [x] Add direct neutral-channel translate edges for beginner route hands.
+- [x] Update recommendation service from fixed two-card output to route-hand output.
+- [x] Add primitive scoring tests for the worst bad pairs.
+- [x] Tune primitive selection so sadness and neutrality do not default to exit/ask moves.
+- [x] Audit library for existing emotional alchemy move inventories.
+- [x] Create emotional vector move inventory artifact.
+- [x] Implement typed vector move family registry.
+- [ ] Add BAR Tune desired-charge/route planning follow-up.
+- [ ] Add 321-to-Show-Up handoff when clarity becomes actionable.
+- [ ] Enrich quest completion with primitive/vector/outcome metadata.
+- [ ] Separate Move Library browsing from contextual recommendations in UI copy and data contracts.
+- [ ] Implement access rules for personal, campaign, creator, steward, and admin move attempts.

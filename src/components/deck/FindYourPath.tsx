@@ -6,6 +6,7 @@ import { DECK_FONTS, DECK_GOLD, LIMINAL, MOVE_LABELS, themeForMove } from '@/lib
 import type { MoveCard, BasicMove, Operation, AllyshipDomain } from '@/lib/allyship-deck/types'
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
 import { SendToBarsButton } from './SendToBarsButton'
+import { WorkThisCardButton } from './WorkThisCardButton'
 
 // ─── Flavor / channel data ──────────────────────────────────────────────────
 
@@ -358,6 +359,7 @@ export function FindYourPath({
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24 }}>
           <div>
+            <WorkThisCardButton card={move} subject={subject} label="Work this move" />
             <SendToBarsButton cardId={move.id} subject={subject} label="Begin your adventure →" />
           </div>
           <button type="button" style={secondaryBtn} onClick={reset}>Read again</button>

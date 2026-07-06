@@ -138,3 +138,14 @@ export function assembleDeck(generatedAt = new Date().toISOString()): AllyshipDe
 
 /** Capabilities available (for UI). */
 export const CAPABILITY_KEYS: Capability[] = CAPABILITIES.map((c) => c.capability)
+
+const DEFAULT_DECK = assembleDeck('static')
+
+export function getCardById(id: string): AllyshipCard | undefined {
+  return DEFAULT_DECK.cards.find((card) => card.id === id)
+}
+
+export function getMoveCardById(id: string): MoveCard | undefined {
+  const card = getCardById(id)
+  return card?.kind === 'move' ? card : undefined
+}

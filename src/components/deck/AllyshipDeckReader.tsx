@@ -21,6 +21,7 @@ import type {
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
 import { DeckCardBack } from './DeckCardBack'
 import { SendToBarsButton } from './SendToBarsButton'
+import { WorkThisCardButton } from './WorkThisCardButton'
 import { FindYourPath } from './FindYourPath'
 import { recordDraw, type DeckStats } from '@/actions/deck-journal'
 
@@ -242,7 +243,9 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
                         card={drawn}
                         variant="full"
                         subject={subject}
-                        footerSlot={<SendToBarsButton cardId={drawn.id} subject={subject} />}
+                        footerSlot={
+                          <DeckCardActions card={drawn} subject={subject} />
+                        }
                       />
                     </div>
                     <div style={{ display: 'flex', gap: 10 }}>
@@ -304,13 +307,22 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
               card={selected}
               variant="full"
               subject={subject}
-              footerSlot={<SendToBarsButton cardId={selected.id} subject={subject} />}
+              footerSlot={<DeckCardActions card={selected} subject={subject} />}
             />
             <button type="button" onClick={() => setSelected(null)} style={closeBtn}>Close</button>
           </div>
         </div>
       )}
     </main>
+  )
+}
+
+function DeckCardActions({ card, subject }: { card: MoveCard; subject: CardSubject }) {
+  return (
+    <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+      <WorkThisCardButton card={card} subject={subject} />
+      <SendToBarsButton cardId={card.id} subject={subject} />
+    </div>
   )
 }
 
