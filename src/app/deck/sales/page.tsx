@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { assembleDeck } from '@/lib/allyship-deck/assemble'
 import type { MoveCard } from '@/lib/allyship-deck/types'
 import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'
@@ -21,27 +21,16 @@ import { MovePip } from '@/components/deck/MovePip'
 import { LAUNCH_OFFERS, formatPrice, isOfferLive, isSuperpowerPackKey } from '@/lib/launch/offers'
 
 export const metadata: Metadata = {
-  title: 'The Allyship Deck — 120 moves for doing the work',
+  title: 'The Allyship Deck - moves for the moment it counts',
   description:
-    'A consultable deck of 120 allyship moves. Draw a card, sit with the practice, and turn it into a real quest. Part of the Mastering Allyship launch.',
+    'A 120-card physical and digital oracle deck that hands you one concrete allyship move in the moment.',
 }
 
 const isMove = (c: { kind: string }): c is MoveCard => c.kind === 'move'
 
-/**
- * /deck/sales — the public Sales landing page for the Allyship Deck.
- *
- * Fan-of-3 hero (real cards), the five-move strip, how-it-works, and the campaign
- * social proof. Every CTA hands off to the converged Gumroad funnel at `/launch`
- * (host decision — no in-app checkout). Inherits the deck-experience fonts + dark
- * shell from `app/deck/layout.tsx`. No auth — it is a top-of-funnel page.
- *
- * @see .specify/specs/allyship-deck-experience/spec.md (slice 4)
- */
 export default function DeckSalesPage() {
   const moves = assembleDeck().cards.filter(isMove)
   const pick = (m: MoveCard['move']) => moves.find((c) => c.move === m)!
-  // Distinct elements for the most colorful fan: water · fire · liminal.
   const fan: [MoveCard, MoveCard, MoveCard] = [pick('clean_up'), pick('show_up'), pick('open_up')]
 
   return (
@@ -357,7 +346,7 @@ function PackUpsell() {
   )
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <h2 style={{ ...kicker, color: SURFACE_TOKENS.textSecondary, textAlign: 'center', margin: 0 }}>{children}</h2>
   )
