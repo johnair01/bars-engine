@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { commitTask, promoteTaskToBar, saveBrainstorm, updateTaskStatus } from '@/actions/tap-the-vein'
 import { getLensDomain, isLensDomainKey } from '@/lib/lenses/domains'
-import { isLensGoalTrace, type LensGoalTrace } from '@/lib/lenses/lineage'
+import { isLensGoalTrace, type LensGoalTrace } from '@/lib/lenses/lineage-types'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import type { TtvTaskDTO, TtvToday } from '@/lib/tap-the-vein/types'
 
