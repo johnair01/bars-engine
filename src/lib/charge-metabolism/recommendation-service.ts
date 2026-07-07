@@ -220,8 +220,9 @@ export function recommendChargeMetabolismMove(
   }
 }
 
-function hasBeginnerRouteRoles(route: { roles?: unknown }): route is { roles: BeginnerRouteHandRole[] } {
-  return Array.isArray(route.roles)
+function hasBeginnerRouteRoles(route: unknown): route is { roles: BeginnerRouteHandRole[] } {
+  if (!route || typeof route !== 'object') return false
+  return Array.isArray((route as { roles?: unknown }).roles)
 }
 
 function fallbackRoleForEdge(
