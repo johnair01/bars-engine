@@ -19,7 +19,7 @@ import { EMOTIONAL_ALCHEMY_TOOLS } from './registry'
 export * from './types'
 export * from './vector'
 export * from './composer'
-export * from './interim-card'
+export * from './deck-draw'
 export { EMOTIONAL_ALCHEMY_TOOLS, HARD_GUARDS, SPIRIT_STEPS, EMOTION_TO_ELEMENT } from './registry'
 
 const RATING_ORDER: Record<ToolRating, number> = {

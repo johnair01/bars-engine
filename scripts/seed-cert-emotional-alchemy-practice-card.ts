@@ -31,13 +31,13 @@ const PASSAGES: Passage[] = [
   {
     name: 'STEP_2',
     pid: '3',
-    text: '### Step 2: Form the practice\n\nTap **Form the practice →**. Pick a move (e.g. **Clean Up**). Confirm a **CultivationCard** forms — element **frame + glow** matching the channel (Anger → Fire), the tool name, and a timebox.',
+    text: '### Step 2: Draw a card, form the practice\n\nTap **Form the practice →**. An **Allyship card** is drawn (gold edge, move glyph) — the drawn move fixes the practice. Try **Draw again**, then **Use this move →**. Confirm a **gold-framed deck card** forms, themed by the drawn move, with the tool name, a timebox, and a small **channel accent** (e.g. Anger 6).',
     links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }],
   },
   {
     name: 'STEP_3',
     pid: '4',
-    text: '### Step 3: The move is playable\n\nConfirm the card shows the **stance question**, numbered **protocol steps**, and a distinct **spirit step** (element gem bullet) at the end. If the charge was hot (≥7), confirm a **grounding step comes first**.',
+    text: '### Step 3: The move is playable\n\nConfirm the card shows the drawn card\'s **stance question**, numbered **protocol steps**, and a distinct **spirit step** (gold bullet) at the end. If the charge was hot (≥7), confirm a **grounding step comes first**.',
     links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }],
   },
   {

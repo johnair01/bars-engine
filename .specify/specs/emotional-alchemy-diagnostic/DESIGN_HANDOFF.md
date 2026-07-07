@@ -105,14 +105,15 @@ None of these change behavior or copy; they move color from literals to tokens a
 
 ---
 
-## The post-card contract (target 3 — so the composer's practice card lands aligned)
+## The post-card contract (target 3) — SUPERSEDED: Allyship Deck language
 
-When the composer renders a recommended practice, it **is** a post-card moment → use `CultivationCard`, not `SceneCard`:
-- **Element** = the vector's channel (`EMOTION_TO_ELEMENT[channel]`).
-- **Altitude** = the vector's `altitude` (dissatisfied at entry; the re-rate at close can visibly lift it toward satisfied — the altitude channel *is* the progress meter, honestly).
-- **Stage** = `growing` for the active practice; `composted` once logged.
-- The tool protocol lives in the description well (`surfaceInset`); the timebox and the re-rate delta are the stat block (tabular-nums). The Show Up options are the primary action (bottom 40%).
-- Crossing from summary → practice card should feel like *formation*: the neutral read resolves into a fully element-coded card. That transition is the payoff the diagnostic's restraint has been saving up for.
+> **Update.** The practice card was originally specced here as a `CultivationCard` themed by the emotional channel. That is **superseded** by [`docs/CARD_SYSTEM_ALIGNMENT.md`](../../../docs/CARD_SYSTEM_ALIGNMENT.md): the practice card flows from an **Allyship Deck draw**, so it speaks the **deck** language, not CultivationCard.
+
+When the composer renders a recommended practice, it **is** a post-card moment → **Allyship Deck card language** (`card-visuals.ts`), not `SceneCard` and not `CultivationCard`:
+- **Frame** = `DECK_GOLD` 2px edge + `INSET_TOP`; **fonts** = `DECK_FONTS` (Jost/Nunito/Space Mono).
+- **Theme** = `themeForMove(drawnCard.move)` — the drawn card's move drives the gradient/glow/gem and the move glyph. The **emotional channel** is a *secondary accent* (gem dot + "Anger 6"), the charge's signature inside the drawn card.
+- The tool protocol lives in a dark well; the timebox is gold; Show Up options are the primary action; the re-rate closes the loop (§1.5).
+- Crossing summary → **draw an Allyship card** → practice card is the *formation*: the raw read becomes a gold-framed deck card. That transition is the payoff the diagnostic's restraint has been saving up for. (The diagnostic itself stays raw/app-sans — law 10.)
 
 ---
 

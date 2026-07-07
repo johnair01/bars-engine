@@ -44,6 +44,7 @@ When beginning any UI work session with an AI assistant, the **first message mus
 13. **Dark background: `#0a0908`.** Do not lighten for accessibility — fix contrast by adjusting foreground tokens.
 14. **`card-tokens.ts` and this file are committed to the repo.** No token lives only in a component. Read this file at every session start.
 15. **Navigation = six spatial zones, not tabs.** Shaman / Challenger / Regent / Architect / Diplomat / Sage. Tab bars are an OS convention, not a Cultivation Card convention.
+16. **Card-system convergence is pending.** CultivationCard and the Allyship Deck are two card languages today; the deck's `DECK_GOLD` gold edge is the intended shared brand frame. Practice/deck surfaces use the deck language; a follow-up (R1–R4) should give CultivationCard the gold edge so both read as one game. See [`docs/CARD_SYSTEM_ALIGNMENT.md`](docs/CARD_SYSTEM_ALIGNMENT.md) before major card work.
 
 ---
 

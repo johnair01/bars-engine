@@ -14,8 +14,8 @@ The **post-card** half of the arc: render the composer's `Recommendation` as a f
 
 | Topic | Decision |
 |-------|----------|
-| Post-card surface | `CultivationCard` (UI_COVENANT law 10 — element-coded, distinct from the pre-card diagnostic). `element = EMOTION_TO_ELEMENT[vector.channel]`, `altitude = vector.altitude`, `stage = 'growing'` |
-| Submove seam (interim) | No Allyship-Deck draw is wired yet, so the player picks the WAVE move at "Form the practice" (the 5 phases, default Clean Up). This supplies the composer's `submove` + a **canonical** stance question from `MOVES` (not invented). New gap **G13**: the deck draw replaces this picker later and will also fix domain/stance |
+| Post-card surface | **Allyship Deck language** (`card-visuals.ts`) — `DECK_GOLD` frame, `DECK_FONTS`, `themeForMove(drawnMove)`, move glyph — **not** CultivationCard. See [`docs/CARD_SYSTEM_ALIGNMENT.md`](../../../docs/CARD_SYSTEM_ALIGNMENT.md). Themed by the **drawn move**; the emotional channel is a secondary accent. (Superseded the original CultivationCard-by-channel plan.) |
+| Submove seam | **Closed (G13)**: an Allyship-Deck card is **drawn** at "Form the practice"; the drawn card fixes the composer's `submove` + `domainLabel` + stance question (the card's `primaryQuestion`). `DeckDrawReveal` supports redraw. Replaces the earlier interim submove picker |
 | Re-rate (§1.5) | Client-only close: re-rate 0–10 → show the delta + the honest branch message (moved / flat / worse). No persistence (that's target 5) |
 | Show Up | Render the composer's internal + external templates; external shows its gated/received-harm state per the recommendation. Selection is client-only |
 | Reasoning surfaced (§8) | A "Why this tool?" disclosure shows `candidatesConsidered`, `guardsApplied`, `rolePath`, `notes` |

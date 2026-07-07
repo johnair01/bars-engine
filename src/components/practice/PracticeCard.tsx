@@ -1,173 +1,209 @@
 'use client'
 
 // ---------------------------------------------------------------------------
-// PracticeCard — the POST-CARD formation (UI_COVENANT §10). Renders the
-// composer's PracticeRecommendation as an element-coded CultivationCard: the
-// neutral read has resolved into a move with an element, an altitude, and a
-// tool. Contrast with the pre-card DiagnosticFlow (raw SceneCard).
-//
-// Three channels: element = the vector's channel; altitude = the vector's
-// altitude; stage = growing (active practice). Element color derives from
-// ELEMENT_TOKENS / EMOTION_TO_ELEMENT — no hex in this file.
+// PracticeCard — the POST-CARD formation, in the ALLYSHIP DECK design language
+// (not CultivationCard — see docs/CARD_SYSTEM_ALIGNMENT.md). The drawn card
+// becomes the practice: gold edge, DECK_FONTS, themeForMove(drawnMove) gradient,
+// the move glyph. The emotional channel appears as a SECONDARY accent (the
+// charge's signature inside the drawn card). Contrast with the pre-card raw
+// diagnostic (SceneCard) — UI_COVENANT law 10.
 // ---------------------------------------------------------------------------
 
-import { useState } from 'react'
-import { CultivationCard } from '@/components/ui/CultivationCard'
-import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
+import { useState, type CSSProperties } from 'react'
+import { SURFACE_TOKENS, ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
+import {
+  themeForMove,
+  DECK_GOLD,
+  INSET_TOP,
+  DECK_FONTS,
+  MOVE_LABELS,
+  MOVE_ICON_PATHS,
+  MOVE_ICON_FILLED,
+} from '@/lib/allyship-deck/card-visuals'
+import type { MoveCard } from '@/lib/allyship-deck/types'
 import {
   getToolById,
   EMOTION_TO_ELEMENT,
   type PracticeRecommendation,
   type EmotionalVector,
+  type EmotionChannel,
 } from '@/lib/emotional-alchemy'
 
-const eyebrow = 'text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500'
+const CHANNEL_LABEL: Record<EmotionChannel, string> = { anger: 'Anger', sadness: 'Sadness', fear: 'Fear', joy: 'Joy', neutrality: 'Neutrality' }
+
+const kicker: CSSProperties = { fontFamily: DECK_FONTS.mono, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: SURFACE_TOKENS.textSecondary }
+const body: CSSProperties = { fontFamily: DECK_FONTS.body, color: SURFACE_TOKENS.textPrimary }
+
+function MoveGlyph({ move, color, size = 30 }: { move: MoveCard['move']; color: string; size?: number }) {
+  const filled = MOVE_ICON_FILLED[move]
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden style={{ flex: 'none' }}>
+      {MOVE_ICON_PATHS[move].map((d, i) => (
+        <path key={i} d={d} fill={filled ? color : 'none'} stroke={filled ? 'none' : color} strokeWidth={filled ? 0 : 3} strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  )
+}
+
+function channelGem(channel: EmotionChannel): string {
+  return ELEMENT_TOKENS[EMOTION_TO_ELEMENT[channel]].gem
+}
 
 function ReRate({ before }: { before: number }) {
   const [after, setAfter] = useState<number | null>(null)
   const delta = after === null ? null : before - after
-  const verdict =
-    delta === null ? null : delta >= 2 ? 'moved' : delta <= -2 ? 'worse' : 'flat'
+  const verdict = delta === null ? null : delta >= 2 ? 'moved' : delta <= -2 ? 'worse' : 'flat'
   const message: Record<string, string> = {
     moved: 'That moved. Worth logging — the charge is lighter than it was.',
     flat: 'Barely shifted. One different tool, or just capture it — either is honest.',
     worse: 'It got louder. That is data, not failure — ground first, then a different tool.',
   }
   return (
-    <div className="space-y-3">
-      <p className={eyebrow}>Re-rate · how loud now?</p>
-      <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-11">
+    <div style={{ display: 'grid', gap: 10 }}>
+      <span style={kicker}>Re-rate · how loud now?</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: 5 }}>
         {Array.from({ length: 11 }).map((_, i) => (
           <button
             key={i}
             type="button"
             onClick={() => setAfter(i)}
-            className={`min-h-[44px] rounded-lg border text-sm tabular-nums transition-colors ${after === i ? 'border-purple-500 bg-purple-950/40 text-purple-200' : 'border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
+            style={{
+              minHeight: 40, borderRadius: 8, fontFamily: DECK_FONTS.mono, fontSize: 13,
+              border: `1px solid ${after === i ? DECK_GOLD : 'rgba(255,255,255,.12)'}`,
+              background: after === i ? 'rgba(201,168,76,.14)' : 'transparent',
+              color: after === i ? DECK_GOLD : SURFACE_TOKENS.textSecondary, cursor: 'pointer',
+            }}
           >
             {i}
           </button>
         ))}
       </div>
-      {verdict && (
-        <p className={`text-sm ${verdict === 'worse' ? 'text-amber-300' : 'text-zinc-300'}`}>
-          {before} → {after}. {message[verdict]}
-        </p>
-      )}
-      <p className={eyebrow}>Not saved — this is your rep to keep.</p>
+      {verdict && <p style={{ ...body, fontSize: 14, color: verdict === 'worse' ? '#f0c84a' : SURFACE_TOKENS.textPrimary, margin: 0 }}>{before} → {after}. {message[verdict]}</p>}
+      <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted }}>Not saved — this is your rep to keep.</span>
     </div>
   )
 }
 
-export function PracticeCard({ rec, vector }: { rec: PracticeRecommendation; vector: EmotionalVector }) {
+export function PracticeCard({ card, rec, vector }: { card: MoveCard; rec: PracticeRecommendation; vector: EmotionalVector }) {
   const [showWhy, setShowWhy] = useState(false)
   const [picked, setPicked] = useState<'internal' | 'external' | null>(null)
 
-  const { channel, altitude } = vector
-  const element = EMOTION_TO_ELEMENT[channel]
-  const t = ELEMENT_TOKENS[element]
+  const t = themeForMove(card.move)
   const tool = getToolById(rec.primaryToolId)
   const prependTool = rec.prepend ? getToolById(rec.prepend) : null
-  const spirit = rec.spiritStep
-  const steps = rec.protocol
+  const gem = channelGem(vector.channel)
+
+  const rootStyle: CSSProperties = {
+    position: 'relative',
+    borderRadius: 14,
+    border: `2px solid ${DECK_GOLD}`,
+    background: `radial-gradient(120% 90% at 78% 8%, ${t.gradFrom}, ${t.gradTo} 64%)`,
+    boxShadow: `${INSET_TOP}, 0 0 26px 1px color-mix(in srgb, ${t.glow} 34%, transparent), 0 18px 40px -20px rgba(0,0,0,.9)`,
+    padding: 20,
+    display: 'grid',
+    gap: 18,
+  }
+  const wellStyle: CSSProperties = { background: 'rgba(0,0,0,.28)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 10, padding: 14 }
+  const showUpBtn = (on: boolean): CSSProperties => ({
+    width: '100%', textAlign: 'left', borderRadius: 10, padding: '12px 14px', cursor: 'pointer',
+    border: `1px solid ${on ? DECK_GOLD : 'rgba(255,255,255,.12)'}`, background: on ? 'rgba(201,168,76,.12)' : 'rgba(0,0,0,.22)',
+    color: SURFACE_TOKENS.textPrimary,
+  })
 
   return (
-    <CultivationCard element={element} altitude={altitude} stage="growing" animated>
-      <div className="relative z-10 space-y-5 p-5">
-        {/* Grounding prepend (hot charge, §4.1 step 1). */}
-        {prependTool && (
-          <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 px-3 py-2">
-            <p className={eyebrow + ' text-amber-500/90'}>First · {prependTool.timebox.minMinutes}–{prependTool.timebox.maxMinutes} min</p>
-            <p className="mt-0.5 text-sm text-zinc-300">{prependTool.barsName} — cool the charge before the move.</p>
-          </div>
-        )}
-
-        {/* Element-coded header — the formation. */}
-        <div className={`rounded-lg ${t.bg} px-4 py-3`}>
-          <p className={eyebrow}>Your practice</p>
-          <div className="mt-1 flex items-baseline justify-between gap-3">
-            <h2 className={`text-xl font-bold ${t.textAccent}`}>{tool?.barsName ?? rec.primaryToolId}</h2>
-            <span className="shrink-0 text-sm font-semibold tabular-nums text-zinc-300">{rec.timeboxMinutes} min</span>
-          </div>
-          {tool && <p className="mt-0.5 text-xs text-zinc-400">{tool.genericName}</p>}
+    <div style={rootStyle}>
+      {/* Grounding prepend (hot charge, §4.1 step 1). */}
+      {prependTool && (
+        <div style={{ ...wellStyle, borderColor: 'rgba(240,200,74,.4)' }}>
+          <span style={{ ...kicker, color: '#f0c84a' }}>First · {prependTool.timebox.minMinutes}–{prependTool.timebox.maxMinutes} min</span>
+          <p style={{ ...body, fontSize: 14, margin: '4px 0 0' }}>{prependTool.barsName} — cool the charge before the move.</p>
         </div>
+      )}
 
-        {rec.bridged && (
-          <p className="text-xs italic text-zinc-500">Your drawn move is banked for later — we cool and metabolize the charge first.</p>
-        )}
+      {/* Header — the drawn card becomes the practice. Move glyph + move label
+          (theme), channel gem accent (the charge's signature). */}
+      <div style={{ display: 'grid', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <MoveGlyph move={card.move} color={t.gem} />
+            <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.gem }}>{MOVE_LABELS[card.move]}</span>
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: gem, display: 'inline-block' }} />
+            <span style={{ ...kicker }}>{CHANNEL_LABEL[vector.channel]} {vector.intensity}</span>
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
+          <h2 style={{ fontFamily: DECK_FONTS.display, fontWeight: 800, fontSize: 24, color: '#fff', margin: 0 }}>{tool?.barsName ?? rec.primaryToolId}</h2>
+          <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 14, color: DECK_GOLD, flex: 'none' }}>{rec.timeboxMinutes} min</span>
+        </div>
+        {tool && <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted }}>{tool.genericName} · {card.title}</span>}
+      </div>
 
-        {/* Stance question — the move framing. */}
-        {rec.stanceQuestion && (
-          <p className="border-l-2 border-zinc-700 pl-4 text-base leading-relaxed text-zinc-200">{rec.stanceQuestion}</p>
-        )}
+      {rec.bridged && <p style={{ ...body, fontSize: 13, fontStyle: 'italic', color: SURFACE_TOKENS.textSecondary, margin: 0 }}>Your drawn move is banked for later — we cool and metabolize the charge first.</p>}
 
-        {/* Protocol — the description well. Spirit step (last) carries the element gem. */}
-        <ol className="space-y-2.5">
-          {steps.map((step, i) => {
-            const isSpirit = step === spirit
+      {/* Stance question — the drawn card's question. */}
+      {rec.stanceQuestion && (
+        <p style={{ ...body, fontSize: 16, lineHeight: 1.5, borderLeft: `2px solid ${DECK_GOLD}`, paddingLeft: 14, margin: 0 }}>{rec.stanceQuestion}</p>
+      )}
+
+      {/* Protocol well — spirit step (last) carries the ♦ gold accent. */}
+      <div style={wellStyle}>
+        <span style={kicker}>The practice</span>
+        <ol style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'grid', gap: 10 }}>
+          {rec.protocol.map((step, i) => {
+            const isSpirit = step === rec.spiritStep
             return (
-              <li key={i} className="flex gap-3 text-sm leading-relaxed text-zinc-200">
-                <span
-                  aria-hidden
-                  className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: isSpirit ? t.gem : '#3f3f46' }}
-                />
-                <span className={isSpirit ? 'text-zinc-100' : ''}>{step}</span>
+              <li key={i} style={{ ...body, fontSize: 14, lineHeight: 1.5, display: 'flex', gap: 10 }}>
+                <span aria-hidden style={{ marginTop: 6, width: 6, height: 6, borderRadius: '50%', flex: 'none', background: isSpirit ? DECK_GOLD : 'rgba(255,255,255,.28)' }} />
+                <span style={{ color: isSpirit ? '#fff' : SURFACE_TOKENS.textPrimary }}>{step}</span>
               </li>
             )
           })}
         </ol>
+      </div>
 
-        {/* Show Up — primary action, bottom zone (§1.7). */}
-        <div className="space-y-2 border-t border-zinc-800 pt-4">
-          <p className={eyebrow}>Show up · make it real</p>
-          <button
-            type="button"
-            onClick={() => setPicked('internal')}
-            className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition-colors ${picked === 'internal' ? 'border-purple-500 bg-purple-950/30 text-zinc-100' : 'border-zinc-800 text-zinc-300 hover:border-zinc-600'}`}
-          >
-            <span className={eyebrow + ' block'}>Internal</span>
-            <span className="mt-1 block">{rec.showUp.internal}</span>
+      {/* Show Up — primary action (§1.7). */}
+      <div style={{ display: 'grid', gap: 8 }}>
+        <span style={kicker}>Show up · make it real</span>
+        <button type="button" onClick={() => setPicked('internal')} style={showUpBtn(picked === 'internal')}>
+          <span style={{ ...kicker, display: 'block' }}>Internal</span>
+          <span style={{ ...body, fontSize: 14, marginTop: 4, display: 'block' }}>{rec.showUp.internal}</span>
+        </button>
+        {rec.showUp.external ? (
+          <button type="button" onClick={() => setPicked('external')} style={showUpBtn(picked === 'external')}>
+            <span style={{ ...kicker, display: 'block' }}>External{rec.showUp.externalGated ? ' · when the charge cools' : ''}</span>
+            <span style={{ ...body, fontSize: 14, marginTop: 4, display: 'block' }}>{rec.showUp.external}</span>
           </button>
-          {rec.showUp.external ? (
-            <button
-              type="button"
-              onClick={() => setPicked('external')}
-              className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition-colors ${picked === 'external' ? 'border-purple-500 bg-purple-950/30 text-zinc-100' : 'border-zinc-800 text-zinc-300 hover:border-zinc-600'}`}
-            >
-              <span className={eyebrow + ' block'}>External{rec.showUp.externalGated ? ' · when the charge cools' : ''}</span>
-              <span className="mt-1 block">{rec.showUp.external}</span>
-            </button>
-          ) : (
-            <p className="rounded-lg border border-zinc-800 px-4 py-3 text-xs text-zinc-500">
-              Internal only for now — nothing external is aimed at the person who caused this by default. That is your call to make, later.
-            </p>
-          )}
-        </div>
+        ) : (
+          <p style={{ ...body, fontSize: 13, color: SURFACE_TOKENS.textSecondary, border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '12px 14px', margin: 0 }}>
+            Internal only for now — nothing external is aimed at the person who caused this by default. That is your call to make, later.
+          </p>
+        )}
+      </div>
 
-        {/* Re-rate close (§1.5) appears once a move is chosen. */}
-        {picked && (
-          <div className="border-t border-zinc-800 pt-4">
-            <ReRate before={vector.intensity} />
+      {/* Re-rate close (§1.5). */}
+      {picked && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: 16 }}>
+          <ReRate before={vector.intensity} />
+        </div>
+      )}
+
+      {/* Inspectable reasoning (§8). */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: 12 }}>
+        <button type="button" onClick={() => setShowWhy((s) => !s)} style={{ ...kicker, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: SURFACE_TOKENS.textMuted }}>
+          {showWhy ? 'Hide' : 'Why this tool?'}
+        </button>
+        {showWhy && (
+          <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+            <p style={{ ...body, fontSize: 12, color: SURFACE_TOKENS.textSecondary, margin: 0 }}>Considered: {rec.candidatesConsidered.map((c) => `${c.toolId} (${c.score})`).join(' · ')}</p>
+            <p style={{ ...body, fontSize: 12, color: SURFACE_TOKENS.textSecondary, margin: 0 }}>Role: {rec.rolePath.join(' → ')}{rec.guardsApplied.length ? ` · Guards: ${rec.guardsApplied.join(', ')}` : ''}</p>
+            {rec.notes.map((n, i) => (
+              <p key={i} style={{ ...body, fontSize: 12, color: SURFACE_TOKENS.textSecondary, margin: 0, lineHeight: 1.5 }}>› {n}</p>
+            ))}
           </div>
         )}
-
-        {/* Inspectable reasoning (§8). */}
-        <div className="border-t border-zinc-800 pt-3">
-          <button type="button" onClick={() => setShowWhy((s) => !s)} className="text-xs text-zinc-500 hover:text-zinc-300">
-            {showWhy ? 'Hide' : 'Why this tool?'}
-          </button>
-          {showWhy && (
-            <div className="mt-2 space-y-1.5 text-xs text-zinc-500">
-              <p>Considered: {rec.candidatesConsidered.map((c) => `${c.toolId} (${c.score})`).join(' · ')}</p>
-              <p>Role: {rec.rolePath.join(' → ')}</p>
-              {rec.guardsApplied.length > 0 && <p>Guards: {rec.guardsApplied.join(', ')}</p>}
-              {rec.notes.map((n, i) => (
-                <p key={i} className="leading-relaxed">› {n}</p>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
-    </CultivationCard>
+    </div>
   )
 }
