@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DiagnosticResult, EmotionChannel, DiagnosticFlag } from '@/lib/emotional-alchemy'
+import { channelGem, channelThresholdStyle } from '@/lib/emotional-alchemy/channel-visuals'
 
 const CHANNEL_LABEL: Record<EmotionChannel, string> = {
   anger: 'Anger',
@@ -14,16 +15,6 @@ const CHANNEL_LABEL: Record<EmotionChannel, string> = {
   fear: 'Fear',
   joy: 'Joy',
   neutrality: 'Neutrality',
-}
-
-// Accent per channel — reuses the ChargeCaptureForm chip vocabulary (Tailwind
-// utility classes, not element hex; this is the raw pre-card surface).
-const CHANNEL_ACCENT: Record<EmotionChannel, string> = {
-  anger: 'text-red-300 border-red-800/50',
-  sadness: 'text-blue-300 border-blue-800/50',
-  fear: 'text-violet-300 border-violet-800/50',
-  joy: 'text-yellow-300 border-yellow-800/50',
-  neutrality: 'text-zinc-200 border-zinc-700',
 }
 
 const FLAG_NOTE: Partial<Record<DiagnosticFlag, string>> = {
@@ -51,16 +42,19 @@ const FUEL_LABEL = { depleted: 'depleted', steady: 'steady', charged: 'charged' 
 export function DiagnosticSummary({ result }: { result: DiagnosticResult }) {
   const { vector, shape, shapeConfidence, time, temporal, fuel, thread, harmRelation, flags } = result
   const channelLabel = CHANNEL_LABEL[vector.channel]
-  const accent = CHANNEL_ACCENT[vector.channel]
 
   return (
     <div className="space-y-6">
       <div>
         <p className="text-[10px] uppercase tracking-widest text-zinc-500">Your read</p>
-        <h2 className={`mt-1 inline-flex items-baseline gap-2 border-b pb-1 text-2xl font-bold ${accent}`}>
+        {/* The threshold: the charge is now legible, so its element gem enters for the
+            first time — bottom-border accent + gem dot at neutral altitude weight
+            (soft glow). The one pre-practice place element appears (DESIGN_HANDOFF A2). */}
+        <h2 className="mt-1 inline-flex items-baseline gap-2 border-b pb-1 text-2xl font-bold text-zinc-100" style={channelThresholdStyle(vector.channel)}>
+          <span aria-hidden className="mr-1 inline-block h-2 w-2 self-center rounded-full" style={{ backgroundColor: channelGem(vector.channel) }} />
           <span className="tabular-nums">{channelLabel} {vector.intensity}</span>
           <span className="text-zinc-500">→</span>
-          <span className="text-zinc-100">{TARGET_TITLE[vector.target] ?? vector.target}</span>
+          <span>{TARGET_TITLE[vector.target] ?? vector.target}</span>
         </h2>
         <p className="mt-2 text-sm text-zinc-500">
           {vector.altitude} · {TEMPORAL_LABEL[temporal]} · fuel {FUEL_LABEL[fuel]} · {time} min

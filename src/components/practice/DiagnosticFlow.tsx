@@ -31,6 +31,7 @@ import {
   type LayerAnswer,
 } from '@/lib/emotional-alchemy'
 import type { SatisfactionSpirit } from '@/lib/emotional-alchemy'
+import { channelChipClasses } from '@/lib/emotional-alchemy/channel-visuals'
 
 type Props = {
   onComplete: (result: DiagnosticResult) => void
@@ -40,14 +41,21 @@ type Props = {
 
 // ── chip vocabulary (raw pre-card; Tailwind utilities, not element hex) ──────
 
-const CHANNEL_OPTIONS: Array<{ value: ChannelPick; label: string; hint: string; active: string }> = [
-  { value: 'anger', label: 'Mad', hint: 'a boundary crossed', active: 'border-red-600 bg-red-950/40 text-red-300' },
-  { value: 'sadness', label: 'Sad', hint: 'something lost', active: 'border-blue-600 bg-blue-950/40 text-blue-300' },
-  { value: 'fear', label: 'Scared', hint: 'a risk or threat', active: 'border-violet-600 bg-violet-950/40 text-violet-300' },
-  { value: 'joy', label: 'Bright-but-stuck', hint: 'aliveness with nowhere to go', active: 'border-yellow-500 bg-yellow-950/40 text-yellow-300' },
-  { value: 'flat', label: 'Flat or numb', hint: 'low signal', active: 'border-zinc-500 bg-zinc-800 text-zinc-200' },
-  { value: 'cant_tell', label: "I can't tell", hint: 'the felt sense hasn’t formed', active: 'border-teal-600 bg-teal-950/40 text-teal-300' },
+// Element tint (selected) derives from ELEMENT_TOKENS via channelChipClasses —
+// see DESIGN_HANDOFF A1. `flat`/`cant_tell` have no element → neutral selected.
+const CHANNEL_OPTIONS: Array<{ value: ChannelPick; label: string; hint: string }> = [
+  { value: 'anger', label: 'Mad', hint: 'a boundary crossed' },
+  { value: 'sadness', label: 'Sad', hint: 'something lost' },
+  { value: 'fear', label: 'Scared', hint: 'a risk or threat' },
+  { value: 'joy', label: 'Bright-but-stuck', hint: 'aliveness with nowhere to go' },
+  { value: 'flat', label: 'Flat or numb', hint: 'low signal' },
+  { value: 'cant_tell', label: "I can't tell", hint: 'the felt sense hasn’t formed' },
 ]
+
+/** Selected-chip tint for a pick: element tint for real channels, neutral for flat/can't-tell. */
+function pickActiveClass(value: ChannelPick): string | undefined {
+  return value === 'flat' || value === 'cant_tell' ? undefined : channelChipClasses(value)
+}
 
 const FLAT_OPTIONS: Array<{ value: FlatAnswer; label: string; hint: string }> = [
   { value: 'rested_calm', label: 'Rested — genuinely okay', hint: 'this is real calm' },
@@ -201,7 +209,7 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
           <SceneCard prompt="Which is closest?" subtext="One tap. This is asked, never guessed." progress={{ current: 2, total: totalGuess }}>
             <div className="grid grid-cols-2 gap-2">
               {CHANNEL_OPTIONS.map((o) => (
-                <Chip key={o.value} selected={answers.channelPick === o.value} activeClass={o.active} onClick={() => patch({ channelPick: o.value })}>
+                <Chip key={o.value} selected={answers.channelPick === o.value} activeClass={pickActiveClass(o.value)} onClick={() => patch({ channelPick: o.value })}>
                   <span className="block font-medium">{o.label}</span>
                   <span className="block text-xs text-zinc-500">{o.hint}</span>
                 </Chip>
@@ -229,7 +237,7 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
           <SceneCard tone="somatized" prompt="That's a real answer." subtext="We'll start by finding where it sits in the body — the felt thread — before naming a channel. You can pick one now if one surfaces, or leave it.">
             <div className="grid grid-cols-2 gap-2">
               {CHANNELS.map((c) => (
-                <Chip key={c} selected={answers.channelConfirmed === c} onClick={() => patch({ channelConfirmed: c })}>
+                <Chip key={c} selected={answers.channelConfirmed === c} activeClass={channelChipClasses(c)} onClick={() => patch({ channelConfirmed: c })}>
                   {CHANNEL_LABEL[c]}
                 </Chip>
               ))}
@@ -341,7 +349,7 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
                   <p className="mb-2 text-xs uppercase tracking-widest text-zinc-600">Channel</p>
                   <div className="grid grid-cols-3 gap-2">
                     {CHANNELS.map((c) => (
-                      <Chip key={c} selected={answers.channelConfirmed === c} onClick={() => confirmChannel(c)}>{CHANNEL_LABEL[c]}</Chip>
+                      <Chip key={c} selected={answers.channelConfirmed === c} activeClass={channelChipClasses(c)} onClick={() => confirmChannel(c)}>{CHANNEL_LABEL[c]}</Chip>
                     ))}
                   </div>
                 </div>
@@ -354,7 +362,7 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
                   ))}
                 </div>
                 {effChannel && answers.target && answers.target !== defaultTargetForChannel(effChannel) && (
-                  <p className="mt-2 text-xs text-zinc-500">Cross-channel — a translate move. Neutralizing because it's complete, or because that feeling is unwelcome here? Your call.</p>
+                  <p className="mt-2 text-xs text-zinc-500">Cross-channel — a translate move. Neutralizing because it&apos;s complete, or because that feeling is unwelcome here? Your call.</p>
                 )}
               </div>
               <div>
