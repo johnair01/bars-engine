@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import type { CSSProperties, ReactNode } from 'react'
 import { assembleDeck } from '@/lib/allyship-deck/assemble'
 import type { MoveCard } from '@/lib/allyship-deck/types'
 import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'
@@ -28,6 +30,8 @@ const isMove = (c: { kind: string }): c is MoveCard => c.kind === 'move'
 
 export default function DeckSalesPage() {
   const moves = assembleDeck().cards.filter(isMove)
+  const pick = (m: MoveCard['move']) => moves.find((c) => c.move === m)!
+  const fan: [MoveCard, MoveCard, MoveCard] = [pick('clean_up'), pick('show_up'), pick('open_up')]
 
   return (
     <main style={{ maxWidth: 1040, margin: '0 auto', padding: '40px 18px 96px', color: SURFACE_TOKENS.textPrimary }}>
@@ -342,7 +346,7 @@ function PackUpsell() {
   )
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <h2 style={{ ...kicker, color: SURFACE_TOKENS.textSecondary, textAlign: 'center', margin: 0 }}>{children}</h2>
   )
