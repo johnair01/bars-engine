@@ -138,6 +138,8 @@
     "seed:onboarding": "tsx scripts/seed-onboarding-thread.ts",
     "seed:cert:cyoa": "tsx scripts/seed-cyoa-certification-quests.ts",
     "seed:cert:the-crossing": "tsx scripts/seed-cyoa-cert-the-crossing.ts",
+    "seed:cert:emotional-alchemy-diagnostic": "tsx scripts/seed-cert-emotional-alchemy-diagnostic.ts",
+    "seed:cert:emotional-alchemy-practice-card": "tsx scripts/seed-cert-emotional-alchemy-practice-card.ts",
     "seed:cert:mga-deck-vault-onboarding": "tsx scripts/seed-cert-mga-deck-vault-onboarding.ts",
     "seed:cert:inner-outer-allyship": "tsx scripts/seed-cyoa-certification-quests.ts",
     "seed:cert:game-loop-tighten": "tsx scripts/seed-cyoa-certification-quests.ts",

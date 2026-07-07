@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  a { color: #a855f7; text-decoration: none; }
+  a:hover { color: #c084fc; }
+  ::selection { background: rgba(124,58,237,0.35); }
+  .cd-scroll::-webkit-scrollbar { width: 0; background: transparent; }
+  textarea, input { font-family: 'Nunito', sans-serif; }
+  textarea::placeholder, input::placeholder { color: #57554f; }
+  @keyframes cdRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes cdGlowIn { from { opacity: 0; box-shadow: 0 0 0 0 transparent; } to { opacity: 1; } }
+  [data-scene] { animation: cdRise .34s cubic-bezier(.16,1,.3,1) both; }
+  @media (prefers-reduced-motion: reduce) { [data-scene] { animation: none !important; } }
+  .cd-range { -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:6px; outline:none; cursor:pointer; }
+  .cd-range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:28px; height:28px; border-radius:50%; background:#7c3aed; border:2px solid #a855f7; box-shadow:0 0 18px rgba(124,58,237,0.6), inset 0 1px 0 rgba(255,255,255,0.3); cursor:pointer; margin-top:-11px; transition:box-shadow .18s; }
+  .cd-range::-webkit-slider-thumb:active { box-shadow:0 0 26px rgba(124,58,237,0.85), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .cd-range::-moz-range-thumb { width:28px; height:28px; border-radius:50%; background:#7c3aed; border:2px solid #a855f7; box-shadow:0 0 18px rgba(124,58,237,0.6); cursor:pointer; }
+
+</style>
+</helmet>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+  <div style="position:absolute; inset:0; background:#0a0908; display:flex; flex-direction:column; font-family:'Nunito', sans-serif; color:#e8e6e0; overflow:hidden;">
+
+    <!-- ── CHROME HEADER (recedes; hidden on end states) ───────────── -->
+    <sc-if value="{{ isStep }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:60px 22px 12px; flex-shrink:0;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <div onClick="{{ onExitBack }}" style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.12em; color:#6b6965; cursor:pointer;">← DASHBOARD</div>
+        <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#b5651d;">EMOTIONAL ALCHEMY</div>
+      </div>
+      <div style="display:flex; gap:5px; align-items:center;">
+        <sc-for list="{{ pips }}" as="pip" hint-placeholder-count="6">
+          <div style="{{ pip.style }}"></div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ── SCROLLABLE BODY ─────────────────────────────────────────── -->
+    <div class="cd-scroll" style="flex:1; overflow-y:auto; padding:8px 22px 22px;">
+      <div data-scene="{{ sceneKey }}" ref="{{ sceneRef }}" style="min-height:100%; display:flex; flex-direction:column;">
+
+        <!-- 1 · NAME -->
+        <sc-if value="{{ isName }}" hint-placeholder-val="{{ true }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 8px;">What's the charge?</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 20px; max-width:32ch;">Say it plainly, in your own words. Notice where in your body it lives.</p>
+          <textarea value="{{ answers.name }}" onInput="{{ onName }}" placeholder="It's still sitting in my chest — that meeting…" style="width:100%; min-height:150px; resize:none; background:#111110; border:1px solid #26261f; border-radius:8px; padding:16px; color:#e8e6e0; font-size:16px; line-height:1.55; outline:none; box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);"></textarea>
+        </sc-if>
+
+        <!-- 2 · THREAD -->
+        <sc-if value="{{ isThread }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 8px;">Name the thread.</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 20px; max-width:32ch;">The storyline this belongs to — a word or two. You'll recognize it later.</p>
+          <input value="{{ answers.thread }}" onInput="{{ onThread }}" placeholder="the standup thing" style="width:100%; background:#111110; border:1px solid #26261f; border-radius:8px; padding:16px; color:#e8e6e0; font-size:16px; outline:none; box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);"/>
+        </sc-if>
+
+        <!-- 3 · CHANNEL -->
+        <sc-if value="{{ isChannel }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 6px;">Which is closest?</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 18px; max-width:32ch;">You don't have to be sure. A first read is enough — it's still unformed.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <sc-for list="{{ channelChips }}" as="chip" hint-placeholder-count="6">
+              <div onClick="{{ chip.onClick }}" style="{{ chip.style }}">
+                <sc-if value="{{ chip.showDot }}" hint-placeholder-val="{{ false }}"><span style="{{ chip.dotStyle }}"></span></sc-if>
+                <span style="{{ chip.labelStyle }}">{{ chip.label }}</span>
+                <span style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.04em; color:#6b6965;">{{ chip.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <!-- design-review treatment switcher -->
+          <div style="margin-top:22px; padding-top:16px; border-top:1px dashed #2a2a27; display:flex; align-items:center; gap:10px;">
+            <span style="font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.2em; color:#57554f;">REVIEW · SELECTED-CHIP TREATMENT</span>
+            <div style="display:flex; gap:6px; margin-left:auto;">
+              <sc-for list="{{ treatmentTabs }}" as="t" hint-placeholder-count="3">
+                <div onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 4 · FLAT FORK -->
+        <sc-if value="{{ isFlatFork }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 6px;">Flat — but which flat?</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 18px; max-width:32ch;">Numbness has textures. Naming it is not the same as fixing it.</p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ flatOptions }}" as="opt" hint-placeholder-count="4">
+              <div onClick="{{ opt.onClick }}" style="{{ opt.style }}">
+                <span style="{{ opt.labelStyle }}">{{ opt.label }}</span>
+                <span style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.04em; color:#6b6965;">{{ opt.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- 5 · INTENSITY -->
+        <sc-if value="{{ isIntensity }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 6px;">How loud, right now?</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 30px; max-width:32ch;">Not how bad — how loud. Drag to where it sits.</p>
+          <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:26px;">
+            <span style="font-family:'Space Mono',monospace; font-variant-numeric:tabular-nums; font-weight:700; font-size:64px; line-height:1; color:{{ intensityColor }};">{{ intensityReadout }}</span>
+            <span style="font-family:'Space Mono',monospace; font-variant-numeric:tabular-nums; font-size:18px; color:#57554f;">/ 10</span>
+          </div>
+          <input type="range" min="0" max="10" step="1" value="{{ intensityValue }}" onInput="{{ onIntensity }}" onChange="{{ onIntensity }}" class="cd-range" style="{{ intensityTrackStyle }}"/>
+          <div style="display:flex; justify-content:space-between; margin-top:14px;">
+            <span style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#6b6965;">QUIET</span>
+            <span style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#6b6965;">FLOODING</span>
+          </div>
+          <sc-if value="{{ showCrisisNudge }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:22px; background:#242420; border:1px solid #b5651d; border-radius:12px; padding:16px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);">
+              <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#d4a017; margin-bottom:6px;">A 10 IS A LOT TO HOLD</div>
+              <p style="color:#e8e6e0; font-size:14px; line-height:1.5; margin:0 0 10px;">At full flood, a practice may not be the right tool right now. That's not failure — it's data.</p>
+              <div onClick="{{ toCrisis }}" style="font-family:'Nunito',sans-serif; font-weight:700; font-size:14px; color:#d4a017; cursor:pointer;">I need more than a practice →</div>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <!-- 6 · TIME -->
+        <sc-if value="{{ isTime }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 6px;">How much time do you have?</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 22px; max-width:32ch;">Be honest about right now, not your best self.</p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ timeOptions }}" as="opt" hint-placeholder-count="3">
+              <div onClick="{{ opt.onClick }}" style="{{ opt.style }}">
+                <span style="{{ opt.labelStyle }}">{{ opt.label }}</span>
+                <span style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.04em; color:#6b6965;">{{ opt.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- 7 · WHEN -->
+        <sc-if value="{{ isWhen }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 6px;">When is this?</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 22px; max-width:32ch;">Where the charge lives in time changes the move.</p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ whenOptions }}" as="opt" hint-placeholder-count="3">
+              <div onClick="{{ opt.onClick }}" style="{{ opt.style }}">
+                <span style="{{ opt.labelStyle }}">{{ opt.label }}</span>
+                <span style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.04em; color:#6b6965;">{{ opt.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- 8 · FUEL -->
+        <sc-if value="{{ isFuel }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 6px;">What's your fuel?</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 22px; max-width:32ch;">Capacity, not mood. It sizes the ask.</p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ fuelOptions }}" as="opt" hint-placeholder-count="3">
+              <div onClick="{{ opt.onClick }}" style="{{ opt.style }}">
+                <span style="{{ opt.labelStyle }}">{{ opt.label }}</span>
+                <span style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.04em; color:#6b6965;">{{ opt.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- 9 · STORY -->
+        <sc-if value="{{ isStory }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 8px;">The story you're telling.</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 20px; max-width:32ch;">Optional. The narration in your head — not the facts. Stuckness is data, not failure.</p>
+          <textarea value="{{ answers.story }}" onInput="{{ onStory }}" placeholder="They think I can't handle it…" style="width:100%; min-height:130px; resize:none; background:#111110; border:1px solid #26261f; border-radius:8px; padding:16px; color:#e8e6e0; font-size:16px; line-height:1.55; outline:none; box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);"></textarea>
+        </sc-if>
+
+        <!-- 10 · HELD FORK (harm relation) -->
+        <sc-if value="{{ isHeldFork }}" hint-placeholder-val="{{ false }}">
+          <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#8b7bd6; margin:8px 0 12px;">A CAREFUL ONE</div>
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:28px; line-height:1.15; margin:0 0 6px;">Did this land on you — or did you witness it?</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 18px; max-width:32ch;">Both are valid charges. The answer changes what a fair move even is.</p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ harmOptions }}" as="opt" hint-placeholder-count="3">
+              <div onClick="{{ opt.onClick }}" style="{{ opt.style }}">
+                <span style="{{ opt.labelStyle }}">{{ opt.label }}</span>
+                <span style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.04em; color:#6b6965;">{{ opt.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- 11 · DEFAULTS -->
+        <sc-if value="{{ isDefaults }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.12; margin:8px 0 6px;">Here's what I'll assume.</h1>
+          <p style="color:#a09e98; font-size:15px; line-height:1.55; margin:0 0 22px; max-width:32ch;">Asked, not inferred. Change any of it — nothing is locked.</p>
+
+          <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#6b6965; margin-bottom:10px;">ALTITUDE — WHERE IT SITS NOW</div>
+          <div style="display:flex; gap:8px; margin-bottom:22px;">
+            <sc-for list="{{ altOptions }}" as="opt" hint-placeholder-count="3">
+              <div onClick="{{ opt.onClick }}" style="{{ opt.style }}">{{ opt.label }}</div>
+            </sc-for>
+          </div>
+
+          <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#6b6965; margin-bottom:10px;">TARGET — WHAT IT WANTS TO BECOME</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px;">
+            <sc-for list="{{ targetOptions }}" as="opt" hint-placeholder-count="3">
+              <div onClick="{{ opt.onClick }}" style="{{ opt.style }}">{{ opt.label }}</div>
+            </sc-for>
+          </div>
+
+          <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#6b6965; margin-bottom:10px;">SHAPE — HOW IT'S HOLDING</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <sc-for list="{{ shapeOptions }}" as="opt" hint-placeholder-count="4">
+              <div onClick="{{ opt.onClick }}" style="{{ opt.style }}">{{ opt.label }}</div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- ═══ END: THE READ (the threshold) ═══ -->
+        <sc-if value="{{ isRead }}" hint-placeholder-val="{{ false }}">
+          <div style="padding-top:52px;">
+            <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#6b6965; margin-bottom:24px;">THE READ</div>
+            <div data-element="{{ readElement }}" style="{{ readLineStyle }}">
+              <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+                <span style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:34px; color:#e8e6e0;">{{ readChannel }}</span>
+                <span style="font-family:'Space Mono',monospace; font-variant-numeric:tabular-nums; font-weight:700; font-size:34px; color:{{ readGem }};">{{ readIntensity }}</span>
+                <span style="font-family:'Jost',sans-serif; font-size:26px; color:#6b6965;">→</span>
+                <span style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:34px; color:#e8e6e0;">{{ answers.target }}</span>
+              </div>
+            </div>
+            <div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em; color:#a09e98; margin:16px 0 26px; text-transform:uppercase;">{{ readMeta }}</div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:26px;">
+              <div style="background:#111110; border:1px solid #1f1f1b; border-radius:12px; padding:14px 16px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.2em; color:#6b6965; margin-bottom:6px;">THREAD</div>
+                <div style="font-size:15px; color:#e8e6e0; font-weight:600;">{{ readThread }}</div>
+              </div>
+              <div style="background:#111110; border:1px solid #1f1f1b; border-radius:12px; padding:14px 16px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.2em; color:#6b6965; margin-bottom:6px;">SHAPE</div>
+                <div style="font-size:15px; color:#e8e6e0; font-weight:600;">{{ answers.shape }}</div>
+              </div>
+            </div>
+
+            <p style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.08em; color:#57554f; line-height:1.7; text-transform:uppercase; margin:0 0 8px;">Your words never left this device.</p>
+            <p style="color:#a09e98; font-size:14px; line-height:1.55; margin:0 0 30px; max-width:34ch;">This is the threshold. On the other side, the charge becomes a formed practice — with an element, and a move.</p>
+          </div>
+        </sc-if>
+
+        <!-- ═══ END: CRISIS ═══ -->
+        <sc-if value="{{ isCrisis }}" hint-placeholder-val="{{ false }}">
+          <div style="padding-top:60px;">
+            <div style="background:#242420; border:1px solid #b5651d; border-radius:20px; padding:26px 22px; box-shadow:0 16px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);">
+              <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#d4a017; margin-bottom:14px;">PAUSE</div>
+              <h2 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:26px; line-height:1.15; color:#f0c84a; margin:0 0 14px;">This might need more than a game.</h2>
+              <p style="color:#e8e6e0; font-size:15px; line-height:1.6; margin:0 0 18px;">If you're in crisis or thinking about harming yourself, a practice isn't the right tool right now — and reaching out is the stronger move.</p>
+              <div style="background:#0a0908; border:1px solid #3a3a34; border-radius:12px; padding:16px; margin-bottom:18px;">
+                <div style="font-family:'Space Mono',monospace; font-variant-numeric:tabular-nums; font-weight:700; font-size:22px; color:#e8e6e0; letter-spacing:0.04em;">988</div>
+                <div style="font-size:13px; color:#a09e98; margin-top:4px;">Suicide &amp; Crisis Lifeline — call or text, 24/7 (US)</div>
+              </div>
+              <p style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.08em; color:#8a8880; line-height:1.7; text-transform:uppercase; margin:0;">Nothing here was saved or sent.</p>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ═══ END: CAPTURED ═══ -->
+        <sc-if value="{{ isCaptured }}" hint-placeholder-val="{{ false }}">
+          <div style="padding-top:70px;">
+            <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#6b6965; margin-bottom:20px;">CAPTURED</div>
+            <h1 style="font-family:'Jost',sans-serif; font-weight:700; letter-spacing:-0.02em; font-size:30px; line-height:1.15; margin:0 0 14px;">Getting it down is a complete session.</h1>
+            <p style="color:#a09e98; font-size:15px; line-height:1.6; margin:0 0 20px; max-width:34ch;">You named it and let it be named. That counts — no move required. It'll be here when there's more room to hold it.</p>
+            <div style="background:#111110; border:1px solid #1f1f1b; border-radius:12px; padding:16px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);">
+              <div style="font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.2em; color:#6b6965; margin-bottom:8px;">YOU WROTE</div>
+              <div style="font-size:15px; color:#e8e6e0; line-height:1.55; font-style:italic;">{{ capturedEcho }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+
+    <!-- ── PERSISTENT BOTTOM BAR ───────────────────────────────────── -->
+    <sc-if value="{{ isStep }}" hint-placeholder-val="{{ true }}">
+    <div style="flex-shrink:0; padding:14px 22px 30px; background:linear-gradient(to top, #0a0908 62%, rgba(10,9,8,0)); ">
+      <div style="display:flex; gap:12px; align-items:stretch; margin-bottom:12px;">
+        <div onClick="{{ onBack }}" style="{{ backStyle }}">Back</div>
+        <div onClick="{{ onContinue }}" style="{{ continueStyle }}">{{ continueLabel }}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.07);">
+        <div onClick="{{ toCaptured }}" style="font-size:13px; color:#6b6965; cursor:pointer; font-weight:600;">Just get it down</div>
+        <div onClick="{{ toCrisis }}" style="margin-left:auto; font-size:12px; font-weight:700; color:#8a8880; border:1px solid #3a3a34; border-radius:8px; padding:9px 13px; cursor:pointer; transition:all .18s cubic-bezier(.16,1,.3,1);" style-hover="color:#d4a017; border-color:#b5651d;">I need more than a practice</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ── END-STATE FOOTER (one calm way back) ────────────────────── -->
+    <sc-if value="{{ isEnd }}" hint-placeholder-val="{{ false }}">
+    <div style="flex-shrink:0; padding:14px 22px 30px;">
+      <div onClick="{{ onEndPrimary }}" style="{{ continueStyle }}">{{ endPrimaryLabel }}</div>
+      <div onClick="{{ onRestart }}" style="text-align:center; margin-top:14px; font-size:13px; color:#6b6965; cursor:pointer; font-weight:600;">Begin again</div>
+    </div>
+    </sc-if>
+
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;chipTreatment&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A&quot;,&quot;B&quot;,&quot;C&quot;],&quot;default&quot;:&quot;A&quot;,&quot;tsType&quot;:&quot;'A'|'B'|'C'&quot;,&quot;section&quot;:&quot;Channel chip&quot;,&quot;label&quot;:&quot;Selected-chip treatment&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;name&quot;,&quot;channel&quot;,&quot;intensity&quot;,&quot;defaults&quot;,&quot;read&quot;,&quot;crisis&quot;,&quot;captured&quot;],&quot;default&quot;:&quot;name&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Review&quot;,&quot;label&quot;:&quot;Jump to screen&quot;},&quot;ambientMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;,&quot;label&quot;:&quot;Ambient step motion&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.sceneRef = React.createRef();
+    this.EL = {
+      fire:  { gem:'#e74c3c', frame:'#c1392b' },
+      water: { gem:'#2980b9', frame:'#1a3a5c' },
+      metal: { gem:'#bdc3c7', frame:'#8e9aab' },
+      wood:  { gem:'#2ecc71', frame:'#4a7c59' },
+      earth: { gem:'#d4a017', frame:'#b5651d' },
+    };
+    this.CH = {
+      mad:    { el:'fire',  label:'Anger',      sub:'heat · push · no' },
+      sad:    { el:'water', label:'Sadness',    sub:'weight · pull · loss' },
+      scared: { el:'metal', label:'Fear',       sub:'edge · brace · what-if' },
+      bright: { el:'wood',  label:'Joy',        sub:'want · no traction' },
+      flat:   { el:'earth', label:'Neutrality', sub:'muffled · far away' },
+      'cant-tell': { el:null, label:'Unnamed',  sub:"won't name itself" },
+    };
+    this.TARGETS = {
+      mad:['Triumph','Boundary','Repair'], sad:['Acceptance','Comfort','Release'],
+      scared:['Safety','Clarity','Readiness'], bright:['Momentum','Expression','Sharing'],
+      flat:['Aliveness','Curiosity','Contact'], 'cant-tell':['Clarity','Contact','Release'],
+    };
+    this.SHAPES = ['Knot','Weight','Fog','Spark','Static','Edge'];
+    this.DEFAULT_SHAPE = { mad:'Edge', sad:'Weight', scared:'Static', bright:'Spark', flat:'Fog', 'cant-tell':'Knot' };
+    this.state = {
+      screen: props.startScreen || 'name',
+      chipTreatment: props.chipTreatment || 'A',
+      tick: 0,
+      a: { name:'', thread:'', channel:null, flat:null, harm:null,
+           intensity:null, time:null, when:null, fuel:null, story:'',
+           altitude:'dissatisfied', target:null, shape:null },
+    };
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.startScreen !== this.props.startScreen && this.props.startScreen) {
+      this.setState({ screen: this.props.startScreen, tick: this.state.tick + 1 });
+    }
+    if (prevProps.chipTreatment !== this.props.chipTreatment && this.props.chipTreatment) {
+      this.setState({ chipTreatment: this.props.chipTreatment });
+    }
+    if (prevState.screen !== this.state.screen || prevState.tick !== this.state.tick) {
+      const el = this.sceneRef.current;
+      if (el && this.props.ambientMotion !== false) {
+        el.style.animation = 'none'; void el.offsetHeight; el.style.animation = '';
+      }
+      const sc = el && el.parentElement;
+      if (sc) sc.scrollTop = 0;
+    }
+  }
+
+  set(key, val) { this.setState(s => ({ a: { ...s.a, [key]: val } })); }
+
+  // ordered active steps given branching
+  steps() {
+    const a = this.state.a;
+    const s = ['name','thread','channel'];
+    if (a.channel === 'flat') s.push('flatFork');
+    s.push('intensity','time','when','fuel','story');
+    if (a.channel === 'mad' || a.channel === 'scared') s.push('heldFork');
+    s.push('defaults');
+    return s;
+  }
+
+  advance(dir) {
+    const steps = this.steps();
+    const i = steps.indexOf(this.state.screen);
+    if (dir > 0) {
+      // seed defaults when leaving the channel step
+      if (this.state.screen === 'channel') this.seedDefaults();
+      if (i === steps.length - 1) return this.go('read');
+      this.go(steps[i + 1]);
+    } else {
+      if (i <= 0) return;
+      this.go(steps[i - 1]);
+    }
+  }
+
+  seedDefaults() {
+    const ch = this.state.a.channel || 'cant-tell';
+    this.setState(s => ({ a: { ...s.a,
+      target: s.a.target || this.TARGETS[ch][0],
+      shape:  s.a.shape  || this.DEFAULT_SHAPE[ch],
+    }}));
+  }
+
+  go(screen) { this.setState(s => ({ screen, tick: s.tick + 1 })); }
+
+  canContinue() {
+    const a = this.state.a, s = this.state.screen;
+    if (s === 'name') return a.name.trim().length > 0;
+    if (s === 'thread') return a.thread.trim().length > 0;
+    if (s === 'channel') return !!a.channel;
+    if (s === 'flatFork') return !!a.flat;
+    if (s === 'intensity') return a.intensity !== null;
+    if (s === 'time') return !!a.time;
+    if (s === 'when') return !!a.when;
+    if (s === 'fuel') return !!a.fuel;
+    if (s === 'story') return true; // optional
+    if (s === 'heldFork') return !!a.harm;
+    if (s === 'defaults') return true;
+    return false;
+  }
+
+  // ── styling factories ────────────────────────────────────────────
+  optBase(active) {
+    return {
+      display:'flex', flexDirection:'column', gap:'3px', alignItems:'flex-start',
+      textAlign:'left', width:'100%', padding:'14px 16px', borderRadius:'8px',
+      cursor:'pointer', minHeight:'44px', boxSizing:'border-box',
+      transition:'all .18s cubic-bezier(.16,1,.3,1)',
+      boxShadow:'inset 0 1px 0 rgba(255,255,255,0.03)',
+      border: active ? '1px solid #7c3aed' : '1px solid rgba(255,255,255,0.09)',
+      background: active ? 'color-mix(in srgb, #7c3aed 15%, #141412)' : '#141412',
+    };
+  }
+  optLabelStyle(active) {
+    return { fontFamily:"'Nunito',sans-serif", fontWeight:'700', fontSize:'15px',
+      width:'100%', lineHeight:'1.2', color: active ? '#efeef0' : '#e8e6e0' };
+  }
+
+  makeOpts(list, key) {
+    const cur = this.state.a[key];
+    return list.map(o => {
+      const active = cur === o.v;
+      return { label:o.l, sub:o.s || '', onClick:() => this.set(key, o.v),
+        style: this.optBase(active), labelStyle: this.optLabelStyle(active) };
+    });
+  }
+
+  pill(active, label, onClick) {
+    return { label, onClick, style:{
+      fontFamily:"'Space Mono',monospace", fontVariantNumeric:'tabular-nums',
+      fontSize:'12px', fontWeight:'700', letterSpacing:'0.04em',
+      padding:'9px 14px', borderRadius:'6px', cursor:'pointer', minHeight:'40px',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      transition:'all .16s cubic-bezier(.16,1,.3,1)',
+      color: active ? '#efeef0' : '#a09e98',
+      border: active ? '1px solid #7c3aed' : '1px solid rgba(255,255,255,0.09)',
+      background: active ? 'color-mix(in srgb, #7c3aed 15%, #141412)' : '#141412',
+    }};
+  }
+
+  // channel chip — the three reviewable SELECTED treatments
+  chipStyle(active, el, treatment) {
+    const base = {
+      display:'flex', flexDirection:'column', gap:'4px', alignItems:'flex-start',
+      justifyContent:'center', padding:'15px 15px', borderRadius:'8px', cursor:'pointer', minHeight:'72px',
+      boxSizing:'border-box', transition:'all .2s cubic-bezier(.16,1,.3,1)',
+      boxShadow:'inset 0 1px 0 rgba(255,255,255,0.03)', position:'relative',
+    };
+    if (!active) return { ...base, border:'1px solid rgba(255,255,255,0.09)', background:'#141412' };
+    if (!el) return { ...base, border:'1px solid #7c3aed', background:'color-mix(in srgb, #7c3aed 15%, #141412)' };
+    const c = this.EL[el];
+    if (treatment === 'B') // gem dot + hairline underline, fill stays neutral
+      return { ...base, border:'1px solid rgba(255,255,255,0.14)', background:'#161614',
+        boxShadow:`inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -2px 0 ${c.frame}` };
+    if (treatment === 'C') // left accent bar + faint wash
+      return { ...base, border:'1px solid rgba(255,255,255,0.10)',
+        borderLeft:`3px solid ${c.frame}`, paddingLeft:'13px',
+        background:`color-mix(in srgb, ${c.gem} 7%, #141412)` };
+    // A — hairline tint (dissatisfied-altitude weight: thin, no glow)
+    return { ...base, border:`1px solid ${c.frame}`,
+      background:`color-mix(in srgb, ${c.gem} 12%, #141412)` };
+  }
+
+  renderVals() {
+    const a = this.state.a, s = this.state.screen, T = this.state.chipTreatment;
+    const isEnd = s === 'read' || s === 'crisis' || s === 'captured';
+    const isStep = !isEnd;
+
+    // pips
+    const steps = this.steps();
+    const idx = steps.indexOf(s);
+    const pips = steps.map((st, i) => ({ style: {
+      height:'3px', borderRadius:'3px', flex: i === idx ? '0 0 22px' : '0 0 10px',
+      transition:'all .3s cubic-bezier(.16,1,.3,1)',
+      background: i < idx ? 'rgba(124,58,237,0.5)' : i === idx ? '#7c3aed' : 'rgba(255,255,255,0.1)',
+    }}));
+
+    // channel chips
+    const channelChips = Object.keys(this.CH).map(k => {
+      const meta = this.CH[k]; const active = a.channel === k;
+      const showDot = active && !!meta.el && T === 'B';
+      const labelColor = active && meta.el && T === 'B' ? this.EL[meta.el].gem
+        : (active ? '#efeef0' : '#e8e6e0');
+      return {
+        key:k, label:k === 'bright' ? 'Bright, stuck' : (k === 'flat' ? 'Flat / numb' : (k === 'cant-tell' ? "I can't tell" : meta.label==='Anger'?'Mad':meta.label==='Sadness'?'Sad':meta.label==='Fear'?'Scared':meta.label)),
+        sub: meta.sub, showDot,
+        onClick: () => this.set('channel', k),
+        style: this.chipStyle(active, meta.el, T),
+        labelStyle: { fontFamily:"'Nunito',sans-serif", fontWeight:'700', fontSize:'15px', color: labelColor, width:'100%', lineHeight:'1.2' },
+        dotStyle: { width:'8px', height:'8px', borderRadius:'50%', position:'absolute', top:'14px', right:'14px',
+          background: meta.el ? this.EL[meta.el].gem : '#7c3aed', boxShadow:`0 0 6px ${meta.el?this.EL[meta.el].gem:'#7c3aed'}` },
+      };
+    });
+
+    const treatmentTabs = ['A','B','C'].map(t => ({
+      label: t, onClick: () => this.setState({ chipTreatment: t }),
+      style: {
+        fontFamily:"'Space Mono',monospace", fontSize:'11px', fontWeight:'700',
+        width:'26px', height:'24px', display:'flex', alignItems:'center', justifyContent:'center',
+        borderRadius:'5px', cursor:'pointer', transition:'all .15s ease',
+        color: T === t ? '#efeef0' : '#6b6965',
+        border: T === t ? '1px solid #7c3aed' : '1px solid rgba(255,255,255,0.1)',
+        background: T === t ? 'rgba(124,58,237,0.18)' : 'transparent',
+      },
+    }));
+
+    // option groups
+    const flatOptions = this.makeOpts([
+      {v:'rested', l:'Rested', s:'quiet because it settled'},
+      {v:'walled', l:'Walled-off', s:'holding a door shut'},
+      {v:'buried', l:'Buried', s:'something under the flat'},
+      {v:'grey', l:'Grey', s:'color drained, not tension'},
+    ], 'flat');
+    const timeOptions = this.makeOpts([
+      {v:'2', l:'2 minutes', s:'a breath and a note'},
+      {v:'10', l:'10 minutes', s:'one real move'},
+      {v:'30', l:'30 minutes', s:'room to sit with it'},
+    ], 'time');
+    const whenOptions = this.makeOpts([
+      {v:'now', l:'Happening now', s:'live, in the room'},
+      {v:'replay', l:'Replaying', s:'already happened, still looping'},
+      {v:'upcoming', l:'Coming up', s:'bracing for it'},
+    ], 'when');
+    const fuelOptions = this.makeOpts([
+      {v:'depleted', l:'Depleted', s:'running on empty'},
+      {v:'steady', l:'Steady', s:'enough to work with'},
+      {v:'charged', l:'Charged', s:'plenty in the tank'},
+    ], 'fuel');
+    const harmOptions = this.makeOpts([
+      {v:'onme', l:'It landed on me', s:'I was the one it hit'},
+      {v:'witness', l:'I witnessed it', s:'it happened to someone else'},
+      {v:'both', l:'Both', s:'it hit me and others'},
+    ], 'harm');
+
+    // intensity — slider
+    const iv = a.intensity;
+    const intensityValue = iv === null ? 5 : iv;
+    const intensityReadout = iv === null ? '—' : iv;
+    const intensityColor = iv === null ? '#57554f' : (iv === 10 ? '#d4a017' : '#e8e6e0');
+    const rangeMod = iv === null ? 'cd-range--unset' : '';
+    const pct = (intensityValue / 10) * 100;
+    const intensityTrackStyle = iv === null
+      ? { background:'#2a2a27' }
+      : { background:`linear-gradient(to right, #7c3aed 0%, #7c3aed ${pct}%, #2a2a27 ${pct}%, #2a2a27 100%)` };
+
+    // defaults chip rows
+    const altOptions = ['dissatisfied','neutral','satisfied'].map(v => this.pill(a.altitude === v,
+      v === 'dissatisfied' ? 'Raw' : v === 'neutral' ? 'Forming' : 'Formed', () => this.set('altitude', v)));
+    const ch = a.channel || 'cant-tell';
+    const targetOptions = this.TARGETS[ch].map(t => this.pill(a.target === t, t, () => this.set('target', t)));
+    const shapeOptions = this.SHAPES.map(sh => this.pill(a.shape === sh, sh, () => this.set('shape', sh)));
+
+    // continue / back
+    const can = this.canContinue();
+    const continueLabel = s === 'defaults' ? 'See the read →' : (s === 'story' && !a.story.trim() ? 'Skip — continue' : 'Continue');
+    const continueStyle = {
+      flex:'1', display:'flex', alignItems:'center', justifyContent:'center',
+      fontFamily:"'Nunito',sans-serif", fontWeight:'800', fontSize:'16px',
+      padding:'15px', borderRadius:'8px', cursor: can ? 'pointer' : 'not-allowed',
+      transition:'all .18s cubic-bezier(.16,1,.3,1)', minHeight:'52px',
+      color: can ? '#fff' : '#57554f',
+      background: can ? '#7c3aed' : '#1a1a18',
+      border: can ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.07)',
+      boxShadow: can ? '0 0 24px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.15)' : 'none',
+      pointerEvents: can ? 'auto' : 'none',
+    };
+    const canBack = idx > 0;
+    const backStyle = {
+      display:'flex', alignItems:'center', justifyContent:'center',
+      fontFamily:"'Nunito',sans-serif", fontWeight:'700', fontSize:'15px',
+      padding:'15px 22px', borderRadius:'8px', minHeight:'52px',
+      cursor: canBack ? 'pointer' : 'default',
+      color: canBack ? '#a09e98' : '#3a3a34',
+      background:'transparent', border:'1px solid rgba(255,255,255,0.09)',
+      transition:'all .18s ease', pointerEvents: canBack ? 'auto' : 'none',
+    };
+
+    // ── the read ──
+    const readEl = this.CH[ch].el; // null for cant-tell
+    const readElement = readEl || 'earth';
+    const gem = readEl ? this.EL[readEl].gem : '#a09e98';
+    const frame = readEl ? this.EL[readEl].frame : '#3a3a34';
+    // threshold accent — NEUTRAL altitude weight: 2px, 70%, 4px glow
+    const readLineStyle = {
+      paddingBottom:'16px',
+      borderBottom: `2px solid color-mix(in srgb, ${frame} 70%, transparent)`,
+      boxShadow: readEl ? `0 4px 12px -4px color-mix(in srgb, ${gem} 45%, transparent)` : 'none',
+    };
+    const timeLabel = { '2':'2 min', '10':'10 min', '30':'30 min' }[a.time] || '—';
+    const whenLabel = { now:'happening now', replay:'replaying', upcoming:'coming up' }[a.when] || '—';
+    const fuelLabel = { depleted:'depleted', steady:'steady fuel', charged:'charged' }[a.fuel] || '—';
+    const altLabel = { dissatisfied:'raw', neutral:'forming', satisfied:'formed' }[a.altitude];
+    const readMeta = `${altLabel} · ${whenLabel} · ${fuelLabel} · ${timeLabel}`;
+
+    return {
+      isStep, isEnd,
+      isName: s==='name', isThread: s==='thread', isChannel: s==='channel',
+      isFlatFork: s==='flatFork', isIntensity: s==='intensity', isTime: s==='time',
+      isWhen: s==='when', isFuel: s==='fuel', isStory: s==='story',
+      isHeldFork: s==='heldFork', isDefaults: s==='defaults',
+      isRead: s==='read', isCrisis: s==='crisis', isCaptured: s==='captured',
+      sceneKey: s + '-' + this.state.tick, sceneRef: this.sceneRef,
+      answers: a, pips,
+      channelChips, treatmentTabs,
+      flatOptions, timeOptions, whenOptions, fuelOptions, harmOptions,
+      intensityValue, intensityReadout, intensityColor, rangeMod, intensityTrackStyle,
+      onIntensity: (e) => this.set('intensity', parseInt(e.target.value, 10)),
+      altOptions, targetOptions, shapeOptions,
+      showCrisisNudge: a.intensity === 10,
+      onName: (e) => this.set('name', e.target.value),
+      onThread: (e) => this.set('thread', e.target.value),
+      onStory: (e) => this.set('story', e.target.value),
+      onContinue: () => { if (this.canContinue()) this.advance(1); },
+      onBack: () => this.advance(-1),
+      onExitBack: () => this.go('name'),
+      continueLabel, continueStyle, backStyle,
+      toCrisis: () => this.go('crisis'),
+      toCaptured: () => this.go('captured'),
+      // read
+      readElement, readGem: gem, readLineStyle,
+      readChannel: this.CH[ch].label,
+      readIntensity: a.intensity === null ? '—' : a.intensity,
+      readThread: a.thread.trim() || '—',
+      readMeta,
+      capturedEcho: (a.name.trim() || 'the charge you named') ,
+      // end footer
+      onEndPrimary: () => { if (s === 'read') { this.go('name'); } else { this.go('name'); } },
+      endPrimaryLabel: s === 'read' ? 'Form the practice →' : (s === 'crisis' ? 'Back to the diagnostic' : 'Done'),
+      onRestart: () => { this.setState({ a: { name:'', thread:'', channel:null, flat:null, harm:null, intensity:null, time:null, when:null, fuel:null, story:'', altitude:'dissatisfied', target:null, shape:null } }); this.go('name'); },
+    };
+  }
+}
+</script>
+</body>
+</html>
