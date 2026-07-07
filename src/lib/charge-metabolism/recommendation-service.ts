@@ -169,7 +169,7 @@ export function recommendChargeMetabolismMove(
     ...(input.cardContext ? { cardContext: input.cardContext } : {}),
   }
   const recommendations = recommendShowUpMovesForEdges(firstRoute.moves, recommendationContext)
-  const routeRoles = 'roles' in firstRoute
+  const routeRoles = hasBeginnerRouteRoles(firstRoute)
     ? firstRoute.roles
     : firstRoute.moves.map((move, index) => fallbackRoleForEdge(move, firstRoute.moves.length === 1 && index === 0))
   const routeHandRecommendations = recommendations
@@ -218,6 +218,10 @@ export function recommendChargeMetabolismMove(
     satisfactionAttemptDraft: isSingleRecommendation ? null : satisfactionAttemptDraft,
     attemptDraft: metabolizeAttemptDraft,
   }
+}
+
+function hasBeginnerRouteRoles(route: { roles?: unknown }): route is { roles: BeginnerRouteHandRole[] } {
+  return Array.isArray(route.roles)
 }
 
 function fallbackRoleForEdge(
