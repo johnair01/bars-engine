@@ -1,10 +1,12 @@
 'use client'
 
+import { useActionState } from 'react'
 import Link from 'next/link'
 import type { CampaignPageData, VisitorStatus } from './page'
 import type { CampaignSkin } from '@/lib/ui/campaign-skin'
-import { buildSkinVars, resolveFontClass, DEFAULT_BG_GRADIENT } from '@/lib/ui/build-skin-vars'
+import { buildSkinVars, resolveFontClass } from '@/lib/ui/build-skin-vars'
 import { useCampaignSkin } from '@/lib/ui/campaign-skin-provider'
+import { saveCampaignLandingPageContent } from '@/actions/campaign-page-admin'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -53,11 +55,13 @@ export function CampaignLanding({
   staticSkin,
   visitorStatus = 'unauthenticated',
   inviteToken,
+  canEditPage = false,
 }: {
   campaign: CampaignPageData
   staticSkin: CampaignSkin | null
   visitorStatus?: VisitorStatus
   inviteToken?: string | null
+  canEditPage?: boolean
 }) {
   // Use campaign skin from provider (layout-level resolution) when available;
   // fall back to direct buildSkinVars for backward compatibility.
@@ -137,6 +141,8 @@ export function CampaignLanding({
 
       {/* ── Body content ───────────────────────────────────────────────── */}
       <main className="flex-1 px-6 sm:px-10 pb-16 max-w-3xl mx-auto w-full space-y-8">
+        {canEditPage && <CampaignPageEditor campaign={campaign} />}
+
         {campaign.description && (
           <section className="text-base leading-relaxed whitespace-pre-line">
             {campaign.description}
@@ -193,6 +199,7 @@ export function CampaignLanding({
             </div>
           </section>
         )}
+
       </main>
 
       {/* ── CTA Footer (thumb-first: primary actions in bottom 40%) ───── */}
@@ -252,6 +259,117 @@ export function CampaignLanding({
         </p>
       </footer>
     </div>
+  )
+}
+
+function CampaignPageEditor({ campaign }: { campaign: CampaignPageData }) {
+  const [state, formAction, pending] = useActionState(saveCampaignLandingPageContent, null)
+
+  return (
+    <details
+      className="rounded-xl p-5"
+      style={{
+        background: 'var(--cs-surface, rgba(10, 10, 40, 0.6))',
+        border: '1px solid var(--cs-border, rgba(200, 160, 255, 0.2))',
+      }}
+    >
+      <summary
+        className="cursor-pointer text-sm font-semibold"
+        style={{ color: 'var(--cs-accent-1, #c8a0ff)' }}
+      >
+        Edit this campaign page
+      </summary>
+      <form action={formAction} className="mt-4 space-y-4">
+        <input type="hidden" name="slug" value={campaign.slug} />
+        <EditorField name="name" label="Page title" defaultValue={campaign.name} />
+        <EditorField
+          name="allyshipDomain"
+          label="Allyship domain"
+          defaultValue={campaign.allyshipDomain ?? ''}
+        />
+        <EditorField
+          name="posterImageUrl"
+          label="Poster image URL"
+          defaultValue={campaign.theme?.posterImageUrl ?? ''}
+        />
+        <EditorTextarea
+          name="description"
+          label="Opening description"
+          defaultValue={campaign.description ?? ''}
+        />
+        <EditorTextarea
+          name="wakeUpContent"
+          label="The Story"
+          defaultValue={campaign.wakeUpContent ?? ''}
+        />
+        <EditorTextarea
+          name="showUpContent"
+          label="How to Contribute"
+          defaultValue={campaign.showUpContent ?? ''}
+        />
+        <EditorTextarea
+          name="storyBridgeCopy"
+          label="Bridge copy"
+          defaultValue={campaign.storyBridgeCopy ?? ''}
+        />
+        {state?.error && <p className="text-sm text-red-300">{state.error}</p>}
+        {state?.ok && <p className="text-sm text-green-300">Saved.</p>}
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-xl px-4 py-2 text-sm font-bold transition-opacity disabled:opacity-60"
+          style={{
+            background: 'var(--cs-cta-bg, #f0d000)',
+            color: 'var(--cs-cta-text, #12124a)',
+          }}
+        >
+          {pending ? 'Saving…' : 'Save campaign page'}
+        </button>
+      </form>
+    </details>
+  )
+}
+
+function EditorField({
+  name,
+  label,
+  defaultValue,
+}: {
+  name: string
+  label: string
+  defaultValue: string
+}) {
+  return (
+    <label className="block text-xs font-semibold text-[var(--cs-text-secondary,#9090c0)]">
+      {label}
+      <input
+        name={name}
+        defaultValue={defaultValue}
+        className="mt-1 w-full rounded-lg border border-[var(--cs-border,rgba(200,160,255,0.2))] bg-black/50 px-3 py-2 text-sm text-white outline-none"
+      />
+    </label>
+  )
+}
+
+function EditorTextarea({
+  name,
+  label,
+  defaultValue,
+}: {
+  name: string
+  label: string
+  defaultValue: string
+}) {
+  return (
+    <label className="block text-xs font-semibold text-[var(--cs-text-secondary,#9090c0)]">
+      {label}
+      <textarea
+        name={name}
+        defaultValue={defaultValue}
+        rows={4}
+        className="mt-1 w-full rounded-lg border border-[var(--cs-border,rgba(200,160,255,0.2))] bg-black/50 px-3 py-2 text-sm text-white outline-none"
+      />
+    </label>
   )
 }
 

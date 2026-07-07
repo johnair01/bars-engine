@@ -1,0 +1,2617 @@
+{
+  "deck_slug": "superpower-connector",
+  "superpower": "connector",
+  "label": "The Connector",
+  "gift": "Relational gravity — the pull that brings people into each other’s orbit.",
+  "version": "0.1.0-draft",
+  "generatedAt": "2026-06-21T20:22:38.928Z",
+  "count": 60,
+  "cards": [
+    {
+      "id": "sp-connector-WAKE-SHAMAN-INNER",
+      "slug": "connector-wake_up-shaman-inner",
+      "name": "Notice your own pull toward people — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Notice what is actually here — sensing what is here.",
+        "Turn it inward: your own pull toward people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-SHAMAN-OUTER",
+      "slug": "connector-wake_up-shaman-outer",
+      "name": "Notice the threads already in the room — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Notice what is actually here — sensing what is here.",
+        "Bring it to others: the threads already in the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-CHALLENGER-INNER",
+      "slug": "connector-wake_up-challenger-inner",
+      "name": "Notice your own pull toward people — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Turn it inward: your own pull toward people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-CHALLENGER-OUTER",
+      "slug": "connector-wake_up-challenger-outer",
+      "name": "Notice the threads already in the room — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Bring it to others: the threads already in the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-REGENT-INNER",
+      "slug": "connector-wake_up-regent-inner",
+      "name": "Notice your own pull toward people — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here — stewarding it over time.",
+        "Turn it inward: your own pull toward people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-REGENT-OUTER",
+      "slug": "connector-wake_up-regent-outer",
+      "name": "Notice the threads already in the room — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here — stewarding it over time.",
+        "Bring it to others: the threads already in the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-ARCHITECT-INNER",
+      "slug": "connector-wake_up-architect-inner",
+      "name": "Notice your own pull toward people — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Notice what is actually here — building it into structure.",
+        "Turn it inward: your own pull toward people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-ARCHITECT-OUTER",
+      "slug": "connector-wake_up-architect-outer",
+      "name": "Map the Network",
+      "essence": "See the whole web of people who could help — who can act, who can connect you onward, who can amplify.",
+      "steps": [
+        "List everyone in reach who cares, in three tiers: help directly, connect you onward, amplify.",
+        "Spot the one connector who could open ten more doors — and notice who you flinch to ask.",
+        "Name the highest-leverage ask first."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [
+        "metal"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "capabilities": [
+        "exploration"
+      ],
+      "primaryQuestion": "Whose support am I overlooking because asking them feels too exposing?",
+      "campaignQuestion": "Who can help directly, who can connect, who can amplify — and where's the leverage?",
+      "optimizesFor": "Seeing latent reach before grinding out one-by-one asks.",
+      "forbiddenMoves": [
+        "Only counting the obvious few",
+        "Ignoring people who'd want to help",
+        "Pressure people who can't help"
+      ],
+      "failureModes": [
+        "Tunnel vision on the obvious few",
+        "Missing the person who'd rally others"
+      ],
+      "remediation": "If stuck, ask one person 'who else do you know who'd want in on this?'",
+      "tell": {
+        "working": "The map feels bigger and more alive.",
+        "performed": "You make a list but ask no one on it."
+      },
+      "contraindications": [
+        "When you're using mapping to avoid the actual ask"
+      ],
+      "example": "Realize an old teammate runs a group chat of 40 — one warm intro could matter more than ten DMs.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-connector-WAKE-DIPLOMAT-INNER",
+      "slug": "connector-wake_up-diplomat-inner",
+      "name": "Notice your own pull toward people — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here — across difference and relationship.",
+        "Turn it inward: your own pull toward people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-DIPLOMAT-OUTER",
+      "slug": "connector-wake_up-diplomat-outer",
+      "name": "Notice the threads already in the room — Bridge",
+      "essence": "For others: relational gravity, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here — across difference and relationship.",
+        "Bring it to others: the threads already in the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-SAGE-INNER",
+      "slug": "connector-wake_up-sage-inner",
+      "name": "Notice your own pull toward people — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here — integrating the whole field.",
+        "Turn it inward: your own pull toward people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-SAGE-OUTER",
+      "slug": "connector-wake_up-sage-outer",
+      "name": "Notice the threads already in the room — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here — integrating the whole field.",
+        "Bring it to others: the threads already in the room."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-SHAMAN-INNER",
+      "slug": "connector-open_up-shaman-inner",
+      "name": "Receive the room without absorbing it — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Receive it without flinching — sensing what is here.",
+        "Turn it inward: the room without absorbing it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-SHAMAN-OUTER",
+      "slug": "connector-open_up-shaman-outer",
+      "name": "Receive what each person is reaching for — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Receive it without flinching — sensing what is here.",
+        "Bring it to others: what each person is reaching for."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-CHALLENGER-INNER",
+      "slug": "connector-open_up-challenger-inner",
+      "name": "Receive the room without absorbing it — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Turn it inward: the room without absorbing it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-CHALLENGER-OUTER",
+      "slug": "connector-open_up-challenger-outer",
+      "name": "Receive what each person is reaching for — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Bring it to others: what each person is reaching for."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-REGENT-INNER",
+      "slug": "connector-open_up-regent-inner",
+      "name": "Receive the room without absorbing it — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching — stewarding it over time.",
+        "Turn it inward: the room without absorbing it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-REGENT-OUTER",
+      "slug": "connector-open_up-regent-outer",
+      "name": "Receive what each person is reaching for — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching — stewarding it over time.",
+        "Bring it to others: what each person is reaching for."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-ARCHITECT-INNER",
+      "slug": "connector-open_up-architect-inner",
+      "name": "Receive the room without absorbing it — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Receive it without flinching — building it into structure.",
+        "Turn it inward: the room without absorbing it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-ARCHITECT-OUTER",
+      "slug": "connector-open_up-architect-outer",
+      "name": "Receive what each person is reaching for — Structure",
+      "essence": "For others: relational gravity, building it into structure.",
+      "steps": [
+        "Receive it without flinching — building it into structure.",
+        "Bring it to others: what each person is reaching for."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-DIPLOMAT-INNER",
+      "slug": "connector-open_up-diplomat-inner",
+      "name": "Receive the room without absorbing it — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching — across difference and relationship.",
+        "Turn it inward: the room without absorbing it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-DIPLOMAT-OUTER",
+      "slug": "connector-open_up-diplomat-outer",
+      "name": "The Warm Ask",
+      "essence": "Open a real ask to someone who'd want to help — without turning the relationship into a ledger.",
+      "steps": [
+        "List the people who'd be glad to be asked.",
+        "For each, name the specific thing you'd ask for and a true reason you feel in your body.",
+        "Ask one today, in your own voice, with an explicit no-strings out."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "Whose help am I afraid to receive, and what story makes the ask feel like a debt?",
+      "campaignQuestion": "Who would genuinely want a chance to help with this — and how do I invite them cleanly?",
+      "optimizesFor": "Support that flows through warmth, not pressure.",
+      "forbiddenMoves": [
+        "Mass-blast the same message",
+        "Imply obligation",
+        "Pre-decide their no for them"
+      ],
+      "failureModes": [
+        "Transactional scorekeeping",
+        "Shame-leveraging",
+        "Only asking the people who least mind"
+      ],
+      "remediation": "If it curdles, say 'no strings — really,' and mean it.",
+      "tell": {
+        "working": "You feel cleaner after asking, win or lose.",
+        "performed": "You start tracking who now owes you."
+      },
+      "contraindications": [
+        "When there's no real warmth in the relationship yet"
+      ],
+      "example": "Message one person who'd want in: name the specific thing and a clear amount or task, with a genuine 'no worries if not.'",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-connector-OPEN-SAGE-INNER",
+      "slug": "connector-open_up-sage-inner",
+      "name": "Receive the room without absorbing it — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching — integrating the whole field.",
+        "Turn it inward: the room without absorbing it."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-SAGE-OUTER",
+      "slug": "connector-open_up-sage-outer",
+      "name": "Receive what each person is reaching for — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching — integrating the whole field.",
+        "Bring it to others: what each person is reaching for."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-SHAMAN-INNER",
+      "slug": "connector-clean_up-shaman-inner",
+      "name": "Clear your need to be the hub — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Transform the charge — sensing what is here.",
+        "Turn it inward: your need to be the hub."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-SHAMAN-OUTER",
+      "slug": "connector-clean_up-shaman-outer",
+      "name": "Clear the Static",
+      "essence": "Clear the relational static with someone before you ask, so the ask lands clean.",
+      "steps": [
+        "Notice the unspoken charge with this person (old debts, awkwardness).",
+        "Name it lightly to yourself, then feel where it sits in your body.",
+        "Ask only once the static has dropped a notch."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "What old relational charge am I about to route into this ask?",
+      "campaignQuestion": "What's unspoken between us that would make the ask land wrong if I ignore it?",
+      "optimizesFor": "An ask received as warmth, not as the next move in an old pattern.",
+      "forbiddenMoves": [
+        "Asking through resentment",
+        "Using guilt as leverage",
+        "Pretending the awkwardness isn't there"
+      ],
+      "failureModes": [
+        "The ask reopens an old wound",
+        "They feel handled, not asked"
+      ],
+      "remediation": "If static spikes mid-ask, pause and name it: 'I know it's been a while — no pressure here.'",
+      "tell": {
+        "working": "The exchange feels lighter afterward.",
+        "performed": "You rehearse the ask to manage their reaction."
+      },
+      "contraindications": [
+        "When the relationship needs repair before any ask"
+      ],
+      "example": "Before reaching out to someone you've drifted from, feel the old charge, then lead with reconnection, not the ask.",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-connector-CLEAN-CHALLENGER-INNER",
+      "slug": "connector-clean_up-challenger-inner",
+      "name": "Clear your need to be the hub — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge — at the edge, naming what resists.",
+        "Turn it inward: your need to be the hub."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-CHALLENGER-OUTER",
+      "slug": "connector-clean_up-challenger-outer",
+      "name": "Clear the static between people — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge — at the edge, naming what resists.",
+        "Bring it to others: the static between people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-REGENT-INNER",
+      "slug": "connector-clean_up-regent-inner",
+      "name": "Clear your need to be the hub — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Transform the charge — stewarding it over time.",
+        "Turn it inward: your need to be the hub."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-REGENT-OUTER",
+      "slug": "connector-clean_up-regent-outer",
+      "name": "Clear the static between people — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Transform the charge — stewarding it over time.",
+        "Bring it to others: the static between people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-ARCHITECT-INNER",
+      "slug": "connector-clean_up-architect-inner",
+      "name": "Clear your need to be the hub — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Transform the charge — building it into structure.",
+        "Turn it inward: your need to be the hub."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-ARCHITECT-OUTER",
+      "slug": "connector-clean_up-architect-outer",
+      "name": "Clear the static between people — Structure",
+      "essence": "For others: relational gravity, building it into structure.",
+      "steps": [
+        "Transform the charge — building it into structure.",
+        "Bring it to others: the static between people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-DIPLOMAT-INNER",
+      "slug": "connector-clean_up-diplomat-inner",
+      "name": "Clear your need to be the hub — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Transform the charge — across difference and relationship.",
+        "Turn it inward: your need to be the hub."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-DIPLOMAT-OUTER",
+      "slug": "connector-clean_up-diplomat-outer",
+      "name": "Clear the static between people — Bridge",
+      "essence": "For others: relational gravity, across difference and relationship.",
+      "steps": [
+        "Transform the charge — across difference and relationship.",
+        "Bring it to others: the static between people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-SAGE-INNER",
+      "slug": "connector-clean_up-sage-inner",
+      "name": "Clear your need to be the hub — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Transform the charge — integrating the whole field.",
+        "Turn it inward: your need to be the hub."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-SAGE-OUTER",
+      "slug": "connector-clean_up-sage-outer",
+      "name": "Clear the static between people — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Transform the charge — integrating the whole field.",
+        "Bring it to others: the static between people."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-SHAMAN-INNER",
+      "slug": "connector-grow_up-shaman-inner",
+      "name": "Widen your capacity to hold ties — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Build the capacity — sensing what is here.",
+        "Turn it inward: your capacity to hold ties."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-SHAMAN-OUTER",
+      "slug": "connector-grow_up-shaman-outer",
+      "name": "Widen the circle of who belongs — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Build the capacity — sensing what is here.",
+        "Bring it to others: the circle of who belongs."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-CHALLENGER-INNER",
+      "slug": "connector-grow_up-challenger-inner",
+      "name": "Widen your capacity to hold ties — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity — at the edge, naming what resists.",
+        "Turn it inward: your capacity to hold ties."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-CHALLENGER-OUTER",
+      "slug": "connector-grow_up-challenger-outer",
+      "name": "Widen the circle of who belongs — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity — at the edge, naming what resists.",
+        "Bring it to others: the circle of who belongs."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-REGENT-INNER",
+      "slug": "connector-grow_up-regent-inner",
+      "name": "Widen your capacity to hold ties — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Build the capacity — stewarding it over time.",
+        "Turn it inward: your capacity to hold ties."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-REGENT-OUTER",
+      "slug": "connector-grow_up-regent-outer",
+      "name": "Widen the circle of who belongs — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Build the capacity — stewarding it over time.",
+        "Bring it to others: the circle of who belongs."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-ARCHITECT-INNER",
+      "slug": "connector-grow_up-architect-inner",
+      "name": "Widen your capacity to hold ties — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Build the capacity — building it into structure.",
+        "Turn it inward: your capacity to hold ties."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-ARCHITECT-OUTER",
+      "slug": "connector-grow_up-architect-outer",
+      "name": "Widen the circle of who belongs — Structure",
+      "essence": "For others: relational gravity, building it into structure.",
+      "steps": [
+        "Build the capacity — building it into structure.",
+        "Bring it to others: the circle of who belongs."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-DIPLOMAT-INNER",
+      "slug": "connector-grow_up-diplomat-inner",
+      "name": "Widen your capacity to hold ties — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Build the capacity — across difference and relationship.",
+        "Turn it inward: your capacity to hold ties."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-DIPLOMAT-OUTER",
+      "slug": "connector-grow_up-diplomat-outer",
+      "name": "Widen the circle of who belongs — Bridge",
+      "essence": "For others: relational gravity, across difference and relationship.",
+      "steps": [
+        "Build the capacity — across difference and relationship.",
+        "Bring it to others: the circle of who belongs."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-SAGE-INNER",
+      "slug": "connector-grow_up-sage-inner",
+      "name": "Widen your capacity to hold ties — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Build the capacity — integrating the whole field.",
+        "Turn it inward: your capacity to hold ties."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-SAGE-OUTER",
+      "slug": "connector-grow_up-sage-outer",
+      "name": "Widen the circle of who belongs — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Build the capacity — integrating the whole field.",
+        "Bring it to others: the circle of who belongs."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-SHAMAN-INNER",
+      "slug": "connector-show_up-shaman-inner",
+      "name": "Make one tie you will tend — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Take the concrete act — sensing what is here.",
+        "Turn it inward: one tie you will tend."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-SHAMAN-OUTER",
+      "slug": "connector-show_up-shaman-outer",
+      "name": "Make the introduction that matters — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Take the concrete act — sensing what is here.",
+        "Bring it to others: the introduction that matters."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-CHALLENGER-INNER",
+      "slug": "connector-show_up-challenger-inner",
+      "name": "Make one tie you will tend — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act — at the edge, naming what resists.",
+        "Turn it inward: one tie you will tend."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-CHALLENGER-OUTER",
+      "slug": "connector-show_up-challenger-outer",
+      "name": "The Direct Ask",
+      "essence": "Make the one concrete ask that moves the work today — specific person, specific request, by when.",
+      "steps": [
+        "Pick the person and the specific request.",
+        "Make the ask plainly, with a deadline.",
+        "Make it easy to say yes — and easy to say no."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [
+        "fire"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "What am I feeling in my gut right before I make the ask — and am I about to soften it?",
+      "campaignQuestion": "What's the single ask that moves things today: to whom, for what, by when?",
+      "optimizesFor": "A real, specific request on the table, not a softened hint.",
+      "forbiddenMoves": [
+        "Hinting instead of asking",
+        "Burying the request",
+        "Pressure a yes"
+      ],
+      "failureModes": [
+        "The ask that never quite gets made",
+        "Vague 'anything helps' with no target"
+      ],
+      "remediation": "If you softened it, follow up with one line naming the real request.",
+      "tell": {
+        "working": "There's a specific request on the table.",
+        "performed": "You 'raised awareness' but asked no one."
+      },
+      "contraindications": [
+        "When you haven't built any relationship with the person yet"
+      ],
+      "example": "Ask directly: 'Could you do [specific thing] by Friday? Totally fine to say no.'",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-connector-SHOW-REGENT-INNER",
+      "slug": "connector-show_up-regent-inner",
+      "name": "Make one tie you will tend — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Take the concrete act — stewarding it over time.",
+        "Turn it inward: one tie you will tend."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-REGENT-OUTER",
+      "slug": "connector-show_up-regent-outer",
+      "name": "Make the introduction that matters — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Take the concrete act — stewarding it over time.",
+        "Bring it to others: the introduction that matters."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-ARCHITECT-INNER",
+      "slug": "connector-show_up-architect-inner",
+      "name": "Make one tie you will tend — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Take the concrete act — building it into structure.",
+        "Turn it inward: one tie you will tend."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-ARCHITECT-OUTER",
+      "slug": "connector-show_up-architect-outer",
+      "name": "Build the Milestone Ladder",
+      "essence": "Give the goal a structure people can join — milestones, a match, a visible climb.",
+      "steps": [
+        "Break the goal into rungs (25% / 50% / 75% / 100%) with a why for each.",
+        "Line up one person to match or double a rung.",
+        "Post the ladder so people see the climb and where they fit."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [
+        "wood"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "capabilities": [
+        "participation"
+      ],
+      "primaryQuestion": "Am I avoiding building structure because it makes the need feel real?",
+      "campaignQuestion": "What structure — milestones, a match, a tracker — turns scattered effort into a climb people join?",
+      "optimizesFor": "Momentum that compounds instead of one-off pushes.",
+      "forbiddenMoves": [
+        "Over-engineering the tracker",
+        "Hiding the goal",
+        "Pressure a matcher"
+      ],
+      "failureModes": [
+        "A ladder no one sees",
+        "Structure that stalls the actual work"
+      ],
+      "remediation": "Ship the simplest version today: three rungs and a visible tracker.",
+      "tell": {
+        "working": "People start asking how to help.",
+        "performed": "You tinker with the design to delay asking."
+      },
+      "contraindications": [
+        "When structure is procrastination in disguise"
+      ],
+      "example": "Post the first milestone and a matcher: 'Hit the first 25% and a friend matches the next chunk.'",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-connector-SHOW-DIPLOMAT-INNER",
+      "slug": "connector-show_up-diplomat-inner",
+      "name": "Make one tie you will tend — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Take the concrete act — across difference and relationship.",
+        "Turn it inward: one tie you will tend."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-DIPLOMAT-OUTER",
+      "slug": "connector-show_up-diplomat-outer",
+      "name": "Invite, Don't Extract",
+      "essence": "Ask in a way that gives people the gift of helping, with full consent and no strings.",
+      "steps": [
+        "Frame the ask as an invitation into something good.",
+        "State the no-strings out loud and feel whether your body agrees.",
+        "Thank helpers in a way that completes the loop, not opens a debt."
+      ],
+      "source": {
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [
+        "water"
+      ],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "primaryQuestion": "Am I about to extract from someone instead of inviting them?",
+      "campaignQuestion": "How do I invite people to help so they feel chosen, not used?",
+      "optimizesFor": "Helping that strengthens the relationship instead of taxing it.",
+      "forbiddenMoves": [
+        "Guilt-tripping",
+        "Using someone's story without consent",
+        "Implying obligation"
+      ],
+      "failureModes": [
+        "The helper feels cornered",
+        "A yes that quietly costs the friendship"
+      ],
+      "remediation": "If you sense pressure, say 'genuinely no strings — I'll love you either way.'",
+      "tell": {
+        "working": "Helpers thank YOU for the chance.",
+        "performed": "You feel a flicker of leverage."
+      },
+      "contraindications": [
+        "When you need it so badly you can't hear a no"
+      ],
+      "example": "'I'm inviting a few people who've had my back to be part of this — zero pressure.'",
+      "tier": "canonical",
+      "status": "published"
+    },
+    {
+      "id": "sp-connector-SHOW-SAGE-INNER",
+      "slug": "connector-show_up-sage-inner",
+      "name": "Make one tie you will tend — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Take the concrete act — integrating the whole field.",
+        "Turn it inward: one tie you will tend."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-SAGE-OUTER",
+      "slug": "connector-show_up-sage-outer",
+      "name": "Make the introduction that matters — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Take the concrete act — integrating the whole field.",
+        "Bring it to others: the introduction that matters."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    }
+  ]
+}

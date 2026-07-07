@@ -2,11 +2,9 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { ensureWallet } from '@/actions/economy'
-import { getAppConfig } from '@/actions/config'
 import Link from 'next/link'
 import { getActiveInstance } from '@/actions/instance'
 import { parseCampaignDomainPreference, ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
-import { BARN_CAMPAIGN_REF } from '@/lib/event/barn-raising'
 // DashboardAvatarWithModal is now internal to DashboardHeader
 import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
@@ -26,25 +24,19 @@ function isPrismaConnectionError(err: unknown): boolean {
 }
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string; focusQuest?: string; ref?: string }> }) {
-  const searchParams = await props.searchParams
-  const campaignRef = searchParams.ref ?? null
+  await props.searchParams
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
 
   // Safe DB calls — run before auth check, must not crash the page
-  let appConfig: any = {}
   let activeInstance: any = null
   try {
-    appConfig = await getAppConfig()
     activeInstance = await getActiveInstance()
   } catch (err) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[Home] DB unreachable for config/instance lookup:', (err as any)?.message)
+      console.warn('[Home] DB unreachable for instance lookup:', (err as any)?.message)
     }
   }
-
-  const heroTitle = appConfig?.heroTitle || 'BARS ENGINE'
-  const heroSubtitle = appConfig?.heroSubtitle || 'A quest system for the vibrational convergence'
 
   const formatUsdCents = (cents: number) => new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -59,11 +51,70 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   if (!playerId) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-black text-white font-mono flex-col gap-8 p-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl tracking-tighter font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-500 bg-clip-text text-transparent">
-            {heroTitle}
+        <div className="text-center space-y-4 max-w-2xl">
+          <h1 className="text-4xl sm:text-5xl tracking-tighter font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-500 bg-clip-text text-transparent">
+            Mastering the Game of Allyship
           </h1>
-          <p className="text-zinc-400 text-lg">{heroSubtitle}</p>
+          <p className="text-zinc-400 text-base sm:text-lg">
+            Allyship is hard, lonely work that rarely comes with a map. A book, a 120-move deck, and a
+            living practice that turn showing up — together — into a game you can actually play.
+          </p>
+          <p className="text-zinc-500 text-sm">Two ways in. Pick the one that fits you right now.</p>
+        </div>
+
+        {/* ── Two clear doors ───────────────────────────────────────────────── */}
+        <div className="grid w-full max-w-2xl gap-4 sm:grid-cols-2">
+          {/* Door A — Discover the game */}
+          <div className="flex flex-col rounded-2xl border border-emerald-600/40 bg-gradient-to-b from-emerald-950/40 to-zinc-950 p-6">
+            <div className="text-[10px] uppercase tracking-widest text-emerald-400/80 mb-2">
+              Curious? Start here
+            </div>
+            <h2 className="text-xl font-bold text-white leading-snug">Discover the game</h2>
+            <p className="mt-2 flex-1 text-sm text-zinc-300 leading-relaxed">
+              See what the deck and the game actually are — 120 allyship moves you can draw, play, and
+              turn into real action. Most of it is free, no account needed.
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <Link
+                href="/deck/sales"
+                className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
+              >
+                Explore the deck &amp; game →
+              </Link>
+              <Link
+                href="/deck/preview"
+                className="w-full py-2 px-4 text-emerald-200/90 hover:text-white font-semibold rounded-lg text-center transition-all text-xs"
+              >
+                Browse all 120 cards free →
+              </Link>
+            </div>
+          </div>
+
+          {/* Door B — Help right now (The Crossing) */}
+          <div className="flex flex-col rounded-2xl border border-amber-500/40 bg-gradient-to-b from-amber-950/40 to-zinc-950 p-6">
+            <div className="text-[10px] uppercase tracking-widest text-amber-400/80 mb-2">
+              Ready to help · The Crossing
+            </div>
+            <h2 className="text-xl font-bold text-white leading-snug">Help right now</h2>
+            <p className="mt-2 flex-1 text-sm text-zinc-300 leading-relaxed">
+              The work is in motion and needs a reliable car to keep moving. Money helps — and so do
+              car leads, intros, and signal boosts. Pick the move that fits what you can offer.
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <Link
+                href="/campaign/the-crossing"
+                className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-bold rounded-lg text-center transition-all shadow-lg shadow-amber-900/30"
+              >
+                Find your move →
+              </Link>
+              <Link
+                href="/awaken"
+                className="w-full py-2 px-4 text-amber-100/90 hover:text-white font-semibold rounded-lg text-center transition-all text-xs"
+              >
+                Or join the July 17–19 launch weekend →
+              </Link>
+            </div>
+          </div>
         </div>
 
         {activeInstance?.isEventMode && (
@@ -93,50 +144,18 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           </Link>
         )}
 
-        <div className="flex flex-col gap-4 w-full max-w-xs">
-          <Link
-            href="/awaken"
-            className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
-          >
-            Start here — wake up &amp; show up
+        {/* ── Secondary row ─────────────────────────────────────────────────── */}
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+          <Link href="/launch" className="text-zinc-300 hover:text-white font-semibold transition-colors">
+            See all the ways to support →
           </Link>
-
-          <Link
-            href="/launch"
-            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
-          >
-            Explore the book, deck &amp; game
+          <Link href="/login" className="text-zinc-400 hover:text-white font-semibold transition-colors">
+            Log in
           </Link>
-
-          <Link
-            href="/game/index.html"
-            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
-          >
-            Play the game
-          </Link>
-
-          <div className="flex gap-3">
-            <Link
-              href={
-                activeInstance?.campaignRef === BARN_CAMPAIGN_REF
-                  ? '/event/barn'
-                  : `/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`
-              }
-              className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
-            >
-              Support
-            </Link>
-            <Link
-              href="/login"
-              className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
-            >
-              Log In
-            </Link>
-          </div>
         </div>
 
-        <div className="text-xs text-zinc-600 mt-8 text-center max-w-md">
-          New here? Start with the book, deck, and game — most of it is free, no account needed. Existing players can log in to continue.
+        <div className="text-xs text-zinc-600 mt-2 text-center max-w-md">
+          New here? Most of it is free, no account needed. Existing players can log in to continue.
         </div>
       </div>
     )

@@ -64,6 +64,37 @@ cancellations reach the endpoint.
 | `ENABLE_LAUNCH_GATES` | launch toggle | `true` switches on the **soft** gates (game / app access). Leave unset/false until launch. |
 | `LAUNCH_GATE_CUTOFF` | launch toggle | ISO datetime; players created **before** it are grandfathered when soft gates switch on. Set to your launch moment so the existing community keeps access. |
 
+### Per-product reference (OfferKey → price → env var)
+
+One row per Gumroad product to create. Set the **buy-link** var to make the
+offer live on `/launch` (`isOfferLive` = non-empty URL). Set the **verify-id**
+var (core SKUs only) so `/redeem` can verify a raw license key if a sale webhook
+ever misfires. Prices are the current `priceCents` in `src/lib/launch/offers.ts`.
+
+| OfferKey (SKU) | Product | Price | Buy-link env (`NEXT_PUBLIC_…`) | Verify-id env (`GUMROAD_PRODUCT_ID_…`) |
+| :-- | :-- | :-- | :-- | :-- |
+| `founding-ally` | Founding Ally Bundle | $150 | `NEXT_PUBLIC_GUMROAD_FOUNDING_ALLY_URL` | `GUMROAD_PRODUCT_ID_FOUNDING_ALLY` |
+| `book-digital` | Mastering Allyship — Digital | $15 (PWYW) | `NEXT_PUBLIC_GUMROAD_BOOK_DIGITAL_URL` | `GUMROAD_PRODUCT_ID_BOOK_DIGITAL` (or legacy `GUMROAD_PRODUCT_ID`) |
+| `book-physical` | Mastering Allyship — Physical | $25 (preorder) | `NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL` | `GUMROAD_PRODUCT_ID_BOOK_PHYSICAL` |
+| `rpg-handbook-digital` | RPG Handbook — Digital | $30 | `NEXT_PUBLIC_GUMROAD_RPG_DIGITAL_URL` | `GUMROAD_PRODUCT_ID_RPG_HANDBOOK_DIGITAL` |
+| `rpg-handbook-physical` | RPG Handbook — Physical | $49 (preorder) | `NEXT_PUBLIC_GUMROAD_RPG_PHYSICAL_URL` | `GUMROAD_PRODUCT_ID_RPG_HANDBOOK_PHYSICAL` |
+| `deck-digital` | Oracle Deck — Digital Access | $10 | `NEXT_PUBLIC_GUMROAD_DECK_DIGITAL_URL` | `GUMROAD_PRODUCT_ID_DECK_DIGITAL` |
+| `game-subscription` | The Game — Monthly | $10/mo | `NEXT_PUBLIC_GUMROAD_GAME_SUB_URL` | `GUMROAD_PRODUCT_ID_GAME_SUBSCRIPTION` |
+| `superpower-connector-pack` | Connector Pack | $8 | `NEXT_PUBLIC_GUMROAD_SP_CONNECTOR_URL` | — |
+| `superpower-storyteller-pack` | Storyteller Pack | $8 | `NEXT_PUBLIC_GUMROAD_SP_STORYTELLER_URL` | — |
+| `superpower-strategist-pack` | Strategist Pack | $8 | `NEXT_PUBLIC_GUMROAD_SP_STRATEGIST_URL` | — |
+| `superpower-disruptor-pack` | Disruptor Pack | $8 | `NEXT_PUBLIC_GUMROAD_SP_DISRUPTOR_URL` | — |
+| `superpower-alchemist-pack` | Alchemist Pack | $8 | `NEXT_PUBLIC_GUMROAD_SP_ALCHEMIST_URL` | — |
+| `superpower-escape_artist-pack` | Escape Artist Pack | $8 | `NEXT_PUBLIC_GUMROAD_SP_ESCAPE_ARTIST_URL` | — |
+| `superpower-coach-pack` | Coach Pack | $8 | `NEXT_PUBLIC_GUMROAD_SP_COACH_URL` | — |
+| `loadout-bundle` | Your Loadout Bundle | $20 | `NEXT_PUBLIC_GUMROAD_LOADOUT_BUNDLE_URL` | — |
+
+Notes: superpower packs and the loadout bundle have no verify-id fallback (the
+license-verify path covers the core SKUs in `src/lib/launch/grants.ts`). The
+loadout bundle's two packs are granted idempotently by SKU, so a deck owner whose
+inner pack was already auto-granted isn't re-charged. `GUMROAD_PRODUCT_MAP` can
+override product→SKU resolution if a Gumroad permalink doesn't match its URL.
+
 ## 4. Access gating
 
 - **Hard gate** (`checkAccess(cap)`) — always enforced. Net-new premium surfaces.

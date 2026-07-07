@@ -21,9 +21,11 @@ import type {
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
 import { DeckCardBack } from './DeckCardBack'
 import { SendToBarsButton } from './SendToBarsButton'
-import { WorkThisCardButton } from './WorkThisCardButton'
+import { GoDeeper } from './GoDeeper'
 import { FindYourPath } from './FindYourPath'
 import { recordDraw, type DeckStats } from '@/actions/deck-journal'
+import { HandModal } from '@/components/world/HandModal'
+import { DeckOrientation, type OrientationDest } from './DeckOrientation'
 
 type AppView = 'draw' | 'browse' | 'path' | 'collection'
 type DrawMode = 'single' | 'spread'
@@ -39,8 +41,12 @@ const isMove = (c: AllyshipDeck['cards'][number]): c is MoveCard => c.kind === '
  *
  * @see .specify/specs/allyship-deck-experience/spec.md
  */
-export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats | null }) {
+export function AllyshipDeckReader({ initialStats, authed = false }: { initialStats: DeckStats | null; authed?: boolean }) {
   const [deck, setDeck] = useState<AllyshipDeck | null>(null)
+  // Hand modal — keep the deck connected to the player's active inventory (FR12).
+  const [handOpen, setHandOpen] = useState(false)
+  // First-run orientation — teaches the four ways to use the deck (shown once).
+  const [orientationOpen, setOrientationOpen] = useState(false)
   const [error, setError] = useState(false)
   const [view, setView] = useState<AppView>('draw')
   const [subject, setSubject] = useState<CardSubject>('self')
@@ -69,6 +75,15 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
       })
       .then(setDeck)
       .catch(() => setError(true))
+  }, [])
+
+  // Open the orientation once for first-time visitors (localStorage-gated).
+  // Done post-mount (not a lazy initializer) so server + first client render
+  // agree — the modal is opened after hydration, avoiding a mismatch.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional client-only first-run gate
+    if (window.localStorage.getItem('deck-orientation-seen') !== 'true') setOrientationOpen(true)
   }, [])
 
   const moveCards = useMemo(() => (deck ? deck.cards.filter(isMove) : []), [deck])
@@ -108,6 +123,25 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
     setView(v)
     setSelected(null)
     window.scrollTo(0, 0)
+  }
+
+  const dismissOrientation = () => {
+    setOrientationOpen(false)
+    if (typeof window !== 'undefined') window.localStorage.setItem('deck-orientation-seen', 'true')
+  }
+
+  const goFromOrientation = (dest: OrientationDest) => {
+    if (dest === 'daily') {
+      setDrawMode('single')
+      switchView('draw')
+    } else if (dest === 'situation') {
+      switchView('path')
+    } else if (dest === 'browse') {
+      switchView('browse')
+    } else {
+      switchView('collection')
+    }
+    dismissOrientation()
   }
 
   if (error) return <Centered>The deck could not be loaded.</Centered>
@@ -163,8 +197,22 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
             ))}
           </nav>
 
-          {/* Streak + balance */}
+          {/* Streak + balance + Hand / NOW (FR12) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
+            <button
+              type="button"
+              onClick={() => setOrientationOpen(true)}
+              title="How to use this deck"
+              aria-label="How to use this deck"
+              style={{
+                fontFamily: DECK_FONTS.mono, fontSize: 12, fontWeight: 700, lineHeight: 1,
+                width: 26, height: 26, borderRadius: '50%', cursor: 'pointer', flex: 'none',
+                color: SURFACE_TOKENS.textSecondary, background: 'transparent',
+                border: '1px solid rgba(255,255,255,.16)',
+              }}
+            >
+              ?
+            </button>
             {stats && (
               <>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: DECK_FONTS.mono, fontSize: 11, color: SURFACE_TOKENS.textSecondary }}>
@@ -176,9 +224,39 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
                 </span>
               </>
             )}
+            {authed && (
+              <button
+                type="button"
+                onClick={() => setHandOpen(true)}
+                title="Open your Hand"
+                style={{
+                  fontFamily: DECK_FONTS.mono, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                  padding: '6px 11px', borderRadius: 8, cursor: 'pointer',
+                  color: SURFACE_TOKENS.textSecondary, background: 'transparent',
+                  border: '1px solid rgba(255,255,255,.16)',
+                }}
+              >
+                🎒 Hand
+              </button>
+            )}
+            <Link
+              href="/"
+              title="Back to NOW"
+              style={{
+                fontFamily: DECK_FONTS.mono, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                padding: '6px 11px', borderRadius: 8, textDecoration: 'none',
+                color: SURFACE_TOKENS.textSecondary, border: '1px solid rgba(255,255,255,.16)',
+              }}
+            >
+              NOW →
+            </Link>
           </div>
         </div>
       </header>
+
+      {handOpen && <HandModal onClose={() => setHandOpen(false)} carryingBarId={null} />}
+
+      {orientationOpen && <DeckOrientation onClose={dismissOrientation} onSelect={goFromOrientation} />}
 
       {/* ── Subject toggle ── */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '12px 16px 0' }}>
@@ -243,9 +321,7 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
                         card={drawn}
                         variant="full"
                         subject={subject}
-                        footerSlot={
-                          <DeckCardActions card={drawn} subject={subject} />
-                        }
+                        footerSlot={<SendToBarsButton card={drawn} subject={subject} />}
                       />
                     </div>
                     <div style={{ display: 'flex', gap: 10 }}>
@@ -307,8 +383,9 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
               card={selected}
               variant="full"
               subject={subject}
-              footerSlot={<DeckCardActions card={selected} subject={subject} />}
+              footerSlot={<SendToBarsButton card={selected} subject={subject} />}
             />
+            <GoDeeper key={`${selected.id}:${subject}`} cardId={selected.id} subject={subject === 'self' ? 'self' : 'other'} />
             <button type="button" onClick={() => setSelected(null)} style={closeBtn}>Close</button>
           </div>
         </div>

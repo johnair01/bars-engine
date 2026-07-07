@@ -1,0 +1,38 @@
+export type LensGoalTraceSource = 'live' | 'attach_snapshot' | 'plant_snapshot'
+
+export type LensGoalTraceNode = {
+  id: string
+  title: string
+  domain: string
+  cadence: string
+  status: string
+}
+
+export type LensGoalTrace = {
+  source: LensGoalTraceSource
+  capturedAt: string
+  goal: LensGoalTraceNode
+  parentChain: LensGoalTraceNode[]
+}
+
+export function isLensGoalTrace(value: unknown): value is LensGoalTrace {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      'source' in value &&
+      'capturedAt' in value &&
+      'goal' in value &&
+      'parentChain' in value,
+  )
+}
+
+export function lensTraceSourceLabel(source: LensGoalTraceSource): string {
+  switch (source) {
+    case 'live':
+      return 'Current thread'
+    case 'attach_snapshot':
+      return 'Attached then'
+    case 'plant_snapshot':
+      return 'Planted then'
+  }
+}

@@ -53,6 +53,8 @@ function buildMoveCards(): MoveCard[] {
           forbiddenMoves: ['— author —'],
           failureModes: ['— author —'],
           remediation: `${sub.action} — in the context of ${d.lens}.`,
+          // "Your move" — the one concrete step, from the canonical submove. AUTHORED may override via the spread below.
+          action: sub.action,
           capabilities: [],
           status: 'generated',
         }
@@ -139,13 +141,27 @@ export function assembleDeck(generatedAt = new Date().toISOString()): AllyshipDe
 /** Capabilities available (for UI). */
 export const CAPABILITY_KEYS: Capability[] = CAPABILITIES.map((c) => c.capability)
 
-const DEFAULT_DECK = assembleDeck('static')
+// ── Canonical card lookup ───────────────────────────────────────────────────
+// Single source of truth for callers that need one card by id (role pages, the
+// Crossing deck cards). Lives here — not in deck-bar.ts — because this module is
+// client-safe (no next/headers, db, or fs), so client components can import it.
 
-export function getCardById(id: string): AllyshipCard | undefined {
-  return DEFAULT_DECK.cards.find((card) => card.id === id)
+let _cardIndex: Map<string, AllyshipCard> | null = null
+
+function cardIndex(): Map<string, AllyshipCard> {
+  if (!_cardIndex) {
+    _cardIndex = new Map(assembleDeck().cards.map((c) => [c.id, c]))
+  }
+  return _cardIndex
 }
 
+/** Look up any card (move or instruction) by its canonical id, e.g. "OPEN-GR-SHAMAN". */
+export function getCardById(id: string): AllyshipCard | undefined {
+  return cardIndex().get(id)
+}
+
+/** Look up a move card by id, narrowing out instruction cards. */
 export function getMoveCardById(id: string): MoveCard | undefined {
-  const card = getCardById(id)
+  const card = cardIndex().get(id)
   return card?.kind === 'move' ? card : undefined
 }

@@ -1,0 +1,39 @@
+name: superpower-deck-quality
+description: >-
+  Raise the six superpower expansion decks from generated drafts to robust,
+  usable cards. Define a Move Quality Rubric grounded in the MTGOA book and the
+  base Allyship Deck's authored anatomy, set quality levels (L0 stub -> L4
+  canonical), produce a gap analysis of the current generated decks, extend the
+  Technique anatomy where needed, and validate with a playtest scenario: moves a
+  player could actually use for the live campaign (raise $8,500 for a new car),
+  tested across the four domains, the six game master faces (operations), and in
+  connection with the five basic WAVE moves.
+type: feature
+status: active
+created_at: '2026-06-20T20:01:50.588877+00:00'
+updated_at: '2026-06-20T20:01:50.588877+00:00'
+fork_space:
+  allowed_paths:
+  - .specify/specs/superpower-deck-quality/
+  - .specify/backlog/prompts/
+  - src/lib/technique-library/
+  excluded_paths:
+  - '**/__pycache__/'
+  - '*.pyc'
+  file_patterns:
+  - '*.ts'
+  - '*.tsx'
+  - '*.md'
+  - '*.json'
+  read_only_paths:
+  - docs/
+  - public/allyship-deck/
+metadata:
+  branch: claude/admiring-shannon-wlddtw
+  builds_on:
+  - superpower-move-decks
+  - allyship-technique-vocabulary
+  - allyship-deck
+  - inner-outer-allyship-moves
+  campaign: raise-8500-for-a-car
+linked_issues: []

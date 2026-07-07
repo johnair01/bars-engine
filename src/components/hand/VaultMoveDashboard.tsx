@@ -5,7 +5,6 @@ type VaultMoveDashboardProps = {
     unplacedQuestCount: number
     draftCount: number
     whoContactCount: number
-    invitationCount: number
     staleItems: number
 }
 
@@ -32,6 +31,16 @@ const ROOMS: RoomCard[] = [
         note: 'text-emerald-500',
     },
     {
+        move: 'Open Up',
+        room: 'Felt sense',
+        href: '/vault/open-up',
+        count: null,
+        verb: 'Receive what\'s getting through',
+        border: 'border-cyan-900/50',
+        label: 'text-cyan-400',
+        note: 'text-cyan-500',
+    },
+    {
         move: 'Clean Up',
         room: 'Compost',
         href: '/vault/compost',
@@ -53,7 +62,7 @@ const ROOMS: RoomCard[] = [
     },
     {
         move: 'Show Up',
-        room: 'Quests & Invitations',
+        room: 'Quests',
         href: '/vault/quests',
         count: null,
         verb: 'Place, deliver, act',
@@ -64,23 +73,23 @@ const ROOMS: RoomCard[] = [
 ]
 
 /**
- * Four-move room nav for the Vault lobby — replaces inline collapsible previews.
+ * Five-move room nav for the Vault lobby — Wake · Open · Clean · Grow · Show.
  * Each card labels its move, names its primary room, and links directly in.
- * Spec: PMI G6, G8
+ * Rooms are a navigable set, not a pipeline: any room is enterable in any order.
+ * Spec: mga-deck-vault-onboarding FR8 (adds Open Up / Felt sense). PMI G6, G8.
  */
 export function VaultMoveDashboard({
     chargeCount,
     unplacedQuestCount,
     draftCount,
     whoContactCount,
-    invitationCount,
     staleItems,
 }: VaultMoveDashboardProps) {
     const countMap: Record<string, number> = {
         Charges: chargeCount,
         Compost: staleItems,
         Drafts: draftCount,
-        'Quests & Invitations': unplacedQuestCount + invitationCount,
+        Quests: unplacedQuestCount,
     }
 
     return (

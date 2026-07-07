@@ -3,20 +3,17 @@ import { redirect } from 'next/navigation'
 import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import Link from 'next/link'
 
-import { SCENE_ATLAS_DISPLAY_NAME, SCENE_ATLAS_TAGLINE } from '@/lib/creator-scene-grid-deck/branding'
-import { loadAcceptedInvitesForVault, loadVaultCoreData } from '@/lib/vault-queries'
-import { loadEventInviteBarsForStewards } from '@/lib/vault-event-invite-bars'
-import { VaultCampaignInviteBars } from '@/components/hand/VaultCampaignInviteBars'
-import { VaultSummaryStrip } from '@/components/hand/VaultSummaryStrip'
+import { loadVaultCoreData } from '@/lib/vault-queries'
 import { VaultMoveDashboard } from '@/components/hand/VaultMoveDashboard'
+import { VaultHandButton } from '@/components/hand/VaultHandButton'
 
 /**
  * @page /vault
  * @entity SYSTEM
- * @description Vault lobby showing player's personal workspace: charges, quests, BARs, compost, invites, and 4-move dashboard
+ * @description Personal Vault lobby for the individual practitioner: the five move-rooms (Wake · Open · Clean · Grow · Show) plus a compost nudge. Campaign/scene clutter lives behind campaign contexts, not here.
  * @permissions authenticated
  * @searchParams quest:string (quest ID to highlight, optional)
- * @relationships BAR (charges, drafts, BARs), QUEST (player quests), CAMPAIGN (invites), EVENT (invite BARs)
+ * @relationships BAR (charges, drafts, BARs), QUEST (player quests)
  * @energyCost 0
  * @dimensions WHO:player, WHAT:vault lobby, WHERE:hand, ENERGY:move_dashboard, PERSONAL_THROUGHPUT:vault_counts
  * @example /vault?quest=quest-123
@@ -27,17 +24,12 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     const searchParams = await props.searchParams
     const highlightQuestId = searchParams.quest ?? null
     const player = await getCurrentPlayer()
-    if (!player) redirect('/conclave/guided')
+    if (!player) redirect('/login')
     if (!isGameAccountReady(player)) redirect('/conclave/guided')
 
     const playerId = player.id
-    const isAdmin = !!player.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
 
-    const [coreResult, invitesResult, eventBarsResult] = await Promise.allSettled([
-        loadVaultCoreData(playerId, 'lobby'),
-        loadAcceptedInvitesForVault(playerId),
-        loadEventInviteBarsForStewards(playerId, { includeAllForAdmin: isAdmin }),
-    ])
+    const coreResult = await Promise.allSettled([loadVaultCoreData(playerId, 'lobby')]).then((r) => r[0])
 
     if (coreResult.status === 'rejected') {
         const err = coreResult.reason
@@ -75,21 +67,10 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     }
     const data = coreResult.value
 
-    const acceptedInvites = invitesResult.status === 'fulfilled' ? invitesResult.value : []
-    if (invitesResult.status === 'rejected') {
-        console.error('[hand] loadAcceptedInvitesForVault failed', invitesResult.reason)
-    }
-
-    const eventInviteBars = eventBarsResult.status === 'fulfilled' ? eventBarsResult.value : []
-    if (eventBarsResult.status === 'rejected') {
-        console.error('[hand] loadEventInviteBarsForStewards failed', eventBarsResult.reason)
-    }
-
     const {
         chargeCount,
         draftCount,
         whoContactCount,
-        invitationCount,
         unplacedQuestCount,
         staleItems,
         personalQuestsRaw,
@@ -109,30 +90,18 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                     <div className="min-w-0">
                         <h1 className="text-3xl font-bold text-white">Vault</h1>
-                        <p className="text-zinc-400 mt-1">Your private studio — metabolize what you&apos;ve been carrying.</p>
-                        <p className="text-xs text-zinc-600 mt-2">
-                            List discoveries publicly in{' '}
-                            <Link
-                                href="/campaign/marketplace?ref=bruised-banana"
-                                className="text-teal-500 hover:text-teal-400 font-medium"
-                            >
-                                campaign stalls
-                            </Link>{' '}
-                            (mall) — explore stays in hub &amp; map.
+                        <p className="text-zinc-400 mt-1">
+                            All of your allyship BARs — metabolize what you&apos;ve been carrying. Enter any move-room
+                            in any order.
                         </p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                        <VaultHandButton />
                         <Link
                             href="/bars/capture"
                             className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-purple-800/70 bg-purple-950/30 px-4 py-3 text-sm font-semibold text-purple-100 hover:border-purple-500/70 hover:bg-purple-900/40 min-h-[44px] sm:min-w-[12rem]"
                         >
                             New BAR →
-                        </Link>
-                        <Link
-                            href="/campaign/marketplace?ref=bruised-banana"
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-teal-800/70 bg-teal-950/30 px-4 py-3 text-sm font-semibold text-teal-100 hover:border-teal-500/70 hover:bg-teal-900/40 min-h-[44px] sm:min-w-[10rem]"
-                        >
-                            Stalls
                         </Link>
                         <Link
                             href="/capture"
@@ -144,16 +113,6 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                         </Link>
                     </div>
                 </div>
-
-                <VaultSummaryStrip
-                    counts={{
-                        chargeCaptures: chargeCount,
-                        unplacedQuests: unplacedQuestCount,
-                        privateDrafts: draftCount,
-                        whoContacts: whoContactCount,
-                        staleItems,
-                    }}
-                />
 
                 {/* Stale items CTA (G7) */}
                 {staleItems > 0 && (
@@ -171,62 +130,27 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                 )}
             </header>
 
-            {/* Four-move room nav — replaces inline collapsible previews (G6, G8) */}
+            {/* Five-move room nav — Wake · Open · Clean · Grow · Show (FR8) */}
             <VaultMoveDashboard
                 chargeCount={chargeCount}
                 unplacedQuestCount={unplacedQuestCount}
                 draftCount={draftCount}
                 whoContactCount={whoContactCount}
-                invitationCount={invitationCount}
                 staleItems={staleItems}
             />
 
-            <VaultCampaignInviteBars bars={eventInviteBars} />
-
-            {/* Accepted invitations — relational signal at lobby level (G20) */}
-            {acceptedInvites.length > 0 && (
-                <section className="space-y-3">
-                    <p className="text-[10px] uppercase tracking-widest text-emerald-500">Invitations Accepted</p>
-                    <div className="space-y-2">
-                        {acceptedInvites.flatMap((inv) =>
-                            inv.players.map((p) => (
-                                <div
-                                    key={`${inv.id}-${p.id}`}
-                                    className="flex items-center justify-between gap-3 py-2 px-4 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-sm"
-                                >
-                                    <span className="text-emerald-200">
-                                        Your invitation was accepted by{' '}
-                                        <span className="font-medium text-white">{p.name}</span>
-                                    </span>
-                                    <span className="text-xs text-zinc-500 shrink-0">
-                                        {new Date(p.createdAt).toLocaleDateString(undefined, {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                        })}
-                                    </span>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </section>
-            )}
-
-            {/* Scene Atlas — primary creation affordance */}
-            <div className="rounded-xl border border-emerald-900/45 bg-emerald-950/20 p-4 space-y-2">
-                <p className="text-[10px] uppercase tracking-widest text-emerald-500/90">{SCENE_ATLAS_DISPLAY_NAME}</p>
-                <p className="text-sm text-zinc-400 leading-relaxed">{SCENE_ATLAS_TAGLINE}</p>
-                <Link href="/creator-scene-deck" className="inline-flex text-sm font-medium text-emerald-400 hover:text-emerald-300">
-                    Open {SCENE_ATLAS_DISPLAY_NAME} →
-                </Link>
-            </div>
-
             <div className="flex flex-wrap gap-2">
                 <Link
-                    href="/vault/forge-invitation"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-800/50 bg-emerald-950/20 text-sm text-emerald-400 hover:text-emerald-300 hover:border-emerald-700/60 transition-colors"
+                    href="/vault/all"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-900/50 bg-purple-950/25 text-sm text-purple-300 hover:text-purple-200 hover:border-purple-700/60 transition-colors"
                 >
-                    ✨ Forge Invitation
+                    All BARs →
+                </Link>
+                <Link
+                    href="/vault/shadow"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-900/50 bg-amber-950/20 text-sm text-amber-300/90 hover:text-amber-200 hover:border-amber-700/60 transition-colors"
+                >
+                    Shadow quests →
                 </Link>
                 <Link
                     href="/vault/moves"

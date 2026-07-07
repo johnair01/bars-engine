@@ -12,15 +12,28 @@ import { CampaignInvitationAccept } from './CampaignInvitationAccept'
 import { BarFaceBackTabs } from '@/components/bars/BarFaceBackTabs'
 import { CanvasPreview } from '@/components/bars/CanvasPreview'
 import { GrowFromBar } from '@/components/bars/GrowFromBar'
+import { PlantBarInGarden } from '@/components/bars/PlantBarInGarden'
 import { OfferToCampaign } from '@/components/bars/OfferToCampaign'
 import { listAttachableCampaigns } from '@/actions/campaign-attach'
 import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
 import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
+import { QuestLineagePanel } from '@/components/quests/QuestLineagePanel'
+import { getQuestLineage, listActiveWeeklyGoals } from '@/actions/quests'
 import { readHandDb } from '@/lib/hand-service'
 import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
 import { isHandVaultMovable } from '@/lib/hand-movement'
+import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+
+// Charge level → human label (mirrors the Seed Capture Whiteboard).
+const CHARGE_LABELS: Record<number, string> = {
+    1: 'barely a flicker',
+    2: 'a low hum',
+    3: "it's sitting with me",
+    4: 'hard to shake',
+    5: "can't put it down",
+}
 
 /**
  * @page /bars/:id
@@ -90,6 +103,14 @@ export default async function BarDetailPage({
     const inHand = hand ? hand.slots.some(s => s.barId === bar.id) : false
     const handFull = hand ? hand.filledCount >= hand.size : false
 
+    // QLA: quests get a lineage panel (week→year) + alignment / shadow state,
+    // with fold-in / acknowledge when the quest is a shadow.
+    const questLineage =
+        isOwner && bar.type === 'quest' ? await getQuestLineage(bar.id) : null
+    const questLineageOk = questLineage && !('error' in questLineage) ? questLineage : null
+    const shadowWeeklyGoals =
+        questLineageOk && !questLineageOk.aligned ? await listActiveWeeklyGoals() : []
+
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
         <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
@@ -144,6 +165,17 @@ export default async function BarDetailPage({
                     )}
                 </div>
 
+                {/* QLA — quest lens lineage + alignment / shadow state (fold-in when shadow) */}
+                {questLineageOk && (
+                    <QuestLineagePanel
+                        trace={questLineageOk.trace}
+                        aligned={questLineageOk.aligned}
+                        questId={bar.id}
+                        weeklyGoals={shadowWeeklyGoals}
+                        acknowledged={!!bar.shadowAcknowledgedAt}
+                    />
+                )}
+
                 {/* Canvas preview — the frozen polaroid of placed stickers (canvas BARs only) */}
                 {canvasLayout && (
                     <CanvasPreview
@@ -152,6 +184,28 @@ export default async function BarDetailPage({
                         charge={charge}
                         title={bar.title}
                     />
+                )}
+
+                {/* Intent · charge line — context beneath the frozen polaroid (canvas BARs). */}
+                {canvasLayout && (
+                    <div className="flex items-baseline justify-between gap-3 px-1 font-mono text-[10px] uppercase tracking-[0.06em]">
+                        <span className="text-zinc-500 truncate">
+                            intent · {tags.length > 0 ? tags.join(' · ') : 'none'}
+                        </span>
+                        {charge && (
+                            <span
+                                className="flex-shrink-0"
+                                style={{
+                                    color:
+                                        element && element in ELEMENT_TOKENS
+                                            ? ELEMENT_TOKENS[element as ElementKey].gem
+                                            : '#a855f7',
+                                }}
+                            >
+                                charge {charge} · {CHARGE_LABELS[charge]}
+                            </span>
+                        )}
+                    </div>
                 )}
 
                 {/* Card: Face | Back */}
@@ -249,6 +303,11 @@ export default async function BarDetailPage({
                 {/* Grow from this BAR (owner or recipient) — bar and charge_capture can become quests */}
                 {(isOwner || isRecipient) && (bar.type === 'bar' || bar.type === 'charge_capture') && (
                     <GrowFromBar barId={bar.id} />
+                )}
+
+                {/* Plant in the Garden (owner, not-yet-planted) — the Hand/Vault → Garden path */}
+                {canMoveHandVault && (
+                    <PlantBarInGarden barId={bar.id} />
                 )}
 
                 {/* Offer to a campaign (owner only) — the personal→collective bridge */}

@@ -19,12 +19,12 @@ import type { EmotionChannel, AlchemyAltitude } from '@/lib/alchemy/types'
 // Constants
 // ---------------------------------------------------------------------------
 
-const CHANNELS: Array<{ key: EmotionChannel; label: string; sigil: string; hint: string }> = [
-  { key: 'joy', label: 'Joy', sigil: '木', hint: 'Vitality, delight, love of the game' },
-  { key: 'anger', label: 'Anger', sigil: '火', hint: 'Obstacle present, boundary met' },
-  { key: 'neutrality', label: 'Neutral', sigil: '土', hint: 'Whole-system perspective' },
-  { key: 'fear', label: 'Fear', sigil: '金', hint: 'Risk detected, excitement as opportunity' },
-  { key: 'sadness', label: 'Sadness', sigil: '水', hint: 'Something I care about feels distant' },
+const CHANNELS: Array<{ key: EmotionChannel; label: string; element: string; sigil: string; hint: string }> = [
+  { key: 'joy', label: 'Joy', element: 'Wood', sigil: '木', hint: 'Vitality, delight, love of the game' },
+  { key: 'anger', label: 'Anger', element: 'Fire', sigil: '火', hint: 'Obstacle present, boundary met' },
+  { key: 'neutrality', label: 'Neutral', element: 'Earth', sigil: '土', hint: 'Whole-system perspective' },
+  { key: 'fear', label: 'Fear', element: 'Metal', sigil: '金', hint: 'Risk detected, excitement as opportunity' },
+  { key: 'sadness', label: 'Sadness', element: 'Water', sigil: '水', hint: 'Something I care about feels distant' },
 ]
 
 const ALTITUDES: Array<{ key: AlchemyAltitude; label: string; hint: string }> = [
@@ -806,8 +806,8 @@ function CheckInStep0Scene({
                     : 'border-stone-700 bg-stone-900 text-stone-400 hover:border-stone-500 hover:text-stone-300'
                 }`}
               >
-                <span className="font-mono text-amber-600 mr-2 text-sm">{c.sigil}</span>
-                <span className="font-medium text-stone-300 mr-2">{c.label}</span>
+                <span className="font-mono text-amber-600 mr-2 text-sm" role="img" aria-label={`${c.element} element`}>{c.sigil}</span>
+                <span className="font-medium text-stone-300 mr-2">{c.element} · {c.label}</span>
                 <span className="text-xs text-stone-500">— {c.hint}</span>
               </button>
             )

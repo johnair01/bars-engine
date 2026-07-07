@@ -27,10 +27,11 @@ export default async function DeckPage() {
         authed={access.authed}
         learnMoreHref="/deck/sales"
         learnMoreLabel="What's in the deck?"
+        returnTo="/deck"
       />
     )
   }
 
   const initialStats = await getDeckStats()
-  return <AllyshipDeckReader initialStats={initialStats} />
+  return <AllyshipDeckReader initialStats={initialStats} authed={access.authed} />
 }

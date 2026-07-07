@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { CultivationCard } from '@/components/ui/CultivationCard'
-import { ELEMENT_TOKENS, type ElementKey, type CardAltitude } from '@/lib/ui/card-tokens'
+import { ELEMENT_TOKENS, elementLabel, type ElementKey, type CardAltitude } from '@/lib/ui/card-tokens'
 import type { AlchemyAltitude } from '@/lib/alchemy/types'
 import type { MaturityPhase } from '@/lib/bar-seed-metabolization/types'
 import { tuneBar } from '@/actions/bars'
@@ -25,13 +25,14 @@ interface TuneBarClientProps {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const ELEMENTS: Array<{ key: ElementKey; label: string }> = [
-    { key: 'fire',   label: '火 Fire' },
-    { key: 'water',  label: '水 Water' },
-    { key: 'wood',   label: '木 Wood' },
-    { key: 'metal',  label: '金 Metal' },
-    { key: 'earth',  label: '土 Earth' },
-]
+// sigil + English name + emotion, e.g. "火 Fire · Anger" — derived from the
+// single source of truth so the Chinese sigil always carries its translation.
+const ELEMENTS: Array<{ key: ElementKey; label: string }> = (
+    ['fire', 'water', 'wood', 'metal', 'earth'] as ElementKey[]
+).map((key) => ({
+    key,
+    label: `${ELEMENT_TOKENS[key].sigil} ${elementLabel(key, { withEmotion: true })}`,
+}))
 
 const ALTITUDES: Array<{ key: CardAltitude; label: string; hint: string }> = [
     { key: 'dissatisfied', label: 'Dissatisfied', hint: 'Something still wrong' },
@@ -233,12 +234,21 @@ export function TuneBarClient({
 
                 {/* Channel 1: Element */}
                 <section>
-                    <p
-                        className="text-xs uppercase tracking-widest mb-3"
-                        style={{ color: 'var(--bars-text-muted, #6b6965)' }}
-                    >
-                        Element
-                    </p>
+                    <div className="flex items-baseline justify-between mb-3">
+                        <p
+                            className="text-xs uppercase tracking-widest"
+                            style={{ color: 'var(--bars-text-muted, #6b6965)' }}
+                        >
+                            Element
+                        </p>
+                        <a
+                            href="/wiki/emotional-alchemy"
+                            className="text-xs"
+                            style={{ color: '#a855f7', textDecoration: 'none' }}
+                        >
+                            how they channel emotion →
+                        </a>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                         {ELEMENTS.map(({ key, label }) => {
                             const token = ELEMENT_TOKENS[key]

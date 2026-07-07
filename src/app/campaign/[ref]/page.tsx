@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { getCampaignSkin } from '@/lib/ui/campaign-skin'
 import { CampaignLanding } from './CampaignLanding'
+import { currentPlayerCanEditCampaignPage } from '@/lib/campaign-page-editing'
 
 /**
  * @page /campaign/:slug
@@ -34,6 +35,8 @@ export type CampaignPageData = {
   instanceName: string
   createdByName: string | null
   shareUrl: string | null
+  parentCampaignRef?: string | null
+  parentCampaignName?: string | null
   theme: {
     bgGradient: string | null
     bgDeep: string | null
@@ -102,12 +105,12 @@ async function getApprovedCampaign(slug: string): Promise<CampaignPageData | nul
     wakeUpContent: campaign.wakeUpContent,
     showUpContent: campaign.showUpContent,
     storyBridgeCopy: campaign.storyBridgeCopy,
-    shareUrl: campaign.shareUrl,
     startDate: campaign.startDate?.toISOString() ?? null,
     endDate: campaign.endDate?.toISOString() ?? null,
     instanceId: campaign.instanceId,
     instanceName: campaign.instance.name,
     createdByName: campaign.createdBy.name,
+    shareUrl: campaign.shareUrl,
     theme: campaign.theme
       ? {
           bgGradient: campaign.theme.bgGradient,
@@ -173,12 +176,20 @@ async function resolveVisitorStatus(
 
   if (!playerId) return 'unauthenticated'
 
-  const membership = await db.instanceMembership.findUnique({
-    where: {
-      instanceId_playerId: { instanceId, playerId },
-    },
-    select: { id: true },
-  })
+  let membership: { id: string } | null = null
+  try {
+    membership = await db.instanceMembership.findUnique({
+      where: {
+        instanceId_playerId: { instanceId, playerId },
+      },
+      select: { id: true },
+    })
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[resolveVisitorStatus] Falling back to visitor mode:', error)
+    }
+    return 'unauthenticated'
+  }
 
   return membership ? 'member' : 'non_member'
 }
@@ -201,6 +212,7 @@ export default async function CampaignPage(props: {
 
   // Determine visitor relationship to this campaign
   const visitorStatus = await resolveVisitorStatus(campaign.instanceId)
+  const canEditPage = await currentPlayerCanEditCampaignPage(campaign)
 
   return (
     <CampaignLanding
@@ -208,6 +220,7 @@ export default async function CampaignPage(props: {
       staticSkin={staticSkin}
       visitorStatus={visitorStatus}
       inviteToken={inviteToken}
+      canEditPage={canEditPage}
     />
   )
 }

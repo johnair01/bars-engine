@@ -12,6 +12,7 @@ export function Paywall({
   authed,
   learnMoreHref,
   learnMoreLabel,
+  returnTo,
 }: {
   title: string
   message?: string
@@ -19,7 +20,10 @@ export function Paywall({
   /** Optional top-of-funnel link (e.g. a Sales page) for visitors who want the pitch first. */
   learnMoreHref?: string
   learnMoreLabel?: string
+  /** Where to send the visitor back after they sign in (e.g. this gated surface). */
+  returnTo?: string
 }) {
+  const signInHref = returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : '/login'
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-16">
       <div className="mx-auto max-w-md space-y-8 text-center">
@@ -59,7 +63,7 @@ export function Paywall({
         {!authed && (
           <p className="text-xs text-[#6b6965]">
             Already bought it?{' '}
-            <Link href="/login" className="text-purple-400 underline-offset-2 hover:underline">
+            <Link href={signInHref} className="text-purple-400 underline-offset-2 hover:underline">
               Sign in
             </Link>{' '}
             to unlock.

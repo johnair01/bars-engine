@@ -30,10 +30,30 @@ export function whoContactVaultWhere(playerId: string) {
     }
 }
 
+/** Charge-room contents (Wake Up): capture-type BARs plus deck-seeded practice BARs.
+ * Deck cards "Sent to BARS" are self-claimed active `bar` BARs (rootId `deck_*`); the
+ * rootId branch keeps surfacing them here as "what's alive" regardless of type. */
+export function chargeRoomWhere(playerId: string) {
+    return {
+        creatorId: playerId,
+        status: 'active' as const,
+        OR: [
+            { type: { in: [...CAPTURE_BAR_TYPES] } },
+            { rootId: { startsWith: 'deck_' } },
+        ],
+    }
+}
+
 export const unplacedPersonalQuestWhere = (playerId: string) => ({
     creatorId: playerId,
     type: 'quest' as const,
-    OR: [{ sourceBarId: { not: null } }, { source321SessionId: { not: null } }],
+    // Personal quests: grown from a BAR, from a 3·2·1 session, or born from a
+    // Tap-the-Vein commit (QLA — `questSource` tags the origin, e.g. 'tap_the_vein').
+    OR: [
+        { sourceBarId: { not: null } },
+        { source321SessionId: { not: null } },
+        { questSource: { not: null } },
+    ],
     parentId: null,
     status: 'active' as const,
     archivedAt: null,
@@ -106,11 +126,7 @@ const invitationSelect = {
 
 async function fetchChargeBarsSelect(playerId: string, take: number) {
     return dbBase.customBar.findMany({
-        where: {
-            creatorId: playerId,
-            type: { in: [...CAPTURE_BAR_TYPES] },
-            status: 'active',
-        },
+        where: chargeRoomWhere(playerId),
         orderBy: { createdAt: 'desc' },
         take,
         select: chargeSelect,
@@ -186,7 +202,7 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
         invitationBars,
     ] = await Promise.all([
         dbBase.customBar.count({
-            where: { creatorId: playerId, type: { in: [...CAPTURE_BAR_TYPES] }, status: 'active' },
+            where: chargeRoomWhere(playerId),
         }),
         dbBase.customBar.count({ where: genericPrivateDraftWhere(playerId) }),
         dbBase.customBar.count({ where: whoContactVaultWhere(playerId) }),

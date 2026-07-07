@@ -56,6 +56,7 @@ Gates the `/handbook` reader behind a Gumroad purchase (see [.specify/specs/book
 | `BOOK_FILE_BLOB_KEY` | 2 | Blob key/URL of the generated book file streamed by `/api/handbook/download` (produced by the PDF/EPUB pipeline, `1.80 DPX`). |
 | `GUMROAD_ACCESS_TOKEN` | 3 | Gumroad API token for the sale/refund webhook + admin sync. |
 | `GUMROAD_WEBHOOK_SECRET` | 3 | Shared secret guarding `POST /api/gumroad/webhook`. |
+| `DECK_PENDING_SECRET` | 1 | HMAC secret signing the logged-out "Send to BARS" pending-intent cookie (`bars_deck_pending`). **Required in production** (the action throws if unset); a fixed dev constant is used in non-production so local capture-then-signup works without setup. |
 
 The Prologue (`front-of-book`) is always free — no entitlement required — so the marketing funnel works without any of these set. Verification keys never reach the client; verification is server-only.
 

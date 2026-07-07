@@ -5,7 +5,12 @@ import { parseSeedMetabolization, effectiveMaturity } from '@/lib/bar-seed-metab
 import { HAND_SIZE } from '@/lib/hand-service'
 import { HandGlance, type HandSlotData } from '@/components/now/HandGlance'
 import { DailyChargePanel } from '@/components/now/DailyChargePanel'
+import { TapTheVeinPanel } from '@/components/now/TapTheVeinPanel'
+import { getTodayPanelSummary } from '@/actions/tap-the-vein'
 import { CaptureBox } from '@/components/now/CaptureBox'
+import { Clean321Launcher } from '@/components/clean321/Clean321Launcher'
+import { getPlayerNextMove } from '@/actions/next-action-bridge'
+import { StarOfBethlehemCard } from '@/components/now/StarOfBethlehemCard'
 
 type NowHomeProps = {
   playerId: string
@@ -13,7 +18,7 @@ type NowHomeProps = {
 }
 
 export async function NowHome({ playerId, vibulons }: NowHomeProps) {
-  const [handSlots, chargeTargets, barCounts] = await Promise.all([
+  const [handSlots, chargeTargets, barCounts, ttvSummary, nextMove] = await Promise.all([
     db.handSlot.findMany({
       where: { playerId },
       orderBy: { slotIndex: 'asc' },
@@ -23,7 +28,13 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
     }),
     getTodayChargeTargets(),
     fetchBarCounts(playerId),
+    getTodayPanelSummary(),
+    getPlayerNextMove(playerId),
   ])
+
+  const ttvPanel = 'error' in ttvSummary
+    ? { status: 'not_started' as const, setForToday: 0, carried: 0, completed: 0, sealedAt: null }
+    : ttvSummary
 
   // Build all 6 slots (filled + empty)
   const slotMap = new Map(handSlots.map(s => [s.slotIndex, s]))
@@ -46,9 +57,9 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
     : chargeTargets
 
   const tools = [
-    { href: '/wiki/first-aid', icon: '✚', iconColor: '#2980b9', iconGlow: '#1a7a8a', label: 'First Aid', sub: 'soothe the charge', mono: false },
-    { href: '/wiki/321', icon: '3·2·1', iconColor: '#7c3aed', iconGlow: '#7c3aed', label: 'Clean Up', sub: 'metabolize it', mono: true },
-    { href: '/wiki/iching', icon: '☰', iconColor: '#d4a017', iconGlow: '#d4a017', label: 'I Ching', sub: 'consult the lines', mono: false },
+    { kind: 'link' as const, href: '/emotional-first-aid', icon: '✚', iconColor: '#2980b9', iconGlow: '#1a7a8a', label: 'First Aid', sub: 'soothe the charge', mono: false },
+    { kind: 'clean321' as const, href: '', icon: '3·2·1', iconColor: '#7c3aed', iconGlow: '#7c3aed', label: 'Clean Up', sub: 'metabolize it', mono: true },
+    { kind: 'link' as const, href: '/iching', icon: '☰', iconColor: '#d4a017', iconGlow: '#d4a017', label: 'I Ching', sub: 'consult the lines', mono: false },
   ]
 
   return (
@@ -105,6 +116,8 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
 
         {/* Scrollable main area */}
         <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '6px 20px 16px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {nextMove ? <StarOfBethlehemCard move={nextMove} /> : null}
+
           {/* Hand glance */}
           <HandGlance
             slots={slots}
@@ -112,6 +125,42 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
             vaultCount={barCounts.vaultCount}
             gardenCount={barCounts.gardenCount}
           />
+
+          {/* Observatory — folded into Now: zoom through time across your lenses */}
+          <Link
+            href="/observatory"
+            style={{
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: '13px 16px',
+              borderRadius: 10,
+              background: '#1a1a18',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.08)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+              <span style={{ fontSize: 16, color: '#7c3aed', textShadow: '0 0 12px #7c3aed', lineHeight: 1 }}>
+                ◎
+              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 13, color: '#e8e6e0', lineHeight: 1 }}>
+                  Observatory
+                </span>
+                <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#6b6965', lineHeight: 1 }}>
+                  Zoom through time · your lenses
+                </span>
+              </div>
+            </div>
+            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, color: '#6b6965' }}>→</span>
+          </Link>
+
+          {/* Tap the Vein — daily ritual (sibling of Daily Charge, above it).
+              The brainstorm (dump → distill) lives INSIDE the ritual, between the
+              free-write and commit — not as a standalone NOW card. */}
+          <TapTheVeinPanel summary={ttvPanel} />
 
           {/* Daily charge */}
           <DailyChargePanel
@@ -125,40 +174,52 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
               When you're activated
             </span>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              {tools.map(tool => (
-                <Link
-                  key={tool.href}
-                  href={tool.href}
-                  style={{
-                    flex: 1,
-                    textDecoration: 'none',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 5,
-                    padding: '13px 12px',
-                    borderRadius: 8,
-                    background: '#1a1a18',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.08)',
-                  }}
-                >
-                  <span style={{
-                    fontFamily: tool.mono ? 'Space Mono, monospace' : 'Jost, sans-serif',
-                    fontWeight: 800,
-                    fontSize: tool.mono ? 15 : 17,
-                    lineHeight: 1,
-                    color: tool.iconColor,
-                    textShadow: `0 0 12px ${tool.iconGlow}`,
-                  }}>
-                    {tool.icon}
-                  </span>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 12, color: '#e8e6e0' }}>
-                    {tool.label}
-                  </span>
-                  <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#6b6965' }}>
-                    {tool.sub}
-                  </span>
-                </Link>
-              ))}
+              {tools.map(tool =>
+                tool.kind === 'clean321' ? (
+                  <Clean321Launcher
+                    key={tool.label}
+                    icon={tool.icon}
+                    iconColor={tool.iconColor}
+                    iconGlow={tool.iconGlow}
+                    label={tool.label}
+                    sub={tool.sub}
+                    mono={tool.mono}
+                  />
+                ) : (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    style={{
+                      flex: 1,
+                      textDecoration: 'none',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 5,
+                      padding: '13px 12px',
+                      borderRadius: 8,
+                      background: '#1a1a18',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <span style={{
+                      fontFamily: tool.mono ? 'Space Mono, monospace' : 'Jost, sans-serif',
+                      fontWeight: 800,
+                      fontSize: tool.mono ? 15 : 17,
+                      lineHeight: 1,
+                      color: tool.iconColor,
+                      textShadow: `0 0 12px ${tool.iconGlow}`,
+                    }}>
+                      {tool.icon}
+                    </span>
+                    <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 12, color: '#e8e6e0' }}>
+                      {tool.label}
+                    </span>
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#6b6965' }}>
+                      {tool.sub}
+                    </span>
+                  </Link>
+                )
+              )}
             </div>
           </div>
         </main>
