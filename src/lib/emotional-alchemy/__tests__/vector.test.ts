@@ -104,7 +104,8 @@ describe('safety + identity-harm predicates (§8.5, §8.6)', () => {
 })
 
 describe('planSteps (§1.3) — conditional forks', () => {
-  const base: Partial<DiagnosticAnswers> = { channelPick: 'anger', intensity: 3, blocker: 'the bus was late' }
+  // Neutral base: no channel-triggered harm fork, low intensity → no layer check.
+  const base: Partial<DiagnosticAnswers> = { channelPick: 'neutrality', intensity: 3, blocker: 'the bus was late' }
 
   it('base flow has no conditional forks', () => {
     expect(planSteps(base)).toEqual([
@@ -121,8 +122,13 @@ describe('planSteps (§1.3) — conditional forks', () => {
     expect(planSteps({ ...base, intensity: 6 })).toContain('layer_check')
     expect(planSteps({ ...base, intensity: 4 })).not.toContain('layer_check')
   })
-  it('identity-harm wording inserts harm_relation before defaults', () => {
-    const steps = planSteps({ ...base, blocker: 'someone used a slur at me' })
+  it('anger/fear channel inserts the harm fork (design handoff)', () => {
+    expect(planSteps({ ...base, channelPick: 'anger' })).toContain('harm_relation')
+    expect(planSteps({ ...base, channelPick: 'fear' })).toContain('harm_relation')
+    expect(planSteps({ ...base, channelPick: 'sadness' })).not.toContain('harm_relation')
+  })
+  it('identity-harm wording inserts harm_relation before defaults (any channel)', () => {
+    const steps = planSteps({ ...base, channelPick: 'sadness', blocker: 'someone used a slur at me' })
     expect(steps).toContain('harm_relation')
     expect(steps.indexOf('harm_relation')).toBeLessThan(steps.indexOf('defaults'))
   })
@@ -164,8 +170,13 @@ describe('finalizeResult (§1.6 structured-only + flags)', () => {
     expect(serialized).not.toContain('must not leak')
     // the result shape exposes no free-text answer fields
     expect(Object.keys(r).sort()).toEqual(
-      ['flags', 'fuel', 'harmRelation', 'layerChecked', 'shape', 'shapeConfidence', 'temporal', 'thread', 'time', 'vector'].sort()
+      ['feltShape', 'flags', 'fuel', 'harmRelation', 'layerChecked', 'shape', 'shapeConfidence', 'temporal', 'thread', 'time', 'vector'].sort()
     )
+  })
+
+  it('carries a player-facing felt shape (channel default when unset)', () => {
+    expect(finalizeResult(complete).feltShape).toBe('edge') // anger default
+    expect(finalizeResult({ ...complete, feltShape: 'knot' }).feltShape).toBe('knot')
   })
 
   it('sets hot_charge at intensity ≥ 7', () => {

@@ -132,6 +132,26 @@ When the composer renders a recommended practice, it **is** a post-card moment �
 
 ---
 
+## Claude Design handoff — integrated (v2)
+
+The full Claude Design handoff (README + 18 screenshots + HTML prototype) is vendored at
+[`design_handoff/`](design_handoff/). It confirmed this doc's architecture (pre-card `SceneCard`
+flow, element withheld until The Read, chip **treatment A** recommended, Geist + tabular-nums in-app)
+and supplied final copy + the intensity **slider** control. Applied to `DiagnosticFlow`,
+`DiagnosticSummary`, `DiagnoseClient`, and `.ea-intensity-range` in `cultivation-cards.css`.
+
+Three points reinterpreted the canonical model; reconciled by decision:
+
+| Point | Handoff wanted | Decision (shipped) |
+|---|---|---|
+| **Target** | Per-channel plain-language targets (Triumph/Boundary/Repair…) | **Keep the 5 satisfaction spirits visible** — the composer needs a `SatisfactionSpirit`; the Defaults screen shows Peace/Triumph/Poignance/Bliss/Wonder. Diverges from the handoff's target labels, keeps doctrine + composer intact. |
+| **Shape** | Felt-texture (Knot/Weight/Fog/Spark/Static/Edge) | **Keep both, separate roles** — new player-facing `FeltShape` (display; shown on Defaults + The Read); the composer's routing `BlockerShape` stays classified silently from text. New gap **G12**: routing shape is now silent (the felt shape is the confirmed one). |
+| **Harm fork** | Trigger on any Mad/Scared; options land-on-me / witnessed / both | **Design trigger + keep own_conduct** — fires for any anger/fear charge (or identity-harm wording); four options incl. "own conduct"; UI values map to canonical `received/witnessed/own_conduct` (Both→received). Composer's received-harm branch unaffected. |
+
+Deltas from the handoff, deliberately: the progress **pips** reuse the shared `SceneCard` primitive
+(not the handoff's exact pip spec) per covenant reuse; **Form the practice →** on The Read is a
+disabled placeholder until the composer's post-card render ships.
+
 ## References
 - `UI_COVENANT.md` (laws 7, 10, 11, 12, 13, 14; three-channel encoding; CultivationCard API)
 - `src/lib/ui/card-tokens.ts` (`SURFACE_TOKENS`, `ELEMENT_TOKENS`, `ALTITUDE_TOKENS`, `EMOTION_TO_ELEMENT` via `src/lib/emotional-alchemy`)

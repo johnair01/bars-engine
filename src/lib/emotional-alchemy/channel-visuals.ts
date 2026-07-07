@@ -38,6 +38,20 @@ export function channelGem(channel: EmotionChannel): string {
 }
 
 /**
+ * Selected-chip treatment A (design handoff, recommended): hairline tint —
+ * `1px solid {frame}` + a `color-mix({gem} 12%, surface-card)` wash, NO glow.
+ * Dissatisfied-altitude weight: reads as "unformed," never a formed card.
+ */
+export function channelChipStyleA(channel: EmotionChannel): CSSProperties {
+  const t = ELEMENT_TOKENS[EMOTION_TO_ELEMENT[channel]]
+  return {
+    borderColor: t.frame,
+    backgroundColor: `color-mix(in srgb, ${t.gem} 12%, #141412)`,
+    color: '#e8e6e0',
+  }
+}
+
+/**
  * Threshold accent for the read — the gem as a bottom-border color with a soft
  * 4px glow (neutral altitude weight, per ALTITUDE_TOKENS.neutral). This is the
  * one pre-practice place element enters: the charge is becoming legible.

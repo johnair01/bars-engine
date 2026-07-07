@@ -31,6 +31,7 @@ function diag(p: {
     fuel: p.fuel ?? 'steady',
     shape: p.shape ?? null,
     shapeConfidence: 'high',
+    feltShape: null,
     thread: { kind: 'new', label: 'fixture' },
     harmRelation: p.harmRelation ?? null,
     layerChecked: false,

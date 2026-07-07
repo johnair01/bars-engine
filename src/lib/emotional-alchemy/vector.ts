@@ -41,6 +41,25 @@ export type FlatAnswer = 'rested_calm' | 'walled_off' | 'buried' | 'grey'
 /** Ally-or-target branch (§8.6). */
 export type HarmRelation = 'witnessed' | 'received' | 'own_conduct'
 
+/**
+ * Felt-texture of the charge — a PLAYER-FACING display field (design handoff),
+ * distinct from the composer's routing `BlockerShape`. The player picks it on
+ * the defaults screen and it shows on The Read; it does not drive tool routing.
+ */
+export type FeltShape = 'knot' | 'weight' | 'fog' | 'spark' | 'static' | 'edge'
+
+const DEFAULT_FELT_SHAPE: Record<EmotionChannel, FeltShape> = {
+  anger: 'edge',
+  sadness: 'weight',
+  fear: 'static',
+  joy: 'spark',
+  neutrality: 'fog',
+}
+
+export function defaultFeltShape(channel: EmotionChannel): FeltShape {
+  return DEFAULT_FELT_SHAPE[channel]
+}
+
 /** Layer-check outcome (§8.2). */
 export type LayerAnswer = 'descended' | 'stayed' | 'declined'
 
@@ -86,10 +105,13 @@ export interface DiagnosticResult {
   temporal: Temporal
   fuel: Fuel
   /** Confirmed blocker shape, or null when undetermined. */
+  /** Internal routing hint, classified from text (composer input). */
   shape: BlockerShape | null
   shapeConfidence: 'high' | 'low'
+  /** Player-facing felt texture (display only; not routing). */
+  feltShape: FeltShape | null
   thread: ThreadRef
-  /** Set only when the ally/target fork fired (identity-based harm). */
+  /** Set when the harm fork fired (any anger/fear charge, or identity harm). */
   harmRelation: HarmRelation | null
   layerChecked: boolean
   flags: DiagnosticFlag[]
@@ -115,6 +137,7 @@ export interface DiagnosticAnswers {
   target?: SatisfactionSpirit
   shape?: BlockerShape | null
   shapeConfidence?: 'high' | 'low'
+  feltShape?: FeltShape
   captureOnly?: boolean
   crisis?: boolean
 }
@@ -249,7 +272,9 @@ export function planSteps(a: Partial<DiagnosticAnswers>): DiagnosticStep[] {
 
   const harmText = `${a.blocker ?? ''} ${a.story ?? ''}`
   if (typeof a.intensity === 'number' && shouldOfferLayerCheck(a.intensity)) steps.push('layer_check')
-  if (detectIdentityHarm(harmText)) steps.push('harm_relation')
+  // Harm fork (§8.6 + design handoff "A careful one"): any anger/fear charge,
+  // or identity-harm wording on any channel.
+  if (a.channelPick === 'anger' || a.channelPick === 'fear' || detectIdentityHarm(harmText)) steps.push('harm_relation')
   if (detectSafetyTrigger(harmText)) steps.push('safety')
 
   steps.push('defaults', 'summary')
@@ -291,6 +316,7 @@ export function finalizeResult(a: DiagnosticAnswers): DiagnosticResult {
     fuel: req(a.fuel, 'fuel'),
     shape: a.shape ?? null,
     shapeConfidence: a.shapeConfidence ?? 'low',
+    feltShape: a.feltShape ?? defaultFeltShape(channel),
     thread: req(a.thread, 'thread'),
     harmRelation: a.harmRelation ?? null,
     layerChecked: a.layerAnswer !== undefined && a.layerAnswer !== 'declined',
