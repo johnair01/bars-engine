@@ -82,6 +82,13 @@ export interface LaunchOffer {
    * `priceCents` is ignored for display when set.
    */
   inquire?: boolean
+  /**
+   * Hide this offer from the /launch storefront grid while keeping it in the
+   * registry (so the webhook can still resolve its SKU and entitlements still
+   * grant). Use for SKUs sold elsewhere or paused for a given launch — e.g. the
+   * RPG handbook and game subscription are held back from the book/deck launch.
+   */
+  hiddenFromLaunch?: boolean
   /** Gumroad product URL, or '' when not yet wired. */
   gumroadUrl: string
   /** CTA verb, e.g. "Buy", "Preorder", "Subscribe". */
@@ -173,6 +180,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     priceCents: 3000,
     gumroadUrl: GUMROAD.rpgHandbookDigital,
     cta: 'Buy',
+    hiddenFromLaunch: true,
     element: 'metal',
     altitude: 'neutral',
     stage: 'growing',
@@ -212,6 +220,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     recurring: 'month',
     gumroadUrl: GUMROAD.gameSubscription,
     cta: 'Subscribe',
+    hiddenFromLaunch: true,
     element: 'wood',
     altitude: 'neutral',
     stage: 'growing',
@@ -238,6 +247,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     preorder: true,
     gumroadUrl: GUMROAD.rpgHandbookPhysical,
     cta: 'Preorder',
+    hiddenFromLaunch: true,
     element: 'metal',
     altitude: 'neutral',
     stage: 'growing',

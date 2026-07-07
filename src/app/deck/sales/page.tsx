@@ -18,6 +18,7 @@ import {
 } from '@/lib/launch/deck-sales-copy'
 import { DeckFanHero } from '@/components/deck/DeckFanHero'
 import { MovePip } from '@/components/deck/MovePip'
+import { LAUNCH_OFFERS, formatPrice, isOfferLive, isSuperpowerPackKey } from '@/lib/launch/offers'
 
 export const metadata: Metadata = {
   title: 'The Allyship Deck — 120 moves for doing the work',
@@ -174,6 +175,9 @@ export default function DeckSalesPage() {
         </div>
       </section>
 
+      {/* Expansion-pack upsell */}
+      <PackUpsell />
+
       {/* Social proof */}
       <section
         style={{
@@ -219,6 +223,137 @@ function Stat({ value, label }: { value: string; label: string }) {
         {label}
       </div>
     </div>
+  )
+}
+
+/**
+ * Expansion-pack upsell — the seven $8 superpower packs, sold beside the deck
+ * (their home surface; they are held back from the /launch grid). Reads the
+ * launch registry so name/price/link never drift; a pack with no Gumroad URL
+ * shows an honest "Coming soon" instead of a dead link.
+ */
+function PackUpsell() {
+  const packs = LAUNCH_OFFERS.filter((o) => isSuperpowerPackKey(o.key))
+  if (packs.length === 0) return null
+
+  return (
+    <section style={{ marginBottom: 52 }}>
+      <SectionLabel>Go deeper · expansion packs</SectionLabel>
+      <p
+        style={{
+          fontFamily: DECK_FONTS.body,
+          fontSize: 14,
+          lineHeight: 1.5,
+          color: SURFACE_TOKENS.textSecondary,
+          textAlign: 'center',
+          margin: '10px auto 0',
+          maxWidth: 520,
+        }}
+      >
+        Add your superpowers to the deck — 60 move-cards each, inner and outer.
+        {' '}
+        {formatPrice(packs[0].priceCents)} a pack.
+      </p>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+          gap: 12,
+          marginTop: 18,
+        }}
+      >
+        {packs.map((pack) => {
+          const live = isOfferLive(pack)
+          return (
+            <div
+              key={pack.key}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '16px 15px',
+                borderRadius: 10,
+                background: SURFACE_TOKENS.surfaceInset,
+                border: '1px solid rgba(255,255,255,.08)',
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'block',
+                  width: 26,
+                  height: 26,
+                  borderRadius: 7,
+                  background: pack.accent ?? 'var(--bars-text-secondary)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.25)',
+                }}
+              />
+              <div
+                style={{
+                  fontFamily: DECK_FONTS.display,
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: '#fff',
+                  margin: '12px 0 4px',
+                }}
+              >
+                {pack.name}
+              </div>
+              <p
+                style={{
+                  fontFamily: DECK_FONTS.body,
+                  fontSize: 12.5,
+                  lineHeight: 1.45,
+                  color: SURFACE_TOKENS.textSecondary,
+                  margin: '0 0 14px',
+                  flex: 1,
+                }}
+              >
+                {pack.blurb}
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 15, color: DECK_GOLD }}>
+                  {formatPrice(pack.priceCents)}
+                </span>
+                {live ? (
+                  <a
+                    href={pack.gumroadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontFamily: DECK_FONTS.display,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      color: '#150a04',
+                      background: DECK_GOLD,
+                      padding: '8px 14px',
+                      borderRadius: 999,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Add →
+                  </a>
+                ) : (
+                  <span
+                    style={{
+                      fontFamily: DECK_FONTS.mono,
+                      fontSize: 10,
+                      letterSpacing: '.1em',
+                      textTransform: 'uppercase',
+                      color: SURFACE_TOKENS.textSecondary,
+                      border: '1px dashed rgba(255,255,255,.2)',
+                      padding: '6px 10px',
+                      borderRadius: 999,
+                    }}
+                  >
+                    Coming soon
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 
