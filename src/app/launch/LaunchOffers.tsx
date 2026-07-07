@@ -87,7 +87,9 @@ function Cta({ offer, href, label }: { offer: LaunchOffer; href: string; label: 
 const HERO_BY_INTENT: Record<LaunchIntent, LaunchOffer['key']> = {
   curious: 'book-digital',
   tool: 'deck-digital',
-  practice: 'game-subscription',
+  // The game subscription is held back from this launch (hiddenFromLaunch); the
+  // deck is the ongoing practice players get today, so "I want a practice" leads here.
+  practice: 'deck-digital',
   shelf: 'founding-ally',
 }
 
@@ -577,9 +579,13 @@ export function LaunchOffers({
   isAdmin: boolean
 }) {
   const [intent, setIntent] = useState<LaunchIntent | null>(null)
-  const bundle = offersByGroup('bundle').filter(isCoreLaunchOffer)
-  const digital = offersByGroup('digital').filter(isCoreLaunchOffer)
-  const physical = offersByGroup('physical').filter(isCoreLaunchOffer)
+  // isCoreLaunchOffer narrows key to CoreOfferKey (needed to index content.offers);
+  // the second filter drops offers held back from this launch without widening the type.
+  const shown = (offers: readonly LaunchOffer[]) =>
+    offers.filter(isCoreLaunchOffer).filter((o) => !o.hiddenFromLaunch)
+  const bundle = shown(offersByGroup('bundle'))
+  const digital = shown(offersByGroup('digital'))
+  const physical = shown(offersByGroup('physical'))
   const allOffers = [...bundle, ...digital, ...physical]
   const heroKey = intent ? HERO_BY_INTENT[intent] : 'founding-ally'
   const hero = allOffers.find((offer) => offer.key === heroKey) ?? bundle[0] ?? digital[0]

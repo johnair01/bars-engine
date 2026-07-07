@@ -71,7 +71,7 @@ export const LAUNCH_DEFAULT_CONTENT: LaunchPageContent = {
       key: 'practice',
       element: 'wood',
       label: 'I want a practice',
-      sub: 'Play the ongoing game.',
+      sub: 'Make the deck your daily practice.',
     },
     {
       key: 'shelf',
@@ -129,7 +129,7 @@ export const LAUNCH_DEFAULT_CONTENT: LaunchPageContent = {
       kicker: 'Digital deck',
       image: '/launch/allyship-deck-thumbnail-1080x1080.png',
       heroImage: '/launch/allyship-deck-cover-1280x720.png',
-      intents: ['tool'],
+      intents: ['tool', 'practice'],
     },
     'game-subscription': {
       name: 'The Game — Monthly',
