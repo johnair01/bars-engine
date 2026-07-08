@@ -42,10 +42,10 @@ export default function DeckSalesPage() {
   // Real deck pricing from the launch registry (was "pending" in the design handoff).
   const digital = offerByKey('deck-digital')
   const physical = offerByKey('deck-physical')
-  // "Get the deck" goes straight to the physical deck's Gumroad product (the page
-  // is physical-first). offerHref falls back to /launch#deck-physical if the
-  // Gumroad URL isn't wired yet — honest, never a dead link.
-  const ctaHref = offerHref('deck-physical')
+  // "Get the deck" goes straight to the digital deck's Gumroad product (the
+  // low-friction, instant-access entry point). offerHref falls back to
+  // /launch#deck-digital if the Gumroad URL isn't wired yet — honest, never dead.
+  const ctaHref = offerHref('deck-digital')
   const priceLine =
     digital && physical
       ? `Digital ${formatPrice(digital.priceCents)} · Physical ${formatPrice(physical.priceCents)} — preorder now, ships after the print run.`
