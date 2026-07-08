@@ -8,6 +8,7 @@ import {
   isOfferLive,
   isSuperpowerPackKey,
   offerByKey,
+  offerHref,
 } from '@/lib/launch/offers'
 import { DeckSalesExperience, type SalesPack } from '@/components/deck/DeckSalesExperience'
 
@@ -41,6 +42,10 @@ export default function DeckSalesPage() {
   // Real deck pricing from the launch registry (was "pending" in the design handoff).
   const digital = offerByKey('deck-digital')
   const physical = offerByKey('deck-physical')
+  // "Get the deck" goes straight to the physical deck's Gumroad product (the page
+  // is physical-first). offerHref falls back to /launch#deck-physical if the
+  // Gumroad URL isn't wired yet — honest, never a dead link.
+  const ctaHref = offerHref('deck-physical')
   const priceLine =
     digital && physical
       ? `Digital ${formatPrice(digital.priceCents)} · Physical ${formatPrice(physical.priceCents)} — preorder now, ships after the print run.`
@@ -58,6 +63,7 @@ export default function DeckSalesPage() {
       socialProof={DECK_SOCIAL_PROOF}
       priceLine={priceLine}
       ctaPrice={ctaPrice}
+      ctaHref={ctaHref}
     />
   )
 }
