@@ -5,6 +5,7 @@ import {
   defaultAltitude,
   isHotCharge,
   isCrisisIntensity,
+  normalizeCaptureIntensity,
   shouldOfferLayerCheck,
   resolveFlat,
   classifyBlockerShape,
@@ -53,6 +54,15 @@ describe('intensity-driven defaults (§1.3, §4, §8.2)', () => {
     expect(isCrisisIntensity(8)).toBe(false)
     expect(isCrisisIntensity(9)).toBe(true)
     expect(isCrisisIntensity(10)).toBe(true)
+  })
+  it('normalizeCaptureIntensity maps capture 1–5 → 0–10, and 5 reaches the crisis range (S4)', () => {
+    expect(normalizeCaptureIntensity(1)).toBe(2)
+    expect(normalizeCaptureIntensity(3)).toBe(6)
+    expect(normalizeCaptureIntensity(5)).toBe(10)
+    expect(isCrisisIntensity(normalizeCaptureIntensity(5))).toBe(true)
+    // clamps out-of-range input
+    expect(normalizeCaptureIntensity(0)).toBe(2)
+    expect(normalizeCaptureIntensity(9)).toBe(10)
   })
   it('layer check offered at 5', () => {
     expect(shouldOfferLayerCheck(4)).toBe(false)

@@ -106,6 +106,16 @@ function Pill({ selected, onClick, children, style }: { selected: boolean; onCli
   )
 }
 
+/** S1 — gentle outside-help offer for the paths that produce no intensity number. */
+function GentleHelp({ onReach }: { onReach: () => void }) {
+  return (
+    <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+      <p className="text-sm text-zinc-400">Numbness can sit over a lot. If what&apos;s under this feels like more than a practice can hold, that&apos;s worth honoring — reaching out is a strong move.</p>
+      <button type="button" onClick={onReach} className="mt-2 text-sm text-amber-400 transition-colors hover:text-amber-300">I need more than a practice →</button>
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 
 export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
@@ -161,6 +171,7 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
 
   const totalGuess = plan.length - 1
   const stepIndex = plan.indexOf(current)
+  const triggerCrisis = () => { patch({ crisis: true }); onCrisis() }
 
   const canAdvance = (() => {
     switch (current) {
@@ -200,7 +211,7 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => { patch({ crisis: true }); onCrisis() }}
+          onClick={triggerCrisis}
           className="ml-auto rounded-lg border border-zinc-800 px-3 py-2 text-zinc-500 transition-colors hover:border-amber-800/60 hover:text-amber-300"
         >
           I need more than a practice
@@ -264,6 +275,9 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
                 <Row key={o.value} selected={answers.flatAnswer === o.value} onClick={() => patch({ flatAnswer: o.value })} label={o.label} hint={o.hint} />
               ))}
             </div>
+            {/* S1: the unratable get an active outside-help offer — walled-off numbness
+                can sit over a lot, and this path produces no intensity number. */}
+            {answers.flatAnswer === 'walled_off' && <GentleHelp onReach={triggerCrisis} />}
           </SceneCard>
         )
 
@@ -275,6 +289,8 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
                 <Pill key={c} selected={answers.channelConfirmed === c} onClick={() => confirmChannel(c)} style={channelChipStyleA(c)}>{CHANNEL_LABEL[c]}</Pill>
               ))}
             </div>
+            {/* S1: no intensity number on this path either — offer the outside-help path gently. */}
+            <GentleHelp onReach={triggerCrisis} />
           </SceneCard>
         )
 
@@ -309,7 +325,7 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
                 <div className="rounded-xl border border-amber-800/60 bg-zinc-900 px-4 py-3">
                   <p className={eyebrow + ' text-amber-500'}>A {v} is a lot to hold</p>
                   <p className="mt-1 text-sm text-zinc-300">At a 9 or 10, a practice may not be the right tool right now. Seeking outside help isn&apos;t failure — it&apos;s the strong move.</p>
-                  <button type="button" onClick={() => { patch({ crisis: true }); onCrisis() }} className="mt-2 text-sm text-amber-400 hover:text-amber-300">
+                  <button type="button" onClick={triggerCrisis} className="mt-2 text-sm text-amber-400 hover:text-amber-300">
                     I need more than a practice →
                   </button>
                 </div>

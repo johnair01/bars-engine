@@ -25,6 +25,7 @@ import {
   getToolById,
   EMOTION_TO_ELEMENT,
   isCrisisIntensity,
+  crisisResources,
   type PracticeRecommendation,
   type EmotionalVector,
   type EmotionChannel,
@@ -82,8 +83,13 @@ function ReRate({ before }: { before: number }) {
       </div>
       {verdict && !highDistress && <p style={{ ...body, fontSize: 14, color: verdict === 'worse' ? '#f0c84a' : SURFACE_TOKENS.textPrimary, margin: 0 }}>{before} → {after}. {message[verdict]}</p>}
       {highDistress && (
-        <div style={{ background: 'rgba(240,200,74,.08)', border: '1px solid rgba(240,200,74,.4)', borderRadius: 10, padding: 14 }}>
-          <p style={{ ...body, fontSize: 14, color: '#f0c84a', margin: 0 }}>{before} → {after}. Still at a {after} after the rep — a practice may not be enough right now. Reaching out is the strong move: in the US, call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline), or your local emergency number.</p>
+        <div style={{ background: 'rgba(240,200,74,.08)', border: '1px solid rgba(240,200,74,.4)', borderRadius: 10, padding: 14, display: 'grid', gap: 8 }}>
+          <p style={{ ...body, fontSize: 14, color: '#f0c84a', margin: 0 }}>{before} → {after}. Still at a {after} after the rep — a practice may not be enough right now. Reaching out is the strong move:</p>
+          {crisisResources().map((r) => (
+            <p key={r.label} style={{ ...body, fontSize: 13, color: SURFACE_TOKENS.textPrimary, margin: 0 }}>
+              <strong>{r.label}</strong> — {r.contact}{r.note ? ` · ${r.note}` : ''}
+            </p>
+          ))}
         </div>
       )}
       <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted }}>Not saved — this is your rep to keep.</span>

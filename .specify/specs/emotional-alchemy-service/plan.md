@@ -40,7 +40,7 @@ The engine (`src/lib/emotional-alchemy/`) is unchanged. Two new seams: **service
 
 ## Key decisions
 
-- **Intensity scale**: capture is 1–5, the vector is 0–10. Normalize on seed ingest (`~ (n-1)/4*10`, rounded); longer-term move capture to 0–10 for parity. Documented, not silently lossy.
+- **Intensity scale (safety-critical, S4)**: capture is 1–5, the vector is 0–10. Every capture-sourced seed **must** pass through `normalizeCaptureIntensity` (`vector.ts`, built + tested: 1→2 … 5→10) so a max captured charge (5) reaches the crisis range (9–10). Never map capture's max below 9. Longer-term, move capture to 0–10 for parity.
 - **Privacy (§1.6) is preserved through the service**: the seed carries `barId` (a reference), not raw text; `AlchemySession` has no text columns; the raw blocker/story stay in client state. The BAR itself already stores the player's summary — the *session* logs only structured fields + the link.
 - **Provenance mirrors 321**: `AlchemySession.chargeSourceBarId` + `CustomBar.sourceAlchemySessionId`, so the vault/lineage tooling that already understands 321 sessions understands alchemy sessions for free.
 - **Inline vs route**: Phase 1 uses the route (`alchemyHref`, cheapest, 321-precedented). An inline sheet (`<EmotionalAlchemyEntry seed>`) is a later nicety, same seed contract.

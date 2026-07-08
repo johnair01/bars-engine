@@ -178,6 +178,17 @@ export function isCrisisIntensity(intensity: number): boolean {
   return intensity >= 9
 }
 
+/**
+ * Normalize charge-capture's 1–5 intensity onto the diagnostic's 0–10 scale
+ * (hostile-review S4). Capture's max (5 = "flooding") MUST map to 10 so a
+ * max-intensity captured charge can reach the crisis range — any seed built
+ * from a capture BAR must pass its intensity through here.
+ */
+export function normalizeCaptureIntensity(oneToFive: number): number {
+  const n = Math.max(1, Math.min(5, Math.round(oneToFive)))
+  return Math.round((n / 5) * 10) // 1→2, 2→4, 3→6, 4→8, 5→10
+}
+
 /** Atlas §8.2 — layer check offered once at intensity ≥ 5. */
 export function shouldOfferLayerCheck(intensity: number): boolean {
   return intensity >= 5

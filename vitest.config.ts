@@ -26,6 +26,7 @@ export default defineConfig({
       'src/lib/emotional-alchemy/__tests__/vector.test.ts',
       'src/lib/emotional-alchemy/__tests__/composer.test.ts',
       'src/lib/emotional-alchemy/__tests__/deck-draw.test.ts',
+      'src/lib/emotional-alchemy/__tests__/crisis-resources.test.ts',
       'src/lib/player-entitlements/__tests__/superpower-skus.test.ts',
       'src/lib/superpowers/__tests__/quiz-loadout.test.ts',
       'src/lib/launch/__tests__/superpower-offers.test.ts',

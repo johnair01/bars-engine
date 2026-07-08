@@ -9,6 +9,7 @@ import { PracticeCard } from '@/components/practice/PracticeCard'
 import {
   recommendPractice,
   composerCardFromMoveCard,
+  crisisResources,
   type DiagnosticResult,
   type PracticeRecommendation,
 } from '@/lib/emotional-alchemy'
@@ -44,9 +45,13 @@ export function DiagnoseClient() {
           Naming that is the right move. A practice is a skill, not therapy or crisis support — and it&apos;s not the
           trained companion this deserves. Reaching out is the stronger move.
         </p>
-        <div className="mt-4 rounded-xl border border-zinc-800 bg-[#0a0908] px-4 py-3">
-          <p className="text-lg font-bold tabular-nums text-zinc-100">988</p>
-          <p className="mt-0.5 text-sm text-zinc-400">Suicide &amp; Crisis Lifeline — call or text, 24/7 (US). Or your local emergency number.</p>
+        <div className="mt-4 space-y-3">
+          {crisisResources().map((r) => (
+            <div key={r.label} className="rounded-xl border border-zinc-800 bg-[#0a0908] px-4 py-3">
+              <p className="text-sm font-semibold text-zinc-100">{r.label}</p>
+              <p className="mt-0.5 text-sm text-zinc-300">{r.contact}{r.note ? ` — ${r.note}` : ''}</p>
+            </div>
+          ))}
         </div>
         <p className={eyebrow + ' mt-4'}>Nothing here was saved or sent.</p>
         <div className="mt-5 flex gap-5 text-sm">
