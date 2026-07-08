@@ -49,7 +49,7 @@ export interface DeckSalesExperienceProps {
 
 const PRICE_LINE_DEFAULT = 'price · format · what is included - pending'
 const GUARANTEE_LINE_DEFAULT =
-  'honest-terms guarantee - e.g. carry it a week; if not one move lands, send it back - pending'
+  'The whole promise is a move in the ten seconds that matter. Carry the deck thirty days; if not one lands there, one email gets your money back — no forms, and you keep the deck.'
 const CTA_PRICE_DEFAULT = 'cta destination + price - pending'
 
 const FACES: Operation[] = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage']
