@@ -358,7 +358,7 @@ export function hubBranches(audience: HubAudience = 'warm'): HubBranch[] {
       status: 'ready',
       accent: 'coral',
     },
-    // 7 — Help fund the crossing: car campaign. Drafted, assets pending → last,
+    // 7 — Help fund the crossing: car campaign. Live now, last on purpose:
     // one path among several, the single explicit monetary ask (§3).
     {
       order: 7,
@@ -369,10 +369,9 @@ export function hubBranches(audience: HubAudience = 'warm'): HubBranch[] {
         "the one straight-up money ask, and it comes last on purpose — after everything else has already been offered to you. it funds the literal crossing that gets this work to the people who need it.",
       bodyPublic:
         'the one direct money ask, last on purpose. it funds the crossing that carries this work to the people who need it.',
-      status: 'coming-soon',
+      status: 'ready',
       accent: 'coral',
-      holding:
-        "still coming together — the video and giving rails aren't live yet. rather than send you to a half-built page, here's the honest state: it's drafted, and it'll open here soon.",
+      ctas: [{ label: 'open the crossing', href: '/campaign/the-crossing' }],
     },
   ]
 }

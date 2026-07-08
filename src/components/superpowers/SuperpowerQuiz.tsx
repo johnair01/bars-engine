@@ -18,6 +18,7 @@ import { submitSuperpowerIntake } from '@/actions/superpower-intake'
 import type { QuizAnswer } from '@/lib/superpowers/quiz/types'
 import type { SuperpowerOrientation } from '@/lib/superpowers/types'
 import type { SuperpowerIntakeOutcome } from '@/lib/superpowers/routing'
+import { cacheSuperpowerResult } from '@/lib/superpowers/last-result'
 import { SuperpowerReveal } from './SuperpowerReveal'
 
 export interface SuperpowerQuizProps {
@@ -62,6 +63,12 @@ export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps)
       })
       if (res.ok) {
         setOutcome(res.outcome)
+        // Best-effort: let other surfaces (e.g. the Kickstarter hub self-report)
+        // carry this result to enrich a steward lead. Never gates the reveal.
+        cacheSuperpowerResult({
+          superpower: res.outcome.routing.superpower,
+          orientation: res.outcome.routing.orientation ?? null,
+        })
         onComplete?.(res.outcome)
       } else setError(res.error)
     })
