@@ -21,6 +21,7 @@ import type {
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
 import { DeckCardBack } from './DeckCardBack'
 import { SendToBarsButton } from './SendToBarsButton'
+import { WorkThisCardButton } from './WorkThisCardButton'
 import { GoDeeper } from './GoDeeper'
 import { FindYourPath } from './FindYourPath'
 import { recordDraw, type DeckStats } from '@/actions/deck-journal'
@@ -398,7 +399,7 @@ function DeckCardActions({ card, subject }: { card: MoveCard; subject: CardSubje
   return (
     <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
       <WorkThisCardButton card={card} subject={subject} />
-      <SendToBarsButton cardId={card.id} subject={subject} />
+      <SendToBarsButton card={card} subject={subject} />
     </div>
   )
 }
