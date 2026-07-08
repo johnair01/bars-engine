@@ -815,6 +815,126 @@
   letter-spacing: .08em;
 }
 
+/* Social-proof stats — folded into the choice CTA (campaign figures). */
+.deck-sales-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(24px, 8vw, 72px);
+  margin-top: 34px;
+}
+
+.deck-sales-stat b {
+  display: block;
+  color: var(--deck-sales-gold);
+  font-family: 'Jost', system-ui, sans-serif;
+  font-size: clamp(30px, 6vw, 44px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.deck-sales-stat span {
+  display: block;
+  margin-top: 8px;
+  color: #9c9587;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+/* Expansion-pack upsell — the seven $8 superpower packs' only storefront. */
+.deck-sales-packs-lead {
+  max-width: 520px;
+  margin: 12px auto 0;
+}
+
+.deck-sales-packs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  max-width: 860px;
+  margin: 40px auto 0;
+  padding: 0 26px;
+}
+
+.deck-sales-pack {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 18px;
+  border: 1px solid color-mix(in srgb, var(--pack-accent) 40%, rgba(232,200,120,.14));
+  border-radius: 14px;
+  background: radial-gradient(120% 100% at 82% 0%, color-mix(in srgb, var(--pack-accent) 12%, #14100a), #14100a 70%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 30px -18px var(--pack-accent);
+  text-align: left;
+}
+
+.deck-sales-pack-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--pack-accent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+.deck-sales-pack h3 {
+  margin: 12px 0 4px;
+  color: #f6f2e8;
+  font-family: 'Jost', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.deck-sales-pack p {
+  flex: 1;
+  margin: 0 0 14px;
+  color: #b8b3a8;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.deck-sales-pack-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.deck-sales-pack-price {
+  color: var(--deck-sales-gold);
+  font-family: 'Jost', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.deck-sales-pack-add {
+  border-radius: 999px;
+  background: linear-gradient(150deg, #e8c878, #c9a84c);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3);
+  color: #1c1505;
+  font-family: 'Jost', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  text-decoration: none;
+  transition: transform .18s cubic-bezier(.16,1,.3,1);
+}
+
+.deck-sales-pack-add:hover {
+  transform: translateY(-1px);
+}
+
+.deck-sales-pack-soon {
+  border: 1px dashed rgba(255,255,255,.2);
+  border-radius: 999px;
+  color: #7d766a;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+}
+
 .deck-sales-objections {
   border-top: 1px solid rgba(232,200,120,.1);
   background: #0a0806;
