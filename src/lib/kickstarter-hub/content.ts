@@ -244,9 +244,18 @@ export const SHARE_SNIPPETS: ShareSnippet[] = [
   },
 ]
 
+/** Internal link to the Chapter 1 surface, keeping the reader's register. Always
+ *  a real destination — the excerpt when ready, else the coming-soon page (§5/§6);
+ *  never a redirect and never a dead link. */
+export function chapterOneHref(audience: HubAudience): string {
+  const base = '/kickstarter/chapter-1'
+  return audience === 'public' ? `${base}?audience=public` : base
+}
+
 // ── The spine (§3) ──────────────────────────────────────────────────────────
 
-export function hubBranches(): HubBranch[] {
+export function hubBranches(audience: HubAudience = 'warm'): HubBranch[] {
+  const chapterReady = chapterOnePreviewReady()
   return [
     // 1 — Wake Up: framing beat. New copy, no build. Must explain the *point*
     // before asking for a quiz answer.
@@ -322,13 +331,18 @@ export function hubBranches(): HubBranch[] {
         "proof, not a status update: the actual opening of the book you backed. it's in final polish and lands here in the next day or two — this page upgrades itself the moment it's ready.",
       bodyPublic:
         "the actual opening of the book — in final polish, landing here in the next day or two. this page upgrades itself the moment it's ready.",
-      status: chapterOnePreviewReady() ? 'ready' : 'coming-soon',
+      status: chapterReady ? 'ready' : 'coming-soon',
       accent: 'coral',
-      ctas: chapterOnePreviewReady()
-        ? [{ label: 'read chapter 1', href: '/kickstarter/chapter-1' }]
-        : undefined,
+      // Always a real destination: the excerpt when ready, else the coming-soon
+      // page (which itself points on to /launch). Never a dead link (§5).
+      ctas: [
+        {
+          label: chapterReady ? 'read chapter 1' : 'see what’s coming',
+          href: chapterOneHref(audience),
+        },
+      ],
       holding:
-        "coming very soon — the excerpt is in final polish. nothing to click yet on purpose; we'd rather show you the real thing than a placeholder. check back tomorrow.",
+        "coming very soon — the excerpt is in final polish. we'd rather show you the real thing than a placeholder, so it lands here in the next day or two.",
     },
     // 6 — Get involved: expanded self-report + concrete CTAs. Rendered by the
     // page from involveActions() + SELF_REPORT_CATEGORIES + SHARE_SNIPPETS.

@@ -225,7 +225,7 @@ export default async function KickstarterHubPage({
   const { audience: rawAudience } = await searchParams
   const audience = normalizeAudience(rawAudience)
   const header = headerFor(audience)
-  const branches = hubBranches()
+  const branches = hubBranches(audience)
 
   return (
     <main className="ks-hub flex justify-center">
