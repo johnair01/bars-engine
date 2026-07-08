@@ -1,0 +1,249 @@
+/* Kickstarter CYOA Hub — aesthetic layer (SPEC v2 §8).
+ *
+ * Warm near-black background (--bars-bg-base), lowercase, coral primary, teal
+ * reserved for the core transformation moves. Coral/teal are marketing-fidelity
+ * hues that live outside the Wuxing element palette (like the mastering-allyship
+ * marketing page's inline palette) — so they're defined here as scoped --ks-*
+ * vars rather than in the game token system. Surfaces, text, and near-black all
+ * still trace to --bars-* tokens. Layout stays Tailwind/inline; identity is here.
+ *
+ * WCAG AA: coral/teal text tokens below are the lightened variants used on
+ * near-black; the deep frame variants are border/glow only. All motion is
+ * guarded by prefers-reduced-motion at the bottom of the file.
+ */
+
+.ks-hub {
+  /* coral — primary action */
+  --ks-coral: #ff6a4d;
+  --ks-coral-lite: #ff8a70; /* text on near-black — ≥4.5:1 */
+  --ks-coral-deep: #c1392b;
+  --ks-coral-glow: rgba(255, 106, 77, 0.35);
+
+  /* teal — core / transformation only */
+  --ks-teal: #2fb9a0;
+  --ks-teal-lite: #6fe6c2; /* text on near-black — ≥4.5:1 */
+  --ks-teal-deep: #06120b;
+  --ks-teal-glow: rgba(47, 185, 160, 0.32);
+
+  background:
+    radial-gradient(125% 85% at 50% -8%, #15110c 0%, var(--bars-bg-base) 58%);
+  min-height: 100vh;
+  font-family: var(--bars-font-display);
+  color: var(--bars-text-primary);
+}
+
+/* Mono eyebrow, matching the quizzes' kicker treatment. */
+.ks-eyebrow {
+  font-family: var(--bars-font-mono);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: var(--bars-text-secondary);
+}
+
+/* ── Persistent fulfillment header (§2) ─────────────────────────────────── */
+.ks-fulfillment {
+  border: 1px solid var(--bars-line-strong);
+  border-radius: var(--bars-radius-lg);
+  background: linear-gradient(180deg, rgba(255, 138, 112, 0.06), rgba(0, 0, 0, 0));
+  box-shadow: var(--bars-shadow-inset-top);
+}
+
+/* ── Branch card (the game-menu tile) ───────────────────────────────────── */
+.ks-card {
+  position: relative;
+  border-radius: var(--bars-radius-lg);
+  background-color: var(--bars-surface-card);
+  border: 1px solid var(--bars-line-strong);
+  box-shadow: var(--bars-shadow-inset-top);
+  transition:
+    transform 0.15s var(--bars-ease-out),
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Accent channel — coral default, teal for transformation moves. */
+.ks-card[data-accent='coral'] {
+  --ks-accent: var(--ks-coral);
+  --ks-accent-lite: var(--ks-coral-lite);
+  --ks-accent-glow: var(--ks-coral-glow);
+}
+.ks-card[data-accent='teal'] {
+  --ks-accent: var(--ks-teal);
+  --ks-accent-lite: var(--ks-teal-lite);
+  --ks-accent-glow: var(--ks-teal-glow);
+}
+
+/* A thin accent rail on the leading edge — the card's element cue. */
+.ks-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: var(--bars-radius-lg) 0 0 var(--bars-radius-lg);
+  background: var(--ks-accent);
+  opacity: 0.55;
+}
+
+/* Hover / focus-within lift (interactive branches only). */
+.ks-card.ks-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ks-accent) 55%, var(--bars-line-strong));
+  box-shadow:
+    var(--bars-shadow-inset-top),
+    0 0 22px var(--ks-accent-glow);
+}
+.ks-card.ks-card--interactive:focus-within {
+  border-color: var(--ks-accent);
+}
+
+/* The deck leads (§3 order 4): promoted, brighter frame + standing glow. */
+.ks-card--primary {
+  border-color: color-mix(in srgb, var(--ks-accent) 60%, var(--bars-line-strong));
+  box-shadow:
+    var(--bars-shadow-inset-top),
+    0 0 18px var(--ks-accent-glow);
+}
+.ks-card--primary::before {
+  opacity: 1;
+  width: 4px;
+}
+
+/* Coming-soon holding state — quieter, dashed, honestly not-yet (§5). */
+.ks-card--holding {
+  border-style: dashed;
+  border-color: var(--bars-line-dashed);
+}
+.ks-card--holding::before {
+  opacity: 0.25;
+}
+
+/* ── Status pill — visible on every branch (§5) ─────────────────────────── */
+.ks-pill {
+  font-family: var(--bars-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: var(--bars-radius-full);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.ks-pill--ready {
+  color: var(--ks-teal-lite);
+  border-color: color-mix(in srgb, var(--ks-teal) 45%, transparent);
+  background: rgba(47, 185, 160, 0.1);
+}
+.ks-pill--soon {
+  color: var(--bars-text-secondary);
+  border-color: var(--bars-line-dashed);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ── CTAs (coral primary) ───────────────────────────────────────────────── */
+.ks-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-height: 44px; /* covenant: 44px touch target */
+  padding: 0 18px;
+  border-radius: var(--bars-radius-full);
+  font-family: var(--bars-font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a0f0b;
+  background: var(--ks-coral);
+  border: 1px solid transparent;
+  transition:
+    transform 0.08s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.ks-cta:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 0 20px var(--ks-coral-glow);
+}
+.ks-cta:active {
+  transform: scale(0.985);
+}
+.ks-cta:focus-visible {
+  outline: 2px solid var(--bars-text-primary);
+  outline-offset: 2px;
+}
+
+/* Ghost / secondary CTA. */
+.ks-cta--ghost {
+  color: var(--bars-text-primary);
+  background: transparent;
+  border-color: var(--bars-line-strong);
+}
+.ks-cta--ghost:hover {
+  border-color: var(--ks-coral-lite);
+  filter: none;
+  box-shadow: none;
+}
+
+/* ── Self-report + share chips ──────────────────────────────────────────── */
+.ks-chip {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-radius: var(--bars-radius-md);
+  border: 1px solid var(--bars-line-strong);
+  background: var(--bars-surface-inset);
+  padding: 12px 14px;
+  min-height: 44px;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.08s ease;
+  cursor: pointer;
+}
+.ks-chip:hover {
+  border-color: color-mix(in srgb, var(--ks-coral) 45%, var(--bars-line-strong));
+  background: rgba(255, 255, 255, 0.025);
+}
+.ks-chip:active {
+  transform: scale(0.99);
+}
+.ks-chip[aria-pressed='true'] {
+  border-color: var(--ks-coral);
+  background: rgba(255, 106, 77, 0.08);
+}
+.ks-chip:focus-visible {
+  outline: 2px solid var(--bars-text-primary);
+  outline-offset: 2px;
+}
+
+/* Copy-to-clipboard block. */
+.ks-copy {
+  border: 1px solid var(--bars-line-strong);
+  border-radius: var(--bars-radius-md);
+  background: var(--bars-surface-inset);
+}
+
+/* ── Entry motion (one ambient move; covenant Law 12) ───────────────────── */
+@keyframes ks-rise {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ks-rise {
+  animation: ks-rise 0.42s var(--bars-ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ks-rise {
+    animation: none !important;
+  }
+  .ks-card,
+  .ks-cta,
+  .ks-chip {
+    transition: none !important;
+  }
+}
