@@ -17,11 +17,40 @@ import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 
 type PartKey = 'title' | 'move' | 'face' | 'domain' | 'prompt' | 'meta'
 
-const CTA_HREF = '/launch'
-const BOOK_HREF = '/book/sales'
-const PRICE_LINE = 'price · format · what is included - pending'
-const GUARANTEE_LINE = 'honest-terms guarantee - e.g. carry it a week; if not one move lands, send it back - pending'
-const CTA_PRICE = 'cta destination + price - pending'
+/**
+ * An expansion pack, pre-formatted on the server from the launch offers registry
+ * so this client component never imports the offer logic. `live` is `isOfferLive`
+ * resolved server-side; a pack with no live Gumroad URL renders "coming soon".
+ */
+export interface SalesPack {
+  key: string
+  name: string
+  blurb: string
+  priceLabel: string
+  accent?: string
+  gumroadUrl?: string
+  live: boolean
+}
+
+export interface DeckSalesExperienceProps {
+  cards: MoveCard[]
+  /** The superpower expansion packs sold beside the deck (their only storefront). */
+  packs?: SalesPack[]
+  /** One-line lead above the pack grid, e.g. "…$8 a pack." */
+  packLead?: string
+  /** Campaign social proof; hidden when omitted. */
+  socialProof?: { raisedDollars: number; backers: number }
+  ctaHref?: string
+  bookHref?: string
+  priceLine?: string
+  guaranteeLine?: string
+  ctaPrice?: string
+}
+
+const PRICE_LINE_DEFAULT = 'price · format · what is included - pending'
+const GUARANTEE_LINE_DEFAULT =
+  'The whole promise is a move in the ten seconds that matter. Carry the deck thirty days; if not one lands there, one email gets your money back — no forms, and you keep the deck.'
+const CTA_PRICE_DEFAULT = 'cta destination + price - pending'
 
 const FACES: Operation[] = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage']
 const MOVES: BasicMove[] = ['wake_up', 'open_up', 'clean_up', 'grow_up', 'show_up']
@@ -88,14 +117,30 @@ const OBJECTIONS = [
   },
   {
     q: "What if it doesn't work for me?",
-    a: GUARANTEE_LINE,
+    a: GUARANTEE_LINE_DEFAULT,
   },
 ] as const
 
-export function DeckSalesExperience({ cards }: { cards: MoveCard[] }) {
+export function DeckSalesExperience({
+  cards,
+  packs = [],
+  packLead = 'Add your superpowers to the deck — 60 move-cards each, inner and outer.',
+  socialProof,
+  ctaHref = '/launch',
+  bookHref = '/mastering-allyship',
+  priceLine = PRICE_LINE_DEFAULT,
+  guaranteeLine = GUARANTEE_LINE_DEFAULT,
+  ctaPrice = CTA_PRICE_DEFAULT,
+}: DeckSalesExperienceProps) {
   const [anaIdx, setAnaIdx] = useState(0)
   const [activePart, setActivePart] = useState<PartKey>('title')
   const [selected, setSelected] = useState<MoveCard | null>(null)
+
+  // The last objection ("what if it doesn't work") carries the guarantee terms;
+  // keep it in sync with the prop so the copy has one source.
+  const objections = OBJECTIONS.map((o, i) =>
+    i === OBJECTIONS.length - 1 ? { ...o, a: guaranteeLine } : o,
+  )
 
   const heroCards = useMemo(() => {
     const pick = (move: BasicMove) => cards.find((card) => card.move === move) ?? cards[0]!
@@ -124,7 +169,7 @@ export function DeckSalesExperience({ cards }: { cards: MoveCard[] }) {
           <span className="deck-sales-brand-mark">B</span>
           <span>the allyship deck</span>
         </Link>
-        <Link href={CTA_HREF} className="deck-sales-top-cta">
+        <Link href={ctaHref} className="deck-sales-top-cta">
           get the deck
         </Link>
       </header>
@@ -233,9 +278,11 @@ export function DeckSalesExperience({ cards }: { cards: MoveCard[] }) {
           <Label>what it is</Label>
           <h2 className="deck-sales-h2 deck-sales-large-h2">120 cards.</h2>
           <p className="deck-sales-sub deck-sales-format">Physical, so they&apos;re in your bag when the phone isn&apos;t the move - and in bars-engine when your hands are full.</p>
-          <div className="deck-sales-dashed">{PRICE_LINE}</div>
+          <div className="deck-sales-dashed">{priceLine}</div>
         </div>
       </section>
+
+      {packs.length > 0 && <PackUpsell packs={packs} lead={packLead} />}
 
       <Band>
         <div className="deck-sales-col deck-sales-grid-copy">
@@ -244,7 +291,7 @@ export function DeckSalesExperience({ cards }: { cards: MoveCard[] }) {
           <p className="deck-sales-p">
             If you want the world these moves came from - why these five, where the six faces come from, what game you&apos;ve been playing all along - that&apos;s the book. The deeper door. Recommended, never required.
           </p>
-          <div className="deck-sales-dashed deck-sales-left-dashed">{GUARANTEE_LINE}</div>
+          <div className="deck-sales-dashed deck-sales-left-dashed">{guaranteeLine}</div>
         </div>
       </Band>
 
@@ -254,10 +301,22 @@ export function DeckSalesExperience({ cards }: { cards: MoveCard[] }) {
           <Label>the choice</Label>
           <p className="deck-sales-sub deck-sales-choice-lead">You were never short on care, or on understanding. You were short a move in the ten seconds it mattered.</p>
           <h2 className="deck-sales-h2 deck-sales-choice-title">put a hundred and twenty of them in your bag.</h2>
-          <Link href={CTA_HREF} className="deck-sales-final-cta">
+          {socialProof && (
+            <div className="deck-sales-stats">
+              <div className="deck-sales-stat">
+                <b>${socialProof.raisedDollars.toLocaleString('en-US')}</b>
+                <span>raised by the community</span>
+              </div>
+              <div className="deck-sales-stat">
+                <b>{socialProof.backers.toLocaleString('en-US')}</b>
+                <span>backers and counting</span>
+              </div>
+            </div>
+          )}
+          <Link href={ctaHref} className="deck-sales-final-cta">
             get the deck →
           </Link>
-          <div className="deck-sales-price">{CTA_PRICE}</div>
+          <div className="deck-sales-price">{ctaPrice}</div>
         </div>
       </section>
 
@@ -266,7 +325,7 @@ export function DeckSalesExperience({ cards }: { cards: MoveCard[] }) {
           <div className="deck-sales-ember-label">before you go</div>
           <h2 className="deck-sales-h2 deck-sales-objections-title">the honest questions.</h2>
           <div className="deck-sales-objection-stack">
-            {OBJECTIONS.map((objection) => (
+            {objections.map((objection) => (
               <article className="deck-sales-objection" key={objection.q}>
                 <p>“{objection.q}”</p>
                 <span>{objection.a}</span>
@@ -283,7 +342,7 @@ export function DeckSalesExperience({ cards }: { cards: MoveCard[] }) {
             <h2 className="deck-sales-h2 deck-sales-book-title">want the world these moves came from?</h2>
             <p>The field guide is the full playbook - why these five moves, where the six faces come from, and the game you&apos;ve been playing all along. Recommended, never required. Get both together.</p>
           </div>
-          <Link href={BOOK_HREF} className="deck-sales-book-cta">
+          <Link href={bookHref} className="deck-sales-book-cta">
             explore the book →
           </Link>
         </div>
@@ -291,7 +350,7 @@ export function DeckSalesExperience({ cards }: { cards: MoveCard[] }) {
 
       <footer className="deck-sales-footer">
         <span>the allyship deck · mastering the game of allyship · © wendell britt</span>
-        <Link href={BOOK_HREF}>the book</Link>
+        <Link href={bookHref}>the book</Link>
       </footer>
 
       {selected && (
@@ -511,6 +570,51 @@ function SalesCardMini({ card }: { card: MoveCard }) {
         <b>{card.remediation}</b>
       </footer>
     </article>
+  )
+}
+
+/**
+ * Expansion-pack upsell — the seven $8 superpower packs. This deck page is their
+ * only storefront (they are held back from the /launch grid), so the section is
+ * load-bearing, not decorative. A pack with no live Gumroad URL shows an honest
+ * "coming soon" instead of a dead link.
+ */
+function PackUpsell({ packs, lead }: { packs: SalesPack[]; lead: string }) {
+  return (
+    <section className="deck-sales-section deck-sales-band deck-sales-packs">
+      <div className="deck-sales-col deck-sales-grid-copy deck-sales-center">
+        <Label>go deeper · expansion packs</Label>
+        <p className="deck-sales-sub deck-sales-packs-lead">{lead}</p>
+      </div>
+      <div className="deck-sales-packs-grid">
+        {packs.map((pack) => (
+          <article
+            className="deck-sales-pack"
+            key={pack.key}
+            style={{ '--pack-accent': pack.accent ?? '#928b7d' } as CSSProperties}
+          >
+            <span className="deck-sales-pack-swatch" aria-hidden />
+            <h3>{pack.name}</h3>
+            <p>{pack.blurb}</p>
+            <div className="deck-sales-pack-foot">
+              <span className="deck-sales-pack-price">{pack.priceLabel}</span>
+              {pack.live && pack.gumroadUrl ? (
+                <a
+                  href={pack.gumroadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="deck-sales-pack-add"
+                >
+                  add →
+                </a>
+              ) : (
+                <span className="deck-sales-pack-soon">coming soon</span>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }
 
