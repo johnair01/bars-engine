@@ -195,6 +195,7 @@ model Player {
   roomPresences                  RoomPresence[]
   sceneAtlasGuidedDrafts         SceneAtlasGuidedDraft[]
   shadow321Sessions              Shadow321Session[]
+  alchemySessions                AlchemySession[]
   tapTheVeinDailySessions        TapTheVeinDailySession[]
   spokeMoveBedKernelsPlanted     SpokeMoveBedKernel[]        @relation("SpokeMoveBedKernelPlantedBy")
   spokeMoveBedsAnchored          SpokeMoveBed[]              @relation("SpokeMoveBedAnchoredBy")
@@ -378,6 +379,8 @@ model CustomBar {
   evidenceKind                         String?
   sourceBarId                          String?
   source321SessionId                   String?
+  /// When set, this charge BAR was metabolized via an Emotional Alchemy practice (provenance back-link).
+  sourceAlchemySessionId               String?
   proposedByAgentId                    String?
   creatorNationKey                     String?                @map("creator_nation_key")
   creatorArchetypeKey                  String?                @map("creator_archetype_key")
@@ -636,6 +639,45 @@ model NextActionBridge {
 
   @@index([questId])
   @@map("next_action_bridges")
+}
+
+/// A logged Emotional Alchemy practice — the "extension of BARs logging" (mirrors
+/// Shadow321Session). Structured-only: no raw blocker/story text is ever stored
+/// (§1.6). Hangs off the charge BAR via chargeSourceBarId; CustomBar.sourceAlchemySessionId
+/// is the back-link. Spec: .specify/specs/emotional-alchemy-service/spec.md
+model AlchemySession {
+  id                String   @id @default(cuid())
+  playerId          String
+  createdAt         DateTime @default(now())
+  /// Originating charge BAR when the practice was launched from a charge (BARs logging).
+  chargeSourceBarId String?
+  /// capture | efa | roadblock | deck | daemon | manual
+  source            String
+  channel           String
+  intensityBefore   Int
+  altitude          String
+  target            String
+  drawnCardId       String?
+  toolId            String
+  /// JSON array of move-role annotations (metabolize|translate|transcend).
+  rolePath          String
+  /// internal | external | declined
+  showUpKind        String?
+  showUpRecipient   String?
+  showUpDate        DateTime?
+  showUpDoneCheck   Boolean?
+  /// Re-rate after the practice (§1.5). Null if the player did not re-rate.
+  intensityAfter    Int?
+  timeboxKept       Boolean?
+  exitedGracefully  Boolean  @default(false)
+  threadLabel       String?
+  /// JSON array of DiagnosticFlag values.
+  flags             String
+  player            Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@index([chargeSourceBarId])
+  @@map("alchemy_sessions")
 }
 
 model Shadow321Session {

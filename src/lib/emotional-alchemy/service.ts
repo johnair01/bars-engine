@@ -11,8 +11,8 @@
  * raw blocker/story text. Raw text stays in client state and the BAR itself.
  */
 
-import type { EmotionChannel } from './types'
-import type { Altitude, DiagnosticAnswers, ThreadRef } from './vector'
+import type { EmotionChannel, MoveRole } from './types'
+import type { Altitude, DiagnosticAnswers, DiagnosticFlag, EmotionalVector, ThreadRef } from './vector'
 import { normalizeCaptureIntensity } from './vector'
 
 export type AlchemySource = 'capture' | 'efa' | 'roadblock' | 'deck' | 'daemon' | 'manual'
@@ -35,6 +35,27 @@ export interface AlchemySeed {
   barId?: string
   /** Where to send the player after the practice. */
   returnTo?: string
+}
+
+/**
+ * Structured-only log of a practice — the input to `logAlchemySession`. Mirrors
+ * the AlchemySession Prisma model. NB: no raw blocker/story text (§1.6).
+ */
+export interface AlchemySessionInput {
+  /** The charge BAR this practice extends (BARs logging provenance). */
+  chargeSourceBarId?: string
+  source: AlchemySource
+  vectorBefore: EmotionalVector
+  drawnCardId?: string
+  toolId: string
+  rolePath: MoveRole[]
+  showUp?: { kind: 'internal' | 'external' | 'declined'; recipient?: string; date?: string; doneCheck?: boolean }
+  /** Re-rate after the practice (§1.5). */
+  vectorAfterIntensity?: number
+  timeboxKept?: boolean
+  exitedGracefully?: boolean
+  threadLabel?: string
+  flags: DiagnosticFlag[]
 }
 
 export const DIAGNOSE_PATH = '/practice/diagnose'

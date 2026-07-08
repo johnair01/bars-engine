@@ -9,7 +9,7 @@
 // diagnostic (SceneCard) — UI_COVENANT law 10.
 // ---------------------------------------------------------------------------
 
-import { useState, type CSSProperties } from 'react'
+import { useState, useTransition, type CSSProperties } from 'react'
 import { SURFACE_TOKENS, ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import {
   themeForMove,
@@ -29,7 +29,19 @@ import {
   type PracticeRecommendation,
   type EmotionalVector,
   type EmotionChannel,
+  type AlchemySource,
+  type DiagnosticFlag,
 } from '@/lib/emotional-alchemy'
+import { logAlchemySession } from '@/actions/alchemy-session'
+
+/** What the practice card needs to log a session (service Phase 1). */
+export interface PracticeLogContext {
+  source: AlchemySource
+  barId?: string
+  threadLabel?: string
+  drawnCardId?: string
+  flags: DiagnosticFlag[]
+}
 
 const CHANNEL_LABEL: Record<EmotionChannel, string> = { anger: 'Anger', sadness: 'Sadness', fear: 'Fear', joy: 'Joy', neutrality: 'Neutrality' }
 
@@ -51,8 +63,8 @@ function channelGem(channel: EmotionChannel): string {
   return ELEMENT_TOKENS[EMOTION_TO_ELEMENT[channel]].gem
 }
 
-function ReRate({ before }: { before: number }) {
-  const [after, setAfter] = useState<number | null>(null)
+function ReRate({ before, after, onRate }: { before: number; after: number | null; onRate: (n: number) => void }) {
+  const setAfter = onRate
   const highDistress = after !== null && isCrisisIntensity(after) // 9–10 after the rep → escalate
   const delta = after === null ? null : before - after
   const verdict = delta === null ? null : delta >= 2 ? 'moved' : delta <= -2 ? 'worse' : 'flat'
@@ -97,9 +109,31 @@ function ReRate({ before }: { before: number }) {
   )
 }
 
-export function PracticeCard({ card, rec, vector }: { card: MoveCard; rec: PracticeRecommendation; vector: EmotionalVector }) {
+export function PracticeCard({ card, rec, vector, logContext }: { card: MoveCard; rec: PracticeRecommendation; vector: EmotionalVector; logContext?: PracticeLogContext }) {
   const [showWhy, setShowWhy] = useState(false)
   const [picked, setPicked] = useState<'internal' | 'external' | null>(null)
+  const [after, setAfter] = useState<number | null>(null)
+  const [logState, setLogState] = useState<'idle' | 'saved' | 'signin' | 'error'>('idle')
+  const [saving, startSave] = useTransition()
+
+  function logRep() {
+    if (!logContext) return
+    startSave(async () => {
+      const res = await logAlchemySession({
+        chargeSourceBarId: logContext.barId,
+        source: logContext.source,
+        vectorBefore: vector,
+        drawnCardId: logContext.drawnCardId,
+        toolId: rec.primaryToolId,
+        rolePath: rec.rolePath,
+        showUp: picked ? { kind: picked } : undefined,
+        vectorAfterIntensity: after ?? undefined,
+        threadLabel: logContext.threadLabel,
+        flags: logContext.flags,
+      })
+      setLogState('error' in res ? (res.error === 'Not logged in' ? 'signin' : 'error') : 'saved')
+    })
+  }
 
   const t = themeForMove(card.move)
   const tool = getToolById(rec.primaryToolId)
@@ -198,7 +232,31 @@ export function PracticeCard({ card, rec, vector }: { card: MoveCard; rec: Pract
       {/* Re-rate close (§1.5). */}
       {picked && (
         <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: 16 }}>
-          <ReRate before={vector.intensity} />
+          <ReRate before={vector.intensity} after={after} onRate={setAfter} />
+        </div>
+      )}
+
+      {/* Log the rep — the "extension of BARs logging" (service Phase 1). Only
+          when a log context is present (a seeded/authenticated session). */}
+      {logContext && picked && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: 16, display: 'grid', gap: 8 }}>
+          {logState === 'saved' ? (
+            <span style={{ ...kicker, color: DECK_GOLD }}>Logged to this charge — it&apos;s part of your practice now.</span>
+          ) : logState === 'signin' ? (
+            <span style={{ ...body, fontSize: 13, color: SURFACE_TOKENS.textSecondary }}>Sign in to keep this rep on your charge&apos;s history.</span>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={logRep}
+                disabled={saving}
+                style={{ fontFamily: DECK_FONTS.display, fontWeight: 700, fontSize: 14, background: DECK_GOLD, border: `1px solid ${DECK_GOLD}`, borderRadius: 10, padding: '11px 20px', color: '#150a04', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1, justifySelf: 'start' }}
+              >
+                {saving ? 'Logging…' : 'Log this rep →'}
+              </button>
+              {logState === 'error' && <span style={{ ...body, fontSize: 13, color: '#f0c84a' }}>Couldn&apos;t log that — try again.</span>}
+            </>
+          )}
         </div>
       )}
 

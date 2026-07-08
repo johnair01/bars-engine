@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { DiagnoseClient } from './DiagnoseClient'
+import { seedFromParams } from '@/lib/emotional-alchemy'
 
 /**
  * @page /practice/diagnose
@@ -11,11 +12,20 @@ import { DiagnoseClient } from './DiagnoseClient'
  * @example /practice/diagnose
  * @agentDiscoverable false
  *
- * Spec: .specify/specs/emotional-alchemy-diagnostic/spec.md
- * DB-free, client-first (deck precedent). No auth gate in Phase 1; persistence
- * and the auth gate arrive with the session log (Practice Atlas target 5).
+ * Spec: .specify/specs/emotional-alchemy-diagnostic/spec.md + emotional-alchemy-service
+ * Accepts a service seed via query params (?src=&ch=&i=&thread=&card=&bar=&return=)
+ * — seedFromParams validates it; the flow skips seeded steps and logs against the
+ * charge BAR when present (Phase 1).
  */
-export default function DiagnosePage() {
+export default async function DiagnosePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = await searchParams
+  const usp = new URLSearchParams()
+  for (const [k, v] of Object.entries(sp)) {
+    if (typeof v === 'string') usp.set(k, v)
+    else if (Array.isArray(v) && v[0] != null) usp.set(k, v[0])
+  }
+  const seed = usp.toString() ? seedFromParams(usp) : undefined
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans">
       <div className="mx-auto max-w-lg space-y-8 px-4 py-12">
@@ -27,7 +37,7 @@ export default function DiagnosePage() {
           <h1 className="text-2xl font-bold text-white">Charge Diagnostic</h1>
           <p className="text-sm text-zinc-500">Name what&apos;s live, get a clear read, then move.</p>
         </header>
-        <DiagnoseClient />
+        <DiagnoseClient seed={seed} />
       </div>
     </div>
   )

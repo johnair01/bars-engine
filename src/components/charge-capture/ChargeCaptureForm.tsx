@@ -10,6 +10,7 @@ import {
 } from '@/actions/charge-capture'
 import type { CreateChargeBarPayload, ChargeExploreCeremony, PersonalMove } from '@/actions/charge-capture'
 import { TransitionCeremony } from '@/components/charge-capture/TransitionCeremony'
+import { alchemyHref, seedFromCapture } from '@/lib/emotional-alchemy'
 import type { QuestSuggestion } from '@/lib/charge-quest-generator'
 
 // ── Emotion options — large tap targets ──────────────────────────────────────
@@ -59,7 +60,15 @@ const MOVE_OPTIONS: MoveOption[] = [
   { value: 'showUp',  label: 'Show Up',  hint: 'Act and contribute',   color: 'border-zinc-700 text-zinc-400 hover:border-purple-700/50',  active: 'border-purple-500 bg-purple-950/40 text-purple-300' },
 ]
 
-type CapturedCharge = { id: string; title: string; personalMove?: PersonalMove }
+type CapturedCharge = {
+  id: string
+  title: string
+  personalMove?: PersonalMove
+  // Structured fields carried into the Emotional Alchemy seed (never raw text).
+  emotion?: CreateChargeBarPayload['emotion_channel']
+  satisfaction?: CreateChargeBarPayload['satisfaction']
+  intensity?: 1 | 2 | 3 | 4 | 5
+}
 
 type ChargeCaptureFormProps = {
   hasChargedToday?: boolean
@@ -126,7 +135,7 @@ export function ChargeCaptureForm({
         personal_move: moveChoice,
       })
       if ('error' in result) { setError(result.error); return }
-      if ('barId' in result) setCaptured((prev) => [...prev, { id: result.barId, title: capturedSummary, personalMove: moveChoice }])
+      if ('barId' in result) setCaptured((prev) => [...prev, { id: result.barId, title: capturedSummary, personalMove: moveChoice, emotion, satisfaction, intensity }])
       reset()
       router.refresh()
     })
@@ -240,14 +249,24 @@ export function ChargeCaptureForm({
         <div className="space-y-2">
           <p className="text-[10px] uppercase tracking-widest text-zinc-500">Captured this session</p>
           {captured.map((c) => (
-            <div key={c.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-950/50 border border-zinc-800">
-              <p className="text-sm text-zinc-300 truncate">{c.title}</p>
-              <PostCaptureActions
-                chargeId={c.id}
-                onExplore={() => handleExplore(c.id)}
-                isPending={isPending}
-                compact
-              />
+            <div key={c.id} className="space-y-2 p-3 rounded-xl bg-zinc-950/50 border border-zinc-800">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-zinc-300 truncate">{c.title}</p>
+                <PostCaptureActions
+                  chargeId={c.id}
+                  onExplore={() => handleExplore(c.id)}
+                  isPending={isPending}
+                  compact
+                />
+              </div>
+              {/* Emotional Alchemy trigger — seed the diagnostic from the charge
+                  (channel/altitude/intensity), keeping raw text off the URL (§1.6). */}
+              <Link
+                href={alchemyHref(seedFromCapture({ barId: c.id, channel: c.emotion, satisfaction: c.satisfaction, intensityOneToFive: c.intensity, returnTo: '/capture' }))}
+                className="inline-block text-xs font-medium text-purple-300 hover:text-purple-200"
+              >
+                Metabolize it now →
+              </Link>
             </div>
           ))}
         </div>

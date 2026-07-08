@@ -5,13 +5,15 @@ import Link from 'next/link'
 import { DiagnosticFlow } from '@/components/practice/DiagnosticFlow'
 import { DiagnosticSummary } from '@/components/practice/DiagnosticSummary'
 import { DeckDrawReveal } from '@/components/practice/DeckDrawReveal'
-import { PracticeCard } from '@/components/practice/PracticeCard'
+import { PracticeCard, type PracticeLogContext } from '@/components/practice/PracticeCard'
 import {
   recommendPractice,
   composerCardFromMoveCard,
+  seedToAnswers,
   crisisResources,
   type DiagnosticResult,
   type PracticeRecommendation,
+  type AlchemySeed,
 } from '@/lib/emotional-alchemy'
 import type { MoveCard } from '@/lib/allyship-deck/types'
 
@@ -25,9 +27,10 @@ type End =
 
 const eyebrow = 'text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500'
 
-export function DiagnoseClient() {
+export function DiagnoseClient({ seed }: { seed?: AlchemySeed }) {
   const [state, setState] = useState<End>({ kind: 'flow' })
   const begin = () => setState({ kind: 'flow' })
+  const initialAnswers = seed ? seedToAnswers(seed) : undefined
 
   function form(result: DiagnosticResult, card: MoveCard) {
     const rec = recommendPractice(composerCardFromMoveCard(card), result)
@@ -106,16 +109,27 @@ export function DiagnoseClient() {
   }
 
   if (state.kind === 'practice') {
+    const logContext: PracticeLogContext = {
+      source: seed?.source ?? 'manual',
+      barId: seed?.barId,
+      threadLabel: state.result.thread.label,
+      drawnCardId: state.card.id,
+      flags: state.result.flags,
+    }
     return (
       <div className="space-y-6">
-        <PracticeCard card={state.card} rec={state.rec} vector={state.result.vector} />
-        <button onClick={begin} className="text-sm text-zinc-500 hover:text-zinc-300">Begin again</button>
+        <PracticeCard card={state.card} rec={state.rec} vector={state.result.vector} logContext={logContext} />
+        <div className="flex gap-5 text-sm">
+          <button onClick={begin} className="text-zinc-500 hover:text-zinc-300">Begin again</button>
+          {seed?.returnTo && <Link href={seed.returnTo} className="text-zinc-500 hover:text-zinc-300">← Back</Link>}
+        </div>
       </div>
     )
   }
 
   return (
     <DiagnosticFlow
+      initialAnswers={initialAnswers}
       onComplete={(result) => setState({ kind: 'summary', result })}
       onCrisis={() => setState({ kind: 'crisis' })}
       onCaptureOnly={() => setState({ kind: 'capture' })}

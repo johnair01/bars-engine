@@ -46,6 +46,8 @@ type Props = {
   onComplete: (result: DiagnosticResult) => void
   onCrisis: () => void
   onCaptureOnly: () => void
+  /** Seed prefill from the service (§Phase 1). Seeded steps are skipped. */
+  initialAnswers?: Partial<DiagnosticAnswers>
 }
 
 type HarmChoice = 'onme' | 'witness' | 'both' | 'own'
@@ -118,14 +120,23 @@ function GentleHelp({ onReach }: { onReach: () => void }) {
 
 // ---------------------------------------------------------------------------
 
-export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
-  const [answers, setAnswers] = useState<DiagnosticAnswers>({})
+export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly, initialAnswers }: Props) {
+  const [answers, setAnswers] = useState<DiagnosticAnswers>(() => ({ ...initialAnswers }))
   const [current, setCurrent] = useState<DiagnosticStep>('blocker')
   const [history, setHistory] = useState<DiagnosticStep[]>([])
   const [harmChoice, setHarmChoice] = useState<HarmChoice | null>(null)
 
   const patch = (p: Partial<DiagnosticAnswers>) => setAnswers((a) => ({ ...a, ...p }))
   const plan = useMemo(() => planSteps(answers), [answers])
+
+  // Steps the seed already answered → skipped when advancing (Phase 1 prefill).
+  const seededSteps = useMemo<Set<DiagnosticStep>>(() => {
+    const s = new Set<DiagnosticStep>()
+    if (initialAnswers?.thread) s.add('thread')
+    if (initialAnswers?.channelPick) s.add('channel')
+    if (typeof initialAnswers?.intensity === 'number') s.add('intensity')
+    return s
+  }, [initialAnswers])
 
   const effChannel: EmotionChannel | null = (() => {
     if (answers.channelPick === 'flat' && answers.flatAnswer) return resolveFlat(answers.flatAnswer).channel ?? answers.channelConfirmed ?? null
@@ -153,7 +164,9 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
 
   function goNext() {
     const p = planSteps(answers)
-    const next = p[p.indexOf(current) + 1]
+    let i = p.indexOf(current) + 1
+    while (i < p.length && seededSteps.has(p[i])) i++ // skip pre-seeded steps
+    const next = p[i]
     if (!next) return
     if (next === 'defaults') enterDefaults()
     if (next === 'summary') return onComplete(finalizeResult(answers))
