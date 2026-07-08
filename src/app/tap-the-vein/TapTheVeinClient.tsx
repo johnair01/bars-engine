@@ -87,12 +87,8 @@ export function TapTheVeinClient({ initial }: { initial: TtvToday }) {
     setPlantedTrace(null)
     startTransition(async () => {
       const result = await promoteTaskToBar(taskId)
-      if ('error' in result && result.error) {
+      if ('error' in result) {
         setMessage(result.error)
-        return
-      }
-      if (!('barId' in result) || !result.barId) {
-        setMessage('The BAR was planted, but the confirmation did not come back cleanly. Refresh and check today’s tasks.')
         return
       }
       const trace = isLensGoalTrace(result.plantSnapshot) ? result.plantSnapshot : null

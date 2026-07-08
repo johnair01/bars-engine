@@ -613,7 +613,9 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
  * Keep/plant gesture (CGLA H1, lazy) — promote a task into a BAR so it joins the
  * core loop. Idempotent; returns the (existing or new) barId.
  */
-export async function promoteTaskToBar(taskId: string): Promise<TtvResult<{ barId: string }>> {
+type PromoteTaskToBarResult = { error: string } | { barId: string; plantSnapshot: unknown | null }
+
+export async function promoteTaskToBar(taskId: string): Promise<PromoteTaskToBarResult> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   try {
@@ -631,7 +633,8 @@ export async function promoteTaskToBar(taskId: string): Promise<TtvResult<{ barI
 
     revalidatePath('/tap-the-vein')
     revalidatePath('/vault')
-    return { barId }
+    const bar = await db.customBar.findFirst({ where: { id: barId, creatorId: player.id }, select: { plantSnapshot: true } })
+    return { barId, plantSnapshot: bar?.plantSnapshot ?? null }
   } catch (e) {
     console.error('[ttv:promoteTaskToBar]', e)
     return { error: 'Failed to plant task' }
