@@ -6,7 +6,8 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import { isLensDomainKey } from '@/lib/lenses/domains'
-import { buildLensGoalSnapshot, resolveLensGoalTrace, type LensGoalTrace } from '@/lib/lenses/lineage'
+import { buildLensGoalSnapshot, resolveLensGoalTrace } from '@/lib/lenses/lineage'
+import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
 import { ensureCadenceLens } from '@/lib/lenses/onboarding-data'
 import { ACTIVE_TTV_TASK_STATUSES, canCommitTtvTask, nextHistoricalPriorityRank } from '@/lib/tap-the-vein/commit-policy'
 import type { TtvLensGoalOption, TtvTaskDTO, TtvToday } from '@/lib/tap-the-vein/types'
@@ -242,7 +243,9 @@ export async function updateTaskStatus(input: { taskId: string; status: string; 
   return { ok: true }
 }
 
-export async function promoteTaskToBar(taskId: string) {
+type PromoteTaskToBarResult = { error: string } | { barId: string; plantSnapshot: unknown | null }
+
+export async function promoteTaskToBar(taskId: string): Promise<PromoteTaskToBarResult> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not authenticated' }
   const task = await db.tapTheVeinTask.findFirst({ where: { id: taskId, playerId: player.id } })

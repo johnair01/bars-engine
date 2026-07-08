@@ -1,5 +1,5 @@
 import type { LensDomainKey } from '@/lib/lenses/domains'
-import type { LensGoalTrace } from '@/lib/lenses/lineage'
+import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
 
 export type TtvTaskDTO = {
   id: string

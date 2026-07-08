@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { commitTask, promoteTaskToBar, saveBrainstorm, updateTaskStatus } from '@/actions/tap-the-vein'
 import { getLensDomain, isLensDomainKey } from '@/lib/lenses/domains'
-import { isLensGoalTrace, type LensGoalTrace } from '@/lib/lenses/lineage'
+import { isLensGoalTrace, type LensGoalTrace } from '@/lib/lenses/lineage-types'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import type { TtvTaskDTO, TtvToday } from '@/lib/tap-the-vein/types'
 
@@ -87,12 +87,8 @@ export function TapTheVeinClient({ initial }: { initial: TtvToday }) {
     setPlantedTrace(null)
     startTransition(async () => {
       const result = await promoteTaskToBar(taskId)
-      if ('error' in result && result.error) {
+      if ('error' in result) {
         setMessage(result.error)
-        return
-      }
-      if (!('barId' in result) || !result.barId) {
-        setMessage('The BAR was planted, but the confirmation did not come back cleanly. Refresh and check today’s tasks.')
         return
       }
       const trace = isLensGoalTrace(result.plantSnapshot) ? result.plantSnapshot : null
