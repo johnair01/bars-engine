@@ -1,0 +1,35 @@
+# Tasks
+
+- [x] Explore Obsidian library context and capture count distinctions.
+- [x] Create canonical emotional state and label definitions.
+- [x] Generate legal direct practice moves.
+- [x] Implement shortest-path move planning with multiple suggestions.
+- [x] Add tests for counts and restlessness-to-peace.
+- [x] Run the focused planner test.
+- [x] Integrate hostile review and six-GM remediation into spec/plan.
+- [x] Split doctrine graph from practice graph.
+- [x] Rename or reshape generic planner API into practice route planner API.
+- [x] Add `growth` and `mastery` route modes.
+- [x] Split `stabilize` identities from transcend move identities.
+- [x] Derive all count reports from graph definitions.
+- [x] Add route metadata fields for product use.
+- [x] Add target-intent classification for satisfied, neutral, and metabolizable dissatisfied targets.
+- [x] Add all-pairs routing tests for growth and mastery modes.
+- [x] Add tests for neutral terminal targets and metabolizable dissatisfied targets.
+- [x] Verify existing threshold scene resolver behavior is unchanged.
+- [x] Ground the superpower axis in library/code sources and distinguish it from domains, ensemble roles, and scenarios.
+- [x] Build a source inventory for superpower x domain x emotional-vector Show Up move examples before generating recommendation tables.
+- [x] Create the clean-axis test bench with 12 golden scenarios, superpower/domain tables, and 20 move card prototypes.
+- [ ] Resolve Catalyst vs Coach naming before user-facing recommendation copy ships.
+- [x] Hostile-review the 20 move card prototypes for mechanics, axis bleed, and handwaving.
+- [x] Correct hostile review to distinguish inner and external Show Up.
+- [x] Re-run hostile review with inner/outer Show Up and enacted-capacity criteria.
+- [x] Define primitive-first move architecture and translation function.
+- [x] Prove primitive translations for MP02 internal/external, MP08 internal/external, MP19 internal/external, MP05 external, and MP12 external.
+- [x] Define MVP primitive data schema for implementation.
+- [x] Implement `translateShowUpPrimitive(input)` for the MVP primitive set.
+- [x] Connect emotional vectors to primitive selection.
+- [x] Connect route planner edges to translated Show Up recommendations.
+- [x] Create UX design handoff for intake-facing primitive recommendations.
+- [ ] Wire primitive recommendations into an intake-facing service or UI surface.
+- [ ] Choose first MVP host for the recommendation panel: Allyship Deck, Daily Charge, or Alchemy Engine.

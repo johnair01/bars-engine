@@ -25,7 +25,6 @@ export function isLensGoalTrace(value: unknown): value is LensGoalTrace {
       'parentChain' in value,
   )
 }
-
 export function lensTraceSourceLabel(source: LensGoalTraceSource): string {
   switch (source) {
     case 'live':

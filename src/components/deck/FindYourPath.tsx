@@ -6,6 +6,7 @@ import { DECK_FONTS, DECK_GOLD, LIMINAL, MOVE_LABELS, themeForMove } from '@/lib
 import type { MoveCard, BasicMove, Operation, AllyshipDomain } from '@/lib/allyship-deck/types'
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
 import { SendToBarsButton } from './SendToBarsButton'
+import { WorkThisCardButton } from './WorkThisCardButton'
 
 // ─── Flavor / channel data ──────────────────────────────────────────────────
 
