@@ -4,6 +4,7 @@ import {
   defaultTargetForChannel,
   defaultAltitude,
   isHotCharge,
+  isCrisisIntensity,
   shouldOfferLayerCheck,
   resolveFlat,
   classifyBlockerShape,
@@ -47,6 +48,11 @@ describe('intensity-driven defaults (§1.3, §4, §8.2)', () => {
   it('isHotCharge fires at 7', () => {
     expect(isHotCharge(6)).toBe(false)
     expect(isHotCharge(7)).toBe(true)
+  })
+  it('isCrisisIntensity fires at 9–10 (seek outside help)', () => {
+    expect(isCrisisIntensity(8)).toBe(false)
+    expect(isCrisisIntensity(9)).toBe(true)
+    expect(isCrisisIntensity(10)).toBe(true)
   })
   it('layer check offered at 5', () => {
     expect(shouldOfferLayerCheck(4)).toBe(false)

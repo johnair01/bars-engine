@@ -24,6 +24,7 @@ import type { MoveCard } from '@/lib/allyship-deck/types'
 import {
   getToolById,
   EMOTION_TO_ELEMENT,
+  isCrisisIntensity,
   type PracticeRecommendation,
   type EmotionalVector,
   type EmotionChannel,
@@ -51,6 +52,7 @@ function channelGem(channel: EmotionChannel): string {
 
 function ReRate({ before }: { before: number }) {
   const [after, setAfter] = useState<number | null>(null)
+  const highDistress = after !== null && isCrisisIntensity(after) // 9–10 after the rep → escalate
   const delta = after === null ? null : before - after
   const verdict = delta === null ? null : delta >= 2 ? 'moved' : delta <= -2 ? 'worse' : 'flat'
   const message: Record<string, string> = {
@@ -78,7 +80,12 @@ function ReRate({ before }: { before: number }) {
           </button>
         ))}
       </div>
-      {verdict && <p style={{ ...body, fontSize: 14, color: verdict === 'worse' ? '#f0c84a' : SURFACE_TOKENS.textPrimary, margin: 0 }}>{before} → {after}. {message[verdict]}</p>}
+      {verdict && !highDistress && <p style={{ ...body, fontSize: 14, color: verdict === 'worse' ? '#f0c84a' : SURFACE_TOKENS.textPrimary, margin: 0 }}>{before} → {after}. {message[verdict]}</p>}
+      {highDistress && (
+        <div style={{ background: 'rgba(240,200,74,.08)', border: '1px solid rgba(240,200,74,.4)', borderRadius: 10, padding: 14 }}>
+          <p style={{ ...body, fontSize: 14, color: '#f0c84a', margin: 0 }}>{before} → {after}. Still at a {after} after the rep — a practice may not be enough right now. Reaching out is the strong move: in the US, call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline), or your local emergency number.</p>
+        </div>
+      )}
       <span style={{ ...kicker, color: SURFACE_TOKENS.textMuted }}>Not saved — this is your rep to keep.</span>
     </div>
   )

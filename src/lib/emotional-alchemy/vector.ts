@@ -168,6 +168,16 @@ export function isHotCharge(intensity: number): boolean {
   return intensity >= 7
 }
 
+/**
+ * Crisis range (0–10 scale): 9–10 means a practice may not be the right tool —
+ * surface the "seek outside help" path. Fires in the diagnostic intensity step
+ * AND on the post-practice re-rate (a rep that leaves the charge at 9–10
+ * escalates, it does not just suggest "a different tool").
+ */
+export function isCrisisIntensity(intensity: number): boolean {
+  return intensity >= 9
+}
+
 /** Atlas §8.2 — layer check offered once at intensity ≥ 5. */
 export function shouldOfferLayerCheck(intensity: number): boolean {
   return intensity >= 5

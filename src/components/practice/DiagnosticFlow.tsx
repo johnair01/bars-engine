@@ -20,6 +20,7 @@ import {
   planSteps,
   finalizeResult,
   classifyBlockerShape,
+  isCrisisIntensity,
   defaultAltitude,
   defaultTargetForChannel,
   defaultFeltShape,
@@ -281,12 +282,12 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
         const touched = typeof answers.intensity === 'number'
         const v = answers.intensity ?? 0
         const pct = (v / 10) * 100
-        const max = v === 10
+        const crisisRange = touched && isCrisisIntensity(v) // 9–10 → seek outside help
         return (
           <SceneCard prompt="How loud, right now?" subtext="Not how bad — how loud. Drag to where it sits." progress={progress(stepIndex)}>
             <div className="space-y-4">
               <div className="flex items-baseline gap-2">
-                <span className={`text-6xl font-bold tabular-nums ${!touched ? 'text-zinc-700' : max ? 'text-amber-400' : 'text-zinc-100'}`}>{touched ? v : '—'}</span>
+                <span className={`text-6xl font-bold tabular-nums ${!touched ? 'text-zinc-700' : crisisRange ? 'text-amber-400' : 'text-zinc-100'}`}>{touched ? v : '—'}</span>
                 <span className={eyebrow}>/ 10</span>
               </div>
               <input
@@ -304,10 +305,10 @@ export function DiagnosticFlow({ onComplete, onCrisis, onCaptureOnly }: Props) {
                 <span className={eyebrow}>Quiet</span>
                 <span className={eyebrow}>Flooding</span>
               </div>
-              {max && (
+              {crisisRange && (
                 <div className="rounded-xl border border-amber-800/60 bg-zinc-900 px-4 py-3">
-                  <p className={eyebrow + ' text-amber-500'}>A 10 is a lot to hold</p>
-                  <p className="mt-1 text-sm text-zinc-300">At full flood, a practice may not be the right tool right now. That&apos;s not failure — it&apos;s data.</p>
+                  <p className={eyebrow + ' text-amber-500'}>A {v} is a lot to hold</p>
+                  <p className="mt-1 text-sm text-zinc-300">At a 9 or 10, a practice may not be the right tool right now. Seeking outside help isn&apos;t failure — it&apos;s the strong move.</p>
                   <button type="button" onClick={() => { patch({ crisis: true }); onCrisis() }} className="mt-2 text-sm text-amber-400 hover:text-amber-300">
                     I need more than a practice →
                   </button>
