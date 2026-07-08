@@ -1,11 +1,11 @@
 # Tasks: Emotional Alchemy as a Service
 
-> DESIGN COMPLETE; BUILD PENDING. No task below is started — this is the phased plan.
+> Phase 0 BUILT (pure seed contract, DB-free). Phases 1–4 pending.
 
 ## Phase 0 — contract (no UI, DB-free)
-- [ ] `src/lib/emotional-alchemy/service.ts`: `AlchemySeed`, `seedToAnswers`, `seedFromVibeTag`, `alchemyHref`, `seedFromParams`
-- [ ] `__tests__/service.test.ts`: seed→answers skips seeded steps; vibe-tag map; href round-trips seedFromParams; intensity 1–5→0–10 normalize
-- [ ] export from index; add test to `vitest.config.ts`
+- [x] `src/lib/emotional-alchemy/service.ts`: `AlchemySeed`, `seedToAnswers`, `seedFromVibeTag`, `alchemyHref`, `seedFromParams`
+- [x] `__tests__/service.test.ts`: seed→answers skips seeded steps; vibe-tag map; href round-trips seedFromParams; intensity 1–5→0–10 normalize
+- [x] export from index; add test to `vitest.config.ts`
 
 ## Phase 1 — capture trigger + BARs logging
 - [ ] `DiagnoseClient` + `/practice/diagnose/page.tsx`: accept `seed` (via `seedFromParams`) + `returnTo`; prefill DiagnosticFlow

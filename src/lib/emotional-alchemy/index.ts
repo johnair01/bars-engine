@@ -21,6 +21,7 @@ export * from './vector'
 export * from './composer'
 export * from './deck-draw'
 export * from './crisis-resources'
+export * from './service'
 export { EMOTIONAL_ALCHEMY_TOOLS, HARD_GUARDS, SPIRIT_STEPS, EMOTION_TO_ELEMENT } from './registry'
 
 const RATING_ORDER: Record<ToolRating, number> = {
