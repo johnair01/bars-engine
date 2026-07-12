@@ -30,7 +30,7 @@ often verbatim:
 | **C3** | Completion: our demonstration teeth vs CD's "mirror, never a grade" | **Integrate through the Calm ↔ Progress polarity.** CD didn't have that context. | Meeting a charge = **mirror** (Calm/recovery register). Earning a capacity = **teeth** (Progress register / School). Feed CD the polarity map. |
 | **C4** | Card economy: permanent-owned + daily-limit (ours) vs Dominion draw (CD) | **We were partly off.** Capacities remain **permanently owned**, AND CD's draw layer surfaces a **meta-skill we'd missed: reliably pulling the card you want** (deck curation). Keep exploring. | Own-everything (economy C) holds; a **draw/reliability layer** sits on top. Needs a short design pass on *how* draw-reliability works when you own the whole deck. |
 | **C5** | Fruit taxonomy: our OutputBar-conflation vs CD's split | **Adopt CD's.** **Fruit type = `allyshipDomain`** (4 fruits = 4 domains, WHERE); **`OutputBar` = the durable artifact** banked to the Vault (with provenance). | Correct our docs/code that said "fruit = OutputBar × altitude." Our `MOVE_FRUIT` (move→OutputBar) is really *move → artifact-type* — relabel, don't delete. |
-| **C6** | Campaign progression: our Kotter + six-face-watering birth vs CD's pour-meter + bounded/recurring goals | **Needs integration** *(your note was cut off — confirm the direction below).* | Likely compose: six-face watering = **birth**; Kotter = the **inner arc**; CD's pour-meter = the **visible rollup**; bounded vs recurring = **goal-type, polarity-governed**. |
+| **C6** | Campaign progression: our Kotter + six-face-watering birth vs CD's pour-meter + bounded/recurring goals | **Integrate (CONFIRMED).** Compose the two. | Six-face watering = **birth**; Kotter = the **inner arc**; CD's pour-up = the **visible rollup meter**; bounded (%-to-done) vs recurring (perennial/Epic, yield-per-season, never "done") = **goal-type**, and the %-meter shows only on the **progress register** (polarity). |
 
 ## The scope axis (the consequence of C1)
 
@@ -73,10 +73,10 @@ capacity at the School has teeth (demonstration). Register (charge vs task) + `a
 curating a deck that reliably *draws* the one you need (deck-thinning / favored-draw / a
 School upgrade to raise draw-reliability). Design pass needed.
 
-**C6 — campaign progression compose.** Confirm: keep our six-face watering as *birth* and
-Kotter as the *inner arc*, and adopt CD's *pour-up meter* (bounded, %-to-done) and
-*perennial/Epic* (recurring, yield-per-season, never "done") as the *visible rollup* —
-with the %-meter shown only on the progress register (polarity).
+**C6 — campaign progression compose (CONFIRMED).** Keep our six-face watering as *birth* and
+Kotter as the *inner arc*; adopt CD's *pour-up meter* (bounded, %-to-done) and *perennial/Epic*
+(recurring, yield-per-season, never "done") as the *visible rollup* — with the %-meter shown
+only on the progress register (polarity). This is a compose, not a pick; no side is dropped.
 
 ## The meta-signal (worth stating plainly)
 

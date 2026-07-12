@@ -23,13 +23,20 @@ import { KOTTER_STAGES, getStageAction, type AllyshipDomain, type KotterStage } 
 /** The 5 WAVE moves (HOW). */
 export type BasicMove = 'wake_up' | 'open_up' | 'clean_up' | 'grow_up' | 'show_up'
 
-/** The fruit a move yields (WHAT the metabolism produces). */
+/**
+ * The durable ARTIFACT a move produces — the `OutputBar` banked to the Vault (WHAT the
+ * metabolism yields). NOTE: this is DISTINCT from a plant's "fruit type," which is the
+ * `allyshipDomain` (the 4 domains). An OutputBar is the move's artifact type, not the fruit.
+ */
 export type OutputBar = 'awareness' | 'experience' | 'insight' | 'wisdom' | 'artifact'
 
 export type ElementKey = 'fire' | 'water' | 'wood' | 'metal' | 'earth'
 
 /**
- * Fruit is FIXED BY MOVE and domain-invariant — every campaign metabolizes all five.
+ * MOVE_FRUIT maps a move to its ARTIFACT TYPE (`OutputBar`) — the durable output banked to
+ * the Vault. It is FIXED BY MOVE and domain-invariant — every campaign metabolizes all five.
+ * DISTINCT from a plant's "fruit type," which is the `allyshipDomain` (the 4 domains): despite
+ * the export name, this is a move → artifact-type map, not a move → fruit(domain) map.
  * Mirror of `allyship-deck/move-library.ts:30-36` (kept local to avoid heavy imports).
  */
 export const MOVE_FRUIT: Record<BasicMove, OutputBar> = {

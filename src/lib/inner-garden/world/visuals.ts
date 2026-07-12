@@ -1,10 +1,15 @@
 /**
  * Inner Garden — token-driven visuals (stub).
  *
- * A sprite is COMPOSED from data, never hand-assigned per BAR: element→tint,
- * altitude→glow, stage→frame. This is the same three-channel encoding as
- * `UI_COVENANT.md` (element=color, altitude=border, stage=density), so garden sprites
- * and OS deck cards read as one visual system.
+ * A sprite is COMPOSED from data, never hand-assigned per BAR, over THREE ORTHOGONAL
+ * CHANNELS that must never bleed into each other:
+ *   - element → hue/tint (which color),
+ *   - altitude → glow/luminance (how bright — luminance lives here ALONE),
+ *   - stage   → silhouette/frame (which shape), NEVER brightness.
+ * Stage drives shape/frame only; luminance is altitude's glow alone — if stage also
+ * touched brightness the two channels would collide and become unreadable. This is the
+ * same three-channel encoding as `UI_COVENANT.md` (element=color, altitude=border,
+ * stage=density), so garden sprites and OS deck cards read as one visual system.
  *
  * This stub carries a local element→tint table so the pure lib has no heavy imports and
  * stays tsx-testable. TODO(v2): source these from `ELEMENT_TOKENS` / `ALTITUDE_TOKENS` /
@@ -18,9 +23,9 @@ import { decodeConfig, type AnchorData, type Altitude, type ElementKey, type Gro
 export interface VisualSpec {
   /** Pixi tint (0xRRGGBB). */
   tint: number
-  /** Glow radius in cells; 0 = none. Encodes altitude, not hue. */
+  /** Glow radius in cells; 0 = none. Encodes altitude (luminance) alone — not hue, not shape. */
   glow: number
-  /** Sprite frame index within the crop atlas row. Encodes growth stage. */
+  /** Sprite frame index within the crop atlas row — a SILHOUETTE/shape index for growth stage. Never a brightness/density signal. */
   frame: number
   /** Atlas key the renderer resolves to a texture. */
   atlasKey: string
@@ -41,6 +46,8 @@ const ALTITUDE_GLOW: Record<Altitude, number> = {
   satisfied: 2,
 }
 
+// SILHOUETTE index: stage → sprite shape/frame ONLY. This is a shape channel, never a
+// brightness/luminance/density signal — luminance is altitude's glow alone (see top comment).
 const STAGE_FRAME: Record<GrowthStage, number> = {
   seed: 0,
   growing: 1,

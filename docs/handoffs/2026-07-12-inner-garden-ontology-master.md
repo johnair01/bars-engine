@@ -43,20 +43,28 @@ replace the old canvas renderer, **keep the bridge**.
 
 ---
 
-## 3. The three orthogonal axes (the clarification that unlocks everything)
+## 3. The orthogonal axes (the clarification that unlocks everything)
 
-`FOUNDATIONS.md:77`: *"Moves are not faces; neither is a domain."*
+`FOUNDATIONS.md:77`: *"Moves are not faces; neither is a domain."* Reconciliation with Claude
+Design (2026-07-12) confirmed **Face = altitude** and surfaced a **fourth axis, Scope** (see
+`…-reconciliation-with-claude-design.md` C1).
 
 | Axis | Question | Values | Determines |
 |---|---|---|---|
-| **Move** (WAVE) | HOW | Wake · Open · Clean · Grow · Show | **the fruit** (fixed by move) |
-| **Face** | WHAT LEVEL | Shaman … Sage | the altitude of the act |
-| **Domain** (the board) | **WHERE** | Gather Resources · Raise Awareness · Direct Action · Skillful Organizing | **the arena + win-condition** |
+| **Move** (WAVE) | HOW | Wake · Open · Clean · Grow · Show | **the artifact** produced (`OutputBar`, fixed by move) |
+| **Face** | **WHAT LEVEL (altitude)** | Shaman → Sage (developmental ladder, prerequisites) | the altitude of the act; the School is the mountain |
+| **Domain** (the board) | **WHERE (arena)** | Gather Resources · Raise Awareness · Direct Action · Skillful Organizing | the win-condition **and the plant's fruit type** (C5) |
+| **Scope** *(4th, from CD)* | **HOW WIDE** | yourself → the moment → relationship → group → system → whole campaign | whether a meet fruits (at-or-above scope) or grows a slice (below) |
 
-Fruit is `// fixed by move`: `Wake→awareness · Open→experience · Clean→insight · Grow→wisdom
-· Show→artifact`. It is **domain-invariant** — every campaign metabolizes all five. "Raise
-Awareness" (domain) and "awareness" (fruit) are different axes; conflating them was the
-original confusion.
+**Fruit vs artifact (C5, adopted from Claude Design):** a plant's **fruit type = its
+`allyshipDomain`** (4 fruits = 4 domains, WHERE); the move's `OutputBar`
+(`Wake→awareness · Open→experience · Clean→insight · Grow→wisdom · Show→artifact`) is the
+**durable artifact banked to the Vault**, *not* the fruit. "Raise Awareness" (domain/fruit)
+and "awareness" (artifact) are different axes — that conflation is now corrected.
+
+**Scope's likely home:** the allyship-deck already has a `Subject` enum
+(`self · other · group · system · campaign`) that nearly matches CD's scope ladder — scope may
+already be canonical as `Subject`. Resolve in the C2 blocker/deck integration handoff.
 
 ---
 

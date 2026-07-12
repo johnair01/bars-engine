@@ -30,7 +30,9 @@ export type CraftedBy = 'player' | 'ai_ratified' | 'canonical'
 export interface CraftSkeleton {
   capacityKey: CapacityKey
   waveMove: BasicMove // 'clean_up' — crafting is triggered by a blocker
-  fruit: OutputBar // fixed by wave move
+  // ARTIFACT TYPE (OutputBar) the move produces — fixed by wave move. This is the move's
+  // durable artifact banked to the Vault, NOT the plant's fruit (which is the allyshipDomain).
+  fruit: OutputBar
   role: MoveRole
   channel: EmotionChannel
   target: SatisfactionSpirit
@@ -63,7 +65,7 @@ export function buildCraftSkeleton(thread: ChannelThread): CraftSkeleton {
   return {
     capacityKey,
     waveMove,
-    fruit: MOVE_FRUIT[waveMove],
+    fruit: MOVE_FRUIT[waveMove], // artifact type (OutputBar) for the move — not the plant's fruit(domain)
     role,
     channel: thread.channel,
     target: thread.target,
