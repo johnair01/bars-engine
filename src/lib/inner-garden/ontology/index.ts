@@ -12,3 +12,4 @@
  */
 export * from './domain-recipe'
 export * from './progression-scales'
+export * from './gate-confrontation'
