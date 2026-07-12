@@ -1,95 +1,71 @@
 /**
- * Demonstration-bar tests — proves completing a quest grants REAL capacity, not clicks.
+ * Demonstration-bar tests (per-thread) — proves a step grants REAL capacity, not clicks.
  * Run: npx tsx src/lib/inner-garden/ontology/__tests__/demonstration.test.ts
  */
 import assert from 'node:assert'
-import { resolveBlocker, type BlockerSignature, type CapacityKey } from '../gate-confrontation'
-import { completeQuest, runIntegrationCheck, type Demonstration } from '../demonstration'
+import { resolveBlocker, type CapacityKey, type ChannelThread } from '../gate-confrontation'
+import { completeThread, runIntegrationCheck, type ThreadDemonstration } from '../demonstration'
 
-// A transcend gate (neutral → satisfied, same channel) — its technique needs an artifact/action.
-const gate: BlockerSignature = {
-  fromElement: 'fire',
-  fromAltitude: 'neutral',
-  toElement: 'fire',
-  toAltitude: 'satisfied',
-  domain: 'DIRECT_ACTION',
-}
-const quest = resolveBlocker(gate, new Set<CapacityKey>())
-if (quest.kind !== 'quest') throw new Error('fixture: expected a quest')
+// The fear thread of "avoiding the hard email": dissatisfied → (metabolize) → neutral.
+const fearThread: ChannelThread = { channel: 'fear', presentAltitude: 'dissatisfied', target: 'wonder' }
 
-const goodDemo: Demonstration = {
-  techniqueApplied: quest.targetCapacity, // 'transcend:fire'
-  evidenceKind: 'action',
-  evidenceRef: 'Sent the hard email and logged the outcome.',
-  preState: { element: 'fire', altitude: 'neutral' },
-  postState: { element: 'fire', altitude: 'satisfied' },
+const goodMetabolize: ThreadDemonstration = {
+  channel: 'fear',
+  evidenceKind: 'traced_practice',
+  evidenceRef: 'Named the avoidance out loud; 5-min felt-sense sit, the grip loosened.',
+  preAltitude: 'dissatisfied',
+  postAltitude: 'neutral',
 }
 
-// === 1. Right kind + edge crossed → passes → card granted → gate becomes a Task ===
+// === 1. Right kind + moved to neutral → capacity earned → thread resolves ===============
 {
-  const c = completeQuest(quest, goodDemo, new Set())
-  assert.ok(c.result.passed, 'good demonstration passes the Integration Check')
-  assert.ok(c.granted, 'the technique-card is granted')
-  assert.ok(c.owned.has(quest.targetCapacity), 'the capacity is now in a slot')
-  // loop closure: the same gate is now a Task.
-  assert.strictEqual(resolveBlocker(gate, c.owned).kind, 'task', 'gate is now a Task')
-  console.log('  ✓ 1. right evidence + edge crossed → capacity earned → gate becomes a Task')
+  const c = completeThread(fearThread, goodMetabolize, new Set())
+  assert.ok(c.result.passed && c.granted, 'metabolize demonstration passes and grants')
+  assert.strictEqual(c.result.earnedKey, 'metabolize:fear', 'earns the altitude-preserving key')
+  assert.ok(resolveBlocker([fearThread], c.owned).resolved, 'thread now resolves')
+  console.log('  ✓ 1. right evidence + movement → capacity earned → thread resolves')
 }
 
-// === 2. Wrong evidence KIND → no card (you can't read your way to an action card) ===
+// === 2. Wrong evidence KIND → no card (metabolize needs a traced practice) ==============
 {
-  const readItsWay: Demonstration = { ...goodDemo, evidenceKind: 'reflection' }
-  const c = completeQuest(quest, readItsWay, new Set())
-  assert.ok(!c.granted, 'a reflection cannot demonstrate a transcend/outer-action technique')
-  assert.ok(
-    c.result.reasons.some(r => r.includes('cannot be demonstrated by a reflection')),
-    'the check explains the evidence-kind mismatch',
-  )
+  const asArtifact: ThreadDemonstration = { ...goodMetabolize, evidenceKind: 'artifact' }
+  const c = completeThread(fearThread, asArtifact, new Set())
+  assert.ok(!c.granted && c.result.reasons.some(r => r.includes('cannot be demonstrated by a artifact')), 'artifact cannot demonstrate a metabolize step')
   console.log('  ✓ 2. wrong evidence kind → no card (the teeth)')
 }
 
-// === 3. Right kind but edge NOT crossed → "data, not failure", no card =========
+// === 3. No movement → "data, not failure" → no card ====================================
 {
-  const noMovement: Demonstration = { ...goodDemo, postState: { element: 'fire', altitude: 'neutral' } }
-  const c = completeQuest(quest, noMovement, new Set())
-  assert.ok(!c.granted, 'no movement across the edge → not complete')
-  assert.ok(c.result.reasons.some(r => r.includes('data, not failure')), 'framed as data, not failure')
-  console.log('  ✓ 3. no movement → data, not failure → no card')
+  const stuck: ThreadDemonstration = { ...goodMetabolize, postAltitude: 'dissatisfied' }
+  const c = completeThread(fearThread, stuck, new Set())
+  assert.ok(!c.granted && c.result.reasons.some(r => r.includes('data, not failure')), 'no movement → data, not failure')
+  console.log('  ✓ 3. no movement → data, not failure')
 }
 
-// === 4. Empty evidence, and addressing the wrong gate, both fail ================
+// === 4. Wrong thread / empty evidence both fail ========================================
 {
-  const empty: Demonstration = { ...goodDemo, evidenceRef: '   ' }
-  assert.ok(!runIntegrationCheck(quest, empty).passed, 'empty evidence fails (recommendation ≠ completion)')
-
-  const wrongGate: Demonstration = { ...goodDemo, preState: { element: 'water', altitude: 'neutral' } }
-  const r = runIntegrationCheck(quest, wrongGate)
-  assert.ok(!r.passed && r.reasons.some(x => x.includes('did not start from this gate')), 'wrong gate fails')
-  console.log('  ✓ 4. empty evidence and wrong-gate demonstrations both fail')
+  const wrongChannel: ThreadDemonstration = { ...goodMetabolize, channel: 'anger' }
+  assert.ok(!runIntegrationCheck(fearThread, wrongChannel).passed, 'wrong channel fails')
+  const empty: ThreadDemonstration = { ...goodMetabolize, evidenceRef: '   ' }
+  assert.ok(!runIntegrationCheck(fearThread, empty).passed, 'empty evidence fails')
+  console.log('  ✓ 4. wrong-channel and empty-evidence both fail')
 }
 
-// === 5. A metabolize gate demands a traced practice (per-role evidence) =========
+// === 5. Transcend (optional depth): neutral→satisfied needs an artifact/action =========
 {
-  const innerGate: BlockerSignature = {
-    fromElement: 'water',
-    fromAltitude: 'dissatisfied',
-    toElement: 'water',
-    toAltitude: 'neutral',
-    domain: 'SKILLFUL_ORGANIZING',
+  const angerThread: ChannelThread = { channel: 'anger', presentAltitude: 'neutral', target: 'triumph' }
+  const transcend: ThreadDemonstration = {
+    channel: 'anger',
+    evidenceKind: 'action',
+    evidenceRef: 'Sent the hard email; logged the win.',
+    preAltitude: 'neutral',
+    postAltitude: 'satisfied',
   }
-  const innerQuest = resolveBlocker(innerGate, new Set<CapacityKey>())
-  if (innerQuest.kind !== 'quest') throw new Error('fixture')
-  const traced: Demonstration = {
-    techniqueApplied: innerQuest.targetCapacity, // 'metabolize:water'
-    evidenceKind: 'traced_practice',
-    evidenceRef: '3-2-1 session recorded; the grief moved.',
-    preState: { element: 'water', altitude: 'dissatisfied' },
-    postState: { element: 'water', altitude: 'neutral' },
-  }
-  assert.ok(completeQuest(innerQuest, traced, new Set()).granted, 'traced practice completes a metabolize gate')
-  const asArtifact: Demonstration = { ...traced, evidenceKind: 'artifact' }
-  assert.ok(!completeQuest(innerQuest, asArtifact, new Set()).granted, 'an artifact does NOT complete an inner metabolize gate')
-  console.log('  ✓ 5. evidence kind is constrained per move-role (metabolize needs a traced practice)')
+  const c = completeThread(angerThread, transcend, new Set())
+  assert.ok(c.granted && c.result.earnedKey === 'transcend:anger->triumph', 'transcend earns the spirit key via action')
+  const asReflection: ThreadDemonstration = { ...transcend, evidenceKind: 'reflection' }
+  assert.ok(!completeThread(angerThread, asReflection, new Set()).granted, 'a reflection cannot demonstrate a transcend step')
+  console.log('  ✓ 5. transcend depth needs artifact/action (not reflection)')
 }
 
 console.log('inner-garden/ontology (demonstration bar): all tests passed ✓')

@@ -1,99 +1,86 @@
 /**
- * Inner Garden — Move Crafting (growing the library at the speed of player need).
+ * Inner Garden — Move Crafting (per-thread; grow the library at the speed of need).
  *
- * When a gate's required capacity has NO card in the library yet, the key must be forged.
- * This is the third branch of gate resolution:
+ * Spec: .specify/specs/inner-garden-blocker-route-hand/spec.md
  *
- *   own the capacity        → Task   (Clean Up)
- *   card exists, not owned   → Quest via SCHOOL   (learn the existing card)
- *   no card exists at all    → Quest via CRAFT    (forge it — a Council session)
+ * When a thread's required capacity has no card yet, forge one. A grammatical move is MOSTLY
+ * DERIVED from the thread; the human (with a full AI draft they ratify) authors only
+ * `baseAct` + `name`. Everything else — role, channel, target spirit, wave move, fruit,
+ * evidence kinds, the altitude-preserving capacity key — is stamped from the thread, so a
+ * crafted move is GRAMMATICAL BY CONSTRUCTION.
  *
- * THE KEY IDEA: a grammatical move is MOSTLY DERIVED from the gate. The human (with a
- * full AI draft they ratify — user decision 2026-07-12) authors only two things: the
- * `baseAct` (the imperative they actually do) and the `name`. Everything that makes it
- * well-formed — role, channels, wave move, fruit, required evidence, canonical key — is
- * stamped from the gate, so a crafted move is GRAMMATICAL BY CONSTRUCTION.
- *
- * Grounding:
- *  - move-library tiers (charge-metabolism spec §Move Library): the lowest tier is
- *    "player-named or daemon-generated candidate moves" — AI-drafted candidates are
- *    already a sanctioned tier.
- *  - Technique Library (`clean-up-technique-system`) Q5: techniques emerge from work, get
- *    named by the pair, stored with context; Q2: promotion is earned "through teaching and
- *    demonstrated use", not asserted.
- *  - grammar/schema authority: `deck-card-move-grammar` spec.
- *
- * Blocker-clearing techniques are Clean Up moves (fruit = insight); the metabolize/
- * translate/transcend ROLE distinguishes which edge within Clean Up they handle.
- *
- * Pure functions. The only non-pure step — the AI drafting `MoveDraft`s — is a typed seam
- * (`MoveDraft`), out of this module. No I/O, no render — tsx-testable.
+ * Blocker-clearing techniques are Clean Up moves (fruit = insight). Promotion is earned, not
+ * asserted (Technique Library Q2). Pure functions; the AI draft is a typed seam (`MoveDraft`).
  */
-import { MOVE_FRUIT, type BasicMove, type ElementKey, type OutputBar } from './domain-recipe'
+import { MOVE_FRUIT, type BasicMove, type OutputBar } from './domain-recipe'
 import {
-  deriveRequiredCapacity,
-  requiredRole,
-  type BlockerSignature,
+  threadRouteHand,
   type CapacityKey,
+  type ChannelThread,
+  type EmotionChannel,
   type MoveRole,
+  type SatisfactionSpirit,
 } from './gate-confrontation'
 import { ROLE_EVIDENCE, type EvidenceKind } from './demonstration'
 
 export type MoveTier = 'candidate' | 'demonstrated' | 'adopted' | 'canonical'
 export type CraftedBy = 'player' | 'ai_ratified' | 'canonical'
 
-/** The derived, grammatical skeleton — stamped from the gate, never authored. */
+/** The derived, grammatical skeleton — stamped from the thread, never authored. */
 export interface CraftSkeleton {
   capacityKey: CapacityKey
-  waveMove: BasicMove // always 'clean_up' — crafting is triggered by a blocker
+  waveMove: BasicMove // 'clean_up' — crafting is triggered by a blocker
   fruit: OutputBar // fixed by wave move
   role: MoveRole
-  sourceElement: ElementKey
-  targetElement: ElementKey
+  channel: EmotionChannel
+  target: SatisfactionSpirit
   evidenceKinds: EvidenceKind[] // fixed by role
 }
 
 /** The authored part — what the human ratifies from the AI's full draft. */
 export interface MoveDraft {
-  baseAct: string // the imperative you actually do
-  name: string // the memorable handle
+  baseAct: string
+  name: string
 }
 
 export interface GrammaticalMove extends CraftSkeleton, MoveDraft {
   craftedBy: CraftedBy
   tier: MoveTier
-  provenance: { sourceGateKey: CapacityKey; note?: string }
+  provenance: { sourceThreadChannel: EmotionChannel; note?: string }
 }
 
-/** Stamp the grammatical skeleton from the gate (all derived; nothing authored). */
-export function buildCraftSkeleton(gate: BlockerSignature): CraftSkeleton {
-  const role = requiredRole(gate)
+/** The capacity a thread most needs a card for: its first required step, else the optional depth. */
+export function threadPrimaryCapacity(thread: ChannelThread): CapacityKey {
+  const { required, optional } = threadRouteHand(thread)
+  return required[0] ?? optional[0]!
+}
+
+/** Stamp the grammatical skeleton from a thread (all derived; nothing authored). */
+export function buildCraftSkeleton(thread: ChannelThread): CraftSkeleton {
+  const capacityKey = threadPrimaryCapacity(thread)
+  const role = capacityKey.split(':')[0] as MoveRole
   const waveMove: BasicMove = 'clean_up'
   return {
-    capacityKey: deriveRequiredCapacity(gate),
+    capacityKey,
     waveMove,
     fruit: MOVE_FRUIT[waveMove],
     role,
-    sourceElement: gate.fromElement,
-    targetElement: gate.toElement,
+    channel: thread.channel,
+    target: thread.target,
     evidenceKinds: ROLE_EVIDENCE[role],
   }
 }
 
 export type GatePath = 'task' | 'school' | 'craft'
 
-/**
- * Which path a gate takes. `libraryKeys` = every capacity that already has a card
- * (canonical + prior candidates) — this is the dedup that prevents re-forging.
- */
+/** Own the key → Task; a card exists in the library → School; nothing → Craft. Dedup by key. */
 export function resolveGatePath(
-  gate: BlockerSignature,
+  capacityKey: CapacityKey,
   ownedCapacities: ReadonlySet<CapacityKey>,
   libraryKeys: ReadonlySet<CapacityKey>,
 ): GatePath {
-  const key = deriveRequiredCapacity(gate)
-  if (ownedCapacities.has(key)) return 'task'
-  if (libraryKeys.has(key)) return 'school'
+  if (ownedCapacities.has(capacityKey)) return 'task'
+  if (libraryKeys.has(capacityKey)) return 'school'
   return 'craft'
 }
 
@@ -103,15 +90,14 @@ export interface CraftValidation {
 }
 
 /** Structural grammar check — a move that fails is not admitted to the library. */
-export function validateGrammaticalMove(move: GrammaticalMove, gate: BlockerSignature): CraftValidation {
+export function validateGrammaticalMove(move: GrammaticalMove, thread: ChannelThread): CraftValidation {
   const reasons: string[] = []
-  const sk = buildCraftSkeleton(gate)
+  const sk = buildCraftSkeleton(thread)
 
-  if (move.capacityKey !== sk.capacityKey) reasons.push('capacityKey does not match the gate')
-  if (move.role !== sk.role) reasons.push('role does not match the gate edge')
-  if (move.sourceElement !== sk.sourceElement || move.targetElement !== sk.targetElement) {
-    reasons.push('channels do not match the gate')
-  }
+  if (move.capacityKey !== sk.capacityKey) reasons.push('capacityKey does not match the thread')
+  if (move.role !== sk.role) reasons.push('role does not match the thread step')
+  if (move.channel !== sk.channel) reasons.push('channel does not match the thread')
+  if (move.target !== sk.target) reasons.push('target spirit does not match the thread')
   if (move.waveMove !== sk.waveMove) reasons.push('a blocker-clearing move must be a Clean Up')
   if (move.fruit !== sk.fruit) reasons.push('fruit must be fixed by the wave move')
   if (move.evidenceKinds.join(',') !== sk.evidenceKinds.join(',')) {
@@ -128,32 +114,29 @@ export interface CraftResult {
   validation: CraftValidation
 }
 
-/**
- * Forge a move for a gate from a ratified draft. Grammatical by construction (skeleton
- * derived); enters as a private `candidate`. Returns the move + its validation.
- */
+/** Forge a move for a thread from a ratified draft. Grammatical by construction; enters as a candidate. */
 export function craftMove(
-  gate: BlockerSignature,
+  thread: ChannelThread,
   draft: MoveDraft,
   craftedBy: CraftedBy = 'ai_ratified',
   note?: string,
 ): CraftResult {
-  const skeleton = buildCraftSkeleton(gate)
+  const skeleton = buildCraftSkeleton(thread)
   const move: GrammaticalMove = {
     ...skeleton,
     baseAct: draft.baseAct,
     name: draft.name,
     craftedBy,
     tier: 'candidate',
-    provenance: { sourceGateKey: skeleton.capacityKey, note },
+    provenance: { sourceThreadChannel: thread.channel, note },
   }
-  return { move, validation: validateGrammaticalMove(move, gate) }
+  return { move, validation: validateGrammaticalMove(move, thread) }
 }
 
 /** Signals that promote a candidate — earned, not asserted (Technique Library Q2). */
 export interface PromotionSignals {
-  demonstratedReuse: number // gates crossed with this move
-  adoptions: number // other players who earned it from you (teaching)
+  demonstratedReuse: number
+  adoptions: number
   gmReviewed: boolean
 }
 

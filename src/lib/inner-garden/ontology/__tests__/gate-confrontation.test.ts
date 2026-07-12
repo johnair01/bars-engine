@@ -1,93 +1,100 @@
 /**
- * Gate-confrontation (quest mechanic) tests — proves the loop, not the narrative.
+ * Gate-confrontation (multi-channel blocker) tests — proves the loop AND the bug fix.
  * Run: npx tsx src/lib/inner-garden/ontology/__tests__/gate-confrontation.test.ts
  */
 import assert from 'node:assert'
 import {
-  deriveRequiredCapacity,
-  earnCapacity,
-  requiredRole,
+  DEFAULT_STAGNATION_WINDOW_DAYS,
+  decomposeBlockerFromText,
+  inferBlockerForStagnantSeed,
+  requiredRouteHand,
   resolveBlocker,
+  threadRouteHand,
   type BlockerSignature,
   type CapacityKey,
+  type ChannelThread,
 } from '../gate-confrontation'
 
-const b = (over: Partial<BlockerSignature> = {}): BlockerSignature => ({
-  fromElement: 'water',
-  fromAltitude: 'dissatisfied',
-  toElement: 'water',
-  toAltitude: 'neutral',
-  domain: 'RAISE_AWARENESS',
-  ...over,
-})
+const fearThread: ChannelThread = { channel: 'fear', presentAltitude: 'dissatisfied', target: 'wonder' }
+const angerThread: ChannelThread = { channel: 'anger', presentAltitude: 'dissatisfied', target: 'triumph' }
 
-// === 1. Required capacity is DERIVED from the signature (principled, deterministic) ===
+// === 1. Route-hand: required (to neutral) vs optional (to spirit); altitude preserved =====
 {
-  // dissatisfied → neutral, same channel = metabolize
-  assert.strictEqual(requiredRole(b()), 'metabolize')
-  assert.strictEqual(deriveRequiredCapacity(b()), 'metabolize:water')
+  const rh = threadRouteHand(fearThread)
+  assert.deepStrictEqual(rh.required, ['metabolize:fear'], 'dissatisfied → required metabolize')
+  assert.deepStrictEqual(rh.optional, ['transcend:fear->wonder'], 'spirit is optional depth')
 
-  // neutral → satisfied, same channel = transcend
-  const asc = b({ fromAltitude: 'neutral', toAltitude: 'satisfied' })
-  assert.strictEqual(requiredRole(asc), 'transcend')
-  assert.strictEqual(deriveRequiredCapacity(asc), 'transcend:water')
+  // altitude preserved: a neutral-present thread has NO required step (distinct route).
+  const fromNeutral = threadRouteHand({ channel: 'fear', presentAltitude: 'neutral', target: 'wonder' })
+  assert.deepStrictEqual(fromNeutral.required, [], 'neutral present → nothing required')
+  assert.notDeepStrictEqual(rh.required, fromNeutral.required, 'dissatisfied vs neutral yield different routes')
 
-  // cross-channel = translate
-  const cross = b({ fromElement: 'water', toElement: 'fire', fromAltitude: 'neutral', toAltitude: 'neutral' })
-  assert.strictEqual(requiredRole(cross), 'translate')
-  assert.strictEqual(deriveRequiredCapacity(cross), 'translate:water->fire')
-
-  // determinism + domain-invariance: domain does not change the key
-  assert.strictEqual(
-    deriveRequiredCapacity(b({ domain: 'DIRECT_ACTION' })),
-    deriveRequiredCapacity(b({ domain: 'RAISE_AWARENESS' })),
-    'domain does not change the required capacity',
+  assert.deepStrictEqual(
+    requiredRouteHand([fearThread, angerThread]).sort(),
+    ['metabolize:anger', 'metabolize:fear'],
+    'blocker route-hand = union of threads’ required moves',
   )
-  console.log('  ✓ 1. required capacity derives deterministically from the blocker signature')
+  console.log('  ✓ 1. route-hand: required/optional split; altitude preserved')
 }
 
-// === 2. Own the key → Task; missing → a well-formed Quest =====================
+// === 2. Neutral suffices — a thread resolves at metabolize, spirit optional =============
 {
-  const sig = b()
-  const key = deriveRequiredCapacity(sig)
-
-  const withKey = resolveBlocker(sig, new Set([key]))
-  assert.strictEqual(withKey.kind, 'task', 'owning the capacity → Task (Clean Up)')
-  if (withKey.kind === 'task') assert.strictEqual(withKey.move, 'clean_up')
-
-  const without = resolveBlocker(sig, new Set<CapacityKey>())
-  assert.strictEqual(without.kind, 'quest', 'missing the capacity → gate confrontation Quest')
-  if (without.kind === 'quest') {
-    // The "good quest" contract: every field present.
-    assert.strictEqual(without.targetCapacity, key, 'quest targets the missing capacity')
-    assert.strictEqual(without.mintedBy, 'grow_up', 'gate confrontation is a Grow Up')
-    assert.strictEqual(without.winCondition, 'demonstrate_then_integration_check', 'anti-hollow win-condition')
-    assert.ok(without.reward.permanent, 'reward card is permanent (a slot)')
-    assert.deepStrictEqual(without.returnsTo, sig, 'quest returns you to the gate')
-  }
-  console.log('  ✓ 2. own→Task, missing→well-formed Quest (trigger/target/win/reward/return)')
+  const owned = new Set<CapacityKey>(['metabolize:fear'])
+  const r = resolveBlocker([fearThread], owned)
+  assert.ok(r.resolved, 'single-thread blocker resolves at neutral')
+  assert.ok(r.threads[0]!.reachedNeutral && !r.threads[0]!.reachedSpirit, 'reached neutral, not spirit')
+  console.log('  ✓ 2. neutral suffices — thread resolves at metabolize; spirit optional')
 }
 
-// === 3. Loop closure: earning the capacity turns the WHOLE CLASS into a Task ===
+// === 3. THE BUG FIX — owning one thread's capacity does NOT resolve a multi-thread blocker =
 {
-  const owned0 = new Set<CapacityKey>()
-  const sig = b()
-  const first = resolveBlocker(sig, owned0)
-  assert.strictEqual(first.kind, 'quest', 'first encounter is a Quest')
+  const blocker: BlockerSignature = [fearThread, angerThread] // "avoiding the hard email"
+  const oneOwned = new Set<CapacityKey>(['metabolize:fear'])
+  const partial = resolveBlocker(blocker, oneOwned)
+  assert.ok(!partial.resolved, 'owning one thread must NOT clear a two-thread blocker (over-grant fixed)')
+  assert.ok(partial.threads.find(t => t.thread.channel === 'anger')!.reachedNeutral === false, 'anger thread unmet')
 
-  // Complete the quest → earn the capacity.
-  const owned1 = earnCapacity(owned0, deriveRequiredCapacity(sig))
+  const bothOwned = new Set<CapacityKey>(['metabolize:fear', 'metabolize:anger'])
+  assert.ok(resolveBlocker(blocker, bothOwned).resolved, 'clears when both threads reach neutral')
+  console.log('  ✓ 3. over-grant bug fixed — all threads must reach neutral')
+}
 
-  // The same blocker is now a Task…
-  assert.strictEqual(resolveBlocker(sig, owned1).kind, 'task', 'after earning, same blocker is a Task')
-  // …AND so is any OTHER blocker of the same signature-class (capacity compounds; anti-grind).
-  const sibling = b({ domain: 'SKILLFUL_ORGANIZING', toAltitude: 'neutral' }) // same water:dissatisfied→neutral edge
-  assert.strictEqual(resolveBlocker(sibling, owned1).kind, 'task', 'whole class unblocked by one technique')
+// === 4. Gate path per thread (task / school / craft) ====================================
+{
+  const library = new Set<CapacityKey>(['metabolize:anger'])
+  const r = resolveBlocker([fearThread, angerThread], new Set(), library)
+  const fear = r.threads.find(t => t.thread.channel === 'fear')!
+  const anger = r.threads.find(t => t.thread.channel === 'anger')!
+  assert.strictEqual(fear.path, 'craft', 'no card anywhere → craft')
+  assert.strictEqual(anger.path, 'school', 'card in library → school')
+  console.log('  ✓ 4. per-thread path — craft vs school')
+}
 
-  // But a DIFFERENT edge is still a Quest (you only earned one capacity).
-  const otherEdge = b({ fromElement: 'fire', toElement: 'fire' })
-  assert.strictEqual(resolveBlocker(otherEdge, owned1).kind, 'quest', 'a different edge still needs its own quest')
-  console.log('  ✓ 3. loop closure — one technique unblocks a whole class, forever (economy C)')
+// === 5. Inferred blocker window (default 3d, player-overridable) =========================
+{
+  assert.strictEqual(
+    inferBlockerForStagnantSeed({ plantedChannel: 'sadness', daysSinceAction: 2 }),
+    null,
+    'within the window → no inferred blocker',
+  )
+  const b = inferBlockerForStagnantSeed({ plantedChannel: 'sadness', daysSinceAction: DEFAULT_STAGNATION_WINDOW_DAYS })
+  assert.ok(b && b.origin === 'inferred' && b.threads[0]!.channel === 'sadness', 'past window → inferred blocker')
+  assert.strictEqual(inferBlockerForStagnantSeed({ plantedChannel: 'sadness', daysSinceAction: 2 }, 2)?.origin, 'inferred', 'custom window shifts boundary')
+  console.log('  ✓ 5. inferred blocker — 3d default, player-overridable')
+}
+
+// === 6. Canonical decomposition — "avoiding the hard email" → fear + anger ==============
+{
+  const { draft } = decomposeBlockerFromText('I keep avoiding the hard email')
+  const channels = draft.map(t => t.channel).sort()
+  assert.deepStrictEqual(channels, ['anger', 'fear'], 'reads fear (avoidance) + anger (hard)')
+  assert.ok(draft.every(t => t.presentAltitude === 'dissatisfied'), 'threads start dissatisfied')
+  // resolves only when both threads reach neutral (both metabolize steps owned).
+  const oneOwned = new Set<CapacityKey>(['metabolize:fear'])
+  assert.ok(!resolveBlocker(draft, oneOwned).resolved, 'one thread owned → not resolved')
+  const bothOwned = new Set<CapacityKey>(['metabolize:fear', 'metabolize:anger'])
+  assert.ok(resolveBlocker(draft, bothOwned).resolved, 'both threads to neutral → resolved')
+  console.log('  ✓ 6. decomposition — hard-email reads fear+anger; clears when both reach neutral')
 }
 
 console.log('inner-garden/ontology (gate confrontation): all tests passed ✓')

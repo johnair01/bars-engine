@@ -134,7 +134,8 @@ technique. Grounded in the Technique Library (`clean-up-technique-system`: gate 
 is the core learning path; techniques = permanent slots).
 
 ```
-blocker (a vector-edge you're stuck on, carrying a required capacity)
+blocker (a MULTI-CHANNEL set of threads, each a vector-edge; see spec
+`inner-garden-blocker-route-hand` — implemented, over-grant bug fixed)
   → own the capacity?  yes → a TASK  (Clean Up)
                        no, but a card exists → Quest via SCHOOL
                        no card at all        → Quest via CRAFT
@@ -246,7 +247,7 @@ gesture; optional domain→need-units mapping.
 |---|---|
 | `world/{scene,project,visuals,hash}.ts` | `FarmScene` IR, `projectFarm`/`projectSharedFarm`/`applyOverlay`, `visualSpecFor`, `fnv32` |
 | `ontology/domain-recipe.ts` | `MOVE_FRUIT`, `DOMAIN_KEYSTONE`, `describeCampaignRecipe` |
-| `ontology/progression-scales.ts` | `QUEST_BEATS`, `CAMPAIGN_STAGES`, `PROGRESSION_SCALES` |
+| `ontology/progression-scales.ts` | `QUEST_BEATS`, `CAMPAIGN_STAGES`, `PROGRESSION_SCALES` — **descriptive scale constants only** (the beats are narrative wrapper, NOT the quest mechanic; §9). The mechanic is the capacity economy. |
 | `ontology/gate-confrontation.ts` | `BlockerSignature`, `deriveRequiredCapacity`, `resolveBlocker`, `earnCapacity` |
 | `ontology/demonstration.ts` | `ROLE_EVIDENCE`, `runIntegrationCheck`, `completeQuest` |
 | `ontology/move-crafting.ts` | `buildCraftSkeleton`, `resolveGatePath`, `validateGrammaticalMove`, `craftMove`, `promoteTier` |
