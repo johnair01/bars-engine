@@ -49,6 +49,36 @@ const labelStyle: CSSProperties = {
   color: SURFACE_TOKENS.textSecondary,
 }
 
+/** Scaffold placeholder used by un-authored generated cards; never shown to players. */
+const UNAUTHORED_MARK = '— author —'
+const authoredList = (items: string[] | undefined): string[] =>
+  (items ?? []).filter((s) => s && s.trim() && s !== UNAUTHORED_MARK)
+
+/** A subdued reference list (Avoid / How it slips) — authored anti-patterns, secondary to the practice. */
+function GuardrailList({ label, items }: { label: string; items: string[] }) {
+  return (
+    <div>
+      <div style={{ ...labelStyle, color: SURFACE_TOKENS.textMuted }}>{label}</div>
+      <ul
+        style={{
+          margin: '5px 0 0',
+          paddingLeft: 18,
+          fontFamily: DECK_FONTS.body,
+          fontSize: 13.5,
+          color: SURFACE_TOKENS.textSecondary,
+          lineHeight: 1.5,
+        }}
+      >
+        {items.map((item, i) => (
+          <li key={i} style={{ marginTop: i === 0 ? 0 : 3 }}>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 /**
  * The Allyship Deck card — element-tinted body, gold edge, move pip + face badge.
  *
@@ -210,6 +240,18 @@ export function AllyshipCard({
           {card.remediation}
         </div>
       </div>
+
+      {/* guardrails — authored anti-patterns: what to avoid, and how the move commonly slips */}
+      {(authoredList(card.forbiddenMoves).length > 0 || authoredList(card.failureModes).length > 0) && (
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {authoredList(card.forbiddenMoves).length > 0 && (
+            <GuardrailList label="Avoid" items={authoredList(card.forbiddenMoves)} />
+          )}
+          {authoredList(card.failureModes).length > 0 && (
+            <GuardrailList label="How it slips" items={authoredList(card.failureModes)} />
+          )}
+        </div>
+      )}
 
       {card.flavor && (
         <p
