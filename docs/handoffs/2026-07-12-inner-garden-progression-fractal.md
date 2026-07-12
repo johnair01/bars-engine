@@ -1,5 +1,12 @@
 # Inner Garden — The Progression Fractal & the Two-Layer Deck-Builder
 
+> **⚠ PARTIALLY SUPERSEDED — see `2026-07-12-inner-garden-ontology-master.md` §9.**
+> The core claim below — that the Epiphany 6-beats are the *quest mechanic* — was
+> **retired**. A quest is a **capacity gate** (a card economy), not a narrative arc; the
+> beats are at most an optional story wrapper. Still valid here: the move→quest→campaign
+> *scale* observation and the **two-deck** distinction (move-deck vs domain quest-deck).
+> Read the master doc for the mechanic that replaced this.
+
 > **Fifth in the handoff set.** Answers the emerging question: *a campaign progresses
 > through Kotter stages — what is the correlate for a **quest**, and how does that interact
 > with the deck-building mechanics?*
