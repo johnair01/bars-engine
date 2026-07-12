@@ -32,10 +32,13 @@ use, plus the regression test below.
 
 | Topic | Decision |
 |-------|----------|
+| Blocker is OPTIONAL | A blocker is **not** a mandatory gate. A player may take action on a seed **without** one. A blocker exists only when it is **self-reported** (the player names that there is inner work to do) or **inferred** (the system assumes one when a *planted* seed goes un-actioned past a stagnation window). |
 | Blocker shape | A **set of channel-threads** (1..N), not a single `from→to` vector. |
-| Thread shape | `{ channel, presentAltitude, target: SatisfactionSpirit }`. The target is the channel's satisfied spirit (fear→wonder, anger→triumph, sadness→poignance, joy→bliss, neutrality→peace) — or a translate target on another channel. |
+| Thread shape | `{ channel, presentAltitude, target: SatisfactionSpirit }`. The target spirit is **aspirational** (fear→wonder, anger→triumph, sadness→poignance, joy→bliss, neutrality→peace) — or a translate target on another channel. |
+| Target altitude | **Neutral resolves the thread.** dissatisfied→neutral (metabolize) is real progress and yields **insight**; the player need not reach the spirit. The **spirit is optional stretch depth** (neutral→satisfied = transcend) that additionally yields the channel's **satisfaction fruit**. |
+| Thread count | **Player-self-reported**, at most one thread per channel → **≤ 5 threads**. Max threat spread = all 5 channels dissatisfied → satisfied. No artificial cap below 5 — sometimes there genuinely are that many. |
 | Capacity key | Per thread, **altitude-preserving**: `metabolize:<channel>` (dissatisfied→neutral), `transcend:<channel>-><spirit>` (neutral→satisfied), `translate:<from>-><to>` (cross-channel). No lossy collapse. |
-| Blocker resolution | A blocker is a **route-hand** = the union of its threads' required moves. It clears only when **every** thread's capacity is owned. |
+| Blocker resolution | A blocker is a **route-hand** = its threads' moves. Each reported thread **resolves at neutral** (metabolize done); the blocker **fully clears when all reported threads reach ≥ neutral**. Per-thread progress yields insight regardless of full clearance; reaching a spirit is optional depth. Owning one thread's capacity must **not** resolve a blocker whose other threads are unmet. |
 | Reuse, don't reinvent | Channels/spirits/roles come from `emotional-alchemy` (`EmotionChannel`, `SatisfactionSpirit`, `MoveRole`, `VECTOR_MOVE_FAMILIES`). Do not mint parallel enums. |
 | Decomposition | `decomposeBlockerFromText` is **AI-drafted, player-ratified** (consistent with the crafting decision, 2026-07-12). The keyword→channel read (avoidance→fear, hard→anger) is a suggestion the player confirms/edits — never auto-committed. |
 | Scope discipline | No renderer. No roll-up counter here (that is governed by the Calm↔Progress polarity map, separate). Keep the lib pure and tsx-testable. |
@@ -53,8 +56,14 @@ use, plus the regression test below.
 **Worked example (the canonical test):** `"I keep avoiding the hard email"` →
 `[ { channel:'fear', present:'dissatisfied', target:'wonder' }, { channel:'anger',
 present:'dissatisfied', target:'triumph' } ]`. Route-hand ≈ `metabolize:fear` (name the
-avoidance) → `transcend:fear->wonder`; `metabolize:anger` (identify the blocker) →
-`transcend:anger->triumph`. The blocker clears only when both threads are demonstrated.
+avoidance) → *optional* `transcend:fear->wonder`; `metabolize:anger` (identify the blocker)
+→ *optional* `transcend:anger->triumph`. The blocker clears when **both threads reach ≥
+neutral** (both metabolize steps done — insight gained); reaching wonder/triumph is optional
+depth that yields the satisfaction fruit.
+
+**Optionality:** the player could also just *act* on this seed with no blocker at all. The
+blocker above exists only because they self-reported "there's inner work here," or because
+the planted seed sat un-actioned and the system inferred one.
 
 ## API Contracts (API-First)
 
@@ -66,32 +75,55 @@ type SatisfactionSpirit = 'triumph' | 'poignance' | 'wonder' | 'bliss' | 'peace'
 type Altitude = 'dissatisfied' | 'neutral' | 'satisfied'
 type MoveRole = 'metabolize' | 'translate' | 'transcend'
 
+type BlockerOrigin = 'self_reported' | 'inferred'
+
 interface ChannelThread {
   channel: EmotionChannel
   presentAltitude: Altitude
-  target: SatisfactionSpirit          // channel's satisfied form, or a translate target
+  target: SatisfactionSpirit          // ASPIRATIONAL spirit; neutral suffices to resolve
 }
-type BlockerSignature = ChannelThread[]   // 1..N threads (was: a single vector)
+type BlockerSignature = ChannelThread[]   // 1..5 threads (≤ one per channel)
 
-/** The ordered moves one thread needs (metabolize → [translate] → transcend). Altitude-preserving. */
-function threadRouteHand(thread: ChannelThread): CapacityKey[]
+interface Blocker {
+  origin: BlockerOrigin
+  threads: BlockerSignature
+}
 
-/** The full route-hand for a blocker = union of every thread's moves. */
-function requiredRouteHand(sig: BlockerSignature): CapacityKey[]
+/** A thread's moves, split into what's REQUIRED to resolve (reach neutral) vs OPTIONAL depth. */
+function threadRouteHand(thread: ChannelThread): { required: CapacityKey[]; optional: CapacityKey[] }
 
-/** Per-thread resolution; blocker resolves only when ALL threads resolve. */
+/** Every thread's REQUIRED (to-neutral) moves — the hand that clears the blocker. */
+function requiredRouteHand(threads: BlockerSignature): CapacityKey[]
+
+/**
+ * Per-thread resolution. A thread resolves when its REQUIRED (metabolize-to-neutral) capacity
+ * is owned; the blocker resolves only when EVERY thread does. Reaching a spirit is optional.
+ */
 function resolveBlocker(
-  sig: BlockerSignature,
+  threads: BlockerSignature,
   owned: ReadonlySet<CapacityKey>,
   library: ReadonlySet<CapacityKey>,
-): { resolved: boolean; threads: Array<{ thread: ChannelThread; path: 'task' | 'school' | 'craft' | 'quest' }> }
+): {
+  resolved: boolean
+  threads: Array<{
+    thread: ChannelThread
+    reachedNeutral: boolean          // required step owned
+    reachedSpirit: boolean           // optional depth owned
+    path: 'task' | 'school' | 'craft' | 'quest'
+  }>
+}
 
-/** AI-drafted, player-ratified decomposition from the blocker's own language. */
+/** AI-drafted, player-ratified decomposition from the blocker's own language (≤ 5 threads). */
 function decomposeBlockerFromText(text: string): { draft: BlockerSignature; rationale: string }
+
+/** Inferred blocker on a planted seed that has gone un-actioned. Null if within the window. */
+function inferBlockerForStagnantSeed(seed: { plantedChannel: EmotionChannel; daysSincePlanted: number }): Blocker | null
 ```
 
-- All except `decomposeBlockerFromText` are **pure** (no I/O). The AI decomposition is the
-  one non-pure seam and is ratified by the player before use.
+- A seed with **no** blocker is directly actionable — action needs no blocker.
+- All except `decomposeBlockerFromText` are **pure** (no I/O). The AI decomposition is the one
+  non-pure seam and is ratified by the player before use; `inferBlockerForStagnantSeed` is pure
+  given the stagnation window.
 
 ## Functional Requirements
 
@@ -99,15 +131,26 @@ function decomposeBlockerFromText(text: string): { draft: BlockerSignature; rati
   single-channel blocker is the N=1 case (backward-compatible in spirit).
 - **FR2 — Altitude-preserving keys.** Capacity keys encode channel **and** the altitude
   edge / target spirit. There is **no** key that collapses distinct altitude climbs.
-- **FR3 — Route-hand resolution.** A blocker resolves iff every thread's required capacity
-  is owned. Owning one thread's capacity must **not** resolve a blocker with unmet threads.
+- **FR3 — Route-hand resolution at neutral.** A thread resolves when its **required
+  (metabolize-to-neutral)** capacity is owned; the blocker resolves iff **every** thread
+  does. Owning one thread's capacity must **not** resolve a blocker with unmet threads.
 - **FR4 — Reuse alchemy.** Channels, spirits, and the metabolize/translate/transcend roles
   reference `emotional-alchemy` / `VECTOR_MOVE_FAMILIES`; no parallel typology.
 - **FR5 — Ratified decomposition.** `decomposeBlockerFromText` returns a draft + rationale;
-  the player confirms/edits before it becomes a `BlockerSignature`.
+  the player confirms/edits (thread count is theirs) before it becomes a `BlockerSignature`.
 - **FR6 — Downstream migration.** Update `demonstration.ts` (demonstrate per thread; a
-  blocker completes when all threads pass) and `move-crafting.ts` (build a skeleton per
+  blocker completes when all threads reach ≥ neutral) and `move-crafting.ts` (skeleton per
   thread) and their tests to the multi-channel shape.
+- **FR7 — Blockers are optional.** A seed may be actioned with no blocker. The gate/quest
+  path engages **only** when a blocker is present (self-reported or inferred).
+- **FR8 — Neutral suffices; spirit is optional.** Reaching neutral resolves a thread and
+  yields insight. The transcend-to-spirit step is optional depth that additionally yields the
+  channel's satisfaction fruit; it is never required to clear a blocker.
+- **FR9 — Player-reported thread count.** ≤ 5 threads (one per channel). The player is the
+  authority on how many channels are live; no system cap below 5.
+- **FR10 — Inferred blocker.** A planted seed left un-actioned past the stagnation window may
+  be assigned an **inferred** blocker (surfaced gently — "looks like there may be inner work
+  here?"), which the player can confirm/edit or dismiss by simply acting.
 
 ## Non-Goals
 
@@ -117,14 +160,21 @@ function decomposeBlockerFromText(text: string): { draft: BlockerSignature; rati
 
 ## Verification
 
-- **Regression (the bug):** construct a two-thread blocker; own **one** thread's capacity;
-  assert the blocker is **not** resolved (`resolved: false`). This is the direct inverse of
-  the current `gate-confrontation.test.ts:83-85`.
+- **Regression (the bug):** construct a two-thread blocker; own **one** thread's required
+  capacity; assert the blocker is **not** resolved (`resolved: false`). Direct inverse of the
+  current `gate-confrontation.test.ts:83-85`.
 - **Altitude preserved:** `fear:dissatisfied→wonder` and `fear:neutral→wonder` yield
   **different** capacity keys / route steps (no collapse).
+- **Neutral suffices:** owning only a thread's **metabolize** (to-neutral) capacity resolves
+  that thread (`reachedNeutral: true`, `reachedSpirit: false`) and the blocker clears if it's
+  the only thread — reaching the spirit is not required.
+- **Optionality:** a seed with **no** blocker is directly actionable (no gate); the gate path
+  engages only when a blocker is present.
+- **Inferred blocker:** `inferBlockerForStagnantSeed` returns `null` within the window and an
+  `origin:'inferred'` blocker past it.
 - **Canonical example:** `decomposeBlockerFromText("I keep avoiding the hard email")` →
-  a fear thread (→wonder) + an anger thread (→triumph); the blocker resolves only when both
-  threads' capacities are owned.
+  a fear thread (→wonder) + an anger thread (→triumph); the blocker clears when both reach
+  neutral (both metabolize steps owned).
 - **Determinism** of the pure functions (mirror existing ontology tests).
 - **Real-user (n=1):** the practitioner-player runs a real blocker through the parallel
   Claude Design build and confirms the decomposition reads true and the route-hand is
