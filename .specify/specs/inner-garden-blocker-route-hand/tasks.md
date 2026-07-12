@@ -8,7 +8,9 @@
       capacity owned); `resolved` iff all threads reach ≥ neutral; report `reachedNeutral`/
       `reachedSpirit` per thread. Remove the lossy single-vector collapse.
 - [ ] **T3b** `BlockerOrigin` + `Blocker { origin, threads }`; `inferBlockerForStagnantSeed`
-      (null within window, `origin:'inferred'` past it). Blockers are optional — no gate without one.
+      (window default **3 days**, player-overridable via `windowDays`; null within, `origin:'inferred'`
+      past it). Blockers are optional — no gate without one. (Pressure 1 / farm fertility is a
+      separate spec — do not build it here.)
 - [ ] **T4** `demonstration.ts`: demonstrate per thread; blocker completes when all threads pass.
 - [ ] **T5** `move-crafting.ts`: `buildCraftSkeleton` per thread; keys altitude-preserving.
 - [ ] **T6** `decomposeBlockerFromText(text)` — deterministic keyword scaffold + typed AI seam.

@@ -28,11 +28,27 @@ is a **corrective refactor of existing tested pure code**, not new product surfa
 a parallel Claude Design build — n=1, but a *real* user. Verification is that person's own
 use, plus the regression test below.
 
+## Action-economy context (two pressures)
+
+The inferred blocker is **one half of an action economy** that keeps the garden honest for two
+opposite player archetypes. Both pressures teach the same lesson — *act on your seeds, don't
+just accumulate*:
+
+- **Pressure 1 — Overcrowding → composting** (the over-planter / ADHD register): a farm has
+  finite fertile capacity; planting faster than you act crowds it and drops fertility, which
+  pressures the player to get good at **composting**. *This is a farm-level fertility mechanic
+  and is OUT OF SCOPE here — it belongs in a sibling spec (Action Economy / Farm Fertility).*
+- **Pressure 2 — Stagnation → inferred blocker** (the under-actor / perfectionist register):
+  even a tidy garden is overrun within a week by the Daily Charge + Tap the Vein inflow if
+  nothing is actioned; at **3 days** un-actioned, the garden gently infers a blocker (there may
+  be inner work here). **This spec covers Pressure 2 only.**
+
 ## Design Decisions
 
 | Topic | Decision |
 |-------|----------|
 | Blocker is OPTIONAL | A blocker is **not** a mandatory gate. A player may take action on a seed **without** one. A blocker exists only when it is **self-reported** (the player names that there is inner work to do) or **inferred** (the system assumes one when a *planted* seed goes un-actioned past a stagnation window). |
+| Stagnation window | **3 days** of no action on a planted seed → an **inferred** blocker (rationale: the daily inflow from Daily Charge + Tap the Vein overruns a passive garden within a week, so 3 days is the humane nudge point). **Player-overridable** — a player may set their own reminder cadence, which replaces the 3-day default. |
 | Blocker shape | A **set of channel-threads** (1..N), not a single `from→to` vector. |
 | Thread shape | `{ channel, presentAltitude, target: SatisfactionSpirit }`. The target spirit is **aspirational** (fear→wonder, anger→triumph, sadness→poignance, joy→bliss, neutrality→peace) — or a translate target on another channel. |
 | Target altitude | **Neutral resolves the thread.** dissatisfied→neutral (metabolize) is real progress and yields **insight**; the player need not reach the spirit. The **spirit is optional stretch depth** (neutral→satisfied = transcend) that additionally yields the channel's **satisfaction fruit**. |
@@ -116,8 +132,14 @@ function resolveBlocker(
 /** AI-drafted, player-ratified decomposition from the blocker's own language (≤ 5 threads). */
 function decomposeBlockerFromText(text: string): { draft: BlockerSignature; rationale: string }
 
-/** Inferred blocker on a planted seed that has gone un-actioned. Null if within the window. */
-function inferBlockerForStagnantSeed(seed: { plantedChannel: EmotionChannel; daysSincePlanted: number }): Blocker | null
+/**
+ * Inferred blocker on a planted seed gone un-actioned. Null if within the window.
+ * `windowDays` defaults to 3; a player's own reminder cadence overrides it.
+ */
+function inferBlockerForStagnantSeed(
+  seed: { plantedChannel: EmotionChannel; daysSinceAction: number },
+  windowDays?: number,   // default 3; player cadence overrides
+): Blocker | null
 ```
 
 - A seed with **no** blocker is directly actionable — action needs no blocker.
@@ -148,15 +170,18 @@ function inferBlockerForStagnantSeed(seed: { plantedChannel: EmotionChannel; day
   channel's satisfaction fruit; it is never required to clear a blocker.
 - **FR9 — Player-reported thread count.** ≤ 5 threads (one per channel). The player is the
   authority on how many channels are live; no system cap below 5.
-- **FR10 — Inferred blocker.** A planted seed left un-actioned past the stagnation window may
-  be assigned an **inferred** blocker (surfaced gently — "looks like there may be inner work
-  here?"), which the player can confirm/edit or dismiss by simply acting.
+- **FR10 — Inferred blocker.** A planted seed left un-actioned past the stagnation window
+  (**default 3 days; player cadence overrides**) may be assigned an **inferred** blocker
+  (surfaced gently — "looks like there may be inner work here?"), which the player can
+  confirm/edit or dismiss by simply acting.
 
 ## Non-Goals
 
 - No renderer / UI (Claude Design, in parallel).
 - No roll-up / progress counter (governed by the Calm↔Progress polarity map, separate).
 - No new persistence yet — this stays a pure lib until a surface needs it.
+- **No farm fertility / overcrowding mechanic** (Pressure 1) — that is the sibling *Action
+  Economy / Farm Fertility* spec. This spec covers only the stagnation → inferred-blocker half.
 
 ## Verification
 
@@ -170,8 +195,9 @@ function inferBlockerForStagnantSeed(seed: { plantedChannel: EmotionChannel; day
   the only thread — reaching the spirit is not required.
 - **Optionality:** a seed with **no** blocker is directly actionable (no gate); the gate path
   engages only when a blocker is present.
-- **Inferred blocker:** `inferBlockerForStagnantSeed` returns `null` within the window and an
-  `origin:'inferred'` blocker past it.
+- **Inferred blocker + window:** `inferBlockerForStagnantSeed` returns `null` at
+  `daysSinceAction: 2` and an `origin:'inferred'` blocker at `3` (default window); a custom
+  `windowDays` shifts the boundary.
 - **Canonical example:** `decomposeBlockerFromText("I keep avoiding the hard email")` →
   a fear thread (→wonder) + an anger thread (→triumph); the blocker clears when both reach
   neutral (both metabolize steps owned).
