@@ -1,5 +1,11 @@
 /**
- * Neutral–Playful copy for BSM UI. No shame metrics.
+ * Neutral–Playful copy for BSM UI.
+ *
+ * NOTE: "No shame metrics" is the CALM pole, not an absolute. Whether a surface shows a
+ * counter/progress signal is governed by the Calm ↔ Progress polarity map
+ * (docs/VALUES_AND_POLARITIES.md § Worked polarity), keyed on LensGoal.alignmentType
+ * (progress|maintenance|recovery) and item register (task vs charge). This copy is correct
+ * for the recovery register; it is not a blanket ban on progress signals elsewhere.
  */
 
 export const bsmCopy = {

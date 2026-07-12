@@ -93,7 +93,9 @@ each a real mechanic (maturation doc §3):
 | Water the kernel | **births a campaign** | six-face watering → `promoteCampaignBarToInstance` | ✅ promote built |
 | Compost | honest release | `compostedAt` + `releaseNote` | ✅ |
 
-**Two ledgers** (both qualitative state-machines, not counters — "no shame metrics"):
+**Two ledgers** (qualitative state-machines by default; whether a counter/progress signal is
+shown is governed by the **Calm ↔ Progress polarity map** in `docs/VALUES_AND_POLARITIES.md` —
+the blanket "no counters / no shame metrics" absolute is **deprecated**):
 - **Vertical (Lens):** a satisfied `LensGoal`, rolling daily→vision. *Personal development.*
 - **Horizontal (Campaign):** a met `MilestoneNeed` advancing a Kotter stage. *Collective impact.*
 

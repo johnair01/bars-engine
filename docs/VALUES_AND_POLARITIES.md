@@ -81,3 +81,42 @@ Each face asks a different question of the same distinction. Useful for design r
 
 - Grid axis math & vocabulary: [`.specify/specs/creator-scene-grid-deck/POLARITY_DERIVATION.md`](../.specify/specs/creator-scene-grid-deck/POLARITY_DERIVATION.md)  
 - Wiki article: `/wiki/values-and-polarities`
+
+---
+
+## Worked polarity: **Calm ↔ Progress** (governs every shame / counter / progress-bar decision)
+
+> **This map is the design principle. The "no shame metrics / not on a counter" language is
+> DEPRECATED as an absolute** — it is one pole (Calm), not a law. Do not cite the anti-shame
+> slogan to settle a design question; consult this map. Octalysis core drives are more
+> fundamental than the anti-shame bias: we *want* Development & Accomplishment (a White-Hat
+> drive); we only refuse to deliver it through Black-Hat framing.
+
+**Greater purpose (why hold both):** *sustainable transformation* — growth the user can keep doing.
+
+|                       | **Calm / Acceptance** (the "no-counter" pole) | **Progress / Accomplishment** (the "counter" pole) |
+|-----------------------|-----------------------------------------------|----------------------------------------------------|
+| **Upside (well-held)** | presence; safe to bring a real charge; intrinsic; sustainable | momentum; agency; *visible* capacity + output growth (Octalysis **CD2 Development & Accomplishment**, White-Hat) |
+| **Downside (over-leaned)** | invisible progress; no traction; drift; "nothing's happening" → churn | pressure; streak-anxiety; empty-bar-as-failure; gaming; burnout (**CD6 Scarcity / CD8 Loss-Avoidance**, Black-Hat) |
+
+**Deeper fear (either extreme):** the user leaves — burned out (over-Progress) or drifted away
+(over-Calm). The two downsides are the same outcome by opposite roads.
+
+### The lever — *when and why* to show a counter (scope, don't ban)
+
+1. **Mode** — `LensGoal.alignmentType` (`progress | maintenance | recovery`) already carries this:
+   *progress* → lead with accomplishment; *maintenance* → gentle consistency; *recovery* → suppress
+   the counter, lead with compost / relief.
+2. **Register** — a **task** (has a done-state, ladders to a weekly goal) may bear a progress signal;
+   a **charge / felt-practice** (emotional metabolization) may not — it is inherently recovery-register.
+3. **Framing (always on)** — show what **grew**, never what's **missing**. *"Your capacity grew; 3 seeds
+   fruited"* — not *"2/5 incomplete."* Same signal, White-Hat valence.
+
+### Early-warning signs (which way to lean)
+
+- **Over-Progress → lean Calm:** guilt on a missed day; gaming the counter; users report "pressure"; streak-anxiety.
+- **Over-Calm → lean Progress:** low return; "I can't tell if I'm growing"; drift; boredom.
+
+**Supersedes:** the absolute reading of `src/lib/bar-seed-metabolization/copy.ts` ("No shame metrics… not
+on a counter") and the "ledgers are not counters" framing in the Inner Garden ontology docs. Those remain
+true *for the Calm pole / recovery register*; they are no longer a blanket prohibition.
