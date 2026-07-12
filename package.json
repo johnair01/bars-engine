@@ -110,7 +110,7 @@
     "test:vitest": "vitest run",
     "test:inner-garden-game": "node scripts/smoke-inner-garden-game.mjs",
     "test:inner-garden-world": "tsx src/lib/inner-garden/world/__tests__/project.test.ts",
-    "test:inner-garden-ontology": "tsx src/lib/inner-garden/ontology/__tests__/domain-recipe.test.ts && tsx src/lib/inner-garden/ontology/__tests__/gate-confrontation.test.ts",
+    "test:inner-garden-ontology": "tsx src/lib/inner-garden/ontology/__tests__/domain-recipe.test.ts && tsx src/lib/inner-garden/ontology/__tests__/gate-confrontation.test.ts && tsx src/lib/inner-garden/ontology/__tests__/demonstration.test.ts",
     "test:onboarding-tokens": "npx tsx src/lib/__tests__/onboarding-tokens.parse.test.ts",
     "test:avatar-parts": "npx tsx src/lib/__tests__/avatar-parts.test.ts",
     "verify:avatar-lockstep": "tsx scripts/verify-avatar-lockstep.ts",
