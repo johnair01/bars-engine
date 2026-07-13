@@ -493,13 +493,19 @@ export const AUTHORED: Record<string, Partial<MoveCard>> = {
   },
   'WAKE-RA-ARCHITECT': {
     title: "The Story That Could Land",
-    primaryQuestion: "What truth, if made visible, would change the most?",
+    primaryQuestion: "Of everything true here, which one fact would flip someone who disagrees?",
     campaignQuestion: "What framing or story has the most potential to shift understanding?",
     optimizesFor: "Spotting the high-leverage truth worth amplifying.",
-    forbiddenMoves: ["Amplifying the loudest thing", "Ignoring framing", "Data with no story"],
-    failureModes: ["Missing the story that would move people", "Truth that doesn't travel"],
-    remediation: "Name the one fact that, if everyone saw it, would change things.",
+    forbiddenMoves: ["Stacking more facts on a made-up mind", "Amplifying the loudest thing, not the truest", "Data with no story"],
+    failureModes: ["The truth that doesn't travel", "Ten right facts, zero minds changed"],
+    remediation: "Cut ten facts down to the one that travels. Do it every time before you post.",
+    action: "Find the single fact that would flip a skeptic — and lead with only that.",
+    flavor: "Ten correct things bounce off. One true thing lands.",
     capabilities: ["exploration", "participation"],
+    applications: [
+      { context: "The cause you brought with you", example: "You've been posting fact after fact and the machine hasn't moved an inch. The problem was never that people had too few facts. Find the one that, if they actually saw it, would change the game — and say only that." },
+      { context: "A meeting", example: "The room is buried in detail and nothing is getting decided. Name the single fact that reframes the whole thing — 'we're all defending a process no one actually uses' — and watch the argument change shape." },
+    ],
   },
   'WAKE-RA-DIPLOMAT': {
     title: "Whose Voice Is Missing",
@@ -525,13 +531,19 @@ export const AUTHORED: Record<string, Partial<MoveCard>> = {
   // ── OPEN UP × Raise Awareness ──
   'OPEN-RA-SHAMAN': {
     title: "What Seeing Costs",
-    primaryQuestion: "What do I actually feel when I let this truth land?",
+    primaryQuestion: "What does it cost you to feel this, not just know it?",
     campaignQuestion: "What does it cost us to really see what is happening here?",
     optimizesFor: "Letting the truth land in the body before reacting.",
-    forbiddenMoves: ["Intellectualizing", "Numbing to the truth", "Performing feeling"],
+    forbiddenMoves: ["Explaining instead of feeling", "Numbing to the truth", "Performing a feeling you skipped"],
     failureModes: ["Knowing without feeling", "Abstraction as armor"],
-    remediation: "Let the truth land for one breath before you respond.",
+    remediation: "Feel the hard thing before you speak on it. Skip the breath and you're performing.",
+    action: "Before you react, give the truth one breath to land. The breath is the move.",
+    flavor: "Knowing is cheap. Feeling it is the fare.",
     capabilities: ["connection"],
+    applications: [
+      { context: "Before you post about a cause", example: "Before you share the hard story, sit with what it actually cost you to look — the helplessness, the guilt you'd rather skip. Then let that show. People can tell the difference between someone who read the facts and someone who felt them. The felt version is the one that reaches." },
+      { context: "A hard conversation", example: "Someone names a harm you had a hand in, and your mouth wants to explain. Take one breath and let it land first — the sting, the defensiveness — before you say anything. The breath is the move. What you say after it will be true instead of armored." },
+    ],
   },
   'OPEN-RA-CHALLENGER': {
     title: "The Truth You're Numb To",
@@ -649,13 +661,19 @@ export const AUTHORED: Record<string, Partial<MoveCard>> = {
   // ── GROW UP × Raise Awareness ──
   'GROW-RA-SHAMAN': {
     title: "The Witness Growing in You",
-    primaryQuestion: "What capacity to see or speak truth is trying to grow in me?",
+    primaryQuestion: "What allyship skill are you clumsy at right now — the one that's actually growing?",
     campaignQuestion: "What awareness-capacity is this work asking the group to develop?",
     optimizesFor: "Noticing the emerging witness or voice.",
-    forbiddenMoves: ["Forcing eloquence", "Performing growth", "Borrowing someone else's voice"],
-    failureModes: ["Naming the capacity you wish for over the one emerging"],
-    remediation: "Name the seeing or speaking capacity one size bigger than today.",
+    forbiddenMoves: ["Faking the finished version", "Performing growth", "Borrowing someone else's voice"],
+    failureModes: ["Naming the skill you wish you had, not the one you're growing", "Performing mastery instead of practicing"],
+    remediation: "Practice the skill you're still bad at, out loud. Practice beats performance.",
+    action: "Name the rep you're on — one size bigger than today. Take it once.",
+    flavor: "The fumble is the useful part.",
     capabilities: ["participation", "exploration"],
+    applications: [
+      { context: "The skill you are mid-rep on", example: "Name the capacity you're actually growing right now — not the one you wish you had, the one you're still clumsy at this week. Then say it to someone plainly: 'I'm practicing saying the costly thing instead of keeping the peace.' Naming the rep you're on beats performing a mastery you haven't earned." },
+      { context: "Online", example: "Everyone posts their finished convictions. Post the edge instead — the capacity you're still building and keep fumbling. Watching someone practice teaches more than watching someone perform." },
+    ],
   },
   'GROW-RA-CHALLENGER': {
     title: "The Edge of Speaking",
@@ -721,12 +739,13 @@ export const AUTHORED: Record<string, Partial<MoveCard>> = {
   },
   'SHOW-RA-CHALLENGER': {
     title: "Say the Thing",
-    primaryQuestion: "What truth must I actually state — publicly or to someone's face — now?",
+    primaryQuestion: "What's the true thing you keep almost saying?",
     campaignQuestion: "What's the intervention: the post, the testimony, the call-out or call-in?",
     optimizesFor: "Shipping the actual act of witness.",
     forbiddenMoves: ["One more draft", "Private clarity", "A soft hint instead of the thing"],
-    failureModes: ["The truth that never gets said"],
-    remediation: "Say the thing today — specifically, to the people who need to hear it.",
+    failureModes: ["The truth that never gets said", "A soft hint you'll call brave later"],
+    remediation: "Say the true thing while it still costs something — today, to the people who need it.",
+    action: "Pick the one true sentence you're avoiding. Send it before you close this card.",
     flavor: "The naming is the first move.",
     capabilities: ["agency"],
     applications: [
