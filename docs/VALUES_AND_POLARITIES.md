@@ -120,3 +120,51 @@ Each face asks a different question of the same distinction. Useful for design r
 **Supersedes:** the absolute reading of `src/lib/bar-seed-metabolization/copy.ts` ("No shame metrics… not
 on a counter") and the "ledgers are not counters" framing in the Inner Garden ontology docs. Those remain
 true *for the Calm pole / recovery register*; they are no longer a blanket prohibition.
+
+---
+
+## Worked polarity: **Honesty ↔ Craft** (governs the Witness register — expressing inner work as content)
+
+> **This map governs the Witness register** (raising awareness by expressing honest inner
+> process — see `src/lib/allyship-deck/expression-register.ts` and
+> `docs/ontology/2026-07-12-the-witness-turn-inner-outer-resolution.md`). Do NOT read it as
+> "honesty over everything" — that would repeat the anti-shame-absolute mistake. Honesty is the
+> **floor**, not the ceiling; you still shape for reach. Both poles are goods.
+
+The deck already half-encodes this: the Raise Awareness cards name **both** shadows —
+*"Dumping charge on an audience"* (over-raw) and *"Performing awareness / feeling / care /
+growth"* (over-craft). **`CLEAN-RA-ARCHITECT` ("From Outrage to Aim") is this whole polarity in
+one card** — its failure modes are literally *"Dumping charge on an audience"* **and** *"Sanitized
+into meaninglessness."*
+
+**Greater purpose (why hold both):** *expression that is both true and lands* — metabolized
+testimony that actually reaches someone.
+
+|                       | **Honesty / Rawness** (the "rings true" pole) | **Craft / Reach** (the "lands" pole) |
+|-----------------------|-----------------------------------------------|--------------------------------------|
+| **Upside (well-held)** | authentic; trust-building; **un-fakeable — the AI-allergy moat**; models the real difficulty of the work | legible; reaches the persuadable; shaped for reception; safe to receive |
+| **Downside (over-leaned)** | trauma-dump; oversharing; **unmetabolized charge dumped on the audience**; incoherence → repels | **performance**; polish over truth; "performing feeling/care/growth"; purity tone; sanitized into meaninglessness; reads as marketing / AI |
+
+**Deeper fear (either extreme):** the expression fails to raise awareness — it either **repels**
+(over-raw) or **doesn't ring true** (over-craft). Same failure by opposite roads (mirrors
+Calm ↔ Progress).
+
+### The lever — *metabolize, then express*
+
+1. **Metabolize first.** The inner moves (Open / Clean / Grow) are what turn raw charge into
+   expressible truth. Craft on un-metabolized charge = **spin**; rawness without metabolization =
+   **dump**. The WAVE order *is* the lever: don't Show Up a charge you haven't Cleaned.
+2. **Register.** Witness is where this bites hardest (you *are* the content). Point has a milder
+   form — a fact can be rage-posted (raw) or spun (craft).
+3. **Honesty is the floor (always on).** Shape for reach above it; never fake below it.
+
+### Early-warning signs (which way to lean)
+
+- **Over-Craft → lean Honesty:** it reads as performance/marketing; "sounds like everyone else";
+  the AI-allergy alarm trips; nothing real is at stake.
+- **Over-Honesty → lean Craft:** it overshares / trauma-dumps; the audience recoils; charge lands
+  *on* people; no one can act on it.
+
+**Gate for the two-context test:** a card's **Witness** application passes only if it can be said
+**honestly** (not performed). The fail case is when *only performance is available* — which means
+the inner work hasn't actually been done.

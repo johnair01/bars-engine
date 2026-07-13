@@ -34,6 +34,16 @@ export type OutputBar = 'awareness' | 'experience' | 'insight' | 'wisdom' | 'art
 /** Consult lens for the subject toggle. */
 export type Subject = 'self' | 'other' | 'collective'
 
+/**
+ * How a card raises awareness (the Witness Turn — inner/outer resolution):
+ *  - 'point'   — an external truth made visible ("here is what's unseen / must change").
+ *  - 'witness' — honest inner process expressed as content ("here is what this surfaced in me").
+ * Both are OUTER (they raise awareness); the difference is the content. Derived deterministically
+ * from the move (see `expression-register.ts`), not authored per card.
+ * @see docs/ontology/2026-07-12-the-witness-turn-inner-outer-resolution.md
+ */
+export type ExpressionRegister = 'point' | 'witness'
+
 /** 'generated' = grammar scaffold awaiting human polish; 'authored' = finished. */
 export type CardStatus = 'authored' | 'generated'
 
