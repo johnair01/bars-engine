@@ -2,8 +2,9 @@
 
 > **Event: MTGOA Virtual Book Launch — Friday, July 17, 7:00 PM Pacific.** Today is Mon Jul 13, so
 > this is a proper 5-day WAVE-arc runway (Wake → Show, landing on Launch Day). Real links are
-> dropped in below. Only blanks left: two `⟨you⟩` Witness lines (one sentence each) and one file
-> to confirm. Post the announcement today; run one draw-a-card post per day; go live Friday.
+> dropped in below, and the Tue/Thu Witness lines are filled (from Chapter 0). Only blanks left:
+> the one Friday-night "after" line (write it live) and one file to confirm. Post the announcement
+> today; run one draw-a-card post per day; go live Friday.
 
 ## The real links (already in the posts)
 - **Zoom join:** https://us02web.zoom.us/j/83460548616?pwd=4IrBKlmzqfwElSaubPc45YiFzCAxXI.1 · **ID** 834 6054 8616 · **Passcode** 495129
@@ -54,7 +55,9 @@ CTA rotation so you're not asking the same thing daily: pre-order → chapter �
 >
 > Most people already know the world needs better allies. The energy's right there — it just has
 > nowhere to go, so it curdles into despair or doom-scrolling. Friday, I'm giving it somewhere to go.
-> ⟨you: one honest line about the energy actually behind why you wrote this⟩
+>
+> For three years I wrote this on guilt, and it emptied me. It moved the day I stopped swallowing
+> the anger — at the delay, at myself — and treated it as fuel instead of contraband.
 >
 > **Your move:** one word for the feeling this moment gives you — I'll send the card that metabolizes it.
 > 📖 First chapter, free → https://masteringallyship.com/chapter-one.pdf
@@ -75,8 +78,8 @@ CTA rotation so you're not asking the same thing daily: pre-order → chapter �
 > *Flavor: The sentence you're avoiding is the assignment. The move: name the sentence you're
 > scared to say — that's your edge.*
 >
-> Launching in public is my edge this week. This book is three years late — ⟨you: one honest line,
-> at your own expense⟩.
+> Launching in public is my edge this week. This book is three years late — because I was writing a
+> book about allyship, and it was making me a worse ally.
 >
 > **Your move:** what's the sentence you're scared to say to your people? You don't have to post it
 > — just find it. Bring it tomorrow night.
@@ -104,7 +107,8 @@ CTA rotation so you're not asking the same thing daily: pre-order → chapter �
 
 ## Notes
 - **Card copy is verbatim from the whacked deck** — the posts already sound like the deck and the book.
-- **Two `⟨you⟩` Witness lines** (Tue, Thu) + the after line are yours — the un-fakeable part; one sentence each.
+- **Tue/Thu Witness lines are filled from Chapter 0** (your own words) — edit freely. Only the
+  Friday-night **after** line is left blank, to write live (fabricating it would be the performed shadow).
 - **Coaching** points at `/launch` (offers page); swap in a direct Gumroad coaching link if you have one.
 - **Cascade Camp variants** (same cards, their frame, no MTGOA breadcrumb) after the launch.
 
