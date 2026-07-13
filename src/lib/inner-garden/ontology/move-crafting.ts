@@ -18,6 +18,7 @@ import {
   type CapacityKey,
   type ChannelThread,
   type EmotionChannel,
+  type GatePath,
   type MoveRole,
   type SatisfactionSpirit,
 } from './gate-confrontation'
@@ -73,7 +74,7 @@ export function buildCraftSkeleton(thread: ChannelThread): CraftSkeleton {
   }
 }
 
-export type GatePath = 'task' | 'school' | 'craft'
+/** GatePath ('task' | 'school' | 'craft') is defined in gate-confrontation and imported above. */
 
 /** Own the key → Task; a card exists in the library → School; nothing → Craft. Dedup by key. */
 export function resolveGatePath(
