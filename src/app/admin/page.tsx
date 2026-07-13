@@ -88,6 +88,7 @@ export default async function AdminDashboard() {
                 {/* System */}
                 <Section title="System & Config">
                     <NavLink href="/admin/config" label="App config" />
+                    <NavLink href="/admin/launch-leads" label="Launch leads" />
                     <NavLink href="/admin/docs" label="Documentation" />
                     <NavLink href="/admin/backlog" label="Spec backlog" />
                     <NavLink href="/lobby" label="Lobby" external />
