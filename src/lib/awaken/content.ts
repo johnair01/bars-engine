@@ -122,10 +122,9 @@ export const AWAKEN_PRODUCTS_HREF = '/launch'
 export const AWAKEN_NONPROFIT_HREF = '/nonprofit'
 
 /**
- * Optional static asset for Chapter One. Drop a PDF at public/chapter-one.pdf
- * and this link goes live; until then we promise delivery by email.
+ * Canonical Chapter One delivery URL.
  */
-export const AWAKEN_CHAPTER_FILE_HREF = '/chapter-one.pdf'
+export const AWAKEN_CHAPTER_FILE_HREF = '/mastering-allyship-chapter-1.pdf'
 
 export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
   steps: {

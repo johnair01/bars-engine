@@ -26,16 +26,19 @@ export function absoluteUrl(path: string): string {
 export async function sendChapterOneEmail(opts: {
   to: string
   firstName?: string | null
+  homePath?: string
+  funnelTag?: string
+  downloadPath?: string
 }): Promise<SendEmailResult> {
-  const downloadUrl = absoluteUrl(AWAKEN_CHAPTER_FILE_HREF)
-  const homeUrl = absoluteUrl('/awaken')
+  const downloadUrl = absoluteUrl(opts.downloadPath ?? AWAKEN_CHAPTER_FILE_HREF)
+  const homeUrl = absoluteUrl(opts.homePath ?? '/awaken')
   const props = { downloadUrl, homeUrl, firstName: opts.firstName ?? null }
   return sendEmail({
     to: opts.to,
     subject: 'Chapter One is yours',
     react: ChapterOneEmail(props),
     text: chapterOneText(props),
-    tags: [{ name: 'funnel', value: 'awaken-chapter' }],
+    tags: [{ name: 'funnel', value: opts.funnelTag ?? 'awaken-chapter' }],
   })
 }
 
