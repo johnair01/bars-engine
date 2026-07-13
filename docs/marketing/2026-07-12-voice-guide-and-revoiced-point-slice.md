@@ -79,6 +79,16 @@ What a Whack Pack card does, mapped to our card anatomy:
 **Compatibility:** Chapter 0 supplies the **voice + philosophy**; the Whack Pack supplies the
 **format + cut**. Use both — Ch0 voice, Whack-Pack compression.
 
+**The flavor rule (learned in review, applies to every card):** flavor is an **affirmative line
+that names what the card *does*** — concrete, quotable. Two hard bans: **(1) no redefine-by-
+negation** ("X is not A, it's B" / "not X but Y" — the tell of a weak reframe); **(2) never bend
+the ontology for a punchline** (e.g. "awareness that fades isn't awareness" is false — awareness
+is awareness; we're adding *teeth*, not reclassifying it). If the line doesn't tell a first-timer
+what the card is for, it's decoration — cut it. Good: *"The sentence you're avoiding is the
+assignment." / "Outrage is ore. Refine it before you ship it." / "Repetition is where awareness
+grows teeth."* Parallel *distinctions* are fine when both sides are affirmed (*"Pity looks down.
+Care looks across."*) — that's not the negation cliché.
+
 **Whack in practice (remediation before → after):**
 - `GROW-RA-SHAMAN`: "Name the seeing or speaking capacity one size bigger than today." →
   **"Name the rep you're on — the capacity one size bigger than today. Take it once. Practice beats
