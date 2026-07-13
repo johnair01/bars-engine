@@ -49,6 +49,45 @@ that reads as a receipt for goodness.
 
 ---
 
+## Format lens: the Creative Whack Pack (card energy)
+
+The allyship deck is, structurally, a **Whack Pack for allyship** — a draw-for-a-jolt provocation
+deck organized by process-roles. Von Oech's four roles (Explorer → Artist → Judge → Warrior) are
+the creative process; our **WAVE moves** (Wake → Open → Clean → Grow → Show) and **Six Faces** are
+the allyship process. Same genre. Borrow the energy.
+
+What a Whack Pack card does, mapped to our card anatomy:
+
+| Whack Pack | Our field |
+|---|---|
+| provocative title | `title` |
+| a vivid concrete hook (story / paradox / quote) | `flavor` / the `applications` hook |
+| the reframe that jolts | `primaryQuestion` / the anti-performance turn |
+| **the "whack"** — a prod that throws it at YOUR problem *now* | `action` ("Your move") / `remediation` ("The practice") |
+
+**Five craft rules (the vibe):**
+1. **Compress to the aphorism.** Every line quotable; cut anything that isn't the point. *"Ten
+   correct things bounce off. One true thing lands."*
+2. **Open on a concrete, not a concept.** A scene, an image, a paradox — never "awareness matters."
+3. **Turn, don't explain.** Name the trap, flip it. The jolt *is* the reversal.
+4. **End on a whack.** The remediation is a prod, not advice — it lands on the player's real
+   situation right now. *"The fumble is the useful part."*
+5. **Play, don't preach.** A little irreverent, energizing, delighted. Heaviness is the failure
+   mode (and the deck's own "performing / purity" shadow). Fun is honest — Ch0: "call it by its
+   real name — engaging."
+
+**Compatibility:** Chapter 0 supplies the **voice + philosophy**; the Whack Pack supplies the
+**format + cut**. Use both — Ch0 voice, Whack-Pack compression.
+
+**Whack in practice (remediation before → after):**
+- `GROW-RA-SHAMAN`: "Name the seeing or speaking capacity one size bigger than today." →
+  **"Name the rep you're on — the capacity one size bigger than today. Take it once. Practice beats
+  performance."**
+- `OPEN-RA-REGENT`: "Choose one truth you'll keep in view past the news cycle." →
+  **"Pick one truth. Keep it past the news cycle. Outrage is cheap; staying is the move."**
+
+---
+
 ## Re-voiced Point cards (candidates — your ratification)
 
 ### `WAKE-RA-ARCHITECT` "The Story That Could Land" · Point
