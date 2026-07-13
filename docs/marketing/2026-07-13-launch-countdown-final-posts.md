@@ -2,16 +2,16 @@
 
 > **Event: MTGOA Virtual Book Launch — Friday, July 17, 7:00 PM Pacific.** Today is Mon Jul 13, so
 > this is a proper 5-day WAVE-arc runway (Wake → Show, landing on Launch Day). Real links are
-> dropped in below, and the Tue/Thu Witness lines are filled (from Chapter 0). Only blanks left:
-> the one Friday-night "after" line (write it live) and one file to confirm. Post the announcement
-> today; run one draw-a-card post per day; go live Friday.
+> dropped in below, and the Tue/Thu Witness lines are filled (from Chapter 1 / *The Infinite
+> Arcade*). Only blank left: the one Friday-night "after" line (write it live). Post the
+> announcement today; run one draw-a-card post per day; go live Friday.
 
 ## The real links (already in the posts)
 - **Zoom join:** https://us02web.zoom.us/j/83460548616?pwd=4IrBKlmzqfwElSaubPc45YiFzCAxXI.1 · **ID** 834 6054 8616 · **Passcode** 495129
 - **Book (pre-order):** https://wendellbritt.gumroad.com/l/MTGOAbook
 - **Deck:** https://masteringallyship.com/deck/sales
 - **Coaching / all offers:** https://masteringallyship.com/launch
-- **Free chapter:** https://masteringallyship.com/chapter-one.pdf ⚠️ *confirm this serves your finished Chapter 0, or swap the file*
+- **Free chapter:** https://masteringallyship.com/chapter-one.pdf — your finished intro chapter (*The Infinite Arcade*, renamed **Chapter 1** under the new 1–9 scheme). Path is correct; just verify the *deployed* PDF is this latest version.
 
 CTA rotation so you're not asking the same thing daily: pre-order → chapter → deck → Zoom → Zoom(go-live).
 
