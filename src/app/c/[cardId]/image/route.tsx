@@ -28,6 +28,14 @@ import {
 
 export const runtime = 'nodejs'
 
+/** Replace non-Latin punctuation so next/og's default font never triggers a dynamic-font fetch (400 → 500). */
+function ascii(s: string): string {
+  return s
+    .replace(/[—–]/g, '-')
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ cardId: string }> },
@@ -44,7 +52,6 @@ export async function GET(
   const face = FACE_COLOR[card.operation]
   const filled = MOVE_ICON_FILLED[card.move]
   const flavor = card.flavor ?? card.remediation
-  const move = card.action ?? card.remediation
 
   const titleSize = square ? 92 : 76
   const flavorSize = square ? 40 : 34
@@ -90,35 +97,18 @@ export async function GET(
             </div>
           </div>
           <span style={{ fontSize: square ? 24 : 20, color: t.gem, fontWeight: 800, letterSpacing: 2 }}>
-            ◇ {DOMAIN_LABELS[card.domain].toUpperCase()}
+            {DOMAIN_LABELS[card.domain].toUpperCase()}
           </span>
         </div>
 
         {/* center: the hook — title huge, flavor as the line */}
         <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'center' }}>
           <div style={{ fontSize: titleSize, fontWeight: 800, lineHeight: 1.02, letterSpacing: -1 }}>
-            {card.title}
+            {ascii(card.title)}
           </div>
-          <div style={{ fontSize: flavorSize, fontStyle: 'italic', color: '#e7c98a', marginTop: 22, lineHeight: 1.22 }}>
-            “{flavor}”
+          <div style={{ fontSize: flavorSize, fontStyle: 'italic', color: '#e7c98a', marginTop: 24, lineHeight: 1.25 }}>
+            {`"${ascii(flavor)}"`}
           </div>
-        </div>
-
-        {/* your move — the whack */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: 'rgba(0,0,0,0.30)',
-            border: '1px solid rgba(201,168,76,0.55)',
-            borderRadius: 18,
-            padding: square ? 30 : 24,
-          }}
-        >
-          <span style={{ fontSize: square ? 18 : 15, fontWeight: 800, letterSpacing: 4, color: DECK_GOLD }}>
-            YOUR MOVE
-          </span>
-          <span style={{ fontSize: square ? 31 : 25, marginTop: 8, lineHeight: 1.28 }}>{move}</span>
         </div>
 
         {/* footer: brand + url */}
