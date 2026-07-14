@@ -49,7 +49,7 @@ degrade gracefully (a card with no art still shares as clean text).
 | Access | Add `/c/[cardId]` to the **public route allowlist** (alongside `/deck/sales`, `/deck/preview`, `/deck/glossary`) per the deck-only product-access model. Never gated. |
 | Social preview | `generateMetadata` emits **OpenGraph + Twitter** tags: title = card title; description = `flavor` (fallback: `remediation`); image = the **branded card graphic** (below). |
 | **Card graphic (v1 core)** | A **branded trading-card image** per card — element frame + gem + move pip + gold edge + title + flavor + "Your move", in the cultivation-card look. Serves **double duty**: the OG unfurl image *and* a **directly-downloadable image** the creator posts where link-unfurls don't work (IG/Threads/stories). |
-| **Generation approach** | Two viable paths: **(A) Satori / `ImageResponse`** — rebuild the card layout in satori-safe JSX (flex, `linear-gradient`, loaded fonts; **no `color-mix`**) → on-brand, on-demand, Vercel-native, *not pixel-identical* to the DOM card. **(B) Playwright build-time screenshots** — render the real `AllyshipCard` DOM to PNG for all 120 → **pixel-perfect**, but needs Chromium in the build and ships static PNG assets. **Lean A** (fidelity ↔ ops balance); choose B only if pixel-parity with the in-app card is a hard requirement. *This is Open Question #1 — decide before build.* |
+| **Generation approach** | **RESOLVED (Six Faces council → Approach A, reframed):** build the graphic with **Satori / `ImageResponse`** as a **purpose-built share card** — feed-optimized (bold, simple, big type, the flavor line as hook), NOT a screenshot of the detail-dense DOM card. On-brand, on-demand, Vercel-native, self-syncing with card data. **Gate:** prototype one card, gut-check felt-authenticity before scaling. **(B) Playwright build-time screenshots** (pixel-perfect DOM card) held in reserve *only if* the prototype fails the authenticity bar. Full rationale in Open Question #1. |
 | **Formats** | **Landscape 1200×630** for link OG (LinkedIn/X/FB) **and** **square 1080×1080** for direct posting (IG/Threads). Portrait 1080×1350 optional. At least landscape + square in v1. |
 | **Download** | The card page and the (now-enabled) `share_card` action let the creator **save the card image** directly — the atomic "draw a card in public" asset, no Canva. |
 | CTA | One primary CTA → **`/deck/sales`** carrying **UTM params** (below). Secondary: link to `/deck/glossary` ("what is this?"). |
@@ -158,9 +158,15 @@ disabled stub.
 
 ## Open Questions
 
-1. **Generation approach — A (satori) vs B (Playwright screenshots).** Fidelity vs. ops (see Risks).
-   *Lean A; prototype one card and eyeball it against the DOM card before committing.* **Decide this
-   first — it shapes the whole build.**
+1. **Generation approach — RESOLVED by a Six Faces council → Approach A (satori), reframed.** The
+   council's key move (Sage): this is not "copy the in-app card" — it's "give the card a shareable
+   *body*." A feed artifact at 1080² thumbnail scale should be **bolder, simpler, bigger type, one
+   hook (the flavor line)** — *not* the detail-dense DOM card. So pixel-parity is the wrong goal and
+   "A is lossy" dissolves. Architect/Regent/Challenger get the composable, low-maintenance,
+   self-syncing win; Shaman/Diplomat attach the gate: **prototype ONE card in A and gut-check it
+   feels authentically on-brand before building the other 119.** B (Playwright screenshots) stays in
+   reserve *only if* that prototype fails the felt-authenticity test. → design a **purpose-built
+   share card**, don't screenshot the detail card.
 2. **Card-graphic content** — the graphic shows title + flavor + "Your move" + marks; does it also
    include the applications, or stay clean (title/flavor/move) for legibility at 1080²? *Lean clean.*
 3. **Full card vs. teaser fields on the PAGE** — the `/c` page can show the entire face; hold any
