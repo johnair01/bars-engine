@@ -1,5 +1,13 @@
 # Spec: Deck Card Share Permalink (`/c/[cardId]`)
 
+> **⚠️ RECONCILED — read `reconciliation.md` first.** PR #183 (`claude/card-landing-pages-zh3rtf`)
+> already **built** this surface (`/deck/card/[id]` page + per-card OG image + analytics), CI-green
+> and mergeable. **#183 is the base — do not rebuild it.** This spec now stands as *intent + the
+> marketing deltas #183 lacks* (short `/c/` alias, downloadable + square graphic, flavor hook, UTM
+> sale-attribution, font fidelity). Where they conflict, `reconciliation.md` rules: **route →
+> `/deck/card/[id]` canonical (C1); depth → question-only teaser (C2, supersedes "full face" below);
+> image hook → flavor (C3).**
+
 ## Purpose
 
 Give every Allyship Deck card a **public, linkable home** so a card can be *shared* — the atomic
