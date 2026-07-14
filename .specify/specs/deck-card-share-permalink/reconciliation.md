@@ -48,7 +48,7 @@ That's ~80% of this spec, already shipped and tested by #183.
 |---|---|---|---|---|
 | C1 | **Route** | `/deck/card/[id]` | `/c/[cardId]` (the URL the app already copies) | **Canonical = `/deck/card/[id]`** (built, SEO-descriptive). **Add `/c/[cardId]` → 308 redirect** to it — short link is nicer for social and the app already copies it. Keep the app copying `/c/`; the redirect carries OG. |
 | C2 | **Page depth** | question-only teaser | full face | **#183 wins — question-only.** Protects the paid deck. |
-| C3 | **Image direction** | question-forward | flavor + "Your move" | **Lead with the FLAVOR line** (title + aphorism): punchier and *more* shareable than the question, and — unlike "Your move" — it reveals **no working**, so it respects C2's teaser boundary. **Drop "Your move" from the public graphic** (that's paid depth). *Open decision — see §5.* |
+| C3 | **Image direction** | question-forward | flavor + "Your move" | **RESOLVED (Six Faces): flavor-PRIMARY, question-FALLBACK** — one adaptive template leads with `card.flavor` when the card has a strong one, else `primaryQuestion`. Whacked cards (all launch RA) render flavor-forward now; the 90 un-whacked fall back to the question — which is exactly #183's built image, so nothing is wasted. **Drop "Your move"** (paid depth). See §5. |
 | C4 | **Analytics** | `/api/deck/events` beacon (built) | UTM on CTA | **Keep both — complementary.** Beacon = on-site engagement (view→cta). **UTM on the `/deck/sales` CTA** = attributes the *Gumroad sale* the beacon can't see. |
 | C5 | **Downloadable / square** | OG preview only, 1200×630 | download + 1080² intended | **Add as a delta.** IG/Threads don't render link previews — the creator needs a **downloadable** graphic and a **square 1080×1080** to post directly. #183 lacks this; it's the real marketing need. |
 | C6 | **`share_card` stub + app copy** | not wired | spec'd | **Enable `share_card`; wire the app copy → `/c/` (which redirects).** Close the already-broken share promise. |
@@ -77,19 +77,21 @@ assumes #183 is in.
 
 ---
 
-## 5. Open decision for Wendell (the one real fork)
+## 5. Image hook — RESOLVED by a Six Faces council
 
-**Image creative direction — what's the hook on the shared graphic?**
-- **(a) Flavor-forward** *(recommended)* — title + the aphorism (*"The naming is the first move."*).
-  Punchy, scroll-stopping, reveals no working (respects the teaser boundary), best for a post people
-  actively share.
-- **(b) Question-forward** *(#183 as built)* — title + the primary question. More "curiosity/teaser,"
-  keeps the answer paid, already shipped.
-- **(c) Both** — question-forward for the *link OG unfurl*, flavor-forward for the *downloadable
-  square*. Most work; most tailored per surface.
+**Flavor-PRIMARY, question-FALLBACK.** One adaptive template: lead with `card.flavor` when the card
+has a strong one, else `primaryQuestion`. This dissolved the a/b/c fork:
 
-*Lean (a)* — it's the shareable hook and it honors #183's teaser logic. Decide this before the C3/C5
-deltas are built.
+- The council split (Shaman/Diplomat: the *question* tugs and invites; Challenger/Sage: the *flavor*
+  has a spine and is the brand IP) revealed they do **different jobs** — and the **Regent's hard
+  fact** decided it: only **30 of 120 cards are whacked**, so only those have strong flavor lines;
+  the other 90 don't. A flavor-only template breaks on 90 cards; every card has a question.
+- **Architect's synthesis (adopted):** use the strongest hook the card *actually has* — flavor when
+  present, question as fallback. One self-adapting renderer, no manual choice.
+- **Result:** launch RA cards (all whacked) → flavor-forward now; un-whacked cards → the question,
+  which is **#183's already-built image** (nothing wasted). Whacking more cards visibly upgrades each
+  from question → flavor hook. Option **(c) "both surfaces" is killed** — the split is *per-card by
+  strength*, not per-surface. **"Your move" dropped** everywhere (paid depth).
 
 ---
 
