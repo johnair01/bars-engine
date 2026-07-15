@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChapterOneLeadForm } from './ChapterOneLeadForm'
-import { CHAPTER_ONE_LEAD_PROMISE } from '@/lib/mastering-allyship/chapter-one-lead'
+import { stageForKey } from '@/lib/launch/funnel'
 
 export const metadata: Metadata = {
   title: 'Read Chapter 1 — Mastering the Game of Allyship',
@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 }
 
 export default function MasteringAllyshipChapterOnePage() {
+  const stage = stageForKey('chapter_one_lead')
+
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
@@ -30,13 +32,13 @@ export default function MasteringAllyshipChapterOnePage() {
               Start the book where allyship becomes practice.
             </h1>
             <p className="max-w-2xl text-base leading-relaxed text-[#a09e98]">
-              {CHAPTER_ONE_LEAD_PROMISE}
+              {stage.promise}
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              ['1', 'Read Chapter 1'],
+              ['1', 'Download Chapter 1'],
               ['2', 'Buy the full book'],
               ['3', 'Practice with the deck, Dojo, or 1:1 work'],
             ].map(([n, label]) => (
@@ -48,8 +50,8 @@ export default function MasteringAllyshipChapterOnePage() {
           </div>
 
           <p className="max-w-2xl text-sm leading-relaxed text-zinc-400">
-            The live reader opens immediately after signup. The polished PDF is in design, and this
-            delivery link will stay stable as the artifact improves.
+            The polished Chapter 1 PDF downloads immediately after signup. A live reader remains
+            available as a fallback while the full launch funnel grows.
           </p>
         </section>
 

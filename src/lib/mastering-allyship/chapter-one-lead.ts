@@ -1,6 +1,6 @@
 export const CHAPTER_ONE_LEAD_SOURCE = 'mastering-allyship-chapter-1'
 export const CHAPTER_ONE_READ_HREF = '/mastering-allyship/chapter-1/read'
-export const CHAPTER_ONE_PDF_HREF = '/chapter-one.pdf'
+export const CHAPTER_ONE_PDF_HREF = '/mastering-allyship-chapter-1.pdf'
 export const CHAPTER_ONE_DESIGN_HANDOFF_PATH =
   'docs/handoffs/2026-07-13-chapter-one-lead-magnet-design-handoff.md'
 

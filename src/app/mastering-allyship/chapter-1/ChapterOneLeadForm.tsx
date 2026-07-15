@@ -2,9 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { captureChapterOneLead } from '@/actions/launch-leads'
-import { CHAPTER_ONE_READ_HREF } from '@/lib/mastering-allyship/chapter-one-lead'
-import type { ChapterOneLeadState } from '@/lib/mastering-allyship/chapter-one-lead-state'
+import { captureChapterOneLead, type ChapterOneLeadState } from '@/actions/launch-leads'
+import { AWAKEN_CHAPTER_FILE_HREF } from '@/lib/awaken/content'
 
 export function ChapterOneLeadForm() {
   const [name, setName] = useState('')
@@ -27,10 +26,11 @@ export function ChapterOneLeadForm() {
         <p className="text-sm font-bold text-emerald-200">{state.message}</p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <a
-            href={state.readerHref || CHAPTER_ONE_READ_HREF}
+            href={AWAKEN_CHAPTER_FILE_HREF}
+            download
             className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 font-bold text-white transition-colors hover:bg-emerald-500"
           >
-            Read Chapter 1
+            Download Chapter 1
           </a>
           <Link
             href="/launch"
@@ -89,8 +89,7 @@ export function ChapterOneLeadForm() {
 
       <p className="text-xs leading-relaxed text-zinc-500">
         You will receive Chapter 1 and occasional launch notes for the book, deck, Dojo, and
-        practice invitations. By submitting, you agree to join the Chapter 1 captured-lead list.
-        Replies go to a human.
+        practice invitations. Replies go to a human.
       </p>
     </form>
   )

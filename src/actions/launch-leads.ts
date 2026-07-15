@@ -1,18 +1,14 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
-import { sendChapterOneAccessEmail } from '@/lib/email/chapter-one'
-import {
-  CHAPTER_ONE_ACCESS_COOKIE,
-  chapterOneAccessCookieOptions,
-  chapterOneAccessPath,
-  issueChapterOneAccessGrant,
-} from '@/lib/mastering-allyship/chapter-one-access'
-import { CHAPTER_ONE_LEAD_SOURCE, CHAPTER_ONE_READ_HREF } from '@/lib/mastering-allyship/chapter-one-lead'
-import type { ChapterOneLeadState } from '@/lib/mastering-allyship/chapter-one-lead-state'
+import { sendChapterOneEmail } from '@/lib/email/awaken'
+import { CHAPTER_ONE_LEAD_SOURCE, CHAPTER_ONE_PDF_HREF } from '@/lib/mastering-allyship/chapter-one-lead'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export type ChapterOneLeadState =
+  | { ok: true; emailed: boolean; message: string }
+  | { ok: false; error: string }
 
 export async function captureChapterOneLead(input: {
   email: string
@@ -23,14 +19,6 @@ export async function captureChapterOneLead(input: {
 
   if (!EMAIL_RE.test(email)) {
     return { ok: false, error: 'Please enter a valid email.' }
-  }
-
-  let accessToken: string
-  try {
-    accessToken = issueChapterOneAccessGrant()
-  } catch (err) {
-    console.error('[launch-leads] Chapter 1 access grant unavailable', err)
-    return { ok: false, error: 'Chapter 1 access is not configured yet. Please try again later.' }
   }
 
   try {
@@ -50,14 +38,13 @@ export async function captureChapterOneLead(input: {
     }
   }
 
-  const cookieStore = await cookies()
-  cookieStore.set(CHAPTER_ONE_ACCESS_COOKIE, accessToken, chapterOneAccessCookieOptions())
-
   const firstName = name?.split(/\s+/)[0] || null
-  const result = await sendChapterOneAccessEmail({
+  const result = await sendChapterOneEmail({
     to: email,
     firstName,
-    accessPath: chapterOneAccessPath(accessToken),
+    homePath: '/launch',
+    funnelTag: CHAPTER_ONE_LEAD_SOURCE,
+    downloadPath: CHAPTER_ONE_PDF_HREF,
   })
   if (!result.ok) {
     console.error('[launch-leads] Chapter 1 email failed to send', {
@@ -69,7 +56,6 @@ export async function captureChapterOneLead(input: {
       emailed: false,
       message:
         "You're on the list. The email hiccuped on our side, so we'll follow up manually if it does not arrive.",
-      readerHref: CHAPTER_ONE_READ_HREF,
     }
   }
 
@@ -80,6 +66,5 @@ export async function captureChapterOneLead(input: {
     message: skipped
       ? "You're on the list. Email delivery is not configured here yet, so this is queued for manual follow-up."
       : "You're in. Chapter 1 is on its way to your inbox.",
-    readerHref: CHAPTER_ONE_READ_HREF,
   }
 }

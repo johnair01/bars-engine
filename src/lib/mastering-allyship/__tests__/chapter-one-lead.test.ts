@@ -2,9 +2,9 @@ import assert from 'node:assert/strict'
 import { captureChapterOneLead } from '@/actions/launch-leads'
 import { AWAKEN_CHAPTER_FILE_HREF } from '@/lib/awaken/content'
 import { chapterOneText } from '@/lib/email/templates/ChapterOneEmail'
-import { chapterOneAccessPath } from '../chapter-one-access'
 import {
   CHAPTER_ONE_LEAD_SOURCE,
+  CHAPTER_ONE_PDF_HREF,
   CHAPTER_ONE_READ_HREF,
   chapterOneLeadsToCsv,
 } from '../chapter-one-lead'
@@ -15,9 +15,10 @@ async function run(name: string, fn: () => void | Promise<void>) {
 }
 
 async function main() {
-  await run('canonical delivery URL is the live Chapter 1 reader', () => {
+  await run('canonical delivery URL is the Chapter 1 PDF', () => {
     assert.equal(CHAPTER_ONE_READ_HREF, '/mastering-allyship/chapter-1/read')
-    assert.equal(AWAKEN_CHAPTER_FILE_HREF, CHAPTER_ONE_READ_HREF)
+    assert.equal(CHAPTER_ONE_PDF_HREF, '/mastering-allyship-chapter-1.pdf')
+    assert.equal(AWAKEN_CHAPTER_FILE_HREF, CHAPTER_ONE_PDF_HREF)
   })
 
   await run('CSV export includes Chapter 1 lead rows with escaped values', () => {
@@ -40,15 +41,15 @@ async function main() {
     )
   })
 
-  await run('delivery email text points to the read route and downstream offers', () => {
+  await run('delivery email text points to the PDF and downstream offers', () => {
     const text = chapterOneText({
-      downloadUrl: `https://bars-engine.vercel.app${chapterOneAccessPath('signed-test-token')}`,
+      downloadUrl: `https://bars-engine.vercel.app${CHAPTER_ONE_PDF_HREF}`,
       homeUrl: 'https://bars-engine.vercel.app/launch',
       firstName: 'Ada',
     })
 
     assert.match(text, /Ada, you're in\./)
-    assert.match(text, /\/mastering-allyship\/chapter-1\/read\/access\?token=signed-test-token/)
+    assert.match(text, /\/mastering-allyship-chapter-1\.pdf/)
     assert.match(text, /the full book, the Allyship Deck/)
     assert.match(text, /the Dojo, or direct practice work/)
   })
