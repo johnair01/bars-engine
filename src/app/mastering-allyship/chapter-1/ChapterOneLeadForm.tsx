@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { captureChapterOneLead, type ChapterOneLeadState } from '@/actions/launch-leads'
-import { AWAKEN_CHAPTER_FILE_HREF } from '@/lib/awaken/content'
+import { AWAKEN_BOOK_SALES_HREF, AWAKEN_CHAPTER_FILE_HREF } from '@/lib/awaken/content'
 
 export function ChapterOneLeadForm() {
   const [name, setName] = useState('')
@@ -32,11 +32,17 @@ export function ChapterOneLeadForm() {
           >
             Download Chapter 1
           </a>
+          <a
+            href={AWAKEN_BOOK_SALES_HREF}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-amber-500/60 px-5 font-bold text-amber-100 transition-colors hover:bg-amber-950/30"
+          >
+            Buy the book →
+          </a>
           <Link
-            href="/launch"
+            href="/launch#choose"
             className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-600/60 px-5 font-bold text-emerald-100 transition-colors hover:bg-emerald-900/30"
           >
-            See the full book →
+            Practice paths →
           </Link>
         </div>
       </div>
