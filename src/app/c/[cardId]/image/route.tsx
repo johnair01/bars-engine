@@ -1,15 +1,18 @@
 /**
- * PROTOTYPE v3 — Approach A (satori) branded card graphic, mirroring the deck card's
- * FULL-variant density (not just its shell).
+ * PROTOTYPE v4 — Approach A (satori) branded card graphic with a TEXT-FIT system.
  *
- * v1 was a bespoke feed graphic (unrecognizable). v2 got the 5:7 shape right but rendered
- * only 4 of the real card's blocks — it read half-empty. v3 mirrors `AllyshipCard variant="full"`:
- * title → marks row WITH labels under each icon → the flavor hook → the question → "How this
- * shows up in real life" (one application) → foot (Restores · → BAR ◆ · id). The paid working
- * (The practice / Your move / Avoid / How it slips) stays deck-only depth — teaser-dense.
+ * The structural chrome (marks row, foot, brand) stays at fixed sizes; the four variable-length
+ * text blocks (title, flavor, question, application) size themselves to FILL their allotted box —
+ * short text goes big and confident, long text shrinks just enough to stay readable, no dead
+ * space and no overflow. satori can't measure-then-fit in one render pass, so the fit is COMPUTED
+ * from the text: `fitText` estimates the wrapped line count at a candidate size and picks the
+ * largest size whose block still fits its box. Pure and deterministic.
  *
- * satori gaps handled: `color-mix` → precomputed rgba; `radial-gradient` → corner-lit linear;
- * non-Latin punctuation → ascii(); fonts (Jost/Nunito/Space Mono) loaded defensively.
+ * Mirrors `AllyshipCard variant="full"` at teaser depth (title → marks → flavor hook → question →
+ * "How it shows up" → foot). The paid working (practice/action/avoid/how-it-slips) stays deck-only.
+ *
+ * satori gaps handled: color-mix → rgba; radial-gradient → corner-lit linear; decorative diamonds
+ * are CSS rotated squares (the ◆/◇/♦/→ glyphs aren't in the latin font subset → dynamic-font 500).
  *
  * View:  /c/SHOW-RA-CHALLENGER/image   (portrait 5:7)   ·   ?fmt=square (card centered on 1080²)
  */
@@ -47,29 +50,44 @@ function rgba(hex: string, a: number): string {
   return `rgba(${r}, ${g}, ${b}, ${a})`
 }
 
-/** Fetch the deck fonts once; skip any that fail so the image never 500s on fonts. */
-async function loadFonts() {
-  const base = 'https://cdn.jsdelivr.net/npm/@fontsource'
-  const specs = [
-    { name: 'Jost', weight: 700 as const, url: `${base}/jost/files/jost-latin-700-normal.woff` },
-    { name: 'Jost', weight: 800 as const, url: `${base}/jost/files/jost-latin-800-normal.woff` },
-    { name: 'Nunito', weight: 400 as const, url: `${base}/nunito/files/nunito-latin-400-normal.woff` },
-    { name: 'Space Mono', weight: 400 as const, url: `${base}/space-mono/files/space-mono-latin-400-normal.woff` },
-  ]
-  const out: { name: string; data: ArrayBuffer; weight: 400 | 700 | 800; style: 'normal' }[] = []
-  await Promise.all(
-    specs.map(async (spec) => {
-      try {
-        const res = await fetch(spec.url)
-        if (!res.ok) return
-        const data = await res.arrayBuffer()
-        if (data.byteLength > 2000) out.push({ name: spec.name, data, weight: spec.weight, style: 'normal' })
-      } catch {
-        /* skip — fall back to the default font */
-      }
-    }),
-  )
-  return out
+/**
+ * Estimate how many lines `text` wraps to at `charsPerLine`, packing whole words (satori doesn't
+ * break mid-word). Slightly conservative — a word longer than the line still counts as one line.
+ */
+function estimateLines(text: string, charsPerLine: number): number {
+  const cpl = Math.max(1, charsPerLine)
+  let lines = 1
+  let cur = 0
+  for (const word of text.split(/\s+/)) {
+    const add = (cur === 0 ? 0 : 1) + word.length
+    if (cur + add <= cpl) {
+      cur += add
+    } else {
+      lines += 1
+      cur = word.length
+    }
+  }
+  return lines
+}
+
+/**
+ * Largest font size (design-space px) at which `text` fits inside `boxW × boxH`. Estimates chars-
+ * per-line from an average glyph width (`charRatio × size`) and multiplies wrapped lines by the
+ * line height. `charRatio` runs a touch wide so we round toward the smaller, safer size.
+ */
+function fitText(
+  text: string,
+  boxW: number,
+  boxH: number,
+  opts: { min: number; max: number; lineHeight: number; charRatio: number },
+): number {
+  const { min, max, lineHeight, charRatio } = opts
+  for (let size = max; size > min; size -= 1) {
+    const charsPerLine = Math.floor(boxW / (size * charRatio))
+    const lines = estimateLines(text, charsPerLine)
+    if (lines * size * lineHeight <= boxH) return size
+  }
+  return min
 }
 
 const BAR_LABEL: Record<string, string> = {
@@ -112,6 +130,26 @@ export async function GET(req: Request, { params }: { params: Promise<{ cardId: 
   const capLine = card.capabilities.length ? card.capabilities.join(' · ') : ''
   const bar = BAR_LABEL[card.outputBar] ?? card.outputBar.toUpperCase()
 
+  // ── text fit (design-space px; wrapped in s() at render) ─────────────────────────────
+  // Interior width after 52px padding. Each block fits its own box; the flexGrow spacer soaks
+  // any leftover so the card fills top-to-bottom regardless of how big the fitted text lands.
+  const PAD = 52
+  const IW = 1000 - PAD * 2 // 896
+  const APP_PAD = 22
+  const titleText = ascii(card.title)
+  const flavorText = card.flavor ? `"${ascii(card.flavor)}"` : ''
+  const questionText = ascii(card.primaryQuestion)
+  const appExample = app ? ascii(app.example) : ''
+
+  const titleSize = fitText(titleText, IW, 168, { min: 46, max: 82, lineHeight: 1.04, charRatio: 0.5 })
+  const flavorSize = flavorText
+    ? fitText(flavorText, IW, 250, { min: 34, max: 62, lineHeight: 1.2, charRatio: 0.52 })
+    : 0
+  const questionSize = fitText(questionText, IW, 190, { min: 27, max: 46, lineHeight: 1.3, charRatio: 0.54 })
+  const appSize = appExample
+    ? fitText(appExample, IW - APP_PAD * 2, 300, { min: 24, max: 40, lineHeight: 1.38, charRatio: 0.54 })
+    : 0
+
   const markLabel = (color: string, size: number): CSSProperties => ({
     fontFamily: mono,
     fontSize: size,
@@ -127,7 +165,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ cardId: 
         height: cardH,
         display: 'flex',
         flexDirection: 'column',
-        padding: s(52),
+        padding: s(PAD),
         backgroundImage: `linear-gradient(215deg, ${t.gradFrom}, ${t.gradTo} 70%)`,
         border: `${s(5)}px solid ${DECK_GOLD}`,
         borderRadius: s(26),
@@ -136,22 +174,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ cardId: 
         fontFamily: body,
       }}
     >
-      {/* title */}
+      {/* title (fitted) */}
       <div
         style={{
           fontFamily: display,
           fontWeight: 800,
-          fontSize: s(62),
+          fontSize: s(titleSize),
           lineHeight: 1.04,
           color: '#ffffff',
           letterSpacing: -1,
         }}
       >
-        {ascii(card.title)}
+        {titleText}
       </div>
 
-      {/* marks row: [pip + move] · [badge + operation] · [◆ domain] — labels under the icons */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: s(28), marginTop: s(26) }}>
+      {/* marks row: [pip + move] · [badge + operation] · [◆ domain] — fixed chrome */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: s(28), marginTop: s(24) }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: s(8) }}>
           <div
             style={{
@@ -211,61 +249,62 @@ export async function GET(req: Request, { params }: { params: Promise<{ cardId: 
         </div>
       </div>
 
-      {/* the flavor hook — the marketing aphorism (leads) */}
-      {card.flavor && (
+      {/* the flavor hook — the marketing aphorism (fitted, leads) */}
+      {flavorText && (
         <div
           style={{
             fontFamily: display,
             fontWeight: 700,
             fontStyle: 'italic',
-            fontSize: s(40),
-            lineHeight: 1.22,
+            fontSize: s(flavorSize),
+            lineHeight: 1.2,
             color: '#ffffff',
-            marginTop: s(34),
+            marginTop: s(32),
           }}
         >
-          {`"${ascii(card.flavor)}"`}
+          {flavorText}
         </div>
       )}
 
-      {/* the question — the invitation (gold italic, the real card's centerpiece) */}
+      {/* the question — the invitation, gold italic (fitted) */}
       <div
         style={{
           fontFamily: body,
           fontStyle: 'italic',
-          fontSize: s(31),
-          lineHeight: 1.34,
+          fontSize: s(questionSize),
+          lineHeight: 1.3,
           color: '#e7c98a',
           marginTop: s(22),
         }}
       >
-        {ascii(card.primaryQuestion)}
+        {questionText}
       </div>
 
-      {/* how this shows up in real life — one application (teaser depth, not the working) */}
+      {/* how this shows up in real life — one application (fitted example; teaser depth) */}
       {app && (
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: s(8),
-            marginTop: s(30),
-            padding: `${s(20)}px ${s(22)}px`,
+            gap: s(10),
+            marginTop: s(28),
+            padding: `${s(20)}px ${s(APP_PAD)}px`,
             borderRadius: s(12),
             backgroundColor: 'rgba(0,0,0,0.26)',
             boxShadow: `inset 0 0 0 1px ${rgba('#ffffff', 0.08)}`,
           }}
         >
           <span style={markLabel('#e7c98a', s(16))}>{`How it shows up · ${ascii(app.context)}`}</span>
-          <span style={{ fontFamily: body, fontSize: s(24), lineHeight: 1.4, color: '#ffffff' }}>
-            {ascii(app.example)}
+          <span style={{ fontFamily: body, fontSize: s(appSize), lineHeight: 1.38, color: '#ffffff' }}>
+            {appExample}
           </span>
         </div>
       )}
 
-      <div style={{ display: 'flex', flexGrow: 1 }} />
+      {/* spacer — soaks leftover so the card fills regardless of fitted sizes */}
+      <div style={{ display: 'flex', flexGrow: 1, minHeight: s(20) }} />
 
-      {/* foot: restores + → BAR ◆ ; then brand */}
+      {/* foot: restores + output BAR ; then brand — fixed chrome */}
       <div
         style={{
           display: 'flex',
@@ -317,4 +356,29 @@ export async function GET(req: Request, { params }: { params: Promise<{ cardId: 
     ),
     { width: outerW, height: outerH, ...(fonts.length ? { fonts } : {}) },
   )
+}
+
+/** Fetch the deck fonts once; skip any that fail so the image never 500s on fonts. */
+async function loadFonts() {
+  const base = 'https://cdn.jsdelivr.net/npm/@fontsource'
+  const specs = [
+    { name: 'Jost', weight: 700 as const, url: `${base}/jost/files/jost-latin-700-normal.woff` },
+    { name: 'Jost', weight: 800 as const, url: `${base}/jost/files/jost-latin-800-normal.woff` },
+    { name: 'Nunito', weight: 400 as const, url: `${base}/nunito/files/nunito-latin-400-normal.woff` },
+    { name: 'Space Mono', weight: 400 as const, url: `${base}/space-mono/files/space-mono-latin-400-normal.woff` },
+  ]
+  const out: { name: string; data: ArrayBuffer; weight: 400 | 700 | 800; style: 'normal' }[] = []
+  await Promise.all(
+    specs.map(async (spec) => {
+      try {
+        const res = await fetch(spec.url)
+        if (!res.ok) return
+        const data = await res.arrayBuffer()
+        if (data.byteLength > 2000) out.push({ name: spec.name, data, weight: spec.weight, style: 'normal' })
+      } catch {
+        /* skip — fall back to the default font */
+      }
+    }),
+  )
+  return out
 }
