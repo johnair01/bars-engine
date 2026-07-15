@@ -142,7 +142,7 @@ export default function MasteringAllyshipChapterOnePage() {
               className="max-w-3xl text-3xl font-semibold leading-tight text-[#ffe7d8] sm:text-5xl"
               style={{ fontFamily: DISPLAY }}
             >
-              The first chapter is not a teaser. It is the trapdoor.
+              Chapter 1 is the arcade screen pulling you through the glass.
             </h2>
             <div className="max-w-3xl space-y-5 text-base leading-8 text-[#d6c8c0]">
               <p>

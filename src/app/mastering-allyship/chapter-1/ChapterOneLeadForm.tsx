@@ -24,25 +24,27 @@ export function ChapterOneLeadForm() {
     return (
       <div className="rounded-2xl border border-emerald-700/60 bg-emerald-950/30 p-5">
         <p className="text-sm font-bold text-emerald-200">{state.message}</p>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <a
             href={AWAKEN_CHAPTER_FILE_HREF}
             download
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 font-bold text-white transition-colors hover:bg-emerald-500"
+            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition-colors hover:bg-emerald-500"
           >
-            Download Chapter 1
+            Download PDF
           </a>
           <a
             href={AWAKEN_BOOK_SALES_HREF}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-amber-500/60 px-5 font-bold text-amber-100 transition-colors hover:bg-amber-950/30"
+            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl border border-amber-500/60 px-4 text-sm font-bold text-amber-100 transition-colors hover:bg-amber-950/30"
+            aria-label="Buy the full book"
           >
-            Buy the book →
+            Buy book →
           </a>
           <Link
             href="/launch#choose"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-600/60 px-5 font-bold text-emerald-100 transition-colors hover:bg-emerald-900/30"
+            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl border border-emerald-600/60 px-4 text-sm font-bold text-emerald-100 transition-colors hover:bg-emerald-900/30"
+            aria-label="See practice paths"
           >
-            Practice paths →
+            Practice →
           </Link>
         </div>
       </div>
