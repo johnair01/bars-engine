@@ -1,9 +1,15 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   CHAPTER_ONE_LEAD_PROMISE,
   CHAPTER_ONE_LEAD_TITLE,
 } from '@/lib/mastering-allyship/chapter-one-lead'
+import {
+  CHAPTER_ONE_ACCESS_COOKIE,
+  verifyChapterOneAccessGrant,
+} from '@/lib/mastering-allyship/chapter-one-access'
 
 export const metadata: Metadata = {
   title: 'Chapter 1: The Call to Play',
@@ -35,13 +41,20 @@ const sections = [
  * @page /mastering-allyship/chapter-1/read
  * @entity CAMPAIGN
  * @description Public Chapter 1 lead-magnet reader while the polished PDF receives design.
- * @permissions public
+ * @permissions chapter-one-signup-required
  * @relationships delivery target for FunnelSignup source mastering-allyship-chapter-1
  * @dimensions WHO:visitor, WHAT:Chapter 1 sample, WHERE:Mastering Allyship funnel, ENERGY:wake_up
  * @example /mastering-allyship/chapter-1/read
  * @agentDiscoverable true
  */
-export default function ChapterOneReadPage() {
+export default async function ChapterOneReadPage() {
+  const cookieStore = await cookies()
+  const accessGrant = cookieStore.get(CHAPTER_ONE_ACCESS_COOKIE)?.value
+
+  if (!verifyChapterOneAccessGrant(accessGrant)) {
+    redirect('/mastering-allyship/chapter-1?gate=required')
+  }
+
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-10 text-[#e8e6e0] sm:px-6 lg:px-8">
       <article className="mx-auto max-w-3xl">
