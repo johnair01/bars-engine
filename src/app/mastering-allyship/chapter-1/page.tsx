@@ -22,7 +22,7 @@ const pathCards = [
     n: '1',
     title: 'Download Chapter 1',
     body:
-      'Start with the part where I admit the book was late because I was trying to write about allyship from inside the exact scarcity trap the book is here to undo.',
+      'Step into the Infinite Arcade: the opening chapter where allyship stops being a verdict on your goodness and becomes a game you can actually play.',
     href: '#chapter-one-form',
     cta: 'Send me the chapter',
   },
@@ -98,8 +98,8 @@ export default function MasteringAllyshipChapterOnePage() {
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-[#d6cfdb]">
                 You are playing a game that was built to feed on the exact feeling you are
-                having right now. Chapter 1 is where I stop pretending I was above that game,
-                tell the truth about why this book was late, and hand you the first map out.
+                having right now. Chapter 1 is your first step through the screen: the moment
+                allyship stops being a moral performance and starts becoming a playable world.
               </p>
             </div>
 
@@ -146,15 +146,14 @@ export default function MasteringAllyshipChapterOnePage() {
             </h2>
             <div className="max-w-3xl space-y-5 text-base leading-8 text-[#d6c8c0]">
               <p>
-                It starts with the part I would have preferred to skip: the promise I made,
-                the delay, and the embarrassing realization that I was making the work smaller,
-                slower, and less alive by trying to prove I was doing allyship correctly.
+                It starts inside the Infinite Arcade: the familiar world where care gets turned
+                into pressure, goodness becomes a scoreboard, and every move feels like it might
+                be the one that proves you were never qualified to play.
               </p>
               <p>
-                That is the whole doorway. Allyship cannot be built from scarcity and
-                self-punishment without turning you into a worse ally. Chapter 1 names the
-                arcade, shows how it eats your care, and points toward the game underneath:
-                one where your satisfaction is not the enemy of the work.
+                Chapter 1 names the rules of that old arcade, shows how it eats your care, and
+                opens the hidden level underneath: a version of allyship where your satisfaction
+                is not the enemy of the work. It is the fuel that lets you keep playing.
               </p>
               <p className="text-[#ffe0d2]">
                 If that lands, the next move is simple: read the book, pull a card from the
