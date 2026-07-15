@@ -19,7 +19,8 @@
  * Business open-items (README): real offerHref (checkout), Wendell portrait photo.
  */
 import type { Metadata } from 'next'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { isOfferLive, offerByKey } from '@/lib/launch/offers'
 import { LoopDiagram, SpiralDiagram, LineupDiagram, RoadDiagram } from './SalesDiagrams'
 import { PortraitSlot } from './PortraitSlot'
 
@@ -33,9 +34,12 @@ const DISPLAY = 'var(--bars-font-display)'
 const BODY = 'var(--bars-font-body)'
 const MONO = 'var(--bars-font-mono)'
 
-// Business wiring (see header open-items). Every buy button points here; the quiz
-// cards point at the real quiz routes.
-const OFFER_HREF = '/launch'
+// Business wiring: every book CTA points directly to the live digital-book offer.
+// A missing Gumroad URL stays visibly unavailable rather than falling back to /launch.
+const BOOK_OFFER_HREF = (() => {
+  const offer = offerByKey('book-digital')
+  return offer && isOfferLive(offer) ? offer.gumroadUrl : null
+})()
 const SUPERPOWER_HREF = '/superpower'
 const MYTHS_HREF = '/mastering-allyship/myths-read'
 
@@ -52,6 +56,22 @@ const GOLD_CTA: CSSProperties = {
   padding: '19px 44px',
   borderRadius: 13,
   boxShadow: '0 18px 44px -16px rgba(230,185,63,.8)',
+}
+
+function BookPurchaseCta({ className, style, children }: { className?: string; style?: CSSProperties; children: ReactNode }) {
+  if (!BOOK_OFFER_HREF) {
+    return (
+      <span className={className} style={{ ...style, opacity: 0.65, cursor: 'not-allowed' }} aria-disabled="true">
+        Book link coming soon
+      </span>
+    )
+  }
+
+  return (
+    <a href={BOOK_OFFER_HREF} className={className} style={style}>
+      {children}
+    </a>
+  )
 }
 
 export default function MasteringAllyshipPage() {
@@ -114,8 +134,11 @@ export default function MasteringAllyshipPage() {
               So let’s design one that is — allyship rebuilt around your real strengths and your actual, un-apologized-for joy.
             </p>
             <div style={{ display: 'flex', gap: 16, marginTop: 26, alignItems: 'center', flexWrap: 'wrap' }}>
-              <a href="#offer" className="sl-cta" style={{ textDecoration: 'none', fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, color: '#0c0910', background: 'linear-gradient(135deg,#ff5fa8,#e6b93f)', padding: '15px 30px', borderRadius: 12, boxShadow: '0 16px 38px -14px rgba(255,95,168,.7)' }}>
-                Start the game →
+              <BookPurchaseCta className="sl-cta" style={{ textDecoration: 'none', fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, color: '#0c0910', background: 'linear-gradient(135deg,#ff5fa8,#e6b93f)', padding: '15px 30px', borderRadius: 12, boxShadow: '0 16px 38px -14px rgba(255,95,168,.7)' }}>
+                Buy the book →
+              </BookPurchaseCta>
+              <a href="/mastering-allyship/chapter-1" className="sl-under" style={{ textDecoration: 'none', fontFamily: MONO, fontSize: 12, letterSpacing: '.06em', color: '#b6aec2', borderBottom: '1px solid rgba(182,174,194,.4)', paddingBottom: 2 }}>
+                Read Chapter 1 free →
               </a>
               <a href="#quizzes" className="sl-under" style={{ textDecoration: 'none', fontFamily: MONO, fontSize: 12, letterSpacing: '.06em', color: '#b6aec2', borderBottom: '1px solid rgba(182,174,194,.4)', paddingBottom: 2 }}>
                 or take the quiz
@@ -334,9 +357,9 @@ export default function MasteringAllyshipPage() {
           </figcaption>
         </figure>
         <div style={{ maxWidth: 760, margin: '36px auto 0', padding: '0 24px', textAlign: 'center' }}>
-          <a href={OFFER_HREF} className="sl-cta" style={GOLD_CTA}>
-            Start the game →
-          </a>
+          <BookPurchaseCta className="sl-cta" style={GOLD_CTA}>
+            Buy the book →
+          </BookPurchaseCta>
         </div>
       </section>
 
@@ -448,9 +471,14 @@ export default function MasteringAllyshipPage() {
             You might as well have fun in it.
           </p>
           <div style={{ marginTop: 44 }}>
-            <a href={OFFER_HREF} className="sl-cta" style={GOLD_CTA}>
-              Start the game →
-            </a>
+            <BookPurchaseCta className="sl-cta" style={GOLD_CTA}>
+              Buy the book →
+            </BookPurchaseCta>
+            <div style={{ marginTop: 20 }}>
+              <a href="/mastering-allyship/chapter-1" className="sl-under" style={{ textDecoration: 'none', fontFamily: MONO, fontSize: 12.5, letterSpacing: '.08em', color: '#8a8790', borderBottom: '1px solid rgba(138,135,144,.4)', paddingBottom: 2 }}>
+                Read Chapter 1 free →
+              </a>
+            </div>
             <div style={{ marginTop: 20 }}>
               <a href="#quizzes" className="sl-under" style={{ textDecoration: 'none', fontFamily: MONO, fontSize: 12.5, letterSpacing: '.08em', color: '#8a8790', borderBottom: '1px solid rgba(138,135,144,.4)', paddingBottom: 2 }}>
                 or just take the quiz
