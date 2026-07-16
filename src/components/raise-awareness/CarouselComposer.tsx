@@ -26,6 +26,7 @@ const palette: Record<Channel, { frame: number[]; glow: number[]; gem: number[] 
   earth: { frame: [181, 101, 29], glow: [212, 160, 23], gem: [212, 160, 23] },
 }
 const railColors = ['#c1392b', '#1a7a8a', '#4a7c59', '#8e9aab', '#d4a017', '#2980b9', '#7c3aed']
+const textColumn = { left: 105, right: 975 }
 const colorLabels: Record<TextColor, string> = { ink: 'Ink', accent: 'Alchemy accent', ember: 'Ember', teal: 'Teal', jade: 'Jade', silver: 'Silver', ochre: 'Ochre', liminal: 'Liminal' }
 const fixedColors: Partial<Record<TextColor, string>> = { ember: '#e8671a', teal: '#2980b9', jade: '#2ecc71', silver: '#bdc3c7', ochre: '#d4a017', liminal: '#7c3aed' }
 const rainRest = [3.5, 6, 8.5, 13.5, 16, 21, 23.5, 31, 38.5, 48.5, 53.5, 56, 58.5, 63.5, 71, 73.5, 78.5, 81, 86, 91, 93.5, 96, 98.5]
@@ -81,14 +82,16 @@ function SlideArt({ post, slide, index, svgRef }: { post: Post; slide: Slide; in
   const chaos = 1 - order
   const from = palette[post.from]; const to = palette[post.to]
   const frame = mix(from.frame, to.frame, order); const glow = mix(from.glow, to.glow, order); const gem = rgb(mix(from.gem, to.gem, order))
-  const limit = slide.kind === 'hook' ? 22 : slide.kind === 'cta' ? 24 : 34
-  const lines = wrapRuns(slide.runs, limit).slice(0, 8)
   const baseSize = slide.kind === 'hook' ? 64 : slide.kind === 'cta' ? 54 : slide.fontRole === 'mono' ? 35 : 47
   const scale = slide.scale === 'compact' ? 0.82 : slide.scale === 'large' ? 1.18 : 1
   const size = baseSize * scale
+  // Keep left-aligned copy within the centered column framed by both corner brackets.
+  const averageGlyphWidth = slide.fontRole === 'mono' ? 0.61 : slide.fontRole === 'body' ? 0.53 : 0.52
+  const limit = Math.max(18, Math.floor((textColumn.right - textColumn.left) / (size * averageGlyphWidth)))
+  const lines = wrapRuns(slide.runs, limit).slice(0, 8)
   const textY = slide.kind === 'hook' ? 372 : 368
-  // The left anchor sits at the midpoint of the upper-left corner bracket.
-  const textX = slide.alignment === 'center' ? 540 : 105
+  // The left anchor sits at the left bracket midpoint; the wrap limit reaches the right one.
+  const textX = slide.alignment === 'center' ? 540 : textColumn.left
   return <svg ref={svgRef} viewBox="0 0 1080 1080" role="img" aria-label={`Slide ${index + 1} of ${post.slides.length}: ${plainText(slide.runs)}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', display: 'block', background: '#0a0810' }}>
     <defs>
       <radialGradient id={`glow-${index}`} cx="50%" cy="32%" r="72%"><stop offset="0" stopColor={rgb(glow)} stopOpacity={0.15 + order * 0.16} /><stop offset="1" stopColor="#0a0810" stopOpacity="0" /></radialGradient>
