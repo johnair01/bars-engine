@@ -16,6 +16,24 @@ const palette: Record<Channel, { frame: number[]; glow: number[]; gem: number[] 
   earth: { frame: [181, 101, 29], glow: [212, 160, 23], gem: [212, 160, 23] },
 }
 const rainRest = [3.5, 6, 8.5, 13.5, 16, 21, 23.5, 31, 38.5, 48.5, 53.5, 56, 58.5, 63.5, 71, 73.5, 78.5, 81, 86, 91, 93.5, 96, 98.5]
+const railColors = ['#c1392b', '#1a7a8a', '#4a7c59', '#8e9aab', '#d4a017', '#2980b9', '#7c3aed']
+function seededRandom(seed: number) { let state = seed; return () => { state = (state * 9301 + 49297) % 233280; return state / 233280 } }
+const rain = (() => {
+  const random = seededRandom(7)
+  return rainRest.map((rest) => ({
+    rest,
+    restHeight: 300 + random() * 720,
+    restTop: -80 + random() * 200,
+    width: 2 + random() * 2,
+    restOpacity: 0.1 + random() * 0.09,
+    color: railColors[Math.floor(random() * railColors.length)],
+    chaosX: random() * 100,
+    chaosHeight: 70 + random() * 700,
+    chaosTop: -120 + random() * 1200,
+    chaosTilt: random() * 46 - 23,
+    chaosOpacity: 0.06 + random() * 0.28,
+  }))
+})()
 const starterSlides: Slide[] = [
   { kind: 'hook', text: 'When the work starts feeling like a performance.', ground: '◇ You are allowed to notice the cost.' },
   { kind: 'body', text: 'You keep saying yes, but something in you is tightening.', ground: '◇ Recognition is already a change in direction.' },
@@ -53,14 +71,14 @@ function SlideArt({ post, slide, index, svgRef }: { post: Post; slide: Slide; in
       <filter id={`grain-${index}`}><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" /></filter>
     </defs>
     <rect width="1080" height="1080" fill={`url(#ground-${index})`} /><rect width="1080" height="1080" fill={`url(#glow-${index})`} />
-    <g opacity={0.18 + chaos * 0.34}>{rainRest.map((rest, i) => { const scattered = (i * 37 + 19) % 100; const x = scattered * chaos + rest * order; const y = 95 + ((i * 83) % 620) * chaos + (i % 5) * 18 * order; const h = 115 + ((i * 53) % 300); const tilt = (((i * 17) % 47) - 23) * chaos; return <rect key={rest} x={x * 10.8} y={y} width={i % 4 === 0 ? 5 : 3} height={h} rx="2" fill={rgb(frame)} transform={`rotate(${tilt} ${x * 10.8} ${y})`} /> })}</g>
-    <g opacity={chaos * 0.22} stroke={rgb(gem)} strokeWidth="2">{Array.from({ length: 14 }, (_, i) => <path key={i} d={`M ${80 + ((i * 71) % 900)} ${150 + ((i * 97) % 700)} l ${20 + (i % 4) * 14} ${-8 + (i % 3) * 9}`} />)}</g>
+    <g>{rain.map((rail) => { const x = rail.chaosX + (rail.rest - rail.chaosX) * order; const y = rail.chaosTop + (rail.restTop - rail.chaosTop) * order; const height = rail.chaosHeight + (rail.restHeight - rail.chaosHeight) * order; const opacity = rail.chaosOpacity + (rail.restOpacity - rail.chaosOpacity) * order; const tilt = rail.chaosTilt * chaos; return <rect key={rail.rest} x={x * 10.8} y={y} width={rail.width} height={height} rx="2" fill={rail.color} opacity={opacity} transform={`rotate(${tilt} ${x * 10.8} ${y})`} /> })}</g>
+    <g opacity={chaos * 0.22} strokeWidth="2">{Array.from({ length: 14 }, (_, i) => <path key={i} stroke={railColors[i % railColors.length]} d={`M ${80 + ((i * 71) % 900)} ${150 + ((i * 97) % 700)} l ${20 + (i % 4) * 14} ${-8 + (i % 3) * 9}`} />)}</g>
     <rect x="38" y="38" width="1004" height="1004" fill="none" stroke={rgb(frame)} strokeOpacity="0.42" strokeWidth="2" />
     <g fill="none" stroke={rgb(frame)} strokeWidth="5" strokeLinecap="square"><path d="M82 128V82h46M998 128V82h-46M82 952v46h46M998 952v46h-46" /><g opacity={chaos * 0.5} transform={`translate(${7 * chaos} ${5 * chaos}) rotate(${2.2 * chaos} 540 540)`}><path d="M82 128V82h46M998 128V82h-46M82 952v46h46M998 952v46h-46" /></g></g>
-    <g fill="#f4f0e6"><text x="80" y="108" fontFamily="'Space Mono', monospace" fontSize="17" letterSpacing="4">MASTERING THE GAME OF ALLYSHIP</text><line x1="80" x2="1000" y1="135" y2="135" stroke={rgb(frame)} strokeOpacity="0.56" /><text x="80" y="190" fontFamily="'Space Mono', monospace" fontSize="19" letterSpacing="5" fill={rgb(gem)}>{post.series.slice(0, 26).toUpperCase()}</text></g>
+    <g fill="#f4f0e6"><line x1="80" x2="308" y1="102" y2="102" stroke={rgb(frame)} strokeOpacity="0.56" /><text x="540" y="108" textAnchor="middle" fontFamily="'Space Mono', monospace" fontSize="17" letterSpacing="4">MASTERING THE GAME OF ALLYSHIP</text><line x1="772" x2="1000" y1="102" y2="102" stroke={rgb(frame)} strokeOpacity="0.56" /><text x="540" y="164" textAnchor="middle" fontFamily="'Space Mono', monospace" fontSize="19" letterSpacing="5" fill={rgb(gem)}>{post.series.slice(0, 26).toUpperCase()}</text></g>
     <g fill="#f7f2e8" fontFamily={slide.kind === 'body' ? "'Nunito', sans-serif" : "'Jost', sans-serif"} fontWeight={slide.kind === 'body' ? 600 : 700} letterSpacing={slide.kind === 'hook' ? '-1.7' : '-0.6'}>{mainLines.slice(0, 8).map((line, lineIndex) => <text key={lineIndex} x="80" y={textY + lineIndex * (size * 1.22)} fontSize={size}>{slide.kind === 'steps' ? `${lineIndex + 1}. ${line}` : line}</text>)}</g>
     {slide.ground && <text x="80" y="858" fill="#e8e1d3" fontFamily="'Nunito', sans-serif" fontSize="27" opacity="0.92">{wrap(slide.ground, 62)[0]}</text>}
-    <image href="/allyship-deck/mtgoa-logo-transparent.png" x="400" y="875" width="280" height="120" opacity={0.05 + order * 0.06} style={{ filter: `blur(${chaos * 3}px)` }} preserveAspectRatio="xMidYMid meet" />
+    <image href="/allyship-deck/mtgoa-logo-transparent.png" x="220" y="220" width="640" height="640" opacity={0.05 + order * 0.06} style={{ filter: `blur(${chaos * 3}px)` }} preserveAspectRatio="xMidYMid meet" />
     <rect width="1080" height="1080" filter={`url(#grain-${index})`} opacity={chaos * 0.14} style={{ mixBlendMode: 'overlay' }} />
   </svg>
 }
