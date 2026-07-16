@@ -87,7 +87,8 @@ function SlideArt({ post, slide, index, svgRef }: { post: Post; slide: Slide; in
   const scale = slide.scale === 'compact' ? 0.82 : slide.scale === 'large' ? 1.18 : 1
   const size = baseSize * scale
   const textY = slide.kind === 'hook' ? 372 : 368
-  const textX = slide.alignment === 'center' ? 540 : 80
+  // The left anchor sits at the midpoint of the upper-left corner bracket.
+  const textX = slide.alignment === 'center' ? 540 : 105
   return <svg ref={svgRef} viewBox="0 0 1080 1080" role="img" aria-label={`Slide ${index + 1} of ${post.slides.length}: ${plainText(slide.runs)}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', display: 'block', background: '#0a0810' }}>
     <defs>
       <radialGradient id={`glow-${index}`} cx="50%" cy="32%" r="72%"><stop offset="0" stopColor={rgb(glow)} stopOpacity={0.15 + order * 0.16} /><stop offset="1" stopColor="#0a0810" stopOpacity="0" /></radialGradient>

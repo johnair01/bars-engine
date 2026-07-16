@@ -59,6 +59,8 @@ structure without introducing a freeform canvas or raw HTML editor.
 3. It must add and remove slides while enforcing a five-to-eight slide limit.
 4. The visual frame must use a dark-indigo ground, MTGOA type families, the
    selected channel palette, light-rain, corner brackets, grain, and a mark.
+   Left-aligned slide copy begins at the midpoint of the upper-left bracket's
+   horizontal arm, not at the frame edge.
 5. Slide progress `i / (N - 1)` must interpolate the channel palette and
    resolve the visual texture from chaos to book-cover order. Same-channel
    transitions must still resolve through that order axis.
