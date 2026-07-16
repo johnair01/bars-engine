@@ -72,6 +72,9 @@ structure without introducing a freeform canvas or raw HTML editor.
    bold, italic, and a constrained MTGOA/Emotional Alchemy colour per run.
 10. Stewards must be able to select left or centre alignment, an existing MTGOA
     type role (display, body, mono), and a compact/standard/large scale per slide.
+11. A steward can restore the full starter draft after experimenting, and can
+    select a word or phrase in a text field before applying emphasis; the editor
+    may split that selection into text runs internally.
 
 ## Acceptance criteria
 
@@ -83,6 +86,8 @@ structure without introducing a freeform canvas or raw HTML editor.
 - Downloaded images are 1080x1080 PNGs and use the current editor values.
 - Rich-text emphasis and slide typography choices render identically in the
   preview and downloaded PNGs.
+- Emphasis retains the default display weight while making the selected phrase
+  visibly larger; it does not require a steward to create a separate text run.
 - No data leaves the browser during composition or download.
 
 ## Non-goals
