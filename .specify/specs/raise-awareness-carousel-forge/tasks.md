@@ -7,3 +7,5 @@
 - [x] Implement selected/all slide PNG downloads.
 - [ ] Manually verify the authenticated route and compiler in a running browser session.
 - [x] Type-check and validate route annotations.
+- [x] Add constrained rich text runs and typography controls to the existing PR.
+- [x] Make selection-based emphasis and starter-draft restore ergonomic.

@@ -22,10 +22,19 @@ person's transformation.
 
 ```ts
 type Channel = 'fire' | 'water' | 'wood' | 'metal' | 'earth'
+type TextRun = {
+  text: string
+  bold?: boolean
+  italic?: boolean
+  color?: 'ink' | 'accent' | 'ember' | 'teal' | 'jade' | 'silver' | 'ochre' | 'liminal'
+}
 type Slide = {
   kind: 'hook' | 'body' | 'steps' | 'cta'
-  text: string
+  runs: TextRun[]
   ground?: string
+  alignment: 'left' | 'center'
+  fontRole: 'display' | 'body' | 'mono'
+  scale: 'compact' | 'standard' | 'large'
 }
 type Post = {
   series: string
@@ -36,10 +45,10 @@ type Post = {
 }
 ```
 
-The editor uses the smallest editable version of the handoff contract: one
-plain-text field and one grounding-line field per slide. `steps` is represented
-as newline-separated text in this first slice. This preserves the visual and
-editorial structure while keeping paste-and-edit work frictionless.
+The editor keeps the paste-and-edit workflow light: each slide starts with one
+text run and can be split into styled runs as needed. `steps` continues to use
+newline-separated text within a run. This preserves the visual and editorial
+structure without introducing a freeform canvas or raw HTML editor.
 
 ## Requirements
 
@@ -50,6 +59,8 @@ editorial structure while keeping paste-and-edit work frictionless.
 3. It must add and remove slides while enforcing a five-to-eight slide limit.
 4. The visual frame must use a dark-indigo ground, MTGOA type families, the
    selected channel palette, light-rain, corner brackets, grain, and a mark.
+   Left-aligned slide copy fills a centred column between the midpoints of the
+   upper-left and upper-right bracket arms, rather than touching the frame edge.
 5. Slide progress `i / (N - 1)` must interpolate the channel palette and
    resolve the visual texture from chaos to book-cover order. Same-channel
    transitions must still resolve through that order axis.
@@ -59,6 +70,13 @@ editorial structure while keeping paste-and-edit work frictionless.
    action to download every slide as individual PNG files.
 8. Text needs a legible in-image hierarchy and all essential content must
    remain available as editable caption/copy, rather than colour alone.
+9. Stewards must be able to compose a slide from structured text runs, choosing
+   bold, italic, and a constrained MTGOA/Emotional Alchemy colour per run.
+10. Stewards must be able to select left or centre alignment, an existing MTGOA
+    type role (display, body, mono), and a compact/standard/large scale per slide.
+11. A steward can restore the full starter draft after experimenting, and can
+    select a word or phrase in a text field before applying emphasis; the editor
+    may split that selection into text runs internally.
 
 ## Acceptance criteria
 
@@ -68,6 +86,10 @@ editorial structure while keeping paste-and-edit work frictionless.
   `from` to `to` palette.
 - A five- or eight-slide draft reaches fully ordered texture on its last slide.
 - Downloaded images are 1080x1080 PNGs and use the current editor values.
+- Rich-text emphasis and slide typography choices render identically in the
+  preview and downloaded PNGs.
+- Emphasis retains the default display weight while making the selected phrase
+  visibly larger; it does not require a steward to create a separate text run.
 - No data leaves the browser during composition or download.
 
 ## Non-goals
