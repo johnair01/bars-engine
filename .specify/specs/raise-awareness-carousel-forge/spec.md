@@ -22,10 +22,19 @@ person's transformation.
 
 ```ts
 type Channel = 'fire' | 'water' | 'wood' | 'metal' | 'earth'
+type TextRun = {
+  text: string
+  bold?: boolean
+  italic?: boolean
+  color?: 'ink' | 'accent' | 'ember' | 'teal' | 'jade' | 'silver' | 'ochre' | 'liminal'
+}
 type Slide = {
   kind: 'hook' | 'body' | 'steps' | 'cta'
-  text: string
+  runs: TextRun[]
   ground?: string
+  alignment: 'left' | 'center'
+  fontRole: 'display' | 'body' | 'mono'
+  scale: 'compact' | 'standard' | 'large'
 }
 type Post = {
   series: string
@@ -36,10 +45,10 @@ type Post = {
 }
 ```
 
-The editor uses the smallest editable version of the handoff contract: one
-plain-text field and one grounding-line field per slide. `steps` is represented
-as newline-separated text in this first slice. This preserves the visual and
-editorial structure while keeping paste-and-edit work frictionless.
+The editor keeps the paste-and-edit workflow light: each slide starts with one
+text run and can be split into styled runs as needed. `steps` continues to use
+newline-separated text within a run. This preserves the visual and editorial
+structure without introducing a freeform canvas or raw HTML editor.
 
 ## Requirements
 
@@ -59,6 +68,10 @@ editorial structure while keeping paste-and-edit work frictionless.
    action to download every slide as individual PNG files.
 8. Text needs a legible in-image hierarchy and all essential content must
    remain available as editable caption/copy, rather than colour alone.
+9. Stewards must be able to compose a slide from structured text runs, choosing
+   bold, italic, and a constrained MTGOA/Emotional Alchemy colour per run.
+10. Stewards must be able to select left or centre alignment, an existing MTGOA
+    type role (display, body, mono), and a compact/standard/large scale per slide.
 
 ## Acceptance criteria
 
@@ -68,6 +81,8 @@ editorial structure while keeping paste-and-edit work frictionless.
   `from` to `to` palette.
 - A five- or eight-slide draft reaches fully ordered texture on its last slide.
 - Downloaded images are 1080x1080 PNGs and use the current editor values.
+- Rich-text emphasis and slide typography choices render identically in the
+  preview and downloaded PNGs.
 - No data leaves the browser during composition or download.
 
 ## Non-goals

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Raise Awareness Carousel Forge — A
 
 /**
  * @page /admin/raise-awareness
- * @entity SOCIAL_ASSET
+ * @entity SYSTEM
  * @description Local-first Instagram carousel composer for approved MTGOA teaching copy
  * @permissions admin, steward
  * @relationships COMPILES (Post copy, Emotional Alchemy visual transition)
