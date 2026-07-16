@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
-import { CarouselComposer } from '@/components/raise-awareness/CarouselComposer'
+import { RaiseAwarenessClient } from './RaiseAwarenessClient'
 
 export const metadata: Metadata = { title: 'Raise Awareness Carousel Forge — Admin' }
 
@@ -22,5 +22,5 @@ export default async function RaiseAwarenessPage() {
 
   if (!canCompose) redirect('/')
 
-  return <CarouselComposer />
+  return <RaiseAwarenessClient />
 }

@@ -1,21 +1,10 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { CarouselSlide as Slide, PostV1, SlideKind, TextColor, TextRun } from '@/lib/raise-awareness/post'
+import type { Channel } from '@/lib/allyship-deck/types'
 
-type Channel = 'fire' | 'water' | 'wood' | 'metal' | 'earth'
-type SlideKind = 'hook' | 'body' | 'steps' | 'cta'
-type TextColor = 'ink' | 'accent' | 'ember' | 'teal' | 'jade' | 'silver' | 'ochre' | 'liminal'
-type TextRun = { text: string; bold?: boolean; italic?: boolean; color?: TextColor }
 type TextSelection = { start: number; end: number }
-type Slide = {
-  kind: SlideKind
-  runs: TextRun[]
-  ground: string
-  alignment: 'left' | 'center'
-  fontRole: 'display' | 'body' | 'mono'
-  scale: 'compact' | 'standard' | 'large'
-}
-type Post = { series: string; from: Channel; to: Channel; caption: string; slides: Slide[] }
 
 const channels: Channel[] = ['metal', 'fire', 'water', 'wood', 'earth']
 const palette: Record<Channel, { frame: number[]; glow: number[]; gem: number[] }> = {
@@ -40,7 +29,7 @@ const rain = (() => {
 function makeSlide(kind: SlideKind, text: string, ground: string, extras: Partial<Slide> = {}): Slide {
   return { kind, runs: [{ text }], ground, alignment: kind === 'cta' ? 'center' : 'left', fontRole: kind === 'body' ? 'body' : 'display', scale: 'standard', ...extras }
 }
-const starter: Post = {
+const starter: PostV1 = {
   series: 'PRACTICE', from: 'metal', to: 'earth', caption: 'A field note from Mastering the Game of Allyship. One practice, one next move.',
   slides: [
     makeSlide('hook', 'When the work starts feeling like a performance.', '◇ You are allowed to notice the cost.'),
@@ -51,7 +40,7 @@ const starter: Post = {
     makeSlide('cta', 'Read the book.\nTake the next move with you.', '◇ Mastering the Game of Allyship'),
   ],
 }
-function freshPost(): Post { return JSON.parse(JSON.stringify(starter)) as Post }
+function freshPost(): PostV1 { return JSON.parse(JSON.stringify(starter)) as PostV1 }
 
 function mix(a: number[], b: number[], t: number) { return a.map((value, index) => Math.round(value + (b[index] - value) * t)) }
 function rgb(color: number[]) { return `rgb(${color.join(' ')})` }
@@ -77,7 +66,7 @@ function runFill(run: TextRun, gem: string) { return run.color === 'accent' ? ge
 function fontFamily(role: Slide['fontRole']) { return role === 'body' ? "'Nunito', sans-serif" : role === 'mono' ? "'Space Mono', monospace" : "'Jost', sans-serif" }
 function updateAt<T>(list: T[], index: number, value: T) { return list.map((item, itemIndex) => itemIndex === index ? value : item) }
 
-function SlideArt({ post, slide, index, svgRef }: { post: Post; slide: Slide; index: number; svgRef?: (node: SVGSVGElement | null) => void }) {
+function SlideArt({ post, slide, index, svgRef }: { post: PostV1; slide: Slide; index: number; svgRef?: (node: SVGSVGElement | null) => void }) {
   const order = post.slides.length === 1 ? 1 : index / (post.slides.length - 1)
   const chaos = 1 - order
   const from = palette[post.from]; const to = palette[post.to]
@@ -111,10 +100,11 @@ function SlideArt({ post, slide, index, svgRef }: { post: Post; slide: Slide; in
   </svg>
 }
 
-export function CarouselComposer() {
-  const [post, setPost] = useState<Post>(() => freshPost()); const [active, setActive] = useState(0); const [notice, setNotice] = useState('')
+export function CarouselComposer({ initialPost, onPostChange }: { initialPost?: PostV1; onPostChange?: (post: PostV1) => void }) {
+  const [post, setPost] = useState<PostV1>(() => initialPost ? JSON.parse(JSON.stringify(initialPost)) as PostV1 : freshPost()); const [active, setActive] = useState(0); const [notice, setNotice] = useState('')
   const svgRefs = useRef<(SVGSVGElement | null)[]>([])
   const textSelections = useRef<Record<string, TextSelection>>({})
+  useEffect(() => { onPostChange?.(post) }, [onPostChange, post])
   const editSlide = (index: number, patch: Partial<Slide>) => setPost((value) => ({ ...value, slides: updateAt(value.slides, index, { ...value.slides[index], ...patch }) }))
   const editRun = (slideIndex: number, runIndex: number, patch: Partial<TextRun>) => editSlide(slideIndex, { runs: updateAt(post.slides[slideIndex].runs, runIndex, { ...post.slides[slideIndex].runs[runIndex], ...patch }) })
   const updateSelectedText = (slideIndex: number, runIndex: number, patch: Partial<TextRun>) => {

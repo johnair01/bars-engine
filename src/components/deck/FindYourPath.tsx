@@ -2,11 +2,11 @@
 
 import { useState, type CSSProperties } from 'react'
 import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'
-import { DECK_FONTS, DECK_GOLD, LIMINAL, MOVE_LABELS, themeForMove } from '@/lib/allyship-deck/card-visuals'
+import { DECK_FONTS, DECK_GOLD, LIMINAL, MOVE_LABELS } from '@/lib/allyship-deck/card-visuals'
 import type { MoveCard, BasicMove, Operation, AllyshipDomain } from '@/lib/allyship-deck/types'
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
 import { SendToBarsButton } from './SendToBarsButton'
-import { WorkThisCardButton } from './WorkThisCardButton'
+import { recommendSpread, type FlavorId } from '@/lib/allyship-deck/reading'
 
 // ─── Flavor / channel data ──────────────────────────────────────────────────
 
@@ -78,53 +78,6 @@ const PASSAGES: PassageDef[] = [
 
 // ─── Spread computation ─────────────────────────────────────────────────────
 
-interface CyoaCtx {
-  flavorFace: Operation
-  flavorMove: BasicMove
-  choices: { move: BasicMove; domain: AllyshipDomain }[]
-}
-
-function scoreCard(card: MoveCard, ctx: CyoaCtx, positionBias: BasicMove | BasicMove[]): number {
-  let w = 0
-  if (card.operation === ctx.flavorFace) w += 3
-  const biases = Array.isArray(positionBias) ? positionBias : [positionBias]
-  if (biases.includes(card.move)) w += 6
-  for (const choice of ctx.choices) {
-    if (card.move === choice.move) w += 2
-    if (card.domain === choice.domain) w += 1
-  }
-  if (card.move === ctx.flavorMove) w += 2
-  return w
-}
-
-function computeCyoaSpread(
-  cards: MoveCard[],
-  ctx: CyoaCtx,
-): [MoveCard, MoveCard, MoveCard] {
-  const positionBiases: Array<BasicMove | BasicMove[]> = [
-    'wake_up',
-    'clean_up',
-    ['show_up', 'grow_up', 'open_up'],
-  ]
-
-  const used = new Set<string>()
-  const result: MoveCard[] = []
-
-  for (const bias of positionBiases) {
-    const scored = cards
-      .filter((c) => !used.has(c.id))
-      .map((c) => ({ card: c, score: scoreCard(c, ctx, bias) }))
-      .sort((a, b) => b.score - a.score || cards.indexOf(a.card) - cards.indexOf(b.card))
-
-    const pick = scored[0]?.card
-    if (!pick) break
-    result.push(pick)
-    used.add(pick.id)
-  }
-
-  return result as [MoveCard, MoveCard, MoveCard]
-}
-
 // ─── State ──────────────────────────────────────────────────────────────────
 
 type CyPhase = 'landing' | 'step0' | 'passage' | 'result'
@@ -163,8 +116,6 @@ export function FindYourPath({
   const reset = () => setState({ phase: 'landing', rating: 5, flavor: null, passageIndex: 0, choices: [], spread: null })
 
   const pct = PHASE_PCT[state.phase]
-  const showProgress = state.phase !== 'landing'
-
   // ── landing ─────────────────────────────────────────────────────────────
   if (state.phase === 'landing') {
     return (
@@ -276,12 +227,7 @@ export function FindYourPath({
       const nextIndex = state.passageIndex + 1
 
       if (nextIndex >= PASSAGES.length) {
-        const ctx: CyoaCtx = {
-          flavorFace: state.flavor!.face,
-          flavorMove: state.flavor!.move,
-          choices: newChoices,
-        }
-        const spread = computeCyoaSpread(cards, ctx)
+        const spread = recommendSpread(cards, { face: state.flavor!.face, flavor: state.flavor!.id as FlavorId, choices: newChoices })
         setState((s) => ({ ...s, choices: newChoices, spread, phase: 'result' }))
       } else {
         setState((s) => ({ ...s, choices: newChoices, passageIndex: nextIndex }))
