@@ -4683,6 +4683,22 @@ model FunnelSignup {
   @@map("funnel_signups")
 }
 
+model BookTourHelpInterest {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String
+  location  String?
+  helpTypes String[] @default([])
+  note      String?
+  consent   Boolean  @default(false)
+  source    String   @default("webinar-book-tour-help")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+  @@map("book_tour_help_interests")
+}
+
 /// Myths Read diagnostic — public Chapter 0 quiz result, optionally linked to
 /// a logged-in player and/or a spawned seeded BAR.
 model MythRead {
