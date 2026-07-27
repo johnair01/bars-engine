@@ -94,6 +94,7 @@
     "test:allyship-deck": "tsx src/lib/allyship-deck/__tests__/assemble.test.ts && tsx src/lib/allyship-deck/__tests__/card-visuals.test.ts && tsx src/lib/allyship-deck/__tests__/seed.test.ts",
     "test:deck-pending-intent": "tsx src/lib/__tests__/deck-pending-intent.test.ts",
     "deck:assemble": "tsx scripts/assemble-allyship-deck.ts",
+    "deck:export-practices": "tsx scripts/export-allyship-deck-with-practices.ts",
     "deck:render-gumroad": "node scripts/render-gumroad.mjs",
     "deck:print-review": "npm run deck:assemble && python3 scripts/print_allyship_cards.py",
     "deck:print-md": "tsx scripts/print-allyship-cards-md.ts",
