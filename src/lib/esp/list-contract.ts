@@ -16,6 +16,10 @@ export type LeadSource =
   | 'character-sheet'
   | 'chapter-one'
   | 'kickstarter'
+  /** Certification waitlist. Nothing is sold, so nothing is sequenced. */
+  | 'succession'
+  /** Founding circle for the in-formation org. Also unsequenced. */
+  | 'nonprofit'
 
 export const SOURCE_TAG_PREFIX = 'source:'
 

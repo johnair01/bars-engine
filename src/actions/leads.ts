@@ -109,3 +109,49 @@ export async function captureCharacterSheetNudge(input: {
 
   return { ok: true, message: 'Set. One reminder a quarter, with a blank sheet attached.' }
 }
+
+/**
+ * The certification waitlist, and the founding circle for the in-formation org.
+ *
+ * Neither sells anything and neither enters a sequence. Both exist because the
+ * book prints an address next to a promise, and an address with nothing behind
+ * it is the defect these two lists close.
+ */
+export async function captureInterestList(input: {
+  email: string
+  name?: string | null
+  list: 'succession' | 'nonprofit'
+  /** What they said they can bring. Free text, stored on the signup row. */
+  note?: string | null
+}): Promise<CaptureLeadState> {
+  const email = normalize(input.email)
+  const name = input.name?.trim() || null
+  if (!EMAIL_RE.test(email)) return { ok: false, error: 'Please enter a valid email.' }
+
+  try {
+    await db.funnelSignup.create({
+      data: { intent: input.list, email, name, source: input.list },
+    })
+  } catch (err) {
+    console.error(`[leads] failed to persist ${input.list} interest`, err)
+    return { ok: false, error: 'Something went wrong saving that. Please try again.' }
+  }
+
+  await syncSubscriber({
+    email,
+    firstName: name?.split(/\s+/)[0] ?? null,
+    tags: [sourceTag(input.list)],
+    fields: {
+      [`${input.list}_joined_at`]: today(),
+      ...(input.note ? { [`${input.list}_note`]: input.note.slice(0, 500) } : {}),
+    },
+  })
+
+  return {
+    ok: true,
+    message:
+      input.list === 'succession'
+        ? "You're on the list. You will hear from me when there is something real to say."
+        : "You're on the list. I will write when the founding circle meets.",
+  }
+}

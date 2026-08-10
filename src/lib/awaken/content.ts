@@ -189,8 +189,8 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
       href: AWAKEN_PRODUCTS_HREF,
     },
     nonprofit: {
-      title: 'About the non-profit',
-      body: 'Learn where this is headed (coming soon) →',
+      title: 'The organization, in formation',
+      body: 'What it needs is people, not money. See the four →',
       href: AWAKEN_NONPROFIT_HREF,
     },
   },
