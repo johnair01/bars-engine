@@ -146,6 +146,14 @@ export const AWAKEN_BOOK_PREORDER_HREF = BOOK_PHYSICAL_GUMROAD_URL || AWAKEN_PRO
 export const AWAKEN_NONPROFIT_HREF = '/nonprofit'
 
 /**
+ * The Chapter One lead-capture page — where "read chapter one" should send
+ * people, rather than straight at the PDF. The sample is free but the email is
+ * the point: the page captures the lead, then hands over the download and mails
+ * a copy. Linking the file directly would skip that.
+ */
+export const AWAKEN_CHAPTER_PAGE_HREF = '/mastering-allyship/chapter-1'
+
+/**
  * Canonical Chapter One delivery URL.
  */
 export const AWAKEN_CHAPTER_FILE_HREF = '/mastering-allyship-chapter-1.pdf'
@@ -211,11 +219,11 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
       href: AWAKEN_BOOK_PREORDER_HREF,
     },
     chapter: {
-      badge: 'Coming soon',
+      badge: 'Free',
       title: 'Read Chapter One',
-      body: 'Chapter One is chapter one of Mastering the Game of Allyship — coming soon. Want it sooner? Grab the book.',
-      cta: 'Get the book →',
-      href: AWAKEN_BOOK_SALES_HREF,
+      body: 'The Infinite Arcade — where the book opens. Twenty-four pages, free: add your email and start reading now.',
+      cta: 'Read Chapter One free →',
+      href: AWAKEN_CHAPTER_PAGE_HREF,
     },
   },
   events: AWAKEN_EVENTS,

@@ -133,7 +133,7 @@ function ShowUp({ content, onInView }: { content: AwakenPageContent; onInView: (
         <LinkMoveCard content={content.moves.book} accent="amber" />
         {/* Move 5 — Pre-order the print edition (ships after the print run) */}
         <LinkMoveCard content={content.moves.bookPrint} accent="orange" />
-        {/* Chapter One — coming soon, funnels to the book */}
+        {/* Chapter One — free sample, funnels through the lead-capture page */}
         <LinkMoveCard content={content.moves.chapter} accent="indigo" />
       </div>
 
