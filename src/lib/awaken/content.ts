@@ -7,7 +7,7 @@
  * touching component logic.
  */
 
-import { BOOK_DIGITAL_GUMROAD_URL } from '@/lib/launch/book-offer'
+import { BOOK_DIGITAL_GUMROAD_URL, BOOK_PHYSICAL_GUMROAD_URL } from '@/lib/launch/book-offer'
 
 export type AwakenEvent = {
   /** Stable key persisted on FunnelSignup.events — do not rename casually. */
@@ -62,7 +62,10 @@ export type AwakenPageContent = {
     donate: AwakenMoveContent
     events: AwakenMoveContent
     deck: AwakenMoveContent
+    /** The digital edition — finished and delivered instantly. */
     book: AwakenMoveContent
+    /** The print edition — a real pre-order, ships after the print run. */
+    bookPrint: AwakenMoveContent
     chapter: AwakenMoveContent
   }
   events: AwakenEvent[]
@@ -127,6 +130,18 @@ export const AWAKEN_BOOK_SALES_HREF = BOOK_DIGITAL_GUMROAD_URL
 /** Where "buy products / explore the offers" points. */
 export const AWAKEN_PRODUCTS_HREF = '/launch'
 
+/**
+ * Where "pre-order the print book" sends people.
+ *
+ * The print run has no Gumroad product yet, so when the URL is unset this falls
+ * back to /launch — which lists the physical SKU and shows its own honest
+ * setup-pending state — rather than rendering a button that goes nowhere.
+ *
+ * Declared after AWAKEN_PRODUCTS_HREF on purpose: it reads that value at module
+ * load, so it cannot sit above it.
+ */
+export const AWAKEN_BOOK_PREORDER_HREF = BOOK_PHYSICAL_GUMROAD_URL || AWAKEN_PRODUCTS_HREF
+
 /** Non-profit page (currently under construction). */
 export const AWAKEN_NONPROFIT_HREF = '/nonprofit'
 
@@ -183,10 +198,17 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     },
     book: {
       badge: 'Move 4',
-      title: 'Pre-order the book',
-      body: 'Mastering the Game of Allyship — the book the whole weekend is built around. Pre-order your copy now.',
-      cta: 'Pre-order the book →',
+      title: 'Get the book',
+      body: 'Mastering the Game of Allyship — the book the whole weekend is built around. The digital edition is finished: buy it and start reading tonight.',
+      cta: 'Buy the digital book →',
       href: AWAKEN_BOOK_SALES_HREF,
+    },
+    bookPrint: {
+      badge: 'Move 5',
+      title: 'Pre-order it in print',
+      body: 'Want it on paper? Reserve the paperback. It ships after the print run.',
+      cta: 'Pre-order the print book →',
+      href: AWAKEN_BOOK_PREORDER_HREF,
     },
     chapter: {
       badge: 'Coming soon',
@@ -255,6 +277,7 @@ export function normalizeAwakenPageContent(input: unknown): AwakenPageContent {
       events: normalizeMove(raw.moves?.events, defaults.moves.events),
       deck: normalizeMove(raw.moves?.deck, defaults.moves.deck),
       book: normalizeMove(raw.moves?.book, defaults.moves.book),
+      bookPrint: normalizeMove(raw.moves?.bookPrint, defaults.moves.bookPrint),
       chapter: normalizeMove(raw.moves?.chapter, defaults.moves.chapter),
     },
     events: defaults.events.map((fallback, index) => {

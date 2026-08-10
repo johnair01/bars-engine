@@ -27,7 +27,7 @@ import type { AlchemyAltitude } from '@/lib/alchemy/types'
 import { BARN_WALLS } from '@/lib/event/barn-raising'
 import { SUPERPOWERS, SUPERPOWER_DEFS, type Superpower } from '@/lib/superpowers/types'
 import { arcAnchorElement, superpowerAccentCss } from '@/lib/superpowers/arc'
-import { BOOK_DIGITAL_GUMROAD_URL } from '@/lib/launch/book-offer'
+import { BOOK_DIGITAL_GUMROAD_URL, BOOK_PHYSICAL_GUMROAD_URL } from '@/lib/launch/book-offer'
 
 /** The hand-authored launch SKUs (book, deck, handbook, subscription, bundles). */
 export type CoreOfferKey =
@@ -117,7 +117,7 @@ const GUMROAD = {
   deckDigital:        process.env.NEXT_PUBLIC_GUMROAD_DECK_DIGITAL_URL ?? '',
   deckPhysical:       process.env.NEXT_PUBLIC_GUMROAD_DECK_PHYSICAL_URL ?? '',
   gameSubscription:   process.env.NEXT_PUBLIC_GUMROAD_GAME_SUB_URL ?? '',
-  bookPhysical:       process.env.NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL ?? '',
+  bookPhysical:       BOOK_PHYSICAL_GUMROAD_URL,
   rpgHandbookPhysical:process.env.NEXT_PUBLIC_GUMROAD_RPG_PHYSICAL_URL ?? '',
   foundingAlly:       process.env.NEXT_PUBLIC_GUMROAD_FOUNDING_ALLY_URL ?? '',
   loadoutBundle:      process.env.NEXT_PUBLIC_GUMROAD_LOADOUT_BUNDLE_URL ?? '',

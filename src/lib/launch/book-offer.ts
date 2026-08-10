@@ -25,3 +25,16 @@
 export const BOOK_DIGITAL_GUMROAD_URL =
   process.env.NEXT_PUBLIC_GUMROAD_BOOK_DIGITAL_URL?.trim() ||
   'https://wendellbritt.gumroad.com/l/MTGOAbook'
+
+/**
+ * The print edition's Gumroad pre-order URL, shared by the registry and the
+ * /awaken funnel for the same reason as above.
+ *
+ * Deliberately has no literal default. The digital book has a product that has
+ * been live for a while; the print run does not, so there is nothing honest to
+ * fall back to. Empty means "not for sale yet", and callers are expected to
+ * handle that — the registry renders the SKU as setup-pending, and the /awaken
+ * card sends people to /launch instead of a dead link.
+ */
+export const BOOK_PHYSICAL_GUMROAD_URL =
+  process.env.NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL?.trim() ?? ''
