@@ -2,6 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SuccessionWaitlist } from './SuccessionWaitlist'
 
+export const metadata: Metadata = {
+  title: 'Certification & succession — Mastering the Game of Allyship',
+  description:
+    'There is no certification program yet. This page says what actually exists, and holds a list for when there is something real to say. Nothing is for sale.',
+}
+
 /**
  * @page /succession
  * @entity CAMPAIGN
@@ -16,13 +22,6 @@ import { SuccessionWaitlist } from './SuccessionWaitlist'
  * @example /succession
  * @agentDiscoverable true
  */
-
-export const metadata: Metadata = {
-  title: 'Certification & succession — Mastering the Game of Allyship',
-  description:
-    'There is no certification program yet. This page says what actually exists, and holds a list for when there is something real to say. Nothing is for sale.',
-}
-
 export default function SuccessionPage() {
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8">

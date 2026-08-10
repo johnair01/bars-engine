@@ -404,7 +404,7 @@ function LaunchPageAdminEditor({ content }: { content: LaunchPageContent }) {
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-bold text-zinc-100">How the pieces fit</h3>
+          <h3 className="font-bold text-zinc-100">What each one does</h3>
           <div className="grid gap-3 md:grid-cols-2">
             {content.pieces.map((piece, index) => (
               <div key={piece.step} className="rounded-xl border border-zinc-800 bg-black/20 p-3">

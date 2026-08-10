@@ -2,23 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CharacterSheetNudge } from './CharacterSheetNudge'
 
-/**
- * @page /mastering-allyship/sheet
- * @entity CAMPAIGN
- * @description The character sheet from Appendix H — print PDF, fillable PDF, and the
- *   interactive teaching version. **Ungated on purpose**: the printed book says these
- *   live at masteringallyship.com, so they are a debt rather than a lead magnet, and
- *   charging an email for something already promised in print is the move the book
- *   spends nine chapters teaching people to spot. The only ask on the page is the
- *   optional quarterly re-fill reminder, which is Appendix H's own instruction.
- * @permissions public
- * @relationships /mastering-allyship/myths-read (line 3), /superpower (line 1),
- *   FunnelSignup (intent: character-sheet), Kit tag source:character-sheet
- * @dimensions WHO:reader, WHAT:artifact, WHERE:mastering-allyship, ENERGY:practice
- * @example /mastering-allyship/sheet
- * @agentDiscoverable true
- */
-
 export const metadata: Metadata = {
   title: 'The Character Sheet — Mastering the Game of Allyship',
   description:
@@ -40,6 +23,22 @@ const DOWNLOADS = [
   },
 ] as const
 
+/**
+ * @page /mastering-allyship/sheet
+ * @entity CAMPAIGN
+ * @description The character sheet from Appendix H — print PDF, fillable PDF, and the
+ *   interactive teaching version. **Ungated on purpose**: the printed book says these
+ *   live at masteringallyship.com, so they are a debt rather than a lead magnet, and
+ *   charging an email for something already promised in print is the move the book
+ *   spends nine chapters teaching people to spot. The only ask on the page is the
+ *   optional quarterly re-fill reminder, which is Appendix H's own instruction.
+ * @permissions public
+ * @relationships /mastering-allyship/myths-read (line 3), /superpower (line 1),
+ *   FunnelSignup (intent: character-sheet), Kit tag source:character-sheet
+ * @dimensions WHO:reader, WHAT:artifact, WHERE:mastering-allyship, ENERGY:practice
+ * @example /mastering-allyship/sheet
+ * @agentDiscoverable true
+ */
 export default function CharacterSheetPage() {
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8">

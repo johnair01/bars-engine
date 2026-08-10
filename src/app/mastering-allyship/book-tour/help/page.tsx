@@ -3,6 +3,15 @@ import Link from 'next/link'
 import { BookTourHelpForm } from './BookTourHelpForm'
 import { CAMPAIGN_UNLOCK } from '@/lib/campaigns/twenty-one-day'
 
+export const metadata: Metadata = {
+  title: 'Help the book tour travel',
+  description:
+    'Pick one practical way to help Mastering the Game of Allyship travel, and enter the 21-day campaign that matches it.',
+}
+
+const qrSource =
+  'https://api.qrserver.com/v1/create-qr-code/?size=320x320&format=svg&data=https%3A%2F%2Fbars-engine.vercel.app%2Fmastering-allyship%2Fbook-tour%2Fhelp'
+
 /**
  * @page /mastering-allyship/book-tour/help
  * @entity CAMPAIGN
@@ -17,16 +26,6 @@ import { CAMPAIGN_UNLOCK } from '@/lib/campaigns/twenty-one-day'
  * @example /mastering-allyship/book-tour/help
  * @agentDiscoverable true
  */
-
-export const metadata: Metadata = {
-  title: 'Help the book tour travel',
-  description:
-    'Pick one practical way to help Mastering the Game of Allyship travel, and enter the 21-day campaign that matches it.',
-}
-
-const qrSource =
-  'https://api.qrserver.com/v1/create-qr-code/?size=320x320&format=svg&data=https%3A%2F%2Fbars-engine.vercel.app%2Fmastering-allyship%2Fbook-tour%2Fhelp'
-
 export default function BookTourHelpPage() {
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8">

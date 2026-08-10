@@ -516,7 +516,7 @@ function WholeBoard({ surfacedIds }: { surfacedIds: MythId[] }) {
           )
         })}
       </ol>
-      <p>Unlit myths aren&apos;t absent — just quiet today.</p>
+      <p>An unlit myth is still yours. It simply did not score today.</p>
     </section>
   )
 }

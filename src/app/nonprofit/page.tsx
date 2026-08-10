@@ -2,22 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { NonprofitFoundingCircle } from './NonprofitFoundingCircle'
 
-/**
- * @page /nonprofit
- * @entity CAMPAIGN
- * @description The organization, in formation — not incorporated, no 501(c)(3)
- *   determination, and **accepting no money**. The disclosure sits above the fold
- *   rather than in a footnote, because a page that reads like a charity while the
- *   charity does not legally exist is the exact move this project's book spends nine
- *   chapters teaching people to spot. Asks for founding circle, governance, legal
- *   help and a first program site.
- * @permissions public
- * @relationships FunnelSignup (intent: nonprofit), Kit tag source:nonprofit, /awaken
- * @dimensions WHO:visitor, WHAT:org state, WHERE:nonprofit, ENERGY:honest_state
- * @example /nonprofit
- * @agentDiscoverable true
- */
-
 export const metadata: Metadata = {
   title: 'The organization, in formation',
   description:
@@ -59,6 +43,21 @@ const NEEDS = [
   },
 ] as const
 
+/**
+ * @page /nonprofit
+ * @entity CAMPAIGN
+ * @description The organization, in formation — not incorporated, no 501(c)(3)
+ *   determination, and **accepting no money**. The disclosure sits above the fold
+ *   rather than in a footnote, because a page that reads like a charity while the
+ *   charity does not legally exist is the exact move this project's book spends nine
+ *   chapters teaching people to spot. Asks for founding circle, governance, legal
+ *   help and a first program site.
+ * @permissions public
+ * @relationships FunnelSignup (intent: nonprofit), Kit tag source:nonprofit, /awaken
+ * @dimensions WHO:visitor, WHAT:org state, WHERE:nonprofit, ENERGY:honest_state
+ * @example /nonprofit
+ * @agentDiscoverable true
+ */
 export default function NonprofitPage() {
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8">

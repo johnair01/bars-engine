@@ -8,6 +8,12 @@ import {
   TWENTY_ONE_DAY_CAMPAIGNS,
 } from '@/lib/campaigns/twenty-one-day'
 
+export const metadata: Metadata = {
+  title: 'The four campaigns — Mastering the Game of Allyship',
+  description:
+    'Appendix B’s four 21-day campaigns: Skillful Organizing, Gather Resources, Raise Awareness, Direct Action. Three weeks each, one object, one capture.',
+}
+
 /**
  * @page /campaigns
  * @entity CAMPAIGN
@@ -23,13 +29,6 @@ import {
  * @example /campaigns
  * @agentDiscoverable true
  */
-
-export const metadata: Metadata = {
-  title: 'The four campaigns — Mastering the Game of Allyship',
-  description:
-    'Appendix B’s four 21-day campaigns: Skillful Organizing, Gather Resources, Raise Awareness, Direct Action. Three weeks each, one object, one capture.',
-}
-
 export default function CampaignsIndexPage() {
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8">

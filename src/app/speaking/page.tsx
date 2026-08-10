@@ -1,21 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-/**
- * @page /speaking
- * @entity CAMPAIGN
- * @description Speaking and workshops — the promise Chapter 9's *What Comes Next*
- *   makes in print. Fees are on the page rather than behind an enquiry, because a
- *   page that hides the number is asking the reader to spend a conversation
- *   finding out she cannot afford it. Two one-sheets attach: corporate and
- *   field/outdoor.
- * @permissions public
- * @relationships /succession, /mastering-allyship, public/speaking/*.pdf
- * @dimensions WHO:organizer, WHAT:offer, WHERE:speaking, ENERGY:invite
- * @example /speaking
- * @agentDiscoverable true
- */
-
 export const metadata: Metadata = {
   title: 'Speaking & workshops — Wendell Britt',
   description:
@@ -56,6 +41,20 @@ const ONE_SHEETS = [
   },
 ] as const
 
+/**
+ * @page /speaking
+ * @entity CAMPAIGN
+ * @description Speaking and workshops — the promise Chapter 9's *What Comes Next*
+ *   makes in print. Fees are on the page rather than behind an enquiry, because a
+ *   page that hides the number is asking the reader to spend a conversation
+ *   finding out she cannot afford it. Two one-sheets attach: corporate and
+ *   field/outdoor.
+ * @permissions public
+ * @relationships /succession, /mastering-allyship, public/speaking/*.pdf
+ * @dimensions WHO:organizer, WHAT:offer, WHERE:speaking, ENERGY:invite
+ * @example /speaking
+ * @agentDiscoverable true
+ */
 export default function SpeakingPage() {
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8">

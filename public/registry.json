@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-07-06T02:46:29.418Z",
+  "generatedAt": "2026-08-10T23:33:19.634Z",
   "entities": {
     "BAR": {
       "name": "BAR",
@@ -95,7 +95,7 @@
         "admin"
       ],
       "example": "/api/admin/forge/forge_123/complete",
-      "id": "post_quest_1783305991321"
+      "id": "post_quest_1786404801310"
     },
     {
       "sourceFile": "/src/app/api/admin/forge/[id]/route.ts",
@@ -121,7 +121,7 @@
         "admin"
       ],
       "example": "/api/admin/forge/forge_123",
-      "id": "patch_quest_1783305991321"
+      "id": "patch_quest_1786404801310"
     },
     {
       "sourceFile": "/src/app/api/admin/forge/check-eligibility/route.ts",
@@ -146,7 +146,7 @@
         "admin"
       ],
       "example": "/api/admin/forge/check-eligibility",
-      "id": "post_player_1783305991321"
+      "id": "post_player_1786404801310"
     },
     {
       "sourceFile": "/src/app/api/admin/forge/start/route.ts",
@@ -172,7 +172,7 @@
         "admin"
       ],
       "example": "/api/admin/forge/start",
-      "id": "post_quest_1783305991322"
+      "id": "post_quest_1786404801310"
     },
     {
       "sourceFile": "/src/app/api/admin/onboarding/draft/passages/[id]/route.ts",
@@ -198,7 +198,7 @@
         "admin"
       ],
       "example": "/api/admin/onboarding/draft/passages/Start",
-      "id": "patch_campaign_1783305991322"
+      "id": "patch_campaign_1786404801311"
     },
     {
       "sourceFile": "/src/app/api/admin/onboarding/draft/passages/route.ts",
@@ -223,7 +223,7 @@
         "admin"
       ],
       "example": "/api/admin/onboarding/draft/passages",
-      "id": "get_campaign_1783305991322"
+      "id": "get_campaign_1786404801311"
     },
     {
       "sourceFile": "/src/app/api/admin/onboarding/draft/route.ts",
@@ -248,7 +248,7 @@
         "admin"
       ],
       "example": "/api/admin/onboarding/draft",
-      "id": "get_campaign_1783305991323"
+      "id": "get_campaign_1786404801312"
     },
     {
       "sourceFile": "/src/app/api/admin/onboarding/draft/route.ts",
@@ -274,7 +274,7 @@
         "admin"
       ],
       "example": "/api/admin/onboarding/draft",
-      "id": "put_campaign_1783305991323"
+      "id": "put_campaign_1786404801312"
     },
     {
       "sourceFile": "/src/app/api/admin/onboarding/flow/route.ts",
@@ -299,7 +299,7 @@
         "admin"
       ],
       "example": "/api/admin/onboarding/flow?campaign=bruised-banana",
-      "id": "get_campaign_1783305991323"
+      "id": "get_campaign_1786404801312"
     },
     {
       "sourceFile": "/src/app/api/admin/story/validate/route.ts",
@@ -325,7 +325,7 @@
         "admin"
       ],
       "example": "/api/admin/story/validate",
-      "id": "post_campaign_1783305991323"
+      "id": "post_campaign_1786404801312"
     },
     {
       "sourceFile": "/src/app/api/admin/twee/compile/route.ts",
@@ -351,7 +351,7 @@
         "admin"
       ],
       "example": "/api/admin/twee/compile",
-      "id": "post_campaign_1783305991324"
+      "id": "post_campaign_1786404801312"
     },
     {
       "sourceFile": "/src/app/api/admin/twee/publish/route.ts",
@@ -377,7 +377,7 @@
         "admin"
       ],
       "example": "/api/admin/twee/publish",
-      "id": "post_campaign_1783305991324"
+      "id": "post_campaign_1786404801313"
     },
     {
       "sourceFile": "/src/app/api/backlog/[id]/route.ts",
@@ -401,7 +401,7 @@
         "admin"
       ],
       "example": "PATCH /api/backlog/item_123 {\"status\": \"done\", \"ownerFace\": \"shaman\"}",
-      "id": "patch_bar_1783305991325"
+      "id": "patch_bar_1786404801314"
     },
     {
       "sourceFile": "/src/app/api/backlog/route.ts",
@@ -425,7 +425,7 @@
         "public"
       ],
       "example": "/api/backlog?ownerFace=architect",
-      "id": "get_bar_1783305991325"
+      "id": "get_bar_1786404801314"
     },
     {
       "sourceFile": "/src/app/api/feedback/cert/route.ts",
@@ -451,7 +451,7 @@
         "authenticated"
       ],
       "example": "POST /api/feedback/cert {questId:\"cert_001\",passageName:\"ending\",feedback:\"Great quest!\"}",
-      "id": "post_quest_1783305991327"
+      "id": "post_quest_1786404801315"
     },
     {
       "sourceFile": "/src/app/api/guidance/route.ts",
@@ -475,7 +475,7 @@
         "public"
       ],
       "example": "/api/guidance?flowId=bruised-banana&nodeId=start&role=librarian",
-      "id": "get_quest_1783305991327"
+      "id": "get_quest_1786404801315"
     },
     {
       "sourceFile": "/src/app/api/health/route.ts",
@@ -498,7 +498,7 @@
         "public"
       ],
       "example": "/api/health",
-      "id": "get_system_1783305991327"
+      "id": "get_system_1786404801315"
     },
     {
       "sourceFile": "/src/app/api/quests/[questId]/apply-move/route.ts",
@@ -525,7 +525,7 @@
         "participant_in_quest"
       ],
       "example": "POST /api/quests/quest_456/apply-move {\"moveKey\": \"wake_up_insight\", \"inputs\": {\"reflection\": \"...\"}}",
-      "id": "post_quest_1783305991329"
+      "id": "post_quest_1786404801317"
     },
     {
       "sourceFile": "/src/app/admin/adventures/[id]/page.tsx",
@@ -549,7 +549,7 @@
         "admin"
       ],
       "example": "/admin/adventures/adv_123?preview=1",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/[id]/page.tsx",
@@ -573,7 +573,7 @@
         "admin"
       ],
       "example": "/admin/adventures/adv_123?preview=1",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/[id]/passages/[passageId]/edit/page.tsx",
@@ -598,7 +598,7 @@
         "admin"
       ],
       "example": "/admin/adventures/adv_123/passages/pass_456/edit",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/[id]/passages/[passageId]/edit/page.tsx",
@@ -623,7 +623,7 @@
         "admin"
       ],
       "example": "/admin/adventures/adv_123/passages/pass_456/edit",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/[id]/passages/create/page.tsx",
@@ -647,7 +647,7 @@
         "admin"
       ],
       "example": "/admin/adventures/adv_123/passages/create",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/[id]/passages/create/page.tsx",
@@ -671,7 +671,7 @@
         "admin"
       ],
       "example": "/admin/adventures/adv_123/passages/create",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/create/page.tsx",
@@ -695,7 +695,7 @@
         "admin"
       ],
       "example": "/admin/adventures/create",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/create/page.tsx",
@@ -719,7 +719,7 @@
         "admin"
       ],
       "example": "/admin/adventures/create",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/merge/page.tsx",
@@ -743,7 +743,7 @@
         "admin"
       ],
       "example": "/admin/adventures/merge",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/merge/page.tsx",
@@ -767,7 +767,7 @@
         "admin"
       ],
       "example": "/admin/adventures/merge",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/page.tsx",
@@ -791,7 +791,7 @@
         "admin"
       ],
       "example": "/admin/adventures",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/adventures/page.tsx",
@@ -815,7 +815,7 @@
         "admin"
       ],
       "example": "/admin/adventures",
-      "id": "page_quest_1783305991341"
+      "id": "page_quest_1786404801329"
     },
     {
       "sourceFile": "/src/app/admin/agent-proposals/page.tsx",
@@ -839,7 +839,7 @@
         "admin"
       ],
       "example": "/admin/agent-proposals",
-      "id": "page_npc_1783305991341"
+      "id": "page_npc_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/agent-proposals/page.tsx",
@@ -863,7 +863,7 @@
         "admin"
       ],
       "example": "/admin/agent-proposals",
-      "id": "page_npc_1783305991341"
+      "id": "page_npc_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/avatars/assets/page.tsx",
@@ -887,7 +887,7 @@
         "admin"
       ],
       "example": "/admin/avatars/assets",
-      "id": "page_player_1783305991342"
+      "id": "page_player_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/avatars/assets/page.tsx",
@@ -911,7 +911,7 @@
         "admin"
       ],
       "example": "/admin/avatars/assets",
-      "id": "page_player_1783305991342"
+      "id": "page_player_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/avatars/page.tsx",
@@ -935,7 +935,7 @@
         "admin"
       ],
       "example": "/admin/avatars",
-      "id": "page_player_1783305991342"
+      "id": "page_player_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/avatars/page.tsx",
@@ -959,7 +959,7 @@
         "admin"
       ],
       "example": "/admin/avatars",
-      "id": "page_player_1783305991342"
+      "id": "page_player_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/backlog/page.tsx",
@@ -983,7 +983,7 @@
         "admin"
       ],
       "example": "/admin/backlog?ownerFace=Coordinator",
-      "id": "page_system_1783305991342"
+      "id": "page_system_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/backlog/page.tsx",
@@ -1007,7 +1007,7 @@
         "admin"
       ],
       "example": "/admin/backlog?ownerFace=Coordinator",
-      "id": "page_system_1783305991342"
+      "id": "page_system_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/bar-candidates/page.tsx",
@@ -1032,7 +1032,7 @@
         "admin"
       ],
       "example": "/admin/bar-candidates",
-      "id": "page_bar_1783305991342"
+      "id": "page_bar_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/bar-candidates/page.tsx",
@@ -1057,7 +1057,7 @@
         "admin"
       ],
       "example": "/admin/bar-candidates",
-      "id": "page_bar_1783305991342"
+      "id": "page_bar_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/moves/page.tsx",
@@ -1081,7 +1081,7 @@
         "admin"
       ],
       "example": "/admin/books/book_123/moves",
-      "id": "page_wiki_1783305991342"
+      "id": "page_wiki_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/moves/page.tsx",
@@ -1105,7 +1105,7 @@
         "admin"
       ],
       "example": "/admin/books/book_123/moves",
-      "id": "page_wiki_1783305991342"
+      "id": "page_wiki_1786404801330"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/page.tsx",
@@ -1130,7 +1130,7 @@
         "admin"
       ],
       "example": "/admin/books/book_123",
-      "id": "page_wiki_1783305991342"
+      "id": "page_wiki_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/page.tsx",
@@ -1155,7 +1155,7 @@
         "admin"
       ],
       "example": "/admin/books/book_123",
-      "id": "page_wiki_1783305991342"
+      "id": "page_wiki_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/quests/page.tsx",
@@ -1179,7 +1179,7 @@
         "admin"
       ],
       "example": "/admin/books/book_123/quests",
-      "id": "page_quest_1783305991342"
+      "id": "page_quest_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/quests/page.tsx",
@@ -1203,7 +1203,7 @@
         "admin"
       ],
       "example": "/admin/books/book_123/quests",
-      "id": "page_quest_1783305991342"
+      "id": "page_quest_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/sections/page.tsx",
@@ -1229,7 +1229,7 @@
         "admin"
       ],
       "example": "/admin/books/clxyz123/sections",
-      "id": "page_wiki_1783305991342"
+      "id": "page_wiki_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/books/[id]/sections/page.tsx",
@@ -1255,7 +1255,7 @@
         "admin"
       ],
       "example": "/admin/books/clxyz123/sections",
-      "id": "page_wiki_1783305991342"
+      "id": "page_wiki_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/books/page.tsx",
@@ -1280,7 +1280,7 @@
         "admin"
       ],
       "example": "/admin/books",
-      "id": "page_wiki_1783305991343"
+      "id": "page_wiki_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/books/page.tsx",
@@ -1305,7 +1305,7 @@
         "admin"
       ],
       "example": "/admin/books",
-      "id": "page_wiki_1783305991343"
+      "id": "page_wiki_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/campaign/[ref]/author/page.tsx",
@@ -1330,7 +1330,7 @@
         "admin"
       ],
       "example": "/admin/campaign/bb-residency/author",
-      "id": "page_campaign_1783305991343"
+      "id": "page_campaign_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/campaign/[ref]/author/page.tsx",
@@ -1355,7 +1355,7 @@
         "admin"
       ],
       "example": "/admin/campaign/bb-residency/author",
-      "id": "page_campaign_1783305991343"
+      "id": "page_campaign_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/campaign/[ref]/deck/page.tsx",
@@ -1380,7 +1380,7 @@
         "admin"
       ],
       "example": "/admin/campaign/bb-residency/deck",
-      "id": "page_campaign_1783305991343"
+      "id": "page_campaign_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/campaign/[ref]/deck/page.tsx",
@@ -1405,7 +1405,7 @@
         "admin"
       ],
       "example": "/admin/campaign/bb-residency/deck",
-      "id": "page_campaign_1783305991343"
+      "id": "page_campaign_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/campaign/[ref]/theme/page.tsx",
@@ -1432,7 +1432,7 @@
         "admin"
       ],
       "example": "/admin/campaign/bruised-banana/theme",
-      "id": "page_campaign_1783305991343"
+      "id": "page_campaign_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/campaign/[ref]/theme/page.tsx",
@@ -1459,7 +1459,7 @@
         "admin"
       ],
       "example": "/admin/campaign/bruised-banana/theme",
-      "id": "page_campaign_1783305991343"
+      "id": "page_campaign_1786404801331"
     },
     {
       "sourceFile": "/src/app/admin/campaign-events/[eventId]/page.tsx",
@@ -1484,7 +1484,7 @@
         "admin"
       ],
       "example": "/admin/campaign-events/evt_123?instanceId=inst_456",
-      "id": "page_event_1783305991343"
+      "id": "page_event_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/campaign-events/[eventId]/page.tsx",
@@ -1509,7 +1509,7 @@
         "admin"
       ],
       "example": "/admin/campaign-events/evt_123?instanceId=inst_456",
-      "id": "page_event_1783305991343"
+      "id": "page_event_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/campaign-events/page.tsx",
@@ -1534,7 +1534,7 @@
         "admin"
       ],
       "example": "/admin/campaign-events?instanceId=inst_123",
-      "id": "page_event_1783305991343"
+      "id": "page_event_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/campaign-events/page.tsx",
@@ -1559,7 +1559,7 @@
         "admin"
       ],
       "example": "/admin/campaign-events?instanceId=inst_123",
-      "id": "page_event_1783305991343"
+      "id": "page_event_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/campaign-seeds/page.tsx",
@@ -1583,7 +1583,7 @@
         "admin"
       ],
       "example": "/admin/campaign-seeds",
-      "id": "page_campaign_1783305991343"
+      "id": "page_campaign_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/campaign-seeds/page.tsx",
@@ -1607,7 +1607,7 @@
         "admin"
       ],
       "example": "/admin/campaign-seeds",
-      "id": "page_campaign_1783305991344"
+      "id": "page_campaign_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/campaigns/review/page.tsx",
@@ -1629,7 +1629,7 @@
       "permissions": [
         "admin"
       ],
-      "id": "page_campaign_1783305991344"
+      "id": "page_campaign_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/campaigns/review/page.tsx",
@@ -1651,7 +1651,7 @@
       "permissions": [
         "admin"
       ],
-      "id": "page_campaign_1783305991344"
+      "id": "page_campaign_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/config/page.tsx",
@@ -1675,7 +1675,7 @@
         "admin"
       ],
       "example": "/admin/config",
-      "id": "page_system_1783305991344"
+      "id": "page_system_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/config/page.tsx",
@@ -1699,7 +1699,7 @@
         "admin"
       ],
       "example": "/admin/config",
-      "id": "page_system_1783305991344"
+      "id": "page_system_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/discovery/page.tsx",
@@ -1724,7 +1724,7 @@
         "admin"
       ],
       "example": "/admin/discovery",
-      "id": "page_quest_1783305991344"
+      "id": "page_quest_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/discovery/page.tsx",
@@ -1749,7 +1749,7 @@
         "admin"
       ],
       "example": "/admin/discovery",
-      "id": "page_quest_1783305991344"
+      "id": "page_quest_1786404801332"
     },
     {
       "sourceFile": "/src/app/admin/docs/page.tsx",
@@ -1773,7 +1773,7 @@
         "admin"
       ],
       "example": "/admin/docs",
-      "id": "page_wiki_1783305991344"
+      "id": "page_wiki_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/docs/page.tsx",
@@ -1797,7 +1797,7 @@
         "admin"
       ],
       "example": "/admin/docs",
-      "id": "page_wiki_1783305991344"
+      "id": "page_wiki_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/first-aid/page.tsx",
@@ -1821,7 +1821,7 @@
         "admin"
       ],
       "example": "/admin/first-aid",
-      "id": "page_system_1783305991344"
+      "id": "page_system_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/first-aid/page.tsx",
@@ -1845,7 +1845,7 @@
         "admin"
       ],
       "example": "/admin/first-aid",
-      "id": "page_system_1783305991344"
+      "id": "page_system_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/forge/page.tsx",
@@ -1869,7 +1869,7 @@
         "admin"
       ],
       "example": "/admin/forge",
-      "id": "page_bar_1783305991344"
+      "id": "page_bar_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/forge/page.tsx",
@@ -1893,7 +1893,7 @@
         "admin"
       ],
       "example": "/admin/forge",
-      "id": "page_bar_1783305991344"
+      "id": "page_bar_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/instances/page.tsx",
@@ -1918,7 +1918,7 @@
         "admin"
       ],
       "example": "/admin/instances?saved=true",
-      "id": "page_campaign_1783305991345"
+      "id": "page_campaign_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/instances/page.tsx",
@@ -1943,7 +1943,7 @@
         "admin"
       ],
       "example": "/admin/instances?saved=true",
-      "id": "page_campaign_1783305991345"
+      "id": "page_campaign_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/journeys/pack/[id]/page.tsx",
@@ -1968,7 +1968,7 @@
         "admin"
       ],
       "example": "/admin/journeys/pack/pack_123",
-      "id": "page_quest_1783305991345"
+      "id": "page_quest_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/journeys/pack/[id]/page.tsx",
@@ -1993,7 +1993,7 @@
         "admin"
       ],
       "example": "/admin/journeys/pack/pack_123",
-      "id": "page_quest_1783305991345"
+      "id": "page_quest_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/journeys/page.tsx",
@@ -2017,7 +2017,7 @@
         "admin"
       ],
       "example": "/admin/journeys",
-      "id": "page_quest_1783305991345"
+      "id": "page_quest_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/journeys/page.tsx",
@@ -2041,7 +2041,7 @@
         "admin"
       ],
       "example": "/admin/journeys",
-      "id": "page_quest_1783305991345"
+      "id": "page_quest_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/journeys/thread/[id]/page.tsx",
@@ -2067,7 +2067,7 @@
         "admin"
       ],
       "example": "/admin/journeys/thread/thread_123",
-      "id": "page_quest_1783305991345"
+      "id": "page_quest_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/journeys/thread/[id]/page.tsx",
@@ -2093,7 +2093,7 @@
         "admin"
       ],
       "example": "/admin/journeys/thread/thread_123",
-      "id": "page_quest_1783305991345"
+      "id": "page_quest_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/library/page.tsx",
@@ -2117,7 +2117,7 @@
         "admin"
       ],
       "example": "/admin/library",
-      "id": "page_wiki_1783305991345"
+      "id": "page_wiki_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/library/page.tsx",
@@ -2141,7 +2141,7 @@
         "admin"
       ],
       "example": "/admin/library",
-      "id": "page_wiki_1783305991345"
+      "id": "page_wiki_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/maps/[id]/editor/page.tsx",
@@ -2166,7 +2166,7 @@
         "admin"
       ],
       "example": "/admin/maps/map_123/editor",
-      "id": "page_system_1783305991345"
+      "id": "page_system_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/maps/[id]/editor/page.tsx",
@@ -2191,7 +2191,7 @@
         "admin"
       ],
       "example": "/admin/maps/map_123/editor",
-      "id": "page_system_1783305991345"
+      "id": "page_system_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/maps/[id]/page.tsx",
@@ -2216,7 +2216,7 @@
         "admin"
       ],
       "example": "/admin/maps/map_123",
-      "id": "page_system_1783305991345"
+      "id": "page_system_1786404801333"
     },
     {
       "sourceFile": "/src/app/admin/maps/[id]/page.tsx",
@@ -2241,7 +2241,7 @@
         "admin"
       ],
       "example": "/admin/maps/map_123",
-      "id": "page_system_1783305991345"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/maps/page.tsx",
@@ -2266,7 +2266,7 @@
         "admin"
       ],
       "example": "/admin/maps",
-      "id": "page_system_1783305991345"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/maps/page.tsx",
@@ -2291,7 +2291,7 @@
         "admin"
       ],
       "example": "/admin/maps",
-      "id": "page_system_1783305991345"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/moves/page.tsx",
@@ -2316,7 +2316,7 @@
         "admin"
       ],
       "example": "/admin/moves?tier=CANONICAL&moveType=wakeUp",
-      "id": "page_system_1783305991345"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/moves/page.tsx",
@@ -2341,7 +2341,7 @@
         "admin"
       ],
       "example": "/admin/moves?tier=CANONICAL&moveType=wakeUp",
-      "id": "page_system_1783305991345"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/npcs/[id]/memories/page.tsx",
@@ -2366,7 +2366,7 @@
         "admin"
       ],
       "example": "/admin/npcs/npc_123/memories",
-      "id": "page_npc_1783305991346"
+      "id": "page_npc_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/npcs/[id]/memories/page.tsx",
@@ -2391,7 +2391,7 @@
         "admin"
       ],
       "example": "/admin/npcs/npc_123/memories",
-      "id": "page_npc_1783305991346"
+      "id": "page_npc_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/npcs/[id]/page.tsx",
@@ -2416,7 +2416,7 @@
         "admin"
       ],
       "example": "/admin/npcs/npc_123",
-      "id": "page_npc_1783305991346"
+      "id": "page_npc_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/npcs/[id]/page.tsx",
@@ -2441,7 +2441,7 @@
         "admin"
       ],
       "example": "/admin/npcs/npc_123",
-      "id": "page_npc_1783305991346"
+      "id": "page_npc_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/npcs/[id]/reflections/page.tsx",
@@ -2465,7 +2465,7 @@
         "admin"
       ],
       "example": "/admin/npcs/npc_123/reflections",
-      "id": "page_npc_1783305991346"
+      "id": "page_npc_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/npcs/[id]/reflections/page.tsx",
@@ -2489,7 +2489,7 @@
         "admin"
       ],
       "example": "/admin/npcs/npc_123/reflections",
-      "id": "page_npc_1783305991346"
+      "id": "page_npc_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/npcs/page.tsx",
@@ -2513,7 +2513,7 @@
         "admin"
       ],
       "example": "/admin/npcs?status=active&tier=2",
-      "id": "page_npc_1783305991346"
+      "id": "page_npc_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/npcs/page.tsx",
@@ -2537,7 +2537,7 @@
         "admin"
       ],
       "example": "/admin/npcs?status=active&tier=2",
-      "id": "page_npc_1783305991346"
+      "id": "page_npc_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/onboarding/page.tsx",
@@ -2562,7 +2562,7 @@
         "admin"
       ],
       "example": "/admin/onboarding",
-      "id": "page_quest_1783305991346"
+      "id": "page_quest_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/onboarding/page.tsx",
@@ -2587,7 +2587,7 @@
         "admin"
       ],
       "example": "/admin/onboarding",
-      "id": "page_quest_1783305991346"
+      "id": "page_quest_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/page.tsx",
@@ -2611,7 +2611,7 @@
         "admin"
       ],
       "example": "/admin",
-      "id": "page_system_1783305991346"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/page.tsx",
@@ -2635,7 +2635,7 @@
         "admin"
       ],
       "example": "/admin",
-      "id": "page_system_1783305991346"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/player-signal-backlog/page.tsx",
@@ -2654,7 +2654,7 @@
       "permissions": [
         "admin"
       ],
-      "id": "page_system_1783305991346"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/player-signal-backlog/page.tsx",
@@ -2673,7 +2673,7 @@
       "permissions": [
         "admin"
       ],
-      "id": "page_system_1783305991346"
+      "id": "page_system_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/players/page.tsx",
@@ -2698,7 +2698,7 @@
         "admin"
       ],
       "example": "/admin/players",
-      "id": "page_player_1783305991346"
+      "id": "page_player_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/players/page.tsx",
@@ -2723,7 +2723,7 @@
         "admin"
       ],
       "example": "/admin/players",
-      "id": "page_player_1783305991346"
+      "id": "page_player_1786404801334"
     },
     {
       "sourceFile": "/src/app/admin/quest-from-context/page.tsx",
@@ -2748,7 +2748,7 @@
         "admin"
       ],
       "example": "/admin/quest-from-context",
-      "id": "page_quest_1783305991346"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quest-from-context/page.tsx",
@@ -2773,7 +2773,7 @@
         "admin"
       ],
       "example": "/admin/quest-from-context",
-      "id": "page_quest_1783305991346"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quest-grammar/page.tsx",
@@ -2798,7 +2798,7 @@
         "admin"
       ],
       "example": "/admin/quest-grammar?appendTo=adv_123",
-      "id": "page_quest_1783305991346"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quest-grammar/page.tsx",
@@ -2823,7 +2823,7 @@
         "admin"
       ],
       "example": "/admin/quest-grammar?appendTo=adv_123",
-      "id": "page_quest_1783305991346"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quest-proposals/[id]/page.tsx",
@@ -2847,7 +2847,7 @@
         "admin"
       ],
       "example": "/admin/quest-proposals/prop_123",
-      "id": "page_quest_1783305991346"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quest-proposals/[id]/page.tsx",
@@ -2871,7 +2871,7 @@
         "admin"
       ],
       "example": "/admin/quest-proposals/prop_123",
-      "id": "page_quest_1783305991346"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quest-proposals/page.tsx",
@@ -2895,7 +2895,7 @@
         "admin"
       ],
       "example": "/admin/quest-proposals?status=pending",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quest-proposals/page.tsx",
@@ -2919,7 +2919,7 @@
         "admin"
       ],
       "example": "/admin/quest-proposals?status=pending",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quests/[id]/page.tsx",
@@ -2945,7 +2945,7 @@
         "admin"
       ],
       "example": "/admin/quests/quest_123",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quests/[id]/page.tsx",
@@ -2971,7 +2971,7 @@
         "admin"
       ],
       "example": "/admin/quests/quest_123",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quests/page.tsx",
@@ -2995,7 +2995,7 @@
         "admin"
       ],
       "example": "/admin/quests",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/quests/page.tsx",
@@ -3019,7 +3019,57 @@
         "admin"
       ],
       "example": "/admin/quests",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
+    },
+    {
+      "sourceFile": "/src/app/admin/raise-awareness/page.tsx",
+      "lineNumber": 17,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "steward",
+        "WHAT": "raise_awareness",
+        "PERSONAL_THROUGHPUT": "wake-up"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/raise-awareness",
+      "entity": "SYSTEM",
+      "description": "Local-first Instagram carousel composer for approved MTGOA teaching copy",
+      "permissions": [
+        "admin",
+        "steward"
+      ],
+      "example": "/admin/raise-awareness",
+      "id": "page_system_1786404801335"
+    },
+    {
+      "sourceFile": "/src/app/admin/raise-awareness/page.tsx",
+      "lineNumber": 17,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "steward",
+        "WHAT": "raise_awareness",
+        "PERSONAL_THROUGHPUT": "wake-up"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/admin/raise-awareness",
+      "entity": "SYSTEM",
+      "description": "Local-first Instagram carousel composer for approved MTGOA teaching copy",
+      "permissions": [
+        "admin",
+        "steward"
+      ],
+      "example": "/admin/raise-awareness",
+      "id": "page_system_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/sprites/review/page.tsx",
@@ -3043,7 +3093,7 @@
         "admin"
       ],
       "example": "/admin/sprites/review",
-      "id": "page_player_1783305991347"
+      "id": "page_player_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/sprites/review/page.tsx",
@@ -3067,7 +3117,7 @@
         "admin"
       ],
       "example": "/admin/sprites/review",
-      "id": "page_player_1783305991347"
+      "id": "page_player_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/templates/page.tsx",
@@ -3092,7 +3142,7 @@
         "admin"
       ],
       "example": "/admin/templates",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/templates/page.tsx",
@@ -3117,7 +3167,7 @@
         "admin"
       ],
       "example": "/admin/templates",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/twine/[id]/ir/page.tsx",
@@ -3141,7 +3191,7 @@
         "admin"
       ],
       "example": "/admin/twine/story_123/ir",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/twine/[id]/ir/page.tsx",
@@ -3165,7 +3215,7 @@
         "admin"
       ],
       "example": "/admin/twine/story_123/ir",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801335"
     },
     {
       "sourceFile": "/src/app/admin/twine/[id]/page.tsx",
@@ -3190,7 +3240,7 @@
         "admin"
       ],
       "example": "/admin/twine/story_123",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/twine/[id]/page.tsx",
@@ -3215,7 +3265,7 @@
         "admin"
       ],
       "example": "/admin/twine/story_123",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/twine/page.tsx",
@@ -3239,7 +3289,7 @@
         "admin"
       ],
       "example": "/admin/twine?status=published&search=onboarding",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/twine/page.tsx",
@@ -3263,7 +3313,7 @@
         "admin"
       ],
       "example": "/admin/twine?status=published&search=onboarding",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/twine/stitcher/page.tsx",
@@ -3288,7 +3338,7 @@
         "admin"
       ],
       "example": "/admin/twine/stitcher?id=story_123",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/twine/stitcher/page.tsx",
@@ -3313,7 +3363,7 @@
         "admin"
       ],
       "example": "/admin/twine/stitcher?id=story_123",
-      "id": "page_quest_1783305991347"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/world/archetype/[id]/page.tsx",
@@ -3338,7 +3388,7 @@
         "admin"
       ],
       "example": "/admin/world/archetype/archetype_123",
-      "id": "page_system_1783305991348"
+      "id": "page_system_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/world/archetype/[id]/page.tsx",
@@ -3363,7 +3413,7 @@
         "admin"
       ],
       "example": "/admin/world/archetype/archetype_123",
-      "id": "page_system_1783305991348"
+      "id": "page_system_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/world/nation/[id]/page.tsx",
@@ -3388,7 +3438,7 @@
         "admin"
       ],
       "example": "/admin/world/nation/nation_123",
-      "id": "page_system_1783305991348"
+      "id": "page_system_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/world/nation/[id]/page.tsx",
@@ -3413,7 +3463,7 @@
         "admin"
       ],
       "example": "/admin/world/nation/nation_123",
-      "id": "page_system_1783305991348"
+      "id": "page_system_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/world/page.tsx",
@@ -3438,7 +3488,7 @@
         "admin"
       ],
       "example": "/admin/world",
-      "id": "page_system_1783305991348"
+      "id": "page_system_1786404801336"
     },
     {
       "sourceFile": "/src/app/admin/world/page.tsx",
@@ -3463,7 +3513,7 @@
         "admin"
       ],
       "example": "/admin/world",
-      "id": "page_system_1783305991348"
+      "id": "page_system_1786404801336"
     },
     {
       "sourceFile": "/src/app/adventure/[id]/play/page.tsx",
@@ -3488,7 +3538,7 @@
         "authenticated"
       ],
       "example": "/adventure/abc123/play?questId=quest-456&ref=bruised-banana&start=Node-1",
-      "id": "page_quest_1783305991348"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/adventure/[id]/play/page.tsx",
@@ -3513,7 +3563,7 @@
         "authenticated"
       ],
       "example": "/adventure/abc123/play?questId=quest-456&ref=bruised-banana&start=Node-1",
-      "id": "page_quest_1783305991348"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/adventure/hub/[questId]/page.tsx",
@@ -3538,7 +3588,7 @@
         "authenticated"
       ],
       "example": "/adventure/hub/quest-123?ref=bruised-banana",
-      "id": "page_quest_1783305991348"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/adventure/hub/[questId]/page.tsx",
@@ -3563,7 +3613,7 @@
         "authenticated"
       ],
       "example": "/adventure/hub/quest-123?ref=bruised-banana",
-      "id": "page_quest_1783305991348"
+      "id": "page_quest_1786404801336"
     },
     {
       "sourceFile": "/src/app/adventures/[id]/play/page.tsx",
@@ -3588,7 +3638,7 @@
         "authenticated"
       ],
       "example": "/adventures/story-abc/play?questId=quest-123&ritual=true",
-      "id": "page_quest_1783305991348"
+      "id": "page_quest_1786404801337"
     },
     {
       "sourceFile": "/src/app/adventures/[id]/play/page.tsx",
@@ -3613,7 +3663,7 @@
         "authenticated"
       ],
       "example": "/adventures/story-abc/play?questId=quest-123&ritual=true",
-      "id": "page_quest_1783305991348"
+      "id": "page_quest_1786404801337"
     },
     {
       "sourceFile": "/src/app/archetype/page.tsx",
@@ -3638,7 +3688,7 @@
         "authenticated"
       ],
       "example": "/archetype",
-      "id": "page_player_1783305991348"
+      "id": "page_player_1786404801337"
     },
     {
       "sourceFile": "/src/app/archetype/page.tsx",
@@ -3663,7 +3713,7 @@
         "authenticated"
       ],
       "example": "/archetype",
-      "id": "page_player_1783305991348"
+      "id": "page_player_1786404801337"
     },
     {
       "sourceFile": "/src/app/arrival/page.tsx",
@@ -3687,7 +3737,7 @@
         "authenticated (requires active player session)"
       ],
       "example": "/arrival",
-      "id": "page_player_1783305991348"
+      "id": "page_player_1786404801337"
     },
     {
       "sourceFile": "/src/app/arrival/page.tsx",
@@ -3711,7 +3761,7 @@
         "authenticated (requires active player session)"
       ],
       "example": "/arrival",
-      "id": "page_player_1783305991348"
+      "id": "page_player_1786404801337"
     },
     {
       "sourceFile": "/src/app/bars/[id]/page.tsx",
@@ -3736,7 +3786,7 @@
         "authenticated"
       ],
       "example": "/bars/bar-123?share=external",
-      "id": "page_bar_1783305991349"
+      "id": "page_bar_1786404801337"
     },
     {
       "sourceFile": "/src/app/bars/[id]/page.tsx",
@@ -3761,7 +3811,7 @@
         "authenticated"
       ],
       "example": "/bars/bar-123?share=external",
-      "id": "page_bar_1783305991349"
+      "id": "page_bar_1786404801337"
     },
     {
       "sourceFile": "/src/app/bars/capture/page.tsx",
@@ -3786,7 +3836,7 @@
         "authenticated"
       ],
       "example": "/bars/capture",
-      "id": "page_bar_1783305991349"
+      "id": "page_bar_1786404801337"
     },
     {
       "sourceFile": "/src/app/bars/capture/page.tsx",
@@ -3811,7 +3861,7 @@
         "authenticated"
       ],
       "example": "/bars/capture",
-      "id": "page_bar_1783305991349"
+      "id": "page_bar_1786404801337"
     },
     {
       "sourceFile": "/src/app/bars/create/page.tsx",
@@ -3830,7 +3880,7 @@
       "permissions": [
         "authenticated"
       ],
-      "id": "page_bar_1783305991349"
+      "id": "page_bar_1786404801337"
     },
     {
       "sourceFile": "/src/app/bars/create/page.tsx",
@@ -3849,7 +3899,7 @@
       "permissions": [
         "authenticated"
       ],
-      "id": "page_bar_1783305991349"
+      "id": "page_bar_1786404801337"
     },
     {
       "sourceFile": "/src/app/bars/page.tsx",
@@ -3873,7 +3923,7 @@
         "authenticated"
       ],
       "example": "/bars",
-      "id": "page_bar_1783305991349"
+      "id": "page_bar_1786404801337"
     },
     {
       "sourceFile": "/src/app/bars/page.tsx",
@@ -3897,7 +3947,7 @@
         "authenticated"
       ],
       "example": "/bars",
-      "id": "page_bar_1783305991349"
+      "id": "page_bar_1786404801337"
     },
     {
       "sourceFile": "/src/app/bb/page.tsx",
@@ -3916,7 +3966,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801337"
     },
     {
       "sourceFile": "/src/app/bb/page.tsx",
@@ -3935,7 +3985,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801337"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/begin/page.tsx",
@@ -3959,7 +4009,7 @@
       "permissions": [
         "public (no sign-up wall — parity with the Superpower quiz)"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801337"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/begin/page.tsx",
@@ -3983,7 +4033,7 @@
       "permissions": [
         "public (no sign-up wall — parity with the Superpower quiz)"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801337"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/home/page.tsx",
@@ -4008,7 +4058,7 @@
         "authenticated member of the campaign's instance"
       ],
       "example": "/campaign/bruised-banana/home",
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/leads/[leadId]/page.tsx",
@@ -4032,7 +4082,7 @@
       "permissions": [
         "steward (assertCampaignSteward via the lead's campaign)"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/leads/[leadId]/page.tsx",
@@ -4056,7 +4106,7 @@
       "permissions": [
         "steward (assertCampaignSteward via the lead's campaign)"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/leads/collective/page.tsx",
@@ -4080,7 +4130,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/leads/collective/page.tsx",
@@ -4104,7 +4154,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/leads/page.tsx",
@@ -4128,7 +4178,7 @@
       "permissions": [
         "steward (assertCampaignSteward — owner/steward of the campaign)"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/leads/page.tsx",
@@ -4152,7 +4202,7 @@
       "permissions": [
         "steward (assertCampaignSteward — owner/steward of the campaign)"
       ],
-      "id": "page_campaign_1783305991349"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/milestones/page.tsx",
@@ -4172,7 +4222,7 @@
         "steward+ (owner/steward of the backing instance",
         "or global admin)"
       ],
-      "id": "page_campaign_1783305991350"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/milestones/page.tsx",
@@ -4192,7 +4242,7 @@
         "steward+ (owner/steward of the backing instance",
         "or global admin)"
       ],
-      "id": "page_campaign_1783305991350"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/quests/new/page.tsx",
@@ -4216,7 +4266,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991350"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/quests/new/page.tsx",
@@ -4240,7 +4290,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991350"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/quests/page.tsx",
@@ -4264,7 +4314,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/quests/page.tsx",
@@ -4288,7 +4338,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/spoke/[n]/seeds/page.tsx",
@@ -4312,7 +4362,7 @@
       "permissions": [
         "authenticated"
       ],
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/[ref]/spoke/[n]/seeds/page.tsx",
@@ -4336,7 +4386,7 @@
       "permissions": [
         "authenticated"
       ],
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801338"
     },
     {
       "sourceFile": "/src/app/campaign/lobby/page.tsx",
@@ -4360,7 +4410,7 @@
         "authenticated"
       ],
       "example": "/campaign/lobby?ref=bruised-banana",
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/lobby/page.tsx",
@@ -4384,7 +4434,7 @@
         "authenticated"
       ],
       "example": "/campaign/lobby?ref=bruised-banana",
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/slot/[slotId]/enter/[adventureId]/page.tsx",
@@ -4409,7 +4459,7 @@
         "authenticated"
       ],
       "example": "/campaign/slot/cld123/enter/adv456?ref=bruised-banana",
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/slot/[slotId]/enter/[adventureId]/page.tsx",
@@ -4434,7 +4484,7 @@
         "authenticated"
       ],
       "example": "/campaign/slot/cld123/enter/adv456?ref=bruised-banana",
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/slot/[slotId]/page.tsx",
@@ -4459,7 +4509,7 @@
         "authenticated"
       ],
       "example": "/campaign/slot/cld123",
-      "id": "page_campaign_1783305991353"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/spoke/[index]/generated/page.tsx",
@@ -4478,7 +4528,7 @@
       "permissions": [
         "authenticated"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/spoke/[index]/generated/page.tsx",
@@ -4497,7 +4547,7 @@
       "permissions": [
         "authenticated"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/begin/page.tsx",
@@ -4521,7 +4571,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/begin/page.tsx",
@@ -4545,7 +4595,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801339"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/leads/[leadId]/page.tsx",
@@ -4569,7 +4619,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/leads/[leadId]/page.tsx",
@@ -4593,7 +4643,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/leads/collective/page.tsx",
@@ -4617,7 +4667,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/leads/collective/page.tsx",
@@ -4641,7 +4691,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/leads/page.tsx",
@@ -4665,7 +4715,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/leads/page.tsx",
@@ -4689,7 +4739,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/quests/new/page.tsx",
@@ -4713,7 +4763,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/quests/new/page.tsx",
@@ -4737,7 +4787,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/quests/page.tsx",
@@ -4761,7 +4811,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaign/the-crossing/steward/quests/page.tsx",
@@ -4785,7 +4835,7 @@
       "permissions": [
         "steward (assertCampaignSteward)"
       ],
-      "id": "page_campaign_1783305991354"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaigns/landing/[slug]/page.tsx",
@@ -4810,7 +4860,7 @@
         "public"
       ],
       "example": "/campaigns/landing/bruised-banana?invite=abc123&shareToken=xyz789",
-      "id": "page_campaign_1783305991355"
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/campaigns/landing/[slug]/page.tsx",
@@ -4835,7 +4885,57 @@
         "public"
       ],
       "example": "/campaigns/landing/bruised-banana?invite=abc123&shareToken=xyz789",
-      "id": "page_campaign_1783305991355"
+      "id": "page_campaign_1786404801340"
+    },
+    {
+      "sourceFile": "/src/app/campaigns/page.tsx",
+      "lineNumber": 32,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "player",
+        "WHAT": "campaign index",
+        "WHERE": "campaigns",
+        "ENERGY": "choose"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/campaigns",
+      "entity": "CAMPAIGN",
+      "description": "The four doors — Appendix B's 21-day campaigns, one card each. There was\nno index under /campaigns (only landing/[slug]), so the four had nowhere to live.\nDirect Action's object is open by design: Week 1 names it, and its menu lists the\nnon-launch options first and in the majority, because a menu of one teaches nothing.\nBoth house rules are pinned above the cards rather than surfaced after entry.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/campaigns",
+      "id": "page_campaign_1786404801340"
+    },
+    {
+      "sourceFile": "/src/app/campaigns/page.tsx",
+      "lineNumber": 32,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "player",
+        "WHAT": "campaign index",
+        "WHERE": "campaigns",
+        "ENERGY": "choose"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/campaigns",
+      "entity": "CAMPAIGN",
+      "description": "The four doors — Appendix B's 21-day campaigns, one card each. There was\nno index under /campaigns (only landing/[slug]), so the four had nowhere to live.\nDirect Action's object is open by design: Week 1 names it, and its menu lists the\nnon-launch options first and in the majority, because a menu of one teaches nothing.\nBoth house rules are pinned above the cards rather than surfaced after entry.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/campaigns",
+      "id": "page_campaign_1786404801340"
     },
     {
       "sourceFile": "/src/app/capture/explore/[barId]/page.tsx",
@@ -4860,7 +4960,7 @@
         "owner"
       ],
       "example": "/capture/explore/bar-charge-123",
-      "id": "page_bar_1783305991355"
+      "id": "page_bar_1786404801341"
     },
     {
       "sourceFile": "/src/app/capture/explore/[barId]/page.tsx",
@@ -4885,7 +4985,7 @@
         "owner"
       ],
       "example": "/capture/explore/bar-charge-123",
-      "id": "page_bar_1783305991355"
+      "id": "page_bar_1786404801341"
     },
     {
       "sourceFile": "/src/app/capture/page.tsx",
@@ -4911,7 +5011,7 @@
         "authenticated"
       ],
       "example": "/capture",
-      "id": "page_bar_1783305991355"
+      "id": "page_bar_1786404801341"
     },
     {
       "sourceFile": "/src/app/capture/page.tsx",
@@ -4937,7 +5037,7 @@
         "authenticated"
       ],
       "example": "/capture",
-      "id": "page_bar_1783305991355"
+      "id": "page_bar_1786404801341"
     },
     {
       "sourceFile": "/src/app/character/[shareToken]/page.tsx",
@@ -4962,7 +5062,7 @@
         "public"
       ],
       "example": "/character/abc123xyz",
-      "id": "page_player_1783305991355"
+      "id": "page_player_1786404801341"
     },
     {
       "sourceFile": "/src/app/character/[shareToken]/page.tsx",
@@ -4987,7 +5087,7 @@
         "public"
       ],
       "example": "/character/abc123xyz",
-      "id": "page_player_1783305991355"
+      "id": "page_player_1786404801341"
     },
     {
       "sourceFile": "/src/app/character/create/page.tsx",
@@ -5013,7 +5113,7 @@
         "authenticated"
       ],
       "example": "/character/create",
-      "id": "page_player_1783305991355"
+      "id": "page_player_1786404801341"
     },
     {
       "sourceFile": "/src/app/character/create/page.tsx",
@@ -5039,7 +5139,7 @@
         "authenticated"
       ],
       "example": "/character/create",
-      "id": "page_player_1783305991355"
+      "id": "page_player_1786404801341"
     },
     {
       "sourceFile": "/src/app/character-creator/page.tsx",
@@ -5064,7 +5164,7 @@
         "authenticated"
       ],
       "example": "/character-creator",
-      "id": "page_player_1783305991355"
+      "id": "page_player_1786404801341"
     },
     {
       "sourceFile": "/src/app/character-creator/page.tsx",
@@ -5089,7 +5189,7 @@
         "authenticated"
       ],
       "example": "/character-creator",
-      "id": "page_player_1783305991355"
+      "id": "page_player_1786404801342"
     },
     {
       "sourceFile": "/src/app/conclave/space/[mapId]/page.tsx",
@@ -5115,7 +5215,7 @@
         "authenticated"
       ],
       "example": "/conclave/space/lobby_001",
-      "id": "page_system_1783305991356"
+      "id": "page_system_1786404801342"
     },
     {
       "sourceFile": "/src/app/conclave/space/[mapId]/page.tsx",
@@ -5141,7 +5241,7 @@
         "authenticated"
       ],
       "example": "/conclave/space/lobby_001",
-      "id": "page_system_1783305991356"
+      "id": "page_system_1786404801342"
     },
     {
       "sourceFile": "/src/app/conclave/space/page.tsx",
@@ -5167,7 +5267,7 @@
         "authenticated"
       ],
       "example": "/conclave/space",
-      "id": "page_system_1783305991357"
+      "id": "page_system_1786404801342"
     },
     {
       "sourceFile": "/src/app/conclave/space/page.tsx",
@@ -5193,7 +5293,7 @@
         "authenticated"
       ],
       "example": "/conclave/space",
-      "id": "page_system_1783305991357"
+      "id": "page_system_1786404801342"
     },
     {
       "sourceFile": "/src/app/create-bar/page.tsx",
@@ -5220,7 +5320,7 @@
         "profile_complete"
       ],
       "example": "/create-bar?setup=true&from321=1",
-      "id": "page_bar_1783305991357"
+      "id": "page_bar_1786404801342"
     },
     {
       "sourceFile": "/src/app/create-bar/page.tsx",
@@ -5247,7 +5347,7 @@
         "profile_complete"
       ],
       "example": "/create-bar?setup=true&from321=1",
-      "id": "page_bar_1783305991357"
+      "id": "page_bar_1786404801342"
     },
     {
       "sourceFile": "/src/app/creator-scene-deck/[slug]/page.tsx",
@@ -5274,7 +5374,7 @@
         "game_account_ready"
       ],
       "example": "/creator-scene-deck/bruised-banana",
-      "id": "page_campaign_1783305991357"
+      "id": "page_campaign_1786404801342"
     },
     {
       "sourceFile": "/src/app/creator-scene-deck/[slug]/page.tsx",
@@ -5301,7 +5401,7 @@
         "game_account_ready"
       ],
       "example": "/creator-scene-deck/bruised-banana",
-      "id": "page_campaign_1783305991357"
+      "id": "page_campaign_1786404801342"
     },
     {
       "sourceFile": "/src/app/creator-scene-deck/page.tsx",
@@ -5328,7 +5428,7 @@
         "game_account_ready"
       ],
       "example": "/creator-scene-deck → redirects to /creator-scene-deck/bruised-banana",
-      "id": "page_campaign_1783305991357"
+      "id": "page_campaign_1786404801342"
     },
     {
       "sourceFile": "/src/app/creator-scene-deck/page.tsx",
@@ -5355,7 +5455,7 @@
         "game_account_ready"
       ],
       "example": "/creator-scene-deck → redirects to /creator-scene-deck/bruised-banana",
-      "id": "page_campaign_1783305991357"
+      "id": "page_campaign_1786404801342"
     },
     {
       "sourceFile": "/src/app/daemons/321-wake-up/page.tsx",
@@ -5379,7 +5479,7 @@
         "authenticated"
       ],
       "example": "/daemons/321-wake-up",
-      "id": "page_daemon_1783305991357"
+      "id": "page_daemon_1786404801342"
     },
     {
       "sourceFile": "/src/app/daemons/321-wake-up/page.tsx",
@@ -5403,7 +5503,7 @@
         "authenticated"
       ],
       "example": "/daemons/321-wake-up",
-      "id": "page_daemon_1783305991357"
+      "id": "page_daemon_1786404801342"
     },
     {
       "sourceFile": "/src/app/daemons/page.tsx",
@@ -5429,7 +5529,7 @@
         "authenticated"
       ],
       "example": "/daemons",
-      "id": "page_daemon_1783305991357"
+      "id": "page_daemon_1786404801342"
     },
     {
       "sourceFile": "/src/app/daemons/page.tsx",
@@ -5455,7 +5555,7 @@
         "authenticated"
       ],
       "example": "/daemons",
-      "id": "page_daemon_1783305991357"
+      "id": "page_daemon_1786404801342"
     },
     {
       "sourceFile": "/src/app/dashboard/page.tsx",
@@ -5478,7 +5578,7 @@
         "authenticated"
       ],
       "example": "/dashboard",
-      "id": "page_player_1783305991357"
+      "id": "page_player_1786404801342"
     },
     {
       "sourceFile": "/src/app/dashboard/page.tsx",
@@ -5501,7 +5601,7 @@
         "authenticated"
       ],
       "example": "/dashboard",
-      "id": "page_player_1783305991357"
+      "id": "page_player_1786404801342"
     },
     {
       "sourceFile": "/src/app/deck/glossary/page.tsx",
@@ -5526,7 +5626,7 @@
         "public"
       ],
       "example": "/deck/glossary#shaman",
-      "id": "page_system_1783305991357"
+      "id": "page_system_1786404801342"
     },
     {
       "sourceFile": "/src/app/deck/glossary/page.tsx",
@@ -5551,7 +5651,7 @@
         "public"
       ],
       "example": "/deck/glossary#shaman",
-      "id": "page_system_1783305991357"
+      "id": "page_system_1786404801342"
     },
     {
       "sourceFile": "/src/app/deck/preview/page.tsx",
@@ -5576,7 +5676,7 @@
         "public"
       ],
       "example": "/deck/preview",
-      "id": "page_system_1783305991357"
+      "id": "page_system_1786404801343"
     },
     {
       "sourceFile": "/src/app/deck/preview/page.tsx",
@@ -5601,7 +5701,7 @@
         "public"
       ],
       "example": "/deck/preview",
-      "id": "page_system_1783305991357"
+      "id": "page_system_1786404801343"
     },
     {
       "sourceFile": "/src/app/demo/bruised-banana/donate/page.tsx",
@@ -5620,7 +5720,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991358"
+      "id": "page_campaign_1786404801343"
     },
     {
       "sourceFile": "/src/app/demo/bruised-banana/donate/page.tsx",
@@ -5639,7 +5739,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991358"
+      "id": "page_campaign_1786404801343"
     },
     {
       "sourceFile": "/src/app/demo/bruised-banana/page.tsx",
@@ -5658,7 +5758,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991358"
+      "id": "page_campaign_1786404801343"
     },
     {
       "sourceFile": "/src/app/demo/bruised-banana/page.tsx",
@@ -5677,7 +5777,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991358"
+      "id": "page_campaign_1786404801343"
     },
     {
       "sourceFile": "/src/app/demo/orientation/page.tsx",
@@ -5703,7 +5803,7 @@
         "public"
       ],
       "example": "/demo/orientation?s=bruised-banana-orientation",
-      "id": "page_campaign_1783305991358"
+      "id": "page_campaign_1786404801343"
     },
     {
       "sourceFile": "/src/app/demo/orientation/page.tsx",
@@ -5729,7 +5829,7 @@
         "public"
       ],
       "example": "/demo/orientation?s=bruised-banana-orientation",
-      "id": "page_campaign_1783305991358"
+      "id": "page_campaign_1786404801343"
     },
     {
       "sourceFile": "/src/app/dev/page.tsx",
@@ -5755,7 +5855,7 @@
         "dev_mode_only (NODE_ENV=development OR ENABLE_DEV_TOOLS=true)"
       ],
       "example": "/dev",
-      "id": "page_system_1783305991358"
+      "id": "page_system_1786404801343"
     },
     {
       "sourceFile": "/src/app/dev/page.tsx",
@@ -5781,7 +5881,7 @@
         "dev_mode_only (NODE_ENV=development OR ENABLE_DEV_TOOLS=true)"
       ],
       "example": "/dev",
-      "id": "page_system_1783305991358"
+      "id": "page_system_1786404801343"
     },
     {
       "sourceFile": "/src/app/docs/[slug]/page.tsx",
@@ -5807,7 +5907,7 @@
         "public (read-only)"
       ],
       "example": "/docs/how-to-create-bars",
-      "id": "page_wiki_1783305991358"
+      "id": "page_wiki_1786404801343"
     },
     {
       "sourceFile": "/src/app/docs/[slug]/page.tsx",
@@ -5833,7 +5933,7 @@
         "public (read-only)"
       ],
       "example": "/docs/how-to-create-bars",
-      "id": "page_wiki_1783305991358"
+      "id": "page_wiki_1786404801343"
     },
     {
       "sourceFile": "/src/app/docs/page.tsx",
@@ -5859,7 +5959,7 @@
         "public (read-only)"
       ],
       "example": "/docs",
-      "id": "page_wiki_1783305991358"
+      "id": "page_wiki_1786404801343"
     },
     {
       "sourceFile": "/src/app/docs/page.tsx",
@@ -5885,7 +5985,7 @@
         "public (read-only)"
       ],
       "example": "/docs",
-      "id": "page_wiki_1783305991358"
+      "id": "page_wiki_1786404801343"
     },
     {
       "sourceFile": "/src/app/emotional-first-aid/page.tsx",
@@ -5911,7 +6011,7 @@
         "guest-capable via party guest mode"
       ],
       "example": "/emotional-first-aid?questId=quest_123&returnTo=/game-map",
-      "id": "page_quest_1783305991358"
+      "id": "page_quest_1786404801343"
     },
     {
       "sourceFile": "/src/app/emotional-first-aid/page.tsx",
@@ -5937,7 +6037,7 @@
         "guest-capable via party guest mode"
       ],
       "example": "/emotional-first-aid?questId=quest_123&returnTo=/game-map",
-      "id": "page_quest_1783305991358"
+      "id": "page_quest_1786404801343"
     },
     {
       "sourceFile": "/src/app/event/barn/page.tsx",
@@ -5957,12 +6057,12 @@
       "method": "PAGE",
       "pattern": "/event/barn",
       "entity": "SYSTEM",
-      "description": "Public \"barn raising\" centerpiece — the three-wall Milestone BAR for the\nJuly 18 send-off. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill\nfor design review; default is the honest pre-launch (empty) state.",
+      "description": "Public \"barn raising\" centerpiece — the three-wall Milestone BAR for the\npress run and the book tour. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill\nfor design review; default is the honest pre-launch (empty) state.",
       "permissions": [
         "public"
       ],
       "example": "/event/barn",
-      "id": "page_system_1783305991358"
+      "id": "page_system_1786404801343"
     },
     {
       "sourceFile": "/src/app/event/barn/page.tsx",
@@ -5982,12 +6082,12 @@
       "method": "PAGE",
       "pattern": "/event/barn",
       "entity": "SYSTEM",
-      "description": "Public \"barn raising\" centerpiece — the three-wall Milestone BAR for the\nJuly 18 send-off. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill\nfor design review; default is the honest pre-launch (empty) state.",
+      "description": "Public \"barn raising\" centerpiece — the three-wall Milestone BAR for the\npress run and the book tour. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill\nfor design review; default is the honest pre-launch (empty) state.",
       "permissions": [
         "public"
       ],
       "example": "/event/barn",
-      "id": "page_system_1783305991358"
+      "id": "page_system_1786404801343"
     },
     {
       "sourceFile": "/src/app/event/donate/page.tsx",
@@ -6014,7 +6114,7 @@
         "authenticated (self-report + vibeulon mint)"
       ],
       "example": "/event/donate",
-      "id": "page_event_1783305991358"
+      "id": "page_event_1786404801343"
     },
     {
       "sourceFile": "/src/app/event/donate/page.tsx",
@@ -6041,7 +6141,7 @@
         "authenticated (self-report + vibeulon mint)"
       ],
       "example": "/event/donate",
-      "id": "page_event_1783305991358"
+      "id": "page_event_1786404801343"
     },
     {
       "sourceFile": "/src/app/fork-game/page.tsx",
@@ -6067,7 +6167,7 @@
         "authenticated"
       ],
       "example": "/fork-game",
-      "id": "page_system_1783305991359"
+      "id": "page_system_1786404801344"
     },
     {
       "sourceFile": "/src/app/fork-game/page.tsx",
@@ -6093,7 +6193,7 @@
         "authenticated"
       ],
       "example": "/fork-game",
-      "id": "page_system_1783305991359"
+      "id": "page_system_1786404801344"
     },
     {
       "sourceFile": "/src/app/fork-wizard/page.tsx",
@@ -6119,7 +6219,7 @@
         "public"
       ],
       "example": "/fork-wizard",
-      "id": "page_system_1783305991359"
+      "id": "page_system_1786404801344"
     },
     {
       "sourceFile": "/src/app/fork-wizard/page.tsx",
@@ -6145,7 +6245,7 @@
         "public"
       ],
       "example": "/fork-wizard",
-      "id": "page_system_1783305991359"
+      "id": "page_system_1786404801344"
     },
     {
       "sourceFile": "/src/app/game-map/page.tsx",
@@ -6172,7 +6272,7 @@
         "game_account_ready"
       ],
       "example": "/game-map#space-library",
-      "id": "page_system_1783305991359"
+      "id": "page_system_1786404801344"
     },
     {
       "sourceFile": "/src/app/game-map/page.tsx",
@@ -6199,7 +6299,7 @@
         "game_account_ready"
       ],
       "example": "/game-map#space-library",
-      "id": "page_system_1783305991359"
+      "id": "page_system_1786404801344"
     },
     {
       "sourceFile": "/src/app/graveyard/page.tsx",
@@ -6225,7 +6325,7 @@
         "authenticated"
       ],
       "example": "/graveyard",
-      "id": "page_quest_1783305991359"
+      "id": "page_quest_1786404801344"
     },
     {
       "sourceFile": "/src/app/graveyard/page.tsx",
@@ -6251,7 +6351,7 @@
         "authenticated"
       ],
       "example": "/graveyard",
-      "id": "page_quest_1783305991359"
+      "id": "page_quest_1786404801344"
     },
     {
       "sourceFile": "/src/app/growth-scene/[id]/page.tsx",
@@ -6278,7 +6378,7 @@
         "owner_only"
       ],
       "example": "/growth-scene/scene_abc123",
-      "id": "page_quest_1783305991359"
+      "id": "page_quest_1786404801344"
     },
     {
       "sourceFile": "/src/app/growth-scene/[id]/page.tsx",
@@ -6305,7 +6405,7 @@
         "owner_only"
       ],
       "example": "/growth-scene/scene_abc123",
-      "id": "page_quest_1783305991359"
+      "id": "page_quest_1786404801344"
     },
     {
       "sourceFile": "/src/app/iching/page.tsx",
@@ -6331,7 +6431,7 @@
         "authenticated"
       ],
       "example": "/iching?instanceId=inst_001&campaignRef=bruised-banana",
-      "id": "page_system_1783305991359"
+      "id": "page_system_1786404801344"
     },
     {
       "sourceFile": "/src/app/iching/page.tsx",
@@ -6357,7 +6457,7 @@
         "authenticated"
       ],
       "example": "/iching?instanceId=inst_001&campaignRef=bruised-banana",
-      "id": "page_system_1783305991359"
+      "id": "page_system_1786404801344"
     },
     {
       "sourceFile": "/src/app/invite/[token]/page.tsx",
@@ -6383,7 +6483,7 @@
         "public (invite token required)"
       ],
       "example": "/invite/abc123xyz",
-      "id": "page_player_1783305991359"
+      "id": "page_player_1786404801344"
     },
     {
       "sourceFile": "/src/app/invite/claim/[barId]/page.tsx",
@@ -6409,7 +6509,7 @@
         "public"
       ],
       "example": "/invite/claim/bar_123 → redirects to /invite/abc123xyz",
-      "id": "page_bar_1783305991359"
+      "id": "page_bar_1786404801344"
     },
     {
       "sourceFile": "/src/app/invite/claim/[barId]/page.tsx",
@@ -6435,7 +6535,7 @@
         "public"
       ],
       "example": "/invite/claim/bar_123 → redirects to /invite/abc123xyz",
-      "id": "page_bar_1783305991359"
+      "id": "page_bar_1786404801345"
     },
     {
       "sourceFile": "/src/app/join/[instanceSlug]/page.tsx",
@@ -6461,7 +6561,7 @@
         "authenticated"
       ],
       "example": "/join/bruised-banana",
-      "id": "page_campaign_1783305991359"
+      "id": "page_campaign_1786404801345"
     },
     {
       "sourceFile": "/src/app/join/[instanceSlug]/page.tsx",
@@ -6487,7 +6587,7 @@
         "authenticated"
       ],
       "example": "/join/bruised-banana",
-      "id": "page_campaign_1783305991359"
+      "id": "page_campaign_1786404801345"
     },
     {
       "sourceFile": "/src/app/library/page.tsx",
@@ -6513,7 +6613,7 @@
         "authenticated"
       ],
       "example": "/library",
-      "id": "page_quest_1783305991360"
+      "id": "page_quest_1786404801345"
     },
     {
       "sourceFile": "/src/app/library/page.tsx",
@@ -6539,7 +6639,7 @@
         "authenticated"
       ],
       "example": "/library",
-      "id": "page_quest_1783305991360"
+      "id": "page_quest_1786404801345"
     },
     {
       "sourceFile": "/src/app/lobby/[roomSlug]/page.tsx",
@@ -6565,7 +6665,7 @@
         "authenticated"
       ],
       "example": "/lobby/main-room",
-      "id": "page_system_1783305991360"
+      "id": "page_system_1786404801345"
     },
     {
       "sourceFile": "/src/app/lobby/[roomSlug]/page.tsx",
@@ -6591,7 +6691,7 @@
         "authenticated"
       ],
       "example": "/lobby/main-room",
-      "id": "page_system_1783305991360"
+      "id": "page_system_1786404801345"
     },
     {
       "sourceFile": "/src/app/lobby/new/page.tsx",
@@ -6618,7 +6718,7 @@
         "admin"
       ],
       "example": "/lobby/new?copyFrom=bruised-banana",
-      "id": "page_campaign_1783305991360"
+      "id": "page_campaign_1786404801345"
     },
     {
       "sourceFile": "/src/app/lobby/new/page.tsx",
@@ -6645,7 +6745,7 @@
         "admin"
       ],
       "example": "/lobby/new?copyFrom=bruised-banana",
-      "id": "page_campaign_1783305991360"
+      "id": "page_campaign_1786404801345"
     },
     {
       "sourceFile": "/src/app/lobby/page.tsx",
@@ -6671,7 +6771,7 @@
         "authenticated"
       ],
       "example": "/lobby",
-      "id": "page_system_1783305991360"
+      "id": "page_system_1786404801345"
     },
     {
       "sourceFile": "/src/app/lobby/page.tsx",
@@ -6697,7 +6797,7 @@
         "authenticated"
       ],
       "example": "/lobby",
-      "id": "page_system_1783305991360"
+      "id": "page_system_1786404801345"
     },
     {
       "sourceFile": "/src/app/login/page.tsx",
@@ -6723,7 +6823,7 @@
         "public"
       ],
       "example": "/login?returnTo=/deck",
-      "id": "page_player_1783305991360"
+      "id": "page_player_1786404801345"
     },
     {
       "sourceFile": "/src/app/login/page.tsx",
@@ -6749,7 +6849,7 @@
         "public"
       ],
       "example": "/login?returnTo=/deck",
-      "id": "page_player_1783305991360"
+      "id": "page_player_1786404801345"
     },
     {
       "sourceFile": "/src/app/map/page.tsx",
@@ -6775,7 +6875,7 @@
         "authenticated"
       ],
       "example": "/map?type=vibeulon → redirects to /wallet",
-      "id": "page_system_1783305991360"
+      "id": "page_system_1786404801345"
     },
     {
       "sourceFile": "/src/app/map/page.tsx",
@@ -6801,7 +6901,107 @@
         "authenticated"
       ],
       "example": "/map?type=vibeulon → redirects to /wallet",
-      "id": "page_system_1783305991360"
+      "id": "page_system_1786404801345"
+    },
+    {
+      "sourceFile": "/src/app/mastering-allyship/book-tour/help/page.tsx",
+      "lineNumber": 29,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "supporter",
+        "WHAT": "campaign entry",
+        "WHERE": "book-tour",
+        "ENERGY": "offer"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/mastering-allyship/book-tour/help",
+      "entity": "CAMPAIGN",
+      "description": "Book tour help intake, framed as Appendix B's 21-day campaigns rather\nthan as a volunteer form. Same options and same routes; what changed is that the\nunlock is stated here, **before** anybody picks, and the confirmation names the\ncampaign they entered along with its three weeks. An ask revealed after the fact\nis the defect this page was one step away from having.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/mastering-allyship/book-tour/help",
+      "id": "page_campaign_1786404801345"
+    },
+    {
+      "sourceFile": "/src/app/mastering-allyship/book-tour/help/page.tsx",
+      "lineNumber": 29,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "supporter",
+        "WHAT": "campaign entry",
+        "WHERE": "book-tour",
+        "ENERGY": "offer"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/mastering-allyship/book-tour/help",
+      "entity": "CAMPAIGN",
+      "description": "Book tour help intake, framed as Appendix B's 21-day campaigns rather\nthan as a volunteer form. Same options and same routes; what changed is that the\nunlock is stated here, **before** anybody picks, and the confirmation names the\ncampaign they entered along with its three weeks. An ask revealed after the fact\nis the defect this page was one step away from having.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/mastering-allyship/book-tour/help",
+      "id": "page_campaign_1786404801345"
+    },
+    {
+      "sourceFile": "/src/app/mastering-allyship/chapter-1/read/page.tsx",
+      "lineNumber": 50,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "visitor",
+        "WHAT": "Chapter 1 sample",
+        "WHERE": "Mastering Allyship funnel",
+        "ENERGY": "wake_up"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/mastering-allyship/chapter-1/read",
+      "entity": "CAMPAIGN",
+      "description": "Public Chapter 1 lead-magnet reader while the polished PDF receives design.",
+      "permissions": [
+        "chapter-one-signup-required"
+      ],
+      "example": "/mastering-allyship/chapter-1/read",
+      "id": "page_campaign_1786404801346"
+    },
+    {
+      "sourceFile": "/src/app/mastering-allyship/chapter-1/read/page.tsx",
+      "lineNumber": 50,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "visitor",
+        "WHAT": "Chapter 1 sample",
+        "WHERE": "Mastering Allyship funnel",
+        "ENERGY": "wake_up"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/mastering-allyship/chapter-1/read",
+      "entity": "CAMPAIGN",
+      "description": "Public Chapter 1 lead-magnet reader while the polished PDF receives design.",
+      "permissions": [
+        "chapter-one-signup-required"
+      ],
+      "example": "/mastering-allyship/chapter-1/read",
+      "id": "page_campaign_1786404801346"
     },
     {
       "sourceFile": "/src/app/mastering-allyship/myths-read/page.tsx",
@@ -6820,7 +7020,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991360"
+      "id": "page_campaign_1786404801346"
     },
     {
       "sourceFile": "/src/app/mastering-allyship/myths-read/page.tsx",
@@ -6839,7 +7039,57 @@
       "permissions": [
         "public"
       ],
-      "id": "page_campaign_1783305991360"
+      "id": "page_campaign_1786404801346"
+    },
+    {
+      "sourceFile": "/src/app/mastering-allyship/sheet/page.tsx",
+      "lineNumber": 42,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "reader",
+        "WHAT": "artifact",
+        "WHERE": "mastering-allyship",
+        "ENERGY": "practice"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/mastering-allyship/sheet",
+      "entity": "CAMPAIGN",
+      "description": "The character sheet from Appendix H — print PDF, fillable PDF, and the\ninteractive teaching version. **Ungated on purpose**: the printed book says these\nlive at masteringallyship.com, so they are a debt rather than a lead magnet, and\ncharging an email for something already promised in print is the move the book\nspends nine chapters teaching people to spot. The only ask on the page is the\noptional quarterly re-fill reminder, which is Appendix H's own instruction.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/mastering-allyship/sheet",
+      "id": "page_campaign_1786404801346"
+    },
+    {
+      "sourceFile": "/src/app/mastering-allyship/sheet/page.tsx",
+      "lineNumber": 42,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "reader",
+        "WHAT": "artifact",
+        "WHERE": "mastering-allyship",
+        "ENERGY": "practice"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/mastering-allyship/sheet",
+      "entity": "CAMPAIGN",
+      "description": "The character sheet from Appendix H — print PDF, fillable PDF, and the\ninteractive teaching version. **Ungated on purpose**: the printed book says these\nlive at masteringallyship.com, so they are a debt rather than a lead magnet, and\ncharging an email for something already promised in print is the move the book\nspends nine chapters teaching people to spot. The only ask on the page is the\noptional quarterly re-fill reminder, which is Appendix H's own instruction.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/mastering-allyship/sheet",
+      "id": "page_campaign_1786404801346"
     },
     {
       "sourceFile": "/src/app/nation/[id]/page.tsx",
@@ -6865,7 +7115,7 @@
         "public"
       ],
       "example": "/nation/argyra",
-      "id": "page_player_1783305991361"
+      "id": "page_player_1786404801352"
     },
     {
       "sourceFile": "/src/app/nation/[id]/page.tsx",
@@ -6891,7 +7141,7 @@
         "public"
       ],
       "example": "/nation/argyra",
-      "id": "page_player_1783305991361"
+      "id": "page_player_1786404801352"
     },
     {
       "sourceFile": "/src/app/nation/page.tsx",
@@ -6917,7 +7167,7 @@
         "authenticated"
       ],
       "example": "/nation → redirects to /nation/argyra",
-      "id": "page_player_1783305991361"
+      "id": "page_player_1786404801352"
     },
     {
       "sourceFile": "/src/app/nation/page.tsx",
@@ -6943,7 +7193,57 @@
         "authenticated"
       ],
       "example": "/nation → redirects to /nation/argyra",
-      "id": "page_player_1783305991361"
+      "id": "page_player_1786404801352"
+    },
+    {
+      "sourceFile": "/src/app/nonprofit/page.tsx",
+      "lineNumber": 61,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "visitor",
+        "WHAT": "org state",
+        "WHERE": "nonprofit",
+        "ENERGY": "honest_state"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/nonprofit",
+      "entity": "CAMPAIGN",
+      "description": "The organization, in formation — not incorporated, no 501(c)(3)\ndetermination, and **accepting no money**. The disclosure sits above the fold\nrather than in a footnote, because a page that reads like a charity while the\ncharity does not legally exist is the exact move this project's book spends nine\nchapters teaching people to spot. Asks for founding circle, governance, legal\nhelp and a first program site.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/nonprofit",
+      "id": "page_campaign_1786404801352"
+    },
+    {
+      "sourceFile": "/src/app/nonprofit/page.tsx",
+      "lineNumber": 61,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "visitor",
+        "WHAT": "org state",
+        "WHERE": "nonprofit",
+        "ENERGY": "honest_state"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/nonprofit",
+      "entity": "CAMPAIGN",
+      "description": "The organization, in formation — not incorporated, no 501(c)(3)\ndetermination, and **accepting no money**. The disclosure sits above the fold\nrather than in a footnote, because a page that reads like a charity while the\ncharity does not legally exist is the exact move this project's book spends nine\nchapters teaching people to spot. Asks for founding circle, governance, legal\nhelp and a first program site.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/nonprofit",
+      "id": "page_campaign_1786404801352"
     },
     {
       "sourceFile": "/src/app/onboarding/page.tsx",
@@ -6969,7 +7269,7 @@
         "authenticated"
       ],
       "example": "/onboarding",
-      "id": "page_player_1783305991361"
+      "id": "page_player_1786404801352"
     },
     {
       "sourceFile": "/src/app/onboarding/page.tsx",
@@ -6995,7 +7295,7 @@
         "authenticated"
       ],
       "example": "/onboarding",
-      "id": "page_player_1783305991361"
+      "id": "page_player_1786404801352"
     },
     {
       "sourceFile": "/src/app/play/page.tsx",
@@ -7021,7 +7321,7 @@
         "authenticated"
       ],
       "example": "/play",
-      "id": "page_system_1783305991361"
+      "id": "page_system_1786404801352"
     },
     {
       "sourceFile": "/src/app/play/page.tsx",
@@ -7047,7 +7347,59 @@
         "authenticated"
       ],
       "example": "/play",
-      "id": "page_system_1783305991361"
+      "id": "page_system_1786404801352"
+    },
+    {
+      "sourceFile": "/src/app/practice/diagnose/page.tsx",
+      "lineNumber": 18,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "player",
+        "WHAT": "charge diagnostic",
+        "WHERE": "practice",
+        "ENERGY": "emotional_charge",
+        "PERSONAL_THROUGHPUT": "diagnose_before_move"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/practice/diagnose",
+      "entity": "EMOTIONALVECTOR",
+      "description": "Charge Diagnostic — turns a live charge into a structured, composer-ready emotional vector. Pre-card raw flow; raw text never leaves the client (§1.6).",
+      "permissions": [
+        "public"
+      ],
+      "example": "/practice/diagnose",
+      "id": "page_emotionalvector_1786404801352"
+    },
+    {
+      "sourceFile": "/src/app/practice/diagnose/page.tsx",
+      "lineNumber": 18,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "player",
+        "WHAT": "charge diagnostic",
+        "WHERE": "practice",
+        "ENERGY": "emotional_charge",
+        "PERSONAL_THROUGHPUT": "diagnose_before_move"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": false,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/practice/diagnose",
+      "entity": "EMOTIONALVECTOR",
+      "description": "Charge Diagnostic — turns a live charge into a structured, composer-ready emotional vector. Pre-card raw flow; raw text never leaves the client (§1.6).",
+      "permissions": [
+        "public"
+      ],
+      "example": "/practice/diagnose",
+      "id": "page_emotionalvector_1786404801352"
     },
     {
       "sourceFile": "/src/app/pricing/page.tsx",
@@ -7072,7 +7424,7 @@
         "public"
       ],
       "example": "/pricing",
-      "id": "page_system_1783305991361"
+      "id": "page_system_1786404801352"
     },
     {
       "sourceFile": "/src/app/pricing/page.tsx",
@@ -7097,7 +7449,7 @@
         "public"
       ],
       "example": "/pricing",
-      "id": "page_system_1783305991361"
+      "id": "page_system_1786404801352"
     },
     {
       "sourceFile": "/src/app/quest/[questId]/unpack/page.tsx",
@@ -7124,7 +7476,7 @@
         "owner_or_claimer"
       ],
       "example": "/quest/quest_123/unpack",
-      "id": "page_quest_1783305991361"
+      "id": "page_quest_1786404801353"
     },
     {
       "sourceFile": "/src/app/quest/[questId]/unpack/page.tsx",
@@ -7151,7 +7503,7 @@
         "owner_or_claimer"
       ],
       "example": "/quest/quest_123/unpack",
-      "id": "page_quest_1783305991361"
+      "id": "page_quest_1786404801353"
     },
     {
       "sourceFile": "/src/app/quest/create/page.tsx",
@@ -7178,7 +7530,7 @@
         "profile_complete"
       ],
       "example": "/quest/create?from=gameboard&questId=q123&slotId=s456&campaignRef=bruised-banana",
-      "id": "page_quest_1783305991368"
+      "id": "page_quest_1786404801353"
     },
     {
       "sourceFile": "/src/app/quest/create/page.tsx",
@@ -7205,7 +7557,7 @@
         "profile_complete"
       ],
       "example": "/quest/create?from=gameboard&questId=q123&slotId=s456&campaignRef=bruised-banana",
-      "id": "page_quest_1783305991368"
+      "id": "page_quest_1786404801353"
     },
     {
       "sourceFile": "/src/app/quest/page.tsx",
@@ -7232,7 +7584,7 @@
         "game_account_ready"
       ],
       "example": "/quest",
-      "id": "page_quest_1783305991368"
+      "id": "page_quest_1786404801353"
     },
     {
       "sourceFile": "/src/app/quest/page.tsx",
@@ -7259,7 +7611,7 @@
         "game_account_ready"
       ],
       "example": "/quest",
-      "id": "page_quest_1783305991368"
+      "id": "page_quest_1786404801353"
     },
     {
       "sourceFile": "/src/app/reliquary/page.tsx",
@@ -7285,7 +7637,7 @@
         "authenticated"
       ],
       "example": "/reliquary",
-      "id": "page_player_1783305991368"
+      "id": "page_player_1786404801353"
     },
     {
       "sourceFile": "/src/app/reliquary/page.tsx",
@@ -7311,7 +7663,7 @@
         "authenticated"
       ],
       "example": "/reliquary",
-      "id": "page_player_1783305991368"
+      "id": "page_player_1786404801353"
     },
     {
       "sourceFile": "/src/app/shadow/321/page.tsx",
@@ -7337,7 +7689,7 @@
         "authenticated"
       ],
       "example": "/shadow/321?chargeBarId=bar_123&returnTo=/capture&personalMove=growUp",
-      "id": "page_system_1783305991368"
+      "id": "page_system_1786404801353"
     },
     {
       "sourceFile": "/src/app/shadow/321/page.tsx",
@@ -7363,7 +7715,7 @@
         "authenticated"
       ],
       "example": "/shadow/321?chargeBarId=bar_123&returnTo=/capture&personalMove=growUp",
-      "id": "page_system_1783305991368"
+      "id": "page_system_1786404801353"
     },
     {
       "sourceFile": "/src/app/signup/page.tsx",
@@ -7389,7 +7741,7 @@
         "public"
       ],
       "example": "/signup?returnTo=/deck",
-      "id": "page_player_1783305991368"
+      "id": "page_player_1786404801353"
     },
     {
       "sourceFile": "/src/app/signup/page.tsx",
@@ -7415,7 +7767,57 @@
         "public"
       ],
       "example": "/signup?returnTo=/deck",
-      "id": "page_player_1783305991368"
+      "id": "page_player_1786404801353"
+    },
+    {
+      "sourceFile": "/src/app/speaking/page.tsx",
+      "lineNumber": 58,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "organizer",
+        "WHAT": "offer",
+        "WHERE": "speaking",
+        "ENERGY": "invite"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/speaking",
+      "entity": "CAMPAIGN",
+      "description": "Speaking and workshops — the promise Chapter 9's *What Comes Next*\nmakes in print. Fees are on the page rather than behind an enquiry, because a\npage that hides the number is asking the reader to spend a conversation\nfinding out she cannot afford it. Two one-sheets attach: corporate and\nfield/outdoor.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/speaking",
+      "id": "page_campaign_1786404801353"
+    },
+    {
+      "sourceFile": "/src/app/speaking/page.tsx",
+      "lineNumber": 58,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "organizer",
+        "WHAT": "offer",
+        "WHERE": "speaking",
+        "ENERGY": "invite"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/speaking",
+      "entity": "CAMPAIGN",
+      "description": "Speaking and workshops — the promise Chapter 9's *What Comes Next*\nmakes in print. Fees are on the page rather than behind an enquiry, because a\npage that hides the number is asking the reader to spend a conversation\nfinding out she cannot afford it. Two one-sheets attach: corporate and\nfield/outdoor.",
+      "permissions": [
+        "public"
+      ],
+      "example": "/speaking",
+      "id": "page_campaign_1786404801353"
     },
     {
       "sourceFile": "/src/app/story/[id]/page.tsx",
@@ -7441,7 +7843,7 @@
         "authenticated"
       ],
       "example": "/story/invitation",
-      "id": "page_system_1783305991368"
+      "id": "page_system_1786404801353"
     },
     {
       "sourceFile": "/src/app/story/[id]/page.tsx",
@@ -7467,7 +7869,7 @@
         "authenticated"
       ],
       "example": "/story/invitation",
-      "id": "page_system_1783305991368"
+      "id": "page_system_1786404801353"
     },
     {
       "sourceFile": "/src/app/story/page.tsx",
@@ -7493,7 +7895,7 @@
         "authenticated"
       ],
       "example": "/story",
-      "id": "page_system_1783305991369"
+      "id": "page_system_1786404801353"
     },
     {
       "sourceFile": "/src/app/story/page.tsx",
@@ -7519,7 +7921,57 @@
         "authenticated"
       ],
       "example": "/story",
-      "id": "page_system_1783305991369"
+      "id": "page_system_1786404801353"
+    },
+    {
+      "sourceFile": "/src/app/succession/page.tsx",
+      "lineNumber": 25,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "practitioner",
+        "WHAT": "waitlist",
+        "WHERE": "succession",
+        "ENERGY": "honest_state"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/succession",
+      "entity": "CAMPAIGN",
+      "description": "Certification and succession — overdue by a printing. Chapter 9 puts\nwendell@masteringallyship.com in print next to certification with no intake behind\nit, so people wrote to an address that led nowhere. **Nothing is sold here.** The\npage states the actual current state and offers a waitlist, which enters no\nsequence (see src/lib/esp/list-contract.ts).",
+      "permissions": [
+        "public"
+      ],
+      "example": "/succession",
+      "id": "page_campaign_1786404801353"
+    },
+    {
+      "sourceFile": "/src/app/succession/page.tsx",
+      "lineNumber": 25,
+      "params": [],
+      "query": [],
+      "relationships": [],
+      "dimensions": {
+        "WHO": "practitioner",
+        "WHAT": "waitlist",
+        "WHERE": "succession",
+        "ENERGY": "honest_state"
+      },
+      "energyCost": 0,
+      "agentDiscoverable": true,
+      "experimental": false,
+      "method": "PAGE",
+      "pattern": "/succession",
+      "entity": "CAMPAIGN",
+      "description": "Certification and succession — overdue by a printing. Chapter 9 puts\nwendell@masteringallyship.com in print next to certification with no intake behind\nit, so people wrote to an address that led nowhere. **Nothing is sold here.** The\npage states the actual current state and offers a waitlist, which enters no\nsequence (see src/lib/esp/list-contract.ts).",
+      "permissions": [
+        "public"
+      ],
+      "example": "/succession",
+      "id": "page_campaign_1786404801353"
     },
     {
       "sourceFile": "/src/app/swap-organizer/[slug]/page.tsx",
@@ -7546,7 +7998,7 @@
         "organizer_or_admin"
       ],
       "example": "/swap-organizer/pdx-art-swap-2026",
-      "id": "page_event_1783305991369"
+      "id": "page_event_1786404801354"
     },
     {
       "sourceFile": "/src/app/swap-organizer/[slug]/page.tsx",
@@ -7573,7 +8025,7 @@
         "organizer_or_admin"
       ],
       "example": "/swap-organizer/pdx-art-swap-2026",
-      "id": "page_event_1783305991369"
+      "id": "page_event_1786404801354"
     },
     {
       "sourceFile": "/src/app/threshold-encounter/[id]/page.tsx",
@@ -7600,7 +8052,7 @@
         "owner_only"
       ],
       "example": "/threshold-encounter/enc_123",
-      "id": "page_quest_1783305991369"
+      "id": "page_quest_1786404801354"
     },
     {
       "sourceFile": "/src/app/threshold-encounter/[id]/page.tsx",
@@ -7627,7 +8079,7 @@
         "owner_only"
       ],
       "example": "/threshold-encounter/enc_123",
-      "id": "page_quest_1783305991369"
+      "id": "page_quest_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/all/page.tsx",
@@ -7651,7 +8103,7 @@
         "authenticated"
       ],
       "example": "/vault/all",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/all/page.tsx",
@@ -7675,7 +8127,7 @@
         "authenticated"
       ],
       "example": "/vault/all",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/charges/page.tsx",
@@ -7701,7 +8153,7 @@
         "authenticated"
       ],
       "example": "/vault/charges",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/charges/page.tsx",
@@ -7727,7 +8179,7 @@
         "authenticated"
       ],
       "example": "/vault/charges",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/compost/page.tsx",
@@ -7753,7 +8205,7 @@
         "authenticated"
       ],
       "example": "/vault/compost",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/compost/page.tsx",
@@ -7779,7 +8231,7 @@
         "authenticated"
       ],
       "example": "/vault/compost",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/drafts/page.tsx",
@@ -7805,7 +8257,7 @@
         "authenticated"
       ],
       "example": "/vault/drafts",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/drafts/page.tsx",
@@ -7831,7 +8283,7 @@
         "authenticated"
       ],
       "example": "/vault/drafts",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/invitations/page.tsx",
@@ -7857,7 +8309,7 @@
         "authenticated"
       ],
       "example": "/vault/invitations",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/invitations/page.tsx",
@@ -7883,7 +8335,7 @@
         "authenticated"
       ],
       "example": "/vault/invitations",
-      "id": "page_bar_1783305991369"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/open-up/page.tsx",
@@ -7908,7 +8360,7 @@
         "authenticated"
       ],
       "example": "/vault/open-up",
-      "id": "page_bar_1783305991370"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/open-up/page.tsx",
@@ -7933,7 +8385,7 @@
         "authenticated"
       ],
       "example": "/vault/open-up",
-      "id": "page_bar_1783305991370"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/page.tsx",
@@ -7959,7 +8411,7 @@
         "authenticated"
       ],
       "example": "/vault?quest=quest-123",
-      "id": "page_system_1783305991370"
+      "id": "page_system_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/page.tsx",
@@ -7985,7 +8437,7 @@
         "authenticated"
       ],
       "example": "/vault?quest=quest-123",
-      "id": "page_system_1783305991370"
+      "id": "page_system_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/quests/page.tsx",
@@ -8010,7 +8462,7 @@
         "authenticated"
       ],
       "example": "/vault/quests?quest=quest_123",
-      "id": "page_quest_1783305991370"
+      "id": "page_quest_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/quests/page.tsx",
@@ -8035,7 +8487,7 @@
         "authenticated"
       ],
       "example": "/vault/quests?quest=quest_123",
-      "id": "page_quest_1783305991370"
+      "id": "page_quest_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/who/page.tsx",
@@ -8061,7 +8513,7 @@
         "authenticated"
       ],
       "example": "/vault/who",
-      "id": "page_bar_1783305991370"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/vault/who/page.tsx",
@@ -8087,7 +8539,7 @@
         "authenticated"
       ],
       "example": "/vault/who",
-      "id": "page_bar_1783305991370"
+      "id": "page_bar_1786404801354"
     },
     {
       "sourceFile": "/src/app/wallet/page.tsx",
@@ -8113,7 +8565,7 @@
         "authenticated"
       ],
       "example": "/wallet",
-      "id": "page_player_1783305991370"
+      "id": "page_player_1786404801355"
     },
     {
       "sourceFile": "/src/app/wallet/page.tsx",
@@ -8139,7 +8591,7 @@
         "authenticated"
       ],
       "example": "/wallet",
-      "id": "page_player_1783305991370"
+      "id": "page_player_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/321-shadow-process/page.tsx",
@@ -8158,7 +8610,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_wiki_1783305991370"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/321-shadow-process/page.tsx",
@@ -8177,7 +8629,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_wiki_1783305991370"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/archetypes/page.tsx",
@@ -8203,7 +8655,7 @@
         "public"
       ],
       "example": "/wiki/archetypes",
-      "id": "page_wiki_1783305991370"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/archetypes/page.tsx",
@@ -8229,7 +8681,7 @@
         "public"
       ],
       "example": "/wiki/archetypes",
-      "id": "page_wiki_1783305991370"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/campaign/bruised-banana/house/page.tsx",
@@ -8255,7 +8707,7 @@
         "public"
       ],
       "example": "/wiki/campaign/bruised-banana/house",
-      "id": "page_wiki_1783305991370"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/campaign/bruised-banana/house/page.tsx",
@@ -8281,7 +8733,7 @@
         "public"
       ],
       "example": "/wiki/campaign/bruised-banana/house",
-      "id": "page_wiki_1783305991370"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/glossary/page.tsx",
@@ -8307,7 +8759,7 @@
         "public"
       ],
       "example": "/wiki/glossary",
-      "id": "page_wiki_1783305991370"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/glossary/page.tsx",
@@ -8333,7 +8785,7 @@
         "public"
       ],
       "example": "/wiki/glossary",
-      "id": "page_wiki_1783305991370"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/grid-deck/page.tsx",
@@ -8359,7 +8811,7 @@
         "public"
       ],
       "example": "/wiki/grid-deck",
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/grid-deck/page.tsx",
@@ -8385,7 +8837,7 @@
         "public"
       ],
       "example": "/wiki/grid-deck",
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/handbook/play/page.tsx",
@@ -8404,7 +8856,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/handbook/play/page.tsx",
@@ -8423,7 +8875,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/hidden/grill-master/page.tsx",
@@ -8443,7 +8895,7 @@
         "public (hidden",
         "no nav link)"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801355"
     },
     {
       "sourceFile": "/src/app/wiki/hidden/grill-master/page.tsx",
@@ -8463,7 +8915,7 @@
         "public (hidden",
         "no nav link)"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     },
     {
       "sourceFile": "/src/app/wiki/hidden/page.tsx",
@@ -8483,7 +8935,7 @@
         "public (hidden",
         "no nav link)"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     },
     {
       "sourceFile": "/src/app/wiki/hidden/page.tsx",
@@ -8503,7 +8955,7 @@
         "public (hidden",
         "no nav link)"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     },
     {
       "sourceFile": "/src/app/wiki/hidden/signal/page.tsx",
@@ -8523,7 +8975,7 @@
         "public (hidden",
         "no nav link)"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     },
     {
       "sourceFile": "/src/app/wiki/hidden/signal/page.tsx",
@@ -8543,7 +8995,7 @@
         "public (hidden",
         "no nav link)"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     },
     {
       "sourceFile": "/src/app/wiki/nations/page.tsx",
@@ -8569,7 +9021,7 @@
         "public"
       ],
       "example": "/wiki/nations",
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     },
     {
       "sourceFile": "/src/app/wiki/nations/page.tsx",
@@ -8595,7 +9047,7 @@
         "public"
       ],
       "example": "/wiki/nations",
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     },
     {
       "sourceFile": "/src/app/wiki/privacy/page.tsx",
@@ -8614,7 +9066,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     },
     {
       "sourceFile": "/src/app/wiki/privacy/page.tsx",
@@ -8633,7 +9085,7 @@
       "permissions": [
         "public"
       ],
-      "id": "page_wiki_1783305991371"
+      "id": "page_wiki_1786404801356"
     }
   ],
   "relationships": {
