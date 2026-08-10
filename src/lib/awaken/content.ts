@@ -7,6 +7,8 @@
  * touching component logic.
  */
 
+import { BOOK_DIGITAL_GUMROAD_URL } from '@/lib/launch/book-offer'
+
 export type AwakenEvent = {
   /** Stable key persisted on FunnelSignup.events — do not rename casually. */
   key: string
@@ -112,8 +114,15 @@ export const AWAKEN_CROSSING_HREF = '/campaign/the-crossing'
 /** The Allyship Deck sales page. */
 export const AWAKEN_DECK_SALES_HREF = '/deck/sales'
 
-/** The Mastering the Game of Allyship book sales page (external). */
-export const AWAKEN_BOOK_SALES_HREF = 'https://wendellbritt.gumroad.com/l/MTGOAbook'
+/**
+ * The Mastering the Game of Allyship book sales page (external).
+ *
+ * Re-exported from the shared definition rather than written out again here, so
+ * this funnel and the `book-digital` offer on /launch and /mastering-allyship
+ * can never advertise two different links (or two different states) for the same
+ * product. Change the URL in `lib/launch/book-offer.ts`, not here.
+ */
+export const AWAKEN_BOOK_SALES_HREF = BOOK_DIGITAL_GUMROAD_URL
 
 /** Where "buy products / explore the offers" points. */
 export const AWAKEN_PRODUCTS_HREF = '/launch'
