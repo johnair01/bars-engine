@@ -42,12 +42,12 @@ export type TheCrossingPageContent = {
 export const THE_CROSSING_PAGE_DEFAULT_CONTENT: TheCrossingPageContent = {
   chrome: {
     label: 'The Crossing',
-    awakenLink: 'Book-launch weekend →',
+    awakenLink: 'Where this stands →',
   },
   hero: {
-    parentLabel: '◇ Part of the Allyship Launch · Barn Raising',
+    parentLabel: '◇ Part of the Allyship Launch · The Press Run',
     title: 'The Crossing',
-    subtitle: 'Wendell needs a reliable car to keep showing up.',
+    subtitle: 'Three hundred seventy-one backers paid for a printed book and are still holding a receipt.',
     body: 'Every kind of help moves this forward. Choose the path that fits what you can actually offer.',
     primaryCta: 'Choose Your Move →',
     secondaryCta: 'Read the full story',
@@ -62,7 +62,7 @@ export const THE_CROSSING_PAGE_DEFAULT_CONTENT: TheCrossingPageContent = {
     gates: [
       {
         domain: 'GATHERING_RESOURCES',
-        blurb: 'Bring what the campaign needs into reach — cars, money, people.',
+        blurb: 'Bring what the campaign needs into reach: printers, money, people.',
       },
       {
         domain: 'SKILLFUL_ORGANIZING',
@@ -89,7 +89,7 @@ export const THE_CROSSING_PAGE_DEFAULT_CONTENT: TheCrossingPageContent = {
   },
   awaken: {
     body:
-      'Here for the book launch? The July 17–19 gatherings live on /awaken.',
+      'Here for the book itself? The press run, the tour and Chapter One live on /awaken.',
     href: '/awaken',
     cta: '→',
   },

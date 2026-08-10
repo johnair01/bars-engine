@@ -1,5 +1,5 @@
 /**
- * The Milestone BAR — three-wall "barn raising" config for the July 18 send-off.
+ * The Milestone BAR — three-wall "barn raising" config for the press run and the book tour.
  *
  * Single source of truth for the barn's three walls (the three *kinds* of money) plus the
  * in-kind "hands & beams" readout. Presentational components read this; it can later be
@@ -40,14 +40,18 @@ export interface BarnWall {
 /** Confirmed targets (host, 2026-06-14). Presale is a modeled goal (units + $). */
 export const BARN_WALLS: readonly BarnWall[] = [
   {
+    // The stored key stays `car`: Milestone rows, donation credits and the `?wall=`
+    // param all persist it, and the campaign that raised this wall is complete. The
+    // object moved to the press run; renaming the discriminator would orphan the
+    // history rather than carry it. Display copy is the only thing that changed.
     key: "car",
-    name: "Replace the car",
+    name: "The press run",
     kind: "gift",
     blurb:
-      "The priority wall. A reliable replacement for the car that died — fills first.",
-    targetCents: 850_000, // $8,500 all-in (car + tax/title/reg + inspection + contingency)
+      "Three hundred seventy-one people paid for a printed book and are still holding a receipt. This wall covers the print bill that puts a copy in their hands.",
+    targetCents: 850_000,
     cadence: "once",
-    cta: { label: "Chip in for the car", href: "/event/donate?dswPath=money&wall=car" },
+    cta: { label: "Chip in for the press run", href: "/event/donate?dswPath=money&wall=car" },
     accent: {
       bar: "from-amber-600 to-orange-500",
       text: "text-amber-300",

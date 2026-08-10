@@ -58,7 +58,12 @@ export async function sendRsvpConfirmationEmail(opts: {
   const props = { events, homeUrl, firstName: opts.firstName ?? null }
   return sendEmail({
     to: opts.to,
-    subject: `You're on the list — July 17–19`,
+    // Derived from the stops they actually picked. A hardcoded date outlives the
+    // event it names and then confirms people into a weekend that already ran.
+    subject:
+      events.length === 1
+        ? `You're on the list — ${events[0].when}`
+        : `You're on the list — ${events.length} stops`,
     react: RsvpConfirmationEmail(props),
     text: rsvpConfirmationText(props),
     tags: [{ name: 'funnel', value: 'awaken-rsvp' }],

@@ -173,6 +173,17 @@ function EventsCard({ content }: { content: AwakenPageContent }) {
     <Card accent="green" badge={content.moves.events.badge} title={content.moves.events.title}>
       <p className="text-sm leading-relaxed text-zinc-300">{content.moves.events.body}</p>
 
+      {/* No dated stop on the board is the normal state between tours, so the card
+          falls back to its own link rather than rendering an empty well. */}
+      {content.events.length === 0 && content.moves.events.href && (
+        <Link
+          href={content.moves.events.href}
+          className="mt-4 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500"
+        >
+          {content.moves.events.cta}
+        </Link>
+      )}
+
       <div className="mt-4 space-y-2">
         {content.events.map((ev) => (
           <div key={ev.key} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
