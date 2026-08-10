@@ -5,6 +5,8 @@ import { db } from '@/lib/db'
 import type { Prisma } from '@prisma/client'
 import { getCurrentPlayer } from '@/lib/auth'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
+import { syncSubscriber } from '@/lib/esp/kit'
+import { buildMythsReadTags } from '@/lib/esp/list-contract'
 import {
   MYTH_BY_ID,
   MYTH_CHARGE_FLAVORS,
@@ -149,6 +151,32 @@ export async function saveMythRead(input: {
 
       return { mythReadId: mythRead.id, barId }
     })
+
+    // The list sync runs on email submit only. Finishing the read without
+    // submitting an address stays anonymous, which is the whole reason the
+    // form is a separate step from the result.
+    //
+    // Persist-then-send: the MythRead row is already committed above, so a Kit
+    // outage costs us a copy of the lead, never the lead.
+    if (email) {
+      const topMyth = payload.topMyths[0] ?? null
+      if (topMyth) {
+        const secondMyth = payload.topMyths[1] ?? null
+        const strength =
+          payload.mythScores.find((entry) => entry.myth === topMyth)?.strength ?? null
+        await syncSubscriber({
+          email,
+          tags: buildMythsReadTags({ topMyth, secondMyth, strength }),
+          fields: {
+            top_myth: topMyth,
+            top_myth_name: MYTH_BY_ID[topMyth].short,
+            ...(secondMyth ? { second_myth: secondMyth } : {}),
+            ...(strength ? { strength: strength.toLowerCase() } : {}),
+            taken_at: new Date().toISOString().slice(0, 10),
+          },
+        })
+      }
+    }
 
     revalidatePath('/mastering-allyship/myths-read')
     if (created.barId) {

@@ -90,6 +90,7 @@
     "test:vault-limits": "tsx src/lib/__tests__/vault-limits.test.ts",
     "test:book-paywall": "tsx src/lib/__tests__/book-launch-paywall.test.ts",
     "test:chapter-one-lead": "tsx src/lib/mastering-allyship/__tests__/chapter-one-lead.test.ts",
+    "test:list-contract": "tsx src/lib/esp/__tests__/list-contract.test.ts",
     "test:chapter-one-lead:db": "tsx scripts/verify-chapter-one-lead-db.ts",
     "test:allyship-deck": "tsx src/lib/allyship-deck/__tests__/assemble.test.ts && tsx src/lib/allyship-deck/__tests__/card-visuals.test.ts && tsx src/lib/allyship-deck/__tests__/seed.test.ts",
     "test:deck-pending-intent": "tsx src/lib/__tests__/deck-pending-intent.test.ts",

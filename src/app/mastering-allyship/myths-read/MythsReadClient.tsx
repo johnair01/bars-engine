@@ -345,6 +345,11 @@ export function MythsReadClient() {
               )}
             </section>
 
+            <p className={styles.sheetCrossLink}>
+              That is line three of your character sheet.{' '}
+              <Link href="/mastering-allyship/sheet">Here are the other twelve</Link>.
+            </p>
+
             <button type="button" className={styles.retake} onClick={reset}>
               ↺ Retake the read
             </button>

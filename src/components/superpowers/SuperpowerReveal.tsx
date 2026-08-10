@@ -13,9 +13,12 @@
  *      the taker from *finding* their superpower to *making one concrete move* in
  *      The Crossing (their superpower lens on the campaign + a matched role move);
  *   d. full spectrum — all seven ranked, so the result reads as a position;
+ *   f. the character-sheet cross-link and an optional save (the result and the
+ *      avoided Face, by email);
  *   e. framing note — lens, not verdict; the taker is the authority.
  *
- * NO email gate. All element color flows through --bars-* tokens (scoped via
+ * NO email gate — (f) sits below the whole result and asks rather than blocks.
+ * All element color flows through --bars-* tokens (scoped via
  * data-element). The liminal-purple action ramp is the reserved non-element
  * action hue (see bars-tokens.css). UI_COVENANT: layout only in Tailwind/inline.
  */
@@ -33,6 +36,8 @@ import {
 } from '@/lib/superpowers/crossing-path'
 import type { SuperpowerRoutingResult } from '@/lib/superpowers/routing'
 import type { ResultCopy } from '@/lib/superpowers/quiz/descriptions'
+import { EmailCaptureForm } from '@/components/leads/EmailCaptureForm'
+import { captureSuperpowerLead } from '@/actions/leads'
 
 export interface SuperpowerRevealProps {
   routing: SuperpowerRoutingResult
@@ -56,6 +61,10 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
   const primaryDef = SUPERPOWER_DEFS[primary]
   const secondaryDef = SUPERPOWER_DEFS[routing.secondary]
   const element = superpowerElement(primary)
+  // Bottom of the ranking. Chapter 9 treats the avoided Face as the more
+  // interesting datum, so the reveal names it rather than leaving it to be
+  // inferred from a spectrum most people never open.
+  const avoidedFace = routing.ranked[routing.ranked.length - 1]?.superpower ?? routing.secondary
 
   // The Aligned Action lens uses the chosen orientation; fall back to the
   // world-facing lens when the orientation item was skipped.
@@ -368,6 +377,35 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
           })}
         </div>
       </details>
+
+      {/* f. The sheet cross-link, and an optional save.
+          Still no gate: the whole result is above this block and stays readable
+          without an address. What an address buys is stated before it is asked
+          for, which is the only condition this surface has to meet. */}
+      <div
+        className="flex flex-col gap-[13px] rounded-xl px-4 py-[15px]"
+        style={{ background: 'var(--bars-surface-card)', boxShadow: 'inset 0 1px 0 var(--bars-inset-top), 0 0 0 1px var(--bars-line)' }}
+      >
+        <p className="text-[13px]" style={{ ...BODY, lineHeight: 1.55, color: 'var(--bars-text-secondary)' }}>
+          That is one line of your character sheet.{' '}
+          <Link href="/mastering-allyship/sheet" style={{ color: PURPLE.outline }}>
+            Here are the other twelve
+          </Link>
+          .
+        </p>
+        <EmailCaptureForm
+          promise={`Want this kept? I will send your result and the Face you ranked last — ${SUPERPOWER_DEFS[avoidedFace].label}. Chapter 9 argues the avoided Face is the more interesting half.`}
+          submitLabel="Send me my result"
+          onSubmit={({ email, name }) =>
+            captureSuperpowerLead({
+              email,
+              name,
+              homeFace: SUPERPOWER_DEFS[primary].label,
+              avoidedFace: SUPERPOWER_DEFS[avoidedFace].label,
+            })
+          }
+        />
+      </div>
 
       {/* e. Framing — lens, not verdict. */}
       <p className="text-[12px]" style={{ ...BODY, lineHeight: 1.6, color: 'var(--bars-text-muted)' }}>

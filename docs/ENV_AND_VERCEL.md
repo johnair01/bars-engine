@@ -145,6 +145,37 @@ Outbound email (Chapter One delivery, `/awaken` RSVP confirmations) sends via
 3. **Graceful degradation**: when `RESEND_API_KEY`/`EMAIL_FROM` are unset, sends are **logged and skipped** rather than throwing — the funnel still saves the lead, it just can't deliver yet.
 4. **Deliverability is gated on DNS**: `EMAIL_FROM`'s domain must be verified in Resend with **SPF, DKIM, and DMARC** records, or mail lands in spam. See Resend → Domains for the exact records.
 
+### KIT_API_KEY (the email list)
+
+The Myths Read, the Superpower quiz, Chapter One and the character sheet's
+quarterly nudge all sync to [Kit](https://kit.com) through the single client at
+`src/lib/esp/kit.ts`. Free to 10,000 subscribers.
+
+| Variable | Required | Meaning |
+|----------|----------|---------|
+| `KIT_API_KEY` | yes (to sync) | Kit → Settings → Developer → API keys. The **v4** key, sent as `X-Kit-Api-Key`. |
+
+1. **Local**: add it to `.env.local`. Leaving it unset is a supported state.
+2. **Vercel**: Dashboard → Settings → Environment Variables (Production + Preview).
+3. **Graceful degradation**: with no key, every sync is **logged and skipped**.
+   The lead is already committed to `FunnelSignup` / `MythRead` before the sync
+   runs, so an unset key or a Kit outage costs a copy, never the lead itself.
+4. **Tags and custom fields are created on demand.** The client resolves a tag
+   name to an id, creating it when it does not exist, and caches the map per
+   process.
+
+**Who may enter a sequence is decided in `src/lib/esp/list-contract.ts`, not in
+the client.** Two rules are enforced there and covered by
+`npm run test:list-contract`:
+
+- **Kickstarter backers never enter any sequence.** They were promised roughly
+  four broadcasts a year and no funnel. A backer who later takes a quiz is still
+  a backer, so the exclusion is checked against tags they already carry as well
+  as the ones being applied.
+- **Retaking updates, it does not re-enter.** Sequence-triggering tags are
+  applied on first creation only. Retaking a quiz refreshes the data tags and
+  the custom fields on the existing subscriber.
+
 ### STRAND_CREATOR_PLAYER_ID (FastAPI / bars-agents)
 
 Strand and MCP-generated BARs attach to a **dedicated agent `Player`**, not an arbitrary first user.
