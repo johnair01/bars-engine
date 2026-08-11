@@ -132,6 +132,17 @@ export default function OriginPage() {
           book&apos;s. Choosing on a page stays the easy version, and the sheet is how you find
           out whether the choosing got faster.
         </p>
+
+        <p className="text-sm leading-relaxed text-zinc-500">
+          Chapter 9 puts two paths on the other side of the book, and{' '}
+          <Link
+            href="/mastering-allyship/what-comes-next"
+            className="text-zinc-300 underline underline-offset-4"
+          >
+            they are laid out here
+          </Link>
+          .
+        </p>
       </div>
     </main>
   )
