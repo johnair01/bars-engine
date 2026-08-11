@@ -129,6 +129,14 @@ export default function SpeakingPage() {
             wendell@masteringallyship.com
           </a>
         </section>
+
+        <p className="text-sm leading-relaxed text-zinc-500">
+          Running a show rather than an event? Coming on a podcast costs nothing and{' '}
+          <Link href="/podcasts" className="text-zinc-300 underline underline-offset-4">
+            has its own page
+          </Link>
+          .
+        </p>
       </div>
     </main>
   )

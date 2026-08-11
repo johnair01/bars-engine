@@ -129,6 +129,14 @@ export default function CharacterSheetPage() {
           </div>
         </section>
 
+        <p className="text-sm leading-relaxed text-zinc-500">
+          Lines one and three tend to disagree with each other, and{' '}
+          <Link href="/mastering-allyship/origin" className="text-zinc-300 underline underline-offset-4">
+            the page about why is here
+          </Link>
+          .
+        </p>
+
         <CharacterSheetNudge />
       </div>
     </main>
