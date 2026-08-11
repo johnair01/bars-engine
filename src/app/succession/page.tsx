@@ -62,6 +62,13 @@ export default function SuccessionPage() {
             A curriculum, a cohort, a price, a date, or a credential. Nothing on this page is
             for sale, and there is no deposit to place or seat to hold.
           </p>
+          <h2 className="text-lg font-bold">What succession means here</h2>
+          <p className="text-sm leading-relaxed text-zinc-400">
+            The book names it at the end of Chapter 9, and the definition is narrower than the
+            word usually is. Wanting the method itself — to run these six Faces for other
+            people, rather than only for what you are building — is the succession the book was
+            written to make possible, and it is the work I most want to hand off.
+          </p>
           <h2 className="text-lg font-bold">What happens next</h2>
           <p className="text-sm leading-relaxed text-zinc-400">
             If a certification gets built, it gets built with the people who were already

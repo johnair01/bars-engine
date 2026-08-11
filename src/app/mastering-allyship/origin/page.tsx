@@ -2,38 +2,33 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Your origin — Mastering the Game of Allyship',
+  title: 'The Face that never came up — Mastering the Game of Allyship',
   description:
-    'The Face your history handed you and the Face you are strongest in are rarely the same one. Both quizzes name theirs; this page is where you put them side by side and date it.',
+    'Chapter 9 ends on a drill. Which Face answers a given moment, why the answer need not match the superpower your Face came with, and what to do with the Face that never came up at all.',
 }
 
 /**
- * Chapter 9, p309. Wendell writes this one.
+ * Chapter 9's closing argument, quoted from the shipped trade edition.
  *
- * The page below carries the MECHANISM — both quizzes, the comparison, the
- * dated sheet line. What it deliberately does not carry is the book's own
- * argument for why the two Faces diverge, because that argument is on a page of
- * a book this repo does not contain, and writing a plausible version of
- * somebody else's chapter is how a product surface ends up teaching the wrong
- * thing in the author's name.
- *
- * Set this to the passage (or a re-aimed version of it) and the section
- * renders above the two quizzes. Left null, the page still works: it asks the
- * question and hands over the two instruments that answer it. Do NOT substitute
- * a bracketed placeholder — placeholders typeset, and they ship.
+ * Kept verbatim rather than paraphrased. It is two sentences, it stands up
+ * without the 300 pages in front of it, and it is the whole reason the page
+ * exists — so re-aiming it would cost the thing it was brought here for.
  */
-const ORIGIN_PASSAGE: string | null = null
+const ORIGIN_PULL_QUOTE =
+  'Choosing between the Faces on a page is the easy version. The skill is choosing between them at speed, with something real at stake, while the moment is still open.'
 
 /**
  * @page /mastering-allyship/origin
  * @entity CAMPAIGN
- * @description The history-face vs. superpower-face page Chapter 9 p309 promises. Routes
- *   the Superpower quiz (which names a Home Face and an avoided Face) and the Myths Read
- *   into one frame, and lands on the character sheet where the pair gets dated. The
- *   book's own exposition is a typed null awaiting Wendell — see ORIGIN_PASSAGE.
+ * @description The page Chapter 9's closing drill points at. Its argument, from the book:
+ *   the Face that answers a given moment need not match the superpower your Face came
+ *   with, and the Face that never came up at all is the one worth walking toward. Routes
+ *   the Superpower quiz (which already computes the avoided Face) into that frame and
+ *   lands on the character sheet, where the chapter's own instruction applies — give it a
+ *   name and a date, or it is a resolution.
  * @permissions public
  * @relationships /superpower, /mastering-allyship/myths-read, /mastering-allyship/sheet
- * @dimensions WHO:reader, WHAT:frame, WHERE:mastering-allyship, ENERGY:reflect
+ * @dimensions WHO:reader, WHAT:drill, WHERE:mastering-allyship, ENERGY:practice
  * @example /mastering-allyship/origin
  * @agentDiscoverable true
  */
@@ -46,7 +41,7 @@ export default function OriginPage() {
             Mastering the Game of Allyship
           </Link>
           <span aria-hidden="true"> / </span>
-          <span>Origin</span>
+          <span>The Face that never came up</span>
         </nav>
 
         <header className="space-y-4">
@@ -54,32 +49,28 @@ export default function OriginPage() {
             Chapter 9 sent you here
           </p>
           <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
-            Two Faces, and they are rarely the same one.
+            The Face that answers is not always the one you came with.
           </h1>
           <p className="text-base leading-relaxed text-[#a09e98]">
-            One Face you arrived with. Something in your history rewarded it often enough that
-            it became the move you make before you decide to make a move. The other is the one
-            you are actually strongest in, which you can find out by measuring rather than by
-            remembering.
+            The drill at the end of the book puts six moments in front of you and asks which
+            Face answers each one. The argument sits in the aside: the answer does not have to
+            match the superpower your Face came with. Six moments can come out across six
+            different Faces, and that spread is a result rather than a failure.
           </p>
-          <p className="text-base leading-relaxed text-[#a09e98]">
-            The distance between those two is worth knowing, and it is the kind of distance
-            that only shows up when both are written down on the same day.
-          </p>
+          <blockquote className="border-l-2 border-amber-600/60 pl-4 text-base italic leading-relaxed text-[#a09e98]">
+            {ORIGIN_PULL_QUOTE}
+            <footer className="mt-2 text-xs not-italic text-zinc-600">
+              — <cite>Mastering the Game of Allyship</cite>, Chapter 9
+            </footer>
+          </blockquote>
         </header>
 
-        {ORIGIN_PASSAGE && (
-          <section className="rounded-2xl border border-zinc-800 bg-black/30 p-6">
-            <p className="text-base leading-relaxed text-zinc-300">{ORIGIN_PASSAGE}</p>
-          </section>
-        )}
-
         <section className="space-y-3">
-          <h2 className="text-lg font-bold">Measure one</h2>
+          <h2 className="text-lg font-bold">One · Get the Faces named</h2>
           <p className="text-sm leading-relaxed text-zinc-400">
-            The Superpower quiz ranks all seven and hands you two names: the Face you lead
-            with, and the Face you avoid. Chapter 9 argues the second is the more interesting
-            of the pair, so the result names it rather than burying it in a ranking.
+            The drill wants you to already know the cast. The Superpower quiz ranks all seven
+            and hands back two names that matter here: the Face you lead with, and the one
+            sitting at the bottom of your ranking.
           </p>
           <Link
             href="/superpower"
@@ -87,50 +78,59 @@ export default function OriginPage() {
           >
             <span className="text-base font-bold text-white">Take the Superpower quiz →</span>
             <span className="text-sm leading-relaxed text-zinc-400">
-              Seven ranked, a Home Face, and the one you steer around. No email required to see
-              the result.
+              Seven ranked, the Face you lead with, and the one you steer around. The result
+              reads without an email address.
             </span>
           </Link>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-bold">Remember the other</h2>
+          <h2 className="text-lg font-bold">Two · Go to the one that never came up</h2>
           <p className="text-sm leading-relaxed text-zinc-400">
-            Your history is harder to measure, so approach it sideways. The Myths Read scores
-            the moves you actually make under pressure, and the myth running loudest is usually
-            the one whichever Face you arrived with was hired to protect.
+            This is the instruction the chapter closes on, and it is the reason the quiz names
+            your bottom-ranked Face out loud instead of leaving it buried in a spectrum. Open
+            that Face&apos;s chapter. Find the one move you have never run in your life. Put it
+            against the cause you named as your quest back in Chapter 1.
           </p>
-          <Link
-            href="/mastering-allyship/myths-read"
-            className="flex min-h-[44px] flex-col gap-1 rounded-2xl border border-amber-700/50 bg-amber-950/20 p-5 transition-colors hover:border-amber-500"
-          >
-            <span className="text-base font-bold text-white">Take the Myths Read →</span>
-            <span className="text-sm leading-relaxed text-zinc-400">
-              Ten myths sorted, the loudest named, and a charge you can metabolize into a first
-              move.
-            </span>
-          </Link>
+          <div className="rounded-2xl border border-amber-600/50 bg-amber-950/20 p-5">
+            <p className="text-base font-bold leading-relaxed text-amber-200">
+              Give it a name and a date, or it is a resolution.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-amber-100/80">
+              Chapter 9&apos;s words, and the reason the next section exists rather than a
+              button that says &ldquo;commit&rdquo;.
+            </p>
+          </div>
         </section>
 
         <section className="rounded-2xl border border-zinc-800 bg-black/30 p-6">
-          <h2 className="text-lg font-bold">Then date it</h2>
+          <h2 className="text-lg font-bold">Three · Write it where the date sticks</h2>
           <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-            Line one of the character sheet is your Home Face and line three is your Myth. Put
-            both down with today&apos;s date on them. Appendix H&apos;s argument is that across
-            a year of play you can watch your Face, your shadow and your myths move, and a
-            sheet with one date on it cannot show you any movement at all.
+            Line one of the character sheet is your Home Face and line three is your Myth. The
+            move you just named goes down beside them, dated. Appendix H asks you to re-fill
+            the sheet across a year for the same reason Chapter 9 asks you to run the drill
+            again in three months: a sheet carrying one date cannot show you movement.
           </p>
-          <Link
-            href="/mastering-allyship/sheet"
-            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-zinc-200 px-5 font-bold text-[#0a0908] transition-colors hover:bg-white"
-          >
-            Get the character sheet →
-          </Link>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <Link
+              href="/mastering-allyship/sheet"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-zinc-200 px-5 font-bold text-[#0a0908] transition-colors hover:bg-white"
+            >
+              Get the character sheet →
+            </Link>
+            <Link
+              href="/mastering-allyship/myths-read"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-zinc-700 px-5 font-bold text-zinc-200 transition-colors hover:border-zinc-500"
+            >
+              Fill line three →
+            </Link>
+          </div>
         </section>
 
         <p className="text-sm leading-relaxed text-zinc-500">
-          Neither instrument is a verdict, and the gap between the two is not a fault to
-          correct. Both are readings, and you are the authority on what they mean.
+          Re-run the drill in three months with moments from your own week rather than the
+          book&apos;s. Choosing on a page stays the easy version, and the sheet is how you find
+          out whether the choosing got faster.
         </p>
       </div>
     </main>
