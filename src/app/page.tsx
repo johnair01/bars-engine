@@ -97,10 +97,8 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             </div>
             <h2 className="text-xl font-bold text-white leading-snug">Help right now</h2>
             <p className="mt-2 flex-1 text-sm text-zinc-300 leading-relaxed">
-              Three hundred seventy-one people paid for a printed book and are still holding a
-              receipt. The press run puts a copy in their hands; the tour is what carries the book
-              after. Money helps, so do venue leads, intros, and signal boosts. Pick the move that
-              fits what you can offer.
+              The work is in motion and needs a reliable car to keep moving. Money helps, so do
+              car leads, intros, and signal boosts. Pick the move that fits what you can offer.
             </p>
             <div className="mt-5 flex flex-col gap-2">
               <Link

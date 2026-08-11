@@ -224,7 +224,7 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
                 className="text-[9.5px] uppercase"
                 style={{ ...MONO, letterSpacing: '.16em', color: PURPLE.lite }}
               >
-                ◇ The Press Run · The Book Tour
+                ◇ The Crossing · The Book Tour
               </span>
               <h3
                 className="text-[25px] font-bold"
@@ -236,8 +236,7 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
                 className="text-[13.5px]"
                 style={{ ...BODY, lineHeight: 1.5, color: 'var(--bars-text-secondary)' }}
               >
-                Three hundred seventy-one people paid for a printed book and are still holding a
-                receipt. The press run puts a copy in their hands. Every superpower has a way in.
+                Wendell needs a reliable car to keep showing up. Every superpower has a way in.
               </p>
             </div>
 

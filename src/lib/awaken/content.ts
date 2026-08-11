@@ -85,13 +85,13 @@ export const AWAKEN_EVENTS: AwakenEvent[] = []
 
 export const AWAKEN_EVENT_KEYS = new Set(AWAKEN_EVENTS.map((e) => e.key))
 
-/** Legacy donate page. The press-run CTA points at the Crossing campaign instead. */
+/** Legacy donate page. The car-fund CTA points at the Crossing campaign instead. */
 export const AWAKEN_DONATE_HREF = '/event/donate'
 
 /**
- * The Crossing campaign — where "pay toward the press run" sends people. The
- * campaign engine is unchanged; the object it raises against moved from the car
- * (bought) to the print run owed to the Kickstarter backers.
+ * The Crossing campaign — where "fuel the car fund" sends people. Still running:
+ * the car has not been bought yet, and its contributors get thanked through
+ * stewardBroadcastThankYou() once it has.
  */
 export const AWAKEN_CROSSING_HREF = '/campaign/the-crossing'
 
@@ -128,12 +128,12 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     title: 'Wake up.',
     paragraphs: [
       'Most allyship marketing sells a verdict: you are good, or you are not good yet. A verdict is something a person waits to receive, and the work waits alongside her.',
-      'Allyship is a game you learn by playing: a handful of moves you practice, miss, and practice again. Right now the game is specific. Three hundred seventy-one people paid for a printed book in the Kickstarter and are still holding a receipt.',
-      'That is the Crossing. One honest move is the whole entry price. Below is where the press run stands and what you can do today.',
+      'Allyship is a game you learn by playing: a handful of moves you practice, miss, and practice again. Right now the game is specific and local: a person, a community, and a car that has to keep running so the work can keep showing up.',
+      'That is the Crossing. One honest move is the whole entry price. Below is where it stands and what you can do today.',
     ],
     stats: [
-      { key: 'backers', label: 'Backers owed print', value: '371' },
-      { key: 'object', label: 'The object', value: 'The press run' },
+      { key: 'object', label: 'The object', value: 'A reliable car' },
+      { key: 'backers', label: 'Backers waiting on print', value: '371' },
       { key: 'ask', label: 'The ask', value: 'Show up' },
     ],
     cta: "I'm awake — show me how to help ↓",
@@ -146,9 +146,9 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
   moves: {
     donate: {
       badge: 'Move 1',
-      title: 'Pay toward the press run',
-      body: 'Three hundred seventy-one backers paid for a printed book and are still holding a receipt. The print bill is what puts a copy in their hands. Chip in and join the Crossing campaign.',
-      cta: 'Chip in & join the Crossing →',
+      title: 'Fuel the car fund',
+      body: 'A reliable car is what keeps the work showing up: to the tour stops, the community, the next chapter. Chip in and join the Crossing campaign.',
+      cta: 'Donate & join the Crossing →',
       href: AWAKEN_CROSSING_HREF,
     },
     events: {
@@ -168,7 +168,7 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     book: {
       badge: 'Move 4',
       title: 'Get the book',
-      body: 'The ebook of Mastering the Game of Allyship is live on Gumroad: nine chapters, eight appendices, and the ten myths the first chapter takes apart. The printed edition is what the press run pays for.',
+      body: 'The ebook of Mastering the Game of Allyship is live on Gumroad: nine chapters, eight appendices, and the ten myths the first chapter takes apart.',
       cta: 'Get the ebook →',
       href: AWAKEN_BOOK_SALES_HREF,
     },

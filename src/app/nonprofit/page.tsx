@@ -106,8 +106,8 @@ export default function NonprofitPage() {
         <NonprofitFoundingCircle />
 
         <p className="text-sm leading-relaxed text-zinc-500">
-          Money for the press run and the book tour is a separate matter, goes to a person
-          rather than an organization, and says so.{' '}
+          Money for the car and the book tour is a separate matter, goes to a person rather
+          than an organization, and says so.{' '}
           <Link href="/campaign/the-crossing" className="text-zinc-300 underline underline-offset-4">
             That lives at The Crossing
           </Link>

@@ -43,7 +43,7 @@ export function BarnRaisingBar({
         </p>
         <h3 className="mt-1 text-lg font-bold text-white">Raise the barn together</h3>
         <p className="mt-1 text-sm text-zinc-400">
-          Three walls: pay the press run, back the pre-sale, fund the runway.
+          Three walls: replace the car, back the pre-sale, fund the runway.
         </p>
         <div className="mt-4 flex gap-1.5">
           {BARN_WALLS.map((w) => (

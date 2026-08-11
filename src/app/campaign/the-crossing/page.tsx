@@ -8,9 +8,9 @@ import {
 /**
  * @page /campaign/the-crossing
  * @entity CAMPAIGN
- * @description The Crossing — the community CYOA support experience, now raising the
- *   press run owed to the Kickstarter backers (the car campaign it opened with is
- *   complete; the engine, steward roles and campaign state carried over). Dedicated
+ * @description The Crossing — the community CYOA car-fund experience, still running.
+ *   The car has not been bought yet, and contributors get thanked through
+ *   stewardBroadcastThankYou() once it has. Dedicated
  *   supporter-facing landing (hero → How To Play → domain gates + accordion role
  *   cards) that hands into the capture flow. A literal route segment that
  *   overrides the generic `/campaign/[ref]` landing for this campaign.
@@ -22,11 +22,10 @@ import {
 export const metadata: Metadata = {
   title: 'The Crossing | BARs',
   description:
-    'Three hundred seventy-one backers paid for a printed book and are still holding a receipt. Choose the path that fits what you can offer.',
+    'Wendell needs a reliable car to keep showing up. Choose the path that fits what you can offer — every kind of help moves the campaign.',
   openGraph: {
     title: 'The Crossing',
-    description:
-      'Three hundred seventy-one backers are still owed a printed book. Choose your move.',
+    description: 'Wendell needs a reliable car to keep showing up. Choose your move.',
     type: 'website',
   },
 }

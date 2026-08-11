@@ -75,7 +75,7 @@ export const TWENTY_ONE_DAY_CAMPAIGNS: readonly TwentyOneDayCampaign[] = [
     ],
     object: {
       kind: 'named',
-      object: 'An introduction, a venue, or a resource moved toward the press run.',
+      object: 'An introduction, a venue, or a resource moved toward the Crossing.',
     },
   },
   {

@@ -7,7 +7,7 @@ import { getBarnSnapshot } from "@/actions/barn";
 export const metadata: Metadata = {
   title: "The Barn Raising",
   description:
-    "Three walls: pay the press run, back the pre-sale, fund the runway. Raise the barn together.",
+    "Three walls: replace the car, back the pre-sale, fund the runway. Raise the barn together.",
 };
 
 /**
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
  * @page /event/barn
  * @entity SYSTEM
  * @description Public "barn raising" centerpiece — the three-wall Milestone BAR for the
- *   press run and the book tour. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill
+ *   Crossing and the book tour. Big-screen friendly (kiosk). `?preview=1` shows illustrative fill
  *   for design review; default is the honest pre-launch (empty) state.
  * @permissions public
  * @energyCost 0 (read-only)
@@ -72,8 +72,8 @@ export default async function BarnPage({
             </Link>
           </div>
           <p className="text-xs text-zinc-600">
-            Any one of the three raises a wall: pay toward the press run, back the pre-sale, or come
-            stand a plank at a tour stop.
+            Any one of the three raises a wall: give to the car, back the pre-sale, or come stand a
+            plank at a tour stop.
           </p>
         </div>
 
