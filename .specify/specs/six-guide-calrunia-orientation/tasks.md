@@ -49,6 +49,17 @@
 - [x] T28: Deprecate normal Pixi `/world/:instanceSlug/:roomSlug` runtime via redirect unless the prototype flag is enabled.
 - [x] T29: Add and run eligibility/bridge tests.
 
+## Inner Garden Chapter 1 Playable Slice
+
+- [x] T30: Add Phase 7 to `plan.md` defining Chapter 1 as the first playable Inner Garden threshold ritual.
+- [x] T31: Add pure Chapter 1 constants/builders for source BAR and result BAR metadata.
+- [x] T32: Extend Inner Garden server actions to complete Chapter 1 from an existing raw BAR or a newly named call.
+- [x] T33: Add authenticated `/inner-garden/chapter-1` route with eligible BAR selection and create-from-call flow.
+- [x] T34: Link MTGOA Spoke I to `/inner-garden/chapter-1`.
+- [x] T35: Add pure tests for Chapter 1 builders and run targeted verification.
+- [x] T36: Add three Chapter 1 starter situations for first-time playtesters who do not bring a raw BAR.
+- [x] T37: Capture optional Chapter 1 playtest feedback in result BAR metadata.
+
 ## Acceptance Review
 
 - [ ] T19: Confirm the team can state the Calrunia portal rule in one sentence.
