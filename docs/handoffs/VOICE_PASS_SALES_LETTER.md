@@ -30,7 +30,9 @@ the worst available way.
 **Parts-work vocabulary (L347, L389).** `the parts of you still loyal to the old rules`
 is the technical term, not a placeholder noun. The whole 1:1 offer and the testimonial
 that follows it run on the same vocabulary. `src/lib/launch/offers.ts:264` carries the
-identical phrase and is excluded for the identical reason.
+identical phrase, and `src/app/mastering-allyship/one-to-one/page.tsx` now carries it too
+since the offer blurb is the page's opening. All three are excluded for the same reason:
+`saboteurs` in the next clause settles which sense of the word is running.
 
 **Your own history (L282, L288, L291).** `a small room, and a lot of uncomfortable
 questions` is a literal space you were literally in. The ban is on the placeholder

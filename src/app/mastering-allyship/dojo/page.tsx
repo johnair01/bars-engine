@@ -7,6 +7,19 @@ export const metadata: Metadata = {
     'A weekly practice community for turning allyship from idea into real-world conversation practice.',
 }
 
+/**
+ * @page /mastering-allyship/dojo
+ * @entity CAMPAIGN
+ * @description The weekly practice community. **No cohort is scheduled**, and the page
+ *   says so above the alternatives rather than describing an implementation backlog to
+ *   customers, which is what it did before. Hands a reader the deck (runs without a
+ *   calendar) or the 1:1 (open, and priced after a conversation).
+ * @permissions public
+ * @relationships /deck/sales, /mastering-allyship/one-to-one, /mastering-allyship/chapter-1
+ * @dimensions WHO:practitioner, WHAT:program state, WHERE:mastering-allyship, ENERGY:honest_state
+ * @example /mastering-allyship/dojo
+ * @agentDiscoverable true
+ */
 export default function AllyshipDojoOfferPage() {
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8">
@@ -30,18 +43,39 @@ export default function AllyshipDojoOfferPage() {
           </p>
         </header>
 
-        <section className="rounded-2xl border border-zinc-800 bg-black/30 p-6">
-          <h2 className="text-lg font-bold">First live version</h2>
-          <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-            This page is now a real route in the funnel. The next implementation pass will add dates,
-            registration, pricing, and the workshop-specific practice prompt.
+        {/* Honest state. This section used to describe the implementation backlog
+            to customers — dates, registration and pricing "in the next pass" —
+            which tells a reader nothing she can act on and tells her the site is
+            unfinished. It now says what is true and hands her something live. */}
+        <section className="rounded-2xl border border-amber-600/40 bg-amber-950/20 p-6">
+          <h2 className="text-lg font-bold">No cohort is scheduled</h2>
+          <p className="mt-3 text-sm leading-relaxed text-amber-100/90">
+            The Dojo has run before and will run again, and there is no date on the board
+            today. Nothing is for sale on this page, and there is no seat to hold.
           </p>
-          <Link
-            href="/mastering-allyship/chapter-1"
-            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 font-bold text-white transition-colors hover:bg-emerald-500"
-          >
-            Start with Chapter 1 →
-          </Link>
+        </section>
+
+        <section className="rounded-2xl border border-zinc-800 bg-black/30 p-6">
+          <h2 className="text-lg font-bold">What to do meanwhile</h2>
+          <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+            The weekly move the Dojo teaches is a card in the deck, and the deck runs without
+            a cohort or a calendar. If what you want is somebody in the fire with you rather
+            than a group, the 1:1 is open and its page says what it costs to find out.
+          </p>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <Link
+              href="/deck/sales"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 font-bold text-white transition-colors hover:bg-emerald-500"
+            >
+              Get the deck →
+            </Link>
+            <Link
+              href="/mastering-allyship/one-to-one"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-zinc-700 px-5 font-bold text-zinc-200 transition-colors hover:border-zinc-500"
+            >
+              Look at the 1:1
+            </Link>
+          </div>
         </section>
       </div>
     </main>
