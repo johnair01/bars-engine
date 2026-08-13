@@ -94,6 +94,7 @@
     "test:footer-surfaces": "tsx src/lib/ui/__tests__/footer-surfaces.test.ts",
     "test:build-log": "tsx src/lib/build-log/__tests__/posts.test.ts",
     "test:go-audiences": "tsx src/lib/go/__tests__/audiences.test.ts",
+    "test:corridor": "tsx src/lib/tour-leads/__tests__/corridor.test.ts",
     "test:chapter-one-lead:db": "tsx scripts/verify-chapter-one-lead-db.ts",
     "test:allyship-deck": "tsx src/lib/allyship-deck/__tests__/assemble.test.ts && tsx src/lib/allyship-deck/__tests__/card-visuals.test.ts && tsx src/lib/allyship-deck/__tests__/seed.test.ts",
     "test:deck-pending-intent": "tsx src/lib/__tests__/deck-pending-intent.test.ts",

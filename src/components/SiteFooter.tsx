@@ -51,6 +51,7 @@ const COLUMNS = [
       { label: 'Support the work', href: '/support' },
       { label: 'The organization', href: '/nonprofit' },
       { label: 'Help the book tour', href: '/mastering-allyship/book-tour/help' },
+      { label: 'Name a place for the tour', href: '/introductions' },
       { label: 'The build log', href: '/build-log' },
     ],
   },
