@@ -260,11 +260,15 @@ export async function allyProgress(leadId: string): Promise<AllyProgressResult> 
   })
   if (!lead) return { ok: false, error: 'That link does not match anything. It may have been reset.' }
 
-  const rows = await db.milestoneNeed.findMany({
-    where: {
-      OR: [{ campaignRef: PARENT_REF }, { campaignRef: { startsWith: `${PARENT_REF}-` } }],
-    },
-  })
+  // Same catalogue filter as `allyBoard` — see the note there on superseded
+  // `mq-need-*` rows sharing this campaignRef.
+  const rows = (
+    await db.milestoneNeed.findMany({
+      where: {
+        OR: [{ campaignRef: PARENT_REF }, { campaignRef: { startsWith: `${PARENT_REF}-` } }],
+      },
+    })
+  ).filter((r) => findNeed(r.id))
 
   const toTask = (row: (typeof rows)[number]): AllyTask => {
     const authored = findNeed(row.id)
@@ -382,7 +386,12 @@ export async function allyBoard(): Promise<AllyBoardResult> {
 
   const leadName = new Map(leadRows.map((l) => [l.id, l.name]))
 
-  const needs: AllyBoardNeed[] = needRows.map((n) => {
+  // The `mobility-quest` ref predates this campaign — an earlier seed
+  // (`seed-mobility-quest.ts`, the "get out of Portland" framing) left `mq-need-*`
+  // rows behind under the same ref. Show only what the current catalogue authors,
+  // so superseded seed data can sit in the database without corrupting the board.
+  // Non-destructive on purpose: those rows are somebody's history, not garbage.
+  const needs: AllyBoardNeed[] = needRows.filter((n) => findNeed(n.id)).map((n) => {
     const authored = findNeed(n.id)
     const ws = workstreamForNeed(n.id)
     return {
