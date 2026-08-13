@@ -75,8 +75,18 @@ describe('economics — print run', () => {
 describe('economics — repayment plan', () => {
   const plan = repaymentPlan()
 
+  it('borrows the loan amount, not the car price', () => {
+    // Collapsing these is how an ask quietly inflates. The schedule is built on
+    // what was actually borrowed.
+    expect(plan.principalCents).toBe(INPUTS.carLoanCents)
+  })
+
   it('splits the principal across both engines without losing a cent to rounding', () => {
-    expect(plan.fromWorkshopsCents + plan.fromBooksCents).toBe(INPUTS.carBudgetCents)
+    expect(plan.fromWorkshopsCents + plan.fromBooksCents).toBe(INPUTS.carLoanCents)
+  })
+
+  it('never asks to borrow more than the car costs', () => {
+    expect(INPUTS.carLoanCents).toBeLessThanOrEqual(INPUTS.carBudgetCents)
   })
 
   it('asks for enough workshops and books to actually cover each half', () => {
@@ -124,6 +134,33 @@ describe('economics — totals and formatting', () => {
   it('totals every line it lists', () => {
     const t = campaignTotals()
     expect(t.capitalNeededCents).toBe(t.lines.reduce((s, l) => s + l.cents, 0))
+  })
+
+  it('splits the total into repaid / recouped / spent without losing money', () => {
+    const t = campaignTotals()
+    expect(t.repaidCents + t.recoupedCents + t.spentCents).toBe(t.capitalNeededCents)
+  })
+
+  it('counts only the borrowed portion as repaid', () => {
+    expect(campaignTotals().repaidCents).toBe(INPUTS.carLoanCents)
+  })
+
+  it('reports a real cost well below the headline capital figure', () => {
+    // The whole point of the split: "has to exist" is not "disappears."
+    const t = campaignTotals()
+    expect(t.spentCents).toBeLessThan(t.capitalNeededCents)
+  })
+
+  it('books a self-funded car gap as spent, not repaid', () => {
+    const gapped: CampaignInputs = { ...INPUTS, carBudgetCents: 4_000_00, carLoanCents: 2_500_00 }
+    const t = campaignTotals(gapped)
+    expect(t.repaidCents).toBe(2_500_00)
+    expect(t.lines.some((l) => l.label.includes('self-funded'))).toBe(true)
+    expect(t.repaidCents + t.recoupedCents + t.spentCents).toBe(t.capitalNeededCents)
+  })
+
+  it('omits the self-funded line when the loan covers the whole car', () => {
+    expect(campaignTotals().lines.some((l) => l.label.includes('self-funded'))).toBe(false)
   })
 
   it('flags unconfirmed lines as estimates so the UI can say so out loud', () => {

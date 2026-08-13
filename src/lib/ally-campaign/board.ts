@@ -80,3 +80,44 @@ export interface AllyBoard {
 }
 
 export type AllyBoardResult = { ok: true; board: AllyBoard } | { ok: false; error: string }
+
+// ── The ally's own view (accountless, capability-scoped) ────────────────────
+
+export interface AllyTask {
+  id: string
+  title: string
+  detail: string
+  workstream: string
+  domain: string
+  unit: string
+  value: number
+  bountyVibeulons: number
+  /** 'claimed' | 'done' for held tasks; always 'open' for available ones. */
+  status: string
+  /** True when this task matches the ally's revealed superpower. */
+  matchesSuperpower: boolean
+}
+
+export interface AllyProgress {
+  leadId: string
+  name: string | null
+  superpower: string | null
+  orientation: string | null
+  domain: string | null
+  workstream: string | null
+  /** Bounties banked from completed work. Pledged work is not counted here. */
+  vibeulonsEarned: number
+  /** Bounty energy riding on work they hold but have not finished. */
+  vibeulonsPledged: number
+  /** What they're holding right now. */
+  held: AllyTask[]
+  /** Still-open work, their superpower first — so returning has a point. */
+  available: AllyTask[]
+  /** What they offered the collective, and where the steward took it. */
+  offers: { id: string; body: string; status: string; createdAt: string }[]
+  joinedAt: string
+}
+
+export type AllyProgressResult =
+  | { ok: true; progress: AllyProgress }
+  | { ok: false; error: string }

@@ -21,7 +21,7 @@
  * different domain, and every field on the sign step is optional.
  */
 
-import { useCallback, useMemo, useState, useTransition } from 'react'
+import { useCallback, useMemo, useState, useSyncExternalStore, useTransition } from 'react'
 import Link from 'next/link'
 import { SuperpowerQuiz } from '@/components/superpowers/SuperpowerQuiz'
 import { offerHref } from '@/lib/launch/offers'
@@ -60,6 +60,24 @@ const cta =
   'rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-opacity disabled:opacity-50'
 const ghost = 'rounded-xl px-4 py-3 text-[14px] font-semibold transition-colors'
 
+/** Where a returning ally's way back in is remembered. */
+const LEAD_STORAGE_KEY = 'ally_lead_id'
+
+/** `storage` only fires for OTHER tabs, which is exactly the case worth catching. */
+function subscribeToStorage(onChange: () => void): () => void {
+  window.addEventListener('storage', onChange)
+  return () => window.removeEventListener('storage', onChange)
+}
+
+function readStoredLeadId(): string | null {
+  try {
+    return window.localStorage.getItem(LEAD_STORAGE_KEY)
+  } catch {
+    // Private browsing / storage disabled — the resume banner just won't show.
+    return null
+  }
+}
+
 export function AllyFunnel({ invite }: { invite: AllyInvite }) {
   const [step, setStep] = useState<Step>('intro')
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
@@ -73,12 +91,19 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [notes, setNotes] = useState('')
+  const [leadId, setLeadId] = useState<string | null>(null)
   const [result, setResult] = useState<{ claimed: number; skipped: string[]; vibeulons: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
   const superpower = outcome?.routing.superpower ?? null
   const orientation = outcome?.routing.orientation ?? null
+
+  // The page is statically rendered, so localStorage cannot be read during SSR.
+  // `useSyncExternalStore` with a null server snapshot is the sanctioned way to
+  // hydrate a client-only value without a setState-in-effect cascade.
+  const storedLeadId = useSyncExternalStore(subscribeToStorage, readStoredLeadId, () => null)
+  const returningLeadId = leadId ?? storedLeadId
 
   const plan = useMemo(() => repaymentPlan(), [])
   const print = useMemo(() => printEconomics(), [])
@@ -131,6 +156,15 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
           superpower,
         })
       }
+      // Their way back in. No account exists, so the lead id IS the credential —
+      // remembered locally so a returning visitor isn't stranded if they lose the
+      // link, and shown explicitly on the finish screen so they can bookmark it.
+      try {
+        window.localStorage.setItem(LEAD_STORAGE_KEY, res.leadId)
+      } catch {
+        // Private browsing / storage disabled — the on-screen link still works.
+      }
+      setLeadId(res.leadId)
       setResult({ claimed: res.claimed, skipped: res.skipped, vibeulons: res.vibeulons })
       setStep('done')
     })
@@ -143,10 +177,29 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
       {/* ── intro ─────────────────────────────────────────────────────────── */}
       {step === 'intro' && (
         <Panel>
+          {/* Someone who already did this shouldn't be made to do it again just
+              because they lost the link. */}
+          {returningLeadId && (
+            <div
+              className="flex flex-col gap-2 rounded-lg p-4"
+              style={{ background: 'rgba(139,92,246,.10)' }}
+            >
+              <p className="text-[13.5px] leading-relaxed" style={{ color: INK }}>
+                You&apos;ve been here before — your page is still where you left it.
+              </p>
+              <Link
+                href={`/ally/mine/${returningLeadId}`}
+                className="text-[13.5px] font-semibold"
+                style={{ color: PURPLE }}
+              >
+                Go to my page →
+              </Link>
+            </div>
+          )}
           <Prose text={invite.opening} />
           <Row>
             <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('superpower')}>
-              Start →
+              {returningLeadId ? 'Start over →' : 'Start →'}
             </button>
           </Row>
         </Panel>
@@ -453,6 +506,29 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
               </p>
             )}
             <Prose text={invite.closing} />
+
+            {leadId && (
+              <div
+                className="flex flex-col gap-2 rounded-lg p-4"
+                style={{ background: 'rgba(139,92,246,.10)' }}
+              >
+                <p className="text-[12px] uppercase" style={{ letterSpacing: '.14em', color: PURPLE }}>
+                  your page — bookmark it
+                </p>
+                <p className="text-[13.5px] leading-relaxed" style={{ color: DIM }}>
+                  You can come back any time to see what you&apos;re holding, pick up something else,
+                  or <strong style={{ color: INK }}>hand something back</strong> — no explanation
+                  needed. There&apos;s no account, so this link is the only way in.
+                </p>
+                <Link
+                  href={`/ally/mine/${leadId}`}
+                  className={`${cta} self-start`}
+                  style={{ background: PURPLE }}
+                >
+                  Open my page →
+                </Link>
+              </div>
+            )}
           </Panel>
 
           <Numbers plan={plan} print={print} totals={totals} />
@@ -498,23 +574,28 @@ function Numbers({
 
       <div className="flex flex-col divide-y divide-white/[0.06]">
         {totals.lines.map((l) => (
-          <div key={l.key} className="flex items-baseline justify-between gap-3 py-2">
-            <span className="text-[14px]" style={{ color: DIM }}>
-              {l.label}
-              {l.estimate && (
-                <span className="ml-1.5 text-[11px]" style={{ color: FAINT }}>
-                  (estimate)
-                </span>
-              )}
-            </span>
-            <span className="text-[14px] font-semibold tabular-nums" style={{ color: INK }}>
-              {usd(l.cents)}
+          <div key={l.key} className="flex flex-col gap-0.5 py-2.5">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[14px]" style={{ color: DIM }}>
+                {l.label}
+                {l.estimate && (
+                  <span className="ml-1.5 text-[11px]" style={{ color: FAINT }}>
+                    (estimate)
+                  </span>
+                )}
+              </span>
+              <span className="text-[14px] font-semibold tabular-nums" style={{ color: INK }}>
+                {usd(l.cents)}
+              </span>
+            </div>
+            <span className="text-[12px] leading-snug" style={{ color: FAINT }}>
+              {l.recoveryNote}
             </span>
           </div>
         ))}
         <div className="flex items-baseline justify-between gap-3 py-2.5">
           <span className="text-[14px] font-semibold" style={{ color: INK }}>
-            Total capital needed
+            Has to exist up front
           </span>
           <span className="text-[16px] font-bold tabular-nums" style={{ color: GOLD }}>
             {usd(totals.capitalNeededCents)}
@@ -522,14 +603,35 @@ function Numbers({
         </div>
       </div>
 
+      {/* The number above blends a loan with a sunk cost, so it never stands
+          alone. This is the honest reading of what is actually being asked. */}
+      <div className="flex flex-col gap-2 rounded-lg p-4" style={{ background: 'rgba(255,255,255,.045)' }}>
+        <p className="text-[12px] uppercase" style={{ letterSpacing: '.14em', color: GOLD }}>
+          But that&apos;s not what it costs
+        </p>
+        <p className="text-[13.5px] leading-relaxed" style={{ color: DIM }}>
+          That total is how much money has to <em>exist</em> before any of it comes back — it is not
+          how much disappears. Split honestly:
+        </p>
+        <div className="flex flex-col gap-1.5 pt-1">
+          <SplitRow label="Comes back to the lender, on a schedule" cents={totals.repaidCents} />
+          <SplitRow label="Comes back out of book sales" cents={totals.recoupedCents} />
+          <SplitRow label="Genuinely spent" cents={totals.spentCents} accent />
+        </div>
+        <p className="pt-1 text-[13.5px] leading-relaxed" style={{ color: INK }}>
+          So the real cost of a year of this is{' '}
+          <strong style={{ color: GOLD }}>{usd(totals.spentCents)}</strong>. The rest is timing.
+        </p>
+      </div>
+
       <div className="mt-2 flex flex-col gap-2 rounded-lg p-4" style={{ background: 'rgba(139,92,246,.08)' }}>
         <p className="text-[12px] uppercase" style={{ letterSpacing: '.14em', color: PURPLE }}>
           How the car gets paid back
         </p>
         <p className="text-[14px] leading-relaxed" style={{ color: INK }}>
-          {plan.workshopsNeeded} workshops and {plan.booksNeeded} books over {INPUTS.repaymentMonths}{' '}
-          months — about <strong>{usd(plan.monthlyCents)}/month</strong>. That&apos;s{' '}
-          {plan.workshopsPerMonth} workshops and {plan.booksPerMonth} books a month.
+          The loan is <strong>{usd(INPUTS.carLoanCents)}</strong>. Paying it back takes{' '}
+          {plural(plan.workshopsNeeded, 'workshop')} and {plural(plan.booksNeeded, 'book')} over{' '}
+          {INPUTS.repaymentMonths} months — about <strong>{usd(plan.monthlyCents)}/month</strong>.
         </p>
         <p className="text-[13px] leading-relaxed" style={{ color: DIM }}>
           The print run breaks even at <strong style={{ color: INK }}>{print.breakEvenUnits} copies</strong>{' '}
@@ -632,6 +734,22 @@ function MythCard({
 }
 
 // ── Small presentational pieces ─────────────────────────────────────────────
+
+function SplitRow({ label, cents, accent }: { label: string; cents: number; accent?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-[13.5px]" style={{ color: accent ? INK : DIM }}>
+        {label}
+      </span>
+      <span
+        className="text-[14px] font-semibold tabular-nums"
+        style={{ color: accent ? GOLD : INK }}
+      >
+        {usd(cents)}
+      </span>
+    </div>
+  )
+}
 
 function Panel({ children }: { children: React.ReactNode }) {
   return (
@@ -768,4 +886,9 @@ function costLabel(need: WorkstreamNeed): string {
 
 function labelize(key: string): string {
   return key.replace(/_/g, ' ')
+}
+
+/** "1 workshop" / "5 workshops" — derived counts land in prose, so they agree. */
+function plural(n: number, singular: string, pluralForm = `${singular}s`): string {
+  return `${n} ${n === 1 ? singular : pluralForm}`
 }

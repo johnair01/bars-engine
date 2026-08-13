@@ -21,6 +21,9 @@
 
 /** Which inputs are still placeholders. Remove a key once the real number lands. */
 export const UNCONFIRMED = new Set<string>([
+  // carLoanCents is CONFIRMED — $2,500, the actual ask (Wendell, 2026-08-13).
+  // The car's full price is still open; if it lands above the loan, the gap is
+  // self-funded and `carBudgetCents` should rise while `carLoanCents` stays put.
   'carBudgetCents',
   'printUnitCostCents',
   'shipUnitCostCents',
@@ -32,8 +35,19 @@ export const UNCONFIRMED = new Set<string>([
 
 export interface CampaignInputs {
   // ── The car ────────────────────────────────────────────────────────────────
-  /** TODO(wendell): real target for a reliable, tour-capable vehicle. */
+  /**
+   * TODO(wendell): full price of a reliable, tour-capable vehicle. Only the
+   * `carLoanCents` portion is borrowed; any excess is self-funded, so this can
+   * rise without changing what anyone is being asked for.
+   */
   carBudgetCents: number
+  /**
+   * The actual ask — what is borrowed from family and repaid on a schedule.
+   * This, not `carBudgetCents`, drives the repayment plan. Kept separate because
+   * "what the car costs" and "what I'm asking you for" are different questions
+   * and collapsing them is how an ask quietly inflates.
+   */
+  carLoanCents: number
   /** How the payback splits between the two revenue engines. Must sum to 1. */
   repaymentMix: { workshops: number; books: number }
   /** Months Wendell is committing to pay it back within. */
@@ -77,7 +91,8 @@ export interface CampaignInputs {
 }
 
 export const INPUTS: CampaignInputs = {
-  carBudgetCents: 12_000_00,
+  carBudgetCents: 2_500_00,
+  carLoanCents: 2_500_00,
   repaymentMix: { workshops: 0.5, books: 0.5 },
   repaymentMonths: 18,
 
@@ -210,7 +225,8 @@ export interface RepaymentPlan {
  * an assumption that flatters the plan by understating how many books it takes.
  */
 export function repaymentPlan(i: CampaignInputs = INPUTS): RepaymentPlan {
-  const principalCents = i.carBudgetCents
+  // The borrowed portion, never the car's full price — see `carLoanCents`.
+  const principalCents = i.carLoanCents
   const fromWorkshopsCents = round(principalCents * i.repaymentMix.workshops)
   const fromBooksCents = principalCents - fromWorkshopsCents
 
@@ -236,27 +252,125 @@ export function repaymentPlan(i: CampaignInputs = INPUTS): RepaymentPlan {
   }
 }
 
+/**
+ * How a given dollar comes back — or doesn't.
+ *
+ *   repaid    goes back to a specific person on a schedule (the car loan)
+ *   recouped  comes back out of sales revenue (the print run)
+ *   spent     genuinely gone; the real cost of the year (ads, filing fees)
+ *
+ * These are NOT interchangeable and must never be summed into a single
+ * "what I need" figure without also being shown apart. A lone total blends a
+ * loan with a sunk cost and reads as "give me $9,875" when the true sentence is
+ * "$2,500 comes back to you, $4,675 comes back out of sales, $2,700 is gone."
+ * Same principle as the Six Faces unit ruling: report kinds separately, always.
+ */
+export type RecoveryKind = 'repaid' | 'recouped' | 'spent'
+
+export interface CampaignLine {
+  key: string
+  label: string
+  cents: number
+  estimate: boolean
+  recovery: RecoveryKind
+  /** How this specific money comes back, in one plain line. */
+  recoveryNote: string
+}
+
 export interface CampaignTotals {
-  /** Everything the campaign needs funded, added up. */
+  /**
+   * Money that must EXIST up front, before any revenue returns. This is a
+   * cash-flow requirement, not a cost — do not present it alone.
+   */
   capitalNeededCents: number
-  /** Line items behind that total. */
-  lines: { key: string; label: string; cents: number; estimate: boolean }[]
+  /** Returned to a lender on a written schedule. */
+  repaidCents: number
+  /** Recovered out of sales revenue. */
+  recoupedCents: number
+  /** Never recovered — the honest cost of doing this for a year. */
+  spentCents: number
+  lines: CampaignLine[]
 }
 
 export function campaignTotals(i: CampaignInputs = INPUTS): CampaignTotals {
   const print = printEconomics(i)
-  const lines = [
-    { key: 'carBudgetCents', label: 'The car', cents: i.carBudgetCents },
-    { key: 'printUnitCostCents', label: `Print run (${i.printRunUnits} copies)`, cents: print.printTotalCents },
-    { key: 'shipUnitCostCents', label: `Shipping (${print.unitsForFulfillment} mailed)`, cents: print.shipTotalCents },
-    { key: 'adMonthlyBudgetCents', label: 'Ads (3-month test)', cents: i.adMonthlyBudgetCents * 3 },
-    { key: 'nonprofitFilingCents', label: 'Nonprofit filing + first year', cents: i.nonprofitFilingCents },
-  ].map((l) => ({ ...l, estimate: UNCONFIRMED.has(l.key) }))
+  const plan = repaymentPlan(i)
+
+  // The car splits into a borrowed portion and any self-funded gap. They are
+  // different kinds of money and are never shown as one line.
+  const carGapCents = Math.max(0, i.carBudgetCents - i.carLoanCents)
+
+  const authored: Omit<CampaignLine, 'estimate'>[] = [
+    {
+      key: 'carLoanCents',
+      label: 'The car — borrowed',
+      cents: i.carLoanCents,
+      recovery: 'repaid',
+      recoveryNote: `repaid to the lender at ${usd(plan.monthlyCents)}/month over ${i.repaymentMonths} months`,
+    },
+    ...(carGapCents > 0
+      ? [
+          {
+            key: 'carBudgetCents',
+            label: 'The car — self-funded',
+            cents: carGapCents,
+            recovery: 'spent' as RecoveryKind,
+            recoveryNote: 'the part of the vehicle nobody is being asked to cover',
+          },
+        ]
+      : []),
+    {
+      key: 'printUnitCostCents',
+      label: `Print run (${i.printRunUnits} copies)`,
+      cents: print.printTotalCents,
+      recovery: 'recouped',
+      recoveryNote: `recovered from sales — the run is whole at ${print.breakEvenUnits} copies`,
+    },
+    {
+      key: 'shipUnitCostCents',
+      label: `Shipping (${print.unitsForFulfillment} mailed)`,
+      cents: print.shipTotalCents,
+      recovery: 'recouped',
+      recoveryNote: 'built into the cover price of every mailed copy',
+    },
+    {
+      key: 'adMonthlyBudgetCents',
+      label: 'Ads (3-month test)',
+      cents: i.adMonthlyBudgetCents * 3,
+      recovery: 'spent',
+      recoveryNote: 'buys an answer, not inventory — this money does not come back',
+    },
+    {
+      key: 'nonprofitFilingCents',
+      label: 'Nonprofit filing + first year',
+      cents: i.nonprofitFilingCents,
+      recovery: 'spent',
+      recoveryNote: 'one-time cost of an entity that outlives its founder',
+    },
+  ]
+
+  const lines: CampaignLine[] = authored.map((l) => ({
+    ...l,
+    estimate: UNCONFIRMED.has(l.key),
+  }))
+
+  const sumOf = (kind: RecoveryKind) =>
+    lines.filter((l) => l.recovery === kind).reduce((s, l) => s + l.cents, 0)
 
   return {
     capitalNeededCents: lines.reduce((sum, l) => sum + l.cents, 0),
+    repaidCents: sumOf('repaid'),
+    recoupedCents: sumOf('recouped'),
+    spentCents: sumOf('spent'),
     lines,
   }
+}
+
+/** Human label for a recovery kind — used as a group heading. */
+export const RECOVERY_LABEL: Record<RecoveryKind, string> = {
+  repaid: 'Comes back to the lender',
+  recouped: 'Comes back out of sales',
+  spent: 'Genuinely spent',
 }
 
 /** `$1,234` / `$1,234.50` — cents in, display string out. Never floats in state. */

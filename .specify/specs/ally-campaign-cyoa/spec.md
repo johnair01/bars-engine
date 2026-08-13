@@ -30,6 +30,8 @@ Content is authored data in `src/lib/ally-campaign/*`; the routes are shells.
 | **Each workstream is a real sub-campaign** | The five workstreams are child `Campaign` rows under `mobility-quest` via `parentCampaignId`, keyed by the domain whose *emergent problem* they are. Nesting deeper is free. |
 | **Domain by emergent problem, not by resemblance** | Per `allyship-domain-definitions.md`: the print run is Gathering Resources because the material form is missing; the nonprofit is Skillful Organizing because no structure exists; the tour is Direct Action because nobody is booking rooms. |
 | **All numbers derive from one input block** | `economics.ts` holds the inputs; every quoted figure is derived. Unconfirmed inputs are listed in `UNCONFIRMED` and render with a visible "estimate" flag. Money is cents, never floats. |
+| **The loan is separate from the car's price** | `carLoanCents` (what is borrowed, and what the repayment schedule is built on) is distinct from `carBudgetCents` (what the vehicle costs). Collapsing them is how an ask quietly inflates; any gap is booked as self-funded. |
+| **Capital is never reported as one number** | A lone "total needed" blends a loan, working capital, and a sunk cost — the same sin the Six Faces unit ruling forbids elsewhere. `campaignTotals` classifies every line `repaid` / `recouped` / `spent` and reports all three, so "$9,875 has to exist" is always shown beside "$2,700 is actually gone." |
 | **Books cost at the blended margin** | Repayment counts books at the run's blended margin, not the better hand-to-hand event margin — using the event margin assumes every repayment copy sells in person, which the run cannot supply. `withinCapacity` surfaces the shortfall rather than hiding it. |
 | **Bounties are energy, not price** | `MilestoneNeed.bountyVibeulons` carries the same range for internal and external orientation, so money can never dwarf inner work (Six Faces ruling, carried from `mobility-quest-superpower-campaign`). Units are reported separately and never blended. |
 | **Offers are first-class and unshaped** | `CollectiveOffer` is the counterpart to a need: a need is a steward-shaped ask, an offer is raw material the community hands the steward. `GameboardAidOffer` could not serve — it requires three `Player` FKs. |
@@ -81,8 +83,18 @@ each chosen `MilestoneNeed`, and an optional `CollectiveOffer`.
 | Route | Access | Purpose |
 |-------|--------|---------|
 | `/ally/[slug]` | public, no auth | The warm CYOA |
+| `/ally/mine/[leadId]` | capability URL | The ally's own page — hold, release, take more |
 | `/campaign/mobility-quest/allies` | steward | Who's on what, who needs help, goal numbers |
 | `/api/campaign/mobility-quest/export` | steward | Flat CSV of leads + tasks + offers, each row linking back to the dashboard |
+
+### The capability URL
+
+`/ally/mine/[leadId]` is authorized by possession of an unguessable cuid — the
+standard accountless pattern (an order-status link works the same way). Anyone
+holding the link can see and modify what that ally is holding, so the surface
+returns **no contact details** and is `noindex`. The alternative — requiring an
+account — is precisely what this feature exists to avoid. If the tradeoff ever
+stops being acceptable, the upgrade path is emailed magic links, not accounts.
 
 ## Schema (additive, one migration)
 
@@ -100,9 +112,8 @@ each chosen `MilestoneNeed`, and an optional `CollectiveOffer`.
   integer on the lead; minting happens if and when they claim a `Player`.
 - Steward UI for *shaping* an offer into a need (`respondToOffer` exists; the
   shaping form does not).
-- An **ally-facing return surface**. After the finish screen a lead has nowhere to
-  come back to, so `releaseNeed` has no UI path and allies cannot see their own
-  progress or ledger. The most obvious next increment.
+- **Email/notification of any kind.** Neither side is told when the other acts.
+- **Expiring or rotatable capability links.** A lead id works forever.
 - Payment capture. Money asks are pledges; the actual transaction happens
   off-platform or through the existing Gumroad offers.
 - Per-ally sub-campaign spawning (a friend getting their *own* branch under a

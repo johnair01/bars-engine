@@ -32,11 +32,12 @@ import {
 } from '@/lib/ally-campaign/workstreams'
 import {
   PARENT_REF,
-  type AllyBoard,
   type AllyBoardLead,
   type AllyBoardNeed,
   type AllyBoardOffer,
   type AllyBoardResult,
+  type AllyProgressResult,
+  type AllyTask,
 } from '@/lib/ally-campaign/board'
 
 const REF_RE = /^[a-z0-9][a-z0-9-]{0,80}$/i
@@ -234,6 +235,120 @@ export async function releaseNeed(raw: unknown): Promise<{ ok: boolean; error?: 
   if (res.count === 0) return { ok: false, error: 'That task is not yours to release.' }
 
   revalidatePath(`/campaign/${PARENT_REF}/allies`)
+  return { ok: true }
+}
+
+// ── allyProgress (public, capability-scoped) ────────────────────────────────
+
+/**
+ * The ally's own view of what they're holding.
+ *
+ * Scoped by `leadId`, which is an unguessable cuid handed to them on the finish
+ * screen — a capability URL, the standard pattern for an accountless flow (an
+ * order-status link works the same way). Anyone with the link can see it, so this
+ * deliberately returns NO contact details: the holder already knows their own
+ * phone number, and a leaked link should not become a way to harvest one.
+ *
+ * Also returns still-open work so returning has a point beyond letting go.
+ */
+export async function allyProgress(leadId: string): Promise<AllyProgressResult> {
+  if (!leadId || leadId.length > 120) return { ok: false, error: 'Unknown link.' }
+
+  const lead = await db.campaignLead.findUnique({
+    where: { id: leadId },
+    include: { offers: { orderBy: { createdAt: 'desc' } } },
+  })
+  if (!lead) return { ok: false, error: 'That link does not match anything. It may have been reset.' }
+
+  const rows = await db.milestoneNeed.findMany({
+    where: {
+      OR: [{ campaignRef: PARENT_REF }, { campaignRef: { startsWith: `${PARENT_REF}-` } }],
+    },
+  })
+
+  const toTask = (row: (typeof rows)[number]): AllyTask => {
+    const authored = findNeed(row.id)
+    const ws = workstreamForNeed(row.id)
+    return {
+      id: row.id,
+      title: authored?.title ?? row.title ?? row.id,
+      detail: authored?.detail ?? '',
+      workstream: ws?.title ?? '—',
+      domain: ws?.domain ?? '—',
+      unit: row.unit,
+      value: row.value,
+      bountyVibeulons: row.bountyVibeulons,
+      status: row.status,
+      matchesSuperpower: !!lead.superpower && row.superpower === lead.superpower,
+    }
+  }
+
+  const held = rows.filter((r) => r.claimedByLeadId === leadId).map(toTask)
+
+  // Open work, their superpower first — same ordering promise as the funnel.
+  const available = rows
+    .filter((r) => r.status === 'open')
+    .map(toTask)
+    .sort((a, b) => Number(b.matchesSuperpower) - Number(a.matchesSuperpower))
+
+  return {
+    ok: true,
+    progress: {
+      leadId: lead.id,
+      name: lead.name,
+      superpower: lead.superpower,
+      orientation: lead.superpowerOrientation,
+      domain: lead.domain,
+      workstream: lead.campaignRef.startsWith(`${PARENT_REF}-`)
+        ? lead.campaignRef.slice(PARENT_REF.length + 1)
+        : null,
+      vibeulonsEarned: lead.vibeulonsEarned,
+      vibeulonsPledged: held
+        .filter((t) => t.status === 'claimed')
+        .reduce((s, t) => s + t.bountyVibeulons, 0),
+      held,
+      available,
+      offers: lead.offers.map((o) => ({
+        id: o.id,
+        body: o.body,
+        status: o.status,
+        createdAt: o.createdAt.toISOString(),
+      })),
+      joinedAt: lead.createdAt.toISOString(),
+    },
+  }
+}
+
+// ── claimNeed (public, capability-scoped) ───────────────────────────────────
+
+const claimSchema = z.object({
+  needId: z.string().trim().min(1).max(120),
+  leadId: z.string().trim().min(1).max(120),
+})
+
+/**
+ * Pick up another task from the return surface. Conditional on `status: 'open'`,
+ * so two people racing for the same task cannot both win — the loser is told,
+ * rather than silently double-booked.
+ */
+export async function claimNeed(raw: unknown): Promise<{ ok: boolean; error?: string }> {
+  const parsed = claimSchema.safeParse(raw)
+  if (!parsed.success) return { ok: false, error: 'Invalid request.' }
+  const { needId, leadId } = parsed.data
+
+  if (!findNeed(needId)) return { ok: false, error: 'Unknown task.' }
+
+  const lead = await db.campaignLead.findUnique({ where: { id: leadId }, select: { id: true } })
+  if (!lead) return { ok: false, error: 'Unknown link.' }
+
+  const res = await db.milestoneNeed.updateMany({
+    where: { id: needId, status: 'open' },
+    data: { status: 'claimed', claimedByLeadId: leadId },
+  })
+  if (res.count === 0) return { ok: false, error: 'Someone else just took that one.' }
+
+  revalidatePath(`/campaign/${PARENT_REF}/allies`)
+  revalidatePath(`/ally/mine/${leadId}`)
   return { ok: true }
 }
 

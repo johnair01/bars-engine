@@ -82,6 +82,11 @@ export interface Workstream {
 const plan = repaymentPlan()
 const print = printEconomics()
 
+/** "1 workshop" / "5 workshops" — derived counts land in prose, so they agree. */
+function plural(n: number, singular: string, pluralForm = `${singular}s`): string {
+  return `${n} ${n === 1 ? singular : pluralForm}`
+}
+
 export const WORKSTREAMS: readonly Workstream[] = [
   // ───────────────────────────────────────────────────────────────────────────
   {
@@ -95,22 +100,24 @@ export const WORKSTREAMS: readonly Workstream[] = [
 
 I can't get the book to the people it's for. Not because the book isn't ready — it's ready. Because a book tour is a logistics problem wearing a literary costume, and the logistics start with being able to drive somewhere with two hundred books in the back.
 
-I'm not asking you to give me a car. I'm asking you to *buy* one and let me pay you back out of the two things this work already produces: workshops and books. That's ${plan.workshopsNeeded} workshops and ${plan.booksNeeded} copies over ${INPUTS.repaymentMonths} months — about ${usd(plan.monthlyCents)} a month.
+The ask is ${usd(INPUTS.carLoanCents)}, as a loan.
+
+Not a gift, not an investment, not "whatever you can spare." A loan, paid back out of the two things this work already produces: workshops and books. That's ${plural(plan.workshopsNeeded, 'workshop')} and ${plural(plan.booksNeeded, 'copy', 'copies')} over ${INPUTS.repaymentMonths} months — about ${usd(plan.monthlyCents)} a month.
 
 I wrote those numbers down before I asked you, because an ask without a repayment schedule isn't an ask. It's a hope with good manners.`,
-    theAsk: `Buy the car. I pay it back at ${usd(plan.monthlyCents)}/month from workshop and book revenue, over ${INPUTS.repaymentMonths} months.`,
-    milestone: { title: 'The car, funded', targetValue: INPUTS.carBudgetCents / 100, unit: 'currency' },
+    theAsk: `Lend ${usd(INPUTS.carLoanCents)} for the car. I pay it back at ${usd(plan.monthlyCents)}/month from workshop and book revenue, over ${INPUTS.repaymentMonths} months.`,
+    milestone: { title: 'The car, funded', targetValue: INPUTS.carLoanCents / 100, unit: 'currency' },
     needs: [
       {
         id: 'aq-car-underwrite',
         superpower: 'strategist',
         orientation: 'external',
         unit: 'currency',
-        value: INPUTS.carBudgetCents / 100,
+        value: INPUTS.carLoanCents / 100,
         bountyVibeulons: 8,
         cardId: 'SHOW-GR-ARCHITECT',
-        title: 'Underwrite the vehicle',
-        detail: `Purchase the car outright against the written repayment schedule (${usd(plan.monthlyCents)}/month, ${INPUTS.repaymentMonths} months). You hold the title until it's paid.`,
+        title: `Lend the ${usd(INPUTS.carLoanCents)} for the car`,
+        detail: `A loan against the written schedule — ${usd(plan.monthlyCents)}/month for ${INPUTS.repaymentMonths} months, from workshop and book revenue. Repaid in full, not "when things pick up."`,
       },
       {
         id: 'aq-car-terms',

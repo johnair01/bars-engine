@@ -57,11 +57,11 @@ You should see:
 ```
 ✅ parent campaign mobility-quest (instance …)
    owner: Wendell Britt <wendell@masteringallyship.com> (from ALLY_CAMPAIGN_OWNER_EMAIL)
-   goal: $19,375
+   goal: $9,875
 
 ✅ sub-campaign mobility-quest-car  [GATHERING_RESOURCES]
-   milestone aq-ms-car: The car, funded (target 12000 currency)
-   • aq-car-underwrite          strategist/external  12000 currency  8 vib
+   milestone aq-ms-car: The car, funded (target 2500 currency)
+   • aq-car-underwrite          strategist/external  2500 currency  8 vib
    …
 
 ✅ Ally Campaign seeded: 1 parent, 5 sub-campaigns, 5 milestones, 24 needs.
@@ -82,12 +82,18 @@ Everything the site quotes is derived from the `INPUTS` block at the top.
 
 ```ts
 export const INPUTS: CampaignInputs = {
-  carBudgetCents: 12_000_00,     // ← your real number
+  carBudgetCents: 2_500_00,      // what the vehicle costs
+  carLoanCents:   2_500_00,      // what you're actually asking to borrow
   printUnitCostCents: 6_50,      // ← from a real printer quote
   workshopSeatPriceCents: 150_00,
   …
 }
 ```
+
+**`carLoanCents` is the ask; `carBudgetCents` is the price.** They're separate on
+purpose. The repayment schedule is built on the loan, so if you find a car at
+$4,000 you raise the budget and leave the loan at $2,500 — the extra is booked as
+self-funded and nobody's ask silently inflates.
 
 As you confirm each figure, **delete its key from `UNCONFIRMED`** just above:
 
@@ -274,12 +280,36 @@ economy stops meaning anything, so `markNeedDone` is steward-gated. It's one-way
 in the UI — un-completing would have to un-bank a bounty and roll a milestone
 backwards, which is a real decision, not a button. Fix mistakes in the database.
 
-**If Ray needs to put a task back down**, the `releaseNeed` action exists and is
-scoped so only the lead who claimed it can release it — but there is **no UI path
-to it yet**. An ally has no return surface after the finish screen. In practice
-today: Ray tells you, and you clear it directly. Giving allies a way to put
-something down without asking permission is what makes picking it up feel safe,
-so this is worth building next.
+---
+
+## Part 4.5 — Ray's own page
+
+On the finish screen Ray got a link to **his** page, and it was saved in his
+browser:
+
+```
+https://masteringallyship.com/ally/mine/<his lead id>
+```
+
+There he can:
+
+- see what he's holding, and what he's finished (with vibeulons banked)
+- **put a task back down** — one button, no explanation required
+- pick up something else, his superpower's matches first
+- see what became of his Elks lodge offer
+
+If he comes back to `/ally/ray` later, the intro shows *"You've been here before"*
+with a link straight to his page, so losing the bookmark isn't fatal.
+
+**The release button is the point of this page.** Someone who can't hand a task
+back either drops it silently — and you find out in March — or avoids the whole
+thing. Making it easy to put something down is what makes picking it up feel safe.
+
+> **How the link works.** There is no account, so the unguessable lead id in the
+> URL *is* the credential — the same pattern as an order-status link. Anyone Ray
+> forwards it to can see and change what he's holding. Because of that the page
+> deliberately shows **no contact details**, and it's `noindex`. If that tradeoff
+> ever stops being acceptable, the fix is emailed magic links, not accounts.
 
 ---
 
@@ -340,18 +370,28 @@ npx tsx scripts/print-ally-economics.ts
 
 ```
 ── Capital needed ──
-  The car                               $12,000 (estimate)
+  The car — borrowed                     $2,500
   Print run (500 copies)                 $3,250 (estimate)
   Shipping (300 mailed)                  $1,425 (estimate)
   Ads (3-month test)                     $1,500 (estimate)
   Nonprofit filing + first year          $1,200 (estimate)
-  TOTAL                                 $19,375
+  HAS TO EXIST UP FRONT                  $9,875
+
+── …but split by how it comes back ──
+  repaid to the lender                   $2,500
+  recouped from sales                    $4,675
+  genuinely spent                        $2,700  ← the real cost
 
 ── Car repayment ──
-  workshops needed      5
-  books needed          322 (run prints 500) withinCapacity=true
-  monthly               $666.67
+  workshops needed      1
+  books needed          68 (run prints 500) withinCapacity=true
+  monthly               $138.89
 ```
+
+**Read that split before you quote the total.** "$9,875" is a cash-flow
+requirement, not a cost — it's how much money has to *exist* before any of it
+comes back. Only $2,700 of it actually disappears. Showing the headline alone
+turns a $2,500 loan request into what sounds like a $9,875 gift request.
 
 Then check your math still holds:
 
@@ -407,9 +447,11 @@ Being explicit so nobody plans around a feature that isn't there:
 - **No UI to shape an offer into a task.** `respondToOffer` exists as an action;
   the form does not. Ray's Elks lodge note has to become a task by you adding one
   to `workstreams.ts`.
-- **No ally-facing return surface.** Once someone finishes the CYOA they have no
-  page to come back to — so `releaseNeed` has no path, and they can't see their own
-  progress. This is the most obvious next thing to build.
+- **No email.** Nothing notifies Ray that his task was marked done, or notifies you
+  that someone claimed something. You find out by opening the board; he finds out
+  by opening his page. For a family-scale campaign that's fine — at 50 allies it
+  won't be.
+- **No expiry on capability links.** A lead id works forever and can't be rotated.
 - **No per-ally sub-campaign spawning.** The schema supports arbitrary nesting via
   `Campaign.parentCampaignId` — if Ray eventually wants to run the Portland tour
   leg as his own branch, the structure is there but nothing drives it yet.

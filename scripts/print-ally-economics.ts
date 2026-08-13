@@ -12,7 +12,12 @@ const pr = printEconomics()
 
 console.log('\n── Capital needed ──')
 for (const l of t.lines) console.log(`  ${l.label.padEnd(34)} ${usd(l.cents).padStart(10)} ${l.estimate ? '(estimate)' : ''}`)
-console.log(`  ${'TOTAL'.padEnd(34)} ${usd(t.capitalNeededCents).padStart(10)}`)
+console.log(`  ${'HAS TO EXIST UP FRONT'.padEnd(34)} ${usd(t.capitalNeededCents).padStart(10)}`)
+
+console.log('\n── …but split by how it comes back ──')
+console.log(`  ${'repaid to the lender'.padEnd(34)} ${usd(t.repaidCents).padStart(10)}`)
+console.log(`  ${'recouped from sales'.padEnd(34)} ${usd(t.recoupedCents).padStart(10)}`)
+console.log(`  ${'genuinely spent'.padEnd(34)} ${usd(t.spentCents).padStart(10)}  ← the real cost`)
 
 console.log('\n── Print run ──')
 console.log(`  landed cost/unit      ${usd(pr.landedUnitCostCents)}`)
