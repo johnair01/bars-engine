@@ -48,6 +48,8 @@ for (const route of [
   '/login',
   '/deck', // the app deck, not /deck/sales
   '/workshop', // the Allyship Workshop feature stub, not the build log
+  '/go/backers', // T8 funnel pages carry no chrome at all
+  '/go/bookstore',
   '/campaign/bruised-banana', // a different campaign
   '/campaigns-archive', // must not match the /campaigns exact entry
 ]) {
