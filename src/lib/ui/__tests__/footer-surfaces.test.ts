@@ -26,6 +26,7 @@ for (const route of [
   '/deck/sales',
   '/campaign/the-crossing',
   '/igniting-joy',
+  '/build-log',
 ]) {
   assert.equal(hasFooter(route, false), true, `${route} should carry the footer`)
   assert.equal(hasFooter(route, true), true, `${route} keeps it when signed in`)
@@ -46,6 +47,7 @@ for (const route of [
   '/wiki/glossary',
   '/login',
   '/deck', // the app deck, not /deck/sales
+  '/workshop', // the Allyship Workshop feature stub, not the build log
   '/campaign/bruised-banana', // a different campaign
   '/campaigns-archive', // must not match the /campaigns exact entry
 ]) {

@@ -25,6 +25,7 @@ const FOOTER_EXACT: ReadonlySet<string> = new Set([
   '/kickstarter',
   '/superpower',
   '/igniting-joy',
+  '/build-log',
 ])
 
 /** Public route families. */

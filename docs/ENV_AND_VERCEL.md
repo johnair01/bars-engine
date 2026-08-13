@@ -156,6 +156,25 @@ the repo.** The only URL for this book anywhere in the codebase lives in a Twine
 source file and reads `.../l/IgnnitingJoy`, with a doubled N. That is either the
 real slug or a typo, and nothing here can tell you which.
 
+### NEXT_PUBLIC_PATREON_URL (the build log)
+
+`/build-log` is the build-in-public surface. Absent, the page offers to send the
+link rather than rendering a dead button.
+
+**Setting this is not what launches it.** The page enforces the handoff's
+condition itself — one post a week minimum — by reading `BUILD_LOG_POSTS` in
+`src/lib/build-log/posts.ts` and computing the days since the newest entry:
+
+| state | what renders |
+|-------|--------------|
+| no posts | "It has not started yet", and **no subscribe button at all** |
+| last post ≤ 10 days | the log, the cadence, and the join button |
+| last post > 10 days | "The cadence lapsed", how long it has been, and **the button is withheld** |
+
+So the way to launch it is to write a post and add it to the list. The way to
+keep it launched is to keep writing them. `npm run test:build-log` covers all
+three states, including four months of silence.
+
 ### KIT_API_KEY (the email list)
 
 The Myths Read, the Superpower quiz, Chapter One and the character sheet's

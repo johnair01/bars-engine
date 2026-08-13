@@ -24,6 +24,7 @@ const COLUMNS = [
       { label: 'Read Chapter One', href: '/mastering-allyship/chapter-1' },
       { label: 'The character sheet', href: '/mastering-allyship/sheet' },
       { label: 'What comes next', href: '/mastering-allyship/what-comes-next' },
+      { label: 'Igniting Joy', href: '/igniting-joy' },
     ],
   },
   {
@@ -50,6 +51,7 @@ const COLUMNS = [
       { label: 'Support the work', href: '/support' },
       { label: 'The organization', href: '/nonprofit' },
       { label: 'Help the book tour', href: '/mastering-allyship/book-tour/help' },
+      { label: 'The build log', href: '/build-log' },
     ],
   },
 ] as const
