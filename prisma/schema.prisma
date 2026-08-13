@@ -611,6 +611,14 @@ model CampaignLead {
   /// Automated → the captured CYOA intake.
   latentIntakeId        String?   @unique
   clientSessionId       String?
+  /// When this lead arrived through a SUB-campaign (a workstream), `campaignRef`
+  /// is the child slug and this is the parent's. Lets the steward dashboard roll
+  /// a whole campaign tree up in one query instead of walking the hierarchy.
+  parentCampaignRef     String?   @map("parent_campaign_ref")
+  /// Running vibeulon ledger for an accountless ally. Incremented as claimed
+  /// needs complete. If they later claim a Player, this is what gets minted into
+  /// real `Vibulon` rows — until then it is an honest integer, not a fake balance.
+  vibeulonsEarned       Int       @default(0) @map("vibeulons_earned")
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
@@ -618,10 +626,56 @@ model CampaignLead {
   claimedBy    Player?               @relation("CampaignLeadClaimedBy", fields: [claimedByPlayerId], references: [id])
   invite       Invite?               @relation(fields: [inviteId], references: [id])
   latentIntake LatentAllyshipIntake? @relation(fields: [latentIntakeId], references: [id])
+  claimedNeeds MilestoneNeed[]       @relation("MilestoneNeedClaimedByLead")
+  offers       CollectiveOffer[]     @relation("CollectiveOfferLead")
 
   @@index([campaignRef, status])
   @@index([campaignRef, createdAt])
+  @@index([parentCampaignRef, status])
   @@map("campaign_leads")
+}
+
+/// An unsolicited OFFER to the collective — "here is what I have, use it however
+/// helps." The counterpart to `MilestoneNeed` (which the steward defines): a need
+/// is a shaped ask, an offer is an unshaped gift that a steward later shapes into
+/// one. Deliberately accountless — the `CampaignLead` is the identity, so a friend
+/// can offer a garage or four hours without ever creating a bars-engine account.
+///
+/// Distinct from `GameboardAidOffer`, which requires three Player FKs and is scoped
+/// to a gameboard slot. This is campaign-scoped and account-free by design.
+model CollectiveOffer {
+  id            String   @id @default(cuid())
+  /// Sub-campaign (workstream) slug when offered into one; else the parent.
+  campaignRef   String
+  parentCampaignRef String? @map("parent_campaign_ref")
+  /// Accountless identity. Null only for offers forged by a steward on someone's behalf.
+  leadId        String?
+  /// Optional account, when the offerer happens to have one.
+  playerId      String?
+  /// 'action' | 'currency' | 'hours' — same unit vocabulary as MilestoneNeed.
+  unit          String   @default("action")
+  value         Float    @default(1)
+  /// What's being offered, in the offerer's own words.
+  body          String
+  /// Optional domain the offerer thinks it belongs in; steward may reroute.
+  domain        String?
+  superpower    String?
+  /// 'open' | 'accepted' | 'shaped' | 'declined' — 'shaped' = became a MilestoneNeed.
+  status        String   @default("open")
+  /// Set when a steward turns this offer into a scoped need.
+  shapedNeedId  String?  @map("shaped_need_id")
+  /// Published to the campaign's collective directory for other stewards to adopt.
+  collective    Boolean  @default(true)
+  stewardNotes  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lead CampaignLead? @relation("CollectiveOfferLead", fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([campaignRef, status])
+  @@index([parentCampaignRef, status])
+  @@index([leadId])
+  @@map("collective_offers")
 }
 
 model NextActionBridge {
@@ -3948,14 +4002,25 @@ model MilestoneNeed {
   status            String            @default("open")
   /// Player id who claimed/completed (denormalized; no FK to keep Player lean).
   claimedByPlayerId String?
+  /// Accountless claim path: the `CampaignLead` that took this on. A person can
+  /// participate fully without a bars-engine account — the lead IS their identity
+  /// until (and unless) they ever claim a Player. Exactly one of
+  /// claimedByPlayerId / claimedByLeadId is set on a claimed need.
+  claimedByLeadId   String?           @map("claimed_by_lead_id")
+  /// Energy released when this need completes — a bounty, NOT a price. Six Faces
+  /// ruling holds: internal-orientation needs carry the same range as external, so
+  /// money can never dwarf inner work. Never used to rank one unit against another.
+  bountyVibeulons   Int               @default(0) @map("bounty_vibeulons")
   title             String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   milestone         CampaignMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  claimedByLead     CampaignLead?     @relation("MilestoneNeedClaimedByLead", fields: [claimedByLeadId], references: [id], onDelete: SetNull)
 
   @@index([campaignRef, status])
   @@index([milestoneId])
   @@index([claimedByPlayerId])
+  @@index([claimedByLeadId])
   @@map("milestone_needs")
 }
 
