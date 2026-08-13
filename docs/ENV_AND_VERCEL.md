@@ -145,6 +145,17 @@ Outbound email (Chapter One delivery, `/awaken` RSVP confirmations) sends via
 3. **Graceful degradation**: when `RESEND_API_KEY`/`EMAIL_FROM` are unset, sends are **logged and skipped** rather than throwing — the funnel still saves the lead, it just can't deliver yet.
 4. **Deliverability is gated on DNS**: `EMAIL_FROM`'s domain must be verified in Resend with **SPF, DKIM, and DMARC** records, or mail lands in spam. See Resend → Domains for the exact records.
 
+### NEXT_PUBLIC_GUMROAD_IGNITING_JOY_URL (the other book)
+
+`/igniting-joy` buys through Gumroad like every other offer. Absent, the page
+renders a "write to me and I will send the direct link" state rather than a dead
+button — the same convention `src/lib/launch/offers.ts` uses.
+
+**Verify the slug by clicking through from Gumroad rather than copying it from
+the repo.** The only URL for this book anywhere in the codebase lives in a Twine
+source file and reads `.../l/IgnnitingJoy`, with a doubled N. That is either the
+real slug or a typo, and nothing here can tell you which.
+
 ### KIT_API_KEY (the email list)
 
 The Myths Read, the Superpower quiz, Chapter One and the character sheet's

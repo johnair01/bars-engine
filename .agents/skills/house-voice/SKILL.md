@@ -62,6 +62,23 @@ The SOFT numbers are ratios against the book's own measured baseline. Over **1.3
 read the sites; it does not mean the sentence is wrong. **A ratio under ~300 words is
 noise** — score a page, never a button.
 
+**Known blind spot: JSX text nodes containing an expression.** The TSX extractor
+skips any `>...<` node containing a brace, because a brace usually means code. But an
+ordinary paragraph with an inline link is written `... sentence{' '}<Link>label</Link>
+rest ...`, and that whole node is skipped — so **a banned word sitting in a paragraph
+with a link in it does not appear on the board**. This is not hypothetical; it hid a
+`quiet` on `/igniting-joy` behind a clean report.
+
+Until the counters are re-copied from the book repo, grep the raw file as well. It takes
+a second and it checks the result rather than the mechanism:
+
+```bash
+grep -rniE "\b(rooms?|quiet(ly|er|est)?|genuinely|things?)\b" src/app/your/page.tsx
+```
+
+Hits inside `/** ... */` comments are out of scope — this skill is for what a customer
+reads. Hits inside a JSX text node are defects the board could not see.
+
 ### 2 · The slop pass
 
 Run the `no-ai-slop` skill on the draft, **against its `eval.md` and not only its pattern

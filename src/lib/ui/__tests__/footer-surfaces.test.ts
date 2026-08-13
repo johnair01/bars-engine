@@ -25,6 +25,7 @@ for (const route of [
   '/campaigns',
   '/deck/sales',
   '/campaign/the-crossing',
+  '/igniting-joy',
 ]) {
   assert.equal(hasFooter(route, false), true, `${route} should carry the footer`)
   assert.equal(hasFooter(route, true), true, `${route} keeps it when signed in`)
