@@ -31,11 +31,54 @@ import { INPUTS, campaignTotals } from '../src/lib/ally-campaign/economics'
  */
 const PARENT_REF = 'mobility-quest'
 
+/**
+ * Resolve who OWNS this campaign. This is not cosmetic: `assertCampaignSteward`
+ * grants board access to the campaign's `createdById`, so whoever this returns is
+ * who can see /campaign/mobility-quest/allies and download the CSV.
+ *
+ * Order: explicit env → a global admin → first player (with a loud warning).
+ * The old `findFirst()`-only behaviour silently handed ownership to whichever row
+ * the database returned first, which is arbitrary and very confusing to debug
+ * from the far side of a 403.
+ */
+async function resolveOwner() {
+  const email = process.env.ALLY_CAMPAIGN_OWNER_EMAIL?.trim()
+
+  if (email) {
+    const byEmail = await db.player.findFirst({ where: { contactValue: email } })
+    if (!byEmail) {
+      throw new Error(
+        `ALLY_CAMPAIGN_OWNER_EMAIL="${email}" matched no player. Check the address, or unset it to fall back to a global admin.`,
+      )
+    }
+    console.log(`   owner: ${byEmail.name} <${byEmail.contactValue}> (from ALLY_CAMPAIGN_OWNER_EMAIL)`)
+    return byEmail
+  }
+
+  const adminRole = await db.playerRole.findFirst({
+    where: { role: { key: 'admin' } },
+    include: { player: true },
+  })
+  if (adminRole?.player) {
+    console.log(`   owner: ${adminRole.player.name} <${adminRole.player.contactValue}> (global admin)`)
+    return adminRole.player
+  }
+
+  const first = await db.player.findFirst()
+  if (!first) throw new Error('No player found for createdById — seed players first.')
+  console.warn(
+    `   ⚠️  owner: ${first.name} <${first.contactValue}> — arbitrary first player.\n` +
+      '      No admin role found and ALLY_CAMPAIGN_OWNER_EMAIL is unset. This player, and\n' +
+      '      only this player, will be able to open the ally board. Re-run with\n' +
+      '      ALLY_CAMPAIGN_OWNER_EMAIL=you@example.com to set it deliberately.',
+  )
+  return first
+}
+
 async function seed() {
   console.log('--- Seeding Ally Campaign (parent + 5 workstream sub-campaigns) ---')
 
-  const creator = await db.player.findFirst()
-  if (!creator) throw new Error('No player found for createdById — seed players first.')
+  const creator = await resolveOwner()
 
   const totals = campaignTotals()
   const blurb =

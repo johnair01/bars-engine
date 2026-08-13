@@ -15,8 +15,10 @@
  * a `CampaignLead` plus conditional claims on each chosen `MilestoneNeed`.
  *
  * A note on the shape: every screen states its own cost and its own "done."
- * The one thing this flow must never do is make declining feel like failing —
- * `Not this one` is present on every ask screen, styled as a peer of the CTA.
+ * The one thing this flow must never do is make declining feel like failing, so
+ * the needs step carries an explicit "None of these are mine" styled as a peer of
+ * the CTA (not a hidden skip link), the workstream step can always back out to a
+ * different domain, and every field on the sign step is optional.
  */
 
 import { useCallback, useMemo, useState, useTransition } from 'react'
@@ -338,10 +340,25 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
             <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('offer')}>
               {picked.size > 0 ? `Take ${picked.size} →` : 'Continue →'}
             </button>
-            <button className={ghost} style={{ color: DIM }} onClick={() => setStep('workstream')}>
+            {/* Declining is a peer of accepting, not a hidden escape hatch. */}
+            <button
+              className={ghost}
+              style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
+              onClick={() => {
+                setPicked(new Set())
+                setStep('offer')
+              }}
+            >
+              None of these are mine →
+            </button>
+            <button className={ghost} style={{ color: FAINT }} onClick={() => setStep('workstream')}>
               ← Back
             </button>
           </Row>
+          <p className="text-[12.5px] leading-relaxed" style={{ color: FAINT }}>
+            Taking nothing is a complete answer. I&apos;d rather have a clear no today than a soft yes
+            I&apos;m quietly counting on in March.
+          </p>
         </div>
       )}
 

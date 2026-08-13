@@ -16,6 +16,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { allyBoard } from '@/actions/ally-campaign'
 import { PARENT_REF, TOTAL_AUTHORED_NEEDS } from '@/lib/ally-campaign/board'
+import { MarkDoneButton } from './MarkDoneButton'
 import { getDomainLabel } from '@/lib/allyship-domains'
 import { WORKSTREAMS, TOTAL_BOUNTY_VIBEULONS } from '@/lib/ally-campaign/workstreams'
 import { campaignTotals, repaymentPlan, usd } from '@/lib/ally-campaign/economics'
@@ -199,12 +200,25 @@ export default async function AlliesDashboard({
                   )}
 
                   {theirs.length > 0 && (
-                    <ul className="mt-2.5 flex flex-col gap-1 border-l-2 pl-3" style={{ borderColor: PURPLE }}>
+                    <ul className="mt-2.5 flex flex-col gap-1.5 border-l-2 pl-3" style={{ borderColor: PURPLE }}>
                       {theirs.map((n) => (
-                        <li key={n.id} className="text-[13.5px]" style={{ color: '#e6e4de' }}>
-                          {n.status === 'done' ? '✓ ' : '◷ '}
-                          {n.title}
-                          <span style={{ color: FAINT }}> · {unitLabel(n.unit, n.value)}</span>
+                        <li
+                          key={n.id}
+                          className="flex flex-wrap items-center gap-2 text-[13.5px]"
+                          style={{ color: '#e6e4de' }}
+                        >
+                          <span>
+                            {n.status === 'done' ? '✓ ' : '◷ '}
+                            {n.title}
+                            <span style={{ color: FAINT }}> · {unitLabel(n.unit, n.value)}</span>
+                          </span>
+                          {n.status !== 'done' && (
+                            <MarkDoneButton
+                              needId={n.id}
+                              label={n.title}
+                              bountyVibeulons={n.bountyVibeulons}
+                            />
+                          )}
                         </li>
                       ))}
                     </ul>

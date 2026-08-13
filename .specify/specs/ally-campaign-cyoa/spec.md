@@ -100,6 +100,9 @@ each chosen `MilestoneNeed`, and an optional `CollectiveOffer`.
   integer on the lead; minting happens if and when they claim a `Player`.
 - Steward UI for *shaping* an offer into a need (`respondToOffer` exists; the
   shaping form does not).
+- An **ally-facing return surface**. After the finish screen a lead has nowhere to
+  come back to, so `releaseNeed` has no UI path and allies cannot see their own
+  progress or ledger. The most obvious next increment.
 - Payment capture. Money asks are pledges; the actual transaction happens
   off-platform or through the existing Gumroad offers.
 - Per-ally sub-campaign spawning (a friend getting their *own* branch under a
@@ -114,6 +117,11 @@ each chosen `MilestoneNeed`, and an optional `CollectiveOffer`.
    closing are machine-drafted personal writing in Wendell's voice. They are a
    competent draft and they are not his sentences.
 3. **Confirm "a run of $500" meant 500 copies**, which is how it is encoded.
+
+## Operator guide
+
+Step-by-step setup, invite, board, and content-editing walkthrough:
+[`docs/ALLY_CAMPAIGN_GUIDE.md`](../../../docs/ALLY_CAMPAIGN_GUIDE.md).
 
 ## Verification
 
