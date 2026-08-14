@@ -37,6 +37,51 @@ export type InviteOverride = {
   eyebrow?: string
   opening?: string
   closing?: string
+  /** Only meaningful on created invites; authored ones keep their file value. */
+  cohort?: string
+}
+
+/**
+ * Slugs that can never be an invite, because a real route already owns them.
+ * `/ally/mine/[leadId]` is the ally return surface — an invite named `mine`
+ * would sit under a path that means something else entirely.
+ */
+export const RESERVED_INVITE_SLUGS = new Set(['mine', '__default', 'api', 'new'])
+
+/** URL-safe, lowercase, no leading dash. Matches what the route can serve. */
+export const INVITE_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,40}$/
+
+export type SlugCheck = { ok: true; slug: string } | { ok: false; error: string }
+
+/**
+ * Validate a proposed invite slug. Shared by the create action and the admin UI so
+ * the rules are stated once — the form can't disagree with the server about what
+ * is allowed.
+ */
+export function checkInviteSlug(raw: string): SlugCheck {
+  const slug = raw.trim().toLowerCase()
+  if (!slug) return { ok: false, error: 'Give it a short name for the URL.' }
+  if (!INVITE_SLUG_RE.test(slug)) {
+    return {
+      ok: false,
+      error: 'Use lowercase letters, numbers and dashes only — like “uncle-ray”.',
+    }
+  }
+  if (RESERVED_INVITE_SLUGS.has(slug)) {
+    return { ok: false, error: `“${slug}” is reserved by another page. Pick a different name.` }
+  }
+  if (ALLIES[slug]) {
+    return { ok: false, error: `“${slug}” already exists in code — edit it instead of creating it.` }
+  }
+  return { ok: true, slug }
+}
+
+const COHORTS: readonly AllyInvite['cohort'][] = ['family', 'friends', 'colleagues', 'public']
+
+function asCohort(value: string | undefined, fallback: AllyInvite['cohort']): AllyInvite['cohort'] {
+  return COHORTS.includes(value as AllyInvite['cohort'])
+    ? (value as AllyInvite['cohort'])
+    : fallback
 }
 
 export type MythOverride = {
@@ -118,7 +163,7 @@ function pickRecord<T extends Record<string, unknown>>(
   return Object.keys(out).length > 0 ? out : undefined
 }
 
-const INVITE_FIELDS = ['displayName', 'eyebrow', 'opening', 'closing'] as const
+const INVITE_FIELDS = ['displayName', 'eyebrow', 'opening', 'closing', 'cohort'] as const
 const MYTH_FIELDS = ['myth', 'truth', 'reframe'] as const
 const PANEL_FIELDS = ['kicker', 'heading', 'body'] as const
 const WORKSTREAM_FIELDS = ['title', 'emergentProblem', 'narrative', 'theAsk'] as const
@@ -160,21 +205,42 @@ export function parseAllyContentTheme(theme: string | null | undefined): AllyCon
 
 // ── Resolution (defaults ← overrides) ───────────────────────────────────────
 
-/** The authored invite for a slug, before overrides. */
-function baseInvite(slug: string | undefined): { invite: AllyInvite; key: string } {
-  if (slug && ALLIES[slug.toLowerCase()]) {
-    const key = slug.toLowerCase()
-    return { invite: ALLIES[key], key }
+/**
+ * Where a slug's edits live, and what it layers on top of.
+ *
+ * Three cases, in priority order:
+ *   1. authored in `ALLIES`      → edits keyed by slug, layered on the file entry
+ *   2. created in the database   → edits keyed by slug, layered on DEFAULT_INVITE
+ *   3. anything else             → the shared `__default` bucket
+ *
+ * Case 2 is what makes an invite creatable without a deploy: an entry under a
+ * slug that has no file counterpart *is* the invite, with DEFAULT_INVITE
+ * supplying anything the admin left blank.
+ */
+function baseInvite(
+  slug: string | undefined,
+  overrides: AllyContentOverrides,
+): { invite: AllyInvite; key: string } {
+  const key = slug?.trim().toLowerCase()
+
+  if (key && ALLIES[key]) return { invite: ALLIES[key], key }
+
+  if (key && overrides.invites?.[key] && !RESERVED_INVITE_SLUGS.has(key)) {
+    return { invite: { ...DEFAULT_INVITE, slug: key }, key }
   }
+
   // Unknown slugs render DEFAULT_INVITE but keep the requested slug for links.
-  return { invite: { ...DEFAULT_INVITE, slug: slug ?? DEFAULT_INVITE.slug }, key: DEFAULT_INVITE_KEY }
+  return {
+    invite: { ...DEFAULT_INVITE, slug: key ?? DEFAULT_INVITE.slug },
+    key: DEFAULT_INVITE_KEY,
+  }
 }
 
 export function resolveInviteWithOverrides(
   slug: string | undefined,
   overrides: AllyContentOverrides,
 ): AllyInvite {
-  const { invite, key } = baseInvite(slug)
+  const { invite, key } = baseInvite(slug, overrides)
   const o = overrides.invites?.[key]
   if (!o) return invite
   return {
@@ -183,7 +249,48 @@ export function resolveInviteWithOverrides(
     eyebrow: o.eyebrow ?? invite.eyebrow,
     opening: o.opening ?? invite.opening,
     closing: o.closing ?? invite.closing,
+    cohort: asCohort(o.cohort, invite.cohort),
   }
+}
+
+export interface InviteSummary {
+  slug: string
+  displayName: string
+  cohort: AllyInvite['cohort']
+  /** `code` entries live in allies.ts; `created` ones exist only in the database. */
+  source: 'code' | 'created'
+  /** True when an authored invite has been edited in the admin UI. */
+  edited: boolean
+}
+
+/**
+ * Every invite that currently resolves to a real page — authored and created —
+ * for the admin index. Sorted code-first, then alphabetically, so the entries
+ * someone can delete are visually separate from the ones they can't.
+ */
+export function listInvites(overrides: AllyContentOverrides): InviteSummary[] {
+  const out: InviteSummary[] = Object.values(ALLIES).map((invite) => ({
+    slug: invite.slug,
+    displayName: overrides.invites?.[invite.slug]?.displayName ?? invite.displayName,
+    cohort: asCohort(overrides.invites?.[invite.slug]?.cohort, invite.cohort),
+    source: 'code',
+    edited: !!overrides.invites?.[invite.slug],
+  }))
+
+  for (const [slug, o] of Object.entries(overrides.invites ?? {})) {
+    if (slug === DEFAULT_INVITE_KEY || ALLIES[slug] || RESERVED_INVITE_SLUGS.has(slug)) continue
+    out.push({
+      slug,
+      displayName: o.displayName ?? slug,
+      cohort: asCohort(o.cohort, DEFAULT_INVITE.cohort),
+      source: 'created',
+      edited: true,
+    })
+  }
+
+  return out.sort((a, b) =>
+    a.source === b.source ? a.slug.localeCompare(b.slug) : a.source === 'code' ? -1 : 1,
+  )
 }
 
 export function resolveMyths(overrides: AllyContentOverrides): AllyMyth[] {
@@ -238,7 +345,19 @@ export function resolveAllyContent(
   }
 }
 
-/** Which override bucket a given invite slug writes to. */
-export function inviteOverrideKey(slug: string | undefined): string {
-  return slug && ALLIES[slug.toLowerCase()] ? slug.toLowerCase() : DEFAULT_INVITE_KEY
+/**
+ * Which override bucket a given invite slug writes to. Needs the overrides so a
+ * created invite edits *itself* rather than the shared default — without this an
+ * admin editing `/ally/uncle-ray` would silently rewrite everyone's fallback copy.
+ */
+export function inviteOverrideKey(
+  slug: string | undefined,
+  overrides: AllyContentOverrides = {},
+): string {
+  return baseInvite(slug, overrides).key
+}
+
+/** True when this slug resolves to a real invite rather than the generic fallback. */
+export function inviteExists(slug: string | undefined, overrides: AllyContentOverrides): boolean {
+  return inviteOverrideKey(slug, overrides) !== DEFAULT_INVITE_KEY
 }

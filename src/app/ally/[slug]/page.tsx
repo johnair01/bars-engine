@@ -23,9 +23,17 @@
 import type { Metadata } from 'next'
 import { AllyFunnel } from './AllyFunnel'
 import { AllyContentEditor } from './AllyContentEditor'
-import { getAllyContent, isCurrentPlayerAdmin } from '@/lib/ally-campaign/content-server'
-import { inviteOverrideKey } from '@/lib/ally-campaign/content-overrides'
-import { resolveInvite } from '@/lib/ally-campaign/allies'
+import {
+  getAllyContentOverrides,
+  isCurrentPlayerAdmin,
+} from '@/lib/ally-campaign/content-server'
+import {
+  inviteExists,
+  inviteOverrideKey,
+  listInvites,
+  resolveAllyContent,
+} from '@/lib/ally-campaign/content-overrides'
+import { ALLIES, resolveInvite } from '@/lib/ally-campaign/allies'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,7 +57,15 @@ export async function generateMetadata({
 
 export default async function AllyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const [content, isAdmin] = await Promise.all([getAllyContent(slug), isCurrentPlayerAdmin()])
+  const [overrides, isAdmin] = await Promise.all([
+    getAllyContentOverrides(),
+    isCurrentPlayerAdmin(),
+  ])
+
+  const content = resolveAllyContent(slug, overrides)
+  const key = inviteOverrideKey(slug, overrides)
+  // Created invites live only in the database; authored ones have a file entry.
+  const isCreated = inviteExists(slug, overrides) && !ALLIES[key]
 
   return (
     <main
@@ -63,11 +79,13 @@ export default async function AllyPage({ params }: { params: Promise<{ slug: str
         {/* Absent from the DOM entirely for a visitor — not merely hidden. */}
         {isAdmin && (
           <AllyContentEditor
-            inviteKey={inviteOverrideKey(slug)}
+            inviteKey={key}
             invite={content.invite}
             myths={content.myths}
             understanding={content.understanding}
             workstreams={content.workstreams}
+            invites={listInvites(overrides)}
+            isCreated={isCreated}
           />
         )}
         <AllyFunnel

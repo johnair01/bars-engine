@@ -18,7 +18,14 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { resetAllyInvite, saveAllyContent } from '@/actions/ally-content-admin'
+import Link from 'next/link'
+import {
+  createAllyInvite,
+  deleteAllyInvite,
+  resetAllyInvite,
+  saveAllyContent,
+} from '@/actions/ally-content-admin'
+import { checkInviteSlug, type InviteSummary } from '@/lib/ally-campaign/content-overrides'
 import type { AllyInvite, AllyMyth, UnderstandingPanel } from '@/lib/ally-campaign/allies'
 import type { Workstream } from '@/lib/ally-campaign/workstreams'
 
@@ -28,7 +35,15 @@ const DIM = '#a09e98'
 const FAINT = '#6b6862'
 const PANEL = '#121210'
 
-type Tab = 'letter' | 'about' | 'myths' | 'workstreams'
+type Tab = 'letter' | 'invites' | 'about' | 'myths' | 'workstreams'
+
+const TAB_LABELS: Record<Tab, string> = {
+  letter: 'This letter',
+  invites: 'All invites',
+  about: 'About me',
+  myths: 'Myths',
+  workstreams: 'Workstreams',
+}
 
 export function AllyContentEditor({
   inviteKey,
@@ -36,6 +51,8 @@ export function AllyContentEditor({
   myths,
   understanding,
   workstreams,
+  invites,
+  isCreated,
 }: {
   /** Which override bucket this letter writes to (`mom`, `__default`, …). */
   inviteKey: string
@@ -43,6 +60,10 @@ export function AllyContentEditor({
   myths: AllyMyth[]
   understanding: UnderstandingPanel[]
   workstreams: Workstream[]
+  /** Every invite that resolves today — authored and created. */
+  invites: InviteSummary[]
+  /** Whether the invite being viewed exists only in the database. */
+  isCreated: boolean
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -121,6 +142,19 @@ export function AllyContentEditor({
     })
   }
 
+  function removeInvite(slug: string) {
+    setStatus(null)
+    startTransition(async () => {
+      const res = await deleteAllyInvite(slug)
+      if (res.ok) {
+        setStatus(`Deleted “${slug}”.`)
+        router.refresh()
+      } else {
+        setStatus(res.error)
+      }
+    })
+  }
+
   if (!open) {
     return (
       <button
@@ -156,7 +190,7 @@ export function AllyContentEditor({
       </p>
 
       <div className="flex flex-wrap gap-1.5">
-        {(['letter', 'about', 'myths', 'workstreams'] as Tab[]).map((t) => (
+        {(['letter', 'invites', 'about', 'myths', 'workstreams'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -166,10 +200,23 @@ export function AllyContentEditor({
               color: tab === t ? GOLD : DIM,
             }}
           >
-            {t === 'letter' ? 'The letter' : t === 'about' ? 'About me' : t === 'myths' ? 'Myths' : 'Workstreams'}
+            {TAB_LABELS[t]}
           </button>
         ))}
       </div>
+
+      {tab === 'invites' && (
+        <InvitesTab
+          invites={invites}
+          pending={pending}
+          onDelete={removeInvite}
+          onCreated={(slug) => {
+            setStatus(`Created “${slug}”.`)
+            router.refresh()
+          }}
+          onError={setStatus}
+        />
+      )}
 
       {tab === 'letter' && (
         <div className="flex flex-col gap-3">
@@ -179,14 +226,27 @@ export function AllyContentEditor({
           <Area label="Closing" value={closing} onChange={setClosing} rows={8} />
           <div className="flex flex-wrap items-center gap-3">
             <SaveButton onClick={saveLetter} pending={pending} />
-            <button
-              onClick={resetLetter}
-              disabled={pending}
-              className="rounded-lg px-3 py-2 text-[12.5px] font-semibold disabled:opacity-50"
-              style={{ color: DIM, border: '1px solid rgba(255,255,255,.14)' }}
-            >
-              Restore the original
-            </button>
+            {/* An authored letter can be reverted to the file; a created one has
+                no file to revert to, so the equivalent action is deletion. */}
+            {isCreated ? (
+              <button
+                onClick={() => removeInvite(inviteKey)}
+                disabled={pending}
+                className="rounded-lg px-3 py-2 text-[12.5px] font-semibold disabled:opacity-50"
+                style={{ color: '#e28b8b', border: '1px solid rgba(226,139,139,.3)' }}
+              >
+                Delete this invite
+              </button>
+            ) : (
+              <button
+                onClick={resetLetter}
+                disabled={pending}
+                className="rounded-lg px-3 py-2 text-[12.5px] font-semibold disabled:opacity-50"
+                style={{ color: DIM, border: '1px solid rgba(255,255,255,.14)' }}
+              >
+                Restore the original
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -290,6 +350,223 @@ export function AllyContentEditor({
           {status}
         </p>
       )}
+    </div>
+  )
+}
+
+/**
+ * The invite index + create form — the last thing that used to need a deploy.
+ *
+ * Creating writes an override entry under a brand-new slug, and because
+ * `/ally/[slug]` is dynamic the page exists the moment it saves. Slug rules are
+ * checked here with the same function the server uses, so the form can never
+ * disagree with the action about what's allowed.
+ */
+function InvitesTab({
+  invites,
+  pending,
+  onDelete,
+  onCreated,
+  onError,
+}: {
+  invites: InviteSummary[]
+  pending: boolean
+  onDelete: (slug: string) => void
+  onCreated: (slug: string) => void
+  onError: (message: string) => void
+}) {
+  const [slug, setSlug] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [opening, setOpening] = useState('')
+  const [closing, setClosing] = useState('')
+  const [cohort, setCohort] = useState<AllyInvite['cohort']>('family')
+  const [creating, startCreate] = useTransition()
+  const [confirming, setConfirming] = useState<string | null>(null)
+
+  const slugCheck = slug.trim() ? checkInviteSlug(slug) : null
+
+  function create() {
+    const check = checkInviteSlug(slug)
+    if (!check.ok) {
+      onError(check.error)
+      return
+    }
+    if (!displayName.trim() || !opening.trim()) {
+      onError('A name and an opening letter are required.')
+      return
+    }
+    startCreate(async () => {
+      const res = await createAllyInvite({
+        slug: check.slug,
+        displayName: displayName.trim(),
+        opening: opening.trim(),
+        closing: closing.trim() || undefined,
+        cohort,
+      })
+      if (res.ok) {
+        setSlug('')
+        setDisplayName('')
+        setOpening('')
+        setClosing('')
+        onCreated(res.slug)
+      } else {
+        onError(res.error)
+      }
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <span className="text-[11px] uppercase" style={{ letterSpacing: '.14em', color: FAINT }}>
+          Live invites ({invites.length})
+        </span>
+        {invites.map((i) => (
+          <div
+            key={i.slug}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/[0.08] px-3 py-2"
+            style={{ background: 'rgba(0,0,0,.25)' }}
+          >
+            <span className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/ally/${i.slug}`}
+                className="text-[13.5px] font-semibold"
+                style={{ color: INK }}
+              >
+                /ally/{i.slug}
+              </Link>
+              <span className="text-[12px]" style={{ color: DIM }}>
+                {i.displayName}
+              </span>
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                style={{
+                  background: i.source === 'code' ? 'rgba(255,255,255,.06)' : 'rgba(212,160,23,.14)',
+                  color: i.source === 'code' ? FAINT : GOLD,
+                }}
+              >
+                {i.source === 'code' ? 'in code' : 'created here'}
+              </span>
+              {i.source === 'code' && i.edited && (
+                <span className="text-[10px]" style={{ color: GOLD }}>
+                  edited
+                </span>
+              )}
+            </span>
+
+            {i.source === 'created' &&
+              (confirming === i.slug ? (
+                <span className="flex items-center gap-2">
+                  <span className="text-[11px]" style={{ color: FAINT }}>
+                    Delete?
+                  </span>
+                  <button
+                    onClick={() => {
+                      setConfirming(null)
+                      onDelete(i.slug)
+                    }}
+                    disabled={pending}
+                    className="rounded-md px-2 py-0.5 text-[11px] font-semibold text-black disabled:opacity-50"
+                    style={{ background: '#e28b8b' }}
+                  >
+                    yes
+                  </button>
+                  <button
+                    onClick={() => setConfirming(null)}
+                    className="text-[11px]"
+                    style={{ color: FAINT }}
+                  >
+                    cancel
+                  </button>
+                </span>
+              ) : (
+                <button
+                  onClick={() => setConfirming(i.slug)}
+                  className="text-[11px] font-semibold"
+                  style={{ color: DIM }}
+                >
+                  delete
+                </button>
+              ))}
+          </div>
+        ))}
+        <p className="text-[11.5px] leading-relaxed" style={{ color: FAINT }}>
+          Deleting a created invite leaves every lead it captured on the steward board — only the
+          link stops resolving to a personal letter.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3 border-t border-white/[0.07] pt-4">
+        <span className="text-[11px] uppercase" style={{ letterSpacing: '.14em', color: GOLD }}>
+          New invite
+        </span>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] uppercase" style={{ letterSpacing: '.14em', color: FAINT }}>
+            Link — /ally/…
+          </span>
+          <input
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="uncle-ray"
+            className="w-full rounded-lg border bg-black/40 px-3 py-2 text-[13.5px] focus:outline-none"
+            style={{
+              color: INK,
+              borderColor: slugCheck && !slugCheck.ok ? '#e28b8b66' : 'rgba(255,255,255,.1)',
+            }}
+          />
+          {slugCheck && !slugCheck.ok && (
+            <span className="text-[11.5px]" style={{ color: '#e28b8b' }}>
+              {slugCheck.error}
+            </span>
+          )}
+          {slugCheck?.ok && (
+            <span className="text-[11.5px]" style={{ color: FAINT }}>
+              → /ally/{slugCheck.slug}
+            </span>
+          )}
+        </label>
+
+        <Field label="How they're addressed" value={displayName} onChange={setDisplayName} />
+
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] uppercase" style={{ letterSpacing: '.14em', color: FAINT }}>
+            Cohort
+          </span>
+          <select
+            value={cohort}
+            onChange={(e) => setCohort(e.target.value as AllyInvite['cohort'])}
+            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-[13.5px] focus:outline-none"
+            style={{ color: INK }}
+          >
+            <option value="family">family</option>
+            <option value="friends">friends</option>
+            <option value="colleagues">colleagues</option>
+            <option value="public">public</option>
+          </select>
+        </label>
+
+        <Area label="Opening letter" rows={10} value={opening} onChange={setOpening} />
+        <Area
+          label="Closing (optional — falls back to the generic one)"
+          rows={5}
+          value={closing}
+          onChange={setClosing}
+        />
+
+        <button
+          onClick={create}
+          disabled={creating || pending}
+          className="self-start rounded-lg px-4 py-2 text-[13px] font-semibold text-black disabled:opacity-50"
+          style={{ background: GOLD }}
+        >
+          {creating ? 'Creating…' : 'Create invite'}
+        </button>
+        <p className="text-[11.5px] leading-relaxed" style={{ color: FAINT }}>
+          The page exists as soon as you save — no deploy. Anything you leave blank uses the generic
+          invite&apos;s wording.
+        </p>
+      </div>
     </div>
   )
 }
