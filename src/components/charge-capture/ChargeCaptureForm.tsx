@@ -2,6 +2,9 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { isVaultCapacityError, stripVaultCompostPath } from '@/lib/vault-limits'
+import { VaultCompostModal } from '@/components/hand/VaultCompostModal'
+
 import { useRouter } from 'next/navigation'
 import {
   createChargeBar,
@@ -11,6 +14,29 @@ import {
 import type { CreateChargeBarPayload, ChargeExploreCeremony, PersonalMove } from '@/actions/charge-capture'
 import { TransitionCeremony } from '@/components/charge-capture/TransitionCeremony'
 import type { QuestSuggestion } from '@/lib/charge-quest-generator'
+
+/**
+ * Renders a capture error. When the Vault is at capacity the message stops being
+ * a dead end: the raw route is stripped and replaced with a button that composts
+ * in place, so the charge already typed into the form survives.
+ */
+function CaptureError({ error, onCompost }: { error: string; onCompost: () => void }) {
+  if (!isVaultCapacityError(error)) {
+    return <p className="text-sm text-red-400">{error}</p>
+  }
+  return (
+    <div className="rounded-xl border border-red-900/50 bg-red-950/20 p-4 space-y-3">
+      <p className="text-sm text-red-300">{stripVaultCompostPath(error)}</p>
+      <button
+        type="button"
+        onClick={onCompost}
+        className="w-full rounded-lg border border-emerald-700/60 px-4 py-2.5 text-sm text-emerald-300 hover:bg-emerald-950/30 min-h-[44px]"
+      >
+        Free up space without leaving this page →
+      </button>
+    </div>
+  )
+}
 
 // ── Emotion options — large tap targets ──────────────────────────────────────
 
@@ -90,6 +116,7 @@ export function ChargeCaptureForm({
 
   // Interaction state
   const [error, setError] = useState<string | null>(null)
+  const [compostOpen, setCompostOpen] = useState(false)
   const [captured, setCaptured] = useState<CapturedCharge[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<QuestSuggestion[] | null>(null)
@@ -197,7 +224,7 @@ export function ChargeCaptureForm({
             </div>
           ))}
         </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <CaptureError error={error} onCompost={() => setCompostOpen(true)} />}
         <button
           onClick={() => { setSuggestions(null); setActiveId(null); setCeremony(null); setPendingSuggestions(null) }}
           className="text-sm text-zinc-500 hover:text-zinc-300"
@@ -227,6 +254,16 @@ export function ChargeCaptureForm({
         >
           ← Dashboard
         </Link>
+      <VaultCompostModal
+        isOpen={compostOpen}
+        onClose={() => {
+          setCompostOpen(false)
+          // Space may now exist — clear the stale cap error so the player can retry.
+          setError(null)
+          router.refresh()
+        }}
+        reason={error && isVaultCapacityError(error) ? stripVaultCompostPath(error) : null}
+      />
       </div>
     )
   }
@@ -312,7 +349,7 @@ export function ChargeCaptureForm({
         </div>
 
         {/* 4. Submit */}
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <CaptureError error={error} onCompost={() => setCompostOpen(true)} />}
         <button
           type="submit"
           disabled={isPending}
@@ -381,6 +418,17 @@ export function ChargeCaptureForm({
           Done → Dashboard
         </button>
       )}
+
+      <VaultCompostModal
+        isOpen={compostOpen}
+        onClose={() => {
+          setCompostOpen(false)
+          // Space may now exist — clear the stale cap error so the player can retry.
+          setError(null)
+          router.refresh()
+        }}
+        reason={error && isVaultCapacityError(error) ? stripVaultCompostPath(error) : null}
+      />
     </div>
   )
 }

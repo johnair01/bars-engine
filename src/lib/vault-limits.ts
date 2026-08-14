@@ -40,6 +40,30 @@ export const VAULT_CAP_MESSAGES = {
         `Your Vault is full for unplaced personal quests (${max} max). Place a quest in a thread or gameboard from the Quests room, or use Vault Compost (/vault/compost) to clear space.`,
 } as const
 
+/**
+ * True when an action failed because the Vault is at capacity.
+ *
+ * These messages are returned as plain strings by nine call sites, so a UI that
+ * wants to offer composting inline has no way to tell a capacity failure from
+ * any other error. Rather than change every signature, callers can ask.
+ *
+ * Player signal (2026-04-15, /capture): the capacity message rendered the route
+ * as bare text — "use Vault Compost (/vault/compost)" — which is not clickable,
+ * and following it would have discarded the charge already typed into the form:
+ *   "I should be able to click that link and have the vault open up as a modal
+ *    for me to do composting or open the compost function in a modal so I don't
+ *    have the leave the screen to clear up charge"
+ */
+export function isVaultCapacityError(message: string | null | undefined): boolean {
+    if (!message) return false
+    return message.startsWith('Your Vault is full for')
+}
+
+/** The capacity message with the raw route stripped — the UI supplies the affordance. */
+export function stripVaultCompostPath(message: string): string {
+    return message.replace(/\s*\(\/vault\/compost\)/g, '')
+}
+
 export async function assertCanCreatePrivateDraft(
     playerId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
