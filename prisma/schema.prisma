@@ -532,7 +532,7 @@ model BarForgeRecord {
 
 /// Emergent campaign from BAR interview (ECI) — structured path through invite CYOA before child campaign exists.
 model LatentAllyshipIntake {
-  id                    String    @id @default(cuid())
+  id                    String        @id @default(cuid())
   customBarId           String
   /// Logged-in submitter when available.
   playerId              String?
@@ -546,21 +546,21 @@ model LatentAllyshipIntake {
   pathJson              String
   /// Denormalized from invite URL ?note= for steward context.
   senderNote            String?
-  status                String    @default("submitted")
+  status                String        @default("submitted")
   /// When set, this intake was watered into a child campaign instance.
-  spawnedInstanceId     String?   @map("spawned_instance_id")
-  wateredAt             DateTime? @map("watered_at")
-  wateredByPlayerId     String?   @map("watered_by_player_id")
-  stewardNotes          String?   @map("steward_notes")
+  spawnedInstanceId     String?       @map("spawned_instance_id")
+  wateredAt             DateTime?     @map("watered_at")
+  wateredByPlayerId     String?       @map("watered_by_player_id")
+  stewardNotes          String?       @map("steward_notes")
   /// Superpower discovery result captured at submit (additive, nullable).
-  superpower            String?   @map("superpower")
-  superpowerOrientation String?   @map("superpower_orientation")
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  customBar             CustomBar @relation(fields: [customBarId], references: [id], onDelete: Cascade)
-  player                Player?   @relation(fields: [playerId], references: [id])
-  spawnedInstance       Instance? @relation("AllyshipIntakeSpawnedInstance", fields: [spawnedInstanceId], references: [id])
-  wateredBy             Player?   @relation("AllyshipIntakeWateredBy", fields: [wateredByPlayerId], references: [id])
+  superpower            String?       @map("superpower")
+  superpowerOrientation String?       @map("superpower_orientation")
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  customBar             CustomBar     @relation(fields: [customBarId], references: [id], onDelete: Cascade)
+  player                Player?       @relation(fields: [playerId], references: [id])
+  spawnedInstance       Instance?     @relation("AllyshipIntakeSpawnedInstance", fields: [spawnedInstanceId], references: [id])
+  wateredBy             Player?       @relation("AllyshipIntakeWateredBy", fields: [wateredByPlayerId], references: [id])
   campaignLead          CampaignLead?
 
   @@index([customBarId, createdAt])
@@ -575,13 +575,13 @@ model LatentAllyshipIntake {
 /// one owner follow-up board with a shared status machine.
 /// See .specify/specs/campaign-lead-forge/spec.md
 model CampaignLead {
-  id                    String    @id @default(cuid())
+  id                    String   @id @default(cuid())
   /// e.g. 'the-crossing'. Resolves to an Instance/Campaign for auth + display.
   campaignRef           String
   /// 'manual' | 'automated'
-  source                String    @default("manual")
+  source                String   @default("manual")
   /// new | contacted | accepted | declined | onboarded
-  status                String    @default("new")
+  status                String   @default("new")
   name                  String?
   contact               String?
   /// 'text' | 'email' | 'instagram' | 'signal' | ...
@@ -595,7 +595,7 @@ model CampaignLead {
   /// The owner's goals for this lead (free text). Shapes their warm CYOA.
   goals                 String?
   /// Published to the campaign's collective directory (other stewards can adopt).
-  collective            Boolean   @default(false)
+  collective            Boolean  @default(false)
   /// JSON string[] of concrete aligned actions the lead should take.
   actionsJson           String?
   /// JSON string[] of CustomBar ids (starter quests) to assign on onboard.
@@ -607,20 +607,20 @@ model CampaignLead {
   /// Player who claimed / became this lead.
   claimedByPlayerId     String?
   /// Manual → the tailored Invite.
-  inviteId              String?   @unique
+  inviteId              String?  @unique
   /// Automated → the captured CYOA intake.
-  latentIntakeId        String?   @unique
+  latentIntakeId        String?  @unique
   clientSessionId       String?
   /// When this lead arrived through a SUB-campaign (a workstream), `campaignRef`
   /// is the child slug and this is the parent's. Lets the steward dashboard roll
   /// a whole campaign tree up in one query instead of walking the hierarchy.
-  parentCampaignRef     String?   @map("parent_campaign_ref")
+  parentCampaignRef     String?  @map("parent_campaign_ref")
   /// Running vibeulon ledger for an accountless ally. Incremented as claimed
   /// needs complete. If they later claim a Player, this is what gets minted into
   /// real `Vibulon` rows — until then it is an honest integer, not a fake balance.
-  vibeulonsEarned       Int       @default(0) @map("vibeulons_earned")
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  vibeulonsEarned       Int      @default(0) @map("vibeulons_earned")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   forgedBy     Player?               @relation("CampaignLeadForgedBy", fields: [forgedByPlayerId], references: [id])
   claimedBy    Player?               @relation("CampaignLeadClaimedBy", fields: [claimedByPlayerId], references: [id])
@@ -644,31 +644,31 @@ model CampaignLead {
 /// Distinct from `GameboardAidOffer`, which requires three Player FKs and is scoped
 /// to a gameboard slot. This is campaign-scoped and account-free by design.
 model CollectiveOffer {
-  id            String   @id @default(cuid())
+  id                String   @id @default(cuid())
   /// Sub-campaign (workstream) slug when offered into one; else the parent.
-  campaignRef   String
-  parentCampaignRef String? @map("parent_campaign_ref")
+  campaignRef       String
+  parentCampaignRef String?  @map("parent_campaign_ref")
   /// Accountless identity. Null only for offers forged by a steward on someone's behalf.
-  leadId        String?
+  leadId            String?
   /// Optional account, when the offerer happens to have one.
-  playerId      String?
+  playerId          String?
   /// 'action' | 'currency' | 'hours' — same unit vocabulary as MilestoneNeed.
-  unit          String   @default("action")
-  value         Float    @default(1)
+  unit              String   @default("action")
+  value             Float    @default(1)
   /// What's being offered, in the offerer's own words.
-  body          String
+  body              String
   /// Optional domain the offerer thinks it belongs in; steward may reroute.
-  domain        String?
-  superpower    String?
+  domain            String?
+  superpower        String?
   /// 'open' | 'accepted' | 'shaped' | 'declined' — 'shaped' = became a MilestoneNeed.
-  status        String   @default("open")
+  status            String   @default("open")
   /// Set when a steward turns this offer into a scoped need.
-  shapedNeedId  String?  @map("shaped_need_id")
+  shapedNeedId      String?  @map("shaped_need_id")
   /// Published to the campaign's collective directory for other stewards to adopt.
-  collective    Boolean  @default(true)
-  stewardNotes  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  collective        Boolean  @default(true)
+  stewardNotes      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   lead CampaignLead? @relation("CollectiveOfferLead", fields: [leadId], references: [id], onDelete: SetNull)
 
@@ -761,7 +761,7 @@ model TapTheVeinDailySession {
 model Lens {
   id           String   @id @default(cuid())
   playerId     String
-  type         String   // orientation | vision | yearly | quarterly | monthly | weekly | daily
+  type         String // orientation | vision | yearly | quarterly | monthly | weekly | daily
   title        String
   description  String?  @db.Text
   parentLensId String?
@@ -776,26 +776,26 @@ model Lens {
 }
 
 model LensGoal {
-  id                 String   @id @default(cuid())
-  stableKey          String   @unique @default(cuid())
+  id                 String    @id @default(cuid())
+  stableKey          String    @unique @default(cuid())
   playerId           String
   lensId             String
   domain             String
-  cadence            String   @default("year") // year | quarter | month | week
+  cadence            String    @default("year") // year | quarter | month | week
   title              String
   description        String?
   satisfactionPayoff String?
   metric             String?
   parentGoalId       String?
   superpowerSource   String?
-  alignmentType      String   @default("progress")
-  status             String   @default("active") // draft | active | parked | skipped | superseded | archived | complete
-  keepOrder          Int      @default(0)
+  alignmentType      String    @default("progress")
+  status             String    @default("active") // draft | active | parked | skipped | superseded | archived | complete
+  keepOrder          Int       @default(0)
   supersededById     String?
   archivedAt         DateTime?
   lineageSnapshot    Json?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@index([playerId, lensId])
   @@index([playerId, domain])
@@ -865,11 +865,11 @@ model TapTheVeinTask {
   // Phase 3 wiring (links back to daily session)
   dailySession              TapTheVeinDailySession @relation(fields: [dailySessionId], references: [id], onDelete: Cascade)
 
+  @@unique([dailySessionId, priorityRank])
   @@index([playerId, status])
   @@index([playerId, carryCount])
   @@index([campaignId, visibility])
   @@index([lensGoalId])
-  @@unique([dailySessionId, priorityRank])
   @@map("tap_the_vein_tasks")
 }
 
@@ -4764,24 +4764,60 @@ model BookTourHelpInterest {
   @@map("book_tour_help_interests")
 }
 
+/// A lead somebody names for the book tour — a bookstore, a venue, an org, a
+/// show. Crowdsourced: backers and readers add to the pile, which makes it a
+/// Gather Resources rep (Appendix B, "The Introduction") rather than a form.
+///
+/// PRIVACY, deliberate: this stores the PLACE and never the third party's
+/// contact details. A submitter cannot hand over somebody else's email here,
+/// because that person did not agree to be handed over. `canIntroduce` is the
+/// mechanism instead — the submitter keeps ownership of the introduction, which
+/// is both cleaner and warmer than a cold address would have been. Mirrors the
+/// campaign rule already pinned on /campaigns: the capture is posted, the
+/// person is not.
+model TourIntroduction {
+  id             String   @id @default(cuid())
+  /// The venue, shop, organization or show. A business, not a private person.
+  place          String
+  city           String
+  /// One of LEAD_KINDS in src/lib/tour-leads/corridor.ts.
+  kind           String
+  /// Whether the submitter will make the introduction themselves.
+  canIntroduce   Boolean  @default(false)
+  note           String?
+  submitterName  String?
+  submitterEmail String
+  consent        Boolean  @default(false)
+  source         String   @default("introductions")
+  /// Triage state: new | contacted | booked | declined | parked
+  status         String   @default("new")
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([city])
+  @@index([status])
+  @@index([submitterEmail])
+  @@map("tour_introductions")
+}
+
 /// Myths Read diagnostic — public Chapter 0 quiz result, optionally linked to
 /// a logged-in player and/or a spawned seeded BAR.
 model MythRead {
-  id                      String     @id @default(cuid())
+  id                      String   @id @default(cuid())
   userId                  String?
   email                   String?
-  source                  String     @default("mastering-allyship-ch0")
+  source                  String   @default("mastering-allyship-ch0")
   responses               Json
   mythScores              Json
   topMyths                String[]
-  rootBeliefs             String[]   @default([])
-  recommendedDestinations String[]   @default([])
+  rootBeliefs             String[] @default([])
+  recommendedDestinations String[] @default([])
   capturedCharge          Json?
   seedBarDrafts           Json?
-  ctaPrimary              String     @default("deck")
-  consent                 Boolean    @default(false)
+  ctaPrimary              String   @default("deck")
+  consent                 Boolean  @default(false)
   createdBarId            String?
-  createdAt               DateTime   @default(now())
+  createdAt               DateTime @default(now())
 
   user       Player?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdBar CustomBar? @relation("MythReadCreatedBar", fields: [createdBarId], references: [id], onDelete: SetNull)

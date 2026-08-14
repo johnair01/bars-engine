@@ -21,7 +21,7 @@ const sections = [
     eyebrow: 'Threshold',
     title: 'You have already heard the call.',
     body:
-      'It is the faint signal under ordinary life: the ache that says this could be better, the moment when good intentions stop being enough, the quiet knowing that allyship has to become something you can practice.',
+      'It is the faint signal under ordinary life: the ache that says this could be better, the moment when good intentions stop being enough, the knowing you have not said out loud yet: that allyship has to become a practice.',
   },
   {
     eyebrow: 'Practice',

@@ -3,6 +3,8 @@
 import { db } from '@/lib/db'
 import { sendChapterOneEmail } from '@/lib/email/awaken'
 import { CHAPTER_ONE_LEAD_SOURCE, CHAPTER_ONE_PDF_HREF } from '@/lib/mastering-allyship/chapter-one-lead'
+import { syncSubscriber } from '@/lib/esp/kit'
+import { sourceTag, WELCOME_SEQUENCE_TAG } from '@/lib/esp/list-contract'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -39,6 +41,16 @@ export async function captureChapterOneLead(input: {
   }
 
   const firstName = name?.split(/\s+/)[0] || null
+
+  // Persist-then-send, same as the delivery email below: the FunnelSignup row is
+  // already committed, so a Kit outage costs a copy of the lead and nothing else.
+  await syncSubscriber({
+    email,
+    firstName,
+    tags: [sourceTag('chapter-one'), WELCOME_SEQUENCE_TAG],
+    fields: { chapter_one_at: new Date().toISOString().slice(0, 10) },
+  })
+
   const result = await sendChapterOneEmail({
     to: email,
     firstName,

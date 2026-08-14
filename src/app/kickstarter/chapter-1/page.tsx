@@ -43,7 +43,7 @@ export default async function ChapterOnePage({
 
   const body =
     audience === 'warm'
-      ? "the actual opening of the book you backed — not a status update, the real thing. it's in final polish and lands right here in the next day or two. this page will upgrade itself the moment it's ready; nothing to do but check back."
+      ? "the actual opening of the book you backed, rather than a status update about it. it's in final polish and lands right here in the next day or two. this page will upgrade itself the moment it's ready; nothing to do but check back."
       : "the actual opening of the book — in final polish, landing right here in the next day or two. this page upgrades itself the moment it's ready."
 
   return (
@@ -108,14 +108,14 @@ export default async function ChapterOnePage({
               color: 'var(--bars-text-muted)',
             }}
           >
-            coming very soon — the excerpt is in final polish. we’d rather show you the real thing
+            coming very soon — the excerpt is in final polish. we’d rather show you the finished chapter
             than a placeholder{ready ? ', and it’s nearly here' : ''}.
           </p>
 
           {/* A real link on to /launch — the reader's choice, not a redirect. */}
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Link className="ks-cta" href="/launch">
-              {audience === 'warm' ? 'see everything you backed' : 'see the whole thing'} →
+              {audience === 'warm' ? 'see everything you backed' : 'see all of it'} →
             </Link>
             <Link className="ks-cta ks-cta--ghost" href={hubHref}>
               back to the hub

@@ -345,6 +345,11 @@ export function MythsReadClient() {
               )}
             </section>
 
+            <p className={styles.sheetCrossLink}>
+              That is line three of your character sheet.{' '}
+              <Link href="/mastering-allyship/sheet">Here are the other twelve</Link>.
+            </p>
+
             <button type="button" className={styles.retake} onClick={reset}>
               ↺ Retake the read
             </button>
@@ -511,7 +516,7 @@ function WholeBoard({ surfacedIds }: { surfacedIds: MythId[] }) {
           )
         })}
       </ol>
-      <p>Unlit myths aren&apos;t absent — just quiet today.</p>
+      <p>An unlit myth is still yours. It simply did not score today.</p>
     </section>
   )
 }

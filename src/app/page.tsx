@@ -90,28 +90,33 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             </div>
           </div>
 
-          {/* Door B — Help right now (The Crossing) */}
+          {/* Door B — the ways in.
+              The storefront points at the ask rather than making it. The handoff's
+              rule is that a personal-need ask lives at /support, and /support is
+              where the car, the runway and the non-money help are laid out with
+              the tax-deductibility question answered before any of them. */}
           <div className="flex flex-col rounded-2xl border border-amber-500/40 bg-gradient-to-b from-amber-950/40 to-zinc-950 p-6">
             <div className="text-[10px] uppercase tracking-widest text-amber-400/80 mb-2">
-              Ready to help · The Crossing
+              Ready to help
             </div>
             <h2 className="text-xl font-bold text-white leading-snug">Help right now</h2>
             <p className="mt-2 flex-1 text-sm text-zinc-300 leading-relaxed">
-              The work is in motion and needs a reliable car to keep moving. Money helps — and so do
-              car leads, intros, and signal boosts. Pick the move that fits what you can offer.
+              Some of what helps costs money and some of it costs an introduction. One page
+              lists every way in, says what each one funds, and says where the money lands
+              before you give any.
             </p>
             <div className="mt-5 flex flex-col gap-2">
               <Link
-                href="/campaign/the-crossing"
+                href="/support"
                 className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-bold rounded-lg text-center transition-all shadow-lg shadow-amber-900/30"
               >
-                Find your move →
+                See the ways in →
               </Link>
               <Link
-                href="/awaken"
+                href="/mastering-allyship/book-tour/help"
                 className="w-full py-2 px-4 text-amber-100/90 hover:text-white font-semibold rounded-lg text-center transition-all text-xs"
               >
-                Or join the July 17–19 launch weekend →
+                Or help with the book tour →
               </Link>
             </div>
           </div>

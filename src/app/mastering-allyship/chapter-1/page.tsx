@@ -38,7 +38,7 @@ const pathCards = [
     n: '3',
     title: 'Practice with the tools',
     body:
-      'The deck gives you one concrete move. The Dojo and 1:1 work give you a room where the move can become something you actually do.',
+      'The deck gives you one concrete move. The Dojo and 1:1 work give you people to practice it with, and a standing reason to.',
     href: '/launch#choose',
     cta: 'See the practice paths',
   },
@@ -123,7 +123,7 @@ export default function MasteringAllyshipChapterOnePage() {
             <p className="max-w-2xl text-sm leading-7 text-[#9f98a8]">
               The PDF downloads immediately after signup. No scavenger hunt, no broken
               “coming soon” link. Read the chapter, then decide whether you want the book,
-              the deck, or a room where the work becomes practice.
+              the deck, or people to practice the work alongside.
             </p>
           </div>
         </div>

@@ -17,7 +17,7 @@ import {
  * @page /mastering-allyship/spoke/:index
  * @entity CAMPAIGN
  * @description MTGOA spoke leaf — "the drawn card, opened" on the slate table. PUBLIC
- *   sub-landing: shows the spoke's curriculum + WAVE moves + its July 18 funnel door.
+ *   sub-landing: shows the spoke's curriculum + WAVE moves + its funnel door.
  *   Cards take the player's nation element (earth fallback when logged out).
  *   Spec: .specify/specs/mtgoa-menu-skeuomorphic-cyoa/
  * @permissions public
