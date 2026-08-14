@@ -7,6 +7,8 @@
  * touching component logic.
  */
 
+import { BOOK_DIGITAL_GUMROAD_URL, BOOK_PHYSICAL_GUMROAD_URL } from '@/lib/launch/book-offer'
+
 export type AwakenEvent = {
   /** Stable key persisted on FunnelSignup.events — do not rename casually. */
   key: string
@@ -60,7 +62,10 @@ export type AwakenPageContent = {
     donate: AwakenMoveContent
     events: AwakenMoveContent
     deck: AwakenMoveContent
+    /** The digital edition — finished and delivered instantly. */
     book: AwakenMoveContent
+    /** The print edition — a real pre-order, ships after the print run. */
+    bookPrint: AwakenMoveContent
     chapter: AwakenMoveContent
   }
   events: AwakenEvent[]
@@ -101,22 +106,46 @@ export const AWAKEN_BOOK_TOUR_HREF = '/mastering-allyship/book-tour/help'
 /** The Allyship Deck sales page. */
 export const AWAKEN_DECK_SALES_HREF = '/deck/sales'
 
-/** The Mastering the Game of Allyship book sales page (external). */
-export const AWAKEN_BOOK_SALES_HREF = 'https://wendellbritt.gumroad.com/l/MTGOAbook'
+/**
+ * The Mastering the Game of Allyship book sales page (external).
+ *
+ * Re-exported from the shared definition rather than written out again here, so
+ * this funnel and the `book-digital` offer on /launch and /mastering-allyship
+ * can never advertise two different links (or two different states) for the same
+ * product. Change the URL in `lib/launch/book-offer.ts`, not here.
+ */
+export const AWAKEN_BOOK_SALES_HREF = BOOK_DIGITAL_GUMROAD_URL
 
 /** Where "buy products / explore the offers" points. */
 export const AWAKEN_PRODUCTS_HREF = '/launch'
+
+/**
+ * Where "pre-order the print book" sends people.
+ *
+ * The print run has no Gumroad product yet, so when the URL is unset this falls
+ * back to /launch — which lists the physical SKU and shows its own honest
+ * setup-pending state — rather than rendering a button that goes nowhere.
+ *
+ * Declared after AWAKEN_PRODUCTS_HREF on purpose: it reads that value at module
+ * load, so it cannot sit above it.
+ */
+export const AWAKEN_BOOK_PREORDER_HREF = BOOK_PHYSICAL_GUMROAD_URL || AWAKEN_PRODUCTS_HREF
 
 /** Non-profit page (currently under construction). */
 export const AWAKEN_NONPROFIT_HREF = '/nonprofit'
 
 /**
+ * The Chapter One lead-capture page — where "read chapter one" should send
+ * people, rather than straight at the PDF. The sample is free but the email is
+ * the point: the page captures the lead, then hands over the download and mails
+ * a copy. Linking the file directly would skip that.
+ */
+export const AWAKEN_CHAPTER_PAGE_HREF = '/mastering-allyship/chapter-1'
+
+/**
  * Canonical Chapter One delivery URL.
  */
 export const AWAKEN_CHAPTER_FILE_HREF = '/mastering-allyship-chapter-1.pdf'
-
-/** The Chapter One lead page — the chapter in exchange for an email address. */
-export const AWAKEN_CHAPTER_ONE_HREF = '/mastering-allyship/chapter-1'
 
 export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
   steps: {
@@ -168,16 +197,23 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     book: {
       badge: 'Move 4',
       title: 'Get the book',
-      body: 'The ebook of Mastering the Game of Allyship is live on Gumroad: nine chapters, eight appendices, and the ten myths the first chapter takes apart.',
-      cta: 'Get the ebook →',
+      body: 'The digital edition of Mastering the Game of Allyship is finished: nine chapters, eight appendices, and the ten myths the first chapter takes apart. Buy it and start reading tonight.',
+      cta: 'Buy the digital book →',
       href: AWAKEN_BOOK_SALES_HREF,
     },
-    chapter: {
+    bookPrint: {
       badge: 'Move 5',
+      title: 'Pre-order it in print',
+      body: 'Want it on paper? Reserve the paperback. It ships after the print run.',
+      cta: 'Pre-order the print book →',
+      href: AWAKEN_BOOK_PREORDER_HREF,
+    },
+    chapter: {
+      badge: 'Free',
       title: 'Read Chapter One',
-      body: 'The Infinite Arcade, and the ten myths that keep the game unwinnable. It costs an email address and arrives immediately.',
-      cta: 'Send me the chapter →',
-      href: AWAKEN_CHAPTER_ONE_HREF,
+      body: 'The Infinite Arcade — where the book opens. Twenty-four pages, free: add your email and start reading now.',
+      cta: 'Read Chapter One free →',
+      href: AWAKEN_CHAPTER_PAGE_HREF,
     },
   },
   events: AWAKEN_EVENTS,
@@ -239,6 +275,7 @@ export function normalizeAwakenPageContent(input: unknown): AwakenPageContent {
       events: normalizeMove(raw.moves?.events, defaults.moves.events),
       deck: normalizeMove(raw.moves?.deck, defaults.moves.deck),
       book: normalizeMove(raw.moves?.book, defaults.moves.book),
+      bookPrint: normalizeMove(raw.moves?.bookPrint, defaults.moves.bookPrint),
       chapter: normalizeMove(raw.moves?.chapter, defaults.moves.chapter),
     },
     events: defaults.events.map((fallback, index) => {

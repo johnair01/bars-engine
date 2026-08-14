@@ -66,7 +66,7 @@ export default function MasteringAllyshipChapterOnePage() {
                 src="/mastering-allyship/cover-front.png"
                 alt="Mastering the Game of Allyship book cover"
                 width={430}
-                height={645}
+                height={688}
                 className="h-auto w-full rounded-[3px_8px_8px_3px]"
                 priority
               />
