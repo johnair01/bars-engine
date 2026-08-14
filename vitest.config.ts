@@ -30,6 +30,7 @@ export default defineConfig({
       'src/lib/superpowers/__tests__/quiz-loadout.test.ts',
       'src/lib/launch/__tests__/superpower-offers.test.ts',
       'src/lib/ally-campaign/__tests__/economics.test.ts',
+      'src/lib/ally-campaign/__tests__/content-overrides.test.ts',
     ],
   },
   resolve: {

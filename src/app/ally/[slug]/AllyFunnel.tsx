@@ -27,10 +27,9 @@ import { SuperpowerQuiz } from '@/components/superpowers/SuperpowerQuiz'
 import { offerHref } from '@/lib/launch/offers'
 import { ALLYSHIP_DOMAINS, getDomainLabel, type AllyshipDomainKey } from '@/lib/allyship-domains'
 import type { SuperpowerIntakeOutcome } from '@/lib/superpowers/routing'
-import { ALLY_MYTHS, UNDERSTANDING, type AllyInvite } from '@/lib/ally-campaign/allies'
+import type { AllyInvite, AllyMyth, UnderstandingPanel } from '@/lib/ally-campaign/allies'
 import {
   needsForSuperpower,
-  workstreamsForDomain,
   type Workstream,
   type WorkstreamNeed,
 } from '@/lib/ally-campaign/workstreams'
@@ -78,7 +77,20 @@ function readStoredLeadId(): string | null {
   }
 }
 
-export function AllyFunnel({ invite }: { invite: AllyInvite }) {
+export function AllyFunnel({
+  invite,
+  myths,
+  understanding,
+  workstreams,
+}: {
+  /** All prose arrives resolved — authored defaults with any admin edits already
+   *  merged in by the server. This component never reads the content modules
+   *  directly, so an edit shows up without touching the funnel. */
+  invite: AllyInvite
+  myths: AllyMyth[]
+  understanding: UnderstandingPanel[]
+  workstreams: Workstream[]
+}) {
   const [step, setStep] = useState<Step>('intro')
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
   const [mythIndex, setMythIndex] = useState(0)
@@ -99,11 +111,17 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
   const superpower = outcome?.routing.superpower ?? null
   const orientation = outcome?.routing.orientation ?? null
 
-  // The page is statically rendered, so localStorage cannot be read during SSR.
-  // `useSyncExternalStore` with a null server snapshot is the sanctioned way to
-  // hydrate a client-only value without a setState-in-effect cascade.
+  // localStorage cannot be read during SSR. `useSyncExternalStore` with a null
+  // server snapshot is the sanctioned way to hydrate a client-only value without
+  // a setState-in-effect cascade.
   const storedLeadId = useSyncExternalStore(subscribeToStorage, readStoredLeadId, () => null)
   const returningLeadId = leadId ?? storedLeadId
+
+  /** Workstreams in one domain, from the resolved prop rather than the module. */
+  const streamsFor = useCallback(
+    (d: AllyshipDomainKey) => workstreams.filter((w) => w.domain === d),
+    [workstreams],
+  )
 
   const plan = useMemo(() => repaymentPlan(), [])
   const print = useMemo(() => printEconomics(), [])
@@ -137,7 +155,7 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
         contact: contact.trim() || undefined,
         superpower,
         superpowerOrientation: orientation,
-        mythsSeen: ALLY_MYTHS.map((m) => m.id),
+        mythsSeen: myths.map((m) => m.id),
         domain,
         commitments: [...picked],
         notes: notes.trim() || undefined,
@@ -227,11 +245,12 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
       {/* ── myths ─────────────────────────────────────────────────────────── */}
       {step === 'myths' && (
         <MythCard
+          myths={myths}
           index={mythIndex}
           flipped={mythFlipped}
           onFlip={() => setMythFlipped(true)}
           onNext={() => {
-            if (mythIndex >= ALLY_MYTHS.length - 1) {
+            if (mythIndex >= myths.length - 1) {
               setStep('understanding')
               return
             }
@@ -244,23 +263,23 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
       {/* ── understanding ─────────────────────────────────────────────────── */}
       {step === 'understanding' && (
         <Panel>
-          <Eyebrow>{UNDERSTANDING[panelIndex].kicker}</Eyebrow>
+          <Eyebrow>{understanding[panelIndex].kicker}</Eyebrow>
           <h2 className="text-[23px] font-bold leading-snug" style={{ color: INK }}>
-            {UNDERSTANDING[panelIndex].heading}
+            {understanding[panelIndex].heading}
           </h2>
-          <Prose text={UNDERSTANDING[panelIndex].body} />
+          <Prose text={understanding[panelIndex].body} />
           <Row>
             <button
               className={cta}
               style={{ background: PURPLE }}
               onClick={() => {
-                if (panelIndex >= UNDERSTANDING.length - 1) setStep('domain')
+                if (panelIndex >= understanding.length - 1) setStep('domain')
                 else setPanelIndex((i) => i + 1)
               }}
             >
-              {panelIndex >= UNDERSTANDING.length - 1 ? 'Show me the work →' : 'Go on →'}
+              {panelIndex >= understanding.length - 1 ? 'Show me the work →' : 'Go on →'}
             </button>
-            <Counter now={panelIndex + 1} total={UNDERSTANDING.length} />
+            <Counter now={panelIndex + 1} total={understanding.length} />
           </Row>
         </Panel>
       )}
@@ -276,7 +295,7 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
           </Sub>
           <div className="grid grid-cols-1 gap-2.5">
             {ALLYSHIP_DOMAINS.map((d) => {
-              const streams = workstreamsForDomain(d.key as AllyshipDomainKey)
+              const streams = streamsFor(d.key as AllyshipDomainKey)
               if (streams.length === 0) return null
               return (
                 <button
@@ -307,9 +326,9 @@ export function AllyFunnel({ invite }: { invite: AllyInvite }) {
           <Heading>{getDomainLabel(domain)}</Heading>
           <Sub>
             <strong style={{ color: GOLD }}>Why this domain:</strong>{' '}
-            {workstreamsForDomain(domain)[0]?.emergentProblem}
+            {streamsFor(domain)[0]?.emergentProblem}
           </Sub>
-          {workstreamsForDomain(domain).map((w) => (
+          {streamsFor(domain).map((w) => (
             <Panel key={w.key}>
               <Eyebrow>{w.eyebrow}</Eyebrow>
               <h3 className="text-[21px] font-bold" style={{ color: INK }}>
@@ -662,17 +681,19 @@ function Numbers({
 // ── Myth card ───────────────────────────────────────────────────────────────
 
 function MythCard({
+  myths,
   index,
   flipped,
   onFlip,
   onNext,
 }: {
+  myths: AllyMyth[]
   index: number
   flipped: boolean
   onFlip: () => void
   onNext: () => void
 }) {
-  const myth = ALLY_MYTHS[index]
+  const myth = myths[index]
   return (
     <div className="flex flex-col gap-5">
       <div
@@ -680,7 +701,7 @@ function MythCard({
         style={{ letterSpacing: '.18em', color: DIM }}
       >
         <span>
-          Myth {index + 1} / {ALLY_MYTHS.length}
+          Myth {index + 1} / {myths.length}
         </span>
         <span style={{ color: GOLD }}>Reframe</span>
       </div>
@@ -721,7 +742,7 @@ function MythCard({
       <Row>
         {flipped ? (
           <button className={cta} style={{ background: PURPLE }} onClick={onNext}>
-            {index >= ALLY_MYTHS.length - 1 ? 'Done with the myths →' : 'Next myth →'}
+            {index >= myths.length - 1 ? 'Done with the myths →' : 'Next myth →'}
           </button>
         ) : (
           <button className={cta} style={{ background: PURPLE }} onClick={onFlip}>

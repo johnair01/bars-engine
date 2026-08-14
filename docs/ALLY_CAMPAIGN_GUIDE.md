@@ -142,9 +142,37 @@ I'll call Sunday.
 That's the whole registration. `/ally/ray` now exists — no database row, no
 deploy-time registry. Ship it and send the link.
 
+### 1.1b Or just edit it in the browser
+
+You don't have to touch code to change any of the prose. **Log in as an admin and
+visit the page** — an `✎ Edit this page` button appears above the letter, with
+four tabs:
+
+| Tab | Edits |
+|-----|-------|
+| The letter | display name, eyebrow, opening, closing — for *this* invite |
+| About me | the three "who he actually is" panels |
+| Myths | all six myths (myth / truth / reframe) |
+| Workstreams | title, why-this-domain, narrative, and the ask, per workstream |
+
+Edits save to `AppConfig.theme` and take effect immediately. The panel is absent
+from the page entirely for anyone who isn't an admin — not hidden, not rendered.
+
+Two behaviours worth knowing:
+
+- **Clearing a box restores the written-in-code default.** You cannot publish a
+  blank letter by deleting text, and `Restore the original` does that for a whole
+  letter at once.
+- **The code file is still the source of truth for anything unedited.** Overrides
+  are sparse, so a field you never touched keeps tracking the file — including the
+  dollar figures, which are interpolated at render time.
+
+Adding a *new* invite still needs a code entry (§1.1); editing an existing one
+does not.
+
 > **Read what you wrote.** The `mom` entry in that file was drafted by a machine
-> in your voice. It's a competent draft and it is not your sentences. Same applies
-> to anything you generate for someone else.
+> in your voice. It's a competent draft and it is not your sentences — and now you
+> can fix that from the page itself instead of a pull request.
 
 Anyone who visits a slug you haven't defined (`/ally/whoever`) gets
 `DEFAULT_INVITE` — a warm, non-presumptuous version. That's the link to put in a
@@ -340,12 +368,18 @@ Everything below is plain data. None of it requires touching a component.
 
 | To change | Edit |
 |-----------|------|
-| Any dollar figure or count | `economics.ts` → `INPUTS` |
-| Which figures show *(estimate)* | `economics.ts` → `UNCONFIRMED` |
-| Workstream story, the ask, the tasks | `workstreams.ts` |
-| Personal invite letters | `allies.ts` → `ALLIES` |
-| The six myths | `allies.ts` → `ALLY_MYTHS` |
-| The "who he actually is" panels | `allies.ts` → `UNDERSTANDING` |
+| Any dollar figure or count | `economics.ts` → `INPUTS` **(code only)** |
+| Which figures show *(estimate)* | `economics.ts` → `UNCONFIRMED` **(code only)** |
+| The tasks under a workstream | `workstreams.ts` → `needs` **(code only)** |
+| Workstream title / story / the ask | `workstreams.ts` — *or the admin editor* |
+| Personal invite letters | `allies.ts` → `ALLIES` — *or the admin editor* |
+| The six myths | `allies.ts` → `ALLY_MYTHS` — *or the admin editor* |
+| The "who he actually is" panels | `allies.ts` → `UNDERSTANDING` — *or the admin editor* |
+| Adding a brand-new invite slug | `allies.ts` → `ALLIES` **(code only)** |
+
+Anything marked *or the admin editor* can be changed in the browser (§1.1b) with
+no deploy. Prose edited there wins over the file; anything left alone keeps
+following the file.
 
 **Keep `id` values stable.** Need ids and myth ids are persisted on real leads and
 claims. Renaming `aq-tour-host` orphans Ray's claim. Change the `title` and
