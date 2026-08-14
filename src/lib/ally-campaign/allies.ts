@@ -15,6 +15,7 @@
  */
 
 import type { AllyshipDomainKey } from '@/lib/allyship-domains'
+import { INPUTS, usd } from './economics'
 
 export interface AllyInvite {
   /** URL slug — `/ally/<slug>`. */
@@ -36,22 +37,34 @@ export const ALLIES: Record<string, AllyInvite> = {
     slug: 'mom',
     displayName: 'Mom',
     eyebrow: 'a letter, with a game attached',
+
+    // ⚠️ ADD THE PERSONAL BEAT. This letter is deliberately free of invented
+    // history — it makes no claim about your past with her, because a machine
+    // guessing at that is how you get a sentence that is either wrong or, worse,
+    // accidentally right. It reads as honest and slightly formal as a result.
+    // One or two true sentences from you, dropped in before "Start when you're
+    // ready," is what turns it from a good letter into your letter.
     opening: `Mom —
 
-I've spent four years telling you "the book is almost done" and then changing the subject. I want to stop doing that.
+I'm going to ask you for ${usd(INPUTS.carLoanCents)}, as a loan, to buy a car. I'd rather you know that in the first sentence than wonder about it for fifteen minutes.
 
-So this isn't a phone call where I'm vague and you're supportive and neither of us knows what was decided. It's the actual thing: what I'm building, what it costs, what I'm asking you for, and how I pay you back. In writing. With numbers you can check.
+Everything after this is me showing the work: what the car is for, what the rest of it costs, how I pay you back, and what it looks like if I'm wrong. In writing, with numbers you can check.
 
-It'll take about fifteen minutes. It's built as a game because that's genuinely what my work is — I build games that teach people how to help each other, and the fastest way to show you what I do all day is to have you play one.
+It's built as a game because that is literally the job — I build games that teach people how to help each other. The fastest way to show you what I actually do all day is to hand you one and let you play it.
 
-Here's the deal I'll make with you up front: at the end, "no" is a real option. Not a disappointing one. I've watched you say yes to things out of love and then carry them alone, and I would rather have your honest no than your worried yes.
+Two things before you start.
+
+First: "no" is a complete answer. Not a disappointing one, and not one I'll be quiet and wounded about afterward. I would rather have a clear no from you today than a yes you're privately worrying about in March.
+
+Second: there is more than money in here. Most of what I need can't be bought at any price. If your honest answer turns out to be "not the money, but I could do that other thing" — that's a real yes, and it lands on the same board.
 
 Start when you're ready.`,
-    closing: `That's the whole thing, Mom. No part of it hidden.
 
-Whatever you picked — money, a room, a phone call, or just reading to the end — it's on the board now and I can see it. I'll call you this week and we'll talk about it like two adults who both have the same information for once.
+    closing: `That's the whole thing, Mom. Nothing held back, and nothing rounded in my favor.
 
-Thank you for reading all of it. I know it was long. You raised someone who explains things.
+Whatever you picked is on my board now, and I can see it. If you picked nothing, that's a real answer and I meant it when I said so.
+
+I'll call you this week. You've seen everything I've seen now, so we can just talk about it.
 
 — Wendell`,
     cohort: 'family',

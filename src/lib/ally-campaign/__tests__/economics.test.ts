@@ -28,6 +28,7 @@ import {
   workstreamsForDomain,
 } from '../workstreams'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
+import { ALLIES, DEFAULT_INVITE, resolveInvite } from '../allies'
 
 describe('economics — print run', () => {
   const p = printEconomics()
@@ -259,6 +260,41 @@ describe('workstreams — lookups', () => {
         expect(w.domain).toBe(d.key)
       }
     }
+  })
+})
+
+describe('the warm letters', () => {
+  it("quotes the live loan figure, so the letter can't go stale", () => {
+    // The ask appears in the first sentence of the letter to Wendell's mother.
+    // If `carLoanCents` changes and the prose doesn't, she reads one number and
+    // the rest of the site shows another — the single worst failure this page has.
+    expect(ALLIES.mom.opening).toContain(usd(INPUTS.carLoanCents))
+  })
+
+  it('names the ask in the opening rather than burying it', () => {
+    const firstParagraph = ALLIES.mom.opening.split('\n\n')[1] ?? ''
+    expect(firstParagraph).toContain(usd(INPUTS.carLoanCents))
+  })
+
+  it('makes no claim about shared history', () => {
+    // Guards against a well-meaning edit reintroducing invented biography.
+    // These are the phrasings a generator reaches for; none of them are knowable.
+    const invented = [/I've watched you/i, /you always/i, /for once/i, /like you did when/i]
+    for (const pattern of invented) {
+      expect(ALLIES.mom.opening, pattern.source).not.toMatch(pattern)
+      expect(ALLIES.mom.closing, pattern.source).not.toMatch(pattern)
+    }
+  })
+
+  it('keeps the default invite free of any personal claim', () => {
+    expect(DEFAULT_INVITE.opening).not.toMatch(/\bmom\b/i)
+    expect(DEFAULT_INVITE.cohort).not.toBe('family')
+  })
+
+  it('resolves a known slug, and falls back warmly for an unknown one', () => {
+    expect(resolveInvite('mom').displayName).toBe('Mom')
+    expect(resolveInvite('nobody').displayName).toBe(DEFAULT_INVITE.displayName)
+    expect(resolveInvite(undefined).slug).toBe('friend')
   })
 })
 

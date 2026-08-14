@@ -4,26 +4,38 @@
  * @description The warm ally CYOA — a named, personal walk through the Mastering
  *   Allyship framework that ends with the reader holding a specific, scoped piece
  *   of the campaign. `/ally/mom` is the first one. Public, no auth, no AI.
- * @permissions public
+ * @permissions public (admins additionally see an inline content editor)
  * @dimensions WHO:a person who loves the founder, WHAT:allyship onboarding + scoped ask,
  *   WHERE:mobility-quest campaign tree, ENERGY:open_up
  *
  * Accountless by design (see `src/actions/ally-campaign.ts`): everything the reader
  * does lands on the steward dashboard without a bars-engine account ever existing.
  *
- * Content lives in `@/lib/ally-campaign/*` — this file is a shell.
- * Spec lineage: campaign-lead-forge, mobility-quest-superpower-campaign.
+ * Rendered dynamically rather than statically: the prose is admin-editable at
+ * runtime (`content-overrides.ts`), and the editor is gated on the viewer's role,
+ * so both the copy and the chrome depend on request state. Traffic here is
+ * family-scale; correctness beats a cached render.
+ *
+ * Content defaults live in `@/lib/ally-campaign/*` — this file is a shell.
+ * Spec lineage: campaign-lead-forge, mobility-quest-superpower-campaign,
+ * admin-editable-launch-page (the override pattern).
  */
 import type { Metadata } from 'next'
 import { AllyFunnel } from './AllyFunnel'
-import { resolveInvite, ALLY_SLUGS } from '@/lib/ally-campaign/allies'
+import { AllyContentEditor } from './AllyContentEditor'
+import {
+  getAllyContentOverrides,
+  isCurrentPlayerAdmin,
+} from '@/lib/ally-campaign/content-server'
+import {
+  inviteExists,
+  inviteOverrideKey,
+  listInvites,
+  resolveAllyContent,
+} from '@/lib/ally-campaign/content-overrides'
+import { ALLIES, resolveInvite } from '@/lib/ally-campaign/allies'
 
-export const dynamic = 'force-static'
-
-/** Pre-render the named invites; anything else renders on demand. */
-export function generateStaticParams() {
-  return ALLY_SLUGS.map((slug) => ({ slug }))
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({
   params,
@@ -31,6 +43,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
+  // Metadata uses the authored default rather than a database read — a title is
+  // not worth a query, and the name rarely differs.
   const invite = resolveInvite(slug)
   return {
     title: `Mastering the Game of Allyship — for ${invite.displayName}`,
@@ -43,7 +57,15 @@ export async function generateMetadata({
 
 export default async function AllyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const invite = resolveInvite(slug)
+  const [overrides, isAdmin] = await Promise.all([
+    getAllyContentOverrides(),
+    isCurrentPlayerAdmin(),
+  ])
+
+  const content = resolveAllyContent(slug, overrides)
+  const key = inviteOverrideKey(slug, overrides)
+  // Created invites live only in the database; authored ones have a file entry.
+  const isCreated = inviteExists(slug, overrides) && !ALLIES[key]
 
   return (
     <main
@@ -53,8 +75,25 @@ export default async function AllyPage({ params }: { params: Promise<{ slug: str
         fontFamily: 'var(--bars-font-body)',
       }}
     >
-      <div className="flex w-full max-w-[620px] flex-col px-5 pb-20 pt-8">
-        <AllyFunnel invite={invite} />
+      <div className="flex w-full max-w-[620px] flex-col gap-6 px-5 pb-20 pt-8">
+        {/* Absent from the DOM entirely for a visitor — not merely hidden. */}
+        {isAdmin && (
+          <AllyContentEditor
+            inviteKey={key}
+            invite={content.invite}
+            myths={content.myths}
+            understanding={content.understanding}
+            workstreams={content.workstreams}
+            invites={listInvites(overrides)}
+            isCreated={isCreated}
+          />
+        )}
+        <AllyFunnel
+          invite={content.invite}
+          myths={content.myths}
+          understanding={content.understanding}
+          workstreams={content.workstreams}
+        />
       </div>
     </main>
   )
