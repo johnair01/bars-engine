@@ -1,6 +1,7 @@
 'use server'
 
 import { getCurrentPlayer } from '@/lib/auth'
+import { addBarToHandForPlayer } from '@/lib/hand-service'
 import { dbBase } from '@/lib/db'
 import { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
@@ -101,6 +102,22 @@ export type CompleteNurseryResult = {
   barTitle: string
   vibeulonsAwarded: number
   planted: boolean
+  /**
+   * Why the BAR did or did not land on the bed.
+   *
+   * Player signal (2026-04-08, /world/bb-bday-001/spoke-0-clean-up): "the ritual
+   * can be completed, but since I've already completed it I expect that what I
+   * input should be turned into a BAR and I should have the option to plant the
+   * BAR once I've completed the ritual."
+   *
+   * The bed anchor is first-mover-wins, so a repeat ritual minted a BAR that was
+   * silently not planted, never dealt anywhere, and shown as a bare "BAR
+   * Created". `bed_taken` is the case the player hit; the UI now hands them the
+   * BAR to carry instead of dropping it.
+   */
+  plantOutcome: 'anchored' | 'bed_taken'
+  /** True when the un-planted BAR was dealt into the player's Hand. */
+  inHand: boolean
 }
 
 export async function completeNurseryRitual(input: {
@@ -292,12 +309,29 @@ export async function completeNurseryRitual(input: {
   revalidatePath('/campaign/hub')
   revalidatePath(`/world/${input.instanceId}`)
 
+  // The BAR must never evaporate. When the bed already has a flagship, deal it
+  // into the Hand so the player is carrying something real and can plant it in
+  // another nursery — "THEN that bar can be taken to the nursery and planted".
+  let inHand = false
+  if (!planted) {
+    try {
+      const handRes = await addBarToHandForPlayer(player.id, bar.id)
+      inHand = 'success' in handRes && handRes.success === true
+    } catch (e) {
+      // A full Hand is not a failure — the BAR is still in the Vault and the
+      // carry affordance still works off barId.
+      console.error('[nursery-ritual] hand deal failed', e)
+    }
+  }
+
   return {
     success: true,
     barId: bar.id,
     barTitle,
     vibeulonsAwarded: vibeulonBase,
     planted,
+    plantOutcome: planted ? 'anchored' : 'bed_taken',
+    inHand,
   }
 }
 

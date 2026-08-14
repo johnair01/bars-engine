@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { isGameAccountReady } from '@/lib/auth'
-import { compostEligibleWhere } from '@/lib/vault-queries'
+import { compostEligibleWhere, loadCompostEligibleBars } from '@/lib/vault-queries'
 import {
     parseSalvagePayload,
     serializeSalvagePayload,
@@ -89,4 +89,34 @@ export async function runVaultCompost(input: {
     revalidatePath('/bars')
 
     return { ok: true }
+}
+
+/**
+ * Compost-eligible BARs for the current player, fetched on demand.
+ *
+ * The `/vault/compost` page loads these server-side, but the inline compost
+ * modal needs them without a navigation — a player who hits the Vault cap
+ * mid-capture must be able to clear space without losing what they typed.
+ */
+export async function listCompostEligible(): Promise<
+  { items: Array<{ id: string; title: string; type: string; createdAt: string }> } | { error: string }
+> {
+  const player = await getCurrentPlayer()
+  if (!player || !isGameAccountReady(player)) {
+    return { error: 'Sign in and complete orientation to use Vault Compost.' }
+  }
+  try {
+    const rows = await loadCompostEligibleBars(player.id)
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        type: r.type,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    }
+  } catch (e) {
+    console.error('[vault-compost:listCompostEligible]', e)
+    return { error: 'Could not load compostable items.' }
+  }
 }
