@@ -9,7 +9,11 @@
 import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_INVITE_KEY,
+  RESERVED_INVITE_SLUGS,
+  checkInviteSlug,
+  inviteExists,
   inviteOverrideKey,
+  listInvites,
   normalizeOverrides,
   parseAllyContentTheme,
   resolveAllyContent,
@@ -77,6 +81,124 @@ describe('parseAllyContentTheme', () => {
 
   it('ignores a theme whose allyCampaign key is the wrong shape', () => {
     expect(parseAllyContentTheme(JSON.stringify({ allyCampaign: 'oops' }))).toEqual({})
+  })
+})
+
+describe('checkInviteSlug', () => {
+  it('accepts a normal slug and lowercases it', () => {
+    expect(checkInviteSlug('Uncle-Ray')).toEqual({ ok: true, slug: 'uncle-ray' })
+  })
+
+  it('rejects empty and whitespace', () => {
+    expect(checkInviteSlug('').ok).toBe(false)
+    expect(checkInviteSlug('   ').ok).toBe(false)
+  })
+
+  it('rejects characters that would break the URL', () => {
+    for (const bad of ['has space', 'slash/es', 'dots.', 'under_score', '-leading', 'é']) {
+      expect(checkInviteSlug(bad).ok, bad).toBe(false)
+    }
+  })
+
+  it('refuses slugs that a real route already owns', () => {
+    // `/ally/mine/[leadId]` is the return surface — an invite here would sit under
+    // a path that means something else.
+    for (const reserved of RESERVED_INVITE_SLUGS) {
+      expect(checkInviteSlug(reserved).ok, reserved).toBe(false)
+    }
+  })
+
+  it('refuses to create something that already exists in code', () => {
+    const res = checkInviteSlug('mom')
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.error).toMatch(/edit it instead/i)
+  })
+})
+
+describe('created invites — no deploy required', () => {
+  const created = normalizeOverrides({
+    invites: {
+      'uncle-ray': {
+        displayName: 'Uncle Ray',
+        opening: 'Ray — here is the honest version.',
+        cohort: 'family',
+      },
+    },
+  })
+
+  it('resolves a slug that exists only in the database', () => {
+    const invite = resolveInviteWithOverrides('uncle-ray', created)
+    expect(invite.slug).toBe('uncle-ray')
+    expect(invite.displayName).toBe('Uncle Ray')
+    expect(invite.opening).toBe('Ray — here is the honest version.')
+  })
+
+  it('falls back to the generic invite for anything left blank', () => {
+    const invite = resolveInviteWithOverrides('uncle-ray', created)
+    expect(invite.closing).toBe(DEFAULT_INVITE.closing)
+    expect(invite.eyebrow).toBe(DEFAULT_INVITE.eyebrow)
+  })
+
+  it('edits itself rather than the shared default bucket', () => {
+    // The bug this prevents: editing /ally/uncle-ray silently rewriting the copy
+    // every unknown slug falls back to.
+    expect(inviteOverrideKey('uncle-ray', created)).toBe('uncle-ray')
+    expect(inviteOverrideKey('someone-else', created)).toBe(DEFAULT_INVITE_KEY)
+  })
+
+  it('validates the cohort instead of trusting stored text', () => {
+    const bogus = normalizeOverrides({
+      invites: { x: { opening: 'hi', cohort: 'executives' } },
+    })
+    expect(resolveInviteWithOverrides('x', bogus).cohort).toBe(DEFAULT_INVITE.cohort)
+  })
+
+  it('never resolves a reserved slug as an invite', () => {
+    const hostile = normalizeOverrides({ invites: { mine: { opening: 'sneaky' } } })
+    expect(inviteOverrideKey('mine', hostile)).toBe(DEFAULT_INVITE_KEY)
+    expect(resolveInviteWithOverrides('mine', hostile).opening).toBe(DEFAULT_INVITE.opening)
+  })
+
+  it('reports existence correctly', () => {
+    expect(inviteExists('uncle-ray', created)).toBe(true)
+    expect(inviteExists('mom', created)).toBe(true)
+    expect(inviteExists('stranger', created)).toBe(false)
+  })
+})
+
+describe('listInvites', () => {
+  it('lists authored invites even with no overrides', () => {
+    const list = listInvites({})
+    expect(list).toHaveLength(Object.keys(ALLIES).length)
+    expect(list.every((i) => i.source === 'code')).toBe(true)
+    expect(list.every((i) => !i.edited)).toBe(true)
+  })
+
+  it('includes created invites and marks their source', () => {
+    const list = listInvites({ invites: { 'uncle-ray': { opening: 'hi' } } })
+    const ray = list.find((i) => i.slug === 'uncle-ray')
+    expect(ray?.source).toBe('created')
+    expect(list.find((i) => i.slug === 'mom')?.source).toBe('code')
+  })
+
+  it('flags an authored invite that has been edited', () => {
+    const list = listInvites({ invites: { mom: { opening: 'rewritten' } } })
+    expect(list.find((i) => i.slug === 'mom')?.edited).toBe(true)
+  })
+
+  it('never lists the shared default bucket or a reserved slug as an invite', () => {
+    const list = listInvites({
+      invites: { [DEFAULT_INVITE_KEY]: { opening: 'x' }, mine: { opening: 'y' } },
+    })
+    expect(list.map((i) => i.slug)).not.toContain(DEFAULT_INVITE_KEY)
+    expect(list.map((i) => i.slug)).not.toContain('mine')
+  })
+
+  it('sorts code entries before created ones', () => {
+    const list = listInvites({ invites: { 'aaa-created': { opening: 'x' } } })
+    const firstCreated = list.findIndex((i) => i.source === 'created')
+    const lastCode = list.map((i) => i.source).lastIndexOf('code')
+    expect(lastCode).toBeLessThan(firstCreated)
   })
 })
 

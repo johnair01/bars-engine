@@ -23,10 +23,12 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import {
   ALLY_CONTENT_KEY,
+  checkInviteSlug,
   normalizeOverrides,
   parseAllyContentTheme,
   type AllyContentOverrides,
 } from '@/lib/ally-campaign/content-overrides'
+import { ALLIES } from '@/lib/ally-campaign/allies'
 
 async function requireAdminId(): Promise<string> {
   const cookieStore = await cookies()
@@ -159,6 +161,177 @@ export async function saveAllyContent(raw: unknown): Promise<SaveAllyContentResu
     return {
       ok: false,
       error: error instanceof Error ? error.message : 'Could not save the content.',
+    }
+  }
+}
+
+// ── Creating and deleting invites ───────────────────────────────────────────
+
+const createSchema = z.object({
+  slug: z.string().trim().min(1).max(40),
+  displayName: z.string().trim().min(1).max(160),
+  eyebrow: z.string().trim().max(200).optional(),
+  opening: z.string().trim().min(1).max(20_000),
+  closing: z.string().trim().max(20_000).optional(),
+  cohort: z.enum(['family', 'friends', 'colleagues', 'public']).optional(),
+})
+
+export type CreateInviteResult =
+  | { ok: true; slug: string; href: string }
+  | { ok: false; error: string }
+
+/**
+ * Create a brand-new invite — the last thing that used to require a code change.
+ *
+ * A created invite is just an override entry under a slug with no counterpart in
+ * `allies.ts`; `DEFAULT_INVITE` supplies anything left blank. `/ally/<slug>` is
+ * dynamic, so the page exists the moment this returns — no deploy, no rebuild.
+ */
+export async function createAllyInvite(raw: unknown): Promise<CreateInviteResult> {
+  let adminId: string
+  try {
+    adminId = await requireAdminId()
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'Admin access required' }
+  }
+
+  const parsed = createSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid invite.' }
+  }
+  const input = parsed.data
+
+  // Same rules the form shows — reserved routes, bad characters, existing slugs.
+  const check = checkInviteSlug(input.slug)
+  if (!check.ok) return { ok: false, error: check.error }
+  const slug = check.slug
+
+  try {
+    const existing = await db.appConfig.findUnique({
+      where: { id: 'singleton' },
+      select: { theme: true },
+    })
+
+    let theme: Record<string, unknown> = {}
+    try {
+      theme = existing?.theme ? (JSON.parse(existing.theme) as Record<string, unknown>) : {}
+    } catch {
+      theme = {}
+    }
+
+    const current = parseAllyContentTheme(existing?.theme)
+    if (current.invites?.[slug]) {
+      return { ok: false, error: `“${slug}” already exists. Open it to edit instead.` }
+    }
+
+    const next = normalizeOverrides({
+      ...current,
+      invites: {
+        ...(current.invites ?? {}),
+        [slug]: {
+          displayName: input.displayName,
+          eyebrow: input.eyebrow,
+          opening: input.opening,
+          closing: input.closing,
+          cohort: input.cohort,
+        },
+      },
+    })
+
+    const nextTheme = JSON.stringify({ ...theme, [ALLY_CONTENT_KEY]: next })
+
+    await db.appConfig.upsert({
+      where: { id: 'singleton' },
+      create: { id: 'singleton', theme: nextTheme, updatedBy: adminId },
+      update: { theme: nextTheme, updatedBy: adminId },
+    })
+
+    await db.adminAuditLog.create({
+      data: {
+        adminId,
+        action: 'config_update',
+        target: 'ally_campaign_content',
+        payload: JSON.stringify({ createdInvite: slug }),
+      },
+    })
+
+    revalidatePath('/ally/[slug]', 'page')
+    return { ok: true, slug, href: `/ally/${slug}` }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Could not create the invite.',
+    }
+  }
+}
+
+/**
+ * Delete a CREATED invite outright. Authored invites cannot be deleted here —
+ * they live in code, and the destructive-looking action for those is
+ * `resetAllyInvite`, which only clears edits.
+ *
+ * Deleting does not touch any `CampaignLead` already captured through the link;
+ * those rows record `channel: 'ally:<slug>'` and stay on the steward board. The
+ * link simply stops resolving to a personal letter and falls back to the generic
+ * invite.
+ */
+export async function deleteAllyInvite(slug: string): Promise<SaveAllyContentResult> {
+  let adminId: string
+  try {
+    adminId = await requireAdminId()
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'Admin access required' }
+  }
+
+  const key = String(slug ?? '').trim().toLowerCase()
+  if (!key) return { ok: false, error: 'No invite named.' }
+  if (ALLIES[key]) {
+    return { ok: false, error: `“${key}” is defined in code — use “Restore the original” instead.` }
+  }
+
+  try {
+    const existing = await db.appConfig.findUnique({
+      where: { id: 'singleton' },
+      select: { theme: true },
+    })
+
+    let theme: Record<string, unknown> = {}
+    try {
+      theme = existing?.theme ? (JSON.parse(existing.theme) as Record<string, unknown>) : {}
+    } catch {
+      theme = {}
+    }
+
+    const current = parseAllyContentTheme(existing?.theme)
+    if (!current.invites?.[key]) return { ok: false, error: 'That invite no longer exists.' }
+
+    const invites = { ...current.invites }
+    delete invites[key]
+
+    const next = normalizeOverrides({ ...current, invites })
+    const nextTheme = JSON.stringify({ ...theme, [ALLY_CONTENT_KEY]: next })
+
+    await db.appConfig.upsert({
+      where: { id: 'singleton' },
+      create: { id: 'singleton', theme: nextTheme, updatedBy: adminId },
+      update: { theme: nextTheme, updatedBy: adminId },
+    })
+
+    await db.adminAuditLog.create({
+      data: {
+        adminId,
+        action: 'config_update',
+        target: 'ally_campaign_content',
+        payload: JSON.stringify({ deletedInvite: key }),
+      },
+    })
+
+    revalidatePath('/ally/[slug]', 'page')
+    return { ok: true }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Could not delete the invite.',
     }
   }
 }

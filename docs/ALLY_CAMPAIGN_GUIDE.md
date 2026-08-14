@@ -113,10 +113,37 @@ you don't have. Re-run the seed after editing so the milestone targets match.
 
 ## Part 1 — Inviting Uncle Ray
 
-### 1.1 Write him a personal opening
+### 1.1 Make him an invite — in the browser
 
-Open [`src/lib/ally-campaign/allies.ts`](../src/lib/ally-campaign/allies.ts) and
-add an entry to `ALLIES`:
+Log in as an admin, open any ally page, hit **`✎ Edit this page`** → **All
+invites**. You'll see every live invite and a **New invite** form:
+
+| Field | |
+|---|---|
+| Link | `uncle-ray` → the page becomes `/ally/uncle-ray` |
+| How they're addressed | `Uncle Ray` |
+| Cohort | family / friends / colleagues / public — shows on the steward board |
+| Opening letter | the personal part |
+| Closing | optional; falls back to the generic sign-off |
+
+**The page exists the moment you save.** No deploy, no rebuild, no pull request.
+
+The link field validates as you type — lowercase letters, numbers and dashes
+only, and it refuses names a real route already owns (`mine` is the ally return
+surface) or that already exist in code.
+
+Created invites show a `created here` badge and can be deleted. Ones defined in
+code show `in code` and can only be reset to their original wording — deleting
+something that lives in a file would just come back on the next deploy.
+
+> Deleting an invite leaves every lead it captured on the steward board. Only the
+> link stops resolving to a personal letter.
+
+### 1.1a Or write it in code
+
+Still supported, and better when you want the letter in version control. Open
+[`src/lib/ally-campaign/allies.ts`](../src/lib/ally-campaign/allies.ts) and add an
+entry to `ALLIES`:
 
 ```ts
 ray: {
@@ -142,15 +169,14 @@ I'll call Sunday.
 That's the whole registration. `/ally/ray` now exists — no database row, no
 deploy-time registry. Ship it and send the link.
 
-### 1.1b Or just edit it in the browser
+### 1.1b Editing everything else
 
-You don't have to touch code to change any of the prose. **Log in as an admin and
-visit the page** — an `✎ Edit this page` button appears above the letter, with
-four tabs:
+The same `✎ Edit this page` panel has five tabs:
 
 | Tab | Edits |
 |-----|-------|
-| The letter | display name, eyebrow, opening, closing — for *this* invite |
+| This letter | display name, eyebrow, opening, closing — for the invite you're on |
+| All invites | the index, plus create and delete (§1.1) |
 | About me | the three "who he actually is" panels |
 | Myths | all six myths (myth / truth / reframe) |
 | Workstreams | title, why-this-domain, narrative, and the ask, per workstream |
@@ -160,19 +186,17 @@ from the page entirely for anyone who isn't an admin — not hidden, not rendere
 
 Two behaviours worth knowing:
 
-- **Clearing a box restores the written-in-code default.** You cannot publish a
-  blank letter by deleting text, and `Restore the original` does that for a whole
-  letter at once.
-- **The code file is still the source of truth for anything unedited.** Overrides
-  are sparse, so a field you never touched keeps tracking the file — including the
-  dollar figures, which are interpolated at render time.
+- **Clearing a box restores the default.** You cannot publish a blank letter by
+  deleting text, and `Restore the original` does that for a whole authored letter
+  at once.
+- **Anything unedited keeps tracking the code.** Overrides are sparse, so a field
+  you never touched still follows the file — including the dollar figures, which
+  are interpolated at render time. Type a number by hand and that sentence stops
+  updating with the rest of the site.
 
-Adding a *new* invite still needs a code entry (§1.1); editing an existing one
-does not.
-
-> **Read what you wrote.** The `mom` entry in that file was drafted by a machine
-> in your voice. It's a competent draft and it is not your sentences — and now you
-> can fix that from the page itself instead of a pull request.
+> **Read what you wrote.** The `mom` entry was drafted by a machine in your voice.
+> It's a competent draft and it is not your sentences — and you can now fix that
+> from the page itself instead of a pull request.
 
 Anyone who visits a slug you haven't defined (`/ally/whoever`) gets
 `DEFAULT_INVITE` — a warm, non-presumptuous version. That's the link to put in a
@@ -375,11 +399,16 @@ Everything below is plain data. None of it requires touching a component.
 | Personal invite letters | `allies.ts` → `ALLIES` — *or the admin editor* |
 | The six myths | `allies.ts` → `ALLY_MYTHS` — *or the admin editor* |
 | The "who he actually is" panels | `allies.ts` → `UNDERSTANDING` — *or the admin editor* |
-| Adding a brand-new invite slug | `allies.ts` → `ALLIES` **(code only)** |
+| Adding a brand-new invite | `allies.ts` → `ALLIES` — *or the admin editor* |
 
-Anything marked *or the admin editor* can be changed in the browser (§1.1b) with
-no deploy. Prose edited there wins over the file; anything left alone keeps
+Anything marked *or the admin editor* can be changed in the browser with no
+deploy. Prose edited there wins over the file; anything left alone keeps
 following the file.
+
+Only three things still require code: **the money inputs**, **the tasks under a
+workstream**, and **the myth/panel/workstream set itself** (you can rewrite the
+six myths, but adding a seventh is a code change). Everything a person actually
+reads is editable live.
 
 **Keep `id` values stable.** Need ids and myth ids are persisted on real leads and
 claims. Renaming `aq-tour-host` orphans Ray's claim. Change the `title` and
