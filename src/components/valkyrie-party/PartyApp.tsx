@@ -1,18 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { ImageBand } from "@/components/oracle/ImageBand";
-import {
-  CARD_HEIGHT,
-  CARD_WIDTH,
-  DEFAULT_CROP,
-  ZONE_CONTENT_H,
-  ZONE_HEADER_H,
-  ZONE_TITLE_H,
-  ZONE_TITLE_PADDING_X,
-  cropFromCard,
-  type Crop,
-} from "@/lib/oracle/cardLayout";
+import { PartyCardBack, PartyCardFace, type PartyCardPalette } from "@/components/oracle/PartyCardFace";
+import { CARD_WIDTH, type Crop } from "@/lib/oracle/cardLayout";
 import { uploadPartyAsset } from "@/lib/valkyrie-party/upload-client";
 
 type Depth = "easy" | "medium" | "hard";
@@ -224,13 +214,6 @@ function emptyAdminDraft(): AdminCardCopyDraft {
   };
 }
 
-const SUIT_SVG_FILES: Record<string, string> = {
-  WU: "/oracle/icons/wake-up.svg",
-  CU: "/oracle/icons/clean-up.svg",
-  GU: "/oracle/icons/grow-up.svg",
-  SU: "/oracle/icons/show-up.svg",
-};
-
 const FACE_FIELDS = [
   ["shaman", "Shaman", "Creates quests of presence, meaning, emotional honesty, and ritual. This face asks: what feeling or threshold is this quest helping people meet?"],
   ["challenger", "Challenger", "Creates quests of courage, clean asks, boundaries, and growth through chosen friction. This face asks: what brave edge makes the quest alive?"],
@@ -331,6 +314,15 @@ async function getJson<T>(url: string): Promise<T> {
   return json as T;
 }
 
+/** Valkyrie's palette, handed to the shared renderer. Unchanged visually. */
+const VALKYRIE_CARD_PALETTE: PartyCardPalette = {
+  accent: PARTY_GOLD,
+  cream: PARTY_CREAM,
+  headerFrom: PARTY_BG,
+  headerTo: "#4B1248",
+  glow: "rgba(255,77,46,0.22)",
+};
+
 function CardFace({
   card,
   depth,
@@ -340,67 +332,23 @@ function CardFace({
   depth: Depth;
   playerCard: PlayerCard | null;
 }) {
-  const crop = card.crop_saved ? cropFromCard(card) : DEFAULT_CROP;
-  const image = typeof card.image_file === "string" && card.image_file.startsWith("/oracle/") ? card.image_file : null;
   const flavor = card.flavor[depth];
-  const prompt = card.prompts[depth];
-
   return (
-    <article style={{ width: CARD_WIDTH, height: CARD_HEIGHT, borderRadius: 12, overflow: "hidden", border: `1px solid ${PARTY_GOLD}`, background: "#111", boxShadow: "0 18px 50px rgba(255,77,46,0.22)" }}>
-      <div style={{ height: ZONE_HEADER_H, background: `linear-gradient(90deg, ${PARTY_BG}, #4B1248)`, borderBottom: `1px solid ${PARTY_GOLD}`, padding: "0 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: PARTY_GOLD }}>
-          <img src={SUIT_SVG_FILES[card.suit.code]} alt="" style={{ width: 32, height: 32, objectFit: "contain" }} />
-          <span style={{ fontSize: "0.7rem", letterSpacing: "0.08em" }}>{card.suit.name.toUpperCase()}</span>
-        </div>
-        <span style={{ color: PARTY_GOLD, fontSize: "0.75rem" }}>{card.rank}</span>
-      </div>
-
-      <ImageBand src={image} crop={crop} />
-
-      <div style={{ height: ZONE_TITLE_H, background: `linear-gradient(90deg, #4B1248, ${PARTY_BG})`, borderTop: `1px solid ${PARTY_GOLD}`, display: "flex", alignItems: "center", justifyContent: "center", padding: `0 ${ZONE_TITLE_PADDING_X}` }}>
-        <p style={{ color: PARTY_CREAM, fontSize: "0.68rem", margin: 0, textAlign: "center", letterSpacing: "0.04em", lineHeight: 1.15 }}>
-          {(playerCard?.title || card.title).toUpperCase()}
-        </p>
-      </div>
-
-      <div style={{ height: ZONE_CONTENT_H, background: "rgba(17,17,17,0.95)", padding: "0.45rem 0.5rem", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center", gap: "0.25rem", overflow: "hidden" }}>
-        <p style={{ color: PARTY_CREAM, fontSize: "0.72rem", textAlign: "center", margin: 0, lineHeight: 1.3, overflowWrap: "break-word" }}>
-          {playerCard?.prompt || prompt}
-        </p>
-        <div style={{ textAlign: "center", minWidth: 0, marginTop: "0.15rem" }}>
-          <p style={{ color: PARTY_CREAM, fontSize: "0.68rem", fontStyle: "italic", margin: "0 0 0.1rem", lineHeight: 1.3 }}>
-            "{playerCard?.flavor || flavor.line}"
-          </p>
-          <p style={{ color: PARTY_GOLD, fontSize: "0.56rem", margin: 0, opacity: 0.85, lineHeight: 1.2 }}>
-            {playerCard ? `Added by ${playerCard.author || "Anonymous"}` : `- ${flavor.npc}, ${flavor.title}`}
-          </p>
-        </div>
-      </div>
-    </article>
+    <PartyCardFace
+      card={card}
+      palette={VALKYRIE_CARD_PALETTE}
+      prompt={playerCard?.prompt || card.prompts[depth]}
+      flavorLine={playerCard?.flavor || flavor.line}
+      flavorAttribution={
+        playerCard ? `Added by ${playerCard.author || "Anonymous"}` : `- ${flavor.npc}, ${flavor.title}`
+      }
+      titleOverride={playerCard?.title}
+    />
   );
 }
 
 function CardBack({ onClick }: { onClick?: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        width: CARD_WIDTH,
-        height: CARD_HEIGHT,
-        border: "none",
-        borderRadius: 12,
-        padding: 0,
-        overflow: "hidden",
-        background: "transparent",
-        cursor: onClick ? "pointer" : "default",
-        boxShadow: "0 18px 50px rgba(0,0,0,0.28)",
-      }}
-      aria-label={onClick ? "Reveal card" : "Card back"}
-    >
-      <img src="/oracle/card-back.png" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-    </button>
-  );
+  return <PartyCardBack onClick={onClick} />;
 }
 
 function QuestSlip({ card }: { card: QuestCard }) {

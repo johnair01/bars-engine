@@ -2638,6 +2638,26 @@ model PartyOracleCardOverride {
   @@map("party_oracle_card_overrides")
 }
 
+/// Append-only party game record. One primitive; hand, cycle, board, achievements,
+/// and GM feature/unlock state are all projections over this stream rather than
+/// separate mutable tables. Follows the loose-id convention of the other party
+/// models (no Prisma relations) so the one-shot stays additive.
+/// See .specify/specs/goodbye-yellow-brick-road-party-one-shot/plan.md
+model PartyGameEvent {
+  id          String   @id @default(cuid())
+  partyId     String   @map("party_id")
+  playerId    String?  @map("player_id")
+  type        String
+  cardId      String?  @map("card_id")
+  payloadJson Json     @default("{}") @map("payload_json")
+  createdAt   DateTime @default(now())
+
+  @@index([partyId, createdAt])
+  @@index([partyId, playerId, createdAt])
+  @@index([partyId, type, createdAt])
+  @@map("party_game_events")
+}
+
 model GameboardSlot {
   id                String              @id @default(cuid())
   instanceId        String
