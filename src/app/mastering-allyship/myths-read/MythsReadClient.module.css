@@ -899,3 +899,21 @@
     border-radius: 0;
   }
 }
+
+/* Cross-link to the character sheet. The read is one of its thirteen lines,
+   and Appendix H's whole argument is that the lines only mean something
+   together and dated. */
+.sheetCrossLink {
+  margin: 4px auto 0;
+  max-width: 46ch;
+  text-align: center;
+  color: var(--bars-text-secondary, #a09e98);
+  font-family: var(--bars-font-body, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.sheetCrossLink a {
+  color: var(--bars-text-primary, #f4f2ec);
+  text-underline-offset: 3px;
+}

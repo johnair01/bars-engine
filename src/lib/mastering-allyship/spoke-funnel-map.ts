@@ -2,7 +2,7 @@ import type { WallKey } from "@/lib/event/barn-raising";
 import type { ElementKey } from "@/lib/ui/card-tokens";
 
 /**
- * Spoke → July 18 funnel map (the card-face ribbon for the MtGoA deck menu).
+ * Spoke → funnel map (the card-face ribbon for the MtGoA deck menu).
  *
  * Derived from the six-faces analysis:
  * `.specify/specs/mtgoa-menu-skeuomorphic-cyoa/SIX_FACES_FUNNEL_ANALYSIS.md`.

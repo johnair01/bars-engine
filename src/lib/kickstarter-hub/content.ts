@@ -208,9 +208,11 @@ export const SELF_REPORT_CATEGORIES: SelfReportCategory[] = [
     blurb: "i love this and i'll help it travel.",
   },
   {
+    // Stored key stays `here-for-july-17`: it is persisted on existing hub rows
+    // and the label is the only part a backer reads.
     key: 'here-for-july-17',
-    label: "i'm just here for july 17",
-    blurb: 'no ask — i backed it and i wanted to look around.',
+    label: "i'm just looking around",
+    blurb: 'no ask — i backed it and i wanted to see where it got to.',
   },
 ]
 

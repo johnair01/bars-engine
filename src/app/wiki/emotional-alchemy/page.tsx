@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ALL_CANONICAL_MOVES, getMoveFamily } from '@/lib/quest-grammar/move-engine'
 import { SHENG_CYCLE, KE_CYCLE } from '@/lib/alchemy/wuxing'
 import { ElementEmotionLegend } from '@/components/bars/ElementEmotionLegend'
+import { listCompoundEmotionSlots } from '@/lib/alchemy/compound-emotions'
 
 /**
  * @page /wiki/emotional-alchemy
@@ -47,6 +48,9 @@ const MOVE_TO_WAVE: Record<string, string> = {
   water_fire: 'Clean',
 }
 
+const COMPOUND_SLOTS = listCompoundEmotionSlots()
+const NAMED_COMPOUND_SLOTS = COMPOUND_SLOTS.filter((slot) => slot.nameStatus === 'named')
+
 export default function EmotionalAlchemyPage() {
   return (
     <div className="space-y-8">
@@ -79,6 +83,49 @@ export default function EmotionalAlchemyPage() {
           <div className="flex gap-4"><span className="w-16 text-zinc-500">Fire</span><span className="text-zinc-300">Anger — boundary, breakthrough</span></div>
           <div className="flex gap-4"><span className="w-16 text-zinc-500">Earth</span><span className="text-zinc-300">Neutrality — clarity, coherence</span></div>
         </div>
+      </section>
+
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-4">
+        <h2 id="compound-emotions" className="text-lg font-bold text-white">Compound Emotions</h2>
+        <p className="text-zinc-400 text-sm max-w-3xl">
+          The primary model is still 5 channels × 3 altitudes = 15 primary states. Compound emotions are a diagnostic layer:
+          10 channel-pair edges × 2 directions = 20 directional slots. Treat the component channels, not the compound directly.
+        </p>
+        <div className="grid gap-2 text-sm">
+          {NAMED_COMPOUND_SLOTS.map((slot) => (
+            <div key={slot.id} className="border border-zinc-800 rounded-lg p-3">
+              <div className="flex flex-wrap items-baseline gap-2">
+                <span className="font-medium text-zinc-200">{slot.label}</span>
+                {slot.alternateLabels.length > 0 && (
+                  <span className="text-zinc-500">/ {slot.alternateLabels.join(' / ')}</span>
+                )}
+                <span className="text-[10px] uppercase tracking-widest text-emerald-500">named</span>
+              </div>
+              <p className="mt-1 text-xs text-zinc-500">
+                {slot.channels.join(' + ')} · {slot.dominantChannel} dominant · {slot.feltSense}
+              </p>
+            </div>
+          ))}
+        </div>
+        <details className="text-sm">
+          <summary className="cursor-pointer text-zinc-300 hover:text-white">Show provisional slots ({COMPOUND_SLOTS.length - NAMED_COMPOUND_SLOTS.length})</summary>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {COMPOUND_SLOTS.filter((slot) => slot.nameStatus === 'candidate').map((slot) => (
+              <div key={slot.id} className="border border-zinc-800 rounded-lg p-3">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <span className="font-medium text-zinc-300">{slot.label}</span>
+                  {slot.alternateLabels.length > 0 && (
+                    <span className="text-zinc-500">/ {slot.alternateLabels.join(' / ')}</span>
+                  )}
+                  <span className="text-[10px] uppercase tracking-widest text-amber-500">candidate</span>
+                </div>
+                <p className="mt-1 text-xs text-zinc-500">
+                  {slot.channels.join(' + ')} · {slot.dominantChannel} dominant
+                </p>
+              </div>
+            ))}
+          </div>
+        </details>
       </section>
 
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-4">

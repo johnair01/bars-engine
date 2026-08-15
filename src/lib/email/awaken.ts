@@ -26,16 +26,19 @@ export function absoluteUrl(path: string): string {
 export async function sendChapterOneEmail(opts: {
   to: string
   firstName?: string | null
+  homePath?: string
+  funnelTag?: string
+  downloadPath?: string
 }): Promise<SendEmailResult> {
-  const downloadUrl = absoluteUrl(AWAKEN_CHAPTER_FILE_HREF)
-  const homeUrl = absoluteUrl('/awaken')
+  const downloadUrl = absoluteUrl(opts.downloadPath ?? AWAKEN_CHAPTER_FILE_HREF)
+  const homeUrl = absoluteUrl(opts.homePath ?? '/awaken')
   const props = { downloadUrl, homeUrl, firstName: opts.firstName ?? null }
   return sendEmail({
     to: opts.to,
     subject: 'Chapter One is yours',
     react: ChapterOneEmail(props),
     text: chapterOneText(props),
-    tags: [{ name: 'funnel', value: 'awaken-chapter' }],
+    tags: [{ name: 'funnel', value: opts.funnelTag ?? 'awaken-chapter' }],
   })
 }
 
@@ -55,7 +58,12 @@ export async function sendRsvpConfirmationEmail(opts: {
   const props = { events, homeUrl, firstName: opts.firstName ?? null }
   return sendEmail({
     to: opts.to,
-    subject: `You're on the list — July 17–19`,
+    // Derived from the stops they actually picked. A hardcoded date outlives the
+    // event it names and then confirms people into a weekend that already ran.
+    subject:
+      events.length === 1
+        ? `You're on the list — ${events[0].when}`
+        : `You're on the list — ${events.length} stops`,
     react: RsvpConfirmationEmail(props),
     text: rsvpConfirmationText(props),
     tags: [{ name: 'funnel', value: 'awaken-rsvp' }],

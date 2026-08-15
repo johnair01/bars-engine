@@ -35,7 +35,7 @@ import { ShareKit } from './ShareKit'
 export const metadata: Metadata = {
   title: 'Mastering the Game of Allyship — Your Next Step',
   description:
-    'The book ships August 1 — and a game, two quizzes, and a deck for doing the work are ready to play with right now. Pick your next step.',
+    'The ebook is live, the print run is next, and a game, two quizzes and a deck are ready to play with right now. Pick your next step.',
 }
 
 function normalizeAudience(v?: string): HubAudience {

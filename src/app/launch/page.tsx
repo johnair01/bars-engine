@@ -98,7 +98,7 @@ export default async function LaunchPage() {
 
           <aside className="rounded-2xl border border-zinc-800 bg-black/30 p-5">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-              How the pieces fit
+              What each one does
             </p>
             <ol className="mt-4 space-y-3 text-sm leading-relaxed text-zinc-300">
               {launchContent.pieces.map((piece) => (

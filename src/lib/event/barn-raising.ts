@@ -1,5 +1,5 @@
 /**
- * The Milestone BAR — three-wall "barn raising" config for the July 18 send-off.
+ * The Milestone BAR — three-wall "barn raising" config for the Crossing and the book tour.
  *
  * Single source of truth for the barn's three walls (the three *kinds* of money) plus the
  * in-kind "hands & beams" readout. Presentational components read this; it can later be

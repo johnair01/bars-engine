@@ -70,7 +70,7 @@ export function ChapterOneEmail({ downloadUrl, firstName, homeUrl }: ChapterOneE
 
           <Text style={text}>
             Thank you for raising your hand. You just crossed from watching to walking — and the
-            first chapter is yours to take with you.
+            first chapter is ready for you.
           </Text>
 
           <Section style={{ margin: '24px 0' }}>
@@ -87,8 +87,8 @@ export function ChapterOneEmail({ downloadUrl, firstName, homeUrl }: ChapterOneE
           <Hr style={hr} />
 
           <Text style={muted}>
-            When you&apos;re ready for the next step — fueling the car fund or finding us in person
-            the weekend of July 18th — it all lives here:{' '}
+            When you&apos;re ready for the next step — the full book, the Allyship Deck, the Dojo,
+            or direct practice work — it all lives here:{' '}
             <Link href={homeUrl} style={link}>
               everything you can do
             </Link>
@@ -112,15 +112,15 @@ export function chapterOneText({ downloadUrl, firstName, homeUrl }: ChapterOneEm
     greeting,
     '',
     'Thank you for raising your hand. You just crossed from watching to walking,',
-    'and the first chapter is yours to take with you.',
+    'and the first chapter is ready for you.',
     '',
     `Read Chapter One: ${downloadUrl}`,
     '',
     'It opens the story we are all standing inside right now. Read it slowly.',
     'There is no rush and no test at the end.',
     '',
-    `When you are ready for the next step — fueling the car fund or finding us in`,
-    `person the weekend of July 18th — it all lives here: ${homeUrl}`,
+    `When you are ready for the next step — the full book, the Allyship Deck,`,
+    `the Dojo, or direct practice work — it all lives here: ${homeUrl}`,
     '',
     'This is not an automated list. Just reply to this email and it reaches a real person.',
   ].join('\n')

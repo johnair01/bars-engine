@@ -8,7 +8,9 @@ import {
 /**
  * @page /campaign/the-crossing
  * @entity CAMPAIGN
- * @description The Crossing — the community CYOA car-fund experience. Dedicated
+ * @description The Crossing — the community CYOA car-fund experience, still running.
+ *   The car has not been bought yet, and contributors get thanked through
+ *   stewardBroadcastThankYou() once it has. Dedicated
  *   supporter-facing landing (hero → How To Play → domain gates + accordion role
  *   cards) that hands into the capture flow. A literal route segment that
  *   overrides the generic `/campaign/[ref]` landing for this campaign.

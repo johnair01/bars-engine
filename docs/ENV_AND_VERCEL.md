@@ -145,6 +145,67 @@ Outbound email (Chapter One delivery, `/awaken` RSVP confirmations) sends via
 3. **Graceful degradation**: when `RESEND_API_KEY`/`EMAIL_FROM` are unset, sends are **logged and skipped** rather than throwing — the funnel still saves the lead, it just can't deliver yet.
 4. **Deliverability is gated on DNS**: `EMAIL_FROM`'s domain must be verified in Resend with **SPF, DKIM, and DMARC** records, or mail lands in spam. See Resend → Domains for the exact records.
 
+### NEXT_PUBLIC_GUMROAD_IGNITING_JOY_URL (the other book)
+
+`/igniting-joy` buys through Gumroad like every other offer. Absent, the page
+renders a "write to me and I will send the direct link" state rather than a dead
+button — the same convention `src/lib/launch/offers.ts` uses.
+
+**Verify the slug by clicking through from Gumroad rather than copying it from
+the repo.** The only URL for this book anywhere in the codebase lives in a Twine
+source file and reads `.../l/IgnnitingJoy`, with a doubled N. That is either the
+real slug or a typo, and nothing here can tell you which.
+
+### NEXT_PUBLIC_PATREON_URL (the build log)
+
+`/build-log` is the build-in-public surface. Absent, the page offers to send the
+link rather than rendering a dead button.
+
+**Setting this is not what launches it.** The page enforces the handoff's
+condition itself — one post a week minimum — by reading `BUILD_LOG_POSTS` in
+`src/lib/build-log/posts.ts` and computing the days since the newest entry:
+
+| state | what renders |
+|-------|--------------|
+| no posts | "It has not started yet", and **no subscribe button at all** |
+| last post ≤ 10 days | the log, the cadence, and the join button |
+| last post > 10 days | "The cadence lapsed", how long it has been, and **the button is withheld** |
+
+So the way to launch it is to write a post and add it to the list. The way to
+keep it launched is to keep writing them. `npm run test:build-log` covers all
+three states, including four months of silence.
+
+### KIT_API_KEY (the email list)
+
+The Myths Read, the Superpower quiz, Chapter One and the character sheet's
+quarterly nudge all sync to [Kit](https://kit.com) through the single client at
+`src/lib/esp/kit.ts`. Free to 10,000 subscribers.
+
+| Variable | Required | Meaning |
+|----------|----------|---------|
+| `KIT_API_KEY` | yes (to sync) | Kit → Settings → Developer → API keys. The **v4** key, sent as `X-Kit-Api-Key`. |
+
+1. **Local**: add it to `.env.local`. Leaving it unset is a supported state.
+2. **Vercel**: Dashboard → Settings → Environment Variables (Production + Preview).
+3. **Graceful degradation**: with no key, every sync is **logged and skipped**.
+   The lead is already committed to `FunnelSignup` / `MythRead` before the sync
+   runs, so an unset key or a Kit outage costs a copy, never the lead itself.
+4. **Tags and custom fields are created on demand.** The client resolves a tag
+   name to an id, creating it when it does not exist, and caches the map per
+   process.
+
+**Who may enter a sequence is decided in `src/lib/esp/list-contract.ts`, not in
+the client.** Two rules are enforced there and covered by
+`npm run test:list-contract`:
+
+- **Kickstarter backers never enter any sequence.** They were promised roughly
+  four broadcasts a year and no funnel. A backer who later takes a quiz is still
+  a backer, so the exclusion is checked against tags they already carry as well
+  as the ones being applied.
+- **Retaking updates, it does not re-enter.** Sequence-triggering tags are
+  applied on first creation only. Retaking a quiz refreshes the data tags and
+  the custom fields on the existing subscriber.
+
 ### STRAND_CREATOR_PLAYER_ID (FastAPI / bars-agents)
 
 Strand and MCP-generated BARs attach to a **dedicated agent `Player`**, not an arbitrary first user.
