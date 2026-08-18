@@ -31,6 +31,11 @@ export default defineConfig({
       'src/lib/launch/__tests__/superpower-offers.test.ts',
       'src/lib/ally-campaign/__tests__/economics.test.ts',
       'src/lib/ally-campaign/__tests__/content-overrides.test.ts',
+      'src/lib/ally-campaign/__tests__/victory-paths.test.ts',
+      'src/lib/ally-campaign/__tests__/divisible-needs.test.ts',
+      'src/lib/ally-campaign/__tests__/warm-selling.test.ts',
+      'src/lib/ally-campaign/__tests__/digital-price-parity.test.ts',
+      'src/lib/ally-campaign/__tests__/referral.test.ts',
     ],
   },
   resolve: {

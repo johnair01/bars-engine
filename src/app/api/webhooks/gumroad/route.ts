@@ -27,6 +27,7 @@ import { resolveSkuFromGumroad } from '@/lib/launch/gumroad'
 import { grantForSku } from '@/lib/launch/grants'
 import { wallForSku, parseGumroadPriceCents } from '@/lib/launch/barn-credit'
 import { creditBarnWallAnon } from '@/actions/barn'
+import { allyFromGumroadPing, mergeReferralMetadata } from '@/lib/ally-campaign/referral'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -138,6 +139,43 @@ export async function POST(req: NextRequest) {
       code: get('license_key'),
     })
 
+    // Ally attribution. Gumroad echoes back the `ally` parameter the storefront
+    // link carried, which is the only way credit survives a checkout we don't
+    // host. Written onto the sale's own row, so it is idempotent with the mint
+    // above and cannot double-count on a Gumroad retry.
+    //
+    // Best-effort throughout: a sale is never failed, retried or delayed over an
+    // attribution problem. A missing credit is a wrong number on a dashboard; a
+    // failed webhook is a buyer without their book.
+    let attributedTo: string | null = null
+    if (!alreadyMinted) {
+      try {
+        const allyLeadId = allyFromGumroadPing(get)
+        if (allyLeadId) {
+          // Only credit ids that are real leads — keeps a forged or stale query
+          // string from putting a fictional ally on the board.
+          const lead = await db.campaignLead.findUnique({
+            where: { id: allyLeadId },
+            select: { id: true },
+          })
+          if (lead) {
+            await db.redemptionCode.update({
+              where: { id: rc.id },
+              data: {
+                metadata: mergeReferralMetadata(rc.metadata, {
+                  allyLeadId: lead.id,
+                  attributedAt: new Date().toISOString(),
+                }),
+              },
+            })
+            attributedTo = lead.id
+          }
+        }
+      } catch (e) {
+        console.warn('[gumroad] ally attribution failed', e)
+      }
+    }
+
     let barnCredited = false
     if (!alreadyMinted) {
       const cents = parseGumroadPriceCents(get('price'))
@@ -156,7 +194,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true, action: 'minted', sku, status: rc.status, barnCredited })
+    return NextResponse.json({
+      ok: true,
+      action: 'minted',
+      sku,
+      status: rc.status,
+      barnCredited,
+      attributedTo,
+    })
   } catch (err) {
     // 500 ⇒ Gumroad retries (good for transient DB errors).
     console.error('[gumroad] webhook error', err)

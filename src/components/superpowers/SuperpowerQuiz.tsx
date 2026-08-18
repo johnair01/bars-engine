@@ -30,6 +30,16 @@ export interface SuperpowerQuizProps {
    * superpower + orientation and advance to the next step.
    */
   onComplete?: (outcome: SuperpowerIntakeOutcome) => void
+  /**
+   * Render nothing on completion — score, fire `onComplete`, and let the host
+   * surface take over.
+   *
+   * The default reveal ends in Crossing CTAs, which are right for a standalone
+   * quiz and wrong when the quiz is one step inside someone else's flow: a warm
+   * invite that routes its reader out to a different product mid-walk has lost
+   * them. Hosts that set this own the job of telling the reader their result.
+   */
+  suppressReveal?: boolean
 }
 
 const TOTAL_STEPS = QUIZ_ITEMS.length + 1 // items + orientation
@@ -38,7 +48,7 @@ const MONO: CSSProperties = { fontFamily: 'var(--bars-font-mono)' }
 const DISPLAY: CSSProperties = { fontFamily: 'var(--bars-font-display)' }
 const BODY: CSSProperties = { fontFamily: 'var(--bars-font-body)' }
 
-export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps) {
+export function SuperpowerQuiz({ campaignRef, onComplete, suppressReveal }: SuperpowerQuizProps) {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
@@ -90,6 +100,8 @@ export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps)
     setOutcome(null)
     setError(null)
   }
+
+  if (outcome && suppressReveal) return null
 
   if (outcome) {
     return (

@@ -27,14 +27,28 @@ import { SuperpowerQuiz } from '@/components/superpowers/SuperpowerQuiz'
 import { offerHref } from '@/lib/launch/offers'
 import { ALLYSHIP_DOMAINS, getDomainLabel, type AllyshipDomainKey } from '@/lib/allyship-domains'
 import type { SuperpowerIntakeOutcome } from '@/lib/superpowers/routing'
+import { DOMAIN_PRIMERS } from '@/lib/ally-campaign/allies'
 import type { AllyInvite, AllyMyth, UnderstandingPanel } from '@/lib/ally-campaign/allies'
 import {
+  findNeed,
+  groupNeedEntries,
   needsForSuperpower,
+  superpowerFootprint,
+  workstreamForNeed,
+  type NeedEntry,
   type Workstream,
   type WorkstreamNeed,
 } from '@/lib/ally-campaign/workstreams'
-import { INPUTS, campaignTotals, printEconomics, repaymentPlan, usd } from '@/lib/ally-campaign/economics'
+import {
+  INPUTS,
+  campaignTotals,
+  printEconomics,
+  repaymentPlan,
+  repaymentPlanDigital,
+  usd,
+} from '@/lib/ally-campaign/economics'
 import { submitAllyIntake, offerToCollective } from '@/actions/ally-campaign'
+import { PlanScreen } from './PlanScreen'
 
 const PURPLE = 'var(--bars-liminal)'
 const GOLD = '#d4a017'
@@ -46,11 +60,15 @@ const PANEL = '#121210'
 type Step =
   | 'intro'
   | 'superpower'
+  | 'superpower-result'
   | 'myths'
   | 'understanding'
+  | 'plan'
+  | 'domains-primer'
   | 'domain'
   | 'workstream'
   | 'needs'
+  | 'checkout'
   | 'offer'
   | 'sign'
   | 'done'
@@ -111,9 +129,9 @@ export function AllyFunnel({
   const superpower = outcome?.routing.superpower ?? null
   const orientation = outcome?.routing.orientation ?? null
 
-  // localStorage cannot be read during SSR. `useSyncExternalStore` with a null
-  // server snapshot is the sanctioned way to hydrate a client-only value without
-  // a setState-in-effect cascade.
+  // The page is statically rendered, so localStorage cannot be read during SSR.
+  // `useSyncExternalStore` with a null server snapshot is the sanctioned way to
+  // hydrate a client-only value without a setState-in-effect cascade.
   const storedLeadId = useSyncExternalStore(subscribeToStorage, readStoredLeadId, () => null)
   const returningLeadId = leadId ?? storedLeadId
 
@@ -124,16 +142,20 @@ export function AllyFunnel({
   )
 
   const plan = useMemo(() => repaymentPlan(), [])
+  const planDigital = useMemo(() => repaymentPlanDigital(), [])
   const print = useMemo(() => printEconomics(), [])
   const totals = useMemo(() => campaignTotals(), [])
 
-  /** Needs for the chosen workstream, best-matched to her superpower first. */
-  const offeredNeeds = useMemo<WorkstreamNeed[]>(() => {
+  /** Where their superpower lands across all four domains — the quiz's receipt. */
+  const footprint = useMemo(() => superpowerFootprint(superpower, orientation), [superpower, orientation])
+
+  /** Needs for the chosen workstream, best-matched first, slices grouped. */
+  const offeredEntries = useMemo<NeedEntry[]>(() => {
     if (!workstream) return []
     const matched = needsForSuperpower(superpower, orientation, { domain: workstream.domain })
     // Keep only this workstream's needs, in match order.
     const inWorkstream = new Set(workstream.needs.map((n) => n.id))
-    return matched.filter((n) => inWorkstream.has(n.id))
+    return groupNeedEntries(matched.filter((n) => inWorkstream.has(n.id)))
   }, [workstream, superpower, orientation])
 
   const toggle = useCallback((id: string) => {
@@ -144,6 +166,46 @@ export function AllyFunnel({
       return next
     })
   }, [])
+
+  /**
+   * Hold exactly `count` slices of a divisible ask.
+   *
+   * Slices are claimed lowest-index-first so two people filling the same group
+   * from different tabs collide on a row the server can arbitrate, rather than
+   * both quietly "having" the ask.
+   *
+   * `resolve` receives the count currently held so callers can express a DELTA
+   * without reading state at render time. A stepper that computes `count + 1`
+   * from its render closure silently drops increments when clicks land faster
+   * than React re-renders — three quick taps become one share.
+   */
+  const setShareCount = useCallback(
+    (entry: Extract<NeedEntry, { kind: 'group' }>, resolve: number | ((held: number) => number)) => {
+      setPicked((prev) => {
+        const next = new Set(prev)
+        const held = entry.slices.filter((s) => next.has(s.id)).length
+        const wanted = typeof resolve === 'function' ? resolve(held) : resolve
+        const clamped = Math.max(0, Math.min(entry.slices.length, wanted))
+        if (clamped === held) return prev
+        entry.slices.forEach((s) => next.delete(s.id))
+        entry.slices.slice(0, clamped).forEach((s) => next.add(s.id))
+        return next
+      })
+    },
+    [],
+  )
+
+  /** Drop a whole checkout line — for a share line, every slice in it. */
+  const removeLine = useCallback((needIds: string[]) => {
+    setPicked((prev) => {
+      const next = new Set(prev)
+      needIds.forEach((id) => next.delete(id))
+      return next
+    })
+  }, [])
+
+  /** Everything they're holding, grouped for the checkout view. */
+  const cart = useMemo(() => summarizeCart(picked), [picked])
 
   function finish() {
     if (!superpower || !domain) return
@@ -166,9 +228,12 @@ export function AllyFunnel({
       }
       // The offer is secondary — a failure here must not lose the intake above.
       if (offerBody.trim().length > 2) {
+        // Route the offer to the workstream their FIRST pick belongs to — picks
+        // can now span several, so "the last one they looked at" would be wrong.
+        const primary = [...picked].map((id) => workstreamForNeed(id)).find(Boolean) ?? workstream
         await offerToCollective({
           leadId: res.leadId,
-          campaignRef: workstream ? `mobility-quest-${workstream.key}` : undefined,
+          campaignRef: primary ? `mobility-quest-${primary.key}` : undefined,
           body: offerBody.trim(),
           domain: domain ?? undefined,
           superpower,
@@ -229,17 +294,33 @@ export function AllyFunnel({
           <Heading>First: what do you actually bring?</Heading>
           <Sub>
             Seven allyship superpowers. This isn&apos;t a personality quiz with a flattering answer at the
-            end — it decides which of the twenty jobs on this page you get shown.
+            end — it decides which of the jobs on this page you get shown, and in what order.
           </Sub>
-          <SuperpowerQuiz campaignRef="mobility-quest" onComplete={setOutcome} />
-          {outcome && (
-            <Row>
-              <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('myths')}>
-                Continue →
-              </button>
-            </Row>
-          )}
+          {/* `suppressReveal`: the stock reveal ends in Crossing CTAs, which would
+              route the reader out of this letter halfway through it. We render
+              our own result on the next step instead. */}
+          <SuperpowerQuiz
+            campaignRef="mobility-quest"
+            suppressReveal
+            onComplete={(o) => {
+              setOutcome(o)
+              setStep('superpower-result')
+            }}
+          />
         </div>
+      )}
+
+      {/* ── superpower result — ours, not the stock reveal ─────────────────── */}
+      {step === 'superpower-result' && superpower && (
+        <SuperpowerResult
+          superpower={superpower}
+          orientation={orientation}
+          onContinue={() => setStep('myths')}
+          onRetake={() => {
+            setOutcome(null)
+            setStep('superpower')
+          }}
+        />
       )}
 
       {/* ── myths ─────────────────────────────────────────────────────────── */}
@@ -273,35 +354,50 @@ export function AllyFunnel({
               className={cta}
               style={{ background: PURPLE }}
               onClick={() => {
-                if (panelIndex >= understanding.length - 1) setStep('domain')
-                else setPanelIndex((i) => i + 1)
+                if (panelIndex < understanding.length - 1) setPanelIndex((i) => i + 1)
+                else setStep(invite.showPlan ? 'plan' : 'domains-primer')
               }}
             >
-              {panelIndex >= understanding.length - 1 ? 'Show me the work →' : 'Go on →'}
+              {panelIndex >= understanding.length - 1
+                ? invite.showPlan
+                  ? 'Show me the numbers →'
+                  : 'Show me the work →'
+                : 'Go on →'}
             </button>
             <Counter now={panelIndex + 1} total={understanding.length} />
           </Row>
         </Panel>
       )}
 
+      {/* ── plan (invite-gated) ───────────────────────────────────────────── */}
+      {step === 'plan' && <PlanScreen onContinue={() => setStep('domains-primer')} />}
+
+      {/* ── domains primer — teach the frame before asking them to use it ──── */}
+      {step === 'domains-primer' && <DomainsPrimer onContinue={() => setStep('domain')} />}
+
       {/* ── domain ────────────────────────────────────────────────────────── */}
       {step === 'domain' && (
         <div className="flex flex-col gap-4">
           <Heading>Where do you want to work?</Heading>
           <Sub>
-            Four domains. Each one is defined by what&apos;s <em>missing</em>, not by what the work looks
-            like — that&apos;s the whole trick of the framework. Your superpower
-            {superpower ? ` (${labelize(superpower)})` : ''} works in all four.
+            Everything you&apos;ve answered so far points somewhere, so here is exactly where. Each
+            domain shows how much of its work is typed to your superpower
+            {superpower ? <strong style={{ color: INK }}> ({labelize(superpower)})</strong> : null}, and
+            how many of the myths you just turned over were blocking it. Every domain has work you can
+            do — the matching only decides what you meet first.
           </Sub>
           <div className="grid grid-cols-1 gap-2.5">
             {ALLYSHIP_DOMAINS.map((d) => {
-              const streams = streamsFor(d.key as AllyshipDomainKey)
+              const key = d.key as AllyshipDomainKey
+              const streams = streamsFor(key)
               if (streams.length === 0) return null
+              const foot = footprint.find((f) => f.domain === key)
+              const mythsHere = myths.filter((m) => m.domainHint === key)
               return (
                 <button
                   key={d.key}
                   onClick={() => {
-                    setDomain(d.key as AllyshipDomainKey)
+                    setDomain(key)
                     setStep('workstream')
                   }}
                   className="rounded-xl border border-white/[0.10] px-4 py-4 text-left hover:border-[#8b5cf6]"
@@ -313,10 +409,41 @@ export function AllyFunnel({
                   <div className="mt-1 text-[13px] leading-relaxed" style={{ color: DIM }}>
                     {streams.map((s) => s.title).join(' · ')}
                   </div>
+                  {/* The receipt for the quiz and the myths: this is what those
+                      two steps actually bought the reader. */}
+                  <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                    {foot && foot.matched > 0 && (
+                      <Tag accent>
+                        {foot.matched} matched to your superpower
+                      </Tag>
+                    )}
+                    <Tag>{foot?.total ?? 0} jobs here</Tag>
+                    {mythsHere.length > 0 && (
+                      <Tag>
+                        {mythsHere.length === 1 ? '1 myth pointed here' : `${mythsHere.length} myths pointed here`}
+                      </Tag>
+                    )}
+                  </div>
+                  {foot?.exemplar && (
+                    <p className="mt-2 text-[12.5px] leading-snug" style={{ color: FAINT }}>
+                      e.g. {foot.exemplar.title}
+                    </p>
+                  )}
                 </button>
               )
             })}
           </div>
+          {picked.size > 0 && (
+            <Row>
+              <button
+                className={ghost}
+                style={{ color: PURPLE, border: '1px solid rgba(139,92,246,.4)' }}
+                onClick={() => setStep('checkout')}
+              >
+                Review what I&apos;ve picked ({picked.size}) →
+              </button>
+            </Row>
+          )}
         </div>
       )}
 
@@ -370,58 +497,37 @@ export function AllyFunnel({
             all three are real answers.
           </Sub>
           <div className="flex flex-col gap-2.5">
-            {offeredNeeds.map((need) => {
-              const on = picked.has(need.id)
-              const match = need.superpower === superpower
-              return (
-                <button
-                  key={need.id}
-                  onClick={() => toggle(need.id)}
-                  className="rounded-xl border px-4 py-4 text-left transition-colors"
-                  style={{
-                    background: on ? 'rgba(139,92,246,.10)' : PANEL,
-                    borderColor: on ? PURPLE : 'rgba(255,255,255,.10)',
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="text-[15.5px] font-semibold" style={{ color: INK }}>
-                      {need.title}
-                    </span>
-                    <span
-                      className="mt-0.5 shrink-0 text-[16px]"
-                      style={{ color: on ? PURPLE : FAINT }}
-                      aria-hidden
-                    >
-                      {on ? '✦' : '○'}
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: DIM }}>
-                    {need.detail}
-                  </p>
-                  <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                    <Tag>{costLabel(need)}</Tag>
-                    <Tag>{need.orientation === 'internal' ? 'inner work' : 'outer work'}</Tag>
-                    {match && <Tag accent>your superpower</Tag>}
-                    {need.needsHelp && <Tag accent>nobody on this yet</Tag>}
-                  </div>
-                </button>
-              )
-            })}
+            {offeredEntries.map((entry) =>
+              entry.kind === 'group' ? (
+                <ShareCard
+                  key={entry.key}
+                  entry={entry}
+                  picked={picked}
+                  isMatch={entry.need.superpower === superpower}
+                  onSetCount={(n) => setShareCount(entry, n)}
+                />
+              ) : (
+                <NeedCard
+                  key={entry.key}
+                  need={entry.need}
+                  on={picked.has(entry.need.id)}
+                  isMatch={entry.need.superpower === superpower}
+                  onToggle={() => toggle(entry.need.id)}
+                />
+              ),
+            )}
           </div>
           <Row>
-            <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('offer')}>
-              {picked.size > 0 ? `Take ${picked.size} →` : 'Continue →'}
+            <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('checkout')}>
+              {picked.size > 0 ? `Review my ${picked.size} →` : 'Continue →'}
             </button>
-            {/* Declining is a peer of accepting, not a hidden escape hatch. */}
+            {/* Taking more from elsewhere is a first-class move, not a back button. */}
             <button
               className={ghost}
               style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
-              onClick={() => {
-                setPicked(new Set())
-                setStep('offer')
-              }}
+              onClick={() => setStep('domain')}
             >
-              None of these are mine →
+              + Look at another area
             </button>
             <button className={ghost} style={{ color: FAINT }} onClick={() => setStep('workstream')}>
               ← Back
@@ -431,6 +537,142 @@ export function AllyFunnel({
             Taking nothing is a complete answer. I&apos;d rather have a clear no today than a soft yes
             I&apos;m quietly counting on in March.
           </p>
+        </div>
+      )}
+
+      {/* ── checkout ──────────────────────────────────────────────────────── */}
+      {step === 'checkout' && (
+        <div className="flex flex-col gap-4">
+          <Heading>Here&apos;s everything you&apos;re holding</Heading>
+          {cart.lines.length === 0 ? (
+            <>
+              <Sub>
+                Nothing selected — which is a complete answer, not an empty cart. You can go back and
+                add something, or keep going and tell me what you actually think.
+              </Sub>
+              <Row>
+                <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('offer')}>
+                  Continue with nothing →
+                </button>
+                <button
+                  className={ghost}
+                  style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
+                  onClick={() => setStep('domain')}
+                >
+                  ← Look again
+                </button>
+              </Row>
+            </>
+          ) : (
+            <>
+              <Sub>
+                Everything in one place before it becomes real. Remove anything that looks bigger in
+                daylight than it did a minute ago — that&apos;s what this screen is for.
+              </Sub>
+
+              {cart.groups.map((g) => (
+                <div key={g.workstreamKey} className="flex flex-col gap-2">
+                  <span
+                    className="text-[10px] uppercase"
+                    style={{ fontFamily: 'var(--bars-font-mono)', letterSpacing: '.22em', color: GOLD }}
+                  >
+                    {g.workstreamTitle}
+                  </span>
+                  {g.lines.map((line) => (
+                    <div
+                      key={line.key}
+                      className="flex items-start justify-between gap-3 rounded-xl border border-white/[0.10] px-4 py-3"
+                      style={{ background: PANEL }}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[14.5px] font-semibold" style={{ color: INK }}>
+                          {line.title}
+                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {line.quantity > 1 ? (
+                            <Tag>
+                              {line.quantity} × {line.costLabel}
+                            </Tag>
+                          ) : (
+                            <Tag>{line.costLabel}</Tag>
+                          )}
+                          {line.subtotalLabel && <Tag accent>{line.subtotalLabel}</Tag>}
+                          <Tag>{line.vibeulons} vibeulons</Tag>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeLine(line.needIds)}
+                        className="shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-semibold"
+                        style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))}
+
+              {/* Units are reported apart and never summed — the Six Faces ruling.
+                  A single blended "total contribution" would let money dwarf the
+                  hours and the inner work, which is the exact failure this
+                  campaign is arguing against everywhere else. */}
+              <div
+                className="flex flex-col gap-2 rounded-2xl border border-white/[0.08] p-5"
+                style={{ background: PANEL }}
+              >
+                <span
+                  className="text-[10px] uppercase"
+                  style={{ fontFamily: 'var(--bars-font-mono)', letterSpacing: '.22em', color: GOLD }}
+                >
+                  your total, in its own units
+                </span>
+                <div className="flex flex-col gap-1.5">
+                  {cart.totalCurrency > 0 && (
+                    <TotalRow label="Money" value={usd(cart.totalCurrency * 100)} />
+                  )}
+                  {cart.totalHours > 0 && (
+                    <TotalRow label="Time" value={`${cart.totalHours} ${cart.totalHours === 1 ? 'hour' : 'hours'}`} />
+                  )}
+                  {cart.totalActions > 0 && (
+                    <TotalRow
+                      label="Actions"
+                      value={`${cart.totalActions} ${cart.totalActions === 1 ? 'thing' : 'things'}`}
+                    />
+                  )}
+                  <TotalRow label="Energy to the collective" value={`${cart.totalVibeulons} vibeulons`} accent />
+                </div>
+                <p className="text-[12px] leading-relaxed" style={{ color: FAINT }}>
+                  These are listed separately on purpose and never added together. An hour is not
+                  worth some number of dollars here, and pretending otherwise is how the money
+                  quietly becomes the only contribution that counts.
+                </p>
+              </div>
+
+              <Row>
+                <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('offer')}>
+                  This is right →
+                </button>
+                <button
+                  className={ghost}
+                  style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
+                  onClick={() => setStep('domain')}
+                >
+                  + Add from another area
+                </button>
+                <button
+                  className={ghost}
+                  style={{ color: FAINT }}
+                  onClick={() => setPicked(new Set())}
+                >
+                  Clear it all
+                </button>
+              </Row>
+              <p className="text-[12.5px] leading-relaxed" style={{ color: FAINT }}>
+                Nothing here is committed until the last screen — and even after that, your own page
+                lets you hand anything back with no explanation required.
+              </p>
+            </>
+          )}
         </div>
       )}
 
@@ -454,6 +696,9 @@ export function AllyFunnel({
           <Row>
             <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('sign')}>
               Continue →
+            </button>
+            <button className={ghost} style={{ color: FAINT }} onClick={() => setStep('checkout')}>
+              ← Back to my list
             </button>
           </Row>
         </div>
@@ -487,6 +732,27 @@ export function AllyFunnel({
               style={{ color: INK }}
             />
           </div>
+          {/* Last honest look at the commitment before it lands. */}
+          {cart.lines.length > 0 && (
+            <div className="flex flex-col gap-1 rounded-lg p-4" style={{ background: 'rgba(139,92,246,.08)' }}>
+              <p className="text-[12px] uppercase" style={{ letterSpacing: '.14em', color: PURPLE }}>
+                you&apos;re taking
+              </p>
+              {cart.lines.map((l) => (
+                <p key={l.key} className="text-[13.5px] leading-relaxed" style={{ color: INK }}>
+                  {l.quantity > 1 ? `${l.quantity} × ` : ''}
+                  {l.title}
+                </p>
+              ))}
+              <button
+                className="self-start pt-1 text-[12.5px] font-semibold"
+                style={{ color: PURPLE }}
+                onClick={() => setStep('checkout')}
+              >
+                ← Change it
+              </button>
+            </div>
+          )}
           {error && <p className="text-[13px] text-red-400">{error}</p>}
           <Row>
             <button className={cta} style={{ background: PURPLE }} disabled={pending} onClick={finish}>
@@ -550,7 +816,7 @@ export function AllyFunnel({
             )}
           </Panel>
 
-          <Numbers plan={plan} print={print} totals={totals} />
+          <Numbers plan={plan} planDigital={planDigital} print={print} totals={totals} />
 
           <Panel>
             <Eyebrow>if you&apos;d rather just buy something</Eyebrow>
@@ -573,14 +839,398 @@ export function AllyFunnel({
   )
 }
 
+// ── Superpower result — ours, so the reader isn't routed out mid-letter ─────
+
+function SuperpowerResult({
+  superpower,
+  orientation,
+  onContinue,
+  onRetake,
+}: {
+  superpower: string
+  orientation: 'internal' | 'external' | null
+  onContinue: () => void
+  onRetake: () => void
+}) {
+  const footprint = useMemo(
+    () => superpowerFootprint(superpower, orientation),
+    [superpower, orientation],
+  )
+  const totalMatched = footprint.reduce((s, f) => s + f.matched, 0)
+
+  return (
+    <Panel>
+      <Eyebrow>saved — this changes what you get shown</Eyebrow>
+      <h2 className="text-[25px] font-bold capitalize" style={{ color: INK }}>
+        {labelize(superpower)}
+      </h2>
+      <p className="text-[15px] leading-relaxed" style={{ color: '#cfcdc6' }}>
+        {orientation === 'internal'
+          ? 'Turned inward — the work wants to happen in you before it happens around you.'
+          : 'Turned outward — the work wants to move resources, people, and story.'}
+      </p>
+      <div className="flex flex-col gap-2 rounded-lg p-4" style={{ background: 'rgba(139,92,246,.08)' }}>
+        <p className="text-[12px] uppercase" style={{ letterSpacing: '.14em', color: PURPLE }}>
+          what it just did
+        </p>
+        <p className="text-[14px] leading-relaxed" style={{ color: INK }}>
+          <strong>{totalMatched}</strong> of the jobs on this board are typed to your answer. They get
+          sorted to the top of every list you see from here, in every domain:
+        </p>
+        <div className="flex flex-col gap-1 pt-1">
+          {footprint.map((f) => (
+            <div key={f.domain} className="flex items-baseline justify-between gap-3">
+              <span className="text-[13.5px]" style={{ color: DIM }}>
+                {getDomainLabel(f.domain)}
+              </span>
+              <span className="text-[13.5px] font-semibold tabular-nums" style={{ color: f.matched > 0 ? GOLD : FAINT }}>
+                {f.matched} of {f.total}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="text-[13px] leading-relaxed" style={{ color: FAINT }}>
+        Note that no domain is empty. The quiz decides the <em>order</em> you meet the work in, never
+        whether there&apos;s work for you — a router, not a gate.
+      </p>
+      <Row>
+        <button className={cta} style={{ background: PURPLE }} onClick={onContinue}>
+          Continue →
+        </button>
+        <button className={ghost} style={{ color: FAINT }} onClick={onRetake}>
+          ↺ Retake
+        </button>
+      </Row>
+    </Panel>
+  )
+}
+
+// ── Domains primer ──────────────────────────────────────────────────────────
+
+function DomainsPrimer({ onContinue }: { onContinue: () => void }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <Heading>Four domains — and the trick is counterintuitive</Heading>
+      <Sub>
+        A domain is named by <em>what&apos;s missing</em>, not by what the work looks like. Two people
+        doing identical-looking things can be in different domains, and the same task can move domains
+        as the situation changes. Worth ninety seconds before you choose.
+      </Sub>
+      {DOMAIN_PRIMERS.map((p) => (
+        <div
+          key={p.key}
+          className="flex flex-col gap-2 rounded-xl border border-white/[0.10] px-4 py-4"
+          style={{ background: PANEL }}
+        >
+          <div className="text-[16px] font-semibold" style={{ color: INK }}>
+            {p.label}
+          </div>
+          <p className="text-[14px] leading-relaxed" style={{ color: '#cfcdc6' }}>
+            {p.definition}
+          </p>
+          <p className="text-[13px] leading-relaxed" style={{ color: PURPLE }}>
+            {p.test}
+          </p>
+          <p className="text-[13px] leading-relaxed" style={{ color: DIM }}>
+            {p.everyday}
+          </p>
+          <p
+            className="rounded-lg px-3 py-2 text-[13px] leading-relaxed"
+            style={{ background: 'rgba(212,160,23,.08)', color: '#e8c98a' }}
+          >
+            <strong style={{ color: GOLD }}>Here:</strong> {p.here}
+          </p>
+        </div>
+      ))}
+      <Row>
+        <button className={cta} style={{ background: PURPLE }} onClick={onContinue}>
+          Got it — show me where I fit →
+        </button>
+      </Row>
+    </div>
+  )
+}
+
+// ── Need cards ──────────────────────────────────────────────────────────────
+
+function NeedCard({
+  need,
+  on,
+  isMatch,
+  onToggle,
+}: {
+  need: WorkstreamNeed
+  on: boolean
+  isMatch: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="rounded-xl border px-4 py-4 text-left transition-colors"
+      style={{
+        background: on ? 'rgba(139,92,246,.10)' : PANEL,
+        borderColor: on ? PURPLE : 'rgba(255,255,255,.10)',
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="text-[15.5px] font-semibold" style={{ color: INK }}>
+          {need.title}
+        </span>
+        <span className="mt-0.5 shrink-0 text-[16px]" style={{ color: on ? PURPLE : FAINT }} aria-hidden>
+          {on ? '✦' : '○'}
+        </span>
+      </div>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: DIM }}>
+        {need.detail}
+      </p>
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        <Tag>{costLabel(need)}</Tag>
+        <Tag>{need.orientation === 'internal' ? 'inner work' : 'outer work'}</Tag>
+        {isMatch && <Tag accent>your superpower</Tag>}
+        {need.needsHelp && <Tag accent>nobody on this yet</Tag>}
+      </div>
+    </button>
+  )
+}
+
+/**
+ * A divisible ask, as one card with a quantity — never as N near-identical rows.
+ * Taking 2 of 10 shares is a complete, unembarrassing answer, and the card says
+ * so rather than making a partial contribution feel like a partial commitment.
+ */
+function ShareCard({
+  entry,
+  picked,
+  isMatch,
+  onSetCount,
+}: {
+  entry: Extract<NeedEntry, { kind: 'group' }>
+  picked: Set<string>
+  isMatch: boolean
+  onSetCount: (resolve: number | ((held: number) => number)) => void
+}) {
+  const count = entry.slices.filter((s) => picked.has(s.id)).length
+  const on = count > 0
+  const total = entry.slices.length
+  return (
+    <div
+      className="rounded-xl border px-4 py-4 transition-colors"
+      style={{
+        background: on ? 'rgba(139,92,246,.10)' : PANEL,
+        borderColor: on ? PURPLE : 'rgba(255,255,255,.10)',
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="text-[15.5px] font-semibold" style={{ color: INK }}>
+          {entry.need.title}
+        </span>
+        <span className="mt-0.5 shrink-0 text-[16px]" style={{ color: on ? PURPLE : FAINT }} aria-hidden>
+          {on ? '✦' : '○'}
+        </span>
+      </div>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: DIM }}>
+        {entry.need.detail}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <StepBtn label="−" onClick={() => onSetCount((held) => held - 1)} disabled={count <= 0} />
+          <span
+            className="min-w-[104px] text-center text-[13.5px] font-semibold tabular-nums"
+            style={{ color: on ? INK : FAINT }}
+          >
+            {count} of {total} shares
+          </span>
+          <StepBtn label="+" onClick={() => onSetCount((held) => held + 1)} disabled={count >= total} />
+        </div>
+        <button
+          onClick={() => onSetCount(total)}
+          className="rounded-lg px-2.5 py-1 text-[12px] font-semibold"
+          style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
+        >
+          All {total}
+        </button>
+      </div>
+
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        {/* Shares are not always money — a brigade case is five copies, not $5.
+            Currency shows the price beside the label; everything else lets the
+            label speak, since "5 actions per share · 5 copies" says it twice. */}
+        <Tag>
+          {entry.need.unit === 'currency'
+            ? `${usd(entry.sliceValue * 100)} per share · ${entry.sliceLabel}`
+            : `${entry.sliceLabel} per share`}
+        </Tag>
+        {count > 0 && (
+          <Tag accent>
+            you:{' '}
+            {entry.need.unit === 'currency'
+              ? usd(count * entry.sliceValue * 100)
+              : `${count * entry.sliceValue} ${sliceNoun(entry.sliceLabel)}`}
+          </Tag>
+        )}
+        {isMatch && <Tag accent>your superpower</Tag>}
+      </div>
+      <p className="mt-2 text-[12.5px] leading-relaxed" style={{ color: FAINT }}>
+        Split into {total} shares so nobody carries the whole thing. One share is a real contribution
+        and is treated as one.
+      </p>
+    </div>
+  )
+}
+
+function StepBtn({
+  label,
+  onClick,
+  disabled,
+}: {
+  label: string
+  onClick: () => void
+  disabled?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label === '+' ? 'Add a share' : 'Remove a share'}
+      className="h-8 w-8 rounded-lg text-[16px] font-semibold disabled:opacity-30"
+      style={{ color: INK, border: '1px solid rgba(255,255,255,.16)' }}
+    >
+      {label}
+    </button>
+  )
+}
+
+// ── Cart ────────────────────────────────────────────────────────────────────
+
+interface CartLine {
+  key: string
+  title: string
+  costLabel: string
+  quantity: number
+  vibeulons: number
+  /** Every underlying need id — a share line carries several. */
+  needIds: string[]
+  /** Line total once quantity is applied, when that isn't the unit cost. */
+  subtotalLabel?: string
+}
+
+interface CartGroup {
+  workstreamKey: string
+  workstreamTitle: string
+  lines: CartLine[]
+}
+
+/**
+ * Turn the flat set of claimed need ids into something a person can read: slices
+ * collapsed back into one line with a quantity, lines grouped by workstream, and
+ * totals kept strictly per unit.
+ */
+function summarizeCart(picked: Set<string>): {
+  lines: CartLine[]
+  groups: CartGroup[]
+  totalCurrency: number
+  totalHours: number
+  totalActions: number
+  totalVibeulons: number
+} {
+  const byLine = new Map<string, CartLine>()
+  const lineWorkstream = new Map<string, { key: string; title: string }>()
+
+  for (const id of picked) {
+    const need = findNeed(id)
+    if (!need) continue
+    const ws = workstreamForNeed(id)
+    const lineKey = need.share?.groupId ?? need.id
+    const existing = byLine.get(lineKey)
+    if (existing) {
+      existing.quantity += 1
+      existing.vibeulons += need.bountyVibeulons
+      existing.needIds.push(id)
+    } else {
+      byLine.set(lineKey, {
+        key: lineKey,
+        title: need.title,
+        // A share states its own unit ("5 copies"); only fall back to the
+        // generic unit label for needs that aren't divisible.
+        costLabel: need.share ? need.share.sliceLabel : costLabel(need),
+        quantity: 1,
+        vibeulons: need.bountyVibeulons,
+        needIds: [id],
+      })
+      lineWorkstream.set(lineKey, { key: ws?.key ?? 'other', title: ws?.title ?? 'Elsewhere' })
+    }
+  }
+
+  const lines = [...byLine.values()]
+
+  // A per-unit price beside a "×4" makes the reader do the multiplication. Say it.
+  for (const line of lines) {
+    if (line.quantity <= 1) continue
+    const need = findNeed(line.needIds[0])
+    if (!need) continue
+    if (need.unit === 'currency') {
+      line.subtotalLabel = usd(need.value * line.quantity * 100)
+    } else if (need.unit === 'hours') {
+      const hours = need.value * line.quantity
+      line.subtotalLabel = `${hours} ${hours === 1 ? 'hour' : 'hours'}`
+    } else if (need.share) {
+      line.subtotalLabel = `${need.value * line.quantity} ${sliceNoun(need.share.sliceLabel)}`
+    }
+  }
+
+  const groups: CartGroup[] = []
+  for (const line of lines) {
+    const ws = lineWorkstream.get(line.key)!
+    let group = groups.find((g) => g.workstreamKey === ws.key)
+    if (!group) {
+      group = { workstreamKey: ws.key, workstreamTitle: ws.title, lines: [] }
+      groups.push(group)
+    }
+    group.lines.push(line)
+  }
+
+  let totalCurrency = 0
+  let totalHours = 0
+  let totalActions = 0
+  let totalVibeulons = 0
+  for (const id of picked) {
+    const need = findNeed(id)
+    if (!need) continue
+    totalVibeulons += need.bountyVibeulons
+    if (need.unit === 'currency') totalCurrency += need.value
+    else if (need.unit === 'hours') totalHours += need.value
+    else totalActions += need.value
+  }
+
+  return { lines, groups, totalCurrency, totalHours, totalActions, totalVibeulons }
+}
+
+function TotalRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-[13.5px]" style={{ color: accent ? INK : DIM }}>
+        {label}
+      </span>
+      <span className="text-[14px] font-semibold tabular-nums" style={{ color: accent ? GOLD : INK }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
 // ── The numbers panel ───────────────────────────────────────────────────────
 
 function Numbers({
   plan,
+  planDigital,
   print,
   totals,
 }: {
   plan: ReturnType<typeof repaymentPlan>
+  planDigital: ReturnType<typeof repaymentPlanDigital>
   print: ReturnType<typeof printEconomics>
   totals: ReturnType<typeof campaignTotals>
 }) {
@@ -649,14 +1299,20 @@ function Numbers({
         </p>
         <p className="text-[14px] leading-relaxed" style={{ color: INK }}>
           The loan is <strong>{usd(INPUTS.carLoanCents)}</strong>. Paying it back takes{' '}
-          {plural(plan.workshopsNeeded, 'workshop')} and {plural(plan.booksNeeded, 'book')} over{' '}
-          {INPUTS.repaymentMonths} months — about <strong>{usd(plan.monthlyCents)}/month</strong>.
+          {plural(planDigital.workshopsNeeded, 'workshop')} and{' '}
+          {plural(planDigital.copiesNeeded, 'digital copy', 'digital copies')} over{' '}
+          {INPUTS.repaymentMonths} months — about <strong>{usd(planDigital.monthlyCents)}/month</strong>.
         </p>
         <p className="text-[13px] leading-relaxed" style={{ color: DIM }}>
-          The print run breaks even at <strong style={{ color: INK }}>{print.breakEvenUnits} copies</strong>{' '}
-          of {INPUTS.printRunUnits}. The {INPUTS.unitsHeldForEvents} event copies alone are worth{' '}
-          {usd(print.eventRevenuePotentialCents)} at cover. Books are counted at the run&apos;s blended
-          margin, not the better hand-to-hand margin — the less flattering of the two.
+          Paper covers the run at <strong style={{ color: INK }}>{print.breakEvenUnits} copies</strong> of
+          the {print.sellableUnits} left after the {print.obligationUnits} already owed
+          {print.coversRunFromSellable ? ', so it fits' : ", which it does not have"}. Paper earns a
+          little more per copy; digital at {usd(INPUTS.digitalPriceCents)} earns a little less and has
+          no ceiling, so digital is what answers a good month. Copy counts here are net of what it
+          costs to find a reader, not gross margin.
+        </p>
+        <p className="text-[13px] leading-relaxed" style={{ color: FAINT }}>
+          {planDigital.demandCaveat}
         </p>
         {!plan.withinCapacity && (
           <p
@@ -735,6 +1391,16 @@ function MythCard({
                 {myth.reframe}
               </p>
             </div>
+            {/* Each myth obstructs a specific domain. Naming it here is what makes
+                the domain choice two screens later feel earned rather than random. */}
+            {myth.domainHint && (
+              <div className="flex flex-wrap items-center gap-2 border-t border-white/[0.07] pt-3">
+                <span className="text-[11px] uppercase" style={{ letterSpacing: '.14em', color: FAINT }}>
+                  this myth blocks
+                </span>
+                <Tag accent>{getDomainLabel(myth.domainHint)}</Tag>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -900,9 +1566,22 @@ function Prose({ text }: { text: string }) {
 
 /** "$12,000" / "3 hours" / "one action" — the cost, stated in its own unit. */
 function costLabel(need: WorkstreamNeed): string {
-  if (need.unit === 'currency') return usd(need.value * 100)
-  if (need.unit === 'hours') return `${need.value} ${need.value === 1 ? 'hour' : 'hours'}`
-  return need.value === 1 ? 'one action' : `${need.value} actions`
+  return unitAmount(need.unit, need.value)
+}
+
+/**
+ * A quantity in its own unit. Kept separate from `costLabel` so a share card can
+ * format multiples (4 shares, 20 copies) without inventing a fake need.
+ */
+function unitAmount(unit: WorkstreamNeed['unit'], value: number): string {
+  if (unit === 'currency') return usd(value * 100)
+  if (unit === 'hours') return `${value} ${value === 1 ? 'hour' : 'hours'}`
+  return value === 1 ? 'one action' : `${value} actions`
+}
+
+/** "5 copies" → "copies", so a running total can be stated in the ask's own noun. */
+function sliceNoun(sliceLabel: string): string {
+  return sliceLabel.replace(/^\s*[\d.,]+\s*/, '').trim() || 'shares'
 }
 
 function labelize(key: string): string {

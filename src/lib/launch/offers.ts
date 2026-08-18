@@ -162,13 +162,17 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     key: 'book-digital',
     name: 'Mastering Allyship — Digital',
     blurb:
-      'The book, instantly — and a 30-day key into the app to play what you read. Pay what feels right; $15 is the suggested seed.',
+      'The book, instantly — and a 30-day key into the app to play what you read.',
     includes: ['The digital book', '30 days of app access'],
     group: 'digital',
-    priceCents: 1500,
-    pwyw: true,
+    // $30, fixed. This is the edition the ally campaign's whole plan is costed
+    // on (see `ally-campaign/economics.ts`), and every copy target moves if it
+    // changes — `digital-price-parity.test.ts` fails if the two ever disagree.
+    // No longer pay-what-you-want: an ally asking five people to buy a $30 book
+    // cannot make that ask against a page that invites $15.
+    priceCents: 3000,
     gumroadUrl: GUMROAD.bookDigital,
-    cta: 'Name your price',
+    cta: 'Get the book',
     element: 'water',
     altitude: 'neutral',
     stage: 'growing',
