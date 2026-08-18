@@ -30,8 +30,10 @@ import {
 import {
   inviteExists,
   inviteOverrideKey,
+  isTestSlug,
   listInvites,
   resolveAllyContent,
+  testSlugTarget,
 } from '@/lib/ally-campaign/content-overrides'
 import { ALLIES, resolveInvite } from '@/lib/ally-campaign/allies'
 
@@ -45,9 +47,13 @@ export async function generateMetadata({
   const { slug } = await params
   // Metadata uses the authored default rather than a database read — a title is
   // not worth a query, and the name rarely differs.
-  const invite = resolveInvite(slug)
+  const invite = resolveInvite(testSlugTarget(slug))
   return {
-    title: `Mastering the Game of Allyship — for ${invite.displayName}`,
+    // The browser tab is the one place a dry run could be mistaken for the real
+    // link once several are open at once.
+    title: isTestSlug(slug)
+      ? `[TEST] Allyship — for ${invite.displayName}`
+      : `Mastering the Game of Allyship — for ${invite.displayName}`,
     description:
       'The honest version: what is being built, what it costs, what is needed, and how it pays for itself. About fifteen minutes.',
     // Personal warm invites should never be indexed or shared onward.
@@ -62,10 +68,14 @@ export default async function AllyPage({ params }: { params: Promise<{ slug: str
     isCurrentPlayerAdmin(),
   ])
 
-  const content = resolveAllyContent(slug, overrides)
-  const key = inviteOverrideKey(slug, overrides)
+  // `/ally/test-mom` rehearses the real `mom` letter and persists nothing.
+  const testMode = isTestSlug(slug)
+  const contentSlug = testSlugTarget(slug)
+
+  const content = resolveAllyContent(contentSlug, overrides)
+  const key = inviteOverrideKey(contentSlug, overrides)
   // Created invites live only in the database; authored ones have a file entry.
-  const isCreated = inviteExists(slug, overrides) && !ALLIES[key]
+  const isCreated = inviteExists(contentSlug, overrides) && !ALLIES[key]
 
   return (
     <main
@@ -93,6 +103,8 @@ export default async function AllyPage({ params }: { params: Promise<{ slug: str
           myths={content.myths}
           understanding={content.understanding}
           workstreams={content.workstreams}
+          testMode={testMode}
+          testTargetLabel={testMode ? content.invite.displayName : undefined}
         />
       </div>
     </main>

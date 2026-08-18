@@ -48,6 +48,32 @@ export type InviteOverride = {
  */
 export const RESERVED_INVITE_SLUGS = new Set(['mine', '__default', 'api', 'new'])
 
+/**
+ * Prefix that turns any invite into a DRY RUN: `/ally/test-mom` walks the real
+ * `mom` letter but writes nothing at all.
+ *
+ * This exists because rehearsing the flow on the live link is destructive in a
+ * non-obvious way. `submitAllyIntake` claims each chosen need conditionally on
+ * `status: 'open'`, so a single walkthrough would mark real tasks as taken and
+ * put a fake lead on the steward board — and there are only 24 needs.
+ */
+export const TEST_SLUG_PREFIX = 'test-'
+
+/** True when this slug should run without persisting anything. */
+export function isTestSlug(slug: string | undefined): boolean {
+  return !!slug && slug.trim().toLowerCase().startsWith(TEST_SLUG_PREFIX)
+}
+
+/**
+ * The invite a test slug is rehearsing — `test-mom` → `mom`. A bare `test-`
+ * (nothing after the prefix) rehearses the generic invite.
+ */
+export function testSlugTarget(slug: string | undefined): string | undefined {
+  if (!isTestSlug(slug)) return slug
+  const target = slug!.trim().toLowerCase().slice(TEST_SLUG_PREFIX.length)
+  return target.length > 0 ? target : undefined
+}
+
 /** URL-safe, lowercase, no leading dash. Matches what the route can serve. */
 export const INVITE_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,40}$/
 
@@ -69,6 +95,12 @@ export function checkInviteSlug(raw: string): SlugCheck {
   }
   if (RESERVED_INVITE_SLUGS.has(slug)) {
     return { ok: false, error: `“${slug}” is reserved by another page. Pick a different name.` }
+  }
+  if (isTestSlug(slug)) {
+    return {
+      ok: false,
+      error: `“${TEST_SLUG_PREFIX}…” is the dry-run prefix, not a name. /ally/${slug} already works as a test of “${testSlugTarget(slug) ?? 'the generic invite'}”.`,
+    }
   }
   if (ALLIES[slug]) {
     return { ok: false, error: `“${slug}” already exists in code — edit it instead of creating it.` }
