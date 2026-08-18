@@ -143,12 +143,12 @@ found the code sound — only about **legibility of failure**.
 
 **Ruling:**
 
-1. **Q1 — ship jim's narratives as the single shared set.** No per-invite
-   workstream variants in this integration. Derived numbers stay computed from
-   `economics.ts`; nobody hand-authors a second account of the same print run.
-2. **Register stays per-invite only where it already is** — the `opening` and
-   `closing` letters, which are authored per invite and admin-editable. That is
-   the correct and sufficient seam for "different reader, same truth."
+1. **Q1 — ~~ship jim's narratives as the single shared set. No per-invite
+   workstream variants.~~** **AMENDED (Wendell, 2026-08-18)** — see
+   *Amendment 1* below. The requirement is per-ally messaging over shared data;
+   this ruling dropped half of it.
+2. ~~**Register stays per-invite only where it already is** — the `opening` and
+   `closing` letters.~~ **Superseded by Amendment 1.**
 3. **Q2 — the 250 ships to Mom unsoftened**, in the first person, with a
    structural invariant: **an obligation never renders without its recovery on the
    same screen.** Liability → what it changes → the plan that survives it.
@@ -180,9 +180,89 @@ found the code sound — only about **legibility of failure**.
 - **Δ I7** — `digital-price-parity` retained as merged; the $30 decision is now
   load-bearing for every copy target in `victory-paths.ts`.
 
-**Deferred (explicit):** per-register workstream narratives (Regent's gate — no
-evidence yet); cross-invite content inheritance. Both are systems built for a
-third reader who does not exist.
+**Deferred (explicit):** ~~per-register workstream narratives (Regent's gate);
+cross-invite content inheritance.~~ **Both un-deferred by Amendment 1.**
+
+---
+
+# Amendment 1 — per-ally messaging over shared data
+
+**Correction (Wendell, 2026-08-18):** *"different allies can get different
+messaging but relying on the same data."*
+
+The original Q1 ruling was wrong. It let **Regent's phase gate override the
+requirement** rather than schedule it, and resolved Architect-vs-Challenger by
+dropping one side instead of fixing the mechanism that made them look opposed.
+
+**Why the objection stops applying.** Challenger's argument — *you cannot maintain
+two voices of the same fact by hand* — is sound only while each variant
+**hand-authors the facts**. If every variant derives its numbers from
+`economics.ts`, the variants are structurally incapable of drifting on facts.
+They can differ only in register, which is the entire point. Challenger's risk
+was never "two messages"; it was "two sources of truth."
+
+## The blocker (found on inspection, not argued)
+
+The two requirements are in **direct conflict in the code as it stands**:
+
+| | today |
+|---|---|
+| authored narrative (`workstreams.ts`) | template literal — `${INPUTS.printRunUnits}`, `${usd(...)}` — always tracks `economics.ts` |
+| overridden narrative (`content-overrides.ts`) | `o.narrative ?? w.narrative` — a **frozen string** |
+
+So per-ally messaging requires overriding narratives, and overriding narratives
+loses the shared data. Whichever you pick, you lose the other. **This is why the
+first ruling reached for "don't do variants" — it was resolving an architectural
+conflict by abandoning a requirement.**
+
+## Ruling (amended)
+
+> **Data is single-source and derived. Message is per-ally and authored. An
+> override may never contain a number.**
+
+1. **Three-layer cascade** for every content bucket — myths, understanding panels,
+   workstream narratives, asks:
+   `authored default (TS)` → `global override` → `per-invite override`.
+   Most specific wins per *field*, not per object, so a per-ally narrative does
+   not silently drop a globally-corrected ask.
+2. **Overrides carry tokens, not numbers.** Override text uses `{{token}}`
+   resolved at render against the same `economics.ts` values the authored
+   template literals use. `{{carLoan}}`, `{{printLanded}}`, `{{breakEven}}`,
+   `{{obligation}}`. One registry, both consumers.
+3. **A literal currency figure in an override fails validation.** Not a warning in
+   the editor — a rejection in `normalizeOverrides`, because the invariant is the
+   whole amendment. An admin who types `$2,500` gets told to use `{{carLoan}}`.
+4. **The editor offers the tokens** rather than expecting them to be memorised: an
+   insert-token control listing what each resolves to right now.
+5. **Per-ally content is scoped by invite slug**, so `/ally/mom` and `/ally/jim`
+   may state the same print run in different registers — and both move when
+   `INPUTS.printRunUnits` changes.
+
+## Amended deltas
+
+- **Δ A1** — `AllyContentOverrides` gains an `invites[slug].content` layer mirroring
+  the global `myths` / `understanding` / `workstreams` shape. Resolution is
+  field-level three-layer cascade.
+- **Δ A2** — New `content-tokens.ts`: one registry mapping token → derived value,
+  consumed by both the authored templates and the override renderer, so a token
+  cannot exist in one and not the other.
+- **Δ A3** — `normalizeOverrides` rejects override text containing a currency
+  literal or a bare figure matching a known derived value. Test: storing
+  `"$2,500"` in a narrative is refused; storing `"{{carLoan}}"` is accepted.
+- **Δ A4** — Invariant test: for every workstream, rendering under a per-invite
+  override with a changed `INPUTS.carLoanCents` produces the changed figure. This
+  is the falsifiable form of "different messaging, same data".
+- **Δ A5** — Editor gains a token palette per field, showing each token's current
+  resolved value inline.
+
+**What this does not change:** the disclosure ruling (3) and the payment gate (4)
+stand. The 250 still ships unsoftened in Mom's register; the webhook still merges
+alone.
+
+**Consequence for the integration order:** Δ A1–A3 are prerequisites for *any*
+per-ally divergence in jim's narratives. Until they land, jim's narratives ship as
+the shared set — not as the ruling, but as the honest interim, and the interim
+should be short.
 
 **Open question raised by the council:** the car's `theAsk` is now costed on
 **digital** book revenue rather than physical. Mom's loan repayment therefore
