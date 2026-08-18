@@ -11,6 +11,7 @@
  */
 
 import { db } from '@/lib/db'
+import { sendSuperpowerResultEmail } from '@/lib/email/superpower'
 import { syncSubscriber } from '@/lib/esp/kit'
 import {
   buildSuperpowerTags,
@@ -57,9 +58,11 @@ export async function captureSuperpowerLead(input: {
     return { ok: false, error: 'Something went wrong saving that. Please try again.' }
   }
 
+  const firstName = name?.split(/\s+/)[0] ?? null
+
   await syncSubscriber({
     email,
-    firstName: name?.split(/\s+/)[0] ?? null,
+    firstName,
     tags: [
       ...buildSuperpowerTags({ homeFace: input.homeFace, avoidedFace: input.avoidedFace }),
       WELCOME_SEQUENCE_TAG,
@@ -71,7 +74,33 @@ export async function captureSuperpowerLead(input: {
     },
   })
 
-  return { ok: true, message: "Saved. Your result is on its way to your inbox." }
+  // The reveal promises the result and the avoided Face by email before it asks
+  // for the address, so this send is the promise itself rather than a courtesy.
+  // Until 2026-08-18 this action had no send path at all and returned the
+  // sentence below regardless, which meant the one surface that states its terms
+  // up front was the one breaking them.
+  const sent = await sendSuperpowerResultEmail({
+    to: email,
+    homeFace: input.homeFace,
+    avoidedFace: input.avoidedFace,
+    firstName,
+  })
+  if (!sent.ok) {
+    console.error('[leads] superpower result email failed to send', {
+      email,
+      error: sent.error,
+    })
+    return {
+      ok: true,
+      message:
+        'Saved. The email hiccuped on my side, so it may not arrive. Your result is still on this page, and taking the quiz again will resend it.',
+    }
+  }
+  if ('skipped' in sent && sent.skipped) {
+    return { ok: true, message: 'Saved. Email is not switched on here yet, so nothing was sent.' }
+  }
+
+  return { ok: true, message: 'Saved. Your result is on its way to your inbox.' }
 }
 
 /**
