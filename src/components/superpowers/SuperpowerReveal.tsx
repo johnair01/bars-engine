@@ -42,6 +42,11 @@ import { captureSuperpowerLead } from '@/actions/leads'
 export interface SuperpowerRevealProps {
   routing: SuperpowerRoutingResult
   copy: ResultCopy
+  /**
+   * Show the matched Crossing path + its CTAs. True for the standalone
+   * `/superpower` page; false when embedded in another campaign's funnel.
+   */
+  showCrossingPath?: boolean
 }
 
 const ORIENTATION_LABEL = {
@@ -56,7 +61,7 @@ const BODY: CSSProperties = { fontFamily: 'var(--bars-font-body)' }
 // Reserved liminal-purple action ramp (non-element; see bars-tokens.css).
 const PURPLE = { lite: '#a78bfa', chip: '#b794f6', deep: '#7c3aed', mid: '#8b5cf6', outline: '#cdbff5' }
 
-export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
+export function SuperpowerReveal({ routing, copy, showCrossingPath = true }: SuperpowerRevealProps) {
   const primary = routing.superpower
   const primaryDef = SUPERPOWER_DEFS[primary]
   const secondaryDef = SUPERPOWER_DEFS[routing.secondary]
@@ -197,141 +202,147 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
       </div>
 
       {/* c. Aligned Action bridge — reserved liminal-purple action treatment. */}
-      <div className="flex flex-col gap-[11px]">
-        <span
-          className="text-[10px] uppercase"
-          style={{ ...MONO, letterSpacing: '.24em', color: 'var(--bars-liminal-glow)' }}
-        >
-          Move into aligned action · live
-        </span>
+      {/* The Crossing path. Suppressed when this quiz is embedded in another
+          campaign's funnel — sending a reader who is halfway through one
+          campaign off to a different one is the wrong invitation, and the host
+          flow presents its own aligned action a few screens later. */}
+      {showCrossingPath && (
+        <div className="flex flex-col gap-[11px]">
+          <span
+            className="text-[10px] uppercase"
+            style={{ ...MONO, letterSpacing: '.24em', color: 'var(--bars-liminal-glow)' }}
+          >
+            Move into aligned action · live
+          </span>
 
-        <div
-          className="relative overflow-hidden rounded-2xl px-[18px] pb-[18px] pt-[19px]"
-          style={{
-            background: 'linear-gradient(168deg, #16111f 0%, #111110 52%)',
-            boxShadow:
-              'inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(124,58,237,0.30), 0 0 34px -10px rgba(124,58,237,0.55)',
-          }}
-        >
           <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{ background: 'radial-gradient(120% 80% at 90% -12%, rgba(124,58,237,0.22) 0%, transparent 55%)' }}
-          />
-          <div className="relative flex flex-col gap-[14px]">
-            <div className="flex flex-col gap-[6px]">
-              <span
-                className="text-[9.5px] uppercase"
-                style={{ ...MONO, letterSpacing: '.16em', color: PURPLE.lite }}
-              >
-                ◇ The Crossing · The Book Tour
-              </span>
-              <h3
-                className="text-[25px] font-bold"
-                style={{ ...DISPLAY, letterSpacing: '-.02em', lineHeight: 1, color: '#f4f2ec' }}
-              >
-                The Crossing
-              </h3>
-              <p
-                className="text-[13.5px]"
-                style={{ ...BODY, lineHeight: 1.5, color: 'var(--bars-text-secondary)' }}
-              >
-                Wendell needs a reliable car to keep showing up. Every superpower has a way in.
-              </p>
-            </div>
-
-            {/* Your lens on this campaign */}
+            className="relative overflow-hidden rounded-2xl px-[18px] pb-[18px] pt-[19px]"
+            style={{
+              background: 'linear-gradient(168deg, #16111f 0%, #111110 52%)',
+              boxShadow:
+                'inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(124,58,237,0.30), 0 0 34px -10px rgba(124,58,237,0.55)',
+            }}
+          >
             <div
-              className="flex flex-col gap-[8px] rounded-xl px-[14px] py-[13px]"
-              style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.18)' }}
-            >
-              <span
-                className="text-[9px] uppercase"
-                style={{ ...MONO, letterSpacing: '.14em', color: PURPLE.lite }}
-              >
-                Your {primaryDef.label} lens · {orientation === 'internal' ? 'self-allyship' : 'world-facing'}
-              </span>
-              <p
-                className="text-[16px] font-semibold"
-                style={{ ...DISPLAY, lineHeight: 1.32, letterSpacing: '-.01em', color: 'var(--bars-text-primary)' }}
-              >
-                {cell.prompt}
-              </p>
-              <p
-                className="text-[12.5px]"
-                style={{ ...BODY, lineHeight: 1.45, color: 'var(--bars-text-secondary)' }}
-              >
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{ background: 'radial-gradient(120% 80% at 90% -12%, rgba(124,58,237,0.22) 0%, transparent 55%)' }}
+            />
+            <div className="relative flex flex-col gap-[14px]">
+              <div className="flex flex-col gap-[6px]">
                 <span
-                  className="mr-[6px] text-[8.5px] uppercase"
-                  style={{ ...MONO, letterSpacing: '.14em', color: 'var(--bars-text-muted)' }}
+                  className="text-[9.5px] uppercase"
+                  style={{ ...MONO, letterSpacing: '.16em', color: PURPLE.lite }}
                 >
-                  Make
+                  ◇ The Crossing · The Book Tour
                 </span>
-                {cell.suggestedArtifact}
-              </p>
-            </div>
+                <h3
+                  className="text-[25px] font-bold"
+                  style={{ ...DISPLAY, letterSpacing: '-.02em', lineHeight: 1, color: '#f4f2ec' }}
+                >
+                  The Crossing
+                </h3>
+                <p
+                  className="text-[13.5px]"
+                  style={{ ...BODY, lineHeight: 1.5, color: 'var(--bars-text-secondary)' }}
+                >
+                  Wendell needs a reliable car to keep showing up. Every superpower has a way in.
+                </p>
+              </div>
 
-            {/* Matched move */}
-            <div className="flex items-start gap-3">
-              <span
-                aria-hidden
-                className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[11px] text-center text-[9px] font-bold uppercase"
-                style={{
-                  ...MONO,
-                  letterSpacing: '.02em',
-                  lineHeight: 1.05,
-                  color: '#0a0908',
-                  background: `linear-gradient(150deg, ${PURPLE.chip}, ${PURPLE.deep})`,
-                  boxShadow: '0 8px 18px -10px #7c3aed',
-                }}
+              {/* Your lens on this campaign */}
+              <div
+                className="flex flex-col gap-[8px] rounded-xl px-[14px] py-[13px]"
+                style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.18)' }}
               >
-                {path.abbr}
-              </span>
-              <div className="flex min-w-0 flex-col gap-[3px]">
                 <span
                   className="text-[9px] uppercase"
-                  style={{ ...MONO, letterSpacing: '.14em', color: 'var(--bars-text-muted)' }}
+                  style={{ ...MONO, letterSpacing: '.14em', color: PURPLE.lite }}
                 >
-                  Your path · {path.roleLabel}
+                  Your {primaryDef.label} lens · {orientation === 'internal' ? 'self-allyship' : 'world-facing'}
                 </span>
-                <span
-                  className="text-[13.5px] font-semibold"
-                  style={{ ...BODY, lineHeight: 1.42, color: 'var(--bars-text-primary)' }}
+                <p
+                  className="text-[16px] font-semibold"
+                  style={{ ...DISPLAY, lineHeight: 1.32, letterSpacing: '-.01em', color: 'var(--bars-text-primary)' }}
                 >
-                  {path.move}
-                </span>
+                  {cell.prompt}
+                </p>
+                <p
+                  className="text-[12.5px]"
+                  style={{ ...BODY, lineHeight: 1.45, color: 'var(--bars-text-secondary)' }}
+                >
+                  <span
+                    className="mr-[6px] text-[8.5px] uppercase"
+                    style={{ ...MONO, letterSpacing: '.14em', color: 'var(--bars-text-muted)' }}
+                  >
+                    Make
+                  </span>
+                  {cell.suggestedArtifact}
+                </p>
               </div>
-            </div>
 
-            <div className="mt-[2px] flex flex-wrap gap-[10px]">
-              <Link
-                href={crossingRoleHref(path.roleId)}
-                className="min-w-[170px] flex-1 rounded-[11px] px-4 py-3 text-center text-[14px] font-semibold no-underline"
-                style={{
-                  ...DISPLAY,
-                  color: '#fff',
-                  background: `linear-gradient(150deg, ${PURPLE.mid}, ${PURPLE.deep})`,
-                  boxShadow: '0 10px 26px -12px #7c3aed, inset 0 1px 0 rgba(255,255,255,0.18)',
-                }}
-              >
-                Take this move in The Crossing →
-              </Link>
-              <Link
-                href={THE_CROSSING_HREF}
-                className="flex-none rounded-[11px] px-4 py-3 text-center text-[14px] font-semibold no-underline"
-                style={{
-                  ...DISPLAY,
-                  color: PURPLE.outline,
-                  background: 'transparent',
-                  border: '1px solid rgba(124,58,237,0.42)',
-                }}
-              >
-                See all paths
-              </Link>
+              {/* Matched move */}
+              <div className="flex items-start gap-3">
+                <span
+                  aria-hidden
+                  className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[11px] text-center text-[9px] font-bold uppercase"
+                  style={{
+                    ...MONO,
+                    letterSpacing: '.02em',
+                    lineHeight: 1.05,
+                    color: '#0a0908',
+                    background: `linear-gradient(150deg, ${PURPLE.chip}, ${PURPLE.deep})`,
+                    boxShadow: '0 8px 18px -10px #7c3aed',
+                  }}
+                >
+                  {path.abbr}
+                </span>
+                <div className="flex min-w-0 flex-col gap-[3px]">
+                  <span
+                    className="text-[9px] uppercase"
+                    style={{ ...MONO, letterSpacing: '.14em', color: 'var(--bars-text-muted)' }}
+                  >
+                    Your path · {path.roleLabel}
+                  </span>
+                  <span
+                    className="text-[13.5px] font-semibold"
+                    style={{ ...BODY, lineHeight: 1.42, color: 'var(--bars-text-primary)' }}
+                  >
+                    {path.move}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-[2px] flex flex-wrap gap-[10px]">
+                <Link
+                  href={crossingRoleHref(path.roleId)}
+                  className="min-w-[170px] flex-1 rounded-[11px] px-4 py-3 text-center text-[14px] font-semibold no-underline"
+                  style={{
+                    ...DISPLAY,
+                    color: '#fff',
+                    background: `linear-gradient(150deg, ${PURPLE.mid}, ${PURPLE.deep})`,
+                    boxShadow: '0 10px 26px -12px #7c3aed, inset 0 1px 0 rgba(255,255,255,0.18)',
+                  }}
+                >
+                  Take this move in The Crossing →
+                </Link>
+                <Link
+                  href={THE_CROSSING_HREF}
+                  className="flex-none rounded-[11px] px-4 py-3 text-center text-[14px] font-semibold no-underline"
+                  style={{
+                    ...DISPLAY,
+                    color: PURPLE.outline,
+                    background: 'transparent',
+                    border: '1px solid rgba(124,58,237,0.42)',
+                  }}
+                >
+                  See all paths
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* d. Full spectrum — all seven ranked. */}
       <details

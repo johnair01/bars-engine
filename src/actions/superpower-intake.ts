@@ -28,6 +28,16 @@ const submitSchema = z.object({
   orientation: z.enum(['internal', 'external']).nullish(),
   /** Per-campaign context for persisting the result on CampaignMembership. */
   campaignRef: z.string().trim().min(1).max(64).optional(),
+  /**
+   * Whether to write the result. Defaults true (the standalone `/superpower`
+   * page). Host flows that capture the superpower at their own checkout pass
+   * false: in the ally funnel the result lands on the `CampaignLead` when the
+   * reader actually commits, and writing again from mid-quiz would record a
+   * decision from someone who has not made one yet — and, because only a
+   * signed-in viewer persists at all, would in practice only ever fire for an
+   * admin rehearsing the flow.
+   */
+  persist: z.boolean().optional(),
 })
 
 export type SubmitSuperpowerIntakeResult =
@@ -93,10 +103,12 @@ export async function submitSuperpowerIntake(raw: unknown): Promise<SubmitSuperp
     }
   }
 
-  const { answers, orientation, campaignRef } = parsed.data
+  const { answers, orientation, campaignRef, persist } = parsed.data
   const outcome = resolveSuperpowerIntake(answers, orientation ?? null)
 
-  const player = await getCurrentPlayer()
+  // Scoring is deterministic and always returned; only the write is optional.
+  const shouldPersist = persist !== false
+  const player = shouldPersist ? await getCurrentPlayer() : null
   const persisted = player ? await persistResult(campaignRef, player.id, outcome) : false
   const loadoutSaved = player ? await persistLoadout(outcome) : false
 

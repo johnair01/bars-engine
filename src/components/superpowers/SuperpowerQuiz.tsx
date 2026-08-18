@@ -30,6 +30,14 @@ export interface SuperpowerQuizProps {
    * superpower + orientation and advance to the next step.
    */
   onComplete?: (outcome: SuperpowerIntakeOutcome) => void
+  /**
+   * Rendered inside another campaign's funnel rather than as the standalone
+   * `/superpower` page. Two consequences, both about not acting like the host:
+   *   - the result is NOT written here; the host captures it at its own checkout
+   *   - the reveal drops its "Take this move in The Crossing" CTA, which would
+   *     otherwise send a reader out of the campaign they are actually in
+   */
+  embedded?: boolean
 }
 
 const TOTAL_STEPS = QUIZ_ITEMS.length + 1 // items + orientation
@@ -38,7 +46,7 @@ const MONO: CSSProperties = { fontFamily: 'var(--bars-font-mono)' }
 const DISPLAY: CSSProperties = { fontFamily: 'var(--bars-font-display)' }
 const BODY: CSSProperties = { fontFamily: 'var(--bars-font-body)' }
 
-export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps) {
+export function SuperpowerQuiz({ campaignRef, onComplete, embedded = false }: SuperpowerQuizProps) {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
@@ -60,15 +68,18 @@ export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps)
         answers: answerList,
         orientation: finalOrientation,
         campaignRef,
+        persist: !embedded,
       })
       if (res.ok) {
         setOutcome(res.outcome)
         // Best-effort: let other surfaces (e.g. the Kickstarter hub self-report)
         // carry this result to enrich a steward lead. Never gates the reveal.
-        cacheSuperpowerResult({
-          superpower: res.outcome.routing.superpower,
-          orientation: res.outcome.routing.orientation ?? null,
-        })
+        if (!embedded) {
+          cacheSuperpowerResult({
+            superpower: res.outcome.routing.superpower,
+            orientation: res.outcome.routing.orientation ?? null,
+          })
+        }
         onComplete?.(res.outcome)
       } else setError(res.error)
     })
@@ -94,7 +105,7 @@ export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps)
   if (outcome) {
     return (
       <div className="mt-6 flex flex-col gap-[18px]">
-        <SuperpowerReveal routing={outcome.routing} copy={outcome.copy} />
+        <SuperpowerReveal routing={outcome.routing} copy={outcome.copy} showCrossingPath={!embedded} />
         <button
           type="button"
           onClick={restart}
