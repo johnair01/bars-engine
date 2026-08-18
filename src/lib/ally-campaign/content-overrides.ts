@@ -28,6 +28,7 @@ import {
   type UnderstandingPanel,
 } from './allies'
 import { WORKSTREAMS, type Workstream } from './workstreams'
+import { findLiteralFigure, literalFigureMessage, renderTokens } from './content-tokens'
 
 /** The JSON key inside `AppConfig.theme`. */
 export const ALLY_CONTENT_KEY = 'allyCampaign'
@@ -39,6 +40,12 @@ export type InviteOverride = {
   closing?: string
   /** Only meaningful on created invites; authored ones keep their file value. */
   cohort?: string
+  /**
+   * This ally's own myths / panels / workstream copy, layered over the global
+   * layer, layered over the authored file. Same shape at every scope so a
+   * per-ally edit can say anything a global one can.
+   */
+  content?: ContentLayer
 }
 
 /**
@@ -135,16 +142,43 @@ export type WorkstreamOverride = {
   theAsk?: string
 }
 
-/** Everything an admin may rewrite. All optional, all sparse. */
-export interface AllyContentOverrides {
-  /** Keyed by invite slug — `mom`, `ray`, … plus `__default` for DEFAULT_INVITE. */
-  invites?: Record<string, InviteOverride>
+/**
+ * The content buckets an admin may rewrite, at either scope.
+ *
+ * Split out so the global layer and each per-invite layer are literally the same
+ * shape — a per-ally override can say anything a global one can, which is the
+ * point of the cascade.
+ */
+export interface ContentLayer {
   /** Keyed by myth id. */
   myths?: Record<string, MythOverride>
   /** Keyed by panel index, as a string (JSON object keys are strings). */
   understanding?: Record<string, PanelOverride>
   /** Keyed by workstream key. */
   workstreams?: Record<string, WorkstreamOverride>
+}
+
+/**
+ * Everything an admin may rewrite. All optional, all sparse.
+ *
+ * THREE LAYERS, resolved per FIELD (see `resolveAllyContent`):
+ *
+ *   1. authored default   `workstreams.ts` / `allies.ts`
+ *   2. global override    `.myths` / `.understanding` / `.workstreams`
+ *   3. per-invite override `.invites[slug].content.*`
+ *
+ * Field-level rather than object-level on purpose: a per-ally rewrite of one
+ * workstream's *narrative* must not silently discard a globally-corrected *ask*
+ * for the same workstream. The two edits are about different things and are made
+ * by the same person months apart.
+ *
+ * Every layer stores TOKENS, never figures — `{{carLoan}}`, not `$2,500`. That is
+ * what lets the message differ per ally while the data stays single-source, and
+ * it is enforced in `normalizeOverrides` rather than advised in the editor.
+ */
+export interface AllyContentOverrides extends ContentLayer {
+  /** Keyed by invite slug — `mom`, `ray`, … plus `__default` for DEFAULT_INVITE. */
+  invites?: Record<string, InviteOverride>
 }
 
 /** The slug used to override `DEFAULT_INVITE`, which has no entry in ALLIES. */
@@ -167,6 +201,31 @@ function text(value: unknown): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined
 }
 
+/**
+ * Why a piece of override text was refused, if it was.
+ *
+ * `normalizeOverrides` silently DROPS refused text so a bad value can never reach
+ * a reader, but the save action needs to tell the admin what happened — a field
+ * that vanishes without explanation is worse than one that errors. `checkLayer`
+ * is the reporting half of the same rule.
+ */
+export interface OverrideRejection {
+  bucket: 'myths' | 'understanding' | 'workstreams' | 'invites'
+  key: string
+  field: string
+  message: string
+}
+
+/**
+ * True when this text may be stored. The invariant of the whole token layer:
+ * an override carries `{{carLoan}}`, never `$2,500`. Enforced here, at the point
+ * data enters, rather than advised in the editor — a rule that lives only in a
+ * hint is a rule nobody keeps.
+ */
+function isStorableText(value: string): boolean {
+  return findLiteralFigure(value) === null
+}
+
 function pickFields<T extends Record<string, unknown>>(
   raw: unknown,
   fields: readonly (keyof T & string)[],
@@ -176,7 +235,8 @@ function pickFields<T extends Record<string, unknown>>(
   const out: Record<string, string> = {}
   for (const field of fields) {
     const value = text(source[field])
-    if (value !== undefined) out[field] = value
+    // A hard-coded figure is dropped rather than stored — see isStorableText.
+    if (value !== undefined && isStorableText(value)) out[field] = value
   }
   return Object.keys(out).length > 0 ? (out as T) : undefined
 }
@@ -211,18 +271,39 @@ export function normalizeOverrides(raw: unknown): AllyContentOverrides {
   const result: AllyContentOverrides = {}
 
   const invites = pickRecord<InviteOverride>(source.invites, INVITE_FIELDS)
-  if (invites) result.invites = invites
+  // pickRecord only keeps declared string fields, so the nested per-invite
+  // content layer is normalized separately and re-attached.
+  const rawInvites = (source.invites ?? {}) as Record<string, unknown>
+  const withContent: Record<string, InviteOverride> = { ...(invites ?? {}) }
+  for (const [slug, raw] of Object.entries(rawInvites)) {
+    if (!raw || typeof raw !== 'object') continue
+    const layer = normalizeLayer((raw as Record<string, unknown>).content)
+    if (Object.keys(layer).length === 0) continue
+    withContent[slug] = { ...(withContent[slug] ?? {}), content: layer }
+  }
+  if (Object.keys(withContent).length > 0) result.invites = withContent
 
-  const myths = pickRecord<MythOverride>(source.myths, MYTH_FIELDS)
-  if (myths) result.myths = myths
-
-  const understanding = pickRecord<PanelOverride>(source.understanding, PANEL_FIELDS)
-  if (understanding) result.understanding = understanding
-
-  const workstreams = pickRecord<WorkstreamOverride>(source.workstreams, WORKSTREAM_FIELDS)
-  if (workstreams) result.workstreams = workstreams
+  Object.assign(result, normalizeLayer(source))
 
   return result
+}
+
+/** Normalize one content layer — used for the global scope and each invite's. */
+export function normalizeLayer(raw: unknown): ContentLayer {
+  if (!raw || typeof raw !== 'object') return {}
+  const source = raw as Record<string, unknown>
+  const layer: ContentLayer = {}
+
+  const myths = pickRecord<MythOverride>(source.myths, MYTH_FIELDS)
+  if (myths) layer.myths = myths
+
+  const understanding = pickRecord<PanelOverride>(source.understanding, PANEL_FIELDS)
+  if (understanding) layer.understanding = understanding
+
+  const workstreams = pickRecord<WorkstreamOverride>(source.workstreams, WORKSTREAM_FIELDS)
+  if (workstreams) layer.workstreams = workstreams
+
+  return layer
 }
 
 /** Read overrides out of a raw `AppConfig.theme` string. Never throws. */
@@ -279,8 +360,10 @@ export function resolveInviteWithOverrides(
     ...invite,
     displayName: o.displayName ?? invite.displayName,
     eyebrow: o.eyebrow ?? invite.eyebrow,
-    opening: o.opening ?? invite.opening,
-    closing: o.closing ?? invite.closing,
+    // Letters carry tokens too — "{{carLoan}}, as a loan" in an admin-edited
+    // opening must move with economics.ts exactly like the authored one does.
+    opening: renderTokens(o.opening ?? invite.opening),
+    closing: renderTokens(o.closing ?? invite.closing),
     cohort: asCohort(o.cohort, invite.cohort),
   }
 }
@@ -325,41 +408,79 @@ export function listInvites(overrides: AllyContentOverrides): InviteSummary[] {
   )
 }
 
-export function resolveMyths(overrides: AllyContentOverrides): AllyMyth[] {
+/**
+ * First defined value across the layers, most specific first, rendered through
+ * the token registry. Field-level, so one layer overriding `narrative` never
+ * discards another layer's `theAsk`.
+ */
+function pick<T extends Record<string, string | undefined>>(
+  layers: (T | undefined)[],
+  field: keyof T,
+  authored: string,
+): string {
+  for (const layer of layers) {
+    const v = layer?.[field]
+    if (typeof v === 'string' && v.length > 0) return renderTokens(v)
+  }
+  // Authored prose already interpolated its figures at module load; running it
+  // through the renderer is a no-op unless someone wrote a token in the file.
+  return renderTokens(authored)
+}
+
+/** The layer stack for a slug: per-invite first, then global. */
+export function layersFor(
+  slug: string | undefined,
+  overrides: AllyContentOverrides,
+): ContentLayer[] {
+  const key = inviteOverrideKey(slug, overrides)
+  const perInvite = overrides.invites?.[key]?.content
+  return perInvite ? [perInvite, overrides] : [overrides]
+}
+
+export function resolveMyths(
+  overrides: AllyContentOverrides,
+  slug?: string,
+): AllyMyth[] {
+  const layers = layersFor(slug, overrides)
   return ALLY_MYTHS.map((m) => {
-    const o = overrides.myths?.[m.id]
-    if (!o) return m
+    const os = layers.map((l) => l.myths?.[m.id])
     return {
       ...m,
-      myth: o.myth ?? m.myth,
-      truth: o.truth ?? m.truth,
-      reframe: o.reframe ?? m.reframe,
+      myth: pick(os, 'myth', m.myth),
+      truth: pick(os, 'truth', m.truth),
+      reframe: pick(os, 'reframe', m.reframe),
     }
   })
 }
 
-export function resolveUnderstanding(overrides: AllyContentOverrides): UnderstandingPanel[] {
+export function resolveUnderstanding(
+  overrides: AllyContentOverrides,
+  slug?: string,
+): UnderstandingPanel[] {
+  const layers = layersFor(slug, overrides)
   return UNDERSTANDING.map((p, i) => {
-    const o = overrides.understanding?.[String(i)]
-    if (!o) return p
+    const os = layers.map((l) => l.understanding?.[String(i)])
     return {
-      kicker: o.kicker ?? p.kicker,
-      heading: o.heading ?? p.heading,
-      body: o.body ?? p.body,
+      kicker: pick(os, 'kicker', p.kicker),
+      heading: pick(os, 'heading', p.heading),
+      body: pick(os, 'body', p.body),
     }
   })
 }
 
-export function resolveWorkstreams(overrides: AllyContentOverrides): Workstream[] {
+export function resolveWorkstreams(
+  overrides: AllyContentOverrides,
+  slug?: string,
+): Workstream[] {
+  const layers = layersFor(slug, overrides)
   return WORKSTREAMS.map((w) => {
-    const o = overrides.workstreams?.[w.key]
-    if (!o) return w
+    const os = layers.map((l) => l.workstreams?.[w.key])
     return {
       ...w,
-      title: o.title ?? w.title,
-      emergentProblem: o.emergentProblem ?? w.emergentProblem,
-      narrative: o.narrative ?? w.narrative,
-      theAsk: o.theAsk ?? w.theAsk,
+      title: pick(os, 'title', w.title),
+      emergentProblem: pick(os, 'emergentProblem', w.emergentProblem),
+      narrative: pick(os, 'narrative', w.narrative),
+      theAsk: pick(os, 'theAsk', w.theAsk),
     }
   })
 }
@@ -371,9 +492,9 @@ export function resolveAllyContent(
 ): ResolvedAllyContent {
   return {
     invite: resolveInviteWithOverrides(slug, overrides),
-    myths: resolveMyths(overrides),
-    understanding: resolveUnderstanding(overrides),
-    workstreams: resolveWorkstreams(overrides),
+    myths: resolveMyths(overrides, slug),
+    understanding: resolveUnderstanding(overrides, slug),
+    workstreams: resolveWorkstreams(overrides, slug),
   }
 }
 
@@ -392,4 +513,80 @@ export function inviteOverrideKey(
 /** True when this slug resolves to a real invite rather than the generic fallback. */
 export function inviteExists(slug: string | undefined, overrides: AllyContentOverrides): boolean {
   return inviteOverrideKey(slug, overrides) !== DEFAULT_INVITE_KEY
+}
+
+// ── Reporting the invariant ─────────────────────────────────────────────────
+
+const LAYER_FIELDS: Record<'myths' | 'understanding' | 'workstreams', readonly string[]> = {
+  myths: MYTH_FIELDS,
+  understanding: PANEL_FIELDS,
+  workstreams: WORKSTREAM_FIELDS,
+}
+
+/** Letter fields that carry prose and are therefore subject to the same rule. */
+const INVITE_PROSE_FIELDS = ['opening', 'closing'] as const
+
+/**
+ * Every field in a patch that will be refused, and why.
+ *
+ * `normalizeOverrides` drops these silently — correct for rendering, useless for
+ * the person who just typed them. The save action calls this first so it can say
+ * *"“$2,500” is a live figure — write {{carLoan}} instead"* rather than accepting
+ * the save and quietly discarding half of it.
+ */
+export function checkLayer(raw: unknown, scope = 'global'): OverrideRejection[] {
+  if (!raw || typeof raw !== 'object') return []
+  const source = raw as Record<string, unknown>
+  const out: OverrideRejection[] = []
+
+  for (const [bucket, fields] of Object.entries(LAYER_FIELDS)) {
+    const rows = source[bucket]
+    if (!rows || typeof rows !== 'object') continue
+    for (const [key, row] of Object.entries(rows as Record<string, unknown>)) {
+      if (!row || typeof row !== 'object') continue
+      for (const field of fields) {
+        const value = (row as Record<string, unknown>)[field]
+        if (typeof value !== 'string' || !value.trim()) continue
+        const literal = findLiteralFigure(value)
+        if (literal) {
+          out.push({
+            bucket: bucket as OverrideRejection['bucket'],
+            key: scope === 'global' ? key : `${scope}/${key}`,
+            field,
+            message: literalFigureMessage(literal),
+          })
+        }
+      }
+    }
+  }
+
+  return out
+}
+
+/** `checkLayer` across the global layer, every invite letter, and every per-invite layer. */
+export function checkOverrides(raw: unknown): OverrideRejection[] {
+  if (!raw || typeof raw !== 'object') return []
+  const source = raw as Record<string, unknown>
+  const out = checkLayer(source)
+
+  const invites = source.invites
+  if (invites && typeof invites === 'object') {
+    for (const [slug, invite] of Object.entries(invites as Record<string, unknown>)) {
+      if (!invite || typeof invite !== 'object') continue
+      const inv = invite as Record<string, unknown>
+
+      for (const field of INVITE_PROSE_FIELDS) {
+        const value = inv[field]
+        if (typeof value !== 'string' || !value.trim()) continue
+        const literal = findLiteralFigure(value)
+        if (literal) {
+          out.push({ bucket: 'invites', key: slug, field, message: literalFigureMessage(literal) })
+        }
+      }
+
+      out.push(...checkLayer(inv.content, slug))
+    }
+  }
+
+  return out
 }
