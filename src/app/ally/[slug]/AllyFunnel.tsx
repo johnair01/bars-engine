@@ -124,6 +124,8 @@ export function AllyFunnel({
    */
   const [history, setHistory] = useState<Step[]>([])
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
+  /** True once the reader answers anything — collapses the quiz framing. */
+  const [quizStarted, setQuizStarted] = useState(false)
   const [mythIndex, setMythIndex] = useState(0)
   /** Only the myths actually read — a skip must not report six. */
   const [mythsSeen, setMythsSeen] = useState<string[]>([])
@@ -366,7 +368,10 @@ export function AllyFunnel({
       )}
 
       <div className="flex items-center justify-between gap-3">
-        <Eyebrow>{invite.eyebrow}</Eyebrow>
+        {/* No genre label above a personal letter. The eyebrow slot stays in
+            the type for created invites that want one, but the warm letters
+            open on their own first line. */}
+        {invite.eyebrow ? <Eyebrow>{invite.eyebrow}</Eyebrow> : <span />}
         {/* One consistent way back, on every screen. Exploring a proposal means
             re-reading things; a flow you can only move forward through quietly
             punishes the reader for being careful. */}
@@ -416,12 +421,25 @@ export function AllyFunnel({
       {step === 'superpower' && (
         <div className="flex flex-col gap-4">
           <Heading>First: what do you actually bring?</Heading>
-          {/* Say what the questions are FOR before asking them. Answering a quiz
-              with no stated purpose invites the flattering answer rather than the
-              true one, and the true one is what routes the work. */}
-          <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-4" style={{ background: PANEL }}>
+          {/* Say what the questions are FOR before asking them — once. Answering a
+              quiz with no stated purpose invites the flattering answer rather than
+              the true one, and the true one is what routes the work. It collapses
+              after the first answer: an explanation that never leaves stops being
+              an explanation and becomes furniture above every question. */}
+          <details
+            open={!quizStarted}
+            className="rounded-xl border border-white/[0.08]"
+            style={{ background: PANEL }}
+          >
+            <summary
+              className="cursor-pointer list-none px-4 py-3 text-[12px] uppercase"
+              style={{ fontFamily: 'var(--bars-font-mono)', letterSpacing: '.16em', color: GOLD }}
+            >
+              Why I&apos;m asking {quizStarted ? '▾' : ''}
+            </summary>
+          <div className="flex flex-col gap-3 p-4 pt-0">
             <p className="text-[14px] leading-relaxed" style={{ color: '#cfcdc6' }}>
-              <strong style={{ color: INK }}>Why I&apos;m asking.</strong> There are{' '}
+              There are{' '}
               {workstreams.reduce((n, w) => n + w.needs.length, 0)} specific jobs in this campaign, and
               showing you all of them at once would be useless. These questions decide which ones you
               see first, and in what order.
@@ -441,19 +459,25 @@ export function AllyFunnel({
               </li>
             </ul>
           </div>
+          </details>
 
           {/* `embedded` is behavioural (no mid-quiz write, no Crossing CTA);
               `suppressReveal` is presentational — we render the result ourselves
               on the next step rather than showing the stock reveal. */}
-          <SuperpowerQuiz
-            campaignRef="mobility-quest"
-            embedded
-            suppressReveal
-            onComplete={(o) => {
-              setOutcome(o)
-              go('superpower-result')
-            }}
-          />
+          {/* Any interaction inside the quiz counts as started. Capture rather
+              than a prop on SuperpowerQuiz — the framing is this page's concern,
+              not something a shared component should have to know about. */}
+          <div onClickCapture={() => setQuizStarted(true)}>
+            <SuperpowerQuiz
+              campaignRef="mobility-quest"
+              embedded
+              suppressReveal
+              onComplete={(o) => {
+                setOutcome(o)
+                go('superpower-result')
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -530,9 +554,11 @@ export function AllyFunnel({
           <Sub>
             Everything you&apos;ve answered so far points somewhere, so here is exactly where. Each
             domain shows how much of its work is typed to your superpower
-            {superpower ? <strong style={{ color: INK }}> ({labelize(superpower)})</strong> : null}, and
-            how many of the myths you just turned over were blocking it. Every domain has work you can
-            do — the matching only decides what you meet first.
+            {superpower ? <strong style={{ color: INK }}> ({labelize(superpower)})</strong> : null}
+            {mythsSeen.length > 0
+              ? ', and how many of the myths you turned over were blocking it'
+              : ''}
+            . Every domain has work you can do — the matching only decides what you meet first.
           </Sub>
           <div className="grid grid-cols-1 gap-2.5">
             {ALLYSHIP_DOMAINS.map((d) => {
@@ -540,7 +566,9 @@ export function AllyFunnel({
               const streams = streamsFor(key)
               if (streams.length === 0) return null
               const foot = footprint.find((f) => f.domain === key)
-              const mythsHere = myths.filter((m) => m.domainHint === key)
+              const mythsHere = myths.filter(
+                (m) => m.domainHint === key && mythsSeen.includes(m.id),
+              )
               return (
                 <button
                   key={d.key}
@@ -705,7 +733,7 @@ export function AllyFunnel({
                 <button
                   className={ghost}
                   style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
-                  onClick={() => go('domain')}
+                  onClick={back}
                 >
                   ← Look again
                 </button>
@@ -1038,7 +1066,7 @@ function SuperpowerResult({
 
   return (
     <Panel>
-      <Eyebrow>saved — this changes what you get shown</Eyebrow>
+      <Eyebrow>this changes what you get shown</Eyebrow>
       <h2 className="text-[25px] font-bold capitalize" style={{ color: INK }}>
         {labelize(superpower)}
       </h2>

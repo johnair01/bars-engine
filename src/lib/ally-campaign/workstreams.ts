@@ -518,6 +518,26 @@ Two things I will hold myself to here. You get a link that tracks what came from
           'A book club, an ERG, a team, a congregation, a class. One person saying yes on behalf of ten is the cheapest ten copies in the whole campaign. Done means a bulk order placed.',
       },
       {
+        // The floor of the whole campaign, and it was missing. Every other
+        // Brigade ask is about moving OTHER people — sell a case, brief a group,
+        // get me on a podcast. Someone whose honest answer is "I'll buy a copy
+        // and read it" had nothing to take, which quietly says the smallest real
+        // contribution isn't a contribution. It is the one everybody can do.
+        //
+        // Typed to the disruptor, who had nothing in this workstream at all: the
+        // move here is to stop deliberating about how to help and just do the
+        // obvious thing.
+        id: 'aq-brigade-buy',
+        superpower: 'disruptor',
+        orientation: 'external',
+        unit: 'currency',
+        value: INPUTS.digitalPriceCents / 100,
+        bountyVibeulons: 3,
+        cardId: 'SHOW-RA-CHALLENGER',
+        title: 'Buy the book — one copy, for you',
+        detail: `${usd(INPUTS.digitalPriceCents)} for the digital edition. Not a donation and not a favour: it is the thing being sold, you get the thing, and it is the single number every other plan on this page is costed on. If you only ever do one item from this whole campaign, this is a complete answer.`,
+      },
+      {
         id: 'aq-brigade-post',
         superpower: 'storyteller',
         orientation: 'external',

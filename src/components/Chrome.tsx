@@ -21,8 +21,14 @@ const BARE_ROUTES = new Set<string>(['/mastering-allyship'])
  * Route families that render bare. `/go/*` is the T8 funnel format, whose whole
  * discipline is one audience, one ask, and nothing else on the page — so a nav
  * bar offering nine other destinations would undo the format it is wrapping.
+ *
+ * `/ally/*` is the same discipline applied to a letter: these pages open with
+ * someone's name and a personal disclosure, and a site nav above that offers six
+ * exits before the first sentence has been read. It also reframes the page as
+ * marketing, which is the one thing a letter to your mother cannot afford to be.
+ * The reader's way out is the flow itself — declining is a first-class ending.
  */
-const BARE_PREFIXES = ['/go/']
+const BARE_PREFIXES = ['/go/', '/ally/']
 
 function isBareRoute(pathname: string): boolean {
   if (BARE_ROUTES.has(pathname)) return true
