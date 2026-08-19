@@ -31,6 +31,11 @@ import {
   type WorkstreamNeed,
 } from '@/lib/ally-campaign/workstreams'
 import {
+  isPlausibleLeadId,
+  metadataMatchFor,
+  readReferralMetadata,
+} from '@/lib/ally-campaign/referral'
+import {
   PARENT_REF,
   type AllyBoardLead,
   type AllyBoardNeed,
@@ -43,6 +48,60 @@ import {
 const REF_RE = /^[a-z0-9][a-z0-9-]{0,80}$/i
 const DOMAIN_KEYS = ALLYSHIP_DOMAINS.map((d) => d.key) as [string, ...string[]]
 
+// ── attributedSales (public, by capability url) ─────────────────────────────
+
+export interface AttributedSales {
+  /** Sales credited to this ally. */
+  count: number
+  /** Per-SKU breakdown, so "5 copies" can be checked as copies of what. */
+  bySku: { sku: string; count: number }[]
+}
+
+/**
+ * Sales credited to an ally's referral link.
+ *
+ * Reads the attribution the Gumroad webhook wrote onto each sale's
+ * `RedemptionCode.metadata`. That column is a plain string, so this is a LIKE
+ * against the serialized shape rather than a JSON query — the tradeoff taken to
+ * avoid a migration, and the reason `metadataMatchFor` lives next to the writer.
+ *
+ * Public by design: the lead id is already the capability for this ally's page,
+ * and a number of copies sold is not sensitive. No contact details are returned.
+ */
+export async function attributedSales(leadId: string): Promise<AttributedSales> {
+  const empty: AttributedSales = { count: 0, bySku: [] }
+  if (!isPlausibleLeadId(leadId)) return empty
+
+  try {
+    const rows = await db.redemptionCode.findMany({
+      where: {
+        metadata: { contains: metadataMatchFor(leadId) },
+        // A voided sale is a refund or chargeback; it should not keep counting.
+        status: { not: 'void' },
+      },
+      select: { sku: true, metadata: true },
+    })
+
+    // Re-verify each row: `contains` is a substring match, so a lead id that is
+    // a prefix of another would over-count without parsing the value back out.
+    const confirmed = rows.filter((r) => readReferralMetadata(r.metadata)?.allyLeadId === leadId)
+
+    const bySku = new Map<string, number>()
+    for (const row of confirmed) bySku.set(row.sku, (bySku.get(row.sku) ?? 0) + 1)
+
+    return {
+      count: confirmed.length,
+      bySku: [...bySku.entries()]
+        .map(([sku, count]) => ({ sku, count }))
+        .sort((a, b) => b.count - a.count),
+    }
+  } catch (e) {
+    // A dashboard number is never worth failing someone's page over.
+    console.warn('[ally-campaign] attributedSales failed', e)
+    return empty
+  }
+}
+
 // ── submitAllyIntake (public) ───────────────────────────────────────────────
 
 const intakeSchema = z.object({
@@ -54,8 +113,12 @@ const intakeSchema = z.object({
   superpowerOrientation: z.enum(['internal', 'external']).nullable().optional(),
   mythsSeen: z.array(z.string().trim().min(1).max(120)).max(40).optional(),
   domain: z.enum(DOMAIN_KEYS),
-  /** Need ids they committed to — validated against the authored catalogue. */
-  commitments: z.array(z.string().trim().min(1).max(120)).max(20).optional(),
+  /**
+   * Need ids they committed to — validated against the authored catalogue.
+   * Ceiling allows for divisible asks: taking all ten shares of the print run is
+   * ten ids on its own, and a generous ally can legitimately span workstreams.
+   */
+  commitments: z.array(z.string().trim().min(1).max(120)).max(60).optional(),
   /** Anything they wanted to say in their own words. */
   notes: z.string().trim().max(4000).optional(),
   /** Publish to the collective directory so other stewards can see the offer. */

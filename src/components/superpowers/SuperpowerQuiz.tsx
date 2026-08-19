@@ -31,13 +31,25 @@ export interface SuperpowerQuizProps {
    */
   onComplete?: (outcome: SuperpowerIntakeOutcome) => void
   /**
-   * Rendered inside another campaign's funnel rather than as the standalone
-   * `/superpower` page. Two consequences, both about not acting like the host:
-   *   - the result is NOT written here; the host captures it at its own checkout
+   * BEHAVIOURAL. Rendered inside another campaign's funnel rather than as the
+   * standalone `/superpower` page. Two consequences, both about not acting like
+   * the host:
+   *   - the result is NOT written here; the host captures it at its own checkout,
+   *     so the quiz never records a decision from someone who has not made one
    *   - the reveal drops its "Take this move in The Crossing" CTA, which would
    *     otherwise send a reader out of the campaign they are actually in
    */
   embedded?: boolean
+  /**
+   * PRESENTATIONAL, and orthogonal to `embedded`. Render nothing on completion —
+   * score, fire `onComplete`, and let the host surface take over.
+   *
+   * Set this when the host has its own result screen. `embedded` alone still
+   * shows the built-in reveal (minus the Crossing CTAs); this removes it
+   * entirely. A host that sets `suppressReveal` owns the job of telling the
+   * reader their result — say so, or they finish a quiz and are told nothing.
+   */
+  suppressReveal?: boolean
 }
 
 const TOTAL_STEPS = QUIZ_ITEMS.length + 1 // items + orientation
@@ -46,7 +58,12 @@ const MONO: CSSProperties = { fontFamily: 'var(--bars-font-mono)' }
 const DISPLAY: CSSProperties = { fontFamily: 'var(--bars-font-display)' }
 const BODY: CSSProperties = { fontFamily: 'var(--bars-font-body)' }
 
-export function SuperpowerQuiz({ campaignRef, onComplete, embedded = false }: SuperpowerQuizProps) {
+export function SuperpowerQuiz({
+  campaignRef,
+  onComplete,
+  embedded = false,
+  suppressReveal = false,
+}: SuperpowerQuizProps) {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
@@ -101,6 +118,8 @@ export function SuperpowerQuiz({ campaignRef, onComplete, embedded = false }: Su
     setOutcome(null)
     setError(null)
   }
+
+  if (outcome && suppressReveal) return null
 
   if (outcome) {
     return (

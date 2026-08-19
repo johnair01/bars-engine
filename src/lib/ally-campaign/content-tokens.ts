@@ -155,6 +155,25 @@ const TOKEN_DEFS: readonly TokenDef[] = [
     numeric: (i) => printEconomics(i).breakEvenUnits,
   },
   {
+    key: 'obligation',
+    label: 'Copies already owed',
+    description:
+      'Pre-sold, undelivered copies — a debt, not inventory. Never state this without its discharge alongside.',
+    group: 'The print run',
+    kind: 'count',
+    resolve: (i) => String(printEconomics(i).obligationUnits),
+    numeric: (i) => printEconomics(i).obligationUnits,
+  },
+  {
+    key: 'sellable',
+    label: 'Copies that can earn',
+    description: 'What is left of the run once the pre-sold obligation is discharged.',
+    group: 'The print run',
+    kind: 'count',
+    resolve: (i) => String(printEconomics(i).sellableUnits),
+    numeric: (i) => printEconomics(i).sellableUnits,
+  },
+  {
     key: 'bookPrice',
     label: 'Cover price',
     description: 'Retail price of the physical book.',
@@ -379,4 +398,31 @@ export function literalFigureMessage(f: LiteralFigure): string {
     return `“${f.found}” is a live figure — write {{${f.suggestion}}} instead, so this text follows the numbers when they change.`
   }
   return `“${f.found}” is a hard-coded amount. Use a token from the palette so it stays in step with the plan.`
+}
+
+// ── The disclosure invariant ────────────────────────────────────────────────
+
+/**
+ * Tokens that discharge the obligation — the recovery half of the sentence.
+ *
+ * Sage ruling (Six Faces consult, ruling 3): *an obligation never renders
+ * without its recovery on the same screen.* Charge with no discharge is anxiety
+ * transferred; naming a debt and stopping there leaves the reader holding it with
+ * no way to set it down.
+ */
+const RECOVERY_TOKENS = new Set(['sellable', 'breakEven', 'recouped'])
+
+/**
+ * True when text names the obligation but nothing that discharges it.
+ *
+ * Structural rather than linguistic: it asks which tokens are present, so it
+ * cannot be fooled by rephrasing and cannot false-positive on prose that merely
+ * sounds gloomy. Only meaningful for token-bearing text — authored narratives
+ * interpolate their figures directly and are covered by their own test.
+ */
+export function statesObligationWithoutRecovery(text: string): boolean {
+  const used = new Set(tokensUsed(text))
+  if (!used.has('obligation')) return false
+  for (const t of used) if (RECOVERY_TOKENS.has(t)) return false
+  return true
 }

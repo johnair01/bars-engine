@@ -28,7 +28,12 @@ import {
   type UnderstandingPanel,
 } from './allies'
 import { WORKSTREAMS, type Workstream } from './workstreams'
-import { findLiteralFigure, literalFigureMessage, renderTokens } from './content-tokens'
+import {
+  findLiteralFigure,
+  literalFigureMessage,
+  renderTokens,
+  statesObligationWithoutRecovery,
+} from './content-tokens'
 
 /** The JSON key inside `AppConfig.theme`. */
 export const ALLY_CONTENT_KEY = 'allyCampaign'
@@ -547,13 +552,22 @@ export function checkLayer(raw: unknown, scope = 'global'): OverrideRejection[] 
       for (const field of fields) {
         const value = (row as Record<string, unknown>)[field]
         if (typeof value !== 'string' || !value.trim()) continue
+        const rowKey = scope === 'global' ? key : `${scope}/${key}`
         const literal = findLiteralFigure(value)
         if (literal) {
           out.push({
             bucket: bucket as OverrideRejection['bucket'],
-            key: scope === 'global' ? key : `${scope}/${key}`,
+            key: rowKey,
             field,
             message: literalFigureMessage(literal),
+          })
+        } else if (statesObligationWithoutRecovery(value)) {
+          out.push({
+            bucket: bucket as OverrideRejection['bucket'],
+            key: rowKey,
+            field,
+            message:
+              'This names the copies already owed without saying what discharges them. Add {{sellable}} or {{breakEven}} — a debt stated with no way out of it just moves the weight onto the reader.',
           })
         }
       }
@@ -581,6 +595,14 @@ export function checkOverrides(raw: unknown): OverrideRejection[] {
         const literal = findLiteralFigure(value)
         if (literal) {
           out.push({ bucket: 'invites', key: slug, field, message: literalFigureMessage(literal) })
+        } else if (statesObligationWithoutRecovery(value)) {
+          out.push({
+            bucket: 'invites',
+            key: slug,
+            field,
+            message:
+              'This letter names the copies already owed without saying what discharges them. Add {{sellable}} or {{breakEven}}.',
+          })
         }
       }
 
