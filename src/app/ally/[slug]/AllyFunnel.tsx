@@ -82,6 +82,8 @@ export function AllyFunnel({
   myths,
   understanding,
   workstreams,
+  testMode = false,
+  testTargetLabel,
 }: {
   /** All prose arrives resolved — authored defaults with any admin edits already
    *  merged in by the server. This component never reads the content modules
@@ -90,6 +92,10 @@ export function AllyFunnel({
   myths: AllyMyth[]
   understanding: UnderstandingPanel[]
   workstreams: Workstream[]
+  /** Dry run — walk the whole thing, persist nothing. See TEST_SLUG_PREFIX. */
+  testMode?: boolean
+  /** The invite being rehearsed, for the banner's "you are testing X" line. */
+  testTargetLabel?: string
 }) {
   const [step, setStep] = useState<Step>('intro')
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
@@ -148,6 +154,23 @@ export function AllyFunnel({
   function finish() {
     if (!superpower || !domain) return
     setError(null)
+
+    // Dry run: compute what WOULD have happened and stop. No lead, no claims, no
+    // offer. Rehearsing on the live link would otherwise mark real needs as taken
+    // — claims are conditional on `status: 'open'`, and there are only 24 of them.
+    if (testMode) {
+      const wouldClaim = [...picked]
+      setResult({
+        claimed: wouldClaim.length,
+        skipped: [],
+        vibeulons: offeredNeeds
+          .filter((n) => picked.has(n.id))
+          .reduce((sum, n) => sum + n.bountyVibeulons, 0),
+      })
+      setStep('done')
+      return
+    }
+
     startTransition(async () => {
       const res = await submitAllyIntake({
         allySlug: invite.slug,
@@ -190,6 +213,33 @@ export function AllyFunnel({
 
   return (
     <div className="flex w-full flex-col gap-6">
+      {/* Visible on every screen, not just the first — the whole risk of a dry run
+          is forgetting you're in one and believing the result. */}
+      {testMode && (
+        <div
+          className="sticky top-0 z-10 flex flex-col gap-1 rounded-xl border px-4 py-3"
+          style={{
+            background: 'rgba(212,160,23,.12)',
+            borderColor: 'rgba(212,160,23,.4)',
+            backdropFilter: 'blur(6px)',
+          }}
+        >
+          <span
+            className="text-[10px] uppercase"
+            style={{ fontFamily: 'var(--bars-font-mono)', letterSpacing: '.24em', color: GOLD }}
+          >
+            test run — nothing is recorded
+          </span>
+          <span className="text-[13px] leading-relaxed" style={{ color: '#e6e4de' }}>
+            {testTargetLabel
+              ? `You're walking the real ${testTargetLabel} letter. `
+              : 'You&apos;re walking the real flow. '}
+            No lead is created, no task is claimed, and nothing reaches the board. Send the link
+            without <code style={{ color: GOLD }}>test-</code> when it&apos;s for real.
+          </span>
+        </div>
+      )}
+
       <Eyebrow>{invite.eyebrow}</Eyebrow>
 
       {/* ── intro ─────────────────────────────────────────────────────────── */}
@@ -501,9 +551,39 @@ export function AllyFunnel({
         <div className="flex flex-col gap-6">
           <Panel>
             <h2 className="text-[25px] font-bold" style={{ color: INK }}>
-              It&apos;s on the board ✦
+              {testMode ? 'End of the test run' : "It's on the board ✦"}
             </h2>
-            {result && result.claimed > 0 ? (
+
+            {/* Say what WOULD have happened, then say plainly that it didn't. */}
+            {testMode ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-[15px] leading-relaxed" style={{ color: '#cfcdc6' }}>
+                  On the real link this would have created a lead
+                  {result && result.claimed > 0 ? (
+                    <>
+                      {' '}
+                      and claimed <strong style={{ color: INK }}>{result.claimed}</strong>{' '}
+                      {result.claimed === 1 ? 'task' : 'tasks'} worth{' '}
+                      <strong style={{ color: GOLD }}>{result.vibeulons} vibeulons</strong>
+                    </>
+                  ) : (
+                    ' with no tasks claimed'
+                  )}
+                  .
+                </p>
+                <p
+                  className="rounded-lg px-4 py-3 text-[14px] leading-relaxed"
+                  style={{ background: 'rgba(212,160,23,.12)', color: '#e6e4de' }}
+                >
+                  <strong style={{ color: GOLD }}>None of it happened.</strong> No lead was written,
+                  no task was claimed, and the board is exactly as you left it.
+                </p>
+                <p className="text-[13px] leading-relaxed" style={{ color: FAINT }}>
+                  The closing letter below is what she&apos;d read. Everything above this panel — the
+                  quiz, the myths, the numbers, the tasks — was the real thing.
+                </p>
+              </div>
+            ) : result && result.claimed > 0 ? (
               <p className="text-[15px] leading-relaxed" style={{ color: '#cfcdc6' }}>
                 You took <strong style={{ color: INK }}>{result.claimed}</strong>{' '}
                 {result.claimed === 1 ? 'thing' : 'things'}, worth{' '}

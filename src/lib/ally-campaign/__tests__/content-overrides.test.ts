@@ -13,6 +13,7 @@ import {
   checkInviteSlug,
   inviteExists,
   inviteOverrideKey,
+  isTestSlug,
   listInvites,
   normalizeOverrides,
   parseAllyContentTheme,
@@ -21,6 +22,7 @@ import {
   resolveMyths,
   resolveUnderstanding,
   resolveWorkstreams,
+  testSlugTarget,
 } from '../content-overrides'
 import { ALLIES, ALLY_MYTHS, DEFAULT_INVITE, UNDERSTANDING } from '../allies'
 import { WORKSTREAMS } from '../workstreams'
@@ -163,6 +165,55 @@ describe('created invites — no deploy required', () => {
     expect(inviteExists('uncle-ray', created)).toBe(true)
     expect(inviteExists('mom', created)).toBe(true)
     expect(inviteExists('stranger', created)).toBe(false)
+  })
+})
+
+describe('test slugs — the dry-run prefix', () => {
+  it('recognises the prefix', () => {
+    expect(isTestSlug('test-mom')).toBe(true)
+    expect(isTestSlug('TEST-MOM')).toBe(true)
+    expect(isTestSlug('mom')).toBe(false)
+    expect(isTestSlug(undefined)).toBe(false)
+  })
+
+  it('does not treat a slug merely containing "test" as a dry run', () => {
+    // The failure that would matter: a real invite silently persisting nothing.
+    expect(isTestSlug('greatest-aunt')).toBe(false)
+    expect(isTestSlug('protest-group')).toBe(false)
+  })
+
+  it('resolves to the invite being rehearsed', () => {
+    expect(testSlugTarget('test-mom')).toBe('mom')
+    expect(testSlugTarget('test-uncle-ray')).toBe('uncle-ray')
+  })
+
+  it('rehearses the generic invite when nothing follows the prefix', () => {
+    expect(testSlugTarget('test-')).toBeUndefined()
+  })
+
+  it('passes a normal slug through untouched', () => {
+    expect(testSlugTarget('mom')).toBe('mom')
+  })
+
+  it('renders the real letter it is testing', () => {
+    // A dry run that showed different copy would be testing nothing.
+    const real = resolveAllyContent('mom', {})
+    const test = resolveAllyContent(testSlugTarget('test-mom'), {})
+    expect(test.invite.opening).toBe(real.invite.opening)
+    expect(test.invite.displayName).toBe(real.invite.displayName)
+  })
+
+  it('picks up an admin edit to the invite it rehearses', () => {
+    const edited = { invites: { mom: { opening: 'rewritten by Wendell' } } }
+    expect(resolveAllyContent(testSlugTarget('test-mom'), edited).invite.opening).toBe(
+      'rewritten by Wendell',
+    )
+  })
+
+  it('refuses to let a test- slug be created as a real invite', () => {
+    const res = checkInviteSlug('test-mom')
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.error).toMatch(/dry-run prefix/i)
   })
 })
 
