@@ -3,135 +3,156 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { OpenUpActionKey, OpenUpAnalyticsEvent, OpenUpCardId, OpenUpEntryMode } from '@/lib/open-up/events'
 import { openUpBookHref, openUpChapterOneHref, openUpSalesHref } from '@/lib/open-up/outbound'
-import { BOOK_ACTIONS, GENERIC_ACTIONS, OPEN_UP_PRACTICES, OPEN_UP_STORIES, OPEN_UP_WEATHER } from '@/lib/open-up/check-content'
+import { BOOK_ACTIONS, GENERIC_ACTIONS, OPEN_UP_BELIEFS, OPEN_UP_EMOTIONS, OPEN_UP_PRACTICES, OPEN_UP_WEATHER, type OpenUpPractice } from '@/lib/open-up/check-content'
 
-type Screen = 'entry' | 'notice' | 'practice' | 'action' | 'receipt'
+type Screen = 'entry' | 'weather' | 'emotion' | 'belief' | 'people' | 'sampler' | 'action' | 'receipt'
 type OutreachPerson = { id: string; name: string; sent: boolean }
+type Emotion = (typeof OPEN_UP_EMOTIONS)[number]
+type Belief = (typeof OPEN_UP_BELIEFS)[number]
+
 const OUTREACH_STORAGE_KEY = 'mtgoa-open-up-outreach-v1'
+const mono = { fontFamily: 'var(--bars-font-mono)' }
+const display = { fontFamily: 'var(--bars-font-display)' }
 
 function track(event: OpenUpAnalyticsEvent) {
   const body = JSON.stringify(event)
-  if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+  if ('sendBeacon' in navigator) {
     navigator.sendBeacon('/api/open-up/events', new Blob([body], { type: 'application/json' }))
     return
   }
   void fetch('/api/open-up/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true })
 }
 
-const mono = { fontFamily: 'var(--bars-font-mono)' }
-const display = { fontFamily: 'var(--bars-font-display)' }
+function drawThree() {
+  const cards = [...OPEN_UP_PRACTICES]
+  for (let index = cards.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1))
+    ;[cards[index], cards[swap]] = [cards[swap], cards[index]]
+  }
+  return cards.slice(0, 3)
+}
 
 export function OpenUpCheck({ queryString }: { queryString: string }) {
   const search = useMemo(() => new URLSearchParams(queryString), [queryString])
   const [screen, setScreen] = useState<Screen>('entry')
   const [mode, setMode] = useState<OpenUpEntryMode | null>(null)
   const [weather, setWeather] = useState<string | null>(null)
-  const [story, setStory] = useState<string | null>(null)
+  const [emotionKey, setEmotionKey] = useState<string | null>(null)
+  const [beliefKey, setBeliefKey] = useState<string | null>(null)
+  const [draw, setDraw] = useState<OpenUpPractice[]>([])
   const [cardId, setCardId] = useState<OpenUpCardId | null>(null)
   const [action, setAction] = useState<OpenUpActionKey | null>(null)
-  const [copied, setCopied] = useState(false)
-  const [outreachList, setOutreachList] = useState<OutreachPerson[]>([])
-  const [outreachReady, setOutreachReady] = useState(false)
+  const [people, setPeople] = useState<OutreachPerson[]>([])
+  const [storageReady, setStorageReady] = useState(false)
 
   useEffect(() => { track({ event: 'open_up_check_viewed' }) }, [])
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(OUTREACH_STORAGE_KEY)
-      const parsed: unknown = raw ? JSON.parse(raw) : []
-      if (Array.isArray(parsed)) {
-        setOutreachList(parsed.filter((item): item is OutreachPerson => (
-          !!item && typeof item === 'object' && typeof item.id === 'string' && typeof item.name === 'string' && typeof item.sent === 'boolean'
-        )).slice(0, 100))
-      }
-    } catch { /* A blocked or malformed local store should not block the check. */ }
-    setOutreachReady(true)
+      const value: unknown = raw ? JSON.parse(raw) : []
+      if (Array.isArray(value)) setPeople(value.filter((item): item is OutreachPerson => !!item && typeof item === 'object' && typeof item.id === 'string' && typeof item.name === 'string' && typeof item.sent === 'boolean').slice(0, 100))
+    } catch { /* Browser storage is optional. */ }
+    setStorageReady(true)
   }, [])
   useEffect(() => {
-    if (!outreachReady) return
-    try { window.localStorage.setItem(OUTREACH_STORAGE_KEY, JSON.stringify(outreachList)) } catch { /* Best-effort local persistence. */ }
-  }, [outreachList, outreachReady])
+    if (!storageReady) return
+    try { window.localStorage.setItem(OUTREACH_STORAGE_KEY, JSON.stringify(people)) } catch { /* Browser storage is optional. */ }
+  }, [people, storageReady])
 
-  const begin = (entryMode: OpenUpEntryMode) => {
-    setMode(entryMode)
-    setScreen('notice')
-    track({ event: 'open_up_check_started', entryMode })
-    track({ event: 'open_up_entry_mode_selected', entryMode })
+  const emotion = OPEN_UP_EMOTIONS.find((item) => item.key === emotionKey) as Emotion | undefined
+  const belief = OPEN_UP_BELIEFS.find((item) => item.key === beliefKey) as Belief | undefined
+  const card = OPEN_UP_PRACTICES.find((item) => item.id === cardId)
+  const bookHref = openUpBookHref(search)
+  const addPerson = (name: string) => setPeople((current) => [...current, { id: globalThis.crypto?.randomUUID?.() ?? String(Date.now() + Math.random()), name, sent: false }])
+  const togglePerson = (id: string) => setPeople((current) => current.map((person) => person.id === id ? { ...person, sent: !person.sent } : person))
+  const removePerson = (id: string) => setPeople((current) => current.filter((person) => person.id !== id))
+  const begin = (nextMode: OpenUpEntryMode) => {
+    setMode(nextMode); setScreen('weather')
+    track({ event: 'open_up_check_started', entryMode: nextMode })
+    track({ event: 'open_up_entry_mode_selected', entryMode: nextMode })
   }
-
+  const openSampler = () => { setDraw(drawThree()); setCardId(null); setScreen('sampler') }
   const chooseAction = (actionKey: OpenUpActionKey) => {
     if (!mode) return
-    setAction(actionKey)
-    setScreen('receipt')
+    setAction(actionKey); setScreen('receipt')
     track({ event: 'open_up_action_selected', entryMode: mode, actionKey, cardId: cardId ?? undefined })
     track({ event: 'open_up_check_completed', entryMode: mode, actionKey, cardId: cardId ?? undefined })
   }
+  const restart = () => { setScreen('entry'); setMode(null); setWeather(null); setEmotionKey(null); setBeliefKey(null); setDraw([]); setCardId(null); setAction(null) }
 
-  const reset = () => {
-    setScreen('entry'); setMode(null); setWeather(null); setStory(null); setCardId(null); setAction(null); setCopied(false)
-  }
+  return <main className="min-h-screen bg-[#0b0910] px-4 py-7 text-[#ded7e4] sm:px-6 sm:py-10" style={{ fontFamily: 'var(--bars-font-body)' }}>
+    <div className="mx-auto max-w-2xl">
+      <header className="mb-9 flex items-center justify-between border-b border-white/10 pb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b7aabf]" style={mono}><span>MTGOA Open Up Check</span><span>Day 2 · Open Up</span></header>
+      <section className="overflow-hidden rounded-[28px] border border-[#513d58] bg-[radial-gradient(110%_95%_at_50%_-10%,#321e40,#17111d_62%,#100d14)] p-6 shadow-2xl shadow-black/40 sm:p-10">
+        {screen === 'entry' ? <Entry onBegin={begin} salesHref={openUpSalesHref(search)} /> : null}
+        {screen === 'weather' ? <Weather value={weather} onChange={setWeather} onNext={() => setScreen('emotion')} mode={mode!} /> : null}
+        {screen === 'emotion' ? <EmotionStep value={emotionKey} onChange={setEmotionKey} onNext={() => setScreen(emotion?.kind === 'dissatisfied' ? 'belief' : 'people')} /> : null}
+        {screen === 'belief' ? <BeliefStep value={beliefKey} onChange={setBeliefKey} onNext={() => setScreen('people')} /> : null}
+        {screen === 'people' ? <PeopleStep people={people} onAdd={addPerson} onToggle={togglePerson} onRemove={removePerson} onClear={() => setPeople([])} onNext={openSampler} /> : null}
+        {screen === 'sampler' ? <Sampler cards={draw} value={cardId} onChange={setCardId} onDraw={() => { setDraw(drawThree()); setCardId(null) }} onNext={() => setScreen('action')} /> : null}
+        {screen === 'action' ? <Action mode={mode!} card={card} belief={belief} onChoose={chooseAction} /> : null}
+        {screen === 'receipt' ? <Receipt mode={mode!} action={action!} weather={weather} emotion={emotion} belief={belief} card={card} bookHref={bookHref} chapterHref={openUpChapterOneHref(search)} people={people} onToggle={togglePerson} onRemove={removePerson} onClear={() => setPeople([])} onBook={() => track({ event: 'open_up_book_cta_clicked', entryMode: mode!, actionKey: action!, cardId: cardId ?? undefined })} onChapter={() => track({ event: 'open_up_chapter_one_clicked', entryMode: mode!, actionKey: action!, cardId: cardId ?? undefined })} onCopy={(shareType) => track({ event: 'open_up_share_copy_copied', entryMode: mode!, actionKey: action!, cardId: cardId ?? undefined, shareType })} onRestart={restart} /> : null}
+      </section>
+      <p className="mx-auto mt-5 max-w-xl text-center text-xs leading-5 text-[#a99daa]">Your check selections and draft are not saved. Your outreach list stays only in this browser, until you clear it.</p>
+    </div>
+  </main>
+}
 
-  const card = OPEN_UP_PRACTICES.find((candidate) => candidate.id === cardId)
-  const actions = mode === 'book_share' ? BOOK_ACTIONS : GENERIC_ACTIONS
-
-  return (
-    <main className="min-h-screen bg-[#0b0910] px-4 py-7 text-[#ded7e4] sm:px-6 sm:py-10" style={{ fontFamily: 'var(--bars-font-body)' }}>
-      <div className="mx-auto max-w-2xl">
-        <header className="mb-9 flex items-center justify-between border-b border-white/10 pb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b7aabf]" style={mono}>
-          <span>MTGOA Open Up Check</span><span>Day 2 · Open Up</span>
-        </header>
-
-        <section className="overflow-hidden rounded-[28px] border border-[#513d58] bg-[radial-gradient(110%_95%_at_50%_-10%,#321e40,#17111d_62%,#100d14)] p-6 shadow-2xl shadow-black/40 sm:p-10">
-          {screen === 'entry' && <Entry onBegin={begin} salesHref={openUpSalesHref(search)} />}
-          {screen === 'notice' && <Notice weather={weather} story={story} onWeather={setWeather} onStory={setStory} onNext={() => setScreen(mode === 'generic_allyship' ? 'practice' : 'action')} />}
-          {screen === 'practice' && <Practice selected={cardId} onSelect={(id) => { setCardId(id); setScreen('action') }} />}
-          {screen === 'action' && <Action mode={mode!} actions={actions} selectedCard={card} onChoose={chooseAction} />}
-          {screen === 'receipt' && <Receipt mode={mode!} action={action!} card={card} weather={weather} story={story} bookHref={openUpBookHref(search)} chapterHref={openUpChapterOneHref(search)} copied={copied} outreachList={outreachList} onAddPerson={(name) => setOutreachList((current) => [...current, { id: crypto.randomUUID(), name, sent: false }])} onTogglePerson={(id) => setOutreachList((current) => current.map((person) => person.id === id ? { ...person, sent: !person.sent } : person))} onRemovePerson={(id) => setOutreachList((current) => current.filter((person) => person.id !== id))} onClearPeople={() => setOutreachList([])} onCopy={() => { navigator.clipboard?.writeText(openUpBookHref(search)); setCopied(true); track({ event: 'open_up_share_copy_copied', entryMode: mode!, actionKey: action!, shareType: 'personal_note' }) }} onBook={() => track({ event: 'open_up_book_cta_clicked', entryMode: mode!, actionKey: action!, cardId: cardId ?? undefined })} onChapter={() => track({ event: 'open_up_chapter_one_clicked', entryMode: mode!, actionKey: action!, cardId: cardId ?? undefined })} onReset={reset} />}
-        </section>
-        <p className="mx-auto mt-5 max-w-xl text-center text-xs leading-5 text-[#a99daa]">Your check selections are not saved. Your outreach list stays only in this browser, until you clear it.</p>
-      </div>
-    </main>
-  )
+function Heading({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
+  return <div><p className="text-[11px] font-bold uppercase tracking-[.24em] text-[#ff9fca]" style={mono}>{eyebrow}</p><h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl" style={display}>{title}</h1><p className="mt-3 leading-7 text-[#d0c6d5]">{children}</p></div>
 }
 
 function Entry({ onBegin, salesHref }: { onBegin: (mode: OpenUpEntryMode) => void; salesHref: string }) {
-  return <div className="space-y-8">
-    <p className="text-[11px] font-bold uppercase tracking-[.24em] text-[#ff9fca]" style={mono}>A small opening, not a test</p>
-    <div><h1 className="text-4xl font-bold leading-[1.02] text-white sm:text-5xl" style={display}>The charge is not the verdict.</h1><p className="mt-5 max-w-xl text-lg leading-8 text-[#d0c6d5]">When allyship—or helping put this book in someone’s hands—brings up a lot, you do not have to disappear or force yourself through it. You can make a little room and choose one aligned action.</p></div>
-    <div className="grid gap-3">
-      <button onClick={() => onBegin('book_share')} className="rounded-2xl bg-gradient-to-r from-[#ff73b1] to-[#e7a851] px-5 py-4 text-left font-bold text-[#1b1018] transition hover:brightness-110">I want to help put the book in someone’s hands <span className="ml-2">→</span></button>
-      <a href={salesHref} className="rounded-2xl border border-[#765b70] bg-[#211824] px-5 py-4 text-sm font-semibold text-[#f1dce8] transition hover:border-[#e8a1c5]">Haven’t bought the book yet? Start here <span className="ml-2">→</span></a>
-      <button onClick={() => onBegin('generic_allyship')} className="rounded-2xl border border-white/15 bg-black/10 px-5 py-4 text-left text-sm font-semibold text-[#d7cbdc] transition hover:border-[#ba9ac0]">Practice with something alive in your own allyship</button>
-    </div>
-  </div>
+  return <div className="space-y-8"><Heading eyebrow="A small opening, not a test" title="The charge is not the verdict.">When allyship—or helping put this book in someone’s hands—brings up a lot, you do not have to disappear or force yourself through it.</Heading><div className="grid gap-3"><button onClick={() => onBegin('book_share')} className="rounded-2xl bg-gradient-to-r from-[#ff73b1] to-[#e7a851] px-5 py-4 text-left font-bold text-[#1b1018]">I want to help put the book in someone’s hands →</button><a href={salesHref} className="rounded-2xl border border-[#765b70] bg-[#211824] px-5 py-4 text-sm font-semibold text-[#f1dce8]">Haven’t bought the book yet? Start here →</a><button onClick={() => onBegin('generic_allyship')} className="rounded-2xl border border-white/15 bg-black/10 px-5 py-4 text-left text-sm font-semibold text-[#d7cbdc]">Practice with something alive in your own allyship</button></div></div>
 }
 
-function Notice({ weather, story, onWeather, onStory, onNext }: { weather: string | null; story: string | null; onWeather: (value: string) => void; onStory: (value: string) => void; onNext: () => void }) {
-  return <div className="space-y-8"><div><p className="text-[11px] font-bold uppercase tracking-[.24em] text-[#ff9fca]" style={mono}>Let it register</p><h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl" style={display}>Before you decide what to do, notice what arrived.</h1><p className="mt-3 leading-7 text-[#d0c6d5]">You don’t need to fix it or explain it. Just notice it.</p></div><Choice label="What is the weather?" values={OPEN_UP_WEATHER} selected={weather} onSelect={onWeather} /><Choice label="Is there a story trying to run the show?" values={OPEN_UP_STORIES} selected={story} onSelect={onStory} /><button onClick={onNext} className="w-full rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">Make room for a next move →</button><p className="text-center text-xs text-[#a99daa]">Selections stay in this browser tab only.</p></div>
+function Weather({ mode, value, onChange, onNext }: { mode: OpenUpEntryMode; value: string | null; onChange: (value: string) => void; onNext: () => void }) {
+  return <div className="space-y-7"><Heading eyebrow="Let it register" title={mode === 'book_share' ? 'Where does the charge around sharing the book live in your body?' : 'Where does the charge live in your body?'}>You do not need to fix it or explain it. Just notice it.</Heading><div className="flex flex-wrap gap-2">{OPEN_UP_WEATHER.map((item) => <button key={item} onClick={() => onChange(item)} className={'rounded-full border px-3 py-2 text-sm ' + (value === item ? 'border-[#ff9fca] bg-[#522843] text-white' : 'border-white/15 bg-black/10 text-[#d5c9d8]')}>{item}</button>)}</div><button onClick={onNext} className="w-full rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">Notice the emotional weather →</button></div>
 }
 
-function Choice({ label, values, selected, onSelect }: { label: string; values: readonly string[]; selected: string | null; onSelect: (value: string) => void }) {
-  return <div><p className="mb-3 text-sm font-bold text-[#f1e7f3]">{label}</p><div className="flex flex-wrap gap-2">{values.map((value) => <button key={value} onClick={() => onSelect(value)} className={`rounded-full border px-3 py-2 text-sm transition ${selected === value ? 'border-[#ff9fca] bg-[#522843] text-white' : 'border-white/15 bg-black/10 text-[#d5c9d8] hover:border-[#b78eac]'}`}>{value}</button>)}</div></div>
+function EmotionStep({ value, onChange, onNext }: { value: string | null; onChange: (value: string) => void; onNext: () => void }) {
+  return <div className="space-y-6"><Heading eyebrow="Emotional weather" title="Which description is closest?">This is a prompt, not a diagnosis. Pick one, or keep moving.</Heading><div className="grid gap-2">{OPEN_UP_EMOTIONS.map((item) => <button key={item.key} onClick={() => onChange(item.key)} className={'rounded-2xl border p-4 text-left ' + (value === item.key ? 'border-[#ff9fca] bg-[#3c2036]' : 'border-white/15 bg-black/10')}><strong className="text-[#fff5fb]">{item.label}</strong><span className="mt-1 block text-sm text-[#bcaec0]">{item.hint}</span></button>)}</div><button onClick={onNext} className="w-full rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">Continue →</button></div>
 }
 
-function Practice({ selected, onSelect }: { selected: OpenUpCardId | null; onSelect: (id: OpenUpCardId) => void }) {
-  return <div className="space-y-6"><div><p className="text-[11px] font-bold uppercase tracking-[.24em] text-[#ff9fca]" style={mono}>Choose a practice</p><h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl" style={display}>Try one move. Not all three.</h1><p className="mt-3 leading-7 text-[#d0c6d5]">Pick the one that creates a little more room without asking you to become a different person.</p></div><div className="grid gap-3">{OPEN_UP_PRACTICES.map((practice) => <button key={practice.id} onClick={() => onSelect(practice.id)} className={`rounded-2xl border p-5 text-left transition ${selected === practice.id ? 'border-[#ff9fca] bg-[#3c2036]' : 'border-white/15 bg-black/10 hover:border-[#b78eac]'}`}><span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#ff9fca]" style={mono}>{practice.role}</span><h2 className="mt-2 text-xl font-bold text-white" style={display}>{practice.title}</h2><p className="mt-2 text-sm leading-6 text-[#d0c6d5]">{practice.instruction}</p></button>)}</div></div>
+function BeliefStep({ value, onChange, onNext }: { value: string | null; onChange: (value: string) => void; onNext: () => void }) {
+  const active = OPEN_UP_BELIEFS.find((item) => item.key === value)
+  return <div className="space-y-6"><Heading eyebrow="The voice under the weather" title="Which one sounds familiar?">Name it if it fits. You are not required to agree with it.</Heading><div className="grid gap-2">{OPEN_UP_BELIEFS.map((item) => <button key={item.key} onClick={() => onChange(item.key)} className={'rounded-2xl border p-4 text-left ' + (value === item.key ? 'border-[#ff9fca] bg-[#3c2036]' : 'border-white/15 bg-black/10')}><span className="text-[#f5e8f0]">{item.voice}</span><span className="mt-2 block text-xs text-[#bcaec0]">{item.belief}</span></button>)}</div>{active ? <div className="rounded-2xl border border-[#765b70] bg-black/15 p-4 text-sm leading-6 text-[#e8dce8]"><strong>{active.question}</strong><p className="mt-2 text-[#bcaec0]">{active.reframe}</p></div> : null}<button onClick={onNext} className="w-full rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">Continue →</button></div>
 }
 
-function Action({ mode, actions, selectedCard, onChoose }: { mode: OpenUpEntryMode; actions: Array<{ key: OpenUpActionKey; label: string; detail: string }>; selectedCard?: { title: string; instruction: string }; onChoose: (key: OpenUpActionKey) => void }) {
-  return <div className="space-y-7"><div><p className="text-[11px] font-bold uppercase tracking-[.24em] text-[#ff9fca]" style={mono}>One next move</p><h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl" style={display}>{mode === 'book_share' ? 'What could you actually do from here?' : 'What could you do with the room you made?'}</h1>{selectedCard && <p className="mt-3 rounded-xl border border-[#765b70] bg-black/15 p-3 text-sm text-[#dccde0]">{selectedCard.title}: {selectedCard.instruction}</p>}</div><div className="grid gap-3">{actions.map((choice) => <button key={choice.key} onClick={() => onChoose(choice.key)} className="rounded-2xl border border-white/15 bg-black/10 p-4 text-left transition hover:border-[#ff9fca] hover:bg-[#2d1a2b]"><strong className="text-[#fff5fb]">{choice.label}</strong><span className="mt-1 block text-sm text-[#bcaec0]">{choice.detail}</span></button>)}</div></div>
+function PeopleStep({ people, onAdd, onToggle, onRemove, onClear, onNext }: { people: OutreachPerson[]; onAdd: (name: string) => void; onToggle: (id: string) => void; onRemove: (id: string) => void; onClear: () => void; onNext: () => void }) {
+  return <div className="space-y-6"><Heading eyebrow="Who might need this?" title="Make a list, not a performance.">These names stay in your browser and will be waiting beside the share draft.</Heading><OutreachList people={people} editable onAdd={onAdd} onToggle={onToggle} onRemove={onRemove} onClear={onClear} /><button onClick={onNext} className="w-full rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">Draw three Open Up cards →</button></div>
 }
 
-function Receipt({ mode, action, card, weather, story, bookHref, chapterHref, copied, outreachList, onAddPerson, onTogglePerson, onRemovePerson, onClearPeople, onCopy, onBook, onChapter, onReset }: { mode: OpenUpEntryMode; action: OpenUpActionKey; card?: { title: string }; weather: string | null; story: string | null; bookHref: string; chapterHref: string; copied: boolean; outreachList: OutreachPerson[]; onAddPerson: (name: string) => void; onTogglePerson: (id: string) => void; onRemovePerson: (id: string) => void; onClearPeople: () => void; onCopy: () => void; onBook: () => void; onChapter: () => void; onReset: () => void }) {
-  const actionWords = { not_my_ask: 'decided this is not your ask', come_back: 'decided to come back', save_excerpt: 'saved this practice', name_one_person: 'named one person', send_personal_note: 'chose one personal note', take_personal_step: 'chose one small step', share_publicly: 'chose a public share' }[action]
-  const defaultDraft = `I sat with a question today: would I put Mastering the Game of Allyship in the hands of someone who trusts my taste?${weather ? ` I noticed some ${weather.toLowerCase()} weather around it` : ''}${story ? `—${story}` : ''}. I decided not to let that be the whole verdict. If you are curious, here is the book: ${bookHref}`
-  const [draft, setDraft] = useState(defaultDraft)
-  const [draftCopied, setDraftCopied] = useState(false)
-  const copyDraft = () => { navigator.clipboard?.writeText(draft); setDraftCopied(true); onCopy() }
-  return <div className="space-y-7"><div><p className="text-[11px] font-bold uppercase tracking-[.24em] text-[#ff9fca]" style={mono}>Your receipt</p><h1 className="mt-3 text-4xl font-bold leading-[1.02] text-white sm:text-5xl" style={display}>The charge is not the verdict.</h1><p className="mt-5 text-lg leading-8 text-[#d0c6d5]">You {actionWords}.{card ? ` You chose ${card.title}.` : ''} That is all this check gets to say.</p></div>{mode === 'book_share' && <div className="grid gap-5"><label className="block"><span className="text-sm font-bold text-[#f1e7f3]">Your draft share</span><textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={7} className="mt-2 w-full rounded-2xl border border-[#765b70] bg-black/20 p-4 text-sm leading-6 text-[#eee3f0] outline-none focus:border-[#ff9fca]" /><span className="mt-2 block text-xs text-[#a99daa]">Edit it until it sounds like you. This text is never sent to us.</span></label><div className="grid gap-3"><button onClick={copyDraft} className="rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">{draftCopied ? 'Draft copied' : 'Copy the draft'}</button><OutreachList people={outreachList} onAdd={onAddPerson} onToggle={onTogglePerson} onRemove={onRemovePerson} onClear={onClearPeople} /><a href={bookHref} onClick={onBook} className="rounded-2xl border border-[#ff9fca] px-5 py-4 text-center font-bold text-[#ffd6e8]">Get the book →</a><a href={chapterHref} onClick={onChapter} className="text-center text-sm text-[#d0c6d5] underline underline-offset-4">Read Chapter 1 free</a></div></div>}<button onClick={onReset} className="w-full text-sm text-[#bcaec0] underline underline-offset-4">Start again</button></div>
+function Sampler({ cards, value, onChange, onDraw, onNext }: { cards: OpenUpPractice[]; value: string | null; onChange: (id: string) => void; onDraw: () => void; onNext: () => void }) {
+  return <div className="space-y-6"><Heading eyebrow="A random draw from the Allyship Deck" title="Pick one, draw again, or skip.">All 24 Open Up cards are in the draw. A card is an invitation, not a verdict.</Heading><div className="grid gap-3">{cards.map((item) => <button key={item.id} onClick={() => onChange(item.id)} className={'rounded-2xl border p-5 text-left ' + (value === item.id ? 'border-[#ff9fca] bg-[#3c2036]' : 'border-white/15 bg-black/10')}><span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#ff9fca]" style={mono}>{item.operation} · {item.domain.replaceAll('_', ' ')}</span><h2 className="mt-2 text-xl font-bold text-white" style={display}>{item.title}</h2><p className="mt-2 text-sm leading-6 text-[#d0c6d5]">{item.primaryQuestion}</p><p className="mt-3 text-xs leading-5 text-[#bcaec0]">Your move: {item.remediation}</p></button>)}</div><div className="grid gap-3 sm:grid-cols-2"><button onClick={onDraw} className="rounded-2xl border border-white/15 px-5 py-4 font-bold text-[#f1dce8]">Draw three more</button><button onClick={onNext} className="rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">{value ? 'Continue with this card →' : 'Skip the draw →'}</button></div></div>
 }
 
-function OutreachList({ people, onAdd, onToggle, onRemove, onClear }: { people: OutreachPerson[]; onAdd: (name: string) => void; onToggle: (id: string) => void; onRemove: (id: string) => void; onClear: () => void }) {
+function Action({ mode, card, belief, onChoose }: { mode: OpenUpEntryMode; card?: OpenUpPractice; belief?: Belief; onChoose: (action: OpenUpActionKey) => void }) {
+  const actions = mode === 'book_share' ? BOOK_ACTIONS : GENERIC_ACTIONS
+  return <div className="space-y-7"><Heading eyebrow={belief ? 'Alive right now · ' + belief.belief : 'One next move'} title={mode === 'book_share' ? 'What could you actually do from here?' : 'What could you do with the room you made?'}>{belief ? belief.question + ' ' + belief.reframe : 'Choose a move that your actual capacity can support.'}</Heading>{card ? <div className="rounded-2xl border border-[#765b70] bg-black/15 p-4 text-sm leading-6 text-[#dccde0]"><strong>{card.title}</strong><br />{card.remediation}</div> : null}<div className="grid gap-3">{actions.map((item) => <button key={item.key} onClick={() => onChoose(item.key)} className="rounded-2xl border border-white/15 bg-black/10 p-4 text-left hover:border-[#ff9fca]"><strong className="text-[#fff5fb]">{item.label}</strong><span className="mt-1 block text-sm text-[#bcaec0]">{item.detail}</span></button>)}</div></div>
+}
+
+function Receipt({ mode, action, weather, emotion, belief, card, bookHref, chapterHref, people, onToggle, onRemove, onClear, onBook, onChapter, onCopy, onRestart }: { mode: OpenUpEntryMode; action: OpenUpActionKey; weather: string | null; emotion?: Emotion; belief?: Belief; card?: OpenUpPractice; bookHref: string; chapterHref: string; people: OutreachPerson[]; onToggle: (id: string) => void; onRemove: (id: string) => void; onClear: () => void; onBook: () => void; onChapter: () => void; onCopy: (type: 'personal_note' | 'public_share') => void; onRestart: () => void }) {
+  const [draft, setDraft] = useState(() => draftFor(mode, weather, emotion, belief, bookHref))
+  const [copied, setCopied] = useState(false)
+  const actions: Record<OpenUpActionKey, string> = { not_my_ask: 'decided this is not your ask', come_back: 'decided to come back', save_excerpt: 'saved this practice', name_one_person: 'named one person', send_personal_note: 'chose one personal note', take_personal_step: 'chose one small step', share_publicly: 'chose a public share' }
+  const evidence = ['showed up to the question', weather && weather !== 'not sure / skip' ? 'body weather · ' + weather : null, emotion ? 'emotional weather · ' + emotion.label : null, belief ? 'named the charged belief' : null, people.length ? 'made an outreach list' : null, card ? 'drew ' + card.title : null, 'chose · ' + actions[action]].filter(Boolean)
+  const copy = () => { void navigator.clipboard?.writeText(draft); setCopied(true); onCopy(action === 'share_publicly' ? 'public_share' : 'personal_note') }
+  return <div className="space-y-7"><Heading eyebrow="Your receipt" title={action === 'not_my_ask' ? 'Heard. This is not your ask.' : action === 'come_back' ? 'Come back whenever.' : 'The share is live in your hands.'}>You {actions[action]}.{card ? ' You drew ' + card.title + '.' : ''}</Heading>{action === 'come_back' ? <CalendarReturn /> : null}{action !== 'not_my_ask' ? <div className="grid gap-5"><label><span className="text-sm font-bold text-[#f1e7f3]">Your draft share</span><textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={8} className="mt-2 w-full rounded-2xl border border-[#765b70] bg-black/20 p-4 text-sm leading-6 text-[#eee3f0] outline-none focus:border-[#ff9fca]" /><span className="mt-2 block text-xs text-[#a99daa]">Edit it until it sounds like you. This text is never sent to us.</span></label><button onClick={copy} className="rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">{copied ? 'Draft copied' : 'Copy the draft'}</button>{mode === 'book_share' ? <><OutreachList people={people} onAdd={() => {}} onToggle={onToggle} onRemove={onRemove} onClear={onClear} /><a href={bookHref} onClick={onBook} className="rounded-2xl border border-[#ff9fca] px-5 py-4 text-center font-bold text-[#ffd6e8]">Get the book →</a><a href="/deck/sales" className="rounded-2xl border border-[#765b70] px-5 py-4 text-center font-bold text-[#f1dce8]">Explore the Allyship Deck →</a><a href={chapterHref} onClick={onChapter} className="text-center text-sm text-[#d0c6d5] underline underline-offset-4">Read Chapter 1 free</a></> : <a href="/deck/sales" className="rounded-2xl border border-[#765b70] px-5 py-4 text-center font-bold text-[#f1dce8]">Explore the Allyship Deck →</a>}</div> : <div className="rounded-2xl border border-dashed border-[#765b70] p-4 text-sm text-[#d0c6d5]">Closing the tab is also a complete move.</div>}<div className="border-t border-white/10 pt-5"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#a99daa]" style={mono}>The moves you made here</p><div className="mt-3 flex flex-wrap gap-2">{evidence.map((item) => <span key={item} className="rounded-full border border-white/10 bg-black/15 px-3 py-2 text-[10px] uppercase tracking-[.08em] text-[#c9bdcd]" style={mono}>{item}</span>)}</div></div><button onClick={onRestart} className="w-full text-sm text-[#bcaec0] underline underline-offset-4">Start again</button></div>
+}
+
+function OutreachList({ people, editable = false, onAdd, onToggle, onRemove, onClear }: { people: OutreachPerson[]; editable?: boolean; onAdd: (name: string) => void; onToggle: (id: string) => void; onRemove: (id: string) => void; onClear: () => void }) {
   const [name, setName] = useState('')
   const add = () => { const trimmed = name.trim(); if (!trimmed) return; onAdd(trimmed); setName('') }
-  return <div className="rounded-2xl border border-[#765b70] bg-black/15 p-4"><div className="flex items-center justify-between gap-3"><div><p className="font-bold text-[#f1e7f3]">People who might need this</p><p className="mt-1 text-xs text-[#a99daa]">Saved only in this browser. Check them off when you send it.</p></div>{people.length > 0 && <button onClick={onClear} className="text-xs text-[#d6b1c4] underline">Clear list</button>}</div><div className="mt-3 flex gap-2"><input value={name} onChange={(event) => setName(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); add() } }} placeholder="Add a person" className="min-w-0 flex-1 rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-[#ff9fca]" /><button onClick={add} className="rounded-xl bg-[#513047] px-3 py-2 text-sm font-bold text-white">Add</button></div>{people.length > 0 && <ul className="mt-3 space-y-2">{people.map((person) => <li key={person.id} className="flex items-center gap-2 rounded-xl bg-black/15 px-3 py-2"><input id={person.id} type="checkbox" checked={person.sent} onChange={() => onToggle(person.id)} className="size-4 accent-[#ff9fca]" /><label htmlFor={person.id} className={`min-w-0 flex-1 text-sm ${person.sent ? 'text-[#a99daa] line-through' : 'text-[#eee3f0]'}`}>{person.name}</label><button aria-label={`Remove ${person.name}`} onClick={() => onRemove(person.id)} className="text-sm text-[#d6b1c4]">×</button></li>)}</ul>}</div>
+  return <div className="rounded-2xl border border-[#765b70] bg-black/15 p-4"><div className="flex items-center justify-between gap-3"><div><p className="font-bold text-[#f1e7f3]">People who might need this</p><p className="mt-1 text-xs text-[#a99daa]">Saved only in this browser. Check them off when you send it.</p></div>{people.length ? <button onClick={onClear} className="text-xs text-[#d6b1c4] underline">Clear list</button> : null}</div>{editable ? <div className="mt-3 flex gap-2"><input value={name} onChange={(event) => setName(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); add() } }} placeholder="Add a person" className="min-w-0 flex-1 rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-[#ff9fca]" /><button onClick={add} className="rounded-xl bg-[#513047] px-3 py-2 text-sm font-bold text-white">Add</button></div> : null}{people.length ? <ul className="mt-3 space-y-2">{people.map((person) => <li key={person.id} className="flex items-center gap-2 rounded-xl bg-black/15 px-3 py-2"><input id={person.id} type="checkbox" checked={person.sent} onChange={() => onToggle(person.id)} className="size-4 accent-[#ff9fca]" /><label htmlFor={person.id} className={'min-w-0 flex-1 text-sm ' + (person.sent ? 'text-[#a99daa] line-through' : 'text-[#eee3f0]')}>{person.name}</label><button aria-label={'Remove ' + person.name} onClick={() => onRemove(person.id)} className="text-sm text-[#d6b1c4]">×</button></li>)}</ul> : null}</div>
+}
+
+function CalendarReturn() {
+  const open = (days: number) => { const start = new Date(); start.setDate(start.getDate() + days); const end = new Date(start); end.setDate(end.getDate() + 1); const stamp = (date: Date) => date.toISOString().slice(0, 10).replaceAll('-', ''); const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Open Up Check — come back to the question') + '&dates=' + stamp(start) + '/' + stamp(end); window.open(url, '_blank', 'noopener,noreferrer') }
+  return <div><p className="text-sm font-bold text-[#f1e7f3]">Put it in the calendar</p><p className="mt-1 text-sm text-[#bcaec0]">The check waits either way.</p><div className="mt-3 flex flex-wrap gap-2">{[[1, 'Tomorrow'], [3, 'In three days'], [7, 'Next week']].map(([days, label]) => <button key={days} onClick={() => open(days as number)} className="rounded-full border border-white/15 px-3 py-2 text-sm text-[#eee3f0]">{label}</button>)}</div></div>
+}
+
+function draftFor(mode: OpenUpEntryMode, weather: string | null, emotion: Emotion | undefined, belief: Belief | undefined, bookHref: string) {
+  const reflection = [weather && weather !== 'not sure / skip' ? 'The feeling showed up ' + weather + ' in my body.' : null, emotion ? 'I noticed ' + emotion.label + ' around it.' : null, belief ? 'Under that was the voice saying “' + belief.belief + '.”' : null].filter(Boolean).join(' ')
+  return mode === 'book_share' ? 'I sat with one question today: would I put Mastering the Game of Allyship in the hands of someone who trusts my taste? ' + reflection + ' I decided not to obey the charge automatically. This book made me think of you: ' + bookHref : 'I ran a small Open Up practice on something alive in my allyship. ' + reflection + ' The charge is not the verdict.'
 }

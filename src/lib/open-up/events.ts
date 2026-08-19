@@ -20,7 +20,8 @@ export type OpenUpActionKey =
   | 'send_personal_note'
   | 'take_personal_step'
   | 'share_publicly'
-export type OpenUpCardId = 'OPEN-RA-SHAMAN' | 'OPEN-RA-SAGE' | 'OPEN-GR-REGENT'
+/** Validated against the canonical Open Up suit at runtime. */
+export type OpenUpCardId = string
 export type OpenUpShareType = 'personal_note' | 'public_share'
 
 export type OpenUpAnalyticsEvent = {
@@ -42,7 +43,6 @@ const ACTION_KEYS = new Set<string>([
   'take_personal_step',
   'share_publicly',
 ])
-const CARD_IDS = new Set<string>(['OPEN-RA-SHAMAN', 'OPEN-RA-SAGE', 'OPEN-GR-REGENT'])
 const SHARE_TYPES = new Set<string>(['personal_note', 'public_share'])
 
 /**
@@ -66,7 +66,7 @@ export function parseOpenUpAnalyticsEvent(input: unknown): OpenUpAnalyticsEvent 
   if (typeof raw.actionKey === 'string' && ACTION_KEYS.has(raw.actionKey)) {
     event.actionKey = raw.actionKey as OpenUpActionKey
   }
-  if (typeof raw.cardId === 'string' && CARD_IDS.has(raw.cardId)) {
+  if (typeof raw.cardId === 'string' && OPEN_UP_CARD_IDS.has(raw.cardId)) {
     event.cardId = raw.cardId as OpenUpCardId
   }
   if (typeof raw.shareType === 'string' && SHARE_TYPES.has(raw.shareType)) {
@@ -75,3 +75,4 @@ export function parseOpenUpAnalyticsEvent(input: unknown): OpenUpAnalyticsEvent 
 
   return event
 }
+import { OPEN_UP_CARD_IDS } from './check-content'
