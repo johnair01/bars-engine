@@ -26,12 +26,12 @@ export const OPEN_UP_BELIEFS = [
   { key: 'capable', voice: '“I’ll explain it badly and put them off.”', belief: 'I’m not capable', question: 'The book explains itself. Can you just hand it over?', reframe: 'You do the handing; the book does the explaining.' },
 ] as const
 
-export type OpenUpPractice = Pick<MoveCard, 'id' | 'title' | 'operation' | 'domain' | 'primaryQuestion' | 'remediation' | 'action'>
+export type OpenUpPractice = MoveCard
 
 /** The real Open Up suit: four domains × six operations. */
 export const OPEN_UP_PRACTICES: OpenUpPractice[] = assembleDeck('open-up-check').cards.filter(
   (card): card is MoveCard => card.kind === 'move' && card.move === 'open_up',
-).map(({ id, title, operation, domain, primaryQuestion, remediation, action }) => ({ id, title, operation, domain, primaryQuestion, remediation, action }))
+)
 
 export const OPEN_UP_CARD_IDS = new Set(OPEN_UP_PRACTICES.map((card) => card.id))
 
