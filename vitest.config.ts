@@ -38,6 +38,7 @@ export default defineConfig({
       'src/lib/ally-campaign/__tests__/digital-price-parity.test.ts',
       'src/lib/ally-campaign/__tests__/referral.test.ts',
       'src/lib/ally-campaign/__tests__/disclosure-invariant.test.ts',
+      'src/lib/ally-campaign/__tests__/attribution.test.ts',
     ],
   },
   resolve: {
