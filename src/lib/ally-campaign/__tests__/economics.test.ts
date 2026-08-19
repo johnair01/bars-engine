@@ -328,3 +328,45 @@ describe('needsForSuperpower — never a dead end', () => {
     expect(needsForSuperpower('coach', 'external', { limit: 3 })).toHaveLength(3)
   })
 })
+
+describe('the floor of the campaign — buying the book', () => {
+  it('there is a way to simply buy a copy', () => {
+    // Every other Brigade ask moves OTHER people. Without this, someone whose
+    // honest answer is "I'll buy one and read it" has nothing to take, which
+    // quietly says the smallest real contribution is not a contribution.
+    const buy = ALL_NEEDS.find((n) => n.id === 'aq-brigade-buy')
+    expect(buy).toBeDefined()
+    expect(buy!.unit).toBe('currency')
+  })
+
+  it('it is priced at the edition the whole plan is costed on', () => {
+    const buy = ALL_NEEDS.find((n) => n.id === 'aq-brigade-buy')!
+    expect(buy.value).toBe(INPUTS.digitalPriceCents / 100)
+  })
+
+  it('it is the cheapest currency ask on the board', () => {
+    // If a bigger money ask ever undercuts it, the floor has moved and the
+    // "anyone can do this one" claim stops being true.
+    const money = ALL_NEEDS.filter((n) => n.unit === 'currency')
+    expect(Math.min(...money.map((n) => n.value))).toBe(
+      ALL_NEEDS.find((n) => n.id === 'aq-brigade-buy')!.value,
+    )
+  })
+
+  it('there is also a way to share it without spending anything', () => {
+    const share = ALL_NEEDS.filter(
+      (n) => n.unit !== 'currency' && /post|podcast|share|tell/i.test(n.title + n.detail),
+    )
+    expect(share.length).toBeGreaterThan(0)
+  })
+
+  it('every superpower has somewhere to land in the Book Brigade', () => {
+    // The buy task was typed to the disruptor precisely because that superpower
+    // had nothing here at all.
+    const brigade = WORKSTREAMS.find((w) => w.key === 'book-brigade')!
+    const covered = new Set(brigade.needs.map((n) => n.superpower))
+    for (const sp of ['connector', 'storyteller', 'strategist', 'disruptor', 'coach', 'alchemist']) {
+      expect(covered.has(sp as never), sp).toBe(true)
+    }
+  })
+})

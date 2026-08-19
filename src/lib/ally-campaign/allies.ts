@@ -42,7 +42,7 @@ export const ALLIES: Record<string, AllyInvite> = {
   mom: {
     slug: 'mom',
     displayName: 'Mom',
-    eyebrow: 'a letter, with a game attached',
+    eyebrow: '',
 
     // ⚠️ ADD THE PERSONAL BEAT. This letter is deliberately free of invented
     // history — it makes no claim about your past with her, because a machine
@@ -78,7 +78,7 @@ I'll call you this week. You've seen everything I've seen now, so we can just ta
   jim: {
     slug: 'jim',
     displayName: 'Jim',
-    eyebrow: 'a plan, with a game attached',
+    eyebrow: '',
     opening: `Jim —
 
 For four years I did the thing I'm good at and avoided the thing I'm not.
@@ -120,7 +120,7 @@ I'll call you this week. You'll have had time to find the weak spot by then — 
 export const DEFAULT_INVITE: AllyInvite = {
   slug: 'friend',
   displayName: 'friend',
-  eyebrow: 'an invitation, with a game attached',
+  eyebrow: '',
   opening: `Someone who knows me sent you here — or you found it yourself, which is even better.
 
 This is the honest version of what I'm building: what it is, what it costs, what I need, and how it pays for itself. It's built as a game because that's what my work actually is. I build games that teach people how to help each other well, so the fastest way to show you is to hand you one.
