@@ -31,6 +31,7 @@ export default defineConfig({
       'src/lib/launch/__tests__/superpower-offers.test.ts',
       'src/lib/ally-campaign/__tests__/economics.test.ts',
       'src/lib/ally-campaign/__tests__/content-overrides.test.ts',
+      'src/lib/ally-campaign/__tests__/content-tokens.test.ts',
     ],
   },
   resolve: {

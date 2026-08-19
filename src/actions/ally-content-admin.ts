@@ -24,6 +24,7 @@ import { db } from '@/lib/db'
 import {
   ALLY_CONTENT_KEY,
   checkInviteSlug,
+  checkOverrides,
   normalizeOverrides,
   parseAllyContentTheme,
   type AllyContentOverrides,
@@ -46,12 +47,34 @@ async function requireAdminId(): Promise<string> {
 /** Long-form prose; generous but bounded so a paste accident can't fill the row. */
 const prose = z.string().trim().max(20_000).optional()
 
+/** The three content buckets, identical at global and per-invite scope. */
+const layerSchema = z.object({
+  myths: z.record(z.string(), z.object({
+    myth: prose,
+    truth: prose,
+    reframe: prose,
+  })).optional(),
+  understanding: z.record(z.string(), z.object({
+    kicker: z.string().trim().max(200).optional(),
+    heading: z.string().trim().max(400).optional(),
+    body: prose,
+  })).optional(),
+  workstreams: z.record(z.string(), z.object({
+    title: z.string().trim().max(200).optional(),
+    emergentProblem: prose,
+    narrative: prose,
+    theAsk: prose,
+  })).optional(),
+})
+
 const patchSchema = z.object({
   invites: z.record(z.string(), z.object({
     displayName: z.string().trim().max(160).optional(),
     eyebrow: z.string().trim().max(200).optional(),
     opening: prose,
     closing: prose,
+    /** This ally's own copy, layered over the global layer. */
+    content: layerSchema.optional(),
   })).optional(),
   myths: z.record(z.string(), z.object({
     myth: prose,
@@ -75,6 +98,51 @@ export type SaveAllyContentResult = { ok: true } | { ok: false; error: string }
 
 /** One override bucket: entity key → field → text. */
 type Bucket = Record<string, Record<string, string | undefined>>
+
+type InviteBucket = Record<string, Record<string, unknown>>
+
+/**
+ * Merge the invites bucket, which is the one bucket that is not flat: alongside
+ * its string fields it carries a nested per-invite `content` layer. String
+ * fields follow the usual empty-clears rule; `content` merges bucket by bucket
+ * so editing one ally's workstream copy cannot drop their myth copy.
+ */
+function mergeInvites(
+  current: InviteBucket | undefined,
+  patch: InviteBucket | undefined,
+): InviteBucket | undefined {
+  if (!patch) return current
+  const out: InviteBucket = { ...(current ?? {}) }
+
+  for (const [slug, incoming] of Object.entries(patch)) {
+    const existing = { ...(out[slug] ?? {}) }
+    const { content: incomingContent, ...flat } = incoming
+    const merged = mergeBucket(
+      { one: existing as Record<string, string | undefined> },
+      { one: flat as Record<string, string | undefined> },
+    )?.one ?? {}
+
+    const nextInvite: Record<string, unknown> = { ...merged }
+
+    const currentContent = (existing.content ?? {}) as Record<string, Bucket | undefined>
+    if (incomingContent && typeof incomingContent === 'object') {
+      const patchContent = incomingContent as Record<string, Bucket | undefined>
+      const nextContent: Record<string, Bucket> = {}
+      for (const bucket of ['myths', 'understanding', 'workstreams']) {
+        const m = mergeBucket(currentContent[bucket], patchContent[bucket])
+        if (m) nextContent[bucket] = m
+      }
+      if (Object.keys(nextContent).length > 0) nextInvite.content = nextContent
+    } else if (Object.keys(currentContent).length > 0) {
+      nextInvite.content = currentContent
+    }
+
+    if (Object.keys(nextInvite).length > 0) out[slug] = nextInvite
+    else delete out[slug]
+  }
+
+  return Object.keys(out).length > 0 ? out : undefined
+}
 
 /** Deep-merge one bucket, dropping keys whose value is now empty. */
 function mergeBucket(current: Bucket | undefined, patch: Bucket | undefined): Bucket | undefined {
@@ -114,6 +182,17 @@ export async function saveAllyContent(raw: unknown): Promise<SaveAllyContentResu
   }
   const patch = parsed.data
 
+  // The invariant, reported rather than silently applied. `normalizeOverrides`
+  // will drop a hard-coded figure regardless — but an admin whose paragraph
+  // half-saved with no explanation would reasonably conclude the editor is
+  // broken. Refuse the whole save and name the one fix.
+  const rejections = checkOverrides(patch)
+  if (rejections.length > 0) {
+    const first = rejections[0]
+    const more = rejections.length > 1 ? ` (+${rejections.length - 1} more)` : ''
+    return { ok: false, error: `${first.bucket} · ${first.key} · ${first.field}: ${first.message}${more}` }
+  }
+
   try {
     const existing = await db.appConfig.findUnique({
       where: { id: 'singleton' },
@@ -129,7 +208,7 @@ export async function saveAllyContent(raw: unknown): Promise<SaveAllyContentResu
 
     const current = parseAllyContentTheme(existing?.theme)
     const next: AllyContentOverrides = normalizeOverrides({
-      invites: mergeBucket(current.invites, patch.invites),
+      invites: mergeInvites(current.invites as InviteBucket | undefined, patch.invites as InviteBucket | undefined),
       myths: mergeBucket(current.myths, patch.myths),
       understanding: mergeBucket(current.understanding, patch.understanding),
       workstreams: mergeBucket(current.workstreams, patch.workstreams),

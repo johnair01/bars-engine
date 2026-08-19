@@ -26,6 +26,7 @@ import {
   saveAllyContent,
 } from '@/actions/ally-content-admin'
 import { checkInviteSlug, type InviteSummary } from '@/lib/ally-campaign/content-overrides'
+import { tokensByGroup } from '@/lib/ally-campaign/content-tokens'
 import type { AllyInvite, AllyMyth, UnderstandingPanel } from '@/lib/ally-campaign/allies'
 import type { Workstream } from '@/lib/ally-campaign/workstreams'
 
@@ -613,11 +614,14 @@ function Area({
   value,
   onChange,
   rows,
+  tokens = true,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
   rows: number
+  /** Show the token palette. On by default — every prose field can carry them. */
+  tokens?: boolean
 }) {
   return (
     <label className="flex flex-col gap-1">
@@ -631,6 +635,73 @@ function Area({
         className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-[13.5px] leading-relaxed focus:border-[#d4a017] focus:outline-none"
         style={{ color: INK, fontFamily: 'var(--bars-font-body)' }}
       />
+      {tokens && <TokenPalette onInsert={(t) => onChange(`${value}${value.endsWith(' ') || !value ? '' : ' '}{{${t}}}`)} />}
     </label>
+  )
+}
+
+/**
+ * The token palette.
+ *
+ * Tokens are useless if they have to be memorised, and the rule they serve —
+ * never type a figure — only holds if the alternative is easier than typing one.
+ * Each entry shows what it resolves to *right now*, so an author picks by the
+ * value they can see rather than by guessing from a name.
+ */
+function TokenPalette({ onInsert }: { onInsert: (token: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const groups = tokensByGroup()
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-0.5 self-start text-[11px] font-semibold"
+        style={{ color: GOLD }}
+      >
+        + insert a live figure
+      </button>
+    )
+  }
+
+  return (
+    <div
+      className="mt-1 flex flex-col gap-2 rounded-lg border p-3"
+      style={{ background: 'rgba(0,0,0,.3)', borderColor: `${GOLD}33` }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] uppercase" style={{ letterSpacing: '.16em', color: GOLD }}>
+          live figures — click to insert
+        </span>
+        <button type="button" onClick={() => setOpen(false)} className="text-[11px]" style={{ color: DIM }}>
+          close
+        </button>
+      </div>
+      <p className="text-[11px] leading-relaxed" style={{ color: FAINT }}>
+        These stay in step with the plan. Typing the number itself is refused on save.
+      </p>
+      {groups.map((g) => (
+        <div key={g.group} className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase" style={{ letterSpacing: '.14em', color: FAINT }}>
+            {g.group}
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {g.tokens.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                title={t.description}
+                onClick={() => onInsert(t.key)}
+                className="rounded-md px-2 py-1 text-[11px] font-semibold"
+                style={{ background: 'rgba(255,255,255,.06)', color: INK }}
+              >
+                {t.label} <span style={{ color: GOLD }}>{t.preview}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
