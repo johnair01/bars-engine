@@ -18,9 +18,10 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { claimNeed, releaseNeed } from '@/actions/ally-campaign'
+import { claimNeed, releaseNeed, type AttributedSales } from '@/actions/ally-campaign'
 import { getDomainLabel } from '@/lib/allyship-domains'
 import { usd } from '@/lib/ally-campaign/economics'
+import { allyReferralPath } from '@/lib/ally-campaign/warm-selling'
 import type { AllyProgress, AllyTask } from '@/lib/ally-campaign/board'
 
 const PURPLE = 'var(--bars-liminal)'
@@ -30,7 +31,13 @@ const DIM = '#a09e98'
 const FAINT = '#6b6862'
 const PANEL = '#121210'
 
-export function AllyProgressView({ progress }: { progress: AllyProgress }) {
+export function AllyProgressView({
+  progress,
+  sales,
+}: {
+  progress: AllyProgress
+  sales?: AttributedSales
+}) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [showMore, setShowMore] = useState(false)
@@ -85,6 +92,12 @@ export function AllyProgressView({ progress }: { progress: AllyProgress }) {
           {error}
         </p>
       )}
+
+      {/* ── Their selling link ──────────────────────────────────────────────
+          The whole warm channel depends on a contribution being attributable.
+          Their lead id is already an unguessable token, so it doubles as a
+          referral code with no account and no second identity to reconcile. */}
+      <ReferralLink leadId={progress.leadId} sales={sales} />
 
       {/* ── What they're holding ────────────────────────────────────────── */}
       <section className="flex flex-col gap-3">
@@ -247,6 +260,90 @@ export function AllyProgressView({ progress }: { progress: AllyProgress }) {
         </Link>
       </footer>
     </div>
+  )
+}
+
+/**
+ * The ally's tracking link — what turns "I told some people" into a number.
+ *
+ * Rendered for every ally, not only those holding a selling task: someone who
+ * took nothing may still mention the book to one person, and that copy should
+ * still find its way back to them.
+ *
+ * The origin is read at click time rather than baked in, because this component
+ * is statically rendered and has no reliable notion of its own host at build.
+ */
+function ReferralLink({ leadId, sales }: { leadId: string; sales?: AttributedSales }) {
+  const [copied, setCopied] = useState(false)
+  const path = allyReferralPath(leadId)
+  const sold = sales?.count ?? 0
+
+  async function copy() {
+    const full = `${window.location.origin}${path}`
+    try {
+      await navigator.clipboard.writeText(full)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard blocked (insecure context, permissions). The link is visible
+      // on screen either way, so this fails quietly rather than alarming anyone.
+    }
+  }
+
+  return (
+    <section
+      className="flex flex-col gap-2 rounded-xl border border-white/[0.08] px-4 py-4"
+      style={{ background: 'rgba(139,92,246,.08)' }}
+    >
+      <span className="text-[12px] uppercase" style={{ letterSpacing: '.14em', color: PURPLE }}>
+        your selling link
+      </span>
+      <p className="text-[13.5px] leading-relaxed" style={{ color: DIM }}>
+        Anything bought through this counts as yours on the board. Use it when you post, when you
+        text someone, when a podcast asks where to send people.
+      </p>
+      <code
+        className="overflow-x-auto rounded-lg px-3 py-2 text-[12.5px]"
+        style={{ background: 'rgba(0,0,0,.35)', color: INK }}
+      >
+        {path}
+      </code>
+      <button
+        onClick={copy}
+        className="self-start rounded-lg px-3 py-2 text-[13px] font-semibold"
+        style={{ background: PURPLE, color: '#fff' }}
+      >
+        {copied ? 'Copied ✓' : 'Copy my link'}
+      </button>
+
+      {/* The number, or an honest zero. A referral surface that only appears
+          once it has something to boast about teaches allies not to trust it. */}
+      <div className="flex flex-col gap-1 border-t border-white/[0.08] pt-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-[13.5px]" style={{ color: DIM }}>
+            Sold through your link
+          </span>
+          <span
+            className="text-[18px] font-bold tabular-nums"
+            style={{ color: sold > 0 ? GOLD : FAINT }}
+          >
+            {sold}
+          </span>
+        </div>
+        {sold === 0 ? (
+          <p className="text-[12.5px] leading-relaxed" style={{ color: FAINT }}>
+            Nothing yet. This counts purchases made through your link — it can&apos;t see a copy
+            someone bought after you mentioned it in person, so tell me about those and I&apos;ll
+            add them by hand.
+          </p>
+        ) : (
+          <p className="text-[12.5px] leading-relaxed" style={{ color: FAINT }}>
+            {sales!.bySku.map((s) => `${s.count} × ${s.sku}`).join(' · ')}. Refunds drop off this
+            number automatically.
+          </p>
+        )}
+      </div>
+    </section>
   )
 }
 

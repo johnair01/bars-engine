@@ -14,7 +14,7 @@
  */
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { allyProgress } from '@/actions/ally-campaign'
+import { allyProgress, attributedSales } from '@/actions/ally-campaign'
 import { AllyProgressView } from './AllyProgressView'
 
 export const dynamic = 'force-dynamic'
@@ -30,7 +30,9 @@ export default async function AllyMinePage({
   params: Promise<{ leadId: string }>
 }) {
   const { leadId } = await params
-  const res = await allyProgress(leadId)
+  // Sales credited to their link, fetched alongside so the page shows what they
+  // actually sold rather than only what they promised.
+  const [res, sales] = await Promise.all([allyProgress(leadId), attributedSales(leadId)])
 
   return (
     <main
@@ -42,7 +44,7 @@ export default async function AllyMinePage({
     >
       <div className="flex w-full max-w-[620px] flex-col gap-6 px-5 pb-20 pt-10">
         {res.ok ? (
-          <AllyProgressView progress={res.progress} />
+          <AllyProgressView progress={res.progress} sales={sales} />
         ) : (
           <div className="flex flex-col gap-4">
             <h1 className="text-[24px] font-bold" style={{ color: '#f4f2ec' }}>

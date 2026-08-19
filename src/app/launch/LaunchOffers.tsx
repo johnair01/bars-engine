@@ -16,6 +16,8 @@ import Image from 'next/image'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { saveLaunchPageContent } from '@/actions/launch-page-admin'
+import { withAllyParam } from '@/lib/ally-campaign/referral'
+import { useAllyReferral } from '@/lib/ally-campaign/useAllyReferral'
 import {
   offersByGroup,
   formatPrice,
@@ -58,6 +60,10 @@ function PriceLine({ offer }: { offer: LaunchOffer }) {
 }
 
 function Cta({ offer, href, label }: { offer: LaunchOffer; href: string; label: string }) {
+  // Carry the referring ally out to Gumroad, which echoes it back on the sale
+  // ping — the only way attribution survives a checkout we don't host.
+  const allyId = useAllyReferral()
+
   if (!isOfferLive(offer)) {
     return (
       <div className="space-y-1">
@@ -74,7 +80,7 @@ function Cta({ offer, href, label }: { offer: LaunchOffer; href: string; label: 
   }
   return (
     <a
-      href={href}
+      href={withAllyParam(href, allyId)}
       target="_blank"
       rel="noopener noreferrer"
       className="flex min-h-11 w-full items-center justify-center rounded-xl bg-purple-600 px-4 font-bold text-white transition-colors hover:bg-purple-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0908]"

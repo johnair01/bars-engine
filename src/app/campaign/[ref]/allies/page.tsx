@@ -19,7 +19,7 @@ import { PARENT_REF, TOTAL_AUTHORED_NEEDS } from '@/lib/ally-campaign/board'
 import { MarkDoneButton } from './MarkDoneButton'
 import { getDomainLabel } from '@/lib/allyship-domains'
 import { WORKSTREAMS, TOTAL_BOUNTY_VIBEULONS } from '@/lib/ally-campaign/workstreams'
-import { campaignTotals, repaymentPlan, usd } from '@/lib/ally-campaign/economics'
+import { campaignTotals, repaymentPlanDigital, usd } from '@/lib/ally-campaign/economics'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,7 +64,7 @@ export default async function AlliesDashboard({
   const { board } = res
   const t = board.totals
   const totals = campaignTotals()
-  const plan = repaymentPlan()
+  const plan = repaymentPlanDigital()
 
   return (
     <Shell>
@@ -119,7 +119,7 @@ export default async function AlliesDashboard({
           Units are reported separately and never blended — money, hours, and actions are not
           convertible into one another. Capital target is {usd(totals.capitalNeededCents)}; the car
           repays at {usd(plan.monthlyCents)}/month over {plan.workshopsNeeded} workshops and{' '}
-          {plan.booksNeeded} books.
+          {plan.copiesNeeded} digital copies, counted net of what it costs to find a reader.
         </p>
       </Section>
 
