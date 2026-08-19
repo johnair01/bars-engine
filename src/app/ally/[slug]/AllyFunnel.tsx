@@ -98,8 +98,17 @@ export function AllyFunnel({
   testTargetLabel?: string
 }) {
   const [step, setStep] = useState<Step>('intro')
+  /**
+   * Where the reader came from, so they can walk backwards while exploring.
+   * A stack rather than a fixed step order, because the route through the
+   * funnel branches (domain → which workstream) and "back" has to mean "undo my
+   * last move", not "the previous item in a list".
+   */
+  const [history, setHistory] = useState<Step[]>([])
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
   const [mythIndex, setMythIndex] = useState(0)
+  /** Only the myths actually read — a skip must not report six. */
+  const [mythsSeen, setMythsSeen] = useState<string[]>([])
   const [mythFlipped, setMythFlipped] = useState(false)
   const [panelIndex, setPanelIndex] = useState(0)
   const [domain, setDomain] = useState<AllyshipDomainKey | null>(null)
@@ -142,6 +151,52 @@ export function AllyFunnel({
     return matched.filter((n) => inWorkstream.has(n.id))
   }, [workstream, superpower, orientation])
 
+  /** Move forward, remembering where we were. */
+  const go = useCallback(
+    (next: Step) => {
+      setHistory((h) => [...h, step])
+      setStep(next)
+    },
+    [step],
+  )
+
+  /**
+   * Undo the last move. Inside the myth cards and the understanding panels this
+   * steps back one *card* first — those screens have internal position, and
+   * jumping out of myth 5 back to the quiz would lose four screens of reading.
+   * Nothing is cleared on the way back, so answers survive exploring.
+   */
+  const back = useCallback(() => {
+    if (step === 'myths' && mythIndex > 0) {
+      setMythIndex((i) => i - 1)
+      setMythFlipped(true) // they already turned this one over
+      return
+    }
+    if (step === 'understanding' && panelIndex > 0) {
+      setPanelIndex((i) => i - 1)
+      return
+    }
+    if (history.length === 0) return
+    const prev = history[history.length - 1]
+    setHistory(history.slice(0, -1))
+    setStep(prev)
+  }, [step, mythIndex, panelIndex, history])
+
+  const canGoBack =
+    step !== 'done' &&
+    (history.length > 0 ||
+      (step === 'myths' && mythIndex > 0) ||
+      (step === 'understanding' && panelIndex > 0))
+
+  /** Leave the myths, recording only the ones actually read. */
+  const leaveMyths = useCallback(
+    (seenThrough: number) => {
+      setMythsSeen(myths.slice(0, seenThrough).map((m) => m.id))
+      go('understanding')
+    },
+    [myths, go],
+  )
+
   const toggle = useCallback((id: string) => {
     setPicked((prev) => {
       const next = new Set(prev)
@@ -178,7 +233,7 @@ export function AllyFunnel({
         contact: contact.trim() || undefined,
         superpower,
         superpowerOrientation: orientation,
-        mythsSeen: myths.map((m) => m.id),
+        mythsSeen,
         domain,
         commitments: [...picked],
         notes: notes.trim() || undefined,
@@ -240,7 +295,21 @@ export function AllyFunnel({
         </div>
       )}
 
-      <Eyebrow>{invite.eyebrow}</Eyebrow>
+      <div className="flex items-center justify-between gap-3">
+        <Eyebrow>{invite.eyebrow}</Eyebrow>
+        {/* One consistent way back, on every screen. Exploring a proposal means
+            re-reading things; a flow you can only move forward through quietly
+            punishes the reader for being careful. */}
+        {canGoBack && (
+          <button
+            onClick={back}
+            className="rounded-lg px-2.5 py-1 text-[12.5px] font-semibold"
+            style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
+          >
+            ← Back
+          </button>
+        )}
+      </div>
 
       {/* ── intro ─────────────────────────────────────────────────────────── */}
       {step === 'intro' && (
@@ -266,7 +335,7 @@ export function AllyFunnel({
           )}
           <Prose text={invite.opening} />
           <Row>
-            <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('superpower')}>
+            <button className={cta} style={{ background: PURPLE }} onClick={() => go('superpower')}>
               {returningLeadId ? 'Start over →' : 'Start →'}
             </button>
           </Row>
@@ -277,14 +346,37 @@ export function AllyFunnel({
       {step === 'superpower' && (
         <div className="flex flex-col gap-4">
           <Heading>First: what do you actually bring?</Heading>
-          <Sub>
-            Seven allyship superpowers. This isn&apos;t a personality quiz with a flattering answer at the
-            end — it decides which of the twenty jobs on this page you get shown.
-          </Sub>
-          <SuperpowerQuiz campaignRef="mobility-quest" onComplete={setOutcome} />
+
+          {/* Say what the questions are FOR before asking them. Answering a quiz
+              with no stated purpose invites the flattering answer rather than the
+              true one, and the true one is what routes the work. */}
+          <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-4" style={{ background: PANEL }}>
+            <p className="text-[14px] leading-relaxed" style={{ color: '#cfcdc6' }}>
+              <strong style={{ color: INK }}>Why I&apos;m asking.</strong> There are{' '}
+              {workstreams.reduce((n, w) => n + w.needs.length, 0)} specific jobs in this campaign, and
+              showing you all of them at once would be useless. These questions decide which ones you
+              see first.
+            </p>
+            <ul className="flex flex-col gap-1.5 text-[13.5px] leading-relaxed" style={{ color: DIM }}>
+              <li>
+                <span style={{ color: GOLD }}>·</span> Roughly two minutes. There are no wrong
+                answers and no score.
+              </li>
+              <li>
+                <span style={{ color: GOLD }}>·</span> It is not a personality test. It sorts{' '}
+                <em>work</em>, not people — and you can ignore the result entirely.
+              </li>
+              <li>
+                <span style={{ color: GOLD }}>·</span> Nothing is saved until the very end, and only
+                if you choose to leave your name.
+              </li>
+            </ul>
+          </div>
+
+          <SuperpowerQuiz campaignRef="mobility-quest" onComplete={setOutcome} embedded />
           {outcome && (
             <Row>
-              <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('myths')}>
+              <button className={cta} style={{ background: PURPLE }} onClick={() => go('myths')}>
                 Continue →
               </button>
             </Row>
@@ -301,12 +393,13 @@ export function AllyFunnel({
           onFlip={() => setMythFlipped(true)}
           onNext={() => {
             if (mythIndex >= myths.length - 1) {
-              setStep('understanding')
+              leaveMyths(myths.length)
               return
             }
             setMythIndex((i) => i + 1)
             setMythFlipped(false)
           }}
+          onSkip={() => leaveMyths(mythIndex)}
         />
       )}
 
@@ -323,7 +416,7 @@ export function AllyFunnel({
               className={cta}
               style={{ background: PURPLE }}
               onClick={() => {
-                if (panelIndex >= understanding.length - 1) setStep('domain')
+                if (panelIndex >= understanding.length - 1) go('domain')
                 else setPanelIndex((i) => i + 1)
               }}
             >
@@ -352,7 +445,7 @@ export function AllyFunnel({
                   key={d.key}
                   onClick={() => {
                     setDomain(d.key as AllyshipDomainKey)
-                    setStep('workstream')
+                    go('workstream')
                   }}
                   className="rounded-xl border border-white/[0.10] px-4 py-4 text-left hover:border-[#8b5cf6]"
                   style={{ background: PANEL }}
@@ -397,7 +490,7 @@ export function AllyFunnel({
                   style={{ background: PURPLE }}
                   onClick={() => {
                     setWorkstream(w)
-                    setStep('needs')
+                    go('needs')
                   }}
                 >
                   Show me what I could do →
@@ -405,7 +498,7 @@ export function AllyFunnel({
               </Row>
             </Panel>
           ))}
-          <button className={ghost} style={{ color: DIM }} onClick={() => setStep('domain')}>
+          <button className={ghost} style={{ color: DIM }} onClick={back}>
             ← A different domain
           </button>
         </div>
@@ -459,7 +552,7 @@ export function AllyFunnel({
             })}
           </div>
           <Row>
-            <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('offer')}>
+            <button className={cta} style={{ background: PURPLE }} onClick={() => go('offer')}>
               {picked.size > 0 ? `Take ${picked.size} →` : 'Continue →'}
             </button>
             {/* Declining is a peer of accepting, not a hidden escape hatch. */}
@@ -468,12 +561,12 @@ export function AllyFunnel({
               style={{ color: DIM, border: '1px solid rgba(255,255,255,.12)' }}
               onClick={() => {
                 setPicked(new Set())
-                setStep('offer')
+                go('offer')
               }}
             >
               None of these are mine →
             </button>
-            <button className={ghost} style={{ color: FAINT }} onClick={() => setStep('workstream')}>
+            <button className={ghost} style={{ color: FAINT }} onClick={back}>
               ← Back
             </button>
           </Row>
@@ -502,7 +595,7 @@ export function AllyFunnel({
             style={{ color: INK }}
           />
           <Row>
-            <button className={cta} style={{ background: PURPLE }} onClick={() => setStep('sign')}>
+            <button className={cta} style={{ background: PURPLE }} onClick={() => go('sign')}>
               Continue →
             </button>
           </Row>
@@ -766,12 +859,15 @@ function MythCard({
   flipped,
   onFlip,
   onNext,
+  onSkip,
 }: {
   myths: AllyMyth[]
   index: number
   flipped: boolean
   onFlip: () => void
   onNext: () => void
+  /** Leave the myths early. Only the cards actually read get recorded. */
+  onSkip: () => void
 }) {
   const myth = myths[index]
   return (
@@ -829,6 +925,17 @@ function MythCard({
             Turn it over →
           </button>
         )}
+
+        {/* A real exit, not a hidden one. Six cards is a lot to sit through when
+            you already know what you think, and forcing them makes the rest of
+            the page feel like something to endure. */}
+        <button
+          onClick={onSkip}
+          className="rounded-xl px-3 py-2 text-[13px] font-semibold"
+          style={{ color: DIM }}
+        >
+          Skip the myths →
+        </button>
       </Row>
     </div>
   )
