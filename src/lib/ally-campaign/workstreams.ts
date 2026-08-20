@@ -74,6 +74,20 @@ export interface WorkstreamNeed {
   /** Flagged on the steward dashboard as blocked / needing a second pair of hands. */
   needsHelp?: boolean
   /**
+   * THE FLOOR. Offered to every reader on every needs screen, whatever their
+   * superpower, domain or workstream — outside the matching entirely.
+   *
+   * Everything else here is winnowed: the quiz narrows by superpower, the domain
+   * step narrows again, the workstream narrows once more. That is the mechanism
+   * and it is the right one. But buying the book and telling one person about it
+   * are the two moves *nobody* should have to be routed to. A reader who lands in
+   * "The Car" and never sees them has been told, implicitly, that the minimum
+   * contribution is not available to them.
+   *
+   * Universal needs are not scored, not sorted, and not competing for a slot.
+   */
+  universal?: boolean
+  /**
    * Set when this need is one SLICE of a larger ask that several people can split.
    *
    * Each slice is a real, separately-claimable `MilestoneNeed` row — which is what
@@ -528,6 +542,7 @@ Two things I will hold myself to here. You get a link that tracks what came from
         // move here is to stop deliberating about how to help and just do the
         // obvious thing.
         id: 'aq-brigade-buy',
+        universal: true,
         superpower: 'disruptor',
         orientation: 'external',
         unit: 'currency',
@@ -539,6 +554,7 @@ Two things I will hold myself to here. You get a link that tracks what came from
       },
       {
         id: 'aq-brigade-post',
+        universal: true,
         superpower: 'storyteller',
         orientation: 'external',
         unit: 'action',
@@ -546,7 +562,12 @@ Two things I will hold myself to here. You get a link that tracks what came from
         bountyVibeulons: 3,
         cardId: 'SHOW-RA-SAGE',
         title: 'Post about it in your own words',
-        detail: `One post saying why this matters to YOU — your reason, not my copy. Honest expectation: about ${copiesPerRun(WARM_CHANNELS[0])} copies. It is the weakest thing on this list and it is still worth doing, because it is how the people who'd never take a direct ask find out this exists.`,
+        // Re-cut. This used to call itself "the weakest thing on this list",
+        // measured on copies sold — which is true and is the wrong axis, because
+        // this is the FREE rung of the floor. It is the slot that exists for
+        // someone who cannot do the $30, and it was telling that person their
+        // option was the worst one available. The number stays; the ranking goes.
+        detail: `One post saying why this matters to YOU — your reason, not my copy. Honest expectation: about ${copiesPerRun(WARM_CHANNELS[0])} copies — which is not the point of it. It reaches the people who would never take a direct ask from me, and no amount of money buys that. It costs you nothing but your own words.`,
       },
       {
         id: 'aq-brigade-report',
@@ -768,14 +789,28 @@ export function workstreamForNeed(id: string): Workstream | undefined {
  * should always be handed something real to do. Falls back superpower-only, then
  * to every open need — honest breadth beats a dead end.
  */
+/**
+ * The two moves every reader is offered regardless of how they answered.
+ * Order is deliberate: buying is the smaller ask and the concrete one, so it
+ * leads.
+ */
+export const UNIVERSAL_NEEDS: readonly WorkstreamNeed[] = ALL_NEEDS.filter((n) => n.universal)
+
+/** Everything the winnowing is allowed to route — the floor is handled separately. */
+export const MATCHABLE_NEEDS: readonly WorkstreamNeed[] = ALL_NEEDS.filter((n) => !n.universal)
+
 export function needsForSuperpower(
   superpower: SuperpowerKey | string | null,
   orientation: Orientation | null,
   opts: { domain?: AllyshipDomainKey | null; limit?: number } = {},
 ): WorkstreamNeed[] {
+  // Universals are rendered separately as the floor, so they are excluded here
+  // rather than competing for a matched slot and appearing twice.
   const pool = opts.domain
-    ? WORKSTREAMS.filter((w) => w.domain === opts.domain).flatMap((w) => w.needs)
-    : [...ALL_NEEDS]
+    ? WORKSTREAMS.filter((w) => w.domain === opts.domain)
+        .flatMap((w) => w.needs)
+        .filter((n) => !n.universal)
+    : [...MATCHABLE_NEEDS]
 
   const scored = pool
     .map((need) => {

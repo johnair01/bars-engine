@@ -32,6 +32,7 @@ import type { AllyInvite, AllyMyth, UnderstandingPanel } from '@/lib/ally-campai
 import {
   findNeed,
   groupNeedEntries,
+  UNIVERSAL_NEEDS,
   needsForSuperpower,
   superpowerFootprint,
   workstreamForNeed,
@@ -693,6 +694,37 @@ export function AllyFunnel({
               ),
             )}
           </div>
+
+          {/* ── The floor ──────────────────────────────────────────────────
+              Present on every needs screen, for every superpower and every
+              domain, outside the matching. Everything above this is winnowed —
+              that is the mechanism and it is right — but these two are the moves
+              nobody should have to be routed to. A reader who lands in "The Car"
+              and never sees them has been told, implicitly, that the minimum
+              contribution isn't available to them. */}
+          <div className="flex flex-col gap-2.5 pt-2">
+            <div className="flex items-baseline gap-2">
+              <span
+                className="text-[10px] uppercase"
+                style={{ fontFamily: 'var(--bars-font-mono)', letterSpacing: '.2em', color: GOLD }}
+              >
+                whatever else you do
+              </span>
+              <span className="text-[12px]" style={{ color: FAINT }}>
+                always here, whichever area you picked
+              </span>
+            </div>
+            {UNIVERSAL_NEEDS.map((need) => (
+              <NeedCard
+                key={need.id}
+                need={need}
+                on={picked.has(need.id)}
+                isMatch={need.superpower === superpower}
+                onToggle={() => toggle(need.id)}
+              />
+            ))}
+          </div>
+
           <Row>
             <button className={cta} style={{ background: PURPLE }} onClick={() => go('checkout')}>
               {picked.size > 0 ? `Review my ${picked.size} →` : 'Continue →'}

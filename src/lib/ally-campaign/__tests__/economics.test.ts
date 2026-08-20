@@ -23,6 +23,8 @@ import {
   WORKSTREAMS,
   findNeed,
   needsForSuperpower,
+  MATCHABLE_NEEDS,
+  UNIVERSAL_NEEDS,
   subcampaignSlug,
   workstreamForNeed,
   workstreamsForDomain,
@@ -311,8 +313,12 @@ describe('needsForSuperpower — never a dead end', () => {
     expect(ranked.length).toBeGreaterThan(0)
   })
 
-  it('returns something even with no superpower at all', () => {
-    expect(needsForSuperpower(null, null).length).toBe(ALL_NEEDS.length)
+  it('returns every matchable need when there is no superpower at all', () => {
+    // The floor (buy / share) is deliberately NOT in the matched pool — it is
+    // rendered separately on every screen, so counting it here would mean
+    // showing it twice. See UNIVERSAL_NEEDS.
+    expect(needsForSuperpower(null, null).length).toBe(MATCHABLE_NEEDS.length)
+    expect(MATCHABLE_NEEDS.length + UNIVERSAL_NEEDS.length).toBe(ALL_NEEDS.length)
   })
 
   it('scopes to a domain when asked', () => {
@@ -367,6 +373,69 @@ describe('the floor of the campaign — buying the book', () => {
     const covered = new Set(brigade.needs.map((n) => n.superpower))
     for (const sp of ['connector', 'storyteller', 'strategist', 'disruptor', 'coach', 'alchemist']) {
       expect(covered.has(sp as never), sp).toBe(true)
+    }
+  })
+})
+
+describe('THE FLOOR — buy and share reach everyone', () => {
+  const SUPERPOWERS = [
+    'connector', 'storyteller', 'strategist',
+    'disruptor', 'alchemist', 'escape_artist', 'coach',
+  ] as const
+
+  it('the floor is exactly buy and share', () => {
+    expect(UNIVERSAL_NEEDS.map((n) => n.id).sort()).toEqual(['aq-brigade-buy', 'aq-brigade-post'])
+  })
+
+  it('one of them is money and one of them is free', () => {
+    // A floor that costs money is not a floor for someone who has none.
+    expect(UNIVERSAL_NEEDS.some((n) => n.unit === 'currency')).toBe(true)
+    expect(UNIVERSAL_NEEDS.some((n) => n.unit !== 'currency')).toBe(true)
+  })
+
+  it.each(SUPERPOWERS)('%s is offered both, in every domain', (superpower) => {
+    // The winnowing is the mechanism; the floor sits underneath it. This is the
+    // property that makes "everyone can do the minimum" true rather than aspirational.
+    for (const domain of ALLYSHIP_DOMAINS) {
+      const offered = [
+        ...needsForSuperpower(superpower, 'external', { domain: domain.key }),
+        ...UNIVERSAL_NEEDS,
+      ].map((n) => n.id)
+      expect(offered, `${superpower} / ${domain.key}`).toContain('aq-brigade-buy')
+      expect(offered, `${superpower} / ${domain.key}`).toContain('aq-brigade-post')
+    }
+  })
+
+  it('never double-renders — the matcher excludes what the floor shows', () => {
+    // Without this the Book Brigade would list buy/share twice: once matched,
+    // once as the floor.
+    for (const superpower of SUPERPOWERS) {
+      const matched = needsForSuperpower(superpower, 'external').map((n) => n.id)
+      for (const u of UNIVERSAL_NEEDS) expect(matched).not.toContain(u.id)
+    }
+  })
+
+  it('the free rung does not rank itself below the paid one', () => {
+    // It exists for someone who cannot do the $30. Telling that person their
+    // option is the weakest thing available defeats the point of having it.
+    // The honest expectation (about 2 copies) stays — the ranking does not.
+    const free = UNIVERSAL_NEEDS.find((n) => n.unit !== 'currency')!
+    expect(free.detail).not.toMatch(/weakest|worst|least|barely|only worth/i)
+  })
+
+  it('the free rung still states its honest expectation', () => {
+    // The fix must not become "hide the number" — the honesty is the product.
+    const free = UNIVERSAL_NEEDS.find((n) => n.unit !== 'currency')!
+    expect(free.detail).toMatch(/honest expectation/i)
+  })
+
+  it('the floor is still claimable like any other need', () => {
+    // It has to be a real MilestoneNeed, not a decorative link, or taking it
+    // records nothing.
+    for (const n of UNIVERSAL_NEEDS) {
+      expect(findNeed(n.id)).toBeDefined()
+      expect(workstreamForNeed(n.id)).toBeDefined()
+      expect(n.bountyVibeulons).toBeGreaterThan(0)
     }
   })
 })
