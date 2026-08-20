@@ -415,6 +415,20 @@ describe('THE FLOOR — buy and share reach everyone', () => {
     }
   })
 
+  it('the free rung does not rank itself below the paid one', () => {
+    // It exists for someone who cannot do the $30. Telling that person their
+    // option is the weakest thing available defeats the point of having it.
+    // The honest expectation (about 2 copies) stays — the ranking does not.
+    const free = UNIVERSAL_NEEDS.find((n) => n.unit !== 'currency')!
+    expect(free.detail).not.toMatch(/weakest|worst|least|barely|only worth/i)
+  })
+
+  it('the free rung still states its honest expectation', () => {
+    // The fix must not become "hide the number" — the honesty is the product.
+    const free = UNIVERSAL_NEEDS.find((n) => n.unit !== 'currency')!
+    expect(free.detail).toMatch(/honest expectation/i)
+  })
+
   it('the floor is still claimable like any other need', () => {
     // It has to be a real MilestoneNeed, not a decorative link, or taking it
     // records nothing.

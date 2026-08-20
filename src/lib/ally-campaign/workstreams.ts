@@ -562,7 +562,12 @@ Two things I will hold myself to here. You get a link that tracks what came from
         bountyVibeulons: 3,
         cardId: 'SHOW-RA-SAGE',
         title: 'Post about it in your own words',
-        detail: `One post saying why this matters to YOU — your reason, not my copy. Honest expectation: about ${copiesPerRun(WARM_CHANNELS[0])} copies. It is the weakest thing on this list and it is still worth doing, because it is how the people who'd never take a direct ask find out this exists.`,
+        // Re-cut. This used to call itself "the weakest thing on this list",
+        // measured on copies sold — which is true and is the wrong axis, because
+        // this is the FREE rung of the floor. It is the slot that exists for
+        // someone who cannot do the $30, and it was telling that person their
+        // option was the worst one available. The number stays; the ranking goes.
+        detail: `One post saying why this matters to YOU — your reason, not my copy. Honest expectation: about ${copiesPerRun(WARM_CHANNELS[0])} copies — which is not the point of it. It reaches the people who would never take a direct ask from me, and no amount of money buys that. It costs you nothing but your own words.`,
       },
       {
         id: 'aq-brigade-report',
