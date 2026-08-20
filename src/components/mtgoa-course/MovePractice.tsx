@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AllyshipCard } from '@/components/deck/AllyshipCard'
-import { CLEAN_UP_PRACTICES, WAKE_UP_PRACTICES } from '@/lib/mtgoa-course/course-days'
+import { CLEAN_UP_PRACTICES } from '@/lib/mtgoa-course/course-days'
 import type { MoveCard } from '@/lib/allyship-deck/types'
+import { WakeUpIntake } from './WakeUpIntake'
 
 type PracticeKind = 'wake_up' | 'clean_up'
 type Screen = 'entry' | 'notice' | 'counterpart' | 'three' | 'two' | 'one' | 'draw' | 'receipt'
@@ -51,9 +52,10 @@ function drawThree(cards: MoveCard[]) {
   return shuffled.slice(0, 3)
 }
 
-export function MovePractice({ kind }: { kind: PracticeKind }) {
+export function MovePractice({ kind, courseRound = 1 }: { kind: PracticeKind; courseRound?: number }) {
+  if (kind === 'wake_up') return <WakeUpIntake courseRound={courseRound} />
   const copy = COPY[kind]
-  const practices = kind === 'wake_up' ? WAKE_UP_PRACTICES : CLEAN_UP_PRACTICES
+  const practices = CLEAN_UP_PRACTICES
   const [screen, setScreen] = useState<Screen>('entry')
   const [notice, setNotice] = useState<string | null>(null)
   const [draw, setDraw] = useState<MoveCard[]>(() => drawThree(practices))
@@ -64,7 +66,7 @@ export function MovePractice({ kind }: { kind: PracticeKind }) {
   const [two, setTwo] = useState('')
   const [one, setOne] = useState('')
 
-  const back = () => setScreen((current) => ({ notice: 'entry', counterpart: 'notice', three: 'counterpart', two: 'three', one: 'two', draw: kind === 'clean_up' ? 'one' : 'notice', receipt: 'draw', entry: 'entry' })[current] as Screen)
+  const back = () => setScreen((current) => ({ notice: 'entry', counterpart: 'notice', three: 'counterpart', two: 'three', one: 'two', draw: 'one', receipt: 'draw', entry: 'entry' })[current] as Screen)
   const restart = () => { setNotice(null); setCounterpart(null); setThree(''); setTwo(''); setOne(''); setSelectedCard(null); setDraw(drawThree(practices)); setScreen('entry') }
 
   return <main className="min-h-screen bg-[#0b0910] px-4 py-7 text-[#ded7e4] sm:px-6 sm:py-10" style={{ fontFamily: 'var(--bars-font-body)' }}>
