@@ -1,0 +1,133 @@
+/* MTGOA Clean Up Check — effects, media queries and keyframes.
+ *
+ * Layout and color live inline on the elements, read from --bars-* tokens
+ * (UI_COVENANT: tokens or it does not exist). This file holds only the things
+ * inline styles cannot express: focus rings, breakpoints, and motion.
+ *
+ * Reference: .specify/specs/mtgoa-clean-up-check/design_handoff/
+ *            MTGOA Clean Up Check.dc.html
+ */
+
+.root {
+  /* Clean Up is the Water move — the element comes from the move, not the
+     domain. `waterLift` is the water glow raised for legibility at the 10px
+     mono label size the covenant's contrast gate requires. */
+  --cu-water: var(--bars-water-glow);
+  --cu-water-lift: #3fa9c4;
+  /* The draw band is a well, so it sits below the page rather than on it. */
+  --cu-well: color-mix(in srgb, var(--bars-bg-base) 62%, #000);
+  --cu-gutter: clamp(16px, 5vw, 32px);
+
+  min-height: 100vh;
+  background: var(--bars-bg-base);
+  font-family: var(--bars-font-body);
+  color: var(--bars-text-primary);
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px var(--cu-gutter) 90px;
+}
+
+/* Pointer affordance for the tappable rows/chips/cards. */
+.clk {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.field {
+  width: 100%;
+  font-family: var(--bars-font-body);
+  /* 16px prevents iOS zoom-on-focus. Never drop below it. */
+  font-size: 16px;
+  color: var(--bars-text-primary);
+  background: var(--bars-surface-inset);
+  border: 1px solid var(--bars-line-strong);
+  border-radius: var(--bars-radius-lg);
+  resize: vertical;
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--cu-water);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cu-water) 26%, transparent);
+}
+
+.clk:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--cu-water-lift);
+  outline-offset: 2px;
+}
+
+.link {
+  color: var(--bars-gold);
+  text-decoration: none;
+}
+.link:hover {
+  color: var(--bars-text-primary);
+}
+
+.channelgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+/* The deck threshold label between two gold hairlines. It holds one line where
+   there is room and wraps on narrow phones — it must never widen the page. */
+.ribbon {
+  min-width: 0;
+  text-align: center;
+  font-family: var(--bars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bars-gold);
+  white-space: nowrap;
+}
+
+/* Gold hairlines flanking the ribbon. They keep a visible minimum so the
+   threshold still reads as a threshold once the label wraps on a phone. */
+.ribbonRule {
+  flex: 1;
+  min-width: 20px;
+  height: 1px;
+}
+
+@media (max-width: 640px) {
+  .channelgrid {
+    grid-template-columns: 1fr;
+  }
+  .ribbon {
+    white-space: normal;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .clk {
+    transition: transform 0.15s var(--bars-ease-out), filter 0.15s ease, box-shadow 0.2s ease;
+  }
+  .clk:hover {
+    filter: brightness(1.08);
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+  .fadeup {
+    animation: fadeup 0.4s var(--bars-ease-out) both;
+  }
+}
+
+@keyframes fadeup {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -8,6 +8,15 @@
 import assert from 'node:assert/strict'
 import { hasFooter } from '../footer-surfaces'
 
+// ── The single-ask flows withhold it ─────────────────────────────────────────
+
+// Each check names its own doors on the receipt. A link tree under that turns a
+// deliberate ending into a menu.
+for (const route of ['/mastering-allyship/clean-up', '/mastering-allyship/open-up']) {
+  assert.equal(hasFooter(route, false), false)
+  assert.equal(hasFooter(route, true), false)
+}
+
 // ── The public surfaces get it ───────────────────────────────────────────────
 
 for (const route of [

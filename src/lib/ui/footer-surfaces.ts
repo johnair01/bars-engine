@@ -36,7 +36,19 @@ const FOOTER_PREFIXES: readonly string[] = [
   '/campaign/the-crossing',
 ]
 
+/**
+ * Exceptions carved out of the `/mastering-allyship/` family. Both checks end by
+ * naming the doors that are actually open — the deck, the book, another pass,
+ * and closing the tab. A site-wide link tree directly under that turns a
+ * deliberate ending into a menu.
+ */
+const FOOTER_EXCLUDE_EXACT: ReadonlySet<string> = new Set([
+  '/mastering-allyship/clean-up',
+  '/mastering-allyship/open-up',
+])
+
 export function hasFooter(pathname: string, isAuthenticated: boolean): boolean {
+  if (FOOTER_EXCLUDE_EXACT.has(pathname)) return false
   // `/` serves two pages from one route: the marketing doors when logged out,
   // and the player's NOW dashboard when logged in. The footer belongs to the
   // first, and under the second it is chrome in the wrong place.

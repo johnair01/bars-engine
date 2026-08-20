@@ -1,0 +1,164 @@
+/* The shared deck-draw surface (see CardDraw.tsx).
+ *
+ * Colors come from --bars-* tokens; the one per-flow value (the accent) is
+ * passed in, because the element comes from the move.
+ */
+
+/* Three up on desktop; on phones a horizontal scroll-snap row at ~78% width, so
+   the peek reveals there are more and the 5:7 frame stays whole. Sizing the tile
+   relative to the row is what keeps it from stretching: an AllyshipCard allowed
+   to fill a phone's width becomes ~480px tall with a long empty band between its
+   marks and its question. Percentage width also makes this independent of how
+   much padding the host flow puts around the row. */
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .row {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+  .cell {
+    flex: 0 0 78%;
+    scroll-snap-align: center;
+  }
+}
+
+.frame {
+  border-radius: 14px;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  transition: outline-color 0.2s ease;
+}
+
+.caption {
+  text-align: center;
+  min-height: 14px;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(5, 4, 3, 0.86);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 520px;
+  /* dvh, not vh — iOS toolbars. */
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bars-bg-base);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid transparent;
+  box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.95), var(--bars-shadow-inset-top);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet {
+    animation: sheetup 0.28s var(--bars-ease-out) both;
+  }
+}
+
+@keyframes sheetup {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.grabRail {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 4px;
+}
+
+.grab {
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.sheetBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 20px 20px;
+}
+
+/* The full card carries the question, "your move", the practice and the flavor,
+   and scrolls inside its own frame. Capping its width caps its 5:7 height. */
+.cardWell {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.sheetFoot {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--bars-line);
+  background: var(--bars-bg-base);
+}
+
+.ghost,
+.solid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: var(--bars-radius-lg);
+  font-family: var(--bars-font-display);
+  font-size: 15px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ghost {
+  flex: 0 0 auto;
+  padding: 0 20px;
+  border: 1px solid var(--bars-line-strong);
+  background: none;
+  color: var(--bars-text-primary);
+  font-weight: 600;
+}
+
+.solid {
+  flex: 1;
+  border: none;
+  font-weight: 700;
+  box-shadow: var(--bars-shadow-inset-top);
+}
+
+.ghost:focus-visible,
+.solid:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ghost:active,
+  .solid:active {
+    transform: scale(0.97);
+  }
+}

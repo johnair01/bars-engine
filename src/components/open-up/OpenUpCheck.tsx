@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { OpenUpActionKey, OpenUpAnalyticsEvent, OpenUpCardId, OpenUpEntryMode } from '@/lib/open-up/events'
 import { openUpBookHref, openUpChapterOneHref, openUpSalesHref } from '@/lib/open-up/outbound'
 import { BOOK_ACTIONS, GENERIC_ACTIONS, OPEN_UP_BELIEFS, OPEN_UP_EMOTIONS, OPEN_UP_PRACTICES, OPEN_UP_WEATHER, type OpenUpPractice } from '@/lib/open-up/check-content'
-import { AllyshipCard } from '@/components/deck/AllyshipCard'
+import { CardDrawRow, CardDrawSheet } from '@/components/deck/CardDraw'
 
 type Screen = 'entry' | 'weather' | 'emotion' | 'belief' | 'people' | 'sampler' | 'action' | 'receipt'
 type OutreachPerson = { id: string; name: string; sent: boolean }
@@ -13,6 +13,10 @@ type Belief = (typeof OPEN_UP_BELIEFS)[number]
 
 const OUTREACH_STORAGE_KEY = 'mtgoa-open-up-outreach-v1'
 const mono = { fontFamily: 'var(--bars-font-mono)' }
+/** The draw's selection ring and sheet action. Open Up → liminal: the element
+ *  comes from the move, and purple is the engine's reserved action color. */
+const OPEN_UP_RING = 'var(--bars-liminal-glow)'
+const OPEN_UP_ACTION = 'var(--bars-liminal)'
 const display = { fontFamily: 'var(--bars-font-display)' }
 
 function track(event: OpenUpAnalyticsEvent) {
@@ -140,19 +144,16 @@ function PeopleStep({ people, onAdd, onToggle, onRemove, onClear, onNext, onBack
   return <div className="space-y-6"><BackButton onClick={onBack} /><Heading eyebrow="The check · your people" title="Who would benefit from—and enjoy—this work?">Brainstorm freely before you decide anything. First names are enough. These names stay in your browser and will be waiting beside the share draft.</Heading><OutreachList people={people} editable onAdd={onAdd} onToggle={onToggle} onRemove={onRemove} onClear={onClear} /><div className="grid gap-3 sm:grid-cols-2"><button onClick={onNext} className="rounded-2xl bg-[#7c3aed] px-5 py-4 font-bold text-white">Continue to the card draw →</button><button onClick={onNext} className="rounded-2xl border border-white/15 px-5 py-4 font-bold text-[#f1dce8]">Skip this list →</button></div></div>
 }
 
+/**
+ * The draw hands off to the deck through the shared `CardDraw` surface, so the
+ * Open Up Check and the Clean Up Check present the same cards the same way.
+ * Only the accent differs — the element comes from the move.
+ */
 function Sampler({ cards, value, onChange, onDraw, onNext, onBack }: { cards: OpenUpPractice[]; value: string | null; onChange: (id: string) => void; onDraw: () => void; onNext: () => void; onBack: () => void }) {
   const [expanded, setExpanded] = useState<OpenUpPractice | null>(null)
-  return <div className="space-y-6"><BackButton onClick={onBack} /><Heading eyebrow="From the Allyship Deck · Open Up suit · 24 cards" title="Want an Open Up practice to take with you?">Three cards from the deck’s Open Up suit. Tap to read one in full, draw again, or skip—the check works either way.</Heading><div className="grid gap-4 sm:grid-cols-3">{cards.map((item) => <div key={item.id} className={value === item.id ? 'rounded-xl outline outline-2 outline-[#a855f7] outline-offset-4' : ''}><AllyshipCard card={item} variant="grid" onClick={() => setExpanded(item)} /></div>)}</div><div className="grid gap-3 sm:grid-cols-2"><button onClick={onDraw} className="rounded-2xl border border-white/15 px-5 py-4 font-bold text-[#f1dce8]">Draw three more</button><button onClick={onNext} className="rounded-2xl bg-[#7c3aed] px-5 py-4 font-bold text-white">{value ? 'Continue with this card →' : 'Skip the draw →'}</button></div>{expanded ? <CardModal card={expanded} onClose={() => setExpanded(null)} onChoose={() => { onChange(expanded.id); setExpanded(null) }} /> : null}</div>
+  return <div className="space-y-6"><BackButton onClick={onBack} /><Heading eyebrow="From the Allyship Deck · Open Up suit · 24 cards" title="Want an Open Up practice to take with you?">Three cards from the deck’s Open Up suit. Tap to read one in full, draw again, or skip—the check works either way.</Heading><CardDrawRow cards={cards} carriedId={value} onOpen={setExpanded} accent={OPEN_UP_RING} /><div className="grid gap-3 sm:grid-cols-2"><button onClick={onDraw} className="rounded-2xl border border-white/15 px-5 py-4 font-bold text-[#f1dce8]">Draw three more</button><button onClick={onNext} className="rounded-2xl bg-[#7c3aed] px-5 py-4 font-bold text-white">{value ? 'Continue with this card →' : 'Skip the draw →'}</button></div>{expanded ? <CardDrawSheet card={expanded} carried={value === expanded.id} onClose={() => setExpanded(null)} onChoose={() => { onChange(expanded.id); setExpanded(null) }} accent={OPEN_UP_ACTION} accentText="#fff" /> : null}</div>
 }
 
-function CardModal({ card, onClose, onChoose }: { card: OpenUpPractice; onClose: () => void; onChoose: () => void }) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
-  return <div role="dialog" aria-modal="true" aria-label={card.title} className="fixed inset-0 z-50 flex items-end bg-black/80 p-3 backdrop-blur-sm sm:items-center sm:p-8" onMouseDown={onClose}><div className="mx-auto flex max-h-[96dvh] w-full max-w-lg flex-col rounded-t-[28px] bg-[#120d17] p-4 shadow-2xl sm:rounded-[28px]" onMouseDown={(event) => event.stopPropagation()}><div className="mb-3 flex items-center justify-between"><span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#c9bdcd]" style={mono}>Drawn card</span><button type="button" onClick={onClose} className="rounded-full border border-white/15 px-3 py-1 text-sm text-[#f2e6f0]">Close</button></div><div className="min-h-0 overflow-y-auto px-1 pb-2"><AllyshipCard card={card} variant="full" /></div><button type="button" onClick={onChoose} className="mt-4 shrink-0 rounded-2xl bg-[#f3e5ed] px-5 py-4 font-bold text-[#251525]">Choose this card →</button></div></div>
-}
 
 function Action({ mode, card, belief, onChoose, onBack }: { mode: OpenUpEntryMode; card?: OpenUpPractice; belief?: Belief; onChoose: (action: OpenUpActionKey) => void; onBack: () => void }) {
   const actions = mode === 'book_share' ? BOOK_ACTIONS : GENERIC_ACTIONS
