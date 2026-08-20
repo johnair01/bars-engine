@@ -12,11 +12,20 @@ export const metadata: Metadata = {
     url: '/open-up',
     siteName: 'Mastering the Game of Allyship',
     type: 'website',
+    images: [
+      {
+        url: '/mastering-allyship/open-up/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'The MTGOA Open Up Check — There is energy here to work with.',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'There is energy here to work with.',
     description: 'Take the Open Up Check and notice where the charge wants to go.',
+    images: ['/mastering-allyship/open-up/opengraph-image'],
   },
 }
 
