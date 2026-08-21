@@ -14,8 +14,20 @@ import { NavBar } from '@/components/NavBar'
 import { SiteFooter } from '@/components/SiteFooter'
 import { hasFooter } from '@/lib/ui/footer-surfaces'
 
-/** Exact routes that render with no global chrome. */
-const BARE_ROUTES = new Set<string>(['/mastering-allyship'])
+/**
+ * Exact routes that render with no global chrome.
+ *
+ * Both public checks are here for the same reason `/go/*` is: each is one ask,
+ * walked in order, with both exits already offered on its own receipt. A nav bar
+ * over "there is energy here to work with" hands the reader nine other
+ * destinations before the first sentence, and reframes a private practice as a
+ * site section.
+ */
+const BARE_ROUTES = new Set<string>([
+  '/mastering-allyship',
+  '/mastering-allyship/clean-up',
+  '/mastering-allyship/open-up',
+])
 
 /**
  * Route families that render bare. `/go/*` is the T8 funnel format, whose whole
