@@ -33,7 +33,7 @@ export async function NowHome({ playerId, vibulons }: NowHomeProps) {
   ])
 
   const ttvPanel = 'error' in ttvSummary
-    ? { status: 'not_started' as const, setForToday: 0, carried: 0, completed: 0, sealedAt: null }
+    ? { status: 'not_started' as const, setForToday: 0, carried: 0, completed: 0, sealedAt: null, blocked: 0, openTasks: [] }
     : ttvSummary
 
   // Build all 6 slots (filled + empty)

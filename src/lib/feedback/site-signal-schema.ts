@@ -19,6 +19,12 @@ export function isAllowedVercelBlobPublicUrl(href: string): boolean {
   }
 }
 
+/** Mirrors `BacklogItem.area`. Submitter-chosen so triage isn't 100% `ux` by default. */
+export const SIGNAL_AREAS = ['rules', 'ux', 'tech', 'lore', 'social', 'other'] as const
+
+/** Mirrors `BacklogItem.severity`. */
+export const SIGNAL_SEVERITIES = ['low', 'medium', 'high', 'blocking'] as const
+
 export const siteSignalInputSchema = z
   .object({
     pageUrl: z.string().trim().min(1).max(MAX_PAGE_URL),
@@ -28,6 +34,8 @@ export const siteSignalInputSchema = z
     documentTitle: z.string().max(MAX_TITLE).optional().nullable(),
     message: z.string().trim().min(1).max(MAX_MESSAGE),
     imageUrl: z.string().url().max(MAX_IMAGE_URL).optional(),
+    area: z.enum(SIGNAL_AREAS).optional(),
+    severity: z.enum(SIGNAL_SEVERITIES).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.imageUrl && !isAllowedVercelBlobPublicUrl(data.imageUrl)) {

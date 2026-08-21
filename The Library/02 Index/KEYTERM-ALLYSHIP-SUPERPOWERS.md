@@ -8,7 +8,7 @@ aliases:
   - Strategist
   - Disruptor
   - Escape Artist
-  - Catalyst
+  - Coach
   - Alchemist
   - Storyteller
 tags:
@@ -36,13 +36,15 @@ Superpowers are not moral rankings, jobs, or fixed identities. They are gifts wi
 
 ## The Seven Superpowers
 
+The six primary superpowers name distinct territories of practice. **Coach** is the seventh, integrative superpower: it draws on the other six in service of another person's agency. It does not give people power; it helps them remember and use power they already have.
+
 | Superpower | Core Gift | Clean Use | Shadow / Overuse |
 |---|---|---|---|
 | **Connector** | Builds trust, belonging, relational circuits, and bridges across difference. | Creates intentional spaces where people, resources, and insight can meet. | Over-connects without consent, confuses access with intimacy, becomes the social glue at personal cost. |
 | **Strategist** | Sees the board, hidden constraints, leverage points, and future consequences. | Names the right sequence of action and helps others move with clarity. | Becomes cold, controlling, over-optimized, or resentful when others do not see what they see. |
 | **Disruptor** | Interrupts stuck patterns, false inevitability, silence, and compliance. | Breaks the spell of "this is just how things are" so new action becomes possible. | Confuses rupture with change, escalates for identity, or damages trust the mission still needs. |
 | **Escape Artist** | Finds exits, loopholes, routes, options, and sovereignty under constraint. | Helps people move through traps without surrendering agency or imagination. | Avoids commitment, slips accountability, or treats every container as a cage. |
-| **Catalyst** | Sees latent capacity and helps people practice into power. | Builds courage, skill, momentum, and agency through timely challenge and support. | Optimizes everyone else, over-coaches, or makes other people's growth a hiding place from their own helplessness. |
+| **Coach** | Sees latent capacity and calls people up to the level they are ready to claim. | Returns power to its owner through a timely, consent-aware challenge, clear next step, and recognition of their agency. | Becomes a Taskmaster who pressures growth, or an Empty Cheerleader who affirms without challenge. |
 | **Alchemist** | Transforms adversity, grief, conflict, failure, and stuckness into usable capacity. | Metabolizes pain into growth, ritual, repair, and renewed motion. | Romanticizes suffering, over-processes, or turns every wound into curriculum before people are ready. |
 | **Storyteller** | Shapes meaning, memory, morale, narrative, and public imagination. | Gives experience an arc that helps people understand, endure, and act. | Turns pain into performance, simplifies complexity, or makes the story more important than the people inside it. |
 
@@ -79,9 +81,9 @@ They can be related without being the same thing.
 Example:
 
 - Belief: **I'm Not Capable**
-- Superpower: **Catalyst**
-- Wound distortion: improves everyone else so they never have to feel their own helplessness
-- Clean use: builds capability without making other people's growth a substitute for their own
+- Superpower: **Coach**
+- Wound distortion: pushes others to grow so they never have to feel their own helplessness or respect another person's pace
+- Clean use: calls up capacity without making another person's growth a substitute for their own
 
 ## Common Belief / Superpower Pairings
 
@@ -93,11 +95,11 @@ These are not mandatory assignments. They are the school's most common admission
 | **I'm Not Ready** | **Strategist** | If I can plan enough, I never have to risk beginning unprepared. |
 | **I'm Not Worthy** | **Disruptor** | If I can expose the gatekeepers as false, I do not have to admit I wanted their blessing. |
 | **I'm Not Capable** | **Escape Artist** | If I can always find a way out, I never have to discover whether I could stay and act. |
-| **I'm Not Capable** | **Catalyst** | If I can make everyone else more capable, I never have to feel my own helplessness directly. |
+| **I'm Not Capable** | **Coach** | If I can make everyone else more capable, I never have to feel my own helplessness directly. |
 | **I'm Not Good Enough** | **Alchemist** | If I can transform every failure into growth, maybe inadequacy never gets the final word. |
 | **I'm Insignificant** | **Storyteller** | If I can make meaning of what happened, maybe I can prove it mattered, and that I did too. |
 
-Design note: **Escape Artist** and **Catalyst** share the same root belief but turn it in opposite directions. Escape Artist says, "Capability means finding the exit." Catalyst says, "Capability means helping power come online." Both can be clean. Both can become hiding places.
+Design note: **Escape Artist** and **Coach** share the same root belief but turn it in opposite directions. Escape Artist says, "Capability means finding the exit." Coach says, "Capability means helping power come online." Both can be clean. Both can become hiding places.
 
 ## Superpower Mechanics For The RPG
 
@@ -193,23 +195,26 @@ RPG hooks:
 - Protects agency when systems try to trap people in false choices.
 - Risks avoidance, commitment panic, and treating every agreement as captivity.
 
-## Catalyst
+## Coach
 
-Catalyst power lives in activation, practice, encouragement, capacity-building, and developmental heat.
+Coach power lives in activation, practice, encouragement, capacity-building, and developmental heat. The Coach sees the next level before a person trusts that it exists, then speaks to that higher version without taking ownership of the climb.
 
-Clean Catalyst questions:
+Clean Coach questions:
 
 - What capacity is trying to come online here?
 - What practice room would make this feel possible?
 - Who needs encouragement, and who needs a clean challenge?
 - Where am I improving others so I do not have to feel my own helplessness?
+- Is this their next level, or mine?
+- Does this person need a nudge, emotional integration, or an exit from a harmful system?
 
 RPG hooks:
 
 - Helps another student unlock a temporary bonus after practice, reflection, or risk.
 - Turns failure into a training scene with a concrete next attempt.
 - Names the smallest brave rep that builds real capability.
-- Risks over-coaching, optimization as control, and making other people's growth carry their self-worth.
+- Returns agency after a breakthrough: "That was you, not me."
+- Risks Taskmaster pressure, Empty Cheerleader avoidance, and making other people's growth carry their self-worth.
 
 ## Alchemist
 
@@ -247,6 +252,59 @@ RPG hooks:
 - Builds morale through meaningful memory.
 - Risks spectacle, simplification, and making narrative clarity more important than material change.
 
+## Practice Guide Additions
+
+The following guidance synthesizes the 2026-08-05 strategy-guide imports. These are practice and design notes, not mandatory character assignments.
+
+### Connector — Webweaver
+
+- **Core work:** detect the invisible threads between people, ideas, resources, and opportunities; make the right connection at the right time.
+- **Dilemma:** connection work is essential but often invisible or dismissed as "just talking," which can lead to overextension or attempts to hold every relationship together.
+- **Clean practice:** listen beneath stated needs, weave across groups with consent, and navigate group energy without taking responsibility for every outcome.
+- **Shadow calibration:** do not introduce, mediate, or expose people without permission. Not every tension needs fixing and not everyone wants to be connected.
+
+### Strategist — System Seer
+
+- **Core work:** foresight, leverage, power mapping, decision architecture, and the ability to see the board before a crisis becomes visible.
+- **Dilemma:** successful prevention can look unnecessary; warnings can be received as control, paranoia, or manipulation.
+- **Clean practice:** build trust before it is needed, identify the smallest leverage point, make a plan intelligible to the people who must carry it, and adapt without treating people as pieces.
+- **Shadow calibration:** distinguish strategy from overdesign. A plan that never touches reality is avoidance, not foresight.
+
+### Disruptor — Sacred Spark
+
+- **Core work:** interrupt false inevitability, name the taboo, and make room for what must come next.
+- **Dilemma:** people may interpret a necessary challenge as aggression or chaos, while the Disruptor can either over-burn or silence their own fire.
+- **Clean practice:** target structures rather than people, choose the right battle and timing, pair disruption with allies and a viable opening, and let grief inform what must change.
+- **Shadow calibration:** the **Chaos Bringer** burns indiscriminately; the **Caged Rebel** complains from withdrawal. Precision of fire is the mature middle.
+
+### Escape Artist — Framebreaker
+
+- **Core work:** see cages, distinguish real constraints from theatrical ones, and create exits that preserve sovereignty and consent.
+- **Dilemma:** people fear freedom and may call a necessary exit quitting; the Escape Artist can also mistake ordinary challenge for captivity.
+- **Clean practice:** name the cage, its cost, and who benefits from continued compliance; build a deliberate route out rather than merely fleeing.
+- **Shadow calibration:** the **Ghost** leaves at the first discomfort; the **Martyr** stays to save a system past the point of contribution. Not every struggle is a cage, and not every exit is abandonment.
+
+### Coach — Caller-Up
+
+- **Core work:** address the higher version of a person, illuminate an outgrown level or expired story, and return their power and pace to them.
+- **Dilemma:** seeing unrealized potential can turn into pressure; true coaching is a transfer of agency, never a transfer of dependence.
+- **Clean practice:** make the current plateau honest, identify what it protects, name the smallest brave next move, and credit the resulting triumph to its owner.
+- **Shadow calibration:** the **Taskmaster** imposes a timeline and creates dependence; the **Empty Cheerleader** validates without delivering the needed challenge. Do not coach someone who needs emotional processing, safety, or an exit first.
+
+### Alchemist — Emotional Transmuter
+
+- **Core work:** help individuals and groups move emotional energy into flow: fear toward clarity, anger toward purposeful momentum, and sadness toward poignance, meaning, and joy.
+- **Dilemma:** people may offload feelings onto the Alchemist, resist the emotions transformation requires, or confuse discomfort with harm.
+- **Clean practice:** witness before redirecting; facilitate collective ritual, movement, silence, art, or repair so emotional work is shared rather than absorbed by one person.
+- **Shadow calibration:** the **Emotional Overload** becomes a sponge for collective pain; the **Detached Observer** intellectualizes from shore. The discipline is to engage without drowning.
+
+### Storyteller — Meaning Weaver
+
+- **Core work:** identify the narratives organizing behavior and offer truthful frames that help people understand, endure, and act.
+- **Dilemma:** people defend stories that hold their identity in place; narrative skill can either invite freedom or become coercive.
+- **Clean practice:** reveal rather than control, protect authorship and consent, and use emotion to illuminate reality rather than replace it.
+- **Shadow calibration:** the **Manipulator** exaggerates or bends truth for impact; the **Lost Author** cedes the story to harmful narratives. The work is to tell the necessary truth without flattening the people inside it.
+
 ## Integration With Chapter 6
 
 Chapter 6 of the MTGOA RPG should use this page as source guidance.
@@ -278,9 +336,19 @@ Primary sources already in the Library:
 - [[../07 Book OS/03 Game Dev/MTGOA Allyship RPG/manual/core-v0.4/Book Roadmap Spec - Chapters 6-12 and Starter Missions v0.1|MTGOA RPG Roadmap Spec]]
 - [[../07 Book OS/03 Game Dev/MTGOA Allyship RPG/manual/core-v0.4/Game Masters Council - Open Question Rulings v0.1|Game Masters Council - Open Question Rulings]]
 
+2026-08-05 strategy-guide imports, pending permanent Library ingestion:
+
+- Coach Strategy Guide — *The Art of Calling People Up*
+- The Strategist's Dilemma
+- The Alchemist's Gift and Burden
+- Connector Strategy Guide
+- Disruptor Strategy Guide
+- The Storyteller's Power & Dilemma
+- The Escape Artist's Gift and Curse
+
 ## Open Questions
 
 - Should Chapter 6 use "playstyle" language as an ancestry term, or fully replace it with "superpower"?
 - Does each superpower need one generic Power Move, or a Belief-specific Power Move for every superpower / belief pairing?
-- Should Disruptor receive a dedicated older-source extraction pass? The current Library has strong Strategist, Connector, Escape Artist, Storyteller, and Alchemist material, while Disruptor appears more through campaign and role references.
+- Does "Coach" fully replace the older "Catalyst" label in all Chapter 6 and character-sheet material? This keyterm now treats Coach as canonical, based on the current guide import.
 - Should the RPG preserve Builder / Innovator as historical playstyle language, or retire them into team Role / School / House mechanics?

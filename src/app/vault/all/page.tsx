@@ -37,7 +37,18 @@ export default async function VaultAllBarsPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link href="/vault" className="text-sm text-zinc-500 hover:text-white transition">← Vault</Link>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Link href="/vault" className="text-sm text-zinc-500 hover:text-white transition">← Vault</Link>
+                            {/* /bars redirects here, and /bars is where players asked for
+                                docs: "We also need documentation for how a player is
+                                supposed to interact with this page." (2026-03-30) */}
+                            <Link
+                                href="/wiki/bars-guide"
+                                className="text-xs text-zinc-600 hover:text-zinc-300 underline underline-offset-2"
+                            >
+                                How BARs work →
+                            </Link>
+                        </div>
                         <h1 className="text-3xl font-bold text-white mt-1">All BARs</h1>
                         <p className="text-zinc-500 text-sm mt-0.5">Everything you hold — seeds and quests in one place.</p>
                     </div>
