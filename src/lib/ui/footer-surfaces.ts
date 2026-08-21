@@ -50,8 +50,17 @@ const FOOTER_EXCLUDE_EXACT: ReadonlySet<string> = new Set([
   '/mastering-allyship/grow-up',
 ])
 
+/**
+ * Course days name their own exits on the receipt — the deck, the book, the next
+ * day, and closing the tab. A site-wide link tree under that turns a deliberate
+ * ending into a menu, so the whole `/course/` family is excluded, the same way
+ * each round-1 alias is.
+ */
+const FOOTER_EXCLUDE_PREFIXES: readonly string[] = ['/mastering-allyship/course/']
+
 export function hasFooter(pathname: string, isAuthenticated: boolean): boolean {
   if (FOOTER_EXCLUDE_EXACT.has(pathname)) return false
+  if (FOOTER_EXCLUDE_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return false
   // `/` serves two pages from one route: the marketing doors when logged out,
   // and the player's NOW dashboard when logged in. The footer belongs to the
   // first, and under the second it is chrome in the wrong place.

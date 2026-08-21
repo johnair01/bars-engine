@@ -18,14 +18,14 @@ describe('course receipt handoffs', () => {
     expect(nextCourseDay(4)?.route).toBe('/show-up')
   })
 
-  it('stops at the round-2 boundary, which is drafted but unbuilt', () => {
-    const afterShowUp = nextCourseDay(5)
-    expect(afterShowUp?.day.title).toBe('Wake Up')
-    // Named, so Day 5's receipt can still ask Day 6's question...
-    expect(afterShowUp?.day.question).toBeTruthy()
+  it('stops at the round-3 boundary, which has no authored domain', () => {
+    const afterWeekTwo = nextCourseDay(10)
+    expect(afterWeekTwo?.day.title).toBe('Wake Up')
+    // Named, so Day 10's receipt can still ask Day 11's question...
+    expect(afterWeekTwo?.day.question).toBeTruthy()
     // ...but not linkable, so it renders "coming next" instead of a 404.
-    expect(afterShowUp?.route).toBeNull()
-    expect(linkableRoute(mtgoaCourseDay(6)!)).toBeNull()
+    expect(afterWeekTwo?.route).toBeNull()
+    expect(linkableRoute(mtgoaCourseDay(11)!)).toBeNull()
   })
 
   it('carries attribution through every handoff without leaking an answer', () => {
@@ -68,7 +68,8 @@ describe('course receipt handoffs', () => {
     // Day 6 re-asks Wake Up of the campaign structure, not of the reader — so it
     // must not inherit Day 1's wording.
     expect(afterShowUp?.day.question).toBe('What structure is actually running this work now?')
-    expect(afterShowUp?.route).toBeNull()
+    // Week 1 hands straight into Week 2 on the canonical course route.
+    expect(afterShowUp?.route).toBe('/mastering-allyship/course/2/wake-up')
   })
 
   it('ends the course rather than inventing a Day 31', () => {

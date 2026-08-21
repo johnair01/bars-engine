@@ -43,7 +43,7 @@ const BARE_ROUTES = new Set<string>([
  * marketing, which is the one thing a letter to your mother cannot afford to be.
  * The reader's way out is the flow itself — declining is a first-class ending.
  */
-const BARE_PREFIXES = ['/go/', '/ally/']
+const BARE_PREFIXES = ['/go/', '/ally/', '/mastering-allyship/course/']
 
 function isBareRoute(pathname: string): boolean {
   if (BARE_ROUTES.has(pathname)) return true
