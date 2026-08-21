@@ -38,3 +38,11 @@ export function openUpSalesHref(search: URLSearchParams): string {
 export function openUpChapterOneHref(search: URLSearchParams): string {
   return withOpenUpAttribution('/kickstarter/chapter-1?audience=public', search)
 }
+
+/**
+ * The next course day. The route comes from `nextCourseDay()`, never a literal,
+ * so this cannot outlive the day it points at.
+ */
+export function openUpNextDayHref(search: URLSearchParams, route: string): string {
+  return withOpenUpAttribution(route, search)
+}

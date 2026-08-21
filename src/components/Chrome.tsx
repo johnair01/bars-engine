@@ -27,6 +27,9 @@ const BARE_ROUTES = new Set<string>([
   '/mastering-allyship',
   '/mastering-allyship/clean-up',
   '/mastering-allyship/open-up',
+  '/mastering-allyship/wake-up',
+  '/mastering-allyship/show-up',
+  '/mastering-allyship/grow-up',
 ])
 
 /**

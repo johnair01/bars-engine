@@ -20,3 +20,12 @@ export function cleanUpBookHref(search: URLSearchParams): string {
 export function cleanUpDeckHref(search: URLSearchParams): string {
   return cleanUpAttribution('/deck/sales', search)
 }
+
+/**
+ * The next course day. The route comes from `nextCourseDay()`, never a literal,
+ * so this cannot outlive the day it points at — while Day 4 is unbuilt the spine
+ * returns no route and the receipt renders "coming next" instead of a link.
+ */
+export function cleanUpNextDayHref(search: URLSearchParams, route: string): string {
+  return cleanUpAttribution(route, search)
+}
