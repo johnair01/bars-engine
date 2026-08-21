@@ -35,9 +35,31 @@ const CLIENT_ONLY_PATTERNS = [
     /\bsessionStorage\b/,
 ]
 
+/**
+ * Strip comments and string literals before pattern matching.
+ *
+ * These patterns describe *code*, and without this they also match English. A
+ * card prompt reading "in place of another planning document." tripped
+ * `\bdocument\.` and demanded "use client" on a pure data module — copy the
+ * file never executes. Prose lives in this repo's `src/lib/**` content modules
+ * by design, so the false positives are structural rather than a one-off.
+ *
+ * Replacing with a space (rather than nothing) keeps `\b` boundaries honest, so
+ * stripping can never splice two identifiers into a third that matches.
+ */
+function stripCommentsAndStrings(content: string): string {
+    return content
+        .replace(/\/\*[\s\S]*?\*\//g, ' ')      // block comments, JSDoc included
+        .replace(/\/\/[^\n]*/g, ' ')             // line comments
+        .replace(/`(?:\\[\s\S]|[^`\\])*`/g, ' ') // template literals
+        .replace(/'(?:\\.|[^'\\\n])*'/g, ' ')    // single-quoted
+        .replace(/"(?:\\.|[^"\\\n])*"/g, ' ')    // double-quoted
+}
+
 function usesHooksOrClientOnly(content: string): boolean {
+    const code = stripCommentsAndStrings(content)
     const allPatterns = [...HOOK_PATTERNS, ...CLIENT_ONLY_PATTERNS]
-    return allPatterns.some((p) => p.test(content))
+    return allPatterns.some((p) => p.test(code))
 }
 
 function hasUseClient(content: string): boolean {
