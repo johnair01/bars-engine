@@ -160,6 +160,22 @@ export const MOVE_ICON_FILLED: Record<BasicMove, boolean> = {
   open_up: false,
 }
 
+/**
+ * The move's chrome sigil — the elemental character each move is tagged with in
+ * the course chrome (Open Up is liminal rather than an element, so it carries the
+ * threshold lozenge instead of a Wu Xing character).
+ *
+ * Lives here because it is a move's visual identity, alongside its element and
+ * glyph. `WeekTwoPractice` still carries a private copy from before this existed.
+ */
+export const MOVE_SIGIL: Record<BasicMove, string> = {
+  wake_up: '土',
+  open_up: '◇',
+  clean_up: '水',
+  grow_up: '木',
+  show_up: '火',
+}
+
 export const MOVE_LABELS: Record<BasicMove, string> = {
   wake_up: 'Wake Up',
   open_up: 'Open Up',
