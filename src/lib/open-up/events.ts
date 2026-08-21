@@ -7,6 +7,7 @@ export const OPEN_UP_EVENT_NAMES = [
   'open_up_book_cta_clicked',
   'open_up_chapter_one_clicked',
   'open_up_share_copy_copied',
+  'open_up_next_day_clicked',
 ] as const
 
 export type OpenUpEventName = (typeof OPEN_UP_EVENT_NAMES)[number]

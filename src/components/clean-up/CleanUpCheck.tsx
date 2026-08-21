@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
 import { CardDrawRow, CardDrawSheet } from '@/components/deck/CardDraw'
+import { NextDayHandoff } from '@/components/mtgoa-check/CheckKit'
 import { MovePip } from '@/components/deck/MovePip'
 import { DECK_GOLD } from '@/lib/allyship-deck/card-visuals'
 import type { MoveCard } from '@/lib/allyship-deck/types'
@@ -34,7 +35,8 @@ import {
 } from '@/lib/clean-up/check-content'
 import type { CleanUpMoveKey, CleanUpRoute } from '@/lib/clean-up/check-content'
 import type { CleanUpAnalyticsEvent } from '@/lib/clean-up/events'
-import { cleanUpBookHref, cleanUpDeckHref } from '@/lib/clean-up/outbound'
+import { cleanUpBookHref, cleanUpDeckHref, cleanUpNextDayHref } from '@/lib/clean-up/outbound'
+import { nextCourseDay } from '@/lib/mtgoa-course/course-days'
 
 import styles from './CleanUpCheck.module.css'
 
@@ -106,6 +108,12 @@ export function CleanUpCheck({ queryString }: { queryString: string }) {
   const checkUrl = cleanUpCheckUrl(SITE_ORIGIN)
   const deckHref = cleanUpDeckHref(search)
   const bookHref = cleanUpBookHref(search)
+
+  // Day 3 of 30. Day 4 is designed but unbuilt, so the spine returns no route and
+  // the handoff names Grow Up's question without linking at it. When Day 4 ships,
+  // this becomes a link with no edit here.
+  const tomorrow = nextCourseDay(3)
+  const nextHref = tomorrow?.route ? cleanUpNextDayHref(search, tomorrow.route) : undefined
 
   const compose = useCallback(
     () =>
@@ -246,7 +254,7 @@ export function CleanUpCheck({ queryString }: { queryString: string }) {
               The Clean Up Check
             </h1>
             <span className="bars-label" style={{ display: 'block', marginTop: 8, color: 'var(--bars-text-muted)' }}>
-              a practice, not a test
+              a practice, walked in order
             </span>
             <p
               className="bars-title"
@@ -280,7 +288,7 @@ export function CleanUpCheck({ queryString }: { queryString: string }) {
           <Step>
             <span className="bars-label" style={{ color: 'var(--bars-text-muted)' }}>orientation · the three vantage points</span>
             <h2 className="bars-title" style={{ margin: '10px 0 0', fontSize: 26, lineHeight: 1.22 }}>
-              Not a reframe. A walk around the charge.
+              A walk around the charge.
             </h2>
             <p className="bars-prose" style={{ margin: '10px 0 0', color: 'var(--bars-text-secondary)', lineHeight: 1.6 }}>
               You look at the same charge from three positions — as an it, as a you, as an I — until what was stuck as story is
@@ -322,7 +330,7 @@ export function CleanUpCheck({ queryString }: { queryString: string }) {
             >
               <span className="bars-label" style={{ color: 'var(--cu-water-lift)' }}>why it belongs in allyship</span>
               <p className="bars-prose" style={{ margin: '9px 0 0', fontSize: 15, lineHeight: 1.6, color: 'var(--bars-text-secondary)' }}>
-                Charge arrives through a real person, a figure you have never met, or a part of yourself. However it arrives, an
+                Charge arrives through a real person, a figure you have only read about, or a part of yourself. However it arrives, an
                 uncleaned charge spends itself on the story instead of the work. Clean Up is one of the four moves that raise your
                 throughput on the fifth one: showing up.
               </p>
@@ -637,7 +645,7 @@ export function CleanUpCheck({ queryString }: { queryString: string }) {
               />
             </Pass>
 
-            <PrivacyLine align="left">stays only in this browser · never sent</PrivacyLine>
+            <PrivacyLine align="left">stays only in this browser</PrivacyLine>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 26 }}>
               <BackLink onClick={() => go('draw')} />
@@ -807,6 +815,13 @@ export function CleanUpCheck({ queryString }: { queryString: string }) {
                 {CLEAN_UP_EXPLAINER}
               </p>
             </div>
+
+            <NextDayHandoff
+              handoff={tomorrow}
+              href={nextHref}
+              onNavigate={() => track({ event: 'clean_up_next_day_clicked', route })}
+              accent="var(--cu-water-lift)"
+            />
 
             <div
               style={{

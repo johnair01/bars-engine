@@ -8,6 +8,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
+      'src/lib/mtgoa-course/__tests__/course-foundation.test.ts',
+      'src/lib/wake-up/__tests__/check-content.test.ts',
+      'src/lib/mtgoa-course/__tests__/receipt-handoffs.test.ts',
+      'src/lib/show-up/__tests__/check-content.test.ts',
+      'src/lib/grow-up/__tests__/check-content.test.ts',
       'src/actions/__tests__/campaign-attach.test.ts',
       'src/actions/__tests__/campaign-milestone-authoring.test.ts',
       'src/lib/alchemy-engine/__tests__/ai-generation.test.ts',

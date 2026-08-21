@@ -45,6 +45,9 @@ const FOOTER_PREFIXES: readonly string[] = [
 const FOOTER_EXCLUDE_EXACT: ReadonlySet<string> = new Set([
   '/mastering-allyship/clean-up',
   '/mastering-allyship/open-up',
+  '/mastering-allyship/wake-up',
+  '/mastering-allyship/show-up',
+  '/mastering-allyship/grow-up',
 ])
 
 export function hasFooter(pathname: string, isAuthenticated: boolean): boolean {

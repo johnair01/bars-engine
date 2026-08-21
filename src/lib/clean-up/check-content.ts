@@ -82,7 +82,7 @@ export const CLEAN_UP_BOOK_LINES: readonly CleanUpLine[] = [
     voice: '“I should read all of it before I push it.”',
     belief: 'I’m not ready',
     overcome: 'What has the book already given you? Share that.',
-    reframe: 'Readiness was never the ask. What already landed is already shareable.',
+    reframe: 'What already landed is already shareable.',
   },
   {
     key: 'belong',
@@ -107,7 +107,7 @@ export const CLEAN_UP_LINES: readonly CleanUpLine[] = [
     voice: '“If I were better at this, it wouldn’t be getting to me.”',
     belief: 'I’m not good enough',
     overcome: 'What would you tell someone else who felt this about the same thing?',
-    reframe: 'The charge is not a skill gap. Feeling it is what makes you useful in the room.',
+    reframe: 'Feeling it is what makes you useful in the room.',
   },
   {
     key: 'worthy',
@@ -135,7 +135,7 @@ export const CLEAN_UP_LINES: readonly CleanUpLine[] = [
     voice: '“Nothing I do about this would change anything.”',
     belief: 'I’m insignificant',
     overcome: 'What is the smallest true move that is still in your hands?',
-    reframe: 'Scale is not the test. A worked charge funds one move; one move is how anything moves at all.',
+    reframe: 'A worked charge funds one move, and one move is how anything moves at all.',
   },
   {
     key: 'capable',

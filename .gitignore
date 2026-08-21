@@ -55,9 +55,13 @@ yarn-error.log*
 
 # embedded repos (avoid accidental add)
 LibreSprite/
-# Keep Claude config local, but share the project SessionStart hook + settings.
+# Keep Claude config local, but share the project SessionStart hook + settings,
+# and the skills — a prose or review rule only works if a fresh clone carries it.
 .claude/*
 !.claude/settings.json
+!.claude/skills/
+!.claude/skills/**
+.claude/skills/**/__pycache__/
 .claude/settings.local.json
 
 # typescript

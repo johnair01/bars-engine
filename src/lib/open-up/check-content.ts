@@ -19,9 +19,9 @@ export const OPEN_UP_EMOTIONS = [
 
 export const OPEN_UP_BELIEFS = [
   { key: 'enough', voice: '“Who am I to recommend a book on allyship?”', belief: 'I’m not good enough', question: 'What’s the one true sentence you’d say about this book?', reframe: 'Honesty is the ask, not credentials. One true sentence is a complete recommendation.' },
-  { key: 'worthy', voice: '“Why would anyone act on my recommendation?”', belief: 'I’m not worthy', question: 'Who is worthy of this book? Can you put it in front of them?', reframe: 'Worthiness was never yours to prove — it is theirs to receive.' },
-  { key: 'ready', voice: '“I should finish it — or reread it — before I share it.”', belief: 'I’m not ready', question: 'What has the book already given you? Share that.', reframe: 'Readiness was never the ask. What already landed is already shareable.' },
-  { key: 'belong', voice: '“This conversation isn’t mine to start.”', belief: 'I don’t belong', question: 'Who is one person you already belong with? Start there.', reframe: 'You do not need standing with a community to hand a book to a friend.' },
+  { key: 'worthy', voice: '“Why would anyone act on my recommendation?”', belief: 'I’m not worthy', question: 'Who is worthy of this book? Can you put it in front of them?', reframe: 'Worthiness is theirs to receive.' },
+  { key: 'ready', voice: '“I should finish it — or reread it — before I share it.”', belief: 'I’m not ready', question: 'What has the book already given you? Share that.', reframe: 'What already landed is already shareable.' },
+  { key: 'belong', voice: '“This conversation isn’t mine to start.”', belief: 'I don’t belong', question: 'Who is one person you already belong with? Start there.', reframe: 'Handing a book to a friend asks nothing of your standing in a community.' },
   { key: 'insignificant', voice: '“My share won’t matter to anyone.”', belief: 'I’m insignificant', question: 'One hand-off is how books travel. Who is your one?', reframe: 'Books move node to node. Significance is downstream of the hand-off.' },
   { key: 'capable', voice: '“I’ll explain it badly and put them off.”', belief: 'I’m not capable', question: 'The book explains itself. Can you just hand it over?', reframe: 'You do the handing; the book does the explaining.' },
 ] as const
@@ -39,7 +39,7 @@ export const BOOK_ACTIONS: Array<{ key: OpenUpActionKey; label: string; detail: 
   { key: 'send_personal_note', label: 'Send one personal note', detail: 'One person. No performance required.' },
   { key: 'share_publicly', label: 'Make a public share', detail: 'Use the draft, then make it sound like you.' },
   { key: 'come_back', label: 'Come back to this', detail: 'A real pause is still a choice.' },
-  { key: 'not_my_ask', label: 'This is not my ask', detail: 'Do not turn someone else’s request into a test of your goodness.' },
+  { key: 'not_my_ask', label: 'This is not my ask', detail: 'Let someone else’s request stay a request.' },
 ]
 
 export const GENERIC_ACTIONS: Array<{ key: OpenUpActionKey; label: string; detail: string }> = [

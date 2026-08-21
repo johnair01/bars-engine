@@ -10,6 +10,7 @@ export const CLEAN_UP_EVENT_NAMES = [
   'clean_up_draft_copied',
   'clean_up_deck_cta_clicked',
   'clean_up_book_cta_clicked',
+  'clean_up_next_day_clicked',
 ] as const
 
 export type CleanUpEventName = (typeof CLEAN_UP_EVENT_NAMES)[number]
