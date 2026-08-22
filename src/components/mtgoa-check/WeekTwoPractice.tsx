@@ -38,6 +38,7 @@ import type { RoundTwoDay, RoundTwoLane, RoundTwoState } from '@/lib/mtgoa-cours
 import type { MtgoaOrganizationState } from '@/lib/mtgoa-course/organization-state'
 import { NO_OPEN_PARTICIPATION_NOTE } from '@/lib/mtgoa-course/organization-state'
 import type { RoundTwoAnalyticsEvent } from '@/lib/mtgoa-course/round-two-events'
+import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
 
 /**
  * The Week 2 course day — one component for Days 6 through 10.
@@ -110,6 +111,17 @@ export function WeekTwoPractice({
   )
 
   const [screen, setScreen] = useState<Screen>('entry')
+
+  /**
+   * Reaching the receipt is what finishes a day, so this is where the board
+   * learns to open tomorrow. One day number, written to this browser — never
+   * anything the reader typed.
+   *
+   * @see src/lib/mtgoa-course/mark-day-complete.ts
+   */
+  useEffect(() => {
+    if (screen === 'receipt') markCourseDayComplete(day.day)
+  }, [screen, day.day])
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [artifact, setArtifact] = useState<Record<string, string>>({})
   const [lane, setLane] = useState<RoundTwoLane | null>(null)

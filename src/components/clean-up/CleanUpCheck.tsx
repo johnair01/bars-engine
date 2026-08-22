@@ -39,6 +39,7 @@ import { cleanUpBookHref, cleanUpDeckHref, cleanUpNextDayHref } from '@/lib/clea
 import { nextCourseDay } from '@/lib/mtgoa-course/course-days'
 
 import styles from './CleanUpCheck.module.css'
+import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
 
 type Screen = 'entry' | 'orient' | 'charge' | 'line' | 'draw' | 'work' | 'moves' | 'receipt'
 type Voice = 'me' | 'it'
@@ -79,6 +80,17 @@ export function CleanUpCheck({ queryString }: { queryString: string }) {
   const search = useMemo(() => new URLSearchParams(queryString), [queryString])
 
   const [screen, setScreen] = useState<Screen>('entry')
+
+  /**
+   * Reaching the receipt is what finishes a day, so this is where the board
+   * learns to open tomorrow. One day number, written to this browser — never
+   * anything the reader typed.
+   *
+   * @see src/lib/mtgoa-course/mark-day-complete.ts
+   */
+  useEffect(() => {
+    if (screen === 'receipt') markCourseDayComplete(3)
+  }, [screen])
   const [route, setRoute] = useState<CleanUpRoute>('own_charge')
   const [bodyReading, setBodyReading] = useState<string | null>(null)
   const [channelKey, setChannelKey] = useState<string | null>(null)

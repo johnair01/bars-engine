@@ -48,6 +48,7 @@ import {
 import type { GrowUpScope } from '@/lib/grow-up/check-content'
 import type { GrowUpAnalyticsEvent } from '@/lib/grow-up/events'
 import { growUpBookHref, growUpDayOneHref, growUpDeckHref, growUpNextDayHref } from '@/lib/grow-up/outbound'
+import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
 
 /**
  * MTGOA Grow Up Check — Day 4, the last gap in round 1.
@@ -101,6 +102,17 @@ export function GrowUpCheck({ queryString }: { queryString: string }) {
   const search = useMemo(() => new URLSearchParams(queryString), [queryString])
 
   const [screen, setScreen] = useState<Screen>('entry')
+
+  /**
+   * Reaching the receipt is what finishes a day, so this is where the board
+   * learns to open tomorrow. One day number, written to this browser — never
+   * anything the reader typed.
+   *
+   * @see src/lib/mtgoa-course/mark-day-complete.ts
+   */
+  useEffect(() => {
+    if (screen === 'receipt') markCourseDayComplete(4)
+  }, [screen])
   const [scope, setScope] = useState<GrowUpScope | null>(null)
   const [handoffs, setHandoffs] = useState<string[]>([])
   const [beliefKey, setBeliefKey] = useState<string | null>(null)

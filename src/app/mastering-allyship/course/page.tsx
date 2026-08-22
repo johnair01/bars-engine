@@ -40,6 +40,14 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Rendered per request, because the board's week gate is a wall-clock read. A
+ * page cached from before a release would serve "opens Sunday" after Sunday.
+ * The browser corrects it on load either way; this keeps the HTML itself honest
+ * for crawlers and for anyone without JavaScript.
+ */
+export const dynamic = 'force-dynamic'
+
 export default function MtgoaCourseIndexPage() {
   return <CourseIndex />
 }
