@@ -52,6 +52,7 @@ import {
   showUpEarlierMoveHref,
   showUpNextDayHref,
 } from '@/lib/show-up/outbound'
+import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
 
 /**
  * MTGOA Show Up Check — Day 5, the end of round 1's loop.
@@ -101,6 +102,17 @@ export function ShowUpCheck({ queryString }: { queryString: string }) {
   const search = useMemo(() => new URLSearchParams(queryString), [queryString])
 
   const [screen, setScreen] = useState<Screen>('entry')
+
+  /**
+   * Reaching the receipt is what finishes a day, so this is where the board
+   * learns to open tomorrow. One day number, written to this browser — never
+   * anything the reader typed.
+   *
+   * @see src/lib/mtgoa-course/mark-day-complete.ts
+   */
+  useEffect(() => {
+    if (screen === 'receipt') markCourseDayComplete(5)
+  }, [screen])
   const [room, setRoom] = useState('')
   const [channel, setChannel] = useState<string | null>(null)
   const [artifact, setArtifact] = useState<string | null>(null)

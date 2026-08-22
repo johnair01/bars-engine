@@ -13,6 +13,7 @@ export default defineConfig({
       'src/lib/mtgoa-course/__tests__/receipt-handoffs.test.ts',
       'src/lib/mtgoa-course/__tests__/round-two.test.ts',
       'src/lib/mtgoa-course/__tests__/course-index.test.ts',
+      'src/lib/mtgoa-course/__tests__/course-gating.test.ts',
       'src/lib/show-up/__tests__/check-content.test.ts',
       'src/lib/grow-up/__tests__/check-content.test.ts',
       'src/actions/__tests__/campaign-attach.test.ts',

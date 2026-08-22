@@ -6,6 +6,7 @@ import { openUpBookHref, openUpChapterOneHref, openUpNextDayHref, openUpSalesHre
 import { askingLine, nextCourseDay } from '@/lib/mtgoa-course/course-days'
 import { BOOK_ACTIONS, GENERIC_ACTIONS, OPEN_UP_BELIEFS, OPEN_UP_EMOTIONS, OPEN_UP_PRACTICES, OPEN_UP_WEATHER, type OpenUpPractice } from '@/lib/open-up/check-content'
 import { CardDrawRow, CardDrawSheet } from '@/components/deck/CardDraw'
+import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
 
 type Screen = 'entry' | 'weather' | 'emotion' | 'belief' | 'people' | 'sampler' | 'action' | 'receipt'
 type OutreachPerson = { id: string; name: string; sent: boolean }
@@ -45,6 +46,17 @@ export function OpenUpCheck({ queryString }: { queryString: string }) {
   // an unbuilt day ships.
   const tomorrow = nextCourseDay(2)
   const [screen, setScreen] = useState<Screen>('entry')
+
+  /**
+   * Reaching the receipt is what finishes a day, so this is where the board
+   * learns to open tomorrow. One day number, written to this browser — never
+   * anything the reader typed.
+   *
+   * @see src/lib/mtgoa-course/mark-day-complete.ts
+   */
+  useEffect(() => {
+    if (screen === 'receipt') markCourseDayComplete(2)
+  }, [screen])
   const [mode, setMode] = useState<OpenUpEntryMode | null>(null)
   const [weather, setWeather] = useState<string | null>(null)
   const [emotionKey, setEmotionKey] = useState<string | null>(null)
