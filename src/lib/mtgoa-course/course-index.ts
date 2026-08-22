@@ -105,6 +105,12 @@ export function courseIndexWeeks(): CourseIndexWeek[] {
   })
 }
 
+/** One day by number, in the shape the page and the social cards read. */
+export function courseIndexDay(number: number): CourseIndexDay | null {
+  const day = MTGOA_COURSE_DAYS.find((entry) => entry.number === number)
+  return day ? toIndexDay(day) : null
+}
+
 /** Where "start at the beginning" goes. Null would mean day 1 itself is unbuilt. */
 export function courseStartRoute(): string | null {
   return courseIndexWeeks()[0]?.days[0]?.route ?? null
