@@ -26,22 +26,29 @@ import { useCourseProgress } from '@/lib/mtgoa-course/use-course-progress'
  * are re-derived from the clock and from storage after mount, so a cached render
  * cannot outlive a release, and a day finished in another tab shows up here.
  *
- * The clock is read on mount rather than during render, so the server output is
- * deterministic. Until it is read, a week counts as unreleased — the board shows
- * less than it might for one frame, never more than it should.
+ * The clock is read on mount rather than during render, so nothing impure runs
+ * while rendering. Until the browser has its own clock the board trusts
+ * `releasedRounds`, which the server resolved at request time — so the first
+ * paint, the hydrating render and a crawler's view all show the real board
+ * rather than a course that has yet to start. Once the browser's clock arrives
+ * it takes over, which is what stops a cached render outliving a release.
  */
 export function CourseBoard({
   weeks,
+  releasedRounds,
   stateLine,
 }: {
   weeks: CourseIndexWeek[]
+  /** Rounds open when the server rendered. The floor until the client has a clock. */
+  releasedRounds: number[]
   stateLine: string
 }) {
   const { progress, ready, complete } = useCourseProgress()
   const now = useClientClock()
 
   const gated = weeks.map((week) => {
-    const released = now !== null && isRoundReleased(week.round, now)
+    const released =
+      now === null ? releasedRounds.includes(week.round) : isRoundReleased(week.round, now)
     return {
       ...week,
       released,

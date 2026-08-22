@@ -1,5 +1,6 @@
 import { CourseBoard } from '@/components/mtgoa-course/CourseBoard'
 import { courseIndexWeeks, writtenStateLine } from '@/lib/mtgoa-course/course-index'
+import { currentReleasedRounds } from '@/lib/mtgoa-course/release-state'
 
 /**
  * `/course` — the front door to the thirty days.
@@ -16,7 +17,9 @@ import { courseIndexWeeks, writtenStateLine } from '@/lib/mtgoa-course/course-in
  * @see src/components/mtgoa-course/CourseBoard.tsx — the gated board
  * @see src/lib/mtgoa-course/course-release.ts — when each week opens
  */
-export function CourseIndex() {
+export async function CourseIndex() {
+  const releasedRounds = await currentReleasedRounds()
+
   return (
     <main
       style={{
@@ -52,7 +55,11 @@ export function CourseIndex() {
           </p>
         </header>
 
-        <CourseBoard weeks={courseIndexWeeks()} stateLine={writtenStateLine()} />
+        <CourseBoard
+          weeks={courseIndexWeeks()}
+          releasedRounds={releasedRounds}
+          stateLine={writtenStateLine()}
+        />
       </div>
     </main>
   )
