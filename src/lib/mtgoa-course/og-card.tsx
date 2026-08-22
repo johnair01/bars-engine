@@ -225,7 +225,7 @@ export function courseIndexOgCard(): ReactElement {
       gradFrom="#241a3e"
       gradTo="#0a0908"
       glow="#a855f7"
-      eyebrow="THE THIRTY-DAY PRACTICE"
+      eyebrow="THE FREE 30-DAY CHALLENGE"
       eyebrowColor={DECK_GOLD}
       headline="Thirty days of allyship practice, one move at a time."
       footLeft={
@@ -250,4 +250,4 @@ export function courseDayOgAlt(day: CourseIndexDay): string {
 }
 
 export const COURSE_INDEX_OG_ALT =
-  'Mastering the Game of Allyship — thirty days of allyship practice, one move at a time.'
+  'The free 30-day challenge from Mastering the Game of Allyship: thirty days of allyship practice, one move at a time.'

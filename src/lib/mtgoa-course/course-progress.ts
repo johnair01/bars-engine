@@ -100,24 +100,27 @@ export type DayGate =
  * deserves the most useful reason:
  *
  *   1. Has anyone written it? (the spine)
- *   2. Has its week opened? (the calendar)
+ *   2. Has its date arrived? (the calendar)
  *   3. Has the reader finished the day before? (their own progress)
  *
- * **The first day of a released round is always open.** When week 2 opens on
- * Sunday, Day 6 opens with it — a reader who never finished week 1 joins the new
- * week rather than being locked out of a release they were told was coming. The
- * sequence gate then applies inside the week: day 7 waits on day 6.
+ * **The first day of a week is always open once released.** When Day 6 goes live
+ * on Sunday it opens for everyone — a reader who never finished week 1 joins the
+ * new week rather than being locked out of a release they were told was coming.
+ * The sequence gate then applies inside the week: day 7 waits on day 6.
+ *
+ * The calendar can only ever hold a day back. Finishing day 6 on Sunday does not
+ * hand you day 7 early; it goes live on Monday like everyone else's.
  */
 export function dayGate(input: {
   day: number
   round: number
   shipped: boolean
-  roundReleased: boolean
+  dayReleased: boolean
   progress: CourseProgress
 }): DayGate {
-  const { day, shipped, roundReleased, progress } = input
+  const { day, shipped, dayReleased, progress } = input
   if (!shipped) return { state: 'unwritten' }
-  if (!roundReleased) return { state: 'unreleased' }
+  if (!dayReleased) return { state: 'unreleased' }
   if (isDayCompleted(progress, day)) return { state: 'done' }
   if (isFirstDayOfRound(day)) return { state: 'open' }
   if (isDayCompleted(progress, day - 1)) return { state: 'open' }

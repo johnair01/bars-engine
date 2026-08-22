@@ -1,10 +1,10 @@
 /**
- * When each round of the course opens.
+ * When each day of the challenge goes live.
  *
- * The course releases a week at a time, so "has this day been written" and "has
+ * The course releases one day per day, so "has this day been written" and "has
  * it been released to readers" are two different questions. The spine answers
  * the first (`status`); this module answers the second. A day needs both a
- * `shipped` status and a released round before anyone can open it.
+ * `shipped` status and a past release date before anyone can open it.
  *
  * Pure functions over an injected `now`, so every boundary is testable without
  * mocking the clock — the same shape `src/lib/goodbye-party/time.ts` uses. There
@@ -16,33 +16,45 @@
  * @see src/lib/mtgoa-course/course-progress.ts — where a reader has got to
  */
 
-import { MTGOA_COURSE_ROUNDS } from './course-days'
+import { MTGOA_COURSE_LENGTH, MTGOA_MOVES_PER_ROUND } from './course-days'
 
 /** The clock the release dates are written against. */
 export const MTGOA_RELEASE_TIME_ZONE = 'America/New_York'
 
 /**
- * The instant each round opens, or null where no date has been set.
+ * The instant each day goes live, or null where no date has been set.
  *
- * Times are midnight in `MTGOA_RELEASE_TIME_ZONE`, expressed as UTC so the
- * constant means one instant everywhere. August is EDT (UTC-4), so midnight ET
- * is 04:00Z — a release date set in a different part of the year needs its own
- * offset worked out rather than copied from here.
+ * Written out per day rather than computed from a week's start plus an offset.
+ * Adding twenty-four hours five times is only correct while a week avoids a
+ * daylight-saving boundary, and a week that straddles one would shift its
+ * midnight into the previous day and rename the weekday on the board. Explicit
+ * instants have no such failure, and authoring five strings a week is a small
+ * price for a release calendar that cannot quietly drift.
  *
- * Round 1 shipped before the course had a release calendar; its date is simply
- * in the past, and only that fact matters.
+ * Times are midnight in `MTGOA_RELEASE_TIME_ZONE`. August is EDT (UTC-4), so
+ * midnight ET is 04:00Z; a date in EST (UTC-5) is 05:00Z. Work the offset out
+ * for the date rather than copying the one above.
+ *
+ * Days 1–5 shipped before the challenge had a release calendar, so their date is
+ * simply in the past and only that fact matters.
  */
-export const ROUND_RELEASE_ISO: Readonly<Record<number, string | null>> = {
+export const DAY_RELEASE_ISO: Readonly<Record<number, string | null>> = {
+  // Week 1 — Raise Awareness. Long live.
   1: '2026-08-14T04:00:00Z',
-  2: '2026-08-23T04:00:00Z',
-  3: null,
-  4: null,
-  5: null,
-  6: null,
+  2: '2026-08-14T04:00:00Z',
+  3: '2026-08-14T04:00:00Z',
+  4: '2026-08-14T04:00:00Z',
+  5: '2026-08-14T04:00:00Z',
+  // Week 2 — Skillful Organizing. One a day, Sunday through Thursday.
+  6: '2026-08-23T04:00:00Z',
+  7: '2026-08-24T04:00:00Z',
+  8: '2026-08-25T04:00:00Z',
+  9: '2026-08-26T04:00:00Z',
+  10: '2026-08-27T04:00:00Z',
 }
 
-function releaseMs(round: number): number | null {
-  const iso = ROUND_RELEASE_ISO[round]
+function releaseMs(day: number): number | null {
+  const iso = DAY_RELEASE_ISO[day]
   if (!iso) return null
   const ms = Date.parse(iso)
   return Number.isNaN(ms) ? null : ms
@@ -52,55 +64,77 @@ function toMs(now: Date | number): number {
   return typeof now === 'number' ? now : now.getTime()
 }
 
-/** Has this round opened to readers? A round with no date never has. */
-export function isRoundReleased(round: number, now: Date | number): boolean {
-  const at = releaseMs(round)
+/** Has this day gone live? A day with no date never has. */
+export function isDayReleased(day: number, now: Date | number): boolean {
+  const at = releaseMs(day)
   return at !== null && toMs(now) >= at
 }
 
-/** Every round open at `now`, ascending. */
-export function releasedRounds(now: Date | number): number[] {
-  return Array.from({ length: MTGOA_COURSE_ROUNDS }, (_, i) => i + 1).filter((round) =>
-    isRoundReleased(round, now),
+/** Every day live at `now`, ascending. */
+export function releasedDays(now: Date | number): number[] {
+  return Array.from({ length: MTGOA_COURSE_LENGTH }, (_, i) => i + 1).filter((day) =>
+    isDayReleased(day, now),
   )
 }
 
 /**
- * The next round with a date that has yet to open, or null.
+ * The newest day live right now — what the banner means by "we are on day N".
  *
- * This is what lets the board say "opens Sunday" against a specific week rather
- * than hiding that the course continues.
+ * Null before anything has been released.
  */
-export function nextRoundRelease(now: Date | number): { round: number; at: number } | null {
-  for (let round = 1; round <= MTGOA_COURSE_ROUNDS; round += 1) {
-    const at = releaseMs(round)
-    if (at !== null && toMs(now) < at) return { round, at }
+export function latestReleasedDay(now: Date | number): number | null {
+  const live = releasedDays(now)
+  return live.length > 0 ? live[live.length - 1] : null
+}
+
+/** Has any day of this week gone live? Drives whether the board draws cards. */
+export function isRoundStarted(round: number, now: Date | number): boolean {
+  const first = (round - 1) * MTGOA_MOVES_PER_ROUND + 1
+  return isDayReleased(first, now)
+}
+
+/** Weeks with at least one day live, ascending. */
+export function startedRounds(now: Date | number): number[] {
+  const rounds = Math.ceil(MTGOA_COURSE_LENGTH / MTGOA_MOVES_PER_ROUND)
+  return Array.from({ length: rounds }, (_, i) => i + 1).filter((round) => isRoundStarted(round, now))
+}
+
+/** The next day with a date that has yet to arrive, or null. */
+export function nextDayRelease(now: Date | number): { day: number; at: number } | null {
+  for (let day = 1; day <= MTGOA_COURSE_LENGTH; day += 1) {
+    const at = releaseMs(day)
+    if (at !== null && toMs(now) < at) return { day, at }
   }
   return null
 }
 
-/** The instant a round opens, or null where no date has been set. */
-export function roundReleaseAt(round: number): number | null {
-  return releaseMs(round)
-}
-
-/** Does this round have a date at all? */
-export function roundHasReleaseDate(round: number): boolean {
-  return releaseMs(round) !== null
+/** When a given day goes live, or null if it has no date. */
+export function dayReleaseAt(day: number): number | null {
+  return releaseMs(day)
 }
 
 /**
- * How a pending release is named on the board — "opens Sunday, August 23".
+ * How a pending release is named.
  *
- * Deliberately takes no `now`: a label that changed shape as the date
- * approached could not be rendered on the server, because the server and the
- * browser would disagree and the reader would watch it rewrite itself on load.
- * Naming both the weekday and the date also survives being read three weeks
- * early, which a bare weekday does not.
+ * Inside a week of the release it reads as a weekday a reader can hold ("opens
+ * Sunday"), because that is how someone thinks about a course they are waiting
+ * on. Tomorrow gets its own word. Further out it takes the date, since "opens
+ * Tuesday" three weeks early tells you nothing.
  */
-export function releaseLabel(at: number): string {
+export function releaseLabel(at: number, now: Date | number): string {
   const zone = MTGOA_RELEASE_TIME_ZONE
-  const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: zone }).format(at)
-  const date = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: zone }).format(at)
-  return `opens ${weekday}, ${date}`
+  const nowMs = toMs(now)
+  if (at <= nowMs) return 'live'
+
+  const dayIn = (ms: number) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(ms)
+  const daysApart = Math.round(
+    (Date.parse(`${dayIn(at)}T00:00:00Z`) - Date.parse(`${dayIn(nowMs)}T00:00:00Z`)) / 86_400_000,
+  )
+
+  if (daysApart <= 1) return 'opens tomorrow'
+  if (daysApart < 7) {
+    return `opens ${new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: zone }).format(at)}`
+  }
+  return `opens ${new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: zone }).format(at)}`
 }

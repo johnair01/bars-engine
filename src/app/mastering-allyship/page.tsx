@@ -24,6 +24,9 @@ import { isOfferLive, offerByKey } from '@/lib/launch/offers'
 import { LoopDiagram, SpiralDiagram, LineupDiagram, RoadDiagram } from './SalesDiagrams'
 import { PortraitSlot } from './PortraitSlot'
 
+import { ChallengeBanner } from '@/components/mtgoa-course/ChallengeBanner'
+import { currentLatestDay } from '@/lib/mtgoa-course/release-state'
+
 export const metadata: Metadata = {
   title: 'Mastering the Game of Allyship',
   description:
@@ -74,7 +77,16 @@ function BookPurchaseCta({ className, style, children }: { className?: string; s
   )
 }
 
-export default function MasteringAllyshipPage() {
+/**
+ * Rendered per request: the banner names the day of the challenge that is live,
+ * and a response cached yesterday would name yesterday's day. The browser
+ * corrects it on load either way; this keeps the HTML honest on its own.
+ */
+export const dynamic = 'force-dynamic'
+
+export default async function MasteringAllyshipPage() {
+  const latestDay = await currentLatestDay()
+
   return (
     <main
       className="sl-page"
@@ -86,6 +98,8 @@ export default function MasteringAllyshipPage() {
         WebkitFontSmoothing: 'antialiased',
       }}
     >
+      <ChallengeBanner serverLatestDay={latestDay} />
+
       {/* ================= HERO ================= */}
       <div
         style={{

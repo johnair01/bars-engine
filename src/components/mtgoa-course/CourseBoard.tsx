@@ -5,10 +5,10 @@ import { CardTable } from '@/components/menu/CardTable'
 import { MOVE_ELEMENT, MOVE_SIGIL } from '@/lib/allyship-deck/card-visuals'
 import type { CourseIndexDay, CourseIndexWeek } from '@/lib/mtgoa-course/course-index'
 import {
-  isRoundReleased,
+  dayReleaseAt,
+  isDayReleased,
+  isRoundStarted,
   releaseLabel,
-  roundHasReleaseDate,
-  roundReleaseAt,
 } from '@/lib/mtgoa-course/course-release'
 import { dayGate, isDayReachable, resumeDay } from '@/lib/mtgoa-course/course-progress'
 import type { DayGate } from '@/lib/mtgoa-course/course-progress'
@@ -18,8 +18,9 @@ import { useCourseProgress } from '@/lib/mtgoa-course/use-course-progress'
 /**
  * The board: thirty days behind two gates.
  *
- * A week opens on a date the whole audience shares. A day opens when the reader
- * finishes the one before it. The real course works that way, and this page
+ * A day goes live on a date the whole audience shares, one per day. Within the
+ * days that are live, the next one opens when the reader finishes the one before
+ * it. The real challenge works that way, and this page
  * should feel the same while it is still being built.
  *
  * Client-side because the second gate lives in the reader's browser. Both gates
@@ -35,30 +36,37 @@ import { useCourseProgress } from '@/lib/mtgoa-course/use-course-progress'
  */
 export function CourseBoard({
   weeks,
-  releasedRounds,
+  releasedDays,
   stateLine,
 }: {
   weeks: CourseIndexWeek[]
-  /** Rounds open when the server rendered. The floor until the client has a clock. */
-  releasedRounds: number[]
+  /** Days live when the server rendered. The floor until the client has a clock. */
+  releasedDays: number[]
   stateLine: string
 }) {
   const { progress, ready, complete } = useCourseProgress()
   const now = useClientClock()
 
+  const dayIsLive = (day: number) =>
+    now === null ? releasedDays.includes(day) : isDayReleased(day, now)
+
   const gated = weeks.map((week) => {
-    const released =
-      now === null ? releasedRounds.includes(week.round) : isRoundReleased(week.round, now)
+    // A week draws its cards once its first day is live. The days behind it in
+    // that week keep their own dates and show them.
+    const started =
+      now === null
+        ? releasedDays.includes((week.round - 1) * 5 + 1)
+        : isRoundStarted(week.round, now)
     return {
       ...week,
-      released,
+      started,
       days: week.days.map((day) => ({
         day,
         gate: dayGate({
           day: day.number,
           round: week.round,
           shipped: day.status === 'shipped',
-          roundReleased: released,
+          dayReleased: dayIsLive(day.number),
           progress,
         }),
       })),
@@ -80,7 +88,7 @@ export function CourseBoard({
    * variable reassigned while rendering is a mutation during render.
    */
   const firstUndatedRound =
-    gated.find((week) => !week.released && !roundHasReleaseDate(week.round))?.round ?? null
+    gated.find((week) => !week.started && dayReleaseAt((week.round - 1) * 5 + 1) === null)?.round ?? null
 
   return (
     <>
@@ -112,12 +120,25 @@ export function CourseBoard({
 
         <div className="mt-6 space-y-8">
           {gated.map((week) => {
-            const asCards = week.written && week.released
-            const at = roundReleaseAt(week.round)
+            const asCards = week.written && week.started
+            const firstDayAt = dayReleaseAt((week.round - 1) * 5 + 1)
             let status: string
-            if (week.released) status = week.range
-            else if (at !== null) status = releaseLabel(at)
-            else status = 'still being written'
+            if (week.started) {
+              // Part-way through a week, the useful thing to say is when the
+              // next day of it lands rather than the range a reader can see.
+              const pending = week.days.find(({ gate }) => gate.state === 'unreleased')
+              const pendingAt = pending ? dayReleaseAt(pending.day.number) : null
+              status =
+                pendingAt !== null && now !== null
+                  ? `Day ${pending!.day.number} ${releaseLabel(pendingAt, now)}`
+                  : week.range
+            } else if (firstDayAt !== null && now !== null) {
+              status = `Day ${(week.round - 1) * 5 + 1} ${releaseLabel(firstDayAt, now)}`
+            } else if (firstDayAt !== null) {
+              status = week.range
+            } else {
+              status = 'still being written'
+            }
 
             const noteHere = week.round === firstUndatedRound
 
@@ -139,7 +160,7 @@ export function CourseBoard({
                   </h2>
                   <span
                     className="bars-label"
-                    style={{ color: week.released ? undefined : at !== null ? 'var(--bars-gold-lite)' : undefined }}
+                    style={{ color: firstDayAt !== null ? 'var(--bars-gold-lite)' : undefined }}
                   >
                     {status}
                   </span>

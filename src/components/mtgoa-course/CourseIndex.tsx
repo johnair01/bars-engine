@@ -1,6 +1,6 @@
 import { CourseBoard } from '@/components/mtgoa-course/CourseBoard'
 import { courseIndexWeeks, writtenStateLine } from '@/lib/mtgoa-course/course-index'
-import { currentReleasedRounds } from '@/lib/mtgoa-course/release-state'
+import { currentReleasedDays } from '@/lib/mtgoa-course/release-state'
 
 /**
  * `/course` — the front door to the thirty days.
@@ -18,7 +18,7 @@ import { currentReleasedRounds } from '@/lib/mtgoa-course/release-state'
  * @see src/lib/mtgoa-course/course-release.ts — when each week opens
  */
 export async function CourseIndex() {
-  const releasedRounds = await currentReleasedRounds()
+  const releasedDays = await currentReleasedDays()
 
   return (
     <main
@@ -32,7 +32,7 @@ export async function CourseIndex() {
       <div className="mx-auto max-w-5xl px-[clamp(16px,5vw,32px)] pb-24 pt-10">
         <header className="max-w-2xl">
           <p className="bars-label" style={{ color: 'var(--bars-gold)' }}>
-            The thirty-day practice · free · no sign-up
+            The free 30-day challenge · no sign-up
           </p>
 
           <h1 className="bars-title mt-4" style={{ fontSize: 'clamp(30px,5.4vw,44px)', textWrap: 'pretty' }}>
@@ -50,14 +50,14 @@ export async function CourseIndex() {
           </p>
 
           <p className="bars-prose mt-3 text-[17px]" style={{ color: 'var(--bars-text-secondary)' }}>
-            One day at a time, in order. Finishing a day opens the next one, and a new week opens on
-            its own date.
+            One day at a time, in order. A new day goes live each day, and finishing one opens the
+            next.
           </p>
         </header>
 
         <CourseBoard
           weeks={courseIndexWeeks()}
-          releasedRounds={releasedRounds}
+          releasedDays={releasedDays}
           stateLine={writtenStateLine()}
         />
       </div>
