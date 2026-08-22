@@ -38,6 +38,7 @@ import {
 import type { WakeUpRoute } from '@/lib/wake-up/check-content'
 import type { WakeUpAnalyticsEvent } from '@/lib/wake-up/events'
 import { wakeUpBookHref, wakeUpDeckHref, wakeUpNextDayHref } from '@/lib/wake-up/outbound'
+import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
 
 /**
  * MTGOA Wake Up Check — Day 1 of the 30-day course.
@@ -88,6 +89,17 @@ export function WakeUpCheck({ queryString }: { queryString: string }) {
   const search = useMemo(() => new URLSearchParams(queryString), [queryString])
 
   const [screen, setScreen] = useState<Screen>('entry')
+
+  /**
+   * Reaching the receipt is what finishes a day, so this is where the board
+   * learns to open tomorrow. One day number, written to this browser — never
+   * anything the reader typed.
+   *
+   * @see src/lib/mtgoa-course/mark-day-complete.ts
+   */
+  useEffect(() => {
+    if (screen === 'receipt') markCourseDayComplete(1)
+  }, [screen])
   const [route, setRoute] = useState<WakeUpRoute>('own_practice')
   const [answers, setAnswers] = useState<Record<string, string>>(EMPTY_ANSWERS)
   const [sampler, setSampler] = useState<MoveCard[]>([])
