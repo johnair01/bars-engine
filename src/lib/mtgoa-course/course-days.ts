@@ -137,6 +137,21 @@ const ROUND_ONE_STATUS: Partial<Record<MtgoaCourseMove, { status: MtgoaCourseDay
   show_up:  { status: 'shipped',  publicRoute: '/show-up' },
 }
 
+/**
+ * Round 2 — Days 6–10, Skillful Organizing. These answer on the canonical course
+ * route only; the Week 2 spec reserves the short campaign aliases (`/wake-up`,
+ * `/open-up`, …) for the first loop until a public navigation convention is
+ * approved. `publicRoute: null` is what expresses that, and `linkableRoute`
+ * falls back to `courseRoute`.
+ */
+const ROUND_TWO_STATUS: Partial<Record<MtgoaCourseMove, { status: MtgoaCourseDayStatus; publicRoute: string | null }>> = {
+  wake_up:  { status: 'shipped', publicRoute: null },
+  open_up:  { status: 'shipped', publicRoute: null },
+  clean_up: { status: 'shipped', publicRoute: null },
+  grow_up:  { status: 'shipped', publicRoute: null },
+  show_up:  { status: 'shipped', publicRoute: null },
+}
+
 /** Stable route convention for six five-move rounds. */
 export function mtgoaCourseRoute(round: number, move: MtgoaCourseMove): string {
   if (!Number.isInteger(round) || round < 1 || round > MTGOA_COURSE_ROUNDS) {
@@ -159,7 +174,7 @@ function buildDay(round: number, move: MtgoaCourseMove): MtgoaCourseDay {
   const def = MOVE_DEFINITION[move]
   const authoredRound = ROUND_AUTHORING[round]
   const authoredDay = authoredRound?.days[move]
-  const shipped = round === 1 ? ROUND_ONE_STATUS[move] : undefined
+  const shipped = round === 1 ? ROUND_ONE_STATUS[move] : round === 2 ? ROUND_TWO_STATUS[move] : undefined
   return {
     id: `day-${number}`,
     number,

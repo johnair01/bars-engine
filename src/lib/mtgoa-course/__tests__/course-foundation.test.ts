@@ -83,13 +83,16 @@ describe('MTGOA course foundation', () => {
   })
 
   it('only offers a route for a day that actually resolves', () => {
-    // Round 1 is complete: all five days resolve on their campaign aliases.
-    expect(shippedCourseDays().map((day) => day.number)).toEqual([1, 2, 3, 4, 5])
-    expect(shippedCourseDays().map((day) => linkableRoute(day))).toEqual([
+    // Rounds 1 and 2 are complete. Round 1 resolves on its short campaign
+    // aliases; round 2 on the canonical course route, which the Week 2 spec
+    // reserves until a public navigation convention is approved.
+    expect(shippedCourseDays().map((day) => day.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    expect(shippedCourseDays().slice(0, 5).map((day) => linkableRoute(day))).toEqual([
       '/wake-up', '/open-up', '/clean-up', '/grow-up', '/show-up',
     ])
-    // Round 2 is drafted but unbuilt — nothing past Day 5 resolves.
-    expect(linkableRoute(mtgoaCourseDay(6)!)).toBeNull()
+    expect(linkableRoute(mtgoaCourseDay(6)!)).toBe('/mastering-allyship/course/2/wake-up')
+    // Round 3 is undecided — nothing past Day 10 resolves.
+    expect(linkableRoute(mtgoaCourseDay(11)!)).toBeNull()
   })
 
   it('links tomorrow once that day ships', () => {
@@ -106,6 +109,11 @@ describe('MTGOA course foundation', () => {
     const afterGrowUp = nextCourseDay(4)
     expect(afterGrowUp?.day.title).toBe('Show Up')
     expect(afterGrowUp?.route).toBe('/show-up')
+
+    // The boundary is now Day 11, where round 3 has no authored domain.
+    const afterWeekTwo = nextCourseDay(10)
+    expect(afterWeekTwo?.day.number).toBe(11)
+    expect(afterWeekTwo?.route).toBeNull()
 
     expect(nextCourseDay(30)).toBeNull()
   })
