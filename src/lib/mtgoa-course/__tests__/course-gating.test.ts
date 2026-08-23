@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  DAY_RELEASE_ISO,
   MTGOA_RELEASE_TIME_ZONE,
-  ROUND_RELEASE_ISO,
-  isRoundReleased,
-  nextRoundRelease,
+  isDayReleased,
+  isRoundStarted,
+  latestReleasedDay,
+  nextDayRelease,
   releaseLabel,
-  releasedRounds,
+  releasedDays,
 } from '../course-release'
 import {
   COURSE_PROGRESS_STORAGE_KEY,
@@ -27,44 +29,80 @@ const SUNDAY = Date.parse('2026-08-23T05:00:00Z') // one hour after it opens
 const progressOf = (...completed: number[]): CourseProgress => ({ version: 1, completed })
 
 describe('the release calendar', () => {
-  it('opens week 2 at midnight Eastern on Sunday, and not before', () => {
-    expect(ROUND_RELEASE_ISO[2]).toBe('2026-08-23T04:00:00Z')
+  it('drips one day per day through week 2, Sunday to Thursday', () => {
+    expect(DAY_RELEASE_ISO[6]).toBe('2026-08-23T04:00:00Z')
+    expect(DAY_RELEASE_ISO[7]).toBe('2026-08-24T04:00:00Z')
+    expect(DAY_RELEASE_ISO[8]).toBe('2026-08-25T04:00:00Z')
+    expect(DAY_RELEASE_ISO[9]).toBe('2026-08-26T04:00:00Z')
+    expect(DAY_RELEASE_ISO[10]).toBe('2026-08-27T04:00:00Z')
     expect(MTGOA_RELEASE_TIME_ZONE).toBe('America/New_York')
-
-    expect(isRoundReleased(2, Date.parse('2026-08-23T03:59:59Z'))).toBe(false)
-    expect(isRoundReleased(2, Date.parse('2026-08-23T04:00:00Z'))).toBe(true)
   })
 
-  it('treats week 1 as long open and gives weeks 3 to 6 no date at all', () => {
-    expect(isRoundReleased(1, SATURDAY)).toBe(true)
-    for (const round of [3, 4, 5, 6]) {
-      expect(ROUND_RELEASE_ISO[round]).toBeNull()
-      // A round with no date never opens, however far the clock is wound on.
-      expect(isRoundReleased(round, Date.parse('2099-01-01T00:00:00Z'))).toBe(false)
+  it('opens a day at midnight Eastern, and not a second before', () => {
+    expect(isDayReleased(6, Date.parse('2026-08-23T03:59:59Z'))).toBe(false)
+    expect(isDayReleased(6, Date.parse('2026-08-23T04:00:00Z'))).toBe(true)
+  })
+
+  /**
+   * The reason the dates are written out per day. Computing them as a start plus
+   * twenty-four hours would drift by an hour across a daylight-saving boundary
+   * and rename the weekday on the board.
+   */
+  it('writes every date as its own instant rather than a start plus an offset', () => {
+    for (const day of [6, 7, 8, 9, 10]) {
+      expect(DAY_RELEASE_ISO[day]).toMatch(/^2026-08-\d{2}T04:00:00Z$/)
     }
   })
 
-  it('reports the rounds open at a given moment', () => {
-    expect(releasedRounds(SATURDAY)).toEqual([1])
-    expect(releasedRounds(SUNDAY)).toEqual([1, 2])
+  it('treats week 1 as long live and gives days 11 to 30 no date at all', () => {
+    for (const day of [1, 2, 3, 4, 5]) expect(isDayReleased(day, SATURDAY)).toBe(true)
+    for (const day of [11, 20, 30]) {
+      expect(DAY_RELEASE_ISO[day] ?? null).toBeNull()
+      // A day with no date never opens, however far the clock is wound on.
+      expect(isDayReleased(day, Date.parse('2099-01-01T00:00:00Z'))).toBe(false)
+    }
   })
 
-  it('names the next pending release, and nothing once every dated round is open', () => {
-    expect(nextRoundRelease(SATURDAY)).toEqual({ round: 2, at: Date.parse('2026-08-23T04:00:00Z') })
-    expect(nextRoundRelease(SUNDAY)).toBeNull()
+  it('reports the days live at a given moment, and the newest of them', () => {
+    expect(releasedDays(SATURDAY)).toEqual([1, 2, 3, 4, 5])
+    expect(latestReleasedDay(SATURDAY)).toBe(5)
+
+    expect(releasedDays(SUNDAY)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(latestReleasedDay(SUNDAY)).toBe(6)
+
+    // Thursday, once the whole of week 2 has landed.
+    expect(latestReleasedDay(Date.parse('2026-08-27T05:00:00Z'))).toBe(10)
   })
 
-  it('names a pending release by weekday and date, the same however early it is read', () => {
-    const at = Date.parse('2026-08-23T04:00:00Z')
-    // No `now` argument at all: the server and the browser must agree, so the
-    // label cannot depend on how far away the date is.
-    expect(releaseLabel(at)).toBe('opens Sunday, August 23')
+  it('counts a week as started from its first day, so the board draws its cards', () => {
+    expect(isRoundStarted(2, SATURDAY)).toBe(false)
+    expect(isRoundStarted(2, SUNDAY)).toBe(true)
+    expect(isRoundStarted(1, SATURDAY)).toBe(true)
+    expect(isRoundStarted(3, Date.parse('2099-01-01T00:00:00Z'))).toBe(false)
+  })
+
+  it('names the next day still to come, and nothing once every dated day is live', () => {
+    expect(nextDayRelease(SATURDAY)).toEqual({ day: 6, at: Date.parse('2026-08-23T04:00:00Z') })
+    expect(nextDayRelease(SUNDAY)).toEqual({ day: 7, at: Date.parse('2026-08-24T04:00:00Z') })
+    expect(nextDayRelease(Date.parse('2026-08-28T05:00:00Z'))).toBeNull()
+  })
+
+  it('labels tomorrow as tomorrow, this week by weekday, and further out by date', () => {
+    const daySix = Date.parse('2026-08-23T04:00:00Z')
+    // Saturday looking at Sunday.
+    expect(releaseLabel(daySix, SATURDAY)).toBe('opens tomorrow')
+    // Wednesday looking at Sunday — still inside the week, so a weekday reads.
+    expect(releaseLabel(daySix, Date.parse('2026-08-19T12:00:00Z'))).toBe('opens Sunday')
+    // Far enough out that a weekday tells a reader nothing useful.
+    expect(releaseLabel(daySix, Date.parse('2026-08-01T12:00:00Z'))).toBe('opens August 23')
+    // Already live.
+    expect(releaseLabel(daySix, SUNDAY)).toBe('live')
   })
 })
 
 describe('the day-by-day unlock', () => {
-  const gateFor = (day: number, round: number, progress: CourseProgress, roundReleased = true) =>
-    dayGate({ day, round, shipped: true, roundReleased, progress })
+  const gateFor = (day: number, round: number, progress: CourseProgress, dayReleased = true) =>
+    dayGate({ day, round, shipped: true, dayReleased, progress })
 
   it('opens day 1 to a reader who has done nothing', () => {
     expect(gateFor(1, 1, EMPTY_COURSE_PROGRESS)).toEqual({ state: 'open' })
@@ -94,7 +132,7 @@ describe('the day-by-day unlock', () => {
   })
 
   it('reports an unwritten day as unwritten whatever the calendar and the reader say', () => {
-    expect(dayGate({ day: 11, round: 3, shipped: false, roundReleased: true, progress: progressOf(10) }))
+    expect(dayGate({ day: 11, round: 3, shipped: false, dayReleased: true, progress: progressOf(10) }))
       .toEqual({ state: 'unwritten' })
   })
 
@@ -120,7 +158,7 @@ describe('the button at the top of the board', () => {
         day: number,
         round: number <= 5 ? 1 : 2,
         shipped: true,
-        roundReleased: number <= 5 ? true : week2,
+        dayReleased: number <= 5 ? true : week2,
         progress,
       }),
     }))

@@ -5,7 +5,7 @@ import { CourseIndex } from '@/components/mtgoa-course/CourseIndex'
 /**
  * @page /mastering-allyship/course
  * @entity CAMPAIGN
- * @description The course index — the front door to the MTGOA thirty-day practice.
+ * @description The course index — the front door to the free 30-day MTGOA challenge.
  *   Built to be the link a social audience is sent to, so it opens on the practice
  *   rather than on the book: one button to Day 1, and the whole board of thirty days
  *   labelled underneath. Served on the short alias `/course` as well.
@@ -16,9 +16,9 @@ import { CourseIndex } from '@/components/mtgoa-course/CourseIndex'
  * @agentDiscoverable true
  */
 
-const TITLE = 'The 30-Day Practice | Mastering the Game of Allyship'
+const TITLE = 'The Free 30-Day Challenge | Mastering the Game of Allyship'
 const DESCRIPTION =
-  'Thirty days of allyship practice, one move at a time. Start at Day 1, or pick any day on the board. Free, no sign-up, and what you write stays in your browser.'
+  'The free 30-day Mastering Allyship challenge. One move a day, in order. Start at Day 1, or pick any day on the board. No sign-up, and what you write stays in your browser.'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://masteringallyship.com'),
