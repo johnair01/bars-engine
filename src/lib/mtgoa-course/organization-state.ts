@@ -10,12 +10,9 @@
  * point of the panel is that a reader can trust it, and one invented vacancy
  * costs that for every other line on the page.
  *
- * Current state: the approved facts are an open decision in the Week 2 spec
- * (`MTGOA_COURSE_WEEK_2_AND_ORGANIZATION_SURFACES_SPEC_2026-08-21.md`, "Open
- * decisions" 1 and 2). So nothing is marked `open`, there are no CTAs, and the
- * panel says plainly that there is no current contribution route and points the
- * reader at the personal lane. That is the state the spec requires when nothing
- * has been approved: "It never creates a fictional campaign vacancy."
+ * The Campaign Steward owns these facts. An `open` route has been checked against
+ * a real page or purchase link; a future campaign, partner, reward, or team stays
+ * absent until it can meet that same standard.
  *
  * To publish real state, fill these in and flip the relevant `status`. The
  * publication rules the spec sets, enforced by tests in `__tests__`:
@@ -80,17 +77,17 @@ export type MtgoaOrganizationState = {
 }
 
 export const MTGOA_ORGANIZATION_STATE: MtgoaOrganizationState = {
-  updatedAt: '2026-08-21',
-  nextReviewAt: '2026-09-21',
+  updatedAt: '2026-08-22',
+  nextReviewAt: '2026-08-29',
 
   campaignSummary:
-    'One book, and readers who hand it to people who may find it useful. That is the whole of the campaign right now.',
+    'The book is out. Wendell is showing up daily with small games, Kickstarter backers have been updated, and the Book Launch is trying to put 500 copies in people’s hands.',
 
   currentTruths: [
-    'The book is published and available.',
+    'The digital book is published and available now.',
     'The Allyship Deck is available.',
-    'The first five days of this course are live, and a reader can walk them alone.',
-    'Days 6–10 exist as a practice you can do for your own work, whether or not anyone else is involved.',
+    'Days 1–10 of the course are live, and a reader can use them for the Book Launch or their own allyship work.',
+    'Wendell is the Campaign Steward today. More stewards can be onboarded as the work needs them.',
   ],
 
   /**
@@ -98,18 +95,51 @@ export const MTGOA_ORGANIZATION_STATE: MtgoaOrganizationState = {
    * what is absent as plainly as what exists.
    */
   notCurrentlyTrue: [
-    'Volunteer, ambassador and street-team roles are all closed right now.',
-    'Local teams are still a plan. The first one starts when it starts.',
-    'Rewards and recognition are undecided, so nothing is on offer — free copies included.',
-    'Whatever you organize this week is yours, for your own work.',
+    'There is no public ambassador program or generic volunteer pool.',
+    'No local team is open for people to join yet.',
+    'No reward, referral credit, or free-copy promise is attached to the routes below.',
+    'A book handoff does not make someone a member or obligate them to keep promoting the book.',
   ],
 
-  // Nothing is published as an active workstream until the campaign owner
-  // approves the specific facts. An empty list renders as "nothing to show yet",
-  // which is true, rather than as a page with an invented opportunity on it.
-  activeWorkstreams: [],
+  activeWorkstreams: [{
+    id: 'book-launch',
+    title: 'Book Launch',
+    whyItMatters: 'The book reaches people through specific relationships, organizations, rooms, and conversations—not through a generic audience.',
+    status: 'open',
+    ownerLabel: 'Campaign Steward: Wendell',
+    nextUsefulAction: 'Choose one route you can stand behind, or use the same practice in your own allyship life.',
+    href: '/organization',
+  }],
 
-  participationPaths: [],
+  participationPaths: [
+    {
+      id: 'five-copy-handoff', title: 'Help five people get a copy',
+      forWhom: 'Someone who can name a person or room that may genuinely use the book.',
+      ask: 'Make one consentful handoff at a time. You can repeat the practice until five people have a copy.',
+      timeShape: 'One person or room at a time; the reader sets the rhythm.',
+      decisionRights: 'You decide who is a fit, what you offer, and when to stop. Their choice remains theirs.',
+      boundaries: ['Do not turn a relationship into a sales channel.', 'Do not pursue silence or ask for purchase proof.', 'Use the same move in your own allyship life if no book handoff fits.'],
+      status: 'open', href: '/mastering-allyship/show-up',
+    },
+    {
+      id: 'organization-introduction', title: 'Put the book in front of an organization or community you know',
+      forWhom: 'Someone with a relevant organization, community, venue, or collaborator in mind.',
+      ask: 'Offer one introduction or Book Tour lead through the current help route.',
+      timeShape: 'One introduction or lead; follow-up is handled by the Book Tour team.',
+      decisionRights: 'You decide whether the relationship is appropriate. The team decides whether and how to follow up.',
+      boundaries: ['Do not share another person’s contact details without permission.', 'The form is an offer to help, not a confirmed event or partnership.'],
+      status: 'open', href: '/mastering-allyship/book-tour/help',
+    },
+    {
+      id: 'podcast-invitation', title: 'Invite Wendell onto a podcast',
+      forWhom: 'A podcast host, producer, or someone who can make an appropriate introduction.',
+      ask: 'Use the podcast page to see the topics and contact Wendell directly.',
+      timeShape: 'One honest invitation or introduction.',
+      decisionRights: 'The host decides whether the conversation is a fit; Wendell responds personally.',
+      boundaries: ['An invitation is not a booking.', 'Do not offer a show or producer relationship you cannot actually connect.'],
+      status: 'open', href: '/podcasts',
+    },
+  ],
 
   localTeams: {
     status: 'planned',
@@ -145,6 +175,10 @@ export const MTGOA_ORGANIZATION_STATE: MtgoaOrganizationState = {
   },
 
   relatedSurfaces: [
+    { label: 'Buy the digital book', href: 'https://wendellbritt.gumroad.com/l/MTGOAbook', why: 'A book purchase is a separate commerce action, not campaign membership.' },
+    { label: 'Practice the book handoff', href: '/mastering-allyship/show-up', why: 'The Day 5 Show Up check helps a reader prepare one useful, consentful handoff.' },
+    { label: 'Help the Book Tour', href: '/mastering-allyship/book-tour/help', why: 'Offer a venue, introduction, production help, resource lead, or promotion support.' },
+    { label: 'Invite Wendell onto a podcast', href: '/podcasts', why: 'Topics, formats, and a direct contact route for hosts and producers.' },
     { label: 'Read the campaign state', href: '/wiki/mastering-allyship/campaign-state', why: 'The longer version of this panel.' },
     { label: 'Nonprofit status', href: '/nonprofit', why: 'The legal disclosures live there and only there.' },
     { label: 'Support', href: '/support', why: 'Personal support, kept separate from anything in this course.' },

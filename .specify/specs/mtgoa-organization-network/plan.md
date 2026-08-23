@@ -46,8 +46,8 @@ The repository’s `.specify/memory/constitution.md` is a placeholder rather tha
 src/
 ├── app/organization/page.tsx
 ├── components/organization/OrganizationLanding.tsx
-├── lib/mastering-allyship/organization-state.ts
-└── lib/mastering-allyship/__tests__/organization-state.test.ts
+├── lib/mtgoa-course/organization-state.ts
+└── lib/mtgoa-course/__tests__/round-two.test.ts
 ```
 
 **Structure Decision:** Release 1 is a Server Component route plus a typed public-state module and a presentational component. Keep content in code because facts are still steward-reviewed and mutable in PRs. Do not introduce a CMS before the campaign network has settled its operating rhythm.
@@ -62,9 +62,8 @@ src/
 
 ## Phase 1 — P1 public organization page
 
-1. Add typed `organization-state.ts`, including a validation helper that rejects `open` actions without an `href`.
-2. Add `getMtgoaOrganizationState()` server-side read.
-3. Build `/organization` using the app’s established visual language and accessible heading/link structure.
+1. Extend the existing typed `organization-state.ts` with reviewed Book Launch facts and links; add validation coverage for public-state invariants.
+2. Build `/organization` using the app’s established visual language and accessible heading/link structure.
 4. Include Book Launch as the first campaign; hide unconfirmed campaigns and partners.
 5. Link only to existing, confirmed route surfaces.
 6. Add page-specific metadata and Open Graph configuration.

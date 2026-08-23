@@ -105,20 +105,21 @@ describe('Week 2 course routing', () => {
 })
 
 describe('public organization state', () => {
-  it('publishes no open route until the campaign owner approves one', () => {
-    // The Week 2 spec leaves the approved facts an open decision, and requires
-    // that the panel never invent a campaign vacancy.
-    expect(hasOpenParticipation()).toBe(false)
-    expect(MTGOA_ORGANIZATION_STATE.participationPaths).toHaveLength(0)
-    expect(MTGOA_ORGANIZATION_STATE.activeWorkstreams).toHaveLength(0)
+  it('publishes approved Book Launch routes with a steward and no generic volunteer claim', () => {
+    expect(hasOpenParticipation()).toBe(true)
+    expect(MTGOA_ORGANIZATION_STATE.activeWorkstreams).toHaveLength(1)
+    expect(MTGOA_ORGANIZATION_STATE.activeWorkstreams[0]?.ownerLabel).toMatch(/Wendell/)
+    expect(MTGOA_ORGANIZATION_STATE.participationPaths.map((p) => p.id)).toEqual([
+      'five-copy-handoff', 'organization-introduction', 'podcast-invitation',
+    ])
     expect(MTGOA_ORGANIZATION_STATE.localTeams.status).not.toBe('open')
   })
 
   it('says plainly what is not true, so a reader is not left guessing', () => {
     const absent = MTGOA_ORGANIZATION_STATE.notCurrentlyTrue.join(' ').toLowerCase()
-    expect(absent).toMatch(/closed right now/)
-    expect(absent).toMatch(/local teams are still a plan/)
-    expect(absent).toMatch(/rewards and recognition are undecided/)
+    expect(absent).toMatch(/no public ambassador program/)
+    expect(absent).toMatch(/no local team is open/)
+    expect(absent).toMatch(/no reward, referral credit, or free-copy promise/)
   })
 
   it('promises no reward while the terms are undecided', () => {
