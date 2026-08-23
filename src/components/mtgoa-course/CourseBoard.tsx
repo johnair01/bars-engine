@@ -36,27 +36,27 @@ import { useCourseProgress } from '@/lib/mtgoa-course/use-course-progress'
  */
 export function CourseBoard({
   weeks,
-  releasedDays,
+  serverNow,
   stateLine,
 }: {
   weeks: CourseIndexWeek[]
-  /** Days live when the server rendered. The floor until the client has a clock. */
-  releasedDays: number[]
+  /** The clock at request time. Used until the browser hands over its own. */
+  serverNow: number
   stateLine: string
 }) {
   const { progress, ready, complete } = useCourseProgress()
-  const now = useClientClock()
+  // The browser's clock once the page is alive, the server's until then. The
+  // hydrating render sees null and so uses the same instant the server did,
+  // which keeps the markup identical; the browser's clock then takes over and
+  // stops a cached response outliving a release.
+  const now = useClientClock() ?? serverNow
 
-  const dayIsLive = (day: number) =>
-    now === null ? releasedDays.includes(day) : isDayReleased(day, now)
+  const dayIsLive = (day: number) => isDayReleased(day, now)
 
   const gated = weeks.map((week) => {
     // A week draws its cards once its first day is live. The days behind it in
     // that week keep their own dates and show them.
-    const started =
-      now === null
-        ? releasedDays.includes((week.round - 1) * 5 + 1)
-        : isRoundStarted(week.round, now)
+    const started = isRoundStarted(week.round, now)
     return {
       ...week,
       started,
@@ -123,19 +123,22 @@ export function CourseBoard({
             const asCards = week.written && week.started
             const firstDayAt = dayReleaseAt((week.round - 1) * 5 + 1)
             let status: string
+            // Gold marks a date a reader is waiting on. A week whose days are all
+            // live has nothing pending, so it stays in the quiet label colour.
+            let pendingRelease = false
             if (week.started) {
               // Part-way through a week, the useful thing to say is when the
               // next day of it lands rather than the range a reader can see.
               const pending = week.days.find(({ gate }) => gate.state === 'unreleased')
               const pendingAt = pending ? dayReleaseAt(pending.day.number) : null
+              pendingRelease = pendingAt !== null
               status =
-                pendingAt !== null && now !== null
+                pendingAt !== null
                   ? `Day ${pending!.day.number} ${releaseLabel(pendingAt, now)}`
                   : week.range
-            } else if (firstDayAt !== null && now !== null) {
-              status = `Day ${(week.round - 1) * 5 + 1} ${releaseLabel(firstDayAt, now)}`
             } else if (firstDayAt !== null) {
-              status = week.range
+              pendingRelease = true
+              status = `Day ${(week.round - 1) * 5 + 1} ${releaseLabel(firstDayAt, now)}`
             } else {
               status = 'still being written'
             }
@@ -160,7 +163,7 @@ export function CourseBoard({
                   </h2>
                   <span
                     className="bars-label"
-                    style={{ color: firstDayAt !== null ? 'var(--bars-gold-lite)' : undefined }}
+                    style={{ color: pendingRelease ? 'var(--bars-gold-lite)' : undefined }}
                   >
                     {status}
                   </span>

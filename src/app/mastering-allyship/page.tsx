@@ -25,7 +25,7 @@ import { LoopDiagram, SpiralDiagram, LineupDiagram, RoadDiagram } from './SalesD
 import { PortraitSlot } from './PortraitSlot'
 
 import { ChallengeBanner } from '@/components/mtgoa-course/ChallengeBanner'
-import { currentLatestDay } from '@/lib/mtgoa-course/release-state'
+import { currentNow } from '@/lib/mtgoa-course/release-state'
 
 export const metadata: Metadata = {
   title: 'Mastering the Game of Allyship',
@@ -85,7 +85,7 @@ function BookPurchaseCta({ className, style, children }: { className?: string; s
 export const dynamic = 'force-dynamic'
 
 export default async function MasteringAllyshipPage() {
-  const latestDay = await currentLatestDay()
+  const serverNow = await currentNow()
 
   return (
     <main
@@ -98,7 +98,7 @@ export default async function MasteringAllyshipPage() {
         WebkitFontSmoothing: 'antialiased',
       }}
     >
-      <ChallengeBanner serverLatestDay={latestDay} />
+      <ChallengeBanner serverNow={serverNow} />
 
       {/* ================= HERO ================= */}
       <div
