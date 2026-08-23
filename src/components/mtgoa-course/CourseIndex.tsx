@@ -1,6 +1,6 @@
 import { CourseBoard } from '@/components/mtgoa-course/CourseBoard'
 import { courseIndexWeeks, writtenStateLine } from '@/lib/mtgoa-course/course-index'
-import { currentReleasedDays } from '@/lib/mtgoa-course/release-state'
+import { currentNow } from '@/lib/mtgoa-course/release-state'
 
 /**
  * `/course` — the front door to the thirty days.
@@ -18,7 +18,7 @@ import { currentReleasedDays } from '@/lib/mtgoa-course/release-state'
  * @see src/lib/mtgoa-course/course-release.ts — when each week opens
  */
 export async function CourseIndex() {
-  const releasedDays = await currentReleasedDays()
+  const serverNow = await currentNow()
 
   return (
     <main
@@ -57,7 +57,7 @@ export async function CourseIndex() {
 
         <CourseBoard
           weeks={courseIndexWeeks()}
-          releasedDays={releasedDays}
+          serverNow={serverNow}
           stateLine={writtenStateLine()}
         />
       </div>
