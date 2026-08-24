@@ -48,6 +48,8 @@ export type MtgoaParticipationPath = {
   boundaries: string[]
   status: Availability
   href?: string
+  secondaryHref?: string
+  secondaryLabel?: string
 }
 
 export type MtgoaOrganizationState = {
@@ -131,13 +133,23 @@ export const MTGOA_ORGANIZATION_STATE: MtgoaOrganizationState = {
       status: 'open', href: '/mastering-allyship/book-tour/help',
     },
     {
-      id: 'podcast-invitation', title: 'Invite Wendell onto a podcast',
-      forWhom: 'A podcast host, producer, or someone who can make an appropriate introduction.',
-      ask: 'Use the podcast page to see the topics and contact Wendell directly.',
-      timeShape: 'One honest invitation or introduction.',
-      decisionRights: 'The host decides whether the conversation is a fit; Wendell responds personally.',
-      boundaries: ['An invitation is not a booking.', 'Do not offer a show or producer relationship you cannot actually connect.'],
-      status: 'open', href: '/podcasts',
+      id: 'podcast-capacity', title: 'Offer podcast capacity',
+      forWhom: 'Someone who wants to be a guest, a host or producer, or a person who can make an appropriate introduction.',
+      ask: 'Offer yourself as a guest, or invite Wendell onto a podcast that is a genuine fit.',
+      timeShape: 'One email, then a conversation if it is useful.',
+      decisionRights: 'You decide what you can offer. Wendell decides whether and how to follow up.',
+      boundaries: ['An offer is not a booking.', 'Do not offer a show or producer relationship you cannot actually connect.'],
+      status: 'open', href: 'mailto:wendell@masteringallyship.com?subject=Podcast%20guest%20offer',
+      secondaryHref: '/podcasts', secondaryLabel: 'Host or produce a show? Invite Wendell →',
+    },
+    {
+      id: 'buy-book', title: 'Get a copy into your own hands',
+      forWhom: 'Someone who has not bought the book yet, or wants a copy before offering it onward.',
+      ask: 'Buy a copy. A purchase is a complete commerce choice, separate from joining the campaign.',
+      timeShape: 'One copy.',
+      decisionRights: 'You decide whether the book is useful to you and whether now is the time.',
+      boundaries: ['Buying the book does not enroll you in anything.', 'No follow-up contribution is required.'],
+      status: 'open', href: 'https://wendellbritt.gumroad.com/l/MTGOAbook',
     },
   ],
 
@@ -178,7 +190,7 @@ export const MTGOA_ORGANIZATION_STATE: MtgoaOrganizationState = {
     { label: 'Buy the digital book', href: 'https://wendellbritt.gumroad.com/l/MTGOAbook', why: 'A book purchase is a separate commerce action, not campaign membership.' },
     { label: 'Practice the book handoff', href: '/mastering-allyship/show-up', why: 'The Day 5 Show Up check helps a reader prepare one useful, consentful handoff.' },
     { label: 'Help the Book Tour', href: '/mastering-allyship/book-tour/help', why: 'Offer a venue, introduction, production help, resource lead, or promotion support.' },
-    { label: 'Invite Wendell onto a podcast', href: '/podcasts', why: 'Topics, formats, and a direct contact route for hosts and producers.' },
+    { label: 'Podcast conversations', href: '/podcasts', why: 'Invite Wendell onto a show, or offer yourself as a guest by email.' },
     { label: 'Read the campaign state', href: '/wiki/mastering-allyship/campaign-state', why: 'The longer version of this panel.' },
     { label: 'Nonprofit status', href: '/nonprofit', why: 'The legal disclosures live there and only there.' },
     { label: 'Support', href: '/support', why: 'Personal support, kept separate from anything in this course.' },

@@ -110,7 +110,7 @@ describe('public organization state', () => {
     expect(MTGOA_ORGANIZATION_STATE.activeWorkstreams).toHaveLength(1)
     expect(MTGOA_ORGANIZATION_STATE.activeWorkstreams[0]?.ownerLabel).toMatch(/Wendell/)
     expect(MTGOA_ORGANIZATION_STATE.participationPaths.map((p) => p.id)).toEqual([
-      'five-copy-handoff', 'organization-introduction', 'podcast-invitation',
+      'five-copy-handoff', 'organization-introduction', 'podcast-capacity', 'buy-book',
     ])
     expect(MTGOA_ORGANIZATION_STATE.localTeams.status).not.toBe('open')
   })
