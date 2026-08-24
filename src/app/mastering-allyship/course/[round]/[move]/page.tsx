@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 
 import { WeekTwoPractice } from '@/components/mtgoa-check/WeekTwoPractice'
+import { DaySixWakeUpCheck } from '@/components/mtgoa-check/DaySixWakeUpCheck'
 import {
   MTGOA_COURSE_ROUNDS,
   linkableRoute,
@@ -54,22 +55,28 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const day = roundTwoDayByMove(resolved.move)
   if (resolved.round !== 2 || !day) return {}
 
-  const title = `Day ${day.day} · ${day.title} | Mastering the Game of Allyship`
+  const isDaySix = day.day === 6
+  const title = isDaySix
+    ? 'Day 6 · Wake Up — The Six Questions | Mastering the Game of Allyship'
+    : `Day ${day.day} · ${day.title} | Mastering the Game of Allyship`
+  const description = isDaySix
+    ? 'A private six-question Wake Up unpacking for finding where you fit in the Book Launch—or in your own allyship work.'
+    : `Day ${day.day} of the MTGOA self-paced course, Week 2 · Skillful Organizing. A private practice: ${day.coreQuestion}`
   return {
     metadataBase: new URL('https://masteringallyship.com'),
     title,
     // The spec requires metadata that makes clear this is a course practice —
     // never a legal nonprofit page or a promise of a reward.
-    description: `Day ${day.day} of the MTGOA self-paced course, Week 2 · Skillful Organizing. A private practice: ${day.coreQuestion}`,
+    description,
     alternates: { canonical: `/mastering-allyship/course/2/${day.slug}` },
     openGraph: {
-      title: `${day.title} — a Week 2 course practice`,
-      description: day.coreQuestion,
+      title: isDaySix ? 'The Six Questions — a Wake Up practice' : `${day.title} — a Week 2 course practice`,
+      description: isDaySix ? description : day.coreQuestion,
       url: `/mastering-allyship/course/2/${day.slug}`,
       siteName: 'Mastering the Game of Allyship',
       type: 'website',
     },
-    twitter: { card: 'summary_large_image', title: day.title, description: day.coreQuestion },
+    twitter: { card: 'summary_large_image', title: isDaySix ? 'The Six Questions — Wake Up' : day.title, description: isDaySix ? description : day.coreQuestion },
   }
 }
 
@@ -87,6 +94,10 @@ export default async function CourseDayPage({ params }: { params: Promise<Params
 
   const day = roundTwoDayByMove(resolved.move)
   if (resolved.round !== 2 || !day) notFound()
+
+  if (day.day === 6) {
+    return <DaySixWakeUpCheck cards={roundTwoCardsFor(day.move)} bookHref="https://wendellbritt.gumroad.com/l/MTGOAbook" />
+  }
 
   return (
     <WeekTwoPractice
