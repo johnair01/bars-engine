@@ -74,8 +74,8 @@ export const ROUND_TWO_DAYS: readonly RoundTwoDay[] = [
     day: 6,
     move: 'wake_up',
     slug: 'wake-up',
-    title: 'See the campaign that is actually there',
-    coreQuestion: 'What structure is actually running this work now?',
+    title: 'The Six Questions',
+    coreQuestion: 'What experience do you want to create through the Book Launch?',
     practice: {
       name: 'The Campaign Table',
       body: 'Before proposing a new system, make a plain map of how the work currently moves.',
