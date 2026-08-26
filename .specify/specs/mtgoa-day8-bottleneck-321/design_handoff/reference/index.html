@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MTGOA Day 8 — Clean Up the Organization Bottleneck</title>
+<meta name="description" content="Week 2 · Skillful Organizing · Day 8 of 30. Draw a Clean Up lens, name the organizing strain, run a short 3-2-1, and carry one condition forward.">
+<!-- The _ds bundle is not vendored into this repo (see README). These are the
+     repo-side mirror plus the webfonts the mirror declares but does not load. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="../../../../../src/styles/bars-tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  html, body { margin:0; }
+  body { background:var(--bars-bg-base); font-family:var(--bars-font-body); color:var(--bars-text-primary); }
+  a { color:var(--bars-water-gem); text-decoration:none; }
+  a:hover { color:var(--bars-text-primary); }
+
+  /* Every tappable surface in the design is a real <button>, reset to inherit
+     the inline styles the design specifies. Keyboard + AT get the affordance
+     the .dc prototype's onClick spans could not offer. */
+  .clk { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  button.clk { appearance:none; -webkit-appearance:none; background:none; border:none;
+    padding:0; margin:0; font:inherit; color:inherit; text-align:inherit; display:block; width:100%; }
+  :focus-visible { outline:2px solid var(--bars-water-gem); outline-offset:3px; border-radius:4px; }
+
+  .ta { width:100%; font-family:var(--bars-font-body); font-size:16px; line-height:1.55; color:#e8e6e0; background:#0e1520; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:13px 14px; resize:vertical; }
+  .ta::placeholder { color:#6b6965; }
+  .ta:focus { outline:none; border-color:var(--bars-water-gem); box-shadow:0 0 0 3px color-mix(in srgb,var(--bars-water-gem) 26%,transparent); }
+  input.ta { resize:none; }
+
+  .gates { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:640px) {
+    .gates { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:6px; }
+    .gates > * { flex:0 0 74%; scroll-snap-align:center; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .clk { transition: transform .15s var(--bars-ease-out), filter .15s ease, box-shadow .2s ease; }
+    .clk:hover { filter: brightness(1.08); }
+    .press:active { transform: scale(.97); }
+    .fadeup { animation: fadeup .4s var(--bars-ease-out) both; }
+    @keyframes fadeup { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none;} }
+    .sheetup { animation: sheetup .28s var(--bars-ease-out) both; }
+    @keyframes sheetup { from { transform: translateY(16px); opacity:0;} to { transform:none; opacity:1;} }
+  }
+
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+</style>
+</head>
+<body>
+<div style="min-height:100vh;">
+  <div style="max-width:640px;margin:0 auto;padding:26px clamp(16px,5vw,32px) 96px;">
+
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:12px;">
+      <span class="bars-label" style="color:#C9A84C;">Week 2 · Skillful Organizing · Day 8 of 30</span>
+      <span class="bars-label" style="color:var(--bars-water-gem);">clean up · 水</span>
+    </div>
+    <div style="height:2px;border-radius:2px;background:var(--bars-line);overflow:hidden;"
+         role="progressbar" aria-label="Day 8 progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+      <div id="progressFill"></div>
+    </div>
+
+    <main id="screen"></main>
+  </div>
+  <div id="modalRoot"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Routes ────────────────────────────────────────────────────────────────
+     The .dc prototype exposed these as editable props defaulting to sibling
+     .dc.html filenames. Point them at the real routes when the other days ship;
+     window.MTGOA_DAY8_ROUTES overrides them without touching this file. */
+  var ROUTES = Object.assign({
+    day7: 'MTGOA Day 7 - Open Up Organization Load Check.dc.html',
+    day3: 'MTGOA Clean Up Check.dc.html',
+    org:  'MTGOA Organization Page.dc.html'
+  }, window.MTGOA_DAY8_ROUTES || {});
+
+  var KEY = 'mtgoa-day8-bottleneck-321';
+
+  var STARTERS = [
+    'Only I can do this.',
+    'Nobody will care.',
+    'It is faster if I carry it.',
+    'If I take this on, I will disappoint someone.',
+    'I do not know what I am allowed to ask for.',
+    'Something else.'
+  ];
+
+  /* Day 8 reframes each Clean Up · Skillful Organizing card toward the
+     bottleneck question. Falls back to the card's own deck question. */
+  var DAY8 = {
+    '067': 'What channel is running before you redesign anything?',
+    '068': 'What would you learn by testing the bottleneck story with one real handoff?',
+    '069': 'What capability or care is missing that another rule will not supply?',
+    '070': 'What becomes possible when the charge is worked before the system is designed?',
+    '071': 'What would real ownership look like here?',
+    '072': 'What lesson needs to change the next arrangement?'
+  };
+
+  var FACE = { shaman:'#6fd0d0', challenger:'#e8896f', regent:'#e0c25a', architect:'#9fb2c8', diplomat:'#6fc795', sage:'#a99ae0' };
+  var CLEAN = ['M14 22 H50','M20 22 L23 50 H41 L44 22','M26 30 V42','M32 30 V42','M38 30 V42'];
+
+  var OPENERS = [
+    'What are you protecting?',
+    'What do you need me to understand?',
+    'What happens if I hand one thing off?',
+    'Who taught you this job?',
+    'What would you need to let go?'
+  ];
+
+  var PROGRESS = { entry:0, draw:22, strain:45, three:70, principle:88, receipt:100 };
+  var PRIVACY = 'Private by default · nothing you write is sent or saved as a course answer';
+  var BLANK = '— left blank';
+
+  /* ── State ───────────────────────────────────────────────────────────────── */
+  var PERSISTED = ['step','field','starter','strainText','they','maskName','thread','i','shift','needsText','becauseText','drawn','chosen'];
+
+  var state = {
+    step:'entry', field:null, starter:null, strainText:'', they:'', maskName:'', thread:[],
+    draft:'', voice:'me', i:'', shift:'', needsText:'', becauseText:'',
+    cards:[], drawn:[], chosen:null, modal:null, copied:false, left:false
+  };
+
+  function persist() {
+    try {
+      var out = {};
+      PERSISTED.forEach(function (k) { out[k] = state[k]; });
+      window.localStorage.setItem(KEY, JSON.stringify(out));
+    } catch (e) {}
+  }
+  /* save() writes through to localStorage; set() is transient (draft, voice,
+     modal, copied, left) exactly as the prototype divided them. */
+  function save(patch) { Object.assign(state, patch); persist(); }
+  function set(patch) { Object.assign(state, patch); }
+
+  function restore() {
+    var saved = null;
+    try { saved = JSON.parse(window.localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    if (!saved || typeof saved !== 'object') return;
+    ['step','field','starter','strainText','they','maskName','i','shift','needsText','becauseText','chosen']
+      .forEach(function (k) { if (saved[k]) state[k] = saved[k]; });
+    if (Array.isArray(saved.thread)) state.thread = saved.thread;
+    if (Array.isArray(saved.drawn) && saved.drawn.length === 3) state.drawn = saved.drawn;
+  }
+
+  /* ── Deck ────────────────────────────────────────────────────────────────── */
+  function deal(pool) {
+    var p = (pool || state.cards).map(function (c) { return c.num; });
+    for (var i = p.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = p[i]; p[i] = p[j]; p[j] = t;
+    }
+    return p.slice(0, 3);
+  }
+  function card(num) {
+    for (var i = 0; i < state.cards.length; i++) if (state.cards[i].num === num) return state.cards[i];
+    return null;
+  }
+  function day8Of(c) { return DAY8[c.num] || c.q; }
+
+  /* ── Derived ─────────────────────────────────────────────────────────────── */
+  function strainLine() {
+    return state.strainText.trim() || (state.starter && state.starter !== 'Something else.' ? state.starter : '');
+  }
+  function partName() { return (state.maskName || '').trim() || 'the part'; }
+  function receiptSentence() {
+    return 'This work needs a way of organizing that ' + (state.needsText.trim() || '___') +
+      ', because the current pattern keeps ' + (state.becauseText.trim() || '___') + '.';
+  }
+
+  /* ── Style helpers (verbatim from the design) ────────────────────────────── */
+  function rowStyle(sel) {
+    return 'padding:14px 15px;border-radius:12px;background:' + (sel ? '#0e1e2e' : 'var(--bars-surface-card)') +
+      ';box-shadow:var(--bars-shadow-inset-top),0 0 0 ' + (sel ? '1.5px var(--bars-water-gem)' : '1px var(--bars-line)') + ';';
+  }
+  function voicePill(on) {
+    return 'display:inline-block;width:auto;font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;border-radius:var(--bars-radius-full);'
+      + (on ? 'color:#fff;background:var(--bars-water-gem);border:1px solid var(--bars-water-gem);box-shadow:var(--bars-shadow-inset-top);'
+            : 'color:var(--bars-text-secondary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);');
+  }
+  function badgeStyle(faceKey) {
+    var col = FACE[faceKey] || '#9fb2c8';
+    return 'color:' + col + ';background:color-mix(in srgb,' + col + ' 14%,transparent);border:1px dashed color-mix(in srgb,' + col + ' 60%,transparent);';
+  }
+  function frameStyle(isSel) {
+    return 'position:relative;aspect-ratio:2.5/3.5;border-radius:var(--bars-radius-lg);overflow:hidden;background:radial-gradient(120% 90% at 78% 8%,#0c2b4c,#03101f 64%);border:'
+      + (isSel ? '2px solid #C9A84C' : '1px solid rgba(201,168,76,.4)')
+      + ';box-shadow:var(--bars-shadow-inset-top),0 0 '
+      + (isSel ? '26px 1px rgba(26,122,138,.44)' : '16px 1px rgba(26,122,138,.18)')
+      + ',0 14px 30px -18px rgba(0,0,0,.9);';
+  }
+  var PRIMARY_BTN = 'text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-water-gem);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-water-glow);';
+  var GHOST_BTN = 'display:inline-block;width:auto;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:12px 15px;border-radius:9px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);';
+  var BACK_BTN = 'display:inline-block;width:auto;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);';
+  var DOOR = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);';
+  var STEP_CARD = 'margin-top:14px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);';
+
+  /* ── DOM helpers ─────────────────────────────────────────────────────────── */
+  function h(tag, opts, kids) {
+    var n = document.createElement(tag);
+    opts = opts || {};
+    if (opts.cls) n.className = opts.cls;
+    if (opts.style) n.setAttribute('style', opts.style);
+    if (opts.text != null) n.textContent = opts.text;
+    if (opts.attrs) for (var a in opts.attrs) if (opts.attrs[a] != null) n.setAttribute(a, opts.attrs[a]);
+    if (opts.on) for (var e in opts.on) n.addEventListener(e, opts.on[e]);
+    (kids || []).forEach(function (k) { if (k) n.appendChild(k); });
+    return n;
+  }
+  function btn(opts, kids) {
+    opts = opts || {};
+    opts.cls = 'clk' + (opts.cls ? ' ' + opts.cls : '');
+    opts.attrs = Object.assign({ type: 'button' }, opts.attrs || {});
+    return h('button', opts, kids);
+  }
+  function txt(tag, style, text, cls) { return h(tag, { cls: cls, style: style, text: text }); }
+
+  function cleanIcon() {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '17'); svg.setAttribute('height', '17');
+    svg.setAttribute('viewBox', '0 0 64 64'); svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', '#04121f'); svg.setAttribute('stroke-width', '4.2');
+    svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    CLEAN.forEach(function (d) {
+      var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', d); svg.appendChild(p);
+    });
+    return svg;
+  }
+
+  function field(tag, opts) {
+    var n = h(tag, {
+      cls: 'ta',
+      style: opts.style || '',
+      attrs: Object.assign({ placeholder: opts.placeholder || '' }, opts.attrs || {})
+    });
+    if (tag === 'textarea') { n.rows = opts.rows || 3; n.value = opts.value || ''; }
+    else { n.type = 'text'; n.value = opts.value || ''; }
+    n.addEventListener('input', function () { opts.onInput(n.value); });
+    if (opts.onKeyDown) n.addEventListener('keydown', opts.onKeyDown);
+    return n;
+  }
+
+  /* ── Screens ─────────────────────────────────────────────────────────────── */
+
+  function screenEntry() {
+    var wrap = h('div', { cls: 'fadeup', style: 'padding-top:36px;' });
+
+    wrap.appendChild(txt('h1', 'margin:0;font-size:clamp(29px,5.8vw,41px);line-height:1.14;font-weight:700;text-wrap:pretty;',
+      'The work will inherit the story you build it from.', 'bars-title'));
+    wrap.appendChild(txt('p', 'margin:18px 0 0;font-size:17px;line-height:1.62;color:var(--bars-text-secondary);text-wrap:pretty;',
+      'Yesterday you noticed what getting involved brings up. Today, take the part of that response with the most charge. It may have been keeping work moving for a long time. Let it describe the job before you ask it to carry anything else.', 'bars-prose'));
+
+    wrap.appendChild(h('div', { style: 'margin-top:22px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid var(--bars-water-gem);' }, [
+      txt('span', 'color:var(--bars-water-gem);', 'the contract', 'bars-label'),
+      txt('p', 'margin:9px 0 0;font-size:15.5px;line-height:1.6;color:#e8e6e0;text-wrap:pretty;',
+        'You are allowed to let a part say, “I cannot carry this,” “I do not trust this yet,” or “I do not know what I need.” Those answers change what a clean arrangement would require.', 'bars-prose'),
+      txt('p', 'margin:9px 0 0;font-size:14.5px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;',
+        'No role is assigned and nothing here asks you to delegate. You can end the practice without an action.', 'bars-prose')
+    ]));
+
+    wrap.appendChild(btn({
+      cls: 'press',
+      style: 'display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:26px;padding:20px;border-radius:var(--bars-radius-lg);background:var(--bars-water-gem);box-shadow:var(--bars-shadow-inset-top),0 12px 28px -12px var(--bars-water-glow);',
+      on: { click: function () { save({ field: 'org', step: 'draw' }); render(); } }
+    }, [
+      h('span', {}, [
+        txt('span', 'display:block;font-family:var(--bars-font-display);font-weight:700;font-size:18px;color:#fff;', 'Work the organizing strain'),
+        txt('span', 'display:block;margin-top:5px;font-size:14.5px;line-height:1.45;color:rgba(255,255,255,.86);', 'A card, one short 3-2-1, one condition.')
+      ]),
+      txt('span', 'flex:none;color:#fff;font-size:18px;', '→')
+    ]));
+
+    wrap.appendChild(txt('p', 'margin:26px 0 11px;color:var(--bars-text-muted);', 'if that is not your live question', 'bars-label'));
+
+    var alts = h('div', { style: 'display:flex;flex-direction:column;gap:10px;' });
+    function altLink(href, label) {
+      return h('a', { style: DOOR + 'font-size:15.5px;line-height:1.4;text-wrap:pretty;', attrs: { href: href } }, [
+        txt('span', '', label),
+        txt('span', 'flex:none;color:var(--bars-water-gem);', '→')
+      ]);
+    }
+    alts.appendChild(altLink(ROUTES.day7, 'I need to feel the invitation before I can name the strain'));
+    alts.appendChild(altLink(ROUTES.day3, "My live question is putting the book in someone's hands"));
+    alts.appendChild(btn({
+      cls: 'press',
+      style: DOOR + 'font-size:15.5px;line-height:1.4;text-wrap:pretty;',
+      on: { click: function () { save({ field: 'own', step: 'draw' }); render(); } }
+    }, [
+      txt('span', '', 'Use this on work in my own life'),
+      txt('span', 'flex:none;color:var(--bars-water-gem);', '→')
+    ]));
+    wrap.appendChild(alts);
+
+    wrap.appendChild(txt('p', 'margin:20px 0 0;text-align:center;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;', PRIVACY));
+    return wrap;
+  }
+
+  function backLink(label, step) {
+    return btn({ style: BACK_BTN, on: { click: function () { save({ step: step }); render(); } } }, [
+      document.createTextNode(label)
+    ]);
+  }
+
+  function screenDraw() {
+    var wrap = h('div', { cls: 'fadeup', style: 'padding-top:26px;' });
+    wrap.appendChild(backLink('← back', 'entry'));
+    wrap.appendChild(txt('span', 'display:block;margin-top:16px;color:var(--bars-text-muted);', 'the Allyship Deck · Clean Up · Skillful Organizing', 'bars-label'));
+    wrap.appendChild(txt('h2', 'margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;', 'Draw the lens first.', 'bars-title'));
+    wrap.appendChild(txt('p', 'margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;',
+      'The card gives you one way to look at the strain before you try to explain it. It does not diagnose you and it does not decide the arrangement.', 'bars-prose'));
+
+    var gates = h('div', { cls: 'gates', style: 'margin-top:20px;' });
+    wrap.appendChild(gates);
+    paintGates(gates);
+
+    var row = h('div', { style: 'display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;' }, [
+      btn({ cls: 'press', style: GHOST_BTN, text: 'Draw again',
+        on: { click: function () { save({ drawn: deal(), chosen: null }); paintGates(gates); } } }),
+      btn({ cls: 'press', style: GHOST_BTN, text: 'Continue without a card',
+        on: { click: function () { save({ chosen: null, step: 'strain' }); render(); } } })
+    ]);
+    wrap.appendChild(row);
+
+    wrap.appendChild(btn({ cls: 'press', style: 'margin-top:14px;' + PRIMARY_BTN, text: 'Name the strain →',
+      on: { click: function () { save({ step: 'strain' }); render(); } } }));
+    return wrap;
+  }
+
+  function paintGates(gates) {
+    gates.textContent = '';
+    state.drawn.forEach(function (num) {
+      var c = card(num);
+      if (!c) { gates.appendChild(h('div', { style: frameStyle(false) })); return; }
+      var isSel = state.chosen === num;
+      var body = h('div', { style: 'position:relative;z-index:1;display:flex;flex-direction:column;height:100%;' }, [
+        h('div', { style: 'padding:13px 13px 10px;border-bottom:1px solid rgba(41,128,185,.42);' }, [
+          txt('h3', 'margin:0;font-family:var(--bars-font-display);font-weight:600;font-size:16px;line-height:1.16;color:#fff;text-wrap:pretty;', c.title)
+        ]),
+        h('div', { style: 'display:flex;align-items:flex-start;justify-content:space-between;padding:11px 13px 0;' }, [
+          h('span', { style: 'display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:linear-gradient(150deg,#2f8fd0,var(--bars-water-frame));box-shadow:0 0 9px -3px var(--bars-water-glow);' }, [cleanIcon()]),
+          txt('span', 'display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;font-family:var(--bars-font-display);font-weight:700;font-size:14px;' + badgeStyle(c.face), c.faceLabel.charAt(0))
+        ]),
+        h('div', { style: 'padding:10px 13px 0;' }, [
+          txt('span', 'font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-water-gem);', '◇ Skillful Organizing')
+        ]),
+        h('div', { style: 'flex:1;padding:9px 13px 0;' }, [
+          txt('p', 'margin:0;font-family:var(--bars-font-body);font-size:13px;line-height:1.36;color:#e8e6e0;text-wrap:pretty;', day8Of(c))
+        ]),
+        h('div', { style: 'padding:9px 13px 12px;display:flex;align-items:center;justify-content:space-between;' }, [
+          txt('span', 'font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.1em;color:#6b6965;', '#' + c.num),
+          txt('span', 'font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.1em;color:#C9A84C;', isSel ? '♦ chosen' : '')
+        ])
+      ]);
+      gates.appendChild(btn({
+        style: frameStyle(isSel),
+        attrs: { 'aria-label': c.title + (isSel ? ' — chosen' : '') + '. Open card.' },
+        on: { click: function () { set({ modal: num }); paintModal(); } }
+      }, [body]));
+    });
+  }
+
+  function screenStrain() {
+    var wrap = h('div', { cls: 'fadeup', style: 'padding-top:26px;' });
+    wrap.appendChild(backLink('← back to the cards', 'draw'));
+    wrap.appendChild(txt('span', 'display:block;margin-top:16px;color:var(--bars-water-gem);', 'step one · the active strain', 'bars-label'));
+    wrap.appendChild(txt('h2', 'margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;',
+      state.field === 'own'
+        ? 'What story, feeling, or strain is shaping how you picture taking this on?'
+        : 'What story, feeling, or strain is shaping how you picture getting involved?', 'bars-title'));
+    wrap.appendChild(txt('p', 'margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;',
+      'Use a starter, write your own words, or skip this step entirely.', 'bars-prose'));
+
+    var list = h('div', { style: 'display:flex;flex-direction:column;gap:9px;margin-top:18px;' });
+    var rows = STARTERS.map(function (label) {
+      var inner = txt('span', '', label);
+      var b = btn({
+        cls: 'press',
+        attrs: { 'aria-pressed': String(state.starter === label) },
+        on: { click: function () {
+          var sel = state.starter === label;
+          save({ starter: sel ? null : label });
+          rows.forEach(function (r) { r.repaint(); });
+        } }
+      }, [inner]);
+      var api = {
+        node: b,
+        repaint: function () {
+          var sel = state.starter === label;
+          b.setAttribute('style', rowStyle(sel));
+          b.setAttribute('aria-pressed', String(sel));
+          inner.setAttribute('style', 'display:block;font-family:var(--bars-font-body);font-size:15.5px;line-height:1.42;color:' + (sel ? '#fff' : 'var(--bars-text-secondary)') + ';text-wrap:pretty;');
+        }
+      };
+      api.repaint();
+      list.appendChild(b);
+      return api;
+    });
+    wrap.appendChild(list);
+
+    wrap.appendChild(field('textarea', {
+      rows: 2, style: 'margin-top:12px;', value: state.strainText,
+      placeholder: 'In your own words. Optional.',
+      attrs: { 'aria-label': 'The strain, in your own words' },
+      onInput: function (v) { save({ strainText: v }); }
+    }));
+
+    var chosen = state.chosen ? card(state.chosen) : null;
+    if (chosen) {
+      wrap.appendChild(h('div', { style: 'margin-top:18px;padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:0 0 0 1px rgba(41,128,185,.3);' }, [
+        txt('span', 'color:var(--bars-water-gem);', '◇ your lens · ' + chosen.title, 'bars-label'),
+        txt('p', 'margin:8px 0 0;font-size:15px;line-height:1.5;color:#e8e6e0;text-wrap:pretty;', day8Of(chosen))
+      ]));
+    }
+
+    wrap.appendChild(btn({ cls: 'press', style: 'margin-top:26px;' + PRIMARY_BTN, text: 'Start the 3-2-1 →',
+      on: { click: function () { save({ step: 'three' }); render(); } } }));
+    wrap.appendChild(txt('p', 'margin:14px 0 0;text-align:center;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;', PRIVACY));
+    return wrap;
+  }
+
+  function screenThree() {
+    var wrap = h('div', { cls: 'fadeup', style: 'padding-top:26px;' });
+    /* Nodes that follow the part's name as it is typed. */
+    var nameEchoes = [];
+
+    wrap.appendChild(backLink('← back', 'strain'));
+    wrap.appendChild(txt('span', 'display:block;margin-top:16px;color:var(--bars-water-gem);', 'step two · the short 3-2-1', 'bars-label'));
+    wrap.appendChild(txt('h2', 'margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;', 'Give the part a turn at the microphone.', 'bars-title'));
+    wrap.appendChild(txt('p', 'margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;',
+      'Use the strain you named, or the one your card brought into focus. You do not have to agree with the part, argue with it, or get rid of it.', 'bars-prose'));
+
+    var line = strainLine();
+    if (line) {
+      wrap.appendChild(h('div', { style: 'margin-top:16px;padding:13px 15px;border-radius:10px;background:var(--bars-surface-inset);border-left:2px solid var(--bars-water-gem);' }, [
+        txt('span', 'font-size:15.5px;line-height:1.5;color:#e8e6e0;text-wrap:pretty;', line)
+      ]));
+    }
+
+    /* ── 3 · FACE IT ─────────────────────────────────────────────────────── */
+    wrap.appendChild(h('div', { style: 'margin-top:22px;' + STEP_CARD.replace('margin-top:14px;', '') }, [
+      h('div', { style: 'display:flex;gap:13px;align-items:center;' }, [
+        txt('span', 'display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:17px;color:var(--bars-water-gem);box-shadow:inset 0 0 0 1.5px rgba(41,128,185,.5), inset 0 1px 0 rgba(255,255,255,.07);', '3'),
+        h('span', { style: 'flex:1;min-width:0;' }, [
+          txt('span', 'display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;', 'Face it'),
+          txt('span', 'display:block;margin-top:3px;color:var(--bars-water-gem);', 'third person · they', 'bars-label')
+        ])
+      ]),
+      txt('p', 'margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;',
+        'Describe the part as “they.” What are they trying to do? What do they keep watching for? How long have they been doing this job?'),
+      field('textarea', {
+        rows: 8, style: 'margin-top:11px;', value: state.they,
+        placeholder: 'They’re the kind of part who…',
+        attrs: { 'aria-label': 'Face it — describe the part as they' },
+        onInput: function (v) { save({ they: v }); }
+      })
+    ]));
+
+    /* ── 2 · TALK TO IT ──────────────────────────────────────────────────── */
+    var threadList = h('div', { style: 'margin-top:14px;display:flex;flex-direction:column;gap:9px;' });
+    var openersBlock = h('div', { style: 'margin-top:14px;' }, [
+      txt('span', 'color:var(--bars-text-muted);', 'openers, if you want one', 'bars-label'),
+      h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;' }, OPENERS.map(function (o) {
+        return btn({
+          cls: 'press', text: o,
+          style: 'display:inline-block;width:auto;font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:10px 13px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);border:1px solid var(--bars-line);color:var(--bars-text-secondary);',
+          on: { click: function () { set({ draft: o, voice: 'me' }); draftBox.value = o; paintVoice(); draftBox.focus(); } } });
+      }))
+    ]);
+
+    var pillMe = btn({ cls: 'press', text: 'me', on: { click: function () { set({ voice: 'me' }); paintVoice(); } } });
+    var pillIt = btn({ cls: 'press', on: { click: function () { set({ voice: 'it' }); paintVoice(); } } });
+    var pillItLabel = document.createTextNode(partName());
+    pillIt.appendChild(pillItLabel);
+    nameEchoes.push(function () { pillItLabel.nodeValue = partName(); });
+
+    var draftBox = field('textarea', {
+      rows: 3, style: 'margin-top:10px;', value: state.draft, placeholder: '',
+      attrs: { 'aria-label': 'What you say next' },
+      onInput: function (v) { set({ draft: v }); },
+      onKeyDown: function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+    });
+
+    function paintVoice() {
+      pillMe.setAttribute('style', voicePill(state.voice === 'me'));
+      pillIt.setAttribute('style', voicePill(state.voice === 'it'));
+      pillMe.setAttribute('aria-pressed', String(state.voice === 'me'));
+      pillIt.setAttribute('aria-pressed', String(state.voice === 'it'));
+      draftBox.placeholder = state.voice === 'me'
+        ? 'Ask them something, or say the thing you would say if there were no cost…'
+        : 'Answer as ' + partName() + ', in their own words…';
+    }
+    nameEchoes.push(paintVoice);
+
+    function paintThread() {
+      threadList.textContent = '';
+      state.thread.forEach(function (msg, i) {
+        var mine = msg.from === 'me';
+        threadList.appendChild(h('div', {
+          style: 'display:flex;align-items:flex-start;gap:6px;' + (mine ? 'flex-direction:row-reverse;' : '')
+        }, [
+          h('span', {
+            style: 'max-width:82%;padding:11px 14px;border-radius:' + (mine ? '14px 14px 4px 14px' : '14px 14px 14px 4px') + ';'
+              + (mine
+                ? 'background:color-mix(in srgb,var(--bars-water-gem) 26%,transparent);border:1px solid color-mix(in srgb,var(--bars-water-gem) 45%,transparent);color:#fff;'
+                : 'background:rgba(26,122,138,.18);border:1px solid rgba(26,122,138,.45);color:var(--bars-text-primary);')
+          }, [
+            txt('span', 'display:block;font-size:9px;opacity:.8;margin-bottom:4px;', mine ? 'me' : partName(), 'bars-label'),
+            txt('span', 'display:block;font-size:15px;line-height:1.5;', msg.text)
+          ]),
+          btn({
+            style: 'display:inline-block;width:auto;font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);padding:4px 6px;',
+            text: '×',
+            attrs: { 'aria-label': 'Remove this line' },
+            on: { click: function () {
+              save({ thread: state.thread.filter(function (_, j) { return j !== i; }) });
+              paintThread();
+            } }
+          })
+        ]));
+      });
+      openersBlock.hidden = state.thread.length !== 0;
+    }
+    nameEchoes.push(paintThread);
+
+    function sendMsg() {
+      var text = (state.draft || '').trim();
+      if (!text) return;
+      var from = state.voice;
+      save({ thread: state.thread.concat([{ from: from, text: text }]), draft: '', voice: from === 'me' ? 'it' : 'me' });
+      draftBox.value = '';
+      paintThread();
+      paintVoice();
+      draftBox.focus();
+    }
+
+    var beItLead = txt('p', 'margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;', '');
+    function paintBeItLead() {
+      beItLead.textContent = 'Drop the dialogue. You are ' + partName() +
+        ' now, with nobody to convince and no arrangement to defend. Finish it: “The smallest true thing I know, need, or can hand off is…”';
+    }
+    nameEchoes.push(paintBeItLead);
+
+    var nameBox = field('input', {
+      style: 'margin-top:10px;', value: state.maskName,
+      placeholder: 'e.g. The Only One, The Carrier, The Quiet Steward',
+      attrs: { 'aria-label': 'A name for the part' },
+      onInput: function (v) { save({ maskName: v }); nameEchoes.forEach(function (f) { f(); }); }
+    });
+
+    wrap.appendChild(h('div', { style: STEP_CARD }, [
+      h('div', { style: 'display:flex;gap:13px;align-items:center;' }, [
+        txt('span', 'display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:17px;color:var(--bars-water-gem);box-shadow:inset 0 0 0 1.5px rgba(41,128,185,.5), inset 0 1px 0 rgba(255,255,255,.07);', '2'),
+        h('span', { style: 'flex:1;min-width:0;' }, [
+          txt('span', 'display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;', 'Talk to it'),
+          txt('span', 'display:block;margin-top:3px;color:var(--bars-water-gem);', 'second person · you · a thread', 'bars-label')
+        ])
+      ]),
+      txt('p', 'margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);',
+        'Before you speak to them, what do you call them? Not a job title — a name that fits how they work.'),
+      nameBox,
+      txt('p', 'margin:16px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);',
+        'Now go back and forth. Ask what they are protecting, switch voices, and let them answer in their own words. Keep going until they say something you did not already know.'),
+      threadList,
+      openersBlock,
+      h('div', { style: 'margin-top:14px;padding-top:14px;border-top:1px solid var(--bars-line);' }, [
+        h('div', { style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;' }, [
+          txt('span', 'color:var(--bars-text-muted);', 'speaking as', 'bars-label'),
+          pillMe, pillIt
+        ]),
+        draftBox,
+        h('div', { style: 'display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;' }, [
+          txt('span', 'font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--bars-text-muted);', 'enter sends · shift+enter for a new line'),
+          btn({ cls: 'press', text: 'say it',
+            style: 'display:inline-block;width:auto;font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:#fff;background:var(--bars-water-gem);padding:11px 20px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);',
+            on: { click: sendMsg } })
+        ])
+      ])
+    ]));
+
+    /* ── 1 · BE IT ───────────────────────────────────────────────────────── */
+    wrap.appendChild(h('div', { style: STEP_CARD }, [
+      h('div', { style: 'display:flex;gap:13px;align-items:center;' }, [
+        txt('span', 'display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:17px;color:#a99ae0;box-shadow:inset 0 0 0 1.5px rgba(169,154,224,.5), inset 0 1px 0 rgba(255,255,255,.07);', '1'),
+        h('span', { style: 'flex:1;min-width:0;' }, [
+          txt('span', 'display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;', 'Be it'),
+          txt('span', 'display:block;margin-top:3px;color:#a99ae0;', 'first person · I · no one else in the room', 'bars-label')
+        ])
+      ]),
+      beItLead,
+      field('textarea', {
+        rows: 6, style: 'margin-top:11px;', value: state.i, placeholder: 'The smallest true thing is…',
+        attrs: { 'aria-label': 'Be it — speak as I' },
+        onInput: function (v) { save({ i: v }); }
+      }),
+      txt('p', 'margin:16px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);', 'Come back to yourself. What shifted?'),
+      field('textarea', {
+        rows: 3, style: 'margin-top:11px;', value: state.shift, placeholder: 'What feels different now…',
+        attrs: { 'aria-label': 'What shifted' },
+        onInput: function (v) { save({ shift: v }); }
+      })
+    ]));
+
+    wrap.appendChild(btn({ cls: 'press', style: 'margin-top:26px;' + PRIMARY_BTN, text: 'Carry one principle forward →',
+      on: { click: function () { save({ step: 'principle' }); render(); } } }));
+
+    var tail = h('p', { style: 'margin:12px 0 0;text-align:center;font-size:14px;line-height:1.5;color:var(--bars-text-muted);text-wrap:pretty;' });
+    tail.appendChild(document.createTextNode('A partial 3-2-1 is a complete pass. If the part will not speak, '));
+    tail.appendChild(btn({ style: 'display:inline;width:auto;color:var(--bars-water-gem);', text: 'Day 7',
+      on: { click: function () { save({ step: 'entry' }); render(); } } }));
+    tail.appendChild(document.createTextNode(' is the right place to be.'));
+    wrap.appendChild(tail);
+
+    paintVoice(); paintThread(); paintBeItLead();
+    return wrap;
+  }
+
+  function screenPrinciple() {
+    var wrap = h('div', { cls: 'fadeup', style: 'padding-top:26px;' });
+    wrap.appendChild(backLink('← back to the 3-2-1', 'three'));
+    wrap.appendChild(txt('span', 'display:block;margin-top:16px;color:var(--bars-water-gem);', 'step three · one condition', 'bars-label'));
+    wrap.appendChild(txt('h2', 'margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;',
+      'What would let this work be organized without repeating the strain?', 'bars-title'));
+    wrap.appendChild(txt('p', 'margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;',
+      'A condition — not an organizational plan, and not a promise to take responsibility for fixing the system.', 'bars-prose'));
+
+    wrap.appendChild(h('div', { style: 'margin-top:20px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px rgba(41,128,185,.3);' }, [
+      txt('p', 'margin:0;font-size:16px;line-height:1.6;color:#e8e6e0;', 'This work needs a way of organizing that…'),
+      field('textarea', {
+        rows: 2, style: 'margin-top:9px;', value: state.needsText,
+        placeholder: 'e.g. lets one piece be handed off without a rescue',
+        attrs: { 'aria-label': 'This work needs a way of organizing that…' },
+        onInput: function (v) { save({ needsText: v }); }
+      }),
+      txt('p', 'margin:16px 0 0;font-size:16px;line-height:1.6;color:#e8e6e0;', '…because the current pattern keeps…'),
+      field('textarea', {
+        rows: 2, style: 'margin-top:9px;', value: state.becauseText,
+        placeholder: 'e.g. putting everything through one person',
+        attrs: { 'aria-label': '…because the current pattern keeps…' },
+        onInput: function (v) { save({ becauseText: v }); }
+      })
+    ]));
+
+    wrap.appendChild(btn({ cls: 'press', style: 'margin-top:24px;' + PRIMARY_BTN, text: 'Close the day →',
+      on: { click: function () { save({ step: 'receipt' }); render(); } } }));
+    return wrap;
+  }
+
+  function screenReceipt() {
+    var wrap = h('div', { cls: 'fadeup', style: 'padding-top:26px;' });
+    wrap.appendChild(backLink('← back to the condition', 'principle'));
+    wrap.appendChild(txt('span', 'display:block;margin-top:16px;color:var(--bars-water-gem);', 'your Day 8 receipt', 'bars-label'));
+    wrap.appendChild(txt('h2', 'margin:9px 0 0;font-size:28px;line-height:1.18;text-wrap:pretty;', 'You let the part describe the job.', 'bars-title'));
+
+    var sentence = receiptSentence();
+    var copyBtn = btn({
+      cls: 'press', text: 'copy this',
+      style: 'display:inline-block;width:auto;margin-top:14px;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;padding:10px 14px;border-radius:8px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);',
+      on: { click: function () { copy(sentence, copyBtn); } }
+    });
+    wrap.appendChild(h('div', { style: 'margin-top:18px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px rgba(41,128,185,.34);' }, [
+      txt('p', 'margin:0;font-size:17px;line-height:1.58;color:#e8e6e0;text-wrap:pretty;', sentence),
+      copyBtn
+    ]));
+
+    var line = strainLine();
+    var name = partName();
+    var rows = [
+      { label: 'the strain I named', value: line || BLANK, filled: !!line },
+      { label: '3 · faced it as they', value: state.they.trim() || BLANK, filled: !!state.they.trim() },
+      { label: '2 · talked with ' + name,
+        value: state.thread.length
+          ? state.thread.length + (state.thread.length === 1 ? ' turn' : ' turns') + ' · last: “' + state.thread[state.thread.length - 1].text + '”'
+          : BLANK,
+        filled: state.thread.length > 0 },
+      { label: '1 · spoke as I', value: state.i.trim() || BLANK, filled: !!state.i.trim() }
+    ];
+    if (state.shift.trim()) rows.push({ label: 'what shifted', value: state.shift.trim(), filled: true });
+
+    var well = h('div', { style: 'margin-top:16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);padding:6px 18px 16px;' });
+    rows.forEach(function (r) {
+      well.appendChild(h('div', { style: 'padding:13px 0;border-bottom:1px solid rgba(255,255,255,.06);' }, [
+        txt('span', 'color:var(--bars-text-muted);', r.label, 'bars-label'),
+        txt('p', 'margin:7px 0 0;font-size:15.5px;line-height:1.5;color:' + (r.filled ? '#e8e6e0' : 'var(--bars-text-muted)') + ';text-wrap:pretty;', r.value)
+      ]));
+    });
+    var chosen = state.chosen ? card(state.chosen) : null;
+    if (chosen) {
+      well.appendChild(txt('p', 'margin:13px 0 0;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-water-gem);',
+        '◇ looked through ' + chosen.title + ' · #' + chosen.num));
+    }
+    wrap.appendChild(well);
+
+    wrap.appendChild(txt('p', 'margin:28px 0 12px;color:var(--bars-text-muted);', 'only if it fits', 'bars-label'));
+
+    var doorStyle = DOOR + 'font-family:var(--bars-font-display);font-weight:600;font-size:15px;text-wrap:pretty;';
+    var doors = h('div', { style: 'display:flex;flex-direction:column;gap:10px;' }, [
+      h('a', { style: doorStyle, attrs: { href: ROUTES.day7 } }, [
+        txt('span', '', 'Return to the Organization Load Check'), txt('span', 'flex:none;color:var(--bars-water-gem);', '→')
+      ]),
+      h('a', { style: doorStyle, attrs: { href: ROUTES.org } }, [
+        txt('span', '', 'See what work is actually live'), txt('span', 'flex:none;color:var(--bars-water-gem);', '→')
+      ]),
+      btn({ cls: 'press', style: doorStyle, on: { click: restart } }, [
+        txt('span', '', 'Use this practice on another situation'), txt('span', 'flex:none;color:var(--bars-water-gem);', '→')
+      ]),
+      h('div', { style: 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px dashed var(--bars-line-strong);color:var(--bars-text-muted);font-family:var(--bars-font-display);font-weight:600;font-size:15px;text-wrap:pretty;' }, [
+        txt('span', '', 'Next: Day 9 — The Role Rep'),
+        txt('span', 'flex:none;font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;', 'soon')
+      ])
+    ]);
+    wrap.appendChild(doors);
+
+    var leftNote = txt('p', 'margin:12px 0 0;text-align:center;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;',
+      'Left where it is. Nothing follows this, and nothing is owed.');
+    leftNote.hidden = !state.left;
+
+    wrap.appendChild(btn({
+      cls: 'press', text: 'Leave it here for now',
+      style: 'margin-top:18px;text-align:center;padding:15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-secondary);',
+      on: { click: function () { set({ left: true }); leftNote.hidden = false; } }
+    }));
+    wrap.appendChild(leftNote);
+
+    wrap.appendChild(h('div', { style: 'display:flex;justify-content:center;margin-top:22px;' }, [
+      btn({ text: 'Clear this from my device',
+        style: 'display:inline-block;width:auto;font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-muted);border-bottom:1px solid var(--bars-line-strong);',
+        on: { click: clearAll } })
+    ]));
+    return wrap;
+  }
+
+  /* ── Card sheet ──────────────────────────────────────────────────────────── */
+  var modalRoot = document.getElementById('modalRoot');
+  var lastFocus = null;
+
+  function closeModal() {
+    set({ modal: null });
+    paintModal();
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+    lastFocus = null;
+  }
+
+  function paintModal() {
+    modalRoot.textContent = '';
+    var c = state.modal ? card(state.modal) : null;
+    if (!c) return;
+    if (!lastFocus) lastFocus = document.activeElement;
+
+    var chosenAlready = state.chosen === c.num;
+    var sheet = h('div', { cls: 'sheetup', style: 'width:100%;max-width:340px;', on: { click: function (e) { e.stopPropagation(); } } }, [
+      h('div', { style: 'position:relative;aspect-ratio:2.5/3.5;border-radius:var(--bars-radius-lg);overflow:hidden;border:2px solid #C9A84C;background:radial-gradient(120% 90% at 78% 8%,#0c2b4c,#03101f 64%);box-shadow:var(--bars-shadow-inset-top),0 0 30px 1px rgba(26,122,138,.38),0 18px 40px -20px rgba(0,0,0,.9);' }, [
+        h('div', { style: 'position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(41,128,185,.22),transparent 60%);', attrs: { 'aria-hidden': 'true' } }),
+        h('div', { style: 'position:relative;z-index:1;display:flex;flex-direction:column;height:100%;' }, [
+          h('div', { style: 'padding:18px 20px 13px;border-bottom:1px solid rgba(41,128,185,.42);' }, [
+            txt('h3', 'margin:0;font-family:var(--bars-font-display);font-weight:600;font-size:24px;line-height:1.14;color:#fff;text-wrap:pretty;', c.title, null)
+          ]),
+          h('div', { style: 'display:flex;align-items:flex-start;justify-content:space-between;padding:14px 20px 0;' }, [
+            h('span', { style: 'display:flex;flex-direction:column;align-items:center;gap:5px;' }, [
+              h('span', { style: 'display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:linear-gradient(150deg,#2f8fd0,var(--bars-water-frame));box-shadow:0 0 11px -3px var(--bars-water-glow);' }, [cleanIcon()]),
+              txt('span', 'font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-water-gem);', 'Clean Up')
+            ]),
+            h('span', { style: 'display:flex;flex-direction:column;align-items:center;gap:5px;' }, [
+              txt('span', 'display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;font-family:var(--bars-font-display);font-weight:700;font-size:16px;' + badgeStyle(c.face), c.faceLabel.charAt(0)),
+              txt('span', 'font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-secondary);', c.faceLabel)
+            ])
+          ]),
+          h('div', { style: 'padding:13px 20px 0;' }, [
+            txt('span', 'font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-water-gem);', '◇ Skillful Organizing')
+          ]),
+          h('div', { style: 'flex:1;padding:13px 20px 0;' }, [
+            txt('p', 'margin:0;font-family:var(--bars-font-body);font-size:17px;line-height:1.4;color:#e8e6e0;text-wrap:pretty;', day8Of(c)),
+            txt('p', 'margin:12px 0 0;font-family:var(--bars-font-body);font-size:13.5px;line-height:1.45;color:#7fb6dd;text-wrap:pretty;', 'In the deck: ' + c.q),
+            txt('p', 'margin:10px 0 0;font-family:var(--bars-font-body);font-size:13.5px;line-height:1.5;color:var(--bars-water-gem);text-wrap:pretty;', c.action)
+          ]),
+          h('div', { style: 'padding:12px 20px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(41,128,185,.32);' }, [
+            txt('span', 'font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;color:#6b6965;', '#' + c.num + ' / 120'),
+            txt('span', 'font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-water-gem);', '◇ ' + c.faceLabel)
+          ])
+        ])
+      ]),
+      h('div', { style: 'display:flex;gap:10px;margin-top:14px;' }, [
+        btn({
+          cls: 'press', text: chosenAlready ? 'Chosen ♦' : 'Look through this card',
+          style: 'flex:1;width:auto;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-water-gem);padding:14px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-water-glow);',
+          on: { click: function () { save({ chosen: state.modal }); closeModal(); render(); } }
+        }),
+        btn({
+          cls: 'press', text: 'Close',
+          style: 'flex:none;width:auto;text-align:center;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-secondary);padding:14px 16px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);',
+          on: { click: closeModal }
+        })
+      ])
+    ]);
+
+    var overlay = h('div', {
+      style: 'position:fixed;inset:0;z-index:60;background:rgba(5,4,3,.86);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;',
+      attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-label': c.title },
+      on: { click: closeModal }
+    }, [sheet]);
+
+    modalRoot.appendChild(overlay);
+    sheet.querySelector('button').focus();
+  }
+
+  /* ── Actions ─────────────────────────────────────────────────────────────── */
+  function copy(text, button) {
+    var done = function () {
+      set({ copied: true });
+      button.textContent = 'copied ♦';
+      window.setTimeout(function () { set({ copied: false }); button.textContent = 'copy this'; }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text); done(); });
+    } else { legacyCopy(text); done(); }
+  }
+  function legacyCopy(text) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    } catch (e) {}
+  }
+
+  function restart() {
+    save({ field:'own', step:'strain', starter:null, strainText:'', they:'', maskName:'', thread:[],
+           i:'', shift:'', needsText:'', becauseText:'', chosen:null });
+    set({ draft:'', voice:'me', left:false });
+    render();
+  }
+
+  function clearAll() {
+    try { window.localStorage.removeItem(KEY); } catch (e) {}
+    Object.assign(state, {
+      step:'entry', field:null, starter:null, strainText:'', they:'', maskName:'', thread:[],
+      draft:'', voice:'me', i:'', shift:'', needsText:'', becauseText:'',
+      chosen:null, modal:null, left:false, drawn: deal()
+    });
+    render();
+  }
+
+  /* ── Render ──────────────────────────────────────────────────────────────── */
+  var screenRoot = document.getElementById('screen');
+  var fill = document.getElementById('progressFill');
+  var track = document.getElementById('progressTrack');
+  var SCREENS = { entry:screenEntry, draw:screenDraw, strain:screenStrain, three:screenThree, principle:screenPrinciple, receipt:screenReceipt };
+
+  function render() {
+    var pct = PROGRESS[state.step] != null ? PROGRESS[state.step] : 0;
+    fill.setAttribute('style', 'height:100%;width:' + pct + '%;background:linear-gradient(90deg,#123a5c,var(--bars-water-gem));transition:width .35s var(--bars-ease-out);');
+    track.setAttribute('aria-valuenow', String(pct));
+    screenRoot.textContent = '';
+    screenRoot.appendChild((SCREENS[state.step] || screenEntry)());
+    window.scrollTo(0, 0);
+  }
+
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.modal) closeModal(); });
+
+  /* ── Boot ────────────────────────────────────────────────────────────────── */
+  restore();
+  render();
+
+  fetch('day8-card-pool.json')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      state.cards = (d.cards || []).filter(function (c) { return c.move === 'clean' && c.domain === 'organize'; });
+      if (state.drawn.length !== 3) save({ drawn: deal(state.cards) });
+      /* The deck arrives after first paint; repaint any screen that shows it. */
+      if (state.step === 'draw' || state.step === 'strain' || state.step === 'receipt') render();
+    })
+    .catch(function () {});
+})();
+</script>
+</body>
+</html>
