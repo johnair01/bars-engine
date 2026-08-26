@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/cards.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+<script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  html, body { margin:0; }
+  a { color:var(--bars-water-gem); text-decoration:none; }
+  a:hover { color:var(--bars-text-primary); }
+  .clk { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .ta { width:100%; font-family:var(--bars-font-body); font-size:16px; line-height:1.55; color:#e8e6e0; background:#0e1520; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:13px 14px; resize:vertical; }
+  .ta::placeholder { color:#6b6965; }
+  .ta:focus { outline:none; border-color:var(--bars-water-gem); box-shadow:0 0 0 3px color-mix(in srgb,var(--bars-water-gem) 26%,transparent); }
+  .gates { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:640px) {
+    .gates { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:6px; }
+    .gates > * { flex:0 0 74%; scroll-snap-align:center; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .clk { transition: transform .15s var(--bars-ease-out), filter .15s ease, box-shadow .2s ease; }
+    .clk:hover { filter: brightness(1.08); }
+    .press:active { transform: scale(.97); }
+    .fadeup { animation: fadeup .4s var(--bars-ease-out) both; }
+    @keyframes fadeup { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none;} }
+    .sheetup { animation: sheetup .28s var(--bars-ease-out) both; }
+    @keyframes sheetup { from { transform: translateY(16px); opacity:0;} to { transform:none; opacity:1;} }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bars-bg-base);font-family:var(--bars-font-body);color:var(--bars-text-primary);">
+  <div style="max-width:640px;margin:0 auto;padding:26px clamp(16px,5vw,32px) 96px;">
+
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:12px;">
+      <span class="bars-label" style="color:#C9A84C;">Week 2 · Skillful Organizing · Day 8 of 30</span>
+      <span class="bars-label" style="color:var(--bars-water-gem);">clean up · 水</span>
+    </div>
+    <div style="height:2px;border-radius:2px;background:var(--bars-line);overflow:hidden;">
+      <div style="{{ progressStyle }}"></div>
+    </div>
+
+    <!-- ===== ENTRY ===== -->
+    <sc-if value="{{ sEntry }}" hint-placeholder-val="{{ true }}">
+      <div class="fadeup" style="padding-top:36px;">
+        <h1 class="bars-title" style="margin:0;font-size:clamp(29px,5.8vw,41px);line-height:1.14;font-weight:700;text-wrap:pretty;">The work will inherit the story you build it from.</h1>
+        <p class="bars-prose" style="margin:18px 0 0;font-size:17px;line-height:1.62;color:var(--bars-text-secondary);text-wrap:pretty;">Yesterday you noticed what getting involved brings up. Today, take the part of that response with the most charge. It may have been keeping work moving for a long time. Let it describe the job before you ask it to carry anything else.</p>
+        <div style="margin-top:22px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid var(--bars-water-gem);">
+          <span class="bars-label" style="color:var(--bars-water-gem);">the contract</span>
+          <p class="bars-prose" style="margin:9px 0 0;font-size:15.5px;line-height:1.6;color:#e8e6e0;text-wrap:pretty;">You are allowed to let a part say, “I cannot carry this,” “I do not trust this yet,” or “I do not know what I need.” Those answers change what a clean arrangement would require.</p>
+          <p class="bars-prose" style="margin:9px 0 0;font-size:14.5px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">No role is assigned and nothing here asks you to delegate. You can end the practice without an action.</p>
+        </div>
+
+        <div class="clk press" onClick="{{ start }}" style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:26px;padding:20px;border-radius:var(--bars-radius-lg);background:var(--bars-water-gem);box-shadow:var(--bars-shadow-inset-top),0 12px 28px -12px var(--bars-water-glow);">
+          <span>
+            <span style="display:block;font-family:var(--bars-font-display);font-weight:700;font-size:18px;color:#fff;">Work the organizing strain</span>
+            <span style="display:block;margin-top:5px;font-size:14.5px;line-height:1.45;color:rgba(255,255,255,.86);">A card, one short 3-2-1, one condition.</span>
+          </span>
+          <span style="flex:none;color:#fff;font-size:18px;">→</span>
+        </div>
+
+        <p class="bars-label" style="margin:26px 0 11px;color:var(--bars-text-muted);">if that is not your live question</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="{{ day7Href }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15.5px;line-height:1.4;text-wrap:pretty;">I need to feel the invitation before I can name the strain <span style="flex:none;color:var(--bars-water-gem);">→</span></a>
+          <a href="{{ day3Href }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15.5px;line-height:1.4;text-wrap:pretty;">My live question is putting the book in someone's hands <span style="flex:none;color:var(--bars-water-gem);">→</span></a>
+          <span class="clk press" onClick="{{ startOwn }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15.5px;line-height:1.4;text-wrap:pretty;">Use this on work in my own life <span style="flex:none;color:var(--bars-water-gem);">→</span></span>
+        </div>
+        <p style="margin:20px 0 0;text-align:center;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">{{ privacyNote }}</p>
+      </div>
+    </sc-if>
+
+    <!-- ===== 1 · DRAW THE LENS ===== -->
+    <sc-if value="{{ sDraw }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToEntry }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-text-muted);">the Allyship Deck · Clean Up · Skillful Organizing</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">Draw the lens first.</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">The card gives you one way to look at the strain before you try to explain it. It does not diagnose you and it does not decide the arrangement.</p>
+
+        <div class="gates" style="margin-top:20px;">
+          <sc-for list="{{ drawn }}" as="c" hint-placeholder-count="3">
+            <div class="clk" onClick="{{ c.open }}" style="{{ c.frameStyle }}">
+              <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+                <div style="padding:13px 13px 10px;border-bottom:1px solid rgba(41,128,185,.42);"><h3 style="margin:0;font-family:var(--bars-font-display);font-weight:600;font-size:16px;line-height:1.16;color:#fff;text-wrap:pretty;">{{ c.title }}</h3></div>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:11px 13px 0;">
+                  <span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:linear-gradient(150deg,#2f8fd0,var(--bars-water-frame));box-shadow:0 0 9px -3px var(--bars-water-glow);">{{ cleanIcon }}</span>
+                  <span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;font-family:var(--bars-font-display);font-weight:700;font-size:14px;{{ c.badgeStyle }}">{{ c.initial }}</span>
+                </div>
+                <div style="padding:10px 13px 0;"><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-water-gem);">◇ Skillful Organizing</span></div>
+                <div style="flex:1;padding:9px 13px 0;"><p style="margin:0;font-family:var(--bars-font-body);font-size:13px;line-height:1.36;color:#e8e6e0;text-wrap:pretty;">{{ c.day8 }}</p></div>
+                <div style="padding:9px 13px 12px;display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.1em;color:#6b6965;">#{{ c.num }}</span>
+                  <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.1em;color:#C9A84C;">{{ c.chosenMark }}</span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;">
+          <span class="clk press" onClick="{{ redraw }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:12px 15px;border-radius:9px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">Draw again</span>
+          <span class="clk press" onClick="{{ skipCard }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:12px 15px;border-radius:9px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">Continue without a card</span>
+        </div>
+        <div class="clk press" onClick="{{ toStrain }}" style="margin-top:14px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-water-gem);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-water-glow);">Name the strain →</div>
+      </div>
+    </sc-if>
+
+    <!-- ===== 2 · THE STRAIN ===== -->
+    <sc-if value="{{ sStrain }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToDraw }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back to the cards</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-water-gem);">step one · the active strain</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">{{ strainQ }}</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">Use a starter, write your own words, or skip this step entirely.</p>
+
+        <div style="display:flex;flex-direction:column;gap:9px;margin-top:18px;">
+          <sc-for list="{{ starters }}" as="o" hint-placeholder-count="6">
+            <div class="clk press" onClick="{{ o.pick }}" style="{{ o.rowStyle }}">
+              <span style="display:block;font-family:var(--bars-font-body);font-size:15.5px;line-height:1.42;color:{{ o.textColor }};text-wrap:pretty;">{{ o.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <textarea class="ta" rows="2" style="margin-top:12px;" placeholder="In your own words. Optional." value="{{ strainText }}" onChange="{{ setStrainText }}"></textarea>
+
+        <sc-if value="{{ hasChosen }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:18px;padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:0 0 0 1px rgba(41,128,185,.3);">
+            <span class="bars-label" style="color:var(--bars-water-gem);">◇ your lens · {{ chosenTitle }}</span>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.5;color:#e8e6e0;text-wrap:pretty;">{{ chosenDay8 }}</p>
+          </div>
+        </sc-if>
+
+        <div class="clk press" onClick="{{ toThree }}" style="margin-top:26px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-water-gem);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-water-glow);">Start the 3-2-1 →</div>
+        <p style="margin:14px 0 0;text-align:center;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">{{ privacyNote }}</p>
+      </div>
+    </sc-if>
+
+    <!-- ===== 3 · THE 3-2-1 ===== -->
+    <sc-if value="{{ sThree }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToStrain }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-water-gem);">step two · the short 3-2-1</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">Give the part a turn at the microphone.</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">Use the strain you named, or the one your card brought into focus. You do not have to agree with the part, argue with it, or get rid of it.</p>
+
+        <sc-if value="{{ hasStrain }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;padding:13px 15px;border-radius:10px;background:var(--bars-surface-inset);border-left:2px solid var(--bars-water-gem);">
+            <span style="font-size:15.5px;line-height:1.5;color:#e8e6e0;text-wrap:pretty;">{{ strainLine }}</span>
+          </div>
+        </sc-if>
+
+        <!-- 3 · FACE IT -->
+        <div style="margin-top:22px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);">
+          <div style="display:flex;gap:13px;align-items:center;">
+            <span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:17px;color:var(--bars-water-gem);box-shadow:inset 0 0 0 1.5px rgba(41,128,185,.5), inset 0 1px 0 rgba(255,255,255,.07);">3</span>
+            <span style="flex:1;min-width:0;">
+              <span style="display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;">Face it</span>
+              <span class="bars-label" style="display:block;margin-top:3px;color:var(--bars-water-gem);">third person · they</span>
+            </span>
+          </div>
+          <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">Describe the part as “they.” What are they trying to do? What do they keep watching for? How long have they been doing this job?</p>
+          <textarea class="ta" rows="8" style="margin-top:11px;" placeholder="They're the kind of part who…" value="{{ they }}" onChange="{{ setThey }}"></textarea>
+        </div>
+
+        <!-- 2 · TALK TO IT — the thread -->
+        <div style="margin-top:14px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);">
+          <div style="display:flex;gap:13px;align-items:center;">
+            <span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:17px;color:var(--bars-water-gem);box-shadow:inset 0 0 0 1.5px rgba(41,128,185,.5), inset 0 1px 0 rgba(255,255,255,.07);">2</span>
+            <span style="flex:1;min-width:0;">
+              <span style="display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;">Talk to it</span>
+              <span class="bars-label" style="display:block;margin-top:3px;color:var(--bars-water-gem);">second person · you · a thread</span>
+            </span>
+          </div>
+          <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">Before you speak to them, what do you call them? Not a job title — a name that fits how they work.</p>
+          <input class="ta" style="margin-top:10px;" placeholder="e.g. The Only One, The Carrier, The Quiet Steward" value="{{ maskName }}" onChange="{{ setMaskName }}">
+          <p style="margin:16px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">Now go back and forth. Ask what they are protecting, switch voices, and let them answer in their own words. Keep going until they say something you did not already know.</p>
+
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+            <sc-for list="{{ thread }}" as="m" hint-placeholder-count="0">
+              <div style="{{ m.rowStyle }}">
+                <span style="{{ m.bubbleStyle }}">
+                  <span class="bars-label" style="display:block;font-size:9px;opacity:.8;margin-bottom:4px;">{{ m.who }}</span>
+                  <span style="display:block;font-size:15px;line-height:1.5;">{{ m.text }}</span>
+                </span>
+                <span class="clk" onClick="{{ m.remove }}" style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);padding:4px 6px;">×</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ threadEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:14px;">
+              <span class="bars-label" style="color:var(--bars-text-muted);">openers, if you want one</span>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;">
+                <sc-for list="{{ openers }}" as="o" hint-placeholder-count="5">
+                  <span class="clk press" onClick="{{ o.use }}" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:10px 13px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);border:1px solid var(--bars-line);color:var(--bars-text-secondary);">{{ o.label }}</span>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bars-line);">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="bars-label" style="color:var(--bars-text-muted);">speaking as</span>
+              <span class="clk press" onClick="{{ voiceMe }}" style="{{ voiceMeStyle }}">me</span>
+              <span class="clk press" onClick="{{ voiceIt }}" style="{{ voiceItStyle }}">{{ partName }}</span>
+            </div>
+            <textarea class="ta" rows="3" style="margin-top:10px;" placeholder="{{ draftPlaceholder }}" value="{{ draft }}" onChange="{{ setDraft }}" onKeyDown="{{ onDraftKey }}"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;">
+              <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--bars-text-muted);">enter sends · shift+enter for a new line</span>
+              <span class="clk press" onClick="{{ send }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:#fff;background:var(--bars-water-gem);padding:11px 20px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">say it</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1 · BE IT — the monologue -->
+        <div style="margin-top:14px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);">
+          <div style="display:flex;gap:13px;align-items:center;">
+            <span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:17px;color:#a99ae0;box-shadow:inset 0 0 0 1.5px rgba(169,154,224,.5), inset 0 1px 0 rgba(255,255,255,.07);">1</span>
+            <span style="flex:1;min-width:0;">
+              <span style="display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;">Be it</span>
+              <span class="bars-label" style="display:block;margin-top:3px;color:#a99ae0;">first person · I · no one else in the room</span>
+            </span>
+          </div>
+          <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">Drop the dialogue. You are {{ partName }} now, with nobody to convince and no arrangement to defend. Finish it: “The smallest true thing I know, need, or can hand off is…”</p>
+          <textarea class="ta" rows="6" style="margin-top:11px;" placeholder="The smallest true thing is…" value="{{ i }}" onChange="{{ setI }}"></textarea>
+          <p style="margin:16px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">Come back to yourself. What shifted?</p>
+          <textarea class="ta" rows="3" style="margin-top:11px;" placeholder="What feels different now…" value="{{ shift }}" onChange="{{ setShift }}"></textarea>
+        </div>
+
+        <div class="clk press" onClick="{{ toPrinciple }}" style="margin-top:26px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-water-gem);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-water-glow);">Carry one principle forward →</div>
+        <p style="margin:12px 0 0;text-align:center;font-size:14px;line-height:1.5;color:var(--bars-text-muted);text-wrap:pretty;">A partial 3-2-1 is a complete pass. If the part will not speak, <span class="clk" onClick="{{ backToEntry }}" style="color:var(--bars-water-gem);">Day 7</span> is the right place to be.</p>
+      </div>
+    </sc-if>
+
+    <!-- ===== 4 · THE CONDITION ===== -->
+    <sc-if value="{{ sPrinciple }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToThree }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back to the 3-2-1</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-water-gem);">step three · one condition</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">What would let this work be organized without repeating the strain?</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">A condition — not an organizational plan, and not a promise to take responsibility for fixing the system.</p>
+
+        <div style="margin-top:20px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px rgba(41,128,185,.3);">
+          <p style="margin:0;font-size:16px;line-height:1.6;color:#e8e6e0;">This work needs a way of organizing that…</p>
+          <textarea class="ta" rows="2" style="margin-top:9px;" placeholder="e.g. lets one piece be handed off without a rescue" value="{{ needsText }}" onChange="{{ setNeedsText }}"></textarea>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.6;color:#e8e6e0;">…because the current pattern keeps…</p>
+          <textarea class="ta" rows="2" style="margin-top:9px;" placeholder="e.g. putting everything through one person" value="{{ becauseText }}" onChange="{{ setBecauseText }}"></textarea>
+        </div>
+
+        <div class="clk press" onClick="{{ toReceipt }}" style="margin-top:24px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-water-gem);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-water-glow);">Close the day →</div>
+      </div>
+    </sc-if>
+
+    <!-- ===== RECEIPT ===== -->
+    <sc-if value="{{ sReceipt }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToPrinciple }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back to the condition</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-water-gem);">your Day 8 receipt</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:28px;line-height:1.18;text-wrap:pretty;">You let the part describe the job.</h2>
+
+        <div style="margin-top:18px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px rgba(41,128,185,.34);">
+          <p style="margin:0;font-size:17px;line-height:1.58;color:#e8e6e0;text-wrap:pretty;">{{ receiptSentence }}</p>
+          <span class="clk press" onClick="{{ copyLine }}" style="display:inline-block;margin-top:14px;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;padding:10px 14px;border-radius:8px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">{{ copyLabel }}</span>
+        </div>
+
+        <div style="margin-top:16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);padding:6px 18px 16px;">
+          <sc-for list="{{ receiptRows }}" as="r" hint-placeholder-count="4">
+            <div style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+              <span class="bars-label" style="color:var(--bars-text-muted);">{{ r.label }}</span>
+              <p style="margin:7px 0 0;font-size:15.5px;line-height:1.5;color:{{ r.color }};text-wrap:pretty;">{{ r.value }}</p>
+            </div>
+          </sc-for>
+          <sc-if value="{{ hasChosen }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:13px 0 0;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-water-gem);">◇ looked through {{ chosenTitle }} · #{{ chosenNum }}</p>
+          </sc-if>
+        </div>
+
+        <p class="bars-label" style="margin:28px 0 12px;color:var(--bars-text-muted);">only if it fits</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <sc-for list="{{ doors }}" as="d" hint-placeholder-count="2">
+            <a href="{{ d.href }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-family:var(--bars-font-display);font-weight:600;font-size:15px;text-wrap:pretty;">{{ d.label }} <span style="flex:none;color:var(--bars-water-gem);">→</span></a>
+          </sc-for>
+          <span class="clk press" onClick="{{ restart }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-family:var(--bars-font-display);font-weight:600;font-size:15px;text-wrap:pretty;">Use this practice on another situation <span style="flex:none;color:var(--bars-water-gem);">→</span></span>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px dashed var(--bars-line-strong);color:var(--bars-text-muted);font-family:var(--bars-font-display);font-weight:600;font-size:15px;text-wrap:pretty;">Next: Day 9 — The Role Rep <span style="flex:none;font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;">soon</span></div>
+        </div>
+
+        <div class="clk press" onClick="{{ leaveIt }}" style="margin-top:18px;text-align:center;padding:15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-secondary);">Leave it here for now</div>
+        <sc-if value="{{ left }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:12px 0 0;text-align:center;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">Left where it is. Nothing follows this, and nothing is owed.</p>
+        </sc-if>
+        <div style="display:flex;justify-content:center;margin-top:22px;">
+          <span class="clk" onClick="{{ clearAll }}" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-muted);border-bottom:1px solid var(--bars-line-strong);">Clear this from my device</span>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- ===== CARD SHEET ===== -->
+  <sc-if value="{{ modalCard }}" hint-placeholder-val="{{ false }}">
+    <div class="clk" onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:60;background:rgba(5,4,3,.86);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;">
+      <div class="sheetup" onClick="{{ stop }}" style="width:100%;max-width:340px;">
+        <div style="position:relative;aspect-ratio:2.5/3.5;border-radius:var(--bars-radius-lg);overflow:hidden;border:2px solid #C9A84C;background:radial-gradient(120% 90% at 78% 8%,#0c2b4c,#03101f 64%);box-shadow:var(--bars-shadow-inset-top),0 0 30px 1px rgba(26,122,138,.38),0 18px 40px -20px rgba(0,0,0,.9);">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(41,128,185,.22),transparent 60%);"></div>
+          <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+            <div style="padding:18px 20px 13px;border-bottom:1px solid rgba(41,128,185,.42);"><h3 style="margin:0;font-family:var(--bars-font-display);font-weight:600;font-size:24px;line-height:1.14;color:#fff;text-wrap:pretty;">{{ modalTitle }}</h3></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 20px 0;">
+              <span style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+                <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:linear-gradient(150deg,#2f8fd0,var(--bars-water-frame));box-shadow:0 0 11px -3px var(--bars-water-glow);">{{ cleanIcon }}</span>
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-water-gem);">Clean Up</span>
+              </span>
+              <span style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+                <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;font-family:var(--bars-font-display);font-weight:700;font-size:16px;{{ modalBadgeStyle }}">{{ modalInitial }}</span>
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-secondary);">{{ modalFace }}</span>
+              </span>
+            </div>
+            <div style="padding:13px 20px 0;"><span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-water-gem);">◇ Skillful Organizing</span></div>
+            <div style="flex:1;padding:13px 20px 0;">
+              <p style="margin:0;font-family:var(--bars-font-body);font-size:17px;line-height:1.4;color:#e8e6e0;text-wrap:pretty;">{{ modalDay8 }}</p>
+              <p style="margin:12px 0 0;font-family:var(--bars-font-body);font-size:13.5px;line-height:1.45;color:#7fb6dd;text-wrap:pretty;">In the deck: {{ modalQ }}</p>
+              <p style="margin:10px 0 0;font-family:var(--bars-font-body);font-size:13.5px;line-height:1.5;color:var(--bars-water-gem);text-wrap:pretty;">{{ modalAction }}</p>
+            </div>
+            <div style="padding:12px 20px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(41,128,185,.32);">
+              <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;color:#6b6965;">#{{ modalNum }} / 120</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-water-gem);">◇ {{ modalFace }}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <div class="clk press" onClick="{{ chooseModal }}" style="flex:1;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-water-gem);padding:14px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-water-glow);">{{ modalChooseLabel }}</div>
+          <div class="clk press" onClick="{{ closeModal }}" style="flex:none;text-align:center;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-secondary);padding:14px 16px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">Close</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:940},&quot;day7Href&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Day 7 - Open Up Organization Load Check.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;day3Href&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Clean Up Check.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;orgHref&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Organization Page.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;}}">
+class Component extends DCLogic {
+  KEY = 'mtgoa-day8-bottleneck-321';
+
+  STARTERS = [
+    'Only I can do this.',
+    'Nobody will care.',
+    'It is faster if I carry it.',
+    'If I take this on, I will disappoint someone.',
+    'I do not know what I am allowed to ask for.',
+    'Something else.',
+  ];
+
+  DAY8 = {
+    '067': 'What channel is running before you redesign anything?',
+    '068': 'What would you learn by testing the bottleneck story with one real handoff?',
+    '069': 'What capability or care is missing that another rule will not supply?',
+    '070': 'What becomes possible when the charge is worked before the system is designed?',
+    '071': 'What would real ownership look like here?',
+    '072': 'What lesson needs to change the next arrangement?',
+  };
+
+  FACE = { shaman:'#6fd0d0', challenger:'#e8896f', regent:'#e0c25a', architect:'#9fb2c8', diplomat:'#6fc795', sage:'#a99ae0' };
+  CLEAN = ['M14 22 H50','M20 22 L23 50 H41 L44 22','M26 30 V42','M32 30 V42','M38 30 V42'];
+
+  OPENERS = [
+    'What are you protecting?',
+    'What do you need me to understand?',
+    'What happens if I hand one thing off?',
+    'Who taught you this job?',
+    'What would you need to let go?',
+  ];
+
+  state = { step:'entry', field:null, starter:null, strainText:'', they:'', maskName:'', thread:[], draft:'', voice:'me',
+            i:'', shift:'', needsText:'', becauseText:'', cards:[], drawn:[], chosen:null, modal:null, copied:false, left:false };
+
+  sendMsg() {
+    const text = (this.state.draft || '').trim();
+    if (!text) return;
+    const from = this.state.voice;
+    this.save({ thread: this.state.thread.concat([{ from, text }]), draft:'', voice: from === 'me' ? 'it' : 'me' });
+  }
+
+  componentDidMount() {
+    fetch('deck-data.json').then(r => r.json()).then(d => {
+      const pool = (d.cards || []).filter(c => c.move === 'clean' && c.domain === 'organize');
+      this.setState({ cards: pool }, () => { if (this.state.drawn.length !== 3) this.setState({ drawn: this.deal(pool) }); });
+    }).catch(() => {});
+    let saved = null;
+    try { saved = JSON.parse(window.localStorage.getItem(this.KEY) || 'null'); } catch (e) {}
+    if (saved && typeof saved === 'object') {
+      const next = {};
+      ['step','field','starter','strainText','they','maskName','i','shift','needsText','becauseText','chosen'].forEach(k => { if (saved[k]) next[k] = saved[k]; });
+      if (Array.isArray(saved.thread)) next.thread = saved.thread;
+      if (Array.isArray(saved.drawn) && saved.drawn.length === 3) next.drawn = saved.drawn;
+      this.setState(next);
+    }
+    this._esc = (e) => { if (e.key === 'Escape' && this.state.modal) this.setState({ modal:null }); };
+    window.addEventListener('keydown', this._esc);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._esc); }
+
+  save(patch) {
+    this.setState(patch, () => {
+      const s = this.state;
+      try { window.localStorage.setItem(this.KEY, JSON.stringify({ step:s.step, field:s.field, starter:s.starter,
+        strainText:s.strainText, they:s.they, maskName:s.maskName, thread:s.thread, i:s.i, shift:s.shift,
+        needsText:s.needsText, becauseText:s.becauseText, drawn:s.drawn, chosen:s.chosen })); } catch (e) {}
+    });
+  }
+
+  deal(pool) {
+    const p = (pool || this.state.cards).map(c => c.num);
+    for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+    return p.slice(0, 3);
+  }
+  card(num) { return this.state.cards.find(c => c.num === num) || null; }
+
+  rowStyle(sel) {
+    return 'padding:14px 15px;border-radius:12px;background:' + (sel ? '#0e1e2e' : 'var(--bars-surface-card)') +
+      ';box-shadow:var(--bars-shadow-inset-top),0 0 0 ' + (sel ? '1.5px var(--bars-water-gem)' : '1px var(--bars-line)') + ';';
+  }
+  icon() {
+    return React.createElement('svg', { width:17, height:17, viewBox:'0 0 64 64', fill:'none', stroke:'#04121f', strokeWidth:4.2, strokeLinecap:'round', strokeLinejoin:'round' },
+      this.CLEAN.map((d,i) => React.createElement('path', { key:i, d })));
+  }
+  copy(text) {
+    try { navigator.clipboard.writeText(text); } catch (e) {}
+    this.setState({ copied:true });
+    window.setTimeout(() => this.setState({ copied:false }), 1800);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const own = s.field === 'own';
+    const pct = { entry:0, draw:22, strain:45, three:70, principle:88, receipt:100 }[s.step] ?? 0;
+    const chosen = s.chosen ? this.card(s.chosen) : null;
+    const modal = s.modal ? this.card(s.modal) : null;
+    const blank = '— left blank';
+
+    const strainLine = s.strainText.trim() || (s.starter && s.starter !== 'Something else.' ? s.starter : '');
+    const partName = (s.maskName || '').trim() || 'the part';
+    const voicePill = (on) => 'font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;border-radius:var(--bars-radius-full);'
+      + (on ? 'color:#fff;background:var(--bars-water-gem);border:1px solid var(--bars-water-gem);box-shadow:var(--bars-shadow-inset-top);'
+            : 'color:var(--bars-text-secondary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);');
+    const needs = s.needsText.trim();
+    const because = s.becauseText.trim();
+    const receiptSentence = 'This work needs a way of organizing that ' + (needs || '___') +
+      ', because the current pattern keeps ' + (because || '___') + '.';
+
+    return {
+      progressStyle: 'height:100%;width:' + pct + '%;background:linear-gradient(90deg,#123a5c,var(--bars-water-gem));transition:width .35s var(--bars-ease-out);',
+      sEntry: s.step === 'entry', sDraw: s.step === 'draw', sStrain: s.step === 'strain',
+      sThree: s.step === 'three', sPrinciple: s.step === 'principle', sReceipt: s.step === 'receipt',
+      privacyNote: 'Private by default · nothing you write is sent or saved as a course answer',
+
+      start: () => this.save({ field:'org', step:'draw' }),
+      startOwn: () => this.save({ field:'own', step:'draw' }),
+      backToEntry: () => this.save({ step:'entry' }),
+      backToDraw: () => this.save({ step:'draw' }),
+      backToStrain: () => this.save({ step:'strain' }),
+      backToThree: () => this.save({ step:'three' }),
+      backToPrinciple: () => this.save({ step:'principle' }),
+      day7Href: this.props.day7Href ?? 'MTGOA Day 7 - Open Up Organization Load Check.dc.html',
+      day3Href: this.props.day3Href ?? 'MTGOA Clean Up Check.dc.html',
+      orgHref: this.props.orgHref ?? 'MTGOA Organization Page.dc.html',
+
+      drawn: s.drawn.map(num => {
+        const c = this.card(num);
+        if (!c) return { num, title:'', day8:'', initial:'', badgeStyle:'', frameStyle:'', chosenMark:'', open:()=>{} };
+        const col = this.FACE[c.face] || '#9fb2c8';
+        const isSel = s.chosen === num;
+        return { num:c.num, title:c.title, day8:this.DAY8[c.num] || c.q, initial:c.faceLabel.charAt(0),
+          badgeStyle:'color:' + col + ';background:color-mix(in srgb,' + col + ' 14%,transparent);border:1px dashed color-mix(in srgb,' + col + ' 60%,transparent);',
+          frameStyle:'position:relative;aspect-ratio:2.5/3.5;border-radius:var(--bars-radius-lg);overflow:hidden;background:radial-gradient(120% 90% at 78% 8%,#0c2b4c,#03101f 64%);border:' + (isSel ? '2px solid #C9A84C' : '1px solid rgba(201,168,76,.4)') + ';box-shadow:var(--bars-shadow-inset-top),0 0 ' + (isSel ? '26px 1px rgba(26,122,138,.44)' : '16px 1px rgba(26,122,138,.18)') + ',0 14px 30px -18px rgba(0,0,0,.9);',
+          chosenMark: isSel ? '♦ chosen' : '', open: () => this.setState({ modal:num }) };
+      }),
+      redraw: () => this.save({ drawn: this.deal(), chosen:null }),
+      skipCard: () => this.save({ chosen:null, step:'strain' }),
+      toStrain: () => this.save({ step:'strain' }),
+
+      strainQ: own
+        ? 'What story, feeling, or strain is shaping how you picture taking this on?'
+        : 'What story, feeling, or strain is shaping how you picture getting involved?',
+      starters: this.STARTERS.map(l => {
+        const sel = s.starter === l;
+        return { label:l, textColor: sel ? '#fff' : 'var(--bars-text-secondary)',
+          rowStyle: this.rowStyle(sel), pick: () => this.save({ starter: sel ? null : l }) };
+      }),
+      strainText: s.strainText,
+      setStrainText: (e) => this.save({ strainText: e.target.value }),
+      hasStrain: !!strainLine,
+      strainLine: strainLine,
+
+      they: s.they,
+      setThey: (e) => this.save({ they:e.target.value }),
+      maskName: s.maskName,
+      setMaskName: (e) => this.save({ maskName:e.target.value }),
+      partName: partName,
+      thread: s.thread.map((msg, i) => ({
+        who: msg.from === 'me' ? 'me' : partName,
+        text: msg.text,
+        rowStyle: 'display:flex;align-items:flex-start;gap:6px;' + (msg.from === 'me' ? 'flex-direction:row-reverse;' : ''),
+        bubbleStyle: 'max-width:82%;padding:11px 14px;border-radius:' + (msg.from === 'me' ? '14px 14px 4px 14px' : '14px 14px 14px 4px') + ';'
+          + (msg.from === 'me'
+            ? 'background:color-mix(in srgb,var(--bars-water-gem) 26%,transparent);border:1px solid color-mix(in srgb,var(--bars-water-gem) 45%,transparent);color:#fff;'
+            : 'background:rgba(26,122,138,.18);border:1px solid rgba(26,122,138,.45);color:var(--bars-text-primary);'),
+        remove: () => this.save({ thread: s.thread.filter((_, j) => j !== i) }),
+      })),
+      threadEmpty: s.thread.length === 0,
+      openers: this.OPENERS.map(o => ({ label:o, use: () => this.setState({ draft:o, voice:'me' }) })),
+      voiceMe: () => this.setState({ voice:'me' }),
+      voiceIt: () => this.setState({ voice:'it' }),
+      voiceMeStyle: voicePill(s.voice === 'me'),
+      voiceItStyle: voicePill(s.voice === 'it'),
+      draft: s.draft,
+      draftPlaceholder: s.voice === 'me'
+        ? 'Ask them something, or say the thing you would say if there were no cost…'
+        : 'Answer as ' + partName + ', in their own words…',
+      setDraft: (e) => this.setState({ draft:e.target.value }),
+      onDraftKey: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendMsg(); } },
+      send: () => this.sendMsg(),
+      i: s.i,
+      setI: (e) => this.save({ i:e.target.value }),
+      shift: s.shift,
+      setShift: (e) => this.save({ shift:e.target.value }),
+      toThree: () => this.save({ step:'three' }),
+      toPrinciple: () => this.save({ step:'principle' }),
+
+      needsText: s.needsText,
+      setNeedsText: (e) => this.save({ needsText:e.target.value }),
+      becauseText: s.becauseText,
+      setBecauseText: (e) => this.save({ becauseText:e.target.value }),
+      toReceipt: () => this.save({ step:'receipt' }),
+
+      modalCard: !!modal,
+      modalTitle: modal ? modal.title : '',
+      modalDay8: modal ? (this.DAY8[modal.num] || modal.q) : '',
+      modalQ: modal ? modal.q : '',
+      modalNum: modal ? modal.num : '',
+      modalAction: modal ? modal.action : '',
+      modalFace: modal ? modal.faceLabel : '',
+      modalInitial: modal ? modal.faceLabel.charAt(0) : '',
+      modalBadgeStyle: modal ? (() => { const col = this.FACE[modal.face] || '#9fb2c8';
+        return 'color:' + col + ';background:color-mix(in srgb,' + col + ' 14%,transparent);border:1px dashed color-mix(in srgb,' + col + ' 60%,transparent);'; })() : '',
+      modalChooseLabel: (modal && s.chosen === modal.num) ? 'Chosen ♦' : 'Look through this card',
+      chooseModal: () => this.save({ chosen:s.modal, modal:null }),
+      closeModal: () => this.setState({ modal:null }),
+      stop: (e) => e.stopPropagation(),
+
+      receiptSentence,
+      copyLine: () => this.copy(receiptSentence),
+      copyLabel: s.copied ? 'copied ♦' : 'copy this',
+      receiptRows: [
+        { label:'the strain I named', value: strainLine || blank, color: strainLine ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'3 · faced it as they', value: s.they.trim() || blank, color: s.they.trim() ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'2 · talked with ' + partName, value: s.thread.length ? s.thread.length + (s.thread.length === 1 ? ' turn' : ' turns') + ' · last: “' + s.thread[s.thread.length - 1].text + '”' : blank,
+          color: s.thread.length ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'1 · spoke as I', value: s.i.trim() || blank, color: s.i.trim() ? '#e8e6e0' : 'var(--bars-text-muted)' },
+      ].concat(s.shift.trim() ? [{ label:'what shifted', value:s.shift.trim(), color:'#e8e6e0' }] : []),
+      hasChosen: !!chosen,
+      chosenTitle: chosen ? chosen.title : '',
+      chosenNum: chosen ? chosen.num : '',
+      chosenDay8: chosen ? (this.DAY8[chosen.num] || chosen.q) : '',
+
+      doors: [
+        { label:'Return to the Organization Load Check', href: this.props.day7Href ?? 'MTGOA Day 7 - Open Up Organization Load Check.dc.html' },
+        { label:'See what work is actually live', href: this.props.orgHref ?? 'MTGOA Organization Page.dc.html' },
+      ],
+      restart: () => this.save({ field:'own', step:'strain', starter:null, strainText:'', they:'', maskName:'', thread:[], draft:'', voice:'me', i:'', shift:'', needsText:'', becauseText:'', chosen:null, left:false }),
+      leaveIt: () => this.setState({ left:true }),
+      left: s.left,
+      clearAll: () => { try { window.localStorage.removeItem(this.KEY); } catch (e) {}
+        this.setState({ step:'entry', field:null, starter:null, strainText:'', they:'', maskName:'', thread:[], draft:'', voice:'me', i:'', shift:'', needsText:'', becauseText:'', chosen:null, modal:null, left:false, drawn:this.deal() }); },
+
+      cleanIcon: this.icon(),
+    };
+  }
+}
+</script>
+</body>
+</html>
