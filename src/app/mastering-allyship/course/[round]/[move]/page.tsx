@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 
 import { WeekTwoPractice } from '@/components/mtgoa-check/WeekTwoPractice'
 import { DaySixWakeUpCheck } from '@/components/mtgoa-check/DaySixWakeUpCheck'
+import { DayNineRoleRep } from '@/components/mtgoa-check/DayNineRoleRep'
 import {
   MTGOA_COURSE_ROUNDS,
   linkableRoute,
@@ -97,6 +98,16 @@ export default async function CourseDayPage({ params }: { params: Promise<Params
 
   if (day.day === 6) {
     return <DaySixWakeUpCheck cards={roundTwoCardsFor(day.move)} bookHref="https://wendellbritt.gumroad.com/l/MTGOAbook" />
+  }
+
+  if (day.day === 9) {
+    return (
+      <DayNineRoleRep
+        cards={roundTwoCardsFor(day.move)}
+        orgState={MTGOA_ORGANIZATION_STATE}
+        hasOpenRoute={hasOpenParticipation()}
+      />
+    )
   }
 
   return (
