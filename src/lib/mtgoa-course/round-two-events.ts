@@ -1,5 +1,6 @@
+import type { DayTenLane, DayTenPlacement } from './day-ten'
 import { ROUND_TWO_DAYS, roundTwoCardsFor } from './round-two'
-import type { RoundTwoLane, RoundTwoState } from './round-two'
+import type { RoundTwoState } from './round-two'
 
 export const ROUND_TWO_EVENT_NAMES = [
   'week_two_viewed',
@@ -24,15 +25,20 @@ export type RoundTwoAnalyticsEvent = {
   /** Which of days 6–10. A position in the course, never an answer. */
   day?: number
   cardId?: string
-  lane?: RoundTwoLane
-  state?: RoundTwoState
+  lane?: DayTenLane
+  /**
+   * Where the day landed. Days 6 to 9 report the three shared Week 2 states;
+   * Day 10 reports its own four, because a structure nobody can reach yet and a
+   * structure deliberately put down are different results.
+   */
+  state?: RoundTwoState | DayTenPlacement
   /** Which earlier day a blocked reader routed to. */
   returnedToDay?: number
 }
 
 const EVENT_NAMES = new Set<string>(ROUND_TWO_EVENT_NAMES)
 const LANES = new Set<string>(['personal', 'local_team'])
-const STATES = new Set<string>(['prepared', 'made', 'returning'])
+const STATES = new Set<string>(['prepared', 'made', 'returning', 'placed', 'returned', 'put_down'])
 const DAYS = new Set<number>(ROUND_TWO_DAYS.map((d) => d.day))
 
 /** Every canonical Skillful Organizing card id across the five Week 2 moves. */
@@ -58,8 +64,8 @@ export function parseRoundTwoAnalyticsEvent(input: unknown): RoundTwoAnalyticsEv
 
   if (typeof raw.day === 'number' && DAYS.has(raw.day)) event.day = raw.day
   if (typeof raw.cardId === 'string' && CARD_IDS.has(raw.cardId)) event.cardId = raw.cardId
-  if (typeof raw.lane === 'string' && LANES.has(raw.lane)) event.lane = raw.lane as RoundTwoLane
-  if (typeof raw.state === 'string' && STATES.has(raw.state)) event.state = raw.state as RoundTwoState
+  if (typeof raw.lane === 'string' && LANES.has(raw.lane)) event.lane = raw.lane as DayTenLane
+  if (typeof raw.state === 'string' && STATES.has(raw.state)) event.state = raw.state as RoundTwoState | DayTenPlacement
   if (
     typeof raw.returnedToDay === 'number' &&
     Number.isInteger(raw.returnedToDay) &&

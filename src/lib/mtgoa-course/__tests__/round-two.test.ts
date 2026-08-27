@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ALLYSHIP_RHYTHM_FIELDS,
-  CAMPAIGN_HANDOFF_FIELDS,
-  ROUND_TWO_COME_BACK,
   ROUND_TWO_DAYS,
-  ROUND_TWO_LANES,
   ROUND_TWO_STATES,
   roundTwoCardsFor,
   roundTwoDay,
@@ -43,31 +39,12 @@ describe('Week 2 — Skillful Organizing', () => {
     }
   })
 
-  it('offers two lanes, and never makes the team lane the graduation requirement', () => {
-    expect(ROUND_TWO_LANES.map((l) => l.key)).toEqual(['personal', 'local_team'])
-    const team = ROUND_TWO_LANES[1]
-    expect(team.body).toMatch(/owner: me/i)
-    expect(ALLYSHIP_RHYTHM_FIELDS).toHaveLength(5)
-    expect(CAMPAIGN_HANDOFF_FIELDS.map((f) => f.key)).toEqual([
-      'purpose', 'audience', 'action', 'owner', 'terms', 'review',
-    ])
-  })
-
-  it('keeps prepared distinct from made', () => {
+  it('keeps prepared distinct from made for the days that share three states', () => {
     expect(ROUND_TWO_STATES.map((s) => s.key)).toEqual(['made', 'prepared', 'returning'])
     const prepared = ROUND_TWO_STATES.find((s) => s.key === 'prepared')!
     expect(prepared.label).not.toMatch(/complete|done|finished/i)
   })
 
-  it('routes a failed structure back into the loop rather than calling it done', () => {
-    const answers = ROUND_TWO_COME_BACK.answers
-    expect(answers.map((a) => a.returnToDay)).toEqual([null, 6, 1])
-    // Both return targets must actually resolve, or the answer is a dead end.
-    for (const a of answers) {
-      if (!a.returnToDay) continue
-      expect(linkableRoute(mtgoaCourseDay(a.returnToDay)!)).toBeTruthy()
-    }
-  })
 
   it('reports only what the reader actually did', () => {
     expect(roundTwoEvidence({ day: 6, answered: 0, carried: false, state: null })).toEqual(['showed up to Day 6'])

@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/cards.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+<script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  html, body { margin:0; }
+  a { color:var(--bars-fire-gem); text-decoration:none; }
+  a:hover { color:var(--bars-text-primary); }
+  .clk { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .ta { width:100%; font-family:var(--bars-font-body); font-size:16px; line-height:1.55; color:#e8e6e0; background:#180a06; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:13px 14px; resize:vertical; }
+  .ta::placeholder { color:#6b6965; }
+  .ta:focus { outline:none; border-color:var(--bars-fire-gem); box-shadow:0 0 0 3px color-mix(in srgb,var(--bars-fire-gem) 24%,transparent); }
+  .hand { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:640px) {
+    .hand { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:6px; }
+    .hand > * { flex:0 0 74%; scroll-snap-align:center; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .clk { transition: transform .15s var(--bars-ease-out), filter .15s ease, box-shadow .2s ease; }
+    .clk:hover { filter: brightness(1.08); }
+    .press:active { transform: scale(.97); }
+    .fadeup { animation: fadeup .4s var(--bars-ease-out) both; }
+    @keyframes fadeup { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none;} }
+    .sheetup { animation: sheetup .28s var(--bars-ease-out) both; }
+    @keyframes sheetup { from { transform: translateY(16px); opacity:0;} to { transform:none; opacity:1;} }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bars-bg-base);font-family:var(--bars-font-body);color:var(--bars-text-primary);">
+  <div style="max-width:640px;margin:0 auto;padding:26px clamp(16px,5vw,32px) 96px;">
+
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:12px;">
+      <span class="bars-label" style="color:#C9A84C;">Week 2 · Skillful Organizing · Day 10 of 30</span>
+      <span class="bars-label" style="color:var(--bars-fire-gem);">show up · 火</span>
+    </div>
+    <div style="height:2px;border-radius:2px;background:var(--bars-line);overflow:hidden;">
+      <div style="{{ progressStyle }}"></div>
+    </div>
+
+    <!-- ===== ENTRY ===== -->
+    <sc-if value="{{ sEntry }}" hint-placeholder-val="{{ true }}">
+      <div class="fadeup" style="padding-top:36px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">day 10 · show up · skillful organizing</span>
+        <h1 class="bars-title" style="margin:10px 0 0;font-size:clamp(29px,5.8vw,41px);line-height:1.14;font-weight:700;text-wrap:pretty;">Put one useful structure where someone can use it.</h1>
+        <p class="bars-prose" style="margin:18px 0 0;font-size:17px;line-height:1.62;color:var(--bars-text-secondary);text-wrap:pretty;">You can have a clear idea, a careful plan, and a real desire to help. The work still stays with you until it has a place to land.</p>
+        <p class="bars-prose" style="margin:12px 0 0;font-size:17px;line-height:1.62;color:var(--bars-text-secondary);text-wrap:pretty;">Today you will build one small handoff: a rhythm future you can keep, or a shared-work page another person has agreed to receive. The standard is simple — can someone take the next useful action from what you made?</p>
+
+        <div style="margin-top:22px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid var(--bars-fire-gem);">
+          <span class="bars-label" style="color:var(--bars-fire-gem);">the live field</span>
+          <p class="bars-prose" style="margin:9px 0 0;font-size:15.5px;line-height:1.6;color:#e8e6e0;text-wrap:pretty;">Helping <em>Mastering the Game of Allyship</em> reach people who could use it. Use today's practice on the campaign where a current route fits, or on a piece of your own allyship life.</p>
+        </div>
+
+        <div class="clk press" onClick="{{ start }}" style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:26px;padding:20px;border-radius:var(--bars-radius-lg);background:var(--bars-fire-frame);box-shadow:var(--bars-shadow-inset-top),0 12px 28px -12px var(--bars-fire-glow);">
+          <span>
+            <span style="display:block;font-family:var(--bars-font-display);font-weight:700;font-size:18px;color:#fff;">Build the handoff</span>
+            <span style="display:block;margin-top:5px;font-size:14.5px;line-height:1.45;color:rgba(255,255,255,.86);">Draw a card, choose a lane, make one thing someone can use.</span>
+          </span>
+          <span style="flex:none;color:#fff;font-size:18px;">→</span>
+        </div>
+
+        <p class="bars-label" style="margin:26px 0 11px;color:var(--bars-text-muted);">other ways in</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="{{ orgHref }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15.5px;line-height:1.4;text-wrap:pretty;">See the current organization work <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          <a href="{{ facesHref }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15.5px;line-height:1.4;text-wrap:pretty;">Explore the Six Faces <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          <span class="clk press" onClick="{{ startOwn }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15.5px;line-height:1.4;text-wrap:pretty;">Use this in my own allyship life <span style="flex:none;color:var(--bars-fire-gem);">→</span></span>
+        </div>
+        <p style="margin:20px 0 0;text-align:center;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;line-height:1.6;">{{ privacyNote }}</p>
+      </div>
+    </sc-if>
+
+    <!-- ===== 1 · DRAW ===== -->
+    <sc-if value="{{ sDraw }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToEntry }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-text-muted);">the Allyship Deck · Show Up · Skillful Organizing</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">Six ways to make a structure real.</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">Each card gives you one way to take the handoff out of your head and into a place where it can be used. Choose one, deal again, or continue without a card.</p>
+
+        <div class="hand" style="margin-top:20px;">
+          <sc-for list="{{ drawn }}" as="c" hint-placeholder-count="3">
+            <div class="clk" onClick="{{ c.open }}" style="{{ c.frameStyle }}">
+              <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+                <div style="padding:13px 13px 10px;border-bottom:1px solid rgba(193,57,43,.5);"><h3 style="margin:0;font-family:var(--bars-font-display);font-weight:600;font-size:16px;line-height:1.16;color:#fff;text-wrap:pretty;">{{ c.title }}</h3></div>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:11px 13px 0;">
+                  <span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:linear-gradient(150deg,var(--bars-fire-glow),var(--bars-fire-frame));box-shadow:0 0 9px -3px var(--bars-fire-glow);">{{ showIcon }}</span>
+                  <span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;font-family:var(--bars-font-display);font-weight:700;font-size:14px;{{ c.badgeStyle }}">{{ c.initial }}</span>
+                </div>
+                <div style="padding:10px 13px 0;"><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-fire-gem);">◇ Skillful Organizing</span></div>
+                <div style="flex:1;padding:9px 13px 0;"><p style="margin:0;font-family:var(--bars-font-body);font-size:13px;line-height:1.36;color:#e8e6e0;text-wrap:pretty;">{{ c.day10 }}</p></div>
+                <div style="padding:9px 13px 12px;display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.1em;color:#6b6965;">#{{ c.num }}</span>
+                  <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.1em;color:#C9A84C;">{{ c.chosenMark }}</span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;">
+          <span class="clk press" onClick="{{ redraw }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:12px 15px;border-radius:9px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">Deal again</span>
+          <span class="clk press" onClick="{{ skipCard }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:12px 15px;border-radius:9px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">Continue without a card</span>
+        </div>
+        <div class="clk press" onClick="{{ toLane }}" style="margin-top:14px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-fire-frame);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-fire-glow);">Choose what you are organizing →</div>
+      </div>
+    </sc-if>
+
+    <!-- ===== 2 · LANES ===== -->
+    <sc-if value="{{ sLane }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToDraw }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back to the cards</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-fire-gem);">step two · choose the lane</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">What needs a place to live?</h2>
+
+        <sc-if value="{{ hasChosen }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:18px;padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:0 0 0 1px rgba(193,57,43,.42);">
+            <span class="bars-label" style="color:var(--bars-fire-gem);">◇ your lens · {{ chosenTitle }}</span>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.5;color:#e8e6e0;text-wrap:pretty;">{{ chosenDay10 }}</p>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px;">
+          <div class="clk press" onClick="{{ pickPersonal }}" style="{{ laneAStyle }}">
+            <span class="bars-label" style="color:var(--bars-fire-gem);">lane a · my allyship life</span>
+            <p style="margin:9px 0 0;font-size:16.5px;line-height:1.5;color:#fff;font-family:var(--bars-font-display);font-weight:600;text-wrap:pretty;">I want a rhythm that lets me take a useful action without asking my future self to remember everything from scratch.</p>
+            <div style="display:flex;flex-direction:column;gap:7px;margin-top:13px;">
+              <span style="font-size:14.5px;line-height:1.5;color:var(--bars-text-secondary);"><strong style="color:#e8e6e0;">You will build:</strong> An Allyship Rhythm</span>
+              <span style="font-size:14.5px;line-height:1.5;color:var(--bars-text-secondary);"><strong style="color:#e8e6e0;">Who can use it:</strong> Future you.</span>
+              <span style="font-size:14.5px;line-height:1.5;color:var(--bars-text-secondary);"><strong style="color:#e8e6e0;">What happens to it:</strong> You place it in your own system. Sending it to the Campaign Steward is optional.</span>
+            </div>
+          </div>
+
+          <div class="clk press" onClick="{{ pickShared }}" style="{{ laneBStyle }}">
+            <span class="bars-label" style="color:var(--bars-fire-gem);">lane b · shared work I already hold</span>
+            <p style="margin:9px 0 0;font-size:16.5px;line-height:1.5;color:#fff;font-family:var(--bars-font-display);font-weight:600;text-wrap:pretty;">I have a real piece of work and a person, group, or place that has agreed to receive a clear handoff.</p>
+            <div style="display:flex;flex-direction:column;gap:7px;margin-top:13px;">
+              <span style="font-size:14.5px;line-height:1.5;color:var(--bars-text-secondary);"><strong style="color:#e8e6e0;">You will build:</strong> A Shared Work Handoff</span>
+              <span style="font-size:14.5px;line-height:1.5;color:var(--bars-text-secondary);"><strong style="color:#e8e6e0;">Who can use it:</strong> A person, group, or place that has agreed to receive it.</span>
+              <span style="font-size:14.5px;line-height:1.5;color:var(--bars-text-secondary);"><strong style="color:#e8e6e0;">What happens to it:</strong> You place it with that recipient. MTGOA does not receive it unless you separately choose to submit a book-campaign handoff.</span>
+            </div>
+            <p style="margin:13px 0 0;font-size:14px;line-height:1.5;color:var(--bars-text-muted);text-wrap:pretty;">Choose this only when you have standing to place the handoff. "Owner: me" is a real answer. A collaborator needs to have separately agreed to receive work from you.</p>
+          </div>
+        </div>
+
+        <p class="bars-label" style="margin:24px 0 11px;color:var(--bars-text-muted);">book-promotion starters · optional</p>
+        <div style="display:flex;flex-wrap:wrap;gap:9px;">
+          <sc-for list="{{ starters }}" as="st" hint-placeholder-count="5">
+            <span class="clk press" onClick="{{ st.pick }}" style="{{ st.style }}">{{ st.label }}</span>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasStarter }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:12px;padding:14px 15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid #C9A84C;">
+            <p style="margin:0;font-size:15px;line-height:1.55;color:#e8e6e0;text-wrap:pretty;">{{ starterBlurb }}</p>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:var(--bars-text-muted);text-wrap:pretty;">These are ways to structure book-promotion work. Actual open routes, owners, terms, and contact links come from the Campaign Steward's public state.</p>
+          </div>
+        </sc-if>
+
+        <div class="clk press" onClick="{{ toBuild }}" style="margin-top:22px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-fire-frame);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-fire-glow);">{{ buildLabel }}</div>
+
+        <p class="bars-label" style="margin:30px 0 11px;color:var(--bars-text-muted);">lane c · an earlier move is still live</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">The invitation, the story, or the capacity still needs attention before I build a structure around it. Choosing this is a complete and useful response to the page.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <sc-for list="{{ returnDoors }}" as="d" hint-placeholder-count="4">
+            <a href="{{ d.href }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;text-wrap:pretty;">{{ d.label }} <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===== 3A · ALLYSHIP RHYTHM ===== -->
+    <sc-if value="{{ sRhythm }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToLane }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back to the lanes</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-fire-gem);">step three · an Allyship Rhythm</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">Give future you a rhythm that fits in a real week.</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">A rhythm holds one useful action in a place you can actually reach. Make it small enough that you can put it on a calendar, in a note you will open, or beside a recurring moment you already have.</p>
+
+        <div style="display:flex;flex-direction:column;gap:14px;margin-top:18px;">
+          <sc-for list="{{ rhythmFields }}" as="f" hint-placeholder-count="5">
+            <div style="padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);">
+              <div style="display:flex;gap:13px;align-items:center;">
+                <span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:17px;color:var(--bars-fire-gem);box-shadow:inset 0 0 0 1.5px rgba(193,57,43,.6), inset 0 1px 0 rgba(255,255,255,.07);">{{ f.n }}</span>
+                <span style="flex:1;min-width:0;">
+                  <span style="display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;">{{ f.label }}</span>
+                  <span class="bars-label" style="display:block;margin-top:3px;color:var(--bars-fire-gem);">{{ f.prompt }}</span>
+                </span>
+              </div>
+              <textarea class="ta" rows="2" style="margin-top:11px;" placeholder="{{ f.ph }}" value="{{ f.value }}" onChange="{{ f.set }}"></textarea>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="margin-top:16px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:0 0 0 1px rgba(201,168,76,.35);">
+          <div class="clk" onClick="{{ toggleBook }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <span>
+              <span style="display:block;font-family:var(--bars-font-display);font-weight:600;font-size:16.5px;color:#fff;">Book Handoff Rhythm · optional</span>
+              <span class="bars-label" style="display:block;margin-top:4px;color:#C9A84C;">one thoughtful recommendation, at a rhythm you can keep</span>
+            </span>
+            <span style="flex:none;font-family:var(--bars-font-mono);font-size:15px;color:var(--bars-text-muted);">{{ bookChev }}</span>
+          </div>
+          <sc-if value="{{ bookOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px;">
+              <input class="ta" placeholder="The person or kind of group I will consider…" value="{{ bkWho }}" onChange="{{ set_bkWho }}">
+              <input class="ta" placeholder="Why this book could be useful to them…" value="{{ bkWhy }}" onChange="{{ set_bkWhy }}">
+              <input class="ta" placeholder="The one sentence that leaves their choice intact…" value="{{ bkLine }}" onChange="{{ set_bkLine }}">
+              <p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:var(--bars-text-muted);text-wrap:pretty;">My boundary: I will not follow up unless they invite more conversation.</p>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="margin-top:20px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px rgba(193,57,43,.4);">
+          <span class="bars-label" style="color:var(--bars-fire-gem);">my Allyship Rhythm</span>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.6;color:#e8e6e0;white-space:pre-wrap;text-wrap:pretty;">{{ rhythmArtifact }}</p>
+          <p style="margin:14px 0 0;font-size:14.5px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">Copy it into the calendar, task list, notebook, or reminder system you actually use. Then create the first instance now. The structure is placed when future you can encounter it without having to remember this page.</p>
+          <span class="clk press" onClick="{{ copyArtifact }}" style="display:inline-block;margin-top:13px;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;padding:11px 14px;border-radius:8px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">{{ copyLabel }}</span>
+        </div>
+
+        <div class="clk press" onClick="{{ toLand }}" style="margin-top:22px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-fire-frame);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-fire-glow);">Tell the truth about where it landed →</div>
+      </div>
+    </sc-if>
+
+    <!-- ===== 3B · SHARED WORK HANDOFF ===== -->
+    <sc-if value="{{ sHandoff }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToLane }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back to the lanes</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-fire-gem);">step three · a Shared Work Handoff</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">Make the next action legible to the person who will carry it.</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">A shared handoff tells someone what this piece of work is for, what happens next, who owns it, what is optional, and when the work comes back for review. Write only what you have standing to offer or decide.</p>
+
+        <div style="margin-top:16px;padding:14px 15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid var(--bars-fire-gem);">
+          <p style="margin:0;font-size:14.5px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">Do not include another person's contact details, private story, or identifying information unless you have permission to share it. Frame <em>For whom</em> as a role, group, or relationship.</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;margin-top:16px;">
+          <sc-for list="{{ handoffFields }}" as="f" hint-placeholder-count="6">
+            <div style="padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);">
+              <div style="display:flex;gap:13px;align-items:center;">
+                <span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:17px;color:var(--bars-fire-gem);box-shadow:inset 0 0 0 1.5px rgba(193,57,43,.6), inset 0 1px 0 rgba(255,255,255,.07);">{{ f.n }}</span>
+                <span style="flex:1;min-width:0;">
+                  <span style="display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;">{{ f.label }}</span>
+                  <span class="bars-label" style="display:block;margin-top:3px;color:var(--bars-fire-gem);">{{ f.prompt }}</span>
+                </span>
+              </div>
+              <textarea class="ta" rows="2" style="margin-top:11px;" placeholder="{{ f.ph }}" value="{{ f.value }}" onChange="{{ f.set }}"></textarea>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="margin-top:20px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px rgba(193,57,43,.4);">
+          <span class="bars-label" style="color:var(--bars-fire-gem);">shared work handoff</span>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.6;color:#e8e6e0;white-space:pre-wrap;text-wrap:pretty;">{{ handoffArtifact }}</p>
+          <p style="margin:14px 0 0;font-size:14.5px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">Copy it into the document, message, shared space, or meeting where the intended person can use it. If the person has not agreed to receive it, keep it as a draft and choose the Prepared state.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:13px;">
+            <span class="clk press" onClick="{{ copyArtifact }}" style="font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;padding:11px 14px;border-radius:8px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">{{ copyLabel }}</span>
+            <a href="{{ orgHref }}" style="font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;padding:11px 14px;border-radius:8px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">See current MTGOA work →</a>
+            <a href="{{ facesHref }}" style="font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;padding:11px 14px;border-radius:8px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">Explore the relevant Face →</a>
+          </div>
+        </div>
+
+        <div class="clk press" onClick="{{ toLand }}" style="margin-top:22px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-fire-frame);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-fire-glow);">Tell the truth about where it landed →</div>
+      </div>
+    </sc-if>
+
+    <!-- ===== 4 · PLACEMENT ===== -->
+    <sc-if value="{{ sLand }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToBuild }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back to the handoff</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-fire-gem);">step four · the honest state</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">Can someone use it from here?</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">Choose the sentence that describes the handoff's current state. This tells you what the next move is. No state earns a score, a reward, or a role.</p>
+
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:20px;">
+          <sc-for list="{{ states }}" as="st" hint-placeholder-count="4">
+            <div class="clk press" onClick="{{ st.pick }}" style="{{ st.style }}">
+              <span style="display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;text-wrap:pretty;">{{ st.label }}</span>
+              <span class="bars-label" style="display:block;margin-top:5px;color:{{ st.color }};">{{ st.tag }}</span>
+              <p style="margin:9px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">{{ st.body }}</p>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ needsAttest }}" hint-placeholder-val="{{ false }}">
+          <div class="clk" onClick="{{ toggleAttest }}" style="{{ attestStyle }}">
+            <span style="flex:none;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-family:var(--bars-font-mono);font-size:13px;color:#fff;{{ attestBoxStyle }}">{{ attestMark }}</span>
+            <span style="flex:1;font-size:15px;line-height:1.55;color:#e8e6e0;text-wrap:pretty;">{{ attestText }}</span>
+          </div>
+          <p style="margin:10px 0 0;font-size:14px;line-height:1.5;color:var(--bars-text-muted);text-wrap:pretty;">The page takes this as your word. It never asks for screenshots, recipient names, proof of purchase, or proof of reply.</p>
+        </sc-if>
+
+        <sc-if value="{{ needsReturnPick }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;">
+            <span class="bars-label" style="color:var(--bars-text-muted);">which move is still live?</span>
+            <sc-for list="{{ returnDoors }}" as="d" hint-placeholder-count="4">
+              <a href="{{ d.href }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;text-wrap:pretty;">{{ d.label }} <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div class="clk press" onClick="{{ toComeBack }}" style="{{ landNextStyle }}">{{ landNextLabel }}</div>
+      </div>
+    </sc-if>
+
+    <!-- ===== 5 · COME BACK ===== -->
+    <sc-if value="{{ sComeBack }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToLand }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-fire-gem);">step five · come back</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">What did the placement teach you?</h2>
+        <p class="bars-prose" style="margin:9px 0 0;font-size:16px;line-height:1.58;color:var(--bars-text-secondary);text-wrap:pretty;">Did this structure make the next useful handoff easier, harder, or clearer? This page cannot know whether you will return later — so take the question with you.</p>
+
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:20px;">
+          <sc-for list="{{ learnings }}" as="l" hint-placeholder-count="3">
+            <div class="clk press" onClick="{{ l.pick }}" style="{{ l.style }}">
+              <span style="display:block;font-family:var(--bars-font-display);font-weight:600;font-size:17px;color:#fff;text-wrap:pretty;">{{ l.label }}</span>
+              <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">{{ l.body }}</p>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="margin-top:18px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid #a99ae0;">
+          <span class="bars-label" style="color:#a99ae0;">a line for your own reminder system</span>
+          <input class="ta" type="date" style="margin-top:11px;" value="{{ returnDate }}" onChange="{{ set_returnDate }}">
+          <p style="margin:11px 0 0;font-family:var(--bars-font-mono);font-size:13.5px;line-height:1.6;color:#e8e6e0;text-wrap:pretty;">{{ reminderLine }}</p>
+          <span class="clk press" onClick="{{ copyReminder }}" style="display:inline-block;margin-top:12px;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;padding:10px 14px;border-radius:8px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">{{ copyReminderLabel }}</span>
+        </div>
+
+        <div class="clk press" onClick="{{ toReceipt }}" style="margin-top:22px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-fire-frame);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-fire-glow);">Close the day →</div>
+      </div>
+    </sc-if>
+
+    <!-- ===== RECEIPT ===== -->
+    <sc-if value="{{ sReceipt }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToComeBack }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:var(--bars-fire-gem);">your Day 10 receipt</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:28px;line-height:1.18;text-wrap:pretty;">{{ receiptHead }}</h2>
+        <p class="bars-prose" style="margin:12px 0 0;font-size:16.5px;line-height:1.6;color:var(--bars-text-secondary);text-wrap:pretty;">Week 2 closes with a handoff: something future you or another person can use to take the next step. Run the loop again when the work needs another pass.</p>
+
+        <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:9px;">
+          <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;border-radius:7px;color:var(--bars-text-secondary);border:1px solid var(--bars-line-strong);">Day 10 explored</span>
+          <span style="{{ stateChipStyle }}">{{ stateChip }}</span>
+        </div>
+
+        <div style="margin-top:16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);padding:6px 18px 16px;">
+          <sc-for list="{{ receiptRows }}" as="r" hint-placeholder-count="6">
+            <div style="padding:13px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+              <span class="bars-label" style="color:var(--bars-text-muted);">{{ r.label }}</span>
+              <p style="margin:7px 0 0;font-size:15.5px;line-height:1.5;color:{{ r.color }};text-wrap:pretty;">{{ r.value }}</p>
+            </div>
+          </sc-for>
+          <sc-if value="{{ hasChosen }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:13px 0 0;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-fire-gem);">◇ played through {{ chosenTitle }} · #{{ chosenNum }}</p>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ preparedPrompt }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;padding:16px 17px;border-radius:var(--bars-radius-lg);border:1px dashed var(--bars-line-strong);">
+            <span class="bars-label" style="color:#C9A84C;">choose a placement</span>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">You have something concrete. Decide where it will land before calling it a finished structure — a calendar, a shared document, a consented message, a meeting.</p>
+          </div>
+        </sc-if>
+
+        <p class="bars-label" style="margin:28px 0 12px;color:var(--bars-text-muted);">next steps</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <sc-if value="{{ canSubmit }}" hint-placeholder-val="{{ false }}">
+            <div class="clk press" onClick="{{ toSubmit }}" style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:19px;border-radius:var(--bars-radius-lg);background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top),0 12px 28px -12px var(--bars-liminal-glow);color:#fff;">
+              <span>
+                <span style="display:block;font-family:var(--bars-font-display);font-weight:700;font-size:17px;">Send this handoff to the Campaign Stewards</span>
+                <span style="display:block;margin-top:5px;font-size:14.5px;line-height:1.45;color:rgba(255,255,255,.88);">Wendell and the Campaign Stewards see only the handoff you choose to send. Your private course answers stay on this device.</span>
+              </span>
+              <span style="flex:none;font-size:18px;">→</span>
+            </div>
+          </sc-if>
+          <a href="{{ facesHref }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;text-wrap:pretty;">See the Six Faces of the organization <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          <a href="{{ orgHref }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;text-wrap:pretty;">See current MTGOA work <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          <a href="{{ bookHref }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;text-wrap:pretty;">Haven't bought the book yet? Read the book <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          <a href="{{ deckHref }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;text-wrap:pretty;">Use the Allyship Deck for the next move <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          <sc-if value="{{ showWeek3 }}" hint-placeholder-val="{{ false }}">
+            <a href="{{ week3Href }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;text-wrap:pretty;">Start Week 3 — Gather Resources <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          </sc-if>
+        </div>
+
+        <p class="bars-label" style="margin:26px 0 12px;color:var(--bars-text-muted);">or return to the move that is still live</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <sc-for list="{{ returnDoors }}" as="d" hint-placeholder-count="4">
+            <a href="{{ d.href }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);font-size:15px;line-height:1.4;text-wrap:pretty;">{{ d.label }} <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          </sc-for>
+        </div>
+
+        <p style="margin:26px 0 0;text-align:center;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;line-height:1.6;">{{ privacyNote }}</p>
+      </div>
+    </sc-if>
+
+    <!-- ===== SUBMISSION REVIEW ===== -->
+    <sc-if value="{{ sSubmit }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:26px;">
+        <span class="clk" onClick="{{ backToReceipt }}" style="font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-muted);">← back to the receipt</span>
+        <span class="bars-label" style="display:block;margin-top:16px;color:#a855f7;">review what you are sharing</span>
+        <h2 class="bars-title" style="margin:9px 0 0;font-size:27px;line-height:1.2;text-wrap:pretty;">Nothing leaves this device until you send it.</h2>
+
+        <div style="margin-top:16px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid var(--bars-liminal);">
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#e8e6e0;text-wrap:pretty;">This handoff is visible only to MTGOA Campaign Stewards, currently including Wendell Britt. It is not public and it is not a task assignment. If you choose "No reply needed," a steward may read it and will not contact you from it. You can withdraw it later.</p>
+          <p style="margin:9px 0 0;font-size:14px;line-height:1.55;color:var(--bars-text-muted);text-wrap:pretty;">Withdrawn submissions leave active campaign review and are handled under the published retention rule.</p>
+        </div>
+
+        <span class="bars-label" style="display:block;margin-top:26px;color:var(--bars-text-muted);">1 · the handoff being shared</span>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:12px;">
+          <sc-for list="{{ submitFields }}" as="f" hint-placeholder-count="7">
+            <div style="padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);">
+              <span class="bars-label" style="color:var(--bars-fire-gem);">{{ f.label }}</span>
+              <textarea class="ta" rows="2" style="margin-top:9px;" placeholder="{{ f.ph }}" value="{{ f.value }}" onChange="{{ f.set }}"></textarea>
+            </div>
+          </sc-for>
+          <div style="padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);">
+            <span class="bars-label" style="color:var(--bars-fire-gem);">where it is placed</span>
+            <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px;">
+              <sc-for list="{{ placementKinds }}" as="k" hint-placeholder-count="5">
+                <span class="clk press" onClick="{{ k.pick }}" style="{{ k.style }}">{{ k.label }}</span>
+              </sc-for>
+            </div>
+            <p style="margin:11px 0 0;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--bars-text-muted);">state: {{ placementStateLabel }} · lane: {{ laneLabel }}{{ faceContext }}</p>
+          </div>
+          <p style="margin:2px 0 0;font-size:14px;line-height:1.55;color:var(--bars-text-muted);text-wrap:pretty;">Your 3-2-1 dialogue, load check, body weather, beliefs, and card answers are not included and are not sent.</p>
+        </div>
+
+        <span class="bars-label" style="display:block;margin-top:28px;color:var(--bars-text-muted);">2 · what would be useful from us?</span>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+          <sc-for list="{{ requests }}" as="r" hint-placeholder-count="5">
+            <div class="clk press" onClick="{{ r.pick }}" style="{{ r.style }}">
+              <span style="flex:none;display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:10px;color:#fff;{{ r.dotStyle }}">{{ r.mark }}</span>
+              <span style="flex:1;font-size:15.5px;line-height:1.5;color:#e8e6e0;text-wrap:pretty;">{{ r.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:13px;padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px var(--bars-line);">
+          <span class="bars-label" style="color:var(--bars-text-muted);">anything else Wendell should know? · optional</span>
+          <textarea class="ta" rows="3" style="margin-top:9px;" placeholder="Optional." value="{{ note }}" onChange="{{ set_note }}"></textarea>
+          <p style="margin:6px 0 0;text-align:right;font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">{{ noteCount }}</p>
+          <span class="bars-label" style="display:block;margin-top:14px;color:var(--bars-text-muted);">what did putting this somewhere real teach you? · optional</span>
+          <textarea class="ta" rows="2" style="margin-top:9px;" placeholder="Share only what you want the steward to know about the work." value="{{ learningNote }}" onChange="{{ set_learningNote }}"></textarea>
+          <p style="margin:6px 0 0;text-align:right;font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">{{ learningCount }}</p>
+        </div>
+
+        <span class="bars-label" style="display:block;margin-top:28px;color:var(--bars-text-muted);">3 · contact and consent</span>
+        <p style="margin:10px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">{{ contactPrompt }}</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+          <input class="ta" placeholder="Name" value="{{ senderName }}" onChange="{{ set_senderName }}">
+          <input class="ta" placeholder="Email or other contact route" value="{{ senderContact }}" onChange="{{ set_senderContact }}">
+          <input class="ta" placeholder="City or region — only if it matters to the handoff" value="{{ senderRegion }}" onChange="{{ set_senderRegion }}">
+        </div>
+        <div class="clk" onClick="{{ toggleConsent }}" style="{{ consentStyle }}">
+          <span style="flex:none;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-family:var(--bars-font-mono);font-size:13px;color:#fff;{{ consentBoxStyle }}">{{ consentMark }}</span>
+          <span style="flex:1;font-size:15px;line-height:1.55;color:#e8e6e0;text-wrap:pretty;">I give MTGOA Campaign Stewards permission to store this handoff and contact me only about the response I requested or this specific piece of work.</span>
+        </div>
+
+        <div class="clk press" onClick="{{ send }}" style="{{ sendStyle }}">{{ sendLabel }}</div>
+        <p style="margin:11px 0 0;text-align:center;font-size:14px;line-height:1.55;color:var(--bars-text-muted);text-wrap:pretty;">{{ sendNote }}</p>
+      </div>
+    </sc-if>
+
+    <!-- ===== CONFIRMATION ===== -->
+    <sc-if value="{{ sSent }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:36px;">
+        <span class="bars-label" style="color:#a855f7;">submitted to the campaign</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:29px;line-height:1.16;text-wrap:pretty;">Your handoff is with the Campaign Steward.</h2>
+        <p class="bars-prose" style="margin:14px 0 0;font-size:17px;line-height:1.6;color:var(--bars-text-secondary);text-wrap:pretty;">It is private to the people stewarding this work. Your private course writing was not sent. A submission does not create a role, task, or commitment unless a separate agreement is made later.</p>
+
+        <div style="margin-top:20px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 1px rgba(124,58,237,.45);">
+          <span class="bars-label" style="color:#a855f7;">your handoff link · save this</span>
+          <p style="margin:10px 0 0;font-family:var(--bars-font-mono);font-size:13px;line-height:1.6;color:#e8e6e0;word-break:break-all;">{{ handoffLink }}</p>
+          <p style="margin:10px 0 0;font-size:14.5px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">This one-time link lets you see your submission and its steward-visible status, withdraw it, or change your contact preference. It shows no one else's submission.</p>
+          <span class="clk press" onClick="{{ copyLink }}" style="display:inline-block;margin-top:12px;font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;padding:10px 14px;border-radius:8px;border:1px solid var(--bars-line-strong);color:var(--bars-text-secondary);">{{ copyLinkLabel }}</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px;">
+          <a href="{{ orgHref }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;">See current MTGOA work <span style="flex:none;color:var(--bars-fire-gem);">→</span></a>
+          <span class="clk press" onClick="{{ backToReceipt }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-size:15px;line-height:1.4;">Back to my Day 10 receipt <span style="flex:none;color:var(--bars-fire-gem);">→</span></span>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- ===== CARD SHEET ===== -->
+  <sc-if value="{{ modalCard }}" hint-placeholder-val="{{ false }}">
+    <div class="clk" onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:60;background:rgba(5,4,3,.86);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;">
+      <div class="sheetup" onClick="{{ stop }}" style="width:100%;max-width:340px;">
+        <div style="position:relative;aspect-ratio:2.5/3.5;border-radius:var(--bars-radius-lg);overflow:hidden;border:2px solid #C9A84C;background:radial-gradient(120% 90% at 78% 8%,#431407,#1c0700 64%);box-shadow:var(--bars-shadow-inset-top),0 0 30px 1px rgba(232,103,26,.32),0 18px 40px -20px rgba(0,0,0,.9);">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(232,103,26,.2),transparent 60%);"></div>
+          <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+            <div style="padding:18px 20px 13px;border-bottom:1px solid rgba(193,57,43,.5);"><h3 style="margin:0;font-family:var(--bars-font-display);font-weight:600;font-size:24px;line-height:1.14;color:#fff;text-wrap:pretty;">{{ modalTitle }}</h3></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 20px 0;">
+              <span style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+                <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:linear-gradient(150deg,var(--bars-fire-glow),var(--bars-fire-frame));box-shadow:0 0 11px -3px var(--bars-fire-glow);">{{ showIcon }}</span>
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-fire-gem);">Show Up</span>
+              </span>
+              <span style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+                <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;font-family:var(--bars-font-display);font-weight:700;font-size:16px;{{ modalBadgeStyle }}">{{ modalInitial }}</span>
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-text-secondary);">{{ modalFace }}</span>
+              </span>
+            </div>
+            <div style="padding:13px 20px 0;"><span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bars-fire-gem);">◇ Skillful Organizing</span></div>
+            <div style="flex:1;padding:13px 20px 0;">
+              <p style="margin:0;font-family:var(--bars-font-body);font-size:17px;line-height:1.4;color:#e8e6e0;text-wrap:pretty;">{{ modalDay10 }}</p>
+              <p style="margin:12px 0 0;font-family:var(--bars-font-body);font-size:13.5px;line-height:1.45;color:#f0a58a;text-wrap:pretty;">In the deck: {{ modalQ }}</p>
+              <p style="margin:10px 0 0;font-family:var(--bars-font-body);font-size:13.5px;line-height:1.5;color:var(--bars-fire-gem);text-wrap:pretty;">{{ modalAction }}</p>
+            </div>
+            <div style="padding:12px 20px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(193,57,43,.42);">
+              <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;color:#6b6965;">#{{ modalNum }} / 120</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-fire-gem);">◇ {{ modalFace }}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <div class="clk press" onClick="{{ chooseModal }}" style="flex:1;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-fire-frame);padding:14px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-fire-glow);">{{ modalChooseLabel }}</div>
+          <div class="clk press" onClick="{{ closeModal }}" style="flex:none;text-align:center;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--bars-text-secondary);padding:14px 16px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">Close</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:940},&quot;orgHref&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Organization Page.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;facesHref&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Day 9 - Grow Up The Role Rep.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;day6Href&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Day 6 - Wake Up Campaign Table.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;day7Href&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Day 7 - Open Up Organization Load Check.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;day8Href&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Day 8 - Clean Up Organization Bottleneck 321.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;day9Href&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;MTGOA Day 9 - Grow Up The Role Rep.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;bookHref&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Sales Page.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;deckHref&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;The Deck - Cold Sales Page.dc.html&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Routes&quot;},&quot;showWeek3&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Flags&quot;},&quot;week3Href&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Flags&quot;}}">
+class Component extends DCLogic {
+  FACE = { shaman:'#6fd0d0', challenger:'#e8896f', regent:'#e0c25a', architect:'#9fb2c8', diplomat:'#6fc795', sage:'#a99ae0' };
+
+  DAY10 = {
+    '115': 'Choose the one process this handoff serves first.',
+    '116': 'Make one structural change instead of writing another planning document.',
+    '117': 'Give the handoff an owner and a return rhythm.',
+    '118': 'Add one durable lever: a documented process, clear role, or handoff.',
+    '119': 'Give real ownership to someone who has agreed to hold it.',
+    '120': 'Leave a capacity or piece of documentation that survives one person\u2019s absence.',
+  };
+
+  STARTERS = [
+    { key:'rhythm', label:'Book Handoff Rhythm', lane:'personal',
+      blurb:'One thoughtful recommendation at a sustainable rhythm, with a clear reason, recipient fit, and room for the recipient to decline. Lands in a personal calendar, note, or reminder system.' },
+    { key:'intro', label:'Organization Introduction', lane:'shared',
+      blurb:'A member of an organization introduces the book to the person or group that can assess whether it belongs in their work. Lands in a consented email, meeting agenda, or internal shared document.' },
+    { key:'podcast', label:'Podcast / Speaking Outreach', lane:'shared',
+      blurb:'A person who knows a host or producer makes a warm introduction, or a host invites Wendell with enough context to act. Lands in the existing podcast route or a consented direct introduction.' },
+    { key:'message', label:'Campaign Message & Response Rhythm', lane:'shared',
+      blurb:'A steward keeps public book material, next-step links, and incoming interest from disappearing after a post or conversation. Lands in a campaign brief, shared document, or current workstream card.' },
+    { key:'tour', label:'Book Tour Lead Handoff', lane:'shared',
+      blurb:'A venue, host, or connector lead reaches the person responsible for the next reply with enough context to respond clearly. Lands in the actual Book Tour Help route or an approved steward handoff.' },
+  ];
+
+  RHYTHM = [
+    { k:'rPractice', label:'The practice', prompt:'what kind of useful handoff do you want to make repeatable?', ph:'Once a week, I will\u2026' },
+    { k:'rPlace', label:'The place', prompt:'where does this fit in your actual life?', ph:'After ___ on ___, I will spend ___ minutes\u2026' },
+    { k:'rSupport', label:'The support', prompt:'what makes beginning easier?', ph:'I will keep ___ ready / ask ___ / use ___ as my cue\u2026' },
+    { k:'rBoundary', label:'The boundary', prompt:'what keeps this practice renewable?', ph:'I will stop after ___ / I will not use this rhythm for\u2026' },
+    { k:'rReturn', label:'The return', prompt:'how will you know whether it is still useful?', ph:'On ___, I will ask whether this helped ___ and whether it still fits\u2026' },
+  ];
+
+  HANDOFF = [
+    { k:'hPurpose', label:'Purpose', prompt:'what is this handoff trying to make more possible?', ph:'This exists so that\u2026' },
+    { k:'hWhom', label:'For whom', prompt:'who can use this handoff? a role, group, or relationship', ph:'This is for\u2026' },
+    { k:'hAction', label:'One next action', prompt:'what is the smallest useful thing to do?', ph:'The next action is\u2026' },
+    { k:'hOwner', label:'Owner', prompt:'who owns that action?', ph:'The owner is\u2026' },
+    { k:'hTerms', label:'Terms', prompt:'what is optional, what needs permission, what is outside the ask?', ph:'Optional\u2026 / ask first before\u2026 / this handoff does not ask for\u2026' },
+    { k:'hReturn', label:'Return', prompt:'when and how will the work be reviewed?', ph:'We will come back on\u2026 and look for\u2026' },
+  ];
+
+  STATES = [
+    { key:'placed', tag:'placed', label:'It is in a place someone can use.', color:'#6fc795',
+      body:'Future me can encounter the rhythm, or a person who agreed to receive the handoff can take the next action.' },
+    { key:'prepared', tag:'prepared', label:'I built it. It still needs a placement.', color:'#e0c25a',
+      body:'You have something concrete. Decide where it will land before calling it a finished structure.' },
+    { key:'returned', tag:'returned', label:'An earlier move is still live.', color:'#9fb2c8',
+      body:'The handoff showed you a question that belongs in Days 6\u20139.' },
+    { key:'putdown', tag:'put down', label:'This moment needs one personal action.', color:'#a99ae0',
+      body:'A larger structure would add weight without helping. Choose the one useful handoff instead.' },
+  ];
+
+  REQUESTS = [
+    { key:'none', label:'No reply needed \u2014 I want this visible to the campaign.', contact:false },
+    { key:'ack', label:'Acknowledge that you received it.', contact:true },
+    { key:'feedback', label:'Feedback on the handoff.', contact:true },
+    { key:'convo', label:'A conversation about whether this could become campaign work.', contact:true },
+    { key:'offer', label:'I am offering a specific capacity or resource.', contact:true },
+  ];
+
+  KINDS = [
+    { key:'calendar', label:'calendar' },
+    { key:'message', label:'consented message' },
+    { key:'doc', label:'shared document' },
+    { key:'meeting', label:'meeting' },
+    { key:'other', label:'other' },
+  ];
+
+  state = { step:'entry', field:null, lane:null, starter:null, cards:[], drawn:[], chosen:null, modal:null,
+    rPractice:'', rPlace:'', rSupport:'', rBoundary:'', rReturn:'',
+    bookOpen:false, bkWho:'', bkWhy:'', bkLine:'',
+    hPurpose:'', hWhom:'', hAction:'', hOwner:'', hTerms:'', hReturn:'',
+    placement:null, attest:false, learning:null, returnDate:'',
+    sTitle:'', sPurpose:'', sAction:'', sOwner:'', sTerms:'', sReturn:'', kind:null,
+    request:null, note:'', learningNote:'', senderName:'', senderContact:'', senderRegion:'', consent:false,
+    link:'', copied:false, copiedReminder:false, copiedLink:false };
+
+  componentDidMount() {
+    fetch('deck-data.json').then(r => r.json()).then(d => {
+      const pool = (d.cards || []).filter(c => c.move === 'show' && c.domain === 'organize');
+      this.setState({ cards: pool, drawn: this.deal(pool) });
+    }).catch(() => {});
+    this._esc = (e) => { if (e.key === 'Escape' && this.state.modal) this.setState({ modal:null }); };
+    window.addEventListener('keydown', this._esc);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._esc); }
+
+  deal(pool) {
+    const p = (pool || this.state.cards).map(c => c.num);
+    for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+    return p.slice(0, 3);
+  }
+  card(num) { return this.state.cards.find(c => c.num === num) || null; }
+  icon(size) {
+    const DS = (window.BARSEngineDesignSystem_af69ba || {});
+    if (DS.MoveIcon) return React.createElement(DS.MoveIcon, { move:'show-up', size: size || 17, color:'#1c0700' });
+    return null;
+  }
+  copy(text, key) {
+    try { navigator.clipboard.writeText(text); } catch (e) {}
+    this.setState({ [key]: true });
+    window.setTimeout(() => this.setState({ [key]: false }), 1800);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  t(v) { return (v || '').trim(); }
+  dateLabel() {
+    if (!this.state.returnDate) return '';
+    return new Date(this.state.returnDate + 'T00:00:00').toLocaleDateString(undefined, { month:'long', day:'numeric' });
+  }
+  buildStep() { return this.state.lane === 'shared' ? 'handoff' : 'rhythm'; }
+
+  rhythmText() {
+    const s = this.state, t = (v) => this.t(v);
+    const lines = [
+      'MY ALLYSHIP RHYTHM',
+      'The practice: ' + (t(s.rPractice) || '\u2014'),
+      'The place: ' + (t(s.rPlace) || '\u2014'),
+      'The support: ' + (t(s.rSupport) || '\u2014'),
+      'The boundary: ' + (t(s.rBoundary) || '\u2014'),
+      'The return: ' + (t(s.rReturn) || '\u2014'),
+    ];
+    if (t(s.bkWho) || t(s.bkWhy) || t(s.bkLine)) {
+      lines.push('', 'BOOK HANDOFF RHYTHM',
+        'Who I will consider: ' + (t(s.bkWho) || '\u2014'),
+        'Why the book could be useful: ' + (t(s.bkWhy) || '\u2014'),
+        'The sentence that leaves their choice intact: ' + (t(s.bkLine) || '\u2014'),
+        'Boundary: I will not follow up unless they invite more conversation.');
+    }
+    lines.push('', 'Made as a Day 10 practice in Mastering the Game of Allyship.');
+    return lines.join('\n');
+  }
+  handoffText() {
+    const s = this.state, t = (v) => this.t(v);
+    return [
+      'SHARED WORK HANDOFF',
+      'Purpose: ' + (t(s.hPurpose) || '\u2014'),
+      'For whom: ' + (t(s.hWhom) || '\u2014'),
+      'One next action: ' + (t(s.hAction) || '\u2014'),
+      'Owner: ' + (t(s.hOwner) || '\u2014'),
+      'Terms: ' + (t(s.hTerms) || '\u2014'),
+      'Return: ' + (t(s.hReturn) || '\u2014'),
+      '',
+      'Made as a Day 10 practice in Mastering the Game of Allyship. A proposal, not a claim on anyone\u2019s time.',
+    ].join('\n');
+  }
+  seedSubmission() {
+    const s = this.state, t = (v) => this.t(v);
+    const shared = s.lane === 'shared';
+    this.setState({
+      step:'submit',
+      sTitle: s.sTitle || (shared ? t(s.hPurpose).slice(0, 60) : t(s.rPractice).slice(0, 60)),
+      sPurpose: s.sPurpose || (shared ? t(s.hPurpose) : t(s.rPractice)),
+      sAction: s.sAction || (shared ? t(s.hAction) : t(s.rPlace)),
+      sOwner: s.sOwner || (shared ? t(s.hOwner) : 'me'),
+      sTerms: s.sTerms || (shared ? t(s.hTerms) : t(s.rBoundary)),
+      sReturn: s.sReturn || (shared ? t(s.hReturn) : t(s.rReturn)),
+      kind: s.kind || (shared ? null : 'calendar'),
+    });
+  }
+
+  renderVals() {
+    const s = this.state, t = (v) => this.t(v);
+    const blank = '\u2014 left blank';
+    const shared = s.lane === 'shared';
+    const pct = { entry:0, draw:18, lane:34, rhythm:52, handoff:52, land:70, comeback:86, receipt:100, submit:100, sent:100 }[s.step] ?? 0;
+    const chosen = s.chosen ? this.card(s.chosen) : null;
+    const modal = s.modal ? this.card(s.modal) : null;
+    const st = this.STATES.find(x => x.key === s.placement) || null;
+    const req = this.REQUESTS.find(x => x.key === s.request) || null;
+    const dateLabel = this.dateLabel();
+    const artifact = shared ? this.handoffText() : this.rhythmText();
+    const needsContact = !!(req && req.contact);
+    const canSend = !!req && (!needsContact || (t(s.senderName) && t(s.senderContact) && s.consent));
+
+    const pill = (on) => 'font-family:var(--bars-font-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;padding:11px 14px;border-radius:9px;'
+      + (on ? 'color:#fff;background:var(--bars-fire-frame);border:1px solid var(--bars-fire-frame);box-shadow:var(--bars-shadow-inset-top);'
+            : 'color:var(--bars-text-secondary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);');
+    const panel = (on, col) => 'padding:19px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 '
+      + (on ? '1.5px ' + col : '1px var(--bars-line)') + (on ? ',0 12px 28px -18px ' + col : '') + ';';
+    const box = (on, col) => on
+      ? 'background:' + col + ';box-shadow:var(--bars-shadow-inset-top);'
+      : 'background:transparent;box-shadow:inset 0 0 0 1.5px var(--bars-line-strong);';
+
+    const vals = {
+      progressStyle: 'height:100%;width:' + pct + '%;background:linear-gradient(90deg,#3a1206,var(--bars-fire-glow));transition:width .35s var(--bars-ease-out);',
+      sEntry: s.step === 'entry', sDraw: s.step === 'draw', sLane: s.step === 'lane',
+      sRhythm: s.step === 'rhythm', sHandoff: s.step === 'handoff', sLand: s.step === 'land',
+      sComeBack: s.step === 'comeback', sReceipt: s.step === 'receipt', sSubmit: s.step === 'submit', sSent: s.step === 'sent',
+      privacyNote: 'Your practice stays on this device unless you choose to send a final handoff to the Campaign Steward',
+
+      start: () => this.setState({ field:'org', step:'draw' }),
+      startOwn: () => this.setState({ field:'own', lane:'personal', step:'draw' }),
+      backToEntry: () => this.setState({ step:'entry' }),
+      backToDraw: () => this.setState({ step:'draw' }),
+      backToLane: () => this.setState({ step:'lane' }),
+      backToBuild: () => this.setState({ step:this.buildStep() }),
+      backToLand: () => this.setState({ step:'land' }),
+      backToComeBack: () => this.setState({ step:'comeback' }),
+      backToReceipt: () => this.setState({ step:'receipt' }),
+      toLane: () => this.setState({ step:'lane' }),
+      toBuild: () => this.setState({ lane: s.lane || 'personal', step: s.lane === 'shared' ? 'handoff' : 'rhythm' }),
+      toLand: () => this.setState({ step:'land' }),
+      toComeBack: () => this.setState({ step:'comeback' }),
+      toReceipt: () => this.setState({ step:'receipt' }),
+      toSubmit: () => this.seedSubmission(),
+
+      orgHref: this.props.orgHref ?? 'MTGOA Organization Page.dc.html',
+      facesHref: this.props.facesHref ?? 'MTGOA Day 9 - Grow Up The Role Rep.dc.html',
+      bookHref: this.props.bookHref ?? 'Sales Page.dc.html',
+      deckHref: this.props.deckHref ?? 'The Deck - Cold Sales Page.dc.html',
+      week3Href: this.props.week3Href ?? '',
+      showWeek3: !!this.props.showWeek3 && !!t(this.props.week3Href),
+
+      drawn: s.drawn.map(num => {
+        const c = this.card(num);
+        if (!c) return { num, title:'', day10:'', initial:'', badgeStyle:'', frameStyle:'', chosenMark:'', open:()=>{} };
+        const col = this.FACE[c.face] || '#9fb2c8';
+        const isSel = s.chosen === num;
+        return { num:c.num, title:c.title, day10:this.DAY10[c.num] || c.action, initial:c.faceLabel.charAt(0),
+          badgeStyle:'color:' + col + ';background:color-mix(in srgb,' + col + ' 14%,transparent);border:1px dashed color-mix(in srgb,' + col + ' 60%,transparent);',
+          frameStyle:'position:relative;aspect-ratio:2.5/3.5;border-radius:var(--bars-radius-lg);overflow:hidden;background:radial-gradient(120% 90% at 78% 8%,#431407,#1c0700 64%);border:' + (isSel ? '2px solid #C9A84C' : '1px solid rgba(201,168,76,.4)') + ';box-shadow:var(--bars-shadow-inset-top),0 0 ' + (isSel ? '26px 1px rgba(232,103,26,.4)' : '16px 1px rgba(232,103,26,.16)') + ',0 14px 30px -18px rgba(0,0,0,.9);',
+          chosenMark: isSel ? '\u2666 chosen' : '', open: () => this.setState({ modal:num }) };
+      }),
+      redraw: () => this.setState({ drawn: this.deal(), chosen:null }),
+      skipCard: () => this.setState({ chosen:null, step:'lane' }),
+
+      hasChosen: !!chosen,
+      chosenTitle: chosen ? chosen.title : '',
+      chosenNum: chosen ? chosen.num : '',
+      chosenDay10: chosen ? (this.DAY10[chosen.num] || chosen.action) : '',
+
+      laneAStyle: panel(s.lane === 'personal', 'color-mix(in srgb,var(--bars-fire-gem) 70%,transparent)'),
+      laneBStyle: panel(s.lane === 'shared', 'color-mix(in srgb,var(--bars-fire-gem) 70%,transparent)'),
+      pickPersonal: () => this.setState({ lane:'personal' }),
+      pickShared: () => this.setState({ lane:'shared' }),
+      buildLabel: shared ? 'Build the Shared Work Handoff \u2192' : 'Build the Allyship Rhythm \u2192',
+
+      starters: this.STARTERS.map(x => ({
+        label: x.label, style: pill(s.starter === x.key),
+        pick: () => this.setState({ starter: s.starter === x.key ? null : x.key, lane: x.lane }),
+      })),
+      hasStarter: !!s.starter,
+      starterBlurb: (this.STARTERS.find(x => x.key === s.starter) || {}).blurb || '',
+
+      returnDoors: [
+        { label:'I need to see the work more clearly \u2192 Day 6', href: this.props.day6Href ?? 'MTGOA Day 6 - Wake Up Campaign Table.dc.html' },
+        { label:'I need room around getting involved \u2192 Day 7', href: this.props.day7Href ?? 'MTGOA Day 7 - Open Up Organization Load Check.dc.html' },
+        { label:'A story is designing this \u2192 Day 8', href: this.props.day8Href ?? 'MTGOA Day 8 - Clean Up Organization Bottleneck 321.dc.html' },
+        { label:'I need a capacity or Face to grow \u2192 Day 9', href: this.props.day9Href ?? 'MTGOA Day 9 - Grow Up The Role Rep.dc.html' },
+      ],
+
+      rhythmFields: this.RHYTHM.map((f, i) => ({ n: i + 1, label:f.label, prompt:f.prompt, ph:f.ph, value: s[f.k], set: this.set(f.k) })),
+      handoffFields: this.HANDOFF.map((f, i) => ({ n: i + 1, label:f.label, prompt:f.prompt, ph:f.ph, value: s[f.k], set: this.set(f.k) })),
+      bookOpen: s.bookOpen, bookChev: s.bookOpen ? '\u2212' : '+',
+      toggleBook: () => this.setState({ bookOpen: !s.bookOpen }),
+      bkWho: s.bkWho, set_bkWho: this.set('bkWho'),
+      bkWhy: s.bkWhy, set_bkWhy: this.set('bkWhy'),
+      bkLine: s.bkLine, set_bkLine: this.set('bkLine'),
+      rhythmArtifact: this.rhythmText(),
+      handoffArtifact: this.handoffText(),
+      copyArtifact: () => this.copy(artifact, 'copied'),
+      copyLabel: s.copied ? 'copied \u2666' : (shared ? 'copy the Shared Work Handoff' : 'copy my Allyship Rhythm'),
+
+      states: this.STATES.map(x => ({
+        label:x.label, tag:x.tag, body:x.body, color:x.color,
+        style: panel(s.placement === x.key, 'color-mix(in srgb,' + x.color + ' 70%,transparent)'),
+        pick: () => this.setState({ placement:x.key, attest:false }),
+      })),
+      needsAttest: s.placement === 'placed',
+      attestText: shared
+        ? 'I put this where a person or group that agreed to receive it can use it.'
+        : 'I created the first instance in a calendar, reminder, note, or system I actually use.',
+      attestStyle: 'display:flex;align-items:flex-start;gap:13px;margin-top:16px;padding:16px 17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:0 0 0 '
+        + (s.attest ? '1.5px #6fc795' : '1px var(--bars-line-strong)') + ';',
+      attestBoxStyle: box(s.attest, '#6fc795'),
+      attestMark: s.attest ? '\u2713' : '',
+      toggleAttest: () => this.setState({ attest: !s.attest }),
+      needsReturnPick: s.placement === 'returned',
+      landNextLabel: !s.placement ? 'Choose the honest state to continue'
+        : (s.placement === 'placed' && !s.attest) ? 'Confirm the placement above to continue'
+        : 'What did the placement teach you? \u2192',
+      landNextStyle: 'margin-top:22px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;padding:16px;border-radius:var(--bars-radius-lg);'
+        + ((!s.placement || (s.placement === 'placed' && !s.attest))
+          ? 'color:var(--bars-text-muted);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line-strong);pointer-events:none;'
+          : 'color:#fff;background:var(--bars-fire-frame);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-fire-glow);'),
+
+      learnings: [
+        { key:'easier', label:'Easier or clearer.', body:'Carry the learning into the next five-day loop.' },
+        { key:'harder', label:'Harder, or nobody could use it.', body:'The placement revealed a missing move. The four earlier days are named on your receipt.' },
+        { key:'no', label:'This should not become a structure.', body:'Put it down cleanly. One personal handoff is a complete game.' },
+      ].map(x => ({ label:x.label, body:x.body, style: panel(s.learning === x.key, 'color-mix(in srgb,var(--bars-fire-gem) 70%,transparent)'),
+        pick: () => this.setState({ learning:x.key }) })),
+      returnDate: s.returnDate, set_returnDate: this.set('returnDate'),
+      reminderLine: 'On ' + (dateLabel || '[date]') + ', I will ask: Did this make the next useful handoff easier, harder, or clearer?',
+      copyReminder: () => this.copy('On ' + (dateLabel || '[date]') + ', I will ask: Did this make the next useful handoff easier, harder, or clearer?', 'copiedReminder'),
+      copyReminderLabel: s.copiedReminder ? 'copied \u2666' : 'copy this line',
+
+      receiptHead: s.placement === 'placed' ? 'You put a structure in the world.'
+        : s.placement === 'prepared' ? 'You built something that needs a landing place.'
+        : s.placement === 'returned' ? 'You found the move that comes before structure.'
+        : s.placement === 'putdown' ? 'You kept the work small enough to be useful.'
+        : 'You moved through the practice.',
+      stateChip: st ? (st.key === 'placed' ? (shared ? 'Placed with others' : 'Placed for future me') : st.tag.charAt(0).toUpperCase() + st.tag.slice(1)) : 'No state chosen',
+      stateChipStyle: 'font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;border-radius:7px;'
+        + (st ? 'color:' + st.color + ';border:1px solid color-mix(in srgb,' + st.color + ' 55%,transparent);background:color-mix(in srgb,' + st.color + ' 10%,transparent);'
+              : 'color:var(--bars-text-muted);border:1px dashed var(--bars-line-strong);'),
+      preparedPrompt: s.placement === 'prepared',
+      canSubmit: s.placement === 'placed' || s.placement === 'prepared',
+
+      receiptRows: shared ? [
+        { label:'lane', value:'Shared Work Handoff', color:'#e8e6e0' },
+        { label:'purpose', value: t(s.hPurpose) || blank, color: t(s.hPurpose) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'for whom', value: t(s.hWhom) || blank, color: t(s.hWhom) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'one next action', value: t(s.hAction) || blank, color: t(s.hAction) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'owner', value: t(s.hOwner) || blank, color: t(s.hOwner) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'terms', value: t(s.hTerms) || blank, color: t(s.hTerms) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'return', value: t(s.hReturn) || dateLabel || blank, color: (t(s.hReturn) || dateLabel) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+      ] : [
+        { label:'lane', value:'Allyship Rhythm', color:'#e8e6e0' },
+        { label:'the practice', value: t(s.rPractice) || blank, color: t(s.rPractice) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'the place', value: t(s.rPlace) || blank, color: t(s.rPlace) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'the support', value: t(s.rSupport) || blank, color: t(s.rSupport) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'the boundary', value: t(s.rBoundary) || blank, color: t(s.rBoundary) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+        { label:'the return', value: t(s.rReturn) || dateLabel || blank, color: (t(s.rReturn) || dateLabel) ? '#e8e6e0' : 'var(--bars-text-muted)' },
+      ],
+
+      submitFields: [
+        { k:'sTitle', label:'title / short label', ph:'A short name for this handoff' },
+        { k:'sPurpose', label:'purpose', ph:'This exists so that\u2026' },
+        { k:'sAction', label:'next action', ph:'The next action is\u2026' },
+        { k:'sOwner', label:'owner', ph:'me' },
+        { k:'sTerms', label:'terms / permission boundary', ph:'Optional\u2026 / ask first before\u2026' },
+        { k:'sReturn', label:'return date or rhythm', ph:'We will come back on\u2026' },
+      ].map(f => ({ label:f.label, ph:f.ph, value: s[f.k], set: this.set(f.k) })),
+      placementKinds: this.KINDS.map(k => ({ label:k.label, style: pill(s.kind === k.key), pick: () => this.setState({ kind:k.key }) })),
+      placementStateLabel: st ? st.tag : '\u2014',
+      laneLabel: shared ? 'Shared Work Handoff' : 'Allyship Rhythm',
+      faceContext: chosen ? ' · ' + chosen.faceLabel + ' · Skillful Organizing' : '',
+
+      requests: this.REQUESTS.map(r => ({
+        label:r.label, mark: s.request === r.key ? '\u25cf' : '',
+        dotStyle: s.request === r.key ? 'background:var(--bars-liminal);box-shadow:0 0 0 1px var(--bars-liminal-glow);' : 'box-shadow:inset 0 0 0 1.5px var(--bars-line-strong);',
+        style: 'display:flex;align-items:flex-start;gap:12px;padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top),0 0 0 '
+          + (s.request === r.key ? '1.5px color-mix(in srgb,var(--bars-liminal) 80%,transparent)' : '1px var(--bars-line)') + ';',
+        pick: () => this.setState({ request:r.key }),
+      })),
+      note: s.note, set_note: (e) => this.setState({ note: e.target.value.slice(0, 2000) }),
+      noteCount: s.note.length + ' / 2000',
+      learningNote: s.learningNote, set_learningNote: (e) => this.setState({ learningNote: e.target.value.slice(0, 500) }),
+      learningCount: s.learningNote.length + ' / 500',
+      contactPrompt: needsContact
+        ? 'How should a Campaign Steward reach you? Contact and consent are required for the response you asked for.'
+        : 'Contact is optional when no reply is needed. Leave these blank to stay anonymous.',
+      senderName: s.senderName, set_senderName: this.set('senderName'),
+      senderContact: s.senderContact, set_senderContact: this.set('senderContact'),
+      senderRegion: s.senderRegion, set_senderRegion: this.set('senderRegion'),
+      consentStyle: 'display:flex;align-items:flex-start;gap:13px;margin-top:12px;padding:16px 17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);box-shadow:0 0 0 '
+        + (s.consent ? '1.5px var(--bars-liminal-glow)' : '1px var(--bars-line-strong)') + ';',
+      consentBoxStyle: box(s.consent, 'var(--bars-liminal)'),
+      consentMark: s.consent ? '\u2713' : '',
+      toggleConsent: () => this.setState({ consent: !s.consent }),
+      sendLabel: canSend ? 'Send this handoff to the Campaign Steward' : (!req ? 'Choose what would be useful from us' : 'Add contact and consent to send'),
+      sendStyle: 'margin-top:22px;text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;padding:16px;border-radius:var(--bars-radius-lg);'
+        + (canSend ? 'color:#fff;background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-liminal-glow);'
+                   : 'color:var(--bars-text-muted);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line-strong);pointer-events:none;'),
+      sendNote: 'A submission does not create a role, task, or public post. Only a separate Campaign Steward decision can do that.',
+      send: () => this.setState({ step:'sent', link:'masteringallyship.com/my-handoff/' + Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 8) }),
+      handoffLink: s.link,
+      copyLink: () => this.copy(s.link, 'copiedLink'),
+      copyLinkLabel: s.copiedLink ? 'copied \u2666' : 'copy my handoff link',
+
+      modalCard: !!modal,
+      modalTitle: modal ? modal.title : '',
+      modalDay10: modal ? (this.DAY10[modal.num] || modal.action) : '',
+      modalQ: modal ? modal.q : '',
+      modalNum: modal ? modal.num : '',
+      modalAction: modal ? modal.action : '',
+      modalFace: modal ? modal.faceLabel : '',
+      modalInitial: modal ? modal.faceLabel.charAt(0) : '',
+      modalBadgeStyle: modal ? (() => { const col = this.FACE[modal.face] || '#9fb2c8';
+        return 'color:' + col + ';background:color-mix(in srgb,' + col + ' 14%,transparent);border:1px dashed color-mix(in srgb,' + col + ' 60%,transparent);'; })() : '',
+      modalChooseLabel: (modal && s.chosen === modal.num) ? 'Chosen \u2666' : 'Play through this card',
+      chooseModal: () => this.setState({ chosen:s.modal, modal:null }),
+      closeModal: () => this.setState({ modal:null }),
+      stop: (e) => e.stopPropagation(),
+      showIcon: this.icon(),
+    };
+    return vals;
+  }
+}
+
+</script>
+</body>
+</html>
