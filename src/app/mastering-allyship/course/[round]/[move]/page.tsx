@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 
 import { WeekTwoPractice } from '@/components/mtgoa-check/WeekTwoPractice'
 import { DaySixWakeUpCheck } from '@/components/mtgoa-check/DaySixWakeUpCheck'
+import { DayEightBottleneck321 } from '@/components/mtgoa-check/DayEightBottleneck321'
 import { DayNineRoleRep } from '@/components/mtgoa-check/DayNineRoleRep'
 import { DayTenCampaignHandoff } from '@/components/mtgoa-check/DayTenCampaignHandoff'
 import {
@@ -99,6 +100,12 @@ export default async function CourseDayPage({ params }: { params: Promise<Params
 
   if (day.day === 6) {
     return <DaySixWakeUpCheck cards={roundTwoCardsFor(day.move)} bookHref="https://wendellbritt.gumroad.com/l/MTGOAbook" />
+  }
+
+  // Day 8 needs a named part, a two-voice thread and a restorable pass, none of
+  // which WeekTwoPractice has.
+  if (day.day === 8) {
+    return <DayEightBottleneck321 cards={roundTwoCardsFor(day.move)} />
   }
 
   if (day.day === 9) {
