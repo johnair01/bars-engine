@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 import { CardDrawRow, CardDrawSheet } from '@/components/deck/CardDraw'
 import { CampaignStatePanel } from './CampaignStatePanel'
+import { DayTenStewardSubmission } from './DayTenStewardSubmission'
 import {
   BackLink,
   CheckShell,
@@ -71,9 +72,12 @@ import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
  * @see .specify/specs/mtgoa-day10-campaign-handoff/design_handoff/
  */
 
-type Screen = 'entry' | 'draw' | 'lane' | 'build' | 'land' | 'comeback' | 'receipt'
+type Screen = 'entry' | 'draw' | 'lane' | 'build' | 'land' | 'comeback' | 'receipt' | 'submit'
 
 const ORDER: Screen[] = ['entry', 'draw', 'lane', 'build', 'land', 'comeback', 'receipt']
+
+/** Progress index for a screen. `submit` sits past the receipt and keeps the rail full. */
+const railIndex = (screen: Screen) => (screen === 'submit' ? ORDER.length - 1 : ORDER.indexOf(screen))
 
 /** Show Up is fire, the same fire Day 5 uses. A reader should recognise the move by its colour. */
 const ACCENT = { base: 'var(--bars-fire-glow)', lift: '#f0813a' }
@@ -205,6 +209,9 @@ export function DayTenCampaignHandoff({
   /** Placed is the one state that asks for a word before the page moves on. */
   const landReady = placement !== null && (placement !== 'placed' || attested)
 
+  /** Only a built thing can go to a steward. Returned and put down have nothing to send. */
+  const canSubmit = placement === 'placed' || placement === 'prepared'
+
   const copy = (text: string, mark: (v: boolean) => void) => {
     navigator.clipboard?.writeText(text)
     track({ event: 'week_two_artifact_copied', day: 10, lane: lane ?? undefined })
@@ -302,7 +309,7 @@ export function DayTenCampaignHandoff({
       moveTag="show up · 火"
       accent={ACCENT}
       steps={ORDER.length}
-      index={ORDER.indexOf(screen)}
+      index={railIndex(screen)}
     >
       {screen === 'entry' ? (
         <Step>
@@ -803,6 +810,29 @@ export function DayTenCampaignHandoff({
 
           <span className="bars-label" style={{ display: 'block', margin: '28px 0 12px', color: 'var(--bars-text-muted)' }}>next steps</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {canSubmit ? (
+              <button
+                type="button"
+                onClick={() => go('submit')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, width: '100%',
+                  textAlign: 'left', padding: 19, cursor: 'pointer', borderRadius: 'var(--bars-radius-lg)', border: 'none',
+                  background: 'var(--bars-liminal)', color: '#fff',
+                  boxShadow: 'var(--bars-shadow-inset-top), 0 12px 28px -12px var(--bars-liminal-glow)',
+                }}
+              >
+                <span>
+                  <span style={{ display: 'block', fontFamily: 'var(--bars-font-display)', fontWeight: 700, fontSize: 17 }}>
+                    Send this handoff to the Campaign Stewards
+                  </span>
+                  <span style={{ display: 'block', marginTop: 5, fontSize: 14.5, lineHeight: 1.45, color: 'rgba(255,255,255,.88)' }}>
+                    Wendell and the Campaign Stewards see only the handoff you choose to send. Your private course answers stay
+                    on this device.
+                  </span>
+                </span>
+                <span aria-hidden style={{ flex: 'none', fontSize: 18 }}>→</span>
+              </button>
+            ) : null}
             {facesHref ? (
               <a href={facesHref} style={doorStyle}>
                 See the Six Faces of the organization <span aria-hidden style={{ flex: 'none', color: ACCENT.lift }}>→</span>
@@ -832,6 +862,35 @@ export function DayTenCampaignHandoff({
           </div>
           <PrivacyLine>Session-only · nothing you write is stored, sent, or saved as a course answer</PrivacyLine>
         </Step>
+      ) : null}
+
+      {screen === 'submit' ? (
+        <DayTenStewardSubmission
+          seed={
+            shared
+              ? {
+                  title: (handoff.purpose ?? '').trim().slice(0, 60),
+                  purpose: (handoff.purpose ?? '').trim(),
+                  nextAction: (handoff.action ?? '').trim(),
+                  owner: (handoff.owner ?? '').trim(),
+                  terms: (handoff.terms ?? '').trim(),
+                  returnPlan: (handoff.return ?? '').trim() || dateLabel,
+                }
+              : {
+                  title: (rhythm.practice ?? '').trim().slice(0, 60),
+                  purpose: (rhythm.practice ?? '').trim(),
+                  nextAction: (rhythm.place ?? '').trim(),
+                  owner: 'me',
+                  terms: (rhythm.boundary ?? '').trim(),
+                  returnPlan: (rhythm.return ?? '').trim() || dateLabel,
+                }
+          }
+          lane={lane ?? 'personal'}
+          placement={placement === 'prepared' ? 'prepared' : 'placed'}
+          face={chosen?.operation ?? null}
+          placementLearning=""
+          onBack={() => go('receipt')}
+        />
       ) : null}
     </CheckShell>
   )

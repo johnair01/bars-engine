@@ -84,23 +84,73 @@ The dedicated component:
 The design's `put down` state was added to the Week 2 analytics enum
 (`round-two-events.ts`) so the four states stay distinguishable in aggregate.
 
-## Deferred — the steward submission
+## The steward submission
 
-The design's second half (`ShowUpHandoffSubmission`, `submitShowUpHandoff`, the
-private `/admin/mtgoa/show-up` inbox, the accountless withdrawal capability link)
-is **not in this import**. It is a server-side feature, and the design gates it on
-two founder decisions that are still open:
+Shipped 2026-08-27, after the two founder decisions the design was waiting on.
 
-- **Steward response terms** — what a reader is promised when they request
-  acknowledgement, feedback, or a conversation.
-- **Release 1 retention/deletion rule** — the design requires this published on
-  the public privacy page *before* the submission feature goes live.
+### Founder decisions
 
-Until both land, the page collects no contact data and promises no reply. The
-receipt's next-step list is where the steward CTA belongs when it ships; the
-design's full spec for the model, the server action, the inbox, and the reuse
-boundaries against `CampaignLead` / `BookTourHelpInterest` / `CollectiveOffer`
-stays in the design project's own README.
+| Question the design left open | Decision |
+| --- | --- |
+| Steward response terms | **Read, no reply promised.** "Every handoff is read by a Campaign Steward. Asking for a response does not guarantee one, and no submission creates a role, task, or commitment." No window and no SLA, so the promise stays true on the worst week. |
+| Release 1 retention rule | **Kept until withdrawn; withdrawal erases contact.** No expiry while it sits in review. Withdrawing deletes name, contact and region immediately and leaves the artifact anonymous in the campaign record. |
+| Email receipt | **Yes, when contact was supplied.** It carries the withdrawal link, so the right survives a closed tab. Anonymous senders keep the on-screen link. |
+| Ship state | **Live**, with the retention copy published in the same change. |
+
+Both terms live in one place — `SHOW_UP_TERMS` in `src/lib/mtgoa-course/show-up-handoff.ts` — and are rendered by both the
+submission form and the privacy page, so the rule a reader agrees to and the rule we publish cannot drift apart.
+
+### What was built
+
+| Piece | Where |
+| --- | --- |
+| `ShowUpHandoffSubmission` model | `prisma/schema.prisma` + `prisma/migrations/20260827120000_add_show_up_handoff_submissions/` |
+| Domain, terms, parser | `src/lib/mtgoa-course/show-up-handoff.ts` |
+| Accountless capability token | `src/lib/mtgoa-course/handoff-token.ts` |
+| Server actions | `src/actions/mtgoa-show-up-handoff.ts` |
+| Review + confirmation screens | `src/components/mtgoa-check/DayTenStewardSubmission.tsx` |
+| Sender control | `src/app/my-handoff/[token]/` |
+| Steward inbox | `src/app/admin/mtgoa/show-up/` |
+| Published retention rule | `src/app/wiki/privacy/page.tsx#course-submissions` |
+
+### How the privacy boundary is held
+
+`parseShowUpHandoff` reads only the named artifact fields off the payload. The 3-2-1, the load check, body weather,
+beliefs and card answers have no column and no parse branch, so they cannot reach the server even if a future caller
+passes them. A test asserts exactly that.
+
+Contact lives on `CampaignLead` rather than on the submission, which is what makes the retention rule a delete instead
+of a column-by-column scrub: withdrawal deletes the lead, the FK nulls `leadId`, and `senderRegion` is cleared in the
+same transaction. A lead is created only when the sender asked for a response **and** consented — an anonymous
+submission creates no contact record at all.
+
+The withdrawal token is stored as a SHA-256 hash. The raw token is shown once and emailed when contact was supplied, so
+a database read cannot reconstruct anybody's link.
+
+### Reuse boundaries held
+
+- `CampaignLead` — used, for consented accountless identity and follow-up.
+- `BookTourHelpInterest` — untouched. Day 10 links to the Book Tour route when the handoff is a Book Tour lead.
+- `CollectiveOffer` / `MilestoneNeed` — a steward may still shape a submission into one, as a separate deliberate act.
+  No status change on the inbox creates one.
+- Course session state — stays private and ephemeral.
+
+### Acceptance criteria
+
+1. A reader submits only the final handoff they explicitly reviewed; private practice never reaches the server. ✅
+2. An anonymous submission is steward-visible without creating a contact record; a reply request requires contact and
+   consent. ✅
+3. Wendell sees submitted handoffs in one private queue at `/admin/mtgoa/show-up`, filtered by status, request and lane,
+   and replies through the sender's own route. ✅
+4. Every sender, anonymous included, can withdraw through the accountless link. ✅
+5. No submission becomes public, a campaign task, or a reward claim without a separate steward decision. ✅
+6. The Book Tour route keeps its existing focused intake. ✅
+
+### Still open
+
+- **Week 3 destination.** `Start Week 3` stays unbuilt; `NextDayHandoff` reads "Day 11 · coming next" until it ships.
+- **Steward count.** The terms name Wendell as the only current steward. Onboarding a second steward means editing
+  `SHOW_UP_TERMS.visibility`, which changes the published page in the same commit.
 
 ## Carousel
 
