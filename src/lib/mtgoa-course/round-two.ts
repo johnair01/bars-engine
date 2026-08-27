@@ -7,6 +7,12 @@
  * six Skillful Organizing cards, and a receipt. So the days are data here and
  * one component renders them. That is also what makes rounds 3–6 tractable.
  *
+ * Day 6 is the exception. It runs the Wake Up unpacking in its own component
+ * (`DaySixWakeUpCheck`), so the page short-circuits before `WeekTwoPractice`
+ * and only Day 6's `title` still reaches a reader, through the course index and
+ * its social card. The rest of Day 6 below is kept in the authored voice of the
+ * shipped day so the record matches what Day 6 actually asks.
+ *
  * Authority: MTGOA_WEEK_2_SKILLFUL_ORGANIZING_DAYS_6_TO_10_DRAFT_2026-08-21.md
  * and MTGOA_COURSE_WEEK_2_AND_ORGANIZATION_SURFACES_SPEC_2026-08-21.md.
  *
@@ -24,7 +30,7 @@ export type RoundTwoDay = {
   day: number
   move: MtgoaCourseMove
   slug: string
-  /** The move's Week 2 title, e.g. "See the Campaign That Is Actually There". */
+  /** The move's Week 2 title, e.g. "Let the structure be felt". */
   title: string
   coreQuestion: string
   /** The named practice this day runs. Week 2's days each have one. */
@@ -77,35 +83,37 @@ export const ROUND_TWO_DAYS: readonly RoundTwoDay[] = [
     title: 'The Six Questions',
     coreQuestion: 'What experience do you want to create through the Book Launch?',
     practice: {
-      name: 'The Campaign Table',
-      body: 'Before proposing a new system, make a plain map of how the work currently moves.',
+      name: 'The Wake Up Unpacking',
+      body: 'Six questions that turn a general willingness into a sentence specific enough to act on.',
     },
     entry:
-      'You have already tried to put the book in someone’s hands. Now look at how that work actually happens — the campaign that is already running, in place of the one you wish existed.',
+      'Someone is asking you to help launch a book. Before you answer, name what you would want out of it — and what it would take to get there.',
     prompts: [
-      { key: 'happening', label: 'what is happening now', placeholder: 'Even if it is sporadic, the work happening now is…' },
-      { key: 'reliable', label: 'what happens reliably', placeholder: 'This happens without anyone remembering… and this only happens when someone does…' },
-      { key: 'carried', label: 'who is carrying it', placeholder: 'Carried by one person, by nobody, or by an agreement nobody named…' },
-      { key: 'stuck', label: 'where a handoff gets stuck', placeholder: 'A useful handoff currently gets stuck at…' },
+      { key: 'create', label: 'what I want to create', placeholder: 'Through the launch, or through my own allyship work, I want to create…' },
+      { key: 'gets', label: 'what that gets me', placeholder: 'Having it would feel like…' },
+      { key: 'now', label: 'what life is like right now', placeholder: 'Right now this is moving in the right direction, stuck, moving backward, or foggy…' },
+      { key: 'living', label: 'how it feels to live there', placeholder: 'Living there feels…' },
+      { key: 'reservation', label: 'the reservation underneath', placeholder: 'What stops me short of saying yes to it is…' },
+      { key: 'next', label: 'what it needs next', placeholder: 'What this needs next is a Wake Up, Open Up, Clean Up, Grow Up, or Show Up move…' },
     ],
     cardPrompts: {
-      'WAKE-SO-SHAMAN': 'Name how the work actually flows, in place of how it is supposed to.',
-      'WAKE-SO-CHALLENGER': 'Name the process problem people keep absorbing personally.',
-      'WAKE-SO-REGENT': 'Identify the load-bearing part that needs care first.',
-      'WAKE-SO-ARCHITECT': 'Name the structure that would remove the most friction.',
-      'WAKE-SO-DIPLOMAT': 'Map where trust and decision power actually sit.',
-      'WAKE-SO-SAGE': 'Identify the recurring pattern, beyond this week’s mess.',
+      'WAKE-SO-SHAMAN': 'See what is actually shaping your answer, under the reasons you would give for it.',
+      'WAKE-SO-CHALLENGER': 'Name the reservation you have been working around instead of saying out loud.',
+      'WAKE-SO-REGENT': 'Choose the part of this that most needs your attention first.',
+      'WAKE-SO-ARCHITECT': 'Name the experience trying to emerge, before you plan how to reach it.',
+      'WAKE-SO-DIPLOMAT': 'Notice who your yes would actually be for.',
+      'WAKE-SO-SAGE': 'Connect this wanting to the pattern it repeats.',
     },
-    drawTitle: 'Six ways to see a structure.',
+    drawTitle: 'Six ways to look at what you want.',
     drawBody:
-      'Three of the six Wake Up cards for organizing. Each carries a different Game Master’s operation — a way of looking, and every one of them is a verb.',
+      'Three of the six Wake Up cards for organizing. Each is a different way of looking at the answer you just gave.',
     receipt: {
       eyebrow: 'your Day 6 receipt',
-      title: 'You have a campaign reality.',
-      body: 'A map of what is actually running, and one place worth looking at first. That is the whole job today.',
-      stem: 'The work currently depends on … and the first friction worth addressing is …',
+      title: 'You know what you are reaching for.',
+      body: 'One sentence holding what you want and the move it needs next. That is the whole job today.',
+      stem: 'What I want to create is … and what it needs next is a … move.',
     },
-    doNot: 'Day 6 is awareness. No project-management system, no assigned roles, and nobody recruited yet.',
+    doNot: 'Day 6 stays with wanting. Taking a role and promising it to someone both wait for a later day.',
   },
   {
     day: 7,
