@@ -25,10 +25,10 @@ export const CHALLENGER_MOVE_META: Record<
 > = {
   issue_challenge: {
     canonicalMoveId: 'fire_transcend',
-    title: 'Issue challenge',
+    title: 'Issue Challenge',
     energyDelta: 2,
     element: 'fire',
-    narrative: 'Direct confrontation — achieve breakthrough.',
+    narrative: 'Anger → boundary honored',
   },
   propose_move: {
     canonicalMoveId: 'wood_fire',

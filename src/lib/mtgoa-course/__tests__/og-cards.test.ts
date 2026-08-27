@@ -86,7 +86,7 @@ describe('social preview cards', () => {
     const dayOne = courseIndexDay(1)
     const daySix = courseIndexDay(6)
     expect(dayOne?.headline).toBe('Before you decide whether to act, notice what comes alive.')
-    expect(daySix?.headline).toBe('See the campaign that is actually there')
+    expect(daySix?.headline).toBe('The Six Questions')
     // Both come from the index rather than from anything written into a route file.
     for (const slug of ['wake-up', 'open-up', 'clean-up', 'grow-up', 'show-up']) {
       const source = fs.readFileSync(path.join(APP, slug, 'opengraph-image.tsx'), 'utf8')
