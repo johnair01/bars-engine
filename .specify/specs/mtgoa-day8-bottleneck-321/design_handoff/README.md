@@ -21,9 +21,9 @@ uses, so `reference/index.html` links it directly and needs no new tokens.
 
 ## Read this first: Day 8 already ships
 
-`round-two.ts` has a Day 8, live at `/mastering-allyship/course/2/clean-up`, rendered by
-the shared `WeekTwoPractice`. **This design replaces it**, the way
-[#221](https://github.com/johnair01/bars-engine/pull/221) replaced Day 6.
+`round-two.ts` had a Day 8 rendered by the shared `WeekTwoPractice`. **This design replaced
+it** on 2026-08-27, the way [#221](https://github.com/johnair01/bars-engine/pull/221)
+replaced Day 6. The row still owns the route contract and the metadata.
 
 | | Shipped (`round-two.ts`) | This design |
 |---|---|---|
@@ -192,14 +192,59 @@ repo's `src/styles/bars-tokens.css`:
 **Not verified:** anything inside this repo. This PR adds no code and changes no route, so
 `round-two.ts` still serves the old Day 8 at `/course/2/clean-up`.
 
-## Open for the campaign owner
+## Decided, and built — 2026-08-27
 
-1. Persistence (above) — the invariant question, and the one that blocks the port.
-2. Which receipt sentence Day 8 produces — a design principle or a condition.
-3. Day 7's receipt links "Work the charge more directly — Clean Up" at the standalone
-   Clean Up Check. Day 8 now exists; repoint it when this ships.
-4. Day 9 is a disabled "soon" on the receipt. It needs a title before this goes live, or
-   the row should come out.
+The port shipped. The four open questions closed as follows.
+
+| Question | Decision |
+| --- | --- |
+| **Persistence** — the invariant question | **Persist while in progress, clear at the receipt.** A reload mid-3-2-1 restores the step, the answers and the dealt hand. Reaching the receipt removes the storage key, so the dialogue lives on the device only while the practice is open. Days 6, 7, 9 and 10 stay session-only. |
+| **Which receipt sentence** | **The condition.** "This work needs a way of organizing that … because the current pattern keeps …" It describes what a clean arrangement would require and commits the reader to nothing — the same thing slide 7 says. Day 10 is where a reader builds a structure. `round-two.ts`'s Day 8 `receipt.stem` and `receipt.title` were updated to match, so the course index and the OG card agree with the page. |
+| **Day 7's Clean Up door** | **Moot on the shipped code.** That door exists in the Day 7 *prototype*; the shipped Day 7 renders through `WeekTwoPractice`, which has no such link. Day 6's receipt does send a charged reader to `/clean-up` (the standalone Day 3), and its "next move" row already routes to `/mastering-allyship/course/2/clean-up`, which now reaches this component. Repointing Day 6's primary CTA is a separate call. |
+| **Day 9 as a disabled "soon"** | **Resolved by shipping.** The receipt uses `NextDayHandoff` over `nextCourseDay(8)`, which returns Day 9 with a real route now that it exists. The row is a live link with Day 9's authored title, and it would have read "coming next" on its own had Day 9 been unbuilt. |
+
+### What was built
+
+| Piece | Where |
+| --- | --- |
+| Copy, starters, openers, the lens, the composer | `src/lib/mtgoa-course/day-eight.ts` |
+| The in-progress draft | `src/lib/mtgoa-course/day-eight-store.ts` |
+| The day | `src/components/mtgoa-check/DayEightBottleneck321.tsx` |
+| Dispatch | `page.tsx`, on `day.day === 8` |
+| Tests | `src/lib/mtgoa-course/__tests__/day-eight.test.ts` |
+
+### Resolutions against the prototype
+
+- **The card overlay is keyed by `Operation`**, following Day 9, in place of the prototype's
+  deck number or `round-two.ts`'s card id. There is one card per Face in this pool, so the
+  Face is the stable identity — and it answers the handoff's "key it once and consistently".
+- **Primary buttons are liminal purple.** The prototype paints them `--bars-water-gem`;
+  `UI_COVENANT.md` reserves purple for the primary action and water for the element. Water
+  carries the chrome, the rings, the card frames and the voice pills. The "Be it" card keeps
+  the prototype's `#a99ae0`, which is the one place the day leaves water by design.
+- **Cards come from `roundTwoCardsFor('clean_up')`.** `reference/day8-card-pool.json` stays
+  a fixture for reading the prototype.
+- **The draft store re-validates every field on read.** Browser storage is writable by
+  anything on the device, so a malformed draft costs a pass and leaves the page rendering.
+- **Accessibility follows `reference/index.html` rather than the `.dc` prototype**: real
+  buttons with `aria-pressed`, labelled fields, and `CardDrawSheet`'s focus trap.
+
+### Verified in the repo
+
+- Six steps forward and back; the rail tracks; no console errors.
+- Deal, redraw, sheet, choose, continue-without-a-card.
+- The thread: openers load a draft and disappear once it has content, "say it" and
+  Enter both send, the voice flips, `×` removes a turn.
+- Live name propagation — typing "The Carrier" updates the voice pill, the draft
+  placeholder, the bubble labels and the "Be it" lead.
+- **Persistence**: a full page reload mid-3-2-1 restored the step, the part's name, the
+  "they" pass, the strain and both thread turns. Reaching the receipt left
+  `localStorage` holding `{"version":1,"completed":[8]}` and the draft key gone.
+- Day 7 still walks its five screens and writes no Day 8 draft.
+
+The scanner flags three strings for plain negation — the entry's "if that is not your live
+question", the thread's "something you did not already know", and card #069's "another rule
+will not supply". All three are the reference's wording, and the reference wins.
 
 ## Files
 

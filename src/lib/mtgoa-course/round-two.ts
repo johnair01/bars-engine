@@ -158,9 +158,9 @@ export const ROUND_TWO_DAYS: readonly RoundTwoDay[] = [
       'Three of the six Clean Up cards for organizing. The card supplies the lens you carry into the 3-2-1.',
     receipt: {
       eyebrow: 'your Day 8 receipt',
-      title: 'You have a design principle.',
-      body: 'One principle drawn from a charge you actually worked. It describes the system, and leaves you alone.',
-      stem: 'This campaign needs a structure that … because the current pattern keeps …',
+      title: 'You let the part describe the job.',
+      body: 'One condition drawn from a charge you actually worked. It describes what a clean arrangement would require, and leaves you alone.',
+      stem: 'This work needs a way of organizing that … because the current pattern keeps …',
     },
     doNot:
       'The 3-2-1 asks what the part knows. Where that lands is yours to decide.',
