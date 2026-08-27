@@ -154,10 +154,18 @@ a database read cannot reconstruct anybody's link.
 
 ## Carousel
 
-`MTGOA Day 10 - Show Up The Campaign Handoff Carousel.dc.html` — 8 × 1080×1350 on
-the Day 9 frame, ember radials instead of jade. Exported PNGs live in the design
-project at `exports/day10-carousel/`; they are too large to copy through the
-design API and are referenced there rather than vendored here.
+Eight slides at 1080×1350 on the Day 9 frame, ember radials where Day 9 ran jade.
+Slides 1–3 stage the scene, 4 names the ask, 5–6 give the two lanes, 7 is
+placement, 8 is the standard plus the route. The caption draft sits under the
+board.
+
+The carousel stays in the design project rather than here — this folder vendors
+the day page, which is what the build follows. Both live at
+`design_handoff_day10_show_up/` in project `b6457c63-114e-44c9-8039-494652c5ce64`:
+
+- `MTGOA Day 10 - Show Up The Campaign Handoff Carousel.dc.html` — the board
+- `exports/day10-carousel/day10-01.png` … `day10-08.png` — the rendered slides,
+  too large to copy through the design API
 
 ## Week 2 invariant
 
