@@ -26,39 +26,33 @@ import type { CheckAccent } from './CheckKit'
 import { CampaignStatePanel } from './CampaignStatePanel'
 import type { MoveCard } from '@/lib/allyship-deck/types'
 import { MOVE_ELEMENT } from '@/lib/allyship-deck/card-visuals'
-import { linkableRoute, mtgoaCourseDay, nextCourseDay } from '@/lib/mtgoa-course/course-days'
-import {
-  ALLYSHIP_RHYTHM_FIELDS,
-  CAMPAIGN_HANDOFF_FIELDS,
-  ROUND_TWO_COME_BACK,
-  ROUND_TWO_LANES,
-  ROUND_TWO_STATES,
-  roundTwoEvidence,
-} from '@/lib/mtgoa-course/round-two'
-import type { RoundTwoDay, RoundTwoLane, RoundTwoState } from '@/lib/mtgoa-course/round-two'
+import { nextCourseDay } from '@/lib/mtgoa-course/course-days'
+import { ROUND_TWO_STATES, roundTwoEvidence } from '@/lib/mtgoa-course/round-two'
+import type { RoundTwoDay, RoundTwoState } from '@/lib/mtgoa-course/round-two'
 import type { MtgoaOrganizationState } from '@/lib/mtgoa-course/organization-state'
-import { NO_OPEN_PARTICIPATION_NOTE } from '@/lib/mtgoa-course/organization-state'
 import type { RoundTwoAnalyticsEvent } from '@/lib/mtgoa-course/round-two-events'
 import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
 
 /**
- * The Week 2 course day — one component for Days 6 through 10.
+ * The Week 2 course day, rendered from a `round-two.ts` table row.
  *
  * Week 1's days were each authored separately and each got its own component.
- * Week 2's spec gives every day the same shape, so the days are data in
- * `round-two.ts` and this renders them. Day 10 adds the lane fork and the
- * artifact builder; the other four share one path.
+ * Week 2's spec gives every day the same shape, so the days are data and this
+ * renders them: prompts, a draw, a state, a receipt.
  *
- * The element comes from the move, as everywhere else — so Day 6 is earth, Day 7
- * liminal, Day 8 water, Day 9 wood, Day 10 fire, matching Days 1–5 exactly.
- * A reader walking the second loop should recognise the colour of each move.
+ * Days 6, 9 and 10 outgrew the table and have their own components, dispatched
+ * ahead of this one in `page.tsx`. Days 7 and 8 render here.
+ *
+ * The element comes from the move, as everywhere else — so Day 7 is liminal and
+ * Day 8 water, matching Days 2 and 3 exactly. A reader walking the second loop
+ * should recognise the colour of each move.
  *
  * `orgState` arrives from the Server Component so the public campaign panel has
  * no client fetch and no waterfall. It is public state, and it must never look
  * like the course remembering the reader's own work.
  */
 
-type Screen = 'entry' | 'prompts' | 'draw' | 'lane' | 'artifact' | 'state' | 'comeback' | 'receipt'
+type Screen = 'entry' | 'prompts' | 'draw' | 'state' | 'receipt'
 
 /** Per-move accent, identical to the Week 1 day that shares the move. */
 const ACCENTS: Record<string, CheckAccent> = {
@@ -102,14 +96,7 @@ export function WeekTwoPractice({
   orgState: MtgoaOrganizationState
   hasOpenRoute: boolean
 }) {
-  const isFinalDay = day.move === 'show_up'
-  const order: Screen[] = useMemo(
-    () =>
-      isFinalDay
-        ? ['entry', 'draw', 'lane', 'artifact', 'state', 'comeback', 'receipt']
-        : ['entry', 'prompts', 'draw', 'state', 'receipt'],
-    [isFinalDay],
-  )
+  const order: Screen[] = useMemo(() => ['entry', 'prompts', 'draw', 'state', 'receipt'], [])
 
   const [screen, setScreen] = useState<Screen>('entry')
 
@@ -124,15 +111,11 @@ export function WeekTwoPractice({
     if (screen === 'receipt') markCourseDayComplete(day.day)
   }, [screen, day.day])
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [artifact, setArtifact] = useState<Record<string, string>>({})
-  const [lane, setLane] = useState<RoundTwoLane | null>(null)
   const [sampler, setSampler] = useState<MoveCard[]>([])
   const [carried, setCarried] = useState<MoveCard | null>(null)
   const [sheetCard, setSheetCard] = useState<MoveCard | null>(null)
   const [state, setState] = useState<RoundTwoState | null>(null)
-  const [comeBack, setComeBack] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
-  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     track({ event: 'week_two_viewed', day: day.day })
@@ -143,14 +126,11 @@ export function WeekTwoPractice({
   const accent = ACCENTS[element] ?? ACCENTS.earth
 
   const tomorrow = nextCourseDay(day.day)
-  const laneDef = ROUND_TWO_LANES.find((l) => l.key === lane) ?? null
-  const artifactFields = lane === 'local_team' ? CAMPAIGN_HANDOFF_FIELDS : ALLYSHIP_RHYTHM_FIELDS
 
   const go = (next: Screen) => { setScreen(next); window.scrollTo(0, 0) }
   const back = () => go(order[Math.max(0, order.indexOf(screen) - 1)])
 
   const write = (key: string, value: string) => setAnswers((c) => ({ ...c, [key]: value }))
-  const writeArtifact = (key: string, value: string) => setArtifact((c) => ({ ...c, [key]: value }))
 
   const chooseSheetCard = () => {
     if (!sheetCard) return
@@ -161,17 +141,7 @@ export function WeekTwoPractice({
   }
 
   const answered = day.prompts.filter((p) => (answers[p.key] ?? '').trim()).length
-  const artifactAnswered = artifactFields.filter((f) => (artifact[f.key] ?? '').trim()).length
-  const evidence = roundTwoEvidence({ day: day.day, answered: answered + artifactAnswered, carried: !!carried, state })
-
-  /** Assembled from the reader's own words, for them to copy. Never sent. */
-  const artifactText = [
-    `${laneDef?.artifact ?? 'Week 2 artifact'} — Day ${day.day}`,
-    ...artifactFields.map((f) => {
-      const v = (artifact[f.key] ?? '').trim()
-      return v ? `${f.label}: ${v}` : null
-    }).filter(Boolean),
-  ].join('\n')
+  const evidence = roundTwoEvidence({ day: day.day, answered, carried: !!carried, state })
 
   return (
     <CheckShell
@@ -222,7 +192,7 @@ export function WeekTwoPractice({
 
           <div style={{ marginTop: 26 }}>
             <PrimaryButton
-              onClick={() => { track({ event: 'week_two_started', day: day.day }); go(isFinalDay ? 'draw' : 'prompts') }}
+              onClick={() => { track({ event: 'week_two_started', day: day.day }); go('prompts') }}
               block
             >
               Begin →
@@ -282,109 +252,18 @@ export function WeekTwoPractice({
             <OutlineButton onClick={() => { setSampler(drawThree(cards)); setCarried(null); track({ event: 'week_two_redraw', day: day.day }) }}>
               deal three more
             </OutlineButton>
-            <OutlineButton onClick={() => { track({ event: 'week_two_draw_skipped', day: day.day }); go(isFinalDay ? 'lane' : 'state') }}>
+            <OutlineButton onClick={() => { track({ event: 'week_two_draw_skipped', day: day.day }); go('state') }}>
               skip the draw →
             </OutlineButton>
           </div>
-          <StepFooter back={back} next={{ label: 'continue →', onClick: () => go(isFinalDay ? 'lane' : 'state') }} />
-        </Step>
-      ) : null}
-
-      {screen === 'lane' ? (
-        <Step>
-          <StepEyebrow color={accent.lift}>step 2 · choose a lane</StepEyebrow>
-          <StepTitle>What are you organizing?</StepTitle>
-          <StepBody>
-            Both are real, and they are different commitments. Working alone counts — &ldquo;Owner: me&rdquo; is a valid answer.
-          </StepBody>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
-            {ROUND_TWO_LANES.map((l) => (
-              <SelectRow
-                key={l.key}
-                selected={lane === l.key}
-                onClick={() => { const n = lane === l.key ? null : l.key; setLane(n); if (n) track({ event: 'week_two_lane_chosen', day: day.day, lane: n }) }}
-              >
-                <span className="bars-title" style={{ display: 'block', fontSize: 17, color: '#fff' }}>{l.label}</span>
-                <span className="bars-prose" style={{ display: 'block', marginTop: 5, fontSize: 14, lineHeight: 1.5, color: 'var(--bars-text-secondary)' }}>
-                  {l.body}
-                </span>
-                <span className="bars-label" style={{ display: 'block', marginTop: 8, color: accent.lift }}>
-                  {`you will build: ${l.artifact}`}
-                </span>
-              </SelectRow>
-            ))}
-          </div>
-          {lane === 'local_team' && !hasOpenRoute ? (
-            <div
-              style={{
-                marginTop: 18, padding: 15, borderRadius: 'var(--bars-radius-lg)',
-                background: 'var(--bars-surface-inset)', border: '1px dashed var(--bars-line-strong)',
-              }}
-            >
-              <p className="bars-prose" style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: 'var(--bars-text-secondary)' }}>
-                {NO_OPEN_PARTICIPATION_NOTE} You can still build the handoff for a group you already belong to.
-              </p>
-            </div>
-          ) : null}
-          <StepFooter back={back} next={{ label: 'build it →', onClick: () => go('artifact') }} />
-        </Step>
-      ) : null}
-
-      {screen === 'artifact' ? (
-        <Step>
-          <StepEyebrow color={accent.lift}>step 3 · {laneDef?.artifact ?? 'the artifact'}</StepEyebrow>
-          <StepTitle>One page someone can act on.</StepTitle>
-          <StepBody>{day.entry}</StepBody>
-          {artifactFields.map((f) => (
-            <PrivateField
-              key={f.key}
-              id={`w2-artifact-${f.key}`}
-              label={`${f.label} · stays in your browser`}
-              value={artifact[f.key] ?? ''}
-              onChange={(v) => writeArtifact(f.key, v)}
-              placeholder={f.placeholder}
-              rows={3}
-            />
-          ))}
-          {artifactAnswered > 0 ? (
-            <div
-              style={{
-                marginTop: 24, padding: '15px 16px', borderRadius: 'var(--bars-radius-lg)',
-                background: 'var(--bars-surface-inset)', border: '1px solid var(--bars-line)',
-              }}
-            >
-              <span className="bars-label" style={{ display: 'block', color: 'var(--bars-text-muted)' }}>yours to paste somewhere real</span>
-              <pre
-                style={{
-                  margin: '10px 0 0', whiteSpace: 'pre-wrap', fontFamily: 'var(--bars-font-body)',
-                  fontSize: 15, lineHeight: 1.55, color: 'var(--bars-text-primary)',
-                }}
-              >
-                {artifactText}
-              </pre>
-              <div style={{ marginTop: 12 }}>
-                <PrimaryButton
-                  compact
-                  onClick={() => {
-                    void navigator.clipboard?.writeText(artifactText).catch(() => {})
-                    setCopied(true)
-                    track({ event: 'week_two_artifact_copied', day: day.day, lane: lane ?? undefined })
-                  }}
-                >
-                  {copied ? 'copied ✓' : 'copy it'}
-                </PrimaryButton>
-              </div>
-            </div>
-          ) : null}
-          <StepFooter back={back} next={{ label: 'where did it land? →', onClick: () => go('state') }} />
-          <PrivacyLine>{day.doNot}</PrivacyLine>
+          <StepFooter back={back} next={{ label: 'continue →', onClick: () => go('state') }} />
         </Step>
       ) : null}
 
       {screen === 'state' ? (
         <Step>
           <StepEyebrow color={accent.lift}>what is true right now</StepEyebrow>
-          <StepTitle>{isFinalDay ? 'Can someone use it?' : 'Where did today land?'}</StepTitle>
+          <StepTitle>Where did today land?</StepTitle>
           <StepBody>
             Answer for what has actually happened. Nobody checks this, which is exactly why it only means something if it is
             true.
@@ -397,7 +276,8 @@ export function WeekTwoPractice({
                 onClick={() => {
                   setState(s.key)
                   track({ event: 'week_two_state_chosen', day: day.day, state: s.key })
-                  go(isFinalDay ? 'comeback' : 'receipt')
+                  track({ event: 'week_two_completed', day: day.day, state: s.key })
+                  go('receipt')
                 }}
               >
                 <span className="bars-title" style={{ display: 'block', fontSize: 17, color: '#fff' }}>{s.label}</span>
@@ -408,41 +288,6 @@ export function WeekTwoPractice({
             ))}
           </div>
           <div style={{ marginTop: 24 }}><BackLink onClick={back} /></div>
-        </Step>
-      ) : null}
-
-      {screen === 'comeback' ? (
-        <Step>
-          <StepEyebrow color={accent.lift}>come back · after the loop</StepEyebrow>
-          <StepTitle>{ROUND_TWO_COME_BACK.question}</StepTitle>
-          <StepBody>Contact teaches something a plan cannot. This is the part the course is actually for.</StepBody>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
-            {ROUND_TWO_COME_BACK.answers.map((a) => {
-              const target = a.returnToDay ? mtgoaCourseDay(a.returnToDay) : null
-              const route = target ? linkableRoute(target) : null
-              return (
-                <SelectRow
-                  key={a.key}
-                  selected={comeBack === a.key}
-                  onClick={() => {
-                    setComeBack(a.key)
-                    if (a.returnToDay) track({ event: 'week_two_returned_to_day', day: day.day, returnedToDay: a.returnToDay })
-                  }}
-                >
-                  <span className="bars-title" style={{ display: 'block', fontSize: 16, color: '#fff' }}>{a.label}</span>
-                  <span className="bars-prose" style={{ display: 'block', marginTop: 4, fontSize: 14, lineHeight: 1.5, color: 'var(--bars-text-secondary)' }}>
-                    {a.body}
-                  </span>
-                  {comeBack === a.key && route ? (
-                    <span className="bars-label" style={{ display: 'block', marginTop: 8, color: accent.lift }}>
-                      {`Day ${a.returnToDay} is at ${route}`}
-                    </span>
-                  ) : null}
-                </SelectRow>
-              )
-            })}
-          </div>
-          <StepFooter back={back} next={{ label: `see my Day ${day.day} receipt →`, onClick: () => { track({ event: 'week_two_completed', day: day.day, state: state ?? undefined }); go('receipt') } }} />
         </Step>
       ) : null}
 
@@ -468,9 +313,6 @@ export function WeekTwoPractice({
             {day.prompts.map((p) => (
               <ReceiptRow key={p.key} label={p.label} value={(answers[p.key] ?? '').trim() || null} />
             ))}
-            {isFinalDay ? artifactFields.map((f) => (
-              <ReceiptRow key={f.key} label={f.label} value={(artifact[f.key] ?? '').trim() || null} />
-            )) : null}
             {state ? <ReceiptRow label="where it landed" value={ROUND_TWO_STATES.find((s) => s.key === state)?.label ?? null} /> : null}
             {carried ? (
               <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--bars-line)' }}>
@@ -481,7 +323,7 @@ export function WeekTwoPractice({
                 </p>
               </div>
             ) : null}
-            {answered === 0 && artifactAnswered === 0 && !carried ? (
+            {answered === 0 && !carried ? (
               <p className="bars-prose" style={{ margin: 0, fontSize: 16, lineHeight: 1.55, color: 'var(--bars-text-secondary)' }}>
                 You kept it all in your head. That still counts — the looking is the thing.
               </p>
@@ -515,7 +357,7 @@ export function WeekTwoPractice({
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 }}>
             <BackLink onClick={back} />
-            <TextButton onClick={() => { setAnswers({}); setArtifact({}); setLane(null); setCarried(null); setState(null); setComeBack(null); setCopied(false); setSampler(drawThree(cards)); go('entry') }}>
+            <TextButton onClick={() => { setAnswers({}); setCarried(null); setState(null); setSampler(drawThree(cards)); go('entry') }}>
               start again
             </TextButton>
           </div>

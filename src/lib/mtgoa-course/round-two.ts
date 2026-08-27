@@ -10,8 +10,11 @@
  * Authority: MTGOA_WEEK_2_SKILLFUL_ORGANIZING_DAYS_6_TO_10_DRAFT_2026-08-21.md
  * and MTGOA_COURSE_WEEK_2_AND_ORGANIZATION_SURFACES_SPEC_2026-08-21.md.
  *
- * Privacy invariant: nothing composed here leaves the browser. Day 10's artifact
- * is assembled from the reader's own text for them to copy, and is never sent.
+ * Day 10's copy outgrew this table and lives in `day-ten.ts`. The Day 10 row
+ * stays here: it owns the route contract, the metadata, and that day's reading
+ * of its six cards.
+ *
+ * Privacy invariant: nothing composed here leaves the browser.
  */
 
 import { assembleDeck } from '@/lib/allyship-deck/assemble'
@@ -46,28 +49,6 @@ export const ROUND_TWO_DOMAIN = 'SKILLFUL_ORGANIZING' as const
 
 export const ROUND_TWO_PROMISE =
   'Allyship should not have to live in the leftover corners of your life. Week 2 is about the structures that make the next useful handoff easier.'
-
-/**
- * The two lanes, shown without pretending they are the same commitment. A reader
- * who only ever wants to make one personal recommendation has already completed
- * a valid Week 1 game; Week 2 is not a graduation requirement.
- */
-export type RoundTwoLane = 'personal' | 'local_team'
-
-export const ROUND_TWO_LANES: ReadonlyArray<{ key: RoundTwoLane; label: string; body: string; artifact: string }> = [
-  {
-    key: 'personal',
-    label: 'My allyship life',
-    body: 'A repeatable practice that keeps allyship out of the leftover corners of your week.',
-    artifact: 'Allyship Rhythm',
-  },
-  {
-    key: 'local_team',
-    label: 'A local book team',
-    body: 'A voluntary, locally rooted group helping the book reach people who may benefit. Working alone is a real version of this — "Owner: me" is a valid answer.',
-    artifact: 'Book Campaign Handoff',
-  },
-]
 
 export const ROUND_TWO_DAYS: readonly RoundTwoDay[] = [
   {
@@ -255,28 +236,10 @@ export const ROUND_TWO_DAYS: readonly RoundTwoDay[] = [
   },
 ] as const
 
-/** The Allyship Rhythm — Day 10's personal-lane artifact. */
-export const ALLYSHIP_RHYTHM_FIELDS: RoundTwoPrompt[] = [
-  { key: 'practice', label: 'the practice', placeholder: 'The kind of useful handoff I want to make repeatable is…' },
-  { key: 'place', label: 'the place', placeholder: 'It fits in my actual life at…' },
-  { key: 'support', label: 'the support', placeholder: 'What makes it easier to begin is…' },
-  { key: 'boundary', label: 'the boundary', placeholder: 'What keeps it from eating the rest of my life is…' },
-  { key: 'return', label: 'the return', placeholder: 'I will notice whether it is still useful by…' },
-]
-
-/** The Book Campaign Handoff — Day 10's local-team artifact. */
-export const CAMPAIGN_HANDOFF_FIELDS: RoundTwoPrompt[] = [
-  { key: 'purpose', label: 'purpose', placeholder: 'This is trying to make more possible…' },
-  { key: 'audience', label: 'audience', placeholder: 'This particular handoff is for…' },
-  { key: 'action', label: 'one next action', placeholder: 'The smallest useful thing to do is…' },
-  { key: 'owner', label: 'owner', placeholder: 'Who owns that action (“me” is a real answer)…' },
-  { key: 'terms', label: 'terms', placeholder: 'Optional… needs permission… explicitly not being asked…' },
-  { key: 'review', label: 'return', placeholder: 'This gets reviewed when, and by…' },
-]
-
 /**
- * The three receipt states Week 2 shares with Day 5, kept distinct for the same
- * reason: a built thing that nobody can use yet is not a finished one.
+ * The three receipt states Days 6 to 9 share with Day 5, kept distinct for the
+ * same reason: a built thing nobody can use yet is still waiting on a step.
+ * Day 10 has its own four, in `day-ten.ts`.
  */
 export type RoundTwoState = 'prepared' | 'made' | 'returning'
 
@@ -285,16 +248,6 @@ export const ROUND_TWO_STATES: ReadonlyArray<{ key: RoundTwoState; label: string
   { key: 'prepared', label: 'It is built, and not in anyone’s hands yet.', body: 'A real thing to have made, and still waiting on a next step.' },
   { key: 'returning', label: 'I am coming back to this.', body: 'Something earlier in the loop wants attention first.' },
 ]
-
-/** Day 10's Come Back question, and where each answer sends a reader. */
-export const ROUND_TWO_COME_BACK = {
-  question: 'Did this structure make the next useful handoff easier, harder, or clearer?',
-  answers: [
-    { key: 'easier', label: 'Easier or clearer.', body: 'Carry the learning into the next loop.', returnToDay: null },
-    { key: 'harder', label: 'Harder, or nobody can use it.', body: 'There is an unaddressed move behind it — Days 6 to 9 are where it lives.', returnToDay: 6 },
-    { key: 'not_structure', label: 'This should not become a structure.', body: 'Put it down cleanly. A single personal handoff is a complete game.', returnToDay: 1 },
-  ],
-} as const
 
 const DECK = assembleDeck('mtgoa-week-two')
 

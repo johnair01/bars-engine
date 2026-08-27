@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import { WeekTwoPractice } from '@/components/mtgoa-check/WeekTwoPractice'
 import { DaySixWakeUpCheck } from '@/components/mtgoa-check/DaySixWakeUpCheck'
 import { DayNineRoleRep } from '@/components/mtgoa-check/DayNineRoleRep'
+import { DayTenCampaignHandoff } from '@/components/mtgoa-check/DayTenCampaignHandoff'
 import {
   MTGOA_COURSE_ROUNDS,
   linkableRoute,
@@ -106,6 +107,21 @@ export default async function CourseDayPage({ params }: { params: Promise<Params
         cards={roundTwoCardsFor(day.move)}
         orgState={MTGOA_ORGANIZATION_STATE}
         hasOpenRoute={hasOpenParticipation()}
+      />
+    )
+  }
+
+  // Day 10 has its own component because it needs two behaviours WeekTwoPractice
+  // lacks: four placement states, and a required checkbox before the flow will
+  // treat a structure as placed.
+  if (day.day === 10) {
+    return (
+      <DayTenCampaignHandoff
+        cards={roundTwoCardsFor(day.move)}
+        orgState={MTGOA_ORGANIZATION_STATE}
+        hasOpenRoute={hasOpenParticipation()}
+        bookHref="https://wendellbritt.gumroad.com/l/MTGOAbook"
+        deckHref="/deck/sales"
       />
     )
   }

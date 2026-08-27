@@ -12,6 +12,8 @@ export default defineConfig({
       'src/lib/wake-up/__tests__/check-content.test.ts',
       'src/lib/mtgoa-course/__tests__/receipt-handoffs.test.ts',
       'src/lib/mtgoa-course/__tests__/round-two.test.ts',
+      'src/lib/mtgoa-course/__tests__/day-ten.test.ts',
+      'src/lib/mtgoa-course/__tests__/show-up-handoff.test.ts',
       'src/lib/mtgoa-course/__tests__/course-index.test.ts',
       'src/lib/mtgoa-course/__tests__/course-gating.test.ts',
       'src/lib/mtgoa-course/__tests__/og-cards.test.ts',
