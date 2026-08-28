@@ -45,7 +45,7 @@ function testEntryShape() {
     assert(typeof entry.role === 'string' && entry.role.length > 0, `${face}: role required`)
     assert(typeof entry.mission === 'string' && entry.mission.length > 0, `${face}: mission required`)
     assert(typeof entry.color === 'string' && entry.color.length > 0, `${face}: color required`)
-    assert(typeof entry.trigram === 'string' && entry.trigram.length > 0, `${face}: trigram required`)
+    assert(typeof entry.line === 'number' && entry.line >= 1 && entry.line <= 6, `${face}: line 1-6 required`)
     assert(entry.semantic_intent != null, `${face}: semantic_intent required`)
     assert(Array.isArray(entry.field_slots) && entry.field_slots.length > 0, `${face}: field_slots required`)
     assert(entry.mapping_cues != null, `${face}: mapping_cues required`)
@@ -53,23 +53,27 @@ function testEntryShape() {
 }
 
 // ---------------------------------------------------------------------------
-// Test: trigram assignments match iching-faces.ts
+// The face's classical line position, from FACE_LINE in iching-struct.ts.
+// Replaced a face-to-trigram map that left Water and Thunder with no face.
 // ---------------------------------------------------------------------------
-function testTrigramAssignments() {
-  const expected: Record<string, string> = {
-    shaman: 'Earth',
-    challenger: 'Fire',
-    regent: 'Lake',
-    architect: 'Heaven',
-    diplomat: 'Wind',
-    sage: 'Mountain',
+function testLineAssignments() {
+  const expected: Record<string, number> = {
+    shaman: 1,
+    diplomat: 2,
+    challenger: 3,
+    architect: 4,
+    regent: 5,
+    sage: 6,
   }
+  const seen = new Set<number>()
   for (const face of ORDERED_FACES) {
     assert(
-      FACE_CONTEXT_INDEX[face].trigram === expected[face],
-      `${face}: trigram should be "${expected[face]}"`,
+      FACE_CONTEXT_INDEX[face].line === expected[face],
+      `${face}: line should be ${expected[face]}`,
     )
+    seen.add(FACE_CONTEXT_INDEX[face].line)
   }
+  assert(seen.size === 6, 'each face takes a distinct line, all six covered')
 }
 
 // ---------------------------------------------------------------------------
@@ -266,7 +270,7 @@ function testFieldSlotCoverage() {
 const tests = [
   testAllFacesDefined,
   testEntryShape,
-  testTrigramAssignments,
+  testLineAssignments,
   testEntrySentences,
   testFieldSlots,
   testMappingCues,

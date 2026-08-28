@@ -8,7 +8,7 @@
 
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
-import { getHexagramStructure } from '@/lib/iching-struct'
+import { getHexagramStructure, isLineCorrect, FACE_LINE } from '@/lib/iching-struct'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { NATION_AFFINITIES } from '@/lib/elemental-moves'
 import type { KotterStage } from '@/lib/kotter'
@@ -32,16 +32,6 @@ const PLAYBOOK_TRIGRAM: Record<string, string> = {
   'The Subtle Influence': 'Wind',
   'The Truth Seer': 'Fire',
   'The Joyful Connector': 'Lake',
-}
-
-/** Face key → preferred trigram (Game Master sect) */
-export const FACE_TRIGRAM_PREFERENCE: Record<string, string> = {
-  shaman: 'Earth',
-  challenger: 'Fire',
-  regent: 'Lake',
-  architect: 'Heaven',
-  diplomat: 'Wind',
-  sage: 'Mountain',
 }
 
 export type AlignmentBreakdown = {
@@ -148,10 +138,10 @@ export function scoreHexagramAlignment(
     breakdown.archetype = 1
   }
 
-  // Sect: FACE_TRIGRAM_PREFERENCE
+  // Sect: the face's line sits in its correct place, so the figure supports that seat
   if (context.activeFace) {
-    const preferred = FACE_TRIGRAM_PREFERENCE[context.activeFace]
-    if (preferred && trigrams.some((t) => t === preferred)) {
+    const line = FACE_LINE[context.activeFace]
+    if (line && isLineCorrect(hexagramId, line)) {
       breakdown.sect = 1
     }
   }

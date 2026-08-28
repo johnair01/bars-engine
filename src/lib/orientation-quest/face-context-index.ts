@@ -5,14 +5,14 @@
  * into a single structured context object. Each entry captures:
  *   - semantic intent    : thematic lens + orientation stance
  *   - field_slots        : TransformationMove fields this face elicits in a sub-packet
- *   - descriptive metadata: label, role, mission, color, trigram, entry sentence
+ *   - descriptive metadata: label, role, mission, color, line, entry sentence
  *   - mapping_cues       : keyword/phrase signals for inference when mapping
  *                          player narrative to a face's domain
  *
  * Data sources (static, compile-time):
  *   - FACE_META         → src/lib/quest-grammar/types.ts
  *   - FACE_SENTENCES    → src/lib/face-sentences.ts
- *   - FACE_TRIGRAM      → src/lib/quest-grammar/iching-faces.ts
+ *   - FACE_LINE         → src/lib/iching-struct.ts
  *   - TransformationMove → src/lib/transformation-move-registry/types.ts
  *
  * No AI, no Prisma. Safe for server and client bundles.
@@ -98,8 +98,8 @@ export interface FaceContextEntry {
   mission: string
   /** Tailwind color class (from FACE_META). */
   color: string
-  /** I Ching trigram alignment (from FACE_TRIGRAM in iching-faces.ts). */
-  trigram: string
+  /** The face's classical line position in a figure (from FACE_LINE in iching-struct.ts). */
+  line: number
   /** Semantic intent object derived from all face description sources. */
   semantic_intent: FaceSemanticIntent
   /**
@@ -405,7 +405,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
     role: 'Mythic threshold',
     mission: 'Belonging, ritual space, bridge between worlds',
     color: 'text-fuchsia-400',
-    trigram: 'Earth',
+    line: 1,
     semantic_intent: {
       theme: 'Mythic threshold and ritual belonging',
       orientation:
@@ -425,7 +425,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
     role: 'Proving ground',
     mission: 'Action, edge, lever',
     color: 'text-red-400',
-    trigram: 'Fire',
+    line: 3,
     semantic_intent: {
       theme: 'Proving ground — pressure that forges clarity',
       orientation:
@@ -445,7 +445,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
     role: 'Order, structure',
     mission: 'Roles, rules, collective tool',
     color: 'text-amber-400',
-    trigram: 'Lake',
+    line: 5,
     semantic_intent: {
       theme: 'Order and collective structure',
       orientation:
@@ -465,7 +465,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
     role: 'Blueprint',
     mission: 'Strategy, project, advantage',
     color: 'text-blue-400',
-    trigram: 'Heaven',
+    line: 4,
     semantic_intent: {
       theme: 'Blueprint and strategic design',
       orientation:
@@ -485,7 +485,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
     role: 'Weave',
     mission: 'Relational field, care, connector',
     color: 'text-teal-400',
-    trigram: 'Wind',
+    line: 2,
     semantic_intent: {
       theme: 'Relational field and care',
       orientation:
@@ -505,7 +505,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
     role: 'Whole',
     mission: 'Integration, emergence, flow',
     color: 'text-purple-400',
-    trigram: 'Mountain',
+    line: 6,
     semantic_intent: {
       theme: 'Whole-system integration and emergence',
       orientation:

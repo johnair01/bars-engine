@@ -25,16 +25,38 @@ import {
   type AgentResponse,
   type AgentMindState,
 } from '@/lib/agents'
+import { FACE_LINE } from '@/lib/iching-struct'
 
 type AgentKey = 'architect' | 'challenger' | 'shaman' | 'regent' | 'diplomat' | 'sage'
 
-const AGENTS: { key: AgentKey; name: string; sect: string; trigram: string; color: string; placeholder: string }[] = [
-  { key: 'architect', name: 'Architect', sect: 'Orange/Strategy', trigram: 'Heaven', color: '#f59e0b', placeholder: 'Enter a narrative lock (e.g., "I am afraid to share my work")...' },
-  { key: 'challenger', name: 'Challenger', sect: 'Red/Power', trigram: 'Fire', color: '#ef4444', placeholder: 'Quest ID for context (optional, leave blank for general)...' },
-  { key: 'shaman', name: 'Shaman', sect: 'Magenta/Mythic', trigram: 'Earth', color: '#a855f7', placeholder: 'What are you feeling? Describe your emotional state...' },
-  { key: 'regent', name: 'Regent', sect: 'Blue/Order', trigram: 'Lake', color: '#3b82f6', placeholder: 'Campaign instance ID to assess...' },
-  { key: 'diplomat', name: 'Diplomat', sect: 'Green/Care', trigram: 'Wind', color: '#22c55e', placeholder: 'No input needed — the Diplomat reads your state...' },
-  { key: 'sage', name: 'Sage', sect: 'Teal/Integration', trigram: 'Mountain', color: '#14b8a6', placeholder: 'Ask the Sage anything — it will route to specialists...' },
+/**
+ * Colours follow the canonical Spiral Dynamics sequence in
+ * `lib/school/big-schools.ts` and `lib/campaign-hub/growth-stage.ts`:
+ * Shaman Magenta → Challenger Red → Regent Amber → Architect Orange →
+ * Diplomat Green → Sage Teal. Regent read Blue here and Architect held Amber's
+ * hex; corrected 2026-08-27.
+ *
+ * The `line` is the face's classical position in a figure, from
+ * `lib/iching-struct.ts`. It replaces a per-face trigram, which mapped six faces
+ * onto six of the eight trigrams and left Water and Thunder with none — a face
+ * has an expression at every trigram, so no single one belongs to it.
+ */
+const LINE_ROLE: Record<number, string> = {
+  1: 'the beginning, below and hidden',
+  2: 'the officer in the field',
+  3: 'the exposed transition',
+  4: 'the minister, next to power',
+  5: "the ruler's place",
+  6: 'past the situation',
+}
+
+const AGENTS: { key: AgentKey; name: string; sect: string; color: string; placeholder: string }[] = [
+  { key: 'architect', name: 'Architect', sect: 'Orange/Strategy', color: '#f97316', placeholder: 'Enter a narrative lock (e.g., "I am afraid to share my work")...' },
+  { key: 'challenger', name: 'Challenger', sect: 'Red/Power', color: '#ef4444', placeholder: 'Quest ID for context (optional, leave blank for general)...' },
+  { key: 'shaman', name: 'Shaman', sect: 'Magenta/Mythic', color: '#a855f7', placeholder: 'What are you feeling? Describe your emotional state...' },
+  { key: 'regent', name: 'Regent', sect: 'Amber/Order', color: '#f59e0b', placeholder: 'Campaign instance ID to assess...' },
+  { key: 'diplomat', name: 'Diplomat', sect: 'Green/Care', color: '#22c55e', placeholder: 'No input needed — the Diplomat reads your state...' },
+  { key: 'sage', name: 'Sage', sect: 'Teal/Integration', color: '#14b8a6', placeholder: 'Ask the Sage anything — it will route to specialists...' },
 ]
 
 export default function AgentConsolePage() {
@@ -139,7 +161,7 @@ export default function AgentConsolePage() {
       {/* Input + submit */}
       <div style={{ marginBottom: '1rem' }}>
         <div style={{ fontSize: '0.75rem', color: agent.color, marginBottom: '0.25rem' }}>
-          {agent.trigram} trigram — {agent.sect}
+          line {FACE_LINE[agent.key]} — {LINE_ROLE[FACE_LINE[agent.key]]} · {agent.sect}
         </div>
         <textarea
           value={input}
