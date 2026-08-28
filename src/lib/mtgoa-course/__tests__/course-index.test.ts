@@ -112,7 +112,7 @@ describe('the course index', () => {
   it('takes week 2 headlines from the authored round-two days', () => {
     const weekTwo = courseIndexWeeks()[1]
     expect(weekTwo.days.map((day) => day.headline)).toEqual([
-      'See the campaign that is actually there',
+      'The Six Questions',
       'Let the structure be felt',
       'Clear the story designing the system',
       'Practice the capacity to organize',
