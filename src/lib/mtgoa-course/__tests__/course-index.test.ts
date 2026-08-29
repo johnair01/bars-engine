@@ -43,8 +43,9 @@ describe('the course index', () => {
     const weeks = courseIndexWeeks()
     expect(weeks[0]).toMatchObject({ label: 'Week 1', domainLabel: 'Raise Awareness', range: 'Days 1–5' })
     expect(weeks[1]).toMatchObject({ label: 'Week 2', domainLabel: 'Skillful Organizing', range: 'Days 6–10' })
-    // Rounds 3–6 are undecided. The page must not invent a field for them.
-    for (const week of weeks.slice(2)) expect(week.domainLabel).toBeNull()
+    expect(weeks[2]).toMatchObject({ label: 'Week 3', domainLabel: 'Gather Resources' })
+    // Rounds 4–6 are undecided. The page must not invent a field for them.
+    for (const week of weeks.slice(3)) expect(week.domainLabel).toBeNull()
     expect(weeks[5].range).toBe('Days 26–30')
   })
 

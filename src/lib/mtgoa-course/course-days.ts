@@ -91,10 +91,14 @@ type RoundAuthoring = {
  * can make one useful handoff of this book; round 2 asks whether that work can be made
  * legible and repeatable. Same five moves, different field — so the questions differ.
  *
- * Rounds 3–6 are undecided and deliberately absent. Do not invent domains for them.
+ * Round 3 is Gather Resources, decided by the Day 11 design. Only its wake_up day
+ * is authored; the other four fall back to the move's generic question until each
+ * is written. Rounds 4–6 remain undecided and deliberately absent. Do not invent
+ * domains for them.
  *
  * @see MTGOA_30_DAY_COURSE_FOUNDATION_DAYS_1_TO_3_2026-08-19.md — round 1
  * @see MTGOA_WEEK_2_SKILLFUL_ORGANIZING_DAYS_6_TO_10_DRAFT_2026-08-21.md — round 2
+ * @see .specify/specs/mtgoa-day11-starting-hand/design_handoff/ — round 3
  */
 const ROUND_AUTHORING: Record<number, RoundAuthoring> = {
   1: {
@@ -115,6 +119,12 @@ const ROUND_AUTHORING: Record<number, RoundAuthoring> = {
       clean_up: { question: 'What story or strain is being designed into the campaign?', output: 'one clean design principle' },
       grow_up:  { question: 'What organizing capacity needs a deliberate rep?',          output: 'a capacity practice' },
       show_up:  { question: 'What small structure can another person actually use?',     output: 'a usable campaign artifact' },
+    },
+  },
+  3: {
+    domain: 'GATHERING_RESOURCES',
+    days: {
+      wake_up:  { question: 'What can I actually reach?',                                output: 'a resource ledger' },
     },
   },
 }
@@ -152,6 +162,15 @@ const ROUND_TWO_STATUS: Partial<Record<MtgoaCourseMove, { status: MtgoaCourseDay
   show_up:  { status: 'shipped', publicRoute: null },
 }
 
+/**
+ * Round 3 — Days 11–15, Gather Resources. Day 11 answers on the canonical course
+ * route; the remaining four are unlisted, so the spine reports them `unauthored`
+ * and every forward handoff to them renders as "coming next" rather than a link.
+ */
+const ROUND_THREE_STATUS: Partial<Record<MtgoaCourseMove, { status: MtgoaCourseDayStatus; publicRoute: string | null }>> = {
+  wake_up: { status: 'shipped', publicRoute: null },
+}
+
 /** Stable route convention for six five-move rounds. */
 export function mtgoaCourseRoute(round: number, move: MtgoaCourseMove): string {
   if (!Number.isInteger(round) || round < 1 || round > MTGOA_COURSE_ROUNDS) {
@@ -174,7 +193,11 @@ function buildDay(round: number, move: MtgoaCourseMove): MtgoaCourseDay {
   const def = MOVE_DEFINITION[move]
   const authoredRound = ROUND_AUTHORING[round]
   const authoredDay = authoredRound?.days[move]
-  const shipped = round === 1 ? ROUND_ONE_STATUS[move] : round === 2 ? ROUND_TWO_STATUS[move] : undefined
+  const shipped =
+    round === 1 ? ROUND_ONE_STATUS[move]
+    : round === 2 ? ROUND_TWO_STATUS[move]
+    : round === 3 ? ROUND_THREE_STATUS[move]
+    : undefined
   return {
     id: `day-${number}`,
     number,

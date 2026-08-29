@@ -54,9 +54,11 @@ describe('the release calendar', () => {
     }
   })
 
-  it('treats week 1 as long live and gives days 11 to 30 no date at all', () => {
+  it('treats week 1 as long live and gives days 12 to 30 no date at all', () => {
     for (const day of [1, 2, 3, 4, 5]) expect(isDayReleased(day, SATURDAY)).toBe(true)
-    for (const day of [11, 20, 30]) {
+    // Day 11 opens Week 3 and has a date; nothing after it does yet.
+    expect(DAY_RELEASE_ISO[11]).toBe('2026-08-30T04:00:00Z')
+    for (const day of [12, 20, 30]) {
       expect(DAY_RELEASE_ISO[day] ?? null).toBeNull()
       // A day with no date never opens, however far the clock is wound on.
       expect(isDayReleased(day, Date.parse('2099-01-01T00:00:00Z'))).toBe(false)
@@ -78,13 +80,22 @@ describe('the release calendar', () => {
     expect(isRoundStarted(2, SATURDAY)).toBe(false)
     expect(isRoundStarted(2, SUNDAY)).toBe(true)
     expect(isRoundStarted(1, SATURDAY)).toBe(true)
-    expect(isRoundStarted(3, Date.parse('2099-01-01T00:00:00Z'))).toBe(false)
+    // Week 3 starts the day Day 11 lands.
+    expect(isRoundStarted(3, Date.parse('2026-08-29T12:00:00Z'))).toBe(false)
+    expect(isRoundStarted(3, Date.parse('2026-08-30T12:00:00Z'))).toBe(true)
+    expect(isRoundStarted(4, Date.parse('2099-01-01T00:00:00Z'))).toBe(false)
   })
 
   it('names the next day still to come, and nothing once every dated day is live', () => {
     expect(nextDayRelease(SATURDAY)).toEqual({ day: 6, at: Date.parse('2026-08-23T04:00:00Z') })
     expect(nextDayRelease(SUNDAY)).toEqual({ day: 7, at: Date.parse('2026-08-24T04:00:00Z') })
-    expect(nextDayRelease(Date.parse('2026-08-28T05:00:00Z'))).toBeNull()
+    // Friday, with Week 2 complete and Day 11 still to come.
+    expect(nextDayRelease(Date.parse('2026-08-28T05:00:00Z'))).toEqual({
+      day: 11,
+      at: Date.parse('2026-08-30T04:00:00Z'),
+    })
+    // Once Day 11 is live, no dated day is left.
+    expect(nextDayRelease(Date.parse('2026-08-31T05:00:00Z'))).toBeNull()
   })
 
   it('labels tomorrow as tomorrow, this week by weekday, and further out by date', () => {

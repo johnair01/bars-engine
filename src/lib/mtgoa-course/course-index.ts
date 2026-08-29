@@ -24,11 +24,13 @@ import {
 } from './course-days'
 import type { MtgoaCourseDay, MtgoaCourseDayStatus, MtgoaCourseMove } from './course-days'
 import { roundTwoDayByMove } from './round-two'
+import { roundThreeDayByMove } from './round-three'
 
 /**
  * Week 1's headlines, quoted from each day's own entry screen.
  *
- * Week 2 authors a title per day in `round-two.ts`, so it needs no table here.
+ * Weeks 2 and 3 author a title per day in `round-two.ts` and `round-three.ts`,
+ * so they need no table here.
  * Week 1's five days shipped as five separate components and carry their
  * headline inline, which is why these are transcribed rather than imported —
  * lifting them into a shared module would mean editing five shipped flows.
@@ -73,7 +75,10 @@ export type CourseIndexWeek = {
 }
 
 function toIndexDay(day: MtgoaCourseDay): CourseIndexDay {
-  const authored = day.round === 2 ? roundTwoDayByMove(day.move) : null
+  const authored =
+    day.round === 2 ? roundTwoDayByMove(day.move)
+    : day.round === 3 ? roundThreeDayByMove(day.move)
+    : null
   const headline =
     day.round === 1 ? WEEK_ONE_HEADLINES[day.move] : authored?.title ?? MOVE_LABELS[day.move]
   return {

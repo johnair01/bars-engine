@@ -51,6 +51,8 @@ export const DAY_RELEASE_ISO: Readonly<Record<number, string | null>> = {
   8: '2026-08-25T04:00:00Z',
   9: '2026-08-26T04:00:00Z',
   10: '2026-08-27T04:00:00Z',
+  // Week 3 — Gather Resources. Day 11 opens the week on Sunday 30 August (EDT).
+  11: '2026-08-30T04:00:00Z',
 }
 
 function releaseMs(day: number): number | null {
