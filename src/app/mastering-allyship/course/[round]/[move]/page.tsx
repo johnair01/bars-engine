@@ -6,6 +6,7 @@ import { DaySixWakeUpCheck } from '@/components/mtgoa-check/DaySixWakeUpCheck'
 import { DayEightBottleneck321 } from '@/components/mtgoa-check/DayEightBottleneck321'
 import { DayNineRoleRep } from '@/components/mtgoa-check/DayNineRoleRep'
 import { DayTenCampaignHandoff } from '@/components/mtgoa-check/DayTenCampaignHandoff'
+import { DayElevenStartingHand } from '@/components/mtgoa-check/DayElevenStartingHand'
 import {
   MTGOA_COURSE_ROUNDS,
   linkableRoute,
@@ -15,6 +16,7 @@ import {
 import type { MtgoaCourseMove } from '@/lib/mtgoa-course/course-days'
 import { MTGOA_ORGANIZATION_STATE, hasOpenParticipation } from '@/lib/mtgoa-course/organization-state'
 import { ROUND_TWO_DAYS, roundTwoCardsFor, roundTwoDayByMove } from '@/lib/mtgoa-course/round-two'
+import { ROUND_THREE_DAYS, roundThreeCardsFor, roundThreeDayByMove } from '@/lib/mtgoa-course/round-three'
 
 /**
  * The canonical course route: `/mastering-allyship/course/{round}/{move}`.
@@ -47,14 +49,39 @@ function resolve(params: Params) {
   return { round, move, dayNumber: mtgoaCourseDayNumber(round, move) }
 }
 
-/** Only the rounds that exist. Round 1 is served by its aliases, so only round 2 here. */
+/** Only the rounds that exist. Round 1 is served by its aliases, so rounds 2 and 3 here. */
 export function generateStaticParams() {
-  return ROUND_TWO_DAYS.map((day) => ({ round: '2', move: day.slug }))
+  return [
+    ...ROUND_TWO_DAYS.map((day) => ({ round: '2', move: day.slug })),
+    ...ROUND_THREE_DAYS.map((day) => ({ round: '3', move: day.slug })),
+  ]
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const resolved = resolve(await params)
   if (!resolved) return {}
+
+  // Round 3 authors one day so far. Its metadata comes from its own table.
+  if (resolved.round === 3) {
+    const three = roundThreeDayByMove(resolved.move)
+    if (!three) return {}
+    const description = `Day ${three.day} of the MTGOA self-paced course, Week 3 · Gather Resources. A private practice: ${three.coreQuestion}`
+    return {
+      metadataBase: new URL('https://masteringallyship.com'),
+      title: `Day ${three.day} · ${three.title} | Mastering the Game of Allyship`,
+      description,
+      alternates: { canonical: `/mastering-allyship/course/3/${three.slug}` },
+      openGraph: {
+        title: `${three.title} — a Week 3 course practice`,
+        description: three.coreQuestion,
+        url: `/mastering-allyship/course/3/${three.slug}`,
+        siteName: 'Mastering the Game of Allyship',
+        type: 'website',
+      },
+      twitter: { card: 'summary_large_image', title: three.title, description: three.coreQuestion },
+    }
+  }
+
   const day = roundTwoDayByMove(resolved.move)
   if (resolved.round !== 2 || !day) return {}
 
@@ -92,6 +119,14 @@ export default async function CourseDayPage({ params }: { params: Promise<Params
     const day = mtgoaCourseDay(resolved.dayNumber)
     const route = day ? linkableRoute(day) : null
     if (route) redirect(route)
+    notFound()
+  }
+
+  // Week 3 opens with Day 11, which has its own component and its own table.
+  if (resolved.round === 3) {
+    const three = roundThreeDayByMove(resolved.move)
+    if (!three) notFound()
+    if (three.day === 11) return <DayElevenStartingHand cards={roundThreeCardsFor(three.move)} />
     notFound()
   }
 

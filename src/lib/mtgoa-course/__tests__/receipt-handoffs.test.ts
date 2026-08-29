@@ -18,14 +18,20 @@ describe('course receipt handoffs', () => {
     expect(nextCourseDay(4)?.route).toBe('/show-up')
   })
 
-  it('stops at the round-3 boundary, which has no authored domain', () => {
+  it('hands Week 2 forward into Day 11, then stops inside Week 3', () => {
     const afterWeekTwo = nextCourseDay(10)
     expect(afterWeekTwo?.day.title).toBe('Wake Up')
-    // Named, so Day 10's receipt can still ask Day 11's question...
     expect(afterWeekTwo?.day.question).toBeTruthy()
-    // ...but not linkable, so it renders "coming next" instead of a 404.
-    expect(afterWeekTwo?.route).toBeNull()
-    expect(linkableRoute(mtgoaCourseDay(11)!)).toBeNull()
+    // Day 11 ships, so Day 10's receipt links straight at it.
+    expect(afterWeekTwo?.route).toBe('/mastering-allyship/course/3/wake-up')
+    expect(linkableRoute(mtgoaCourseDay(11)!)).toBe('/mastering-allyship/course/3/wake-up')
+
+    // Day 12 is the first unwritten day. Named, so Day 11's receipt can ask its
+    // question, but unlinkable, so it renders "coming next" instead of a 404.
+    const afterDayEleven = nextCourseDay(11)
+    expect(afterDayEleven?.day.question).toBeTruthy()
+    expect(afterDayEleven?.route).toBeNull()
+    expect(linkableRoute(mtgoaCourseDay(12)!)).toBeNull()
   })
 
   it('carries attribution through every handoff without leaking an answer', () => {
