@@ -4,10 +4,13 @@ import {
   DAY_ELEVEN_ACCESS,
   DAY_ELEVEN_ACCESS_STANDARD,
   DAY_ELEVEN_COLUMNS,
+  DAY_ELEVEN_INFORMATION_NEEDS,
   DAY_ELEVEN_LINES,
   dayElevenLedger,
+  dayElevenBlankLedgerText,
   dayElevenLedgerText,
   dayElevenReceiptHeadline,
+  dayElevenStewardEmailText,
   dayElevenUnlabelled,
   dayElevenWritten,
 } from '../day-eleven'
@@ -21,7 +24,7 @@ import { ROUND_THREE_DOMAIN, roundThreeCardsFor, roundThreeDay } from '../round-
  * Day 11 — Wake Up · What Is Already in Your Hand.
  *
  * The carousel is published, so its three vocabularies are fixed and this suite
- * pins them: five starting-hand prompts, four access labels, three columns.
+ * pins them: eight starting-hand prompts, four access labels, three columns.
  *
  * @see .specify/specs/mtgoa-day11-starting-hand/design_handoff/
  */
@@ -29,18 +32,34 @@ import { ROUND_THREE_DOMAIN, roundThreeCardsFor, roundThreeDay } from '../round-
 const entries = (...rows: Array<Partial<DayElevenEntry> & { key: string }>): DayElevenEntry[] =>
   DAY_ELEVEN_LINES.map((line) => {
     const row = rows.find((r) => r.key === line.key)
-    return { key: line.key, text: row?.text ?? '', access: row?.access ?? null }
+    return {
+      key: line.key,
+      id: row?.id ?? line.key,
+      text: row?.text ?? '',
+      access: row?.access ?? null,
+      askStatus: row?.askStatus ?? null,
+      includeInEmail: row?.includeInEmail ?? false,
+    }
   })
 
 describe('the published vocabularies', () => {
-  it('keeps the five starting-hand lines the carousel names', () => {
+  it('keeps the eight starting-hand resource piles', () => {
     expect(DAY_ELEVEN_LINES.map((l) => l.prompt)).toEqual([
       'people who trust your judgment.',
       'groups you belong to.',
       'skills and tools you can offer.',
       'rooms you can convene.',
       'problems you already understand.',
+      'material support you can move.',
+      'time and energy you can realistically give.',
+      'something else you have access to.',
     ])
+  })
+
+  it('keeps the bounded campaign facts rather than collecting a freewrite', () => {
+    expect(DAY_ELEVEN_INFORMATION_NEEDS).toContain('What the campaign most needs this week')
+    expect(DAY_ELEVEN_INFORMATION_NEEDS).toContain('Whether someone can think through the fit with me')
+    expect(DAY_ELEVEN_INFORMATION_NEEDS).toContain('I have enough information for now')
   })
 
   it('keeps the four access labels verbatim', () => {
@@ -108,6 +127,24 @@ describe('the ledger', () => {
   it('produces nothing to copy when the reader wrote nothing', () => {
     expect(dayElevenLedgerText(entries())).toBe('')
   })
+
+  it('keeps the blank ledger useful without a browser session', () => {
+    const blank = dayElevenBlankLedgerText()
+    expect(blank).toContain('RESOURCE LEDGER')
+    expect(blank).toContain('Material support you can move')
+    expect(blank).toContain('Ask / transfer status')
+  })
+
+  it('puts only the explicitly selected resource in the steward email draft', () => {
+    const state = entries(
+      { key: 'people', text: 'Dana', access: 'ask', includeInEmail: true },
+      { key: 'groups', text: 'the co-op', access: 'ask', includeInEmail: false },
+    )
+    const email = dayElevenStewardEmailText(state, ['What the campaign most needs this week'])
+    expect(email).toContain('Dana')
+    expect(email).not.toContain('the co-op')
+    expect(email).toContain('What the campaign most needs this week')
+  })
 })
 
 describe('the receipt headline', () => {
@@ -118,6 +155,11 @@ describe('the receipt headline', () => {
   it('says so when nothing is the reader’s to offer', () => {
     const state = entries({ key: 'rooms', text: 'the church hall', access: 'not_mine' })
     expect(dayElevenReceiptHeadline(state)).toBe('1 in hand. None of it is yours to offer today.')
+  })
+
+  it('names when a resource needs permission or a campaign fact', () => {
+    const state = entries({ key: 'groups', text: 'the co-op', access: 'ask' })
+    expect(dayElevenReceiptHeadline(state)).toBe('1 in hand. 1 needs a question or permission first.')
   })
 
   it('counts the hand and the lines ready to move', () => {
