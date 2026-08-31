@@ -12,16 +12,17 @@ import { roundThreeDay } from './round-three'
  * reading of its six Wake Up · Gathering Resources cards.
  *
  * Authority: .specify/specs/mtgoa-day11-starting-hand/design_handoff/ — the
- * carousel is public, so its three vocabularies are fixed: the five starting
+ * carousel is public, so its three vocabularies are fixed: the starting-hand
  * hand prompts, the four access labels, and the three columns.
  *
- * Privacy invariant: nothing here leaves the browser. The ledger is assembled
- * from the reader's own text for them to copy, and a refresh clears it.
+ * Privacy invariant: the ledger stays in the browser unless the reader selects
+ * Ask first entries and deliberately opens a drafted email to the Campaign
+ * Steward. A refresh otherwise clears it.
  */
 
 const DAY_ELEVEN = roundThreeDay(11)
 
-/** The five lines of the starting hand, in the carousel's order. */
+/** The resource piles in the Starting Hand board. */
 export type DayElevenLine = {
   key: string
   /** The carousel's own prompt, verbatim. */
@@ -60,6 +61,24 @@ export const DAY_ELEVEN_LINES: readonly DayElevenLine[] = [
     prompt: 'problems you already understand.',
     label: 'Problems you already understand',
     placeholder: 'What do you recognise on sight that other people find confusing?',
+  },
+  {
+    key: 'material',
+    prompt: 'material support you can move.',
+    label: 'Material support you can move',
+    placeholder: 'A copy, venue, printing, transport, childcare, supplies, or budget access.',
+  },
+  {
+    key: 'time',
+    prompt: 'time and energy you can realistically give.',
+    label: 'Time and energy you can realistically give',
+    placeholder: 'Fifteen minutes, an hour, a recurring rhythm, or a bounded one-time effort.',
+  },
+  {
+    key: 'other',
+    prompt: 'something else you have access to.',
+    label: 'Something else you have access to',
+    placeholder: 'A concrete resource that belongs in the ledger.',
   },
 ]
 
@@ -136,10 +155,36 @@ export function dayElevenColumn(key: DayElevenColumn): DayElevenColumnDef {
  * `access` is null until the reader labels it, which is what lets the flow tell
  * an unlabelled line from a line the reader has decided is out of reach.
  */
+export type DayElevenAskStatus = 'sent' | 'accepted' | 'declined' | 'waiting'
+
+export const DAY_ELEVEN_ASK_STATUSES: ReadonlyArray<{ key: DayElevenAskStatus; label: string }> = [
+  { key: 'sent', label: 'sent / offered' },
+  { key: 'accepted', label: 'accepted' },
+  { key: 'declined', label: 'declined' },
+  { key: 'waiting', label: 'waiting for a response' },
+]
+
+export const DAY_ELEVEN_INFORMATION_NEEDS = [
+  'What the campaign most needs this week',
+  'Whether this specific resource would be useful right now',
+  'Who can receive or decide about this offer',
+  'What scope or time commitment would be useful',
+  'How to make the introduction or offer cleanly',
+  'What terms, boundaries, or stop conditions apply',
+  'Whether there is a current route for book copies, events, podcast/speaking, or another campaign path',
+  'Whether someone can think through the fit with me',
+  'I have enough information for now',
+] as const
+
 export type DayElevenEntry = {
+  /** Category/pile key. */
   key: string
+  /** Stable client-only id for one resource slip. */
+  id: string
   text: string
   access: DayElevenAccess | null
+  askStatus: DayElevenAskStatus | null
+  includeInEmail: boolean
 }
 
 /** Lines the reader actually wrote. Blank prompts never reach the ledger. */
@@ -187,18 +232,67 @@ export function dayElevenLedgerText(entries: readonly DayElevenEntry[]): string 
     blocks.push(
       [
         `${column.label.toUpperCase()} — ${column.blurb}`,
-        ...lines.map((line) => `• ${dayElevenLineLabel(line.key)}: ${line.text.trim()}`),
+        ...lines.map((line) => {
+          const ask = line.askStatus
+            ? ` · ${DAY_ELEVEN_ASK_STATUSES.find((status) => status.key === line.askStatus)?.label ?? line.askStatus}`
+            : ''
+          return `• ${dayElevenLineLabel(line.key)}: ${line.text.trim()}${ask}`
+        }),
       ].join('\n'),
     )
   }
   return blocks.join('\n\n')
 }
 
+export function dayElevenBlankLedgerText(): string {
+  return [
+    'MTGOA RESOURCE LEDGER',
+    'Date: __________',
+    '',
+    ...DAY_ELEVEN_COLUMNS.flatMap((column) => [
+      `${column.label.toUpperCase()} — ${column.blurb}`,
+      ...DAY_ELEVEN_LINES.map((line) => `• ${line.label}: ______________________________`),
+      '',
+    ]),
+    'Ask / transfer status: sent / offered · accepted · declined · waiting for a response',
+  ].join('\n')
+}
+
+export function dayElevenStewardEmailText(
+  entries: readonly DayElevenEntry[],
+  informationNeeds: readonly string[],
+): string {
+  const selected = entries.filter((entry) => entry.includeInEmail && entry.text.trim())
+  const resources = selected.length
+    ? selected.map((entry) => {
+      const access = dayElevenAccess(entry.access)?.label ?? 'access not yet marked'
+      return `- ${dayElevenLineLabel(entry.key)}: ${entry.text.trim()} (${access})`
+    }).join('\n')
+    : '- No resource selected yet.'
+  const questions = informationNeeds.length
+    ? informationNeeds.map((need) => `- ${need}`).join('\n')
+    : '- No campaign question selected.'
+  return [
+    'Hello Campaign Steward,',
+    '',
+    'I am using the Day 11 Resource Ledger and would like to explore the fit of these selected resources:',
+    resources,
+    '',
+    'What I need to learn before deciding whether to move them:',
+    questions,
+    '',
+    'This is an offer to explore fit. It does not commit me to a campaign role or contribution.',
+  ].join('\n')
+}
+
 /** The receipt headline. It reports the count and claims nothing else. */
 export function dayElevenReceiptHeadline(entries: readonly DayElevenEntry[]): string {
   const written = dayElevenWritten(entries).length
   if (written === 0) return 'You read the ledger through.'
-  const ready = dayElevenLedger(entries).move_now.length
+  const ledger = dayElevenLedger(entries)
+  const ready = ledger.move_now.length
+  const waitingOn = ledger.ask_first.length
+  if (ready === 0 && waitingOn > 0) return `${written} in hand. ${waitingOn} need${waitingOn === 1 ? 's' : ''} a question or permission first.`
   if (ready === 0) return `${written} in hand. None of it is yours to offer today.`
   return `${written} in hand. ${ready} you can move on now.`
 }
