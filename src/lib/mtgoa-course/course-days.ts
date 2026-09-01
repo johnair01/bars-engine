@@ -164,11 +164,12 @@ const ROUND_TWO_STATUS: Partial<Record<MtgoaCourseMove, { status: MtgoaCourseDay
 
 /**
  * Round 3 — Days 11–15, Gather Resources. Day 11 answers on the canonical course
- * route; the remaining four are unlisted, so the spine reports them `unauthored`
+ * route; Days 13–15 are unlisted, so the spine reports them `unauthored`
  * and every forward handoff to them renders as "coming next" rather than a link.
  */
 const ROUND_THREE_STATUS: Partial<Record<MtgoaCourseMove, { status: MtgoaCourseDayStatus; publicRoute: string | null }>> = {
   wake_up: { status: 'shipped', publicRoute: null },
+  open_up: { status: 'shipped', publicRoute: null },
 }
 
 /** Stable route convention for six five-move rounds. */

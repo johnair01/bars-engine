@@ -198,8 +198,8 @@ describe('the day in the spine', () => {
     expect(day?.courseRoute).toBe('/mastering-allyship/course/3/wake-up')
   })
 
-  it('leaves days 12 to 15 unauthored, so nothing links to them', () => {
-    for (const number of [12, 13, 14, 15]) {
+  it('leaves days 13 to 15 unauthored, so nothing links to them', () => {
+    for (const number of [13, 14, 15]) {
       expect(mtgoaCourseDay(number)?.status, `day ${number}`).toBe('unauthored')
       expect(courseIndexDay(number)?.route, `day ${number}`).toBeNull()
     }
