@@ -60,11 +60,12 @@ describe('MTGOA course foundation', () => {
     expect(mtgoaCourseDay(6)!.question).toBe('What structure is actually running this work now?')
     expect(mtgoaCourseDay(1)!.question).not.toBe(mtgoaCourseDay(6)!.question)
 
-    // Round 3 is Gather Resources, decided by the Day 11 design; Day 11 is written
-    // and its four siblings are not. Rounds 4-6 stay undecided.
+    // Round 3 is Gather Resources. Days 11 and 12 are written; its remaining
+    // three siblings are not. Rounds 4-6 stay undecided.
     expect(mtgoaCourseDay(11)!.domain).toBe('GATHERING_RESOURCES')
     expect(mtgoaCourseDay(11)!.question).toBe('What can I actually reach?')
-    expect(mtgoaCourseDay(12)!.status).toBe('unauthored')
+    expect(mtgoaCourseDay(12)!.status).toBe('shipped')
+    expect(mtgoaCourseDay(12)!.question).toBe('What energy is trying to get through?')
 
     for (const number of [16, 21, 26, 30]) {
       expect(mtgoaCourseDay(number)!.domain).toBeNull()
@@ -92,14 +93,15 @@ describe('MTGOA course foundation', () => {
     // Rounds 1 and 2 are complete. Round 1 resolves on its short campaign
     // aliases; round 2 on the canonical course route, which the Week 2 spec
     // reserves until a public navigation convention is approved.
-    expect(shippedCourseDays().map((day) => day.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    expect(shippedCourseDays().map((day) => day.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
     expect(shippedCourseDays().slice(0, 5).map((day) => linkableRoute(day))).toEqual([
       '/wake-up', '/open-up', '/clean-up', '/grow-up', '/show-up',
     ])
     expect(linkableRoute(mtgoaCourseDay(6)!)).toBe('/mastering-allyship/course/2/wake-up')
     expect(linkableRoute(mtgoaCourseDay(11)!)).toBe('/mastering-allyship/course/3/wake-up')
-    // Week 3 has only its first day — nothing past Day 11 resolves.
-    expect(linkableRoute(mtgoaCourseDay(12)!)).toBeNull()
+    expect(linkableRoute(mtgoaCourseDay(12)!)).toBe('/mastering-allyship/course/3/open-up')
+    // Day 13 is still unauthored, so nothing past Day 12 resolves.
+    expect(linkableRoute(mtgoaCourseDay(13)!)).toBeNull()
   })
 
   it('links tomorrow once that day ships', () => {
@@ -122,10 +124,14 @@ describe('MTGOA course foundation', () => {
     expect(afterWeekTwo?.day.number).toBe(11)
     expect(afterWeekTwo?.route).toBe('/mastering-allyship/course/3/wake-up')
 
-    // The boundary is now Day 12, the first Week 3 day still unwritten.
+    // Day 12 now ships too; Day 13 remains the first Week 3 day still unwritten.
     const afterDayEleven = nextCourseDay(11)
     expect(afterDayEleven?.day.number).toBe(12)
-    expect(afterDayEleven?.route).toBeNull()
+    expect(afterDayEleven?.route).toBe('/mastering-allyship/course/3/open-up')
+
+    const afterDayTwelve = nextCourseDay(12)
+    expect(afterDayTwelve?.day.number).toBe(13)
+    expect(afterDayTwelve?.route).toBeNull()
 
     expect(nextCourseDay(30)).toBeNull()
   })

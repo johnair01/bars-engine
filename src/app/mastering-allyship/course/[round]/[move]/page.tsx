@@ -7,6 +7,7 @@ import { DayEightBottleneck321 } from '@/components/mtgoa-check/DayEightBottlene
 import { DayNineRoleRep } from '@/components/mtgoa-check/DayNineRoleRep'
 import { DayTenCampaignHandoff } from '@/components/mtgoa-check/DayTenCampaignHandoff'
 import { DayElevenStartingHand } from '@/components/mtgoa-check/DayElevenStartingHand'
+import { DayTwelveResourceQuestion } from '@/components/mtgoa-check/DayTwelveResourceQuestion'
 import {
   MTGOA_COURSE_ROUNDS,
   linkableRoute,
@@ -122,11 +123,12 @@ export default async function CourseDayPage({ params }: { params: Promise<Params
     notFound()
   }
 
-  // Week 3 opens with Day 11, which has its own component and its own table.
+  // Week 3's authored practices each need their own component and table.
   if (resolved.round === 3) {
     const three = roundThreeDayByMove(resolved.move)
     if (!three) notFound()
     if (three.day === 11) return <DayElevenStartingHand cards={roundThreeCardsFor(three.move)} />
+    if (three.day === 12) return <DayTwelveResourceQuestion cards={roundThreeCardsFor(three.move)} />
     notFound()
   }
 
