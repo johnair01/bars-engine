@@ -1,5 +1,3 @@
-import type { MoveCard, Operation } from '@/lib/allyship-deck/types'
-
 /**
  * Day 13 — Clean Up · The Resourcing 3-2-1 (pure content).
  *
@@ -51,24 +49,11 @@ export const DAY_THIRTEEN_OPENERS: readonly string[] = [
 ]
 
 /**
- * Day 13's reading of each Clean Up · Gathering Resources card.
- *
- * Keyed by operation, following Day 8: there is exactly one card per Face in
- * this pool, and the Face is the stable identity. The deck's own question still
- * shows in the card sheet.
+ * Day 13's reading of each Clean Up · Gathering Resources card lives in one place:
+ * the `cardPrompts` map on the Day 13 row in `round-three.ts`, keyed by card id.
+ * The component reads it straight from there (as Days 11 and 12 do), so there is
+ * no second copy of the readings here to drift out of step with it.
  */
-export const DAY_THIRTEEN_LENS: Record<Operation, string> = {
-  shaman: 'Which feeling is actually running this — fear, anger, sadness, numbness, or reach?',
-  challenger: 'Which story about deserving or scarcity are you treating as a fact?',
-  regent: 'Which capability is offline — to ask, to receive, to rest, to let it be enough?',
-  architect: 'If you moved this charge, would you transcend it, translate it, or set it down?',
-  diplomat: 'Which feeling would the ask come from if it served the other person?',
-  sage: 'What does this shortfall teach you that you get to keep?',
-}
-
-export function dayThirteenLens(card: MoveCard): string {
-  return DAY_THIRTEEN_LENS[card.operation] ?? card.primaryQuestion
-}
 
 /** One turn in the 3-2-1 thread. `me` is the reader; `it` is the part. */
 export type DayThirteenTurn = { from: 'me' | 'it'; text: string }

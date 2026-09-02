@@ -53,7 +53,9 @@ Six steps, tracked by the rail: `entry → draw → strain → three → move �
 
 ## The six Clean Up · Gathering Resources cards, and Day 13's reading of each
 
-Keyed by Face, following Day 8 — one card per operation, so the Face is the stable key.
+These readings live in one place — the `cardPrompts` map on the Day 13 row in
+`round-three.ts`, keyed by card id — and the component reads them straight from there,
+the way Days 11 and 12 do. There is no separate per-Face lens table.
 
 | Face | Card (`CLEAN-GR-*`) | Day 13's lens |
 |---|---|---|

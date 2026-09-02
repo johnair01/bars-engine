@@ -6,11 +6,16 @@ import type { DayThirteenTurn } from './day-thirteen'
  * Day 13's in-progress draft, on this device only.
  *
  * Week 3's invariant is that nothing a reader composes leaves the browser. Day 13
- * bends the session-only half of that the same way Day 8 did, by the founder's
- * decision of 2026-08-27: a 3-2-1 is long enough that losing it to a stray reload
- * is a real cost, so the pass is kept while it is in progress and cleared when the
- * receipt arrives. Nothing is ever sent; it lives on the device only while the
- * practice is open.
+ * keeps that invariant whole and bends only the session-only half of it, by the
+ * founder's ruling: a 3-2-1 is long enough that losing it to a stray reload is a
+ * real cost, so the pass is kept while it is in progress and cleared when the
+ * receipt arrives.
+ *
+ * The keeping is `localStorage` and nothing else. There is no server write here and
+ * no network call anywhere in Day 13 — the pass lives on the reader's own device,
+ * on that device only, and only while the practice is open. That is the whole of
+ * what "browser, not servers" means, and it is enforced by this module holding the
+ * only writer.
  *
  * Scope: one key, one day, cleared at the receipt, read by this component.
  */

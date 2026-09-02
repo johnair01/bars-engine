@@ -24,7 +24,6 @@ import {
   DAY_THIRTEEN_OPEN_STARTER,
   DAY_THIRTEEN_RECEIPT,
   DAY_THIRTEEN_STARTERS,
-  dayThirteenLens,
   dayThirteenMove,
   dayThirteenPartName,
   dayThirteenReceiptRows,
@@ -33,6 +32,7 @@ import {
 import type { DayThirteenTurn } from '@/lib/mtgoa-course/day-thirteen'
 import { clearDayThirteenDraft, readDayThirteenDraft, writeDayThirteenDraft } from '@/lib/mtgoa-course/day-thirteen-store'
 import { markCourseDayComplete } from '@/lib/mtgoa-course/mark-day-complete'
+import { roundThreeDay } from '@/lib/mtgoa-course/round-three'
 
 /**
  * Day 13 — Clean Up · The Resourcing 3-2-1.
@@ -60,6 +60,7 @@ type Field = 'work' | 'own' | null
 type Screen = 'entry' | 'draw' | 'strain' | 'three' | 'move' | 'receipt'
 
 const ORDER: Screen[] = ['entry', 'draw', 'strain', 'three', 'move', 'receipt']
+const DAY = 13
 
 /** Week 3 is earth, the same earth Day 11 uses. */
 const ACCENT = { base: 'var(--bars-earth-frame)', lift: 'var(--bars-earth-gem)' }
@@ -107,6 +108,7 @@ const doorStyle = {
 } as const
 
 export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
+  const day = roundThreeDay(DAY)
   const [screen, setScreen] = useState<Screen>('entry')
   const [field, setField] = useState<Field>(null)
 
@@ -136,7 +138,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
   const partName = dayThirteenPartName(maskName)
   const strain = dayThirteenStrainLine(starter, strainText)
   const move = dayThirteenMove(missingText, insteadText)
-  const tomorrow = nextCourseDay(13)
+  const tomorrow = nextCourseDay(DAY)
 
   /**
    * Restore an in-progress pass.
@@ -191,7 +193,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
   }, [restored, screen, field, starter, strainText, they, maskName, thread, i, shift, missingText, insteadText, hand, chosen])
 
   useEffect(() => {
-    if (screen === 'receipt') markCourseDayComplete(13)
+    if (screen === 'receipt') markCourseDayComplete(DAY)
   }, [screen])
 
   const go = (next: Screen) => { setScreen(next); window.scrollTo(0, 0) }
@@ -255,7 +257,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
   const lensPanel = chosen ? (
     <div style={{ marginTop: 18, padding: '15px 16px', borderRadius: 'var(--bars-radius-lg)', background: 'var(--bars-surface-inset)', boxShadow: `0 0 0 1px ${ACCENT.base}` }}>
       <StepEyebrow color={ACCENT.lift}>◇ your lens · {chosen.title}</StepEyebrow>
-      <p className="bars-prose" style={{ margin: '8px 0 0', fontSize: 15, lineHeight: 1.5, color: '#e8e6e0', textWrap: 'pretty' }}>{dayThirteenLens(chosen)}</p>
+      <p className="bars-prose" style={{ margin: '8px 0 0', fontSize: 15, lineHeight: 1.5, color: '#e8e6e0', textWrap: 'pretty' }}>{day?.cardPrompts[chosen.id] ?? chosen.primaryQuestion}</p>
     </div>
   ) : null
 
@@ -272,11 +274,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
           <h1 className="bars-title" style={{ margin: 0, fontSize: 'clamp(29px,5.8vw,41px)', lineHeight: 1.14, textWrap: 'pretty' }}>
             Before you fix how you resource this, hear the part that carries it.
           </h1>
-          <StepBody top={18}>
-            Day 11 counted what is in reach. Day 12 held one resource question. Today, take the part of you that gets loud
-            the moment a resource has to move — the one that would rather cover it quietly than ask, or that treats one
-            more request as a debt. Let it describe the job before you ask it to do anything differently.
-          </StepBody>
+          <StepBody top={18}>{day?.entry}</StepBody>
 
           <div style={{ marginTop: 22, padding: 17, borderRadius: 'var(--bars-radius-lg)', background: 'var(--bars-surface-inset)', borderLeft: `2px solid ${ACCENT.base}` }}>
             <StepEyebrow color={ACCENT.lift}>the contract</StepEyebrow>
@@ -318,8 +316,9 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
         <Step>
           <BackLink onClick={() => go('entry')} />
           <StepEyebrow color={ACCENT.lift}>the allyship deck · clean up · gather resources</StepEyebrow>
-          <StepTitle size={27}>Draw the lens first.</StepTitle>
-          <StepBody>
+          <StepTitle size={27}>{day?.drawTitle}</StepTitle>
+          <StepBody>{day?.drawBody}</StepBody>
+          <StepBody top={12}>
             The card gives you one way to look at the charge before you try to explain it. It offers a question, and it
             leaves the move to you.
           </StepBody>

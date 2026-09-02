@@ -2,12 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DAY_THIRTEEN_BLANK,
-  DAY_THIRTEEN_LENS,
   DAY_THIRTEEN_OPENERS,
   DAY_THIRTEEN_OPEN_STARTER,
   DAY_THIRTEEN_RECEIPT,
   DAY_THIRTEEN_STARTERS,
-  dayThirteenLens,
   dayThirteenMove,
   dayThirteenPartName,
   dayThirteenReceiptRows,
@@ -17,14 +15,19 @@ import { roundThreeCardsFor, roundThreeDay } from '../round-three'
 import { linkableRoute, mtgoaCourseDay, nextCourseDay } from '../course-days'
 
 describe('Day 13 — the Resourcing 3-2-1', () => {
-  it('carries a reading of every Clean Up gathering-resources card, keyed by Face', () => {
+  it('draws six Clean Up gathering-resources cards, one per Face', () => {
     const cards = roundThreeCardsFor('clean_up')
     expect(cards).toHaveLength(6)
-    // One card per operation is what makes the Face a safe key.
+    // One card per operation, so the Day 13 row can carry a reading per card.
     expect(new Set(cards.map((c) => c.operation)).size).toBe(6)
-    for (const card of cards) {
-      expect(dayThirteenLens(card)).toBe(DAY_THIRTEEN_LENS[card.operation])
-      expect(dayThirteenLens(card)).toBeTruthy()
+  })
+
+  it('keeps every card reading in one place — the row that the component reads', () => {
+    // The readings live only on the round-three row's cardPrompts, keyed by id.
+    // There is no second per-Face lens table to drift out of step with it.
+    const day = roundThreeDay(13)
+    for (const card of roundThreeCardsFor('clean_up')) {
+      expect(day?.cardPrompts[card.id], card.id).toBeTruthy()
     }
   })
 
