@@ -4,17 +4,20 @@
  * Week 3 narrows to the Deck's `GATHERING_RESOURCES` domain, so every day draws
  * from its move's six `*-GR-*` cards.
  *
- * Days 11 and 12 are authored. The remaining three rows are deliberately absent rather
+ * Days 11, 12 and 13 are authored. The remaining two rows are deliberately absent rather
  * than stubbed: `course-days.ts` marks anything unlisted `unauthored`, which is
  * what keeps a forward handoff from pointing at a route that does not resolve.
  *
- * Day 11 and Day 12 have their own components and copy modules. The rows here
+ * Days 11–13 have their own components and copy modules. The rows here
  * own their route contracts, metadata, and readings of their six cards.
  *
- * Authority: .specify/specs/mtgoa-day11-starting-hand/design_handoff/
+ * Authority: .specify/specs/mtgoa-day11-starting-hand/design_handoff/ (Day 11),
+ * .specify/specs/mtgoa-day13-resourcing-321/design_handoff/ (Day 13)
  *
  * Privacy invariant: nothing composed on a Week 3 day leaves the browser,
- * except the explicit Day 11 email-app handoff the reader elects to open.
+ * except the explicit Day 11 email-app handoff the reader elects to open. Day 13
+ * keeps its 3-2-1 pass in `localStorage` while the practice is open and clears it
+ * at the receipt — the same on-device bend Day 8 made, never a network write.
  */
 
 import { assembleDeck } from '@/lib/allyship-deck/assemble'
@@ -87,6 +90,27 @@ export const ROUND_THREE_DAYS: readonly RoundThreeDay[] = [
       'OPEN-GR-SAGE': 'What becomes visible when you stop trying to force this question closed?',
     },
     doNot: 'A decision about what you owe.',
+  },
+  {
+    day: 13,
+    move: 'clean_up',
+    slug: 'clean-up',
+    title: 'Let the resourcing part speak',
+    coreQuestion: 'What move is missing when a resource has to move?',
+    entry:
+      'Day 11 counted what is in reach. Day 12 held one resource question. Today, take the part of you that gets loud the moment a resource has to move — the one that would rather cover it quietly than ask, or that treats one more request as a debt. Let it describe the job before you try to fix how you resource anything.',
+    drawTitle: 'Three from the Gather Resources hand',
+    drawBody:
+      'Six Clean Up cards read the charge around resourcing. Three are dealt. Carrying one is optional.',
+    cardPrompts: {
+      'CLEAN-GR-SHAMAN': 'Which feeling is actually running this — fear, anger, sadness, numbness, or reach?',
+      'CLEAN-GR-CHALLENGER': 'Which story about deserving or scarcity are you treating as a fact?',
+      'CLEAN-GR-REGENT': 'Which capability is offline — to ask, to receive, to rest, to let it be enough?',
+      'CLEAN-GR-ARCHITECT': 'If you moved this charge, would you transcend it, translate it, or set it down?',
+      'CLEAN-GR-DIPLOMAT': 'Which feeling would the ask come from if it served the other person?',
+      'CLEAN-GR-SAGE': 'What does this shortfall teach you that you get to keep?',
+    },
+    doNot: 'A plan for how to resource the work.',
   },
 ]
 
