@@ -54,13 +54,14 @@ describe('the release calendar', () => {
     }
   })
 
-  it('treats week 1 as long live and gives days 14 to 30 no date at all', () => {
+  it('treats week 1 as long live and gives days 15 to 30 no date at all', () => {
     for (const day of [1, 2, 3, 4, 5]) expect(isDayReleased(day, SATURDAY)).toBe(true)
-    // Days 11, 12 and 13 are the dated part of Week 3.
+    // Days 11–14 are the dated part of Week 3.
     expect(DAY_RELEASE_ISO[11]).toBe('2026-08-30T04:00:00Z')
     expect(DAY_RELEASE_ISO[12]).toBe('2026-08-31T04:00:00Z')
     expect(DAY_RELEASE_ISO[13]).toBe('2026-09-02T04:00:00Z')
-    for (const day of [14, 20, 30]) {
+    expect(DAY_RELEASE_ISO[14]).toBe('2026-09-03T04:00:00Z')
+    for (const day of [15, 20, 30]) {
       expect(DAY_RELEASE_ISO[day] ?? null).toBeNull()
       // A day with no date never opens, however far the clock is wound on.
       expect(isDayReleased(day, Date.parse('2099-01-01T00:00:00Z'))).toBe(false)
@@ -106,8 +107,13 @@ describe('the release calendar', () => {
       day: 13,
       at: Date.parse('2026-09-02T04:00:00Z'),
     })
-    // Once Day 13 is live, no dated day is left.
-    expect(nextDayRelease(Date.parse('2026-09-02T05:00:00Z'))).toBeNull()
+    // Once Day 13 is live, Day 14 is the next dated day.
+    expect(nextDayRelease(Date.parse('2026-09-02T05:00:00Z'))).toEqual({
+      day: 14,
+      at: Date.parse('2026-09-03T04:00:00Z'),
+    })
+    // Once Day 14 is live, no dated day is left.
+    expect(nextDayRelease(Date.parse('2026-09-03T05:00:00Z'))).toBeNull()
   })
 
   it('labels tomorrow as tomorrow, this week by weekday, and further out by date', () => {

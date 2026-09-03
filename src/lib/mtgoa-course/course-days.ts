@@ -91,10 +91,10 @@ type RoundAuthoring = {
  * can make one useful handoff of this book; round 2 asks whether that work can be made
  * legible and repeatable. Same five moves, different field — so the questions differ.
  *
- * Round 3 is Gather Resources, decided by the Day 11 design. Its wake_up and
- * clean_up days carry an authored question here; the rest fall back to the move's
- * generic question until each is written. Rounds 4–6 remain undecided and
- * deliberately absent. Do not invent domains for them.
+ * Round 3 is Gather Resources, decided by the Day 11 design. Its wake_up,
+ * clean_up and grow_up days carry an authored question here; the rest fall back
+ * to the move's generic question until each is written. Rounds 4–6 remain
+ * undecided and deliberately absent. Do not invent domains for them.
  *
  * @see MTGOA_30_DAY_COURSE_FOUNDATION_DAYS_1_TO_3_2026-08-19.md — round 1
  * @see MTGOA_WEEK_2_SKILLFUL_ORGANIZING_DAYS_6_TO_10_DRAFT_2026-08-21.md — round 2
@@ -126,6 +126,7 @@ const ROUND_AUTHORING: Record<number, RoundAuthoring> = {
     days: {
       wake_up:  { question: 'What can I actually reach?',                                output: 'a resource ledger' },
       clean_up: { question: 'What move is missing when a resource has to move?',         output: 'the missing move' },
+      grow_up:  { question: 'Which resourcing capacity deserves one real rep?',          output: 'a resourcing rep' },
     },
   },
 }
@@ -164,14 +165,15 @@ const ROUND_TWO_STATUS: Partial<Record<MtgoaCourseMove, { status: MtgoaCourseDay
 }
 
 /**
- * Round 3 — Days 11–15, Gather Resources. Days 11–13 answer on the canonical
- * course route; Days 14–15 are unlisted, so the spine reports them `unauthored`
- * and every forward handoff to them renders as "coming next" rather than a link.
+ * Round 3 — Days 11–15, Gather Resources. Days 11–14 answer on the canonical
+ * course route; Day 15 is unlisted, so the spine reports it `unauthored`
+ * and every forward handoff to it renders as "coming next" rather than a link.
  */
 const ROUND_THREE_STATUS: Partial<Record<MtgoaCourseMove, { status: MtgoaCourseDayStatus; publicRoute: string | null }>> = {
   wake_up:  { status: 'shipped', publicRoute: null },
   open_up:  { status: 'shipped', publicRoute: null },
   clean_up: { status: 'shipped', publicRoute: null },
+  grow_up:  { status: 'shipped', publicRoute: null },
 }
 
 /** Stable route convention for six five-move rounds. */

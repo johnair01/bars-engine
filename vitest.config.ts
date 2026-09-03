@@ -21,6 +21,8 @@ export default defineConfig({
       'src/lib/mtgoa-course/__tests__/day-thirteen.test.ts',
       'src/lib/mtgoa-course/__tests__/day-thirteen-store.test.ts',
       'src/components/mtgoa-check/__tests__/day-thirteen-render.test.tsx',
+      'src/lib/mtgoa-course/__tests__/day-fourteen.test.ts',
+      'src/components/mtgoa-check/__tests__/day-fourteen-render.test.tsx',
       'src/lib/mtgoa-course/__tests__/show-up-handoff.test.ts',
       'src/lib/mtgoa-course/__tests__/course-index.test.ts',
       'src/lib/mtgoa-course/__tests__/course-gating.test.ts',

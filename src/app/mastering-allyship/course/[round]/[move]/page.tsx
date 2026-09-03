@@ -9,6 +9,7 @@ import { DayTenCampaignHandoff } from '@/components/mtgoa-check/DayTenCampaignHa
 import { DayElevenStartingHand } from '@/components/mtgoa-check/DayElevenStartingHand'
 import { DayTwelveResourceQuestion } from '@/components/mtgoa-check/DayTwelveResourceQuestion'
 import { DayThirteenResourcingPart } from '@/components/mtgoa-check/DayThirteenResourcingPart'
+import { DayFourteenResourcingRep } from '@/components/mtgoa-check/DayFourteenResourcingRep'
 import {
   MTGOA_COURSE_ROUNDS,
   linkableRoute,
@@ -131,6 +132,7 @@ export default async function CourseDayPage({ params }: { params: Promise<Params
     if (three.day === 11) return <DayElevenStartingHand cards={roundThreeCardsFor(three.move)} />
     if (three.day === 12) return <DayTwelveResourceQuestion cards={roundThreeCardsFor(three.move)} />
     if (three.day === 13) return <DayThirteenResourcingPart cards={roundThreeCardsFor(three.move)} />
+    if (three.day === 14) return <DayFourteenResourcingRep cards={roundThreeCardsFor(three.move)} />
     notFound()
   }
 

@@ -4,11 +4,11 @@
  * Week 3 narrows to the Deck's `GATHERING_RESOURCES` domain, so every day draws
  * from its move's six `*-GR-*` cards.
  *
- * Days 11, 12 and 13 are authored. The remaining two rows are deliberately absent rather
+ * Days 11–14 are authored. The last row (Day 15) is deliberately absent rather
  * than stubbed: `course-days.ts` marks anything unlisted `unauthored`, which is
  * what keeps a forward handoff from pointing at a route that does not resolve.
  *
- * Days 11–13 have their own components and copy modules. The rows here
+ * Days 11–14 have their own components and copy modules. The rows here
  * own their route contracts, metadata, and readings of their six cards.
  *
  * Authority: .specify/specs/mtgoa-day11-starting-hand/design_handoff/ (Day 11),
@@ -111,6 +111,27 @@ export const ROUND_THREE_DAYS: readonly RoundThreeDay[] = [
       'CLEAN-GR-SAGE': 'What does this shortfall teach you that you get to keep?',
     },
     doNot: 'A plan for how to resource the work.',
+  },
+  {
+    day: 14,
+    move: 'grow_up',
+    slug: 'grow-up',
+    title: 'Give one resourcing capacity a rep',
+    coreQuestion: 'Which resourcing capacity deserves one real rep?',
+    entry:
+      'Day 13 named the move you keep skipping around resources. Today you do not fix all of it. You pick one resourcing capacity — asking, receiving, stewarding, resting — and give it a single rep, one notch bigger than today. A capacity grows by being used once more than it was yesterday, not by being replaced.',
+    drawTitle: 'Six ways a capacity grows',
+    drawBody:
+      'Six Grow Up cards read the resourcing edge. Three are dealt. Carrying one is optional.',
+    cardPrompts: {
+      'GROW-GR-SHAMAN': 'Which resourcing capacity is already trying to grow in you?',
+      'GROW-GR-CHALLENGER': 'What is the edge — the ask or the stewardship one level past comfortable?',
+      'GROW-GR-REGENT': 'Which resourcing skill is worth repeating until it is reliable?',
+      'GROW-GR-ARCHITECT': 'Which capability you already have would unlock the most if you strengthened it?',
+      'GROW-GR-DIPLOMAT': 'As this grows, how does it land on the people around you?',
+      'GROW-GR-SAGE': 'Who are you becoming as you learn to gather and steward?',
+    },
+    doNot: 'A whole new skill by Friday.',
   },
 ]
 

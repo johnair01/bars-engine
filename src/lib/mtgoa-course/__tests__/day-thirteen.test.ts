@@ -114,10 +114,10 @@ describe('Day 13 — the Resourcing 3-2-1', () => {
     expect(linkableRoute(mtgoaCourseDay(13)!)).toBe('/mastering-allyship/course/3/clean-up')
   })
 
-  it('hands forward to a Day 14 that has not shipped, so the row reads "coming next"', () => {
+  it('hands forward to Day 14, which now ships', () => {
     const after = nextCourseDay(13)
     expect(after?.day.number).toBe(14)
-    expect(after?.route).toBeNull()
+    expect(after?.route).toBe('/mastering-allyship/course/3/grow-up')
   })
 
   it('keeps its side doors pointed at days that resolve', () => {
