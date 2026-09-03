@@ -32,8 +32,21 @@ describe('course receipt handoffs', () => {
     expect(afterDayEleven?.route).toBe('/mastering-allyship/course/3/open-up')
     expect(linkableRoute(mtgoaCourseDay(12)!)).toBe('/mastering-allyship/course/3/open-up')
 
+    // Day 13 ships, so Day 12's receipt links straight at it.
     const afterDayTwelve = nextCourseDay(12)
-    expect(afterDayTwelve?.route).toBeNull()
+    expect(afterDayTwelve?.day.question).toBeTruthy()
+    expect(afterDayTwelve?.route).toBe('/mastering-allyship/course/3/clean-up')
+    expect(linkableRoute(mtgoaCourseDay(13)!)).toBe('/mastering-allyship/course/3/clean-up')
+
+    // Day 14 ships, so Day 13's receipt links straight at it.
+    const afterDayThirteen = nextCourseDay(13)
+    expect(afterDayThirteen?.day.question).toBeTruthy()
+    expect(afterDayThirteen?.route).toBe('/mastering-allyship/course/3/grow-up')
+    expect(linkableRoute(mtgoaCourseDay(14)!)).toBe('/mastering-allyship/course/3/grow-up')
+
+    // Day 15 is unwritten, so Day 14's receipt reads "coming next" rather than a link.
+    const afterDayFourteen = nextCourseDay(14)
+    expect(afterDayFourteen?.route).toBeNull()
   })
 
   it('carries attribution through every handoff without leaking an answer', () => {

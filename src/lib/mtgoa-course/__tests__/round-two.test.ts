@@ -61,15 +61,15 @@ describe('Week 2 — Skillful Organizing', () => {
 })
 
 describe('Week 2 course routing', () => {
-  it('makes days 1 to 12 walkable, with rounds 2 and 3 on the canonical course route', () => {
-    expect(shippedCourseDays().map((d) => d.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+  it('makes days 1 to 14 walkable, with rounds 2 and 3 on the canonical course route', () => {
+    expect(shippedCourseDays().map((d) => d.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     expect(linkableRoute(mtgoaCourseDay(6)!)).toBe('/mastering-allyship/course/2/wake-up')
     expect(linkableRoute(mtgoaCourseDay(10)!)).toBe('/mastering-allyship/course/2/show-up')
     // Round 1 keeps its short campaign aliases.
     expect(linkableRoute(mtgoaCourseDay(1)!)).toBe('/wake-up')
   })
 
-  it('hands Day 5 forward into Week 2 and Day 10 into Week 3, stopping at Day 13', () => {
+  it('hands Day 5 forward into Week 2 and Day 10 into Week 3, stopping at Day 15', () => {
     const afterShowUp = nextCourseDay(5)
     expect(afterShowUp?.day.number).toBe(6)
     expect(afterShowUp?.route).toBe('/mastering-allyship/course/2/wake-up')
@@ -85,7 +85,15 @@ describe('Week 2 course routing', () => {
 
     const afterDayTwelve = nextCourseDay(12)
     expect(afterDayTwelve?.day.number).toBe(13)
-    expect(afterDayTwelve?.route).toBeNull()
+    expect(afterDayTwelve?.route).toBe('/mastering-allyship/course/3/clean-up')
+
+    const afterDayThirteen = nextCourseDay(13)
+    expect(afterDayThirteen?.day.number).toBe(14)
+    expect(afterDayThirteen?.route).toBe('/mastering-allyship/course/3/grow-up')
+
+    const afterDayFourteen = nextCourseDay(14)
+    expect(afterDayFourteen?.day.number).toBe(15)
+    expect(afterDayFourteen?.route).toBeNull()
   })
 })
 

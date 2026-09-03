@@ -93,15 +93,17 @@ describe('MTGOA course foundation', () => {
     // Rounds 1 and 2 are complete. Round 1 resolves on its short campaign
     // aliases; round 2 on the canonical course route, which the Week 2 spec
     // reserves until a public navigation convention is approved.
-    expect(shippedCourseDays().map((day) => day.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    expect(shippedCourseDays().map((day) => day.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     expect(shippedCourseDays().slice(0, 5).map((day) => linkableRoute(day))).toEqual([
       '/wake-up', '/open-up', '/clean-up', '/grow-up', '/show-up',
     ])
     expect(linkableRoute(mtgoaCourseDay(6)!)).toBe('/mastering-allyship/course/2/wake-up')
     expect(linkableRoute(mtgoaCourseDay(11)!)).toBe('/mastering-allyship/course/3/wake-up')
     expect(linkableRoute(mtgoaCourseDay(12)!)).toBe('/mastering-allyship/course/3/open-up')
-    // Day 13 is still unauthored, so nothing past Day 12 resolves.
-    expect(linkableRoute(mtgoaCourseDay(13)!)).toBeNull()
+    expect(linkableRoute(mtgoaCourseDay(13)!)).toBe('/mastering-allyship/course/3/clean-up')
+    expect(linkableRoute(mtgoaCourseDay(14)!)).toBe('/mastering-allyship/course/3/grow-up')
+    // Day 15 is still unauthored, so nothing past Day 14 resolves.
+    expect(linkableRoute(mtgoaCourseDay(15)!)).toBeNull()
   })
 
   it('links tomorrow once that day ships', () => {
@@ -124,14 +126,22 @@ describe('MTGOA course foundation', () => {
     expect(afterWeekTwo?.day.number).toBe(11)
     expect(afterWeekTwo?.route).toBe('/mastering-allyship/course/3/wake-up')
 
-    // Day 12 now ships too; Day 13 remains the first Week 3 day still unwritten.
+    // Day 14 now ships too; Day 15 remains the first Week 3 day still unwritten.
     const afterDayEleven = nextCourseDay(11)
     expect(afterDayEleven?.day.number).toBe(12)
     expect(afterDayEleven?.route).toBe('/mastering-allyship/course/3/open-up')
 
     const afterDayTwelve = nextCourseDay(12)
     expect(afterDayTwelve?.day.number).toBe(13)
-    expect(afterDayTwelve?.route).toBeNull()
+    expect(afterDayTwelve?.route).toBe('/mastering-allyship/course/3/clean-up')
+
+    const afterDayThirteen = nextCourseDay(13)
+    expect(afterDayThirteen?.day.number).toBe(14)
+    expect(afterDayThirteen?.route).toBe('/mastering-allyship/course/3/grow-up')
+
+    const afterDayFourteen = nextCourseDay(14)
+    expect(afterDayFourteen?.day.number).toBe(15)
+    expect(afterDayFourteen?.route).toBeNull()
 
     expect(nextCourseDay(30)).toBeNull()
   })
