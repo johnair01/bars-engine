@@ -59,6 +59,12 @@ export default defineConfig({
       'src/lib/open-up/__tests__/outbound.test.ts',
       'src/lib/clean-up/__tests__/check-content.test.ts',
       'src/lib/clean-up/__tests__/events.test.ts',
+      // Registered by the guard below, which fails if any vitest suite is missing here.
+      'src/lib/__tests__/book-toc-to-sections.test.ts',
+      'src/lib/__tests__/npc-face-resolver.test.ts',
+      'src/lib/cyoa-composer/__tests__/merge-overrides.test.ts',
+      'src/lib/cyoa-composer/__tests__/step-registry.test.ts',
+      'src/lib/__tests__/vitest-include-registration.test.ts',
     ],
   },
   resolve: {
