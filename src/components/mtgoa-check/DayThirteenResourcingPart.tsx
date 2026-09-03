@@ -49,22 +49,27 @@ import { roundThreeDay } from '@/lib/mtgoa-course/round-three'
  * write. And Clean Up asks "what move is missing?", so the day ends in a missing
  * move rather than an organizing condition, committing the reader to nothing.
  *
- * Colour is Week 3's earth, the palette Day 11 runs. The one place the page
- * leaves earth is the "Be it" card — the first-person pass — painted the soft
- * violet Day 8 uses for the same beat.
+ * Colour is water, because the UI covenant is element=color and Clean Up's
+ * element is water — the same water Day 8 runs, not Week 3's earth. The one place
+ * the page leaves water is the "Be it" card — the first-person pass — painted the
+ * soft violet Day 8 uses for the same beat.
  *
  * @see .specify/specs/mtgoa-day13-resourcing-321/design_handoff/
  */
 
 type Field = 'work' | 'own' | null
-type Screen = 'entry' | 'draw' | 'strain' | 'three' | 'move' | 'receipt'
+type Screen = 'entry' | 'draw' | 'strain' | 'three' | 'missing' | 'receipt'
 
-const ORDER: Screen[] = ['entry', 'draw', 'strain', 'three', 'move', 'receipt']
+const ORDER: Screen[] = ['entry', 'draw', 'strain', 'three', 'missing', 'receipt']
 const DAY = 13
 
-/** Week 3 is earth, the same earth Day 11 uses. */
-const ACCENT = { base: 'var(--bars-earth-frame)', lift: 'var(--bars-earth-gem)' }
-/** The one place the day leaves earth: the first-person pass. */
+/**
+ * Clean Up is water, the same water Day 8 uses. The UI covenant is element=color,
+ * and Clean Up's element is water in every round — so this day runs water, not
+ * Week 3's earth, exactly as the other Clean Up 3-2-1 does.
+ */
+const ACCENT = { base: 'var(--bars-water-glow)', lift: '#3fa9c4' }
+/** The one place the day leaves water: the first-person pass. */
 const BE_IT = '#a99ae0'
 
 function drawThree(pool: MoveCard[]): MoveCard[] {
@@ -85,7 +90,7 @@ const fieldStyle = {
   lineHeight: 1.55,
   fontFamily: 'var(--bars-font-body)',
   color: 'var(--bars-text-primary)',
-  background: '#1a0f06',
+  background: '#0a1a28',
   border: '1px solid var(--bars-line-strong)',
   resize: 'vertical' as const,
 }
@@ -264,7 +269,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
   return (
     <CheckShell
       label="Week 3 · Gather Resources · Day 13 of 30"
-      moveTag="clean up · 金"
+      moveTag="clean up · 水"
       accent={ACCENT}
       steps={ORDER.length}
       index={ORDER.indexOf(screen)}
@@ -308,6 +313,9 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
             ) : null}
             <OutlineButton onClick={() => begin('own')} block strong>Use this on resourcing in my own life →</OutlineButton>
           </div>
+          <div style={{ marginTop: 14, textAlign: 'center' }}>
+            <a href="https://wendellbritt.gumroad.com/l/MTGOAbook" style={{ color: ACCENT.lift, fontSize: 15 }}>Haven’t read the book yet? Read the book →</a>
+          </div>
           <PrivacyLine>Private by default · nothing you write is sent or saved as a course answer</PrivacyLine>
         </Step>
       ) : null}
@@ -349,7 +357,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
                 setSheet(null)
               }}
               accent={ACCENT.lift}
-              accentText="#1a0a00"
+              accentText="#03101f"
               chooseLabel="Look through this card"
               carriedLabel="Chosen ♦"
             />
@@ -379,7 +387,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
                   onClick={() => setStarter(selected ? null : label)}
                   style={{
                     display: 'block', width: '100%', textAlign: 'left', padding: '14px 15px', cursor: 'pointer',
-                    borderRadius: 12, border: 'none', background: selected ? '#241405' : 'var(--bars-surface-card)',
+                    borderRadius: 12, border: 'none', background: selected ? '#0e1e2e' : 'var(--bars-surface-card)',
                     boxShadow: `var(--bars-shadow-inset-top), 0 0 0 ${selected ? `1.5px ${ACCENT.lift}` : '1px var(--bars-line)'}`,
                   }}
                 >
@@ -460,8 +468,8 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
                         style={{
                           maxWidth: '82%', padding: '11px 14px',
                           borderRadius: mine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                          background: mine ? `color-mix(in srgb, ${ACCENT.lift} 26%, transparent)` : 'rgba(181,101,29,.20)',
-                          border: `1px solid ${mine ? `color-mix(in srgb, ${ACCENT.lift} 45%, transparent)` : 'rgba(181,101,29,.48)'}`,
+                          background: mine ? `color-mix(in srgb, ${ACCENT.lift} 26%, transparent)` : 'rgba(26,122,138,.18)',
+                          border: `1px solid ${mine ? `color-mix(in srgb, ${ACCENT.lift} 45%, transparent)` : 'rgba(26,122,138,.45)'}`,
                           color: mine ? '#fff' : 'var(--bars-text-primary)',
                         }}
                       >
@@ -572,7 +580,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
           ))}
 
           <div style={{ marginTop: 26 }}>
-            <PrimaryButton onClick={() => go('move')} block glow>Name the missing move →</PrimaryButton>
+            <PrimaryButton onClick={() => go('missing')} block glow>Name the missing move →</PrimaryButton>
           </div>
           <p style={{ margin: '12px 0 0', textAlign: 'center', fontSize: 14, lineHeight: 1.5, color: 'var(--bars-text-muted)', textWrap: 'pretty' }}>
             A partial 3-2-1 is a complete pass. If the part stays quiet, Day 12 is the right place to be.
@@ -580,7 +588,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
         </Step>
       ) : null}
 
-      {screen === 'move' ? (
+      {screen === 'missing' ? (
         <Step>
           <BackLink onClick={() => go('three')} />
           <StepEyebrow color={ACCENT.lift}>step three · one missing move</StepEyebrow>
@@ -589,6 +597,11 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
             Clean Up asks what move is missing, not what you should build. Name the one small thing you could do
             differently. It commits you to nothing, and it leaves the doing to a later day.
           </StepBody>
+          {day?.doNot ? (
+            <p style={{ margin: '12px 0 0', fontSize: 14, lineHeight: 1.5, color: 'var(--bars-text-muted)', textWrap: 'pretty' }}>
+              Not <span style={{ color: 'var(--bars-text-secondary)' }}>{day.doNot.charAt(0).toLowerCase() + day.doNot.slice(1)}</span> Naming the move is enough; the doing is a later day.
+            </p>
+          ) : null}
 
           <div style={{ marginTop: 20, padding: 18, borderRadius: 'var(--bars-radius-lg)', background: 'var(--bars-surface-card)', boxShadow: `var(--bars-shadow-inset-top), 0 0 0 1px ${ACCENT.base}` }}>
             <label htmlFor="d13-missing" style={{ display: 'block', margin: 0, fontSize: 16, lineHeight: 1.6, color: '#e8e6e0' }}>
@@ -609,7 +622,7 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
 
       {screen === 'receipt' ? (
         <Step>
-          <BackLink onClick={() => go('move')} />
+          <BackLink onClick={() => go('missing')} />
           <StepEyebrow color={ACCENT.lift}>your Day 13 receipt</StepEyebrow>
           <StepTitle size={28}>{DAY_THIRTEEN_RECEIPT.headline}</StepTitle>
 
@@ -652,6 +665,9 @@ export function DayThirteenResourcingPart({ cards }: { cards: MoveCard[] }) {
             ) : null}
             <a href="/organization" style={doorStyle}>
               See what work is actually live <span aria-hidden style={{ flex: 'none', color: ACCENT.lift }}>→</span>
+            </a>
+            <a href="https://wendellbritt.gumroad.com/l/MTGOAbook" style={doorStyle}>
+              Read the book <span aria-hidden style={{ flex: 'none', color: ACCENT.lift }}>→</span>
             </a>
             <button type="button" onClick={restart} style={{ ...doorStyle, cursor: 'pointer', background: 'none', textAlign: 'left', width: '100%' }}>
               Use this practice on another part <span aria-hidden style={{ flex: 'none', color: ACCENT.lift }}>→</span>

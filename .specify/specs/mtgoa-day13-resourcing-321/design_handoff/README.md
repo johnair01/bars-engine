@@ -59,7 +59,7 @@ the way Days 11 and 12 do. There is no separate per-Face lens table.
 
 | Face | Card (`CLEAN-GR-*`) | Day 13's lens |
 |---|---|---|
-| Shaman | Name the Money Feeling | Which feeling is actually running this — fear, anger, sadness, numbness, or reach? |
+| Shaman | Name the Money Feeling | Which feeling is running the money here — fear, anger, sadness, numbness, or reach? |
 | Challenger | The Money Story | Which story about deserving or scarcity are you treating as a fact? |
 | Regent | The Capability You're Missing | Which capability is offline — to ask, to receive, to rest, to let it be enough? |
 | Architect | Move the Charge | If you moved this charge, would you transcend it, translate it, or set it down? |
@@ -68,11 +68,18 @@ the way Days 11 and 12 do. There is no separate per-Face lens table.
 
 ## Instagram carousel
 
-Eight slides at 1080×1350. Week 3 runs **earth** — terracotta and ochre on
-near-black, the palette Day 11 uses (`--bars-earth-frame` / `--bars-earth-gem`).
-The chrome reads `week 3 · gather resources · day 13 · 金` (金 = gold/money, the
-day's field). The one place the deck leaves earth is slide 6's first-person line,
-in the soft violet the practice uses for *Be it*.
+Eight slides at 1080×1350. **Clean Up runs water** — the UI covenant is
+element=color, and Clean Up's element is water in every round, so this day runs
+water (`--bars-water-glow` / `#3fa9c4`), the same water Day 8 uses, rather than
+Week 3's earth. The chrome reads `week 3 · gather resources · day 13 · 水`. The one
+place the deck leaves water is slide 6's first-person line, in the soft violet the
+practice uses for *Be it*.
+
+This deliberately breaks the Week 3 earth grid on Instagram for one post, on the
+same principle the in-app page follows: a Clean Up day is water wherever it appears.
+If the grid cohesion matters more than the element read for the social series, that
+is the founder's call to make when the board is built — the in-app page stays water
+regardless.
 
 Props, matching Day 11: `handle` (default `@wendell_britt`) and `dayUrl`
 (default `masteringallyship.com/mastering-allyship/course/3/clean-up`).

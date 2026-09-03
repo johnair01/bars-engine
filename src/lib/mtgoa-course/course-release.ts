@@ -51,7 +51,6 @@ export const DAY_RELEASE_ISO: Readonly<Record<number, string | null>> = {
   8: '2026-08-25T04:00:00Z',
   9: '2026-08-26T04:00:00Z',
   10: '2026-08-27T04:00:00Z',
-  // Week 3 — Gather Resources. Sunday, Monday, then Wednesday (EDT).
   11: '2026-08-30T04:00:00Z',
   12: '2026-08-31T04:00:00Z',
   13: '2026-09-02T04:00:00Z',

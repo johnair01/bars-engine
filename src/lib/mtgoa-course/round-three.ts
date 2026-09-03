@@ -103,7 +103,7 @@ export const ROUND_THREE_DAYS: readonly RoundThreeDay[] = [
     drawBody:
       'Six Clean Up cards read the charge around resourcing. Three are dealt. Carrying one is optional.',
     cardPrompts: {
-      'CLEAN-GR-SHAMAN': 'Which feeling is actually running this — fear, anger, sadness, numbness, or reach?',
+      'CLEAN-GR-SHAMAN': 'Which feeling is running the money here — fear, anger, sadness, numbness, or reach?',
       'CLEAN-GR-CHALLENGER': 'Which story about deserving or scarcity are you treating as a fact?',
       'CLEAN-GR-REGENT': 'Which capability is offline — to ask, to receive, to rest, to let it be enough?',
       'CLEAN-GR-ARCHITECT': 'If you moved this charge, would you transcend it, translate it, or set it down?',
