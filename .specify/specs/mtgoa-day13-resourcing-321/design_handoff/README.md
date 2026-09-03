@@ -146,6 +146,12 @@ rather than eight beats. Post text:
 
 ## Notes for whoever builds the `.dc.html` carousel
 
+A paste-ready Claude Design brief for this carousel lives at
+[`../CLAUDE_DESIGN_PROMPT.md`](../CLAUDE_DESIGN_PROMPT.md) — it carries the water palette,
+the props, and all eight slides' copy. This README stays the authority on the copy; the
+prompt is the layout + design-system handoff.
+
+
 Follow Day 11's board. It is a `text/x-dc` component with `handle` and `dayUrl`, links
 the `_ds` bundle by relative path (the repo-side mirror is `src/styles/bars-tokens.css`,
 already wired through `src/app/globals.css`), and needs no new tokens. Slide 4's icon is
