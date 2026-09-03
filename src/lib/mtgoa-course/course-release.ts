@@ -55,6 +55,7 @@ export const DAY_RELEASE_ISO: Readonly<Record<number, string | null>> = {
   12: '2026-08-31T04:00:00Z',
   13: '2026-09-02T04:00:00Z',
   14: '2026-09-03T04:00:00Z',
+  15: '2026-09-04T04:00:00Z',
 }
 
 function releaseMs(day: number): number | null {

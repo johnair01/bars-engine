@@ -93,7 +93,7 @@ describe('MTGOA course foundation', () => {
     // Rounds 1 and 2 are complete. Round 1 resolves on its short campaign
     // aliases; round 2 on the canonical course route, which the Week 2 spec
     // reserves until a public navigation convention is approved.
-    expect(shippedCourseDays().map((day) => day.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+    expect(shippedCourseDays().map((day) => day.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
     expect(shippedCourseDays().slice(0, 5).map((day) => linkableRoute(day))).toEqual([
       '/wake-up', '/open-up', '/clean-up', '/grow-up', '/show-up',
     ])
@@ -102,8 +102,9 @@ describe('MTGOA course foundation', () => {
     expect(linkableRoute(mtgoaCourseDay(12)!)).toBe('/mastering-allyship/course/3/open-up')
     expect(linkableRoute(mtgoaCourseDay(13)!)).toBe('/mastering-allyship/course/3/clean-up')
     expect(linkableRoute(mtgoaCourseDay(14)!)).toBe('/mastering-allyship/course/3/grow-up')
-    // Day 15 is still unauthored, so nothing past Day 14 resolves.
-    expect(linkableRoute(mtgoaCourseDay(15)!)).toBeNull()
+    expect(linkableRoute(mtgoaCourseDay(15)!)).toBe('/mastering-allyship/course/3/show-up')
+    // Day 16 opens the unauthored Round 4, so nothing past Day 15 resolves.
+    expect(linkableRoute(mtgoaCourseDay(16)!)).toBeNull()
   })
 
   it('links tomorrow once that day ships', () => {
@@ -141,7 +142,11 @@ describe('MTGOA course foundation', () => {
 
     const afterDayFourteen = nextCourseDay(14)
     expect(afterDayFourteen?.day.number).toBe(15)
-    expect(afterDayFourteen?.route).toBeNull()
+    expect(afterDayFourteen?.route).toBe('/mastering-allyship/course/3/show-up')
+
+    const afterDayFifteen = nextCourseDay(15)
+    expect(afterDayFifteen?.day.number).toBe(16)
+    expect(afterDayFifteen?.route).toBeNull()
 
     expect(nextCourseDay(30)).toBeNull()
   })

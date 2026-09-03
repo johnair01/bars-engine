@@ -4,12 +4,10 @@
  * Week 3 narrows to the Deck's `GATHERING_RESOURCES` domain, so every day draws
  * from its move's six `*-GR-*` cards.
  *
- * Days 11–14 are authored. The last row (Day 15) is deliberately absent rather
- * than stubbed: `course-days.ts` marks anything unlisted `unauthored`, which is
- * what keeps a forward handoff from pointing at a route that does not resolve.
- *
- * Days 11–14 have their own components and copy modules. The rows here
- * own their route contracts, metadata, and readings of their six cards.
+ * Days 11–15 are authored — Week 3 is complete. Each day has its own component
+ * and copy module; the rows here own their route contracts, metadata, and readings
+ * of their six cards. Day 16 opens Round 4, whose domain is undecided, so the spine
+ * leaves it `unauthored` and Day 15's forward handoff renders as "coming next".
  *
  * Authority: .specify/specs/mtgoa-day11-starting-hand/design_handoff/ (Day 11),
  * .specify/specs/mtgoa-day13-resourcing-321/design_handoff/ (Day 13)
@@ -132,6 +130,27 @@ export const ROUND_THREE_DAYS: readonly RoundThreeDay[] = [
       'GROW-GR-SAGE': 'Who are you becoming as you learn to gather and steward?',
     },
     doNot: 'A whole new skill by Friday.',
+  },
+  {
+    day: 15,
+    move: 'show_up',
+    slug: 'show-up',
+    title: 'Make one real move',
+    coreQuestion: 'What resourcing move can another person actually act on?',
+    entry:
+      'You counted what is in reach, held one question, cleaned the charge, and grew one capacity. Today you make a single real move: one concrete offer or ask, to one specific person, in words they can act on. Not a campaign, not a mass ask — one message you could send today, with consent named and no strings.',
+    drawTitle: 'Six ways a resource goes live',
+    drawBody:
+      'Six Show Up cards read the concrete move. Three are dealt. Carrying one is optional.',
+    cardPrompts: {
+      'SHOW-GR-SHAMAN': 'Where exactly does this resource go — concretely, this week?',
+      'SHOW-GR-CHALLENGER': 'What is the one concrete act you keep almost doing?',
+      'SHOW-GR-REGENT': 'What would keep this trustworthy after the yes — a record, an update?',
+      'SHOW-GR-ARCHITECT': 'Is there one small structure that makes the move repeatable?',
+      'SHOW-GR-DIPLOMAT': 'Whose consent and power do you name so this stays an invitation?',
+      'SHOW-GR-SAGE': 'What would remain after — a relationship, a story worth telling?',
+    },
+    doNot: 'A campaign, or a mass ask.',
   },
 ]
 
