@@ -9,6 +9,7 @@
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
 import { getHexagramStructure } from '@/lib/iching-struct'
+import { FACE_TRIGRAM } from '@/lib/quest-grammar/iching-faces'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { NATION_AFFINITIES } from '@/lib/elemental-moves'
 import type { KotterStage } from '@/lib/kotter'
@@ -34,15 +35,12 @@ const PLAYBOOK_TRIGRAM: Record<string, string> = {
   'The Joyful Connector': 'Lake',
 }
 
-/** Face key → preferred trigram (Game Master sect) */
-export const FACE_TRIGRAM_PREFERENCE: Record<string, string> = {
-  shaman: 'Earth',
-  challenger: 'Fire',
-  regent: 'Lake',
-  architect: 'Heaven',
-  diplomat: 'Wind',
-  sage: 'Mountain',
-}
+/**
+ * Face key → preferred trigram (Game Master sect).
+ * Aliases the single source of truth (FACE_TRIGRAM in quest-grammar/iching-faces)
+ * so sect-alignment scoring and hexagram routing can never drift apart.
+ */
+export const FACE_TRIGRAM_PREFERENCE: Record<string, string> = FACE_TRIGRAM
 
 export type AlignmentBreakdown = {
   kotter: number
