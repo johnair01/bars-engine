@@ -21,7 +21,7 @@ import {
  * and the person received nothing.
  *
  * So the copy here is scoped to exactly what was promised on the page — the
- * home Face, the Face ranked last, and Chapter 9's reason the second one is
+ * home superpower, the superpower ranked last, and Chapter 9's reason the second one is
  * worth more. Nothing is sold. The reveal already stated the terms before the
  * address was asked for, and an email that arrives carrying a pitch instead of
  * the result is the same broken promise wearing a nicer suit.
@@ -32,7 +32,7 @@ import {
 export type SuperpowerResultEmailProps = {
   /** Display label, e.g. "Connector". Comes from SUPERPOWER_DEFS[x].label. */
   homeFace: string
-  /** The Face ranked last. Null when the quiz did not produce one. */
+  /** The superpower ranked last. Null when the quiz did not produce one. */
   avoidedFace?: string | null
   /** Optional first name for a warmer greeting. */
   firstName?: string | null
@@ -94,7 +94,7 @@ export function SuperpowerResultEmail({
           {avoidedFace ? (
             <Text style={text}>
               You ranked <strong>{avoidedFace}</strong> last, and that is the more useful half of
-              this result. Chapter 9 argues the Face you avoid is the one holding the part of the
+              this result. Chapter 9 argues the superpower you avoid is the one holding the part of the
               work you have been going around, and going around it costs more every year.
             </Text>
           ) : null}
@@ -153,7 +153,7 @@ export function superpowerResultText({
       ? [
           '',
           `You ranked ${avoidedFace} last, and that is the more useful half of this`,
-          'result. Chapter 9 argues the Face you avoid is the one holding the part of',
+          'result. Chapter 9 argues the superpower you avoid is the one holding the part of',
           'the work you have been going around, and going around it costs more every year.',
         ]
       : []),
