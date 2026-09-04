@@ -82,7 +82,7 @@ export function RoomCanvas({
   const [selectedFace, setSelectedFace] = useState<GameMasterFace | null>(null)
   const [ritualContext, setRitualContext] = useState<NurseryRitualContext | null>(null)
   const [ritualNurseryType, setRitualNurseryType] = useState<NurseryType | null>(null)
-  const [ritualResult, setRitualResult] = useState<{ barTitle: string; vibeulonsAwarded: number; planted: boolean } | null>(null)
+  const [ritualResult, setRitualResult] = useState<{ barId: string; barTitle: string; vibeulonsAwarded: number; planted: boolean; inHand: boolean } | null>(null)
   // Same SSR-safety pattern as selectedFace — restored from URL after mount.
   const [carryingBarId, setCarryingBarId] = useState<string | null>(null)
 
@@ -261,9 +261,11 @@ export function RoomCanvas({
 
     if (res.success) {
       setRitualResult({
+        barId: res.barId,
         barTitle: res.barTitle,
         vibeulonsAwarded: res.vibeulonsAwarded,
         planted: res.planted,
+        inHand: res.inHand,
       })
     }
   }, [ritualContext, ritualNurseryType, room.name, instanceSlug])
@@ -556,6 +558,14 @@ export function RoomCanvas({
           onComplete={handleRitualComplete}
           onClose={() => { setRitualContext(null); setRitualResult(null) }}
           completionResult={ritualResult}
+          onCarryBar={(barId) => {
+            // Same carry mechanism the CYOA seam uses (?carrying=), which the
+            // nursery modal already consumes — so the face → BAR → plant loop
+            // closes without a second way to do the same thing.
+            updateCarryingBarId(barId)
+            setRitualContext(null)
+            setRitualResult(null)
+          }}
         />
       )}
 

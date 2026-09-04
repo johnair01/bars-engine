@@ -4,6 +4,7 @@ import { EditPassageForm } from "./EditPassageForm"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getFaceForNodeId, isPlaceholderText } from "@/lib/template-library"
+import { hasAuthoringArtifacts, linksAreCoveredByChoices } from "@/lib/cyoa/sanitize-passage-text"
 import { getActiveInstance } from "@/actions/instance"
 
 /** Derive slot order from nodeId for sorting (context < anomaly < choice < response < artifact). */
@@ -70,6 +71,20 @@ export default async function EditPassagePage({
     const faceInfo = getFaceForNodeId(passage.nodeId)
     const isPlaceholder = isPlaceholderText(passage.text)
 
+    // Authoring lint: markup left in the body is stripped before players see it,
+    // but authors should know it is there rather than wondering why their links
+    // vanished. `[[…]]` covered by `choices` is normal Twee and gets stripped;
+    // links NOT covered survive to the player, which is the case worth fixing.
+    const artifacts = hasAuthoringArtifacts(passage.text)
+    let parsedChoices: Array<{ targetId?: string }> = []
+    try {
+        const raw = JSON.parse(passage.choices || '[]')
+        if (Array.isArray(raw)) parsedChoices = raw
+    } catch {
+        // Malformed choices JSON is its own problem; treat as no coverage.
+    }
+    const uncoveredLinks = !linksAreCoveredByChoices(passage.text, parsedChoices)
+
     return (
         <div className="space-y-6">
             <AdminPageHeader
@@ -84,6 +99,29 @@ export default async function EditPassagePage({
                     </Link>
                 }
             />
+
+            {artifacts && (
+                <div className={`rounded-xl border p-4 text-sm ${uncoveredLinks ? 'border-amber-700/60 bg-amber-950/20' : 'border-zinc-800 bg-zinc-900'}`}>
+                    <p className={uncoveredLinks ? 'text-amber-300 font-medium' : 'text-zinc-300 font-medium'}>
+                        {uncoveredLinks ? 'Authoring markup will reach players' : 'Authoring markup in this passage'}
+                    </p>
+                    <p className="text-zinc-400 text-xs mt-1 leading-relaxed">
+                        {uncoveredLinks ? (
+                            <>
+                                This passage has <code className="text-amber-400">[[link]]</code> targets that are not in
+                                its choices, so they are kept in the body and shown as raw text. Add matching choices, or
+                                remove the links.
+                            </>
+                        ) : (
+                            <>
+                                <code className="text-zinc-300">[[links]]</code> and{' '}
+                                <code className="text-zinc-300">&lt;&lt;macros&gt;&gt;</code> are stripped before this
+                                passage is served — the choices below are what players click. Nothing to fix.
+                            </>
+                        )}
+                    </p>
+                </div>
+            )}
 
             {/* Context panel */}
             <details className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden" open={isPlaceholder}>
