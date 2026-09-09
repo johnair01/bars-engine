@@ -20,7 +20,8 @@
  * @see .specify/specs/orientation-quest/spec.md (AC 23a)
  */
 
-import type { GameMasterFace } from '@/lib/quest-grammar/types'
+import { FACE_META, GAME_MASTER_FACES, type GameMasterFace } from '@/lib/quest-grammar/types'
+import { FACE_SENTENCES } from '@/lib/face-sentences'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -398,13 +399,14 @@ const SAGE_CUES: FaceMappingCues = {
  *   entry.semantic_intent  // → thematic + orientation description
  *   entry.mapping_cues  // → keyword/phrase signals for inference routing
  */
+// label/role/mission/color come from FACE_META, and entry_sentence from
+// FACE_SENTENCES — the canonical sources — so this index can't drift from them.
+// Only the field-slot ownership, mapping cues, trigram, and semantic framing are
+// unique to this index.
 export const FACE_CONTEXT_INDEX: FaceContextIndex = {
   shaman: {
     face: 'shaman',
-    label: 'Shaman',
-    role: 'Mythic threshold',
-    mission: 'Belonging, ritual space, bridge between worlds',
-    color: 'text-fuchsia-400',
+    ...FACE_META.shaman,
     trigram: 'Earth',
     semantic_intent: {
       theme: 'Mythic threshold and ritual belonging',
@@ -412,8 +414,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
         'Witness — approach the move as sacred ground, held by collective wisdom and the felt sense of belonging.',
       transformation_lens:
         'Change happens through initiation: a ritual crossing that anchors the new self in a larger story.',
-      entry_sentence:
-        "Enter through the mythic threshold: the residency as ritual space, Wendell's technology as a bridge between worlds. Your journey begins in belonging.",
+      entry_sentence: FACE_SENTENCES.shaman,
     },
     field_slots: SHAMAN_FIELD_SLOTS,
     mapping_cues: SHAMAN_CUES,
@@ -421,10 +422,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
 
   challenger: {
     face: 'challenger',
-    label: 'Challenger',
-    role: 'Proving ground',
-    mission: 'Action, edge, lever',
-    color: 'text-red-400',
+    ...FACE_META.challenger,
     trigram: 'Fire',
     semantic_intent: {
       theme: 'Proving ground — pressure that forges clarity',
@@ -432,8 +430,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
         'Edge-walker — meet the move as an obstacle to overcome or a lever to use; transformation is earned through direct engagement.',
       transformation_lens:
         'Change happens through friction and testing: the proving ground reveals what is real and what is possible.',
-      entry_sentence:
-        "Enter through the edge: the residency as a proving ground, Wendell's technology as a lever. Your journey begins in action.",
+      entry_sentence: FACE_SENTENCES.challenger,
     },
     field_slots: CHALLENGER_FIELD_SLOTS,
     mapping_cues: CHALLENGER_CUES,
@@ -441,10 +438,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
 
   regent: {
     face: 'regent',
-    label: 'Regent',
-    role: 'Order, structure',
-    mission: 'Roles, rules, collective tool',
-    color: 'text-amber-400',
+    ...FACE_META.regent,
     trigram: 'Lake',
     semantic_intent: {
       theme: 'Order and collective structure',
@@ -452,8 +446,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
         'Steward — situate the move within the system; transformation requires clear roles, stages, and shared protocols.',
       transformation_lens:
         'Change happens through structure: defining where each piece belongs in the collective order.',
-      entry_sentence:
-        "Enter through the order: the residency as a house with roles and rules, Wendell's technology as a tool for the collective. Your journey begins in structure.",
+      entry_sentence: FACE_SENTENCES.regent,
     },
     field_slots: REGENT_FIELD_SLOTS,
     mapping_cues: REGENT_CUES,
@@ -461,10 +454,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
 
   architect: {
     face: 'architect',
-    label: 'Architect',
-    role: 'Blueprint',
-    mission: 'Strategy, project, advantage',
-    color: 'text-blue-400',
+    ...FACE_META.architect,
     trigram: 'Heaven',
     semantic_intent: {
       theme: 'Blueprint and strategic design',
@@ -472,8 +462,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
         'Designer — build the move from first principles; transformation is an engineering challenge requiring clear purpose, levers, and prompts.',
       transformation_lens:
         'Change happens through intentional design: naming the category, crafting the invocation, stating the strategic purpose.',
-      entry_sentence:
-        "Enter through the blueprint: the residency as a project to build, Wendell's technology as an advantage. Your journey begins in strategy.",
+      entry_sentence: FACE_SENTENCES.architect,
     },
     field_slots: ARCHITECT_FIELD_SLOTS,
     mapping_cues: ARCHITECT_CUES,
@@ -481,10 +470,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
 
   diplomat: {
     face: 'diplomat',
-    label: 'Diplomat',
-    role: 'Weave',
-    mission: 'Relational field, care, connector',
-    color: 'text-teal-400',
+    ...FACE_META.diplomat,
     trigram: 'Wind',
     semantic_intent: {
       theme: 'Relational field and care',
@@ -492,8 +478,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
         'Weaver — sense the move through its relational texture; transformation happens in the space between people and communities.',
       transformation_lens:
         'Change happens through connection: understanding who benefits, who this resonates with, and how it nurtures relationship.',
-      entry_sentence:
-        "Enter through the weave: the residency as a relational field, Wendell's technology as a connector. Your journey begins in care.",
+      entry_sentence: FACE_SENTENCES.diplomat,
     },
     field_slots: DIPLOMAT_FIELD_SLOTS,
     mapping_cues: DIPLOMAT_CUES,
@@ -501,10 +486,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
 
   sage: {
     face: 'sage',
-    label: 'Sage',
-    role: 'Whole',
-    mission: 'Integration, emergence, flow',
-    color: 'text-purple-400',
+    ...FACE_META.sage,
     trigram: 'Mountain',
     semantic_intent: {
       theme: 'Whole-system integration and emergence',
@@ -512,13 +494,12 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
         'Integrator — see the move within the full arc; transformation is complete when all parts cohere into a new emergent whole.',
       transformation_lens:
         'Change happens through integration: naming the move, tracing its place in the arc, and blessing what comes next.',
-      entry_sentence:
-        "Enter through the whole: the residency as one expression of emergence, Wendell's technology as part of the flow. Your journey begins in integration.",
+      entry_sentence: FACE_SENTENCES.sage,
     },
     field_slots: SAGE_FIELD_SLOTS,
     mapping_cues: SAGE_CUES,
   },
-} as const
+}
 
 // ---------------------------------------------------------------------------
 // Utility helpers
@@ -528,14 +509,7 @@ export const FACE_CONTEXT_INDEX: FaceContextIndex = {
  * Returns all GameMasterFace keys in canonical order.
  * (shaman → challenger → regent → architect → diplomat → sage)
  */
-export const ORDERED_FACES: GameMasterFace[] = [
-  'shaman',
-  'challenger',
-  'regent',
-  'architect',
-  'diplomat',
-  'sage',
-]
+export const ORDERED_FACES: GameMasterFace[] = [...GAME_MASTER_FACES]
 
 /**
  * Returns all primary-owned field slot keys for a given face.
