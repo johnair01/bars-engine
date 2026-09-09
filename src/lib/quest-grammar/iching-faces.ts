@@ -9,8 +9,13 @@
 import { getHexagramStructure, type Trigram } from '@/lib/iching-struct'
 import type { GameMasterFace } from './types'
 
-/** Face → preferred trigram (Game Master sect alignment). */
-const FACE_TRIGRAM: Record<GameMasterFace, string> = {
+/**
+ * Face → preferred trigram (Game Master sect alignment).
+ * Single source of truth for the face↔trigram sect mapping — see
+ * .agent/context/game-master-sects.md. Consumers must import this rather than
+ * re-declaring their own copy.
+ */
+export const FACE_TRIGRAM: Record<GameMasterFace, string> = {
   shaman: 'Earth',
   challenger: 'Fire',
   regent: 'Lake',

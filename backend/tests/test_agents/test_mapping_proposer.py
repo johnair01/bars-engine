@@ -361,3 +361,34 @@ class TestMappingProposerRoute:
         assert response.status_code == 200
         # Deterministic path still succeeds even with face_context present
         assert response.json()["deterministic"] is True
+
+
+# ---------------------------------------------------------------------------
+# Guard: SYSTEM_PROMPT face table trigrams must match the canonical sect map
+# ---------------------------------------------------------------------------
+
+
+class TestSystemPromptTrigramConsistency:
+    """The face table baked into SYSTEM_PROMPT once drifted from the canonical
+    Game Master sect trigrams (Shaman=Fire, Challenger=Thunder, ...). Tie it to
+    the single source of truth (_iching.FACE_TRIGRAM, mirroring
+    .agent/context/game-master-sects.md) so it cannot drift again.
+    """
+
+    def test_prompt_table_trigrams_match_canonical(self):
+        from app.agents._iching import FACE_TRIGRAM
+        from app.agents.mapping_proposer import SYSTEM_PROMPT
+
+        rows = {
+            line.split("|")[1].strip().lower(): line
+            for line in SYSTEM_PROMPT.splitlines()
+            if line.lstrip().startswith("|")
+        }
+        for face, trigram in FACE_TRIGRAM.items():
+            row = rows.get(face)
+            assert row is not None, f"No SYSTEM_PROMPT table row for face {face!r}"
+            cells = [c.strip() for c in row.split("|")]
+            assert cells[2] == trigram, (
+                f"{face} trigram in SYSTEM_PROMPT is {cells[2]!r}, "
+                f"expected canonical {trigram!r}"
+            )
