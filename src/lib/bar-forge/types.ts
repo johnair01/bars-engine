@@ -1,3 +1,5 @@
+import type { GameMasterFace } from '@/lib/quest-grammar/types'
+
 /** Request analysis enums (BAR Forge). */
 export type BarAnalysisType = 'perception' | 'identity' | 'relational' | 'systemic'
 export type BarWavePhase = 'Wake Up' | 'Clean Up' | 'Grow Up' | 'Show Up'
@@ -8,7 +10,8 @@ export type BarAnalysis = {
   polarity: string[]
 }
 
-export type GameMasterFaceKey = 'shaman' | 'challenger' | 'regent' | 'architect' | 'diplomat' | 'sage'
+/** Alias of the canonical GameMasterFace (quest-grammar/types). */
+export type GameMasterFaceKey = GameMasterFace
 
 export type MatchBarRequest = {
   bar: string
