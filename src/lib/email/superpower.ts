@@ -29,10 +29,10 @@ export async function sendSuperpowerResultEmail(opts: {
   }
   return sendEmail({
     to: opts.to,
-    // The Face is in the subject because it is what the person asked to be
+    // The superpower is in the subject because it is what the person asked to be
     // sent. A subject that says "your result" makes them open the mail to find
     // out what they already know they wanted.
-    subject: `Your Face is ${opts.homeFace}`,
+    subject: `Your superpower is ${opts.homeFace}`,
     react: SuperpowerResultEmail(props),
     text: superpowerResultText(props),
     tags: [{ name: 'funnel', value: 'superpower-quiz' }],

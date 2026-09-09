@@ -14,7 +14,7 @@
  *      The Crossing (their superpower lens on the campaign + a matched role move);
  *   d. full spectrum — all seven ranked, so the result reads as a position;
  *   f. the character-sheet cross-link and an optional save (the result and the
- *      avoided Face, by email);
+ *      avoided superpower, by email);
  *   e. framing note — lens, not verdict; the taker is the authority.
  *
  * NO email gate — (f) sits below the whole result and asks rather than blocks.
@@ -66,7 +66,7 @@ export function SuperpowerReveal({ routing, copy, showCrossingPath = true }: Sup
   const primaryDef = SUPERPOWER_DEFS[primary]
   const secondaryDef = SUPERPOWER_DEFS[routing.secondary]
   const element = superpowerElement(primary)
-  // Bottom of the ranking. Chapter 9 treats the avoided Face as the more
+  // Bottom of the ranking. Chapter 9 treats the avoided superpower as the more
   // interesting datum, so the reveal names it rather than leaving it to be
   // inferred from a spectrum most people never open.
   const avoidedFace = routing.ranked[routing.ranked.length - 1]?.superpower ?? routing.secondary
@@ -404,7 +404,7 @@ export function SuperpowerReveal({ routing, copy, showCrossingPath = true }: Sup
           .
         </p>
         <EmailCaptureForm
-          promise={`Want this kept? I will send your result and the Face you ranked last — ${SUPERPOWER_DEFS[avoidedFace].label}. Chapter 9 argues the avoided Face is the more interesting half.`}
+          promise={`Want this kept? I will send your result and the superpower you ranked last — ${SUPERPOWER_DEFS[avoidedFace].label}. Chapter 9 argues the superpower you avoid is the more interesting half.`}
           submitLabel="Send me my result"
           onSubmit={({ email, name }) =>
             captureSuperpowerLead({
