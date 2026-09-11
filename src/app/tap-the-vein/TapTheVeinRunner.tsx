@@ -24,6 +24,7 @@ import {
   carryTask,
   plantTask,
   sealSession,
+  saveBrainstormCandidates,
 } from '@/actions/tap-the-vein'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import type { ElementKey } from '@/lib/ui/card-tokens'
@@ -124,6 +125,15 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
   }
 
   // Brainstorm → commit: persist each distilled "play" move, then review them.
+  /**
+   * Keeps the brainstormed field alive past the modal so the commit step can
+   * show it. Fire-and-forget: losing the save must never block the ritual, and
+   * the field is re-sent on every exit from the brainstorm.
+   */
+  const persistCandidates = (candidates: Array<{ text: string; fate: 'raw' | 'play' | 'composted' }>) => {
+    void saveBrainstormCandidates(candidates).catch(() => {})
+  }
+
   const commitPlayForward = (texts: string[]) => {
     setError(null)
     setCommitNote(null)
@@ -250,11 +260,14 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               setLensGoalId={setLensGoalId}
               lensGoals={initial.lensGoals}
               liveTasks={liveTasks}
+              candidates={initial.brainstormCandidates}
               element={element}
               nationName={nationName}
               pending={pending}
               commitNote={commitNote}
               onCommit={handleCommit}
+              onUseCandidate={setDraft}
+              onReopenBrainstorm={() => setPhase('brainstorm')}
               onNext={() => setPhase('work')}
             />
           )}
@@ -292,6 +305,8 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
 
       {phase === 'brainstorm' && (
         <BrainstormFlow
+          initialIdeas={initial.brainstormCandidates}
+          onPersistCandidates={persistCandidates}
           onCarryForward={commitPlayForward}
           onClose={() => setPhase('commit')}
         />
@@ -478,11 +493,14 @@ function CommitPhase({
   setLensGoalId,
   lensGoals,
   liveTasks,
+  candidates,
   element,
   nationName,
   pending,
   commitNote,
   onCommit,
+  onUseCandidate,
+  onReopenBrainstorm,
   onNext,
 }: {
   rawEntry: string
@@ -492,11 +510,14 @@ function CommitPhase({
   setLensGoalId: (s: string) => void
   lensGoals: TtvToday['lensGoals']
   liveTasks: TtvTaskDTO[]
+  candidates: TtvToday['brainstormCandidates']
   element: ElementKey
   nationName: string | null
   pending: boolean
   commitNote: string | null
   onCommit: () => void
+  onUseCandidate: (text: string) => void
+  onReopenBrainstorm: () => void
   onNext: () => void
 }) {
   const count = liveTasks.length
@@ -534,6 +555,65 @@ function CommitPhase({
           </p>
           <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.06em', color: 'var(--bars-text-muted)', margin: '6px 0 0' }}>
             revisit it — it won&rsquo;t write tasks for you
+          </p>
+        </div>
+      )}
+
+      {/* The brainstormed field, still here. Choosing five should not be done
+          from memory — tap one to load it into the compose line. */}
+      {candidates.length > 0 && (
+        <div style={{ marginTop: 12, padding: 12, border: '1px solid var(--bars-line)', borderRadius: 12, background: 'var(--bars-surface-inset)' }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+            <span style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bars-text-muted)' }}>
+              What you brainstormed
+            </span>
+            <button
+              type="button"
+              onClick={onReopenBrainstorm}
+              style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: purple, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
+              reopen
+            </button>
+          </div>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', maxHeight: 168, overflowY: 'auto' }}>
+            {candidates.map((c, i) => {
+              const spent = c.fate === 'play'
+              return (
+                <li key={`${i}-${c.text.slice(0, 24)}`} style={{ marginBottom: 4 }}>
+                  <button
+                    type="button"
+                    onClick={() => onUseCandidate(c.text)}
+                    disabled={pending}
+                    className="w-full text-left"
+                    title={spent ? 'Already carried into today’s play' : 'Use this line'}
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      alignItems: 'baseline',
+                      minHeight: 32,
+                      padding: '6px 8px',
+                      borderRadius: 8,
+                      border: '1px solid transparent',
+                      background: 'transparent',
+                      cursor: pending ? 'default' : 'pointer',
+                      fontFamily: body,
+                      fontSize: 12.5,
+                      lineHeight: 1.4,
+                      color: spent || c.fate === 'composted' ? 'var(--bars-text-muted)' : 'var(--bars-text-secondary)',
+                      textDecoration: c.fate === 'composted' ? 'line-through' : 'none',
+                    }}
+                  >
+                    <span aria-hidden style={{ fontFamily: mono, fontSize: 9, color: spent ? purple : 'var(--bars-text-muted)' }}>
+                      {spent ? '◆' : c.fate === 'composted' ? '·' : '○'}
+                    </span>
+                    <span>{c.text}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+          <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.06em', color: 'var(--bars-text-muted)', margin: '6px 0 0' }}>
+            ◆ carried into play · ○ still on the field · · composted
           </p>
         </div>
       )}

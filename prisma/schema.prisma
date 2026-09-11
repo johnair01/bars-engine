@@ -825,6 +825,10 @@ model TapTheVeinDailySession {
   chargeStrength            String? // high|medium|low
   // Brainstorm output
   brainstormCandidateCount  Int              @default(0)
+  /// TTV-CHARGE: the distilled idea list, persisted so the commit step can show
+  /// what was brainstormed instead of making the player recall it from memory.
+  /// Shape: [{ text: string, fate: "raw"|"play"|"composted" }]
+  brainstormCandidates      Json?            @map("brainstorm_candidates")
   committedTaskCount        Int              @default(0)
   // Session lifecycle
   status                    String           @default("open") // open|sealed|abandoned
@@ -947,15 +951,46 @@ model TapTheVeinTask {
   // Core-loop bridge (CGLA H1): the CustomBar this task projects into, so a task
   // can be tuned / charged / 3·2·1'd / grown like any BAR. Soft pointer.
   barId                     String?
+  // TTV-CHARGE: how much charge the player feels on this commitment, and whether
+  // it is currently blocked. "Highlighting and overcoming blockers is the main
+  // game" — so both are first-class state, not notes buried in text.
+  /// high|medium|low — player's own read, never inferred.
+  chargeLevel               String?                @map("charge_level")
+  /// What is charged about it, in the player's words.
+  chargeNote                String?                @map("charge_note")
+  /// Set when a blocker is reported, cleared when it is overcome. Null = flowing.
+  blockedAt                 DateTime?              @map("blocked_at")
   // Phase 3 wiring (links back to daily session)
   dailySession              TapTheVeinDailySession @relation(fields: [dailySessionId], references: [id], onDelete: Cascade)
+  notes                     TapTheVeinTaskNote[]
 
   @@unique([dailySessionId, priorityRank])
   @@index([playerId, status])
   @@index([playerId, carryCount])
   @@index([campaignId, visibility])
   @@index([lensGoalId])
+  @@index([playerId, blockedAt])
   @@map("tap_the_vein_tasks")
+}
+
+/// TTV-CHARGE: the running log on a commitment — context added while working,
+/// blockers named, and how each blocker was overcome. A single mutable column
+/// would lose exactly the history the loop is meant to make visible.
+model TapTheVeinTaskNote {
+  id          String         @id @default(cuid())
+  taskId      String         @map("task_id")
+  playerId    String         @map("player_id")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  /// context | blocker | unblock | charge
+  kind        String         @default("context")
+  body        String         @db.Text
+  /// Charge at the moment of writing, so the shrink can be read off the log.
+  chargeLevel String?        @map("charge_level")
+  task        TapTheVeinTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@index([playerId, kind])
+  @@map("tap_the_vein_task_notes")
 }
 
 /// Append-only log: human 321 name resolution teaches matching NPCs (creatorType agent) by nation + archetype.

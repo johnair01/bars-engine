@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
 import {
   isBarEligibleSpokeAnchor,
   isSpokeMoveBedMoveType,
@@ -21,6 +22,20 @@ export type BedKernelSnapshot = {
   creatorId: string
   wateringComplete: number
   wateringTotal: number
+  /**
+   * Which of the six GM faces have watered this seed.
+   *
+   * Player signal (2026-04-08, spoke-0-wake-up): "I've been here before and the
+   * system knows it. This is good, but It doesn't give me anything to do with
+   * the seed that was planted."
+   *
+   * Watering is not a button — a face waters a seed when a quest carrying the
+   * `advanceCampaignWatering` completion effect for that face is completed. A
+   * bare "2/6" hides which two, so the seed reads as inert. Naming the faces
+   * makes the remaining work legible even though the act happens elsewhere.
+   */
+  wateredFaces: string[]
+  pendingFaces: string[]
 }
 
 export type BedSnapshot = {
@@ -53,15 +68,21 @@ async function playerMayAdminSpokeBed(playerId: string, campaignRef: string): Pr
   return !!m
 }
 
-function wateringSummary(bar: { wateringProgress: string | null }): { complete: number; total: number } {
+function wateringSummary(bar: { wateringProgress: string | null }): {
+  complete: number
+  total: number
+  watered: string[]
+  pending: string[]
+} {
   let progress: Record<string, boolean> = {}
   try {
     progress = JSON.parse(bar.wateringProgress || '{}')
   } catch {
     progress = {}
   }
-  const complete = WATERING_FACES.filter((f) => progress[f]).length
-  return { complete, total: WATERING_FACES.length }
+  const watered = WATERING_FACES.filter((f) => progress[f])
+  const pending = WATERING_FACES.filter((f) => !progress[f])
+  return { complete: watered.length, total: WATERING_FACES.length, watered, pending }
 }
 
 function playerCanUseBar(bar: { creatorId: string; claimedById: string | null }, playerId: string): boolean {
@@ -120,6 +141,8 @@ export async function getSpokeMoveBeds(input: {
           creatorId: k.kernelBar.creatorId,
           wateringComplete: w.complete,
           wateringTotal: w.total,
+          wateredFaces: w.watered,
+          pendingFaces: w.pending,
         }
       }) ?? []
 
@@ -300,7 +323,32 @@ export async function plantKernelFromBar(input: {
   return { success: true, kind: 'additional', bedId: result.bedId, kernelId: result.kernelId }
 }
 
-export type PlayerBarPick = { id: string; title: string; type: string }
+/**
+ * A BAR as shown in the picker.
+ *
+ * Player signal (2026-03-29, /campaign/.../seeds): "when choosing a BAR we need
+ * a visual way for people to see their BARs… bring up a modal of the vault page
+ * (or a simplified version)… Probably the BARs that are connected to the BASIC
+ * move they chose OR the Game Master Face, and a way to create a new BAR to
+ * plant that's grammatical to where the player encounters this."
+ *
+ * The old shape was `{ id, title, type }` rendered into a bare <select>, which
+ * is what "pull from a dropdown of 80 titles" felt like. These extra fields are
+ * what make the picker filterable and readable.
+ */
+export type PlayerBarPick = {
+  id: string
+  title: string
+  type: string
+  moveType: string | null
+  gmFace: string | null
+  nation: string | null
+  maturity: string
+  createdAt: string
+  excerpt: string | null
+}
+
+const PICKER_LIMIT = 120
 
 /** Bars the current player may use as input for an additional plant (not kernels). */
 export async function listBarsForSpokePlant(): Promise<{ bars: PlayerBarPick[] } | { error: string }> {
@@ -314,12 +362,90 @@ export async function listBarsForSpokePlant(): Promise<{ bars: PlayerBarPick[] }
       archivedAt: null,
       type: { not: 'campaign_kernel' },
     },
-    select: { id: true, title: true, type: true },
+    select: {
+      id: true,
+      title: true,
+      type: true,
+      moveType: true,
+      gmFace: true,
+      nation: true,
+      description: true,
+      seedMetabolization: true,
+      createdAt: true,
+    },
     orderBy: { createdAt: 'desc' },
-    take: 80,
+    take: PICKER_LIMIT,
   })
 
-  return { bars }
+  return {
+    bars: bars.map((b) => ({
+      id: b.id,
+      title: b.title,
+      type: b.type,
+      moveType: b.moveType,
+      gmFace: b.gmFace,
+      nation: b.nation,
+      maturity: effectiveMaturity(parseSeedMetabolization(b.seedMetabolization)),
+      createdAt: b.createdAt.toISOString(),
+      excerpt: b.description ? b.description.slice(0, 140) : null,
+    })),
+  }
+}
+
+/**
+ * Mint a BAR already shaped for the bed it is being planted into, so the player
+ * never has to leave the nursery to make something to plant. The move comes from
+ * the bed, not from a form the player has to reason about — "grammatical to
+ * where the player encounters this".
+ */
+export async function createBarForSpokePlant(input: {
+  campaignRef: string
+  spokeIndex: number
+  moveType: string
+  title: string
+  description?: string | null
+}): Promise<{ barId: string } | { error: string }> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not logged in' }
+
+  const campaignRef = input.campaignRef?.trim()
+  if (!campaignRef) return { error: 'campaignRef required' }
+  if (!isSpokeMoveBedMoveType(input.moveType)) return { error: 'Invalid moveType' }
+
+  const title = (input.title || '').trim().slice(0, 200)
+  if (!title) return { error: 'Give it a title' }
+  const description = (input.description || '').trim().slice(0, 4000) || title
+
+  try {
+    const bar = await db.$transaction(async (tx) => {
+      const created = await tx.customBar.create({
+        data: {
+          creatorId: player.id,
+          title,
+          description,
+          type: 'bar',
+          reward: 0,
+          visibility: 'private',
+          status: 'active',
+          inputs: '[]',
+          rootId: 'temp',
+          moveType: input.moveType,
+          campaignRef,
+        },
+        select: { id: true },
+      })
+      // Self-rooted, matching every other mint path in the engine.
+      await tx.customBar.update({ where: { id: created.id }, data: { rootId: created.id } })
+      return created
+    })
+
+    revalidatePath(`/campaign/${campaignRef}/spoke/${input.spokeIndex}/seeds`)
+    revalidatePath('/vault')
+    return { barId: bar.id }
+  } catch (e) {
+    console.error('[spoke-move-seeds:createBarForSpokePlant]', e)
+    return { error: 'Failed to create the BAR' }
+  }
 }
 
 export async function adminReassignBedAnchor(input: {

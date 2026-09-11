@@ -3,10 +3,12 @@ import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { SpokeNurseryBeds } from '@/components/campaign/SpokeNurseryBeds'
+import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
 import {
   canAdminSpokeMoveBed,
   getSpokeMoveBeds,
   listBarsForSpokePlant,
+  type PlayerBarPick,
 } from '@/actions/spoke-move-seeds'
 import {
   isBarEligibleSpokeAnchor,
@@ -67,6 +69,12 @@ export default async function SpokeSeedsPage(props: {
       id: true,
       title: true,
       type: true,
+      moveType: true,
+      gmFace: true,
+      nation: true,
+      description: true,
+      seedMetabolization: true,
+      createdAt: true,
       agentMetadata: true,
       mergedIntoId: true,
       archivedAt: true,
@@ -75,11 +83,21 @@ export default async function SpokeSeedsPage(props: {
     take: 80,
   })
 
-  const eligibleAnchors = {} as Record<SpokeMoveBedMoveType, { id: string; title: string; type: string }[]>
+  const eligibleAnchors = {} as Record<SpokeMoveBedMoveType, PlayerBarPick[]>
   for (const moveType of SPOKE_MOVE_BED_MOVE_TYPES) {
     eligibleAnchors[moveType] = vibeBars
       .filter((b) => isBarEligibleSpokeAnchor(b, campaignRef, spokeIndex, moveType))
-      .map((b) => ({ id: b.id, title: b.title, type: b.type }))
+      .map((b) => ({
+        id: b.id,
+        title: b.title,
+        type: b.type,
+        moveType: b.moveType,
+        gmFace: b.gmFace,
+        nation: b.nation,
+        maturity: effectiveMaturity(parseSeedMetabolization(b.seedMetabolization)),
+        createdAt: b.createdAt.toISOString(),
+        excerpt: b.description ? b.description.slice(0, 140) : null,
+      }))
   }
 
   return (
