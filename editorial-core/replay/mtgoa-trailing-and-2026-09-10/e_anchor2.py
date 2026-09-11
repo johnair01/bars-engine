@@ -1,0 +1,1 @@
+E = [("Allyship has a prize counter too. Most people have spent their whole lives feeding tickets into the wrong one.", "Allyship has a prize counter too, and most people have spent their whole lives feeding tickets into the wrong one.")]

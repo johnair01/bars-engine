@@ -1,0 +1,162 @@
+# releases.yaml — what each core version did, and whether a stale project can wait.
+#
+# RULED 2026-09-09. `coherence.py`'s `core` check compares a project's `core_version` against the
+# core's VERSION. Until now every mismatch REPORTED. That is wrong for one class of release and
+# right for the other, and the difference is whether a measurement changed meaning:
+#
+#   validity    the same prose now produces a DIFFERENT number. A stale project's board is
+#               reporting figures that no longer mean what its ledger and targets assume, so
+#               the `core` check FAILS until it syncs.
+#
+#   capability  something new is available; nothing already counted changed. The check REPORTS
+#               and the project takes it when convenient.
+#
+# `sync_core.py` reads this to say what a pending upgrade will do before it does it.
+
+32:
+  severity: validity
+  note: >-
+    fragment.py becomes the one fragment referee (MTGOA's gate counter retires). Its false
+    positives fixed: runs wholly in emphasis with no sentence punctuation are labels, not
+    sentences; `'s` after it/that/there/here/what/who/he/she/where/how is a verb; `grows`,
+    `installs`, `tightens` join EXTRA_VERBS; `hand over|off|back|on` is a phrasal verb. In
+    find_line, for every instrument: whole-line HTML comments are skipped, and a project's
+    build_book.py may declare `nonprinting(lines)` to blank provenance the build strips.
+    Fragment counts DROP (MTGOA 251 -> 103 before its index exclusion); no other count moves.
+31:
+  severity: capability
+  note: >-
+    ledger.save refuses a write that drops more than half of an instrument's entries (at least
+    five) unless allow_mass_removal=True. A mistaken prune had emptied MTGOA's ledger in one save.
+30:
+  severity: capability
+  note: >-
+    Stale-ledger detection counts ENTRIES that matched no hit (exceptions.stale, a `stale=` field
+    on every EDITORIAL line). The old entries-vs-accepted-hits comparison let one entry covering
+    several hits mask dead entries: MTGOA read `ledger ok clean` over three. Counts unchanged;
+    `ledger` may now report findings it used to miss.
+29:
+  severity: capability
+  note: >-
+    `scored_frames:` manifest key (profile.scored_frames): lines inside a listed frame block are
+    scored as body prose, box prefix removed, tagged `boxed` so hits are ledgered as notes.
+    Nothing changes for a project that declares none. MTGOA declares HANDBOOK (Wendell,
+    2026-09-10: boxed records scored, ledger notes, edited separately).
+28:
+  severity: validity
+  note: >-
+    trailing_and: `which` leaves DEMONSTRATIVE. `, and which will repay…` is a second relative
+    clause, never a new sentence with a demonstrative subject. Counts DROP by the few such sites.
+27:
+  severity: validity
+  note: >-
+    fragment.py: contractions 'm 're 've 'll 'd join EXTRA_VERBS. The isalpha() lexicon filter
+    kept them out, so any sentence whose only verb was contracted counted as a fragment. Counts
+    DROP wherever the prose uses contractions.
+26:
+  severity: validity
+  note: >-
+    trailing_and: REVERTS v25's `what` in SUBORDINATOR — measured, it hid ~14 real clauses with
+    what-subjects to spare a few ledger entries on lists. Adds ADVERBIAL: `, and when X, <main
+    clause>` now counts (five real misses in MTGOA), except coordinate conditions sharing one
+    main clause (`If X, and if Y, …`). Counts RISE.
+25:
+  severity: validity
+  note: >-
+    trailing_and: `am` joins FINITE and BARE_PREDICATE (`, and I am the one` was invisible), `be`
+    joins BARE_PREDICATE (`, and be corrected afterward` is a predicate on a modal), and `what`
+    joins SUBORDINATOR beside how/why. Counts move both ways.
+24:
+  severity: validity
+  note: >-
+    trailing_and's FINITE and BARE_PREDICATE stop reading `this`, `-ss`, `-ous` and `-sis`
+    words as third-person verbs. Counts move BOTH ways — `and not in this chapter` and
+    `and raising awareness` stop scoring, `, and this matters` starts. fragment.py's
+    EXTRA_VERBS gains `date` and `steers` under its own extend-the-lexicon rule.
+23:
+  severity: validity
+  note: >-
+    trailing_and's RANK tier applies SUBORDINATOR, as LOOSE always has — `, and why the answer
+    is a better game` is a second why-clause, not a ranking tag. Counts DROP by the handful of
+    such sites. Also fixes fragment.py --keys, which emitted the raw line dict as its location
+    and so broke `ledger.py accept fragment --site`; selftest now asserts every --keys location.
+22:
+  severity: validity
+  note: >-
+    trailing_and counts RANK toward the zero target and emits its keys. RANK was the tier the
+    instrument called a defect outright, and it was invisible to the target and the ledger —
+    MTGOA reported unresolved=781 over 799 sites. Counts RISE by the RANK tally. Also drops the
+    printed "Zero is a different tic" line, which argued against the house target.
+21:
+  severity: validity
+  note: >-
+    draft_lines.APPARATUS — a markdown bullet now needs the SPACE after it. The old filter read
+    any leading `*` as a list item, so every line opening `**Term** — ...` was dropped from the
+    scan: MTGOA's whole glossary, and most of Flirtcraft's card decks. Counts RISE sharply
+    because prose that was never scanned now is (MTGOA 592 -> 789, Flirtcraft 0 -> 71). Also
+    removes trailing_and's MIDSENTENCE rule, which existed only to suppress the fragments that
+    bug produced.
+20:
+  severity: validity
+  note: >-
+    trailing_and narrowed to `and` only (ruled by Wendell after the triage — the docstring's
+    relation-naming argument exonerates but/or/so/yet) and tightened on three mechanical
+    over-catch classes: coordinate subordinate clauses, shared-subject compound predicates, and
+    lower-case split artifacts. Counts DROP sharply: MTGOA 775 -> 592, AI Psychologist 121 ->
+    101. Prune stale acceptances afterwards; an over-catch that is now rejected leaves its
+    ledger entry matching nothing.
+19:
+  severity: capability
+  note: >-
+    Every targeted instrument answers `--keys` with TSV of its exact ledger keys, and
+    `ledger.py accept --site` consumes them, so a key is never retyped. Closes the third
+    install's sharpest finding: the string a reader could see was not the string the ledger
+    needed, and a mismatched acceptance reported success while matching nothing.
+18:
+  severity: validity
+  note: >-
+    Found by the THIRD INSTALL (Flirtcraft). find_line.surfaces() and prose_text() now skip
+    fenced code blocks, which draft_lines has always done — the same draft-clean / book-leaky
+    asymmetry as the front-matter bug, from the same cause. Counts DROP on any project with a
+    code block in its prose; neither book has one. Also adds `exclude:` to the manifest for
+    whole files that sit beside the prose and are not prose.
+17:
+  severity: capability
+  note: >-
+    sync_core.py and releases.yaml. The `core` check now escalates: a pending VALIDITY release
+    fails a stale project's board instead of reporting. Nothing already counted changes.
+16:
+  severity: capability
+  note: >-
+    instruments/ledger.py — the only supported writer for editorial_exceptions.yaml. Adds the
+    `readable` hard check and exceptions.error(). No count changes.
+15:
+  severity: capability
+  note: >-
+    selftest.py, and the `readable` check registered ahead of `ledger`. A corrupt ledger now
+    fails the board instead of reading as an empty one.
+14:
+  severity: validity
+  note: >-
+    gate.py reads through find_line.prose_text, so it honours `prose_section` and the
+    front-matter strip like every other instrument. gate counts DROP on any project whose
+    components carry apparatus. Also empties _BANNED_DEFAULT, which held one book's vocabulary
+    as the core's default — a project relying on that default loses those rules.
+13:
+  severity: capability
+  note: init_project.py. Nothing already installed changes.
+12:
+  severity: validity
+  note: >-
+    polysyndeton.py, and the SENT abbreviation guard in six instruments. Sentence counts change
+    wherever `J.`, `ed.` or `Dr.` appear, so every rate moves slightly.
+10:
+  severity: validity
+  note: >-
+    find_line `prose_section` and the front-matter strip. Every instrument stops counting YAML
+    front matter and declared apparatus. Counts drop across the board.
+9:
+  severity: capability
+  note: >-
+    READER_FACES.md § The two terminal states, and trailing_and's docstring superseded. Doc
+    only; no count changes.

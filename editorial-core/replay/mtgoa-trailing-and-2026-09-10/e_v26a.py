@@ -1,0 +1,1 @@
+E = [("Some part of you is delighted by exactly what you complain about, and as long as that delight stays in the dark, it owns you.", "Some part of you is delighted by exactly what you complain about. As long as that delight stays in the dark, it owns you.")]
