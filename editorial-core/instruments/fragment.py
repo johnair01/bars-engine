@@ -174,7 +174,11 @@ SKIP_LINE = ("#", "|", ">", "-", "*", "1.", "2.", "3.", "4.", "5.", "6.", "7.")
 # hole in the gate counter this instrument replaced: `Three exchanges at minimum.` is a fragment,
 # and `exchange` is a verb. Only forms that cannot be nouns are added, one at a time.
 EXTRA_VERBS = set("""ought shall must lest conducts date steers 'm 're 've 'll 'd
-grows installs tightens""".split())
+grows installs tightens deepens""".split())
+# `deepens` added 2026-09-11 (v33), same class again: it occurs once in the book (`Your breathing
+# deepens.`), so the tagger's single mangled reading is all the lexicon ever sees. The v33 splitter
+# fix surfaced it by separating the sentence from its neighbour; adding the word keeps v33 from
+# introducing a false positive.
 
 # `'s` AFTER A PRONOUN IS `is` or `has`, added 2026-09-10 (v32). `'s` stays out of the lexicon
 # (above), and so `That's the price.`, `It's avoidance with better vocabulary.` and `There's a
@@ -213,6 +217,24 @@ def is_label(s):
         return False
     core = s.strip(EMPH + " ").rstrip("*_)]”’\"' ")
     return bool(core) and core[-1] not in ".!?" and not BOUNDARY.search(core)
+
+
+# A run-in header opens a paragraph with a bold run and heads the prose that follows —
+# `**Stage 5: Exit.** You leave…`, `**5. The Keeper of Vows.** The mode…`,
+# `**The Trauma Olympics.** Every conversation…`. The v33 splitter separates it from that prose,
+# so it surfaces as a verbless "sentence". It is a heading, not a beat: strip it before scanning.
+# Bold only (a leading *italic* is ordinary emphasis, `*Sadness* rather than…`, not a header);
+# short only (headers are; RUNIN caps the run and the guard caps the words) so a genuinely bold
+# sentence is left alone; and non-boxed only — a boxed `**Clause four.**` still scores and is
+# ledgered as a note under the boxed-records ruling.
+RUNIN = re.compile(r"^\s*\*\*[^*\n]{1,60}?\*\*[.:]?\s+(?=\S)")
+
+
+def _strip_runin(text):
+    m = RUNIN.match(text)
+    if m and len(m.group(0).split()) <= 8:
+        return text[m.end():]
+    return text
 
 
 def has_verb(toks, lex):
@@ -322,7 +344,7 @@ def verb_lexicon(lines, pos_tag, word_tokenize):
     return lex
 
 
-def sites(text, lex, pos_tag, word_tokenize, min_words=2, deep=False):
+def sites(text, lex, pos_tag, word_tokenize, min_words=2, deep=False, boxed=False):
     """Fragment candidates in one paragraph, with position and length.
 
     `deep` turns on the headed-noun-phrase tier. **Draft mode only by default**, and the
@@ -334,6 +356,8 @@ def sites(text, lex, pos_tag, word_tokenize, min_words=2, deep=False):
     out = []
     if is_label(text):
         return out                         # a heading in emphasis, not a paragraph (v32)
+    if not boxed:
+        text = _strip_runin(text)          # a bold run-in header is not a beat (v33)
     sents = dn.sentences(text)
     for i, s in enumerate(sents):
         st = s.strip()
@@ -411,7 +435,7 @@ def main():
     for l in lines:
         if any(e in l["rel"] for e in EXEMPT_SURFACE):
             continue
-        for kind, n, st in sites(l["text"], lex, pos_tag, word_tokenize, deep=deep):
+        for kind, n, st in sites(l["text"], lex, pos_tag, word_tokenize, deep=deep, boxed=bool(l.get("boxed"))):
             found[kind].append((l, n, st))
             per[l["rel"]][kind] += 1
 

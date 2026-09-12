@@ -50,9 +50,14 @@ Every room.
 The mountain is cheaper than the table because it is not the table.
 
 Three exchanges at minimum.
+
+*She agreed.* A pause.
 """
 # `Three exchanges at minimum.` (v32): a plural noun whose singular is also a verb. The gate counter
 # fragment.py replaced read every -s word as a verb and passed it; this one must not.
+# `*She agreed.* A pause.` (v33): a fragment hidden behind an emphasis-ending sentence. The old
+# splitter did not break at `agreed.*` and read the pair as one verb-bearing sentence; the v33
+# splitter breaks there and `A pause.` surfaces.
 
 # The same passage with every defect repaired. If ANY scanner fires on this, it has a false
 # positive and the negative test says so — which is the half of a self-test that usually gets left
@@ -79,10 +84,14 @@ There's a lamp by the door.
 Your chest tightens.
 
 Hand over the pen.
+
+**Stage two.** The room was ready. *He nodded.* Work began.
 """
-# The last five paragraphs are fragment.py's v32 false positives, one per class: a label in
-# emphasis, a section comment, `'s` after a pronoun, a verb the tagger only ever calls a noun, and a
-# phrasal imperative. Each fired before v32. Kept as paragraphs so no two of them join.
+# The v32 false positives, one per class: a label in emphasis, a section comment, `'s` after a
+# pronoun, a verb the tagger only ever calls a noun, and a phrasal imperative. Each fired before v32.
+# The last paragraph is v33: `**Stage two.**` is a bold run-in header (stripped, not a fragment),
+# and the emphasis-ending `*He nodded.*` must split cleanly from `Work began.` without either
+# reading as verbless. Kept as paragraphs so no two of them join.
 
 EXPECT = [
     ("gate",         "sentence-initial And — a rule that needs no project vocabulary"),
@@ -148,8 +157,8 @@ def main():
         # 2. EACH TARGETED SCANNER FIRES ON ITS OWN DEFECT.
         for name, what in EXPECT:
             check(unresolved(out, name) >= 1, "%s fires" % name, what)
-        check(unresolved(out, "fragment") == 2, "a plural noun is not a verb (v32)",
-              "fragment reads %d of 2: `Every room.`, `Three exchanges at minimum.`"
+        check(unresolved(out, "fragment") == 3, "fragment: plural noun, and a fragment behind emphasis (v32/v33)",
+              "fragment reads %d of 3: `Every room.`, `Three exchanges at minimum.`, `A pause.`"
               % unresolved(out, "fragment"))
 
         # 3. THE LEDGER SILENCES A HIT. Accept the polysyndeton sentence; the count must drop.

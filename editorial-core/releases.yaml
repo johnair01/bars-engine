@@ -13,6 +13,16 @@
 #
 # `sync_core.py` reads this to say what a pending upgrade will do before it does it.
 
+33:
+  severity: validity
+  note: >-
+    density.sentences breaks a sentence that ends inside emphasis or a quote (`...closing.* Then`),
+    keeping the closer with the sentence; the old splitter read the pair as one. fragment.py strips
+    a bold run-in header that opens a paragraph (`**Stage 5: Exit.** You leave...`) before scanning
+    it, non-boxed only (a boxed `**Clause four.**` still scores as a note); `deepens` joins
+    EXTRA_VERBS. Fragment counts MOVE: real fragments hidden behind emphasis surface, bold headers
+    stop being false-flagged. No other instrument's count changes (measured on all three projects;
+    AI-Psych unmoved, Flirtcraft +11 card-field fragments to triage, MTGOA +15 net).
 32:
   severity: validity
   note: >-

@@ -124,7 +124,16 @@ fl = _load("find_line", os.path.join(HERE, "find_line.py"))
 _ABBR = (r"(?<!\b[A-Z]\.)(?<!\bed\.)(?<!\bDr\.)(?<!\bMr\.)(?<!\bMs\.)"
          r"(?<!\bMrs\.)(?<!\betc\.)(?<!\bvs\.)(?<!\bvol\.)(?<!\bno\.)"
          r"(?<!\bpp\.)(?<!\bcf\.)(?<!\bi\.e\.)(?<!\be\.g\.)(?<!\bSt\.)")
-SENT = re.compile(r"(?<=[.!?])" + _ABBR + r"\s+")
+# A sentence can end inside emphasis or a quote: `...closing.* Then` — the terminal `.`
+# is followed by a closing `*`/`_`/quote/paren before the space. Without allowing those
+# closers the boundary is missed and two sentences read as one (found 2026-09-11 when a
+# polysyndeton chain was really two one-`and` quotes bundled). The closers are KEPT with the
+# sentence they close (so `**Stage 5: Exit.**` stays balanced, and a run-in header is still
+# recognisable as wholly-emphasised); only the whitespace is the delimiter. Same closer set
+# resolve3 uses.
+_CLOSERS = r"[*_\"”’\')\]]*"
+SENT = re.compile(r"(?<=[.!?])" + _ABBR + _CLOSERS + r"\s+")
+_BOUNDARY = re.compile(r"(?<=[.!?])" + _ABBR + r"(" + _CLOSERS + r")(\s+)")
 WORD = re.compile(r"[A-Za-z][A-Za-z'’-]*")
 
 # Brown et al.'s CPIDR rule: these tags are the propositions. Determiners, nouns
@@ -169,7 +178,22 @@ def p_density(text, pos_tag, word_tokenize):
 
 
 def sentences(text):
-    return [s.strip() for s in SENT.split(text.strip()) if s.strip()]
+    """Split on a sentence boundary, keeping any closing emphasis/quote with the sentence it
+    closes. `SENT.split` would consume the closers into the delimiter and drop them, unbalancing
+    `**Stage 5: Exit.**` into `**Stage 5: Exit.`; iterating the boundary and cutting after the
+    closers keeps them."""
+    text = text.strip()
+    out, last = [], 0
+    for m in _BOUNDARY.finditer(text):
+        end = m.end(1)          # include the closers in the sentence just ended
+        seg = text[last:end].strip()
+        if seg:
+            out.append(seg)
+        last = m.end()          # resume after the whitespace delimiter
+    tail = text[last:].strip()
+    if tail:
+        out.append(tail)
+    return out
 
 
 def content(text):
