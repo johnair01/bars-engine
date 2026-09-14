@@ -29,7 +29,7 @@ The severity field ships with `sync_core.py`; until then every release reports.
 """
 import os
 
-CORE_VERSION = 33
+CORE_VERSION = 34
 
 
 def home_version(core_home):

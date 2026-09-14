@@ -45,9 +45,10 @@ trade, and showing it lets the reader feel the bad deal the label flattened.
 
 ## Three tiers, by how much they mean
 
-**LABEL** — a demonstrative or *it* + a copula + an article + a noun. *That is the trade.* The
-flagship, and the one to drive down. **3.0% of the book's sentences; 7.3% in the flagged proof
-passage.** Reported as a rate against the book, HEAVY over it.
+**LABEL** — a subject + a copula + an article + a noun. *That is the trade.* *Depletion is a
+design flaw.* The flagship, and the one to drive down. Broadened v34 (2026-09-14) from
+demonstrative-only subjects to any subject except personal pronouns (I/you/we/they/he/she), after
+a subject-swap dodged the narrow version; see the LABEL definition below.
 
 **PROPERTY** — an abstract handed a physical property. *praise has a shape*, *a texture to it*.
 **Five in the whole book**, which is why one of them stopped Wendell cold. A low-noise
@@ -102,8 +103,20 @@ _ABBR = (r"(?<!\b[A-Z]\.)(?<!\bed\.)(?<!\bDr\.)(?<!\bMr\.)(?<!\bMs\.)"
          r"(?<!\bpp\.)(?<!\bcf\.)(?<!\bi\.e\.)(?<!\be\.g\.)(?<!\bSt\.)")
 SENT = re.compile(r"(?<=[.!?])" + _ABBR + r"\s+")
 
-# The demonstrative-copula label. A backward-pointing subject, a copula, an article, a noun.
-LABEL = re.compile(r"\b(That|This|These|Those|It)\s+(is|are|was|were|'s)\s+(the|a|an)\s+\w+", re.I)
+# The copula label: a subject, a copula, an article, a noun — `depletion is a design flaw`.
+#
+# BROADENED v34, 2026-09-14. It read only demonstrative and `it` subjects
+# (`\b(That|This|These|Those|It)\s+…`), which meant the label could be dodged by swapping the
+# subject: `It is a design flaw` → `Depletion is a design flaw` cleared the count while the
+# telling stayed on the page. Wendell, seeing exactly that dodge in a pass: *"it should be tagging
+# the 'is' copula usage."* So the subject is now any noun or demonstrative, and only PERSONAL
+# PRONOUNS and existential there/here are excluded (I/you/we/they/he/she/there/here) — direct address and first person (`you are a
+# player`) is not the abstraction-labeling tell, and `it` stays IN because `it is a…` is the
+# original cataphoric tell. On MTGOA this takes the count from 179 to ~715: most are the copula
+# doing real labelling, a share are licensed ontology metaphors and definitions the reader clears
+# to the ledger. The instrument surfaces; the reader decides show-or-keep, per the docstring.
+LABEL = re.compile(
+    r"\b(?!(?:I|you|we|they|he|she|there|here)\b)(\w+)\s+(is|are|was|were|'s)\s+(the|a|an)\s+\w+", re.I)
 
 # An abstract handed a physical property -- the off-system copula-metaphor. Kept to a short list
 # of genuinely physical nouns, because that is what makes it low-noise: "praise has a shape"

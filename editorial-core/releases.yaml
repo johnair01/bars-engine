@@ -13,6 +13,15 @@
 #
 # `sync_core.py` reads this to say what a pending upgrade will do before it does it.
 
+34:
+  severity: validity
+  note: >-
+    telling.py LABEL broadened from demonstrative/it subjects to ANY subject except personal
+    pronouns (I/you/we/they/he/she). The copula-label could be dodged by swapping the subject
+    (It is a flaw -> Depletion is a flaw); now the copula is tagged whatever the subject.
+    telling LABEL counts JUMP (MTGOA 179 -> ~715); most new hits are the copula doing real
+    labelling, plus licensed metaphors/definitions the reader clears to the ledger.
+
 33:
   severity: validity
   note: >-

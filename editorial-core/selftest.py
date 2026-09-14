@@ -44,7 +44,7 @@ DEFECTIVE = """\
 He walked to the door and he opened it and the room was empty.
 And then the door closed behind him.
 She reached the landing, and the door was already open.
-It was a disaster.
+The route was a disaster.
 She made a decision about the route.
 Every room.
 The mountain is cheaper than the table because it is not the table.
@@ -70,7 +70,7 @@ The folder hit the desk hard enough to slide.
 She chose the northern route.
 She crossed every room to reach it.
 The mountain costs less than the guide who takes you up it.
-That is why the room went quiet, and why the answer is a better map.
+That is why the room went quiet, and why a better map settles the argument.
 She wrote it in pencil, and not in this ink.
 If the door sticks, and if nobody is home, the key is under the mat.
 I'm here, with you.
