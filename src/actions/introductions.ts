@@ -6,6 +6,10 @@
  * Persist-then-send, the same shape the rest of the site uses: the row is
  * committed first, and the Kit sync afterward is best-effort.
  *
+ * **The consent box gates the Kit sync.** Every submitter's lead is stored,
+ * because the email is how I come back to them about that one place. Only a
+ * submitter who ticked the box is copied onto the mailing list.
+ *
  * **This never accepts contact details for the person being named.** The form
  * does not ask, and the action does not store — see the model comment in
  * prisma/schema.prisma. `canIntroduce` is how a warm path gets recorded, and it
@@ -36,6 +40,9 @@ export async function submitIntroduction(input: {
   const place = input.place?.trim()
   const city = input.city?.trim()
   const email = input.submitterEmail?.trim().toLowerCase()
+  // Only a literal true counts. The row and the sync below both read this value,
+  // so a stored `consent: true` always means the list copy was attempted.
+  const consent = input.consent === true
 
   if (!place) return { ok: false, error: 'Name the place, shop, org or show.' }
   if (!city) return { ok: false, error: 'Which town is it in?' }
@@ -54,7 +61,7 @@ export async function submitIntroduction(input: {
         note: input.note?.trim().slice(0, 1000) || null,
         submitterName: input.submitterName?.trim().slice(0, 120) || null,
         submitterEmail: email,
-        consent: Boolean(input.consent),
+        consent,
       },
     })
   } catch (err) {
@@ -62,13 +69,16 @@ export async function submitIntroduction(input: {
     return { ok: false, error: 'Something went wrong saving that. Please try again.' }
   }
 
-  // Best-effort. A tagged subscriber is a copy of a lead already committed.
-  await syncSubscriber({
-    email,
-    firstName: input.submitterName?.trim().split(/\s+/)[0] ?? null,
-    tags: ['source:introductions', 'gather-resources:rep'],
-    fields: { last_introduction_city: city.slice(0, 120) },
-  })
+  // Best-effort, and only with consent. The lead above is stored either way.
+  // A ticked box also copies it to the list as a tagged subscriber.
+  if (consent) {
+    await syncSubscriber({
+      email,
+      firstName: input.submitterName?.trim().split(/\s+/)[0] ?? null,
+      tags: ['source:introductions', 'gather-resources:rep'],
+      fields: { last_introduction_city: city.slice(0, 120) },
+    })
+  }
 
   return {
     ok: true,
