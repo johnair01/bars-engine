@@ -180,7 +180,7 @@ The cast reads through the ruling. Line 4, the tied sack, is its restraint: mone
 
 ## Amendment 1 · three segments, four lists
 
-**Opened:** 2026-09-15 · **Status:** ruled by the faces, awaiting Wendell's ratification
+**Opened:** 2026-09-15 · **Status:** ratified by Wendell's instruction to build it, 2026-09-15
 
 **What happened.** The first backfill run with `--apply` wrote these results:
 
@@ -211,7 +211,7 @@ Every nonprofit failure carried the same Resend error: *"Your plan includes 3 se
 
 Challenger accepts topics for three reasons: the plan stays free, a segment slot stays open for a future list, "nothing else" becomes structural. Regent's cap question stays open, because the topic limit is unpublished. If a limit exists, the first run will report it the same loud way, and nothing sends by mistake. No face dissents.
 
-### Ruling · the faces', awaiting Wendell's ratification
+### Ruling · the faces', ratified by Wendell
 
 1. **Stay on the free plan.**
 2. **One segment, `mailing list`,** holds everyone promised updates. Each promise gets an opt-out-default topic: `succession`, `nonprofit founding circle`, `introductions`. Signup opts the contact into its topic. A Broadcast goes to the segment, scoped to one topic.
@@ -221,4 +221,8 @@ Challenger accepts topics for three reasons: the plan stays free, a segment slot
 
 **Cost:** $0. The code changes in the list client, the contract, the script, the tests and the docs. There are two segment deletions in Resend. The topic limit is unverified until the first run.
 
-**Ratified:** _pending Wendell_
+**Ratified:** 2026-09-15 — "build this" (Wendell)
+
+**Built with one narrowing:** item 4 removes a first-run segment only when its name and its
+creation date both match that run. A segment named `succession` could predate it, and a
+segment nobody here made stays where it is.

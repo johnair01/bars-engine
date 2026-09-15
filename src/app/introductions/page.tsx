@@ -27,7 +27,7 @@ const REACH = CORRIDOR.filter((c) => c.tier === 'reach')
  *   above its four doors: the capture is posted, the person is not.
  * @permissions public
  * @relationships TourIntroduction, /campaigns, /mastering-allyship/book-tour/help,
- *   src/lib/tour-leads/corridor.ts, Resend segment "introductions" (consent only)
+ *   src/lib/tour-leads/corridor.ts, Resend topic "introductions" (consent only)
  * @dimensions WHO:supporter, WHAT:lead, WHERE:introductions, ENERGY:gather_resources
  * @example /introductions
  * @agentDiscoverable true

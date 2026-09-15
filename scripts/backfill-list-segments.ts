@@ -1,15 +1,16 @@
 /**
- * Copy the people who signed up before the Resend list existed into their
- * segments, so the first Broadcast reaches them.
+ * Copy the people who signed up before the Resend list existed onto their
+ * lists, so the first Broadcast reaches them.
  *
  *   npx tsx scripts/backfill-list-segments.ts           # dry run: counts only
  *   npx tsx scripts/backfill-list-segments.ts --apply   # writes to Resend
  *
  * Reads Postgres (the live database, via .env.local) and writes only to Resend.
- * Nothing in Postgres changes. Safe to run twice: an existing contact is added
- * to its segment and its unsubscribe flag is left as it is.
+ * Nothing in Postgres changes. Safe to run again: an existing contact keeps its
+ * unsubscribe flag, and a topic it has already joined once is left alone.
  *
- * Three segments are backfilled: character sheet, succession, nonprofit. Each
+ * Three lists are backfilled: character sheet (a contact only, in no segment),
+ * succession and nonprofit (the mailing-list segment, one topic each). Each
  * page promised later mail when these people signed up.
  *
  * Introductions are left out on purpose. Until the consent label changed, the
@@ -18,22 +19,64 @@
  * which is narrower than a mailing list. Only ticks under the new label, "Add
  * me to your mailing list too," put anyone on the list, and the action handles
  * those as they arrive.
+ *
+ * Before writing, --apply removes the segments the first backfill created on
+ * 2026-09-15, when each list had its own segment and the plan's limit of three
+ * stopped the run (MAILING_LIST_SIX_FACES.md, Amendment 1). It removes a
+ * segment only when both its name and its creation date match that run, so a
+ * segment anyone else made stays where it is.
  */
 import { config } from 'dotenv'
 import { PrismaClient } from '@prisma/client'
+import { getResend } from '@/lib/email/resend'
 import { addToList } from '@/lib/esp/resend-list'
-import type { ListSegment } from '@/lib/esp/list-contract'
+import type { ListName } from '@/lib/esp/list-contract'
 
 config({ path: '.env' })
 config({ path: '.env.local', override: true })
 
-const BACKFILL: { intent: string; segment: ListSegment }[] = [
-  { intent: 'character-sheet', segment: 'character-sheet' },
-  { intent: 'succession', segment: 'succession' },
-  { intent: 'nonprofit', segment: 'nonprofit' },
+const BACKFILL: { intent: string; list: ListName }[] = [
+  { intent: 'character-sheet', list: 'character-sheet' },
+  { intent: 'succession', list: 'succession' },
+  { intent: 'nonprofit', list: 'nonprofit' },
 ]
 
+/** The first backfill's segment names, from before Amendment 1. */
+const FIRST_RUN_SEGMENTS = new Set([
+  'character-sheet (quarterly reminder only)',
+  'succession',
+  'nonprofit founding circle',
+  'introductions (ticked the box)',
+])
+const FIRST_RUN_DAY = '2026-09-15'
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function removeFirstRunSegments(): Promise<void> {
+  const resend = getResend()
+  if (!resend) return
+  const listed = await resend.segments.list({ limit: 100 })
+  if (listed.error || !listed.data) {
+    console.log(`Could not list segments: ${listed.error?.message ?? 'unknown error'}`)
+    return
+  }
+  console.log('Segments in the account before this run:')
+  for (const segment of listed.data.data) {
+    console.log(`  ${segment.name}  (created ${segment.created_at.slice(0, 10)})`)
+  }
+  for (const segment of listed.data.data) {
+    const fromFirstRun = FIRST_RUN_SEGMENTS.has(segment.name) && segment.created_at.startsWith(FIRST_RUN_DAY)
+    if (!fromFirstRun) continue
+    const removed = await resend.segments.remove(segment.id)
+    console.log(
+      removed.error
+        ? `  could not remove "${segment.name}": ${removed.error.message}`
+        : `  removed "${segment.name}", made by the first backfill`,
+    )
+    await sleep(1000)
+  }
+  console.log('')
+}
 
 async function main() {
   const apply = process.argv.includes('--apply')
@@ -43,7 +86,9 @@ async function main() {
 
   const db = new PrismaClient()
   try {
-    for (const { intent, segment } of BACKFILL) {
+    if (apply) await removeFirstRunSegments()
+
+    for (const { intent, list } of BACKFILL) {
       const rows = await db.funnelSignup.findMany({
         where: { intent },
         select: { email: true, name: true },
@@ -56,20 +101,27 @@ async function main() {
       }
 
       if (!apply) {
-        console.log(`${segment}: ${people.size} people would be added`)
+        console.log(`${list}: ${people.size} people would be added`)
         continue
       }
 
       const tally = { created: 0, existing: 0, unsubscribed: 0, failed: 0 }
+      const failures: string[] = []
       for (const [email, firstName] of people) {
-        const result = await addToList({ email, firstName, segment })
-        if (!result.ok || result.skipped) tally.failed++
-        else if (result.contact.unsubscribed) tally.unsubscribed++
+        const result = await addToList({ email, firstName, list })
+        if (!result.ok) {
+          tally.failed++
+          failures.push(`  ${email}: ${result.error}`)
+        } else if (result.skipped) {
+          tally.failed++
+          failures.push(`  ${email}: skipped (${result.reason})`)
+        } else if (result.contact.unsubscribed) tally.unsubscribed++
         else if (result.created) tally.created++
         else tally.existing++
         await sleep(1000)
       }
-      console.log(`${segment}: ${JSON.stringify(tally)}`)
+      console.log(`${list}: ${JSON.stringify(tally)}`)
+      if (failures.length) console.log(failures.join('\n'))
     }
     if (!apply) console.log('\nDry run. Nothing was written. Re-run with --apply to write to Resend.')
   } finally {

@@ -40,7 +40,7 @@ beforeEach(() => {
 // ── Ticked: stored, then copied to the list ─────────────────────────────────
 
 describe('submitIntroduction with consent', () => {
-  it('stores the lead, then adds the submitter to the introductions segment', async () => {
+  it('stores the lead, then adds the submitter to the introductions list', async () => {
     const result = await submitIntroduction({ ...LEAD, consent: true })
 
     expect(result.ok).toBe(true)
@@ -54,7 +54,7 @@ describe('submitIntroduction with consent', () => {
     expect(addToList).toHaveBeenCalledWith({
       email: 'sam@example.com',
       firstName: 'Sam',
-      segment: 'introductions',
+      list: 'introductions',
     })
 
     // Persist-then-send: the row is written before the list hears about it.

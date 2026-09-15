@@ -115,7 +115,7 @@ export async function captureCharacterSheetNudge(input: {
   await addToList({
     email,
     firstName: name?.split(/\s+/)[0] ?? null,
-    segment: 'character-sheet',
+    list: 'character-sheet',
   })
 
   return { ok: true, message: 'Set. One reminder a quarter, with a blank sheet attached.' }
@@ -149,7 +149,7 @@ export async function captureInterestList(input: {
   await addToList({
     email,
     firstName: name?.split(/\s+/)[0] ?? null,
-    segment: input.list,
+    list: input.list,
   })
 
   return {

@@ -8,7 +8,7 @@
  *
  * **The consent box gates the list.** Every submitter's lead is stored, because
  * the email is how I come back to them about that one place. Only a submitter
- * who ticked the box joins the introductions segment of the mailing list.
+ * who ticked the box joins the mailing list's introductions topic.
  *
  * **This never accepts contact details for the person being named.** The form
  * does not ask, and the action does not store — see the model comment in
@@ -70,12 +70,12 @@ export async function submitIntroduction(input: {
   }
 
   // Best-effort, and only with consent. The lead above is stored either way.
-  // A ticked box also adds the submitter to the introductions segment.
+  // A ticked box also adds the submitter to the introductions topic.
   if (consent) {
     await addToList({
       email,
       firstName: input.submitterName?.trim().split(/\s+/)[0] ?? null,
-      segment: 'introductions',
+      list: 'introductions',
     })
   }
 
