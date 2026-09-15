@@ -3,8 +3,8 @@
  * copy attached, to everyone who asked on the sheet page.
  *
  * Recipients come from Postgres, the list of record: every `FunnelSignup` with
- * intent `character-sheet`. Each reader is copied into the reminder-only Resend
- * segment on the way past, which gives them a contact to unsubscribe from.
+ * intent `character-sheet`. Each reader gets a Resend contact on the way past,
+ * in no segment and no topic, which gives them a flag to unsubscribe with.
  *
  * Why single sends: Broadcasts and Resend's batch API cannot carry an
  * attachment, and the page promised the sheet "attached."
@@ -141,7 +141,7 @@ export async function runCharacterSheetReminder(
     if (i > 0 && pauseMs > 0) await sleep(pauseMs)
 
     const reader = recipients[i]
-    const listed = await addToList({ email: reader.email, firstName: reader.firstName, segment: 'character-sheet' })
+    const listed = await addToList({ email: reader.email, firstName: reader.firstName, list: 'character-sheet' })
     if (!listed.ok || listed.skipped) {
       report.failed++
       console.error('[sheet-reminder] contact lookup failed', {

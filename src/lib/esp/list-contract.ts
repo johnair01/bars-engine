@@ -7,58 +7,62 @@
  * read or test. `resend-list.ts` does the talking; this file decides.
  *
  * Contract from the site handoff (docs/handoffs/HANDOFF_SITE_2026-08-10.md §T3),
- * as amended by MAILING_LIST_SIX_FACES.md (ratified 2026-09-15): Kit is closed,
- * Resend Contacts carry the list, and a reader joins only the segment whose
- * page promised them later mail.
+ * as amended by MAILING_LIST_SIX_FACES.md: Kit is closed, Resend Contacts carry
+ * the list, and a reader joins only the list whose page promised them later
+ * mail. Amendment 1 moved each promise from its own segment to a topic, because
+ * the plan allows three segments.
  */
 
-// ── Segments: who is on the list at all ─────────────────────────────────────
+// ── Lists: who is on which ──────────────────────────────────────────────────
 
 /**
- * The four surfaces whose pages promise mail after the first one. A reader
- * joins the segment for the page they signed up on, and no other.
+ * The four pages that promise mail after the first one. A reader joins the
+ * list for the page they signed up on, and no other.
  *
  * Chapter One, the Superpower quiz and the Myths Read are absent on purpose.
  * Their pages promise one email or a saved read, so those addresses stay in
  * Postgres and never reach a list. Kickstarter backers are absent too: they
  * are reached through Kickstarter, and no page on this site captures them.
  */
-export type ListSegment = 'character-sheet' | 'succession' | 'nonprofit' | 'introductions'
+export type ListName = 'character-sheet' | 'succession' | 'nonprofit' | 'introductions'
 
-export type ListSegmentTerms = {
-  /** The segment's name in Resend, which is what Wendell sees when composing. */
-  resendName: string
+/**
+ * The one Resend segment for everyone promised updates. A Broadcast goes to
+ * this segment scoped to one topic, so it reaches only that topic's readers.
+ */
+export const MAILING_LIST_SEGMENT = 'mailing list'
+
+export type ListTerms = {
   /** The promise, verbatim from the page that collects the address. */
   promise: string
   /**
-   * Whether a Broadcast may go to this segment. The character sheet promised
-   * one reminder a quarter "and nothing else," so its segment is reminder-only
-   * and its Resend name says so where the Broadcast is composed.
+   * The Resend topic a Broadcast is scoped to, created with opt-out as its
+   * default so it reaches only readers who joined it. `null` keeps the reader
+   * out of the segment and every topic.
    */
-  broadcast: boolean
+  topic: string | null
 }
 
-export const LIST_SEGMENTS: Readonly<Record<ListSegment, ListSegmentTerms>> = {
+export const LIST_TERMS: Readonly<Record<ListName, ListTerms>> = {
+  // Reminder-only. The page promised one reminder a quarter "and nothing else,"
+  // so these readers are contacts in no segment and no topic, and no Broadcast
+  // can be addressed to them. The quarterly cron reads them from Postgres.
   'character-sheet': {
-    resendName: 'character-sheet (quarterly reminder only)',
     promise: 'One reminder a quarter, with a blank copy attached. Nothing else.',
-    broadcast: false,
+    topic: null,
   },
   succession: {
-    resendName: 'succession',
     promise: 'One update when there is something real to say. No sequence, no launch runway, and no seat being held.',
-    broadcast: true,
+    topic: 'succession',
   },
   nonprofit: {
-    resendName: 'nonprofit founding circle',
     promise:
       'I will write when the founding circle meets. No sequence, and no ask for money — that one stays closed until the paperwork clears.',
-    broadcast: true,
+    topic: 'nonprofit founding circle',
   },
   introductions: {
-    resendName: 'introductions (ticked the box)',
     promise: 'Add me to your mailing list too.',
-    broadcast: true,
+    topic: 'introductions',
   },
 }
 

@@ -11,7 +11,7 @@
  * Not configured is a normal state. Local, preview and CI run without
  * `RESEND_API_KEY` and get `{ ok: true, skipped: true }`.
  *
- * Who belongs in which segment is decided by `list-contract.ts`, not here.
+ * Who belongs on which list is decided by `list-contract.ts`, not here.
  *
  * **One suppression store.** A contact's `unsubscribed` flag is the only record
  * of who left. Broadcasts honor it natively, the quarterly reminder reads it
@@ -22,13 +22,21 @@
 import type { Resend } from 'resend'
 import { absoluteUrl } from '@/lib/email/awaken'
 import { getResend } from '@/lib/email/resend'
-import { LIST_SEGMENTS, type ListSegment } from './list-contract'
+import { LIST_TERMS, MAILING_LIST_SEGMENT, type ListName } from './list-contract'
 
 export type ListSyncInput = {
   email: string
   firstName?: string | null
-  segment: ListSegment
+  list: ListName
 }
+
+/**
+ * The topics this code has opted a contact into, comma-separated, kept on the
+ * contact itself. Resend's topic listing cannot tell a reader who left a topic
+ * from one who never joined it, so this record is what lets a repeat signup
+ * leave a reader's own opt-out alone.
+ */
+export const TOPICS_JOINED_PROPERTY = 'list_topics_joined'
 
 export type ListContact = {
   id: string
@@ -48,43 +56,53 @@ function describe(call: string, error: { message: string; name?: string } | null
   return `resend ${call} -> ${error?.name ?? 'error'}: ${error?.message ?? 'unknown'}`
 }
 
-// ── Segment ids, resolved once per process ──────────────────────────────────
+// ── The segment and topic ids, resolved once per process ────────────────────
 
-let segmentCache: Map<string, string> | null = null
+let segmentId: string | null = null
+let topicCache: Map<string, string> | null = null
+let joinedPropertyReady = false
 
-/** Exposed for tests, and for a long-lived process that renames segments. */
+/** Exposed for tests, and for a long-lived process that renames things. */
 export function clearListCaches(): void {
-  segmentCache = null
+  segmentId = null
+  topicCache = null
+  joinedPropertyReady = false
 }
 
-async function loadSegments(resend: Resend): Promise<Map<string, string>> {
-  if (segmentCache) return segmentCache
-  const cache = new Map<string, string>()
+/** The mailing-list segment's id, creating the segment the first time. */
+async function resolveMailingListSegment(resend: Resend): Promise<string | null> {
+  if (segmentId) return segmentId
   let after: string | undefined
   for (let page = 0; page < 10; page++) {
     const res = await resend.segments.list(after ? { limit: 100, after } : { limit: 100 })
     if (res.error || !res.data) break
-    for (const segment of res.data.data) cache.set(segment.name, segment.id)
+    const found = res.data.data.find((segment) => segment.name === MAILING_LIST_SEGMENT)
+    if (found) return (segmentId = found.id)
     if (!res.data.has_more || res.data.data.length === 0) break
     after = res.data.data[res.data.data.length - 1].id
   }
-  segmentCache = cache
-  return cache
-}
-
-/** The Resend id for a segment, creating the segment the first time it is used. */
-async function resolveSegmentId(resend: Resend, segment: ListSegment): Promise<string | null> {
-  const name = LIST_SEGMENTS[segment].resendName
-  const cache = await loadSegments(resend)
-  const cached = cache.get(name)
-  if (cached) return cached
-
-  const created = await resend.segments.create({ name })
+  const created = await resend.segments.create({ name: MAILING_LIST_SEGMENT })
   if (created.error || !created.data) {
-    console.error('[list]', describe(`segments.create "${name}"`, created.error))
+    console.error('[list]', describe(`segments.create "${MAILING_LIST_SEGMENT}"`, created.error))
     return null
   }
-  cache.set(name, created.data.id)
+  return (segmentId = created.data.id)
+}
+
+/** A topic's id, creating it with opt-out as the default the first time. */
+async function resolveTopicId(resend: Resend, name: string): Promise<string | null> {
+  if (!topicCache) {
+    const listed = await resend.topics.list()
+    topicCache = new Map((listed.data?.data ?? []).map((topic) => [topic.name, topic.id]))
+  }
+  const cached = topicCache.get(name)
+  if (cached) return cached
+  const created = await resend.topics.create({ name, defaultSubscription: 'opt_out' })
+  if (created.error || !created.data) {
+    console.error('[list]', describe(`topics.create "${name}"`, created.error))
+    return null
+  }
+  topicCache.set(name, created.data.id)
   return created.data.id
 }
 
@@ -101,10 +119,15 @@ function flattenProperties(
 }
 
 /**
- * Put an address in a segment, creating the contact if it is new.
+ * Put an address on a list, creating the contact if it is new.
  *
- * An existing contact is added to the segment, and its `unsubscribed` flag
- * stays as it is (see the module comment).
+ * For a list with a topic, the contact joins the mailing-list segment and is
+ * opted into that topic once. For the reminder-only character sheet, the
+ * contact exists and joins nothing, so no Broadcast can reach it.
+ *
+ * An existing contact's `unsubscribed` flag stays as it is (see the module
+ * comment), and so does a topic it has already been through once: a reader
+ * who left a topic is not put back in by a repeat signup.
  */
 export async function addToList(input: ListSyncInput): Promise<ListSyncResult> {
   const email = input.email.trim().toLowerCase()
@@ -112,42 +135,69 @@ export async function addToList(input: ListSyncInput): Promise<ListSyncResult> {
 
   const resend = getResend()
   if (!resend) {
-    console.warn(`[list] not configured (RESEND_API_KEY/EMAIL_FROM missing) — skipped ${input.segment} for ${email}`)
+    console.warn(`[list] not configured (RESEND_API_KEY/EMAIL_FROM missing) — skipped ${input.list} for ${email}`)
     return { ok: true, skipped: true, reason: 'email_not_configured' }
   }
 
-  try {
-    const segmentId = await resolveSegmentId(resend, input.segment)
-    if (!segmentId) return { ok: false, error: `could not resolve segment ${input.segment}` }
+  const topicName = LIST_TERMS[input.list].topic
 
-    const found = await resend.contacts.get({ email })
-    if (found.data) {
-      // A failed segment add is logged, and the contact is still returned. The
-      // contact and its unsubscribe flag are what the senders need, and a repeat
-      // signup may meet a segment the contact already belongs to.
-      const added = await resend.contacts.segments.add({ email, segmentId })
-      if (added.error) console.warn('[list]', describe('contacts.segments.add', added.error))
-      return {
-        ok: true,
-        created: false,
-        contact: {
-          id: found.data.id,
-          email,
-          unsubscribed: found.data.unsubscribed,
-          properties: flattenProperties(found.data.properties),
-        },
+  try {
+    let listSegmentId: string | null = null
+    let topicId: string | null = null
+    if (topicName) {
+      listSegmentId = await resolveMailingListSegment(resend)
+      if (!listSegmentId) return { ok: false, error: `could not resolve segment "${MAILING_LIST_SEGMENT}"` }
+      topicId = await resolveTopicId(resend, topicName)
+      if (!topicId) return { ok: false, error: `could not resolve topic "${topicName}"` }
+      if (!joinedPropertyReady) {
+        joinedPropertyReady = await ensureStringProperty(TOPICS_JOINED_PROPERTY)
+        if (!joinedPropertyReady) return { ok: false, error: `could not create property ${TOPICS_JOINED_PROPERTY}` }
       }
     }
+
+    const found = await resend.contacts.get({ email })
     const missing = found.error?.name === 'not_found' || found.error?.statusCode === 404
     if (found.error && !missing) {
       return { ok: false, error: describe('contacts.get', found.error) }
+    }
+
+    if (found.data) {
+      const contact: ListContact = {
+        id: found.data.id,
+        email,
+        unsubscribed: found.data.unsubscribed,
+        properties: flattenProperties(found.data.properties),
+      }
+      if (listSegmentId && topicId && topicName) {
+        // A failed segment add is logged and the contact is still returned: a
+        // repeat signup may meet a segment the contact already belongs to.
+        const added = await resend.contacts.segments.add({ email, segmentId: listSegmentId })
+        if (added.error) console.warn('[list]', describe('contacts.segments.add', added.error))
+
+        const joined = (contact.properties[TOPICS_JOINED_PROPERTY] ?? '').split(',').filter(Boolean)
+        if (!joined.includes(topicName)) {
+          const opted = await resend.contacts.topics.update({ email, topics: [{ id: topicId, subscription: 'opt_in' }] })
+          if (opted.error) return { ok: false, error: describe('contacts.topics.update', opted.error) }
+          const record = [...joined, topicName].join(',')
+          const stamped = await resend.contacts.update({ email, properties: { [TOPICS_JOINED_PROPERTY]: record } })
+          if (stamped.error) console.warn('[list]', describe('contacts.update properties', stamped.error))
+          contact.properties[TOPICS_JOINED_PROPERTY] = record
+        }
+      }
+      return { ok: true, created: false, contact }
     }
 
     const firstName = input.firstName?.trim() || undefined
     const created = await resend.contacts.create({
       email,
       ...(firstName ? { firstName } : {}),
-      segments: [{ id: segmentId }],
+      ...(listSegmentId && topicId && topicName
+        ? {
+            segments: [{ id: listSegmentId }],
+            topics: [{ id: topicId, subscription: 'opt_in' as const }],
+            properties: { [TOPICS_JOINED_PROPERTY]: topicName },
+          }
+        : {}),
     })
     if (created.error || !created.data) {
       return { ok: false, error: describe('contacts.create', created.error) }
@@ -155,11 +205,16 @@ export async function addToList(input: ListSyncInput): Promise<ListSyncResult> {
     return {
       ok: true,
       created: true,
-      contact: { id: created.data.id, email, unsubscribed: false, properties: {} },
+      contact: {
+        id: created.data.id,
+        email,
+        unsubscribed: false,
+        properties: topicName ? { [TOPICS_JOINED_PROPERTY]: topicName } : {},
+      },
     }
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err)
-    console.error('[list] addToList threw', { email, segment: input.segment, reason })
+    console.error('[list] addToList threw', { email, list: input.list, reason })
     return { ok: false, error: reason }
   }
 }

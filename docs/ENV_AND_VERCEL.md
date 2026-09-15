@@ -186,15 +186,16 @@ at `src/lib/esp/resend-list.ts` copies an address into Resend afterward. It
 returns errors as values, and it skips quietly when `RESEND_API_KEY` /
 `EMAIL_FROM` are unset.
 
-**Only four pages put anyone on the list**, each into its own segment. The
-segments are defined, with each page's promise, in `src/lib/esp/list-contract.ts`:
+**Only four pages put anyone on the list.** The plan allows three segments, so
+the lists share one segment, `mailing list`, and each promise is a topic created
+with opt-out as its default. The terms live in `src/lib/esp/list-contract.ts`:
 
-| Segment in Resend | Page | What may be sent |
-|---|---|---|
-| `character-sheet (quarterly reminder only)` | `/mastering-allyship/sheet` | the quarterly reminder only, sent by the cron below |
-| `succession` | `/succession` | a Broadcast when there is something real to say |
-| `nonprofit founding circle` | `/nonprofit` | a Broadcast when the founding circle meets |
-| `introductions (ticked the box)` | `/introductions` | Broadcasts about the tour |
+| List | Page | Lives in Resend as | What may be sent |
+|---|---|---|---|
+| character sheet | `/mastering-allyship/sheet` | a contact in no segment and no topic | the quarterly reminder only, sent by the cron below |
+| succession | `/succession` | `mailing list` segment, topic `succession` | a Broadcast when there is something real to say |
+| nonprofit | `/nonprofit` | `mailing list` segment, topic `nonprofit founding circle` | a Broadcast when the founding circle meets |
+| introductions | `/introductions` | `mailing list` segment, topic `introductions` | Broadcasts about the tour, to people who ticked the box |
 
 Chapter One, the Superpower quiz and the Myths Read put nobody on a list. Their
 pages promise one email or a saved read.
@@ -210,9 +211,12 @@ from an address that unsubscribed stays unsubscribed.
 | `EMAIL_POSTAL_ADDRESS` | yes, for the reminder | The postal address list mail must carry. The quarterly job refuses to send without it. |
 | `CRON_SECRET` | yes, for the reminder | See **Cron Jobs** below. Without it the reminder route refuses every caller. |
 
-**Sending a Broadcast.** Resend dashboard → Broadcasts → pick one segment from
-the table. The character-sheet segment is reminder-only, so leave it off every
-Broadcast. Keep the unsubscribe footer Resend offers.
+**Sending a Broadcast.** Resend dashboard → Broadcasts → segment `mailing list`,
+then scope it to one topic from the table. A Broadcast sent to the segment with
+no topic reaches every update list at once. Keep the unsubscribe footer Resend
+offers; with topics, its preferences page lets a reader leave one list and keep
+another. Character-sheet readers sit outside the segment, so no Broadcast
+reaches them.
 
 **Backfilling people who signed up before the switch.** Run once after deploy:
 
@@ -221,8 +225,12 @@ npx tsx scripts/backfill-list-segments.ts          # dry run, counts only
 npx tsx scripts/backfill-list-segments.ts --apply  # writes to Resend
 ```
 
-It reads Postgres and writes only to Resend. It leaves introductions out,
-because ticks under the old label agreed to a reply about one lead.
+It reads Postgres and writes only to Resend, printing each failure with its
+reason. It leaves introductions out, because ticks under the old label agreed to
+a reply about one lead. With `--apply` it first lists every segment in the
+account, which names the one nobody here made. Then it removes the segments the
+first run made on 2026-09-15, matching name and date together. Each contact records the topics it has joined in `list_topics_joined`,
+so a repeat run leaves a reader's own opt-out alone.
 
 **Free-tier limits** (checked 2026-09-15): marketing contacts are free up to
 1,000, and over that Broadcasts return 403 until the $40/mo tier. Transactional
