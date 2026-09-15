@@ -175,3 +175,50 @@ The cast reads through the ruling. Line 4, the tied sack, is its restraint: mone
 
 **Ratified:** 2026-09-15 — "ratified, build it" (Wendell)
 
+
+---
+
+## Amendment 1 · three segments, four lists
+
+**Opened:** 2026-09-15 · **Status:** ruled by the faces, awaiting Wendell's ratification
+
+**What happened.** The first backfill run with `--apply` wrote these results:
+
+| Segment | Created | Already a contact | Failed |
+|---|---|---|---|
+| character sheet | 66 | 0 | 1 |
+| succession | 4 | 33 | 0 |
+| nonprofit | 0 | 0 | 47 |
+
+Every nonprofit failure carried the same Resend error: *"Your plan includes 3 segments. Upgrade to add more."* The run created two segments, so a third segment already existed in the account before it. The pricing page and the docs list no segment limit. The API's error is the only source.
+
+**The cast.** Seed 20260916. Hexagram 5, Patience (Water over Heaven), line 5 changing, relating to Hexagram 11, Harmony (Earth over Heaven). The value turn offered: Cultivate Patience → Balance & Prosperity. Line 5 in the traditional text: *waiting at meat and drink; perseverance brings good fortune*, an interval of rest inside the danger. One high line: the ruling's premise holds, and the fix is in execution. Hexagram 11's *"small investments yield big returns"* was argued in the open, below, before it was read as the small code change.
+
+### Round 1
+
+| Face | Says |
+|---|---|
+| 🧙 SHAMAN | The promise survives this, and its container needs replacing. Falsifiable: a fix that sends a reader mail beyond their page's promise fails, whatever it saves. |
+| ⚔️ CHALLENGER | The plan drew a line at three. The avoided move is dropping the character-sheet segment. The cron reads Postgres, so that segment only ever worked as a warning label. Removing it makes "nothing else" structural, since a contact in no segment cannot be picked for a Broadcast. Paying $40 a month to keep 151 contacts in named buckets reads "small investment" backwards. |
+| 🏛️ REGENT | Segments are scarce: every future list would spend one. Topics cost no slot. Commit to one segment for everyone promised updates, with one topic per promise. Hexagram 11's order and routine points the same way. Deleting a segment may delete its contacts. Since no one has unsubscribed yet, the only risk is losing contacts, which Postgres can recreate. |
+| 🏗️ ARCHITECT | A Broadcast needs a segment, and Resend lets it scope to one topic. An opt-out-default topic reaches only contacts who opted in. So the build is one segment, **mailing list**, plus three topics that signup opts a reader into: succession, nonprofit founding circle, introductions. Resend's hosted preferences page then lets a reader leave one list and keep another. |
+| 🌿 DIPLOMAT | 47 people promised a letter when the circle meets sit outside every list. 33 of the 37 succession signups were already contacts from the character-sheet pass, which suggests the same people or test rows. One character-sheet row failed silently. The script must print every failure's reason. |
+| 🧠 SAGE | The question as posed, how to fit four segments in three, is the wrong one. For this list a segment does nothing a topic cannot. Leave the third segment alone until someone knows whose it is. Nothing is due until 2026-11-10, and the reminder uses no segment, so line 5's pause is real. Build it properly. |
+
+**Split after round 1.** Challenger's first move, three segments without the character-sheet one, needs the pre-existing slot. Sage forbids deleting a segment nobody here made.
+
+### Round 2
+
+Challenger accepts topics for three reasons: the plan stays free, a segment slot stays open for a future list, "nothing else" becomes structural. Regent's cap question stays open, because the topic limit is unpublished. If a limit exists, the first run will report it the same loud way, and nothing sends by mistake. No face dissents.
+
+### Ruling · the faces', awaiting Wendell's ratification
+
+1. **Stay on the free plan.**
+2. **One segment, `mailing list`,** holds everyone promised updates. Each promise gets an opt-out-default topic: `succession`, `nonprofit founding circle`, `introductions`. Signup opts the contact into its topic. A Broadcast goes to the segment, scoped to one topic.
+3. **Character-sheet readers stay contacts in no segment and no topic.** No Broadcast can reach them. The quarterly cron is unchanged.
+4. **Remove the two segments the first run created.** Leave the pre-existing segment alone until its owner is known.
+5. **Rerun the backfill after the change.** The script is idempotent, and each failure now prints its reason.
+
+**Cost:** $0. The code changes in the list client, the contract, the script, the tests and the docs. There are two segment deletions in Resend. The topic limit is unverified until the first run.
+
+**Ratified:** _pending Wendell_
