@@ -175,36 +175,65 @@ So the way to launch it is to write a post and add it to the list. The way to
 keep it launched is to keep writing them. `npm run test:build-log` covers all
 three states, including four months of silence.
 
-### KIT_API_KEY (the email list)
+### The mailing list (Resend Contacts)
 
-The Myths Read, the Superpower quiz, Chapter One and the character sheet's
-quarterly nudge all sync to [Kit](https://kit.com) through the single client at
-`src/lib/esp/kit.ts`. Free to 10,000 subscribers.
+Kit was chosen in the 2026-08-10 handoff and left switched off. The ratified
+decision in `MAILING_LIST_SIX_FACES.md` moved the list to **Resend Contacts**,
+on the same account and key as transactional email. `KIT_API_KEY` is retired.
+
+**Postgres is the list of record.** Every form saves its row first. The client
+at `src/lib/esp/resend-list.ts` copies an address into Resend afterward. It
+returns errors as values, and it skips quietly when `RESEND_API_KEY` /
+`EMAIL_FROM` are unset.
+
+**Only four pages put anyone on the list**, each into its own segment. The
+segments are defined, with each page's promise, in `src/lib/esp/list-contract.ts`:
+
+| Segment in Resend | Page | What may be sent |
+|---|---|---|
+| `character-sheet (quarterly reminder only)` | `/mastering-allyship/sheet` | the quarterly reminder only, sent by the cron below |
+| `succession` | `/succession` | a Broadcast when there is something real to say |
+| `nonprofit founding circle` | `/nonprofit` | a Broadcast when the founding circle meets |
+| `introductions (ticked the box)` | `/introductions` | Broadcasts about the tour |
+
+Chapter One, the Superpower quiz and the Myths Read put nobody on a list. Their
+pages promise one email or a saved read.
+
+**Unsubscribe lives in one place:** the Resend contact's `unsubscribed` flag.
+Broadcasts add Resend's own unsubscribe link and honor the flag. The quarterly
+reminder checks it before each send and links to `/unsubscribe`. A new signup
+from an address that unsubscribed stays unsubscribed.
 
 | Variable | Required | Meaning |
 |----------|----------|---------|
-| `KIT_API_KEY` | yes (to sync) | Kit → Settings → Developer → API keys. The **v4** key, sent as `X-Kit-Api-Key`. |
+| `RESEND_API_KEY`, `EMAIL_FROM` | yes | Same as transactional email, above. |
+| `EMAIL_POSTAL_ADDRESS` | yes, for the reminder | The postal address list mail must carry. The quarterly job refuses to send without it. |
+| `CRON_SECRET` | yes, for the reminder | See **Cron Jobs** below. Without it the reminder route refuses every caller. |
 
-1. **Local**: add it to `.env.local`. Leaving it unset is a supported state.
-2. **Vercel**: Dashboard → Settings → Environment Variables (Production + Preview).
-3. **Graceful degradation**: with no key, every sync is **logged and skipped**.
-   The lead is already committed to `FunnelSignup` / `MythRead` before the sync
-   runs, so an unset key or a Kit outage costs a copy, never the lead itself.
-4. **Tags and custom fields are created on demand.** The client resolves a tag
-   name to an id, creating it when it does not exist, and caches the map per
-   process.
+**Sending a Broadcast.** Resend dashboard → Broadcasts → pick one segment from
+the table. The character-sheet segment is reminder-only, so leave it off every
+Broadcast. Keep the unsubscribe footer Resend offers.
 
-**Who may enter a sequence is decided in `src/lib/esp/list-contract.ts`, not in
-the client.** Two rules are enforced there and covered by
-`npm run test:list-contract`:
+**Backfilling people who signed up before the switch.** Run once after deploy:
 
-- **Kickstarter backers never enter any sequence.** They were promised roughly
-  four broadcasts a year and no funnel. A backer who later takes a quiz is still
-  a backer, so the exclusion is checked against tags they already carry as well
-  as the ones being applied.
-- **Retaking updates, it does not re-enter.** Sequence-triggering tags are
-  applied on first creation only. Retaking a quiz refreshes the data tags and
-  the custom fields on the existing subscriber.
+```bash
+npx tsx scripts/backfill-list-segments.ts          # dry run, counts only
+npx tsx scripts/backfill-list-segments.ts --apply  # writes to Resend
+```
+
+It reads Postgres and writes only to Resend. It leaves introductions out,
+because ticks under the old label agreed to a reply about one lead.
+
+**Free-tier limits** (checked 2026-09-15): marketing contacts are free up to
+1,000, and over that Broadcasts return 403 until the $40/mo tier. Transactional
+sends, which the quarterly reminder uses because it carries an attachment, are
+free up to 100 a day. The cron runs three days in a row, so a list over 100
+finishes on the second or third day.
+
+**Who may enter a sequence** is still decided in `list-contract.ts`, covered by
+`npm run test:list-contract`. Sequences are paused today. When one exists, two
+rules hold: Kickstarter backers stay out of it, and a retake leaves an existing
+subscriber where they are.
 
 ### STRAND_CREATOR_PLAYER_ID (FastAPI / bars-agents)
 
@@ -457,9 +486,10 @@ Cron routes check `Authorization: Bearer <CRON_SECRET>` and return `401` if it i
 
 | Route | Schedule | Description |
 |---|---|---|
-| `/api/cron/abandon-sessions` | `0 * * * *` (hourly) | Mark orientation sessions inactive > 24 h as abandoned. |
+| `/api/cron/character-sheet-reminder` | `0 16 10-12 2,5,8,11 *` | The character sheet's quarterly reminder, with the blank PDF attached. Scheduled in `vercel.json`. Days two and three finish anything day one left. `?dryRun=1` reports without sending. |
+| `/api/cron/abandon-sessions` | `0 * * * *` (hourly) | Mark orientation sessions inactive > 24 h as abandoned. Not yet in `vercel.json`. |
 
-**TODO:** Add the following to `vercel.json` (create it in the repo root if it doesn't exist yet):
+**TODO:** Add the abandon-sessions entry to the `crons` array in `vercel.json`:
 ```json
 {
   "crons": [

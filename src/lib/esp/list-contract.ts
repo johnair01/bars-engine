@@ -4,10 +4,65 @@
  * Kept pure and free of network calls on purpose. The promise this encodes is
  * one the project made to 371 people who paid money before there was a product,
  * and a promise enforced only inside an HTTP client is a promise nobody can
- * read or test. `kit.ts` does the talking; this file decides.
+ * read or test. `resend-list.ts` does the talking; this file decides.
  *
- * Contract from the site handoff (docs/handoffs/HANDOFF_SITE_2026-08-10.md §T3).
+ * Contract from the site handoff (docs/handoffs/HANDOFF_SITE_2026-08-10.md §T3),
+ * as amended by MAILING_LIST_SIX_FACES.md (ratified 2026-09-15): Kit is closed,
+ * Resend Contacts carry the list, and a reader joins only the segment whose
+ * page promised them later mail.
  */
+
+// ── Segments: who is on the list at all ─────────────────────────────────────
+
+/**
+ * The four surfaces whose pages promise mail after the first one. A reader
+ * joins the segment for the page they signed up on, and no other.
+ *
+ * Chapter One, the Superpower quiz and the Myths Read are absent on purpose.
+ * Their pages promise one email or a saved read, so those addresses stay in
+ * Postgres and never reach a list. Kickstarter backers are absent too: they
+ * are reached through Kickstarter, and no page on this site captures them.
+ */
+export type ListSegment = 'character-sheet' | 'succession' | 'nonprofit' | 'introductions'
+
+export type ListSegmentTerms = {
+  /** The segment's name in Resend, which is what Wendell sees when composing. */
+  resendName: string
+  /** The promise, verbatim from the page that collects the address. */
+  promise: string
+  /**
+   * Whether a Broadcast may go to this segment. The character sheet promised
+   * one reminder a quarter "and nothing else," so its segment is reminder-only
+   * and its Resend name says so where the Broadcast is composed.
+   */
+  broadcast: boolean
+}
+
+export const LIST_SEGMENTS: Readonly<Record<ListSegment, ListSegmentTerms>> = {
+  'character-sheet': {
+    resendName: 'character-sheet (quarterly reminder only)',
+    promise: 'One reminder a quarter, with a blank copy attached. Nothing else.',
+    broadcast: false,
+  },
+  succession: {
+    resendName: 'succession',
+    promise: 'One update when there is something real to say. No sequence, no launch runway, and no seat being held.',
+    broadcast: true,
+  },
+  nonprofit: {
+    resendName: 'nonprofit founding circle',
+    promise:
+      'I will write when the founding circle meets. No sequence, and no ask for money — that one stays closed until the paperwork clears.',
+    broadcast: true,
+  },
+  introductions: {
+    resendName: 'introductions (ticked the box)',
+    promise: 'Add me to your mailing list too.',
+    broadcast: true,
+  },
+}
+
+// ── Sources and sequences ────────────────────────────────────────────────────
 
 /** Where a subscriber came in from. One per subscriber, set on first contact. */
 export type LeadSource =
@@ -39,7 +94,12 @@ export const SOURCES_EXCLUDED_FROM_SEQUENCES: ReadonlySet<LeadSource> = new Set<
 ])
 
 /**
- * Tags that start an automation in Kit. Adding one of these to an existing
+ * No sequence runs today. The ruling of 2026-09-15 stopped applying
+ * `sequence:welcome`, because no sequence emails exist and no form discloses
+ * one. The rules below stay so that whatever sequence comes next inherits the
+ * backer exclusion instead of rediscovering it.
+ *
+ * Tags that start an automation. Adding one of these to an existing
  * subscriber is what re-enters somebody into a sequence they already ran, so
  * these are added on first creation only.
  *

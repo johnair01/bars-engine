@@ -12,13 +12,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // vi.mock factories are hoisted above imports, so the stubs they reference are
 // created with vi.hoisted rather than as plain top-level consts.
-const { db, syncSubscriber } = vi.hoisted(() => ({
+const { db, addToList } = vi.hoisted(() => ({
   db: { tourIntroduction: { create: vi.fn() } },
-  syncSubscriber: vi.fn(),
+  addToList: vi.fn(),
 }))
 
 vi.mock('@/lib/db', () => ({ db }))
-vi.mock('@/lib/esp/kit', () => ({ syncSubscriber }))
+vi.mock('@/lib/esp/resend-list', () => ({ addToList }))
 
 import { submitIntroduction } from '@/actions/introductions'
 
@@ -34,13 +34,13 @@ const LEAD = {
 beforeEach(() => {
   vi.clearAllMocks()
   db.tourIntroduction.create.mockResolvedValue({ id: 'intro-1' })
-  syncSubscriber.mockResolvedValue({ ok: true, skipped: true, reason: 'test' })
+  addToList.mockResolvedValue({ ok: true, skipped: true, reason: 'test' })
 })
 
 // ── Ticked: stored, then copied to the list ─────────────────────────────────
 
 describe('submitIntroduction with consent', () => {
-  it('stores the lead, then syncs the submitter to Kit', async () => {
+  it('stores the lead, then adds the submitter to the introductions segment', async () => {
     const result = await submitIntroduction({ ...LEAD, consent: true })
 
     expect(result.ok).toBe(true)
@@ -50,17 +50,16 @@ describe('submitIntroduction with consent', () => {
       consent: true,
     })
 
-    expect(syncSubscriber).toHaveBeenCalledTimes(1)
-    expect(syncSubscriber).toHaveBeenCalledWith({
+    expect(addToList).toHaveBeenCalledTimes(1)
+    expect(addToList).toHaveBeenCalledWith({
       email: 'sam@example.com',
       firstName: 'Sam',
-      tags: ['source:introductions', 'gather-resources:rep'],
-      fields: { last_introduction_city: 'Portland' },
+      segment: 'introductions',
     })
 
     // Persist-then-send: the row is written before the list hears about it.
     expect(db.tourIntroduction.create.mock.invocationCallOrder[0]).toBeLessThan(
-      syncSubscriber.mock.invocationCallOrder[0],
+      addToList.mock.invocationCallOrder[0],
     )
   })
 })
@@ -68,7 +67,7 @@ describe('submitIntroduction with consent', () => {
 // ── Unticked: stored, and the list never hears about it ─────────────────────
 
 describe('submitIntroduction without consent', () => {
-  it('stores the lead with consent false and never calls Kit', async () => {
+  it('stores the lead with consent false and leaves the list alone', async () => {
     const result = await submitIntroduction({ ...LEAD, consent: false })
 
     expect(result.ok).toBe(true)
@@ -77,7 +76,7 @@ describe('submitIntroduction without consent', () => {
       submitterEmail: 'sam@example.com',
       consent: false,
     })
-    expect(syncSubscriber).not.toHaveBeenCalled()
+    expect(addToList).not.toHaveBeenCalled()
   })
 
   it('reads only a literal true as consent', async () => {
@@ -90,7 +89,7 @@ describe('submitIntroduction without consent', () => {
 
     expect(result.ok).toBe(true)
     expect(db.tourIntroduction.create.mock.calls[0][0].data.consent).toBe(false)
-    expect(syncSubscriber).not.toHaveBeenCalled()
+    expect(addToList).not.toHaveBeenCalled()
   })
 })
 
@@ -104,6 +103,6 @@ describe('submitIntroduction when the save fails', () => {
     const result = await submitIntroduction({ ...LEAD, consent: true })
 
     expect(result.ok).toBe(false)
-    expect(syncSubscriber).not.toHaveBeenCalled()
+    expect(addToList).not.toHaveBeenCalled()
   })
 })
