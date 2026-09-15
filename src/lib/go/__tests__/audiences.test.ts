@@ -41,7 +41,7 @@ assert.equal(getGoAudience('nobody-by-this-name'), null, 'unknown slugs 404 rath
 
 // ── The five the handoff names ───────────────────────────────────────────────
 
-for (const expected of ['backers', 'podcast', 'bookstore', 'org', 'facilitator']) {
+for (const expected of ['backers', 'host', 'bookstore', 'org', 'facilitator']) {
   assert.ok(getGoAudience(expected), `${expected} exists`)
 }
 

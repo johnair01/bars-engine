@@ -33,7 +33,7 @@ export async function generateMetadata(props: {
  *   judgment call. Handed out one to one, so `noindex`.
  * @permissions public
  * @params audience:string (one of GO_AUDIENCES; unknown slugs 404)
- * @relationships src/lib/go/audiences.ts, /speaking, /podcasts, /succession,
+ * @relationships src/lib/go/audiences.ts, /speaking, /on-your-show, /succession,
  *   /mastering-allyship/book-tour/help
  * @dimensions WHO:prospect, WHAT:funnel, WHERE:go, ENERGY:invite
  * @example /go/bookstore

@@ -132,7 +132,7 @@ export default function SpeakingPage() {
 
         <p className="text-sm leading-relaxed text-zinc-500">
           Running a show rather than an event? Coming on a podcast costs nothing and{' '}
-          <Link href="/podcasts" className="text-zinc-300 underline underline-offset-4">
+          <Link href="/on-your-show" className="text-zinc-300 underline underline-offset-4">
             has its own page
           </Link>
           .

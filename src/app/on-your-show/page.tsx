@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Podcasts — Wendell Britt',
+  title: 'On your show — Wendell Britt',
   description:
     'Two directions on one page: book Wendell on your show, or let him introduce you to somebody worth having on instead. Topics, formats, bio and headshot below.',
 }
@@ -44,18 +44,20 @@ const FORMATS = [
 ] as const
 
 /**
- * @page /podcasts
+ * @page /on-your-show
  * @entity CAMPAIGN
- * @description Podcast page carrying two directions on one surface: book Wendell, or
- *   take an introduction to a practitioner who fits the audience better. The second
+ * @description The page for hosts: book Wendell on your show, or take an introduction to a
+ *   practitioner who fits the audience better. Lives at /on-your-show, named from the host's
+ *   chair, because /podcast is the show Wendell hosts and the two names were one letter apart.
+ *   /podcasts redirects here (next.config.ts). The second
  *   exists because a page that only extracts bookings fails the book's own argument,
  *   and it is disclosed in the first screen alongside the first rather than offered as
  *   a consolation after a no. Bio facts are sourced from the sales letter and the
  *   handoff's facts ledger; no fee applies to appearing on a show.
  * @permissions public
  * @relationships /speaking (paid events), /mastering-allyship, public/mastering-allyship/wendell.jpg
- * @dimensions WHO:host, WHAT:offer, WHERE:podcasts, ENERGY:invite
- * @example /podcasts
+ * @dimensions WHO:host, WHAT:offer, WHERE:on-your-show, ENERGY:invite
+ * @example /on-your-show
  * @agentDiscoverable true
  */
 export default function PodcastsPage() {
@@ -67,7 +69,7 @@ export default function PodcastsPage() {
             Mastering the Game of Allyship
           </Link>
           <span aria-hidden="true"> / </span>
-          <span>Podcasts</span>
+          <span>On your show</span>
         </nav>
 
         <header className="space-y-4">
