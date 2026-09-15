@@ -3,7 +3,7 @@
 > "we need to either reopen this (and then deal with the budget implication) or have a
 > workaround in the meantime to use what we already have" — Wendell, 2026-09-15
 
-**Opened:** 2026-09-15 · **Status:** ruled by the faces, awaiting Wendell's ratification
+**Opened:** 2026-09-15 · **Status:** ratified by Wendell, 2026-09-15
 **Blocks:** the character-sheet quarterly reminder, the succession and nonprofit updates, and
 any sequence. Each is promised on a live page and has no sender.
 
@@ -153,7 +153,7 @@ The cast reads through the ruling. Line 4, the tied sack, is its restraint: mone
 
 ---
 
-## Ruling · the faces', awaiting Wendell's ratification
+## Ruling · the faces', ratified by Wendell
 
 1. **Kit stays closed.** Its free tier costs nothing and carries nothing this list needs until a sequence exists.
 2. **Postgres stays the list of record.** Resend Contacts carry four segments, one per surface that promised later mail: character sheet, succession, nonprofit, introductions with consent.
@@ -173,5 +173,5 @@ The cast reads through the ruling. Line 4, the tied sack, is its restraint: mone
 
 ---
 
-**Ratified:** _pending Wendell_
+**Ratified:** 2026-09-15 — "ratified, build it" (Wendell)
 
