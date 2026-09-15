@@ -34,6 +34,8 @@ export default defineConfig({
       'src/actions/__tests__/campaign-attach.test.ts',
       'src/actions/__tests__/campaign-milestone-authoring.test.ts',
       'src/actions/__tests__/introductions-consent.test.ts',
+      'src/lib/esp/__tests__/resend-list.test.ts',
+      'src/lib/esp/__tests__/sheet-reminder.test.ts',
       'src/lib/alchemy-engine/__tests__/ai-generation.test.ts',
       'src/lib/alchemy-engine/__tests__/arc-flow-wiring.test.ts',
       'src/lib/alchemy-engine/__tests__/e2e-arc-dissatisfied-to-epiphany.test.ts',

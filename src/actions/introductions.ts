@@ -4,11 +4,11 @@
  * Capture one crowdsourced tour lead.
  *
  * Persist-then-send, the same shape the rest of the site uses: the row is
- * committed first, and the Kit sync afterward is best-effort.
+ * committed first, and the list copy afterward is best-effort.
  *
- * **The consent box gates the Kit sync.** Every submitter's lead is stored,
- * because the email is how I come back to them about that one place. Only a
- * submitter who ticked the box is copied onto the mailing list.
+ * **The consent box gates the list.** Every submitter's lead is stored, because
+ * the email is how I come back to them about that one place. Only a submitter
+ * who ticked the box joins the introductions segment of the mailing list.
  *
  * **This never accepts contact details for the person being named.** The form
  * does not ask, and the action does not store — see the model comment in
@@ -18,7 +18,7 @@
  */
 
 import { db } from '@/lib/db'
-import { syncSubscriber } from '@/lib/esp/kit'
+import { addToList } from '@/lib/esp/resend-list'
 import { LEAD_KIND_KEYS } from '@/lib/tour-leads/corridor'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -70,13 +70,12 @@ export async function submitIntroduction(input: {
   }
 
   // Best-effort, and only with consent. The lead above is stored either way.
-  // A ticked box also copies it to the list as a tagged subscriber.
+  // A ticked box also adds the submitter to the introductions segment.
   if (consent) {
-    await syncSubscriber({
+    await addToList({
       email,
       firstName: input.submitterName?.trim().split(/\s+/)[0] ?? null,
-      tags: ['source:introductions', 'gather-resources:rep'],
-      fields: { last_introduction_city: city.slice(0, 120) },
+      segment: 'introductions',
     })
   }
 

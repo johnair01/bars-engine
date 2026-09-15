@@ -1,5 +1,11 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/cron/character-sheet-reminder",
+      "schedule": "0 16 10-12 2,5,8,11 *"
+    }
+  ]
 }

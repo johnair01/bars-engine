@@ -4,20 +4,16 @@
  * Email capture for the quiz surfaces and the character sheet.
  *
  * Persist-then-send, the same shape `launch-leads.ts` and `myths-read.ts` use:
- * the FunnelSignup row is written first and the Kit sync is best-effort after
+ * the FunnelSignup row is written first and the list copy is best-effort after
  * it. A provider outage costs a copy of the lead, never the lead.
  *
- * The list contract these feed lives in `src/lib/esp/list-contract.ts`.
+ * Only a page that promised later mail puts anyone on the list. Which pages
+ * those are lives in `src/lib/esp/list-contract.ts`.
  */
 
 import { db } from '@/lib/db'
 import { sendSuperpowerResultEmail } from '@/lib/email/superpower'
-import { syncSubscriber } from '@/lib/esp/kit'
-import {
-  buildSuperpowerTags,
-  sourceTag,
-  WELCOME_SEQUENCE_TAG,
-} from '@/lib/esp/list-contract'
+import { addToList } from '@/lib/esp/resend-list'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -25,10 +21,6 @@ export type CaptureLeadState = { ok: true; message: string } | { ok: false; erro
 
 function normalize(email: string): string {
   return email.trim().toLowerCase()
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
 }
 
 /**
@@ -60,19 +52,8 @@ export async function captureSuperpowerLead(input: {
 
   const firstName = name?.split(/\s+/)[0] ?? null
 
-  await syncSubscriber({
-    email,
-    firstName,
-    tags: [
-      ...buildSuperpowerTags({ homeFace: input.homeFace, avoidedFace: input.avoidedFace }),
-      WELCOME_SEQUENCE_TAG,
-    ],
-    fields: {
-      home_face: input.homeFace,
-      ...(input.avoidedFace ? { avoided_face: input.avoidedFace } : {}),
-      taken_at: today(),
-    },
-  })
+  // No list copy. The reveal promises the result and the superpower ranked
+  // last, and nothing after that, so the address stays on the FunnelSignup row.
 
   // The reveal promises the result and the avoided Face by email before it asks
   // for the address, so this send is the promise itself rather than a courtesy.
@@ -129,11 +110,12 @@ export async function captureCharacterSheetNudge(input: {
     return { ok: false, error: 'Something went wrong saving that. Please try again.' }
   }
 
-  await syncSubscriber({
+  // The quarterly job reads its recipients from FunnelSignup, so this copy is
+  // what gives the reader a contact to unsubscribe from before the first send.
+  await addToList({
     email,
     firstName: name?.split(/\s+/)[0] ?? null,
-    tags: [sourceTag('character-sheet'), 'nudge:quarterly'],
-    fields: { nudge_started_at: today() },
+    segment: 'character-sheet',
   })
 
   return { ok: true, message: 'Set. One reminder a quarter, with a blank sheet attached.' }
@@ -150,8 +132,6 @@ export async function captureInterestList(input: {
   email: string
   name?: string | null
   list: 'succession' | 'nonprofit'
-  /** What they said they can bring. Free text, stored on the signup row. */
-  note?: string | null
 }): Promise<CaptureLeadState> {
   const email = normalize(input.email)
   const name = input.name?.trim() || null
@@ -166,14 +146,10 @@ export async function captureInterestList(input: {
     return { ok: false, error: 'Something went wrong saving that. Please try again.' }
   }
 
-  await syncSubscriber({
+  await addToList({
     email,
     firstName: name?.split(/\s+/)[0] ?? null,
-    tags: [sourceTag(input.list)],
-    fields: {
-      [`${input.list}_joined_at`]: today(),
-      ...(input.note ? { [`${input.list}_note`]: input.note.slice(0, 500) } : {}),
-    },
+    segment: input.list,
   })
 
   return {
