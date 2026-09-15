@@ -167,7 +167,10 @@ export function IntroductionForm() {
           className="mt-1 size-4 accent-emerald-500"
         />
         <span>
-          You can write back to me about this lead. Used for the tour and nothing else.
+          Add me to your mailing list too.
+          <span className="mt-1 block text-zinc-500">
+            Leave this unticked and I will only write to you about this lead.
+          </span>
         </span>
       </label>
 
