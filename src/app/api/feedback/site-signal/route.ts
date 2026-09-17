@@ -61,6 +61,8 @@ export async function POST(request: NextRequest) {
     questId: QUEST_ID,
     passageName: PASSAGE_NAME,
     feedback,
+    area: data.area,
+    severity: data.severity,
     context: {
       pageUrl: data.pageUrl,
       pathname: data.pathname,

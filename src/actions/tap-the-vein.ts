@@ -17,6 +17,15 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
+import { normalizeChargeLevel, parseBrainstormCandidates } from '@/lib/tap-the-vein/charge'
+import {
+  TTV_CHARGE_LEVELS,
+  TTV_NOTE_KINDS,
+  type TtvBrainstormCandidate,
+  type TtvChargeLevel,
+  type TtvNoteKind,
+  type TtvTaskNoteDTO,
+} from '@/lib/tap-the-vein/types'
 import { isLensDomainKey } from '@/lib/lenses/domains'
 import { buildLensGoalSnapshot, resolveLensGoalTrace } from '@/lib/lenses/lineage'
 import type { LensGoalTrace } from '@/lib/lenses/lineage-types'
@@ -162,6 +171,9 @@ export type TtvTaskDTO = {
   priorityRank: number | null
   completedAt: string | null
   createdAt: string
+  chargeLevel: TtvChargeLevel | null
+  chargeNote: string | null
+  blockedAt: string | null
 }
 
 export type TtvLensGoalOption = {
@@ -181,6 +193,15 @@ export type TtvToday = {
   committedTaskCount: number
   tasks: TtvTaskDTO[]
   lensGoals: TtvLensGoalOption[]
+  brainstormCandidates: TtvBrainstormCandidate[]
+}
+
+/** A commitment plus its working log — what `/bars/[id]` needs to show. */
+export type TtvTaskWorkspace = {
+  task: TtvTaskDTO
+  notes: TtvTaskNoteDTO[]
+  /** Where "shrink the charge" sends the player (3·2·1 on this commitment). */
+  shrinkChargeHref: string | null
 }
 
 export type TtvResult<T> = T | { error: string }
@@ -221,6 +242,9 @@ function toTaskDTO(t: {
   priorityRank: number | null
   completedAt: Date | null
   createdAt: Date
+  chargeLevel?: string | null
+  chargeNote?: string | null
+  blockedAt?: Date | null
 }, goalById: Map<string, TtvLensGoalOption>, lensGoalTrace: LensGoalTrace | null): TtvTaskDTO {
   const goal = t.lensGoalId ? goalById.get(t.lensGoalId) : null
   return {
@@ -241,8 +265,12 @@ function toTaskDTO(t: {
     priorityRank: t.priorityRank,
     completedAt: t.completedAt ? t.completedAt.toISOString() : null,
     createdAt: t.createdAt.toISOString(),
+    chargeLevel: normalizeChargeLevel(t.chargeLevel),
+    chargeNote: t.chargeNote ?? null,
+    blockedAt: t.blockedAt ? t.blockedAt.toISOString() : null,
   }
 }
+
 
 const TASK_SELECT = {
   id: true,
@@ -260,6 +288,9 @@ const TASK_SELECT = {
   priorityRank: true,
   completedAt: true,
   createdAt: true,
+  chargeLevel: true,
+  chargeNote: true,
+  blockedAt: true,
 } as const
 
 /** Get-or-create the player's session for a given day, returning the serialized view. */
@@ -299,6 +330,7 @@ async function loadOrCreateSession(playerId: string, sessionDate: Date): Promise
     committedTaskCount: session.committedTaskCount,
     tasks,
     lensGoals,
+    brainstormCandidates: parseBrainstormCandidates(session.brainstormCandidates),
   }
 }
 
@@ -750,6 +782,21 @@ export type TtvPanelSummary = {
   carried: number // carried-in, still live
   completed: number
   sealedAt: string | null
+  /** TTV-CHARGE: how many live commitments are currently blocked. */
+  blocked: number
+  /**
+   * Today's live commitments, so the dashboard can show the work itself.
+   * Player signal: "There should also be a way to access your daily tasks from
+   * the dashboard." `href` points at the commitment's own page when it has one.
+   */
+  openTasks: Array<{
+    id: string
+    text: string
+    status: string
+    chargeLevel: TtvChargeLevel | null
+    blocked: boolean
+    href: string | null
+  }>
 }
 
 export async function getTodayPanelSummary(): Promise<TtvResult<TtvPanelSummary>> {
@@ -762,12 +809,25 @@ export async function getTodayPanelSummary(): Promise<TtvResult<TtvPanelSummary>
         status: true,
         rawEntry: true,
         sealedAt: true,
-        tasks: { select: { status: true, carryCount: true, carriedFromDailySessionId: true } },
+        tasks: {
+          select: {
+            id: true,
+            originalText: true,
+            status: true,
+            carryCount: true,
+            carriedFromDailySessionId: true,
+            chargeLevel: true,
+            blockedAt: true,
+            questId: true,
+            barId: true,
+          },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     })
 
     if (!session) {
-      return { status: 'not_started', setForToday: 0, carried: 0, completed: 0, sealedAt: null }
+      return { status: 'not_started', setForToday: 0, carried: 0, completed: 0, sealedAt: null, blocked: 0, openTasks: [] }
     }
 
     const setForToday = session.tasks.filter(
@@ -778,8 +838,24 @@ export async function getTodayPanelSummary(): Promise<TtvResult<TtvPanelSummary>
     ).length
     const completed = session.tasks.filter((t) => t.status === 'completed').length
 
+    const live = session.tasks.filter(
+      (t) => t.status === 'committed' || t.status === 'in_progress',
+    )
+    const blocked = live.filter((t) => !!t.blockedAt).length
+    const openTasks = live.map((t) => {
+      const artifactId = t.questId ?? t.barId
+      return {
+        id: t.id,
+        text: t.originalText,
+        status: t.status,
+        chargeLevel: normalizeChargeLevel(t.chargeLevel),
+        blocked: !!t.blockedAt,
+        href: artifactId ? `/bars/${artifactId}` : null,
+      }
+    })
+
     if (session.status === 'sealed') {
-      return { status: 'sealed', setForToday, carried, completed, sealedAt: session.sealedAt?.toISOString() ?? null }
+      return { status: 'sealed', setForToday, carried, completed, sealedAt: session.sealedAt?.toISOString() ?? null, blocked, openTasks }
     }
 
     // Open but untouched (no tasks, empty free-write) reads as "not started" to the player.
@@ -790,6 +866,8 @@ export async function getTodayPanelSummary(): Promise<TtvResult<TtvPanelSummary>
       carried,
       completed,
       sealedAt: null,
+      blocked,
+      openTasks,
     }
   } catch (e) {
     console.error('[ttv:getTodayPanelSummary]', e)
@@ -840,4 +918,311 @@ export async function sealSession(): Promise<TtvResult<{ status: string }>> {
     console.error('[ttv:sealSession]', e)
     return { error: 'Failed to seal session' }
   }
+}
+
+// ─── TTV-CHARGE: charge assessment + blocker loop ─────────────────────────────
+//
+// Player signal, 2026-08-10: "we need a process for assessing how much charge
+// each committed item has and a link to do a process that can shrink the charge…
+// This will allow users to be able to track what their blockers are and how to
+// get over them" — and 2026-08-10: "moving into this page should move users into
+// being able to report a blocker and add context to the task as they are working
+// on it. highlighting and overcoming blockers is the main game."
+//
+// The player is always the authority: the system never infers a charge level and
+// never decides something is blocked.
+
+/** Task the caller owns, or null. Ownership is checked on every mutation. */
+async function ownedTask(playerId: string, taskId: string) {
+  const task = await db.tapTheVeinTask.findUnique({
+    where: { id: taskId },
+    select: { id: true, playerId: true, chargeLevel: true, blockedAt: true },
+  })
+  if (!task || task.playerId !== playerId) return null
+  return task
+}
+
+function toNoteDTO(n: {
+  id: string
+  kind: string
+  body: string
+  chargeLevel: string | null
+  createdAt: Date
+}): TtvTaskNoteDTO {
+  return {
+    id: n.id,
+    kind: (TTV_NOTE_KINDS as readonly string[]).includes(n.kind)
+      ? (n.kind as TtvNoteKind)
+      : 'context',
+    body: n.body,
+    chargeLevel: (TTV_CHARGE_LEVELS as readonly string[]).includes(n.chargeLevel ?? '')
+      ? (n.chargeLevel as TtvChargeLevel)
+      : null,
+    createdAt: n.createdAt.toISOString(),
+  }
+}
+
+const MAX_NOTE_LENGTH = 4000
+
+/**
+ * Name how charged a commitment feels. Recorded on the task and appended to the
+ * log, so the shrink is legible as history rather than a single overwritten value.
+ */
+export async function setTaskCharge(input: {
+  taskId: string
+  chargeLevel: string
+  chargeNote?: string | null
+}): Promise<TtvResult<{ task: TtvTaskDTO }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  const level = normalizeChargeLevel(input.chargeLevel)
+  if (!level) return { error: 'Pick a charge level' }
+
+  try {
+    const existing = await ownedTask(player.id, input.taskId)
+    if (!existing) return { error: 'Task not found' }
+
+    const note = (input.chargeNote ?? '').trim().slice(0, MAX_NOTE_LENGTH)
+    const changed = existing.chargeLevel !== level
+
+    const updated = await db.$transaction(async (tx) => {
+      const task = await tx.tapTheVeinTask.update({
+        where: { id: input.taskId },
+        data: { chargeLevel: level, ...(note ? { chargeNote: note } : {}) },
+        select: TASK_SELECT,
+      })
+      // Only log a shift, not a re-affirmation of the same level with no words.
+      if (changed || note) {
+        await tx.tapTheVeinTaskNote.create({
+          data: {
+            taskId: input.taskId,
+            playerId: player.id,
+            kind: 'charge',
+            body: note || `Charge set to ${level}.`,
+            chargeLevel: level,
+          },
+        })
+      }
+      return task
+    })
+
+    revalidatePath('/tap-the-vein')
+    revalidatePath('/')
+    return { task: await hydrateTaskDTO(player.id, updated) }
+  } catch (e) {
+    console.error('[ttv:setTaskCharge]', e)
+    return { error: 'Failed to save charge' }
+  }
+}
+
+/** Add working context to a commitment without changing its state. */
+export async function addTaskContext(input: {
+  taskId: string
+  body: string
+}): Promise<TtvResult<{ note: TtvTaskNoteDTO }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  const body = (input.body || '').trim().slice(0, MAX_NOTE_LENGTH)
+  if (!body) return { error: 'Write a line of context first' }
+
+  try {
+    const existing = await ownedTask(player.id, input.taskId)
+    if (!existing) return { error: 'Task not found' }
+
+    const note = await db.tapTheVeinTaskNote.create({
+      data: {
+        taskId: input.taskId,
+        playerId: player.id,
+        kind: 'context',
+        body,
+        chargeLevel: existing.chargeLevel,
+      },
+      select: { id: true, kind: true, body: true, chargeLevel: true, createdAt: true },
+    })
+
+    revalidatePath('/tap-the-vein')
+    return { note: toNoteDTO(note) }
+  } catch (e) {
+    console.error('[ttv:addTaskContext]', e)
+    return { error: 'Failed to add context' }
+  }
+}
+
+/**
+ * Name what is in the way. Sets `blockedAt` so the blocker is visible everywhere
+ * the task appears — the point of "highlighting blockers is the main game".
+ * Reporting a blocker on an already-blocked task appends without resetting the
+ * clock, so how long it has been stuck stays true.
+ */
+export async function reportTaskBlocker(input: {
+  taskId: string
+  body: string
+}): Promise<TtvResult<{ task: TtvTaskDTO; note: TtvTaskNoteDTO }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  const body = (input.body || '').trim().slice(0, MAX_NOTE_LENGTH)
+  if (!body) return { error: 'Name what is in the way' }
+
+  try {
+    const existing = await ownedTask(player.id, input.taskId)
+    if (!existing) return { error: 'Task not found' }
+
+    const { task, note } = await db.$transaction(async (tx) => {
+      const note = await tx.tapTheVeinTaskNote.create({
+        data: {
+          taskId: input.taskId,
+          playerId: player.id,
+          kind: 'blocker',
+          body,
+          chargeLevel: existing.chargeLevel,
+        },
+        select: { id: true, kind: true, body: true, chargeLevel: true, createdAt: true },
+      })
+      const task = await tx.tapTheVeinTask.update({
+        where: { id: input.taskId },
+        // Keep the original blockedAt — elapsed-while-stuck is the useful number.
+        data: existing.blockedAt ? {} : { blockedAt: new Date() },
+        select: TASK_SELECT,
+      })
+      return { task, note }
+    })
+
+    revalidatePath('/tap-the-vein')
+    revalidatePath('/')
+    return { task: await hydrateTaskDTO(player.id, task), note: toNoteDTO(note) }
+  } catch (e) {
+    console.error('[ttv:reportTaskBlocker]', e)
+    return { error: 'Failed to report blocker' }
+  }
+}
+
+/** Record how a blocker was overcome and clear the blocked state. */
+export async function clearTaskBlocker(input: {
+  taskId: string
+  body: string
+}): Promise<TtvResult<{ task: TtvTaskDTO; note: TtvTaskNoteDTO }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  const body = (input.body || '').trim().slice(0, MAX_NOTE_LENGTH)
+  if (!body) return { error: 'Say how you got over it — that is the part worth keeping' }
+
+  try {
+    const existing = await ownedTask(player.id, input.taskId)
+    if (!existing) return { error: 'Task not found' }
+    if (!existing.blockedAt) return { error: 'That commitment is not blocked' }
+
+    const { task, note } = await db.$transaction(async (tx) => {
+      const note = await tx.tapTheVeinTaskNote.create({
+        data: {
+          taskId: input.taskId,
+          playerId: player.id,
+          kind: 'unblock',
+          body,
+          chargeLevel: existing.chargeLevel,
+        },
+        select: { id: true, kind: true, body: true, chargeLevel: true, createdAt: true },
+      })
+      const task = await tx.tapTheVeinTask.update({
+        where: { id: input.taskId },
+        data: { blockedAt: null },
+        select: TASK_SELECT,
+      })
+      return { task, note }
+    })
+
+    revalidatePath('/tap-the-vein')
+    revalidatePath('/')
+    return { task: await hydrateTaskDTO(player.id, task), note: toNoteDTO(note) }
+  } catch (e) {
+    console.error('[ttv:clearTaskBlocker]', e)
+    return { error: 'Failed to clear blocker' }
+  }
+}
+
+/** Persist the brainstorm field so the commit step can show it. */
+export async function saveBrainstormCandidates(
+  candidates: TtvBrainstormCandidate[]
+): Promise<TtvResult<{ saved: number }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  const clean = parseBrainstormCandidates(candidates).slice(0, 200)
+
+  try {
+    await db.tapTheVeinDailySession.update({
+      where: { playerId_sessionDate: { playerId: player.id, sessionDate: startOfDay() } },
+      data: {
+        brainstormCandidates: clean,
+        brainstormCandidateCount: clean.length,
+      },
+    })
+    revalidatePath('/tap-the-vein')
+    return { saved: clean.length }
+  } catch (e) {
+    console.error('[ttv:saveBrainstormCandidates]', e)
+    return { error: 'Failed to save brainstorm' }
+  }
+}
+
+/**
+ * The commitment behind a BAR/quest page, with its working log.
+ *
+ * `/bars/[id]` is where players reported wanting to report blockers and complete
+ * work, so the page needs to resolve a bar id back to its task. A TTV commitment
+ * is minted as a quest (`questId`); older ones carry a projected `barId`.
+ */
+export async function getTaskWorkspaceForBar(
+  barId: string
+): Promise<TtvResult<TtvTaskWorkspace | null>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  try {
+    const task = await db.tapTheVeinTask.findFirst({
+      where: { playerId: player.id, OR: [{ questId: barId }, { barId }] },
+      orderBy: { createdAt: 'desc' },
+      select: TASK_SELECT,
+    })
+    if (!task) return null
+
+    const notes = await db.tapTheVeinTaskNote.findMany({
+      where: { taskId: task.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: { id: true, kind: true, body: true, chargeLevel: true, createdAt: true },
+    })
+
+    const dto = await hydrateTaskDTO(player.id, task)
+    // The shrink-charge process is 3·2·1, run against this commitment's artifact.
+    const chargeArtifactId = dto.questId ?? dto.barId
+    return {
+      task: dto,
+      notes: notes.map(toNoteDTO),
+      shrinkChargeHref: chargeArtifactId
+        ? `/shadow/321?chargeBarId=${encodeURIComponent(chargeArtifactId)}&returnTo=${encodeURIComponent(`/bars/${barId}`)}&personalMove=cleanUp`
+        : null,
+    }
+  } catch (e) {
+    console.error('[ttv:getTaskWorkspaceForBar]', e)
+    return { error: 'Failed to load commitment' }
+  }
+}
+
+/** Shared DTO hydration — resolves lens goal + lineage for a raw task row. */
+async function hydrateTaskDTO(
+  playerId: string,
+  task: { lensGoalId: string | null; attachSnapshot?: unknown } & Record<string, unknown>
+): Promise<TtvTaskDTO> {
+  const lensGoals = await listActiveLensGoals(playerId)
+  const goalById = new Map(lensGoals.map((g) => [g.id, g]))
+  const lensGoalTrace = await resolveLensGoalTrace({
+    playerId,
+    lensGoalId: task.lensGoalId,
+    attachSnapshot: task.attachSnapshot,
+  })
+  return toTaskDTO(task as Parameters<typeof toTaskDTO>[0], goalById, lensGoalTrace)
 }

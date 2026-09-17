@@ -4,6 +4,23 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { elementCssVars, altitudeCssVars, SURFACE_TOKENS } from '@/lib/ui/card-tokens'
 import { SignalQuestImageField } from '@/components/SignalQuestImageField'
+import { SIGNAL_AREAS, SIGNAL_SEVERITIES } from '@/lib/feedback/site-signal-schema'
+
+const AREA_LABELS: Record<(typeof SIGNAL_AREAS)[number], string> = {
+  rules: 'Rules — the game grammar is wrong',
+  ux: 'UX — layout, flow, or wording',
+  tech: 'Tech — broken, errored, or slow',
+  lore: 'Lore — story or world detail',
+  social: 'Social — other players',
+  other: 'Other',
+}
+
+const SEVERITY_LABELS: Record<(typeof SIGNAL_SEVERITIES)[number], string> = {
+  low: 'Low — a papercut',
+  medium: 'Medium — slowed me down',
+  high: 'High — I could not do the thing',
+  blocking: 'Blocking — I am stuck entirely',
+}
 
 type Snapshot = {
   pageUrl: string
@@ -39,6 +56,8 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [message, setMessage] = useState('')
   const [imageUrl, setImageUrl] = useState('')
+  const [area, setArea] = useState<(typeof SIGNAL_AREAS)[number]>('ux')
+  const [severity, setSeverity] = useState<(typeof SIGNAL_SEVERITIES)[number]>('medium')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
@@ -54,6 +73,8 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
     if (!isOpen) return
     setSnapshot(captureSnapshot())
     setMessage('')
+    setArea('ux')
+    setSeverity('medium')
     setError(null)
     setDone(false)
     const t = requestAnimationFrame(() => messageRef.current?.focus())
@@ -99,6 +120,8 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
           documentTitle: snapshot.documentTitle.trim() || undefined,
           message: trimmed,
           imageUrl: imageUrl.trim() || undefined,
+          area,
+          severity,
         }),
       })
       const data = (await res.json()) as { success?: boolean; error?: string }
@@ -112,7 +135,7 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
     } finally {
       setPending(false)
     }
-  }, [message, pending, snapshot])
+  }, [area, imageUrl, message, pending, severity, snapshot])
 
   if (!isOpen || !mounted) return null
 
@@ -201,6 +224,46 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                   placeholder="Broken link, confusing text, something didn’t save…"
                   disabled={pending}
                 />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="site-signal-area" className="block text-sm text-zinc-400 mb-2">
+                    What kind of thing is it?
+                  </label>
+                  <select
+                    id="site-signal-area"
+                    value={area}
+                    onChange={(e) => setArea(e.target.value as (typeof SIGNAL_AREAS)[number])}
+                    disabled={pending}
+                    className="w-full min-h-[44px] rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-slate-500/50"
+                  >
+                    {SIGNAL_AREAS.map((a) => (
+                      <option key={a} value={a}>
+                        {AREA_LABELS[a]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="site-signal-severity" className="block text-sm text-zinc-400 mb-2">
+                    How much did it cost you?
+                  </label>
+                  <select
+                    id="site-signal-severity"
+                    value={severity}
+                    onChange={(e) =>
+                      setSeverity(e.target.value as (typeof SIGNAL_SEVERITIES)[number])
+                    }
+                    disabled={pending}
+                    className="w-full min-h-[44px] rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-slate-500/50"
+                  >
+                    {SIGNAL_SEVERITIES.map((s) => (
+                      <option key={s} value={s}>
+                        {SEVERITY_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               {error ? <p className="text-sm text-red-400">{error}</p> : null}
             </>
