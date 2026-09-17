@@ -160,8 +160,8 @@ function App() {
     setClockNow(now);
     setChoice(null); setMessage('');
   };
-  const reset = () => { if (demoMode) { setGame(demoGame()); setDemoStep(0); setChoice(null); setModal(null); return; } if (window.confirm('Start a new game? This clears the current board.')) { setGame(null); setChoice(null); setModal(null); setSetupStage(0); } };
-  const startDemo = () => { window.history.pushState(null, '', window.location.pathname.startsWith('/understood/') ? '/understood/demo' : `${window.location.pathname}?demo=1`); setDemoMode(true); setDemoStep(0); setGame(demoGame()); setChoice(null); setMessage(''); setModal(null); };
+  const reset = () => { if (demoMode) { setGame(demoGame()); setDemoStep(0); setChoice(null); setModal(null); setFaces([true, true]); setAskColor('white'); setFocus([0, 0]); setMessage(''); return; } if (window.confirm('Start a new game? This clears the current board.')) { setGame(null); setChoice(null); setModal(null); setSetupStage(0); } };
+  const startDemo = () => { window.history.pushState(null, '', window.location.pathname.startsWith('/understood/') ? '/understood/demo' : `${window.location.pathname}?demo=1`); setDemoMode(true); setDemoStep(0); setGame(demoGame()); setChoice(null); setMessage(''); setModal(null); setFaces([true, true]); setAskColor('white'); setFocus([0, 0]); };
   const leaveDemo = () => { window.history.pushState(null, '', window.location.pathname.startsWith('/understood/') ? '/understood/play' : window.location.pathname); setDemoMode(false); setGame(restore()); setChoice(null); setMessage(''); setModal(null); setSetupStage(0); };
   const openMeter = (seat: Seat) => { setModalSeat(seat); setMeterVisible(false); setModal('meter'); };
   const play = (seat: Seat, color: Color, destination = focus[seat], open = faces[seat], forceSilent = false) => {
