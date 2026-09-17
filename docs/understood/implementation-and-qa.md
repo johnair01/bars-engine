@@ -3,7 +3,7 @@
 ## What is built
 
 - `/mastering-allyship` has a compact link to the guided rehearsal.
-- `/understood/demo` opens a 21-step Ari and Bea scenario on the real game board. Visitor taps advance the same move functions used in live play; the guide shows spoken bids, a paid question, a public heat signal, a silent second feeling, hearing every layer of a stack, cooling, private resolution, turn handoff, and both readers reaching zero.
+- `/understood/demo` opens a 21-step Ari and Bea scenario on the real game board. Visitor taps advance the same move functions used in live play; the guide shows spoken bids, a paid question, a public heat signal, a face-down silent second feeling that is later revealed, hearing every layer of a stack, cooling, private resolution, turn handoff, and both readers reaching zero.
 - `/understood/play` opens the two-person setup. The demo uses separate in-memory state and never overwrites a saved real session. Leaving the demo returns to the real setup or saved game.
 - A stack cannot release any chip until every layer has been spoken and marked heard by its owner. The demo offers a **Not yet heard** choice before that happens.
 - A private meter opens covered. The owner hands the device over, then presses and holds to see the value; releasing reseals it.

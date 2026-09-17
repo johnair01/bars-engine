@@ -44,11 +44,11 @@ const demoSteps = [
   { title: 'One placement used', body: 'Ari has made this turn’s placement. Passing moves the active controls to Bea’s side of the board.', cta: 'Finish Ari’s turn' },
   { title: 'Bea has a feeling too', body: 'Bea: “I was excited about the invitation and made a quick choice. I appreciate that you wanted us to plan together.” Place her green delight chip.', cta: 'Place Bea’s delight chip' },
   { title: 'Let the turn travel', body: 'The spoken bid is on Bea’s side. Finish her turn so Ari can add what remains unsaid.', cta: 'Finish Bea’s turn' },
-  { title: 'Dissatisfaction has another layer', body: 'Ari is still sad about being left out. Add one unspoken blue chip on top of Ari’s red stack. Its height now shows unfinished feeling.', cta: 'Stack Ari’s sadness silently' },
+  { title: 'Dissatisfaction has another layer', body: 'Ari is still sad about being left out. Add one face-down, unspoken blue chip on top of the red stack. Its height shows unfinished feeling; Bea cannot ask about the sealed chip yet.', cta: 'Stack Ari’s sadness face down' },
   { title: 'Look beneath the new layer', body: 'Select the red chip under the blue one. Ari can say that the anger was heard, but the stack still cannot move.', cta: 'Select Ari’s red chip' },
   { title: 'Was this feeling heard?', body: 'If not, leave it. If yes, mark red heard. Blue is still unspoken, so neither chip can be taken yet.', cta: 'Ari says the anger was heard' },
   { title: 'The blue layer is waiting', body: 'Select Ari’s blue chip. Speaking an existing chip uses the spoken bid; it does not place a second chip.', cta: 'Select Ari’s blue chip' },
-  { title: 'Sadness points to a value', body: 'Ari: “I value deciding shared plans together.” Speak the blue chip so Bea can hear the value beneath the sadness.', cta: 'Speak Ari’s sadness chip' },
+  { title: 'Sadness points to a value', body: 'Ari: “I value deciding shared plans together.” Turn the blue chip face up and speak it. Ari chooses when this layer is open to questions.', cta: 'Reveal and speak Ari’s sadness' },
   { title: 'The whole stack can be heard', body: 'Ari now feels heard about the sadness too. Mark blue heard. Both layers are ready, so the stack can finally move.', cta: 'Mark the sadness heard' },
   { title: 'Cool the immediate moment', body: 'Choose cooling for the blue chip. Temperature falls, while Ari’s hidden conflict meter stays where it was.', cta: null },
   { title: 'Resolve the underlying issue', body: 'The red chip was already heard and the stack is unlocked. Now choose resolution for it; Ari’s hidden conflict meter can fall.', cta: 'Select the heard red chip' },
@@ -342,7 +342,7 @@ function App() {
       case 5: endTurn(); setDemoStep(6); break;
       case 6: play(1, 'green', 0, true); setDemoStep(7); break;
       case 7: endTurn(); setDemoStep(8); break;
-      case 8: play(0, 'blue', 0, true, true); setDemoStep(9); break;
+      case 8: play(0, 'blue', 0, false, true); setDemoStep(9); break;
       case 9: if (ariRed) { setChoice({ seat: 0, stack: 0, chipId: ariRed.id }); setDemoStep(10); } break;
       case 10: if (selected && selected.id === ariRed?.id) { acknowledge(selected); setDemoStep(11); } break;
       case 11: if (ariBlue) { setChoice({ seat: 0, stack: 0, chipId: ariBlue.id }); setDemoStep(12); } break;
