@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
       { source: "/hand/:path*", destination: "/vault/:path*", permanent: true },
     ];
   },
+  async rewrites() {
+    return [
+      { source: '/understood/play', destination: '/understood-app/index.html' },
+      { source: '/understood/demo', destination: '/understood-app/index.html?demo=1' },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -158,6 +158,9 @@ export default async function MasteringAllyshipPage() {
                 or take the quiz
               </a>
             </div>
+            <a href="/understood/demo" style={{ display: 'inline-flex', marginTop: 22, color: '#fff1d8', border: '1px solid rgba(255,241,216,.55)', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', fontFamily: MONO, fontSize: 12, letterSpacing: '.04em' }}>
+              Try Understood · a guided conflict game →
+            </a>
           </div>
         </div>
       </div>
