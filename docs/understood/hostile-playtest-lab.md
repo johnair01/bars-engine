@@ -10,7 +10,7 @@
 
 Understood tries to lengthen a fast escalation and shorten a long unresolved conflict. Test those as separate effects. A player can feel heard while the conversation is still hot; a conversation can cool while the underlying issue remains. A meter reaching zero is the player's report of resolution, not proof that an agreement was made or will hold.
 
-For each run, ask four questions: (1) Could each player express what was actually present? (2) Did the game make it easier to discover something about the other person? (3) Did it slow an escalation without trapping the conversation? (4) Did it help address the issue beyond moving chips and meters?
+For each run, ask four questions: (1) Could each player express what was actually present? (2) How many voluntary disclosures did it take to reach an owner-confirmed core issue? (3) Did it slow an escalation without trapping the conversation? (4) Did it help address the issue beyond moving chips and meters? Use the standard conflict deck and milestone definitions in [core-issue-study-and-reflection-spec.md](./core-issue-study-and-reflection-spec.md).
 
 ## Research basis for the stress cases
 
@@ -38,6 +38,8 @@ Most evidence above is about romantic couples; its transfer to friends, siblings
 | P6 | Decide if heard | Owner alone judges a spoken chip; all stack layers must be heard before release | Is “heard” distinguishable from agreement, compliance, or exhaustion? |
 | P7 | Apply relief | Owner chooses cooling or private resolution; chip goes to listener | Can they explain why one track changed and the other did not? |
 | P8 | Continue or conclude | Pass, disclose again, or announce personal resolution | Is there a substantive next action, or only a meter outcome? Can the other player still continue? |
+| P9 | Reflect after play | Optionally name the core issue, new insight, and next action; choose whether to do a private 3-2-1 | Does reflection reveal a useful pattern without pressuring more disclosure? |
+| P10 | Review a pattern later | Compare user-chosen issue tags and revised insights across sessions | Does the pattern fit the player's experience? Was follow-through checked? |
 
 ## Game journey and invariants
 
@@ -49,7 +51,7 @@ At every transition check: 50 total chips across hands, stacks, and question off
 
 ## Effectiveness matrix
 
-Score each dimension 0–3 after a run: **C** comprehension (can explain the next legal move); **E** expression (feeling fits a chip without distortion); **R** regulation (heat is noticed and can slow); **U** understanding (partner can accurately restate the bid); **I** issue progress (the underlying issue becomes clearer or a workable next action appears); **A** agency (each can decline, pause, or protect a boundary). `0` means blocked or harmful to the goal, `1` means only with coaching, `2` means useful but with friction, `3` means the players can do it unaided. Record each player's score separately; do not average away a one-sided failure. Also record a rule defect, interface defect, or product-fit failure separately from these scores.
+Score each dimension 0–3 after a run: **C** comprehension (can explain the next legal move); **E** expression (feeling fits a chip without distortion); **R** regulation (heat is noticed and can slow); **U** understanding (partner can accurately restate a core-issue candidate and its owner confirms or corrects it); **I** issue progress (a workable next action or honest remaining constraint appears); **A** agency (each can decline, pause, or protect a boundary). `0` means blocked or harmful to the goal, `1` means only with coaching, `2` means useful but with friction, `3` means the players can do it unaided. Record each player's score separately; do not average away a one-sided failure. Alongside scores, record disclosures to confirmed understanding, disclosures to action, and whether a later reflection revised the initial core-issue hypothesis. Also record a rule defect, interface defect, or product-fit failure separately.
 
 | Case | Conflict and heat | Differing player needs | Stressed journey | Likely break to probe | Best evidence |
 | --- | --- | --- | --- | --- | --- |
@@ -99,6 +101,6 @@ Use this single-line event format: `case / build / turn / journey step / action 
 ## Next test sequence
 
 1. Reproduce H9 and H10 in the preview browser; fix their control paths and retest chip counts and owner choice.
-2. Run six synthetic, unscripted scenario passes: H1, H3, H5, H7, H8, H11. Record turn-by-turn traces in a dated log and update the matrix scores.
-3. Run at least two two-person sessions using fictional conflicts, including H2 and H6, on an iPhone-size board. Ask participants to explain the game back without coaching. Human observations belong in a separate dated log and must not be conflated with simulations.
+2. Run six synthetic, unscripted scenario passes: H1, H3, H5, H7, H8, H11. Use shallow and layered versions of the standard conflict cards. Record the first owner-confirmed core-issue hypothesis, disclosures to reach it, and the next action or remaining constraint. Update the matrix scores.
+3. Run at least two two-person sessions using fictional conflicts, including H2 and H6, on an iPhone-size board. Ask participants to explain the game back without coaching, independently name the core issue, and say whether the other person got it right. Human observations belong in a separate dated log and must not be conflated with simulations.
 4. Revisit the matrix by player journey phase and game state. Prioritize defects that recur across scenarios over one-off wording issues.
