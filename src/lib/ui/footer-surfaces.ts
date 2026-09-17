@@ -18,7 +18,7 @@ const FOOTER_EXACT: ReadonlySet<string> = new Set([
   '/nonprofit',
   '/speaking',
   '/succession',
-  '/podcasts',
+  '/on-your-show',
   '/campaigns',
   '/launch',
   '/awaken',

@@ -67,7 +67,7 @@ export const GO_AUDIENCES: readonly GoAudience[] = [
       'You are not on a mailing sequence and you will not be put on one. That was the deal, and it is enforced in the code rather than remembered.',
   },
   {
-    slug: 'podcast',
+    slug: 'host',
     name: 'Podcast hosts and producers',
     problem:
       'Your audience has heard the standard allyship conversation and can predict every beat of it before the first ad break.',
@@ -77,7 +77,7 @@ export const GO_AUDIENCES: readonly GoAudience[] = [
       'The claim is a 383-page book with nine chapters of mechanism behind it, not a hot take. He ran DEI at an animation studio, built the curriculum, and put the story of doing it badly in the book rather than leaving it out.',
     ask: {
       label: 'See topics, formats and the headshot',
-      href: '/podcasts',
+      href: '/on-your-show',
       afterward: 'One page with five topics on it, and one address that a person answers.',
     },
   },

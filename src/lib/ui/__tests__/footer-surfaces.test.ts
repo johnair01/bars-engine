@@ -30,7 +30,7 @@ for (const route of [
   '/nonprofit',
   '/speaking',
   '/succession',
-  '/podcasts',
+  '/on-your-show',
   '/campaigns',
   '/deck/sales',
   '/campaign/the-crossing',

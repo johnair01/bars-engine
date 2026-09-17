@@ -40,7 +40,7 @@ const COLUMNS = [
     heading: 'Work with Wendell',
     links: [
       { label: 'Speaking & workshops', href: '/speaking' },
-      { label: 'Podcasts', href: '/podcasts' },
+      { label: 'On your show', href: '/on-your-show' },
       { label: '1:1 coaching', href: '/mastering-allyship/one-to-one' },
       { label: 'Certification', href: '/succession' },
     ],
