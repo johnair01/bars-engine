@@ -62,5 +62,6 @@
 .demo-guide-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .demo-guide-actions button:not(.primary){padding:9px 12px;border:1px solid #b6c4ab;border-radius:8px;background:#f8f5ea;color:#3a533e;font-size:.75rem;font-weight:700}
 .demo-guide-actions .demo-skip{margin-left:auto}
+.demo-overlay-skip{position:fixed;z-index:600;top:calc(12px + env(safe-area-inset-top));right:12px;padding:10px 13px;border:1px solid #b6c4ab;border-radius:9px;background:#fff9ea;color:#293d2f;box-shadow:0 5px 18px #0c1b1450;font-size:.76rem;font-weight:800}
 .demo-mode .felt-board,.demo-mode .below-board{pointer-events:none}
 @media(max-width:560px){.demo-guide{padding:15px}.demo-guide h2{font-size:1.4rem}.demo-guide p{font-size:.77rem}.demo-guide-top>span:last-child{max-width:90px;text-align:right}.demo-guide-actions .primary{width:100%}}
