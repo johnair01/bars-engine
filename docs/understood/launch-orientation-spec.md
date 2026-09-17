@@ -41,18 +41,18 @@ No backend is required for this release. Do not log disclosures, meter values, o
 
 ## Guided demo: two reader simulations
 
-Use two fictional readers, **Ari** and **Bea**, discussing a mundane conflict: Bea changed a shared plan without telling Ari. The demo is a rehearsal of game moves, not a model answer to their relationship. Show the board, real chip animations, both hands, stacks, turn panel, visible temperature, and the demo's simulated meter outcome. Narration is brief and skippable; all simulated dialogue is labeled as fictional.
+Use two fictional readers, **Wendell** and **Giuseppe**, discussing a mundane conflict: Giuseppe changed a shared plan without telling Wendell. The demo is a rehearsal of game moves, not a model answer to their relationship. Show the board, real chip animations, both hands, stacks, turn panel, visible temperature, and the demo's simulated meter outcome. Narration is brief and skippable; all simulated dialogue is labeled as fictional.
 
 | Beat | Visitor action | Board consequence | Lesson |
 | --- | --- | --- | --- |
 | 1. Enter | Tap **Begin guided demo** | Seed two readers, five chips of each color, one chosen first turn, zero temperature | How the board is oriented |
-| 2. First bid | Place Ari's red anger chip face up in stack 1 | Chip flies from hand to stack; one placement is consumed | Anger names a boundary or change |
-| 3. Curiosity | Tap Ari's open chip and choose **Tell me more** for Bea | Offered chip is held until answer; demo supplies a short spoken example | Questions cost a chip when available |
-| 4. Escalation | Signal **Getting hotter** for Ari | Public temperature rises one; private conflict remains unchanged | Heat is visible and distinct from unresolved conflict |
-| 5. Dissatisfaction | On Ari's next turn, add one unspoken blue chip to the same stack | Stack grows to two; top is visibly unspoken | A growing stack signals more remains unheard; sadness points to a value |
-| 6. Hearing | After the example listening response, choose **I feel heard** on the spoken chip, then **Cool the conversation** | Chip moves to Bea; heat falls one; private meter does not change | Hearing can first regulate the conversation |
-| 7. Resolution | On a later spoken chip, choose **Resolve part of the issue** | Chip moves; Ari's private meter falls one; temperature stays put | Hearing can also change the underlying conflict |
-| 8. Handoff | Finish a turn and show the panel moving to Bea's side | Bea's controls become active | One player ends a turn; the other begins |
+| 2. First bid | Place Wendell's red anger chip face up in stack 1 | Chip flies from hand to stack; one placement is consumed | Anger names a boundary or change |
+| 3. Curiosity | Tap Wendell's open chip and choose **Tell me more** for Giuseppe | Offered chip is held until answer; demo supplies a short spoken example | Questions cost a chip when available |
+| 4. Escalation | Signal **Getting hotter** for Wendell | Public temperature rises one; private conflict remains unchanged | Heat is visible and distinct from unresolved conflict |
+| 5. Dissatisfaction | On Wendell's next turn, add one unspoken blue chip to the same stack | Stack grows to two; top is visibly unspoken | A growing stack signals more remains unheard; sadness points to a value |
+| 6. Hearing | After the example listening response, choose **I feel heard** on the spoken chip, then **Cool the conversation** | Chip moves to Giuseppe; heat falls one; private meter does not change | Hearing can first regulate the conversation |
+| 7. Resolution | On a later spoken chip, choose **Resolve part of the issue** | Chip moves; Wendell's private meter falls one; temperature stays put | Hearing can also change the underlying conflict |
+| 8. Handoff | Finish a turn and show the panel moving to Giuseppe's side | Giuseppe's controls become active | One player ends a turn; the other begins |
 | 9. Exit | Tap **Start a two-person game** or **Replay** | Open clean real setup or reset only demo | Transition from rehearsal to play |
 
 The tutorial should ask the visitor to perform each highlighted move. Do not make them type an emotional disclosure. A **Show me** control can perform the exact legal move when the visitor is stuck. An unobtrusive **Skip demo** link goes to `/understood/play`. The walkthrough should be usable with taps on an iPhone; dragging remains available in real play but is not required for the demo.

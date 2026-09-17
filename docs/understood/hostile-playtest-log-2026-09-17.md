@@ -23,3 +23,7 @@
 - Browser reproduction: S5 terminal state, S6 face control, mobile stack selection, question payment, and owner-only meter viewing.
 - Unscripted simulated runs with full event traces and separate starting meters.
 - Two-person fictional-conflict sessions. Record each player's C/E/R/U/I/A scores from the lab matrix, plus exact moments of assistance, confusion, relief, or pressure.
+
+## Rule revision after S6
+
+The current code permits a bid on a sealed chip. The owner may reveal and answer, decline and return the bid, or say there is nothing more and keep the bid. Manual face flipping is limited to the owner's active turn. Revealing an answer opens the chip immediately so its owner may mark that chip heard; the stack release rule still applies. The S6 trace above records the earlier build and remains as the regression scenario.
