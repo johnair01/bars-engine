@@ -26,6 +26,7 @@
     "db:restore": "tsx scripts/db-restore.ts",
     "db:push": "node -e \"console.error('\\n❌ FORBIDDEN: prisma db push is not allowed. Use: npx prisma migrate dev (new changes) or npx prisma migrate deploy (apply from main).\\n   See docs/PRISMA_MIGRATE_STRATEGY.md\\n'); process.exit(1)\"",
     "db:generate": "prisma generate",
+    "release:family-room:check": "node scripts/check-family-room-release.mjs",
     "db:migrate:deploy": "tsx scripts/migrate-with-direct-url.ts deploy",
     "db:migrate:status": "tsx scripts/migrate-with-direct-url.ts status",
     "db:url:doctor": "tsx scripts/db-url-doctor.ts",
