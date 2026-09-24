@@ -18,7 +18,7 @@ export function FamilyRoomGate() {
           event.preventDefault(); setError(null)
           startTransition(async () => {
             const result = await enterFamilyRoom(new FormData(event.currentTarget))
-            if (!result.ok) setError(result.error)
+            if (!result.ok) setError(result.error ?? 'Unable to open the room.')
             else router.refresh()
           })
         }}>

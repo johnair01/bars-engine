@@ -26,12 +26,12 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
   const decide = (option: 'week' | 'month' | 'ninety' | 'custom' | 'no') => startTransition(async () => {
     const amountCents = option === 'custom' ? Math.round(Number(customAmount || 0) * 100) : 0
     const result = await submitFamilyFundingDecision({ option, amountCents, terms })
-    setNotice(result.ok ? 'Your decision was saved for the room.' : result.error)
+    setNotice(result.ok ? 'Your decision was saved for the room.' : result.error ?? 'Unable to save your decision.')
     if (result.ok) router.refresh()
   })
   const ask = (lineItemKey: string, body: string) => startTransition(async () => {
     const result = await askBudgetLineQuestion({ lineItemKey, body })
-    setNotice(result.ok ? 'Your question is now visible in the shared room.' : result.error)
+    setNotice(result.ok ? 'Your question is now visible in the shared room.' : result.error ?? 'Unable to share your question.')
     if (result.ok) router.refresh()
   })
   return <main className="min-h-screen bg-[radial-gradient(125%_85%_at_50%_-10%,#241932_0%,#100e14_62%)] px-4 py-7 text-[#f7f2e8]">
@@ -47,7 +47,7 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
       {view === 'budget' && <Budget snapshot={snapshot} expanded={expanded} setExpanded={setExpanded} questions={state.questions} pending={pending} onAsk={ask} />}
       {view === 'scenario' && <ScenarioExplorer snapshot={snapshot} scenarios={state.scenarios} />}
       {view === 'reflection' && <Reflection321 initial={state.myReflection} shared={state.sharedSyntheses} />}
-      {view === 'cfo' && <Cfo pending={pending} onAccept={() => startTransition(async () => { const result = await saveVolunteerCfoAgreement(); setNotice(result.ok ? 'Volunteer CFO agreement saved.' : result.error); if (result.ok) router.refresh() })} agreements={state.agreements.length} commitments={state.altitudeCommitments} participantId={state.participantId} />}
+      {view === 'cfo' && <Cfo pending={pending} onAccept={() => startTransition(async () => { const result = await saveVolunteerCfoAgreement(); setNotice(result.ok ? 'Volunteer CFO agreement saved.' : result.error ?? 'Unable to save the Volunteer CFO agreement.'); if (result.ok) router.refresh() })} agreements={state.agreements.length} commitments={state.altitudeCommitments} participantId={state.participantId} />}
       {view === 'review' && <WeeklyReview reviews={state.reviews} />}
     </div>
   </main>
