@@ -47,7 +47,7 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
       {view === 'budget' && <Budget snapshot={snapshot} expanded={expanded} setExpanded={setExpanded} questions={state.questions} pending={pending} onAsk={ask} />}
       {view === 'scenario' && <ScenarioExplorer snapshot={snapshot} scenarios={state.scenarios} />}
       {view === 'reflection' && <Reflection321 initial={state.myReflection} shared={state.sharedSyntheses} />}
-      {view === 'cfo' && <Cfo pending={pending} onAccept={() => startTransition(async () => { const result = await saveVolunteerCfoAgreement(); setNotice(result.ok ? 'Volunteer CFO agreement saved.' : result.error ?? 'Unable to save the Volunteer CFO agreement.'); if (result.ok) router.refresh() })} agreements={state.agreements.length} commitments={state.altitudeCommitments} participantId={state.participantId} />}
+      {view === 'cfo' && <Cfo pending={pending} onAccept={() => startTransition(async () => { await saveVolunteerCfoAgreement(); setNotice('Volunteer CFO agreement saved.'); router.refresh() })} agreements={state.agreements.length} commitments={state.altitudeCommitments} participantId={state.participantId} />}
       {view === 'review' && <WeeklyReview reviews={state.reviews} />}
     </div>
   </main>
