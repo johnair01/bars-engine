@@ -38,11 +38,11 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
     <div className="mx-auto max-w-4xl">
       <header className="mb-6 flex flex-col justify-between gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end">
         <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d4a017]">Family contribution · repayable plan</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">A path to a clear decision</h1></div>
-        <p className="max-w-xs text-sm leading-5 text-[#c6c0ca]">You can skip the story, pause anywhere, ask for a revision, or say no. Nothing here requires a yes.</p>
+        <p className="max-w-xs text-sm leading-5 text-[#c6c0ca]">You can skip any reflection, choose no, request changes, or return to the decision at any time.</p>
       </header>
       <nav aria-label="Room sections" className="mb-6 flex flex-wrap gap-2">{([['story', 'The story'], ['decision', 'Decision now'], ['budget', `Architect map${openQuestions ? ` · ${openQuestions} open` : ''}`], ['scenario', 'What if?'], ['reflection', 'Private 3·2·1'], ['cfo', 'Volunteer CFO'], ['review', 'Weekly review']] as [View, string][]).map(([key, title]) => <button key={key} onClick={() => setView(key)} className={`rounded-full px-4 py-2 text-sm font-medium ${view === key ? 'bg-[#7452b8] text-white' : 'border border-white/15 text-[#d7d0da]'}`}>{title}</button>)}</nav>
       {notice && <p role="status" className="mb-5 rounded-xl border border-[#d4a017]/30 bg-[#d4a017]/10 px-4 py-3 text-sm text-[#f7e0a0]">{notice}</p>}
-      {view === 'story' && <StoryJourney onDecision={() => setView('decision')} onBudget={() => setView('budget')} onReflection={() => setView('reflection')} onCfo={() => setView('cfo')} />}
+      {view === 'story' && <StoryJourney snapshot={snapshot} onDecision={() => setView('decision')} onBudget={() => setView('budget')} onScenario={() => setView('scenario')} onReflection={() => setView('reflection')} onCfo={() => setView('cfo')} />}
       {view === 'decision' && <Decision snapshot={snapshot} customAmount={customAmount} setCustomAmount={setCustomAmount} terms={terms} setTerms={setTerms} pending={pending} onDecide={decide} onBudget={() => setView('budget')} />}
       {view === 'walk' && <Walk onDecision={() => setView('decision')} onBudget={() => setView('budget')} />}
       {view === 'budget' && <Budget snapshot={snapshot} expanded={expanded} setExpanded={setExpanded} questions={state.questions} pending={pending} onAsk={ask} />}
@@ -54,27 +54,37 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
   </main>
 }
 
-const storyBeats = [
-  { face: 'Shaman', title: 'The year that brought us here', body: 'You already know much of this: finishing the book, losing the tea-store job after three days, leaving Portland, and trying to hold a future together while the ground kept moving.', choice: 'I understand the context', aside: 'I need to slow down and name what this brings up' },
-  { face: 'Sage', title: 'What we are all reaching for', body: 'The external desire is a stable, successful career that brings in the money Wendell knows he can earn through his skill and the work he has built. Internally, the desire is release from daily fear, shame, and the isolation of trying to solve it all alone.', choice: 'That shared future makes sense', aside: 'Show me the concrete opportunities' },
-  { face: 'Challenger', title: 'The wall is real', body: 'The tea-store job looked like the bridge and disappeared immediately. The job search has not landed yet. Meanwhile the book, coaching, events, and Flirtcraft have real potential—but need time, focus, and a small runway to become dependable income.', choice: 'I see the constraint', aside: 'I want to test the assumptions' },
-  { face: 'Diplomat', title: 'The epiphany: partnership, not rescue', body: 'Past asks have often landed as “please come save me.” This asks for something different: enough context, agency, and room to negotiate so support can become a partnership rather than a silent burden for anyone.', choice: 'I can meet this as a partner', aside: 'I need to name a concern first' },
-  { face: 'Architect', title: 'The plan has more than one finish line', body: 'There are two paths toward stability: a new job at $20/hour or more, and building coaching into a full-time business. The book, events, Flirtcraft, and Patreon are supporting income experiments—not promises. The budget and scenario map make every assumption inspectable.', choice: 'Show me the map', aside: 'I want to explore a different scenario' },
-  { face: 'Regent', title: 'Make it a 90-day game with real governance', body: 'The invitation is to become Volunteer CFOs: a weekly check-in on job applications, marketing, revenue, spending, and next commitments. New spending above $100 and scaling ads require approval. Every dollar earned goes toward paying down the family contribution.', choice: 'I understand the accountability offer', aside: 'I want to negotiate the role' },
-  { face: 'Sage', title: 'Choose the next true step', body: 'There is no hidden gate. You can fund a week, a month, or 90 days; propose another shape; ask for a pause; or say no. The point is to leave with shared context and an honest next move.', choice: 'Go to the decision', aside: 'Return to the map before deciding' },
-] as const
+type StoryBeat = {
+  face: string
+  title: string
+  body: string
+  choice: string
+  aside: string
+  asideTo: 'reflection' | 'budget' | 'scenario' | 'cfo'
+}
 
-function StoryJourney({ onDecision, onBudget, onReflection, onCfo }: { onDecision: () => void; onBudget: () => void; onReflection: () => void; onCfo: () => void }) {
+// One voice throughout: Wendell, first person, to Mom and Stepdad. Every figure is read from the
+// approved snapshot so this copy cannot drift from the Decision view.
+// Beats 1 and 4 still want Wendell's own material (his shared 3·2·1 synthesis).
+const storyBeats = (snapshot: FamilyFinancialSnapshot): StoryBeat[] => [
+  { face: 'Shaman', title: 'The year that brought us here', body: `This year I finished the book, lost the tea-store job after three days, left Portland, and kept trying to hold a future together while the ground kept moving. I'm asking for ${usd(snapshot.weeklyStabilizationCents)} this week to steady it, and for the chance to show you the plan for the 90 days after that.`, choice: 'Go on', aside: 'Take a private moment first (3·2·1)', asideTo: 'reflection' },
+  { face: 'Sage', title: 'What we are all reaching for', body: `I'm reaching for a stable career that pays fairly for my skill and the work I've built. Underneath that is a wish for release from daily fear, shame, and the isolation of trying to solve all of this alone.`, choice: 'That shared future makes sense', aside: 'Show me the numbers behind it', asideTo: 'budget' },
+  { face: 'Challenger', title: 'The wall is real', body: `The tea-store job looked like the bridge and ended after three days. The job search is still underway. The book, coaching, events, and Flirtcraft each have real potential, and each needs time, focus, and a runway before it becomes dependable income. That runway has a ceiling: ${usd(snapshot.ninetyDayCeilingCents)} over 90 days, before any income I earn.`, choice: 'What is the way through?', aside: 'I want to test the assumptions', asideTo: 'budget' },
+  { face: 'Diplomat', title: 'The epiphany: partnership', body: `My past asks have often landed as “please come save me.” This time you get the full context, real agency, and room to negotiate, so your support becomes a partnership we both shape.`, choice: 'What would partnering look like?', aside: 'I need to name a concern first', asideTo: 'budget' },
+  { face: 'Architect', title: 'The plan has more than one finish line', body: `I'm working two paths toward stability: a new job at $20 an hour or more, and coaching built into a full-time business. The book, events, Flirtcraft, and Patreon are supporting income experiments. The budget and scenario map put every assumption where you can inspect it.`, choice: 'How would this be run?', aside: 'Try a different scenario', asideTo: 'scenario' },
+  { face: 'Regent', title: 'Make it a 90-day game with real governance', body: `I'm inviting you to become Volunteer CFOs: a weekly check-in on job applications, marketing, revenue, spending, and next commitments. You approve any new spending above $100 and any scaling of ads. Every dollar I earn goes toward paying down the family contribution.`, choice: 'I am ready to see the options', aside: 'I want to negotiate the role', asideTo: 'cfo' },
+  { face: 'Sage', title: 'Choose the next true step', body: `You can fund a week, a month, or 90 days; propose another shape; ask for a pause; or say no. Whichever you choose, the aim is shared context and an honest next move.`, choice: 'Go to the decision', aside: 'Return to the map before deciding', asideTo: 'budget' },
+]
+
+function StoryJourney({ snapshot, onDecision, onBudget, onScenario, onReflection, onCfo }: { snapshot: FamilyFinancialSnapshot; onDecision: () => void; onBudget: () => void; onScenario: () => void; onReflection: () => void; onCfo: () => void }) {
   const [beat, setBeat] = useState(0)
-  const current = storyBeats[beat]
-  const last = beat === storyBeats.length - 1
+  const beats = storyBeats(snapshot)
+  const current = beats[beat]
+  const last = beat === beats.length - 1
   const advance = () => last ? onDecision() : setBeat((value) => value + 1)
-  const aside = () => {
-    if (current.face === 'Shaman') onReflection()
-    else if (current.face === 'Regent') onCfo()
-    else onBudget()
-  }
-  return <div className="mx-auto max-w-2xl"><div className="mb-5 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-[#aaa3af]"><span>{current.face} gate</span><span>{beat + 1} / {storyBeats.length}</span></div><div className="mb-5 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-[#d4a017] transition-all" style={{ width: `${((beat + 1) / storyBeats.length) * 100}%` }} /></div><Card><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d4a017]">{current.face}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight">{current.title}</h2><p className="mt-5 text-lg leading-8 text-[#e4dde8]">{current.body}</p><div className="mt-8 grid gap-3"><button onClick={advance} className="rounded-xl bg-[#7452b8] px-5 py-4 text-left text-sm font-semibold">{current.choice} <span aria-hidden="true">→</span></button><button onClick={aside} className="rounded-xl border border-white/20 px-5 py-4 text-left text-sm font-medium text-[#d7d0da]">{current.aside}</button></div><div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm"><button onClick={onDecision} className="font-semibold text-[#e5bf4e]">Jump to the decision</button><button onClick={onBudget} className="font-semibold text-[#e5bf4e]">Open the Architect map</button>{beat > 0 && <button onClick={() => setBeat((value) => value - 1)} className="text-[#aaa3af]">Back</button>}</div></Card><p className="mt-5 text-center text-xs leading-5 text-[#aaa3af]">These are invitations to understanding, not commitments. Each gate can be skipped, revisited, or negotiated.</p></div>
+  const asideRoutes = { reflection: onReflection, budget: onBudget, scenario: onScenario, cfo: onCfo }
+  const aside = () => asideRoutes[current.asideTo]()
+  return <div className="mx-auto max-w-2xl"><div className="mb-5 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-[#aaa3af]"><span>The story</span><span>{beat + 1} / {beats.length}</span></div><div className="mb-5 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-[#d4a017] transition-all" style={{ width: `${((beat + 1) / beats.length) * 100}%` }} /></div><Card><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d4a017]">{current.face}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight">{current.title}</h2><p className="mt-5 text-lg leading-8 text-[#e4dde8]">{current.body}</p><div className="mt-8 grid gap-3"><button onClick={advance} className="rounded-xl bg-[#7452b8] px-5 py-4 text-left text-sm font-semibold">{current.choice} <span aria-hidden="true">→</span></button><button onClick={aside} className="rounded-xl border border-white/20 px-5 py-4 text-left text-sm font-medium text-[#d7d0da]">{current.aside}</button></div><div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm"><button onClick={onDecision} className="font-semibold text-[#e5bf4e]">Jump to the decision</button><button onClick={onBudget} className="font-semibold text-[#e5bf4e]">Open the Architect map</button>{beat > 0 && <button onClick={() => setBeat((value) => value - 1)} className="text-[#aaa3af]">Back</button>}</div></Card></div>
 }
 
 function Card({ children }: { children: React.ReactNode }) { return <section className="rounded-2xl border border-white/10 bg-[#19151f]/90 p-5 shadow-xl">{children}</section> }
