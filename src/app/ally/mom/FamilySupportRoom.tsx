@@ -11,12 +11,12 @@ import { WeeklyReview } from './WeeklyReview'
 import { AltitudeCommitment } from './AltitudeCommitment'
 
 type RoomState = Awaited<ReturnType<typeof import('@/actions/family-support').getFamilyRoomView>>
-type View = 'decision' | 'walk' | 'budget' | 'scenario' | 'reflection' | 'cfo' | 'review'
+type View = 'story' | 'decision' | 'walk' | 'budget' | 'scenario' | 'reflection' | 'cfo' | 'review'
 const label: Record<string, string> = { essential: 'Essential', experiment: 'Planned experiment', covered: 'Covered', income: 'Proposed income' }
 
 export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinancialSnapshot; state: RoomState }) {
   const router = useRouter()
-  const [view, setView] = useState<View>('decision')
+  const [view, setView] = useState<View>('story')
   const [expanded, setExpanded] = useState<string | null>(null)
   const [customAmount, setCustomAmount] = useState('')
   const [terms, setTerms] = useState('')
@@ -37,11 +37,12 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
   return <main className="min-h-screen bg-[radial-gradient(125%_85%_at_50%_-10%,#241932_0%,#100e14_62%)] px-4 py-7 text-[#f7f2e8]">
     <div className="mx-auto max-w-4xl">
       <header className="mb-6 flex flex-col justify-between gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d4a017]">Family contribution · repayable plan</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">The room for a clear decision</h1></div>
-        <p className="max-w-xs text-sm leading-5 text-[#c6c0ca]">No reflection is required. You may choose no, ask for a revision, or return to the numbers at any time.</p>
+        <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d4a017]">Family contribution · repayable plan</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">A path to a clear decision</h1></div>
+        <p className="max-w-xs text-sm leading-5 text-[#c6c0ca]">You can skip the story, pause anywhere, ask for a revision, or say no. Nothing here requires a yes.</p>
       </header>
-      <nav aria-label="Room sections" className="mb-6 flex flex-wrap gap-2">{([['decision', 'Decision now'], ['walk', 'Walk through it'], ['budget', `Budget explorer${openQuestions ? ` · ${openQuestions} open` : ''}`], ['scenario', 'What if?'], ['reflection', 'Private 3·2·1'], ['cfo', 'Volunteer CFO'], ['review', 'Weekly review']] as [View, string][]).map(([key, title]) => <button key={key} onClick={() => setView(key)} className={`rounded-full px-4 py-2 text-sm font-medium ${view === key ? 'bg-[#7452b8] text-white' : 'border border-white/15 text-[#d7d0da]'}`}>{title}</button>)}</nav>
+      <nav aria-label="Room sections" className="mb-6 flex flex-wrap gap-2">{([['story', 'The story'], ['decision', 'Decision now'], ['budget', `Architect map${openQuestions ? ` · ${openQuestions} open` : ''}`], ['scenario', 'What if?'], ['reflection', 'Private 3·2·1'], ['cfo', 'Volunteer CFO'], ['review', 'Weekly review']] as [View, string][]).map(([key, title]) => <button key={key} onClick={() => setView(key)} className={`rounded-full px-4 py-2 text-sm font-medium ${view === key ? 'bg-[#7452b8] text-white' : 'border border-white/15 text-[#d7d0da]'}`}>{title}</button>)}</nav>
       {notice && <p role="status" className="mb-5 rounded-xl border border-[#d4a017]/30 bg-[#d4a017]/10 px-4 py-3 text-sm text-[#f7e0a0]">{notice}</p>}
+      {view === 'story' && <StoryJourney onDecision={() => setView('decision')} onBudget={() => setView('budget')} onReflection={() => setView('reflection')} onCfo={() => setView('cfo')} />}
       {view === 'decision' && <Decision snapshot={snapshot} customAmount={customAmount} setCustomAmount={setCustomAmount} terms={terms} setTerms={setTerms} pending={pending} onDecide={decide} onBudget={() => setView('budget')} />}
       {view === 'walk' && <Walk onDecision={() => setView('decision')} onBudget={() => setView('budget')} />}
       {view === 'budget' && <Budget snapshot={snapshot} expanded={expanded} setExpanded={setExpanded} questions={state.questions} pending={pending} onAsk={ask} />}
@@ -51,6 +52,29 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
       {view === 'review' && <WeeklyReview reviews={state.reviews} />}
     </div>
   </main>
+}
+
+const storyBeats = [
+  { face: 'Shaman', title: 'The year that brought us here', body: 'You already know much of this: finishing the book, losing the tea-store job after three days, leaving Portland, and trying to hold a future together while the ground kept moving.', choice: 'I understand the context', aside: 'I need to slow down and name what this brings up' },
+  { face: 'Sage', title: 'What we are all reaching for', body: 'The external desire is a stable, successful career that brings in the money Wendell knows he can earn through his skill and the work he has built. Internally, the desire is release from daily fear, shame, and the isolation of trying to solve it all alone.', choice: 'That shared future makes sense', aside: 'Show me the concrete opportunities' },
+  { face: 'Challenger', title: 'The wall is real', body: 'The tea-store job looked like the bridge and disappeared immediately. The job search has not landed yet. Meanwhile the book, coaching, events, and Flirtcraft have real potential—but need time, focus, and a small runway to become dependable income.', choice: 'I see the constraint', aside: 'I want to test the assumptions' },
+  { face: 'Diplomat', title: 'The epiphany: partnership, not rescue', body: 'Past asks have often landed as “please come save me.” This asks for something different: enough context, agency, and room to negotiate so support can become a partnership rather than a silent burden for anyone.', choice: 'I can meet this as a partner', aside: 'I need to name a concern first' },
+  { face: 'Architect', title: 'The plan has more than one finish line', body: 'There are two paths toward stability: a new job at $20/hour or more, and building coaching into a full-time business. The book, events, Flirtcraft, and Patreon are supporting income experiments—not promises. The budget and scenario map make every assumption inspectable.', choice: 'Show me the map', aside: 'I want to explore a different scenario' },
+  { face: 'Regent', title: 'Make it a 90-day game with real governance', body: 'The invitation is to become Volunteer CFOs: a weekly check-in on job applications, marketing, revenue, spending, and next commitments. New spending above $100 and scaling ads require approval. Every dollar earned goes toward paying down the family contribution.', choice: 'I understand the accountability offer', aside: 'I want to negotiate the role' },
+  { face: 'Sage', title: 'Choose the next true step', body: 'There is no hidden gate. You can fund a week, a month, or 90 days; propose another shape; ask for a pause; or say no. The point is to leave with shared context and an honest next move.', choice: 'Go to the decision', aside: 'Return to the map before deciding' },
+] as const
+
+function StoryJourney({ onDecision, onBudget, onReflection, onCfo }: { onDecision: () => void; onBudget: () => void; onReflection: () => void; onCfo: () => void }) {
+  const [beat, setBeat] = useState(0)
+  const current = storyBeats[beat]
+  const last = beat === storyBeats.length - 1
+  const advance = () => last ? onDecision() : setBeat((value) => value + 1)
+  const aside = () => {
+    if (current.face === 'Shaman') onReflection()
+    else if (current.face === 'Regent') onCfo()
+    else onBudget()
+  }
+  return <div className="mx-auto max-w-2xl"><div className="mb-5 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-[#aaa3af]"><span>{current.face} gate</span><span>{beat + 1} / {storyBeats.length}</span></div><div className="mb-5 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-[#d4a017] transition-all" style={{ width: `${((beat + 1) / storyBeats.length) * 100}%` }} /></div><Card><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d4a017]">{current.face}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight">{current.title}</h2><p className="mt-5 text-lg leading-8 text-[#e4dde8]">{current.body}</p><div className="mt-8 grid gap-3"><button onClick={advance} className="rounded-xl bg-[#7452b8] px-5 py-4 text-left text-sm font-semibold">{current.choice} <span aria-hidden="true">→</span></button><button onClick={aside} className="rounded-xl border border-white/20 px-5 py-4 text-left text-sm font-medium text-[#d7d0da]">{current.aside}</button></div><div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm"><button onClick={onDecision} className="font-semibold text-[#e5bf4e]">Jump to the decision</button><button onClick={onBudget} className="font-semibold text-[#e5bf4e]">Open the Architect map</button>{beat > 0 && <button onClick={() => setBeat((value) => value - 1)} className="text-[#aaa3af]">Back</button>}</div></Card><p className="mt-5 text-center text-xs leading-5 text-[#aaa3af]">These are invitations to understanding, not commitments. Each gate can be skipped, revisited, or negotiated.</p></div>
 }
 
 function Card({ children }: { children: React.ReactNode }) { return <section className="rounded-2xl border border-white/10 bg-[#19151f]/90 p-5 shadow-xl">{children}</section> }
