@@ -6,11 +6,11 @@ import { publishReflectionSynthesis, savePrivateReflection } from '@/actions/fam
 type Reflection = Record<string, string | null | undefined>
 type Synthesis = { id: string; participantId: string; publishedSynthesis: string | null; participant: { displayName: string | null } }
 
-const stages = [
+const stages: ReadonlyArray<{ title: string; note: string; fields: ReadonlyArray<readonly [string, string]> }> = [
   { title: 'Face It · third person', note: 'Meet the charged experience as something you can see.', fields: [['chargeDescription', 'There is something I’m carrying. When I sit with it, I notice…'], ['maskShape', 'If I look at this thing closely, I see…'], ['maskName', 'I’ll call this part of me…']] },
   { title: 'Talk to It · second person', note: 'Let the part name its own logic without agreeing with it.', fields: [['desire', 'I want…'], ['desireOutcome', 'If I got that, then I would have…'], ['lifeState', 'From the perspective of this part, life is…'], ['rootCause', 'For this part to be settled, it would need…'], ['fear', 'At the bottom of it all, I am afraid that…'], ['somaticEcho', 'Optional: where do I feel this part in my body?']] },
   { title: 'Be It · first person', note: 'Let the part speak, then notice what changes when it is held with awareness.', fields: [['interiorVoice', 'I am here, and I want you to know…'], ['integrationShift', 'When I hold this presence with awareness, I notice…'], ['alignedAction', 'One aligned action I can take is…']] },
-] as const
+]
 
 export function Reflection321({ initial, shared }: { initial: Reflection | null; shared: Synthesis[] }) {
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(stages.flatMap((stage) => stage.fields).map(([key]) => [key, initial?.[key] ?? ''])))
