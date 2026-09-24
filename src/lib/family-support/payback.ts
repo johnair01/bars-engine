@@ -50,7 +50,7 @@ export const PAYBACK_CHANNELS: readonly PaybackChannel[] = [
   {
     key: 'events', label: 'Events', unit: { one: 'event', many: 'events' },
     lowCents: event.attendees * event.ticketLowCents, highCents: event.attendees * event.ticketHighCents,
-    basis: '20 people on a $25 to $50 sliding scale, before venue and materials costs.', estimate: true,
+    basis: '20 people on a $25 to $50 sliding scale, before the venue cost. Digital events have no venue and need ads instead.', estimate: true,
   },
 ]
 
