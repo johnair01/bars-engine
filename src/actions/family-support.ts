@@ -17,6 +17,10 @@ const reflectionSchema = z.object({
   interiorVoice: reflectionField, integrationShift: reflectionField, alignedAction: reflectionField,
 })
 
+function jsonClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
 async function participant() {
   const token = await participantToken()
   if (!token) throw new Error('This room session has ended. Please enter the room again.')
@@ -223,5 +227,5 @@ export async function getFamilyRoomView() {
     db.weeklyReview.findMany({ where: { roomId: currentRoom.id }, include: { participant: { select: { displayName: true } } }, orderBy: { weekOf: 'desc' }, take: 12 }),
     db.familyAltitudeCommitment.findMany({ where: { roomId: currentRoom.id }, include: { participant: { select: { displayName: true } } }, orderBy: { updatedAt: 'desc' } }),
   ])
-  return { participantId: person.id, questions: JSON.parse(JSON.stringify(questions)), decisions: JSON.parse(JSON.stringify(decisions)), agreements: JSON.parse(JSON.stringify(agreements)), myReflection: JSON.parse(JSON.stringify(myReflection)), sharedSyntheses: JSON.parse(JSON.stringify(sharedSyntheses)), scenarios: JSON.parse(JSON.stringify(scenarios)), reviews: JSON.parse(JSON.stringify(reviews)), altitudeCommitments: JSON.parse(JSON.stringify(altitudeCommitments)) }
+  return { participantId: person.id, questions: jsonClone(questions), decisions: jsonClone(decisions), agreements: jsonClone(agreements), myReflection: jsonClone(myReflection), sharedSyntheses: jsonClone(sharedSyntheses), scenarios: jsonClone(scenarios), reviews: jsonClone(reviews), altitudeCommitments: jsonClone(altitudeCommitments) }
 }
