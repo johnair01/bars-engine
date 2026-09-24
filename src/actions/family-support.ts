@@ -17,8 +17,10 @@ const reflectionSchema = z.object({
   interiorVoice: reflectionField, integrationShift: reflectionField, alignedAction: reflectionField,
 })
 
-function jsonClone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T
+type Serialized<T> = T extends Date ? string : T extends Array<infer Item> ? Serialized<Item>[] : T extends object ? { [Key in keyof T]: Serialized<T[Key]> } : T
+
+function jsonClone<T>(value: T): Serialized<T> {
+  return JSON.parse(JSON.stringify(value)) as Serialized<T>
 }
 
 async function participant() {
