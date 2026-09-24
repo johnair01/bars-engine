@@ -6,12 +6,13 @@ import { askBudgetLineQuestion, saveVolunteerCfoAgreement, submitFamilyFundingDe
 import { usd, type FamilyFinancialSnapshot } from '@/lib/family-support/financial-snapshot'
 import { Reflection321 } from './Reflection321'
 import { ScenarioExplorer } from './ScenarioExplorer'
+import { PaybackPaths } from './PaybackPaths'
 import { BudgetQuestionThread } from './BudgetQuestionThread'
 import { WeeklyReview } from './WeeklyReview'
 import { AltitudeCommitment } from './AltitudeCommitment'
 
 type RoomState = Awaited<ReturnType<typeof import('@/actions/family-support').getFamilyRoomView>>
-type View = 'story' | 'decision' | 'walk' | 'budget' | 'scenario' | 'reflection' | 'cfo' | 'review'
+type View = 'story' | 'decision' | 'walk' | 'budget' | 'scenario' | 'payback' | 'reflection' | 'cfo' | 'review'
 const label: Record<string, string> = { essential: 'Essential', experiment: 'Planned experiment', covered: 'Covered', income: 'Proposed income' }
 
 export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinancialSnapshot; state: RoomState }) {
@@ -40,13 +41,14 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
         <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d4a017]">Family contribution · repayable plan</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">A path to a clear decision</h1></div>
         <p className="max-w-xs text-sm leading-5 text-[#c6c0ca]">You can skip any reflection, choose no, request changes, or return to the decision at any time.</p>
       </header>
-      <nav aria-label="Room sections" className="mb-6 flex flex-wrap gap-2">{([['story', 'The story'], ['decision', 'Decision now'], ['budget', `Architect map${openQuestions ? ` · ${openQuestions} open` : ''}`], ['scenario', 'What if?'], ['reflection', 'Private 3·2·1'], ['cfo', 'Volunteer CFO'], ['review', 'Weekly review']] as [View, string][]).map(([key, title]) => <button key={key} onClick={() => setView(key)} className={`rounded-full px-4 py-2 text-sm font-medium ${view === key ? 'bg-[#7452b8] text-white' : 'border border-white/15 text-[#d7d0da]'}`}>{title}</button>)}</nav>
+      <nav aria-label="Room sections" className="mb-6 flex flex-wrap gap-2">{([['story', 'The story'], ['decision', 'Decision now'], ['budget', `Architect map${openQuestions ? ` · ${openQuestions} open` : ''}`], ['scenario', 'What if?'], ['payback', 'Payback paths'], ['reflection', 'Private 3·2·1'], ['cfo', 'Volunteer CFO'], ['review', 'Weekly review']] as [View, string][]).map(([key, title]) => <button key={key} onClick={() => setView(key)} className={`rounded-full px-4 py-2 text-sm font-medium ${view === key ? 'bg-[#7452b8] text-white' : 'border border-white/15 text-[#d7d0da]'}`}>{title}</button>)}</nav>
       {notice && <p role="status" className="mb-5 rounded-xl border border-[#d4a017]/30 bg-[#d4a017]/10 px-4 py-3 text-sm text-[#f7e0a0]">{notice}</p>}
       {view === 'story' && <StoryJourney snapshot={snapshot} onDecision={() => setView('decision')} onBudget={() => setView('budget')} onScenario={() => setView('scenario')} onReflection={() => setView('reflection')} onCfo={() => setView('cfo')} />}
       {view === 'decision' && <Decision snapshot={snapshot} customAmount={customAmount} setCustomAmount={setCustomAmount} terms={terms} setTerms={setTerms} pending={pending} onDecide={decide} onBudget={() => setView('budget')} />}
       {view === 'walk' && <Walk onDecision={() => setView('decision')} onBudget={() => setView('budget')} />}
       {view === 'budget' && <Budget snapshot={snapshot} expanded={expanded} setExpanded={setExpanded} questions={state.questions} pending={pending} onAsk={ask} />}
       {view === 'scenario' && <ScenarioExplorer snapshot={snapshot} scenarios={state.scenarios} />}
+      {view === 'payback' && <PaybackPaths snapshot={snapshot} onDecision={() => setView('decision')} onBudget={() => setView('budget')} />}
       {view === 'reflection' && <Reflection321 initial={state.myReflection} shared={state.sharedSyntheses} />}
       {view === 'cfo' && <Cfo pending={pending} onAccept={() => startTransition(async () => { await saveVolunteerCfoAgreement(); setNotice('Volunteer CFO agreement saved.'); router.refresh() })} agreements={state.agreements.length} commitments={state.altitudeCommitments} participantId={state.participantId} />}
       {view === 'review' && <WeeklyReview reviews={state.reviews} />}
@@ -73,8 +75,8 @@ const storyBeats = (snapshot: FamilyFinancialSnapshot): StoryBeat[] => [
   { face: 'Challenger', title: 'The wall is real', body: `The tea-store job looked like the bridge and ended after three days. The job search is still underway. The book, coaching, events, and Flirtcraft each have real potential, and each needs time, focus, and a runway before it becomes dependable income. That runway has a ceiling: ${usd(snapshot.ninetyDayCeilingCents)} over 90 days, before any income I earn.`, choice: 'What is the way through?', aside: 'I want to test the assumptions', asideTo: 'budget' },
   { face: 'Diplomat', title: 'The epiphany: partnership', body: `I've figured a few things out and made some pretty good work. What I still need is runway to get it into the world.\n\nMy past asks have often landed as “please come save me,” because the small part of me doing the asking was bracing for the worst. This time the ask comes with the full context, a scope, and an end date, so your support becomes a partnership we both shape.`, choice: 'What would partnering look like?', aside: 'I need to name a concern first', asideTo: 'budget' },
   { face: 'Architect', title: 'The plan has more than one finish line', body: `I'm working two paths toward stability: a new job at $20 an hour or more, and coaching built into a full-time business. The book, events, Flirtcraft, and Patreon are supporting income experiments. The budget and scenario map put every assumption where you can inspect it.`, choice: 'How would this be run?', aside: 'Try a different scenario', asideTo: 'scenario' },
-  { face: 'Regent', title: 'Make it a 90-day game with real governance', body: `I'm inviting you to become Volunteer CFOs: a weekly check-in on job applications, marketing, revenue, spending, and next commitments. You approve any new spending above $100 and any scaling of ads. Every dollar I earn goes toward paying down the family contribution.`, choice: 'I am ready to see the options', aside: 'I want to negotiate the role', asideTo: 'cfo' },
-  { face: 'Sage', title: 'Choose the next true step', body: `You can fund a week, a month, or 90 days; propose another shape; ask for a pause; or say no. Whichever you choose, the aim is shared context and an honest next move.`, choice: 'Go to the decision', aside: 'Return to the map before deciding', asideTo: 'budget' },
+  { face: 'Regent', title: 'Make it a 90-day game with real governance', body: `I'm inviting you to become Volunteer CFOs: a weekly check-in on job applications, marketing, revenue, spending, and next commitments. You approve any new spending above $100 and any scaling of ads. Every dollar I earn goes toward paying down the family contribution.\n\nThe check-ins put me in touch every week, so you hear how it's going before anything breaks. Each one starts with me asking about your week, and then we get to the numbers.\n\nYou also get to say what working looks like. Tell me what you'd need to see at day 30, and I'll build the check-ins around it.`, choice: 'I am ready to see the options', aside: 'I want to negotiate the role', asideTo: 'cfo' },
+  { face: 'Sage', title: 'Choose the next true step', body: `You can fund a week, a month, or 90 days; propose another shape; ask for a pause; or say no. Day 90 is an end date, and extending it takes a new yes from you. Whichever you choose, the aim is shared context and an honest next move.`, choice: 'Go to the decision', aside: 'Return to the map before deciding', asideTo: 'budget' },
 ]
 
 function StoryJourney({ snapshot, onDecision, onBudget, onScenario, onReflection, onCfo }: { snapshot: FamilyFinancialSnapshot; onDecision: () => void; onBudget: () => void; onScenario: () => void; onReflection: () => void; onCfo: () => void }) {
