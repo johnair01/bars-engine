@@ -14,10 +14,10 @@ export async function GET() {
   if (!(await hasFamilyRoomAccess())) {
     return new Response('This budget document is available only inside the family room.', { status: 401 })
   }
-  // A fixed private pathname means the download route never needs to expose or
-  // persist a Blob URL as another environment variable.
+  // The upload script stores the workbook at this pathname. Production sets
+  // FAMILY_ROOM_BUDGET_BLOB_URL to the URL the script prints; the pathname is the fallback.
   const blobUrlOrPathname = process.env.FAMILY_ROOM_BUDGET_BLOB_URL
-    || '90-day-parent-support-budget.xlsx'
+    || 'family-room/90-day-parent-support-budget.xlsx'
   const token = process.env.FAMILY_ROOM_BLOB_READ_WRITE_TOKEN
   if (!token) {
     return new Response('The private budget document store is not connected yet.', { status: 503 })
