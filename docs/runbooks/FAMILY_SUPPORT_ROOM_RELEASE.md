@@ -17,7 +17,6 @@ Set these in the Vercel project for the intended environment(s):
 - `FAMILY_ROOM_PASSWORD` — unique, long room passphrase
 - `FAMILY_ROOM_SESSION_SECRET` — unique random server secret, distinct from the passphrase
 - `FAMILY_ROOM_BLOB_READ_WRITE_TOKEN` — injected when connecting the private family-room Blob store
-- `FAMILY_ROOM_BUDGET_BLOB_URL` — printed by the upload script in step 3; set it after uploading
 
 Never put any of these in `NEXT_PUBLIC_*` variables or in the campaign copy.
 
@@ -30,10 +29,12 @@ node scripts/upload-family-budget.mjs \
   /Users/wendellbritt/Documents/Codex/2026-09-23/ok-i/outputs/90-day-parent-support-budget.xlsx
 ```
 
-The script prints `FAMILY_ROOM_BUDGET_BLOB_URL=...`. Set that value in Vercel for
-Production and Preview. The blob is private, so the URL does nothing without the
-token, and the room serves the file only after the room passphrase. Do not place
-the workbook in `public/` or send the URL to anyone.
+The script stores the workbook at the root of the private store as
+`90-day-parent-support-budget.xlsx`, which is where the room looks for it, so no URL
+setting is needed. The room serves the file only after the room passphrase. Do not
+place the workbook in `public/` or send a Blob URL to anyone. `env pull` writes
+placeholders for Sensitive variables, so the upload needs a token from a shell that
+has the real value; the Vercel dashboard's Blob upload button also works.
 
 ## 4. Apply the migration and validate
 

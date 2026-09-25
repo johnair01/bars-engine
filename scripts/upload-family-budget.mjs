@@ -10,10 +10,10 @@ if (!token) throw new Error('FAMILY_ROOM_BLOB_READ_WRITE_TOKEN is required.')
 
 const file = resolve(source)
 const body = await readFile(file)
-const blob = await put(`family-room/${basename(file)}`, body, {
+const blob = await put(basename(file), body, {
   access: 'private',
   token,
   addRandomSuffix: false,
   contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 })
-console.log(`Set FAMILY_ROOM_BUDGET_BLOB_URL=${blob.url}`)
+console.log(`Uploaded to the private store as ${blob.pathname}. The room finds it by that pathname, so no URL setting is needed.`)

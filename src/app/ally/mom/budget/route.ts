@@ -14,10 +14,10 @@ export async function GET() {
   if (!(await hasFamilyRoomAccess())) {
     return new Response('This budget document is available only inside the family room.', { status: 401 })
   }
-  // The upload script stores the workbook at this pathname. Production sets
-  // FAMILY_ROOM_BUDGET_BLOB_URL to the URL the script prints; the pathname is the fallback.
+  // The workbook sits at the root of the private family-room store under this pathname.
+  // FAMILY_ROOM_BUDGET_BLOB_URL overrides it when set.
   const blobUrlOrPathname = process.env.FAMILY_ROOM_BUDGET_BLOB_URL
-    || 'family-room/90-day-parent-support-budget.xlsx'
+    || '90-day-parent-support-budget.xlsx'
   const token = process.env.FAMILY_ROOM_BLOB_READ_WRITE_TOKEN
   if (!token) {
     return new Response('The private budget document store is not connected yet.', { status: 503 })
