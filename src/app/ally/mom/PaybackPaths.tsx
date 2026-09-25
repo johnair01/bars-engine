@@ -29,25 +29,29 @@ export function PaybackPaths({ snapshot, onDecision, onBudget }: { snapshot: Fam
       <h2 className="mt-2 text-2xl font-semibold">Ways the contribution comes back</h2>
       <p className="mt-3 text-sm leading-6 text-[#c6c0ca]">Every dollar I earn goes toward paying down the family contribution. This table counts the books, coaching sessions, or events that repay each amount, using figures from the approved budget dated {snapshot.asOf}. The counts are arithmetic, and the pace I reach decides which path comes first.</p>
     </section>
-    <section className="overflow-x-auto rounded-2xl border border-white/10 bg-[#19151f]/90 p-5">
-      <table className="w-full min-w-[34rem] text-left text-sm">
-        <caption className="sr-only">Units needed to repay each amount, by path</caption>
-        <thead><tr className="border-b border-white/10 text-xs uppercase tracking-[0.12em] text-[#aaa3af]">
-          <th scope="col" className="pb-3 pr-4 font-semibold">Path</th>
-          {asks.map((ask) => <th key={ask.label} scope="col" className="pb-3 pr-4 font-semibold">{ask.label}<span className="block text-sm normal-case tracking-normal text-[#e5bf4e]">{usd(ask.cents)}</span></th>)}
-        </tr></thead>
-        <tbody>
-          {PAYBACK_CHANNELS.map((channel) => <tr key={channel.key} className="border-b border-white/5 align-top">
-            <th scope="row" className="py-4 pr-4 font-medium">{channel.label}{channel.estimate && <span className="ml-2 rounded-full border border-[#d4a017]/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#e5bf4e]">Planned estimate</span>}
-              <span className="mt-1 block text-xs font-normal leading-5 text-[#aaa3af]">{perUnit(channel.lowCents, channel.highCents)}. {channel.basis}</span></th>
-            {asks.map((ask) => <td key={ask.label} className="py-4 pr-4 text-lg font-semibold">{formatRange(unitsToRepay(ask.cents, channel))} <span className="text-sm font-normal text-[#aaa3af]">{noun(unitsToRepay(ask.cents, channel), channel.unit)}</span></td>)}
-          </tr>)}
-          <tr className="align-top">
-            <th scope="row" className="py-4 pr-4 font-medium">An even mix<span className="mt-1 block text-xs font-normal leading-5 text-[#aaa3af]">One third of each amount from books sold by hand, coaching, and events.</span></th>
-            {asks.map((ask) => { const mix = evenMix(ask.cents); return <td key={ask.label} className="py-4 pr-4 text-sm leading-6">{formatRange(mix.books)} {noun(mix.books, PAYBACK_CHANNELS[0].unit)}<br />{formatRange(mix.coaching)} {noun(mix.coaching, PAYBACK_CHANNELS[2].unit)}<br />{formatRange(mix.events)} {noun(mix.events, PAYBACK_CHANNELS[3].unit)}</td> })}
-          </tr>
-        </tbody>
-      </table>
+    <section className="rounded-2xl border border-white/10 bg-[#19151f]/90 p-5">
+      <div className="grid gap-3">
+        {PAYBACK_CHANNELS.map((channel) => <article key={channel.key} className="rounded-xl border border-white/10 bg-black/20 p-4">
+          <h3 className="font-semibold">{channel.label}{channel.estimate && <span className="ml-2 rounded-full border border-[#d4a017]/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#e5bf4e]">Planned estimate</span>}</h3>
+          <p className="mt-1 text-xs leading-5 text-[#aaa3af]">{perUnit(channel.lowCents, channel.highCents)}. {channel.basis}</p>
+          <dl className="mt-3 grid grid-cols-3 gap-3">
+            {asks.map((ask) => { const range = unitsToRepay(ask.cents, channel); return <div key={ask.label}>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#aaa3af]">{ask.label}<span className="block text-sm normal-case tracking-normal text-[#e5bf4e]">{usd(ask.cents)}</span></dt>
+              <dd className="mt-1"><span className="block text-xl font-semibold">{formatRange(range)}</span><span className="block text-xs text-[#aaa3af]">{noun(range, channel.unit)}</span></dd>
+            </div> })}
+          </dl>
+        </article>)}
+        <article className="rounded-xl border border-white/10 bg-black/20 p-4">
+          <h3 className="font-semibold">An even mix</h3>
+          <p className="mt-1 text-xs leading-5 text-[#aaa3af]">One third of each amount from books sold by hand, coaching, and events.</p>
+          <dl className="mt-3 grid grid-cols-3 gap-3">
+            {asks.map((ask) => { const mix = evenMix(ask.cents); return <div key={ask.label}>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#aaa3af]">{ask.label}<span className="block text-sm normal-case tracking-normal text-[#e5bf4e]">{usd(ask.cents)}</span></dt>
+              <dd className="mt-1 text-sm leading-6">{formatRange(mix.books)} {noun(mix.books, PAYBACK_CHANNELS[0].unit)}<br />{formatRange(mix.coaching)} {noun(mix.coaching, PAYBACK_CHANNELS[2].unit)}<br />{formatRange(mix.events)} {noun(mix.events, PAYBACK_CHANNELS[3].unit)}</dd>
+            </div> })}
+          </dl>
+        </article>
+      </div>
       <div className="mt-4 grid gap-2 text-sm leading-6 text-[#c6c0ca]">
         {paceLines.map((line) => <p key={line}>{line}</p>)}
         <p className="text-xs leading-5 text-[#aaa3af]">Counts are gross receipts before taxes and before my time. Event counts run from the best case ($50 tickets) to the worst case ($25 tickets) and come before the venue cost. Books I sell at an event count toward the books rows.</p>
