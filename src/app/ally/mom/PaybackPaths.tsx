@@ -27,7 +27,7 @@ export function PaybackPaths({ snapshot, onDecision, onBudget }: { snapshot: Fam
     <section className="rounded-2xl border border-[#d4a017]/30 bg-[#19151f] p-5">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d4a017]">Payback paths</p>
       <h2 className="mt-2 text-2xl font-semibold">Ways the contribution comes back</h2>
-      <p className="mt-3 text-sm leading-6 text-[#c6c0ca]">Every dollar I earn goes toward paying down the family contribution. This table counts the books, coaching sessions, or events that repay each amount, using figures from the approved budget dated {snapshot.asOf}. The counts are arithmetic, and the pace I reach decides which path comes first.</p>
+      <p className="mt-3 text-sm leading-6 text-[#c6c0ca]">Every dollar I earn goes toward paying down the family contribution. Each card counts the books, coaching sessions, or events that repay each amount, using figures from the approved budget dated {snapshot.asOf}. The counts are arithmetic, and the pace I reach decides which path comes first.</p>
     </section>
     <section className="rounded-2xl border border-white/10 bg-[#19151f]/90 p-5">
       <div className="grid gap-3">
