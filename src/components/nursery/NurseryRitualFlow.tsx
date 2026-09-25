@@ -37,10 +37,17 @@ type Props = {
   onClose: () => void
   /** Result from completeNurseryRitual — shown in completion phase */
   completionResult?: {
+    barId: string
     barTitle: string
     vibeulonsAwarded: number
     planted: boolean
+    inHand: boolean
   } | null
+  /**
+   * Carry the freshly minted BAR out of the ritual so it can be planted in a
+   * nursery. Given only when the BAR was not auto-planted.
+   */
+  onCarryBar?: (barId: string) => void
 }
 
 /** Face-voiced intro framing per move category. */
@@ -87,6 +94,7 @@ export function NurseryRitualFlow({
   onComplete,
   onClose,
   completionResult,
+  onCarryBar,
 }: Props) {
   const [phase, setPhase] = useState<Phase>('intro')
   const [coreResponse, setCoreResponse] = useState<unknown>(null)
@@ -242,6 +250,27 @@ export function NurseryRitualFlow({
                   <p className="text-amber-400 text-xs">
                     +{completionResult.vibeulonsAwarded} vibeulon{completionResult.vibeulonsAwarded !== 1 ? 's' : ''}
                   </p>
+                )}
+
+                {/* This bed already had a flagship, so the BAR stayed in your
+                    hands rather than disappearing. Say so, and offer the plant. */}
+                {!completionResult.planted && (
+                  <div className="border-t border-zinc-700/70 pt-2 space-y-2">
+                    <p className="text-zinc-400 text-xs leading-relaxed">
+                      This bed already has its flagship, so this BAR is yours to carry.
+                      {completionResult.inHand ? ' It is in your Hand.' : ' It is in your Vault.'}{' '}
+                      Take it to any nursery and plant it there.
+                    </p>
+                    {onCarryBar && (
+                      <button
+                        type="button"
+                        onClick={() => onCarryBar(completionResult.barId)}
+                        className="w-full py-2 rounded-lg border border-emerald-700/60 text-emerald-300 hover:bg-emerald-950/40 text-sm font-medium transition-colors"
+                      >
+                        Carry it to a nursery →
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentPlayer } from '@/lib/auth'
+import { addBarToHandForPlayer } from '@/lib/hand-service'
 import { dbBase } from '@/lib/db'
 import {
   INNER_GARDEN_CHAPTER_1_SOURCE,
@@ -106,5 +107,23 @@ export async function POST(request: Request) {
     data: { rootId: result.id },
   })
 
-  return NextResponse.json({ resultBarId: result.id })
+  // Deal the harvest into the Hand so the ritual actually hands the player
+  // something. Player signal (2026-04-08, spoke-0-clean-up): "what I input
+  // should be turned into a BAR and I should have the option to plant the BAR
+  // once I've completed the ritual." The BAR was minted but left in the Vault
+  // behind a raw id, so the loop had no visible close.
+  let inHand = false
+  try {
+    const handRes = await addBarToHandForPlayer(player.id, result.id)
+    inHand = 'success' in handRes && handRes.success === true
+  } catch (e) {
+    // A full Hand is not a failure — the BAR is still in the Vault.
+    console.error('[inner-garden:completions] hand deal failed', e)
+  }
+
+  return NextResponse.json({
+    resultBarId: result.id,
+    resultBarTitle: `Inner Garden harvest: ${source.title}`.slice(0, 80),
+    inHand,
+  })
 }

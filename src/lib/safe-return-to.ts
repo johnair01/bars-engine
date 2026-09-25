@@ -28,15 +28,27 @@ export function isPublicCampaignEntryReturnTo(returnTo: string | undefined): boo
 }
 
 /**
- * Build `/conclave/onboarding` URL with optional `returnTo` (post-orientation),
- * `ritual`, and `reset` query params.
+ * Where to send a player once an adventure/ritual finishes.
+ *
+ * `/conclave/onboarding` was retired and this was stubbed to always return `/` —
+ * but it kept taking a `returnTo` its callers still pass, and silently threw it
+ * away. Every completion therefore dumped the player on the dashboard:
+ *   "upon completion it took be back to the beginning of the CYOA. It does give
+ *    me an ability to go back to the hub, but it should take players right back
+ *    to where the NPC they are talking to was… we need to make sure this loop
+ *    closes" (site signal, 2026-04-08)
+ *
+ * `returnTo` now wins when it is a safe same-origin path; `/` remains the
+ * fallback, so onboarding callers that pass nothing behave exactly as before.
+ * `ritual` and `reset` are still accepted and unused — the retired route was
+ * the only thing that consumed them.
  */
-export function buildOnboardingUrl(_params?: {
+export function buildOnboardingUrl(params?: {
   returnTo?: string
   ritual?: boolean
   reset?: boolean
 }) {
-  return '/'
+  return resolvePostOnboardingRedirect(params?.returnTo, '/')
 }
 
 export function resolvePostOnboardingRedirect(returnTo: string | undefined, fallback: string): string {
