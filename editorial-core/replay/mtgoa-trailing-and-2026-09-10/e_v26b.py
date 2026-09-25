@@ -1,0 +1,1 @@
+E = [("*In play:* you said you'd show up for someone, and when it gets inconvenient, the Controller is what holds you to your word.", "*In play:* you said you'd show up for someone. When it gets inconvenient, the Controller is what holds you to your word.")]

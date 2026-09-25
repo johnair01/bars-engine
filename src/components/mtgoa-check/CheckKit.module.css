@@ -1,0 +1,112 @@
+/* MTGOA course check — shared chrome, effects, breakpoints and motion.
+ *
+ * Layout and color live inline on the elements, read from --bars-* tokens
+ * (UI_COVENANT: tokens or it does not exist). This file holds only the things
+ * inline styles cannot express: focus rings, breakpoints, and motion.
+ *
+ * Extracted from `src/components/clean-up/CleanUpCheck.module.css` so days 1–30
+ * share one shell instead of forking it five times. The per-day element color
+ * arrives as `--check-accent` / `--check-accent-lift`, set by `CheckShell`.
+ */
+
+.root {
+  /* The draw band is a well, so it sits below the page rather than on it. */
+  --check-well: color-mix(in srgb, var(--bars-bg-base) 62%, #000);
+  --check-gutter: clamp(16px, 5vw, 32px);
+
+  min-height: 100vh;
+  background: var(--bars-bg-base);
+  font-family: var(--bars-font-body);
+  color: var(--bars-text-primary);
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px var(--check-gutter) 90px;
+}
+
+/* Pointer affordance for the tappable rows/chips/cards. */
+.clk {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.field {
+  width: 100%;
+  font-family: var(--bars-font-body);
+  /* 16px prevents iOS zoom-on-focus. Never drop below it. */
+  font-size: 16px;
+  color: var(--bars-text-primary);
+  background: var(--bars-surface-inset);
+  border: 1px solid var(--bars-line-strong);
+  border-radius: var(--bars-radius-lg);
+  resize: vertical;
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--check-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--check-accent) 26%, transparent);
+}
+
+.clk:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--check-accent-lift);
+  outline-offset: 2px;
+}
+
+.link {
+  color: var(--bars-gold);
+  text-decoration: none;
+}
+.link:hover {
+  color: var(--bars-text-primary);
+}
+
+/* The deck threshold label between two gold hairlines. It holds one line where
+   there is room and wraps on narrow phones — it must never widen the page. */
+.ribbon {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.ribbonRule {
+  flex: 1;
+  min-width: 20px;
+  height: 1px;
+}
+
+@media (max-width: 640px) {
+  .ribbon {
+    white-space: normal;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .clk {
+    transition: transform 0.15s var(--bars-ease-out), filter 0.15s ease, box-shadow 0.2s ease;
+  }
+  .clk:hover {
+    filter: brightness(1.08);
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+  .fadeup {
+    animation: fadeup 0.4s var(--bars-ease-out) both;
+  }
+}
+
+@keyframes fadeup {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

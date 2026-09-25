@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/cards.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+<style>
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  html, body { margin:0; }
+  a { color:#C9A84C; text-decoration:none; }
+  a:hover { color:var(--bars-text-primary); }
+  .clk { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .field:focus { outline:none; border-color:#4a7c59 !important; box-shadow: 0 0 0 3px color-mix(in srgb, #27ae60 26%, transparent); }
+  .pick { font-family:var(--bars-font-body); font-size:17px; font-weight:600; color:#fff; background:#11150f; border:1px solid rgba(74,124,89,.7); border-radius:8px; padding:8px 10px; margin:2px 0; max-width:100%; cursor:pointer; }
+  .pick:focus { outline:none; border-color:#2ecc71; box-shadow:0 0 0 3px color-mix(in srgb,#27ae60 24%,transparent); }
+  .pick.empty { color:#C9A84C; border-style:dashed; border-color:rgba(201,168,76,.6); }
+  .gates { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width: 640px) {
+    .gates { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:6px; }
+    .gates > * { flex:0 0 78%; scroll-snap-align:center; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .clk { transition: transform .15s var(--bars-ease-out), filter .15s ease, box-shadow .2s ease; }
+    .clk:hover { filter: brightness(1.08); }
+    .press:active { transform: scale(.97); }
+    .fadeup { animation: fadeup .4s var(--bars-ease-out) both; }
+    @keyframes fadeup { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none;} }
+    .flipin { animation: flipin .34s var(--bars-ease-out) both; }
+    @keyframes flipin { from { transform: rotateY(-12deg) scale(.96); opacity:.4; } to { transform:none; opacity:1; } }
+    .sheetup { animation: sheetup .28s var(--bars-ease-out) both; }
+    @keyframes sheetup { from { transform: translateY(14px); opacity:0;} to { transform:none; opacity:1;} }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bars-bg-base);font-family:var(--bars-font-body);color:var(--bars-text-primary);">
+  <div style="max-width:640px;margin:0 auto;padding:28px clamp(16px,5vw,32px) 90px;">
+
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:12px;">
+      <span class="bars-label" style="color:#C9A84C;">Day 4 · Grow Up</span>
+      <span class="bars-label" style="color:#2ecc71;">grow up · 木</span>
+    </div>
+    <div style="height:2px;border-radius:2px;background:var(--bars-line);overflow:hidden;">
+      <div style="{{ progressStyle }}"></div>
+    </div>
+
+    <!-- ============ 1 · ENTRY ============ -->
+    <sc-if value="{{ sEntry }}" hint-placeholder-val="{{ true }}">
+      <div class="fadeup" style="padding-top:36px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">Day 4 · Grow Up</span>
+        <h1 class="bars-title" style="margin:10px 0 0;font-size:clamp(30px,6vw,42px);line-height:1.16;font-weight:700;text-wrap:pretty;">You already have a starting hand.</h1>
+        <p class="bars-prose" style="margin:18px 0 0;font-size:17px;line-height:1.62;color:var(--bars-text-secondary);text-wrap:pretty;">You do not need a platform. You need to risk being useful where people already trust you. Today, draw a Game Master and build one small practice rep for the hand you already have.</p>
+        <div style="margin-top:24px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid #4a7c59;">
+          <span class="bars-label" style="color:#2ecc71;">where this sits</span>
+          <p class="bars-prose" style="margin:9px 0 0;font-size:15px;line-height:1.6;color:var(--bars-text-secondary);text-wrap:pretty;">Wake Up asked what is happening. Open Up asked what energy is here. Clean Up asked what the charged part says in its own voice. Grow Up asks which capacity you are willing to practice before you ask it to be easy.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:28px;">
+          <div class="clk press" onClick="{{ toRoom }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-liminal);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-liminal);">Draw a Game Master →</div>
+          <a href="{{ wakeHref }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-primary);padding:15px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">I want to start from the beginning →</a>
+        </div>
+        <p style="margin:18px 0 0;text-align:center;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">Your reflections stay on this page. They are not saved or sent to us.</p>
+      </div>
+    </sc-if>
+
+    <!-- ============ 2 · THE ROOM + THE HANDOFF ============ -->
+    <sc-if value="{{ sRoom }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">step 1 · the room</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;text-wrap:pretty;">Where does your word already carry weight?</h2>
+        <p class="bars-prose" style="margin:8px 0 0;font-size:16px;line-height:1.55;color:var(--bars-text-secondary);">Tap the rooms where people take your recommendation seriously. Pick as many as are true.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:18px;">
+          <sc-for list="{{ roomChips }}" as="r" hint-placeholder-count="12">
+            <span class="clk press" onClick="{{ r.pick }}" style="{{ r.style }}">{{ r.label }}</span>
+          </sc-for>
+        </div>
+
+        <div style="margin-top:32px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">step 2 · the handoff</span>
+          <h3 class="bars-title" style="margin:9px 0 0;font-size:22px;line-height:1.25;text-wrap:pretty;">What could you actually put in their hands?</h3>
+          <p class="bars-prose" style="margin:8px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">We'll name the ask for you. Pick every one that's honest today — one is plenty.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+            <sc-for list="{{ handoffOptions }}" as="h" hint-placeholder-count="3">
+              <div class="clk press" onClick="{{ h.pick }}" style="{{ h.style }}">
+                <span class="bars-title" style="display:block;font-size:17px;line-height:1.3;color:#fff;">{{ h.label }}</span>
+                <span class="bars-prose" style="display:block;margin-top:5px;font-size:14.5px;line-height:1.5;color:var(--bars-text-secondary);">{{ h.ask }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:28px;">
+          <span class="clk" onClick="{{ toEntry }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span class="clk press" onClick="{{ toNames }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">continue →</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ 3 · NAMES ============ -->
+    <sc-if value="{{ sNames }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">step 3 · dump names</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;text-wrap:pretty;">Who comes to mind? Don't filter yet.</h2>
+        <p class="bars-prose" style="margin:8px 0 0;font-size:16px;line-height:1.55;color:var(--bars-text-secondary);">{{ namesSub }} First names are enough. Then check the one or two you'd actually approach.</p>
+
+        <div style="display:flex;gap:9px;margin-top:18px;">
+          <input class="field" value="{{ nameDraft }}" onChange="{{ onNameDraft }}" onKeyDown="{{ onNameKey }}" placeholder="a name, then Enter" style="flex:1;min-width:0;padding:14px 15px;font-family:var(--bars-font-body);font-size:16px;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);">
+          <span class="clk press" onClick="{{ addName }}" style="display:flex;align-items:center;justify-content:center;padding:0 20px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:var(--bars-text-primary);">add</span>
+        </div>
+
+        <sc-if value="{{ hasNames }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;">
+            <sc-for list="{{ nameList }}" as="n" hint-placeholder-count="0">
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:var(--bars-radius-lg);{{ n.rowStyle }}">
+                <span class="clk press" onClick="{{ n.toggle }}" style="{{ n.boxStyle }}">{{ n.mark }}</span>
+                <span class="clk" onClick="{{ n.toggle }}" style="flex:1;min-width:0;font-size:16px;color:{{ n.textColor }};">{{ n.name }}</span>
+                <span class="clk" onClick="{{ n.remove }}" style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-text-muted);padding:6px 8px;">×</span>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:12px 0 0;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">{{ checkedCount }} · checked names come with you into the rep</p>
+        </sc-if>
+        <sc-if value="{{ noNames }}" hint-placeholder-val="{{ true }}">
+          <p class="bars-prose" style="margin:16px 0 0;padding:15px 16px;border-radius:var(--bars-radius-lg);border:1px dashed var(--bars-line-strong);font-size:15px;line-height:1.55;color:var(--bars-text-muted);">Nothing here yet. The friend who asks good questions. The coworker who froze last month. The person who always asks what you're reading.</p>
+        </sc-if>
+
+        <p style="margin:14px 0 0;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">names stay in this browser · never sent</p>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px;">
+          <span class="clk" onClick="{{ toRoom }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span style="display:flex;gap:9px;align-items:center;">
+            <span class="clk" onClick="{{ toBelief }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:13px 10px;">skip</span>
+            <span class="clk press" onClick="{{ toBelief }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">continue →</span>
+          </span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ 4 · THE BELIEF → THE CAPACITY ============ -->
+    <sc-if value="{{ sBelief }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">step 4 · what stops the handoff</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;text-wrap:pretty;">{{ beliefHeading }}</h2>
+        <p class="bars-prose" style="margin:8px 0 0;font-size:16px;line-height:1.55;color:var(--bars-text-secondary);">Familiar sentences, not types. The capacity you need is on the other side of one of them.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
+          <sc-for list="{{ beliefOptions }}" as="b" hint-placeholder-count="7">
+            <div class="clk press" onClick="{{ b.pick }}" style="{{ b.style }}">
+              <span class="bars-title" style="display:block;font-size:17px;line-height:1.35;color:#fff;text-wrap:pretty;">{{ b.voice }}</span>
+              <sc-if value="{{ b.revealed }}" hint-placeholder-val="{{ false }}">
+                <span style="display:block;margin-top:9px;padding-top:9px;border-top:1px solid rgba(46,204,113,.25);">
+                  <span class="bars-label" style="display:block;color:#2ecc71;">the capacity on the other side</span>
+                  <span class="bars-prose" style="display:block;margin-top:4px;font-size:15px;line-height:1.5;color:var(--bars-text-secondary);">{{ b.capacity }}</span>
+                </span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px;">
+          <span class="clk" onClick="{{ toNames }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span class="clk press" onClick="{{ toDraw }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">Deal the gates →</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ 5 · THE DRAW ============ -->
+    <sc-if value="{{ sDraw }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">the Allyship Deck · Grow Up · Raise Awareness</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;">Which Game Master has the move?</h2>
+        <p class="bars-prose" style="margin:8px 0 0;color:var(--bars-text-secondary);text-wrap:pretty;">Six Game Masters hold six different ways to grow a capacity. Draw three gates. A card is an invitation, not a verdict. Choose one, draw again, or skip.</p>
+
+        <div style="margin:22px calc(-1 * clamp(16px,5vw,32px)) 0;padding:26px clamp(16px,5vw,32px) 28px;background:#0a0908;box-shadow:var(--bars-shadow-inset-top);border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <span style="flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(201,168,76,.45));"></span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#C9A84C;white-space:nowrap;">◇ grow up · raise awareness · 6 gates ◇</span>
+            <span style="flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(201,168,76,.45));"></span>
+          </div>
+
+          <div class="gates" style="margin-top:22px;">
+            <sc-for list="{{ gates }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <sc-if value="{{ g.down }}" hint-placeholder-val="{{ true }}">
+                  <div class="clk press" onClick="{{ g.reveal }}" style="{{ g.backStyle }}">
+                    <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top left, rgba(39,174,96,.22), transparent 64%);"></div>
+                    <div style="position:absolute;inset:9px;border-radius:8px;border:1px solid rgba(201,168,76,.30);"></div>
+                    <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:100%;padding:14px;">
+                      <span style="{{ g.backPip }}">{{ g.moveIconEl }}</span>
+                      <span class="bars-label" style="font-size:8px;color:#2ecc71;text-align:center;">a Game Master gate</span>
+                      <span style="font-family:var(--bars-font-display);font-weight:700;font-size:26px;color:rgba(201,168,76,.55);">◇</span>
+                      <span class="bars-label" style="font-size:8px;color:var(--bars-text-muted);text-align:center;">tap to turn it over</span>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ g.up }}" hint-placeholder-val="{{ false }}">
+                  <div class="clk press flipin" onClick="{{ g.open }}" style="{{ g.rootStyle }}">
+                    <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top left, rgba(39,174,96,.28), transparent 62%);"></div>
+                    <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+                      <div style="padding:12px 13px 9px;border-bottom:1px solid rgba(74,124,89,.55);">
+                        <h3 class="bars-title" style="margin:0;font-size:16px;line-height:1.12;color:#fff;">{{ g.title }}</h3>
+                      </div>
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 12px 0;">
+                        <span style="display:flex;flex-direction:column;align-items:center;gap:4px;"><span style="{{ g.pipStyle }}">{{ g.moveIconEl }}</span><span class="bars-label" style="font-size:8px;color:#2ecc71;">Grow Up</span></span>
+                        <span style="display:flex;flex-direction:column;align-items:center;gap:4px;"><span style="{{ g.faceStyle }}">{{ g.faceMono }}</span><span class="bars-label" style="font-size:8px;color:var(--bars-text-secondary);">{{ g.faceLabel }}</span></span>
+                      </div>
+                      <div style="padding:8px 13px 0;"><span class="bars-label" style="font-size:8px;color:#2ecc71;">◇ Raise Awareness</span></div>
+                      <div style="flex:1;padding:8px 13px 12px;"><p class="bars-prose" style="margin:0;font-size:11.5px;line-height:1.42;color:var(--bars-text-primary);">{{ g.q }}</p></div>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ g.up }}" hint-placeholder-val="{{ false }}">
+                  <span class="clk press" onClick="{{ g.choose }}" style="{{ g.chooseStyle }}">{{ g.chooseLabel }}</span>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px;">
+          <span class="clk" onClick="{{ toBelief }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span style="display:flex;gap:9px;flex-wrap:wrap;">
+            <span class="clk press" onClick="{{ redeal }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:14px;color:var(--bars-text-primary);padding:13px 18px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">deal three new gates</span>
+            <span class="clk press" onClick="{{ skipDraw }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:14px;color:var(--bars-text-secondary);padding:13px 18px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line);">skip the draw →</span>
+          </span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ 6 · CARD BRIDGE ============ -->
+    <sc-if value="{{ sBridge }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">the Game Master you drew</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:28px;line-height:1.2;text-wrap:pretty;">{{ bridgeTitle }}</h2>
+
+        <div style="max-width:270px;margin:24px auto 0;{{ bridgeCardStyle }}">
+          <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top left, rgba(39,174,96,.28), transparent 62%);"></div>
+          <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+            <div style="padding:15px 17px 11px;border-bottom:1px solid rgba(74,124,89,.55);">
+              <h3 class="bars-title" style="margin:0;font-size:20px;line-height:1.14;color:#fff;">{{ pickTitle }}</h3>
+              <span style="display:block;margin-top:5px;font-size:13px;color:var(--bars-text-secondary);">{{ pickSub }}</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:13px 15px 0;">
+              <span style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="{{ bridgePip }}">{{ bridgeIcon }}</span><span class="bars-label" style="font-size:9px;color:#2ecc71;">Grow Up</span></span>
+              <span style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="{{ bridgeFaceStyle }}">{{ pickFaceMono }}</span><span class="bars-label" style="font-size:9px;color:var(--bars-text-secondary);">{{ pickFaceLabel }}</span></span>
+            </div>
+            <div style="flex:1;padding:11px 17px 16px;"><span class="bars-label" style="font-size:9px;color:#2ecc71;">◇ Raise Awareness</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:22px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);box-shadow:var(--bars-shadow-inset-top);">
+          <span class="bars-label" style="color:#2ecc71;">the card asks</span>
+          <p class="bars-title" style="margin:9px 0 0;font-size:19px;line-height:1.34;color:#fff;text-wrap:pretty;">{{ pickQ }}</p>
+          <p class="bars-prose" style="margin:11px 0 0;font-size:15px;line-height:1.6;color:var(--bars-text-secondary);text-wrap:pretty;">What would it look like to practice this one notch beyond where you usually stop?</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:24px;">
+          <div class="clk press" onClick="{{ toRep }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-liminal);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-liminal);">Build a rep with this card →</div>
+          <div class="clk press" onClick="{{ openPicked }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-primary);padding:14px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">View the card full-screen →</div>
+          <div class="clk press" onClick="{{ toDraw }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-secondary);padding:14px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line);">Draw again →</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ 7 · THE REP · SENTENCE BUILDER ============ -->
+    <sc-if value="{{ sRep }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">build the capacity in the real world</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;">What is one notch bigger than today?</h2>
+        <p class="bars-prose" style="margin:8px 0 0;color:var(--bars-text-secondary);text-wrap:pretty;">Not a performance of courage. Fill in the sentence — every part is a pick, and every part is optional.</p>
+
+        <sc-if value="{{ hasPick }}" hint-placeholder-val="{{ false }}">
+          <div class="clk" onClick="{{ openPicked }}" style="display:flex;gap:12px;align-items:center;margin-top:20px;padding:13px 15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);border-left:2px solid #C9A84C;">
+            <span style="{{ carriedPip }}">{{ carriedIcon }}</span>
+            <span style="flex:1;min-width:0;">
+              <span class="bars-label" style="display:block;color:#C9A84C;">the card you're carrying</span>
+              <span class="bars-title" style="display:block;font-size:15px;color:#fff;margin-top:2px;">{{ pickTitle }}</span>
+              <span style="display:block;font-size:var(--bars-text-sm);color:var(--bars-text-secondary);margin-top:2px;">{{ pickFaceLabel }} · {{ pickAction }}</span>
+            </span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noPick }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:20px;padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);border-left:2px solid var(--bars-line-strong);">
+            <span class="bars-label" style="color:var(--bars-text-muted);">no card · you're carrying the question yourself</span>
+            <span class="clk" onClick="{{ toDraw }}" style="display:inline-block;margin-top:9px;font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#C9A84C;">← draw a Game Master after all</span>
+          </div>
+        </sc-if>
+
+        <div style="margin-top:20px;padding:20px 18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);box-shadow:var(--bars-shadow-inset-top);">
+          <span class="bars-label" style="color:#2ecc71;">the rep</span>
+          <p style="margin:12px 0 0;font-family:var(--bars-font-body);font-size:17px;line-height:2.1;color:var(--bars-text-secondary);">
+            I will practice
+            <select class="{{ repClass }}" value="{{ repVal }}" onChange="{{ onRepSel }}">
+              <option value="">choose a rep…</option>
+              <sc-for list="{{ repOptions }}" as="o" hint-placeholder-count="0">
+                <option value="{{ o.value }}">{{ o.label }}</option>
+              </sc-for>
+            </select>
+            with
+            <select class="{{ whoClass }}" value="{{ whoVal }}" onChange="{{ onWhoSel }}">
+              <option value="">who?</option>
+              <sc-for list="{{ whoOptions }}" as="o" hint-placeholder-count="0">
+                <option value="{{ o.value }}">{{ o.label }}</option>
+              </sc-for>
+            </select>
+            <select class="{{ whereClass }}" value="{{ whereVal }}" onChange="{{ onWhereSel }}">
+              <option value="">where?</option>
+              <sc-for list="{{ whereOptions }}" as="o" hint-placeholder-count="0">
+                <option value="{{ o.value }}">{{ o.label }}</option>
+              </sc-for>
+            </select>
+            <select class="{{ whenClass }}" value="{{ whenVal }}" onChange="{{ onWhenSel }}">
+              <option value="">when?</option>
+              <sc-for list="{{ whenOptions }}" as="o" hint-placeholder-count="0">
+                <option value="{{ o.value }}">{{ o.label }}</option>
+              </sc-for>
+            </select>.
+          </p>
+          <sc-if value="{{ hasFacePrompt }}" hint-placeholder-val="{{ false }}">
+            <p class="bars-prose" style="margin:14px 0 0;font-size:14px;line-height:1.5;color:var(--bars-text-muted);font-style:italic;">{{ facePrompt }}</p>
+          </sc-if>
+        </div>
+
+        <div style="margin-top:14px;padding:20px 18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);box-shadow:var(--bars-shadow-inset-top);">
+          <span class="bars-label" style="color:#2ecc71;">how I make it possible — and how I keep it safe</span>
+          <p style="margin:12px 0 0;font-family:var(--bars-font-body);font-size:17px;line-height:2.1;color:var(--bars-text-secondary);">
+            I'll make it possible by
+            <select class="{{ supportClass }}" value="{{ supportVal }}" onChange="{{ onSupportSel }}">
+              <option value="">choose…</option>
+              <sc-for list="{{ supportOptions }}" as="o" hint-placeholder-count="0">
+                <option value="{{ o.value }}">{{ o.label }}</option>
+              </sc-for>
+            </select>,
+            and I'll pause if
+            <select class="{{ boundaryClass }}" value="{{ boundaryVal }}" onChange="{{ onBoundarySel }}">
+              <option value="">choose…</option>
+              <sc-for list="{{ boundaryOptions }}" as="o" hint-placeholder-count="0">
+                <option value="{{ o.value }}">{{ o.label }}</option>
+              </sc-for>
+            </select>.
+          </p>
+        </div>
+
+        <sc-if value="{{ hasWhy }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid #4a7c59;">
+            <span class="bars-label" style="color:#2ecc71;">why this one · from your own answers</span>
+            <p class="bars-prose" style="margin:9px 0 0;font-size:15px;line-height:1.6;color:var(--bars-text-secondary);text-wrap:pretty;">{{ whyLine }}</p>
+          </div>
+        </sc-if>
+
+        <div style="margin-top:14px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);box-shadow:var(--bars-shadow-inset-top);">
+          <span class="bars-label" style="color:var(--bars-text-muted);">in my own words · optional</span>
+          <textarea class="field" rows="2" value="{{ extra }}" onChange="{{ onExtra }}" placeholder="anything the picks didn't catch" style="width:100%;margin-top:10px;padding:13px 14px;font-family:var(--bars-font-body);font-size:16px;line-height:1.55;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);resize:vertical;"></textarea>
+        </div>
+
+        <p style="margin:14px 0 0;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">stays in this browser · never sent</p>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px;">
+          <span class="clk" onClick="{{ backFromRep }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span class="clk press" onClick="{{ toLand }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">Give it a place to land →</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ 8 · RETURN CONTAINER ============ -->
+    <sc-if value="{{ sLand }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">a rep, not a promise</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;">Give it a place to land.</h2>
+        <p class="bars-prose" style="margin:8px 0 0;color:var(--bars-text-secondary);text-wrap:pretty;">Choose a container for noticing what the rep teaches. This is not a commitment score.</p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px;">
+          <sc-for list="{{ containers }}" as="c" hint-placeholder-count="4">
+            <div class="clk press" onClick="{{ c.pick }}" style="{{ c.style }}">
+              <span class="bars-title" style="display:block;font-size:17px;line-height:1.3;color:#fff;">{{ c.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ showReminder }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:18px;padding:16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);">
+            <span class="bars-label" style="color:var(--bars-text-muted);">reminder text · yours to paste anywhere</span>
+            <p class="bars-prose" style="margin:9px 0 12px;font-size:15px;line-height:1.55;color:var(--bars-text-primary);">{{ reminderText }}</p>
+            <span class="clk press" onClick="{{ copyReminder }}" style="display:inline-block;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:10px 16px;border-radius:var(--bars-radius-full);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">{{ reminderCopyLabel }}</span>
+            <p style="margin:11px 0 0;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">nothing is scheduled for you</p>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px;">
+          <span class="clk" onClick="{{ toRep }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span class="clk press" onClick="{{ toReceipt }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">See my Day 4 receipt →</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ 9 · RECEIPT ============ -->
+    <sc-if value="{{ sReceipt }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:#2ecc71;">your Day 4 receipt</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:28px;line-height:1.2;text-wrap:pretty;">You have a capacity practice.</h2>
+        <p class="bars-prose" style="margin:10px 0 0;font-size:16px;line-height:1.6;color:var(--bars-text-secondary);text-wrap:pretty;">You do not need proof that you have changed. You have one rep that can teach you something.</p>
+
+        <sc-if value="{{ hasCommitment }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:22px;padding:20px 18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid color-mix(in srgb,#27ae60 45%,transparent);box-shadow:var(--bars-shadow-inset-top),0 0 30px -14px #27ae60;">
+            <span class="bars-label" style="color:#2ecc71;">the rep</span>
+            <p class="bars-title" style="margin:10px 0 0;font-size:20px;line-height:1.4;color:#fff;text-wrap:pretty;">{{ commitment }}</p>
+            <sc-if value="{{ hasGuardrails }}" hint-placeholder-val="{{ false }}">
+              <p class="bars-prose" style="margin:10px 0 0;font-size:15px;line-height:1.6;color:var(--bars-text-secondary);text-wrap:pretty;">{{ guardrails }}</p>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ hasPick }}" hint-placeholder-val="{{ false }}">
+          <div class="clk" onClick="{{ openPicked }}" style="display:flex;gap:12px;align-items:center;margin-top:16px;padding:13px 15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);border-left:2px solid #C9A84C;">
+            <span style="{{ carriedPip }}">{{ carriedIcon }}</span>
+            <span style="flex:1;min-width:0;">
+              <span class="bars-label" style="display:block;color:#C9A84C;">{{ pickFaceLabel }} · the card you drew</span>
+              <span class="bars-title" style="display:block;font-size:15px;color:#fff;margin-top:2px;">{{ pickTitle }}</span>
+              <span style="display:block;font-size:var(--bars-text-sm);color:var(--bars-text-secondary);margin-top:2px;">{{ pickQ }}</span>
+            </span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ hasSummary }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:1px;border-radius:var(--bars-radius-lg);overflow:hidden;border:1px solid var(--bars-line-strong);">
+            <sc-for list="{{ summary }}" as="r" hint-placeholder-count="3">
+              <div style="padding:15px 16px;background:var(--bars-surface-card);">
+                <span class="bars-label" style="color:var(--bars-text-muted);">{{ r.label }}</span>
+                <p class="bars-prose" style="margin:6px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-primary);text-wrap:pretty;">{{ r.value }}</p>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noSummary }}" hint-placeholder-val="{{ false }}">
+          <p class="bars-prose" style="margin:18px 0 0;padding:15px 16px;border-radius:var(--bars-radius-lg);border:1px dashed var(--bars-line-strong);font-size:15px;line-height:1.55;color:var(--bars-text-muted);">You kept it all in your head. That still counts — the rep is the thing, not the record of it.</p>
+        </sc-if>
+
+        <div style="margin-top:26px;padding:20px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid color-mix(in srgb, var(--bars-liminal) 45%, transparent);box-shadow:var(--bars-shadow-inset-top),0 0 34px -14px var(--bars-liminal);">
+          <span class="bars-label" style="color:var(--bars-liminal-glow);">tomorrow · Day 5 · Show Up</span>
+          <p class="bars-title" style="margin:10px 0 0;font-size:20px;line-height:1.3;color:#fff;text-wrap:pretty;">Show Up asks: what can you make that another person can actually act on?</p>
+          <span style="display:inline-block;margin-top:16px;font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-muted);padding:14px 22px;border-radius:var(--bars-radius-lg);border:1px dashed var(--bars-line-strong);">Continue to Day 5 · coming next</span>
+        </div>
+
+        <div style="margin-top:22px;padding:20px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid color-mix(in srgb,#C9A84C 40%,transparent);box-shadow:var(--bars-shadow-inset-top);">
+          <span class="bars-label" style="color:#C9A84C;">before you recommend it</span>
+          <h3 class="bars-title" style="margin:8px 0 0;font-size:20px;line-height:1.25;color:#fff;text-wrap:pretty;">Haven't read the book yet? Get <em>Mastering the Game of Allyship</em> before you recommend it.</h3>
+          <p class="bars-prose" style="margin:9px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">Keep the card you drew close. The deck is where the six Game Masters live.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
+            <a href="{{ bookHref }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:14px 22px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">Get the book →</a>
+            <a href="{{ deckHref }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-primary);padding:14px 22px;border-radius:var(--bars-radius-lg);border:1px solid color-mix(in srgb,#C9A84C 55%,transparent);">Explore the Allyship Deck →</a>
+          </div>
+        </div>
+
+        <div style="margin-top:26px;padding-top:20px;border-top:1px solid var(--bars-line);">
+          <span class="bars-label" style="color:var(--bars-text-secondary);">the moves you made here</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+            <sc-for list="{{ evidence }}" as="e" hint-placeholder-count="2">
+              <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 13px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);border:1px solid var(--bars-line);color:var(--bars-text-secondary);">{{ e.label }}</span>
+            </sc-for>
+          </div>
+          <p class="bars-prose" style="margin:16px 0 0;font-size:var(--bars-text-sm);line-height:1.6;color:var(--bars-text-muted);">How the book reads this: Grow Up raises your throughput on Show Up. A rep you can finish teaches you more than a gesture you can only admire.</p>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;align-items:center;">
+          <span class="clk" onClick="{{ toLand }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span class="clk press" onClick="{{ restart }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:14px;color:var(--bars-text-primary);padding:12px 20px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">Draw a different Game Master →</span>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- ============ CARD SHEET ============ -->
+  <sc-if value="{{ modalOn }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:60;background:rgba(5,4,3,.86);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;">
+      <div class="sheetup" onClick="{{ stop }}" style="width:100%;max-width:520px;max-height:92dvh;display:flex;flex-direction:column;background:#0a0908;border-radius:20px 20px 0 0;box-shadow:0 -20px 60px -20px rgba(0,0,0,.95), var(--bars-shadow-inset-top);border-top:1px solid rgba(201,168,76,.35);">
+        <div style="display:flex;justify-content:center;padding:10px 0 4px;"><span style="width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.16);"></span></div>
+        <div style="flex:1;overflow-y:auto;padding:10px 20px 20px;">
+          <div style="max-width:300px;margin:0 auto;{{ modalCardStyle }}">
+            <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top left, rgba(39,174,96,.28), transparent 62%);"></div>
+            <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+              <div style="padding:16px 18px 12px;border-bottom:1px solid rgba(74,124,89,.55);">
+                <h3 class="bars-title" style="margin:0;font-size:22px;line-height:1.14;color:#fff;">{{ modalTitle }}</h3>
+                <span style="display:block;margin-top:5px;font-size:13px;color:var(--bars-text-secondary);">{{ modalSub }}</span>
+              </div>
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 0;">
+                <span style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="{{ modalPip }}">{{ modalIcon }}</span><span class="bars-label" style="font-size:9px;color:#2ecc71;">Grow Up</span></span>
+                <span style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="{{ modalFaceStyle }}">{{ modalFaceMono }}</span><span class="bars-label" style="font-size:9px;color:var(--bars-text-secondary);">{{ modalFaceLabel }}</span></span>
+              </div>
+              <div style="padding:12px 18px 18px;"><span class="bars-label" style="font-size:9px;color:#2ecc71;">◇ Raise Awareness</span></div>
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <span class="bars-label" style="color:var(--bars-text-muted);">what this Game Master brings</span>
+              <p class="bars-prose" style="margin:7px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">{{ modalOperation }}</p>
+            </div>
+            <div>
+              <span class="bars-label" style="color:var(--bars-text-muted);">the question</span>
+              <p class="bars-prose" style="margin:7px 0 0;font-size:16px;line-height:1.55;color:var(--bars-text-primary);">{{ modalQ }}</p>
+            </div>
+            <div>
+              <span class="bars-label" style="color:var(--bars-text-muted);">the practice</span>
+              <p class="bars-prose" style="margin:7px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">{{ modalAction }}</p>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;padding:14px 20px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--bars-line);background:#0a0908;">
+          <span class="clk press" onClick="{{ closeModal }}" style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-family:var(--bars-font-display);font-weight:600;font-size:15px;">close</span>
+          <span class="clk press" onClick="{{ chooseModal }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:var(--bars-radius-lg);background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:var(--bars-shadow-inset-top);">{{ modalChooseLabel }}</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:900},&quot;siteUrl&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;masteringallyship.com&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Adapters (TODO backend)&quot;},&quot;dealFaceUp&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Draw behavior&quot;}}">
+class Component extends DCLogic {
+  order = ['entry','room','names','belief','draw','bridge','rep','land','receipt'];
+  growPath = ['M32 51 V27','M32 34 C24 34 20 27 20 18','M32 30 C40 30 44 24 44 15','M22 53 H42'];
+  faceColor = { shaman:'#6fd0d0', challenger:'#e8896f', regent:'#e0c25a', architect:'#9fb2c8', diplomat:'#6fc795', sage:'#a99ae0' };
+  roomDefs = ['work / colleagues','a team I lead','family','close friends','a group chat','a special-interest or affinity group','faith or spiritual community','my professional network','alumni or school group','neighbors / local','clients or customers','my social media audience'];
+  handoffDefs = [
+    { key:'book', label:'Put the book in their hands', ask:'The ask is simple: read Mastering the Game of Allyship.', short:'the book' },
+    { key:'speak', label:'Bring me in to speak', ask:'The ask is an introduction to whoever books speakers.', short:'a speaking introduction' },
+    { key:'coach', label:'Invite them into group coaching', ask:'The ask is a seat in a facilitated group.', short:'a seat in group coaching' },
+  ];
+  beliefDefs = [
+    { key:'worthy', voice:'\u201cWho am I to put this in front of anyone?\u201d', belief:'I\u2019m not worthy', capacity:'Speaking from your own experience instead of borrowed authority.' },
+    { key:'capable', voice:'\u201cI\u2019ll say it wrong and it\u2019ll land badly.\u201d', belief:'I\u2019m not capable', capacity:'Saying one true sentence plainly, without rehearsing it into mush.' },
+    { key:'good', voice:'\u201cIf they say no, that\u2019s a verdict on me.\u201d', belief:'I\u2019m not good enough', capacity:'Making an offer that another person is free to decline.' },
+    { key:'ready', voice:'\u201cI should know more before I bring this to anyone.\u201d', belief:'I\u2019m not ready', capacity:'Handing off what has already landed in you, unfinished.' },
+    { key:'belong', voice:'\u201cIt feels gross to offer something to my own people.\u201d', belief:'I don\u2019t belong', capacity:'Telling a handoff apart from a sale \u2014 and asking anyway.' },
+    { key:'insig', voice:'\u201cMy circle doesn\u2019t care about this.\u201d', belief:'I\u2019m insignificant', capacity:'Making one specific ask of one specific person.' },
+  ];
+  repDefs = [
+    { key:'recommend', label:'making one honest recommendation, with my real reason', faces:['architect','diplomat'] },
+    { key:'avoided', label:'saying the sentence I\u2019ve been avoiding, out loud, once', faces:['challenger'] },
+    { key:'unspoken', label:'saying one thing I usually leave unspoken', faces:['shaman'] },
+    { key:'moment', label:'naming what I notice in a room while it\u2019s happening', faces:['shaman'] },
+    { key:'why', label:'telling one person why this actually mattered to me', faces:['sage','architect'] },
+    { key:'intro', label:'asking for one introduction', faces:['challenger','regent'] },
+    { key:'weekly', label:'holding the same hard conversation on a repeat', faces:['regent'] },
+    { key:'listen', label:'listening through one conversation without fixing it', faces:['regent','diplomat'] },
+    { key:'askfirst', label:'asking what they need before I offer anything', faces:['diplomat'] },
+    { key:'tend', label:'checking back with someone my bolder voice landed on', faces:['diplomat'] },
+    { key:'dontknow', label:'saying \u201cI don\u2019t know\u201d instead of performing certainty', faces:['sage'] },
+    { key:'callin', label:'calling one person in privately instead of staying quiet', faces:['challenger','shaman'] },
+    { key:'plain', label:'saying it in one sentence, with no hedging', faces:['architect'] },
+    { key:'becoming', label:'doing one thing that matches who I\u2019m becoming', faces:['sage'] },
+  ];
+  whereDefs = ['in person','on a call','by text or DM','by email','in a group chat','in a meeting','in a post'];
+  whenDefs = ['today','in the next 24 hours','this week','the next time it comes up','at a time I\u2019ll set myself'];
+  supportDefs = ['writing the first sentence down before I say it','telling one person that I\u2019m doing it','starting with the easiest room','doing it before I talk myself out of it','asking someone to be in the room with me','giving myself one try, not a campaign'];
+  boundaryDefs = ['they\u2019re not up for it','I notice I\u2019m pushing','it turns into a pitch','I\u2019m doing it to be seen','I need to stop and come back to it'];
+  operations = {
+    shaman: 'Notice emerging capacity \u2014 what is already trying to grow.',
+    challenger: 'Identify the developmental edge \u2014 what has to evolve next.',
+    regent: 'Steward growth through a repeatable practice, not a one-time moment.',
+    architect: 'Strengthen a capability that compounds every time you use it.',
+    diplomat: 'Grow without spending the relationship the growth touches.',
+    sage: 'Integrate the becoming \u2014 who this practice makes you.',
+  };
+  facePrompts = {
+    shaman: 'Shaman: practice seeing or saying one thing you usually leave unspoken.',
+    challenger: 'Challenger: practice the sentence you have been avoiding.',
+    regent: 'Regent: choose a rep you can repeat, not a one-time big moment.',
+    architect: 'Architect: practice the communication skill that would make this land more clearly.',
+    diplomat: 'Diplomat: practice a bolder truth while tending the relationship it touches.',
+    sage: 'Sage: practice one act that matches the person you are becoming.',
+  };
+  containerDefs = [
+    { key:'24h', label:'In the next 24 hours' },
+    { key:'week', label:'This week' },
+    { key:'own', label:'I will add my own reminder' },
+    { key:'later', label:'I will come back later' },
+  ];
+  state = {
+    screen:'entry', pool:[], hand:[], revealed:[], picked:null, modalCard:null,
+    rooms:[], handoffs:[], names:[], nameDraft:'', belief:null,
+    rep:'', who:'', where:'', when:'', support:'', boundary:'', extra:'',
+    container:null, copied:false,
+  };
+
+  componentDidMount() {
+    fetch('deck-data.json').then(r=>r.json()).then(d=>{
+      const pool = (d.cards||[]).filter(c => c.move==='grow' && c.domain==='aware');
+      this.setState({ pool, hand:this.deal(pool) });
+    }).catch(()=>{});
+    this._key = (e)=>{ if (e.key==='Escape' && this.state.modalCard) this.setState({ modalCard:null }); };
+    window.addEventListener('keydown', this._key);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._key); }
+
+  deal(pool) {
+    const p = (pool || this.state.pool).slice();
+    for (let i=p.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [p[i],p[j]]=[p[j],p[i]]; }
+    return p.slice(0,3);
+  }
+  go(screen) { this.setState({ screen }); window.scrollTo(0,0); }
+  toggle(list, v) { return list.indexOf(v)===-1 ? list.concat([v]) : list.filter(x=>x!==v); }
+  addName() {
+    const n = (this.state.nameDraft||'').trim();
+    if (!n) return;
+    if (this.state.names.some(x=>x.name.toLowerCase()===n.toLowerCase())) { this.setState({ nameDraft:'' }); return; }
+    this.setState({ names: this.state.names.concat([{ name:n, checked:true }]), nameDraft:'' });
+  }
+  moveIconEl(size) {
+    return React.createElement('svg', { width:size, height:size, viewBox:'0 0 64 64', fill:'none', stroke:'#fff', strokeWidth:3.4, strokeLinecap:'round', strokeLinejoin:'round' },
+      this.growPath.map((d,i)=>React.createElement('path',{ key:i, d })));
+  }
+  pipStyle(sz) {
+    return 'display:flex;align-items:center;justify-content:center;width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:linear-gradient(150deg,#4a7c59,#011309);box-shadow:0 0 10px -3px #27ae60;flex:none;';
+  }
+  faceStyle(face, sz, fs) {
+    const col = this.faceColor[face] || '#9fb2c8';
+    return 'display:flex;align-items:center;justify-content:center;width:'+sz+'px;height:'+sz+'px;border-radius:9px;font-family:var(--bars-font-display);font-weight:700;font-size:'+fs+'px;color:'+col+';background:color-mix(in srgb,'+col+' 14%,transparent);border:1px dashed color-mix(in srgb,'+col+' 60%,transparent);';
+  }
+  cardRoot(selected, full) {
+    return 'position:relative;aspect-ratio:2.5/3.5;'+(full?'max-height:min(52dvh,380px);':'')+'border-radius:var(--bars-radius-lg);overflow:hidden;border:2px solid '+(selected?'#C9A84C':'color-mix(in srgb,#C9A84C 55%,transparent)')+';background:radial-gradient(120% 90% at 78% 8%,#052e16,#011309 64%);box-shadow:var(--bars-shadow-inset-top),0 0 26px 1px rgba(39,174,96,'+(selected?'.5':'.24')+'),0 18px 40px -20px rgba(0,0,0,.9);';
+  }
+  url() { return 'https://' + (this.props.siteUrl ?? 'masteringallyship.com'); }
+  repLabel() { const r = this.repDefs.find(x=>x.key===this.state.rep); return r ? r.label : ''; }
+  handoffSel() { return this.handoffDefs.filter(h=>this.state.handoffs.indexOf(h.key)!==-1); }
+  handoffShorts() {
+    const v = this.handoffSel().map(h=>h.short);
+    if (v.length<2) return v[0] || '';
+    return v.slice(0,-1).join(', ') + ' or ' + v[v.length-1];
+  }
+  beliefDef() { return this.beliefDefs.find(b=>b.key===this.state.belief) || null; }
+  commitment() {
+    const s = this.state, bits = [];
+    if (!s.rep && !s.who && !s.where && !s.when) return '';
+    bits.push('I will practice ' + (this.repLabel() || 'the capacity I chose'));
+    if (s.who) bits.push('with ' + s.who);
+    if (s.where) bits.push(s.where);
+    if (s.when) bits.push(s.when);
+    return bits.join(' ') + '.';
+  }
+  // Versioned answer envelope — held in memory only, ready for a future opt-in save.
+  envelope() {
+    const s = this.state;
+    return { v:2, day:4, move:'grow', domain:'aware',
+      cardId: s.picked ? s.picked.id : null, handoffs:s.handoffs, belief:s.belief, container:s.container,
+      answers: { rooms:s.rooms, names:s.names, rep:s.rep, who:s.who, where:s.where, when:s.when,
+        support:s.support, boundary:s.boundary, extra:s.extra } };
+  }
+
+  renderVals() {
+    const s = this.state, p = s.picked, m = s.modalCard;
+    const idx = this.order.indexOf(s.screen);
+    const face = p ? p.face : null;
+    const hs = this.handoffSel(), hShorts = this.handoffShorts(), bd = this.beliefDef();
+    const chipBase = 'font-family:var(--bars-font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;padding:13px 16px;border-radius:var(--bars-radius-full);';
+    const sel = 'color:#fff;background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top);border:1px solid var(--bars-liminal);';
+    const unsel = 'color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);';
+    const rowStyle = (on) => 'padding:16px 17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid '+(on?'var(--bars-liminal)':'var(--bars-line-strong)')+';box-shadow:var(--bars-shadow-inset-top)'+(on?',0 0 18px -6px var(--bars-liminal)':'')+';';
+    const pickClass = (v) => v ? 'pick' : 'pick empty';
+
+    const checked = s.names.filter(n=>n.checked).map(n=>n.name);
+    const whoOptions = checked.map(n=>({ value:n, label:n }))
+      .concat(s.rooms.map(r=>({ value:'someone in '+r, label:'someone in '+r })))
+      .concat([{ value:'someone I haven\u2019t named yet', label:'someone I haven\u2019t named yet' }]);
+
+    const suggested = this.repDefs.filter(r => face && r.faces.indexOf(face)!==-1);
+    const rest = this.repDefs.filter(r => !(face && r.faces.indexOf(face)!==-1));
+    const repOptions = suggested.map(r=>({ value:r.key, label:'\u25c7 '+r.label }))
+      .concat(rest.map(r=>({ value:r.key, label:r.label })));
+
+    const commitment = this.commitment();
+    const guardBits = [];
+    if (s.support) guardBits.push('I\u2019ll make it possible by ' + s.support + '.');
+    if (s.boundary) guardBits.push('I\u2019ll pause if ' + s.boundary + '.');
+
+    const whyBits = [];
+    if (bd) whyBits.push('You named the line \u201c' + bd.belief + '.\u201d The capacity on the other side of it: ' + bd.capacity.toLowerCase().replace(/\.$/,'') + '.');
+    if (hShorts) whyBits.push('The handoff' + (hs.length>1?'s':'') + ' you chose: ' + hShorts + '.');
+    if (p) whyBits.push(p.faceLabel + ' says: ' + p.action);
+
+    const reminderText = 'Day 4 rep \u2014 ' + (commitment || 'the capacity practice I chose')
+      + (s.boundary ? ' I\u2019ll pause if ' + s.boundary + '.' : '')
+      + ' \u00b7 ' + this.url() + '/grow-up';
+
+    const summary = [];
+    if (s.rooms.length) summary.push({ label:'the rooms', value:s.rooms.join(' \u00b7 ') });
+    if (hs.length) summary.push({ label: hs.length>1 ? 'the handoffs' : 'the handoff', value: hs.map(h=>h.label + ' \u2014 ' + h.ask).join('  ') });
+    if (checked.length) summary.push({ label:'the people I checked', value:checked.join(', ') });
+    if (bd) summary.push({ label:'the line in the way', value:'\u201c'+bd.belief+'\u201d \u2192 ' + bd.capacity });
+    if (s.extra.trim()) summary.push({ label:'in my own words', value:s.extra.trim() });
+    if (s.container) summary.push({ label:'where it lands', value:(this.containerDefs.find(c=>c.key===s.container)||{}).label });
+
+    const evidence = [{ label:'showed up to Day 4' }];
+    if (s.rooms.length) evidence.push({ label:'named '+s.rooms.length+' room'+(s.rooms.length>1?'s':'') });
+    if (hs.length) evidence.push({ label: hs.length>1 ? 'chose '+hs.length+' handoffs' : 'chose the handoff' });
+    if (s.names.length) evidence.push({ label:'listed '+s.names.length+' name'+(s.names.length>1?'s':'') });
+    if (bd) evidence.push({ label:'named the line' });
+    if (s.revealed.length) evidence.push({ label:'turned over '+s.revealed.length+' gate'+(s.revealed.length>1?'s':'') });
+    if (p) evidence.push({ label:'drew \u00b7 '+p.faceLabel });
+    if (s.rep) evidence.push({ label:'built one rep' });
+    if (s.boundary) evidence.push({ label:'set a boundary' });
+    if (s.container) evidence.push({ label:'gave it a container' });
+
+    return {
+      progressStyle: 'height:100%;width:'+Math.round(((idx+1)/this.order.length)*100)+'%;background:linear-gradient(to right,#4a7c59,var(--bars-liminal));transition:width .35s var(--bars-ease-out);',
+      sEntry: s.screen==='entry', sRoom: s.screen==='room', sNames: s.screen==='names', sBelief: s.screen==='belief',
+      sDraw: s.screen==='draw', sBridge: s.screen==='bridge', sRep: s.screen==='rep', sLand: s.screen==='land', sReceipt: s.screen==='receipt',
+      toEntry: () => this.go('entry'),
+      toRoom: () => this.go('room'),
+      toNames: () => this.go('names'),
+      toBelief: () => this.go('belief'),
+      toDraw: () => this.go('draw'),
+      toRep: () => this.go('rep'),
+      toLand: () => this.go('land'),
+      toReceipt: () => this.go('receipt'),
+      backFromRep: () => this.go(p ? 'bridge' : 'draw'),
+      wakeHref: this.url() + '/wake-up',
+      bookHref: this.url() + '/mastering-allyship',
+      deckHref: this.url() + '/deck/sales',
+
+      roomChips: this.roomDefs.map(r => ({
+        label:r,
+        pick: () => this.setState({ rooms: this.toggle(s.rooms, r) }),
+        style: chipBase + (s.rooms.indexOf(r)!==-1 ? sel : unsel),
+      })),
+      handoffOptions: this.handoffDefs.map(h => ({
+        label:h.label, ask:h.ask,
+        pick: () => this.setState({ handoffs: this.toggle(s.handoffs, h.key) }),
+        style: rowStyle(s.handoffs.indexOf(h.key)!==-1),
+      })),
+
+      namesSub: hShorts ? ('Who might actually want ' + hShorts + '?') : 'Who takes your recommendation seriously?',
+      nameDraft: s.nameDraft,
+      onNameDraft: (e)=>this.setState({ nameDraft:e.target.value }),
+      onNameKey: (e)=>{ if (e.key==='Enter') { e.preventDefault(); this.addName(); } },
+      addName: () => this.addName(),
+      hasNames: s.names.length>0, noNames: s.names.length===0,
+      checkedCount: checked.length + ' of ' + s.names.length + ' checked',
+      nameList: s.names.map((n,i) => ({
+        name:n.name, mark: n.checked ? '\u2713' : '',
+        textColor: n.checked ? '#fff' : 'var(--bars-text-muted)',
+        rowStyle: n.checked
+          ? 'background:var(--bars-surface-card);border:1px solid color-mix(in srgb,#27ae60 50%,transparent);box-shadow:var(--bars-shadow-inset-top);'
+          : 'background:var(--bars-surface-inset);border:1px solid var(--bars-line);',
+        boxStyle: 'display:flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;border-radius:7px;font-size:14px;font-weight:700;'
+          + (n.checked ? 'color:#fff;background:#4a7c59;border:1px solid #2ecc71;' : 'color:transparent;background:transparent;border:1px solid var(--bars-line-strong);'),
+        toggle: () => this.setState({ names: s.names.map((x,j)=> j===i ? { name:x.name, checked:!x.checked } : x) }),
+        remove: () => this.setState({ names: s.names.filter((_,j)=>j!==i) }),
+      })),
+
+      beliefHeading: hShorts ? ('What stops you from offering ' + hShorts + '?') : 'What stops the handoff?',
+      beliefOptions: this.beliefDefs.map(b => ({
+        voice:b.voice, capacity:b.capacity,
+        revealed: s.belief===b.key,
+        pick: () => this.setState({ belief: s.belief===b.key ? null : b.key }),
+        style: rowStyle(s.belief===b.key),
+      })),
+
+      gates: s.hand.map(c => {
+        const open = s.revealed.indexOf(c.id) !== -1 || this.props.dealFaceUp === true;
+        const chosen = !!(p && p.id===c.id);
+        return {
+          down: !open, up: open,
+          reveal: () => { if (s.revealed.indexOf(c.id)===-1) this.setState({ revealed:s.revealed.concat([c.id]) }); },
+          open: () => this.setState({ modalCard:c }),
+          choose: () => { this.setState({ picked:c }); this.go('bridge'); },
+          chooseLabel: chosen ? '\u25c7 carrying this' : 'choose this card',
+          chooseStyle: 'display:block;text-align:center;font-family:var(--bars-font-display);font-weight:'+(chosen?'700':'600')+';font-size:13px;padding:11px 10px;border-radius:var(--bars-radius-lg);'
+            + (chosen ? 'color:#fff;background:var(--bars-liminal);border:1px solid var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top);' : 'color:var(--bars-text-primary);border:1px solid var(--bars-line-strong);'),
+          title:c.title, q:c.q, faceLabel:c.faceLabel, faceMono:c.faceLabel ? c.faceLabel[0] : '',
+          faceStyle: this.faceStyle(c.face, 30, 13),
+          pipStyle: this.pipStyle(30), backPip: this.pipStyle(40), moveIconEl: this.moveIconEl(17),
+          rootStyle: this.cardRoot(chosen, false),
+          backStyle: 'position:relative;aspect-ratio:2.5/3.5;border-radius:var(--bars-radius-lg);overflow:hidden;border:2px solid color-mix(in srgb,#C9A84C 45%,transparent);background:radial-gradient(120% 90% at 50% 12%,#0e2117,#040a06 68%);box-shadow:var(--bars-shadow-inset-top),0 0 22px 1px rgba(39,174,96,.16),0 18px 40px -20px rgba(0,0,0,.9);',
+        };
+      }),
+      redeal: () => this.setState({ hand:this.deal(), revealed:[], picked:null }),
+      skipDraw: () => { this.setState({ picked:null }); this.go('rep'); },
+
+      hasPick: !!p, noPick: !p,
+      pickTitle: p ? p.title : '', pickSub: p ? (p.sub||'') : '', pickQ: p ? p.q : '',
+      pickAction: p ? p.action : '', pickFaceLabel: p ? p.faceLabel : '',
+      pickFaceMono: p && p.faceLabel ? p.faceLabel[0] : '',
+      bridgeTitle: p ? (p.faceLabel + ' asks for a capacity rep.') : '',
+      bridgeCardStyle: this.cardRoot(true, false),
+      bridgePip: this.pipStyle(38), bridgeIcon: this.moveIconEl(21),
+      bridgeFaceStyle: p ? this.faceStyle(p.face, 38, 16) : '',
+      openPicked: () => { if (p) this.setState({ modalCard:p }); },
+      carriedPip: this.pipStyle(34), carriedIcon: this.moveIconEl(19),
+
+      repOptions, repVal: s.rep, repClass: pickClass(s.rep),
+      onRepSel: (e)=>this.setState({ rep:e.target.value }),
+      whoOptions, whoVal: s.who, whoClass: pickClass(s.who),
+      onWhoSel: (e)=>this.setState({ who:e.target.value }),
+      whereOptions: this.whereDefs.map(w=>({ value:w, label:w })), whereVal: s.where, whereClass: pickClass(s.where),
+      onWhereSel: (e)=>this.setState({ where:e.target.value }),
+      whenOptions: this.whenDefs.map(w=>({ value:w, label:w })), whenVal: s.when, whenClass: pickClass(s.when),
+      onWhenSel: (e)=>this.setState({ when:e.target.value }),
+      supportOptions: this.supportDefs.map(w=>({ value:w, label:w })), supportVal: s.support, supportClass: pickClass(s.support),
+      onSupportSel: (e)=>this.setState({ support:e.target.value }),
+      boundaryOptions: this.boundaryDefs.map(w=>({ value:w, label:w })), boundaryVal: s.boundary, boundaryClass: pickClass(s.boundary),
+      onBoundarySel: (e)=>this.setState({ boundary:e.target.value }),
+      hasFacePrompt: !!(face && this.facePrompts[face]),
+      facePrompt: face ? (this.facePrompts[face] || '') : '',
+      hasWhy: whyBits.length>0, whyLine: whyBits.join(' '),
+      extra: s.extra, onExtra: (e)=>this.setState({ extra:e.target.value }),
+
+      containers: this.containerDefs.map(c => ({
+        label:c.label,
+        pick: () => this.setState({ container: s.container===c.key ? null : c.key, copied:false }),
+        style: rowStyle(s.container===c.key),
+      })),
+      showReminder: s.container==='own',
+      reminderText,
+      copyReminder: () => { if (navigator.clipboard) navigator.clipboard.writeText(reminderText).catch(()=>{}); this.setState({ copied:true }); },
+      reminderCopyLabel: s.copied ? 'copied \u2713' : 'copy the reminder',
+
+      commitment, hasCommitment: !!commitment,
+      guardrails: guardBits.join(' '), hasGuardrails: guardBits.length>0,
+      summary, hasSummary: summary.length>0,
+      noSummary: summary.length===0 && !commitment && !p,
+      evidence,
+      restart: () => this.setState({ screen:'draw', hand:this.deal(), revealed:[], picked:null, modalCard:null,
+        rep:'', who:'', where:'', when:'', support:'', boundary:'', extra:'', container:null, copied:false }),
+
+      modalOn: !!m,
+      modalCardStyle: this.cardRoot(true, true),
+      modalTitle: m ? m.title : '', modalSub: m ? (m.sub||'') : '',
+      modalQ: m ? m.q : '', modalAction: m ? m.action : '',
+      modalOperation: m ? (this.operations[m.face] || '') : '',
+      modalPip: this.pipStyle(38), modalIcon: this.moveIconEl(21),
+      modalFaceStyle: m ? this.faceStyle(m.face, 38, 16) : '',
+      modalFaceMono: m && m.faceLabel ? m.faceLabel[0] : '', modalFaceLabel: m ? m.faceLabel : '',
+      modalChooseLabel: (m && p && p.id===m.id) ? 'carrying this \u2713' : 'choose this card',
+      closeModal: () => this.setState({ modalCard:null }),
+      chooseModal: () => { if (m) { this.setState({ picked:m, modalCard:null }); this.go('bridge'); } },
+      stop: (e) => e.stopPropagation(),
+    };
+  }
+}
+</script>
+</body>
+</html>

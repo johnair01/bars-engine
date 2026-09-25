@@ -11,8 +11,16 @@ const nextConfig: NextConfig = {
   // 301-redirect old links/bookmarks, preserving sub-paths and query params.
   async redirects() {
     return [
+      // The booking page was /podcasts until 2026-09-15; /podcast is the show itself.
+      { source: "/podcasts", destination: "/on-your-show", permanent: true },
       { source: "/hand", destination: "/vault", permanent: true },
       { source: "/hand/:path*", destination: "/vault/:path*", permanent: true },
+    ];
+  },
+  async rewrites() {
+    return [
+      { source: '/understood/play', destination: '/understood-app/index.html' },
+      { source: '/understood/demo', destination: '/understood-app/index.html?demo=1' },
     ];
   },
 };

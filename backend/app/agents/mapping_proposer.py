@@ -186,12 +186,12 @@ sub-packet for the orientation quest.
 
 | Face       | Trigram | Mission / Domain                                         |
 |------------|---------|----------------------------------------------------------|
-| Shaman     | Fire/Magenta | Mythic threshold, ritual, emotional alchemy, belonging |
-| Challenger | Thunder/Red  | Action, edge, energy validation, proving ground        |
-| Regent     | Earth/Amber  | Structure, roles, rules, governance, collective order  |
-| Architect  | Heaven/Orange | Strategy, blueprint, systems design, taxonomy         |
-| Diplomat   | Lake/Teal    | Relational field, care, connection, bridging           |
-| Sage       | Wind/Purple  | Integration, emergence, synthesis, whole-picture view  |
+| Shaman     | Earth   | Mythic threshold, ritual, emotional alchemy, belonging |
+| Challenger | Fire    | Action, edge, energy validation, proving ground        |
+| Regent     | Lake    | Structure, roles, rules, governance, collective order  |
+| Architect  | Heaven  | Strategy, blueprint, systems design, taxonomy          |
+| Diplomat   | Wind    | Relational field, care, connection, bridging           |
+| Sage       | Mountain | Integration, emergence, synthesis, whole-picture view |
 
 ## TransformationMove Schema Fields
 

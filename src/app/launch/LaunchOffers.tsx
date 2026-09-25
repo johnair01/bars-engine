@@ -16,6 +16,8 @@ import Image from 'next/image'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { saveLaunchPageContent } from '@/actions/launch-page-admin'
+import { withAllyParam } from '@/lib/ally-campaign/referral'
+import { useAllyReferral } from '@/lib/ally-campaign/useAllyReferral'
 import {
   offersByGroup,
   formatPrice,
@@ -58,6 +60,10 @@ function PriceLine({ offer }: { offer: LaunchOffer }) {
 }
 
 function Cta({ offer, href, label }: { offer: LaunchOffer; href: string; label: string }) {
+  // Carry the referring ally out to Gumroad, which echoes it back on the sale
+  // ping — the only way attribution survives a checkout we don't host.
+  const allyId = useAllyReferral()
+
   if (!isOfferLive(offer)) {
     return (
       <div className="space-y-1">
@@ -74,7 +80,7 @@ function Cta({ offer, href, label }: { offer: LaunchOffer; href: string; label: 
   }
   return (
     <a
-      href={href}
+      href={withAllyParam(href, allyId)}
       target="_blank"
       rel="noopener noreferrer"
       className="flex min-h-11 w-full items-center justify-center rounded-xl bg-purple-600 px-4 font-bold text-white transition-colors hover:bg-purple-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0908]"
@@ -87,7 +93,9 @@ function Cta({ offer, href, label }: { offer: LaunchOffer; href: string; label: 
 const HERO_BY_INTENT: Record<LaunchIntent, LaunchOffer['key']> = {
   curious: 'book-digital',
   tool: 'deck-digital',
-  practice: 'game-subscription',
+  // The game subscription is held back from this launch (hiddenFromLaunch); the
+  // deck is the ongoing practice players get today, so "I want a practice" leads here.
+  practice: 'deck-digital',
   shelf: 'founding-ally',
 }
 
@@ -402,7 +410,7 @@ function LaunchPageAdminEditor({ content }: { content: LaunchPageContent }) {
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-bold text-zinc-100">How the pieces fit</h3>
+          <h3 className="font-bold text-zinc-100">What each one does</h3>
           <div className="grid gap-3 md:grid-cols-2">
             {content.pieces.map((piece, index) => (
               <div key={piece.step} className="rounded-xl border border-zinc-800 bg-black/20 p-3">
@@ -577,9 +585,13 @@ export function LaunchOffers({
   isAdmin: boolean
 }) {
   const [intent, setIntent] = useState<LaunchIntent | null>(null)
-  const bundle = offersByGroup('bundle').filter(isCoreLaunchOffer)
-  const digital = offersByGroup('digital').filter(isCoreLaunchOffer)
-  const physical = offersByGroup('physical').filter(isCoreLaunchOffer)
+  // isCoreLaunchOffer narrows key to CoreOfferKey (needed to index content.offers);
+  // the second filter drops offers held back from this launch without widening the type.
+  const shown = (offers: readonly LaunchOffer[]) =>
+    offers.filter(isCoreLaunchOffer).filter((o) => !o.hiddenFromLaunch)
+  const bundle = shown(offersByGroup('bundle'))
+  const digital = shown(offersByGroup('digital'))
+  const physical = shown(offersByGroup('physical'))
   const allOffers = [...bundle, ...digital, ...physical]
   const heroKey = intent ? HERO_BY_INTENT[intent] : 'founding-ally'
   const hero = allOffers.find((offer) => offer.key === heroKey) ?? bundle[0] ?? digital[0]

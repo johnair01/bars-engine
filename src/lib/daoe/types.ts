@@ -5,8 +5,10 @@
  */
 
 import type { NpcToneWeights, PlayerPersonalityProfile } from './personality-mapper'
+import type { GameMasterFace } from '@/lib/quest-grammar/types'
 
 export { type NpcToneWeights, type PlayerPersonalityProfile } from './personality-mapper'
+export type { GameMasterFace }
 
 // ---------------------------------------------------------------------------
 // Delta Update (Phase 2 FR2.1)
@@ -80,7 +82,7 @@ export interface CastFortuneOutput {
 
 export type JourneyStage = 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp'
 export type AllyshipDomain = 'gathering_resources' | 'direct_action' | 'raise_awareness' | 'skillful_organizing'
-export type GameMasterFace = 'shaman' | 'challenger' | 'regent' | 'architect' | 'diplomat' | 'sage'
+// GameMasterFace is imported from the canonical source and re-exported at the top of this file.
 
 export interface PersonalityIntakeAnswers {
   currentStage: JourneyStage

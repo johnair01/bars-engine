@@ -9,6 +9,7 @@ This repo historically mixed **`prisma db push`** with a long **`prisma/migratio
 - **`npm run db:push`** exits with an error (wrapper).
 - **`scripts/db-sync.ts`** runs **`prisma generate` only**; it never pushes. If `schema.prisma` changed since your local `.prisma_hash`, it fails until you run **`migrate dev` / `migrate deploy`** and **`npm run db:record-schema-hash`**.
 - **Legacy damage:** `20250306000000_playbook_to_archetype_rename` was removed (wrong order + duplicate). **Gaps** (e.g. `adventures`) from old `db push` are why **`migrate reset` on an empty DB** can still fail until Path B (squash) is done.
+- **Legacy damage — duplicate `CREATE TABLE`:** `20260629124500_add_lenses_goal_onboarding` re-declares `tap_the_vein_daily_sessions` and `tap_the_vein_tasks`, which `20260624160338_add_tap_the_vein` already created — with a *different*, divergent-branch column set (no `lensFaceKey` / `eaChannel` / `chargeStrength`; extra `lensGoalId` / `lifeLensDomain`). Whichever of the two actually ran decides the table shape, so databases disagree. Production ended up on the second shape and every `/tap-the-vein` read failed with **P2022**; `20260810193000_repair_tap_the_vein_columns` reconciles it additively. **When doing the Path B squash, resolve this pair against `schema.prisma` rather than replaying either one.**
 
 ---
 

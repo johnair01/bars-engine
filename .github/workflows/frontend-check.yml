@@ -4,8 +4,11 @@ name: Frontend check
 on:
   push:
     branches: [main, master]
+  # Deliberately UNFILTERED. On a pull_request trigger, `branches:` matches the
+  # BASE branch — so a `[main, master]` filter silently skips every stacked PR,
+  # which are the ones most worth checking. A five-deep ally-campaign stack got
+  # no CI at all before this: only the one branch based on main was ever seen.
   pull_request:
-    branches: [main, master]
 
 jobs:
   check:

@@ -1,0 +1,1 @@
+E = [("It came from the moment I connected back to myself, after failing to make money or create the allies I'd wanted to create, and found that", "It came from the moment, after failing to make money or create the allies I'd wanted to create, when I connected back to myself and found that")]

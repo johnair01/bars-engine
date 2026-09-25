@@ -129,9 +129,11 @@ function ShowUp({ content, onInView }: { content: AwakenPageContent; onInView: (
         <EventsCard content={content} />
         {/* Move 3 — Purchase the deck */}
         <LinkMoveCard content={content.moves.deck} accent="teal" />
-        {/* Move 4 — Pre-order the book */}
+        {/* Move 4 — Buy the digital book (finished, delivered instantly) */}
         <LinkMoveCard content={content.moves.book} accent="amber" />
-        {/* Chapter One — coming soon, funnels to the book */}
+        {/* Move 5 — Pre-order the print edition (ships after the print run) */}
+        <LinkMoveCard content={content.moves.bookPrint} accent="orange" />
+        {/* Chapter One — free sample, funnels through the lead-capture page */}
         <LinkMoveCard content={content.moves.chapter} accent="indigo" />
       </div>
 
@@ -172,6 +174,17 @@ function EventsCard({ content }: { content: AwakenPageContent }) {
   return (
     <Card accent="green" badge={content.moves.events.badge} title={content.moves.events.title}>
       <p className="text-sm leading-relaxed text-zinc-300">{content.moves.events.body}</p>
+
+      {/* No dated stop on the board is the normal state between tours, so the card
+          falls back to its own link rather than rendering an empty well. */}
+      {content.events.length === 0 && content.moves.events.href && (
+        <Link
+          href={content.moves.events.href}
+          className="mt-4 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500"
+        >
+          {content.moves.events.cta}
+        </Link>
+      )}
 
       <div className="mt-4 space-y-2">
         {content.events.map((ev) => (
@@ -290,7 +303,12 @@ function AwakenAdminEditor({ content }: { content: AwakenPageContent }) {
           showHref={false}
         />
         <MoveFields prefix="moves.deck" label="Deck card" content={content.moves.deck} />
-        <MoveFields prefix="moves.book" label="Book card" content={content.moves.book} />
+        <MoveFields prefix="moves.book" label="Book card (digital)" content={content.moves.book} />
+        <MoveFields
+          prefix="moves.bookPrint"
+          label="Book card (print pre-order)"
+          content={content.moves.bookPrint}
+        />
         <MoveFields prefix="moves.chapter" label="Chapter card" content={content.moves.chapter} />
 
         {content.events.map((event, index) => (
@@ -397,6 +415,10 @@ const ACCENT: Record<string, string> = {
   teal: 'from-teal-500/15 to-cyan-500/5 border-teal-800/50',
   green: 'from-green-500/15 to-emerald-500/5 border-green-800/50',
   amber: 'from-amber-500/15 to-orange-500/5 border-amber-800/50',
+  // Print pre-order sits next to the digital book, so it stays in the warm
+  // family — close enough to read as the same product, distinct enough to tell
+  // the two editions apart at a glance.
+  orange: 'from-orange-500/15 to-amber-600/5 border-orange-800/50',
   indigo: 'from-indigo-500/15 to-blue-500/5 border-indigo-800/50',
 }
 

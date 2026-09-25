@@ -1,0 +1,18 @@
+# The production pipeline's dependencies. Everything else in instruments/ runs on
+# the standard library.
+#
+#   pip install -r instruments/requirements.txt
+#   python3 -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('punkt_tab')"
+#
+# The second line downloads the tagger data fragment.py needs; pip installs the code,
+# not the models. Run it once per environment. On a Mac whose system Python is
+# externally managed (PEP 668), do all of this inside a venv.
+#
+# pypandoc-binary bundles the pandoc executable rather than expecting one on PATH.
+# typst is a wheel with the compiler and its fonts inside it, which is what makes
+# the PDF reproducible — see instruments/book/README.md.
+# nltk gives fragment.py real part-of-speech tags; without it the fragment gate cannot
+# run (a heuristic tagger would print a number that only looks like a measurement).
+pypandoc-binary>=1.13
+typst>=0.13
+nltk>=3.9

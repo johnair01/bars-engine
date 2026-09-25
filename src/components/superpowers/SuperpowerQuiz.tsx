@@ -18,6 +18,7 @@ import { submitSuperpowerIntake } from '@/actions/superpower-intake'
 import type { QuizAnswer } from '@/lib/superpowers/quiz/types'
 import type { SuperpowerOrientation } from '@/lib/superpowers/types'
 import type { SuperpowerIntakeOutcome } from '@/lib/superpowers/routing'
+import { cacheSuperpowerResult } from '@/lib/superpowers/last-result'
 import { SuperpowerReveal } from './SuperpowerReveal'
 
 export interface SuperpowerQuizProps {
@@ -29,6 +30,26 @@ export interface SuperpowerQuizProps {
    * superpower + orientation and advance to the next step.
    */
   onComplete?: (outcome: SuperpowerIntakeOutcome) => void
+  /**
+   * BEHAVIOURAL. Rendered inside another campaign's funnel rather than as the
+   * standalone `/superpower` page. Two consequences, both about not acting like
+   * the host:
+   *   - the result is NOT written here; the host captures it at its own checkout,
+   *     so the quiz never records a decision from someone who has not made one
+   *   - the reveal drops its "Take this move in The Crossing" CTA, which would
+   *     otherwise send a reader out of the campaign they are actually in
+   */
+  embedded?: boolean
+  /**
+   * PRESENTATIONAL, and orthogonal to `embedded`. Render nothing on completion —
+   * score, fire `onComplete`, and let the host surface take over.
+   *
+   * Set this when the host has its own result screen. `embedded` alone still
+   * shows the built-in reveal (minus the Crossing CTAs); this removes it
+   * entirely. A host that sets `suppressReveal` owns the job of telling the
+   * reader their result — say so, or they finish a quiz and are told nothing.
+   */
+  suppressReveal?: boolean
 }
 
 const TOTAL_STEPS = QUIZ_ITEMS.length + 1 // items + orientation
@@ -37,7 +58,12 @@ const MONO: CSSProperties = { fontFamily: 'var(--bars-font-mono)' }
 const DISPLAY: CSSProperties = { fontFamily: 'var(--bars-font-display)' }
 const BODY: CSSProperties = { fontFamily: 'var(--bars-font-body)' }
 
-export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps) {
+export function SuperpowerQuiz({
+  campaignRef,
+  onComplete,
+  embedded = false,
+  suppressReveal = false,
+}: SuperpowerQuizProps) {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [outcome, setOutcome] = useState<SuperpowerIntakeOutcome | null>(null)
@@ -59,9 +85,18 @@ export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps)
         answers: answerList,
         orientation: finalOrientation,
         campaignRef,
+        persist: !embedded,
       })
       if (res.ok) {
         setOutcome(res.outcome)
+        // Best-effort: let other surfaces (e.g. the Kickstarter hub self-report)
+        // carry this result to enrich a steward lead. Never gates the reveal.
+        if (!embedded) {
+          cacheSuperpowerResult({
+            superpower: res.outcome.routing.superpower,
+            orientation: res.outcome.routing.orientation ?? null,
+          })
+        }
         onComplete?.(res.outcome)
       } else setError(res.error)
     })
@@ -84,10 +119,12 @@ export function SuperpowerQuiz({ campaignRef, onComplete }: SuperpowerQuizProps)
     setError(null)
   }
 
+  if (outcome && suppressReveal) return null
+
   if (outcome) {
     return (
       <div className="mt-6 flex flex-col gap-[18px]">
-        <SuperpowerReveal routing={outcome.routing} copy={outcome.copy} />
+        <SuperpowerReveal routing={outcome.routing} copy={outcome.copy} showCrossingPath={!embedded} />
         <button
           type="button"
           onClick={restart}

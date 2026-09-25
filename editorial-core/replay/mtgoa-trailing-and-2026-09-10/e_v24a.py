@@ -1,0 +1,2 @@
+E = [("every one of these myths is a solvable puzzle, and this book hands you the moves to take each one apart.", "every one of these myths is a solvable puzzle. This book hands you the moves to take each one apart."),
+("to carry to the counter and trade for a prize, and this chapter has already said what the good prize does:", "to carry to the counter and trade for a prize. This chapter has already said what the good prize does:")]

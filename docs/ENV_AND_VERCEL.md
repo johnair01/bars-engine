@@ -145,6 +145,104 @@ Outbound email (Chapter One delivery, `/awaken` RSVP confirmations) sends via
 3. **Graceful degradation**: when `RESEND_API_KEY`/`EMAIL_FROM` are unset, sends are **logged and skipped** rather than throwing — the funnel still saves the lead, it just can't deliver yet.
 4. **Deliverability is gated on DNS**: `EMAIL_FROM`'s domain must be verified in Resend with **SPF, DKIM, and DMARC** records, or mail lands in spam. See Resend → Domains for the exact records.
 
+### NEXT_PUBLIC_GUMROAD_IGNITING_JOY_URL (the other book)
+
+`/igniting-joy` buys through Gumroad like every other offer. Absent, the page
+renders a "write to me and I will send the direct link" state rather than a dead
+button — the same convention `src/lib/launch/offers.ts` uses.
+
+**Verify the slug by clicking through from Gumroad rather than copying it from
+the repo.** The only URL for this book anywhere in the codebase lives in a Twine
+source file and reads `.../l/IgnnitingJoy`, with a doubled N. That is either the
+real slug or a typo, and nothing here can tell you which.
+
+### NEXT_PUBLIC_PATREON_URL (the build log)
+
+`/build-log` is the build-in-public surface. Absent, the page offers to send the
+link rather than rendering a dead button.
+
+**Setting this is not what launches it.** The page enforces the handoff's
+condition itself — one post a week minimum — by reading `BUILD_LOG_POSTS` in
+`src/lib/build-log/posts.ts` and computing the days since the newest entry:
+
+| state | what renders |
+|-------|--------------|
+| no posts | "It has not started yet", and **no subscribe button at all** |
+| last post ≤ 10 days | the log, the cadence, and the join button |
+| last post > 10 days | "The cadence lapsed", how long it has been, and **the button is withheld** |
+
+So the way to launch it is to write a post and add it to the list. The way to
+keep it launched is to keep writing them. `npm run test:build-log` covers all
+three states, including four months of silence.
+
+### The mailing list (Resend Contacts)
+
+Kit was chosen in the 2026-08-10 handoff and left switched off. The ratified
+decision in `MAILING_LIST_SIX_FACES.md` moved the list to **Resend Contacts**,
+on the same account and key as transactional email. `KIT_API_KEY` is retired.
+
+**Postgres is the list of record.** Every form saves its row first. The client
+at `src/lib/esp/resend-list.ts` copies an address into Resend afterward. It
+returns errors as values, and it skips quietly when `RESEND_API_KEY` /
+`EMAIL_FROM` are unset.
+
+**Only four pages put anyone on the list.** The plan allows three segments, so
+the lists share one segment, `mailing list`, and each promise is a topic created
+with opt-out as its default. The terms live in `src/lib/esp/list-contract.ts`:
+
+| List | Page | Lives in Resend as | What may be sent |
+|---|---|---|---|
+| character sheet | `/mastering-allyship/sheet` | a contact in no segment and no topic | the quarterly reminder only, sent by the cron below |
+| succession | `/succession` | `mailing list` segment, topic `succession` | a Broadcast when there is something real to say |
+| nonprofit | `/nonprofit` | `mailing list` segment, topic `nonprofit founding circle` | a Broadcast when the founding circle meets |
+| introductions | `/introductions` | `mailing list` segment, topic `introductions` | Broadcasts about the tour, to people who ticked the box |
+
+Chapter One, the Superpower quiz and the Myths Read put nobody on a list. Their
+pages promise one email or a saved read.
+
+**Unsubscribe lives in one place:** the Resend contact's `unsubscribed` flag.
+Broadcasts add Resend's own unsubscribe link and honor the flag. The quarterly
+reminder checks it before each send and links to `/unsubscribe`. A new signup
+from an address that unsubscribed stays unsubscribed.
+
+| Variable | Required | Meaning |
+|----------|----------|---------|
+| `RESEND_API_KEY`, `EMAIL_FROM` | yes | Same as transactional email, above. |
+| `EMAIL_POSTAL_ADDRESS` | yes, for the reminder | The postal address list mail must carry. The quarterly job refuses to send without it. |
+| `CRON_SECRET` | yes, for the reminder | See **Cron Jobs** below. Without it the reminder route refuses every caller. |
+
+**Sending a Broadcast.** Resend dashboard → Broadcasts → segment `mailing list`,
+then scope it to one topic from the table. A Broadcast sent to the segment with
+no topic reaches every update list at once. Keep the unsubscribe footer Resend
+offers; with topics, its preferences page lets a reader leave one list and keep
+another. Character-sheet readers sit outside the segment, so no Broadcast
+reaches them.
+
+**Backfilling people who signed up before the switch.** Run once after deploy:
+
+```bash
+npx tsx scripts/backfill-list-segments.ts          # dry run, counts only
+npx tsx scripts/backfill-list-segments.ts --apply  # writes to Resend
+```
+
+It reads Postgres and writes only to Resend, printing each failure with its
+reason. It leaves introductions out, because ticks under the old label agreed to
+a reply about one lead. With `--apply` it first lists every segment in the
+account, which names the one nobody here made. Then it removes the segments the
+first run made on 2026-09-15, matching name and date together. Each contact records the topics it has joined in `list_topics_joined`,
+so a repeat run leaves a reader's own opt-out alone.
+
+**Free-tier limits** (checked 2026-09-15): marketing contacts are free up to
+1,000, and over that Broadcasts return 403 until the $40/mo tier. Transactional
+sends, which the quarterly reminder uses because it carries an attachment, are
+free up to 100 a day. The cron runs three days in a row, so a list over 100
+finishes on the second or third day.
+
+**Who may enter a sequence** is still decided in `list-contract.ts`, covered by
+`npm run test:list-contract`. Sequences are paused today. When one exists, two
+rules hold: Kickstarter backers stay out of it, and a retake leaves an existing
+subscriber where they are.
+
 ### STRAND_CREATOR_PLAYER_ID (FastAPI / bars-agents)
 
 Strand and MCP-generated BARs attach to a **dedicated agent `Player`**, not an arbitrary first user.
@@ -396,9 +494,10 @@ Cron routes check `Authorization: Bearer <CRON_SECRET>` and return `401` if it i
 
 | Route | Schedule | Description |
 |---|---|---|
-| `/api/cron/abandon-sessions` | `0 * * * *` (hourly) | Mark orientation sessions inactive > 24 h as abandoned. |
+| `/api/cron/character-sheet-reminder` | `0 16 10-12 2,5,8,11 *` | The character sheet's quarterly reminder, with the blank PDF attached. Scheduled in `vercel.json`. Days two and three finish anything day one left. `?dryRun=1` reports without sending. |
+| `/api/cron/abandon-sessions` | `0 * * * *` (hourly) | Mark orientation sessions inactive > 24 h as abandoned. Not yet in `vercel.json`. |
 
-**TODO:** Add the following to `vercel.json` (create it in the repo root if it doesn't exist yet):
+**TODO:** Add the abandon-sessions entry to the `crons` array in `vercel.json`:
 ```json
 {
   "crons": [

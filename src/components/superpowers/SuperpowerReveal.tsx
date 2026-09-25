@@ -13,9 +13,12 @@
  *      the taker from *finding* their superpower to *making one concrete move* in
  *      The Crossing (their superpower lens on the campaign + a matched role move);
  *   d. full spectrum — all seven ranked, so the result reads as a position;
+ *   f. the character-sheet cross-link and an optional save (the result and the
+ *      avoided superpower, by email);
  *   e. framing note — lens, not verdict; the taker is the authority.
  *
- * NO email gate. All element color flows through --bars-* tokens (scoped via
+ * NO email gate — (f) sits below the whole result and asks rather than blocks.
+ * All element color flows through --bars-* tokens (scoped via
  * data-element). The liminal-purple action ramp is the reserved non-element
  * action hue (see bars-tokens.css). UI_COVENANT: layout only in Tailwind/inline.
  */
@@ -33,10 +36,17 @@ import {
 } from '@/lib/superpowers/crossing-path'
 import type { SuperpowerRoutingResult } from '@/lib/superpowers/routing'
 import type { ResultCopy } from '@/lib/superpowers/quiz/descriptions'
+import { EmailCaptureForm } from '@/components/leads/EmailCaptureForm'
+import { captureSuperpowerLead } from '@/actions/leads'
 
 export interface SuperpowerRevealProps {
   routing: SuperpowerRoutingResult
   copy: ResultCopy
+  /**
+   * Show the matched Crossing path + its CTAs. True for the standalone
+   * `/superpower` page; false when embedded in another campaign's funnel.
+   */
+  showCrossingPath?: boolean
 }
 
 const ORIENTATION_LABEL = {
@@ -51,11 +61,15 @@ const BODY: CSSProperties = { fontFamily: 'var(--bars-font-body)' }
 // Reserved liminal-purple action ramp (non-element; see bars-tokens.css).
 const PURPLE = { lite: '#a78bfa', chip: '#b794f6', deep: '#7c3aed', mid: '#8b5cf6', outline: '#cdbff5' }
 
-export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
+export function SuperpowerReveal({ routing, copy, showCrossingPath = true }: SuperpowerRevealProps) {
   const primary = routing.superpower
   const primaryDef = SUPERPOWER_DEFS[primary]
   const secondaryDef = SUPERPOWER_DEFS[routing.secondary]
   const element = superpowerElement(primary)
+  // Bottom of the ranking. Chapter 9 treats the avoided superpower as the more
+  // interesting datum, so the reveal names it rather than leaving it to be
+  // inferred from a spectrum most people never open.
+  const avoidedFace = routing.ranked[routing.ranked.length - 1]?.superpower ?? routing.secondary
 
   // The Aligned Action lens uses the chosen orientation; fall back to the
   // world-facing lens when the orientation item was skipped.
@@ -188,141 +202,147 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
       </div>
 
       {/* c. Aligned Action bridge — reserved liminal-purple action treatment. */}
-      <div className="flex flex-col gap-[11px]">
-        <span
-          className="text-[10px] uppercase"
-          style={{ ...MONO, letterSpacing: '.24em', color: 'var(--bars-liminal-glow)' }}
-        >
-          Move into aligned action · live
-        </span>
+      {/* The Crossing path. Suppressed when this quiz is embedded in another
+          campaign's funnel — sending a reader who is halfway through one
+          campaign off to a different one is the wrong invitation, and the host
+          flow presents its own aligned action a few screens later. */}
+      {showCrossingPath && (
+        <div className="flex flex-col gap-[11px]">
+          <span
+            className="text-[10px] uppercase"
+            style={{ ...MONO, letterSpacing: '.24em', color: 'var(--bars-liminal-glow)' }}
+          >
+            Move into aligned action · live
+          </span>
 
-        <div
-          className="relative overflow-hidden rounded-2xl px-[18px] pb-[18px] pt-[19px]"
-          style={{
-            background: 'linear-gradient(168deg, #16111f 0%, #111110 52%)',
-            boxShadow:
-              'inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(124,58,237,0.30), 0 0 34px -10px rgba(124,58,237,0.55)',
-          }}
-        >
           <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{ background: 'radial-gradient(120% 80% at 90% -12%, rgba(124,58,237,0.22) 0%, transparent 55%)' }}
-          />
-          <div className="relative flex flex-col gap-[14px]">
-            <div className="flex flex-col gap-[6px]">
-              <span
-                className="text-[9.5px] uppercase"
-                style={{ ...MONO, letterSpacing: '.16em', color: PURPLE.lite }}
-              >
-                ◇ The Allyship Launch · Barn Raising
-              </span>
-              <h3
-                className="text-[25px] font-bold"
-                style={{ ...DISPLAY, letterSpacing: '-.02em', lineHeight: 1, color: '#f4f2ec' }}
-              >
-                The Crossing
-              </h3>
-              <p
-                className="text-[13.5px]"
-                style={{ ...BODY, lineHeight: 1.5, color: 'var(--bars-text-secondary)' }}
-              >
-                Wendell needs a reliable car to keep showing up. Every superpower has a way in.
-              </p>
-            </div>
-
-            {/* Your lens on this campaign */}
+            className="relative overflow-hidden rounded-2xl px-[18px] pb-[18px] pt-[19px]"
+            style={{
+              background: 'linear-gradient(168deg, #16111f 0%, #111110 52%)',
+              boxShadow:
+                'inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(124,58,237,0.30), 0 0 34px -10px rgba(124,58,237,0.55)',
+            }}
+          >
             <div
-              className="flex flex-col gap-[8px] rounded-xl px-[14px] py-[13px]"
-              style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.18)' }}
-            >
-              <span
-                className="text-[9px] uppercase"
-                style={{ ...MONO, letterSpacing: '.14em', color: PURPLE.lite }}
-              >
-                Your {primaryDef.label} lens · {orientation === 'internal' ? 'self-allyship' : 'world-facing'}
-              </span>
-              <p
-                className="text-[16px] font-semibold"
-                style={{ ...DISPLAY, lineHeight: 1.32, letterSpacing: '-.01em', color: 'var(--bars-text-primary)' }}
-              >
-                {cell.prompt}
-              </p>
-              <p
-                className="text-[12.5px]"
-                style={{ ...BODY, lineHeight: 1.45, color: 'var(--bars-text-secondary)' }}
-              >
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{ background: 'radial-gradient(120% 80% at 90% -12%, rgba(124,58,237,0.22) 0%, transparent 55%)' }}
+            />
+            <div className="relative flex flex-col gap-[14px]">
+              <div className="flex flex-col gap-[6px]">
                 <span
-                  className="mr-[6px] text-[8.5px] uppercase"
-                  style={{ ...MONO, letterSpacing: '.14em', color: 'var(--bars-text-muted)' }}
+                  className="text-[9.5px] uppercase"
+                  style={{ ...MONO, letterSpacing: '.16em', color: PURPLE.lite }}
                 >
-                  Make
+                  ◇ The Crossing · The Book Tour
                 </span>
-                {cell.suggestedArtifact}
-              </p>
-            </div>
+                <h3
+                  className="text-[25px] font-bold"
+                  style={{ ...DISPLAY, letterSpacing: '-.02em', lineHeight: 1, color: '#f4f2ec' }}
+                >
+                  The Crossing
+                </h3>
+                <p
+                  className="text-[13.5px]"
+                  style={{ ...BODY, lineHeight: 1.5, color: 'var(--bars-text-secondary)' }}
+                >
+                  Wendell needs a reliable car to keep showing up. Every superpower has a way in.
+                </p>
+              </div>
 
-            {/* Matched move */}
-            <div className="flex items-start gap-3">
-              <span
-                aria-hidden
-                className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[11px] text-center text-[9px] font-bold uppercase"
-                style={{
-                  ...MONO,
-                  letterSpacing: '.02em',
-                  lineHeight: 1.05,
-                  color: '#0a0908',
-                  background: `linear-gradient(150deg, ${PURPLE.chip}, ${PURPLE.deep})`,
-                  boxShadow: '0 8px 18px -10px #7c3aed',
-                }}
+              {/* Your lens on this campaign */}
+              <div
+                className="flex flex-col gap-[8px] rounded-xl px-[14px] py-[13px]"
+                style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.18)' }}
               >
-                {path.abbr}
-              </span>
-              <div className="flex min-w-0 flex-col gap-[3px]">
                 <span
                   className="text-[9px] uppercase"
-                  style={{ ...MONO, letterSpacing: '.14em', color: 'var(--bars-text-muted)' }}
+                  style={{ ...MONO, letterSpacing: '.14em', color: PURPLE.lite }}
                 >
-                  Your path · {path.roleLabel}
+                  Your {primaryDef.label} lens · {orientation === 'internal' ? 'self-allyship' : 'world-facing'}
                 </span>
-                <span
-                  className="text-[13.5px] font-semibold"
-                  style={{ ...BODY, lineHeight: 1.42, color: 'var(--bars-text-primary)' }}
+                <p
+                  className="text-[16px] font-semibold"
+                  style={{ ...DISPLAY, lineHeight: 1.32, letterSpacing: '-.01em', color: 'var(--bars-text-primary)' }}
                 >
-                  {path.move}
-                </span>
+                  {cell.prompt}
+                </p>
+                <p
+                  className="text-[12.5px]"
+                  style={{ ...BODY, lineHeight: 1.45, color: 'var(--bars-text-secondary)' }}
+                >
+                  <span
+                    className="mr-[6px] text-[8.5px] uppercase"
+                    style={{ ...MONO, letterSpacing: '.14em', color: 'var(--bars-text-muted)' }}
+                  >
+                    Make
+                  </span>
+                  {cell.suggestedArtifact}
+                </p>
               </div>
-            </div>
 
-            <div className="mt-[2px] flex flex-wrap gap-[10px]">
-              <Link
-                href={crossingRoleHref(path.roleId)}
-                className="min-w-[170px] flex-1 rounded-[11px] px-4 py-3 text-center text-[14px] font-semibold no-underline"
-                style={{
-                  ...DISPLAY,
-                  color: '#fff',
-                  background: `linear-gradient(150deg, ${PURPLE.mid}, ${PURPLE.deep})`,
-                  boxShadow: '0 10px 26px -12px #7c3aed, inset 0 1px 0 rgba(255,255,255,0.18)',
-                }}
-              >
-                Take this move in The Crossing →
-              </Link>
-              <Link
-                href={THE_CROSSING_HREF}
-                className="flex-none rounded-[11px] px-4 py-3 text-center text-[14px] font-semibold no-underline"
-                style={{
-                  ...DISPLAY,
-                  color: PURPLE.outline,
-                  background: 'transparent',
-                  border: '1px solid rgba(124,58,237,0.42)',
-                }}
-              >
-                See all paths
-              </Link>
+              {/* Matched move */}
+              <div className="flex items-start gap-3">
+                <span
+                  aria-hidden
+                  className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[11px] text-center text-[9px] font-bold uppercase"
+                  style={{
+                    ...MONO,
+                    letterSpacing: '.02em',
+                    lineHeight: 1.05,
+                    color: '#0a0908',
+                    background: `linear-gradient(150deg, ${PURPLE.chip}, ${PURPLE.deep})`,
+                    boxShadow: '0 8px 18px -10px #7c3aed',
+                  }}
+                >
+                  {path.abbr}
+                </span>
+                <div className="flex min-w-0 flex-col gap-[3px]">
+                  <span
+                    className="text-[9px] uppercase"
+                    style={{ ...MONO, letterSpacing: '.14em', color: 'var(--bars-text-muted)' }}
+                  >
+                    Your path · {path.roleLabel}
+                  </span>
+                  <span
+                    className="text-[13.5px] font-semibold"
+                    style={{ ...BODY, lineHeight: 1.42, color: 'var(--bars-text-primary)' }}
+                  >
+                    {path.move}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-[2px] flex flex-wrap gap-[10px]">
+                <Link
+                  href={crossingRoleHref(path.roleId)}
+                  className="min-w-[170px] flex-1 rounded-[11px] px-4 py-3 text-center text-[14px] font-semibold no-underline"
+                  style={{
+                    ...DISPLAY,
+                    color: '#fff',
+                    background: `linear-gradient(150deg, ${PURPLE.mid}, ${PURPLE.deep})`,
+                    boxShadow: '0 10px 26px -12px #7c3aed, inset 0 1px 0 rgba(255,255,255,0.18)',
+                  }}
+                >
+                  Take this move in The Crossing →
+                </Link>
+                <Link
+                  href={THE_CROSSING_HREF}
+                  className="flex-none rounded-[11px] px-4 py-3 text-center text-[14px] font-semibold no-underline"
+                  style={{
+                    ...DISPLAY,
+                    color: PURPLE.outline,
+                    background: 'transparent',
+                    border: '1px solid rgba(124,58,237,0.42)',
+                  }}
+                >
+                  See all paths
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* d. Full spectrum — all seven ranked. */}
       <details
@@ -367,6 +387,35 @@ export function SuperpowerReveal({ routing, copy }: SuperpowerRevealProps) {
           })}
         </div>
       </details>
+
+      {/* f. The sheet cross-link, and an optional save.
+          Still no gate: the whole result is above this block and stays readable
+          without an address. What an address buys is stated before it is asked
+          for, which is the only condition this surface has to meet. */}
+      <div
+        className="flex flex-col gap-[13px] rounded-xl px-4 py-[15px]"
+        style={{ background: 'var(--bars-surface-card)', boxShadow: 'inset 0 1px 0 var(--bars-inset-top), 0 0 0 1px var(--bars-line)' }}
+      >
+        <p className="text-[13px]" style={{ ...BODY, lineHeight: 1.55, color: 'var(--bars-text-secondary)' }}>
+          That is one line of your character sheet.{' '}
+          <Link href="/mastering-allyship/sheet" style={{ color: PURPLE.outline }}>
+            Here are the other twelve
+          </Link>
+          .
+        </p>
+        <EmailCaptureForm
+          promise={`Want this kept? I will send your result and the superpower you ranked last — ${SUPERPOWER_DEFS[avoidedFace].label}. Chapter 9 argues the superpower you avoid is the more interesting half.`}
+          submitLabel="Send me my result"
+          onSubmit={({ email, name }) =>
+            captureSuperpowerLead({
+              email,
+              name,
+              homeFace: SUPERPOWER_DEFS[primary].label,
+              avoidedFace: SUPERPOWER_DEFS[avoidedFace].label,
+            })
+          }
+        />
+      </div>
 
       {/* e. Framing — lens, not verdict. */}
       <p className="text-[12px]" style={{ ...BODY, lineHeight: 1.6, color: 'var(--bars-text-muted)' }}>

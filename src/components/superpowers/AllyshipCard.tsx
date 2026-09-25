@@ -11,11 +11,12 @@
  * Element color = the base card's identity; the gold foil = the superpower overlay.
  */
 import { useState, type CSSProperties } from 'react'
+import type { GameMasterFace } from '@/lib/quest-grammar/types'
 
 // ─── Card grammar types ──────────────────────────────────────────────────────
 export type CardElement = 'fire' | 'water' | 'wood' | 'metal' | 'earth' | 'liminal'
 export type MoveKey = 'wake' | 'clean' | 'grow' | 'show' | 'open'
-export type FaceKey = 'shaman' | 'challenger' | 'regent' | 'architect' | 'diplomat' | 'sage'
+export type FaceKey = GameMasterFace
 export type DomainKey = 'gather' | 'aware' | 'direct' | 'organize'
 export type CardStatus = 'open' | 'mine' | 'taken' | 'done' | 'signedout'
 

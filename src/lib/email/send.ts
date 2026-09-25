@@ -23,12 +23,25 @@ export type SendEmailInput = {
   replyTo?: string
   /** Optional tags for Resend analytics (e.g. funnel:awaken). */
   tags?: { name: string; value: string }[]
+  /**
+   * Files to attach. `path` is a URL Resend fetches at send time, which keeps a
+   * PDF out of the serverless bundle. Single sends only: Resend's batch API and
+   * Broadcasts do not carry attachments.
+   */
+  attachments?: { filename: string; path?: string; content?: string | Buffer }[]
+  /** Extra headers, e.g. List-Unsubscribe on list mail. */
+  headers?: Record<string, string>
+  /**
+   * Resend drops a repeat send carrying the same key within 24 hours, so a
+   * retried job cannot deliver the same email twice.
+   */
+  idempotencyKey?: string
 }
 
 export type SendEmailResult =
   | { ok: true; id: string | null; skipped?: false }
   | { ok: true; id: null; skipped: true; reason: string }
-  | { ok: false; error: string }
+  | { ok: false; error: string; code?: string }
 
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
   const config = getEmailConfig()
@@ -51,6 +64,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     subject: input.subject,
     replyTo: input.replyTo ?? config.replyTo ?? undefined,
     tags: input.tags,
+    ...(input.attachments?.length ? { attachments: input.attachments } : {}),
+    ...(input.headers ? { headers: input.headers } : {}),
   }
   let payload: CreateEmailOptions
   if (input.react) {
@@ -62,11 +77,14 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   }
 
   try {
-    const { data, error } = await resend.emails.send(payload)
+    const { data, error } = await resend.emails.send(
+      payload,
+      input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : undefined,
+    )
 
     if (error) {
       console.error('[email] resend returned an error', error)
-      return { ok: false, error: error.message }
+      return { ok: false, error: error.message, code: error.name }
     }
     return { ok: true, id: data?.id ?? null }
   } catch (err) {

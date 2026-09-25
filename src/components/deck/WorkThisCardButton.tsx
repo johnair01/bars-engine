@@ -26,6 +26,10 @@ import {
   type MoveAttemptDraft,
   type MoveRecommendationServiceResult,
 } from '@/lib/charge-metabolism'
+import {
+  buildRecommendationCardViewModel,
+  type RecommendationCardViewModel,
+} from '@/lib/allyship-deck/recommendation-card-view-model'
 import type { CardSubject } from './AllyshipCard'
 
 type PanelStep =
@@ -608,11 +612,18 @@ function DeckWorkThisCardPanel({
                 {routeHandRecommendations.map((item, index) => {
                   const draft = routeHandAttemptDrafts[index] ?? null
                   const role = draft?.recommendationRole ?? 'single'
+                  const viewModel = buildRecommendationCardViewModel({
+                    card,
+                    subject,
+                    recommendation: item,
+                    role,
+                    attemptDraft: draft,
+                  })
                   return (
                     <RecommendationView
                       key={`${item.edge.vector}-${index}`}
-                      kickerLabel={`Card ${index + 1} · ${routeHandRoleLabel(role)}`}
-                      recommendation={item.move}
+                      kickerLabel={`Card ${index + 1} · ${viewModel.kicker}`}
+                      viewModel={viewModel}
                       action={
                         <button
                           type="button"
@@ -860,21 +871,51 @@ function OptionCard({
 }
 
 function RecommendationView({
-  recommendation,
+  viewModel,
   kickerLabel = 'Recommended move',
   action,
 }: {
-  recommendation: NonNullable<MoveRecommendationServiceResult['primaryRecommendation']>['move']
+  viewModel: RecommendationCardViewModel
   kickerLabel?: string
   action?: ReactNode
 }) {
   return (
     <div style={recommendationBox}>
       <p style={{ ...kicker, color: DECK_GOLD }}>{kickerLabel}</p>
-      <h3 style={{ ...panelHeading, marginTop: 5 }}>{recommendation.title}</h3>
-      <p style={smallLabel}>{recommendation.domainOutput}</p>
-      <div style={recommendationText}>{recommendation.instruction}</div>
-      <p style={{ ...bodyText, marginTop: 12 }}>{recommendation.completion}</p>
+      <h3 style={{ ...panelHeading, marginTop: 5 }}>{viewModel.title}</h3>
+      <div style={recommendationSection}>
+        <p style={smallLabel}>Why this card</p>
+        <p style={bodyText}>{viewModel.whyThisCard}</p>
+      </div>
+      <div style={recommendationMetaGrid}>
+        <div style={miniPanel}>
+          <p style={smallLabel}>Your vector</p>
+          <p style={compactText}>{viewModel.vectorLabel}</p>
+        </div>
+        <div style={miniPanel}>
+          <p style={smallLabel}>Where the work is</p>
+          <p style={compactText}>{viewModel.blockerLabel}</p>
+        </div>
+      </div>
+      <div style={recommendationSection}>
+        <p style={smallLabel}>Do this now</p>
+        <ol style={protocolList}>
+          {viewModel.protocolSteps.map((step, index) => (
+            <li key={`${viewModel.id}:step:${index}`}>{step}</li>
+          ))}
+        </ol>
+      </div>
+      <div style={traceBox}>
+        <p style={smallLabel}>Leave this trace</p>
+        <p style={compactText}>{viewModel.tracePrompt}</p>
+      </div>
+      <div style={saveTargetRow} aria-label="Future save targets">
+        {viewModel.saveTargets.map((target) => (
+          <button key={target.id} type="button" disabled={!target.enabled} style={disabledPill}>
+            {target.label}
+          </button>
+        ))}
+      </div>
       {action && <div style={{ marginTop: 14 }}>{action}</div>}
     </div>
   )
@@ -887,12 +928,6 @@ function stateEquals(left: AlchemyState | null, right: AlchemyState): boolean {
 function routeHandHeading(count: number): string {
   if (count === 1) return 'A card came forward.'
   return `${count} cards came forward.`
-}
-
-function routeHandRoleLabel(role: NonNullable<MoveAttemptDraft['recommendationRole']>): string {
-  if (role === 'single') return 'practice'
-  if (role === 'satisfaction') return 'transcend'
-  return role
 }
 
 function buildBlockerContext(choice: BlockerChoice | null, detail: string): string {
@@ -1110,6 +1145,70 @@ const recommendationGrid: CSSProperties = {
   gap: 12,
 }
 
+const recommendationSection: CSSProperties = {
+  display: 'grid',
+  gap: 6,
+  marginTop: 13,
+}
+
+const recommendationMetaGrid: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr',
+  gap: 9,
+  marginTop: 13,
+}
+
+const miniPanel: CSSProperties = {
+  borderRadius: 10,
+  border: '1px solid rgba(255,255,255,.1)',
+  background: SURFACE_TOKENS.surfaceInset,
+  padding: 11,
+}
+
+const compactText: CSSProperties = {
+  fontFamily: DECK_FONTS.body,
+  fontSize: 13,
+  lineHeight: 1.45,
+  color: SURFACE_TOKENS.textPrimary,
+  margin: '5px 0 0',
+}
+
+const protocolList: CSSProperties = {
+  display: 'grid',
+  gap: 7,
+  paddingLeft: 18,
+  margin: '6px 0 0',
+  fontFamily: DECK_FONTS.body,
+  fontSize: 13.5,
+  lineHeight: 1.45,
+  color: SURFACE_TOKENS.textPrimary,
+}
+
+const traceBox: CSSProperties = {
+  borderRadius: 10,
+  border: `1px solid color-mix(in srgb, ${DECK_GOLD} 45%, transparent)`,
+  background: 'rgba(230, 184, 90, .1)',
+  padding: 12,
+  marginTop: 13,
+}
+
+const saveTargetRow: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 8,
+  marginTop: 13,
+}
+
+const disabledPill: CSSProperties = {
+  border: '1px solid rgba(255,255,255,.1)',
+  borderRadius: 999,
+  background: 'rgba(255,255,255,.04)',
+  color: SURFACE_TOKENS.textMuted,
+  fontFamily: DECK_FONTS.mono,
+  fontSize: 10,
+  padding: '7px 9px',
+}
+
 const smallLabel: CSSProperties = {
   fontFamily: DECK_FONTS.mono,
   fontSize: 10,
@@ -1117,15 +1216,6 @@ const smallLabel: CSSProperties = {
   textTransform: 'uppercase',
   color: SURFACE_TOKENS.textMuted,
   margin: '6px 0 0',
-}
-
-const recommendationText: CSSProperties = {
-  whiteSpace: 'pre-wrap',
-  fontFamily: DECK_FONTS.body,
-  fontSize: 13.5,
-  lineHeight: 1.5,
-  color: SURFACE_TOKENS.textPrimary,
-  marginTop: 12,
 }
 
 const errorText: CSSProperties = {

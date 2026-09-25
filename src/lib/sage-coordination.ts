@@ -5,7 +5,9 @@
  * Suggests backlog item assignments to Game Master faces and detects convergence points.
  */
 
-export type GameMasterFace = 'shaman' | 'challenger' | 'regent' | 'architect' | 'diplomat' | 'sage'
+import type { GameMasterFace } from '@/lib/quest-grammar/types'
+
+export type { GameMasterFace }
 
 export interface BacklogItemForCoordination {
   id: string

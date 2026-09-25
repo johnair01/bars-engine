@@ -1,0 +1,18 @@
+E = [
+("A system like that produces a predictable game, and the game seats three kinds of players.", "A system like that produces a predictable game that seats three kinds of players."),
+("Some believe the stated mission, do the actual labor, and burn out inside three years.", "Some believe the stated mission and do the actual labor, then burn out inside three years."),
+("Rules arrived to protect that group, and they do not work.", "Rules arrived to protect that group, but they do not work."),
+("Ken Wilber named this confusion, and his name for it is the most useful idea I can hand you before chapter one.", "The most useful idea I can hand you before chapter one is Ken Wilber's name for this confusion."),
+("one that has not reached the rules yet, and one that has been through them", "one that has not reached the rules yet and one that has been through them"),
+("the only work that moves anybody, and the rules cannot tell,", "the only work that moves anybody, yet the rules cannot tell,"),
+("So the rules defend in both directions at once, and the believer pays for the defense.", "So the rules defend in both directions at once, while the believer pays for the defense."),
+("Most of it does not take, and the failure is rarely the curriculum.", "Most of it does not take, though the failure is rarely the curriculum."),
+("Allyship is already a game, and it is already gamified.", "Allyship is already a game, one that is already gamified."),
+("will absolutely make somebody act, and they will hollow that person out", "will absolutely make somebody act, but they will hollow that person out"),
+("the drives that leave you feeling capable, and it does that by being an actual game,", "the drives that leave you feeling capable, by being an actual game,"),
+("That is your way in, and it is what I most want you to take from this page.", "That way in is what I most want you to take from this page."),
+("Deserving it was never the mechanism, and that is the first claim this book takes off the table.", "The first claim this book takes off the table is that deserving it was ever the mechanism."),
+("the moment you meet it somewhere else, and that is what the best fantasy has always been for.", "the moment you meet it somewhere else, which is what the best fantasy has always been for."),
+("You cannot make another person satisfied, and reaching for that is the exact place", "You cannot make another person satisfied. Reaching for that is the exact place"),
+("So you aim at one person, by name, you make the move cleanly, and what they do with it stays theirs.", "So you aim at one person, by name, and make the move cleanly. What they do with it stays theirs."),
+]

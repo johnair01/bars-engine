@@ -22,7 +22,7 @@ import {
  * @entity CAMPAIGN
  * @description MTGOA Book/Game hub — the curriculum as a **deck of cards on a slate table**
  *   (skeuomorphic CYOA menu). PUBLIC sub-landing/funnel: anyone can browse and "Draw" a card
- *   toward its July 18 funnel door; only the deeper gated content requires auth. Cards take
+ *   toward its funnel door; only the deeper gated content requires auth. Cards take
  *   the player's nation element (earth fallback when logged out). Built on the reusable
  *   CardTable + DeckCard primitives. Spec: .specify/specs/mtgoa-menu-skeuomorphic-cyoa/
  * @permissions public

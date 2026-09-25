@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/cards.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; }
+  a { color:#C9A84C; text-decoration:none; }
+  a:hover { color:var(--bars-text-primary); }
+  .clk { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .field:focus { outline:none; border-color:#1a7a8a !important; box-shadow: 0 0 0 3px color-mix(in srgb, #1a7a8a 26%, transparent); }
+  .drawrow { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .emogrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; }
+  @media (max-width: 640px) {
+    .drawrow { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:6px; }
+    .drawrow > * { flex:0 0 78%; scroll-snap-align:center; }
+    .emogrid { grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .clk { transition: transform .15s var(--bars-ease-out), filter .15s ease, box-shadow .2s ease; }
+    .clk:hover { filter: brightness(1.08); }
+    .press:active { transform: scale(.97); }
+    .fadeup { animation: fadeup .4s var(--bars-ease-out) both; }
+    @keyframes fadeup { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none;} }
+    .sheetup { animation: sheetup .28s var(--bars-ease-out) both; }
+    @keyframes sheetup { from { transform: translateY(14px); opacity:0;} to { transform:none; opacity:1;} }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bars-bg-base);font-family:var(--bars-font-body);color:var(--bars-text-primary);">
+  <div style="max-width:640px;margin:0 auto;padding:28px clamp(16px,5vw,32px) 90px;">
+
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:12px;">
+      <span class="bars-label" style="color:#C9A84C;">Clean Up Check</span>
+      <span class="bars-label" style="color:#3fa9c4;">clean up · 水</span>
+    </div>
+    <div style="height:2px;border-radius:2px;background:var(--bars-line);overflow:hidden;">
+      <div style="{{ progressStyle }}"></div>
+    </div>
+
+    <!-- ============ ENTRY ============ -->
+    <sc-if value="{{ sEntry }}" hint-placeholder-val="{{ true }}">
+      <div class="fadeup" style="padding-top:36px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">a practice, not a test</span>
+        <h1 class="bars-title" style="margin:10px 0 0;font-size:clamp(30px,6vw,42px);line-height:1.16;font-weight:700;text-wrap:pretty;">Something has your attention. Until you work it, it works you.</h1>
+        <p class="bars-prose" style="margin:18px 0 0;font-size:17px;line-height:1.62;color:var(--bars-text-secondary);text-wrap:pretty;">Unnoticed charge runs you from underneath — it gathers a story, and the story is what makes the next move look impossible. Noticed, it becomes workable. Clean Up is how you work it until the energy inside it is yours to spend.</p>
+        <p class="bars-prose" style="margin:14px 0 0;font-size:17px;line-height:1.62;color:var(--bars-text-secondary);text-wrap:pretty;">Twenty minutes, or five. You name what is live, draw a card for the lens, and walk it around three vantage points.</p>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:28px;">
+          <div class="clk press" onClick="{{ startBook }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-liminal);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-liminal);text-wrap:pretty;">I want to promote the book but something's in the way →</div>
+          <div class="clk press" onClick="{{ startFree }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-primary);padding:15px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);text-wrap:pretty;">I'm carrying a charge about my allyship →</div>
+          <div class="clk press" onClick="{{ toOrient }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-secondary);padding:14px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line);">what is 3-2-1? →</div>
+        </div>
+        <p style="margin:18px 0 0;text-align:center;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">No sign-up. Nothing you write is saved or sent.</p>
+      </div>
+    </sc-if>
+
+    <!-- ============ ORIENTATION ============ -->
+    <sc-if value="{{ sOrient }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">orientation · the three vantage points</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;">Not a reframe. A walk around the charge.</h2>
+        <p class="bars-prose" style="margin:10px 0 0;color:var(--bars-text-secondary);line-height:1.6;">You look at the same charge from three positions — as an it, as a you, as an I — until what was stuck as story is available as energy.</p>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:24px;">
+          <sc-for list="{{ steps321 }}" as="s" hint-placeholder-count="3">
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:16px 17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);box-shadow:var(--bars-shadow-inset-top);">
+              <span style="{{ s.numStyle }}">{{ s.num }}</span>
+              <span style="flex:1;min-width:0;">
+                <span class="bars-title" style="display:block;font-size:17px;color:#fff;">{{ s.title }}</span>
+                <span class="bars-prose" style="display:block;margin-top:5px;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">{{ s.body }}</span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:22px;padding:17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border-left:2px solid #1a7a8a;">
+          <span class="bars-label" style="color:#3fa9c4;">why it belongs in allyship</span>
+          <p class="bars-prose" style="margin:9px 0 0;font-size:15px;line-height:1.6;color:var(--bars-text-secondary);">Charge arrives through a real person, a figure you have never met, or a part of yourself. However it arrives, an uncleaned charge spends itself on the story instead of the work. Clean Up is one of the four moves that raise your throughput on the fifth one: showing up.</p>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:28px;">
+          <span class="clk" onClick="{{ toEntry }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span class="clk press" onClick="{{ startCharge }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">continue →</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ CHARGE ============ -->
+    <sc-if value="{{ sCharge }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">step 1 · what is live</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;text-wrap:pretty;">{{ chargeHeading }}</h2>
+        <p class="bars-prose" style="margin:8px 0 0;color:var(--bars-text-secondary);">One read, no interpretation. Pick what's closest to true.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:20px;">
+          <sc-for list="{{ chargeChips }}" as="c" hint-placeholder-count="7">
+            <span class="clk press" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</span>
+          </sc-for>
+        </div>
+        <div style="margin-top:24px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">the channel underneath</span>
+          <p class="bars-prose" style="margin:6px 0 0;font-size:15px;color:var(--bars-text-secondary);">Which one is running? Naming it is already half the clean-up.</p>
+          <div class="emogrid" style="margin-top:12px;">
+            <sc-for list="{{ channelChips }}" as="c" hint-placeholder-count="5">
+              <div class="clk press" onClick="{{ c.pick }}" style="{{ c.style }}">
+                <span class="bars-title" style="display:block;font-size:17px;color:#fff;">{{ c.label }}</span>
+                <span class="bars-prose" style="display:block;margin-top:4px;font-size:14px;line-height:1.45;color:var(--bars-text-secondary);">{{ c.hint }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ chargeMsgOn }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:20px;padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);">
+            <span class="bars-label" style="color:var(--bars-text-muted);">take it with you · text or socials</span>
+            <p class="bars-prose" style="margin:8px 0 12px;font-size:15px;line-height:1.55;color:var(--bars-text-primary);">{{ chargeMsg }}</p>
+            <span class="clk press" onClick="{{ copyChargeMsg }}" style="display:inline-block;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:10px 16px;border-radius:var(--bars-radius-full);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">{{ chargeCopyLabel }}</span>
+          </div>
+        </sc-if>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px;">
+          <span class="clk" onClick="{{ toEntry }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span class="clk press" onClick="{{ toLine }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">continue →</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ THE LINE ============ -->
+    <sc-if value="{{ sLine }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">step 2 · the line running underneath</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;text-wrap:pretty;">{{ lineHeading }}</h2>
+        <p class="bars-prose" style="margin:8px 0 0;color:var(--bars-text-secondary);">Familiar sentences, not types. Pick the one you'd recognize in your own voice today.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px;">
+          <sc-for list="{{ lineOptions }}" as="o" hint-placeholder-count="7">
+            <div class="clk press" onClick="{{ o.pick }}" style="{{ o.style }}">
+              <span class="bars-title" style="display:block;font-size:17px;line-height:1.35;color:#fff;text-wrap:pretty;">{{ o.voice }}</span>
+              <sc-if value="{{ o.revealed }}" hint-placeholder-val="{{ false }}">
+                <span class="bars-label" style="display:block;margin-top:8px;color:var(--bars-liminal-glow);">{{ o.tag }}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ lineMsgOn }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:20px;padding:15px 16px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);">
+            <span class="bars-label" style="color:var(--bars-text-muted);">take it with you · text or socials</span>
+            <p class="bars-prose" style="margin:8px 0 12px;font-size:15px;line-height:1.55;color:var(--bars-text-primary);">{{ lineMsg }}</p>
+            <span class="clk press" onClick="{{ copyLineMsg }}" style="display:inline-block;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:10px 16px;border-radius:var(--bars-radius-full);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">{{ lineCopyLabel }}</span>
+          </div>
+        </sc-if>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px;">
+          <span class="clk" onClick="{{ toCharge }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span class="clk press" onClick="{{ toDraw }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">continue →</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ THE DRAW ============ -->
+    <sc-if value="{{ sDraw }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">step 3 · draw a lens</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;">Carry one card into the work.</h2>
+        <p class="bars-prose" style="margin:8px 0 0;color:var(--bars-text-secondary);">{{ drawSub }}</p>
+        <div style="margin:22px calc(-1 * clamp(16px,5vw,32px)) 0;padding:26px clamp(16px,5vw,32px) 28px;background:#0a0908;box-shadow:var(--bars-shadow-inset-top);border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <span style="flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(201,168,76,.45));"></span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#C9A84C;white-space:nowrap;">{{ deckRibbon }}</span>
+            <span style="flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(201,168,76,.45));"></span>
+          </div>
+          <div class="drawrow" style="margin-top:22px;">
+            <sc-for list="{{ sampler }}" as="c" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div class="clk press" onClick="{{ c.open }}" style="{{ c.rootStyle }}">
+                  <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top left, rgba(26,122,138,.30), transparent 62%);"></div>
+                  <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+                    <div style="padding:12px 13px 9px;border-bottom:1px solid rgba(26,122,138,.5);">
+                      <h3 class="bars-title" style="margin:0;font-size:16px;line-height:1.12;color:#fff;">{{ c.title }}</h3>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 12px 0;">
+                      <span style="display:flex;flex-direction:column;align-items:center;gap:4px;"><span style="{{ c.pipStyle }}">{{ c.moveIconEl }}</span><span class="bars-label" style="font-size:8px;color:#3fa9c4;">Clean Up</span></span>
+                      <span style="display:flex;flex-direction:column;align-items:center;gap:4px;"><span style="{{ c.faceStyle }}">{{ c.faceMono }}</span><span class="bars-label" style="font-size:8px;color:var(--bars-text-secondary);">{{ c.faceLabel }}</span></span>
+                    </div>
+                    <div style="padding:8px 13px 0;"><span class="bars-label" style="font-size:8px;color:#3fa9c4;">◇ {{ c.domainLabel }}</span></div>
+                    <div style="flex:1;padding:8px 13px 12px;"><p class="bars-prose" style="margin:0;font-size:11.5px;line-height:1.42;color:var(--bars-text-primary);">{{ c.q }}</p></div>
+                  </div>
+                </div>
+                <span class="bars-label" style="text-align:center;color:{{ c.pickedColor }};min-height:14px;">{{ c.pickedLabel }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px;">
+          <span class="clk" onClick="{{ toLine }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span style="display:flex;gap:9px;">
+            <span class="clk press" onClick="{{ redraw }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:14px;color:var(--bars-text-primary);padding:13px 18px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">draw three more</span>
+            <span class="clk press" onClick="{{ toWork }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:#fff;background:var(--bars-liminal);padding:13px 22px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">{{ drawCta }}</span>
+          </span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ THE WORK · 3-2-1 ============ -->
+    <sc-if value="{{ sWork }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">step 4 · work the charge</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;">Three passes. Same charge, three positions.</h2>
+        <p class="bars-prose" style="margin:8px 0 0;color:var(--bars-text-secondary);">Write badly and quickly. Nothing here is saved, sent, or read by anyone.</p>
+
+        <sc-if value="{{ hasCarried }}" hint-placeholder-val="{{ false }}">
+          <div class="clk" onClick="{{ reopenCarried }}" style="display:flex;gap:12px;align-items:center;margin-top:20px;padding:13px 15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);border-left:2px solid #C9A84C;">
+            <span style="{{ carriedPip }}">{{ carriedIcon }}</span>
+            <span style="flex:1;min-width:0;">
+              <span class="bars-label" style="display:block;color:#C9A84C;">the card you're carrying</span>
+              <span class="bars-title" style="display:block;font-size:15px;color:#fff;margin-top:2px;">{{ carriedTitle }}</span>
+              <span style="display:block;font-size:var(--bars-text-sm);color:var(--bars-text-secondary);margin-top:2px;">{{ carriedAction }}</span>
+            </span>
+          </div>
+        </sc-if>
+
+        <!-- 3 · FACE IT -->
+        <div style="margin-top:22px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);box-shadow:var(--bars-shadow-inset-top);">
+          <div style="display:flex;gap:13px;align-items:center;">
+            <span style="{{ n3Style }}">3</span>
+            <span style="flex:1;min-width:0;">
+              <span class="bars-title" style="display:block;font-size:17px;color:#fff;">Face it</span>
+              <span class="bars-label" style="display:block;margin-top:3px;color:#3fa9c4;">third person · it</span>
+            </span>
+          </div>
+          <p class="bars-prose" style="margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">What does this charge look like if it were a person? Where are they from? How do they move through the world? Just write down what comes up and let yourself be surprised.</p>
+          <textarea class="field" rows="12" value="{{ faceCharge }}" onChange="{{ onFaceCharge }}" placeholder="They're the kind of person who…" style="width:100%;margin-top:11px;padding:14px 15px;font-family:var(--bars-font-body);font-size:16px;line-height:1.6;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);resize:vertical;"></textarea>
+        </div>
+
+        <!-- 2 · TALK TO IT — the thread -->
+        <div style="margin-top:14px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);box-shadow:var(--bars-shadow-inset-top);">
+          <div style="display:flex;gap:13px;align-items:center;">
+            <span style="{{ n2Style }}">2</span>
+            <span style="flex:1;min-width:0;">
+              <span class="bars-title" style="display:block;font-size:17px;color:#fff;">Talk to it</span>
+              <span class="bars-label" style="display:block;margin-top:3px;color:#3fa9c4;">second person · you · a thread</span>
+            </span>
+          </div>
+          <p class="bars-prose" style="margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">Before you speak to them, what do you call them? Not a clinical label — a name that fits their nature.</p>
+          <input class="field" value="{{ maskName }}" onChange="{{ onMaskName }}" placeholder="e.g. The Cynic, The Protector, The Good Ally" style="width:100%;margin-top:10px;padding:13px 14px;font-family:var(--bars-font-body);font-size:16px;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);">
+          <p class="bars-prose" style="margin:16px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">Now go back and forth. Ask them something, switch voices, and let them answer in their own words. Keep going until they say something you didn't already know.</p>
+
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+            <sc-for list="{{ thread }}" as="m" hint-placeholder-count="0">
+              <div style="{{ m.rowStyle }}">
+                <span style="{{ m.bubbleStyle }}">
+                  <span class="bars-label" style="display:block;font-size:9px;opacity:.8;margin-bottom:4px;">{{ m.who }}</span>
+                  <span style="display:block;font-size:15px;line-height:1.5;">{{ m.text }}</span>
+                </span>
+                <span class="clk" onClick="{{ m.remove }}" style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);padding:4px 6px;">×</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ threadEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:14px;">
+              <span class="bars-label" style="color:var(--bars-text-muted);">openers, if you want one</span>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;">
+                <sc-for list="{{ openers }}" as="o" hint-placeholder-count="5">
+                  <span class="clk press" onClick="{{ o.use }}" style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:10px 13px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);border:1px solid var(--bars-line);color:var(--bars-text-secondary);">{{ o.label }}</span>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bars-line);">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="bars-label" style="color:var(--bars-text-muted);">speaking as</span>
+              <span class="clk press" onClick="{{ voiceMe }}" style="{{ voiceMeStyle }}">me</span>
+              <span class="clk press" onClick="{{ voiceIt }}" style="{{ voiceItStyle }}">{{ partName }}</span>
+            </div>
+            <textarea class="field" rows="3" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" placeholder="{{ draftPlaceholder }}" style="width:100%;margin-top:10px;padding:13px 14px;font-family:var(--bars-font-body);font-size:16px;line-height:1.55;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);resize:vertical;"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;">
+              <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--bars-text-muted);">enter sends · shift+enter for a new line</span>
+              <span class="clk press" onClick="{{ send }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:#fff;background:var(--bars-liminal);padding:11px 20px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">say it</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1 · BE IT — the monologue -->
+        <div style="margin-top:14px;padding:18px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid var(--bars-line-strong);box-shadow:var(--bars-shadow-inset-top);">
+          <div style="display:flex;gap:13px;align-items:center;">
+            <span style="{{ n1Style }}">1</span>
+            <span style="flex:1;min-width:0;">
+              <span class="bars-title" style="display:block;font-size:17px;color:#fff;">Be it</span>
+              <span class="bars-label" style="display:block;margin-top:3px;color:#a99ae0;">first person · I · no one else in the room</span>
+            </span>
+          </div>
+          <p class="bars-prose" style="margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">Drop the dialogue. You are {{ partName }} now, alone, with nobody to convince and nothing to ask for. Say what is true when there's no one listening.</p>
+          <textarea class="field" rows="6" value="{{ beVoice }}" onChange="{{ onBeVoice }}" placeholder="I am… / What is true about me is…" style="width:100%;margin-top:11px;padding:13px 14px;font-family:var(--bars-font-body);font-size:16px;line-height:1.6;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);resize:vertical;"></textarea>
+          <p class="bars-prose" style="margin:16px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">Come back to yourself. Holding this presence with awareness — what shifted?</p>
+          <textarea class="field" rows="3" value="{{ beShift }}" onChange="{{ onBeShift }}" placeholder="What feels different now…" style="width:100%;margin-top:11px;padding:13px 14px;font-family:var(--bars-font-body);font-size:16px;line-height:1.55;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);resize:vertical;"></textarea>
+        </div>
+
+        <p style="margin:14px 0 0;font-size:var(--bars-text-2xs);color:var(--bars-text-muted);font-family:var(--bars-font-mono);letter-spacing:.06em;text-transform:uppercase;">stays only in this browser · never sent</p>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px;">
+          <span class="clk" onClick="{{ toDraw }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+          <span style="display:flex;gap:9px;align-items:center;">
+            <span class="clk" onClick="{{ toMoves }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:13px 10px;">skip</span>
+            <span class="clk press" onClick="{{ toMoves }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:13px 26px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">what's freed up →</span>
+          </span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ CONVERGE + MOVES ============ -->
+    <sc-if value="{{ sMoves }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">step 5 · where the energy goes</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:26px;line-height:1.22;">The charge is worked. What does it fund?</h2>
+
+        <sc-if value="{{ hasCarried }}" hint-placeholder-val="{{ false }}">
+          <div class="clk" onClick="{{ reopenCarried }}" style="display:flex;gap:12px;align-items:center;margin-top:18px;padding:13px 15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);border-left:2px solid #C9A84C;">
+            <span style="{{ carriedPip }}">{{ carriedIcon }}</span>
+            <span style="flex:1;min-width:0;">
+              <span class="bars-label" style="display:block;color:#C9A84C;">the card you're carrying</span>
+              <span class="bars-title" style="display:block;font-size:15px;color:#fff;margin-top:2px;">{{ carriedTitle }}</span>
+              <span style="display:block;font-size:var(--bars-text-sm);color:var(--bars-text-secondary);margin-top:2px;">{{ carriedAction }}</span>
+            </span>
+          </div>
+        </sc-if>
+
+        <div style="margin-top:18px;padding:20px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid color-mix(in srgb, var(--bars-liminal) 45%, transparent);box-shadow:var(--bars-shadow-inset-top),0 0 34px -14px var(--bars-liminal);">
+          <span class="bars-label" style="color:var(--bars-liminal-glow);">{{ recHeader }}</span>
+          <sc-if value="{{ hasRecQuestion }}" hint-placeholder-val="{{ true }}">
+            <p class="bars-title" style="margin:11px 0 0;font-size:20px;line-height:1.3;color:#fff;text-wrap:pretty;">{{ recQuestion }}</p>
+            <p class="bars-prose" style="margin:9px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);text-wrap:pretty;">{{ recReframe }}</p>
+          </sc-if>
+          <div style="margin-top:18px;">
+            <span class="bars-label" style="color:var(--bars-text-muted);">{{ draftLabel }}</span>
+            <textarea class="field" rows="7" value="{{ postText }}" onChange="{{ onPostText }}" style="width:100%;margin-top:9px;padding:14px;font-family:var(--bars-font-body);font-size:16px;line-height:1.6;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);resize:vertical;"></textarea>
+            <span class="clk press" onClick="{{ copyPost }}" style="display:inline-block;margin-top:11px;font-family:var(--bars-font-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:11px 18px;border-radius:var(--bars-radius-full);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">{{ postCopyLabel }}</span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:24px;">
+          <div class="clk press" onClick="{{ pickAct }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:#fff;background:var(--bars-liminal);padding:16px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top),0 10px 24px -10px var(--bars-liminal);">{{ actLabel }}</div>
+          <div class="clk press" onClick="{{ pickLater }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-primary);padding:14px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">let it settle · come back later</div>
+          <div class="clk press" onClick="{{ pickDecline }}" style="text-align:center;font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-secondary);padding:14px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line);">this one isn't mine to clean</div>
+        </div>
+
+        <div style="margin-top:20px;">
+          <span class="clk" onClick="{{ toWork }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ RECEIPT ============ -->
+    <sc-if value="{{ sReceipt }}" hint-placeholder-val="{{ false }}">
+      <div class="fadeup" style="padding-top:34px;">
+        <span class="bars-label" style="color:#3fa9c4;">the clean-up is done for now</span>
+        <h2 class="bars-title" style="margin:10px 0 0;font-size:28px;line-height:1.2;text-wrap:pretty;">{{ receiptTitle }}</h2>
+        <p class="bars-prose" style="margin:10px 0 0;font-size:16px;line-height:1.6;color:var(--bars-text-secondary);text-wrap:pretty;">{{ receiptBody }}</p>
+
+        <sc-if value="{{ rShowPost }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:22px;">
+            <span class="bars-label" style="color:var(--bars-text-muted);">{{ draftLabelShort }}</span>
+            <textarea class="field" rows="7" value="{{ postText }}" onChange="{{ onPostText }}" style="width:100%;margin-top:9px;padding:14px;font-family:var(--bars-font-body);font-size:16px;line-height:1.6;color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);border-radius:var(--bars-radius-lg);resize:vertical;"></textarea>
+            <span class="clk press" onClick="{{ copyPost }}" style="display:inline-block;margin-top:12px;font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:14px 24px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">{{ postCopyLabel }}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ rShowCalendar }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:20px;">
+            <span class="clk press" onClick="{{ calTomorrow }}" style="font-family:var(--bars-font-mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:14px 18px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">tomorrow</span>
+            <span class="clk press" onClick="{{ calThree }}" style="font-family:var(--bars-font-mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:14px 18px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">in three days</span>
+            <span class="clk press" onClick="{{ calWeek }}" style="font-family:var(--bars-font-mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:14px 18px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">next week</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ rShowDoors }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:11px;margin-top:22px;">
+            <span class="bars-label" style="color:var(--bars-text-muted);">other doors, if one calls</span>
+            <a href="{{ deckHref }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:15px;padding:13px 16px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">explore the Allyship Deck →</a>
+            <span class="clk press" onClick="{{ doorRestartOther }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:15px;padding:13px 16px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);">clean up something else →</span>
+            <span style="padding:14px 16px;border-radius:var(--bars-radius-lg);border:1px dashed var(--bars-line-strong);color:var(--bars-text-muted);font-size:15px;">closing the tab is also a complete move.</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ hasCarried }}" hint-placeholder-val="{{ false }}">
+          <div class="clk" onClick="{{ reopenCarried }}" style="display:flex;gap:12px;align-items:center;margin-top:24px;padding:13px 15px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-inset);border:1px solid var(--bars-line);border-left:2px solid #C9A84C;">
+            <span style="{{ carriedPip }}">{{ carriedIcon }}</span>
+            <span style="flex:1;min-width:0;">
+              <span class="bars-label" style="display:block;color:#C9A84C;">the card you're carrying</span>
+              <span class="bars-title" style="display:block;font-size:15px;color:#fff;margin-top:2px;">{{ carriedTitle }}</span>
+              <span style="display:block;font-size:var(--bars-text-sm);color:var(--bars-text-secondary);margin-top:2px;">{{ carriedAction }}</span>
+            </span>
+          </div>
+        </sc-if>
+
+        <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--bars-line);">
+          <span class="bars-label" style="color:var(--bars-text-secondary);">the moves you made here</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+            <sc-for list="{{ evidence }}" as="e" hint-placeholder-count="3">
+              <span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 13px;border-radius:var(--bars-radius-full);background:var(--bars-surface-inset);border:1px solid var(--bars-line);color:var(--bars-text-secondary);">{{ e.label }}</span>
+            </sc-for>
+          </div>
+          <p class="bars-prose" style="margin:16px 0 0;font-size:var(--bars-text-sm);line-height:1.6;color:var(--bars-text-muted);">How the book reads this: Clean Up doesn't add motivation. Four of the five moves — noticing, receiving, metabolizing, building capacity — raise your throughput on the fifth one, showing up. You just cleared one blockage in that line.</p>
+        </div>
+
+        <div style="margin-top:26px;padding:20px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid color-mix(in srgb,#C9A84C 40%,transparent);box-shadow:var(--bars-shadow-inset-top);">
+          <span class="bars-label" style="color:#C9A84C;">keep going</span>
+          <h3 class="bars-title" style="margin:8px 0 0;font-size:20px;line-height:1.25;color:#fff;text-wrap:pretty;">The practice has a deck and a book behind it.</h3>
+          <p class="bars-prose" style="margin:8px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">120 cards across five moves — the Clean Up suit you just drew from is one of them. The book is where the whole game is taught.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
+            <a href="{{ deckHref }}" style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:#fff;background:var(--bars-liminal);padding:14px 22px;border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top);">explore the Allyship Deck →</a>
+            <a href="{{ bookHref }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:15px;color:var(--bars-text-primary);padding:14px 22px;border-radius:var(--bars-radius-lg);border:1px solid color-mix(in srgb,#C9A84C 55%,transparent);">buy the book →</a>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;align-items:center;">
+          <span class="clk" onClick="{{ toMoves }}" style="color:var(--bars-text-secondary);font-size:var(--bars-text-sm);padding:12px 4px;">← back to the moves</span>
+          <span class="clk press" onClick="{{ restart }}" style="font-family:var(--bars-font-display);font-weight:600;font-size:14px;color:var(--bars-text-primary);padding:12px 20px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);">start over</span>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- ============ CARD SHEET ============ -->
+  <sc-if value="{{ modalOn }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:60;background:rgba(5,4,3,.86);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;">
+      <div class="sheetup" onClick="{{ stop }}" style="width:100%;max-width:520px;max-height:92dvh;display:flex;flex-direction:column;background:#0a0908;border-radius:20px 20px 0 0;box-shadow:0 -20px 60px -20px rgba(0,0,0,.95), var(--bars-shadow-inset-top);border-top:1px solid rgba(201,168,76,.35);">
+        <div style="display:flex;justify-content:center;padding:10px 0 4px;"><span style="width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.16);"></span></div>
+        <div style="flex:1;overflow-y:auto;padding:10px 20px 20px;">
+          <div style="max-width:300px;margin:0 auto;{{ modalCardStyle }}">
+            <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top left, rgba(26,122,138,.30), transparent 62%);"></div>
+            <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+              <div style="padding:16px 18px 12px;border-bottom:1px solid rgba(26,122,138,.5);">
+                <h3 class="bars-title" style="margin:0;font-size:22px;line-height:1.14;color:#fff;">{{ modalTitle }}</h3>
+                <span style="display:block;margin-top:5px;font-size:13px;color:var(--bars-text-secondary);">{{ modalSub }}</span>
+              </div>
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 0;">
+                <span style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="{{ modalPip }}">{{ modalIcon }}</span><span class="bars-label" style="font-size:9px;color:#3fa9c4;">Clean Up</span></span>
+                <span style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="{{ modalFaceStyle }}">{{ modalFaceMono }}</span><span class="bars-label" style="font-size:9px;color:var(--bars-text-secondary);">{{ modalFaceLabel }}</span></span>
+              </div>
+              <div style="padding:12px 18px 18px;"><span class="bars-label" style="font-size:9px;color:#3fa9c4;">◇ {{ modalDomain }}</span></div>
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <span class="bars-label" style="color:var(--bars-text-muted);">the question</span>
+              <p class="bars-prose" style="margin:7px 0 0;font-size:16px;line-height:1.55;color:var(--bars-text-primary);">{{ modalQ }}</p>
+            </div>
+            <div>
+              <span class="bars-label" style="color:var(--bars-text-muted);">the practice</span>
+              <p class="bars-prose" style="margin:7px 0 0;font-size:15px;line-height:1.55;color:var(--bars-text-secondary);">{{ modalAction }}</p>
+            </div>
+            <sc-if value="{{ modalHasFlavor }}" hint-placeholder-val="{{ false }}">
+              <p class="bars-prose" style="margin:0;font-size:14px;line-height:1.55;color:var(--bars-text-muted);font-style:italic;">{{ modalFlavor }}</p>
+            </sc-if>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;padding:14px 20px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--bars-line);background:#0a0908;">
+          <span class="clk press" onClick="{{ closeModal }}" style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border-radius:var(--bars-radius-lg);border:1px solid var(--bars-line-strong);color:var(--bars-text-primary);font-family:var(--bars-font-display);font-weight:600;font-size:15px;">close</span>
+          <span class="clk press" onClick="{{ chooseModal }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:var(--bars-radius-lg);background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:var(--bars-shadow-inset-top);">{{ modalChooseLabel }}</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:900},&quot;siteUrl&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;masteringallyship.com&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Adapters (TODO backend)&quot;}}">
+class Component extends DCLogic {
+  order = ['entry','orient','charge','line','draw','work','moves','receipt'];
+  chargeDefs = ['tight','hot','heavy','foggy','buzzing','numb','not sure / skip'];
+  channelDefs = [
+    { key:'fire', label:'anger', hint:'heat, resentment, the urge to push back', clause:'The channel running was anger' },
+    { key:'water', label:'fear', hint:'bracing, scanning, waiting for impact', clause:'The channel running was fear' },
+    { key:'metal', label:'sadness', hint:'grief, loss, something worth mourning', clause:'The channel running was sadness' },
+    { key:'earth', label:'numbness', hint:'flat, far away, going through motions', clause:'The channel running was numbness' },
+    { key:'wood', label:'reach', hint:'wanting more than the situation allows', clause:'The channel running was reach — wanting more than the situation allowed' },
+  ];
+  bookLineDefs = [
+    { key:'b_worthy', voice:'\u201cWho am I to promote a book on allyship?\u201d', belief:'I\u2019m not worthy',
+      overcome:'What\u2019s the one true sentence you\u2019d say about this book?', reframe:'Honesty is the ask, not credentials. One true sentence is a complete recommendation.' },
+    { key:'b_capable', voice:'\u201cI\u2019ll get the message wrong and embarrass him.\u201d', belief:'I\u2019m not capable',
+      overcome:'What can you say that is only about what the book gave you?', reframe:'You do the handing; the book does the explaining. Your own experience can\u2019t be gotten wrong.' },
+    { key:'b_good', voice:'\u201cIf it flops on my page, that\u2019s on me.\u201d', belief:'I\u2019m not good enough',
+      overcome:'Who is one person who\u2019d be glad you sent it, regardless of the numbers?', reframe:'Reach is the platform\u2019s business. The hand-off is yours, and one landing is a full result.' },
+    { key:'b_ready', voice:'\u201cI should read all of it before I push it.\u201d', belief:'I\u2019m not ready',
+      overcome:'What has the book already given you? Share that.', reframe:'Readiness was never the ask. What already landed is already shareable.' },
+    { key:'b_belong', voice:'\u201cIt feels gross to sell to my own people.\u201d', belief:'I don\u2019t belong',
+      overcome:'What\u2019s the difference between selling to them and handing something to them?', reframe:'You\u2019re not extracting from your people. You\u2019re putting a tool in front of the ones who\u2019d use it.' },
+    { key:'b_insig', voice:'\u201cMy network doesn\u2019t care about this.\u201d', belief:'I\u2019m insignificant',
+      overcome:'One hand-off is how books travel. Who\u2019s your one?', reframe:'Books move node to node. Significance is downstream of the hand-off, not upstream of it.' },
+  ];
+  lineDefs = [
+    { key:'good', voice:'\u201cIf I were better at this, it wouldn\u2019t be getting to me.\u201d', belief:'I\u2019m not good enough',
+      overcome:'What would you tell someone else who felt this about the same thing?', reframe:'The charge is not a skill gap. Feeling it is what makes you useful in the room.' },
+    { key:'worthy', voice:'\u201cWho am I to be upset when others have it harder?\u201d', belief:'I\u2019m not worthy',
+      overcome:'Whose pain are you comparing yours to \u2014 and did they ask you to?', reframe:'Ranking your charge against someone else\u2019s doesn\u2019t transfer any energy to them. Working it does.' },
+    { key:'ready', voice:'\u201cI should be over this by now.\u201d', belief:'I\u2019m not ready',
+      overcome:'What has this charge been protecting since the first time you felt it?', reframe:'Charge doesn\u2019t expire on schedule. It waits until it\u2019s worked.' },
+    { key:'belong', voice:'\u201cIt\u2019s not my place to be upset about this.\u201d', belief:'I don\u2019t belong',
+      overcome:'What did you see that made your body respond before your head did?', reframe:'You don\u2019t need standing to have a reaction. You need somewhere to put it.' },
+    { key:'insig', voice:'\u201cNothing I do about this would change anything.\u201d', belief:'I\u2019m insignificant',
+      overcome:'What is the smallest true move that is still in your hands?', reframe:'Scale is not the test. A worked charge funds one move; one move is how anything moves at all.' },
+    { key:'capable', voice:'\u201cIf I say something I\u2019ll get it wrong and make it worse.\u201d', belief:'I\u2019m not capable',
+      overcome:'What can you say that is only about what you saw and felt?', reframe:'Precision beats fluency. You don\u2019t have to be articulate to be honest.' },
+  ];
+  openerDefs = [
+    'What do you want from me?',
+    'If you got that, what would you have then?',
+    'What is life like for you right now?',
+    'What would have to be true for you to settle?',
+    'What are you most afraid would happen?',
+  ];
+  receipts = {
+    act: { title:'The energy is yours to spend.', body:'You worked the charge instead of obeying it. Take the move while the line is clear \u2014 copy the entry if you want the record.' },
+    later: { title:'Let it settle.', body:'Nothing expires and nothing is tracked. If a nudge would help, put it where your days actually live:' },
+    notmine: { title:'Heard. This one isn\u2019t yours to clean.', body:'No date required. No explanation owed. Noticing the charge and setting it down is still a complete pass.' },
+  };
+  cleanPath = ['M14 22 H50','M20 22 L23 50 H41 L44 22','M26 30 V42','M32 30 V42','M38 30 V42'];
+  faceColor = { shaman:'#6fd0d0', challenger:'#e8896f', regent:'#e0c25a', architect:'#9fb2c8', diplomat:'#6fc795', sage:'#a99ae0' };
+  state = { screen:'entry', route:'free', charge:null, channel:null, line:null, cards:[], sampler:[], pickedCard:null, modalCard:null,
+    faceCharge:'', faceShape:'', maskName:'', thread:[], draft:'', voice:'me', beVoice:'', beShift:'',
+    move:null, postText:'', postEdited:false, copied:null };
+
+  componentDidMount() {
+    fetch('deck-data.json').then(r=>r.json()).then(d=>{
+      const pool = (d.cards||[]).filter(c=>c.move==='clean');
+      const scoped = this.state.route==='book' ? pool.filter(c=>c.domain==='aware') : pool;
+      this.setState({ cards:pool, sampler:this.sample(scoped) });
+    }).catch(()=>{});
+    this._key = (e)=>{ if (e.key==='Escape' && this.state.modalCard) this.setState({ modalCard:null }); };
+    window.addEventListener('keydown', this._key);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._key); }
+  pool() {
+    const all = this.state.cards || [];
+    return this.state.route==='book' ? all.filter(c => c.domain==='aware') : all;
+  }
+  sample(pool) {
+    const p = (pool || this.pool()).slice();
+    for (let i=p.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [p[i],p[j]]=[p[j],p[i]]; }
+    return p.slice(0,3);
+  }
+  moveIconEl(size) {
+    return React.createElement('svg', { width:size, height:size, viewBox:'0 0 64 64', fill:'none', stroke:'#fff', strokeWidth:3.4, strokeLinecap:'round', strokeLinejoin:'round' },
+      this.cleanPath.map((d,i)=>React.createElement('path',{ key:i, d })));
+  }
+  pipStyle(sz) {
+    return 'display:flex;align-items:center;justify-content:center;width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:linear-gradient(150deg,#1a7a8a,#0c1e3e);box-shadow:0 0 10px -3px #1a7a8a;flex:none;';
+  }
+  faceStyle(face, sz, fs) {
+    const col = this.faceColor[face] || '#9fb2c8';
+    return 'display:flex;align-items:center;justify-content:center;width:'+sz+'px;height:'+sz+'px;border-radius:9px;font-family:var(--bars-font-display);font-weight:700;font-size:'+fs+'px;color:'+col+';background:color-mix(in srgb,'+col+' 14%,transparent);border:1px dashed color-mix(in srgb,'+col+' 60%,transparent);';
+  }
+  cardRoot(selected, full) {
+    return 'position:relative;aspect-ratio:2.5/3.5;'+(full?'max-height:min(52dvh,380px);':'')+'border-radius:var(--bars-radius-lg);overflow:hidden;border:2px solid '+(selected?'#C9A84C':'color-mix(in srgb,#C9A84C 55%,transparent)')+';background:radial-gradient(120% 90% at 78% 8%,#0c1e3e,#020c1f 64%);box-shadow:var(--bars-shadow-inset-top),0 0 26px 1px rgba(26,122,138,'+(selected?'.55':'.28')+'),0 18px 40px -20px rgba(0,0,0,.9);';
+  }
+  numBadge(txt, col) {
+    return 'display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:10px;font-family:var(--bars-font-display);font-weight:700;font-size:16px;color:'+col+';background:color-mix(in srgb,'+col+' 13%,transparent);border:1px solid color-mix(in srgb,'+col+' 45%,transparent);';
+  }
+  url() { return 'https://' + (this.props.siteUrl ?? 'masteringallyship.com'); }
+  checkUrl() { return this.url() + '/clean-up'; }
+  channelDef() { return this.channelDefs.find(c=>c.key===this.state.channel) || null; }
+  activeLines() { return this.state.route==='book' ? this.bookLineDefs : this.lineDefs; }
+  lineDef() { return this.activeLines().find(l=>l.key===this.state.line) || null; }
+  compose() {
+    const s = this.state, ch = this.channelDef(), ln = this.lineDef();
+    const isBook = s.route==='book';
+    const bits = [isBook
+      ? 'I\u2019ve been sitting on a book recommendation, and today I worked out why.'
+      : 'I ran a clean-up today on something that was still live in me.'];
+    if (s.charge && s.charge !== 'not sure / skip') bits.push('The charge showed up ' + s.charge + ' in my body.');
+    if (ch) bits.push(ch.clause + '.');
+    if (ln) bits.push('Underneath it was a familiar line: \u201c' + ln.belief + '.\u201d');
+    if (s.pickedCard) bits.push('The card I drew asked me: ' + s.pickedCard.q);
+    const named = (s.maskName||'').trim();
+    const faced = !!(s.faceCharge||'').trim();
+    const talked = s.thread.length >= 2;
+    const spoke = !!(s.beVoice||'').trim();
+    if (faced && named) bits.push('I gave it a form and a name.');
+    else if (faced) bits.push('I gave it a form.');
+    if (talked) bits.push('Then I talked with it \u2014 back and forth, both voices \u2014 until it said something I didn\u2019t already know.');
+    if (spoke) bits.push('Last, I spoke as it with no one else in the room, and what it said on its own was simpler than the story I\u2019d been telling about it.');
+    if ((s.beShift||'').trim()) bits.push('Something shifted when I held it with awareness.');
+    if (isBook) {
+      bits.push('So here it is: Mastering the Game of Allyship changed how I show up, and I want you to have it too. ' + this.url());
+    } else {
+      bits.push('What was stuck as story is available as energy again. If you want to run it yourself, it\u2019s here: ' + this.checkUrl());
+    }
+    return bits.join(' ');
+  }
+  go(screen) {
+    const patch = { screen };
+    if (screen==='moves' && !this.state.postEdited) patch.postText = this.compose();
+    this.setState(patch); window.scrollTo(0,0);
+  }
+  send() {
+    const text = (this.state.draft||'').trim();
+    if (!text) return;
+    const from = this.state.voice;
+    this.setState({
+      thread: this.state.thread.concat([{ from, text }]),
+      draft: '',
+      voice: from==='me' ? 'it' : 'me',
+    });
+  }
+  pickMove(key){ this.setState({ move:key, copied:null, screen:'receipt' }); window.scrollTo(0,0); }
+  copy(text, tag) {
+    if (navigator.clipboard && text) navigator.clipboard.writeText(text).catch(()=>{});
+    this.setState({ copied:tag });
+  }
+  openCal(daysOut) {
+    const d = new Date(); d.setDate(d.getDate()+daysOut);
+    const ymd = d.toISOString().slice(0,10).replace(/-/g,'');
+    const d2 = new Date(d); d2.setDate(d2.getDate()+1);
+    const ymd2 = d2.toISOString().slice(0,10).replace(/-/g,'');
+    const u = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Clean Up Check \u2014 come back to the charge')
+      + '&dates=' + ymd + '/' + ymd2 + '&details=' + encodeURIComponent('The charge is still worth working. ' + this.checkUrl());
+    window.open(u, '_blank');
+  }
+
+  renderVals() {
+    const s = this.state;
+    const ch = this.channelDef(), ln = this.lineDef(), m = s.modalCard;
+    const isBook = s.route==='book';
+    const chipBase = 'font-family:var(--bars-font-mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:14px 18px;border-radius:var(--bars-radius-full);';
+    const partName = (s.maskName||'').trim() || 'the part';
+    const voicePill = (on) => 'font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;border-radius:var(--bars-radius-full);'
+      + (on ? 'color:#fff;background:var(--bars-liminal);border:1px solid var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top);'
+            : 'color:var(--bars-text-secondary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);');
+    const sel = 'color:#fff;background:var(--bars-liminal);box-shadow:var(--bars-shadow-inset-top);border:1px solid var(--bars-liminal);';
+    const unsel = 'color:var(--bars-text-primary);background:var(--bars-surface-inset);border:1px solid var(--bars-line-strong);';
+    const rowStyle = (on) => 'padding:16px 17px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);border:1px solid '+(on?'var(--bars-liminal)':'var(--bars-line-strong)')+';box-shadow:var(--bars-shadow-inset-top)'+(on?',0 0 18px -6px var(--bars-liminal)':'')+';';
+    const idx = this.order.indexOf(s.screen);
+    const rc = this.receipts[s.move] || this.receipts.later;
+    const cLabel = (tag, base) => s.copied===tag ? 'copied \u2713' : base;
+    const chargeMsg = (s.charge && s.charge!=='not sure / skip')
+      ? 'Ran a clean-up before deciding anything. The charge showed up ' + s.charge + ' in my body. Now I can work it. ' + this.checkUrl() : '';
+    const lineMsg = ln ? 'Caught the line running underneath: \u201c' + ln.belief + '.\u201d Working it instead of obeying it. ' + this.checkUrl() : '';
+    const evidence = [{ label:'showed up to the charge' }];
+    if (s.charge && s.charge!=='not sure / skip') evidence.push({ label:'body reading \u00b7 '+s.charge });
+    if (ch) evidence.push({ label:'channel \u00b7 '+ch.label });
+    if (ln) evidence.push({ label:'named the line' });
+    if (s.pickedCard) evidence.push({ label:'carried '+s.pickedCard.title });
+    if ((s.faceCharge||'').trim()) evidence.push({ label:'faced it' });
+    if ((s.maskName||'').trim()) evidence.push({ label:'named it \u00b7 '+(s.maskName||'').trim() });
+    if (s.thread.length) evidence.push({ label:'talked with it \u00b7 '+s.thread.length+' turns' });
+    if ((s.beVoice||'').trim()) evidence.push({ label:'spoke as it' });
+    if (s.move==='act') evidence.push({ label: isBook ? 'chose \u00b7 post it' : 'chose \u00b7 spend it on the move' });
+    if (isBook) evidence.unshift({ label:'route \u00b7 promoting the book' });
+    if (s.move==='later') evidence.push({ label:'chose \u00b7 let it settle' });
+    if (s.move==='notmine') evidence.push({ label:'chose \u00b7 a clean no' });
+
+    return {
+      progressStyle: 'height:100%;width:'+Math.round(((idx+1)/this.order.length)*100)+'%;background:linear-gradient(to right,#1a7a8a,var(--bars-liminal));transition:width .35s var(--bars-ease-out);',
+      sEntry: s.screen==='entry', sOrient: s.screen==='orient', sCharge: s.screen==='charge', sLine: s.screen==='line',
+      sDraw: s.screen==='draw', sWork: s.screen==='work', sMoves: s.screen==='moves', sReceipt: s.screen==='receipt',
+      toEntry: () => this.go('entry'),
+      toOrient: () => this.go('orient'),
+      startCharge: () => this.go('charge'),
+      startBook: () => { this.setState({ route:'book', line:null, sampler:[] }, () => this.setState({ sampler:this.sample() })); this.go('charge'); },
+      startFree: () => { this.setState({ route:'free', line:null, sampler:[] }, () => this.setState({ sampler:this.sample() })); this.go('charge'); },
+      chargeHeading: isBook ? 'Where does the resistance to sharing it live in the body?' : 'Where does the charge live in the body?',
+      lineHeading: isBook ? 'Which sentence stops you from posting?' : 'Which sentence is in your head about this one?',
+      deckRibbon: isBook ? '\u25c7 allyship deck \u00b7 clean up \u00b7 raise awareness \u00b7 6 cards \u25c7' : '\u25c7 from the allyship deck \u00b7 clean up suit \u00b7 24 cards \u25c7',
+      drawSub: isBook
+        ? 'The six Clean Up cards from the Raise Awareness domain \u2014 the ones about telling the truth in public. The card gives you the angle you take into 3-2-1.'
+        : 'The card doesn\u2019t answer the charge. It gives you the angle you take into 3-2-1. Tap one to read it in full.',
+      toCharge: () => this.go('charge'),
+      toLine: () => this.go('line'),
+      toDraw: () => this.go('draw'),
+      toWork: () => this.go('work'),
+      toMoves: () => this.go('moves'),
+
+      steps321: [
+        { num:'3', title:'Face it', body:'Describe the charge in the third person \u2014 as an it. Unedited, unfair, exactly as it shows up.', numStyle:this.numBadge('3','#3fa9c4') },
+        { num:'2', title:'Talk to it', body:'Address it in the second person. Say the thing you would say if there were no cost, and ask what it wants.', numStyle:this.numBadge('2','#2980b9') },
+        { num:'1', title:'Be it', body:'Speak as it, in the first person, until the energy it was holding reads as yours.', numStyle:this.numBadge('1','#a99ae0') },
+      ],
+
+      chargeChips: this.chargeDefs.map(w => ({
+        label: w,
+        pick: () => this.setState({ charge: s.charge===w ? null : w, copied:null }),
+        style: chipBase + (s.charge===w ? sel : unsel),
+      })),
+      channelChips: this.channelDefs.map(c => ({
+        label: c.label, hint: c.hint,
+        pick: () => this.setState({ channel: s.channel===c.key ? null : c.key, copied:null }),
+        style: rowStyle(s.channel===c.key),
+      })),
+      chargeMsgOn: !!chargeMsg, chargeMsg,
+      copyChargeMsg: () => this.copy(chargeMsg,'c'), chargeCopyLabel: cLabel('c','copy this'),
+
+      lineOptions: this.activeLines().concat([{ key:'skip', voice:'none of these / skip', belief:null }]).map(o => ({
+        voice: o.voice,
+        revealed: s.line===o.key && !!o.belief,
+        tag: o.belief ? ('the belief underneath \u00b7 '+o.belief) : '',
+        pick: () => this.setState({ line: s.line===o.key ? null : (o.belief ? o.key : null), copied:null }),
+        style: rowStyle(s.line===o.key),
+      })),
+      lineMsgOn: !!lineMsg, lineMsg,
+      copyLineMsg: () => this.copy(lineMsg,'l'), lineCopyLabel: cLabel('l','copy this'),
+
+      sampler: s.sampler.map(c => ({
+        title:c.title, q:c.q, domainLabel:c.domainLabel, faceLabel:c.faceLabel,
+        faceMono: c.faceLabel ? c.faceLabel[0] : '',
+        faceStyle: this.faceStyle(c.face, 30, 13),
+        pipStyle: this.pipStyle(30), moveIconEl: this.moveIconEl(17),
+        rootStyle: this.cardRoot(!!(s.pickedCard && s.pickedCard.id===c.id), false),
+        open: () => this.setState({ modalCard:c }),
+        pickedColor: (s.pickedCard && s.pickedCard.id===c.id) ? '#C9A84C' : 'transparent',
+        pickedLabel: (s.pickedCard && s.pickedCard.id===c.id) ? '\u25c7 carrying this' : '\u00b7',
+      })),
+      redraw: () => this.setState({ sampler:this.sample(), pickedCard:null }),
+      drawCta: s.pickedCard ? 'work it \u2192' : 'skip the draw \u2192',
+
+      n3Style: this.numBadge('3','#3fa9c4'),
+      n2Style: this.numBadge('2','#2980b9'),
+      n1Style: this.numBadge('1','#a99ae0'),
+      faceCharge: s.faceCharge, onFaceCharge: (e)=>this.setState({ faceCharge:e.target.value }),
+      faceShape: s.faceShape, onFaceShape: (e)=>this.setState({ faceShape:e.target.value }),
+      maskName: s.maskName, onMaskName: (e)=>this.setState({ maskName:e.target.value }),
+      partName: partName,
+      thread: s.thread.map((msg, i) => ({
+        who: msg.from==='me' ? 'me' : partName,
+        text: msg.text,
+        rowStyle: 'display:flex;align-items:flex-start;gap:6px;'+(msg.from==='me' ? 'flex-direction:row-reverse;' : ''),
+        bubbleStyle: 'max-width:82%;padding:11px 14px;border-radius:'+(msg.from==='me' ? '14px 14px 4px 14px' : '14px 14px 14px 4px')+';'
+          + (msg.from==='me'
+            ? 'background:color-mix(in srgb,var(--bars-liminal) 26%,transparent);border:1px solid color-mix(in srgb,var(--bars-liminal) 45%,transparent);color:#fff;'
+            : 'background:rgba(26,122,138,.18);border:1px solid rgba(26,122,138,.45);color:var(--bars-text-primary);'),
+        remove: () => this.setState({ thread: s.thread.filter((_,j)=>j!==i) }),
+      })),
+      threadEmpty: s.thread.length===0,
+      openers: this.openerDefs.map(o => ({
+        label: o,
+        use: () => this.setState({ draft:o, voice:'me' }),
+      })),
+      voiceMe: () => this.setState({ voice:'me' }),
+      voiceIt: () => this.setState({ voice:'it' }),
+      voiceMeStyle: voicePill(s.voice==='me'),
+      voiceItStyle: voicePill(s.voice==='it'),
+      draft: s.draft,
+      draftPlaceholder: s.voice==='me' ? 'Ask it something, or say the thing you\u2019d say if there were no cost\u2026' : 'Answer as ' + partName + ', in its own words\u2026',
+      onDraft: (e)=>this.setState({ draft:e.target.value }),
+      onDraftKey: (e)=>{ if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
+      send: () => this.send(),
+      beVoice: s.beVoice, onBeVoice: (e)=>this.setState({ beVoice:e.target.value }),
+      beShift: s.beShift, onBeShift: (e)=>this.setState({ beShift:e.target.value }),
+
+      hasCarried: !!s.pickedCard,
+      carriedTitle: s.pickedCard ? s.pickedCard.title : '',
+      carriedAction: s.pickedCard ? s.pickedCard.action : '',
+      carriedPip: this.pipStyle(34), carriedIcon: this.moveIconEl(19),
+      reopenCarried: () => this.setState({ modalCard: s.pickedCard }),
+
+      recHeader: ln ? ('worked just now \u00b7 '+ln.belief) : (ch ? ('worked just now \u00b7 '+ch.label) : 'what the clean-up freed'),
+      hasRecQuestion: !!ln,
+      recQuestion: ln ? ln.overcome : '',
+      recReframe: ln ? ln.reframe : '',
+      draftLabel: isBook ? 'your post \u2014 drafted from the whole clean-up' : 'your entry \u2014 drafted from the whole clean-up',
+      draftLabelShort: isBook ? 'your post' : 'your entry',
+      postText: s.postText,
+      onPostText: (e) => this.setState({ postText:e.target.value, postEdited:true }),
+      copyPost: () => this.copy(s.postText || this.compose(), 'p'),
+      postCopyLabel: cLabel('p', isBook ? 'copy the post' : 'copy the entry'),
+      pickAct: () => this.pickMove('act'),
+      pickLater: () => this.pickMove('later'),
+      pickDecline: () => this.pickMove('notmine'),
+
+      actLabel: isBook ? 'post it \u2192' : 'spend it on the move \u2192',
+      receiptTitle: (isBook && s.move==='act') ? 'The recommendation is yours to make.' : rc.title,
+      receiptBody: (isBook && s.move==='act')
+        ? 'You named the resistance instead of obeying it. Here\u2019s the post, drafted from your clean-up \u2014 make it yours, then send it wherever your people actually are.'
+        : rc.body,
+      rShowPost: s.move==='act' || (isBook && s.move==='later'),
+      rShowCalendar: s.move==='later',
+      rShowDoors: s.move==='notmine',
+      calTomorrow: () => this.openCal(1), calThree: () => this.openCal(3), calWeek: () => this.openCal(7),
+      doorRestartOther: () => this.setState({ screen:'charge', charge:null, channel:null, line:null, pickedCard:null, faceCharge:'', faceShape:'', maskName:'', thread:[], draft:'', voice:'me', beVoice:'', beShift:'', move:null, postText:'', postEdited:false, copied:null, sampler:this.sample() }),
+      deckHref: this.url() + '/deck/sales',
+      bookHref: this.url() + '/mastering-allyship',
+      evidence,
+      restart: () => this.setState({ screen:'entry', charge:null, channel:null, line:null, pickedCard:null, modalCard:null, faceCharge:'', faceShape:'', maskName:'', thread:[], draft:'', voice:'me', beVoice:'', beShift:'', move:null, postText:'', postEdited:false, copied:null, sampler:this.sample() }),
+
+      modalOn: !!m,
+      modalCardStyle: this.cardRoot(true, true),
+      modalTitle: m ? m.title : '', modalSub: m ? (m.sub||'') : '',
+      modalQ: m ? m.q : '', modalAction: m ? m.action : '',
+      modalHasFlavor: !!(m && m.flavor), modalFlavor: m ? (m.flavor||'') : '',
+      modalDomain: m ? m.domainLabel : '',
+      modalPip: this.pipStyle(38), modalIcon: this.moveIconEl(21),
+      modalFaceStyle: m ? this.faceStyle(m.face, 38, 16) : '',
+      modalFaceMono: m && m.faceLabel ? m.faceLabel[0] : '', modalFaceLabel: m ? m.faceLabel : '',
+      modalChooseLabel: (m && s.pickedCard && s.pickedCard.id===m.id) ? 'carrying this \u2713' : 'choose this card',
+      closeModal: () => this.setState({ modalCard:null }),
+      chooseModal: () => this.setState({ pickedCard: (s.pickedCard && m && s.pickedCard.id===m.id) ? null : m, modalCard:null }),
+      stop: (e) => e.stopPropagation(),
+    };
+  }
+}
+</script>
+</body>
+</html>

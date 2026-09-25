@@ -1,0 +1,89 @@
+# editorial.yaml — the project profile for the editorial pipeline.
+#
+# This is the ONE file that varies per project. Everything in instruments/ is the shared core and
+# travels unchanged; this declares what is true of THIS book. Installed by init from the core's
+# templates/ and owned by the project thereafter — sync never overwrites it.
+
+project: "CHANGE ME"
+
+# Which core this project was installed from, and where that core lives. coherence.py compares
+# `core_version` against the core's VERSION file when `core_home` is reachable, and names the fix.
+core_version: 0    # STAMPED by init_project.py at install; 0 here means "template, never installed"
+core_home: "../editorial-core"
+
+# What "the book" means when a scanner runs book-wide. build_book.py turns these globs into the
+# SPINE that find_line.surfaces() walks. Change a glob and every scanner follows.
+corpus:
+  - "chapters/*.md"
+
+# Where the prose sits INSIDE each component. YAML front matter is stripped for every project
+# without asking; these markers are yours, because the heading text is. Declare them when a
+# component carries apparatus in the same file as the prose — an outline above, editorial notes
+# below — or every instrument counts that apparatus as writing. Omit the key and components are
+# scanned whole, which is what every project did before 2026-09-09.
+#
+# Added after `fragment` went live and reported `title: "Appendix C" number: 91 pov: kuiper` as a
+# fragment. The leak was never fragment's: gate, telling, light_verb and trailing_and had all been
+# reading front matter too.
+#
+# prose_section:
+#   begin: "## Chapter Text"     # scanning starts on the line AFTER this
+#   end:   "## Notes"            # and stops on the line BEFORE this
+
+# House policy: ZERO. Every hit is a defect until it is resolved in the prose or accepted, one at a
+# time, in editorial_exceptions.yaml. coherence.py's `zero` check counts UN-accepted hits.
+targets:
+  fragment: 0         # verbless sentences (needs NLTK; the `gates` check reports it off)
+  polysyndeton: 0     # bare `X and Y and Z` chains (needs NLTK)
+  slop_shapes: 0      # discrete sites -> the loop (ruled 2026-09-09)
+  gate: 0             # hard rules: banned words, sentence-initial And/But, glued em-dashes
+  telling: 0
+  trailing_and: 0
+  light_verb: 0
+
+# Declared boards: they surface candidates for a reader and exit non-zero as a matter of course, so
+# review.py shows them as `note` and never fails on them. Anything outside this list AND outside
+# `targets:` fails the board on a non-zero exit — the strict default that stops a hard gate being
+# demoted by inference (which is exactly what happened to `gate` on 2026-09-09).
+reporting:
+  - prose_diet
+  - antecedent
+
+# This project's voice decisions. gate.py wraps each fragment in word boundaries.
+banned: []
+
+# WHO reads this book, for a reader-agent pass. The Face lenses are universal (see
+# editorial-core/READER_FACES.md); this persona is the project's own — it supplies the goal the
+# lens reads through, which is what keeps a Face panel from only finding Face-shaped problems.
+reader:
+  who: "CHANGE ME — who they are, and what they do"
+  came_for: "what they want out of this book"
+  monday: "what they should be able to do after reading"
+  tired_of: "what they have had enough of"
+  channels: use            # `use` for practical nonfiction, `fiction` for reader-sim's originals
+  # Developmental position. The Faces are altitudes as well as lenses, and transcend-and-include
+  # means a reader carries every altitude beneath their centre of gravity — read through the one
+  # they stand on, and surfacing as shadow wherever it went unintegrated. See READER_FACES.md.
+  altitude: unset          # shaman | challenger | regent | architect | diplomat | sage | unset
+  shadows: "how the lower altitudes arrive to this reader, in her altitude's flavour"
+  toward: unset            # the altitude this work is trying to grow them into
+
+# The universal prose scanners, in pass order. coherence.py checks each exists on disk.
+pass:
+  - gate
+  - prose_diet
+  - fragment
+  - antecedent
+  - slop_shapes
+  - trailing_and
+  - polysyndeton
+  - telling
+  - light_verb
+
+# Instruments welded to this project's own ontology; they do not travel.
+project_only: []
+
+# OPTIONAL — external reference bands for the distribution-shaped measures. Without them prose_diet
+# has no local reference. Build with: python3 instruments/build_bands.py <band> <comps...>
+# reference:
+#   reader: {comps: [...], sources: ..., scorer: 2, band: {...}}

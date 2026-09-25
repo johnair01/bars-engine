@@ -7,6 +7,8 @@
  * touching component logic.
  */
 
+import { BOOK_DIGITAL_GUMROAD_URL, BOOK_PHYSICAL_GUMROAD_URL } from '@/lib/launch/book-offer'
+
 export type AwakenEvent = {
   /** Stable key persisted on FunnelSignup.events — do not rename casually. */
   key: string
@@ -60,7 +62,10 @@ export type AwakenPageContent = {
     donate: AwakenMoveContent
     events: AwakenMoveContent
     deck: AwakenMoveContent
+    /** The digital edition — finished and delivered instantly. */
     book: AwakenMoveContent
+    /** The print edition — a real pre-order, ships after the print run. */
+    bookPrint: AwakenMoveContent
     chapter: AwakenMoveContent
   }
   events: AwakenEvent[]
@@ -72,60 +77,75 @@ export type AwakenPageContent = {
 }
 
 /**
- * The two events the weekend of July 18th, 2026 (Jul 17–18).
- * RSVPs are handled on Partiful (partifulUrl); /awaken links out to them.
+ * Dated events /awaken is currently advertising. **Empty is the correct state
+ * between tours**, and the card degrades to its blurb plus the book-tour link.
  *
- * Titles + dates + Partiful URLs are confirmed. One title is still marked
- * pending by the organizer, and venues/times are TBA — update `where` (and add
- * times to the calendar links in calendar.ts) once finalized.
+ * The July 17–18 launch weekend ran and has been removed. A public funnel
+ * advertising a date that has passed is the defect this list exists to avoid,
+ * so add a stop only while it is still ahead, and take it out once it runs.
+ * `AWAKEN_EVENT_KEYS` gates the signup route, so a removed key stops accepting
+ * RSVPs on its own.
  */
-export const AWAKEN_EVENTS: AwakenEvent[] = [
-  {
-    key: 'jul17-opening-circle',
-    title: 'Mastering the Game of Allyship — Book Launch',
-    when: 'Fri · Jul 17',
-    date: '2026-07-17',
-    where: 'Portland · TBA',
-    blurb: 'The launch itself — the book steps into the world. Come be there for the beginning.',
-    partifulUrl: 'https://partiful.com/e/JTEHEkp0YslfGplWK8vS',
-  },
-  {
-    // Title pending — organizer to finalize.
-    key: 'jul18-mainstage',
-    title: 'Book Launch Booty Shake™',
-    when: 'Sat · Jul 18',
-    date: '2026-07-18',
-    where: 'Portland · TBA',
-    blurb: 'A dance party to shake the book into the world. Bring your whole body.',
-    partifulUrl: 'https://partiful.com/e/de44COeykTCRP8qvGt3O',
-  },
-]
+export const AWAKEN_EVENTS: AwakenEvent[] = []
 
 export const AWAKEN_EVENT_KEYS = new Set(AWAKEN_EVENTS.map((e) => e.key))
 
-/** Legacy donate page. The car-fund CTA now points at the Crossing campaign instead. */
+/** Legacy donate page. The car-fund CTA points at the Crossing campaign instead. */
 export const AWAKEN_DONATE_HREF = '/event/donate'
 
-/** The Crossing car-fund campaign — where "fuel the car fund" now sends people. */
+/**
+ * The Crossing campaign — where "fuel the car fund" sends people. Still running:
+ * the car has not been bought yet, and its contributors get thanked through
+ * stewardBroadcastThankYou() once it has.
+ */
 export const AWAKEN_CROSSING_HREF = '/campaign/the-crossing'
+
+/** Book tour help — the four ways to put the book in front of people. */
+export const AWAKEN_BOOK_TOUR_HREF = '/mastering-allyship/book-tour/help'
 
 /** The Allyship Deck sales page. */
 export const AWAKEN_DECK_SALES_HREF = '/deck/sales'
 
-/** The Mastering the Game of Allyship book sales page (external). */
-export const AWAKEN_BOOK_SALES_HREF = 'https://wendellbritt.gumroad.com/l/MTGOAbook'
+/**
+ * The Mastering the Game of Allyship book sales page (external).
+ *
+ * Re-exported from the shared definition rather than written out again here, so
+ * this funnel and the `book-digital` offer on /launch and /mastering-allyship
+ * can never advertise two different links (or two different states) for the same
+ * product. Change the URL in `lib/launch/book-offer.ts`, not here.
+ */
+export const AWAKEN_BOOK_SALES_HREF = BOOK_DIGITAL_GUMROAD_URL
 
 /** Where "buy products / explore the offers" points. */
 export const AWAKEN_PRODUCTS_HREF = '/launch'
+
+/**
+ * Where "pre-order the print book" sends people.
+ *
+ * The print run has no Gumroad product yet, so when the URL is unset this falls
+ * back to /launch — which lists the physical SKU and shows its own honest
+ * setup-pending state — rather than rendering a button that goes nowhere.
+ *
+ * Declared after AWAKEN_PRODUCTS_HREF on purpose: it reads that value at module
+ * load, so it cannot sit above it.
+ */
+export const AWAKEN_BOOK_PREORDER_HREF = BOOK_PHYSICAL_GUMROAD_URL || AWAKEN_PRODUCTS_HREF
 
 /** Non-profit page (currently under construction). */
 export const AWAKEN_NONPROFIT_HREF = '/nonprofit'
 
 /**
- * Optional static asset for Chapter One. Drop a PDF at public/chapter-one.pdf
- * and this link goes live; until then we promise delivery by email.
+ * The Chapter One lead-capture page — where "read chapter one" should send
+ * people, rather than straight at the PDF. The sample is free but the email is
+ * the point: the page captures the lead, then hands over the download and mails
+ * a copy. Linking the file directly would skip that.
  */
-export const AWAKEN_CHAPTER_FILE_HREF = '/chapter-one.pdf'
+export const AWAKEN_CHAPTER_PAGE_HREF = '/mastering-allyship/chapter-1'
+
+/**
+ * Canonical Chapter One delivery URL.
+ */
+export const AWAKEN_CHAPTER_FILE_HREF = '/mastering-allyship-chapter-1.pdf'
 
 export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
   steps: {
@@ -133,16 +153,16 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     show: 'Show up',
   },
   wake: {
-    eyebrow: 'Act I · The current state of things',
+    eyebrow: 'Act I · Where this stands',
     title: 'Wake up.',
     paragraphs: [
-      'For a long time, allyship felt like a test you could fail in public — something you were supposed to already be good at. So a lot of us stayed quiet, waited to feel qualified, and did nothing while the work waited too.',
-      "Here's the shift: allyship isn't a verdict on who you are. It's a game you learn by playing — a handful of moves you can practice, miss, and try again. And right now that game is real and local: a person, a community, and a car that has to keep running so the work can keep showing up.",
-      "That's the Crossing. You don't need to be an expert to step in — you need one honest move. Here's where things stand, and the moves you can make today. Read it, then choose how you want to show up.",
+      'Most allyship marketing sells a verdict: you are good, or you are not good yet. A verdict is something a person waits to receive, and the work waits alongside her.',
+      'Allyship is a game you learn by playing: a handful of moves you practice, miss, and practice again. Right now the game is specific and local: a person, a community, and a car that has to keep running so the work can keep showing up.',
+      'That is the Crossing. One honest move is the whole entry price. Below is where it stands and what you can do today.',
     ],
     stats: [
-      { key: 'weekend', label: 'Weekend', value: 'Jul 17–18' },
-      { key: 'events', label: 'Events', value: '2 nights' },
+      { key: 'object', label: 'The object', value: 'A reliable car' },
+      { key: 'backers', label: 'Backers waiting on print', value: '371' },
       { key: 'ask', label: 'The ask', value: 'Show up' },
     ],
     cta: "I'm awake — show me how to help ↓",
@@ -156,15 +176,16 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     donate: {
       badge: 'Move 1',
       title: 'Fuel the car fund',
-      body: 'A reliable car is what keeps the work showing up — to the events, the community, the next chapter. Chip in and join the Crossing campaign.',
+      body: 'A reliable car is what keeps the work showing up: to the tour stops, the community, the next chapter. Chip in and join the Crossing campaign.',
       cta: 'Donate & join the Crossing →',
       href: AWAKEN_CROSSING_HREF,
     },
     events: {
       badge: 'Move 2',
-      title: 'Be there · Jul 17–18',
-      body: "Two gatherings the weekend of July 18th. RSVP on Partiful for the ones you'll make.",
-      cta: 'RSVP on Partiful →',
+      title: 'Help with the book tour',
+      body: 'A tour stop needs someone to host it, produce it, spread word about it, or introduce the person who can. Pick the one that matches what you already have.',
+      cta: 'See the four ways in →',
+      href: AWAKEN_BOOK_TOUR_HREF,
     },
     deck: {
       badge: 'Move 3',
@@ -175,17 +196,24 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
     },
     book: {
       badge: 'Move 4',
-      title: 'Pre-order the book',
-      body: 'Mastering the Game of Allyship — the book the whole weekend is built around. Pre-order your copy now.',
-      cta: 'Pre-order the book →',
+      title: 'Get the book',
+      body: 'The digital edition of Mastering the Game of Allyship is finished: nine chapters, eight appendices, and the ten myths the first chapter takes apart. Buy it and start reading tonight.',
+      cta: 'Buy the digital book →',
       href: AWAKEN_BOOK_SALES_HREF,
     },
+    bookPrint: {
+      badge: 'Move 5',
+      title: 'Pre-order it in print',
+      body: 'Want it on paper? Reserve the paperback. It ships after the print run.',
+      cta: 'Pre-order the print book →',
+      href: AWAKEN_BOOK_PREORDER_HREF,
+    },
     chapter: {
-      badge: 'Coming soon',
+      badge: 'Free',
       title: 'Read Chapter One',
-      body: 'Chapter One is chapter one of Mastering the Game of Allyship — coming soon. Want it sooner? Grab the book.',
-      cta: 'Get the book →',
-      href: AWAKEN_BOOK_SALES_HREF,
+      body: 'The Infinite Arcade — where the book opens. Twenty-four pages, free: add your email and start reading now.',
+      cta: 'Read Chapter One free →',
+      href: AWAKEN_CHAPTER_PAGE_HREF,
     },
   },
   events: AWAKEN_EVENTS,
@@ -197,8 +225,8 @@ export const AWAKEN_DEFAULT_CONTENT: AwakenPageContent = {
       href: AWAKEN_PRODUCTS_HREF,
     },
     nonprofit: {
-      title: 'About the non-profit',
-      body: 'Learn where this is headed (coming soon) →',
+      title: 'The organization, in formation',
+      body: 'What it needs is people, not money. See the four →',
       href: AWAKEN_NONPROFIT_HREF,
     },
   },
@@ -247,6 +275,7 @@ export function normalizeAwakenPageContent(input: unknown): AwakenPageContent {
       events: normalizeMove(raw.moves?.events, defaults.moves.events),
       deck: normalizeMove(raw.moves?.deck, defaults.moves.deck),
       book: normalizeMove(raw.moves?.book, defaults.moves.book),
+      bookPrint: normalizeMove(raw.moves?.bookPrint, defaults.moves.bookPrint),
       chapter: normalizeMove(raw.moves?.chapter, defaults.moves.chapter),
     },
     events: defaults.events.map((fallback, index) => {

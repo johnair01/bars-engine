@@ -15,6 +15,7 @@ import { NAV } from '@/lib/navigation-contract'
 import { ArtifactCeremony } from '@/components/shadow/ArtifactCeremony'
 import { createCyoaDraftFrom321 } from '@/actions/cyoa-generator'
 import { PrivacyBadge } from '@/components/ui/PrivacyBadge'
+import type { GameMasterFace } from '@/lib/quest-grammar/types'
 // ---------------------------------------------------------------------------
 // Feeling chip vocabulary — Wuxing neutral + satisfied
 // ---------------------------------------------------------------------------
@@ -128,7 +129,7 @@ type Props = {
 type NPCGuide = {
   id: string
   name: string
-  face: 'shaman' | 'challenger' | 'regent' | 'architect' | 'diplomat' | 'sage'
+  face: GameMasterFace
   tagline: string
   description: string
   color: string

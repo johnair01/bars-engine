@@ -71,7 +71,7 @@ export const LAUNCH_DEFAULT_CONTENT: LaunchPageContent = {
       key: 'practice',
       element: 'wood',
       label: 'I want a practice',
-      sub: 'Play the ongoing game.',
+      sub: 'Make the deck your daily practice.',
     },
     {
       key: 'shelf',
@@ -97,11 +97,11 @@ export const LAUNCH_DEFAULT_CONTENT: LaunchPageContent = {
     'book-digital': {
       name: 'Mastering Allyship — Digital',
       blurb:
-        'The book, instantly — and a 30-day key into the app to play what you read. Pay what feels right; $15 is the suggested seed.',
+        'The book, instantly — and a 30-day key into the app to play what you read.',
       bestFor: 'Curious - start with the frame',
       unlocks: 'Book plus 30 days of app access',
       context: 'Choose this when you want the core argument before committing to more practice tools.',
-      kicker: 'Name your price',
+      kicker: 'Read it tonight',
       image: '/launch/cover-front.png',
       heroImage: '/launch/cover-front.png',
       intents: ['curious'],
@@ -129,7 +129,7 @@ export const LAUNCH_DEFAULT_CONTENT: LaunchPageContent = {
       kicker: 'Digital deck',
       image: '/launch/allyship-deck-thumbnail-1080x1080.png',
       heroImage: '/launch/allyship-deck-cover-1280x720.png',
-      intents: ['tool'],
+      intents: ['tool', 'practice'],
     },
     'game-subscription': {
       name: 'The Game — Monthly',

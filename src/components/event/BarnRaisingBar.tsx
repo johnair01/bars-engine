@@ -39,11 +39,11 @@ export function BarnRaisingBar({
         className="block rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 transition-colors hover:border-amber-700/60"
       >
         <p className="text-[10px] uppercase tracking-widest text-amber-500/90">
-          The Barn Raising · July 18
+          The Barn Raising
         </p>
         <h3 className="mt-1 text-lg font-bold text-white">Raise the barn together</h3>
         <p className="mt-1 text-sm text-zinc-400">
-          One send-off, three walls: replace the car, back the pre-sale, fund the runway.
+          Three walls: replace the car, back the pre-sale, fund the runway.
         </p>
         <div className="mt-4 flex gap-1.5">
           {BARN_WALLS.map((w) => (
@@ -67,7 +67,7 @@ export function BarnRaisingBar({
       {/* Headline */}
       <header className="flex flex-col gap-2">
         <p className="text-[11px] uppercase tracking-widest text-amber-500/90">
-          The Barn Raising · July 18
+          The Barn Raising
         </p>
         <h2 className="text-2xl font-bold text-white sm:text-3xl">
           {isEmpty ? "Be the first plank" : "The barn is going up"}

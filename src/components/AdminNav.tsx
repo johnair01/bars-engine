@@ -69,7 +69,10 @@ const SECTIONS: {
     id: 'show',
     title: 'Show — ship',
     hint: 'Player-facing surfaces',
-    items: [{ name: 'Game Lobby', href: '/lobby', icon: '🎂' }],
+    items: [
+      { name: 'Launch leads', href: '/admin/launch-leads', icon: '📣' },
+      { name: 'Game Lobby', href: '/lobby', icon: '🎂' },
+    ],
   },
   {
     id: 'sage',

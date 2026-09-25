@@ -90,6 +90,13 @@ function contentFromFormData(formData: FormData): AwakenPageContent {
         cta: formText(formData, 'moves.book.cta', defaults.moves.book.cta),
         href: formText(formData, 'moves.book.href', defaults.moves.book.href ?? ''),
       },
+      bookPrint: {
+        badge: formText(formData, 'moves.bookPrint.badge', defaults.moves.bookPrint.badge),
+        title: formText(formData, 'moves.bookPrint.title', defaults.moves.bookPrint.title),
+        body: formText(formData, 'moves.bookPrint.body', defaults.moves.bookPrint.body),
+        cta: formText(formData, 'moves.bookPrint.cta', defaults.moves.bookPrint.cta),
+        href: formText(formData, 'moves.bookPrint.href', defaults.moves.bookPrint.href ?? ''),
+      },
       chapter: {
         badge: formText(formData, 'moves.chapter.badge', defaults.moves.chapter.badge),
         title: formText(formData, 'moves.chapter.title', defaults.moves.chapter.title),

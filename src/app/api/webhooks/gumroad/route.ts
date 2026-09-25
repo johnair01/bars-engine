@@ -27,6 +27,7 @@ import { resolveSkuFromGumroad } from '@/lib/launch/gumroad'
 import { grantForSku } from '@/lib/launch/grants'
 import { wallForSku, parseGumroadPriceCents } from '@/lib/launch/barn-credit'
 import { creditBarnWallAnon } from '@/actions/barn'
+import { attributeSale } from '@/lib/ally-campaign/attribution'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -138,6 +139,35 @@ export async function POST(req: NextRequest) {
       code: get('license_key'),
     })
 
+    // Ally attribution. Gumroad echoes back the `ally` parameter the storefront
+    // link carried, which is the only way credit survives a checkout we do not
+    // host. Written onto the sale's own row, so it is idempotent with the mint
+    // above and cannot double-count on a Gumroad retry.
+    //
+    // Subordinate to the sale by construction, not by convention: `attributeSale`
+    // swallows its own errors AND bounds its own latency, because a try/catch
+    // does nothing about a slow query and a stalled attribution would make
+    // Gumroad retry a sale that already succeeded. See attribution.ts.
+    let attributedTo: string | null = null
+    if (!alreadyMinted) {
+      const outcome = await attributeSale({
+        get,
+        codeId: rc.id,
+        currentMetadata: rc.metadata,
+        findLead: async (id) => {
+          const lead = await db.campaignLead.findUnique({ where: { id }, select: { id: true } })
+          return lead?.id ?? null
+        },
+        writeMetadata: async (codeId, metadata) => {
+          await db.redemptionCode.update({ where: { id: codeId }, data: { metadata } })
+        },
+      })
+      if (outcome.credited) attributedTo = outcome.allyLeadId
+      else if (outcome.reason === 'error' || outcome.reason === 'timed-out') {
+        console.warn('[gumroad] ally attribution skipped:', outcome.reason)
+      }
+    }
+
     let barnCredited = false
     if (!alreadyMinted) {
       const cents = parseGumroadPriceCents(get('price'))
@@ -156,7 +186,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true, action: 'minted', sku, status: rc.status, barnCredited })
+    return NextResponse.json({
+      ok: true,
+      action: 'minted',
+      sku,
+      status: rc.status,
+      barnCredited,
+      // Reported so a failed credit is visible in the Gumroad delivery log
+      // instead of only in a server warning nobody reads. `null` here alongside
+      // a successful mint is exactly the state we want to be able to see.
+      attributedTo,
+    })
   } catch (err) {
     // 500 ⇒ Gumroad retries (good for transient DB errors).
     console.error('[gumroad] webhook error', err)

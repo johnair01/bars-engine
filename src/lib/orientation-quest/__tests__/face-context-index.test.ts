@@ -16,6 +16,8 @@ import {
   getFaceForField,
   validateFieldSlotCoverage,
 } from '../face-context-index'
+import { FACE_META } from '../../quest-grammar/types'
+import { FACE_SENTENCES } from '../../face-sentences'
 
 function assert(condition: boolean, message: string) {
   if (!condition) throw new Error(`Assertion failed: ${message}`)
@@ -73,26 +75,26 @@ function testTrigramAssignments() {
 }
 
 // ---------------------------------------------------------------------------
-// Test: entry sentences match face-sentences.ts FACE_SENTENCES
+// Test: label/role/mission/color are the canonical FACE_META values
+// ---------------------------------------------------------------------------
+function testFaceMetaMatch() {
+  for (const face of ORDERED_FACES) {
+    const entry = FACE_CONTEXT_INDEX[face]
+    const meta = FACE_META[face]
+    assert(entry.label === meta.label, `${face}: label must match FACE_META`)
+    assert(entry.role === meta.role, `${face}: role must match FACE_META`)
+    assert(entry.mission === meta.mission, `${face}: mission must match FACE_META`)
+    assert(entry.color === meta.color, `${face}: color must match FACE_META`)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Test: entry sentences are the canonical face-sentences.ts FACE_SENTENCES
 // ---------------------------------------------------------------------------
 function testEntrySentences() {
-  const expected: Record<string, string> = {
-    shaman:
-      "Enter through the mythic threshold: the residency as ritual space, Wendell's technology as a bridge between worlds. Your journey begins in belonging.",
-    challenger:
-      "Enter through the edge: the residency as a proving ground, Wendell's technology as a lever. Your journey begins in action.",
-    regent:
-      "Enter through the order: the residency as a house with roles and rules, Wendell's technology as a tool for the collective. Your journey begins in structure.",
-    architect:
-      "Enter through the blueprint: the residency as a project to build, Wendell's technology as an advantage. Your journey begins in strategy.",
-    diplomat:
-      "Enter through the weave: the residency as a relational field, Wendell's technology as a connector. Your journey begins in care.",
-    sage:
-      "Enter through the whole: the residency as one expression of emergence, Wendell's technology as part of the flow. Your journey begins in integration.",
-  }
   for (const face of ORDERED_FACES) {
     assert(
-      FACE_CONTEXT_INDEX[face].semantic_intent.entry_sentence === expected[face],
+      FACE_CONTEXT_INDEX[face].semantic_intent.entry_sentence === FACE_SENTENCES[face],
       `${face}: entry_sentence must match FACE_SENTENCES`,
     )
   }
@@ -266,6 +268,7 @@ function testFieldSlotCoverage() {
 const tests = [
   testAllFacesDefined,
   testEntryShape,
+  testFaceMetaMatch,
   testTrigramAssignments,
   testEntrySentences,
   testFieldSlots,

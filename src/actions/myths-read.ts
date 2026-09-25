@@ -150,6 +150,9 @@ export async function saveMythRead(input: {
       return { mythReadId: mythRead.id, barId }
     })
 
+    // No list copy. The form asks to "Save your read," so the address stays on
+    // the MythRead row, where the read can find the reader again.
+
     revalidatePath('/mastering-allyship/myths-read')
     if (created.barId) {
       revalidatePath('/vault')

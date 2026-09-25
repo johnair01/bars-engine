@@ -27,6 +27,7 @@ import type { AlchemyAltitude } from '@/lib/alchemy/types'
 import { BARN_WALLS } from '@/lib/event/barn-raising'
 import { SUPERPOWERS, SUPERPOWER_DEFS, type Superpower } from '@/lib/superpowers/types'
 import { arcAnchorElement, superpowerAccentCss } from '@/lib/superpowers/arc'
+import { BOOK_DIGITAL_GUMROAD_URL, BOOK_PHYSICAL_GUMROAD_URL } from '@/lib/launch/book-offer'
 
 /** The hand-authored launch SKUs (book, deck, handbook, subscription, bundles). */
 export type CoreOfferKey =
@@ -82,6 +83,13 @@ export interface LaunchOffer {
    * `priceCents` is ignored for display when set.
    */
   inquire?: boolean
+  /**
+   * Hide this offer from the /launch storefront grid while keeping it in the
+   * registry (so the webhook can still resolve its SKU and entitlements still
+   * grant). Use for SKUs sold elsewhere or paused for a given launch — e.g. the
+   * RPG handbook and game subscription are held back from the book/deck launch.
+   */
+  hiddenFromLaunch?: boolean
   /** Gumroad product URL, or '' when not yet wired. */
   gumroadUrl: string
   /** CTA verb, e.g. "Buy", "Preorder", "Subscribe". */
@@ -104,12 +112,12 @@ export interface LaunchOffer {
 
 // Gumroad URLs — referenced statically so Next.js can inline NEXT_PUBLIC_* at build.
 const GUMROAD = {
-  bookDigital:        process.env.NEXT_PUBLIC_GUMROAD_BOOK_DIGITAL_URL ?? '',
+  bookDigital:        BOOK_DIGITAL_GUMROAD_URL,
   rpgHandbookDigital: process.env.NEXT_PUBLIC_GUMROAD_RPG_DIGITAL_URL ?? '',
   deckDigital:        process.env.NEXT_PUBLIC_GUMROAD_DECK_DIGITAL_URL ?? '',
   deckPhysical:       process.env.NEXT_PUBLIC_GUMROAD_DECK_PHYSICAL_URL ?? '',
   gameSubscription:   process.env.NEXT_PUBLIC_GUMROAD_GAME_SUB_URL ?? '',
-  bookPhysical:       process.env.NEXT_PUBLIC_GUMROAD_BOOK_PHYSICAL_URL ?? '',
+  bookPhysical:       BOOK_PHYSICAL_GUMROAD_URL,
   rpgHandbookPhysical:process.env.NEXT_PUBLIC_GUMROAD_RPG_PHYSICAL_URL ?? '',
   foundingAlly:       process.env.NEXT_PUBLIC_GUMROAD_FOUNDING_ALLY_URL ?? '',
   loadoutBundle:      process.env.NEXT_PUBLIC_GUMROAD_LOADOUT_BUNDLE_URL ?? '',
@@ -154,13 +162,17 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     key: 'book-digital',
     name: 'Mastering Allyship — Digital',
     blurb:
-      'The book, instantly — and a 30-day key into the app to play what you read. Pay what feels right; $15 is the suggested seed.',
+      'The book, instantly — and a 30-day key into the app to play what you read.',
     includes: ['The digital book', '30 days of app access'],
     group: 'digital',
-    priceCents: 1500,
-    pwyw: true,
+    // $30, fixed. This is the edition the ally campaign's whole plan is costed
+    // on (see `ally-campaign/economics.ts`), and every copy target moves if it
+    // changes — `digital-price-parity.test.ts` fails if the two ever disagree.
+    // No longer pay-what-you-want: an ally asking five people to buy a $30 book
+    // cannot make that ask against a page that invites $15.
+    priceCents: 3000,
     gumroadUrl: GUMROAD.bookDigital,
-    cta: 'Name your price',
+    cta: 'Get the book',
     element: 'water',
     altitude: 'neutral',
     stage: 'growing',
@@ -173,6 +185,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     priceCents: 3000,
     gumroadUrl: GUMROAD.rpgHandbookDigital,
     cta: 'Buy',
+    hiddenFromLaunch: true,
     element: 'metal',
     altitude: 'neutral',
     stage: 'growing',
@@ -212,6 +225,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     recurring: 'month',
     gumroadUrl: GUMROAD.gameSubscription,
     cta: 'Subscribe',
+    hiddenFromLaunch: true,
     element: 'wood',
     altitude: 'neutral',
     stage: 'growing',
@@ -238,6 +252,7 @@ const CORE_LAUNCH_OFFERS: readonly LaunchOffer[] = [
     preorder: true,
     gumroadUrl: GUMROAD.rpgHandbookPhysical,
     cta: 'Preorder',
+    hiddenFromLaunch: true,
     element: 'metal',
     altitude: 'neutral',
     stage: 'growing',
