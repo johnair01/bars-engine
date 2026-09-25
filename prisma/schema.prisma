@@ -4147,6 +4147,216 @@ model MilestoneContribution {
   @@map("milestone_contributions")
 }
 
+/// A small, password-gated family room. It deliberately has no Player relation:
+/// family participants should never need a Bars Engine account to use it.
+model FamilyDecisionRoom {
+  id                       String                 @id @default(cuid())
+  slug                     String                 @unique
+  financialSnapshotVersion String
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  participants             FamilyParticipant[]
+  fundingDecisions         FamilyFundingDecision[]
+  cfoAgreements            VolunteerCfoAgreement[]
+  budgetQuestions          BudgetLineQuestion[]
+  reflections              FamilyReflection[]
+  budgetScenarios          BudgetScenario[]
+  weeklyReviews            WeeklyReview[]
+  altitudeCommitments      FamilyAltitudeCommitment[]
+
+  @@map("family_decision_rooms")
+}
+
+/// Hashed request identity only; used to throttle family-room passphrase guesses.
+model FamilyRoomAccessAttempt {
+  id              String   @id @default(cuid())
+  identityHash    String   @unique
+  count           Int      @default(0)
+  windowStartedAt DateTime @default(now())
+  lockedUntil     DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@map("family_room_access_attempts")
+}
+
+model FamilyParticipant {
+  id              String                 @id @default(cuid())
+  roomId          String
+  tokenHash       String                 @unique
+  displayName     String?
+  createdAt       DateTime               @default(now())
+  lastSeenAt      DateTime               @default(now())
+  room            FamilyDecisionRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  fundingDecisions FamilyFundingDecision[]
+  cfoAgreements   VolunteerCfoAgreement[]
+  budgetQuestions BudgetLineQuestion[]
+  budgetAnswers   BudgetLineAnswer[]
+  reflections     FamilyReflection[]
+  budgetScenarios BudgetScenario[]
+  weeklyReviews    WeeklyReview[]
+  altitudeCommitments FamilyAltitudeCommitment[]
+
+  @@index([roomId])
+  @@map("family_participants")
+}
+
+/// Saved “what if?” calculations. These never alter the approved snapshot.
+model BudgetScenario {
+  id                     String             @id @default(cuid())
+  roomId                 String
+  participantId          String
+  name                   String?
+  snapshotVersion        String
+  assumptionOverridesJson String
+  calculatedTotalsJson  String
+  sharedAt               DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  room                   FamilyDecisionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant            FamilyParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@map("budget_scenarios")
+}
+
+/// Canonical 3·2·1 entries. Full text is only ever queried for its author;
+/// `publishedSynthesis` is the sole field designed for the shared room.
+model FamilyReflection {
+  id                String             @id @default(cuid())
+  roomId            String
+  participantId     String
+  chargeDescription String?
+  maskShape         String?
+  maskName          String?
+  desire            String?
+  desireOutcome     String?
+  lifeState         String?
+  rootCause         String?
+  fear              String?
+  somaticEcho       String?
+  interiorVoice     String?
+  integrationShift  String?
+  alignedAction     String?
+  publishedSynthesis String?
+  publishedAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  room              FamilyDecisionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant       FamilyParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, participantId])
+  @@index([roomId, publishedAt])
+  @@map("family_reflections")
+}
+
+model FamilyFundingDecision {
+  id            String             @id @default(cuid())
+  roomId        String
+  participantId String
+  fundingOption String
+  amountCents   Int
+  durationDays  Int?
+  terms         String?
+  status        String             @default("proposed")
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  room          FamilyDecisionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant   FamilyParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, updatedAt])
+  @@map("family_funding_decisions")
+}
+
+model VolunteerCfoAgreement {
+  id                            String             @id @default(cuid())
+  roomId                        String
+  participantId                 String
+  spendingApprovalThresholdCents Int               @default(10000)
+  adScalingApproval             Boolean            @default(true)
+  pauseRevisionRight            Boolean            @default(true)
+  negotiationRight              Boolean            @default(true)
+  weeklyReview                  Boolean            @default(true)
+  status                        String             @default("proposed")
+  createdAt                     DateTime           @default(now())
+  updatedAt                     DateTime           @updatedAt
+  room                          FamilyDecisionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant                   FamilyParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, participantId])
+  @@map("volunteer_cfo_agreements")
+}
+
+/// Shared weekly operating review for the Volunteer CFO rhythm.
+model WeeklyReview {
+  id              String             @id @default(cuid())
+  roomId          String
+  participantId   String
+  weekOf          DateTime
+  snapshotVersion String
+  jobApplications Int                @default(0)
+  marketingActions Int               @default(0)
+  revenueCents    Int                @default(0)
+  spendingCents   Int                @default(0)
+  notes           String?
+  decisions       String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  room            FamilyDecisionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant     FamilyParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, weekOf])
+  @@index([roomId, updatedAt])
+  @@map("weekly_reviews")
+}
+
+/// A participant chooses how they want to serve in this room and can hand off a concern.
+model FamilyAltitudeCommitment {
+  id            String             @id @default(cuid())
+  roomId        String
+  participantId String
+  altitude      String
+  handoffNote   String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  room          FamilyDecisionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant   FamilyParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, participantId])
+  @@map("family_altitude_commitments")
+}
+
+model BudgetLineQuestion {
+  id                       String             @id @default(cuid())
+  roomId                   String
+  participantId            String
+  budgetSnapshotVersion    String
+  lineItemKey              String
+  body                     String
+  status                   String             @default("open")
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  room                     FamilyDecisionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  participant              FamilyParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  answers                  BudgetLineAnswer[]
+
+  @@index([roomId, lineItemKey, createdAt])
+  @@map("budget_line_questions")
+}
+
+model BudgetLineAnswer {
+  id            String             @id @default(cuid())
+  questionId    String
+  participantId String
+  body          String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  question      BudgetLineQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  participant   FamilyParticipant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([questionId, createdAt])
+  @@map("budget_line_answers")
+}
+
 /// Lightweight join: one NPC slot injected into a spoke CYOA session.
 /// Created at first-hit NPC slot injection; questId set when NPC quest seed is emitted.
 /// No full PlayerPlaybook overhead — this is a structural join only.
