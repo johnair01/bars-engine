@@ -8,13 +8,15 @@ import { Reflection321 } from './Reflection321'
 import { ScenarioExplorer } from './ScenarioExplorer'
 import { PaybackPaths } from './PaybackPaths'
 import { DecisionReview } from './DecisionReview'
+import { CheckOut } from './CheckOut'
+import { latestPerParticipant } from '@/lib/family-support/decision-ledger'
 import { decisionSavedNotice, dollarsToCents, type DecisionOption } from '@/lib/family-support/decision-review'
 import { BudgetQuestionThread } from './BudgetQuestionThread'
 import { WeeklyReview } from './WeeklyReview'
 import { AltitudeCommitment } from './AltitudeCommitment'
 
 type RoomState = Awaited<ReturnType<typeof import('@/actions/family-support').getFamilyRoomView>>
-type View = 'story' | 'decision' | 'walk' | 'budget' | 'scenario' | 'payback' | 'reflection' | 'cfo' | 'review'
+type View = 'story' | 'decision' | 'checkout' | 'walk' | 'budget' | 'scenario' | 'payback' | 'reflection' | 'cfo' | 'review'
 const label: Record<string, string> = { essential: 'Essential', experiment: 'Planned experiment', covered: 'Covered', income: 'Proposed income' }
 
 export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinancialSnapshot; state: RoomState }) {
@@ -25,12 +27,13 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
   const [terms, setTerms] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const savedProposals = useMemo(() => latestPerParticipant(state.decisions).length, [state.decisions])
   const openQuestions = useMemo(() => state.questions.filter((q) => q.status === 'open').length, [state.questions])
   const decide = (option: DecisionOption) => startTransition(async () => {
     const amountCents = option === 'custom' ? dollarsToCents(customAmount) : 0
     const result = await submitFamilyFundingDecision({ option, amountCents, terms })
     setNotice(result.ok ? decisionSavedNotice(option, snapshot, customAmount) : result.error ?? 'Unable to save your decision.')
-    if (result.ok) router.refresh()
+    if (result.ok) { router.refresh(); setView('checkout') }
   })
   const ask = (lineItemKey: string, body: string) => startTransition(async () => {
     const result = await askBudgetLineQuestion({ lineItemKey, body })
@@ -43,10 +46,11 @@ export function FamilySupportRoom({ snapshot, state }: { snapshot: FamilyFinanci
         <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d4a017]">Family contribution · repayable plan</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">A path to a clear decision</h1></div>
         <p className="max-w-xs text-sm leading-5 text-[#c6c0ca]">You can skip any reflection, choose no, request changes, or return to the decision at any time.</p>
       </header>
-      <nav aria-label="Room sections" className="mb-6 flex flex-wrap gap-2">{([['story', 'The story'], ['decision', 'Decision now'], ['budget', `Architect map${openQuestions ? ` · ${openQuestions} open` : ''}`], ['scenario', 'What if?'], ['payback', 'Payback paths'], ['reflection', 'Private 3·2·1'], ['cfo', 'Volunteer CFO'], ['review', 'Weekly review']] as [View, string][]).map(([key, title]) => <button key={key} onClick={() => setView(key)} className={`rounded-full px-4 py-2 text-sm font-medium ${view === key ? 'bg-[#7452b8] text-white' : 'border border-white/15 text-[#d7d0da]'}`}>{title}</button>)}</nav>
+      <nav aria-label="Room sections" className="mb-6 flex flex-wrap gap-2">{([['story', 'The story'], ['decision', 'Decision now'], ['checkout', `Check-out${savedProposals ? ` · ${savedProposals} saved` : ''}`], ['budget', `Architect map${openQuestions ? ` · ${openQuestions} open` : ''}`], ['scenario', 'What if?'], ['payback', 'Payback paths'], ['reflection', 'Private 3·2·1'], ['cfo', 'Volunteer CFO'], ['review', 'Weekly review']] as [View, string][]).map(([key, title]) => <button key={key} onClick={() => setView(key)} className={`rounded-full px-4 py-2 text-sm font-medium ${view === key ? 'bg-[#7452b8] text-white' : 'border border-white/15 text-[#d7d0da]'}`}>{title}</button>)}</nav>
       {notice && <p role="status" className="mb-5 rounded-xl border border-[#d4a017]/30 bg-[#d4a017]/10 px-4 py-3 text-sm text-[#f7e0a0]">{notice}</p>}
       {view === 'story' && <StoryJourney snapshot={snapshot} onDecision={() => setView('decision')} onBudget={() => setView('budget')} onScenario={() => setView('scenario')} onReflection={() => setView('reflection')} onCfo={() => setView('cfo')} />}
       {view === 'decision' && <Decision snapshot={snapshot} customAmount={customAmount} setCustomAmount={setCustomAmount} terms={terms} setTerms={setTerms} pending={pending} onDecide={decide} onBudget={() => setView('budget')} onPayback={() => setView('payback')} />}
+      {view === 'checkout' && <CheckOut decisions={state.decisions} viewerId={state.participantId} onDecision={() => setView('decision')} />}
       {view === 'walk' && <Walk onDecision={() => setView('decision')} onBudget={() => setView('budget')} />}
       {view === 'budget' && <Budget snapshot={snapshot} expanded={expanded} setExpanded={setExpanded} questions={state.questions} pending={pending} onAsk={ask} />}
       {view === 'scenario' && <ScenarioExplorer snapshot={snapshot} scenarios={state.scenarios} />}

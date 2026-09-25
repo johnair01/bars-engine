@@ -221,7 +221,7 @@ export async function getFamilyRoomView() {
   const currentRoom = await room()
   const [questions, decisions, agreements, myReflection, sharedSyntheses, scenarios, reviews, altitudeCommitments] = await Promise.all([
     db.budgetLineQuestion.findMany({ where: { roomId: currentRoom.id }, include: { answers: { include: { participant: { select: { displayName: true } } }, orderBy: { createdAt: 'asc' } }, participant: { select: { displayName: true } } }, orderBy: { createdAt: 'desc' } }),
-    db.familyFundingDecision.findMany({ where: { roomId: currentRoom.id }, include: { participant: { select: { displayName: true } } }, orderBy: { updatedAt: 'desc' }, take: 10 }),
+    db.familyFundingDecision.findMany({ where: { roomId: currentRoom.id }, include: { participant: { select: { displayName: true } } }, orderBy: { updatedAt: 'desc' }, take: 50 }),
     db.volunteerCfoAgreement.findMany({ where: { roomId: currentRoom.id }, include: { participant: { select: { displayName: true } } } }),
     db.familyReflection.findUnique({ where: { roomId_participantId: { roomId: currentRoom.id, participantId: person.id } } }),
     db.familyReflection.findMany({ where: { roomId: currentRoom.id, publishedSynthesis: { not: null } }, select: { id: true, participantId: true, publishedSynthesis: true, publishedAt: true, participant: { select: { displayName: true } } }, orderBy: { publishedAt: 'desc' } }),

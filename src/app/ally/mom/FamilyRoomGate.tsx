@@ -22,7 +22,7 @@ export function FamilyRoomGate() {
             else router.refresh()
           })
         }}>
-          <label className="grid gap-2 text-sm font-medium">Your name <span className="font-normal text-[#aaa3af]">optional</span><input name="displayName" className="rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-base outline-none focus:border-[#d4a017]" /></label>
+          <label className="grid gap-2 text-sm font-medium">Your name <span className="font-normal text-[#aaa3af]">optional. It labels your choices for everyone in the room.</span><input name="displayName" className="rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-base outline-none focus:border-[#d4a017]" /></label>
           <label className="grid gap-2 text-sm font-medium">Room passphrase<input required name="passphrase" type="password" className="rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-base outline-none focus:border-[#d4a017]" /></label>
           {error && <p role="alert" className="text-sm text-[#ffb4ab]">{error}</p>}
           <button disabled={pending} className="rounded-xl bg-[#7452b8] px-5 py-3 font-semibold disabled:opacity-60">{pending ? 'Opening…' : 'Enter the room'}</button>
