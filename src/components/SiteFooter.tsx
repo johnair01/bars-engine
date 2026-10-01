@@ -30,6 +30,7 @@ const COLUMNS = [
   {
     heading: 'Practice',
     links: [
+      { label: 'The podcast', href: '/podcast' },
       { label: 'The Allyship Deck', href: '/deck/sales' },
       { label: 'The four campaigns', href: '/campaigns' },
       { label: 'The Myths Read', href: '/mastering-allyship/myths-read' },
@@ -40,7 +41,7 @@ const COLUMNS = [
     heading: 'Work with Wendell',
     links: [
       { label: 'Speaking & workshops', href: '/speaking' },
-      { label: 'On your show', href: '/on-your-show' },
+      { label: 'On your show', href: '/podcast#on-your-show' },
       { label: '1:1 coaching', href: '/mastering-allyship/one-to-one' },
       { label: 'Certification', href: '/succession' },
     ],

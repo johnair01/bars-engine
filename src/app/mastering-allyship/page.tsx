@@ -423,11 +423,11 @@ export default async function MasteringAllyshipPage() {
       {/* ================= ROOM 7 · MAGENTA · THE ON-RAMPS ================= */}
       <section id="quizzes" style={{ background: 'linear-gradient(180deg,#1c0f2a,#120a1c)', ...ROOM, color: '#cbc0d0' }}>
         <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 24px' }}>
-          <div className="sl-kick" style={{ color: '#ff5fa8' }}>07 · Two on-ramps</div>
+          <div className="sl-kick" style={{ color: '#ff5fa8' }}>07 · Three on-ramps</div>
           <h2 className="sl-hl" style={{ margin: '18px 0 0', fontSize: 'clamp(28px,5vw,42px)', color: '#f6e0ee' }}>
             Not ready to buy a thing from a man promising fun. Fair. Play instead.
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 20, marginTop: 40 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 20, marginTop: 40 }}>
             <a href={SUPERPOWER_HREF} className="sl-quiz-card" style={{ textDecoration: 'none', position: 'relative', display: 'flex', flexDirection: 'column', borderRadius: 16, padding: '30px 30px 26px', background: 'rgba(24,14,34,.6)', border: '1px solid rgba(255,95,168,.28)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.05)', overflow: 'hidden', ...({ '--sl-card-border-hover': 'rgba(255,95,168,.6)', '--sl-card-glow': 'rgba(255,95,168,.6)' } as CSSProperties) }}>
               <div style={{ position: 'absolute', right: -24, top: -24, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(255,95,168,.26),transparent 66%)' }} />
               <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: '#ff5fa8' }}>Quiz 01 · the flip</div>
@@ -445,6 +445,15 @@ export default async function MasteringAllyshipPage() {
                 Finds which myth of “good allyship” is currently running you — being good, saying the right words, never causing harm — and reframes it toward the real game. Names the trap, then the redesign.
               </p>
               <div style={{ marginTop: 20, fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: '#c77bff' }}>Name the myth →</div>
+            </a>
+            <a href="/podcast" className="sl-quiz-card" style={{ textDecoration: 'none', position: 'relative', display: 'flex', flexDirection: 'column', borderRadius: 16, padding: '30px 30px 26px', background: 'rgba(24,14,34,.6)', border: '1px solid rgba(255,95,168,.28)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.05)', overflow: 'hidden', ...({ '--sl-card-border-hover': 'rgba(230,185,63,.62)', '--sl-card-glow': 'rgba(230,185,63,.42)' } as CSSProperties) }}>
+              <div style={{ position: 'absolute', right: -24, top: -24, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(230,185,63,.24),transparent 66%)' }} />
+              <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: '#e6b93f' }}>Listen · the podcast</div>
+              <h3 className="sl-hl" style={{ margin: '12px 0 0', fontSize: 'clamp(21px,3vw,26px)', color: '#f6e0ee' }}>Hear the work done live</h3>
+              <p style={{ margin: '12px 0 0', fontSize: 15, lineHeight: 1.55, color: '#c7bcd4' }}>
+                Real people bring real situations, and we work through them on the record. Start with the newest episode.
+              </p>
+              <div style={{ marginTop: 20, fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: '#e6b93f' }}>Listen to the podcast →</div>
             </a>
           </div>
         </div>
