@@ -213,6 +213,48 @@
    "auto": true,
    "pos": "A failed production deploy should notify someone. Three weeks of failures went unheard. This is a proposal and nothing is built for it yet.",
    "why": "Every production and preview build since Sept 12 failed with no alert. Source: Vercel deployment list."
+  },
+  {
+   "id": "x-one-home",
+   "faces": [
+    "architect",
+    "challenger"
+   ],
+   "pass": "4",
+   "auto": true,
+   "pos": "One home repo. Every other repo pulls the definition file and the skill from it when a session opens, and the session is told whether its copy is current, updated, or local because GitHub was unreachable.",
+   "why": "All five repos are public and cloud sessions run start-up hooks. Tested in a repo that never had the council, a brand-new repo, the home repo, and with GitHub unreachable. Source: 6FACE_PASS4_2026-10-02.md"
+  },
+  {
+   "id": "x-lessons-home",
+   "faces": [
+    "regent",
+    "challenger"
+   ],
+   "pass": "4",
+   "auto": true,
+   "pos": "Lessons and lens changes are written at home only. A lesson recorded in another repo goes under lessons_pending in that repo's record, and a script at home finds it.",
+   "why": "Pass one: the definition file has one author's history; two writers would fork it. Tested by recording a lesson in root-game and finding it from home. Source: 6FACE_PASS4_2026-10-02.md"
+  },
+  {
+   "id": "x-records-local",
+   "faces": [
+    "regent"
+   ],
+   "pass": "4",
+   "auto": true,
+   "pos": "Ledgers, term registries and glossaries never sync. They stay in the repo whose decision they record. Stats can still count every repo's records over GitHub.",
+   "why": "Pass one ruled records live where the decision is. Remote stats read 69 records across the five repos. Source: 6FACE_PASS4_2026-10-02.md"
+  },
+  {
+   "id": "x-install",
+   "faces": [
+    "diplomat"
+   ],
+   "pass": "4",
+   "auto": true,
+   "pos": "Any repo, new or existing, gets the council with one command run at home, which also adds it to the list of council repos.",
+   "why": "Run on root-game, emotional-first-aid and a brand-new repo; its first run caught a repo whose ignore rules would have hidden the hook. Source: 6FACE_PASS4_2026-10-02.md"
   }
  ],
  "questions": [
@@ -267,6 +309,60 @@
      "v": "hold",
      "label": "Hold until checklist sections 0 to 5 are done",
      "c": "The live site stays at Aug 31. The fix waits, proven, on its branch."
+    }
+   ]
+  },
+  {
+   "id": "council-home",
+   "faces": [
+    "architect",
+    "regent"
+   ],
+   "q": "Where should the council's home live? Every repo pulls the shared files from it, and lessons are written there.",
+   "why_you": "It is a question of ownership: bars-engine belongs to johnair01 and is a game app, while the council serves all your projects. Creating a new repo is yours to approve.",
+   "not_before": "The home was implicit until the sync made it a single named place.",
+   "options": [
+    {
+     "v": "bars-engine",
+     "label": "Keep bars-engine",
+     "c": "Nothing moves. The council keeps living beside the game code, in a repo you share with johnair01."
+    },
+    {
+     "v": "new-repo",
+     "label": "A new public repo of its own, such as wendell-britt/six-faces-council",
+     "c": "I create it, copy the council in, and change one line in each repo. Your projects then depend on a repo only you own."
+    },
+    {
+     "v": "friendcraft",
+     "label": "friendcraft-manuacript",
+     "c": "The repo with the most passes and the decision log becomes home. It mixes the council into a book repo."
+    }
+   ]
+  },
+  {
+   "id": "merge-branches",
+   "faces": [
+    "regent",
+    "challenger"
+   ],
+   "q": "When should the five waiting branches merge? They hold today's board, term and sync work, and the council install for root-game and emotional-first-aid.",
+   "why_you": "Merging changes the main branch of five repos, and friendcraft's includes glossary and decision-log text.",
+   "not_before": "You merged the first batch by saying so in chat; this batch has been waiting since.",
+   "options": [
+    {
+     "v": "all-now",
+     "label": "Merge all five now",
+     "c": "New sessions everywhere get the sync, the skill rules, and the glossary changes. bars-engine merges after its check passes."
+    },
+    {
+     "v": "home-first",
+     "label": "Home first, then the rest",
+     "c": "bars-engine merges, I confirm a repo syncs from its main branch, then the other four merge."
+    },
+    {
+     "v": "hold",
+     "label": "Hold",
+     "c": "Nothing changes on any main branch until you say."
     }
    ]
   }
