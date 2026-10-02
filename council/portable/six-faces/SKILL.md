@@ -15,8 +15,10 @@ Read `faces.yaml` beside this file. It holds each face's altitude, lens, what it
 sees that later levels lose, its term test, and its lessons. The lessons are Wendell's words from
 past rulings, and each face carries them into its argument. Do not restate a lens from memory.
 
-The bundled `faces.yaml` is a snapshot, dated in `snapshot.txt`. If Wendell has ruled since, his
-newer words win over the snapshot.
+The bundled `faces.yaml` is a snapshot, dated in `snapshot.txt`. Where you can fetch a web address,
+read the current copy first from
+`https://raw.githubusercontent.com/johnair01/bars-engine/main/council/faces.yaml` and say which copy
+the pass used. If Wendell has ruled since either copy, his newer words win.
 
 ## The shape of a pass
 

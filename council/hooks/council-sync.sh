@@ -1,0 +1,55 @@
+#!/bin/bash
+# Six-faces council: pull the shared files from the home repo at session start.
+#
+# The home repo is named in council/source.txt as owner/repo@ref. Every repo with the council runs
+# this hook, so an update made at home (a new lesson, a changed lens, a skill rule) reaches every
+# other repo the next time a session opens there. Only the shared files are pulled. Ledgers, term
+# registries and glossaries belong to the repo they are in and are never touched.
+#
+# Fail-soft: with no network, the local copy stays and the session is told its date.
+# Test override: COUNCIL_SOURCE_BASE=file:///path/to/home replaces the GitHub address.
+set -uo pipefail
+
+root="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+cd "$root" || exit 0
+[ -f council/source.txt ] || exit 0
+
+source_spec="$(grep -v '^#' council/source.txt | head -1 | tr -d '[:space:]')"
+home_repo="${source_spec%@*}"
+ref="${source_spec#*@}"
+[ "$ref" = "$source_spec" ] && ref=main
+
+origin="$(git config --get remote.origin.url 2>/dev/null | sed -E 's#^.*github\.com[:/]##; s#\.git$##')"
+lessons() { grep -c '^      - date:' council/faces.yaml 2>/dev/null || echo 0; }
+
+if [ "$origin" = "$home_repo" ] && [ -z "${COUNCIL_SOURCE_BASE:-}" ]; then
+  echo "Six-faces council: this repo is the home copy ($home_repo). $(lessons) face lessons in council/faces.yaml. Lessons and lens changes are made here."
+  exit 0
+fi
+
+base="${COUNCIL_SOURCE_BASE:-https://raw.githubusercontent.com/$home_repo/$ref}"
+label="$home_repo@$ref"; [ -n "${COUNCIL_SOURCE_BASE:-}" ] && label="$COUNCIL_SOURCE_BASE"
+files="council/faces.yaml .claude/skills/six-faces/SKILL.md council/portable/six-faces/SKILL.md"
+changed=""; failed=""
+tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+for f in $files; do
+  # the portable copy is only kept where it already exists
+  if [ "$f" = "council/portable/six-faces/SKILL.md" ] && [ ! -f "$f" ]; then continue; fi
+  if curl -fsS --max-time 8 "$base/$f" -o "$tmp/x" 2>/dev/null && [ -s "$tmp/x" ]; then
+    if ! cmp -s "$tmp/x" "$f" 2>/dev/null; then
+      mkdir -p "$(dirname "$f")" && cp "$tmp/x" "$f" && changed="$changed $f"
+    fi
+  else
+    failed="$failed $f"
+  fi
+done
+
+if [ -n "$failed" ]; then
+  stamp="$(git log -1 --format=%as -- council/faces.yaml 2>/dev/null)"
+  echo "Six-faces council: could not reach $label, so this session uses the local copy (faces.yaml last committed ${stamp:-unknown}). $(lessons) face lessons."
+elif [ -n "$changed" ]; then
+  echo "Six-faces council: synced from $label. Updated:$changed. $(lessons) face lessons. Commit these with your next change so the repo copy stays current. Write any new lesson in the home repo, or record it under lessons_pending in this repo's ledger."
+else
+  echo "Six-faces council: up to date with $label. $(lessons) face lessons."
+fi
+exit 0

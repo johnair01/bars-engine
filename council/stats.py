@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Counts over council ledger records.
 
-Usage: python3 council/stats.py [ledger_dir ...]
+Usage: python3 council/stats.py [--remote | ledger_dir ...]\n--remote reads every repo in council/repos.yaml over GitHub instead of the folders on this disk.
 Default: every ledger/ directory under .specify/specs/ plus council/ledger/ if present.
 Reads JSON records in the shape of .specify/specs/six-faces-council-agents/ledger/*.json.
 No model, no network. Prints counts by project, cause, position outcome, question outcome, and
@@ -29,6 +29,27 @@ def find_records(dirs: list[Path]) -> list[dict]:
 
 
 def main(argv: list[str]) -> int:
+    if "--remote" in argv:
+        # every repo in council/repos.yaml, read over GitHub; public repos need no token
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("cl", ROOT / "council" / "collect_lessons.py")
+        cl = importlib.util.module_from_spec(spec); spec.loader.exec_module(cl)
+        recs = []
+        for repo in cl.registry():
+            for d in ("council/ledger", "council/ledger/backfill", ".specify/specs/six-faces-council-agents/ledger"):
+                try:
+                    items = cl.get(f"https://api.github.com/repos/{repo}/contents/{d}")
+                except Exception:
+                    continue
+                for it in items:
+                    if it.get("type") == "file" and it["name"].endswith(".json"):
+                        try:
+                            import urllib.request
+                            with urllib.request.urlopen(it["download_url"], timeout=15) as r:
+                                recs.append(json.loads(r.read()))
+                        except Exception:
+                            pass
+        return report(recs, "remote: " + ", ".join(cl.registry()))
     if argv[1:]:
         dirs = [Path(a) for a in argv[1:]]
     else:
@@ -39,8 +60,11 @@ def main(argv: list[str]) -> int:
             if base.is_dir():
                 dirs += [base] + sorted(d for d in base.rglob("*") if d.is_dir())
     dirs = [d for d in dirs if d.is_dir()]
-    recs = find_records(dirs)
-    print(f"{len(recs)} record(s) from {len(dirs)} ledger dir(s)\n")
+    return report(find_records(dirs), f"{len(dirs)} ledger dir(s)")
+
+
+def report(recs: list[dict], where: str) -> int:
+    print(f"{len(recs)} record(s) from {where}\n")
 
     by_project, by_cause, by_convener = Counter(), Counter(), Counter()
     pos_outcomes, q_outcomes, doc_outcomes, by_source = Counter(), Counter(), Counter(), Counter()

@@ -58,6 +58,23 @@ Read the store with `ArtifactData`: collections `positions`, `questions`, and th
 that face's entry in `faces.yaml`, quoted, with the source. A ruling that changes a term, a
 structure or a date goes in the repo's decision log where one exists.
 
+## One home, every repo
+
+The council has one home: the repo named in `council/source.txt`, today `johnair01/bars-engine`.
+Every other repo pulls `council/faces.yaml` and this skill from home when a session starts, through
+`council/hooks/council-sync.sh`. The hook's first line in the session says whether the copy is
+current, updated, or local because GitHub was unreachable. Commit synced files with the next change.
+
+- **Lessons and lens changes are written at home only.** In another repo, record a new lesson in
+  that repo's ledger record under `lessons_pending`, with the face, Wendell's exact words, the
+  lesson, the date and the source. `python3 council/collect_lessons.py` at home lists every pending
+  lesson across the registered repos, and folding one in is a reviewed edit there.
+- **Ledgers, term registries and glossaries stay in the repo they belong to.** The hook never
+  touches them. `python3 council/stats.py --remote` at home counts every registered repo's records
+  over GitHub.
+- **A repo without the council gets it with** `python3 council/install.py <path>` run at home. That
+  adds it to `council/repos.yaml`. Commit the new files in the target and merge them.
+
 ## The term pass
 
 Run it when Wendell asks for terms, when a pass coins a word, or when the harvest grows. The full
