@@ -6,44 +6,44 @@ causes:
   feature-design:
     status: proposed
     backfill_count: 34
-    description: A consult that stress-tests a feature before it is built. Most of the March 2026 strand batch.
+    description: "A consult that stress-tests a feature before it is built. Most of the March 2026 strand batch."
   spec-review:
     status: proposed
     backfill_count: 15
-    description: A six-face read or gap analysis of an existing spec or design brief.
+    description: "A six-face read or gap analysis of an existing spec or design brief."
   incident-reliability:
     status: proposed
     backfill_count: 4
-    description: A production incident or a recurring build or schema failure.
+    description: "A production incident or a recurring build or schema failure."
   book-structure:
     status: proposed
     backfill_count: 3
-    description: A ruling on the shape of a manuscript: outline, metaphor, voice, what the book is.
+    description: "A ruling on the shape of a manuscript: outline, metaphor, voice, what the book is."
   project-steering:
     status: proposed
     backfill_count: 2
-    description: What is next. Grades the previous pass and chooses the next move.
+    description: "What is next. Grades the previous pass and chooses the next move."
   product-launch:
     status: proposed
     backfill_count: 2
-    description: Funnel, SKU, launch gate, what the public page promises.
+    description: "Funnel, SKU, launch gate, what the public page promises."
   product-intake-pricing:
     status: proposed
     backfill_count: 2
-    description: Intake, paywall, subscription, what a stranger gets before paying.
+    description: "Intake, paywall, subscription, what a stranger gets before paying."
   vendor-decision:
     status: proposed
     backfill_count: 1
-    description: Which service carries a function, with the budget implication.
+    description: "Which service carries a function, with the budget implication."
   card-schema:
     status: proposed
     backfill_count: 1
-    description: Whether a field or taxonomy belongs on a card or in a deck.
+    description: "Whether a field or taxonomy belongs on a card or in a deck."
   council-design:
     status: proposed
     backfill_count: 0
-    description: How the council itself is built and run.
+    description: "How the council itself is built and run."
   code-review:
     status: proposed
     backfill_count: 0
-    description: A ruling on review findings for a change. Seen once, in a commit message, not a document.
+    description: "A ruling on review findings for a change. Seen once, in a commit message, not a document."

@@ -59,7 +59,7 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
 </style>
 
 <h1>Council Board</h1>
-<p class="lede">The six faces' positions from passes one and two and from the research you steered, 2026-10-02. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
+<p class="lede">The six faces' positions from passes one and two and from the research you steered, 2026-10-02, plus the cause categories the backfill proposes. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
 
 <div class="banner" id="banner">This view cannot save. Your flips and steers stay on screen only.</div>
 
@@ -75,6 +75,10 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
 <h2 id="qh" style="margin-top:28px">Questions only you can answer</h2>
 <p class="lede">Each one passed the reach test: its face could not answer it from the record, your answer changes what gets built, and it carries options with their consequences.</p>
 <div id="qrows"></div>
+
+<h2 style="margin-top:32px">Causes to name</h2>
+<p class="lede">The backfill sorted sixty-six past deliberations into these categories by heuristic. The counts describe the record; they are not targets. Keep a name, or type the one you would use. A blank keeps the proposed name.</p>
+<div id="crows"></div>
 
 <h2 style="margin-top:32px">Positions</h2>
 <div id="rows"></div>
@@ -144,6 +148,20 @@ const QUESTIONS = [
    {v:'owner',label:'The owning face rules, Sage records',c:'The face whose domain the question is in decides, as the Regent did on Kickstarter ruling 6. Splits across domains still reach you.'}
   ]}
 ];
+const CAUSES = [
+ {id:'feature-design',count:34,desc:'A consult that stress-tests a feature before it is built. Most of the March 2026 strand batch.'},
+ {id:'spec-review',count:15,desc:'A six-face read or gap analysis of an existing spec or design brief.'},
+ {id:'incident-reliability',count:4,desc:'A production incident or a recurring build or schema failure.'},
+ {id:'book-structure',count:3,desc:'A ruling on the shape of a manuscript: outline, metaphor, voice, what the book is.'},
+ {id:'project-steering',count:2,desc:'What is next. Grades the previous pass and chooses the next move.'},
+ {id:'product-launch',count:2,desc:'Funnel, SKU, launch gate, what the public page promises.'},
+ {id:'product-intake-pricing',count:2,desc:'Intake, paywall, subscription, what a stranger gets before paying.'},
+ {id:'vendor-decision',count:1,desc:'Which service carries a function, with the budget implication.'},
+ {id:'card-schema',count:1,desc:'Whether a field or taxonomy belongs on a card or in a deck.'},
+ {id:'council-design',count:0,desc:'How the council itself is built and run.'},
+ {id:'code-review',count:0,desc:'A ruling on review findings for a change. Seen once, in a commit message, not a document.'}
+];
+const cstate = {}; CAUSES.forEach(c => cstate[c.id] = {name:'', note:''});
 const qstate = {}; QUESTIONS.forEach(q => qstate[q.id] = {choice:'', steer:''});
 const state = {}; // id -> {status, steer}
 POSITIONS.forEach(p => state[p.id] = {status:'stands', steer:''});
@@ -183,6 +201,20 @@ function buildQ(){
     </div>
   </section>`).join('');
 }
+const cEl = document.getElementById('crows');
+function buildC(){
+  cEl.innerHTML = CAUSES.map(c => `
+  <section class="row" id="c-${c.id}">
+    <div class="meta"><span>proposed cause</span><span>${c.count} in the record</span></div>
+    <p class="pos"><code>${esc(c.id)}</code></p>
+    <p class="why">${esc(c.desc)}</p>
+    <div class="ctl">
+      <div class="steer"><input type="text" id="cname-${c.id}" placeholder="Keep, or the name you would use" style="width:100%;font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg)"></div>
+      <div><button type="button" class="save" data-csave="${c.id}">Save</button><div class="state" id="cstate-${c.id}"></div></div>
+    </div>
+  </section>`).join('');
+}
+function paintC(id){ const el = document.getElementById('cname-'+id); if (document.activeElement !== el) el.value = cstate[id].name || ''; }
 function paintQ(id){
   const s = qstate[id];
   QUESTIONS.find(q=>q.id===id).options.forEach(o => { const r = document.getElementById('q-'+id+'-'+o.v); if (r) r.checked = (s.choice===o.v); });
@@ -203,7 +235,15 @@ function counts(){
   document.getElementById('n-stand').textContent = POSITIONS.length - over;
   document.getElementById('n-steer').textContent = steer;
 }
-build(); buildQ(); POSITIONS.forEach(p=>paint(p.id)); QUESTIONS.forEach(q=>paintQ(q.id)); counts();
+build(); buildQ(); buildC(); POSITIONS.forEach(p=>paint(p.id)); QUESTIONS.forEach(q=>paintQ(q.id)); CAUSES.forEach(c=>paintC(c.id)); counts();
+cEl.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-csave]'); if(!b) return;
+  const id = b.dataset.csave, st = document.getElementById('cstate-'+id);
+  cstate[id].name = document.getElementById('cname-'+id).value.trim();
+  if (!db){ st.textContent = 'Not saved in this view.'; return; }
+  try { await db.doc('causes/'+id).set({name: cstate[id].name || id, kept: !cstate[id].name, savedAt:new Date().toISOString()}); st.textContent = 'Saved.'; }
+  catch (err){ st.textContent = 'Could not save (' + (err && err.code || 'error') + ').'; }
+});
 document.getElementById('n-auto').textContent = POSITIONS.filter(p=>p.auto).length;
 document.getElementById('n-q').textContent = QUESTIONS.length;
 qEl.addEventListener('change', e => { const r = e.target; if (r.type==='radio'){ const id = r.name.slice(2); qstate[id].choice = r.value; } });
@@ -247,6 +287,9 @@ document.getElementById('ctx-save').addEventListener('click', async () => {
   db.collection('positions').onSnapshot(snap => {
     snap.docs.forEach(d => { if (!d.exists || !state[d.id]) return; const v = d.data(); state[d.id] = {status: v.status==='overrule'?'overrule':'stands', steer: typeof v.steer==='string'?v.steer:''}; paint(d.id); });
     counts();
+  }, () => {});
+  db.collection('causes').onSnapshot(snap => {
+    snap.docs.forEach(d => { if (!d.exists || !cstate[d.id]) return; const v = d.data(); cstate[d.id] = {name: v.kept ? '' : (typeof v.name==='string'?v.name:'')}; paintC(d.id); });
   }, () => {});
   db.collection('questions').onSnapshot(snap => {
     snap.docs.forEach(d => { if (!d.exists || !qstate[d.id]) return; const v = d.data(); qstate[d.id] = {choice: typeof v.choice==='string'?v.choice:'', steer: typeof v.steer==='string'?v.steer:''}; paintQ(d.id); });
