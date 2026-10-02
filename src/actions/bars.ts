@@ -752,10 +752,20 @@ export async function getBarDetail(barId: string) {
     const isOwner = bar.creatorId === playerId
     const isRecipient = bar.shares.some(s => s.toUserId === playerId)
 
-    // Type guard: public BARs are always viewable; owners can view their own
-    // charge_capture seeds AND quests (QLA — quests need a home page showing lineage);
-    // otherwise only 'bar' type is accessible via this route
-    const allowedType = bar.type === 'bar' || (isOwner && (bar.type === 'charge_capture' || bar.type === 'quest'))
+    // Type guard: public BARs are always viewable; so is anything you created or
+    // were sent. Only strangers are held to type 'bar'.
+    //
+    // This used to allowlist ('bar' | charge_capture | quest), which locked
+    // owners out of their own artifacts — a player following a journey BAR to
+    // /bars/[id] got "Not a BAR", read as the BAR not existing:
+    //   "Got here from a journey BAR and then it gave the feedback that this BAR
+    //    doesn't exist. Somehow the journey generated BARs aren't ending up in
+    //    players hands to vaults." (site signal, 2026-04-08)
+    // The BAR was in their vault the whole time; it was type 'vibe'. At the time
+    // of the fix, 146 live private BARs across 13 types were unopenable by the
+    // people who made them. Access is still decided by ownership below — type
+    // was never the right gate for it.
+    const allowedType = bar.type === 'bar' || isOwner || isRecipient
     if (!isPublic && !allowedType) return { error: 'Not a BAR' }
     // Share through which current user received this BAR (most recent if multiple)
     const recipientShare = isRecipient

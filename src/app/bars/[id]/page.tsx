@@ -25,6 +25,8 @@ import { readHandDb } from '@/lib/hand-service'
 import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
 import { isHandVaultMovable } from '@/lib/hand-movement'
 import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+import { getTaskWorkspaceForBar } from '@/actions/tap-the-vein'
+import { CommitmentWorkspace } from './CommitmentWorkspace'
 
 // Charge level → human label (mirrors the Seed Capture Whiteboard).
 const CHARGE_LABELS: Record<number, string> = {
@@ -102,6 +104,13 @@ export default async function BarDetailPage({
     const hand = canMoveHandVault ? await readHandDb(player.id) : null
     const inHand = hand ? hand.slots.some(s => s.barId === bar.id) : false
     const handFull = hand ? hand.filledCount >= hand.size : false
+
+    // TTV-CHARGE: if this BAR is a Tap the Vein commitment, the owner works it
+    // here — charge, blockers, context, and completion. Players reported wanting
+    // exactly this on /bars/[id]; the commitment loop had no surface on the page.
+    const commitmentRes = isOwner ? await getTaskWorkspaceForBar(bar.id) : null
+    const commitment =
+        commitmentRes && !('error' in commitmentRes) ? commitmentRes : null
 
     // QLA: quests get a lineage panel (week→year) + alignment / shadow state,
     // with fold-in / acknowledge when the quest is a shadow.
@@ -220,6 +229,11 @@ export default async function BarDetailPage({
                     element={element}
                     charge={charge}
                 />
+
+                {/* TTV-CHARGE: working surface for a Tap the Vein commitment —
+                    sits directly under the card so a blocker is the first thing
+                    you can reach, not buried under the sharing tools. */}
+                {commitment && <CommitmentWorkspace workspace={commitment} />}
 
                 {/* Pending external shares (owner only) */}
                 {isOwner && bar.shareExternals && bar.shareExternals.length > 0 && (

@@ -1,4 +1,5 @@
 import { SIGNUP_CHOICE_TARGET_IDS } from '@/lib/cyoa/types'
+import { linksAreCoveredByChoices, sanitizePassageText } from '@/lib/cyoa/sanitize-passage-text'
 
 export type MinimalChoice = { text: string; targetId: string; moveType?: string }
 
@@ -40,9 +41,25 @@ export function applyAuthenticatedChoicePolicy(
 }
 
 /** Apply auth policy to any adventure node payload before JSON response. */
-export function finalizeAdventureNodePayload<T extends { choices: MinimalChoice[] }>(
+export function finalizeAdventureNodePayload<T extends { choices: MinimalChoice[]; text?: string }>(
   node: T,
   isAuthenticated: boolean
 ): T {
-  return { ...node, choices: applyAuthenticatedChoicePolicy(node.choices, isAuthenticated) }
+  const choices = applyAuthenticatedChoicePolicy(node.choices, isAuthenticated)
+
+  // Strip authoring markup at the single serve chokepoint, so no route can
+  // forget. Players reported branch links printed as prose above the very
+  // buttons they duplicate; `<<set $x>>` directives leaked the same way.
+  //
+  // Guard: only strip links the `choices` column can already navigate. A passage
+  // whose links are NOT covered keeps them, so a hand-authored dead end degrades
+  // to "ugly" rather than "unplayable".
+  const text =
+    typeof node.text === 'string'
+      ? sanitizePassageText(node.text, {
+          keepLinks: !linksAreCoveredByChoices(node.text, node.choices),
+        })
+      : node.text
+
+  return { ...node, choices, ...(typeof node.text === 'string' ? { text } : {}) }
 }

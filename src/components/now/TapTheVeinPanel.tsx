@@ -49,6 +49,83 @@ const cardShell = (glow: boolean): React.CSSProperties => ({
     : `inset 0 1px 0 var(--bars-inset-top), inset 0 0 0 1px var(--bars-line)`,
 })
 
+const CHARGE_TONE: Record<string, string> = {
+  high: '#f87171',
+  medium: '#fbbf24',
+  low: '#4ade80',
+}
+
+/**
+ * Today's commitments, reachable from the dashboard.
+ *
+ * Player signal: "There should also be a way to access your daily tasks from the
+ * dashboard" — the panel counted tasks but never showed them, so the work was
+ * always one navigation away. Blocked ones sort first: a blocker you can't see
+ * is a blocker you don't clear.
+ */
+function TaskList({
+  tasks,
+  blocked,
+}: {
+  tasks: TtvPanelSummary['openTasks']
+  blocked: number
+}) {
+  if (tasks.length === 0) return null
+  const ordered = [...tasks].sort((a, b) => Number(b.blocked) - Number(a.blocked))
+
+  return (
+    <div style={{ marginTop: 12 }}>
+      {blocked > 0 && (
+        <p style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f87171', margin: '0 0 6px' }}>
+          {blocked} blocked
+        </p>
+      )}
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+        {ordered.map((t) => {
+          const tone = t.chargeLevel ? CHARGE_TONE[t.chargeLevel] : null
+          const row = (
+            <span className="flex items-baseline gap-2" style={{ minHeight: 32, padding: '5px 0' }}>
+              <span
+                aria-hidden
+                style={{
+                  flex: 'none',
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: t.blocked ? '#f87171' : tone ?? 'var(--bars-line-strong)',
+                  transform: 'translateY(-1px)',
+                }}
+              />
+              <span
+                className="truncate"
+                style={{
+                  fontFamily: body,
+                  fontSize: 12.5,
+                  lineHeight: 1.4,
+                  color: t.blocked ? '#fca5a5' : 'var(--bars-text-secondary)',
+                }}
+              >
+                {t.text}
+              </span>
+            </span>
+          )
+          return (
+            <li key={t.id}>
+              {t.href ? (
+                <Link href={t.href} className="block" style={{ textDecoration: 'none' }}>
+                  {row}
+                </Link>
+              ) : (
+                row
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 export function TapTheVeinPanel({ summary }: { summary: TtvPanelSummary }) {
   return (
     <section>
@@ -100,6 +177,8 @@ export function TapTheVeinPanel({ summary }: { summary: TtvPanelSummary }) {
               ))}
             </div>
 
+            <TaskList tasks={summary.openTasks} blocked={summary.blocked} />
+
             <Link
               href="/tap-the-vein"
               className="flex items-center justify-center gap-2"
@@ -113,20 +192,26 @@ export function TapTheVeinPanel({ summary }: { summary: TtvPanelSummary }) {
 
       {summary.status === 'sealed' && (
         <div style={cardShell(true)}>
-          <div className="flex items-center gap-3" style={{ padding: '15px 16px' }}>
-            <span
-              className="flex items-center justify-center rounded-full flex-none"
-              style={{ width: 40, height: 40, color: purple, boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${purple} 60%, transparent)`, fontSize: 16 }}
-              aria-hidden
-            >
-              ✓
-            </span>
-            <div className="min-w-0">
-              <h3 style={{ fontFamily: display, fontWeight: 800, fontSize: 15, color: 'var(--bars-text-primary)', margin: 0 }}>The vein is tapped.</h3>
-              <p style={{ fontFamily: body, fontSize: 11.5, lineHeight: 1.4, color: 'var(--bars-text-secondary)', margin: '3px 0 0' }}>
-                {summary.setForToday} task{summary.setForToday === 1 ? '' : 's'} set for today · {summary.completed} already paved.
-              </p>
+          <div style={{ padding: '15px 16px' }}>
+            <div className="flex items-center gap-3">
+              <span
+                className="flex items-center justify-center rounded-full flex-none"
+                style={{ width: 40, height: 40, color: purple, boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${purple} 60%, transparent)`, fontSize: 16 }}
+                aria-hidden
+              >
+                ✓
+              </span>
+              <div className="min-w-0">
+                <h3 style={{ fontFamily: display, fontWeight: 800, fontSize: 15, color: 'var(--bars-text-primary)', margin: 0 }}>The vein is tapped.</h3>
+                <p style={{ fontFamily: body, fontSize: 11.5, lineHeight: 1.4, color: 'var(--bars-text-secondary)', margin: '3px 0 0' }}>
+                  {summary.setForToday} task{summary.setForToday === 1 ? '' : 's'} set for today · {summary.completed} already paved.
+                </p>
+              </div>
             </div>
+
+            {/* Sealing the ritual is when the work starts, so the commitments
+                have to stay reachable here — not only while the ritual is open. */}
+            <TaskList tasks={summary.openTasks} blocked={summary.blocked} />
           </div>
         </div>
       )}
