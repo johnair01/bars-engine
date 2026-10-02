@@ -1,0 +1,119 @@
+<title>How the Council Works</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: one reading column; a short answer first, then the loop, the surfaces table, the fix, and the mod. Same tokens as the Council Board so the two read as one set. */
+:root{
+  --bg:#f6f5f1; --fg:#1d1f1e; --muted:#5d625f; --line:#d9d8d1; --panel:#ffffff;
+  --accent:#1f6f6a; --accent-soft:#e1efed; --yes:#2f7a3b; --no:#9a4b1e; --part:#a9741a;
+  --display:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#17191a; --fg:#ece9e1; --muted:#a4a8a3; --line:#33373a; --panel:#1f2224;
+  --accent:#5fc2ba; --accent-soft:#1e3533; --yes:#7cc488; --no:#e8a06e; --part:#e3b75c; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#17191a; --fg:#ece9e1; --muted:#a4a8a3; --line:#33373a; --panel:#1f2224;
+  --accent:#5fc2ba; --accent-soft:#1e3533; --yes:#7cc488; --no:#e8a06e; --part:#e3b75c; color-scheme:dark; }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.55;font-size:15px;padding-block:28px 56px;padding-inline:16px;max-width:820px;margin:0 auto}
+h1{font-family:var(--display);font-weight:600;font-size:2rem;margin:0 0 8px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:500;font-size:1.3rem;margin:40px 0 10px;text-wrap:balance}
+h3{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:22px 0 6px;font-weight:600}
+p,li{max-width:68ch}
+p{margin:0 0 12px}
+ol,ul{padding-left:1.2em;margin:0 0 12px}
+li{margin:0 0 8px}
+code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);padding:1px 5px;border-radius:3px}
+a{color:var(--accent)}
+.lede{color:var(--muted);font-size:1.02rem}
+.answer{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:4px;padding:14px 16px;margin:18px 0 8px}
+.answer p:last-child{margin:0}
+.tablewrap{overflow-x:auto;margin:8px 0 14px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.92rem}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+.y{color:var(--yes);font-weight:600}.n{color:var(--no);font-weight:600}.p{color:var(--part);font-weight:600}
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps li{counter-increment:s;position:relative;padding-left:2.3em;margin-bottom:14px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:1.6em;height:1.6em;border-radius:50%;background:var(--accent);color:var(--bg);font-weight:600;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+.who{font-size:.76rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px 16px;margin:12px 0}
+pre.mermaid{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px;overflow-x:auto}
+.src{font-size:.82rem;color:var(--muted)}
+</style>
+
+<h1>How the Council Works</h1>
+<p class="lede">The six faces in practice: what happens when you call them, where everything lives, why your other chats can't see them yet, and what a Claude mod would add. Written 2026-10-02.</p>
+
+<div class="answer">
+<p><b>The short answer.</b> The council is a skill: a set of written instructions plus one data file, <code>faces.yaml</code>, that Claude reads when you ask for the six. Until today the skill lived on unmerged branches, so no session could load it. It is now merged in friendcraft and flirtcraft, and bars-engine is merging. Even merged, a repo's skill reaches only Claude Code sessions opened on that repo. Ordinary chats, the desktop and mobile apps, and your other repos never read it. One upload to your claude.ai account fixes that, and the package is ready.</p>
+</div>
+
+<h2>What the council is made of</h2>
+<p>No server runs and no agent sits waiting. The council is four pieces, and Claude reads them when you call it.</p>
+<div class="tablewrap"><table>
+<tr><th>Piece</th><th>What it holds</th><th>Where</th></tr>
+<tr><td><b>The skill</b></td><td>How to run a pass or a term pass: the shape, the order of faces, the reach test, where results land.</td><td><code>.claude/skills/six-faces/</code> in each of the three repos</td></tr>
+<tr><td><b>The definition file</b></td><td>Each face's altitude, lens, term test, and lessons in your own words. Also the reserved list and your ruling that the Sage never decides.</td><td><code>council/faces.yaml</code>, kept identical across repos by a check</td></tr>
+<tr><td><b>The board</b></td><td>Every position, question and term waiting on you, with buttons. It is the one piece you touch.</td><td><a href="https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho">Council Board</a>, on claude.ai, any device</td></tr>
+<tr><td><b>The ledger</b></td><td>One record per pass and per board read: the question, the faces, what you ruled. The stats script counts these.</td><td><code>council/ledger/</code> and the spec folder in bars-engine</td></tr>
+</table></div>
+
+<h2>One pass, step by step</h2>
+<ol class="steps">
+<li><span class="who">You, in chat</span><br>Ask in a Claude Code session on one of the three repos. Plain words work: <i>get the six on this</i>, <i>let the faces weigh in</i>, <i>run a term pass</i>. Chat is where you give context and steer.</li>
+<li><span class="who">Claude</span><br>Claude loads the skill, reads <code>faces.yaml</code>, and gathers evidence: files, logs, past rulings. Each face argues from its lens and carries its lessons. The Sage synthesises, lists the dissent, and decides nothing.</li>
+<li><span class="who">Claude</span><br>Before any question reaches you, Claude tries to answer it from the record. A question gets through only if the answer is your preference or a fact only you hold, and only if it changes what gets built.</li>
+<li><span class="who">Claude</span><br>The pass is written as a file beside what it is about. Positions and real questions go onto the board. The chat reply is what changed and a link.</li>
+<li><span class="who">You, on the board</span><br>Flip a position you disagree with, answer a question, rename or retire a term, or type a steer. Save each row. This works from your phone.</li>
+<li><span class="who">Claude, next time you write</span><br>Tell Claude you saved. Claude reads the board, writes a ledger record, and turns any overrule or steer into a lesson for that face, quoted exactly. Adopted terms go into the repo's glossary as proposed, with a decision-log entry. The next pass carries all of it.</li>
+</ol>
+
+<pre class="mermaid">
+flowchart LR
+  A[You ask in chat] --> B[Claude reads the skill and faces.yaml]
+  B --> C[Six faces argue, the Sage synthesises]
+  C --> D[Reach test filters the questions]
+  D --> E[Pass file, plus the board]
+  E --> F[You flip, answer, steer on the board]
+  F --> G[Claude records the ruling and writes lessons]
+  G --> B
+</pre>
+
+<div class="case">
+<h3>Today's real case</h3>
+<p>You asked for flirtcraft's failing deploys as a test. Claude traced the cause in the build log. Vercel's installer blocks Prisma's setup script, so the database client never gets built and the type check fails. Claude reproduced the failure exactly, proved a one-line fix, and ran the tests. The six then argued what the fix ships: the live site is from August 31, and 50 commits wait behind the broken build. Five positions needed nothing from you. One question did, because only you can see the production settings: when to merge. It is on the board now, and the fix waits as pull request #2.</p>
+</div>
+
+<h2>Where it works</h2>
+<div class="tablewrap"><table>
+<tr><th>Where you are</th><th>Today</th><th>After you upload the skill</th></tr>
+<tr><td>A new Claude Code session on bars-engine, friendcraft or flirtcraft</td><td class="y">Yes, once that repo's merge lands</td><td class="y">Yes. The repo copy wins because it is newer.</td></tr>
+<tr><td>A Claude Code session already open before the merge</td><td class="p">Not until it has the merged files: pull main, then run <code>/reload-skills</code>, or start a new session</td><td class="y">Yes</td></tr>
+<tr><td>Claude Code on root-game, emotional-first-aid or any other repo</td><td class="n">No</td><td class="y">Yes</td></tr>
+<tr><td>An ordinary claude.ai chat or Project</td><td class="n">No</td><td class="y">Yes</td></tr>
+<tr><td>The desktop app and the mobile app, signed in</td><td class="n">No</td><td class="y">Yes</td></tr>
+<tr><td>The board</td><td class="y">Yes, anywhere you are signed in</td><td class="y">Yes</td></tr>
+</table></div>
+<p class="src">Sources: code.claude.com/docs/en/skills, code.claude.com/docs/en/claude-code-on-the-web, claude.com/docs/skills/overview. A cloud session loads skills from the repo it cloned, plus skills enabled on your claude.ai account. It never loads personal skills from a computer.</p>
+
+<h2>Making it reach everywhere</h2>
+<h3>Now: upload the skill to your account</h3>
+<p>The package is attached in chat as <code>six-faces-skill.zip</code>. Upload it at claude.ai, under Settings, then Customize, then Skills. It holds a copy of the skill written for places with no repo, plus today's <code>faces.yaml</code>. Without a repo, a pass ends with a short record block that a repo session pastes into the ledger later.</p>
+<p><b>The catch is that the upload is a snapshot.</b> When a face gains a lesson, the uploaded copy does not change. Rebuild the zip with <code>python3 council/package_skill.py</code> and upload it again. The snapshot date sits inside the package, so a pass can say how old its lessons are.</p>
+<h3>Later: a connector, if the snapshot becomes a problem</h3>
+<p>A connector added at claude.ai, under Settings, then Customize, then Connectors, reaches chats, the desktop app and Claude Code, and it reads the live files. It needs a server on a public web address with sign-in. The first pass deferred it until a second person needs the council. It is also the fix if re-uploading feels like a chore.</p>
+
+<h2>What a Claude mod would add</h2>
+<p>A mod is a plugin that runs inside Claude Code itself. It can add commands, draw panels, watch what Claude does, and register agent types. For the council it could do six jobs.</p>
+<ul>
+<li><b>A <code>/six</code> command</b> that starts a pass, and <code>/terms</code> for a term pass.</li>
+<li><b>Six real agents.</b> Each face becomes its own agent type with its own prompt and its own model. Running the Challenger on a different model from the other five is the published fix for faces sharing one blind spot.</li>
+<li><b>The board as a side panel</b> beside the conversation, so you flip and answer without leaving.</li>
+<li><b>A line above the prompt</b> that says when questions are waiting for you, such as <i>2 questions on the board</i>.</li>
+<li><b>Lessons in every session.</b> The faces' lessons would be added to Claude's instructions automatically, even when you never call the six.</li>
+<li><b>A guard on the definition file</b> that refuses edits to <code>faces.yaml</code> unless they come from your ruling.</li>
+</ul>
+<p><b>The limit matters for how you work.</b> A mod runs in Claude Code on your own computer: the terminal, the desktop app's Code tab, or an editor. Cloud sessions at claude.ai/code, where this conversation runs, do not load plugins from a computer or from a repo's settings. An organization admin can provision them for everyone. So a mod would help most if you start using Claude Code locally. For the web sessions you use now, the uploaded skill does the job.</p>
+<p class="src">Sources: the Claude Code mod guide in this session, code.claude.com/docs/en/plugins/install.</p>

@@ -60,7 +60,7 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
 </style>
 
 <h1>Council Board</h1>
-<p class="lede">The six faces' positions from passes one and two and from the research you steered, 2026-10-02, the cause categories you named, and the first term pass. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
+<p class="lede">The six faces' positions from passes one and two and from the research you steered, 2026-10-02, the cause categories you named, the first term pass, and the council's first real case: flirtcraft's failing deploys. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
 
 <div class="banner" id="banner">This view cannot save. Your flips and steers stay on screen only.</div>
 
@@ -71,7 +71,7 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
   <div class="ctl" style="margin-top:8px"><button class="save" id="ctx-save">Save context</button><div class="state" id="ctx-state"></div></div>
 </div>
 
-<div class="strip" id="strip"><span><b id="n-stand">10</b> stand</span><span><b id="n-over">0</b> overruled</span><span><b id="n-steer">0</b> steered</span><span><b id="n-auto">4</b> answered without you</span><span><b id="n-q">1</b> question for you</span><span><b id="n-t">13</b> terms</span></div>
+<div class="strip" id="strip"><span><b id="n-stand">10</b> stand</span><span><b id="n-over">0</b> overruled</span><span><b id="n-steer">0</b> steered</span><span><b id="n-auto">4</b> answered without you</span><span><b id="n-q">2</b> questions for you</span><span><b id="n-t">13</b> terms</span></div>
 
 <h2 id="qh" style="margin-top:28px">Questions only you can answer</h2>
 <p class="lede">Each one passed the reach test: its face could not answer it from the record, your answer changes what gets built, and it carries options with their consequences.</p>
@@ -140,7 +140,16 @@ const POSITIONS = [
   why:'A claim of novelty with no citations is the Muhani tell. Source: RESEARCH §6.'},
  {id:'verify',faces:['regent'],pass:'research',auto:true,
   pos:'Every quotation in the research note came through a search index because the container could not open pages. None of it goes into a book, a wiki or a public page until the linked page has been opened and the quote checked.',
-  why:'The interview-material rule’s spirit: an unchecked quote is not a quote. Source: RESEARCH, header.'}
+  why:'The interview-material rule’s spirit: an unchecked quote is not a quote. Source: RESEARCH, header.'},
+ {id:'fc-build-generate',faces:['architect','challenger'],pass:'flirtcraft',auto:true,
+  pos:'Flirtcraft’s build runs prisma generate before next build. Vercel’s npm blocks Prisma’s install script, so the client was never generated and every deploy since Sept 12 failed the type check.',
+  why:'Reproduced exactly with install scripts blocked, and fixed in the same copy: build, type check and tests pass. Source: flirtcraft 6FACE_PASS1_2026-10-02.md E3, E4.'},
+ {id:'fc-door-shut',faces:['regent','shaman'],pass:'flirtcraft',auto:true,
+  pos:'The fix sets nothing. The paywall stays off unless FLIRTCRAFT_PAYWALL=1, and no founding grant runs while its dates are unset. Fixing the build and launching stay two separate acts.',
+  why:'lib/door.ts was built so a deploy changes nothing for a visitor until you decide; your launch decisions in checklist section 7 are still open.'},
+ {id:'fc-silent-failure',faces:['challenger'],pass:'flirtcraft',auto:true,
+  pos:'A failed production deploy should notify someone. Three weeks of failures went unheard. This is a proposal and nothing is built for it yet.',
+  why:'Every production and preview build since Sept 12 failed with no alert. Source: Vercel deployment list.'}
 ];
 const QUESTIONS = [
  {id:'sage-authority',faces:['sage','regent'],
@@ -151,6 +160,15 @@ const QUESTIONS = [
    {v:'synthesise',label:'Synthesise only',c:'More reaches you when the five split. The ladder risk from the research is gone, because no face outranks another.'},
    {v:'rule',label:'Sage rules, you can overrule',c:'Fewer splits reach you. The Sage becomes the top rung, which the research warns turns lenses back into a ladder, so the Sage must name every face it overrode.'},
    {v:'owner',label:'The owning face rules, Sage records',c:'The face whose domain the question is in decides, as the Regent did on Kickstarter ruling 6. Splits across domains still reach you.'}
+  ]},
+ {id:'flirtcraft-deploy',faces:['regent','diplomat'],
+  q:'Flirtcraft: when should production take the 50 commits merged since the last live build on Aug 31? The build fix is proven and waits as pull request #2.',
+  why_you:'This session cannot see which settings production has (Vercel refused the request), and where the database lives is still item 0 of the launch checklist. Whether strangers see the new intake now is your call.',
+  not_before:'The build never got far enough to make it a question. Every deploy since Sept 12 failed.',
+  options:[
+   {v:'merge-now',label:'Merge now',c:'The site updates today with the paywall off. Anything needing the database fails until DATABASE_URL and the email settings exist, including the last step of the intake.'},
+   {v:'merge-after-settings',label:'Merge after I confirm the settings',c:'You check Vercel for the variables in checklist section 5, then I merge. The intake works end to end on day one.'},
+   {v:'hold',label:'Hold until checklist sections 0 to 5 are done',c:'The live site stays at Aug 31. The fix waits, proven, on its branch.'}
   ]}
 ];
 const CAUSES = [
