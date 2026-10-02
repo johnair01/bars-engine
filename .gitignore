@@ -122,3 +122,6 @@ chatgpt_repo_snapshot_*/
 
 # Generated Gumroad/marketing image exports (reproducible via scripts/render-gumroad.mjs)
 gumroad-exports/
+
+# built skill packages (rebuild with python3 council/package_skill.py)
+council/dist/

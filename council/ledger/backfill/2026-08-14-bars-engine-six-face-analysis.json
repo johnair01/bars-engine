@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-six-face-analysis",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Six-Face Analysis: Asset Management, BAR Upload, Walkable Sprites",
+  "title": "Six-Face Analysis: Asset Management, BAR Upload, Walkable Sprites",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/SIX_FACE_ANALYSIS.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-gap-analysis-gm-faces",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "Golden Path Onboarding + Action Loop v0 \u2014 Gap Analysis with Game Master Faces",
+  "title": "Golden Path Onboarding + Action Loop v0 \u2014 Gap Analysis with Game Master Faces",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/golden-path-onboarding-action-loop/GAP_ANALYSIS_GM_FACES.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

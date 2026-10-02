@@ -1,0 +1,19 @@
+{
+  "id": "2026-03-14-bars-engine-conclave-analysis-20260314",
+  "date": "2026-03-14",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Conclave Docs Analysis \u2014 2026-03-14",
+  "title": "Conclave Docs Analysis \u2014 2026-03-14",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/plans/conclave-analysis-20260314.md",
+  "faces_present": [],
+  "face_count": 0,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

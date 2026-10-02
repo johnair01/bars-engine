@@ -1,0 +1,21 @@
+{
+  "id": "2026-08-14-bars-engine-interview-and-gm-consult",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Interview & Game Master Consult \u2014 Lobby-Centric Path Map",
+  "title": "Interview & Game Master Consult \u2014 Lobby-Centric Path Map",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/game-map-path-generation-audit/INTERVIEW_AND_GM_CONSULT.md",
+  "faces_present": [
+    "architect"
+  ],
+  "face_count": 1,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

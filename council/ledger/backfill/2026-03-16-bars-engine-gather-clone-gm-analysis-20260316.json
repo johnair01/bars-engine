@@ -1,0 +1,19 @@
+{
+  "id": "2026-03-16-bars-engine-gather-clone-gm-analysis-20260316",
+  "date": "2026-03-16",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Gather-Clone GM Analysis \u2014 2026-03-16",
+  "title": "Gather-Clone GM Analysis \u2014 2026-03-16",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/plans/gather-clone-gm-analysis-20260316.md",
+  "faces_present": [],
+  "face_count": 0,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

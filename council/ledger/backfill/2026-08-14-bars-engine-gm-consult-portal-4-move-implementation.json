@@ -1,0 +1,25 @@
+{
+  "id": "2026-08-14-bars-engine-gm-consult-portal-4-move-implementation",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Game Master Consult \u2014 Portal \u2192 4-Move Implementation Plan",
+  "title": "Game Master Consult \u2014 Portal \u2192 4-Move Implementation Plan",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/game-map-path-generation-audit/GM_CONSULT_PORTAL_4_MOVE_IMPLEMENTATION.md",
+  "faces_present": [
+    "shaman",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 5,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

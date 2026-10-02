@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-six-faces-plan",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "incident-reliability",
+  "cause_source": "backfill-heuristic",
+  "question": "Six Faces Plan: Production DB Connection Incident",
+  "title": "Six Faces Plan: Production DB Connection Incident",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/production-db-connection-incident/SIX_FACES_PLAN.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

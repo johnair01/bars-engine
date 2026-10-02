@@ -1,0 +1,19 @@
+{
+  "id": "2026-03-24-bars-engine-strand-output",
+  "date": "2026-03-24",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "Strand output \u2014 player-facing CYOA generator",
+  "title": "Strand output \u2014 player-facing CYOA generator",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/player-facing-cyoa-generator/STRAND_OUTPUT.md",
+  "faces_present": [],
+  "face_count": 0,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

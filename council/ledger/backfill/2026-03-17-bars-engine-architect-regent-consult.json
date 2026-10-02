@@ -1,0 +1,23 @@
+{
+  "id": "2026-03-17-bars-engine-architect-regent-consult",
+  "date": "2026-03-17",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Architect & Regent Consultation \u2014 Strand System",
+  "title": "Architect & Regent Consultation \u2014 Strand System",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/strand-system-bars/ARCHITECT_REGENT_CONSULT.md",
+  "faces_present": [
+    "regent",
+    "architect",
+    "sage"
+  ],
+  "face_count": 3,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

@@ -1,0 +1,366 @@
+<title>Council Board</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: one column of ruling rows, each a ledger line the owner can flip; summary strip above, context box first. */
+:root{
+  --bg:#f6f5f1; --fg:#1d1f1e; --muted:#5d625f; --line:#d9d8d1; --panel:#ffffff;
+  --accent:#1f6f6a; --accent-ink:#ffffff; --warn:#9a4b1e; --warn-bg:#f8e9df;
+  --f-shaman:#8b3a8f; --f-challenger:#b3331f; --f-regent:#a9741a; --f-architect:#c9681b; --f-diplomat:#2f7a3b; --f-sage:#1f6f6a;
+  --display:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#17191a; --fg:#ece9e1; --muted:#a4a8a3; --line:#33373a; --panel:#1f2224;
+  --accent:#5fc2ba; --accent-ink:#0f1a19; --warn:#e8a06e; --warn-bg:#3a2a1f; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#17191a; --fg:#ece9e1; --muted:#a4a8a3; --line:#33373a; --panel:#1f2224;
+  --accent:#5fc2ba; --accent-ink:#0f1a19; --warn:#e8a06e; --warn-bg:#3a2a1f; color-scheme:dark; }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.5;padding-block:24px 48px;padding-inline:16px;max-width:860px;margin:0 auto}
+h1{font-family:var(--display);font-weight:600;font-size:1.9rem;margin:0 0 6px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:500;font-size:1.15rem;margin:0 0 8px}
+p{margin:0 0 10px;max-width:68ch}
+.lede{color:var(--muted)}
+.strip{display:flex;flex-wrap:wrap;gap:8px 20px;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:18px 0;font-size:.92rem;color:var(--muted)}
+.strip b{color:var(--fg);font-variant-numeric:tabular-nums}
+.banner{display:none;background:var(--warn-bg);color:var(--warn);padding:10px 12px;border-radius:4px;margin-bottom:16px;font-size:.92rem}
+.banner.on{display:block}
+.context{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:28px}
+textarea{width:100%;min-height:72px;font:inherit;font-size:.95rem;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px;resize:vertical}
+textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{padding:18px 0;border-top:1px solid var(--line)}
+.row:last-child{border-bottom:1px solid var(--line)}
+.row.over{box-shadow:inset 4px 0 0 var(--warn);padding-left:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:6px;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.chip{display:inline-block;padding:1px 7px;border-radius:3px;color:#fff;font-weight:600}
+.chip.shaman{background:var(--f-shaman)}.chip.challenger{background:var(--f-challenger)}.chip.regent{background:var(--f-regent)}
+.chip.architect{background:var(--f-architect)}.chip.diplomat{background:var(--f-diplomat)}.chip.sage{background:var(--f-sage)}
+.auto{border:1px solid var(--muted);border-radius:3px;padding:0 6px}
+.pos{font-size:1.02rem;font-weight:500;margin:0 0 6px;max-width:72ch}
+.why{color:var(--muted);font-size:.92rem;margin:0 0 12px;max-width:72ch}
+.why span{font-family:var(--mono);font-size:.8rem}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg{flex-wrap:wrap}
+.seg button{font:inherit;font-size:.9rem;padding:6px 12px;border:0;background:var(--panel);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button.o[aria-pressed="true"]{background:var(--warn);color:#fff}
+.steer{flex:1 1 260px;min-width:0}
+.steer textarea{min-height:44px}
+.save{font:inherit;font-size:.9rem;padding:6px 14px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.save:disabled{opacity:.5;cursor:default}
+.opts{display:grid;gap:8px;margin-top:4px}
+.opt{display:block;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel);cursor:pointer;max-width:72ch}
+.opt:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.opt input{margin-right:6px}
+.oc{color:var(--muted);font-size:.9rem}
+.state{font-size:.82rem;color:var(--muted);margin-top:6px;min-height:1.2em}
+@media (prefers-reduced-motion:no-preference){.row{transition:box-shadow .2s}}
+</style>
+
+<h1>Council Board</h1>
+<p class="lede">The six faces' positions from passes one and two and from the research you steered, 2026-10-02, the cause categories you named, the first term pass, and the council's first real case: flirtcraft's failing deploys. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
+
+<div class="banner" id="banner">This view cannot save. Your flips and steers stay on screen only.</div>
+
+<div class="context">
+  <h2>Context for the agents</h2>
+  <p class="lede">Anything you want every face to carry into the next pass. This is the chat's job, moved here.</p>
+  <textarea id="ctx" placeholder="Extra context or steering for all six faces"></textarea>
+  <div class="ctl" style="margin-top:8px"><button class="save" id="ctx-save">Save context</button><div class="state" id="ctx-state"></div></div>
+</div>
+
+<div class="strip" id="strip"><span><b id="n-stand">10</b> stand</span><span><b id="n-over">0</b> overruled</span><span><b id="n-steer">0</b> steered</span><span><b id="n-auto">4</b> answered without you</span><span><b id="n-q">2</b> questions for you</span><span><b id="n-t">13</b> terms</span></div>
+
+<h2 id="qh" style="margin-top:28px">Questions only you can answer</h2>
+<p class="lede">Each one passed the reach test: its face could not answer it from the record, your answer changes what gets built, and it carries options with their consequences.</p>
+<div id="qrows"></div>
+
+<h2 style="margin-top:32px">Terms</h2>
+<p class="lede">The first term pass, 2026-10-02. Each row is a name the record is already using. The council's recommendation is selected; change it if you disagree. Adopt puts the term in that repo's glossary as proposed, with a decision-log entry. Nothing is locked until you say so.</p>
+<div id="trows"></div>
+
+<h2 style="margin-top:32px">Causes to name</h2>
+<p class="lede">The backfill sorted sixty-six past deliberations into these categories by heuristic. The counts describe the record; they are not targets. Keep a name, or type the one you would use. A blank keeps the proposed name.</p>
+<div id="crows"></div>
+
+<h2 style="margin-top:32px">Positions</h2>
+<div id="rows"></div>
+
+<script>
+const POSITIONS = [
+ {id:'build',faces:['sage'],pass:1,auto:false,
+  pos:'The council is a definition file with a lessons list per face, a skill that convenes a pass and records it, and a stats script. Nothing in Python until a surface needs it.',
+  why:'Five faces converged on it in pass one. The anchor rules out the bars-engine backend because the Claude surfaces you decide in do not have it. Source: 6FACE_PASS1 § Sage.'},
+ {id:'ledger',faces:['architect','regent'],pass:1,auto:false,
+  pos:'One record per repo, beside the decision it belongs to, pointing at the decision-log entry that holds the ruling.',
+  why:'A friendcraft session cannot see bars-engine, so a record there is invisible when needed. A ruling is written once, in the decision log. Source: PASS1 § Architect, § Regent.'},
+ {id:'ceding',faces:['regent','shaman'],pass:1,auto:false,
+  pos:'The run length before a face answers alone stays unset until you set it. A delegated face drafts a ruling; you confirm it with a word.',
+  why:'The Numbers rule in the working rules: no number inferred on your behalf. The Challenger says it is not due until ten rulings exist. Source: PASS1 § Regent, § Shaman.'},
+ {id:'reserved',faces:['regent'],pass:1,auto:false,
+  pos:'Reserved, never delegated: canonical prose, consent and release, money, anything naming a person, and the council’s own definition file.',
+  why:'Four were the spec’s defaults; the fifth the Regent added. Adding to a rule is the Sage’s job rather than a question for you. Source: PASS1 § Regent.'},
+ {id:'model',faces:['architect','challenger'],pass:1,auto:false,
+  pos:'The council runs on whichever Claude you are talking to. The second-model experiment for the Challenger is a note, not a design decision.',
+  why:'Your anchor: the greatest utility is inside your Claude flow. The Challenger: an untested idea stays out of the decisions table. Source: PASS1 § Architect, § Challenger.'},
+ {id:'six',faces:['sage'],pass:1,auto:false,
+  pos:'The altitude six (Shaman, Challenger, Regent, Architect, Diplomat, Sage) are canonical. The doctrine six in specs/doctrine/gm-faces.md become masks the Sage may wear.',
+  why:'Every pass you convened used the altitude six. The record answered it before the faces argued. Source: inventory of 2026-10-02; PASS1 verdicts.'},
+ {id:'outputs',faces:['architect'],pass:2,auto:true,
+  pos:'A pass has two typed outputs: product and questions. A question carries its owner face, options, the consequence of each, and one line on why only you can answer it.',
+  why:'Your brief: questions and interfaceable product are two separate things. Nobody asked you this before because pass one typed them as one. Source: PASS2 § Architect.'},
+ {id:'reach',faces:['sage','regent','challenger'],pass:2,auto:true,
+  pos:'Before a question reaches you, its face answers it from the record with a citation, or says what is missing. It reaches you only when what is missing is your preference or a fact only you hold, and only if your answer changes what gets built.',
+  why:'Your brief: recursive calls to solve constant reaching. Pass one scored zero of six under this test. Not asked before because the test did not exist. Source: PASS2 § Challenger, § Regent.'},
+ {id:'chat',faces:['diplomat'],pass:2,auto:true,
+  pos:'Chat carries context and steering. The pass lives in its file and on this board. The chat reply of a pass is what changed and a link.',
+  why:'Your brief: chat should be for extra context and steering. Source: PASS2 § Diplomat.'},
+ {id:'interface',faces:['architect','shaman'],pass:2,auto:true,
+  pos:'In the Claude flow the interface is a page with a store, like this one. In bars-engine it becomes a CYOA quest later. Rows the council answered without you stay visible here and can be flipped.',
+  why:'The anchor, plus the Shaman’s guard: a hidden auto-answer is a silent decision. Source: PASS2 § Architect, § Shaman.'},
+ {id:'colours',faces:['regent','architect'],pass:'research',auto:true,
+  pos:'The definition file names altitudes in Wilber’s 2006 scheme (Magenta, Amber, Teal) and says so. The Blue in the agents package docstring is Beck and Cowan’s 1996 name for the same level and is corrected to Amber.',
+  why:'game-master-sects.md already rules Amber canonical. The research confirms Blue and Amber are one level, Graves D-Q. Source: RESEARCH §1.'},
+ {id:'torbert',faces:['diplomat','regent'],pass:'research',auto:true,
+  pos:'The council never cites Torbert’s Diplomat for its own. Torbert’s Diplomat is the conformist logic at Amber; the council’s Diplomat is Green and corresponds to Torbert’s Individualist.',
+  why:'A fact about two published models, not a preference. Source: RESEARCH §3.'},
+ {id:'standing',faces:['challenger','shaman'],pass:'research',auto:true,
+  pos:'The definition file says what the model stands on: Graves’s data was never replicated, no validated instrument places a person at a level, Cowan doubted the tier break, and the Mean Green Meme was invented to shame Green. The levels are lenses on a question and never a rating of a person.',
+  why:'The §2c test in the working rules, applied to the theory itself. Source: RESEARCH §4.'},
+ {id:'lens',faces:['sage','shaman'],pass:'research',auto:true,
+  pos:'Each face’s entry states what it sees that later levels lose. The Sage’s synthesis must carry every face’s contribution or name which it dropped.',
+  why:'Beck and Cowan: no vMEME is better than another. Wilber: a stage transcended by dissociation becomes an allergy. Source: RESEARCH §5.'},
+ {id:'dissent',faces:['challenger','sage'],pass:'research',auto:true,
+  pos:'Seats get stated, unequal agreeableness, with the Challenger set to disagree. Anonymised verdicts go to the Sage before synthesis. A second model backbone per seat is an experiment recorded in the ledger, not a rule.',
+  why:'Pass six’s blind-sector finding is in the literature, with two mitigations named: mixed agreeableness across roles and anonymised authorship. Source: RESEARCH §6.'},
+ {id:'kin',faces:['diplomat'],pass:'research',auto:true,
+  pos:'The definition file cites the nearest kin, Six Thinking Hats agents, llm-council and the Stanford playbook paper, so the claim that nothing combines worldview seats with per-seat lessons from a human’s rulings stays checkable.',
+  why:'A claim of novelty with no citations is the Muhani tell. Source: RESEARCH §6.'},
+ {id:'verify',faces:['regent'],pass:'research',auto:true,
+  pos:'Every quotation in the research note came through a search index because the container could not open pages. None of it goes into a book, a wiki or a public page until the linked page has been opened and the quote checked.',
+  why:'The interview-material rule’s spirit: an unchecked quote is not a quote. Source: RESEARCH, header.'},
+ {id:'fc-build-generate',faces:['architect','challenger'],pass:'flirtcraft',auto:true,
+  pos:'Flirtcraft’s build runs prisma generate before next build. Vercel’s npm blocks Prisma’s install script, so the client was never generated and every deploy since Sept 12 failed the type check.',
+  why:'Reproduced exactly with install scripts blocked, and fixed in the same copy: build, type check and tests pass. Source: flirtcraft 6FACE_PASS1_2026-10-02.md E3, E4.'},
+ {id:'fc-door-shut',faces:['regent','shaman'],pass:'flirtcraft',auto:true,
+  pos:'The fix sets nothing. The paywall stays off unless FLIRTCRAFT_PAYWALL=1, and no founding grant runs while its dates are unset. Fixing the build and launching stay two separate acts.',
+  why:'lib/door.ts was built so a deploy changes nothing for a visitor until you decide; your launch decisions in checklist section 7 are still open.'},
+ {id:'fc-silent-failure',faces:['challenger'],pass:'flirtcraft',auto:true,
+  pos:'A failed production deploy should notify someone. Three weeks of failures went unheard. This is a proposal and nothing is built for it yet.',
+  why:'Every production and preview build since Sept 12 failed with no alert. Source: Vercel deployment list.'}
+];
+const QUESTIONS = [
+ {id:'sage-authority',faces:['sage','regent'],
+  q:'May the Sage rule on a non-reserved question when the five disagree, or does the Sage only synthesise and carry the dissent to you?',
+  why_you:'The record holds both answers. Pass one’s header says the Sage rules; the Regent in the same pass quoted the earlier ruling that the Sage does not overturn the Regent. Only your preference settles it, and the skill’s Sage step is built differently either way.',
+  not_before:'Nobody asked because every pass so far ended for you to rule, so the Sage’s authority was never exercised.',
+  options:[
+   {v:'synthesise',label:'Synthesise only',c:'More reaches you when the five split. The ladder risk from the research is gone, because no face outranks another.'},
+   {v:'rule',label:'Sage rules, you can overrule',c:'Fewer splits reach you. The Sage becomes the top rung, which the research warns turns lenses back into a ladder, so the Sage must name every face it overrode.'},
+   {v:'owner',label:'The owning face rules, Sage records',c:'The face whose domain the question is in decides, as the Regent did on Kickstarter ruling 6. Splits across domains still reach you.'}
+  ]},
+ {id:'flirtcraft-deploy',faces:['regent','diplomat'],
+  q:'Flirtcraft: when should production take the 50 commits merged since the last live build on Aug 31? The build fix is proven and waits as pull request #2.',
+  why_you:'This session cannot see which settings production has (Vercel refused the request), and where the database lives is still item 0 of the launch checklist. Whether strangers see the new intake now is your call.',
+  not_before:'The build never got far enough to make it a question. Every deploy since Sept 12 failed.',
+  options:[
+   {v:'merge-now',label:'Merge now',c:'The site updates today with the paywall off. Anything needing the database fails until DATABASE_URL and the email settings exist, including the last step of the intake.'},
+   {v:'merge-after-settings',label:'Merge after I confirm the settings',c:'You check Vercel for the variables in checklist section 5, then I merge. The intake works end to end on day one.'},
+   {v:'hold',label:'Hold until checklist sections 0 to 5 are done',c:'The live site stays at Aug 31. The fix waits, proven, on its branch.'}
+  ]}
+];
+const CAUSES = [
+ {id:'feature-design',count:34,desc:'A consult that stress-tests a feature before it is built. Most of the March 2026 strand batch.'},
+ {id:'spec-review',count:15,desc:'A six-face read or gap analysis of an existing spec or design brief.'},
+ {id:'incident-reliability',count:4,desc:'A production incident or a recurring build or schema failure.'},
+ {id:'book-structure',count:3,desc:'A ruling on the shape of a manuscript: outline, metaphor, voice, what the book is.'},
+ {id:'project-steering',count:2,desc:'What is next. Grades the previous pass and chooses the next move.'},
+ {id:'product-launch',count:2,desc:'Funnel, SKU, launch gate, what the public page promises.'},
+ {id:'product-intake-pricing',count:2,desc:'Intake, paywall, subscription, what a stranger gets before paying.'},
+ {id:'vendor-decision',count:1,desc:'Which service carries a function, with the budget implication.'},
+ {id:'card-schema',count:1,desc:'Whether a field or taxonomy belongs on a card or in a deck.'},
+ {id:'council-design',count:0,desc:'How the council itself is built and run.'},
+ {id:'code-review',count:0,desc:'A ruling on review findings for a change. Seen once, in a commit message, not a document.'}
+];
+const TERMS = [{"id": "the-showing-test", "term": "the showing test", "repo": "friendcraft-manuacript", "whose": "the record, from a rule Wendell accepted", "rec": "adopt", "register": ["product", "council"], "plain": "Anything you write about a person you should be willing to show them.", "eli5": "If you would be embarrassed for your friend to read a note you wrote about them, don't write it.", "usage": "The log field passes the showing test, so a note about Steven is one you could hand him.", "replaces": null, "collisions": [], "why": "Used three times as a rule and never glossed. Passes all six tests.", "flag": null, "source": "canon/DECISION_LOG.md:553"}, {"id": "the-play", "term": "the play", "repo": "friendcraft-manuacript", "whose": "friendcraft canon", "rec": "adopt", "register": ["book", "product"], "plain": "Show Up's output: the move, made at a real person.", "eli5": "The play is the moment you actually text your friend instead of thinking about it.", "usage": "The card names the move; the play is when you send it to Dana.", "replaces": null, "collisions": ["flirtcraft GRAMMAR.md §6: a deck noun that belongs in a reading, never in an instruction"], "why": "Usage rule settles the collision: a reading word in both repos, never inside a move's instruction.", "flag": null, "source": "canon/MOVES.md:331"}, {"id": "integral-homies", "term": "integral homies", "repo": "friendcraft-manuacript", "whose": "Wendell, 2026-08-25", "rec": "adopt", "register": ["council"], "plain": "Wendell's friends from the integral community, who become the demo-practice table of ruling 21.", "eli5": "The friends Wendell plays the practice games with first.", "usage": "Send order: integral homies, then round two, then round one.", "replaces": null, "collisions": [], "why": "His word, twice. A reader cannot check it, so it stays out of the book.", "flag": null, "source": "canon/DECISION_LOG.md:1642"}, {"id": "the-reach-test", "term": "the reach test", "repo": "bars-engine", "whose": "the council, from Wendell's 'constant reaching', 2026-10-02", "rec": "adopt", "register": ["council"], "plain": "The check a question passes before it reaches Wendell: its face cannot answer it from the record with a citation, what is missing is his preference or a fact only he holds, and his answer changes what gets built.", "eli5": "Before asking Wendell something, look it up yourself; only ask if the answer is really his to give.", "usage": "Pass one's six questions scored zero of six on the reach test.", "replaces": null, "collisions": [], "why": "Points at the council's questions, never at Wendell's habits.", "flag": null, "source": ".specify/specs/six-faces-council-agents/6FACE_PASS2_2026-10-02.md"}, {"id": "steer", "term": "steer", "repo": "bars-engine", "whose": "Wendell, 2026-10-02", "rec": "adopt", "register": ["council"], "plain": "Context or direction Wendell gives the agents, in chat or in a board's steer box. On the board, a steer on a face's row becomes that face's lesson.", "eli5": "Steering is telling the helpers which way to go next.", "usage": "His steer on the research row asked for the lineage of the levels.", "replaces": null, "collisions": [], "why": "His word for what chat is for.", "flag": null, "source": "6FACE_PASS2_2026-10-02.md header"}, {"id": "lens-not-ladder", "term": "lens, not ladder", "repo": "bars-engine", "whose": "the research, from Beck and Cowan", "rec": "adopt", "register": ["council"], "plain": "Each face is a viewpoint on a question and never a rank.", "eli5": "The six helpers look at the problem from different windows; none of them is the boss.", "usage": "The Sage synthesises and never rules, because the faces are a lens, not a ladder.", "replaces": null, "collisions": [], "why": "Survives said flatly, and Beck and Cowan hold it up.", "flag": "Diplomat would hold it at not yet because it is quotable; the Challenger's flat test passed.", "source": "RESEARCH_lineage-and-prior-art_2026-10-02.md §5"}, {"id": "non-deference-by-structure", "term": "non-deference by structure", "repo": "friendcraft-manuacript", "whose": "the record", "rec": "not_yet", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": null, "collisions": [], "why": "One paragraph of usage in one entry. Too thin to judge.", "flag": null, "source": "canon/DECISION_LOG.md:1652"}, {"id": "the-projections-shape", "term": "the projection's shape", "repo": "friendcraft-manuacript", "whose": "the record", "rec": "not_yet", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": null, "collisions": [], "why": "One sentence of usage.", "flag": null, "source": "canon/DECISION_LOG.md:1751"}, {"id": "let-yourself-be-carried", "term": "let yourself be carried", "repo": "friendcraft-manuacript", "whose": "friendcraft outline", "rec": "not_a_term", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": null, "collisions": [], "why": "A section title (3.12). It names a chapter, not a mechanic.", "flag": null, "source": "canon/DECISION_LOG.md:242"}, {"id": "reaching-toward", "term": "reaching toward", "repo": "friendcraft-manuacript", "whose": "a session, 2026-08-22", "rec": "retire", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": "the two plain questions in THE_CREW.md", "collisions": [], "why": "No action in it. Wendell had to ask what it meant.", "flag": null, "source": "canon/DECISION_LOG.md:218"}, {"id": "thats-a-crm", "term": "that's a CRM", "repo": "friendcraft-manuacript", "whose": "a session, 2026-08-27", "rec": "retire", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": "sort by your own debt, never by their value", "collisions": [], "why": "A category name doing the work of an argument.", "flag": null, "source": "CLAUDE.md § Guardrails, over-applied"}, {"id": "friendcraft-serves-the-friend", "term": "Friendcraft serves the friend", "repo": "friendcraft-manuacript", "whose": "a session, 2026-08-31", "rec": "retire", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": "serve the relationship (Wendell)", "collisions": [], "why": "Replaced by Wendell's correction one level up.", "flag": null, "source": "CLAUDE.md § Back on Muhani"}, {"id": "generated-invitations-are-corrupting", "term": "generated invitations are corrupting", "repo": "friendcraft-manuacript", "whose": "a session, 2026-08-27", "rec": "retire", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": "teaching the un-hedged ask", "collisions": [], "why": "Plainly false said flatly.", "flag": null, "source": "CLAUDE.md § A fourth variant"}];
+const tstate = {}; TERMS.forEach(t => tstate[t.id] = {action:t.rec, rename:'', steer:''});
+const cstate = {}; CAUSES.forEach(c => cstate[c.id] = {name:'', note:''});
+const qstate = {}; QUESTIONS.forEach(q => qstate[q.id] = {choice:'', steer:''});
+const state = {}; // id -> {status, steer}
+POSITIONS.forEach(p => state[p.id] = {status:'stands', steer:''});
+let db = null, saving = {};
+
+const rowsEl = document.getElementById('rows');
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function build(){
+  rowsEl.innerHTML = POSITIONS.map(p => `
+  <section class="row" id="row-${p.id}">
+    <div class="meta">${p.faces.map(f=>`<span class="chip ${f}">${f}</span>`).join('')}<span>pass ${p.pass}</span>${p.auto?'<span class="auto">answered without you</span>':''}</div>
+    <p class="pos">${esc(p.pos)}</p>
+    <p class="why"><span>why it did not reach you</span> ${esc(p.why)}</p>
+    <div class="ctl">
+      <div class="seg" role="group" aria-label="Status">
+        <button type="button" class="s" data-id="${p.id}" data-v="stands" aria-pressed="true">Stands</button>
+        <button type="button" class="o" data-id="${p.id}" data-v="overrule" aria-pressed="false">Overrule</button>
+      </div>
+      <div class="steer"><textarea id="steer-${p.id}" placeholder="Steer: what the face should carry forward, in your words"></textarea></div>
+      <div><button type="button" class="save" data-save="${p.id}">Save</button><div class="state" id="state-${p.id}"></div></div>
+    </div>
+  </section>`).join('');
+}
+const qEl = document.getElementById('qrows');
+function buildQ(){
+  qEl.innerHTML = QUESTIONS.map(q => `
+  <section class="row" id="q-${q.id}">
+    <div class="meta">${q.faces.map(f=>`<span class="chip ${f}">${f}</span>`).join('')}<span>question</span></div>
+    <p class="pos">${esc(q.q)}</p>
+    <p class="why"><span>why only you</span> ${esc(q.why_you)}</p>
+    <p class="why"><span>why not before</span> ${esc(q.not_before)}</p>
+    <div class="opts">${q.options.map(o => `
+      <label class="opt"><input type="radio" name="q-${q.id}" value="${o.v}" id="q-${q.id}-${o.v}"> <b>${esc(o.label)}</b><br><span class="oc">${esc(o.c)}</span></label>`).join('')}</div>
+    <div class="ctl" style="margin-top:10px">
+      <div class="steer"><textarea id="qsteer-${q.id}" placeholder="Steer, in your words"></textarea></div>
+      <div><button type="button" class="save" data-qsave="${q.id}">Save</button><div class="state" id="qstate-${q.id}"></div></div>
+    </div>
+  </section>`).join('');
+}
+const cEl = document.getElementById('crows');
+function buildC(){
+  cEl.innerHTML = CAUSES.map(c => `
+  <section class="row" id="c-${c.id}">
+    <div class="meta"><span>proposed cause</span><span>${c.count} in the record</span></div>
+    <p class="pos"><code>${esc(c.id)}</code></p>
+    <p class="why">${esc(c.desc)}</p>
+    <div class="ctl">
+      <div class="steer"><input type="text" id="cname-${c.id}" placeholder="Keep, or the name you would use" style="width:100%;font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg)"></div>
+      <div><button type="button" class="save" data-csave="${c.id}">Save</button><div class="state" id="cstate-${c.id}"></div></div>
+    </div>
+  </section>`).join('');
+}
+const tEl = document.getElementById('trows');
+const ACT = [['adopt','Adopt'],['not_yet','Not yet'],['retire','Retire'],['not_a_term','Not a term']];
+const REC = {adopt:'council: adopt', not_yet:'council: not yet', retire:'council: retire', not_a_term:'council: not a term'};
+function buildT(){
+  tEl.innerHTML = TERMS.map(t => `
+  <section class="row" id="t-${t.id}">
+    <div class="meta"><span class="auto">${REC[t.rec]}</span><span>${esc(t.repo)}</span>${(t.register||[]).map(r=>`<span>${esc(r)}</span>`).join('')}</div>
+    <p class="pos"><b>${esc(t.term)}</b>${t.plain?` · ${esc(t.plain)}`:''}</p>
+    ${t.eli5?`<p class="why"><span>plainly</span> ${esc(t.eli5)}</p>`:''}
+    ${t.usage?`<p class="why"><span>in use</span> ${esc(t.usage)}</p>`:''}
+    <p class="why"><span>whose</span> ${esc(t.whose)} · <span>why</span> ${esc(t.why)}${t.replaces?` · <span>replaced by</span> ${esc(t.replaces)}`:''}</p>
+    ${(t.collisions||[]).length?`<p class="why"><span>collides with</span> ${t.collisions.map(esc).join('; ')}</p>`:''}
+    ${t.flag?`<p class="why"><span>split</span> ${esc(t.flag)}</p>`:''}
+    <div class="ctl">
+      <div class="seg" role="group" aria-label="Decision for ${esc(t.term)}">${ACT.map(([v,l])=>`<button type="button" class="${v==='retire'?'o':'s'}" data-tid="${t.id}" data-tv="${v}" aria-pressed="false">${l}</button>`).join('')}</div>
+      <div class="steer"><input type="text" id="tren-${t.id}" placeholder="Rename to (optional)" style="width:100%;font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg);margin-bottom:6px"><textarea id="tsteer-${t.id}" placeholder="Steer: usage, register, or why"></textarea></div>
+      <div><button type="button" class="save" data-tsave="${t.id}">Save</button><div class="state" id="tstate-${t.id}"></div></div>
+    </div>
+  </section>`).join('');
+}
+function paintT(id){
+  const st = tstate[id];
+  document.querySelectorAll(`#t-${id} .seg button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tv===st.action)));
+  const r = document.getElementById('tren-'+id), ta = document.getElementById('tsteer-'+id);
+  if (document.activeElement !== r) r.value = st.rename || '';
+  if (document.activeElement !== ta) ta.value = st.steer || '';
+}
+function paintC(id){ const el = document.getElementById('cname-'+id); if (document.activeElement !== el) el.value = cstate[id].name || ''; }
+function paintQ(id){
+  const s = qstate[id];
+  QUESTIONS.find(q=>q.id===id).options.forEach(o => { const r = document.getElementById('q-'+id+'-'+o.v); if (r) r.checked = (s.choice===o.v); });
+  const ta = document.getElementById('qsteer-'+id);
+  if (document.activeElement !== ta) ta.value = s.steer || '';
+}
+function paint(id){
+  const s = state[id], row = document.getElementById('row-'+id);
+  row.classList.toggle('over', s.status==='overrule');
+  row.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v===s.status)));
+  const ta = document.getElementById('steer-'+id);
+  if (document.activeElement !== ta) ta.value = s.steer || '';
+}
+function counts(){
+  let over=0, steer=0;
+  for (const id in state){ if(state[id].status==='overrule') over++; if((state[id].steer||'').trim()) steer++; }
+  document.getElementById('n-over').textContent = over;
+  document.getElementById('n-stand').textContent = POSITIONS.length - over;
+  document.getElementById('n-steer').textContent = steer;
+}
+build(); buildQ(); buildT(); buildC(); POSITIONS.forEach(p=>paint(p.id)); QUESTIONS.forEach(q=>paintQ(q.id)); CAUSES.forEach(c=>paintC(c.id)); TERMS.forEach(t=>paintT(t.id)); counts();
+document.getElementById('n-t').textContent = TERMS.length;
+tEl.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if(!b) return;
+  if (b.dataset.tv){ tstate[b.dataset.tid].action = b.dataset.tv; paintT(b.dataset.tid); return; }
+  if (!b.dataset.tsave) return;
+  const id = b.dataset.tsave, st = document.getElementById('tstate-'+id);
+  tstate[id].rename = document.getElementById('tren-'+id).value.trim();
+  tstate[id].steer = document.getElementById('tsteer-'+id).value;
+  if (!db){ st.textContent = 'Not saved in this view.'; return; }
+  try { await db.doc('terms/'+id).set({action:tstate[id].action, rename:tstate[id].rename, steer:tstate[id].steer, savedAt:new Date().toISOString()}); st.textContent = 'Saved.'; }
+  catch (err){ st.textContent = 'Could not save (' + (err && err.code || 'error') + ').'; }
+});
+cEl.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-csave]'); if(!b) return;
+  const id = b.dataset.csave, st = document.getElementById('cstate-'+id);
+  cstate[id].name = document.getElementById('cname-'+id).value.trim();
+  if (!db){ st.textContent = 'Not saved in this view.'; return; }
+  try { await db.doc('causes/'+id).set({name: cstate[id].name || id, kept: !cstate[id].name, savedAt:new Date().toISOString()}); st.textContent = 'Saved.'; }
+  catch (err){ st.textContent = 'Could not save (' + (err && err.code || 'error') + ').'; }
+});
+document.getElementById('n-auto').textContent = POSITIONS.filter(p=>p.auto).length;
+document.getElementById('n-q').textContent = QUESTIONS.length;
+qEl.addEventListener('change', e => { const r = e.target; if (r.type==='radio'){ const id = r.name.slice(2); qstate[id].choice = r.value; } });
+qEl.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-qsave]'); if(!b) return;
+  const id = b.dataset.qsave, st = document.getElementById('qstate-'+id);
+  qstate[id].steer = document.getElementById('qsteer-'+id).value;
+  if (!db){ st.textContent = 'Not saved in this view.'; return; }
+  if (!qstate[id].choice && !qstate[id].steer.trim()){ st.textContent = 'Pick an option or write a steer first.'; return; }
+  try { await db.doc('questions/'+id).set({choice:qstate[id].choice, steer:qstate[id].steer, savedAt:new Date().toISOString()}); st.textContent = 'Saved.'; }
+  catch (err){ st.textContent = 'Could not save (' + (err && err.code || 'error') + ').'; }
+});
+
+rowsEl.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if(!b) return;
+  if (b.dataset.v){ state[b.dataset.id].status = b.dataset.v; paint(b.dataset.id); counts(); return; }
+  if (b.dataset.save){ await saveRow(b.dataset.save); }
+});
+async function saveRow(id){
+  state[id].steer = document.getElementById('steer-'+id).value;
+  counts();
+  const st = document.getElementById('state-'+id);
+  if (!db){ st.textContent = 'Not saved in this view.'; return; }
+  if (saving[id]) return; saving[id] = true;
+  try {
+    await db.doc('positions/'+id).set({status:state[id].status, steer:state[id].steer, savedAt:new Date().toISOString(), pass:POSITIONS.find(p=>p.id===id).pass});
+    st.textContent = 'Saved.';
+  } catch (err){ st.textContent = 'Could not save (' + (err && err.code || 'error') + ').'; }
+  saving[id] = false;
+}
+document.getElementById('ctx-save').addEventListener('click', async () => {
+  const st = document.getElementById('ctx-state');
+  if (!db){ st.textContent = 'Not saved in this view.'; return; }
+  try { await db.doc('steer/general').set({text:document.getElementById('ctx').value, savedAt:new Date().toISOString()}); st.textContent = 'Saved.'; }
+  catch (err){ st.textContent = 'Could not save (' + (err && err.code || 'error') + ').'; }
+});
+
+(async () => {
+  db = window.claude && window.claude.use ? await window.claude.use('db') : null;
+  if (!db){ document.getElementById('banner').classList.add('on'); return; }
+  db.collection('positions').onSnapshot(snap => {
+    snap.docs.forEach(d => { if (!d.exists || !state[d.id]) return; const v = d.data(); state[d.id] = {status: v.status==='overrule'?'overrule':'stands', steer: typeof v.steer==='string'?v.steer:''}; paint(d.id); });
+    counts();
+  }, () => {});
+  db.collection('terms').onSnapshot(snap => {
+    snap.docs.forEach(d => { if (!d.exists || !tstate[d.id]) return; const v = d.data(); tstate[d.id] = {action: typeof v.action==='string'?v.action:tstate[d.id].action, rename: typeof v.rename==='string'?v.rename:'', steer: typeof v.steer==='string'?v.steer:''}; paintT(d.id); });
+  }, () => {});
+  db.collection('causes').onSnapshot(snap => {
+    snap.docs.forEach(d => { if (!d.exists || !cstate[d.id]) return; const v = d.data(); cstate[d.id] = {name: v.kept ? '' : (typeof v.name==='string'?v.name:'')}; paintC(d.id); });
+  }, () => {});
+  db.collection('questions').onSnapshot(snap => {
+    snap.docs.forEach(d => { if (!d.exists || !qstate[d.id]) return; const v = d.data(); qstate[d.id] = {choice: typeof v.choice==='string'?v.choice:'', steer: typeof v.steer==='string'?v.steer:''}; paintQ(d.id); });
+  }, () => {});
+  db.doc('steer/general').onSnapshot(d => { const ta = document.getElementById('ctx'); if (d.exists && document.activeElement !== ta) ta.value = (d.data().text || ''); }, () => {});
+})();
+</script>

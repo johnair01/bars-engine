@@ -1,0 +1,42 @@
+# Term registry for this repo. The repo's glossary stays the canon; this file indexes terms the council
+# has harvested or tested, with their state, source and usage. States: harvested, candidate, proposed,
+# locked, not_yet, retired, not_a_term. Only Wendell locks. See council/faces.yaml term_pass.
+# Filled by the term pass of 2026-10-02 (bars-engine 6FACE_PASS3_2026-10-02.md). The board decides
+# what moves from candidate to proposed, and what is retired.
+terms:
+- term: the reach test
+  state: candidate
+  council_recommends: adopt
+  whose: the council, from Wendell's 'constant reaching', 2026-10-02
+  source: .specify/specs/six-faces-council-agents/6FACE_PASS2_2026-10-02.md
+  why: Points at the council's questions, never at Wendell's habits.
+  plain: 'The check a question passes before it reaches Wendell: its face cannot answer it from the record with
+    a citation, what is missing is his preference or a fact only he holds, and his answer changes what gets built.'
+  eli5: Before asking Wendell something, look it up yourself; only ask if the answer is really his to give.
+  usage: Pass one's six questions scored zero of six on the reach test.
+  register:
+  - council
+- term: steer
+  state: candidate
+  council_recommends: adopt
+  whose: Wendell, 2026-10-02
+  source: 6FACE_PASS2_2026-10-02.md header
+  why: His word for what chat is for.
+  plain: Context or direction Wendell gives the agents, in chat or in a board's steer box. On the board, a steer
+    on a face's row becomes that face's lesson.
+  eli5: Steering is telling the helpers which way to go next.
+  usage: His steer on the research row asked for the lineage of the levels.
+  register:
+  - council
+- term: lens, not ladder
+  state: candidate
+  council_recommends: adopt
+  whose: the research, from Beck and Cowan
+  source: RESEARCH_lineage-and-prior-art_2026-10-02.md §5
+  why: Survives said flatly, and Beck and Cowan hold it up.
+  plain: Each face is a viewpoint on a question and never a rank.
+  eli5: The six helpers look at the problem from different windows; none of them is the boss.
+  usage: The Sage synthesises and never rules, because the faces are a lens, not a ladder.
+  flag: Diplomat would hold it at not yet because it is quotable; the Challenger's flat test passed.
+  register:
+  - council

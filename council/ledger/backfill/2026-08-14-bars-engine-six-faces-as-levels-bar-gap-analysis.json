@@ -1,0 +1,19 @@
+{
+  "id": "2026-08-14-bars-engine-six-faces-as-levels-bar-gap-analysis",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "Gap Analysis: Six Faces as Levels \u2014 Expressed as BARs",
+  "title": "Gap Analysis: Six Faces as Levels \u2014 Expressed as BARs",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/golden-path-onboarding-action-loop/SIX_FACES_AS_LEVELS_BAR_GAP_ANALYSIS.md",
+  "faces_present": [],
+  "face_count": 0,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

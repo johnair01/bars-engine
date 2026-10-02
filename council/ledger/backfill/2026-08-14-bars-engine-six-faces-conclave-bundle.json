@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-six-faces-conclave-bundle",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Six Game Master faces \u2014 Construc Conclave (9) bundle",
+  "title": "Six Game Master faces \u2014 Construc Conclave (9) bundle",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": "docs/conclave/construc-conclave-9/SIX_FACES_CONCLAVE_BUNDLE.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

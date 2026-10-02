@@ -3,7 +3,7 @@
 - Architect: Quest generation / strategy (Orange)
 - Challenger: Move proposals / action (Red)
 - Shaman: Emotional alchemy / narrative (Magenta)
-- Regent: Campaign structure / Kotter (Blue)
+- Regent: Campaign structure / Kotter (Amber; Beck and Cowan called this level Blue)
 - Diplomat: Community / onboarding (Green)
 - Sage: Orchestration meta-agent (Teal)
 """

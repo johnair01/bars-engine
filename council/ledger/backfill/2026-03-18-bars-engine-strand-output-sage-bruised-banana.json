@@ -1,0 +1,21 @@
+{
+  "id": "2026-03-18-bars-engine-strand-output-sage-bruised-banana",
+  "date": "2026-03-18",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Sage consult output \u2014 Hub\u2013spoke \u00d7 Bruised Banana runway",
+  "title": "Sage consult output \u2014 Hub\u2013spoke \u00d7 Bruised Banana runway",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/campaign-hub-spoke-landing-architecture/STRAND_OUTPUT_SAGE_BRUISED_BANANA.md",
+  "faces_present": [
+    "sage"
+  ],
+  "face_count": 1,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}
