@@ -49,12 +49,17 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
 .steer textarea{min-height:44px}
 .save{font:inherit;font-size:.9rem;padding:6px 14px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
 .save:disabled{opacity:.5;cursor:default}
+.opts{display:grid;gap:8px;margin-top:4px}
+.opt{display:block;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel);cursor:pointer;max-width:72ch}
+.opt:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.opt input{margin-right:6px}
+.oc{color:var(--muted);font-size:.9rem}
 .state{font-size:.82rem;color:var(--muted);margin-top:6px;min-height:1.2em}
 @media (prefers-reduced-motion:no-preference){.row{transition:box-shadow .2s}}
 </style>
 
 <h1>Council Board</h1>
-<p class="lede">The six faces' positions from passes one and two, 2026-10-02. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
+<p class="lede">The six faces' positions from passes one and two and from the research you steered, 2026-10-02. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
 
 <div class="banner" id="banner">This view cannot save. Your flips and steers stay on screen only.</div>
 
@@ -65,8 +70,13 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
   <div class="ctl" style="margin-top:8px"><button class="save" id="ctx-save">Save context</button><div class="state" id="ctx-state"></div></div>
 </div>
 
-<div class="strip" id="strip"><span><b id="n-stand">10</b> stand</span><span><b id="n-over">0</b> overruled</span><span><b id="n-steer">0</b> steered</span><span><b id="n-auto">4</b> answered without you</span></div>
+<div class="strip" id="strip"><span><b id="n-stand">10</b> stand</span><span><b id="n-over">0</b> overruled</span><span><b id="n-steer">0</b> steered</span><span><b id="n-auto">4</b> answered without you</span><span><b id="n-q">1</b> question for you</span></div>
 
+<h2 id="qh" style="margin-top:28px">Questions only you can answer</h2>
+<p class="lede">Each one passed the reach test: its face could not answer it from the record, your answer changes what gets built, and it carries options with their consequences.</p>
+<div id="qrows"></div>
+
+<h2 style="margin-top:32px">Positions</h2>
 <div id="rows"></div>
 
 <script>
@@ -100,8 +110,41 @@ const POSITIONS = [
   why:'Your brief: chat should be for extra context and steering. Source: PASS2 § Diplomat.'},
  {id:'interface',faces:['architect','shaman'],pass:2,auto:true,
   pos:'In the Claude flow the interface is a page with a store, like this one. In bars-engine it becomes a CYOA quest later. Rows the council answered without you stay visible here and can be flipped.',
-  why:'The anchor, plus the Shaman’s guard: a hidden auto-answer is a silent decision. Source: PASS2 § Architect, § Shaman.'}
+  why:'The anchor, plus the Shaman’s guard: a hidden auto-answer is a silent decision. Source: PASS2 § Architect, § Shaman.'},
+ {id:'colours',faces:['regent','architect'],pass:'research',auto:true,
+  pos:'The definition file names altitudes in Wilber’s 2006 scheme (Magenta, Amber, Teal) and says so. The Blue in the agents package docstring is Beck and Cowan’s 1996 name for the same level and is corrected to Amber.',
+  why:'game-master-sects.md already rules Amber canonical. The research confirms Blue and Amber are one level, Graves D-Q. Source: RESEARCH §1.'},
+ {id:'torbert',faces:['diplomat','regent'],pass:'research',auto:true,
+  pos:'The council never cites Torbert’s Diplomat for its own. Torbert’s Diplomat is the conformist logic at Amber; the council’s Diplomat is Green and corresponds to Torbert’s Individualist.',
+  why:'A fact about two published models, not a preference. Source: RESEARCH §3.'},
+ {id:'standing',faces:['challenger','shaman'],pass:'research',auto:true,
+  pos:'The definition file says what the model stands on: Graves’s data was never replicated, no validated instrument places a person at a level, Cowan doubted the tier break, and the Mean Green Meme was invented to shame Green. The levels are lenses on a question and never a rating of a person.',
+  why:'The §2c test in the working rules, applied to the theory itself. Source: RESEARCH §4.'},
+ {id:'lens',faces:['sage','shaman'],pass:'research',auto:true,
+  pos:'Each face’s entry states what it sees that later levels lose. The Sage’s synthesis must carry every face’s contribution or name which it dropped.',
+  why:'Beck and Cowan: no vMEME is better than another. Wilber: a stage transcended by dissociation becomes an allergy. Source: RESEARCH §5.'},
+ {id:'dissent',faces:['challenger','sage'],pass:'research',auto:true,
+  pos:'Seats get stated, unequal agreeableness, with the Challenger set to disagree. Anonymised verdicts go to the Sage before synthesis. A second model backbone per seat is an experiment recorded in the ledger, not a rule.',
+  why:'Pass six’s blind-sector finding is in the literature, with two mitigations named: mixed agreeableness across roles and anonymised authorship. Source: RESEARCH §6.'},
+ {id:'kin',faces:['diplomat'],pass:'research',auto:true,
+  pos:'The definition file cites the nearest kin, Six Thinking Hats agents, llm-council and the Stanford playbook paper, so the claim that nothing combines worldview seats with per-seat lessons from a human’s rulings stays checkable.',
+  why:'A claim of novelty with no citations is the Muhani tell. Source: RESEARCH §6.'},
+ {id:'verify',faces:['regent'],pass:'research',auto:true,
+  pos:'Every quotation in the research note came through a search index because the container could not open pages. None of it goes into a book, a wiki or a public page until the linked page has been opened and the quote checked.',
+  why:'The interview-material rule’s spirit: an unchecked quote is not a quote. Source: RESEARCH, header.'}
 ];
+const QUESTIONS = [
+ {id:'sage-authority',faces:['sage','regent'],
+  q:'May the Sage rule on a non-reserved question when the five disagree, or does the Sage only synthesise and carry the dissent to you?',
+  why_you:'The record holds both answers. Pass one’s header says the Sage rules; the Regent in the same pass quoted the earlier ruling that the Sage does not overturn the Regent. Only your preference settles it, and the skill’s Sage step is built differently either way.',
+  not_before:'Nobody asked because every pass so far ended for you to rule, so the Sage’s authority was never exercised.',
+  options:[
+   {v:'synthesise',label:'Synthesise only',c:'More reaches you when the five split. The ladder risk from the research is gone, because no face outranks another.'},
+   {v:'rule',label:'Sage rules, you can overrule',c:'Fewer splits reach you. The Sage becomes the top rung, which the research warns turns lenses back into a ladder, so the Sage must name every face it overrode.'},
+   {v:'owner',label:'The owning face rules, Sage records',c:'The face whose domain the question is in decides, as the Regent did on Kickstarter ruling 6. Splits across domains still reach you.'}
+  ]}
+];
+const qstate = {}; QUESTIONS.forEach(q => qstate[q.id] = {choice:'', steer:''});
 const state = {}; // id -> {status, steer}
 POSITIONS.forEach(p => state[p.id] = {status:'stands', steer:''});
 let db = null, saving = {};
@@ -124,6 +167,28 @@ function build(){
     </div>
   </section>`).join('');
 }
+const qEl = document.getElementById('qrows');
+function buildQ(){
+  qEl.innerHTML = QUESTIONS.map(q => `
+  <section class="row" id="q-${q.id}">
+    <div class="meta">${q.faces.map(f=>`<span class="chip ${f}">${f}</span>`).join('')}<span>question</span></div>
+    <p class="pos">${esc(q.q)}</p>
+    <p class="why"><span>why only you</span> ${esc(q.why_you)}</p>
+    <p class="why"><span>why not before</span> ${esc(q.not_before)}</p>
+    <div class="opts">${q.options.map(o => `
+      <label class="opt"><input type="radio" name="q-${q.id}" value="${o.v}" id="q-${q.id}-${o.v}"> <b>${esc(o.label)}</b><br><span class="oc">${esc(o.c)}</span></label>`).join('')}</div>
+    <div class="ctl" style="margin-top:10px">
+      <div class="steer"><textarea id="qsteer-${q.id}" placeholder="Steer, in your words"></textarea></div>
+      <div><button type="button" class="save" data-qsave="${q.id}">Save</button><div class="state" id="qstate-${q.id}"></div></div>
+    </div>
+  </section>`).join('');
+}
+function paintQ(id){
+  const s = qstate[id];
+  QUESTIONS.find(q=>q.id===id).options.forEach(o => { const r = document.getElementById('q-'+id+'-'+o.v); if (r) r.checked = (s.choice===o.v); });
+  const ta = document.getElementById('qsteer-'+id);
+  if (document.activeElement !== ta) ta.value = s.steer || '';
+}
 function paint(id){
   const s = state[id], row = document.getElementById('row-'+id);
   row.classList.toggle('over', s.status==='overrule');
@@ -138,7 +203,19 @@ function counts(){
   document.getElementById('n-stand').textContent = POSITIONS.length - over;
   document.getElementById('n-steer').textContent = steer;
 }
-build(); POSITIONS.forEach(p=>paint(p.id)); counts();
+build(); buildQ(); POSITIONS.forEach(p=>paint(p.id)); QUESTIONS.forEach(q=>paintQ(q.id)); counts();
+document.getElementById('n-auto').textContent = POSITIONS.filter(p=>p.auto).length;
+document.getElementById('n-q').textContent = QUESTIONS.length;
+qEl.addEventListener('change', e => { const r = e.target; if (r.type==='radio'){ const id = r.name.slice(2); qstate[id].choice = r.value; } });
+qEl.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-qsave]'); if(!b) return;
+  const id = b.dataset.qsave, st = document.getElementById('qstate-'+id);
+  qstate[id].steer = document.getElementById('qsteer-'+id).value;
+  if (!db){ st.textContent = 'Not saved in this view.'; return; }
+  if (!qstate[id].choice && !qstate[id].steer.trim()){ st.textContent = 'Pick an option or write a steer first.'; return; }
+  try { await db.doc('questions/'+id).set({choice:qstate[id].choice, steer:qstate[id].steer, savedAt:new Date().toISOString()}); st.textContent = 'Saved.'; }
+  catch (err){ st.textContent = 'Could not save (' + (err && err.code || 'error') + ').'; }
+});
 
 rowsEl.addEventListener('click', async e => {
   const b = e.target.closest('button'); if(!b) return;
@@ -170,6 +247,9 @@ document.getElementById('ctx-save').addEventListener('click', async () => {
   db.collection('positions').onSnapshot(snap => {
     snap.docs.forEach(d => { if (!d.exists || !state[d.id]) return; const v = d.data(); state[d.id] = {status: v.status==='overrule'?'overrule':'stands', steer: typeof v.steer==='string'?v.steer:''}; paint(d.id); });
     counts();
+  }, () => {});
+  db.collection('questions').onSnapshot(snap => {
+    snap.docs.forEach(d => { if (!d.exists || !qstate[d.id]) return; const v = d.data(); qstate[d.id] = {choice: typeof v.choice==='string'?v.choice:'', steer: typeof v.steer==='string'?v.steer:''}; paintQ(d.id); });
   }, () => {});
   db.doc('steer/general').onSnapshot(d => { const ta = document.getElementById('ctx'); if (d.exists && document.activeElement !== ta) ta.value = (d.data().text || ''); }, () => {});
 })();
