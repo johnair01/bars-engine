@@ -1,0 +1,9 @@
+# Repos that carry the six-faces council. council/install.py adds to this list.
+# stats.py --remote and collect_lessons.py read the ledgers of every repo named here.
+home: johnair01/bars-engine
+repos:
+  - johnair01/bars-engine
+  - wendell-britt/friendcraft-manuacript
+  - wendell-britt/flirtcraft
+  - wendell-britt/root-game
+  - wendell-britt/emotional-first-aid

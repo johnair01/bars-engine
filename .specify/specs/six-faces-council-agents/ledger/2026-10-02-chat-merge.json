@@ -1,0 +1,18 @@
+{
+  "id": "2026-10-02-bars-engine-chat-merge",
+  "date": "2026-10-02",
+  "project": "bars-engine",
+  "cause": "council-design",
+  "question": "When should the five waiting branches merge?",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "questions": {"merge-branches": {"choice": "all-now", "ruled_in": "chat", "words": "Ok let's merge the 5 branches"}},
+  "acted_on": [
+    "wendell-britt/friendcraft-manuacript#20 merged",
+    "wendell-britt/flirtcraft#3 merged",
+    "wendell-britt/root-game#1 merged",
+    "wendell-britt/emotional-first-aid#3 merged",
+    "johnair01/bars-engine#254 merges when its check passes"
+  ],
+  "note": "Answered in chat rather than on the board; the board records it as resolved. The home question stays open."
+}

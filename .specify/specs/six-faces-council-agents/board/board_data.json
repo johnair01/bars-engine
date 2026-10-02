@@ -1,0 +1,909 @@
+{
+ "updated": "2026-10-02",
+ "positions": [
+  {
+   "id": "build",
+   "faces": [
+    "sage"
+   ],
+   "pass": 1,
+   "auto": false,
+   "pos": "The council is a definition file with a lessons list per face, a skill that convenes a pass and records it, and a stats script. Nothing in Python until a surface needs it.",
+   "why": "Five faces converged on it in pass one. The anchor rules out the bars-engine backend because the Claude surfaces you decide in do not have it. Source: 6FACE_PASS1 § Sage."
+  },
+  {
+   "id": "ledger",
+   "faces": [
+    "architect",
+    "regent"
+   ],
+   "pass": 1,
+   "auto": false,
+   "pos": "One record per repo, beside the decision it belongs to, pointing at the decision-log entry that holds the ruling.",
+   "why": "A friendcraft session cannot see bars-engine, so a record there is invisible when needed. A ruling is written once, in the decision log. Source: PASS1 § Architect, § Regent."
+  },
+  {
+   "id": "ceding",
+   "faces": [
+    "regent",
+    "shaman"
+   ],
+   "pass": 1,
+   "auto": false,
+   "pos": "The run length before a face answers alone stays unset until you set it. A delegated face drafts a ruling; you confirm it with a word.",
+   "why": "The Numbers rule in the working rules: no number inferred on your behalf. The Challenger says it is not due until ten rulings exist. Source: PASS1 § Regent, § Shaman."
+  },
+  {
+   "id": "reserved",
+   "faces": [
+    "regent"
+   ],
+   "pass": 1,
+   "auto": false,
+   "pos": "Reserved, never delegated: canonical prose, consent and release, money, anything naming a person, and the council’s own definition file.",
+   "why": "Four were the spec’s defaults; the fifth the Regent added. Adding to a rule is the Sage’s job rather than a question for you. Source: PASS1 § Regent."
+  },
+  {
+   "id": "model",
+   "faces": [
+    "architect",
+    "challenger"
+   ],
+   "pass": 1,
+   "auto": false,
+   "pos": "The council runs on whichever Claude you are talking to. The second-model experiment for the Challenger is a note, not a design decision.",
+   "why": "Your anchor: the greatest utility is inside your Claude flow. The Challenger: an untested idea stays out of the decisions table. Source: PASS1 § Architect, § Challenger."
+  },
+  {
+   "id": "six",
+   "faces": [
+    "sage"
+   ],
+   "pass": 1,
+   "auto": false,
+   "pos": "The altitude six (Shaman, Challenger, Regent, Architect, Diplomat, Sage) are canonical. The doctrine six in specs/doctrine/gm-faces.md become masks the Sage may wear.",
+   "why": "Every pass you convened used the altitude six. The record answered it before the faces argued. Source: inventory of 2026-10-02; PASS1 verdicts."
+  },
+  {
+   "id": "outputs",
+   "faces": [
+    "architect"
+   ],
+   "pass": 2,
+   "auto": true,
+   "pos": "A pass has two typed outputs: product and questions. A question carries its owner face, options, the consequence of each, and one line on why only you can answer it.",
+   "why": "Your brief: questions and interfaceable product are two separate things. Nobody asked you this before because pass one typed them as one. Source: PASS2 § Architect."
+  },
+  {
+   "id": "reach",
+   "faces": [
+    "sage",
+    "regent",
+    "challenger"
+   ],
+   "pass": 2,
+   "auto": true,
+   "pos": "Before a question reaches you, its face answers it from the record with a citation, or says what is missing. It reaches you only when what is missing is your preference or a fact only you hold, and only if your answer changes what gets built.",
+   "why": "Your brief: recursive calls to solve constant reaching. Pass one scored zero of six under this test. Not asked before because the test did not exist. Source: PASS2 § Challenger, § Regent."
+  },
+  {
+   "id": "chat",
+   "faces": [
+    "diplomat"
+   ],
+   "pass": 2,
+   "auto": true,
+   "pos": "Chat carries context and steering. The pass lives in its file and on this board. The chat reply of a pass is what changed and a link.",
+   "why": "Your brief: chat should be for extra context and steering. Source: PASS2 § Diplomat."
+  },
+  {
+   "id": "interface",
+   "faces": [
+    "architect",
+    "shaman"
+   ],
+   "pass": 2,
+   "auto": true,
+   "pos": "In the Claude flow the interface is a page with a store, like this one. In bars-engine it becomes a CYOA quest later. Rows the council answered without you stay visible here and can be flipped.",
+   "why": "The anchor, plus the Shaman’s guard: a hidden auto-answer is a silent decision. Source: PASS2 § Architect, § Shaman."
+  },
+  {
+   "id": "colours",
+   "faces": [
+    "regent",
+    "architect"
+   ],
+   "pass": "research",
+   "auto": true,
+   "pos": "The definition file names altitudes in Wilber’s 2006 scheme (Magenta, Amber, Teal) and says so. The Blue in the agents package docstring is Beck and Cowan’s 1996 name for the same level and is corrected to Amber.",
+   "why": "game-master-sects.md already rules Amber canonical. The research confirms Blue and Amber are one level, Graves D-Q. Source: RESEARCH §1."
+  },
+  {
+   "id": "torbert",
+   "faces": [
+    "diplomat",
+    "regent"
+   ],
+   "pass": "research",
+   "auto": true,
+   "pos": "The council never cites Torbert’s Diplomat for its own. Torbert’s Diplomat is the conformist logic at Amber; the council’s Diplomat is Green and corresponds to Torbert’s Individualist.",
+   "why": "A fact about two published models, not a preference. Source: RESEARCH §3."
+  },
+  {
+   "id": "standing",
+   "faces": [
+    "challenger",
+    "shaman"
+   ],
+   "pass": "research",
+   "auto": true,
+   "pos": "The definition file says what the model stands on: Graves’s data was never replicated, no validated instrument places a person at a level, Cowan doubted the tier break, and the Mean Green Meme was invented to shame Green. The levels are lenses on a question and never a rating of a person.",
+   "why": "The §2c test in the working rules, applied to the theory itself. Source: RESEARCH §4."
+  },
+  {
+   "id": "lens",
+   "faces": [
+    "sage",
+    "shaman"
+   ],
+   "pass": "research",
+   "auto": true,
+   "pos": "Each face’s entry states what it sees that later levels lose. The Sage’s synthesis must carry every face’s contribution or name which it dropped.",
+   "why": "Beck and Cowan: no vMEME is better than another. Wilber: a stage transcended by dissociation becomes an allergy. Source: RESEARCH §5."
+  },
+  {
+   "id": "dissent",
+   "faces": [
+    "challenger",
+    "sage"
+   ],
+   "pass": "research",
+   "auto": true,
+   "pos": "Seats get stated, unequal agreeableness, with the Challenger set to disagree. Anonymised verdicts go to the Sage before synthesis. A second model backbone per seat is an experiment recorded in the ledger, not a rule.",
+   "why": "Pass six’s blind-sector finding is in the literature, with two mitigations named: mixed agreeableness across roles and anonymised authorship. Source: RESEARCH §6."
+  },
+  {
+   "id": "kin",
+   "faces": [
+    "diplomat"
+   ],
+   "pass": "research",
+   "auto": true,
+   "pos": "The definition file cites the nearest kin, Six Thinking Hats agents, llm-council and the Stanford playbook paper, so the claim that nothing combines worldview seats with per-seat lessons from a human’s rulings stays checkable.",
+   "why": "A claim of novelty with no citations is the Muhani tell. Source: RESEARCH §6."
+  },
+  {
+   "id": "verify",
+   "faces": [
+    "regent"
+   ],
+   "pass": "research",
+   "auto": true,
+   "pos": "Every quotation in the research note came through a search index because the container could not open pages. None of it goes into a book, a wiki or a public page until the linked page has been opened and the quote checked.",
+   "why": "The interview-material rule’s spirit: an unchecked quote is not a quote. Source: RESEARCH, header."
+  },
+  {
+   "id": "fc-build-generate",
+   "faces": [
+    "architect",
+    "challenger"
+   ],
+   "pass": "flirtcraft",
+   "auto": true,
+   "pos": "Flirtcraft’s build runs prisma generate before next build. Vercel’s npm blocks Prisma’s install script, so the client was never generated and every deploy since Sept 12 failed the type check.",
+   "why": "Reproduced exactly with install scripts blocked, and fixed in the same copy: build, type check and tests pass. Source: flirtcraft 6FACE_PASS1_2026-10-02.md E3, E4."
+  },
+  {
+   "id": "fc-door-shut",
+   "faces": [
+    "regent",
+    "shaman"
+   ],
+   "pass": "flirtcraft",
+   "auto": true,
+   "pos": "The fix sets nothing. The paywall stays off unless FLIRTCRAFT_PAYWALL=1, and no founding grant runs while its dates are unset. Fixing the build and launching stay two separate acts.",
+   "why": "lib/door.ts was built so a deploy changes nothing for a visitor until you decide; your launch decisions in checklist section 7 are still open."
+  },
+  {
+   "id": "fc-silent-failure",
+   "faces": [
+    "challenger"
+   ],
+   "pass": "flirtcraft",
+   "auto": true,
+   "pos": "A failed production deploy should notify someone. Three weeks of failures went unheard. This is a proposal and nothing is built for it yet.",
+   "why": "Every production and preview build since Sept 12 failed with no alert. Source: Vercel deployment list."
+  },
+  {
+   "id": "x-one-home",
+   "faces": [
+    "architect",
+    "challenger"
+   ],
+   "pass": "4",
+   "auto": true,
+   "pos": "One home repo. Every other repo pulls the definition file and the skill from it when a session opens, and the session is told whether its copy is current, updated, or local because GitHub was unreachable.",
+   "why": "All five repos are public and cloud sessions run start-up hooks. Tested in a repo that never had the council, a brand-new repo, the home repo, and with GitHub unreachable. Source: 6FACE_PASS4_2026-10-02.md"
+  },
+  {
+   "id": "x-lessons-home",
+   "faces": [
+    "regent",
+    "challenger"
+   ],
+   "pass": "4",
+   "auto": true,
+   "pos": "Lessons and lens changes are written at home only. A lesson recorded in another repo goes under lessons_pending in that repo's record, and a script at home finds it.",
+   "why": "Pass one: the definition file has one author's history; two writers would fork it. Tested by recording a lesson in root-game and finding it from home. Source: 6FACE_PASS4_2026-10-02.md"
+  },
+  {
+   "id": "x-records-local",
+   "faces": [
+    "regent"
+   ],
+   "pass": "4",
+   "auto": true,
+   "pos": "Ledgers, term registries and glossaries never sync. They stay in the repo whose decision they record. Stats can still count every repo's records over GitHub.",
+   "why": "Pass one ruled records live where the decision is. Remote stats read 69 records across the five repos. Source: 6FACE_PASS4_2026-10-02.md"
+  },
+  {
+   "id": "x-install",
+   "faces": [
+    "diplomat"
+   ],
+   "pass": "4",
+   "auto": true,
+   "pos": "Any repo, new or existing, gets the council with one command run at home, which also adds it to the list of council repos.",
+   "why": "Run on root-game, emotional-first-aid and a brand-new repo; its first run caught a repo whose ignore rules would have hidden the hook. Source: 6FACE_PASS4_2026-10-02.md"
+  }
+ ],
+ "questions": [
+  {
+   "id": "sage-authority",
+   "faces": [
+    "sage",
+    "regent"
+   ],
+   "q": "May the Sage rule on a non-reserved question when the five disagree, or does the Sage only synthesise and carry the dissent to you?",
+   "why_you": "The record holds both answers. Pass one’s header says the Sage rules; the Regent in the same pass quoted the earlier ruling that the Sage does not overturn the Regent. Only your preference settles it, and the skill’s Sage step is built differently either way.",
+   "not_before": "Nobody asked because every pass so far ended for you to rule, so the Sage’s authority was never exercised.",
+   "options": [
+    {
+     "v": "synthesise",
+     "label": "Synthesise only",
+     "c": "More reaches you when the five split. The ladder risk from the research is gone, because no face outranks another."
+    },
+    {
+     "v": "rule",
+     "label": "Sage rules, you can overrule",
+     "c": "Fewer splits reach you. The Sage becomes the top rung, which the research warns turns lenses back into a ladder, so the Sage must name every face it overrode."
+    },
+    {
+     "v": "owner",
+     "label": "The owning face rules, Sage records",
+     "c": "The face whose domain the question is in decides, as the Regent did on Kickstarter ruling 6. Splits across domains still reach you."
+    }
+   ]
+  },
+  {
+   "id": "flirtcraft-deploy",
+   "faces": [
+    "regent",
+    "diplomat"
+   ],
+   "q": "Flirtcraft: when should production take the 50 commits merged since the last live build on Aug 31? The build fix is proven and waits as pull request #2.",
+   "why_you": "This session cannot see which settings production has (Vercel refused the request), and where the database lives is still item 0 of the launch checklist. Whether strangers see the new intake now is your call.",
+   "not_before": "The build never got far enough to make it a question. Every deploy since Sept 12 failed.",
+   "options": [
+    {
+     "v": "merge-now",
+     "label": "Merge now",
+     "c": "The site updates today with the paywall off. Anything needing the database fails until DATABASE_URL and the email settings exist, including the last step of the intake."
+    },
+    {
+     "v": "merge-after-settings",
+     "label": "Merge after I confirm the settings",
+     "c": "You check Vercel for the variables in checklist section 5, then I merge. The intake works end to end on day one."
+    },
+    {
+     "v": "hold",
+     "label": "Hold until checklist sections 0 to 5 are done",
+     "c": "The live site stays at Aug 31. The fix waits, proven, on its branch."
+    }
+   ]
+  },
+  {
+   "id": "council-home",
+   "faces": [
+    "architect",
+    "regent"
+   ],
+   "q": "Where should the council's home live? Every repo pulls the shared files from it, and lessons are written there.",
+   "why_you": "It is a question of ownership: bars-engine belongs to johnair01 and is a game app, while the council serves all your projects. Creating a new repo is yours to approve.",
+   "not_before": "The home was implicit until the sync made it a single named place.",
+   "options": [
+    {
+     "v": "bars-engine",
+     "label": "Keep bars-engine",
+     "c": "Nothing moves. The council keeps living beside the game code, in a repo you share with johnair01."
+    },
+    {
+     "v": "new-repo",
+     "label": "A new public repo of its own, such as wendell-britt/six-faces-council",
+     "c": "I create it, copy the council in, and change one line in each repo. Your projects then depend on a repo only you own."
+    },
+    {
+     "v": "friendcraft",
+     "label": "friendcraft-manuacript",
+     "c": "The repo with the most passes and the decision log becomes home. It mixes the council into a book repo."
+    }
+   ]
+  },
+  {
+   "id": "merge-branches",
+   "faces": [
+    "regent",
+    "challenger"
+   ],
+   "q": "When should the five waiting branches merge? They hold today's board, term and sync work, and the council install for root-game and emotional-first-aid.",
+   "why_you": "Merging changes the main branch of five repos, and friendcraft's includes glossary and decision-log text.",
+   "not_before": "You merged the first batch by saying so in chat; this batch has been waiting since.",
+   "options": [
+    {
+     "v": "all-now",
+     "label": "Merge all five now",
+     "c": "New sessions everywhere get the sync, the skill rules, and the glossary changes. bars-engine merges after its check passes."
+    },
+    {
+     "v": "home-first",
+     "label": "Home first, then the rest",
+     "c": "bars-engine merges, I confirm a repo syncs from its main branch, then the other four merge."
+    },
+    {
+     "v": "hold",
+     "label": "Hold",
+     "c": "Nothing changes on any main branch until you say."
+    }
+   ]
+  }
+ ],
+ "causes": [
+  {
+   "id": "feature-design",
+   "count": 34,
+   "desc": "A consult that stress-tests a feature before it is built. Most of the March 2026 strand batch."
+  },
+  {
+   "id": "spec-review",
+   "count": 15,
+   "desc": "A six-face read or gap analysis of an existing spec or design brief."
+  },
+  {
+   "id": "incident-reliability",
+   "count": 4,
+   "desc": "A production incident or a recurring build or schema failure."
+  },
+  {
+   "id": "book-structure",
+   "count": 3,
+   "desc": "A ruling on the shape of a manuscript: outline, metaphor, voice, what the book is."
+  },
+  {
+   "id": "project-steering",
+   "count": 2,
+   "desc": "What is next. Grades the previous pass and chooses the next move."
+  },
+  {
+   "id": "product-launch",
+   "count": 2,
+   "desc": "Funnel, SKU, launch gate, what the public page promises."
+  },
+  {
+   "id": "product-intake-pricing",
+   "count": 2,
+   "desc": "Intake, paywall, subscription, what a stranger gets before paying."
+  },
+  {
+   "id": "vendor-decision",
+   "count": 1,
+   "desc": "Which service carries a function, with the budget implication."
+  },
+  {
+   "id": "card-schema",
+   "count": 1,
+   "desc": "Whether a field or taxonomy belongs on a card or in a deck."
+  },
+  {
+   "id": "council-design",
+   "count": 0,
+   "desc": "How the council itself is built and run."
+  },
+  {
+   "id": "code-review",
+   "count": 0,
+   "desc": "A ruling on review findings for a change. Seen once, in a commit message, not a document."
+  }
+ ],
+ "terms": [
+  {
+   "id": "the-showing-test",
+   "term": "the showing test",
+   "repo": "friendcraft-manuacript",
+   "whose": "the record, from a rule Wendell accepted",
+   "rec": "adopt",
+   "register": [
+    "product",
+    "council"
+   ],
+   "plain": "Anything you write about a person you should be willing to show them.",
+   "eli5": "If you would be embarrassed for your friend to read a note you wrote about them, don't write it.",
+   "usage": "The log field passes the showing test, so a note about Steven is one you could hand him.",
+   "replaces": null,
+   "collisions": [],
+   "why": "Used three times as a rule and never glossed. Passes all six tests.",
+   "flag": null,
+   "source": "canon/DECISION_LOG.md:553"
+  },
+  {
+   "id": "the-play",
+   "term": "the play",
+   "repo": "friendcraft-manuacript",
+   "whose": "friendcraft canon",
+   "rec": "adopt",
+   "register": [
+    "book",
+    "product"
+   ],
+   "plain": "Show Up's output: the move, made at a real person.",
+   "eli5": "The play is the moment you actually text your friend instead of thinking about it.",
+   "usage": "The card names the move; the play is when you send it to Dana.",
+   "replaces": null,
+   "collisions": [
+    "flirtcraft GRAMMAR.md §6: a deck noun that belongs in a reading, never in an instruction"
+   ],
+   "why": "Usage rule settles the collision: a reading word in both repos, never inside a move's instruction.",
+   "flag": null,
+   "source": "canon/MOVES.md:331"
+  },
+  {
+   "id": "integral-homies",
+   "term": "integral homies",
+   "repo": "friendcraft-manuacript",
+   "whose": "Wendell, 2026-08-25",
+   "rec": "adopt",
+   "register": [
+    "council"
+   ],
+   "plain": "Wendell's friends from the integral community, who become the demo-practice table of ruling 21.",
+   "eli5": "The friends Wendell plays the practice games with first.",
+   "usage": "Send order: integral homies, then round two, then round one.",
+   "replaces": null,
+   "collisions": [],
+   "why": "His word, twice. A reader cannot check it, so it stays out of the book.",
+   "flag": null,
+   "source": "canon/DECISION_LOG.md:1642"
+  },
+  {
+   "id": "the-reach-test",
+   "term": "the reach test",
+   "repo": "bars-engine",
+   "whose": "the council, from Wendell's 'constant reaching', 2026-10-02",
+   "rec": "adopt",
+   "register": [
+    "council"
+   ],
+   "plain": "The check a question passes before it reaches Wendell: its face cannot answer it from the record with a citation, what is missing is his preference or a fact only he holds, and his answer changes what gets built.",
+   "eli5": "Before asking Wendell something, look it up yourself; only ask if the answer is really his to give.",
+   "usage": "Pass one's six questions scored zero of six on the reach test.",
+   "replaces": null,
+   "collisions": [],
+   "why": "Points at the council's questions, never at Wendell's habits.",
+   "flag": null,
+   "source": ".specify/specs/six-faces-council-agents/6FACE_PASS2_2026-10-02.md"
+  },
+  {
+   "id": "steer",
+   "term": "steer",
+   "repo": "bars-engine",
+   "whose": "Wendell, 2026-10-02",
+   "rec": "adopt",
+   "register": [
+    "council"
+   ],
+   "plain": "Context or direction Wendell gives the agents, in chat or in a board's steer box. On the board, a steer on a face's row becomes that face's lesson.",
+   "eli5": "Steering is telling the helpers which way to go next.",
+   "usage": "His steer on the research row asked for the lineage of the levels.",
+   "replaces": null,
+   "collisions": [],
+   "why": "His word for what chat is for.",
+   "flag": null,
+   "source": "6FACE_PASS2_2026-10-02.md header"
+  },
+  {
+   "id": "lens-not-ladder",
+   "term": "lens, not ladder",
+   "repo": "bars-engine",
+   "whose": "the research, from Beck and Cowan",
+   "rec": "adopt",
+   "register": [
+    "council"
+   ],
+   "plain": "Each face is a viewpoint on a question and never a rank.",
+   "eli5": "The six helpers look at the problem from different windows; none of them is the boss.",
+   "usage": "The Sage synthesises and never rules, because the faces are a lens, not a ladder.",
+   "replaces": null,
+   "collisions": [],
+   "why": "Survives said flatly, and Beck and Cowan hold it up.",
+   "flag": "Diplomat would hold it at not yet because it is quotable; the Challenger's flat test passed.",
+   "source": "RESEARCH_lineage-and-prior-art_2026-10-02.md §5"
+  },
+  {
+   "id": "non-deference-by-structure",
+   "term": "non-deference by structure",
+   "repo": "friendcraft-manuacript",
+   "whose": "the record",
+   "rec": "not_yet",
+   "register": [],
+   "plain": "",
+   "eli5": "",
+   "usage": "",
+   "replaces": null,
+   "collisions": [],
+   "why": "One paragraph of usage in one entry. Too thin to judge.",
+   "flag": null,
+   "source": "canon/DECISION_LOG.md:1652"
+  },
+  {
+   "id": "the-projections-shape",
+   "term": "the projection's shape",
+   "repo": "friendcraft-manuacript",
+   "whose": "the record",
+   "rec": "not_yet",
+   "register": [],
+   "plain": "",
+   "eli5": "",
+   "usage": "",
+   "replaces": null,
+   "collisions": [],
+   "why": "One sentence of usage.",
+   "flag": null,
+   "source": "canon/DECISION_LOG.md:1751"
+  },
+  {
+   "id": "let-yourself-be-carried",
+   "term": "let yourself be carried",
+   "repo": "friendcraft-manuacript",
+   "whose": "friendcraft outline",
+   "rec": "not_a_term",
+   "register": [],
+   "plain": "",
+   "eli5": "",
+   "usage": "",
+   "replaces": null,
+   "collisions": [],
+   "why": "A section title (3.12). It names a chapter, not a mechanic.",
+   "flag": null,
+   "source": "canon/DECISION_LOG.md:242"
+  },
+  {
+   "id": "reaching-toward",
+   "term": "reaching toward",
+   "repo": "friendcraft-manuacript",
+   "whose": "a session, 2026-08-22",
+   "rec": "retire",
+   "register": [],
+   "plain": "",
+   "eli5": "",
+   "usage": "",
+   "replaces": "the two plain questions in THE_CREW.md",
+   "collisions": [],
+   "why": "No action in it. Wendell had to ask what it meant.",
+   "flag": null,
+   "source": "canon/DECISION_LOG.md:218"
+  },
+  {
+   "id": "thats-a-crm",
+   "term": "that's a CRM",
+   "repo": "friendcraft-manuacript",
+   "whose": "a session, 2026-08-27",
+   "rec": "retire",
+   "register": [],
+   "plain": "",
+   "eli5": "",
+   "usage": "",
+   "replaces": "sort by your own debt, never by their value",
+   "collisions": [],
+   "why": "A category name doing the work of an argument.",
+   "flag": null,
+   "source": "CLAUDE.md § Guardrails, over-applied"
+  },
+  {
+   "id": "friendcraft-serves-the-friend",
+   "term": "Friendcraft serves the friend",
+   "repo": "friendcraft-manuacript",
+   "whose": "a session, 2026-08-31",
+   "rec": "retire",
+   "register": [],
+   "plain": "",
+   "eli5": "",
+   "usage": "",
+   "replaces": "serve the relationship (Wendell)",
+   "collisions": [],
+   "why": "Replaced by Wendell's correction one level up.",
+   "flag": null,
+   "source": "CLAUDE.md § Back on Muhani"
+  },
+  {
+   "id": "generated-invitations-are-corrupting",
+   "term": "generated invitations are corrupting",
+   "repo": "friendcraft-manuacript",
+   "whose": "a session, 2026-08-27",
+   "rec": "retire",
+   "register": [],
+   "plain": "",
+   "eli5": "",
+   "usage": "",
+   "replaces": "teaching the un-hedged ask",
+   "collisions": [],
+   "why": "Plainly false said flatly.",
+   "flag": null,
+   "source": "CLAUDE.md § A fourth variant"
+  }
+ ],
+ "resolved": {
+  "positions": {
+   "build": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "ledger": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "ceding": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "reserved": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "model": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "six": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "outputs": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "reach": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "chat": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "interface": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-1.json"
+   },
+   "colours": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "torbert": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "standing": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "lens": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "dissent": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "kin": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "verify": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "fc-build-generate": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "fc-door-shut": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "fc-silent-failure": {
+    "decision": "stands",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   }
+  },
+  "questions": {
+   "sage-authority": {
+    "decision": "synthesise",
+    "label": "Synthesise only",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "flirtcraft-deploy": {
+    "decision": "merge-now",
+    "label": "Merge now (merged as 0986d5e)",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-5.json"
+   },
+   "merge-branches": {
+    "decision": "all-now",
+    "label": "Merge all five now (said in chat)",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-chat-merge.json"
+   }
+  },
+  "causes": {
+   "feature-design": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "spec-review": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "incident-reliability": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "book-structure": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "project-steering": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "product-launch": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "product-intake-pricing": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "vendor-decision": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "card-schema": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "council-design": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   },
+   "code-review": {
+    "decision": "kept",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-3.json"
+   }
+  },
+  "terms": {
+   "the-play": {
+    "decision": "adopt",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "the-reach-test": {
+    "decision": "adopt",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "steer": {
+    "decision": "adopt",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "lens-not-ladder": {
+    "decision": "adopt",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "reaching-toward": {
+    "decision": "retire",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "thats-a-crm": {
+    "decision": "retire",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "friendcraft-serves-the-friend": {
+    "decision": "retire",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "generated-invitations-are-corrupting": {
+    "decision": "retire",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "non-deference-by-structure": {
+    "decision": "not_yet",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "the-projections-shape": {
+    "decision": "not_yet",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "let-yourself-be-carried": {
+    "decision": "not_a_term",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "the-showing-test": {
+    "decision": "adopt",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-5.json"
+   },
+   "integral-homies": {
+    "decision": "not_yet",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-5.json"
+   }
+  }
+ },
+ "steers_recorded": [
+  {
+   "text": "Do research on the developmental levels the faces are built off of. Spiral dynamics and integral theory and see if there are any projects that also use agents in this way",
+   "savedAt": "2026-10-02T16:20:19.620Z",
+   "record": "ledger/2026-10-02-board-read-1.json"
+  }
+ ],
+ "steer_recorded_through": "2026-10-02T16:20:19.620Z"
+}

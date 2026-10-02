@@ -38,9 +38,14 @@ the board.
 
 - The pass is a file: `6FACE_PASS<n>_<date>.md` beside the subject it concerns (a spec folder, or
   `preproduction/` in friendcraft).
-- Positions and questions go to the board, the artifact page whose source is
-  `.specify/specs/six-faces-council-agents/council-board.html` in bars-engine, so Wendell flips and
-  steers there. Publish it to the same URL the ledger records carry.
+- Positions, questions and terms go to the board, so Wendell flips, answers and steers there. The
+  board's top page holds only unresolved work; everything decided moves to its Resolved view (Wendell,
+  2026-10-02). Add rows to `.specify/specs/six-faces-council-agents/board/board_data.json` in
+  bars-engine, run `python3 board/build_board.py` from that folder, and publish `council-board.html`
+  to the same URL the ledger records carry.
+- When a board read is recorded in the ledger, add each decided item to `resolved` in
+  `board_data.json` with its decision and the ledger file, rebuild, and republish. A saved but
+  unrecorded item already shows as resolved and waiting to be recorded.
 - A record goes in this repo's `council/ledger/` as JSON, in the shape of bars-engine's
   `.specify/specs/six-faces-council-agents/ledger/*.json`. `council/stats.py` in bars-engine reads
   every sibling repo's ledger; `council/lockstep.py` checks this file and `faces.yaml` match across repos.
@@ -52,6 +57,23 @@ Read the store with `ArtifactData`: collections `positions`, `questions`, and th
 `steer/general`. Write a ledger record. An overrule or a steer on a face's row becomes a lesson in
 that face's entry in `faces.yaml`, quoted, with the source. A ruling that changes a term, a
 structure or a date goes in the repo's decision log where one exists.
+
+## One home, every repo
+
+The council has one home: the repo named in `council/source.txt`, today `johnair01/bars-engine`.
+Every other repo pulls `council/faces.yaml` and this skill from home when a session starts, through
+`council/hooks/council-sync.sh`. The hook's first line in the session says whether the copy is
+current, updated, or local because GitHub was unreachable. Commit synced files with the next change.
+
+- **Lessons and lens changes are written at home only.** In another repo, record a new lesson in
+  that repo's ledger record under `lessons_pending`, with the face, Wendell's exact words, the
+  lesson, the date and the source. `python3 council/collect_lessons.py` at home lists every pending
+  lesson across the registered repos, and folding one in is a reviewed edit there.
+- **Ledgers, term registries and glossaries stay in the repo they belong to.** The hook never
+  touches them. `python3 council/stats.py --remote` at home counts every registered repo's records
+  over GitHub.
+- **A repo without the council gets it with** `python3 council/install.py <path>` run at home. That
+  adds it to `council/repos.yaml`. Commit the new files in the target and merge them.
 
 ## The term pass
 

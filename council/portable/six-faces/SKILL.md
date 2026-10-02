@@ -15,8 +15,10 @@ Read `faces.yaml` beside this file. It holds each face's altitude, lens, what it
 sees that later levels lose, its term test, and its lessons. The lessons are Wendell's words from
 past rulings, and each face carries them into its argument. Do not restate a lens from memory.
 
-The bundled `faces.yaml` is a snapshot, dated in `snapshot.txt`. If Wendell has ruled since, his
-newer words win over the snapshot.
+The bundled `faces.yaml` is a snapshot, dated in `snapshot.txt`. Where you can fetch a web address,
+read the current copy first from
+`https://raw.githubusercontent.com/johnair01/bars-engine/main/council/faces.yaml` and say which copy
+the pass used. If Wendell has ruled since either copy, his newer words win.
 
 ## The shape of a pass
 
@@ -43,7 +45,8 @@ with options, the consequence of each, why only he can answer, and why it was no
 
 Wendell works in interfaces more than in chat. Chat is for context and steering.
 
-- Put the pass in an artifact page, with positions he can flip and questions he can answer.
+- Put the pass in an artifact page, with positions he can flip and questions he can answer. The
+  page's first view holds only unresolved work; decided items move to a second, resolved view.
 - End the chat reply with what changed and the link.
 - Close with a short **record block**: the date, the question, each face's one-line verdict, and his
   ruling once he gives it. A repo session pastes it into a ledger later. A ruling or steer in his own

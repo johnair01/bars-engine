@@ -1,0 +1,20 @@
+{
+  "id": "2026-10-02-bars-engine-board-read-5",
+  "date": "2026-10-02",
+  "project": "bars-engine",
+  "cause": "council-design",
+  "question": "The last two terms, and when flirtcraft production takes the 50 commits",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "source": "https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho",
+  "terms": {"the showing test": "adopt", "integral homies": "not_yet"},
+  "questions": {"flirtcraft-deploy": {"choice": "merge-now", "saved_at": "2026-10-02T20:56:59Z"}},
+  "acted_on": [
+    "wendell-britt/flirtcraft#2 merged as 0986d5e on his ruling",
+    "friendcraft canon/GLOSSARY.md: the showing test under Proposed; DECISION_LOG.md entry of 2026-10-02 amended"
+  ],
+  "overruled": [],
+  "steers": {},
+  "lessons": {},
+  "note": "Every item the board carried is now resolved."
+}

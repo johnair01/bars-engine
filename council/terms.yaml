@@ -5,7 +5,7 @@
 # what moves from candidate to proposed, and what is retired.
 terms:
 - term: the reach test
-  state: candidate
+  state: proposed
   council_recommends: adopt
   whose: the council, from Wendell's 'constant reaching', 2026-10-02
   source: .specify/specs/six-faces-council-agents/6FACE_PASS2_2026-10-02.md
@@ -16,8 +16,10 @@ terms:
   usage: Pass one's six questions scored zero of six on the reach test.
   register:
   - council
+  ruling: 'Wendell, council board, 2026-10-02: proposed.'
+  glossary: none; council register. This registry is the record. Only Wendell locks.
 - term: steer
-  state: candidate
+  state: proposed
   council_recommends: adopt
   whose: Wendell, 2026-10-02
   source: 6FACE_PASS2_2026-10-02.md header
@@ -28,8 +30,10 @@ terms:
   usage: His steer on the research row asked for the lineage of the levels.
   register:
   - council
+  ruling: 'Wendell, council board, 2026-10-02: proposed.'
+  glossary: none; council register. This registry is the record. Only Wendell locks.
 - term: lens, not ladder
-  state: candidate
+  state: proposed
   council_recommends: adopt
   whose: the research, from Beck and Cowan
   source: RESEARCH_lineage-and-prior-art_2026-10-02.md §5
@@ -40,3 +44,5 @@ terms:
   flag: Diplomat would hold it at not yet because it is quotable; the Challenger's flat test passed.
   register:
   - council
+  ruling: 'Wendell, council board, 2026-10-02: proposed.'
+  glossary: none; council register. This registry is the record. Only Wendell locks.
