@@ -765,6 +765,12 @@
     "label": "Merge now (merged as 0986d5e)",
     "recorded": "2026-10-02",
     "record": "ledger/2026-10-02-board-read-5.json"
+   },
+   "merge-branches": {
+    "decision": "all-now",
+    "label": "Merge all five now (said in chat)",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-chat-merge.json"
    }
   },
   "causes": {
