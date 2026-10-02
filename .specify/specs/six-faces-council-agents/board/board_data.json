@@ -663,6 +663,12 @@
     "label": "Synthesise only",
     "recorded": "2026-10-02",
     "record": "ledger/2026-10-02-board-read-2.json"
+   },
+   "flirtcraft-deploy": {
+    "decision": "merge-now",
+    "label": "Merge now (merged as 0986d5e)",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-5.json"
    }
   },
   "causes": {
@@ -777,6 +783,16 @@
     "decision": "not_a_term",
     "recorded": "2026-10-02",
     "record": "ledger/2026-10-02-board-read-4.json"
+   },
+   "the-showing-test": {
+    "decision": "adopt",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-5.json"
+   },
+   "integral-homies": {
+    "decision": "not_yet",
+    "recorded": "2026-10-02",
+    "record": "ledger/2026-10-02-board-read-5.json"
    }
   }
  },
