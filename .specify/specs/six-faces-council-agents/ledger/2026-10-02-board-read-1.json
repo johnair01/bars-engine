@@ -1,0 +1,20 @@
+{
+  "id": "2026-10-02-bars-engine-board-read-1",
+  "date": "2026-10-02",
+  "project": "bars-engine",
+  "cause": "council-design",
+  "question": "Do the ten positions from passes one and two stand?",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "source": "https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho",
+  "positions": {
+    "build": "stands", "ledger": "stands", "ceding": "stands", "reserved": "stands", "model": "stands",
+    "six": "stands", "outputs": "stands", "reach": "stands", "chat": "stands", "interface": "stands"
+  },
+  "overruled": [],
+  "steers": {
+    "general": "Do research on the developmental levels the faces are built off of. Spiral dynamics and integral theory and see if there are any projects that also use agents in this way"
+  },
+  "lessons": {},
+  "note": "No row was flipped or steered. All ten stand by default on a page that says what standing means. One general steer, read 2026-10-02 at 16:20Z, became the next task."
+}
