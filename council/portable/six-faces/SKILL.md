@@ -43,7 +43,8 @@ with options, the consequence of each, why only he can answer, and why it was no
 
 Wendell works in interfaces more than in chat. Chat is for context and steering.
 
-- Put the pass in an artifact page, with positions he can flip and questions he can answer.
+- Put the pass in an artifact page, with positions he can flip and questions he can answer. The
+  page's first view holds only unresolved work; decided items move to a second, resolved view.
 - End the chat reply with what changed and the link.
 - Close with a short **record block**: the date, the question, each face's one-line verdict, and his
   ruling once he gives it. A repo session pastes it into a ledger later. A ruling or steer in his own

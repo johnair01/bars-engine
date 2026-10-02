@@ -1,0 +1,31 @@
+{
+  "id": "2026-10-02-bars-engine-board-read-4",
+  "date": "2026-10-02",
+  "project": "bars-engine",
+  "cause": "council-design",
+  "question": "The first term pass, and the flirtcraft deploy case",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "source": "https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho",
+  "terms": {
+    "the play": "adopt", "the reach test": "adopt", "steer": "adopt", "lens, not ladder": "adopt",
+    "reaching toward": "retire", "that's a CRM": "retire", "Friendcraft serves the friend": "retire",
+    "generated invitations are corrupting": "retire",
+    "non-deference by structure": "not_yet", "the projection's shape": "not_yet",
+    "let yourself be carried": "not_a_term"
+  },
+  "terms_open": ["the showing test", "integral homies"],
+  "positions": {"fc-build-generate": "stands", "fc-door-shut": "stands", "fc-silent-failure": "stands"},
+  "positions_note": "Unflipped at this read, so they stand, as at read 1. fc-silent-failure stands as a proposal; nothing is built for it.",
+  "questions_open": ["flirtcraft-deploy"],
+  "overruled": [],
+  "steers": {},
+  "lessons": {},
+  "steer_from_chat": "We want resolved issues to move out of the top page. That should only be for unresolved work.",
+  "written": [
+    "friendcraft canon/GLOSSARY.md: the play under Proposed; a Retired section with four struck rows",
+    "friendcraft canon/DECISION_LOG.md: entry of 2026-10-02",
+    "council/terms.yaml in all three repos"
+  ],
+  "note": "Saved 20:50-20:51Z. The lens-not-ladder split (Diplomat against, Challenger for) was decided for adoption."
+}
