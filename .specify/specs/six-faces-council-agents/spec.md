@@ -2,6 +2,8 @@
 
 **Status:** proposal, 2026-10-02, revised by two six-face passes the same day. The passes and the board supersede this file where they differ: the build is a definition file (`council/faces.yaml`), a skill (`.claude/skills/six-faces/`) and a stats script (`council/stats.py`), with no Python agents until a surface needs them; records live per repo in `ledger/`; the Sage synthesises and never rules (Wendell, 2026-10-02). See `6FACE_PASS1_2026-10-02.md`, `6FACE_PASS2_2026-10-02.md`, `RESEARCH_lineage-and-prior-art_2026-10-02.md`, and `ledger/`. The board: https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho
 
+**Moved 2026-10-02.** On Wendell's ruling on the board, the council's home is now https://github.com/wendell-britt/six-faces-council. The board source, the tools and new council-design records live there. This folder keeps the history: the spec, passes one to four, the research, the explainer source and the ledger up to board read five.
+
 ## Purpose
 
 Make the six Game Master faces (Shaman, Challenger, Regent, Architect, Diplomat, Sage) a formal, callable council that deliberates on Wendell's projects from Integral altitudes, records every deliberation and every ruling, and learns from the rulings which questions each face may answer alone.

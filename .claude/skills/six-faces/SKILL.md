@@ -40,15 +40,14 @@ the board.
   `preproduction/` in friendcraft).
 - Positions, questions and terms go to the board, so Wendell flips, answers and steers there. The
   board's top page holds only unresolved work; everything decided moves to its Resolved view (Wendell,
-  2026-10-02). Add rows to `.specify/specs/six-faces-council-agents/board/board_data.json` in
-  bars-engine, run `python3 board/build_board.py` from that folder, and publish `council-board.html`
-  to the same URL the ledger records carry.
+  2026-10-02). Add rows to `board/board_data.json` in the home repo, run `python3 board/build_board.py`,
+  and publish `board/council-board.html` to the same URL the ledger records carry.
 - When a board read is recorded in the ledger, add each decided item to `resolved` in
   `board_data.json` with its decision and the ledger file, rebuild, and republish. A saved but
   unrecorded item already shows as resolved and waiting to be recorded.
-- A record goes in this repo's `council/ledger/` as JSON, in the shape of bars-engine's
-  `.specify/specs/six-faces-council-agents/ledger/*.json`. `council/stats.py` in bars-engine reads
-  every sibling repo's ledger; `council/lockstep.py` checks this file and `faces.yaml` match across repos.
+- A record goes in this repo's `council/ledger/` as JSON, in the shape of the home repo's
+  `council/ledger/*.json`. `python3 council/stats.py --remote` in the home repo counts every
+  registered repo's records.
 - The chat reply is what changed and the link. The pass itself is not pasted into chat.
 
 ## After Wendell answers on the board
@@ -60,7 +59,7 @@ structure or a date goes in the repo's decision log where one exists.
 
 ## One home, every repo
 
-The council has one home: the repo named in `council/source.txt`, today `johnair01/bars-engine`.
+The council has one home: the repo named in `council/source.txt`, `wendell-britt/six-faces-council` since 2026-10-02.
 Every other repo pulls `council/faces.yaml` and this skill from home when a session starts, through
 `council/hooks/council-sync.sh`. The hook's first line in the session says whether the copy is
 current, updated, or local because GitHub was unreachable. Commit synced files with the next change.
@@ -78,10 +77,10 @@ current, updated, or local because GitHub was unreachable. Commit synced files w
 ## The term pass
 
 Run it when Wendell asks for terms, when a pass coins a word, or when the harvest grows. The full
-rule is `term_pass` and each face's `term_test` in `council/faces.yaml`; pass three in bars-engine
-argues it.
+rule is `term_pass` and each face's `term_test` in `council/faces.yaml`; pass three, kept in
+bars-engine's `.specify/specs/six-faces-council-agents/`, argues it.
 
-1. **Harvest.** Run `python3 council/harvest_terms.py --min 2` from bars-engine. It lists names used
+1. **Harvest.** Run `python3 council/harvest_terms.py --min 2` from the home repo. It lists names used
    in two or more files that no glossary or registry holds, with whose word each is. Add any term
    Wendell coined in the conversation, with the quotation. A face may add a name for an unnamed
    pattern only if it is marked as the council's.
@@ -98,5 +97,5 @@ argues it.
 
 ## Voice
 
-Run `tools/voice_lint.py` from friendcraft on the pass before it ships. Every hard finding is a
+Run `python3 council/tools/voice_lint.py <pass file>` before the pass ships. Every council repo has it. Every hard finding is a
 defect. A quotation of Wendell's is never altered to satisfy the linter.
