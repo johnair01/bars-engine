@@ -62,5 +62,5 @@ each one. Only he locks a term.
 
 ## Voice
 
-Write plain, complete sentences. Name who does what. Use no fragments, and keep house vocabulary out
+If the session has a repo with `council/tools/voice_lint.py`, run it on the pass. Write plain, complete sentences. Name who does what. Use no fragments, and keep house vocabulary out
 of the opening he reads first. Quote his words exactly and never alter them.

@@ -98,5 +98,5 @@ argues it.
 
 ## Voice
 
-Run `tools/voice_lint.py` from friendcraft on the pass before it ships. Every hard finding is a
+Run `python3 council/tools/voice_lint.py <pass file>` before the pass ships. Every council repo has it. Every hard finding is a
 defect. A quotation of Wendell's is never altered to satisfy the linter.

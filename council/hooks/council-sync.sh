@@ -1,7 +1,8 @@
 #!/bin/bash
 # Six-faces council: pull the shared files from the home repo at session start.
 #
-# The home repo is named in council/source.txt as owner/repo@ref. Every repo with the council runs
+# The home repo is named in council/source.txt as owner/repo@ref. The hook also updates itself, so a
+# change to the list of shared files reaches every repo at its next session start. Every repo with the council runs
 # this hook, so an update made at home (a new lesson, a changed lens, a skill rule) reaches every
 # other repo the next time a session opens there. Only the shared files are pulled. Ledgers, term
 # registries and glossaries belong to the repo they are in and are never touched.
@@ -29,7 +30,7 @@ fi
 
 base="${COUNCIL_SOURCE_BASE:-https://raw.githubusercontent.com/$home_repo/$ref}"
 label="$home_repo@$ref"; [ -n "${COUNCIL_SOURCE_BASE:-}" ] && label="$COUNCIL_SOURCE_BASE"
-files="council/faces.yaml .claude/skills/six-faces/SKILL.md council/portable/six-faces/SKILL.md"
+files="council/faces.yaml .claude/skills/six-faces/SKILL.md council/portable/six-faces/SKILL.md council/tools/voice_lint.py council/hooks/council-sync.sh"
 changed=""; failed=""
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 for f in $files; do
@@ -37,7 +38,9 @@ for f in $files; do
   if [ "$f" = "council/portable/six-faces/SKILL.md" ] && [ ! -f "$f" ]; then continue; fi
   if curl -fsS --max-time 8 "$base/$f" -o "$tmp/x" 2>/dev/null && [ -s "$tmp/x" ]; then
     if ! cmp -s "$tmp/x" "$f" 2>/dev/null; then
-      mkdir -p "$(dirname "$f")" && cp "$tmp/x" "$f" && changed="$changed $f"
+      # write beside and rename, so a running copy of this hook is never overwritten in place
+      mkdir -p "$(dirname "$f")" && cp "$tmp/x" "$f.council-new" && mv "$f.council-new" "$f" && changed="$changed $f"
+      case "$f" in *.sh|*.py) chmod +x "$f" ;; esac
     fi
   else
     failed="$failed $f"

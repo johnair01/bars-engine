@@ -255,6 +255,49 @@
    "auto": true,
    "pos": "Any repo, new or existing, gets the council with one command run at home, which also adds it to the list of council repos.",
    "why": "Run on root-game, emotional-first-aid and a brand-new repo; its first run caught a repo whose ignore rules would have hidden the hook. Source: 6FACE_PASS4_2026-10-02.md"
+  },
+  {
+   "id": "rg-ruler-first",
+   "faces": [
+    "regent",
+    "challenger"
+   ],
+   "pass": "root-game 1",
+   "auto": true,
+   "pos": "Root-game, moving the hands like the cloth moves: the first step is to make the ruler whole, not to write the solver. Run the self-test and the shipped baseline, add single-gate contacts to eval.js, and state which smoothing value is used (the code says 30, the handoff says 20).",
+   "why": "Root-game's working rules require the self-test and baseline before judging any change, and the handoff's own pass mark names single-gate contacts that eval.js does not report. Source: root-game council/6FACE_PASS1_2026-10-02.md (branch council/pass1-hands)"
+  },
+  {
+   "id": "rg-trace-second",
+   "faces": [
+    "challenger"
+   ],
+   "pass": "root-game 1",
+   "auto": true,
+   "pos": "The second step is to trace what pushes a hand out today: its own target sitting inside the partner's arm, or the partner's arm moving into it. The answer decides whether the new collision works against a fixed surface or on the two hands' relative motion.",
+   "why": "Root-game's rules: find causes by tracing, and confirm with a cheap test before building. The Architect's dissent, to build the switch first, is on record. Source: root-game council/6FACE_PASS1_2026-10-02.md (branch council/pass1-hands)"
+  },
+  {
+   "id": "rg-segments",
+   "faces": [
+    "architect"
+   ],
+   "pass": "root-game 1",
+   "auto": true,
+   "pos": "The new hand physics keeps forearm-segment collision and right of way, not point collision.",
+   "why": "Wins 3 and 4 in the handoff, and the arms-through number is already measured on forearm segments. Source: root-game council/6FACE_PASS1_2026-10-02.md (branch council/pass1-hands)"
+  },
+  {
+   "id": "rg-worked",
+   "faces": [
+    "regent",
+    "diplomat",
+    "shaman"
+   ],
+   "pass": "root-game 1",
+   "auto": true,
+   "pos": "It worked if every pass mark in the handoff holds and the jitter the kit adds is below shipped, shown as one row in the existing tables, then a side-by-side clip on the preview page for you to watch.",
+   "why": "The pass marks are yours, in the handoff; 'below shipped, ideally zero' is in root-game's rules; the clip follows open issue 5. Source: root-game council/6FACE_PASS1_2026-10-02.md (branch council/pass1-hands)"
   }
  ],
  "questions": [
