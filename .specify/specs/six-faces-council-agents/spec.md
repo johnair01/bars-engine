@@ -30,9 +30,51 @@ The second practice is the one this spec is about, and it has no definition outs
 | Friendcraft passes | `preproduction/6FACE_*.md`, six files | the mature form: scorecard, anchor, six lenses, verdicts table, dissent check, landing |
 | Flirtcraft consults | `INTAKE_SIX_FACES.md`, `LEDGER_AND_LAUNCH_SIX_FACES.md` | same format; the ruling is a header note that records what the ruling overturned |
 
-## Counts
+## Counts (inventory of 2026-10-02)
 
-The inventory of recorded six-face invocations across the five repos is being compiled and lands here in the next commit.
+Taken from the written record in the five repos. Session transcripts are not available in this container (`~/.claude/projects` holds only this session), so a pass argued in a Claude Code session and never written to a file is not counted. That gap is the reason for the ledger. The three active repos are shallow clones (bars-engine to 2026-06-11, friendcraft to 2026-08-21, flirtcraft to 2026-08-30), so git-derived counts are lower bounds. emotional-first-aid and root-game hold no face material.
+
+| Measure | Count |
+|---|---|
+| Standalone recorded deliberations | about 71 (friendcraft 6, flirtcraft 2, bars-engine about 63) |
+| Embedded or borderline (six-face sections inside specs, the Library council's 25 rulings) | about 13 |
+| Convened by Wendell, with a ruling recorded, in the pass shape of September 2026 | 11 (friendcraft 6, flirtcraft 2, mailing list 2, Understood review 1) |
+| Automated strand or Sage consults, March 2026, via `sage_consult` / `strand_run` / `strand:consult:*` | about 25 |
+| Decision-log entries in friendcraft citing a pass or a face by name | 10 of 55 (passes four and six are not logged) |
+| Recorded overrules of a face by Wendell | 2 explicit (pass six Shaman; flirtcraft intake Sage), plus the mailing-list amendment |
+
+**What they were convened for**
+
+| Cause | About |
+|---|---|
+| Feature-design consult (mostly the March strand batch) | 25 |
+| Spec review or gap analysis | 22 |
+| Product, pricing, launch, intake | 8 |
+| Incident or build reliability | 5 |
+| Book structure or manuscript ruling | 4 |
+| Project steering ("what is next") | 2 |
+| Card or schema design | 1 |
+| Code review | 1 |
+| Prose or voice review | 0 recorded (`editorial-core/READER_FACES.md` defines one; no run found) |
+
+**Which face decides**
+
+| Face | Pattern in the record |
+|---|---|
+| Sage | Rules in all six friendcraft passes, both flirtcraft consults, and every scripted strand consult. About 8 Sage-only consults. |
+| Challenger | Primary face for the Understood review; drives "send the letter" in friendcraft passes three to five; one Challenger-only balance pass. |
+| Architect | Primary in hand-vault; resolved all three round-one splits in the mailing-list decision. |
+| Regent | Occasional: campaign-leads ruling C, the topics plan in the mailing amendment, Kickstarter ruling 6 ("the Sage does not overturn the Regent"). |
+| Shaman | Opens, supplies the felt sense, almost never decides. The one explicit overrule on record is against it. |
+| Diplomat | Almost never decides; most often the dissent (pass six "Tag"; flirtcraft D9). |
+
+Friendcraft decision-log mentions by name: Sage 14, Shaman 4, Challenger 4, Regent 2, Architect 1, Diplomat 1.
+
+**Three things the inventory changed in this proposal**
+
+1. **A second six exists.** `specs/doctrine/gm-faces.md` defines Ontologist, Systems Architect, Experience Designer, Encounter Designer, Steward, Integrator for spec review, and `hand-vault-capture-movement/SIX_FACE_ANALYSIS.md` used it. The council needs one canonical six. Open decision 7.
+2. **The method was already written down three times**, in `docs/process/spec-prework-iching-six-faces.md` (I Ching cast, then six faces, before spec work), `editorial-core/READER_FACES.md` (faces judge prose, per chapter) and `.agent/context/game-master-sects.md`. `faces.yaml` absorbs all three rather than adding a fourth.
+3. **The face list is enumerated in at least twelve places in code** (`GameMasterFace` in two `types.ts`, a Python `StrEnum`, a `Literal`, and local copies in eight files) and kept in step by `scripts/verify-face-meta-lockstep.ts`. `faces.yaml` becomes the source those read from, or the lockstep script grows to check it.
 
 ## Design Decisions
 
@@ -193,6 +235,7 @@ Model: `COUNCIL_MODEL`, default `anthropic:claude-sonnet-5-5` (the `anthropic` p
 4. Whether the council prompts may diverge from the NPC lore (Kaelen, Ignis, Aurelius, Vorm, Sola, The Witness). My recommendation: the council speaks as the faces, not as the NPCs, because the passes never used the NPC names.
 5. Model provider for the council, and whether to try a second family for the Challenger.
 6. Build order: CLI first (my recommendation), or MCP first.
+7. Which six is canonical for the council: the altitude six (Shaman, Challenger, Regent, Architect, Diplomat, Sage) or the doctrine six in `specs/doctrine/gm-faces.md`. My recommendation: the altitude six, since every Wendell-convened pass used it, and the doctrine six becomes a named mask set the Sage may wear.
 
 ## Dependencies
 
