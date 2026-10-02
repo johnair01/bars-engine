@@ -1,0 +1,31 @@
+{
+  "id": "2026-10-02-bars-engine-board-read-2",
+  "date": "2026-10-02",
+  "project": "bars-engine",
+  "cause": "council-design",
+  "question": "Do the seven research positions stand, and may the Sage rule when the five disagree?",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "source": "https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho",
+  "positions": {
+    "colours": "stands", "torbert": "stands", "standing": "stands", "lens": "stands",
+    "dissent": "stands", "kin": "stands", "verify": "stands"
+  },
+  "overruled": [],
+  "questions": {
+    "sage-authority": {
+      "choice": "synthesise",
+      "ruling": "The Sage synthesises only. When the five disagree, the dissent is carried to Wendell. No face outranks another.",
+      "saved_at": "2026-10-02T16:39:03Z",
+      "supersedes": "6FACE_OPEN_RULINGS_2026-08-22.md header line 'the Sage rules', and 6FACE_PASS1 § Regent's definition of done insofar as it assumed a Sage ruling"
+    }
+  },
+  "steers": {},
+  "lessons": {},
+  "scorecard": {
+    "pass2_test_board_carries_a_steer_or_answer": "pass",
+    "pass2_test_no_question_the_record_could_answer": "pass: one question asked, the record held two answers",
+    "pass2_test_chat_is_what_changed_and_a_link": "pass"
+  },
+  "note": "Read 2026-10-02 after Wendell wrote 'Saved'. The ruling on the Sage changes the skill's Sage step: synthesis names every face's contribution and lists the dissent; it never decides."
+}

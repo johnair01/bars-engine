@@ -1,6 +1,6 @@
 # Spec: Six Faces as formal council agents
 
-**Status:** proposal, 2026-10-02. Nothing here is built. Wendell rules on §Open decisions before any of it is.
+**Status:** proposal, 2026-10-02, revised by two six-face passes the same day. The passes and the board supersede this file where they differ: the build is a definition file (`council/faces.yaml`), a skill (`.claude/skills/six-faces/`) and a stats script (`council/stats.py`), with no Python agents until a surface needs them; records live per repo in `ledger/`; the Sage synthesises and never rules (Wendell, 2026-10-02). See `6FACE_PASS1_2026-10-02.md`, `6FACE_PASS2_2026-10-02.md`, `RESEARCH_lineage-and-prior-art_2026-10-02.md`, and `ledger/`. The board: https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho
 
 ## Purpose
 

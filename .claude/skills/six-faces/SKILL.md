@@ -1,0 +1,57 @@
+---
+name: six-faces
+description: Convene the six Game Master faces (Shaman, Architect, Challenger, Regent, Diplomat, Sage) as a council on a project question. Use when Wendell says "get the six on this", "six-face pass", "let the faces weigh in", or when a decision needs deliberation from the Integral altitudes. Reads council/faces.yaml; never improvises a lens.
+---
+
+# Six faces, as a council
+
+Read `council/faces.yaml` first. It holds each face's lens, what it delivers, what it sees that later
+levels lose, its standing test, and its lessons. The lessons are Wendell's words from past rulings.
+A face carries them into its argument. Do not restate a lens from memory; the file is the standard.
+
+## The shape of a pass
+
+1. **Header.** Date, who called it, the question in his words, and what pass this is on the subject.
+2. **Scorecard.** Grade the tests the previous pass set. Set new ones, dated, at the end.
+3. **Anchor.** The design intent in one or two sentences. Unchanged unless Wendell changed it.
+4. **Six faces, in the order `faces.yaml` gives.** Each speaks as its face, not as a game NPC. Each
+   delivers what its entry lists, in bold-led paragraphs with a subject and a finite verb. Each
+   applies its standing test where one exists.
+5. **Verdicts table.** One row per face, one column per question.
+6. **Dissent check.** State whether the pass was unanimous. A unanimous pass is a flag, not a result;
+   say so in the pass.
+7. **Sage.** The Sage synthesises. It names each face's contribution or says which it dropped, lists
+   the dissent, and never decides. The Sage does not rule; Wendell ruled this on 2026-10-02.
+8. **Outputs, typed apart.** *Positions*: what the council resolved, each with the citation for why it
+   did not need Wendell. *Questions*: only what passed the reach test below, each with owner face,
+   options, the consequence of each, why only he can answer, and why it was not asked before.
+
+## The reach test, before any question leaves the pass
+
+Send the question back to its owning face with the record: the decision log, the working rules,
+prior passes, the ledger. The face answers with a citation or says what is missing. The question
+reaches Wendell only when what is missing is his preference or a fact only he holds, and only if his
+answer changes what gets built. An answer with no citation is not an answer; the question goes to
+the board.
+
+## Where it lands
+
+- The pass is a file: `6FACE_PASS<n>_<date>.md` beside the subject it concerns (a spec folder, or
+  `preproduction/` in friendcraft).
+- Positions and questions go to the board, the artifact page whose source is
+  `.specify/specs/six-faces-council-agents/council-board.html`, so Wendell flips and steers there.
+- A record goes in the repo's `ledger/` for the subject as JSON, in the shape of
+  `.specify/specs/six-faces-council-agents/ledger/*.json`.
+- The chat reply is what changed and the link. The pass itself is not pasted into chat.
+
+## After Wendell answers on the board
+
+Read the store with `ArtifactData`: collections `positions`, `questions`, and the document
+`steer/general`. Write a ledger record. An overrule or a steer on a face's row becomes a lesson in
+that face's entry in `faces.yaml`, quoted, with the source. A ruling that changes a term, a
+structure or a date goes in the repo's decision log where one exists.
+
+## Voice
+
+Run `tools/voice_lint.py` from friendcraft on the pass before it ships. Every hard finding is a
+defect. A quotation of Wendell's is never altered to satisfy the linter.
