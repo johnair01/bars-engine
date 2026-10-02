@@ -1,6 +1,6 @@
 ---
 name: six-faces
-description: Convene the six Game Master faces (Shaman, Architect, Challenger, Regent, Diplomat, Sage) as a council on a project question. Use when Wendell says "get the six on this", "six-face pass", "let the faces weigh in", or when a decision needs deliberation from the Integral altitudes. Reads council/faces.yaml; never improvises a lens.
+description: Convene the six Game Master faces (Shaman, Architect, Challenger, Regent, Diplomat, Sage) as a council on a project question, or run a term pass that finds, tests and records emergent terms and their usage. Use when Wendell says "get the six on this", "six-face pass", "let the faces weigh in", asks for new terms, a glossary pass or naming, or when a decision needs deliberation from the Integral altitudes. Reads council/faces.yaml; never improvises a lens.
 ---
 
 # Six faces, as a council
@@ -52,6 +52,27 @@ Read the store with `ArtifactData`: collections `positions`, `questions`, and th
 `steer/general`. Write a ledger record. An overrule or a steer on a face's row becomes a lesson in
 that face's entry in `faces.yaml`, quoted, with the source. A ruling that changes a term, a
 structure or a date goes in the repo's decision log where one exists.
+
+## The term pass
+
+Run it when Wendell asks for terms, when a pass coins a word, or when the harvest grows. The full
+rule is `term_pass` and each face's `term_test` in `council/faces.yaml`; pass three in bars-engine
+argues it.
+
+1. **Harvest.** Run `python3 council/harvest_terms.py --min 2` from bars-engine. It lists names used
+   in two or more files that no glossary or registry holds, with whose word each is. Add any term
+   Wendell coined in the conversation, with the quotation. A face may add a name for an unnamed
+   pattern only if it is marked as the council's.
+2. **Six tests.** Each face applies its `term_test`. A term that diagnoses a person, names nothing
+   new, survives only by its phrasing, or cannot be checked by its reader does not go forward.
+3. **Usage card.** The Sage writes: plain definition, the five-year-old sentence, one usage sentence,
+   register (council, product or book), whose word, what it replaces, collisions with other repos.
+4. **Board.** Each candidate is a row with adopt, not yet, retire, or a rename, and a steer box. The
+   council recommends; Wendell decides.
+5. **Write after he answers.** Update `council/terms.yaml` in the repo that owns the term. An adopted
+   term enters that repo's glossary in the Proposed section, pasted into the reply before and after,
+   with a decision-log entry. A retired term is struck through with its reason and date. Nothing is
+   locked unless he says the word.
 
 ## Voice
 

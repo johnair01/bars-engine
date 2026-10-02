@@ -42,6 +42,7 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
 .why span{font-family:var(--mono);font-size:.8rem}
 .ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg{flex-wrap:wrap}
 .seg button{font:inherit;font-size:.9rem;padding:6px 12px;border:0;background:var(--panel);color:var(--fg);cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .seg button.o[aria-pressed="true"]{background:var(--warn);color:#fff}
@@ -59,7 +60,7 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
 </style>
 
 <h1>Council Board</h1>
-<p class="lede">The six faces' positions from passes one and two and from the research you steered, 2026-10-02, plus the cause categories the backfill proposes. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
+<p class="lede">The six faces' positions from passes one and two and from the research you steered, 2026-10-02, the cause categories you named, and the first term pass. Each row stands unless you flip it. A steer becomes a lesson for the face that owns the row. The next session reads this board as data and writes what you changed into the decision log.</p>
 
 <div class="banner" id="banner">This view cannot save. Your flips and steers stay on screen only.</div>
 
@@ -70,11 +71,15 @@ textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offs
   <div class="ctl" style="margin-top:8px"><button class="save" id="ctx-save">Save context</button><div class="state" id="ctx-state"></div></div>
 </div>
 
-<div class="strip" id="strip"><span><b id="n-stand">10</b> stand</span><span><b id="n-over">0</b> overruled</span><span><b id="n-steer">0</b> steered</span><span><b id="n-auto">4</b> answered without you</span><span><b id="n-q">1</b> question for you</span></div>
+<div class="strip" id="strip"><span><b id="n-stand">10</b> stand</span><span><b id="n-over">0</b> overruled</span><span><b id="n-steer">0</b> steered</span><span><b id="n-auto">4</b> answered without you</span><span><b id="n-q">1</b> question for you</span><span><b id="n-t">13</b> terms</span></div>
 
 <h2 id="qh" style="margin-top:28px">Questions only you can answer</h2>
 <p class="lede">Each one passed the reach test: its face could not answer it from the record, your answer changes what gets built, and it carries options with their consequences.</p>
 <div id="qrows"></div>
+
+<h2 style="margin-top:32px">Terms</h2>
+<p class="lede">The first term pass, 2026-10-02. Each row is a name the record is already using. The council's recommendation is selected; change it if you disagree. Adopt puts the term in that repo's glossary as proposed, with a decision-log entry. Nothing is locked until you say so.</p>
+<div id="trows"></div>
 
 <h2 style="margin-top:32px">Causes to name</h2>
 <p class="lede">The backfill sorted sixty-six past deliberations into these categories by heuristic. The counts describe the record; they are not targets. Keep a name, or type the one you would use. A blank keeps the proposed name.</p>
@@ -161,6 +166,8 @@ const CAUSES = [
  {id:'council-design',count:0,desc:'How the council itself is built and run.'},
  {id:'code-review',count:0,desc:'A ruling on review findings for a change. Seen once, in a commit message, not a document.'}
 ];
+const TERMS = [{"id": "the-showing-test", "term": "the showing test", "repo": "friendcraft-manuacript", "whose": "the record, from a rule Wendell accepted", "rec": "adopt", "register": ["product", "council"], "plain": "Anything you write about a person you should be willing to show them.", "eli5": "If you would be embarrassed for your friend to read a note you wrote about them, don't write it.", "usage": "The log field passes the showing test, so a note about Steven is one you could hand him.", "replaces": null, "collisions": [], "why": "Used three times as a rule and never glossed. Passes all six tests.", "flag": null, "source": "canon/DECISION_LOG.md:553"}, {"id": "the-play", "term": "the play", "repo": "friendcraft-manuacript", "whose": "friendcraft canon", "rec": "adopt", "register": ["book", "product"], "plain": "Show Up's output: the move, made at a real person.", "eli5": "The play is the moment you actually text your friend instead of thinking about it.", "usage": "The card names the move; the play is when you send it to Dana.", "replaces": null, "collisions": ["flirtcraft GRAMMAR.md §6: a deck noun that belongs in a reading, never in an instruction"], "why": "Usage rule settles the collision: a reading word in both repos, never inside a move's instruction.", "flag": null, "source": "canon/MOVES.md:331"}, {"id": "integral-homies", "term": "integral homies", "repo": "friendcraft-manuacript", "whose": "Wendell, 2026-08-25", "rec": "adopt", "register": ["council"], "plain": "Wendell's friends from the integral community, who become the demo-practice table of ruling 21.", "eli5": "The friends Wendell plays the practice games with first.", "usage": "Send order: integral homies, then round two, then round one.", "replaces": null, "collisions": [], "why": "His word, twice. A reader cannot check it, so it stays out of the book.", "flag": null, "source": "canon/DECISION_LOG.md:1642"}, {"id": "the-reach-test", "term": "the reach test", "repo": "bars-engine", "whose": "the council, from Wendell's 'constant reaching', 2026-10-02", "rec": "adopt", "register": ["council"], "plain": "The check a question passes before it reaches Wendell: its face cannot answer it from the record with a citation, what is missing is his preference or a fact only he holds, and his answer changes what gets built.", "eli5": "Before asking Wendell something, look it up yourself; only ask if the answer is really his to give.", "usage": "Pass one's six questions scored zero of six on the reach test.", "replaces": null, "collisions": [], "why": "Points at the council's questions, never at Wendell's habits.", "flag": null, "source": ".specify/specs/six-faces-council-agents/6FACE_PASS2_2026-10-02.md"}, {"id": "steer", "term": "steer", "repo": "bars-engine", "whose": "Wendell, 2026-10-02", "rec": "adopt", "register": ["council"], "plain": "Context or direction Wendell gives the agents, in chat or in a board's steer box. On the board, a steer on a face's row becomes that face's lesson.", "eli5": "Steering is telling the helpers which way to go next.", "usage": "His steer on the research row asked for the lineage of the levels.", "replaces": null, "collisions": [], "why": "His word for what chat is for.", "flag": null, "source": "6FACE_PASS2_2026-10-02.md header"}, {"id": "lens-not-ladder", "term": "lens, not ladder", "repo": "bars-engine", "whose": "the research, from Beck and Cowan", "rec": "adopt", "register": ["council"], "plain": "Each face is a viewpoint on a question and never a rank.", "eli5": "The six helpers look at the problem from different windows; none of them is the boss.", "usage": "The Sage synthesises and never rules, because the faces are a lens, not a ladder.", "replaces": null, "collisions": [], "why": "Survives said flatly, and Beck and Cowan hold it up.", "flag": "Diplomat would hold it at not yet because it is quotable; the Challenger's flat test passed.", "source": "RESEARCH_lineage-and-prior-art_2026-10-02.md §5"}, {"id": "non-deference-by-structure", "term": "non-deference by structure", "repo": "friendcraft-manuacript", "whose": "the record", "rec": "not_yet", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": null, "collisions": [], "why": "One paragraph of usage in one entry. Too thin to judge.", "flag": null, "source": "canon/DECISION_LOG.md:1652"}, {"id": "the-projections-shape", "term": "the projection's shape", "repo": "friendcraft-manuacript", "whose": "the record", "rec": "not_yet", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": null, "collisions": [], "why": "One sentence of usage.", "flag": null, "source": "canon/DECISION_LOG.md:1751"}, {"id": "let-yourself-be-carried", "term": "let yourself be carried", "repo": "friendcraft-manuacript", "whose": "friendcraft outline", "rec": "not_a_term", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": null, "collisions": [], "why": "A section title (3.12). It names a chapter, not a mechanic.", "flag": null, "source": "canon/DECISION_LOG.md:242"}, {"id": "reaching-toward", "term": "reaching toward", "repo": "friendcraft-manuacript", "whose": "a session, 2026-08-22", "rec": "retire", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": "the two plain questions in THE_CREW.md", "collisions": [], "why": "No action in it. Wendell had to ask what it meant.", "flag": null, "source": "canon/DECISION_LOG.md:218"}, {"id": "thats-a-crm", "term": "that's a CRM", "repo": "friendcraft-manuacript", "whose": "a session, 2026-08-27", "rec": "retire", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": "sort by your own debt, never by their value", "collisions": [], "why": "A category name doing the work of an argument.", "flag": null, "source": "CLAUDE.md § Guardrails, over-applied"}, {"id": "friendcraft-serves-the-friend", "term": "Friendcraft serves the friend", "repo": "friendcraft-manuacript", "whose": "a session, 2026-08-31", "rec": "retire", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": "serve the relationship (Wendell)", "collisions": [], "why": "Replaced by Wendell's correction one level up.", "flag": null, "source": "CLAUDE.md § Back on Muhani"}, {"id": "generated-invitations-are-corrupting", "term": "generated invitations are corrupting", "repo": "friendcraft-manuacript", "whose": "a session, 2026-08-27", "rec": "retire", "register": [], "plain": "", "eli5": "", "usage": "", "replaces": "teaching the un-hedged ask", "collisions": [], "why": "Plainly false said flatly.", "flag": null, "source": "CLAUDE.md § A fourth variant"}];
+const tstate = {}; TERMS.forEach(t => tstate[t.id] = {action:t.rec, rename:'', steer:''});
 const cstate = {}; CAUSES.forEach(c => cstate[c.id] = {name:'', note:''});
 const qstate = {}; QUESTIONS.forEach(q => qstate[q.id] = {choice:'', steer:''});
 const state = {}; // id -> {status, steer}
@@ -214,6 +221,33 @@ function buildC(){
     </div>
   </section>`).join('');
 }
+const tEl = document.getElementById('trows');
+const ACT = [['adopt','Adopt'],['not_yet','Not yet'],['retire','Retire'],['not_a_term','Not a term']];
+const REC = {adopt:'council: adopt', not_yet:'council: not yet', retire:'council: retire', not_a_term:'council: not a term'};
+function buildT(){
+  tEl.innerHTML = TERMS.map(t => `
+  <section class="row" id="t-${t.id}">
+    <div class="meta"><span class="auto">${REC[t.rec]}</span><span>${esc(t.repo)}</span>${(t.register||[]).map(r=>`<span>${esc(r)}</span>`).join('')}</div>
+    <p class="pos"><b>${esc(t.term)}</b>${t.plain?` · ${esc(t.plain)}`:''}</p>
+    ${t.eli5?`<p class="why"><span>plainly</span> ${esc(t.eli5)}</p>`:''}
+    ${t.usage?`<p class="why"><span>in use</span> ${esc(t.usage)}</p>`:''}
+    <p class="why"><span>whose</span> ${esc(t.whose)} · <span>why</span> ${esc(t.why)}${t.replaces?` · <span>replaced by</span> ${esc(t.replaces)}`:''}</p>
+    ${(t.collisions||[]).length?`<p class="why"><span>collides with</span> ${t.collisions.map(esc).join('; ')}</p>`:''}
+    ${t.flag?`<p class="why"><span>split</span> ${esc(t.flag)}</p>`:''}
+    <div class="ctl">
+      <div class="seg" role="group" aria-label="Decision for ${esc(t.term)}">${ACT.map(([v,l])=>`<button type="button" class="${v==='retire'?'o':'s'}" data-tid="${t.id}" data-tv="${v}" aria-pressed="false">${l}</button>`).join('')}</div>
+      <div class="steer"><input type="text" id="tren-${t.id}" placeholder="Rename to (optional)" style="width:100%;font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg);margin-bottom:6px"><textarea id="tsteer-${t.id}" placeholder="Steer: usage, register, or why"></textarea></div>
+      <div><button type="button" class="save" data-tsave="${t.id}">Save</button><div class="state" id="tstate-${t.id}"></div></div>
+    </div>
+  </section>`).join('');
+}
+function paintT(id){
+  const st = tstate[id];
+  document.querySelectorAll(`#t-${id} .seg button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tv===st.action)));
+  const r = document.getElementById('tren-'+id), ta = document.getElementById('tsteer-'+id);
+  if (document.activeElement !== r) r.value = st.rename || '';
+  if (document.activeElement !== ta) ta.value = st.steer || '';
+}
 function paintC(id){ const el = document.getElementById('cname-'+id); if (document.activeElement !== el) el.value = cstate[id].name || ''; }
 function paintQ(id){
   const s = qstate[id];
@@ -235,7 +269,19 @@ function counts(){
   document.getElementById('n-stand').textContent = POSITIONS.length - over;
   document.getElementById('n-steer').textContent = steer;
 }
-build(); buildQ(); buildC(); POSITIONS.forEach(p=>paint(p.id)); QUESTIONS.forEach(q=>paintQ(q.id)); CAUSES.forEach(c=>paintC(c.id)); counts();
+build(); buildQ(); buildT(); buildC(); POSITIONS.forEach(p=>paint(p.id)); QUESTIONS.forEach(q=>paintQ(q.id)); CAUSES.forEach(c=>paintC(c.id)); TERMS.forEach(t=>paintT(t.id)); counts();
+document.getElementById('n-t').textContent = TERMS.length;
+tEl.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if(!b) return;
+  if (b.dataset.tv){ tstate[b.dataset.tid].action = b.dataset.tv; paintT(b.dataset.tid); return; }
+  if (!b.dataset.tsave) return;
+  const id = b.dataset.tsave, st = document.getElementById('tstate-'+id);
+  tstate[id].rename = document.getElementById('tren-'+id).value.trim();
+  tstate[id].steer = document.getElementById('tsteer-'+id).value;
+  if (!db){ st.textContent = 'Not saved in this view.'; return; }
+  try { await db.doc('terms/'+id).set({action:tstate[id].action, rename:tstate[id].rename, steer:tstate[id].steer, savedAt:new Date().toISOString()}); st.textContent = 'Saved.'; }
+  catch (err){ st.textContent = 'Could not save (' + (err && err.code || 'error') + ').'; }
+});
 cEl.addEventListener('click', async e => {
   const b = e.target.closest('button[data-csave]'); if(!b) return;
   const id = b.dataset.csave, st = document.getElementById('cstate-'+id);
@@ -287,6 +333,9 @@ document.getElementById('ctx-save').addEventListener('click', async () => {
   db.collection('positions').onSnapshot(snap => {
     snap.docs.forEach(d => { if (!d.exists || !state[d.id]) return; const v = d.data(); state[d.id] = {status: v.status==='overrule'?'overrule':'stands', steer: typeof v.steer==='string'?v.steer:''}; paint(d.id); });
     counts();
+  }, () => {});
+  db.collection('terms').onSnapshot(snap => {
+    snap.docs.forEach(d => { if (!d.exists || !tstate[d.id]) return; const v = d.data(); tstate[d.id] = {action: typeof v.action==='string'?v.action:tstate[d.id].action, rename: typeof v.rename==='string'?v.rename:'', steer: typeof v.steer==='string'?v.steer:''}; paintT(d.id); });
   }, () => {});
   db.collection('causes').onSnapshot(snap => {
     snap.docs.forEach(d => { if (!d.exists || !cstate[d.id]) return; const v = d.data(); cstate[d.id] = {name: v.kept ? '' : (typeof v.name==='string'?v.name:'')}; paintC(d.id); });

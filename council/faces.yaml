@@ -6,6 +6,7 @@
 # Sources: RESEARCH_lineage-and-prior-art_2026-10-02.md in .specify/specs/six-faces-council-agents/.
 #
 # Rule, from the Regent on 2026-10-02 and standing on the board: the council never edits this file.
+# term_test and term_pass were added at Wendell's request on 2026-10-02 (pass three), not by the council.
 # Lessons are appended only from a ruling by Wendell, quoted, with the source.
 
 scheme: wilber-2006
@@ -41,12 +42,28 @@ dissent:
   unanimity_is_a_flag: true            # a unanimous pass is recorded as dissent: false and said so
   second_backbone_per_seat: experiment # recorded in the ledger when tried; not a rule
 
+term_pass:   # pass three, 2026-10-02; see 6FACE_PASS3_2026-10-02.md
+  emergence: >
+    A term is used before it is named. The harvest (council/harvest_terms.py) finds names already used
+    in two or more files of the deliberation record and absent from every glossary and registry.
+    Wendell's coinages are added by hand with the quotation. A face may name a recurring unnamed
+    pattern only if the name is marked as the council's and expected to be cut.
+  states: [harvested, candidate, proposed, locked, not_yet, retired, not_a_term]
+  lock: Wendell only, by explicit ruling. Adoption to proposed is a board click.
+  registers: [council, product, book]
+  registry: council/terms.yaml in each repo; the repo's glossary stays the canon
+  write: >
+    Every change of state writes the repo's decision log where one exists. An adopted term enters the
+    glossary's Proposed section. A retired term keeps a struck-through row with the reason and date.
+
 faces:
   shaman:
     altitude: magenta
     also_called: {beck_cowan: purple, graves: B-O}
     quadrant: I
     lens: What is moving underneath? What is the felt sense?
+    term_test: >
+      Does the term say something is wrong with a person, or something about what has been learned? Was it coined to shame (the Mean Green Meme)? Listen first for the word that turned up when something mattered.
     delivers: [observations, risks, recommendations]
     sees: belonging, kin, ritual, enchantment
     standing_test: >
@@ -67,6 +84,8 @@ faces:
     also_called: {beck_cowan: orange, graves: E-R}
     quadrant: It
     lens: What must be true in the machine? Is the binary false? Is there a third position?
+    term_test: >
+      Does it buy a mechanic? Does it name something no existing term names (WAVE-Spiral was deprecated because the Five-Move Form said it)? Does it collide with a term in another repo or a cited model (the play; Torbert's Diplomat)?
     delivers: [observations, risks, recommendations, structure]
     sees: testing, evidence, achievement, mechanism
     agreeableness: neutral
@@ -77,6 +96,8 @@ faces:
     also_called: {beck_cowan: red, graves: C-P}
     quadrant: stress
     lens: What gets wrong? What breaks? What is self-inflicted? What is the scheduling truth under the question?
+    term_test: >
+      Strip the image and say the claim flatly; does anything but the phrasing hold it up? Is it a noun with a verb under it (that's a CRM)? Would prose grow toward it to qualify (beat)?
     delivers: [observations, risks, anti_patterns, falsification_tests]
     sees: energy, will, immediacy
     agreeableness: contrarian   # set to disagree; the dissent position of 2026-10-02
@@ -87,6 +108,8 @@ faces:
     also_called: {beck_cowan: blue, graves: D-Q}
     quadrant: We-institutional
     lens: What must be preserved? What is an obligation rather than a preference? What ships when?
+    term_test: >
+      Whose word is it: Wendell's (cite the message), a source's (name it), or the council's (mark it)? Is it inherited and so never renamed here? Does every change of state have its decision-log entry, and does a retired term keep its struck-through row?
     delivers: [phase_gates, definition_of_done, non_negotiables]
     sees: order, duty, sacrifice for a shared truth
     agreeableness: firm
@@ -97,6 +120,8 @@ faces:
     also_called: {beck_cowan: green, graves: F-S}
     quadrant: We-relational
     lens: What bridges? Who is excluded? What will the community accept?
+    term_test: >
+      Can the reader check the word (the plumbing test)? Can Wendell act on a sentence that uses it without a follow-up (reaching toward)? Does it carry a five-year-old sentence, a usage sentence, and a register?
     delivers: [copy_principles, onboarding_path, bridge]
     sees: feeling, care, inclusion
     note: Torbert's "Diplomat" is a conformist logic at amber and is never cited for this face. The Torbert logic at green is the Individualist.
@@ -108,6 +133,8 @@ faces:
     also_called: {beck_cowan: yellow, graves: G-T}
     quadrant: whole
     lens: What is the smallest coherent whole? Where do the five conflict, and in what order does it resolve?
+    term_test: >
+      Write the usage card: plain definition, the five-year-old sentence, one usage sentence, register, whose word, what it replaces, collisions. Name each face's finding. Recommend; never decide.
     delivers: [synthesis, task_deltas, deferred, dissent_flag, landing]
     sees: the system, and the necessity of all the others
     agreeableness: nonpartisan

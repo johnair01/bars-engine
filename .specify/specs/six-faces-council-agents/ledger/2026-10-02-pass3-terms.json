@@ -1,0 +1,27 @@
+{
+  "id": "2026-10-02-bars-engine-pass3-terms",
+  "date": "2026-10-02",
+  "project": "bars-engine",
+  "cause": "council-design",
+  "question": "A process where the six faces come up with new emergent terms and usage.",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "source_doc": ".specify/specs/six-faces-council-agents/6FACE_PASS3_2026-10-02.md",
+  "faces_present": ["shaman", "architect", "challenger", "regent", "diplomat", "sage"],
+  "dissent": true,
+  "dissent_note": "Challenger would have the council never coin; Shaman and Architect allow naming an unnamed pattern if marked. Settled by the Received wisdom rule, no question to Wendell. Diplomat split from Challenger on 'lens, not ladder'; flagged on the board.",
+  "positions": {
+    "term-pass-five-steps": "council", "states-map-onto-glossary": "council", "registry-per-repo": "council",
+    "retired-state": "council", "usage-card-and-register": "council", "lock-is-wendells": "council"
+  },
+  "terms_recommended": {
+    "adopt": ["the showing test", "the play", "integral homies", "the reach test", "steer", "lens, not ladder"],
+    "not_yet": ["non-deference by structure", "the projection's shape"],
+    "not_a_term": ["let yourself be carried"],
+    "retire": ["reaching toward", "that's a CRM", "Friendcraft serves the friend", "generated invitations are corrupting"]
+  },
+  "definition_file_change": "term_test per face and term_pass added to council/faces.yaml at Wendell's request, not by the council",
+  "questions": {},
+  "outcome": "unruled",
+  "note": "Terms land on the board for adopt, not yet, retire or rename. Nothing enters a glossary until he adopts it there."
+}

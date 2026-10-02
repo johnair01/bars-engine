@@ -1,0 +1,19 @@
+{
+  "id": "2026-10-02-bars-engine-board-read-3",
+  "date": "2026-10-02",
+  "project": "bars-engine",
+  "cause": "council-design",
+  "question": "What are the categories a council is convened for?",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "source": "https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho",
+  "causes": {
+    "book-structure": "kept", "card-schema": "kept", "code-review": "kept", "council-design": "kept",
+    "feature-design": "kept", "incident-reliability": "kept", "product-intake-pricing": "kept",
+    "product-launch": "kept", "project-steering": "kept", "spec-review": "kept", "vendor-decision": "kept"
+  },
+  "overruled": [],
+  "steers": {},
+  "lessons": {},
+  "note": "All eleven kept as proposed, saved 20:26-20:27Z. causes.yaml status set to named. Wendell's next request, the same message: a process where the six faces produce new emergent terms and usage."
+}
