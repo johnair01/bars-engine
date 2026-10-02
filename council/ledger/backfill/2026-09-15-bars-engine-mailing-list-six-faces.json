@@ -1,0 +1,19 @@
+{
+  "id": "2026-09-15-bars-engine-mailing-list-six-faces",
+  "date": "2026-09-15",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "vendor-decision",
+  "cause_source": "backfill-heuristic",
+  "question": "Decision \u2014 what carries the mailing list, with Kit closed",
+  "title": "Decision \u2014 what carries the mailing list, with Kit closed",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": "MAILING_LIST_SIX_FACES.md",
+  "faces_present": [],
+  "face_count": 0,
+  "positions": {},
+  "overruled": [],
+  "outcome": "ruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

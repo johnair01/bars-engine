@@ -29,18 +29,32 @@ def find_records(dirs: list[Path]) -> list[dict]:
 
 
 def main(argv: list[str]) -> int:
-    dirs = [Path(a) for a in argv[1:]] or sorted(ROOT.glob(".specify/specs/*/ledger")) + [ROOT / "council" / "ledger"]
+    if argv[1:]:
+        dirs = [Path(a) for a in argv[1:]]
+    else:
+        # this repo's ledgers, plus every sibling repo's council ledgers (records live per repo)
+        dirs = sorted(ROOT.glob(".specify/specs/*/ledger"))
+        for repo in sorted(ROOT.parent.iterdir()):
+            base = repo / "council" / "ledger"
+            if base.is_dir():
+                dirs += [base] + sorted(d for d in base.rglob("*") if d.is_dir())
     dirs = [d for d in dirs if d.is_dir()]
     recs = find_records(dirs)
     print(f"{len(recs)} record(s) from {len(dirs)} ledger dir(s)\n")
 
     by_project, by_cause, by_convener = Counter(), Counter(), Counter()
-    pos_outcomes, q_outcomes = Counter(), Counter()
+    pos_outcomes, q_outcomes, doc_outcomes, by_source = Counter(), Counter(), Counter(), Counter()
+    faces_seen = Counter()
     steers, overrules = 0, 0
     for r in recs:
         by_project[r.get("project", "?")] += 1
         by_cause[r.get("cause", "?")] += 1
         by_convener[r.get("convened_by", "?")] += 1
+        by_source[r.get("invoked_from", "?")] += 1
+        if r.get("outcome"):
+            doc_outcomes[r["outcome"]] += 1
+        for f in r.get("faces_present") or []:
+            faces_seen[f] += 1
         for v in (r.get("positions") or {}).values():
             pos_outcomes[v] += 1
         overrules += len(r.get("overruled") or [])
@@ -57,6 +71,9 @@ def main(argv: list[str]) -> int:
     table("by project", by_project)
     table("by cause", by_cause)
     table("convened by", by_convener)
+    table("invoked from", by_source)
+    table("document outcomes (ruled / unruled)", doc_outcomes)
+    table("faces present in documents", faces_seen)
     table("position outcomes", pos_outcomes)
     table("question outcomes", q_outcomes)
     print(f"overrules {overrules}\nsteers {steers}\n")

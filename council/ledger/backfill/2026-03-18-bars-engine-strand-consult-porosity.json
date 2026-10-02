@@ -1,0 +1,25 @@
+{
+  "id": "2026-03-18-bars-engine-strand-consult-porosity",
+  "date": "2026-03-18",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "Game Master Consultation \u2014 BAR Share Porosity, Preview, Link Ergonomic",
+  "title": "Game Master Consultation \u2014 BAR Share Porosity, Preview, Link Ergonomic",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/bar-share-full-preview/STRAND_CONSULT_POROSITY.md",
+  "faces_present": [
+    "shaman",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 5,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-gm-analysis-bar-to-campaign-watering",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Game Master Analysis: BAR \u2192 Campaign Watering",
+  "title": "Game Master Analysis: BAR \u2192 Campaign Watering",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/golden-path-onboarding-action-loop/GM_ANALYSIS_BAR_TO_CAMPAIGN_WATERING.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

@@ -1,0 +1,22 @@
+{
+  "id": "2026-08-14-bars-engine-strand-consult-bruised-banana",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Strand / Sage consult brief \u2014 Hub\u2013spoke architecture \u00d7 existing work \u00d7 Bruised Banana events",
+  "title": "Strand / Sage consult brief \u2014 Hub\u2013spoke architecture \u00d7 existing work \u00d7 Bruised Banana events",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/campaign-hub-spoke-landing-architecture/STRAND_CONSULT_BRUISED_BANANA.md",
+  "faces_present": [
+    "challenger",
+    "sage"
+  ],
+  "face_count": 2,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

@@ -1,0 +1,24 @@
+{
+  "id": "2026-03-18-bars-engine-gm-consult-reevaluation",
+  "date": "2026-03-18",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "Game Master Consultation \u2014 Admin Agent Forge (EJ) Reevaluation",
+  "title": "Game Master Consultation \u2014 Admin Agent Forge (EJ) Reevaluation",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/archive/strand-consults/admin-agent-forge/GM_CONSULT_REEVALUATION.md",
+  "faces_present": [
+    "shaman",
+    "regent",
+    "architect",
+    "sage"
+  ],
+  "face_count": 4,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

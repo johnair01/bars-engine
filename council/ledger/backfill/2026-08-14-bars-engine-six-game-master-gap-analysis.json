@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-six-game-master-gap-analysis",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "Six Game Master Gap Analysis: Lineage Stability Bridge Spec",
+  "title": "Six Game Master Gap Analysis: Lineage Stability Bridge Spec",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/lenses-lineage-stability-bridge/SIX_GAME_MASTER_GAP_ANALYSIS.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

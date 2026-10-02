@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-strand-consult",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Strand consult: BAR seed metabolization & backlog composting",
+  "title": "Strand consult: BAR seed metabolization & backlog composting",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/bar-seed-metabolization/STRAND_CONSULT.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

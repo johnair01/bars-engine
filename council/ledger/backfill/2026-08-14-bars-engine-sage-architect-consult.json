@@ -1,0 +1,22 @@
+{
+  "id": "2026-08-14-bars-engine-sage-architect-consult",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Sage + Architect consult \u2014 Charge move alignment, events (Partiful), vibeulons, Bruised Banana",
+  "title": "Sage + Architect consult \u2014 Charge move alignment, events (Partiful), vibeulons, Bruised Banana",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/charge-capture-personal-move-commitment/SAGE_ARCHITECT_CONSULT.md",
+  "faces_present": [
+    "architect",
+    "sage"
+  ],
+  "face_count": 2,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

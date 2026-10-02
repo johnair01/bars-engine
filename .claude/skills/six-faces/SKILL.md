@@ -39,9 +39,11 @@ the board.
 - The pass is a file: `6FACE_PASS<n>_<date>.md` beside the subject it concerns (a spec folder, or
   `preproduction/` in friendcraft).
 - Positions and questions go to the board, the artifact page whose source is
-  `.specify/specs/six-faces-council-agents/council-board.html`, so Wendell flips and steers there.
-- A record goes in the repo's `ledger/` for the subject as JSON, in the shape of
-  `.specify/specs/six-faces-council-agents/ledger/*.json`.
+  `.specify/specs/six-faces-council-agents/council-board.html` in bars-engine, so Wendell flips and
+  steers there. Publish it to the same URL the ledger records carry.
+- A record goes in this repo's `council/ledger/` as JSON, in the shape of bars-engine's
+  `.specify/specs/six-faces-council-agents/ledger/*.json`. `council/stats.py` in bars-engine reads
+  every sibling repo's ledger; `council/lockstep.py` checks this file and `faces.yaml` match across repos.
 - The chat reply is what changed and the link. The pass itself is not pasted into chat.
 
 ## After Wendell answers on the board

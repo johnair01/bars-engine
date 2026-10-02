@@ -1,0 +1,26 @@
+{
+  "id": "2026-04-25-bars-engine-gm-gap-analysis-rpg-zine-bar-maturity",
+  "date": "2026-04-25",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "6-Face GM Gap Analysis: bars-engine vs. RPG Design Zine BAR Maturity",
+  "title": "6-Face GM Gap Analysis: bars-engine vs. RPG Design Zine BAR Maturity",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": "GM_GAP_ANALYSIS_RPG_ZINE_BAR_MATURITY.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

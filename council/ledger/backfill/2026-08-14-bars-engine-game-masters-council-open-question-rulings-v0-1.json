@@ -1,0 +1,21 @@
+{
+  "id": "2026-08-14-bars-engine-game-masters-council-open-question-rulings-v0-1",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "Game Masters Council - Open Question Rulings v0.1",
+  "title": "Game Masters Council - Open Question Rulings v0.1",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": "The Library/07 Book OS/03 Game Dev/MTGOA Allyship RPG/manual/core-v0.4/Game Masters Council - Open Question Rulings v0.1.md",
+  "faces_present": [
+    "regent"
+  ],
+  "face_count": 1,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

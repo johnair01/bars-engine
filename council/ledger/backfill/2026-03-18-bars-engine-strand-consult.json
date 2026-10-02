@@ -1,0 +1,25 @@
+{
+  "id": "2026-03-18-bars-engine-strand-consult",
+  "date": "2026-03-18",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Strand Consultation \u2014 BAR Social Links",
+  "title": "Strand Consultation \u2014 BAR Social Links",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/archive/strand-consults/bar-social-links/STRAND_CONSULT.md",
+  "faces_present": [
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 5,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

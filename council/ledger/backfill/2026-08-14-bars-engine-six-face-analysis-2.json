@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-six-face-analysis-2",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Six Game Master Faces \u2014 Narrative OS Map v0",
+  "title": "Six Game Master Faces \u2014 Narrative OS Map v0",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/narrative-os-map-v0/SIX_FACE_ANALYSIS.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

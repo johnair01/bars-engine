@@ -1,0 +1,22 @@
+{
+  "id": "2026-03-18-bars-engine-strand-output-challenger-balance",
+  "date": "2026-03-18",
+  "date_source": "filename-or-header",
+  "project": "bars-engine",
+  "cause": "spec-review",
+  "cause_source": "backfill-heuristic",
+  "question": "Challenger balance \u2014 vs Sage pass 2",
+  "title": "Challenger balance \u2014 vs Sage pass 2",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/campaign-hub-spoke-landing-architecture/STRAND_OUTPUT_CHALLENGER_BALANCE.md",
+  "faces_present": [
+    "challenger",
+    "sage"
+  ],
+  "face_count": 2,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

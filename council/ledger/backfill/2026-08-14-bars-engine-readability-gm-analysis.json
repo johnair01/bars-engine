@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-readability-gm-analysis",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "cause_source": "backfill-heuristic",
+  "question": "Campaign Lobby \u2014 Readability Pass & GM Analysis",
+  "title": "Campaign Lobby \u2014 Readability Pass & GM Analysis",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/portal-path-hint-gm-interview/READABILITY_GM_ANALYSIS.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}

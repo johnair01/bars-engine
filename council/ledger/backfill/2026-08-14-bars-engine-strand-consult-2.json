@@ -1,0 +1,26 @@
+{
+  "id": "2026-08-14-bars-engine-strand-consult-2",
+  "date": "2026-08-14",
+  "date_source": "git-add",
+  "project": "bars-engine",
+  "cause": "incident-reliability",
+  "cause_source": "backfill-heuristic",
+  "question": "Build reliability \u2014 After Action Report & Strand consult (6 Game Masters)",
+  "title": "Build reliability \u2014 After Action Report & Strand consult (6 Game Masters)",
+  "convened_by": "unknown",
+  "invoked_from": "backfill",
+  "source_doc": ".specify/specs/build-reliability/STRAND_CONSULT.md",
+  "faces_present": [
+    "shaman",
+    "challenger",
+    "regent",
+    "architect",
+    "diplomat",
+    "sage"
+  ],
+  "face_count": 6,
+  "positions": {},
+  "overruled": [],
+  "outcome": "unruled",
+  "note": "Backfilled from the document by heuristic. Positions were not extracted; faces_present and outcome are the reliable fields."
+}
