@@ -232,7 +232,7 @@ Model: `COUNCIL_MODEL`, default `anthropic:claude-sonnet-5-5` (the `anthropic` p
 1. Where the ledger lives: one ledger in bars-engine with a `project` field (my recommendation, since the agents and the composting script are here), or one per repo.
 2. The run length for promotion to `delegated`, and whether promotion is automatic or proposed for him to confirm.
 3. The reserved list, beyond the four defaults.
-4. Whether the council prompts may diverge from the NPC lore (Kaelen, Ignis, Aurelius, Vorm, Sola, The Witness). My recommendation: the council speaks as the faces, not as the NPCs, because the passes never used the NPC names.
+4. **Ruled 2026-10-02:** the council speaks as the faces, not as the NPCs (Kaelen, Ignis, Aurelius, Vorm, Sola, The Witness). Wendell: *"They should speak as faces."*
 5. Model provider for the council, and whether to try a second family for the Challenger.
 6. Build order: CLI first (my recommendation), or MCP first.
 7. Which six is canonical for the council: the altitude six (Shaman, Challenger, Regent, Architect, Diplomat, Sage) or the doctrine six in `specs/doctrine/gm-faces.md`. My recommendation: the altitude six, since every Wendell-convened pass used it, and the doctrine six becomes a named mask set the Sage may wear.
