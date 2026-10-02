@@ -1,2 +1,2 @@
 # The home repo for the six-faces council, as owner/repo@ref. Shared files are pulled from here.
-johnair01/bars-engine@main
+wendell-britt/six-faces-council@main
