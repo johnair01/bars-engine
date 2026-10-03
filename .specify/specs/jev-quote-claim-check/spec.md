@@ -12,12 +12,14 @@ Test whether TypeSafe's Jev can tell, for a quote and the claim it is attached t
 
 | Topic | Decision |
 |-------|----------|
-| Primitive | One Noul per (claim, quote) pair: "Does the quote support the claim?" A Noul is a yes/no probability. Choice and Score are not needed. |
+| Primitive | Two arms, compared. Arm A: one Noul per (claim, quote) pair, "Does the quote support the claim?" TypeSafe's Noul page says that if the question is really about degree, the value does not measure the degree, and support is partly a matter of degree. Arm B: a three-way Choice (supports, contradicts, says nothing), the shape TypeSafe's citation-check cookbook uses. The trial reports which arm fits. |
 | Role of the output | A candidate flag only. A low probability sends the pair to the face to read. A high probability never closes a check. Position `jev-candidates-only`. |
 | Fallback | With no key or no network, the check is skipped and the face reads every pair, as today. Position `jev-fallback`. |
 | Scope of data | Daemon reports and their cited sources. No player text. Position `jev-no-player-text`. |
 | Where it runs | A script beside `council/daemons/check_report.py`, called by a face on a finished report. Nothing runs at session start. |
 | Key | Server-side or local environment variable only. It never enters chat, the repo or a report. Creating the account is Wendell's step. |
+| Equal information | The baseline and both Jev arms see the same input: the claim, the quote and the text of the cited page (or an excerpt). A Jev that sees less than the baseline makes the comparison unfair. |
+| Data terms | TypeSafe's legal page says its Privacy Policy commits not to train models on user data and that enterprise customers can have zero data retention. The retention terms themselves sit in documents not yet read. The text sent is council material and never player text. Before Phase 2, Wendell reads the Data Processing Agreement and Privacy Policy (task T6a). |
 | Docs first | Before any code, read TypeSafe's current Noul page, confidence page and citation-check cookbook at docs.typesafe.ai. The skill says live docs are the source of truth. |
 
 ## Conceptual Model
@@ -41,8 +43,10 @@ The ruler is built before Jev runs, and its labels come from a person.
 
 1. **Known cases.** The four checks in the daemon-subagents spec's Skeptic rerun, two of which were mismatches. Source: `.specify/specs/daemon-subagents/spec.md` in the home repo.
 2. **Reports on record.** Every claim-and-quote pair in the daemon reports from passes 5 and 6 and the I Ching test. The window is named: those reports, as they stand on 2026-10-03.
-3. **Constructed mismatches.** For each pair in set 2, one pair with the quote swapped for a quote from a different claim in the same report. These mismatches are true by construction.
-4. **Wendell's labels.** Wendell labels a sample of set 2 as supports or does not support. The sample size, the pass mark and the threshold are his numbers and are unset (see Open decisions).
+3. **Constructed mismatches.** For each pair in set 2, one pair with the quote swapped for a quote from a different claim in the same report. These mismatches are true by construction. They are also easy: a swapped quote is lexically distant, so a shared-terms baseline will catch most of them. They are reported separately and never count toward the pass test.
+4. **Count first.** Before any model call or any money, count the true mismatches among the real pairs (sets 1 and 2). If there are too few to mean anything, the window widens (more reports, or the next passes) before the trial goes on. The real failure on record is a verbatim, on-topic quote attached to the wrong claim, and only real mismatches test that.
+5. **Split.** The labelled real pairs are split into a tuning half and a scoring half. The threshold is set on the tuning half and scored on the other.
+6. **Wendell's labels.** Wendell labels a sample of set 2 as supports or does not support. The sample size, the pass mark and the threshold are his numbers and are unset (see Open decisions).
 
 ## Functional Requirements
 
@@ -50,17 +54,18 @@ The ruler is built before Jev runs, and its labels come from a person.
 
 - **FR1**: Extract every claim-and-quote pair from the reports in the window into `labelled.json` with `id`, `claim`, `quote`, `source_url` and a `label` of `unlabelled` until a person sets it.
 - **FR2**: Build the constructed mismatches and mark them `label: no, by: construction`.
-- **FR3**: Verify each quote against its source page by opening the page. A quote that is not on the page is labelled `no, by: source`.
+- **FR3**: Check each quote against its source page by opening the page. A quote that is not on the page word for word goes to a person to read. A truncated or lightly reworded quote is not marked fabricated by rule: TypeSafe's cookbook notes its own string check does that, and this trial must not inherit it.
+- **FR3a**: Count the true mismatches among the real pairs and write the count into RESULTS before Phase 1 starts.
 
 ### Phase 1: Baseline
 
-- **FR4**: Run a deterministic baseline first: does the quote appear verbatim on the source page, and do the claim and quote share their key terms. Report its agreement with the labels.
+- **FR4**: Run a deterministic baseline first: does the quote appear on the source page (verbatim, then fuzzy), and do the claim and quote share their key terms. Report its agreement with the labels, on constructed and real pairs separately.
 - **FR5**: The baseline is the bar Jev must beat to earn a place. A Jev that only matches the baseline adds a dependency and a cost for nothing.
 
 ### Phase 2: Jev
 
-- **FR6**: Run one Noul per pair, in parallel, over `{claim, quote}` as state. Record `p_support` for every pair.
-- **FR7**: Report agreement with the labels at the threshold, the misses in both directions, and the end-to-end time and token cost, measured and not assumed.
+- **FR6**: Run both arms per pair, in parallel, over `{claim, quote, page_text}` as state. Record `p_support` (Noul) and the Choice distribution for every pair.
+- **FR7**: Report agreement with the labels on the scoring half at the threshold set on the tuning half, the misses in both directions, and the end-to-end time and token cost, measured and not assumed. Report the face's reading time per pair with and without the flag, because saving reading is the stated aim.
 
 ### Phase 3: Reading the misses
 
@@ -69,7 +74,7 @@ The ruler is built before Jev runs, and its labels come from a person.
 
 ## Pass marks
 
-Unset. Wendell sets them. The spec records only the shape: the trial passes if Jev beats the deterministic baseline on the labelled set at a threshold Wendell sets, and misses fewer constructed mismatches than the baseline does. No number here was inferred on his behalf.
+Unset. Wendell sets them. The spec records only the shape: the trial passes if Jev beats the deterministic baseline on the real pairs in the scoring half at a threshold Wendell sets, and the face's reading time per pair falls without a real mismatch slipping through unflagged. Constructed mismatches are reported and do not count. No number here was inferred on his behalf.
 
 ## Non-Functional Requirements
 
@@ -85,6 +90,7 @@ Unset. Wendell sets them. The spec records only the shape: the trial passes if J
 | The threshold for `read` | A number about his tolerance for a missed mismatch against reading time. | Which pairs reach the face. |
 | The pass mark | A number on his behalf is forbidden. | Whether the trial ends in adoption. |
 | Creating the TypeSafe account and key | His account and money. | Whether Phase 2 can run at all. |
+| Whether the data terms are acceptable for council text | A consent and release question; the reserved list keeps it with him. | Whether Phase 2 may send report text to TypeSafe. |
 
 ## Verification Quest
 
