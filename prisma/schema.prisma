@@ -386,7 +386,7 @@ model CustomBar {
   questSource                          String?
   stakedPool                           Int                    @default(0)
   agentMetadata                        String?
-  strandMetadata                       String?
+  strandMetadata                       String? // legacy name: general BAR provenance JSON (alchemy-engine, strand runs); not tied to the retired strand CLI
   questPool                            String?
   /// Playbook slug at charge capture (IE-10); immutable once set; null = no archetype stamp
   archetypeKey                         String?
