@@ -2,6 +2,22 @@
 
 Auto-generated from all feature plans. Last updated: 2026-03-08
 
+## Questions for Wendell go to the Council Board
+
+Every question whose answer changes what gets built goes through the six faces' reach test and onto the Council
+Board, https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho, never into chat. This holds in every session, mid-build,
+and for any worker a session starts.
+
+- Run the reach test first (`reach_test` in `council/faces.yaml`; the skill is `.claude/skills/six-faces/`). A
+  question the record can answer becomes a position that stands unless he flips it.
+- Board rows are written in the council's home repo, `wendell-britt/six-faces-council`, in `board/board_data.json`
+  on main, then rebuilt and republished. Its `CLAUDE.md` holds the full rule.
+- A chat reply says what changed and names the new board rows with the link. It ends without a question.
+- A worker sees only its prompt and this file. Put this rule in the prompt of any worker that might ask him
+  anything.
+
+Wendell, 2026-10-04: *"If you need rulings from me this should've gone to the council?"*
+
 ## UI Work — Read First
 
 **Before any UI work:** Read [`UI_COVENANT.md`](UI_COVENANT.md) at the start of every session.
