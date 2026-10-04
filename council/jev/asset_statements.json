@@ -1,0 +1,3216 @@
+[
+  {
+    "id": "AS-001",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 69,
+    "statement": "- **FR1**: Add `Asset` model: id, type, url, mimeType, metadataJson, ownerId, customBarId?, createdAt. Types: `bar_attachment`, `sprite`, `tile`.",
+    "kind": "schema",
+    "scope": "asset-admin",
+    "code_refs": [
+      "prisma/schema.prisma:1349",
+      "prisma/schema.prisma:1351",
+      "prisma/schema.prisma:1354",
+      "prisma/schema.prisma:1356",
+      "prisma/schema.prisma:1357",
+      "prisma/schema.prisma:1358"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Model Asset is at SCH:1349-1365; the upload route writes type bar_attachment at UP:113-147."
+  },
+  {
+    "id": "AS-002",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 71,
+    "statement": "- **FR3**: Asset storage: Vercel Blob when BLOB_READ_WRITE_TOKEN set; else `public/uploads/assets/{id}/{filename}`.",
+    "kind": "path",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/actions/assets.ts:11",
+      "src/actions/assets.ts:82",
+      "src/actions/assets.ts:93",
+      "src/actions/assets.ts:97"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-003",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 83,
+    "statement": "- **FR9**: Path convention: `public/sprites/walkable/{nationKey}-{archetypeKey}.png` or derive from avatar config. Fallback: `public/sprites/walkable/default.png`.",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155",
+      "src/lib/avatar-utils.ts:157",
+      "src/lib/avatar-utils.ts:160"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-004",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 84,
+    "statement": "- **FR10**: Extend avatar config or Player with `walkableSpritesheetUrl` when custom sprites exist; else derive from nation+archetype.",
+    "kind": "schema",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "prisma/schema.prisma:90",
+      "prisma/schema.prisma:91",
+      "prisma/schema.prisma:92"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Player fields at SCH:90-92."
+  },
+  {
+    "id": "AS-005",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 99,
+    "statement": "type String // bar_attachment | sprite | tile",
+    "kind": "schema",
+    "scope": "asset-admin",
+    "code_refs": [
+      "prisma/schema.prisma:1351"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-006",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 102,
+    "statement": "metadataJson String? @map(\"metadata_json\") // { intention?, altText?, ... }",
+    "kind": "schema",
+    "scope": "asset-admin",
+    "code_refs": [
+      "prisma/schema.prisma:1354"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-007",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 106,
+    "statement": "owner Player @relation(fields: [ownerId], references: [id])",
+    "kind": "schema",
+    "scope": "asset-admin",
+    "code_refs": [
+      "prisma/schema.prisma:1360"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-008",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 176,
+    "statement": "| Dimensions | 64×64 per frame (or 32×32 for smaller footprint) |",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-walkable-default.ts:11",
+      "src/lib/spatial-world/pixi-room.ts:208"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-009",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 177,
+    "statement": "| Layout | Row-major: N_idle, N_walk, S_idle, S_walk, E_idle, E_walk, W_idle, W_walk (8 frames) |",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/spatial-world/pixi-room.ts:81",
+      "src/lib/spatial-world/pixi-room.ts:82"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-010",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 180,
+    "statement": "| Path | `public/sprites/walkable/{key}.png` — key from `nationKey-archetypeKey` or `default` |",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155",
+      "src/lib/avatar-utils.ts:160"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-011",
+    "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md",
+    "line": 240,
+    "statement": "- Asset upload: max file size 5 MB for images; 10 MB for PDFs.",
+    "kind": "numeric",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/app/api/assets/upload/route.ts:31",
+      "src/app/api/assets/upload/route.ts:32",
+      "src/app/api/assets/upload/route.ts:109",
+      "src/actions/signal-quest-media.ts:7",
+      "src/app/api/party/valkyrie/upload/route.ts:7",
+      "src/app/api/party/valkyrie/upload/route.ts:8"
+    ],
+    "checkable": true,
+    "known_drift": "b",
+    "label": "unlabelled",
+    "note": "Number constants: UP:31 (5 MB), UP:32 (10 MB), UP:109 (the value passed to the token), SIG:7, VLK:7-8."
+  },
+  {
+    "id": "AS-012",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 19,
+    "statement": "**Format:** 1024×1024px RGBA PNG. Dark chiaroscuro pixel art. One per nation+archetype pairing.",
+    "kind": "numeric",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:72",
+      "scripts/generate-card-art.ts:549"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-013",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 20,
+    "statement": "**Asset count:** 40 images (5 nations × 8 archetypes). Done.",
+    "kind": "numeric",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:526",
+      "src/lib/ui/card-art-registry.ts:527"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "public/card-art holds 40 PNG files."
+  },
+  {
+    "id": "AS-014",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 31,
+    "statement": "- Nation sigil: 24×24px pixel glyph. 5 glyphs (one per element-nation). Designed, not Unicode.",
+    "kind": "numeric",
+    "scope": "asset-admin",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:45"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Sigil directory rules are at VAL:44-46."
+  },
+  {
+    "id": "AS-015",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 32,
+    "statement": "- Archetype mark: 16×16px geometric mark. 8 marks (role marks, shared across nations).",
+    "kind": "numeric",
+    "scope": "asset-admin",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:46"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-016",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 33,
+    "statement": "**Asset count:** 13 marks total. Not yet generated.",
+    "kind": "numeric",
+    "scope": "asset-admin",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:44",
+      "scripts/validate-sprite-layers.ts:45",
+      "scripts/validate-sprite-layers.ts:46",
+      "src/lib/avatar-utils.ts:10"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "public/sprites/ holds the directories parts, pending and walkable."
+  },
+  {
+    "id": "AS-017",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 44,
+    "statement": "**Format:** 64×96px cropped square. Derived from Cosmic art — CSS crop at `object-position: center 15%`",
+    "kind": "numeric",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/lib/ui/register-portrait.ts:4",
+      "src/lib/ui/register-portrait.ts:15"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-018",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 54,
+    "statement": "**Format:** Three composited RGBA sprite sheets (512×64px each, 8 frames: 4 dirs × 2):",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:41",
+      "scripts/validate-sprite-layers.ts:42",
+      "scripts/validate-sprite-layers.ts:43",
+      "scripts/generate-walkable-default.ts:14"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-019",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 55,
+    "statement": "- `walkable/base/{genderKey}.png` — 4 files, neutral body in motion",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:41",
+      "src/lib/avatar-utils.ts:155"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-020",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 56,
+    "statement": "- `walkable/nation/{nationKey}.png` — 5 files, nation color overlay (derived from ELEMENT_TOKENS)",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:42",
+      "src/lib/avatar-utils.ts:155"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-021",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 57,
+    "statement": "- `walkable/archetype/{archetypeKey}.png` — 8 files, archetype silhouette overlay",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:43",
+      "src/lib/avatar-utils.ts:155"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-022",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 58,
+    "statement": "**Compositing:** Same build-a-bear approach as portrait avatar (Avatar.tsx). In Pixi.js: three",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/pixel-identity/resolve-walkable.ts:27",
+      "src/lib/pixel-identity/resolve-walkable.ts:37",
+      "src/lib/spatial-world/pixi-room.ts:208"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-023",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 59,
+    "statement": "stacked Sprites from one AvatarConfig via `resolveWalkableSprite(config)`.",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/pixel-identity/resolve-walkable.ts:27",
+      "src/lib/pixel-identity/resolve-walkable.ts:40"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Resolver functions in RW are named resolveWalkableSpriteUrl and characterIdentityFromAvatarConfig."
+  },
+  {
+    "id": "AS-024",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 68,
+    "statement": "**Format:** 4 move icons at 24×24px. One per move family: Wake Up / Grow Up / Show Up / Clean Up.",
+    "kind": "numeric",
+    "scope": "asset-admin",
+    "code_refs": [],
+    "checkable": false,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "No move-icon rule found by grep."
+  },
+  {
+    "id": "AS-025",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 79,
+    "statement": "**Format:** Tileable 64×64px RGBA PNG. Near-black on `#0a0908` base. Subtle grain — readable",
+    "kind": "numeric",
+    "scope": "asset-admin",
+    "code_refs": [],
+    "checkable": false,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "public/textures holds zone-lobby.png."
+  },
+  {
+    "id": "AS-026",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 91,
+    "statement": "No image assets required — color derives from ELEMENT_TOKENS automatically.",
+    "kind": "other",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/lib/ui/card-tokens.ts:39"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-027",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 113,
+    "statement": "getAvatarPartSpecs(config) → portrait CSS layers (Avatar.tsx)",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:65"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-028",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 114,
+    "statement": "resolveWalkableSprite(config) → Pixi walk layers (pixi-room.ts)",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/pixel-identity/resolve-walkable.ts:27",
+      "src/lib/spatial-world/pixi-room.ts:208"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-029",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 115,
+    "statement": "resolveProvenanceStamp(config) → sigil + mark chip (BAR card corner)",
+    "kind": "naming",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:10"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "avatar-utils.ts:10 mentions this function in a comment."
+  },
+  {
+    "id": "AS-030",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 158,
+    "statement": "- Portrait layers: 64×64px exactly.",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:35",
+      "scripts/validate-sprite-layers.ts:36",
+      "scripts/validate-sprite-layers.ts:37",
+      "scripts/validate-sprite-layers.ts:38",
+      "scripts/validate-sprite-layers.ts:39"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-031",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 159,
+    "statement": "- Walk sprite sheets: 512×64px exactly, 8 frames, direction order: down(0-1) left(2-3) right(4-5) up(6-7).",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:41",
+      "src/lib/spatial-world/pixi-room.ts:81",
+      "src/lib/spatial-world/pixi-room.ts:82"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-032",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 162,
+    "statement": "- All colors must trace to `ELEMENT_TOKENS` or `SURFACE_TOKENS` in `card-tokens.ts`. No hardcoded hex.",
+    "kind": "other",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/lib/ui/card-tokens.ts:39",
+      "src/lib/ui/card-tokens.ts:205",
+      "src/lib/ui/card-art-registry.ts:683",
+      "src/lib/ui/card-art-registry.ts:685"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-033",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 166,
+    "statement": "- `src/lib/ui/card-tokens.ts` — ELEMENT_TOKENS, SURFACE_TOKENS (authoritative color source)",
+    "kind": "path",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/lib/ui/card-tokens.ts:39",
+      "src/lib/ui/card-tokens.ts:205"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-034",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 167,
+    "statement": "- `src/lib/avatar-utils.ts` — AvatarConfig, getWalkableSpriteUrl (existing; extend with resolvers)",
+    "kind": "naming",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-035",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 168,
+    "statement": "- `src/lib/ui/card-art-registry.ts` — Cosmic register registry",
+    "kind": "path",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:549"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-036",
+    "doc": ".specify/specs/asset-register-design-system/spec.md",
+    "line": 170,
+    "statement": "- `.specify/specs/provenance-stamp-system/spec.md` — Provenance Stamp implementation",
+    "kind": "path",
+    "scope": "asset-admin",
+    "code_refs": [],
+    "checkable": false,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Path checked by directory listing of .specify/specs."
+  },
+  {
+    "id": "AS-037",
+    "doc": ".specify/specs/avatar-sprite-assets/spec.md",
+    "line": 21,
+    "statement": "| **WHO** (Archetype) | playbook_outfit/{playbookKey}.png, playbook_accent/{playbookKey}.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:56",
+      "src/lib/avatar-parts.ts:57",
+      "src/lib/avatar-parts.ts:58",
+      "scripts/validate-sprite-layers.ts:38",
+      "scripts/validate-sprite-layers.ts:39"
+    ],
+    "checkable": true,
+    "known_drift": "c",
+    "label": "unlabelled",
+    "note": "AP:56-60 maps layer names to directory names."
+  },
+  {
+    "id": "AS-038",
+    "doc": ".specify/specs/avatar-sprite-assets/spec.md",
+    "line": 41,
+    "statement": "**Acceptance**: docs/SPRITE_ASSETS.md lists nation keys (argyra, pyrakanth, virelune, meridia, lamenth) and playbook keys (bold-heart, devoted-guardian, etc.).",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:67",
+      "src/lib/ui/card-art-registry.ts:107",
+      "src/lib/ui/card-art-registry.ts:113"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-039",
+    "doc": ".specify/specs/avatar-sprite-assets/spec.md",
+    "line": 45,
+    "statement": "- **FR1**: Base layer MUST include four PNGs: `default.png`, `male.png`, `female.png`, `neutral.png` in `public/sprites/parts/base/`.",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/actions/admin.ts:663",
+      "src/lib/avatar-parts.ts:70"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-040",
+    "doc": ".specify/specs/avatar-sprite-assets/spec.md",
+    "line": 46,
+    "statement": "- **FR2**: All sprite assets MUST be 64x64 pixels with transparent backgrounds for proper layering.",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:35",
+      "scripts/validate-sprite-layers.ts:41"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-041",
+    "doc": ".specify/specs/avatar-sprite-assets/spec.md",
+    "line": 57,
+    "statement": "playbook_outfit/",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:56",
+      "src/lib/avatar-parts.ts:57",
+      "scripts/validate-sprite-layers.ts:38"
+    ],
+    "checkable": true,
+    "known_drift": "c",
+    "label": "unlabelled",
+    "note": "AP:56-60 maps layer names to directory names."
+  },
+  {
+    "id": "AS-042",
+    "doc": ".specify/specs/avatar-sprite-assets/spec.md",
+    "line": 58,
+    "statement": "playbook_accent/",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:56",
+      "src/lib/avatar-parts.ts:58",
+      "scripts/validate-sprite-layers.ts:39"
+    ],
+    "checkable": true,
+    "known_drift": "c",
+    "label": "unlabelled",
+    "note": "AP:56-60 maps layer names to directory names."
+  },
+  {
+    "id": "AS-043",
+    "doc": ".specify/specs/avatar-sprite-quality-process/CANONICAL_BASE_SPRITE.md",
+    "line": 28,
+    "statement": "| skin_light | `#FF0001` | `#f4d4b8` | `#e8c4a0` | `#f5dcc8` | `#f0d0b0` |",
+    "kind": "other",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/derive-base-sprites.ts:25",
+      "scripts/derive-base-sprites.ts:34",
+      "scripts/derive-base-sprites.ts:43",
+      "scripts/derive-base-sprites.ts:52",
+      "scripts/derive-base-sprites.ts:61"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-044",
+    "doc": ".specify/specs/avatar-sprite-quality-process/CANONICAL_BASE_SPRITE.md",
+    "line": 36,
+    "statement": "Index colors (`#FF0001`–`#FF0005`) are chosen to be distinct and rarely occur in art; swap script replaces them.",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/derive-base-sprites.ts:24",
+      "scripts/derive-base-sprites.ts:25"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-045",
+    "doc": ".specify/specs/avatar-sprite-quality-process/CANONICAL_BASE_SPRITE.md",
+    "line": 42,
+    "statement": "| **Anchor** | Center-bottom (32, 64) | All layers align here |",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-nation-placeholders.ts:5"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-046",
+    "doc": ".specify/specs/avatar-sprite-quality-process/CANONICAL_BASE_SPRITE.md",
+    "line": 50,
+    "statement": "2. **Script** runs `npm run sprites:derive-base` → outputs default.png, male.png, female.png, neutral.png.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "package.json:241",
+      "scripts/derive-base-sprites.ts:2"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-047",
+    "doc": ".specify/specs/avatar-sprite-quality-process/CANONICAL_BASE_SPRITE.md",
+    "line": 55,
+    "statement": "Reads `base/canonical.png`, applies palette swap per variant, writes to `base/{default,male,female,neutral}.png`. Uses `sharp` or `jimp` for pixel-level color replacement.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/derive-base-sprites.ts:2",
+      "scripts/derive-base-sprites.ts:14"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-048",
+    "doc": ".specify/specs/avatar-sprite-quality-process/CANONICAL_BASE_SPRITE.md",
+    "line": 59,
+    "statement": "If canonical doesn't exist: keep current base/*.png. Script no-ops.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/derive-base-sprites.ts:129",
+      "scripts/derive-base-sprites.ts:137"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-049",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 23,
+    "statement": "| **Dimensions** | 64×64 px | Dashboard header visibility; no code change |",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:35"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-050",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 24,
+    "statement": "| **Format** | PNG, transparent background | Layering requires transparency |",
+    "kind": "other",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/actions/admin.ts:725",
+      "backend/app/sprites/validation.py:115"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-051",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 30,
+    "statement": "Shared palette so nation × playbook combos don't clash. 12 colors max per layer.",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/validation.py:8",
+      "backend/app/sprites/validation.py:12",
+      "backend/app/sprites/validation.py:13"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "BVAL:12 reads colours from docs/STYLE_GUIDE.md; the guide sits in a specs folder."
+  },
+  {
+    "id": "AS-052",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 36,
+    "statement": "| Skin light | `#f4d4b8` | Default skin |",
+    "kind": "other",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/derive-base-sprites.ts:34"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-053",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 66,
+    "statement": "- **Workflow**: Create `base/canonical.png` with index colors, or run `npm run sprites:derive-base -- --init-from-default` to create canonical from default.png.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "package.json:241",
+      "scripts/derive-base-sprites.ts:111",
+      "scripts/derive-base-sprites.ts:129"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-054",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 67,
+    "statement": "- **Derive**: `npm run sprites:derive-base` → outputs default, male, female, neutral from canonical.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "package.json:241",
+      "scripts/derive-base-sprites.ts:2"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-055",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 75,
+    "statement": "3. playbook_outfit (WHO: archetype clothing)",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:56",
+      "src/lib/avatar-parts.ts:57"
+    ],
+    "checkable": true,
+    "known_drift": "c",
+    "label": "unlabelled",
+    "note": "AP:56-60 maps layer names to directory names."
+  },
+  {
+    "id": "AS-056",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 77,
+    "statement": "5. playbook_accent (archetype flourish)",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:56",
+      "src/lib/avatar-parts.ts:58"
+    ],
+    "checkable": true,
+    "known_drift": "c",
+    "label": "unlabelled",
+    "note": "AP:56-60 maps layer names to directory names."
+  },
+  {
+    "id": "AS-057",
+    "doc": ".specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md",
+    "line": 105,
+    "statement": "Edit `base-silhouette.json` manually to tune `nationBody` and `nationAccent` (x, y, width, height) if needed.",
+    "kind": "schema",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "public/sprites/parts/base-silhouette.json:15",
+      "public/sprites/parts/base-silhouette.json:18",
+      "scripts/analyze-base-silhouette.ts:14"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-058",
+    "doc": ".specify/specs/avatar-sprite-quality-process/spec.md",
+    "line": 5,
+    "statement": "The sprites must work with the existing modular layer system (base → nation_body → playbook_outfit → nation_accent → playbook_accent).",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:56",
+      "src/lib/avatar-parts.ts:57",
+      "src/lib/avatar-parts.ts:58",
+      "src/lib/avatar-parts.ts:65",
+      "scripts/validate-sprite-layers.ts:38",
+      "scripts/validate-sprite-layers.ts:39"
+    ],
+    "checkable": true,
+    "known_drift": "c",
+    "label": "unlabelled",
+    "note": "AP:56-60 maps layer names to directory names."
+  },
+  {
+    "id": "AS-059",
+    "doc": ".specify/specs/avatar-sprite-quality-process/spec.md",
+    "line": 47,
+    "statement": "base → nation_body → playbook_outfit → nation_accent → playbook_accent",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:40",
+      "src/lib/avatar-parts.ts:41",
+      "src/lib/avatar-parts.ts:42",
+      "src/lib/avatar-parts.ts:43",
+      "src/lib/avatar-parts.ts:44",
+      "src/lib/avatar-parts.ts:45",
+      "src/lib/avatar-parts.ts:56"
+    ],
+    "checkable": true,
+    "known_drift": "c",
+    "label": "unlabelled",
+    "note": "AP:40-45 is the PartLayer type; AP:56-60 maps layer names to directory names."
+  },
+  {
+    "id": "AS-060",
+    "doc": ".specify/specs/avatar-sprite-quality-process/spec.md",
+    "line": 53,
+    "statement": "3. **Consistent dimensions**: Same pixel size across all layers (currently 64×64)",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:35",
+      "scripts/validate-sprite-layers.ts:39"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-061",
+    "doc": ".specify/specs/avatar-sprite-quality-process/spec.md",
+    "line": 67,
+    "statement": "- Create 4 bases: default, male, female, neutral",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/actions/admin.ts:663"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-062",
+    "doc": ".specify/specs/avatar-sprite-quality-process/spec.md",
+    "line": 74,
+    "statement": "- For each nation (argyra, pyrakanth, virelune, meridia, lamenth):",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:67",
+      "src/lib/ui/card-art-registry.ts:73",
+      "src/lib/ui/card-art-registry.ts:79",
+      "src/lib/ui/card-art-registry.ts:85",
+      "src/lib/ui/card-art-registry.ts:91"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-063",
+    "doc": ".specify/specs/avatar-sprite-quality-process/spec.md",
+    "line": 92,
+    "statement": "- Test nation × playbook combinations (5 × 8 = 40 combos)",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:526",
+      "src/lib/ui/card-art-registry.ts:527"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-064",
+    "doc": ".specify/specs/book-upload-vercel-client-exception/spec.md",
+    "line": 56,
+    "statement": "3. Upload a PDF (< 4.5 MB for Hobby).",
+    "kind": "numeric",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/app/api/books/upload/route.ts:40",
+      "src/app/api/books/upload/route.ts:61"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Book route sets its own maximum at BKU:61."
+  },
+  {
+    "id": "AS-065",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 13,
+    "statement": "- Route: `/admin/raise-awareness`.",
+    "kind": "path",
+    "scope": "carousel",
+    "code_refs": [
+      "src/app/admin/raise-awareness/page.tsx:17"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-066",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 14,
+    "statement": "- Access: signed-in global admins and global stewards only. No public route.",
+    "kind": "process",
+    "scope": "carousel",
+    "code_refs": [
+      "src/app/admin/raise-awareness/page.tsx:18",
+      "src/app/admin/raise-awareness/page.tsx:19",
+      "src/app/admin/raise-awareness/page.tsx:20",
+      "src/app/admin/raise-awareness/page.tsx:23"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-067",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 15,
+    "statement": "- Input: a steward pastes and edits already-approved text. The MVP does not",
+    "kind": "process",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:142"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-068",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 17,
+    "statement": "- Output: live in-app carousel preview and one downloaded 1080x1080 PNG per slide.",
+    "kind": "numeric",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:95",
+      "src/components/raise-awareness/CarouselComposer.tsx:134"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-069",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 19,
+    "statement": "- Slide count: five to eight, with six supplied by the starter draft.",
+    "kind": "numeric",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:43",
+      "src/components/raise-awareness/CarouselComposer.tsx:46",
+      "src/components/raise-awareness/CarouselComposer.tsx:51",
+      "src/components/raise-awareness/CarouselComposer.tsx:139",
+      "src/components/raise-awareness/CarouselComposer.tsx:140"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-070",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 24,
+    "statement": "type Channel = 'fire' | 'water' | 'wood' | 'metal' | 'earth'",
+    "kind": "schema",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:5"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-071",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 29,
+    "statement": "color?: 'ink' | 'accent' | 'ember' | 'teal' | 'jade' | 'silver' | 'ochre' | 'liminal'",
+    "kind": "schema",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:7",
+      "src/components/raise-awareness/CarouselComposer.tsx:8"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-072",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 32,
+    "statement": "kind: 'hook' | 'body' | 'steps' | 'cta'",
+    "kind": "schema",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:6",
+      "src/components/raise-awareness/CarouselComposer.tsx:11"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-073",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 35,
+    "statement": "alignment: 'left' | 'center'",
+    "kind": "schema",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:14"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-074",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 36,
+    "statement": "fontRole: 'display' | 'body' | 'mono'",
+    "kind": "schema",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:15"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-075",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 37,
+    "statement": "scale: 'compact' | 'standard' | 'large'",
+    "kind": "schema",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:16"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-076",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 59,
+    "statement": "3. It must add and remove slides while enforcing a five-to-eight slide limit.",
+    "kind": "numeric",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:139",
+      "src/components/raise-awareness/CarouselComposer.tsx:140"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-077",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 64,
+    "statement": "5. Slide progress `i / (N - 1)` must interpolate the channel palette and",
+    "kind": "numeric",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:81"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-078",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 88,
+    "statement": "- Downloaded images are 1080x1080 PNGs and use the current editor values.",
+    "kind": "numeric",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:134"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-079",
+    "doc": ".specify/specs/raise-awareness-carousel-forge/spec.md",
+    "line": 93,
+    "statement": "- No data leaves the browser during composition or download.",
+    "kind": "process",
+    "scope": "carousel",
+    "code_refs": [
+      "src/components/raise-awareness/CarouselComposer.tsx:128",
+      "src/components/raise-awareness/CarouselComposer.tsx:134",
+      "src/components/raise-awareness/CarouselComposer.tsx:138"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "grep of CarouselComposer.tsx for fetch, localStorage and sessionStorage found no calls."
+  },
+  {
+    "id": "AS-080",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 15,
+    "statement": "- Generation is triggered on player acceptance (character creation / \"Build Your Character\" quest completion → `deriveAvatarFromExisting` completion effect).",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/actions/quest-engine.ts:849",
+      "src/lib/sprite-queue.ts:9"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-081",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 16,
+    "statement": "- The result is stored as `Player.avatarConfig` (JSON), a `Player.avatarSpritePath` (portrait) and `Player.walkableSpritePath` (walkable).",
+    "kind": "schema",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "prisma/schema.prisma:90",
+      "prisma/schema.prisma:91",
+      "prisma/schema.prisma:92"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-082",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 17,
+    "statement": "- **No per-room generation.** When a player enters a map, `getWalkableSpriteUrl(parseAvatarConfig(avatarConfig))` is called. If the sprite file exists, it renders. If not, `default.png` fallback renders.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155",
+      "src/lib/spatial-world/pixi-room.ts:214",
+      "src/lib/pixel-identity/resolve-walkable.ts:27"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-083",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 28,
+    "statement": "Format: Five compositeable layers, all 64×64 transparent PNG:",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:40",
+      "src/lib/avatar-parts.ts:41",
+      "src/lib/avatar-parts.ts:42",
+      "src/lib/avatar-parts.ts:43",
+      "src/lib/avatar-parts.ts:44",
+      "src/lib/avatar-parts.ts:45",
+      "scripts/validate-sprite-layers.ts:35"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-084",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 35,
+    "statement": "Key at rest: `/sprites/avatar/{nationKey}-{archetypeKey}-{layer}.png`",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:70",
+      "src/lib/avatar-parts.ts:76",
+      "src/lib/avatar-parts.ts:84"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "AP:65-103 builds the layer paths."
+  },
+  {
+    "id": "AS-085",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 39,
+    "statement": "**Generation approach**: AI image API (DALL·E 3 / Stability AI / Replicate) per layer, guided by prompts from `SPRITE_ASSETS.md`. Requires admin review before promotion to `/public/sprites/`.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/worker.py:3",
+      "backend/app/sprites/worker.py:40",
+      "src/actions/sprite-review.ts:19"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-086",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 45,
+    "statement": "Format: Single PNG, 8 frames row-major at 64×64 per frame:",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-walkable-default.ts:11",
+      "scripts/generate-walkable-default.ts:14",
+      "backend/app/sprites/worker.py:5",
+      "backend/app/sprites/worker.py:41"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-087",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 50,
+    "statement": "Key at rest: `/sprites/walkable/{nationKey}-{archetypeKey}.png`",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155",
+      "src/lib/avatar-utils.ts:160"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-088",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 66,
+    "statement": "| `scripts/sprites/flatten-portrait.lua` | Merge 5 portrait layers into single 64×64 PNG |",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/sprites/flatten-portrait.lua:2",
+      "scripts/sprites/flatten-portrait.lua:10",
+      "backend/app/sprites/worker.py:185",
+      "backend/app/sprites/worker.py:197"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-089",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 67,
+    "statement": "| `scripts/sprites/palette-swap.lua` | Apply nation palette to LPC base for walkable |",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [],
+    "checkable": false,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "scripts/sprites is a directory; checked by listing."
+  },
+  {
+    "id": "AS-090",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 68,
+    "statement": "| `scripts/sprites/assemble-walkable.lua` | Concatenate 8 frames into 512×64 spritesheet |",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [],
+    "checkable": false,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "scripts/sprites is a directory; checked by listing."
+  },
+  {
+    "id": "AS-091",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 76,
+    "statement": "`deriveAvatarFromExisting` completion effect → enqueue `sprite_generation_job` with:",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/actions/quest-engine.ts:849",
+      "src/lib/sprite-queue.ts:9",
+      "src/lib/sprite-queue.ts:12",
+      "src/lib/sprite-queue.ts:21"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-092",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 101,
+    "statement": "1. **Wrong dimensions** — portrait not 64×64, walkable not 512×64",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/validation.py:115",
+      "backend/app/sprites/validation.py:131"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-093",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 102,
+    "statement": "2. **Palette violation** — colors outside approved STYLE_GUIDE.md palette",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/validation.py:64",
+      "backend/app/sprites/validation.py:12",
+      "backend/app/sprites/validation.py:119"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-094",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 103,
+    "statement": "3. **Opaque background on overlay layers** — nation_body / archetype layers must be transparent PNG",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/validation.py:116",
+      "backend/app/sprites/validation.py:117",
+      "backend/app/sprites/validation.py:118"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-095",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 104,
+    "statement": "4. **Attribution missing** — LPC-derived assets require CC-BY-SA attribution file",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/validation.py:90",
+      "backend/app/sprites/validation.py:92",
+      "backend/app/sprites/validation.py:93"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-096",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 108,
+    "statement": "Generated sprites land in `/sprites/pending/` before promotion. Admin sees:",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/worker.py:26",
+      "backend/app/sprites/worker.py:163"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-097",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 111,
+    "statement": "- Approve → move to `/public/sprites/` + update `Player.avatarSpritePath`",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/actions/sprite-review.ts:12",
+      "src/actions/sprite-review.ts:19",
+      "src/actions/sprite-review.ts:20"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-098",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 114,
+    "statement": "Route: `/admin/sprites/review`",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/app/admin/sprites/review/page.tsx:1",
+      "src/actions/sprite-review.ts:24"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-099",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 123,
+    "statement": "pipeline String // \"portrait\" | \"walkable\"",
+    "kind": "schema",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "prisma/schema.prisma:3807",
+      "backend/app/sprites/schemas.py:5"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-100",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 126,
+    "statement": "status String // \"enqueued\" | \"generated\" | \"review\" | \"approved\" | \"rejected\"",
+    "kind": "schema",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "prisma/schema.prisma:3810",
+      "backend/app/sprites/schemas.py:6"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-101",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 129,
+    "statement": "sourceModel String? // \"dalle3\" | \"stability\" | \"lpc\" | \"manual\"",
+    "kind": "schema",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "prisma/schema.prisma:1349",
+      "prisma/schema.prisma:1365",
+      "prisma/schema.prisma:3813"
+    ],
+    "checkable": true,
+    "known_drift": "e",
+    "label": "unlabelled",
+    "note": "Models: Asset at SCH:1349-1365; SpriteAuditLog at SCH:3804-3818."
+  },
+  {
+    "id": "AS-102",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 141,
+    "statement": "POST /api/sprites/generate",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/routes.py:10",
+      "backend/app/sprites/routes.py:23",
+      "src/lib/sprite-queue.ts:30"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-103",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 149,
+    "statement": "GET /api/sprites/status?playerId=...",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/routes.py:10",
+      "backend/app/sprites/routes.py:31"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-104",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 150,
+    "statement": "Response: { portrait: \"approved\" | \"pending\" | \"none\", walkable: \"approved\" | \"pending\" | \"none\" }",
+    "kind": "schema",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/schemas.py:6",
+      "backend/app/sprites/schemas.py:19",
+      "backend/app/sprites/schemas.py:20",
+      "backend/app/sprites/schemas.py:21"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-105",
+    "doc": ".specify/specs/sprite-generation-pipeline/spec.md",
+    "line": 157,
+    "statement": "POST /api/admin/sprites/review/:id/approve",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/actions/sprite-review.ts:12",
+      "src/actions/sprite-review.ts:28"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "src/app/api/admin holds the directories books, forge, onboarding, story, twee."
+  },
+  {
+    "id": "AS-106",
+    "doc": ".specify/specs/walkable-sprite-pipeline-demo/spec.md",
+    "line": 20,
+    "statement": "| Demo config | Opt-in: `NEXT_PUBLIC_WALKABLE_SPRITE_DEMO=true` forces `{ nationKey: 'argyra', archetypeKey: 'bold-heart' }` for world walkable URL only (production default unchanged). |",
+    "kind": "other",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/app/world/[instanceSlug]/[roomSlug]/page.tsx:155",
+      "src/app/world/[instanceSlug]/[roomSlug]/page.tsx:156",
+      "src/lib/avatar-utils.ts:22"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-107",
+    "doc": ".specify/specs/walkable-sprite-pipeline-demo/spec.md",
+    "line": 28,
+    "statement": "- **FR3**: `public/sprites/walkable/argyra-bold-heart.png` committed (demo sheet; may duplicate `default.png` until custom art).",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:22",
+      "src/lib/avatar-utils.ts:23",
+      "src/lib/avatar-utils.ts:24"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-108",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 16,
+    "statement": "| **Asset source** | Replicate `retro-diffusion/rd-animation` for generation; LPC 4wall.ai as manual fallback |",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/worker.py:4",
+      "backend/app/sprites/worker.py:79"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-109",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 17,
+    "statement": "| **Format** | 512×64 PNG, 8 frames row-major (N/S/E/W × idle/walk); 64×64 per frame per docs/WALKABLE_SPRITES.md |",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-walkable-default.ts:11",
+      "scripts/generate-walkable-default.ts:14",
+      "backend/app/sprites/worker.py:5",
+      "src/lib/spatial-world/pixi-room.ts:208"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-110",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 18,
+    "statement": "| **Key derivation** | `{nationKey}-{archetypeKey}` via `getWalkableSpriteUrl(parseAvatarConfig(avatarConfig))` |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155",
+      "src/lib/avatar-utils.ts:159"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-111",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 49,
+    "statement": "- Fetches output, optionally scales 48→64 if needed, saves to `public/sprites/walkable/{nationKey}-{archetypeKey}.png`",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/worker.py:5",
+      "backend/app/sprites/worker.py:75",
+      "backend/app/sprites/worker.py:25"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-112",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 91,
+    "statement": "**Acceptance**: Script `npm run sprites:validate-walkable` checks dimensions, frame count, transparency; exits 1 on failure.",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "package.json:241",
+      "package.json:244"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Sprite scripts in package.json are at PKG:241-244."
+  },
+  {
+    "id": "AS-113",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 98,
+    "statement": "- **FR2**: Sprite loading helper: `Assets.load(url)`, frame rect `Rectangle(frameIndex*64, 0, 64, 64)`, cache by URL.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/spatial-world/pixi-room.ts:28",
+      "src/lib/spatial-world/pixi-room.ts:29",
+      "src/lib/spatial-world/pixi-room.ts:202",
+      "src/lib/spatial-world/pixi-room.ts:203",
+      "src/lib/spatial-world/pixi-room.ts:208"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-114",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 114,
+    "statement": "- **FR12**: Call `retro-diffusion/rd-animation` with `style: \"four_angle_walking\"`, `return_spritesheet: true`.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/worker.py:79",
+      "backend/app/sprites/worker.py:88"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-115",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 120,
+    "statement": "- **FR15**: Script `scripts/validate-walkable-sprites.ts` checks 512×64, 8 frames, PNG, transparency.",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:41"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "scripts/ holds validate-walkable-humanoid.ts and validate-sprite-layers.ts."
+  },
+  {
+    "id": "AS-116",
+    "doc": ".specify/specs/walkable-sprites-implementation/spec.md",
+    "line": 126,
+    "statement": "- **Fallback**: default.png must exist; ensure 512×64 format.",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-walkable-default.ts:61",
+      "src/lib/avatar-utils.ts:157"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-117",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 3,
+    "statement": "> Governance document for the 40 canonical card art images (5 nations × 8 playbooks).",
+    "kind": "numeric",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:526",
+      "src/lib/ui/card-art-registry.ts:527"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-118",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 12,
+    "statement": "| **Fork admin (default)** | Nothing. Images are committed to `public/card-art/`. You inherit them. |",
+    "kind": "path",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:536",
+      "scripts/generate-card-art.ts:64"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-119",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 29,
+    "statement": "This prints all 40 pairings and marks which files exist. No API key needed.",
+    "kind": "process",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:92",
+      "scripts/generate-card-art.ts:281",
+      "scripts/generate-card-art.ts:284",
+      "scripts/generate-card-art.ts:289"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-120",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 45,
+    "statement": "npm install --save-dev @fal-ai/client archiver @types/archiver",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "package.json:286",
+      "package.json:288",
+      "package.json:293"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Package.json lines 286, 288 and 293 name these three packages."
+  },
+  {
+    "id": "AS-121",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 48,
+    "statement": "OPENAI_API_KEY=sk-... # for Phase 1 (reference generation)",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:140",
+      "scripts/generate-card-art.ts:141"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-122",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 49,
+    "statement": "FAL_KEY=... # for Phase 2 (LoRA training) + Phase 3 (generation)",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:140",
+      "scripts/generate-card-art.ts:142"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-123",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 57,
+    "statement": "Generate 10 reference images using gpt-image-1 that will define the style LoRA.",
+    "kind": "numeric",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:79",
+      "scripts/generate-card-art.ts:82"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-124",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 58,
+    "statement": "These images are committed to `docs/card-art-references/` so future maintainers",
+    "kind": "path",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:65"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-125",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 69,
+    "statement": "**Output:** `docs/card-art-references/ref-01-*.png` through `ref-10-*.png`",
+    "kind": "naming",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:282",
+      "scripts/generate-card-art.ts:342"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-126",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 81,
+    "statement": "Train a Flux style LoRA on fal.ai using the reference images.",
+    "kind": "process",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:259",
+      "scripts/generate-card-art.ts:467"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-127",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 92,
+    "statement": "**Output:** The script prints a `FAL_LORA_URL` value.",
+    "kind": "process",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:270",
+      "scripts/generate-card-art.ts:272"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-128",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 106,
+    "statement": "Generate all 40 images using Flux Dev + the style LoRA.",
+    "kind": "process",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:71",
+      "scripts/generate-card-art.ts:547",
+      "scripts/generate-card-art.ts:548"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-129",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 107,
+    "statement": "Each image uses a deterministic seed (index × 1000 + 42000)",
+    "kind": "numeric",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:67",
+      "scripts/generate-card-art.ts:68",
+      "scripts/generate-card-art.ts:243"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-130",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 122,
+    "statement": "npx tsx scripts/generate-card-art.ts --generate --element=fire --playbook=bold-heart --force",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:93",
+      "scripts/generate-card-art.ts:100",
+      "scripts/generate-card-art.ts:101"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-131",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 125,
+    "statement": "**Output:** `public/card-art/{nationKey}-{playbookKey}.png` (40 files)",
+    "kind": "naming",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:536",
+      "src/lib/ui/card-art-registry.ts:537",
+      "scripts/generate-card-art.ts:64"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Registry builds key as nationKey-playbookKey; public/card-art holds 40 PNG files."
+  },
+  {
+    "id": "AS-132",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 142,
+    "statement": "- `color_palette` is a first-class API parameter — element hex values from",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:632",
+      "src/lib/ui/card-art-registry.ts:683"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Statement continues on the next doc line (card-tokens.ts)."
+  },
+  {
+    "id": "AS-133",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 144,
+    "statement": "- `seed` parameter means deterministic output — two admins following the same",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:630",
+      "scripts/generate-card-art.ts:243"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-134",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 147,
+    "statement": "- One new API key (`IDEOGRAM_API_KEY`)",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:143"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-135",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 173,
+    "statement": "**Note on style:** Ideogram's `ANIME` style type is the closest available handle",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:631"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-136",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 183,
+    "statement": "All generation modes use deterministic seeds:",
+    "kind": "process",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:243",
+      "scripts/generate-card-art.ts:521",
+      "scripts/generate-card-art.ts:608",
+      "scripts/generate-card-art.ts:360"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "seed is passed at GCA:547 and GCA:630; the gpt-image request body is at GCA:360."
+  },
+  {
+    "id": "AS-137",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 186,
+    "statement": "seed = 42000 + (index × 1000)",
+    "kind": "numeric",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:67",
+      "scripts/generate-card-art.ts:68",
+      "scripts/generate-card-art.ts:243"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-138",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 189,
+    "statement": "Where `index` is the 0-based position of the entry in `CARD_ART_REGISTRY`.",
+    "kind": "process",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:521",
+      "src/lib/ui/card-art-registry.ts:526",
+      "src/lib/ui/card-art-registry.ts:549"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-139",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 204,
+    "statement": "| `FAL_LORA_URL not set` | Run Phase 2 (`--train-lora`) and add the printed URL to `.env.local` |",
+    "kind": "process",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:293",
+      "scripts/generate-card-art.ts:294"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-140",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 205,
+    "statement": "| `< 4 reference images` | Run Phase 1 (`--generate-references`) first |",
+    "kind": "numeric",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:259",
+      "scripts/generate-card-art.ts:264",
+      "scripts/generate-card-art.ts:265"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-141",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 208,
+    "statement": "| gpt-image-1 rate limit | Add `--delay-ms=15000` to slow Phase 1 generation |",
+    "kind": "numeric",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:83",
+      "scripts/generate-card-art.ts:116"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Default delay constant for gpt-image-1 is at GCA:83."
+  },
+  {
+    "id": "AS-142",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 216,
+    "statement": "| `public/card-art/` | Committed canonical images — inherited by all forks |",
+    "kind": "path",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:64"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-143",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 217,
+    "statement": "| `docs/card-art-references/` | LoRA training reference images — committed by maintainer |",
+    "kind": "path",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:65"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-144",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 218,
+    "statement": "| `src/lib/ui/card-art-registry.ts` | 40-entry registry with prompts, `ELEMENT_PALETTE_HINTS` |",
+    "kind": "path",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:526",
+      "src/lib/ui/card-art-registry.ts:683"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-145",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 219,
+    "statement": "| `scripts/generate-card-art.ts` | Admin CLI — all four generation paths |",
+    "kind": "process",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "scripts/generate-card-art.ts:94",
+      "scripts/generate-card-art.ts:95",
+      "scripts/generate-card-art.ts:96",
+      "scripts/generate-card-art.ts:97"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-146",
+    "doc": "docs/CARD_ART_RUNBOOK.md",
+    "line": 220,
+    "statement": "| `src/lib/ui/card-tokens.ts` | Token source — palette hex values referenced by prompts |",
+    "kind": "path",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-tokens.ts:39",
+      "src/lib/ui/card-art-registry.ts:244"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-147",
+    "doc": "docs/ENV_AND_VERCEL.md",
+    "line": 33,
+    "statement": "For BAR photo uploads and book PDFs: `BLOB_READ_WRITE_TOKEN` (from Vercel Blob store — create in Dashboard → Storage). Without it, uploads fail with FUNCTION_PAYLOAD_TOO_LARGE or fall back to local filesystem (which fails on Vercel).",
+    "kind": "process",
+    "scope": "asset-admin",
+    "code_refs": [
+      "src/actions/assets.ts:82",
+      "src/actions/assets.ts:93",
+      "src/app/api/assets/upload/route.ts:21"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "actions/assets.ts branches on the token at line 82; the client-upload route header names the token at line 21."
+  },
+  {
+    "id": "AS-148",
+    "doc": "docs/ENV_AND_VERCEL.md",
+    "line": 469,
+    "statement": "| `REPLICATE_API_TOKEN` | Optional. Required for sprite generation (`SPRITE_GENERATION_ENABLED=1`). Get from [replicate.com/account/api-tokens](https://replicate.com/account/api-tokens). Set in `.env.local` (local) and Vercel dashboard (production). |",
+    "kind": "other",
+    "scope": "sprite-current",
+    "code_refs": [
+      "backend/app/sprites/worker.py:31",
+      "backend/app/sprites/worker.py:64"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-149",
+    "doc": "docs/ENV_AND_VERCEL.md",
+    "line": 470,
+    "statement": "| `SPRITE_GENERATION_ENABLED` | Set to `1` to activate walkable sprite generation via Replicate. Default off (stub mode). |",
+    "kind": "other",
+    "scope": "sprite-current",
+    "code_refs": [
+      "backend/app/sprites/worker.py:30",
+      "backend/app/sprites/worker.py:31"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "Default is read at BWRK:31."
+  },
+  {
+    "id": "AS-150",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 3,
+    "statement": "Layers stack in order: base → nation_body → archetype_outfit → nation_accent → archetype_accent.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:65",
+      "src/lib/avatar-parts.ts:70",
+      "src/lib/avatar-parts.ts:73",
+      "src/lib/avatar-parts.ts:81",
+      "src/lib/avatar-parts.ts:88",
+      "src/lib/avatar-parts.ts:95"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-151",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 3,
+    "statement": "All assets must be **64×64 pixels** with **transparent backgrounds**.",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:35",
+      "scripts/validate-sprite-layers.ts:41"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-152",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 11,
+    "statement": "base/ canonical.png (source), default.png, male.png, female.png, neutral.png",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/actions/admin.ts:663",
+      "scripts/derive-base-sprites.ts:14"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-153",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 12,
+    "statement": "base-silhouette.json overlay region config (from npm run sprites:analyze-base)",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/analyze-base-silhouette.ts:14",
+      "package.json:243"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-154",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 13,
+    "statement": "nation_body/ argyra.png, pyrakanth.png, virelune.png, meridia.png, lamenth.png",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:65",
+      "src/lib/avatar-parts.ts:76"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-155",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 15,
+    "statement": "archetype_outfit/",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:56",
+      "src/lib/avatar-parts.ts:57",
+      "src/lib/avatar-parts.ts:80",
+      "src/lib/avatar-parts.ts:84"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "getSpriteDirForLayer is at AP:56-60."
+  },
+  {
+    "id": "AS-156",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 16,
+    "statement": "archetype_accent/",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:56",
+      "src/lib/avatar-parts.ts:58",
+      "src/lib/avatar-parts.ts:95",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "getSpriteDirForLayer is at AP:56-60."
+  },
+  {
+    "id": "AS-157",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 19,
+    "statement": "Base variants (default, male, female, neutral) are derived from `canonical.png` via palette swap.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/derive-base-sprites.ts:2",
+      "scripts/derive-base-sprites.ts:14"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-158",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 19,
+    "statement": "Run `npm run sprites:derive-base` after editing canonical.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "package.json:241"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-159",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 19,
+    "statement": "Use `--init-from-default` to create canonical from an existing default.png.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/derive-base-sprites.ts:111",
+      "scripts/derive-base-sprites.ts:129"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-160",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 21,
+    "statement": "Paths are defined in [src/lib/avatar-parts.ts](../src/lib/avatar-parts.ts). Missing assets fall back to initials; no broken images.",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-parts.ts:65",
+      "src/components/Avatar.tsx:38"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-161",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 40,
+    "statement": "Resize to 64×64 if needed: `convert input.png -resize 64x64 output.png` (ImageMagick). Upload via `/admin/avatars/assets`.",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/app/admin/avatars/assets/page.tsx:1",
+      "src/actions/admin.ts:711"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-162",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 60,
+    "statement": "| Argyra | argyra | nation_body/argyra.png, nation_accent/argyra.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:85",
+      "src/lib/avatar-parts.ts:76",
+      "src/lib/avatar-parts.ts:91"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-163",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 61,
+    "statement": "| Pyrakanth | pyrakanth | nation_body/pyrakanth.png, nation_accent/pyrakanth.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:67",
+      "src/lib/avatar-parts.ts:76",
+      "src/lib/avatar-parts.ts:91"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-164",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 62,
+    "statement": "| Virelune | virelune | nation_body/virelune.png, nation_accent/virelune.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:79",
+      "src/lib/avatar-parts.ts:76",
+      "src/lib/avatar-parts.ts:91"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-165",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 63,
+    "statement": "| Meridia | meridia | nation_body/meridia.png, nation_accent/meridia.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:91",
+      "src/lib/avatar-parts.ts:76",
+      "src/lib/avatar-parts.ts:91"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-166",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 64,
+    "statement": "| Lamenth | lamenth | nation_body/lamenth.png, nation_accent/lamenth.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:73",
+      "src/lib/avatar-parts.ts:76",
+      "src/lib/avatar-parts.ts:91"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-167",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 72,
+    "statement": "Nation and archetype sprites MUST be **partial overlays**, not full character portraits.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/validation.py:115",
+      "backend/app/sprites/validation.py:117",
+      "scripts/validate-sprite-layers.ts:8"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-168",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 98,
+    "statement": "Reads `base/default.png`, infers torso/badge regions, writes `public/sprites/parts/base-silhouette.json`.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/analyze-base-silhouette.ts:13",
+      "scripts/analyze-base-silhouette.ts:14"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-169",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 101,
+    "statement": "Uses `base-silhouette.json` to draw nation_body, nation_accent, archetype_outfit, and archetype_accent. Each layer gets a colored fill plus 1px black outline so they're visually distinct (not flat grey blocks).",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-nation-placeholders.ts:5",
+      "scripts/generate-nation-placeholders.ts:102",
+      "scripts/generate-nation-placeholders.ts:119",
+      "scripts/generate-nation-placeholders.ts:138",
+      "scripts/generate-nation-placeholders.ts:140"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-170",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 103,
+    "statement": "3. **Verify** — Open `/admin/avatars` and confirm base + nation + playbook layers stack correctly.",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/app/admin/avatars/page.tsx:1"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-171",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 105,
+    "statement": "You can edit `base-silhouette.json` manually to tune overlay positions (x, y, width, height) if the auto-analysis is off.",
+    "kind": "schema",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "public/sprites/parts/base-silhouette.json:15",
+      "public/sprites/parts/base-silhouette.json:16",
+      "public/sprites/parts/base-silhouette.json:17",
+      "public/sprites/parts/base-silhouette.json:18",
+      "scripts/analyze-base-silhouette.ts:14"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-172",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 115,
+    "statement": "| The Bold Heart | bold-heart | archetype_outfit/bold-heart.png, archetype_accent/bold-heart.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:107",
+      "src/lib/avatar-parts.ts:84",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-173",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 116,
+    "statement": "| The Devoted Guardian | devoted-guardian | archetype_outfit/devoted-guardian.png, archetype_accent/devoted-guardian.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:113",
+      "src/lib/avatar-parts.ts:84",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-174",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 117,
+    "statement": "| The Decisive Storm | decisive-storm | archetype_outfit/decisive-storm.png, archetype_accent/decisive-storm.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:119",
+      "src/lib/avatar-parts.ts:84",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-175",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 118,
+    "statement": "| The Danger Walker | danger-walker | archetype_outfit/danger-walker.png, archetype_accent/danger-walker.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:125",
+      "src/lib/avatar-parts.ts:84",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-176",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 119,
+    "statement": "| The Still Point | still-point | archetype_outfit/still-point.png, archetype_accent/still-point.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:131",
+      "src/lib/avatar-parts.ts:84",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-177",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 120,
+    "statement": "| The Subtle Influence | subtle-influence | archetype_outfit/subtle-influence.png, archetype_accent/subtle-influence.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:137",
+      "src/lib/avatar-parts.ts:84",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-178",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 121,
+    "statement": "| The Truth Seer | truth-seer | archetype_outfit/truth-seer.png, archetype_accent/truth-seer.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:143",
+      "src/lib/avatar-parts.ts:84",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-179",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 122,
+    "statement": "| The Joyful Connector | joyful-connector | archetype_outfit/joyful-connector.png, archetype_accent/joyful-connector.png |",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:149",
+      "src/lib/avatar-parts.ts:84",
+      "src/lib/avatar-parts.ts:99"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-180",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 124,
+    "statement": "Keys are derived by `slugifyName()` in [src/lib/avatar-utils.ts](../src/lib/avatar-utils.ts): lowercase, strip \"The \", replace spaces with hyphens.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:39",
+      "src/lib/avatar-utils.ts:40",
+      "src/lib/avatar-utils.ts:41",
+      "src/lib/avatar-utils.ts:42",
+      "src/lib/avatar-utils.ts:43"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-181",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 163,
+    "statement": "- [ ] 64×64 px, PNG, transparent background",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:35",
+      "src/actions/admin.ts:725"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-182",
+    "doc": "docs/SPRITE_ASSETS.md",
+    "line": 168,
+    "statement": "- [ ] Attribution documented if LPC-derived (CC-BY-SA 3.0)",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "backend/app/sprites/validation.py:90",
+      "backend/app/sprites/validation.py:92",
+      "backend/app/sprites/validation.py:93"
+    ],
+    "checkable": true,
+    "known_drift": "d",
+    "label": "unlabelled",
+    "note": "The backend validator looks for a {key}.attribution.txt file beside the sprite; see BVAL:90-98."
+  },
+  {
+    "id": "AS-183",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 11,
+    "statement": "| Dimensions | 64×64 pixels per frame |",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-walkable-default.ts:11",
+      "scripts/generate-walkable-default.ts:12",
+      "src/lib/spatial-world/pixi-room.ts:208"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-184",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 12,
+    "statement": "| Layout | Row-major: N_idle, N_walk, S_idle, S_walk, E_idle, E_walk, W_idle, W_walk (8 frames) |",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/spatial-world/pixi-room.ts:81",
+      "src/lib/spatial-world/pixi-room.ts:82",
+      "scripts/generate-walkable-default.ts:13"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-185",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 14,
+    "statement": "| States | idle, walk (2 frames per direction) |",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-walkable-default.ts:13"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-186",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 15,
+    "statement": "| Format | PNG, transparent background |",
+    "kind": "other",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/validate-sprite-layers.ts:41"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-187",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 16,
+    "statement": "| Path | `public/sprites/walkable/{key}.png` |",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155",
+      "scripts/generate-walkable-default.ts:10",
+      "scripts/generate-walkable-default.ts:61"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-188",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 20,
+    "statement": "Key is derived from avatar config: `{nationKey}-{archetypeKey}`. When nation or archetype is missing, use `default`.",
+    "kind": "naming",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155",
+      "src/lib/avatar-utils.ts:156",
+      "src/lib/avatar-utils.ts:157",
+      "src/lib/avatar-utils.ts:160"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-189",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 33,
+    "statement": "Total spritesheet size: 512×64 (8 frames × 64px width).",
+    "kind": "numeric",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-walkable-default.ts:11",
+      "scripts/generate-walkable-default.ts:14",
+      "scripts/generate-walkable-default.ts:15",
+      "scripts/validate-sprite-layers.ts:41"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-190",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 42,
+    "statement": "// Returns e.g. /sprites/walkable/argyra-bold-heart.png or /sprites/walkable/default.png",
+    "kind": "path",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "src/lib/avatar-utils.ts:155",
+      "src/lib/avatar-utils.ts:157",
+      "src/lib/avatar-utils.ts:160"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-191",
+    "doc": "docs/WALKABLE_SPRITES.md",
+    "line": 47,
+    "statement": "Create `public/sprites/walkable/default.png` as a generic top-down character sprite. Use same 8-frame layout. Until custom sprites exist, all players use default.",
+    "kind": "process",
+    "scope": "sprite-pre-august",
+    "code_refs": [
+      "scripts/generate-walkable-default.ts:61",
+      "src/lib/avatar-utils.ts:157"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-192",
+    "doc": "docs/card-art-prompt-template.md",
+    "line": 15,
+    "statement": "| **Element** | Color palette | Frame, glow, gem hex values from `card-tokens.ts` |",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-tokens.ts:39",
+      "src/lib/ui/card-art-registry.ts:244"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-193",
+    "doc": "docs/card-art-prompt-template.md",
+    "line": 36,
+    "statement": "smooth illustration, vector art, concept art, painted, soft gradients, anti-aliased edges, photography, watermark, signature, copyright notice, text overlay, UI chrome, logo, words, letters",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:177",
+      "src/lib/ui/card-art-registry.ts:178",
+      "src/lib/ui/card-art-registry.ts:179",
+      "src/lib/ui/card-art-registry.ts:180",
+      "scripts/generate-card-art.ts:544"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-194",
+    "doc": "docs/card-art-prompt-template.md",
+    "line": 51,
+    "statement": "Lone robed cultivator figure, centered in frame, silhouetted against the elemental light source. Figure occupies one-third of frame height. Back-facing unless the playbook brief specifies otherwise.",
+    "kind": "other",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:221"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": ""
+  },
+  {
+    "id": "AS-195",
+    "doc": "docs/card-art-prompt-template.md",
+    "line": 72,
+    "statement": "> **Current state:** Border tiers are not yet assigned per playbook.",
+    "kind": "schema",
+    "scope": "card-art-deprecated",
+    "code_refs": [
+      "src/lib/ui/card-art-registry.ts:36",
+      "src/lib/ui/card-art-registry.ts:60"
+    ],
+    "checkable": true,
+    "known_drift": null,
+    "label": "unlabelled",
+    "note": "CardArtEntry interface is at REG:36-61."
+  }
+]
