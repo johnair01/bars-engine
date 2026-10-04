@@ -1,0 +1,140 @@
+[
+  {
+    "id": "2026-10-03-jev-spec-skeptic#1.1",
+    "kind": "real",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 1,
+    "claim": "The Noul docs say the primitive is for yes/no questions and \"does not measure the degree\" [1].",
+    "quote": "If the question is really about degree, the value does not measure the degree.",
+    "source_url": "https://docs.typesafe.ai/primitives/noul.md",
+    "label": "unlabelled",
+    "by": null
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#1.2",
+    "kind": "real",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 1,
+    "claim": "The docs I opened do not state latency, cost, input limits or accuracy [1].",
+    "quote": "If the question is really about degree, the value does not measure the degree.",
+    "source_url": "https://docs.typesafe.ai/primitives/noul.md",
+    "label": "unlabelled",
+    "by": null
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#2.1",
+    "kind": "real",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 2,
+    "claim": "The citation-check cookbook uses a three-way Choice (supports, contradicts, says_nothing) after an exact string match [2].",
+    "quote": "a quote that is truncated or lightly reworded comes back as `fabricated`.",
+    "source_url": "https://docs.typesafe.ai/cookbooks/citation_check.md",
+    "label": "unlabelled",
+    "by": null
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#2.2",
+    "kind": "real",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 2,
+    "claim": "**The cookbook's string check is brittle.** It marks truncated or lightly reworded quotes as fabricated [2].",
+    "quote": "a quote that is truncated or lightly reworded comes back as `fabricated`.",
+    "source_url": "https://docs.typesafe.ai/cookbooks/citation_check.md",
+    "label": "unlabelled",
+    "by": null
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#2.3",
+    "kind": "real",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 2,
+    "claim": "Add a Choice arm (supports, contradicts, says_nothing) alongside the Noul, per [2].",
+    "quote": "a quote that is truncated or lightly reworded comes back as `fabricated`.",
+    "source_url": "https://docs.typesafe.ai/cookbooks/citation_check.md",
+    "label": "unlabelled",
+    "by": null
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#3.1",
+    "kind": "real",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 3,
+    "claim": "Confidence guidance says to \"test with your own data, and adjust\" [3], which invites that overfit.",
+    "quote": "Start with conservative thresholds, test with your own data, and adjust as you observe results.",
+    "source_url": "https://docs.typesafe.ai/confidence.md",
+    "label": "unlabelled",
+    "by": null
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#1.1~swap",
+    "kind": "constructed",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 1,
+    "claim": "The Noul docs say the primitive is for yes/no questions and \"does not measure the degree\" [1].",
+    "quote": "a quote that is truncated or lightly reworded comes back as `fabricated`.",
+    "quote_from_n": 2,
+    "source_url": "https://docs.typesafe.ai/primitives/noul.md",
+    "label": "no",
+    "by": "construction"
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#1.2~swap",
+    "kind": "constructed",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 1,
+    "claim": "The docs I opened do not state latency, cost, input limits or accuracy [1].",
+    "quote": "a quote that is truncated or lightly reworded comes back as `fabricated`.",
+    "quote_from_n": 2,
+    "source_url": "https://docs.typesafe.ai/primitives/noul.md",
+    "label": "no",
+    "by": "construction"
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#2.1~swap",
+    "kind": "constructed",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 2,
+    "claim": "The citation-check cookbook uses a three-way Choice (supports, contradicts, says_nothing) after an exact string match [2].",
+    "quote": "Start with conservative thresholds, test with your own data, and adjust as you observe results.",
+    "quote_from_n": 3,
+    "source_url": "https://docs.typesafe.ai/cookbooks/citation_check.md",
+    "label": "no",
+    "by": "construction"
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#2.2~swap",
+    "kind": "constructed",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 2,
+    "claim": "**The cookbook's string check is brittle.** It marks truncated or lightly reworded quotes as fabricated [2].",
+    "quote": "Start with conservative thresholds, test with your own data, and adjust as you observe results.",
+    "quote_from_n": 3,
+    "source_url": "https://docs.typesafe.ai/cookbooks/citation_check.md",
+    "label": "no",
+    "by": "construction"
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#2.3~swap",
+    "kind": "constructed",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 2,
+    "claim": "Add a Choice arm (supports, contradicts, says_nothing) alongside the Noul, per [2].",
+    "quote": "Start with conservative thresholds, test with your own data, and adjust as you observe results.",
+    "quote_from_n": 3,
+    "source_url": "https://docs.typesafe.ai/cookbooks/citation_check.md",
+    "label": "no",
+    "by": "construction"
+  },
+  {
+    "id": "2026-10-03-jev-spec-skeptic#3.1~swap",
+    "kind": "constructed",
+    "report": "2026-10-03-jev-spec-skeptic.md",
+    "n": 3,
+    "claim": "Confidence guidance says to \"test with your own data, and adjust\" [3], which invites that overfit.",
+    "quote": "If the question is really about degree, the value does not measure the degree.",
+    "quote_from_n": 1,
+    "source_url": "https://docs.typesafe.ai/confidence.md",
+    "label": "no",
+    "by": "construction"
+  }
+]
