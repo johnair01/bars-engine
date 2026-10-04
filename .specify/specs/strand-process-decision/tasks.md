@@ -21,8 +21,8 @@ grep -rn "BARS_STRAND\|bars-strand\|create-strand\|strand-results" . --exclude-d
 - [x] T8: Rename "strand" to "consult" in `docs/STRAND_TO_SPEC_KIT.md` and `docs/AGENT_WORKFLOWS.md`; keep the script names
 - [x] T9: Comment the legacy name at `prisma/schema.prisma:389`
 - [x] T10: `npm run build` and `npm run check`
-- [ ] T11: Start a fresh session in the repo and confirm it begins work without a strand prompt
-- [ ] T12: Mark the backlog row Done and run `npm run backlog:seed`
+- [x] T11: Start a fresh session in the repo and confirm it begins work without a strand prompt
+- [x] T12: Mark the backlog row Done and run `npm run backlog:seed`
 
 ## Phase 2 (option A, if chosen)
 

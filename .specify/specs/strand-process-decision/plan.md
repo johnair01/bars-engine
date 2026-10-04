@@ -30,6 +30,7 @@ Wendell's words covered the consult path directly. The CLI and scope calls are m
 |------|--------|
 | 2026-10-03 | Spec kit created from an activity audit. Recommendation recorded as B. |
 | 2026-10-03 | Ruling recorded (B). Executed: CLI, docs, config, test, plugin, skill, build-run files and consult scripts removed; `.strands/*.yaml` moved to `STRAND_RECORD.yaml` in each spec folder; `CLAUDE.md` section removed. Kept: backend strand pipeline, `docs/STRAND_TROUBLESHOOTING.md` (backend API), `compost:strand-consults`, `strand-results/` (master-of-friendship records), `.cursorrules` and `game-master-agents.mdc` (backend sage_consult and strand_run remain). |
+| 2026-10-03 | T11 confirmed in a fresh cloud session on this branch: no strand offer at feature start; all file checks matched. Status Done. |
 | 2026-10-03 | Rewritten after review: judged by issue #21's goals vs current workflow, consult value read from 21 files. Recommendation changed to a small A (scope field + hook), pending the collision check. |
 
 ## File impact (retire the CLI; same under A and B)
