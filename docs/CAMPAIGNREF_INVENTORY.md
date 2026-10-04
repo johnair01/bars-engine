@@ -362,7 +362,6 @@ Total files with at least one `campaignRef`: **260** (code roots: src, prisma, s
 | `scripts/seed-cyoa-intake-bruised-banana.ts` | 1 |
 | `scripts/seed-mtgoa-spatial-world.ts` | 1 |
 | `scripts/seed-nursery-rooms.ts` | 1 |
-| `scripts/strand-invitation-gap-analysis.ts` | 1 |
 
 ### openapi (2 files)
 

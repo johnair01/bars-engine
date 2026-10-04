@@ -55,5 +55,5 @@
 
 ## Optional follow-up
 
-- [ ] O1 Add `scripts/strand-consult-productivity-modality.ts` (mirror events-bar strand consult)
+- [ ] O1 Run a six-faces consult on the productivity-modality question (the backend `strand-consult-*` scripts were retired 2026-10-03)
 - [ ] O2 Re-run RESEARCH_PROMPT when Tandem/Mindwtr ship major schema changes
