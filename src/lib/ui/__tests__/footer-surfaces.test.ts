@@ -29,6 +29,7 @@ for (const route of [
   '/support',
   '/nonprofit',
   '/speaking',
+  '/coaching',
   '/succession',
   '/on-your-show',
   '/campaigns',
