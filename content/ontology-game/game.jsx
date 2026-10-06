@@ -1145,6 +1145,26 @@
         // The faces for a newcomer (oag-faces-primer; the labels are open board question
         // oag-faces-names, built on its recommended option A). Display only: every key,
         // the demo, the coach code and the saved summary keep the colour names.
+        // How each channel does its job (Wendell, 6 October 2026: "when a player chooses an
+        // emotional Chanel they have to explain how the emotion is doing its job"). The
+        // questions for Anger, Sadness, Fear and Joy are his, from that message. The job
+        // lines are his book's (Mastering the Game of Allyship, compiled 29 May 2026: "Each
+        // of these emotions has a job."). He asked for help with Neutrality; its job line is
+        // the book's ("detachment and perspective, the view that lets you see the whole"),
+        // and its two questions are the council's (position oag-neutrality-job).
+        const CHANNEL_JOBS = {
+            Anger: { job: "Anger's job is to find obstacles to be overcome, or boundaries to be created or destroyed.",
+                     fields: ["What is the obstacle, or what obstacle is being created?"] },
+            Sadness: { job: "Sadness's job is to point you toward what you care about and how far away you are from it.",
+                       fields: ["What do you care about?", "How far away is it from you?"] },
+            Fear: { job: "Fear's job is to detect threat and risk.",
+                    fields: ["What is the threat?", "How far is it from you?"] },
+            Joy: { job: "Joy's job is to show you what's aligned with your delight.",
+                   fields: ["What is the source of aliveness?"] },
+            Neutrality: { job: "Neutrality's job is detachment and perspective, the view that lets you see the whole.",
+                          fields: ["What are you stepping back from?", "From there, what can you see of the whole?"] },
+        };
+
         const FACE_PLAIN = { Magenta: "Presence", Red: "Power", Amber: "Order", Orange: "Understanding", Green: "Perspectives", Teal: "Systems" };
         const faceLabel = (name) => (FACE_PLAIN[name] ? `${FACE_PLAIN[name]}, ${name}` : name);
 
@@ -1366,6 +1386,7 @@
                         return (
                             <li key={i} data-route-stop={s.channel}>
                                 <strong>{s.channel}</strong> ({faceLabel(s.face)}): {s.passive ? "moved on its own" : STATE_WORDS[s.endState] || "worked"}.
+                                {s.job && <> Its job here: “{s.job}”.</>}
                                 {s.deeper && " You went deeper here."}
                                 {blocksHere.length > 0 && ` ${blocksHere.length} block${blocksHere.length === 1 ? "" : "s"} worked inside W.A.V.E.`}
                                 {after.map((m, j) => (
@@ -1414,7 +1435,7 @@
             { key: "begin-practice", title: "Welcome", narration: "Hey — I'll walk alongside you here, real buttons only, none of it touching your own data. Let's begin." },
             { key: "phase1-this-is-it", prefill: { location: "my chest", texture: "tension" }, title: "Locate the block", narration: "You'd scan your own body here. Chest / tension is filled in for now — click “This is it.”" },
             { key: "channel-Anger", title: "Name the channel", narration: "Let's pick Anger." },
-            { key: "face-Amber", title: "Find your face", narration: "Six faces, six ways of knowing a block. We'll go with Amber." },
+            { key: "face-Amber", job: ["A rule I'm expected to follow keeps me from saying what I see."], title: "Find your face", narration: "First, how Anger is doing its job: the obstacle is filled in. Six faces, six ways of knowing a block. We'll go with Amber." },
             { key: "phase4-yes", title: "Try the belief on", narration: "Here's a candidate belief for Anger / Amber. Accept it as true for now." },
             { key: "phase5-ready", title: "Hold it", narration: "Hold the belief and notice what happens in the body." },
             { key: "open-choice-breaths", title: "Pick an opening technique", narration: "Three ways to open into this. Simple Breaths is quickest." },
@@ -1423,12 +1444,12 @@
             { key: "state-confirm-neutral", title: "Where did it land?", narration: "Workable, not fully resolved — pick “neutral.” This routes what's next." },
             { key: "mult-yes-name", title: "Is it anywhere else?", narration: "This charge can live in more than one channel at once. Let's name a second one." },
             { key: "branch-channel-Joy", title: "Name the other channel", narration: "We'll say it's also alive in Joy." },
-            { key: "face-Green", title: "Find its face there", narration: "Joy has its own faces too. Let's pick Green." },
+            { key: "face-Green", job: ["Playing music with friends."], title: "Find its face there", narration: "Joy's source of aliveness is filled in. Joy has its own faces too. Let's pick Green." },
             { key: "branch-defer", title: "Work it now, or set it aside?", narration: "You don't have to work every thread the moment you name it — set this one aside." },
             { key: "mult-no-thats-all", title: "Anywhere else?", narration: "That's enough named for now." },
             { key: "phase6-tempering", title: "Choose your next move", narration: "Tempering Wisdom → Fear, the channel Anger restrains. The rule: Tempering never advances a charge — it holds, or pulls it back toward dissatisfied." },
             { key: "flow-locate-this-is-it", prefill: { location: "my jaw", texture: "constriction" }, title: "Check for a live charge", narration: "Jaw / constriction is filled in — click “This is it.”" },
-            { key: "face-Orange", title: "Find your face in Fear", narration: "Let's go with Orange this time." },
+            { key: "face-Orange", job: ["Getting it wrong in front of everyone.", "Close: the meeting is tomorrow."], title: "Find your face in Fear", narration: "The threat and how far it is are filled in. Let's go with Orange this time." },
             { key: "phase4-yes", title: "Try the belief on", narration: "Accept the belief for Fear / Orange." },
             { key: "phase5-ready", title: "Hold it", narration: "Hold it and notice, same as before." },
             { key: "open-choice-breaths", title: "Open into it", narration: "Simple Breaths again." },
@@ -1440,7 +1461,7 @@
             { key: "mult-no-thats-all", title: "Anywhere else?", narration: "Move on from here." },
             { key: "phase6-flow-forward", title: "Choose your next move", narration: "Flow Forward → Sadness, the generative cycle. The rule: Flow Forward always nudges a charge one rung closer to satisfied." },
             { key: "flow-locate-this-is-it", prefill: { location: "my throat", texture: "numbness" }, title: "Check for a live charge", narration: "Throat / numbness is filled in — click “This is it.”" },
-            { key: "face-Teal", title: "Find your face in Sadness", narration: "We'll go with Teal here." },
+            { key: "face-Teal", job: ["My brother.", "We haven't really talked in a year."], title: "Find your face in Sadness", narration: "What you care about and how far it is are filled in. We'll go with Teal here." },
             { key: "phase4-yes", title: "Try the belief on", narration: "Accept the belief for Sadness / Teal." },
             { key: "phase5-ready", title: "Hold it", narration: "Hold and notice." },
             { key: "open-choice-breaths", title: "Open into it", narration: "Simple Breaths, once more." },
@@ -1567,6 +1588,10 @@
             // The three-sentence faces primer shows on the first face pick of a session
             // (oag-faces-primer).
             const [facesIntroSeen, setFacesIntroSeen] = useState(false);
+            // The player's answer to how the current channel is doing its job, required
+            // before a face is picked. Kept with the channel it answers, so a channel
+            // reached later starts blank. Never stored, like the belief.
+            const [channelJob, setChannelJob] = useState({ channel: null, answers: [] });
             const mapSvgRef = React.useRef(null);
             const [sedonaStep, setSedonaStep] = useState(1); // 1 welcome, 2 could-i, 3 would-i, 4 when, 5 repeat-or-done
             const [sedonaRounds, setSedonaRounds] = useState(0); // completed full passes, for "round N" copy
@@ -1823,6 +1848,17 @@
             };
 
             const logRoute = (event) => setRoute(prev => [...prev, event]);
+            const jobAnswersFor = (ch) => (channelJob.channel === ch ? channelJob.answers : []);
+            const jobComplete = (ch) => {
+                const def = CHANNEL_JOBS[ch];
+                if (!def) return true;
+                const a = jobAnswersFor(ch);
+                return def.fields.every((_, i) => (a[i] || "").trim() !== "");
+            };
+            const jobTextFor = (ch) => {
+                const a = jobAnswersFor(ch).map(x => (x || "").trim().replace(/[.;]+$/, "")).filter(Boolean);
+                return a.length ? a.join("; ") : null;
+            };
 
             // Everything a cycle can change, as [value, setter] pairs, so a blocked W.A.V.E.
             // step can save it whole and put it back whole (oag-wave-blocks). The route log
@@ -1849,6 +1885,7 @@
                 deeperSelfAuthorText: [deeperSelfAuthorText, setDeeperSelfAuthorText], heldBeliefs: [heldBeliefs, setHeldBeliefs],
                 deeperShifted: [deeperShifted, setDeeperShifted], deeperOutcome: [deeperOutcome, setDeeperOutcome],
                 appreciateNotes: [appreciateNotes, setAppreciateNotes],
+                channelJob: [channelJob, setChannelJob],
             });
             const takeSnapshot = () => {
                 const b = cycleStateBindings();
@@ -1892,6 +1929,7 @@
             const startBlockWork = () => {
                 commitBlockDetails();
                 setAppreciateNotes({ opener: "", open: "" });
+                setChannelJob({ channel: null, answers: [] });
                 setSelectedChannel(null);
                 setSelectedFace(null);
                 setCurrentStem("");
@@ -2068,7 +2106,7 @@
                     returnFromBlock("shifted");
                     return;
                 }
-                logRoute({ kind: "stop", channel: selectedChannel, face: selectedFace, endState: state });
+                logRoute({ kind: "stop", channel: selectedChannel, face: selectedFace, endState: state, job: jobTextFor(selectedChannel) });
                 setResolvedThreads(prev => [...prev, { channel: selectedChannel, face: selectedFace, belief: userBelief, passive: false, endState: state }]);
                 afterThreadResolved();
             };
@@ -2952,6 +2990,9 @@
                     setLocation(step.prefill.location);
                     setTexture(step.prefill.texture);
                 }
+                if (step.job && selectedChannel && !jobComplete(selectedChannel)) {
+                    setChannelJob({ channel: selectedChannel, answers: step.job });
+                }
 
                 clearDemoOverlay();
                 const target = document.querySelector(`[data-demo-key="${step.key}"]`);
@@ -3675,6 +3716,25 @@
                                     <p className="prompt">Which way do you know it there?</p>
                                 </>
                             )}
+                            {CHANNEL_JOBS[selectedChannel] && (
+                                <div className="mini-section channel-job" data-channel-job-section={selectedChannel}>
+                                    <p><strong>How is {selectedChannel} doing its job?</strong> {CHANNEL_JOBS[selectedChannel].job}</p>
+                                    {CHANNEL_JOBS[selectedChannel].fields.map((q, i) => (
+                                        <div key={i} style={{ marginTop: "0.45rem" }}>
+                                            <p className="prompt" style={{ margin: "0 0 0.2rem" }}>{q}</p>
+                                            <input type="text" data-channel-job={i}
+                                                   value={jobAnswersFor(selectedChannel)[i] || ""}
+                                                   onChange={(e) => {
+                                                       const v = e.target.value;
+                                                       const next = [...jobAnswersFor(selectedChannel)];
+                                                       next[i] = v;
+                                                       setChannelJob({ channel: selectedChannel, answers: next });
+                                                   }} />
+                                        </div>
+                                    ))}
+                                    {!jobComplete(selectedChannel) && <p style={{ fontSize: "0.8rem", opacity: 0.7, marginTop: "0.4rem" }}>Answer {CHANNEL_JOBS[selectedChannel].fields.length > 1 ? "both" : "this"} to pick a face. What you write stays on this page and isn't saved.</p>}
+                                </div>
+                            )}
                             {!facesIntroSeen && (
                                 // The faces primer (oag-faces-primer): three sentences the first
                                 // time a player picks a face in a session.
@@ -3696,12 +3756,13 @@
                                 {faces.map((f) => (
                                     <div
                                         key={f.name}
-                                        className="option-card"
+                                        className={`option-card${jobComplete(selectedChannel) ? "" : " option-card--waiting"}`}
                                         data-demo-key={`face-${f.name}`}
-                                        onClick={() => (phase3Context === "branch" ? handleBranchFaceSelect(f.name) : handleFaceSelect(f.name))}
+                                        aria-disabled={!jobComplete(selectedChannel)}
+                                        onClick={() => { if (!jobComplete(selectedChannel)) return; phase3Context === "branch" ? handleBranchFaceSelect(f.name) : handleFaceSelect(f.name); }}
                                         role="button"
                                         tabIndex="0"
-                                        onKeyPress={(e) => e.key === 'Enter' && (phase3Context === "branch" ? handleBranchFaceSelect(f.name) : handleFaceSelect(f.name))}
+                                        onKeyPress={(e) => e.key === 'Enter' && jobComplete(selectedChannel) && (phase3Context === "branch" ? handleBranchFaceSelect(f.name) : handleFaceSelect(f.name))}
                                     >
                                         <strong>{FACE_PLAIN[f.name] || f.name} <span className="face-tag">{f.name}</span></strong>
                                         <small>{f.description}</small>

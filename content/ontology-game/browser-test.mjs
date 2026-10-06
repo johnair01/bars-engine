@@ -46,8 +46,12 @@ const scan = async (pg, where, tex) => {
   await pg.locator('select').selectOption(tex);
   await pg.getByText('This is it', { exact: true }).first().click();
 };
+const fillJob = async (pg) => {
+  for (const el of await pg.locator('[data-channel-job]').all()) await el.fill('it is doing its job');
+};
 const holdBelief = async (pg, channel, face) => {
   if (channel) await pg.locator(`[data-demo-key="channel-${channel}"]`).click();
+  await fillJob(pg);
   await pg.locator(`[data-demo-key="face-${face}"]`).click();
   await pg.getByText('Yes, this is true', { exact: true }).click();
   await pg.getByText('Ready to notice', { exact: true }).click();
@@ -70,6 +74,10 @@ await clickText('This is it');
 await page.locator('[data-demo-key="channel-Anger"]').click();
 ok(await page.locator('[data-faces-primer]').count() === 1 && /Order/.test(await page.locator('[data-demo-key="face-Amber"]').textContent()),
   'first face pick opens with the primer and plain labels');
+ok(/obstacles to be overcome/.test(await page.locator('[data-channel-job-section="Anger"]').textContent()), 'Anger asks how it is doing its job');
+await page.locator('[data-demo-key="face-Amber"]').click({ force: true });
+ok((await gs(page)).phase === 'phase3', 'a face cannot be picked before the job is answered');
+await page.locator('[data-channel-job="0"]').fill('my boss keeps moving the deadline');
 await page.locator('[data-demo-key="face-Amber"]').click();
 await clickText('Yes, this is true');
 await clickText('Ready to notice');
@@ -142,6 +150,8 @@ ok(await page4.getByText('Cycle Complete').count() === 1, 'demo lands on Cycle C
 ok(await page4.locator('[data-route-map]').count() === 1, 'map leads Cycle Complete');
 const stopsAttr = await page4.locator('svg.route-map').getAttribute('data-map-stops');
 ok(stopsAttr === 'Anger,Fear,Sadness,Joy', 'map stops in demo order (' + stopsAttr + ')');
+ok(/Its job here: “Getting it wrong in front of everyone; Close: the meeting is tomorrow”/.test(await page4.locator('[data-route-list]').textContent()),
+  'route list carries how each channel did its job');
 ok(await page4.locator('path[data-map-move="ke"][data-from="Anger"][data-to="Fear"]').count() === 1, 'map draws Tempering Anger to Fear dashed');
 ok(await page4.locator('path[data-map-move="sheng"][data-from="Fear"][data-to="Sadness"]').count() === 1, 'map draws Flow Forward Fear to Sadness solid');
 ok(await page4.locator('[data-map-deeper="Joy"]').count() === 1, 'map rings Go Deeper on Joy');
