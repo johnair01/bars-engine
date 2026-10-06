@@ -25,7 +25,7 @@ const server = http.createServer((req, res) => {
 }).listen(4568);
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }).catch(() => chromium.launch());
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
-await ctx.addInitScript(() => { window.__breathScale = 0.01; window.__forcePracticeId = 'breaths'; });
+await ctx.addInitScript(() => { window.__breathScale = 0.01; window.__forcePracticeId = 'breaths'; window.__oagBodyInstant = true; });
 await ctx.route('https://cdnjs.cloudflare.com/**', (route) => {
   const u = route.request().url();
   const f = u.includes('three') ? NM + 'three/build/three.min.js'
@@ -59,6 +59,17 @@ ok(await page.locator('[data-body-history]').count() === 0, 'no history link bef
 await page.locator('[data-body-pick]').click();
 await tapAnchor(page, 'throat');
 ok((await page.locator('[data-body-picked]').textContent()) === 'My throat', 'tapping the throat names it');
+ok(await page.locator('[data-body-region="head"]').count() === 1 && (await page.evaluate(() => window.__oagBody.zoom())) > 4,
+  'the first tap zooms into the head and neck');
+await tapAnchor(page, 'left_cheek');
+ok((await page.locator('[data-body-picked]').textContent()) === 'My left cheek', 'zoomed in, a tap fine-tunes to the left cheek');
+await page.screenshot({ path: SHOTS + '/body-zoom.png' });
+await tapAnchor(page, 'throat');
+ok((await page.locator('[data-body-picked]').textContent()) === 'My throat' && (await page.evaluate(() => window.__oagBody.zoom())) > 4,
+  'a second fine-tune tap moves the mark and keeps the zoom');
+await page.locator('[data-body-whole]').click();
+ok((await page.evaluate(() => window.__oagBody.zoom())) === 1 && await page.locator('[data-body-region]').count() === 0, '"Whole body" zooms back out');
+await tapAnchor(page, 'throat');
 await page.screenshot({ path: SHOTS + '/body-pick.png' });
 await page.locator('[data-body-use]').click();
 ok(await page.locator('.oagb').count() === 0, 'the figure closes after "Use this place"');
@@ -69,6 +80,9 @@ await page.locator('[data-body-pick]').click();
 await page.locator('[data-body-back]').click();
 await tapAnchor(page, 'lower_back');
 ok((await page.locator('[data-body-picked]').textContent()) === 'My lower back', 'the back of the figure names back places');
+ok(await page.locator('[data-body-region="back"]').count() === 1, 'a tap on the back zooms into the back');
+await tapAnchor(page, 'left_lower_back');
+ok((await page.locator('[data-body-picked]').textContent()) === 'The left side of my lower back', 'zoomed into the back, a tap finds the left side of the lower back');
 await page.locator('[data-body-close]').click();
 ok((await page.getByPlaceholder(where).inputValue()) === 'my throat', 'closing without using keeps the old place');
 

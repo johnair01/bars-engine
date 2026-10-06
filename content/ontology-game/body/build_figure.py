@@ -136,6 +136,13 @@ ANCHORS = [
     ("mid_back", "my mid back", 0, 1.18, "b"),
     ("lower_back", "my lower back", 0, 1.03, "b"),
     ("seat", "my seat", 0, 0.95, "b"),
+    # Finer places, for the zoomed-in view of each part (Wendell, 6 October 2026: "click a
+    # section and be able to zoom in to fine tune").
+    ("mouth", "my mouth", 0, 1.565, "f"),
+    ("nose", "my nose", 0, 1.60, "f"),
+    ("between_shoulder_blades", "between my shoulder blades", 0, 1.38, "b"),
+    ("lower_belly", "my lower belly", 0, 1.00, "f"),
+    ("sternum", "my sternum", 0, 1.26, "f"),
 ]
 for s, side in ((1, "left"), (-1, "right")):
     ANCHORS += [
@@ -153,7 +160,50 @@ for s, side in ((1, "left"), (-1, "right")):
         (f"{side}_calf", f"my {side} calf", s * 0.115, 0.30, "b"),
         (f"{side}_shin", f"my {side} shin", s * 0.115, 0.30, "f"),
         (f"{side}_foot", f"my {side} foot", s * 0.125, 0.04, "f"),
+        (f"{side}_temple", f"my {side} temple", s * 0.07, 1.66, "s"),
+        (f"{side}_ear", f"my {side} ear", s * 0.07, 1.62, "s"),
+        (f"{side}_cheek", f"my {side} cheek", s * 0.045, 1.595, "f"),
+        (f"{side}_jaw", f"the {side} side of my jaw", s * 0.05, 1.56, "f"),
+        (f"{side}_side_of_neck", f"the {side} side of my neck", s * 0.05, 1.50, "s"),
+        (f"{side}_collarbone", f"my {side} collarbone", s * 0.09, 1.42, "f"),
+        (f"{side}_armpit", f"my {side} armpit", s * 0.175, 1.33, "f"),
+        (f"{side}_side_of_belly", f"the {side} side of my belly", s * 0.10, 1.08, "f"),
+        (f"{side}_lower_back", f"the {side} side of my lower back", s * 0.08, 1.04, "b"),
+        (f"{side}_inner_elbow", f"the inside of my {side} elbow", s * 0.275, 1.13, "f"),
+        (f"{side}_wrist", f"my {side} wrist", s * 0.355, 0.88, "s"),
+        (f"{side}_back_of_thigh", f"the back of my {side} thigh", s * 0.10, 0.72, "b"),
+        (f"{side}_back_of_knee", f"the back of my {side} knee", s * 0.11, 0.50, "b"),
+        (f"{side}_ankle", f"my {side} ankle", s * 0.118, 0.10, "f"),
+        (f"{side}_heel", f"my {side} heel", s * 0.12, 0.035, "b"),
     ]
+
+
+
+# The parts a first tap zooms into. Each anchor belongs to one; the page frames the part's
+# anchors when it is tapped.
+def region_of(name):
+    for side in ("left", "right"):
+        if name.startswith(side + "_"):
+            rest = name[len(side) + 1:]
+            if rest in ("upper_arm", "elbow", "inner_elbow", "forearm", "wrist", "hand", "armpit"):
+                return side + "_arm"
+            if rest in ("thigh", "back_of_thigh", "knee", "back_of_knee", "calf", "shin", "ankle", "foot", "heel"):
+                return side + "_leg"
+            if rest in ("temple", "ear", "cheek", "jaw", "side_of_neck"):
+                return "head"
+            if rest in ("shoulder_blade", "lower_back"):
+                return "back"
+            if rest in ("chest", "collarbone", "shoulder"):
+                return "chest"
+            return "belly"  # ribs, hip, side_of_belly
+    if name in ("crown", "forehead", "eyes", "nose", "mouth", "jaw", "back_of_head", "throat", "back_of_neck"):
+        return "head"
+    if name in ("upper_back", "mid_back", "lower_back", "seat", "between_shoulder_blades"):
+        return "back"
+    if name in ("heart", "upper_chest", "sternum"):
+        return "chest"
+    return "belly"  # solar_plexus, belly, lower_belly, pelvis
+
 
 dg = bpy.context.evaluated_depsgraph_get()
 fig_eval = fig.evaluated_get(dg)
@@ -168,10 +218,11 @@ for name, words, x, z, side in ANCHORS:
         origin, direction = Vector((x, 1.0, z)), Vector((0, -1, 0))
     hit, loc, _n, _i = fig_eval.ray_cast(origin, direction)
     if not hit:
-        print(f"MISS {name}"); continue
+        raise SystemExit(f"anchor {name} missed the body")
     emp = bpy.data.objects.new(f"anchor.{name}", None)
     emp.location = loc
     emp["label"] = words
+    emp["region"] = region_of(name)
     scene.collection.objects.link(emp)
 
 bpy.ops.export_scene.gltf(

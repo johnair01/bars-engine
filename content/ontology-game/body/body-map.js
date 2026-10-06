@@ -122,7 +122,7 @@
     var anchors = [];
     (json.nodes || []).forEach(function (n) {
       if (n.extras && n.extras.label && n.translation) {
-        anchors.push({ name: n.name.replace(/^anchor\./, ""), label: n.extras.label, pos: n.translation });
+        anchors.push({ name: n.name.replace(/^anchor\./, ""), label: n.extras.label, region: n.extras.region || null, pos: n.translation });
       }
     });
     return {
@@ -159,7 +159,7 @@
     ".oagb-stage canvas{display:block;width:100%;height:100%}" +
     ".oagb-turn{position:absolute;left:.75rem;bottom:.75rem;display:flex;gap:.4rem}" +
     ".oagb .oagb-turn button{background:rgba(26,26,46,.7);border:1px solid rgba(255,255,255,.25);color:#e0e0e0;border-radius:8px;padding:.45rem .8rem;font-size:.85rem;cursor:pointer}" +
-    ".oagb-hint{position:absolute;top:.6rem;left:0;right:0;text-align:center;font-size:.8rem;opacity:.7;pointer-events:none;padding:0 1rem}" +
+    ".oagb-hint{position:absolute;top:.6rem;left:0;right:0;text-align:center;font-size:.85rem;opacity:.8;pointer-events:none;padding:0 1rem}" +
     ".oagb-side{width:340px;max-width:42%;overflow:auto;padding:1rem;border-left:1px solid rgba(255,255,255,.1)}" +
     ".oagb-foot{padding:.75rem 1rem calc(.75rem + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}" +
     ".oagb-picked{flex:1;min-width:10rem;font-size:1rem}" +
@@ -221,7 +221,10 @@
     var marks = new THREE.Group();
     group.add(marks);
 
-    var view = { yaw: 0, zoom: 1, lookY: 0.9 };
+    // The camera looks at (lookX, lookY) from straight ahead. At zoom 1 it frames the whole
+    // figure; zoomed in, it can look anywhere on the figure but not off it.
+    var view = { yaw: 0, zoom: 1, lookX: 0, lookY: 0.9 };
+    var anim = null;
     function place() {
       var w = stage.clientWidth || 1, h = stage.clientHeight || 1;
       renderer.setSize(w, h, false);
@@ -230,13 +233,33 @@
       var fitH = 1.95 / (2 * Math.tan((camera.fov * Math.PI) / 360));
       var fitW = 0.95 / (2 * Math.tan((camera.fov * Math.PI) / 360)) / camera.aspect;
       var dist = Math.max(fitH, fitW) / view.zoom;
-      var half = 0.9 * (1 - 1 / view.zoom);
-      view.lookY = Math.min(0.9 + half, Math.max(0.9 - half, view.lookY));
-      camera.position.set(0, view.lookY, dist);
-      camera.lookAt(0, view.lookY, 0);
+      var halfY = 0.9 * (1 - 1 / view.zoom), halfX = 0.42 * (1 - 1 / view.zoom);
+      view.lookY = Math.min(0.9 + halfY, Math.max(0.9 - halfY, view.lookY));
+      view.lookX = Math.min(halfX, Math.max(-halfX, view.lookX));
+      camera.position.set(view.lookX, view.lookY, dist);
+      camera.lookAt(view.lookX, view.lookY, 0);
       camera.updateProjectionMatrix();
       group.rotation.y = view.yaw;
       renderer.render(scene, camera);
+    }
+    // Glide to a zoom and a point on the figure (in the figure's own coordinates, so it
+    // follows the figure's current turn).
+    function focus(p, zoom) {
+      group.rotation.y = view.yaw;
+      group.updateMatrixWorld();
+      var to = p ? group.localToWorld(new THREE.Vector3(p[0], p[1], p[2])) : { x: 0, y: 0.9 };
+      var from = { zoom: view.zoom, x: view.lookX, y: view.lookY }, t0 = performance.now(), ms = window.__oagBodyInstant ? 0 : 350;
+      if (anim) cancelAnimationFrame(anim);
+      var step = function (now) {
+        var k = ms ? Math.min(1, (now - t0) / ms) : 1;
+        var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        view.zoom = from.zoom + (zoom - from.zoom) * e;
+        view.lookX = from.x + (to.x - from.x) * e;
+        view.lookY = from.y + (to.y - from.y) * e;
+        place();
+        anim = k < 1 ? requestAnimationFrame(step) : null;
+      };
+      step(performance.now());
     }
 
     var pointers = {}, start = null, moved = false, pinch0 = null;
@@ -245,7 +268,7 @@
       el2.setPointerCapture && el2.setPointerCapture(e.pointerId);
       pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
       var ids = Object.keys(pointers);
-      if (ids.length === 1) { start = { x: e.clientX, y: e.clientY, yaw: view.yaw, lookY: view.lookY }; moved = false; }
+      if (ids.length === 1) { start = { x: e.clientX, y: e.clientY, yaw: view.yaw, lookY: view.lookY }; moved = false; if (anim) { cancelAnimationFrame(anim); anim = null; } }
       if (ids.length === 2) {
         var a = pointers[ids[0]], b = pointers[ids[1]];
         pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), zoom: view.zoom };
@@ -327,8 +350,9 @@
     window.addEventListener("resize", onResize);
     place();
     return {
-      dot: dot, path: path, clearMarks: clearMarks, render: place,
-      turn: function (yaw) { view.yaw = yaw; place(); },
+      dot: dot, path: path, clearMarks: clearMarks, render: place, focus: focus,
+      zoom: function () { return view.zoom; },
+      turn: function (yaw) { view.yaw = yaw; view.lookX = -view.lookX; place(); },
       // For the browser tests: where on screen a figure point is right now.
       screenOf: function (p) {
         var v = group.localToWorld(new THREE.Vector3(p[0], p[1], p[2])).project(camera);
@@ -416,9 +440,13 @@
         onclick: function () { if (picked) { lastPick = picked; close({ label: picked.label }); } } });
       c.foot.appendChild(name);
       c.foot.appendChild(use);
-      c.side.appendChild(el("p", { class: "oagb-note", text: "Drag sideways to turn the figure. Pinch or scroll to look closer. Left and right are the figure's own, as if it were you." }));
+      c.side.appendChild(el("p", { class: "oagb-note", text: "Drag sideways to turn the figure, and up or down to move along it when zoomed in. Pinch or scroll to zoom. Left and right are the figure's own, as if it were you." }));
       var past = readMarks();
       if (past.length) c.side.appendChild(el("p", { class: "oagb-note", text: "The faint dots are places you've marked before." }));
+      // A first tap names the nearest place and zooms into that part of the body (Wendell,
+      // 6 October 2026: "click a section and be able to zoom in to fine tune"). Taps while
+      // zoomed in move the mark; "Whole body" zooms back out.
+      var region = null, hint = null, whole = null;
       boot(c, function (p) {
         var a = nearestAnchor(c.fig.anchors, p);
         if (!a) return;
@@ -426,14 +454,34 @@
         name.textContent = a.label.charAt(0).toUpperCase() + a.label.slice(1);
         use.removeAttribute("disabled");
         drawPast();
-        c.view.dot(p, "#64c8ff", 0.024, 1, true);
+        var zoomed = region !== null;
+        c.view.dot(p, "#64c8ff", zoomed ? 0.009 : 0.024, 1, true);
         c.view.render();
+        if (!zoomed && a.region && REGIONS[a.region]) {
+          region = a.region;
+          var pts = c.fig.anchors.filter(function (x) { return x.region === region; });
+          var mid = [0, 1, 2].map(function (i) { return pts.reduce(function (t, x) { return t + x.pos[i]; }, 0) / pts.length; });
+          c.view.focus(mid, REGIONS[region].zoom);
+          hint.textContent = REGIONS[region].name + ". Tap again to fine-tune.";
+          whole.hidden = false;
+          c.stage.setAttribute("data-body-region", region);
+        }
       }).then(function (ok) {
         if (!ok) return;
-        c.stage.appendChild(el("div", { class: "oagb-hint", text: "Tap where the charge is." }));
+        hint = el("div", { class: "oagb-hint", "data-body-hint": "", text: "Tap where the charge is. The figure zooms in so you can fine-tune." });
+        c.stage.appendChild(hint);
+        whole = el("button", { type: "button", "data-body-whole": "", text: "Whole body", onclick: function () {
+          region = null;
+          c.stage.removeAttribute("data-body-region");
+          whole.hidden = true;
+          hint.textContent = "Tap where the charge is. The figure zooms in so you can fine-tune.";
+          c.view.focus(null, 1);
+        } });
+        whole.hidden = true;
+        c.stage.querySelector(".oagb-turn").appendChild(whole);
         drawPast();
         c.view.render();
-        window.__oagBody = { anchors: c.fig.anchors, screenOf: c.view.screenOf };
+        window.__oagBody = { anchors: c.fig.anchors, screenOf: c.view.screenOf, zoom: c.view.zoom };
       });
       function drawPast() {
         c.view.clearMarks();
@@ -444,6 +492,19 @@
       }
     });
   }
+
+  // The parts a first tap zooms into, with how far. Zoom levels are choices, set so each
+  // part fills most of a phone screen.
+  var REGIONS = {
+    head: { name: "Head and neck", zoom: 4.2 },
+    chest: { name: "Chest and shoulders", zoom: 3.0 },
+    belly: { name: "Belly and hips", zoom: 3.0 },
+    back: { name: "Back", zoom: 2.4 },
+    left_arm: { name: "Left arm", zoom: 2.2 },
+    right_arm: { name: "Right arm", zoom: 2.2 },
+    left_leg: { name: "Left leg", zoom: 1.8 },
+    right_leg: { name: "Right leg", zoom: 1.8 },
+  };
 
   function pointOf(m, anchors) {
     if (m.point) return m.point;
