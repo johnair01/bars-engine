@@ -1113,6 +1113,41 @@
             return i >= 0 && i < WAVE_STEPS.length - 1 ? WAVE_STEPS[i + 1].id : null;
         };
 
+        // How big a block is (oag-block-size, council pass 2). The 1 to 10 scale and the
+        // picture words are the council's placeholders, not a sourced instrument. The slider
+        // starts unset and records a size only when the player moves it (the Challenger's
+        // point: a default left in place would answer for the player).
+        const SIZE_WORDS = ["a pebble", "a pebble", "a stone", "a stone", "a rock", "a rock", "a boulder", "a boulder", "a wall", "a wall"];
+        const sizeWord = (n) => (n >= 1 && n <= 10 ? SIZE_WORDS[n - 1] : "");
+        const SizeSlider = ({ value, onChange, dataKey }) => (
+            <div className={`size-slider${value == null ? " size-slider--unset" : ""}`}>
+                <input type="range" min="1" max="10" step="1" value={value == null ? 5 : value}
+                       data-size-slider={dataKey}
+                       aria-label="How big it is, from 1 to 10"
+                       onChange={(e) => onChange(Number(e.target.value))}
+                       onClick={(e) => onChange(Number(e.target.value))} />
+                <div className="size-slider-ends"><span>1, small</span><span>10, it fills everything</span></div>
+                <p className="size-slider-value" data-size-value={value == null ? "" : value}>
+                    {value == null ? "Not set. Slide it if a size comes to you." : `${value}: about the size of ${sizeWord(value)}`}
+                </p>
+            </div>
+        );
+
+        // Plain words for a texture, used where the game names the trailhead back to the
+        // player ("tightness in my throat").
+        const TEXTURE_WORDS = { constriction: "tightness", numbness: "numbness", tension: "tension", strength: "strength", other: "something" };
+        const describeCharge = (c) => {
+            if (!c || !c.location) return c && c.channel ? c.channel : "";
+            const what = `${TEXTURE_WORDS[c.texture] || "something"} in ${c.location}`;
+            return c.channel ? `${what} (${c.channel})` : what;
+        };
+
+        // The faces for a newcomer (oag-faces-primer; the labels are open board question
+        // oag-faces-names, built on its recommended option A). Display only: every key,
+        // the demo, the coach code and the saved summary keep the colour names.
+        const FACE_PLAIN = { Magenta: "Presence", Red: "Power", Amber: "Order", Orange: "Understanding", Green: "Perspectives", Teal: "Systems" };
+        const faceLabel = (name) => (FACE_PLAIN[name] ? `${FACE_PLAIN[name]}, ${name}` : name);
+
         // One guided breath: four seconds in, six out. Both numbers are the council's
         // placeholders (oag-wave-breath), not a sourced figure. The step's continue button
         // shows when the exhale ends. window.__breathScale is a test-only speed-up, the
@@ -1192,10 +1227,16 @@
             return lines;
         };
 
-        const RouteMap = ({ route, belief, svgRef }) => {
+        const RouteMap = ({ route, belief, svgRef, trailhead }) => {
             const { stops, moves, deferred, deeper, blocks } = summarizeRoute(route);
             const beliefLines = belief ? wrapText(`“${belief}”`, 46) : [];
-            const height = MAP_H + (beliefLines.length ? 24 + beliefLines.length * 17 : 0);
+            // Where the trip began (oag-trailhead), drawn under the belief. Like the belief,
+            // it lives only on screen and in the saved image.
+            const startLines = trailhead ? wrapText(describeCharge(trailhead) + (trailhead.words ? `, “${trailhead.words}”` : ""), 50) : [];
+            const beliefH = beliefLines.length ? 24 + beliefLines.length * 17 : 0;
+            const startY = MAP_H + beliefH + (startLines.length ? 8 : 0);
+            const height = MAP_H + beliefH + (startLines.length ? 26 + startLines.length * 16 : 0);
+            const answerWord = { shifted: "it has shifted", same: "it's the same", different: "something else is there now" };
             const pairCount = {};
             const edge = (m, idx) => {
                 const a = mapNodePos(m.from);
@@ -1269,6 +1310,26 @@
                         const lx = p.x + Math.cos(angle) * d, ly = p.y + Math.sin(angle) * d;
                         return <circle key={`b${i}`} cx={lx} cy={ly} r={b.depth > 1 ? 4 : 6} fill="none" stroke="#ffd166" strokeWidth="1.6" data-map-block={b.step} />;
                     })}
+                    {trailhead && trailhead.channel && mapNodePos(trailhead.channel) && (() => {
+                        const p = mapNodePos(trailhead.channel);
+                        const fx = p.x - NODE_R - 4, fy = p.y - NODE_R - 2;
+                        return (
+                            <g data-map-trailhead={trailhead.answer || "open"}>
+                                <line x1={fx} y1={fy} x2={fx} y2={fy - 20} stroke="#ffffff" strokeWidth="1.5" />
+                                <path d={`M${fx},${fy - 20} L${fx + 13},${fy - 15} L${fx},${fy - 10} z`} fill={trailhead.answer === "shifted" ? "#7bd88f" : "#ffffff"} />
+                            </g>
+                        );
+                    })()}
+                    {startLines.length > 0 && (
+                        <g data-map-start>
+                            <text x={MAP_CX} y={startY + 6} textAnchor="middle" fontSize="11" fontFamily="sans-serif" fill="#8a93a6">
+                                {trailhead.answer ? `Where you started, and on the way back ${answerWord[trailhead.answer]}` : "Where you started"}
+                            </text>
+                            {startLines.map((l, i) => (
+                                <text key={i} x={MAP_CX} y={startY + 23 + i * 16} textAnchor="middle" fontSize="12" fontFamily="sans-serif" fill="#e8eef2">{l}</text>
+                            ))}
+                        </g>
+                    )}
                     {beliefLines.length > 0 && (
                         <g>
                             <text x={MAP_CX} y={MAP_H + 6} textAnchor="middle" fontSize="11" fontFamily="sans-serif" fill="#8a93a6">What you held</text>
@@ -1285,14 +1346,26 @@
         const RouteList = ({ route }) => {
             const { stops, moves, blocks } = summarizeRoute(route);
             const moveWord = { sheng: "Flowed forward to", ke: "Tempered toward" };
+            // Blocks and appreciations in the player's words (oag-block-carry,
+            // oag-appreciate-input), listed after the stops. On screen only, never stored.
+            const returns = route.filter(e => e.kind === "block-return");
+            const notes = route.filter(e => e.kind === "block-open" || e.kind === "appreciate").map((e) => {
+                if (e.kind === "appreciate") return { kind: "appreciate", text: `You appreciated: “${e.text}”.` };
+                const back = returns.find(r => r.openId === e.id) || {};
+                const label = WAVE_STEP_LABEL[e.step] || e.step;
+                const sizes = e.size != null && back.sizeAfter != null ? ` Its size went from ${e.size} to ${back.sizeAfter}.`
+                    : e.size != null ? ` Its size was ${e.size}.` : back.sizeAfter != null ? ` Its size afterwards was ${back.sizeAfter}.` : "";
+                return { kind: "block", text: `${label} was blocked${e.words ? ` by “${e.words}”` : ""}.${sizes}` };
+            });
             return (
+                <>
                 <ol className="route-list" data-route-list>
                     {stops.map((s, i) => {
                         const after = moves.filter(m => m.afterStop === i + 1);
                         const blocksHere = blocks.filter(b => b.channel === s.channel);
                         return (
                             <li key={i} data-route-stop={s.channel}>
-                                <strong>{s.channel}</strong> ({s.face}): {s.passive ? "moved on its own" : STATE_WORDS[s.endState] || "worked"}.
+                                <strong>{s.channel}</strong> ({faceLabel(s.face)}): {s.passive ? "moved on its own" : STATE_WORDS[s.endState] || "worked"}.
                                 {s.deeper && " You went deeper here."}
                                 {blocksHere.length > 0 && ` ${blocksHere.length} block${blocksHere.length === 1 ? "" : "s"} worked inside W.A.V.E.`}
                                 {after.map((m, j) => (
@@ -1304,6 +1377,12 @@
                         );
                     })}
                 </ol>
+                {notes.length > 0 && (
+                    <ul className="route-notes" data-route-notes>
+                        {notes.map((n, i) => <li key={i} data-route-note={n.kind}>{n.text}</li>)}
+                    </ul>
+                )}
+                </>
             );
         };
 
@@ -1474,6 +1553,20 @@
             // A stack because a block can come up inside block work.
             const [blockStack, setBlockStack] = useState([]);
             const [blockFrameSkipped, setBlockFrameSkipped] = useState(false);
+            // Where the trip began (oag-trailhead): set once, on the first body scan of a
+            // cycle outside any block, so block work never overwrites it. Holds the
+            // location, texture, first channel and face, the player's optional words, and
+            // their answer on the way back at Cycle Complete. Never stored (oag-words-private).
+            const [trailhead, setTrailhead] = useState(null);
+            const [startWords, setStartWords] = useState("");
+            // The block the player just came back from, shown on the step they return to
+            // with a second size slider (oag-block-carry, oag-block-size).
+            const [lastReturn, setLastReturn] = useState(null);
+            // The optional Appreciate line, one per W.A.V.E. location (oag-appreciate-input).
+            const [appreciateNotes, setAppreciateNotes] = useState({ opener: "", open: "" });
+            // The three-sentence faces primer shows on the first face pick of a session
+            // (oag-faces-primer).
+            const [facesIntroSeen, setFacesIntroSeen] = useState(false);
             const mapSvgRef = React.useRef(null);
             const [sedonaStep, setSedonaStep] = useState(1); // 1 welcome, 2 could-i, 3 would-i, 4 when, 5 repeat-or-done
             const [sedonaRounds, setSedonaRounds] = useState(0); // completed full passes, for "round N" copy
@@ -1676,6 +1769,7 @@
                         waveStep, route, userBelief,
                         blockDepth: blockStack.length,
                         blockSteps: blockStack.map(f => f.step),
+                        trailhead, lastReturn,
                     };
                 }
             });
@@ -1754,6 +1848,7 @@
                 deeperState: [deeperState, setDeeperState], deeperVerdicts: [deeperVerdicts, setDeeperVerdicts],
                 deeperSelfAuthorText: [deeperSelfAuthorText, setDeeperSelfAuthorText], heldBeliefs: [heldBeliefs, setHeldBeliefs],
                 deeperShifted: [deeperShifted, setDeeperShifted], deeperOutcome: [deeperOutcome, setDeeperOutcome],
+                appreciateNotes: [appreciateNotes, setAppreciateNotes],
             });
             const takeSnapshot = () => {
                 const b = cycleStateBindings();
@@ -1770,10 +1865,24 @@
             // block emerged."
             const openBlock = (where, step) => {
                 const depth = blockStack.length + 1;
-                setBlockStack(prev => [...prev, { snapshot: takeSnapshot(), where, step, channel: selectedChannel || null, depth }]);
-                logRoute({ kind: "block-open", step, where, channel: selectedChannel || null, depth });
+                const id = `b${Date.now()}-${depth}`;
+                // The charge the player was with when the step got blocked, so the block
+                // screen and the trail can name exactly what was blocked (oag-block-carry).
+                const charge = { location: location || null, texture: texture || null, channel: selectedChannel || null };
+                setBlockStack(prev => [...prev, { snapshot: takeSnapshot(), where, step, channel: selectedChannel || null, depth, id, charge, words: "", size: null }]);
+                logRoute({ kind: "block-open", id, step, where, channel: selectedChannel || null, depth });
                 setBlockFrameSkipped(false);
+                setLastReturn(null);
                 setPhase("phase-wave-block");
+            };
+            const updateTopFrame = (fields) => setBlockStack(prev => prev.map((f, i) => (i === prev.length - 1 ? { ...f, ...fields } : f)));
+            // Copies the player's words and size from the block screen into the route log,
+            // when they leave that screen either way.
+            const commitBlockDetails = () => {
+                const frame = blockStack[blockStack.length - 1];
+                if (!frame) return;
+                const words = (frame.words || "").trim();
+                setRoute(prev => prev.map(e => (e.kind === "block-open" && e.id === frame.id ? { ...e, words, size: frame.size } : e)));
             };
 
             // Block work runs the game's own cycle from a fresh body scan: find it, name its
@@ -1781,6 +1890,8 @@
             // open board question oag-block-work; B or C would replace only this function
             // and the copy on the block screen.
             const startBlockWork = () => {
+                commitBlockDetails();
+                setAppreciateNotes({ opener: "", open: "" });
                 setSelectedChannel(null);
                 setSelectedFace(null);
                 setCurrentStem("");
@@ -1808,13 +1919,23 @@
             const returnFromBlock = (outcome) => {
                 const frame = blockStack[blockStack.length - 1];
                 if (!frame) return;
-                logRoute({ kind: "block-return", step: frame.step, depth: frame.depth, outcome });
+                const rid = `${frame.id}-r`;
+                logRoute({ kind: "block-return", id: rid, openId: frame.id, step: frame.step, depth: frame.depth, outcome });
                 restoreSnapshot(frame.snapshot);
                 setBlockStack(blockStack.slice(0, -1));
+                setLastReturn({ id: rid, step: frame.step, where: frame.where, words: (frame.words || "").trim(), sizeBefore: frame.size, sizeAfter: null, charge: frame.charge });
+            };
+            const setReturnSize = (n) => {
+                if (!lastReturn) return;
+                setLastReturn({ ...lastReturn, sizeAfter: n });
+                setRoute(prev => prev.map(e => (e.kind === "block-return" && e.id === lastReturn.id ? { ...e, sizeAfter: n } : e)));
             };
 
             const handlePhase1Submit = () => {
                 if (location && texture) {
+                    if (!trailhead && blockStack.length === 0) {
+                        setTrailhead({ location, texture, words: startWords.trim(), channel: null, face: null, answer: null });
+                    }
                     setPhase("phase2");
                 }
             };
@@ -1825,6 +1946,7 @@
 
                     setSelectedChannel(channelName);
                     logAction(`✓ setSelectedChannel("${channelName}")`);
+                    if (blockStack.length === 0) setTrailhead(t => (t && !t.channel ? { ...t, channel: channelName } : t));
 
                     setPhase3Context("initial");
                     logAction(`✓ setPhase3Context("initial")`);
@@ -1845,6 +1967,8 @@
 
             const handleFaceSelect = (faceName) => {
                 setSelectedFace(faceName);
+                setFacesIntroSeen(true);
+                if (blockStack.length === 0) setTrailhead(t => (t && !t.face ? { ...t, face: faceName } : t));
                 setFaceLog(prev => [...prev, faceName]);
                 const key = selectedChannel.toLowerCase();
                 // incomingState was already set by whatever brought us to this channel:
@@ -1985,6 +2109,7 @@
 
             const handleBranchFaceSelect = (faceName) => {
                 setSelectedFace(faceName);
+                setFacesIntroSeen(true);
                 setFaceLog(prev => [...prev, faceName]);
                 const key = selectedChannel.toLowerCase();
                 // A branch is a freshly named thread, not a continuation of a resolved
@@ -2495,6 +2620,9 @@
                 setCoachShareCode(null);
                 setRoute([]);
                 setBlockStack([]);
+                setTrailhead(null);
+                setStartWords("");
+                setLastReturn(null);
             };
 
             // V2 UI Spec (Sept 26 2026), Magenta's veto made concrete: marks that this
@@ -2594,6 +2722,9 @@
                 setCoachShareCode(null);
                 setRoute([]);
                 setBlockStack([]);
+                setTrailhead(null);
+                setStartWords("");
+                setLastReturn(null);
             };
 
             // Coach view (Mode B, read side). Reads a SHARED path — data/coach-shared/
@@ -2891,19 +3022,37 @@
             // go back to, so the way back stays visible however deep the blocks go (the
             // Shaman's risk in the council pass). Imperative, like the pause link above.
             React.useEffect(() => {
-                const existing = document.getElementById("block-trail");
+                // Council pass 2 (oag-trailhead) widened it into the trip's trail: the first
+                // line names where the trip began whenever one is under way, and the second
+                // line appears inside a block. Two lines at most (the Challenger's limit).
+                const existing = document.getElementById("oag-trail");
                 if (existing) existing.remove();
-                if (blockStack.length === 0 || phase === "phase-paused" || phase === "phase-stopped") return;
-                const steps = blockStack.map(f => WAVE_STEP_LABEL[f.step] || f.step);
-                const newest = steps[steps.length - 1];
-                const earlier = steps.slice(0, -1).reverse();
+                const hidden = ["entry", "phase-paused", "phase-stopped", "phase6-done"].includes(phase) || coachMode;
+                if (hidden || (!trailhead && blockStack.length === 0)) return;
                 const bar = document.createElement("div");
-                bar.id = "block-trail";
-                bar.textContent = `Working what got in the way of ${newest}. When it shifts, you go back to ${newest}`
-                    + (earlier.length ? `, then to ${earlier.join(", then to ")}.` : ".");
+                bar.id = "oag-trail";
+                if (trailhead) {
+                    const start = document.createElement("div");
+                    start.id = "trail-start";
+                    start.textContent = `Where you started: ${describeCharge(trailhead)}` + (trailhead.words ? `, “${trailhead.words}”.` : ".");
+                    bar.appendChild(start);
+                }
+                if (blockStack.length > 0) {
+                    const steps = blockStack.map(f => WAVE_STEP_LABEL[f.step] || f.step);
+                    const newest = steps[steps.length - 1];
+                    const earlier = steps.slice(0, -1).reverse();
+                    const top = blockStack[blockStack.length - 1];
+                    const words = (top.words || "").trim();
+                    const line = document.createElement("div");
+                    line.id = "block-trail";
+                    line.textContent = `Working what got in the way of ${newest}` + (words ? ` (“${words}”)` : "")
+                        + `. When it shifts, you go back to ${newest}`
+                        + (earlier.length ? `, then to ${earlier.join(", then to ")}.` : ".");
+                    bar.appendChild(line);
+                }
                 document.body.appendChild(bar);
                 return () => {
-                    const el = document.getElementById("block-trail");
+                    const el = document.getElementById("oag-trail");
                     if (el) el.remove();
                 };
             });
@@ -3085,6 +3234,17 @@
                 const rungs = WAVE_STEPS.filter(st => st.rung).map(st => st.id);
                 const rungIndex = rungs.indexOf(def.id);
                 const lastRungReached = rungIndex > 0 ? rungs[rungIndex - 1] : null;
+                const back = lastReturn && lastReturn.step === def.id && lastReturn.where === where ? lastReturn : null;
+                const note = appreciateNotes[where] || "";
+                const onContinue = () => {
+                    if (def.id === "appreciate" && note.trim()) {
+                        logRoute({ kind: "appreciate", where, channel: selectedChannel || null, text: note.trim() });
+                        setAppreciateNotes(prev => ({ ...prev, [where]: "" }));
+                    }
+                    setLastReturn(null);
+                    if (def.rung) setLevel(def.id);
+                    setStep(nextWaveStep(def.id));
+                };
                 return (
                     <div className="wave-step" data-wave-step={def.id} data-wave-where={where}>
                         <p className="wave-trail">
@@ -3096,22 +3256,39 @@
                             ))}
                         </p>
                         <h3 className="wave-step-title">{def.label}</h3>
+                        {back && (
+                            // Back from a block (oag-block-carry): name what was in the way,
+                            // and ask its size again (oag-block-size).
+                            <div className="mini-section block-came-back" data-block-came-back={def.id}>
+                                <p>You're back at {def.label}.{back.words ? <> What was in the way: <em>“{back.words}”</em>.</> : ""}{back.sizeBefore != null ? ` It was ${back.sizeBefore}, about the size of ${sizeWord(back.sizeBefore)}.` : ""}</p>
+                                <p style={{ marginTop: "0.4rem" }}>How big is it now? You can leave this.</p>
+                                <SizeSlider value={back.sizeAfter} onChange={setReturnSize} dataKey="after" />
+                            </div>
+                        )}
                         <p className="prompt">{prompt}</p>
+                        {def.id === "appreciate" && (
+                            <div className="appreciate-input">
+                                <textarea data-appreciate-input value={note}
+                                          onChange={(e) => { const v = e.target.value; setAppreciateNotes(prev => ({ ...prev, [where]: v })); }}
+                                          placeholder="What can you appreciate about what showed up? (optional)" />
+                                <p className="prompt" style={{ fontSize: "0.82rem", opacity: 0.75 }}>You may not find anything to appreciate today, and that's all right. You can go on without writing.</p>
+                            </div>
+                        )}
                         <BreathPacer key={`${where}-${def.id}-${blockStack.length}`}>
                             {def.id === "exhale" ? (
                                 <>
-                                    <div className="option-card" data-wave-exhale="stay" onClick={() => onExhale("stay")}>
+                                    <div className="option-card" data-wave-exhale="stay" onClick={() => { setLastReturn(null); onExhale("stay"); }}>
                                         <strong>Yes, let it stay</strong>
                                         <p>It's serving me. I'll work with it as it is.</p>
                                     </div>
-                                    <div className="option-card" data-wave-exhale="release" onClick={() => onExhale("release")}>
+                                    <div className="option-card" data-wave-exhale="release" onClick={() => { setLastReturn(null); onExhale("release"); }}>
                                         <strong>No, exhale and release</strong>
                                         <p>Breathe it out and see what's left behind.</p>
                                     </div>
                                 </>
                             ) : (
                                 <div className="button-group">
-                                    <button className="primary" data-wave-continue onClick={() => { if (def.rung) setLevel(def.id); setStep(nextWaveStep(def.id)); }}>
+                                    <button className="primary" data-wave-continue onClick={onContinue}>
                                         {def.button}
                                     </button>
                                 </div>
@@ -3120,7 +3297,7 @@
                         <p className="wave-side-links">
                             {lastRungReached && (
                                 <>
-                                    <a href="#" data-wave-stop onClick={(e) => { e.preventDefault(); setLevel(lastRungReached); setStep("validate"); }}>
+                                    <a href="#" data-wave-stop onClick={(e) => { e.preventDefault(); setLastReturn(null); setLevel(lastRungReached); setStep("validate"); }}>
                                         This is as far as I can honestly go today
                                     </a>
                                     {" · "}
@@ -3288,6 +3465,26 @@
                         <div className="card">
                             <div className="phase-marker">SOMETHING'S IN THE WAY</div>
                             <h2>Something is in the way of {stepLabel}.</h2>
+                            {frame && (
+                                // Exactly what was blocked (oag-block-carry): the step, and the
+                                // charge the player was with when it got blocked.
+                                <p className="prompt" data-block-what>
+                                    {describeCharge(frame.charge)
+                                        ? <>You were at {stepLabel} with {describeCharge(frame.charge)}.</>
+                                        : <>You were at {stepLabel}, with whatever had come up to be welcomed.</>}
+                                </p>
+                            )}
+                            {frame && (
+                                <div className="mini-section block-details">
+                                    <p><strong>What's in the way?</strong> Say it in your own words if you can. You can leave this blank.</p>
+                                    <input type="text" data-block-words value={frame.words || ""}
+                                           onChange={(e) => updateTopFrame({ words: e.target.value })}
+                                           placeholder="e.g. 'I don't want to accept that it happened'" />
+                                    <p style={{ marginTop: "0.6rem" }}><strong>How big is it?</strong></p>
+                                    <SizeSlider value={frame.size} onChange={(n) => updateTopFrame({ size: n })} dataKey="before" />
+                                    <p style={{ fontSize: "0.8rem", opacity: 0.7 }}>What you write here stays on this page and isn't saved.</p>
+                                </div>
+                            )}
                             {blockStack.length === 3 && (
                                 <div className="mini-section" data-block-depth-reflection>
                                     <p>This is the third block inside a block. Sometimes that is the work itself, and sometimes it means today has asked enough. Going on is fine, and so is stopping or pausing.</p>
@@ -3310,7 +3507,7 @@
                                 <button className="primary" data-block-work onClick={startBlockWork}>
                                     Work on what's in the way
                                 </button>
-                                <button className="secondary" data-block-back onClick={() => returnFromBlock("none")}>
+                                <button className="secondary" data-block-back onClick={() => { commitBlockDetails(); returnFromBlock("none"); }}>
                                     Go back to {stepLabel}
                                 </button>
                                 <button className="secondary" onClick={handleStopForToday}>
@@ -3328,6 +3525,16 @@
                         <div className="card">
                             <div className="phase-marker">PHASE 1 — Locate the Block</div>
                             <h2>Where do you feel it?</h2>
+                            {!trailhead && blockStack.length === 0 && scanContext === "first" && (
+                                // The trailhead in the player's words (oag-trailhead). Optional,
+                                // shown back to them on the trail and at the end, never stored.
+                                <div className="mini-section start-words">
+                                    <p><strong>What brought you here today?</strong> One line, if you like. It helps you find your way back at the end.</p>
+                                    <input type="text" data-start-words value={startWords}
+                                           onChange={(e) => setStartWords(e.target.value)}
+                                           placeholder="e.g. 'the call with my sister' (optional)" />
+                                </div>
+                            )}
                             {renderOpeningRitual()}
                             {isScanReady() && (
                                 <div className="button-group">
@@ -3437,7 +3644,7 @@
                             {phase3Context === "initial" && (
                                 <>
                                     <h2>Which way do you know this?</h2>
-                                    <p className="prompt">Choose the epistemological face that fits:</p>
+                                    {facesIntroSeen && <p className="prompt">Pick the face that fits best. Your body gets the next word.</p>}
                                 </>
                             )}
                             {phase3Context === "flow-forward" && (
@@ -3468,6 +3675,14 @@
                                     <p className="prompt">Which way do you know it there?</p>
                                 </>
                             )}
+                            {!facesIntroSeen && (
+                                // The faces primer (oag-faces-primer): three sentences the first
+                                // time a player picks a face in a session.
+                                <div className="mini-section faces-primer" data-faces-primer>
+                                    <p>There are six ways of knowing a feeling, and the game calls them faces. None ranks above another here; each one notices something the others miss.</p>
+                                    <p style={{ marginTop: "0.4rem" }}>Read the questions and pick the one that sounds most like how this feels. If none fits, pick the one your body leans toward, since the next screen checks it with your body anyway.</p>
+                                </div>
+                            )}
                             {streak && (
                                 <div className="mini-section">
                                     <p>
@@ -3488,8 +3703,9 @@
                                         tabIndex="0"
                                         onKeyPress={(e) => e.key === 'Enter' && (phase3Context === "branch" ? handleBranchFaceSelect(f.name) : handleFaceSelect(f.name))}
                                     >
-                                        <strong>{f.name}</strong>
+                                        <strong>{FACE_PLAIN[f.name] || f.name} <span className="face-tag">{f.name}</span></strong>
                                         <small>{f.description}</small>
+                                        <small className="face-question">{precisionQuestions[f.name.toLowerCase()]}</small>
                                     </div>
                                 ))}
                             </div>
@@ -4461,18 +4677,41 @@
                     <div className="container">
                         <div className="card">
                             <h2>Cycle Complete</h2>
+                            {trailhead && (
+                                // Back to the trailhead (oag-trailhead): the trip ends where it
+                                // began. The answer goes on the map as a flag.
+                                <div className="mini-section trailhead-return" data-trailhead-return>
+                                    <p><strong>Back to where you started.</strong> You came in with {describeCharge(trailhead)}{trailhead.words ? <>, about <em>“{trailhead.words}”</em></> : ""}.</p>
+                                    {!trailhead.answer ? (
+                                        <>
+                                            <p style={{ marginTop: "0.4rem" }}>Put your attention there now. What's there?</p>
+                                            <div className="button-group">
+                                                <button className="secondary" data-trailhead-answer="shifted" onClick={() => { setTrailhead({ ...trailhead, answer: "shifted" }); logRoute({ kind: "trailhead-return", answer: "shifted" }); }}>It has shifted</button>
+                                                <button className="secondary" data-trailhead-answer="same" onClick={() => { setTrailhead({ ...trailhead, answer: "same" }); logRoute({ kind: "trailhead-return", answer: "same" }); }}>It's the same</button>
+                                                <button className="secondary" data-trailhead-answer="different" onClick={() => { setTrailhead({ ...trailhead, answer: "different" }); logRoute({ kind: "trailhead-return", answer: "different" }); }}>Something else is there now</button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p style={{ marginTop: "0.4rem" }} data-trailhead-answered={trailhead.answer}>
+                                            {trailhead.answer === "shifted" ? "It has shifted. The flag on the map marks where you started."
+                                                : trailhead.answer === "same" ? "It's the same, and that's worth knowing. The flag on the map marks where you started, if you want to begin there next time."
+                                                : "Something else is there now. That may be your next trailhead whenever you begin again."}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                             {route.some(e => e.kind === "stop") ? (
                                 <div className="route-map-wrap" data-route-map>
                                     <p className="prompt">Here is where you went.</p>
-                                    <RouteMap route={route} belief={heldBeliefs.length > 0 ? heldBeliefs.join(" / ") : userBelief} svgRef={mapSvgRef} />
+                                    <RouteMap route={route} belief={heldBeliefs.length > 0 ? heldBeliefs.join(" / ") : userBelief} svgRef={mapSvgRef} trailhead={trailhead} />
                                     <p className="route-legend">
-                                        Numbers are the order you worked each channel. A solid arrow flowed forward and a dashed arrow tempered. A short line with a bar is a place you looked and found nothing. A dotted ring is a thread you set aside, a double ring is where you went deeper, and a small gold loop is a block you worked inside W.A.V.E.
+                                        Numbers are the order you worked each channel. A solid arrow flowed forward and a dashed arrow tempered. A short line with a bar is a place you looked and found nothing. A dotted ring is a thread you set aside, a double ring is where you went deeper, a small gold loop is a block you worked inside W.A.V.E., and the flag marks where you started.
                                     </p>
                                     <RouteList route={route} />
                                     <div className="button-group">
                                         <button className="secondary" data-save-map onClick={saveMapImage}>Save the map as an image</button>
                                     </div>
-                                    <p className="route-legend">The belief under the map stays on this screen and in the image you save. The game doesn't store it.</p>
+                                    <p className="route-legend">The belief and your own words under the map stay on this screen and in the image you save. The game doesn't store them.</p>
                                 </div>
                             ) : (
                                 <p className="prompt">You've completed one full cycle.</p>

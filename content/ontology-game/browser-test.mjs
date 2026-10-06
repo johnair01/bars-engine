@@ -68,6 +68,8 @@ await page.getByPlaceholder("e.g., 'my throat', 'my solar plexus', 'behind my st
 await page.locator('select').selectOption('tension');
 await clickText('This is it');
 await page.locator('[data-demo-key="channel-Anger"]').click();
+ok(await page.locator('[data-faces-primer]').count() === 1 && /Order/.test(await page.locator('[data-demo-key="face-Amber"]').textContent()),
+  'first face pick opens with the primer and plain labels');
 await page.locator('[data-demo-key="face-Amber"]').click();
 await clickText('Yes, this is true');
 await clickText('Ready to notice');
@@ -150,6 +152,10 @@ const dl = page4.waitForEvent('download');
 await page4.locator('[data-save-map]').click();
 const download = await dl;
 ok(download.suggestedFilename() === 'ontology-game-map.png', 'map saves as a PNG');
+// Falsification test 4 (6FACE_PASS2_2026-10-06): the trip ends where it began.
+ok(await page4.locator('[data-trailhead-return]').count() === 1, 'Cycle Complete opens with the way back to the start');
+await page4.locator('[data-trailhead-answer="same"]').click();
+ok(await page4.locator('[data-map-trailhead="same"]').count() === 1, 'the answer shows on the map as a flag');
 await page4.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-map.png', fullPage: true });
 
 // Falsification test 1: block on Accept, block on Welcome inside it, return to each.
@@ -157,7 +163,10 @@ const p5 = await ctx.newPage();
 p5.on('pageerror', e => errors.push('pageerror5: ' + e.message));
 await p5.goto(B + '/ontology-game/wave');
 await p5.getByText('Begin Practice with W.A.V.E.').click();
-await waveFrom(p5, 'welcome', 'release');
+await p5.locator('[data-start-words]').fill('the call with my sister');
+await waveTo(p5, 'appreciate');
+await p5.locator('[data-appreciate-input]').fill('it kept me careful');
+await waveFrom(p5, 'appreciate', 'release');
 await scan(p5, 'my chest', 'tension');
 await holdBelief(p5, 'Anger', 'Amber');
 await p5.locator('[data-demo-key="open-choice-wave"]').click();
@@ -167,7 +176,12 @@ await p5.locator('[data-wave-step="accept"] [data-wave-block]').click();
 let st = await gs(p5);
 ok(st.phase === 'phase-wave-block' && st.blockDepth === 1, 'block on Accept opens the block screen');
 ok(await p5.locator('[data-block-frame="self-sabotage"]').count() === 1, 'block screen offers the self-sabotage frame');
+ok(/Accept with tension in my chest \(Anger\)/.test(await p5.locator('[data-block-what]').textContent()), 'block screen names exactly what was blocked');
+await p5.locator('[data-block-words]').fill("I can't accept it");
+await p5.locator('[data-size-slider="before"]').fill('7');
 await p5.locator('[data-block-work]').click();
+ok((await p5.locator('#trail-start').textContent()).includes('my chest') && (await p5.locator('#trail-start').textContent()).includes('the call with my sister'),
+  'trail names where the trip started');
 ok((await p5.locator('#block-trail').textContent()).includes('back to Accept'), 'trail bar shows the way back to Accept');
 await p5.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-block.png', fullPage: true });
 await p5.locator('[data-wave-step="welcome"] [data-wave-block]').click();
@@ -176,6 +190,12 @@ ok(st.blockDepth === 2 && JSON.stringify(st.blockSteps) === '["accept","welcome"
 await p5.locator('[data-block-skip-frame]').click();
 ok(await p5.locator('[data-block-frame="plain"]').count() === 1, 'frame can be skipped');
 await p5.locator('[data-block-work]').click();
+// Falsification test 3 (6FACE_PASS2_2026-10-06): two blocks deep, the page still says where the trip began.
+const deep = await p5.locator('#oag-trail').textContent();
+ok(deep.includes('my chest') && deep.includes('the call with my sister') && deep.includes('back to Welcome, then to Accept'),
+  'two blocks deep, the trail names the start and the way back: ' + deep);
+ok(await p5.evaluate(() => { const l = document.getElementById('pause-link'); if (!l) return false; const r = l.getBoundingClientRect();
+  return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === l; }), 'pause link stays visible under the trail');
 await waveFrom(p5, 'welcome', 'release');
 await scan(p5, 'my belly', 'numbness');
 await holdBelief(p5, 'Fear', 'Orange');
@@ -196,6 +216,8 @@ await p5.locator('[data-demo-key="state-confirm-satisfied"]').click();
 st = await gs(p5);
 ok(st.phase === 'phase-open-active' && st.openTechnique === 'wave' && st.blockDepth === 0, 'outer block returns to the open W.A.V.E.');
 ok(await p5.locator('[data-wave-step="accept"]').count() === 1, 'lands back on Accept');
+ok((await p5.locator('[data-block-came-back="accept"]').textContent()).includes("I can't accept it"), 'Accept shows what was in the way');
+await p5.locator('[data-size-slider="after"]').fill('3');
 ok(st.selectedChannel === outer.selectedChannel && st.selectedFace === outer.selectedFace && st.selectedChannel === 'Anger'
   && st.incomingState === outer.incomingState && st.resolvedThreads.length === 0,
   'outer channel, face and charge unchanged (' + st.selectedChannel + ' / ' + st.selectedFace + ')');
@@ -210,9 +232,17 @@ await p5.locator('[data-demo-key="state-confirm-satisfied"]').click();
 await p5.getByText("No, that's all of it", { exact: true }).click();
 await p5.getByText('Complete This Cycle', { exact: true }).click();
 ok(await p5.locator('[data-map-block]').count() === 2, 'map draws a loop for each block (' + await p5.locator('[data-map-block]').count() + ')');
+await p5.locator('[data-trailhead-answer="shifted"]').click();
+ok(await p5.locator('[data-map-trailhead="shifted"]').count() === 1, 'trailhead flag shows the answer');
+const notes = await p5.locator('[data-route-notes] > li').allTextContents();
+// Falsification test 5: size before and after, an unmoved slider shows nothing, words kept on screen.
+ok(notes.some(n => n === "Accept was blocked by “I can't accept it”. Its size went from 7 to 3.")
+  && notes.some(n => n === 'Welcome was blocked.') && notes.some(n => n.includes('it kept me careful')),
+  'route notes carry the block words, sizes and appreciation: ' + JSON.stringify(notes));
 const belief = outer.userBelief;
 const stored = await p5.evaluate(() => Object.keys(localStorage).map(k => localStorage.getItem(k)).join('\n'));
 ok(belief && !stored.includes(belief), 'belief text never stored');
+ok(!stored.includes("accept it") && !stored.includes('my sister') && !stored.includes('kept me careful'), 'block words, start words and appreciation never stored');
 ok((await p5.locator('svg.route-map').textContent()).includes(belief.split(' ')[0]), 'belief drawn under the map');
 await p5.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-map-blocks.png', fullPage: true });
 
