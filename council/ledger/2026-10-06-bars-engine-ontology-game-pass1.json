@@ -1,0 +1,33 @@
+{
+  "id": "2026-10-06-bars-engine-ontology-game-pass1",
+  "date": "2026-10-06",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "question": "How does the Ontology Alchemy Game show the player's route as its output, and how does WAVE become a breathed practice where any step can be blocked, worked and returned to?",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "source_doc": "content/ontology-game/6FACE_PASS1_2026-10-06.md",
+  "faces_present": ["shaman", "architect", "challenger", "regent", "diplomat", "sage"],
+  "dissent": true,
+  "dissent_note": "The Shaman would work a block by meeting the voice in the way (Big Mind); the Architect, Challenger and Regent would run it through the game's own cycle. Sent to the board as oag-block-work; the build proceeds on the game's own cycle meanwhile.",
+  "positions": {
+    "oag-map-output": "council",
+    "oag-map-private": "council",
+    "oag-wave-breath": "council",
+    "oag-wave-ladder": "council",
+    "oag-wave-blocks": "council",
+    "oag-wave-depth": "council",
+    "oag-book-untouched": "council"
+  },
+  "questions": {
+    "oag-block-work": {"options": ["cycle", "small-wave", "daemon"], "choice": null}
+  },
+  "built": [
+    "johnair01/bars-engine pull request #260: route map, breathed WAVE ladder, block-and-return stack"
+  ],
+  "falsification_tests": [
+    "A browser test blocks on Accept, blocks again on Welcome inside the block work, and lands back on each step in turn with the outer channel, face and belief unchanged",
+    "After the guided demo, the map shows the demo's channels in order with their moves, and a reader names the first channel, the move out of it and the last channel from the map alone"
+  ],
+  "outcome": "unruled"
+}

@@ -803,8 +803,9 @@
               } },
             { id: "wave", name: "W.A.V.E.", kind: "wave",
               blurb: {
-                  first: "Welcome it. Acknowledge, Accept, or Appreciate it — whichever you can honestly reach. Validate your body's right to feel it. Exhale: let it stay if it serves you, or release it and see what's left.",
-                  continuation: "Welcome it back, if it's here. Acknowledge, Accept, or Appreciate it — whichever you can honestly reach. Validate your body's right to still feel this. Exhale: let it stay if it's still here, or release it and see what's left."
+                  first: "Each step takes one breath. Welcome it. Acknowledge it, Allow it, Accept it and Appreciate it, as far up as you can honestly go. Validate your body's right to feel it. Exhale: let it stay if it serves you, or release it and see what's left. If something gets in the way of a step, you can work that first and come back.",
+                  continuation: "Each step takes one breath. Welcome it back, if it's here. Acknowledge it, Allow it, Accept it and Appreciate it, as far up as you can honestly go. Validate your body's right to still feel this. Exhale: let it stay if it's still here, or release it and see what's left.",
+                  block: "Each step takes one breath, and this time you breathe with whatever got in the way. Welcome it, climb as far as you honestly can, validate it, and exhale. If something blocks this too, you can work that first."
               } },
             { id: "grounding", name: "5-4-3-2-1 Grounding", kind: "grounding",
               blurb: {
@@ -1078,6 +1079,234 @@
             );
         };
 
+        // W.A.V.E., breathed (council pass, 6 October 2026: bars-engine
+        // content/ontology-game/6FACE_PASS1_2026-10-06.md). Wendell's note of that day:
+        // "The practice is designed that one is supposed to breathe through all the
+        // steps." Each step below is one guided breath (oag-wave-breath), the A is the
+        // four-rung ladder he named (Acknowledge, Allow, Accept, Appreciate;
+        // oag-wave-ladder), and every step can be blocked (oag-wave-blocks).
+        //
+        // Choice, labelled as one: the book defines WAVE as Welcome, Acknowledge,
+        // Validate, Exhale (Mastering the Game of Allyship, Appendix C). The game uses his
+        // four-rung A from the note above. The book is untouched (oag-book-untouched).
+        const WAVE_STEPS = [
+            { id: "welcome", label: "Welcome", button: "I've welcomed it",
+              prompt: "Let whatever's here be here for a moment, without needing it to be different yet.",
+              promptContinuation: "Let whatever's here be here for a moment, the same charge you've been working if it's still showing up, without needing it to be different yet.",
+              promptBlock: "Let what's in the way be here for a moment, without needing it to move yet." },
+            { id: "acknowledge", label: "Acknowledge", rung: true, button: "I acknowledge it",
+              prompt: "Admit that it's here. You don't have to like it." },
+            { id: "allow", label: "Allow", rung: true, button: "I allow it",
+              prompt: "Let it take up as much of you as it's taking. You don't have to make it smaller." },
+            { id: "accept", label: "Accept", rung: true, button: "I accept it",
+              prompt: "Let it be here without fighting it." },
+            { id: "appreciate", label: "Appreciate", rung: true, button: "I appreciate it",
+              prompt: "Find what it's been trying to do for you." },
+            { id: "validate", label: "Validate", button: "I validate that",
+              prompt: "Your body has the right to feel this, whatever it is." },
+            { id: "exhale", label: "Exhale",
+              prompt: "Is this feeling in alignment with what you actually want right now?" },
+        ];
+        const WAVE_STEP_LABEL = WAVE_STEPS.reduce((acc, s) => ({ ...acc, [s.id]: s.label }), {});
+        const nextWaveStep = (id) => {
+            const i = WAVE_STEPS.findIndex(s => s.id === id);
+            return i >= 0 && i < WAVE_STEPS.length - 1 ? WAVE_STEPS[i + 1].id : null;
+        };
+
+        // One guided breath: four seconds in, six out. Both numbers are the council's
+        // placeholders (oag-wave-breath), not a sourced figure. The step's continue button
+        // shows when the exhale ends. window.__breathScale is a test-only speed-up, the
+        // same pattern as window.__forcePracticeId; real play never sets it.
+        const BREATH_IN_MS = 4000;
+        const BREATH_OUT_MS = 6000;
+        const BreathPacer = ({ children }) => {
+            const scale = (typeof window !== "undefined" && window.__breathScale) || 1;
+            const [stage, setStage] = useState("ready"); // "ready" | "in" | "out" | "done"
+            React.useEffect(() => {
+                const t0 = setTimeout(() => setStage("in"), 30);
+                const t1 = setTimeout(() => setStage("out"), 30 + BREATH_IN_MS * scale);
+                const t2 = setTimeout(() => setStage("done"), 30 + (BREATH_IN_MS + BREATH_OUT_MS) * scale);
+                return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); };
+            }, []);
+            return (
+                <div className="breath-pacer" data-breath={stage}>
+                    <div className={`breath-circle breath-circle--${stage}`}
+                         style={{ transitionDuration: `${(stage === "in" ? BREATH_IN_MS : BREATH_OUT_MS) * scale}ms` }} />
+                    <p className="breath-label">{stage === "out" ? "Breathe out" : stage === "done" ? "One breath" : "Breathe in"}</p>
+                    {stage === "done" && children}
+                </div>
+            );
+        };
+
+        // The route map (oag-map-output). Drawn from the route log the game keeps (see
+        // logRoute in the component): one numbered stop per thread worked, solid arrows
+        // for Flow Forward, dashed for Tempering, a barred stub for a dead end, a dotted
+        // ring for a thread set aside, a double ring for Go Deeper, and a small loop for
+        // each block worked inside W.A.V.E. The belief text is drawn here and in the
+        // saved image only and never stored (oag-map-private).
+        //
+        // Layout choice: the five nodes sit on a pentagon in generating (sheng) order,
+        // Joy at the top and clockwise, so every Flow Forward arrow runs around the rim
+        // and every Tempering arrow crosses the middle, as in the usual wuxing drawing.
+        const MAP_ORDER = ["Joy", "Anger", "Neutrality", "Fear", "Sadness"];
+        const MAP_W = 340, MAP_H = 300, MAP_CX = 170, MAP_CY = 150, MAP_R = 104, NODE_R = 20;
+        const STATE_WORDS = { dissatisfied: "still aching", neutral: "workable", satisfied: "resolved" };
+        const mapNodePos = (name) => {
+            const i = MAP_ORDER.indexOf(name);
+            const a = (-90 + i * 72) * Math.PI / 180;
+            return { x: MAP_CX + MAP_R * Math.cos(a), y: MAP_CY + MAP_R * Math.sin(a), ux: Math.cos(a), uy: Math.sin(a) };
+        };
+        const channelOf = (name) => channels.find(c => c.name === name);
+
+        // Turns the route log into the ordered stops and moves the map and its list share.
+        const summarizeRoute = (route) => {
+            const stops = [];
+            const moves = [];
+            const deferred = new Set();
+            const deeper = new Set();
+            const blocks = [];
+            route.forEach((e) => {
+                if (e.kind === "stop") stops.push({ ...e });
+                else if (e.kind === "move" || e.kind === "deadend") moves.push({ ...e, afterStop: stops.length });
+                else if (e.kind === "defer") deferred.add(e.channel);
+                else if (e.kind === "deeper") {
+                    deeper.add(e.channel);
+                    const last = [...stops].reverse().find(s => s.channel === e.channel);
+                    if (last) last.deeper = true;
+                }
+                else if (e.kind === "block-open") blocks.push(e);
+            });
+            stops.forEach(s => deferred.delete(s.channel));
+            return { stops, moves, deferred: [...deferred], deeper: [...deeper], blocks };
+        };
+
+        const wrapText = (text, max) => {
+            const words = String(text || "").split(/\s+/).filter(Boolean);
+            const lines = [];
+            let line = "";
+            words.forEach((w) => {
+                if ((line + " " + w).trim().length > max) { if (line) lines.push(line); line = w; }
+                else line = (line + " " + w).trim();
+            });
+            if (line) lines.push(line);
+            return lines;
+        };
+
+        const RouteMap = ({ route, belief, svgRef }) => {
+            const { stops, moves, deferred, deeper, blocks } = summarizeRoute(route);
+            const beliefLines = belief ? wrapText(`“${belief}”`, 46) : [];
+            const height = MAP_H + (beliefLines.length ? 24 + beliefLines.length * 17 : 0);
+            const pairCount = {};
+            const edge = (m, idx) => {
+                const a = mapNodePos(m.from);
+                const b = mapNodePos(m.to);
+                if (!a || !b || m.from === m.to) return null;
+                const pairKey = `${m.from}>${m.to}`;
+                const k = pairCount[pairKey] = (pairCount[pairKey] || 0) + 1;
+                const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+                const ux = dx / len, uy = dy / len;
+                const sx = a.x + ux * (NODE_R + 3), sy = a.y + uy * (NODE_R + 3);
+                if (m.kind === "deadend") {
+                    const ex = a.x + ux * (len * 0.42), ey = a.y + uy * (len * 0.42);
+                    return (
+                        <g key={`m${idx}`} data-map-move="deadend" data-from={m.from} data-to={m.to}>
+                            <line x1={sx} y1={sy} x2={ex} y2={ey} stroke="#cfd8dc" strokeWidth="2" strokeDasharray={m.type === "ke" ? "5 4" : undefined} />
+                            <line x1={ex - uy * 7} y1={ey + ux * 7} x2={ex + uy * 7} y2={ey - ux * 7} stroke="#cfd8dc" strokeWidth="2.5" />
+                        </g>
+                    );
+                }
+                const ex = b.x - ux * (NODE_R + 6), ey = b.y - uy * (NODE_R + 6);
+                const bend = 14 * k;
+                const qx = (sx + ex) / 2 - uy * bend, qy = (sy + ey) / 2 + ux * bend;
+                return (
+                    <path key={`m${idx}`} data-map-move={m.type} data-from={m.from} data-to={m.to}
+                          d={`M${sx.toFixed(1)},${sy.toFixed(1)} Q${qx.toFixed(1)},${qy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`}
+                          fill="none" stroke="#e8eef2" strokeWidth="2.2"
+                          strokeDasharray={m.type === "ke" ? "6 5" : undefined} markerEnd="url(#oag-arrow)" />
+                );
+            };
+            const badgeCount = {};
+            return (
+                <svg ref={svgRef} className="route-map" xmlns="http://www.w3.org/2000/svg"
+                     viewBox={`0 0 ${MAP_W} ${height}`} width="100%" role="img"
+                     aria-label="Map of the channels you moved through this cycle" data-map-stops={stops.map(s => s.channel).join(",")}>
+                    <defs>
+                        <marker id="oag-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#e8eef2" />
+                        </marker>
+                    </defs>
+                    <rect x="0" y="0" width={MAP_W} height={height} rx="14" fill="#18203a" />
+                    {MAP_ORDER.map((name) => {
+                        const p = mapNodePos(name);
+                        const ch = channelOf(name);
+                        const hex = ELEMENT_HEX[ch.color];
+                        const visited = stops.some(s => s.channel === name);
+                        return (
+                            <g key={name} data-map-node={name}>
+                                {deeper.includes(name) && <circle cx={p.x} cy={p.y} r={NODE_R + 7} fill="none" stroke={hex} strokeWidth="1.5" data-map-deeper={name} />}
+                                {deferred.includes(name) && <circle cx={p.x} cy={p.y} r={NODE_R + 5} fill="none" stroke={hex} strokeWidth="1.5" strokeDasharray="2 3" data-map-deferred={name} />}
+                                <circle cx={p.x} cy={p.y} r={NODE_R} fill={visited ? hex : "none"} fillOpacity={visited ? 0.85 : 1} stroke={hex} strokeWidth="2" strokeOpacity={visited ? 1 : 0.45} />
+                                <text x={p.x + p.ux * (NODE_R + 30)} y={p.y + p.uy * (NODE_R + 22) + 4} textAnchor="middle" fontSize="12" fontFamily="sans-serif" fill={visited ? "#ffffff" : "#8a93a6"}>{name}</text>
+                            </g>
+                        );
+                    })}
+                    {moves.map(edge)}
+                    {stops.map((s, i) => {
+                        const p = mapNodePos(s.channel);
+                        const n = badgeCount[s.channel] = (badgeCount[s.channel] || 0) + 1;
+                        const off = (n - 1) * 15;
+                        return (
+                            <g key={`s${i}`} data-map-stop={i + 1} data-channel={s.channel}>
+                                <circle cx={p.x - 1 + off} cy={p.y} r="9" fill="#18203a" stroke={s.passive ? "#8a93a6" : "#ffffff"} strokeWidth="1.2" />
+                                <text x={p.x - 1 + off} y={p.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fontFamily="sans-serif" fill="#ffffff">{i + 1}</text>
+                            </g>
+                        );
+                    })}
+                    {blocks.map((b, i) => {
+                        const p = b.channel ? mapNodePos(b.channel) : { x: MAP_CX, y: MAP_CY, ux: 0, uy: 1 };
+                        const angle = Math.atan2(p.uy, p.ux) + (i % 3 - 1) * 0.5;
+                        const d = b.channel ? NODE_R + 11 : 8 + i * 4;
+                        const lx = p.x + Math.cos(angle) * d, ly = p.y + Math.sin(angle) * d;
+                        return <circle key={`b${i}`} cx={lx} cy={ly} r={b.depth > 1 ? 4 : 6} fill="none" stroke="#ffd166" strokeWidth="1.6" data-map-block={b.step} />;
+                    })}
+                    {beliefLines.length > 0 && (
+                        <g>
+                            <text x={MAP_CX} y={MAP_H + 6} textAnchor="middle" fontSize="11" fontFamily="sans-serif" fill="#8a93a6">What you held</text>
+                            {beliefLines.map((l, i) => (
+                                <text key={i} x={MAP_CX} y={MAP_H + 24 + i * 17} textAnchor="middle" fontSize="13" fontStyle="italic" fontFamily="Georgia, serif" fill="#ffffff">{l}</text>
+                            ))}
+                        </g>
+                    )}
+                </svg>
+            );
+        };
+
+        // The same route in words, under the map, so it reads without the legend.
+        const RouteList = ({ route }) => {
+            const { stops, moves, blocks } = summarizeRoute(route);
+            const moveWord = { sheng: "Flowed forward to", ke: "Tempered toward" };
+            return (
+                <ol className="route-list" data-route-list>
+                    {stops.map((s, i) => {
+                        const after = moves.filter(m => m.afterStop === i + 1);
+                        const blocksHere = blocks.filter(b => b.channel === s.channel);
+                        return (
+                            <li key={i} data-route-stop={s.channel}>
+                                <strong>{s.channel}</strong> ({s.face}): {s.passive ? "moved on its own" : STATE_WORDS[s.endState] || "worked"}.
+                                {s.deeper && " You went deeper here."}
+                                {blocksHere.length > 0 && ` ${blocksHere.length} block${blocksHere.length === 1 ? "" : "s"} worked inside W.A.V.E.`}
+                                {after.map((m, j) => (
+                                    <span key={j} className="route-move" data-route-move={m.kind === "deadend" ? "deadend" : m.type}>
+                                        {" "}{m.kind === "deadend" ? `Looked for it in ${m.to}; nothing was there.` : `${moveWord[m.type]} ${m.to}.`}
+                                    </span>
+                                ))}
+                            </li>
+                        );
+                    })}
+                </ol>
+            );
+        };
+
         // DEMO MODE — a single scripted walk through the whole game, added so a new
         // player (or Wendell showing this to someone) can see how the process solves a
         // live problem before ever touching their own data. Every step highlights the
@@ -1217,8 +1446,8 @@
             // honest level, hardest last) -> Validate -> Exhale/Exit/Express (stay if
             // aligned, release if not) -> the shared body scan, framed by which branch
             // was taken.
-            const [waveStep, setWaveStep] = useState("welcome"); // "welcome" | "ava" | "validate" | "exhale" | "scan"
-            const [waveLevel, setWaveLevel] = useState(null); // "acknowledge" | "accept" | "appreciate"
+            const [waveStep, setWaveStep] = useState("welcome"); // a WAVE_STEPS id, or "scan" once the opener is done
+            const [waveLevel, setWaveLevel] = useState(null); // the highest rung reached: "acknowledge" | "allow" | "accept" | "appreciate"
             const [waveAlignment, setWaveAlignment] = useState(null); // "stay" | "release"
             // OPEN-UP TECHNIQUE CHOICE (Hold-the-Belief pause, between "Ready to notice"
             // and the shift check, in both the main flow and Go Deeper) — Wendell, Sept 24
@@ -1232,9 +1461,20 @@
             // the real technique, not invented: sourcesofinsight.com, thepleasantmind.com).
             const [openTechnique, setOpenTechnique] = useState(null); // "breaths" | "wave" | "sedona"
             const [openReturnPhase, setOpenReturnPhase] = useState("phase5-result"); // where to land once the chosen technique finishes
-            const [openWaveStep, setOpenWaveStep] = useState("welcome"); // "welcome" | "ava" | "validate" | "exhale"
-            const [openWaveLevel, setOpenWaveLevel] = useState(null); // "acknowledge" | "accept" | "appreciate"
+            const [openWaveStep, setOpenWaveStep] = useState("welcome"); // a WAVE_STEPS id
+            const [openWaveLevel, setOpenWaveLevel] = useState(null); // the highest rung reached, as waveLevel
             const [openWaveAlignment, setOpenWaveAlignment] = useState(null); // "stay" | "release"
+            // The route log the map is drawn from (oag-map-output): stops, moves, dead ends,
+            // threads set aside, Go Deeper, and W.A.V.E. blocks, in the order they happened.
+            // Belief text never goes in it (oag-map-private).
+            const [route, setRoute] = useState([]);
+            // Blocked W.A.V.E. steps (oag-wave-blocks). Each frame saves the whole cycle
+            // state at the moment the block came up, so the block work can run the game's
+            // own cycle and then return to the exact step with the outer charge unchanged.
+            // A stack because a block can come up inside block work.
+            const [blockStack, setBlockStack] = useState([]);
+            const [blockFrameSkipped, setBlockFrameSkipped] = useState(false);
+            const mapSvgRef = React.useRef(null);
             const [sedonaStep, setSedonaStep] = useState(1); // 1 welcome, 2 could-i, 3 would-i, 4 when, 5 repeat-or-done
             const [sedonaRounds, setSedonaRounds] = useState(0); // completed full passes, for "round N" copy
             // LEVEL 2 — "Go Deeper" state. deeperStems is the 3-stem set for the current
@@ -1433,6 +1673,9 @@
                         coachMode, coachViewCode, coachSummary, coachCycles, coachViewError,
                         demoMode, demoStep,
                         pausedFromPhase,
+                        waveStep, route, userBelief,
+                        blockDepth: blockStack.length,
+                        blockSteps: blockStack.map(f => f.step),
                     };
                 }
             });
@@ -1483,6 +1726,91 @@
                 setWaveStep("welcome");
                 setWaveLevel(null);
                 setWaveAlignment(null);
+            };
+
+            const logRoute = (event) => setRoute(prev => [...prev, event]);
+
+            // Everything a cycle can change, as [value, setter] pairs, so a blocked W.A.V.E.
+            // step can save it whole and put it back whole (oag-wave-blocks). The route log
+            // and the block stack are left out on purpose: the map keeps the detour, and the
+            // stack is what does the saving.
+            const cycleStateBindings = () => ({
+                phase: [phase, setPhase], location: [location, setLocation], texture: [texture, setTexture],
+                selectedChannel: [selectedChannel, setSelectedChannel], selectedFace: [selectedFace, setSelectedFace],
+                currentStem: [currentStem, setCurrentStem], userBelief: [userBelief, setUserBelief], shifted: [shifted, setShifted],
+                history: [history, setHistory], phase3Context: [phase3Context, setPhase3Context],
+                previousChannel: [previousChannel, setPreviousChannel], primaryChannel: [primaryChannel, setPrimaryChannel],
+                primaryFace: [primaryFace, setPrimaryFace], resolvedThreads: [resolvedThreads, setResolvedThreads],
+                deferredThreads: [deferredThreads, setDeferredThreads], recheckTarget: [recheckTarget, setRecheckTarget],
+                incomingState: [incomingState, setIncomingState], currentPractice: [currentPractice, setCurrentPractice],
+                scanContext: [scanContext, setScanContext], wantedThing: [wantedThing, setWantedThing],
+                happyAppleStep: [happyAppleStep, setHappyAppleStep], groundingAnswers: [groundingAnswers, setGroundingAnswers],
+                resourceLocation: [resourceLocation, setResourceLocation], waveStep: [waveStep, setWaveStep],
+                waveLevel: [waveLevel, setWaveLevel], waveAlignment: [waveAlignment, setWaveAlignment],
+                openTechnique: [openTechnique, setOpenTechnique], openReturnPhase: [openReturnPhase, setOpenReturnPhase],
+                openWaveStep: [openWaveStep, setOpenWaveStep], openWaveLevel: [openWaveLevel, setOpenWaveLevel],
+                openWaveAlignment: [openWaveAlignment, setOpenWaveAlignment], sedonaStep: [sedonaStep, setSedonaStep],
+                sedonaRounds: [sedonaRounds, setSedonaRounds], deeperStems: [deeperStems, setDeeperStems],
+                deeperState: [deeperState, setDeeperState], deeperVerdicts: [deeperVerdicts, setDeeperVerdicts],
+                deeperSelfAuthorText: [deeperSelfAuthorText, setDeeperSelfAuthorText], heldBeliefs: [heldBeliefs, setHeldBeliefs],
+                deeperShifted: [deeperShifted, setDeeperShifted], deeperOutcome: [deeperOutcome, setDeeperOutcome],
+            });
+            const takeSnapshot = () => {
+                const b = cycleStateBindings();
+                return Object.keys(b).reduce((acc, k) => ({ ...acc, [k]: b[k][0] }), {});
+            };
+            const restoreSnapshot = (snap) => {
+                const b = cycleStateBindings();
+                Object.keys(snap).forEach(k => b[k][1](snap[k]));
+            };
+
+            // "Something's in the way" on a W.A.V.E. step. Wendell, 6 October 2026: "if
+            // something is blocking welcoming a feeling in the player should be able to work
+            // on that block and it should route them back to where they started when the
+            // block emerged."
+            const openBlock = (where, step) => {
+                const depth = blockStack.length + 1;
+                setBlockStack(prev => [...prev, { snapshot: takeSnapshot(), where, step, channel: selectedChannel || null, depth }]);
+                logRoute({ kind: "block-open", step, where, channel: selectedChannel || null, depth });
+                setBlockFrameSkipped(false);
+                setPhase("phase-wave-block");
+            };
+
+            // Block work runs the game's own cycle from a fresh body scan: find it, name its
+            // channel and face, hold a true belief, see if it shifts. This is option A of the
+            // open board question oag-block-work; B or C would replace only this function
+            // and the copy on the block screen.
+            const startBlockWork = () => {
+                setSelectedChannel(null);
+                setSelectedFace(null);
+                setCurrentStem("");
+                setUserBelief("");
+                setShifted(null);
+                setPhase3Context(null);
+                setPreviousChannel(null);
+                setPrimaryChannel(null);
+                setPrimaryFace(null);
+                setResolvedThreads([]);
+                setDeferredThreads([]);
+                setRecheckTarget(null);
+                setHistory([]);
+                setHeldBeliefs([]);
+                setDeeperStems([]);
+                setDeeperVerdicts([]);
+                setDeeperState(null);
+                setDeeperShifted(null);
+                setDeeperOutcome(null);
+                beginBodyScan("block");
+                setPhase("phase1");
+            };
+
+            // Back to the step the newest block came up on, with everything it had.
+            const returnFromBlock = (outcome) => {
+                const frame = blockStack[blockStack.length - 1];
+                if (!frame) return;
+                logRoute({ kind: "block-return", step: frame.step, depth: frame.depth, outcome });
+                restoreSnapshot(frame.snapshot);
+                setBlockStack(blockStack.slice(0, -1));
             };
 
             const handlePhase1Submit = () => {
@@ -1569,9 +1897,8 @@
             // through the picker now instead of being the only option.
             const handleOpenBreathingDone = () => setPhase(openReturnPhase);
 
-            // W.A.V.E., ported from the Phase 1 opening ritual's own four steps (welcome ->
-            // acknowledge/accept/appreciate -> validate -> exhale), ending back in the flow
-            // here instead of the body-scan the Phase 1 version ends in.
+            // W.A.V.E. in the Open Up picker: the same steps as the Phase 1 opener (see
+            // renderWaveStep), ending back in the flow here instead of in a body scan.
             const handleOpenWaveExhale = (alignment) => {
                 setOpenWaveAlignment(alignment);
                 setPhase(openReturnPhase);
@@ -1611,6 +1938,13 @@
             // exactly what Flow Forward/Tempering read to route the NEXT channel's starting
             // state. No skip exists for this — every resolved thread goes through it.
             const handlePhase5StateConfirm = (state) => {
+                // Block work ends here: the block shifted, so return to the step it
+                // came up on (oag-wave-blocks), instead of asking about other channels.
+                if (blockStack.length > 0) {
+                    returnFromBlock("shifted");
+                    return;
+                }
+                logRoute({ kind: "stop", channel: selectedChannel, face: selectedFace, endState: state });
                 setResolvedThreads(prev => [...prev, { channel: selectedChannel, face: selectedFace, belief: userBelief, passive: false, endState: state }]);
                 afterThreadResolved();
             };
@@ -1669,6 +2003,7 @@
             };
 
             const handleBranchDefer = () => {
+                logRoute({ kind: "defer", channel: selectedChannel, face: selectedFace });
                 setDeferredThreads(prev => [...prev, { channel: selectedChannel, face: selectedFace }]);
                 setDeferCount(prev => prev + 1);
                 setPhase("phase-multiplicity-check");
@@ -1680,6 +2015,7 @@
             // undefined, which would break routing if this ends up being the last resolved
             // thread when Phase 6 asks "where next."
             const handleRecheckShifted = () => {
+                logRoute({ kind: "stop", channel: recheckTarget.channel, face: recheckTarget.face, endState: "neutral", passive: true });
                 setResolvedThreads(prev => [...prev, { channel: recheckTarget.channel, face: recheckTarget.face, belief: null, passive: true, endState: "neutral" }]);
                 setRecheckTarget(null);
                 afterThreadResolved();
@@ -1756,6 +2092,7 @@
             const handleFlowForward = () => {
                 const nextChannel = shengCycle[selectedChannel];
                 const nextState = routingTable.sheng[currentThreadEndState()];
+                logRoute({ kind: "move", type: "sheng", from: selectedChannel, to: nextChannel });
                 setIncomingState(nextState);
                 setPreviousChannel(selectedChannel);
                 setSelectedChannel(nextChannel);
@@ -1771,6 +2108,7 @@
             const handleTempering = () => {
                 const restrainingChannel = keCycle[selectedChannel];
                 const nextState = routingTable.ke[currentThreadEndState()];
+                logRoute({ kind: "move", type: "ke", from: selectedChannel, to: restrainingChannel });
                 setIncomingState(nextState);
                 setPreviousChannel(selectedChannel);
                 setSelectedChannel(restrainingChannel);
@@ -1790,6 +2128,11 @@
             };
 
             const handleFlowLocateNoCharge = () => {
+                // The move just logged found nothing: the map draws it as a dead end.
+                setRoute(prev => {
+                    const i = prev.map(e => e.kind).lastIndexOf("move");
+                    return i < 0 ? prev : prev.map((e, j) => (j === i ? { ...e, kind: "deadend" } : e));
+                });
                 setSelectedChannel(previousChannel);
                 // Fix (6 October 2026): handleFlowForward/handleTempering cleared the face
                 // and belief, so a dead end came back to Phase 6 with no face. That hid Go
@@ -1845,6 +2188,7 @@
                 setDeeperShifted(null);
                 setDeeperOutcome(null);
                 setHistory([...history, { channel: selectedChannel, face: selectedFace, belief: userBelief, type: "go-deeper" }]);
+                logRoute({ kind: "deeper", channel: selectedChannel });
                 setPhase("phase-deeper-hold");
             };
 
@@ -2056,6 +2400,33 @@
                 }
             };
 
+            // Draws the map's SVG onto a canvas and downloads it as a PNG. Nothing is sent
+            // or stored; the belief exists only in the image the player keeps.
+            const saveMapImage = () => {
+                const svg = mapSvgRef.current;
+                if (!svg) return;
+                const vb = svg.viewBox.baseVal;
+                const clone = svg.cloneNode(true);
+                clone.setAttribute("width", String(vb.width));
+                clone.setAttribute("height", String(vb.height));
+                const xml = new XMLSerializer().serializeToString(clone);
+                const img = new Image();
+                img.onload = () => {
+                    const scale = 3;
+                    const canvas = document.createElement("canvas");
+                    canvas.width = vb.width * scale;
+                    canvas.height = vb.height * scale;
+                    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const a = document.createElement("a");
+                    a.download = "ontology-game-map.png";
+                    a.href = canvas.toDataURL("image/png");
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                };
+                img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
+            };
+
             const handleConfirmShare = () => {
                 if (pendingShareData) persistSharedCycle(pendingShareData.features, pendingShareData.archetype);
                 setPendingShareData(null);
@@ -2122,6 +2493,8 @@
                 setShareWithCoach(false);
                 setPendingShareData(null);
                 setCoachShareCode(null);
+                setRoute([]);
+                setBlockStack([]);
             };
 
             // V2 UI Spec (Sept 26 2026), Magenta's veto made concrete: marks that this
@@ -2219,6 +2592,8 @@
                 setShareWithCoach(false);
                 setPendingShareData(null);
                 setCoachShareCode(null);
+                setRoute([]);
+                setBlockStack([]);
             };
 
             // Coach view (Mode B, read side). Reads a SHARED path — data/coach-shared/
@@ -2512,6 +2887,27 @@
                 };
             });
 
+            // While a block is being worked, a bar at the top says which step the player will
+            // go back to, so the way back stays visible however deep the blocks go (the
+            // Shaman's risk in the council pass). Imperative, like the pause link above.
+            React.useEffect(() => {
+                const existing = document.getElementById("block-trail");
+                if (existing) existing.remove();
+                if (blockStack.length === 0 || phase === "phase-paused" || phase === "phase-stopped") return;
+                const steps = blockStack.map(f => WAVE_STEP_LABEL[f.step] || f.step);
+                const newest = steps[steps.length - 1];
+                const earlier = steps.slice(0, -1).reverse();
+                const bar = document.createElement("div");
+                bar.id = "block-trail";
+                bar.textContent = `Working what got in the way of ${newest}. When it shifts, you go back to ${newest}`
+                    + (earlier.length ? `, then to ${earlier.join(", then to ")}.` : ".");
+                document.body.appendChild(bar);
+                return () => {
+                    const el = document.getElementById("block-trail");
+                    if (el) el.remove();
+                };
+            });
+
             if (coachMode) {
                 return (
                     <div className="container">
@@ -2576,7 +2972,7 @@
                                 <p><strong>Safety Container:</strong> This is a practice space. Nothing you discover here is permanent or true about you. You are exploring how your body knows things.</p>
                                 <p><strong>What You'll Do:</strong> Find a block in your body. Name it. Hold a true belief about it. See if it shifts. Navigate through emotional channels.</p>
                                 <p><strong>How It Works:</strong> Seven phases per cycle. No "winning." The game is infinite; you cycle as many times as you want.</p>
-                                <p><strong>W.A.V.E.:</strong> Welcome what's here, Acknowledge it, Validate your body's right to feel it, and Exhale. You can open every body scan with it, and choose it again whenever you hold a belief.</p>
+                                <p><strong>W.A.V.E.:</strong> Breathe through each step. Welcome what's here, then Acknowledge it, Allow it, Accept it and Appreciate it, as far as you honestly can. Validate your body's right to feel it, and Exhale. If something gets in the way of a step, you can work that block and come back to the step. You can open every body scan with it, and choose it again whenever you hold a belief.</p>
                             </div>
                             {patternSummary && patternSummary.totalCycles > 0 && (
                                 // Mode A "welcome back" reflection (Cross-Session Persistence
@@ -2670,6 +3066,74 @@
                 other: "Something else in the sky (describe below)"
             };
 
+            // One W.A.V.E. for both places it runs: the Phase 1 opener ("opener") and the
+            // Open Up picker ("open"). Each step is one breath; the continue button shows
+            // when the exhale ends. Any step can be blocked, and from Allow on the player can
+            // stop at the rung they reached, which still completes the W.A.V.E.
+            const renderWaveStep = (where) => {
+                const opener = where === "opener";
+                const step = opener ? waveStep : openWaveStep;
+                const setStep = opener ? setWaveStep : setOpenWaveStep;
+                const setLevel = opener ? setWaveLevel : setOpenWaveLevel;
+                const onExhale = opener
+                    ? (alignment) => { setWaveAlignment(alignment); setWaveStep("scan"); }
+                    : handleOpenWaveExhale;
+                const def = WAVE_STEPS.find(st => st.id === step) || WAVE_STEPS[0];
+                const prompt = def.id === "welcome" && opener && scanContext === "block" ? def.promptBlock
+                    : def.id === "welcome" && opener && scanContext === "continuation" ? def.promptContinuation
+                    : def.prompt;
+                const rungs = WAVE_STEPS.filter(st => st.rung).map(st => st.id);
+                const rungIndex = rungs.indexOf(def.id);
+                const lastRungReached = rungIndex > 0 ? rungs[rungIndex - 1] : null;
+                return (
+                    <div className="wave-step" data-wave-step={def.id} data-wave-where={where}>
+                        <p className="wave-trail">
+                            {WAVE_STEPS.map((st, i) => (
+                                <React.Fragment key={st.id}>
+                                    {i > 0 && <span className="wave-trail-sep"> · </span>}
+                                    <span className={st.id === def.id ? "wave-trail-current" : undefined}>{st.label}</span>
+                                </React.Fragment>
+                            ))}
+                        </p>
+                        <h3 className="wave-step-title">{def.label}</h3>
+                        <p className="prompt">{prompt}</p>
+                        <BreathPacer key={`${where}-${def.id}-${blockStack.length}`}>
+                            {def.id === "exhale" ? (
+                                <>
+                                    <div className="option-card" data-wave-exhale="stay" onClick={() => onExhale("stay")}>
+                                        <strong>Yes, let it stay</strong>
+                                        <p>It's serving me. I'll work with it as it is.</p>
+                                    </div>
+                                    <div className="option-card" data-wave-exhale="release" onClick={() => onExhale("release")}>
+                                        <strong>No, exhale and release</strong>
+                                        <p>Breathe it out and see what's left behind.</p>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="button-group">
+                                    <button className="primary" data-wave-continue onClick={() => { if (def.rung) setLevel(def.id); setStep(nextWaveStep(def.id)); }}>
+                                        {def.button}
+                                    </button>
+                                </div>
+                            )}
+                        </BreathPacer>
+                        <p className="wave-side-links">
+                            {lastRungReached && (
+                                <>
+                                    <a href="#" data-wave-stop onClick={(e) => { e.preventDefault(); setLevel(lastRungReached); setStep("validate"); }}>
+                                        This is as far as I can honestly go today
+                                    </a>
+                                    {" · "}
+                                </>
+                            )}
+                            <a href="#" data-wave-block onClick={(e) => { e.preventDefault(); openBlock(where, def.id); }}>
+                                Something's in the way
+                            </a>
+                        </p>
+                    </div>
+                );
+            };
+
             const renderOpeningRitual = () => {
                 const practice = currentPractice || openingPractices[0];
                 const textureOptions = practice.kind === "weather"
@@ -2716,68 +3180,11 @@
                     );
                 }
 
-                if (practice.kind === "wave" && waveStep === "welcome") {
+                if (practice.kind === "wave" && waveStep !== "scan") {
                     return (
                         <>
                             {ritualIntro}
-                            <p className="prompt">
-                                {scanContext === "continuation"
-                                    ? "Let whatever's here be here for a moment — the same thing you've been working, if it's still showing up — without needing it to be different yet."
-                                    : "Let whatever's here be here for a moment, without needing it to be different yet."}
-                            </p>
-                            <div className="button-group">
-                                <button className="primary" onClick={() => setWaveStep("ava")}>I've welcomed it</button>
-                            </div>
-                        </>
-                    );
-                }
-
-                if (practice.kind === "wave" && waveStep === "ava") {
-                    return (
-                        <>
-                            {ritualIntro}
-                            <p className="prompt">How far can you honestly meet it right now?</p>
-                            <div className="option-card" onClick={() => { setWaveLevel("acknowledge"); setWaveStep("validate"); }}>
-                                <strong>Acknowledge it</strong>
-                                <p>I can admit it's here.</p>
-                            </div>
-                            <div className="option-card" onClick={() => { setWaveLevel("accept"); setWaveStep("validate"); }}>
-                                <strong>Accept it</strong>
-                                <p>I can let it be here without fighting it.</p>
-                            </div>
-                            <div className="option-card" onClick={() => { setWaveLevel("appreciate"); setWaveStep("validate"); }}>
-                                <strong>Appreciate it</strong>
-                                <p>I can find what it's trying to do for me.</p>
-                            </div>
-                        </>
-                    );
-                }
-
-                if (practice.kind === "wave" && waveStep === "validate") {
-                    return (
-                        <>
-                            {ritualIntro}
-                            <p className="prompt">Your body has the right to feel this, whatever it is.</p>
-                            <div className="button-group">
-                                <button className="primary" onClick={() => setWaveStep("exhale")}>I validate that</button>
-                            </div>
-                        </>
-                    );
-                }
-
-                if (practice.kind === "wave" && waveStep === "exhale") {
-                    return (
-                        <>
-                            {ritualIntro}
-                            <p className="prompt">Is this feeling in alignment with what you actually want right now?</p>
-                            <div className="option-card" onClick={() => { setWaveAlignment("stay"); setWaveStep("scan"); }}>
-                                <strong>Yes — let it stay</strong>
-                                <p>It's serving me. I'll work with it as it is.</p>
-                            </div>
-                            <div className="option-card" onClick={() => { setWaveAlignment("release"); setWaveStep("scan"); }}>
-                                <strong>No — exhale and release</strong>
-                                <p>Breathe it out and see what's left behind.</p>
-                            </div>
+                            {renderWaveStep("opener")}
                         </>
                     );
                 }
@@ -2868,6 +3275,52 @@
                     </>
                 );
             };
+
+            // The block screen (oag-wave-blocks, oag-wave-depth). Wendell's ruling of 9
+            // September 2026: "We shouldn't assume a block, but if there IS a block we
+            // should assume self-sabotage, with the given choice to skip if that's not a
+            // frame that works for the user."
+            if (phase === "phase-wave-block") {
+                const frame = blockStack[blockStack.length - 1];
+                const stepLabel = frame ? (WAVE_STEP_LABEL[frame.step] || frame.step) : "this step";
+                return (
+                    <div className="container">
+                        <div className="card">
+                            <div className="phase-marker">SOMETHING'S IN THE WAY</div>
+                            <h2>Something is in the way of {stepLabel}.</h2>
+                            {blockStack.length === 3 && (
+                                <div className="mini-section" data-block-depth-reflection>
+                                    <p>This is the third block inside a block. Sometimes that is the work itself, and sometimes it means today has asked enough. Going on is fine, and so is stopping or pausing.</p>
+                                </div>
+                            )}
+                            {!blockFrameSkipped ? (
+                                <div className="mini-section" data-block-frame="self-sabotage">
+                                    <p>When a step won't come, this game assumes self-sabotage: something in you working against the step, usually to protect you. It isn't wrong to be here. It is the next block to work.</p>
+                                    <p style={{ marginTop: "0.5rem", fontSize: "0.85rem" }}>
+                                        <a href="#" data-block-skip-frame onClick={(e) => { e.preventDefault(); setBlockFrameSkipped(true); }}>That frame doesn't fit me. Skip it.</a>
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="mini-section" data-block-frame="plain">
+                                    <p>Whatever is in the way can be worked like any other block.</p>
+                                </div>
+                            )}
+                            <p className="prompt">You'll find it in your body, name its channel and face, hold a true belief about it, and see if it shifts. Then you come back to {stepLabel}, right where you left it.</p>
+                            <div className="button-group">
+                                <button className="primary" data-block-work onClick={startBlockWork}>
+                                    Work on what's in the way
+                                </button>
+                                <button className="secondary" data-block-back onClick={() => returnFromBlock("none")}>
+                                    Go back to {stepLabel}
+                                </button>
+                                <button className="secondary" onClick={handleStopForToday}>
+                                    I'll leave this here for today
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
 
             if (phase === "phase1") {
                 return (
@@ -3158,7 +3611,7 @@
                                     onKeyPress={(e) => e.key === 'Enter' && handleChooseOpenTechnique("wave")}
                                 >
                                     <strong>W.A.V.E.</strong>
-                                    <small>Welcome it, meet it honestly, validate your body, then choose to stay or release. Use it when the charge is already in your body.</small>
+                                    <small>One breath per step: welcome it, climb as far as you honestly can, validate your body, then choose to stay or release. Use it when the charge is already in your body.</small>
                                 </div>
                                 <div
                                     className="option-card"
@@ -3205,67 +3658,11 @@
                 }
 
                 if (openTechnique === "wave") {
-                    if (openWaveStep === "welcome") {
-                        return (
-                            <div className="container">
-                                <div className="card">
-                                    <div className="phase-marker">OPENING — W.A.V.E.</div>
-                                    <p className="prompt">Let whatever's here be here for a moment, without needing it to be different yet.</p>
-                                    <div className="button-group">
-                                        <button className="primary" onClick={() => setOpenWaveStep("ava")}>I've welcomed it</button>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    }
-                    if (openWaveStep === "ava") {
-                        return (
-                            <div className="container">
-                                <div className="card">
-                                    <div className="phase-marker">OPENING — W.A.V.E.</div>
-                                    <p className="prompt">How far can you honestly meet it right now?</p>
-                                    <div className="option-card" onClick={() => { setOpenWaveLevel("acknowledge"); setOpenWaveStep("validate"); }}>
-                                        <strong>Acknowledge it</strong>
-                                        <p>I can admit it's here.</p>
-                                    </div>
-                                    <div className="option-card" onClick={() => { setOpenWaveLevel("accept"); setOpenWaveStep("validate"); }}>
-                                        <strong>Accept it</strong>
-                                        <p>I can let it be here without fighting it.</p>
-                                    </div>
-                                    <div className="option-card" onClick={() => { setOpenWaveLevel("appreciate"); setOpenWaveStep("validate"); }}>
-                                        <strong>Appreciate it</strong>
-                                        <p>I can find what it's trying to do for me.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    }
-                    if (openWaveStep === "validate") {
-                        return (
-                            <div className="container">
-                                <div className="card">
-                                    <div className="phase-marker">OPENING — W.A.V.E.</div>
-                                    <p className="prompt">Your body has the right to feel this, whatever it is.</p>
-                                    <div className="button-group">
-                                        <button className="primary" onClick={() => setOpenWaveStep("exhale")}>I validate that</button>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    }
                     return (
                         <div className="container">
                             <div className="card">
                                 <div className="phase-marker">OPENING — W.A.V.E.</div>
-                                <p className="prompt">Is this feeling in alignment with what you actually want right now?</p>
-                                <div className="option-card" onClick={() => handleOpenWaveExhale("stay")}>
-                                    <strong>Yes — let it stay</strong>
-                                    <p>It's serving me. I'll work with it as it is.</p>
-                                </div>
-                                <div className="option-card" onClick={() => handleOpenWaveExhale("release")}>
-                                    <strong>No — exhale and release</strong>
-                                    <p>Breathe it out and see what's left behind.</p>
-                                </div>
+                                {renderWaveStep("open")}
                             </div>
                         </div>
                     );
@@ -3711,6 +4108,11 @@
                                 <button className="primary" onClick={() => setPhase("phase5")}>
                                     Try again with this
                                 </button>
+                                {blockStack.length > 0 && (
+                                    <button className="secondary" data-block-back onClick={() => returnFromBlock("unshifted")}>
+                                        Go back to {WAVE_STEP_LABEL[blockStack[blockStack.length - 1].step]} anyway
+                                    </button>
+                                )}
                                 {(phase3Context === "flow-forward" || phase3Context === "tempering") && (
                                     <button className="secondary" onClick={handleDifferentChargeEmerging}>
                                         This is its own charge
@@ -4059,7 +4461,22 @@
                     <div className="container">
                         <div className="card">
                             <h2>Cycle Complete</h2>
-                            <p className="prompt">You've completed one full cycle.</p>
+                            {route.some(e => e.kind === "stop") ? (
+                                <div className="route-map-wrap" data-route-map>
+                                    <p className="prompt">Here is where you went.</p>
+                                    <RouteMap route={route} belief={heldBeliefs.length > 0 ? heldBeliefs.join(" / ") : userBelief} svgRef={mapSvgRef} />
+                                    <p className="route-legend">
+                                        Numbers are the order you worked each channel. A solid arrow flowed forward and a dashed arrow tempered. A short line with a bar is a place you looked and found nothing. A dotted ring is a thread you set aside, a double ring is where you went deeper, and a small gold loop is a block you worked inside W.A.V.E.
+                                    </p>
+                                    <RouteList route={route} />
+                                    <div className="button-group">
+                                        <button className="secondary" data-save-map onClick={saveMapImage}>Save the map as an image</button>
+                                    </div>
+                                    <p className="route-legend">The belief under the map stays on this screen and in the image you save. The game doesn't store it.</p>
+                                </div>
+                            ) : (
+                                <p className="prompt">You've completed one full cycle.</p>
+                            )}
                             {coachShareCode && (
                                 <div className="mini-section">
                                     <p><strong>Here is your code for your coach.</strong> Copy it and send it to them however you usually talk. They paste it into "Coach? View a shared summary" on this page.</p>
@@ -4069,10 +4486,12 @@
                                     </button>
                                 </div>
                             )}
-                            <div className="mini-section">
-                                <p><strong>What You Held:</strong> {userBelief}</p>
-                                <p style={{ marginTop: "0.5rem" }}><strong>Through:</strong> {selectedChannel} ({selectedFace})</p>
-                            </div>
+                            {!route.some(e => e.kind === "stop") && (
+                                <div className="mini-section">
+                                    <p><strong>What You Held:</strong> {userBelief}</p>
+                                    <p style={{ marginTop: "0.5rem" }}><strong>Through:</strong> {selectedChannel} ({selectedFace})</p>
+                                </div>
+                            )}
                             {heldBeliefs.length > 0 && (
                                 <div className="mini-section">
                                     <p><strong>Also Held, Going Deeper:</strong></p>

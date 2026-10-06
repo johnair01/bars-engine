@@ -495,3 +495,34 @@
             filter: brightness(1.1);
         }
     
+
+        /* W.A.V.E., breathed (council pass, 6 October 2026). One breath per step. */
+        .wave-trail { font-size: 0.75rem; letter-spacing: 0.02em; opacity: 0.6; margin: 0.75rem 0 0.25rem; }
+        .wave-trail-current { opacity: 1; color: #64c8ff; font-weight: 600; }
+        .wave-step-title { margin: 0.25rem 0; font-size: 1.15rem; }
+        .breath-pacer { text-align: center; margin: 0.75rem 0; }
+        .breath-circle {
+            width: 84px; height: 84px; margin: 0.75rem auto 0.25rem; border-radius: 50%;
+            background: radial-gradient(circle, rgba(100, 200, 255, 0.55) 0%, rgba(100, 200, 255, 0.12) 70%);
+            border: 1px solid rgba(100, 200, 255, 0.5);
+            transform: scale(0.5); transition-property: transform; transition-timing-function: ease-in-out;
+        }
+        .breath-circle--in { transform: scale(1); }
+        .breath-circle--done { transform: scale(0.5); }
+        .breath-circle--out { transform: scale(0.5); }
+        .breath-label { font-size: 0.85rem; opacity: 0.75; margin: 0 0 0.5rem; }
+        .breath-pacer .option-card { text-align: left; }
+        .wave-side-links { font-size: 0.85rem; margin-top: 0.75rem; opacity: 0.85; }
+        @media (prefers-reduced-motion: reduce) { .breath-circle { transition: none; } }
+        #block-trail {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+            background: rgba(255, 209, 102, 0.95); color: #1a1a2e; font-size: 0.85rem;
+            padding: 0.5rem 1rem; text-align: center;
+        }
+        body:has(#block-trail) { padding-top: 2.5rem; }
+        /* The route map on Cycle Complete (oag-map-output). */
+        .route-map-wrap { margin: 0.5rem 0 1rem; }
+        .route-map { display: block; max-width: 420px; margin: 0.5rem auto; }
+        .route-legend { font-size: 0.8rem; opacity: 0.7; margin: 0.5rem 0; }
+        .route-list { margin: 0.5rem 0 0.75rem 1.25rem; padding: 0; font-size: 0.92rem; }
+        .route-list li { margin: 0.3rem 0; }
