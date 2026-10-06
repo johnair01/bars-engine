@@ -1,0 +1,569 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        /* Site build: links on the dark background were browser-default blue. */
+        a {
+            color: #64c8ff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+        .phase-marker {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: #aaa;
+        }
+        .prompt {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 1.5rem 0;
+            color: #fff;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0 1rem 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        input[type="text"]::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.75rem 1.5rem;
+            background: rgba(100, 200, 255, 0.2);
+            border: 1px solid rgba(100, 200, 255, 0.5);
+            border-radius: 6px;
+            color: #64c8ff;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(100, 200, 255, 0.4);
+            border-color: rgba(100, 200, 255, 0.8);
+        }
+        button.primary {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: rgba(76, 175, 80, 0.6);
+            color: #4caf50;
+        }
+        button.primary:hover {
+            background: rgba(76, 175, 80, 0.5);
+        }
+        button.secondary {
+            background: rgba(255, 152, 0, 0.2);
+            border-color: rgba(255, 152, 0, 0.5);
+            color: #ff9800;
+        }
+        button.secondary:hover {
+            background: rgba(255, 152, 0, 0.4);
+        }
+        button.danger {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: rgba(244, 67, 54, 0.5);
+            color: #f44336;
+        }
+        button.danger:hover {
+            background: rgba(244, 67, 54, 0.4);
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .option-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        .option-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .option-card.selected {
+            background: rgba(100, 200, 255, 0.15);
+            border-color: #64c8ff;
+        }
+        .option-card.selected strong {
+            color: #a8e0ff;
+        }
+        .option-card strong {
+            color: #64c8ff;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        .option-card small {
+            color: #999;
+        }
+        .element-color {
+            display: inline-block;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        .fire { color: #ff6b6b; }
+        .water { color: #4ecdc4; }
+        .wood { color: #95e1d3; }
+        .metal { color: #b0bec5; }
+        .earth { color: #d4a574; }
+        /* The Wuxing Wheel (V2 UI Spec, Sept 26 2026) — dim/unlit until a channel has
+           genuinely landed a satisfied resolution at least once, then lit permanently
+           in that channel's own element color. Deliberately no "in progress" state —
+           see the honesty rule in the spec: only claims what has actually landed. */
+        .wuxing-wheel {
+            display: flex;
+            justify-content: center;
+            gap: 0.65rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        .wuxing-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.5rem 0.6rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            min-width: 4.5rem;
+        }
+        .wuxing-dot {
+            width: 1.1rem;
+            height: 1.1rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .wuxing-node.lit .wuxing-dot {
+            box-shadow: 0 0 8px currentColor;
+        }
+        .wuxing-node small {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+        .wuxing-node.lit small {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .wuxing-wheel.compact {
+            gap: 0.4rem;
+            margin: 0.5rem 0 1rem;
+        }
+        .wuxing-wheel.compact .wuxing-node {
+            padding: 0.3rem 0.4rem;
+            min-width: 3.2rem;
+        }
+        /* Wuxing Mythic Framing (V2 UI Spec 2, Epic Meaning) — a highlighted arrow
+           between the node the player just moved from and the one they moved into,
+           drawn straight off shengCycle/keCycle: a diagram of a choice the game
+           already makes, not a new mechanic. */
+        .wuxing-node.active {
+            outline: 2px solid rgba(255, 255, 255, 0.6);
+        }
+        .wuxing-node.target-sheng {
+            outline: 2px solid #95e1d3;
+        }
+        .wuxing-node.target-ke {
+            outline: 2px dashed #ff6b6b;
+        }
+        .wuxing-transition-note {
+            text-align: center;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin: 0.2rem 0 0.6rem;
+        }
+        .wuxing-arrow--sheng { color: #95e1d3; }
+        .wuxing-arrow--ke { color: #ff6b6b; }
+        /* Texture Glyphs (V2 UI Spec 2, Empowerment & Feedback) — a real visual echo
+           of the `texture` the player already named, instead of only a sentence.
+           `.opened` runs a one-shot keyframe (plays on mount regardless of prior
+           state) so it animates automatically the instant the player lands on a
+           screen rendered with opened=true — no timer, no game-logic change.
+           Strength gets no `.opened` rule on purpose: it confirms rather than
+           transforms, since it was already at rest. */
+        .texture-glyph {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            color: rgba(255, 255, 255, 0.55);
+            overflow: visible;
+        }
+        .texture-glyph--numbness {
+            fill: currentColor;
+            stroke: none;
+            opacity: 0.35;
+            filter: blur(2px);
+        }
+        .texture-glyph--strength {
+            fill: currentColor;
+            fill-opacity: 0.25;
+        }
+        .texture-glyph--constriction {
+            transform: scale(0.85);
+            transform-origin: center;
+        }
+        .texture-glyph--tension {
+            transform-origin: center;
+        }
+        .texture-glyph--other {
+            stroke-dasharray: 4 3;
+        }
+        @keyframes glyph-open-constriction {
+            0% { transform: scale(0.85); stroke-width: 2; }
+            100% { transform: scale(1.15); stroke-width: 1.4; }
+        }
+        .texture-glyph.opened.texture-glyph--constriction {
+            animation: glyph-open-constriction 0.5s ease-out forwards;
+        }
+        @keyframes glyph-open-numbness {
+            0% { opacity: 0.35; filter: blur(2px); }
+            100% { opacity: 0.7; filter: blur(0px); }
+        }
+        .texture-glyph.opened.texture-glyph--numbness {
+            animation: glyph-open-numbness 0.5s ease-out forwards;
+        }
+        @keyframes glyph-open-tension {
+            0% { transform: scaleY(1); stroke-width: 2; }
+            100% { transform: scaleY(0.7); stroke-width: 1.6; }
+        }
+        .texture-glyph.opened.texture-glyph--tension {
+            animation: glyph-open-tension 0.5s ease-out forwards;
+        }
+        @keyframes glyph-open-other {
+            0% { stroke-dasharray: 4 3; }
+            100% { stroke-dasharray: 0; }
+        }
+        .texture-glyph.opened.texture-glyph--other {
+            animation: glyph-open-other 0.5s ease-out forwards;
+        }
+        /* The body map's buttons under the location box (body/body-map.js). */
+        .body-map-links {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem 1rem;
+            margin: 0.25rem 0 0.75rem;
+        }
+        .body-map-links a {
+            font-size: 0.9rem;
+        }
+        .texture-select-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .texture-glyph-hold {
+            display: flex;
+            justify-content: center;
+            margin: 0.75rem 0;
+        }
+        /* The Open Threads Ledger (V2 UI Spec, honest Loss/Avoidance) — deliberately
+           reuses .mini-section's plain, low-key look rather than a badge/alert
+           treatment; framed as availability, never debt. */
+        .open-threads-ledger p {
+            margin: 0;
+        }
+        .open-threads-ledger .open-thread-line {
+            margin-top: 0.35rem;
+            opacity: 0.85;
+        }
+        .face-name {
+            display: inline-block;
+            font-weight: bold;
+            margin-left: 0.5rem;
+            color: #64c8ff;
+        }
+        .entry-ritual {
+            text-align: center;
+            line-height: 1.8;
+        }
+        .entry-ritual p {
+            margin: 1rem 0;
+        }
+        .three-breaths {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+        .breath-indicator {
+            font-size: 3rem;
+            margin: 1rem 0;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        .mini-section {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        .debug-panel {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.85rem;
+            font-family: monospace;
+            color: #4caf50;
+            max-width: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .debug-panel strong {
+            display: block;
+            margin-top: 0.5rem;
+            color: #64c8ff;
+        }
+        .debug-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: auto;
+            min-width: 0;
+            flex: none;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.5);
+            opacity: 0.6;
+            z-index: 10;
+        }
+        .debug-toggle:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        /* Always-reachable pause exit (6-Faces design review, Sept 26 2026): deliberately
+           low-key -- a real interruption shouldn't compete visually with the felt work --
+           but present on every in-progress phase, top-right so it never collides with the
+           bottom-right debug toggle or the bottom-center demo banner. */
+        #pause-link {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.5rem;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.45);
+            text-decoration: none;
+            z-index: 10;
+        }
+        #pause-link:hover {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: underline;
+        }
+        .debug-panel .debug-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: auto;
+            min-width: 0;
+            flex: none;
+            padding: 0.15rem 0.5rem;
+            font-size: 0.8rem;
+            background: transparent;
+            border: none;
+            color: #999;
+        }
+
+        /* Demo Mode — highlight the one real element the script wants clicked next,
+           dim (and disable) everything else on the card, and show a fixed narration
+           banner. Nothing here changes behavior outside demoMode: .demo-target/.demo-dim
+           are only ever applied by the demo overlay effect, never present otherwise. */
+        @keyframes demo-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 60, 0.55); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 200, 60, 0.05); }
+        }
+        .demo-target {
+            position: relative;
+            outline: 3px solid #ffc83c !important;
+            outline-offset: 2px;
+            border-radius: 8px;
+            animation: demo-pulse 1.6s infinite;
+            z-index: 5;
+        }
+        .demo-dim {
+            opacity: 0.35;
+            filter: saturate(0.6);
+            transition: opacity 0.2s;
+        }
+        #demo-banner {
+            position: fixed;
+            left: 50%;
+            bottom: 1.25rem;
+            transform: translateX(-50%);
+            width: min(560px, calc(100% - 2rem));
+            background: rgba(20, 20, 28, 0.97);
+            border: 1px solid rgba(255, 200, 60, 0.4);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            color: #f0f0f0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            font-family: inherit;
+        }
+        .demo-banner-progress {
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #ffc83c;
+            margin-bottom: 0.25rem;
+        }
+        .demo-banner-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+        .demo-banner-narration {
+            font-size: 0.92rem;
+            line-height: 1.4;
+            color: rgba(240, 240, 240, 0.9);
+        }
+        .demo-banner-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.85rem;
+            flex-wrap: wrap;
+        }
+        .demo-banner-btn {
+            width: auto;
+            min-width: 0;
+            flex: none;
+            padding: 0.45rem 0.9rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+            color: #f0f0f0;
+            cursor: pointer;
+        }
+        .demo-banner-btn.primary {
+            background: #ffc83c;
+            border-color: #ffc83c;
+            color: #201800;
+            font-weight: 600;
+        }
+        .demo-banner-btn:hover {
+            filter: brightness(1.1);
+        }
+    
+
+        /* W.A.V.E., breathed (council pass, 6 October 2026). One breath per step. */
+        .wave-trail { font-size: 0.75rem; letter-spacing: 0.02em; opacity: 0.6; margin: 0.75rem 0 0.25rem; }
+        .wave-trail-current { opacity: 1; color: #64c8ff; font-weight: 600; }
+        .wave-step-title { margin: 0.25rem 0; font-size: 1.15rem; }
+        .breath-pacer { text-align: center; margin: 0.75rem 0; }
+        .breath-circle {
+            width: 84px; height: 84px; margin: 0.75rem auto 0.25rem; border-radius: 50%;
+            background: radial-gradient(circle, rgba(100, 200, 255, 0.55) 0%, rgba(100, 200, 255, 0.12) 70%);
+            border: 1px solid rgba(100, 200, 255, 0.5);
+            transform: scale(0.5); transition-property: transform; transition-timing-function: ease-in-out;
+        }
+        .breath-circle--in { transform: scale(1); }
+        .breath-circle--done { transform: scale(0.5); }
+        .breath-circle--out { transform: scale(0.5); }
+        .breath-label { font-size: 0.85rem; opacity: 0.75; margin: 0 0 0.5rem; }
+        .breath-pacer .option-card { text-align: left; }
+        .wave-side-links { font-size: 0.85rem; margin-top: 0.75rem; opacity: 0.85; }
+        @media (prefers-reduced-motion: reduce) { .breath-circle { transition: none; } }
+        #block-trail {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+            background: rgba(255, 209, 102, 0.95); color: #1a1a2e; font-size: 0.85rem;
+            padding: 0.5rem 1rem; text-align: center;
+        }
+        /* The route map on Cycle Complete (oag-map-output). */
+        .route-map-wrap { margin: 0.5rem 0 1rem; }
+        .route-map { display: block; max-width: 420px; margin: 0.5rem auto; }
+        .route-legend { font-size: 0.8rem; opacity: 0.7; margin: 0.5rem 0; }
+        .route-list { margin: 0.5rem 0 0.75rem 1.25rem; padding: 0; font-size: 0.92rem; }
+        .route-list li { margin: 0.3rem 0; }
+        /* Council pass 2 (6 October 2026): the trail, block size, Appreciate, faces primer. */
+        #oag-trail {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+            background: rgba(24, 32, 58, 0.97); color: #e8eef2; font-size: 0.8rem;
+            padding: 0.4rem 1rem; text-align: center; border-bottom: 1px solid rgba(255, 209, 102, 0.5);
+        }
+        #oag-trail #block-trail {
+            position: static; margin: 0.3rem -1rem -0.4rem; padding: 0.35rem 1rem;
+            background: rgba(255, 209, 102, 0.95); color: #1a1a2e; font-size: 0.85rem;
+        }
+        body:has(#oag-trail) { padding-top: 2.4rem; }
+        body:has(#oag-trail #block-trail) { padding-top: 4.4rem; }
+        .size-slider { margin: 0.35rem 0 0.5rem; }
+        .size-slider input[type="range"] { width: 100%; accent-color: #ffd166; }
+        .size-slider--unset input[type="range"] { opacity: 0.45; }
+        .size-slider-ends { display: flex; justify-content: space-between; font-size: 0.72rem; opacity: 0.6; }
+        .size-slider-value { font-size: 0.85rem; margin: 0.25rem 0 0; }
+        .block-came-back { border-left: 3px solid #ffd166; }
+        .appreciate-input textarea { min-height: 3.2rem; }
+        .face-tag { font-size: 0.72rem; font-weight: 400; opacity: 0.65; margin-left: 0.35rem; }
+        .face-question { display: block; margin-top: 0.3rem; font-style: italic; opacity: 0.8; }
+        .route-notes { margin: 0 0 0.75rem 1.25rem; padding: 0; font-size: 0.88rem; opacity: 0.9; }
+        .trailhead-return { border-left: 3px solid #7bd88f; }
+        /* The trail bar sits where the pause link was, so the link moves to the bottom
+           while a trip is under way; pause stays in reach on every screen (Regent). */
+        body:has(#oag-trail) #pause-link {
+            top: auto; bottom: 0.75rem; right: 1rem; z-index: 31;
+            background: rgba(24, 32, 58, 0.9); padding: 0.3rem 0.6rem; border-radius: 6px;
+        }
+        .channel-job { border-left: 3px solid #64c8ff; }
+        .option-card--waiting { opacity: 0.45; cursor: default; }

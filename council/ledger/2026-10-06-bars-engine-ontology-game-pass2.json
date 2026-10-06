@@ -1,0 +1,56 @@
+{
+  "id": "2026-10-06-bars-engine-ontology-game-pass2",
+  "date": "2026-10-06",
+  "project": "bars-engine",
+  "cause": "feature-design",
+  "question": "How does the Ontology Alchemy Game measure a block's size, carry what was blocked forward on the page, take an optional appreciation, lead the player back to where the trip began, and introduce the six faces to a newcomer?",
+  "convened_by": "wendell",
+  "invoked_from": "claude-code",
+  "source_doc": "content/ontology-game/6FACE_PASS2_2026-10-06.md",
+  "faces_present": [
+    "shaman",
+    "architect",
+    "challenger",
+    "regent",
+    "diplomat",
+    "sage"
+  ],
+  "dissent": true,
+  "dissent_note": "On the faces' names, the Shaman would lead with the six game masters, the Diplomat with plain words, and the Regent holds the choice is Wendell's. Sent to the board as oag-faces-names; the build ships plain words with the colour as a tag meanwhile.",
+  "scorecard": {
+    "pass1-test-1-the-return": "passed (browser-test.mjs on 189d9b2)",
+    "pass1-test-2-the-map": "passed (browser-test.mjs on 189d9b2)"
+  },
+  "positions": {
+    "oag-block-size": "council",
+    "oag-block-carry": "council",
+    "oag-appreciate-input": "council",
+    "oag-trailhead": "council",
+    "oag-words-private": "council",
+    "oag-faces-primer": "council",
+    "oag-channel-job": "council",
+    "oag-neutrality-job": "council"
+  },
+  "questions": {
+    "oag-faces-names": {
+      "options": [
+        "plain",
+        "game-masters",
+        "colours"
+      ],
+      "choice": null
+    }
+  },
+  "built": [
+    "johnair01/bars-engine pull request #260: block size slider asked before and after, the block's words carried on the trail and the returned step, optional Appreciate line, trailhead bar and closing return with a map flag, faces primer and plain labels",
+    "johnair01/bars-engine pull request #260: each channel asks how it is doing its job before a face is picked (addendum, 20:16)"
+  ],
+  "falsification_tests": [
+    "Two blocks deep, the page names the trailhead (location and the player's words) and the step to return to; on return the step shows what was in the way and asks its size again",
+    "After the guided demo, Cycle Complete opens with the trailhead named and the answer shows on the map as a flag",
+    "A size of 7 before and 3 after both reach the route list, an unmoved slider reaches nothing, and no block words, Appreciate line or trailhead line appear in storage",
+    "A face click before the channel's job is answered leaves the player on the face screen, and the guided demo still runs to Cycle Complete with its answers in the route list"
+  ],
+  "outcome": "unruled",
+  "addendum": "20:16: Wendell asked that a player explain how the chosen channel is doing its job, and asked for help with Neutrality. The reach test answered Neutrality from his book (detachment and perspective)."
+}
