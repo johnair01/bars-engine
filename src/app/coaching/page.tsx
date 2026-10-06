@@ -7,25 +7,23 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://masteringallyship.com'),
   title: 'Coaching with Wendell Britt',
   description:
-    'Find the part of you running the thing you are stuck on, and put it to work for you. Try the 3-2-1 practice on the page, then book a free call.',
+    'Find the part of you running the thing you are stuck on, and put it to work for you. Try the 3-2-1 practice on the page, then book a session.',
 }
 
 /**
- * Where "book a free call" goes. A mailto until Wendell names a booking link;
- * swap the string and every button on the page follows. (Choice, Claude,
- * 2026-10-06: the address is the one the site footer already publishes.)
+ * Every booking button on the page goes to the tier list, which holds
+ * Wendell's four Calendly links (Wendell, 2026-10-06). Reading the four as
+ * one session on a sliding scale is a choice (Claude, 2026-10-06), taken
+ * from the link names; the copy says so.
  */
-const BOOK_HREF = 'mailto:wendell@masteringallyship.com?subject=Coaching%20%E2%80%94%20free%20call'
+const BOOK_HREF = '#book'
 
-/**
- * Prices are Wendell's to set, the same rule `/mastering-allyship/one-to-one`
- * follows with COACHING_RATE. Set a string and it renders on the offer card;
- * left null, the card says the number comes back in the first reply.
- */
-const PRICES: Record<'session' | 'coaching', string | null> = {
-  session: null,
-  coaching: null,
-}
+const TIERS = [
+  { price: '$250', href: 'https://calendly.com/wendell-britt/coaching-250' },
+  { price: '$150', href: 'https://calendly.com/wendell-britt/coaching-150' },
+  { price: '$75', href: 'https://calendly.com/wendell-britt/coaching-75' },
+  { price: 'Pay what feels right', href: 'https://calendly.com/wendell-britt/pay-what-feels-right' },
+] as const
 
 /**
  * The practices named here are the ones already written down in the project:
@@ -49,30 +47,12 @@ const TOOLS = [
   },
 ] as const
 
-const PATHS = [
-  {
-    name: 'A free call',
-    price: 'Free',
-    body: 'Bring the thing you are stuck on, or the 3-2-1 you just ran. We find out whether working together fits, and you leave with at least one move.',
-  },
-  {
-    name: 'One facilitated session',
-    price: PRICES.session,
-    body: 'Ninety minutes. I walk you through the full sequence of parts, live, including the ones that are better met with someone beside you.',
-  },
-  {
-    name: 'Ongoing coaching',
-    price: PRICES.coaching,
-    body: 'Regular sessions while you take on something real: a change at work, a relationship, a project with your name on it. We use these tools on what comes up week to week.',
-  },
-] as const
-
 /**
  * @page /coaching
  * @entity CAMPAIGN
  * @description Wendell's coaching page: the tools he coaches with, a working 3-2-1 that runs
- *   in the browser with no account and no AI, and three ways to work together, ending in a
- *   free call. Prices render once Wendell sets PRICES; the booking link is BOOK_HREF.
+ *   in the browser with no account and no AI, and four booking tiers, each linking to
+ *   Wendell's Calendly. Every booking button scrolls to the tiers (BOOK_HREF).
  * @permissions public
  * @relationships /mastering-allyship/one-to-one, src/lib/coaching/three-two-one.ts,
  *   src/lib/technique-library/canonical.ts (tech-3-2-1)
@@ -101,7 +81,7 @@ export default function CoachingPage() {
               Try the 3-2-1 now
             </a>
             <a href={BOOK_HREF} className="text-sm font-semibold text-zinc-200 underline underline-offset-4">
-              Book a free call
+              Book a session
             </a>
           </div>
         </header>
@@ -134,26 +114,32 @@ export default function CoachingPage() {
           <ThreeTwoOneDemo bookHref={BOOK_HREF} />
         </section>
 
-        <section className="space-y-5">
-          <h2 className="text-2xl font-bold">Ways to work together</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {PATHS.map((path) => (
-              <div key={path.name} className="flex flex-col rounded-2xl border border-zinc-800 bg-black/30 p-5">
-                <h3 className="font-bold">{path.name}</h3>
-                <p className="mt-1 text-sm font-semibold text-amber-200">
-                  {path.price ?? 'Price in my first reply'}
-                </p>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400">{path.body}</p>
-              </div>
+        <section id="book" className="scroll-mt-24 space-y-5">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Book a session</h2>
+            <p className="text-sm leading-relaxed text-zinc-400">
+              One session with me, at four prices. You get the same session at every tier, so
+              pick the one that fits what you can pay today. Bring the thing you are stuck on, or
+              the 3-2-1 you just ran.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {TIERS.map((tier) => (
+              <a
+                key={tier.href}
+                href={tier.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-h-24 flex-col justify-between rounded-2xl border border-zinc-800 bg-black/30 p-4 transition-colors hover:border-violet-400"
+              >
+                <span className="text-lg font-bold text-amber-200">{tier.price}</span>
+                <span className="mt-3 text-sm font-semibold text-violet-200">Book &rarr;</span>
+              </a>
             ))}
           </div>
           <p className="text-sm leading-relaxed text-zinc-400">
-            Every path starts with the free call.{' '}
-            <a href={BOOK_HREF} className="text-zinc-200 underline underline-offset-4">
-              Write to me to set one up
-            </a>
-            . If you are building something with your name on it and want me alongside for the
-            whole campaign, the{' '}
+            If you are building something with your name on it and want me alongside for the whole
+            campaign, the{' '}
             <Link href="/mastering-allyship/one-to-one" className="text-zinc-200 underline underline-offset-4">
               founder track
             </Link>{' '}

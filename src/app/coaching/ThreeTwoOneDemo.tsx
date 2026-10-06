@@ -248,7 +248,7 @@ export function ThreeTwoOneDemo({ bookHref }: { bookHref: string }) {
               {copied ? 'Copied' : 'Copy my 3-2-1'}
             </button>
             <a href={bookHref} className="text-sm font-semibold text-violet-200 underline underline-offset-4">
-              Bring it to a free call
+              Bring it to a session
             </a>
             <button type="button" onClick={restart} className={quiet}>
               Start a new one
