@@ -33,6 +33,9 @@ const eslintConfig = defineConfig([
     "backend/.venv/**",
     // Design handoff bundle — vendored reference material, not project source:
     "design/**",
+    // Ontology Alchemy Game: browser-global React source carried over from its claude.ai
+    // artifact, compiled by scripts/build-ontology-game.mjs, not part of the Next app:
+    "content/ontology-game/**",
   ]),
 ]);
 

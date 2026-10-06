@@ -1,6 +1,25 @@
         const React = window.React;
         const { useState } = React;
 
+        // SITE BUILD (masteringallyship.com/ontology-game, 6 October 2026). The same
+        // source still runs as the claude.ai artifact: window.__ontologySite is set only
+        // by site-shim.js, which the site page loads before this script, so every
+        // site-only branch below is inert in the artifact. Choices, not rulings:
+        // the debug toggle and the claude.ai walkthrough links are hidden on the site
+        // (a client lands here from a link Wendell sends), and ?debug=1 brings the
+        // toggle back.
+        const ON_SITE = typeof window !== "undefined" && !!window.__ontologySite;
+        const SITE_PARAMS = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+        const SHOW_DEBUG = !ON_SITE || SITE_PARAMS.get("debug") === "1";
+        // /ontology-game/wave (or ?practice=wave) makes W.A.V.E. the opening practice at
+        // every body scan for the whole session, so a link can send a client straight
+        // into practising WAVE inside the game instead of waiting on a one-in-six roll.
+        // The path is checked as well as the query because the site serves /wave by
+        // rewrite, and a rewrite never changes the URL the page itself sees.
+        const LINKED_PRACTICE_ID = (SITE_PARAMS.get("practice") === "wave"
+            || (typeof window !== "undefined" && /\/ontology-game\/wave\/?$/.test(window.location.pathname)))
+            ? "wave" : null;
+
         // STEMS DATA
         const stems = {
             anger: {
@@ -861,6 +880,45 @@
             return dbOnlyPromise;
         };
 
+        // Portable coach code (site build only). On the site, storage is the player's
+        // own browser (site-shim.js), so a coach on another device cannot read
+        // data/coach-shared/ the way the artifact's shared db allows. Instead the
+        // player gets a code that carries the shared summary itself: the same
+        // belief-free fields Mode B already writes (counts, archetype, and the ten most
+        // recent cycles' date/channel/face/archetype). The coach pastes it into the same
+        // coach view. Nothing is sent anywhere; the player decides where the code goes.
+        const PORTABLE_CODE_PREFIX = "OAG1.";
+        const encodePortableCoachCode = (summary, cycles) => {
+            const payload = {
+                s: {
+                    totalCycles: summary.totalCycles || 0,
+                    faceCounts: summary.faceCounts || {},
+                    channelCounts: summary.channelCounts || {},
+                },
+                c: (cycles || []).slice(0, 10).map(c => [c.completedAt, c.channel, c.face, c.archetype]),
+            };
+            const bytes = new TextEncoder().encode(JSON.stringify(payload));
+            let bin = "";
+            bytes.forEach(b => { bin += String.fromCharCode(b); });
+            return PORTABLE_CODE_PREFIX + btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        };
+        const decodePortableCoachCode = (code) => {
+            if (!code || !code.startsWith(PORTABLE_CODE_PREFIX)) return null;
+            try {
+                const b64 = code.slice(PORTABLE_CODE_PREFIX.length).replace(/-/g, "+").replace(/_/g, "/");
+                const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
+                const bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
+                const payload = JSON.parse(new TextDecoder().decode(bytes));
+                if (!payload || !payload.s) return null;
+                return {
+                    summary: payload.s,
+                    cycles: (payload.c || []).map(([completedAt, channel, face, archetype]) => ({ completedAt, channel, face, archetype })),
+                };
+            } catch (e) {
+                return null;
+            }
+        };
+
         // Archetype classifier — a deliberately simplified, faithful port of the
         // rule-based session-shape classifier from classify_archetypes.py (validated
         // against the 20-run random-walk study, Simulated Playtesting doc, Sept 23 2026).
@@ -1141,6 +1199,11 @@
             // body-scan entry point; the rest are transient scratch fields specific to
             // one practice's ritual and are reset (not necessarily used) on every roll.
             const [currentPractice, setCurrentPractice] = useState(null);
+            // W.A.V.E. as the player's chosen opener (site build, 6 October 2026). Null
+            // keeps the original d6 roll. Set by a ?practice=wave link, by "Begin with
+            // W.A.V.E." on the entry screen, or by switching to it mid-scan; it then holds
+            // for every body scan in the session, including Flow Forward/Tempering hops.
+            const [preferredPracticeId, setPreferredPracticeId] = useState(LINKED_PRACTICE_ID);
             // "first" (Phase 1 / a fresh cycle -- genuinely unknown) or "continuation"
             // (phase-flow-locate, after Flow Forward/Tempering -- checking for the
             // already-named charge in its new channel). Read by renderOpeningRitual()
@@ -1263,6 +1326,9 @@
             // isn't under data/users/, so writing there under this key is a SHARED
             // write, not a private one, even though the path is keyed by this uid.
             const [myCode, setMyCode] = useState(null);
+            // Site build: the portable code for the cycle just shared (see
+            // encodePortableCoachCode). Null in the artifact, and reset every new cycle.
+            const [coachShareCode, setCoachShareCode] = useState(null);
             // Coach-view mode: reached from the entry screen by pasting a player's own
             // code, not a URL parameter — a query string on the outer claude.ai artifact
             // URL is not known to reach this page's own window.location once it's
@@ -1321,7 +1387,7 @@
                 })();
             }, []);
 
-            const debugPanel = debugPanelOpen ? (
+            const debugPanel = !SHOW_DEBUG ? null : debugPanelOpen ? (
                 <div className="debug-panel">
                     <button className="debug-close" onClick={() => setDebugPanelOpen(false)} aria-label="Close debug panel">✕</button>
                     <strong>DEBUG STATE</strong>
@@ -1375,7 +1441,7 @@
             // whether or not this roll will use them — called at every body-scan entry
             // point (fresh cycle, and each Flow Forward / Tempering hop) so a leftover
             // answer from a previous practice never bleeds into the next one.
-            const beginBodyScan = (context = "first") => {
+            const beginBodyScan = (context = "first", preferredId = preferredPracticeId) => {
                 // Test-only override: setting window.__forcePracticeId before triggering a
                 // scan makes the roll deterministic, so existing regression tests (written
                 // before this feature existed) don't have to handle six different rituals
@@ -1383,7 +1449,8 @@
                 const forced = (typeof window !== "undefined" && window.__forcePracticeId)
                     ? openingPractices.find(p => p.id === window.__forcePracticeId)
                     : null;
-                const roll = forced || openingPractices[Math.floor(Math.random() * openingPractices.length)];
+                const preferred = preferredId ? openingPractices.find(p => p.id === preferredId) : null;
+                const roll = forced || preferred || openingPractices[Math.floor(Math.random() * openingPractices.length)];
                 setCurrentPractice(roll);
                 setScanContext(context);
                 setWantedThing("");
@@ -1400,6 +1467,22 @@
             const handleEntryRitual = () => {
                 beginBodyScan();
                 setPhase("phase1");
+            };
+
+            const handleEntryWithWave = () => {
+                setPreferredPracticeId("wave");
+                beginBodyScan("first", "wave");
+                setPhase("phase1");
+            };
+
+            // Switch the current scan to W.A.V.E. without losing what's already typed
+            // into location/texture, and keep it as the opener for the rest of the session.
+            const handleSwitchToWave = () => {
+                setPreferredPracticeId("wave");
+                setCurrentPractice(openingPractices.find(p => p.id === "wave"));
+                setWaveStep("welcome");
+                setWaveLevel(null);
+                setWaveAlignment(null);
             };
 
             const handlePhase1Submit = () => {
@@ -1708,6 +1791,15 @@
 
             const handleFlowLocateNoCharge = () => {
                 setSelectedChannel(previousChannel);
+                // Fix (6 October 2026): handleFlowForward/handleTempering cleared the face
+                // and belief, so a dead end came back to Phase 6 with no face. That hid Go
+                // Deeper and left "What You Held" blank on Cycle Complete. Restore both
+                // from the thread Phase 6 is reporting on.
+                const lastResolved = resolvedThreads[resolvedThreads.length - 1];
+                if (lastResolved) {
+                    setSelectedFace(lastResolved.face);
+                    if (lastResolved.belief) setUserBelief(lastResolved.belief);
+                }
                 setLocation("");
                 setTexture("");
                 setDeadEndCount(prev => prev + 1);
@@ -1918,14 +2010,19 @@
                     const archetypeCounts = { ...(prior.archetypeCounts || {}) };
                     archetypeCounts[archetype] = (archetypeCounts[archetype] || 0) + 1;
 
-                    await coachProfileRef.set({
+                    const nextSummary = {
                         totalCycles: (prior.totalCycles || 0) + 1,
                         faceCounts,
                         channelCounts,
                         archetypeCounts,
                         lastCycleAt: Date.now(),
                         lastArchetype: archetype,
-                    });
+                    };
+                    await coachProfileRef.set(nextSummary);
+                    if (ON_SITE) {
+                        const cyclesSnap = await coachProfileRef.collection("cycles").orderBy("completedAt", "desc").limit(10).get();
+                        setCoachShareCode(encodePortableCoachCode(nextSummary, cyclesSnap.docs.map(d => d.data())));
+                    }
                 } catch (e) {
                     // Best-effort, same as Mode A.
                 }
@@ -2024,6 +2121,7 @@
                 moveCountRef.current = 0;
                 setShareWithCoach(false);
                 setPendingShareData(null);
+                setCoachShareCode(null);
             };
 
             // V2 UI Spec (Sept 26 2026), Magenta's veto made concrete: marks that this
@@ -2120,6 +2218,7 @@
                 moveCountRef.current = 0;
                 setShareWithCoach(false);
                 setPendingShareData(null);
+                setCoachShareCode(null);
             };
 
             // Coach view (Mode B, read side). Reads a SHARED path — data/coach-shared/
@@ -2135,6 +2234,14 @@
                 setCoachViewError(null);
                 setCoachSummary(null);
                 setCoachCycles(null);
+                const portable = decodePortableCoachCode(code);
+                if (portable) {
+                    setCoachSummary(portable.summary);
+                    setCoachCycles(portable.cycles);
+                    setCoachViewCode(code);
+                    setCoachViewLoading(false);
+                    return;
+                }
                 const db = await getDb();
                 if (!db) {
                     setCoachViewLoading(false);
@@ -2411,7 +2518,7 @@
                         <div className="card">
                             <div className="phase-marker">COACH VIEW</div>
                             <h2>Shared Practice Summary</h2>
-                            <p className="prompt">Enter the code a player shared with you. This shows only what they chose to share — channels, faces, how sessions tend to shape up — never their held beliefs.</p>
+                            <p className="prompt">{ON_SITE ? "Paste the code your client sent you." : "Enter the code a player shared with you."} This shows only what they chose to share — channels, faces, how sessions tend to shape up — never their held beliefs.</p>
                             <div className="mini-section" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                                 <input
                                     type="text"
@@ -2469,6 +2576,7 @@
                                 <p><strong>Safety Container:</strong> This is a practice space. Nothing you discover here is permanent or true about you. You are exploring how your body knows things.</p>
                                 <p><strong>What You'll Do:</strong> Find a block in your body. Name it. Hold a true belief about it. See if it shifts. Navigate through emotional channels.</p>
                                 <p><strong>How It Works:</strong> Seven phases per cycle. No "winning." The game is infinite; you cycle as many times as you want.</p>
+                                <p><strong>W.A.V.E.:</strong> Welcome what's here, Acknowledge it, Validate your body's right to feel it, and Exhale. You can open every body scan with it, and choose it again whenever you hold a belief.</p>
                             </div>
                             {patternSummary && patternSummary.totalCycles > 0 && (
                                 // Mode A "welcome back" reflection (Cross-Session Persistence
@@ -2505,8 +2613,13 @@
                                 </div>
                             )}
                             <button className="primary" data-demo-key="begin-practice" onClick={handleEntryRitual} style={{ marginTop: "1.5rem" }}>
-                                Begin Practice
+                                {preferredPracticeId === "wave" ? "Begin Practice with W.A.V.E." : "Begin Practice"}
                             </button>
+                            {preferredPracticeId !== "wave" && (
+                                <button className="secondary" data-demo-key="begin-with-wave" onClick={handleEntryWithWave} style={{ marginTop: "0.75rem" }}>
+                                    Begin with W.A.V.E.
+                                </button>
+                            )}
                             <p className="prompt" style={{ marginTop: "1rem" }}>
                                 <a href="#" onClick={(e) => { e.preventDefault(); startDemo(); }} style={{ fontSize: "0.85rem", opacity: 0.75 }}>
                                     Try a guided demo first
@@ -2525,11 +2638,11 @@
                                     </React.Fragment>
                                 ))}
                             </p>
-                            <p className="prompt" style={{ marginTop: "0.6rem", fontSize: "0.78rem", opacity: 0.55 }}>
+                            {!ON_SITE && <p className="prompt" style={{ marginTop: "0.6rem", fontSize: "0.78rem", opacity: 0.55 }}>
                                 Want the reading first? <a href="https://claude.ai/artifact/F9zYnkVSz17avjCKywVWVT" target="_blank" rel="noopener noreferrer">Interactive Walkthrough</a>
                                 {" · "}
                                 <a href="https://claude.ai/artifact/ca17c383-b838-4307-babf-673c8c1af3cc" target="_blank" rel="noopener noreferrer">Coach's Walkthrough</a>
-                            </p>
+                            </p>}
                         </div>
                         {debugPanel}
                     </div>
@@ -2573,6 +2686,13 @@
                     <div className="mini-section">
                         <p><strong>Opening practice — {practice.name}</strong></p>
                         <p style={{ marginTop: "0.35rem" }}>{practice.blurb[scanContext] || practice.blurb.first}</p>
+                        {practice.kind !== "wave" && !demoMode && (
+                            <p style={{ marginTop: "0.5rem", fontSize: "0.85rem" }}>
+                                <a href="#" data-demo-key="switch-to-wave" onClick={(e) => { e.preventDefault(); handleSwitchToWave(); }} style={{ color: "#64c8ff" }}>
+                                    Use W.A.V.E. instead
+                                </a>
+                            </p>
+                        )}
                     </div>
                 );
 
@@ -3026,6 +3146,20 @@
                             <h2>How do you want to open into this?</h2>
                             <p className="prompt">Pick whichever pass fits right now — there's no wrong door.</p>
                             <div className="options-grid">
+                                {/* W.A.V.E. listed first (site build, 6 October 2026): Mastering the
+                                    Game of Allyship teaches it as the Open Up practice, for when
+                                    charge is already present in the body (Appendix C, Key Terms). */}
+                                <div
+                                    className="option-card"
+                                    data-demo-key="open-choice-wave"
+                                    onClick={() => handleChooseOpenTechnique("wave")}
+                                    role="button"
+                                    tabIndex="0"
+                                    onKeyPress={(e) => e.key === 'Enter' && handleChooseOpenTechnique("wave")}
+                                >
+                                    <strong>W.A.V.E.</strong>
+                                    <small>Welcome it, meet it honestly, validate your body, then choose to stay or release. Use it when the charge is already in your body.</small>
+                                </div>
                                 <div
                                     className="option-card"
                                     data-demo-key="open-choice-breaths"
@@ -3036,16 +3170,6 @@
                                 >
                                     <strong>Simple Breaths</strong>
                                     <small>Three slow, conscious breaths. The basic pass.</small>
-                                </div>
-                                <div
-                                    className="option-card"
-                                    onClick={() => handleChooseOpenTechnique("wave")}
-                                    role="button"
-                                    tabIndex="0"
-                                    onKeyPress={(e) => e.key === 'Enter' && handleChooseOpenTechnique("wave")}
-                                >
-                                    <strong>W.A.V.E.</strong>
-                                    <small>Welcome it, meet it honestly, validate your body, then choose to stay or release.</small>
                                 </div>
                                 <div
                                     className="option-card"
@@ -3534,7 +3658,9 @@
                                 // shown again once totalCycles > 0, and never shown at all
                                 // when there's no db/user grant to write with.
                                 <p className="prompt" style={{ marginTop: "1rem", color: "#999", fontSize: "0.85rem" }}>
-                                    (Completing this cycle saves a private pattern summary — channels, faces, how sessions tend to unfold — visible only to you. No belief text is stored.)
+                                    {ON_SITE
+                                        ? "(Completing this cycle saves a private pattern summary — channels, faces, how sessions tend to unfold — in this browser on this device only. No belief text is stored.)"
+                                        : "(Completing this cycle saves a private pattern summary — channels, faces, how sessions tend to unfold — visible only to you. No belief text is stored.)"}
                                 </p>
                             )}
                             {persistenceAvailable && (
@@ -3896,7 +4022,12 @@
                                     <p style={{ marginTop: "0.5rem" }}><strong>Resolved threads:</strong> {pendingShareData.features.resolved}</p>
                                 </div>
                             )}
-                            {myCode && (
+                            {ON_SITE && (
+                                <div className="mini-section" style={{ marginTop: "0.75rem" }}>
+                                    <p>When you share, you get a code to send your coach. It holds only what's listed above and your earlier shared cycles, and nothing leaves this device unless you send it.</p>
+                                </div>
+                            )}
+                            {myCode && !ON_SITE && (
                                 // Shown here rather than as a separate URL-based link: a query
                                 // parameter on the outer claude.ai artifact URL isn't known to
                                 // reach this page once it's rendered inside the platform's own
@@ -3929,6 +4060,15 @@
                         <div className="card">
                             <h2>Cycle Complete</h2>
                             <p className="prompt">You've completed one full cycle.</p>
+                            {coachShareCode && (
+                                <div className="mini-section">
+                                    <p><strong>Here is your code for your coach.</strong> Copy it and send it to them however you usually talk. They paste it into "Coach? View a shared summary" on this page.</p>
+                                    <textarea readOnly value={coachShareCode} onFocus={(e) => e.target.select()} style={{ fontFamily: "monospace", fontSize: "0.8rem", minHeight: "4.5rem" }} />
+                                    <button className="secondary" onClick={() => { if (navigator.clipboard) navigator.clipboard.writeText(coachShareCode); }}>
+                                        Copy code
+                                    </button>
+                                </div>
+                            )}
                             <div className="mini-section">
                                 <p><strong>What You Held:</strong> {userBelief}</p>
                                 <p style={{ marginTop: "0.5rem" }}><strong>Through:</strong> {selectedChannel} ({selectedFace})</p>
