@@ -8,7 +8,7 @@
 // compile of about 270 KB on every load). This compiles once at build time with the
 // TypeScript compiler the repo already has, so a client's phone downloads React and the
 // compiled game only.
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ts from 'typescript';
@@ -20,6 +20,9 @@ const outDir = path.join(root, 'public', 'ontology-game');
 const jsx = readFileSync(path.join(srcDir, 'game.jsx'), 'utf8');
 const css = readFileSync(path.join(srcDir, 'game.css'), 'utf8');
 const shim = readFileSync(path.join(srcDir, 'site-shim.js'), 'utf8');
+// The body map: figure.glb is made in Blender by body/build_figure.py and committed, so this
+// build needs no Blender. body-map.js loads three.js and the figure only when it is opened.
+const bodyMap = readFileSync(path.join(srcDir, 'body', 'body-map.js'), 'utf8');
 
 const compiled = ts.transpileModule(jsx, {
   fileName: 'game.jsx',
@@ -65,12 +68,36 @@ ${css}
 ${inline(shim)}
 </script>
 <script>
+${inline(bodyMap)}
+</script>
+<script>
 ${inline(compiled.outputText)}
 </script>
 </body>
 </html>
 `;
 
+// /ontology-game/body: the marks over time on their own page, for a player between sittings.
+const bodyHtml = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Where it has lived · Ontology Alchemy Game</title>
+<meta name="description" content="The places on your body where charge has shown up in the Ontology Alchemy Game, over time. Saved on your device only.">
+<style>body{margin:0;background:#1a1a2e}</style>
+</head>
+<body>
+<script>
+${inline(bodyMap)}
+</script>
+<script>window.OAGBody.history({ standalone: true });</script>
+</body>
+</html>
+`;
+
 mkdirSync(outDir, { recursive: true });
 writeFileSync(path.join(outDir, 'index.html'), html);
+writeFileSync(path.join(outDir, 'body.html'), bodyHtml);
+copyFileSync(path.join(srcDir, 'body', 'figure.glb'), path.join(outDir, 'figure.glb'));
 console.log(`Ontology Alchemy Game built into public/ontology-game (${Math.round(html.length / 1024)} KB)`);

@@ -25,6 +25,8 @@ const nextConfig: NextConfig = {
       // opens it with W.A.V.E. as the opening practice for the whole session.
       { source: '/ontology-game', destination: '/ontology-game/index.html' },
       { source: '/ontology-game/wave', destination: '/ontology-game/index.html' },
+      // The body map's marks over time, on their own page.
+      { source: '/ontology-game/body', destination: '/ontology-game/body.html' },
     ];
   },
 };

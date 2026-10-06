@@ -290,6 +290,17 @@
         .texture-glyph.opened.texture-glyph--other {
             animation: glyph-open-other 0.5s ease-out forwards;
         }
+        /* The body map's buttons under the location box (body/body-map.js). */
+        .body-map-links {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem 1rem;
+            margin: 0.25rem 0 0.75rem;
+        }
+        .body-map-links a {
+            font-size: 0.9rem;
+        }
         .texture-select-row {
             display: flex;
             align-items: center;

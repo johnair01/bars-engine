@@ -1142,6 +1142,26 @@
             return c.channel ? `${what} (${c.channel})` : what;
         };
 
+        // The body map (content/ontology-game/body/). Wendell, 6 October 2026: players point
+        // to where on the body a charge shows up, and track where it lives over time. The
+        // text box stays for places the figure can't show; the figure only fills it in.
+        const BodyMapLinks = ({ onPick }) => {
+            if (typeof window === "undefined" || !window.OAGBody) return null;
+            return (
+                <div className="body-map-links">
+                    <button type="button" className="secondary" data-body-pick
+                            onClick={() => window.OAGBody.pick().then(r => { if (r) onPick(r.label); })}>
+                        Show me on a body
+                    </button>
+                    {window.OAGBody.marks().length > 0 && (
+                        <a href="#" data-body-history onClick={(e) => { e.preventDefault(); window.OAGBody.history(); }}>
+                            Where it has lived
+                        </a>
+                    )}
+                </div>
+            );
+        };
+
         // The faces for a newcomer (oag-faces-primer; the labels are open board question
         // oag-faces-names, built on its recommended option A). Display only: every key,
         // the demo, the coach code and the saved summary keep the colour names.
@@ -1969,8 +1989,17 @@
                 setRoute(prev => prev.map(e => (e.kind === "block-return" && e.id === lastReturn.id ? { ...e, sizeAfter: n } : e)));
             };
 
+            // Saves a confirmed body scan to the body map (body/body-map.js) so the player can
+            // see where charge has lived over time. Not during the guided demo, whose places
+            // are filled in for the player.
+            const recordBodyScan = (where) => {
+                if (demoMode || typeof window === "undefined" || !window.OAGBody) return;
+                window.OAGBody.record({ location, texture, channel: selectedChannel || null, where });
+            };
+
             const handlePhase1Submit = () => {
                 if (location && texture) {
+                    recordBodyScan("phase1");
                     if (!trailhead && blockStack.length === 0) {
                         setTrailhead({ location, texture, words: startWords.trim(), channel: null, face: null, answer: null });
                     }
@@ -2286,6 +2315,7 @@
 
             const handleFlowLocateSubmit = () => {
                 if (location && texture) {
+                    recordBodyScan(phase3Context === "tempering" ? "tempering" : "flow");
                     setPhase("phase3");
                 }
             };
@@ -3472,6 +3502,7 @@
                             value={location}
                             onChange={(e) => setLocation(e.target.value)}
                         />
+                        <BodyMapLinks onPick={setLocation} />
                         <p className="prompt">What is the texture?</p>
                         <div className="texture-select-row">
                             <select value={texture} onChange={(e) => setTexture(e.target.value)}>
