@@ -1192,6 +1192,9 @@
         // placeholders (oag-wave-breath), not a sourced figure. The step's continue button
         // shows when the exhale ends. window.__breathScale is a test-only speed-up, the
         // same pattern as window.__forcePracticeId; real play never sets it.
+        // "Skip the breath" ends the breath at once and shows the continue button
+        // (Wendell, 7 October 2026, on the body map step: "Players should be able to skip
+        // through the breathing on WAVE").
         const BREATH_IN_MS = 4000;
         const BREATH_OUT_MS = 6000;
         const BreathPacer = ({ children }) => {
@@ -1208,6 +1211,10 @@
                     <div className={`breath-circle breath-circle--${stage}`}
                          style={{ transitionDuration: `${(stage === "in" ? BREATH_IN_MS : BREATH_OUT_MS) * scale}ms` }} />
                     <p className="breath-label">{stage === "out" ? "Breathe out" : stage === "done" ? "One breath" : "Breathe in"}</p>
+                    {stage !== "done" && (
+                        <a href="#" className="breath-skip" data-breath-skip
+                           onClick={(e) => { e.preventDefault(); setStage("done"); }}>Skip the breath</a>
+                    )}
                     {stage === "done" && children}
                 </div>
             );
