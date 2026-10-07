@@ -268,5 +268,19 @@ for (let d = 1; d <= 3; d++) {
 await p6.locator('[data-block-back]').first().click();
 ok((await gs(p6)).blockDepth === 2, 'go back from the block screen returns one level');
 
+// At real breath speed, "Skip the breath" shows the step's continue button at once.
+const pSkip = await ctx.newPage();
+pSkip.on('pageerror', e => errors.push('pageerrorSkip: ' + e.message));
+await pSkip.addInitScript(() => { window.__breathScale = 1; });
+await pSkip.goto(B + '/ontology-game');
+await pSkip.getByRole('button', { name: 'Begin with W.A.V.E.' }).click();
+ok(await pSkip.locator('[data-wave-continue]').count() === 0 && await pSkip.locator('[data-breath-skip]').count() === 1,
+  'a real-speed breath hides continue and offers "Skip the breath"');
+await pSkip.locator('[data-breath-skip]').click();
+ok(await pSkip.locator('[data-wave-continue]').count() === 1 && await pSkip.locator('[data-breath-skip]').count() === 0,
+  'skipping the breath shows continue at once');
+await pSkip.locator('[data-wave-continue]').click();
+ok(await pSkip.locator('[data-breath-skip]').count() === 1, 'the next step paces its own breath and can be skipped too');
+
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close(); server.close();
