@@ -49,6 +49,24 @@ const scan = async (pg, where, tex) => {
 const fillJob = async (pg) => {
   for (const el of await pg.locator('[data-channel-job]').all()) await el.fill('it is doing its job');
 };
+// Block work in the sketch's four steps (6FACE_PASS3_2026-10-07): sensation is the scan before
+// this; then element and its EA practice, the daemon and its job, the six game masters' gate, Release.
+const workBlock = async (pg, channel, face, daemon = 'protector') => {
+  await pg.locator(`[data-demo-key="channel-${channel}"]`).click();
+  await fillJob(pg);
+  await pg.locator('[data-block-practice]').click();
+  await pg.locator('[data-demo-key="open-choice-breaths"]').click();
+  await pg.locator('[data-demo-key="open-active-breaths-done"]').click();
+  await pg.locator(`[data-daemon="${daemon}"]`).click();
+  await pg.locator('[data-daemon-job]').fill('keeping me safe from being seen');
+  await pg.locator('[data-daemon-aside="yes"]').click();
+  await pg.locator('[data-daemon-continue]').click();
+  await pg.locator(`[data-demo-key="face-${face}"]`).click();
+  await pg.getByText('Yes, this is true', { exact: true }).click();
+  await pg.getByText('Ready to notice', { exact: true }).click();
+  await pg.getByText('Yes, something shifted', { exact: true }).click();
+  await pg.locator('[data-block-release]').click();
+};
 const holdBelief = async (pg, channel, face) => {
   if (channel) await pg.locator(`[data-demo-key="channel-${channel}"]`).click();
   await fillJob(pg);
@@ -208,21 +226,13 @@ ok(await p5.evaluate(() => { const l = document.getElementById('pause-link'); if
   return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === l; }), 'pause link stays visible under the trail');
 await waveFrom(p5, 'welcome', 'release');
 await scan(p5, 'my belly', 'numbness');
-await holdBelief(p5, 'Fear', 'Orange');
-await p5.locator('[data-demo-key="open-choice-breaths"]').click();
-await p5.locator('[data-demo-key="open-active-breaths-done"]').click();
-await p5.getByText('Yes, something shifted', { exact: true }).click();
-await p5.locator('[data-demo-key="state-confirm-neutral"]').click();
+await workBlock(p5, 'Fear', 'Orange', 'skeptic');
 st = await gs(p5);
 ok(st.phase === 'phase1' && st.waveStep === 'welcome' && st.blockDepth === 1 && st.selectedChannel === null,
   'inner block returns to Welcome inside the first block work');
 await waveFrom(p5, 'welcome', 'release');
 await scan(p5, 'my throat', 'constriction');
-await holdBelief(p5, 'Sadness', 'Teal');
-await p5.locator('[data-demo-key="open-choice-breaths"]').click();
-await p5.locator('[data-demo-key="open-active-breaths-done"]').click();
-await p5.getByText('Yes, something shifted', { exact: true }).click();
-await p5.locator('[data-demo-key="state-confirm-satisfied"]').click();
+await workBlock(p5, 'Sadness', 'Teal');
 st = await gs(p5);
 ok(st.phase === 'phase-open-active' && st.openTechnique === 'wave' && st.blockDepth === 0, 'outer block returns to the open W.A.V.E.');
 ok(await p5.locator('[data-wave-step="accept"]').count() === 1, 'lands back on Accept');
@@ -281,6 +291,75 @@ ok(await pSkip.locator('[data-wave-continue]').count() === 1 && await pSkip.loca
   'skipping the breath shows continue at once');
 await pSkip.locator('[data-wave-continue]').click();
 ok(await pSkip.locator('[data-breath-skip]').count() === 1, 'the next step paces its own breath and can be skipped too');
+
+// Council pass 3 (6FACE_PASS3_2026-10-07): block work runs in the order of Wendell's sketch.
+const p7 = await ctx.newPage();
+p7.on('pageerror', e => errors.push('pageerror7: ' + e.message));
+p7.on('dialog', d => d.accept());
+await p7.goto(B + '/ontology-game/wave');
+await p7.getByText('Begin Practice with W.A.V.E.').click();
+await p7.locator('[data-wave-step="welcome"] [data-wave-block]').click();
+ok((await p7.locator('[data-block-steps-preview] li').count()) === 4, 'block screen lists the four steps');
+ok(!(await gs(p7)).recordOn, 'the record starts switched off');
+await p7.locator('[data-record-switch]').check();
+await p7.locator('[data-block-words]').fill('I do not want to feel this');
+await p7.locator('[data-block-work]').click();
+await waveFrom(p7, 'welcome', 'release');
+st = await gs(p7);
+ok(st.phase === 'phase1' && st.blockStep === 'sensation', 'step 1 is the blocker sensation (' + st.blockStep + ')');
+await scan(p7, 'my jaw', 'tension');
+await p7.locator('[data-demo-key="channel-Anger"]').click();
+st = await gs(p7);
+ok(st.phase === 'block-element' && st.blockStep === 'element', 'step 2 is the blocker element');
+ok(await p7.locator('[data-demo-key^="face-"]').count() === 0, 'no face is offered before the daemon');
+ok(await p7.locator('[data-block-practice]').isDisabled(), 'the EA practice waits for the element\'s job');
+await fillJob(p7);
+await p7.locator('[data-block-practice]').click();
+await p7.locator('[data-demo-key="open-choice-breaths"]').click();
+await p7.locator('[data-demo-key="open-active-breaths-done"]').click();
+st = await gs(p7);
+ok(st.phase === 'block-daemon' && st.blockStep === 'daemon' && st.blockWork.practice === 'breaths', 'the EA practice leads to step 3, the daemon');
+ok(await p7.locator('[data-daemon]').count() === 8, 'seven daemons and "not sure" are offered');
+await p7.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-daemon.png', fullPage: true });
+await p7.locator('[data-daemon="protector"]').click();
+ok(await p7.locator('[data-daemon-continue]').isDisabled(), 'the gate waits for the daemon\'s job');
+await p7.locator('[data-daemon-job]').fill('keeping me from a fight');
+await p7.locator('[data-daemon-for]').fill('the kid who got yelled at');
+await p7.locator('[data-daemon-aside="not-yet"]').click();
+await p7.locator('[data-daemon-continue]').click();
+st = await gs(p7);
+ok(st.phase === 'phase3' && st.blockStep === 'gate' && /GAME MASTERS' GATE/.test(await p7.locator('.phase-marker').first().textContent()),
+  'step 4 is the six game masters\' gate');
+ok(await p7.locator('[data-channel-job-section]').count() === 0, 'the gate does not ask the element\'s job again');
+await p7.locator('[data-demo-key="face-Red"]').click();
+await p7.getByText('No, generate my own', { exact: true }).click();
+await p7.locator('textarea').fill('I can say no and still be safe');
+await p7.getByText("I've written it", { exact: true }).click();
+await p7.getByText('Ready to notice', { exact: true }).click();
+ok((await gs(p7)).phase === 'phase5-result', 'holding at the gate goes straight to the check, with no second practice');
+await p7.getByText('Yes, something shifted', { exact: true }).click();
+ok((await gs(p7)).phase === 'block-release', 'a shift goes to Release');
+await p7.locator('[data-block-release]').click();
+st = await gs(p7);
+ok(st.blockDepth === 0 && st.waveStep === 'welcome' && (await p7.locator('[data-block-came-back="welcome"]').count()) === 1,
+  'Release returns to the original block, Welcome');
+const rec = await p7.evaluate(() => JSON.parse(localStorage.getItem('oag:record') || '[]'));
+ok(rec.length === 1 && rec[0].daemon === 'protector' && rec[0].element === 'Anger' && rec[0].face === 'Red'
+  && rec[0].belief === 'I can say no and still be safe' && rec[0].stepAside === 'not-yet' && rec[0].outcome === 'shifted',
+  'the record keeps the charge, its daemon, the gate and the belief: ' + JSON.stringify(rec[0] || null));
+// The sketch's outer loop: Exhale, then restart until unblocked.
+await waveTo(p7, 'validate');
+await p7.locator('[data-wave-step="validate"] [data-wave-continue]').click();
+await p7.locator('[data-wave-restart]').click();
+st = await gs(p7);
+ok(st.waveStep === 'welcome' && st.route.some(e => e.kind === 'wave-restart'), 'Exhale offers a restart, which goes back to Welcome');
+await p7.goto(B + '/ontology-game');
+await p7.locator('[data-record-open]').click();
+ok((await p7.locator('[data-record-entry="block"]').textContent()).includes('The Protector')
+  && (await p7.locator('[data-record-entry="block"]').textContent()).includes('I can say no and still be safe'), 'Your record shows the block and its belief');
+await p7.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-record.png', fullPage: true });
+await p7.locator('[data-record-erase]').click();
+ok(await p7.evaluate(() => localStorage.getItem('oag:record')) === null, 'Erase my record removes it from the device');
 
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close(); server.close();

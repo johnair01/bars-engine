@@ -1185,6 +1185,69 @@
                           fields: ["What are you stepping back from?", "From there, what can you see of the whole?"] },
         };
 
+        // Block work in the order of Wendell's workflow sketch (7 October 2026, "This is a
+        // workflow of how the ontology process is supposed to go. A 4th step would be adding
+        // the 6 game master gate as well"; council pass 3, 6FACE_PASS3_2026-10-07.md). A
+        // blocked W.A.V.E. step runs: 1 the blocker's sensation, 2 its element and the EA
+        // practice, 3 the daemon in the way and its job, 4 the six game masters' gate, then
+        // Release and the return to the step. His board answer on oag-block-work, "Mix of a
+        // and c", is the game's own cycle (A) with the daemon met (C).
+        const BLOCK_STEPS = [
+            { id: "sensation", label: "1 Sensation" },
+            { id: "element", label: "2 Element" },
+            { id: "daemon", label: "3 Daemon" },
+            { id: "gate", label: "4 Game masters' gate" },
+            { id: "release", label: "Release" },
+        ];
+        const BLOCK_STEP_OF_PHASE = {
+            "phase1": "sensation",
+            "phase2": "element", "block-element": "element", "phase-open-choice": "element", "phase-open-active": "element",
+            "block-daemon": "daemon",
+            "phase3": "gate", "phase4": "gate", "phase4-self-author": "gate", "phase5": "gate", "phase5-result": "gate", "phase7": "gate",
+            "block-release": "release",
+        };
+
+        // The seven daemons and their essences, the job each does at every level (Mastering
+        // the Game of Allyship research, "MTGOA Daemons — Breakdown", the essence rule; the
+        // same lines brief the council's daemon subagents, position bm-daemon-brief). The
+        // Player is not a daemon and is not listed. The three questions are adapted from the
+        // interview the Daemons from Big Mind proposal (3 October 2026) describes: its job,
+        // who it works for, and whether it will step aside. Choice, labelled as one: the
+        // game asks three of the six interview questions, to keep the step short.
+        const DAEMONS = [
+            { id: "protector", name: "The Protector", essence: "To protect: to keep you alive." },
+            { id: "controller", name: "The Controller", essence: "To set the standard." },
+            { id: "skeptic", name: "The Skeptic", essence: "To doubt." },
+            { id: "fixer", name: "The Fixer", essence: "To fix, in both senses: to repair what's broken, and to hold something in place." },
+            { id: "victim", name: "The Victim", essence: "Sympathy, through stories." },
+            { id: "damaged-self", name: "The Damaged Self", essence: "To take the damage. It is the Protector's last resort, because absorbing a hit is a form of protection." },
+            { id: "emotional-body", name: "The Emotional Body", essence: "To receive the signal and process it into meaning. It is where Emotional Alchemy happens." },
+        ];
+        const DAEMON_NAME = DAEMONS.reduce((acc, d) => ({ ...acc, [d.id]: d.name }), { unsure: "A daemon I couldn't name" });
+
+        // The player's record (Wendell, 7 October 2026: "This program is to help peopel keep
+        // track of charges and their resolutions and emergent beliefs that pop up based on my
+        // ontology"). It lives in this browser only, and only once the player switches it on,
+        // so the 24 September boundary (no belief text in storage) still holds for anyone who
+        // leaves it off. Open board question oag-record asks Wendell whether that switch is
+        // the right line; the coach code stays belief-free either way.
+        const RECORD_KEY = "oag:record";
+        const RECORD_ON_KEY = "oag:record:on";
+        const recordStore = {
+            on() { try { return window.localStorage.getItem(RECORD_ON_KEY) === "1"; } catch (e) { return false; } },
+            setOn(v) { try { if (v) window.localStorage.setItem(RECORD_ON_KEY, "1"); else window.localStorage.removeItem(RECORD_ON_KEY); } catch (e) {} },
+            list() { try { const l = JSON.parse(window.localStorage.getItem(RECORD_KEY) || "[]"); return Array.isArray(l) ? l : []; } catch (e) { return []; } },
+            add(entry) {
+                if (!this.on()) return;
+                try { window.localStorage.setItem(RECORD_KEY, JSON.stringify([...this.list(), entry])); } catch (e) {}
+            },
+            update(id, fields) {
+                if (!this.on()) return;
+                try { window.localStorage.setItem(RECORD_KEY, JSON.stringify(this.list().map(e => (e.id === id ? { ...e, ...fields } : e)))); } catch (e) {}
+            },
+            erase() { try { window.localStorage.removeItem(RECORD_KEY); } catch (e) {} },
+        };
+
         const FACE_PLAIN = { Magenta: "Presence", Red: "Power", Amber: "Order", Orange: "Understanding", Green: "Perspectives", Teal: "Systems" };
         const faceLabel = (name) => (FACE_PLAIN[name] ? `${FACE_PLAIN[name]}, ${name}` : name);
 
@@ -1601,6 +1664,10 @@
             // A stack because a block can come up inside block work.
             const [blockStack, setBlockStack] = useState([]);
             const [blockFrameSkipped, setBlockFrameSkipped] = useState(false);
+            // The player's record switch (oag-record), read once from this browser.
+            const [recordOn, setRecordOnState] = useState(() => recordStore.on());
+            const setRecordOn = (v) => { recordStore.setOn(v); setRecordOnState(v); };
+            const [recordReturnPhase, setRecordReturnPhase] = useState("entry");
             // Where the trip began (oag-trailhead): set once, on the first body scan of a
             // cycle outside any block, so block work never overwrites it. Holds the
             // location, texture, first channel and face, the player's optional words, and
@@ -1822,6 +1889,9 @@
                         blockDepth: blockStack.length,
                         blockSteps: blockStack.map(f => f.step),
                         trailhead, lastReturn,
+                        blockStep: blockStack.length > 0 ? (BLOCK_STEP_OF_PHASE[phase] || null) : null,
+                        blockWork: blockStack.length > 0 ? blockStack[blockStack.length - 1].work || {} : null,
+                        recordOn,
                     };
                 }
             });
@@ -1933,13 +2003,16 @@
                 // The charge the player was with when the step got blocked, so the block
                 // screen and the trail can name exactly what was blocked (oag-block-carry).
                 const charge = { location: location || null, texture: texture || null, channel: selectedChannel || null };
-                setBlockStack(prev => [...prev, { snapshot: takeSnapshot(), where, step, channel: selectedChannel || null, depth, id, charge, words: "", size: null }]);
+                setBlockStack(prev => [...prev, { snapshot: takeSnapshot(), where, step, channel: selectedChannel || null, depth, id, charge, words: "", size: null, work: {} }]);
                 logRoute({ kind: "block-open", id, step, where, channel: selectedChannel || null, depth });
                 setBlockFrameSkipped(false);
                 setLastReturn(null);
                 setPhase("phase-wave-block");
             };
             const updateTopFrame = (fields) => setBlockStack(prev => prev.map((f, i) => (i === prev.length - 1 ? { ...f, ...fields } : f)));
+            // What the four steps of block work found, kept on the block's own frame.
+            const updateBlockWork = (fields) => setBlockStack(prev => prev.map((f, i) => (i === prev.length - 1 ? { ...f, work: { ...(f.work || {}), ...fields } } : f)));
+            const blockWork = blockStack.length > 0 ? (blockStack[blockStack.length - 1].work || {}) : {};
             // Copies the player's words and size from the block screen into the route log,
             // when they leave that screen either way.
             const commitBlockDetails = () => {
@@ -1949,10 +2022,9 @@
                 setRoute(prev => prev.map(e => (e.kind === "block-open" && e.id === frame.id ? { ...e, words, size: frame.size } : e)));
             };
 
-            // Block work runs the game's own cycle from a fresh body scan: find it, name its
-            // channel and face, hold a true belief, see if it shifts. This is option A of the
-            // open board question oag-block-work; B or C would replace only this function
-            // and the copy on the block screen.
+            // Block work starts from a fresh body scan, step 1 of Wendell's sketch (the
+            // blocker's sensation), and runs the four steps in BLOCK_STEPS (council pass 3,
+            // positions oag-sketch-order, oag-daemon-step, oag-gate, oag-release).
             const startBlockWork = () => {
                 commitBlockDetails();
                 setAppreciateNotes({ opener: "", open: "" });
@@ -1986,6 +2058,20 @@
                 if (!frame) return;
                 const rid = `${frame.id}-r`;
                 logRoute({ kind: "block-return", id: rid, openId: frame.id, step: frame.step, depth: frame.depth, outcome });
+                // The player's record (oag-record): what this block turned out to be, read
+                // before the snapshot puts the outer charge back. Written only if switched on.
+                if (outcome !== "none" && !demoMode) {
+                    const w = frame.work || {};
+                    recordStore.add({
+                        id: rid, kind: "block", at: Date.now(), step: frame.step,
+                        words: (frame.words || "").trim(), sizeBefore: frame.size, sizeAfter: null,
+                        sensation: { location: location || null, texture: texture || null },
+                        element: selectedChannel || null, elementJob: selectedChannel ? jobTextFor(selectedChannel) : null,
+                        practice: w.practice || null,
+                        daemon: w.daemon || null, daemonJob: (w.daemonJob || "").trim(), daemonFor: (w.daemonFor || "").trim(), stepAside: w.stepAside || null,
+                        face: selectedFace || null, belief: (userBelief || "").trim(), outcome,
+                    });
+                }
                 restoreSnapshot(frame.snapshot);
                 setBlockStack(blockStack.slice(0, -1));
                 setLastReturn({ id: rid, step: frame.step, where: frame.where, words: (frame.words || "").trim(), sizeBefore: frame.size, sizeAfter: null, charge: frame.charge });
@@ -1994,6 +2080,7 @@
                 if (!lastReturn) return;
                 setLastReturn({ ...lastReturn, sizeAfter: n });
                 setRoute(prev => prev.map(e => (e.kind === "block-return" && e.id === lastReturn.id ? { ...e, sizeAfter: n } : e)));
+                recordStore.update(lastReturn.id, { sizeAfter: n });
             };
 
             // Saves a confirmed body scan to the body map (body/body-map.js) so the player can
@@ -2030,6 +2117,12 @@
                     setIncomingState("dissatisfied");
 
                     setPreviousChannel(null);
+                    // Inside block work the element is step 2 of the sketch: its job, then
+                    // the EA practice, before the daemon and the gate.
+                    if (blockStack.length > 0) {
+                        setPhase("block-element");
+                        return;
+                    }
                     setPhase("phase3");
                     logAction(`✓ setPhase("phase3") called`);
 
@@ -2084,9 +2177,12 @@
                 setPhase("phase-open-choice");
             };
 
-            const handlePhase5Done = () => handleOpenTechniqueEntry("phase5-result");
+            // Inside block work the EA practice already ran at step 2 (oag-ea-practice), so
+            // holding the belief at the gate goes straight to the check.
+            const handlePhase5Done = () => (blockStack.length > 0 ? setPhase("phase5-result") : handleOpenTechniqueEntry("phase5-result"));
 
             const handleChooseOpenTechnique = (technique) => {
+                if (blockStack.length > 0 && openReturnPhase === "block-daemon") updateBlockWork({ practice: technique });
                 setOpenTechnique(technique);
                 setPhase("phase-open-active");
             };
@@ -2116,6 +2212,12 @@
 
             const handleShifted = (didShift) => {
                 setShifted(didShift);
+                if (didShift && blockStack.length > 0) {
+                    // Block work: the gate held and it shifted, so release it (the sketch's
+                    // Release), then return to the step.
+                    setPhase("block-release");
+                    return;
+                }
                 if (didShift) {
                     if (!primaryChannel) {
                         setPrimaryChannel(selectedChannel);
@@ -2588,6 +2690,13 @@
                 // not pollute (or, for a first-time visitor, silently create) a real
                 // player's saved pattern-summary rollup.
                 if (!demoMode) persistCompletedCycle(features, archetype);
+                // The player's record (oag-record): the charge they came with and the
+                // beliefs that resolved it. Written only if switched on.
+                if (!demoMode) recordStore.add({
+                    id: `c${Date.now()}`, kind: "cycle", at: Date.now(),
+                    words: startWords.trim(), charge: trailhead ? { location: trailhead.location, texture: trailhead.texture, channel: trailhead.channel } : null,
+                    threads: resolvedThreads.map(t => ({ channel: t.channel, face: t.face, belief: t.belief || "", endState: t.endState })),
+                });
                 if (shareWithCoach) {
                     // Hold the classifier output for the confirm screen rather than
                     // writing the shared copy immediately — "explicit approval every
@@ -3199,8 +3308,13 @@
                                 <p><strong>Safety Container:</strong> This is a practice space. Nothing you discover here is permanent or true about you. You are exploring how your body knows things.</p>
                                 <p><strong>What You'll Do:</strong> Find a block in your body. Name it. Hold a true belief about it. See if it shifts. Navigate through emotional channels.</p>
                                 <p><strong>How It Works:</strong> Seven phases per cycle. No "winning." The game is infinite; you cycle as many times as you want.</p>
-                                <p><strong>W.A.V.E.:</strong> Breathe through each step. Welcome what's here, then Acknowledge it, Allow it, Accept it and Appreciate it, as far as you honestly can. Validate your body's right to feel it, and Exhale. If something gets in the way of a step, you can work that block and come back to the step. You can open every body scan with it, and choose it again whenever you hold a belief.</p>
+                                <p><strong>W.A.V.E.:</strong> Breathe through each step. Welcome what's here, then Acknowledge it, Allow it, Accept it and Appreciate it, as far as you honestly can. Validate your body's right to feel it, and Exhale. If something gets in the way of a step, you work that block in four steps (its sensation, its element, the daemon in the way, and the six game masters' gate), release it, and come back to the step. If it is still blocked at the Exhale, you can start the W.A.V.E. again. You can open every body scan with it, and choose it again whenever you hold a belief.</p>
                             </div>
+                            <p className="record-link" style={{ fontSize: "0.85rem" }}>
+                                <a href="#" data-record-open onClick={(e) => { e.preventDefault(); setRecordReturnPhase("entry"); setPhase("record"); }}>
+                                    Your record{recordOn ? ` (${recordStore.list().length})` : ""}: charges, what resolved them, and your beliefs
+                                </a>
+                            </p>
                             {patternSummary && patternSummary.totalCycles > 0 && (
                                 // Mode A "welcome back" reflection (Cross-Session Persistence
                                 // Spec, "Mode A"). Hidden outright — never a loading spinner —
@@ -3363,6 +3477,13 @@
                                         <strong>No, exhale and release</strong>
                                         <p>Breathe it out and see what's left behind.</p>
                                     </div>
+                                    {/* The sketch's outer loop: "Exhale to finish", then "Restart
+                                        until unblocked" back to the initial resistance. */}
+                                    <p className="wave-side-links">
+                                        <a href="#" data-wave-restart onClick={(e) => { e.preventDefault(); setLastReturn(null); logRoute({ kind: "wave-restart", where, channel: selectedChannel || null }); setLevel(null); setStep("welcome"); }}>
+                                            Still blocked? Start the W.A.V.E. again
+                                        </a>
+                                    </p>
                                 </>
                             ) : (
                                 <div className="button-group">
@@ -3561,7 +3682,10 @@
                                            placeholder="e.g. 'I don't want to accept that it happened'" />
                                     <p style={{ marginTop: "0.6rem" }}><strong>How big is it?</strong></p>
                                     <SizeSlider value={frame.size} onChange={(n) => updateTopFrame({ size: n })} dataKey="before" />
-                                    <p style={{ fontSize: "0.8rem", opacity: 0.7 }}>What you write here stays on this page and isn't saved.</p>
+                                    <label className="record-switch" style={{ display: "block", fontSize: "0.8rem", opacity: 0.85, marginTop: "0.4rem" }}>
+                                        <input type="checkbox" data-record-switch checked={recordOn} onChange={(e) => setRecordOn(e.target.checked)} />
+                                        {" "}Keep a record of what I find on this device. {recordOn ? "It goes in Your record, and you can erase it there." : "Left off, nothing here is saved."}
+                                    </label>
                                 </div>
                             )}
                             {blockStack.length === 3 && (
@@ -3581,7 +3705,16 @@
                                     <p>Whatever is in the way can be worked like any other block.</p>
                                 </div>
                             )}
-                            <p className="prompt">You'll find it in your body, name its channel and face, hold a true belief about it, and see if it shifts. Then you come back to {stepLabel}, right where you left it.</p>
+                            <div className="mini-section block-steps-preview" data-block-steps-preview>
+                                <p>You'll work it in four steps, then come back to {stepLabel}, right where you left it:</p>
+                                <ol style={{ margin: "0.4rem 0 0 1.2rem" }}>
+                                    <li>Find its sensation in your body.</li>
+                                    <li>Name its element, say how it's doing its job, and do an EA practice with it.</li>
+                                    <li>Meet the daemon in the way, and find its job.</li>
+                                    <li>Pass the six game masters' gate: pick the face, hold a true belief, and see if it shifts.</li>
+                                </ol>
+                                <p style={{ marginTop: "0.4rem" }}>Then you release it.</p>
+                            </div>
                             <div className="button-group">
                                 <button className="primary" data-block-work onClick={startBlockWork}>
                                     Work on what's in the way
@@ -3598,11 +3731,231 @@
                 );
             }
 
+            // Where the player is in the four steps of block work. In the card, not the trail
+            // bar, which keeps its two-line limit (oag-trailhead).
+            const blockStepAt = blockStack.length > 0 ? BLOCK_STEP_OF_PHASE[phase] : null;
+            const blockStepsBar = blockStepAt ? (
+                <p className="block-steps" data-block-steps>
+                    {BLOCK_STEPS.map((st, i) => (
+                        <React.Fragment key={st.id}>
+                            {i > 0 && <span className="wave-trail-sep"> · </span>}
+                            <span className={st.id === blockStepAt ? "block-steps-current" : undefined} data-block-step={st.id === blockStepAt ? st.id : undefined}>{st.label}</span>
+                        </React.Fragment>
+                    ))}
+                </p>
+            ) : null;
+
+            // Block work, step 2 (the sketch's "Blocker element → EA resolution, Do EA
+            // practice"): how the element is doing its job, then an EA practice from the
+            // game's own picker. The practice returns to step 3.
+            if (phase === "block-element") {
+                const job = CHANNEL_JOBS[selectedChannel];
+                const ready = jobComplete(selectedChannel);
+                const ch = channels.find(c => c.name === selectedChannel);
+                return (
+                    <div className="container">
+                        <div className="card">
+                            <div className="phase-marker">STEP 2 · THE BLOCKER'S ELEMENT</div>
+                            {blockStepsBar}
+                            <h2>{selectedChannel}{ch ? <span className={`element-color ${ch.color}`}> {ch.element}</span> : null}</h2>
+                            {job && (
+                                <div className="mini-section channel-job" data-channel-job-section={selectedChannel}>
+                                    <p><strong>How is {selectedChannel} doing its job?</strong> {job.job}</p>
+                                    {job.fields.map((q, i) => (
+                                        <div key={i} style={{ marginTop: "0.45rem" }}>
+                                            <p className="prompt" style={{ margin: "0 0 0.2rem" }}>{q}</p>
+                                            <input type="text" data-channel-job={i}
+                                                   value={jobAnswersFor(selectedChannel)[i] || ""}
+                                                   onChange={(e) => {
+                                                       const v = e.target.value;
+                                                       const next = [...jobAnswersFor(selectedChannel)];
+                                                       next[i] = v;
+                                                       setChannelJob({ channel: selectedChannel, answers: next });
+                                                   }} />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <p className="prompt">Now do an EA practice with it: breathe with the {selectedChannel.toLowerCase()} while it does its job, and let it resolve as far as it will.</p>
+                            {!ready && <p style={{ fontSize: "0.8rem", opacity: 0.7 }}>Answer {job && job.fields.length > 1 ? "both questions" : "the question"} to go on.</p>}
+                            <div className="button-group">
+                                <button className="primary" data-block-practice disabled={!ready} onClick={() => handleOpenTechniqueEntry("block-daemon")}>
+                                    Do the EA practice
+                                </button>
+                                <button className="secondary" data-block-skip-practice disabled={!ready} onClick={() => { updateBlockWork({ practice: "skipped" }); setPhase("block-daemon"); }}>
+                                    Skip the practice
+                                </button>
+                            </div>
+                        </div>
+                        {debugPanel}
+                    </div>
+                );
+            }
+
+            // Block work, step 3 (the sketch's "Blocker daemon → Identify job").
+            if (phase === "block-daemon") {
+                const w = blockWork;
+                const ready = !!w.daemon && !!(w.daemonJob || "").trim() && !!w.stepAside;
+                return (
+                    <div className="container">
+                        <div className="card">
+                            <div className="phase-marker">STEP 3 · THE BLOCKER'S DAEMON</div>
+                            {blockStepsBar}
+                            <h2>Which daemon is in the way?</h2>
+                            <p className="prompt">A daemon is a part of you that does one job on its own whenever nobody else is steering. Pick the one that sounds like what's blocking you. Each line says the job it does.</p>
+                            <div className="options-grid">
+                                {DAEMONS.map(d => (
+                                    <div key={d.id} className={`option-card${w.daemon === d.id ? " option-card--chosen" : ""}`}
+                                         data-daemon={d.id} role="button" tabIndex="0" aria-pressed={w.daemon === d.id}
+                                         onClick={() => updateBlockWork({ daemon: d.id })}
+                                         onKeyPress={(e) => e.key === 'Enter' && updateBlockWork({ daemon: d.id })}>
+                                        <strong>{d.name}</strong>
+                                        <small>{d.essence}</small>
+                                    </div>
+                                ))}
+                                <div className={`option-card${w.daemon === "unsure" ? " option-card--chosen" : ""}`}
+                                     data-daemon="unsure" role="button" tabIndex="0" aria-pressed={w.daemon === "unsure"}
+                                     onClick={() => updateBlockWork({ daemon: "unsure" })}
+                                     onKeyPress={(e) => e.key === 'Enter' && updateBlockWork({ daemon: "unsure" })}>
+                                    <strong>I'm not sure</strong>
+                                    <small>Ask it the questions below anyway. Its answers may tell you who it is.</small>
+                                </div>
+                            </div>
+                            {w.daemon && (
+                                <div className="mini-section daemon-interview" data-daemon-interview>
+                                    <p className="prompt" style={{ margin: "0 0 0.2rem" }}>What is its job right now?</p>
+                                    <input type="text" data-daemon-job value={w.daemonJob || ""}
+                                           onChange={(e) => updateBlockWork({ daemonJob: e.target.value })}
+                                           placeholder="e.g. 'keeping me from looking foolish'" />
+                                    <p className="prompt" style={{ margin: "0.5rem 0 0.2rem" }}>Who does it work for? You can leave this.</p>
+                                    <input type="text" data-daemon-for value={w.daemonFor || ""}
+                                           onChange={(e) => updateBlockWork({ daemonFor: e.target.value })}
+                                           placeholder="e.g. 'the part of me that got laughed at'" />
+                                    <p className="prompt" style={{ margin: "0.5rem 0 0.2rem" }}>Will it step aside long enough for you to go on?</p>
+                                    <div className="button-group">
+                                        <button className={w.stepAside === "yes" ? "primary" : "secondary"} data-daemon-aside="yes" onClick={() => updateBlockWork({ stepAside: "yes" })}>Yes, for now</button>
+                                        <button className={w.stepAside === "not-yet" ? "primary" : "secondary"} data-daemon-aside="not-yet" onClick={() => updateBlockWork({ stepAside: "not-yet" })}>Not yet</button>
+                                    </div>
+                                    {w.stepAside === "not-yet" && (
+                                        <p style={{ marginTop: "0.4rem" }}>That's an answer too. Thank it for doing its job. You can still go to the gate with it standing beside you.</p>
+                                    )}
+                                </div>
+                            )}
+                            <div className="button-group">
+                                <button className="primary" data-daemon-continue disabled={!ready}
+                                        onClick={() => { setPhase3Context("initial"); setPhase("phase3"); }}>
+                                    Go to the game masters' gate
+                                </button>
+                            </div>
+                        </div>
+                        {debugPanel}
+                    </div>
+                );
+            }
+
+            // Release (the sketch's "Release", then "Return to original block").
+            if (phase === "block-release") {
+                const frame = blockStack[blockStack.length - 1];
+                const stepLabel = frame ? (WAVE_STEP_LABEL[frame.step] || frame.step) : "the step";
+                return (
+                    <div className="container">
+                        <div className="card">
+                            <div className="phase-marker">RELEASE</div>
+                            {blockStepsBar}
+                            <h2>Let it go.</h2>
+                            <p className="prompt">It shifted. Breathe out, and let what was in the way of {stepLabel} go with the breath.</p>
+                            {userBelief && (
+                                <div className="mini-section" style={{ textAlign: "center" }}>
+                                    <p><strong>What came through the gate:</strong></p>
+                                    <p style={{ marginTop: "0.5rem", fontStyle: "italic" }}>"{userBelief}"</p>
+                                </div>
+                            )}
+                            <BreathPacer key={`release-${blockStack.length}`}>
+                                <div className="button-group">
+                                    <button className="primary" data-block-release onClick={() => returnFromBlock("shifted")}>
+                                        Return to {stepLabel}
+                                    </button>
+                                </div>
+                            </BreathPacer>
+                        </div>
+                        {debugPanel}
+                    </div>
+                );
+            }
+
+            // Your record (oag-record): every charge, what it turned out to be, and the
+            // beliefs that came through, newest first. On this device only.
+            if (phase === "record") {
+                const entries = recordStore.list().slice().reverse();
+                const when = (t) => new Date(t).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+                return (
+                    <div className="container">
+                        <div className="card">
+                            <div className="phase-marker">YOUR RECORD</div>
+                            <h2>Charges, what resolved them, and what you came to believe</h2>
+                            <label className="record-switch" style={{ display: "block", margin: "0.5rem 0" }}>
+                                <input type="checkbox" data-record-switch checked={recordOn} onChange={(e) => setRecordOn(e.target.checked)} />
+                                {" "}Keep a record on this device
+                            </label>
+                            <p style={{ fontSize: "0.85rem", opacity: 0.75 }}>The record stays in this browser. Nothing is sent anywhere, and the coach code never carries it.</p>
+                            {entries.length === 0 && (
+                                <p className="prompt" data-record-empty>{recordOn ? "Nothing yet. Work a block or complete a cycle and it will show here." : "The record is off. Switch it on and the blocks you work and the cycles you complete will show here."}</p>
+                            )}
+                            {entries.map(e => (
+                                <div key={e.id} className="mini-section record-entry" data-record-entry={e.kind}>
+                                    {e.kind === "block" ? (
+                                        <>
+                                            <p><strong>{when(e.at)} · Blocked at {WAVE_STEP_LABEL[e.step] || e.step}</strong>{e.words ? <> by <em>“{e.words}”</em></> : null}</p>
+                                            <p>Sensation: {describeCharge(e.sensation) || "not named"}</p>
+                                            <p>Element: {e.element || "not named"}{e.elementJob ? ` (${e.elementJob})` : ""}{e.practice ? `. Practice: ${e.practice === "wave" ? "W.A.V.E." : e.practice === "breaths" ? "Simple Breaths" : e.practice === "sedona" ? "Sedona Method" : "skipped"}` : ""}</p>
+                                            <p>Daemon: {e.daemon ? DAEMON_NAME[e.daemon] : "not named"}{e.daemonJob ? `, whose job was ${e.daemonJob}` : ""}{e.daemonFor ? `, working for ${e.daemonFor}` : ""}{e.stepAside === "yes" ? ". It stepped aside." : e.stepAside === "not-yet" ? ". It wasn't ready to step aside." : ""}</p>
+                                            <p>Gate: {e.face ? faceLabel(e.face) : "not reached"}</p>
+                                            {e.belief && <p>Belief: <em>“{e.belief}”</em></p>}
+                                            <p>{e.outcome === "shifted" ? "Released." : "It hadn't shifted yet."}{e.sizeBefore != null ? ` Size ${e.sizeBefore}${e.sizeAfter != null ? ` to ${e.sizeAfter}` : ""}.` : ""}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p><strong>{when(e.at)} · Cycle complete</strong>{e.words ? <>: <em>“{e.words}”</em></> : null}</p>
+                                            {e.charge && <p>Started with {describeCharge(e.charge)}</p>}
+                                            {(e.threads || []).map((t, i) => (
+                                                <p key={i}>{t.channel} through {faceLabel(t.face)}{t.belief ? <>: <em>“{t.belief}”</em></> : ""}{t.endState ? ` (${t.endState})` : ""}</p>
+                                            ))}
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                            <div className="button-group" style={{ marginTop: "1rem" }}>
+                                <button className="secondary" data-record-back onClick={() => setPhase(recordReturnPhase)}>Back</button>
+                                {entries.length > 0 && (
+                                    <button className="secondary" data-record-erase onClick={() => { if (window.confirm("Erase your whole record from this device?")) { recordStore.erase(); setRecordReturnPhase(recordReturnPhase); setPhase("record-erased"); } }}>
+                                        Erase my record
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+            if (phase === "record-erased") {
+                return (
+                    <div className="container">
+                        <div className="card">
+                            <div className="phase-marker">YOUR RECORD</div>
+                            <h2>Your record is erased from this device.</h2>
+                            <div className="button-group">
+                                <button className="secondary" data-record-back onClick={() => setPhase(recordReturnPhase)}>Back</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
             if (phase === "phase1") {
                 return (
                     <div className="container">
                         <div className="card">
                             <div className="phase-marker">PHASE 1 — Locate the Block</div>
+                            {blockStepsBar}
                             <h2>Where do you feel it?</h2>
                             {!trailhead && blockStack.length === 0 && scanContext === "first" && (
                                 // The trailhead in the player's words (oag-trailhead). Optional,
@@ -3668,6 +4021,7 @@
                     <div className="container">
                         <div className="card">
                             <div className="phase-marker">PHASE 2 — Name the Channel</div>
+                            {blockStepsBar}
                             <h2>Which channel does this speak through?</h2>
                             <p className="prompt">Choose the emotional channel that resonates:</p>
                             <div className="options-grid">
@@ -3719,8 +4073,19 @@
                 return (
                     <div className="container">
                         <div className="card">
-                            <div className="phase-marker">PHASE 3 — Find Your Face</div>
-                            {phase3Context === "initial" && (
+                            <div className="phase-marker">{blockStack.length > 0 ? "STEP 4 · THE SIX GAME MASTERS' GATE" : "PHASE 3 — Find Your Face"}</div>
+                            {blockStepsBar}
+                            {phase3Context === "initial" && blockStack.length > 0 && (
+                                // The sketch's fourth step (Wendell, 7 October 2026: "A 4th step
+                                // would be adding the 6 game master gate as well"). The six game
+                                // masters are the game's six faces; the one the block needs to
+                                // pass sets the belief the player holds next.
+                                <>
+                                    <h2>Which game master does this need to get past?</h2>
+                                    <p className="prompt">Six game masters keep the gate, one for each way of knowing. Pick the one whose question this block is really asking. Your body checks the belief it gives you next.</p>
+                                </>
+                            )}
+                            {phase3Context === "initial" && blockStack.length === 0 && (
                                 <>
                                     <h2>Which way do you know this?</h2>
                                     {facesIntroSeen && <p className="prompt">Pick the face that fits best. Your body gets the next word.</p>}
@@ -3754,7 +4119,7 @@
                                     <p className="prompt">Which way do you know it there?</p>
                                 </>
                             )}
-                            {CHANNEL_JOBS[selectedChannel] && (
+                            {CHANNEL_JOBS[selectedChannel] && blockStack.length === 0 && (
                                 <div className="mini-section channel-job" data-channel-job-section={selectedChannel}>
                                     <p><strong>How is {selectedChannel} doing its job?</strong> {CHANNEL_JOBS[selectedChannel].job}</p>
                                     {CHANNEL_JOBS[selectedChannel].fields.map((q, i) => (
@@ -3819,6 +4184,7 @@
                     <div className="container">
                         <div className="card">
                             <div className="phase-marker">PHASE 4 — Hold the Belief</div>
+                            {blockStepsBar}
                             <h2>Notice what's already true.</h2>
                             <div className="mini-section">
                                 <p><strong>Stem:</strong></p>
@@ -3876,6 +4242,7 @@
                     <div className="container">
                         <div className="card">
                             <div className="phase-marker">PHASE 5 — Wait for the Shift</div>
+                            {blockStepsBar}
                             <h2>Hold this. Don't do anything.</h2>
                             <p className="prompt">Simply be with the belief. Notice what wants to change. Notice the texture, the location, the feeling.</p>
                             <div className="texture-glyph-hold">
@@ -3911,6 +4278,7 @@
                     <div className="container">
                         <div className="card">
                             <div className="phase-marker">OPENING</div>
+                            {blockStepsBar}
                             <h2>How do you want to open into this?</h2>
                             <p className="prompt">Pick whichever pass fits right now — there's no wrong door.</p>
                             <div className="options-grid">
@@ -4067,6 +4435,7 @@
                     <div className="container">
                         <div className="card">
                             <div className="phase-marker">PHASE 5 — Result</div>
+                            {blockStepsBar}
                             <h2>What changed?</h2>
                             <div className="texture-glyph-hold">
                                 <TextureGlyph texture={texture} opened={false} size={64} />
@@ -4410,6 +4779,7 @@
                     <div className="container">
                         <div className="card">
                             <div className="phase-marker">PHASE 7 — Block Didn't Shift</div>
+                            {blockStepsBar}
                             <h2>Try again or go deeper.</h2>
                             <p className="prompt">
                                 {precisionQuestions[selectedFace.toLowerCase()]}
@@ -4776,6 +5146,11 @@
                     <div className="container">
                         <div className="card">
                             <h2>Cycle Complete</h2>
+                            <p className="record-link" style={{ fontSize: "0.85rem" }}>
+                                <a href="#" data-record-open onClick={(e) => { e.preventDefault(); setRecordReturnPhase("phase6-done"); setPhase("record"); }}>
+                                    Your record{recordOn ? ` (${recordStore.list().length})` : ""}: charges, what resolved them, and your beliefs
+                                </a>
+                            </p>
                             {trailhead && (
                                 // Back to the trailhead (oag-trailhead): the trip ends where it
                                 // began. The answer goes on the map as a flag.

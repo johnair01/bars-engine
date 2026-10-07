@@ -568,3 +568,10 @@
         }
         .channel-job { border-left: 3px solid #64c8ff; }
         .option-card--waiting { opacity: 0.45; cursor: default; }
+        /* Block work in the order of Wendell's sketch (council pass 3, 7 October 2026). */
+        .block-steps { font-size: 0.78rem; opacity: 0.8; margin: 0 0 0.5rem; }
+        .block-steps-current { color: #ffd166; font-weight: 600; }
+        .option-card--chosen { outline: 2px solid #ffd166; }
+        .daemon-interview { border-left: 3px solid #ffd166; }
+        .record-entry p { margin: 0.15rem 0; font-size: 0.9rem; }
+        .record-switch input { vertical-align: middle; }
