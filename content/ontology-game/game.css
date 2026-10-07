@@ -69,6 +69,40 @@
             resize: vertical;
             min-height: 80px;
         }
+        /* A stack of full-width choices, the first one primary (oag-dig-deeper: "The buttons
+           need to be more ergonomic"). Ways out sit in a quieter row beneath. */
+        .button-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 1.25rem;
+        }
+        .button-stack button { width: 100%; min-height: 48px; }
+        .exit-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .exit-row button.quiet, button.quiet {
+            flex: 1 1 40%;
+            min-width: 0;
+            min-height: 44px;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
+            background: transparent;
+            border-color: rgba(255, 255, 255, 0.18);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .exit-links { margin-top: 1rem; font-size: 0.85rem; }
+        .mark-row {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            min-height: 44px;
+            text-align: left;
+        }
+        .mark-row input { width: 22px; height: 22px; flex: 0 0 22px; margin: 0; }
         .button-group {
             display: flex;
             gap: 1rem;

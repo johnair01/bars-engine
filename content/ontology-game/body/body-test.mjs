@@ -51,7 +51,7 @@ const tapAnchor = async (pg, name) => {
 const where = "e.g., 'my throat', 'my solar plexus', 'behind my sternum'";
 
 await page.goto(B + '/ontology-game');
-await page.getByRole('button', { name: 'Begin Practice' }).click();
+await page.getByRole('button', { name: 'Begin with W.A.V.E.' }).click();
 ok(await page.locator('[data-body-pick]').count() === 1, 'the scan offers "Show me on a body"');
 ok(await page.locator('[data-body-history]').count() === 0, 'no history link before any mark');
 
@@ -120,7 +120,7 @@ ok(await p2.locator('[data-body-sitting]').count() === 1, 'stepping back hides l
 
 // The game shows the history link now that marks exist, and it opens over the game.
 await page.reload();
-await page.getByRole('button', { name: 'Begin Practice' }).click();
+await page.getByRole('button', { name: 'Begin with W.A.V.E.' }).click();
 ok(await page.locator('[data-body-history]').count() === 1, 'the history link appears once marks exist');
 await page.locator('[data-body-history]').click();
 await page.waitForFunction(() => window.__oagBody && window.__oagBody.anchors.length > 0);
