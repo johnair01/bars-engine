@@ -1206,7 +1206,7 @@
         ];
         const BLOCK_STEP_OF_PHASE = {
             "phase1": "sensation",
-            "phase2": "element", "block-element": "element", "block-open-up": "element", "phase-open-choice": "element", "phase-open-active": "element",
+            "phase2": "element", "block-element": "element", "block-open-up": "element", "block-clean-up": "element", "phase-open-choice": "element", "phase-open-active": "element",
             "block-daemon": "daemon",
             "phase3": "gate", "phase4": "gate", "phase4-self-author": "gate", "phase5": "gate", "phase5-result": "gate", "phase7": "gate",
             "block-release": "release",
@@ -1236,69 +1236,45 @@
         const DAEMON_WORKS_FOR = "You, the Player. Every daemon is there to protect you, and to work for your enjoyment.";
         const DAEMON_NAME = DAEMONS.reduce((acc, d) => ({ ...acc, [d.id]: d.name }), { unsure: "A daemon I couldn't name" });
 
-        // The EA practice at step 2 of block work is an Open Up move tied to the element the
-        // player chose. Wendell, board, 7 October 2026 (oag-ea-practice): "I don't think one
-        // should do a WAVE after saying how the element does it's job. The EA practice should
-        // be one connected to the element they choose. Maybe this connects with WAVE, but it
-        // should be tools specifically made for that move. It needs to be an open up move so
-        // they can feel it more, and should be able to have the players mark if they are
-        // experiencing blocks re: opening up to that emotion".
-        // The tools are the ones docs/EMOTIONAL_ALCHEMY_TOOL_TAXONOMY.md rates strong for Open
-        // Up and strong for the channel (Compact Matrices 1 and 3); Anger's second tool, Find
-        // the Felt Thread, is rated "useful for anger when it has somatic heat". The steps are
-        // the council's wording, written to turn toward the emotion so it can be felt more
-        // (position oag-open-up-tools).
-        const OPEN_UP_TOOLS = {
-            Anger: [
-                { id: "return-to-body", name: "Return to the Body", steps: [
-                    "Plant your feet and feel the floor push back.",
-                    "Find the heat. Let it rise as high as it wants to go, without acting on it.",
-                    "Let your hands and jaw show how strong it is. Breathe into the strength." ] },
-                { id: "felt-thread", name: "Find the Felt Thread", steps: [
-                    "Put your attention on the hottest place in your body.",
-                    "Let a word or an image come for the anger there, and test it against the heat.",
-                    "When one fits, say it to yourself and let the anger get a little bigger with it." ] },
-            ],
-            Sadness: [
-                { id: "felt-thread", name: "Find the Felt Thread", steps: [
-                    "Put a hand where the sadness sits.",
-                    "Let the thing you care about come close, close enough to feel how far away it is.",
-                    "Let the ache be as wide as it is. If tears come, let them." ] },
-                { id: "make-it-real", name: "Make It Real", steps: [
-                    "Pick something near you that can stand for what you care about.",
-                    "Hold it, or look at it, and let yourself miss it.",
-                    "Say out loud, or under your breath, what you'd say to it." ] },
-            ],
-            Fear: [
-                { id: "felt-thread", name: "Find the Felt Thread", steps: [
-                    "Find where the fear lives right now: a flutter, a freeze, a tightness.",
-                    "Turn toward it the way you'd turn toward a sound in the dark, slowly.",
-                    "Let it show you the threat, and let the feeling get as clear as it will." ] },
-                { id: "return-to-body", name: "Return to the Body", steps: [
-                    "Feel your back against what's behind you, and the ground under you.",
-                    "From there, let the fear be here at full size. You are held while you feel it.",
-                    "Breathe into the edges of it, and notice them move." ] },
-            ],
-            Joy: [
-                { id: "happy-apples", name: "Happy Apples", steps: [
-                    "Name three small, real goods that are here right now.",
-                    "Pick the one that makes you most alive, and stay with it.",
-                    "Let the delight spread past where it started. You don't have to earn it." ] },
-                { id: "make-it-real", name: "Make It Real", steps: [
-                    "Make one small movement that matches the joy: a stretch, a smile, a sound.",
-                    "Make it a little bigger than feels sensible.",
-                    "Let your body keep it going for a breath." ] },
-            ],
-            Neutrality: [
-                { id: "felt-thread", name: "Find the Felt Thread", steps: [
-                    "Notice the stillness in your body, the place that isn't pulled either way.",
-                    "Let it widen until you can feel the edges of the whole situation.",
-                    "Let a word come for what you see from there." ] },
-                { id: "happy-apples", name: "Happy Apples", steps: [
-                    "From the stepped-back view, name three things in the whole picture that are going fine.",
-                    "Pick one and let yourself feel it fully.",
-                    "Let the calm settle in as a feeling, not a thought." ] },
-            ],
+        // The EA practice at step 2 of block work. Two board rulings of 7 October 2026 shape it.
+        // oag-ea-practice: "The EA practice should be one connected to the element they choose
+        // [...] It needs to be an open up move so they can feel it more, and should be able to
+        // have the players mark if they are experiencing blocks re: opening up to that emotion".
+        // oag-open-up-tools, overruled: "The EA move for each of the channels is a clean up move
+        // as clean up moves are for dissolving and Alchemizing blocks / Fire transforms and burns
+        // away (anger) / Water releases and flows and dissolves (sadness) / Joy and happy apples
+        // is right on board. The general moves for happy apples can apply to all the channels as
+        // an opening up move / Metal is about getting clarity and sharpening awareness (fear) /
+        // And earth is about resting and receiving (neutrality) this is essentially basic
+        // mindfulness". So step 2 opens up with Happy Apples, for every channel, and then runs
+        // the element's own clean up move. The step wording is the council's (position
+        // oag-clean-up-moves); the verbs are his.
+        const OPEN_UP_HAPPY_APPLES = (emotion) => [
+            `Name three small, real things about this ${emotion} that are alive right now: a heat, a pull, an ache, a spark.`,
+            "Pick the one with the most life in it, and stay with it.",
+            `Let the ${emotion} grow around it. You don't have to fix anything yet.`,
+        ];
+        const CLEAN_UP_MOVES = {
+            Anger: { id: "fire-burn", element: "Fire", name: "Burn it away", gist: "Fire transforms and burns away.", steps: [
+                "Let the anger be heat, at full strength, without acting on it.",
+                "Put what's in the way into that fire. Let the heat transform it.",
+                "Breathe out, and notice what's left once it has burned down." ] },
+            Sadness: { id: "water-flow", element: "Water", name: "Let it flow", gist: "Water releases, flows and dissolves.", steps: [
+                "Find where the sadness is being held.",
+                "Let it move: tears, a long sigh, a softening in the chest.",
+                "Let what you're holding dissolve into the flow, and let it go downstream." ] },
+            Joy: { id: "wood-happy-apples", element: "Wood", name: "Happy Apples", gist: "Happy Apples, all the way into delight.", steps: [
+                "Name three small, real goods that are here right now.",
+                "Pick the one that makes you most alive, and stay with it.",
+                "Let the delight spread past where it started. You don't have to earn it." ] },
+            Fear: { id: "metal-sharpen", element: "Metal", name: "Sharpen it", gist: "Metal gets clarity and sharpens awareness.", steps: [
+                "Ask the fear exactly what the threat is, and how close it is.",
+                "Say it in one clear sentence.",
+                "Look at that sentence and notice what's real in it, and what isn't." ] },
+            Neutrality: { id: "earth-rest", element: "Earth", name: "Rest and receive", gist: "Earth rests and receives. This is basic mindfulness.", steps: [
+                "Let your weight drop into whatever is holding you.",
+                "Breathe, and notice what comes without reaching for it.",
+                "Receive whatever arrives, and let it be enough for now." ] },
         };
         // What can get in the way of opening up to the element's emotion. The player marks
         // any that fit (oag-ea-practice), and a marked block can be worked in its own right.
@@ -1310,11 +1286,11 @@
             { id: "too-much", label: "It's too much, too fast" },
             { id: "in-my-head", label: "I'd rather think about it than feel it" },
         ];
-        // Older records name a picker practice; newer ones name the element's Open Up tool.
+        // Older records name a picker practice; newer ones name the element's clean up move.
         const practiceName = (channel, id) => {
             if (id === "skipped") return "nothing (skipped)";
-            const t = (OPEN_UP_TOOLS[channel] || []).find(x => x.id === id);
-            return t ? t.name : ({ wave: "W.A.V.E.", breaths: "Simple Breaths", sedona: "Sedona Method" }[id] || id);
+            const m = Object.values(CLEAN_UP_MOVES).find(x => x.id === id);
+            return m ? `${m.name} (${m.element})` : ({ wave: "W.A.V.E.", breaths: "Simple Breaths", sedona: "Sedona Method" }[id] || id);
         };
         const OPEN_UP_MARK_LABEL = OPEN_UP_BLOCK_MARKS.reduce((acc, m) => ({ ...acc, [m.id]: m.label }), {});
 
@@ -3600,6 +3576,7 @@
 
             const renderOpeningRitual = () => {
                 const practice = currentPractice || openingPractices[0];
+                const openingWave = practice.kind === "wave" && scanContext === "first" && blockStack.length === 0;
                 const textureOptions = practice.kind === "weather"
                     ? weatherLabels
                     : {
@@ -3613,7 +3590,13 @@
                 const ritualIntro = (
                     <div className="mini-section">
                         <p><strong>Opening practice — {practice.name}</strong></p>
-                        <p style={{ marginTop: "0.35rem" }}>{practice.blurb[scanContext] || practice.blurb.first}</p>
+                        <p style={{ marginTop: "0.35rem" }}>{openingWave
+                            // The first W.A.V.E. of a cycle opens up (oag-wave-first, Wendell's steer
+                            // of 7 October 2026: "The beginning wave is an opening up move that allows
+                            // what's alive for the user to emerge. After that first wave we can have the
+                            // player dig deeper into what they want to work on specifically").
+                            ? "This first W.A.V.E. opens you up. You don't need to know what you're working on yet. Breathe through each step and let whatever is alive for you come up."
+                            : (practice.blurb[scanContext] || practice.blurb.first)}</p>
                         {practice.kind !== "wave" && !demoMode && (
                             <p style={{ marginTop: "0.5rem", fontSize: "0.85rem" }}>
                                 <a href="#" data-demo-key="switch-to-wave" onClick={(e) => { e.preventDefault(); handleSwitchToWave(); }} style={{ color: "#64c8ff" }}>
@@ -3702,7 +3685,10 @@
                                 <p className="prompt">Now, where's the activation?</p>
                             </>
                         )}
-                        {practice.kind === "wave" && (
+                        {openingWave && (
+                            <p className="prompt" data-dig-in>Now dig deeper into what you want to work on. Where does it live in your body?</p>
+                        )}
+                        {practice.kind === "wave" && !openingWave && (
                             <p className="prompt">
                                 {waveAlignment === "release"
                                     ? "You exhaled it out. What's left behind — where do you feel it now?"
@@ -3797,7 +3783,7 @@
                                 <p>You'll work it in four steps, then come back to {stepLabel}, right where you left it:</p>
                                 <ol style={{ margin: "0.4rem 0 0 1.2rem" }}>
                                     <li>Find its sensation in your body.</li>
-                                    <li>Name its element, say how it's doing its job, and open up to it so you can feel it more.</li>
+                                    <li>Name its element and say how it's doing its job. Open up to it so you can feel it more, then clean it up with the element's move.</li>
                                     <li>Meet the daemon in the way, and learn its job and who it works for.</li>
                                     <li>Pass the six game masters' gate: pick the face, hold a true belief, and see if it shifts.</li>
                                 </ol>
@@ -3878,14 +3864,11 @@
                                     ))}
                                 </div>
                             )}
-                            <p className="prompt">Next you open up to the {selectedChannel.toLowerCase()}, so you can feel it more while it does its job.</p>
+                            <p className="prompt">Next you open up to the {selectedChannel.toLowerCase()} so you can feel it more, then clean it up with {selectedChannel}'s own move.</p>
                             {!ready && <p style={{ fontSize: "0.8rem", opacity: 0.7 }}>Answer {job && job.fields.length > 1 ? "both questions" : "the question"} to go on.</p>}
                             <div className="button-group">
                                 <button className="primary" data-block-practice disabled={!ready} onClick={() => setPhase("block-open-up")}>
                                     Open up to the {selectedChannel.toLowerCase()}
-                                </button>
-                                <button className="secondary" data-block-skip-practice disabled={!ready} onClick={() => { updateBlockWork({ practice: "skipped" }); setPhase("block-daemon"); }}>
-                                    Skip the practice
                                 </button>
                             </div>
                         </div>
@@ -3894,71 +3877,84 @@
                 );
             }
 
-            // Block work, step 2 continued: the EA practice, an Open Up move made for the
-            // element the player chose (oag-ea-practice). The player picks one of the element's
-            // tools, breathes through its steps, and marks anything in the way of opening up.
-            // A marked block can be worked like any other, and comes back here.
+            // Block work, step 2 continued: open up with Happy Apples, the general opening move
+            // for every channel, and mark anything in the way of opening up (oag-ea-practice,
+            // oag-open-up-marks). A marked block can be worked like any other, and comes back
+            // here. Then the element's clean up move (oag-clean-up-moves).
             if (phase === "block-open-up") {
                 const w = blockWork;
-                const tools = OPEN_UP_TOOLS[selectedChannel] || [];
-                const tool = tools.find(t => t.id === w.practice) || null;
                 const marks = w.openUpMarks || [];
                 const emotion = (selectedChannel || "the feeling").toLowerCase();
                 const toggleMark = (id) => updateBlockWork({ openUpMarks: marks.includes(id) ? marks.filter(m => m !== id) : [...marks, id] });
                 return (
                     <div className="container">
                         <div className="card">
-                            <div className="phase-marker">STEP 2 · OPEN UP TO THE ELEMENT</div>
+                            <div className="phase-marker">STEP 2 · OPEN UP</div>
                             {blockStepsBar}
                             {cameBackNote("open-up")}
                             <h2>Open up to the {emotion}.</h2>
-                            <p className="prompt">This isn't about calming it down. Let yourself feel the {emotion} more, as much as you honestly can. Pick a tool made for it.</p>
-                            <div className="options-grid">
-                                {tools.map(t => (
-                                    <div key={t.id} className={`option-card${w.practice === t.id ? " option-card--chosen" : ""}`}
-                                         data-open-up-tool={t.id} role="button" tabIndex="0" aria-pressed={w.practice === t.id}
-                                         onClick={() => updateBlockWork({ practice: t.id })}
-                                         onKeyPress={(e) => e.key === 'Enter' && updateBlockWork({ practice: t.id })}>
-                                        <strong>{t.name}</strong>
-                                        <small>{t.steps[0]}</small>
+                            <p className="prompt">Before you clean anything up, let yourself feel the {emotion} more, as much as you honestly can. This is Happy Apples.</p>
+                            <div className="mini-section" data-open-up-steps="happy-apples">
+                                <ol style={{ margin: "0 0 0 1.2rem", textAlign: "left" }}>
+                                    {OPEN_UP_HAPPY_APPLES(emotion).map((st, i) => <li key={i} style={{ marginTop: i ? "0.35rem" : 0 }}>{st}</li>)}
+                                </ol>
+                                <BreathPacer key={`open-up-${blockStack.length}`}>
+                                    <div className="mini-section open-up-marks" data-open-up-marks style={{ textAlign: "left" }}>
+                                        <p><strong>Did anything get in the way of opening up to the {emotion}?</strong> Mark any that fit. You can leave them all.</p>
+                                        {OPEN_UP_BLOCK_MARKS.map(m => (
+                                            <label key={m.id} className="mark-row">
+                                                <input type="checkbox" data-open-up-mark={m.id} checked={marks.includes(m.id)} onChange={() => toggleMark(m.id)} />
+                                                <span>{m.label}</span>
+                                            </label>
+                                        ))}
                                     </div>
-                                ))}
+                                    <div className="button-stack">
+                                        <button className="primary" data-open-up-done onClick={() => setPhase("block-clean-up")}>
+                                            Go on to clean it up
+                                        </button>
+                                        {marks.length > 0 && (
+                                            <button className="secondary" data-open-up-work-block onClick={() => openBlock("open-up", "open-up")}>
+                                                Work what's in the way of opening up
+                                            </button>
+                                        )}
+                                    </div>
+                                </BreathPacer>
                             </div>
-                            {tool && (
-                                <div className="mini-section" data-open-up-steps={tool.id}>
-                                    <ol style={{ margin: "0 0 0 1.2rem" }}>
-                                        {tool.steps.map((st, i) => <li key={i} style={{ marginTop: i ? "0.35rem" : 0 }}>{st}</li>)}
+                        </div>
+                        {debugPanel}
+                    </div>
+                );
+            }
+
+            // Block work, step 2 ends with the element's clean up move, which dissolves and
+            // alchemizes the block (oag-open-up-tools, overruled; position oag-clean-up-moves).
+            if (phase === "block-clean-up") {
+                const move = CLEAN_UP_MOVES[selectedChannel] || null;
+                const finish = (practice) => { updateBlockWork({ practice }); setPhase("block-daemon"); };
+                return (
+                    <div className="container">
+                        <div className="card">
+                            <div className="phase-marker">STEP 2 · CLEAN UP</div>
+                            {blockStepsBar}
+                            <h2>{move ? `${move.name}.` : "Clean it up."}</h2>
+                            {move && <p className="prompt">{move.gist} This is {selectedChannel}'s clean up move, for dissolving what's in the way.</p>}
+                            {move && (
+                                <div className="mini-section" data-clean-up-steps={move.id}>
+                                    <ol style={{ margin: "0 0 0 1.2rem", textAlign: "left" }}>
+                                        {move.steps.map((st, i) => <li key={i} style={{ marginTop: i ? "0.35rem" : 0 }}>{st}</li>)}
                                     </ol>
-                                    <BreathPacer key={`open-up-${tool.id}-${blockStack.length}`}>
-                                        <div className="mini-section open-up-marks" data-open-up-marks style={{ textAlign: "left" }}>
-                                            <p><strong>Did anything get in the way of opening up to the {emotion}?</strong> Mark any that fit. You can leave them all.</p>
-                                            {OPEN_UP_BLOCK_MARKS.map(m => (
-                                                <label key={m.id} style={{ display: "block", marginTop: "0.3rem" }}>
-                                                    <input type="checkbox" data-open-up-mark={m.id} checked={marks.includes(m.id)} onChange={() => toggleMark(m.id)} />
-                                                    {" "}{m.label}
-                                                </label>
-                                            ))}
-                                        </div>
-                                        <div className="button-group">
-                                            <button className="primary" data-open-up-done onClick={() => setPhase("block-daemon")}>
+                                    <BreathPacer key={`clean-up-${move.id}-${blockStack.length}`}>
+                                        <div className="button-stack">
+                                            <button className="primary" data-clean-up-done onClick={() => finish(move.id)}>
                                                 Go on to the daemon
                                             </button>
-                                            {marks.length > 0 && (
-                                                <button className="secondary" data-open-up-work-block onClick={() => openBlock("open-up", "open-up")}>
-                                                    Work what's in the way of opening up
-                                                </button>
-                                            )}
                                         </div>
                                     </BreathPacer>
                                 </div>
                             )}
-                            {!tool && (
-                                <div className="button-group">
-                                    <button className="secondary" data-block-skip-practice onClick={() => { updateBlockWork({ practice: "skipped" }); setPhase("block-daemon"); }}>
-                                        Skip the practice
-                                    </button>
-                                </div>
-                            )}
+                            <p className="exit-links">
+                                <a href="#" data-block-skip-practice onClick={(e) => { e.preventDefault(); finish("skipped"); }}>Skip the clean up</a>
+                            </p>
                         </div>
                         {debugPanel}
                     </div>
@@ -4075,7 +4071,7 @@
                                         <>
                                             <p><strong>{when(e.at)} · Blocked at {stepLabelOf(e.step)}</strong>{e.words ? <> by <em>“{e.words}”</em></> : null}</p>
                                             <p>Sensation: {describeCharge(e.sensation) || "not named"}</p>
-                                            <p>Element: {e.element || "not named"}{e.elementJob ? ` (${e.elementJob})` : ""}{e.practice ? `. Opened up with: ${practiceName(e.element, e.practice)}` : ""}</p>
+                                            <p>Element: {e.element || "not named"}{e.elementJob ? ` (${e.elementJob})` : ""}{e.practice ? `. Cleaned up with: ${practiceName(e.element, e.practice)}` : ""}</p>
                                             {(e.openUpMarks || []).length > 0 && <p>In the way of opening up: {e.openUpMarks.map(m => OPEN_UP_MARK_LABEL[m] || m).join("; ")}</p>}
                                             <p>Daemon: {e.daemon ? DAEMON_NAME[e.daemon] : "not named"}{e.daemon && DAEMONS.find(d => d.id === e.daemon) ? `, whose job is ${DAEMONS.find(d => d.id === e.daemon).essence.replace(/\.$/, "").toLowerCase()}` : ""}{e.stepAside === "yes" ? ". It stepped aside." : e.stepAside === "not-yet" ? ". It wasn't ready to step aside." : ""}</p>
                                             <p>Gate: {e.face ? faceLabel(e.face) : "not reached"}</p>
@@ -4126,11 +4122,11 @@
                             <div className="phase-marker">PHASE 1 — Locate the Block</div>
                             {blockStepsBar}
                             <h2>Where do you feel it?</h2>
-                            {!trailhead && blockStack.length === 0 && scanContext === "first" && (
+                            {!trailhead && blockStack.length === 0 && scanContext === "first" && isScanReady() && (
                                 // The trailhead in the player's words (oag-trailhead). Optional,
                                 // shown back to them on the trail and at the end, never stored.
                                 <div className="mini-section start-words">
-                                    <p><strong>What brought you here today?</strong> One line, if you like. It helps you find your way back at the end.</p>
+                                    <p><strong>What do you want to work on?</strong> Of what came up, name the one you want to dig into. One line, if you like. It helps you find your way back at the end.</p>
                                     <input type="text" data-start-words value={startWords}
                                            onChange={(e) => setStartWords(e.target.value)}
                                            placeholder="e.g. 'the call with my sister' (optional)" />
@@ -4959,38 +4955,39 @@
                                 onChange={(e) => setUserBelief(e.target.value)}
                                 placeholder="Answer the precision question..."
                             />
-                            <div className="button-group">
-                                <button className="primary" onClick={() => setPhase("phase5")}>
-                                    Try again with this
-                                </button>
-                                {blockStack.length > 0 && (
-                                    // Wendell, board, 7 October 2026 (oag-main-order): "if WAVE is
-                                    // blocked one can diagnoze by digging deeper until the block
-                                    // releases". A belief that won't shift opens a block inside this
-                                    // one, and its Release comes back here.
+                            {blockStack.length > 0 ? (
+                                // In block work the two ways forward come first, full width; the ways
+                                // out are a quieter row beneath (oag-dig-deeper, Wendell's steer of
+                                // 7 October 2026: "The buttons need to be more ergonomic").
+                                <div className="button-stack">
                                     <button className="primary" data-dig-deeper onClick={() => openBlock("gate", "gate")}>
-                                        Dig deeper: work what's keeping it from shifting
+                                        Dig deeper into what's keeping it stuck
                                     </button>
-                                )}
+                                    <button className="secondary" onClick={() => setPhase("phase5")}>
+                                        Try again with this
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="button-stack">
+                                    <button className="primary" onClick={() => setPhase("phase5")}>
+                                        Try again with this
+                                    </button>
+                                    {(phase3Context === "flow-forward" || phase3Context === "tempering") && (
+                                        <button className="secondary" onClick={handleDifferentChargeEmerging}>
+                                            This is its own charge
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                            <div className="exit-row">
                                 {blockStack.length > 0 && (
-                                    <button className="secondary" data-block-back onClick={() => returnFromBlock("unshifted")}>
+                                    <button className="quiet" data-block-back onClick={() => returnFromBlock("unshifted")}>
                                         Go back to {stepLabelOf(blockStack[blockStack.length - 1].step)} anyway
                                     </button>
                                 )}
-                                {(phase3Context === "flow-forward" || phase3Context === "tempering") && (
-                                    <button className="secondary" onClick={handleDifferentChargeEmerging}>
-                                        This is its own charge
-                                    </button>
-                                )}
-                                <button className="secondary" onClick={handleNewCycle}>
-                                    Start a new cycle
-                                </button>
-                                <button className="secondary" onClick={handleStopForToday}>
-                                    I'll leave this here for today
-                                </button>
-                                <button className="secondary" onClick={handleStopHere}>
-                                    This is too much right now — stop
-                                </button>
+                                <button className="quiet" onClick={handleNewCycle}>Start a new cycle</button>
+                                <button className="quiet" onClick={handleStopForToday}>Leave this for today</button>
+                                <button className="quiet" onClick={handleStopHere}>This is too much, stop</button>
                             </div>
                         </div>
                     </div>

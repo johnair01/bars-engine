@@ -55,8 +55,8 @@ const workBlock = async (pg, channel, face, daemon = 'protector') => {
   await pg.locator(`[data-demo-key="channel-${channel}"]`).click();
   await fillJob(pg);
   await pg.locator('[data-block-practice]').click();
-  await pg.locator('[data-open-up-tool]').first().click();
   await pg.locator('[data-open-up-done]').click();
+  await pg.locator('[data-clean-up-done]').click();
   await pg.locator(`[data-daemon="${daemon}"]`).click();
   await pg.locator('[data-daemon-aside="yes"]').click();
   await pg.locator('[data-daemon-continue]').click();
@@ -191,10 +191,12 @@ const p5 = await ctx.newPage();
 p5.on('pageerror', e => errors.push('pageerror5: ' + e.message));
 await p5.goto(B + '/ontology-game/wave');
 await p5.getByRole('button', { name: 'Begin with W.A.V.E.' }).click();
-await p5.locator('[data-start-words]').fill('the call with my sister');
+ok(await p5.locator('[data-start-words]').count() === 0, 'the first W.A.V.E. opens up before asking what to work on (oag-wave-first)');
 await waveTo(p5, 'appreciate');
 await p5.locator('[data-appreciate-input]').fill('it kept me careful');
 await waveFrom(p5, 'appreciate', 'release');
+ok(await p5.locator('[data-dig-in]').count() === 1, 'after the first W.A.V.E. the player digs into what to work on');
+await p5.locator('[data-start-words]').fill('the call with my sister');
 await scan(p5, 'my chest', 'tension');
 await holdBelief(p5, 'Anger', 'Amber');
 await p5.locator('[data-demo-key="open-choice-wave"]').click();
@@ -319,10 +321,7 @@ st = await gs(p7);
 ok(st.phase === 'block-open-up' && st.blockStep === 'element', 'the EA practice is the element\'s own Open Up screen');
 ok(await p7.locator('[data-wave-step]').count() === 0 && await p7.locator('[data-demo-key^="open-choice-"]').count() === 0,
   'no W.A.V.E. or practice picker after the element\'s job (oag-ea-practice)');
-ok(await p7.locator('[data-open-up-tool]').count() === 2 && await p7.locator('[data-open-up-tool="return-to-body"]').count() === 1,
-  'Anger offers its own Open Up tools');
-await p7.locator('[data-open-up-tool="return-to-body"]').click();
-ok(await p7.locator('[data-open-up-steps="return-to-body"] li').count() === 3, 'the tool shows its steps');
+ok(await p7.locator('[data-open-up-steps="happy-apples"] li').count() === 3, 'opening up is Happy Apples, for any channel');
 ok(await p7.locator('[data-open-up-work-block]').count() === 0, 'no block to work until one is marked');
 await p7.locator('[data-open-up-mark="not-allowed"]').check();
 // A marked block opens a block of its own, and its Release comes back to opening up.
@@ -334,12 +333,16 @@ await waveFrom(p7, 'welcome', 'release');
 await scan(p7, 'my chest', 'constriction');
 await workBlock(p7, 'Fear', 'Amber', 'controller');
 st = await gs(p7);
-ok(st.phase === 'block-open-up' && st.blockDepth === 1 && st.blockWork.practice === 'return-to-body'
+ok(st.phase === 'block-open-up' && st.blockDepth === 1
   && st.blockWork.openUpMarks.includes('not-allowed') && (await p7.locator('[data-block-came-back="open-up"]').count()) === 1,
   'Release comes back to opening up, with the tool and the mark kept');
 await p7.locator('[data-open-up-done]').click();
 st = await gs(p7);
-ok(st.phase === 'block-daemon' && st.blockStep === 'daemon', 'opening up leads to step 3, the daemon');
+ok(st.phase === 'block-clean-up' && st.blockStep === 'element' && await p7.locator('[data-clean-up-steps="fire-burn"] li').count() === 3,
+  'then Anger\'s clean up move, Fire burning it away (oag-open-up-tools, overruled)');
+await p7.locator('[data-clean-up-done]').click();
+st = await gs(p7);
+ok(st.phase === 'block-daemon' && st.blockStep === 'daemon' && st.blockWork.practice === 'fire-burn', 'the clean up leads to step 3, the daemon');
 ok(await p7.locator('[data-daemon]').count() === 8, 'seven daemons and "not sure" are offered');
 await p7.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-daemon.png', fullPage: true });
 await p7.locator('[data-daemon="protector"]').click();
@@ -381,7 +384,7 @@ const recAll = await p7.evaluate(() => JSON.parse(localStorage.getItem('oag:reco
 const rec = recAll.filter(e => e.step === 'welcome');
 ok(recAll.length === 3 && rec.length === 1 && rec[0].daemon === 'protector' && rec[0].element === 'Anger' && rec[0].face === 'Red'
   && rec[0].belief === 'I can say no and still be safe' && rec[0].stepAside === 'not-yet' && rec[0].outcome === 'shifted'
-  && rec[0].practice === 'return-to-body' && rec[0].openUpMarks.includes('not-allowed'),
+  && rec[0].practice === 'fire-burn' && rec[0].openUpMarks.includes('not-allowed'),
   'the record keeps the charge, its Open Up tool and marks, its daemon, the gate and the belief: ' + JSON.stringify(rec[0] || null));
 // The sketch's outer loop: Exhale, then restart until unblocked.
 await waveTo(p7, 'validate');
@@ -393,7 +396,7 @@ await p7.goto(B + '/ontology-game');
 await p7.locator('[data-record-open]').click();
 const recText = await p7.locator('[data-record-entry="block"]').first().textContent();
 ok(await p7.locator('[data-record-entry="block"]').count() === 3 && recText.includes('The Protector') && recText.includes('I can say no and still be safe')
-  && recText.includes('Opened up with: Return to the Body') && recText.includes("I'm not allowed to feel this"),
+  && recText.includes('Cleaned up with: Burn it away (Fire)') && recText.includes("I'm not allowed to feel this"),
   'Your record shows the block, how it opened up, what was in the way, and its belief');
 await p7.screenshot({ path: (process.env.OAG_SHOTS || '.') + '/shot-record.png', fullPage: true });
 await p7.locator('[data-record-erase]').click();
