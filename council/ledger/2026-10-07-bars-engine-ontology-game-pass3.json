@@ -1,0 +1,611 @@
+{
+ "id": "2026-10-07-bars-engine-ontology-game-pass3",
+ "date": "2026-10-07",
+ "project": "bars-engine",
+ "cause": "feature-design",
+ "question": "Align the ontology game to Wendell's workflow sketch, with the six game master gate as a fourth step, and keep track of charges, resolutions and emergent beliefs.",
+ "convened_by": "Wendell, 2026-10-07 19:45, through the project thread",
+ "invoked_from": "project thread, Wendell's Coaching Practice",
+ "source_doc": "content/ontology-game/6FACE_PASS3_2026-10-07.md",
+ "faces_present": [
+  "shaman",
+  "architect",
+  "challenger",
+  "regent",
+  "diplomat",
+  "sage"
+ ],
+ "casts": [
+  {
+   "agent": "shaman",
+   "method": "three coins",
+   "tosses": [
+    [
+     3,
+     2,
+     2
+    ],
+    [
+     3,
+     3,
+     3
+    ],
+    [
+     2,
+     3,
+     3
+    ],
+    [
+     3,
+     3,
+     2
+    ],
+    [
+     2,
+     2,
+     2
+    ],
+    [
+     2,
+     3,
+     2
+    ]
+   ],
+   "values": [
+    7,
+    9,
+    8,
+    8,
+    6,
+    7
+   ],
+   "changing_lines": [
+    2,
+    5
+   ],
+   "n": 41,
+   "name": "Spending",
+   "cn": "損",
+   "pinyin": "sǔn",
+   "lines": [
+    1,
+    1,
+    0,
+    0,
+    0,
+    1
+   ],
+   "shows": "This has a price and you have yet to name it.",
+   "image": "☱ lake beneath ☶ mountain. The lake has been dug deeper so that the mountain can stand higher.",
+   "situation": "Something has been taken from the base and added to the top. The old text asks how the offering should be made and answers that two small bowls will do, since the sacrifice counts by sincerity. Decrease that you choose is a different event from decrease that happens to you.",
+   "lower": {
+    "trigram": "lake",
+    "symbol": "☱",
+    "name": "The Joyous",
+    "quality": "joyful"
+   },
+   "upper": {
+    "trigram": "mountain",
+    "symbol": "☶",
+    "name": "Keeping Still",
+    "quality": "rest"
+   },
+   "becomes": {
+    "n": 42,
+    "name": "Windfall",
+    "cn": "益",
+    "pinyin": "yì",
+    "lines": [
+     1,
+     0,
+     0,
+     0,
+     1,
+     1
+    ],
+    "shows": "More is arriving than you put in.",
+    "image": "☳ thunder beneath ☴ wind. Movement below, fed by what has come down from above.",
+    "situation": "Increase. The old text says it is favourable to have somewhere to go and to cross the great water, which makes this one of the few figures that says yes. The commentary attaches a duty to it: seeing good, move toward it; finding a fault in yourself, correct it.",
+    "lower": {
+     "trigram": "thunder",
+     "symbol": "☳",
+     "name": "The Arousing",
+     "quality": "movement"
+    },
+    "upper": {
+     "trigram": "wind",
+     "symbol": "☴",
+     "name": "The Gentle",
+     "quality": "penetrating"
+    }
+   }
+  },
+  {
+   "agent": "architect",
+   "method": "three coins",
+   "tosses": [
+    [
+     3,
+     2,
+     2
+    ],
+    [
+     3,
+     2,
+     2
+    ],
+    [
+     3,
+     2,
+     2
+    ],
+    [
+     2,
+     3,
+     3
+    ],
+    [
+     2,
+     2,
+     3
+    ],
+    [
+     2,
+     3,
+     2
+    ]
+   ],
+   "values": [
+    7,
+    7,
+    7,
+    8,
+    7,
+    7
+   ],
+   "changing_lines": [],
+   "n": 9,
+   "name": "Restraint",
+   "cn": "小畜",
+   "pinyin": "xiǎo chù",
+   "lines": [
+    1,
+    1,
+    1,
+    0,
+    1,
+    1
+   ],
+   "shows": "A small rule you never revisited is holding all of this.",
+   "image": "☰ heaven beneath ☴ wind. One yielding line holding five firm ones, the way weather is held by wind.",
+   "situation": "A small force restrains a large one here, and the large one is permitting it. The single yielding line's whole strength is position. The tradition reads the restraint as accumulation: force that cannot discharge yet is being stored.",
+   "lower": {
+    "trigram": "heaven",
+    "symbol": "☰",
+    "name": "The Creative",
+    "quality": "strong"
+   },
+   "upper": {
+    "trigram": "wind",
+    "symbol": "☴",
+    "name": "The Gentle",
+    "quality": "penetrating"
+   }
+  },
+  {
+   "agent": "challenger",
+   "method": "three coins",
+   "tosses": [
+    [
+     2,
+     2,
+     2
+    ],
+    [
+     2,
+     2,
+     2
+    ],
+    [
+     3,
+     3,
+     3
+    ],
+    [
+     2,
+     3,
+     2
+    ],
+    [
+     3,
+     3,
+     2
+    ],
+    [
+     2,
+     2,
+     2
+    ]
+   ],
+   "values": [
+    6,
+    6,
+    9,
+    7,
+    8,
+    6
+   ],
+   "changing_lines": [
+    1,
+    2,
+    3,
+    6
+   ],
+   "n": 62,
+   "name": "Overstep",
+   "cn": "小過",
+   "pinyin": "xiǎo guò",
+   "lines": [
+    0,
+    0,
+    1,
+    1,
+    0,
+    0
+   ],
+   "shows": "You are doing slightly too much.",
+   "image": "☶ mountain beneath ☳ thunder. Four yielding lines around two firm ones: a bird with large wings and a small body.",
+   "situation": "Small excess. The old text gives a flying bird and its call, and says the bird does better coming down than going up. Small things can be exceeded here and large ones want leaving alone. The counsel is precise about where to overdo it: in reverence, in mourning, in thrift.",
+   "lower": {
+    "trigram": "mountain",
+    "symbol": "☶",
+    "name": "Keeping Still",
+    "quality": "rest"
+   },
+   "upper": {
+    "trigram": "thunder",
+    "symbol": "☳",
+    "name": "The Arousing",
+    "quality": "movement"
+   },
+   "becomes": {
+    "n": 38,
+    "name": "Estrangement",
+    "cn": "睽",
+    "pinyin": "kuí",
+    "lines": [
+     1,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "shows": "You reached a conclusion from a distance.",
+    "image": "☱ lake beneath ☲ fire. Fire climbing and water settling, the two halves separating as they go.",
+    "situation": "Opposition by nature: two elements in one figure travelling opposite ways. The old text keeps its counsel small — in small matters, good fortune — and fills the lines with strange sightings. A pig covered in mud. A wagon dragged backwards. A stranger who turns out to be kin.",
+    "lower": {
+     "trigram": "lake",
+     "symbol": "☱",
+     "name": "The Joyous",
+     "quality": "joyful"
+    },
+    "upper": {
+     "trigram": "fire",
+     "symbol": "☲",
+     "name": "The Clinging",
+     "quality": "light, and what it depends on"
+    }
+   }
+  },
+  {
+   "agent": "regent",
+   "method": "three coins",
+   "tosses": [
+    [
+     2,
+     2,
+     2
+    ],
+    [
+     2,
+     2,
+     2
+    ],
+    [
+     2,
+     3,
+     3
+    ],
+    [
+     3,
+     2,
+     2
+    ],
+    [
+     3,
+     3,
+     2
+    ],
+    [
+     2,
+     3,
+     2
+    ]
+   ],
+   "values": [
+    6,
+    6,
+    8,
+    7,
+    8,
+    7
+   ],
+   "changing_lines": [
+    1,
+    2
+   ],
+   "n": 35,
+   "name": "Sunrise",
+   "cn": "晉",
+   "pinyin": "jìn",
+   "lines": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    1
+   ],
+   "shows": "This is becoming visible faster than you planned.",
+   "image": "☷ earth beneath ☲ fire. The sun clearing the horizon, with open ground under it.",
+   "situation": "Advance, and the light getting higher. The old text gives a prince horses in quantity and three audiences in a single day, so the figure is about recognition arriving quickly. Everything in it is going up.",
+   "lower": {
+    "trigram": "earth",
+    "symbol": "☷",
+    "name": "The Receptive",
+    "quality": "yielding"
+   },
+   "upper": {
+    "trigram": "fire",
+    "symbol": "☲",
+    "name": "The Clinging",
+    "quality": "light, and what it depends on"
+   },
+   "becomes": {
+    "n": 38,
+    "name": "Estrangement",
+    "cn": "睽",
+    "pinyin": "kuí",
+    "lines": [
+     1,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "shows": "You reached a conclusion from a distance.",
+    "image": "☱ lake beneath ☲ fire. Fire climbing and water settling, the two halves separating as they go.",
+    "situation": "Opposition by nature: two elements in one figure travelling opposite ways. The old text keeps its counsel small — in small matters, good fortune — and fills the lines with strange sightings. A pig covered in mud. A wagon dragged backwards. A stranger who turns out to be kin.",
+    "lower": {
+     "trigram": "lake",
+     "symbol": "☱",
+     "name": "The Joyous",
+     "quality": "joyful"
+    },
+    "upper": {
+     "trigram": "fire",
+     "symbol": "☲",
+     "name": "The Clinging",
+     "quality": "light, and what it depends on"
+    }
+   }
+  },
+  {
+   "agent": "diplomat",
+   "method": "three coins",
+   "tosses": [
+    [
+     3,
+     2,
+     2
+    ],
+    [
+     3,
+     3,
+     2
+    ],
+    [
+     3,
+     2,
+     2
+    ],
+    [
+     2,
+     3,
+     2
+    ],
+    [
+     2,
+     2,
+     3
+    ],
+    [
+     3,
+     2,
+     2
+    ]
+   ],
+   "values": [
+    7,
+    8,
+    7,
+    7,
+    7,
+    7
+   ],
+   "changing_lines": [],
+   "n": 13,
+   "name": "Fellowship",
+   "cn": "同人",
+   "pinyin": "tóng rén",
+   "lines": [
+    1,
+    0,
+    1,
+    1,
+    1,
+    1
+   ],
+   "shows": "You are walking the same way and neither of you has said so.",
+   "image": "☲ fire beneath ☰ heaven. Fire rising to meet the sky it is already heading for.",
+   "situation": "Two things going the same way, which is what makes company possible. The old text sets this in the open country, out where the group has no walls around it, and says the union works when it is available to anyone who arrives.",
+   "lower": {
+    "trigram": "fire",
+    "symbol": "☲",
+    "name": "The Clinging",
+    "quality": "light, and what it depends on"
+   },
+   "upper": {
+    "trigram": "heaven",
+    "symbol": "☰",
+    "name": "The Creative",
+    "quality": "strong"
+   }
+  },
+  {
+   "agent": "sage",
+   "method": "three coins",
+   "tosses": [
+    [
+     3,
+     3,
+     3
+    ],
+    [
+     2,
+     3,
+     2
+    ],
+    [
+     2,
+     3,
+     3
+    ],
+    [
+     3,
+     2,
+     2
+    ],
+    [
+     2,
+     2,
+     3
+    ],
+    [
+     2,
+     2,
+     3
+    ]
+   ],
+   "values": [
+    9,
+    7,
+    8,
+    7,
+    7,
+    7
+   ],
+   "changing_lines": [
+    1
+   ],
+   "n": 10,
+   "name": "Footing",
+   "cn": "履",
+   "pinyin": "lǚ",
+   "lines": [
+    1,
+    1,
+    0,
+    1,
+    1,
+    1
+   ],
+   "shows": "You are stepping onto ground that matters, and the play is what makes it safe.",
+   "image": "☱ lake beneath ☰ heaven. A small soft thing placed directly under the largest hard one.",
+   "situation": "The old line is about treading on a tiger's tail and coming away whole, which happens through the quality of the step. Conduct is the entire content here. Where you put your weight, in what order, at what speed, decides whether the ground holds.",
+   "lower": {
+    "trigram": "lake",
+    "symbol": "☱",
+    "name": "The Joyous",
+    "quality": "joyful"
+   },
+   "upper": {
+    "trigram": "heaven",
+    "symbol": "☰",
+    "name": "The Creative",
+    "quality": "strong"
+   },
+   "becomes": {
+    "n": 6,
+    "name": "Divergence",
+    "cn": "訟",
+    "pinyin": "sòng",
+    "lines": [
+     0,
+     1,
+     0,
+     1,
+     1,
+     1
+    ],
+    "shows": "You are going deeper and pushing forward at once, and the two cancel.",
+    "image": "☵ water beneath ☰ heaven. Heaven rises, water sinks. The two halves are travelling apart.",
+    "situation": "Two forces inside one figure heading opposite ways, so the friction here is structural. The counsel is to stop at the halfway point and to decline the great river, because a dispute carried to its end costs more than whatever was in dispute.",
+    "lower": {
+     "trigram": "water",
+     "symbol": "☵",
+     "name": "The Abysmal",
+     "quality": "danger"
+    },
+    "upper": {
+     "trigram": "heaven",
+     "symbol": "☰",
+     "name": "The Creative",
+     "quality": "strong"
+    }
+   }
+  }
+ ],
+ "dissent": true,
+ "dissent_note": "The Challenger would run the one practice after the gate's belief rather than at step 2 (question oag-ea-practice).",
+ "scorecard": {
+  "3": "pass",
+  "4": "pass",
+  "5": "pass, with the record switched off",
+  "6": "pass; inside blocks the job gates the EA practice"
+ },
+ "positions": [
+  "oag-sketch-order",
+  "oag-daemon-step",
+  "oag-gate",
+  "oag-release",
+  "oag-restart",
+  "oag-record"
+ ],
+ "questions": [
+  "oag-ea-practice",
+  "oag-record",
+  "oag-main-order"
+ ],
+ "built": "johnair01/bars-engine pull request #263",
+ "falsification_tests": {
+  "7": "pass",
+  "8": "pass",
+  "9": "pass",
+  "10": "open, on Wendell's steps list"
+ },
+ "outcome": "Built on the recommended options; three questions on the board.",
+ "subagent_tokens": 0
+}
