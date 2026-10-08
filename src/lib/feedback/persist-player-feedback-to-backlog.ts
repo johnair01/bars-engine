@@ -4,6 +4,7 @@
  */
 import { db } from '@/lib/db'
 import { mirrorCertFeedbackLine } from '@/lib/feedback/mirror-cert-feedback-line'
+import { buildFeedbackTitle } from '@/lib/feedback/feedback-title'
 
 export type PlayerFeedbackSource =
   | 'share_your_signal'
@@ -22,20 +23,6 @@ export type PersistPlayerFeedbackInput = {
   context?: Record<string, unknown>
   area?: 'rules' | 'ux' | 'tech' | 'lore' | 'social' | 'other'
   severity?: 'low' | 'medium' | 'high' | 'blocking'
-}
-
-function titleForFeedback(source: PlayerFeedbackSource, questId: string | undefined, feedback: string): string {
-  const label =
-    source === 'share_your_signal'
-      ? 'Share Your Signal'
-      : source === 'site_signal_nav'
-        ? 'Site signal'
-        : source === 'certification'
-          ? `Cert: ${questId ?? 'quest'}`
-          : 'Player feedback'
-  const first = feedback.split('\n').find((l) => l.trim().length > 0)?.trim() ?? feedback.trim()
-  const snippet = first.length > 100 ? `${first.slice(0, 97)}…` : first
-  return `${label}: ${snippet || '(no text)'}`.slice(0, 200)
 }
 
 function descriptionBlock(
@@ -65,7 +52,7 @@ export async function persistPlayerFeedbackToBacklog(
   const feedback = input.feedback.trim()
   if (!feedback) return { error: 'Empty feedback' }
 
-  const title = titleForFeedback(input.source, input.questId, feedback)
+  const title = buildFeedbackTitle(input.source, input.questId, feedback)
   const description = descriptionBlock(input, feedback)
 
   try {

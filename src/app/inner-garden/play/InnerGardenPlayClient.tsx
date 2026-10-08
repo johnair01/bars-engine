@@ -31,6 +31,7 @@ function sendControl(iframe: HTMLIFrameElement | null, action: 'press' | 'releas
 export function InnerGardenPlayClient({ importPayload }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [bridgeState, setBridgeState] = useState<BridgeState>('loading')
+  const [resultBarId, setResultBarId] = useState<string | null>(null)
   const [notice, setNotice] = useState('Loading Inner Garden...')
 
   const gameUrl = useMemo(() => '/inner-garden-game/index.html?embedded=1', [])
@@ -53,7 +54,11 @@ export function InnerGardenPlayClient({ importPayload }: Props) {
         throw new Error(body.error || 'Completion failed')
       }
 
-      return response.json() as Promise<{ resultBarId: string }>
+      return response.json() as Promise<{
+        resultBarId: string
+        resultBarTitle?: string
+        inHand?: boolean
+      }>
     }
 
     function onMessage(event: MessageEvent) {
@@ -77,7 +82,14 @@ export function InnerGardenPlayClient({ importPayload }: Props) {
         setNotice('Saving harvested result...')
         saveCompletion(data)
           .then((result) => {
-            setNotice(`Harvest saved to Vault: ${result.resultBarId}`)
+            // A raw CUID told the player nothing and offered nothing. Name the
+            // BAR, say where it went, and link to the page that can plant it.
+            setNotice(
+              result.inHand
+                ? `${result.resultBarTitle ?? 'Your harvest'} is in your Hand.`
+                : `${result.resultBarTitle ?? 'Your harvest'} is in your Vault.`
+            )
+            setResultBarId(result.resultBarId)
           })
           .catch((error: Error) => {
             setBridgeState('error')
@@ -96,6 +108,17 @@ export function InnerGardenPlayClient({ importPayload }: Props) {
         <div>
           <p className="font-semibold">Inner Garden</p>
           <p className="text-[11px] text-emerald-200/65">{notice}</p>
+          {/* The ritual now hands you the BAR instead of printing its id: open it
+              to plant it in the Garden. Closes "I should have the option to plant
+              the BAR once I've completed the ritual." */}
+          {resultBarId && (
+            <a
+              href={`/bars/${resultBarId}`}
+              className="mt-0.5 inline-block text-[11px] font-medium text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
+            >
+              Open it to plant it →
+            </a>
+          )}
         </div>
         <div
           className="rounded border border-emerald-800/60 px-2 py-1 text-[10px] uppercase tracking-wider text-emerald-200/80"

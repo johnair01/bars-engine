@@ -35,21 +35,45 @@ type Idea = { id: number; text: string; fate: Fate }
 export function BrainstormFlow({
   onClose,
   onCarryForward,
+  onPersistCandidates,
+  initialIdeas,
 }: {
   onClose: () => void
   /** In-ritual: persist the distilled "play" texts (e.g. each via commitTask). */
   onCarryForward?: (texts: string[]) => void
+  /**
+   * In-ritual: hand the whole field back to the host so it outlives this modal.
+   * Player signal: "we need be abel to see the brainstormed taks hen we are
+   * choosing the 5 that will stay with us. Otherwise we'll have to pull from
+   * memory." The dump used to be component state and died on close.
+   */
+  onPersistCandidates?: (candidates: Array<{ text: string; fate: Fate }>) => void
+  /** Rehydrates the field when the player reopens the brainstorm the same day. */
+  initialIdeas?: Array<{ text: string; fate: Fate }>
 }) {
   const [step, setStep] = useState<Step>('dump')
-  const [ideas, setIdeas] = useState<Idea[]>([])
+  const [ideas, setIdeas] = useState<Idea[]>(() =>
+    (initialIdeas ?? []).map((c, i) => ({ id: i + 1, text: c.text, fate: c.fate }))
+  )
   const [input, setInput] = useState('')
-  const [nextId, setNextId] = useState(1)
+  const [nextId, setNextId] = useState((initialIdeas?.length ?? 0) + 1)
 
   const raw = ideas.filter((i) => i.fate === 'raw')
   const play = ideas.filter((i) => i.fate === 'play')
   const atPlayCap = play.length >= MAX_PLAY
 
+  const persist = () => {
+    onPersistCandidates?.(ideas.map((i) => ({ text: i.text, fate: i.fate })))
+  }
+
+  /** Every exit persists — dismissing the sheet must not discard the field. */
+  const close = () => {
+    persist()
+    onClose()
+  }
+
   const carryForward = () => {
+    persist()
     if (onCarryForward) onCarryForward(play.map((i) => i.text))
     else onClose()
   }
@@ -69,7 +93,7 @@ export function BrainstormFlow({
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
       style={{ background: 'rgba(0,0,0,0.62)' }}
-      onClick={onClose}
+      onClick={close}
       role="dialog"
       aria-modal="true"
     >
