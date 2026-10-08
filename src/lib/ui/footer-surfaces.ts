@@ -19,7 +19,7 @@ const FOOTER_EXACT: ReadonlySet<string> = new Set([
   '/speaking',
   '/coaching',
   '/succession',
-  '/on-your-show',
+  '/podcast',
   '/campaigns',
   '/launch',
   '/awaken',
@@ -33,6 +33,7 @@ const FOOTER_EXACT: ReadonlySet<string> = new Set([
 /** Public route families. */
 const FOOTER_PREFIXES: readonly string[] = [
   '/mastering-allyship/',
+  '/podcast/',
   '/deck/sales',
   '/campaign/the-crossing',
 ]
