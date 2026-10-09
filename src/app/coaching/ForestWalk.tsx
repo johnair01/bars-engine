@@ -14,6 +14,8 @@ import {
   keptSentence,
 } from '@/lib/coaching/coaching-map'
 import type { MapState } from '@/lib/coaching/coaching-map'
+import { EMPTY_WORDS, NAMING, YOUR_WORDS_HASH, canSend, wordsMailto } from '@/lib/coaching/your-words'
+import type { YourWords } from '@/lib/coaching/your-words'
 
 import { ThreeTwoOneDemo } from './ThreeTwoOneDemo'
 
@@ -79,6 +81,8 @@ export function ForestWalk() {
   const [booking, setBooking] = useState(false)
   const [path, setPath] = useState<'clean' | null>(null)
   const [copied, setCopied] = useState(false)
+  const [words, setWords] = useState<YourWords>(EMPTY_WORDS)
+  const [wordsOpen, setWordsOpen] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const moved = useRef(false)
 
@@ -94,8 +98,14 @@ export function ForestWalk() {
   }
 
   // A link to /coaching#book, from anywhere on the site or the 3-2-1, opens the centre with the prices showing.
+  // A link to /coaching#your-words, the one Wendell sends past clients, opens it with the testimonial ask showing.
   useEffect(() => {
     const check = () => {
+      if (window.location.hash === YOUR_WORDS_HASH) {
+        setScreen('centre')
+        setWordsOpen(true)
+        return
+      }
       if (window.location.hash !== BOOK_HREF) return
       moved.current = true
       setScreen('centre')
@@ -117,6 +127,10 @@ export function ForestWalk() {
   useEffect(() => {
     if (booking) document.getElementById('book')?.scrollIntoView({ block: 'nearest' })
   }, [booking])
+
+  useEffect(() => {
+    if (wordsOpen && window.location.hash === YOUR_WORDS_HASH) document.getElementById('your-words')?.scrollIntoView({ block: 'start' })
+  }, [wordsOpen, screen])
 
   const edit = <K extends keyof MapState>(key: K, patch: Partial<MapState[K]>) =>
     setMap((m) => ({ ...m, [key]: { ...m[key], ...patch } }))
@@ -371,6 +385,76 @@ export function ForestWalk() {
                     <p className="mt-1 text-sm leading-relaxed text-emerald-100/70">{tool.body}</p>
                   </div>
                 ))}
+              </div>
+            </details>
+
+            <details
+              id="your-words"
+              open={wordsOpen}
+              onToggle={(e) => setWordsOpen(e.currentTarget.open)}
+              className="scroll-mt-20 rounded-2xl border border-emerald-200/15 bg-black/40 p-5 backdrop-blur-sm"
+            >
+              <summary className="cursor-pointer text-base font-semibold text-emerald-50">Have you worked with me?</summary>
+              <div className="mt-4 space-y-4">
+                <p className="text-sm leading-relaxed text-emerald-100/75">
+                  I&rsquo;d love to hear what it was like. A few lines in your own words helps the next person decide
+                  whether to sit down with me. You choose whether I can quote you, and how you&rsquo;re named.
+                </p>
+                <label className="block space-y-1.5">
+                  <span className="block text-sm font-medium text-emerald-50">What did you come in with?</span>
+                  <textarea
+                    rows={2}
+                    className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
+                    value={words.before}
+                    placeholder="Optional."
+                    onChange={(e) => setWords((w) => ({ ...w, before: e.target.value }))}
+                  />
+                </label>
+                <label className="block space-y-1.5">
+                  <span className="block text-sm font-medium text-emerald-50">What changed?</span>
+                  <textarea
+                    rows={3}
+                    className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
+                    value={words.changed}
+                    onChange={(e) => setWords((w) => ({ ...w, changed: e.target.value }))}
+                  />
+                </label>
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium text-emerald-50">If I quote you, how should I name you?</legend>
+                  {NAMING.map((n) => (
+                    <label key={n.id} className="flex items-center gap-3 text-sm text-emerald-100/85">
+                      <input
+                        type="radio"
+                        name="naming"
+                        checked={words.naming === n.id}
+                        onChange={() => setWords((w) => ({ ...w, naming: n.id }))}
+                        className="accent-amber-200"
+                      />
+                      {n.label}
+                    </label>
+                  ))}
+                </fieldset>
+                {(words.naming === 'full' || words.naming === 'first') && (
+                  <label className="block space-y-1.5">
+                    <span className="block text-sm font-medium text-emerald-50">Your name, as you&rsquo;d like it shown</span>
+                    <input
+                      className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
+                      value={words.name}
+                      onChange={(e) => setWords((w) => ({ ...w, name: e.target.value }))}
+                    />
+                  </label>
+                )}
+                {canSend(words) ? (
+                  <a href={wordsMailto(words)} className={`${go_on} inline-block`}>
+                    Send it to me
+                  </a>
+                ) : (
+                  <p className="text-sm text-emerald-100/55">Write what changed and pick how you&rsquo;re named, and a send button appears.</p>
+                )}
+                <p className="text-xs leading-relaxed text-emerald-100/55">
+                  This opens an email from you to me with your words in it, so you see exactly what I get. Nothing is
+                  saved on this page.
+                </p>
               </div>
             </details>
 
