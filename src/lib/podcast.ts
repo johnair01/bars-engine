@@ -184,6 +184,8 @@ export function parseVtt(vtt: string): TranscriptParagraph[] {
   return paragraphs
 }
 
+const TRANSCRIPTS_DIR = path.join('content', 'podcast', 'transcripts')
+
 export async function getEpisodeTranscript(episode: PodcastEpisode): Promise<TranscriptParagraph[]> {
   if (!episode.transcriptPath) return []
   const relative = path.normalize(episode.transcriptPath).replace(/^([/\\])+/, '')
@@ -192,7 +194,9 @@ export async function getEpisodeTranscript(episode: PodcastEpisode): Promise<Tra
     return []
   }
   try {
-    return parseVtt(await readFile(path.join(process.cwd(), relative), 'utf8'))
+    // A fixed prefix keeps the build's file tracer to the transcripts folder.
+    const file = path.join(process.cwd(), 'content', 'podcast', 'transcripts', path.relative(TRANSCRIPTS_DIR, relative))
+    return parseVtt(await readFile(file, 'utf8'))
   } catch (error) {
     console.error('[podcast] could not read transcript', { relative, error })
     return []
