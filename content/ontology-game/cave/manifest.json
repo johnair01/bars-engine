@@ -1,5 +1,5 @@
 {
-  "note": "The Cave of Lessons asset manifest (DESIGN.md). Game data names these ids, never file paths. Every asset lists its source and licence (council position c3d-cc0-only). status: built, planned. Every anchor on the figure gets its own chamber, shaped from spots.json (c3d-regions-first overruled 2026-10-09).",
+  "note": "The Cave of Lessons asset manifest (DESIGN.md). Game data names these ids, never file paths. Every asset lists its source and licence (council position c3d-cc0-only). status: built, planned. Every anchor on the figure is a portal; the chamber is one generic shape dressed by the charge, channel and face named at the portal (c3d-spot-shape overruled 2026-10-09). spots.json's shape fields are unused.",
   "assets": [
     {
       "id": "body.figure",

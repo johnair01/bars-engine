@@ -35,24 +35,30 @@ walk is the cycle itself.
 Passing a daemon by its lesson, the done test for the first slice, is the passage: the daemon steps aside because
 the player knows its job and who it works for.
 
-## A chamber for every spot
+## The body's markers are portals, and the chamber forms from the charge
 
-Wendell overruled grouping places into regions (board, 9 October, `c3d-regions-first`): "Let's have the chamber change
-to meet the spot. Branching off if there are multiple body sensations with portals or paths that connect them."
+Two board rulings of 9 October shape this. On `c3d-regions-first` (overruled): "Let's have the chamber change to meet
+the spot. Branching off if there are multiple body sensations with portals or paths that connect them." On
+`c3d-spot-shape` (overruled, 18:53): the chamber's feeling matches the energy the player brings, so it is not made until
+the charge, the elemental channel and the face are known. Chambers stay generic for now, and the markers on the body are
+portals for the charge, not pictures of the body part.
 
-**The chamber meets the spot.** Every named place on the figure (`body/build_figure.py`, `ANCHORS`, about fifty) gets
-its own chamber, shaped from the place itself **(choice: how a place sets the shape)**:
+**A marker is a portal.** Every named place on the figure (`body/build_figure.py`, `ANCHORS`) is a doorway into the
+cave. Where the player taps says where the charge lives; it does not shape the chamber. `spots.json` keeps each place's
+words and position so the portal sits on the right spot and the scan is saved there. Its width, height, length and bend
+(day 2) are no longer used for the chamber.
 
-- **Width and height** follow the body's girth at that height: the throat is a narrow tube, the chest a wide vault,
-  the belly a deep round hollow. The figure script already holds these radii (`TRUNK` and the limb sizes).
-- **Length and bend** follow the body part: a limb is a long passage that runs along the arm or leg; the head is a
-  small domed cave.
-- **Front or back** sets the light: a place on the front surface is lit from ahead, a place on the back from behind,
-  so "my heart" and "my upper back" feel like two sides of one place.
+**The chamber forms from the energy brought in.** At the portal, before going in, the player names what they bring
+**(choice: this order)**:
 
-So one chamber is never built by hand. A script makes a small kit of pieces in Blender (wall rings, floor, pool, gate
-stones, portal arch), and the page bends and scales the kit to the spot's numbers when the player enters. Every spot
-works from day one, and no spot is "not open yet".
+1. The charge: tightness, tension, numbness, strength or something else (the body map's textures).
+2. The elemental channel: fire, water, wood, metal or earth (`CLEAN_UP_MOVES`).
+3. The face: one of the six game masters, from the game's faces primer.
+
+Only then does the chamber appear, one generic shape every time, dressed in that energy: the charge sets the walls,
+the channel sets the light and the pool, the face sets the gate. With these three moved to the portal, the mouth and
+the pool still run the sensation and the practice, and the gate still runs the six game masters' gate, but they start
+from what the player already named **(choice)**.
 
 **Several sensations branch into paths.** A body scan can name more than one place, and the body map already joins
 the marks of one sitting with a line (`body-map.js`, "chest, then jaw"). In the cave, each place the player names is a
@@ -69,10 +75,11 @@ spot **(choice)**.
 
 - **The chamber kit** is made by one Blender script, `cave/build_kit.py`, the same way `build_figure.py` makes the
   figure: `pip install bpy` (5.2.2 runs on the cloud's Python 3.13), no Blender window, exported as one `cave-kit.glb`
-  and committed. The page shapes the kit to each spot and switches the texture and element looks with materials and
-  light, so fifty spots, five textures and five elements need one file.
-- **Spot shapes** come from a table, `cave/spots.json`, written by the same script from the figure's anchors and
-  radii: each spot's width, height, length, bend and side. The page reads it, so the figure and the cave always agree.
+  and committed. The page builds one generic chamber from the kit and dresses it with the charge, channel and face
+  the player names at the portal, so every portal and every combination needs one file.
+- **Portals** come from a table, `cave/spots.json`, written by the same script from the figure's anchors: each
+  place's words, position and side. The page reads it, so the figure and the cave always agree. Its shape fields are
+  left over from day 2 and unused since `c3d-spot-shape` was overruled.
 - **The daemon** is built by script from fused rounded shapes like the figure, with no face, so the seven daemons
   share one body and differ by colour, posture and what they carry **(choice)**. TRELLIS.2 on his Mac stays out of
   the first slice (`c3d-meshy-alternatives`).
@@ -94,7 +101,7 @@ spot **(choice)**.
 |---|---|---|
 | 1 (today) | This design and the manifest | Opus |
 | 2 (done 9 Oct) | `build_kit.py` builds the kit and `spots.json`; the page dives in from the figure at any spot and walks the five places. Built: `cave-kit.glb` (17 KB), `spots.json` (79 places), `cave.js`, `cave-test.mjs`; page at `/ontology-game/cave`. Daemon and gate are stand-ins until days 3 and 4 | Sonnet |
-| 3 | Paths and portals between the sensations of one sitting; the texture and element looks | Sonnet |
+| 3 | One generic chamber in place of the spot shapes; the portal asks charge, channel and face, then the chamber forms in that look; paths and portals between the sensations of one sitting | Sonnet |
 | 4 | The daemon figure and the passage; the words wired from the copied tables | Opus |
 | 5 | Phone tests (size, frame rate, one-finger walk) and a playable link on his steps list | Sonnet |
 | 6 and 7 | His play, and the fixes his steers ask for | Sonnet |
@@ -103,6 +110,8 @@ spot **(choice)**.
 
 - By the end of day 2: the kit loads under 3 MB, and a chamber shaped for the throat, the heart and a hand each walks at
   phone size in the browser test.
+- By the end of day 3: every portal opens the same chamber, and two scans with different charge, channel and face
+  look different in the browser test.
 - By the end of day 5: a scan naming two places opens two chambers joined by a path, and a player can go in, through
   both chambers and out, with the scan saved.
 - By the end of the week: Wendell has walked his own scan through its chambers and passed one daemon; the week's measured cost is
