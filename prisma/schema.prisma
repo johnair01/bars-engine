@@ -829,6 +829,10 @@ model TapTheVeinDailySession {
   /// what was brainstormed instead of making the player recall it from memory.
   /// Shape: [{ text: string, fate: "raw"|"play"|"composted" }]
   brainstormCandidates      Json?            @map("brainstorm_candidates")
+  /// TTV-MENU: the morning menu — bridges for kept lines, and the frozen copy the
+  /// council reads once sealed. Never holds the free write (`mm-raw`).
+  /// Shape: { lines: { [key]: { lensGoalId } }, sealedAt, sealed: [...] }
+  morningMenu               Json?            @map("morning_menu")
   committedTaskCount        Int              @default(0)
   // Session lifecycle
   status                    String           @default("open") // open|sealed|abandoned

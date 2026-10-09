@@ -34,6 +34,7 @@ import { CultivationCard } from '@/components/ui/CultivationCard'
 import { TaskCard } from './TaskCard'
 import { TaskActionSheet, type SheetAction } from './TaskActionSheet'
 import { BrainstormFlow } from '@/components/brainstorm/BrainstormFlow'
+import { MenuPhase } from './MenuPhase'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -42,9 +43,10 @@ const body = 'var(--bars-font-body)'
 const purple = 'var(--bars-liminal)'
 
 // Morning sequence: tap the vein (free-write) → brainstorm (dump → distill the
-// moves) → commit (review the committed cards) → work → seal.
-type Phase = 'open' | 'freewrite' | 'brainstorm' | 'commit' | 'work' | 'seal'
-const PHASES: Phase[] = ['open', 'freewrite', 'brainstorm', 'commit', 'work', 'seal']
+// moves) → commit (review the committed cards) → menu (bridge each kept line to
+// a Lens goal and seal it for the council, TTV-MENU) → work → seal.
+type Phase = 'open' | 'freewrite' | 'brainstorm' | 'commit' | 'menu' | 'work' | 'seal'
+const PHASES: Phase[] = ['open', 'freewrite', 'brainstorm', 'commit', 'menu', 'work', 'seal']
 
 type Props = {
   initial: TtvToday
@@ -268,9 +270,11 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               onCommit={handleCommit}
               onUseCandidate={setDraft}
               onReopenBrainstorm={() => setPhase('brainstorm')}
-              onNext={() => setPhase('work')}
+              onNext={() => setPhase('menu')}
             />
           )}
+
+          {phase === 'menu' && <MenuPhase onDone={() => setPhase('work')} />}
 
           {phase === 'work' && (
             <WorkPhase
@@ -281,6 +285,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               vibulons={vibulons}
               pending={pending}
               onOpenMenu={(t) => setMenuTask(t)}
+              onOpenMorningMenu={() => setPhase('menu')}
               onSeal={() => run(() => sealSession(), () => setPhase('seal'))}
             />
           )}
@@ -716,7 +721,7 @@ function CommitPhase({
 
       <div style={{ marginTop: 'auto' }}>
         <PrimaryCta onClick={onNext} disabled={count === 0}>
-          Carry these into the day →
+          Make today&rsquo;s menu →
         </PrimaryCta>
       </div>
     </>
@@ -731,6 +736,7 @@ function WorkPhase({
   vibulons,
   pending,
   onOpenMenu,
+  onOpenMorningMenu,
   onSeal,
 }: {
   tasks: TtvTaskDTO[]
@@ -740,6 +746,7 @@ function WorkPhase({
   vibulons: number
   pending: boolean
   onOpenMenu: (t: TtvTaskDTO) => void
+  onOpenMorningMenu: () => void
   onSeal: () => void
 }) {
   const setForToday = liveTasks.length
@@ -774,6 +781,14 @@ function WorkPhase({
       <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', textAlign: 'center', margin: '16px 0 0' }}>
         Tap a card · start · complete · carry · compost · assign · upgrade
       </p>
+
+      <button
+        type="button"
+        onClick={onOpenMorningMenu}
+        style={{ marginTop: 10, fontFamily: mono, fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: purple, background: 'none' }}
+      >
+        Today&rsquo;s menu for the council →
+      </button>
 
       <div style={{ marginTop: 'auto' }}>
         <button

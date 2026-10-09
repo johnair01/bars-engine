@@ -475,6 +475,21 @@ Set these in the backend service's environment:
 
 ---
 
+## Council menu export
+
+The six-faces council reads Wendell's sealed Tap the Vein morning menu from
+`GET /api/tap-the-vein/menu` (TTV-MENU). The response holds his kept lines and
+the Lens goal each is bridged to, never the free write.
+
+| Variable | Required | Meaning |
+|----------|----------|---------|
+| `COUNCIL_MENU_TOKEN` | yes, for the export | Shared secret. The council sends `Authorization: Bearer <COUNCIL_MENU_TOKEN>`. Generate with `openssl rand -hex 32`. |
+| `COUNCIL_MENU_PLAYER_ID` | yes, for the export | The player whose menu the council reads. |
+
+Without both, the route answers `503` to every caller.
+
+---
+
 ## Cron Jobs
 
 ### `CRON_SECRET`

@@ -120,6 +120,7 @@
     "test:vault-compost": "tsx src/lib/__tests__/vault-compost.test.ts",
     "test:shadow321-name-resolution": "npx tsx src/lib/__tests__/shadow321-name-resolution.test.ts",
     "test:npc321-merge-excerpt": "npx tsx src/lib/__tests__/npc321-merge-excerpt.test.ts",
+    "test:ttv-menu": "npx tsx src/lib/tap-the-vein/__tests__/menu.test.ts",
     "test:vitest": "vitest run",
     "test:inner-garden-game": "node scripts/smoke-inner-garden-game.mjs",
     "test:onboarding-tokens": "npx tsx src/lib/__tests__/onboarding-tokens.parse.test.ts",
