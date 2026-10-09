@@ -3,17 +3,19 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { BOOK_HREF, DOORS, FEELINGS, PLACES, STATIONS, TEXTURES } from '@/lib/coaching/coaching-map'
+import type { StationId } from '@/lib/coaching/coaching-map'
 import {
-  BOOK_HREF,
-  DOORS,
-  EMPTY_MAP,
-  FEELINGS,
-  PLACES,
-  TEXTURES,
-  composeMap,
-  keptSentence,
-} from '@/lib/coaching/coaching-map'
-import type { MapState } from '@/lib/coaching/coaching-map'
+  EMPTY_FOUND,
+  FACES,
+  FROM_GAME_HASH,
+  LIFE_DOMAINS,
+  composeFound,
+  foundLines,
+  readFromGame,
+  strategy,
+} from '@/lib/coaching/forest-path'
+import type { Found } from '@/lib/coaching/forest-path'
 import { EMPTY_WORDS, NAMING, YOUR_WORDS_HASH, canSend, wordsMailto } from '@/lib/coaching/your-words'
 import type { YourWords } from '@/lib/coaching/your-words'
 
@@ -23,24 +25,58 @@ import { ThreeTwoOneDemo } from './ThreeTwoOneDemo'
  * The forest walk: the coaching page as a space the visitor enters
  * (Wendell, 2026-10-09: "I want it to feel like they are entering a space. The
  * forest. The center of which is what they've been looking for the whole time").
- * The design is content/coaching-game/6FACE_PASS2_2026-10-09.md.
+ * Pass 2 (content/coaching-game/6FACE_PASS2_2026-10-09.md) made the forest; pass 3
+ * (6FACE_PASS3_2026-10-09.md) gives it two ways in, from his board answers of
+ * 20:42 that day.
  *
- * Four screens on the way in, each with one act: the edge (step in), where it
- * sits in the body, what it is like, and the clearing (which feeling, and the
- * visitor's own words). The centre gives their words back, with Wendell beside
- * them and one door. The prices sit one tap behind that door, all four at once
- * (cg-money), and "I know what I need" on the edge goes straight there (cg-skip).
+ * A visitor who knows what they are working on names it in their own words and
+ * where in their life it sits, then takes a short tour of how Wendell works
+ * (cf-fast-lane, cf-tour). A visitor who does not walks in: where it sits in the
+ * body, what it is like, which feeling is loudest and its job, the belief in the
+ * way, the life domain, and the level of help, as one of six faces (cf-forest).
+ * The ontology game can do the finding instead and hand its result back through
+ * /coaching#from-game (cf-game-handoff). The walk follows the five moves, with
+ * choosing a face as Grow Up and booking as Show Up (cf-paths), and the moves as
+ * practices open up only once the visitor has asked to book.
+ *
+ * The centre gives back what they found, offers a strategy, shows Wendell, and has
+ * one door; the prices sit one tap behind it, all four at once (cf-one-door,
+ * cg-money). /coaching#book opens them directly.
  *
  * Everything stays in component state: no account, no request, no AI
  * (cg-browser-only). Motion runs only for visitors who have not asked for
- * reduced motion, and each new screen moves focus to its heading (WCAG 2.3.3
- * and 2.4.3, the Protector's report in that pass).
+ * reduced motion, and each new screen moves focus to its heading (cf-protections).
  */
 
-type Screen = 'edge' | 'where' | 'like' | 'clearing' | 'centre'
+type Screen = 'edge' | 'name' | 'tour' | 'where' | 'like' | 'clearing' | 'belief' | 'domain' | 'face' | 'centre'
 
 /** How far in each screen is, from 0 at the edge to 4 at the centre. Drives the scene. */
-const DEPTH: Record<Screen, number> = { edge: 0, where: 1, like: 2, clearing: 3, centre: 4 }
+const DEPTH: Record<Screen, number> = {
+  edge: 0,
+  name: 1.5,
+  tour: 3,
+  where: 1,
+  like: 1.5,
+  clearing: 2,
+  belief: 2.5,
+  domain: 3,
+  face: 3.5,
+  centre: 4,
+}
+
+/** The move each screen belongs to, shown small above its heading (cf-moves-shape). */
+const MOVE: Record<Screen, string> = {
+  edge: 'Coaching with Wendell Britt',
+  name: 'Wake up · name it',
+  tour: 'Open up · how I work',
+  where: 'Wake up · what is here',
+  like: 'Wake up · what is here',
+  clearing: 'Open up · it has a job',
+  belief: 'Clean up · what is in the way',
+  domain: 'Clean up · where it lives',
+  face: 'Grow up · the help you need',
+  centre: 'Show up · sit down with me',
+}
 
 const TIERS = [
   { price: '$250', href: 'https://calendly.com/wendell-britt/coaching-250' },
@@ -50,10 +86,13 @@ const TIERS = [
 ] as const
 
 /**
- * The practices, unchanged from the page they came from. They now sit in a fold at
- * the centre, so nobody reads them on the way in (the Skeptic's report: attention
- * falls off below the first screen).
+ * Words from past clients for the tour. Empty until someone sends theirs through
+ * "Have you worked with me?" and agrees to be quoted (cf-your-words); the tour
+ * shows nothing in their place, and invents nothing (cf-tour).
  */
+const TESTIMONIALS: ReadonlyArray<{ words: string; name: string }> = []
+
+/** The practices, unchanged from the page they came from, in a fold at the centre. */
 const TOOLS = [
   {
     name: 'The 3-2-1',
@@ -69,19 +108,30 @@ const TOOLS = [
   },
 ] as const
 
+/** What each move is for once a call is booked (cf-paths: "more useful for people AFTER they have booked"). */
+const BEFORE_WE_MEET: Record<StationId, string> = {
+  wake: 'When it shows up before our call, notice where it sits in your body.',
+  open: 'Let the feeling tell you what it is for.',
+  clean: 'If a person or a part of you has charge on it, try the 3-2-1.',
+  grow: 'Pick one small practice and keep it daily.',
+  show: 'Bring the move that has to be yours. We start there.',
+}
+
 const chip =
   'rounded-full border border-emerald-200/25 bg-black/40 px-4 py-2 text-base text-emerald-50 backdrop-blur-sm transition-colors hover:border-amber-200/70 focus-visible:border-amber-200 focus-visible:outline-none'
+const chipOn = 'border-amber-200/80 bg-amber-200/15'
 const quiet = 'text-sm text-emerald-100/70 underline underline-offset-4 hover:text-emerald-50'
 const go_on =
   'rounded-full bg-amber-200 px-6 py-3 text-base font-semibold text-[#14110a] transition-colors hover:bg-amber-100 disabled:bg-white/10 disabled:text-white/40'
+const field =
+  'w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none'
 
 export function ForestWalk() {
   const [screen, setScreen] = useState<Screen>('edge')
-  const [map, setMap] = useState<MapState>(EMPTY_MAP)
+  const [found, setFound] = useState<Found>(EMPTY_FOUND)
   const [booking, setBooking] = useState(false)
-  const [path, setPath] = useState<'clean' | null>(null)
+  const [tryClean, setTryClean] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [words, setWords] = useState<YourWords>(EMPTY_WORDS)
   const [wordsOpen, setWordsOpen] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const moved = useRef(false)
@@ -97,16 +147,28 @@ export function ForestWalk() {
     setBooking(true)
   }
 
-  // A link to /coaching#book, from anywhere on the site or the 3-2-1, opens the centre with the prices showing.
-  // A link to /coaching#your-words, the one Wendell sends past clients, opens it with the testimonial ask showing.
+  const set = (patch: Partial<Found>) => setFound((f) => ({ ...f, ...patch }))
+
+  // /coaching#book, from anywhere on the site or the 3-2-1, opens the centre with the prices showing.
+  // /coaching#your-words, the link Wendell sends past clients, opens it with the testimonial ask showing.
+  // /coaching#from-game?channel=…&face=…, from the ontology game's last screen, carries its result in
+  // and picks up the walk at the belief (cf-game-handoff).
   useEffect(() => {
     const check = () => {
-      if (window.location.hash === YOUR_WORDS_HASH) {
+      const hash = window.location.hash
+      if (hash === YOUR_WORDS_HASH) {
         setScreen('centre')
         setWordsOpen(true)
         return
       }
-      if (window.location.hash !== BOOK_HREF) return
+      if (hash.startsWith(FROM_GAME_HASH)) {
+        const game = readFromGame(hash)
+        if (game) setFound((f) => ({ ...f, ...game }))
+        moved.current = true
+        setScreen('belief')
+        return
+      }
+      if (hash !== BOOK_HREF) return
       moved.current = true
       setScreen('centre')
       setBooking(true)
@@ -132,12 +194,9 @@ export function ForestWalk() {
     if (wordsOpen && window.location.hash === YOUR_WORDS_HASH) document.getElementById('your-words')?.scrollIntoView({ block: 'start' })
   }, [wordsOpen, screen])
 
-  const edit = <K extends keyof MapState>(key: K, patch: Partial<MapState[K]>) =>
-    setMap((m) => ({ ...m, [key]: { ...m[key], ...patch } }))
-
-  async function copyWords() {
+  async function copyFound() {
     try {
-      await navigator.clipboard.writeText(composeMap(map))
+      await navigator.clipboard.writeText(composeFound(found))
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2500)
     } catch {
@@ -145,14 +204,39 @@ export function ForestWalk() {
     }
   }
 
-  const feeling = FEELINGS.find((f) => f.name === map.open.feeling)
-  const carried = (['wake', 'open', 'clean'] as const).map((id) => keptSentence(id, map)).filter(Boolean) as string[]
+  const feeling = FEELINGS.find((f) => f.name === found.feeling)
+  const carried = foundLines(found)
   const depth = DEPTH[screen]
 
   const H = (children: ReactNode) => (
     <h2 ref={heading} tabIndex={-1} className="text-2xl font-semibold leading-snug text-emerald-50 outline-none sm:text-3xl">
       {children}
     </h2>
+  )
+  const move = <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-200/70">{MOVE[screen]}</p>
+
+  const faceCards = (toCentre: boolean) => (
+    <div className="grid gap-2.5">
+      {FACES.map((f) => (
+        <button
+          key={f.colour}
+          type="button"
+          aria-pressed={found.face === f.colour}
+          onClick={() => {
+            set({ face: f.colour })
+            if (toCentre) go('centre')
+          }}
+          className={`rounded-2xl border border-emerald-200/20 bg-black/45 p-4 text-left backdrop-blur-sm transition-colors hover:border-amber-200/70 ${
+            found.face === f.colour ? chipOn : ''
+          }`}
+        >
+          <span className="block text-base text-emerald-50">&ldquo;{f.sounds}&rdquo;</span>
+          <span className="mt-1 block text-sm text-amber-100/80">
+            {f.plain}, the {f.face}
+          </span>
+        </button>
+      ))}
+    </div>
   )
 
   return (
@@ -167,25 +251,99 @@ export function ForestWalk() {
       <div
         key={screen}
         className={`relative z-10 mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-10 motion-safe:animate-[forest-in_700ms_ease-out] sm:px-6 ${
-          screen === 'centre' ? 'justify-start' : 'justify-center'
+          screen === 'centre' || screen === 'tour' || screen === 'face' ? 'justify-start' : 'justify-center'
         }`}
       >
         {screen === 'edge' && (
           <div className="space-y-7 text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-200/70">
-              Coaching with Wendell Britt
-            </p>
+            {move}
             {H(<>Whatever brought you here came with you.</>)}
             <p className="text-base leading-relaxed text-emerald-100/80">
-              Walk in a little way with it. Three small steps take a few minutes, and at the centre is the help that
-              fits. What you write stays in this tab, with no account and no AI.
+              At the centre of this forest is the help that fits it. If you know what you are working on, tell me. If
+              not, walk in a little way and find it. What you write stays in this tab, with no account and no AI.
             </p>
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-3">
               <button type="button" onClick={() => go('where')} className={go_on}>
-                Step in
+                Help me find it
+              </button>
+              <button type="button" onClick={() => go('name')} className={`${chip} px-6 py-3`}>
+                I know what I&rsquo;m working on
+              </button>
+              <a href="/ontology-game" className={`${quiet} mt-2`}>
+                Or find it in the ontology game, and bring it back here
+              </a>
+            </div>
+          </div>
+        )}
+
+        {screen === 'name' && (
+          <div className="space-y-6">
+            {move}
+            {H(<>What do you want help with?</>)}
+            <label className="block space-y-2">
+              <span className="block text-base leading-relaxed text-emerald-100/80">
+                Say it your way. A sentence or two is enough, and it is what we start from.
+              </span>
+              <textarea
+                rows={3}
+                className={field}
+                value={found.need}
+                onChange={(e) => set({ need: e.target.value })}
+              />
+            </label>
+            <fieldset className="space-y-3">
+              <legend className="text-base text-emerald-50">Where in your life is it?</legend>
+              <div className="flex flex-wrap gap-2.5">
+                {LIFE_DOMAINS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    aria-pressed={found.domain === d}
+                    onClick={() => set({ domain: found.domain === d ? '' : d })}
+                    className={`${chip} ${found.domain === d ? chipOn : ''}`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <div className="flex flex-wrap items-center gap-5">
+              <button type="button" onClick={() => go('tour')} disabled={!found.need.trim()} className={go_on}>
+                Show me how you work
               </button>
               <button type="button" onClick={openBooking} className={quiet}>
-                I know what I need
+                Take me to the prices
+              </button>
+            </div>
+          </div>
+        )}
+
+        {screen === 'tour' && (
+          <div className="space-y-6 pt-6">
+            {move}
+            {H(<>How I work</>)}
+            <p className="text-base leading-relaxed text-emerald-100/85">
+              Wherever you are stuck, a feeling is doing a job. I use Emotional Alchemy, my map of five emotional
+              energies, to find which one and put it to work for you.
+            </p>
+            <p className="text-base leading-relaxed text-emerald-100/85">
+              I coach at six levels, from what you feel in your body to the whole system you live in. If one of these
+              sounds like you, pick it.
+            </p>
+            {faceCards(false)}
+            {TESTIMONIALS.length > 0 && (
+              <div className="space-y-3">
+                {TESTIMONIALS.map((q) => (
+                  <blockquote key={q.words} className="rounded-2xl border border-amber-100/15 bg-black/45 p-4">
+                    <p className="font-serif text-lg leading-relaxed text-amber-50">&ldquo;{q.words}&rdquo;</p>
+                    <footer className="mt-2 text-sm text-emerald-100/60">{q.name}</footer>
+                  </blockquote>
+                ))}
+              </div>
+            )}
+            <div className="text-center">
+              <button type="button" onClick={() => go('centre')} className={go_on}>
+                Walk to the centre
               </button>
             </div>
           </div>
@@ -193,18 +351,11 @@ export function ForestWalk() {
 
         {screen === 'where' && (
           <div className="space-y-6">
+            {move}
             {H(<>Take one slow breath. Think of what has been stuck. Where do you feel it?</>)}
             <div className="flex flex-wrap gap-2.5">
               {PLACES.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => {
-                    edit('wake', { place: p })
-                    go('like')
-                  }}
-                  className={chip}
-                >
+                <button key={p} type="button" onClick={() => go('like')} className={chip}>
                   {p}
                 </button>
               ))}
@@ -217,18 +368,11 @@ export function ForestWalk() {
 
         {screen === 'like' && (
           <div className="space-y-6">
-            {H(<>What is it like, there in your {map.wake.place}?</>)}
+            {move}
+            {H(<>What is it like, there?</>)}
             <div className="flex flex-wrap gap-2.5">
               {TEXTURES.map((x) => (
-                <button
-                  key={x}
-                  type="button"
-                  onClick={() => {
-                    edit('wake', { texture: x })
-                    go('clearing')
-                  }}
-                  className={chip}
-                >
+                <button key={x} type="button" onClick={() => go('clearing')} className={chip}>
                   {x}
                 </button>
               ))}
@@ -238,15 +382,16 @@ export function ForestWalk() {
 
         {screen === 'clearing' && (
           <div className="space-y-6">
+            {move}
             {H(<>Which feeling is loudest in you right now?</>)}
             <div className="flex flex-wrap gap-2.5">
               {FEELINGS.map((f) => (
                 <button
                   key={f.name}
                   type="button"
-                  aria-pressed={map.open.feeling === f.name}
-                  onClick={() => edit('open', { feeling: f.name })}
-                  className={`${chip} ${map.open.feeling === f.name ? 'border-amber-200/80 bg-amber-200/15' : ''}`}
+                  aria-pressed={found.feeling === f.name}
+                  onClick={() => set({ feeling: f.name })}
+                  className={`${chip} ${found.feeling === f.name ? chipOn : ''}`}
                 >
                   {f.name}
                 </button>
@@ -257,38 +402,117 @@ export function ForestWalk() {
                 <span className="block text-base leading-relaxed text-amber-50">{feeling.job}</span>
                 <span className="block text-base font-medium text-emerald-50">{feeling.question}</span>
                 <input
-                  className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
-                  value={map.open.answer}
+                  className={field}
+                  value={found.answer}
                   placeholder="A few words is enough."
-                  onChange={(e) => edit('open', { answer: e.target.value })}
+                  onChange={(e) => set({ answer: e.target.value })}
                 />
               </label>
             )}
             <div className="flex flex-wrap items-center gap-5">
-              <button type="button" onClick={() => go('centre')} disabled={!keptSentence('open', map)} className={go_on}>
-                Carry it in
+              <button type="button" onClick={() => go('belief')} disabled={!feeling} className={go_on}>
+                Walk on
               </button>
-              <button type="button" onClick={() => go('centre')} className={quiet}>
+              <button type="button" onClick={() => go('belief')} className={quiet}>
                 Walk on without saying
               </button>
             </div>
           </div>
         )}
 
+        {screen === 'belief' && (
+          <div className="space-y-6">
+            {move}
+            {found.fromGame && (feeling || found.face) && (
+              <p className="text-sm leading-relaxed text-emerald-100/75">
+                You brought{' '}
+                {[feeling?.name.toLowerCase(), found.face && `the ${FACES.find((f) => f.colour === found.face)?.plain} face`]
+                  .filter(Boolean)
+                  .join(' and ')}{' '}
+                from the game. The belief you held stays in the game, so write it here if you want it with you.
+              </p>
+            )}
+            {H(<>When you try to move on this, what does a part of you say?</>)}
+            <label className="block space-y-2">
+              <span className="block text-base leading-relaxed text-emerald-100/80">
+                It often sounds like a rule. &ldquo;If I try, I&rsquo;ll be found out.&rdquo; &ldquo;I&rsquo;m not ready
+                yet.&rdquo;
+              </span>
+              <input className={field} value={found.belief} onChange={(e) => set({ belief: e.target.value })} />
+            </label>
+            <div className="flex flex-wrap items-center gap-5">
+              <button type="button" onClick={() => go('domain')} disabled={!found.belief.trim()} className={go_on}>
+                Walk on
+              </button>
+              <button type="button" onClick={() => go('domain')} className={quiet}>
+                I can&rsquo;t tell yet
+              </button>
+            </div>
+          </div>
+        )}
+
+        {screen === 'domain' && (
+          <div className="space-y-6">
+            {move}
+            {H(<>Where in your life does it show up most?</>)}
+            <div className="flex flex-wrap gap-2.5">
+              {LIFE_DOMAINS.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  aria-pressed={found.domain === d}
+                  onClick={() => {
+                    set({ domain: d })
+                    go('face')
+                  }}
+                  className={`${chip} ${found.domain === d ? chipOn : ''}`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            <button type="button" onClick={() => go('face')} className={quiet}>
+              Everywhere, or I can&rsquo;t say
+            </button>
+          </div>
+        )}
+
+        {screen === 'face' && (
+          <div className="space-y-6 pt-6">
+            {move}
+            {H(<>Which of these sounds most like what you need?</>)}
+            {faceCards(true)}
+            <button type="button" onClick={() => go('centre')} className={quiet}>
+              {found.face ? 'Keep this one and walk to the centre' : 'I’m not sure'}
+            </button>
+          </div>
+        )}
+
         {screen === 'centre' && (
           <div className="space-y-8 pt-6">
-            {carried.length > 0 ? (
-              <div className="space-y-3 text-center">
-                {H(<>This is what you carried in.</>)}
-                {carried.map((s) => (
-                  <p key={s} className="font-serif text-xl leading-relaxed text-amber-50 sm:text-2xl">
-                    {s}
+            <div className="space-y-4 text-center">
+              {move}
+              {H(carried.length > 0 ? <>This is what you carried in.</> : <>You are at the centre.</>)}
+            </div>
+            {carried.length > 0 && (
+              <dl className="space-y-3">
+                {carried.map((l) => (
+                  <div key={l.label}>
+                    <dt className="text-xs uppercase tracking-[0.2em] text-emerald-200/60">{l.label}</dt>
+                    <dd className="font-serif text-xl leading-relaxed text-amber-50">{l.text}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+
+            {carried.length > 0 && (
+              <div className="space-y-2 rounded-2xl border border-amber-100/15 bg-black/45 p-5 backdrop-blur-sm">
+                <h3 className="text-base font-semibold text-amber-50">How we would work on it</h3>
+                {strategy(found).map((line) => (
+                  <p key={line} className="text-base leading-relaxed text-emerald-50/90">
+                    {line}
                   </p>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center">
-                {H(<>You are at the centre.</>)}
               </div>
             )}
 
@@ -341,7 +565,7 @@ export function ForestWalk() {
                     ))}
                   </div>
                   {carried.length > 0 && (
-                    <button type="button" onClick={copyWords} className={quiet}>
+                    <button type="button" onClick={copyFound} className={quiet}>
                       {copied ? 'Copied' : 'Copy what I carried in'}
                     </button>
                   )}
@@ -349,32 +573,37 @@ export function ForestWalk() {
               )}
             </div>
 
-            <details className="group rounded-2xl border border-emerald-200/15 bg-black/40 p-5 backdrop-blur-sm">
-              <summary className="cursor-pointer text-base font-semibold text-emerald-50">Other paths from here</summary>
-              <ul className="mt-4 space-y-3">
-                <li>
-                  <button type="button" onClick={() => setPath(path === 'clean' ? null : 'clean')} className="text-left">
-                    <span className="block text-sm font-semibold text-amber-100">Face what has charge on it &rarr;</span>
-                    <span className="block text-sm leading-relaxed text-emerald-100/65">
-                      Free, right here. The 3-2-1, the practice I use in sessions.
-                    </span>
-                  </button>
-                </li>
-                {path === 'clean' && (
-                  <li id="try-321" className="scroll-mt-6">
-                    <ThreeTwoOneDemo bookHref={BOOK_HREF} anchorId="try-321" onOwn={(own) => edit('clean', own)} />
-                  </li>
-                )}
-                {[...DOORS.wake, ...DOORS.open, ...DOORS.grow, ...DOORS.show].map((door) => (
-                  <li key={door.href}>
-                    <a href={door.href} className="block">
-                      <span className="block text-sm font-semibold text-amber-100">{door.label} &rarr;</span>
-                      <span className="block text-sm leading-relaxed text-emerald-100/65">{door.detail}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </details>
+            {booking && (
+              <details id="before-we-meet" className="rounded-2xl border border-emerald-200/15 bg-black/40 p-5 backdrop-blur-sm">
+                <summary className="cursor-pointer text-base font-semibold text-emerald-50">Before we meet: five moves</summary>
+                <ol className="mt-4 space-y-4">
+                  {STATIONS.map((s) => (
+                    <li key={s.id} className="space-y-1">
+                      <span className="block text-sm font-semibold text-amber-100">{s.move}</span>
+                      <span className="block text-sm leading-relaxed text-emerald-100/75">{BEFORE_WE_MEET[s.id]}</span>
+                      {s.id === 'clean' && (
+                        <>
+                          <button type="button" onClick={() => setTryClean(!tryClean)} className={quiet}>
+                            {tryClean ? 'Close the 3-2-1' : 'Try the 3-2-1 here, free'}
+                          </button>
+                          {tryClean && (
+                            <div id="try-321" className="scroll-mt-6 pt-2">
+                              <ThreeTwoOneDemo bookHref={BOOK_HREF} anchorId="try-321" />
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {DOORS[s.id].map((door) => (
+                        <a key={door.href} href={door.href} className="block pt-1">
+                          <span className="block text-sm text-amber-100/90 underline underline-offset-4">{door.label}</span>
+                          <span className="block text-xs leading-relaxed text-emerald-100/60">{door.detail}</span>
+                        </a>
+                      ))}
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
 
             <details className="rounded-2xl border border-emerald-200/15 bg-black/40 p-5 backdrop-blur-sm">
               <summary className="cursor-pointer text-base font-semibold text-emerald-50">What we work with</summary>
@@ -388,75 +617,7 @@ export function ForestWalk() {
               </div>
             </details>
 
-            <details
-              id="your-words"
-              open={wordsOpen}
-              onToggle={(e) => setWordsOpen(e.currentTarget.open)}
-              className="scroll-mt-20 rounded-2xl border border-emerald-200/15 bg-black/40 p-5 backdrop-blur-sm"
-            >
-              <summary className="cursor-pointer text-base font-semibold text-emerald-50">Have you worked with me?</summary>
-              <div className="mt-4 space-y-4">
-                <p className="text-sm leading-relaxed text-emerald-100/75">
-                  I&rsquo;d love to hear what it was like. A few lines in your own words helps the next person decide
-                  whether to sit down with me. You choose whether I can quote you, and how you&rsquo;re named.
-                </p>
-                <label className="block space-y-1.5">
-                  <span className="block text-sm font-medium text-emerald-50">What did you come in with?</span>
-                  <textarea
-                    rows={2}
-                    className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
-                    value={words.before}
-                    placeholder="Optional."
-                    onChange={(e) => setWords((w) => ({ ...w, before: e.target.value }))}
-                  />
-                </label>
-                <label className="block space-y-1.5">
-                  <span className="block text-sm font-medium text-emerald-50">What changed?</span>
-                  <textarea
-                    rows={3}
-                    className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
-                    value={words.changed}
-                    onChange={(e) => setWords((w) => ({ ...w, changed: e.target.value }))}
-                  />
-                </label>
-                <fieldset className="space-y-2">
-                  <legend className="text-sm font-medium text-emerald-50">If I quote you, how should I name you?</legend>
-                  {NAMING.map((n) => (
-                    <label key={n.id} className="flex items-center gap-3 text-sm text-emerald-100/85">
-                      <input
-                        type="radio"
-                        name="naming"
-                        checked={words.naming === n.id}
-                        onChange={() => setWords((w) => ({ ...w, naming: n.id }))}
-                        className="accent-amber-200"
-                      />
-                      {n.label}
-                    </label>
-                  ))}
-                </fieldset>
-                {(words.naming === 'full' || words.naming === 'first') && (
-                  <label className="block space-y-1.5">
-                    <span className="block text-sm font-medium text-emerald-50">Your name, as you&rsquo;d like it shown</span>
-                    <input
-                      className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
-                      value={words.name}
-                      onChange={(e) => setWords((w) => ({ ...w, name: e.target.value }))}
-                    />
-                  </label>
-                )}
-                {canSend(words) ? (
-                  <a href={wordsMailto(words)} className={`${go_on} inline-block`}>
-                    Send it to me
-                  </a>
-                ) : (
-                  <p className="text-sm text-emerald-100/55">Write what changed and pick how you&rsquo;re named, and a send button appears.</p>
-                )}
-                <p className="text-xs leading-relaxed text-emerald-100/55">
-                  This opens an email from you to me with your words in it, so you see exactly what I get. Nothing is
-                  saved on this page.
-                </p>
-              </div>
-            </details>
+            <YourWordsFold open={wordsOpen} onOpen={setWordsOpen} />
 
             <div className="text-center">
               <button type="button" onClick={() => go('edge')} className={quiet}>
@@ -569,4 +730,83 @@ function pine(x: number, base: number, h: number, w: number) {
   const t = w * 0.05
   const trunk = `M${x - t},${base} L${x - t},${base - h * 0.16} L${x + t},${base - h * 0.16} L${x + t},${base} Z`
   return [...tiers, trunk].join(' ')
+}
+
+/**
+ * "Have you worked with me?": the testimonial ask at the centre (cf-your-words).
+ * It writes an email from the visitor to Wendell and stores nothing.
+ */
+function YourWordsFold({ open, onOpen }: { open: boolean; onOpen: (open: boolean) => void }) {
+  const [words, setWords] = useState<YourWords>(EMPTY_WORDS)
+  return (
+    <details
+      id="your-words"
+      open={open}
+      onToggle={(e) => onOpen(e.currentTarget.open)}
+      className="scroll-mt-20 rounded-2xl border border-emerald-200/15 bg-black/40 p-5 backdrop-blur-sm"
+    >
+      <summary className="cursor-pointer text-base font-semibold text-emerald-50">Have you worked with me?</summary>
+      <div className="mt-4 space-y-4">
+        <p className="text-sm leading-relaxed text-emerald-100/75">
+          I&rsquo;d love to hear what it was like. A few lines in your own words helps the next person decide
+          whether to sit down with me. You choose whether I can quote you, and how you&rsquo;re named.
+        </p>
+        <label className="block space-y-1.5">
+          <span className="block text-sm font-medium text-emerald-50">What did you come in with?</span>
+          <textarea
+            rows={2}
+            className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
+            value={words.before}
+            placeholder="Optional."
+            onChange={(e) => setWords((w) => ({ ...w, before: e.target.value }))}
+          />
+        </label>
+        <label className="block space-y-1.5">
+          <span className="block text-sm font-medium text-emerald-50">What changed?</span>
+          <textarea
+            rows={3}
+            className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
+            value={words.changed}
+            onChange={(e) => setWords((w) => ({ ...w, changed: e.target.value }))}
+          />
+        </label>
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium text-emerald-50">If I quote you, how should I name you?</legend>
+          {NAMING.map((n) => (
+            <label key={n.id} className="flex items-center gap-3 text-sm text-emerald-100/85">
+              <input
+                type="radio"
+                name="naming"
+                checked={words.naming === n.id}
+                onChange={() => setWords((w) => ({ ...w, naming: n.id }))}
+                className="accent-amber-200"
+              />
+              {n.label}
+            </label>
+          ))}
+        </fieldset>
+        {(words.naming === 'full' || words.naming === 'first') && (
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-medium text-emerald-50">Your name, as you&rsquo;d like it shown</span>
+            <input
+              className="w-full rounded-xl border border-emerald-200/25 bg-black/50 px-4 py-3 text-base text-emerald-50 placeholder:text-emerald-100/40 focus:border-amber-200 focus:outline-none"
+              value={words.name}
+              onChange={(e) => setWords((w) => ({ ...w, name: e.target.value }))}
+            />
+          </label>
+        )}
+        {canSend(words) ? (
+          <a href={wordsMailto(words)} className={`${go_on} inline-block`}>
+            Send it to me
+          </a>
+        ) : (
+          <p className="text-sm text-emerald-100/55">Write what changed and pick how you&rsquo;re named, and a send button appears.</p>
+        )}
+        <p className="text-xs leading-relaxed text-emerald-100/55">
+          This opens an email from you to me with your words in it, so you see exactly what I get. Nothing is
+          saved on this page.
+        </p>
+      </div>
+    </details>
+  )
 }
