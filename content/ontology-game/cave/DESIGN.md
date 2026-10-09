@@ -35,33 +35,51 @@ walk is the cycle itself.
 Passing a daemon by its lesson, the done test for the first slice, is the passage: the daemon steps aside because
 the player knows its job and who it works for.
 
-## The first three chambers
+## A chamber for every spot
 
-The figure has about fifty named places (`body/build_figure.py`, `ANCHORS`). A chamber per place is too many for a
-first draft, so places are grouped into regions and each region has one chamber **(choice)**. The first slice opens
-three regions:
+Wendell overruled grouping places into regions (board, 9 October, `c3d-regions-first`): "Let's have the chamber change
+to meet the spot. Branching off if there are multiple body sensations with portals or paths that connect them."
 
-- **Throat:** throat, jaw, mouth, back of the neck.
-- **Heart:** heart, upper chest, sternum, both sides of the chest, upper back, between the shoulder blades.
-- **Belly:** belly, lower belly, solar plexus, both sides of the ribs, mid and lower back.
+**The chamber meets the spot.** Every named place on the figure (`body/build_figure.py`, `ANCHORS`, about fifty) gets
+its own chamber, shaped from the place itself **(choice: how a place sets the shape)**:
 
-These are where people most often place emotion in the body in Nummenmaa and colleagues' body maps of emotion
-(*PNAS*, 2014), and the body map's own example is "chest, then jaw" (`body-map.js`). A tap anywhere else says that
-chamber is not open yet and offers to carry on in the original game's flow, so no player is stuck **(choice)**.
+- **Width and height** follow the body's girth at that height: the throat is a narrow tube, the chest a wide vault,
+  the belly a deep round hollow. The figure script already holds these radii (`TRUNK` and the limb sizes).
+- **Length and bend** follow the body part: a limb is a long passage that runs along the arm or leg; the head is a
+  small domed cave.
+- **Front or back** sets the light: a place on the front surface is lit from ahead, a place on the back from behind,
+  so "my heart" and "my upper back" feel like two sides of one place.
+
+So one chamber is never built by hand. A script makes a small kit of pieces in Blender (wall rings, floor, pool, gate
+stones, portal arch), and the page bends and scales the kit to the spot's numbers when the player enters. Every spot
+works from day one, and no spot is "not open yet".
+
+**Several sensations branch into paths.** A body scan can name more than one place, and the body map already joins
+the marks of one sitting with a line (`body-map.js`, "chest, then jaw"). In the cave, each place the player names is a
+chamber, and each pair named in the same sitting is joined by a path that runs inside the body between them **(choice:
+the path follows the straight line through the body, curved to stay inside the figure)**. At the end of a chamber's
+passage, a portal opens for each other sensation; the player picks which to follow. A sensation the player has walked
+through shows its portal lit on the way back, so the whole scan can be finished in any order.
+
+**Where the paths come from.** The page reads the places named in the current sitting from `OAGBody.marks()`. A new
+sensation named inside the cave (the mouth asks "is anything else showing up?") adds a chamber and a portal on the
+spot **(choice)**.
 
 ## How it is built
 
-- **Chambers** are made by one Blender script, `cave/build_chambers.py`, the same way `build_figure.py` makes the
-  figure: `pip install bpy` (5.2.2 runs on the cloud's Python 3.13), no Blender window, lighting baked into the
-  textures, exported as one `.glb` per chamber and committed. The texture and element looks are switched on the page
-  with materials and light, so three chambers need three files, not three times fifteen.
+- **The chamber kit** is made by one Blender script, `cave/build_kit.py`, the same way `build_figure.py` makes the
+  figure: `pip install bpy` (5.2.2 runs on the cloud's Python 3.13), no Blender window, exported as one `cave-kit.glb`
+  and committed. The page shapes the kit to each spot and switches the texture and element looks with materials and
+  light, so fifty spots, five textures and five elements need one file.
+- **Spot shapes** come from a table, `cave/spots.json`, written by the same script from the figure's anchors and
+  radii: each spot's width, height, length, bend and side. The page reads it, so the figure and the cave always agree.
 - **The daemon** is built by script from fused rounded shapes like the figure, with no face, so the seven daemons
   share one body and differ by colour, posture and what they carry **(choice)**. TRELLIS.2 on his Mac stays out of
   the first slice (`c3d-meshy-alternatives`).
 - **Textures** are script-made or CC0 from Poly Haven, each listed in `cave/manifest.json` with its source and
   licence (`c3d-cc0-only`).
 - **The page** loads three.js r128 from cdnjs, the version `body-map.js` already uses, and the chamber files only
-  when the player enters a chamber. Each chamber stays under about 3 MB (`c3d-phone-budget`).
+  when the player enters a chamber. The kit stays under about 3 MB (`c3d-phone-budget`).
 - **Movement** is one finger: drag to look, tap the glowing marker ahead to walk to the next place. There is no
   joystick, because the walk only goes forward **(choice)**.
 - **Game data** names asset ids from the manifest, never file paths, as in Sprout.
@@ -75,16 +93,17 @@ chamber is not open yet and offers to carry on in the original game's flow, so n
 | Day | Work | Model |
 |---|---|---|
 | 1 (today) | This design and the manifest | Opus |
-| 2 | `build_chambers.py` builds the throat chamber; the page dives in from the figure and walks the five places | Sonnet |
-| 3 | The heart and belly chambers; the texture and element looks | Sonnet |
+| 2 | `build_kit.py` builds the kit and `spots.json`; the page dives in from the figure at any spot and walks the five places | Sonnet |
+| 3 | Paths and portals between the sensations of one sitting; the texture and element looks | Sonnet |
 | 4 | The daemon figure and the passage; the words wired from the copied tables | Opus |
 | 5 | Phone tests (size, frame rate, one-finger walk) and a playable link on his steps list | Sonnet |
 | 6 and 7 | His play, and the fixes his steers ask for | Sonnet |
 
 ## Tests
 
-- By the end of day 2: the throat chamber loads under 3 MB and the walk runs at phone size in the browser test.
-- By the end of day 5: all three chambers pass the same test, and a player can go in, through all five places and
-  out, with the scan saved.
-- By the end of the week: Wendell has walked three chambers and passed one daemon; the week's measured cost is
+- By the end of day 2: the kit loads under 3 MB, and a chamber shaped for the throat, the heart and a hand each walks at
+  phone size in the browser test.
+- By the end of day 5: a scan naming two places opens two chambers joined by a path, and a player can go in, through
+  both chambers and out, with the scan saved.
+- By the end of the week: Wendell has walked his own scan through its chambers and passed one daemon; the week's measured cost is
   recorded beside the estimate of $35 to $100.
