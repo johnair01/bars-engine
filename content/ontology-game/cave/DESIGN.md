@@ -93,7 +93,7 @@ spot **(choice)**.
 | Day | Work | Model |
 |---|---|---|
 | 1 (today) | This design and the manifest | Opus |
-| 2 | `build_kit.py` builds the kit and `spots.json`; the page dives in from the figure at any spot and walks the five places | Sonnet |
+| 2 (done 9 Oct) | `build_kit.py` builds the kit and `spots.json`; the page dives in from the figure at any spot and walks the five places. Built: `cave-kit.glb` (17 KB), `spots.json` (79 places), `cave.js`, `cave-test.mjs`; page at `/ontology-game/cave`. Daemon and gate are stand-ins until days 3 and 4 | Sonnet |
 | 3 | Paths and portals between the sensations of one sitting; the texture and element looks | Sonnet |
 | 4 | The daemon figure and the passage; the words wired from the copied tables | Opus |
 | 5 | Phone tests (size, frame rate, one-finger walk) and a playable link on his steps list | Sonnet |

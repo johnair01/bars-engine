@@ -16,7 +16,7 @@
       "kind": "model",
       "source": "cave/build_kit.py",
       "licence": "own work",
-      "status": "planned",
+      "status": "built",
       "budget_bytes": 3000000,
       "day": 2,
       "pieces": [
@@ -26,7 +26,8 @@
         "gate_stones",
         "portal_arch",
         "path_tube"
-      ]
+      ],
+      "bytes": 16916
     },
     {
       "id": "cave.spots",
@@ -34,7 +35,7 @@
       "kind": "data",
       "source": "cave/build_kit.py, from body/build_figure.py ANCHORS and radii",
       "licence": "own work",
-      "status": "planned",
+      "status": "built",
       "day": 2,
       "fields": [
         "id",
@@ -45,7 +46,8 @@
         "height",
         "length",
         "bend"
-      ]
+      ],
+      "bytes": 19731
     },
     {
       "id": "daemon.figure",
