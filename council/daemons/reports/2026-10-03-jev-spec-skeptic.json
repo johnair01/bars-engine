@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-03",
+  "pass": "jev-spec",
+  "daemon": "skeptic",
+  "face": "challenger",
+  "cast": "49 -> 33",
+  "model": "sonnet",
+  "tokens": "101627",
+  "report": "2026-10-03-jev-spec-skeptic.md",
+  "pairs": [
+    {
+      "n": 1,
+      "claims": [
+        "The Noul docs say the primitive is for yes/no questions and \"does not measure the degree\" [1].",
+        "The docs I opened do not state latency, cost, input limits or accuracy [1]."
+      ],
+      "url": "https://docs.typesafe.ai/primitives/noul.md",
+      "quote": "If the question is really about degree, the value does not measure the degree.",
+      "label": "unlabelled"
+    },
+    {
+      "n": 2,
+      "claims": [
+        "The citation-check cookbook uses a three-way Choice (supports, contradicts, says_nothing) after an exact string match [2].",
+        "**The cookbook's string check is brittle.** It marks truncated or lightly reworded quotes as fabricated [2].",
+        "Add a Choice arm (supports, contradicts, says_nothing) alongside the Noul, per [2]."
+      ],
+      "url": "https://docs.typesafe.ai/cookbooks/citation_check.md",
+      "quote": "a quote that is truncated or lightly reworded comes back as `fabricated`.",
+      "label": "unlabelled"
+    },
+    {
+      "n": 3,
+      "claims": [
+        "Confidence guidance says to \"test with your own data, and adjust\" [3], which invites that overfit."
+      ],
+      "url": "https://docs.typesafe.ai/confidence.md",
+      "quote": "Start with conservative thresholds, test with your own data, and adjust as you observe results.",
+      "label": "unlabelled"
+    },
+    {
+      "n": 4,
+      "claims": [
+        "llms.txt shows a Legal page and an API page that I could not confirm cover limits [4]."
+      ],
+      "url": "https://docs.typesafe.ai/llms.txt",
+      "quote": null,
+      "label": "unlabelled"
+    }
+  ]
+}

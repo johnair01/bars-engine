@@ -21,16 +21,31 @@ ref="${source_spec#*@}"
 [ "$ref" = "$source_spec" ] && ref=main
 
 origin="$(git config --get remote.origin.url 2>/dev/null | sed -E 's#^.*github\.com[:/]##; s#\.git$##')"
+# Printed at every session start, because the moment the reach test exists for is the moment a session
+# is about to ask Wendell something, and no trigger phrase marks it (Wendell, 2026-10-02: "In theory
+# these questions should've triggered the game master agents yes?").
+rule="Standing rule: before you ask Wendell a question whose answer changes what gets built, run it through the six-faces reach test (skill six-faces). Answer it from the record if you can. A question that survives goes to the council board with options, and the chat reply says it is there."
+# The feature pipeline (council/pipeline.yaml), asked for by Wendell on 2026-10-02: "Things that need
+# building should go through a production pipeline managed by the 6 faces".
+pipeline_rule="Standing rule: a new feature starts as a spec kit in .specify/specs/<name>/ from council/spec-kit/ and runs the six-faces pipeline in council/pipeline.yaml. A step only Wendell can take goes on the Your steps tab on the council board (https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho#steps), never into chat."
 lessons() { grep -c '^      - date:' council/faces.yaml 2>/dev/null || echo 0; }
+
+# Merge drivers named in .gitattributes: the board's rows merge by id, and the built page is rebuilt.
+if [ -f council/tools/board_merge.py ]; then
+  git config merge.boardjson.driver "python3 council/tools/board_merge.py %O %A %B" 2>/dev/null
+  git config merge.ours.driver true 2>/dev/null
+fi
 
 if [ "$origin" = "$home_repo" ] && [ -z "${COUNCIL_SOURCE_BASE:-}" ]; then
   echo "Six-faces council: this repo is the home copy ($home_repo). $(lessons) face lessons in council/faces.yaml. Lessons and lens changes are made here."
+  echo "$rule"
+  echo "$pipeline_rule"
   exit 0
 fi
 
 base="${COUNCIL_SOURCE_BASE:-https://raw.githubusercontent.com/$home_repo/$ref}"
 label="$home_repo@$ref"; [ -n "${COUNCIL_SOURCE_BASE:-}" ] && label="$COUNCIL_SOURCE_BASE"
-files="council/faces.yaml .claude/skills/six-faces/SKILL.md council/portable/six-faces/SKILL.md council/tools/voice_lint.py council/hooks/council-sync.sh"
+files="council/faces.yaml council/pipeline.yaml council/spec-kit/spec.md council/spec-kit/plan.md council/spec-kit/tasks.md .claude/skills/six-faces/SKILL.md council/portable/six-faces/SKILL.md council/tools/voice_lint.py council/hooks/council-sync.sh council/daemons/daemons.yaml council/daemons/check_report.py council/iching/hexagrams.yaml council/iching/cast.py council/strands.py council/census.py .claude/agents/daemon-protector.md .claude/agents/daemon-controller.md .claude/agents/daemon-skeptic.md .claude/agents/daemon-fixer.md .claude/agents/daemon-victim.md .claude/agents/daemon-damaged-self.md .claude/agents/daemon-emotional-body.md .claude/agents/daemon-player.md"
 changed=""; failed=""
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 for f in $files; do
@@ -55,4 +70,6 @@ elif [ -n "$changed" ]; then
 else
   echo "Six-faces council: up to date with $label. $(lessons) face lessons."
 fi
+echo "$rule"
+echo "$pipeline_rule"
 exit 0
