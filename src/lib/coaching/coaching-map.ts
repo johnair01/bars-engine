@@ -83,6 +83,9 @@ export const FEELINGS = [
 
 export type FeelingName = (typeof FEELINGS)[number]['name']
 
+/** The page that explains each of the five moves, one anchor per station (cf-moves-walk). */
+export const MOVES_HREF = '/coaching/moves'
+
 /** Where every booking door goes: the tier list on the same page, with all four prices (cg-money). */
 export const BOOK_HREF = '#book'
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
-import { BOOK_HREF, DOORS, FEELINGS, PLACES, STATIONS, TEXTURES } from '@/lib/coaching/coaching-map'
+import { BOOK_HREF, DOORS, FEELINGS, MOVES_HREF, PLACES, STATIONS, TEXTURES } from '@/lib/coaching/coaching-map'
 import type { StationId } from '@/lib/coaching/coaching-map'
 import {
   EMPTY_FOUND,
@@ -35,7 +35,7 @@ import { ThreeTwoOneDemo } from './ThreeTwoOneDemo'
  * body, what it is like, which feeling is loudest and its job, the belief in the
  * way, the life domain, and the level of help, as one of six faces (cf-forest).
  * The ontology game can do the finding instead and hand its result back through
- * /coaching#from-game (cf-game-handoff). The walk follows the five moves, with
+ * /coaching#from-game (cf-game-handoff), belief included. The walk follows the five moves, with
  * choosing a face as Grow Up and booking as Show Up (cf-paths), and the moves as
  * practices open up only once the visitor has asked to book.
  *
@@ -64,18 +64,23 @@ const DEPTH: Record<Screen, number> = {
   centre: 4,
 }
 
-/** The move each screen belongs to, shown small above its heading (cf-moves-shape). */
-const MOVE: Record<Screen, string> = {
-  edge: 'Coaching with Wendell Britt',
-  name: 'Wake up · name it',
-  tour: 'Open up · how I work',
-  where: 'Wake up · what is here',
-  like: 'Wake up · what is here',
-  clearing: 'Open up · it has a job',
-  belief: 'Clean up · what is in the way',
-  domain: 'Clean up · where it lives',
-  face: 'Grow up · the help you need',
-  centre: 'Show up · sit down with me',
+/**
+ * The move each screen belongs to, shown small above its heading (cf-moves-walk). The move's
+ * name links to its explanation on /coaching/moves, in a new tab so the walk keeps its place
+ * (Wendell on cf-moves-walk: "These should be hyperlinks that go to a page that explain what
+ * each of them mean").
+ */
+const MOVE: Record<Screen, { station: StationId; label: string; step: string } | null> = {
+  edge: null,
+  name: { station: 'wake', label: 'Wake up', step: 'name it' },
+  tour: { station: 'open', label: 'Open up', step: 'how I work' },
+  where: { station: 'wake', label: 'Wake up', step: 'what is here' },
+  like: { station: 'wake', label: 'Wake up', step: 'what is here' },
+  clearing: { station: 'open', label: 'Open up', step: 'it has a job' },
+  belief: { station: 'clean', label: 'Clean up', step: 'what is in the way' },
+  domain: { station: 'clean', label: 'Clean up', step: 'where it lives' },
+  face: { station: 'grow', label: 'Grow up', step: 'the help you need' },
+  centre: { station: 'show', label: 'Show up', step: 'sit down with me' },
 }
 
 const TIERS = [
@@ -164,6 +169,8 @@ export function ForestWalk() {
       if (hash.startsWith(FROM_GAME_HASH)) {
         const game = readFromGame(hash)
         if (game) setFound((f) => ({ ...f, ...game }))
+        // The hand-off can carry the visitor's belief; take it out of the address bar once read.
+        window.history.replaceState(null, '', window.location.pathname + window.location.search)
         moved.current = true
         setScreen('belief')
         return
@@ -213,7 +220,27 @@ export function ForestWalk() {
       {children}
     </h2>
   )
-  const move = <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-200/70">{MOVE[screen]}</p>
+  const step = MOVE[screen]
+  const move = (
+    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-200/70">
+      {step ? (
+        <>
+          <a
+            href={`${MOVES_HREF}#${step.station}`}
+            target="_blank"
+            rel="noopener"
+            className="underline decoration-emerald-200/40 underline-offset-4 hover:text-emerald-50"
+          >
+            {step.label}
+            <span className="sr-only"> (what this means, opens in a new tab)</span>
+          </a>{' '}
+          · {step.step}
+        </>
+      ) : (
+        'Coaching with Wendell Britt'
+      )}
+    </p>
+  )
 
   const faceCards = (toCentre: boolean) => (
     <div className="grid gap-2.5">
@@ -423,13 +450,18 @@ export function ForestWalk() {
         {screen === 'belief' && (
           <div className="space-y-6">
             {move}
-            {found.fromGame && (feeling || found.face) && (
+            {found.fromGame && (feeling || found.face || found.belief.trim()) && (
               <p className="text-sm leading-relaxed text-emerald-100/75">
                 You brought{' '}
-                {[feeling?.name.toLowerCase(), found.face && `the ${FACES.find((f) => f.colour === found.face)?.plain} face`]
+                {[
+                  feeling?.name.toLowerCase(),
+                  found.face && `the ${FACES.find((f) => f.colour === found.face)?.plain} face`,
+                  found.belief.trim() && 'the belief you held',
+                ]
                   .filter(Boolean)
-                  .join(' and ')}{' '}
-                from the game. The belief you held stays in the game, so write it here if you want it with you.
+                  .join(', ')
+                  .replace(/, ([^,]*)$/, ' and $1')}{' '}
+                from the game. Change the belief here if it reads differently now.
               </p>
             )}
             {H(<>When you try to move on this, what does a part of you say?</>)}

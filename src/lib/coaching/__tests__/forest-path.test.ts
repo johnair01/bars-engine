@@ -1,7 +1,7 @@
 /**
  * The forest's two ways in: what the visitor found reads back in their own words,
  * the strategy always includes Emotional Alchemy, and the ontology game's hand-off
- * carries only a known channel and face (cf-game-handoff, cf-game-belief).
+ * carries a known channel and face and the belief (cf-game-handoff).
  */
 import assert from 'node:assert/strict'
 import { EMPTY_FOUND, FACES, composeFound, foundLines, readFromGame, strategy } from '../forest-path'
@@ -11,9 +11,13 @@ assert.deepEqual(foundLines(EMPTY_FOUND), [])
 assert.equal(composeFound(EMPTY_FOUND), 'What I found')
 assert.match(strategy(EMPTY_FOUND).join(' '), /Emotional Alchemy/)
 
-// The game's hand-off: channel and face cross over, nothing else does.
-assert.deepEqual(readFromGame('#from-game?channel=Anger&face=Amber'), { feeling: 'Anger', face: 'Amber', fromGame: true })
-assert.deepEqual(readFromGame('#from-game?channel=Rage&face=Plaid&belief=x'), { feeling: '', face: '', fromGame: true })
+// The game's hand-off: only a known channel and face cross over, with the belief.
+assert.deepEqual(readFromGame('#from-game?channel=Anger&face=Amber'), { feeling: 'Anger', face: 'Amber', belief: '', fromGame: true })
+assert.deepEqual(readFromGame('#from-game?channel=Rage&face=Plaid'), { feeling: '', face: '', belief: '', fromGame: true })
+// The belief crosses too (cf-game-belief overruled), trimmed and capped.
+const carried = new URLSearchParams({ channel: 'Fear', face: 'Teal', belief: '  If I rest, it all falls apart.  ' })
+assert.equal(readFromGame(`#from-game?${carried}`)?.belief, 'If I rest, it all falls apart.')
+assert.equal(readFromGame(`#from-game?belief=${'x'.repeat(900)}`)?.belief.length, 500)
 assert.equal(readFromGame('#book'), null)
 
 // The six faces line up with the game's colours.

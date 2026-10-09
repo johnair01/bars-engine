@@ -105,23 +105,28 @@ export const EMPTY_FOUND: Found = {
   fromGame: false,
 }
 
-/** The hash the ontology game's "Take this to coaching" link opens: #from-game?channel=Anger&face=Amber. */
+/** The hash the ontology game's "Take this to coaching" link opens: #from-game?channel=Anger&face=Amber&belief=…. */
 export const FROM_GAME_HASH = '#from-game'
 
+/** The longest belief the hand-off carries; anything past it is cut. */
+const BELIEF_MAX = 500
+
 /**
- * Reads the game's hand-off. Only the channel and the face cross over; the belief
- * stays in the game, which never stores belief text (oag-map-private), and the
- * visitor writes it again here in their own words (position cf-game-belief).
- * Anything that is not a known channel or face is dropped.
+ * Reads the game's hand-off: the channel, the face and the belief the player
+ * held (Wendell on cf-game-belief, 2026-10-09: "They should be able to carry this
+ * over for ease of use"). Anything that is not a known channel or face is
+ * dropped; the belief is trimmed and capped. The page clears the hash once it is
+ * read, so the belief does not stay in the address bar (cf-game-belief-carried).
  */
-export function readFromGame(hash: string): Pick<Found, 'feeling' | 'face' | 'fromGame'> | null {
+export function readFromGame(hash: string): Pick<Found, 'feeling' | 'face' | 'belief' | 'fromGame'> | null {
   if (!hash.startsWith(FROM_GAME_HASH)) return null
   const params = new URLSearchParams(hash.slice(FROM_GAME_HASH.length).replace(/^\?/, ''))
   const channel = params.get('channel') ?? ''
   const colour = params.get('face') ?? ''
   const feeling = FEELINGS.find((f) => f.name === channel)?.name ?? ''
   const face = FACES.find((f) => f.colour === colour)?.colour ?? ''
-  return { feeling, face, fromGame: true }
+  const belief = (params.get('belief') ?? '').trim().slice(0, BELIEF_MAX)
+  return { feeling, face, belief, fromGame: true }
 }
 
 const t = (s: string) => s.trim()
