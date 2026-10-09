@@ -136,3 +136,24 @@ Not built yet; each is a design pass first, and the questions go on the Council 
 3. **The W.A.V.E. breathing woven into the walk** more closely.
 4. **Branching paths that emerge from blockages in the wave patterns.**
 
+
+## The next build, from the board of 9 October, 20:35
+
+His answers (six-faces-council ledger `2026-10-09-pull-203521.json`; pass `6FACE_PASS_3d-build3_2026-10-09.md`):
+
+- **`cave-spine`: the W.A.V.E. is the path.** The walk through a chamber is Welcome, the four A's, Validate and Exhale,
+  one winding stretch per breath. The five places (sensation, element, daemon, the six stones, release) are no longer
+  the main walk; they open as a side passage when the player blocks. A walk with no block never meets the daemon or
+  the stones.
+- **`cave-labyrinth-form`: one winding path.** Switchbacks and bends with no free turns, so nobody gets lost while a
+  feeling is live. The path branches only where the player blocks.
+- **Standing:** `cave-avatar-self` (a small faceless figure wearing the charge, seen from close behind; hold to walk,
+  drag to look), `cave-breath-in-the-cave` (the cave breathes at an easy pace; an optional hold-to-inhale ring; nothing
+  scored or required), `cave-block-branch` (a block on any W.A.V.E. step opens the side passage, Release returns to the
+  exact spot, blocks nest, the main path stays lit with a lantern where you branched, every block offers a skip) and
+  `cave-detour-kept` (a blocked step stays marked on the saved scan).
+- **Dropped:** `cave-labyrinth-test` was overruled ("I don't really understand the purpose of this"), so no five-person
+  walk is run before he plays. The phone budget in `c3d-phone-budget` still holds in the browser test.
+
+So the doorway still asks the charge and the feeling, the chamber still forms from them, and the gate's six stones move
+inside the block passage.
