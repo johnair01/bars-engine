@@ -11,7 +11,8 @@
 //
 // Public surface, used by game.jsx and the standalone page body.html:
 //   OAGBody.pick()     opens the figure; resolves to { label } or null if closed
-//   OAGBody.record(s)  saves one confirmed scan { location, texture, channel, where }
+//   OAGBody.record(s)  saves one confirmed scan { location, texture, channel, where }; the Cave of Lessons also
+//                      passes blocked and skipped, lists of the W.A.V.E. steps that would not go further
 //   OAGBody.history()  opens the marks over time
 //   OAGBody.marks()    the saved marks, oldest first
 (function () {
@@ -68,6 +69,9 @@
       channel: scan.channel || null,
       where: scan.where || null,
     };
+    // The cave marks which W.A.V.E. steps were blocked on the scan (cave-detour-kept); other callers leave these off.
+    if (Array.isArray(scan.blocked)) mark.blocked = scan.blocked.slice();
+    if (Array.isArray(scan.skipped)) mark.skipped = scan.skipped.slice();
     if (lastPick && lastPick.label.toLowerCase() === label.toLowerCase()) {
       mark.point = lastPick.point;
       mark.anchor = lastPick.anchor;

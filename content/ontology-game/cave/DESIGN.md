@@ -157,3 +157,50 @@ His answers (six-faces-council ledger `2026-10-09-pull-203521.json`; pass `6FACE
 
 So the doorway still asks the charge and the feeling, the chamber still forms from them, and the gate's six stones move
 inside the block passage.
+
+## What the W.A.V.E. build did (9 October 2026, after the board of 20:35)
+
+The doorway is unchanged: the charge page, then the feeling page. After it the chamber is one winding path with a
+stretch for each W.A.V.E. step, in order: Welcome, Acknowledge, Allow, Accept, Appreciate, Validate, Exhale. The
+path comes from a short table in `cave.js` (`STRETCHES`: a length and a sideways wander for each step) and a seed made
+from the place and the charge, so the same scan gives the same cave. Each stretch ends in a switchback to the next,
+and the rows sit far enough apart that the walls never meet, which the browser test measures. Each stretch ends at a
+glowing marker that shows the step's own words, copied from `WAVE_STEPS` in `game.jsx` (lines 1092-1108), with two
+choices: Go on, or "This step won't go further". At Exhale, Go on reads "Come back out", and the camera rises out as before.
+
+- **Blocks branch.** Choosing the block opens a doorway in the wall at that spot and leaves a lantern there. The side
+  passage holds the five places in order (sensation, element, daemon with "Not yet", the six stones, release). Release
+  walks the player back to the exact marker. A block at any of the first four places opens another passage off it; a
+  stack keeps the way back working two deep or more. The main path stays lit with warm stones along its edges. Every
+  card in a side passage also has Skip, which returns to the main path without the block work.
+- **The avatar.** A small faceless figure built by the daemon's own builder at low segment counts (about 10 KB of
+  geometry). It wears the charge: tightness is narrow, tension is tall and taut, numbness is translucent, strength is
+  bright. Each step passed loosens it a little. The camera follows close behind and a little above. Holding a thumb
+  anywhere walks the avatar along the path toward the next marker, and a drag looks around. The avatar only ever
+  stands on the path line.
+- **The breath.** About 11 seconds (4.5 in, 6.5 out). The walls ease in and out by a few percent, the light warms on the
+  exhale, and the element object and the avatar's chest glow with it. A held thumb walks quicker on the inhale and
+  slower on the exhale, never below about half pace, and no step is ever blocked by it. An optional ring turns on from
+  the top left: hold to breathe in, let go to breathe out, and the cave follows. The Calm button, always at the top
+  right, stills the motion and the light pulsing and hides the ring. No breath is scored or required.
+- **The saved scan.** `OAGBody.record` now takes `blocked` and `skipped` lists and keeps them on the mark. A block on a
+  W.A.V.E. step is saved under its step id (`allow`); a block met inside that step's side passage is saved as
+  `allow>sensation`, `allow>daemon` and so on.
+
+Choices this build made that the board did not settle, each of which stands unless Wendell flips it:
+
+- **(choice)** The side passages sit far below the main cave in the same scene, so they can never cross the path's other
+  rows, and the walk into one is a short fade.
+- **(choice)** Skip returns to the main path from any depth, where Release returns one level. A skipped block stays marked
+  as blocked on the scan, and is also listed under `skipped`.
+- **(choice)** The five places each offer "This step won't go further" except Release, which is the way back.
+- **(choice)** The element object stands beside the first stretch, and it answers a tap anywhere on the main path.
+- **(choice)** Walking pace is 0.8 of full when the cave is calm. The ring hands the breath back to the cave's own cycle
+  after 15 seconds untouched.
+- **(choice)** At Exhale the card also holds the paths to other places named in the sitting, and the button to name another,
+  which the old way out held.
+- **(choice)** Passages the player leaves are put away; walking back in, by blocking the same step again, makes a fresh one.
+
+Tests: `cave-test.mjs` now checks the seven stretches in order, the walk on a held thumb, a block and Release, a block
+two deep, a skip, the calm button, the saved blocked steps, the size budget and that the page raises no errors. The kit
+(`cave-kit.glb`) is unchanged at 17 KB; `build_kit.py` needed no new pieces.
