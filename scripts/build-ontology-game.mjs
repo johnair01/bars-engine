@@ -103,10 +103,10 @@ const caveHtml = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>The Cave of Lessons · Ontology Alchemy Game</title>
 <meta name="description" content="Tap where the charge is in your body and go in. The block work, walked as a cave.">
-<style>body{margin:0;background:#0e0e1a}</style>
+<style>html,body{margin:0;background:#0e0e1a;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}html{touch-action:manipulation}</style>
 </head>
 <body>
 <div id="cave-root"></div>

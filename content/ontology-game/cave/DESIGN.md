@@ -204,3 +204,62 @@ Choices this build made that the board did not settle, each of which stands unle
 Tests: `cave-test.mjs` now checks the seven stretches in order, the walk on a held thumb, a block and Release, a block
 two deep, a skip, the calm button, the saved blocked steps, the size budget and that the page raises no errors. The kit
 (`cave-kit.glb`) is unchanged at 17 KB; `build_kit.py` needed no new pieces.
+
+## The walk, rebuilt around the breath (9 October 2026, after Wendell's playtest on his iPhone)
+
+His words: "holding down the screen doesn't trigger the iPhone select features. We want the figure to be more noticeably
+human and walk. And we want to time the walk to the length of the ontology games inhale and exhale. We want the screen to
+change as they move though each of the wave steps and having the information on screen instead of the bottom makes it more
+immersive switching paths was good but also had the same issues." Five changes answer it.
+
+- **A long press does nothing.** No text selection, magnifier or callout menu, no tap highlight, no double-tap zoom, no
+  context menu. The style sheet sets `user-select:none`, `-webkit-touch-callout:none` and a clear tap highlight on the whole
+  page, `touch-action:none` on the canvas and the breath ring (the hold area) and `touch-action:manipulation` on buttons, so
+  they stay tappable. The script cancels `contextmenu`, `selectstart`, `dragstart` and the three `gesture` events, and
+  cancels `touchstart` and `touchmove` on the canvas and the ring with a non-passive listener. Typed text in an input is the
+  one exception. The page template in `scripts/build-ontology-game.mjs` now has `maximum-scale=1,user-scalable=no` in its
+  viewport. **(choice)** The viewport lock covers the whole cave page, including the body-map picker that opens on it.
+- **A jointed human.** The blob is gone. The avatar is built from lathe capsules and one shared sphere: head, neck, torso,
+  pelvis, and on each side an upper and lower arm with a hand and an upper and lower leg with a foot. Sixteen named joints
+  turn (hips, spine, neck, head, and hip, knee, ankle, shoulder, elbow and wrist on each side). It is still faceless and
+  still wears the charge by the same table (tightness drawn in, tension tall and taut, numbness fogged, strength bright) and
+  loosens a step at a time. Its geometry is about 24 KB. **(choice)** It is 3.6 units tall, and the camera sits farther back
+  and higher (6.2 behind, 4.6 up) so the figure and the sign both fit a phone.
+- **The walk is one breath.** The numbers are the game's own: `game.jsx` lines 1330-1331 set `BREATH_IN_MS = 4000` and
+  `BREATH_OUT_MS = 6000`, and `cave.js` reads the same two values. While the player holds, one stretch from one W.A.V.E.
+  marker to the next takes exactly one breath of holding: the first half of the distance on the 4 s inhale and the second half
+  on the 6 s exhale. Footfalls come two a second, so the inhale has 8 steps and the exhale 12, evenly spaced; the inhale
+  strides are therefore longer than the exhale ones. Letting go pauses the walk's clock (and the steps with it); the cave's own
+  breathing carries on. While the player holds, the cave breathes with the walk, so the walls and the light swell on the inhale
+  step. The optional ring still takes over the cave's breath when it is on. The old rule that the walk quickens and slows with
+  the cave's breath is gone, because the walk now has its own fixed rhythm. The walk cycle swings the legs from the hips with
+  the knees bending as each leg comes through, swings the arms against the legs, turns the torso a little and sinks the hips as
+  the legs spread. Standing, the chest swells and the shoulders lift with the breath.
+  - **(choice)** The rows of the path are shorter (12 units, and 36 for Welcome, which has no switchback before it) so a stretch is
+    about 40 units and the strides stay natural at two steps a second. The side passage's five places are 30 units apart for
+    the same reason (one breath of walking each).
+  - **(choice)** Calm still walks, at 0.8 of the clock rate, as before.
+  - **(choice)** The test speed-up is `state.speed`, which scales the walk clock; it is 1 in play.
+- **Each W.A.V.E. step has its own screen.** `STEP_LOOK` in `cave.js` gives each stretch a light colour, a fog and background
+  colour, a fog thickness, an ambient level and a wall openness. **(choice)** The first five light colours are the game's
+  element colours in the order Earth, Fire, Water, Wood, Metal (Welcome, Acknowledge, Allow, Accept, Appreciate), then gold
+  for Validate and daylight for Exhale; the fog brightens and thins, and the walls open from 0.88 to 1.38 of their width as
+  the steps climb. When the avatar leaves a marker the light, fog and openness ease to the next stretch over about a second and
+  a half, with a short surge of light. The walls change spatially too: the rings within a few units past a marker blend into
+  the next stretch's width. Side passages share one violet look. **(choice)** Neighbouring rows still never touch, and the test
+  now measures that with the walls at their widest.
+- **The words are in the scene, and so are the choices.** A step's name and its prompt are drawn on a canvas and hung in the
+  cave as a sprite that faces the camera, above the marker ahead (while walking it slides along the path ahead of the avatar,
+  so the player reads the next step as they go). It is drawn at a constant size on the screen, about nine tenths of the width
+  of a phone, with 20 px words and a 30 px name at 390 by 844. The choices ("Go on", "This step won't go further", Skip, the
+  five places' buttons) are a small translucent card that hangs under the marker's projected position; it is not a bottom sheet
+  and nothing docks to the bottom while walking. The same holds in the side passages: the place name and its question are in
+  the scene and its choices float by the place. The doorway's charge and feeling pages, and the path between places, keep the
+  bottom panel as they were. The same words are also kept as page text that a screen reader hears. **(choice)** In the
+  pool place the element stands farther ahead of the marker, so the card never covers it.
+
+Tests: `cave-test.mjs` keeps its earlier checks (updated where the interface moved) and adds checks for the points above:
+no bottom panel while walking and at a marker, the sign's words, position and type size, a distinct light and fog for each
+stretch with the walls opening, the jointed limbs swinging against each other, a stretch taking one 10 s breath at normal
+speed with 8 footfalls in the inhale and 12 in the exhale, the pause on letting go, the breath numbers matching `game.jsx`,
+and the iOS guards.
