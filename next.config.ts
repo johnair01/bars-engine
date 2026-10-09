@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
       { source: "/podcasts", destination: "/podcast#on-your-show", permanent: true },
       { source: "/hand", destination: "/vault", permanent: true },
       { source: "/hand/:path*", destination: "/vault/:path*", permanent: true },
+      // wendell.masteringallyship.com is on this Vercel project and showed the home page. Its
+      // front door is now the coaching map (position cg-subdomain, content/coaching-game/
+      // 6FACE_PASS1_2026-10-09.md). Temporary, so the address can move if he flips it.
+      {
+        source: "/",
+        has: [{ type: "host", value: "wendell.masteringallyship.com" }],
+        destination: "https://masteringallyship.com/coaching",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {
