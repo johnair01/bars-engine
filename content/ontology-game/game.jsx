@@ -5389,6 +5389,21 @@
                                     ))}
                                 </div>
                             )}
+                            {typeof window !== "undefined" && window.__ontologySite && selectedChannel && (
+                                // Back to the coaching page (coaching pass 3, cf-game-handoff, Wendell
+                                // 9 October 2026: "pass what happened to them in the game to the site
+                                // that then offers a strategy"). The channel, the face and the belief
+                                // cross over (his answer on cf-game-belief: "They should be able to
+                                // carry this over for ease of use"). The belief rides in the link only;
+                                // the game still stores none, and the coaching page clears it from the
+                                // address bar once read.
+                                <div className="mini-section" data-to-coaching>
+                                    <p><strong>Want help with this?</strong> Take what you found to Wendell's coaching page. It carries the feeling, the face and the belief you worked.</p>
+                                    <div className="button-group">
+                                        <button className="secondary" data-to-coaching-go onClick={() => { window.location.href = `/coaching#from-game?${new URLSearchParams({ channel: selectedChannel, face: selectedFace || "", belief: heldBeliefs.length > 0 ? heldBeliefs.join(" / ") : (userBelief || "") })}`; }}>Take this to coaching</button>
+                                    </div>
+                                </div>
+                            )}
                             {lastCycleArchetype && (
                                 // Archetype reflection (classifyArchetype, ported from
                                 // classify_archetypes.py) — shown for every completed cycle,
