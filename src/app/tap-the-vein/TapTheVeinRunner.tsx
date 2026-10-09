@@ -28,6 +28,7 @@ import {
 } from '@/actions/tap-the-vein'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import type { ElementKey } from '@/lib/ui/card-tokens'
+import { LENS_DOMAINS, type LensDomainKey } from '@/lib/lenses/domains'
 import { lensTraceSourceLabel, type LensGoalTrace } from '@/lib/lenses/lineage-types'
 import { ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 import { CultivationCard } from '@/components/ui/CultivationCard'
@@ -52,6 +53,8 @@ type Props = {
   nationName: string | null
   vibulons: number
   campaigns: TtvCampaignOption[]
+  /** The next year lens not yet locked in: one lens a morning (mm-intake-one-a-morning). */
+  lensDomain?: LensDomainKey | null
 }
 
 function countWords(s: string) {
@@ -61,7 +64,7 @@ function isLive(t: TtvTaskDTO) {
   return t.status !== 'composted' && t.status !== 'carried_over'
 }
 
-export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns }: Props) {
+export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -247,6 +250,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               setRawEntry={setRawEntry}
               words={words}
               pending={pending}
+              lensDomain={lensDomain}
               onContinue={() => run(() => saveBrainstorm(rawEntry), () => setPhase('brainstorm'))}
             />
           )}
@@ -427,19 +431,36 @@ function FreewritePhase({
   setRawEntry,
   words,
   pending,
+  lensDomain,
   onContinue,
 }: {
   rawEntry: string
   setRawEntry: (s: string) => void
   words: number
   pending: boolean
+  lensDomain: LensDomainKey | null
   onContinue: () => void
 }) {
+  const lens = lensDomain ? LENS_DOMAINS.find((d) => d.key === lensDomain) : null
   const pct = Math.min(1, words / WORD_FLOOR)
   return (
     <>
       <Eyebrow>Tap the Vein · Free-write</Eyebrow>
       <H1>What&rsquo;s alive this morning?</H1>
+
+      {lens && (
+        <Link
+          href={`/lenses/onboarding?domain=${lens.key}`}
+          style={{ display: 'block', textDecoration: 'none', margin: '12px 0 0', padding: '10px 12px', borderRadius: 10, boxShadow: 'inset 0 0 0 1px var(--bars-line)', background: 'var(--bars-surface-card)' }}
+        >
+          <span style={{ display: 'block', fontFamily: mono, fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: purple }}>
+            This morning&rsquo;s lens · {lens.label}
+          </span>
+          <span style={{ display: 'block', fontFamily: body, fontSize: 13, lineHeight: 1.5, color: 'var(--bars-text-secondary)', marginTop: 4 }}>
+            {lens.prompt} Write this one lens instead, or skip it and free-write below. →
+          </span>
+        </Link>
+      )}
 
       <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', margin: '14px 0 6px' }}>
         Raw · pre-form · unjudged

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
-import { isLensDomainKey } from './domains'
+import { LENS_DOMAIN_KEYS, isLensDomainKey, type LensDomainKey } from './domains'
+import { nextUnvisitedDomain } from './workshop'
 import { normalizeLensWorkshopOptions } from './workshop-options'
 import type {
   LensCadence,
@@ -233,4 +234,20 @@ export async function loadLensesDescentState(): Promise<LensesDescentState | nul
   }))
 
   return { playerName: player.name, parents, drafts: draftDtos }
+}
+
+/** Tomorrow's lens for the Tap the Vein free-write: the first year lens not yet locked or parked. */
+export async function loadNextLensDomain(playerId: string): Promise<LensDomainKey | null> {
+  const [drafts, goals] = await Promise.all([
+    db.lensWorkshopDraft.findMany({
+      where: { playerId, cadence: 'year', parentGoalId: null },
+      select: { domain: true, status: true },
+    }),
+    db.lensGoal.findMany({
+      where: { playerId, cadence: 'year', status: { in: ['active', 'parked'] } },
+      select: { domain: true, status: true },
+    }),
+  ])
+  const next = nextUnvisitedDomain(LENS_DOMAIN_KEYS, drafts, goals)
+  return next && isLensDomainKey(next) ? next : null
 }
