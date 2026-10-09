@@ -116,3 +116,23 @@ spot **(choice)**.
   both chambers and out, with the scan saved.
 - By the end of the week: Wendell has walked his own scan through its chambers and passed one daemon; the week's measured cost is
   recorded beside the estimate of $35 to $100.
+
+## Wendell's playtest notes on day 3 (9 October 2026, evening)
+
+Built the same night (it overrules the portal in "The chamber forms from the energy brought in" above):
+
+- **No face at the doorway.** Players do not know enough about the faces to answer there. The doorway asks the charge and
+  then the feeling, and the face is met at the gate, where the player stands at all six stones ("choosing all 6 faces
+  when you're in the cave is very cool").
+- **One answer per page, and the cave changes with each answer.** The charge page builds the chamber at once in that
+  charge's walls; the feeling page makes its element appear. There is no list of choices and no Go in button.
+- **Each element is its own object, not a recoloured pool** (fire, a pool of water, a tree, a crystal, a boulder). The
+  player can tap it and it answers.
+
+Not built yet; each is a design pass first, and the questions go on the Council Board, not into chat:
+
+1. **A player avatar** instead of first person.
+2. **A labyrinth** in place of the straight passage, so the cave feels immersive.
+3. **The W.A.V.E. breathing woven into the walk** more closely.
+4. **Branching paths that emerge from blockages in the wave patterns.**
+

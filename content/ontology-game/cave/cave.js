@@ -144,7 +144,7 @@
   function buildChamber(A, dress, parts) {
     var THREE = A.THREE, group = new THREE.Group();
     var G = {}; Object.keys(A.kit).forEach(function (k) { G[k] = geomOf(THREE, A.kit[k]); });
-    var tex = lookup(TEXTURES, dress.texture) || TEXTURES[4], ele = lookup(ELEMENTS, dress.element) || ELEMENTS[4], face = lookup(FACES, dress.face) || FACES[0];
+    var tex = lookup(TEXTURES, dress.texture) || TEXTURES[4], ele = lookup(ELEMENTS, dress.element);
     var look = CHARGE_LOOK[dress.texture] || CHARGE_LOOK.other;
     var rock = new THREE.MeshStandardMaterial({ color: tex[2], roughness: 0.95, side: THREE.DoubleSide });
     var n = Math.round(CHAMBER.length / 2), line = centreLine(n), segLen = CHAMBER.length / n;
@@ -168,12 +168,22 @@
       return { id: p.id, step: p.step, pos: pos, yaw: c.yaw, marker: marker };
     });
     var byId = {}; places.forEach(function (p) { byId[p.id] = p; });
-    // The pool takes the channel's element.
-    var poolMat = new THREE.MeshStandardMaterial({ color: ele[3], roughness: 0.3, emissive: ele[3], emissiveIntensity: 0.25 });
-    var pool = new THREE.Mesh(G.pool, poolMat);
-    pool.position.set(byId.pool.pos.x, -h * 0.9, byId.pool.pos.z - segLen);
-    pool.scale.set(Math.min(w * 0.7, 3.2), 1, Math.min(w * 0.7, 3.2));
-    group.add(pool); parts.poolMat = poolMat;
+    // The element stands in the chamber as its own object (a fire, a pool of water, a tree, a crystal, a boulder), the
+    // same every time it appears; the player can tap it. It is not made until the feeling is named.
+    var holder = new THREE.Group();
+    holder.position.set(byId.pool.pos.x, -h * 0.9, byId.pool.pos.z - segLen);
+    group.add(holder); parts.holder = holder;
+    var lamp = new THREE.PointLight(0xffe0b0, 1.1, CHAMBER.length * 3);
+    lamp.position.set(0, h * 0.3, -CHAMBER.length * 0.35);
+    group.add(lamp); parts.lamp = lamp;
+    parts.setElement = function (name) {
+      var e = lookup(ELEMENTS, name);
+      while (holder.children.length) holder.remove(holder.children[0]);
+      var obj = buildElement(THREE, name, Math.min(w * 0.7, 3.2));
+      obj.userData.interact = name; holder.add(obj); parts.elObj = obj;
+      obj.traverse(function (m) { if (m.isMesh) m.userData.interact = name; });
+      lamp.color.setHex(e[3]); parts.dress.element = name; parts.dress.lamp = e[3];
+    };
     // The gate: six standing stones round a ring, one for each face, each in its own colour. They stand dark
     // until the player has stood at them; the face the player brought gets a faint ring from the start.
     parts.stones = [];
@@ -185,21 +195,41 @@
       st.scale.set(Math.min(gr, 3) * 0.5, Math.min(h * 1.1, 4), Math.min(gr, 3) * 0.5);
       st.userData.face = f[0];
       group.add(st); parts.stones.push(st);
-      if (f[0] === dress.face) {
-        var halo = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.04, 8, 24), new THREE.MeshBasicMaterial({ color: f[4], transparent: true, opacity: 0.6 }));
-        halo.rotation.x = Math.PI / 2; halo.position.set(st.position.x, -h * 0.9, st.position.z); group.add(halo);
-      }
     });
     var arch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
     arch.position.set(byId.way_out.pos.x, -h * 0.92, byId.way_out.pos.z - segLen); arch.rotation.y = byId.way_out.yaw;
     arch.scale.set(Math.min(w * 0.8, h * 0.8), Math.min(w * 0.8, h * 0.8), 1);
     group.add(arch); parts.archPos = arch.position.clone();
-    group.add(new THREE.HemisphereLight(face[4], 0x302828, 0.45));
-    var lamp = new THREE.PointLight(ele[3], 1.1, CHAMBER.length * 3);
-    lamp.position.set(0, h * 0.3, -CHAMBER.length * 0.35);
-    group.add(lamp);
-    parts.dress = { wall: tex[2], width: Math.round(w * 100) / 100, fog: look.fog, pool: ele[3], lamp: ele[3], face: face[4] };
+    group.add(new THREE.HemisphereLight(0xffffff, 0x302828, 0.45));
+    parts.dress = { wall: tex[2], width: Math.round(w * 100) / 100, fog: look.fog, element: null, lamp: 0xffe0b0 };
+    if (ele) parts.setElement(ele[0]);
     return { group: group, places: places, byId: byId, line: line };
+  }
+
+  // One object per element, built from rounded shapes (choices): fire is a cluster of flames, water a still pool, wood a
+  // young tree, metal a crystal spire, earth a boulder. Each is the same wherever it appears.
+  function buildElement(THREE, name, r) {
+    var g = new THREE.Group(), e = lookup(ELEMENTS, name);
+    function mat(c, em, ei, rough) { return new THREE.MeshStandardMaterial({ color: c, roughness: rough == null ? 0.7 : rough, emissive: em || 0x000000, emissiveIntensity: ei || 0 }); }
+    function add(geo, m, x, y, z) { var o = new THREE.Mesh(geo, m); o.position.set(x, y, z); g.add(o); return o; }
+    if (name === "Anger") { // Fire: a ring of stones and three flames
+      add(new THREE.TorusGeometry(r * 0.55, r * 0.1, 8, 14), mat(0x4a3a34), 0, r * 0.1, 0).rotation.x = Math.PI / 2;
+      [[0, 1], [0.25, 0.7], [-0.25, 0.75]].forEach(function (f) { var fl = add(new THREE.ConeGeometry(r * 0.2, r * f[1] * 1.5, 10), mat(0xe0602a, 0xff7a20, 0.9), f[0] * r, r * f[1] * 0.75, 0); fl.userData.flame = true; });
+    } else if (name === "Sadness") { // Water: a still pool
+      add(new THREE.CylinderGeometry(r * 0.7, r * 0.75, r * 0.12, 24), mat(0x3a78d0, 0x2a58a0, 0.35, 0.2), 0, r * 0.06, 0);
+      add(new THREE.TorusGeometry(r * 0.72, r * 0.06, 8, 24), mat(0x5a5f6a), 0, r * 0.1, 0).rotation.x = Math.PI / 2;
+    } else if (name === "Joy") { // Wood: a young tree
+      add(new THREE.CylinderGeometry(r * 0.08, r * 0.13, r * 1.4, 8), mat(0x6a4a2a), 0, r * 0.7, 0);
+      add(new THREE.SphereGeometry(r * 0.5, 14, 10), mat(0x4aa84a, 0x2a7a2a, 0.2), 0, r * 1.5, 0);
+      add(new THREE.SphereGeometry(r * 0.3, 12, 8), mat(0x5ac85a, 0x2a7a2a, 0.2), r * 0.3, r * 1.2, r * 0.1);
+    } else if (name === "Fear") { // Metal: a crystal spire
+      add(new THREE.OctahedronGeometry(r * 0.35, 0), mat(0xc8ccd4, 0x6a7080, 0.25, 0.15), 0, r * 0.9, 0).scale.set(0.6, 2, 0.6);
+      add(new THREE.OctahedronGeometry(r * 0.2, 0), mat(0xaab0bc, 0x6a7080, 0.2, 0.15), r * 0.4, r * 0.35, 0).scale.set(0.6, 1.6, 0.6);
+    } else { // Earth: a boulder with moss
+      add(new THREE.DodecahedronGeometry(r * 0.5, 0), mat(0xa8844a, 0x4a3a1a, 0.1, 0.95), 0, r * 0.4, 0).scale.set(1.2, 0.8, 1);
+      add(new THREE.SphereGeometry(r * 0.2, 10, 8), mat(0x6a8a4a), r * 0.2, r * 0.75, 0).scale.set(1.2, 0.5, 1);
+    }
+    return g;
   }
 
   // The daemon: one body for all seven, no face, fused rounded shapes. It differs by colour, posture and what it carries.
@@ -293,7 +323,7 @@
     var camera = new THREE.PerspectiveCamera(70, 1, 0.1, 200);
 
     // The sitting. sens[i] = { id, spot, texture, element, face, daemon, stepAside, gate: [faces stood at], saved }.
-    var state = { sens: [], cur: null, place: 0, look: { yaw: 0, pitch: 0 }, done: [], mode: "portal", dress: null, path: null };
+    var state = { touched: false, sens: [], cur: null, place: 0, look: { yaw: 0, pitch: 0 }, done: [], mode: "portal", dress: null, path: null };
     var ch = null, parts = {}, daemonFig = null, daemonT = null, orbs = [], goal = null, flight = null;
     var cam = { x: 0, y: 0, z: 0, yaw: 0 };
 
@@ -334,6 +364,11 @@
         daemonFig.position.x = daemonT.from + (daemonT.to - daemonT.from) * dk;
         if (daemonT.t >= 1) daemonT = null;
       }
+      if (parts.elObj) {
+        var pk = parts.pulse ? Math.max(0, 1 - (Date.now() - parts.pulse) / 700) : 0;
+        parts.elObj.scale.setScalar(1 + 0.3 * pk);
+        parts.elObj.children.forEach(function (c) { if (c.userData.flame) c.scale.y = 1 + 0.15 * Math.sin(Date.now() / 90 + c.position.x * 9); });
+      }
       if (daemonFig && daemonFig.userData.orb) daemonFig.userData.orb.scale.setScalar(1 + 0.2 * Math.sin(Date.now() / 250));
       if (ch) ch.places.forEach(function (pl, i) { pl.marker.visible = i === state.place || state.done.indexOf(pl.id) >= 0; pl.marker.scale.setScalar(1 + 0.15 * Math.sin(Date.now() / 300)); });
       orbs.forEach(function (o) { o.scale.setScalar(1 + 0.2 * Math.sin(Date.now() / 280 + o.position.x)); });
@@ -357,11 +392,14 @@
       if (!wasTap || !ch) return;
       var r = dom.getBoundingClientRect();
       ray.setFromCamera({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }, camera);
-      var hit = ray.intersectObjects(ch.places.map(function (p) { return p.marker; }).concat(parts.stones || []).concat(orbs))[0];
+      var here = (PLACES[state.place] || {}).id, kids = [];
+      if (parts.elObj) parts.elObj.traverse(function (m) { if (m.isMesh) kids.push(m); });
+      var hit = ray.intersectObjects(ch.places.map(function (p) { return p.marker; }).concat(parts.stones || []).concat(orbs).concat(kids))[0];
       if (!hit) return;
       var o = hit.object;
-      if (o.userData.place && o.userData.place === PLACES[state.place].id) say();
-      else if (o.userData.face && PLACES[state.place].id === "gate") stand(o.userData.face);
+      if (o.userData.place && o.userData.place === here) say();
+      else if (o.userData.face && here === "gate") stand(o.userData.face);
+      else if (o.userData.interact && here === "pool") touch();
       else if (o.userData.portal) follow(o.userData.portal);
     });
 
@@ -376,43 +414,45 @@
       kids.forEach(function (k) { card.appendChild(k); });
     }
 
-    // ---- the portal: name what you bring, then the chamber forms ------------------------
+    // ---- the portal: one question per page, and the cave changes with each answer ----------
+    // The face is not asked here (players do not yet know enough about the faces); all six are met at the gate.
     function portal(s) {
       clearScene(); state.cur = s; state.mode = "portal"; state.place = 0; state.done = [];
       scene.fog.density = 0.02; cam = { x: 0, y: 0, z: 6, yaw: 0 }; state.look = { yaw: 0, pitch: 0 };
       var arch = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.12, 10, 36), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
-      arch.position.set(0, 0, 0); scene.add(arch);
+      scene.add(arch);
       scene.add(new THREE.HemisphereLight(0xffffff, 0x302828, 0.5));
       wrap.setAttribute("data-cave-chamber", s.id);
       card.setAttribute("data-cave-place", "portal");
-      function draw() {
-        var go = el("button", { "data-cave-form": "", text: "Go in", onclick: function () { form(s); } });
-        if (!(s.texture && s.element && s.face)) go.disabled = true;
-        var kids = [el("p", { text: "This is a doorway into the cave. Say what you bring, and the chamber forms to meet it." }),
-          el("h3", { text: "The charge" }),
-          choice(TEXTURES.map(function (t) { return [t[0], t[1]]; }), s.texture, function (o) { s.texture = o[0]; draw(); }),
-          el("h3", { text: "The feeling (its elemental channel)" }),
-          choice(ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }), s.element, function (o) { s.element = o[0]; draw(); }),
-          el("h3", { text: "The face (the way of knowing it)" }),
-          choice(FACES.map(function (f) { return [f[0], f[1]]; }), s.face, function (o) { s.face = o[0]; draw(); })];
-        if (s.face) kids.push(el("p", { text: lookup(FACES, s.face)[2] + "." }));
-        kids.push(el("div", { class: "oagc-row" }, [go]));
-        fill("A doorway at " + s.spot.words, kids);
-      }
-      draw();
+      s.texture = null; s.element = null;
+      fill("A doorway at " + s.spot.words, [
+        el("p", { text: "What does it feel like there?" }),
+        choice(TEXTURES.map(function (t) { return [t[0], t[1]]; }), null, function (o) { s.texture = o[0]; form(s); }),
+      ]);
+      card.setAttribute("data-cave-place", "portal");
     }
 
+    // The chamber forms around the charge at once; the next page asks the feeling, and its element appears.
     function form(s) {
       clearScene(); parts = {}; state.mode = "chamber"; state.place = 0; state.done = []; state.look = { yaw: 0, pitch: 0 };
-      state.dress = null;
-      ch = buildChamber(A, { texture: s.texture, element: s.element, face: s.face }, parts);
+      state.touched = false;
+      ch = buildChamber(A, { texture: s.texture, element: null }, parts);
       state.dress = parts.dress;
       scene.add(ch.group); scene.fog.density = parts.fog;
       cam = { x: ch.places[0].pos.x, y: 0, z: ch.places[0].pos.z + 3, yaw: 0 };
-      aim(ch.places[0]);
-      // Portals to the other places of this sitting wait by the way out; they light as they are walked.
-      addPortalOrbs();
-      say();
+      aim(ch.places[0]); addPortalOrbs();
+      state.place = -1; // before the first place: the feeling page
+      feeling(s);
+    }
+    function feeling(s) {
+      card.setAttribute("data-cave-place", "portal");
+      fill("Which feeling is here?", [
+        el("p", { text: "The walls have taken your " + lookup(TEXTURES, s.texture)[1] + ". Its feeling has an element." }),
+        choice(ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }), null, function (o) {
+          s.element = o[0]; parts.setElement(o[0]); state.place = 0; say();
+        }),
+      ]);
+      card.setAttribute("data-cave-place", "portal");
     }
 
     function addPortalOrbs() {
@@ -433,10 +473,13 @@
       finish(PLACES[state.place].id);
       if (state.place < PLACES.length - 1) { state.place++; aim(ch.places[state.place]); say(); }
     }
-    function redress(s) { // changing the charge or feeling mid-walk re-dresses the walls and pool
-      var t = lookup(TEXTURES, s.texture), e = lookup(ELEMENTS, s.element);
-      parts.rock.color.setHex(t[2]); parts.poolMat.color.setHex(e[3]); parts.poolMat.emissive.setHex(e[3]);
-      parts.dress.wall = t[2]; parts.dress.pool = e[3];
+    function redress(s) { // changing the charge mid-walk re-dresses the walls; changing the feeling swaps the element
+      var t = lookup(TEXTURES, s.texture);
+      parts.rock.color.setHex(t[2]); parts.dress.wall = t[2];
+      if (s.element && parts.dress.element !== s.element) { parts.setElement(s.element); state.touched = false; }
+    }
+    function touch() { // the element answers when tapped: it swells and glows, and the move is named
+      parts.pulse = Date.now(); state.touched = true; say();
     }
 
     function say() {
@@ -454,7 +497,8 @@
         if (state.sens.length > 1) body.push(el("p", { "data-cave-also": "", text: "Also named this sitting: " + state.sens.filter(function (o) { return o !== s; }).map(function (o) { return o.spot.words; }).join(", ") + "." }));
       } else if (p.id === "pool") {
         var e = lookup(ELEMENTS, s.element);
-        body.push(el("p", { text: e[0] + " in the " + e[1] + " pool. The move that goes with it: " + e[2] + "." }));
+        body.push(el("p", { text: e[0] + " is " + e[1] + ". Tap it. The move that goes with it: " + e[2] + "." }));
+        if (state.touched) body.push(el("p", { "data-cave-touched": "", text: "It answers you. " + e[2] + "." }));
         body.push(el("p", { "data-cave-job": "", text: CHANNEL_JOBS[e[0]] }));
         body.push(choice(ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }), s.element, function (o) { s.element = o[0]; redress(s); say(); }));
       } else if (p.id === "passage") {
@@ -577,6 +621,12 @@
     }
     portal(addSensation(firstSpot)); render();
     window.__oagCave.state = state; window.__oagCave.leave = leave;
+    // For the browser test: where the element stands on the screen, in page pixels.
+    window.__oagCave.elementScreen = function () {
+      var v = parts.holder.getWorldPosition(new THREE.Vector3()); v.y += 1.2; v.project(camera);
+      var r = dom.getBoundingClientRect();
+      return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
+    };
   }
 
   window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); } };

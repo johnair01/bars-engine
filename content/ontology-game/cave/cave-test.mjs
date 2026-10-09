@@ -42,14 +42,13 @@ const pickOnFigure = async (name) => {
   await page.mouse.click(at.x, at.y);
   await page.locator('[data-body-use]').click();
 };
-const portalPick = async (texture, element, face) => {
+const portalPick = async (texture, element) => {
   await page.locator('[data-cave-place="portal"]').waitFor();
-  const go = page.locator('[data-cave-form]');
-  ok(await go.isDisabled(), 'the portal will not open until the charge, the feeling and the face are named');
+  ok(await page.locator('[data-cave-choice="Anger"]').count() === 0, 'the first page asks only the charge');
   await page.locator(`[data-cave-choice="${texture}"]`).click();
+  await page.locator('[data-cave-choice="Anger"]').waitFor();
+  ok(await page.locator('[data-cave-choice="red"]').count() === 0, 'no face is asked at the doorway');
   await page.locator(`[data-cave-choice="${element}"]`).click();
-  await page.locator(`[data-cave-choice="${face}"]`).click();
-  await go.click();
   await page.locator('[data-cave-place="mouth"]').waitFor();
   await page.waitForTimeout(700);
 };
@@ -63,7 +62,7 @@ await page.locator('[data-cave-chamber="heart"]').waitFor();
 ok(true, 'tapping the heart on the figure opens its portal');
 await page.waitForTimeout(500);
 await page.screenshot({ path: SHOTS + '/cave-portal.png' });
-await portalPick('tension', 'Anger', 'red');
+await portalPick('tension', 'Anger');
 const dressA = await page.evaluate(() => window.__oagCave.state.dress);
 await page.screenshot({ path: SHOTS + '/cave-heart-mouth.png' });
 const shotA = await px();
@@ -76,6 +75,11 @@ ok((await page.evaluate(() => window.__oagCave.state.sens.length)) === 2, 'a sec
 await page.locator('[data-cave-next]').click();
 await page.locator('[data-cave-place="pool"]').waitFor();
 ok((await page.locator('[data-cave-job]').innerText()).startsWith('Anger'), "the pool says how the channel does its job");
+await page.waitForTimeout(1500);
+const at = await page.evaluate(() => window.__oagCave.elementScreen());
+await page.mouse.click(at.x, at.y);
+await page.locator('[data-cave-touched]').waitFor();
+ok(true, 'tapping the element makes it answer');
 await page.waitForTimeout(300);
 await page.screenshot({ path: SHOTS + '/cave-heart-pool.png' });
 await page.locator('[data-cave-next]').click();
@@ -115,11 +119,11 @@ await page.locator('[data-cave-place="portal"]').waitFor({ timeout: 15000 });
 ok(await page.evaluate(() => window.__oagCave.state.cur.id) === 'throat', 'the path leads to the throat portal');
 
 // Second place: different charge, channel and face, so the same chamber must look different.
-await portalPick('numbness', 'Sadness', 'teal');
+await portalPick('numbness', 'Sadness');
 const dressB = await page.evaluate(() => window.__oagCave.state.dress);
 await page.screenshot({ path: SHOTS + '/cave-throat-mouth.png' });
 const shotB = await px();
-ok(dressA.wall !== dressB.wall && dressA.pool !== dressB.pool && dressA.face !== dressB.face && dressA.width !== dressB.width, `two scans dress the chamber differently (${JSON.stringify(dressA)} vs ${JSON.stringify(dressB)})`);
+ok(dressA.wall !== dressB.wall && dressA.element !== dressB.element && dressA.lamp !== dressB.lamp && dressA.width !== dressB.width, `two scans dress the chamber differently, each element its own object (${JSON.stringify(dressA)} vs ${JSON.stringify(dressB)})`);
 ok(differ(shotA, shotB), 'and the two screens differ');
 await page.locator('[data-cave-next]').click();
 await page.locator('[data-cave-next]').click();
@@ -136,15 +140,15 @@ const marks = await page.evaluate(() => window.OAGBody.marks());
 ok(marks.length === 2 && marks[0].label === 'my heart' && marks[0].texture === 'tension' && marks[0].channel === 'Anger' && marks[1].label === 'my throat' && marks[1].texture === 'numbness' && marks[0].sitting === marks[1].sitting,
   'both places are saved as one sitting, the way the body map saves them');
 
-// Any portal opens the same chamber: the same three choices at a hand give the same dress as at the throat.
+// Any portal opens the same chamber: the same two choices at a hand give the same dress as at the throat.
 const dresses = [];
 for (const words of ['my left hand', 'my throat']) {
   await page.evaluate((w) => window.__oagCave.dive(w), words);
-  await portalPick('tension', 'Anger', 'red');
+  await portalPick('tension', 'Anger');
   dresses.push(await page.evaluate(() => JSON.stringify(window.__oagCave.state.dress)));
   await page.evaluate(() => window.__oagCave.leave(false));
   await page.locator('[data-cave-chamber]').waitFor({ state: 'detached' });
 }
-ok(dresses[0] === dresses[1] && dresses[0] === JSON.stringify(dressA), 'every portal opens the same chamber for the same charge, channel and face');
+ok(dresses[0] === dresses[1] && dresses[0] === JSON.stringify(dressA), 'every portal opens the same chamber for the same charge and channel');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close(); server.close();
