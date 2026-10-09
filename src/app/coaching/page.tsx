@@ -1,23 +1,24 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { ThreeTwoOneDemo } from './ThreeTwoOneDemo'
+import { BOOK_HREF } from '@/lib/coaching/coaching-map'
+
+import { CoachingMap } from './CoachingMap'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://masteringallyship.com'),
   title: 'Coaching with Wendell Britt',
   description:
-    'Find the part of you running the thing you are stuck on, and put it to work for you. Try the 3-2-1 practice on the page, then book a session.',
+    'Play a short game to find your next move and the kind of help that fits it: a free practice, the thirty-day challenge, or a session with me.',
 }
 
 /**
  * Every booking button on the page goes to the tier list, which holds
  * Wendell's four Calendly links (Wendell, 2026-10-06). Reading the four as
  * one session on a sliding scale is a choice (Claude, 2026-10-06), taken
- * from the link names; the copy says so.
+ * from the link names; the copy says so. BOOK_HREF lives with the coaching map,
+ * whose doors all lead here (cg-money).
  */
-const BOOK_HREF = '#book'
-
 const TIERS = [
   { price: '$250', href: 'https://calendly.com/wendell-britt/coaching-250' },
   { price: '$150', href: 'https://calendly.com/wendell-britt/coaching-150' },
@@ -35,7 +36,7 @@ const TIERS = [
 const TOOLS = [
   {
     name: 'The 3-2-1',
-    body: 'Take something with charge on it, a person or a part of you. Describe it, talk to it, then speak as it. What you were spending energy pushing away comes back as something you can use. You can try it below.',
+    body: 'Take something with charge on it, a person or a part of you. Describe it, talk to it, then speak as it. What you were spending energy pushing away comes back as something you can use. You can try it at the Clean Up stop on the map above.',
   },
   {
     name: 'Interviewing your parts',
@@ -50,11 +51,14 @@ const TOOLS = [
 /**
  * @page /coaching
  * @entity CAMPAIGN
- * @description Wendell's coaching page: the tools he coaches with, a working 3-2-1 that runs
- *   in the browser with no account and no AI, and four booking tiers, each linking to
- *   Wendell's Calendly. Every booking button scrolls to the tiers (BOOK_HREF).
+ * @description Wendell's coaching page, with the coaching map as its front door: a game over
+ *   his five moves that a visitor plays to find their next move and the service that fits
+ *   (content/coaching-game/6FACE_PASS1_2026-10-09.md). It runs in the browser with no account
+ *   and no AI. The tools, the four Calendly tiers and the crisis note follow it, and every
+ *   booking button scrolls to the tiers (BOOK_HREF).
  * @permissions public
- * @relationships /mastering-allyship/one-to-one, src/lib/coaching/three-two-one.ts,
+ * @relationships /mastering-allyship/one-to-one, /mastering-allyship/course, /ontology-game,
+ *   src/lib/coaching/coaching-map.ts, src/lib/coaching/three-two-one.ts,
  *   src/lib/technique-library/canonical.ts (tech-3-2-1)
  * @dimensions WHO:client, WHAT:offer, WHERE:coaching, ENERGY:clean_up
  * @example /coaching
@@ -76,15 +80,24 @@ export default function CoachingPage() {
             that on purpose, and it has a reason. I coach people to meet that part, hear what it is
             protecting, and put its strength to work on the thing they actually want.
           </p>
+          <p className="text-base leading-relaxed text-[#a09e98]">
+            Start by playing. The map below walks you through the five moves I coach with. Each
+            stop gives you something to keep, and shows you the help that fits it, free or paid.
+          </p>
           <div className="flex flex-wrap items-center gap-4 pt-1">
-            <a href="#try-321" className="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-500">
-              Try the 3-2-1 now
+            <a href="#play" className="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-500">
+              Start playing
             </a>
             <a href={BOOK_HREF} className="text-sm font-semibold text-zinc-200 underline underline-offset-4">
-              Book a session
+              Skip to booking
             </a>
           </div>
         </header>
+
+        <section id="play" className="scroll-mt-24 space-y-5">
+          <h2 className="text-2xl font-bold">Find your next move</h2>
+          <CoachingMap />
+        </section>
 
         <section className="space-y-5">
           <h2 className="text-2xl font-bold">What we work with</h2>
@@ -102,25 +115,13 @@ export default function CoachingPage() {
           </p>
         </section>
 
-        <section id="try-321" className="scroll-mt-24 space-y-5">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Try the 3-2-1</h2>
-            <p className="text-sm leading-relaxed text-zinc-400">
-              This is the same practice I use in sessions, in a form you can run alone. It moves
-              something across three seats: out there (it), face to face (you), and from inside (I).
-              The charge tends to build as you go, and that is the practice working.
-            </p>
-          </div>
-          <ThreeTwoOneDemo bookHref={BOOK_HREF} />
-        </section>
-
         <section id="book" className="scroll-mt-24 space-y-5">
           <div className="space-y-2">
             <h2 className="text-2xl font-bold">Book a session</h2>
             <p className="text-sm leading-relaxed text-zinc-400">
               One session with me, at four prices. You get the same session at every tier, so
-              pick the one that fits what you can pay today. Bring the thing you are stuck on, or
-              the 3-2-1 you just ran.
+              pick the one that fits what you can pay today. Bring what you are stuck on, or
+              the map you just made.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -147,7 +148,7 @@ export default function CoachingPage() {
           </p>
         </section>
 
-        <section className="rounded-2xl border border-zinc-800 p-5 text-sm leading-relaxed text-zinc-400">
+        <section id="before-you-start" className="scroll-mt-24 rounded-2xl border border-zinc-800 p-5 text-sm leading-relaxed text-zinc-400">
           <h2 className="font-bold text-zinc-200">Before you start</h2>
           <p className="mt-2">
             Coaching works with where you are now and your next move. It suits people who are
