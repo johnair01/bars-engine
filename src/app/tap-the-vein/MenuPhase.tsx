@@ -133,6 +133,11 @@ export function MenuPhase({ onDone }: { onDone: () => void }) {
                 {copied ? 'Copied' : 'Copy the sealed menu'}
               </button>
             )}
+            {view.sealedAt && (
+              <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.08em', color: 'var(--bars-text-muted)', textAlign: 'center', margin: '8px 0 0', wordBreak: 'break-all' }}>
+                Council setup · your player id: {view.playerId}
+              </p>
+            )}
           </>
         )}
         <button

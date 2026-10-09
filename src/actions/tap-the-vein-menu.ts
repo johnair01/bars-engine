@@ -29,6 +29,8 @@ export type MorningMenuView = {
   /** Every active goal, for the "pick another goal" list. */
   goals: TtvLensGoalOption[]
   sealedAt: string | null
+  /** His player id: the value for COUNCIL_MENU_PLAYER_ID when he sets up the council export. */
+  playerId: string
 }
 
 const MAX_GOAL_TITLE = 200
@@ -40,8 +42,8 @@ function startOfDay(d = new Date()): Date {
   return x
 }
 
-function toView(loaded: NonNullable<Awaited<ReturnType<typeof loadMenuForSession>>>): MorningMenuView {
-  return { sessionDate: loaded.sessionDate, items: loaded.items, goals: loaded.goals, sealedAt: loaded.stored.sealedAt }
+function toView(playerId: string, loaded: NonNullable<Awaited<ReturnType<typeof loadMenuForSession>>>): MorningMenuView {
+  return { sessionDate: loaded.sessionDate, items: loaded.items, goals: loaded.goals, sealedAt: loaded.stored.sealedAt, playerId }
 }
 
 async function saveStored(sessionId: string, stored: StoredMorningMenu) {
@@ -58,7 +60,7 @@ export async function getMorningMenu(): Promise<Result<MorningMenuView>> {
   try {
     const loaded = await loadMenuForSession(player.id, startOfDay())
     if (!loaded) return { error: 'No session today. Open Tap the Vein first.' }
-    return toView(loaded)
+    return toView(player.id, loaded)
   } catch (e) {
     console.error('[ttv-menu:get]', e)
     return { error: 'Failed to load the menu' }
@@ -125,7 +127,7 @@ async function applyBridge(playerId: string, key: string, goalId: string | null)
 
   const reloaded = await loadMenuForSession(playerId, startOfDay())
   revalidatePath('/tap-the-vein')
-  return reloaded ? toView(reloaded) : { error: 'Failed to reload the menu' }
+  return reloaded ? toView(playerId, reloaded) : { error: 'Failed to reload the menu' }
 }
 
 /** He picks a goal for an item himself, or leaves it unaligned (goalId null). */
@@ -154,7 +156,7 @@ export async function acceptMenuSuggestion(input: { key: string; title?: string 
     if (!loaded) return { error: 'No session today. Open Tap the Vein first.' }
     const item = loaded.items.find((i) => i.key === input.key)
     if (!item) return { error: 'That line is no longer on the menu.' }
-    if (item.bridge) return toView(loaded)
+    if (item.bridge) return toView(player.id, loaded)
 
     const suggestion = suggestBridge(item.text, loaded.goals)
     if (!suggestion) return { error: 'No suggestion for this line. Pick a goal instead.' }
@@ -215,7 +217,7 @@ export async function sealMorningMenu(): Promise<Result<MorningMenuView>> {
     const stored: StoredMorningMenu = { ...loaded.stored, sealedAt, sealed: exported.items }
     await saveStored(loaded.sessionId, stored)
     revalidatePath('/tap-the-vein')
-    return { ...toView(loaded), sealedAt }
+    return { ...toView(player.id, loaded), sealedAt }
   } catch (e) {
     console.error('[ttv-menu:seal]', e)
     return { error: 'Failed to seal the menu' }

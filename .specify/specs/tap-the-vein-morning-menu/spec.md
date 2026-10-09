@@ -41,10 +41,12 @@ copy the council reads. He can reopen the menu from the work step and seal again
 - Migration `20261009120000_add_ttv_morning_menu`; apply with `npx tsx scripts/apply-migration-ttv-morning-menu.ts`.
 - Server actions (`src/actions/tap-the-vein-menu.ts`): `getMorningMenu`, `setMenuBridge`, `acceptMenuSuggestion`,
   `sealMorningMenu`.
-- `GET /api/tap-the-vein/menu[?date=YYYY-MM-DD]` with `Authorization: Bearer <COUNCIL_MENU_TOKEN>` returns the latest
-  sealed menu of `COUNCIL_MENU_PLAYER_ID`:
-  `{ version: 1, sessionDate, sealedAt, items: [{ key, text, source, status: "bridged" | "unaligned", goal: { id, title, domain, cadence, chain, trace } | null }] }`.
-  How the council session reaches it (network policy, the token) is the first step of the council's thread 3.
+- `GET /api/tap-the-vein/menu?token=<COUNCIL_MENU_TOKEN>[&date=YYYY-MM-DD]` (or the token as a bearer header) returns
+  the latest sealed menu of `COUNCIL_MENU_PLAYER_ID`:
+  `{ version: 1, sessionDate, sealedAt, items: [{ key, text, source, status: "bridged" | "unaligned", goal: { id, title, domain, cadence, chain, trace } | null }], goals: [{ id, title, domain, cadence, parentId }] }`.
+  `goals` are his active goals at read time. Item `key`s are stable for a sealed menu; the board names items `menu-<key>`.
+  The query token is Wendell's ruling `mm-menu-transport` (2026-10-09): the council reaches production only through
+  the Vercel connector, which sends a plain GET with no headers. The token value is saved on the council board.
 
 ## Verification Quest
 
@@ -53,7 +55,7 @@ copy the council reads. He can reopen the menu from the work step and seal again
 3. Accept a Sage suggestion with an edited title. The Observatory shows the new goal under its parent, and the item
    reads "→ year → … → new goal".
 4. Leave one line unaligned. It moves last and stays on the menu.
-5. Seal the menu. `curl -H "Authorization: Bearer $COUNCIL_MENU_TOKEN" /api/tap-the-vein/menu` returns the three items
+5. Seal the menu. `curl "/api/tap-the-vein/menu?token=$COUNCIL_MENU_TOKEN"` returns the three items
    and no text from the free write.
 
 Automated: `npm run test:ttv-menu`.
