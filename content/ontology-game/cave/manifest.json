@@ -1,0 +1,89 @@
+{
+  "note": "The Cave of Lessons asset manifest (DESIGN.md). Game data names these ids, never file paths. Every asset lists its source and licence (council position c3d-cc0-only). status: built, planned. Every anchor on the figure is a portal; the chamber is one generic shape dressed by the charge, channel and face named at the portal (c3d-spot-shape overruled 2026-10-09). spots.json's shape fields are unused.",
+  "assets": [
+    {
+      "id": "body.figure",
+      "file": "../body/figure.glb",
+      "kind": "model",
+      "source": "body/build_figure.py",
+      "licence": "own work",
+      "status": "built",
+      "bytes": 204264
+    },
+    {
+      "id": "cave.kit",
+      "file": "cave-kit.glb",
+      "kind": "model",
+      "source": "cave/build_kit.py",
+      "licence": "own work",
+      "status": "built",
+      "budget_bytes": 3000000,
+      "day": 2,
+      "pieces": [
+        "wall_ring",
+        "floor",
+        "pool",
+        "gate_stones",
+        "portal_arch",
+        "path_tube"
+      ],
+      "bytes": 16916
+    },
+    {
+      "id": "cave.spots",
+      "file": "spots.json",
+      "kind": "data",
+      "source": "cave/build_kit.py, from body/build_figure.py ANCHORS and radii",
+      "licence": "own work",
+      "status": "built",
+      "day": 2,
+      "fields": [
+        "id",
+        "words",
+        "position",
+        "side",
+        "width",
+        "height",
+        "length",
+        "bend"
+      ],
+      "bytes": 19731
+    },
+    {
+      "id": "daemon.figure",
+      "file": "daemon.glb",
+      "kind": "model",
+      "source": "cave/build_daemon.py",
+      "licence": "own work",
+      "status": "planned",
+      "budget_bytes": 500000,
+      "day": 4
+    },
+    {
+      "id": "lib.three",
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+      "kind": "script",
+      "source": "three.js r128, as body-map.js loads it",
+      "licence": "MIT",
+      "status": "built"
+    }
+  ],
+  "places": [
+    "mouth",
+    "pool",
+    "passage",
+    "gate",
+    "way_out"
+  ],
+  "place_of_block_step": {
+    "sensation": "mouth",
+    "element": "pool",
+    "daemon": "passage",
+    "gate": "gate",
+    "release": "way_out"
+  },
+  "paths": {
+    "source": "OAGBody.marks() of the current sitting, plus places named inside the cave",
+    "rule": "every pair of places named in one sitting is joined by a path inside the body; each chamber's way out holds one portal per other place"
+  }
+}

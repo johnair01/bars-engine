@@ -27,6 +27,8 @@ const nextConfig: NextConfig = {
       { source: '/ontology-game/wave', destination: '/ontology-game/index.html' },
       // The body map's marks over time, on their own page.
       { source: '/ontology-game/body', destination: '/ontology-game/body.html' },
+      // The Cave of Lessons: the block work walked inside the body map.
+      { source: '/ontology-game/cave', destination: '/ontology-game/cave/index.html' },
     ];
   },
 };
