@@ -23,10 +23,10 @@
   // a side passage that opens when the player blocks. s is the place's distance along the passage; key is the name
   // the saved scan uses for a block met there.
   var PLACES = [
-    { id: "mouth", step: "1 Sensation", key: "sensation", s: 30 },
-    { id: "pool", step: "2 Element", key: "element", s: 60 },
-    { id: "passage", step: "3 Daemon", key: "daemon", s: 90 },
-    { id: "gate", step: "4 Game masters' gate", key: "gate", s: 120 },
+    { id: "gate", step: "1 Game masters' gate", key: "gate", s: 30 },
+    { id: "mouth", step: "2 Sensation", key: "sensation", s: 60 },
+    { id: "pool", step: "3 Element", key: "element", s: 90 },
+    { id: "passage", step: "4 Daemon", key: "daemon", s: 120 },
     { id: "way_out", step: "Release", key: "release", s: 150 },
   ];
   var PLACE_BY = {}; PLACES.forEach(function (p) { PLACE_BY[p.id] = p; });
@@ -915,6 +915,7 @@
     // ---- walking ---------------------------------------------------------------------------
     function newWalk(route, blk, s) { return { route: route, s: s, s0: s, D: 1, t: 0, ready: false, moving: false, target: 0, arrived: false, blk: blk }; }
     function ctxOf() { return state.walk && state.walk.route.ctx; }
+    function stopAt(route, place) { for (var i = 0; i < route.stops.length; i++) if (route.stops[i].place === place) return route.stops[i]; return null; }
     function stopOf(wk) { return wk.route.stops[wk.target]; }
     var PLACE_ASK = { mouth: "What is the block like, in the body?", pool: "Which feeling is here? Tap its element.", passage: "A daemon stands in the way.",
       gate: "Six stones, one for each face. Each opens a branch of its own.", way_out: "Light from above. Breathe out." };
@@ -1025,9 +1026,12 @@
       route.group.add(lan); lanternsOn.push(lan);
       if (kind === "side") {
         // the five places along the loop; the six stones of the gate each have a stop of their own, a face's branch beside it
-        var L = route.len, pos = { mouth: 0.15, pool: 0.25, passage: 0.35 }, g0 = 0.45 * L, gs = Math.min(18, (L - 26 - g0) / 6);
-        route.stops = [{ s: pos.mouth * L, place: "mouth" }, { s: pos.pool * L, place: "pool" }, { s: pos.passage * L, place: "passage" }];
+        // Wendell, 10 October 2026: the gates are forks in the path and belong at the beginning, so the six stones come first
+        // (stops 0-5), then the mouth, the pool and the daemon (stops 6-8), then the way out.
+        var L = route.len, pos = { mouth: 0.46, pool: 0.58, passage: 0.7 }, g0 = 0.04 * L, gs = 0.06 * L;
+        route.stops = [];
         FACES.forEach(function (f, i) { route.stops.push({ s: g0 + i * gs, place: "gate", stone: i }); });
+        route.stops.push({ s: pos.mouth * L, place: "mouth" }, { s: pos.pool * L, place: "pool" }, { s: pos.passage * L, place: "passage" });
         route.stops.push({ s: route.sTo - 2.5, place: "way_out" });
       } else route.stops = [{ s: route.sTo - 1.2, face: face }];
       route.markers = route.stops.map(function (st) {
@@ -1086,7 +1090,7 @@
     function dressSide(blk) {
       var route = blk.route, ctx = route.ctx, G = parts.G, h = ch.h, wb = route.w, inner = -route.side;
       function beside(s, lat) { var a = at(route, s); return { x: a.x + -a.fz * inner * lat, y: a.y - h * 0.92, z: a.z + a.fx * inner * lat, a: a }; }
-      var pool = route.stops[1], pe = beside(pool.s + 9, Math.min(wb * 0.4, 2.2));
+      var pool = stopAt(route, "pool"), pe = beside(pool.s + 9, Math.min(wb * 0.4, 2.2));
       ctx.holder.position.set(pe.x, pe.y, pe.z); route.group.add(ctx.holder);
       if (blk.element) setElementOn(ctx, blk.element, Math.min(wb * 0.45, 2));
       route.stops.forEach(function (st) {
@@ -1371,11 +1375,11 @@
     }
     function meet(blk, id) {
       blk.daemon = id;
-      var route = blk.route, c = route.ctx, d = lookup(DAEMONS, id), h = ch.h, a = at(route, route.stops[2].s + 6);
+      var route = blk.route, c = route.ctx, d = lookup(DAEMONS, id), h = ch.h, a = at(route, stopAt(route, "passage").s + 6);
       if (c.daemonFig) route.group.remove(c.daemonFig);
       c.daemonFig = buildDaemon(THREE, d, h * 1.1);
       c.daemonFig.position.set(a.x, a.y - h * 0.9, a.z); c.daemonFig.rotation.y = yawFacing({ fx: -a.fx, fz: -a.fz });
-      c.daemonBase = { x: a.x, z: a.z, nx: -a.fz, nz: a.fx }; c.daemonS = route.stops[2].s + 6; c.daemonRoute = route; c.daemonMoved = false;
+      c.daemonBase = { x: a.x, z: a.z, nx: -a.fz, nz: a.fx }; c.daemonS = stopAt(route, "passage").s + 6; c.daemonRoute = route; c.daemonMoved = false;
       route.group.add(c.daemonFig);
       placeCard(blk);
     }

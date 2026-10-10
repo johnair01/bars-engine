@@ -258,6 +258,21 @@ ok(tn.width >= 6 * 0.9 * 0.99, `the cave is wider: half-width ${tn.width.toFixed
 const clr2 = await C(() => window.__oagCave.clearance());
 ok(clr2.clearance >= clr2.width * 2 * clr2.maxOpen * 1.04, `no two stretches touch even opened wide and breathing in (closest ${clr2.clearance.toFixed(1)}, walls need ${(clr2.width * 2 * clr2.maxOpen * 1.04).toFixed(1)})`);
 
+const FACES6 = ['magenta', 'red', 'amber', 'orange', 'green', 'teal'];
+const gatesFirst = async (check) => {
+  for (const f of FACES6) {
+    await walkTo(`[data-cave-stone="${f}"]`);
+    await page.locator(`[data-cave-stone="${f}"]`).click();
+    await page.locator('[data-cave-place="walk"]').waitFor();
+    if (check && f === 'magenta') {
+      const fb = await C(() => window.__oagCave.branch());
+      ok(fb.kind === 'face' && fb.startGap < 0.01 && fb.endGap < 0.01 && fb.lowest > -0.01, `the Magenta stone opens its own branch, a level loop back to the stone (${Math.round(fb.len)} units)`);
+      ok((await C(() => window.__oagCave.pane())).text === 'Where is the presence you\'re reaching for?', 'walking a face\'s branch, the pane holds that face\'s question');
+    }
+    await walkTo('[data-cave-face-back]');
+    await page.locator('[data-cave-face-back]').click();
+  }
+};
 // ---- a block: the wall opens, a side path loops under the cave and back to the very spot --------------------
 await C(() => { window.__oagCave.state.speed = 8; });
 await walkTo('[data-cave-marker="acknowledge"]');
@@ -269,13 +284,16 @@ ok(b1 && b1.kind === 'side' && b1.startGap < 0.01 && b1.endGap < 0.01, `the side
 ok(b1.lowest <= -9.9 && b1.len > 150, `it ramps down under the cave (${b1.lowest.toFixed(1)} units) and runs a loop ${Math.round(b1.len)} units long`);
 ok(tn1.holes === 2 && tn1.mainTris < tn.mainTris, `the main wall opens twice, out and back (${tn.mainTris - tn1.mainTris} faces removed)`);
 ok((await C(() => window.__oagCave.lanterns())) === 1, 'a lantern stands between the two openings');
-ok(b1.stops === 10, 'the loop holds the mouth, the pool, the daemon, six stones and the way out');
+ok(b1.stops === 10, 'the loop holds six stones, the mouth, the pool, the daemon and the way out');
 await page.screenshot({ path: SHOTS + '/cave-branch.png' });
 const walkSamples = [];
 await page.mouse.move(330, 700); await page.mouse.down();
 for (let i = 0; i < 6; i++) { walkSamples.push(await avatar()); await page.waitForTimeout(150); }
-await page.locator('[data-cave-place="mouth"]').waitFor({ timeout: 60000 }); await page.mouse.up();
+await page.locator('[data-cave-stone="magenta"]').waitFor({ timeout: 60000 }); await page.mouse.up();
 ok(walkSamples.every((a) => a.route === 'branch' || a.route === 'side') && walkSamples.every((a) => a.offPath < 1e-6), 'the avatar walks the side path on its line');
+ok(await page.locator('[data-cave-stone-says]').count() === 1 && await page.locator('[data-cave-next]').isDisabled(), 'the passage opens on the first of the six gates, and the way on waits for its branch');
+await gatesFirst(true);
+await walkTo('[data-cave-place="mouth"]');
 await page.locator('[data-cave-choice="numbness"]').click();
 await page.locator('[data-cave-next]').click();
 await walkTo('[data-cave-place="pool"]');
@@ -300,26 +318,14 @@ await page.locator('[data-cave-pane]').click();
 await page.screenshot({ path: SHOTS + '/cave-daemon-wall.png' });
 
 // The encounter: dig into what it holds, a loop of its own one level deeper, then the daemon is asked again.
-const FACES6 = ['magenta', 'red', 'amber', 'orange', 'green', 'teal'];
 const sidePassage = async (depth) => {
+  await gatesFirst(depth === 2);
   await walkTo('[data-cave-place="mouth"]'); await page.locator('[data-cave-next]').click();
   await walkTo('[data-cave-place="pool"]'); await page.locator('[data-cave-next]').click();
   await walkTo('[data-cave-place="passage"]');
   await page.locator('[data-cave-choice="skeptic"]').click(); await page.locator('[data-cave-aside="yes"]').click();
   await page.waitForTimeout(1000);
   await page.locator('[data-cave-next]').click();
-  for (const f of FACES6) {
-    await walkTo(`[data-cave-stone="${f}"]`);
-    await page.locator(`[data-cave-stone="${f}"]`).click();
-    await page.locator('[data-cave-place="walk"]').waitFor();
-    if (f === 'magenta') {
-      const fb = await C(() => window.__oagCave.branch());
-      ok(fb.kind === 'face' && fb.startGap < 0.01 && fb.endGap < 0.01 && fb.lowest > -0.01, `the Magenta stone opens its own branch, a level loop back to the stone (${Math.round(fb.len)} units)`);
-      ok((await C(() => window.__oagCave.pane())).text === 'Where is the presence you\'re reaching for?', 'walking a face\'s branch, the pane holds that face\'s question');
-    }
-    await walkTo('[data-cave-face-back]');
-    await page.locator('[data-cave-face-back]').click();
-  }
   await walkTo('[data-cave-release]');
   ok(await state(`s.stack[s.stack.length - 1].child.gate.length`) === 6 || depth === 0, 'all six faces\' branches are walked before the way out');
   await page.locator('[data-cave-release]').click();
@@ -328,7 +334,6 @@ await page.locator('[data-cave-dig]').click();
 await page.locator('[data-cave-place="walk"]').waitFor();
 const b2 = await C(() => window.__oagCave.branch());
 ok((await C(() => window.__oagCave.depth())) === 2 && b2.lowest <= -9.9 && b2.startGap < 0.01, 'working what the daemon holds opens a loop of its own, deeper again, from the daemon\'s spot');
-await walkTo('[data-cave-place="mouth"]');
 ok(await page.locator('[data-cave-skip]').count() === 0, 'inside the daemon\'s own loop there is no skip either');
 await sidePassage(2);
 await page.locator('[data-cave-dug]').waitFor({ timeout: 30000 });
@@ -393,10 +398,6 @@ await page.locator('[data-cave-satisfied="yes"]').click();
 await page.waitForTimeout(1000);
 ok(await sees('[data-cave-open]') && await sees('[data-cave-next]'), 'once it stands aside the way opens');
 await page.locator('[data-cave-next]').click();
-for (const f of FACES6) {
-  await walkTo(`[data-cave-stone="${f}"]`); await page.locator(`[data-cave-stone="${f}"]`).click();
-  await walkTo('[data-cave-face-back]'); await page.locator('[data-cave-face-back]').click();
-}
 await walkTo('[data-cave-release]');
 await page.screenshot({ path: SHOTS + '/cave-way-out.png' });
 await page.locator('[data-cave-release]').click();
@@ -410,7 +411,7 @@ await page.locator('[data-cave-go]').click();
 await walkTo('[data-cave-marker="allow"]');
 const sAllow = (await avatar()).s;
 await page.locator('[data-cave-block]').click();
-await walkTo('[data-cave-place="mouth"]');
+await walkTo('[data-cave-stone="magenta"]');
 await page.locator('[data-cave-skip]').click();
 await page.locator('[data-cave-marker="allow"]').waitFor();
 await page.waitForTimeout(700);

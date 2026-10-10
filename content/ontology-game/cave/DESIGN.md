@@ -26,10 +26,10 @@ walk is the cycle itself.
 
 | Place | Block step | What the player does there | How the chamber shows it |
 |---|---|---|---|
-| The mouth | 1 Sensation | Names the texture: tightness, tension, numbness, strength, something else | The walls take that texture: they narrow for tightness, stretch into taut strands for tension, fill with fog for numbness and glow for strength **(choice)** |
-| The pool | 2 Element | Picks fire, water, wood, metal or earth, then runs Happy Apples to open up and the clean up move that goes with it (`CLEAN_UP_MOVES`) | The pool turns to fire, water, wood, metal or earth: fire burns the blockage away, water rises and dissolves it, wood grows through it, metal clears the fog to a sharp edge, earth settles it into the floor **(choice)** |
-| The passage | 3 Daemon | Meets the daemon standing in the way and asks its three questions: its job, who it works for (`DAEMON_WORKS_FOR`), whether it will step aside | The daemon is a figure in the passage. If it steps aside, it moves to the wall and the way opens |
-| The gate | 4 Game masters' gate | The six game masters' gate, as the game runs it now | Six standing stones around a ring, one per face, lit as the gate is worked **(choice)** |
+| The mouth | 2 Sensation | Names the texture: tightness, tension, numbness, strength, something else | The walls take that texture: they narrow for tightness, stretch into taut strands for tension, fill with fog for numbness and glow for strength **(choice)** |
+| The pool | 3 Element | Picks fire, water, wood, metal or earth, then runs Happy Apples to open up and the clean up move that goes with it (`CLEAN_UP_MOVES`) | The pool turns to fire, water, wood, metal or earth: fire burns the blockage away, water rises and dissolves it, wood grows through it, metal clears the fog to a sharp edge, earth settles it into the floor **(choice)** |
+| The passage | 4 Daemon | Meets the daemon standing in the way and asks its three questions: its job, who it works for (`DAEMON_WORKS_FOR`), whether it will step aside | The daemon is a figure in the passage. If it steps aside, it moves to the wall and the way opens |
+| The gate | 1 Game masters' gate (first stop of the passage) | The six game masters' gate, as the game runs it now | Six standing stones around a ring, one per face, lit as the gate is worked **(choice)** |
 | The way out | Release | The release and the return to the step | Light from above; the camera rises back out of the body to the place it entered, and the scan is saved with `OAGBody.record` |
 
 Passing a daemon by its lesson, the done test for the first slice, is the passage: the daemon steps aside because
@@ -331,9 +331,10 @@ then it needs to be worked with. We can pivot to a 321 discussion with the part 
   the on-device charge/seconds/"I" counts of the 17 October test.
 - **From Wendell's play on his phone (10 October, 23:39).** Built: the element beside the pool stays out of the scene until the
   player names one; "I don't know" is offered at the doorway and at the pool and keeps it hidden; naming one lights the
-  passage in its colour and scatters small ones along both walls. Not built yet: "Game master gates are forks in the path and
-  should probably be at the beginning not the end. Eventually they will have different 'games' to offer as the players walk
-  down the paths so seeing them this way at the end is a bad user experience." The six stones move from after the daemon to
-  the start of the side passage; the stop order, the step numbers and the indexes that assume the pool and daemon are stops 1
-  and 2 (`dressSide`, `meet`) change with it.
+  passage in its colour and scatters small ones along both walls. Built (10 October, 23:50): "Game master gates are forks in the path and should probably be at the beginning not the end.
+  Eventually they will have different 'games' to offer as the players walk down the paths so seeing them this way at the end is a
+  bad user experience." The six stones now stand at the start of the side passage (stops 0 to 5), then the mouth, the pool and
+  the daemon (stops 6 to 8), then the way out. Step numbers follow: 1 Game masters' gate, 2 Sensation, 3 Element, 4 Daemon. The
+  way on from the first stone waits for its branch, as it did at the end **(choice)**: every branch is walked before the
+  sensation, and each is a place the games can later live.
 - **(choice)** The written words stay on the page and are not saved with the scan.
