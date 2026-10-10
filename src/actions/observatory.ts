@@ -150,3 +150,36 @@ export async function authorLens(input: {
     return { error: 'Failed to save' }
   }
 }
+
+export type ObservatoryGoal = {
+  id: string
+  title: string
+  domain: string
+  status: 'active' | 'parked'
+}
+
+const LEVEL_CADENCE: Partial<Record<LensLevel, string>> = {
+  yearly: 'year',
+  quarterly: 'quarter',
+  monthly: 'month',
+  weekly: 'week',
+}
+
+/** The player's goals at this level, for rename / park / retire (mm-goal-edit). */
+export async function listLevelGoals(level: string): Promise<ObservatoryGoal[]> {
+  const player = await getCurrentPlayer()
+  if (!player) return []
+  const cadence = LEVEL_CADENCE[level as LensLevel]
+  if (!cadence) return []
+  const rows = await db.lensGoal.findMany({
+    where: { playerId: player.id, cadence, status: { in: ['active', 'parked'] } },
+    orderBy: [{ domain: 'asc' }, { keepOrder: 'asc' }],
+    select: { id: true, title: true, domain: true, status: true },
+  })
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    domain: row.domain,
+    status: row.status === 'parked' ? 'parked' : 'active',
+  }))
+}

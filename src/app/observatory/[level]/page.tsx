@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
-import { getLensLevel } from '@/actions/observatory'
+import { getLensLevel, listLevelGoals } from '@/actions/observatory'
+import { LensGoalList } from '../LensGoalList'
 import { LensAuthorForm } from '../LensAuthorForm'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
@@ -45,6 +46,7 @@ export default async function ObservatoryLevelPage({ params }: { params: Promise
     )
   }
 
+  const goals = await listLevelGoals(res.level)
   const authorable = res.level === 'vision' || res.level === 'orientation'
 
   return (
@@ -73,6 +75,8 @@ export default async function ObservatoryLevelPage({ params }: { params: Promise
             initialDescription={res.description ?? ''}
           />
         )}
+
+        <LensGoalList goals={goals} />
 
         {/* BARs grown under this lens */}
         <div style={{ marginTop: 22 }}>

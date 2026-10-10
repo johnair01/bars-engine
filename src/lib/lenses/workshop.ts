@@ -58,3 +58,50 @@ export function validateDescentInput(input: {
   return { ok: true }
 }
 
+
+export const LENS_GOAL_TITLE_MAX = 200
+
+/** The row change for a single-goal edit from the Observatory (mm-goal-edit). */
+export function lensGoalEditData(
+  action: 'rename' | 'park' | 'resume' | 'retire',
+  title?: string,
+):
+  | { data: { title: string } | { status: 'parked' | 'active' } | { status: 'archived'; archivedAt: Date } }
+  | { error: string } {
+  switch (action) {
+    case 'rename': {
+      const next = (title ?? '').trim()
+      if (!next) return { error: 'A goal needs a name.' }
+      if (next.length > LENS_GOAL_TITLE_MAX) return { error: `Keep the name under ${LENS_GOAL_TITLE_MAX} characters.` }
+      return { data: { title: next } }
+    }
+    case 'park':
+      return { data: { status: 'parked' } }
+    case 'resume':
+      return { data: { status: 'active' } }
+    case 'retire':
+      return { data: { status: 'archived', archivedAt: new Date() } }
+    default:
+      return { error: 'Unknown edit.' }
+  }
+}
+
+/**
+ * The domain that tomorrow's free-write prompt should ask about: the first lens,
+ * in intake order, with no locked or parked year draft and no year goal yet.
+ * Null once every lens has been visited (mm-intake-one-a-morning).
+ */
+export function nextUnvisitedDomain(
+  domainKeys: readonly string[],
+  drafts: Array<{ domain: string | null; status: string }>,
+  yearGoals: Array<{ domain: string; status: string }>,
+): string | null {
+  const visited = new Set<string>()
+  for (const draft of drafts) {
+    if (draft.domain && (draft.status === 'locked' || draft.status === 'parked' || draft.status === 'skipped')) {
+      visited.add(draft.domain)
+    }
+  }
+  for (const goal of yearGoals) visited.add(goal.domain)
+  return domainKeys.find((key) => !visited.has(key)) ?? null
+}
