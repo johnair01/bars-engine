@@ -1487,6 +1487,30 @@
   }
 
 
-  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE };
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+  // Three.js alone, for a cave that needs neither the kit nor the spots (the Big Mind cave, bigmind/bigmind.js).
+  var threeP = null;
+  function loadThree() {
+    if (window.THREE) return Promise.resolve(window.THREE);
+    if (threeP) return threeP;
+    threeP = new Promise(function (res, rej) {
+      var s = el("script", { src: THREE_URL });
+      s.onload = function () { res(window.THREE); };
+      s.onerror = function () { threeP = null; rej(new Error("three.js did not load")); };
+      document.head.appendChild(s);
+    });
+    return threeP;
+  }
+  // The engine pieces a second cave reuses (the Big Mind cave is a fork that shares them, so a fix here reaches both caves):
+  // the route, the tunnel, the pebbles, the marker and lantern, the faceless avatar and its walk, the daemon body, the breath
+  // and the page guards.
+  var kit = {
+    el: el, clamp: clamp, hashOf: hashOf, rngOf: rngOf, loadThree: loadThree,
+    makeRoute: makeRoute, ptOn: ptOn, at: at, yawFacing: yawFacing, smoothLine: smoothLine,
+    buildTube: buildTube, buildPebbles: buildPebbles, buildMarker: buildMarker, buildLantern: buildLantern,
+    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, DAEMONS: DAEMONS,
+    BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
+  };
+  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE, kit: kit };
+  // A page that only borrows the engine sets __oagCaveNoStart before loading this file, so the Cave of Lessons' doorway stays shut.
+  if (!window.__oagCaveNoStart) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start(); }
 })();

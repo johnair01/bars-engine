@@ -120,7 +120,34 @@ ${inline(caveJs)}
 </html>
 `;
 
+// /ontology-game/big-mind: the Big Mind cave, a fork of the Cave of Lessons that borrows its engine (bigmind/DESIGN.md).
+// It needs three.js only, so no kit or spots file is copied.
+const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
+const bigMindHtml = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>The Big Mind cave · Ontology Alchemy Game</title>
+<meta name="description" content="A walk inward, one voice at a time. Saved on your device only.">
+<style>html,body{margin:0;background:#0e0e1a;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}html{touch-action:manipulation}</style>
+</head>
+<body>
+<div id="cave-root"></div>
+<script>window.__oagCaveNoStart = true;</script>
+<script>
+${inline(caveJs)}
+</script>
+<script>
+${inline(bigMindJs)}
+</script>
+</body>
+</html>
+`;
+
 mkdirSync(outDir, { recursive: true });
+mkdirSync(path.join(outDir, 'big-mind'), { recursive: true });
+writeFileSync(path.join(outDir, 'big-mind', 'index.html'), bigMindHtml);
 mkdirSync(path.join(outDir, 'cave'), { recursive: true });
 writeFileSync(path.join(outDir, 'cave', 'index.html'), caveHtml);
 copyFileSync(path.join(srcDir, 'cave', 'cave-kit.glb'), path.join(outDir, 'cave', 'cave-kit.glb'));
