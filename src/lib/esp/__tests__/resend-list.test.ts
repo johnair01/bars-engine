@@ -80,14 +80,22 @@ beforeEach(() => {
 // ── Who can be on which list ────────────────────────────────────────────────
 
 describe('the list contract', () => {
-  it('has exactly the four pages that promised later mail', () => {
-    expect(Object.keys(LIST_TERMS).sort()).toEqual(['character-sheet', 'introductions', 'nonprofit', 'succession'])
+  it('has exactly the five pages that promised later mail', () => {
+    expect(Object.keys(LIST_TERMS).sort()).toEqual([
+      'character-sheet',
+      'daemons',
+      'introductions',
+      'nonprofit',
+      'succession',
+    ])
   })
 
   it('gives every update list its own topic, and the character sheet none', () => {
     expect(LIST_TERMS['character-sheet'].topic).toBeNull()
-    const topics = ['succession', 'nonprofit', 'introductions'].map((l) => LIST_TERMS[l as 'succession'].topic)
-    expect(new Set(topics).size).toBe(3)
+    const topics = ['succession', 'nonprofit', 'introductions', 'daemons'].map(
+      (l) => LIST_TERMS[l as 'succession'].topic,
+    )
+    expect(new Set(topics).size).toBe(4)
     expect(topics.every(Boolean)).toBe(true)
   })
 })

@@ -160,3 +160,38 @@ export async function captureInterestList(input: {
         : "You're on the list. I will write when the founding circle meets.",
   }
 }
+
+/**
+ * The coaching page's keep step: the Meet Your Daemons series.
+ *
+ * Wendell chose this over a mail-yourself button (lg-keep-step = daemons-list,
+ * 2026-10-10), which is what lets the coaching page store an address at all
+ * (cg-browser-only now has this one exception). Only the address and an
+ * optional first name leave the browser. What the visitor carried through the
+ * walk stays in their tab.
+ */
+export async function captureDaemonsSeries(input: {
+  email: string
+  name?: string | null
+}): Promise<CaptureLeadState> {
+  const email = normalize(input.email)
+  const name = input.name?.trim() || null
+  if (!EMAIL_RE.test(email)) return { ok: false, error: 'Please enter a valid email.' }
+
+  try {
+    await db.funnelSignup.create({
+      data: { intent: 'daemons', email, name, source: 'coaching' },
+    })
+  } catch (err) {
+    console.error('[leads] failed to persist daemons series signup', err)
+    return { ok: false, error: 'Something went wrong saving that. Please try again.' }
+  }
+
+  await addToList({
+    email,
+    firstName: name?.split(/\s+/)[0] ?? null,
+    list: 'daemons',
+  })
+
+  return { ok: true, message: "You're in. The first email introduces the first daemon." }
+}

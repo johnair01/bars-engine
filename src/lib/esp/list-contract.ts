@@ -16,7 +16,7 @@
 // ── Lists: who is on which ──────────────────────────────────────────────────
 
 /**
- * The four pages that promise mail after the first one. A reader joins the
+ * The five pages that promise mail after the first one. A reader joins the
  * list for the page they signed up on, and no other.
  *
  * Chapter One, the Superpower quiz and the Myths Read are absent on purpose.
@@ -24,7 +24,7 @@
  * Postgres and never reach a list. Kickstarter backers are absent too: they
  * are reached through Kickstarter, and no page on this site captures them.
  */
-export type ListName = 'character-sheet' | 'succession' | 'nonprofit' | 'introductions'
+export type ListName = 'character-sheet' | 'succession' | 'nonprofit' | 'introductions' | 'daemons'
 
 /**
  * The one Resend segment for everyone promised updates. A Broadcast goes to
@@ -63,6 +63,13 @@ export const LIST_TERMS: Readonly<Record<ListName, ListTerms>> = {
   introductions: {
     promise: 'Add me to your mailing list too.',
     topic: 'introductions',
+  },
+  // The coaching page's keep step (Wendell, lg-keep-step = daemons-list, 2026-10-10).
+  // The series is seven emails and then it ends, so the promise says so. Nothing
+  // goes out until he has edited the series, and the page says that too.
+  daemons: {
+    promise: 'Seven emails, one for each daemon, and then the series ends.',
+    topic: 'meet your daemons',
   },
 }
 
