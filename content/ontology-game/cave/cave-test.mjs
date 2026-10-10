@@ -335,11 +335,30 @@ for (const round of [1, 2]) {
   ok(await sees('[data-cave-321-step="before"]') || round === 2, '3-2-1 opens with a charge reading before');
   if (round === 1) { await charge('before', 9); ok((await page.locator('[data-cave-321-read="before"]').textContent()) === '9 of 10', 'the before reading follows the slider'); await page.locator('[data-cave-321-start]').click(); }
   ok(await sees('[data-cave-321-step="it"]'), `3-2-1 round ${round}: 3 Face it`);
+  const stg = () => C(() => window.__oagCave.stage());
+  const dist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]);
+  let s3;
+  if (round === 1) {
+    await page.waitForTimeout(2500); s3 = await stg();
+    ok(s3.cam === 'far' && s3.cu === 0 && dist(s3.avatar, s3.daemon) > 4.5 && (await page.locator('[data-cave-321-where]').textContent()).includes('across the chamber'), 'staged: Face it is seen from across the chamber');
+  }
   await say('it', 'it is a wall ' + round);
   ok(await page.locator('[data-cave-bubble-phase="3"]').count() >= 1 && (await page.locator('[data-cave-321-text="it"]').inputValue()) === '' && await page.evaluate(() => document.activeElement && document.activeElement.hasAttribute('data-cave-321-text')), 'a line sent shows in the thread, and the box stays ready');
   ok(await page.locator('[data-cave-321-voice]').count() === 0, 'Face it has one voice, no switcher');
   await page.locator('[data-cave-321-next]').click();
   ok(await sees('[data-cave-321-step="you"]') && await page.locator('[data-cave-bubble-phase="3"]').count() >= 1, 'Talk to it keeps the thread above');
+  if (round === 1) {
+    await page.waitForTimeout(3000); const s2 = await stg();
+    ok(s2.cam === 'face-you' && dist(s2.avatar, s2.daemon) < 3.6 && dist(s2.avatar, s2.daemon) > 1.5 && (await page.locator('[data-cave-321-where]').textContent()).includes('face to face'), 'staged: Talk to it is face to face');
+    await page.locator('[data-cave-321-voice="it"]').click(); await page.waitForTimeout(3000); const s2b = await stg();
+    ok(s2b.cam === 'face-it' && dist(s2b.camPos.filter((_, i) => i !== 1), s2.camPos.filter((_, i) => i !== 1)) > 2, 'staged: the voice switcher swings the camera to the daemon\'s shoulder');
+    await page.locator('[data-cave-321-voice="you"]').click();
+    await page.locator('[data-cave-321-back]').click();
+    await page.waitForTimeout(4500); const sb = await stg();
+    ok(await sees('[data-cave-321-resume]') && await page.locator('[data-cave-321-text]').count() === 0 && sb.cam === 'far' && sb.cu === 0, 'Step back returns to the far place and pauses, with no way past');
+    await page.locator('[data-cave-321-resume]').click();
+    ok(await sees('[data-cave-321-step="you"]') && await page.locator('[data-cave-bubble-phase="3"]').count() >= 1, 'going back in keeps the words and the step');
+  }
   await say('you', 'what do you want?');
   await page.locator('[data-cave-321-voice="it"]').click();
   ok((await page.locator('[data-cave-321-voice="it"]').getAttribute('aria-pressed')) === 'true', 'the switcher moves to the daemon\'s voice');
@@ -347,9 +366,14 @@ for (const round of [1, 2]) {
   ok(await page.locator('[data-cave-bubble="it"][data-cave-bubble-phase="2"]').count() >= 1 && await page.locator('[data-cave-bubble="you"][data-cave-bubble-phase="2"]').count() >= 1, 'both voices write their own side of the talk');
   await page.locator('[data-cave-321-next]').click();
   ok(await sees('[data-cave-321-step="i"]') && await page.locator('[data-cave-321-voice]').count() === 0, 'Be it: one voice, "I am"');
+  if (round === 1) {
+    await page.waitForTimeout(4500); const s1 = await stg();
+    ok(s1.cam === 'its' && s1.flip === 1 && s1.cd === 1 && dist(s1.avatar, s1.daemon) > 4.5 && (await page.locator('[data-cave-321-where]').textContent()).includes('where it stood'), 'staged: Be it stands where the daemon stood, with the daemon in the player\'s place');
+  }
   await say('i', 'I am the part that guards');
   await page.locator('[data-cave-321-next]').click();
   ok(await sees('[data-cave-321-step="after"]'), 'a charge reading after');
+  if (round === 1) { await page.waitForTimeout(4500); const sa = await stg(); ok(sa.cam === 'far' && sa.cu === 0 && sa.cd === 0 && sa.flip === 0, 'staged: then a step back to the player\'s own place'); }
   await charge('after', round === 1 ? 8 : 3);
   await page.locator('[data-cave-321-after]').click();
   ok(await sees('[data-cave-321-ask]') && await page.locator('[data-cave-next]').count() === 0 && await page.locator('[data-cave-skip]').count() === 0, `after round ${round} the daemon is asked if it feels satisfied, with no way past and no skip`);

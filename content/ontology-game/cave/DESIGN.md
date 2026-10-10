@@ -321,4 +321,12 @@ then it needs to be worked with. We can pivot to a 321 discussion with the part 
   whether the daemon feels satisfied. Yes, and it steps to the wall; "Not yet, another round" keeps the thread, starts again
   at 3 with the new reading as the next "before", and counts the round in the title. The chat sits in the modal; the text
   box keeps focus after each line.
+- **Staged (board `cave-321-form` = staged, 10 October).** The chat above runs inside a staged scene; each step is a place, and
+  one line under the step names where the player stands. Face it: the figure and the daemon across the chamber. Talk to it:
+  the figure walks to face it, and the voice switcher swings the camera from over the player's shoulder to over the daemon's.
+  Be it: the figure walks to where the daemon stood, turns, and the camera looks back down the passage while the daemon
+  stands in the player's place. After: a step back to the player's own place. "Step back" is on every step and returns to the
+  far place and pauses, keeping the words; "Go back in" resumes the same step. With the Damaged Self, before Be it the cave
+  asks: continue, rest, or go back up. The player writes every line; the daemon's figure moves and never speaks. Not built:
+  the on-device charge/seconds/"I" counts of the 17 October test.
 - **(choice)** The written words stay on the page and are not saved with the scan.

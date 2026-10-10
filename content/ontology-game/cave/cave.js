@@ -1260,16 +1260,33 @@
         inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; });
         return el("div", { class: "oagc-slide" }, [inp, out]);
       }
-      if (ph === "before") {
+      var WHERE = { 3: "You are looking at it from across the chamber.", 2: "You are face to face with it.", 1: "You are standing where it stood.", check: "You are face to face with it.", after: "You have stepped back to your own place." };
+      var stepBack = btn("Step back", { "data-cave-321-back": "" }, function () { t.draft = ""; t.paused = true; placeCard(blk); }, true);
+      if (t.paused) {
+        body.push(P("Stepped back", { "data-cave-321-step": "paused" }));
+        body.push(P("You are across the chamber, at your own place. " + n + " still stands there, and your words are kept. Nothing is skipped."));
+        body.push(row([btn("Go back in", { "data-cave-321-resume": "" }, function () { t.paused = false; placeCard(blk); })]));
+      } else if (ph === "before") {
         body.push(P("Before you start", { "data-cave-321-step": "before" }));
         body.push(P("How charged is this with " + n + " right now? The 3-2-1 cools it into something you can work with: face it, talk to it, be it."));
         body.push(slider("before"));
         body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; placeCard(blk); })]));
       } else if (ph === "after") {
         body.push(P("After the 3-2-1", { "data-cave-321-step": "after" }));
+        body.push(P(WHERE.after, { "data-cave-321-where": "" }));
         body.push(P("How charged is it now? Before, it was " + t.before + " of 10."));
         body.push(slider("after"));
         body.push(row([btn("Continue", { "data-cave-321-after": "" }, function () { t.phase = "ask"; placeCard(blk); })]));
+      } else if (ph === "check") {
+        // Wendell's board, bmc-safety and cave-321-damaged-self-ask: at the deepest door the cave asks first.
+        body.push(P("Before you become it", { "data-cave-321-step": "check" }));
+        body.push(P(WHERE.check, { "data-cave-321-where": "" }));
+        body.push(P("Being " + n + " goes to the deepest place. Do you want to go on, rest, or go back up?", { "data-cave-321-checkask": "" }));
+        body.push(row([
+          btn("Continue", { "data-cave-321-check": "continue" }, function () { t.phase = 1; placeCard(blk); }),
+          btn("Rest", { "data-cave-321-check": "rest" }, function () { t.paused = true; placeCard(blk); }, true),
+          btn("Go back up", { "data-cave-321-check": "up" }, function () { t.phase = 2; placeCard(blk); }, true),
+        ]));
       } else if (ph === "ask") {
         body.push(P("Does " + n + " feel satisfied?", { "data-cave-321-ask": "" }));
         body.push(P("Charge " + t.before + " → " + t.after + (t.after < t.before ? ", down " + (t.before - t.after) + "." : ".") + " Your words stay on this page and are not saved."));
@@ -1280,6 +1297,7 @@
       } else {
         var k = T321[3 - ph], voice = ph === 3 ? "you" : ph === 1 ? "it" : t.voice;
         body.push(P(k[2] + " · " + k[3], { "data-cave-321-step": k[0] }));
+        body.push(P(WHERE[ph], { "data-cave-321-where": "" }));
         body.push(P(k[4].replace("{d}", n)));
         var log = el("div", { class: "oagc-log", "data-cave-321-log": "" });
         t.msgs.forEach(function (m) {
@@ -1305,7 +1323,7 @@
         ta.addEventListener("input", function () { t.draft = ta.value; });
         ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); send(); } });
         body.push(el("div", { class: "oagc-compose" }, [ta, el("button", { "data-cave-321-send": "", "aria-label": "Send", text: "↑", onclick: send })]));
-        body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph - 1; placeCard(blk); })]));
+        body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && blk.daemon === "damaged-self" ? "check" : ph - 1; placeCard(blk); }), stepBack]));
       }
       return title;
     }
@@ -1336,13 +1354,13 @@
       if (c.daemonFig) route.group.remove(c.daemonFig);
       c.daemonFig = buildDaemon(THREE, d, h * 1.1);
       c.daemonFig.position.set(a.x, a.y - h * 0.9, a.z); c.daemonFig.rotation.y = yawFacing({ fx: -a.fx, fz: -a.fz });
-      c.daemonBase = { x: a.x, z: a.z, nx: -a.fz, nz: a.fx };
+      c.daemonBase = { x: a.x, z: a.z, nx: -a.fz, nz: a.fx }; c.daemonS = route.stops[2].s + 6; c.daemonRoute = route; c.daemonMoved = false;
       route.group.add(c.daemonFig);
       placeCard(blk);
     }
     function moveDaemon(blk) {
       var c = blk.route.ctx; if (!c.daemonFig) return;
-      c.daemonT = { t0: performance.now(), to: blk.route.w * 0.6 };
+      c.daemonMoved = true; c.daemonT = { t0: performance.now(), to: blk.route.w * 0.6 };
     }
 
     // ---- the path between two places -------------------------------------------------------
@@ -1397,6 +1415,33 @@
     // ---- the frame -------------------------------------------------------------------------
     var tmp = new THREE.Vector3(), baseLamp = new THREE.Color(), tmpC = new THREE.Color();
     var CAM_BACK = 6.2, CAM_UP = 4.6;
+    // ---- the staged 3-2-1: where the player and the daemon stand at each step -----------------------------------------
+    var stageProbe, stg = { cu: 0, cd: 0, flip: 0, ctx: null, route: null, cam: "far" };
+    function t321Of(wk) { return wk && wk.blk && wk.blk.t321 || null; }
+    // The target places for the chat's current step, or null when there is no 3-2-1 being staged. u is how far the player's
+    // figure has walked toward the daemon's first place (6 is that place); cd is how far the daemon has walked to the player's.
+    function stageTarget(wk, c) {
+      var t = t321Of(wk); if (!t || !wk.arrived || !c || c.daemonS == null || !c.daemonFig) return null;
+      if (t.paused) return { u: 0, cd: 0, flip: 0, cam: "far" };
+      if (t.phase === 2) return { u: 3, cd: 0, flip: 0, cam: t.voice === "it" ? "face-it" : "face-you" };
+      if (t.phase === 1 || t.phase === "check") return t.phase === 1 ? { u: 6, cd: 1, flip: 1, cam: "its" } : { u: 3, cd: 0, flip: 0, cam: "face-you" };
+      return { u: 0, cd: 0, flip: 0, cam: "far" };
+    }
+    function placeDaemon(c, cd) {
+      if (!c || !c.daemonFig || c.daemonS == null || c.daemonT || c.daemonMoved) return;
+      var r = c.daemonRoute, d = at(r, c.daemonS - 6 * cd), h = ch.h;
+      c.daemonFig.position.set(d.x, d.y - h * 0.9, d.z);
+      c.daemonFig.rotation.y = yawFacing({ fx: cd > 0.5 ? d.fx : -d.fx, fz: cd > 0.5 ? d.fz : -d.fz });
+    }
+    // Camera and aim for a stage. sa and sd are the path frames under the player's figure and the daemon's first place.
+    function stageCam(cam, sa, sd, h, t) {
+      var fl = sa.y - h * 0.92, nx = -sa.fz, nz = sa.fx, V = function (x, y, z) { return new THREE.Vector3(x, y, z); };
+      if (cam === "face-you") return { pos: V(sa.x - sa.fx * 2.3 + nx * 1.2, fl + 3.4, sa.z - sa.fz * 2.3 + nz * 1.2), aim: V(sd.x, fl + 2.6, sd.z) };
+      if (cam === "face-it") return { pos: V(sd.x + sd.fx * 2.3 - nx * 1.2, fl + 3.4, sd.z + sd.fz * 2.3 - nz * 1.2), aim: V(sa.x, fl + 2.6, sa.z) };
+      if (cam === "its") return { pos: V(sa.x + sa.fx * 4.2, fl + 4.2, sa.z + sa.fz * 4.2), aim: V(sa.x - sa.fx * 8, fl + 2.2, sa.z - sa.fz * 8) };
+      return { pos: V(sa.x - sa.fx * 7.4, fl + 5.2, sa.z - sa.fz * 7.4), aim: V(sd.x, fl + 2.6, sd.z) }; // far: across the chamber
+    }
+    stageProbe = function () { return { cam: stg.cam, cu: stg.cu, cd: stg.cd, flip: stg.flip, camPos: [camera.position.x, camera.position.y, camera.position.z], avatar: avatar ? [avatar.position.x, avatar.position.z] : null, daemon: stg.ctx && stg.ctx.daemonFig ? [stg.ctx.daemonFig.position.x, stg.ctx.daemonFig.position.z] : null }; };
     function render() {
       var nowMs = performance.now(), dt = Math.min(0.5, (nowMs - last) / 1000); last = nowMs;
       breathStep(dt, nowMs / 1000);
@@ -1415,10 +1460,29 @@
         var wk = state.walk, route = wk.route, a = at(route, wk.s), h = ch.h, fl = a.y - h * 0.92, c = ctxOf();
         looseNow += (me().passed / WAVE.length - looseNow) * Math.min(1, dt * 2);
         loosenAvatar(avatar, looseNow, br.b);
+        // The staged 3-2-1 (board: cave-321-form = staged): each step of the chat is a place. Face it from across the chamber; Talk
+        // to it face to face; Be it from where the daemon stood, looking back; then a step back to one's own place. The player's
+        // figure walks between the places and the daemon's figure trades places with it. Step back always returns to the far place.
+        var stT = stageTarget(wk, c), stCam = null, stMoving = false;
+        if (stg.ctx && stg.ctx !== c) { placeDaemon(stg.ctx, 0); stg.cu = 0; stg.cd = 0; stg.flip = 0; stg.ctx = null; }
+        if (stT || stg.cu > 0.002 || stg.cd > 0.002 || stg.flip > 0.002) {
+          var sc = stT ? c : stg.ctx, tg = stT || { u: 0, cd: 0, flip: 0 }, se = 1 - Math.exp(-dt * 2.2);
+          stg.ctx = sc; stg.route = route; stg.cam = stT ? stT.cam : "far";
+          var pu = stg.cu; stg.cu += (tg.u - stg.cu) * se; stg.cd += (tg.cd - stg.cd) * se; stg.flip += (tg.flip - stg.flip) * se;
+          stMoving = Math.abs(stg.cu - pu) / Math.max(dt, 0.001) > 0.4;
+          if (Math.abs(tg.u - stg.cu) < 0.002) stg.cu = tg.u; if (Math.abs(tg.cd - stg.cd) < 0.002) stg.cd = tg.cd; if (Math.abs(tg.flip - stg.flip) < 0.002) stg.flip = tg.flip;
+          placeDaemon(sc, stg.cd);
+          if (!stT && stg.cu === 0 && stg.cd === 0 && stg.flip === 0) stg.ctx = null;
+        }
         var stepLen = state.auto ? 0.9 : wk.t < BREATH.inS ? wk.D / 2 / STEPS_IN : wk.D / 2 / STEPS_OUT;
-        poseAvatar(avatar, state.auto ? state.auto.clk : wk.t, wk.moving, dt, br.b, stepLen, state.calm);
+        poseAvatar(avatar, state.auto ? state.auto.clk : wk.t, wk.moving || stMoving, dt, br.b, stepLen, state.calm);
         avatar.position.set(a.x, fl + 0.02, a.z);
         avatar.rotation.y = yawFacing(a);
+        if (stg.ctx) { // the figure stands at its place in the staged scene, and the camera is set for it
+          var sa = at(route, stg.ctx.daemonS - 6 + stg.cu), sd = at(route, stg.ctx.daemonS);
+          avatar.position.set(sa.x, sa.y - h * 0.92 + 0.02, sa.z); avatar.rotation.y = yawFacing(sa) + Math.PI * stg.flip;
+          stCam = stageCam(stg.cam, sa, sd, h, t321Of(wk));
+        }
         if (state.held) state.look.yaw *= 1 - Math.min(1, dt * 1.5);
         // camera: behind on the path, and a little above; on a branch's first steps it sits straight behind the figure
         var cbx, cbz, cby;
@@ -1429,9 +1493,10 @@
         var cx = a.x + tmp.x * Math.cos(ry) + tmp.z * Math.sin(ry), cz = a.z - tmp.x * Math.sin(ry) + tmp.z * Math.cos(ry);
         // the camera stays under the roof of the tunnel where it is, so a ramp never lifts it out
         var want = new THREE.Vector3(cx, Math.min(Math.max(cby, a.y) - h * 0.92 + CAM_UP, cby - h * 0.92 + 5) - state.look.pitch * 2.6, cz), aim = new THREE.Vector3(a.x + a.fx * 3.4, fl + 2.2, a.z + a.fz * 3.4);
+        if (stCam) { want.copy(stCam.pos); aim.copy(stCam.aim); }
         if (state.rise) { want.y = state.rise.y0 + 16 * state.rise.k; aim.set(a.x + a.fx * 6, state.rise.y0 + 6 + 20 * state.rise.k, a.z + a.fz * 6); }
         if (snapCam) { camPos.copy(want); lookAt.copy(aim); snapCam = false; }
-        else { var f = 1 - Math.exp(-dt * 6); camPos.lerp(want, f); lookAt.lerp(aim, f); }
+        else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
         var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
@@ -1504,6 +1569,7 @@
       return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur.slice(), revealed: revealed, bg: scene.background.getHex(), density: scene.fog.density };
     };
     // The pane: its words, where it sits on the screen, and where the figure's head is.
+    api.stage = function () { return stageProbe(); };
     api.pane = function () {
       var r = pane.getBoundingClientRect(), cs = getComputedStyle(pane);
       return { shown: pane.style.display !== "none" && pane.style.visibility !== "hidden" && r.width > 0, title: page.title, text: page.text, at: paneAt, rect: { x: r.left, y: r.top, w: r.width, h: r.height }, font: parseFloat(cs.fontSize), docked: docked };
