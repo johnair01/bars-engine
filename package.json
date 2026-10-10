@@ -255,6 +255,7 @@
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.0.6",
     "@types/pathfinding": "^0.1.0",
+    "@vercel/analytics": "^1.5.0",
     "@vercel/blob": "^2.3.1",
     "@xyflow/react": "^12.10.1",
     "ai": "^6.0.67",
