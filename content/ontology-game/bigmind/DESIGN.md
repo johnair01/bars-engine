@@ -96,3 +96,28 @@ to be used in external world actions".
 Not built yet. What this build already gives it: a declined voice and every part asked to wait are saved with status
 `waiting` (`voices[id].status`, `waiting[]`), which is the list the lobby would show. The lobby's size limit, how a part
 comes along on an exploration, and how the gold reaches the outer world are open, for a council pass when the lobby is built.
+
+## The chamber as a conversation (Wendell's playtest, 10 October 2026, 21:48)
+
+His words: "There needs to be more back and forth between the player and the protector. We have to ask its permission to
+step aside and if the player feels it doesn't want to give permission then they go down another dialogue path. The
+experience it quite collapsed and doesn't have a feeling of dialogue yet".
+
+- **The voice speaks first.** "Stop. Nobody goes past this point." The player answers (who are you, I'd like to hear
+  from you, I need to get through) and the Protector answers back before anything is asked.
+- **Three permissions.** The player asks to speak with it, asks it to step aside so they can stand where it stands, and,
+  after stepping back out, asks to walk on past. Each time the player reads its answer: it lets me, it holds back, or I
+  can't tell **(choice: the read is the player's, as the facilitator waits for a voice to come)**. A yes is answered in
+  the Protector's words.
+- **The refusal path.** When it holds back it says why. The player can ask what it is afraid would happen, say what it
+  fears as it (cards or their own words), offer an assurance (cards or their own words), hear its answer and ask again;
+  or wait with it; or leave it at its post. I can't tell means staying and breathing with it, then asking again.
+- **Left at its post.** Before the seat shift it waits, nothing is marked skipped, and the player walks back up. At the end
+  it keeps the way shut: what it said can still be kept, and the save marks it `keepsWay`, so the next sitting meets it
+  at its post. "Not now" at the first meeting stays as before (`bm-decline`: it waits by the wall and the way opens).
+- **Five questions**, each one following from the last, with the guide answering what the voice said: its job, how it
+  protects (walls, borders, the alarm, reinforcements, a higher wall, a dome), what it protects from, how it is thanked,
+  and how that feels. The fear it named in a refusal is offered among the lines to keep.
+
+Tests: `bigmind-test.mjs` now has 72 checks, adding the meeting, each permission, the refusal path, the assurance, I
+can't tell, and leaving it at its post.

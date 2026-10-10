@@ -28,29 +28,58 @@
     unknown: { name: "a voice not met yet", short: "Not sure", waits: "A voice not met yet waits here for its turn.", tell: "" },
     felt: { tell: "did not feel like the Protector to you" },
   };
+  // The chamber is a conversation (Wendell, 10 October 2026, 21:48: "There needs to be more back and forth between the
+  // player and the protector. We have to ask its permission to step aside and if the player feels it doesn't want to give
+  // permission then they go down another dialogue path."). The voice speaks first and answers back. Three times the player
+  // asks its permission: to speak with it, for it to step aside so the player can stand in its place, and to walk on past.
+  // Each time the player reads its answer: it lets them, it holds back, or they can't tell. Holding back opens the refusal
+  // path: asking what it fears, saying what it fears as it, offering an assurance, and asking again; or leaving it at its
+  // post. The lines are a choice, written from the transcript's Protector (00:22 to 00:35).
   var VOICES = [
     {
       id: "protector", name: "the Protector", title: "The Protector", daemon: "protector",
       arrive: "A broad figure stands in the middle of the way, holding a shield. It does not move aside.",
-      ask: "May I speak to the Protector?",
+      meet: {
+        opens: "Stop. Nobody goes past this point.",
+        replies: [
+          ["Who are you?", "I keep the way. That is all you need to know.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear from me? Nobody asks to hear from me. They push past, or they turn back.", "hear"],
+          ["I need to get through.", "Then you'll wait. Everything past here could hurt you.", "push"],
+        ],
+        after: { hear: "Then I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Keeper of the way, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Protector, may I speak with you for a while?", yes: "Speak, then. But I'm watching.", no: ["Why should I? Every time I let someone in, something gets hurt.", "I've heard that before.", "No. Not yet."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. I'll be right here.", no: ["Step aside? If I step aside, the way is open.", "You don't know what it takes to stand here.", "Not yet. Ask me again."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on, then. I'll keep watch behind you.", no: ["Past me? I've only just been heard.", "What's ahead is worse than what's behind.", "Not yet."] },
+      },
+      fears: [["The self will get hurt."], ["I'll be blamed when it does."], ["Nobody will need me anymore."], ["Something will get out that should stay in."], ["I won't get my post back."]],
+      assure: [["I'll come back to my own place when we're done."], ["Nothing will be taken from you. You keep your post."], ["I'll go slowly, and you can stop me at any time."], ["I'm not trying to get rid of you. I want to know you."]],
+      assured: ["...Alright. I'll hold you to that.", "Hm. We'll see.", "That's more than anyone has said to me in a long time."],
       seat: "You are the Protector now, not the self. The self is standing back there, where you were a moment ago.",
       questions: [
-        { id: "job", ask: "Protector, what is your job?", cards: [
+        { id: "job", ask: "Protector, what is your job?", reflect: "Your job is to protect. Then tell me how you do it.", cards: [
           ["To protect."], ["To keep the self safe."], ["To keep my family safe."], ["To keep watch, day and night."],
-          ["I build walls and sound the alarm."], ["It's trying to keep me safe.", "ideas"], ["To keep everything in hand.", "controller"],
+          ["It's trying to keep me safe.", "ideas"], ["To keep everything in hand.", "controller"],
         ] },
-        { id: "from", ask: "What do you protect the self from?", multi: true, cards: [
+        { id: "how", ask: "How do you protect? What do you do when something gets through?", multi: true, reflect: "And when it gets through again, you build it higher. That's a lot of building.", cards: [
+          ["I build walls."], ["I set borders and boundaries."], ["I sound the alarm."], ["I send for reinforcements."], ["I build the wall higher."],
+          ["I build a dome over everything."], ["I'd fix the breach for good.", "fixer"],
+        ] },
+        { id: "from", ask: "What do you protect the self from?", multi: true, reflect: "From all of that, and from itself too. It sounds like there's no end to it.", cards: [
           ["Attack."], ["Danger, from anywhere."], ["Pain."], ["Shame."], ["Looking bad."], ["Risk."], ["Uncertainty."],
           ["Loss."], ["Losing control."], ["Too much excitement."], ["Other people, even loved ones."], ["Itself."],
           ["I'd fix whatever is hurting it.", "fixer"], ["Maybe it protects me from feeling.", "ideas"],
         ] },
-        { id: "pay", ask: "And how are you thanked for all of this?", cards: [
-          ["I'm not."], ["Hardly ever."], ["The self calls me a prison."], ["It feels unfair."], ["I feel devalued."],
-          ["It's a full-time job, and exhausting."], ["I doubt anyone could thank me enough to make it worth it.", "skeptic"],
-          ["It does its best, poor thing.", "ideas"],
+        { id: "pay", ask: "And how are you thanked for all of this?", reflect: "Working day and night, and hardly thanked.", cards: [
+          ["I'm not."], ["Hardly ever."], ["The self calls me a prison."], ["It's a full-time job, and exhausting."],
+          ["I doubt anyone could thank me enough to make it worth it.", "skeptic"], ["It does its best, poor thing.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel, Protector?", reflect: "Thank you for telling me.", cards: [
+          ["Unfair."], ["Like I'm failing."], ["Devalued."], ["Lonely."], ["Tired."], ["Like nobody sees me."],
         ] },
       ],
-      thanks: "Thank you, Protector. Every voice has a right to be heard, and you have been. You can give the self its place back.",
+      thanks: "Thank you, Protector. Every voice has a right to be heard, and you have been. I'm going to step back out now and let the self have its place again.",
     },
   ];
   var NEXT = { id: "controller", title: "The Controller", daemon: "controller" };
@@ -87,6 +116,7 @@
     ".oagc button.bm-link{background:none;border:none;color:#aab4d4;font-weight:400;text-decoration:underline;padding:.4rem .2rem}" +
     ".oagc button.bm-self{position:absolute;top:10px;left:10px;z-index:4;background:rgba(20,20,40,.75);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500}" +
     ".bm-hint{position:absolute;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));text-align:center;color:#e8e2c8;font-size:15px;z-index:2;pointer-events:none;text-shadow:0 1px 3px #000;padding:0 1rem}" +
+    ".bm-npc{color:#cfe0ff;font-size:1.02rem}.bm-npc b{color:#9cc4ff}.bm-you{color:#fff1d0;text-align:right;font-style:normal}" +
     ".bm-kept{border-top:1px solid rgba(255,255,255,.12);padding:.5rem 0}.bm-kept li{color:#cfd8ff}";
 
   function start() {
@@ -132,7 +162,7 @@
     ids.forEach(function (id) {
       var v = save.voices[id], voice = VOICES.filter(function (x) { return x.id === id; })[0];
       var name = voice ? voice.title : id;
-      box.appendChild(el("p", { text: name + (v.status === "waiting" ? " (waiting; it has not spoken yet)" : "") }));
+      box.appendChild(el("p", { text: name + (v.keepsWay ? " (it is keeping the way for now; ask it again next time)" : v.status === "waiting" ? " (waiting; it has not spoken yet)" : "") }));
       if (v.kept.length) box.appendChild(el("ul", {}, v.kept.map(function (k) { return el("li", { text: k.line }); })));
       box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": id, text: "Forget " + name, onclick: function () {
         var s = readSave(); delete s.voices[id]; if (id === "protector") { s.at = "mouth"; s.waiting = []; } writeSave(s); mouth();
@@ -187,7 +217,7 @@
     // phase: hall1 (walking to the voice), chamber (the dialogue), hall2 (walking on), end (the next chamber's mouth).
     // gate is how open the way past the voice is (0.45 shut, 1 open); held is the finger on the stage or the ring.
     var st = { phase: from, s: from === "hall2" ? S_GATE + 2 : 2, held: false, gate: from === "hall2" ? 1 : 0.45, gateGoal: from === "hall2" ? 1 : 0.45,
-      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1 };
+      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1 };
     var route = layout(), tweens = [], last = performance.now(), snap = true;
     function tween(ms, fn, done) { tweens.push({ t0: performance.now(), ms: ms / st.speed, fn: fn, done: done }); }
     function ease(k) { return k * k * (3 - 2 * k); }
@@ -261,14 +291,88 @@
       if (p && p.open) { modal.innerHTML = ""; p.html.forEach(function (n) { modal.appendChild(n); }); modal.setAttribute("data-bm-step", p.tag); } else hide();
     }
 
-    // ---- the chamber: the four moves of the workshop with one voice -------------------------------------------
+    // ---- the chamber: a conversation with one voice -------------------------------------------
+    function npc(t) { return el("p", { class: "bm-npc" }, [el("b", { text: V.title + ": " }), document.createTextNode(t)]); }
+    function you(t) { return el("p", { class: "bm-you", text: "You: " + t }); }
     function arrive() {
       st.phase = "chamber";
-      show([el("h2", { text: V.title }), guide(V.arrive), guide(V.ask),
-        row([btn("Yes. Step into its place", seatShift, { "data-bm-yes": "" }), btn("Not now", decline, { "data-bm-decline": "" }, true)])], "ask");
+      var M = V.meet;
+      show([el("h2", { text: V.title }), guide(V.arrive), npc(M.opens),
+        el("div", { class: "bm-cards" }, M.replies.map(function (r) { return btn(r[0], function () { met(r); }, { class: "bm-card", "data-bm-reply": r[2] }); })),
+        row([btn("Not now", decline, { class: "bm-link", "data-bm-decline": "" })])], "meet");
+    }
+    function met(r) {
+      var M = V.meet, rest = M.replies.filter(function (x) { return x !== r && x[2] !== "who"; });
+      var kids = [el("h2", { text: V.title }), you(r[0]), npc(r[1])];
+      if (r[2] === "who") kids.push(el("div", { class: "bm-cards" }, rest.map(function (x) { return btn(x[0], function () { met(x); }, { class: "bm-card", "data-bm-reply": x[2] }); })));
+      else kids.push(row([btn(M.after[r[2]], function () { permit("speak", 0, seatAsk); }, { "data-bm-ask": "speak" })]));
+      kids.push(row([btn("Not now", decline, { class: "bm-link", "data-bm-decline": "" })]));
+      show(kids, "met");
+    }
+    function seatAsk() { permit("aside", 0, seatShift); }
+
+    // Asking permission. The player reads the voice's answer, so the voice is never forced (a choice: the read is the
+    // player's, as in the workshop, where the facilitator waits for the voice to come).
+    function permit(key, round, onYes, lead) {
+      var A = V.asks[key];
+      show([el("h2", { text: V.title }), lead || null, you(A.ask), guide("Wait for its answer. You may feel it more than see it. How does it answer?"),
+        el("div", { class: "bm-cards" }, [
+          btn("It lets me", function () { granted(key, onYes); }, { class: "bm-card", "data-bm-perm": "yes" }),
+          btn("It holds back", function () { refused(key, round, onYes); }, { class: "bm-card", "data-bm-perm": "no" }),
+          btn("I can't tell", function () { unsure(key, round, onYes); }, { class: "bm-card", "data-bm-perm": "unsure" }),
+        ])], "perm-" + key);
+    }
+    function granted(key, onYes) {
+      st.perms[key] = (st.perms[key] || 0) + 1;
+      show([el("h2", { text: V.title }), npc(V.asks[key].yes), row([btn("Thank you", onYes, { "data-bm-thanks": key })])], "granted-" + key);
+    }
+    function unsure(key, round, onYes) {
+      show([el("h2", { text: V.title }), guide("Then stay here with it a moment. Breathe with it. Nothing has to happen yet."),
+        row([btn("Ask again", function () { permit(key, round + 1, onYes); }, { "data-bm-again": "" }), leaveBtn(key)])], "unsure-" + key);
+    }
+    // The refusal path. The voice says why, the player asks what it fears and answers as it would, then offers an assurance.
+    function refused(key, round, onYes) {
+      var A = V.asks[key];
+      show([el("h2", { text: V.title }), npc(A.no[Math.min(round, A.no.length - 1)]),
+        el("div", { class: "bm-cards" }, [
+          btn("What are you afraid would happen?", function () { fearAsk(key, round, onYes); }, { class: "bm-card", "data-bm-why": "" }),
+          btn("That's fair. I'll wait with you a while.", function () { unsure(key, round, onYes); }, { class: "bm-card", "data-bm-wait": "" }),
+        ]), row([leaveBtn(key)])], "refused-" + key);
+    }
+    function fearAsk(key, round, onYes) {
+      var input = el("input", { type: "text", "data-bm-fearline": "", placeholder: "Or say what it says, in its words", maxlength: "200" });
+      function said(t) { if (!t) return; st.fears.push(t); assureAsk(key, round, onYes, t); }
+      show([el("h2", { text: V.title }), you("What are you afraid would happen?"), guide("Let it answer. What does the Protector say?"),
+        el("div", { class: "bm-cards" }, V.fears.map(function (f, fi) { return btn(f[0], function () { said(f[0]); }, { class: "bm-card", "data-bm-fear": String(fi) }); })),
+        el("div", { class: "bm-line" }, [input, btn("It says this", function () { said(input.value.trim()); }, { "data-bm-fearsay": "" })])], "fear-" + key);
+    }
+    function assureAsk(key, round, onYes, fear) {
+      var input = el("input", { type: "text", "data-bm-assureline": "", placeholder: "Or in your own words", maxlength: "200" });
+      function offer(t) {
+        if (!t) return;
+        show([el("h2", { text: V.title }), you(t), npc(V.assured[Math.min(round, V.assured.length - 1)]),
+          row([btn("Ask again", function () { permit(key, round + 1, onYes); }, { "data-bm-again": "" })])], "assured-" + key);
+      }
+      show([el("h2", { text: V.title }), npc(fear), guide("That makes sense of the wall. What can you offer it?"),
+        el("div", { class: "bm-cards" }, V.assure.map(function (f, fi) { return btn(f[0], function () { offer(f[0]); }, { class: "bm-card", "data-bm-assure": String(fi) }); })),
+        el("div", { class: "bm-line" }, [input, btn("Offer it", function () { offer(input.value.trim()); }, { "data-bm-offer": "" })])], "assure-" + key);
+    }
+    // Leaving it at its post honours the refusal. Before the shift it waits; after it has spoken, it keeps the way shut.
+    function leaveBtn(key) {
+      return btn("Leave it at its post for today", function () { keepsPost(key); }, { class: "bm-link", "data-bm-post": key });
+    }
+    function keepsPost(key) {
+      if (key === "pass") {
+        show([el("h2", { text: V.title }), npc("Thank you for not pushing."), guide("The Protector keeps the way for now. What it said is still yours to keep, and you can come back and ask again another day."),
+          row([btn("Go on", function () { keep(true); }, { "data-bm-next": "" })])], "post-" + key);
+        return;
+      }
+      show([el("h2", { text: V.title }), npc("Thank you for not pushing."), guide("It stays at its post, and it will be here when you come back. Nothing is marked skipped."),
+        row([btn("Walk back up", function () { st.fears.length ? keep(true, "waiting") : finish("waiting", [], true); }, { "data-bm-next": "" })])], "post-" + key);
     }
     // Walking into the voice's place is the seat shift. The self stays behind as a faint figure where the player stood; the
     // player takes the voice's colour and turns to face the way they came, which is the way the voice keeps watch (a choice).
+    // The voice steps aside first, as it agreed to.
     function seatShift() {
       hide(); ring.style.display = "none"; st.cam = "voice";
       ghost = K.buildAvatar(THREE, "other"); seeThrough(ghost, 0.28); figureAt(ghost, S_SELF, 0, false); scene.add(ghost);
@@ -276,12 +380,13 @@
       st.auto = true;
       tween(2600, function (k) {
         var e = ease(k); st.s = s0 + (S_VOICE - s0) * e; st.moving = k < 0.95;
+        figureAt(voice, S_VOICE, -2.4 * clamp(k * 2, 0, 1), true);
         voice.traverse(function (m) { if (m.material) m.material.opacity = 1 - e; });
         avatar.userData.mat.color.setHex(0xb89aff).lerp(new THREE.Color(dm), e); avatar.userData.mat.emissive.copy(avatar.userData.mat.color);
       }, function () {
         st.auto = false; st.moving = false; voice.visible = false; st.turned = true;
         hint.textContent = "";
-        tween(700, function () {}, function () { st.asked = 0; askQ(0, ""); });
+        tween(700, function () {}, function () { askQ(0, ""); });
       });
     }
     function askQ(i, lead) {
@@ -298,17 +403,19 @@
       function say() { var t = input.value.trim(); if (!t) return; var lines = picked.map(function (c) { return c[0]; }).concat([t]); answer(i, lines, firstOut(picked) || heard(t)); }
       input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); say(); } });
       var doneBtn = q.multi ? btn("That's all of it", function () { answer(i, picked.map(function (c) { return c[0]; }), firstOut(picked)); }, { "data-bm-done": "", disabled: "" }) : null;
-      show([el("h2", { text: V.title }), lead ? guide(lead) : (i === 0 ? guide(V.seat) : null), guide(q.ask), cards,
+      var prev = i > 0 ? st.answers[V.questions[i - 1].id] : null;
+      show([el("h2", { text: V.title }), lead ? guide(lead) : (i === 0 ? guide(V.seat) : prev ? guide(V.questions[i - 1].reflect) : null), guide(q.ask), cards,
         el("div", { class: "bm-line" }, [input, btn("Say it", say, { "data-bm-say": "" })]),
         doneBtn ? row([doneBtn]) : null,
         row([btn("This doesn't sound like the Protector", function () { secret("felt", i); }, { class: "bm-link", "data-bm-wrong": "" }),
           btn("Sit this one out", function () { next(i); }, { class: "bm-link", "data-bm-sitout": "" })])], "q-" + q.id);
     }
     function firstOut(cs) { for (var i = 0; i < cs.length; i++) if (cs[i][1]) return cs[i][1]; return null; }
+    // The voice's answer is said back as its own words, then the guide answers it, and the next question follows from it.
     function answer(i, lines, out) {
       if (out) return secret(out, i);
       st.answers[V.questions[i].id] = lines;
-      show([el("h2", { text: V.title })].concat(lines.map(says)).concat([row([btn("Go on", function () { next(i); }, { "data-bm-next": "" })])]), "said");
+      next(i);
     }
     function next(i) { if (i + 1 < V.questions.length) askQ(i + 1, ""); else close(); }
 
@@ -353,9 +460,11 @@
     function openGate() { st.gateGoal = 1; st.flash = 1; }
 
     function close() {
-      show([el("h2", { text: V.title }), guide(V.thanks), row([btn("Step back out", stepOut, { "data-bm-out": "" })])], "thanks");
+      var last = st.answers[V.questions[V.questions.length - 1].id];
+      show([el("h2", { text: V.title }), last ? guide(V.questions[V.questions.length - 1].reflect) : null, guide(V.thanks), row([btn("Step back out", stepOut, { "data-bm-out": "" })])], "thanks");
     }
-    // The player walks back to where the self stood and takes its place again; the voice comes back and steps to the wall.
+    // The player walks back to where the self stood and takes its place again (always allowed: the self can take control
+    // back). The voice comes back to its post, and the player asks its permission to walk on.
     function stepOut() {
       hide(); st.turned = false; st.cam = "behind"; st.auto = true;
       var s0 = st.s, m = avatar.userData.mat, c0 = m.color.clone();
@@ -366,30 +475,37 @@
       }, function () {
         st.auto = false; st.moving = false; st.back = false;
         if (ghost) { scene.remove(ghost); ghost = null; }
-        voice.traverse(function (mm) { if (mm.material) mm.material.opacity = 0; });
-        voiceAside(function () { keep(); });
+        voice.visible = true; figureAt(voice, S_VOICE, 0, true);
+        tween(900, function (k) { voice.traverse(function (mm) { if (mm.material) mm.material.opacity = ease(k); }); }, function () {
+          permit("pass", 0, function () { voiceAside(function () { keep(); }); }, npc("Back at my post. So."));
+        });
       });
     }
     // Only lines the player keeps are stored (bm-cards-and-line).
-    function keep() {
+    // blocked: the voice kept the way shut, so the save sends the player back to the mouth; status overrides "spoken".
+    function keep(blocked, status) {
       var lines = [];
       V.questions.forEach(function (q) { (st.answers[q.id] || []).forEach(function (l) { lines.push({ q: q.id, line: l }); }); });
-      if (!lines.length) return finish("waiting", []); // every question sat out: the voice has not spoken yet, and waits
+      st.fears.forEach(function (f) { lines.push({ q: "fear", line: f }); });
+      if (!lines.length) return finish("waiting", [], blocked); // every question sat out: the voice has not spoken yet, and waits
       var keepOn = lines.map(function () { return false; });
       var list = el("div", { class: "bm-cards" }, lines.map(function (l, li) {
         var b = el("button", { class: "bm-card", "data-bm-keep": String(li), "aria-pressed": "false", text: l.line, onclick: function () { keepOn[li] = !keepOn[li]; b.setAttribute("aria-pressed", String(keepOn[li])); } });
         return b;
       }));
       show([el("h2", { text: "What the Protector said" }), guide("Tap the lines you want to keep. The rest are let go, and only what you keep is saved, on this device."), list,
-        row([btn("Save and walk on", function () { finish("spoken", lines.filter(function (l, li) { return keepOn[li]; })); }, { "data-bm-save": "" })])], "keep");
+        row([btn(blocked ? "Save" : "Save and walk on", function () { finish(status || (Object.keys(st.answers).length ? "spoken" : "waiting"), lines.filter(function (l, li) { return keepOn[li]; }), blocked); }, { "data-bm-save": "" })])], "keep");
     }
     // Saving at every chamber (bm-session): the voice's record, the translators waiting, and the place to come back to.
-    function finish(status, kept) {
+    function finish(status, kept, blocked) {
       var s = readSave();
       s.voices[V.id] = { status: status, kept: kept, savedAt: new Date().toISOString() };
-      s.waiting = st.waiting.slice(); s.at = "hall2";
+      if (blocked) s.voices[V.id].keepsWay = true; // it held the way shut; the next sitting meets it again at its post
+      s.waiting = st.waiting.slice(); s.at = blocked ? "mouth" : "hall2";
       var ok = writeSave(s);
-      hide(); st.phase = "hall2";
+      hide();
+      if (blocked) { leave(); return; }
+      st.phase = "hall2";
       hint.textContent = status === "waiting" ? "The Protector waits by the wall. The way is open." : (ok ? "Saved. The way is open." : "The way is open. (This browser would not save.)");
       hint.setAttribute("data-bm-status", status);
     }
