@@ -31,14 +31,24 @@ const primary =
   'rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-500'
 const quiet = 'text-sm text-zinc-400 underline underline-offset-4 hover:text-zinc-200'
 
-export function ThreeTwoOneDemo({ bookHref }: { bookHref: string }) {
+export function ThreeTwoOneDemo({
+  bookHref,
+  anchorId = 'try-321',
+  onOwn,
+}: {
+  bookHref: string
+  /** The element to scroll back to on each screen change. */
+  anchorId?: string
+  /** Called with what the client takes back, when they reach the record. The coaching map keeps it. */
+  onOwn?: (own: ThreeTwoOnePass['ownIt']) => void
+}) {
   const [screen, setScreen] = useState<Screen>('choose')
   const [pass, setPass] = useState<ThreeTwoOnePass>(EMPTY_PASS)
   const [copied, setCopied] = useState(false)
 
   const go = (next: Screen) => {
     setScreen(next)
-    document.getElementById('try-321')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document.getElementById(anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const set = <K extends keyof ThreeTwoOnePass>(key: K) => (value: ThreeTwoOnePass[K]) =>
@@ -135,7 +145,15 @@ export function ThreeTwoOneDemo({ bookHref }: { bookHref: string }) {
               />
             </label>
           ))}
-          <Nav onBack={() => go('work')} onNext={() => go('record')} canNext nextLabel="See my 3-2-1" />
+          <Nav
+            onBack={() => go('work')}
+            onNext={() => {
+              onOwn?.(pass.ownIt)
+              go('record')
+            }}
+            canNext
+            nextLabel="See my 3-2-1"
+          />
         </div>
       )}
 
