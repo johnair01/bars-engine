@@ -149,7 +149,9 @@ export async function extractBookText(bookId: string) {
       const ab = await res.arrayBuffer()
       buffer = Buffer.from(ab)
     } else if (book.sourcePdfUrl) {
-      const filePath = path.join(process.cwd(), book.sourcePdfUrl)
+      // Local uploads live in public/uploads/books (see uploadBook). Joining a fixed
+      // directory with the basename keeps the build's file tracer from packing the whole repo.
+      const filePath = path.join(UPLOAD_DIR, path.basename(book.sourcePdfUrl))
       buffer = await readFile(filePath)
     } else {
       return { error: 'No PDF URL' }
