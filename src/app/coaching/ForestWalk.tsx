@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode, RefObject } from 'react'
 
+import { captureDaemonsSeries } from '@/actions/leads'
+import { EmailCaptureForm } from '@/components/leads/EmailCaptureForm'
 import { BOOK_HREF, DOORS } from '@/lib/coaching/coaching-map'
 import {
   BELIEFS,
@@ -18,6 +20,8 @@ import {
   toggle,
 } from '@/lib/coaching/unpacking-walk'
 import type { BodyRegion, Walk } from '@/lib/coaching/unpacking-walk'
+
+import { LIST_TERMS } from '@/lib/esp/list-contract'
 
 import { ThreeTwoOneDemo } from './ThreeTwoOneDemo'
 
@@ -36,6 +40,9 @@ import { ThreeTwoOneDemo } from './ThreeTwoOneDemo'
  * (recommend(), position cf-routing). Every question can be passed through without answering.
  *
  * Everything stays in component state: no account, no request, no AI (cg-browser-only).
+ * The one exception is the keep step at the centre (lg-keep-step, 2026-10-10): a visitor
+ * who is not booking can leave an email address for the Meet Your Daemons series. Only the
+ * address and an optional name are sent; what they carried in stays in the tab.
  * Motion runs only for visitors who have not asked for reduced motion, and each new
  * screen moves focus to its heading (cf-protections).
  */
@@ -449,6 +456,20 @@ export function ForestWalk() {
                 </button>
               </div>
             )}
+
+            <div id="daemons" className="scroll-mt-6 space-y-2 rounded-2xl border border-emerald-200/15 bg-black/45 p-5 backdrop-blur-sm">
+              <h3 className="text-lg font-semibold text-amber-50">Meet your daemons by email</h3>
+              <p className="text-sm leading-relaxed text-emerald-100/75">
+                If booking can wait, start here. The parts that stall us have names, and I&rsquo;ll introduce them one at a time. Only your
+                address leaves this page; what you carried in stays here.
+              </p>
+              <EmailCaptureForm
+                askName
+                promise={LIST_TERMS.daemons.promise}
+                submitLabel="Send me the series"
+                onSubmit={({ email, name }) => captureDaemonsSeries({ email, name })}
+              />
+            </div>
 
             <details className="rounded-2xl border border-emerald-200/15 bg-black/40 p-5 backdrop-blur-sm">
               <summary className="cursor-pointer text-base font-semibold text-emerald-50">Free practices to start with</summary>
