@@ -121,3 +121,31 @@ experience it quite collapsed and doesn't have a feeling of dialogue yet".
 
 Tests: `bigmind-test.mjs` now has 72 checks, adding the meeting, each permission, the refusal path, the assurance, I
 can't tell, and leaving it at its post.
+
+## The charge, and getting acquainted from the outside (Wendell, 10 October 2026, 22:39)
+
+His words: "each protector has a charge associated with it, when the charge goes below a certain amount they have gained
+enough trust to be willing to step aside. We keep polling the player if it feels better AND they decide the charge
+amount- this is where the ontology game intersects. Where does your concept of the protector live in your body? How
+charged is the protector- and they can see the meter filled as they ask them questions that are closer to the evidence.
+The information players need about each part is, what their job is, who do they work for, and how are their hours. The
+player ultimately provides tehse answers but the "dialogue" is really an expeirence of getting aquantined from the
+outside of a part that already lives within them".
+
+- **Where it lives.** Once the Protector agrees to speak, the player says where it lives in the body: a body place card,
+  or the ontology game's own body map (`OAGBody.pick`, now loaded on this page), or not yet.
+- **How charged it is.** The player sets its charge from 0 to 10. A meter at the top of the screen shows the number, with
+  a line at the ready mark.
+- **Questions from the outside.** The self asks; the player gives the Protector's answer (cards or its words). The first
+  three are what the player needs to know about every part: its job, who it works for, its hours. Then the ones closer
+  to the evidence: what it protects from, how it does it, how it is thanked, how that feels.
+- **Polling.** After every answer its words are said back, the guide answers them, and the player is asked whether it
+  feels any different and how charged it is now. The meter follows the player's number.
+- **Trust.** When the charge reaches 3 or below **(choice)**, the Protector offers to step aside, and the player asks its
+  permission as before. If every question is asked and the charge is still above the mark, it says it doesn't know the
+  player well enough yet: sit with it and check again, or leave it at its post.
+- **Standing in its place** is now one look from where it stands: what does it want the self to know? Then the player
+  steps back out and asks to walk on.
+- **The save** adds where it lives and every charge the player gave, in order.
+
+Tests: 80 checks.

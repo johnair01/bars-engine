@@ -56,30 +56,45 @@
       fears: [["The self will get hurt."], ["I'll be blamed when it does."], ["Nobody will need me anymore."], ["Something will get out that should stay in."], ["I won't get my post back."]],
       assure: [["I'll come back to my own place when we're done."], ["Nothing will be taken from you. You keep your post."], ["I'll go slowly, and you can stop me at any time."], ["I'm not trying to get rid of you. I want to know you."]],
       assured: ["...Alright. I'll hold you to that.", "Hm. We'll see.", "That's more than anyone has said to me in a long time."],
-      seat: "You are the Protector now, not the self. The self is standing back there, where you were a moment ago.",
+      // The questions are asked from the outside, as the self getting acquainted with a part that already lives within
+      // (Wendell, 10 October 2026, 22:39). The player gives its answers. Job, who it works for and its hours are what the
+      // player needs to know about every part; the rest come closer to the evidence.
       questions: [
-        { id: "job", ask: "Protector, what is your job?", reflect: "Your job is to protect. Then tell me how you do it.", cards: [
-          ["To protect."], ["To keep the self safe."], ["To keep my family safe."], ["To keep watch, day and night."],
+        { id: "job", ask: "What is your job?", reflect: "Your job is to protect.", cards: [
+          ["To protect."], ["To keep the self safe."], ["To keep my family safe."], ["To keep watch."],
           ["It's trying to keep me safe.", "ideas"], ["To keep everything in hand.", "controller"],
         ] },
-        { id: "how", ask: "How do you protect? What do you do when something gets through?", multi: true, reflect: "And when it gets through again, you build it higher. That's a lot of building.", cards: [
-          ["I build walls."], ["I set borders and boundaries."], ["I sound the alarm."], ["I send for reinforcements."], ["I build the wall higher."],
-          ["I build a dome over everything."], ["I'd fix the breach for good.", "fixer"],
+        { id: "boss", ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The self."], ["The family."], ["Whoever is in danger."], ["I thought it was the self. It never thanks me."], ["I'm not sure anymore."],
+          ["Maybe it works for my parents.", "ideas"],
         ] },
-        { id: "from", ask: "What do you protect the self from?", multi: true, reflect: "From all of that, and from itself too. It sounds like there's no end to it.", cards: [
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Day and night."], ["Every hour there is."], ["I never get a day off."], ["Even in my sleep."], ["Whenever something comes close, which is always."],
+        ] },
+        { id: "from", ask: "What do you protect the self from?", multi: true, reflect: "From all of that, and from itself too. There's no end to it.", cards: [
           ["Attack."], ["Danger, from anywhere."], ["Pain."], ["Shame."], ["Looking bad."], ["Risk."], ["Uncertainty."],
           ["Loss."], ["Losing control."], ["Too much excitement."], ["Other people, even loved ones."], ["Itself."],
           ["I'd fix whatever is hurting it.", "fixer"], ["Maybe it protects me from feeling.", "ideas"],
         ] },
-        { id: "pay", ask: "And how are you thanked for all of this?", reflect: "Working day and night, and hardly thanked.", cards: [
-          ["I'm not."], ["Hardly ever."], ["The self calls me a prison."], ["It's a full-time job, and exhausting."],
+        { id: "how", ask: "How do you do it? What happens when something gets through?", multi: true, reflect: "And when it gets through again, you build it higher.", cards: [
+          ["I build walls."], ["I set borders."], ["I sound the alarm."], ["I send for reinforcements."], ["I build the wall higher."],
+          ["I build a dome over everything."], ["I'd fix the breach for good.", "fixer"],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Working all hours, and hardly thanked.", cards: [
+          ["I'm not."], ["Hardly ever."], ["The self calls me a prison."], ["It's exhausting."],
           ["I doubt anyone could thank me enough to make it worth it.", "skeptic"], ["It does its best, poor thing.", "ideas"],
         ] },
-        { id: "feel", ask: "How does that feel, Protector?", reflect: "Thank you for telling me.", cards: [
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
           ["Unfair."], ["Like I'm failing."], ["Devalued."], ["Lonely."], ["Tired."], ["Like nobody sees me."],
         ] },
       ],
-      thanks: "Thank you, Protector. Every voice has a right to be heard, and you have been. I'm going to step back out now and let the self have its place again.",
+      // Where the part lives in the body: the ontology game's body places, or the body map itself when the page has it.
+      places: ["Chest", "Throat", "Belly", "Shoulders", "Jaw", "Back", "Head", "Hands", "All over"],
+      ready: "...I think I could step aside for a while. If you'd like to stand where I stand, you can.",
+      notYet: "I don't know you well enough yet.",
+      seat: "You are standing where the Protector stands. The self is back there, where you were a moment ago, and everything that comes toward it comes past here first.",
+      know: { ask: "From here, what does the Protector want the self to know?", cards: [["I'm still here."], ["I did my best."], ["I'm tired."], ["Let me rest sometimes."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Protector. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
     },
   ];
   var NEXT = { id: "controller", title: "The Controller", daemon: "controller" };
@@ -117,6 +132,11 @@
     ".oagc button.bm-self{position:absolute;top:10px;left:10px;z-index:4;background:rgba(20,20,40,.75);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500}" +
     ".bm-hint{position:absolute;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));text-align:center;color:#e8e2c8;font-size:15px;z-index:2;pointer-events:none;text-shadow:0 1px 3px #000;padding:0 1rem}" +
     ".bm-npc{color:#cfe0ff;font-size:1.02rem}.bm-npc b{color:#9cc4ff}.bm-you{color:#fff1d0;text-align:right;font-style:normal}" +
+    ".bm-meter{position:absolute;top:12px;right:10px;left:84px;z-index:4;display:flex;align-items:center;gap:.4rem;font-size:12px;color:#dfe6ff;pointer-events:none}" +
+    ".bm-bar{position:relative;flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.14);overflow:hidden}.bm-bar i{position:absolute;left:0;top:0;bottom:0;background:#e0704a;transition:width .5s,background .5s}" +
+    ".bm-bar u{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.6)}.bm-meter.ready .bm-bar i{background:#6ac8a0}.bm-meter b{min-width:1.2em;text-align:right}" +
+    ".bm-charge{display:flex;align-items:center;gap:.5rem;margin:.6rem 0 .2rem;font-size:12px;color:#aab4d4}.bm-charge input{flex:1;height:36px;accent-color:#e0704a}" +
+    ".bm-chargeline{text-align:center;margin:.1rem 0}.bm-chargenum{font-size:1.4rem;color:#fff1b0}" +
     ".bm-kept{border-top:1px solid rgba(255,255,255,.12);padding:.5rem 0}.bm-kept li{color:#cfd8ff}";
 
   function start() {
@@ -202,7 +222,9 @@
     var ring = el("div", { class: "oagc-ring", "data-bm-ring": "", text: "Hold to walk" });
     var fade = el("div", { class: "oagc-fade" });
     var selfBtn = el("button", { class: "bm-self", "data-bm-selfbtn": "", text: "Self", onclick: function () { selfPause(); } });
-    [stage, hint, ring, modal, selfBtn, fade].forEach(function (n) { wrap.appendChild(n); });
+    var meterFill = el("i"), meterNum = el("b", { text: "" });
+    var meter = el("div", { class: "bm-meter", "data-bm-meter": "", style: "display:none" }, [el("span", { text: V.title + "'s charge" }), el("div", { class: "bm-bar" }, [meterFill, el("u", { style: "left:" + (READY * 10) + "%" })]), meterNum]);
+    [stage, hint, ring, modal, selfBtn, meter, fade].forEach(function (n) { wrap.appendChild(n); });
     document.body.appendChild(wrap);
     fade.style.opacity = 1; setTimeout(function () { fade.style.opacity = 0; }, 30);
 
@@ -217,7 +239,7 @@
     // phase: hall1 (walking to the voice), chamber (the dialogue), hall2 (walking on), end (the next chamber's mouth).
     // gate is how open the way past the voice is (0.45 shut, 1 open); held is the finger on the stage or the ring.
     var st = { phase: from, s: from === "hall2" ? S_GATE + 2 : 2, held: false, gate: from === "hall2" ? 1 : 0.45, gateGoal: from === "hall2" ? 1 : 0.45,
-      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1 };
+      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], charge: null, charges: [], place: null, know: null, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1 };
     var route = layout(), tweens = [], last = performance.now(), snap = true;
     function tween(ms, fn, done) { tweens.push({ t0: performance.now(), ms: ms / st.speed, fn: fn, done: done }); }
     function ease(k) { return k * k * (3 - 2 * k); }
@@ -305,11 +327,54 @@
       var M = V.meet, rest = M.replies.filter(function (x) { return x !== r && x[2] !== "who"; });
       var kids = [el("h2", { text: V.title }), you(r[0]), npc(r[1])];
       if (r[2] === "who") kids.push(el("div", { class: "bm-cards" }, rest.map(function (x) { return btn(x[0], function () { met(x); }, { class: "bm-card", "data-bm-reply": x[2] }); })));
-      else kids.push(row([btn(M.after[r[2]], function () { permit("speak", 0, seatAsk); }, { "data-bm-ask": "speak" })]));
+      else kids.push(row([btn(M.after[r[2]], function () { permit("speak", 0, body); }, { "data-bm-ask": "speak" })]));
       kids.push(row([btn("Not now", decline, { class: "bm-link", "data-bm-decline": "" })]));
       show(kids, "met");
     }
-    function seatAsk() { permit("aside", 0, seatShift); }
+    // ---- the charge (the ontology game's charge, Wendell 10 October 2026, 22:39) ---------------------------------
+    // The player says where the part lives in the body and how charged it is, and after each answer is asked again whether
+    // it feels any different and how charged it is now. The meter shows the player's own number. When it falls to READY or
+    // below, the Protector trusts the player enough to offer to step aside (READY is a choice).
+    var READY = 3;
+    function body() {
+      var kids = [el("h2", { text: V.title }), guide("Before you ask it anything, notice it. Where does the Protector live in your body?"),
+        el("div", { class: "bm-cards" }, V.places.map(function (pl) { return btn(pl, function () { placed(pl); }, { class: "bm-card", "data-bm-place": pl }); }))];
+      if (window.OAGBody && window.OAGBody.pick) kids.push(row([btn("Show me on the body map", function () {
+        hide(); window.OAGBody.pick().then(function (r) { if (r) placed(r.label); else body(); });
+      }, { "data-bm-bodymap": "" }, true)]));
+      kids.push(row([btn("I can't find it yet", function () { placed(null); }, { class: "bm-link", "data-bm-noplace": "" })]));
+      show(kids, "body");
+    }
+    function placed(pl) { st.place = pl; chargeAsk(null, "How charged is the Protector right now?"); }
+    function setMeter(v) {
+      meter.style.display = ""; meterFill.style.width = (v * 10) + "%"; meterNum.textContent = String(v);
+      meter.setAttribute("data-bm-charge", String(v)); meter.classList.toggle("ready", v <= READY);
+    }
+    // i is the question just answered (null before the first). The slider starts at the last number.
+    function chargeAsk(i, ask) {
+      var cur = st.charge == null ? 7 : st.charge;
+      var num = el("b", { class: "bm-chargenum", text: String(cur) });
+      var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(cur), "data-bm-range": "", "aria-label": "Charge, 0 to 10" });
+      range.addEventListener("input", function () { num.textContent = range.value; setMeter(+range.value); });
+      var kids = [el("h2", { text: V.title })];
+      if (i != null) { var said = st.answers[V.questions[i].id]; if (said) said.forEach(function (l) { kids.push(npc(l)); }); kids.push(guide(V.questions[i].reflect)); }
+      kids.push(guide(ask + (st.place ? " (in your " + st.place.toLowerCase() + ")" : "")), el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
+        row([btn("That's how it is", function () { charged(i, +range.value); }, { "data-bm-charged": "" })]));
+      show(kids, i == null ? "charge-first" : "charge");
+      setMeter(cur);
+    }
+    function charged(i, v) {
+      st.charge = v; st.charges.push({ after: i == null ? "start" : V.questions[i].id, v: v }); setMeter(v);
+      if (v <= READY) return ready();
+      var n = i == null ? 0 : i + 1;
+      while (n < V.questions.length && st.answers[V.questions[n].id]) n++;
+      if (n < V.questions.length) return askQ(n, "");
+      show([el("h2", { text: V.title }), npc(V.notYet), guide("You've asked it everything you know to ask. Nothing has to change yet."),
+        row([btn("Sit with it, and check again", function () { chargeAsk(null, "Does it feel any different now? How charged is it?"); }, { "data-bm-recheck": "" }), leaveBtn("aside")])], "notyet");
+    }
+    function ready() {
+      show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
+    }
 
     // Asking permission. The player reads the voice's answer, so the voice is never forced (a choice: the read is the
     // player's, as in the workshop, where the facilitator waits for the voice to come).
@@ -386,7 +451,7 @@
       }, function () {
         st.auto = false; st.moving = false; voice.visible = false; st.turned = true;
         hint.textContent = "";
-        tween(700, function () {}, function () { askQ(0, ""); });
+        tween(700, function () {}, function () { knowAsk(); });
       });
     }
     function askQ(i, lead) {
@@ -399,12 +464,11 @@
         } });
         cards.appendChild(b);
       });
-      var input = el("input", { type: "text", "data-bm-line": "", placeholder: "Or in your own words, as the Protector", enterkeyhint: "done", maxlength: "200" });
+      var input = el("input", { type: "text", "data-bm-line": "", placeholder: "Or what it says, in its words", enterkeyhint: "done", maxlength: "200" });
       function say() { var t = input.value.trim(); if (!t) return; var lines = picked.map(function (c) { return c[0]; }).concat([t]); answer(i, lines, firstOut(picked) || heard(t)); }
       input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); say(); } });
       var doneBtn = q.multi ? btn("That's all of it", function () { answer(i, picked.map(function (c) { return c[0]; }), firstOut(picked)); }, { "data-bm-done": "", disabled: "" }) : null;
-      var prev = i > 0 ? st.answers[V.questions[i - 1].id] : null;
-      show([el("h2", { text: V.title }), lead ? guide(lead) : (i === 0 ? guide(V.seat) : prev ? guide(V.questions[i - 1].reflect) : null), guide(q.ask), cards,
+      show([el("h2", { text: V.title }), lead ? guide(lead) : null, you(q.ask), guide("What does the Protector say?"), cards,
         el("div", { class: "bm-line" }, [input, btn("Say it", say, { "data-bm-say": "" })]),
         doneBtn ? row([doneBtn]) : null,
         row([btn("This doesn't sound like the Protector", function () { secret("felt", i); }, { class: "bm-link", "data-bm-wrong": "" }),
@@ -415,9 +479,18 @@
     function answer(i, lines, out) {
       if (out) return secret(out, i);
       st.answers[V.questions[i].id] = lines;
-      next(i);
+      chargeAsk(i, "Does it feel any different? How charged is the Protector now?");
     }
-    function next(i) { if (i + 1 < V.questions.length) askQ(i + 1, ""); else close(); }
+    function next(i) { st.answers[V.questions[i].id] = st.answers[V.questions[i].id] || null; charged(i, st.charge); } // sitting a question out moves on at the same charge
+    // Standing in its place: one look from where it stands, then back out.
+    function knowAsk() {
+      var input = el("input", { type: "text", "data-bm-knowline": "", placeholder: "Or in its words", maxlength: "200" });
+      function said(t) { if (!t) return; st.know = t; close(); }
+      show([el("h2", { text: V.title }), guide(V.seat), guide(V.know.ask),
+        el("div", { class: "bm-cards" }, V.know.cards.map(function (c, ci) { return btn(c[0], function () { said(c[0]); }, { class: "bm-card", "data-bm-know": String(ci) }); })),
+        el("div", { class: "bm-line" }, [input, btn("Say it", function () { said(input.value.trim()); }, { "data-bm-knowsay": "" })]),
+        row([btn("Just look for a while", function () { close(); }, { class: "bm-link", "data-bm-look": "" })])], "know");
+    }
 
     // Secretly speaking (bm-dismiss-step-aside): a second figure shows behind the voice. The player names it, thanks it and
     // asks it to wait; it walks on ahead into the closed passage and waits by the wall there. The voice is asked again.
@@ -460,8 +533,7 @@
     function openGate() { st.gateGoal = 1; st.flash = 1; }
 
     function close() {
-      var last = st.answers[V.questions[V.questions.length - 1].id];
-      show([el("h2", { text: V.title }), last ? guide(V.questions[V.questions.length - 1].reflect) : null, guide(V.thanks), row([btn("Step back out", stepOut, { "data-bm-out": "" })])], "thanks");
+      show([el("h2", { text: V.title }), guide(V.thanks), row([btn("Step back out", stepOut, { "data-bm-out": "" })])], "thanks");
     }
     // The player walks back to where the self stood and takes its place again (always allowed: the self can take control
     // back). The voice comes back to its post, and the player asks its permission to walk on.
@@ -486,6 +558,7 @@
     function keep(blocked, status) {
       var lines = [];
       V.questions.forEach(function (q) { (st.answers[q.id] || []).forEach(function (l) { lines.push({ q: q.id, line: l }); }); });
+      if (st.know) lines.push({ q: "know", line: st.know });
       st.fears.forEach(function (f) { lines.push({ q: "fear", line: f }); });
       if (!lines.length) return finish("waiting", [], blocked); // every question sat out: the voice has not spoken yet, and waits
       var keepOn = lines.map(function () { return false; });
@@ -494,12 +567,12 @@
         return b;
       }));
       show([el("h2", { text: "What the Protector said" }), guide("Tap the lines you want to keep. The rest are let go, and only what you keep is saved, on this device."), list,
-        row([btn(blocked ? "Save" : "Save and walk on", function () { finish(status || (Object.keys(st.answers).length ? "spoken" : "waiting"), lines.filter(function (l, li) { return keepOn[li]; }), blocked); }, { "data-bm-save": "" })])], "keep");
+        row([btn(blocked ? "Save" : "Save and walk on", function () { finish(status || (Object.keys(st.answers).some(function (k) { return st.answers[k]; }) ? "spoken" : "waiting"), lines.filter(function (l, li) { return keepOn[li]; }), blocked); }, { "data-bm-save": "" })])], "keep");
     }
     // Saving at every chamber (bm-session): the voice's record, the translators waiting, and the place to come back to.
     function finish(status, kept, blocked) {
       var s = readSave();
-      s.voices[V.id] = { status: status, kept: kept, savedAt: new Date().toISOString() };
+      s.voices[V.id] = { status: status, kept: kept, place: st.place || null, charges: st.charges.slice(), savedAt: new Date().toISOString() };
       if (blocked) s.voices[V.id].keepsWay = true; // it held the way shut; the next sitting meets it again at its post
       s.waiting = st.waiting.slice(); s.at = blocked ? "mouth" : "hall2";
       var ok = writeSave(s);

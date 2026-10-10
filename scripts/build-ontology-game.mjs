@@ -121,7 +121,7 @@ ${inline(caveJs)}
 `;
 
 // /ontology-game/big-mind: the Big Mind cave, a fork of the Cave of Lessons that borrows its engine (bigmind/DESIGN.md).
-// It needs three.js only, so no kit or spots file is copied.
+// It needs three.js and the body map (for where a part lives in the body), so no kit or spots file is copied.
 const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
 const bigMindHtml = `<!doctype html>
 <html lang="en">
@@ -135,6 +135,9 @@ const bigMindHtml = `<!doctype html>
 <body>
 <div id="cave-root"></div>
 <script>window.__oagCaveNoStart = true;</script>
+<script>
+${inline(bodyMap)}
+</script>
 <script>
 ${inline(caveJs)}
 </script>
