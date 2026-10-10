@@ -263,3 +263,43 @@ no bottom panel while walking and at a marker, the sign's words, position and ty
 stretch with the walls opening, the jointed limbs swinging against each other, a stretch taking one 10 s breath at normal
 speed with 8 footfalls in the inhale and 12 in the exhale, the pause on letting go, the breath numbers matching `game.jsx`,
 and the iOS guards.
+
+## The loop rebuild (10 October 2026, after Wendell's playtest notes)
+
+His words: "The loop should be 1) Choose 2) talk the bath while breathing 3) Choose another option 4) See the scene change in
+response to choice." Also: the text was not visible through the whole walk, the cave was narrow with major segments, side
+paths should loop back onto the path they branch from (playtesters), the six game masters should give branch paths, and "the
+daemon stands aside even when you say the daemon doesn't stand aside".
+
+- **The choice opens the way.** Past each marker the next stretch stays gathered shut (its walls at half width) and keeps the
+  old light until the player chooses. Go on opens it: the walls widen over about a second and a half, the light turns to the
+  stretch's own, and a surge runs through. Naming the feeling at the doorway opens the first stretch the same way. Nothing
+  changes on a timer.
+- **The pane and the modal.** The words are a small pane that sits above the figure's head and follows it on the screen the
+  whole walk (15 px type at 390 by 844). At a stop it grows into the modal, high on the screen so the figure and the way ahead
+  stay in sight, holding every choice the stop needs. "Look around" folds it back to the pane; tapping the pane opens it again.
+  The sprite sign and the floating card are gone. The doorway pages keep the bottom panel.
+- **A wider, continuous cave.** The chamber's half-width is 6 (was 4.4) and the charges spread less (tightness 0.78, strength
+  1.2). The walls are one surface swept along the path, a ring every unit with rock bumps that flow along it, in place of the
+  kit's instanced rings; openness blends over 8 units past a marker. Rows sit far enough apart that walls never meet opened
+  wide and breathing in.
+- **Side paths loop back.** A block opens two openings in the wall, out and back, with a lantern between them. The side path
+  ramps 10 units down under the cave, swings round a wide loop holding the five places, climbs back and ends on the exact spot
+  it left from. Release walks the last of the loop up onto that spot. The loop stays after the player comes back round. A
+  block inside a side path loops 10 units deeper again. Skip still jumps back to the main path with a fade.
+- **The daemon is a wall.** "Not yet" no longer lets the player on: the stop has no Continue, holding does not walk past it,
+  and the daemon's encounter is offered: "Work what it holds", a loop of its own from the daemon's spot (the game's rule, "If a
+  block won't release, you dig deeper into what's holding it", `game.jsx` line 3380). Coming back round, the daemon is asked
+  again; only Yes opens the way. Skip stays (board `cave-block-branch`: every block offers a skip). The scan saves the
+  encounter as `step>daemon`. Board row `cave-daemon-encounter` asks whether the encounter should instead be the spirit rite of
+  `ds-intersect`.
+- **Each face opens a branch.** The gate is six stops, one per stone. Each stone opens its own short level loop out of the
+  wall beside it; walking it, the pane holds that face's question (`game.jsx` precisionQuestions), and at its end the face asks
+  it; Back to the ring walks the player round onto the stone's spot, lights the stone and walks on. All six are walked before
+  the way out. **(choice)** One face's loop is put away when the next opens, so neighbouring loops never cross. Board row
+  `cave-face-branches` holds this as a position.
+
+Tests: `cave-test.mjs` (87 checks) adds the shut stretch that opens only on the choice, the pane above the head through the
+whole walk, the modal and its choices, the continuous tunnel and width, the loop that starts and ends on the branch point and
+runs under the cave, the two openings and the lantern, the daemon wall, the dig and the second asking, the six face branches,
+the camera staying inside the tunnel, and the saved scan.

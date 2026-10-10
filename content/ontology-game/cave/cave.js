@@ -29,6 +29,7 @@
     { id: "gate", step: "4 Game masters' gate", key: "gate", s: 120 },
     { id: "way_out", step: "Release", key: "release", s: 150 },
   ];
+  var PLACE_BY = {}; PLACES.forEach(function (p) { PLACE_BY[p.id] = p; });
   // The W.A.V.E. steps in order, copied from game.jsx WAVE_STEPS (lines 1092-1108): id, label, prompt.
   var WAVE = [
     ["welcome", "Welcome", "Let whatever's here be here for a moment, without needing it to be different yet."],
@@ -49,7 +50,6 @@
     ["welcome", 36, 0], ["acknowledge", 12, 1.4], ["allow", 12, -1.5], ["accept", 12, 1.3],
     ["appreciate", 12, -1.4], ["validate", 12, 1.5], ["exhale", 12, 0],
   ];
-  var SIDE_LEN = 160;    // the side passage's length; the five places line it, one breath of walking apart
   var LEAD = 5;          // straight run behind the first stand, so the camera has a path to follow
   // The breath is the ontology game's own: game.jsx lines 1330-1331 set BREATH_IN_MS = 4000 and BREATH_OUT_MS = 6000 for
   // its breath ring. The cave reads the same two numbers, so a hold here is the same inhale and exhale as there.
@@ -81,6 +81,7 @@
   ];
   var SIDE_LOOK = { id: "side", light: 0xa890ff, fog: 0x120e22, fogK: 1.1, open: 0.95, hemi: 0.36 }; // a violet hush for a block
   var OPEN_MAX = 1.38;
+  var CLOSED = 0.5; // a stretch not yet chosen: its walls gathered in, waiting for the choice at its marker
   var HOLD_ABOUT_AFTER = 15; // seconds without touching the ring before the cave breathes on its own again
   // Textures as the body map names them (body-map.js TEXTURES) and the wall tint each gives (a choice).
   var TEXTURES = [
@@ -122,9 +123,11 @@
     Neutrality: "Neutrality's job is detachment and perspective, the view that lets you see the whole.",
   };
   // How a charge shapes the one generic chamber: width factor and fog (choices).
-  var CHARGE_LOOK = { constriction: { w: 0.62, fog: 0.03 }, tension: { w: 0.85, fog: 0.02 }, numbness: { w: 1.15, fog: 0.05 }, strength: { w: 1.25, fog: 0.012 }, other: { w: 1, fog: 0.02 } };
+  // Wendell, 10 October 2026: "the cave is a bit narrow". The chamber is wider (6 from 4.4) and the charges spread less: tightness
+  // still draws the walls in, but no longer to a corridor.
+  var CHARGE_LOOK = { constriction: { w: 0.78, fog: 0.03 }, tension: { w: 0.9, fog: 0.02 }, numbness: { w: 1.1, fog: 0.05 }, strength: { w: 1.2, fog: 0.012 }, other: { w: 1, fog: 0.02 } };
   // The one chamber every portal opens (half-width, half-height and length in chamber units).
-  var CHAMBER = { w: 4.4, h: 3, length: 20 };
+  var CHAMBER = { w: 6, h: 3, length: 20 };
   var FIG = 14; // chamber units per metre of the figure, for the paths that join two places
   // Game.jsx DAEMON_WORKS_FOR, line 1236.
   var DAEMON_WORKS_FOR = "You, the Player. Every daemon is there to protect you, and to work for your enjoyment.";
@@ -193,15 +196,17 @@
   function hashOf(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function rngOf(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
+
   // ---- a route: the line the avatar walks, sampled every half unit ------------------------------
-  // r = { X, Z, S (distance along), len, startS, stops: [distances] }. The avatar only ever stands on this line.
-  function makeRoute(pts, stopAt, kind) {
-    var r = { X: [], Z: [], S: [], kind: kind, stops: [] }, acc = 0;
+  // r = { X, Y, Z, S (distance along, measured flat), len, stops: [{ s, ... }] }. The avatar only ever stands on this line.
+  // Y is the floor's rise and fall: the main path is level, and a side path ramps down under it and back up.
+  function makeRoute(pts, kind) {
+    var r = { X: [], Y: [], Z: [], S: [], kind: kind, stops: [] }, acc = 0;
     pts.forEach(function (p, i) {
       if (i) acc += Math.hypot(p.x - pts[i - 1].x, p.z - pts[i - 1].z);
-      r.X.push(p.x); r.Z.push(p.z); r.S.push(acc);
+      r.X.push(p.x); r.Y.push(p.y || 0); r.Z.push(p.z); r.S.push(acc);
     });
-    r.len = acc; r.stopAt = stopAt;
+    r.len = acc;
     return r;
   }
   function ptOn(r, s) {
@@ -209,30 +214,47 @@
     var lo = 0, hi = r.S.length - 1;
     while (hi - lo > 1) { var m = (lo + hi) >> 1; if (r.S[m] <= s) lo = m; else hi = m; }
     var k = (s - r.S[lo]) / Math.max(1e-6, r.S[hi] - r.S[lo]);
-    return { x: r.X[lo] + (r.X[hi] - r.X[lo]) * k, z: r.Z[lo] + (r.Z[hi] - r.Z[lo]) * k };
+    return { x: r.X[lo] + (r.X[hi] - r.X[lo]) * k, y: r.Y[lo] + (r.Y[hi] - r.Y[lo]) * k, z: r.Z[lo] + (r.Z[hi] - r.Z[lo]) * k };
   }
-  function at(r, s) { // point and unit forward direction
+  function at(r, s) { // point and unit forward direction (flat)
     var p = ptOn(r, s), a = ptOn(r, s - 0.6), b = ptOn(r, s + 0.6), dx = b.x - a.x, dz = b.z - a.z, l = Math.hypot(dx, dz) || 1;
-    return { x: p.x, z: p.z, fx: dx / l, fz: dz / l };
+    return { x: p.x, y: p.y, z: p.z, fx: dx / l, fz: dz / l };
   }
   function yawFacing(f) { return Math.atan2(f.fx, f.fz); } // a figure that faces +z
   function distToRoute(r, x, z) { // how far a point is from the line (the test uses it: the avatar never leaves it)
     var best = 1e9;
-    for (var i = 1; i < r.X.length; i++) { // nearest point on each little segment
+    for (var i = 1; i < r.X.length; i++) {
       var ax = r.X[i - 1], az = r.Z[i - 1], bx = r.X[i] - ax, bz = r.Z[i] - az, l2 = bx * bx + bz * bz || 1;
       var t = clamp((((x - ax) * bx) + ((z - az) * bz)) / l2, 0, 1);
       best = Math.min(best, Math.hypot(ax + bx * t - x, az + bz * t - z));
     }
     return best;
   }
+  // Resample a polyline every ds units (flat distance), after two rounds of corner cutting so the line flows.
+  function smoothLine(pts, ds) {
+    for (var it = 0; it < 2; it++) {
+      var q = [pts[0]];
+      for (var i = 0; i < pts.length - 1; i++) {
+        var a = pts[i], b = pts[i + 1];
+        q.push({ x: a.x * 0.75 + b.x * 0.25, y: a.y * 0.75 + b.y * 0.25, z: a.z * 0.75 + b.z * 0.25 });
+        q.push({ x: a.x * 0.25 + b.x * 0.75, y: a.y * 0.25 + b.y * 0.75, z: a.z * 0.25 + b.z * 0.75 });
+      }
+      q.push(pts[pts.length - 1]); pts = q;
+    }
+    var r = makeRoute(pts, "tmp"), out = [];
+    for (var s = 0; s < r.len; s += ds) out.push(ptOn(r, s));
+    out.push(ptOn(r, r.len));
+    return out;
+  }
 
   // The main path: seven rows, one per W.A.V.E. step, joined by half-circle switchbacks; each row wanders a little.
-  // Rows are far enough apart that the walls never meet, so there are no free turns and no dead ends.
+  // Rows are far enough apart that the walls never meet, even opened to their widest and breathing in, so there are no free
+  // turns and no dead ends.
   function layoutMain(seed, w) {
     var R = rngOf(hashOf(seed));
     var rows = STRETCHES.map(function (r) { return { step: r[0], len: r[1] * (0.9 + 0.2 * R()), amp: r[2] * (0.75 + 0.5 * R()) }; });
     var ampMax = 0; rows.forEach(function (r) { ampMax = Math.max(ampMax, Math.abs(r.amp)); });
-    var ru = Math.max(8, w * 1.15 + ampMax + 2.5), pitch = 2 * ru, ds = 0.5, pts = [], ends = [], x = 0, dir = 1;
+    var ru = Math.max(9, w * OPEN_MAX * 1.06 + ampMax + 1.5), pitch = 2 * ru, ds = 0.5, pts = [], ends = [], x = 0, dir = 1;
     for (var k = -LEAD / ds; k < 0; k++) pts.push({ x: k * ds, z: 0 });
     rows.forEach(function (row, i) {
       var z0 = -i * pitch, n = Math.max(2, Math.round(row.len / ds));
@@ -250,65 +272,125 @@
         for (var e = 1; e <= 20; e++) pts.push({ x: xe + dir * e * ds, z: z0 }); // the way out
       }
     });
-    var r = makeRoute(pts, null, "main");
+    var r = makeRoute(pts, "main");
     r.startS = LEAD; r.rows = rows.map(function (row) { return { step: row.step, len: Math.round(row.len * 10) / 10, amp: Math.round(row.amp * 10) / 10 }; });
-    r.stops = ends.map(function (e) { return r.S[e] - 1.5; });
+    r.stops = ends.map(function (e, i) { return { s: r.S[e] - 1.5, wave: i }; });
     r.exitS = r.len; r.pitch = pitch;
     return r;
   }
-  // A side passage: straight, with the five places along it.
-  function layoutSide() {
-    var pts = [], ds = 0.5;
-    for (var k = 0; k <= (SIDE_LEN + LEAD) / ds; k++) pts.push({ x: 0, z: LEAD - k * ds });
-    var r = makeRoute(pts, null, "side");
-    r.startS = LEAD; r.stops = PLACES.map(function (p) { return LEAD + p.s; }); r.exitS = r.len;
+
+  // Which side a branch leaves by: the outside of the bend the path is in, so its legs spread apart instead of crossing.
+  // A straight stretch alternates by depth.
+  function outerSide(route, s, depth) {
+    var a = at(route, s - 3), b = at(route, s + 3), cross = a.fx * b.fz - a.fz * b.fx;
+    if (Math.abs(cross) < 0.02) return depth % 2 ? -1 : 1;
+    return cross > 0 ? -1 : 1;
+  }
+  // A branch: a loop that leaves the parent path through one opening in its wall and comes back through a second opening
+  // beside the first, ending on the very spot it left from (playtesters: a side path loops back onto the path it branched
+  // from). A side passage ramps down under the cave (drop), swings round a wide loop and climbs back; a face's branch at
+  // the gate is a short level loop. In the parent's frame at s: u runs along the path, v out through the wall.
+  // o = { wb: half-width, g: half the gap between the two openings, W0: the parent's wall, L1: leg length, alpha: how far
+  // the legs splay, R: the loop's radius, drop }.
+  function layoutBranch(parent, sAt, side, o) {
+    var b = at(parent, sAt), nx = -b.fz * side, nz = b.fx * side;
+    function P(u, v, dy) { return { x: b.x + b.fx * u + nx * v, y: b.y + dy, z: b.z + b.fz * u + nz * v }; }
+    var sa = Math.sin(o.alpha), ca = Math.cos(o.alpha), ctl = [P(0, 0, 0), P(-o.g * 0.7, o.W0 * 0.5, 0), P(-o.g, o.W0, 0)], i, k;
+    var n1 = Math.max(1, Math.round(o.L1 / 2));
+    for (i = 1; i <= n1; i++) { k = i / n1; ctl.push(P(-o.g - o.L1 * sa * k, o.W0 + o.L1 * ca * k, -o.drop * k)); }
+    var c = o.g + o.L1 * sa, v1 = o.W0 + o.L1 * ca, R = Math.max(o.R, c + 1), Rc = Math.sqrt(R * R - c * c), cv = v1 + Rc;
+    var phA = Math.atan2(-Rc, -c), phB = Math.atan2(-Rc, c) - 2 * Math.PI, m = Math.max(12, Math.round(R * Math.abs(phA - phB) / 1.5));
+    for (var j = 1; j < m; j++) { var ph = phA + (phB - phA) * j / m; ctl.push(P(R * Math.cos(ph), cv + R * Math.sin(ph), -o.drop)); }
+    for (i = n1; i >= 1; i--) { k = i / n1; ctl.push(P(o.g + o.L1 * sa * k, o.W0 + o.L1 * ca * k, -o.drop * k)); }
+    ctl.push(P(o.g, o.W0, 0)); ctl.push(P(o.g * 0.7, o.W0 * 0.5, 0)); ctl.push(P(0, 0, 0));
+    var r = makeRoute(smoothLine(ctl, 0.5), "branch");
+    // Where the loop passes through the parent's wall, going out and coming back.
+    var vOf = function (q) { return (r.X[q] - b.x) * nx + (r.Z[q] - b.z) * nz; }, qa = 0, qb = r.X.length - 1;
+    while (qa < r.X.length - 1 && vOf(qa) < o.W0 * 0.92) qa++;
+    while (qb > 0 && vOf(qb) < o.W0 * 0.92) qb--;
+    r.sFrom = Math.max(0, r.S[qa] - 0.6); r.sTo = Math.min(r.len, r.S[qb] + 0.6);
+    function nearestParentS(q) {
+      var best = 1e9, bs = sAt;
+      for (var p = 0; p < parent.X.length; p++) {
+        if (Math.abs(parent.S[p] - sAt) > o.g + 12) continue;
+        var d = Math.hypot(parent.X[p] - r.X[q], parent.Z[p] - r.Z[q]); if (d < best) { best = d; bs = parent.S[p]; }
+      }
+      return bs;
+    }
+    r.holes = [nearestParentS(qa), nearestParentS(qb)].map(function (ps) { return { s0: ps - o.wb * 1.08, s1: ps + o.wb * 1.08, side: side }; });
+    r.side = side; r.parent = parent; r.at = sAt; r.drop = o.drop; r.startS = 0;
     return r;
   }
 
-  // ---- the walls, the floor and the lit pebbles along a route -----------------------------------
-  // Instanced from the kit's wall_ring and floor, one draw call each. setBreath eases the walls in and out a little.
-  // route.stops (the main path only) split the rings into stretches; open[k] widens stretch k's walls, and the rings within
-  // a few units of a marker blend into the next stretch, so the walls open as the avatar passes a marker.
-  function buildTunnel(THREE, G, route, w, h, rock) {
-    var step = 2, L = step * 1.4, n = Math.ceil(route.len / step), grp = new THREE.Group(), base = [], ringK = [], ringA = [], ringB = [], ringW = [];
-    var rings = new THREE.InstancedMesh(G.wall_ring, rock, n), floors = new THREE.InstancedMesh(G.floor, rock, n);
-    rings.frustumCulled = false; floors.frustumCulled = false;
-    var M = new THREE.Matrix4(), Q = new THREE.Quaternion(), P = new THREE.Vector3(), Sc = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
-    for (var i = 0; i < n; i++) {
-      var m = at(route, i * step + step / 2), th = Math.atan2(-m.fx, -m.fz), b = { x: m.x - m.fx * L / 2, z: m.z - m.fz * L / 2, th: th };
-      base.push(b);
-      var sc = i * step + step / 2, kk = 0;
-      if (route.kind === "main") while (kk < route.stops.length && route.stops[kk] < sc) kk++;
-      var dB = kk > 0 ? sc - route.stops[kk - 1] : 99;
-      ringA.push(Math.max(0, dB < 5 ? kk - 1 : kk)); ringB.push(Math.min(kk, 6)); ringW.push(dB < 5 ? dB / 5 * (dB / 5) * (3 - 2 * dB / 5) : 1);
-      Q.setFromAxisAngle(Y, th); P.set(b.x, -h * 0.92, b.z); Sc.set(w * 1.8, 1, L); M.compose(P, Q, Sc); floors.setMatrixAt(i, M);
+  // ---- the walls: one continuous tunnel along a route ---------------------------------------------
+  // Wendell, 10 October 2026: "the cave is a bit narrow and there are major segments". The tunnel is now one surface swept
+  // along the route (a rounded arch with a flat floor, a ring every unit, rock bumps that flow along it), so nothing breaks
+  // between stretches. openAt(s) widens it along its length; update(k) breathes it. Holes cut the openings a branch leaves by.
+  var PROF = 20, PX = [], PY = [];
+  (function () {
+    for (var j = 0; j < PROF; j++) {
+      var t = (j / PROF) * Math.PI * 2, cx = Math.cos(t), sy = Math.sin(t);
+      PX.push((cx < 0 ? -1 : 1) * Math.pow(Math.abs(cx), 0.55));
+      PY.push(0.04 + 0.96 * (sy < 0 ? -1 : 1) * Math.pow(Math.abs(sy), 0.55)); // the floor sits at -0.92 of the height
     }
-    var t = { group: grp, k: -1, open: [1, 1, 1, 1, 1, 1, 1], dirty: true };
-    t.setOpen = function (arr) { for (var q = 0; q < 7; q++) if (Math.abs(arr[q] - t.open[q]) > 0.0005) { t.open[q] = arr[q]; t.dirty = true; } };
-    t.setBreath = function (k) {
-      if (Math.abs(k - t.k) < 0.0005 && !t.dirty) return;
-      t.k = k; t.dirty = false;
-      for (var j = 0; j < n; j++) {
-        var bb = base[j], o = t.open[ringA[j]] * (1 - ringW[j]) + t.open[ringB[j]] * ringW[j], kj = k * o;
-        Q.setFromAxisAngle(Y, bb.th); P.set(bb.x, 0, bb.z); Sc.set(w * kj, h * kj, L); M.compose(P, Q, Sc); rings.setMatrixAt(j, M);
+  })();
+  function buildTube(THREE, route, o) {
+    var s0 = o.sFrom || 0, s1 = o.sTo == null ? route.len : o.sTo, n = Math.max(2, Math.floor(s1 - s0) + 1), ds = (s1 - s0) / (n - 1);
+    var ring = [], i, j;
+    for (i = 0; i < n; i++) { var s = s0 + i * ds, a = at(route, s); ring.push({ s: s, x: a.x, y: a.y, z: a.z, nx: -a.fz, nz: a.fx }); }
+    var pos = new Float32Array(n * PROF * 3), jit = new Float32Array(n * PROF), seed = o.seed || 0;
+    for (i = 0; i < n; i++) for (j = 0; j < PROF; j++) {
+      var floor = PY[j] < -0.8, sv = ring[i].s;
+      jit[i * PROF + j] = 1 + (floor ? 0.01 : 0.075) * (0.6 * Math.sin(sv * 0.37 + j * 2.1 + seed) + 0.4 * Math.sin(sv * 0.11 + j * 0.7 + seed * 1.3));
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    var mesh = new THREE.Mesh(geo, o.rock); mesh.frustumCulled = false;
+    var t = { mesh: mesh, holes: [], k: -1, dirty: true, n: n, ring: ring, w: o.w, h: o.h };
+    t.index = function () {
+      var idx = [];
+      for (var i = 0; i < n - 1; i++) for (var j = 0; j < PROF; j++) {
+        var j1 = (j + 1) % PROF, cut = false;
+        for (var q = 0; q < t.holes.length && !cut; q++) {
+          var H = t.holes[q];
+          cut = ring[i].s >= H.s0 && ring[i + 1].s <= H.s1 && PX[j] * H.side > 0.05 && PX[j1] * H.side > 0.05 && PY[j] > -0.86 && PY[j1] > -0.86 && PY[j] < 0.8 && PY[j1] < 0.8;
+        }
+        if (cut) continue;
+        var a = i * PROF + j, b = i * PROF + j1, c = (i + 1) * PROF + j, d = (i + 1) * PROF + j1;
+        idx.push(a, c, b, b, c, d);
       }
-      rings.instanceMatrix.needsUpdate = true;
+      geo.setIndex(idx); t.dirty = true;
     };
-    t.setBreath(1);
-    floors.instanceMatrix.needsUpdate = true;
-    grp.add(rings); grp.add(floors);
-    // The path stays lit: small warm stones down both edges of the floor.
-    var count = Math.floor(route.len / 2.5) * 2, pe = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.13, 0), new THREE.MeshBasicMaterial({ color: 0xffe0a0 }), count), c = 0;
+    t.addHole = function (H) { t.holes.push(H); t.index(); };
+    t.update = function (k) {
+      if (Math.abs(k - t.k) < 0.0008 && !t.dirty) return;
+      t.k = k; t.dirty = false;
+      var kh = 1 + (k - 1) * 0.5;
+      for (var i = 0; i < n; i++) {
+        var R = ring[i], wf = o.openAt(R.s) * k * o.w;
+        for (var j = 0; j < PROF; j++) {
+          var p = (i * PROF + j) * 3, jt = jit[i * PROF + j], fl = PY[j] < -0.8, xx = PX[j] * wf * jt;
+          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[j] * o.h : PY[j] * o.h * kh * jt); pos[p + 2] = R.z + R.nz * xx;
+        }
+      }
+      geo.attributes.position.needsUpdate = true;
+      geo.computeVertexNormals();
+      geo.computeBoundingSphere();
+    };
+    t.index(); t.update(1);
+    return t;
+  }
+  // The path stays lit: small warm stones down both edges of the floor.
+  function buildPebbles(THREE, route, w, h, s0, s1) {
+    var count = Math.floor((s1 - s0) / 2.5) * 2 + 2, pe = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.13, 0), new THREE.MeshBasicMaterial({ color: 0xffe0a0 }), count), c = 0;
+    var M = new THREE.Matrix4(), Q = new THREE.Quaternion(), P = new THREE.Vector3(), Sc = new THREE.Vector3(1, 1, 1);
     pe.frustumCulled = false;
-    for (var s = 1; s < route.len - 1 && c < count; s += 2.5) {
+    for (var s = s0 + 1; s < s1 - 1 && c < count - 1; s += 2.5) {
       var a = at(route, s);
-      [-1, 1].forEach(function (sd) {
-        Q.identity(); P.set(a.x + -a.fz * sd * w * 0.3, -h * 0.92 + 0.1, a.z + a.fx * sd * w * 0.3); Sc.set(1, 1, 1); M.compose(P, Q, Sc); pe.setMatrixAt(c++, M);
-      });
+      [-1, 1].forEach(function (sd) { P.set(a.x + -a.fz * sd * w * 0.3, a.y - h * 0.92 + 0.1, a.z + a.fx * sd * w * 0.3); M.compose(P, Q, Sc); pe.setMatrixAt(c++, M); });
     }
     pe.count = c; pe.instanceMatrix.needsUpdate = true;
-    grp.add(pe);
-    return t;
+    return pe;
   }
 
   // A glowing marker floating just ahead of a stand; the lit ones stay lit.
@@ -326,16 +408,6 @@
     g.userData.lamp = lamp;
     return g;
   }
-  // The opening that appears in the wall when a step won't go further: a dark doorway with a glowing rim.
-  function buildOpening(THREE) {
-    var g = new THREE.Group();
-    var disc = new THREE.Mesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: 0x020204, side: THREE.DoubleSide }));
-    var rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.08, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
-    rim.position.z = 0.02; g.add(disc); g.add(rim);
-    g.userData.rim = rim;
-    return g;
-  }
-
   // ---- the avatar: a jointed, faceless human wearing the charge -------------------------------------
   // Built from three.js primitives (rounded capsules made by lathe, and one shared sphere), in a 2.2-unit design height and
   // scaled up by AVATAR_H / 2.2. Every joint is a named group that turns: hip, knee and ankle on each leg, shoulder and elbow
@@ -504,8 +576,14 @@
     ".oagc canvas{display:block;position:absolute;inset:0;width:100%;height:100%;touch-action:none}" +
     ".oagc-stage{position:absolute;inset:0;touch-action:none}" +
     ".oagc-card{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));background:rgba(20,20,40,.96);border-top:1px solid rgba(255,255,255,.12);max-height:62vh;overflow-y:auto;touch-action:manipulation}" +
-    ".oagc-card.oagc-float{left:0;top:0;right:auto;bottom:auto;width:max-content;max-width:min(340px,calc(100vw - 24px));padding:.45rem;background:rgba(14,14,30,.74);border:1px solid rgba(255,255,255,.22);border-radius:14px;max-height:70vh;will-change:transform}" +
-    ".oagc-float .oagc-row{justify-content:center;margin:.25rem 0 0;gap:.3rem}.oagc-float .oagc-row:first-child{margin-top:0}.oagc-float button{min-height:40px;padding:.3rem .6rem;font-size:.82rem}" +
+    // the pane: small, in the scene, above the figure's head with a tail pointing down at it
+    ".oagc-pane{position:absolute;left:0;top:0;z-index:3;width:max-content;max-width:min(270px,calc(100vw - 24px));padding:.45rem .65rem .5rem;background:rgba(12,12,28,.8);border:1px solid rgba(255,241,176,.55);border-radius:12px;color:#f4f4fa;font-size:15px;line-height:1.3;will-change:transform;cursor:pointer;touch-action:manipulation}" +
+    ".oagc-pane strong{display:block;color:#fff1b0;font-size:16px;margin-bottom:.15rem}.oagc-pane span{display:block}.oagc-pane small{display:block;margin-top:.3rem;color:#aab0c4;font-size:12px}" +
+    ".oagc-pane:after{content:'';position:absolute;left:var(--tail,50%);bottom:-8px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top-color:rgba(255,241,176,.55)}" +
+    // the modal: the pane grown large, near the top so the figure and the way ahead stay in sight below it
+    ".oagc-modal{position:absolute;left:12px;right:12px;top:58px;z-index:4;max-width:420px;margin:0 auto;max-height:calc(62vh - 58px);overflow-y:auto;padding:.8rem .9rem;background:rgba(12,12,28,.86);border:1px solid rgba(255,241,176,.5);border-radius:16px;opacity:0;transform:scale(.35);pointer-events:none;transition:opacity .22s,transform .25s;touch-action:manipulation}" +
+    ".oagc-modal.open{opacity:1;transform:none;pointer-events:auto}" +
+    ".oagc-modal h2{margin:0 0 .35rem;font-size:1.15rem;color:#fff1b0}.oagc-modal p{margin:.35rem 0;font-size:1rem;line-height:1.35}.oagc-modal .oagc-row{margin-top:.5rem}" +
     ".oagc-card h2{margin:0 0 .3rem;font-size:1rem;color:#fff}.oagc-card h3{margin:.55rem 0 0;font-size:.82rem;color:#aab;font-weight:600}.oagc-card p{margin:.3rem 0;font-size:.92rem}" +
     ".oagc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:normal;pointer-events:none}" +
     ".oagc-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}" +
@@ -572,12 +650,15 @@
     var THREE = A.THREE;
     var wrap = el("div", { class: "oagc", "data-cave-chamber": firstSpot.id });
     var fade = el("div", { class: "oagc-fade" });
-    // The canvas fills the page. The only panel that docks to the bottom is the doorway's (charge, feeling) and the path between
-    // places; while walking, a step's name and words hang in the scene (the sign) and its choices float at the marker (the card).
+    // The canvas fills the page. The doorway (charge, feeling) and the path between places keep the bottom panel (card). Inside
+    // the cave the words live in the pane, a small panel in the scene that follows the figure; at a stop, or when tapped, it
+    // grows into the modal, which holds every choice the stop needs before the walk goes on.
     var canvasBox = el("div", { class: "oagc-stage" });
-    var card = el("div", { class: "oagc-card oagc-float", "data-cave-card": "", style: "display:none" });
-    var stat = el("div", { class: "oagc-sr", "data-cave-signtext": "", "aria-live": "polite" }); // the sign's words as page text, and the state marks
-    wrap.appendChild(canvasBox); wrap.appendChild(card); wrap.appendChild(stat); wrap.appendChild(fade);
+    var card = el("div", { class: "oagc-card", "data-cave-card": "", style: "display:none" });
+    var pane = el("div", { class: "oagc-pane", "data-cave-pane": "", role: "button", tabindex: "0", style: "display:none" });
+    var modal = el("div", { class: "oagc-modal", "data-cave-modal": "", "aria-hidden": "true" });
+    var stat = el("div", { class: "oagc-sr", "data-cave-signtext": "", "aria-live": "polite" }); // the words as page text, and the state marks
+    wrap.appendChild(canvasBox); wrap.appendChild(pane); wrap.appendChild(modal); wrap.appendChild(card); wrap.appendChild(stat); wrap.appendChild(fade);
     wrap.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     document.body.appendChild(wrap);
     fade.style.opacity = 1; setTimeout(function () { fade.style.opacity = 0; }, 30); // the dive: in from black
@@ -585,35 +666,34 @@
 
     var renderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) {
-      card.className = "oagc-card"; card.style.display = ""; card.textContent = "This device cannot show the cave. The body map and the game still work."; return;
+      card.style.display = ""; card.textContent = "This device cannot show the cave. The body map and the game still work."; return;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     canvasBox.appendChild(renderer.domElement);
     var scene = new THREE.Scene(); scene.background = new THREE.Color(0x0c0c16); scene.fog = new THREE.FogExp2(0x0c0c16, 0.02);
-    var camera = new THREE.PerspectiveCamera(70, 1, 0.1, 200);
+    var camera = new THREE.PerspectiveCamera(70, 1, 0.1, 260);
 
     // The sitting. sens[i] = { id, spot, texture, element, saved, passed, blocked: [], skipped: [] }.
-    // walk = { route, s, target, arrived, lat, block }. stack holds where each side passage branched from.
+    // walk = { route, s, s0, D, t, target (a stop on the route), arrived, blk }. stack holds where each branch left from.
     // speed scales the walk clock (the test sets it above 1 to cross a stretch faster than one breath); it is 1 in play.
-    var state = { sens: [], cur: null, mode: "portal", dress: null, look: { yaw: 0, pitch: 0 }, walk: null, stack: [], calm: false, ringOn: false, held: false, speed: 1, touched: false, layout: null, walkedOnce: false };
+    var state = { sens: [], cur: null, mode: "portal", dress: null, look: { yaw: 0, pitch: 0 }, walk: null, stack: [], calm: false, ringOn: false, held: false, speed: 1, touched: false, layout: null, walkedOnce: false, modal: false, auto: null };
     var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [];
-    var docked = true, cardDirty = true;
-    // The light of the stretch being walked (lk eases toward the table row), the walls' openness per stretch, and the surge on entering one.
+    var docked = true;
+    // The light of the stretch being walked (lk eases toward the table row), the walls' openness per stretch, and the surge on
+    // a choice. revealed is the last stretch the player has chosen to walk; the ones past it stay gathered shut and dark until
+    // the choice at their marker opens them (Wendell, 10 October: the scene changes in response to the choice).
     var lk = { idx: 0, light: new THREE.Color(STEP_LOOK[0].light), fog: new THREE.Color(STEP_LOOK[0].fog), fogK: STEP_LOOK[0].fogK, hemi: STEP_LOOK[0].hemi, flash: 0 };
-    var openCur = STEP_LOOK.map(function () { return STEP_LOOK[0].open; }), revealed = 0;
-    // The sign: the step's name and words as text in the scene, on a canvas texture, facing the camera (see drawSign).
-    var sign = { sprite: null, canvas: null, title: "", paras: [], foot: "", has: false, pos: new THREE.Vector3(), snap: true, fade: 0, avatarAnchor: false, cw: 1, ch: 1, accent: "#fff1b0", info: null };
+    var openCur = STEP_LOOK.map(function () { return CLOSED; }), revealed = -1;
+    var page = { title: "", text: "", foot: "", has: false };
     var camPos = new THREE.Vector3(), lookAt = new THREE.Vector3(), looseNow = 0, last = performance.now(), lanternsOn = [];
-    // The breath: b runs 0 (empty) to 1 (full). d is how fast it is changing.
     var br = { b: 0.5, target: 0.5, d: 0, t0: performance.now() / 1000, ring: 0, ringHeld: false, lastRing: -1e9, k: 1 };
     var WARM = new THREE.Color(0xffa860);
 
     function clearScene() {
       while (scene.children.length) scene.remove(scene.children[0]);
       ch = null; flight = null; busy = false; tweens = []; avatar = null; lamp = null; hemi = null; glow = []; lanternsOn = [];
-      if (sign.sprite && sign.sprite.material.map) sign.sprite.material.map.dispose();
-      state.walk = null; state.stack = []; snapCam = true; sign.sprite = null; sign.has = false;
-      lk.idx = 0; lk.flash = 0; revealed = 0; openCur = STEP_LOOK.map(function () { return STEP_LOOK[0].open; });
+      state.walk = null; state.stack = []; state.auto = null; snapCam = true; page.has = false;
+      lk.idx = 0; lk.flash = 0; revealed = -1; openCur = STEP_LOOK.map(function () { return CLOSED; });
       scene.background.setHex(0x0c0c16); scene.fog.color.setHex(0x0c0c16);
     }
     function addSensation(spot) {
@@ -640,7 +720,7 @@
     function ringUp() { br.ringHeld = false; br.lastRing = performance.now() / 1000; }
     holdArea(ring);
     ring.addEventListener("pointerdown", ringDown); ring.addEventListener("pointerup", ringUp); ring.addEventListener("pointercancel", ringUp);
-    function syncRing() { // the ring is shown only when it is on and the cave is not stilled
+    function syncRing() {
       var show = state.ringOn && !state.calm;
       if (show && !ring.parentNode) canvasBox.appendChild(ring); else if (!show && ring.parentNode) ring.remove();
       if (!show) br.ringHeld = false;
@@ -648,9 +728,7 @@
     canvasBox.appendChild(calmBtn); canvasBox.appendChild(ringBtn);
     function breathStep(dt, nowS) {
       var T = BREATH_S, u, wk = state.walk;
-      // While the player holds and walks, the cave breathes with the avatar (the walk clock is the breath); let go and the
-      // cave's own breath carries on from where the walk left it.
-      if (wk && wk.moving && !state.calm && !(state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER)) br.t0 = nowS - (wk.t % T);
+      if (wk && wk.moving && !state.auto && !state.calm && !(state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER)) br.t0 = nowS - (wk.t % T);
       if (state.calm) { br.target = 0.5; br.d = 0; }
       else if (state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER) {
         var prev = br.ring;
@@ -660,13 +738,13 @@
         var tm = (((nowS - br.t0) % T) + T) % T;
         if (tm < BREATH.inS) { u = tm / BREATH.inS; br.target = 0.5 - 0.5 * Math.cos(Math.PI * u); br.d = (Math.PI / 2) * Math.sin(Math.PI * u) / BREATH.inS; }
         else { u = (tm - BREATH.inS) / BREATH.outS; br.target = 0.5 + 0.5 * Math.cos(Math.PI * u); br.d = -(Math.PI / 2) * Math.sin(Math.PI * u) / BREATH.outS; }
-        if (state.ringOn) br.ring = br.target; // the ring picks up where the cave is
+        if (state.ringOn) br.ring = br.target;
       }
       br.b += (br.target - br.b) * Math.min(1, dt * 8);
-      br.k = 1 + 0.08 * (br.b - 0.5); // the walls ease in and out by a few percent
+      br.k = 1 + 0.08 * (br.b - 0.5);
       if (state.calm) { br.b = 0.5; br.k = 1; }
     }
-    function paceNow() { // the walk's speed against its average: quicker on the inhale (1.25), slower on the exhale (0.83)
+    function paceNow() {
       var wk = state.walk; if (!wk) return 1;
       return wk.t < BREATH.inS ? 0.5 * BREATH_S / BREATH.inS : 0.5 * BREATH_S / BREATH.outS;
     }
@@ -681,7 +759,7 @@
     dom.addEventListener("pointermove", function (e) {
       if (!drag) return;
       var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
-      if (drag.moved > 12) { // a moving finger looks around; a still one walks
+      if (drag.moved > 12) {
         state.held = false;
         state.look.yaw = clamp(state.look.yaw - dx * 0.006, -1.5, 1.5);
         state.look.pitch = clamp(state.look.pitch + dy * 0.004, -0.5, 0.6);
@@ -696,14 +774,11 @@
       ray.setFromCamera({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }, camera);
       var kids = [];
       if (c && c.elObj) c.elObj.traverse(function (m) { if (m.isMesh) kids.push(m); });
-      var hit = ray.intersectObjects(((c && c.stones) || []).concat(kids))[0];
-      if (!hit) return;
-      var o = hit.object;
-      if (o.userData.face && onPlace("gate")) stand(o.userData.face);
-      else if (o.userData.interact) touch();
+      var hit = ray.intersectObjects(kids)[0];
+      if (hit && hit.object.userData.interact) touch();
     });
 
-    // ---- the cards -------------------------------------------------------------------------
+    // ---- the pane and the modal ------------------------------------------------------------
     function P(text, attrs) { var a = attrs || {}; a.text = text; return el("p", a); }
     function btn(label, attrs, fn, alt) { var a = attrs || {}; a.text = label; a.onclick = fn; if (alt) a["class"] = "alt"; return el("button", a); }
     function row(kids) { return el("div", { class: "oagc-row" }, kids); }
@@ -712,31 +787,45 @@
         return el("button", { class: "alt", "data-cave-choice": o[0], "aria-pressed": String(picked === o[0]), text: o[1], onclick: function () { onPick(o); } });
       }));
     }
-    // fill puts a page up. The doorway's pages (dock true) are the bottom panel, as they were. Everything met while walking is
-    // not: its words (the title and every paragraph) become the sign in the scene and are also kept as page text for screen
-    // readers, and its choices (the buttons) float in a small card anchored to the marker.
+    function openModal() {
+      if (docked) return;
+      var r = pane.getBoundingClientRect(), m = modal.getBoundingClientRect();
+      if (r.width) modal.style.transformOrigin = Math.round(r.left + r.width / 2 - m.left) + "px " + Math.round(r.top + r.height / 2 - m.top) + "px";
+      state.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden";
+    }
+    function closeModal() { state.modal = false; modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); pane.style.visibility = ""; }
+    pane.addEventListener("click", function () { openModal(); });
+    // fill puts a page up. The doorway's pages (dock true) are the bottom panel, as they were. Inside the cave the title and the
+    // first paragraph are the pane, which follows the figure and stays readable the whole walk; the modal holds the whole page:
+    // every paragraph and every choice. A page with choices opens the modal (a stop); a page without them keeps the pane.
     function fill(title, kids, dock) {
       stat.removeAttribute("data-cave-marker"); stat.removeAttribute("data-cave-walking");
-      card.innerHTML = ""; stat.innerHTML = ""; docked = !!dock; sign.avatarAnchor = false; cardDirty = true;
+      card.innerHTML = ""; stat.innerHTML = ""; modal.innerHTML = ""; docked = !!dock;
       if (docked) {
-        card.className = "oagc-card"; card.style.display = ""; card.style.transform = ""; sign.has = false;
+        closeModal(); pane.style.display = "none";
+        card.style.display = "";
         card.appendChild(el("h2", { text: title }));
         kids.forEach(function (k) { card.appendChild(k); });
         return;
       }
-      card.className = "oagc-card oagc-float";
-      var paras = [], foot = "", ctl = 0;
-      stat.appendChild(el("h2", { text: title }));
-      kids.forEach(function (k) {
-        if (k.tagName === "P") { stat.appendChild(k); if (k.hasAttribute("data-cave-hint")) foot = k.textContent; else paras.push(k.textContent); }
-        else { card.appendChild(k); ctl++; }
-      });
-      card.style.display = ctl ? "" : "none";
-      setSign(title, paras, foot);
+      card.style.display = "none";
+      var paras = [], foot = "", ctls = [];
+      kids.forEach(function (k) { if (k.tagName === "P") { if (k.hasAttribute("data-cave-hint")) foot = k.textContent; else paras.push(k); } else ctls.push(k); });
+      stat.appendChild(el("h2", { text: title })); paras.forEach(function (p) { stat.appendChild(el("p", { text: p.textContent })); });
+      page.title = title; page.text = paras.length ? paras[0].textContent : ""; page.foot = foot; page.has = true;
+      pane.innerHTML = "";
+      pane.appendChild(el("strong", { text: title }));
+      if (page.text) pane.appendChild(el("span", { text: page.text }));
+      if (foot) pane.appendChild(el("small", { text: foot }));
+      pane.style.display = "";
+      modal.appendChild(el("h2", { text: title }));
+      paras.forEach(function (p) { modal.appendChild(p); });
+      ctls.forEach(function (c) { modal.appendChild(c); });
+      if (ctls.length) { modal.appendChild(row([btn("Look around", { "data-cave-shrink": "" }, closeModal, true)])); openModal(); }
+      else { modal.appendChild(row([btn("Keep walking", { "data-cave-close": "" }, closeModal, true)])); closeModal(); }
     }
 
     // ---- the doorway: one question per page, and the cave changes with each answer -------------
-    // The face is not asked here (players do not yet know enough about the faces); all six are met at the gate.
     function portal(s) {
       clearScene(); state.cur = s; state.mode = "portal"; state.look = { yaw: 0, pitch: 0 };
       scene.fog.density = 0.02; camera.position.set(0, 0, 6); camera.rotation.set(0, 0, 0);
@@ -751,7 +840,8 @@
       stat.setAttribute("data-cave-place", "portal");
     }
 
-    // The cave forms around the charge at once, with the avatar standing at the start; the next page asks the feeling.
+    // The cave forms around the charge at once, with the avatar standing at the start. The way ahead stays gathered shut until
+    // the feeling is named: that choice opens the first stretch.
     function form(s) {
       clearScene(); parts = {}; state.mode = "chamber"; state.look = { yaw: 0, pitch: 0 }; state.touched = false;
       var look = CHARGE_LOOK[s.texture] || CHARGE_LOOK.other, tex = lookup(TEXTURES, s.texture) || TEXTURES[4];
@@ -760,41 +850,45 @@
       parts.G = G; parts.w = w; parts.h = h; parts.fog = look.fog;
       parts.rock = new THREE.MeshStandardMaterial({ color: tex[2], roughness: 0.95, side: THREE.DoubleSide });
       var main = layoutMain(s.spot.id + ":" + s.texture, w);
-      main.yOff = 0; main.group = new THREE.Group();
-      main.tunnel = buildTunnel(THREE, G, main, w, h, parts.rock); main.group.add(main.tunnel.group);
+      main.group = new THREE.Group(); main.w = w;
+      main.openAt = function (sv) { // stretch q runs from marker q-1 to marker q; past a marker its walls ease over 8 units into the next
+        var st = main.stops, q = 0; while (q < st.length - 1 && st[q].s < sv) q++;
+        if (q === 0) return openCur[0];
+        var u = clamp((sv - st[q - 1].s) / 8, 0, 1); u = u * u * (3 - 2 * u);
+        return openCur[q - 1] * (1 - u) + openCur[q] * u;
+      };
+      main.tube = buildTube(THREE, main, { w: w, h: h, rock: parts.rock, openAt: main.openAt, seed: hashOf(s.spot.id) % 97 });
+      main.group.add(main.tube.mesh); main.group.add(buildPebbles(THREE, main, w, h, 0, main.len));
       main.markers = main.stops.map(function (st, i) {
-        var m = buildMarker(THREE, w, h, STEP_LOOK[i].light), a = at(main, st + MARK_AHEAD); m.position.set(a.x, -h * 0.92 + MARK_Y, a.z); main.group.add(m); return m;
+        var m = buildMarker(THREE, w, h, STEP_LOOK[i].light), a = at(main, st.s + MARK_AHEAD); m.position.set(a.x, a.y - h * 0.92 + MARK_Y, a.z); main.group.add(m); return m;
       });
       main.ctx = { holder: new THREE.Group(), lampHex: 0xffe0b0 };
-      // The element stands beside the first stretch as its own object; the player can tap it. It is not made until the feeling is named.
-      var ea = at(main, main.startS + 9), side = Math.min(w * 0.34, 1.1);
+      var ea = at(main, main.startS + 9), side = Math.min(w * 0.4, 2);
       main.ctx.holder.position.set(ea.x + -ea.fz * -side, -h * 0.92, ea.z + ea.fx * -side);
       main.group.add(main.ctx.holder);
-      // The way out: an arch of light at the end of the last stretch.
       var xa = at(main, main.exitS - 0.2), arch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
       arch.position.set(xa.x, -h * 0.92, xa.z); arch.rotation.y = yawFacing(xa); arch.scale.setScalar(Math.min(w * 0.55, h * 0.7));
       main.group.add(arch); main.arch = arch;
       var beam = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 40, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
       beam.position.set(xa.x, 18, xa.z); main.group.add(beam);
       scene.add(main.group); ch = { main: main, w: w, h: h };
-      lamp = new THREE.PointLight(0xffe0b0, 1.1, 60); scene.add(lamp);
+      lamp = new THREE.PointLight(0xffe0b0, 1.1, 70); scene.add(lamp);
       hemi = new THREE.HemisphereLight(0xffffff, 0x302828, 0.45); scene.add(hemi);
       scene.fog.density = look.fog * STEP_LOOK[0].fogK;
       lk.idx = 0; lk.light.setHex(STEP_LOOK[0].light); lk.fog.setHex(STEP_LOOK[0].fog); lk.fogK = STEP_LOOK[0].fogK; lk.hemi = STEP_LOOK[0].hemi; lk.flash = 0;
-      scene.background.copy(lk.fog); scene.fog.color.copy(lk.fog); main.tunnel.setOpen(openCur);
+      scene.background.copy(lk.fog); scene.fog.color.copy(lk.fog);
       avatar = buildAvatar(THREE, s.texture); scene.add(avatar);
       parts.dress = { wall: tex[2], width: Math.round(w * 100) / 100, fog: look.fog, element: null, lamp: 0xffe0b0 };
       state.dress = parts.dress;
-      state.layout = { seed: s.spot.id + ":" + s.texture, rows: main.rows, stops: main.stops.map(function (v) { return Math.round(v * 100) / 100; }), length: Math.round(main.len * 10) / 10 };
-      state.walk = { route: main, s: main.startS, s0: main.startS, D: main.stops[0] - main.startS, t: 0, ready: false, moving: false, target: 0, arrived: false, lat: 0, block: null };
+      state.layout = { seed: s.spot.id + ":" + s.texture, rows: main.rows, stops: main.stops.map(function (v) { return Math.round(v.s * 100) / 100; }), length: Math.round(main.len * 10) / 10 };
+      state.walk = newWalk(main, null, main.startS);
       state.mainRoute = main;
       looseNow = 0;
       feeling(s);
     }
     function feeling(s) {
-      stat.setAttribute("data-cave-place", "portal");
       fill("Which feeling is here?", [
-        P("The walls have taken your " + lookup(TEXTURES, s.texture)[1] + ". Its feeling has an element."),
+        P("The walls have taken your " + lookup(TEXTURES, s.texture)[1] + ". Its feeling has an element. Naming it opens the way."),
         choice(ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }), null, function (o) {
           s.element = o[0]; setElementOn(state.mainRoute.ctx, o[0], Math.min(ch.w * 0.3, 1.3)); parts.dress.element = o[0]; parts.dress.lamp = lookup(ELEMENTS, o[0])[3];
           hint(0);
@@ -802,7 +896,6 @@
       ], true);
       stat.setAttribute("data-cave-place", "portal");
     }
-    // The element object for a route: fire, a pool of water, a tree, a crystal, a boulder.
     function setElementOn(ctx, name, r) {
       var e = lookup(ELEMENTS, name);
       while (ctx.holder.children.length) ctx.holder.remove(ctx.holder.children[0]);
@@ -812,49 +905,64 @@
     }
 
     // ---- walking ---------------------------------------------------------------------------
+    function newWalk(route, blk, s) { return { route: route, s: s, s0: s, D: 1, t: 0, ready: false, moving: false, target: 0, arrived: false, blk: blk }; }
     function ctxOf() { return state.walk && state.walk.route.ctx; }
-    function onPlace(id) { var wk = state.walk; return wk && wk.block && wk.arrived && PLACES[wk.target].id === id; }
-    // What a place asks while the avatar is still walking toward it (the sign shows this, then the full page on arrival).
-    var PLACE_ASK = { mouth: "What is the block like, in the body?", pool: "Which feeling is here? Tap its element.", passage: "A daemon stands in the way. Which one is it?",
-      gate: "Six stones, one for each face. Stand at each and ask what it asks.", way_out: "Light from above. Breathe out." };
-    function hint(i) { // the sign while walking: the step being walked toward, hanging in the cave ahead
-      var wk = state.walk, label = wk.block ? PLACES[i].step : WAVE[i][1];
+    function stopOf(wk) { return wk.route.stops[wk.target]; }
+    var PLACE_ASK = { mouth: "What is the block like, in the body?", pool: "Which feeling is here? Tap its element.", passage: "A daemon stands in the way.",
+      gate: "Six stones, one for each face. Each opens a branch of its own.", way_out: "Light from above. Breathe out." };
+    // hint(i) starts the walk to stop i of the route the avatar is on: the pane shows where it is going, the clock is reset, and
+    // on the main path the stretch is opened (the choice at the last marker is what opens it).
+    function hint(i) {
+      var wk = state.walk, stp = wk.route.stops[i], kind = wk.route.kind, label, words;
       wk.target = i;
       stat.setAttribute("data-cave-place", "walk");
-      var kids = [P(wk.block ? PLACE_ASK[PLACES[i].id] : WAVE[i][2])];
-      if (!state.walkedOnce) kids.push(P("Hold anywhere to walk. Drag to look.", { "data-cave-hint": "" }));
+      if (stp.wave != null) { label = WAVE[i][1]; words = WAVE[i][2]; }
+      else if (stp.face) { var f = lookup(FACES, stp.face); label = f[1] + "'s branch"; words = f[3]; }
+      else { var pl = PLACE_BY[stp.place]; label = pl.step + (stp.stone != null ? " · " + FACES[stp.stone][1] : ""); words = stp.stone != null ? FACES[stp.stone][1] + ": " + FACES[stp.stone][2] + ". Its branch opens here." : PLACE_ASK[stp.place]; }
+      var kids = [P(words)];
+      if (!state.walkedOnce) kids.push(P("Hold anywhere to walk. Drag to look. Tap these words to open them.", { "data-cave-hint": "" }));
       fill(label, kids);
-      stat.setAttribute("data-cave-walking", wk.block ? PLACES[i].id : WAVE[i][0]);
-      // One stretch is one breath of holding: from here to the marker, 4 s of inhale then 6 s of exhale.
-      wk.target = i; wk.arrived = false; wk.ready = true; wk.s0 = wk.s; wk.D = Math.max(1, wk.route.stops[i] - wk.s); wk.t = 0; wk.moving = false;
+      stat.setAttribute("data-cave-walking", stp.wave != null ? WAVE[i][0] : stp.face ? "face-" + stp.face : stp.place);
+      wk.arrived = false; wk.ready = true; wk.s0 = wk.s; wk.D = Math.max(1, stp.s - wk.s); wk.t = 0; wk.moving = false;
       if (avatar) { avatar.userData.stepIdx = 0; avatar.userData.stepsIn = 0; avatar.userData.stepsOut = 0; }
-      if (!wk.block) { // entering a stretch: the light turns, the walls open, a short surge
-        if (i !== lk.idx || i === 0) lk.flash = 1;
-        revealed = Math.max(revealed, i);
-      }
+      if (kind === "main") { if (i > revealed) { revealed = i; lk.flash = 1; } }
+      else lk.flash = Math.max(lk.flash, 0.5);
     }
     function arrive() {
-      var wk = state.walk;
-      if (wk.block) placeCard(wk.block); else markerCard(wk.target);
+      var wk = state.walk, stp = stopOf(wk);
+      if (stp.wave != null) markerCard(wk.target);
+      else if (stp.face) faceCard(wk.blk);
+      else placeCard(wk.blk);
     }
-    // Holding walks the avatar; the walk clock t counts held seconds (scaled by speed) from 0 to one full breath, and lifting
-    // the thumb stops it, so the walk and its breath pause together. Calm walks at 0.8 of full (a choice carried over).
+    // Holding walks the avatar; the walk clock t counts held seconds from 0 to one full breath, and lifting the thumb stops it,
+    // so the walk and its breath pause together. state.auto is a short walk the game takes itself: up out of a branch onto the
+    // path it left from.
     function walkStep(dt) {
       var wk = state.walk; if (!wk) return;
       wk.moving = false;
+      var au = state.auto;
+      if (au) {
+        au.k = Math.min(1, au.k + dt / au.dur); wk.s = au.s0 + (au.s1 - au.s0) * ease(au.k); wk.moving = true; au.clk += dt;
+        if (au.k >= 1) { state.auto = null; wk.moving = false; au.done(); }
+        return;
+      }
       if (!wk.ready || wk.arrived || busy || flight || !state.held) return;
       wk.moving = true; state.walkedOnce = true;
       wk.t = Math.min(BREATH_S, wk.t + dt * state.speed * (state.calm ? 0.8 : 1));
       wk.s = wk.s0 + wk.D * stretchFrac(wk.t);
       if (wk.t >= BREATH_S) { wk.s = wk.s0 + wk.D; wk.arrived = true; wk.moving = false; arrive(); }
     }
+    function autoWalk(s1, done) {
+      var wk = state.walk; state.auto = { s0: wk.s, s1: s1, k: 0, dur: Math.max(0.5, Math.abs(s1 - wk.s) / 7) / Math.max(1, state.speed / 4), clk: 0, done: done };
+    }
 
     // ---- the main path's markers: go on, or "this step won't go further" ---------------------------
     function markerCard(i) {
       var s = me(), wv = WAVE[i], last = i === WAVE.length - 1, body = [];
       stat.setAttribute("data-cave-place", "marker");
-      if (s.blocked.indexOf(wv[0]) >= 0) body.push(P("You are back from the block at " + wv[1] + ".", { "data-cave-back": "" }));
+      if (s.blocked.indexOf(wv[0]) >= 0) body.push(P("You came back round to " + wv[1] + ". The way you looped is lit beside you.", { "data-cave-back": "" }));
       body.push(P(wv[2], { "data-cave-prompt": "" }));
+      if (!last) body.push(P("The way ahead is gathered shut. It opens when you choose.", { "data-cave-shut": "" }));
       var kids = [btn(last ? "Come back out" : "Go on", { "data-cave-go": "" }, function () { goOn(i); }), btn("This step won't go further", { "data-cave-block": "" }, function () { openBlock(wv[0], wv[1]); }, true)];
       body.push(row(kids));
       if (last) {
@@ -874,135 +982,194 @@
       var s = me(); s.passed = Math.max(s.passed, i + 1);
       if (i < WAVE.length - 1) hint(i + 1); else finishOut();
     }
-    // The way out: the camera rises out of the cave to the light, and the scan is saved.
     function finishOut() {
-      busy = true; stat.setAttribute("data-cave-place", "rising"); fill("Light from above", [P("Breathe out.")]); sign.avatarAnchor = true;
+      busy = true; stat.setAttribute("data-cave-place", "rising"); fill("Light from above", [P("Breathe out.")]);
       var y0 = camera.position.y;
       tween(2200, function (k) { state.rise = { k: ease(k), y0: y0 }; }, function () { state.rise = null; leave(true); });
     }
 
-    // ---- a block: a side passage opens in the wall, and the five places line it ----------------------
-    // key is the saved name of the blocked step: a W.A.V.E. step on the main path, or a place inside a side passage.
+    // ---- branches: a loop out through the wall and back to the same spot ----------------------------
+    // kind "side": a block's side passage, which ramps down under the cave and holds the five places. kind "face": one face's
+    // short level branch at the gate. The parent's wall opens twice (out and back), a lantern stands between the openings,
+    // and the loop is kept after the player comes back round, so the way they went stays visible.
+    function makeBranch(frame, kind, depth, face) {
+      var parent = frame.route, w = ch.w, h = ch.h, side = outerSide(parent, frame.s, depth);
+      var pw = (parent.w || w) * (parent.kind === "main" ? parent.openAt(frame.s) : SIDE_LOOK.open);
+      var o = kind === "side" ? { wb: w * 0.8, g: w * 0.8 * 1.3, W0: pw, L1: 18, alpha: 0.7, R: 34, drop: 10 }
+        : { wb: w * 0.65, g: w * 0.65 * 1.3, W0: pw, L1: 2, alpha: 0, R: w * 0.65 * 1.3 + 2.5, drop: 0 };
+      var route = layoutBranch(parent, frame.s, side, o);
+      route.w = o.wb; route.kind = kind; route.group = new THREE.Group();
+      route.holes.forEach(function (H) { parent.tube.addHole(H); });
+      var rock = frame.blk ? frame.blk.rock : parts.rock;
+      if (kind === "side") rock = new THREE.MeshStandardMaterial({ color: rock.color.getHex(), roughness: 0.95, side: THREE.DoubleSide });
+      route.openAt = function () { return SIDE_LOOK.open; };
+      route.tube = buildTube(THREE, route, { w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN });
+      route.group.add(route.tube.mesh); route.group.add(buildPebbles(THREE, route, o.wb, h, route.sFrom, route.sTo));
+      // the two openings get a glowing rim each, and a lantern stands between them
+      route.rims = route.holes.map(function (H) {
+        var a = at(parent, (H.s0 + H.s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
+        var nx = -a.fz * H.side, nz = a.fx * H.side;
+        rim.position.set(a.x + nx * pw * 0.97, a.y - h * 0.25, a.z + nz * pw * 0.97); rim.rotation.y = Math.atan2(nx, nz);
+        rim.scale.set(0.01, 0.01, 1); route.group.add(rim); return rim;
+      });
+      var b = at(parent, frame.s), lan = buildLantern(THREE);
+      lan.position.set(b.x + -b.fz * side * pw * 0.8, b.y - h * 0.92, b.z + b.fx * side * pw * 0.8);
+      route.group.add(lan); lanternsOn.push(lan);
+      if (kind === "side") {
+        // the five places along the loop; the six stones of the gate each have a stop of their own, a face's branch beside it
+        var L = route.len, pos = { mouth: 0.15, pool: 0.25, passage: 0.35 }, g0 = 0.45 * L, gs = Math.min(18, (L - 26 - g0) / 6);
+        route.stops = [{ s: pos.mouth * L, place: "mouth" }, { s: pos.pool * L, place: "pool" }, { s: pos.passage * L, place: "passage" }];
+        FACES.forEach(function (f, i) { route.stops.push({ s: g0 + i * gs, place: "gate", stone: i }); });
+        route.stops.push({ s: route.sTo - 2.5, place: "way_out" });
+      } else route.stops = [{ s: route.sTo - 1.2, face: face }];
+      route.markers = route.stops.map(function (st) {
+        var m = buildMarker(THREE, o.wb, h, kind === "face" ? lookup(FACES, face)[4] : SIDE_LOOK.light), a = at(route, Math.min(route.len, st.s + MARK_AHEAD));
+        m.position.set(a.x, a.y - h * 0.92 + MARK_Y, a.z); route.group.add(m); return m;
+      });
+      route.ctx = { holder: new THREE.Group(), lampHex: 0xffe0b0, stones: [] };
+      scene.add(route.group);
+      return route;
+    }
+    function growRims(route, done) {
+      busy = true;
+      tween(900, function (k) { var e = ease(k); route.rims.forEach(function (r) { r.scale.set(0.01 + 1.3 * e, 0.01 + 1.7 * e, 1); }); }, function () { busy = false; done(); });
+    }
+    // A block: the wall opens, and a side passage loops out from here and back to this spot.
     function openBlock(stepId, label) {
       if (busy) return;
-      var wk = state.walk, s = me(), route = wk.route, depth = state.stack.length + 1;
-      var key = wk.block ? wk.block.key + ">" + PLACES[wk.target].key : stepId;
+      var wk = state.walk, s = me(), depth = state.stack.length + 1, stp = stopOf(wk);
+      var key = wk.blk ? wk.blk.key + ">" + PLACE_BY[stp.place].key : stepId;
       if (s.blocked.indexOf(key) < 0) s.blocked.push(key);
-      busy = true;
-      var frame = { route: route, s: wk.s, target: wk.target, block: wk.block, key: key, label: label };
-      stat.setAttribute("data-cave-place", "opening"); fill(label, [P("The wall opens.")]);
-      // The opening in the wall, and a lantern that stays where the player branched.
-      var a = at(route, wk.s), sd = state.stack.length % 2 ? -1 : 1, nx = -a.fz * sd, nz = a.fx * sd, w = ch.w, h = ch.h;
-      var open = buildOpening(THREE);
-      open.position.set(a.x + nx * w * 0.82, -h * 0.55, a.z + nz * w * 0.82);
-      open.rotation.y = Math.atan2(-nx, -nz); open.scale.set(0.05, 0.05, 1);
-      route.group.add(open);
-      var lan = buildLantern(THREE); lan.position.set(a.x + nx * w * 0.3 - a.fx * 1.4, -h * 0.92, a.z + nz * w * 0.3 - a.fz * 1.4);
-      route.group.add(lan); lanternsOn.push(lan); frame.lantern = lan; frame.opening = open;
-      var blk = makeBlock(frame, key, depth); frame.child = blk;
-      tween(1300, function (k) {
-        var e = ease(k); open.scale.set(1.15 * e + 0.05, 1.6 * e + 0.05, 1);
-        state.walk.lat = e * w * 0.2 * sd;
-      }, function () {
-        fade.style.opacity = 1;
-        setTimeout(function () {
-          state.stack.push(frame);
-          state.walk = { route: blk.route, s: blk.route.startS, s0: blk.route.startS, D: 1, t: 0, ready: false, moving: false, target: 0, arrived: false, lat: 0, block: blk };
-          blk.route.group.visible = true; route.group.visible = route.group === ch.main.group;
-          snapCam = true; busy = false; hint(0); fade.style.opacity = 0;
-        }, 520);
+      var frame = { route: wk.route, s: wk.s, target: wk.target, blk: wk.blk, key: key, label: label, kind: "side" };
+      var route = makeBranch(frame, "side", depth);
+      var par = frame.blk, tex = par ? par.texture : s.texture;
+      var blk = { id: "b" + (++blockN), key: key, label: label, depth: depth, texture: tex, element: par ? par.element : s.element, daemon: null, stepAside: null, dug: 0, gate: [], route: route, frame: frame, touched: false };
+      blk.rock = route.tube.mesh.material; blk.rock.color.setHex((lookup(TEXTURES, tex) || TEXTURES[4])[2]);
+      dressSide(blk);
+      frame.child = blk;
+      stat.setAttribute("data-cave-place", "opening"); fill(label, [P("The wall opens. The path loops out from here and comes back to this spot.")]);
+      growRims(route, function () {
+        state.stack.push(frame);
+        state.walk = newWalk(route, blk, 0);
+        hint(0);
       });
     }
-    // The side passage: walls dressed in the blocker's own charge, the five places, and their objects.
-    function makeBlock(frame, key, depth) {
-      var w = ch.w, h = ch.h, s = me(), G = parts.G;
-      var par = frame.block, tex = par ? par.texture : s.texture;
-      var blk = { id: "b" + (++blockN), key: key, label: frame.label, depth: depth, texture: tex, element: par ? par.element : s.element, daemon: null, stepAside: null, gate: [], route: layoutSide(), frame: frame, touched: false };
-      var route = blk.route; route.yOff = -400 * depth; route.group = new THREE.Group(); route.group.position.y = route.yOff;
-      blk.rock = new THREE.MeshStandardMaterial({ color: (lookup(TEXTURES, tex) || TEXTURES[4])[2], roughness: 0.95, side: THREE.DoubleSide });
-      route.tunnel = buildTunnel(THREE, G, route, w, h, blk.rock); route.group.add(route.tunnel.group);
-      route.markers = route.stops.map(function (st) {
-        var m = buildMarker(THREE, w, h, SIDE_LOOK.light), a = at(route, st + MARK_AHEAD); m.position.set(a.x, -h * 0.92 + MARK_Y, a.z); route.group.add(m); return m;
+    // A face's branch at the gate: a short level loop out of the wall beside that face's stone and back.
+    function openFace(blk, stone) {
+      if (busy) return;
+      var wk = state.walk, f = FACES[stone];
+      var frame = { route: wk.route, s: wk.s, target: wk.target, blk: blk, key: blk.key + ">face-" + f[0], label: f[1], kind: "face", stone: stone };
+      // the last face's branch is put away (its openings close), so neighbouring branches never cross
+      if (blk.lastFace) {
+        var old = blk.lastFace; scene.remove(old.group);
+        wk.route.tube.holes = wk.route.tube.holes.filter(function (H) { return old.holes.indexOf(H) < 0; }); wk.route.tube.index();
+        lanternsOn = lanternsOn.filter(function (l) { return l.parent !== old.group; });
+      }
+      var route = makeBranch(frame, "face", state.stack.length + 1, f[0]);
+      frame.child = { route: route }; blk.lastFace = route;
+      fill(f[1] + "'s branch", [P("The wall beside the " + f[1] + " stone opens.")]);
+      growRims(route, function () {
+        state.stack.push(frame);
+        state.walk = newWalk(route, blk, 0);
+        hint(0);
       });
-      var ctx = route.ctx = { holder: new THREE.Group(), lampHex: 0xffe0b0, stones: [] };
-      // the element stands well ahead of the marker, so the card hanging under the marker never covers it
-      ctx.holder.position.set(Math.min(w * 0.4, 2.2), -h * 0.92, -(PLACES[1].s + 11)); route.group.add(ctx.holder);
-      if (blk.element) setElementOn(ctx, blk.element, Math.min(w * 0.45, 2));
-      var gr = Math.min(w * 0.36, 1.5);
-      FACES.forEach(function (f, i) {
-        var a = (i / 6) * Math.PI * 2;
-        var st = new THREE.Mesh(G.gate_stone, new THREE.MeshStandardMaterial({ color: 0x70707e, roughness: 0.8, emissive: 0x000000 }));
-        st.position.set(Math.cos(a) * gr, -h * 0.92, -(PLACES[3].s + 5) + Math.sin(a) * gr);
-        st.scale.set(Math.min(gr, 3) * 0.7, Math.min(h * 1.1, 4), Math.min(gr, 3) * 0.7); st.userData.face = f[0];
-        route.group.add(st); ctx.stones.push(st);
+    }
+    // The side passage's objects: the element beside the pool, the six stones, and the arch at the way out.
+    function dressSide(blk) {
+      var route = blk.route, ctx = route.ctx, G = parts.G, h = ch.h, wb = route.w, inner = -route.side;
+      function beside(s, lat) { var a = at(route, s); return { x: a.x + -a.fz * inner * lat, y: a.y - h * 0.92, z: a.z + a.fx * inner * lat, a: a }; }
+      var pool = route.stops[1], pe = beside(pool.s + 9, Math.min(wb * 0.4, 2.2));
+      ctx.holder.position.set(pe.x, pe.y, pe.z); route.group.add(ctx.holder);
+      if (blk.element) setElementOn(ctx, blk.element, Math.min(wb * 0.45, 2));
+      route.stops.forEach(function (st) {
+        if (st.stone == null) return;
+        var f = FACES[st.stone], p = beside(st.s + 2.5, wb * 0.55);
+        var stone = new THREE.Mesh(G.gate_stone, new THREE.MeshStandardMaterial({ color: 0x70707e, roughness: 0.8, emissive: 0x000000 }));
+        stone.position.set(p.x, p.y, p.z); stone.scale.set(2.2, Math.min(h * 1.1, 3.4), 2.2); stone.userData.face = f[0];
+        route.group.add(stone); ctx.stones.push(stone);
       });
+      var wo = route.stops[route.stops.length - 1], aw = at(route, Math.min(route.len, wo.s + 1.5));
       var arch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
-      arch.position.set(0, -h * 0.92, -(PLACES[4].s + 6)); arch.scale.setScalar(Math.min(w * 0.55, h * 0.7)); route.group.add(arch);
-      route.group.visible = false; scene.add(route.group);
-      return blk;
-    }
-    function dropBlock(blk) {
-      scene.remove(blk.route.group);
-      lanternsOn = lanternsOn.filter(function (l) { return l.parent !== blk.route.group; });
+      arch.position.set(aw.x, aw.y - h * 0.92, aw.z); arch.rotation.y = yawFacing(aw); arch.scale.setScalar(Math.min(wb * 0.55, h * 0.7)); route.group.add(arch);
     }
 
-    // Release walks back to the exact spot the player branched from; a skip walks back to the main path.
-    // Passages the player leaves are put away; the lanterns on the way stay.
-    function comeBack(toMain) {
+    // Coming back round: the avatar walks the last of the loop up onto the very spot it left from. Release returns one level;
+    // a skip goes back to the main path from any depth (with a short fade, because it jumps).
+    function backRound(done) {
       if (busy) return;
-      busy = true; fade.style.opacity = 1;
+      var wk = state.walk; busy = true; closeModal();
+      autoWalk(wk.route.len, function () {
+        var fr = state.stack.pop();
+        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: BREATH_S, ready: true, moving: false, target: fr.target, arrived: true, blk: fr.blk };
+        busy = false; done(fr);
+      });
+    }
+    function release() {
+      backRound(function (fr) {
+        var pb = fr.blk;
+        if (pb && fr.route.stops[fr.target].place === "passage" && pb.stepAside === "not-yet") { pb.dug++; pb.stepAside = null; } // the daemon is asked again
+        arrive();
+      });
+    }
+    function faceBack() {
+      backRound(function (fr) {
+        var blk = fr.blk, f = FACES[fr.stone];
+        if (blk.gate.indexOf(f[0]) < 0) blk.gate.push(f[0]);
+        blk.route.ctx.stones.forEach(function (st) {
+          if (blk.gate.indexOf(st.userData.face) >= 0) { var col = lookup(FACES, st.userData.face)[4]; st.material.color.setHex(col); st.material.emissive.setHex(col); st.material.emissiveIntensity = st.userData.face === f[0] ? 0.9 : 0.45; }
+        });
+        lk.flash = 1;
+        next(blk);
+      });
+    }
+    function skip() {
+      if (busy) return;
+      var s = me(), wk = state.walk;
+      var chain = [], b = wk.blk; while (b) { chain.unshift(b.key); b = b.frame.blk; }
+      chain.forEach(function (k) { if (s.skipped.indexOf(k) < 0) s.skipped.push(k); });
+      busy = true; closeModal(); fade.style.opacity = 1;
       setTimeout(function () {
-        if (toMain) while (state.stack.length > 1) dropBlock(state.stack.pop().child);
-        var fr = state.stack.pop(); dropBlock(fr.child);
-        fr.route.group.visible = true;
-        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: BREATH_S, ready: true, moving: false, target: fr.target, arrived: true, lat: 0, block: fr.block };
+        var fr = state.stack[0]; state.stack = [];
+        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: BREATH_S, ready: true, moving: false, target: fr.target, arrived: true, blk: null };
         snapCam = true; busy = false; fade.style.opacity = 0;
         arrive();
       }, 520);
     }
-    function release() { comeBack(false); }
-    function skip() {
-      var s = me(), wk = state.walk;
-      // A skip is marked on the scan too: the step stayed blocked and its work was not done.
-      var chain = [], b = wk.block; while (b) { chain.unshift(b.key); b = b.frame.block; }
-      chain.forEach(function (k) { if (s.skipped.indexOf(k) < 0) s.skipped.push(k); });
-      comeBack(true);
-    }
 
-    // ---- the side passage's places (the old five-place walk, now opened by a block) ---------------
+    // ---- the side passage's places ----------------------------------------------------------------
     function next(blk) {
-      if (blk.place < PLACES.length - 1) { blk.place++; hint(blk.place); }
+      var wk = state.walk;
+      if (wk.target < wk.route.stops.length - 1) hint(wk.target + 1);
     }
     function redress(blk) {
       blk.rock.color.setHex((lookup(TEXTURES, blk.texture) || TEXTURES[4])[2]);
       var c = blk.route.ctx;
-      if (blk.element && c.element !== blk.element) { setElementOn(c, blk.element, Math.min(ch.w * 0.45, 2)); blk.touched = false; }
+      if (blk.element && c.element !== blk.element) { setElementOn(c, blk.element, Math.min(blk.route.w * 0.45, 2)); blk.touched = false; }
+      lk.flash = Math.max(lk.flash, 0.7);
     }
-    function touch() { // the element answers when tapped: it swells and glows, and the move is named
+    function touch() {
       var c = ctxOf(); if (!c) return;
       c.pulse = performance.now(); state.touched = true;
-      var wk = state.walk; if (wk.block && onPlace("pool")) { wk.block.touched = true; placeCard(wk.block); }
+      var wk = state.walk; if (wk.blk && wk.arrived && stopOf(wk).place === "pool") { wk.blk.touched = true; placeCard(wk.blk); }
     }
-
     function placeCard(blk) {
-      var wk = state.walk, p = PLACES[wk.target], body = [], kids = [];
-      blk.place = wk.target;
-      stat.setAttribute("data-cave-place", p.id);
-      var go = btn("Continue", { "data-cave-next": "" }, function () { next(blk); });
-      if (p.id === "mouth") {
+      var wk = state.walk, stp = stopOf(wk), p = PLACE_BY[stp.place], body = [], kids = [];
+      stat.setAttribute("data-cave-place", stp.place);
+      var go = btn("Continue", { "data-cave-next": "" }, function () { next(blk); }), title = p.step;
+      if (stp.place === "mouth") {
         body.push(P("What is the block like, in the body?"));
         body.push(choice(TEXTURES.map(function (t) { return [t[0], t[1]]; }), blk.texture, function (o) { blk.texture = o[0]; redress(blk); placeCard(blk); }));
         body.push(P("Is anything else showing up somewhere else in your body?"));
         body.push(row([btn("Yes, name another place", { "data-cave-add": "" }, addPlace, true)]));
         var s = me();
         if (state.sens.length > 1) body.push(P("Also named this sitting: " + state.sens.filter(function (o) { return o !== s; }).map(function (o) { return o.spot.words; }).join(", ") + ".", { "data-cave-also": "" }));
-      } else if (p.id === "pool") {
+      } else if (stp.place === "pool") {
         var e = lookup(ELEMENTS, blk.element);
         body.push(P(e[0] + " is " + e[1] + ". Tap it. The move that goes with it: " + e[2] + "."));
         if (blk.touched) body.push(P("It answers you. " + e[2] + ".", { "data-cave-touched": "" }));
         body.push(P(CHANNEL_JOBS[e[0]], { "data-cave-job": "" }));
         body.push(choice(ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }), blk.element, function (o) { blk.element = o[0]; redress(blk); placeCard(blk); }));
-      } else if (p.id === "passage") {
+      } else if (stp.place === "passage") {
         var d = blk.daemon && lookup(DAEMONS, blk.daemon);
         if (!d) {
           body.push(P("A daemon stands in the way. Which one is it?"));
@@ -1012,37 +1179,53 @@
           body.push(P(d[1] + "'s job: " + d[2], { "data-cave-daemon-job": "" }));
           body.push(P("Who it works for: " + DAEMON_WORKS_FOR, { "data-cave-daemon-for": "" }));
           if (!blk.stepAside) {
-            body.push(P("Knowing that, will it step aside?"));
+            if (blk.dug) body.push(P("You worked what it was holding.", { "data-cave-dug": "" }));
+            body.push(P(blk.dug ? "Will it step aside now?" : "Knowing that, will it step aside?"));
             body.push(row([
               btn("Yes, it steps aside", { "data-cave-aside": "yes" }, function () { blk.stepAside = "yes"; moveDaemon(blk); placeCard(blk); }),
-              btn("Not yet", { "data-cave-aside": "not-yet" }, function () { blk.stepAside = "not-yet"; moveDaemon(blk); placeCard(blk); }, true),
+              btn("Not yet", { "data-cave-aside": "not-yet" }, function () { blk.stepAside = "not-yet"; placeCard(blk); }, true),
             ]));
             go.disabled = true;
+          } else if (blk.stepAside === "yes") {
+            body.push(P(d[1] + " stepped to the wall, and the way is open.", { "data-cave-open": "" }));
           } else {
-            body.push(P(blk.stepAside === "yes" ? d[1] + " stepped to the wall, and the way is open." : d[1] + " isn't ready. It waits by the wall, and it will be here when you come back."));
+            // Wendell, 10 October 2026: "This type of blocker shouldn't be able to be moved past and there should be an encounter
+            // where they only stand aside after resolving the emergent issue presented by the daemon." The way stays shut; the
+            // encounter is digging into what it holds (the game's own rule: "If a block won't release, you dig deeper into what's
+            // holding it", game.jsx line 3380), a branch of its own, and then it is asked again (board: cave-daemon-encounter).
+            body.push(P(d[1] + " won't move, and you can't walk past it. It is still doing its job here, for you.", { "data-cave-wall": "" }));
+            body.push(P("Work what it is holding, and ask it again when you come back round."));
+            body.push(row([btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); })]));
+            go.disabled = true;
           }
         }
-      } else if (p.id === "gate") {
-        var left = FACES.filter(function (f) { return blk.gate.indexOf(f[0]) < 0; });
-        body.push(P("Six stones, one for each face. Stand at each and ask what it asks. " + blk.gate.length + " of 6."));
-        body.push(row(FACES.map(function (f) {
-          return el("button", { class: "alt", "data-cave-stone": f[0], "aria-pressed": String(blk.gate.indexOf(f[0]) >= 0), text: f[1], onclick: function () { stand(f[0]); } });
-        })));
-        var lastF = blk.gate[blk.gate.length - 1];
-        if (lastF) { var lf = lookup(FACES, lastF); body.push(P(lf[1] + ": " + lf[2] + ". " + lf[3], { "data-cave-stone-says": "" })); }
-        if (left.length) go.disabled = true;
+      } else if (stp.place === "gate") {
+        var f = FACES[stp.stone], walked = blk.gate.indexOf(f[0]) >= 0;
+        title = p.step + " · " + f[1];
+        body.push(P(f[1] + ": " + f[2] + ". " + blk.gate.length + " of 6 branches walked.", { "data-cave-stone-says": "" }));
+        if (!walked) {
+          body.push(row([btn("Walk " + f[1] + "'s branch", { "data-cave-stone": f[0] }, function () { openFace(blk, stp.stone); })]));
+          go.disabled = true;
+        }
       } else {
-        body.push(P("Light from above. Breathe out, and come back to " + blk.label + "."));
+        body.push(P("Light from above. Breathe out, and come back round to " + blk.label + "."));
         go = btn("Return to " + blk.label, { "data-cave-release": "" }, release);
       }
-      kids.push(go);
-      if (p.id !== "way_out") kids.push(btn("This step won't go further", { "data-cave-block": "" }, function () { openBlock(p.key, p.step); }, true));
-      if (p.id !== "way_out") kids.push(btn("Skip", { "data-cave-skip": "" }, skip, true));
-      fill(p.step, body.concat([row(kids)]));
+      if (stp.place === "passage" && blk.stepAside !== "yes") { kids.push(btn("Skip", { "data-cave-skip": "" }, skip, true)); }
+      else {
+        kids.push(go);
+        if (stp.place !== "way_out") kids.push(btn("This step won't go further", { "data-cave-block": "" }, function () { openBlock(p.key, p.step); }, true));
+        if (stp.place !== "way_out") kids.push(btn("Skip", { "data-cave-skip": "" }, skip, true));
+      }
+      fill(title, body.concat([row(kids)]));
+    }
+    function faceCard(blk) {
+      var stp = stopOf(state.walk), f = lookup(FACES, stp.face);
+      stat.setAttribute("data-cave-place", "face");
+      fill(f[1] + " asks", [P(f[3], { "data-cave-face-asks": "" }), P(f[1] + " knows through " + f[2].replace(/^Knows through /, "") + "."), row([btn("Back to the ring", { "data-cave-face-back": "" }, faceBack)])]);
     }
 
     function addPlace() {
-      // The figure opens over the cave; the place named becomes a cave of its own, reached from the way out.
       window.OAGBody.pick().then(function (r) {
         if (!r) return;
         var sp = spotNamed(A, r.label);
@@ -1051,37 +1234,25 @@
         if (state.walk.arrived) arrive();
       });
     }
-
     function meet(blk, id) {
       blk.daemon = id;
-      var c = blk.route.ctx, d = lookup(DAEMONS, id), h = ch.h;
-      if (c.daemonFig) blk.route.group.remove(c.daemonFig);
+      var route = blk.route, c = route.ctx, d = lookup(DAEMONS, id), h = ch.h, a = at(route, route.stops[2].s + 6);
+      if (c.daemonFig) route.group.remove(c.daemonFig);
       c.daemonFig = buildDaemon(THREE, d, h * 1.1);
-      c.daemonFig.position.set(0, -h * 0.9, -(PLACES[2].s + 6));
-      blk.route.group.add(c.daemonFig);
+      c.daemonFig.position.set(a.x, a.y - h * 0.9, a.z); c.daemonFig.rotation.y = yawFacing({ fx: -a.fx, fz: -a.fz });
+      c.daemonBase = { x: a.x, z: a.z, nx: -a.fz, nz: a.fx };
+      route.group.add(c.daemonFig);
       placeCard(blk);
     }
     function moveDaemon(blk) {
       var c = blk.route.ctx; if (!c.daemonFig) return;
-      c.daemonT = { t0: performance.now(), from: c.daemonFig.position.x, to: ch.w * 0.36 };
-    }
-    function stand(face) {
-      var wk = state.walk, blk = wk.block, c = ctxOf();
-      if (!blk || !onPlace("gate")) return;
-      if (blk.gate.indexOf(face) < 0) blk.gate.push(face);
-      c.stones.forEach(function (st) {
-        if (blk.gate.indexOf(st.userData.face) >= 0) { var col = lookup(FACES, st.userData.face)[4]; st.material.color.setHex(col); st.material.emissive.setHex(col); st.material.emissiveIntensity = st.userData.face === face ? 0.9 : 0.45; }
-      });
-      placeCard(blk);
+      c.daemonT = { t0: performance.now(), to: blk.route.w * 0.6 };
     }
 
     // ---- the path between two places -------------------------------------------------------
     function save(s) {
       if (s.saved || !s.texture) return;
       s.saved = true;
-      // The scan is saved the way the body map saves one (body-map.js record), so "Where it has lived" shows it and
-      // joins the places of one sitting with a line. The blocked W.A.V.E. steps go with it (cave-detour-kept): a
-      // W.A.V.E. step id, or "step>place" for a block met inside that step's side passage.
       window.OAGBody.record({ location: s.spot.words, texture: s.texture, channel: s.element, where: "cave", blocked: s.blocked.slice(), skipped: s.skipped.slice() });
     }
     function follow(id) {
@@ -1090,7 +1261,7 @@
       save(from);
       var Pp = function (sp) { return new THREE.Vector3(sp.position[0] * FIG, (sp.position[1] - 0.9) * FIG, sp.position[2] * FIG); };
       var a = Pp(from.spot), b = Pp(to.spot), mid = a.clone().add(b).multiplyScalar(0.5);
-      mid.x *= 0.25; mid.z *= 0.25; // the path bends in toward the body's centre line, so it stays inside the figure
+      mid.x *= 0.25; mid.z *= 0.25;
       var curve = new THREE.CatmullRomCurve3([a, a.clone().lerp(mid, 0.5), mid, mid.clone().lerp(b, 0.5), b]);
       clearScene(); state.mode = "path"; state.path = { from: from.id, to: to.id };
       var tint = new THREE.Color((lookup(TEXTURES, from.texture) || TEXTURES[4])[2]).multiplyScalar(0.45);
@@ -1102,7 +1273,6 @@
       stat.setAttribute("data-cave-place", "path");
       flight = { curve: curve, t: 0, lamp: fl, done: function () { portal(to); } };
     }
-
     function leave(doSave) {
       if (doSave && me()) save(me());
       fade.style.opacity = 1;
@@ -1113,103 +1283,24 @@
       }, 500);
     }
 
-    // ---- the sign: a step's name and words as text in the scene ------------------------------------
-    // A canvas texture on a sprite, so it always faces the camera. It hangs above the marker ahead (and slides along the path
-    // ahead of the avatar while it walks), is drawn at a constant size on the screen so it reads on a phone (about nine tenths
-    // of the width, never taller than under half the screen), and is held below the top of the screen.
-    var SIGN_W = 520, measure = document.createElement("canvas").getContext("2d");
-    var FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif";
-    function wrapLines(text, font, maxW) {
-      measure.font = font;
-      var lines = [], cur = "";
-      String(text).split(/\s+/).forEach(function (w) {
-        var t = cur ? cur + " " + w : w;
-        if (cur && measure.measureText(t).width > maxW) { lines.push(cur); cur = w; } else cur = t;
-      });
-      if (cur) lines.push(cur);
-      return lines;
-    }
-    function drawSign(title, paras, foot, accent) {
-      var DPR = 2, pad = 26, inner = SIGN_W - 2 * pad, fT = "700 44px " + FONT, fB = "400 30px " + FONT, fF = "400 23px " + FONT;
-      var tl = wrapLines(title, fT, inner), pl = paras.map(function (p) { return wrapLines(p, fB, inner); }), fl = foot ? wrapLines(foot, fF, inner) : [];
-      var H = pad + tl.length * 52 + 8;
-      pl.forEach(function (l) { H += l.length * 38 + 8; });
-      if (fl.length) H += 6 + fl.length * 29;
-      H += pad - 8;
-      var c = document.createElement("canvas"); c.width = SIGN_W * DPR; c.height = Math.ceil(H) * DPR;
-      var g = c.getContext("2d"); g.scale(DPR, DPR);
-      g.fillStyle = "rgba(10,10,24,0.82)"; g.strokeStyle = accent; g.lineWidth = 3;
-      var r = 26, w = SIGN_W - 6, hh = Math.ceil(H) - 6;
-      g.beginPath(); g.moveTo(3 + r, 3); g.arcTo(3 + w, 3, 3 + w, 3 + hh, r); g.arcTo(3 + w, 3 + hh, 3, 3 + hh, r); g.arcTo(3, 3 + hh, 3, 3, r); g.arcTo(3, 3, 3 + w, 3, r); g.closePath(); g.fill(); g.stroke();
-      g.textBaseline = "top"; g.textAlign = "left";
-      var y = pad;
-      g.font = fT; g.fillStyle = accent; tl.forEach(function (l) { g.fillText(l, pad, y); y += 52; }); y += 8;
-      g.font = fB; g.fillStyle = "#f4f4fa"; pl.forEach(function (ls) { ls.forEach(function (l) { g.fillText(l, pad, y); y += 38; }); y += 8; });
-      if (fl.length) { y += 6; g.font = fF; g.fillStyle = "#aab0c4"; fl.forEach(function (l) { g.fillText(l, pad, y); y += 29; }); }
-      return { canvas: c, w: SIGN_W, h: Math.ceil(H) };
-    }
-    function lookNow() { var wk = state.walk; return wk && wk.block ? SIDE_LOOK : STEP_LOOK[Math.max(0, Math.min(6, wk ? wk.target : 0))]; }
-    function setSign(title, paras, foot) {
-      if (!ch) return;
-      var accent = "#" + new THREE.Color(lookNow().light).lerp(new THREE.Color(0xffffff), 0.4).getHexString();
-      var d = drawSign(title, paras, foot, accent);
-      if (!sign.sprite) {
-        sign.sprite = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false }));
-        sign.sprite.renderOrder = 20; sign.sprite.frustumCulled = false; sign.sprite.center.set(0.5, 0); scene.add(sign.sprite); sign.snap = true;
-      }
-      var tex = new THREE.CanvasTexture(d.canvas); tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false;
-      if (sign.sprite.material.map) sign.sprite.material.map.dispose();
-      sign.sprite.material.map = tex; sign.sprite.material.needsUpdate = true; sign.sprite.material.opacity = 0;
-      sign.canvas = d.canvas; sign.cw = d.w; sign.ch = d.h; sign.title = title; sign.paras = paras; sign.foot = foot; sign.accent = accent; sign.has = true; sign.fade = 0;
-    }
-    var sv = new THREE.Vector3(), sw = new THREE.Vector3();
-    function updateSign(dt, nowMs) {
-      var sp = sign.sprite, wk = state.walk, W = canvasBox.clientWidth || 1, H = canvasBox.clientHeight || 1;
-      sign.info = null;
-      if (!sp) return;
-      if (!sign.has || !wk || docked || !avatar) { sp.visible = false; return; }
-      var route = wk.route, fl = -ch.h * 0.92 + route.yOff;
-      if (sign.avatarAnchor) sv.set(avatar.position.x, avatar.position.y + 4.9, avatar.position.z);
-      else {
-        var goal = route.stops[wk.target], sa = wk.arrived ? goal + MARK_AHEAD : Math.min(goal + MARK_AHEAD, wk.s + 12), a = at(route, sa);
-        sv.set(a.x, fl + MARK_Y + 0.9 + (state.calm ? 0 : 0.1 * Math.sin(nowMs / 700)), a.z);
-      }
-      if (sign.snap) { sign.pos.copy(sv); sign.snap = false; } else sign.pos.lerp(sv, 1 - Math.exp(-dt * 5));
-      sp.position.copy(sign.pos);
-      sw.copy(sp.position).applyMatrix4(camera.matrixWorldInverse);
-      var depth = -sw.z;
-      if (depth < 0.5) { sp.visible = false; return; }
-      var worldH = 2 * depth * Math.tan(camera.fov * Math.PI / 360), pxPerWorld = H / worldH;
-      var wantPx = Math.min(0.9 * W, sign.cw), hPx = wantPx * sign.ch / sign.cw, maxH = 0.46 * H;
-      if (hPx > maxH) { wantPx *= maxH / hPx; hPx = maxH; }
-      sp.scale.set(wantPx / pxPerWorld, hPx / pxPerWorld, 1);
-      sw.copy(sp.position).project(camera);
-      var hNdc = 2 * hPx / H, over = sw.y + hNdc - 0.9, shift = over > 0 ? Math.min(1, over / hNdc) : 0;
-      sp.center.set(0.5, shift);
-      sign.fade = Math.min(1, sign.fade + dt * 3); sp.material.opacity = sign.fade; sp.visible = true;
-      var bottomNdc = sw.y - shift * hNdc;
-      sign.info = { x: (sw.x + 1) / 2 * W, bottomY: (1 - bottomNdc) / 2 * H, topY: (1 - (bottomNdc + hNdc)) / 2 * H, w: wantPx, h: hPx, bodyPx: 30 * wantPx / sign.cw, titlePx: 44 * wantPx / sign.cw };
-    }
-    // The floating card hangs just under the marker on the screen (and under the sign if the sign was pushed down onto it).
-    var cv = new THREE.Vector3();
-    function layoutCard() {
-      var wk = state.walk;
-      if (docked || card.style.display === "none" || !wk || !ch) return;
-      var W = canvasBox.clientWidth || 1, H = canvasBox.clientHeight || 1, cw = card.offsetWidth, chh = card.offsetHeight;
-      var mk = wk.route.markers[wk.target];
-      if (!mk) return;
-      cv.set(mk.position.x, mk.position.y + wk.route.yOff, mk.position.z).project(camera);
-      var px = (cv.x + 1) / 2 * W, py = (1 - cv.y) / 2 * H;
-      if (cv.z > 1) { px = W / 2; py = H * 0.5; }
-      var top = py + 24;
-      if (sign.info) top = Math.max(top, sign.info.bottomY + 8);
-      var x = clamp(px - cw / 2, 8, Math.max(8, W - cw - 8)), y = clamp(top, 56, Math.max(56, H - chh - 12));
-      card.style.transform = "translate(" + Math.round(x) + "px," + Math.round(y) + "px)";
+    // The pane follows the figure: it sits above the avatar's head on the screen, held inside the screen and below the buttons.
+    var hv = new THREE.Vector3(), paneAt = null;
+    function layoutPane() {
+      paneAt = null;
+      if (docked || !avatar || !page.has || pane.style.display === "none") return;
+      var W = canvasBox.clientWidth || 1, H = canvasBox.clientHeight || 1, pw = pane.offsetWidth, ph = pane.offsetHeight;
+      hv.set(avatar.position.x, avatar.position.y + AVATAR_H + 0.4, avatar.position.z).project(camera);
+      var hx = (hv.x + 1) / 2 * W, hy = (1 - hv.y) / 2 * H;
+      if (hv.z > 1) { hx = W / 2; hy = H * 0.6; }
+      var x = clamp(hx - pw / 2, 8, Math.max(8, W - pw - 8)), y = clamp(hy - ph - 14, 58, Math.max(58, H - ph - 12));
+      pane.style.transform = "translate(" + Math.round(x) + "px," + Math.round(y) + "px)";
+      pane.style.setProperty("--tail", Math.round(clamp(hx - x, 16, pw - 16)) + "px");
+      paneAt = { x: x, y: y, w: pw, h: ph, headX: hx, headY: hy };
     }
 
     // ---- the frame -------------------------------------------------------------------------
     var tmp = new THREE.Vector3(), baseLamp = new THREE.Color(), tmpC = new THREE.Color();
-    var CAM_BACK = 6.2, CAM_UP = 4.6; // the camera follows close behind the avatar and a little above its head
+    var CAM_BACK = 6.2, CAM_UP = 4.6;
     function render() {
       var nowMs = performance.now(), dt = Math.min(0.5, (nowMs - last) / 1000); last = nowMs;
       breathStep(dt, nowMs / 1000);
@@ -1218,52 +1309,56 @@
         if (k >= 1) { if (tw.done) tw.done(); return false; }
         return true;
       });
-      if (flight) { // along a path inside the body
+      if (flight) {
         flight.t = Math.min(1, flight.t + 0.006);
         var p = flight.curve.getPoint(flight.t), q = flight.curve.getPoint(Math.min(1, flight.t + 0.02));
         camera.position.copy(p); camera.lookAt(q); flight.lamp.position.copy(p);
         if (flight.t >= 1) { var done = flight.done; flight = null; done(); }
       } else if (ch && state.walk && avatar) {
         walkStep(dt);
-        var wk = state.walk, route = wk.route, a = at(route, wk.s), fl = -ch.h * 0.92 + route.yOff, c = ctxOf();
-        var d = avatar.userData;
+        var wk = state.walk, route = wk.route, a = at(route, wk.s), h = ch.h, fl = a.y - h * 0.92, c = ctxOf();
         looseNow += (me().passed / WAVE.length - looseNow) * Math.min(1, dt * 2);
         loosenAvatar(avatar, looseNow, br.b);
-        var stepLen = wk.t < BREATH.inS ? wk.D / 2 / STEPS_IN : wk.D / 2 / STEPS_OUT;
-        poseAvatar(avatar, wk.t, wk.moving, dt, br.b, stepLen, state.calm);
-        avatar.position.set(a.x + -a.fz * wk.lat, fl + 0.02, a.z + a.fx * wk.lat);
-        // at a branch the avatar turns to the opening in the wall
-        avatar.rotation.y = Math.abs(wk.lat) > 0.01 ? Math.atan2(-a.fz * Math.sign(wk.lat), a.fx * Math.sign(wk.lat)) : yawFacing(a);
-        if (state.held) state.look.yaw *= 1 - Math.min(1, dt * 1.5); // walking turns the view back behind the avatar
-        // camera: behind on the path, and a little above; a drag swings it round the avatar
-        var cb = at(route, Math.max(0, wk.s - CAM_BACK)), ry = state.look.yaw;
-        tmp.set(cb.x - a.x, 0, cb.z - a.z);
+        var stepLen = state.auto ? 0.9 : wk.t < BREATH.inS ? wk.D / 2 / STEPS_IN : wk.D / 2 / STEPS_OUT;
+        poseAvatar(avatar, state.auto ? state.auto.clk : wk.t, wk.moving, dt, br.b, stepLen, state.calm);
+        avatar.position.set(a.x, fl + 0.02, a.z);
+        avatar.rotation.y = yawFacing(a);
+        if (state.held) state.look.yaw *= 1 - Math.min(1, dt * 1.5);
+        // camera: behind on the path, and a little above; on a branch's first steps it sits straight behind the figure
+        var cbx, cbz, cby;
+        var frT = state.stack[state.stack.length - 1], back = route.kind === "face" ? 3.6 : CAM_BACK; // a face's tight loop keeps the camera closer
+        if (wk.s >= back || route.kind === "main" || !frT) { var cb = at(route, Math.max(0, wk.s - back)); cbx = cb.x; cbz = cb.z; cby = cb.y; }
+        else { var pb = at(frT.route, frT.s - (back - wk.s)); cbx = pb.x; cbz = pb.z; cby = pb.y; } // a branch's first steps are seen from the path it left
+        var ry = state.look.yaw; tmp.set(cbx - a.x, 0, cbz - a.z);
         var cx = a.x + tmp.x * Math.cos(ry) + tmp.z * Math.sin(ry), cz = a.z - tmp.x * Math.sin(ry) + tmp.z * Math.cos(ry);
-        var want = new THREE.Vector3(cx, fl + CAM_UP - state.look.pitch * 2.6, cz), aim = new THREE.Vector3(a.x + a.fx * 3.4, fl + 2.2, a.z + a.fz * 3.4);
+        // the camera stays under the roof of the tunnel where it is, so a ramp never lifts it out
+        var want = new THREE.Vector3(cx, Math.min(Math.max(cby, a.y) - h * 0.92 + CAM_UP, cby - h * 0.92 + 5) - state.look.pitch * 2.6, cz), aim = new THREE.Vector3(a.x + a.fx * 3.4, fl + 2.2, a.z + a.fz * 3.4);
         if (state.rise) { want.y = state.rise.y0 + 16 * state.rise.k; aim.set(a.x + a.fx * 6, state.rise.y0 + 6 + 20 * state.rise.k, a.z + a.fz * 6); }
         if (snapCam) { camPos.copy(want); lookAt.copy(aim); snapCam = false; }
         else { var f = 1 - Math.exp(-dt * 6); camPos.lerp(want, f); lookAt.lerp(aim, f); }
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
-        // the screen changes with each W.A.V.E. step: the light, the fog and the openness ease toward the stretch being walked
-        var lg = wk.block ? SIDE_LOOK : STEP_LOOK[clamp(wk.target, 0, 6)], fe = 1 - Math.exp(-dt * 2.2);
-        lk.idx = wk.block ? -1 : wk.target;
+        // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
+        var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
+        lk.idx = route.kind === "main" ? wk.target : -1;
         lk.light.lerp(tmpC.setHex(lg.light), fe); lk.fog.lerp(tmpC.setHex(lg.fog), fe);
-        lk.fogK += (lg.fogK - lk.fogK) * fe; lk.hemi += (lg.hemi - lk.hemi) * fe; lk.flash = Math.max(0, lk.flash - dt / 0.9);
+        lk.fogK += (lg.fogK - lk.fogK) * fe; lk.hemi += (lg.hemi - lk.hemi) * fe; lk.flash = Math.max(0, lk.flash - dt / 1.1);
         scene.background.copy(lk.fog); scene.fog.color.copy(lk.fog); scene.fog.density = parts.fog * lk.fogK;
-        if (!wk.block) {
-          for (var q = 0; q < STEP_LOOK.length; q++) openCur[q] = q <= revealed ? openCur[q] + (STEP_LOOK[q].open - openCur[q]) * fe : openCur[Math.max(0, q - 1)];
-          route.tunnel.setOpen(openCur);
+        var mt = state.mainRoute.tube, chg = false;
+        for (var qq = 0; qq < STEP_LOOK.length; qq++) {
+          var goal = qq <= revealed ? STEP_LOOK[qq].open : CLOSED, nv = openCur[qq] + (goal - openCur[qq]) * fe;
+          if (Math.abs(nv - openCur[qq]) > 0.0004) { openCur[qq] = nv; chg = true; }
         }
+        if (chg) mt.dirty = true;
         lamp.position.set(a.x, fl + 3.8, a.z);
-        // the cave breathes: walls ease, the light warms on the exhale, the element and the chest glow
-        route.tunnel.setBreath(br.k);
+        mt.update(br.k);
+        state.stack.forEach(function (fr) { if (fr.child && fr.child.route) fr.child.route.tube.update(br.k); });
         var warm = 1 - br.b, surge = lk.flash * lk.flash;
         baseLamp.copy(lk.light).lerp(tmpC.setHex(0xffffff), 0.3).lerp(tmpC.setHex(c && c.lampHex || 0xffe0b0), 0.15).lerp(WARM, warm * 0.2);
         lamp.color.copy(baseLamp); lamp.intensity = 1.0 + 0.5 * warm + 1.6 * surge + 0.5 * lk.hemi;
         hemi.color.setHex(0xffffff).lerp(lk.light, 0.35); hemi.intensity = lk.hemi + 0.1 * warm + 0.4 * surge;
         glow.forEach(function (g) { g.m.emissiveIntensity = g.base * (0.7 + 0.6 * br.b); });
         route.markers.forEach(function (m, i) {
-          var on = wk.block ? (wk.block.place > i || (wk.arrived && wk.target === i)) : i < me().passed;
+          var on = route.kind === "main" ? i < me().passed : i < wk.target || (wk.arrived && wk.target === i);
           var here = i === wk.target;
           m.material.opacity = on ? 0.95 : here ? 0.8 : 0.35;
           m.scale.setScalar(here && !state.calm ? 1 + 0.15 * Math.sin(nowMs / 300) : 1);
@@ -1276,12 +1371,13 @@
             if (!state.calm) c.elObj.children.forEach(function (m) { if (m.userData.flame) m.scale.y = 1 + 0.15 * Math.sin(nowMs / 90 + m.position.x * 9); });
           }
           if (c.daemonT) {
-            var dk = ease(Math.min(1, (nowMs - c.daemonT.t0) / 900)); c.daemonFig.position.x = c.daemonT.from + (c.daemonT.to - c.daemonT.from) * dk;
+            var dk = ease(Math.min(1, (nowMs - c.daemonT.t0) / 900)), db = c.daemonBase;
+            c.daemonFig.position.x = db.x + db.nx * c.daemonT.to * dk; c.daemonFig.position.z = db.z + db.nz * c.daemonT.to * dk;
             if (dk >= 1) c.daemonT = null;
           }
           if (c.daemonFig && c.daemonFig.userData.orb && !state.calm) c.daemonFig.userData.orb.scale.setScalar(1 + 0.2 * Math.sin(nowMs / 250));
         }
-        updateSign(dt, nowMs); layoutCard();
+        layoutPane();
       }
       renderer.render(scene, camera);
       running = requestAnimationFrame(render);
@@ -1296,9 +1392,8 @@
     api.avatar = function () {
       var d = avatar.userData, wk = state.walk, a = at(wk.route, wk.s);
       return { x: avatar.position.x, y: avatar.position.y, z: avatar.position.z, scale: [d.body.scale.x, d.body.scale.y], opacity: d.mat.opacity, glow: d.mat.emissiveIntensity,
-        offPath: distToRoute(wk.route, avatar.position.x, avatar.position.z), bytes: geometryBytes(avatar), loose: looseNow, s: wk.s, ahead: [a.fx, a.fz] };
+        offPath: distToRoute(wk.route, avatar.position.x, avatar.position.z), bytes: geometryBytes(avatar), loose: looseNow, s: wk.s, ahead: [a.fx, a.fz], route: wk.route.kind };
     };
-    // The avatar's joints (radians about x, and the count of named joints), and the walk's clock against the breath.
     api.joints = function () {
       var J = avatar.userData.J, r = {};
       Object.keys(J).forEach(function (k) { r[k] = J[k].rotation.x; });
@@ -1309,45 +1404,54 @@
       return { t: wk.t, s: wk.s, s0: wk.s0, D: wk.D, frac: wk.D ? (wk.s - wk.s0) / wk.D : 1, phase: wk.t < BREATH.inS ? "in" : "out", moving: wk.moving, stepsIn: d.stepsIn, stepsOut: d.stepsOut,
         inS: BREATH.inS, outS: BREATH.outS, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
     };
-    // The light of the stretch being walked, as the screen shows it now.
     api.look = function () {
-      return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur[Math.max(0, lk.idx)], bg: scene.background.getHex(), fogHex: scene.fog.color.getHex(), density: scene.fog.density };
+      return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur.slice(), revealed: revealed, bg: scene.background.getHex(), density: scene.fog.density };
     };
-    // The sign in the scene: its words, where it is on the screen, how big its type is, and whether its texture holds drawn pixels.
-    api.sign = function () {
-      var sp = sign.sprite, W = canvasBox.clientWidth, H = canvasBox.clientHeight, out = { has: sign.has, visible: !!(sp && sp.visible), title: sign.title, paras: sign.paras.slice(), foot: sign.foot, text: [sign.title].concat(sign.paras).join(" ") };
-      if (sign.info) out.screen = sign.info;
-      if (state.walk && state.walk.route.markers[state.walk.target]) {
-        var mk = state.walk.route.markers[state.walk.target], v = new THREE.Vector3(mk.position.x, mk.position.y + state.walk.route.yOff, mk.position.z).project(camera);
-        out.marker = { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * H };
-      }
-      if (sign.canvas) {
-        var px = sign.canvas.getContext("2d").getImageData(0, 0, sign.canvas.width, sign.canvas.height).data, n = 0;
-        for (var i = 3; i < px.length; i += 4 * 16) if (px[i] > 200) n++;
-        out.pixels = n; out.canvas = [sign.canvas.width, sign.canvas.height];
-      }
-      out.docked = docked; out.cardShown = card.style.display !== "none";
-      return out;
+    // The pane: its words, where it sits on the screen, and where the figure's head is.
+    api.pane = function () {
+      var r = pane.getBoundingClientRect(), cs = getComputedStyle(pane);
+      return { shown: pane.style.display !== "none" && pane.style.visibility !== "hidden" && r.width > 0, title: page.title, text: page.text, at: paneAt, rect: { x: r.left, y: r.top, w: r.width, h: r.height }, font: parseFloat(cs.fontSize), docked: docked };
     };
-    api.card = function () { var r = card.getBoundingClientRect(); return { docked: docked, shown: card.style.display !== "none", x: r.left, y: r.top, w: r.width, h: r.height, vw: window.innerWidth, vh: window.innerHeight }; };
+    api.modal = function () {
+      var r = modal.getBoundingClientRect();
+      return { open: state.modal, text: modal.textContent, buttons: Array.prototype.map.call(modal.querySelectorAll("button"), function (b) { return b.textContent; }), rect: { x: r.left, y: r.top, w: r.width, h: r.height } };
+    };
     api.depth = function () { return state.stack.length; };
-    // The least distance between two stretches of the main path that are far apart along it; the walls meet if this is under twice the half-width.
+    // Whether the camera is inside the tunnel being walked (between its walls, above its floor, under its roof).
+    api.camInside = function () {
+      var r = state.walk.route, best = 1e9, bs = 0;
+      for (var i = 0; i < r.X.length; i += 2) { var d = Math.hypot(r.X[i] - camera.position.x, r.Z[i] - camera.position.z); if (d < best) { best = d; bs = r.S[i]; } }
+      var a = at(r, bs), hw = (r.w || ch.w) * (r.kind === "main" ? r.openAt(bs) : SIDE_LOOK.open), fl = a.y - ch.h * 0.92;
+      return { side: best, halfWidth: hw, above: camera.position.y - fl, roof: ch.h * 1.92, inside: best < hw * 0.95 && camera.position.y > fl && camera.position.y < fl + ch.h * 1.85 };
+    };
     api.clearance = function () {
       var r = state.mainRoute, best = 1e9;
       for (var i = 0; i < r.X.length; i += 2) for (var j = i + 1; j < r.X.length; j += 2) {
-        if (r.S[j] - r.S[i] < 12) continue;
+        if (r.S[j] - r.S[i] < Math.max(12, Math.PI * r.pitch / 2 * 0.95)) continue; // pairs on one switchback are a bend, not two stretches
         best = Math.min(best, Math.hypot(r.X[i] - r.X[j], r.Z[i] - r.Z[j]));
       }
       return { clearance: best, width: ch.w, maxOpen: OPEN_MAX };
     };
+    // The tunnel: one mesh per route, how many faces its openings removed, and the branch that is being walked (where it starts
+    // and ends against the spot it left from, and how far below the main path it runs).
+    api.tunnel = function () {
+      var m = state.mainRoute.tube.mesh;
+      return { instanced: state.mainRoute.group.children.filter(function (o) { return o.isInstancedMesh; }).length, mainTris: m.geometry.index.count / 3, rings: state.mainRoute.tube.n, holes: state.mainRoute.tube.holes.length, width: ch.w, len: state.mainRoute.len };
+    };
+    api.branch = function () {
+      var wk = state.walk, r = wk.route; if (r.kind === "main") return null;
+      var fr = state.stack[state.stack.length - 1], b = at(fr.route, fr.s), s0 = ptOn(r, 0), s1 = ptOn(r, r.len), lowest = 0;
+      for (var i = 0; i < r.Y.length; i++) lowest = Math.min(lowest, r.Y[i] - b.y);
+      return { kind: r.kind, len: r.len, startGap: Math.hypot(s0.x - b.x, s0.z - b.z), endGap: Math.hypot(s1.x - b.x, s1.z - b.z), lowest: lowest, stops: r.stops.length, holes: r.holes };
+    };
     api.lanterns = function () { return lanternsOn.length; };
-    // Where the element stands on the screen, in page pixels.
     api.elementScreen = function () {
       var c = ctxOf(), v = c.holder.getWorldPosition(new THREE.Vector3()); v.y += 1.4; v.project(camera);
       var r = dom.getBoundingClientRect();
       return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
     };
   }
+
 
   window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
