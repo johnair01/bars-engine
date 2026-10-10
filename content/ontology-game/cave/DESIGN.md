@@ -303,3 +303,19 @@ Tests: `cave-test.mjs` (87 checks) adds the shut stretch that opens only on the 
 whole walk, the modal and its choices, the continuous tunnel and width, the loop that starts and ends on the branch point and
 runs under the cave, the two openings and the lantern, the daemon wall, the dig and the second asking, the six face branches,
 the camera staying inside the tunnel, and the saved scan.
+
+## No skip at a daemon, and the 3-2-1 (board of 10 October, 02:01)
+
+Ledger `2026-10-10-pull-020047.json`. `cave-daemon-wall` was overruled: "We shouldn't have a skip. If a daemon pops up
+then it needs to be worked with. We can pivot to a 321 discussion with the part until it feels satisfied."
+`cave-daemon-encounter` was answered "Dig into what it holds", which is already built.
+
+- **No skip at the daemon.** The daemon's stop never offers Skip. Inside any loop opened while a daemon still stands in
+  the way (its own dig loop, or a block deeper in it), Skip is gone too. Elsewhere a block keeps its skip
+  (`cave-block-branch`) until a daemon shows up **(choice)**.
+- **The 3-2-1 with the daemon.** When the daemon answers "Not yet", the wall offers two ways to work it: "Talk with it" and
+  "Work what it holds". Talk with it runs the 3-2-1 in the pane, using the wording of the game's existing
+  `ThreeTwoOneDialogue`: 3, face it as "it" and describe it; 2, talk to it as "you" and ask what it wants and protects; 1,
+  be it and speak as "I". Each step has a box to write in. Then the pane asks whether the daemon feels satisfied. Yes, and
+  it steps to the wall; "Not yet, another round" starts the 3-2-1 again, with the round counted in the title.
+- **(choice)** The written words stay on the page and are not saved with the scan.

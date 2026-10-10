@@ -284,6 +284,7 @@ ok(await page.locator('[data-cave-next]').count() === 0, 'the daemon\'s stop has
 await page.locator('[data-cave-choice="protector"]').click();
 await page.locator('[data-cave-aside="not-yet"]').click();
 ok(await sees('[data-cave-wall]') && await sees('[data-cave-dig]') && await page.locator('[data-cave-next]').count() === 0, '"Not yet" keeps the daemon in the way: no Continue, and an encounter to work');
+ok(await page.locator('[data-cave-skip]').count() === 0 && await sees('[data-cave-321]'), 'a daemon in the way offers no skip, and offers the 3-2-1 talk');
 const sWall = (await avatar()).s;
 await page.locator('[data-cave-shrink]').click();
 await page.mouse.move(330, 700); await page.mouse.down(); await page.waitForTimeout(2500); await page.mouse.up();
@@ -320,10 +321,24 @@ await page.locator('[data-cave-dig]').click();
 await page.locator('[data-cave-place="walk"]').waitFor();
 const b2 = await C(() => window.__oagCave.branch());
 ok((await C(() => window.__oagCave.depth())) === 2 && b2.lowest <= -9.9 && b2.startGap < 0.01, 'working what the daemon holds opens a loop of its own, deeper again, from the daemon\'s spot');
+await walkTo('[data-cave-place="mouth"]');
+ok(await page.locator('[data-cave-skip]').count() === 0, 'inside the daemon\'s own loop there is no skip either');
 await sidePassage(2);
 await page.locator('[data-cave-dug]').waitFor({ timeout: 30000 });
 ok((await C(() => window.__oagCave.depth())) === 1 && await sees('[data-cave-aside="yes"]'), 'coming back round, the daemon is asked again');
-await page.locator('[data-cave-aside="yes"]').click();
+// Still not yet: the 3-2-1, round after round, until it is satisfied.
+await page.locator('[data-cave-aside="not-yet"]').click();
+await page.locator('[data-cave-321]').click();
+for (const round of [1, 2]) {
+  for (const k of ['it', 'you', 'i']) {
+    ok(await sees(`[data-cave-321-step="${k}"]`), `3-2-1 round ${round}: the ${k} step`);
+    await page.locator(`[data-cave-321-text="${k}"]`).fill('words for ' + k);
+    await page.locator('[data-cave-321-next]').click();
+  }
+  ok(await sees('[data-cave-321-ask]') && await page.locator('[data-cave-next]').count() === 0 && await page.locator('[data-cave-skip]').count() === 0, `after round ${round} the daemon is asked if it feels satisfied, with no way past and no skip`);
+  if (round === 1) await page.locator('[data-cave-satisfied="not-yet"]').click();
+}
+await page.locator('[data-cave-satisfied="yes"]').click();
 await page.waitForTimeout(1000);
 ok(await sees('[data-cave-open]') && await sees('[data-cave-next]'), 'once it stands aside the way opens');
 await page.locator('[data-cave-next]').click();

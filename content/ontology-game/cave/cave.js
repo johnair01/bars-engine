@@ -1193,9 +1193,35 @@
             // where they only stand aside after resolving the emergent issue presented by the daemon." The way stays shut; the
             // encounter is digging into what it holds (the game's own rule: "If a block won't release, you dig deeper into what's
             // holding it", game.jsx line 3380), a branch of its own, and then it is asked again (board: cave-daemon-encounter).
-            body.push(P(d[1] + " won't move, and you can't walk past it. It is still doing its job here, for you.", { "data-cave-wall": "" }));
-            body.push(P("Work what it is holding, and ask it again when you come back round."));
-            body.push(row([btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); })]));
+            // Wendell, 10 October 2026 (board cave-daemon-wall, overruled): "We shouldn't have a skip. If a daemon pops up then
+            // it needs to be worked with. We can pivot to a 321 discussion with the part until it feels satisfied." The 3-2-1
+            // runs here, round after round, until the player says it is satisfied; then it steps aside. Its wording follows
+            // src/components/nursery/ThreeTwoOneDialogue.tsx. The words stay on this page and are not saved.
+            var t = blk.t321;
+            if (!t) {
+              body.push(P(d[1] + " won't move, and you can't walk past it. It is still doing its job here, for you.", { "data-cave-wall": "" }));
+              body.push(P("Talk with it, 3-2-1, until it feels satisfied, or work what it is holding and ask it again when you come back round."));
+              body.push(row([
+                btn("Talk with it", { "data-cave-321": "" }, function () { blk.t321 = { step: 0, rounds: 1, it: "", you: "", i: "" }; placeCard(blk); }),
+                btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); }, true),
+              ]));
+            } else if (t.step < 3) {
+              var k = T321[t.step], ta = el("textarea", { rows: "3", placeholder: k[3].replace("{d}", d[1]), "data-cave-321-text": k[0] });
+              ta.value = t[k[0]];
+              ta.addEventListener("input", function () { t[k[0]] = ta.value; });
+              title = "3-2-1 with " + d[1] + (t.rounds > 1 ? " · round " + t.rounds : "");
+              body.push(P(k[1], { "data-cave-321-step": k[0] }));
+              body.push(P(k[2].replace("{d}", d[1])));
+              body.push(ta);
+              body.push(row([btn("Next", { "data-cave-321-next": "" }, function () { t.step++; placeCard(blk); })]));
+            } else {
+              title = "3-2-1 with " + d[1];
+              body.push(P("Does " + d[1] + " feel satisfied?", { "data-cave-321-ask": "" }));
+              body.push(row([
+                btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
+                btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { t.step = 0; t.rounds++; placeCard(blk); }, true),
+              ]));
+            }
             go.disabled = true;
           }
         }
@@ -1211,14 +1237,22 @@
         body.push(P("Light from above. Breathe out, and come back round to " + blk.label + "."));
         go = btn("Return to " + blk.label, { "data-cave-release": "" }, release);
       }
-      if (stp.place === "passage" && blk.stepAside !== "yes") { kids.push(btn("Skip", { "data-cave-skip": "" }, skip, true)); }
+      // No skip once a daemon has shown up and not stepped aside, here or in any block this one opened from: it is worked with.
+      if (stp.place === "passage" && blk.stepAside !== "yes") { /* the daemon is here: no skip, no way on until it steps aside */ }
       else {
         kids.push(go);
         if (stp.place !== "way_out") kids.push(btn("This step won't go further", { "data-cave-block": "" }, function () { openBlock(p.key, p.step); }, true));
-        if (stp.place !== "way_out") kids.push(btn("Skip", { "data-cave-skip": "" }, skip, true));
+        if (stp.place !== "way_out" && !daemonHolds(blk)) kids.push(btn("Skip", { "data-cave-skip": "" }, skip, true));
       }
       fill(title, body.concat([row(kids)]));
     }
+    // True when this block, or one it was opened from, has a daemon that has not stepped aside.
+    function daemonHolds(b) { while (b) { if (b.daemon && b.stepAside !== "yes") return true; b = b.frame.blk; } return false; }
+    var T321 = [
+      ["it", "3 · It", "Face {d} as something outside you. Describe it in the third person.", "It stands there whenever I try to... It looks like..."],
+      ["you", "2 · You", "Talk to {d} directly, as \"you\". Ask what it wants and what it is protecting, and let it answer.", "You show up whenever I... What do you want from me?"],
+      ["i", "1 · I", "Be {d}. Speak as \"I\", as the part of you it is.", "I am the part of you that... I need..."],
+    ];
     function faceCard(blk) {
       var stp = stopOf(state.walk), f = lookup(FACES, stp.face);
       stat.setAttribute("data-cave-place", "face");
