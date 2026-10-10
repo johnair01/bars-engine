@@ -83,3 +83,16 @@ opening, the waiting part in the next hallway, the next chamber shut, walking ba
 forgetting, declining, deleting everything, and the Cave of Lessons still opening on its own page. Build with
 `npm run build:ontology-game`, then run it from a folder with playwright and three@0.128.0:
 `OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node bigmind-test.mjs`.
+
+## Wendell's steer for later: the inner room (10 October 2026, 20:58)
+
+His words: "eventually we will have an inner room that people can start their own inner explorations from but specifically
+can guide players into the spots of their inner world that needs attention. For instance if I were to abandon a path
+because I ran into a protector and didn't have the time to go deep I would meet that same protector in the inner room lobby
+and be able to pick up the explorations from there. The lobby would get limited and this creates a healthy scarcity.
+Eventually people can bring other parts of self with them on the inner explorations especially when we're mining for gold
+to be used in external world actions".
+
+Not built yet. What this build already gives it: a declined voice and every part asked to wait are saved with status
+`waiting` (`voices[id].status`, `waiting[]`), which is the list the lobby would show. The lobby's size limit, how a part
+comes along on an exploration, and how the gold reaches the outer world are open, for a council pass when the lobby is built.
