@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
-import { saveYearLensFrame } from '@/actions/lens-goals'
+import { useRouter } from 'next/navigation'
+import { saveYearLensDomain, saveYearLensFrame } from '@/actions/lens-goals'
 import { LENS_DOMAINS, LENS_FEELINGS, type LensDomainKey } from '@/lib/lenses/domains'
 import { getPromptSeeds } from '@/lib/lenses/prompt-seeds'
 import { createClientOptionKey, optionText } from '@/lib/lenses/workshop-options'
@@ -53,10 +54,19 @@ function compactSuperpowerLabel(state: LensesOnboardingState) {
     .join(' ')
 }
 
-export function LensesOnboardingClient({ initialState }: { initialState: LensesOnboardingState }) {
-  const [screen, setScreen] = useState<Screen>('entry')
+export function LensesOnboardingClient({
+  initialState,
+  focusDomain = null,
+}: {
+  initialState: LensesOnboardingState
+  /** One domain a morning: open straight on this lens, save it, and head back to Tap the Vein. */
+  focusDomain?: LensDomainKey | null
+}) {
+  const router = useRouter()
+  const focusIndex = focusDomain ? LENS_DOMAINS.findIndex((domain) => domain.key === focusDomain) : -1
+  const [screen, setScreen] = useState<Screen>(focusIndex >= 0 ? 'workshop' : 'entry')
   const [phase, setPhase] = useState<Phase>('write')
-  const [domainIndex, setDomainIndex] = useState(0)
+  const [domainIndex, setDomainIndex] = useState(Math.max(0, focusIndex))
   const [vagueMovement, setVagueMovement] = useState(initialState.drafts[0]?.vagueMovement ?? '')
   const [feelings, setFeelings] = useState<string[]>(initialState.drafts[0]?.feelings.length ? initialState.drafts[0].feelings : ['settled', 'connected'])
   const [units, setUnits] = useState< LensWorkshopUnit[] >(() => emptyUnits(initialState))
@@ -118,6 +128,37 @@ export function LensesOnboardingClient({ initialState }: { initialState: LensesO
     updateUnit({ keptIndexes: [...activeUnit.keptIndexes, optionIndex] })
   }
 
+  /** Save one lens as it is locked in, so a closed tab loses nothing. */
+  function saveDomain(unit: LensWorkshopUnit, then: () => void) {
+    startTransition(async () => {
+      const result = await saveYearLensDomain({ vagueMovement, feelings, unit })
+      if ('error' in result && result.error) {
+        setMessage(result.error)
+        return
+      }
+      if ('unit' in result && result.unit) {
+        const saved = result.unit
+        setUnits((current) => current.map((item) => (item.domain === saved.domain ? saved : item)))
+      }
+      then()
+    })
+  }
+
+  function advanceAfterDomain() {
+    if (focusIndex >= 0) {
+      router.push('/tap-the-vein')
+      return
+    }
+    if (domainIndex < LENS_DOMAINS.length - 1) {
+      setDomainIndex(domainIndex + 1)
+      setPhase('write')
+      setTimerSeconds(600)
+      setTimerRunning(false)
+      return
+    }
+    setScreen('review')
+  }
+
   function nextWorkshopStep() {
     setMessage(null)
     if (phase === 'write') {
@@ -138,26 +179,17 @@ export function LensesOnboardingClient({ initialState }: { initialState: LensesO
       setPhase('keep')
       return
     }
-    if (domainIndex < LENS_DOMAINS.length - 1) {
-      setDomainIndex(domainIndex + 1)
-      setPhase('write')
-      setTimerSeconds(600)
-      setTimerRunning(false)
+    if (activeUnit.keptIndexes.length === 0) {
+      setMessage('Keep at least one goal in this lens, or park it.')
       return
     }
-    setScreen('review')
+    saveDomain({ ...activeUnit, status: 'draft' }, advanceAfterDomain)
   }
 
   function parkActiveDomain() {
+    const parked = { ...activeUnit, status: 'parked' as LensWorkshopStatus, keptIndexes: [] as number[] }
     updateUnit({ status: 'parked', keptIndexes: [] })
-    if (domainIndex < LENS_DOMAINS.length - 1) {
-      setDomainIndex(domainIndex + 1)
-      setPhase('write')
-      setTimerSeconds(600)
-      setTimerRunning(false)
-    } else {
-      setScreen('review')
-    }
+    saveDomain(parked, advanceAfterDomain)
   }
 
   function resumeDomain(index: number) {
@@ -393,11 +425,24 @@ export function LensesOnboardingClient({ initialState }: { initialState: LensesO
 
             <button
               className="mt-auto w-full rounded-lg bg-[#7c3aed] px-5 py-4 font-bold text-white disabled:opacity-40"
-              disabled={phase === 'keep' && keptCount === 0}
+              disabled={isPending || (phase === 'keep' && keptCount === 0)}
               onClick={nextWorkshopStep}
             >
-              {phase === 'write' ? 'I am done - make options' : phase === 'options' ? 'Choose which to keep' : domainIndex < LENS_DOMAINS.length - 1 ? 'Lock in - next lens' : 'Lock in - review'}
+              {phase === 'write'
+                ? 'I am done - make options'
+                : phase === 'options'
+                  ? 'Choose which to keep'
+                  : isPending
+                    ? 'Saving...'
+                    : focusIndex >= 0
+                      ? 'Lock in - back to Tap the Vein'
+                      : domainIndex < LENS_DOMAINS.length - 1
+                        ? 'Lock in - next lens'
+                        : 'Lock in - review'}
             </button>
+            {message && screen === 'workshop' && (
+              <p className="rounded-lg border border-white/10 bg-[#111110] p-3 text-sm text-[#d8b4fe]">{message}</p>
+            )}
           </section>
         )}
 
