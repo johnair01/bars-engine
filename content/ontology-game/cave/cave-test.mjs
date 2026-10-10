@@ -329,14 +329,34 @@ ok((await C(() => window.__oagCave.depth())) === 1 && await sees('[data-cave-asi
 // Still not yet: the 3-2-1, round after round, until it is satisfied.
 await page.locator('[data-cave-aside="not-yet"]').click();
 await page.locator('[data-cave-321]').click();
+const charge = (which, v) => page.locator(`[data-cave-321-charge="${which}"]`).evaluate((e, x) => { e.value = x; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
+const say = async (k, text) => { await page.locator(`[data-cave-321-text="${k}"]`).fill(text); await page.locator('[data-cave-321-send]').click(); };
 for (const round of [1, 2]) {
-  for (const k of ['it', 'you', 'i']) {
-    ok(await sees(`[data-cave-321-step="${k}"]`), `3-2-1 round ${round}: the ${k} step`);
-    await page.locator(`[data-cave-321-text="${k}"]`).fill('words for ' + k);
-    await page.locator('[data-cave-321-next]').click();
-  }
+  ok(await sees('[data-cave-321-step="before"]') || round === 2, '3-2-1 opens with a charge reading before');
+  if (round === 1) { await charge('before', 9); ok((await page.locator('[data-cave-321-read="before"]').textContent()) === '9 of 10', 'the before reading follows the slider'); await page.locator('[data-cave-321-start]').click(); }
+  ok(await sees('[data-cave-321-step="it"]'), `3-2-1 round ${round}: 3 Face it`);
+  await say('it', 'it is a wall ' + round);
+  ok(await page.locator('[data-cave-bubble-phase="3"]').count() >= 1 && (await page.locator('[data-cave-321-text="it"]').inputValue()) === '' && await page.evaluate(() => document.activeElement && document.activeElement.hasAttribute('data-cave-321-text')), 'a line sent shows in the thread, and the box stays ready');
+  ok(await page.locator('[data-cave-321-voice]').count() === 0, 'Face it has one voice, no switcher');
+  await page.locator('[data-cave-321-next]').click();
+  ok(await sees('[data-cave-321-step="you"]') && await page.locator('[data-cave-bubble-phase="3"]').count() >= 1, 'Talk to it keeps the thread above');
+  await say('you', 'what do you want?');
+  await page.locator('[data-cave-321-voice="it"]').click();
+  ok((await page.locator('[data-cave-321-voice="it"]').getAttribute('aria-pressed')) === 'true', 'the switcher moves to the daemon\'s voice');
+  await say('you', 'I want you safe');
+  ok(await page.locator('[data-cave-bubble="it"][data-cave-bubble-phase="2"]').count() >= 1 && await page.locator('[data-cave-bubble="you"][data-cave-bubble-phase="2"]').count() >= 1, 'both voices write their own side of the talk');
+  await page.locator('[data-cave-321-next]').click();
+  ok(await sees('[data-cave-321-step="i"]') && await page.locator('[data-cave-321-voice]').count() === 0, 'Be it: one voice, "I am"');
+  await say('i', 'I am the part that guards');
+  await page.locator('[data-cave-321-next]').click();
+  ok(await sees('[data-cave-321-step="after"]'), 'a charge reading after');
+  await charge('after', round === 1 ? 8 : 3);
+  await page.locator('[data-cave-321-after]').click();
   ok(await sees('[data-cave-321-ask]') && await page.locator('[data-cave-next]').count() === 0 && await page.locator('[data-cave-skip]').count() === 0, `after round ${round} the daemon is asked if it feels satisfied, with no way past and no skip`);
-  if (round === 1) await page.locator('[data-cave-satisfied="not-yet"]').click();
+  if (round === 1) {
+    await page.locator('[data-cave-satisfied="not-yet"]').click();
+    ok(await sees('[data-cave-321-step="it"]') && await page.locator('[data-cave-bubble-phase="3"]').count() >= 1, 'another round keeps the thread');
+  }
 }
 await page.locator('[data-cave-satisfied="yes"]').click();
 await page.waitForTimeout(1000);

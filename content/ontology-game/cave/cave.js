@@ -585,6 +585,13 @@
     ".oagc-modal.open{opacity:1;transform:none;pointer-events:auto}" +
     ".oagc-modal h2{margin:0 0 .35rem;font-size:1.15rem;color:#fff1b0}.oagc-modal p{margin:.35rem 0;font-size:1rem;line-height:1.35}.oagc-modal .oagc-row{margin-top:.5rem}" +
     ".oagc-card h2{margin:0 0 .3rem;font-size:1rem;color:#fff}.oagc-card h3{margin:.55rem 0 0;font-size:.82rem;color:#aab;font-weight:600}.oagc-card p{margin:.3rem 0;font-size:.92rem}" +
+    ".oagc-log{display:flex;flex-direction:column;gap:.4rem;max-height:22vh;overflow-y:auto;margin:.4rem 0;padding:.3rem;border-radius:8px;background:rgba(0,0,0,.25)}" +
+    ".oagc-msg{max-width:84%;padding:.35rem .55rem;border-radius:12px;font-size:.95rem;line-height:1.3;word-break:break-word}.oagc-msg small{display:block;font-size:.7rem;opacity:.75;margin-bottom:.1rem}" +
+    ".oagc-msg.you{align-self:flex-end;background:rgba(150,110,255,.22);border:1px solid rgba(150,110,255,.5)}.oagc-msg.it{align-self:flex-start;background:rgba(100,200,255,.14);border:1px solid rgba(100,200,255,.5)}" +
+    ".oagc-div{align-self:center;font-size:.72rem;color:#aab0c4;text-transform:uppercase;letter-spacing:.08em}" +
+    ".oagc-compose{display:flex;gap:.35rem;margin-top:.4rem}.oagc-compose input{flex:1;min-width:0;min-height:44px;padding:0 .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(20,20,40,.9);color:#f4f4fa;font-size:16px}" +
+    ".oagc-compose button{min-width:44px;padding:.5rem}" +
+    ".oagc-slide{display:flex;align-items:center;gap:.6rem;margin:.4rem 0}.oagc-slide input{flex:1;min-height:44px}.oagc-read{white-space:nowrap;font-size:.9rem;color:#fff1b0}" +
     ".oagc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:normal;pointer-events:none}" +
     ".oagc-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}" +
     ".oagc button{background:#64c8ff;color:#10142a;border:none;border-radius:8px;padding:.5rem .8rem;font-size:.9rem;font-weight:600;min-height:44px;cursor:pointer;width:auto;margin:0;touch-action:manipulation}" +
@@ -1202,25 +1209,11 @@
               body.push(P(d[1] + " won't move, and you can't walk past it. It is still doing its job here, for you.", { "data-cave-wall": "" }));
               body.push(P("Talk with it, 3-2-1, until it feels satisfied, or work what it is holding and ask it again when you come back round."));
               body.push(row([
-                btn("Talk with it", { "data-cave-321": "" }, function () { blk.t321 = { step: 0, rounds: 1, it: "", you: "", i: "" }; placeCard(blk); }),
+                btn("Talk with it", { "data-cave-321": "" }, function () { blk.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 8, after: 3 }; placeCard(blk); }),
                 btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); }, true),
               ]));
-            } else if (t.step < 3) {
-              var k = T321[t.step], ta = el("textarea", { rows: "3", placeholder: k[3].replace("{d}", d[1]), "data-cave-321-text": k[0] });
-              ta.value = t[k[0]];
-              ta.addEventListener("input", function () { t[k[0]] = ta.value; });
-              title = "3-2-1 with " + d[1] + (t.rounds > 1 ? " · round " + t.rounds : "");
-              body.push(P(k[1], { "data-cave-321-step": k[0] }));
-              body.push(P(k[2].replace("{d}", d[1])));
-              body.push(ta);
-              body.push(row([btn("Next", { "data-cave-321-next": "" }, function () { t.step++; placeCard(blk); })]));
             } else {
-              title = "3-2-1 with " + d[1];
-              body.push(P("Does " + d[1] + " feel satisfied?", { "data-cave-321-ask": "" }));
-              body.push(row([
-                btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
-                btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { t.step = 0; t.rounds++; placeCard(blk); }, true),
-              ]));
+              title = chat321(blk, d, t, body);
             }
             go.disabled = true;
           }
@@ -1248,11 +1241,80 @@
     }
     // True when this block, or one it was opened from, has a daemon that has not stepped aside.
     function daemonHolds(b) { while (b) { if (b.daemon && b.stepAside !== "yes") return true; b = b.frame.blk; } return false; }
+    // The 3-2-1 chat, ported from bars-engine's Clean321Flow (src/components/clean321/Clean321Flow.tsx): one thread the player
+    // writes entirely (the system never writes a turn); 3 Face it, "it", one voice; 2 Talk to it, two voices with a switcher
+    // (You and the daemon); 1 Be it, "I am"; a charge reading before and after. The daemon steps aside when the player says it
+    // feels satisfied (board: cave-daemon-wall); another round keeps the thread and starts again at 3. Nothing leaves the page,
+    // and completeClean321's rewards stay with the NOW page. Returns the page's title.
     var T321 = [
-      ["it", "3 · It", "Face {d} as something outside you. Describe it in the third person.", "It stands there whenever I try to... It looks like..."],
-      ["you", "2 · You", "Talk to {d} directly, as \"you\". Ask what it wants and what it is protecting, and let it answer.", "You show up whenever I... What do you want from me?"],
-      ["i", "1 · I", "Be {d}. Speak as \"I\", as the part of you it is.", "I am the part of you that... I need..."],
+      ["it", 3, "3 · Face it", "3rd person · \"it\"", "Name {d} as \"it\", at arm's length. Describe it.", "Describe it...", "Talk to it →"],
+      ["you", 2, "2 · Talk to it", "2nd person · \"you\"", "Speak to {d}, then let it answer back. Switch voices to write both sides.", "Speak to it...", "Be it →"],
+      ["i", 1, "1 · Be it", "1st person · \"I am\"", "Speak as {d}. \"I am...\"", "Speak as it. \"I am...\"", "How charged is it now? →"],
     ];
+    function chat321(blk, d, t, body) {
+      var n = d[1], ph = t.phase, title = "3-2-1 with " + n + (t.rounds > 1 ? " · round " + t.rounds : "");
+      function slider(which) {
+        var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "data-cave-321-charge": which, "aria-label": "Charge, 0 to 10" });
+        inp.value = t[which];
+        var out = el("span", { class: "oagc-read", "data-cave-321-read": which, text: t[which] + " of 10" });
+        inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; });
+        return el("div", { class: "oagc-slide" }, [inp, out]);
+      }
+      if (ph === "before") {
+        body.push(P("Before you start", { "data-cave-321-step": "before" }));
+        body.push(P("How charged is this with " + n + " right now? The 3-2-1 cools it into something you can work with: face it, talk to it, be it."));
+        body.push(slider("before"));
+        body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; placeCard(blk); })]));
+      } else if (ph === "after") {
+        body.push(P("After the 3-2-1", { "data-cave-321-step": "after" }));
+        body.push(P("How charged is it now? Before, it was " + t.before + " of 10."));
+        body.push(slider("after"));
+        body.push(row([btn("Continue", { "data-cave-321-after": "" }, function () { t.phase = "ask"; placeCard(blk); })]));
+      } else if (ph === "ask") {
+        body.push(P("Does " + n + " feel satisfied?", { "data-cave-321-ask": "" }));
+        body.push(P("Charge " + t.before + " → " + t.after + (t.after < t.before ? ", down " + (t.before - t.after) + "." : ".") + " Your words stay on this page and are not saved."));
+        body.push(row([
+          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
+          btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { t.phase = 3; t.rounds++; t.before = t.after; t.msgs.push({ round: t.rounds, divider: true }); placeCard(blk); }, true),
+        ]));
+      } else {
+        var k = T321[3 - ph], voice = ph === 3 ? "you" : ph === 1 ? "it" : t.voice;
+        body.push(P(k[2] + " · " + k[3], { "data-cave-321-step": k[0] }));
+        body.push(P(k[4].replace("{d}", n)));
+        var log = el("div", { class: "oagc-log", "data-cave-321-log": "" });
+        t.msgs.forEach(function (m) {
+          if (m.divider) { log.appendChild(el("div", { class: "oagc-div", text: "Round " + m.round })); return; }
+          log.appendChild(el("div", { class: "oagc-msg " + (m.voice === "you" ? "you" : "it"), "data-cave-bubble": m.voice, "data-cave-bubble-phase": String(m.phase) }, [
+            el("small", { text: m.voice === "you" ? "You" : (m.phase === 1 ? "As " + n : n) }), el("div", { text: m.text })]));
+        });
+        if (!t.msgs.length) log.appendChild(el("div", { class: "oagc-div", text: "Every line is yours to write." }));
+        body.push(log);
+        if (ph === 2) {
+          body.push(el("div", { class: "oagc-row" }, ["you", "it"].map(function (v) {
+            return el("button", { class: v === t.voice ? "" : "alt", "data-cave-321-voice": v, "aria-pressed": v === t.voice ? "true" : "false", text: v === "you" ? "Speak as you" : "Speak as " + n, onclick: function () { t.voice = v; placeCard(blk); focus321(); } });
+          })));
+        }
+        var hint = ph === 2 && t.voice === "it" ? "Answer as " + n + "..." : k[5];
+        var ta = el("input", { type: "text", placeholder: hint, "data-cave-321-text": k[0], "aria-label": hint });
+        ta.value = t.draft;
+        var send = function () {
+          var text = ta.value.trim(); if (!text) return;
+          t.msgs.push({ phase: ph, voice: voice, text: text, round: t.rounds }); t.draft = "";
+          placeCard(blk); focus321();
+        };
+        ta.addEventListener("input", function () { t.draft = ta.value; });
+        ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); send(); } });
+        body.push(el("div", { class: "oagc-compose" }, [ta, el("button", { "data-cave-321-send": "", "aria-label": "Send", text: "↑", onclick: send })]));
+        body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph - 1; placeCard(blk); })]));
+      }
+      return title;
+    }
+    // After a chat page redraws, the text box takes focus again so the player can keep writing, and the thread scrolls to its end.
+    function focus321() {
+      var i = modal.querySelector("[data-cave-321-text]"), l = modal.querySelector("[data-cave-321-log]");
+      if (l) l.scrollTop = l.scrollHeight;
+      if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
+    }
     function faceCard(blk) {
       var stp = stopOf(state.walk), f = lookup(FACES, stp.face);
       stat.setAttribute("data-cave-place", "face");

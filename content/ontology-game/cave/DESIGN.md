@@ -313,9 +313,12 @@ then it needs to be worked with. We can pivot to a 321 discussion with the part 
 - **No skip at the daemon.** The daemon's stop never offers Skip. Inside any loop opened while a daemon still stands in
   the way (its own dig loop, or a block deeper in it), Skip is gone too. Elsewhere a block keeps its skip
   (`cave-block-branch`) until a daemon shows up **(choice)**.
-- **The 3-2-1 with the daemon.** When the daemon answers "Not yet", the wall offers two ways to work it: "Talk with it" and
-  "Work what it holds". Talk with it runs the 3-2-1 in the pane, using the wording of the game's existing
-  `ThreeTwoOneDialogue`: 3, face it as "it" and describe it; 2, talk to it as "you" and ask what it wants and protects; 1,
-  be it and speak as "I". Each step has a box to write in. Then the pane asks whether the daemon feels satisfied. Yes, and
-  it steps to the wall; "Not yet, another round" starts the 3-2-1 again, with the round counted in the title.
+- **The 3-2-1 with the daemon, as a chat (10 October, 23:14).** Wendell: "we need to actually have an in game interface of
+  the 321. At the very least pulling in the version from bars engine with the chat interface". Talk with it now runs the
+  chat from bars-engine's `Clean321Flow` (the NOW page), ported as plain JS in `cave.js`: a charge reading from 0 to 10
+  before; one thread the player writes entirely, the system never writing a turn; 3 Face it, "it", one voice; 2 Talk to it,
+  two voices with a switcher (You, and the daemon named); 1 Be it, "I am"; a charge reading after. Then the pane asks
+  whether the daemon feels satisfied. Yes, and it steps to the wall; "Not yet, another round" keeps the thread, starts again
+  at 3 with the new reading as the next "before", and counts the round in the title. The chat sits in the modal; the text
+  box keeps focus after each line.
 - **(choice)** The written words stay on the page and are not saved with the scan.
