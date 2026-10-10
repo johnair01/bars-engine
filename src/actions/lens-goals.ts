@@ -15,6 +15,7 @@ import {
   normalizeLensAlignmentType,
   nextLensCadence,
   validateDescentInput,
+  lensGoalEditData,
 } from '@/lib/lenses/workshop'
 import { cleanWorkshopKeptIndexes, cleanWorkshopOptions } from '@/lib/lenses/workshop-options'
 import type { LensCadence, LensWorkshopOption, LensWorkshopUnit, SaveLensDescentInput, SaveYearFrameInput } from '@/lib/lenses/types'
@@ -76,10 +77,12 @@ async function retireRemovedGoals(
   keptStableKeys: Set<string>,
   successorByDomain: Map<string, string>,
   parkedDomains = new Set<string>(),
+  onlyDomain?: string,
 ) {
   const existing = await tx.lensGoal.findMany({
     where: {
       playerId: scope.playerId,
+      ...(onlyDomain ? { domain: onlyDomain } : {}),
       cadence: scope.cadence,
       parentGoalId: scope.parentGoalId,
       ...(scope.lensId ? { lensId: scope.lensId } : {}),
@@ -221,6 +224,125 @@ export async function saveYearLensFrame(input: SaveYearFrameInput) {
   revalidatePath('/lenses/onboarding')
   revalidatePath('/lenses/descent')
   return { ok: true, units }
+}
+
+/**
+ * Save one lens domain the moment it is locked in (mm-intake-saves-each-lens).
+ * Touches only this domain's year draft and goals, so closing the tab after two
+ * domains keeps both. The all-five check stays in saveYearLensFrame.
+ */
+export async function saveYearLensDomain(input: {
+  vagueMovement: string
+  feelings: string[]
+  unit: LensWorkshopUnit
+}) {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+  if (!isLensDomainKey(input.unit.domain)) return { error: 'Unknown lens.' }
+
+  const [unit] = normalizeUnits([input.unit])
+  const parked = unit.status === 'parked' || unit.status === 'skipped'
+  if (!parked && unit.keptIndexes.length === 0) {
+    return { error: 'Keep at least one goal in this lens, or park it.' }
+  }
+
+  const lens = await ensureYearlyLens(player.id)
+  const superpower = await getLatestSuperpowerForPlayer(player.id)
+  const options = unit.options
+  const keptIndexes = unit.keptIndexes
+
+  await db.$transaction(async (tx) => {
+    await tx.lensWorkshopDraft.deleteMany({
+      where: { playerId: player.id, lensId: lens.id, cadence: 'year', parentGoalId: null, domain: unit.domain },
+    })
+    await tx.lensWorkshopDraft.create({
+      data: {
+        playerId: player.id,
+        lensId: lens.id,
+        domain: unit.domain,
+        cadence: 'year',
+        freewrite: unit.freewrite.trim() || null,
+        options,
+        keptOrder: keptIndexes,
+        feelings: input.feelings,
+        vagueMovement: input.vagueMovement.trim() || null,
+        status: parked ? unit.status : 'locked',
+      },
+    })
+
+    const keptStableKeys = new Set<string>()
+    const successorByDomain = new Map<string, string>()
+    for (const [order, optionIndex] of keptIndexes.entries()) {
+      const option = options[optionIndex]
+      if (!option?.stableKey) continue
+      keptStableKeys.add(option.stableKey)
+      const existing = await tx.lensGoal.findUnique({
+        where: { stableKey: option.stableKey },
+        select: { id: true, playerId: true, domain: true, cadence: true },
+      })
+      const data = {
+        playerId: player.id,
+        lensId: lens.id,
+        domain: unit.domain,
+        cadence: 'year',
+        title: option.text,
+        satisfactionPayoff: input.feelings.join(', ') || null,
+        superpowerSource: superpower.superpower
+          ? `${superpower.superpower}${superpower.superpowerOrientation ? `:${superpower.superpowerOrientation}` : ''}`
+          : null,
+        status: parked ? 'parked' : 'active',
+        keepOrder: order + 1,
+        supersededById: null,
+        archivedAt: null,
+      }
+      if (existing?.playerId === player.id && existing.domain === unit.domain && existing.cadence === 'year') {
+        await tx.lensGoal.update({ where: { id: existing.id }, data })
+        successorByDomain.set(unit.domain, existing.id)
+      } else if (!existing) {
+        const created = await tx.lensGoal.create({ data: { ...data, stableKey: option.stableKey } })
+        successorByDomain.set(unit.domain, created.id)
+      }
+    }
+
+    await retireRemovedGoals(
+      tx,
+      { playerId: player.id, lensId: lens.id, cadence: 'year', parentGoalId: null },
+      keptStableKeys,
+      successorByDomain,
+      parked ? new Set([unit.domain]) : new Set<string>(),
+      unit.domain,
+    )
+  })
+
+  revalidatePath('/lenses/onboarding')
+  revalidatePath('/lenses/descent')
+  revalidatePath('/observatory')
+  return { ok: true, unit }
+}
+
+/** Rename, park, resume or retire a single goal (mm-goal-edit). Children are left in place. */
+export async function editLensGoal(input: {
+  goalId: string
+  action: 'rename' | 'park' | 'resume' | 'retire'
+  title?: string
+}) {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  const goal = await db.lensGoal.findFirst({
+    where: { id: input.goalId, playerId: player.id, status: { in: ['active', 'parked'] } },
+    select: { id: true },
+  })
+  if (!goal) return { error: 'Goal not found.' }
+
+  const change = lensGoalEditData(input.action, input.title)
+  if ('error' in change) return change
+
+  await db.lensGoal.update({ where: { id: goal.id }, data: change.data })
+  revalidatePath('/observatory', 'layout')
+  revalidatePath('/lenses/descent')
+  revalidatePath('/lenses/onboarding')
+  return { ok: true }
 }
 
 export async function saveLensGoalDescent(input: SaveLensDescentInput) {
