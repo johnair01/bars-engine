@@ -900,6 +900,7 @@
           s.element = o[0]; setElementOn(state.mainRoute.ctx, o[0], Math.min(ch.w * 0.3, 1.3)); parts.dress.element = o[0]; parts.dress.lamp = lookup(ELEMENTS, o[0])[3];
           hint(0);
         }),
+        row([btn("I don't know", { "data-cave-element-unknown": "" }, function () { s.element = null; hint(0); }, true)]),
       ], true);
       stat.setAttribute("data-cave-place", "portal");
     }
@@ -1050,7 +1051,7 @@
       var frame = { route: wk.route, s: wk.s, target: wk.target, blk: wk.blk, key: key, label: label, kind: "side" };
       var route = makeBranch(frame, "side", depth);
       var par = frame.blk, tex = par ? par.texture : s.texture;
-      var blk = { id: "b" + (++blockN), key: key, label: label, depth: depth, texture: tex, element: par ? par.element : s.element, daemon: null, stepAside: null, dug: 0, gate: [], route: route, frame: frame, touched: false };
+      var blk = { id: "b" + (++blockN), key: key, label: label, depth: depth, texture: tex, element: null, unknownEl: false, deco: [], daemon: null, stepAside: null, dug: 0, gate: [], route: route, frame: frame, touched: false };
       blk.rock = route.tube.mesh.material; blk.rock.color.setHex((lookup(TEXTURES, tex) || TEXTURES[4])[2]);
       dressSide(blk);
       frame.child = blk;
@@ -1148,10 +1149,25 @@
       var wk = state.walk;
       if (wk.target < wk.route.stops.length - 1) hint(wk.target + 1);
     }
+    // Wendell, 10 October 2026: "Elements should be hidden out of sight until the player chooses one. Can be fog of war or w/e.
+    // Also the cave should be decorated with the element after it's been chosen. There should also be an option to say I don't
+    // know." The element beside the pool stays out of the scene until it is named; naming it lights the passage with its
+    // colour and scatters small ones of it along both walls.
+    function decorate(blk) {
+      var route = blk.route, h = ch.h, wb = route.w, inner = -route.side;
+      (blk.deco || []).forEach(function (o) { route.group.remove(o); }); blk.deco = [];
+      if (!blk.element) return;
+      for (var i = 0; i < 8; i++) {
+        var a = at(route, route.len * (0.08 + 0.1 * i)), lat = (i % 2 ? 1 : -1) * wb * 0.62;
+        var o = buildElement(THREE, blk.element, Math.min(wb * 0.2, 0.9));
+        o.position.set(a.x + -a.fz * inner * lat, a.y - h * 0.92, a.z + a.fx * inner * lat);
+        route.group.add(o); blk.deco.push(o);
+      }
+    }
     function redress(blk) {
       blk.rock.color.setHex((lookup(TEXTURES, blk.texture) || TEXTURES[4])[2]);
       var c = blk.route.ctx;
-      if (blk.element && c.element !== blk.element) { setElementOn(c, blk.element, Math.min(blk.route.w * 0.45, 2)); blk.touched = false; }
+      if (blk.element && c.element !== blk.element) { setElementOn(c, blk.element, Math.min(blk.route.w * 0.45, 2)); blk.touched = false; decorate(blk); }
       lk.flash = Math.max(lk.flash, 0.7);
     }
     function touch() {
@@ -1171,11 +1187,16 @@
         var s = me();
         if (state.sens.length > 1) body.push(P("Also named this sitting: " + state.sens.filter(function (o) { return o !== s; }).map(function (o) { return o.spot.words; }).join(", ") + ".", { "data-cave-also": "" }));
       } else if (stp.place === "pool") {
-        var e = lookup(ELEMENTS, blk.element);
-        body.push(P(e[0] + " is " + e[1] + ". Tap it. The move that goes with it: " + e[2] + "."));
-        if (blk.touched) body.push(P("It answers you. " + e[2] + ".", { "data-cave-touched": "" }));
-        body.push(P(CHANNEL_JOBS[e[0]], { "data-cave-job": "" }));
-        body.push(choice(ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }), blk.element, function (o) { blk.element = o[0]; redress(blk); placeCard(blk); }));
+        var e = blk.element && lookup(ELEMENTS, blk.element);
+        if (!e) {
+          body.push(P(blk.unknownEl ? "You don't know which feeling this is, and that is allowed. It stays hidden. Name one if it comes to you." : "Which feeling is here? Its element stays hidden until you choose one. Or say you don't know.", { "data-cave-element-hidden": "" }));
+        } else {
+          body.push(P(e[0] + " is " + e[1] + ". Tap it. The move that goes with it: " + e[2] + "."));
+          if (blk.touched) body.push(P("It answers you. " + e[2] + ".", { "data-cave-touched": "" }));
+          body.push(P(CHANNEL_JOBS[e[0]], { "data-cave-job": "" }));
+        }
+        body.push(choice(ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }), blk.element, function (o) { blk.element = o[0]; blk.unknownEl = false; redress(blk); placeCard(blk); }));
+        body.push(row([btn("I don't know", { "data-cave-element-unknown": "" }, function () { blk.unknownEl = true; placeCard(blk); }, true)]));
       } else if (stp.place === "passage") {
         var d = blk.daemon && lookup(DAEMONS, blk.daemon);
         if (!d) {
@@ -1570,6 +1591,7 @@
     };
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
+    api.sideElement = function () { var wk = state.walk, b = wk && wk.blk, c = b && b.route.ctx; return { shown: !!(c && c.elObj && c.holder.children.length), name: b && b.element, deco: b ? b.deco.length : 0 }; };
     api.pane = function () {
       var r = pane.getBoundingClientRect(), cs = getComputedStyle(pane);
       return { shown: pane.style.display !== "none" && pane.style.visibility !== "hidden" && r.width > 0, title: page.title, text: page.text, at: paneAt, rect: { x: r.left, y: r.top, w: r.width, h: r.height }, font: parseFloat(cs.fontSize), docked: docked };

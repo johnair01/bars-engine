@@ -278,7 +278,14 @@ await page.locator('[data-cave-place="mouth"]').waitFor({ timeout: 60000 }); awa
 ok(walkSamples.every((a) => a.route === 'branch' || a.route === 'side') && walkSamples.every((a) => a.offPath < 1e-6), 'the avatar walks the side path on its line');
 await page.locator('[data-cave-choice="numbness"]').click();
 await page.locator('[data-cave-next]').click();
-await walkTo('[data-cave-place="pool"]'); await page.locator('[data-cave-next]').click();
+await walkTo('[data-cave-place="pool"]');
+ok(await sees('[data-cave-element-hidden]') && await sees('[data-cave-element-unknown]') && await C(() => window.__oagCave.sideElement().shown === false), 'at the pool the element stays out of sight until the player chooses, and "I don\'t know" is offered');
+await page.locator('[data-cave-element-unknown]').click();
+ok(await sees('[data-cave-element-hidden]') && await C(() => window.__oagCave.sideElement().shown === false) && await sees('[data-cave-next]'), '"I don\'t know" keeps it hidden and lets the player go on');
+await page.locator('[data-cave-choice="Sadness"]').click();
+const se = await C(() => window.__oagCave.sideElement());
+ok(se.shown && se.deco >= 6 && se.name === 'Sadness', 'choosing an element shows it and decorates the passage with it');
+await page.locator('[data-cave-next]').click();
 await walkTo('[data-cave-place="passage"]');
 ok(await page.locator('[data-cave-next]').count() === 0, 'the daemon\'s stop has no Continue until it stands aside');
 await page.locator('[data-cave-choice="protector"]').click();

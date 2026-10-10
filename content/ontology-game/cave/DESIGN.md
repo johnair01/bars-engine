@@ -329,4 +329,11 @@ then it needs to be worked with. We can pivot to a 321 discussion with the part 
   far place and pauses, keeping the words; "Go back in" resumes the same step. With the Damaged Self, before Be it the cave
   asks: continue, rest, or go back up. The player writes every line; the daemon's figure moves and never speaks. Not built:
   the on-device charge/seconds/"I" counts of the 17 October test.
+- **From Wendell's play on his phone (10 October, 23:39).** Built: the element beside the pool stays out of the scene until the
+  player names one; "I don't know" is offered at the doorway and at the pool and keeps it hidden; naming one lights the
+  passage in its colour and scatters small ones along both walls. Not built yet: "Game master gates are forks in the path and
+  should probably be at the beginning not the end. Eventually they will have different 'games' to offer as the players walk
+  down the paths so seeing them this way at the end is a bad user experience." The six stones move from after the daemon to
+  the start of the side passage; the stop order, the step numbers and the indexes that assume the pool and daemon are stops 1
+  and 2 (`dressSide`, `meet`) change with it.
 - **(choice)** The written words stay on the page and are not saved with the scan.
