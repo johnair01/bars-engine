@@ -149,3 +149,25 @@ outside of a part that already lives within them".
 - **The save** adds where it lives and every charge the player gave, in order.
 
 Tests: 80 checks.
+
+## The easing: a reward when the charge falls (Wendell's playtest, 11 October 2026, 23:29)
+
+His words: "There should be a visual reward for when the charge goes down".
+
+- **When it plays.** Whenever the player gives a lower charge than the last one they gave. A charge that stays the same or
+  rises plays nothing; the meter just follows the number, as before.
+- **What the player sees.** The panel steps away for about two seconds so the chamber can answer **(choice)**. A ring of
+  warm light spreads out from the Protector's feet, motes of light rise off it, and the Protector lets its breath out
+  (it settles a little lower, then stands again). The line in the middle of the screen says "The Protector eases." with
+  the numbers ("7 down to 5"). On the meter, the part that drained glows and fades, and the drop floats beside the number.
+- **Bigger drops give more.** The ring's width and the light grow with the size of the drop. A drop of three or more says
+  "eases a lot". Crossing the ready line gives the most: the lantern flares, and the line says "The Protector lets its
+  breath out." **(choice: the scale)**
+- **The chamber warms with calm.** Once the player has given a charge, the chamber's blue light warms toward gold by how
+  calm the Protector is now, so a low charge reads in the room as well as on the meter **(choice)**.
+- **Reduced motion.** With the device's reduced-motion setting on, the ring holds still, the motes and the breath are left
+  out, and the line and the warmth still show.
+- The Self button still works during the easing; the conversation picks up where it was when the player goes on.
+
+Tests: 86 checks, adding the easing after a drop, its words and numbers, the ring and the meter playing, the biggest
+easing at the ready line, the chamber warming, and one easing per drop.

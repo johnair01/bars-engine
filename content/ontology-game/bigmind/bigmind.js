@@ -137,6 +137,15 @@
     ".bm-bar u{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.6)}.bm-meter.ready .bm-bar i{background:#6ac8a0}.bm-meter b{min-width:1.2em;text-align:right}" +
     ".bm-charge{display:flex;align-items:center;gap:.5rem;margin:.6rem 0 .2rem;font-size:12px;color:#aab4d4}.bm-charge input{flex:1;height:36px;accent-color:#e0704a}" +
     ".bm-chargeline{text-align:center;margin:.1rem 0}.bm-chargenum{font-size:1.4rem;color:#fff1b0}" +
+    ".bm-bar s{position:absolute;top:0;bottom:0;background:#fff1b0;opacity:0;text-decoration:none}" +
+    ".bm-meter.eased .bm-bar s{animation:bm-drain 1.6s ease-out forwards}.bm-meter.eased .bm-bar{animation:bm-glow 1.6s ease-out}" +
+    ".bm-drop{position:absolute;right:0;top:16px;color:#fff1b0;font-size:15px;font-weight:600;opacity:0;text-shadow:0 1px 3px #000}.bm-meter.eased .bm-drop{animation:bm-rise 1.8s ease-out}" +
+    "@keyframes bm-drain{0%{opacity:.95}100%{opacity:0;transform:scaleX(.2);transform-origin:left}}" +
+    "@keyframes bm-glow{0%{box-shadow:0 0 0 rgba(255,241,176,0)}25%{box-shadow:0 0 14px rgba(255,241,176,.9)}100%{box-shadow:0 0 0 rgba(255,241,176,0)}}" +
+    "@keyframes bm-rise{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(16px)}}" +
+    ".bm-eased{position:absolute;left:0;right:0;top:34%;text-align:center;z-index:3;color:#fff1d0;font-size:1.15rem;text-shadow:0 1px 4px #000;pointer-events:none;opacity:0;transition:opacity .4s;padding:0 1.2rem}" +
+    ".bm-eased.on{opacity:1}.bm-eased small{display:block;font-size:.9rem;color:#dfe6ff;margin-top:.25rem}" +
+    "@media (prefers-reduced-motion:reduce){.bm-meter.eased .bm-bar s,.bm-meter.eased .bm-bar,.bm-meter.eased .bm-drop{animation-duration:.01s}}" +
     ".bm-kept{border-top:1px solid rgba(255,255,255,.12);padding:.5rem 0}.bm-kept li{color:#cfd8ff}";
 
   function start() {
@@ -222,9 +231,10 @@
     var ring = el("div", { class: "oagc-ring", "data-bm-ring": "", text: "Hold to walk" });
     var fade = el("div", { class: "oagc-fade" });
     var selfBtn = el("button", { class: "bm-self", "data-bm-selfbtn": "", text: "Self", onclick: function () { selfPause(); } });
-    var meterFill = el("i"), meterNum = el("b", { text: "" });
-    var meter = el("div", { class: "bm-meter", "data-bm-meter": "", style: "display:none" }, [el("span", { text: V.title + "'s charge" }), el("div", { class: "bm-bar" }, [meterFill, el("u", { style: "left:" + (READY * 10) + "%" })]), meterNum]);
-    [stage, hint, ring, modal, selfBtn, meter, fade].forEach(function (n) { wrap.appendChild(n); });
+    var meterFill = el("i"), meterNum = el("b", { text: "" }), meterGone = el("s"), meterDrop = el("span", { class: "bm-drop", text: "" });
+    var meter = el("div", { class: "bm-meter", "data-bm-meter": "", style: "display:none" }, [el("span", { text: V.title + "'s charge" }), el("div", { class: "bm-bar" }, [meterFill, meterGone, el("u", { style: "left:" + (READY * 10) + "%" })]), meterNum, meterDrop]);
+    var easedLine = el("div", { class: "bm-eased", "data-bm-eased": "" });
+    [stage, hint, ring, modal, selfBtn, meter, easedLine, fade].forEach(function (n) { wrap.appendChild(n); });
     document.body.appendChild(wrap);
     fade.style.opacity = 1; setTimeout(function () { fade.style.opacity = 0; }, 30);
 
@@ -269,6 +279,17 @@
     var voice = K.buildDaemon(THREE, daemonRow(V.daemon), 6.2); seeThrough(voice, 1); scene.add(voice);
     var aside = from === "hall2" ? W * 0.95 : 0;
     figureAt(voice, S_VOICE, aside, aside === 0); if (aside) voice.rotation.y += Math.PI / 2;
+    // The easing (Wendell, 11 October 2026: "There should be a visual reward for when the charge goes down"). When the
+    // player gives a lower charge than before, a ring of warm light spreads out from the voice's feet, motes rise off it,
+    // the voice lets its breath out, and the chamber's light warms by how calm it now is (choices, all of them).
+    var easeRing = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.25, 64), new THREE.MeshBasicMaterial({ color: 0xffe6a0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    easeRing.rotation.x = -Math.PI / 2; var er = at(route, S_VOICE); easeRing.position.set(er.x, floor(er) + 0.06, er.z); scene.add(easeRing);
+    var MOTES = 48, moteGeo = new THREE.BufferGeometry(), moteBase = [], motePos = new Float32Array(MOTES * 3);
+    for (var mi = 0; mi < MOTES; mi++) { var ma = mi * 2.399, mr = 0.5 + 1.3 * ((mi * 37) % 11) / 11; moteBase.push({ x: Math.cos(ma) * mr, z: Math.sin(ma) * mr, y: 0.4 + 4.5 * ((mi * 53) % 17) / 17, v: 0.7 + ((mi * 29) % 7) / 7 }); }
+    moteGeo.setAttribute("position", new THREE.BufferAttribute(motePos, 3));
+    var motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xfff1b0, size: 0.16, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    motes.position.copy(easeRing.position); scene.add(motes);
+    var calmBlue = new THREE.Color(0x6a9aff), calmWarm = new THREE.Color(0xffd49a);
     var nextFig = K.buildDaemon(THREE, daemonRow(NEXT.daemon), 6); seeThrough(nextFig, 0.55); figureAt(nextFig, route.sEnd + 4, 0, true); scene.add(nextFig);
     var avatar = K.buildAvatar(THREE, "other"); scene.add(avatar);
     var ghost = null, figures = [];
@@ -310,6 +331,8 @@
     }
     function resume() {
       var p = paused; paused = null;
+      if (p && p.then) { hide(); return p.then(); }
+      if (p && p.tag === "eased") { hide(); modal.setAttribute("data-bm-step", "eased"); st.modal = true; ring.style.display = "none"; return; }
       if (p && p.open) { modal.innerHTML = ""; p.html.forEach(function (n) { modal.appendChild(n); }); modal.setAttribute("data-bm-step", p.tag); } else hide();
     }
 
@@ -364,7 +387,34 @@
       setMeter(cur);
     }
     function charged(i, v) {
+      var was = st.charge;
       st.charge = v; st.charges.push({ after: i == null ? "start" : V.questions[i].id, v: v }); setMeter(v);
+      if (was != null && v < was) return eased(was, v, function () { afterCharge(i, v); });
+      afterCharge(i, v);
+    }
+    // The reward for a lower charge: the panel steps away for a breath so the player sees the chamber answer. A bigger drop
+    // gives a wider ring and more light; crossing the ready line gives the most.
+    function eased(was, v, then) {
+      var drop = was - v, crossed = was > READY && v <= READY;
+      st.eases = (st.eases || 0) + 1;
+      hide(); modal.innerHTML = ""; modal.setAttribute("data-bm-step", "eased"); st.modal = true; ring.style.display = "none";
+      meterGone.style.left = (v * 10) + "%"; meterGone.style.width = (drop * 10) + "%"; meterDrop.textContent = "\u2212" + drop;
+      meter.classList.remove("eased"); void meter.offsetWidth; meter.classList.add("eased");
+      meter.setAttribute("data-bm-eases", String(st.eases));
+      easedLine.innerHTML = "";
+      easedLine.appendChild(document.createTextNode(crossed ? "The Protector lets its breath out." : drop >= 3 ? "The Protector eases a lot." : "The Protector eases."));
+      easedLine.appendChild(el("small", { text: was + " down to " + v }));
+      easedLine.classList.add("on");
+      var big = Math.min(1, 0.45 + drop * 0.18 + (crossed ? 0.35 : 0)), still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      st.easing = { k: 0, big: big, still: still };
+      if (crossed) st.flash = Math.max(st.flash, 0.7);
+      tween(crossed ? 2600 : 2100, function (k) { st.easing.k = k; }, function () {
+        st.easing = null; easedLine.classList.remove("on");
+        if (modal.getAttribute("data-bm-step") === "self") { paused = { then: then }; return; } // the Self button was taken mid-breath
+        st.modal = false; then();
+      });
+    }
+    function afterCharge(i, v) {
       if (v <= READY) return ready();
       var n = i == null ? 0 : i + 1;
       while (n < V.questions.length && st.answers[V.questions[n].id]) n++;
@@ -630,6 +680,19 @@
       hemi.intensity = 0.38 + 0.12 * inCh + 0.4 * st.flash;
       tmpC.setHex(0x0c0c18).lerp(new THREE.Color(0x101a34), inCh); scene.background.copy(tmpC); scene.fog.color.copy(tmpC);
       chamberLight.intensity = 1.1 + 0.4 * br.b;
+      // the chamber warms with calm once a charge is given, and the easing plays out over st.easing.k (0 to 1)
+      var calm = st.charge == null ? 0 : 1 - st.charge / 10, E = st.easing;
+      tmpC.copy(calmBlue).lerp(calmWarm, 0.75 * calm); chamberLight.color.lerp(tmpC, Math.min(1, dt * 1.5));
+      if (E) {
+        var ek = E.k, swell = Math.sin(Math.PI * Math.min(1, ek * 1.15));
+        chamberLight.intensity += 1.6 * E.big * swell;
+        easeRing.material.opacity = 0.55 * E.big * (1 - ek) * Math.min(1, ek * 6);
+        var rs = E.still ? 2.5 : 1 + (3.2 + 3 * E.big) * ease(ek); easeRing.scale.set(rs, rs, rs);
+        motes.material.opacity = E.still ? 0 : 0.9 * E.big * swell;
+        for (var q = 0; q < MOTES; q++) { var mb = moteBase[q], up = ek * (2 + 2.5 * mb.v); motePos[q * 3] = mb.x * (1 + 0.6 * ek); motePos[q * 3 + 1] = mb.y * 0.4 + up; motePos[q * 3 + 2] = mb.z * (1 + 0.6 * ek); }
+        moteGeo.attributes.position.needsUpdate = true;
+        if (!E.still && voice.visible) voice.scale.y = 1 - 0.05 * E.big * swell;
+      } else if (easeRing.material.opacity) { easeRing.material.opacity = 0; motes.material.opacity = 0; voice.scale.y = 1; }
       // the hint: the one line under the scene
       if (!st.modal && !st.auto) {
         if (st.phase === "hall1") hint.textContent = st.s < 6 ? "Hold anywhere to walk. Let go to stop." : "";
@@ -642,7 +705,7 @@
       renderer.render(scene, camera);
     }
     var api = window.__oagBigMind; api.state = st; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
-    api.openAt = route.openAt; api.camera = camera; api.figures = figures; api.voice = voice;
+    api.openAt = route.openAt; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
     size(); window.addEventListener("resize", size);
     running = requestAnimationFrame(frame);
   }
