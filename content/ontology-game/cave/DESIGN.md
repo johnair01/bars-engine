@@ -397,3 +397,42 @@ its own from the body map: the seated figure and the shut door, the door waiting
 now, Validate steadying, the fork asking the goal first, Step back, the stays branch through the staged 3-2-1 to a written move,
 two goes rounds with named lights and the door ajar, the restart, the rest offer after round three, the three test answers kept
 with their rounds, and storage holding only those answers.
+
+## The WAVE room, second slice (11 October 2026)
+
+Wendell's feedback after his first play of the room, 11 October 22:59, is quoted in the Next section of six-faces-council
+`council/callsheets/wave-room.md`; the build takes the readings written there.
+
+- **Talk to it switches by itself.** In 2 · Talk to it, each line sent hands the voice to the other side, and the camera swings
+  with it ("Automatic switching in the 2 phase to show the perspective shifting is desired"). This is in `talk321`, so it holds
+  in the room and at the cave's daemons alike. The voice buttons stay, to override.
+- **At the daemon in the cave.** The narrower reading **(choice)**: the 3-2-1 switching, Allow's two sliders and the glow reach
+  the daemon where it stands. The sliders sit on the 3-2-1's first page, under the charge reading ("Allow it: let it be as big
+  and as bright as it is"); the daemon grows a little by itself once the talk starts. The whole room flow run in place at the
+  daemon is not built: the room is its own scene, so running it in the cave means a second room inside the tunnel. "Take it
+  home" still carries the charge to the room.
+- **The door slides into the wall.** It no longer swings into the room; it slides sideways behind the wall, so nothing sweeps
+  the floor the charge comes in on ("Put it it to the side is desired").
+- **Allow grows it.** At Allow the creature grows a little by itself (×1.3), and two sliders say how large it gets (up to ×2) and
+  how bright its colour can get (`ALLOW_GROW`, `ALLOW_BRIGHT`). The brightness is a ceiling; the charge fills it.
+- **Intensity shows** (`buildAura`, `stepAura`). A halo and sparks in the creature's colour, brighter as its charge rises and
+  duller as it is worked: the 3-2-1's readings set the charge (before while it is worked, after once given), Validate dulls it,
+  and being kept dulls it again; a daemon dulls once it stands aside. The same aura is on the room's creatures and the cave's
+  daemons.
+- **Up to three at once.** On every step from Witness to Validate, "What else is here?" can bring in something new: the door
+  opens on the out-breath and it comes to a place of its own (the middle, the left, the right), and the player works it now.
+  "Working with:" on the page picks which one is worked; each keeps its own step. A fourth waits at the door, and is welcomed
+  once the room is clear **(choice)**. When one is worked through, the next one in the room is worked, where it was left; the
+  round ends only when the room is empty.
+- **Emotions about emotions.** "What else is here?" first asks whether it is about one already in the room. If so it is a layer
+  on that creature: a ring in its own colour, with the name the player writes, flickering until it is validated with that
+  creature. Validate names it. If that creature is validated already, the layer is validated with it at once **(choice)**. Only
+  "Something new" brings in a creature of its own.
+- Kept: the player writes every line, words stay on the page, the 18 October question after each creature's branch, the test at
+  390 by 844.
+
+Tests: `cave-test.mjs` adds the daemon's sliders, its growth and its glow dulling round to round and once it stands aside; the
+voice handing over by itself in the cave and in the room, with the camera; the door sliding clear; and a second sitting with
+three creatures: something new to its own place, the focus row, Allow growing by itself and by slider, brightness up and down, a
+feeling about the second as a named ring with no new creature, a fourth waiting at the door, picking the second again at its
+step, Validate steadying it and its layer and dulling the glow, then each worked through in turn and the waiting one welcomed.

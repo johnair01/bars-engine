@@ -577,6 +577,69 @@
     return g;
   }
 
+  // The intensity a creature carries shows around it (Wendell, 11 October 2026: "We need there to be effects that get brighter
+  // as the intensity increases and duller when they are worked though"): a soft halo and sparks rising in its colour. One aura
+  // serves the room's creatures and the cave's daemons. stepAura sets it from a level, 0 (worked through) to 1 (as bright as it
+  // can get).
+  var AURA_SPARKS = 48, auraTex = null;
+  function buildAura(THREE, r) {
+    var g = new THREE.Group();
+    if (!auraTex) {
+      var cv = document.createElement("canvas"); cv.width = cv.height = 64; var cx = cv.getContext && cv.getContext("2d");
+      if (cx) { var gr = cx.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.35, "rgba(255,255,255,.45)"); gr.addColorStop(1, "rgba(255,255,255,0)"); cx.fillStyle = gr; cx.fillRect(0, 0, 64, 64); }
+      auraTex = new THREE.CanvasTexture(cv);
+    }
+    var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: auraTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    halo.position.y = r * 0.6; g.add(halo);
+    var pos = new Float32Array(AURA_SPARKS * 3), seeds = [], rnd = rngOf(hashOf("aura" + r));
+    for (var i = 0; i < AURA_SPARKS; i++) seeds.push({ a: rnd() * Math.PI * 2, d: r * (0.35 + 0.4 * rnd()), y: rnd(), v: 0.25 + 0.5 * rnd() });
+    var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    var sparks = new THREE.Points(geo, new THREE.PointsMaterial({ map: auraTex, color: 0xffffff, size: r * 0.12, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    g.add(sparks);
+    g.userData = { halo: halo, sparks: sparks, seeds: seeds, r: r, level: 0, t: 0 };
+    return g;
+  }
+  function stepAura(aura, color, level, dt, still) {
+    var u = aura.userData, r = u.r;
+    u.level += (level - u.level) * Math.min(1, dt * 2); u.t += still ? 0 : dt;
+    var L = u.level, pulse = still ? 0 : 0.06 * Math.sin(u.t * 2.4);
+    u.halo.material.color.copy(color); u.halo.material.opacity = 0.08 + 0.62 * L;
+    u.halo.scale.setScalar(r * (1.4 + 1.6 * L + pulse));
+    u.sparks.material.color.copy(color); u.sparks.material.opacity = 0.15 + 0.85 * L;
+    var n = Math.round(AURA_SPARKS * Math.min(1, 0.1 + L)), p = u.sparks.geometry.attributes.position;
+    for (var i = 0; i < AURA_SPARKS; i++) {
+      var s = u.seeds[i], y = (s.y + u.t * s.v * (0.3 + L)) % 1;
+      p.array[i * 3] = Math.cos(s.a + u.t * 0.4) * s.d; p.array[i * 3 + 1] = r * (0.1 + 1.5 * y); p.array[i * 3 + 2] = Math.sin(s.a + u.t * 0.4) * s.d;
+    }
+    p.needsUpdate = true; u.sparks.geometry.setDrawRange(0, n);
+  }
+  // Allow (Wendell, 11 October 2026): "When you are allowing I want the creature to get a bit bigger. I want peopel to be able to
+  // decide how large it is gets via slider and how bright it can get in its emotional color." a = { grow, bright }, each 0 to 10.
+  // grow is how much larger it gets (0 its own size, 10 twice it); bright is the most it can glow, which the charge fills.
+  var ALLOW_GROW = 3, ALLOW_BRIGHT = 7; // it grows a little by itself, and can glow fairly bright, until the player says otherwise
+  function allowSliders(a, attr, onChange) {
+    return [["grow", "How large it gets", function (v) { return v === 0 ? "its own size" : "×" + (1 + v / 10).toFixed(1); }],
+      ["bright", "How bright its colour can get", function (v) { return v + " of 10"; }]].map(function (q) {
+      var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "aria-label": q[1] }); inp.setAttribute(attr, q[0]);
+      inp.value = a[q[0]];
+      var out = el("span", { class: "oagc-read", text: q[2](a[q[0]]) }); out.setAttribute(attr + "-read", q[0]);
+      inp.addEventListener("input", function () { a[q[0]] = +inp.value; out.textContent = q[2](a[q[0]]); if (onChange) onChange(); });
+      return el("div", {}, [el("p", { class: "oagc-note", text: q[1] }), el("div", { class: "oagc-slide" }, [inp, out])]);
+    });
+  }
+  // How charged a creature is, 0 to 10, from its 3-2-1: the reading before while it is worked, the reading after once given.
+  function heatOf(t, fallback) {
+    if (!t) return fallback;
+    return t.phase === "after" || t.phase === "ask" ? t.after : t.before;
+  }
+  function labelSprite(THREE, name, color, w) {
+    var cv = document.createElement("canvas"); cv.width = 512; cv.height = 96;
+    var cx = cv.getContext && cv.getContext("2d");
+    if (cx) { cx.font = "600 44px -apple-system,Segoe UI,Roboto,sans-serif"; cx.textAlign = "center"; cx.fillStyle = color || "#fff1d0"; cx.fillText(name.slice(0, 22), 256, 62); }
+    var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false })); s.scale.set(w, w * 0.1875, 1);
+    return s;
+  }
+
   // The 3-2-1 chat, ported from bars-engine's Clean321Flow (src/components/clean321/Clean321Flow.tsx): one thread the player
   // writes entirely (the system never writes a turn); 3 Face it, "it", one voice; 2 Talk to it, two voices with a switcher
   // (You and the daemon); 1 Be it, "I am"; a charge reading before and after. The daemon steps aside when the player says it
@@ -584,11 +647,12 @@
   // and completeClean321's rewards stay with the NOW page. Returns the page's title.
   var T321 = [
     ["it", 3, "3 · Face it", "3rd person · \"it\"", "Name {d} as \"it\", at arm's length. Describe it.", "Describe it...", "Talk to it →"],
-    ["you", 2, "2 · Talk to it", "2nd person · \"you\"", "Speak to {d}, then let it answer back. Switch voices to write both sides.", "Speak to it...", "Be it →"],
+    ["you", 2, "2 · Talk to it", "2nd person · \"you\"", "Speak to {d}, then let it answer back. Each line you send hands the voice to the other side.", "Speak to it...", "Be it →"],
     ["i", 1, "1 · Be it", "1st person · \"I am\"", "Speak as {d}. \"I am...\"", "Speak as it. \"I am...\"", "How charged is it now? →"],
   ];
   // talk321(t, o, body): o = { name, damaged (the Damaged Self's check before Be it), redraw, focus, where (the staged
-  // places' words, by step), aim (a line shown on every step, or none), ask(body) (the last page, after the charge reading) }.
+  // places' words, by step), aim (a line shown on every step, or none), before(body) (more for the first page, or none),
+  // ask(body) (the last page, after the charge reading) }.
   // The cave aims it at the daemon standing in the way; the WAVE room aims it at what the player wants right now.
   var WHERE_CAVE = { 3: "You are looking at it from across the chamber.", 2: "You are face to face with it.", 1: "You are standing where it stood.", check: "You are face to face with it.", after: "You have stepped back to your own place.", paused: "You are across the chamber, at your own place." };
   function talk321(t, o, body) {
@@ -609,6 +673,7 @@
       body.push(P("Before you start", { "data-cave-321-step": "before" }));
       body.push(P("How charged is this with " + n + " right now? The 3-2-1 cools it into something you can work with: face it, talk to it, be it."));
       body.push(slider("before"));
+      if (o.before) o.before(body);
       body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; o.redraw(); })]));
     } else if (ph === "after") {
       body.push(P("After the 3-2-1", { "data-cave-321-step": "after" }));
@@ -653,6 +718,9 @@
       var send = function () {
         var text = ta.value.trim(); if (!text) return;
         t.msgs.push({ phase: ph, voice: voice, text: text, round: t.rounds }); t.draft = "";
+        // Wendell, 11 October 2026: "Automatic switching in the 2 phase to show the perspective shifting is desired." Each line
+        // sent in Talk to it hands the voice to the other side, and the camera swings with it. The voice buttons still override.
+        if (ph === 2) t.voice = voice === "you" ? "it" : "you";
         o.redraw(); o.focus();
       };
       ta.addEventListener("input", function () { t.draft = ta.value; });
@@ -695,6 +763,7 @@
     ".oagc-compose{display:flex;gap:.35rem;margin-top:.4rem}.oagc-compose input{flex:1;min-width:0;min-height:44px;padding:0 .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(20,20,40,.9);color:#f4f4fa;font-size:16px}" +
     ".oagc-compose button{min-width:44px;padding:.5rem}" +
     ".oagc-slide{display:flex;align-items:center;gap:.6rem;margin:.4rem 0}.oagc-slide input{flex:1;min-height:44px}.oagc-read{white-space:nowrap;font-size:.9rem;color:#fff1b0}" +
+    ".oagc-note{font-size:.8rem!important;color:#aab0c4;margin:.4rem 0 0!important}" +
     ".oagc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:normal;pointer-events:none}" +
     ".oagc-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}" +
     ".oagc button{background:#64c8ff;color:#10142a;border:none;border-radius:8px;padding:.5rem .8rem;font-size:.9rem;font-weight:600;min-height:44px;cursor:pointer;width:auto;margin:0;touch-action:manipulation}" +
@@ -1337,14 +1406,14 @@
               body.push(P("You took it home and worked it in the WAVE room. The lantern you left stands here.", { "data-cave-home-back": "" }));
               body.push(P("Does " + d[1] + " feel satisfied?"));
               body.push(row([
-                btn("Yes, it is satisfied", { "data-cave-home-satisfied": "yes" }, function () { blk.home = null; blk.stepAside = "yes"; moveDaemon(blk); placeCard(blk); }),
+                btn("Yes, it is satisfied", { "data-cave-home-satisfied": "yes" }, function () { blk.home = null; if (blk.dm) blk.dm.heat = Math.min(blk.dm.heat, 3); blk.stepAside = "yes"; moveDaemon(blk); placeCard(blk); }),
                 btn("Not yet", { "data-cave-home-satisfied": "not-yet" }, function () { blk.home = null; placeCard(blk); }, true),
               ]));
             } else if (!t) {
               body.push(P(d[1] + " won't move, and you can't walk past it. It is still doing its job here, for you.", { "data-cave-wall": "" }));
               body.push(P("Talk with it, 3-2-1, until it feels satisfied, work what it is holding and ask it again when you come back round, or take it home to the WAVE room."));
               body.push(row([
-                btn("Talk with it", { "data-cave-321": "" }, function () { blk.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 8, after: 3 }; placeCard(blk); }),
+                btn("Talk with it", { "data-cave-321": "" }, function () { blk.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 8, after: 3 }; blk.dm.allowed = true; placeCard(blk); }),
                 btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); }, true),
                 btn("Take it home", { "data-cave-take-home": "" }, function () { takeHome(blk, d); }, true),
               ]));
@@ -1393,16 +1462,23 @@
         });
       }, 520);
     }
+    // How brightly a daemon glows, 0 to 1: its charge (the 3-2-1's readings), up to the brightness the player allowed it, and
+    // duller once it has stepped aside.
+    function daemonLevel(b) { var dm = b.dm; return clamp(heatOf(b.t321, dm.heat) / 10, 0, 1) * (dm.bright / 10) * (b.stepAside === "yes" ? 0.3 : 1); }
     // True when this block, or one it was opened from, has a daemon that has not stepped aside.
     function daemonHolds(b) { while (b) { if (b.daemon && b.stepAside !== "yes") return true; b = b.frame.blk; } return false; }
     // The 3-2-1 with the daemon in the way (talk321, above, holds the chat). Asked at the end whether it feels satisfied.
     function chat321(blk, d, t, body) {
       return talk321(t, { name: d[1], damaged: blk.daemon === "damaged-self", redraw: function () { placeCard(blk); }, focus: function () { focusChat(modal); },
+        // Allow, at the daemon (callsheet wave-room, Next: the room's sliders reach the cave's daemons): it grows a little by itself
+        before: function (body) {
+          body.push(el("div", { "data-cave-allow": "" }, [el("p", { text: "Allow it: let it be as big and as bright as it is." })].concat(allowSliders(blk.dm, "data-cave-allow-slider"))));
+        },
         ask: function (body) {
         body.push(P("Does " + d[1] + " feel satisfied?", { "data-cave-321-ask": "" }));
         body.push(P("Charge " + t.before + " → " + t.after + (t.after < t.before ? ", down " + (t.before - t.after) + "." : ".") + " Your words stay on this page and are not saved."));
         body.push(row([
-          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
+          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.dm.heat = t.after; blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
           btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { t.phase = 3; t.rounds++; t.before = t.after; t.msgs.push({ round: t.rounds, divider: true }); placeCard(blk); }, true),
         ]));
         } }, body);
@@ -1429,6 +1505,9 @@
       c.daemonFig = buildDaemon(THREE, d, h * 1.1);
       c.daemonFig.position.set(a.x, a.y - h * 0.9, a.z); c.daemonFig.rotation.y = yawFacing({ fx: -a.fx, fz: -a.fz });
       c.daemonBase = { x: a.x, z: a.z, nx: -a.fz, nz: a.fx }; c.daemonS = stopAt(route, "passage").s + 6; c.daemonRoute = route; c.daemonMoved = false;
+      // its charge shows around it, and Allow's sliders set how large it gets and how bright it can glow (see buildAura)
+      c.daemonAura = buildAura(THREE, h * 0.6); c.daemonFig.add(c.daemonAura); c.daemonBlk = blk; c.daemonHex = d[3];
+      blk.dm = blk.dm || { grow: ALLOW_GROW, bright: ALLOW_BRIGHT, heat: 6, allowed: false };
       route.group.add(c.daemonFig);
       placeCard(blk);
     }
@@ -1611,6 +1690,12 @@
             if (dk >= 1) c.daemonT = null;
           }
           if (c.daemonFig && c.daemonFig.userData.orb && !state.calm) c.daemonFig.userData.orb.scale.setScalar(1 + 0.2 * Math.sin(nowMs / 250));
+          if (c.daemonAura) { // brighter as its charge rises, duller as it is worked through: the reading after, then standing aside
+            var dbk = c.daemonBlk, dm = dbk.dm, dl = daemonLevel(dbk), dsz = dm.allowed ? 1 + dm.grow / 10 : 1, dfs = c.daemonFig.scale.x;
+            c.daemonFig.scale.setScalar(dfs + (dsz - dfs) * Math.min(1, dt * 2));
+            stepAura(c.daemonAura, tmpC.setHex(c.daemonHex), dl, dt, state.calm);
+            c.daemonFig.userData.mat.emissiveIntensity = 0.12 + 0.6 * c.daemonAura.userData.level;
+          }
         }
         layoutPane();
       }
@@ -1644,6 +1729,7 @@
     };
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
+    api.daemonGlow = function () { var c = ctxOf(); if (!c || !c.daemonAura) return null; var dm = c.daemonBlk.dm; return { level: c.daemonAura.userData.level, want: daemonLevel(c.daemonBlk), scale: c.daemonFig.scale.x, grow: dm.grow, bright: dm.bright, allowed: dm.allowed }; };
     api.sideElement = function () { var wk = state.walk, b = wk && wk.blk, c = b && b.route.ctx; return { shown: !!(c && c.elObj && c.holder.children.length), name: b && b.element, deco: b ? b.deco.length : 0 }; };
     api.pane = function () {
       var r = pane.getBoundingClientRect(), cs = getComputedStyle(pane);
@@ -1744,7 +1830,12 @@
 
       // ---- the room, from the kit ----------------------------------------------------------------------------------------
       var RR = 8, RH = 5.4, DZ = -RR * 0.92, DW = 2.4, DH = 3.4;
-      var SEAT = { x: 0, z: 2.4 }, HERE = { x: 0, z: -2.4 }, FACE = { x: 0, z: 0 }, BACK = { x: 1.6, z: 4.2 };
+      var SEAT = { x: 0, z: 2.4 }, BACK = { x: 1.6, z: 4.2 };
+      // Up to three creatures at once (Wendell, 11 October 2026: "One should be able to invite multiple creatures into the space.
+      // Up to three and worked through at a time."), each with its own place facing the seat. HERE is the place of the one being
+      // worked, and FACE is halfway between it and the seat; both move when the player picks another.
+      var SLOTS = [{ x: 0, z: -2.4 }, { x: -2.1, z: -0.9 }, { x: 2.1, z: -0.9 }], SLOT_WORDS = ["in the middle", "on the left", "on the right"], ROOM_MAX = 3;
+      var HERE = SLOTS[0], FACE = { x: 0, z: 0 };
       var scene = new THREE.Scene(); scene.background = new THREE.Color(0x120e10); scene.fog = new THREE.FogExp2(0x120e10, 0.03);
       var camera = new THREE.PerspectiveCamera(60, 1, 0.1, 120);
       var rock = new THREE.MeshStandardMaterial({ color: 0x5e4e44, roughness: 0.95, side: THREE.DoubleSide });
@@ -1759,6 +1850,8 @@
       function archShape(x0) { var s = new THREE.Shape(), r = DW / 2; s.moveTo(x0 - r, 0); s.lineTo(x0 + r, 0); s.lineTo(x0 + r, DH - r); s.absarc(x0, DH - r, r, 0, Math.PI, false); s.lineTo(x0 - r, 0); return s; }
       var beyond = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: 0xfff1d0 })); // the light beyond the door
       beyond.position.set(0, 0.01, DZ - 0.06); scene.add(beyond);
+      // The door slides sideways into the wall (Wendell, 11 October 2026: "Door had to swing through the second part invited ins
+      // space. Put it it to the side is desired"), so nothing sweeps the floor a charge comes in on.
       var door = new THREE.Group(); door.position.set(-DW / 2, 0, DZ); scene.add(door);
       door.add(new THREE.Mesh(new THREE.ShapeGeometry(archShape(DW / 2), 16), new THREE.MeshStandardMaterial({ color: 0x4a3426, roughness: 0.8, side: THREE.DoubleSide })));
       var frameMat = new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.7 });
@@ -1783,13 +1876,26 @@
         });
         var core = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
         core.position.set(0, 1.2, 0.42); body.add(core); g.add(body);
-        g.userData = { mat: mat, body: body, core: core, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false };
+        var aura = buildAura(THREE, 1.25); g.add(aura);
+        g.userData = { mat: mat, body: body, core: core, aura: aura, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false };
         return g;
       }
       function dressCharge(c) {
         var u = c.fig.userData, look = AVATAR_LOOK[c.texture] || null, e = c.element && lookup(ELEMENTS, c.element);
         u.sx = look ? look.sx[0] : 1; u.sy = look ? look.sy[0] : 1; u.op = look ? 0.3 + 0.55 * look.op[0] : 0.85;
         u.want.setHex(e ? e[3] : GREY); u.steady = !!c.steady;
+      }
+      // A feeling about a feeling (Wendell, 11 October 2026: "being able to have emotions about the emotions and sensations that
+      // show up is key ... so they don't spam emotions about emotions as separate creatures"): a ring around the creature it is
+      // about, in its own colour, with the name the player writes. It flickers until it is validated with that creature.
+      function addLayer(c, name, element) {
+        var n = c.layers.length, e = element && lookup(ELEMENTS, element), hex = e ? e[3] : GREY;
+        var ring = new THREE.Mesh(new THREE.TorusGeometry(0.95 + 0.14 * n, 0.045, 8, 40), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.8, depthWrite: false }));
+        ring.rotation.x = Math.PI / 2 - 0.25; ring.position.y = 0.85 + 0.42 * n;
+        var label = labelSprite(THREE, name, "#" + new THREE.Color(hex).lerp(new THREE.Color(0xffffff), 0.5).getHexString(), 2.2); label.position.set(1.5 + 0.14 * n, ring.position.y + 0.12, 0);
+        c.fig.add(ring); c.fig.add(label);
+        var l = { name: name, element: element || null, ring: ring, label: label, steady: !!c.steady };
+        c.layers.push(l); return l;
       }
       // A light the charge leaves on the threshold, named by the player, for the sitting.
       function buildLight(hex, name, n) {
@@ -1807,13 +1913,26 @@
 
       // ---- the sitting -------------------------------------------------------------------------------------------------------
       // R.phase is the step's id from ROOM_STEPS, or opening, stays, kept, goes, leaving, gone, checkin, again, end.
-      var R = { round: 1, phase: "welcome", back: false, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, move: null };
-      function newCharge(first) {
-        var c = { where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false };
+      // R.active holds the creatures in the room being worked (up to three); ch is the one the player is working now. Each keeps
+      // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
+      var R = { round: 1, phase: "welcome", back: false, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null };
+      function newCharge(first, slot) {
+        var c = { where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
+          slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [] };
         c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
-      var ch = newCharge(true);
+      var ch = newCharge(true); R.active.push(ch);
+      function inRoom() { return R.active.filter(function (c) { return !c.gone && R.kept.indexOf(c) < 0; }); }
+      function freeSlot() { var used = inRoom().map(function (c) { return c.slot; }); for (var i = 0; i < ROOM_MAX; i++) if (used.indexOf(i) < 0) return i; return -1; }
+      function setFocus(c) {
+        if (ch !== c && R.active.indexOf(ch) >= 0) ch.phase = R.phase;
+        ch = c; HERE = SLOTS[c.slot]; FACE = { x: HERE.x / 2, z: (HERE.z + SEAT.z) / 2 };
+        R.phase = c.phase; R.back = false;
+      }
+      function labelOf(c) { return c.name.trim() || "The one " + SLOT_WORDS[c.slot]; }
+      // How brightly a creature glows, 0 to 1: its charge, up to the brightness allowed it, duller as it is worked through.
+      function levelOf(c) { return clamp(heatOf(c.t321, c.heat) / 10, 0, 1) * (c.allow.bright / 10) * c.dull; }
       var br = { b: 0.5, t0: performance.now() / 1000, exhaling: false };
       var fig = { x: SEAT.x, z: SEAT.z, sit: 1, yaw: Math.PI, clk: 0 };
 
@@ -1827,6 +1946,7 @@
         pane.appendChild(el("strong", { text: pg.title }));
         var first = kids.filter(function (k) { return k.tagName === "P"; })[0]; if (first) pane.appendChild(el("span", { text: first.textContent }));
         if (pg.still) { closeModal(); pane.style.display = ""; return; } // a page with nothing to choose: the pane, so the room is in view
+        if (R.active.length > 1 && !R.back && ["else", "layer", "waiting"].indexOf(R.phase) < 0) modal.appendChild(focusRow());
         modal.appendChild(row([btn("Look around", { "data-room-shrink": "" }, closeModal, true)]));
         pane.style.display = ""; openModal();
       }
@@ -1845,6 +1965,16 @@
         }));
       }
       function stepBack() { return btn("Step back", { "data-room-step-back": "" }, function () { R.back = true; draw(); }, true); }
+      // Which creature is being worked: the player picks, and each keeps its own step.
+      function focusRow() {
+        return el("div", {}, [el("p", { class: "oagr-note", text: "Working with:" }), el("div", { class: "oagc-row" }, R.active.map(function (c, n) {
+          var b = el("button", { class: c === ch ? "" : "alt", "aria-pressed": String(c === ch), text: labelOf(c), onclick: function () { if (c !== ch) { setFocus(c); draw(); } } });
+          b.setAttribute("data-room-focus", String(n)); return b;
+        }))]);
+      }
+      // "What else is here?" (Wendell: "This will be the greatest use case for 'what else is here'"): first, is it about one of the
+      // creatures already here? Then it is a layer on that one. Only something new comes in through the door, as a creature of its own.
+      function elseBtn() { return btn("What else is here?", { "data-room-else": "" }, function () { R.prev = R.phase; R.phase = "else"; R.back = false; draw(); }, true); }
       function go(phase) { R.phase = phase; R.back = false; draw(); }
       function stepIndex(id) { for (var i = 0; i < ROOM_STEPS.length; i++) if (ROOM_STEPS[i].id === id) return i; return -1; }
       function nextStep() { var i = stepIndex(R.phase); go(ROOM_STEPS[i + 1].id); }
@@ -1860,11 +1990,40 @@
         }
         if (ph === "welcome") {
           k.push(P(w[2], { "data-room-prompt": "" }));
-          k.push(P(R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
+          k.push(P(ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
           k.push(row([btn("Welcome it", { "data-room-welcome": "" }, function () { R.phase = "opening"; R.wait = "door-in"; draw(); })]));
           return { title: w[1], kids: k };
         }
         if (ph === "opening") return { title: "The door", kids: [P(R.calm ? "The door opens." : "On your next out-breath, the door opens.")], still: true };
+        if (ph === "else") {
+          var here = inRoom();
+          k.push(P("Something else is here. Is it about " + (here.length > 1 ? "one of the ones" : "the one") + " already in the room?", { "data-room-else-ask": "" }));
+          k.push(el("div", { class: "oagc-row" }, here.map(function (c) {
+            var b = el("button", { text: "About " + labelOf(c), onclick: function () { R.layer = { c: c, name: "", element: null, unknown: false }; R.phase = "layer"; draw(); } });
+            b.setAttribute("data-room-else-about", String(R.active.indexOf(c))); return b;
+          })));
+          k.push(row([btn("Something new", { "data-room-else-new": "" }, somethingNew, true), btn("Back", { "data-room-else-back": "" }, function () { go(R.prev); }, true)]));
+          return { title: "What else is here?", kids: k };
+        }
+        if (ph === "layer") {
+          var L = R.layer, about = labelOf(L.c);
+          k.push(P("A feeling about " + about + ". Welcome it as part of " + about + ".", { "data-room-layer-ask": "" }));
+          var wl = btn("Welcome it with " + about, { "data-room-layer-welcome": "" }, function () {
+            addLayer(L.c, L.name.trim(), L.element); R.layer = null; go(R.prev);
+          });
+          var lready = function () { wl.disabled = !(L.name.trim() && (L.element || L.unknown)); };
+          k.push(field("data-room-layer-name", L.name, "A name for it", function (v) { L.name = v; lready(); }));
+          k.push(pickRow("data-room-layer-element", ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }).concat([["unknown", "I don't know"]]),
+            L.unknown ? "unknown" : L.element, function (v) { L.unknown = v === "unknown"; L.element = v === "unknown" ? null : v; draw(); }));
+          k.push(P(L.c.steady ? about + " is validated already, and this is validated with it." : "It is validated when " + about + " is.", { class: "oagr-note" }));
+          lready(); k.push(row([wl, btn("Back", { "data-room-else-back": "" }, function () { R.layer = null; go(R.prev); }, true)]));
+          return { title: "A feeling about a feeling", kids: k };
+        }
+        if (ph === "waiting") {
+          k.push(P("Three are in the room already. The new one waits at the door until one of them has been worked through.", { "data-room-waiting": "" }));
+          k.push(row([btn("Go on", { "data-room-next": "" }, function () { go(R.prev); })]));
+          return { title: "It waits at the door", kids: k };
+        }
         if (ph === "witness") {
           k.push(P(w[2], { "data-room-prompt": "" }));
           k.push(P(ch.where ? "Where: " + ch.where + "." : "Where is it?", { "data-room-where": "" }));
@@ -1874,7 +2033,7 @@
           k.push(P("What is it like?"));
           k.push(pickRow("data-room-texture", TEXTURES.map(function (t) { return [t[0], t[1]]; }), ch.texture, function (v) { ch.texture = v; dressCharge(ch); draw(); }));
           var nx = btn("Go on", { "data-room-next": "" }, nextStep); nx.disabled = !ch.texture;
-          k.push(row([nx, stepBack()]));
+          k.push(row([nx, elseBtn(), stepBack()]));
           return { title: w[1], kids: k };
         }
         if (ph === "acknowledge") {
@@ -1885,14 +2044,23 @@
           k.push(field("data-room-name", ch.name, "A name for it", function (v) { ch.name = v; ready(); }));
           k.push(pickRow("data-room-element", ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }).concat([["unknown", "I don't know"]]),
             ch.elementUnknown ? "unknown" : ch.element, function (v) { ch.elementUnknown = v === "unknown"; ch.element = v === "unknown" ? null : v; dressCharge(ch); draw(); }));
-          ready(); k.push(row([go1, stepBack()]));
+          ready(); k.push(row([go1, elseBtn(), stepBack()]));
           return { title: w[1], kids: k };
         }
         if (st && ph !== "fork") { // allow, accept, appreciate, validate
           k.push(P(w[2], { "data-room-prompt": "" }));
-          var kk = [btn("Go on", { "data-room-next": "" }, function () { if (ph === "validate") { ch.steady = true; dressCharge(ch); } nextStep(); })];
+          if (ph === "allow") { // it grows a little by itself; the player says how large, and how bright its colour can get
+            ch.allowed = true;
+            k.push(P(nm() + " grows a little as you let it be here.", { "data-room-allow": "" }));
+            allowSliders(ch.allow, "data-room-allow-slider").forEach(function (n) { k.push(n); });
+          }
+          if (ph === "validate" && ch.layers.length) k.push(P("This holds " + ch.layers.map(function (l) { return l.name; }).join(" and ") + " too.", { "data-room-validate-layers": "" }));
+          var kk = [btn("Go on", { "data-room-next": "" }, function () {
+            if (ph === "validate") { ch.steady = true; ch.dull = 0.6; ch.layers.forEach(function (l) { l.steady = true; }); dressCharge(ch); } // worked through: it dulls
+            nextStep();
+          })];
           if (st.notNow) kk.push(btn("Not now", { "data-room-notnow": "" }, nextStep, true));
-          kk.push(stepBack()); k.push(row(kk));
+          kk.push(elseBtn()); kk.push(stepBack()); k.push(row(kk));
           return { title: w[1], kids: k };
         }
         if (ph === "fork") {
@@ -1941,7 +2109,7 @@
           k.push(P("Did it leave, or did you get rid of it?", { "data-room-checkin-ask": "" }));
           var ans = [["left", "It left"], ["got-rid", "I got rid of it"]];
           if (ch.push === "toward") ans.push(["stayed", "It stayed"]);
-          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v }); go("again"); }));
+          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v }); workedThrough(); }));
           k.push(P("Your answer and the round number stay on this device. What you wrote stays on this page.", { class: "oagr-note" }));
           return { title: "For the test", kids: k };
         }
@@ -1961,15 +2129,31 @@
         return { title: R.rested ? "Resting" : "The room is quiet", kids: k };
       }
       function lightName() { return (ch.lightName || "").trim() || nm(); }
+      // Something new while fewer than three are in: the door opens on the out-breath and it comes in to a place of its own, and
+      // the player works it now (the others keep their steps). With three in, it waits at the door.
+      function somethingNew() {
+        var sl = freeSlot();
+        if (sl < 0) { R.waiting++; R.phase = "waiting"; draw(); return; }
+        R.phase = R.prev;
+        var c = newCharge(false, sl); R.active.push(c); setFocus(c);
+        R.phase = "opening"; R.wait = "door-in"; draw();
+      }
+      // One creature is worked through: the next one in the room is worked, or one waiting at the door is welcomed, or the round ends.
+      function workedThrough() {
+        R.active.splice(R.active.indexOf(ch), 1);
+        if (R.active.length) { var nx = R.active[0]; ch.phase = "done"; ch = nx; setFocus(nx); draw(); return; }
+        if (R.waiting > 0) { R.waiting--; var c = newCharge(false, 0); c.waited = true; R.active.push(c); ch = c; setFocus(c); draw(); return; }
+        go("again");
+      }
       function startStays() { ch.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }; go("stays"); }
       function keep() { // the charge takes a place in the room, beside the wall, for the sitting
-        var n = R.kept.length % 4, spot = [[-1.8, -0.4], [2.4, -0.4], [-2.6, -3.2], [3.1, -3.2]][n];
-        R.move = { c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: { x: spot[0], z: spot[1] }, t: 0, dur: 3 };
-        R.kept.push(ch); ch.t321 = null; go("kept");
+        var n = R.kept.length % 4, spot = [[-5.2, 1.4], [5.2, 1.4], [-5.4, -2.4], [5.4, -2.4]][n]; // by the wall, clear of the three places
+        R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: { x: spot[0], z: spot[1] }, t: 0, dur: 3 });
+        ch.heat = ch.t321.after; ch.dull *= 0.6; R.kept.push(ch); ch.t321 = null; go("kept");
       }
       function restart() {
         R.round++; if (ch.gone) scene.remove(ch.fig);
-        ch = newCharge(false); R.doorWant = 0; go("welcome");
+        ch = newCharge(false); R.active = [ch]; setFocus(ch); R.doorWant = 0; go("welcome");
       }
       function rest() {
         var lan = buildLantern(THREE); lan.position.set(DW / 2 + 1.1, 0, DZ + 0.8); lan.scale.setScalar(1.3); scene.add(lan); R.lantern = lan;
@@ -2029,6 +2213,7 @@
         if (name === "face-it") return { pos: V(HERE.x - 2.8, 3.6, HERE.z - 2.2), aim: V(FACE.x, 0.9, FACE.z) };
         if (name === "its") return { pos: V(HERE.x + 1.6, 3.6, HERE.z - 4.3), aim: V(SEAT.x, 0.6, SEAT.z) };
         if (name === "back") return { pos: V(BACK.x + 0.8, 4.6, BACK.z + 2.3), aim: V(HERE.x, 0.6, HERE.z) };
+        if (inRoom().length > 1) return { pos: V(0.4 + 0.3 * HERE.x, 6.6, 6.6), aim: V(0.6 * HERE.x, 0.2, -2) }; // higher, so all of them are in view, turned to the one worked
         return { pos: V(1.0, 5.4, 7.0), aim: V(0, 0.6, -3) };
       }
       var camPos = new THREE.Vector3(), camAim = new THREE.Vector3(), snap = true, last = performance.now(), running = null, tmpC = new THREE.Color();
@@ -2040,36 +2225,49 @@
         // the door: it opens on an out-breath (at once when calm), then the charge comes in, or goes out
         if (R.wait && (R.calm || br.exhaling)) {
           var w0 = R.wait; R.wait = null; R.doorWant = 1;
-          if (w0 === "door-in") { ch.fig.visible = true; ch.fig.position.set(0, 0, DZ - 2.5); R.move = { c: ch, from: { x: 0, z: DZ - 2.5 }, to: HERE, t: -1.4, dur: 3.6, then: function () { go("witness"); } }; }
-          else R.move = { c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
-            ch.gone = true; ch.fig.visible = false; var l = buildLight(ch.fig.userData.want.getHex(), lightName(), R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3; go("gone");
-          } };
+          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { if (ch === cin) go("witness"); else cin.phase = "witness"; } }); }
+          else { var cout = ch; R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
+            cout.gone = true; cout.fig.visible = false; var l = buildLight(cout.fig.userData.want.getHex(), (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
+            if (ch === cout) go("gone"); else cout.phase = "gone";
+          } }); }
         }
         R.doorOpen += (R.doorWant - R.doorOpen) * Math.min(1, dt * 1.6);
-        door.rotation.y = -1.75 * R.doorOpen; doorLight.intensity = 1.8 * R.doorOpen;
-        if (R.move) {
-          var mv = R.move; mv.t += dt; var k = clamp(mv.t / mv.dur, 0, 1), e = k * k * (3 - 2 * k);
+        door.position.x = -DW / 2 - (DW + 0.25) * R.doorOpen; doorLight.intensity = 1.8 * R.doorOpen;
+        R.moves = R.moves.filter(function (mv) {
+          mv.t += dt; var k = clamp(mv.t / mv.dur, 0, 1), e = k * k * (3 - 2 * k);
           mv.c.fig.position.x = mv.from.x + (mv.to.x - mv.from.x) * e; mv.c.fig.position.z = mv.from.z + (mv.to.z - mv.from.z) * e;
           if (mv.fadeOut) mv.c.fig.userData.fade = 1 - clamp((k - 0.75) / 0.25, 0, 1);
-          if (k >= 1) { R.move = null; if (mv.fadeOut) R.doorWant = 0.3; if (mv.then) mv.then(); }
-        }
-        // the charge where the step puts it (unless it is moving): in the room, or in the seat while the player is it
+          if (k >= 1) { if (mv.fadeOut) R.doorWant = 0.3; if (mv.then) mv.then(); return false; }
+          return true;
+        });
+        var inFlight = R.moves.map(function (mv) { return mv.c; });
+        // each creature where the step puts it (unless it is moving): the one being worked at its place, or in the seat while the
+        // player is it; the others at their own places
         var tg = targets();
-        if (!R.move && ch.fig.visible && !ch.gone && R.kept.indexOf(ch) < 0) {
-          var cy = tg.c === SEAT ? 0.55 : 0;
-          ch.fig.position.x += (tg.c.x - ch.fig.position.x) * Math.min(1, dt * 1.8); ch.fig.position.z += (tg.c.z - ch.fig.position.z) * Math.min(1, dt * 1.8);
-          ch.fig.position.y += (cy - ch.fig.position.y) * Math.min(1, dt * 1.8);
-        }
-        // every charge in the room: its colour eases to its element, its shape to its texture; it breathes, and flickers until validated
-        [ch].concat(R.kept).forEach(function (c) {
-          var u = c.fig.userData, b = br.b;
+        inRoom().forEach(function (c) {
+          if (inFlight.indexOf(c) >= 0 || !c.fig.visible) return;
+          var to = c === ch ? tg.c : SLOTS[c.slot], cy = to === SEAT ? 0.55 : 0, fk = Math.min(1, dt * 1.8);
+          c.fig.position.x += (to.x - c.fig.position.x) * fk; c.fig.position.z += (to.z - c.fig.position.z) * fk; c.fig.position.y += (cy - c.fig.position.y) * fk;
+        });
+        // every creature in the room: its colour eases to its element, its shape to its texture; it breathes, and flickers until
+        // validated. Allowed, it grows to the size the player set; its aura brightens with its charge and dulls as it is worked.
+        var every = R.active.concat(R.kept); if (every.indexOf(ch) < 0) every.push(ch);
+        every.forEach(function (c) {
+          var u = c.fig.userData, b = br.b, lv = levelOf(c);
           u.col.lerp(u.want, Math.min(1, dt * 1.5)); u.mat.color.copy(u.col); u.mat.emissive.copy(u.col);
           var flick = u.steady || R.calm ? 0 : 0.12 * Math.sin(now / 130) * Math.sin(now / 370);
-          u.mat.emissiveIntensity = 0.22 + 0.18 * b + flick + (u.steady ? 0.15 : 0);
+          u.mat.emissiveIntensity = 0.22 + 0.18 * b + flick + (u.steady ? 0.15 : 0) + 0.6 * u.aura.userData.level;
+          var sz = c.allowed ? 1 + c.allow.grow / 10 : 1, fs = c.fig.scale.x; c.fig.scale.setScalar(fs + (sz - fs) * Math.min(1, dt * 1.5));
+          stepAura(u.aura, u.col, lv * (u.fade == null ? 1 : u.fade), dt, R.calm);
+          c.layers.forEach(function (l, n) {
+            if (!R.calm) l.ring.rotation.z += dt * (0.4 + 0.15 * n);
+            l.ring.material.opacity = (l.steady || R.calm ? 0.85 : 0.45 + 0.35 * Math.abs(Math.sin(now / 240 + n))) * (u.fade == null ? 1 : u.fade);
+            l.label.material.opacity = u.fade == null ? 1 : u.fade;
+          });
           u.mat.opacity = u.op * (u.fade == null ? 1 : u.fade);
           u.body.scale.set(u.sx * (1 + 0.05 * (b - 0.5)), u.sy * (1 + 0.04 * (b - 0.5)), u.sx);
           u.core.material.opacity = (u.steady ? 0.85 : 0.4 + 0.3 * b) * (u.fade == null ? 1 : u.fade);
-          var faceTo = c.fig.position.z > SEAT.z - 0.5 ? HERE : (fig.sit > 0.5 ? SEAT : { x: fig.x, z: fig.z });
+          var faceTo = c.fig.position.z > SEAT.z - 0.5 ? SLOTS[c.slot] : (fig.sit > 0.5 ? SEAT : { x: fig.x, z: fig.z });
           c.fig.rotation.y = Math.atan2(faceTo.x - c.fig.position.x, faceTo.z - c.fig.position.z);
         });
         if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
@@ -2122,8 +2320,10 @@
       var api = window.__oagCave;
       api.room = {
         state: R,
-        charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal }; },
-        scene: function () { return { door: R.doorOpen, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
+        charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
+          slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }) }; },
+        creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
+        scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
       };
     });

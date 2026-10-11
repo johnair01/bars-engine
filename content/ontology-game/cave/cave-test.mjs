@@ -325,7 +325,8 @@ const roomIn = async (shot) => { // Welcome: the door opens on an out-breath and
   ok(await sees('[data-room-pane]') && (await room()).phase === 'opening', 'Welcome: the door waits for the out-breath, with only the pane up');
   await page.locator('[data-room-texture]').first().waitFor({ timeout: 30000 });
   const r = await room();
-  ok(r.scene.door > 0.8 && r.charge.visible && Math.hypot(r.charge.x - r.scene.here[0], r.charge.z - r.scene.here[1]) < 0.05, 'the door opened and the charge came in to the middle of the room');
+  ok(r.scene.door > 0.8 && r.charge.visible && Math.hypot(r.charge.x - r.scene.here[0], r.charge.z - r.scene.here[1]) < 0.05, 'the door opened and the charge came in to its place in the room');
+  ok(r.scene.doorX < -r.scene.doorW * 1.2, `the door slid sideways into the wall, clear of the way in (its edge at x ${(r.scene.doorX + r.scene.doorW).toFixed(2)})`);
   if (shot) await page.screenshot({ path: SHOTS + '/room-witness.png' });
 };
 const roomToFork = async (name, element, texture, appreciate) => {
@@ -414,9 +415,18 @@ await page.locator('[data-cave-aside="not-yet"]').click();
 await page.locator('[data-cave-321]').click();
 const charge = (which, v) => page.locator(`[data-cave-321-charge="${which}"]`).evaluate((e, x) => { e.value = x; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
 const say = async (k, text) => { await page.locator(`[data-cave-321-text="${k}"]`).fill(text); await page.locator('[data-cave-321-send]').click(); };
+let glow9 = null;
 for (const round of [1, 2]) {
   ok(await sees('[data-cave-321-step="before"]') || round === 2, '3-2-1 opens with a charge reading before');
-  if (round === 1) { await charge('before', 9); ok((await page.locator('[data-cave-321-read="before"]').textContent()) === '9 of 10', 'the before reading follows the slider'); await page.locator('[data-cave-321-start]').click(); }
+  if (round === 1) {
+    await charge('before', 9); ok((await page.locator('[data-cave-321-read="before"]').textContent()) === '9 of 10', 'the before reading follows the slider');
+    ok(await sees('[data-cave-allow-slider="grow"]') && await sees('[data-cave-allow-slider="bright"]'), 'at the daemon, Allow\'s two sliders: how large it gets and how bright it can glow');
+    await page.locator('[data-cave-allow-slider="grow"]').evaluate((e) => { e.value = 10; e.dispatchEvent(new Event('input', { bubbles: true })); });
+    await page.waitForTimeout(2500); glow9 = await C(() => window.__oagCave.daemonGlow());
+    ok(glow9.allowed && glow9.scale > 1.85 && glow9.level > 0.5, `the daemon grows to the size set (×${glow9.scale.toFixed(2)}) and glows with its charge (${glow9.level.toFixed(2)})`);
+    await page.screenshot({ path: SHOTS + '/cave-daemon-allowed.png' });
+    await page.locator('[data-cave-321-start]').click();
+  }
   ok(await sees('[data-cave-321-step="it"]'), `3-2-1 round ${round}: 3 Face it`);
   const stg = () => C(() => window.__oagCave.stage());
   const dist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]);
@@ -443,9 +453,12 @@ for (const round of [1, 2]) {
     ok(await sees('[data-cave-321-step="you"]') && await page.locator('[data-cave-bubble-phase="3"]').count() >= 1, 'going back in keeps the words and the step');
   }
   await say('you', 'what do you want?');
+  ok((await page.locator('[data-cave-321-voice="it"]').getAttribute('aria-pressed')) === 'true', 'a line sent in Talk to it hands the voice to the daemon by itself');
+  if (round === 1) { await page.waitForTimeout(3000); ok((await stg()).cam === 'face-it', 'and the camera swings to the daemon\'s shoulder with it'); }
   await page.locator('[data-cave-321-voice="it"]').click();
-  ok((await page.locator('[data-cave-321-voice="it"]').getAttribute('aria-pressed')) === 'true', 'the switcher moves to the daemon\'s voice');
+  ok((await page.locator('[data-cave-321-voice="it"]').getAttribute('aria-pressed')) === 'true', 'the switcher still sets the voice');
   await say('you', 'I want you safe');
+  ok((await page.locator('[data-cave-321-voice="you"]').getAttribute('aria-pressed')) === 'true', 'its answer hands the voice back to the player');
   ok(await page.locator('[data-cave-bubble="it"][data-cave-bubble-phase="2"]').count() >= 1 && await page.locator('[data-cave-bubble="you"][data-cave-bubble-phase="2"]').count() >= 1, 'both voices write their own side of the talk');
   await page.locator('[data-cave-321-next]').click();
   ok(await sees('[data-cave-321-step="i"]') && await page.locator('[data-cave-321-voice]').count() === 0, 'Be it: one voice, "I am"');
@@ -458,6 +471,7 @@ for (const round of [1, 2]) {
   ok(await sees('[data-cave-321-step="after"]'), 'a charge reading after');
   if (round === 1) { await page.waitForTimeout(4500); const sa = await stg(); ok(sa.cam === 'far' && sa.cu === 0 && sa.cd === 0 && sa.flip === 0, 'staged: then a step back to the player\'s own place'); }
   await charge('after', round === 1 ? 8 : 3);
+  if (round === 2) { await page.waitForTimeout(2500); const g3 = await C(() => window.__oagCave.daemonGlow()); ok(g3.level < glow9.level - 0.25, `its glow dulls as the charge comes down (${glow9.level.toFixed(2)} → ${g3.level.toFixed(2)})`); }
   await page.locator('[data-cave-321-after]').click();
   ok(await sees('[data-cave-321-ask]') && await page.locator('[data-cave-next]').count() === 0 && await page.locator('[data-cave-skip]').count() === 0, `after round ${round} the daemon is asked if it feels satisfied, with no way past and no skip`);
   if (round === 1) {
@@ -468,6 +482,8 @@ for (const round of [1, 2]) {
 await page.locator('[data-cave-satisfied="yes"]').click();
 await page.waitForTimeout(1000);
 ok(await sees('[data-cave-open]') && await sees('[data-cave-next]'), 'once it stands aside the way opens');
+await page.waitForTimeout(1500);
+ok((await C(() => window.__oagCave.daemonGlow())).want < 0.15, 'standing aside, it is dull');
 await page.locator('[data-cave-next]').click();
 await walkTo('[data-cave-release]');
 await page.screenshot({ path: SHOTS + '/cave-way-out.png' });
@@ -563,11 +579,12 @@ ok((await page.locator('[data-cave-321-aim]').textContent()).includes('a quiet e
 await say('it', 'a knot under the chin');
 await page.locator('[data-cave-321-next]').click();
 await say('you', 'what do you want for me?');
-await page.locator('[data-cave-321-voice="it"]').click();
+await page.waitForTimeout(3500);
+ok((await room()).scene.view === 'face-it' && (await room()).scene.sit < 0.05, 'Talk to it: face to face, and the line sent swings the voice and the camera to it by itself');
+await page.screenshot({ path: SHOTS + '/room-talk.png' });
 await say('you', 'for you to slow down');
 await page.waitForTimeout(3500);
-ok((await room()).scene.view === 'face-it' && (await room()).scene.sit < 0.05, 'Talk to it: face to face, the camera with the voice');
-await page.screenshot({ path: SHOTS + '/room-talk.png' });
+ok((await room()).scene.view === 'face-you', 'its answer swings them back to the player');
 await page.locator('[data-cave-321-next]').click();
 await say('i', 'I am the knot that keeps you careful');
 await page.waitForTimeout(4500);
@@ -611,6 +628,88 @@ ok(!/quiet evening|make tea|Knot|Blue lamp|knot under|slow down/.test(stored), '
 await page.locator('[data-room-leave]').click();
 await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
 ok(await sees('[data-cave-home]'), 'Leave the room returns to the front page');
+// ---- the room's second slice (Wendell, 11 October 2026): up to three at once, a feeling about a feeling, Allow's sliders, the glow -----
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room-welcome]').waitFor();
+await C(() => window.__oagCave.room.speed(3));
+await roomIn(false);
+const cr = () => C(() => window.__oagCave.room.creatures());
+const pressed = async (sel) => (await page.locator(sel).getAttribute('aria-pressed')) === 'true';
+const slide = (which, v) => page.locator(`[data-room-allow-slider="${which}"]`).evaluate((e, x) => { e.value = x; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
+ok(await sees('[data-room-else]'), 'Witness offers "What else is here?"');
+await page.locator('[data-room-else]').click();
+ok(await sees('[data-room-else-ask]') && await page.locator('[data-room-else-about]').count() === 1, '"What else is here?" first asks whether it is about the one already in the room');
+await page.locator('[data-room-else-new]').click();
+await page.locator('[data-room-texture]').first().waitFor({ timeout: 30000 });
+let cs = await cr();
+ok(cs.length === 2 && cs[1].focus && cs[1].slot === 1 && Math.hypot(cs[1].x - cs[0].x, cs[1].z - cs[0].z) > 2.5 && cs[0].phase === 'witness', 'something new comes in through the door to a place of its own and is worked now; the first keeps its step');
+ok(await page.locator('[data-room-focus]').count() === 2 && await pressed('[data-room-focus="1"]'), 'the page shows which one is being worked');
+await page.locator('[data-room-texture="tension"]').click(); await page.locator('[data-room-next]').click();
+await page.locator('[data-room-name]').fill('Ache'); await page.locator('[data-room-element="Joy"]').click(); await page.locator('[data-room-next]').click();
+ok((await room()).phase === 'allow' && await sees('[data-room-allow-slider="grow"]') && await sees('[data-room-allow-slider="bright"]'), 'Allow has two sliders: how large it gets, and how bright its colour can get');
+await page.waitForTimeout(2500);
+const a1 = (await room()).charge;
+ok(a1.allowed && a1.scale > 1.2 && a1.scale < 1.4, `at Allow it grows a little by itself (×${a1.scale.toFixed(2)})`);
+await slide('grow', 10); await slide('bright', 10);
+await page.waitForTimeout(2500);
+const a2 = (await room()).charge;
+ok(a2.scale > 1.85 && a2.glow > a1.glow + 0.1, `the sliders make it larger (×${a2.scale.toFixed(2)}) and brighter (glow ${a1.glow.toFixed(2)} → ${a2.glow.toFixed(2)})`);
+await page.screenshot({ path: SHOTS + '/room-allow-large.png' });
+await slide('bright', 2);
+await page.waitForTimeout(2000);
+ok((await room()).charge.glow < a2.glow - 0.2, 'turning its brightness down dims the glow and the sparks');
+await slide('bright', 8); await slide('grow', 5);
+await page.locator('[data-room-else]').click();
+await page.locator('[data-room-else-about="1"]').click();
+ok(await sees('[data-room-layer-ask]') && await page.locator('[data-room-layer-welcome]').isDisabled(), 'a feeling about it is welcomed as part of it, once it has a name and an element');
+await page.locator('[data-room-layer-name]').fill('Shame about the ache'); await page.locator('[data-room-layer-element="Fear"]').click();
+await page.locator('[data-room-layer-welcome]').click();
+const a3 = (await room()).charge; cs = await cr();
+ok((await room()).phase === 'allow' && cs.length === 2 && a3.layers.length === 1 && a3.layers[0].name === 'Shame about the ache' && !a3.layers[0].steady, 'it rides on that creature as a named ring, no new creature comes in, and the page goes back to Allow');
+await page.waitForTimeout(800);
+await page.screenshot({ path: SHOTS + '/room-layer.png' });
+await page.locator('[data-room-else]').click(); await page.locator('[data-room-else-new]').click();
+await page.locator('[data-room-texture]').first().waitFor({ timeout: 30000 });
+cs = await cr();
+ok(cs.length === 3 && cs[2].slot === 2 && cs[2].focus, 'a third comes in to the third place');
+await page.locator('[data-room-shrink]').click(); await page.waitForTimeout(800);
+await page.screenshot({ path: SHOTS + '/room-three.png' });
+await page.locator('[data-room-pane]').click();
+await page.locator('[data-room-else]').click(); await page.locator('[data-room-else-new]').click();
+ok(await sees('[data-room-waiting]') && (await cr()).length === 3 && (await room()).scene.waiting === 1, 'a fourth waits at the door');
+await page.locator('[data-room-next]').click();
+ok((await room()).phase === 'witness' && (await cr())[2].focus, 'and the page goes back to the third');
+await page.locator('[data-room-focus="1"]').click();
+await page.waitForTimeout(1500);
+const r5 = await room();
+ok(r5.phase === 'allow' && r5.charge.name === 'Ache' && Math.hypot(r5.scene.here[0] - r5.charge.x, r5.scene.here[1] - r5.charge.z) < 0.2 && r5.charge.layers.length === 1, 'picking the second again: it is back at Allow with its feeling about it, and the seat faces it');
+await page.locator('[data-room-next]').click(); await page.locator('[data-room-next]').click(); await page.locator('[data-room-notnow]').click();
+ok((await room()).phase === 'validate' && await sees('[data-room-validate-layers]'), 'Validate names the feeling about it too');
+await page.waitForTimeout(1000);
+const v0 = (await room()).charge.want;
+await page.locator('[data-room-next]').click();
+const v1 = (await room()).charge;
+ok(v1.steady && v1.layers[0].steady && v1.want < v0 * 0.7, `Validate steadies it and the feeling about it, and its glow dulls as it is worked (${v0.toFixed(2)} → ${v1.want.toFixed(2)})`);
+await roomGoes('to stretch', 'Green', false);
+await page.locator('[data-room-checkin="left"]').click();
+cs = await cr();
+ok(cs.length === 2 && cs[0].focus && (await room()).phase === 'witness' && !(await sees('[data-room-again-ask]')), 'once one is worked through, the next in the room is worked, where it was left');
+await roomToFork('Fog', 'Sadness', 'numbness');
+await roomGoes('sleep', '', false);
+await page.locator('[data-room-checkin="left"]').click();
+ok((await cr()).length === 1 && (await room()).phase === 'witness', 'then the third');
+await roomToFork('Heat', 'Anger', 'constriction');
+await roomGoes('to finish', '', false);
+await page.locator('[data-room-checkin="got-rid"]').click();
+ok(await sees('[data-room-welcome]') && (await page.locator('[data-room-welcome]').locator('xpath=../..').textContent()).includes('waited at the door') && (await room()).scene.waiting === 0, 'with the room clear, the one that waited at the door is welcomed');
+await roomIn(false);
+await roomToFork('Last', 'Neutrality', 'tension');
+await roomGoes('rest', '', false);
+await roomCheckin('left');
+await page.locator('[data-room-again="no"]').click();
+await page.locator('[data-room-leave]').click();
+await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();
