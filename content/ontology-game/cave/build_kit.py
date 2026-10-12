@@ -233,14 +233,17 @@ DRESSING = [
     ("stone_spire", "stone_spire.jpg", "lathe", 160),
     ("glow_cap", "glow_cap.jpg", "lathe", 300),
     ("root_curl", "root_curl.jpg", "inflate", 500),
+    # Wendell's first ChatGPT picture (Drive, Cave studio inbox, cave-crystal-growth.png, 2026-10-12): two pieces,
+    # crystal_cluster and crystal_cluster_bed, so the page can light the crystals and leave the rocks as rock.
+    ("crystal_cluster", "crystal_cluster.jpg", "crystals", 0),
 ]
 
 
 def dressing():
     out = {}
     for name, picture, mode, faces in DRESSING:
-        mask = from_picture.outline(os.path.join(HERE, "pictures", picture))
-        unit = 1.0 / mask.shape[0]
+        mask = from_picture.outline(os.path.join(HERE, "pictures", picture), colour=mode == "crystals")
+        unit = 1.0 / (mask[0] if mode == "crystals" else mask).shape[0]
         out[name] = round(from_picture.build(name, mask, unit, mode, faces)[2], 3)
     return out
 

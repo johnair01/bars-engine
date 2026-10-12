@@ -55,8 +55,9 @@ before publishing.** The orientation and scale of a new asset are found by eye: 
 
 `from_picture.py` turns one front-view picture of one object on a plain background into a model, for the cave
 studio's rule that ChatGPT art is concept only and the piece is rebuilt here (`cs-chatgpt-ai-art`). It reads the
-outline, then either turns it around its centre line (`--mode lathe`, for round objects) or fills it with metaballs
-as thick as the shape is wide (`--mode inflate`, for objects with a bend). It fits a face budget, scores how well the
+outline, then either turns it around its centre line (`--mode lathe`, for round objects), fills it with metaballs
+as thick as the shape is wide (`--mode inflate`, for objects with a bend), or splits it by colour into crystal and
+rock and makes one six-sided prism per crystal tip on an inflated rock bed (`--mode crystals`). It fits a face budget, scores how well the
 model's front outline matches the picture's (intersection over union, 1.0 exact) and renders front and
 three-quarter views with Cycles on the CPU.
 
@@ -65,7 +66,9 @@ three-quarter views with Cycles on the CPU.
 ```
 
 The cave's chamber dressing is built this way inside `content/ontology-game/cave/build_kit.py` (its `DRESSING`
-table). First run, 2026-10-12: 0.987, 0.974 and 0.89 outline match. The front view only fixes the outline, so depth
+table). First run, 2026-10-12: 0.987, 0.974 and 0.89 outline match on stand-in pictures, and 0.829 on Wendell's
+first ChatGPT picture (a crystal cluster). On that picture, inflate scored 0.88 but looked like a blob: a high outline
+match is necessary, not enough, so always look at the render. The front view only fixes the outline, so depth
 is a guess: round for lathe, as thick as wide for inflate. A picture with a busy background, two objects or a
 cast shadow reads the wrong outline; the prompt on the comparison page (https://claude.ai/artifact/568K2pwc7Lz5X9Kyftbzza) asks ChatGPT for the plain kind.
 

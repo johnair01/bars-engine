@@ -28,9 +28,11 @@
         "path_tube",
         "stone_spire",
         "glow_cap",
-        "root_curl"
+        "root_curl",
+        "crystal_cluster",
+        "crystal_cluster_bed"
       ],
-      "bytes": 48376,
+      "bytes": 85736,
       "dressing": [
         {
           "piece": "stone_spire",
@@ -49,6 +51,17 @@
           "built_from": "pictures/root_curl.jpg",
           "how": "inflate",
           "outline_match": 0.89
+        },
+        {
+          "piece": "crystal_cluster",
+          "parts": [
+            "crystal_cluster",
+            "crystal_cluster_bed"
+          ],
+          "built_from": "pictures/crystal_cluster.jpg",
+          "picture_made_with": "ChatGPT (Wendell, Drive inbox cave-crystal-growth.png, 2026-10-12)",
+          "how": "crystals",
+          "outline_match": 0.829
         }
       ],
       "dressing_note": "Built in Blender from the pictures by tools/blender-cloud/from_picture.py (cave studio, 2026-10-12). A picture is concept only (cs-chatgpt-ai-art); the built piece is own work. outline_match is the overlap of the model's front outline with the picture's, 1.0 exact."
@@ -57,11 +70,11 @@
       "id": "cave.pictures",
       "file": "pictures/",
       "kind": "concept pictures",
-      "source": "pictures/draw_standins.py (stand-ins drawn in code until a ChatGPT picture arrives)",
+      "source": "pictures/draw_standins.py (stone_spire, glow_cap, root_curl: stand-ins drawn in code, own work); crystal_cluster.jpg: Wendell's ChatGPT concept picture, reference only",
       "licence": "own work",
       "status": "built",
       "ships": false,
-      "bytes": 158197
+      "bytes": 223390
     },
     {
       "id": "cave.spots",

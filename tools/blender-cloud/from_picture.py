@@ -7,6 +7,8 @@ from the picture and builds the shape one of two ways:
   lathe    turns the outline around its centre line, for round things: a stalagmite, a mushroom, a pot.
   inflate  fills the outline with overlapping balls as thick as the shape is wide at each point (Blender metaballs),
            for things with a bend in them: a root, a branch, a lumpy stone.
+  crystals splits the picture by colour into crystal and rock, makes one six-sided prism per crystal tip it finds in
+           the outline, and inflates the rock bed under them, for a crystal cluster.
 
 Then it lays the finished mesh flat against the picture and measures the overlap of the two outlines (intersection
 over union, 1.0 is a perfect match), and renders the model from the front and from three-quarters so it can be put
@@ -80,8 +82,9 @@ def flood(mask, seeds):
     return seen
 
 
-def outline(path):
-    """The object's mask, top row first: background is the colour around the picture's edge."""
+def outline(path, colour=False):
+    """The object's mask, top row first: background is the colour around the picture's edge. With colour, also
+    returns the picture's colours on the same grid."""
     rgb = shrink(load_rgb(path), MAX_SIDE * 3)  # read finely, so a thin dark outline still closes the shape
     nan = np.isnan(rgb).any(axis=2)
     rgb = np.nan_to_num(rgb)
@@ -105,8 +108,10 @@ def outline(path):
     k = max(1, int(math.ceil(max(h, w) / MAX_SIDE)))
     h2, w2 = h // k, w // k
     mask = mask[:h2 * k, :w2 * k].reshape(h2, k, w2, k).mean(axis=(1, 3)) >= 0.5
+    small = rgb[:h2 * k, :w2 * k].reshape(h2, k, w2, k, 3).mean(axis=(1, 3))
     ys, xs = np.nonzero(mask)
-    return mask[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    crop = (slice(ys.min(), ys.max() + 1), slice(xs.min(), xs.max() + 1))
+    return (mask[crop], small[crop]) if colour else mask[crop]
 
 
 def distance(mask):
@@ -125,6 +130,107 @@ def distance(mask):
             if d[y, x]:
                 d[y, x] = min(d[y, x], d[y + 1, x] + a, d[y, x + 1] + a, d[y + 1, x + 1] + b, d[y + 1, x - 1] + b)
     return d[1:-1, 1:-1]
+
+
+def saturation(rgb):
+    hi, lo = rgb.max(axis=2), rgb.min(axis=2)
+    return np.where(hi > 1e-6, (hi - lo) / np.maximum(hi, 1e-6), 0)
+
+
+def prism(bm, base, tip, radius, sides=6, point=1.8, turn=0.0):
+    """A crystal: a six-sided prism from base toward tip, ending in a point point*radius long."""
+    base, tip = np.array(base, float), np.array(tip, float)
+    axis = tip - base
+    length = np.linalg.norm(axis)
+    if length < 1e-6:
+        return
+    axis /= length
+    side = np.cross(axis, (0, 0, 1.0))
+    if np.linalg.norm(side) < 1e-3:
+        side = np.cross(axis, (1.0, 0, 0))
+    side /= np.linalg.norm(side)
+    up = np.cross(axis, side)
+    neck = base + axis * max(length - point * radius, length * 0.4)
+    rings = []
+    for c in (base, neck):
+        rings.append([bm.verts.new(tuple(c + radius * (math.cos(a) * side + math.sin(a) * up)))
+                      for a in (turn + 2 * math.pi * j / sides for j in range(sides))])
+    apex = bm.verts.new(tuple(tip))
+    a, b = rings
+    for j in range(sides):
+        k = (j + 1) % sides
+        bm.faces.new((a[j], a[k], b[k], b[j]))
+        bm.faces.new((b[j], b[k], apex))
+    bm.faces.new(list(reversed(a)))
+
+
+def across(mask, x, y, px, py, most=60):
+    """Width in pixels of the run of mask through (x, y) along the direction (px, py)."""
+    h, w = mask.shape
+    n = 0
+    for sgn in (1, -1):
+        for k in range(1, most):
+            xx, yy = int(round(x + sgn * px * k)), int(round(y + sgn * py * k))
+            if not (0 <= yy < h and 0 <= xx < w and mask[yy, xx]):
+                break
+            n += 1
+    return n + 1
+
+
+def crystals(name, mask, rgb, unit, seed=3):
+    """A crystal cluster. The saturated part of the picture is crystal, the rest is the rock bed. Each crystal tip is
+    a peak of the crystal outline's reach from the cluster's foot, and becomes one prism pointing at it, as wide as
+    the picture's crystal is there. Prisms alternate a little toward and away from the viewer, so the cluster has
+    depth. The rock bed is inflated from its outline and kept low-poly."""
+    rng = np.random.default_rng(seed)
+    h, w = mask.shape
+    sat, val = saturation(rgb), rgb.max(axis=2)
+    rock = mask & (sat < max(0.18, otsu(sat[mask]))) & (val < 0.6)  # grey and dark; a white highlight is crystal
+    crystal = mask & ~rock
+    ys, xs = np.nonzero(crystal)
+    foot = np.array([np.median(xs), ys.max() - 0.12 * h])  # picture coords, y down
+    # reach of the crystal outline from the foot, per degree from straight up
+    ang = np.degrees(np.arctan2(xs - foot[0], foot[1] - ys))
+    reach = np.hypot(xs - foot[0], ys - foot[1])
+    bins = np.full(181, 0.0)
+    for a, r in zip(np.round(ang).astype(int) + 90, reach):
+        if 0 <= a <= 180 and r > bins[a]:
+            bins[a] = r
+    sm = np.convolve(bins, np.ones(5) / 5, mode="same")
+    tips = []
+    for a in range(3, 178):
+        win = sm[max(0, a - 6):a + 7]
+        if sm[a] > 0.18 * h and sm[a] == win.max() and sm[a] - win.min() > 0.03 * h:
+            if not tips or a - tips[-1] >= 6:
+                tips.append(a)
+    bm = bmesh.new()
+    for i, a in enumerate(tips):
+        th = math.radians(a - 90)
+        L = bins[max(0, a - 2):a + 3].max()
+        dx, dy = math.sin(th), -math.cos(th)
+        samples = [across(crystal, foot[0] + dx * L * t, foot[1] + dy * L * t, dy, -dx) for t in np.linspace(0.55, 0.85, 7)]
+        r = max(1.5, float(np.median(samples)) * 0.5)
+        r = min(r, 0.09 * h)
+        depth = rng.uniform(0.3, 1.0) * (1 if i % 2 else -1) * L * 0.35
+        to3 = lambda px, py, z=0.0: ((px - w / 2) * unit, (h - 1 - py) * unit, z * unit)
+        base = to3(foot[0] + dx * L * 0.12, foot[1] + dy * L * 0.12, 0)
+        tip = to3(foot[0] + dx * L, foot[1] + dy * L, depth)
+        prism(bm, base, tip, r * unit * 0.95, turn=rng.uniform(0, math.pi / 3))
+    ob = to_object(name, bm)
+    for p in ob.data.polygons:
+        p.use_smooth = False
+    parts = [ob]
+    if rock.sum() > 0.04 * mask.sum():
+        bed = inflate(name + "_bed", rock, unit, stride=2, swell=1.7)
+        m = bed.modifiers.new("low", "DECIMATE")
+        m.ratio = min(1.0, 220 / max(1, len(bed.data.polygons)))
+        bpy.context.view_layer.update()
+        bed.data = bpy.data.meshes.new_from_object(bed.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+        bed.modifiers.clear()
+        for p in bed.data.polygons:
+            p.use_smooth = False
+        parts.append(bed)
+    return parts, len(tips)
 
 
 # ---- building ------------------------------------------------------------------------------------
@@ -219,6 +325,18 @@ def inflate(name, mask, unit, stride=2, swell=1.25):
     return out
 
 
+def place(parts):
+    """Puts the parts' shared base on y=0 and centres them together on x=0 and z=0."""
+    v = np.concatenate([np.array([p.co[:] for p in ob.data.vertices]) for ob in parts])
+    lo, hi = v.min(axis=0), v.max(axis=0)
+    shift = np.array([-(lo[0] + hi[0]) / 2, -lo[1], -(lo[2] + hi[2]) / 2])
+    for ob in parts:
+        for p in ob.data.vertices:
+            p.co = tuple(np.array(p.co[:]) + shift)
+        ob.data.update()
+    return parts
+
+
 def fit(ob, faces):
     """Decimates to the face budget, puts the base on y=0 and centres it on x=0 and z=0."""
     bpy.context.view_layer.objects.active = ob
@@ -269,8 +387,11 @@ def silhouette(ob, shape, unit):
 
 
 def match(ob, mask, unit):
-    """Outline overlap of model and picture, at the best sideways shift (where the piece sits is free)."""
-    sil0 = silhouette(ob, mask.shape, unit)
+    """Outline overlap of model and picture, at the best sideways shift (where the piece sits is free). ob may be a
+    list of parts, scored together."""
+    sil0 = np.zeros(mask.shape, bool)
+    for part in (ob if isinstance(ob, list) else [ob]):
+        sil0 |= silhouette(part, mask.shape, unit)
     best = (sil0, 0.0)
     w = mask.shape[1]
     for dx in range(-w // 6, w // 6 + 1):
@@ -282,15 +403,17 @@ def match(ob, mask, unit):
 
 
 def render(ob, out_png, yaw_deg, size=480):
-    """A plain clay render of the piece, to stand beside its picture."""
+    """A plain clay render of the piece (or list of parts), to stand beside its picture."""
+    parts = ob if isinstance(ob, list) else [ob]
     sc = bpy.context.scene
     for o in list(sc.objects):
         if o.type in ("CAMERA", "LIGHT"):
             bpy.data.objects.remove(o)
-    v = np.array([p.co[:] for p in ob.data.vertices])
+    v = np.concatenate([np.array([p.co[:] for p in o.data.vertices]) for o in parts])
     hi = v.max(axis=0)
     span = max(hi[1], np.ptp(v[:, 0]), np.ptp(v[:, 2]))
-    ob.rotation_euler = (math.radians(90), 0, math.radians(yaw_deg))  # page axes (Y up) to Blender's (Z up)
+    for o in parts:
+        o.rotation_euler = (math.radians(90), 0, math.radians(yaw_deg))  # page axes (Y up) to Blender's (Z up)
     cam_data = bpy.data.cameras.new("cam")
     cam_data.type = "ORTHO"
     width = max(np.ptp(v[:, 0]), np.ptp(v[:, 2]))
@@ -304,12 +427,13 @@ def render(ob, out_png, yaw_deg, size=480):
     sun.data.energy = 3.5
     sun.rotation_euler = (math.radians(55), 0, math.radians(-40))
     sc.collection.objects.link(sun)
-    if not ob.data.materials:
-        mat = bpy.data.materials.new("clay")
-        mat.use_nodes = True
-        mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.72, 0.68, 0.62, 1)
-        mat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.9
-        ob.data.materials.append(mat)
+    for o in parts:
+        if not o.data.materials:
+            mat = bpy.data.materials.new("clay")
+            mat.use_nodes = True
+            mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.72, 0.68, 0.62, 1)
+            mat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.9
+            o.data.materials.append(mat)
     sc.render.engine = "CYCLES"  # Workbench and EEVEE need a GPU; the cloud has none
     sc.cycles.device = "CPU"
     sc.cycles.samples = 16
@@ -320,12 +444,20 @@ def render(ob, out_png, yaw_deg, size=480):
     sc.render.resolution_y = size
     sc.render.filepath = out_png
     bpy.ops.render.render(write_still=True)
-    ob.rotation_euler = (0, 0, 0)
+    for o in parts:
+        o.rotation_euler = (0, 0, 0)
 
 
 def build(name, mask, unit, mode, faces):
     """Builds, fits to the face budget and scores the piece. For inflate, tries a few swells (the balls' surface
-    sits inside their radius) and keeps the one whose outline fits the picture best."""
+    sits inside their radius) and keeps the one whose outline fits the picture best. Returns the parts (one, or
+    for crystals the cluster and its rock bed), the model's outline and the outline match."""
+    if mode == "crystals":
+        mask, rgb = mask
+        parts, _ = crystals(name, mask, rgb, unit)
+        place(parts)
+        sil, iou = match(parts, mask, unit)
+        return parts, sil, iou
     ob = fit((lathe if mode == "lathe" else inflate)(name, mask, unit), faces)
     sil, iou = match(ob, mask, unit)
     if mode == "inflate":
@@ -338,14 +470,14 @@ def build(name, mask, unit, mode, faces):
                 ob.name = ob.data.name = name
             else:
                 bpy.data.objects.remove(trial)
-    return ob, sil, iou
+    return [ob], sil, iou
 
 
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("picture")
     ap.add_argument("out")
-    ap.add_argument("--mode", choices=("lathe", "inflate"), required=True)
+    ap.add_argument("--mode", choices=("lathe", "inflate", "crystals"), required=True)
     ap.add_argument("--height", type=float, required=True, help="height of the piece in page units")
     ap.add_argument("--name", required=True)
     ap.add_argument("--faces", type=int, default=600)
@@ -353,24 +485,25 @@ def main(argv):
     a = ap.parse_args(argv)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    mask = outline(a.picture)
-    unit = a.height / mask.shape[0]
-    ob, sil, iou = build(a.name, mask, unit, a.mode, a.faces)
-    v = np.array([p.co[:] for p in ob.data.vertices])
+    mask = outline(a.picture, colour=a.mode == "crystals")
+    unit = a.height / (mask[0] if a.mode == "crystals" else mask).shape[0]
+    parts, sil, iou = build(a.name, mask, unit, a.mode, a.faces)
+    mask = mask[0] if a.mode == "crystals" else mask
+    v = np.concatenate([np.array([p.co[:] for p in o.data.vertices]) for o in parts])
     size = [round(float(x), 3) for x in v.max(axis=0) - v.min(axis=0)]
     for o in list(bpy.context.scene.objects):
-        o.select_set(o is ob)
-    bpy.context.view_layer.objects.active = ob
+        o.select_set(o in parts)
+    bpy.context.view_layer.objects.active = parts[0]
     bpy.ops.export_scene.gltf(filepath=os.path.abspath(a.out), export_format="GLB", use_selection=True,
                               export_apply=True, export_yup=False, export_normals=True, export_texcoords=False,
                               export_materials="NONE")
-    report = {"name": a.name, "mode": a.mode, "picture": os.path.basename(a.picture), "faces": len(ob.data.polygons),
+    report = {"name": a.name, "mode": a.mode, "picture": os.path.basename(a.picture), "faces": sum(len(o.data.polygons) for o in parts),
               "size_xyz": size, "outline_match": round(iou, 3), "bytes": os.path.getsize(a.out)}
     if a.render:
         os.makedirs(a.render, exist_ok=True)
         np.save(os.path.join(a.render, a.name + "_mask.npy"), np.stack([mask, sil]))
-        render(ob, os.path.join(a.render, a.name + "_front.png"), 0)
-        render(ob, os.path.join(a.render, a.name + "_three_quarter.png"), 40)
+        render(parts, os.path.join(a.render, a.name + "_front.png"), 0)
+        render(parts, os.path.join(a.render, a.name + "_three_quarter.png"), 40)
     print("REPORT " + json.dumps(report))
     return report
 

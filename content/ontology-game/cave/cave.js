@@ -393,11 +393,11 @@
     return pe;
   }
 
-  // Chamber dressing from the kit: stone_spire, glow_cap and root_curl, each built in Blender from a picture
-  // (build_kit.py, pictures/). Spires stand at the foot of the wall, glow caps grow in twos and threes, roots hang from
-  // the roof. Nothing is set near a stop, and a piece where a side passage opens is hidden. An older kit without the
+  // Chamber dressing from the kit: stone_spire, glow_cap, root_curl and crystal_cluster (with its rock bed), each built
+  // in Blender from a picture (build_kit.py, pictures/). Spires stand at the foot of the wall, glow caps grow in twos
+  // and threes, roots hang from the roof, crystals sit on their rocks. Nothing is set near a stop, and a piece where a side passage opens is hidden. An older kit without the
   // pieces leaves the chamber bare. The same seed dresses the same way.
-  var DRESS_ROOT = 0x4a3426, DRESS_GLOW = 0x7fe8c8;
+  var DRESS_ROOT = 0x4a3426, DRESS_GLOW = 0x7fe8c8, DRESS_CRYSTAL = 0x8f84ff;
   function buildDressing(THREE, route, G, o) {
     var g = new THREE.Group(), items = [];
     g.userData.items = items;
@@ -405,6 +405,7 @@
     var rnd = rngOf(hashOf(o.seed)), w = o.w, h = o.h, floorY = -h * 0.92;
     var rootMat = new THREE.MeshStandardMaterial({ color: DRESS_ROOT, roughness: 0.9 });
     var capMat = new THREE.MeshStandardMaterial({ color: DRESS_GLOW, emissive: DRESS_GLOW, emissiveIntensity: 0.55, roughness: 0.6 });
+    var crystalMat = new THREE.MeshStandardMaterial({ color: DRESS_CRYSTAL, emissive: DRESS_CRYSTAL, emissiveIntensity: 0.45, roughness: 0.25, flatShading: true });
     var keepClear = (route.stops || []).map(function (st) { return st.s; }).concat(o.clear || []);
     function clear(s) { return keepClear.every(function (c) { return Math.abs(c - s) > 2.5; }); }
     function put(piece, mat, s, sd, off, y, size, hang) {
@@ -417,9 +418,14 @@
     for (var s = o.s0 + 3; s < o.s1 - 3; s += 4 + rnd() * 3) {
       var sd = rnd() < 0.5 ? -1 : 1, k = rnd();
       if (!clear(s)) continue;
-      if (k < 0.4) put("stone_spire", o.rock, s, sd, 0.36, floorY - 0.05, h * (0.28 + rnd() * 0.18));
-      else if (k < 0.75) for (var i = 0, n = 2 + Math.floor(rnd() * 2); i < n; i++) put("glow_cap", capMat, s + (i - 1) * 0.45, sd, 0.3 + rnd() * 0.08, floorY, h * (0.12 + rnd() * 0.1));
-      else put("root_curl", rootMat, s, sd, 0.22, h * 0.9, h * (0.3 + rnd() * 0.1), true);
+      if (G.crystal_cluster && k >= 0.85) {
+        var cs = h * (0.4 + rnd() * 0.15), turn = rnd() * Math.PI * 2;
+        put("crystal_cluster", crystalMat, s, sd, 0.32, floorY - 0.03, cs); items[items.length - 1].mesh.rotation.y = turn;
+        put("crystal_cluster_bed", o.rock, s, sd, 0.32, floorY - 0.03, cs); items[items.length - 1].mesh.rotation.y = turn;
+      }
+      else if (k < 0.35) put("stone_spire", o.rock, s, sd, 0.36, floorY - 0.05, h * (0.28 + rnd() * 0.18));
+      else if (k < 0.65) for (var i = 0, n = 2 + Math.floor(rnd() * 2); i < n; i++) put("glow_cap", capMat, s + (i - 1) * 0.45, sd, 0.3 + rnd() * 0.08, floorY, h * (0.12 + rnd() * 0.1));
+      else if (k < 0.85) put("root_curl", rootMat, s, sd, 0.22, h * 0.9, h * (0.3 + rnd() * 0.1), true);
     }
     if (route.tube) {
       var addHole = route.tube.addHole;

@@ -101,7 +101,7 @@ await page.screenshot({ path: SHOTS + '/cave-start.png' });
 
 // ---- chamber dressing: pieces built in Blender from pictures (build_kit.py, pictures/) ----------------
 const kitPieces = await C(() => window.__oagCave.load().then((a) => Object.keys(a.kit).sort()));
-ok(['glow_cap', 'root_curl', 'stone_spire'].every((p) => kitPieces.includes(p)), `the kit carries the dressing built from pictures (${kitPieces.join(', ')})`);
+ok(['crystal_cluster', 'crystal_cluster_bed', 'glow_cap', 'root_curl', 'stone_spire'].every((p) => kitPieces.includes(p)), `the kit carries the dressing built from pictures (${kitPieces.join(', ')})`);
 const dressing = await state('s.dressing');
 ok(Array.isArray(dressing) && dressing.length >= 4 && new Set(dressing).size >= 2, `the chamber is dressed with ${dressing.length} pieces of ${new Set(dressing).size} kinds`);
 

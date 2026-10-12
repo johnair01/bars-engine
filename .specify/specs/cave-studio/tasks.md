@@ -38,8 +38,11 @@
 ## Next
 
 - [ ] [wendell] Look at the comparison page and say whether the models are close enough to trust (board step).
-- [ ] [wendell] The Drive step above, with the prompt on the comparison page: one ChatGPT picture in `Cave studio inbox`.
-- [ ] [claude] Build his first picture with `from_picture.py`, add it as a `DRESSING` row in `build_kit.py`, show it.
+- [ ] [claude] Crystal mode finds six crystals where his picture has about ten, and the rocks are rounder: next pass.
+- [x] [wendell] The Drive step above: `cave-crystal-growth.png` in `Cave studio inbox`, 2026-10-12.
+- [x] [claude] Built his first picture: outline modes gave a blob (0.88), so `from_picture.py` gained `--mode crystals`
+  (one prism per crystal tip, rock bed underneath, 0.83). It is a `DRESSING` row in `build_kit.py` and dresses the
+  chambers (kit 84 KB; 126 of 126 checks). On the comparison page as the first row.
 
 ## Verify and ship
 
