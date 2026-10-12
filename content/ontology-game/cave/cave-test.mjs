@@ -446,6 +446,7 @@ for (const round of [1, 2]) {
     await page.waitForTimeout(2500); glow9 = await C(() => window.__oagCave.daemonGlow());
     ok(glow9.allowed && glow9.scale > 1.85 && glow9.level > 0.5, `the daemon grows to the size set (×${glow9.scale.toFixed(2)}) and glows with its charge (${glow9.level.toFixed(2)})`);
     await page.screenshot({ path: SHOTS + '/cave-daemon-allowed.png' });
+    ok(await page.locator('[data-cave-321-skip]').count() === 0, 'the 3-2-1 with a daemon in the way has no skip');
     await page.locator('[data-cave-321-start]').click();
   }
   ok(await sees('[data-cave-321-step="it"]'), `3-2-1 round ${round}: 3 Face it`);
@@ -594,7 +595,7 @@ await page.locator('[data-room-resume]').click();
 ok((await page.locator('[data-room-goal]').inputValue()) === '' && await sees('[data-room-goal-ask]'), 'Go back in returns to the same step');
 await page.locator('[data-room-goal]').fill('a quiet evening');
 await page.locator('[data-room-push="toward"]').click();
-ok(await sees('[data-cave-321-start]'), 'Stays: the 3-2-1 begins with a charge reading');
+ok(await sees('[data-cave-321-start]') && await sees('[data-cave-321-skip]'), 'Stays: the 3-2-1 begins with a charge reading, and can be skipped');
 await page.locator('[data-cave-321-start]').click();
 ok((await page.locator('[data-cave-321-aim]').textContent()).includes('a quiet evening'), 'the 3-2-1 is aimed at what the player wants');
 await say('it', 'a knot under the chin');

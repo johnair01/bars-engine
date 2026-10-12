@@ -706,7 +706,7 @@
       var S = st.sit; if (!S) return;
       var nm = S.name.trim() || S.gen, standBtn = btn("Stand up", function () { standUp("stood"); }, { class: "bm-link", "data-bm-standup": "" });
       if (S.phase === "stays") {
-        var k = [], title = K.talk321(S.t321, { name: nm, damaged: false, redraw: sitDraw, focus: function () { K.focusChat(modal); }, where: SIT_WHERE, aim: "Aimed at what you want: " + S.goal,
+        var k = [], title = K.talk321(S.t321, { name: nm, damaged: false, skippable: true, redraw: sitDraw, focus: function () { K.focusChat(modal); }, where: SIT_WHERE, aim: "Aimed at what you want: " + S.goal,
           ask: function (body) {
             body.push(guide("What is one next move toward " + S.goal + "? Write it."));
             var done = btn("That's my move", function () { standUp("stays"); }, { "data-bm-sitmovedone": "" });

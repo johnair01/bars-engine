@@ -151,7 +151,7 @@
       else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
       else e.setAttribute(k, attrs[k]);
     });
-    (kids || []).forEach(function (c) { e.appendChild(c); });
+    (kids || []).forEach(function (c) { if (c) e.appendChild(c); });
     return e;
   }
 
@@ -691,7 +691,9 @@
   ];
   // talk321(t, o, body): o = { name, damaged (the Damaged Self's check before Be it), redraw, focus, where (the staged
   // places' words, by step), aim (a line shown on every step, or none), before(body) (more for the first page, or none),
-  // ask(body) (the last page, after the charge reading) }.
+  // ask(body) (the last page, after the charge reading), skippable (a Skip button on every page that goes straight to ask) }.
+  // Wendell, 12 October 2026, 23:11: "321s are optional and should have an option to skip". The sit-down and the WAVE room
+  // pass skippable; the cave's 3-2-1 with a daemon in the way does not, since it is how the daemon steps aside.
   // The cave aims it at the daemon standing in the way; the WAVE room aims it at what the player wants right now.
   var WHERE_CAVE = { 3: "You are looking at it from across the chamber.", 2: "You are face to face with it.", 1: "You are standing where it stood.", check: "You are face to face with it.", after: "You have stepped back to your own place.", paused: "You are across the chamber, at your own place." };
   function talk321(t, o, body) {
@@ -704,6 +706,7 @@
       return el("div", { class: "oagc-slide" }, [inp, out]);
     }
     var stepBack = btn("Step back", { "data-cave-321-back": "" }, function () { t.draft = ""; t.paused = true; o.redraw(); }, true);
+    var skip = o.skippable ? btn("Skip the 3-2-1", { "data-cave-321-skip": "" }, function () { t.draft = ""; t.skipped = true; t.phase = "ask"; o.redraw(); }, true) : null;
     if (t.paused) {
       body.push(P("Stepped back", { "data-cave-321-step": "paused" }));
       body.push(P(WHERE.paused + " " + n + " still stands there, and your words are kept. Nothing is skipped."));
@@ -713,7 +716,7 @@
       body.push(P("How charged is this with " + n + " right now? The 3-2-1 cools it into something you can work with: face it, talk to it, be it."));
       body.push(slider("before"));
       if (o.before) o.before(body);
-      body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; o.redraw(); })]));
+      body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; o.redraw(); }), skip]));
     } else if (ph === "after") {
       body.push(P("After the 3-2-1", { "data-cave-321-step": "after" }));
       body.push(P(WHERE.after, { "data-cave-321-where": "" }));
@@ -765,7 +768,7 @@
       ta.addEventListener("input", function () { t.draft = ta.value; });
       ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); send(); } });
       body.push(el("div", { class: "oagc-compose" }, [ta, el("button", { "data-cave-321-send": "", "aria-label": "Send", text: "↑", onclick: send })]));
-      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && o.damaged ? "check" : ph - 1; o.redraw(); }), stepBack]));
+      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && o.damaged ? "check" : ph - 1; o.redraw(); }), stepBack, skip]));
     }
     return title;
   }
@@ -2236,7 +2239,7 @@
           return { title: w[1], kids: k };
         }
         if (ph === "stays") {
-          var title = talk321(ch.t321, { name: nm(), damaged: false, redraw: draw, focus: function () { focusChat(modal); }, where: WHERE_ROOM, aim: "Aimed at what you want: " + ch.goal,
+          var title = talk321(ch.t321, { name: nm(), damaged: false, skippable: true, redraw: draw, focus: function () { focusChat(modal); }, where: WHERE_ROOM, aim: "Aimed at what you want: " + ch.goal,
             ask: function (body) {
               body.push(P("What is one next move toward " + ch.goal + "? Write it.", { "data-room-move-ask": "" }));
               var done = btn("That's my move", { "data-room-move-done": "" }, function () { keep(); });

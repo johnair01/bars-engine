@@ -397,13 +397,14 @@ await page.click('[data-bm-sitpush="toward"]');
 ok(await waitStep('sit-321'), 'toward it runs the room\'s 3-2-1, aimed at the goal');
 await page.click('[data-cave-321-start]');
 ok(/Aimed at what you want: rest/.test(await page.textContent('[data-bm-modal]')), 'the 3-2-1 shows the aim');
+ok(await page.locator('[data-cave-321-skip]').count() === 1, 'every page of the 3-2-1 can be skipped');
 await page.click('[data-cave-321-next]'); // to Talk to it
 for (const line of ['Why are you here', 'To keep you safe', 'From what', 'From being seen']) { await page.fill('[data-cave-321-text]', line); await page.press('[data-cave-321-text]', 'Enter'); }
 const chat = await page.evaluate(() => { const m = document.querySelector('[data-bm-modal]'), i = m.querySelector('[data-cave-321-text]'), a = m.getBoundingClientRect(), b = i.getBoundingClientRect();
   return { inView: b.top >= a.top && b.bottom <= a.bottom, focused: document.activeElement === i, voice: m.querySelector('[data-cave-321-voice][aria-pressed="true"]').getAttribute('data-cave-321-voice') }; });
 ok(chat.inView && chat.focused && chat.voice === 'you', 'in Talk to it the text box stays in view and keeps focus line after line, and the voice switches each line');
-for (let i = 0; i < 2; i++) await page.click('[data-cave-321-next]');
-await page.click('[data-cave-321-after]');
+await page.click('[data-cave-321-skip]');
+ok(await page.locator('[data-bm-sitmove]').count() === 1, 'Skip goes straight to the next move');
 await page.fill('[data-bm-sitmove]', 'lie down');
 await page.click('[data-bm-sitmovedone]');
 await page.waitForFunction(() => window.__oagBigMind.spirits.length === 1 && !window.__oagBigMind.sitting(), null, { timeout: 8000 }).catch(() => {});
