@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdf-parse-new"],
+  // The 321 ingest route reads files by a computed path, so the build traces the whole project into its function,
+  // public/ included (161 MB of art and game builds), and the function crossed Vercel's 250 MB limit on 12 October 2026.
+  // The route reads only from the Library folder outside the project, never from public/ or content/.
+  outputFileTracingExcludes: {
+    "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "20mb",
