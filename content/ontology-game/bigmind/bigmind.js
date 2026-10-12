@@ -642,7 +642,7 @@
     // spirit: a spirit sat with again. via: what the sitting came from (the button, a block in a W.A.V.E., or a spirit).
     // A charge needs no name to be sat with: the game gives each one a name of its own to keep track of it, and the player
     // can name it in their own words at Acknowledge or once they have been through it, at Validate.
-    var NAME_A = ["Quiet", "Restless", "Heavy", "Small", "Bright", "Low", "Tangled", "Soft", "Warm", "Cold", "Hollow", "Humming"];
+    var NAME_A = ["Slow", "Restless", "Heavy", "Small", "Bright", "Low", "Tangled", "Soft", "Warm", "Cold", "Hollow", "Humming"];
     var NAME_B = ["Moth", "Stone", "Drum", "Knot", "Ember", "Tide", "Thorn", "Lantern", "Pebble", "Root", "Bell", "Wren"];
     function genName() {
       var taken = spirits.map(function (o) { return o.name; }), n;
