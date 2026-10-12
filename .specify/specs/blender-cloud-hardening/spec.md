@@ -25,6 +25,19 @@ and a stop condition. Nothing here changes what the published viewer shows.
 - The chair's UDIM image has one tile (1001). The single-tile workaround was correct for it. Other assets are untested.
 - Blender 5.2.2 for Linux is listed on download.blender.org. Not downloaded or tried.
 
+## Found in task 2.3 (2026-10-12): a seventh problem, and it is a licence one
+
+BlenderKit is now Blendkit (www.blendkit.com; the API host api.blenderkit.com still works). Its terms
+(/terms-and-conditions-2021/, article 5) say a Royalty Free model used in "web or mobile applications" may
+only be used if "access to the product will be disabled outside the user's software", "in such a format that it
+cannot be opened or separated by a third party", and the software "may not contain any functionality that would
+allow end users to export any 3D model from the software or embed any open-format 3D model." Images and
+renders are fine. CC0 assets have no such limit.
+
+The published viewer embeds the royalty-free chair as a plain GLB, so anyone who opens the page can extract it.
+It breaks that term as published. Fix: embed only CC0 assets in a page (`license:cc_zero` is a working search
+filter, 214 CC0 chairs); royalty-free assets are for renders and previews only.
+
 ## The six problems
 
 | # | Problem | Fix | Test |
@@ -40,6 +53,7 @@ and a stop condition. Nothing here changes what the published viewer shows.
 
 | Decision | Choice | Whose |
 |---|---|---|
+| Embed only CC0 models in published pages | Search with `license:cc_zero`; the fetch script refuses other licences for embedding | Blendkit terms art. 5 (read 2026-10-12) |
 | Default asset file type | glTF, decoded locally, over `.blend` | council (spike result) |
 | Decode tool | `@gltf-transform/cli` via npx | council (spike result); alternative kept: the full Blender build |
 | Multi-tile UDIM | Stop with a message; no atlas baking | council: baking changes UVs and is more code than the problem warrants |
@@ -47,8 +61,10 @@ and a stop condition. Nothing here changes what the published viewer shows.
 
 ## Reserved items
 
-- Whether BlenderKit's terms allow scripted downloads, and what attribution their licence needs beyond the
-  author credit already on the page. Task 2.3 reads them. If they are unclear, that becomes a board question, not a decision here.
+- Whether scripted downloads are allowed. The terms and licence pages say nothing against API use, and the
+  terms name APIs among the ways to reach the service. Nothing found either way; a missing rule is not a grant.
+  If Wendell wants it certain, the question for Blendkit is whether scripted API downloads are fine.
+- Royalty Free reuse inside software, as above: resolved by the CC0-only rule for embedded models.
 
 ## How we will know it failed
 
