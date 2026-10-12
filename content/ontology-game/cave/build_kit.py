@@ -3,7 +3,8 @@
 Run with Blender's Python module (pip install bpy, 5.2.2 for Python 3.13):
     python3 content/ontology-game/cave/build_kit.py
 Output, both committed so the site build needs no Blender:
-    cave-kit.glb  six unit pieces the page scales and bends to each spot (DESIGN.md, "How it is built")
+    cave-kit.glb  six unit pieces the page scales and bends to each spot (DESIGN.md, "How it is built"), and the
+                  chamber dressing, each piece built from a picture in pictures/ (DRESSING below)
     spots.json    one row per named place on the figure: width, height, length, bend, light side
 
 Pieces are authored in the page's own axes (Y up, a passage along -Z) and exported with export_yup=False so the
@@ -16,11 +17,15 @@ import os
 import random
 import struct
 
+import sys
+
 import bpy
 import bmesh
 from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "tools", "blender-cloud"))
+import from_picture  # noqa: E402  the cave studio's picture-to-model tool
 FIGURE = os.path.join(HERE, "..", "body", "figure.glb")
 OUT_KIT = os.path.join(HERE, "cave-kit.glb")
 OUT_SPOTS = os.path.join(HERE, "spots.json")
@@ -220,9 +225,30 @@ def portal_arch():
     return to_object("portal_arch", bm)
 
 
+# ---- chamber dressing, built from pictures -------------------------------------------------------
+# One row per piece: name, picture in pictures/, how it is built, faces. Each is one unit high; the page sizes it.
+# A picture is concept art only (Wendell, cs-chatgpt-ai-art): the piece is rebuilt here and is own work. To build from
+# a new picture, put it in pictures/ and add a row; manifest.json names the picture each piece came from.
+DRESSING = [
+    ("stone_spire", "stone_spire.jpg", "lathe", 160),
+    ("glow_cap", "glow_cap.jpg", "lathe", 300),
+    ("root_curl", "root_curl.jpg", "inflate", 500),
+]
+
+
+def dressing():
+    out = {}
+    for name, picture, mode, faces in DRESSING:
+        mask = from_picture.outline(os.path.join(HERE, "pictures", picture))
+        unit = 1.0 / mask.shape[0]
+        out[name] = round(from_picture.build(name, mask, unit, mode, faces)[2], 3)
+    return out
+
+
 if __name__ == "__main__":
     for build in (wall_ring, floor, pool, gate_stone, portal_arch, path_tube):
         build()
+    matches = dressing()
     mat = bpy.data.materials.new("Rock")
     mat.diffuse_color = (0.55, 0.5, 0.46, 1.0)
     for ob in scene.objects:
@@ -236,3 +262,4 @@ if __name__ == "__main__":
                    "spots": spots}, f, indent=1)
         f.write("\n")
     print(f"wrote {OUT_KIT}: {os.path.getsize(OUT_KIT) // 1024} KB; {OUT_SPOTS}: {len(spots)} spots")
+    print("outline match, model against picture: " + json.dumps(matches))

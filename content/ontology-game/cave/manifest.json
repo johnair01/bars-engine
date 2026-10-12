@@ -25,9 +25,43 @@
         "pool",
         "gate_stones",
         "portal_arch",
-        "path_tube"
+        "path_tube",
+        "stone_spire",
+        "glow_cap",
+        "root_curl"
       ],
-      "bytes": 16916
+      "bytes": 48376,
+      "dressing": [
+        {
+          "piece": "stone_spire",
+          "built_from": "pictures/stone_spire.jpg",
+          "how": "lathe",
+          "outline_match": 0.987
+        },
+        {
+          "piece": "glow_cap",
+          "built_from": "pictures/glow_cap.jpg",
+          "how": "lathe",
+          "outline_match": 0.974
+        },
+        {
+          "piece": "root_curl",
+          "built_from": "pictures/root_curl.jpg",
+          "how": "inflate",
+          "outline_match": 0.89
+        }
+      ],
+      "dressing_note": "Built in Blender from the pictures by tools/blender-cloud/from_picture.py (cave studio, 2026-10-12). A picture is concept only (cs-chatgpt-ai-art); the built piece is own work. outline_match is the overlap of the model's front outline with the picture's, 1.0 exact."
+    },
+    {
+      "id": "cave.pictures",
+      "file": "pictures/",
+      "kind": "concept pictures",
+      "source": "pictures/draw_standins.py (stand-ins drawn in code until a ChatGPT picture arrives)",
+      "licence": "own work",
+      "status": "built",
+      "ships": false,
+      "bytes": 158197
     },
     {
       "id": "cave.spots",

@@ -393,6 +393,44 @@
     return pe;
   }
 
+  // Chamber dressing from the kit: stone_spire, glow_cap and root_curl, each built in Blender from a picture
+  // (build_kit.py, pictures/). Spires stand at the foot of the wall, glow caps grow in twos and threes, roots hang from
+  // the roof. Nothing is set near a stop, and a piece where a side passage opens is hidden. An older kit without the
+  // pieces leaves the chamber bare. The same seed dresses the same way.
+  var DRESS_ROOT = 0x4a3426, DRESS_GLOW = 0x7fe8c8;
+  function buildDressing(THREE, route, G, o) {
+    var g = new THREE.Group(), items = [];
+    g.userData.items = items;
+    if (!G.stone_spire || !G.glow_cap || !G.root_curl) return g;
+    var rnd = rngOf(hashOf(o.seed)), w = o.w, h = o.h, floorY = -h * 0.92;
+    var rootMat = new THREE.MeshStandardMaterial({ color: DRESS_ROOT, roughness: 0.9 });
+    var capMat = new THREE.MeshStandardMaterial({ color: DRESS_GLOW, emissive: DRESS_GLOW, emissiveIntensity: 0.55, roughness: 0.6 });
+    var keepClear = (route.stops || []).map(function (st) { return st.s; }).concat(o.clear || []);
+    function clear(s) { return keepClear.every(function (c) { return Math.abs(c - s) > 2.5; }); }
+    function put(piece, mat, s, sd, off, y, size, hang) {
+      var a = at(route, s), m = new THREE.Mesh(G[piece], mat);
+      m.position.set(a.x + -a.fz * sd * w * off, a.y + y, a.z + a.fx * sd * w * off);
+      m.scale.setScalar(size); m.rotation.y = rnd() * Math.PI * 2;
+      if (hang) m.rotation.x = Math.PI;
+      g.add(m); items.push({ piece: piece, s: s, side: sd, mesh: m });
+    }
+    for (var s = o.s0 + 3; s < o.s1 - 3; s += 4 + rnd() * 3) {
+      var sd = rnd() < 0.5 ? -1 : 1, k = rnd();
+      if (!clear(s)) continue;
+      if (k < 0.4) put("stone_spire", o.rock, s, sd, 0.36, floorY - 0.05, h * (0.28 + rnd() * 0.18));
+      else if (k < 0.75) for (var i = 0, n = 2 + Math.floor(rnd() * 2); i < n; i++) put("glow_cap", capMat, s + (i - 1) * 0.45, sd, 0.3 + rnd() * 0.08, floorY, h * (0.12 + rnd() * 0.1));
+      else put("root_curl", rootMat, s, sd, 0.22, h * 0.9, h * (0.3 + rnd() * 0.1), true);
+    }
+    if (route.tube) {
+      var addHole = route.tube.addHole;
+      route.tube.addHole = function (H) {
+        addHole(H);
+        items.forEach(function (it) { if (it.side === H.side && it.s > H.s0 - 1.5 && it.s < H.s1 + 1.5) it.mesh.visible = false; });
+      };
+    }
+    return g;
+  }
+
   // A glowing marker floating just ahead of a stand; the lit ones stay lit.
   function buildMarker(THREE, w, h, color) {
     return new THREE.Mesh(new THREE.SphereGeometry(Math.min(0.55, w * 0.14), 14, 10), new THREE.MeshBasicMaterial({ color: color || 0xfff1b0, transparent: true, opacity: 0.4 }));
@@ -866,6 +904,9 @@
       };
       main.tube = buildTube(THREE, main, { w: w, h: h, rock: parts.rock, openAt: main.openAt, seed: hashOf(s.spot.id) % 97 });
       main.group.add(main.tube.mesh); main.group.add(buildPebbles(THREE, main, w, h, 0, main.len));
+      main.dressing = buildDressing(THREE, main, G, { w: w, h: h, rock: parts.rock, s0: 0, s1: main.len, seed: s.spot.id + ":" + s.texture + ":dress", clear: [main.startS + 9, main.exitS] });
+      main.group.add(main.dressing);
+      state.dressing = main.dressing.userData.items.map(function (it) { return it.piece; });
       main.markers = main.stops.map(function (st, i) {
         var m = buildMarker(THREE, w, h, STEP_LOOK[i].light), a = at(main, st.s + MARK_AHEAD); m.position.set(a.x, a.y - h * 0.92 + MARK_Y, a.z); main.group.add(m); return m;
       });
@@ -1014,6 +1055,7 @@
       route.openAt = function () { return SIDE_LOOK.open; };
       route.tube = buildTube(THREE, route, { w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN });
       route.group.add(route.tube.mesh); route.group.add(buildPebbles(THREE, route, o.wb, h, route.sFrom, route.sTo));
+      route.group.add(buildDressing(THREE, route, parts.G, { w: o.wb, h: h, rock: rock, s0: route.sFrom, s1: route.sTo, seed: kind + ":" + depth + ":" + blockN }));
       // the two openings get a glowing rim each, and a lantern stands between them
       route.rims = route.holes.map(function (H) {
         var a = at(parent, (H.s0 + H.s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));

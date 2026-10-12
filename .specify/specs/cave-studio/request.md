@@ -67,9 +67,31 @@ Three questions on the board, each with the council's lean marked: `cs-chatgpt-a
 how is it marked), `cs-first-piece` (which piece first), `cs-asset-kind` (what the ChatGPT assets are). Seven
 positions stand unless he flips them. His answers will be quoted here, with the date, when he saves them.
 
+**His answers, saved on the board 2026-10-12 between 22:25 and 22:29 UTC** (ledger `2026-10-12-pull-222843.json` and
+`2026-10-12-pull-222920.json` in six-faces-council):
+
+| Row | His turn | His words |
+|---|---|---|
+| `cs-chatgpt-ai-art` | Concept only. Nothing from ChatGPT ships. | "for now it's for concept, we will need an additional production step to rebuild the pieces ourselves" |
+| `cs-first-piece` | Chamber dressing for the kit. | (no steer) |
+| `cs-asset-kind` | Pictures to build from. | "I'd need to see and trust blenders ability to take pictures to build from" |
+| `cs-cc0-or-own` | Overruled. | "How are people getting around this? Well not around but if royalty free can be extracted then what's the point of this" |
+| `cs-rebuild-proof`, `cs-manifest-row`, `cs-one-studio`, `cs-no-written-words`, `cs-stand-in`, `cs-chatgpt-by-drive`, `cs-first-test` | Stand. | |
+
 ### What the dialogue found
 
-Not yet. This section fills as rounds close.
+- **ChatGPT pictures are concept art.** The production step he names is the studio itself: a session rebuilds each
+  piece in Blender, by script, from his picture, and that rebuilt piece is what ships. Its licence is own work, and
+  its manifest row names the picture it was built from. No ChatGPT pixels go into the cave.
+- **The first piece has to earn his trust in that step.** So it is the chamber dressing built from pictures, shown
+  beside the pictures it came from, with a number for how closely each model's outline matches its picture.
+- **The overrule on `cs-cc0-or-own`.** His words read as a doubt about the point of the Royalty Free licence, not a
+  request to let Royalty Free models into the page. The record holds what Blendkit's terms say (article 5, read
+  2026-10-12, quoted in `tools/blender-cloud/README.md`): a Royalty Free model may go in a web page only if no one
+  can extract it. Inferred, not checked: that licence is written for renders, films and compiled games, where the
+  model is not handed to the viewer, and web projects mostly use CC0 or their own models. With pictures to build
+  from, every piece is own work, so the overrule changes nothing for the first piece. `build_viewer.py` still
+  refuses non-CC0 downloads until he rules otherwise.
 
 ## 1: Be it (first person, tested)
 
