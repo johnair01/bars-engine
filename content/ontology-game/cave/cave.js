@@ -2415,6 +2415,9 @@
     buildTube: buildTube, buildPebbles: buildPebbles, buildMarker: buildMarker, buildLantern: buildLantern,
     buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, DAEMONS: DAEMONS,
     BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
+    // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
+    ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,
+    buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, labelSprite: labelSprite, P: P, btn: btn, row: row,
   };
   window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE,
     openRoom: function (o) { return load().then(function (A) { return openRoom(A, o); }); }, ROOM_STEPS: ROOM_STEPS, roomTest: readRoomTest, kit: kit };
