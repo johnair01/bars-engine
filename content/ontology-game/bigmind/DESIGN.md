@@ -171,3 +171,46 @@ His words: "There should be a visual reward for when the charge goes down".
 
 Tests: 86 checks, adding the easing after a drop, its words and numbers, the ring and the meter playing, the biggest
 easing at the ready line, the chamber warming, and one easing per drop.
+
+## Two charges, and a W.A.V.E. on yours (board, 11 October 2026, 23:51)
+
+His note of 11 October: "One should also be able to do W.A.V.E. in the cave on the protector (and other voices) in order
+to gain more data about the motions charge that comes up while talking to the daemon". Council pass 2 (sprout
+`campaigns/big-mind/6FACE_PASS2_big-mind-cave_2026-10-11.md`) put six positions on the board, and he let all six stand.
+His answer to `bmw-whose-charge`: "Two charges, yours and its".
+
+- **Two charges on the meter.** The top of the screen now has two bars: "Protector (it)", the voice's charge, and "You",
+  the player's own. The voice's bar decides trust exactly as before (3 or below). The player's bar shows once they give it.
+- **The offer** (`bmw-offer`). Every charge poll has "Breathe with it (W.A.V.E.)" under the slider. It is never required
+  and never a condition of the voice stepping aside. Going back from its first screen returns to the same poll.
+- **Your charge first.** The W.A.V.E. asks how charged you are, 0 to 10, then where you feel it in your body (the same body
+  places, or not yet).
+- **The game's W.A.V.E.** (`bmw-game-wave`), done standing where you stand: Welcome, Acknowledge, Allow, Accept,
+  Appreciate, Validate, Exhale, with the Cave of Lessons' words. Each step is one breath: its button wakes after the cave's
+  4 s in and 6 s out. From Allow on, "This is as far as I can honestly go today" goes on to Validate. The Exhale asks
+  whether to let it stay or exhale and release.
+- **Naming it** (`bmw-player-names`). At Acknowledge the player names the feeling in one word, then picks its element from
+  the five (Fire anger, Water sadness, Wood joy, Metal fear, Earth neutrality). Nothing is picked for them.
+- **After.** How charged are you now? Then the voice's poll comes back as after any answer, the slider at the voice's last
+  number (`bmw-number-stays`). The W.A.V.E. never sets or nudges the voice's number, and your own charge falling plays no
+  easing for the voice.
+- **Something in the way.** Every step has "Something's in the way". For now the blocked step is noted and the W.A.V.E.
+  counts as complete there, then asks your charge after **(choice)**. Where a block goes in this cave was `bmw-block`; he
+  answered with a steer instead of an option (below), so this stays the plain default until that pass is built.
+- **The record** (`bmw-record`). Each W.A.V.E. is one entry under the voice: after which question, the feeling word, the
+  element, the body place, your charge before and after, the highest rung, any blocked step, the exhale, and when.
+  Entries add up across sittings, so the Challenger's lever test can be read off them. The feeling word is stored only if
+  the player taps that W.A.V.E. at the keeping step; the rest of the entry is saved either way, on the device, and Forget
+  and Delete everything remove it.
+- **Shown back** (`bmw-shown`). At the keeping step and in the mouth's list, one line each: "Dread, Metal, in your chest: 8
+  to 6".
+
+Tests: 108 checks, adding the offer at every poll, the two bars, your charge first, a breath per step, naming and picking
+the element with nothing picked for you, stopping on a rung, the exhale, the voice's number and easing left alone, the
+record, a blocked step, the feeling word kept only when tapped, and the line shown back at the mouth.
+
+His steer on `bmw-block` (11 October 2026, 23:53), not built yet: "One should be able to sit down and do a version of the
+wave room on the part in front of them while they are in the cave. They should be able to do this when a charge emerges
+for them not just when they are in front of a daemon. The charge spirits can come with then throughout the cave until
+they are dismissed. The daemons should be able to respond to how many spirits are around. They might be protecting the
+self from the charge they are carrying". A council pass takes it first.
