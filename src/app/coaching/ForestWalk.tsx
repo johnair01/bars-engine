@@ -6,6 +6,7 @@ import type { ReactNode, RefObject } from 'react'
 import { captureDaemonsSeries } from '@/actions/leads'
 import { EmailCaptureForm } from '@/components/leads/EmailCaptureForm'
 import { BOOK_HREF, DOORS } from '@/lib/coaching/coaching-map'
+import { readSourceTags, withSourceTags } from '@/lib/coaching/source-tags'
 import {
   BELIEFS,
   BODY_REGIONS,
@@ -450,6 +451,10 @@ export function ForestWalk() {
                       <a
                         key={tier.href}
                         href={tier.href}
+                        // The utm tags the visitor arrived with ride along to Calendly, so a booking shows its source.
+                        onClick={(e) => {
+                          e.currentTarget.href = withSourceTags(tier.href, readSourceTags(window.location.search))
+                        }}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex min-h-20 flex-col justify-between rounded-xl border border-emerald-200/20 bg-black/40 p-4 transition-colors hover:border-amber-200/70"

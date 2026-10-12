@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { Chrome } from "@/components/Chrome";
 import { AdminIdentitySwitcher } from "@/components/AdminIdentitySwitcher";
 import { DevIdentitySwitcher } from "@/components/DevIdentitySwitcher";
@@ -67,6 +68,8 @@ export default async function RootLayout({
         {/* Legacy Dev Switcher (Non-production only) */}
         {process.env.NODE_ENV !== 'production' && <DevIdentitySwitcher />}
         <Toaster />
+        {/* Vercel Web Analytics: cookieless page counts by path, referrer and utm tag (lead-gen pass 1). */}
+        <Analytics />
       </body>
     </html>
   );
