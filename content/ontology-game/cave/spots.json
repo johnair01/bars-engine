@@ -1,0 +1,1269 @@
+{
+ "note": "Written by cave/build_kit.py from body/figure.glb. Units: chamber units (36 per metre of body girth). Do not edit by hand.",
+ "spots": [
+  {
+   "id": "back_of_head",
+   "words": "the back of my head",
+   "region": "head",
+   "position": [
+    0,
+    1.64,
+    -0.1002
+   ],
+   "side": "back",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "back_of_neck",
+   "words": "the back of my neck",
+   "region": "head",
+   "position": [
+    0,
+    1.49,
+    -0.0666
+   ],
+   "side": "back",
+   "kind": "tube",
+   "width": 4.18,
+   "height": 4.18,
+   "length": 14,
+   "bend": 0
+  },
+  {
+   "id": "belly",
+   "words": "my belly",
+   "region": "belly",
+   "position": [
+    0,
+    1.06,
+    0.0993
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 10.94,
+   "height": 11.52,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "between_shoulder_blades",
+   "words": "between my shoulder blades",
+   "region": "back",
+   "position": [
+    0,
+    1.38,
+    -0.0923
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 11.52,
+   "height": 10.52,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "crown",
+   "words": "the top of my head",
+   "region": "head",
+   "position": [
+    0,
+    1.7378,
+    0
+   ],
+   "side": "top",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "eyes",
+   "words": "my eyes",
+   "region": "head",
+   "position": [
+    0,
+    1.635,
+    0.0912
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "forehead",
+   "words": "my forehead",
+   "region": "head",
+   "position": [
+    0,
+    1.68,
+    0.0793
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "heart",
+   "words": "my heart",
+   "region": "chest",
+   "position": [
+    0,
+    1.32,
+    0.1033
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.84,
+   "height": 11.88,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "jaw",
+   "words": "my jaw",
+   "region": "head",
+   "position": [
+    0,
+    1.55,
+    0.0673
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "left_ankle",
+   "words": "my left ankle",
+   "region": "left_leg",
+   "position": [
+    0.118,
+    0.1,
+    0.02
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 2.6,
+   "height": 2.6,
+   "length": 40,
+   "bend": 10
+  },
+  {
+   "id": "left_armpit",
+   "words": "my left armpit",
+   "region": "left_arm",
+   "position": [
+    0.175,
+    1.33,
+    0.0332
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.89,
+   "height": 11.72,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_back_of_knee",
+   "words": "the back of my left knee",
+   "region": "left_leg",
+   "position": [
+    0.11,
+    0.5,
+    -0.0535
+   ],
+   "side": "back",
+   "kind": "limb",
+   "width": 3.96,
+   "height": 3.96,
+   "length": 46,
+   "bend": 14
+  },
+  {
+   "id": "left_back_of_thigh",
+   "words": "the back of my left thigh",
+   "region": "left_leg",
+   "position": [
+    0.1,
+    0.72,
+    -0.0682
+   ],
+   "side": "back",
+   "kind": "limb",
+   "width": 4.99,
+   "height": 4.99,
+   "length": 46,
+   "bend": 14
+  },
+  {
+   "id": "left_calf",
+   "words": "my left calf",
+   "region": "left_leg",
+   "position": [
+    0.115,
+    0.3,
+    -0.0501
+   ],
+   "side": "back",
+   "kind": "limb",
+   "width": 3.2,
+   "height": 3.2,
+   "length": 40,
+   "bend": 10
+  },
+  {
+   "id": "left_cheek",
+   "words": "my left cheek",
+   "region": "head",
+   "position": [
+    0.045,
+    1.595,
+    0.069
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "left_chest",
+   "words": "the left side of my chest",
+   "region": "chest",
+   "position": [
+    0.11,
+    1.31,
+    0.0772
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.79,
+   "height": 12.05,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_collarbone",
+   "words": "my left collarbone",
+   "region": "chest",
+   "position": [
+    0.09,
+    1.42,
+    0.0499
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 9.22,
+   "height": 8.37,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_ear",
+   "words": "my left ear",
+   "region": "head",
+   "position": [
+    0.0768,
+    1.62,
+    0
+   ],
+   "side": "side",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "left_elbow",
+   "words": "my left elbow",
+   "region": "left_arm",
+   "position": [
+    0.306,
+    1.13,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 2.72,
+   "height": 2.72,
+   "length": 44,
+   "bend": 22
+  },
+  {
+   "id": "left_foot",
+   "words": "my left foot",
+   "region": "left_leg",
+   "position": [
+    0.125,
+    0.04,
+    0.139
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 3.6,
+   "height": 7.92,
+   "length": 22,
+   "bend": 8
+  },
+  {
+   "id": "left_forearm",
+   "words": "my left forearm",
+   "region": "left_arm",
+   "position": [
+    0.3422,
+    1,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 2.6,
+   "height": 2.6,
+   "length": 44,
+   "bend": 22
+  },
+  {
+   "id": "left_hand",
+   "words": "my left hand",
+   "region": "left_arm",
+   "position": [
+    0.3829,
+    0.8,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 3.24,
+   "height": 5.04,
+   "length": 22,
+   "bend": 12
+  },
+  {
+   "id": "left_heel",
+   "words": "my left heel",
+   "region": "left_leg",
+   "position": [
+    0.12,
+    0.035,
+    -0.0705
+   ],
+   "side": "back",
+   "kind": "limb",
+   "width": 2.6,
+   "height": 2.6,
+   "length": 40,
+   "bend": 10
+  },
+  {
+   "id": "left_hip",
+   "words": "my left hip",
+   "region": "belly",
+   "position": [
+    0.15,
+    0.96,
+    0.058
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.61,
+   "height": 11.64,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_inner_elbow",
+   "words": "the inside of my left elbow",
+   "region": "left_arm",
+   "position": [
+    0.275,
+    1.13,
+    0.0265
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 2.72,
+   "height": 2.72,
+   "length": 44,
+   "bend": 22
+  },
+  {
+   "id": "left_jaw",
+   "words": "the left side of my jaw",
+   "region": "head",
+   "position": [
+    0.05,
+    1.56,
+    0.0435
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "left_knee",
+   "words": "my left knee",
+   "region": "left_leg",
+   "position": [
+    0.11,
+    0.5,
+    0.0532
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 3.96,
+   "height": 3.96,
+   "length": 46,
+   "bend": 14
+  },
+  {
+   "id": "left_lower_back",
+   "words": "the left side of my lower back",
+   "region": "back",
+   "position": [
+    0.08,
+    1.04,
+    -0.0855
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 11.18,
+   "height": 11.64,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_ribs",
+   "words": "my left ribs",
+   "region": "belly",
+   "position": [
+    0.12,
+    1.17,
+    0.0478
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 10.08,
+   "height": 10.94,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_shin",
+   "words": "my left shin",
+   "region": "left_leg",
+   "position": [
+    0.115,
+    0.3,
+    0.0358
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 3.2,
+   "height": 3.2,
+   "length": 40,
+   "bend": 10
+  },
+  {
+   "id": "left_shoulder",
+   "words": "my left shoulder",
+   "region": "chest",
+   "position": [
+    0.2,
+    1.4356,
+    0
+   ],
+   "side": "side",
+   "kind": "vault",
+   "width": 8.64,
+   "height": 7.83,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_shoulder_blade",
+   "words": "my left shoulder blade",
+   "region": "back",
+   "position": [
+    0.11,
+    1.33,
+    -0.0753
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 11.89,
+   "height": 11.72,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_side_of_belly",
+   "words": "the left side of my belly",
+   "region": "belly",
+   "position": [
+    0.1,
+    1.08,
+    0.0718
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 10.57,
+   "height": 11.26,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "left_side_of_neck",
+   "words": "the left side of my neck",
+   "region": "head",
+   "position": [
+    0.0528,
+    1.5,
+    0
+   ],
+   "side": "side",
+   "kind": "tube",
+   "width": 4.18,
+   "height": 4.18,
+   "length": 14,
+   "bend": 0
+  },
+  {
+   "id": "left_temple",
+   "words": "my left temple",
+   "region": "head",
+   "position": [
+    0.0728,
+    1.66,
+    0
+   ],
+   "side": "side",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "left_thigh",
+   "words": "my left thigh",
+   "region": "left_leg",
+   "position": [
+    0.1,
+    0.72,
+    0.0683
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 4.99,
+   "height": 4.99,
+   "length": 46,
+   "bend": 14
+  },
+  {
+   "id": "left_upper_arm",
+   "words": "my left upper arm",
+   "region": "left_arm",
+   "position": [
+    0.2718,
+    1.26,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 3.06,
+   "height": 3.06,
+   "length": 44,
+   "bend": 22
+  },
+  {
+   "id": "left_wrist",
+   "words": "my left wrist",
+   "region": "left_arm",
+   "position": [
+    0.3692,
+    0.88,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 2.6,
+   "height": 2.6,
+   "length": 44,
+   "bend": 22
+  },
+  {
+   "id": "lower_back",
+   "words": "my lower back",
+   "region": "back",
+   "position": [
+    0,
+    1.03,
+    -0.101
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 11.3,
+   "height": 11.69,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "lower_belly",
+   "words": "my lower belly",
+   "region": "belly",
+   "position": [
+    0,
+    1,
+    0.1029
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.65,
+   "height": 11.87,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "mid_back",
+   "words": "my mid back",
+   "region": "back",
+   "position": [
+    0,
+    1.18,
+    -0.0956
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 10.19,
+   "height": 11.03,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "mouth",
+   "words": "my mouth",
+   "region": "head",
+   "position": [
+    0,
+    1.565,
+    0.077
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "nose",
+   "words": "my nose",
+   "region": "head",
+   "position": [
+    0,
+    1.6,
+    0.0894
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "pelvis",
+   "words": "my pelvis",
+   "region": "belly",
+   "position": [
+    0,
+    0.96,
+    0.1014
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.61,
+   "height": 11.64,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "right_ankle",
+   "words": "my right ankle",
+   "region": "right_leg",
+   "position": [
+    -0.118,
+    0.1,
+    0.0198
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 2.6,
+   "height": 2.6,
+   "length": 40,
+   "bend": -10
+  },
+  {
+   "id": "right_armpit",
+   "words": "my right armpit",
+   "region": "right_arm",
+   "position": [
+    -0.175,
+    1.33,
+    0.0331
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.89,
+   "height": 11.72,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_back_of_knee",
+   "words": "the back of my right knee",
+   "region": "right_leg",
+   "position": [
+    -0.11,
+    0.5,
+    -0.0534
+   ],
+   "side": "back",
+   "kind": "limb",
+   "width": 3.96,
+   "height": 3.96,
+   "length": 46,
+   "bend": -14
+  },
+  {
+   "id": "right_back_of_thigh",
+   "words": "the back of my right thigh",
+   "region": "right_leg",
+   "position": [
+    -0.1,
+    0.72,
+    -0.0683
+   ],
+   "side": "back",
+   "kind": "limb",
+   "width": 4.99,
+   "height": 4.99,
+   "length": 46,
+   "bend": -14
+  },
+  {
+   "id": "right_calf",
+   "words": "my right calf",
+   "region": "right_leg",
+   "position": [
+    -0.115,
+    0.3,
+    -0.0501
+   ],
+   "side": "back",
+   "kind": "limb",
+   "width": 3.2,
+   "height": 3.2,
+   "length": 40,
+   "bend": -10
+  },
+  {
+   "id": "right_cheek",
+   "words": "my right cheek",
+   "region": "head",
+   "position": [
+    -0.045,
+    1.595,
+    0.0692
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "right_chest",
+   "words": "the right side of my chest",
+   "region": "chest",
+   "position": [
+    -0.11,
+    1.31,
+    0.0768
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.79,
+   "height": 12.05,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_collarbone",
+   "words": "my right collarbone",
+   "region": "chest",
+   "position": [
+    -0.09,
+    1.42,
+    0.05
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 9.22,
+   "height": 8.37,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_ear",
+   "words": "my right ear",
+   "region": "head",
+   "position": [
+    -0.0768,
+    1.62,
+    0
+   ],
+   "side": "side",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "right_elbow",
+   "words": "my right elbow",
+   "region": "right_arm",
+   "position": [
+    -0.3062,
+    1.13,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 2.72,
+   "height": 2.72,
+   "length": 44,
+   "bend": -22
+  },
+  {
+   "id": "right_foot",
+   "words": "my right foot",
+   "region": "right_leg",
+   "position": [
+    -0.125,
+    0.04,
+    0.1389
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 3.6,
+   "height": 7.92,
+   "length": 22,
+   "bend": -8
+  },
+  {
+   "id": "right_forearm",
+   "words": "my right forearm",
+   "region": "right_arm",
+   "position": [
+    -0.3424,
+    1,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 2.6,
+   "height": 2.6,
+   "length": 44,
+   "bend": -22
+  },
+  {
+   "id": "right_hand",
+   "words": "my right hand",
+   "region": "right_arm",
+   "position": [
+    -0.383,
+    0.8,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 3.24,
+   "height": 5.04,
+   "length": 22,
+   "bend": -12
+  },
+  {
+   "id": "right_heel",
+   "words": "my right heel",
+   "region": "right_leg",
+   "position": [
+    -0.12,
+    0.035,
+    -0.0705
+   ],
+   "side": "back",
+   "kind": "limb",
+   "width": 2.6,
+   "height": 2.6,
+   "length": 40,
+   "bend": -10
+  },
+  {
+   "id": "right_hip",
+   "words": "my right hip",
+   "region": "belly",
+   "position": [
+    -0.15,
+    0.96,
+    0.0581
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.61,
+   "height": 11.64,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_inner_elbow",
+   "words": "the inside of my right elbow",
+   "region": "right_arm",
+   "position": [
+    -0.275,
+    1.13,
+    0.0262
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 2.72,
+   "height": 2.72,
+   "length": 44,
+   "bend": -22
+  },
+  {
+   "id": "right_jaw",
+   "words": "the right side of my jaw",
+   "region": "head",
+   "position": [
+    -0.05,
+    1.56,
+    0.0435
+   ],
+   "side": "front",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "right_knee",
+   "words": "my right knee",
+   "region": "right_leg",
+   "position": [
+    -0.11,
+    0.5,
+    0.0534
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 3.96,
+   "height": 3.96,
+   "length": 46,
+   "bend": -14
+  },
+  {
+   "id": "right_lower_back",
+   "words": "the right side of my lower back",
+   "region": "back",
+   "position": [
+    -0.08,
+    1.04,
+    -0.0854
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 11.18,
+   "height": 11.64,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_ribs",
+   "words": "my right ribs",
+   "region": "belly",
+   "position": [
+    -0.12,
+    1.17,
+    0.0477
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 10.08,
+   "height": 10.94,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_shin",
+   "words": "my right shin",
+   "region": "right_leg",
+   "position": [
+    -0.115,
+    0.3,
+    0.0359
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 3.2,
+   "height": 3.2,
+   "length": 40,
+   "bend": -10
+  },
+  {
+   "id": "right_shoulder",
+   "words": "my right shoulder",
+   "region": "chest",
+   "position": [
+    -0.2,
+    1.4356,
+    0
+   ],
+   "side": "side",
+   "kind": "vault",
+   "width": 8.64,
+   "height": 7.83,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_shoulder_blade",
+   "words": "my right shoulder blade",
+   "region": "back",
+   "position": [
+    -0.11,
+    1.33,
+    -0.0752
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 11.89,
+   "height": 11.72,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_side_of_belly",
+   "words": "the right side of my belly",
+   "region": "belly",
+   "position": [
+    -0.1,
+    1.08,
+    0.0716
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 10.57,
+   "height": 11.26,
+   "length": 28,
+   "bend": -8
+  },
+  {
+   "id": "right_side_of_neck",
+   "words": "the right side of my neck",
+   "region": "head",
+   "position": [
+    -0.0528,
+    1.5,
+    0
+   ],
+   "side": "side",
+   "kind": "tube",
+   "width": 4.18,
+   "height": 4.18,
+   "length": 14,
+   "bend": 0
+  },
+  {
+   "id": "right_temple",
+   "words": "my right temple",
+   "region": "head",
+   "position": [
+    -0.0726,
+    1.66,
+    0
+   ],
+   "side": "side",
+   "kind": "dome",
+   "width": 5.62,
+   "height": 8.28,
+   "length": 16,
+   "bend": 0
+  },
+  {
+   "id": "right_thigh",
+   "words": "my right thigh",
+   "region": "right_leg",
+   "position": [
+    -0.1,
+    0.72,
+    0.0682
+   ],
+   "side": "front",
+   "kind": "limb",
+   "width": 4.99,
+   "height": 4.99,
+   "length": 46,
+   "bend": -14
+  },
+  {
+   "id": "right_upper_arm",
+   "words": "my right upper arm",
+   "region": "right_arm",
+   "position": [
+    -0.2718,
+    1.26,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 3.06,
+   "height": 3.06,
+   "length": 44,
+   "bend": -22
+  },
+  {
+   "id": "right_wrist",
+   "words": "my right wrist",
+   "region": "right_arm",
+   "position": [
+    -0.3697,
+    0.88,
+    0
+   ],
+   "side": "side",
+   "kind": "limb",
+   "width": 2.6,
+   "height": 2.6,
+   "length": 44,
+   "bend": -22
+  },
+  {
+   "id": "seat",
+   "words": "my seat",
+   "region": "back",
+   "position": [
+    0,
+    0.95,
+    -0.0997
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 11.47,
+   "height": 11.46,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "solar_plexus",
+   "words": "my solar plexus",
+   "region": "belly",
+   "position": [
+    0,
+    1.2,
+    0.0971
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 10.4,
+   "height": 11.2,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "sternum",
+   "words": "my sternum",
+   "region": "chest",
+   "position": [
+    0,
+    1.26,
+    0.1022
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 11.19,
+   "height": 11.8,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "throat",
+   "words": "my throat",
+   "region": "head",
+   "position": [
+    0,
+    1.49,
+    0.0429
+   ],
+   "side": "front",
+   "kind": "tube",
+   "width": 4.18,
+   "height": 4.18,
+   "length": 14,
+   "bend": 0
+  },
+  {
+   "id": "upper_back",
+   "words": "my upper back",
+   "region": "back",
+   "position": [
+    0,
+    1.33,
+    -0.1015
+   ],
+   "side": "back",
+   "kind": "vault",
+   "width": 11.89,
+   "height": 11.72,
+   "length": 28,
+   "bend": 8
+  },
+  {
+   "id": "upper_chest",
+   "words": "my upper chest",
+   "region": "chest",
+   "position": [
+    0,
+    1.39,
+    0.0882
+   ],
+   "side": "front",
+   "kind": "vault",
+   "width": 10.94,
+   "height": 9.98,
+   "length": 28,
+   "bend": 8
+  }
+ ]
+}
