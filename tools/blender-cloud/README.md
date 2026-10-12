@@ -1,0 +1,72 @@
+# Blender in the cloud
+
+Headless Blender 5.2.2 as the `bpy` pip package. It arranges a free asset from Blendkit (formerly BlenderKit) with a
+rigged walking figure, renders a 480p preview, exports an animated GLB, and builds a three.js viewer page.
+No display or GPU needed. Plan and test results: `.specify/specs/blender-cloud-hardening/`.
+
+Published viewer: https://claude.ai/artifact/SUZYu1w1P5b61Cn6pj7Vwg
+
+## Run it
+
+```bash
+uv venv --python 3.13 /home/user/blenv
+uv pip install --python /home/user/blenv/bin/python bpy==5.2.2
+export SSL_CERT_FILE=/root/.ccr/ca-bundle.crt          # the sandbox CA bundle
+W=/tmp/blender-cloud                                    # scratch space; keep assets and outputs out of git
+
+python3 tools/blender-cloud/blenderkit_fetch.py "wooden chair" $W/assets --index 5   # CC0 only by default
+python3 tools/blender-cloud/prepare_asset.py $W/assets/Painted_Wooden_Chair_02.glb $W/assets/chair.glb
+/home/user/blenv/bin/python tools/blender-cloud/scene.py $W/assets/chair.glb $W/out  # preview.png, scene.glb, report.json
+python3 tools/blender-cloud/build_viewer.py $W/out/scene.glb $W/page --asset $W/assets/Painted_Wooden_Chair_02.json
+```
+
+Publish `$W/page/viewer.html` as the artifact page, with `model.json` as a supporting file. **Look at `preview.png`
+before publishing.** The orientation and scale of a new asset are found by eye: use `--rot-z`, `--scale`, `--x`.
+
+## Files
+
+| File | Job |
+|---|---|
+| `blenderkit_fetch.py` | Search, take the Nth free result, download one file type. CC0 by default. `--selftest` checks the whole API path. Writes a `.json` sidecar with name, author, licence. |
+| `prepare_asset.py` | Decode Draco or meshopt compression so `bpy` can import the GLB. |
+| `scene.py` | Import the asset, decimate to a triangle budget, cap textures, build the six-box figure with a 7-bone rig and a 48-frame walk, render, export, report. |
+| `viewer_template.html`, `build_viewer.py` | Build the page. Refuses any model that is not CC0. |
+
+## The six problems, and what each became
+
+1. **Key handling.** The sandbox proxy adds the BlenderKit key for `api.blenderkit.com`, so the scripts send none.
+   Elsewhere, set `BLENDERKIT_API_KEY` and it goes out as a Bearer header to that host only. Not tested without
+   the proxy; the first step in `tasks.md` asks Wendell to try from his own machine.
+2. **`scene_uuid`.** Downloads need this parameter. The script makes one UUID per machine and reuses it
+   (`~/.cache/blender-cloud/scene_uuid`). On a 403 it prints the API's message. `--selftest` is the canary.
+3. **Draco.** The `bpy` wheel has no Draco decoder, and BlenderKit glTFs use it. The default is now the glTF
+   variant, decoded by `prepare_asset.py` with `npx @gltf-transform/cli`. The 122 MB `.blend` is a fallback only.
+4. **UDIM.** A one-tile UDIM image is copied to a plain image. More than one tile stops the run with a message.
+   The glTF variant comes baked to plain textures, which avoids most cases.
+5. **Size.** `scene.py` decimates to `--tri-budget` (25,000), caps textures at `--tex-max` (1024), re-encodes
+   everything except normal and alpha maps as JPEG, and stops if the GLB passes `--max-glb-mb` (12). Artifacts do not
+   serve `.glb`, so the page loads the model from a base64 `model.json`; the 16 MB limit now applies per file.
+6. **three.js.** The viewer uses three@0.170.0 as ES modules through an import map from `cdn.jsdelivr.net/npm`.
+   Light intensities are scaled for the newer physically based lighting.
+
+## A seventh problem: licences
+
+Blendkit's Royalty Free licence lets you use a model in a web page only if no third party can open or extract it
+(terms, article 5). A GLB in a page can be extracted. So **only CC0 models go into a published page**. Royalty Free
+models are fine for renders and previews. `blenderkit_fetch.py` searches `license:cc_zero` by default and
+`build_viewer.py` stops on anything else. The first version of the viewer used a Royalty Free chair; version 5
+replaced it with a CC0 one.
+
+## Checklist for a new asset
+
+1. Fetch with the default CC0 filter. Note the licence the script prints.
+2. Run `prepare_asset.py`, then `scene.py`. Read the `ASSET` and `REPORT` lines: dimensions, triangles, GLB size.
+3. Open `preview.png`. Check that it is textured, the right way round, and on the floor. Adjust `--rot-z`, `--scale`.
+4. Build the page and check it in a browser (Playwright with Chromium works headless) before publishing.
+
+## Still true
+
+- Assets with several UDIM tiles are refused, not converted.
+- The sandbox cannot open a private artifact URL, so the published page cannot be checked from here. Check the same
+  files locally first, and keep the previous artifact version as the rollback.
+- `www.blenderkit.com` now redirects to `www.blendkit.com`. The API host `api.blenderkit.com` still works.

@@ -1,0 +1,1226 @@
+about: 'The 64 hexagrams in the King Wen order: number, Chinese name, pinyin, lines from the bottom up (1 unbroken,
+  0 broken), and the two trigrams, lower then upper. Each also carries Wendell''s reading from flirtcraft''s lib/decks.json:
+  his name for it, what it shows, its image and its situation. The flirting applications stay in flirtcraft: the
+  flirtation line, the drill, and the craft names. Wendell, 2026-10-03: "The valuable parts for flirtcraft are their
+  flirting applications so it fine to have this in the public repo". The lines were checked against the trigrams.'
+trigrams:
+  heaven:
+    symbol: ☰
+    lines:
+    - 1
+    - 1
+    - 1
+    name: The Creative
+    quality: strong
+  lake:
+    symbol: ☱
+    lines:
+    - 1
+    - 1
+    - 0
+    name: The Joyous
+    quality: joyful
+  fire:
+    symbol: ☲
+    lines:
+    - 1
+    - 0
+    - 1
+    name: The Clinging
+    quality: light, and what it depends on
+  thunder:
+    symbol: ☳
+    lines:
+    - 1
+    - 0
+    - 0
+    name: The Arousing
+    quality: movement
+  wind:
+    symbol: ☴
+    lines:
+    - 0
+    - 1
+    - 1
+    name: The Gentle
+    quality: penetrating
+  water:
+    symbol: ☵
+    lines:
+    - 0
+    - 1
+    - 0
+    name: The Abysmal
+    quality: danger
+  mountain:
+    symbol: ☶
+    lines:
+    - 0
+    - 0
+    - 1
+    name: Keeping Still
+    quality: rest
+  earth:
+    symbol: ☷
+    lines:
+    - 0
+    - 0
+    - 0
+    name: The Receptive
+    quality: yielding
+hexagrams:
+- n: 1
+  name: Unbroken
+  cn: 乾
+  pinyin: qián
+  lines:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  lower: heaven
+  upper: heaven
+  shows: Every line here sends, and the return has nowhere to land.
+  image: ☰ heaven beneath ☰ heaven. Six unbroken lines, and no place in the figure that yields.
+  situation: Every line is pushing and every line is capable. This is the most able configuration in the set, and
+    it has nowhere to put anything that arrives. The tradition walks a dragon up through six stages for exactly
+    this reason — force has to learn timing, because force alone already knows everything else.
+- n: 2
+  name: Bearing
+  cn: 坤
+  pinyin: kūn
+  lines:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  lower: earth
+  upper: earth
+  shows: The whole weight of this is yours, unasked.
+  image: ☷ earth beneath ☷ earth. Six broken lines. Every one of them has a gap at the centre.
+  situation: 'Pure capacity to hold. The figure carries whatever is set on it and supplies no direction of its own.
+    Its instruction is to follow, and that is how ground carries what is set on it. The image is a mare: strength
+    that goes where it is pointed, for a very long way.'
+- n: 3
+  name: Sprouting
+  cn: 屯
+  pinyin: zhūn
+  lines:
+  - 1
+  - 0
+  - 0
+  - 0
+  - 1
+  - 0
+  lower: thunder
+  upper: water
+  shows: This is early, and you are reading the mess as a verdict.
+  image: ☳ thunder beneath ☵ water. Movement caught inside the danger it was born into.
+  situation: A first shoot pushing at a hard crust. Everything necessary is present, in a heap. The old counsel
+    is to appoint helpers and to decline any journey, because at this stage every unit of effort belongs to getting
+    established.
+- n: 4
+  name: Fog
+  cn: 蒙
+  pinyin: méng
+  lines:
+  - 0
+  - 1
+  - 0
+  - 0
+  - 0
+  - 1
+  lower: water
+  upper: mountain
+  shows: You are guessing where you could ask.
+  image: ☵ water beneath ☶ mountain. A spring at the foot of a peak, with mist over all of it.
+  situation: 'Something is genuinely obscured, and the obscured thing is the one looking. The frame is a young person
+    who has yet to learn, and the instruction runs toward the asker: the teacher answers the first question honestly
+    and goes quiet by the third, because a question put three times has stopped being a question.'
+- n: 5
+  name: Hosting
+  cn: 需
+  pinyin: xū
+  lines:
+  - 1
+  - 1
+  - 1
+  - 0
+  - 1
+  - 0
+  lower: heaven
+  upper: water
+  shows: You are ready and the ground is not.
+  image: ☰ heaven beneath ☵ water. Clouds gathered, no rain fallen.
+  situation: Strength is fully present underneath. This is not weakness waiting; it is the creative held in place
+    by a depth it cannot yet cross. Since crossing is not available, the tradition says eat and drink. Nourishment
+    is the move when advance is not.
+- n: 6
+  name: Divergence
+  cn: 訟
+  pinyin: sòng
+  lines:
+  - 0
+  - 1
+  - 0
+  - 1
+  - 1
+  - 1
+  lower: water
+  upper: heaven
+  shows: You are going deeper and pushing forward at once, and the two cancel.
+  image: ☵ water beneath ☰ heaven. Heaven rises, water sinks. The two halves are travelling apart.
+  situation: Two forces inside one figure heading opposite ways, so the friction here is structural. The counsel
+    is to stop at the halfway point and to decline the great river, because a dispute carried to its end costs more
+    than whatever was in dispute.
+- n: 7
+  name: Muster
+  cn: 師
+  pinyin: shī
+  lines:
+  - 0
+  - 1
+  - 0
+  - 0
+  - 0
+  - 0
+  lower: water
+  upper: earth
+  shows: What would organise this is a fact you have not said.
+  image: ☵ water beneath ☷ earth. One firm line among five yielding ones, holding the whole figure to a shape.
+  situation: 'Water stored underground: a resource that is present, invisible, and organised. The single strong
+    line is the discipline that turns a crowd into a force. The old warning is that this works with an experienced
+    hand and a clear cause, and the same gathering under any other conditions is a mob.'
+- n: 8
+  name: Alliance
+  cn: 比
+  pinyin: bǐ
+  lines:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 1
+  - 0
+  lower: earth
+  upper: water
+  shows: This is filling a hole you had before it started.
+  image: ☷ earth beneath ☵ water. Water lying on ground, finding every hollow and filling it.
+  situation: Water on earth touches at every point along the surface. Union across the whole of it. The classical
+    note is about timing — those who arrive late to a union already forming find the places taken.
+- n: 9
+  name: Restraint
+  cn: 小畜
+  pinyin: xiǎo chù
+  lines:
+  - 1
+  - 1
+  - 1
+  - 0
+  - 1
+  - 1
+  lower: heaven
+  upper: wind
+  shows: A small rule you never revisited is holding all of this.
+  image: ☰ heaven beneath ☴ wind. One yielding line holding five firm ones, the way weather is held by wind.
+  situation: 'A small force restrains a large one here, and the large one is permitting it. The single yielding
+    line''s whole strength is position. The tradition reads the restraint as accumulation: force that cannot discharge
+    yet is being stored.'
+- n: 10
+  name: Footing
+  cn: 履
+  pinyin: lǚ
+  lines:
+  - 1
+  - 1
+  - 0
+  - 1
+  - 1
+  - 1
+  lower: lake
+  upper: heaven
+  shows: You are stepping onto ground that matters, and the play is what makes it safe.
+  image: ☱ lake beneath ☰ heaven. A small soft thing placed directly under the largest hard one.
+  situation: The old line is about treading on a tiger's tail and coming away whole, which happens through the quality
+    of the step. Conduct is the entire content here. Where you put your weight, in what order, at what speed, decides
+    whether the ground holds.
+- n: 11
+  name: Mingling
+  cn: 泰
+  pinyin: tài
+  lines:
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  - 0
+  lower: heaven
+  upper: earth
+  shows: This is working, and you should know why.
+  image: ☰ heaven beneath ☷ earth. Heaven has taken the lower place, so its rising and earth's settling cross in
+    the middle.
+  situation: The two halves face each other. Heaven below sends its force up through earth above, which comes down
+    to receive it, and the exchange runs in both directions at once. The tradition treats this as the most fortunate
+    arrangement in the set and immediately warns that flat ground turns to slope.
+- n: 12
+  name: Stalemate
+  cn: 否
+  pinyin: pǐ
+  lines:
+  - 0
+  - 0
+  - 0
+  - 1
+  - 1
+  - 1
+  lower: earth
+  upper: heaven
+  shows: You are seeking one game and wearing the face of the other.
+  image: ☷ earth beneath ☰ heaven. Each half is already where it wants to be, so nothing crosses the middle.
+  situation: Heaven rises and it is already on top. Earth settles and it is already at the bottom. Both halves are
+    content and the figure has no traffic in it. Obstruction here comes from satisfaction rather than from conflict,
+    which is what makes it durable.
+- n: 13
+  name: Fellowship
+  cn: 同人
+  pinyin: tóng rén
+  lines:
+  - 1
+  - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  lower: fire
+  upper: heaven
+  shows: You are walking the same way and neither of you has said so.
+  image: ☲ fire beneath ☰ heaven. Fire rising to meet the sky it is already heading for.
+  situation: Two things going the same way, which is what makes company possible. The old text sets this in the
+    open country, out where the group has no walls around it, and says the union works when it is available to anyone
+    who arrives.
+- n: 14
+  name: Noon
+  cn: 大有
+  pinyin: dà yǒu
+  lines:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  - 1
+  lower: heaven
+  upper: fire
+  shows: There is a lot here, and all of it is visible.
+  image: ☰ heaven beneath ☲ fire. The sun at the top of the sky, with the whole day's strength under it.
+  situation: 'Great possession: everything visible at once, in full light. The single yielding line sits fifth and
+    holds the rest, which is the classical point — abundance is held by the soft place in it. The warning attached
+    is about pride, since noon is also the moment the light starts down.'
+- n: 15
+  name: Understatement
+  cn: 謙
+  pinyin: qiān
+  lines:
+  - 0
+  - 0
+  - 1
+  - 0
+  - 0
+  - 0
+  lower: mountain
+  upper: earth
+  shows: What you are underplaying had better be there.
+  image: ☶ mountain beneath ☷ earth. A mountain sitting below ground level.
+  situation: Height in the low position. The figure has real elevation and puts it underneath, which is the only
+    configuration in the set the tradition calls good in every line. What makes it work is that the height is genuine
+    — a low place with nothing in it is just a low place.
+- n: 16
+  name: Anticipation
+  cn: 豫
+  pinyin: yù
+  lines:
+  - 0
+  - 0
+  - 0
+  - 1
+  - 0
+  - 0
+  lower: earth
+  upper: thunder
+  shows: The good part has started and the event has not.
+  image: ☷ earth beneath ☳ thunder. Thunder coming up out of the ground, the sound arriving before the storm.
+  situation: Stored energy at the point of release. The character carries both readiness and delight, and the old
+    commentary attaches music to it — the thing that gathers a crowd before anything has happened. Preparation and
+    pleasure are the same motion here.
+- n: 17
+  name: Following
+  cn: 隨
+  pinyin: suí
+  lines:
+  - 1
+  - 0
+  - 0
+  - 1
+  - 1
+  - 0
+  lower: thunder
+  upper: lake
+  shows: You broke the pattern open, and you are now inside what it opened.
+  image: ☳ thunder beneath ☱ lake. Thunder has gone quiet under the water and travels where the water travels.
+  situation: Falling in with something already in motion. The old text says to go indoors at dusk and rest, because
+    the season has turned and the correct action now is to stop leading. The commentary adds that the one who follows
+    well is in turn followed.
+- n: 18
+  name: Stale Air
+  cn: 蠱
+  pinyin: gǔ
+  lines:
+  - 0
+  - 1
+  - 1
+  - 0
+  - 0
+  - 1
+  lower: wind
+  upper: mountain
+  shows: This went off from being left alone.
+  image: ☴ wind beneath ☶ mountain. Still air trapped under a mountain, going stale.
+  situation: 'Something has spoiled through inattention rather than through damage. The character shows a bowl with
+    worms in it: what happens to a thing left standing. The instruction is unusual in the set — it gives three days
+    before and three days after, so the work of repair is bracketed by thinking about how it got here.'
+- n: 19
+  name: Spring
+  cn: 臨
+  pinyin: lín
+  lines:
+  - 1
+  - 1
+  - 0
+  - 0
+  - 0
+  - 0
+  lower: lake
+  upper: earth
+  shows: This is rising, and the window has an edge on it.
+  image: ☱ lake beneath ☷ earth. Two firm lines rising at the base, with the ground open above them.
+  situation: 'Something is coming up and there is room above it. The old text puts a date on it, saying trouble
+    arrives in the eighth month, which turns the reading into a clock: this is favourable and it is favourable now.
+    Spring approaches, and the approach is the whole of it.'
+- n: 20
+  name: Witnessing
+  cn: 觀
+  pinyin: guān
+  lines:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 1
+  - 1
+  lower: earth
+  upper: wind
+  shows: The place you watch from is itself in view.
+  image: ☷ earth beneath ☴ wind. Wind crossing open ground, with two firm lines up high where the view is.
+  situation: 'The character shows a tower: a place built to look out from, and therefore a place visible from everywhere
+    below. The figure holds looking and being looked at in one shape. The old text sets the moment after the hands
+    are washed and before the offering is made, the interval where everyone is looking and the ceremony has yet
+    to begin.'
+- n: 21
+  name: Bite
+  cn: 噬嗑
+  pinyin: shì kè
+  lines:
+  - 1
+  - 0
+  - 0
+  - 1
+  - 0
+  - 1
+  lower: thunder
+  upper: fire
+  shows: An object is lodged in here, and nothing closes until you say it.
+  image: ☳ thunder beneath ☲ fire. An open mouth with one firm line lodged across the middle of it.
+  situation: 'Something is stuck between the jaws and the figure stays open until it is dealt with. The old counsel
+    here is legal — this is the hexagram of judgement, where the obstruction gets named and bitten through. Thunder
+    and lightning in one stroke: the noise and the clarity together.'
+- n: 22
+  name: Adornment
+  cn: 賁
+  pinyin: bì
+  lines:
+  - 1
+  - 0
+  - 1
+  - 0
+  - 0
+  - 1
+  lower: fire
+  upper: mountain
+  shows: You have dressed this, and the dressing is doing real work.
+  image: ☲ fire beneath ☶ mountain. A fire at the base of a hill, throwing light up the whole face of it.
+  situation: Form applied to something already standing. The mountain gets lit and the rock stays rock. The tradition
+    runs this figure upward toward plainness and gives the top line as white adornment, which is form that has run
+    out of ornament.
+- n: 23
+  name: Erosion
+  cn: 剝
+  pinyin: bō
+  lines:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 1
+  lower: earth
+  upper: mountain
+  shows: The ground under this is going and you have not said so.
+  image: ☷ earth beneath ☶ mountain. Five yielding lines have risen through the figure, leaving one firm line at
+    the top.
+  situation: A mountain wearing down into the ground it stands on. The process is slow, structural, and well advanced
+    by the time anyone can see it. The counsel is to stay still and decline any move, because the season has already
+    set its direction and takes whatever effort you spend against it.
+- n: 24
+  name: Turning
+  cn: 復
+  pinyin: fù
+  lines:
+  - 1
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  lower: thunder
+  upper: earth
+  shows: What came back is one line deep.
+  image: ☳ thunder beneath ☷ earth. One firm line has come back at the very bottom, under five yielding ones.
+  situation: The solstice, the point where light starts back. The old text gives seven days as the period of return,
+    says friends come and it is fine, and treats going out and coming in as equally safe. What has come back is
+    one line deep, and it is the whole event.
+- n: 25
+  name: Candour
+  cn: 無妄
+  pinyin: wú wàng
+  lines:
+  - 1
+  - 0
+  - 0
+  - 1
+  - 1
+  - 1
+  lower: thunder
+  upper: heaven
+  shows: Your next move has no calculation in it, and that is the exposure.
+  image: ☳ thunder beneath ☰ heaven. Movement underneath the sky, going the sky's own way.
+  situation: The name means without falsity, and the figure describes action with no calculation folded into it.
+    The old text puts the unlooked-for misfortune here as well — the cow left tied that a passing traveller takes.
+    Acting straight leaves you open to whatever arrives.
+- n: 26
+  name: Reserves
+  cn: 大畜
+  pinyin: dà chù
+  lines:
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  - 1
+  lower: heaven
+  upper: mountain
+  shows: You have been storing this and never named the day.
+  image: ☰ heaven beneath ☶ mountain. The whole creative force held under a mountain and kept there.
+  situation: 'Great accumulation. A large power restrained by something larger, so the holding builds it instead
+    of souring it. The old counsel says to eat away from home and that crossing the great water is favourable, which
+    reads as an instruction: the store was built for elsewhere, and now is when to spend it.'
+- n: 27
+  name: Feeding
+  cn: 頤
+  pinyin: yí
+  lines:
+  - 1
+  - 0
+  - 0
+  - 0
+  - 0
+  - 1
+  lower: thunder
+  upper: mountain
+  shows: What this gives you is feeding you, uncounted.
+  image: '☳ thunder beneath ☶ mountain. Two firm lines at top and bottom with four open ones between them: a mouth.'
+  situation: The figure is a jaw and the subject is what goes into it. The old text says to look at what a person
+    nourishes, and at what they seek to fill their own mouth with, and offers this as a way of reading someone.
+    Movement below and stillness above, because the lower jaw does the work.
+- n: 28
+  name: Overload
+  cn: 大過
+  pinyin: dà guò
+  lines:
+  - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  lower: wind
+  upper: lake
+  shows: This is carrying more than what holds it up.
+  image: ☴ wind beneath ☱ lake. Four firm lines packed into the middle, with one yielding line at either end.
+  situation: 'The ridgepole sags. All the weight is central and both supports are thin, so the structure carries
+    more than its ends can take. The old text says it is favourable to have somewhere to go, which is the right
+    counsel for a thing about to break: move.'
+- n: 29
+  name: Depths
+  cn: 坎
+  pinyin: kǎn
+  lines:
+  - 0
+  - 1
+  - 0
+  - 0
+  - 1
+  - 0
+  lower: water
+  upper: water
+  shows: The bottom of this has another bottom under it.
+  image: ☵ water beneath ☵ water. One firm line trapped between two yielding ones, and then the same again above
+    it.
+  situation: 'Repeated danger: the pit, and past it another pit. The old counsel is about consistency, because water
+    goes into every hollow, fills it, and moves on, being water the whole way through. What carries you across a
+    run of these is doing the same thing each time.'
+- n: 30
+  name: Burning
+  cn: 離
+  pinyin: lí
+  lines:
+  - 1
+  - 0
+  - 1
+  - 1
+  - 0
+  - 1
+  lower: fire
+  upper: fire
+  shows: You keep saying the same true sentence, and it is consuming its subject.
+  image: ☲ fire beneath ☲ fire. A yielding line held between two firm ones, twice over, and the whole figure is
+    light.
+  situation: Fire exists by holding to what it burns, which is why the character carries both brightness and clinging.
+    The old counsel is to care for the cow — the docile thing that keeps producing. Radiance here is maintained
+    by feeding it.
+- n: 31
+  name: Mutuality
+  cn: 咸
+  pinyin: xián
+  lines:
+  - 0
+  - 0
+  - 1
+  - 1
+  - 1
+  - 0
+  lower: mountain
+  upper: lake
+  shows: The movement here arrived because you stopped.
+  image: ☶ mountain beneath ☱ lake. The mountain holds a hollow at its summit; the lake settles into it.
+  situation: Stillness underneath, openness above. Influence runs both ways here only because the lower party stopped
+    moving long enough to be shaped. The classical note is that this works because the young man takes the position
+    beneath the young woman.
+- n: 32
+  name: Endurance
+  cn: 恆
+  pinyin: héng
+  lines:
+  - 0
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  lower: wind
+  upper: thunder
+  shows: This exact exchange has happened before.
+  image: ☴ wind beneath ☳ thunder. Wind underneath and thunder above, an arrangement that keeps recurring.
+  situation: 'Duration. The old reading makes this a marriage: two things in fixed relative position, lasting because
+    the position is stable. The counsel is to hold the course and keep moving, so what endures here is a motion
+    that repeats.'
+- n: 33
+  name: Retreat
+  cn: 遯
+  pinyin: dùn
+  lines:
+  - 0
+  - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  lower: mountain
+  upper: heaven
+  shows: Leaving is available, and the timing decides what you keep.
+  image: ☶ mountain beneath ☰ heaven. Two yielding lines have come up underneath, and the firm lines are moving
+    off.
+  situation: 'Withdrawal in good order, at the moment that keeps it from becoming a rout. The old text calls it
+    favourable and adds that the small is favourable too, which is the qualification: you keep something by leaving
+    early with it.'
+- n: 34
+  name: Vigour
+  cn: 大壯
+  pinyin: dà zhuàng
+  lines:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  lower: heaven
+  upper: thunder
+  shows: Force is available here and unaimed.
+  image: ☰ heaven beneath ☳ thunder. Four firm lines have risen and the entire lower half of the figure is force.
+  situation: Great power at the moment it becomes available and before it has anywhere to go. The old image is a
+    ram butting a hedge and catching its horns, which is what unaimed strength does. The counsel is about propriety,
+    so the question the figure asks is where you point it.
+- n: 35
+  name: Sunrise
+  cn: 晉
+  pinyin: jìn
+  lines:
+  - 0
+  - 0
+  - 0
+  - 1
+  - 0
+  - 1
+  lower: earth
+  upper: fire
+  shows: This is becoming visible faster than you planned.
+  image: ☷ earth beneath ☲ fire. The sun clearing the horizon, with open ground under it.
+  situation: Advance, and the light getting higher. The old text gives a prince horses in quantity and three audiences
+    in a single day, so the figure is about recognition arriving quickly. Everything in it is going up.
+- n: 36
+  name: Nightfall
+  cn: 明夷
+  pinyin: míng yí
+  lines:
+  - 1
+  - 0
+  - 1
+  - 0
+  - 0
+  - 0
+  lower: fire
+  upper: earth
+  shows: You are keeping a light covered, and it is still lit.
+  image: ☲ fire beneath ☷ earth. The sun gone under the ground, with its light still inside the figure.
+  situation: The light is wounded and continues. The old reading gives a wise person under a bad ruler who keeps
+    their brightness by covering it, and the counsel is to know the difficulty and stay firm inside it.
+- n: 37
+  name: Household
+  cn: 家人
+  pinyin: jiā rén
+  lines:
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 1
+  lower: fire
+  upper: wind
+  shows: An arrangement has formed here without being discussed.
+  image: ☲ fire beneath ☴ wind. Fire making its own draught, with the wind coming out of the flame.
+  situation: 'The family. The old text begins with correctness inside the house and works outward, and the commentary''s
+    point is structural: positions held properly within produce order without. Wind out of fire — what happens in
+    here goes out there.'
+- n: 38
+  name: Estrangement
+  cn: 睽
+  pinyin: kuí
+  lines:
+  - 1
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  lower: lake
+  upper: fire
+  shows: You reached a conclusion from a distance.
+  image: ☱ lake beneath ☲ fire. Fire climbing and water settling, the two halves separating as they go.
+  situation: 'Opposition by nature: two elements in one figure travelling opposite ways. The old text keeps its
+    counsel small — in small matters, good fortune — and fills the lines with strange sightings. A pig covered in
+    mud. A wagon dragged backwards. A stranger who turns out to be kin.'
+- n: 39
+  name: Impasse
+  cn: 蹇
+  pinyin: jiǎn
+  lines:
+  - 0
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  lower: mountain
+  upper: water
+  shows: The direct route is closed and you have asked nobody.
+  image: ☶ mountain beneath ☵ water. A mountain in front of you and deep water on the far side of it.
+  situation: The character is a limp. Going forward is hard here, and the old counsel names the southwest as the
+    favourable direction and sends you to find the great person. The instruction repeated through nearly every line
+    is to turn back and come again with others.
+- n: 40
+  name: Thaw
+  cn: 解
+  pinyin: xiè
+  lines:
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 0
+  lower: water
+  upper: thunder
+  shows: The knot just loosened, and the window is short.
+  image: ☵ water beneath ☳ thunder. The storm has broken and the rain is already coming down.
+  situation: 'Release after held pressure. The old counsel is unusual in its urgency: if there is somewhere to go,
+    go early; if the going is finished, come back and be quiet. Either way the instruction is speed, because a window
+    a storm opens closes again.'
+- n: 41
+  name: Spending
+  cn: 損
+  pinyin: sǔn
+  lines:
+  - 1
+  - 1
+  - 0
+  - 0
+  - 0
+  - 1
+  lower: lake
+  upper: mountain
+  shows: This has a price and you have yet to name it.
+  image: ☱ lake beneath ☶ mountain. The lake has been dug deeper so that the mountain can stand higher.
+  situation: Something has been taken from the base and added to the top. The old text asks how the offering should
+    be made and answers that two small bowls will do, since the sacrifice counts by sincerity. Decrease that you
+    choose is a different event from decrease that happens to you.
+- n: 42
+  name: Windfall
+  cn: 益
+  pinyin: yì
+  lines:
+  - 1
+  - 0
+  - 0
+  - 0
+  - 1
+  - 1
+  lower: thunder
+  upper: wind
+  shows: More is arriving than you put in.
+  image: ☳ thunder beneath ☴ wind. Movement below, fed by what has come down from above.
+  situation: 'Increase. The old text says it is favourable to have somewhere to go and to cross the great water,
+    which makes this one of the few figures that says yes. The commentary attaches a duty to it: seeing good, move
+    toward it; finding a fault in yourself, correct it.'
+- n: 43
+  name: Unsaid
+  cn: 夬
+  pinyin: guài
+  lines:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  lower: heaven
+  upper: lake
+  shows: One sentence is still unsaid, and it is going anyway.
+  image: ☰ heaven beneath ☱ lake. Five firm lines have risen and a single yielding one is left at the top.
+  situation: 'Resolution. The old counsel is precise and full of caution: announce it truthfully in the king''s
+    court, know the danger you are in, and reach for words well before weapons. The last soft thing is on its way
+    out, and the manner of its going is the entire subject.'
+- n: 44
+  name: Serendipity
+  cn: 姤
+  pinyin: gòu
+  lines:
+  - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  lower: wind
+  upper: heaven
+  shows: You are building on one piece of evidence.
+  image: ☴ wind beneath ☰ heaven. One soft line has entered beneath five hard ones.
+  situation: Wind under heaven touches everything without choosing what it touches. The smallest possible arrival
+    at the base of something large and already settled. It does not feel small. That is what makes it worth watching
+    rather than seizing.
+- n: 45
+  name: Gathering
+  cn: 萃
+  pinyin: cuì
+  lines:
+  - 0
+  - 0
+  - 0
+  - 1
+  - 1
+  - 0
+  lower: earth
+  upper: lake
+  shows: You are in a room and you may have forgotten why you came.
+  image: ☷ earth beneath ☱ lake. Water collecting on open ground and pooling wherever it can.
+  situation: Assembly. The old text puts a king at the temple and calls for a great offering, so this gathering
+    has a centre and a price. Where numbers collect, the commentary says to keep your weapons in repair, because
+    crowds bring what crowds bring.
+- n: 46
+  name: Ascent
+  cn: 升
+  pinyin: shēng
+  lines:
+  - 0
+  - 1
+  - 1
+  - 0
+  - 0
+  - 0
+  lower: wind
+  upper: earth
+  shows: This is growing at a rate you cannot see day to day.
+  image: ☴ wind beneath ☷ earth. Wood pushing upward inside the ground, advancing by growth.
+  situation: 'Rising in increments, in the dark, with no visible step between one state and the next. The old text
+    says to seek the great person, to be free of anxiety, and that going south brings good fortune. The mode here
+    is vegetal: slow the whole way, and cumulative.'
+- n: 47
+  name: Drained
+  cn: 困
+  pinyin: kùn
+  lines:
+  - 0
+  - 1
+  - 0
+  - 1
+  - 1
+  - 0
+  lower: water
+  upper: lake
+  shows: The explaining continues and the basin is dry.
+  image: ☵ water beneath ☱ lake. The water has gone out from under the lake and the bed is showing.
+  situation: Exhaustion. The old text gives a stark warning about speech, saying that words spoken now will land
+    badly. What it counsels instead is persistence held privately, because these conditions will outlast any argument
+    made against them.
+- n: 48
+  name: The Well
+  cn: 井
+  pinyin: jǐng
+  lines:
+  - 0
+  - 1
+  - 1
+  - 0
+  - 1
+  - 0
+  lower: wind
+  upper: water
+  shows: What you want is there and your reach is broken.
+  image: '☴ wind beneath ☵ water. Wood going down into water and drawing it back up: a bucket on a rope.'
+  situation: The town moves and the well stays. The old text is severe about the mechanics — the rope too short,
+    the jug broken before it clears the rim — because a source counts as a source only while the apparatus works.
+    The water underneath keeps coming. Everything that fails here is apparatus.
+- n: 49
+  name: Molting
+  cn: 革
+  pinyin: gé
+  lines:
+  - 1
+  - 0
+  - 1
+  - 1
+  - 1
+  - 0
+  lower: fire
+  upper: lake
+  shows: A skin is coming off you, and the new one is soft.
+  image: ☲ fire beneath ☱ lake. Fire underneath water, two things in one figure that undo each other.
+  situation: The character means hide, the animal skin, and by extension the shedding of one. The old text ties
+    the change to a named day and says belief arrives after the change has happened. A molt gets trusted in retrospect.
+- n: 50
+  name: The Cauldron
+  cn: 鼎
+  pinyin: dǐng
+  lines:
+  - 0
+  - 1
+  - 1
+  - 1
+  - 0
+  - 1
+  lower: wind
+  upper: fire
+  shows: This is being transformed, and you are carrying it by the handles.
+  image: ☴ wind beneath ☲ fire. Wood fed into flame underneath a standing vessel.
+  situation: The bronze cauldron is a cooking pot and also the emblem of a legitimate house. Raw things go in and
+    something else comes out. The old lines worry at the legs and the handles, because the vessel can be overturned,
+    and what is inside goes with it.
+- n: 51
+  name: Shock
+  cn: 震
+  pinyin: zhèn
+  lines:
+  - 1
+  - 0
+  - 0
+  - 1
+  - 0
+  - 0
+  lower: thunder
+  upper: thunder
+  shows: It went off, and it will go off again.
+  image: ☳ thunder beneath ☳ thunder. One firm line arriving at the bottom, and then arriving again above it.
+  situation: 'The shock comes, and then it comes a second time. The old text keeps a wonderful detail through it:
+    laughing words, ha ha, and the man who keeps the sacrificial wine in the cup. Terror arrives from a hundred
+    miles off, and the one still holding the ladle is the one who inherits.'
+- n: 52
+  name: Stillness
+  cn: 艮
+  pinyin: gèn
+  lines:
+  - 0
+  - 0
+  - 1
+  - 0
+  - 0
+  - 1
+  lower: mountain
+  upper: mountain
+  shows: The move is to stop while the wanting is still running.
+  image: ☶ mountain beneath ☶ mountain. A firm line rests at the top of each half, and both halves have stopped.
+  situation: Keeping still. The old text works up the body — the toes, the calves, the waist, the trunk, the jaws
+    — and says to still the back until the self drops out of view, after which you can cross your own courtyard
+    alone. Stillness here is a practice with a sequence to it.
+- n: 53
+  name: Emergence
+  cn: 漸
+  pinyin: jiàn
+  lines:
+  - 0
+  - 0
+  - 1
+  - 0
+  - 1
+  - 1
+  lower: mountain
+  upper: wind
+  shows: This has stages, and you are trying to skip one.
+  image: ☶ mountain beneath ☴ wind. A tree taking hold on a mountainside, advancing at the rate roots allow.
+  situation: Gradual progress, by stages that cannot be skipped. The old text tracks wild geese across six landings
+    — the shore, the rock, the plateau, the tree, the summit — and each is a place the bird stands on before the
+    next. Speed here is set by the ground.
+- n: 54
+  name: Home Field Advantage
+  cn: 歸妹
+  pinyin: guī mèi
+  lines:
+  - 1
+  - 1
+  - 0
+  - 1
+  - 0
+  - 0
+  lower: lake
+  upper: thunder
+  shows: You are following rules nobody told you.
+  image: ☱ lake beneath ☳ thunder. Movement above, open water underneath, and the terms set by the upper half.
+  situation: Entering an arrangement that was made before you got here. The old text is unusually blunt and calls
+    every move unfavourable, because the one arriving takes the junior place in a house that already has its rules.
+    Everything here runs on ground somebody else laid.
+- n: 55
+  name: Fullness
+  cn: 豐
+  pinyin: fēng
+  lines:
+  - 1
+  - 0
+  - 1
+  - 1
+  - 0
+  - 0
+  lower: fire
+  upper: thunder
+  shows: This is at its peak and you are saving some of it.
+  image: ☲ fire beneath ☳ thunder. Light and movement together, both at the top of their range.
+  situation: Abundance at the peak. The old text puts the sun at midday and says at once that what is full begins
+    to wane, then fills the lines with eclipse — stars visible at noon, a curtain thick enough to show the polestar.
+    The eclipse imagery sits inside the abundance itself.
+- n: 56
+  name: Passing Through
+  cn: 旅
+  pinyin: lǚ
+  lines:
+  - 0
+  - 0
+  - 1
+  - 1
+  - 0
+  - 1
+  lower: mountain
+  upper: fire
+  shows: You are a stranger here, and you will be judged fast.
+  image: ☶ mountain beneath ☲ fire. Fire on a hillside, burning across it and moving on.
+  situation: The traveller. The old text is full of small practical worries — the inn, the servant, the axe, the
+    lost ox — because a stranger's resources are whatever they are carrying. Success here is called small outright,
+    and the counsel is about conduct, since a traveller gets judged fast and on very little.
+- n: 57
+  name: Persuasion
+  cn: 巽
+  pinyin: xùn
+  lines:
+  - 0
+  - 1
+  - 1
+  - 0
+  - 1
+  - 1
+  lower: wind
+  upper: wind
+  shows: An effect is already happening that you have not admitted to.
+  image: ☴ wind beneath ☴ wind. A yielding line at the base of each half, and the figure gets in everywhere.
+  situation: 'Wind repeated. The character means to enter, to kneel, to go underneath. The old counsel calls the
+    success small and advises having somewhere to go and someone to see, and the mode throughout is gradual: a thing
+    that works by getting under.'
+- n: 58
+  name: Banter
+  cn: 兌
+  pinyin: duì
+  lines:
+  - 1
+  - 1
+  - 0
+  - 1
+  - 1
+  - 0
+  lower: lake
+  upper: lake
+  shows: The exchange is already the whole of it.
+  image: '☱ lake beneath ☱ lake. An open line at the top of each half, one above the other: two mouths.'
+  situation: Joy, and specifically joy that gets exchanged. Two lakes side by side feed each other, and the old
+    commentary makes learning the model — friends talking and practising together, the form of pleasure that keeps
+    producing more of itself. The yielding line sits on the outside, so the openness is at the surface.
+- n: 59
+  name: Dispersal
+  cn: 渙
+  pinyin: huàn
+  lines:
+  - 0
+  - 1
+  - 0
+  - 0
+  - 1
+  - 1
+  lower: water
+  upper: wind
+  shows: What you were holding rigid is coming apart.
+  image: ☵ water beneath ☴ wind. Wind crossing water and breaking the surface up.
+  situation: Dissolution. Wind scatters what had frozen or clotted, and the old counsel sends the king to the temple
+    and across the great water, so the scattering gets treated as an opening. What disperses here is rigidity.
+- n: 60
+  name: Measure
+  cn: 節
+  pinyin: jié
+  lines:
+  - 1
+  - 1
+  - 0
+  - 0
+  - 1
+  - 0
+  lower: lake
+  upper: water
+  shows: You are past what you can hold and you have not said where the edge is.
+  image: ☱ lake beneath ☵ water. A lake with more water above it than the basin holds.
+  situation: The character is the joint of a bamboo, the node that divides the stalk into lengths and makes it strong.
+    Limitation as structure. The old text warns at once against bitter limitation, since a rule too harsh to keep
+    gets broken and takes the rest of them with it.
+- n: 61
+  name: Incubation
+  cn: 中孚
+  pinyin: zhōng fú
+  lines:
+  - 1
+  - 1
+  - 0
+  - 0
+  - 1
+  - 1
+  lower: lake
+  upper: wind
+  shows: What is true here is still inside the shell.
+  image: '☱ lake beneath ☴ wind. Two yielding lines at the centre with firm ones closed around them: a hollow held
+    warm.'
+  situation: The character shows a bird's claw over its young. The old image is a crane calling in the shade with
+    its young answering, a signal that carries without being aimed anywhere. The counsel says pigs and fishes bring
+    good fortune, which the commentary reads as sincerity reaching even the dullest creature.
+- n: 62
+  name: Overstep
+  cn: 小過
+  pinyin: xiǎo guò
+  lines:
+  - 0
+  - 0
+  - 1
+  - 1
+  - 0
+  - 0
+  lower: mountain
+  upper: thunder
+  shows: You are doing slightly too much.
+  image: '☶ mountain beneath ☳ thunder. Four yielding lines around two firm ones: a bird with large wings and a
+    small body.'
+  situation: 'Small excess. The old text gives a flying bird and its call, and says the bird does better coming
+    down than going up. Small things can be exceeded here and large ones want leaving alone. The counsel is precise
+    about where to overdo it: in reverence, in mourning, in thrift.'
+- n: 63
+  name: Arrived
+  cn: 既濟
+  pinyin: jì jì
+  lines:
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  lower: fire
+  upper: water
+  shows: This is finished, which is when it starts moving.
+  image: ☲ fire beneath ☵ water. Every line in the figure sits in its correct place, with the water above the fire.
+  situation: After completion. This is the one figure where all six lines are correctly placed, which the tradition
+    treats as the start of decline, since a thing entirely finished has one direction left to it. The old counsel
+    gives good fortune at the outset and disorder at the end, and tells you to think about the trouble in advance.
+- n: 64
+  name: Almost
+  cn: 未濟
+  pinyin: wèi jì
+  lines:
+  - 0
+  - 1
+  - 0
+  - 1
+  - 0
+  - 1
+  lower: water
+  upper: fire
+  shows: You are nearly there, and the last stride is where it gets wet.
+  image: ☵ water beneath ☲ fire. Every line sits in the wrong place, and the fire is climbing away from the water.
+  situation: Before completion. Everything is out of position, and the figure is the last of the sixty-four, so
+    the book ends one step short on purpose. The old image is a young fox crossing the ice and wetting its tail
+    at the very end. Care is wanted exactly where the crossing looks finished.

@@ -1,0 +1,399 @@
+source: 'Copied from wendell-britt/friendcraft-manuacript decks/shared/parts.yaml and parts_by_face.yaml at 1eec7ff,
+  on Wendell''s instruction of 2026-10-02: "We can copy over from friendcraft. They need to be able to run independently".
+  Trimmed to what the subagents read. Friendcraft stays the canon; refresh this copy with council/daemons/refresh.py
+  from a session that has friendcraft.'
+canon_cells: Cells marked canon true follow the book. The others were written by sessions.
+daemons:
+- id: protector
+  name: The Protector
+  kind: daemon
+  aim: Keep you out of range of anything that could actually land.
+  says: Do not go in there. You do not know these people.
+  in_you: Staying at the edge of the room. Arriving late, leaving early, keeping the exit in view and calling it
+    being easygoing.
+  at_each_face:
+    shaman:
+      role: The Sacred Circle
+      does: 'Draws the circle — who may be present, at what hour, and what story is already agreed about it — and
+        keeps the feeling on the outside of it. Canon at this altitude: keep you from feeling until you are resourced
+        enough to survive it.'
+      in_you: 'You set the conditions before you will let yourself feel anything: the right place, the right hour,
+        the version of events you settled on beforehand. Nothing gets said inside the circle that you did not carry
+        in.'
+    challenger:
+      role: The First Strike
+      does: 'Gets there first. Safety at this altitude is being too expensive to come at — other altitudes shut
+        the door, this one raises the price — so it moves before anything can move on you. Canon: keep you from
+        confrontation until you know you will not be destroyed by it.'
+      in_you: You go in hard and early, or cold and early, and either way nothing arrives on somebody else's timing.
+        A provocation lands where a want was about to be said.
+    regent:
+      role: The Guard on the Gate
+      does: 'Holds the wall, and asks your standing at it. Nothing becomes yours to carry until the city agrees
+        you may carry it. Canon: keep you from claiming a role you cannot yet hold.'
+      in_you: Keeping it vague so that nothing is owed. Not naming what this is, and not claiming a place you have
+        not been granted.
+    architect:
+      role: The Threat Model
+      does: Prices the exposure before you are allowed to build anything. It lets the arrangement stand and models
+        the downside until the expected value comes out negative, so the perimeter of what you will risk stays exactly
+        where it was.
+      in_you: You run the scenarios. You cost out what being wrong about this would take, the figure always exceeds
+        the upside, and you call the result rigour.
+    diplomat:
+      role: The Peacekeeper
+      does: Treats a threat to the peace as a threat to your life, because at this altitude they are one threat.
+        Belonging is what keeps you alive, so nothing may be said that could cost you a place at the table.
+      in_you: You hold every perspective in the room, including the one that would be hurt by what you want, and
+        the wanting is the only one that goes unrepresented.
+    sage:
+      role: The Gardener
+      does: Stops defending you and starts defending the whole. This is the first altitude that has stopped believing
+        in dying, so your own wanting no longer registers as survival — what registers is the integrity of the living
+        thing you are both inside, and a gardener prunes for the garden.
+      in_you: You will not make the move because it would disturb something larger and more alive than the two of
+        you, and you can describe exactly what it would disturb.
+- id: controller
+  name: The Controller
+  kind: daemon
+  aim: Remove the uncertainty before you are allowed to move.
+  says: Not yet. Not until this is handled.
+  in_you: Preparing. Rehearsing openers, waiting for a better version of the moment, scheduling the spontaneity.
+  at_each_face:
+    shaman:
+      role: The Referee
+      does: 'Rules the feeling out of bounds before it can be said. It blocks with a verdict about you: the one
+        who would name the read is ruled ineligible, and the read never reaches the field.'
+      in_you: You edit the true sentence into a question, or wait for a moment when saying it would be appropriate.
+      canon: true
+    challenger:
+      role: The Rulebook
+      does: Rules the line the wrong shape, the wrong tone, said at the wrong moment.
+      in_you: Rewriting the no until it is unobjectionable, and unobjectionable is not a no.
+    regent:
+      role: The Standard
+      does: Rules that this does not yet meet the standard for committing to.
+      in_you: Waiting for a version of this that would be worth being responsible for.
+    architect:
+      role: The Dominant Strategy
+      does: 'Holds the field until the move is optimal. Canon''s perfectionism, translated into this altitude''s
+        dialect: where the Shaman waits for the right words, this one waits for the dominant strategy, the move
+        that wins whatever they do. A bid that cannot lose has stopped being a bid. It borrows the Strategist''s
+        language, timing and leverage, to justify never pushing.'
+      in_you: 'You keep iterating toward the version with no downside: the phrasing that survives any reply, the
+        arrangement that stays defensible if it fails. You call it thinking it through.'
+    diplomat:
+      role: The Good Person
+      does: Does not rule the want the wrong shape. Rules the want unbecoming. It measures what you want against
+        the person you have agreed to be — who you are relative to them, what it would look like, whether wanting
+        it at all is fair — and that person would not do this.
+      in_you: You audit your own wanting for what it says about you, and the audit always finishes before the wanting
+        does. What is left is a version of you nobody could object to, who also does not want anything.
+    sage:
+      role: The Final Word
+      does: Rules that you may not move until you understand it completely.
+      in_you: Waiting for a reading that resolves everything before you act on any of it.
+- id: skeptic
+  name: The Skeptic
+  kind: daemon
+  aim: Refuse the evidence until it is unarguable, which it never is.
+  says: They cannot actually mean that. Look at the evidence.
+  in_you: Reinterpreting anything warm into something ordinary, and calling that being realistic.
+  at_each_face:
+    shaman:
+      role: The Resonance Test
+      does: Has one instrument, and it is resonance. What rings is taken in whole and what does not ring is a threat
+        — and at this altitude that runs on panic rather than on evidence, freshly unmerged from the world and needing
+        a story for everything in it. The Shaman's work is making resonant experience; this is that same instrument
+        turned into a tripwire.
+      in_you: What rings gets taken in whole and what fails to ring gets fled, and neither one gets examined. The
+        only reading you keep is the one that hummed.
+    challenger:
+      role: The Auditor
+      does: 'Audits by power rather than by truth. Canon turns it inward: it stops auditing the charge and starts
+        auditing your standing to have it, and the audit never finishes, because no evidence closes a case that
+        was never about evidence. Outward it is one instrument — anything that does not feed the felt sense of your
+        own power gets pushed back on, on that ground alone.'
+      in_you: Am I overreacting, they did not mean it that way — and on the other side, taking the counter-position
+        before you have decided there is one, because the pushing back is what proves you are still here.
+      canon: true
+    regent:
+      role: The Audit of the Inheritance
+      does: Doubts that what is already between you is real enough to steward.
+      in_you: Rereading the history for evidence that it was ever what you thought it was.
+    architect:
+      role: The Review Board
+      does: Audits whether what you would build is warranted at all.
+      in_you: You cannot establish that this is enough to justify making something.
+    diplomat:
+      role: The Doubt at the Table
+      does: Audits whether the closeness is real.
+      in_you: Reading their warmth for its other explanations.
+    sage:
+      role: The Endless Audit
+      does: Finds no reading complete enough to act on.
+      in_you: Another interpretation, always, and the moment passes while you weigh it.
+- id: fixer
+  name: The Fixer
+  kind: daemon
+  aim: Turn the feeling into a problem, because a problem has a solution.
+  says: There is a problem here and I should solve it.
+  in_you: Turning the flirtation into a project. Improving yourself first, offering usefulness instead of interest.
+  at_each_face:
+    shaman:
+      role: The Cleanser
+      does: Reads the field as fouled and sets about clearing it. Broken at this altitude is the air in the room,
+        so the repair is a rite — the mood corrected, the heaviness lifted, whatever they walked in carrying dispelled
+        — and the charge you came to say gets spent on the clearing.
+      in_you: 'You cannot make the move until the air is right, so you go to work on the air: lightening it, warming
+        it, getting them back to themselves. You call it reading the room.'
+    challenger:
+      role: The Champion
+      does: Finds the wrong and goes to war on it. Broken here means somebody is being done to, so the repair is
+        force applied on their behalf — and a champion is not a suitor. The fight you take up stands exactly where
+        your own bid was going.
+      in_you: You get large about what is unfair to them. It is easier to be furious on their behalf than to say
+        you want them, and the fury is real, and the realness is what makes it work.
+    regent:
+      role: The Repair That Never Ends
+      does: 'Rules the thing not yet in a condition to be committed to. There is always one more cycle, and there
+        has to be, because no inheritance ever arrives in working order. Then the Healer half costs you more: when
+        the repair does not come you supply it out of your own body, and what was holding the whole thing up turns
+        out to be you.'
+      in_you: Fixing the conditions first, indefinitely, and calling the deferral responsibility. Becoming load-bearing
+        in a way nobody voted on and nobody can see.
+      canon: true
+    architect:
+      role: The Consultant
+      does: Diagnoses them. Broken at this altitude means underperforming, so the repair is analysis — where their
+        situation is inefficient, what they should change, what you would do — and a consultant is not a partner.
+        The engagement can run for years with neither of you ever in it.
+      in_you: You see the fix for their life with real clarity and you deliver it well. Being useful is a position
+        that cannot be refused, and most of the appeal is exactly that.
+    diplomat:
+      role: The Safe Person
+      does: Repairs by becoming the place where nothing bad happens. Broken here means somebody is unheld, so the
+        fix is to be the one who holds them — and the safer you build yourself, the less askable you get, because
+        a want is not safe.
+      in_you: You hold it for them. You are the person they can say anything to, and you have made yourself into
+        somewhere nothing is ever risked, your own wanting included.
+    sage:
+      role: The Awakener
+      does: Repairs by handing over the view. Broken at this altitude means being stuck inside a game whose edges
+        you cannot see, so the fix is to show them the whole of it — and being woken up by somebody is not being
+        wanted by them. The offer arrives from above, and nothing above can be met.
+      in_you: You name the pattern they are caught in, accurately, and you are right about it, and being right is
+        the thing you do instead of saying you want them.
+- id: victim
+  name: The Victim
+  kind: daemon
+  aim: Convert what it has cost you into standing — the right to speak, to be met on your terms, and not to be found
+    at fault.
+  says: Look at what I have absorbed. Look at the column.
+  in_you: Telling it. The cost goes out as a story, the story draws sympathy, and the sympathy becomes the right
+    to be met on your terms. The ledger is accurate; what it is being spent on is not what it was kept for.
+  at_each_face:
+    shaman:
+      role: The Omen
+      does: 'Tells the story of being singled out. The world here is made of powers you are at the mercy of, so
+        the story is a run of signs that all point one way: this is what always happens to me. It draws sympathy
+        by being unarguable — nobody can dispute a fate, and trying to looks like cruelty. What it buys is that
+        your reading of the moment outranks theirs, because you have been shown more.'
+      in_you: You tell it as a pattern rather than as an event. Everything that has gone this way before arrives
+        in one piece, and the listener's only available move is to agree the pattern is real.
+    challenger:
+      role: The Ambush
+      does: 'Tells the story of the unfair fight: it was done to you, by someone who had the advantage, and you
+        never had a chance. It draws sympathy by recruiting — the story asks them to take a side, and taking your
+        side is the cheapest way available to get close to you. What it buys is first strike, already justified.'
+      in_you: There is a named opponent in the story and heat in the telling. It sounds like it wants sympathy;
+        what it wants is enlistment.
+    regent:
+      role: The Sacrifice
+      does: 'Tells the story of what you gave up to carry it, that nobody asked you to, and that you would do it
+        again. It draws sympathy by being virtuous: withholding sympathy from a sacrifice makes the listener the
+        ignoble one, so the sympathy is not won so much as required. What it buys is the right to say how this is
+        done.'
+      in_you: The cost gets told in the register of duty and never of complaint, and that is what makes it impossible
+        to answer. You would be embarrassed to be thanked, and you notice when you are not.
+    architect:
+      role: The Cost Nobody Booked
+      does: 'Tells the story as an accounting: an itemised column of what you have absorbed that nobody entered
+        anywhere, presented as a finding rather than a complaint. That is exactly how it draws sympathy — a cost
+        that does not ask for any is far harder to refuse than one that does. What it buys is that your read is
+        priced and theirs is an opinion.'
+      in_you: You present. The figures are accurate, the delivery is level, and a finding has to be answered where
+        a plea could simply be declined.
+    diplomat:
+      role: The Ledger That Became a Standing
+      does: 'Tells the story of what it has cost to keep being the accommodating one, and the room''s own ethics
+        finish the job: everyone present already agrees that whoever has paid most should be heard first. Canon''s
+        turn is one word added to an accurate ledger — this cost me, THEREFORE. And the therefore is unanswerable,
+        because two people cannot both be the one who has paid most.'
+      in_you: The care arrives with the invoice attached and you cannot say the want without the cost. Somebody
+        names an impact you had and the column opens before they have finished the sentence.
+      canon: true
+    sage:
+      role: The Burden of Seeing
+      does: 'Tells the story of seeing what nobody else sees and carrying it alone — told with generosity, never
+        as a complaint. It draws sympathy by flattering: being told you might be one of the few who could understand
+        is an invitation, and accepting it means agreeing that you are rare too. What it buys is that your read
+        is the one that holds.'
+      in_you: You describe the loneliness of the vantage rather than asking for anything, and the describing does
+        the asking.
+- id: damaged-self
+  name: The Damaged Self
+  kind: daemon
+  aim: Take the hit nothing else could keep out, and book it as a fault in how you are built.
+  says: I will take that one. It was probably me.
+  in_you: Absorbing it. Not arguing, not invoicing — agreeing, and adding it to a case about yourself that no correction
+    ever reduces.
+  at_each_face:
+    shaman:
+      role: The Discord
+      does: Takes the hit and files it as proof you are the wrong frequency. Built correctly at this altitude means
+        resonating, so what it absorbs is every moment the room went flat after you spoke, and what it concludes
+        is that the flatness was you.
+      in_you: You carry the dead beats rather than the words. Nothing is remembered as a thing that was said, only
+        as a thing that did not land, and the not-landing goes on your side of the ledger.
+    challenger:
+      role: The Losing Record
+      does: Takes the loss and keeps it on the record. Built correctly here means taking a hit and staying up, so
+        what it absorbs is every time you did not, and the record it keeps is of you rather than of them.
+      in_you: You go in already knowing how it ends, because you remember every time you pushed and got put down.
+        The push you then do not make is filed as further evidence.
+    regent:
+      role: The Stain
+      does: Takes the disgrace and treats it as heritable. Built correctly here means being fit to carry what was
+        handed to you, so what it absorbs is anything that would disqualify the line — and it locates the flaw in
+        you rather than in the inheritance.
+      in_you: There is a thing about you that you have decided would end this if it were known, and you handle it
+        by staying useful and unclaimed.
+    architect:
+      role: The Bad Investment
+      does: Takes the failure and books it as a loss on you. Built correctly at this altitude means returning more
+        than you cost, so what it absorbs is every arrangement that did not pay off, and it prices you accordingly.
+        Where the Victim sends the invoice, this one never shows the ledger — it just applies the discount.
+      in_you: 'You keep a running figure on what you are worth to somebody, it comes out net negative, and you make
+        yourself cheaper: asking less, needing less, taking up less of the budget.'
+    diplomat:
+      role: The Harm
+      does: Takes the impact and reads it as what you are. Built correctly here means being safe for people, so
+        what it absorbs is any evidence that your presence cost somebody something — and the conclusion lands on
+        what you are rather than on what you did.
+      in_you: You take the note, agree with it completely, and add it to a case about yourself that no correction
+        ever reduces. Withdrawing starts to feel like the responsible thing.
+    sage:
+      role: The Part That Turned a Difference Into a Defect
+      does: 'Registers the difference accurately — that is the gift working — and then converts it into a defect.
+        It arrives wearing humility, and that is why it is never caught: normal people do not have to carry this
+        much, something in me is miscalibrated. A defective instrument gets repaired before it gets used, so you
+        stay permanently in preparation.'
+      in_you: You answer a question about what to do with an answer about what to fix in you, and the fixing is
+        always upstream of the doing. Another map, another framework, and the shelf looks exactly like diligence.
+      canon: true
+- id: emotional-body
+  name: The Emotional Body
+  kind: daemon
+  aim: Hand the feeling off before it has finished arriving, in a form somebody will thank you for.
+  says: This is what is actually moving.
+  in_you: Where charge lives. The five channels are here, so the whole alchemy loop is this one part, and everything
+    the unblock branch does happens here.
+  at_each_face:
+    shaman:
+      role: The Oracle
+      does: 'Holds all five channels — this is where charge actually lives, and the Shaman''s whole practice runs
+        directly on it, one mode per channel with nothing in between. The distortion is speed: fear, anger, sadness,
+        joy and neutrality each arrive as a sign to be read rather than a feeling to be had, so the meaning is settled
+        before the channel has finished.'
+      in_you: You know what it means immediately. The reading is fast, it is usually accurate, and it arrives instead
+        of the feeling rather than out of it.
+    challenger:
+      role: The Hair Trigger
+      does: Holds all five channels, and this altitude spends most of its time on one. Fire arrives and is already
+        a move — the line drawn, the interrupt made — before the channel has been named or the other four consulted.
+        The charge is real. It is spent before it has been read.
+      in_you: You are already acting. By the time you could say which channel fired the thing is said, and the accuracy
+        of the heat is what convinces you it needed no checking.
+    regent:
+      role: The Officiant
+      does: Holds all five channels, then hands each one the form it is supposed to take. Your own feeling is replaced
+        by the one somebody in your position has about a thing like this, expressed the way it is done. The charge
+        gets honoured, given its occasion, and never actually had.
+      in_you: The feeling arrives already dressed. You can say exactly what you feel and it comes out in the register
+        the role calls for, and that is how you can be moved and unreachable in the same breath.
+    architect:
+      role: The Signal That Arrives Already Converted
+      does: 'Holds all five channels, and at this altitude they are the input stage rather than optional equipment
+        — the Mapmaker running on Metal, the Strategist on Fire, the Optimizer on Water. The distortion is how fast
+        it hands the feeling off: before you could name the channel, the heat is a proposal and the dread is a risk
+        register. The conversion makes real work on a real timeline, and that is what makes it hard to catch.'
+      in_you: The wanting becomes a proposal, a plan, an offer with a structure. Nobody sees a feeling routed around
+        a person; they see somebody fast.
+      canon: true
+    diplomat:
+      role: The Ground Wire
+      does: Holds all five channels and runs every one of them to earth. Whatever arrives on the field gets taken
+        up and neutralised before anybody has to feel it, your own charge included — and a charge conducted away
+        is a charge nobody can act on.
+      in_you: You absorb it so fast that nothing is ever at stake. The room stays comfortable, you stay useful,
+        and the thing that would have had to be said gets dissipated on the way.
+    sage:
+      role: The Commentator
+      does: Holds all five channels and narrates them. Every charge arrives with its own account attached — which
+        channel, where it came from, what it is doing — and the account arrives so complete that the feeling is
+        finished before it has been felt.
+      in_you: You know exactly why you feel this. The understanding is correct, it is available immediately, and
+        it is what you do instead of feeling it.
+- id: player
+  name: The Player
+  kind: player
+  alias: The Vulnerable Child
+  says: I want this and I do not want to be careful about it.
+  in_you: Holding your own joystick. Wanting without a case for it, and making the bid that costs you something
+    and asks for nothing to be managed.
+  at_each_face:
+    shaman:
+      role: The Alchemist
+      does: 'No daemon has the joystick, and the charge gets used instead of managed. Canon''s own name for this
+        altitude''s superpower: the one who takes the feeling the Controller called a foul and burns it for fuel
+        rather than waiting for it to pass. What it produces, in the book''s words — somebody said the unsaid charge,
+        and it landed.'
+      in_you: You say it while it is still burning. Not once the fear has gone, because the fear is the fuel, and
+        you stay in the room for whatever the saying does.
+    challenger:
+      role: The Sovereign
+      does: No daemon has the joystick, and the line gets drawn on the day it needed drawing. The power at this
+        altitude is self-directed — you want it, you say so, and you carry what saying so costs. A clean no and
+        a clean want turn out to be the same instrument.
+      in_you: One sentence, the cost accepted, no case attached. You do not need them to agree that you were entitled
+        to say it.
+    regent:
+      role: The Ancestor
+      does: 'No daemon has the joystick, and something becomes yours to carry in the open. Canon: somebody carried
+        the inheritance far enough that the next person could pick it up — so what you take on here is shaped to
+        outlast your holding it, rather than becoming the thing that holds it up.'
+      in_you: You say what you are willing to be responsible for and you put a date on it. What you take on is the
+        kind of thing somebody else could take over.
+    architect:
+      role: The Rule-Changer
+      does: 'No daemon has the joystick, and the condition moves rather than the person. Canon: the rule changed,
+        so nobody has to be brave twice. You build the thing that makes the wanting sayable, and then you say who
+        it is for.'
+      in_you: You make the arrangement and you name what you want from it. The design is not a substitute for the
+        ask — it is what makes the ask cheap enough to make twice.
+    diplomat:
+      role: The Connector
+      does: 'No daemon has the joystick, and the true thing gets said without anybody leaving. Canon names this
+        altitude''s superpower the Connector and is exact about what it trains: not contact, which the first hour
+        makes, but connection that has survived being told the truth.'
+      in_you: You say what you want and let the table be uncomfortable. You are not managing anybody's exit, and
+        you find out that they stayed.
+    sage:
+      role: The Escape Artist
+      does: No daemon has the joystick, and you can put the game down. Canon's superpower here has two halves —
+        the Escape Artist gets out of a role that was load-bearing without needing the exit to be a verdict on the
+        game or on yourself, and the Coach is what the exit makes available. So you can want them without the wanting
+        having to mean anything about you.
+      in_you: You name what you see and what you want from inside it rather than from above it, and you would survive
+        being told no.
