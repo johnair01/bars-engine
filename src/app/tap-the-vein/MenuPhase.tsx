@@ -133,12 +133,14 @@ export function MenuPhase({ onDone }: { onDone: () => void }) {
                 {copied ? 'Copied' : 'Copy the sealed menu'}
               </button>
             )}
-            {view.sealedAt && (
-              <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.08em', color: 'var(--bars-text-muted)', textAlign: 'center', margin: '8px 0 0', wordBreak: 'break-all' }}>
-                Council setup · your player id: {view.playerId}
-              </p>
-            )}
           </>
+        )}
+        {/* Shown whenever the menu loads, sealed or not and with or without kept lines: Wendell (2026-10-12) reached
+            the council setup step with nothing to seal, and the id was hidden behind the seal. */}
+        {view && (
+          <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.08em', color: 'var(--bars-text-muted)', textAlign: 'center', margin: '8px 0 0', wordBreak: 'break-all', userSelect: 'all' }}>
+            Council setup · your player id: {view.playerId}
+          </p>
         )}
         <button
           type="button"
