@@ -261,3 +261,32 @@ environments it should spawn a spirit that walks with the character until dismis
   only, and the room opened from the body map on its own has no cave to walk, so it spawns none.
 - **One spirit for every cave.** cave.js holds `buildSpirit`, `followSpirits` and `spiritHex` on the kit, so both caves draw and
   walk the same spirit.
+
+## The W.A.V.E. screens, the charge you can see, and speaking as the voice (Wendell, 12 October 2026, 21:15)
+
+His playtest notes, on the W.A.V.E. at the charge poll: "need the breathing animation on these screens / The wave screen is
+showing up as a modal, but there should be a spirit that is apearing that represents the charge that is being worked on EVEN in
+this WAVE context. it should follow the same rule of getting bigger as you allow / The apprecaite step should also allow the
+player to skip and say something the appreciate about it jsut like in the other WAVE containers / exhale and release should have
+an animation of the spirit being dismissed / Also the 1 phase with the protector (and all the voices) should be a bit longer and
+should have the option for the player to speak as the protector in their own words."
+
+- **The breath, drawn.** Every W.A.V.E. step and every sitting step has a ring of light that swells over the 4 s in-breath and
+  settles over the 6 s out-breath, saying in and out. With reduced motion it holds still and only the word changes. Choice: the
+  ring's look and size.
+- **The charge you can see.** From "Breathe with it" on, the charge being worked comes along the path as the sitting's grey
+  shape, low and to the side so it shows under the panel. It takes its element's colour at Acknowledge, grows and brightens at
+  Allow by the same two sliders a sitting uses, and dulls at Validate.
+- **Appreciate** has the line from `oag-appreciate-input` ("What can you appreciate about what showed up?", and "You may not find
+  anything to appreciate today, and that's all right.") and Not now (`wave-room-appreciate-optional`), at the poll's W.A.V.E. and
+  in a sitting. What is written there stays on the page and is not saved (a choice, as with a sitting's words).
+- **Exhale.** "No, exhale and release" lifts the charge and fades it on the out-breath, then asks how charged you are now. "Yes,
+  let it stay" turns it into a spirit that walks with you, named with your feeling word. A W.A.V.E. left at a block keeps its
+  charge walking with you too, because nothing dismisses a spirit for you (`bms-dismiss`). Going back before the first step lets
+  it sink away, since nothing was worked yet. Choices, all of them.
+- **Speaking as the voice.** Standing in its place is now three turns in the first person: who it is ("I am the Protector, and
+  I…"), what it sees from its post, and what it wants the self to know. Each has a line for the player's own words as the voice;
+  the last keeps the workshop's cards too, since the first two have no group answers to draw on. The guide shows what was said
+  as the voice back on the next turn. Any turn can be passed, and "Just look for a while" steps back out at once. Lines said as
+  the voice are offered at the keeping step with its other lines. The turns are written for any voice from its name, so the
+  later chambers get them as they open. Choices: the three turns and their wording.

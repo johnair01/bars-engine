@@ -136,6 +136,8 @@
     ".bm-meter{position:relative;display:flex;align-items:center;gap:.4rem;font-size:12px;color:#dfe6ff}.bm-meter>span:first-child{width:6.4em;flex:none;white-space:nowrap}" +
     ".bm-meter.you .bm-bar i{background:#c89cff}" +
     ".bm-breath{text-align:center;color:#fff1b0;font-size:1rem;margin:.5rem 0;min-height:1.4em}.oagc .bm-wave button:disabled{opacity:.45}" +
+    ".bm-orb{width:88px;height:88px;margin:.5rem auto .1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff1b0;font-size:.8rem;letter-spacing:.06em;" +
+    "background:radial-gradient(circle,rgba(255,241,176,.5),rgba(255,241,176,.14) 62%,rgba(255,241,176,0) 72%);border:1px solid rgba(255,241,176,.55);transform:scale(.55);will-change:transform}" +
     ".bm-wavestep{font-size:.8rem;color:#aab4d4;letter-spacing:.04em;text-transform:uppercase;margin:0}" +
     ".bm-bar{position:relative;flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.14);overflow:hidden}.bm-bar i{position:absolute;left:0;top:0;bottom:0;background:#e0704a;transition:width .5s,background .5s}" +
     ".bm-bar u{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.6)}.bm-meter.ready .bm-bar i{background:#6ac8a0}.bm-meter b{min-width:1.2em;text-align:right}" +
@@ -276,7 +278,7 @@
     // phase: hall1 (walking to the voice), chamber (the dialogue), hall2 (walking on), end (the next chamber's mouth).
     // gate is how open the way past the voice is (0.45 shut, 1 open); held is the finger on the stage or the ring.
     var st = { phase: from, s: from === "hall2" ? S_GATE + 2 : 2, held: false, gate: from === "hall2" ? 1 : 0.45, gateGoal: from === "hall2" ? 1 : 0.45,
-      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], charge: null, charges: [], you: null, waves: [], place: null, know: null, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1 };
+      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], charge: null, charges: [], you: null, waves: [], place: null, know: null, be: {}, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1 };
     var route = layout(), tweens = [], last = performance.now(), snap = true;
     function tween(ms, fn, done) { tweens.push({ t0: performance.now(), ms: ms / st.speed, fn: fn, done: done }); }
     function ease(k) { return k * k * (3 - 2 * k); }
@@ -345,6 +347,10 @@
     }
     function hide() { modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); modal.setAttribute("data-bm-step", ""); st.modal = false; ring.style.display = ""; }
     function guide(t) { return el("p", { class: "bm-guide", text: t }); }
+    // The breath, drawn (Wendell, 12 October 2026, 21:15: "need the breathing animation on these screens"): a ring of light that
+    // swells over the 4 s in-breath and settles over the 6 s out-breath, saying in and out. The frame breathes it, at the page's
+    // speed, from when its screen opens; with reduced motion it holds still and only the words change (choices).
+    function orb() { var o = el("div", { class: "bm-orb", "data-bm-orb": "", "aria-hidden": "true", text: "in" }); o._t = 0; return o; }
     function says(t) { return el("p", { class: "bm-voice", text: t }); }
     function row(btns) { return el("div", { class: "oagc-row" }, btns); }
     function btn(text, fn, attrs, alt) { var a = attrs || {}; a.text = text; a.onclick = fn; if (alt) a.class = "alt"; return el("button", a); }
@@ -471,13 +477,30 @@
       range.addEventListener("input", function () { num.textContent = range.value; youMeter(+range.value); });
       return { range: range, kids: [el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")])] };
     }
+    // The charge being worked shows in the scene through the whole W.A.V.E. (Wendell, 12 October 2026, 21:15: "there should be a
+    // spirit that is apearing that represents the charge that is being worked on EVEN in this WAVE context. it should follow the
+    // same rule of getting bigger as you allow"). It is the sitting's grey shape: it comes along the path from ahead, takes its
+    // element's colour at Acknowledge, grows and brightens by the Allow sliders, dulls at Validate, and at the Exhale either walks
+    // with you as a spirit (stay) or rises and fades (release: "exhale and release should have an animation of the spirit being
+    // dismissed"). Going back before any step lets it sink away again; a W.A.V.E. left at a block keeps it walking with you, since
+    // nothing dismisses a spirit for you (bms-dismiss). Choices, all of them.
+    function chargeBlob() {
+      var g = new THREE.Group(), au = K.buildAura(THREE, 0.9);
+      var m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 20, 14), new THREE.MeshStandardMaterial({ color: 0x8a8a96, emissive: 0x8a8a96, emissiveIntensity: 0.25, transparent: true, opacity: 0.85, roughness: 0.7 }));
+      m.position.y = 0.6; g.add(m); g.userData.body = m; g.add(au); g.userData.aura = au; scene.add(g);
+      return { g: g, allow: { grow: 3, bright: 7 }, allowed: false, element: null, named: false, dull: 0, come: 1, rise: 0, fade: 1, near: true };
+    }
+    function blobGone(B, ms, done) {
+      tween(ms, function (k) { var e = ease(k); B.rise = 2.5 * e; B.fade = 1 - e; }, function () { scene.remove(B.g); if (done) done(); });
+    }
     function waveStart(i, ask) {
       wv = { i: i, ask: ask, after: i == null ? "start" : V.questions[i].id, word: "", element: null, place: null, before: null, reached: null, blocked: null };
+      var B = wv.B = chargeBlob(); tween(1400, function (k) { B.come = 1 - ease(k); });
       var sl = youSlider(st.you == null ? 5 : st.you, "Your own charge, 0 to 10");
       show([el("h2", { text: "Breathe with it" }), guide("This is about your own charge: the feeling that comes up in you while you sit with " + V.name + ". Its charge stays as you set it."),
         guide("How charged are you right now?")].concat(sl.kids, [
         row([btn("That's me right now", function () { wv.before = +sl.range.value; st.you = wv.before; youMeter(wv.before); wavePlace(); }, { "data-bm-youset": "" })]),
-        row([btn("Back to " + V.name, function () { wv = null; chargeAsk(i, ask); }, { class: "bm-link", "data-bm-waveback": "" })])]), "wave-you");
+        row([btn("Back to " + V.name, function () { var B = wv.B; wv = null; B.leaving = true; tween(700, function (k) { B.come = ease(k); B.fade = 1 - ease(k); }, function () { scene.remove(B.g); }); chargeAsk(i, ask); }, { class: "bm-link", "data-bm-waveback": "" })])]), "wave-you");
       youMeter(+sl.range.value);
     }
     function wavePlace() {
@@ -488,7 +511,7 @@
     // One step, one breath: its button wakes when the breath has been taken (the cave's own 4 s in, 6 s out).
     function waveStep(n) {
       var w = WAVE[n], id = w[0], rung = RUNGS.indexOf(id) >= 0;
-      var cue = el("p", { class: "bm-breath", "data-bm-breath": "", text: "Breathe in…" });
+      var cue = el("p", { class: "bm-breath", "data-bm-breath": "", text: "Breathe in…" }), B = wv.B;
       var kids = [el("p", { class: "bm-wavestep", text: "W.A.V.E. · " + (n + 1) + " of " + WAVE.length }), el("h2", { text: w[1] }), guide(w[2])];
       var go = [];
       if (id === "acknowledge") {
@@ -496,17 +519,34 @@
         var word = el("input", { type: "text", maxlength: "30", placeholder: "One word for the feeling", "data-bm-waveword": "", "aria-label": "One word for the feeling" });
         var picked = null, els = ELEMENTS.map(function (e) {
           var b = el("button", { class: "bm-card", "data-bm-element": e[0], "aria-pressed": "false", text: e[1] + " (" + e[2] + ")", onclick: function () {
-            picked = e[0]; els.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+            picked = e[0]; B.element = e[0]; B.named = true; els.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
           } });
           return b;
         });
         kids.push(guide("Name the feeling to yourself in one word, then pick its element."), el("div", { class: "bm-line" }, [word]), el("div", { class: "bm-cards" }, els));
         go.push(btn(WAVE_BTN[id], function () { wv.word = word.value.trim(); wv.element = picked; climbed(n); }, { "data-bm-wavego": id, disabled: "" }));
       } else if (id === "exhale") {
-        go.push(btn("Yes, let it stay", function () { wv.exhale = "stay"; waveAfter(); }, { "data-bm-exhale": "stay", disabled: "" }),
-          btn("No, exhale and release", function () { wv.exhale = "release"; waveAfter(); }, { "data-bm-exhale": "release", disabled: "" }, true));
-      } else go.push(btn(WAVE_BTN[id], function () { if (rung) climbed(n); else waveStep(n + 1); }, { "data-bm-wavego": id, disabled: "" }));
-      kids.push(cue, el("div", { class: "oagc-row bm-wave" }, go));
+        go.push(btn("Yes, let it stay", function () { wv.exhale = "stay"; blobStays(); waveAfter(); }, { "data-bm-exhale": "stay", disabled: "" }),
+          btn("No, exhale and release", function () { wv.exhale = "release"; blobReleased(); }, { "data-bm-exhale": "release", disabled: "" }, true));
+      } else {
+        if (id === "allow") {
+          // Allow grows it, by the same two sliders as the sitting and the WAVE room (K.allowSliders).
+          B.allowed = true;
+          kids.push(guide((wv.word || "It") + " grows a little as you let it be here."));
+          K.allowSliders(B.allow, "data-bm-waveallow").forEach(function (x) { kids.push(x); });
+        }
+        if (id === "appreciate") {
+          // Appreciate as in the game's other W.A.V.E.s: an optional line (oag-appreciate-input) and Not now (wave-room-appreciate-optional).
+          // Wendell, 21:15: "The apprecaite step should also allow the player to skip and say something the appreciate about it". What
+          // is written stays on the page and is not saved (a choice, as with the sitting's words).
+          kids.push(guide("What can you appreciate about what showed up?"), el("div", { class: "bm-line" }, [el("input", { type: "text", maxlength: "200", placeholder: "In your own words, if you want", "data-bm-waveappreciate": "", "aria-label": "What you appreciate about it" })]),
+            guide("You may not find anything to appreciate today, and that's all right."));
+          go.push(btn("Not now", function () { waveStep(n + 1); }, { "data-bm-wavenotnow": "", disabled: "" }, true));
+        }
+        if (id === "validate") B.dull = 0.6; // worked through: it dulls, as in the WAVE room
+        go.unshift(btn(WAVE_BTN[id], function () { if (rung) climbed(n); else waveStep(n + 1); }, { "data-bm-wavego": id, disabled: "" }));
+      }
+      kids.push(orb(), cue, el("div", { class: "oagc-row bm-wave" }, go));
       var side = [];
       if (rung && wv.reached) side.push(btn("This is as far as I can honestly go today", function () { waveStep(WAVE.length - 2); }, { class: "bm-link", "data-bm-wavestop": "" }));
       side.push(btn("Something's in the way", function () { waveBlocked(id); }, { class: "bm-link", "data-bm-waveblock": "" }));
@@ -518,6 +558,19 @@
       }); });
     }
     function climbed(n) { wv.reached = WAVE[n][0]; waveStep(n + 1); }
+    function blobStays() {
+      var B = wv.B; if (!B || B.leaving) return; B.leaving = true; scene.remove(B.g);
+      addSpirit({ name: wv.word || "A charge", element: wv.element }, B.g.position.clone().setY(B.g.position.y + 0.8));
+    }
+    function blobReleased() {
+      var B = wv.B; B.leaving = true; hide(); modal.setAttribute("data-bm-step", "wave-releasing"); st.modal = true; ring.style.display = "none";
+      hint.textContent = "On the out-breath, it lifts and goes.";
+      blobGone(B, K.BREATH.outS * 1000 * 0.5, function () {
+        hint.textContent = "";
+        if (modal.getAttribute("data-bm-step") === "self") { paused = { then: waveAfter }; return; }
+        waveAfter();
+      });
+    }
     // A step that won't go further is noted, and the W.A.V.E. counts as complete there (oag-wave-ladder's stopping rule).
     // Where a block goes in this cave is still open with Wendell (bmw-block), so this is the plain default (a choice).
     // A block can also be sat down with (bms-block-sits): the room's steps run in place on what is in the way, and afterwards
@@ -528,7 +581,7 @@
       show([el("h2", { text: "Something's in the way" }), guide("That's noted. A W.A.V.E. that stops here still counts. You don't have to push past it."),
         guide("Or you can sit down with what's in the way, and come back to this step after."),
         row([btn("Sit down with it", function () { wv.blocked = null; wv.satAt = id; sitDown("me", function () { waveStep(n); }, null, "block"); }, { "data-bm-blocksit": "" }),
-          btn("Go on", function () { waveAfter(); }, { "data-bm-blockgo": "" }, true)])], "wave-blocked");
+          btn("Go on", function () { blobStays(); waveAfter(); }, { "data-bm-blockgo": "" }, true)])], "wave-blocked");
     }
     function waveAfter() {
       var sl = youSlider(wv.before == null ? 5 : wv.before, "Your own charge now, 0 to 10");
@@ -572,7 +625,7 @@
     }
     function canSit() {
       var tag = modal.getAttribute("data-bm-step") || "";
-      return !st.sit && !st.auto && !st.turned && st.cam !== "voice" && !/^(self|eased|sit|spirit|mouth|thanks|know)/.test(tag);
+      return !st.sit && !st.auto && !st.turned && st.cam !== "voice" && !/^(self|eased|sit|spirit|mouth|thanks|know|be-|wave-releasing)/.test(tag);
     }
     function sitOffer() {
       if (!canSit()) return;
@@ -633,7 +686,7 @@
         return;
       }
       if (S.phase === "goes") {
-        show([el("h2", { text: "Exhale" }), guide("Let the out-breath soften it. It walks with you, lighter, until you thank it and let it go."),
+        show([el("h2", { text: "Exhale" }), guide("Let the out-breath soften it. It walks with you, lighter, until you thank it and let it go."), orb(),
           row([btn("Breathe out", function () { standUp("goes"); }, { "data-bm-sitexhale": "" })]), row([standBtn])], "sit-goes");
         return;
       }
@@ -666,9 +719,13 @@
         ok(); kids.push(row([tw, aw]), row([standBtn]), el("p", { class: "bm-wavestep", text: "What you write stays on this page." }));
         show(kids, "sit-fork");
         return;
+      } else if (R.id === "appreciate") {
+        // As at the W.A.V.E.'s own Appreciate (oag-appreciate-input): an optional line, kept on the page only.
+        kids.push(guide("What can you appreciate about what showed up?"), lineInput("data-bm-sitappreciate", S.appreciate || "", "In your own words, if you want", function (v) { S.appreciate = v; }),
+          guide("You may not find anything to appreciate today, and that's all right."));
       }
       if (R.notNow) extra.push(btn("Not now", sitNext, { "data-bm-sitnotnow": "" }, true));
-      kids.push(row([go].concat(extra)), row([standBtn]));
+      kids.push(orb(), row([go].concat(extra)), row([standBtn]));
       show(kids, "sit-" + R.id);
     }
     // branch: stays (Toward at the fork), goes (Away: breathed out, lighter), done (the voice's sitting ran to the end), stood (stood
@@ -804,7 +861,7 @@
       }, function () {
         st.auto = false; st.moving = false; voice.visible = false; st.turned = true;
         hint.textContent = "";
-        tween(700, function () {}, function () { knowAsk(); });
+        tween(700, function () {}, function () { knowAsk(0); });
       });
     }
     function askQ(i, lead) {
@@ -837,14 +894,34 @@
       chargeAsk(i, "Does it feel any different? How charged is the Protector now?");
     }
     function next(i) { st.answers[V.questions[i].id] = st.answers[V.questions[i].id] || null; charged(i, st.charge); } // sitting a question out moves on at the same charge
-    // Standing in its place: one look from where it stands, then back out.
-    function knowAsk() {
-      var input = el("input", { type: "text", "data-bm-knowline": "", placeholder: "Or in its words", maxlength: "200" });
-      function said(t) { if (!t) return; st.know = t; close(); }
-      show([el("h2", { text: V.title }), guide(V.seat), guide(V.know.ask),
-        el("div", { class: "bm-cards" }, V.know.cards.map(function (c, ci) { return btn(c[0], function () { said(c[0]); }, { class: "bm-card", "data-bm-know": String(ci) }); })),
-        el("div", { class: "bm-line" }, [input, btn("Say it", function () { said(input.value.trim()); }, { "data-bm-knowsay": "" })]),
-        row([btn("Just look for a while", function () { close(); }, { class: "bm-link", "data-bm-look": "" })])], "know");
+    // Standing in its place, speaking as it. Wendell, 12 October 2026, 21:15: "the 1 phase with the protector (and all the voices)
+    // should be a bit longer and should have the option for the player to speak as the protector in their own words". So the seat
+    // shift is now three turns as the voice, in the first person: who it is, what it sees from its post, and what it wants the self
+    // to know. Each has a line for the player's own words as the voice; only the last also has the workshop's cards
+    // (bm-cards-and-line), since the first two have no group answers to draw on. Any turn can be passed, and "Just look for a
+    // while" leaves at once. Lines said as the voice are offered at the keeping step like its other lines (choices, all of them).
+    function beTurns() {
+      return [
+        { id: "who", ask: "Speak as " + V.name + " now, in your own words. Who are you?", ph: "I am " + V.name + ", and I…" },
+        { id: "see", ask: "From here, as " + V.name + ", what do you see?", ph: "From here I see…" },
+        { id: "know", ask: V.know.ask, ph: "In its words: I want you to know…", cards: V.know.cards },
+      ];
+    }
+    function knowAsk(n) {
+      n = n || 0;
+      var T = beTurns(), t = T[n], nextTurn = function () { if (n + 1 < T.length) knowAsk(n + 1); else close(); };
+      var input = el("input", { type: "text", "data-bm-beline": t.id, placeholder: t.ph, maxlength: "200", enterkeyhint: "done", "aria-label": t.ask });
+      var sayBtn = btn("Say it", function () { said(input.value.trim()); }, { "data-bm-besay": t.id });
+      if (t.id === "know") { input.setAttribute("data-bm-knowline", ""); sayBtn.setAttribute("data-bm-knowsay", ""); }
+      function said(v) { if (!v) return; st.be[t.id] = v; if (t.id === "know") st.know = v; nextTurn(); }
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); said(input.value.trim()); } });
+      var heardSoFar = T.slice(0, n).map(function (x) { return st.be[x.id]; }).filter(Boolean).map(function (l) { return npc(l); });
+      show([el("p", { class: "bm-wavestep", text: "Speaking as " + V.name + " · " + (n + 1) + " of " + T.length }), el("h2", { text: V.title }),
+        n === 0 ? guide(V.seat) : null].concat(heardSoFar, [guide(t.ask),
+        t.cards ? el("div", { class: "bm-cards" }, t.cards.map(function (c, ci) { return btn(c[0], function () { said(c[0]); }, { class: "bm-card", "data-bm-know": String(ci) }); })) : null,
+        el("div", { class: "bm-line" }, [input, sayBtn]),
+        row([btn("Pass", nextTurn, { class: "bm-link", "data-bm-bepass": t.id }),
+          btn("Just look for a while", function () { close(); }, { class: "bm-link", "data-bm-look": "" })])]), t.id === "know" ? "know" : "be-" + t.id);
     }
 
     // Secretly speaking (bm-dismiss-step-aside): a second figure shows behind the voice. The player names it, thanks it and
@@ -913,6 +990,7 @@
     function keep(blocked, status) {
       var lines = [];
       V.questions.forEach(function (q) { (st.answers[q.id] || []).forEach(function (l) { lines.push({ q: q.id, line: l }); }); });
+      ["who", "see"].forEach(function (k) { if (st.be[k]) lines.push({ q: "be-" + k, line: st.be[k] }); });
       if (st.know) lines.push({ q: "know", line: st.know });
       st.fears.forEach(function (f) { lines.push({ q: "fear", line: f }); });
       st.waveKeep = st.waves.map(function () { return false; });
@@ -975,6 +1053,20 @@
     }
 
     // ---- the frame ------------------------------------------------------------------------------
+    // A charge being worked, in a sitting or a W.A.V.E.: grey until named, then its element's colour; larger and brighter by the Allow
+    // sliders; duller once validated; rise and fade lift it and let it go. On the voice, the glow sits on the voice instead.
+    function drawCharge(C, onVoice, lit, dt, still) {
+      if (onVoice) C.g.position.set(voice.position.x, voice.position.y, voice.position.z);
+      else if (C.near) { var na = side(Math.min(route.len - 1, st.s + 1.6 + 6 * C.come), 1.5); C.g.position.set(na.x, floor(na) + 0.45 + (C.rise || 0), na.z); } // low and to the side, so it shows under the W.A.V.E.'s panel
+      else { var ba = at(route, Math.min(route.len - 1, st.s + 3.2 + 7 * C.come)); C.g.position.set(ba.x, floor(ba) + 0.9 + (C.rise || 0), ba.z); }
+      var bc = tmpC.setHex(C.element ? colorOf(C.element) : 0x9a9aa8), fd = C.fade == null ? 1 : C.fade;
+      if (C.g.userData.body) {
+        var bm = C.g.userData.body.material; bm.color.lerp(bc, Math.min(1, dt * 3)); bm.emissive.copy(bm.color); bm.opacity = 0.85 * fd;
+        var gs = 1 + (C.allowed ? C.allow.grow / 10 : 0); C.g.userData.body.scale.lerp(new THREE.Vector3(gs, gs, gs), Math.min(1, dt * 2));
+      }
+      K.stepAura(C.g.userData.aura, bc, (lit ? (C.allow.bright / 10) * (1 - C.dull) : 0.12) * fd, dt, still);
+      if (fd < 1) { var au = C.g.userData.aura.userData; au.halo.material.opacity *= fd; au.sparks.material.opacity *= fd; }
+    }
     var br = { b: 0.5, t0: performance.now() / 1000 }, camPos = new THREE.Vector3(), aim = new THREE.Vector3(), tmpC = new THREE.Color();
     function frame(now) {
       running = requestAnimationFrame(frame);
@@ -1003,16 +1095,17 @@
       var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches, SI = st.sit;
       if (SI) {
         avatar.position.y -= 0.75 * SI.k; avatar.scale.y = 1 - 0.3 * SI.k;
-        if (SI.whom === "voice") SI.g.position.set(voice.position.x, voice.position.y, voice.position.z);
-        else { var ba = at(route, Math.min(route.len - 1, st.s + 3.2 + 7 * SI.come)); SI.g.position.set(ba.x, floor(ba) + 0.9, ba.z); }
-        var named = SI.element ? colorOf(SI.element) : 0x9a9aa8, bc = tmpC.setHex(named);
-        if (SI.g.userData.body) {
-          var bm = SI.g.userData.body.material; bm.color.lerp(bc, Math.min(1, dt * 3)); bm.emissive.copy(bm.color);
-          var gs = 1 + (SI.allowed ? SI.allow.grow / 10 : 0); SI.g.userData.body.scale.lerp(new THREE.Vector3(gs, gs, gs), Math.min(1, dt * 2));
-        }
-        var lvl = SI.texture || SI.element || SI.whom === "voice" ? (SI.allow.bright / 10) * (1 - SI.dull) : 0.12;
-        K.stepAura(SI.g.userData.aura, bc, lvl, dt, still);
+        drawCharge(SI, SI.whom === "voice", SI.texture || SI.element || SI.whom === "voice", dt, still);
       } else avatar.scale.y = 1;
+      if (wv && wv.B && wv.B.g.parent) { wv.B.g.visible = !SI; drawCharge(wv.B, false, wv.B.named, dt, still); } // a sitting from a block shows its own
+      var ob = modal.querySelector("[data-bm-orb]");
+      if (ob) {
+        var BT = K.BREATH; ob._t = (ob._t + dt * st.speed) % (BT.inS + BT.outS);
+        var inn = ob._t < BT.inS, ob_b = inn ? 0.5 - 0.5 * Math.cos(Math.PI * ob._t / BT.inS) : 0.5 + 0.5 * Math.cos(Math.PI * (ob._t - BT.inS) / BT.outS);
+        ob.style.transform = "scale(" + (still ? 0.8 : 0.55 + 0.45 * ob_b).toFixed(3) + ")";
+        if (ob.textContent !== (inn ? "in" : "out")) ob.textContent = inn ? "in" : "out";
+        ob.setAttribute("data-bm-orb", inn ? "in" : "out");
+      }
       K.followSpirits(THREE, spirits, function (j) { var sa = side(Math.max(0.5, st.s - 2.2 - 1.6 * j), j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2); return { x: sa.x, y: floor(sa) + 1.7, z: sa.z }; }, dt, now, still);
       var stance = 1 + 0.04 * Math.min(spirits.length, 3); voice.scale.x = voice.scale.z = stance; // it squares up to what you bring
       sitBtn.disabled = !canSit();
@@ -1053,7 +1146,7 @@
     }
     var api = window.__oagBigMind; api.state = st; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
     api.openAt = route.openAt; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
-    api.spirits = spirits; api.sitting = function () { return st.sit; };
+    api.spirits = spirits; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
     size(); window.addEventListener("resize", size);
     running = requestAnimationFrame(frame);
   }
