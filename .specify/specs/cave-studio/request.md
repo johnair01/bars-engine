@@ -85,33 +85,13 @@ positions stand unless he flips them. His answers will be quoted here, with the 
   its manifest row names the picture it was built from. No ChatGPT pixels go into the cave.
 - **The first piece has to earn his trust in that step.** So it is the chamber dressing built from pictures, shown
   beside the pictures it came from, with a number for how closely each model's outline matches its picture.
-- **The overrule on `cs-cc0-or-own`.** His words read as a doubt about the point of the Royalty Free licence, not a
-  request to let Royalty Free models into the page. The record holds what Blendkit's terms say (article 5, read
-  2026-10-12, quoted in `tools/blender-cloud/README.md`): a Royalty Free model may go in a web page only if no one
-  can extract it. Inferred, not checked: that licence is written for renders, films and compiled games, where the
-  model is not handed to the viewer, and web projects mostly use CC0 or their own models. With pictures to build
-  from, every piece is own work, so the overrule changes nothing for the first piece. `build_viewer.py` still
-  refuses non-CC0 downloads until he rules otherwise.
-
-## 1: Be it (first person, tested)
-
-### Aligned actions
-
-| Face | Analysis | Action |
-|---|---|---|
-| Shaman | The daemons are the cave's characters, and today they are sphere stacks. A character earns a body made with care. | Build the first daemon figure in the cloud, with no face, as the cave's design says. |
-| Architect | The scripts run in the cloud and match the committed files, so the studio has a known base. | Add new pieces as scripts beside `build_kit.py`, each with a manifest row and a size budget. |
-| Challenger | Polish is the risk: a studio can make beautiful pieces nobody loads. | Every piece is loaded in the cave at 390 by 844 before it counts as done. |
-| Regent | The licence line is the one thing that cannot be fixed afterwards. | Manifest row first. ChatGPT-made art waits for his answer to `cs-chatgpt-ai-art`. |
-| Diplomat | The wary community reads the credits. | Every piece that came from ChatGPT has a scripted or CC0 stand-in, and says so in the manifest. |
-| Sage | Two caves, one studio, one list of pieces. | Build each shared piece once, as for the 3-2-1 chamber. |
-
-### The test, and what it showed
-
-**Falsification test (spec.md), run 2026-10-12:** rebuild the cave's figure, kit and spot table in the cloud from the
-committed scripts and compare with the committed files.
-
-**Result: passed.** `build_figure.py` took about 5 seconds and `build_kit.py` under 1 second. `figure.glb`
-(204,264 bytes), `cave-kit.glb` (16,916 bytes) and `spots.json` (19,731 bytes) came out byte for byte identical to
-the committed files. That makes "life now" for the next run: the cloud reproduces the cave's Blender pieces exactly,
-so a new piece can be judged against a known base.
+- **The overrule on `cs-cc0-or-own`, and the answer to his question.** Blendkit's Royalty Free licence covers renders,
+  images, prints and software whose models a third party cannot separate or open (terms, article 5, read 2026-10-12).
+  Its Licensing FAQ says a game may use them "if these can't be extracted by the users in an easy way". A plain GLB in
+  a web page can be extracted, so a page cannot carry one. Games get around this by shipping models inside their own
+  protected asset bundles, and a page can show a render or a video instead. CC0 has no such limit. With pictures to
+  build from, every piece is own work, so the overrule changes nothing for the first piece, and the studio's CC0 gate
+  in `tools/blender-cloud/` stays until he rules otherwise.
+- **His first picture, 2026-10-12.** `cave-crystal-growth.png` (ChatGPT, Drive inbox) built as a crystal cluster at
+  0.829 outline match. Outline alone scored 0.88 and looked like a blob, so the studio gained a crystals mode, and a
+  high outline match is now read as necessary, not enough. Whether he trusts the step is board step `cave-studio-03`.

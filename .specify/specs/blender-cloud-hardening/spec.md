@@ -76,8 +76,10 @@ filter, 214 CC0 chairs); royalty-free assets are for renders and previews only.
 
 ## Definition of done
 
-- [ ] Each of the six problems has its fix and its test passing, with output pasted in tasks.md.
-- [ ] Two assets other than the chair run end to end, each with a 480p preview that was looked at.
-- [ ] `tools/blender-cloud/README.md` lists what each problem became and the new asset checklist.
-- [ ] The viewer is republished to https://claude.ai/artifact/SUZYu1w1P5b61Cn6pj7Vwg and loads in headless Chromium.
-- [ ] The repo's checks pass and the Vercel preview builds.
+All met, 2026-10-12 (evidence: six-faces-council ledger `2026-10-12-blender-cloud-session.json`).
+
+- [x] Each of the six problems has its fix and its test passing, with output pasted in tasks.md.
+- [x] Two assets other than the chair run end to end, each with a 480p preview that was looked at.
+- [x] `tools/blender-cloud/README.md` lists what each problem became and the new asset checklist.
+- [x] The viewer is republished to https://claude.ai/artifact/SUZYu1w1P5b61Cn6pj7Vwg and loads in headless Chromium.
+- [x] The repo's checks pass and the Vercel preview builds.
