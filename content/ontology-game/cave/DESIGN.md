@@ -436,3 +436,15 @@ voice handing over by itself in the cave and in the room, with the camera; the d
 three creatures: something new to its own place, the focus row, Allow growing by itself and by slider, brightness up and down, a
 feeling about the second as a named ring with no new creature, a fourth waiting at the door, picking the second again at its
 step, Validate steadying it and its layer and dulling the glow, then each worked through in turn and the waiting one welcomed.
+
+### A style for each face's branch (11 October 2026, after his phone play)
+
+Wendell, from the preview: "Branches are going wild. The screen should give you a dropdown that styles the branch they are on
+with the style and vibes of the branch they choose."
+
+- Each face's branch now opens in that face's own look (`FACE_LOOK`): walls in a shade of its stone colour, its light and fog,
+  and motes drifting in its light, still for Amber and restless for Red **(choice of each look)**. Before, every face's branch
+  shared the side passage's violet hush and its walls.
+- While the player walks a face's branch, a dropdown on the screen ("Teal · wide and moving") dresses the branch in any face's
+  look. It starts on the branch's own face and hides while a page is open and on the way back to the stone.
+- The two glowing openings fade while the player is inside the loop, because the loop is tight and they filled the view.

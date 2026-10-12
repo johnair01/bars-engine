@@ -103,6 +103,18 @@
     ["green", "Green", "Knows through perspectives, voices, integration", "What perspectives or voices are involved?", 0x40b858],
     ["teal", "Teal", "Knows through systems, how everything learns", "How is the system trying to learn through this?", 0x20a8a8],
   ];
+  // Each face's look for its branch (Wendell, 11 October 2026: "Branches are going wild. The screen should give you a dropdown
+  // that styles the branch they are on with the style and vibes of the branch they choose"). A face's branch opens in its own
+  // look, and the dropdown on the screen dresses it in any face's: the walls, the light, the fog, and motes in its colour. The
+  // colours follow each face's stone; the rest is a choice. drift is how the motes move: 0 still, 1 restless.
+  var FACE_LOOK = {
+    magenta: { light: 0xff86d4, fog: 0x200a1a, fogK: 1.05, hemi: 0.4, rock: 0x6a3a5c, drift: 0.25, vibe: "close and warm" },
+    red: { light: 0xff6a48, fog: 0x260a08, fogK: 0.9, hemi: 0.46, rock: 0x7a302a, drift: 1, vibe: "hot and strong" },
+    amber: { light: 0xffcc66, fog: 0x221808, fogK: 1, hemi: 0.42, rock: 0x7e6232, drift: 0, vibe: "steady and ordered" },
+    orange: { light: 0xffaa66, fog: 0x1e1208, fogK: 0.75, hemi: 0.52, rock: 0x7c4c2c, drift: 0.5, vibe: "clear and bright" },
+    green: { light: 0x8ae49a, fog: 0x0c1c10, fogK: 0.9, hemi: 0.46, rock: 0x3c6a44, drift: 0.4, vibe: "many and together" },
+    teal: { light: 0x78e4e4, fog: 0x081a1c, fogK: 0.7, hemi: 0.52, rock: 0x2c686a, drift: 0.7, vibe: "wide and moving" },
+  };
   // The seven daemons (game.jsx DAEMONS, lines 1222-1230: id, name, essence), the colour each wears and what it
   // carries (choices: the seven share one body and differ by colour, posture and what they carry).
   var DAEMONS = [
@@ -772,6 +784,7 @@
     ".oagc button[aria-pressed=true]{outline:2px solid #fff}" +
     ".oagc button.oagc-calm,.oagc button.oagc-ringbtn{position:absolute;top:10px;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500;z-index:4}" +
     ".oagc button.oagc-calm{right:10px}.oagc button.oagc-ringbtn{left:10px}" +
+    ".oagc-style{position:absolute;top:62px;right:10px;z-index:4;max-width:calc(100vw - 20px);min-height:44px;padding:0 .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(20,20,40,.85);color:#f4f4fa;font-size:16px}" +
     ".oagc-ring{position:absolute;left:50%;bottom:14px;width:88px;height:88px;margin-left:-44px;border-radius:50%;border:3px solid rgba(255,241,176,.85);background:rgba(255,241,176,.12);display:flex;align-items:center;justify-content:center;text-align:center;font-size:.68rem;line-height:1.15;color:#fff1b0;z-index:2;touch-action:none}" +
     ".oagc-fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:5}" +
     ".oagc-home{padding:2rem 1rem;max-width:34rem;margin:auto;text-align:center}.oagc-home h1{font-size:1.5rem;color:#fff}";
@@ -912,6 +925,22 @@
       if (!show) br.ringHeld = false;
     }
     canvasBox.appendChild(calmBtn); canvasBox.appendChild(ringBtn);
+    // The branch's style: shown while walking a face's branch, set to that face at first; any face's look can dress it.
+    var styleSel = el("select", { class: "oagc-style", "data-cave-branch-style": "", "aria-label": "This branch's style" });
+    FACES.forEach(function (f) { styleSel.appendChild(el("option", { value: f[0], text: f[1] + " · " + FACE_LOOK[f[0]].vibe })); });
+    styleSel.style.display = "none"; canvasBox.appendChild(styleSel);
+    styleSel.addEventListener("change", function () {
+      var r = state.walk && state.walk.route; if (!r || r.kind !== "face") return;
+      r.style = styleSel.value; lk.flash = Math.max(lk.flash, 0.5);
+      r.markers.forEach(function (m) { if (m.material.color) m.material.color.setHex(lookup(FACES, r.style)[4]); });
+    });
+    var styleFor = null;
+    function syncStyle(route) {
+      var on = route.kind === "face" && !flight && !modal.classList.contains("open"); // out of the way of the page
+      if (on && styleFor !== route) { styleSel.value = route.style; styleFor = route; }
+      if (!on) styleFor = null;
+      var d = on ? "" : "none"; if (styleSel.style.display !== d) styleSel.style.display = d;
+    }
     function breathStep(dt, nowS) {
       var T = BREATH_S, u, wk = state.walk;
       if (wk && wk.moving && !state.auto && !state.calm && !(state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER)) br.t0 = nowS - (wk.t % T);
@@ -1182,12 +1211,13 @@
       route.holes.forEach(function (H) { parent.tube.addHole(H); });
       var rock = frame.blk ? frame.blk.rock : parts.rock;
       if (kind === "side") rock = new THREE.MeshStandardMaterial({ color: rock.color.getHex(), roughness: 0.95, side: THREE.DoubleSide });
+      if (kind === "face") rock = new THREE.MeshStandardMaterial({ color: FACE_LOOK[face].rock, roughness: 0.9, side: THREE.DoubleSide }); // its own walls, so a style stays on this branch
       route.openAt = function () { return SIDE_LOOK.open; };
       route.tube = buildTube(THREE, route, { w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN });
       route.group.add(route.tube.mesh); route.group.add(buildPebbles(THREE, route, o.wb, h, route.sFrom, route.sTo));
       // the two openings get a glowing rim each, and a lantern stands between them
       route.rims = route.holes.map(function (H) {
-        var a = at(parent, (H.s0 + H.s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
+        var a = at(parent, (H.s0 + H.s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true }));
         var nx = -a.fz * H.side, nz = a.fx * H.side;
         rim.position.set(a.x + nx * pw * 0.97, a.y - h * 0.25, a.z + nz * pw * 0.97); rim.rotation.y = Math.atan2(nx, nz);
         rim.scale.set(0.01, 0.01, 1); route.group.add(rim); return rim;
@@ -1210,9 +1240,29 @@
         m.position.set(a.x, a.y - h * 0.92 + MARK_Y, a.z); route.group.add(m); return m;
       });
       route.ctx = { holder: new THREE.Group(), lampHex: 0xffe0b0, stones: [] };
+      if (kind === "face") { route.style = face; route.motes = buildMotes(route, o.wb, h); route.group.add(route.motes); }
       scene.add(route.group);
       return route;
     }
+    // Motes along a face's branch, in the colour of the style it wears.
+    function buildMotes(route, wb, h) {
+      var N = 90, pos = new Float32Array(N * 3), rnd = rngOf(hashOf("motes" + route.len)), seeds = [];
+      for (var i = 0; i < N; i++) seeds.push({ s: route.sFrom + rnd() * (route.sTo - route.sFrom), lat: (rnd() - 0.5) * wb * 1.4, y: rnd(), v: 0.3 + rnd() });
+      var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      var m = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending }));
+      m.userData = { seeds: seeds, t: 0, h: h, route: route };
+      return m;
+    }
+    function stepMotes(m, look, dt, still) {
+      var u = m.userData, p = m.geometry.attributes.position; u.t += still ? 0 : dt * (0.2 + look.drift);
+      m.material.color.lerp(tmpC.setHex(look.light), Math.min(1, dt * 2));
+      for (var i = 0; i < u.seeds.length; i++) {
+        var sd = u.seeds[i], a = at(u.route, sd.s), y = (sd.y + u.t * sd.v * 0.15) % 1, sw = look.drift * 0.4 * Math.sin(u.t * 2 + i);
+        p.array[i * 3] = a.x + -a.fz * (sd.lat + sw); p.array[i * 3 + 1] = a.y - u.h * 0.9 + u.h * 1.6 * y; p.array[i * 3 + 2] = a.z + a.fx * (sd.lat + sw);
+      }
+      p.needsUpdate = true;
+    }
+    function faceLook(style) { var L = FACE_LOOK[style]; return { light: L.light, fog: L.fog, fogK: L.fogK, hemi: L.hemi, open: SIDE_LOOK.open, drift: L.drift }; }
     function growRims(route, done) {
       busy = true;
       tween(900, function (k) { var e = ease(k); route.rims.forEach(function (r) { r.scale.set(0.01 + 1.3 * e, 0.01 + 1.7 * e, 1); }); }, function () { busy = false; done(); });
@@ -1272,7 +1322,7 @@
         route.group.add(stone); ctx.stones.push(stone);
       });
       var wo = route.stops[route.stops.length - 1], aw = at(route, Math.min(route.len, wo.s + 1.5));
-      var arch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
+      var arch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true })); ctx.arch = arch;
       arch.position.set(aw.x, aw.y - h * 0.92, aw.z); arch.rotation.y = yawFacing(aw); arch.scale.setScalar(Math.min(wb * 0.55, h * 0.7)); route.group.add(arch);
     }
 
@@ -1298,6 +1348,8 @@
       backRound(function (fr) {
         var blk = fr.blk, f = FACES[fr.stone];
         if (blk.gate.indexOf(f[0]) < 0) blk.gate.push(f[0]);
+        if (blk.route.ctx.arch) blk.route.ctx.arch.material.opacity = 1; // the openings and the arch shine again once out of the loop
+        if (fr.child && fr.child.route) fr.child.route.rims.forEach(function (r) { r.material.opacity = 1; });
         blk.route.ctx.stones.forEach(function (st) {
           if (blk.gate.indexOf(st.userData.face) >= 0) { var col = lookup(FACES, st.userData.face)[4]; st.material.color.setHex(col); st.material.emissive.setHex(col); st.material.emissiveIntensity = st.userData.face === f[0] ? 0.9 : 0.45; }
         });
@@ -1652,7 +1704,18 @@
         else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
-        var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
+        var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : route.kind === "face" ? faceLook(route.style) : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
+        if (route.kind === "face") { // the branch wears its style: the walls ease to its rock, the motes drift in its light
+          route.tube.mesh.material.color.lerp(tmpC.setHex(FACE_LOOK[route.style].rock), fe);
+          if (route.motes) stepMotes(route.motes, lg, dt, state.calm);
+        }
+        // a face's loop is tight, so its two glowing openings fill the view from inside it: they fade while the player walks it
+        state.stack.forEach(function (fr) {
+          var cr = fr.child && fr.child.route, op = route.kind === "face" ? 0.15 : 1;
+          if (cr && cr.rims) cr.rims.forEach(function (r) { r.material.opacity += (op - r.material.opacity) * fe; });
+          var ar = fr.child && fr.child.route && fr.child.route.ctx && fr.child.route.ctx.arch; if (ar) ar.material.opacity += (op - ar.material.opacity) * fe; // and the way-out arch it loops beside
+        });
+        syncStyle(route);
         lk.idx = route.kind === "main" ? wk.target : -1;
         lk.light.lerp(tmpC.setHex(lg.light), fe); lk.fog.lerp(tmpC.setHex(lg.fog), fe);
         lk.fogK += (lg.fogK - lk.fogK) * fe; lk.hemi += (lg.hemi - lk.hemi) * fe; lk.flash = Math.max(0, lk.flash - dt / 1.1);
@@ -1729,6 +1792,7 @@
     };
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
+    api.branchStyle = function () { var r = state.walk && state.walk.route; return { shown: styleSel.style.display !== "none", value: styleSel.value, style: r && r.style || null, rock: r && r.kind === "face" ? r.tube.mesh.material.color.getHex() : null, light: lk.light.getHex(), motes: !!(r && r.motes) }; };
     api.daemonGlow = function () { var c = ctxOf(); if (!c || !c.daemonAura) return null; var dm = c.daemonBlk.dm; return { level: c.daemonAura.userData.level, want: daemonLevel(c.daemonBlk), scale: c.daemonFig.scale.x, grow: dm.grow, bright: dm.bright, allowed: dm.allowed }; };
     api.sideElement = function () { var wk = state.walk, b = wk && wk.blk, c = b && b.route.ctx; return { shown: !!(c && c.elObj && c.holder.children.length), name: b && b.element, deco: b ? b.deco.length : 0 }; };
     api.pane = function () {

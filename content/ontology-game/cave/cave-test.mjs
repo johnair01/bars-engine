@@ -269,9 +269,19 @@ const gatesFirst = async (check) => {
       const fb = await C(() => window.__oagCave.branch());
       ok(fb.kind === 'face' && fb.startGap < 0.01 && fb.endGap < 0.01 && fb.lowest > -0.01, `the Magenta stone opens its own branch, a level loop back to the stone (${Math.round(fb.len)} units)`);
       ok((await C(() => window.__oagCave.pane())).text === 'Where is the presence you\'re reaching for?', 'walking a face\'s branch, the pane holds that face\'s question');
+      const st0 = await C(() => window.__oagCave.branchStyle());
+      ok(st0.shown && st0.value === 'magenta' && st0.style === 'magenta' && st0.motes, 'a face\'s branch opens in that face\'s style, with the style dropdown on the screen');
+      await page.waitForTimeout(1500); const rock0 = (await C(() => window.__oagCave.branchStyle())).rock;
+      await page.locator('[data-cave-branch-style]').selectOption('teal');
+      await page.waitForTimeout(2500);
+      const st1 = await C(() => window.__oagCave.branchStyle());
+      const near = (a, b) => [16, 8, 0].every((k) => Math.abs(((a >> k) & 255) - ((b >> k) & 255)) < 24);
+      ok(st1.style === 'teal' && st1.rock !== rock0 && near(st1.rock, 0x2c686a) && near(st1.light, 0x78e4e4), `choosing Teal dresses the branch in Teal's walls and light (rock #${st1.rock.toString(16)}, light #${st1.light.toString(16)})`);
+      await page.screenshot({ path: SHOTS + '/cave-branch-teal.png' });
     }
     await walkTo('[data-cave-face-back]');
     await page.locator('[data-cave-face-back]').click();
+    if (check && f === 'magenta') ok(await page.waitForFunction(() => !window.__oagCave.branchStyle().shown, null, { timeout: 15000 }).then(() => true, () => false), 'back at the stone, the style dropdown is gone');
   }
 };
 // ---- a block: the wall opens, a side path loops under the cave and back to the very spot --------------------
