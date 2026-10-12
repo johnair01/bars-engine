@@ -4,6 +4,7 @@ import "./globals.css";
 import { Chrome } from "@/components/Chrome";
 import { AdminIdentitySwitcher } from "@/components/AdminIdentitySwitcher";
 import { DevIdentitySwitcher } from "@/components/DevIdentitySwitcher";
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,6 +68,7 @@ export default async function RootLayout({
         {/* Legacy Dev Switcher (Non-production only) */}
         {process.env.NODE_ENV !== 'production' && <DevIdentitySwitcher />}
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
