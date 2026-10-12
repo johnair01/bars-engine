@@ -214,3 +214,34 @@ wave room on the part in front of them while they are in the cave. They should b
 for them not just when they are in front of a daemon. The charge spirits can come with then throughout the cave until
 they are dismissed. The daemons should be able to respond to how many spirits are around. They might be protecting the
 self from the charge they are carrying". A council pass takes it first.
+
+## Sitting down, and the spirits that follow (Wendell's board, 12 October 2026; pass 3)
+
+His steer on `bmw-block`: "One should be able to sit down and do a version of the wave room on the part in front of them while
+they are in the cave. They should be able to do this when a charge emerges for them not just when they are in front of a daemon.
+The charge spirits can come with then throughout the cave until they are dismissed. The daemons should be able to respond to how
+many spirits are around. They might be protecting the self from the charge they are carrying". Pass 3 (sprout
+`campaigns/big-mind/6FACE_PASS3_big-mind-cave_2026-10-12.md`) set eight positions; he answered the two questions.
+
+- **Sit down, anywhere** (`bms-sit-anywhere`). A Sit down button sits at the bottom left in every hallway and chamber. The figure
+  sits, the walls draw in around it, and what's coming up comes along the path as a grey shape that takes its element's colour
+  once it is named. Sitting with the voice puts the glow on the voice instead.
+- **The room's own steps, in place** (`bms-in-place`, `bms-build-order`). The sitting runs cave.js's `ROOM_STEPS`, `WAVE`,
+  `TEXTURES`, `ELEMENTS`, `allowSliders`, `buildAura` and `talk321`, exported on the kit, so the WAVE room and the cave share one
+  copy: Welcome, Witness, Acknowledge, Allow (with the size and brightness sliders), Accept, Appreciate (with Not now), Validate
+  (it dulls), and the fork. Toward runs the 3-2-1 aimed at what the player wants, then one next move; Away breathes it out.
+- **Who to sit with** (`bms-sit-whom`, his answer: pick). In a chamber the player picks each time: what's coming up in them, or
+  the voice in front of them. Sitting with the voice has no fork and comes back to the voice's charge poll.
+- **A block sits down** (`bms-block-sits`). "Something's in the way" in a W.A.V.E. now offers Sit down with it, and standing up
+  comes back to the W.A.V.E. step it stopped on.
+- **Spirits follow** (`bms-spirits-follow`). A charge that stays at the fork follows as a spirit in its element's colour with its
+  name. At most three are in view; the Spirits button at the bottom right counts them all.
+- **Dismissing** (`bms-dismiss`). Tap Spirits, tap one, thank it, then breathe it out or sit with it again.
+- **The voices respond** (`bms-voices-respond`). With any spirit, the Protector says "You didn't come alone.", and with three or
+  more, "That's a lot to bring through here." It stands wider by 4% a spirit, up to three. Spirits never move its charge or trust.
+- **What it protects you from** (`bms-protects-from`). The "from" question offers the spirits' names as answers, and the guide
+  asks whether it might be protecting you from what you carry.
+- **At the mouth** (`bms-spirits-after`, his answer: choose). Leaving shows each spirit with Keep or Let go. A kept spirit is its
+  name and element on this device, and it comes back in with the player next time. The mouth lists kept spirits.
+- **The record.** Each sitting saves where it happened, with whom, what it came from and which way it went (`s.sittings`), with
+  no words. Choices: the button places, the narrowing (16%), the grey shape, the spirits' places behind the figure.

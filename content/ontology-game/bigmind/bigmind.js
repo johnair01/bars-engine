@@ -150,6 +150,8 @@
     ".bm-eased{position:absolute;left:0;right:0;top:34%;text-align:center;z-index:3;color:#fff1d0;font-size:1.15rem;text-shadow:0 1px 4px #000;pointer-events:none;opacity:0;transition:opacity .4s;padding:0 1.2rem}" +
     ".bm-eased.on{opacity:1}.bm-eased small{display:block;font-size:.9rem;color:#dfe6ff;margin-top:.25rem}" +
     "@media (prefers-reduced-motion:reduce){.bm-meter.eased .bm-bar s,.bm-meter.eased .bm-bar,.bm-meter.eased .bm-drop{animation-duration:.01s}}" +
+    ".oagc button.bm-sitbtn,.oagc button.bm-spiritbtn{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
+    ".oagc button.bm-sitbtn{left:10px}.oagc button.bm-spiritbtn{right:10px}.oagc button.bm-sitbtn:disabled{opacity:.35}" +
     ".bm-kept{border-top:1px solid rgba(255,255,255,.12);padding:.5rem 0}.bm-kept li{color:#cfd8ff}";
 
   function start() {
@@ -200,11 +202,13 @@
     return head + ": " + w.before + " to " + w.afterCharge + (w.blocked ? " (something was in the way at " + (WAVE_LABEL[w.blocked] || w.blocked) + ")" : "");
   }
 
+  function spiritLabel(o) { var e = ELEMENTS.filter(function (x) { return x[0] === o.element; })[0]; return o.name + (e ? " (" + e[1] + ")" : ""); }
   // What you've kept: keep or forget per voice, and delete everything (bmc-safety).
   function keptList(save) {
-    var ids = Object.keys(save.voices);
-    if (!ids.length) return el("span", {});
+    var ids = Object.keys(save.voices), sps = save.spirits || [];
+    if (!ids.length && !sps.length) return el("span", {});
     var box = el("div", { class: "bm-kept", "data-bm-kept": "" }, [el("p", { text: "What you've kept, on this device:" })]);
+    if (sps.length) box.appendChild(el("p", { "data-bm-keptspirits": "", text: "Spirits that come back in with you: " + sps.map(spiritLabel).join(", ") + "." }));
     ids.forEach(function (id) {
       var v = save.voices[id], voice = VOICES.filter(function (x) { return x.id === id; })[0];
       var name = voice ? voice.title : id;
@@ -285,6 +289,7 @@
       var g = clamp((s - S_GATE) / 5, 0, 1), u = g * g * (3 - 2 * g);
       o *= 1 - u + u * st.gate;
       var e = clamp((s - (route.sEnd + 2)) / 5, 0, 1); o *= 1 - 0.5 * e; // the next chamber's mouth, shut for now
+      if (st.sit) o *= 1 - 0.16 * st.sit.k * clamp(1 - Math.abs(s - st.s) / 14, 0, 1); // the walls draw in around a sitting (a choice)
       return o;
     };
     var tube = K.buildTube(THREE, route, { w: W, h: H, rock: rock, openAt: route.openAt, seed: 31 });
@@ -365,9 +370,9 @@
     function arrive() {
       st.phase = "chamber";
       var M = V.meet;
-      show([el("h2", { text: V.title }), guide(V.arrive), npc(M.opens),
+      show([el("h2", { text: V.title }), guide(V.arrive), npc(M.opens)].concat(spiritLines(), [
         el("div", { class: "bm-cards" }, M.replies.map(function (r) { return btn(r[0], function () { met(r); }, { class: "bm-card", "data-bm-reply": r[2] }); })),
-        row([btn("Not now", decline, { class: "bm-link", "data-bm-decline": "" })])], "meet");
+        row([btn("Not now", decline, { class: "bm-link", "data-bm-decline": "" })])]), "meet");
     }
     function met(r) {
       var M = V.meet, rest = M.replies.filter(function (x) { return x !== r && x[2] !== "who"; });
@@ -398,6 +403,7 @@
     }
     // i is the question just answered (null before the first). The slider starts at the last number.
     function chargeAsk(i, ask) {
+      st.lastPoll = { i: i, ask: ask };
       var cur = st.charge == null ? 7 : st.charge;
       var num = el("b", { class: "bm-chargenum", text: String(cur) });
       var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(cur), "data-bm-range": "", "aria-label": "Charge, 0 to 10" });
@@ -514,10 +520,15 @@
     function climbed(n) { wv.reached = WAVE[n][0]; waveStep(n + 1); }
     // A step that won't go further is noted, and the W.A.V.E. counts as complete there (oag-wave-ladder's stopping rule).
     // Where a block goes in this cave is still open with Wendell (bmw-block), so this is the plain default (a choice).
+    // A block can also be sat down with (bms-block-sits): the room's steps run in place on what is in the way, and afterwards
+    // the W.A.V.E. comes back at the step it stopped on.
     function waveBlocked(id) {
       wv.blocked = id;
+      var n = WAVE.map(function (w) { return w[0]; }).indexOf(id);
       show([el("h2", { text: "Something's in the way" }), guide("That's noted. A W.A.V.E. that stops here still counts. You don't have to push past it."),
-        row([btn("Go on", function () { waveAfter(); }, { "data-bm-blockgo": "" })])], "wave-blocked");
+        guide("Or you can sit down with what's in the way, and come back to this step after."),
+        row([btn("Sit down with it", function () { wv.blocked = null; wv.satAt = id; sitDown("me", function () { waveStep(n); }, null, "block"); }, { "data-bm-blocksit": "" }),
+          btn("Go on", function () { waveAfter(); }, { "data-bm-blockgo": "" }, true)])], "wave-blocked");
     }
     function waveAfter() {
       var sl = youSlider(wv.before == null ? 5 : wv.before, "Your own charge now, 0 to 10");
@@ -532,6 +543,188 @@
       var i = wv.i, ask = wv.ask; wv = null;
       chargeAsk(i, ask); // the voice's poll comes back as after any answer; its number is the player's alone
     }
+    // ---- sitting down, anywhere, and the spirits that follow -----------------------------------------------------
+    // Wendell's board steer (bmw-block, 12 October 2026): "One should be able to sit down and do a version of the wave room on
+    // the part in front of them while they are in the cave. They should be able to do this when a charge emerges for them not
+    // just when they are in front of a daemon. The charge spirits can come with then throughout the cave until they are
+    // dismissed. The daemons should be able to respond to how many spirits are around. They might be protecting the self from
+    // the charge they are carrying". Pass 3 and his answers: Sit down is there anywhere (bms-sit-anywhere); it runs the WAVE
+    // room's own steps in place, from cave.js's ROOM_STEPS, WAVE and talk321 (bms-in-place); in a chamber the player picks each
+    // time whether to sit with what's coming up in them or with the voice in front of them (bms-sit-whom = pick); a charge
+    // that stays at the fork follows as a spirit in its element's colour with its name, at most three in view and the rest as
+    // a count (bms-spirits-follow); a spirit is dismissed by tapping it, thanking it, then breathing out or sitting with it
+    // again (bms-dismiss). Only where and with whom a sitting happened, and which way it went, is saved; never its words.
+    var SIT_WHERE = { 3: "You are sitting where you stopped, looking at it.", 2: "You are face to face with it.", 1: "You are sitting where it sat, and it sits where you were.", check: "You are face to face with it.", after: "You are back where you sat down.", paused: "You leaned back from it, still sitting." };
+    var sitBtn = el("button", { class: "bm-sitbtn", "data-bm-sitbtn": "", text: "Sit down", onclick: function () { sitOffer(); } });
+    var spiritBtn = el("button", { class: "bm-spiritbtn", "data-bm-spiritbtn": "", style: "display:none", onclick: function () { spiritList(); } });
+    wrap.insertBefore(sitBtn, fade); wrap.insertBefore(spiritBtn, fade);
+    var spirits = [], SHOW_SPIRITS = 3;
+    function colorOf(element) { var r = K.ELEMENTS.filter(function (x) { return x[1].toLowerCase() === element; })[0]; return r ? r[3] : 0x9a9aa8; }
+    function stash() { return { html: Array.prototype.slice.call(modal.childNodes), tag: modal.getAttribute("data-bm-step"), open: st.modal }; }
+    function unstash(p) {
+      if (!p || !p.open) return hide();
+      modal.innerHTML = ""; p.html.forEach(function (n) { modal.appendChild(n); });
+      modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); modal.setAttribute("data-bm-step", p.tag); st.modal = true; st.held = false; ring.style.display = "none";
+    }
+    function canSit() {
+      var tag = modal.getAttribute("data-bm-step") || "";
+      return !st.sit && !st.auto && !st.turned && st.cam !== "voice" && !/^(self|eased|sit|spirit|mouth|thanks|know)/.test(tag);
+    }
+    function sitOffer() {
+      if (!canSit()) return;
+      var p = stash(), back = function () { unstash(p); };
+      if (st.phase !== "chamber" || !voice.visible) return sitDown("me", back, null, "button");
+      show([el("h2", { text: "Sit down" }), guide("Who do you want to sit with?"),
+        el("div", { class: "bm-cards" }, [
+          btn("What's coming up in me", function () { sitDown("me", back, null, "button"); }, { class: "bm-card", "data-bm-sitwhom": "me" }),
+          btn(V.title + ", in front of me", function () { sitDown("voice", st.lastPoll ? function () { chargeAsk(st.lastPoll.i, st.lastPoll.ask); } : back, null, "button"); }, { class: "bm-card", "data-bm-sitwhom": "voice" }),
+        ]), row([btn("Stay standing", back, { class: "bm-link", "data-bm-sitcancel": "" })])], "sit-whom");
+    }
+    function sitSteps(S) { return K.ROOM_STEPS.filter(function (r) { return S.whom === "me" || r.id !== "fork"; }); }
+    // whom: "me" (what's coming up in the player) or "voice" (the voice in front of them). back runs when they stand up again.
+    // spirit: a spirit sat with again. via: what the sitting came from (the button, a block in a W.A.V.E., or a spirit).
+    function sitDown(whom, back, spirit, via) {
+      var S = st.sit = { whom: whom, back: back, via: via, where: st.phase, n: 0, phase: "steps", place: whom === "voice" ? st.place : null, texture: null,
+        name: spirit ? spirit.name : whom === "voice" ? V.title : "", element: spirit ? spirit.element : null, unknown: false, allow: { grow: 3, bright: 7 }, allowed: false,
+        goal: "", move: "", t321: { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }, k: 0, dull: 0, spirit: spirit || null, come: 1 };
+      hide(); modal.setAttribute("data-bm-step", "sitting"); st.modal = true; ring.style.display = "none";
+      if (spirit) spirit.hidden = true;
+      // The figure sits, the walls draw in around it, and what's coming up comes along the path from ahead as a grey shape that
+      // takes its colour once it is named (choices). Sitting with the voice puts the glow on the voice instead.
+      var g = new THREE.Group(), au = K.buildAura(THREE, whom === "voice" ? 1.8 : 0.9);
+      if (whom !== "voice") {
+        var m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 20, 14), new THREE.MeshStandardMaterial({ color: 0x8a8a96, emissive: 0x8a8a96, emissiveIntensity: 0.25, transparent: true, opacity: 0.85, roughness: 0.7 }));
+        m.position.y = 0.6; g.add(m); g.userData.body = m;
+      }
+      g.add(au); g.userData.aura = au; S.g = g; scene.add(g);
+      tween(1400, function (k) { S.k = ease(k); S.come = 1 - ease(k); tube.dirty = true; }, function () {
+        if (modal.getAttribute("data-bm-step") === "self") { paused = { then: sitDraw }; return; }
+        sitDraw();
+      });
+    }
+    function cardRow(list, cur, attr, pick) {
+      return el("div", { class: "bm-cards" }, list.map(function (x) {
+        var a = { class: "bm-card", "aria-pressed": String(cur === x[0]) }; a[attr] = x[0];
+        return btn(x[1], function () { pick(x[0]); }, a);
+      }));
+    }
+    function lineInput(attr, val, ph, onInput) {
+      var a = { type: "text", maxlength: "60", placeholder: ph, "aria-label": ph }; a[attr] = "";
+      var i = el("input", a); i.value = val; i.addEventListener("input", function () { onInput(i.value); });
+      return el("div", { class: "bm-line" }, [i]);
+    }
+    function sitNext() { var S = st.sit, steps = sitSteps(S); S.n++; if (S.n >= steps.length) return standUp("done"); sitDraw(); }
+    function sitDraw() {
+      var S = st.sit; if (!S) return;
+      var nm = S.name.trim() || "it", standBtn = btn("Stand up", function () { standUp("stood"); }, { class: "bm-link", "data-bm-standup": "" });
+      if (S.phase === "stays") {
+        var k = [], title = K.talk321(S.t321, { name: nm, damaged: false, redraw: sitDraw, focus: function () { K.focusChat(modal); }, where: SIT_WHERE, aim: "Aimed at what you want: " + S.goal,
+          ask: function (body) {
+            body.push(guide("What is one next move toward " + S.goal + "? Write it."));
+            var done = btn("That's my move", function () { standUp("stays"); }, { "data-bm-sitmovedone": "" });
+            body.push(lineInput("data-bm-sitmove", S.move, "One next move", function (v) { S.move = v; done.disabled = !v.trim(); }));
+            done.disabled = !S.move.trim(); body.push(row([done]));
+          } }, k);
+        show([el("h2", { text: title })].concat(k), "sit-321");
+        return;
+      }
+      if (S.phase === "goes") {
+        show([el("h2", { text: "Exhale" }), guide("Let the out-breath carry it. It leaves at its own pace, and it can come back."),
+          row([btn("Breathe out", function () { standUp("goes"); }, { "data-bm-sitexhale": "" })]), row([standBtn])], "sit-goes");
+        return;
+      }
+      var steps = sitSteps(S), R = steps[S.n], w = R.wave != null ? K.WAVE[R.wave] : [R.id, R.title, R.words];
+      var kids = [el("p", { class: "bm-wavestep", text: (S.whom === "voice" ? "Sitting with " + V.name : "Sitting with what's coming up") + " · " + (S.n + 1) + " of " + steps.length }), el("h2", { text: w[1] }), guide(w[2])];
+      var go = btn("Go on", function () { if (R.id === "validate") S.dull = 0.6; sitNext(); }, { "data-bm-sitnext": "" }), extra = [];
+      if (R.id === "witness") {
+        kids.push(guide(S.place ? "Where: " + S.place + "." : "Where is it in your body?"), cardRow(V.places.map(function (pl) { return [pl, pl]; }), S.place, "data-bm-sitplace", function (v) { S.place = v; sitDraw(); }));
+        if (window.OAGBody && window.OAGBody.pick) kids.push(row([btn("Show me on the body map", function () { window.OAGBody.pick().then(function (r) { if (r) S.place = r.label; sitDraw(); }); }, { "data-bm-sitbodymap": "" }, true)]));
+        kids.push(guide("What is it like?"), cardRow(K.TEXTURES.map(function (t) { return [t[0], t[1]]; }), S.texture, "data-bm-sittexture", function (v) { S.texture = v; sitDraw(); }));
+        go.disabled = !S.texture;
+      } else if (R.id === "acknowledge") {
+        kids.push(guide(S.whom === "voice" ? "Name what you feel from " + V.name + ", in your own words, then its element if you know it." : "Give it a name, in your own words. Then its element, if you know it."));
+        if (S.whom === "voice" && S.name === V.title) S.name = "";
+        var ready = function () { go.disabled = !(S.name.trim() && (S.element || S.unknown)); };
+        kids.push(lineInput("data-bm-sitname", S.name, "A name for it", function (v) { S.name = v; ready(); }),
+          cardRow(K.ELEMENTS.map(function (x) { return [x[1].toLowerCase(), x[0] + " · " + x[1]]; }).concat([["unknown", "I don't know"]]), S.unknown ? "unknown" : S.element, "data-bm-sitelement",
+            function (v) { S.unknown = v === "unknown"; S.element = S.unknown ? null : v; sitDraw(); }));
+        ready();
+      } else if (R.id === "allow") {
+        S.allowed = true;
+        kids.push(guide((S.name.trim() || "It") + " grows a little as you let it be here."));
+        K.allowSliders(S.allow, "data-bm-sitallow").forEach(function (n) { kids.push(n); });
+      } else if (R.id === "fork") {
+        kids.push(guide("What do you actually want right now?"));
+        var tw = btn("Toward it", function () { S.phase = "stays"; sitDraw(); }, { "data-bm-sitpush": "toward" });
+        var aw = btn("Away from it", function () { S.phase = "goes"; sitDraw(); }, { "data-bm-sitpush": "away" }, true);
+        var ok = function () { tw.disabled = aw.disabled = !S.goal.trim(); };
+        kids.push(lineInput("data-bm-sitgoal", S.goal, "What you want, in your words", function (v) { S.goal = v; ok(); }), guide("Is " + nm + " pushing your next move toward it, or away from it?"));
+        ok(); kids.push(row([tw, aw]), row([standBtn]), el("p", { class: "bm-wavestep", text: "What you write stays on this page." }));
+        show(kids, "sit-fork");
+        return;
+      }
+      if (R.notNow) extra.push(btn("Not now", sitNext, { "data-bm-sitnotnow": "" }, true));
+      kids.push(row([go].concat(extra)), row([standBtn]));
+      show(kids, "sit-" + R.id);
+    }
+    // branch: stays (Toward at the fork: it follows as a spirit), goes (Away: breathed out), done (the voice's sitting ran to the
+    // end), stood (stood up partway: nothing is marked, and a spirit sat with again keeps following).
+    function standUp(branch) {
+      var S = st.sit, nm = S.name.trim();
+      hide(); modal.setAttribute("data-bm-step", "sitting"); st.modal = true; ring.style.display = "none";
+      try { var s = readSave(); s.sittings = (s.sittings || []).concat([{ where: S.where, whom: S.spirit ? "spirit" : S.whom, via: S.via, branch: branch, at: new Date().toISOString() }]); writeSave(s); } catch (e) {}
+      var from = S.g.position.clone();
+      tween(branch === "goes" ? 2200 : 1200, function (k) {
+        S.k = 1 - ease(k); tube.dirty = true;
+        if (branch === "goes") { S.g.position.y = from.y + 3 * ease(k); S.fade = 1 - k; }
+        else if (branch === "stood" && !S.spirit) S.come = ease(k);
+      }, function () {
+        scene.remove(S.g); st.sit = null;
+        if (S.spirit) { S.spirit.hidden = false; if (branch === "goes") letGo(S.spirit, from); }
+        else if (branch === "stays") addSpirit({ name: nm || "A charge", element: S.element }, from);
+        if (modal.getAttribute("data-bm-step") === "self") { paused = { then: S.back }; return; }
+        st.modal = false; S.back();
+      });
+    }
+    function addSpirit(o, from) {
+      var g = new THREE.Group(), hex = colorOf(o.element);
+      var orb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }));
+      var au = K.buildAura(THREE, 0.7), label = K.labelSprite(THREE, o.name, "#fff1d0", 2.4); label.position.y = 0.95;
+      g.add(orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label };
+      if (from) g.position.copy(from); else { var a = side(Math.max(0.5, st.s - 2.2), 0.9); g.position.set(a.x, floor(a) + 1.7, a.z); }
+      scene.add(g); o.g = g; spirits.push(o); spiritsUi();
+    }
+    function letGo(o, from) {
+      var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); spiritsUi();
+      var g = o.g, y0 = (from || g.position).y; g.position.copy(from || g.position); o.leaving = true;
+      tween(1600, function (k) { g.position.y = y0 + 2.5 * ease(k); g.traverse(function (m) { if (m.material) m.material.opacity = 0.9 * (1 - k); }); }, function () { scene.remove(g); });
+    }
+    function spiritsUi() {
+      var n = spirits.length;
+      spiritBtn.style.display = n ? "" : "none";
+      spiritBtn.textContent = "Spirits " + n + (n > SHOW_SPIRITS ? " (+" + (n - SHOW_SPIRITS) + " behind)" : "");
+      spiritBtn.setAttribute("data-bm-spirits", String(n));
+    }
+    function spiritList() {
+      var tag = modal.getAttribute("data-bm-step") || "";
+      if (!spirits.length || st.sit || st.auto || /^(self|eased|sit|spirit|mouth)/.test(tag)) return;
+      var p = stash(), back = function () { unstash(p); };
+      show([el("h2", { text: "Spirits with you" }), guide("Tap one to thank it."),
+        el("div", { class: "bm-cards" }, spirits.map(function (o, oi) { return btn(spiritLabel(o), function () { thank(o, back); }, { class: "bm-card", "data-bm-spirit": String(oi) }); })),
+        row([btn("Back", back, { class: "bm-link", "data-bm-spiritback": "" })])], "spirit-list");
+    }
+    function thank(o, back) {
+      show([el("h2", { text: o.name }), you("Thank you for coming with me."), guide("Breathe it out and let it go, or sit with it again."),
+        row([btn("Breathe out, and let it go", function () { hide(); letGo(o); back(); }, { "data-bm-spiritout": "" }),
+          btn("Sit with it again", function () { sitDown("me", back, o, "spirit"); }, { "data-bm-spiritsit": "" }, true)])], "spirit-thank");
+    }
+    // The voices answer the spirits in what they say and how they stand, never in their charge or trust (bms-voices-respond).
+    function spiritLines() {
+      var n = spirits.length; if (!n) return [];
+      return [npc("You didn't come alone.")].concat(n >= 3 ? [npc("That's a lot to bring through here.")] : []);
+    }
+    (save.spirits || []).forEach(function (o) { addSpirit({ name: o.name, element: o.element }); });
+
     function ready() {
       show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
     }
@@ -617,7 +810,9 @@
     function askQ(i, lead) {
       var q = V.questions[i], picked = [];
       var cards = el("div", { class: "bm-cards" });
-      q.cards.forEach(function (c, ci) {
+      // What it protects the self from may be what the player carries in (bms-protects-from): the spirits' names are cards too.
+      var carried = q.id === "from" ? spirits.map(function (o) { return [o.name + "."]; }) : [];
+      q.cards.concat(carried).forEach(function (c, ci) {
         var b = el("button", { class: "bm-card", "data-bm-card": String(ci), "aria-pressed": "false", text: c[0], onclick: function () {
           if (q.multi) { var on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", String(on)); if (on) picked.push(c); else picked.splice(picked.indexOf(c), 1); doneBtn.disabled = !picked.length; }
           else answer(i, [c[0]], c[1] || null);
@@ -628,7 +823,7 @@
       function say() { var t = input.value.trim(); if (!t) return; var lines = picked.map(function (c) { return c[0]; }).concat([t]); answer(i, lines, firstOut(picked) || heard(t)); }
       input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); say(); } });
       var doneBtn = q.multi ? btn("That's all of it", function () { answer(i, picked.map(function (c) { return c[0]; }), firstOut(picked)); }, { "data-bm-done": "", disabled: "" }) : null;
-      show([el("h2", { text: V.title }), lead ? guide(lead) : null, you(q.ask), guide("What does the Protector say?"), cards,
+      show([el("h2", { text: V.title }), lead ? guide(lead) : null, you(q.ask), carried.length ? guide("You came in with " + (carried.length === 1 ? "a spirit" : carried.length + " spirits") + ". Might it be protecting you from what you carry?") : null, guide("What does the Protector say?"), cards,
         el("div", { class: "bm-line" }, [input, btn("Say it", say, { "data-bm-say": "" })]),
         doneBtn ? row([doneBtn]) : null,
         row([btn("This doesn't sound like the Protector", function () { secret("felt", i); }, { class: "bm-link", "data-bm-wrong": "" }),
@@ -757,7 +952,24 @@
         guide("Your place is saved here. You can rest, or walk back up and out."),
         row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }), btn("Rest here", function () { hide(); st.phase = "rest"; hint.textContent = "Resting. Tap Self to walk back up."; }, { "data-bm-rest": "" }, true)])], "end");
     }
+    // At the mouth the player chooses, for each spirit, to keep it for next time or let it go (bms-spirits-after = choose). What
+    // is kept is its name and element, on this device.
     function leave() {
+      if (!spirits.length) { var s0 = readSave(); if (s0.spirits && s0.spirits.length) { s0.spirits = []; writeSave(s0); } return leaveNow(); }
+      var keepIt = spirits.map(function () { return true; });
+      show([el("h2", { text: "At the cave mouth" }), guide("These came out with you. Keep each one to come back in with you next time, or let it go here. What is kept is its name and element, on this device."),
+        el("div", { class: "bm-cards" }, spirits.map(function (o, oi) {
+          var b = el("button", { class: "bm-card", "data-bm-mouthspirit": String(oi), "aria-pressed": "true", text: "Keep " + spiritLabel(o), onclick: function () {
+            keepIt[oi] = !keepIt[oi]; b.setAttribute("aria-pressed", String(keepIt[oi])); b.textContent = (keepIt[oi] ? "Keep " : "Let go of ") + spiritLabel(o);
+          } });
+          return b;
+        })),
+        row([btn("Walk out", function () {
+          var s = readSave(); s.spirits = spirits.filter(function (o, oi) { return keepIt[oi]; }).map(function (o) { return { name: o.name, element: o.element }; });
+          writeSave(s); leaveNow();
+        }, { "data-bm-walkout": "" })])], "mouth-spirits");
+    }
+    function leaveNow() {
       fade.style.opacity = 1;
       setTimeout(function () { cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; mouth(); }, 520);
     }
@@ -788,6 +1000,28 @@
       K.poseAvatar(avatar, st.clk, st.moving, dt, br.b, WALK / K.STEPS_PER_S, false);
       avatar.position.set(a.x, fl + 0.02, a.z);
       var face = K.yawFacing(a) + (st.turned || st.back ? Math.PI : 0); avatar.rotation.y = face;
+      var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches, SI = st.sit;
+      if (SI) {
+        avatar.position.y -= 0.75 * SI.k; avatar.scale.y = 1 - 0.3 * SI.k;
+        if (SI.whom === "voice") SI.g.position.set(voice.position.x, voice.position.y, voice.position.z);
+        else if (!SI.fade && SI.fade !== 0) { var ba = at(route, Math.min(route.len - 1, st.s + 3.2 + 7 * SI.come)); SI.g.position.set(ba.x, floor(ba) + 0.9, ba.z); }
+        var named = SI.element ? colorOf(SI.element) : 0x9a9aa8, bc = tmpC.setHex(named);
+        if (SI.g.userData.body) {
+          var bm = SI.g.userData.body.material; bm.color.lerp(bc, Math.min(1, dt * 3)); bm.emissive.copy(bm.color); bm.opacity = 0.85 * (SI.fade == null ? 1 : SI.fade);
+          var gs = 1 + (SI.allowed ? SI.allow.grow / 10 : 0); SI.g.userData.body.scale.lerp(new THREE.Vector3(gs, gs, gs), Math.min(1, dt * 2));
+        }
+        var lvl = SI.texture || SI.element || SI.whom === "voice" ? (SI.allow.bright / 10) * (1 - SI.dull) : 0.12;
+        K.stepAura(SI.g.userData.aura, bc, lvl * (SI.fade == null ? 1 : SI.fade), dt, still);
+      } else avatar.scale.y = 1;
+      var shown = 0;
+      spirits.forEach(function (o) {
+        var g = o.g; g.visible = !o.hidden && shown < SHOW_SPIRITS; if (!g.visible) return;
+        var j = shown++, sa = side(Math.max(0.5, st.s - 2.2 - 1.6 * j), j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2), ty = floor(sa) + 1.7 + (still ? 0 : 0.18 * Math.sin(now / 700 + j * 2));
+        g.position.lerp(new THREE.Vector3(sa.x, ty, sa.z), Math.min(1, dt * 2.2));
+        K.stepAura(g.userData.aura, g.userData.color, 0.45, dt, still);
+      });
+      var stance = 1 + 0.04 * Math.min(spirits.length, 3); voice.scale.x = voice.scale.z = stance; // it squares up to what you bring
+      sitBtn.disabled = !canSit();
       // the camera: behind on the path; in the voice's place it stands past the player, looking back the way the self came
       var want, look;
       if (st.cam === "voice") { var c = at(route, S_VOICE + 6.5), sp = at(route, S_SELF); want = new THREE.Vector3(c.x, floor(c) + 4.4, c.z); look = new THREE.Vector3(sp.x, floor(sp) + 1.8, sp.z); }
@@ -825,6 +1059,7 @@
     }
     var api = window.__oagBigMind; api.state = st; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
     api.openAt = route.openAt; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
+    api.spirits = spirits; api.sitting = function () { return st.sit; };
     size(); window.addEventListener("resize", size);
     running = requestAnimationFrame(frame);
   }

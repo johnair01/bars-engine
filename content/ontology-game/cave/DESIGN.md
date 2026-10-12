@@ -26,10 +26,10 @@ walk is the cycle itself.
 
 | Place | Block step | What the player does there | How the chamber shows it |
 |---|---|---|---|
-| The mouth | 1 Sensation | Names the texture: tightness, tension, numbness, strength, something else | The walls take that texture: they narrow for tightness, stretch into taut strands for tension, fill with fog for numbness and glow for strength **(choice)** |
-| The pool | 2 Element | Picks fire, water, wood, metal or earth, then runs Happy Apples to open up and the clean up move that goes with it (`CLEAN_UP_MOVES`) | The pool turns to fire, water, wood, metal or earth: fire burns the blockage away, water rises and dissolves it, wood grows through it, metal clears the fog to a sharp edge, earth settles it into the floor **(choice)** |
-| The passage | 3 Daemon | Meets the daemon standing in the way and asks its three questions: its job, who it works for (`DAEMON_WORKS_FOR`), whether it will step aside | The daemon is a figure in the passage. If it steps aside, it moves to the wall and the way opens |
-| The gate | 4 Game masters' gate | The six game masters' gate, as the game runs it now | Six standing stones around a ring, one per face, lit as the gate is worked **(choice)** |
+| The mouth | 2 Sensation | Names the texture: tightness, tension, numbness, strength, something else | The walls take that texture: they narrow for tightness, stretch into taut strands for tension, fill with fog for numbness and glow for strength **(choice)** |
+| The pool | 3 Element | Picks fire, water, wood, metal or earth, then runs Happy Apples to open up and the clean up move that goes with it (`CLEAN_UP_MOVES`) | The pool turns to fire, water, wood, metal or earth: fire burns the blockage away, water rises and dissolves it, wood grows through it, metal clears the fog to a sharp edge, earth settles it into the floor **(choice)** |
+| The passage | 4 Daemon | Meets the daemon standing in the way and asks its three questions: its job, who it works for (`DAEMON_WORKS_FOR`), whether it will step aside | The daemon is a figure in the passage. If it steps aside, it moves to the wall and the way opens |
+| The gate | 1 Game masters' gate (first stop of the passage) | The six game masters' gate, as the game runs it now | Six standing stones around a ring, one per face, lit as the gate is worked **(choice)** |
 | The way out | Release | The release and the return to the step | Light from above; the camera rises back out of the body to the place it entered, and the scan is saved with `OAGBody.record` |
 
 Passing a daemon by its lesson, the done test for the first slice, is the passage: the daemon steps aside because
@@ -313,9 +313,138 @@ then it needs to be worked with. We can pivot to a 321 discussion with the part 
 - **No skip at the daemon.** The daemon's stop never offers Skip. Inside any loop opened while a daemon still stands in
   the way (its own dig loop, or a block deeper in it), Skip is gone too. Elsewhere a block keeps its skip
   (`cave-block-branch`) until a daemon shows up **(choice)**.
-- **The 3-2-1 with the daemon.** When the daemon answers "Not yet", the wall offers two ways to work it: "Talk with it" and
-  "Work what it holds". Talk with it runs the 3-2-1 in the pane, using the wording of the game's existing
-  `ThreeTwoOneDialogue`: 3, face it as "it" and describe it; 2, talk to it as "you" and ask what it wants and protects; 1,
-  be it and speak as "I". Each step has a box to write in. Then the pane asks whether the daemon feels satisfied. Yes, and
-  it steps to the wall; "Not yet, another round" starts the 3-2-1 again, with the round counted in the title.
+- **The 3-2-1 with the daemon, as a chat (10 October, 23:14).** Wendell: "we need to actually have an in game interface of
+  the 321. At the very least pulling in the version from bars engine with the chat interface". Talk with it now runs the
+  chat from bars-engine's `Clean321Flow` (the NOW page), ported as plain JS in `cave.js`: a charge reading from 0 to 10
+  before; one thread the player writes entirely, the system never writing a turn; 3 Face it, "it", one voice; 2 Talk to it,
+  two voices with a switcher (You, and the daemon named); 1 Be it, "I am"; a charge reading after. Then the pane asks
+  whether the daemon feels satisfied. Yes, and it steps to the wall; "Not yet, another round" keeps the thread, starts again
+  at 3 with the new reading as the next "before", and counts the round in the title. The chat sits in the modal; the text
+  box keeps focus after each line.
+- **Staged (board `cave-321-form` = staged, 10 October).** The chat above runs inside a staged scene; each step is a place, and
+  one line under the step names where the player stands. Face it: the figure and the daemon across the chamber. Talk to it:
+  the figure walks to face it, and the voice switcher swings the camera from over the player's shoulder to over the daemon's.
+  Be it: the figure walks to where the daemon stood, turns, and the camera looks back down the passage while the daemon
+  stands in the player's place. After: a step back to the player's own place. "Step back" is on every step and returns to the
+  far place and pauses, keeping the words; "Go back in" resumes the same step. With the Damaged Self, before Be it the cave
+  asks: continue, rest, or go back up. The player writes every line; the daemon's figure moves and never speaks. Not built:
+  the on-device charge/seconds/"I" counts of the 17 October test.
+- **From Wendell's play on his phone (10 October, 23:39).** Built: the element beside the pool stays out of the scene until the
+  player names one; "I don't know" is offered at the doorway and at the pool and keeps it hidden; naming one lights the
+  passage in its colour and scatters small ones along both walls. Built (10 October, 23:50): "Game master gates are forks in the path and should probably be at the beginning not the end.
+  Eventually they will have different 'games' to offer as the players walk down the paths so seeing them this way at the end is a
+  bad user experience." The six stones now stand at the start of the side passage (stops 0 to 5), then the mouth, the pool and
+  the daemon (stops 6 to 8), then the way out. Step numbers follow: 1 Game masters' gate, 2 Sensation, 3 Element, 4 Daemon. The
+  way on from the first stone waits for its branch, as it did at the end **(choice)**: every branch is walked before the
+  sensation, and each is a place the games can later live.
 - **(choice)** The written words stay on the page and are not saved with the scan.
+
+## The WAVE room, first slice (11 October 2026)
+
+The brief is the Next section of six-faces-council `council/callsheets/wave-room.md`; the pass is
+`council/passes/6FACE_PASS_wave-room1_2026-10-11.md`. Wendell's words: "A player sits in a room with a door. When they welcome a
+sensation the door opens and a 'charge' shows up." The room is the cave's home: the cave is where the player explores, the room
+is where what turns up gets worked. It is `openRoom` in `cave.js`, on the same page as the cave.
+
+- **The scene, from the kit.** Four of the kit's wall rings stood upright and stacked make a round room under a low dome, with
+  the kit's floor. A door in the far wall has the kit's portal arch over it and light behind it. The seat is a gate stone,
+  squat. The player's faceless figure sits on it facing the door, at about 0.6 of the cave's size so it stands under the door
+  **(choice)**, in a plain stone colour because the charge has come out of it **(choice)**. The cave's breath (4 s in, 6 s out)
+  eases the walls and the light, and Calm stills it.
+- **Two ways in** (`wave-room-cave-link` = both). On the cave's front page, "Sit in the WAVE room" opens the body map; the place
+  tapped is where the charge is, and the room opens. At a daemon's stop in the cave, "Take it home" sits beside "Talk with it"
+  and "Work what it holds". It leaves a lantern at the spot, the cave rests, and the room opens with the charge's texture and
+  element already known (`wave-reveal`: a charge from a block starts with its feeling known). When the room is done, "Back to the
+  lantern" brings the cave back with the figure where it stood, and the daemon is asked again whether it feels satisfied. Only
+  Yes opens the way **(choice)**: the charge was worked, in another place.
+- **The flow is a table** (`ROOM_STEPS`, as `STRETCHES` is): Welcome, Witness, Acknowledge, Allow, Accept, Appreciate,
+  Validate, then the fork. The words are `WAVE` (game.jsx lines 1092-1108); Witness is the room's own step, "Feel into it. Where
+  is it in your body, and what is it like?" **(choice of words)**. Each step takes the cave's `STEP_LOOK` light for its W.A.V.E.
+  step, so the room warms and brightens as the steps climb.
+  - Welcome: "Welcome it", and the door opens on the next out-breath (at once when Calm is on). A grey shape comes in to the
+    middle of the room at its own pace.
+  - Witness: where it is (the place from the body map or the cave; "It's somewhere else" opens the body map again) and its
+    texture, which the shape takes, by the avatar's charge table.
+  - Acknowledge: a name the player writes and an element, with "I don't know". The shape takes the element's colour. Go on waits
+    for both.
+  - Allow and Accept: one page each. Appreciate has Not now, which moves on to Validate. Validate steadies the shape's
+    light (it flickers until then).
+  - The fork: the Exhale words, then "What do you actually want right now?" (`wave-room-goal` = asked in the moment; nothing
+    stored), then whether the charge pushes the next move toward it or away (`wave-room-validate-first`).
+- **Stays** (`wave-room-stay-move`): the cave's staged 3-2-1 chat, the same code (`talk321`, shared now), with a line on every
+  step naming what the player wants. Face it from the seat; Talk to it standing face to face, the camera swinging with the voice;
+  Be it standing where it stood while it sits in the seat; then back to the seat. It ends with one next move the player writes,
+  and the charge takes a place in the room for the sitting.
+- **Goes** (`wave-room-release`): a line to it if the player wants, and a name for the light it leaves. "Breathe out": the door
+  opens on the out-breath, the charge drifts out over one exhale and a little more, a light in its colour with its name stays on
+  the threshold for the sitting, and the door stays ajar. An unnamed light takes the charge's name **(choice)**.
+- **Again** (`wave-room-parts-restart`): "Is anything still here that says it belongs?" Yes starts again at Welcome with a new,
+  grey charge in the same place. From the third round on, the page also offers to rest it by the door with a lantern
+  (`wave-room-stop`), which ends the sitting with the lantern and a small shape beside it.
+- **Step back** is on every step from Witness on: the figure stands up and steps back behind the seat, the words are kept, and
+  "Go back in" returns to the same step. In the 3-2-1 the chat's own Step back does the same.
+- **The words stay on the page.** The player writes every line. The name, the goal, the 3-2-1, the move, the line and the
+  light's name live only in the page's memory for the sitting.
+- **For the test on 18 October.** After each branch the page asks "Did it leave, or did you get rid of it?" (It left, I got rid
+  of it, and It stayed after the stays branch **(choice)**). The answer, the branch, the round and the sitting's start time are
+  kept in this device's local storage under `oag:wave-room:test`; `__oagCave.roomTest()` reads them back.
+
+Left for later: the daemon and alchemy extensions, which his phone play by 18 October gates.
+
+Tests: `cave-test.mjs` adds Take it home from the daemon's stop (the lantern, the charge's feeling known, Witness already
+answered, a goes round, back to the lantern with the figure where it stood, the daemon asked again with no skip) and the room on
+its own from the body map: the seated figure and the shut door, the door waiting for the out-breath, every step in order, Not
+now, Validate steadying, the fork asking the goal first, Step back, the stays branch through the staged 3-2-1 to a written move,
+two goes rounds with named lights and the door ajar, the restart, the rest offer after round three, the three test answers kept
+with their rounds, and storage holding only those answers.
+
+## The WAVE room, second slice (11 October 2026)
+
+Wendell's feedback after his first play of the room, 11 October 22:59, is quoted in the Next section of six-faces-council
+`council/callsheets/wave-room.md`; the build takes the readings written there.
+
+- **Talk to it switches by itself.** In 2 · Talk to it, each line sent hands the voice to the other side, and the camera swings
+  with it ("Automatic switching in the 2 phase to show the perspective shifting is desired"). This is in `talk321`, so it holds
+  in the room and at the cave's daemons alike. The voice buttons stay, to override.
+- **At the daemon in the cave.** The narrower reading **(choice)**: the 3-2-1 switching, Allow's two sliders and the glow reach
+  the daemon where it stands. The sliders sit on the 3-2-1's first page, under the charge reading ("Allow it: let it be as big
+  and as bright as it is"); the daemon grows a little by itself once the talk starts. The whole room flow run in place at the
+  daemon is not built: the room is its own scene, so running it in the cave means a second room inside the tunnel. "Take it
+  home" still carries the charge to the room.
+- **The door slides into the wall.** It no longer swings into the room; it slides sideways behind the wall, so nothing sweeps
+  the floor the charge comes in on ("Put it it to the side is desired").
+- **Allow grows it.** At Allow the creature grows a little by itself (×1.3), and two sliders say how large it gets (up to ×2) and
+  how bright its colour can get (`ALLOW_GROW`, `ALLOW_BRIGHT`). The brightness is a ceiling; the charge fills it.
+- **Intensity shows** (`buildAura`, `stepAura`). A halo and sparks in the creature's colour, brighter as its charge rises and
+  duller as it is worked: the 3-2-1's readings set the charge (before while it is worked, after once given), Validate dulls it,
+  and being kept dulls it again; a daemon dulls once it stands aside. The same aura is on the room's creatures and the cave's
+  daemons.
+- **Up to three at once.** On every step from Witness to Validate, "What else is here?" can bring in something new: the door
+  opens on the out-breath and it comes to a place of its own (the middle, the left, the right), and the player works it now.
+  "Working with:" on the page picks which one is worked; each keeps its own step. A fourth waits at the door, and is welcomed
+  once the room is clear **(choice)**. When one is worked through, the next one in the room is worked, where it was left; the
+  round ends only when the room is empty.
+- **Emotions about emotions.** "What else is here?" first asks whether it is about one already in the room. If so it is a layer
+  on that creature: a ring in its own colour, with the name the player writes, flickering until it is validated with that
+  creature. Validate names it. If that creature is validated already, the layer is validated with it at once **(choice)**. Only
+  "Something new" brings in a creature of its own.
+- Kept: the player writes every line, words stay on the page, the 18 October question after each creature's branch, the test at
+  390 by 844.
+
+Tests: `cave-test.mjs` adds the daemon's sliders, its growth and its glow dulling round to round and once it stands aside; the
+voice handing over by itself in the cave and in the room, with the camera; the door sliding clear; and a second sitting with
+three creatures: something new to its own place, the focus row, Allow growing by itself and by slider, brightness up and down, a
+feeling about the second as a named ring with no new creature, a fourth waiting at the door, picking the second again at its
+step, Validate steadying it and its layer and dulling the glow, then each worked through in turn and the waiting one welcomed.
+
+### A style for each face's branch (11 October 2026, after his phone play)
+
+Wendell, from the preview: "Branches are going wild. The screen should give you a dropdown that styles the branch they are on
+with the style and vibes of the branch they choose."
+
+- Each face's branch now opens in that face's own look (`FACE_LOOK`): walls in a shade of its stone colour, its light and fog,
+  and motes drifting in its light, still for Amber and restless for Red **(choice of each look)**. Before, every face's branch
+  shared the side passage's violet hush and its walls.
+- While the player walks a face's branch, a dropdown on the screen ("Teal · wide and moving") dresses the branch in any face's
+  look. It starts on the branch's own face and hides while a page is open and on the way back to the stone.
+- The two glowing openings fade while the player is inside the loop, because the loop is tight and they filled the view.
