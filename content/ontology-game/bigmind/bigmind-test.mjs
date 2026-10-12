@@ -372,6 +372,17 @@ const seen = await page.evaluate(() => {
 });
 ok(seen.y > seen.panel + 10 && seen.y < seen.h - 10 && seen.x > 10 && seen.x < seen.w - 10, 'at Acknowledge the camera frames the charge below the panel (y ' + seen.y.toFixed(0) + ', panel ends ' + seen.panel.toFixed(0) + ')');
 await page.screenshot({ path: SHOTS + '/bm-6-sit-acknowledge.png' });
+const cam0 = await page.evaluate(() => window.__oagBigMind.camera.position.toArray());
+await page.mouse.move(195, 760); await page.mouse.down(); await page.mouse.move(345, 700, { steps: 8 }); await page.mouse.up();
+await page.waitForTimeout(800);
+const orbit = await page.evaluate(() => {
+  const B = window.__oagBigMind, c = B.camera.position;
+  return { p: c.toArray(), open: document.querySelector('[data-bm-modal]').getAttribute('data-bm-step') };
+});
+const moved = Math.hypot(orbit.p[0] - cam0[0], orbit.p[2] - cam0[2]);
+ok(moved > 1 && orbit.open === 'sit-acknowledge', 'seated, dragging the scene turns the camera (moved ' + moved.toFixed(1) + ') and the panel stays open');
+ok(await page.evaluate(() => { const B = window.__oagBigMind; return B.inCave(B.camera.position); }), 'the turned camera stays inside the cave');
+await page.screenshot({ path: SHOTS + '/bm-6b-sit-turned.png' });
 await page.click('[data-bm-sitnext]');
 ok(await waitStep('sit-allow') && await page.locator('[data-bm-sitallow="grow"]').count() === 1, 'Allow has the room\'s size and brightness sliders');
 await page.fill('[data-bm-sitallow="grow"]', '8');
@@ -386,7 +397,12 @@ await page.click('[data-bm-sitpush="toward"]');
 ok(await waitStep('sit-321'), 'toward it runs the room\'s 3-2-1, aimed at the goal');
 await page.click('[data-cave-321-start]');
 ok(/Aimed at what you want: rest/.test(await page.textContent('[data-bm-modal]')), 'the 3-2-1 shows the aim');
-for (let i = 0; i < 3; i++) await page.click('[data-cave-321-next]');
+await page.click('[data-cave-321-next]'); // to Talk to it
+for (const line of ['Why are you here', 'To keep you safe', 'From what', 'From being seen']) { await page.fill('[data-cave-321-text]', line); await page.press('[data-cave-321-text]', 'Enter'); }
+const chat = await page.evaluate(() => { const m = document.querySelector('[data-bm-modal]'), i = m.querySelector('[data-cave-321-text]'), a = m.getBoundingClientRect(), b = i.getBoundingClientRect();
+  return { inView: b.top >= a.top && b.bottom <= a.bottom, focused: document.activeElement === i, voice: m.querySelector('[data-cave-321-voice][aria-pressed="true"]').getAttribute('data-cave-321-voice') }; });
+ok(chat.inView && chat.focused && chat.voice === 'you', 'in Talk to it the text box stays in view and keeps focus line after line, and the voice switches each line');
+for (let i = 0; i < 2; i++) await page.click('[data-cave-321-next]');
 await page.click('[data-cave-321-after]');
 await page.fill('[data-bm-sitmove]', 'lie down');
 await page.click('[data-bm-sitmovedone]');

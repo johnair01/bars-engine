@@ -337,6 +337,26 @@
     K.holdArea(stage); K.holdArea(ring);
     function down(e) { if (st.modal) return; e.preventDefault(); st.held = true; }
     function up() { st.held = false; }
+    // Seated, a drag on the scene turns the camera around the charge while the panel stays open (Wendell, 12 October 2026,
+    // 22:53: "be able to look at the scene from all sides"). The camera keeps inside the cave: see keepInCave.
+    var orb0 = null;
+    stage.addEventListener("pointerdown", function (e) { if (st.sit) orb0 = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
+    stage.addEventListener("pointermove", function (e) {
+      if (!orb0 || !st.sit || e.pointerId !== orb0.id) return;
+      var O = st.orbit || (st.orbit = { yaw: 0, pitch: 0 });
+      O.yaw -= (e.clientX - orb0.x) * 0.012; O.pitch = clamp(O.pitch + (e.clientY - orb0.y) * 0.008, -0.5, 0.9);
+      orb0.x = e.clientX; orb0.y = e.clientY;
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (k) { stage.addEventListener(k, function () { orb0 = null; }); });
+    // A point pulled back inside the cave's walls, floor and roof, at the nearest place along the path.
+    function keepInCave(p, s0) {
+      var best = s0, bd = 1e9;
+      for (var q = Math.max(0, s0 - 12); q <= Math.min(route.len - 1, s0 + 12); q += 0.25) { var c = at(route, q), d = (p.x - c.x) * (p.x - c.x) + (p.z - c.z) * (p.z - c.z); if (d < bd) { bd = d; best = q; } }
+      var a = at(route, best), o = route.openAt(best), nx = -a.fz, nz = a.fx, lat = (p.x - a.x) * nx + (p.z - a.z) * nz, m = 0.62 * W * o;
+      if (Math.abs(lat) > m) { var dl = (Math.sign(lat) * m - lat); p.x += nx * dl; p.z += nz * dl; }
+      p.y = clamp(p.y, floor(a) + 0.5, a.y + 0.45 * H * o);
+      return p;
+    }
     [stage, ring].forEach(function (n) { n.addEventListener("pointerdown", down); n.addEventListener("pointerup", up); n.addEventListener("pointercancel", up); n.addEventListener("pointerleave", up); });
 
     // ---- the modal ------------------------------------------------------------------------------
@@ -651,6 +671,7 @@
       return n;
     }
     function sitDown(whom, back, spirit, via) {
+      st.orbit = null;
       var S = st.sit = { gen: spirit ? spirit.name : whom === "voice" ? V.title : genName(), whom: whom, back: back, via: via, where: st.phase, n: 0, phase: "steps", place: whom === "voice" ? st.place : null, texture: null,
         name: spirit ? spirit.name : whom === "voice" ? V.title : "", element: spirit ? spirit.element : null, unknown: false, allow: { grow: 3, bright: 7 }, allowed: false,
         goal: "", move: "", t321: { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }, k: 0, dull: 0, spirit: spirit || null, come: 1 };
@@ -1127,6 +1148,16 @@
       else if (SI && SI.g) { // sitting with a charge: close and to the side, aimed above it so it shows under the panel as the choices change it
         var T = SI.g.position, cb = side(Math.max(0, st.s - 2.6), 1.3), dx = T.x - cb.x, dz = T.z - cb.z, d = Math.sqrt(dx * dx + dz * dz);
         want = new THREE.Vector3(cb.x, Math.max(floor(cb), T.y) + 2.1, cb.z); look = new THREE.Vector3(T.x, T.y + d * 0.42 + 0.35, T.z);
+        var O = st.orbit;
+        if (O && (O.yaw || O.pitch)) { // turned by a drag: swing around the charge, closer in, then back inside the cave
+          // In the path's frame: the camera keeps its distance by going further along the path where the walls stop it going
+          // out to the side, so from the side it sees the charge across the cave rather than pressed against it.
+          var r = Math.max(3.6, d), el0 = 0.38 + O.pitch, rh = r * Math.cos(el0), frS = SI.whom === "voice" ? S_VOICE : st.s + 3, fr = at(route, frS);
+          var mLat = 0.55 * W * route.openAt(frS), lat = clamp(Math.sin(O.yaw) * rh, -mLat, mLat);
+          var along = (Math.cos(O.yaw) >= 0 ? -1 : 1) * Math.sqrt(Math.max(0, rh * rh - lat * lat));
+          want.set(T.x + fr.fx * along - fr.fz * lat, T.y + 0.6 + Math.sin(el0) * r, T.z + fr.fz * along + fr.fx * lat);
+          keepInCave(want, st.s + 2); var dd = want.distanceTo(T); look.set(T.x, T.y + dd * 0.4 + 0.3, T.z); // still under the panel
+        }
       }
       else { var b = at(route, Math.max(0, st.s - 6.2)); want = new THREE.Vector3(b.x, floor(b) + 4.6, b.z); look = new THREE.Vector3(a.x + a.fx * 3.4, fl + 2.2, a.z + a.fz * 3.4); }
       if (snap) { camPos.copy(want); aim.copy(look); snap = false; } else { var f = 1 - Math.exp(-dt * (st.cam === "voice" ? 2.2 : 6)); camPos.lerp(want, f); aim.lerp(look, f); }
@@ -1161,7 +1192,7 @@
       renderer.render(scene, camera);
     }
     var api = window.__oagBigMind; api.state = st; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
-    api.openAt = route.openAt; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
+    api.openAt = route.openAt; api.inCave = function (p) { var q = keepInCave(p.clone(), st.s + 2); return q.distanceTo(p) < 0.01; }; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
     api.spirits = spirits; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
     size(); window.addEventListener("resize", size);
     running = requestAnimationFrame(frame);

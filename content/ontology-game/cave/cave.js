@@ -770,9 +770,12 @@
     return title;
   }
   // After a chat page redraws, the text box takes focus again so the player can keep writing, and the thread scrolls to its end.
+  // The panel scrolls to its end too, so the text box stays in view line after line (Wendell, 12 October 2026, 22:53:
+  // "resetting and scrolling is gettin gpretty tedious").
   function focusChat(modal) {
     var i = modal.querySelector("[data-cave-321-text]"), l = modal.querySelector("[data-cave-321-log]");
     if (l) l.scrollTop = l.scrollHeight;
+    if (i) modal.scrollTop = modal.scrollHeight;
     if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
   }
 
