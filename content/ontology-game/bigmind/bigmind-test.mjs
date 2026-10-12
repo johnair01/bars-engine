@@ -364,6 +364,14 @@ await page.click('[data-bm-sitnext]');
 ok(await waitStep('sit-acknowledge'), 'then Acknowledge');
 await page.fill('[data-bm-sitname]', 'Worry'); await page.click('[data-bm-sitelement="metal"]');
 ok(await page.evaluate(() => window.__oagBigMind.sitting().name === 'Worry'), 'the typed name survives picking the element');
+await page.waitForTimeout(700);
+const seen = await page.evaluate(() => {
+  const B = window.__oagBigMind, g = B.state.sit.g, v = g.position.clone(); g.updateMatrixWorld(); g.getWorldPosition(v); v.project(B.camera);
+  const m = document.querySelector('.oagc-modal').getBoundingClientRect();
+  return { y: (1 - v.y) / 2 * innerHeight, x: (v.x + 1) / 2 * innerWidth, panel: m.bottom, h: innerHeight, w: innerWidth };
+});
+ok(seen.y > seen.panel + 10 && seen.y < seen.h - 10 && seen.x > 10 && seen.x < seen.w - 10, 'at Acknowledge the camera frames the charge below the panel (y ' + seen.y.toFixed(0) + ', panel ends ' + seen.panel.toFixed(0) + ')');
+await page.screenshot({ path: SHOTS + '/bm-6-sit-acknowledge.png' });
 await page.click('[data-bm-sitnext]');
 ok(await waitStep('sit-allow') && await page.locator('[data-bm-sitallow="grow"]').count() === 1, 'Allow has the room\'s size and brightness sliders');
 await page.fill('[data-bm-sitallow="grow"]', '8');
@@ -423,7 +431,7 @@ await page.click('[data-bm-blocksit]');
 ok(await waitStep('sit-welcome'), 'and sitting down with it starts at Welcome');
 await page.click('[data-bm-standup]');
 ok(await waitStep('wave-welcome', 8000), 'standing up returns to the W.A.V.E. step it stopped on');
-ok(await page.evaluate(() => window.__oagBigMind.spirits.length === 3 && window.__oagBigMind.spirits[2].name === 'A charge'), 'a sitting stood up from early still spawns a spirit, unnamed');
+ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits[2]; return window.__oagBigMind.spirits.length === 3 && /^[A-Z][a-z]+ [A-Z][a-z]+$/.test(o.name); }), 'a sitting stood up from early still spawns a spirit, under the name the game gave it');
 ok((await page.textContent('[data-bm-spiritbtn]')) === 'Spirits 3', 'three spirits are counted');
 sv = await save();
 ok(sv.sittings.length === 3 && sv.sittings[2].via === 'block' && sv.sittings[2].branch === 'stood' && sv.sittings[1].whom === 'voice', 'each sitting is recorded: ' + JSON.stringify(sv.sittings.map((x) => [x.whom, x.via, x.branch])));
@@ -447,8 +455,15 @@ ok((await page.evaluate(() => window.__oagBigMind.spirits.length)) === 0, 'breat
 await page.waitForTimeout(300);
 await page.click('[data-bm-sitbtn]'); await waitStep('sit-welcome');
 await page.click('[data-bm-sitnext]'); await waitStep('sit-witness'); await page.click('[data-bm-sittexture="numbness"]');
-await page.click('[data-bm-sitnext]'); await waitStep('sit-acknowledge'); await page.fill('[data-bm-sitname]', 'Ache'); await page.click('[data-bm-sitelement="water"]');
-for (const id of ['allow', 'accept', 'appreciate', 'validate', 'fork']) { await page.click('[data-bm-sitnext]'); await waitStep('sit-' + id); }
+await page.click('[data-bm-sitnext]'); await waitStep('sit-acknowledge'); await page.click('[data-bm-sitelement="water"]');
+const gen = await page.evaluate(() => window.__oagBigMind.sitting().gen);
+ok(/^[A-Z][a-z]+ [A-Z][a-z]+$/.test(gen) && !(await page.isDisabled('[data-bm-sitnext]')), 'a name is optional: the game names it ' + gen + ' to keep track of it');
+await page.click('[data-bm-sitnext]'); await waitStep('sit-allow');
+ok((await page.textContent('[data-bm-modal]')).includes(gen + ' grows'), 'and calls it by that name');
+for (const id of ['accept', 'appreciate', 'validate']) { await page.click('[data-bm-sitnext]'); await waitStep('sit-' + id); }
+ok(await page.locator('[data-bm-sitrename]').count() === 1, 'once it has been worked through, Validate offers a name of your own');
+await page.fill('[data-bm-sitrename]', 'Ache');
+await page.click('[data-bm-sitnext]'); await waitStep('sit-fork');
 await page.fill('[data-bm-sitgoal]', 'quiet'); await page.click('[data-bm-sitpush="away"]');
 ok(await waitStep('sit-goes') && /walks with you, lighter/.test(await page.textContent('[data-bm-modal]')), 'away from it breathes it out, and says it still walks with you');
 await page.click('[data-bm-sitexhale]');

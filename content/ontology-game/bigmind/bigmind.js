@@ -640,8 +640,18 @@
     function sitSteps(S) { return K.ROOM_STEPS.filter(function (r) { return S.whom === "me" || r.id !== "fork"; }); }
     // whom: "me" (what's coming up in the player) or "voice" (the voice in front of them). back runs when they stand up again.
     // spirit: a spirit sat with again. via: what the sitting came from (the button, a block in a W.A.V.E., or a spirit).
+    // A charge needs no name to be sat with: the game gives each one a name of its own to keep track of it, and the player
+    // can name it in their own words at Acknowledge or once they have been through it, at Validate.
+    var NAME_A = ["Quiet", "Restless", "Heavy", "Small", "Bright", "Low", "Tangled", "Soft", "Warm", "Cold", "Hollow", "Humming"];
+    var NAME_B = ["Moth", "Stone", "Drum", "Knot", "Ember", "Tide", "Thorn", "Lantern", "Pebble", "Root", "Bell", "Wren"];
+    function genName() {
+      var taken = spirits.map(function (o) { return o.name; }), n;
+      try { taken = taken.concat((readSave().spirits || []).map(function (o) { return o.name; })); } catch (e) {}
+      for (var i = 0; i < 40; i++) { n = NAME_A[Math.floor(Math.random() * NAME_A.length)] + " " + NAME_B[Math.floor(Math.random() * NAME_B.length)]; if (taken.indexOf(n) < 0) break; }
+      return n;
+    }
     function sitDown(whom, back, spirit, via) {
-      var S = st.sit = { whom: whom, back: back, via: via, where: st.phase, n: 0, phase: "steps", place: whom === "voice" ? st.place : null, texture: null,
+      var S = st.sit = { gen: spirit ? spirit.name : whom === "voice" ? V.title : genName(), whom: whom, back: back, via: via, where: st.phase, n: 0, phase: "steps", place: whom === "voice" ? st.place : null, texture: null,
         name: spirit ? spirit.name : whom === "voice" ? V.title : "", element: spirit ? spirit.element : null, unknown: false, allow: { grow: 3, bright: 7 }, allowed: false,
         goal: "", move: "", t321: { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }, k: 0, dull: 0, spirit: spirit || null, come: 1 };
       hide(); modal.setAttribute("data-bm-step", "sitting"); st.modal = true; ring.style.display = "none";
@@ -673,7 +683,7 @@
     function sitNext() { var S = st.sit, steps = sitSteps(S); S.n++; if (S.n >= steps.length) return standUp("done"); sitDraw(); }
     function sitDraw() {
       var S = st.sit; if (!S) return;
-      var nm = S.name.trim() || "it", standBtn = btn("Stand up", function () { standUp("stood"); }, { class: "bm-link", "data-bm-standup": "" });
+      var nm = S.name.trim() || S.gen, standBtn = btn("Stand up", function () { standUp("stood"); }, { class: "bm-link", "data-bm-standup": "" });
       if (S.phase === "stays") {
         var k = [], title = K.talk321(S.t321, { name: nm, damaged: false, redraw: sitDraw, focus: function () { K.focusChat(modal); }, where: SIT_WHERE, aim: "Aimed at what you want: " + S.goal,
           ask: function (body) {
@@ -699,16 +709,16 @@
         kids.push(guide("What is it like?"), cardRow(K.TEXTURES.map(function (t) { return [t[0], t[1]]; }), S.texture, "data-bm-sittexture", function (v) { S.texture = v; sitDraw(); }));
         go.disabled = !S.texture;
       } else if (R.id === "acknowledge") {
-        kids.push(guide(S.whom === "voice" ? "Name what you feel from " + V.name + ", in your own words, then its element if you know it." : "Give it a name, in your own words. Then its element, if you know it."));
+        kids.push(guide(S.whom === "voice" ? "Name what you feel from " + V.name + ", in your own words, then its element if you know it." : "Its element, if you know it. You can give it a name of your own, now or once you have been with it."));
         if (S.whom === "voice" && S.name === V.title) S.name = "";
-        var ready = function () { go.disabled = !(S.name.trim() && (S.element || S.unknown)); };
-        kids.push(lineInput("data-bm-sitname", S.name, "A name for it", function (v) { S.name = v; ready(); }),
+        var ready = function () { go.disabled = !(S.element || S.unknown); };
+        kids.push(lineInput("data-bm-sitname", S.name, "Its name for now: " + S.gen, function (v) { S.name = v; ready(); }),
           cardRow(K.ELEMENTS.map(function (x) { return [x[1].toLowerCase(), x[0] + " · " + x[1]]; }).concat([["unknown", "I don't know"]]), S.unknown ? "unknown" : S.element, "data-bm-sitelement",
             function (v) { S.unknown = v === "unknown"; S.element = S.unknown ? null : v; sitDraw(); }));
         ready();
       } else if (R.id === "allow") {
         S.allowed = true;
-        kids.push(guide((S.name.trim() || "It") + " grows a little as you let it be here."));
+        kids.push(guide(nm + " grows a little as you let it be here."));
         K.allowSliders(S.allow, "data-bm-sitallow").forEach(function (n) { kids.push(n); });
       } else if (R.id === "fork") {
         kids.push(guide("What do you actually want right now?"));
@@ -719,6 +729,8 @@
         ok(); kids.push(row([tw, aw]), row([standBtn]), el("p", { class: "bm-wavestep", text: "What you write stays on this page." }));
         show(kids, "sit-fork");
         return;
+      } else if (R.id === "validate") {
+        kids.push(guide("Now that you have been with it, does it have a name of your own?"), lineInput("data-bm-sitrename", S.name, "Or keep " + S.gen, function (v) { S.name = v; }));
       } else if (R.id === "appreciate") {
         // As at the W.A.V.E.'s own Appreciate (oag-appreciate-input): an optional line, kept on the page only.
         kids.push(guide("What can you appreciate about what showed up?"), lineInput("data-bm-sitappreciate", S.appreciate || "", "In your own words, if you want", function (v) { S.appreciate = v; }),
@@ -731,7 +743,7 @@
     // branch: stays (Toward at the fork), goes (Away: breathed out, lighter), done (the voice's sitting ran to the end), stood (stood
     // up partway: nothing is marked). Every one leaves a spirit walking with the player; a spirit sat with again keeps walking.
     function standUp(branch) {
-      var S = st.sit, nm = S.name.trim();
+      var S = st.sit, nm = S.name.trim() || S.gen;
       hide(); modal.setAttribute("data-bm-step", "sitting"); st.modal = true; ring.style.display = "none";
       try { var s = readSave(); s.sittings = (s.sittings || []).concat([{ where: S.where, whom: S.spirit ? "spirit" : S.whom, via: S.via, branch: branch, at: new Date().toISOString() }]); writeSave(s); } catch (e) {}
       var from = S.g.position.clone();
@@ -741,7 +753,7 @@
         scene.remove(S.g); st.sit = null;
         var lighter = branch === "goes";
         if (S.spirit) { S.spirit.hidden = false; if (S.element) S.spirit.element = S.element; S.spirit.lighter = lighter; S.spirit.g.userData.level = lighter ? 0.2 : 0.45; }
-        else addSpirit({ name: nm || "A charge", element: S.element, lighter: lighter }, from);
+        else addSpirit({ name: nm, element: S.element, lighter: lighter }, from);
         if (modal.getAttribute("data-bm-step") === "self") { paused = { then: S.back }; return; }
         st.modal = false; S.back();
       });
@@ -1112,6 +1124,10 @@
       // the camera: behind on the path; in the voice's place it stands past the player, looking back the way the self came
       var want, look;
       if (st.cam === "voice") { var c = at(route, S_VOICE + 6.5), sp = at(route, S_SELF); want = new THREE.Vector3(c.x, floor(c) + 4.4, c.z); look = new THREE.Vector3(sp.x, floor(sp) + 1.8, sp.z); }
+      else if (SI && SI.g) { // sitting with a charge: close and to the side, aimed above it so it shows under the panel as the choices change it
+        var T = SI.g.position, cb = side(Math.max(0, st.s - 2.6), 1.3), dx = T.x - cb.x, dz = T.z - cb.z, d = Math.sqrt(dx * dx + dz * dz);
+        want = new THREE.Vector3(cb.x, Math.max(floor(cb), T.y) + 2.1, cb.z); look = new THREE.Vector3(T.x, T.y + d * 0.42 + 0.35, T.z);
+      }
       else { var b = at(route, Math.max(0, st.s - 6.2)); want = new THREE.Vector3(b.x, floor(b) + 4.6, b.z); look = new THREE.Vector3(a.x + a.fx * 3.4, fl + 2.2, a.z + a.fz * 3.4); }
       if (snap) { camPos.copy(want); aim.copy(look); snap = false; } else { var f = 1 - Math.exp(-dt * (st.cam === "voice" ? 2.2 : 6)); camPos.lerp(want, f); aim.lerp(look, f); }
       camera.position.copy(camPos); camera.lookAt(aim);
