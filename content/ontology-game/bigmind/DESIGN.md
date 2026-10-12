@@ -245,3 +245,19 @@ many spirits are around. They might be protecting the self from the charge they 
   name and element on this device, and it comes back in with the player next time. The mouth lists kept spirits.
 - **The record.** Each sitting saves where it happened, with whom, what it came from and which way it went (`s.sittings`), with
   no words. Choices: the button places, the narrowing (16%), the grey shape, the spirits' places behind the figure.
+
+## Every sit-down spawns a spirit (Wendell, 12 October 2026, 20:43)
+
+His steer, which widens `bms-spirits-follow`: "When someone does WAVE sitting down in the big mind cave or the other cave
+environments it should spawn a spirit that walks with the character until dismissed".
+
+- **Big Mind cave.** Every sitting now leaves a spirit, whichever way it went: Toward, Away, with the voice, from a block, or
+  stood up partway (then it is "A charge" in grey until it is named). Away at the fork no longer lets it go on the spot, because
+  nothing dismisses a spirit for you (`bms-dismiss`): the out-breath softens it and it walks lighter. Sitting with a spirit again
+  keeps that one spirit. Dismissing is unchanged: tap Spirits, thank it, then breathe it out or sit with it again.
+- **Cave of Lessons.** Every charge worked through in the WAVE room walks back into the cave with the player as a spirit, in its
+  element's colour with its name, lighter if it was breathed out at the fork. Spirits shows at the top of the screen; tap it,
+  thank one, then breathe it out or take it home again (the room opens with its feeling known). Choices: they walk this visit
+  only, and the room opened from the body map on its own has no cave to walk, so it spawns none.
+- **One spirit for every cave.** cave.js holds `buildSpirit`, `followSpirits` and `spiritHex` on the kit, so both caves draw and
+  walk the same spirit.

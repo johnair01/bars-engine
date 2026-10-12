@@ -355,7 +355,7 @@ for (const id of ['witness', 'acknowledge', 'allow', 'accept', 'appreciate', 'va
 }
 await page.click('[data-bm-sitnext]');
 ok(await waitStep('meet', 8000), 'the voice\'s sitting has no fork, and it comes back to where you were');
-ok((await page.evaluate(() => window.__oagBigMind.spirits.length)) === 1, 'sitting with the voice makes no spirit');
+ok(await page.evaluate(() => window.__oagBigMind.spirits.length === 2 && window.__oagBigMind.spirits[1].name === 'Wary'), 'sitting with the voice spawns a spirit too (Wendell, 20:43: every sit-down W.A.V.E. spawns one)');
 await page.click('[data-bm-reply="hear"]'); await page.click('[data-bm-ask="speak"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="speak"]');
 await page.click('[data-bm-place="Chest"]'); await page.click('[data-bm-charged]');
 for (let i = 0; i < 3; i++) { await page.click('[data-bm-card="0"]'); await page.click('[data-bm-charged]'); }
@@ -373,10 +373,13 @@ await page.click('[data-bm-blocksit]');
 ok(await waitStep('sit-welcome'), 'and sitting down with it starts at Welcome');
 await page.click('[data-bm-standup]');
 ok(await waitStep('wave-welcome', 8000), 'standing up returns to the W.A.V.E. step it stopped on');
+ok(await page.evaluate(() => window.__oagBigMind.spirits.length === 3 && window.__oagBigMind.spirits[2].name === 'A charge'), 'a sitting stood up from early still spawns a spirit, unnamed');
+ok((await page.textContent('[data-bm-spiritbtn]')) === 'Spirits 3', 'three spirits are counted');
 sv = await save();
 ok(sv.sittings.length === 3 && sv.sittings[2].via === 'block' && sv.sittings[2].branch === 'stood' && sv.sittings[1].whom === 'voice', 'each sitting is recorded: ' + JSON.stringify(sv.sittings.map((x) => [x.whom, x.via, x.branch])));
 await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 ok(await waitStep('mouth-spirits'), 'at the mouth, each spirit is kept for next time or let go');
+await page.click('[data-bm-mouthspirit="1"]'); await page.click('[data-bm-mouthspirit="2"]');
 await page.click('[data-bm-walkout]');
 await page.waitForSelector('[data-bm-mouth]');
 ok(JSON.stringify((await save()).spirits) === '[{"name":"Worry","element":"metal"}]', 'a kept spirit is its name and element, on the device');
@@ -392,9 +395,19 @@ ok(await waitStep('spirit-thank') && /Thank you for coming with me/.test(await p
 await page.click('[data-bm-spiritout]');
 ok((await page.evaluate(() => window.__oagBigMind.spirits.length)) === 0, 'breathing out lets it go');
 await page.waitForTimeout(300);
+await page.click('[data-bm-sitbtn]'); await waitStep('sit-welcome');
+await page.click('[data-bm-sitnext]'); await waitStep('sit-witness'); await page.click('[data-bm-sittexture="numbness"]');
+await page.click('[data-bm-sitnext]'); await waitStep('sit-acknowledge'); await page.fill('[data-bm-sitname]', 'Ache'); await page.click('[data-bm-sitelement="water"]');
+for (const id of ['allow', 'accept', 'appreciate', 'validate', 'fork']) { await page.click('[data-bm-sitnext]'); await waitStep('sit-' + id); }
+await page.fill('[data-bm-sitgoal]', 'quiet'); await page.click('[data-bm-sitpush="away"]');
+ok(await waitStep('sit-goes') && /walks with you, lighter/.test(await page.textContent('[data-bm-modal]')), 'away from it breathes it out, and says it still walks with you');
+await page.click('[data-bm-sitexhale]');
+await page.waitForFunction(() => window.__oagBigMind.spirits.length === 1 && !window.__oagBigMind.sitting(), null, { timeout: 8000 }).catch(() => {});
+ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits[0]; return o && o.name === 'Ache' && o.lighter && o.g.userData.level < 0.3; }), 'a charge breathed out still spawns a spirit, walking lighter');
 await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
+await waitStep('mouth-spirits'); await page.click('[data-bm-mouthspirit="0"]'); await page.click('[data-bm-walkout]');
 await page.waitForSelector('[data-bm-mouth]');
-ok(JSON.stringify((await save()).spirits) === '[]', 'with none left, nothing is kept');
+ok(JSON.stringify((await save()).spirits) === '[]', 'with every spirit let go, nothing is kept');
 await page.evaluate(() => localStorage.clear());
 
 // the Cave of Lessons still opens on its own page

@@ -554,12 +554,16 @@
     // that stays at the fork follows as a spirit in its element's colour with its name, at most three in view and the rest as
     // a count (bms-spirits-follow); a spirit is dismissed by tapping it, thanking it, then breathing out or sitting with it
     // again (bms-dismiss). Only where and with whom a sitting happened, and which way it went, is saved; never its words.
+    // Wendell's steer of 12 October 2026, 20:43, which widens bms-spirits-follow: "When someone does WAVE sitting down in the big
+    // mind cave or the other cave environments it should spawn a spirit that walks with the character until dismissed". So every
+    // sitting spawns one, whichever way it went and whoever it was with. Away at the fork no longer lets it go on the spot, since
+    // nothing dismisses a spirit for you (bms-dismiss): the out-breath softens it, and it walks lighter (a choice).
     var SIT_WHERE = { 3: "You are sitting where you stopped, looking at it.", 2: "You are face to face with it.", 1: "You are sitting where it sat, and it sits where you were.", check: "You are face to face with it.", after: "You are back where you sat down.", paused: "You leaned back from it, still sitting." };
     var sitBtn = el("button", { class: "bm-sitbtn", "data-bm-sitbtn": "", text: "Sit down", onclick: function () { sitOffer(); } });
     var spiritBtn = el("button", { class: "bm-spiritbtn", "data-bm-spiritbtn": "", style: "display:none", onclick: function () { spiritList(); } });
     wrap.insertBefore(sitBtn, fade); wrap.insertBefore(spiritBtn, fade);
-    var spirits = [], SHOW_SPIRITS = 3;
-    function colorOf(element) { var r = K.ELEMENTS.filter(function (x) { return x[1].toLowerCase() === element; })[0]; return r ? r[3] : 0x9a9aa8; }
+    var spirits = [], SHOW_SPIRITS = K.SPIRITS_SHOWN;
+    function colorOf(element) { return K.spiritHex(element); }
     function stash() { return { html: Array.prototype.slice.call(modal.childNodes), tag: modal.getAttribute("data-bm-step"), open: st.modal }; }
     function unstash(p) {
       if (!p || !p.open) return hide();
@@ -629,7 +633,7 @@
         return;
       }
       if (S.phase === "goes") {
-        show([el("h2", { text: "Exhale" }), guide("Let the out-breath carry it. It leaves at its own pace, and it can come back."),
+        show([el("h2", { text: "Exhale" }), guide("Let the out-breath soften it. It walks with you, lighter, until you thank it and let it go."),
           row([btn("Breathe out", function () { standUp("goes"); }, { "data-bm-sitexhale": "" })]), row([standBtn])], "sit-goes");
         return;
       }
@@ -667,8 +671,8 @@
       kids.push(row([go].concat(extra)), row([standBtn]));
       show(kids, "sit-" + R.id);
     }
-    // branch: stays (Toward at the fork: it follows as a spirit), goes (Away: breathed out), done (the voice's sitting ran to the
-    // end), stood (stood up partway: nothing is marked, and a spirit sat with again keeps following).
+    // branch: stays (Toward at the fork), goes (Away: breathed out, lighter), done (the voice's sitting ran to the end), stood (stood
+    // up partway: nothing is marked). Every one leaves a spirit walking with the player; a spirit sat with again keeps walking.
     function standUp(branch) {
       var S = st.sit, nm = S.name.trim();
       hide(); modal.setAttribute("data-bm-step", "sitting"); st.modal = true; ring.style.display = "none";
@@ -676,21 +680,17 @@
       var from = S.g.position.clone();
       tween(branch === "goes" ? 2200 : 1200, function (k) {
         S.k = 1 - ease(k); tube.dirty = true;
-        if (branch === "goes") { S.g.position.y = from.y + 3 * ease(k); S.fade = 1 - k; }
-        else if (branch === "stood" && !S.spirit) S.come = ease(k);
       }, function () {
         scene.remove(S.g); st.sit = null;
-        if (S.spirit) { S.spirit.hidden = false; if (branch === "goes") letGo(S.spirit, from); }
-        else if (branch === "stays") addSpirit({ name: nm || "A charge", element: S.element }, from);
+        var lighter = branch === "goes";
+        if (S.spirit) { S.spirit.hidden = false; if (S.element) S.spirit.element = S.element; S.spirit.lighter = lighter; S.spirit.g.userData.level = lighter ? 0.2 : 0.45; }
+        else addSpirit({ name: nm || "A charge", element: S.element, lighter: lighter }, from);
         if (modal.getAttribute("data-bm-step") === "self") { paused = { then: S.back }; return; }
         st.modal = false; S.back();
       });
     }
     function addSpirit(o, from) {
-      var g = new THREE.Group(), hex = colorOf(o.element);
-      var orb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }));
-      var au = K.buildAura(THREE, 0.7), label = K.labelSprite(THREE, o.name, "#fff1d0", 2.4); label.position.y = 0.95;
-      g.add(orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label };
+      var g = K.buildSpirit(THREE, o.name, colorOf(o.element)); if (o.lighter) g.userData.level = 0.2;
       if (from) g.position.copy(from); else { var a = side(Math.max(0.5, st.s - 2.2), 0.9); g.position.set(a.x, floor(a) + 1.7, a.z); }
       scene.add(g); o.g = g; spirits.push(o); spiritsUi();
     }
@@ -723,7 +723,7 @@
       var n = spirits.length; if (!n) return [];
       return [npc("You didn't come alone.")].concat(n >= 3 ? [npc("That's a lot to bring through here.")] : []);
     }
-    (save.spirits || []).forEach(function (o) { addSpirit({ name: o.name, element: o.element }); });
+    (save.spirits || []).forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); });
 
     function ready() {
       show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
@@ -965,7 +965,7 @@
           return b;
         })),
         row([btn("Walk out", function () {
-          var s = readSave(); s.spirits = spirits.filter(function (o, oi) { return keepIt[oi]; }).map(function (o) { return { name: o.name, element: o.element }; });
+          var s = readSave(); s.spirits = spirits.filter(function (o, oi) { return keepIt[oi]; }).map(function (o) { return o.lighter ? { name: o.name, element: o.element, lighter: true } : { name: o.name, element: o.element }; });
           writeSave(s); leaveNow();
         }, { "data-bm-walkout": "" })])], "mouth-spirits");
     }
@@ -1004,22 +1004,16 @@
       if (SI) {
         avatar.position.y -= 0.75 * SI.k; avatar.scale.y = 1 - 0.3 * SI.k;
         if (SI.whom === "voice") SI.g.position.set(voice.position.x, voice.position.y, voice.position.z);
-        else if (!SI.fade && SI.fade !== 0) { var ba = at(route, Math.min(route.len - 1, st.s + 3.2 + 7 * SI.come)); SI.g.position.set(ba.x, floor(ba) + 0.9, ba.z); }
+        else { var ba = at(route, Math.min(route.len - 1, st.s + 3.2 + 7 * SI.come)); SI.g.position.set(ba.x, floor(ba) + 0.9, ba.z); }
         var named = SI.element ? colorOf(SI.element) : 0x9a9aa8, bc = tmpC.setHex(named);
         if (SI.g.userData.body) {
-          var bm = SI.g.userData.body.material; bm.color.lerp(bc, Math.min(1, dt * 3)); bm.emissive.copy(bm.color); bm.opacity = 0.85 * (SI.fade == null ? 1 : SI.fade);
+          var bm = SI.g.userData.body.material; bm.color.lerp(bc, Math.min(1, dt * 3)); bm.emissive.copy(bm.color);
           var gs = 1 + (SI.allowed ? SI.allow.grow / 10 : 0); SI.g.userData.body.scale.lerp(new THREE.Vector3(gs, gs, gs), Math.min(1, dt * 2));
         }
         var lvl = SI.texture || SI.element || SI.whom === "voice" ? (SI.allow.bright / 10) * (1 - SI.dull) : 0.12;
-        K.stepAura(SI.g.userData.aura, bc, lvl * (SI.fade == null ? 1 : SI.fade), dt, still);
+        K.stepAura(SI.g.userData.aura, bc, lvl, dt, still);
       } else avatar.scale.y = 1;
-      var shown = 0;
-      spirits.forEach(function (o) {
-        var g = o.g; g.visible = !o.hidden && shown < SHOW_SPIRITS; if (!g.visible) return;
-        var j = shown++, sa = side(Math.max(0.5, st.s - 2.2 - 1.6 * j), j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2), ty = floor(sa) + 1.7 + (still ? 0 : 0.18 * Math.sin(now / 700 + j * 2));
-        g.position.lerp(new THREE.Vector3(sa.x, ty, sa.z), Math.min(1, dt * 2.2));
-        K.stepAura(g.userData.aura, g.userData.color, 0.45, dt, still);
-      });
+      K.followSpirits(THREE, spirits, function (j) { var sa = side(Math.max(0.5, st.s - 2.2 - 1.6 * j), j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2); return { x: sa.x, y: floor(sa) + 1.7, z: sa.z }; }, dt, now, still);
       var stance = 1 + 0.04 * Math.min(spirits.length, 3); voice.scale.x = voice.scale.z = stance; // it squares up to what you bring
       sitBtn.disabled = !canSit();
       // the camera: behind on the path; in the voice's place it stands past the player, looking back the way the self came
