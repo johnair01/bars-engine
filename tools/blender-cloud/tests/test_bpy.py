@@ -257,9 +257,9 @@ def dressing_rows():
 
 
 _pieces = {}
-# Known gaps found by the first run on main (2026-10-13), in from_picture.py, which the cave-studio strand owns. Only
-# these pieces are excused; the same failure in any other piece fails the run.
-KNOWN = {"P3": {"root_curl"}, "P5": {"root_curl"}}
+# Pieces excused from a test as known gaps, {test id: {piece}}. The first run on main (2026-10-13) excused root_curl
+# from P3 and P5; the cave-studio strand fixed both in from_picture.py (#289), so nothing is excused now.
+KNOWN = {}
 
 
 def report(tid, bad, ok):

@@ -104,6 +104,23 @@ const kitPieces = await C(() => window.__oagCave.load().then((a) => Object.keys(
 ok(['crystal_cluster', 'crystal_cluster_bed', 'glow_cap', 'root_curl', 'stone_spire'].every((p) => kitPieces.includes(p)), `the kit carries the dressing built from pictures (${kitPieces.join(', ')})`);
 const dressing = await state('s.dressing');
 ok(Array.isArray(dressing) && dressing.length >= 4 && new Set(dressing).size >= 2, `the chamber is dressed with ${dressing.length} pieces of ${new Set(dressing).size} kinds`);
+// The crystal as a building block: one Blender piece, six tints, any size, height and width (Wendell, 2026-10-13).
+const blocks = await C(() => window.__oagCave.load().then((a) => {
+  const c = window.__oagCave, T = a.THREE, G = { crystal_cluster: c.geomOf(T, a.kit.crystal_cluster), crystal_cluster_bed: c.geomOf(T, a.kit.crystal_cluster_bed) };
+  return c.CRYSTAL_TINTS.map(([tint], i) => {
+    const g = c.crystalBlock(T, G, { tint, size: 1 + i * 0.25, tall: 1 + i * 0.1, wide: 1 }, new T.MeshStandardMaterial());
+    g.children.forEach((m) => { if (!m.geometry.boundingBox) m.geometry.computeBoundingBox(); }); g.updateMatrixWorld(true);
+    const cl = new T.Box3().setFromObject(g.children[0]).getSize(new T.Vector3()), bed = new T.Box3().setFromObject(g.children[1]).getSize(new T.Vector3());
+    return { tint: g.userData.look.tint, hex: g.children[0].material.color.getHex(), h: cl.y, bedH: bed.y, size: 1 + i * 0.25 };
+  });
+}));
+ok(blocks.length === 6 && new Set(blocks.map((b) => b.hex)).size === 6 && blocks.every((b, i) => i === 0 || b.h > blocks[i - 1].h)
+  && blocks.every((b) => Math.abs(b.bedH / b.size - blocks[0].bedH / blocks[0].size) < 1e-6),
+  `the crystal comes in ${blocks.length} tints and grows with size and height, its rocks not stretched (${blocks.map((b) => b.tint).join(', ')})`);
+const crystals = await state('s.crystals');
+const CR = await C(() => window.__oagCave.CRYSTAL_RANGE);
+ok(Array.isArray(crystals) && crystals.every((l) => l.tall >= CR.tall[0] && l.tall <= CR.tall[1] && l.wide >= CR.wide[0] && l.wide <= CR.wide[1]),
+  `the chamber's crystals vary within their ranges (${crystals.map((l) => l.tint).join(', ') || 'none in this chamber'})`);
 
 // ---- the path: seven stretches in W.A.V.E. order, one winding line --------------------------------
 const layout = await state('s.layout');

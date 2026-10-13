@@ -397,7 +397,23 @@
   // in Blender from a picture (build_kit.py, pictures/). Spires stand at the foot of the wall, glow caps grow in twos
   // and threes, roots hang from the roof, crystals sit on their rocks. Nothing is set near a stop, and a piece where a side passage opens is hidden. An older kit without the
   // pieces leaves the chamber bare. The same seed dresses the same way.
-  var DRESS_ROOT = 0x4a3426, DRESS_GLOW = 0x7fe8c8, DRESS_CRYSTAL = 0x8f84ff;
+  var DRESS_ROOT = 0x4a3426, DRESS_GLOW = 0x7fe8c8;
+  // The crystal as a building block (Wendell, 2026-10-13: "vary sizes and colors from this asset to give us changeable
+  // building blocks to work with"). One Blender piece gives many looks: size scales the cluster, tall stretches the
+  // crystals upward, wide spreads the cluster and its rocks, and tint names its colour. The rock bed takes the cave's rock
+  // and is not stretched upward. violet is his picture's colour; the other five are choices.
+  var CRYSTAL_TINTS = [["violet", 0x8f84ff], ["ice", 0x9fd8ff], ["rose", 0xff8fb8], ["amber", 0xffb84a], ["jade", 0x5fe0a0], ["smoke", 0xb8b0c8]];
+  var CRYSTAL_RANGE = { size: [0.28, 0.62], tall: [0.8, 1.35], wide: [0.85, 1.2] }; // size is a share of the chamber height
+  function crystalBlock(THREE, G, look, rock, mats) {
+    var t = lookup(CRYSTAL_TINTS, look.tint) || CRYSTAL_TINTS[0], key = t[0], size = look.size, tall = look.tall || 1, wide = look.wide || 1;
+    mats = mats || {};
+    if (!mats[key]) mats[key] = new THREE.MeshStandardMaterial({ color: t[1], emissive: t[1], emissiveIntensity: 0.45, roughness: 0.25, flatShading: true });
+    var g = new THREE.Group(), cl = new THREE.Mesh(G.crystal_cluster, mats[key]), bed = new THREE.Mesh(G.crystal_cluster_bed, rock);
+    cl.scale.set(size * wide, size * tall, size * wide); bed.scale.set(size * wide, size, size * wide);
+    g.add(cl); g.add(bed);
+    g.userData.look = { tint: key, size: size, tall: tall, wide: wide };
+    return g;
+  }
   function buildDressing(THREE, route, G, o) {
     var g = new THREE.Group(), items = [];
     g.userData.items = items;
@@ -405,7 +421,7 @@
     var rnd = rngOf(hashOf(o.seed)), w = o.w, h = o.h, floorY = -h * 0.92;
     var rootMat = new THREE.MeshStandardMaterial({ color: DRESS_ROOT, roughness: 0.9 });
     var capMat = new THREE.MeshStandardMaterial({ color: DRESS_GLOW, emissive: DRESS_GLOW, emissiveIntensity: 0.55, roughness: 0.6 });
-    var crystalMat = new THREE.MeshStandardMaterial({ color: DRESS_CRYSTAL, emissive: DRESS_CRYSTAL, emissiveIntensity: 0.45, roughness: 0.25, flatShading: true });
+    var crystalMats = {};
     var keepClear = (route.stops || []).map(function (st) { return st.s; }).concat(o.clear || []);
     function clear(s) { return keepClear.every(function (c) { return Math.abs(c - s) > 2.5; }); }
     function put(piece, mat, s, sd, off, y, size, hang) {
@@ -418,10 +434,12 @@
     for (var s = o.s0 + 3; s < o.s1 - 3; s += 4 + rnd() * 3) {
       var sd = rnd() < 0.5 ? -1 : 1, k = rnd();
       if (!clear(s)) continue;
-      if (G.crystal_cluster && k >= 0.85) {
-        var cs = h * (0.4 + rnd() * 0.15), turn = rnd() * Math.PI * 2;
-        put("crystal_cluster", crystalMat, s, sd, 0.32, floorY - 0.03, cs); items[items.length - 1].mesh.rotation.y = turn;
-        put("crystal_cluster_bed", o.rock, s, sd, 0.32, floorY - 0.03, cs); items[items.length - 1].mesh.rotation.y = turn;
+      if (G.crystal_cluster && G.crystal_cluster_bed && k >= 0.85) {
+        var R = CRYSTAL_RANGE, pick = function (r) { return r[0] + rnd() * (r[1] - r[0]); };
+        var cb = crystalBlock(THREE, G, { tint: CRYSTAL_TINTS[Math.floor(rnd() * CRYSTAL_TINTS.length)][0], size: h * pick(R.size), tall: pick(R.tall), wide: pick(R.wide) }, o.rock, crystalMats);
+        var ca = at(route, s);
+        cb.position.set(ca.x + -ca.fz * sd * w * 0.32, ca.y + floorY - 0.03, ca.z + ca.fx * sd * w * 0.32); cb.rotation.y = rnd() * Math.PI * 2;
+        g.add(cb); items.push({ piece: "crystal_cluster", s: s, side: sd, mesh: cb, look: cb.userData.look });
       }
       else if (k < 0.35) put("stone_spire", o.rock, s, sd, 0.36, floorY - 0.05, h * (0.28 + rnd() * 0.18));
       else if (k < 0.65) for (var i = 0, n = 2 + Math.floor(rnd() * 2); i < n; i++) put("glow_cap", capMat, s + (i - 1) * 0.45, sd, 0.3 + rnd() * 0.08, floorY, h * (0.12 + rnd() * 0.1));
@@ -913,6 +931,7 @@
       main.dressing = buildDressing(THREE, main, G, { w: w, h: h, rock: parts.rock, s0: 0, s1: main.len, seed: s.spot.id + ":" + s.texture + ":dress", clear: [main.startS + 9, main.exitS] });
       main.group.add(main.dressing);
       state.dressing = main.dressing.userData.items.map(function (it) { return it.piece; });
+      state.crystals = main.dressing.userData.items.filter(function (it) { return it.look; }).map(function (it) { return it.look; });
       main.markers = main.stops.map(function (st, i) {
         var m = buildMarker(THREE, w, h, STEP_LOOK[i].light), a = at(main, st.s + MARK_AHEAD); m.position.set(a.x, a.y - h * 0.92 + MARK_Y, a.z); main.group.add(m); return m;
       });
@@ -1689,6 +1708,6 @@
   }
 
 
-  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE };
+  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE, crystalBlock: crystalBlock, geomOf: geomOf, CRYSTAL_TINTS: CRYSTAL_TINTS, CRYSTAL_RANGE: CRYSTAL_RANGE };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
