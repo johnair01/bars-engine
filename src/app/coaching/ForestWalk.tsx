@@ -6,6 +6,8 @@ import type { ReactNode, RefObject } from 'react'
 import { captureDaemonsSeries } from '@/actions/leads'
 import { EmailCaptureForm } from '@/components/leads/EmailCaptureForm'
 import { BOOK_HREF, DOORS } from '@/lib/coaching/coaching-map'
+import { EMPTY_FOUND, FACES, LIFE_DOMAINS, foundLines, readFromGame, strategy } from '@/lib/coaching/forest-path'
+import type { Found } from '@/lib/coaching/forest-path'
 import { readSourceTags, withSourceTags } from '@/lib/coaching/source-tags'
 import {
   BELIEFS,
@@ -15,7 +17,9 @@ import {
   EMPTY_WALK,
   EXPERIENCES,
   SATISFACTIONS,
+  CHANNEL_NAME,
   composeWalk,
+  feltChannels,
   jobsFor,
   recommend,
   toggle,
@@ -34,7 +38,9 @@ import { ThreeTwoOneDemo } from './ThreeTwoOneDemo'
  * what they've been looking for the whole time"), walked as the six unpacking questions
  * (Wendell, the same evening: "what I want is for this to be a gamified version of the 6
  * unpacking questions"). The design is content/coaching-game/6FACE_PASS3_2026-10-09.md,
- * which follows passes 1 and 2.
+ * which follows passes 1 and 2. The edge offers two ways in (6FACE_PASS4_2026-10-09.md): "I know what
+ * I'm working on" names the need and picks a face, and "Help me find it" is the six questions. The
+ * ontology game's result arrives at #from-game, and the walk picks up at question 5.
  *
  * One question per screen. The feeling the visitor chooses to walk toward (question 2)
  * becomes the forest's light. Question 4 is answered on a body, as Wendell asked ("I want
@@ -50,7 +56,7 @@ import { ThreeTwoOneDemo } from './ThreeTwoOneDemo'
  * screen moves focus to its heading (cf-protections).
  */
 
-type Screen = 'edge' | 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'q6' | 'centre'
+type Screen = 'edge' | 'know' | 'tour' | 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'q6' | 'centre'
 
 const ORDER: Screen[] = ['edge', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'centre']
 
@@ -94,6 +100,7 @@ const go_on =
 export function ForestWalk() {
   const [screen, setScreen] = useState<Screen>('edge')
   const [walk, setWalk] = useState<Walk>(EMPTY_WALK)
+  const [found, setFound] = useState<Found>(EMPTY_FOUND)
   const [booking, setBooking] = useState(false)
   const [practice, setPractice] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -109,6 +116,7 @@ export function ForestWalk() {
   const step = ORDER.indexOf(screen)
   const next = () => go(ORDER[step + 1])
   const back = () => go(ORDER[step - 1])
+  const setF = (patch: Partial<Found>) => setFound((f) => ({ ...f, ...patch }))
 
   const set = (patch: Partial<Walk>) => setWalk((w) => ({ ...w, ...patch }))
 
@@ -122,6 +130,16 @@ export function ForestWalk() {
   // A link to /coaching#your-words, the one Wendell sends past clients, opens it with the testimonial ask showing.
   useEffect(() => {
     const check = () => {
+      // The ontology game's "Take this to coaching" button: the feeling and face cross over, and the walk picks up at the belief.
+      const game = readFromGame(window.location.hash)
+      if (game) {
+        setFound((f) => ({ ...f, ...game }))
+        setWalk((w) => ({ ...w, truth: game.belief || w.truth }))
+        moved.current = true
+        setScreen('q5')
+        window.history.replaceState(null, '', window.location.pathname + window.location.search)
+        return
+      }
       if (window.location.hash === YOUR_WORDS_HASH) {
         setScreen('centre')
         setWordsOpen(true)
@@ -155,7 +173,7 @@ export function ForestWalk() {
 
   async function copyWalk() {
     try {
-      await navigator.clipboard.writeText(composeWalk(walk))
+      await navigator.clipboard.writeText(['What I brought out of the forest', '', ...record].join('\n'))
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2500)
     } catch {
@@ -166,7 +184,12 @@ export function ForestWalk() {
   const toward = SATISFACTIONS.filter((s) => walk.toward.includes(s.channel))
   const glow = toward.length ? CHANNEL_LIGHT[toward[0].channel] : '#fde9b4'
   const offers = recommend(walk)
-  const record = composeWalk(walk).split('\n').slice(2)
+  // What they named on the first way in, then the six questions; the game's feeling stands in when the felt states are empty.
+  const inLines = foundLines({ ...EMPTY_FOUND, need: found.need, domain: found.domain, face: found.face }).map((l) => `${l.label}: ${l.text}`)
+  const walkLines = composeWalk(walk).split('\n').slice(2)
+  const record = [...inLines, ...walkLines]
+  const feelingName = found.feeling || (feltChannels(walk)[0] ? CHANNEL_NAME[feltChannels(walk)[0]] : '')
+  const plan = found.face || found.domain || found.fromGame ? strategy({ ...found, feeling: feelingName as Found['feeling'], belief: found.belief || walk.truth }) : []
 
   const H = (children: ReactNode) => (
     <h2 ref={heading} tabIndex={-1} className="text-2xl font-semibold leading-snug text-emerald-50 outline-none sm:text-3xl">
@@ -183,7 +206,7 @@ export function ForestWalk() {
       className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-[#040a07] text-emerald-50"
     >
       <style>{`@keyframes forest-in { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }`}</style>
-      <ForestScene depth={(step * 4) / (ORDER.length - 1)} glow={glow} />
+      <ForestScene depth={(Math.max(step, screen === 'tour' ? 4 : screen === 'know' ? 2 : 0) * 4) / (ORDER.length - 1)} glow={glow} />
 
       <div
         key={screen}
@@ -198,16 +221,101 @@ export function ForestWalk() {
             </p>
             {H(<>Whatever brought you here came with you.</>)}
             <p className="text-base leading-relaxed text-emerald-100/80">
-              Walk in with it. Six questions take a few minutes, and at the centre is the help that fits. What
-              you write stays in this tab, with no account and no AI.
+              Two ways in. Tell me what you are working on, or walk in and find it with six questions. At the
+              centre is the help that fits. What you write stays in this tab, with no account and no AI.
             </p>
             <div className="flex flex-col items-center gap-4">
-              <button type="button" onClick={next} className={go_on}>
-                Step in
+              <button type="button" onClick={() => go('know')} className={go_on}>
+                I know what I&rsquo;m working on
               </button>
+              <button type="button" onClick={next} className={go_on}>
+                Help me find it
+              </button>
+              <a href="/ontology-game" className={quiet}>
+                Play the ontology game first, then bring what happened here
+              </a>
               <button type="button" onClick={openBooking} className={quiet}>
                 I know what I need
               </button>
+            </div>
+          </div>
+        )}
+
+        {screen === 'know' && (
+          <div className="space-y-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-200/70">Name it</p>
+            {H(<>What do you want help with?</>)}
+            <textarea
+              className={`${field} min-h-24`}
+              value={found.need}
+              placeholder="I want help with..."
+              onChange={(e) => setF({ need: e.target.value })}
+            />
+            <div className="space-y-2.5">
+              <p className="text-sm text-emerald-100/70">Where in your life does it sit?</p>
+              <div className="flex flex-wrap gap-2.5">
+                {LIFE_DOMAINS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    aria-pressed={found.domain === d}
+                    onClick={() => setF({ domain: found.domain === d ? '' : d })}
+                    className={chip(found.domain === d)}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <button type="button" onClick={() => go('edge')} className={quiet}>
+                Back
+              </button>
+              <div className="flex items-center gap-4">
+                <button type="button" onClick={() => go('tour')} className={quiet}>
+                  Skip
+                </button>
+                <button type="button" onClick={() => go('tour')} className={go_on}>
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {screen === 'tour' && (
+          <div className="space-y-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-200/70">How I work</p>
+            {H(<>Which of these sounds like you?</>)}
+            <p className="text-base leading-relaxed text-emerald-100/80">
+              Each is a way I work, and every road leads through Emotional Alchemy. Choosing one is choosing the level of help.
+            </p>
+            <div className="space-y-2.5">
+              {FACES.map((f) => (
+                <button
+                  key={f.colour}
+                  type="button"
+                  aria-pressed={found.face === f.colour}
+                  onClick={() => setF({ face: found.face === f.colour ? '' : f.colour })}
+                  className={card(found.face === f.colour)}
+                >
+                  <span className="block text-base italic text-emerald-50">&ldquo;{f.sounds}&rdquo;</span>
+                  <span className="mt-1 block text-sm leading-relaxed text-emerald-100/75">{f.approach}</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-between">
+              <button type="button" onClick={() => go('know')} className={quiet}>
+                Back
+              </button>
+              <div className="flex items-center gap-4">
+                <button type="button" onClick={() => go('centre')} className={quiet}>
+                  Skip
+                </button>
+                <button type="button" onClick={() => go('centre')} className={go_on}>
+                  To the centre
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -390,6 +498,17 @@ export function ForestWalk() {
               </div>
             ) : (
               <div className="text-center">{H(<>You are at the centre.</>)}</div>
+            )}
+
+            {plan.length > 0 && (
+              <div className="space-y-2.5 rounded-2xl border border-amber-100/15 bg-black/45 p-5 backdrop-blur-sm">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/70">How we would work on it</h3>
+                {plan.map((line) => (
+                  <p key={line} className="text-base leading-relaxed text-emerald-50/90">
+                    {line}
+                  </p>
+                ))}
+              </div>
             )}
 
             <figure className="flex items-start gap-4 rounded-2xl border border-amber-100/15 bg-black/45 p-5 backdrop-blur-sm">

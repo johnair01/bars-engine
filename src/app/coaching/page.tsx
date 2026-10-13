@@ -14,7 +14,7 @@ export const metadata: Metadata = {
  * @entity CAMPAIGN
  * @description Wendell's coaching page, built as a walk into a forest through the six unpacking
  *   questions, whose centre holds the visitor's own words, Wendell, and the offer that fits
- *   (content/coaching-game/6FACE_PASS3_2026-10-09.md, which follows passes 1 and 2). It runs in the browser with no account and no AI. The four
+ *   (content/coaching-game/6FACE_PASS3_2026-10-09.md, which follows passes 1 and 2). Pass 4 (6FACE_PASS4_2026-10-09.md) adds a second way in for visitors who know their need; /coaching#from-game carries the ontology game's result. It runs in the browser with no account and no AI. The four
  *   Calendly tiers sit one tap behind the centre's door, and /coaching#book opens them directly.
  *   /coaching#your-words opens the centre's testimonial ask, which writes an email to Wendell
  *   (src/lib/coaching/your-words.ts).
