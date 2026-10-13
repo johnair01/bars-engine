@@ -9,13 +9,17 @@ from the picture and builds the shape one of two ways:
            for things with a bend in them: a root, a branch, a lumpy stone.
   crystals splits the picture by colour into crystal and rock, makes one six-sided prism per crystal tip it finds in
            the outline, and inflates the rock bed under them, for a crystal cluster.
+  mushrooms finds each cap by its saturated colour, lathes it, follows its stem down to the dark bed and sweeps a
+           round stem along it, and inflates the bed, for a cluster of mushrooms (J3).
+  roots    thins the outline to its centre lines and sweeps a round tube along each one, as thick as the picture is
+           wide there, so fine tendrils and the gaps between strands survive, for a hanging root knot (J3).
 
 Then it lays the finished mesh flat against the picture and measures the overlap of the two outlines (intersection
 over union, 1.0 is a perfect match), and renders the model from the front and from three-quarters so it can be put
 beside the picture.
 
 Run with Blender's Python module (bpy 5.2.2, Python 3.13; README.md here):
-    python from_picture.py PICTURE OUT.glb --mode lathe --height 3 --name stone_spire [--faces 600] [--render DIR]
+    python from_picture.py PICTURE OUT.glb --mode lathe --height 3 --name stone_spire [--faces 600] [--render DIR] [--flat]
 Prints one REPORT line of JSON: name, mode, faces, size, outline match.
 The GLB is in the page's own axes (Y up, front toward +Z), base on y=0, centred on x=0, like the cave kit.
 """
@@ -30,6 +34,9 @@ import bmesh
 import numpy as np
 
 MAX_SIDE = 160  # the outline is read at this many pixels along the picture's longer side
+MODES = ("lathe", "inflate", "crystals", "mushrooms", "roots")
+COLOUR = ("crystals", "mushrooms")  # modes that read the picture's colours as well as its outline
+FINE = {"mushrooms": 320, "roots": 320}  # modes that read the outline finer than MAX_SIDE
 
 
 # ---- reading the outline -------------------------------------------------------------------------
@@ -82,16 +89,22 @@ def flood(mask, seeds):
     return seen
 
 
-def outline(path, colour=False):
+def outline(path, colour=False, flat=False, side=MAX_SIDE):
     """The object's mask, top row first: background is the colour around the picture's edge. With colour, also
-    returns the picture's colours on the same grid."""
-    rgb = shrink(load_rgb(path), MAX_SIDE * 3)  # read finely, so a thin dark outline still closes the shape
+    returns the picture's colours on the same grid. flat=True is for a picture on a flat plain background (J3's
+    pictures): anything that differs from the background by more than a few times the edge's own noise is the
+    object, so pale parts close to the background's grey (a lilac stem, a lit crystal face) still count. Without it
+    the cut is Otsu's, which suits the stand-ins' textured paper and keeps the kit's dressing as built. side is the
+    grid's longer side in pixels; the J3 modes read at twice the usual, so a stem or a tendril is more than a pixel."""
+    rgb = shrink(load_rgb(path), side * 3)  # read finely, so a thin dark outline still closes the shape
     nan = np.isnan(rgb).any(axis=2)
     rgb = np.nan_to_num(rgb)
     border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]])
     bg = np.median(border, axis=0)
     dist = np.sqrt(((rgb - bg) ** 2).sum(axis=2))
-    mask = (dist > max(otsu(dist[~nan]), 0.06)) & ~nan
+    edge_dist = np.sqrt(((border - bg) ** 2).sum(axis=1))
+    cut = max(4 * float(np.percentile(edge_dist, 99)), 0.06) if flat else max(otsu(dist[~nan]), 0.06)
+    mask = (dist > cut) & ~nan
     # keep the largest piece, then fill its holes
     h, w = mask.shape
     best = np.zeros_like(mask)
@@ -105,7 +118,7 @@ def outline(path, colour=False):
     edge = [(y, x) for y in range(h) for x in (0, w - 1)] + [(y, x) for x in range(w) for y in (0, h - 1)]
     outside = flood(~best, edge)
     mask = ~outside
-    k = max(1, int(math.ceil(max(h, w) / MAX_SIDE)))
+    k = max(1, int(math.ceil(max(h, w) / side)))
     h2, w2 = h // k, w // k
     mask = mask[:h2 * k, :w2 * k].reshape(h2, k, w2, k).mean(axis=(1, 3)) >= 0.5
     small = rgb[:h2 * k, :w2 * k].reshape(h2, k, w2, k, 3).mean(axis=(1, 3))
@@ -231,6 +244,267 @@ def crystals(name, mask, rgb, unit, seed=3):
             p.use_smooth = False
         parts.append(bed)
     return parts, len(tips)
+
+
+def pieces(mask):
+    """The connected pieces of a mask, largest first."""
+    left, out = mask.copy(), []
+    while left.any():
+        y, x = np.argwhere(left)[0]
+        part = flood(left, [(y, x)])
+        left &= ~part
+        out.append(part)
+    return sorted(out, key=lambda p: -int(p.sum()))
+
+
+def filled(mask):
+    """The mask with its holes filled."""
+    h, w = mask.shape
+    edge = [(y, x) for y in range(h) for x in (0, w - 1)] + [(y, x) for x in range(w) for y in (0, h - 1)]
+    return ~flood(~mask, edge)
+
+
+def tube(bm, pts, radii, sides=6, tips=(True, True)):
+    """A round tube through the 3D points pts, radii[i] wide at each; a pointed end where tips says so, else flat."""
+    pts = [np.array(p, float) for p in pts]
+    if len(pts) < 2:
+        return
+    rings, side_prev = [], None
+    for i, (c, r) in enumerate(zip(pts, radii)):
+        t = pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]
+        t /= max(np.linalg.norm(t), 1e-9)
+        side = np.cross(t, (0, 0, 1.0)) if side_prev is None else side_prev - t * np.dot(side_prev, t)
+        if np.linalg.norm(side) < 1e-6:
+            side = np.cross(t, (1.0, 0, 0))
+        side /= np.linalg.norm(side)
+        side_prev = side
+        up = np.cross(t, side)
+        rings.append([bm.verts.new(tuple(c + r * (math.cos(a) * side + math.sin(a) * up)))
+                      for a in (2 * math.pi * j / sides for j in range(sides))])
+    for a, b in zip(rings, rings[1:]):
+        for j in range(sides):
+            k = (j + 1) % sides
+            bm.faces.new((a[j], a[k], b[k], b[j]))
+    for end, ring, nxt, sharp in ((0, rings[0], pts[1], tips[0]), (-1, rings[-1], pts[-2], tips[1])):
+        if sharp:
+            apex = bm.verts.new(tuple(pts[end] + (pts[end] - nxt) / max(np.linalg.norm(pts[end] - nxt), 1e-9) * radii[end]))
+            for j in range(sides):
+                k = (j + 1) % sides
+                bm.faces.new((ring[j], ring[k], apex) if end else (ring[k], ring[j], apex))
+        else:
+            bm.faces.new(list(reversed(ring)) if end == 0 else ring)
+
+
+def low_bed(name, bed, unit, faces=220, swell=1.6):
+    """The rock or moss under a cluster: inflated from its outline, kept low-poly and faceted."""
+    ob = inflate(name, bed, unit, stride=2, swell=swell)
+    m = ob.modifiers.new("low", "DECIMATE")
+    m.ratio = min(1.0, faces / max(1, len(ob.data.polygons)))
+    bpy.context.view_layer.update()
+    ob.data = bpy.data.meshes.new_from_object(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    ob.modifiers.clear()
+    for p in ob.data.polygons:
+        p.use_smooth = False
+    return ob
+
+
+def mushrooms(name, mask, rgb, unit, seed=5):
+    """A mushroom cluster. Dark pixels are the bed (moss and stone). Each cap's dome is a piece of the picture's
+    strongest colour; it is lathed row by row from that piece, with gills under the rim closing in toward the stem.
+    What the caps and the bed leave (the stems and the gills' glow) is inflated. Caps step a little toward and away from
+    the viewer so the cluster has depth, and each stem moves with the cap above it. Returns the caps, the stems and the
+    bed as three parts, and the number of caps."""
+    rng = np.random.default_rng(seed)
+    h, w = mask.shape
+    sat, val = saturation(rgb), rgb.max(axis=2)
+    bed = mask & (val < 0.5)
+    bed_main = pieces(bed)[0] if bed.any() else bed
+    seeds = pieces(mask & ~bed & (sat > 0.5))  # a cap's top: the strongest colour in the picture
+    seeds = [c for c in seeds if c.sum() >= 0.06 * seeds[0].sum()] if seeds else []
+    to3 = lambda px, py, z: ((px - w / 2) * unit, (h - 1 - py) * unit, z)
+
+    def run(r, x, lo, hi):
+        """The run of mask in row r through column x, clipped to lo..hi; None if x is outside the mask."""
+        x = int(round(x))
+        if not (0 <= x < w and mask[r, x]):
+            return None
+        a = b = x
+        while a - 1 >= max(0, lo) and mask[r, a - 1]:
+            a -= 1
+        while b + 1 <= min(w - 1, hi) and mask[r, b + 1]:
+            b += 1
+        return a, b
+
+    # each cap: its dome is the coloured piece, row by row; under the rim, the gills close in toward the stem
+    caps = []
+    for c in seeds:
+        ys, xs = np.nonzero(c)
+        cx, cy = xs.mean(), ys.mean()
+        if any(x0 <= cx <= x1 and y0 <= cy <= y1 for _, x0, x1, y0, y1, _, _ in caps):
+            continue  # a highlight or a shadow on a cap already found
+        # a cap drawn leaning: find its lean from the piece's shape (a cap is wider than it is tall, so its axis is
+        # the direction it is thinnest in), and read its rows square to that axis
+        f = np.argwhere(filled(c)).astype(float)
+        centre = f.mean(axis=0)
+        evals, evecs = np.linalg.eigh(np.cov((f - centre).T))
+        ax = evecs[:, 0] if evecs[0, 0] <= 0 else -evecs[:, 0]  # (dy, dx), pointing up the picture
+        lean = max(-0.6, min(0.6, math.atan2(-ax[1], -ax[0])))  # radians, positive leans right
+        cs, sn = math.cos(lean), math.sin(lean)
+        ry = (f[:, 0] - centre[0]) * cs + (f[:, 1] - centre[1]) * sn  # down the cap's own axis
+        rx = (f[:, 1] - centre[1]) * cs - (f[:, 0] - centre[0]) * sn  # across it
+        rows, rad = [], []
+        for r in range(int(math.floor(ry.min())), int(math.ceil(ry.max())) + 1):
+            sel = np.abs(ry - r) < 0.5
+            if sel.any():
+                rows.append(r)
+                rad.append(max((rx[sel].max() - rx[sel].min() + 1) / 2, 0.5))
+        rad = list(np.maximum.accumulate(rad))  # a dome widens downward
+        rim = rad[-1]
+        gill = max(2.0, 0.25 * (rows[-1] - rows[0]))
+        prof = list(zip(rows, rad)) + [(rows[-1] + gill * 0.5, 0.85 * rim), (rows[-1] + gill, 0.35 * rim)]
+        caps.append((prof, centre[1] - rim, centre[1] + rim, centre[0] + rows[0], centre[0] + rows[-1] + gill,
+                     centre, lean))
+    cbm, depth = bmesh.new(), []
+    for i, (prof, x0, x1, y0, y1, centre, lean) in enumerate(caps):
+        width = x1 - x0
+        cs, sn = math.cos(lean), math.sin(lean)
+        at = lambda r, xr, zr: to3(centre[1] + r * sn + xr * cs, centre[0] + r * cs - xr * sn, z + zr * unit)
+        z = 0.0 if i == 0 else (1 if i % 2 else -1) * rng.uniform(0.35, 0.8) * width * unit * 0.6
+        depth.append((x0, x1, y1, z))
+        rad = np.convolve(np.pad([p[1] for p in prof], 1, mode="edge"), np.ones(3) / 3, mode="valid")
+        rows = [p[0] for p in prof]
+        keep = profile_rows(np.array(rad), 0, len(rad) - 1, 14, tol=0.8)
+        seg = 12
+        ringv = []
+        for k in sorted(keep):
+            r, rr = rows[k], rad[k]
+            ringv.append([cbm.verts.new(at(r, rr * math.cos(2 * math.pi * j / seg), rr * math.sin(2 * math.pi * j / seg)))
+                          for j in range(seg)])
+        top = cbm.verts.new(at(rows[0] - 0.5, 0, 0))
+        for j in range(seg):
+            cbm.faces.new((ringv[0][(j + 1) % seg], ringv[0][j], top))
+        for a, b in zip(ringv, ringv[1:]):
+            for j in range(seg):
+                k = (j + 1) % seg
+                cbm.faces.new((a[j], a[k], b[k], b[j]))
+        cbm.faces.new(list(reversed(ringv[-1])))
+    caps_ob = to_object(name, cbm)
+    for p in caps_ob.data.polygons:
+        p.use_smooth = True
+    parts = [caps_ob]
+    bed_all = filled(bed_main)
+    stems = mask & ~silhouette(caps_ob, mask.shape, unit) & ~bed_all  # stems and gills: what the caps and bed leave
+    if stems.sum():
+        ob = inflate(name + "_stems", stems, unit, stride=2, swell=1.3)
+        fit_faces(ob, 500)
+        for v in ob.data.vertices:  # each stem stands as far forward or back as the cap above it
+            px, py = v.co.x / unit + w / 2, h - 1 - v.co.y / unit
+            v.co.z *= 0.6  # where stems overlap in the picture they inflate as one; keep that lump shallow
+            above = [(y1, z) for x0, x1, y1, z in depth if x0 <= px <= x1 and y1 <= py + 2]
+            if above:
+                v.co.z += max(above)[1]
+        parts.append(ob)
+    if bed_main.sum() > 0.03 * mask.sum():
+        parts.append(low_bed(name + "_bed", bed_all, unit, swell=1.35))
+    return parts, len(caps)
+
+
+def fit_faces(ob, faces):
+    """Decimates in place to at most faces, keeping the piece where it is."""
+    if len(ob.data.polygons) > faces:
+        m = ob.modifiers.new("fit", "DECIMATE")
+        m.ratio = faces / len(ob.data.polygons)
+        bpy.context.view_layer.update()
+        ob.data = bpy.data.meshes.new_from_object(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+        ob.modifiers.clear()
+    for p in ob.data.polygons:
+        p.use_smooth = True
+
+
+def thin(mask):
+    """The mask thinned to lines one pixel wide (Zhang and Suen)."""
+    img = np.pad(mask.astype(np.uint8), 1)
+    changed = True
+    while changed:
+        changed = False
+        for step in (0, 1):
+            P = img
+            p2, p3, p4, p5 = P[:-2, 1:-1], P[:-2, 2:], P[1:-1, 2:], P[2:, 2:]
+            p6, p7, p8, p9 = P[2:, 1:-1], P[2:, :-2], P[1:-1, :-2], P[:-2, :-2]
+            c = P[1:-1, 1:-1]
+            ring = [p2, p3, p4, p5, p6, p7, p8, p9, p2]
+            B = sum(p.astype(int) for p in ring[:8])
+            A = sum(((ring[i] == 0) & (ring[i + 1] == 1)).astype(int) for i in range(8))
+            m1, m2 = (p2 * p4 * p6, p4 * p6 * p8) if step == 0 else (p2 * p4 * p8, p2 * p6 * p8)
+            gone = (c == 1) & (B >= 2) & (B <= 6) & (A == 1) & (m1 == 0) & (m2 == 0)
+            if gone.any():
+                changed = True
+                img[1:-1, 1:-1][gone] = 0
+    return img[1:-1, 1:-1].astype(bool)
+
+
+def centre_lines(skel, d):
+    """The thinned mask as lines from end or fork to end or fork, with the short spurs a thick shape's thinning
+    leaves at its edges dropped."""
+    pts = set(map(tuple, np.argwhere(skel)))
+    nb = lambda p: [(p[0] + dy, p[1] + dx) for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                    if (dy or dx) and (p[0] + dy, p[1] + dx) in pts]
+    deg = {p: len(nb(p)) for p in pts}
+    nodes = {p for p in pts if deg[p] != 2}
+    used, lines = set(), []
+    for n in sorted(nodes):
+        for q in nb(n):
+            if (n, q) in used:
+                continue
+            line, prev, cur = [n, q], n, q
+            used |= {(n, q), (q, n)}
+            while cur not in nodes:
+                nxt = [r for r in nb(cur) if r != prev and (cur, r) not in used]
+                if not nxt:
+                    break
+                r = nxt[0]
+                used |= {(cur, r), (r, cur)}
+                line.append(r)
+                prev, cur = cur, r
+            lines.append(line)
+    keep = []
+    for line in lines:
+        ends = [deg[line[0]], deg[line[-1]]]
+        root = line[0] if ends[0] != 1 else line[-1]
+        if 1 in ends and 2 not in ends and min(ends) == 1 and max(ends) > 2 and len(line) < 1.3 * d[root]:
+            continue  # a spur: shorter than the shape is thick where it leaves
+        keep.append((line, ends))
+    return keep
+
+
+def roots(name, mask, unit, seed=11):
+    """A root knot: a round tube along each centre line of the outline, as thick as the outline is wide there, so a
+    tendril one or two pixels wide stays a tendril. Each line bows a little toward or away from the viewer between its
+    ends, so the strands cross in depth and still meet where they fork."""
+    rng = np.random.default_rng(seed)
+    h, w = mask.shape
+    d = distance(mask)
+    bm = bmesh.new()
+    lines = centre_lines(thin(mask), d)
+    for line, ends in lines:
+        if len(line) < 3 and 1 not in ends:
+            continue
+        step = max(2, int(np.median([d[p] for p in line]) * 0.8))
+        idx = list(range(0, len(line), step))
+        if idx[-1] != len(line) - 1:
+            idx.append(len(line) - 1)
+        rad = [max(0.7, float(d[line[i]]) * 1.05) for i in idx]
+        bow = rng.uniform(-1, 1) * 0.8 * float(np.median(rad))
+        pts = []
+        for t, i in zip(np.linspace(0, 1, len(idx)), idx):
+            y, x = line[i]
+            pts.append(((x - w / 2) * unit, (h - 1 - y) * unit, bow * math.sin(math.pi * t) * unit))
+        sides = 6 if max(rad) > 2.5 else 4
+        tube(bm, pts, [r * unit for r in rad], sides=sides, tips=(ends[0] == 1, ends[1] == 1))
+    ob = to_object(name, bm)
+    for p in ob.data.polygons:
+        p.use_smooth = True
+    return [ob], len(lines)
 
 
 # ---- building ------------------------------------------------------------------------------------
@@ -492,6 +766,19 @@ def build(name, mask, unit, mode, faces):
         place(parts)
         sil, iou = match(parts, mask, unit)
         return parts, sil, iou
+    if mode == "mushrooms":
+        mask, rgb = mask
+        parts, _ = mushrooms(name, mask, rgb, unit)
+        place(parts)
+        sil, iou = match(parts, mask, unit)
+        return parts, sil, iou
+    if mode == "roots":
+        parts, _ = roots(name, mask, unit)
+        if len(parts[0].data.polygons) > faces:
+            fit(parts[0], faces)
+        place(parts)
+        sil, iou = match(parts, mask, unit)
+        return parts, sil, iou
     ob = fit(lathe(name, mask, unit) if mode == "lathe" else inflate(name, mask, unit, one=True), faces)
     sil, iou = match(ob, mask, unit)
     if mode == "inflate":
@@ -511,18 +798,19 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("picture")
     ap.add_argument("out")
-    ap.add_argument("--mode", choices=("lathe", "inflate", "crystals"), required=True)
+    ap.add_argument("--mode", choices=MODES, required=True)
     ap.add_argument("--height", type=float, required=True, help="height of the piece in page units")
     ap.add_argument("--name", required=True)
     ap.add_argument("--faces", type=int, default=600)
     ap.add_argument("--render", help="folder for front.png and three-quarter.png")
+    ap.add_argument("--flat", action="store_true", help="the picture's background is flat and plain (see outline)")
     a = ap.parse_args(argv)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    mask = outline(a.picture, colour=a.mode == "crystals")
-    unit = a.height / (mask[0] if a.mode == "crystals" else mask).shape[0]
+    mask = outline(a.picture, colour=a.mode in COLOUR, flat=a.flat, side=FINE.get(a.mode, MAX_SIDE))
+    unit = a.height / (mask[0] if a.mode in COLOUR else mask).shape[0]
     parts, sil, iou = build(a.name, mask, unit, a.mode, a.faces)
-    mask = mask[0] if a.mode == "crystals" else mask
+    mask = mask[0] if a.mode in COLOUR else mask
     v = np.concatenate([np.array([p.co[:] for p in o.data.vertices]) for o in parts])
     size = [round(float(x), 3) for x in v.max(axis=0) - v.min(axis=0)]
     for o in list(bpy.context.scene.objects):

@@ -2,11 +2,15 @@
 
   blenderkit(query, index, id)   a pinned CC0 Blendkit model: the index-th free result for the query, which must
                                  still be the asset with that id. Anything not CC0 stops the build (cs-cc0-or-own).
-  picture(file, mode)            a model built from a picture in pictures/ by tools/blender-cloud/from_picture.py
+  picture(file, mode)            a model built from a picture in pictures/ by tools/blender-cloud/from_picture.py; a
+                                 mode that makes parts (crystals, mushrooms: the cluster and its bed) takes one
+                                 material per part, and flat=True reads a picture on a flat plain background (J3)
   script(builder)                a model built by a function here
 
-Each object is scaled to its height, stood on the floor, checked (lowest vertex within 1 cm of the floor, every vertex
-inside the walls, its GLB under its byte budget) and given a manifest row (cs-manifest-row) in manifest.json.
+Each object is scaled to its height, stood on the floor (or, with hang=, hung with its top at that height, for a root
+that hangs from the roof), checked (lowest vertex within 1 cm of the floor, or highest within 1 cm of where it hangs;
+every vertex inside the walls; its GLB under its byte budget) and given a manifest row (cs-manifest-row) in
+manifest.json.
 Needs bpy; a Blendkit source also needs the network (tools/blender-cloud/README.md).
 """
 import json, math, os, subprocess, sys
@@ -29,8 +33,8 @@ def blenderkit(query, index, id, licence="cc_zero"):
     return {"kind": "blenderkit", "query": query, "index": index, "id": id, "licence": licence}
 
 
-def picture(file, mode, faces=400):
-    return {"kind": "picture", "file": file, "mode": mode, "faces": faces}
+def picture(file, mode, faces=400, flat=False):
+    return {"kind": "picture", "file": file, "mode": mode, "faces": faces, "flat": flat}
 
 
 def script(builder):
@@ -107,13 +111,16 @@ def from_blenderkit(name, src, faces):
 
 
 def from_picture_file(name, src, faces):
-    mask = from_picture.outline(os.path.join(HERE, "pictures", src["file"]))
-    parts, _, iou = from_picture.build(name, mask, 1.0 / mask.shape[0], src["mode"], src["faces"])
-    ob = parts[0]
-    ob.data.transform(__import__("mathutils").Matrix.Rotation(math.pi / 2, 4, "X"))  # the tool builds Y up
-    row = {"source": f"cave/objects.py from pictures/{src['file']} ({src['mode']}, tools/blender-cloud/from_picture.py)",
+    mode = src["mode"]
+    mask = from_picture.outline(os.path.join(HERE, "pictures", src["file"]), colour=mode in from_picture.COLOUR,
+                                flat=src.get("flat", False), side=from_picture.FINE.get(mode, from_picture.MAX_SIDE))
+    grid = mask[0] if mode in from_picture.COLOUR else mask
+    parts, _, iou = from_picture.build(name, mask, 1.0 / grid.shape[0], mode, src["faces"])
+    for ob in parts:
+        ob.data.transform(__import__("mathutils").Matrix.Rotation(math.pi / 2, 4, "X"))  # the tool builds Y up
+    row = {"source": f"cave/objects.py from pictures/{src['file']} ({mode}, tools/blender-cloud/from_picture.py)",
            "licence": "own work", "outline_match": round(iou, 3)}
-    return ob, row
+    return (parts if len(parts) > 1 else parts[0]), row
 
 
 def from_script(name, src, faces):
@@ -157,23 +164,31 @@ def cushion(bm, segments=16):
 
 # ---- placing and checking ----
 
-def obj(name, src, at, turn, height, budget, faces, material, objects):
-    """Builds the object, scales it to height (metres), stands it on the floor at at=(x, y), turned turn degrees."""
-    ob, row = SOURCES[src["kind"]](name, src, faces)
-    ob.name = ob.data.name = name
-    v = [c.co for c in ob.data.vertices]
+def obj(name, src, at, turn, height, budget, faces, material, objects, hang=None):
+    """Builds the object, scales it to height (metres), stands it on the floor at at=(x, y), turned turn degrees. With
+    hang, its top is at that height instead, as a root hangs from the roof. A source that makes several parts (a
+    cluster and its bed) gives one object per part, named name, name_stems, name_bed and so on, moved together; then
+    material is a list, one per part (None keeps the source's own)."""
+    built, row = SOURCES[src["kind"]](name, src, faces)
+    obs = built if isinstance(built, list) else [built]
+    mats = material if isinstance(material, (list, tuple)) else [material] * len(obs)
+    for i, ob in enumerate(obs):
+        ob.name = ob.data.name = name + (ob.name[len(name):] if i and ob.name.startswith(name) else "_" + str(i) if i else "")
+    v = [c.co for ob in obs for c in ob.data.vertices]
     lo = [min(p[i] for p in v) for i in range(3)]
     hi = [max(p[i] for p in v) for i in range(3)]
     s = height / (hi[2] - lo[2])
     from mathutils import Matrix
-    ob.data.transform(Matrix.Diagonal((s, s, s, 1)) @ Matrix.Translation((-(lo[0] + hi[0]) / 2, -(lo[1] + hi[1]) / 2,
-                                                                          -lo[2])))
-    ob.location = (at[0], at[1], 0)
-    ob.rotation_euler = (0, 0, math.radians(turn))
-    if material is not None:
+    for ob, m in zip(obs, mats):
+        ob.data.transform(Matrix.Diagonal((s, s, s, 1)) @ Matrix.Translation((-(lo[0] + hi[0]) / 2, -(lo[1] + hi[1]) / 2,
+                                                                              -lo[2])))
+        ob.location = (at[0], at[1], 0 if hang is None else hang - height)
+        ob.rotation_euler = (0, 0, math.radians(turn))
+        if m is None:
+            continue
         ob.data.materials.clear()
-        ob.data.materials.append(material)
-        if material.get("texture") and not ob.data.uv_layers:  # baked by chamber.py, which needs UVs
+        ob.data.materials.append(m)
+        if m.get("texture") and not ob.data.uv_layers:  # baked by chamber.py, which needs UVs
             for x in bpy.context.scene.objects:
                 x.select_set(x == ob)
             bpy.context.view_layer.objects.active = ob
@@ -181,29 +196,37 @@ def obj(name, src, at, turn, height, budget, faces, material, objects):
             bpy.ops.mesh.select_all(action="SELECT")
             bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.01)
             bpy.ops.object.mode_set(mode="OBJECT")
-    objects.append({"ob": ob, "row": {"id": f"chamber.{name}", "kind": "object", "in": "chamber.glb",
-                                      **row, "budget_bytes": budget, "faces": len(ob.data.polygons),
-                                      "at": [at[0], at[1]], "height_m": height}})
-    return ob
+    extra = {} if hang is None else {"hangs_from_m": hang}
+    objects.append({"obs": obs, "hang": hang, "row": {"id": f"chamber.{name}", "kind": "object", "in": "chamber.glb",
+                                                      **row, "budget_bytes": budget,
+                                                      "faces": sum(len(ob.data.polygons) for ob in obs),
+                                                      "at": [at[0], at[1]], "height_m": height, **extra}})
+    return obs[0]
 
 
 def check(objects, wall_r, H, out):
-    """The J2 kill line, per object: on the floor, inside the walls, under budget. Writes each object's row into
-    manifest.json (cs-manifest-row); stops on the first miss after reporting them all."""
+    """The J2 kill line, per object: on the floor (or hung where it says), inside the walls, under budget. Writes each
+    object's row into manifest.json (cs-manifest-row); stops on the first miss after reporting them all."""
     misses, rows = [], []
     for o in objects:
-        ob, row = o["ob"], o["row"]
+        obs, row = o["obs"], o["row"]
+        ob = obs[0]
         bpy.context.view_layer.update()
-        world = [ob.matrix_world @ c.co for c in ob.data.vertices]
+        world = [x.matrix_world @ c.co for x in obs for c in x.data.vertices]
         low = min(p.z for p in world)
-        if abs(low) > FLOOR_TOL:
+        if o["hang"] is None and abs(low) > FLOOR_TOL:
             misses.append(f"{ob.name}: lowest vertex {low * 100:.1f} cm from the floor (most 1 cm)")
+        if o["hang"] is not None:
+            top = max(p.z for p in world)
+            if abs(top - o["hang"]) > FLOOR_TOL:
+                misses.append(f"{ob.name}: top {top:.3f} m, should hang from {o['hang']} m")
+            row["top_gap_cm"] = round((o["hang"] - top) * 100, 2)
         out_of = [p for p in world if math.hypot(p.x, p.y) > wall_r(math.atan2(p.x, p.y), max(0, p.z) / H) - WALL_GAP]
         if out_of:
             misses.append(f"{ob.name}: {len(out_of)} vertices within {WALL_GAP * 100:.0f} cm of the wall or past it")
         path = os.path.join(out, f"object_{ob.name}.glb")
         for x in bpy.context.scene.objects:
-            x.select_set(x == ob)
+            x.select_set(x in obs)
         bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_apply=True,
                                   export_image_format="JPEG", export_jpeg_quality=82)
         row["bytes"] = os.path.getsize(path)

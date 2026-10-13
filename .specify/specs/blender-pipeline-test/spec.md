@@ -203,6 +203,24 @@ colour map read the second of two UV sets, so dropping "the extra one" turned it
 both. The chamber build now needs the network the first time a Blendkit object is fetched; after that it
 reads the cache under `/tmp/blender-cloud/assets`.
 
+**J3 result (2026-10-13, waiting on his look):** two of three pass on the number, and his eye decides the rest.
+His three ChatGPT pictures (`pictures/j3_mushroom.jpg`, `j3_crystal.jpg`, `j3_root.jpg`, from the J3 vibe interview)
+are three `obj(...)` lines in `chamber.py` with no code of their own. Mushrooms 0.894, amber crystals 0.855, root
+knot 0.819 (below 0.85, as the brief expected for its fine tendrils). What it took, all in `from_picture.py`:
+- `--flat` (`picture(..., flat=True)`): on a flat plain background the old Otsu cut dropped the pale parts (the
+  lilac stems and caps), so the mushroom traced only its moss bed. The new cut takes anything a few times the edge's
+  own noise away from the grey. The kit's dressing reads as before (R2 and P1 pass).
+- Mode `mushrooms`: each cap is a piece of the strongest colour, read square to its own lean and lathed, with gills
+  under the rim; stems and bed are inflated; three parts, three materials (violet caps, pale stems, stone bed).
+- Mode `roots`: the outline thinned to centre lines, a round tube along each, as thick as the picture is wide, so
+  tendrils stay tendrils. The thick trunk criss-crosses into folds; inflating it instead scored 0.732 and lost the
+  look, so tubes stand.
+- `obj(..., hang=4.85)` hangs a piece from the roof; a picture source with parts takes one material per part.
+Seen on the sheet (`/mnt/project-files/3d-build/j3-result-2026-10-13/j3-sheet.png`): the crystals read as crystals
+but with five big shards where the picture has about ten (the P4 gap again); the mushroom caps read, the stems fuse
+into one pale mass; the root's tendrils read, its trunk is crumpled rather than twisted, with no green glow. Chamber
+849 KB of the 3 MB budget. Test J3 (`test_bpy.py`) checks the number half; J2 now accepts a hung piece.
+
 **Start from root-game.** Wendell's steer on `bpt-skinned-garments` (2026-10-13): "Use as much as we can from the
 root game for this as we’ve already done many garment tests there". So J5's thread begins by listing what root-game
 already has (`wendell-britt/root-game`, call sheet `root.md`): its garment shapes (robe, sleeves, skirt), the clothes'

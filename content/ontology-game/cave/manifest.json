@@ -128,11 +128,11 @@
       "id": "cave.pictures",
       "file": "pictures/",
       "kind": "concept pictures",
-      "source": "pictures/draw_standins.py (stone_spire, glow_cap, root_curl, offering_bowl: stand-ins drawn in code, own work); crystal_cluster.jpg: Wendell's ChatGPT concept picture, reference only",
+      "source": "pictures/draw_standins.py (stone_spire, glow_cap, root_curl, offering_bowl: stand-ins drawn in code, own work); crystal_cluster.jpg: Wendell's ChatGPT concept picture, reference only; j3_mushroom.jpg, j3_crystal.jpg, j3_root.jpg: Wendell's ChatGPT concept pictures for J3 (Drive inbox, prompts in the J3 vibe interview, 2026-10-13), reference only, resized to 640 px",
       "licence": "own work",
       "status": "built",
       "ships": false,
-      "bytes": 272718
+      "bytes": 517431
     },
     {
       "id": "cave.spots",
@@ -222,6 +222,62 @@
       "height_m": 0.22,
       "bytes": 5164,
       "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.mushrooms.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "cave/objects.py from pictures/j3_mushroom.jpg (mushrooms, tools/blender-cloud/from_picture.py)",
+      "licence": "own work",
+      "outline_match": 0.894,
+      "budget_bytes": 120000,
+      "faces": 1735,
+      "at": [
+        -4.1,
+        1.6
+      ],
+      "height_m": 0.9,
+      "bytes": 109728,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.amber.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "cave/objects.py from pictures/j3_crystal.jpg (crystals, tools/blender-cloud/from_picture.py)",
+      "licence": "own work",
+      "outline_match": 0.855,
+      "budget_bytes": 100000,
+      "faces": 401,
+      "at": [
+        3.2,
+        -4.8
+      ],
+      "height_m": 1.1,
+      "bytes": 90172,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.rootknot.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "cave/objects.py from pictures/j3_root.jpg (roots, tools/blender-cloud/from_picture.py)",
+      "licence": "own work",
+      "outline_match": 0.819,
+      "budget_bytes": 110000,
+      "faces": 2267,
+      "at": [
+        -1.6,
+        4.0
+      ],
+      "height_m": 2.0,
+      "hangs_from_m": 4.85,
+      "top_gap_cm": 0.0,
+      "bytes": 91704,
+      "lowest_cm": 285.0,
       "status": "built"
     },
     {

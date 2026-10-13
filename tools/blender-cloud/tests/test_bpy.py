@@ -1,4 +1,4 @@
-"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2 and J2b. Run under the bpy venv (README); each build runs as a
+"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2, J3 and J2b. Run under the bpy venv (README); each build runs as a
 subprocess of that same Python, in a copy of the repo under $W, so the checkout is never written.
 
 usage: /home/user/blenv/bin/python tools/blender-cloud/tests/test_bpy.py [R2,W1,...]
@@ -428,12 +428,32 @@ def j2():
           f"want one object from each source (Blendkit, picture, script); got {[row['source'] for row in rows]}")
     manifest = {a["id"]: a for a in json.loads((root / "content/ontology-game/cave/manifest.json").read_text())["assets"]}
     for row in rows:
-        check(abs(row["lowest_cm"]) <= 1, f"{row['id']} stands {row['lowest_cm']} cm off the floor")
+        if "hangs_from_m" in row:  # a root hung from the roof: its top, not its foot, is where it is placed
+            check(abs(row["top_gap_cm"]) <= 1, f"{row['id']} hangs {row['top_gap_cm']} cm below its roof point")
+        else:
+            check(abs(row["lowest_cm"]) <= 1, f"{row['id']} stands {row['lowest_cm']} cm off the floor")
         check(row["bytes"] <= row["budget_bytes"], f"{row['id']} is {row['bytes']} bytes, budget {row['budget_bytes']}")
         check(row["licence"] in ("CC0", "own work"), f"{row['id']} licence {row['licence']}")
         m = manifest.get(row["id"])
         check(m and m["bytes"] == row["bytes"] and m["source"] and m["budget_bytes"], f"{row['id']}: no manifest row")
+    _chamber_rows[:] = rows
     return ", ".join(f"{row['id']} {row['bytes'] // 1024} KB" for row in rows) + f"; {secs:.0f} s"
+
+
+_chamber_rows = []
+
+
+@test("J3")
+def j3():
+    """His concept pictures (pictures/j3_*.jpg) became placed pieces with no code of their own: two of the three
+    trace at 0.85 or better. The other half of the kill line is his yes on the sheet (E1), never the score alone."""
+    if not _chamber_rows:
+        raise Skip("needs J2's chamber build")
+    rows = [r for r in _chamber_rows if "pictures/j3_" in r["source"]]
+    check(len(rows) == 3, f"want the three J3 pictures placed; got {[r['id'] for r in rows]}")
+    passed = [r for r in rows if r["outline_match"] >= 0.85]
+    check(len(passed) >= 2, "outline match: " + ", ".join(f"{r['id']} {r['outline_match']}" for r in rows))
+    return ", ".join(f"{r['id']} {r['outline_match']}" for r in rows)
 
 
 @test("J2b")

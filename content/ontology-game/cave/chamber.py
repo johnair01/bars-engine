@@ -118,6 +118,9 @@ M_CRYSTAL = mat("crystal", "#8f84ff", 0.25, glow=2.25)
 M_ROOT = mat("root", "#4a3426", 0.9)
 M_ARCH = mat("arch", "#fff1b0", 0.8, glow=5)
 M_CLOTH = mat("cloth", "#6e2f2a", 0.95)
+M_CAP = mat("cap", "#5a3fd6", 0.6, glow=0.7)  # J3: tightness glows cold violet
+M_STEM = mat("stem", "#a994ea", 0.7, glow=0.2)
+M_AMBER = mat("amber", "#e0861a", 0.25, glow=0.9)  # J3: tension's sharp amber
 
 
 def add(name, mesh, material):
@@ -200,11 +203,16 @@ place("crystals.1", "crystal_cluster", M_CRYSTAL, (5.11, -2.38, 0.00), (0, 0, -1
 place("crystals.1", "crystal_cluster_bed", M_ROCK, (5.11, -2.38, 0.00), (0, 0, -115), (2.20, 2.20, 2.20))
 
 # ---- objects (J2): name, source, (x, y) on the floor, turn (degrees), height (metres), byte budget, face budget,
-# material (None keeps the source's own). Sources: blenderkit(query, index, id), picture(file, mode), script(builder).
+# material (None keeps the source's own; a list, one per part, for a picture mode that makes parts). Sources:
+# blenderkit(query, index, id), picture(file, mode), script(builder). hang=z hangs the object with its top at z.
 OBJECTS = []
 obj("boulder.1", blenderkit("boulder", 0, "eff99517-c257-4525-9fe3-41bf2e367197"), (-3.20, -4.60), 30, 0.90, 120_000, 1200, None, OBJECTS)
 obj("bowl.1", picture("offering_bowl.jpg", "lathe"), (0.70, -3.40), 0, 0.30, 60_000, 400, M_STONE, OBJECTS)
 obj("cushion.1", script(cushion), (-0.80, -3.50), 0, 0.22, 20_000, 300, M_CLOTH, OBJECTS)
+# J3: his concept pictures (pictures/j3_*.jpg), traced with no code of their own. Parts take a material each.
+obj("mushrooms.1", picture("j3_mushroom.jpg", "mushrooms", flat=True), (-4.10, 1.60), 20, 0.90, 120_000, 0, [M_CAP, M_STEM, M_STONE], OBJECTS)
+obj("amber.1", picture("j3_crystal.jpg", "crystals", flat=True), (3.20, -4.80), -30, 1.10, 100_000, 0, [M_AMBER, M_ROCK], OBJECTS)
+obj("rootknot.1", picture("j3_root.jpg", "roots", faces=2400, flat=True), (-1.60, 4.00), 10, 2.00, 110_000, 0, M_ROOT, OBJECTS, hang=4.85)
 
 # ---- bake each textured surface: one JPEG per piece and texture ----
 sc.render.engine = "CYCLES"  # Workbench and EEVEE need a GPU; the cloud has none
