@@ -32,6 +32,8 @@ before publishing.** The orientation and scale of a new asset are found by eye: 
 | `scene.py` | Import the asset, decimate to a triangle budget, cap textures, build the six-box figure with a 7-bone rig and a 48-frame walk, render, export, report. |
 | `viewer_template.html`, `build_viewer.py` | Build the page. Refuses any model that is not CC0. |
 | `from_picture.py` | Build a model from one front-view picture (lathe or inflate), score its outline against the picture, render it. |
+| `procgen.py` | Roots and mushrooms from numbers: forking roots, leaning mushrooms, clumps, mats and colonies. Pure Python. |
+| `detail.py` | The detail pass on the cave's grown pieces: each grown at its face budget (no decimation), cap rims kept sharp, a grey shade and baked shadow per vertex (`COLOR_0`). `--counts` needs no `bpy`. |
 
 ## The six problems, and what each became
 
