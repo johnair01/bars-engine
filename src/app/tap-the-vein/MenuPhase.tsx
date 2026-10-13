@@ -134,6 +134,15 @@ export function MenuPhase({ onDone }: { onDone: () => void }) {
                 {copied ? 'Copied' : 'Copy the sealed menu'}
               </button>
             )}
+            <a
+              href="https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho#morning"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center"
+              style={{ marginTop: 8, minHeight: 44, borderRadius: 12, boxShadow: 'inset 0 0 0 1px var(--bars-line)', fontFamily: mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bars-text-secondary)' }}
+            >
+              Open the Council Board
+            </a>
           </>
         )}
         {/* Shown whenever the menu loads, sealed or not and with or without kept lines: Wendell (2026-10-12) reached
