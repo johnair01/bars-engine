@@ -561,6 +561,9 @@
   // Fog of war (Wendell, 2026-10-13: "You can't see into the full cave. The avaiable lighting centers around the character and
   // any spirits that are following them"). The figure carries the light: it reaches so far and falls off, the sky light is a
   // trace, and the far cave sinks into darkened fog. Glowing things (caps, crystals, markers, the element) still show.
+  // Looking with the thumb: how far a pixel of drag tilts, how far it can tilt (pushed up, then pulled down), how long the
+  // thumb rests before the look eases back behind the figure (ms), and how close to the roof the camera may rise (choices).
+  var LOOK = { pitchPerPx: 0.004, pitch: [-1.3, 0.6], settle: 600, roof: 1.75 };
   var LAMP = { reach: 16, decay: 1.6, above: 1.9, ambient: 0.22, dim: 0.35, fog: 1.6 };
   // Numbness is hardly a cave: its walls are lost in the dark, the floor is faint, and only glowing things hang in the black.
   function darken(shape, rock, dressing) {
@@ -1249,19 +1252,23 @@
     }
 
     // ---- input: hold to walk, drag to look, tap an object -------------------------------------
+    // One touch does both (Wendell, 2026-10-13: "For navigation one needs to be able to look walk and pan in the same touch.
+    // One keeps walking even as they drag to move the camera. Should follow touch rules so dragging down moves the camera down
+    // and pushing up moves the camera up (and has it looking down on the character)"). A drag no longer stops the walk; the
+    // look eases back behind the figure only once the thumb has rested a moment (LOOK.settle).
     var ray = new THREE.Raycaster(), drag = null, dom = renderer.domElement;
     holdArea(dom);
     dom.addEventListener("pointerdown", function (e) {
       try { dom.setPointerCapture(e.pointerId); } catch (x) {}
-      drag = { x: e.clientX, y: e.clientY, moved: 0, t: Date.now() }; state.held = true;
+      drag = { x: e.clientX, y: e.clientY, moved: 0, t: Date.now(), last: 0 }; state.held = true;
     });
     dom.addEventListener("pointermove", function (e) {
       if (!drag) return;
       var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
       if (drag.moved > 12) {
-        state.held = false;
+        drag.last = Date.now();
         state.look.yaw = clamp(state.look.yaw - dx * 0.006, -1.5, 1.5);
-        state.look.pitch = clamp(state.look.pitch + dy * 0.004, -0.5, 0.6);
+        state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx, LOOK.pitch[0], LOOK.pitch[1]);
       }
     });
     function lift() { state.held = false; drag = null; }
@@ -2215,7 +2222,7 @@
         }
         if (sit) sitFrame(dt, nowMs, route, wk, h);
         sitBtn.disabled = !canSit();
-        if (state.held) state.look.yaw *= 1 - Math.min(1, dt * 1.5);
+        if (state.held && (!drag || Date.now() - drag.last > LOOK.settle)) state.look.yaw *= 1 - Math.min(1, dt * 1.5);
         // camera: behind on the path, and a little above; on a branch's first steps it sits straight behind the figure
         var cbx, cbz, cby;
         var frT = state.stack[state.stack.length - 1], back = route.kind === "face" ? 3.6 : CAM_BACK; // a face's tight loop keeps the camera closer
@@ -2224,7 +2231,10 @@
         var ry = state.look.yaw; tmp.set(cbx - a.x, 0, cbz - a.z);
         var cx = a.x + tmp.x * Math.cos(ry) + tmp.z * Math.sin(ry), cz = a.z - tmp.x * Math.sin(ry) + tmp.z * Math.cos(ry);
         // the camera stays under the roof of the tunnel where it is, so a ramp never lifts it out
-        var want = new THREE.Vector3(cx, Math.min(Math.max(cby, a.y) - h * 0.92 + CAM_UP, cby - h * 0.92 + 5) - state.look.pitch * 2.6, cz), aim = new THREE.Vector3(a.x + a.fx * 3.4, fl + 2.2, a.z + a.fz * 3.4);
+        // pitch below 0 is the thumb pushed up: the camera rises toward the roof and looks down on the figure
+        var pu = Math.max(0, -state.look.pitch / -LOOK.pitch[0]), cy0 = Math.min(Math.max(cby, a.y) - h * 0.92 + CAM_UP, cby - h * 0.92 + 5);
+        var want = new THREE.Vector3(cx, Math.min(cy0 - state.look.pitch * 2.6, fl + h * LOOK.roof), cz);
+        var aim = new THREE.Vector3(a.x + a.fx * 3.4 * (1 - pu), fl + 2.2 - 1.2 * pu, a.z + a.fz * 3.4 * (1 - pu));
         if (stCam) { want.copy(stCam.pos); aim.copy(stCam.aim); }
         if (state.rise) { want.y = state.rise.y0 + 16 * state.rise.k; aim.set(a.x + a.fx * 6, state.rise.y0 + 6 + 20 * state.rise.k, a.z + a.fz * 6); }
         if (snapCam) { camPos.copy(want); lookAt.copy(aim); snapCam = false; }

@@ -246,6 +246,17 @@ ok(!(await C(() => window.__oagCave.modal())).open && (await C(() => window.__oa
 const yaw0 = await state('s.look.yaw');
 await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(120, 600, { steps: 6 }); await page.mouse.up();
 ok(Math.abs((await state('s.look.yaw')) - yaw0) > 0.2, 'dragging looks around');
+// One touch walks and looks (Wendell, 2026-10-13): a drag keeps the hold, and pushing up lifts the camera to look down.
+const above0 = (await C(() => window.__oagCave.camInside())).above;
+await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(150, 460, { steps: 8 });
+const heldWhileDragging = await state('s.held');
+await page.waitForTimeout(900);
+const above1 = (await C(() => window.__oagCave.camInside())).above, pitchUp = await state('s.look.pitch');
+await page.mouse.up();
+ok(heldWhileDragging, 'dragging to look keeps the thumb walking');
+ok(pitchUp < 0 && above1 > above0 + 0.5, `pushing up lifts the camera to look down on the figure (${above0.toFixed(1)} to ${above1.toFixed(1)} above the floor)`);
+await page.mouse.move(195, 460); await page.mouse.down(); await page.mouse.move(195, 640, { steps: 8 }); await page.mouse.up();
+ok((await state('s.look.pitch')) > pitchUp, 'dragging down brings the camera back down');
 await page.locator('[data-cave-pane]').click();
 await page.waitForTimeout(400);
 ok((await C(() => window.__oagCave.modal())).open, 'tapping the pane opens the modal again');
