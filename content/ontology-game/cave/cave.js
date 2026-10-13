@@ -143,6 +143,72 @@
   var FIG = 14; // chamber units per metre of the figure, for the paths that join two places
   // Game.jsx DAEMON_WORKS_FOR, line 1236.
   var DAEMON_WORKS_FOR = "You, the Player. Every daemon is there to protect you, and to work for your enjoyment.";
+  // Meeting a daemon the Big Mind way (board merge-layout, 13 October 2026: the Big Mind cave's chambers become this cave's
+  // daemon stops). Ask its permission to speak with it, step into its place, answer its questions as it, and ask a voice that
+  // is secretly speaking to step aside and wait for its own turn. The questions follow the Big Mind cave's (bigmind.js VOICES):
+  // its job, what it protects you from, how it is thanked. The Protector's cards are the workshop group's answers, from the Big
+  // Mind cave; the other six daemons' cards are written from their jobs above (a choice). A card with a second entry is an
+  // answer another part would give, so picking it brings that part out from behind the daemon (bm-dismiss-step-aside).
+  var MEET_Q = [
+    { id: "job", ask: "What is your job?" },
+    { id: "from", ask: "What do you protect me from?", multi: true },
+    { id: "thanks", ask: "How are you thanked for it?" },
+  ];
+  var MEET_CARDS = {
+    "protector": {
+      job: [["To protect."], ["To keep you safe."], ["To keep watch."], ["It's trying to keep me safe.", "ideas"], ["To keep everything in hand.", "controller"]],
+      from: [["Attack."], ["Danger, from anywhere."], ["Pain."], ["Shame."], ["Looking bad."], ["Risk."], ["Uncertainty."], ["Loss."], ["Losing control."], ["Other people, even loved ones."], ["Itself."], ["I'd fix whatever is hurting you.", "fixer"]],
+      thanks: [["I'm not."], ["Hardly ever."], ["You call me a prison."], ["It's exhausting."], ["I doubt anyone could thank me enough.", "skeptic"], ["It does its best, poor thing.", "ideas"]],
+    },
+    "controller": {
+      job: [["To set the standard."], ["To keep things in order."], ["To make sure it's done right."], ["To decide what happens next."], ["To keep every danger out.", "protector"], ["It just wants things to go well.", "ideas"]],
+      from: [["Mess."], ["Mistakes."], ["Being caught unprepared."], ["Chaos."], ["Falling short."], ["Other people's standards."], ["I'd repair whatever goes wrong.", "fixer"]],
+      thanks: [["When it goes right, nobody notices."], ["I'm called rigid."], ["Never enough."], ["Nothing is ever good enough to thank.", "skeptic"]],
+    },
+    "skeptic": {
+      job: [["To doubt."], ["To test what's true."], ["To ask whether it holds up."], ["To keep you from being fooled."], ["It's just being careful.", "ideas"], ["To keep you safe from harm.", "protector"]],
+      from: [["Being fooled."], ["False hope."], ["Looking naive."], ["Promises that don't hold."], ["Wasting yourself on what won't work."], ["I'd make it work properly myself.", "fixer"]],
+      thanks: [["I'm called negative."], ["Hardly."], ["Only when I'm proven right."], ["Nobody ever feels sorry for me.", "victim"]],
+    },
+    "fixer": {
+      job: [["To fix things."], ["To repair what's broken."], ["To hold things in place."], ["To make it better."], ["To set the standard for how it should be.", "controller"], ["It wants to help.", "ideas"]],
+      from: [["Things staying broken."], ["Feeling helpless."], ["It getting worse."], ["Being useless."], ["I doubt it can be fixed at all.", "skeptic"]],
+      thanks: [["When it's fixed, you forget me."], ["I'm told to stop meddling."], ["There's always another thing."], ["I'm the one who's broken.", "damaged-self"]],
+    },
+    "victim": {
+      job: [["To get sympathy."], ["To tell what happened to us."], ["To be seen hurting."], ["To get help."], ["It just wants to be heard.", "ideas"], ["To take the hit so you don't have to.", "damaged-self"]],
+      from: [["Being blamed."], ["Being alone with it."], ["Being ignored."], ["Having to act before you're ready."], ["I'd keep every danger out.", "protector"]],
+      thanks: [["People get tired of my stories."], ["I'm called dramatic."], ["Sometimes someone listens."], ["I doubt anyone really cares.", "skeptic"]],
+    },
+    "damaged-self": {
+      job: [["To take the damage."], ["To absorb the hit."], ["To carry what hurts."], ["To be the last resort."], ["It's broken, I think.", "ideas"], ["To fix the crack myself.", "fixer"]],
+      from: [["The full force of the blow."], ["Falling apart."], ["What can't be carried."], ["I'd stop it ever getting close.", "protector"]],
+      thanks: [["Nobody sees me."], ["I'm treated as the problem."], ["I'm hidden away."], ["Poor me, nobody ever helps.", "victim"]],
+    },
+    "emotional-body": {
+      job: [["To feel the signal."], ["To make meaning from it."], ["To turn feeling into something you can use."], ["To let it move through."], ["It's just being emotional.", "ideas"], ["To keep it all under control.", "controller"]],
+      from: [["Going numb."], ["Missing what matters."], ["Signals that pile up unfelt."], ["I'd repair the feeling so it stops.", "fixer"]],
+      thanks: [["I'm called too much."], ["I'm told to calm down."], ["Sometimes you listen."], ["I doubt feelings tell you anything.", "skeptic"]],
+    },
+  };
+  // Who else might be speaking, and how the guide names the tell (bigmind.js TRANSLATORS, widened to all seven daemons).
+  var MEET_TELL = {
+    ideas: "talked about it instead of speaking as it", protector: "took up the Protector's job of keeping you safe",
+    controller: "took up the Controller's job of setting the standard", skeptic: "doubted, which is the Skeptic's job",
+    fixer: "took up the Fixer's job of repairing things", victim: "told it as a story for sympathy, which is the Victim's way",
+    "damaged-self": "took the hit, which is the Damaged Self's job", "emotional-body": "felt it through for its meaning, which is the Emotional Body's job",
+  };
+  var MEET_OTHERS = [["ideas", "Your own ideas", "", 0x9a9aa8, ""], ["unknown", "Not sure", "", 0x6a6a74, ""]];
+  // An open line is heard for the same tells, with a plain word list (bigmind.js heard): a miss is cheap, and the player can
+  // always say it doesn't sound like the daemon.
+  function meetHeard(text, self) {
+    var t = " " + String(text || "").toLowerCase().replace(/[’]/g, "'") + " ", out = null;
+    if (/^ (it|he|she|they)\b/.test(t) || /\bit('s| is| does| wants| tries| keeps| has)\b/.test(t) || /\b(i think|maybe|perhaps|probably|i guess)\b/.test(t)) out = "ideas";
+    else if (/\b(fix|fixing|repair|solve|heal|make it better|sort it out)\b/.test(t)) out = "fixer";
+    else if (/\b(in charge|keep control|take control|manage|managing|keep order|the standard|in hand)\b/.test(t) && !/\b(lose|losing|lost|out of) control\b/.test(t)) out = "controller";
+    else if (/\b(doubt|don't believe|pointless|no point|silly)\b/.test(t) && !/self-doubt|self doubt/.test(t)) out = "skeptic";
+    return out === self ? null : out;
+  }
 
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -1876,10 +1942,24 @@
           body.push(P("A daemon stands in the way. Which one is it?"));
           body.push(choice(DAEMONS.map(function (x) { return [x[0], x[1]]; }), null, function (o) { meet(blk, o[0]); }));
           go.disabled = true;
+        } else if (!blk.met && blk.bm) {
+          title = meetCard(blk, d, body); go.disabled = true;
         } else {
           body.push(P(d[1] + "'s job: " + d[2], { "data-cave-daemon-job": "" }));
           body.push(P("Who it works for: " + DAEMON_WORKS_FOR, { "data-cave-daemon-for": "" }));
-          if (!blk.stepAside) {
+          if (!blk.met) {
+            // Met the Big Mind way (board merge-layout): its permission first. "Not now" is a full answer; the daemon still holds the
+            // way and is asked to step aside, as before (cave-daemon-wall), so nothing here becomes a skip.
+            body.push(P("May I speak with " + lowerName(d[1]) + "?", { "data-cave-bm-ask": "" }));
+            body.push(P("Ask it first. It can say no, and that is an answer too."));
+            body.push(row([
+              btn("It says yes", { "data-cave-bm-speak": "yes" }, function () { blk.bm = { phase: "q", n: 0, picked: [], heard: {}, seat: true, draft: "", waiting: [] }; placeCard(blk); }),
+              btn("Not now", { "data-cave-bm-speak": "not-now" }, function () { blk.met = "declined"; placeCard(blk); }, true),
+            ]));
+            go.disabled = true;
+          } else if (!blk.stepAside) {
+            if (blk.met === "declined" && !blk.dug) body.push(P(d[1] + " would rather not speak yet.", { "data-cave-met": "declined" }));
+            if (blk.met === "spoken" && !blk.dug) body.push(P("You stood in its place and spoke as it. It has been heard.", { "data-cave-met": "spoken" }));
             if (blk.dug) body.push(P("You worked what it was holding.", { "data-cave-dug": "" }));
             body.push(P(blk.dug ? "Will it step aside now?" : "Knowing that, will it step aside?"));
             body.push(row([
@@ -2192,6 +2272,98 @@
         ]));
         } }, body);
     }
+    // ---- meeting a daemon the Big Mind way (board merge-layout) --------------------------------------------------------
+    // blk.bm.phase: q (a question, answered as the daemon from its place), secret (another voice spoke), thank (it is asked to
+    // wait), out (the guide thanks the daemon), done. blk.met: "spoken" or "declined" once the meeting is over. The words stay
+    // on this page and are not saved, like the 3-2-1's.
+    function lowerName(n) { return n.replace(/^The /, "the "); }
+    function voiceRow(id) { return lookup(DAEMONS, id) || lookup(MEET_OTHERS, id); }
+    function meetCard(blk, d, body) {
+      var m = blk.bm, nm = lowerName(d[1]);
+      var leave = btn("Step back out", { "data-cave-bm-leave": "" }, function () { meetDone(blk); }, true);
+      if (m.phase === "secret") {
+        var why = m.tell === "felt" ? "did not feel like " + nm + " to you" : MEET_TELL[m.tell];
+        body.push(P("Wait. That answer " + why + ". Someone else has come out behind " + nm + ".", { "data-cave-bm-secret": m.tell }));
+        body.push(P("Who was speaking just then?"));
+        body.push(el("div", { class: "oagc-row" }, DAEMONS.filter(function (x) { return x[0] !== blk.daemon; }).concat(MEET_OTHERS).map(function (x) {
+          return btn(x[1], { "data-cave-bm-name": x[0] }, function () { m.who = x[0]; m.phase = "thank"; waiterOut(blk, x[0]); placeCard(blk); }, true);
+        })));
+        return "Someone else spoke";
+      }
+      if (m.phase === "thank") {
+        var w = voiceRow(m.who), wn = m.who === "ideas" ? "your own ideas" : m.who === "unknown" ? "the voice you don't know yet" : lowerName(w[1]);
+        body.push(P("Thank " + wn + " for speaking up, and ask it to wait for its own turn. Nothing it said is lost.", { "data-cave-bm-thankask": m.who }));
+        body.push(row([btn("Thank you. Please wait; you'll be heard later.", { "data-cave-bm-thank": "" }, function () {
+          if (m.waiting.indexOf(m.who) < 0) m.waiting.push(m.who);
+          waiterAside(blk); m.phase = "q"; m.lead = "Let me speak to " + nm + " again."; m.picked = []; placeCard(blk);
+        })]));
+        return "Someone else spoke";
+      }
+      if (m.phase === "out") {
+        var said = [];
+        MEET_Q.forEach(function (q) { (m.heard[q.id] || []).forEach(function (l) { said.push(l); }); });
+        if (said.length) body.push(el("div", { "data-cave-bm-heard": String(said.length) }, [P(d[1] + " said:")].concat(said.map(function (l) { return P("“" + l + "”", { class: "oagc-note" }); }))));
+        body.push(P("Thank you, " + d[1].replace(/^The /, "") + ". Every voice has a right to be heard, and you have been. I'm stepping back out to my own place now, and you have your post again.", { "data-cave-bm-thanks": "" }));
+        body.push(row([btn("Step back out", { "data-cave-bm-out": "" }, function () { meetDone(blk); })]));
+        return d[1];
+      }
+      var q = MEET_Q[m.n], cards = ((MEET_CARDS[blk.daemon] || {})[q.id] || []).slice();
+      // What it protects you from may be what you carry in (bms-protects-from): the spirits' names are cards too.
+      if (q.id === "from") spirits.forEach(function (o) { if (o.name) cards.push([o.name + "."]); });
+      body.push(P("Speaking as " + d[1] + " · " + (m.n + 1) + " of " + MEET_Q.length, { class: "oagc-note", "data-cave-bm-step": q.id }));
+      if (m.seat) body.push(P("You step into " + nm + "'s place. It steps back to where you stood, and you look back the way you came, the way it keeps watch.", { "data-cave-bm-seat": "" }));
+      if (m.lead) body.push(P(m.lead));
+      body.push(P(q.ask + " Answer as " + nm + ".", { "data-cave-bm-q": q.id }));
+      function answer(lines, out) {
+        if (out && out !== blk.daemon) { m.phase = "secret"; m.tell = out; m.draft = ""; placeCard(blk); return; }
+        m.heard[q.id] = lines; nextQ();
+      }
+      function nextQ() { m.picked = []; m.lead = null; m.seat = false; m.draft = ""; m.n++; if (m.n >= MEET_Q.length) m.phase = "out"; placeCard(blk); }
+      function firstOut(cs) { for (var i = 0; i < cs.length; i++) if (cs[i][1]) return cs[i][1]; return null; }
+      body.push(el("div", { class: "oagc-row" }, cards.map(function (c, ci) {
+        var on = m.picked.indexOf(c[0]) >= 0;
+        return el("button", { class: on ? "" : "alt", "data-cave-bm-card": String(ci), "aria-pressed": String(on), text: c[0], onclick: function () {
+          if (!q.multi) return answer([c[0]], c[1] || null);
+          var i = m.picked.indexOf(c[0]); if (i >= 0) m.picked.splice(i, 1); else m.picked.push(c[0]);
+          if (c[1] && i < 0) return answer(m.picked.slice(), c[1]);
+          placeCard(blk);
+        } });
+      })));
+      var input = el("input", { type: "text", "data-cave-bm-line": "", placeholder: "Or in its own words", maxlength: "200", enterkeyhint: "done", "aria-label": q.ask });
+      input.value = m.draft || "";
+      input.addEventListener("input", function () { m.draft = input.value; });
+      function say() { var t = input.value.trim(); if (!t) return; var picked = cards.filter(function (c) { return m.picked.indexOf(c[0]) >= 0; }); answer(m.picked.concat([t]), firstOut(picked) || meetHeard(t, blk.daemon)); }
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); say(); } });
+      body.push(el("div", { class: "oagc-compose" }, [input, el("button", { "data-cave-bm-say": "", "aria-label": "Say it", text: "↑", onclick: say })]));
+      var kids = [];
+      if (q.multi) { var done = btn("That's all of it", { "data-cave-bm-done": "" }, function () { answer(m.picked.slice(), null); }); done.disabled = !m.picked.length; kids.push(done); }
+      kids.push(btn("This doesn't sound like " + nm, { "data-cave-bm-wrong": "" }, function () { m.phase = "secret"; m.tell = "felt"; placeCard(blk); }, true));
+      kids.push(btn("Sit this one out", { "data-cave-bm-sitout": "" }, nextQ, true));
+      kids.push(leave);
+      body.push(row(kids));
+      return d[1];
+    }
+    // Stepping back out is always allowed (the Big Mind cave's Self button): the player takes their own place again.
+    function meetDone(blk) {
+      var m = blk.bm, any = Object.keys(m.heard).some(function (k) { return m.heard[k] && m.heard[k].length; });
+      m.phase = "done"; blk.met = any ? "spoken" : "declined";
+      placeCard(blk);
+    }
+    // A voice that was secretly speaking comes out behind the daemon, then walks on ahead and waits by the wall for its own turn.
+    function waiterOut(blk, id) {
+      var c = blk.route.ctx, r = blk.route, h = ch.h, vr = voiceRow(id); if (!c || c.daemonS == null || !vr) return;
+      var fig = buildDaemon(THREE, vr, h * 0.8), a = at(r, c.daemonS + 2.6), lat = (r.w || ch.w) * 0.25;
+      fig.position.set(a.x - a.fz * lat, a.y - h * 0.9, a.z + a.fx * lat); fig.rotation.y = yawFacing({ fx: -a.fx, fz: -a.fz });
+      fig.userData.who = id; r.group.add(fig); blk.waiters = (blk.waiters || []).concat([fig]); blk.bm.fig = fig;
+    }
+    function waiterAside(blk) {
+      var fig = blk.bm.fig, c = blk.route.ctx, r = blk.route, h = ch.h; blk.bm.fig = null; if (!fig || !c) return;
+      var k = blk.waiters.length - 1, s0 = c.daemonS + 2.6, s1 = c.daemonS + 10 + 3 * k, lat0 = (r.w || ch.w) * 0.25, lat1 = (r.w || ch.w) * 0.75;
+      tween(2000, function (t) {
+        var e = ease(t), a = at(r, s0 + (s1 - s0) * e), lat = lat0 + (lat1 - lat0) * e;
+        fig.position.set(a.x - a.fz * lat, a.y - h * 0.9, a.z + a.fx * lat); fig.rotation.y = yawFacing(a);
+      }, function () { var a = at(r, s1); fig.rotation.y = yawFacing({ fx: a.fz, fz: -a.fx }); fig.userData.wait = true; });
+    }
     function faceCard(blk) {
       var stp = stopOf(state.walk), f = lookup(FACES, stp.face);
       stat.setAttribute("data-cave-place", "face");
@@ -2283,6 +2455,8 @@
     // The target places for the chat's current step, or null when there is no 3-2-1 being staged. u is how far the player's
     // figure has walked toward the daemon's first place (6 is that place); cd is how far the daemon has walked to the player's.
     function stageTarget(wk, c) {
+      var b = wk && wk.blk, bm = b && !b.met && b.bm; // meeting it the Big Mind way: the player stands in its place, as at Be it
+      if (bm && wk.arrived && c && c.daemonS != null && c.daemonFig && bm.phase !== "done") return { u: 6, cd: 1, flip: 1, cam: "its" };
       var t = t321Of(wk); if (!t || !wk.arrived || !c || c.daemonS == null || !c.daemonFig) return null;
       if (t.paused) return { u: 0, cd: 0, flip: 0, cam: "far" };
       if (t.phase === 2) return { u: 3, cd: 0, flip: 0, cam: t.voice === "it" ? "face-it" : "face-you" };
@@ -2547,6 +2721,7 @@
         // how far the figure turns from the way it faced on the path to face the way in (2026-10-13: never more than 90°)
         turnIn: Math.acos(clamp((b.fx * (r.cross[0].x - b.x) + b.fz * (r.cross[0].z - b.z)) / Math.max(1e-6, Math.hypot(r.cross[0].x - b.x, r.cross[0].z - b.z)), -1, 1)) * 180 / Math.PI };
     };
+    api.meeting = function () { var b = state.walk && state.walk.blk; if (!b) return null; return { met: b.met || null, phase: b.bm ? b.bm.phase : null, n: b.bm ? b.bm.n : null, heard: b.bm ? b.bm.heard : null, waiting: b.bm ? b.bm.waiting.slice() : [], waiters: (b.waiters || []).map(function (f) { return { who: f.userData.who, wait: !!f.userData.wait }; }) }; };
     api.lanterns = function () { return lanternsOn.length; };
     api.elementScreen = function () {
       var c = ctxOf(), v = c.holder.getWorldPosition(new THREE.Vector3()); v.y += 1.4; v.project(camera);
@@ -2581,7 +2756,10 @@
   var WHERE_ROOM = { 3: "You are on your seat, looking at it across the room.", 2: "You are face to face with it.", 1: "You are standing where it stood, and it sits in your seat.", check: "You are face to face with it.", after: "You are back on your seat.", paused: "You stepped back behind your seat." };
   var ROOM_CSS = ".oagr{z-index:950}.oagr .oagc-pane{transform:translate(12px,58px)}.oagr .oagc-pane:after{display:none}" +
     ".oagr-field{display:block;width:100%;box-sizing:border-box;min-height:44px;margin:.35rem 0;padding:0 .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(20,20,40,.9);color:#f4f4fa;font-size:16px}" +
-    ".oagr-note{font-size:.8rem!important;color:#aab0c4}";
+    ".oagr-note{font-size:.8rem!important;color:#aab0c4}" +
+    ".oagr-close{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;max-width:420px;margin:0 auto;max-height:40vh;overflow-y:auto;padding:.7rem .9rem;background:rgba(12,12,28,.9);border:1px solid rgba(255,241,176,.5);border-radius:16px;color:#f4f4fa;touch-action:manipulation}" +
+    ".oagr-close h2{margin:0 0 .3rem;font-size:1.15rem;color:#fff1b0;display:flex;align-items:center;gap:.5rem}.oagr-close p{margin:.25rem 0;font-size:.95rem;line-height:1.35}.oagr-close .oagc-row{margin-top:.5rem}" +
+    ".oagr-dot{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}";
 
   function readRoomTest() { try { return JSON.parse(localStorage.getItem(ROOM_TEST_KEY) || "[]"); } catch (e) { return []; } }
   function keepRoomTest(entry) { try { var all = readRoomTest(); all.push(entry); localStorage.setItem(ROOM_TEST_KEY, JSON.stringify(all)); } catch (e) { /* storage blocked: the room still plays */ } }
@@ -2695,7 +2873,7 @@
       // R.phase is the step's id from ROOM_STEPS, or opening, stays, kept, goes, leaving, gone, checkin, again, end.
       // R.active holds the creatures in the room being worked (up to three); ch is the one the player is working now. Each keeps
       // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
-      var R = { round: 1, phase: "welcome", back: false, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [] };
+      var R = { round: 1, phase: "welcome", back: false, close: null, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [] };
       function newCharge(first, slot) {
         var c = { where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [] };
@@ -2716,7 +2894,9 @@
       var br = { b: 0.5, t0: performance.now() / 1000, exhaling: false };
       var fig = { x: SEAT.x, z: SEAT.z, sit: 1, yaw: Math.PI, clk: 0 };
 
-      function draw() {
+      // A close-up (below) keeps the step's page tucked away until the player goes back to the room, and keeps its card current.
+      function draw() { drawPage(); if (R.close) { closeModal(); pane.style.display = "none"; closeCard(); } }
+      function drawPage() {
         modal.innerHTML = ""; stat.innerHTML = ""; pane.innerHTML = "";
         var pg = page(), kids = pg.kids || [];
         modal.appendChild(el("h2", { text: pg.title }));
@@ -2748,8 +2928,12 @@
       // Which creature is being worked: the player picks, and each keeps its own step.
       function focusRow() {
         return el("div", {}, [el("p", { class: "oagr-note", text: "Working with:" }), el("div", { class: "oagc-row" }, R.active.map(function (c, n) {
-          var b = el("button", { class: c === ch ? "" : "alt", "aria-pressed": String(c === ch), text: labelOf(c), onclick: function () { if (c !== ch) { setFocus(c); draw(); } } });
-          b.setAttribute("data-room-focus", String(n)); return b;
+          // Each part shows the element chosen for it, in its colour (Wendell, 13 October 2026: "Working on a different part
+          // should let me know what elements I've chosen for them").
+          var e = c.element && ELEMENTS.filter(function (x) { return x[0] === c.element || x[1] === c.element; })[0];
+          var b = el("button", { class: c === ch ? "" : "alt", "aria-pressed": String(c === ch), text: labelOf(c) + (e ? " · " + e[1] : ""), onclick: function () { if (c !== ch) { setFocus(c); draw(); } } });
+          if (e) b.style.borderLeft = "6px solid #" + ("00000" + e[3].toString(16)).slice(-6);
+          b.setAttribute("data-room-focus", String(n)); if (e) b.setAttribute("data-room-focus-element", e[1].toLowerCase()); return b;
         }))]);
       }
       // "What else is here?" (Wendell: "This will be the greatest use case for 'what else is here'"): first, is it about one of the
@@ -2956,12 +3140,93 @@
       // ---- breath, calm, look ---------------------------------------------------------------------------------------------
       var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
       stage.appendChild(calmBtn);
-      var lookYaw = 0, drag = null;
+      // One finger turns the view. Two fingers pinch it nearer or farther (Wendell, 13 October 2026: "Let's introduce pinch to
+      // zoom in the wave room"), and the mouse wheel does the same on a computer. A tap on a creature brings it close (below).
+      var lookYaw = 0, drag = null, zoom = 1, ptrs = {}, pinch = null, tap = null, ZOOM_MIN = 0.3, ZOOM_MAX = 1.6;
+      function setZoom(z) { zoom = clamp(z, ZOOM_MIN, ZOOM_MAX); }
+      function spread() { var k = Object.keys(ptrs); return k.length < 2 ? 0 : Math.hypot(ptrs[k[0]].x - ptrs[k[1]].x, ptrs[k[0]].y - ptrs[k[1]].y); }
       if (renderer) {
         var dom = renderer.domElement;
-        dom.addEventListener("pointerdown", function (e) { drag = { x: e.clientX }; });
-        dom.addEventListener("pointermove", function (e) { if (!drag) return; lookYaw = clamp(lookYaw - (e.clientX - drag.x) * 0.005, -0.9, 0.9); drag.x = e.clientX; });
-        ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function () { drag = null; }); });
+        dom.addEventListener("pointerdown", function (e) {
+          ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX }; tap = { x: e.clientX, y: e.clientY, t: performance.now() }; }
+          else { drag = null; tap = null; pinch = { d: spread(), z: zoom }; }
+        });
+        dom.addEventListener("pointermove", function (e) {
+          if (!ptrs[e.pointerId]) return;
+          ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) tap = null;
+          if (pinch) { var d = spread(); if (pinch.d > 0 && d > 0) setZoom(pinch.z * pinch.d / d); return; }
+          if (!drag) return; lookYaw = clamp(lookYaw - (e.clientX - drag.x) * 0.005, -0.9, 0.9); drag.x = e.clientX;
+        });
+        ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function (e) {
+          delete ptrs[e.pointerId];
+          if (n === "pointerup" && tap && performance.now() - tap.t < 600) tapAt(e.clientX, e.clientY);
+          tap = null;
+          var left = Object.keys(ptrs);
+          if (left.length < 2) pinch = null;
+          drag = left.length === 1 ? { x: ptrs[left[0]].x } : null; // the finger still down after a pinch turns the view again
+        }); });
+        dom.addEventListener("wheel", function (e) { e.preventDefault(); setZoom(zoom * Math.exp(e.deltaY * 0.0015)); }, { passive: false });
+      }
+
+      // ---- a creature close up (Wendell, 13 October 2026: "the ability to click on each of the spirits to have them fill the
+      // frame and have more information about it") ----------------------------------------------------------------------------
+      // A tap on a creature in the room (one being worked, or one that stays by the wall) swings the camera round to its front,
+      // close enough that it fills the frame, and a card below says what is known of it: its name, element, texture, where it
+      // is in the body, its step, its charge and glow, the feelings about it, what the player wants and the next move. Back
+      // to the room returns the camera and the page where they were; the pinch and the turn work in the close-up too.
+      var closeBox = el("div", { class: "oagr-close", "data-room-close": "", style: "display:none" }); wrap.appendChild(closeBox);
+      var roomZoom = 1, roomModal = false;
+      function seen() { return R.active.concat(R.kept).filter(function (c, i, a) { return a.indexOf(c) === i && !c.gone && c.fig.visible; }); }
+      function centreOf(c) { var s = c.fig.scale.x; return new THREE.Vector3(c.fig.position.x, c.fig.position.y + 1.2 * s, c.fig.position.z); }
+      // The creature nearest the tap on screen, if the tap lands on or close to it.
+      function tapAt(x, y) {
+        if (!renderer) return;
+        var rc = renderer.domElement.getBoundingClientRect(), best = null, bestK = Infinity;
+        var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+        seen().forEach(function (c) {
+          var p = centreOf(c), e = p.clone().addScaledVector(right, c.fig.scale.x).project(camera); p.project(camera);
+          if (p.z > 1) return; // behind the camera
+          var sx = rc.left + (p.x + 1) / 2 * rc.width, sy = rc.top + (1 - p.y) / 2 * rc.height;
+          var rad = Math.hypot((e.x - p.x) / 2 * rc.width, (e.y - p.y) / 2 * rc.height), d = Math.hypot(x - sx, y - sy);
+          var k = d / (rad * 1.4 + 24); if (k < 1 && k < bestK) { best = c; bestK = k; }
+        });
+        if (best && best !== R.close) closeUp(best);
+      }
+      function closeUp(c) {
+        if (!R.close) { roomZoom = zoom; roomModal = R.modal; }
+        R.close = c; zoom = 1; lookYaw = 0;
+        closeModal(); pane.style.display = "none"; closeCard();
+      }
+      function backToRoom() {
+        if (!R.close) return;
+        R.close = null; zoom = roomZoom; lookYaw = 0; closeBox.style.display = "none"; draw();
+        if (!roomModal) closeModal(); // the page comes back as it was: open, or tucked into the pane
+      }
+      function stepName(c) {
+        var ph = c === ch ? R.phase : c.phase, i = stepIndex(ph);
+        if (R.kept.indexOf(c) >= 0) return "It stays, with a place in the room";
+        if (i >= 0) return words(ROOM_STEPS[i])[1];
+        return { opening: "Coming in through the door", stays: "Talking with you, 3-2-1", goes: "Exhale", leaving: "Leaving on the out-breath", checkin: "Worked through", done: "Worked through" }[ph] || "In the room";
+      }
+      function closeCard() {
+        var c = R.close; if (!c) return;
+        var e = c.element && lookup(ELEMENTS, c.element), t = c.texture && lookup(TEXTURES, c.texture);
+        var hex = "#" + c.fig.userData.want.getHexString(), k = [];
+        k.push(el("h2", {}, [el("span", { class: "oagr-dot", style: "background:" + hex + ";color:" + hex }), el("span", { text: c.name.trim() || "Not named yet", "data-room-close-name": "" })]));
+        k.push(P(e ? "Element: " + e[1] + ", " + e[0].toLowerCase() + ". Its clean up move: " + e[2] + "." : "Element: not known yet.", { "data-room-close-element": "" }));
+        k.push(P("It feels like " + (t ? t[1] : "nothing named yet") + "." + (c.where ? " Where: " + c.where + "." : ""), { "data-room-close-feel": "" }));
+        k.push(P("Step: " + stepName(c) + (c.steady ? ". Validated." : "."), { "data-room-close-step": "" }));
+        k.push(P("Charge " + heatOf(c.t321, c.heat) + " of 10, glowing at " + Math.round(levelOf(c) * 100) + "%" + (c.allowed ? ", allowed to grow " + c.allow.grow + " of 10" : "") + ".", { "data-room-close-charge": "" }));
+        if (c.layers.length) k.push(P("Feelings about it: " + c.layers.map(function (l) { return l.name + (l.element ? " (" + l.element.toLowerCase() + ")" : ""); }).join(", ") + ".", { "data-room-close-layers": "" }));
+        if (c.goal.trim()) k.push(P("What you want: " + c.goal.trim() + (c.push ? ". It pushes " + (c.push === "toward" ? "toward" : "away from") + " it." : "."), { "data-room-close-goal": "" }));
+        if (c.move.trim()) k.push(P("Your next move: " + c.move.trim() + "."));
+        var bs = [];
+        if (c !== ch && R.active.indexOf(c) >= 0 && R.kept.indexOf(c) < 0) bs.push(btn("Work with this one", { "data-room-close-work": "" }, function () { setFocus(c); backToRoom(); }));
+        bs.push(btn("Back to the room", { "data-room-close-back": "" }, backToRoom, bs.length > 0));
+        k.push(row(bs));
+        closeBox.innerHTML = ""; k.forEach(function (n) { closeBox.appendChild(n); }); closeBox.style.display = "";
       }
       function breathStep(nowS) {
         var T = BREATH_S, tm = (((nowS - br.t0) % T) + T) % T, b;
@@ -2996,6 +3261,10 @@
         if (name === "face-it") return { pos: V(HERE.x - 2.8, 3.6, HERE.z - 2.2), aim: V(FACE.x, 0.9, FACE.z) };
         if (name === "its") return { pos: V(HERE.x + 1.6, 3.6, HERE.z - 4.3), aim: V(SEAT.x, 0.6, SEAT.z) };
         if (name === "back") return { pos: V(BACK.x + 0.8, 4.6, BACK.z + 2.3), aim: V(HERE.x, 0.6, HERE.z) };
+        if (name === "close") { // in front of the creature, near enough that it fills the frame above the card
+          var cc = R.close, s = cc.fig.scale.x, mid = centreOf(cc), ry = cc.fig.rotation.y;
+          return { pos: V(mid.x + Math.sin(ry) * 4.4 * s, mid.y + 0.5 * s, mid.z + Math.cos(ry) * 4.4 * s), aim: V(mid.x, mid.y - 0.8 * s, mid.z) };
+        }
         if (inRoom().length > 1) return { pos: V(0.4 + 0.3 * HERE.x, 6.6, 6.6), aim: V(0.6 * HERE.x, 0.2, -2) }; // higher, so all of them are in view, turned to the one worked
         return { pos: V(1.0, 5.4, 7.0), aim: V(0, 0.6, -3) };
       }
@@ -3086,8 +3355,15 @@
         var wk = 1 + 0.015 * (br.b - 0.5); walls.scale.set(wk, 1, wk);
         R.lights.forEach(function (l, n) { l.userData.halo.scale.setScalar(R.calm ? 1 : 1 + 0.12 * Math.sin(now / 500 + n)); });
         // the camera
-        var vw = view(tg.view, 0, 0); R.view = tg.view;
+        if (R.close && (R.close.gone || !R.close.fig.visible)) backToRoom(); // it left the room while close up
+        var vw = view(R.close ? "close" : tg.view, 0, 0); R.view = R.close ? "close" : tg.view;
         if (lookYaw) { var off = vw.pos.clone().sub(vw.aim), c0 = Math.cos(lookYaw), s0 = Math.sin(lookYaw); vw.pos.set(vw.aim.x + off.x * c0 + off.z * s0, vw.pos.y, vw.aim.z - off.x * s0 + off.z * c0); }
+        // Zooming in brings the camera nearer. Zooming out past the step's own view widens the lens instead, since the walls are
+        // close behind the camera: on a phone held upright that is what brings all three creatures into view.
+        if (zoom < 1) vw.pos.sub(vw.aim).multiplyScalar(zoom).add(vw.aim);
+        var fov = zoom > 1 ? 60 + (zoom - 1) * 70 : 60; if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = fov; camera.updateProjectionMatrix(); }
+        var rr = Math.hypot(vw.pos.x, vw.pos.z), RIN = RR - 0.8; if (rr > RIN) { vw.pos.x *= RIN / rr; vw.pos.z *= RIN / rr; } // zoomed out, it stays inside the walls
+        vw.pos.y = clamp(vw.pos.y, 0.4, RH + 1.2);
         if (snap) { camPos.copy(vw.pos); camAim.copy(vw.aim); snap = false; }
         else { var f = 1 - Math.exp(-dt * 2.6); camPos.lerp(vw.pos, f); camAim.lerp(vw.aim, f); }
         camera.position.copy(camPos); camera.lookAt(camAim);
@@ -3108,6 +3384,14 @@
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
+        zoom: function () { return zoom; },
+        close: function () { return R.close ? { name: R.close.name, slot: R.close.slot, kept: R.kept.indexOf(R.close) >= 0 } : null; },
+        // where a creature is on screen (by its index in creatures(), or the n-th kept one with kept true), for a test to tap it
+        screenOf: function (n, kept) {
+          var c = kept ? R.kept[n] : R.active[n]; if (!c || !renderer) return null;
+          var rc = renderer.domElement.getBoundingClientRect(), p = centreOf(c).project(camera);
+          return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height };
+        },
       };
     });
   }

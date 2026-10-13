@@ -535,6 +535,56 @@ walk. Dragging down lowers the camera; pushing up lifts it toward the roof (neve
 figure. The look eases back behind the figure only after the thumb has rested for 0.6 s. **(choice)** the tilt per pixel,
 its range, the rest time and how near the roof the camera may go (`LOOK` in `cave.js`).
 
+## One cave: a daemon stop is met the Big Mind way (13 October 2026)
+
+The board position `merge-layout` stands: the Big Mind cave's chambers become this cave's daemon stops. Wendell picked
+"Both" at 04:26 on 13 October, after walking version 8, so the fold is built.
+
+- **Its permission first.** When the player names the daemon standing in the way, its job and who it works for show, and
+  the guide asks "May I speak with the Protector?" (or whichever daemon it is). It says yes, or Not now.
+- **Not now is an answer, not a skip.** The daemon still holds the way and is asked to step aside, as before
+  (`cave-daemon-wall`): Yes, or Not yet and the wall with its 3-2-1, Work what it holds and Take it home. This is where the
+  Big Mind cave's own decline (the voice steps to the wall and the way opens) gives way to this cave's rule that a daemon
+  is worked with **(choice)**.
+- **Its place.** Yes walks the player's figure into the daemon's place, and the daemon steps back to where the player
+  stood, using the 3-2-1's Be it staging (camera `its`).
+- **Its questions, answered as it.** Three, from the Big Mind cave: its job, what it protects you from (several cards,
+  and the spirits the player carries are cards too, `bms-protects-from`), how it is thanked. Each has cards and an open
+  line in its own words, and each can be sat out. The Protector's cards are the workshop group's answers from the Big Mind
+  cave; the other six daemons' cards are written from their jobs **(choice: the cards)**.
+- **Secretly speaking.** A card that another part would give, an open line that talks about the daemon instead of as it
+  (the same plain word list as the Big Mind cave), or "This doesn't sound like the Protector" brings a figure out behind
+  the daemon. The guide names the tell, the player names who spoke (any of the other six daemons, your own ideas, or not
+  sure), thanks it and asks it to wait. It walks on ahead and waits by the wall, and the daemon is asked again.
+- **Stepping back out.** After the questions the guide says back what the daemon said and thanks it, and the player
+  steps back to their own place. Step back out is there on every page, so the player can take their place back at any
+  time. Then the daemon is asked to step aside, as before. The words stay on the page and are not saved, like the 3-2-1's.
+
+**Not in this build:** the Big Mind page still stands on its own. It carries more for the Protector than a daemon stop
+does yet: the refusal path (what it fears, an assurance, asking again), the W.A.V.E. on its charge, the three turns
+speaking as it, and saving the lines kept. The page opens the Cave of Lessons once those come across.
+
+Tests: `cave-test.mjs` checks the ask, the seat, a card answer, several cards, an out-of-voice card, an open line heard
+as the self's ideas, "This doesn't sound like", the voices waiting by the wall, stepping back out, and Not now.
+
+## Pinch to zoom and a creature close up in the WAVE room (13 October 2026)
+
+Wendell, 13 October 2026: "Let's introduce pinch to zoom in the wave room. Also the ability to click on each of the spirits
+to have them fill the frame and have more information about it."
+
+- **Pinch.** Two fingers spread apart bring the camera nearer to what the step looks at, down to a third of the distance.
+  Pinching them together goes back to the step's own view and then widens the lens, up to about 100 degrees, because
+  the walls are close behind the camera **(choice)**. On a phone held upright the widest view shows all three creatures,
+  where the step's own view can leave the one on the left off screen. The mouse wheel does the same on a computer. One
+  finger still turns the view, and the zoom stays as set until the sitting ends.
+- **A creature close up.** A tap on a creature (one being worked, or one that stays by the wall) swings the camera to
+  its front, close enough that it fills the frame, and a card below it takes the place of the step's page **(choice)**.
+  The card shows its name and colour, element and clean up move, texture, where it is in the body, its step and
+  whether it is validated, its charge and glow, the feelings about it, what the player wants and which way it pushes,
+  and the next move. "Work with this one" picks it, if it is one of the creatures still being worked; "Back to the room"
+  returns the camera, its zoom and the page as they were. Pinch and turn work in the close-up too, and the close-up ends
+  by itself if the creature leaves the room.
+
 **Openings ahead, one at a time, and no gaps (13 October 2026).** Wendell, at the Game masters' gate: "It's showing us
 the entrance and the exit at the same time. We should only see the entrance and it shouldn't generate behind the
 character. The character should not have to rotate more than 90 degrees to access to opening that appears. The

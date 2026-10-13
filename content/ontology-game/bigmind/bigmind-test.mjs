@@ -58,7 +58,10 @@ ok(shut.past < 0.5, 'the way past the voice is gathered shut before it has spoke
 const s0 = (await st()).s;
 await page.evaluate(() => { window.__oagBigMind.state.speed = 6; });
 const box = await page.locator('[data-bm-stage]').boundingBox();
-await page.mouse.move(box.x + 200, box.y + 400); await page.mouse.down(); await page.waitForTimeout(500); await page.mouse.up();
+// Hold until the figure has walked (up to 4 s): frames come slower on a loaded runner, so a fixed 0.5 s hold is not enough.
+await page.mouse.move(box.x + 200, box.y + 400); await page.mouse.down();
+await page.waitForFunction((a) => window.__oagBigMind.state.s > a, s0 + 2, { timeout: 4000 }).catch(() => {});
+await page.mouse.up();
 ok((await st()).s > s0 + 2, 'holding the stage walks the figure along the path');
 
 ok(await holdUntil('meet'), 'walking on reaches the Protector, who blocks the path');
@@ -129,8 +132,7 @@ ok(/To protect\./.test(await page.textContent('[data-bm-modal]')) && /Your job i
 await setCharge(7);
 ok(await waitStep('eased', 3000), 'a lower charge is rewarded: the panel steps away so the chamber can answer');
 ok(/The Protector eases\./.test(await page.textContent('[data-bm-eased]')) && /8 down to 7/.test(await page.textContent('[data-bm-eased]')), 'the easing is named, with the numbers');
-await page.waitForTimeout(120);
-ok(await page.evaluate(() => { const b = window.__oagBigMind.state.easing; return !!b && b.k > 0; }) && await page.evaluate(() => document.querySelector('[data-bm-meter]').classList.contains('eased')), 'the ring, the motes and the meter\'s drain play');
+ok(await page.waitForFunction(() => { const b = window.__oagBigMind.state.easing; return !!b && b.k > 0 && document.querySelector('[data-bm-meter]').classList.contains('eased'); }, null, { timeout: 3000 }).then(() => true, () => false), 'the ring, the motes and the meter\'s drain play');
 await page.screenshot({ path: SHOTS + '/bm-3f-eased.png' });
 ok(await waitStep('q-boss') && /Who do you work for\?/.test(await page.textContent('[data-bm-modal]')), 'who do you work for?');
 await page.click('[data-bm-modal] [data-bm-card]:has-text("The self.")');
@@ -163,8 +165,8 @@ await breathed('[data-bm-wavego="acknowledge"]');
 ok(await waitStep('wave-allow') && await page.locator('[data-bm-wavestop]').count() === 1, 'from Allow on you can stop at the rung you reached');
 ok(await page.locator('[data-bm-waveallow="grow"]').count() === 1 && await page.locator('[data-bm-waveallow="bright"]').count() === 1, 'Allow has the size and brightness sliders');
 await page.fill('[data-bm-waveallow="grow"]', '9');
-await page.waitForTimeout(1500);
-ok(await page.evaluate(() => window.__oagBigMind.wave().B.g.userData.body.scale.x > 1.6), 'it grows as you allow it');
+// It grows frame by frame, so wait on the size, not the clock (a slow runner took longer than 1.5 s).
+ok(await page.waitForFunction(() => window.__oagBigMind.wave().B.g.userData.body.scale.x > 1.6, null, { timeout: 10000 }).then(() => true, () => false), 'it grows as you allow it');
 await page.screenshot({ path: SHOTS + '/bm-3j-wave-allow.png' });
 await page.click('[data-bm-wavestop]');
 ok(await waitStep('wave-validate'), 'stopping on a rung goes on to Validate');
@@ -339,7 +341,9 @@ await page.click('[data-bm-decline]');
 await page.waitForTimeout(2200);
 sv = await save();
 ok(sv.voices.protector.status === 'waiting' && sv.voices.protector.kept.length === 0 && !JSON.stringify(sv).includes('skip'), 'declining: the voice waits and nothing is marked skipped');
-ok((await page.evaluate(() => window.__oagBigMind.openAt(window.__oagBigMind.S.S_GATE + 14))) > 0.9, 'declining opens the way');
+// The gate eases open frame by frame, so a slow runner takes longer than 2.2 s: wait on the gate itself, not the clock.
+const opened = await page.waitForFunction(() => window.__oagBigMind.openAt(window.__oagBigMind.S.S_GATE + 14) > 0.9, null, { timeout: 10000 }).then(() => true, () => false);
+ok(opened, 'declining opens the way');
 await page.screenshot({ path: SHOTS + '/bm-10-declined.png' });
 await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 await page.waitForSelector('[data-bm-mouth]');
