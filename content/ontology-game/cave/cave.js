@@ -380,11 +380,14 @@
   // beside the first, ending on the very spot it left from (playtesters: a side path loops back onto the path it branched
   // from). A side passage ramps down under the cave (drop), swings round a wide loop and climbs back; a face's branch at
   // the gate is a short level loop. In the parent's frame at s: u runs along the path, v out through the wall.
+  // The loop leaves forward and comes back from behind (Wendell, 2026-10-13: the opening "shouldn't generate behind the
+  // character" and the figure "should not have to rotate more than 90 degrees" to reach it), so the way in is ahead and to
+  // the side, and the way back joins the path still walking forward.
   // o = { wb: half-width, g: half the gap between the two openings, W0: the parent's wall, L1: leg length, alpha: how far
   // the legs splay, R: the loop's radius, drop }.
   function layoutBranch(parent, sAt, side, o) {
     var b = at(parent, sAt), nx = -b.fz * side, nz = b.fx * side;
-    function P(u, v, dy) { return { x: b.x + b.fx * u + nx * v, y: b.y + dy, z: b.z + b.fz * u + nz * v }; }
+    function P(u, v, dy) { return { x: b.x - b.fx * u + nx * v, y: b.y + dy, z: b.z - b.fz * u + nz * v }; }
     var sa = Math.sin(o.alpha), ca = Math.cos(o.alpha), ctl = [P(0, 0, 0), P(-o.g * 0.7, o.W0 * 0.5, 0), P(-o.g, o.W0, 0)], i, k;
     var n1 = Math.max(1, Math.round(o.L1 / 2));
     for (i = 1; i <= n1; i++) { k = i / n1; ctl.push(P(-o.g - o.L1 * sa * k, o.W0 + o.L1 * ca * k, -o.drop * k)); }
@@ -398,7 +401,16 @@
     var vOf = function (q) { return (r.X[q] - b.x) * nx + (r.Z[q] - b.z) * nz; }, qa = 0, qb = r.X.length - 1;
     while (qa < r.X.length - 1 && vOf(qa) < o.W0 * 0.92) qa++;
     while (qb > 0 && vOf(qb) < o.W0 * 0.92) qb--;
-    r.sFrom = Math.max(0, r.S[qa] - 0.6); r.sTo = Math.min(r.len, r.S[qb] + 0.6);
+    // The tube itself starts well inside the parent's wall (Wendell, 2026-10-13: "the segments between the tunnels are
+    // leaving dark gaps"). It used to start at the wall, so when the parent breathed out, or its stone bulged, a ring of
+    // nothing showed between the two. Inside the parent its floor lies under the parent's own and its walls stand as the
+    // opening's jambs.
+    var qa2 = qa, qb2 = qb;
+    while (qa2 > 0 && vOf(qa2) > o.W0 * 0.6) qa2--;
+    while (qb2 < r.X.length - 1 && vOf(qb2) > o.W0 * 0.6) qb2++;
+    r.sFrom = r.S[qa2]; r.sTo = r.S[qb2]; r.sIn = Math.max(0, r.S[qa] - 0.6); r.sOut = Math.min(r.len, r.S[qb] + 0.6); // the stretch outside the parent
+    // where the ramp ends and the loop runs level (a face's branch beside a stone must stand on level stone)
+    var qf = 0; while (qf < r.X.length - 1 && r.Y[qf] > b.y - o.drop + 0.05) qf++; r.sLevel = r.S[qf];
     function nearestParentS(q) {
       var best = 1e9, bs = sAt;
       for (var p = 0; p < parent.X.length; p++) {
@@ -407,6 +419,7 @@
       }
       return bs;
     }
+    r.cross = [qa, qb].map(function (q) { return { x: r.X[q], y: r.Y[q], z: r.Z[q] }; }); // where it passes through the wall
     r.holes = [nearestParentS(qa), nearestParentS(qb)].map(function (ps) { return { s0: ps - o.wb * 1.08, s1: ps + o.wb * 1.08, side: side }; });
     r.side = side; r.parent = parent; r.at = sAt; r.drop = o.drop; r.startS = 0;
     return r;
@@ -458,31 +471,72 @@
     geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
     var mesh = new THREE.Mesh(geo, [o.rock.userData.floor || o.rock, o.rock]); mesh.frustumCulled = false;
     var t = { mesh: mesh, rock: o.rock, holes: [], k: -1, dirty: true, n: n, ring: ring, w: o.w, h: o.h };
+    // Where two tunnels meet, each gives way only where the other's inside is (Wendell, 2026-10-13: "the segments between
+    // the tunnels are leaving dark gaps"). A hole with a tube cuts this tube's stone only where all four corners of a face
+    // lie inside that tube; t.within drops this tube's own faces near its ends that lie wholly inside its parent. Faces that
+    // straddle the seam stay on both sides, so the two overlap there and never leave a gap. Both are worked out from the
+    // stone as it stands, and again whenever the breath has moved it (see update).
+    function vin(other, q, thr) { var c = other.contain({ x: pos[q * 3], y: pos[q * 3 + 1], z: pos[q * 3 + 2] }); return !!c && c.ratio < thr; }
     t.index = function () {
-      var floorIdx = [], idx = [];
+      var floorIdx = [], idx = [], shaped = t.k >= 0, memo = {};
+      function quadIn(other, key, thr, a, b, c, d) {
+        if (!shaped || !other || other.k < 0) return false;
+        var m = memo[key] || (memo[key] = {});
+        return [a, b, c, d].every(function (q) { return q in m ? m[q] : (m[q] = vin(other, q, thr)); });
+      }
       for (var i = 0; i < n - 1; i++) for (var j = 0; j < PROF; j++) {
-        var j1 = (j + 1) % PROF, cut = false;
+        var j1 = (j + 1) % PROF, cut = false, a = i * C + j, b = i * C + j + 1, c = (i + 1) * C + j, d = (i + 1) * C + j + 1;
         for (var q = 0; q < t.holes.length && !cut; q++) {
           var H = t.holes[q];
-          cut = ring[i].s >= H.s0 && ring[i + 1].s <= H.s1 && PX[j] * H.side > 0.05 && PX[j1] * H.side > 0.05 && PY[j] > -0.86 && PY[j1] > -0.86 && PY[j] < 0.8 && PY[j1] < 0.8;
+          if (H.tube) cut = ring[i].s >= H.s0 - 2 && ring[i + 1].s <= H.s1 + 2 && PX[j] * H.side > -0.2 && PX[j1] * H.side > -0.2 && quadIn(H.tube, "h" + q, 0.98, a, b, c, d);
+          else cut = ring[i].s >= H.s0 && ring[i + 1].s <= H.s1 && PX[j] * H.side > 0.05 && PX[j1] * H.side > 0.05 && PY[j] > -0.86 && PY[j1] > -0.86 && PY[j] < 0.8 && PY[j1] < 0.8;
         }
+        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) cut = quadIn(t.within.tube, "w", 0.995, a, b, c, d);
         if (cut) continue;
-        var a = i * C + j, b = i * C + j + 1, c = (i + 1) * C + j, d = (i + 1) * C + j + 1;
         (PY[j] < -0.8 && PY[j1] < -0.8 ? floorIdx : idx).push(a, c, b, b, c, d);
       }
       geo.setIndex(floorIdx.concat(idx)); geo.clearGroups();
-      geo.addGroup(0, floorIdx.length, 0); geo.addGroup(floorIdx.length, idx.length, 1); t.dirty = true;
+      geo.addGroup(0, floorIdx.length, 0); geo.addGroup(floorIdx.length, idx.length, 1); t.kIdx = t.k;
+      if (!shaped) t.dirty = true;
     };
+    t.exact = function () { return !!t.within || t.holes.some(function (H) { return H.tube; }); };
     t.addHole = function (H) { t.holes.push(H); t.index(); };
+    // How far inside the tunnel a point is, against the stone as it stands this frame (breath, bumps and all): ratio is 0 at
+    // the middle of the nearest ring's cross-section and 1 on its stone. clamp(f) gives the point pulled in to ratio f.
+    // Null when the point is past either end of the tube. The camera uses it to stay inside (see the frame loop).
+    t.contain = function (P, cap) {
+      if (t.k < 0) return null; // not shaped yet
+      var bi = 0, bd = 1e18, i, j;
+      for (i = 0; i < n; i++) { var dx = P.x - ring[i].x, dy = P.y - ring[i].y, dz = P.z - ring[i].z, d = dx * dx + dy * dy * 0.25 + dz * dz; if (d < bd) { bd = d; bi = i; } }
+      var R = ring[bi], fx = R.nz, fz = -R.nx, ox = P.x - R.x, oz = P.z - R.z;
+      var lx = ox * R.nx + oz * R.nz, ly = P.y - R.y, along = ox * fx + oz * fz;
+      var past = (bi === 0 && along < -0.5) || (bi === n - 1 && along > 0.5);
+      if (past && !cap) return null;
+      if (past) along = bi === 0 ? 0.5 : -0.5; // cap: a point past an end is held just inside it
+      var vx = [], vy = [], lo = 1e9, hi = -1e9;
+      for (j = 0; j < PROF; j++) { var p = (bi * C + j) * 3; vx.push((pos[p] - R.x) * R.nx + (pos[p + 2] - R.z) * R.nz); vy.push(pos[p + 1] - R.y); lo = Math.min(lo, vy[j]); hi = Math.max(hi, vy[j]); }
+      var cy = (lo + hi) / 2, ddx = lx, ddy = ly - cy, L = Math.hypot(ddx, ddy), ux = L > 1e-6 ? ddx / L : 0, uy = L > 1e-6 ? ddy / L : 1, rmax = 1e9;
+      for (j = 0; j < PROF; j++) { // where the ray from the middle meets the outline
+        var j1 = (j + 1) % PROF, ex = vx[j1] - vx[j], ey = vy[j1] - vy[j], wx = vx[j], wy = vy[j] - cy, den = ux * ey - uy * ex;
+        if (Math.abs(den) < 1e-9) continue;
+        var tr = (wx * ey - wy * ex) / den, te = (wx * uy - wy * ux) / den;
+        if (tr > 0 && te >= -1e-6 && te <= 1 + 1e-6) rmax = Math.min(rmax, tr);
+      }
+      if (rmax > 1e8) return null;
+      return { ratio: past ? Math.max(9, L / rmax) : L / rmax, clamp: function (f) {
+        var r = Math.min(L, f * rmax), x = ux * r, y = cy + uy * r;
+        return { x: R.x + R.nx * x + fx * along, y: R.y + y, z: R.z + R.nz * x + fz * along };
+      } };
+    };
     t.update = function (k) {
       if (Math.abs(k - t.k) < 0.0008 && !t.dirty) return;
-      t.k = k; t.dirty = false;
-      var kh = 1 + (k - 1) * 0.5;
+      var moved = t.dirty; t.k = k; t.dirty = false;
+      var kh = 1 + (k - 1) * 0.5, sink = o.within ? 0.03 : 0; // a branch's floor lies a hair under its parent's, so the two never flicker where they overlap
       for (var i = 0; i < n; i++) {
         var R = ring[i], wf = o.openAt(R.s) * k * o.w * (shape.rib ? 1 - shape.rib * Math.pow(0.5 + 0.5 * Math.cos(R.s * Math.PI * 2 / shape.ribEvery + seed), 3) : 1);
         for (var j = 0; j < C; j++) {
           var jj = j % PROF, p = (i * C + j) * 3, jt = jit[i * PROF + jj], fl = PY[jj] < -0.8, xx = PX[jj] * wf * jt;
-          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[jj] * o.h : PY[jj] * o.h * kh * jt); pos[p + 2] = R.z + R.nz * xx;
+          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[jj] * o.h - sink : PY[jj] * o.h * kh * jt); pos[p + 2] = R.z + R.nz * xx;
         }
       }
       geo.attributes.position.needsUpdate = true;
@@ -493,6 +547,7 @@
       }
       geo.computeBoundingSphere();
       t.mounts.forEach(t.place);
+      if (t.exact() && (moved || t.kIdx == null || Math.abs(k - t.kIdx) > 0.025)) t.index(); // the seams follow the breath
     };
     // Pieces that grow out of the stone (Wendell, 2026-10-13: "the placement of the elements need to feel a lot more natural
     // including having the elements comes out of the wall in various ways"). A mount is a point on the tube's surface: s along
@@ -1378,6 +1433,9 @@
       parts.shape = CAVE_SHAPE[s.texture] || CAVE_SHAPE.other;
       main.tube = buildTube(THREE, main, { w: w, h: h, rock: parts.rock, openAt: main.openAt, seed: hashOf(s.spot.id) % 97, shape: parts.shape });
       main.group.add(main.tube.mesh); main.group.add(buildPebbles(THREE, main, w, h, 0, main.len));
+      // the tunnel's first end is stone, so looking back from the start shows rock, not the dark outside
+      var a0m = at(main, 0.4), capM = new THREE.Mesh(new THREE.CircleGeometry(1, 28), parts.rock);
+      capM.position.set(a0m.x, a0m.y + h * 0.1, a0m.z); capM.rotation.y = Math.atan2(a0m.fx, a0m.fz); capM.scale.set(w * OPEN_MAX * 1.4, h * 1.6, 1); main.group.add(capM);
       main.dressing = buildDressing(THREE, main, G, { w: w, h: h, rock: parts.rock, s0: 0, s1: main.len, seed: s.spot.id + ":" + s.texture + ":dress", clear: [main.startS + 9, main.exitS] });
       main.group.add(main.dressing); darken(parts.shape, parts.rock, main.dressing);
       state.cave = { shape: CAVE_SHAPE[s.texture] ? s.texture : "other", walls: parts.rock.visible, roof: parts.shape.roof, e: parts.shape.e };
@@ -1527,23 +1585,34 @@
         : { wb: w * 0.65, g: w * 0.65 * 1.3, W0: pw, L1: 2, alpha: 0, R: w * 0.65 * 1.3 + 2.5, drop: 0 };
       var route = layoutBranch(parent, frame.s, side, o);
       route.w = o.wb; route.kind = kind; route.group = new THREE.Group();
-      route.holes.forEach(function (H) { parent.tube.addHole(H); });
+      route.parentTube = parent.tube; route.pendingExit = route.holes[1]; // the wall opens in reveal(): the way in now, the way back later
       var rock = frame.blk ? frame.blk.rock : parts.rock;
       if (kind === "side") rock = stoneOf(THREE, parts.tiles, rock.userData.hex);
       if (kind === "face") rock = stoneOf(THREE, parts.tiles, FACE_LOOK[face].rock); // its own walls, so a style stays on this branch
       route.openAt = function () { return SIDE_LOOK.open; };
       var shp = CAVE_SHAPE[frame.blk ? frame.blk.texture : state.cur.texture] || CAVE_SHAPE.other;
-      route.tube = buildTube(THREE, route, { w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN, shape: shp });
-      route.group.add(route.tube.mesh); route.group.add(buildPebbles(THREE, route, o.wb, h, route.sFrom, route.sTo));
-      var dr = buildDressing(THREE, route, parts.G, { w: o.wb, h: h, rock: rock, s0: route.sFrom, s1: route.sTo, seed: kind + ":" + depth + ":" + blockN });
-      route.group.add(dr); darken(shp, rock, dr);
-      // the two openings get a glowing rim each, and a lantern stands between them
-      route.rims = route.holes.map(function (H) {
-        var a = at(parent, (H.s0 + H.s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true }));
-        var nx = -a.fz * H.side, nz = a.fx * H.side;
-        rim.position.set(a.x + nx * pw * 0.97, a.y - h * 0.25, a.z + nz * pw * 0.97); rim.rotation.y = Math.atan2(nx, nz);
-        rim.scale.set(0.01, 0.01, 1); route.group.add(rim); return rim;
+      route.tube = buildTube(THREE, route, { within: true, w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN, shape: shp });
+      route.holes.forEach(function (H) { H.tube = route.tube; });
+      route.tube.within = { tube: parent.tube, s0: route.sIn + 1, s1: route.sOut - 1 };
+      route.tube.update(br.k); route.tube.index();
+      // a disc of floor under each meeting, a hair below both floors: where the two tunnels' rounded lower walls cross at a
+      // slant, no sliver of the dark below can show through
+      route.cross.forEach(function (cp) {
+        var disc = new THREE.Mesh(new THREE.CircleGeometry(o.wb * 1.5, 24), rock.userData.floor || rock);
+        disc.rotation.x = -Math.PI / 2; disc.position.set(cp.x, cp.y - h * 0.92 - 0.06, cp.z); route.group.add(disc);
       });
+      route.group.add(route.tube.mesh); route.group.add(buildPebbles(THREE, route, o.wb, h, route.sIn, route.sOut));
+      var dr = buildDressing(THREE, route, parts.G, { w: o.wb, h: h, rock: rock, s0: route.sIn, s1: route.sOut, seed: kind + ":" + depth + ":" + blockN });
+      route.group.add(dr); darken(shp, rock, dr);
+      // Only the way in shows (Wendell, 2026-10-13: "We should only see the entrance"): it gets a glowing rim, and the way back
+      // opens without one when the player is round the far side of the loop. A lantern stands where they left the path.
+      route.light = kind === "face" ? lookup(FACES, face)[4] : SIDE_LOOK.light;
+      route.pw = pw;
+      var a0 = at(parent, (route.holes[0].s0 + route.holes[0].s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true }));
+      var nx0 = -a0.fz * side, nz0 = a0.fx * side;
+      rim.position.set(a0.x + nx0 * pw * 0.97, a0.y - h * 0.25, a0.z + nz0 * pw * 0.97); rim.rotation.y = Math.atan2(nx0, nz0);
+      rim.scale.set(0.01, 0.01, 1); rim.visible = false; route.group.add(rim);
+      route.rims = [rim];
       var b = at(parent, frame.s), lan = buildLantern(THREE);
       lan.position.set(b.x + -b.fz * side * pw * 0.8, b.y - h * 0.92, b.z + b.fx * side * pw * 0.8);
       route.group.add(lan); lanternsOn.push(lan);
@@ -1551,12 +1620,15 @@
         // the five places along the loop; the six stones of the gate each have a stop of their own, a face's branch beside it
         // Wendell, 10 October 2026: the gates are forks in the path and belong at the beginning, so the six stones come first
         // (stops 0-5), then the mouth, the pool and the daemon (stops 6-8), then the way out.
-        var L = route.len, pos = { mouth: 0.46, pool: 0.58, passage: 0.7 }, g0 = 0.04 * L, gs = 0.06 * L;
+        // The first stone stands past the ramp, far enough on that its branch's openings cut level wall (2026-10-13: on the
+        // ramp a level branch met a sloping wall and left dark gaps, and the camera behind the figure was outside both).
+        var L = route.len, pos = { mouth: 0.46, pool: 0.58, passage: 0.7 }, half = w * 0.65 * (1.3 + 1.08);
+        var g0 = Math.max(0.04 * L, route.sLevel + half + 1), gs = Math.max(0, Math.min(0.06 * L, (pos.mouth * L - 6 - g0) / 5));
         route.stops = [];
         FACES.forEach(function (f, i) { route.stops.push({ s: g0 + i * gs, place: "gate", stone: i }); });
         route.stops.push({ s: pos.mouth * L, place: "mouth" }, { s: pos.pool * L, place: "pool" }, { s: pos.passage * L, place: "passage" });
-        route.stops.push({ s: route.sTo - 2.5, place: "way_out" });
-      } else route.stops = [{ s: route.sTo - 1.2, face: face }];
+        route.stops.push({ s: route.sOut - 2.5, place: "way_out" });
+      } else route.stops = [{ s: route.sOut - 1.2, face: face }];
       route.markers = route.stops.map(function (st) {
         var m = buildMarker(THREE, o.wb, h, kind === "face" ? lookup(FACES, face)[4] : SIDE_LOOK.light), a = at(route, Math.min(route.len, st.s + MARK_AHEAD));
         m.position.set(a.x, a.y - h * 0.92 + MARK_Y, a.z); route.group.add(m); return m;
@@ -1569,7 +1641,7 @@
     // Motes along a face's branch, in the colour of the style it wears.
     function buildMotes(route, wb, h) {
       var N = 90, pos = new Float32Array(N * 3), rnd = rngOf(hashOf("motes" + route.len)), seeds = [];
-      for (var i = 0; i < N; i++) seeds.push({ s: route.sFrom + rnd() * (route.sTo - route.sFrom), lat: (rnd() - 0.5) * wb * 1.4, y: rnd(), v: 0.3 + rnd() });
+      for (var i = 0; i < N; i++) seeds.push({ s: route.sIn + rnd() * (route.sOut - route.sIn), lat: (rnd() - 0.5) * wb * 1.4, y: rnd(), v: 0.3 + rnd() });
       var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
       var m = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending }));
       m.userData = { seeds: seeds, t: 0, h: h, route: route };
@@ -1585,10 +1657,46 @@
       p.needsUpdate = true;
     }
     function faceLook(style) { var L = FACE_LOOK[style]; return { light: L.light, fog: L.fog, fogK: L.fogK, hemi: L.hemi, open: SIDE_LOOK.open, drift: L.drift }; }
-    function growRims(route, done) {
-      busy = true;
-      tween(900, function (k) { var e = ease(k); route.rims.forEach(function (r) { r.scale.set(0.01 + 1.3 * e, 0.01 + 1.7 * e, 1); }); }, function () { busy = false; done(); });
+    // An opening appears (Wendell, 2026-10-13: "The transitions should also be more magical it's a bit jarring how it shows up
+    // now"). Light gathers on the stone first: a veil in the branch's colour brightens over the spot while sparks spiral in
+    // and the rim turns open. The stone gives way under the veil at its brightest, then the veil thins away and the sparks
+    // drift out through the opening. which: 0 the way in (with its rim), 1 the way back (light only).
+    function reveal(route, which, done) {
+      var H = route.holes[which], parent = route.parentTube, a = at(route.parent, (H.s0 + H.s1) / 2);
+      var nx = -a.fz * H.side, nz = a.fx * H.side, pw = route.pw, h = ch.h, col = new THREE.Color(route.light).lerp(new THREE.Color(0xfff1b0), 0.35);
+      var at0 = new THREE.Vector3(a.x + nx * pw * 0.85, a.y - h * 0.25, a.z + nz * pw * 0.85), sx = route.w * 1.05, sy = h * 0.62;
+      var veil = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+      veil.position.copy(at0); veil.rotation.y = Math.atan2(nx, nz); veil.scale.set(0.01, 0.01, 1); route.group.add(veil);
+      var N = 70, sp = new Float32Array(N * 3), seeds = [], rnd = rngOf(hashOf("spark" + which + route.len));
+      for (var i = 0; i < N; i++) seeds.push({ a: rnd() * Math.PI * 2, r: 1.2 + rnd() * 1.4, v: 0.6 + rnd() * 0.8, out: 0.5 + rnd() * 2.5 });
+      var sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(sp, 3));
+      var sparks = new THREE.Points(sg, new THREE.PointsMaterial({ color: col, size: 0.14, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+      route.group.add(sparks);
+      var tx = Math.cos(veil.rotation.y), tz = -Math.sin(veil.rotation.y); // along the wall, in the veil's plane
+      var rim = which === 0 ? route.rims[0] : null, cut = false;
+      if (rim) rim.visible = true;
+      if (which === 0) { busy = true; state.peek = { x: at0.x, z: at0.z, until: performance.now() + 2600 }; }
+      tween(which === 0 ? 1700 : 1300, function (k) {
+        var gather = Math.min(1, k / 0.45), fadeK = Math.max(0, (k - 0.45) / 0.55), eg = ease(gather);
+        veil.material.opacity = 0.85 * eg * (1 - ease(fadeK));
+        veil.scale.set(sx * (0.2 + 0.8 * eg), sy * (0.2 + 0.8 * eg), 1);
+        if (rim) { var back = 1 + 0.18 * Math.sin(Math.PI * Math.min(1, k / 0.7)); rim.scale.set((0.01 + 1.3 * eg) * (k > 0.45 ? back : 1), (0.01 + 1.7 * eg) * (k > 0.45 ? back : 1), 1); rim.rotation.z = (1 - eg) * Math.PI * 1.5; }
+        if (!cut && k >= 0.45) { cut = true; parent.addHole(H); if (which === 1) route.pendingExit = null; }
+        sparks.material.opacity = Math.min(1, k * 4) * (1 - fadeK);
+        for (var i = 0; i < N; i++) {
+          var sd = seeds[i], rr = gather < 1 ? sd.r * (1 - 0.85 * eg) : 0.15 + fadeK * sd.out, an = sd.a + k * 6 * sd.v;
+          var lx = Math.cos(an) * rr * sx * 0.7, ly = Math.sin(an) * rr * sy * 0.7, push = fadeK * fadeK * sd.out * 1.5;
+          sp[i * 3] = at0.x + tx * lx + nx * push; sp[i * 3 + 1] = at0.y + ly; sp[i * 3 + 2] = at0.z + tz * lx + nz * push;
+        }
+        sg.attributes.position.needsUpdate = true;
+      }, function () {
+        route.group.remove(veil); route.group.remove(sparks); veil.geometry.dispose(); sg.dispose();
+        if (which === 0) busy = false;
+        if (done) done();
+      });
     }
+    // The way back opens once the player is round the far side of the loop (or at once if the game walks them back).
+    function openWayBack(route) { if (route.pendingExit && !route.exitOpening) { route.exitOpening = true; reveal(route, 1); } }
     // A block: the wall opens, and a side passage loops out from here and back to this spot.
     function openBlock(stepId, label) {
       if (busy) return;
@@ -1603,7 +1711,7 @@
       dressSide(blk);
       frame.child = blk;
       stat.setAttribute("data-cave-place", "opening"); fill(label, [P("The wall opens. The path loops out from here and comes back to this spot.")]);
-      growRims(route, function () {
+      reveal(route, 0, function () {
         state.stack.push(frame);
         state.walk = newWalk(route, blk, 0);
         hint(0);
@@ -1623,7 +1731,7 @@
       var route = makeBranch(frame, "face", state.stack.length + 1, f[0]);
       frame.child = { route: route }; blk.lastFace = route;
       fill(f[1] + "'s branch", [P("The wall beside the " + f[1] + " stone opens.")]);
-      growRims(route, function () {
+      reveal(route, 0, function () {
         state.stack.push(frame);
         state.walk = newWalk(route, blk, 0);
         hint(0);
@@ -1658,6 +1766,7 @@
     function backRound(done) {
       if (busy) return;
       var wk = state.walk; busy = true; closeModal();
+      if (wk.route.pendingExit) openWayBack(wk.route);
       autoWalk(wk.route.len, function () {
         var fr = state.stack.pop();
         state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: BREATH_S, ready: true, moving: false, target: fr.target, arrived: true, blk: fr.blk };
@@ -2243,11 +2352,22 @@
         if (sit) sitFrame(dt, nowMs, route, wk, h);
         sitBtn.disabled = !canSit();
         if (state.held && (!drag || Date.now() - drag.last > LOOK.settle)) state.look.yaw *= 1 - Math.min(1, dt * 1.5);
+        if (route.pendingExit && wk.s > route.len * 0.5) openWayBack(route);
         // camera: behind on the path, and a little above; on a branch's first steps it sits straight behind the figure
         var cbx, cbz, cby;
         var frT = state.stack[state.stack.length - 1], back = route.kind === "face" ? 3.6 : CAM_BACK; // a face's tight loop keeps the camera closer
         if (wk.s >= back || route.kind === "main" || !frT) { var cb = at(route, Math.max(0, wk.s - back)); cbx = cb.x; cbz = cb.z; cby = cb.y; }
         else { var pb = at(frT.route, frT.s - (back - wk.s)); cbx = pb.x; cbz = pb.z; cby = pb.y; } // a branch's first steps are seen from the path it left
+        if (state.peek) { // while an opening appears the camera swings round to show it beside the figure, then lets go
+          var px0 = cbx - a.x, pz0 = cbz - a.z, ox = state.peek.x - a.x, oz = state.peek.z - a.z, bestY = 0, bestD = -9;
+          for (var yq = -1.4; yq <= 1.4; yq += 0.05) { // the swing that puts the opening straight past the figure; half of it frames both
+            var qx = px0 * Math.cos(yq) + pz0 * Math.sin(yq), qz = -px0 * Math.sin(yq) + pz0 * Math.cos(yq), dd = (-qx * ox - qz * oz) / Math.max(1e-6, Math.hypot(qx, qz) * Math.hypot(ox, oz));
+            if (dd > bestD) { bestD = dd; bestY = yq; }
+          }
+          var want0 = bestY * 0.6;
+          state.look.yaw += (want0 - state.look.yaw) * (1 - Math.exp(-dt * 3));
+          if (nowMs > state.peek.until) state.peek = null;
+        }
         var ry = state.look.yaw; tmp.set(cbx - a.x, 0, cbz - a.z);
         var cx = a.x + tmp.x * Math.cos(ry) + tmp.z * Math.sin(ry), cz = a.z - tmp.x * Math.sin(ry) + tmp.z * Math.cos(ry);
         // the camera stays under the roof of the tunnel where it is, so a ramp never lifts it out
@@ -2255,10 +2375,23 @@
         var pu = Math.max(0, -state.look.pitch / -LOOK.pitch[0]), cy0 = Math.min(Math.max(cby, a.y) - h * 0.92 + CAM_UP, cby - h * 0.92 + 5);
         var want = new THREE.Vector3(cx, Math.min(cy0 - state.look.pitch * 2.6, fl + h * LOOK.roof), cz);
         var aim = new THREE.Vector3(a.x + a.fx * 3.4 * (1 - pu), fl + 2.2 - 1.2 * pu, a.z + a.fz * 3.4 * (1 - pu));
+        if (state.peek) aim.lerp(tmpV.set(state.peek.x, fl + 1.6, state.peek.z), 0.5); // and looks toward it
         if (stCam) { want.copy(stCam.pos); aim.copy(stCam.aim); }
         if (state.rise) { want.y = state.rise.y0 + 16 * state.rise.k; aim.set(a.x + a.fx * 6, state.rise.y0 + 6 + 20 * state.rise.k, a.z + a.fz * 6); }
+        // The camera stays inside the stone like a drone on a leash (Wendell, 2026-10-13: "Camera shouldn't break the ceiling.
+        // We'll need a dynamic camera the follows the player more effectively not unlike a drone. So it stays within the
+        // boundaries of the cave"). Where it wants to be, and where it is after easing, are both pulled back inside the
+        // tunnel that holds them best: the one being walked, or on a branch's first steps the one it left.
+        var tubes = [route.tube]; if (frT && frT.route.tube) tubes.push(frT.route.tube);
+        var keepIn = function (v, f) {
+          var best = null; tubes.forEach(function (tb) { var c2 = tb.contain(v, true); if (c2 && (!best || c2.ratio < best.ratio)) best = c2; });
+          if (best && best.ratio > f) { var q = best.clamp(f); v.set(q.x, q.y, q.z); }
+        };
+        var free = !stCam && !state.rise;
+        if (free) keepIn(want, 0.72);
         if (snapCam) { camPos.copy(want); lookAt.copy(aim); snapCam = false; }
         else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
+        if (free) keepIn(camPos, 0.8);
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
         var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : route.kind === "face" ? faceLook(route.style) : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
@@ -2279,6 +2412,7 @@
         lk.fogK += (lg.fogK - lk.fogK) * fe; lk.hemi += (lg.hemi - lk.hemi) * fe; lk.flash = Math.max(0, lk.flash - dt / 1.1);
         scene.background.copy(lk.fog).multiplyScalar(LAMP.dim * (parts.shape && parts.shape.dark ? 0.25 : 1)); scene.fog.color.copy(scene.background);
         scene.fog.density = parts.fog * lk.fogK * LAMP.fog;
+        if (state.voidHex != null) { scene.background.setHex(state.voidHex); scene.fog.density = 0; } // tests: paint the void outside the stone to find gaps
         var mt = state.mainRoute.tube, chg = false;
         for (var qq = 0; qq < STEP_LOOK.length; qq++) {
           var goal = qq <= revealed ? STEP_LOOK[qq].open : CLOSED, nv = openCur[qq] + (goal - openCur[qq]) * fe;
@@ -2392,7 +2526,10 @@
       var wk = state.walk, r = wk.route; if (r.kind === "main") return null;
       var fr = state.stack[state.stack.length - 1], b = at(fr.route, fr.s), s0 = ptOn(r, 0), s1 = ptOn(r, r.len), lowest = 0;
       for (var i = 0; i < r.Y.length; i++) lowest = Math.min(lowest, r.Y[i] - b.y);
-      return { kind: r.kind, len: r.len, startGap: Math.hypot(s0.x - b.x, s0.z - b.z), endGap: Math.hypot(s1.x - b.x, s1.z - b.z), lowest: lowest, stops: r.stops.length, holes: r.holes };
+      return { kind: r.kind, len: r.len, startGap: Math.hypot(s0.x - b.x, s0.z - b.z), endGap: Math.hypot(s1.x - b.x, s1.z - b.z), lowest: lowest, stops: r.stops.length,
+        holes: r.holes.map(function (H) { return { s0: H.s0, s1: H.s1, side: H.side }; }), opened: fr.route.tube.holes.filter(function (H) { return r.holes.indexOf(H) >= 0; }).length,
+        // how far the figure turns from the way it faced on the path to face the way in (2026-10-13: never more than 90°)
+        turnIn: Math.acos(clamp((b.fx * (r.cross[0].x - b.x) + b.fz * (r.cross[0].z - b.z)) / Math.max(1e-6, Math.hypot(r.cross[0].x - b.x, r.cross[0].z - b.z)), -1, 1)) * 180 / Math.PI };
     };
     api.lanterns = function () { return lanternsOn.length; };
     api.elementScreen = function () {

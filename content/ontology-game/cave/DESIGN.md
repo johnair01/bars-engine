@@ -534,3 +534,29 @@ camera down and pushing up moves the camera up (and has it looking down on the c
 walk. Dragging down lowers the camera; pushing up lifts it toward the roof (never through it) and turns it down onto the
 figure. The look eases back behind the figure only after the thumb has rested for 0.6 s. **(choice)** the tilt per pixel,
 its range, the rest time and how near the roof the camera may go (`LOOK` in `cave.js`).
+
+**Openings ahead, one at a time, and no gaps (13 October 2026).** Wendell, at the Game masters' gate: "It's showing us
+the entrance and the exit at the same time. We should only see the entrance and it shouldn't generate behind the
+character. The character should not have to rotate more than 90 degrees to access to opening that appears. The
+transitions should also be more magical it's a bit jarring how it shows up now"; "the segments between the tunnels are
+leaving dark gaps"; and on the camera: "Camera shouldn't break the ceiling. We'll need a dynamic camera the follows the
+player more effectively not unlike a drone".
+
+- Every branch (a side passage and a face's branch) now leaves forward and comes back from behind, so the way in is ahead
+  and to the side (about a 45° turn at the gate) and the way back joins the path still walking forward.
+- Only the way in opens, with its rim. The way back opens, without a rim, once the player is round the far side of the loop.
+- An opening gathers light before it opens: a veil in the branch's colour brightens over the stone while sparks spiral in
+  and the rim turns open; the stone gives way under the veil, which thins away as the sparks drift out. The camera swings
+  round and looks toward the opening while it forms, then lets go.
+- The six stones stood on the side passage's ramp, so a level face branch cut a sloping wall and left dark gaps, and the
+  camera behind the figure ended up outside both tunnels. The first stone now stands past the ramp.
+- Where two tunnels meet, each gives way only where the other's inside is, worked out from the stone as it stands and
+  again as the breath moves it; faces across the seam stay on both sides, so they overlap instead of leaving a gap. A
+  branch's tube starts inside its parent, its floor lies a hair under the parent's, and a disc of floor lies under each
+  meeting. The tunnel's first end is capped with stone.
+- The camera is held inside the stone like a drone on a leash: where it wants to be, and where it is after easing, are both
+  pulled back inside the tunnel that holds them best (or a tunnel's end), whatever the look does. The rise at the way out
+  and the staged scenes keep their own cameras.
+
+**(choice)** how far the stones stand past the ramp, the reveal's timing and colours, the camera's swing (`state.peek`),
+and how far inside the stone the camera keeps (0.72 and 0.8 of the way to the wall).

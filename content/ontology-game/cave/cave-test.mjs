@@ -315,6 +315,7 @@ const gatesFirst = async (check) => {
     if (check && f === 'magenta') {
       const fb = await C(() => window.__oagCave.branch());
       ok(fb.kind === 'face' && fb.startGap < 0.01 && fb.endGap < 0.01 && fb.lowest > -0.01, `the Magenta stone opens its own branch, a level loop back to the stone (${Math.round(fb.len)} units)`);
+      ok(fb.turnIn <= 90 && fb.opened === 1, `Magenta's way in is ahead of the figure, a ${Math.round(fb.turnIn)}° turn, and only it is open`);
       ok((await C(() => window.__oagCave.pane())).text === 'Where is the presence you\'re reaching for?', 'walking a face\'s branch, the pane holds that face\'s question');
       const st0 = await C(() => window.__oagCave.branchStyle());
       ok(st0.shown && st0.value === 'magenta' && st0.style === 'magenta' && st0.motes, 'a face\'s branch opens in that face\'s style, with the style dropdown on the screen');
@@ -331,6 +332,14 @@ const gatesFirst = async (check) => {
     if (check && f === 'magenta') ok(await page.waitForFunction(() => !window.__oagCave.branchStyle().shown, null, { timeout: 15000 }).then(() => true, () => false), 'back at the stone, the style dropdown is gone');
   }
 };
+// ---- the camera stays inside the stone: thumb pushed up to look down, and swung round (Wendell, 2026-10-13) -------------
+const camLooks = [];
+for (const [p, y] of [[-1.3, 0], [-1.3, 1.5], [-1.3, Math.PI], [0.6, -1.5]]) {
+  await C(([pp, yy]) => { window.__oagCave.state.look.pitch = pp; window.__oagCave.state.look.yaw = yy; }, [p, y]);
+  await page.waitForTimeout(1200); camLooks.push(await C(() => window.__oagCave.camInside()));
+}
+await C(() => { window.__oagCave.state.look.pitch = 0; window.__oagCave.state.look.yaw = 0; });
+ok(camLooks.every((c) => c.inside && c.above < c.roof * 0.97), `looking down from above and swinging round, the camera stays under the roof and between the walls (${camLooks.map((c) => c.above.toFixed(1) + '/' + c.side.toFixed(1)).join(', ')})`);
 // ---- a block: the wall opens, a side path loops under the cave and back to the very spot --------------------
 await C(() => { window.__oagCave.state.speed = 8; });
 await walkTo('[data-cave-marker="acknowledge"]');
@@ -340,7 +349,8 @@ await page.locator('[data-cave-place="walk"]').waitFor();
 const b1 = await C(() => window.__oagCave.branch()), tn1 = await C(() => window.__oagCave.tunnel());
 ok(b1 && b1.kind === 'side' && b1.startGap < 0.01 && b1.endGap < 0.01, `the side path starts and ends on the spot it left from (gaps ${b1.startGap.toFixed(3)} and ${b1.endGap.toFixed(3)}): it loops back`);
 ok(b1.lowest <= -9.9 && b1.len > 150, `it ramps down under the cave (${b1.lowest.toFixed(1)} units) and runs a loop ${Math.round(b1.len)} units long`);
-ok(tn1.holes === 2 && tn1.mainTris < tn.mainTris, `the main wall opens twice, out and back (${tn.mainTris - tn1.mainTris} faces removed)`);
+ok(tn1.holes === 1 && tn1.mainTris < tn.mainTris && b1.opened === 1, `only the way in opens at first; the way back waits (${tn.mainTris - tn1.mainTris} faces removed)`);
+ok(b1.turnIn <= 90, `the way in is ahead of the figure, a ${Math.round(b1.turnIn)}° turn (never more than 90°)`);
 ok((await C(() => window.__oagCave.lanterns())) === 1, 'a lantern stands between the two openings');
 ok(b1.stops === 10, 'the loop holds six stones, the mouth, the pool, the daemon and the way out');
 await page.screenshot({ path: SHOTS + '/cave-branch.png' });
@@ -349,6 +359,7 @@ await page.mouse.move(330, 700); await page.mouse.down();
 for (let i = 0; i < 6; i++) { walkSamples.push(await avatar()); await page.waitForTimeout(150); }
 await page.locator('[data-cave-stone="magenta"]').waitFor({ timeout: 60000 }); await page.mouse.up();
 ok(walkSamples.every((a) => a.route === 'branch' || a.route === 'side') && walkSamples.every((a) => a.offPath < 1e-6), 'the avatar walks the side path on its line');
+ok((await C(() => window.__oagCave.tunnel())).holes === 1, 'walking out to the gate, the main wall still shows only the way in');
 ok(await page.locator('[data-cave-stone-says]').count() === 1 && await page.locator('[data-cave-next]').isDisabled(), 'the passage opens on the first of the six gates, and the way on waits for its branch');
 await gatesFirst(true);
 await walkTo('[data-cave-place="mouth"]');
