@@ -65,7 +65,9 @@ UDIM images for G3 are made at run time by `_make_fixtures.py`, so no `synthetic
 - [x] [claude] 7b, J2 objects: boulder (Blendkit CC0), offering bowl (picture), cushion (script) in chamber.py
   through `cave/objects.py`; tests J2 and J2b pass (spec.md, J2 result).
 - [ ] [claude] 7b, J3 picture to asset (needs his pictures in the Drive inbox).
-- [ ] [claude] 7c. J4 character creator, J5 clothing.
+- [x] [claude] 7c, J4 character creator: `cave/character.py`, nine figures, tests J4 and J4b pass (spec.md, J4 result).
+  The sheet goes to his eye on Your steps.
+- [ ] [claude] 7c, J5 clothing.
 
 ## Steps only Wendell can take
 

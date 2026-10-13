@@ -1,4 +1,4 @@
-"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2 and J2b. Run under the bpy venv (README); each build runs as a
+"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2, J3 and J2b. Run under the bpy venv (README); each build runs as a
 subprocess of that same Python, in a copy of the repo under $W, so the checkout is never written.
 
 usage: /home/user/blenv/bin/python tools/blender-cloud/tests/test_bpy.py [R2,W1,...]
@@ -428,12 +428,32 @@ def j2():
           f"want one object from each source (Blendkit, picture, script); got {[row['source'] for row in rows]}")
     manifest = {a["id"]: a for a in json.loads((root / "content/ontology-game/cave/manifest.json").read_text())["assets"]}
     for row in rows:
-        check(abs(row["lowest_cm"]) <= 1, f"{row['id']} stands {row['lowest_cm']} cm off the floor")
+        if "hangs_from_m" in row:  # a root hung from the roof: its top, not its foot, is where it is placed
+            check(abs(row["top_gap_cm"]) <= 1, f"{row['id']} hangs {row['top_gap_cm']} cm below its roof point")
+        else:
+            check(abs(row["lowest_cm"]) <= 1, f"{row['id']} stands {row['lowest_cm']} cm off the floor")
         check(row["bytes"] <= row["budget_bytes"], f"{row['id']} is {row['bytes']} bytes, budget {row['budget_bytes']}")
         check(row["licence"] in ("CC0", "own work"), f"{row['id']} licence {row['licence']}")
         m = manifest.get(row["id"])
         check(m and m["bytes"] == row["bytes"] and m["source"] and m["budget_bytes"], f"{row['id']}: no manifest row")
+    _chamber_rows[:] = rows
     return ", ".join(f"{row['id']} {row['bytes'] // 1024} KB" for row in rows) + f"; {secs:.0f} s"
+
+
+_chamber_rows = []
+
+
+@test("J3")
+def j3():
+    """His concept pictures (pictures/j3_*.jpg) became placed pieces with no code of their own: two of the three
+    trace at 0.85 or better. The other half of the kill line is his yes on the sheet (E1), never the score alone."""
+    if not _chamber_rows:
+        raise Skip("needs J2's chamber build")
+    rows = [r for r in _chamber_rows if "pictures/j3_" in r["source"]]
+    check(len(rows) == 3, f"want the three J3 pictures placed; got {[r['id'] for r in rows]}")
+    passed = [r for r in rows if r["outline_match"] >= 0.85]
+    check(len(passed) >= 2, "outline match: " + ", ".join(f"{r['id']} {r['outline_match']}" for r in rows))
+    return ", ".join(f"{r['id']} {r['outline_match']}" for r in rows)
 
 
 @test("J2b")
@@ -452,6 +472,56 @@ def j2b():
     check(r.returncode != 0 and "cs-cc0-or-own" in said, f"the build went on: exit {r.returncode}, {said[-300:]}")
     check(not (root / "content/ontology-game/cave/manifest.json").read_text().count("royalty"), "a row was written")
     return "Royalty Free source stopped the build"
+
+
+# ---- the character creator (J4, J4b) -------------------------------------------------------------------------
+
+def walk_check(glb):
+    r, _ = run([TESTS / "_walk_check.py", glb])
+    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    check(r.returncode == 0 and line, f"_walk_check.py failed on {glb.name}: {r.stderr[-300:]}")
+    return json.loads(line)
+
+
+@test("J4")
+def j4():
+    """character.py --all makes nine figures (three builds, three palettes of the robe set), each one GLB under 300 KB
+    with one skin and one walk, and each walk passes W3's swing and swap with no knee or elbow folding the wrong way,
+    read back from the GLB. The sheet goes to the eye (LOOKED.md)."""
+    out = tmpdir("j4")
+    r, secs = run([GAME / "cave/character.py", "--all", "--out", out])
+    check(r.returncode == 0, f"character.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    rows = json.loads((out / "report.json").read_text())
+    check(len(rows) == 9 and len({(x["build"], x["palette"]) for x in rows}) == 9, f"{len(rows)} figures, want nine")
+    sizes = []
+    for row in rows:
+        glb = out / row["file"]
+        size = glb.stat().st_size
+        check(size < 300 * 1024, f"{row['id']} is {size // 1024} KB")
+        j = glb_json(glb)
+        check(len(j.get("skins", [])) == 1 and [a["name"] for a in j.get("animations", [])] == ["Walk"],
+              f"{row['id']}: want one skin and one Walk")
+        w = walk_check(glb)
+        check(not w["problems"], f"{row['id']}: {'; '.join(w['problems'])}")
+        sizes.append(size)
+    return f"nine figures, {min(sizes) // 1024} to {max(sizes) // 1024} KB, every walk clean; {secs:.0f} s"
+
+
+@test("J4b")
+def j4b():
+    """The walk check catches an inverted joint: a copy of character.py with the knees bent forward fails it."""
+    root = copy_tree(tmpdir("j4b"))
+    src = root / "content/ontology-game/cave/character.py"
+    text = src.read_text()
+    bent = "0.12 + 0.95 * max(0.0, math.cos(ph))"
+    check(bent in text, "the knee line moved; update J4b")
+    src.write_text(text.replace(bent, "-(0.12 + 0.95 * max(0.0, math.cos(ph)))"))
+    out = tmpdir("j4b-out")
+    r, _ = run([src, "--out", out])
+    check(r.returncode == 0, f"character.py exited {r.returncode}: {r.stderr[-300:]}")
+    w = walk_check(out / "average-dusk.glb")
+    check(any("kneeL folds forward" in p for p in w["problems"]), f"the forward knee went unseen: {w}")
+    return "a forward-bent knee fails the walk check"
 
 
 if __name__ == "__main__":
