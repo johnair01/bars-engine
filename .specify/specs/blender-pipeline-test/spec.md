@@ -165,6 +165,16 @@ of a few lines. The builder is read once when it is written, never on each edit.
 | T2 | The recipe path beats writing code | The same ten asks done by writing `bpy` code directly, in matched threads. The recipe path must cost at most a third of the code path in tokens, with no worse result on E1's sheet. If it does not, the recipe idea is dropped and Part 2 plans around direct code. | net (platform), eyes |
 | T3 | An edit lands as asked | For each of the ten asks, a person who did not write it reads the ask and the contact sheet and says yes or no. 8 of 10 yes passes. | eyes |
 
+**Result (2026-10-13, #291):** T1 passed (every edit under 20,000 tokens past the opening load), T3 passed (8 of 10 on
+both paths), T2 missed: the recipe cost 0.69 of the code path, where the line was a third. Both files are short, so
+the edit's own cost is small next to the opening load every thread pays. Per this section, the recipe is dropped
+(`bpt-recipe-result`, which he let stand). Claude now edits one committed Blender script for the chamber,
+`content/ontology-game/cave/chamber.py`, one `place(...)` line per piece; every job below is an edit to that script
+where the tables say "recipe line". The recipe, its builder and the token numbers stay in
+`tools/blender-cloud/recipe_trial/` as the record (`RESULTS.md`). One finding carries forward: no edit on either path
+looked at a render before calling itself done, and one look would have caught each miss, so every job thread looks at
+its render before it reports.
+
 ### The five jobs
 
 | Id | Job | Proves | Kill line | Tier |
@@ -174,6 +184,12 @@ of a few lines. The builder is read once when it is written, never on each edit.
 | J3 | Picture to asset | One of his own concept pictures (through the Drive inbox, `cs-chatgpt-by-drive`) becomes a placed piece with no hand-written code. | Outline match at or above 0.85 and a yes on the sheet (the score trap holds: both, never the score alone). Three pictures tried; two of three pass. A picture with depth the outline tools cannot read (a figure, a garment) is expected to fail here; that is recorded, and TRELLIS.2 on his Mac (`c3d-meshy-alternatives`) is the next tool to try, outside the cloud. | bpy, eyes |
 | J4 | Character creator from a theme | A recipe block `character: {theme: robe_set, build: average, palette: dusk}` makes a player figure: the cave's faceless figure (`cave-avatar-self`, `build_figure.py`) with three builds and three palettes. | Nine figures on one sheet, each one GLB under 300 KB, each walking with the cave's walk cycle with no joint inverted (W3's check, per figure). The theme for the test is the Taoist cultivation robe set (`cc-robe-set`), so the 3D creator and the 2D one share one wardrobe (`cs-one-studio`). | bpy, eyes |
 | J5 | Clothing options (the biggest test) | Garments are separate meshes skinned to the figure's one rig, built by script from the body (offset from its surface, then thickened), with weights copied from the body, reusing root-game's garment work first (below). The game swaps them at runtime. Three garments from the robe set: long robe, sash, topknot, each in three colourways. | (a) Through the whole walk cycle, no body vertex shows through a garment at frames 0, 12, 24 and 36, from front, side and back (a script counts body vertices outside the garment's surface; zero passes, and the sheet is looked at). (b) Each garment is under 150 KB. (c) In headless Chromium, swapping a garment on the walking figure takes under 100 ms and drops no frame below 30 a second. (d) A contact sheet of 3 builds by 3 garments by 3 colourways goes to his eye, as `cc-wardrobe-gate` asks of all new clothing. | bpy, eyes, wendell |
+
+**J1 result (2026-10-13, #292, merged; in the cave game through #294, merged):** wet stone on the walls, dry stone on
+the floor and gate stones, crystal vein on the spires and crystal bed, six 512 px JPEGs. The chamber is 465 KB of the
+3 MB budget and the three textures look different. The frame-rate line is judged on his phone, not in the cloud
+(`bpt-j1-frame-rate`): the cloud browser draws without a graphics chip, so the untextured chamber already misses 30 a
+second there (27.7 on the 4x throttle; 19.7 textured).
 
 **Start from root-game.** Wendell's steer on `bpt-skinned-garments` (2026-10-13): "Use as much as we can from the
 root game for this as we’ve already done many garment tests there". So J5's thread begins by listing what root-game
@@ -241,11 +257,11 @@ spirit's words (`cs-no-written-words`).
 | Meshopt fixture | Made from the table with gltf-transform, not searched for | council: cheaper and pinned by construction |
 | The CC0 gate | Tested, never loosened. A gap G2 finds goes to the board as a finding. | Wendell, `cs-cc0-or-own` (`.specify/specs/cave-studio/request.md`) |
 | Crystal count | Floor at today's 6, hard test once fixed | cave-studio sheet, known gap |
-| How words change the cave (Part 2) | Claude edits a short recipe, `cave/scene.yaml`; a fixed builder script makes the GLBs. Tested against writing `bpy` code directly (T2) before anything depends on it | council (Architect, Challenger), from `c3d-codex-rebuilds` and the token audit |
+| How words change the cave (Part 2) | Tested first: a short recipe, `cave/scene.yaml`, against writing `bpy` code directly (T2). The recipe missed T2, so Claude edits the committed `cave/chamber.py`, one line per piece | council (Architect, Challenger); `bpt-recipe-result`, 2026-10-13 |
 | Theme for the character test | The Taoist cultivation robe set, so the 3D and 2D creators share one wardrobe | `cc-robe-set`, `cs-one-studio` |
 | How clothing is made | Separate garment meshes skinned to the figure's one rig, built by script from the body, swapped at runtime; no cloth simulation in round one | council (Architect, Challenger); his eye on the result per `cc-wardrobe-gate` |
 | Textures | Procedural nodes in Blender, baked to 512 px JPEGs, within the 3 MB budget | `c3d-phone-budget` |
-| Order of Part 2 | T1 to T3 (the recipe and its cost) first, then J1, J2, J3, J4, J5 | council: each later job is a recipe line, so the recipe's cost decides the rest |
+| Order of Part 2 | T1 to T3 (the recipe and its cost) first, then J1, J2, J3, J4, J5 | council: the recipe's cost decided how every later job is written |
 
 ## Reserved items
 
