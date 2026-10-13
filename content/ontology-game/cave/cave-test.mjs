@@ -395,6 +395,17 @@ ok((await page.locator('[data-room-leave]').textContent()) === 'Back to the lant
 await page.locator('[data-room-leave]').click();
 await page.locator('[data-cave-home-back]').waitFor({ timeout: 15000 });
 ok((await page.locator('[data-room]').count()) === 0 && Math.abs((await avatar()).s - sWall) < 1e-6 && (await C(() => window.__oagCave.lanterns())) === sideLanterns + 1, 'the cave comes back at the lantern, the figure where it stood');
+const sp = await C(() => window.__oagCave.spirits.map((o) => ({ name: o.name, element: o.element, lighter: o.lighter, hex: o.g.userData.color.getHex() })));
+ok(sp.length === 1 && sp[0].name === 'The guard' && sp[0].element === 'Sadness' && sp[0].lighter && sp[0].hex === 0x3a78d0, 'the charge worked in the room walks back into the cave as a spirit, in its colour with its name, lighter for being breathed out: ' + JSON.stringify(sp));
+ok((await page.locator('[data-cave-spiritbtn]').textContent()) === 'Spirits 1', 'the cave counts the spirits with you');
+await page.waitForTimeout(800);
+ok(await C(() => { const g = window.__oagCave.spirits[0].g, a = window.__oagCave.avatar(); return g.visible && Math.hypot(g.position.x - a.x, g.position.z - a.z) < 6; }), 'the spirit floats by the figure');
+await page.screenshot({ path: SHOTS + '/cave-spirit.png' });
+await page.locator('[data-cave-spiritbtn]').click();
+await page.locator('[data-cave-spirit="0"]').click();
+ok(/Thank you for coming with me/.test(await page.locator('[data-cave-spirits]').textContent()) && await sees('[data-cave-spirit-home]'), 'tapping it thanks it, and offers to breathe it out or take it home again');
+await page.locator('[data-cave-spirit-out]').click();
+ok((await C(() => window.__oagCave.spirits.length)) === 0 && !(await page.locator('[data-cave-spiritbtn]').isVisible()), 'breathing it out lets it go');
 ok(await sees('[data-cave-home-satisfied="yes"]') && await page.locator('[data-cave-skip]').count() === 0 && await page.locator('[data-cave-next]').count() === 0, 'back from the room the daemon is asked again, and it is still no skip and no way past');
 await page.locator('[data-cave-home-satisfied="not-yet"]').click();
 ok(await sees('[data-cave-dig]') && await sees('[data-cave-take-home]'), '"Not yet" puts the daemon back in the way, with its encounters');
@@ -435,6 +446,7 @@ for (const round of [1, 2]) {
     await page.waitForTimeout(2500); glow9 = await C(() => window.__oagCave.daemonGlow());
     ok(glow9.allowed && glow9.scale > 1.85 && glow9.level > 0.5, `the daemon grows to the size set (×${glow9.scale.toFixed(2)}) and glows with its charge (${glow9.level.toFixed(2)})`);
     await page.screenshot({ path: SHOTS + '/cave-daemon-allowed.png' });
+    ok(await page.locator('[data-cave-321-skip]').count() === 0, 'the 3-2-1 with a daemon in the way has no skip');
     await page.locator('[data-cave-321-start]').click();
   }
   ok(await sees('[data-cave-321-step="it"]'), `3-2-1 round ${round}: 3 Face it`);
@@ -583,7 +595,7 @@ await page.locator('[data-room-resume]').click();
 ok((await page.locator('[data-room-goal]').inputValue()) === '' && await sees('[data-room-goal-ask]'), 'Go back in returns to the same step');
 await page.locator('[data-room-goal]').fill('a quiet evening');
 await page.locator('[data-room-push="toward"]').click();
-ok(await sees('[data-cave-321-start]'), 'Stays: the 3-2-1 begins with a charge reading');
+ok(await sees('[data-cave-321-start]') && await sees('[data-cave-321-skip]'), 'Stays: the 3-2-1 begins with a charge reading, and can be skipped');
 await page.locator('[data-cave-321-start]').click();
 ok((await page.locator('[data-cave-321-aim]').textContent()).includes('a quiet evening'), 'the 3-2-1 is aimed at what the player wants');
 await say('it', 'a knot under the chin');

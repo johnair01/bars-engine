@@ -151,7 +151,7 @@
       else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
       else e.setAttribute(k, attrs[k]);
     });
-    (kids || []).forEach(function (c) { e.appendChild(c); });
+    (kids || []).forEach(function (c) { if (c) e.appendChild(c); });
     return e;
   }
 
@@ -652,6 +652,33 @@
     return s;
   }
 
+  // A charge worked sitting down walks with the player as a spirit until it is dismissed (Wendell, 12 October 2026, 20:43: "When
+  // someone does WAVE sitting down in the big mind cave or the other cave environments it should spawn a spirit that walks with
+  // the character until dismissed"). One look serves every cave: an orb in its element's colour, its aura, and its name above it.
+  // followSpirits floats them toward spot(j), the j-th place in view; past SPIRITS_SHOWN they are hidden and only counted.
+  var SPIRITS_SHOWN = 3;
+  function buildSpirit(THREE, name, hex) {
+    var g = new THREE.Group();
+    var orb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }));
+    var au = buildAura(THREE, 0.7), label = labelSprite(THREE, name, "#fff1d0", 2.4); label.position.y = 0.95;
+    g.add(orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label, level: 0.45 };
+    return g;
+  }
+  function followSpirits(THREE, list, spot, dt, now, still) {
+    var shown = 0, v = new THREE.Vector3();
+    list.forEach(function (o) {
+      var g = o.g; g.visible = !o.hidden && shown < SPIRITS_SHOWN; if (!g.visible) return;
+      var j = shown++, p = spot(j); v.set(p.x, p.y + (still ? 0 : 0.18 * Math.sin(now / 700 + j * 2)), p.z);
+      g.position.lerp(v, Math.min(1, dt * 2.2));
+      stepAura(g.userData.aura, g.userData.color, g.userData.level, dt, still);
+    });
+  }
+  // The element's colour for a spirit, by the element's own name (Fire) or the feeling's (Anger), any case.
+  function spiritHex(element) {
+    var k = String(element || "").toLowerCase(), r = ELEMENTS.filter(function (x) { return x[0].toLowerCase() === k || x[1].toLowerCase() === k; })[0];
+    return r ? r[3] : 0x9a9aa8;
+  }
+
   // The 3-2-1 chat, ported from bars-engine's Clean321Flow (src/components/clean321/Clean321Flow.tsx): one thread the player
   // writes entirely (the system never writes a turn); 3 Face it, "it", one voice; 2 Talk to it, two voices with a switcher
   // (You and the daemon); 1 Be it, "I am"; a charge reading before and after. The daemon steps aside when the player says it
@@ -664,7 +691,9 @@
   ];
   // talk321(t, o, body): o = { name, damaged (the Damaged Self's check before Be it), redraw, focus, where (the staged
   // places' words, by step), aim (a line shown on every step, or none), before(body) (more for the first page, or none),
-  // ask(body) (the last page, after the charge reading) }.
+  // ask(body) (the last page, after the charge reading), skippable (a Skip button on every page that goes straight to ask) }.
+  // Wendell, 12 October 2026, 23:11: "321s are optional and should have an option to skip". The sit-down and the WAVE room
+  // pass skippable; the cave's 3-2-1 with a daemon in the way does not, since it is how the daemon steps aside.
   // The cave aims it at the daemon standing in the way; the WAVE room aims it at what the player wants right now.
   var WHERE_CAVE = { 3: "You are looking at it from across the chamber.", 2: "You are face to face with it.", 1: "You are standing where it stood.", check: "You are face to face with it.", after: "You have stepped back to your own place.", paused: "You are across the chamber, at your own place." };
   function talk321(t, o, body) {
@@ -677,6 +706,7 @@
       return el("div", { class: "oagc-slide" }, [inp, out]);
     }
     var stepBack = btn("Step back", { "data-cave-321-back": "" }, function () { t.draft = ""; t.paused = true; o.redraw(); }, true);
+    var skip = o.skippable ? btn("Skip the 3-2-1", { "data-cave-321-skip": "" }, function () { t.draft = ""; t.skipped = true; t.phase = "ask"; o.redraw(); }, true) : null;
     if (t.paused) {
       body.push(P("Stepped back", { "data-cave-321-step": "paused" }));
       body.push(P(WHERE.paused + " " + n + " still stands there, and your words are kept. Nothing is skipped."));
@@ -686,7 +716,7 @@
       body.push(P("How charged is this with " + n + " right now? The 3-2-1 cools it into something you can work with: face it, talk to it, be it."));
       body.push(slider("before"));
       if (o.before) o.before(body);
-      body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; o.redraw(); })]));
+      body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; o.redraw(); }), skip]));
     } else if (ph === "after") {
       body.push(P("After the 3-2-1", { "data-cave-321-step": "after" }));
       body.push(P(WHERE.after, { "data-cave-321-where": "" }));
@@ -738,14 +768,17 @@
       ta.addEventListener("input", function () { t.draft = ta.value; });
       ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); send(); } });
       body.push(el("div", { class: "oagc-compose" }, [ta, el("button", { "data-cave-321-send": "", "aria-label": "Send", text: "↑", onclick: send })]));
-      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && o.damaged ? "check" : ph - 1; o.redraw(); }), stepBack]));
+      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && o.damaged ? "check" : ph - 1; o.redraw(); }), stepBack, skip]));
     }
     return title;
   }
   // After a chat page redraws, the text box takes focus again so the player can keep writing, and the thread scrolls to its end.
+  // The panel scrolls to its end too, so the text box stays in view line after line (Wendell, 12 October 2026, 22:53:
+  // "resetting and scrolling is gettin gpretty tedious").
   function focusChat(modal) {
     var i = modal.querySelector("[data-cave-321-text]"), l = modal.querySelector("[data-cave-321-log]");
     if (l) l.scrollTop = l.scrollHeight;
+    if (i) modal.scrollTop = modal.scrollHeight;
     if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
   }
 
@@ -784,6 +817,9 @@
     ".oagc button[aria-pressed=true]{outline:2px solid #fff}" +
     ".oagc button.oagc-calm,.oagc button.oagc-ringbtn{position:absolute;top:10px;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500;z-index:4}" +
     ".oagc button.oagc-calm{right:10px}.oagc button.oagc-ringbtn{left:10px}" +
+    ".oagc button.oagc-spiritbtn{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
+    ".oagc-spirits{position:absolute;left:12px;right:12px;top:58px;z-index:6;max-width:420px;margin:0 auto;padding:.8rem .9rem;background:rgba(12,12,28,.92);border:1px solid rgba(255,241,176,.5);border-radius:16px}" +
+    ".oagc-spirits h2{font-size:1.1rem;color:#fff;margin:0 0 .3rem}.oagc-spirits p{margin:.3rem 0;font-size:.95rem}.oagc-spirits .oagc-you{color:#fff1d0}" +
     ".oagc-style{position:absolute;top:62px;right:10px;z-index:4;max-width:calc(100vw - 20px);min-height:44px;padding:0 .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(20,20,40,.85);color:#f4f4fa;font-size:16px}" +
     ".oagc-ring{position:absolute;left:50%;bottom:14px;width:88px;height:88px;margin-left:-44px;border-radius:50%;border:3px solid rgba(255,241,176,.85);background:rgba(255,241,176,.12);display:flex;align-items:center;justify-content:center;text-align:center;font-size:.68rem;line-height:1.15;color:#fff1b0;z-index:2;touch-action:none}" +
     ".oagc-fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:5}" +
@@ -1511,6 +1547,62 @@
         openRoom(A, { from: "cave", where: me().spot.words, texture: blk.texture, element: blk.element, daemon: d[1] }).then(function (r) {
           wrap.style.display = ""; snapCam = true; last = performance.now(); render();
           blk.home = r || {}; busy = false; fade.style.opacity = 0; placeCard(blk);
+          ((r && r.spirits) || []).forEach(function (o) { addSpirit(o); });
+        });
+      }, 520);
+    }
+    // ---- the spirits that walk with you (Wendell, 12 October 2026, 20:43) --------------------------------------------------
+    // Every charge worked through in the WAVE room comes back into the cave with the player as a spirit, in its element's colour
+    // with its name, and walks behind the figure until the player dismisses it: tap Spirits, thank it, then breathe it out or take
+    // it home again (the Big Mind cave's bms-dismiss). Nothing dismisses one for you. A charge breathed out at the room's fork
+    // comes back lighter (a choice). They walk this visit only; leaving the cave leaves them at its doorway (a choice).
+    var spirits = [];
+    var spiritBtn = el("button", { class: "oagc-spiritbtn", "data-cave-spiritbtn": "", style: "display:none", onclick: function () { spiritPanel(); } });
+    var spiritBox = el("div", { class: "oagc-spirits", "data-cave-spirits": "", style: "display:none" });
+    canvasBox.appendChild(spiritBtn); wrap.appendChild(spiritBox);
+    function addSpirit(o, at0) {
+      var g = buildSpirit(THREE, o.name, o.hex != null ? o.hex : spiritHex(o.element)); if (o.lighter) g.userData.level = 0.2;
+      if (at0) g.position.copy(at0); else if (avatar) g.position.set(avatar.position.x, avatar.position.y + 1.7, avatar.position.z);
+      scene.add(g); o.g = g; spirits.push(o); spiritsUi();
+    }
+    function spiritsUi() {
+      var n = spirits.length;
+      spiritBtn.style.display = n ? "" : "none";
+      spiritBtn.textContent = "Spirits " + n + (n > SPIRITS_SHOWN ? " (+" + (n - SPIRITS_SHOWN) + " behind)" : "");
+      spiritBtn.setAttribute("data-cave-spirits-n", String(n));
+    }
+    function spiritPanel(o) {
+      spiritBox.innerHTML = ""; spiritBox.style.display = "";
+      if (!o) {
+        spiritBox.appendChild(el("h2", { text: "Spirits with you" })); spiritBox.appendChild(P("Tap one to thank it."));
+        spiritBox.appendChild(el("div", { class: "oagc-row" }, spirits.map(function (x, i) {
+          var b = btn(x.name, { "data-cave-spirit": String(i) }, function () { spiritPanel(x); }, true); return b;
+        })));
+        spiritBox.appendChild(row([btn("Back", { "data-cave-spirit-back": "" }, function () { spiritBox.style.display = "none"; }, true)]));
+        return;
+      }
+      spiritBox.appendChild(el("h2", { text: o.name }));
+      spiritBox.appendChild(P("You: Thank you for coming with me.", { class: "oagc-you" }));
+      spiritBox.appendChild(P("Breathe it out and let it go, or take it home and sit with it again."));
+      spiritBox.appendChild(row([btn("Breathe out, and let it go", { "data-cave-spirit-out": "" }, function () { spiritBox.style.display = "none"; letSpiritGo(o); }),
+        btn("Take it home again", { "data-cave-spirit-home": "" }, function () { spiritBox.style.display = "none"; spiritHome(o); }, true)]));
+    }
+    function letSpiritGo(o) {
+      var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); spiritsUi();
+      var g = o.g, y0 = g.position.y;
+      tween(1600, function (k) { g.position.y = y0 + 2.5 * ease(k); g.traverse(function (m) { if (m.material) m.material.opacity = 0.9 * (1 - k); }); }, function () { scene.remove(g); });
+    }
+    // Sitting with it again: the room opens with its feeling known. What is worked there comes back out; if nothing is, it does.
+    function spiritHome(o) {
+      if (busy || !state.walk) return;
+      busy = true; fade.style.opacity = 1;
+      var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); scene.remove(o.g); spiritsUi();
+      setTimeout(function () {
+        cancelAnimationFrame(running); wrap.style.display = "none";
+        openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element }).then(function (r) {
+          wrap.style.display = ""; snapCam = true; last = performance.now(); render(); busy = false; fade.style.opacity = 0;
+          var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter }];
+          back.forEach(function (x) { addSpirit(x); });
         });
       }, 520);
     }
@@ -1688,6 +1780,13 @@
           avatar.position.set(sa.x, sa.y - h * 0.92 + 0.02, sa.z); avatar.rotation.y = yawFacing(sa) + Math.PI * stg.flip;
           stCam = stageCam(stg.cam, sa, sd, h, t321Of(wk));
         }
+        if (spirits.length) { // the spirits walk behind the figure, on the path it came along
+          followSpirits(THREE, spirits, function (j) {
+            var sp = at(route, Math.max(0, wk.s - 2.2 - 1.6 * j)), d = j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2;
+            return { x: sp.x - sp.fz * d, y: sp.y - h * 0.92 + 1.7, z: sp.z + sp.fx * d };
+          }, dt, nowMs, state.calm);
+          spirits.forEach(function (o) { if (!o.g.parent) scene.add(o.g); });
+        }
         if (state.held) state.look.yaw *= 1 - Math.min(1, dt * 1.5);
         // camera: behind on the path, and a little above; on a branch's first steps it sits straight behind the figure
         var cbx, cbz, cby;
@@ -1770,7 +1869,7 @@
 
     // ---- hooks for the browser test ----------------------------------------------------------
     var api = window.__oagCave;
-    api.state = state; api.leave = leave;
+    api.state = state; api.leave = leave; api.spirits = spirits; api.addSpirit = addSpirit;
     api.breath = function () { return { b: br.b, k: br.k, calm: state.calm, ring: !!ring.parentNode, pace: paceNow() }; };
     api.avatar = function () {
       var d = avatar.userData, wk = state.walk, a = at(wk.route, wk.s);
@@ -1979,7 +2078,7 @@
       // R.phase is the step's id from ROOM_STEPS, or opening, stays, kept, goes, leaving, gone, checkin, again, end.
       // R.active holds the creatures in the room being worked (up to three); ch is the one the player is working now. Each keeps
       // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
-      var R = { round: 1, phase: "welcome", back: false, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null };
+      var R = { round: 1, phase: "welcome", back: false, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [] };
       function newCharge(first, slot) {
         var c = { where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [] };
@@ -2140,7 +2239,7 @@
           return { title: w[1], kids: k };
         }
         if (ph === "stays") {
-          var title = talk321(ch.t321, { name: nm(), damaged: false, redraw: draw, focus: function () { focusChat(modal); }, where: WHERE_ROOM, aim: "Aimed at what you want: " + ch.goal,
+          var title = talk321(ch.t321, { name: nm(), damaged: false, skippable: true, redraw: draw, focus: function () { focusChat(modal); }, where: WHERE_ROOM, aim: "Aimed at what you want: " + ch.goal,
             ask: function (body) {
               body.push(P("What is one next move toward " + ch.goal + "? Write it.", { "data-room-move-ask": "" }));
               var done = btn("That's my move", { "data-room-move-done": "" }, function () { keep(); });
@@ -2204,6 +2303,7 @@
       }
       // One creature is worked through: the next one in the room is worked, or one waiting at the door is welcomed, or the round ends.
       function workedThrough() {
+        if (R.worked.indexOf(ch) < 0) R.worked.push(ch); // each W.A.V.E. worked here walks back out with the player as a spirit
         R.active.splice(R.active.indexOf(ch), 1);
         if (R.active.length) { var nx = R.active[0]; ch.phase = "done"; ch = nx; setFocus(nx); draw(); return; }
         if (R.waiting > 0) { R.waiting--; var c = newCharge(false, 0); c.waited = true; R.active.push(c); ch = c; setFocus(c); draw(); return; }
@@ -2230,7 +2330,9 @@
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
-          resolve({ rounds: R.round, rested: R.rested });
+          resolve({ rounds: R.round, rested: R.rested, spirits: R.worked.map(function (c) {
+            return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away" };
+          }) });
         }, 520);
       }
 
@@ -2418,6 +2520,7 @@
     // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
     ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,
     buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, labelSprite: labelSprite, P: P, btn: btn, row: row,
+    buildSpirit: buildSpirit, followSpirits: followSpirits, spiritHex: spiritHex, SPIRITS_SHOWN: SPIRITS_SHOWN,
   };
   window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE,
     openRoom: function (o) { return load().then(function (A) { return openRoom(A, o); }); }, ROOM_STEPS: ROOM_STEPS, roomTest: readRoomTest, kit: kit };
