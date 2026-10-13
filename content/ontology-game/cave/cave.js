@@ -2750,8 +2750,12 @@
       // Which creature is being worked: the player picks, and each keeps its own step.
       function focusRow() {
         return el("div", {}, [el("p", { class: "oagr-note", text: "Working with:" }), el("div", { class: "oagc-row" }, R.active.map(function (c, n) {
-          var b = el("button", { class: c === ch ? "" : "alt", "aria-pressed": String(c === ch), text: labelOf(c), onclick: function () { if (c !== ch) { setFocus(c); draw(); } } });
-          b.setAttribute("data-room-focus", String(n)); return b;
+          // Each part shows the element chosen for it, in its colour (Wendell, 13 October 2026: "Working on a different part
+          // should let me know what elements I've chosen for them").
+          var e = c.element && ELEMENTS.filter(function (x) { return x[0] === c.element || x[1] === c.element; })[0];
+          var b = el("button", { class: c === ch ? "" : "alt", "aria-pressed": String(c === ch), text: labelOf(c) + (e ? " · " + e[1] : ""), onclick: function () { if (c !== ch) { setFocus(c); draw(); } } });
+          if (e) b.style.borderLeft = "6px solid #" + ("00000" + e[3].toString(16)).slice(-6);
+          b.setAttribute("data-room-focus", String(n)); if (e) b.setAttribute("data-room-focus-element", e[1].toLowerCase()); return b;
         }))]);
       }
       // "What else is here?" (Wendell: "This will be the greatest use case for 'what else is here'"): first, is it about one of the

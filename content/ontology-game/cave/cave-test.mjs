@@ -830,6 +830,7 @@ await page.locator('[data-room-else]').click(); await page.locator('[data-room-e
 await page.locator('[data-room-texture]').first().waitFor({ timeout: 30000 });
 cs = await cr();
 ok(cs.length === 3 && cs[2].slot === 2 && cs[2].focus, 'a third comes in to the third place');
+ok(/Ache · Wood/.test(await page.locator('[data-room-focus="1"]').textContent()) && await page.locator('[data-room-focus="1"][data-room-focus-element="wood"]').count() === 1, 'each part\'s chip shows the element chosen for it');
 await page.locator('[data-room-shrink]').click(); await page.waitForTimeout(800);
 await page.screenshot({ path: SHOTS + '/room-three.png' });
 await page.locator('[data-room-pane]').click();
