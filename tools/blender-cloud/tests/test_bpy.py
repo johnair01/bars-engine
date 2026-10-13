@@ -454,5 +454,55 @@ def j2b():
     return "Royalty Free source stopped the build"
 
 
+# ---- the character creator (J4, J4b) -------------------------------------------------------------------------
+
+def walk_check(glb):
+    r, _ = run([TESTS / "_walk_check.py", glb])
+    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    check(r.returncode == 0 and line, f"_walk_check.py failed on {glb.name}: {r.stderr[-300:]}")
+    return json.loads(line)
+
+
+@test("J4")
+def j4():
+    """character.py --all makes nine figures (three builds, three palettes of the robe set), each one GLB under 300 KB
+    with one skin and one walk, and each walk passes W3's swing and swap with no knee or elbow folding the wrong way,
+    read back from the GLB. The sheet goes to the eye (LOOKED.md)."""
+    out = tmpdir("j4")
+    r, secs = run([GAME / "cave/character.py", "--all", "--out", out])
+    check(r.returncode == 0, f"character.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    rows = json.loads((out / "report.json").read_text())
+    check(len(rows) == 9 and len({(x["build"], x["palette"]) for x in rows}) == 9, f"{len(rows)} figures, want nine")
+    sizes = []
+    for row in rows:
+        glb = out / row["file"]
+        size = glb.stat().st_size
+        check(size < 300 * 1024, f"{row['id']} is {size // 1024} KB")
+        j = glb_json(glb)
+        check(len(j.get("skins", [])) == 1 and [a["name"] for a in j.get("animations", [])] == ["Walk"],
+              f"{row['id']}: want one skin and one Walk")
+        w = walk_check(glb)
+        check(not w["problems"], f"{row['id']}: {'; '.join(w['problems'])}")
+        sizes.append(size)
+    return f"nine figures, {min(sizes) // 1024} to {max(sizes) // 1024} KB, every walk clean; {secs:.0f} s"
+
+
+@test("J4b")
+def j4b():
+    """The walk check catches an inverted joint: a copy of character.py with the knees bent forward fails it."""
+    root = copy_tree(tmpdir("j4b"))
+    src = root / "content/ontology-game/cave/character.py"
+    text = src.read_text()
+    bent = "0.12 + 0.95 * max(0.0, math.cos(ph))"
+    check(bent in text, "the knee line moved; update J4b")
+    src.write_text(text.replace(bent, "-(0.12 + 0.95 * max(0.0, math.cos(ph)))"))
+    out = tmpdir("j4b-out")
+    r, _ = run([src, "--out", out])
+    check(r.returncode == 0, f"character.py exited {r.returncode}: {r.stderr[-300:]}")
+    w = walk_check(out / "average-dusk.glb")
+    check(any("kneeL folds forward" in p for p in w["problems"]), f"the forward knee went unseen: {w}")
+    return "a forward-bent knee fails the walk check"
+
+
 if __name__ == "__main__":
     main()
