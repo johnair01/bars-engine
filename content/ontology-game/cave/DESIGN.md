@@ -517,7 +517,16 @@ wall), `mush_clump` (seven mushrooms, where the caps grew) and `mush_colony` (ni
 beside the pool across the path from the element). The pieces from pictures stay in the kit and grow when a kit lacks the
 grown ones. The kit went from 80 KB to 319 KB; the page and all it loads are 829 KB of the 3 MB budget. The mushrooms take
 the caps' glow and stay lit in numbness's dark. **(choice)** the seeds, the face budgets (`GROWN` in `grow.py`), the sizes
-(`GROWN` in `cave.js`), a mat in about half the root places. The Blender detail pass comes next.
+(`GROWN` in `cave.js`), a mat in about half the root places.
+
+**The Blender detail pass (13 October 2026).** Wendell: "Start 4". Decimating to the budget had rounded the clump caps
+into blobs and melted the root mat's hair-roots. `tools/blender-cloud/detail.py` now grows each piece at its budget:
+mushrooms at fewer sides and rings, root lines thinned where they run straight, a share of the hair-roots kept whole.
+Each cap's rim stays a sharp edge, and every vertex carries a grey shade with ambient occlusion baked against the floor,
+wall or roof (`COLOR_0`, no textures). The page multiplies it into both colour and glow (`shaded` in `cave.js`), so a
+cap's gills and stem sit darker than its glowing top. The clump is nine mushrooms thrown wider (spread 0.55), so they
+stand apart. The kit went from 319 KB to 398 KB. **(choice)** the resolutions (`RES` in `detail.py`), the shades,
+and the clump's count and spread.
 
 **One touch walks and looks (13 October 2026).** Wendell: "For navigation one needs to be able to look walk and pan in the
 same touch. One keeps walking even as they drag to move the camera. Should follow touch rules so dragging down moves the

@@ -203,10 +203,17 @@ def mushroom_between(a, b, t):
     return out
 
 
-def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.65, **f):
+def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.65, sides=None, rings=None, cap_rings=None, gill_rings=5,
+             **f):
     """Lathe mesh of one mushroom, base at z=0. jitter varies each number by up to that fraction, per seed.
     lean (radians), bend (stem curvature) and cap_tilt (radians) are maximums: each seed draws its own amount between
-    zero and the maximum, in its own direction, so a patch of them does not stand like a row of pins. Pass 0 for upright."""
+    zero and the maximum, in its own direction, so a patch of them does not stand like a row of pins. Pass 0 for upright.
+    sides, rings (the stem), cap_rings and gill_rings set the resolution; left out they are SIDES, RINGS, RINGS and 5,
+    the full-detail mesh. A phone piece is made at its own resolution here rather than decimated afterwards, which is
+    what rounded the clump caps into blobs (detail.py)."""
+    sides = sides or SIDES
+    stem_rings = rings or RINGS
+    cap_rings = cap_rings or RINGS
     p = dict(MUSHROOM_FORMS["dome"], **f)
     rng = random.Random(seed)
     for k, v in list(p.items()):
@@ -218,23 +225,23 @@ def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.65, **f):
     rows = []  # rings from the base up: (radius, height, theta); theta > 0 only on the cap, where scallops and pits apply
 
     # stem profile from the base up
-    for i in range(RINGS):
-        t = i / (RINGS - 1)
+    for i in range(stem_rings):
+        t = i / (stem_rings - 1)
         r = lerp(p["rb"], p["rt"], t) * (1 + p["bulge"] * math.sin(3.1416 * t))
         rows.append((r, p["H"] * t, 0.0))
     if p["ring"] > 0:  # a skirt a third of the way up
-        k = RINGS // 3
-        rows.insert(k + 1, (p["rb"] + p["ring"], p["H"] * (k / (RINGS - 1)) - 0.01, 0.0))
-        rows.insert(k + 2, (p["rb"] + p["ring"] * 0.2, p["H"] * (k / (RINGS - 1)) + 0.02, 0.0))
+        k = stem_rings // 3
+        rows.insert(k + 1, (p["rb"] + p["ring"], p["H"] * (k / (stem_rings - 1)) - 0.01, 0.0))
+        rows.insert(k + 2, (p["rb"] + p["ring"] * 0.2, p["H"] * (k / (stem_rings - 1)) + 0.02, 0.0))
     # the cap sits on the stem top at z0. Underside: out from the stem to the rim, sloping down by `thick`; then the
     # rim; then the top, from the rim in over the dome to the centre. theta runs pi/2 (rim) to 0 (centre).
     z0 = p["H"]
     rim_z = z0 + p["h"] * 0 + p["lip"] * 0
-    for i in range(1, 6):
-        u = i / 5
+    for i in range(1, gill_rings + 1):
+        u = i / gill_rings
         rows.append((lerp(p["rt"], p["R"] * 0.97, u), z0 - p["thick"] * (u ** 1.5) * 0.9, 0.0))
-    for i in range(RINGS):
-        th = 1.5708 * (1 - i / (RINGS - 1))
+    for i in range(cap_rings):
+        th = 1.5708 * (1 - i / (cap_rings - 1))
         r = p["R"] * math.sin(th)
         z = z0 + p["h"] * max(0.0, math.cos(th)) ** p["sharp"] + p["umbo"] * math.exp(-(th * 4) ** 2)
         if th > 1.2:
@@ -243,8 +250,8 @@ def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.65, **f):
     ring_list = rows
 
     for (r, z, th) in ring_list:
-        for k in range(SIDES):
-            a = 6.283185307 * k / SIDES
+        for k in range(sides):
+            a = 6.283185307 * k / sides
             rr = r
             if nsc and th > 1.0:
                 rr *= 1 + dsc * math.cos(nsc * a + phase) * min(1, (th - 1.0) / 0.5)
@@ -254,9 +261,9 @@ def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.65, **f):
             verts.append((rr * math.cos(a), rr * math.sin(a), zz))
     n = len(ring_list)
     for i in range(n - 1):
-        for k in range(SIDES):
-            a, b = i * SIDES + k, i * SIDES + (k + 1) % SIDES
-            faces.append((a, b, b + SIDES, a + SIDES))
+        for k in range(sides):
+            a, b = i * sides + k, i * sides + (k + 1) % sides
+            faces.append((a, b, b + sides, a + sides))
     if lean or bend or cap_tilt:
         L, B, T = rng.uniform(0.2, 1.0) * lean, rng.uniform(0.0, 1.0) * bend, rng.uniform(0.3, 1.0) * cap_tilt
         az, at = rng.uniform(0, 6.283), rng.uniform(0, 6.283)  # lean direction, and the cap's own tilt direction

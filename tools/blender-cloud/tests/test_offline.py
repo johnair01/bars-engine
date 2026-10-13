@@ -1,4 +1,4 @@
-"""Offline tier: G1, G2, G2b, G6, G7. Plain Python 3, no third-party packages, no network. Runs in the GitHub check job.
+"""Offline tier: G1, G2, G2b, G6, G7, D1. Plain Python 3, no third-party packages, no network. Runs in the GitHub check job.
 
 usage: python3 tools/blender-cloud/tests/test_offline.py [G1,G2,...]
 """
@@ -70,6 +70,10 @@ def g6():
         for k in ("source", "licence"):
             if not a.get(k):
                 problems.append(f"{aid} has no {k}")
+        if a.get("kind") == "object":  # packed inside chamber.glb (J2): J2 checks its bytes and budget when it builds
+            if a.get("licence") not in ("own work", "CC0"):
+                problems.append(f"{aid} licence is {a.get('licence')!r}")
+            continue
         if a.get("file") is None:
             continue  # a library with no file of its own (lib.three) is listed for its licence only
         if a.get("licence") not in ("own work", "CC0"):
@@ -118,6 +122,24 @@ def g7():
         leaks = [p.name for p in written if key.encode() in p.read_bytes()]
         check(key not in r.stdout + r.stderr and not leaks, f"the key appeared in output or in {leaks}")
     return f"key on the API host only ({len(api)} API, {len(other)} asset requests); none when unset; never printed or written"
+
+
+@test("D1")
+def d1():
+    """The detail pass (detail.py): every grown piece fits its face budget with no decimation, every vertex has a tag,
+    the same every run, and procgen's mushroom at its default resolution is what it was before the resolution options."""
+    sys.path.insert(0, str(TOOLS))
+    import detail, procgen
+    a, b = detail.pieces(), detail.pieces()
+    for name, (v, f, tags, budget) in a.items():
+        check(len(f) <= budget, f"{name}: {len(f)} faces over its budget of {budget}")
+        check(len(tags) == len(v), f"{name}: {len(tags)} tags for {len(v)} vertices")
+        check(b[name][0] == v and b[name][1] == f, f"{name}: not the same on a second run")
+    caps = sum(1 for k, t in a["mush_clump"][2] if k == detail.CAP and t == 0)
+    check(caps, "mush_clump: no cap rim to keep sharp")
+    v, f = procgen.mushroom(seed=5)
+    check(len(v) == (procgen.RINGS * 2 + 5) * procgen.SIDES, f"the default mushroom changed: {len(v)} vertices")
+    return ", ".join(f"{n} {len(x[1])}/{x[3]}" for n, x in a.items()) + " faces"
 
 
 if __name__ == "__main__":
