@@ -20,7 +20,9 @@
 ## Build
 
 - [x] [claude] 1. Offline tier: G1, G2, G2b, G6, G7, and the CI step. G2 and G2b marked known gaps.
-- [ ] [claude] 2. Raise G2 and G2b on the board as positions (the record answers them).
+- [x] [claude] 2. Raised G2 and G2b on the board as positions `bpt-licence-stop` and `bpt-no-restricted-flag`; both
+  stood (board read 0107). Fixed in `build_viewer.py`: a sidecar with no licence stops with a STOP: line, and
+  `--allow-restricted` is gone. G2 and G2b are no longer gaps. `bpt-root-curl` (P3, P5) waits for the cave-studio strand.
 - [x] [claude] 3. `bpy` tier: G3, R1 to R3, W1 to W4. `walk_keys.json` committed after the walk frames were looked at.
   G4 and G5 skip: they need the dining table, and Blendkit is unreachable here.
 - [x] [claude] 4. Contact sheet, `LOOKED.md`, first look written.

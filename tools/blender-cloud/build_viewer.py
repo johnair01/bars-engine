@@ -1,11 +1,12 @@
 """Build the Cloud Walker viewer: OUT_DIR/viewer.html plus OUT_DIR/model.json, a base64 copy of the GLB that the page fetches.
 (Artifacts do not serve .glb files, so the model rides in a .json file.)
 
-usage: python build_viewer.py scene.glb OUT_DIR --asset assets/Painted_Wooden_Chair_02.json [--allow-restricted]
+usage: python build_viewer.py scene.glb OUT_DIR --asset assets/Painted_Wooden_Chair_02.json
 
 --asset is the sidecar JSON that blenderkit_fetch.py wrote. Only CC0 models may sit in a published page: a Royalty
 Free model must not be extractable by a third party (Blendkit terms, art. 5), and a GLB in a page is. The build
-stops on any other licence unless --allow-restricted is given, which is for pages nobody else can open.
+stops on any other licence, and on a sidecar that names none (cs-cc0-or-own; board bpt-no-restricted-flag removed the
+old --allow-restricted switch, 2026-10-13). Preview a Royalty Free model with scene.py's preview.png instead.
 """
 import argparse, base64, html, json, pathlib, sys
 
@@ -13,15 +14,14 @@ ap = argparse.ArgumentParser()
 ap.add_argument("glb")
 ap.add_argument("out_dir")
 ap.add_argument("--asset", action="append", default=[], help="sidecar JSON of each downloaded asset in the scene")
-ap.add_argument("--allow-restricted", action="store_true")
 a = ap.parse_args()
 
 if not a.asset:
     sys.exit("STOP: pass --asset <sidecar.json> for every downloaded model in the scene, so the licence can be checked.")
 infos = [json.loads(pathlib.Path(p).read_text()) for p in a.asset]
 bad = [i for i in infos if i.get("license") != "cc_zero"]
-if bad and not a.allow_restricted:
-    sys.exit("STOP: " + ", ".join(f"{i['name']!r} is {i['license']}" for i in bad) +
+if bad:
+    sys.exit("STOP: " + ", ".join(f"{i.get('name', 'a model')!r} is {i.get('license') or 'missing its licence'}" for i in bad) +
              ". Only CC0 models may be embedded in a published page. Pick a CC0 asset: blenderkit_fetch.py searches CC0 by default.")
 
 here = pathlib.Path(__file__).parent

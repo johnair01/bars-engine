@@ -45,7 +45,7 @@ def g1():
     return "royalty_free refused, cc_zero built"
 
 
-@test("G2", gap=True)
+@test("G2")
 def g2():
     for case, sc in (("no sidecar", None), ("no license key", sidecar(license=None)), ('"CC0" spelling', sidecar(license="CC0"))):
         r, page = viewer(sc)
@@ -53,14 +53,12 @@ def g2():
     return "each odd sidecar stops with a STOP: line"
 
 
-@test("G2b", gap=True)
+@test("G2b")
 def g2b():
     r, page = viewer(sidecar(license="royalty_free"), "--allow-restricted")
-    if r.returncode != 0 and not page.exists():
-        return "--allow-restricted no longer lets a royalty_free model into a page"
-    check(page.exists() and "do-not-publish" in page.read_text(),
-          "--allow-restricted builds a page holding a royalty_free model, with nothing marking it unpublishable (cs-cc0-or-own)")
-    return "the page built with --allow-restricted is marked do-not-publish"
+    check(r.returncode != 0 and not page.exists(),
+          "--allow-restricted builds a page holding a royalty_free model (cs-cc0-or-own, bpt-no-restricted-flag)")
+    return "--allow-restricted no longer lets a royalty_free model into a page"
 
 
 @test("G6")
