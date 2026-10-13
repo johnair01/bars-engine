@@ -336,10 +336,10 @@ const gatesFirst = async (check) => {
 const camLooks = [];
 for (const [p, y] of [[-1.3, 0], [-1.3, 1.5], [-1.3, Math.PI], [0.6, -1.5]]) {
   await C(([pp, yy]) => { window.__oagCave.state.look.pitch = pp; window.__oagCave.state.look.yaw = yy; }, [p, y]);
-  await page.waitForTimeout(1200); camLooks.push(await C(() => window.__oagCave.camInside()));
+  await page.waitForTimeout(1200); camLooks.push(Object.assign(await C(() => window.__oagCave.camInside()), { room: await C(() => window.__oagCave.camRoom()) }));
 }
 await C(() => { window.__oagCave.state.look.pitch = 0; window.__oagCave.state.look.yaw = 0; });
-ok(camLooks.every((c) => c.inside && c.above < c.roof * 0.97), `looking down from above and swinging round, the camera stays under the roof and between the walls (${camLooks.map((c) => c.above.toFixed(1) + '/' + c.side.toFixed(1)).join(', ')})`);
+ok(camLooks.every((c) => c.room > 0.2 && c.above < c.roof * 0.97), `looking down from above and swinging round, the camera keeps clear of the roof and walls (room ${camLooks.map((c) => c.room.toFixed(2)).join(', ')})`);
 // ---- a block: the wall opens, a side path loops under the cave and back to the very spot --------------------
 await C(() => { window.__oagCave.state.speed = 8; });
 await walkTo('[data-cave-marker="acknowledge"]');

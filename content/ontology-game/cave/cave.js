@@ -488,10 +488,10 @@
         var j1 = (j + 1) % PROF, cut = false, a = i * C + j, b = i * C + j + 1, c = (i + 1) * C + j, d = (i + 1) * C + j + 1;
         for (var q = 0; q < t.holes.length && !cut; q++) {
           var H = t.holes[q];
-          if (H.tube) cut = ring[i].s >= H.s0 - 2 && ring[i + 1].s <= H.s1 + 2 && PX[j] * H.side > -0.2 && PX[j1] * H.side > -0.2 && quadIn(H.tube, "h" + q, 0.98, a, b, c, d);
+          if (H.tube) cut = ring[i].s >= H.s0 - 2 && ring[i + 1].s <= H.s1 + 2 && PX[j] * H.side > -0.2 && PX[j1] * H.side > -0.2 && quadIn(H.tube, "h" + q, 0.95, a, b, c, d);
           else cut = ring[i].s >= H.s0 && ring[i + 1].s <= H.s1 && PX[j] * H.side > 0.05 && PX[j1] * H.side > 0.05 && PY[j] > -0.86 && PY[j1] > -0.86 && PY[j] < 0.8 && PY[j1] < 0.8;
         }
-        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) cut = quadIn(t.within.tube, "w", 0.995, a, b, c, d);
+        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) cut = quadIn(t.within.tube, "w", 0.97, a, b, c, d);
         if (cut) continue;
         (PY[j] < -0.8 && PY[j1] < -0.8 ? floorIdx : idx).push(a, c, b, b, c, d);
       }
@@ -523,8 +523,8 @@
         if (tr > 0 && te >= -1e-6 && te <= 1 + 1e-6) rmax = Math.min(rmax, tr);
       }
       if (rmax > 1e8) return null;
-      return { ratio: past ? Math.max(9, L / rmax) : L / rmax, clamp: function (f) {
-        var r = Math.min(L, f * rmax), x = ux * r, y = cy + uy * r;
+      return { ratio: past ? Math.max(9, L / rmax) : L / rmax, room: past ? -9 : rmax - L, clamp: function (f, m) {
+        var r = Math.max(0, Math.min(L, f * rmax, rmax - (m || 0))), x = ux * r, y = cy + uy * r;
         return { x: R.x + R.nx * x + fx * along, y: R.y + y, z: R.z + R.nz * x + fz * along };
       } };
     };
@@ -2383,15 +2383,15 @@
         // boundaries of the cave"). Where it wants to be, and where it is after easing, are both pulled back inside the
         // tunnel that holds them best: the one being walked, or on a branch's first steps the one it left.
         var tubes = [route.tube]; if (frT && frT.route.tube) tubes.push(frT.route.tube);
-        var keepIn = function (v, f) {
+        var keepIn = function (v, f, m) { // f of the way to the stone, and at least m short of it
           var best = null; tubes.forEach(function (tb) { var c2 = tb.contain(v, true); if (c2 && (!best || c2.ratio < best.ratio)) best = c2; });
-          if (best && best.ratio > f) { var q = best.clamp(f); v.set(q.x, q.y, q.z); }
+          if (best && (best.ratio > f || best.room < m)) { var q = best.clamp(f, m); v.set(q.x, q.y, q.z); }
         };
         var free = !stCam && !state.rise;
-        if (free) keepIn(want, 0.72);
+        if (free) keepIn(want, 0.94, 0.35);
         if (snapCam) { camPos.copy(want); lookAt.copy(aim); snapCam = false; }
         else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
-        if (free) keepIn(camPos, 0.8);
+        if (free) keepIn(camPos, 0.96, 0.25);
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
         var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : route.kind === "face" ? faceLook(route.style) : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
@@ -2503,10 +2503,21 @@
     api.depth = function () { return state.stack.length; };
     // Whether the camera is inside the tunnel being walked (between its walls, above its floor, under its roof).
     api.camInside = function () {
-      var r = state.walk.route, best = 1e9, bs = 0;
+      var top = state.stack[state.stack.length - 1], a1 = insideOf(state.walk.route);
+      if (a1.inside || !top || state.walk.route.kind === "main") return a1;
+      var a2 = insideOf(top.route); return a2.inside ? a2 : a1; // on a branch's first steps the camera is still in the tunnel it left
+    };
+    function insideOf(r) {
+      var best = 1e9, bs = 0;
       for (var i = 0; i < r.X.length; i += 2) { var d = Math.hypot(r.X[i] - camera.position.x, r.Z[i] - camera.position.z); if (d < best) { best = d; bs = r.S[i]; } }
       var a = at(r, bs), hw = (r.w || ch.w) * (r.kind === "main" ? r.openAt(bs) : SIDE_LOOK.open), fl = a.y - ch.h * 0.92;
       return { side: best, halfWidth: hw, above: camera.position.y - fl, roof: ch.h * 1.92, inside: best < hw * 0.95 && camera.position.y > fl && camera.position.y < fl + ch.h * 1.85 };
+    };
+    // How much room the camera has to the stone, measured against the stone as it stands (positive: inside).
+    api.camRoom = function () {
+      var top = state.stack[state.stack.length - 1], best = -1e9;
+      [state.walk.route, top && top.route].forEach(function (r) { if (r && r.tube) { var c = r.tube.contain(camera.position, true); if (c) best = Math.max(best, c.room); } });
+      return best;
     };
     api.clearance = function () {
       var r = state.mainRoute, best = 1e9;

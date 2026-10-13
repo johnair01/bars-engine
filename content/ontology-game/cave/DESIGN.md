@@ -559,4 +559,4 @@ player more effectively not unlike a drone".
   and the staged scenes keep their own cameras.
 
 **(choice)** how far the stones stand past the ramp, the reveal's timing and colours, the camera's swing (`state.peek`),
-and how far inside the stone the camera keeps (0.72 and 0.8 of the way to the wall).
+and how close to the stone the camera may come (0.35 where it aims to be, 0.25 where it is).
