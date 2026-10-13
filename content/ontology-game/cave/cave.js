@@ -911,6 +911,98 @@
     return total;
   }
 
+  // The water element's pool: an uneven shore of wet stones round a dark basin, and a surface that moves. The surface is one
+  // flat disc; its ripples live in the fragment shader (no extra vertices on a phone): a slow swell that crosses it, rings
+  // where a drop falls from the roof every few seconds, light rippling under it, and a sheen at a low angle that takes the
+  // lamp's colour, so the figure's own light slides across the water as it walks past. Calm stills the drops and slows the swell.
+  var waterCalm = false, waterSheen = null; // set each frame from the calm button and the figure's lamp
+  var WATER_VERT = "varying vec2 vPoolP;\nvarying vec3 vPoolX;\nvarying vec3 vPoolY;\nvarying vec3 vPoolZ;\nuniform float uPoolR;\n";
+  var WATER_FRAG = [
+    "varying vec2 vPoolP;", "varying vec3 vPoolX;", "varying vec3 vPoolY;", "varying vec3 vPoolZ;",
+    "uniform float uTime;", "uniform float uSwell;", "uniform vec3 uSheen;", "uniform vec4 uDrip[3];",
+    "float poolH(vec2 p) {",
+    "  float h = uSwell * (0.012 * sin(dot(p, vec2(0.8, 0.6)) * 7.0 + uTime * 1.3) + 0.008 * sin(dot(p, vec2(-0.5, 0.86)) * 11.0 - uTime * 1.7)",
+    "    + 0.005 * sin(dot(p, vec2(0.2, -0.98)) * 17.0 + uTime * 2.3));",
+    "  for (int i = 0; i < 3; i++) {",
+    "    float age = uTime - uDrip[i].z;",
+    "    if (age > 0.0 && age < 3.5) {",
+    "      float d = length(p - uDrip[i].xy) - age * 0.45;",
+    "      h += uDrip[i].w * 0.065 * sin(d * 30.0) * exp(-d * d * 40.0) * exp(-age * 1.1);",
+    "    }",
+    "  }",
+    "  return h;",
+    "}",
+  ].join("\n") + "\n";
+  function waterMaterial(THREE, r) {
+    var m = new THREE.MeshStandardMaterial({ color: 0x12324f, roughness: 0.08, metalness: 0.3, emissive: 0x2a58a0, emissiveIntensity: 0.3, transparent: true, opacity: 0.9 });
+    var u = { uTime: { value: 0 }, uSwell: { value: 1 }, uPoolR: { value: r }, uSheen: { value: new THREE.Color(0xffe0b0) },
+      uDrip: { value: [new THREE.Vector4(0, 0, -99, 0), new THREE.Vector4(0, 0, -99, 0), new THREE.Vector4(0, 0, -99, 0)] } };
+    m.userData.water = u;
+    m.onBeforeCompile = function (sh) {
+      Object.keys(u).forEach(function (k) { sh.uniforms[k] = u[k]; });
+      sh.vertexShader = WATER_VERT + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  vPoolP = position.xz / uPoolR;\n" +
+        "  vPoolX = normalize(normalMatrix * vec3(1.0, 0.0, 0.0));\n  vPoolY = normalize(normalMatrix * vec3(0.0, 1.0, 0.0));\n  vPoolZ = normalize(normalMatrix * vec3(0.0, 0.0, 1.0));");
+      sh.fragmentShader = WATER_FRAG + sh.fragmentShader
+        .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n" +
+          "  float pe = 0.01, ph = poolH(vPoolP);\n  vec2 pg = vec2(poolH(vPoolP + vec2(pe, 0.0)) - ph, poolH(vPoolP + vec2(0.0, pe)) - ph) / pe;\n" +
+          "  normal = normalize(normalize(vPoolY) - (pg.x * normalize(vPoolX) + pg.y * normalize(vPoolZ)) * 2.2);")
+        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n" +
+          "  float pf = pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 3.0);\n" +
+          "  vec2 cq = vPoolP * 9.0;\n  float pc = sin(cq.x + sin(cq.y * 1.3 + uTime * 0.9) * 1.7 + uTime * 0.6) * sin(cq.y + sin(cq.x * 1.1 - uTime * 0.7) * 1.7 - uTime * 0.5);\n" +
+          "  totalEmissiveRadiance += uSheen * (pf * 0.45 + clamp(length(pg) * 1.5, 0.0, 0.6)) + diffuseColor.rgb * pow(abs(pc), 6.0) * 0.45 * uSwell\n" +
+          "    + uSheen * smoothstep(0.82, 1.0, length(vPoolP)) * 0.12;");
+    };
+    return m;
+  }
+  var dropGeo = null;
+  function buildPool(THREE, g, r) {
+    var seed = (r * 977.3) % 1, n = 40;
+    function shore(a) { return 0.68 + 0.08 * Math.sin(3 * a + seed * 6.3) + 0.05 * Math.sin(5 * a + seed * 11.1); }
+    function disc(k, y) { // the pool's outline as a fan, flat in x-z
+      var pos = [0, y, 0], idx = [];
+      for (var i = 0; i < n; i++) { var a = i / n * Math.PI * 2, rr = r * shore(a) * k; pos.push(Math.cos(a) * rr, y, Math.sin(a) * rr); idx.push(0, 1 + (i + 1) % n, 1 + i); }
+      var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+      return geo;
+    }
+    g.add(new THREE.Mesh(disc(1.02, r * 0.01), new THREE.MeshStandardMaterial({ color: 0x07121c, roughness: 1 })));
+    var wm = waterMaterial(THREE, r), water = new THREE.Mesh(disc(1, r * 0.07), wm);
+    g.add(water);
+    // the shore: smooth wet stones merged into one mesh, so a pool is three draws however many stones it has
+    var ico = new THREE.IcosahedronGeometry(1, 2), src = ico.attributes.position, sp = [], sn = [], tmp = new THREE.Vector3(), M = new THREE.Matrix4(), N = new THREE.Matrix3(), Q = new THREE.Quaternion(), E = new THREE.Euler(), S3 = new THREE.Vector3();
+    var ns = 24 + Math.floor(seed * 5);
+    for (var i = 0; i < ns; i++) {
+      var a = (i + 0.35 * Math.sin(i * 7.1 + seed * 9)) / ns * Math.PI * 2, s = r * (0.06 + 0.05 * ((i * 5 + Math.floor(seed * 7)) % 4) / 3), rr = r * shore(a) + s * 0.5;
+      M.compose(tmp.set(Math.cos(a) * rr, s * 0.2, Math.sin(a) * rr), Q.setFromEuler(E.set(0.3 * Math.sin(i * 3.3), a, 0.3 * Math.cos(i * 2.1))), S3.set(s * 1.4, s * 0.55, s));
+      N.getNormalMatrix(M);
+      for (var v = 0; v < src.count; v++) {
+        tmp.fromBufferAttribute(src, v); var nx = tmp.clone().applyMatrix3(N).normalize(); sn.push(nx.x, nx.y, nx.z);
+        tmp.applyMatrix4(M); sp.push(tmp.x, tmp.y, tmp.z);
+      }
+    }
+    var sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.Float32BufferAttribute(sp, 3)); sg.setAttribute("normal", new THREE.Float32BufferAttribute(sn, 3));
+    g.add(new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ color: 0x4a4f58, roughness: 0.35, metalness: 0.15 })));
+    // a drop falls from the dark above, and its ring opens where it lands
+    if (!dropGeo) dropGeo = new THREE.SphereGeometry(1, 8, 6);
+    var drop = new THREE.Mesh(dropGeo, new THREE.MeshBasicMaterial({ color: 0xbfe0ff, transparent: true, opacity: 0.85 }));
+    drop.scale.set(r * 0.025, r * 0.05, r * 0.025); drop.visible = false; g.add(drop);
+    var u = wm.userData.water, clock = 0, last = 0, next = 0.6 + seed * 2, slot = 0, fall = null, rnd = rngOf(hashOf("pool:" + seed));
+    water.onBeforeRender = function () {
+      var now = performance.now() / 1000, dt = last ? Math.min(0.1, now - last) : 0; last = now;
+      if (waterSheen) u.uSheen.value.copy(waterSheen);
+      clock += dt * (waterCalm ? 0.3 : 1); u.uTime.value = clock;
+      u.uSwell.value += ((waterCalm ? 0.4 : 1) - u.uSwell.value) * Math.min(1, dt * 2);
+      if (fall) {
+        var k = (clock - fall.t) / 0.55;
+        if (k >= 1) { u.uDrip.value[slot].set(fall.x, fall.z, clock, 0.6 + rnd() * 0.5); slot = (slot + 1) % 3; fall = null; drop.visible = false; }
+        else drop.position.set(fall.x * r, r * (0.07 + 2.4 * (1 - k * k)), fall.z * r);
+      } else if (clock > next && !waterCalm) {
+        var da = rnd() * Math.PI * 2, dr = Math.sqrt(rnd()) * 0.5;
+        fall = { x: Math.cos(da) * dr, z: Math.sin(da) * dr, t: clock }; drop.visible = true; next = clock + 2.2 + rnd() * 3;
+      }
+    };
+    water.userData.water = u;
+  }
+
   // One object per element, built from rounded shapes (choices): fire is a cluster of flames, water a still pool, wood a
   // young tree, metal a crystal spire, earth a boulder. Each is the same wherever it appears.
   function buildElement(THREE, name, r) {
@@ -920,9 +1012,9 @@
     if (name === "Anger") { // Fire: a ring of stones and three flames
       add(new THREE.TorusGeometry(r * 0.55, r * 0.1, 8, 14), mat(0x4a3a34), 0, r * 0.1, 0).rotation.x = Math.PI / 2;
       [[0, 1], [0.25, 0.7], [-0.25, 0.75]].forEach(function (f) { var fl = add(new THREE.ConeGeometry(r * 0.2, r * f[1] * 1.5, 10), mat(0xe0602a, 0xff7a20, 0.9), f[0] * r, r * f[1] * 0.75, 0); fl.userData.flame = true; });
-    } else if (name === "Sadness") { // Water: a still pool
-      add(new THREE.CylinderGeometry(r * 0.7, r * 0.75, r * 0.12, 24), mat(0x3a78d0, 0x2a58a0, 0.35, 0.2), 0, r * 0.06, 0);
-      add(new THREE.TorusGeometry(r * 0.72, r * 0.06, 8, 24), mat(0x5a5f6a), 0, r * 0.1, 0).rotation.x = Math.PI / 2;
+    } else if (name === "Sadness") { // Water: a pool that moves (Wendell, 2026-10-13: "we need to start looking at more dynamic
+      // water effects than the generic geometric pool")
+      buildPool(THREE, g, r);
     } else if (name === "Joy") { // Wood, as it grows underground and at a cave's mouth (Wendell, 2026-10-13: "the wood elements
       // shouldn't be underground trees thats foolish, but roots and bushes and grass makes a lot more sense"): a low bush, tufts of
       // grass round it, and a root that curls out of the stone beside them.
@@ -2607,6 +2699,7 @@
         var warm = 1 - br.b, surge = lk.flash * lk.flash;
         baseLamp.copy(lk.light).lerp(tmpC.setHex(0xffffff), 0.3).lerp(tmpC.setHex(c && c.lampHex || 0xffe0b0), 0.15).lerp(WARM, warm * 0.2);
         lamp.color.copy(baseLamp); lamp.intensity = 1.0 + 0.5 * warm + 1.6 * surge + 0.5 * lk.hemi;
+        waterCalm = state.calm; (waterSheen || (waterSheen = new THREE.Color())).copy(baseLamp).multiplyScalar(0.25 + 0.2 * lamp.intensity);
         hemi.color.setHex(0xffffff).lerp(lk.light, 0.35); hemi.intensity = (lk.hemi + 0.1 * warm + 0.4 * surge) * LAMP.ambient * (parts.shape && parts.shape.dark ? 0.4 : 1);
         glow.forEach(function (g) { g.m.emissiveIntensity = g.base * (0.7 + 0.6 * br.b); });
         route.markers.forEach(function (m, i) {
@@ -3430,7 +3523,8 @@
   };
   window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE,
     crystalBlock: crystalBlock, geomOf: geomOf, stoneOf: stoneOf, CRYSTAL_TINTS: CRYSTAL_TINTS, CRYSTAL_RANGE: CRYSTAL_RANGE,
-    openRoom: function (o) { return load().then(function (A) { return openRoom(A, o); }); }, ROOM_STEPS: ROOM_STEPS, roomTest: readRoomTest, kit: kit };
+    openRoom: function (o) { return load().then(function (A) { return openRoom(A, o); }); }, ROOM_STEPS: ROOM_STEPS, roomTest: readRoomTest, kit: kit, buildElement: buildElement,
+    waterLook: function (calm, sheen) { waterCalm = !!calm; waterSheen = sheen; } };
   // A page that only borrows the engine sets __oagCaveNoStart before loading this file, so the Cave of Lessons' doorway stays shut.
   if (!window.__oagCaveNoStart) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start(); }
 })();
