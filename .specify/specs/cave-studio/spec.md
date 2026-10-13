@@ -36,7 +36,10 @@ piece in the cave or a stated reason it waits.
 
 | Decision | Choice | Whose |
 |---|---|---|
-| Licence of every asset | Own work or CC0 only; Royalty Free models never go into a page | Wendell (`c3d-cc0-only`); Blendkit terms art. 5, read 2026-10-12 |
+| Licence of every asset | Own work or CC0 only; Royalty Free models never go into a page | Wendell (`c3d-cc0-only`); Blendkit terms art. 5, read 2026-10-12. Position `cs-cc0-or-own` overruled 2026-10-12 with a question about the point of Royalty Free (request.md, Round 1); pieces built from pictures are own work, so the first piece is unaffected |
+| ChatGPT art | Concept only; a session rebuilds each piece in Blender from the picture, and the rebuilt piece ships | Wendell (`cs-chatgpt-ai-art`, 2026-10-12) |
+| What ChatGPT makes | Pictures to build from | Wendell (`cs-asset-kind`, 2026-10-12) |
+| First piece | Chamber dressing for the kit | Wendell (`cs-first-piece`, 2026-10-12) |
 | Size | The kit stays under about 3 MB; each piece has its own budget in the manifest | Wendell (`c3d-phone-budget`) |
 | Words | The studio makes things to see. It never writes a daemon's or spirit's words | Wendell (`cave-321-player-writes`) |
 | One studio, two caves | Shared pieces are built once | Wendell (`cave-321-one-build`, `st-which-three` steer) |
@@ -52,20 +55,20 @@ piece in the cave or a stated reason it waits.
 
 ## Reserved items
 
-- Whether ChatGPT-made art may ship at all, and how it is marked: board question `cs-chatgpt-ai-art`. Consent and a
-  person's likeness are reserved too: no piece is made from a photograph of a real person.
+- Consent and a person's likeness are reserved: no piece is made from a photograph of a real person.
 
 ## How we will know it failed
 
 - **The cheap test, run before building:** rebuild the cave's figure, kit and spot table in the cloud and compare
   with the committed files. **Run 2026-10-12: passed**, all three byte for byte identical.
-- **The result that stops the work:** the first new piece (a daemon figure) cannot be built under its budget, or
-  loads in the cave and fails the 390 by 844 browser test, after two honest attempts. Then the studio's scripted
+- **The result that stops the work:** the first new piece (chamber dressing, built from pictures) cannot be built under
+  its budget, or loads in the cave and fails the 390 by 844 browser test, after two honest attempts. **Run 2026-10-12:
+  passed**, three pieces at 0.89 to 0.99 outline match, kit 47 KB, 126 of 126 checks. Then the studio's scripted
   path is the wrong tool for characters, and the council rethinks, with image-to-3D as the next thing to try.
 
 ## Definition of done
 
-- [ ] The first piece is built in the cloud, committed with a manifest row, and loads in the cave at 390 by 844.
-- [ ] The cave's browser test passes and the kit stays under budget.
+- [x] The first piece is built in the cloud, committed with a manifest row, and loads in the cave at 390 by 844.
+- [x] The cave's browser test passes and the kit stays under budget.
 - [ ] The repo's checks pass and the preview builds.
 - [ ] Wendell has looked at the piece's preview. It goes on his steps list.

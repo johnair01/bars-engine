@@ -31,12 +31,14 @@ before publishing.** The orientation and scale of a new asset are found by eye: 
 | `prepare_asset.py` | Decode Draco or meshopt compression so `bpy` can import the GLB. |
 | `scene.py` | Import the asset, decimate to a triangle budget, cap textures, build the six-box figure with a 7-bone rig and a 48-frame walk, render, export, report. |
 | `viewer_template.html`, `build_viewer.py` | Build the page. Refuses any model that is not CC0. |
+| `from_picture.py` | Build a model from one front-view picture (lathe or inflate), score its outline against the picture, render it. |
 
 ## The six problems, and what each became
 
 1. **Key handling.** The sandbox proxy adds the BlenderKit key for `api.blenderkit.com`, so the scripts send none.
-   Elsewhere, set `BLENDERKIT_API_KEY` and it goes out as a Bearer header to that host only. Not tested without
-   the proxy; the first step in `tasks.md` asks Wendell to try from his own machine.
+   Elsewhere, set `BLENDERKIT_API_KEY` and it goes out as a Bearer header to that host only. Search without a key
+   works from Wendell's Mac (his check, 2026-10-12: "works"). On 2026-10-12 a later cloud session's proxy refused
+   `api.blenderkit.com`, so whether a session reaches Blendkit depends on that environment's network setting.
 2. **`scene_uuid`.** Downloads need this parameter. The script makes one UUID per machine and reuses it
    (`~/.cache/blender-cloud/scene_uuid`). On a 403 it prints the API's message. `--selftest` is the canary.
 3. **Draco.** The `bpy` wheel has no Draco decoder, and BlenderKit glTFs use it. The default is now the glTF
@@ -48,6 +50,27 @@ before publishing.** The orientation and scale of a new asset are found by eye: 
    serve `.glb`, so the page loads the model from a base64 `model.json`; the 16 MB limit now applies per file.
 6. **three.js.** The viewer uses three@0.170.0 as ES modules through an import map from `cdn.jsdelivr.net/npm`.
    Light intensities are scaled for the newer physically based lighting.
+
+## Building from a picture
+
+`from_picture.py` turns one front-view picture of one object on a plain background into a model, for the cave
+studio's rule that ChatGPT art is concept only and the piece is rebuilt here (`cs-chatgpt-ai-art`). It reads the
+outline, then either turns it around its centre line (`--mode lathe`, for round objects), fills it with metaballs
+as thick as the shape is wide (`--mode inflate`, for objects with a bend), or splits it by colour into crystal and
+rock and makes one six-sided prism per crystal tip on an inflated rock bed (`--mode crystals`). It fits a face budget, scores how well the
+model's front outline matches the picture's (intersection over union, 1.0 exact) and renders front and
+three-quarter views with Cycles on the CPU.
+
+```bash
+/home/user/blenv/bin/python tools/blender-cloud/from_picture.py PICTURE $W/piece.glb --mode lathe --height 1 --name piece --render $W/out
+```
+
+The cave's chamber dressing is built this way inside `content/ontology-game/cave/build_kit.py` (its `DRESSING`
+table). First run, 2026-10-12: 0.987, 0.974 and 0.89 outline match on stand-in pictures, and 0.829 on Wendell's
+first ChatGPT picture (a crystal cluster). On that picture, inflate scored 0.88 but looked like a blob: a high outline
+match is necessary, not enough, so always look at the render. The front view only fixes the outline, so depth
+is a guess: round for lathe, as thick as wide for inflate. A picture with a busy background, two objects or a
+cast shadow reads the wrong outline; the prompt on the comparison page (https://claude.ai/artifact/568K2pwc7Lz5X9Kyftbzza) asks ChatGPT for the plain kind.
 
 ## A seventh problem: licences
 
@@ -67,6 +90,7 @@ replaced it with a CC0 one.
 ## Still true
 
 - Assets with several UDIM tiles are refused, not converted.
+- Workbench and EEVEE renders need a GPU (libEGL); the cloud renders with Cycles on the CPU.
 - The sandbox cannot open a private artifact URL, so the published page cannot be checked from here. Check the same
   files locally first, and keep the previous artifact version as the rollback.
 - `www.blenderkit.com` now redirects to `www.blendkit.com`. The API host `api.blenderkit.com` still works.

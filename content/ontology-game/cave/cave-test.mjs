@@ -99,6 +99,12 @@ await page.locator('[data-cave-place="walk"]').waitFor();
 await page.waitForTimeout(800);
 await page.screenshot({ path: SHOTS + '/cave-start.png' });
 
+// ---- chamber dressing: pieces built in Blender from pictures (build_kit.py, pictures/) ----------------
+const kitPieces = await C(() => window.__oagCave.load().then((a) => Object.keys(a.kit).sort()));
+ok(['crystal_cluster', 'crystal_cluster_bed', 'glow_cap', 'root_curl', 'stone_spire'].every((p) => kitPieces.includes(p)), `the kit carries the dressing built from pictures (${kitPieces.join(', ')})`);
+const dressing = await state('s.dressing');
+ok(Array.isArray(dressing) && dressing.length >= 4 && new Set(dressing).size >= 2, `the chamber is dressed with ${dressing.length} pieces of ${new Set(dressing).size} kinds`);
+
 // ---- the path: seven stretches in W.A.V.E. order, one winding line --------------------------------
 const layout = await state('s.layout');
 ok(JSON.stringify(layout.rows.map((r) => r.step)) === JSON.stringify(WAVE) && layout.stops.length === 7 && layout.stops.every((v, i) => i === 0 || v > layout.stops[i - 1]),
