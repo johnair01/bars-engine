@@ -373,6 +373,141 @@ are not drawn, the floor is faint and only glowing things hang in the black. The
 falling off), the sky light is a trace and the far cave sinks into darkened fog; `carryLight` gives any following spirit its
 own small light (this cave has none yet; the Big Mind cave's spirits will). Wood is a low bush with grass and a root.
 
+## The WAVE room, first slice (11 October 2026)
+
+The brief is the Next section of six-faces-council `council/callsheets/wave-room.md`; the pass is
+`council/passes/6FACE_PASS_wave-room1_2026-10-11.md`. Wendell's words: "A player sits in a room with a door. When they welcome a
+sensation the door opens and a 'charge' shows up." The room is the cave's home: the cave is where the player explores, the room
+is where what turns up gets worked. It is `openRoom` in `cave.js`, on the same page as the cave.
+
+- **The scene, from the kit.** Four of the kit's wall rings stood upright and stacked make a round room under a low dome, with
+  the kit's floor. A door in the far wall has the kit's portal arch over it and light behind it. The seat is a gate stone,
+  squat. The player's faceless figure sits on it facing the door, at about 0.6 of the cave's size so it stands under the door
+  **(choice)**, in a plain stone colour because the charge has come out of it **(choice)**. The cave's breath (4 s in, 6 s out)
+  eases the walls and the light, and Calm stills it.
+- **Two ways in** (`wave-room-cave-link` = both). On the cave's front page, "Sit in the WAVE room" opens the body map; the place
+  tapped is where the charge is, and the room opens. At a daemon's stop in the cave, "Take it home" sits beside "Talk with it"
+  and "Work what it holds". It leaves a lantern at the spot, the cave rests, and the room opens with the charge's texture and
+  element already known (`wave-reveal`: a charge from a block starts with its feeling known). When the room is done, "Back to the
+  lantern" brings the cave back with the figure where it stood, and the daemon is asked again whether it feels satisfied. Only
+  Yes opens the way **(choice)**: the charge was worked, in another place.
+- **The flow is a table** (`ROOM_STEPS`, as `STRETCHES` is): Welcome, Witness, Acknowledge, Allow, Accept, Appreciate,
+  Validate, then the fork. The words are `WAVE` (game.jsx lines 1092-1108); Witness is the room's own step, "Feel into it. Where
+  is it in your body, and what is it like?" **(choice of words)**. Each step takes the cave's `STEP_LOOK` light for its W.A.V.E.
+  step, so the room warms and brightens as the steps climb.
+  - Welcome: "Welcome it", and the door opens on the next out-breath (at once when Calm is on). A grey shape comes in to the
+    middle of the room at its own pace.
+  - Witness: where it is (the place from the body map or the cave; "It's somewhere else" opens the body map again) and its
+    texture, which the shape takes, by the avatar's charge table.
+  - Acknowledge: a name the player writes and an element, with "I don't know". The shape takes the element's colour. Go on waits
+    for both.
+  - Allow and Accept: one page each. Appreciate has Not now, which moves on to Validate. Validate steadies the shape's
+    light (it flickers until then).
+  - The fork: the Exhale words, then "What do you actually want right now?" (`wave-room-goal` = asked in the moment; nothing
+    stored), then whether the charge pushes the next move toward it or away (`wave-room-validate-first`).
+- **Stays** (`wave-room-stay-move`): the cave's staged 3-2-1 chat, the same code (`talk321`, shared now), with a line on every
+  step naming what the player wants. Face it from the seat; Talk to it standing face to face, the camera swinging with the voice;
+  Be it standing where it stood while it sits in the seat; then back to the seat. It ends with one next move the player writes,
+  and the charge takes a place in the room for the sitting.
+- **Goes** (`wave-room-release`): a line to it if the player wants, and a name for the light it leaves. "Breathe out": the door
+  opens on the out-breath, the charge drifts out over one exhale and a little more, a light in its colour with its name stays on
+  the threshold for the sitting, and the door stays ajar. An unnamed light takes the charge's name **(choice)**.
+- **Again** (`wave-room-parts-restart`): "Is anything still here that says it belongs?" Yes starts again at Welcome with a new,
+  grey charge in the same place. From the third round on, the page also offers to rest it by the door with a lantern
+  (`wave-room-stop`), which ends the sitting with the lantern and a small shape beside it.
+- **Step back** is on every step from Witness on: the figure stands up and steps back behind the seat, the words are kept, and
+  "Go back in" returns to the same step. In the 3-2-1 the chat's own Step back does the same.
+- **The words stay on the page.** The player writes every line. The name, the goal, the 3-2-1, the move, the line and the
+  light's name live only in the page's memory for the sitting.
+- **For the test on 18 October.** After each branch the page asks "Did it leave, or did you get rid of it?" (It left, I got rid
+  of it, and It stayed after the stays branch **(choice)**). The answer, the branch, the round and the sitting's start time are
+  kept in this device's local storage under `oag:wave-room:test`; `__oagCave.roomTest()` reads them back.
+
+Left for later: the daemon and alchemy extensions, which his phone play by 18 October gates.
+
+Tests: `cave-test.mjs` adds Take it home from the daemon's stop (the lantern, the charge's feeling known, Witness already
+answered, a goes round, back to the lantern with the figure where it stood, the daemon asked again with no skip) and the room on
+its own from the body map: the seated figure and the shut door, the door waiting for the out-breath, every step in order, Not
+now, Validate steadying, the fork asking the goal first, Step back, the stays branch through the staged 3-2-1 to a written move,
+two goes rounds with named lights and the door ajar, the restart, the rest offer after round three, the three test answers kept
+with their rounds, and storage holding only those answers.
+
+## The WAVE room, second slice (11 October 2026)
+
+Wendell's feedback after his first play of the room, 11 October 22:59, is quoted in the Next section of six-faces-council
+`council/callsheets/wave-room.md`; the build takes the readings written there.
+
+- **Talk to it switches by itself.** In 2 · Talk to it, each line sent hands the voice to the other side, and the camera swings
+  with it ("Automatic switching in the 2 phase to show the perspective shifting is desired"). This is in `talk321`, so it holds
+  in the room and at the cave's daemons alike. The voice buttons stay, to override.
+- **At the daemon in the cave.** The narrower reading **(choice)**: the 3-2-1 switching, Allow's two sliders and the glow reach
+  the daemon where it stands. The sliders sit on the 3-2-1's first page, under the charge reading ("Allow it: let it be as big
+  and as bright as it is"); the daemon grows a little by itself once the talk starts. The whole room flow run in place at the
+  daemon is not built: the room is its own scene, so running it in the cave means a second room inside the tunnel. "Take it
+  home" still carries the charge to the room.
+- **The door slides into the wall.** It no longer swings into the room; it slides sideways behind the wall, so nothing sweeps
+  the floor the charge comes in on ("Put it it to the side is desired").
+- **Allow grows it.** At Allow the creature grows a little by itself (×1.3), and two sliders say how large it gets (up to ×2) and
+  how bright its colour can get (`ALLOW_GROW`, `ALLOW_BRIGHT`). The brightness is a ceiling; the charge fills it.
+- **Intensity shows** (`buildAura`, `stepAura`). A halo and sparks in the creature's colour, brighter as its charge rises and
+  duller as it is worked: the 3-2-1's readings set the charge (before while it is worked, after once given), Validate dulls it,
+  and being kept dulls it again; a daemon dulls once it stands aside. The same aura is on the room's creatures and the cave's
+  daemons.
+- **Up to three at once.** On every step from Witness to Validate, "What else is here?" can bring in something new: the door
+  opens on the out-breath and it comes to a place of its own (the middle, the left, the right), and the player works it now.
+  "Working with:" on the page picks which one is worked; each keeps its own step. A fourth waits at the door, and is welcomed
+  once the room is clear **(choice)**. When one is worked through, the next one in the room is worked, where it was left; the
+  round ends only when the room is empty.
+- **Emotions about emotions.** "What else is here?" first asks whether it is about one already in the room. If so it is a layer
+  on that creature: a ring in its own colour, with the name the player writes, flickering until it is validated with that
+  creature. Validate names it. If that creature is validated already, the layer is validated with it at once **(choice)**. Only
+  "Something new" brings in a creature of its own.
+- Kept: the player writes every line, words stay on the page, the 18 October question after each creature's branch, the test at
+  390 by 844.
+
+Tests: `cave-test.mjs` adds the daemon's sliders, its growth and its glow dulling round to round and once it stands aside; the
+voice handing over by itself in the cave and in the room, with the camera; the door sliding clear; and a second sitting with
+three creatures: something new to its own place, the focus row, Allow growing by itself and by slider, brightness up and down, a
+feeling about the second as a named ring with no new creature, a fourth waiting at the door, picking the second again at its
+step, Validate steadying it and its layer and dulling the glow, then each worked through in turn and the waiting one welcomed.
+
+### A style for each face's branch (11 October 2026, after his phone play)
+
+Wendell, from the preview: "Branches are going wild. The screen should give you a dropdown that styles the branch they are on
+with the style and vibes of the branch they choose."
+
+- Each face's branch now opens in that face's own look (`FACE_LOOK`): walls in a shade of its stone colour, its light and fog,
+  and motes drifting in its light, still for Amber and restless for Red **(choice of each look)**. Before, every face's branch
+  shared the side passage's violet hush and its walls.
+- While the player walks a face's branch, a dropdown on the screen ("Teal · wide and moving") dresses the branch in any face's
+  look. It starts on the branch's own face and hides while a page is open and on the way back to the stone.
+- The two glowing openings fade while the player is inside the loop, because the loop is tight and they filled the view.
+
+## One map: the WAVE room and the Big Mind cave come onto the stone (13 October 2026)
+
+Wendell, 2026-10-13, in the cave textures thread: "Also we need to import the WAVE process into this map. I think we're almost
+to the point where we can merge the bigmind cave and this cave". This build is the first half: everything the two caves share
+now runs on this map, and the Big Mind cave wears it.
+
+- **One branch.** The WAVE room (first and second slices), the Big Mind cave (step 1, the two charges, the sit-down and its
+  spirits) and this cave's stone, shapes and carried light are merged into one branch, so the two caves stop drifting apart.
+  A face's branch now wears the stone too, tinted to the face's rock, and the style dropdown eases the stone's tint.
+- **Sit down, here.** A Sit down button, bottom left, is there the whole walk. It runs the WAVE room's steps in place
+  (`ROOM_STEPS`, `talk321`, Allow's sliders), the way the Big Mind cave's sit-down does (`bms-sit-anywhere`, `bms-in-place`):
+  a grey shape comes along the path from ahead, takes its texture's colour at Witness and its element's at Acknowledge,
+  grows with Allow and steadies at Validate. A breathing ring sits on every step. The game names each charge (two words,
+  such as Small Drum); the player can name it at Acknowledge or Validate. Toward at the fork runs the 3-2-1 and asks for one
+  next move; Away breathes it out. Whatever page was up (a stop, a daemon's question) is put aside and comes back when the
+  player stands. Standing up, partway or at the end, leaves a spirit (`bms-away-lighter`). The full room, with its door and
+  up to three creatures, is still reached by Take it home and from the body map.
+- **The spirits carry light.** Every spirit that walks with the figure carries a small light in its colour (`carryLight`),
+  in this cave and in the Big Mind cave, so the lit circle grows with what the player brings. A spirit let go takes its
+  light with it.
+- **The Big Mind cave's stone.** Its tunnel is the same J1 stone (`stoneOf`, `tileStone` in the kit), in its own violet-grey.
+  Its lighting is unchanged for now: the Protector's chamber keeps its blue light.
+
+**Still to do for the merge:** where the Big Mind cave's chambers sit in this map. It is on the board as `merge-layout`.
+
 **Roots and mushrooms grown from numbers (13 October 2026).** Wendell: "more fractal and natural", "so they aren't so
 upright", "how the mushrooms and roots cluster", "let's wire this into the cave". The generators in
 `tools/blender-cloud/procgen.py` (roots that fork by Murray's law, mushrooms that lean, clumps and colonies) now make four

@@ -103,6 +103,18 @@
     ["green", "Green", "Knows through perspectives, voices, integration", "What perspectives or voices are involved?", 0x40b858],
     ["teal", "Teal", "Knows through systems, how everything learns", "How is the system trying to learn through this?", 0x20a8a8],
   ];
+  // Each face's look for its branch (Wendell, 11 October 2026: "Branches are going wild. The screen should give you a dropdown
+  // that styles the branch they are on with the style and vibes of the branch they choose"). A face's branch opens in its own
+  // look, and the dropdown on the screen dresses it in any face's: the walls, the light, the fog, and motes in its colour. The
+  // colours follow each face's stone; the rest is a choice. drift is how the motes move: 0 still, 1 restless.
+  var FACE_LOOK = {
+    magenta: { light: 0xff86d4, fog: 0x200a1a, fogK: 1.05, hemi: 0.4, rock: 0x6a3a5c, drift: 0.25, vibe: "close and warm" },
+    red: { light: 0xff6a48, fog: 0x260a08, fogK: 0.9, hemi: 0.46, rock: 0x7a302a, drift: 1, vibe: "hot and strong" },
+    amber: { light: 0xffcc66, fog: 0x221808, fogK: 1, hemi: 0.42, rock: 0x7e6232, drift: 0, vibe: "steady and ordered" },
+    orange: { light: 0xffaa66, fog: 0x1e1208, fogK: 0.75, hemi: 0.52, rock: 0x7c4c2c, drift: 0.5, vibe: "clear and bright" },
+    green: { light: 0x8ae49a, fog: 0x0c1c10, fogK: 0.9, hemi: 0.46, rock: 0x3c6a44, drift: 0.4, vibe: "many and together" },
+    teal: { light: 0x78e4e4, fog: 0x081a1c, fogK: 0.7, hemi: 0.52, rock: 0x2c686a, drift: 0.7, vibe: "wide and moving" },
+  };
   // The seven daemons (game.jsx DAEMONS, lines 1222-1230: id, name, essence), the colour each wears and what it
   // carries (choices: the seven share one body and differ by colour, posture and what they carry).
   var DAEMONS = [
@@ -139,8 +151,18 @@
       else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
       else e.setAttribute(k, attrs[k]);
     });
-    (kids || []).forEach(function (c) { e.appendChild(c); });
+    (kids || []).forEach(function (c) { if (c) e.appendChild(c); });
     return e;
+  }
+
+  // Small builders for the pages' words and buttons, shared by the cave and the WAVE room.
+  function P(text, attrs) { var a = attrs || {}; a.text = text; return el("p", a); }
+  function btn(label, attrs, fn, alt) { var a = attrs || {}; a.text = label; a.onclick = fn; if (alt) a["class"] = "alt"; return el("button", a); }
+  function row(kids) { return el("div", { class: "oagc-row" }, kids); }
+  function choice(opts, picked, onPick) {
+    return el("div", { class: "oagc-row" }, opts.map(function (o) {
+      return el("button", { class: "alt", "data-cave-choice": o[0], "aria-pressed": String(picked === o[0]), text: o[1], onclick: function () { onPick(o); } });
+    }));
   }
 
   // ---- reading the kit -------------------------------------------------------------------
@@ -217,14 +239,22 @@
   var STONE = { wall: { tile: "wet_stone", lift: 1.7 }, floor: { tile: "dry_stone", lift: 1.35 }, vein: { tile: "crystal_vein", lift: 1.9, glow: 0.55 } };
   function stoneOf(THREE, tiles, hex) {
     var m = {};
+    Object.keys(STONE).forEach(function (k) { m[k] = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.95, side: THREE.DoubleSide }); m[k].userData.lift = 1; });
+    var rock = m.wall; rock.userData.floor = m.floor; rock.userData.vein = m.vein;
+    rock.userData.hex = hex;
+    return tileStone(rock, tiles);
+  }
+  // Lays the tiles on a stone made without them, as the Big Mind cave's is (it draws before its tiles have loaded).
+  function tileStone(rock, tiles) {
+    var m = { wall: rock, floor: rock.userData.floor, vein: rock.userData.vein };
+    rock.userData.tiles = tiles;
     Object.keys(STONE).forEach(function (k) {
-      var st = STONE[k], map = tiles && tiles[st.tile];
-      m[k] = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.95, side: THREE.DoubleSide, map: map || null });
-      m[k].userData.lift = map ? st.lift : 1;
-      if (map && st.glow) { m[k].emissive.setHex(0xffffff); m[k].emissiveMap = map; m[k].emissiveIntensity = st.glow; }
+      var st = STONE[k], map = tiles && tiles[st.tile], x = m[k]; if (!x || !map) return;
+      x.map = map; x.userData.lift = st.lift;
+      if (st.glow) { x.emissive.setHex(0xffffff); x.emissiveMap = map; x.emissiveIntensity = st.glow; }
+      x.needsUpdate = true;
     });
-    var rock = m.wall; rock.userData.floor = m.floor; rock.userData.vein = m.vein; rock.userData.tiles = tiles;
-    tintStone(rock, hex);
+    tintStone(rock, rock.userData.hex);
     return rock;
   }
   function tintStone(rock, hex) {
@@ -643,6 +673,7 @@
     numbness: { color: 0xa8bcd2, sx: [0.95, 1.0], sy: [1.0, 1.0], op: [0.35, 0.85], glow: [0.02, 0.2] },
     strength: { color: 0x5fe0b0, sx: [1.0, 1.04], sy: [1.0, 1.0], op: [1, 1], glow: [0.95, 0.5] },
     other: { color: 0xb89aff, sx: [0.9, 1.0], sy: [1.0, 1.0], op: [1, 1], glow: [0.15, 0.3] },
+    self: { color: 0xd8cfc2, sx: [1.0, 1.0], sy: [1.0, 1.0], op: [1, 1], glow: [0.1, 0.1] }, // the WAVE room: the charge has come out of the figure
   };
   var AVATAR_H = 3.6, DESIGN_H = 2.2, HIP_Y = 1.15, THIGH = 0.52, SHIN = 0.5, LEG_WORLD = (THIGH + SHIN) * AVATAR_H / DESIGN_H;
   // A rounded limb: a lathe of two hemispheres joined by a straight run of length S, radius r, centred on the origin along y.
@@ -799,6 +830,199 @@
     return g;
   }
 
+  // The intensity a creature carries shows around it (Wendell, 11 October 2026: "We need there to be effects that get brighter
+  // as the intensity increases and duller when they are worked though"): a soft halo and sparks rising in its colour. One aura
+  // serves the room's creatures and the cave's daemons. stepAura sets it from a level, 0 (worked through) to 1 (as bright as it
+  // can get).
+  var AURA_SPARKS = 48, auraTex = null;
+  function buildAura(THREE, r) {
+    var g = new THREE.Group();
+    if (!auraTex) {
+      var cv = document.createElement("canvas"); cv.width = cv.height = 64; var cx = cv.getContext && cv.getContext("2d");
+      if (cx) { var gr = cx.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.35, "rgba(255,255,255,.45)"); gr.addColorStop(1, "rgba(255,255,255,0)"); cx.fillStyle = gr; cx.fillRect(0, 0, 64, 64); }
+      auraTex = new THREE.CanvasTexture(cv);
+    }
+    var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: auraTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    halo.position.y = r * 0.6; g.add(halo);
+    var pos = new Float32Array(AURA_SPARKS * 3), seeds = [], rnd = rngOf(hashOf("aura" + r));
+    for (var i = 0; i < AURA_SPARKS; i++) seeds.push({ a: rnd() * Math.PI * 2, d: r * (0.35 + 0.4 * rnd()), y: rnd(), v: 0.25 + 0.5 * rnd() });
+    var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    var sparks = new THREE.Points(geo, new THREE.PointsMaterial({ map: auraTex, color: 0xffffff, size: r * 0.12, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    g.add(sparks);
+    g.userData = { halo: halo, sparks: sparks, seeds: seeds, r: r, level: 0, t: 0 };
+    return g;
+  }
+  function stepAura(aura, color, level, dt, still) {
+    var u = aura.userData, r = u.r;
+    u.level += (level - u.level) * Math.min(1, dt * 2); u.t += still ? 0 : dt;
+    var L = u.level, pulse = still ? 0 : 0.06 * Math.sin(u.t * 2.4);
+    u.halo.material.color.copy(color); u.halo.material.opacity = 0.08 + 0.62 * L;
+    u.halo.scale.setScalar(r * (1.4 + 1.6 * L + pulse));
+    u.sparks.material.color.copy(color); u.sparks.material.opacity = 0.15 + 0.85 * L;
+    var n = Math.round(AURA_SPARKS * Math.min(1, 0.1 + L)), p = u.sparks.geometry.attributes.position;
+    for (var i = 0; i < AURA_SPARKS; i++) {
+      var s = u.seeds[i], y = (s.y + u.t * s.v * (0.3 + L)) % 1;
+      p.array[i * 3] = Math.cos(s.a + u.t * 0.4) * s.d; p.array[i * 3 + 1] = r * (0.1 + 1.5 * y); p.array[i * 3 + 2] = Math.sin(s.a + u.t * 0.4) * s.d;
+    }
+    p.needsUpdate = true; u.sparks.geometry.setDrawRange(0, n);
+  }
+  // Allow (Wendell, 11 October 2026): "When you are allowing I want the creature to get a bit bigger. I want peopel to be able to
+  // decide how large it is gets via slider and how bright it can get in its emotional color." a = { grow, bright }, each 0 to 10.
+  // grow is how much larger it gets (0 its own size, 10 twice it); bright is the most it can glow, which the charge fills.
+  var ALLOW_GROW = 3, ALLOW_BRIGHT = 7; // it grows a little by itself, and can glow fairly bright, until the player says otherwise
+  function allowSliders(a, attr, onChange) {
+    return [["grow", "How large it gets", function (v) { return v === 0 ? "its own size" : "×" + (1 + v / 10).toFixed(1); }],
+      ["bright", "How bright its colour can get", function (v) { return v + " of 10"; }]].map(function (q) {
+      var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "aria-label": q[1] }); inp.setAttribute(attr, q[0]);
+      inp.value = a[q[0]];
+      var out = el("span", { class: "oagc-read", text: q[2](a[q[0]]) }); out.setAttribute(attr + "-read", q[0]);
+      inp.addEventListener("input", function () { a[q[0]] = +inp.value; out.textContent = q[2](a[q[0]]); if (onChange) onChange(); });
+      return el("div", {}, [el("p", { class: "oagc-note", text: q[1] }), el("div", { class: "oagc-slide" }, [inp, out])]);
+    });
+  }
+  // How charged a creature is, 0 to 10, from its 3-2-1: the reading before while it is worked, the reading after once given.
+  function heatOf(t, fallback) {
+    if (!t) return fallback;
+    return t.phase === "after" || t.phase === "ask" ? t.after : t.before;
+  }
+  function labelSprite(THREE, name, color, w) {
+    var cv = document.createElement("canvas"); cv.width = 512; cv.height = 96;
+    var cx = cv.getContext && cv.getContext("2d");
+    if (cx) { cx.font = "600 44px -apple-system,Segoe UI,Roboto,sans-serif"; cx.textAlign = "center"; cx.fillStyle = color || "#fff1d0"; cx.fillText(name.slice(0, 22), 256, 62); }
+    var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false })); s.scale.set(w, w * 0.1875, 1);
+    return s;
+  }
+
+  // A charge worked sitting down walks with the player as a spirit until it is dismissed (Wendell, 12 October 2026, 20:43: "When
+  // someone does WAVE sitting down in the big mind cave or the other cave environments it should spawn a spirit that walks with
+  // the character until dismissed"). One look serves every cave: an orb in its element's colour, its aura, and its name above it.
+  // followSpirits floats them toward spot(j), the j-th place in view; past SPIRITS_SHOWN they are hidden and only counted.
+  var SPIRITS_SHOWN = 3;
+  function buildSpirit(THREE, name, hex) {
+    var g = new THREE.Group();
+    var orb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }));
+    var au = buildAura(THREE, 0.7), label = labelSprite(THREE, name, "#fff1d0", 2.4); label.position.y = 0.95;
+    g.add(orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label, level: 0.45 };
+    return g;
+  }
+  function followSpirits(THREE, list, spot, dt, now, still) {
+    var shown = 0, v = new THREE.Vector3();
+    list.forEach(function (o) {
+      var g = o.g; g.visible = !o.hidden && shown < SPIRITS_SHOWN; if (!g.visible) return;
+      var j = shown++, p = spot(j); v.set(p.x, p.y + (still ? 0 : 0.18 * Math.sin(now / 700 + j * 2)), p.z);
+      g.position.lerp(v, Math.min(1, dt * 2.2));
+      stepAura(g.userData.aura, g.userData.color, g.userData.level, dt, still);
+    });
+  }
+  // The element's colour for a spirit, by the element's own name (Fire) or the feeling's (Anger), any case.
+  function spiritHex(element) {
+    var k = String(element || "").toLowerCase(), r = ELEMENTS.filter(function (x) { return x[0].toLowerCase() === k || x[1].toLowerCase() === k; })[0];
+    return r ? r[3] : 0x9a9aa8;
+  }
+
+  // The 3-2-1 chat, ported from bars-engine's Clean321Flow (src/components/clean321/Clean321Flow.tsx): one thread the player
+  // writes entirely (the system never writes a turn); 3 Face it, "it", one voice; 2 Talk to it, two voices with a switcher
+  // (You and the daemon); 1 Be it, "I am"; a charge reading before and after. The daemon steps aside when the player says it
+  // feels satisfied (board: cave-daemon-wall); another round keeps the thread and starts again at 3. Nothing leaves the page,
+  // and completeClean321's rewards stay with the NOW page. Returns the page's title.
+  var T321 = [
+    ["it", 3, "3 · Face it", "3rd person · \"it\"", "Name {d} as \"it\", at arm's length. Describe it.", "Describe it...", "Talk to it →"],
+    ["you", 2, "2 · Talk to it", "2nd person · \"you\"", "Speak to {d}, then let it answer back. Each line you send hands the voice to the other side.", "Speak to it...", "Be it →"],
+    ["i", 1, "1 · Be it", "1st person · \"I am\"", "Speak as {d}. \"I am...\"", "Speak as it. \"I am...\"", "How charged is it now? →"],
+  ];
+  // talk321(t, o, body): o = { name, damaged (the Damaged Self's check before Be it), redraw, focus, where (the staged
+  // places' words, by step), aim (a line shown on every step, or none), before(body) (more for the first page, or none),
+  // ask(body) (the last page, after the charge reading), skippable (a Skip button on every page that goes straight to ask) }.
+  // Wendell, 12 October 2026, 23:11: "321s are optional and should have an option to skip". The sit-down and the WAVE room
+  // pass skippable; the cave's 3-2-1 with a daemon in the way does not, since it is how the daemon steps aside.
+  // The cave aims it at the daemon standing in the way; the WAVE room aims it at what the player wants right now.
+  var WHERE_CAVE = { 3: "You are looking at it from across the chamber.", 2: "You are face to face with it.", 1: "You are standing where it stood.", check: "You are face to face with it.", after: "You have stepped back to your own place.", paused: "You are across the chamber, at your own place." };
+  function talk321(t, o, body) {
+    var n = o.name, ph = t.phase, title = "3-2-1 with " + n + (t.rounds > 1 ? " · round " + t.rounds : ""), WHERE = o.where || WHERE_CAVE;
+    function slider(which) {
+      var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "data-cave-321-charge": which, "aria-label": "Charge, 0 to 10" });
+      inp.value = t[which];
+      var out = el("span", { class: "oagc-read", "data-cave-321-read": which, text: t[which] + " of 10" });
+      inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; });
+      return el("div", { class: "oagc-slide" }, [inp, out]);
+    }
+    var stepBack = btn("Step back", { "data-cave-321-back": "" }, function () { t.draft = ""; t.paused = true; o.redraw(); }, true);
+    var skip = o.skippable ? btn("Skip the 3-2-1", { "data-cave-321-skip": "" }, function () { t.draft = ""; t.skipped = true; t.phase = "ask"; o.redraw(); }, true) : null;
+    if (t.paused) {
+      body.push(P("Stepped back", { "data-cave-321-step": "paused" }));
+      body.push(P(WHERE.paused + " " + n + " still stands there, and your words are kept. Nothing is skipped."));
+      body.push(row([btn("Go back in", { "data-cave-321-resume": "" }, function () { t.paused = false; o.redraw(); })]));
+    } else if (ph === "before") {
+      body.push(P("Before you start", { "data-cave-321-step": "before" }));
+      body.push(P("How charged is this with " + n + " right now? The 3-2-1 cools it into something you can work with: face it, talk to it, be it."));
+      body.push(slider("before"));
+      if (o.before) o.before(body);
+      body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; o.redraw(); }), skip]));
+    } else if (ph === "after") {
+      body.push(P("After the 3-2-1", { "data-cave-321-step": "after" }));
+      body.push(P(WHERE.after, { "data-cave-321-where": "" }));
+      body.push(P("How charged is it now? Before, it was " + t.before + " of 10."));
+      body.push(slider("after"));
+      body.push(row([btn("Continue", { "data-cave-321-after": "" }, function () { t.phase = "ask"; o.redraw(); })]));
+    } else if (ph === "check") {
+      // Wendell's board, bmc-safety and cave-321-damaged-self-ask: at the deepest door the cave asks first.
+      body.push(P("Before you become it", { "data-cave-321-step": "check" }));
+      body.push(P(WHERE.check, { "data-cave-321-where": "" }));
+      body.push(P("Being " + n + " goes to the deepest place. Do you want to go on, rest, or go back up?", { "data-cave-321-checkask": "" }));
+      body.push(row([
+        btn("Continue", { "data-cave-321-check": "continue" }, function () { t.phase = 1; o.redraw(); }),
+        btn("Rest", { "data-cave-321-check": "rest" }, function () { t.paused = true; o.redraw(); }, true),
+        btn("Go back up", { "data-cave-321-check": "up" }, function () { t.phase = 2; o.redraw(); }, true),
+      ]));
+    } else if (ph === "ask") {
+      o.ask(body);
+    } else {
+      var k = T321[3 - ph], voice = ph === 3 ? "you" : ph === 1 ? "it" : t.voice;
+      body.push(P(k[2] + " · " + k[3], { "data-cave-321-step": k[0] }));
+      body.push(P(WHERE[ph], { "data-cave-321-where": "" }));
+      if (o.aim) body.push(P(o.aim, { "data-cave-321-aim": "" }));
+      body.push(P(k[4].replace("{d}", n)));
+      var log = el("div", { class: "oagc-log", "data-cave-321-log": "" });
+      t.msgs.forEach(function (m) {
+        if (m.divider) { log.appendChild(el("div", { class: "oagc-div", text: "Round " + m.round })); return; }
+        log.appendChild(el("div", { class: "oagc-msg " + (m.voice === "you" ? "you" : "it"), "data-cave-bubble": m.voice, "data-cave-bubble-phase": String(m.phase) }, [
+          el("small", { text: m.voice === "you" ? "You" : (m.phase === 1 ? "As " + n : n) }), el("div", { text: m.text })]));
+      });
+      if (!t.msgs.length) log.appendChild(el("div", { class: "oagc-div", text: "Every line is yours to write." }));
+      body.push(log);
+      if (ph === 2) {
+        body.push(el("div", { class: "oagc-row" }, ["you", "it"].map(function (v) {
+          return el("button", { class: v === t.voice ? "" : "alt", "data-cave-321-voice": v, "aria-pressed": v === t.voice ? "true" : "false", text: v === "you" ? "Speak as you" : "Speak as " + n, onclick: function () { t.voice = v; o.redraw(); o.focus(); } });
+        })));
+      }
+      var hint = ph === 2 && t.voice === "it" ? "Answer as " + n + "..." : k[5];
+      var ta = el("input", { type: "text", placeholder: hint, "data-cave-321-text": k[0], "aria-label": hint });
+      ta.value = t.draft;
+      var send = function () {
+        var text = ta.value.trim(); if (!text) return;
+        t.msgs.push({ phase: ph, voice: voice, text: text, round: t.rounds }); t.draft = "";
+        // Wendell, 11 October 2026: "Automatic switching in the 2 phase to show the perspective shifting is desired." Each line
+        // sent in Talk to it hands the voice to the other side, and the camera swings with it. The voice buttons still override.
+        if (ph === 2) t.voice = voice === "you" ? "it" : "you";
+        o.redraw(); o.focus();
+      };
+      ta.addEventListener("input", function () { t.draft = ta.value; });
+      ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); send(); } });
+      body.push(el("div", { class: "oagc-compose" }, [ta, el("button", { "data-cave-321-send": "", "aria-label": "Send", text: "↑", onclick: send })]));
+      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && o.damaged ? "check" : ph - 1; o.redraw(); }), stepBack, skip]));
+    }
+    return title;
+  }
+  // After a chat page redraws, the text box takes focus again so the player can keep writing, and the thread scrolls to its end.
+  // The panel scrolls to its end too, so the text box stays in view line after line (Wendell, 12 October 2026, 22:53:
+  // "resetting and scrolling is gettin gpretty tedious").
+  function focusChat(modal) {
+    var i = modal.querySelector("[data-cave-321-text]"), l = modal.querySelector("[data-cave-321-log]");
+    if (l) l.scrollTop = l.scrollHeight;
+    if (i) modal.scrollTop = modal.scrollHeight;
+    if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
+  }
+
   // ---- the page --------------------------------------------------------------------------
   // Nothing on this page is selectable, and a long press does nothing: no text selection or magnifier, no callout menu, no tap
   // highlight, no double-tap zoom. The canvas and the ring take touch-action:none (they are the hold area); buttons use
@@ -825,6 +1049,7 @@
     ".oagc-compose{display:flex;gap:.35rem;margin-top:.4rem}.oagc-compose input{flex:1;min-width:0;min-height:44px;padding:0 .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(20,20,40,.9);color:#f4f4fa;font-size:16px}" +
     ".oagc-compose button{min-width:44px;padding:.5rem}" +
     ".oagc-slide{display:flex;align-items:center;gap:.6rem;margin:.4rem 0}.oagc-slide input{flex:1;min-height:44px}.oagc-read{white-space:nowrap;font-size:.9rem;color:#fff1b0}" +
+    ".oagc-note{font-size:.8rem!important;color:#aab0c4;margin:.4rem 0 0!important}" +
     ".oagc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:normal;pointer-events:none}" +
     ".oagc-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}" +
     ".oagc button{background:#64c8ff;color:#10142a;border:none;border-radius:8px;padding:.5rem .8rem;font-size:.9rem;font-weight:600;min-height:44px;cursor:pointer;width:auto;margin:0;touch-action:manipulation}" +
@@ -833,6 +1058,13 @@
     ".oagc button[aria-pressed=true]{outline:2px solid #fff}" +
     ".oagc button.oagc-calm,.oagc button.oagc-ringbtn{position:absolute;top:10px;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500;z-index:4}" +
     ".oagc button.oagc-calm{right:10px}.oagc button.oagc-ringbtn{left:10px}" +
+    ".oagc button.oagc-sitbtn{position:absolute;left:10px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
+    ".oagc-orb{width:88px;height:88px;margin:.5rem auto .1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff1b0;font-size:.8rem;letter-spacing:.06em;" +
+    "background:radial-gradient(circle,rgba(255,241,176,.5),rgba(255,241,176,.14) 62%,rgba(255,241,176,0) 72%);border:1px solid rgba(255,241,176,.55);transform:scale(.55);will-change:transform}" +
+    ".oagc button.oagc-spiritbtn{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
+    ".oagc-spirits{position:absolute;left:12px;right:12px;top:58px;z-index:6;max-width:420px;margin:0 auto;padding:.8rem .9rem;background:rgba(12,12,28,.92);border:1px solid rgba(255,241,176,.5);border-radius:16px}" +
+    ".oagc-spirits h2{font-size:1.1rem;color:#fff;margin:0 0 .3rem}.oagc-spirits p{margin:.3rem 0;font-size:.95rem}.oagc-spirits .oagc-you{color:#fff1d0}" +
+    ".oagc-style{position:absolute;top:62px;right:10px;z-index:4;max-width:calc(100vw - 20px);min-height:44px;padding:0 .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(20,20,40,.85);color:#f4f4fa;font-size:16px}" +
     ".oagc-ring{position:absolute;left:50%;bottom:14px;width:88px;height:88px;margin-left:-44px;border-radius:50%;border:3px solid rgba(255,241,176,.85);background:rgba(255,241,176,.12);display:flex;align-items:center;justify-content:center;text-align:center;font-size:.68rem;line-height:1.15;color:#fff1b0;z-index:2;touch-action:none}" +
     ".oagc-fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:5}" +
     ".oagc-home{padding:2rem 1rem;max-width:34rem;margin:auto;text-align:center}.oagc-home h1{font-size:1.5rem;color:#fff}";
@@ -862,6 +1094,13 @@
       el("p", { text: "Your body is the world. Tap where the charge is, and go in." }),
       el("button", { "data-cave-dive": "", text: "Find the place", onclick: function () {
         window.OAGBody.pick().then(function (r) { if (r) dive(r.label, home); });
+      } }),
+      // The WAVE room on its own, from the body map (board wave-room-cave-link = both): tap where the charge is, and sit with it.
+      el("p", { text: "Or sit with it at home: a room with a door, where a charge is welcomed in, worked, and let go." }),
+      el("button", { class: "alt", "data-room-open": "", text: "Sit in the WAVE room", onclick: function () {
+        window.OAGBody.pick().then(function (r) {
+          if (r) load().then(function (A) { return openRoom(A, { from: "body", where: r.label }); }).catch(function (e) { alert("The room could not open: " + e.message); });
+        });
       } }),
     ])]);
     root.appendChild(home);
@@ -919,8 +1158,9 @@
     var state = { sens: [], cur: null, mode: "portal", dress: null, look: { yaw: 0, pitch: 0 }, walk: null, stack: [], calm: false, ringOn: false, held: false, speed: 1, touched: false, layout: null, walkedOnce: false, modal: false, auto: null };
     var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [], carried = [], tmpV = new THREE.Vector3();
     // A spirit that follows the player carries a small light of its own (Wendell, 2026-10-13: "The avaiable lighting centers
-    // around the character and any spirits that are following them"). This cave has no followers yet; the Big Mind cave's do.
+    // around the character and any spirits that are following them"). The spirits back from the WAVE room carry one each.
     function carryLight(obj, hex) { var l = new THREE.PointLight(hex || 0xc8e0ff, 0.6, LAMP.reach * 0.5, LAMP.decay); scene.add(l); carried.push({ obj: obj, light: l }); return l; }
+    function dropLight(obj) { carried = carried.filter(function (c) { if (c.obj !== obj) return true; scene.remove(c.light); return false; }); }
     var docked = true;
     // The light of the stretch being walked (lk eases toward the table row), the walls' openness per stretch, and the surge on
     // a choice. revealed is the last stretch the player has chosen to walk; the ones past it stay gathered shut and dark until
@@ -969,6 +1209,22 @@
       if (!show) br.ringHeld = false;
     }
     canvasBox.appendChild(calmBtn); canvasBox.appendChild(ringBtn);
+    // The branch's style: shown while walking a face's branch, set to that face at first; any face's look can dress it.
+    var styleSel = el("select", { class: "oagc-style", "data-cave-branch-style": "", "aria-label": "This branch's style" });
+    FACES.forEach(function (f) { styleSel.appendChild(el("option", { value: f[0], text: f[1] + " · " + FACE_LOOK[f[0]].vibe })); });
+    styleSel.style.display = "none"; canvasBox.appendChild(styleSel);
+    styleSel.addEventListener("change", function () {
+      var r = state.walk && state.walk.route; if (!r || r.kind !== "face") return;
+      r.style = styleSel.value; lk.flash = Math.max(lk.flash, 0.5);
+      r.markers.forEach(function (m) { if (m.material.color) m.material.color.setHex(lookup(FACES, r.style)[4]); });
+    });
+    var styleFor = null;
+    function syncStyle(route) {
+      var on = route.kind === "face" && !flight && !modal.classList.contains("open"); // out of the way of the page
+      if (on && styleFor !== route) { styleSel.value = route.style; styleFor = route; }
+      if (!on) styleFor = null;
+      var d = on ? "" : "none"; if (styleSel.style.display !== d) styleSel.style.display = d;
+    }
     function breathStep(dt, nowS) {
       var T = BREATH_S, u, wk = state.walk;
       if (wk && wk.moving && !state.auto && !state.calm && !(state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER)) br.t0 = nowS - (wk.t % T);
@@ -1022,14 +1278,6 @@
     });
 
     // ---- the pane and the modal ------------------------------------------------------------
-    function P(text, attrs) { var a = attrs || {}; a.text = text; return el("p", a); }
-    function btn(label, attrs, fn, alt) { var a = attrs || {}; a.text = label; a.onclick = fn; if (alt) a["class"] = "alt"; return el("button", a); }
-    function row(kids) { return el("div", { class: "oagc-row" }, kids); }
-    function choice(opts, picked, onPick) {
-      return el("div", { class: "oagc-row" }, opts.map(function (o) {
-        return el("button", { class: "alt", "data-cave-choice": o[0], "aria-pressed": String(picked === o[0]), text: o[1], onclick: function () { onPick(o); } });
-      }));
-    }
     function openModal() {
       if (docked) return;
       var r = pane.getBoundingClientRect(), m = modal.getBoundingClientRect();
@@ -1255,6 +1503,7 @@
       route.holes.forEach(function (H) { parent.tube.addHole(H); });
       var rock = frame.blk ? frame.blk.rock : parts.rock;
       if (kind === "side") rock = stoneOf(THREE, parts.tiles, rock.userData.hex);
+      if (kind === "face") rock = stoneOf(THREE, parts.tiles, FACE_LOOK[face].rock); // its own walls, so a style stays on this branch
       route.openAt = function () { return SIDE_LOOK.open; };
       var shp = CAVE_SHAPE[frame.blk ? frame.blk.texture : state.cur.texture] || CAVE_SHAPE.other;
       route.tube = buildTube(THREE, route, { w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN, shape: shp });
@@ -1263,7 +1512,7 @@
       route.group.add(dr); darken(shp, rock, dr);
       // the two openings get a glowing rim each, and a lantern stands between them
       route.rims = route.holes.map(function (H) {
-        var a = at(parent, (H.s0 + H.s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
+        var a = at(parent, (H.s0 + H.s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true }));
         var nx = -a.fz * H.side, nz = a.fx * H.side;
         rim.position.set(a.x + nx * pw * 0.97, a.y - h * 0.25, a.z + nz * pw * 0.97); rim.rotation.y = Math.atan2(nx, nz);
         rim.scale.set(0.01, 0.01, 1); route.group.add(rim); return rim;
@@ -1286,9 +1535,29 @@
         m.position.set(a.x, a.y - h * 0.92 + MARK_Y, a.z); route.group.add(m); return m;
       });
       route.ctx = { holder: new THREE.Group(), lampHex: 0xffe0b0, stones: [] };
+      if (kind === "face") { route.style = face; route.motes = buildMotes(route, o.wb, h); route.group.add(route.motes); }
       scene.add(route.group);
       return route;
     }
+    // Motes along a face's branch, in the colour of the style it wears.
+    function buildMotes(route, wb, h) {
+      var N = 90, pos = new Float32Array(N * 3), rnd = rngOf(hashOf("motes" + route.len)), seeds = [];
+      for (var i = 0; i < N; i++) seeds.push({ s: route.sFrom + rnd() * (route.sTo - route.sFrom), lat: (rnd() - 0.5) * wb * 1.4, y: rnd(), v: 0.3 + rnd() });
+      var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      var m = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending }));
+      m.userData = { seeds: seeds, t: 0, h: h, route: route };
+      return m;
+    }
+    function stepMotes(m, look, dt, still) {
+      var u = m.userData, p = m.geometry.attributes.position; u.t += still ? 0 : dt * (0.2 + look.drift);
+      m.material.color.lerp(tmpC.setHex(look.light), Math.min(1, dt * 2));
+      for (var i = 0; i < u.seeds.length; i++) {
+        var sd = u.seeds[i], a = at(u.route, sd.s), y = (sd.y + u.t * sd.v * 0.15) % 1, sw = look.drift * 0.4 * Math.sin(u.t * 2 + i);
+        p.array[i * 3] = a.x + -a.fz * (sd.lat + sw); p.array[i * 3 + 1] = a.y - u.h * 0.9 + u.h * 1.6 * y; p.array[i * 3 + 2] = a.z + a.fx * (sd.lat + sw);
+      }
+      p.needsUpdate = true;
+    }
+    function faceLook(style) { var L = FACE_LOOK[style]; return { light: L.light, fog: L.fog, fogK: L.fogK, hemi: L.hemi, open: SIDE_LOOK.open, drift: L.drift }; }
     function growRims(route, done) {
       busy = true;
       tween(900, function (k) { var e = ease(k); route.rims.forEach(function (r) { r.scale.set(0.01 + 1.3 * e, 0.01 + 1.7 * e, 1); }); }, function () { busy = false; done(); });
@@ -1353,7 +1622,7 @@
         route.group.add(stone); ctx.stones.push(stone);
       });
       var wo = route.stops[route.stops.length - 1], aw = at(route, Math.min(route.len, wo.s + 1.5));
-      var arch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
+      var arch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true })); ctx.arch = arch;
       arch.position.set(aw.x, aw.y - h * 0.92, aw.z); arch.rotation.y = yawFacing(aw); arch.scale.setScalar(Math.min(wb * 0.55, h * 0.7)); route.group.add(arch);
     }
 
@@ -1379,6 +1648,8 @@
       backRound(function (fr) {
         var blk = fr.blk, f = FACES[fr.stone];
         if (blk.gate.indexOf(f[0]) < 0) blk.gate.push(f[0]);
+        if (blk.route.ctx.arch) blk.route.ctx.arch.material.opacity = 1; // the openings and the arch shine again once out of the loop
+        if (fr.child && fr.child.route) fr.child.route.rims.forEach(function (r) { r.material.opacity = 1; });
         blk.route.ctx.stones.forEach(function (st) {
           if (blk.gate.indexOf(st.userData.face) >= 0) { var col = lookup(FACES, st.userData.face)[4]; st.material.color.setHex(col); st.material.emissive.setHex(col); st.material.emissiveIntensity = st.userData.face === f[0] ? 0.9 : 0.45; }
         });
@@ -1488,12 +1759,21 @@
             // runs here, round after round, until the player says it is satisfied; then it steps aside. Its wording follows
             // src/components/nursery/ThreeTwoOneDialogue.tsx. The words stay on this page and are not saved.
             var t = blk.t321;
-            if (!t) {
-              body.push(P(d[1] + " won't move, and you can't walk past it. It is still doing its job here, for you.", { "data-cave-wall": "" }));
-              body.push(P("Talk with it, 3-2-1, until it feels satisfied, or work what it is holding and ask it again when you come back round."));
+            if (blk.home) {
+              // Back from the WAVE room by the lantern: the charge was worked there, so the daemon is asked again. Only Yes opens the way.
+              body.push(P("You took it home and worked it in the WAVE room. The lantern you left stands here.", { "data-cave-home-back": "" }));
+              body.push(P("Does " + d[1] + " feel satisfied?"));
               body.push(row([
-                btn("Talk with it", { "data-cave-321": "" }, function () { blk.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 8, after: 3 }; placeCard(blk); }),
+                btn("Yes, it is satisfied", { "data-cave-home-satisfied": "yes" }, function () { blk.home = null; if (blk.dm) blk.dm.heat = Math.min(blk.dm.heat, 3); blk.stepAside = "yes"; moveDaemon(blk); placeCard(blk); }),
+                btn("Not yet", { "data-cave-home-satisfied": "not-yet" }, function () { blk.home = null; placeCard(blk); }, true),
+              ]));
+            } else if (!t) {
+              body.push(P(d[1] + " won't move, and you can't walk past it. It is still doing its job here, for you.", { "data-cave-wall": "" }));
+              body.push(P("Talk with it, 3-2-1, until it feels satisfied, work what it is holding and ask it again when you come back round, or take it home to the WAVE room."));
+              body.push(row([
+                btn("Talk with it", { "data-cave-321": "" }, function () { blk.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 8, after: 3 }; blk.dm.allowed = true; placeCard(blk); }),
                 btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); }, true),
+                btn("Take it home", { "data-cave-take-home": "" }, function () { takeHome(blk, d); }, true),
               ]));
             } else {
               title = chat321(blk, d, t, body);
@@ -1522,99 +1802,255 @@
       }
       fill(title, body.concat([row(kids)]));
     }
+    // "Take it home" (board wave-room-cave-link = both, by lantern): a lantern is left at this spot, the cave rests, and the charge
+    // goes to the WAVE room with its feeling known. When the room is done the cave comes back, at the lantern, and the daemon is
+    // asked again. Nothing is skipped: the charge is worked, only in another place.
+    function takeHome(blk, d) {
+      if (busy) return;
+      busy = true; closeModal();
+      var wk = state.walk, a = at(wk.route, wk.s), inner = -(wk.route.side || 1), lat = (wk.route.w || ch.w) * 0.5, lan = buildLantern(THREE);
+      lan.position.set(a.x + -a.fz * inner * lat, a.y - ch.h * 0.92, a.z + a.fx * inner * lat);
+      wk.route.group.add(lan); lanternsOn.push(lan); blk.homeLantern = lan;
+      fade.style.opacity = 1;
+      setTimeout(function () {
+        cancelAnimationFrame(running); wrap.style.display = "none";
+        openRoom(A, { from: "cave", where: me().spot.words, texture: blk.texture, element: blk.element, daemon: d[1] }).then(function (r) {
+          wrap.style.display = ""; snapCam = true; last = performance.now(); render();
+          blk.home = r || {}; busy = false; fade.style.opacity = 0; placeCard(blk);
+          ((r && r.spirits) || []).forEach(function (o) { addSpirit(o); });
+        });
+      }, 520);
+    }
+    // ---- the spirits that walk with you (Wendell, 12 October 2026, 20:43) --------------------------------------------------
+    // Every charge worked through in the WAVE room comes back into the cave with the player as a spirit, in its element's colour
+    // with its name, and walks behind the figure until the player dismisses it: tap Spirits, thank it, then breathe it out or take
+    // it home again (the Big Mind cave's bms-dismiss). Nothing dismisses one for you. A charge breathed out at the room's fork
+    // comes back lighter (a choice). They walk this visit only; leaving the cave leaves them at its doorway (a choice).
+    var spirits = [];
+    var spiritBtn = el("button", { class: "oagc-spiritbtn", "data-cave-spiritbtn": "", style: "display:none", onclick: function () { spiritPanel(); } });
+    var spiritBox = el("div", { class: "oagc-spirits", "data-cave-spirits": "", style: "display:none" });
+    canvasBox.appendChild(spiritBtn); wrap.appendChild(spiritBox);
+    function addSpirit(o, at0) {
+      var g = buildSpirit(THREE, o.name, o.hex != null ? o.hex : spiritHex(o.element)); if (o.lighter) g.userData.level = 0.2;
+      if (at0) g.position.copy(at0); else if (avatar) g.position.set(avatar.position.x, avatar.position.y + 1.7, avatar.position.z);
+      scene.add(g); o.g = g; o.light = carryLight(g, g.userData.color.getHex()); spirits.push(o); spiritsUi();
+    }
+    function spiritsUi() {
+      var n = spirits.length;
+      spiritBtn.style.display = n ? "" : "none";
+      spiritBtn.textContent = "Spirits " + n + (n > SPIRITS_SHOWN ? " (+" + (n - SPIRITS_SHOWN) + " behind)" : "");
+      spiritBtn.setAttribute("data-cave-spirits-n", String(n));
+    }
+    function spiritPanel(o) {
+      spiritBox.innerHTML = ""; spiritBox.style.display = "";
+      if (!o) {
+        spiritBox.appendChild(el("h2", { text: "Spirits with you" })); spiritBox.appendChild(P("Tap one to thank it."));
+        spiritBox.appendChild(el("div", { class: "oagc-row" }, spirits.map(function (x, i) {
+          var b = btn(x.name, { "data-cave-spirit": String(i) }, function () { spiritPanel(x); }, true); return b;
+        })));
+        spiritBox.appendChild(row([btn("Back", { "data-cave-spirit-back": "" }, function () { spiritBox.style.display = "none"; }, true)]));
+        return;
+      }
+      spiritBox.appendChild(el("h2", { text: o.name }));
+      spiritBox.appendChild(P("You: Thank you for coming with me.", { class: "oagc-you" }));
+      spiritBox.appendChild(P("Breathe it out and let it go, or take it home and sit with it again."));
+      spiritBox.appendChild(row([btn("Breathe out, and let it go", { "data-cave-spirit-out": "" }, function () { spiritBox.style.display = "none"; letSpiritGo(o); }),
+        btn("Take it home again", { "data-cave-spirit-home": "" }, function () { spiritBox.style.display = "none"; spiritHome(o); }, true)]));
+    }
+    function letSpiritGo(o) {
+      var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); spiritsUi();
+      var g = o.g, y0 = g.position.y;
+      var li = o.light && o.light.intensity;
+      tween(1600, function (k) { g.position.y = y0 + 2.5 * ease(k); g.traverse(function (m) { if (m.material) m.material.opacity = 0.9 * (1 - k); }); if (o.light) o.light.intensity = li * (1 - k); }, function () { scene.remove(g); dropLight(g); });
+    }
+    // Sitting with it again: the room opens with its feeling known. What is worked there comes back out; if nothing is, it does.
+    function spiritHome(o) {
+      if (busy || !state.walk) return;
+      busy = true; fade.style.opacity = 1;
+      var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); scene.remove(o.g); dropLight(o.g); spiritsUi();
+      setTimeout(function () {
+        cancelAnimationFrame(running); wrap.style.display = "none";
+        openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element }).then(function (r) {
+          wrap.style.display = ""; snapCam = true; last = performance.now(); render(); busy = false; fade.style.opacity = 0;
+          var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter }];
+          back.forEach(function (x) { addSpirit(x); });
+        });
+      }, 520);
+    }
+    // ---- sitting down where you are (the Big Mind cave's sit-down, brought into this cave, 13 October 2026) --------------------
+    // Wendell, 2026-10-13: "Also we need to import the WAVE process into this map. I think we're almost to the point where we can
+    // merge the bigmind cave and this cave". Sit down anywhere on the walk (bms-sit-anywhere) and the WAVE room's steps run in place
+    // (bms-in-place): the same table (ROOM_STEPS) and the same 3-2-1 (talk321), here in the tunnel, without the room's door. The
+    // figure sits down, and what's coming up comes along the path from ahead as a grey shape that takes its
+    // texture's colour at Witness and its element's at Acknowledge, grows with Allow's sliders and steadies at Validate. A breathing
+    // ring keeps the cave's breath on every step. Standing up, partway or at the end, leaves a spirit that walks behind the figure
+    // with its own light (`bms-away-lighter`: breathed out at the fork, it walks lighter). The game names each charge (two words,
+    // as in the Big Mind cave); the player can give it a name of their own at Acknowledge or Validate.
+    var SIT_WHERE = { 3: "You are sitting where you stopped, looking at it.", 2: "You are face to face with it.", 1: "You are sitting where it sat, and it sits where you were.", check: "You are face to face with it.", after: "You are back where you sat down.", paused: "You leaned back from it, still sitting." };
+    var NAME_A = ["Slow", "Restless", "Heavy", "Small", "Bright", "Low", "Tangled", "Soft", "Warm", "Cold", "Hollow", "Humming"];
+    var NAME_B = ["Moth", "Stone", "Drum", "Knot", "Ember", "Tide", "Thorn", "Lantern", "Pebble", "Root", "Bell", "Wren"];
+    function genName() {
+      var taken = spirits.map(function (o) { return o.name; }), n;
+      for (var i = 0; i < 40; i++) { n = NAME_A[Math.floor(Math.random() * NAME_A.length)] + " " + NAME_B[Math.floor(Math.random() * NAME_B.length)]; if (taken.indexOf(n) < 0) break; }
+      return n;
+    }
+    var sit = null;
+    var sitBtn = el("button", { class: "oagc-sitbtn", "data-cave-sitbtn": "", style: "display:none", text: "Sit down", onclick: function () { sitDown(null); } });
+    canvasBox.appendChild(sitBtn);
+    // A page that is up (a stop's choices, a 3-2-1) is put aside while the player sits, and comes back when they stand.
+    function canSit() { return state.mode === "chamber" && !!state.walk && !sit && !busy && !flight && spiritBox.style.display === "none"; }
+    // What was on the page when the player sat down comes back when they stand up.
+    function stashPage() {
+      return { modal: Array.prototype.slice.call(modal.childNodes), stat: Array.prototype.slice.call(stat.childNodes), pane: Array.prototype.slice.call(pane.childNodes),
+        paneShown: pane.style.display, open: state.modal, page: { title: page.title, text: page.text, foot: page.foot, has: page.has } };
+    }
+    function unstashPage(p) {
+      [[modal, p.modal], [stat, p.stat], [pane, p.pane]].forEach(function (x) { x[0].innerHTML = ""; x[1].forEach(function (n) { x[0].appendChild(n); }); });
+      pane.style.display = p.paneShown; page.title = p.page.title; page.text = p.page.text; page.foot = p.page.foot; page.has = p.page.has;
+      if (p.open) openModal(); else closeModal();
+    }
+    function sitPage(title, kids, tag) {
+      modal.innerHTML = ""; modal.setAttribute("data-cave-sit-step", tag);
+      modal.appendChild(el("h2", { text: title })); kids.forEach(function (k) { if (k) modal.appendChild(k); });
+      pane.innerHTML = ""; pane.appendChild(el("strong", { text: title }));
+      page.title = title; page.text = ""; openModal();
+    }
+    function breathOrb() { var o = el("div", { class: "oagc-orb", "data-cave-orb": "in", "aria-hidden": "true", text: "in" }); o._t = 0; return o; }
+    function line(attr, val, ph, onInput) {
+      var i = el("input", { type: "text", maxlength: "60", placeholder: ph, "aria-label": ph }); i.setAttribute(attr, ""); i.value = val;
+      i.addEventListener("input", function () { onInput(i.value); });
+      return el("div", { class: "oagc-compose" }, [i]);
+    }
+    function cards(list, cur, attr, pick) {
+      return row(list.map(function (x) { var a = { "aria-pressed": String(cur === x[0]) }; a[attr] = x[0]; return btn(x[1], a, function () { pick(x[0]); }, cur !== x[0]); }));
+    }
+    // spirit: a spirit sat with again (it keeps its name and element, and walks on after).
+    function sitDown(spirit) {
+      if (!spirit && !canSit()) return;
+      var wk = state.walk;
+      var S = sit = { gen: spirit ? spirit.name : genName(), back: stashPage(), n: 0, phase: "steps", place: null, texture: null, name: spirit ? spirit.name : "",
+        element: spirit ? spirit.element : null, unknown: false, allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, valid: false, goal: "", move: "", appreciate: "",
+        t321: { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }, k: 0, come: 1, spirit: spirit || null, route: wk.route, s: wk.s };
+      if (spirit) { var i = spirits.indexOf(spirit); if (i >= 0) spirits.splice(i, 1); scene.remove(spirit.g); dropLight(spirit.g); spiritsUi(); }
+      state.held = false; sitBtn.style.display = "none";
+      var g = new THREE.Group(), au = buildAura(THREE, 0.9);
+      var m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 20, 14), new THREE.MeshStandardMaterial({ color: 0x8a8a96, emissive: 0x8a8a96, emissiveIntensity: 0.25, transparent: true, opacity: 0.85, roughness: 0.7 }));
+      m.position.y = 0.6; g.add(m); g.add(au); g.userData = { body: m, aura: au, color: new THREE.Color(0x8a8a96) };
+      S.g = g; S.light = carryLight(g, 0x9a9aa8); scene.add(g);
+      tween(1400, function (k) { S.k = ease(k); S.come = 1 - ease(k); }, sitDraw);
+    }
+    function sitHex(S) { return S.element ? spiritHex(S.element) : S.texture ? (lookup(TEXTURES, S.texture) || TEXTURES[4])[2] : 0x8a8a96; }
+    function sitNext() { sit.n++; if (sit.n >= ROOM_STEPS.length) return standUp("done"); sitDraw(); }
+    function sitDraw() {
+      var S = sit; if (!S) return;
+      var nm = S.name.trim() || S.gen, stand = btn("Stand up", { "data-cave-standup": "" }, function () { standUp("stood"); }, true);
+      if (S.phase === "stays") {
+        var k = [], title = talk321(S.t321, { name: nm, damaged: false, skippable: true, redraw: sitDraw, focus: function () { focusChat(modal); }, where: SIT_WHERE, aim: "Aimed at what you want: " + S.goal,
+          ask: function (body) {
+            body.push(P("What is one next move toward " + S.goal + "? Write it."));
+            var done = btn("That's my move", { "data-cave-sitmovedone": "" }, function () { standUp("stays"); });
+            body.push(line("data-cave-sitmove", S.move, "One next move", function (v) { S.move = v; done.disabled = !v.trim(); }));
+            done.disabled = !S.move.trim(); body.push(row([done]));
+          } }, k);
+        sitPage(title, k, "321");
+        return;
+      }
+      if (S.phase === "goes") {
+        sitPage("Exhale", [P("Let the out-breath soften it. It walks with you, lighter, until you thank it and let it go."), breathOrb(),
+          row([btn("Breathe out", { "data-cave-sitexhale": "" }, function () { standUp("goes"); })]), row([stand])], "goes");
+        return;
+      }
+      var R = ROOM_STEPS[S.n], w = R.wave != null ? WAVE[R.wave] : [R.id, R.title, R.words];
+      var kids = [P("Sitting with what's coming up · " + (S.n + 1) + " of " + ROOM_STEPS.length, { class: "oagc-note" }), P(w[2])];
+      var go = btn("Go on", { "data-cave-sitnext": "" }, function () { if (R.id === "validate") S.valid = true; sitNext(); }), extra = [];
+      if (R.id === "witness") {
+        kids.push(P(S.place ? "Where: " + S.place + "." : "Where is it in your body?"));
+        if (window.OAGBody && window.OAGBody.pick) kids.push(row([btn(S.place ? "Somewhere else" : "Show me on the body map", { "data-cave-sitbodymap": "" }, function () { window.OAGBody.pick().then(function (r) { if (r) S.place = r.label; sitDraw(); }); }, true)]));
+        kids.push(P("What is it like?"), cards(TEXTURES.map(function (t) { return [t[0], t[1]]; }), S.texture, "data-cave-sittexture", function (v) { S.texture = v; sitDraw(); }));
+        go.disabled = !S.texture;
+      } else if (R.id === "acknowledge") {
+        kids.push(P("Its element, if you know it. You can give it a name of your own, now or once you have been with it."));
+        kids.push(line("data-cave-sitname", S.name, "Its name for now: " + S.gen, function (v) { S.name = v; }),
+          cards(ELEMENTS.map(function (x) { return [x[0], x[1] + " · " + x[0]]; }).concat([["unknown", "I don't know"]]), S.unknown ? "unknown" : S.element, "data-cave-sitelement",
+            function (v) { S.unknown = v === "unknown"; S.element = S.unknown ? null : v; sitDraw(); }));
+        go.disabled = !(S.element || S.unknown);
+      } else if (R.id === "allow") {
+        S.allowed = true;
+        kids.push(P(nm + " grows a little as you let it be here."));
+        allowSliders(S.allow, "data-cave-sitallow").forEach(function (n) { kids.push(n); });
+      } else if (R.id === "appreciate") {
+        kids.push(line("data-cave-sitappreciate", S.appreciate, "In your own words, if you want", function (v) { S.appreciate = v; }),
+          P("You may not find anything to appreciate today, and that's all right."));
+      } else if (R.id === "validate") {
+        kids.push(P("Now that you have been with it, does it have a name of your own?"), line("data-cave-sitrename", S.name, "Or keep " + S.gen, function (v) { S.name = v; }));
+      } else if (R.id === "fork") {
+        kids.push(P("What do you actually want right now?"));
+        var tw = btn("Toward it", { "data-cave-sitpush": "toward" }, function () { S.phase = "stays"; sitDraw(); });
+        var aw = btn("Away from it", { "data-cave-sitpush": "away" }, function () { S.phase = "goes"; sitDraw(); }, true);
+        var ok = function () { tw.disabled = aw.disabled = !S.goal.trim(); };
+        kids.push(line("data-cave-sitgoal", S.goal, "What you want, in your words", function (v) { S.goal = v; ok(); }), P("Is " + nm + " pushing your next move toward it, or away from it?"));
+        ok(); kids.push(row([tw, aw]), row([stand]), P("What you write stays on this page.", { class: "oagc-note" }));
+        sitPage(w[1], kids, "fork");
+        return;
+      }
+      if (R.notNow) extra.push(btn("Not now", { "data-cave-sitnotnow": "" }, sitNext, true));
+      kids.push(breathOrb(), row([go].concat(extra)), row([stand]));
+      sitPage(w[1], kids, R.id);
+    }
+    // branch: stays (Toward), goes (Away: breathed out, lighter), done, stood (stood up partway). Every one leaves a spirit.
+    function standUp(branch) {
+      var S = sit; if (!S) return;
+      modal.innerHTML = ""; modal.setAttribute("data-cave-sit-step", "standing"); closeModal();
+      var from = S.g.position.clone(), nm = S.name.trim() || S.gen;
+      tween(branch === "goes" ? 2200 : 1200, function (k) { S.k = 1 - ease(k); }, function () {
+        scene.remove(S.g); dropLight(S.g); sit = null; modal.removeAttribute("data-cave-sit-step");
+        var o = { name: nm, element: S.element, lighter: branch === "goes" };
+        if (S.spirit) { o.name = S.spirit.name; o.element = S.element || S.spirit.element; o.hex = S.element ? null : S.spirit.hex; o.lighter = branch === "goes" || S.spirit.lighter; }
+        o.hex = o.element ? null : sitHex(S);
+        addSpirit(o, from);
+        unstashPage(S.back);
+      });
+    }
+    // Each frame: the shape comes from ahead and settles in front of the figure, and the figure lowers to sit.
+    function sitFrame(dt, nowMs, route, wk, h) {
+      var S = sit; if (!S || route !== S.route) return;
+      var a = at(route, Math.min(route.len || 1e9, wk.s + 2.4 + 9 * S.come));
+      S.g.position.set(a.x, a.y - h * 0.92 + 0.15 + 0.05 * Math.sin(nowMs / 700), a.z);
+      avatar.position.y -= 0.32 * S.k;
+      var hex = sitHex(S), body = S.g.userData.body, col = S.g.userData.color.lerp(tmpC.setHex(hex), Math.min(1, dt * 3));
+      body.material.color.copy(col); body.material.emissive.copy(col);
+      var grow = S.allowed ? 1 + S.allow.grow / 10 : 1; S.g.scale.setScalar(S.g.scale.x + (grow - S.g.scale.x) * Math.min(1, dt * 2));
+      body.material.emissiveIntensity = S.valid ? 0.35 : 0.25 + (state.calm ? 0 : 0.12 * Math.sin(nowMs / 90));
+      stepAura(S.g.userData.aura, col, S.allowed ? S.allow.bright / 10 : 0.3, dt, state.calm);
+      if (S.light) S.light.color.copy(col);
+      var ob = modal.querySelector("[data-cave-orb]");
+      if (ob) {
+        ob._t = (ob._t + dt) % (BREATH.inS + BREATH.outS);
+        var inn = ob._t < BREATH.inS, b = inn ? 0.5 - 0.5 * Math.cos(Math.PI * ob._t / BREATH.inS) : 0.5 + 0.5 * Math.cos(Math.PI * (ob._t - BREATH.inS) / BREATH.outS);
+        ob.style.transform = "scale(" + (state.calm ? 0.8 : 0.55 + 0.45 * b).toFixed(3) + ")";
+        if (ob.textContent !== (inn ? "in" : "out")) { ob.textContent = inn ? "in" : "out"; ob.setAttribute("data-cave-orb", ob.textContent); }
+      }
+    }
+    // How brightly a daemon glows, 0 to 1: its charge (the 3-2-1's readings), up to the brightness the player allowed it, and
+    // duller once it has stepped aside.
+    function daemonLevel(b) { var dm = b.dm; return clamp(heatOf(b.t321, dm.heat) / 10, 0, 1) * (dm.bright / 10) * (b.stepAside === "yes" ? 0.3 : 1); }
     // True when this block, or one it was opened from, has a daemon that has not stepped aside.
     function daemonHolds(b) { while (b) { if (b.daemon && b.stepAside !== "yes") return true; b = b.frame.blk; } return false; }
-    // The 3-2-1 chat, ported from bars-engine's Clean321Flow (src/components/clean321/Clean321Flow.tsx): one thread the player
-    // writes entirely (the system never writes a turn); 3 Face it, "it", one voice; 2 Talk to it, two voices with a switcher
-    // (You and the daemon); 1 Be it, "I am"; a charge reading before and after. The daemon steps aside when the player says it
-    // feels satisfied (board: cave-daemon-wall); another round keeps the thread and starts again at 3. Nothing leaves the page,
-    // and completeClean321's rewards stay with the NOW page. Returns the page's title.
-    var T321 = [
-      ["it", 3, "3 · Face it", "3rd person · \"it\"", "Name {d} as \"it\", at arm's length. Describe it.", "Describe it...", "Talk to it →"],
-      ["you", 2, "2 · Talk to it", "2nd person · \"you\"", "Speak to {d}, then let it answer back. Switch voices to write both sides.", "Speak to it...", "Be it →"],
-      ["i", 1, "1 · Be it", "1st person · \"I am\"", "Speak as {d}. \"I am...\"", "Speak as it. \"I am...\"", "How charged is it now? →"],
-    ];
+    // The 3-2-1 with the daemon in the way (talk321, above, holds the chat). Asked at the end whether it feels satisfied.
     function chat321(blk, d, t, body) {
-      var n = d[1], ph = t.phase, title = "3-2-1 with " + n + (t.rounds > 1 ? " · round " + t.rounds : "");
-      function slider(which) {
-        var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "data-cave-321-charge": which, "aria-label": "Charge, 0 to 10" });
-        inp.value = t[which];
-        var out = el("span", { class: "oagc-read", "data-cave-321-read": which, text: t[which] + " of 10" });
-        inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; });
-        return el("div", { class: "oagc-slide" }, [inp, out]);
-      }
-      var WHERE = { 3: "You are looking at it from across the chamber.", 2: "You are face to face with it.", 1: "You are standing where it stood.", check: "You are face to face with it.", after: "You have stepped back to your own place." };
-      var stepBack = btn("Step back", { "data-cave-321-back": "" }, function () { t.draft = ""; t.paused = true; placeCard(blk); }, true);
-      if (t.paused) {
-        body.push(P("Stepped back", { "data-cave-321-step": "paused" }));
-        body.push(P("You are across the chamber, at your own place. " + n + " still stands there, and your words are kept. Nothing is skipped."));
-        body.push(row([btn("Go back in", { "data-cave-321-resume": "" }, function () { t.paused = false; placeCard(blk); })]));
-      } else if (ph === "before") {
-        body.push(P("Before you start", { "data-cave-321-step": "before" }));
-        body.push(P("How charged is this with " + n + " right now? The 3-2-1 cools it into something you can work with: face it, talk to it, be it."));
-        body.push(slider("before"));
-        body.push(row([btn("Run the 3-2-1", { "data-cave-321-start": "" }, function () { t.phase = 3; placeCard(blk); })]));
-      } else if (ph === "after") {
-        body.push(P("After the 3-2-1", { "data-cave-321-step": "after" }));
-        body.push(P(WHERE.after, { "data-cave-321-where": "" }));
-        body.push(P("How charged is it now? Before, it was " + t.before + " of 10."));
-        body.push(slider("after"));
-        body.push(row([btn("Continue", { "data-cave-321-after": "" }, function () { t.phase = "ask"; placeCard(blk); })]));
-      } else if (ph === "check") {
-        // Wendell's board, bmc-safety and cave-321-damaged-self-ask: at the deepest door the cave asks first.
-        body.push(P("Before you become it", { "data-cave-321-step": "check" }));
-        body.push(P(WHERE.check, { "data-cave-321-where": "" }));
-        body.push(P("Being " + n + " goes to the deepest place. Do you want to go on, rest, or go back up?", { "data-cave-321-checkask": "" }));
-        body.push(row([
-          btn("Continue", { "data-cave-321-check": "continue" }, function () { t.phase = 1; placeCard(blk); }),
-          btn("Rest", { "data-cave-321-check": "rest" }, function () { t.paused = true; placeCard(blk); }, true),
-          btn("Go back up", { "data-cave-321-check": "up" }, function () { t.phase = 2; placeCard(blk); }, true),
-        ]));
-      } else if (ph === "ask") {
-        body.push(P("Does " + n + " feel satisfied?", { "data-cave-321-ask": "" }));
+      return talk321(t, { name: d[1], damaged: blk.daemon === "damaged-self", redraw: function () { placeCard(blk); }, focus: function () { focusChat(modal); },
+        // Allow, at the daemon (callsheet wave-room, Next: the room's sliders reach the cave's daemons): it grows a little by itself
+        before: function (body) {
+          body.push(el("div", { "data-cave-allow": "" }, [el("p", { text: "Allow it: let it be as big and as bright as it is." })].concat(allowSliders(blk.dm, "data-cave-allow-slider"))));
+        },
+        ask: function (body) {
+        body.push(P("Does " + d[1] + " feel satisfied?", { "data-cave-321-ask": "" }));
         body.push(P("Charge " + t.before + " → " + t.after + (t.after < t.before ? ", down " + (t.before - t.after) + "." : ".") + " Your words stay on this page and are not saved."));
         body.push(row([
-          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
+          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.dm.heat = t.after; blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
           btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { t.phase = 3; t.rounds++; t.before = t.after; t.msgs.push({ round: t.rounds, divider: true }); placeCard(blk); }, true),
         ]));
-      } else {
-        var k = T321[3 - ph], voice = ph === 3 ? "you" : ph === 1 ? "it" : t.voice;
-        body.push(P(k[2] + " · " + k[3], { "data-cave-321-step": k[0] }));
-        body.push(P(WHERE[ph], { "data-cave-321-where": "" }));
-        body.push(P(k[4].replace("{d}", n)));
-        var log = el("div", { class: "oagc-log", "data-cave-321-log": "" });
-        t.msgs.forEach(function (m) {
-          if (m.divider) { log.appendChild(el("div", { class: "oagc-div", text: "Round " + m.round })); return; }
-          log.appendChild(el("div", { class: "oagc-msg " + (m.voice === "you" ? "you" : "it"), "data-cave-bubble": m.voice, "data-cave-bubble-phase": String(m.phase) }, [
-            el("small", { text: m.voice === "you" ? "You" : (m.phase === 1 ? "As " + n : n) }), el("div", { text: m.text })]));
-        });
-        if (!t.msgs.length) log.appendChild(el("div", { class: "oagc-div", text: "Every line is yours to write." }));
-        body.push(log);
-        if (ph === 2) {
-          body.push(el("div", { class: "oagc-row" }, ["you", "it"].map(function (v) {
-            return el("button", { class: v === t.voice ? "" : "alt", "data-cave-321-voice": v, "aria-pressed": v === t.voice ? "true" : "false", text: v === "you" ? "Speak as you" : "Speak as " + n, onclick: function () { t.voice = v; placeCard(blk); focus321(); } });
-          })));
-        }
-        var hint = ph === 2 && t.voice === "it" ? "Answer as " + n + "..." : k[5];
-        var ta = el("input", { type: "text", placeholder: hint, "data-cave-321-text": k[0], "aria-label": hint });
-        ta.value = t.draft;
-        var send = function () {
-          var text = ta.value.trim(); if (!text) return;
-          t.msgs.push({ phase: ph, voice: voice, text: text, round: t.rounds }); t.draft = "";
-          placeCard(blk); focus321();
-        };
-        ta.addEventListener("input", function () { t.draft = ta.value; });
-        ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); send(); } });
-        body.push(el("div", { class: "oagc-compose" }, [ta, el("button", { "data-cave-321-send": "", "aria-label": "Send", text: "↑", onclick: send })]));
-        body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && blk.daemon === "damaged-self" ? "check" : ph - 1; placeCard(blk); }), stepBack]));
-      }
-      return title;
-    }
-    // After a chat page redraws, the text box takes focus again so the player can keep writing, and the thread scrolls to its end.
-    function focus321() {
-      var i = modal.querySelector("[data-cave-321-text]"), l = modal.querySelector("[data-cave-321-log]");
-      if (l) l.scrollTop = l.scrollHeight;
-      if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
+        } }, body);
     }
     function faceCard(blk) {
       var stp = stopOf(state.walk), f = lookup(FACES, stp.face);
@@ -1638,6 +2074,9 @@
       c.daemonFig = buildDaemon(THREE, d, h * 1.1);
       c.daemonFig.position.set(a.x, a.y - h * 0.9, a.z); c.daemonFig.rotation.y = yawFacing({ fx: -a.fx, fz: -a.fz });
       c.daemonBase = { x: a.x, z: a.z, nx: -a.fz, nz: a.fx }; c.daemonS = stopAt(route, "passage").s + 6; c.daemonRoute = route; c.daemonMoved = false;
+      // its charge shows around it, and Allow's sliders set how large it gets and how bright it can glow (see buildAura)
+      c.daemonAura = buildAura(THREE, h * 0.6); c.daemonFig.add(c.daemonAura); c.daemonBlk = blk; c.daemonHex = d[3];
+      blk.dm = blk.dm || { grow: ALLOW_GROW, bright: ALLOW_BRIGHT, heat: 6, allowed: false };
       route.group.add(c.daemonFig);
       placeCard(blk);
     }
@@ -1733,6 +2172,7 @@
         if (k >= 1) { if (tw.done) tw.done(); return false; }
         return true;
       });
+      sitBtn.style.display = !sit && state.mode === "chamber" && state.walk ? "" : "none";
       if (flight) {
         flight.t = Math.min(1, flight.t + 0.006);
         var p = flight.curve.getPoint(flight.t), q = flight.curve.getPoint(Math.min(1, flight.t + 0.02));
@@ -1766,6 +2206,15 @@
           avatar.position.set(sa.x, sa.y - h * 0.92 + 0.02, sa.z); avatar.rotation.y = yawFacing(sa) + Math.PI * stg.flip;
           stCam = stageCam(stg.cam, sa, sd, h, t321Of(wk));
         }
+        if (spirits.length) { // the spirits walk behind the figure, on the path it came along
+          followSpirits(THREE, spirits, function (j) {
+            var sp = at(route, Math.max(0, wk.s - 2.2 - 1.6 * j)), d = j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2;
+            return { x: sp.x - sp.fz * d, y: sp.y - h * 0.92 + 1.7, z: sp.z + sp.fx * d };
+          }, dt, nowMs, state.calm);
+          spirits.forEach(function (o) { if (!o.g.parent) scene.add(o.g); });
+        }
+        if (sit) sitFrame(dt, nowMs, route, wk, h);
+        sitBtn.disabled = !canSit();
         if (state.held) state.look.yaw *= 1 - Math.min(1, dt * 1.5);
         // camera: behind on the path, and a little above; on a branch's first steps it sits straight behind the figure
         var cbx, cbz, cby;
@@ -1782,7 +2231,19 @@
         else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
-        var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
+        var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : route.kind === "face" ? faceLook(route.style) : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
+        if (route.kind === "face") { // the branch wears its style: the walls ease to its rock, the motes drift in its light
+          var rk = route.tube.rock, sc = route.styleCol || (route.styleCol = new THREE.Color(rk.userData.hex)); // the stone's tint, kept unrounded
+          tintStone(rk, sc.lerp(tmpC.setHex(FACE_LOOK[route.style].rock), fe).getHex());
+          if (route.motes) stepMotes(route.motes, lg, dt, state.calm);
+        }
+        // a face's loop is tight, so its two glowing openings fill the view from inside it: they fade while the player walks it
+        state.stack.forEach(function (fr) {
+          var cr = fr.child && fr.child.route, op = route.kind === "face" ? 0.15 : 1;
+          if (cr && cr.rims) cr.rims.forEach(function (r) { r.material.opacity += (op - r.material.opacity) * fe; });
+          var ar = fr.child && fr.child.route && fr.child.route.ctx && fr.child.route.ctx.arch; if (ar) ar.material.opacity += (op - ar.material.opacity) * fe; // and the way-out arch it loops beside
+        });
+        syncStyle(route);
         lk.idx = route.kind === "main" ? wk.target : -1;
         lk.light.lerp(tmpC.setHex(lg.light), fe); lk.fog.lerp(tmpC.setHex(lg.fog), fe);
         lk.fogK += (lg.fogK - lk.fogK) * fe; lk.hemi += (lg.hemi - lk.hemi) * fe; lk.flash = Math.max(0, lk.flash - dt / 1.1);
@@ -1795,7 +2256,7 @@
         }
         if (chg) mt.dirty = true;
         lamp.position.set(a.x, fl + LAMP.above, a.z); // the light is the figure's own: it walks with them
-        carried.forEach(function (c2) { c2.light.position.copy(c2.obj.getWorldPosition(tmpV)); c2.light.position.y += LAMP.above * 0.6; });
+        carried.forEach(function (c2) { c2.light.visible = c2.obj.visible && !!c2.obj.parent; c2.light.position.copy(c2.obj.getWorldPosition(tmpV)); c2.light.position.y += LAMP.above * 0.6; });
         mt.update(br.k);
         state.stack.forEach(function (fr) { if (fr.child && fr.child.route) fr.child.route.tube.update(br.k); });
         var warm = 1 - br.b, surge = lk.flash * lk.flash;
@@ -1822,6 +2283,12 @@
             if (dk >= 1) c.daemonT = null;
           }
           if (c.daemonFig && c.daemonFig.userData.orb && !state.calm) c.daemonFig.userData.orb.scale.setScalar(1 + 0.2 * Math.sin(nowMs / 250));
+          if (c.daemonAura) { // brighter as its charge rises, duller as it is worked through: the reading after, then standing aside
+            var dbk = c.daemonBlk, dm = dbk.dm, dl = daemonLevel(dbk), dsz = dm.allowed ? 1 + dm.grow / 10 : 1, dfs = c.daemonFig.scale.x;
+            c.daemonFig.scale.setScalar(dfs + (dsz - dfs) * Math.min(1, dt * 2));
+            stepAura(c.daemonAura, tmpC.setHex(c.daemonHex), dl, dt, state.calm);
+            c.daemonFig.userData.mat.emissiveIntensity = 0.12 + 0.6 * c.daemonAura.userData.level;
+          }
         }
         layoutPane();
       }
@@ -1833,7 +2300,7 @@
 
     // ---- hooks for the browser test ----------------------------------------------------------
     var api = window.__oagCave;
-    api.state = state; api.leave = leave;
+    api.state = state; api.leave = leave; api.spirits = spirits; api.addSpirit = addSpirit;
     api.breath = function () { return { b: br.b, k: br.k, calm: state.calm, ring: !!ring.parentNode, pace: paceNow() }; };
     api.avatar = function () {
       var d = avatar.userData, wk = state.walk, a = at(wk.route, wk.s);
@@ -1851,11 +2318,15 @@
         inS: BREATH.inS, outS: BREATH.outS, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
     };
     api.carryLight = carryLight;
+    api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k } : null; };
+    api.carried = function () { return carried.length; };
     api.look = function () {
       return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur.slice(), revealed: revealed, bg: scene.background.getHex(), density: scene.fog.density };
     };
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
+    api.branchStyle = function () { var r = state.walk && state.walk.route; return { shown: styleSel.style.display !== "none", value: styleSel.value, style: r && r.style || null, rock: r && r.kind === "face" ? r.tube.rock.userData.hex : null, light: lk.light.getHex(), motes: !!(r && r.motes) }; };
+    api.daemonGlow = function () { var c = ctxOf(); if (!c || !c.daemonAura) return null; var dm = c.daemonBlk.dm; return { level: c.daemonAura.userData.level, want: daemonLevel(c.daemonBlk), scale: c.daemonFig.scale.x, grow: dm.grow, bright: dm.bright, allowed: dm.allowed }; };
     api.sideElement = function () { var wk = state.walk, b = wk && wk.blk, c = b && b.route.ctx; return { shown: !!(c && c.elObj && c.holder.children.length), name: b && b.element, deco: b ? b.deco.length : 0, colony: !!(c && c.colony && c.colony.parent) }; };
     api.pane = function () {
       var r = pane.getBoundingClientRect(), cs = getComputedStyle(pane);
@@ -1902,6 +2373,595 @@
   }
 
 
-  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE, crystalBlock: crystalBlock, geomOf: geomOf, stoneOf: stoneOf, CRYSTAL_TINTS: CRYSTAL_TINTS, CRYSTAL_RANGE: CRYSTAL_RANGE };
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+  // ---- the WAVE room: the cave's home ----------------------------------------------------------------
+  // The design: six-faces-council council/callsheets/wave-room.md (Next) and council/passes/6FACE_PASS_wave-room1_2026-10-11.md.
+  // Wendell, 11 October 2026: "A player sits in a room with a door. When they welcome a sensation the door opens and a 'charge'
+  // shows up." One small scene built from the cave kit: a seat facing a door, the player's faceless figure on the seat, the cave's
+  // breath in the walls and the light, Calm, and "Step back". It is reached two ways (board wave-room-cave-link = both): from the
+  // body map on its own, and from a daemon's stop in the cave by "Take it home", which leaves a lantern at the spot and comes back
+  // to it when the room is done.
+  // The flow is a table of steps, as STRETCHES is. wave is the row of WAVE (the game's own words, game.jsx lines 1092-1108);
+  // Witness is the room's own step (the pass's table: where it is, and its texture). look is the row of STEP_LOOK the room takes.
+  var ROOM_STEPS = [
+    { id: "welcome", wave: 0, look: 0 },
+    { id: "witness", title: "Witness", words: "Feel into it. Where is it in your body, and what is it like?", look: 0 },
+    { id: "acknowledge", wave: 1, look: 1 },
+    { id: "allow", wave: 2, look: 2 },
+    { id: "accept", wave: 3, look: 3 },
+    { id: "appreciate", wave: 4, look: 4, notNow: true },
+    { id: "validate", wave: 5, look: 5 },
+    { id: "fork", wave: 6, look: 6 },
+  ];
+  var ROOM_ROUNDS_REST = 3; // board wave-room-stop: after three rounds in a sitting, offer to rest it by the door with a lantern
+  var ROOM_TEST_KEY = "oag:wave-room:test"; // the 18 October test: the answer and the round, on this device only
+  // Where the player stands at each step of the 3-2-1 in the room (the staged form, board cave-321-form, as in the cave).
+  var WHERE_ROOM = { 3: "You are on your seat, looking at it across the room.", 2: "You are face to face with it.", 1: "You are standing where it stood, and it sits in your seat.", check: "You are face to face with it.", after: "You are back on your seat.", paused: "You stepped back behind your seat." };
+  var ROOM_CSS = ".oagr{z-index:950}.oagr .oagc-pane{transform:translate(12px,58px)}.oagr .oagc-pane:after{display:none}" +
+    ".oagr-field{display:block;width:100%;box-sizing:border-box;min-height:44px;margin:.35rem 0;padding:0 .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(20,20,40,.9);color:#f4f4fa;font-size:16px}" +
+    ".oagr-note{font-size:.8rem!important;color:#aab0c4}";
+
+  function readRoomTest() { try { return JSON.parse(localStorage.getItem(ROOM_TEST_KEY) || "[]"); } catch (e) { return []; } }
+  function keepRoomTest(entry) { try { var all = readRoomTest(); all.push(entry); localStorage.setItem(ROOM_TEST_KEY, JSON.stringify(all)); } catch (e) { /* storage blocked: the room still plays */ } }
+
+  // opts = { from: "body" | "cave", where (the place's words), texture, element, daemon (its name, from the cave) }. Resolves when
+  // the player leaves the room, with { rounds, rested }.
+  function openRoom(A, opts) {
+    return new Promise(function (resolve) {
+      if (!document.getElementById("oagr-css")) document.head.appendChild(el("style", { id: "oagr-css", text: ROOM_CSS }));
+      var THREE = A.THREE, G = {};
+      Object.keys(A.kit).forEach(function (k) { G[k] = geomOf(THREE, A.kit[k]); });
+      var wrap = el("div", { class: "oagc oagr", "data-room": opts.from || "body" });
+      var stage = el("div", { class: "oagc-stage" }), fade = el("div", { class: "oagc-fade" });
+      var pane = el("div", { class: "oagc-pane", "data-room-pane": "", role: "button", tabindex: "0", style: "display:none" });
+      var modal = el("div", { class: "oagc-modal", "data-room-modal": "", "aria-hidden": "true" });
+      var stat = el("div", { class: "oagc-sr", "data-room-text": "", "aria-live": "polite" });
+      [stage, pane, modal, stat, fade].forEach(function (n) { wrap.appendChild(n); });
+      wrap.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+      document.body.appendChild(wrap);
+      fade.style.opacity = 1; setTimeout(function () { fade.style.opacity = 0; }, 30);
+
+      var renderer = null;
+      try { renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); stage.appendChild(renderer.domElement); }
+      catch (e) { renderer = null; } // no WebGL: the pages still run, without the scene
+      if (renderer) holdArea(renderer.domElement);
+
+      // ---- the room, from the kit ----------------------------------------------------------------------------------------
+      var RR = 8, RH = 5.4, DZ = -RR * 0.92, DW = 2.4, DH = 3.4;
+      var SEAT = { x: 0, z: 2.4 }, BACK = { x: 1.6, z: 4.2 };
+      // Up to three creatures at once (Wendell, 11 October 2026: "One should be able to invite multiple creatures into the space.
+      // Up to three and worked through at a time."), each with its own place facing the seat. HERE is the place of the one being
+      // worked, and FACE is halfway between it and the seat; both move when the player picks another.
+      var SLOTS = [{ x: 0, z: -2.4 }, { x: -2.1, z: -0.9 }, { x: 2.1, z: -0.9 }], SLOT_WORDS = ["in the middle", "on the left", "on the right"], ROOM_MAX = 3;
+      var HERE = SLOTS[0], FACE = { x: 0, z: 0 };
+      var scene = new THREE.Scene(); scene.background = new THREE.Color(0x120e10); scene.fog = new THREE.FogExp2(0x120e10, 0.03);
+      var camera = new THREE.PerspectiveCamera(60, 1, 0.1, 120);
+      var rock = new THREE.MeshStandardMaterial({ color: 0x5e4e44, roughness: 0.95, side: THREE.DoubleSide });
+      var walls = new THREE.Group(); scene.add(walls);
+      for (var i = 0; i < 4; i++) { // the cave's wall rings, stood upright and stacked into a round room
+        var wr = new THREE.Mesh(G.wall_ring, rock); wr.rotation.x = Math.PI / 2; wr.rotation.z = i * 0.41;
+        wr.scale.set(RR * (1 + 0.025 * (i % 2)), RR * (1 + 0.025 * (i % 2)), RH / 4 + 0.05); wr.position.y = i * RH / 4; walls.add(wr);
+      }
+      var dome = new THREE.Mesh(new THREE.SphereGeometry(RR * 1.03, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2), rock); dome.scale.y = 0.45; dome.position.y = RH; walls.add(dome);
+      var floor = new THREE.Mesh(G.floor, new THREE.MeshStandardMaterial({ color: 0x3a302a, roughness: 1, side: THREE.DoubleSide }));
+      floor.scale.set(2 * RR + 1, 1, 2 * RR + 1); floor.position.set(0, 0, RR + 0.5); scene.add(floor);
+      function archShape(x0) { var s = new THREE.Shape(), r = DW / 2; s.moveTo(x0 - r, 0); s.lineTo(x0 + r, 0); s.lineTo(x0 + r, DH - r); s.absarc(x0, DH - r, r, 0, Math.PI, false); s.lineTo(x0 - r, 0); return s; }
+      var beyond = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: 0xfff1d0 })); // the light beyond the door
+      beyond.position.set(0, 0.01, DZ - 0.06); scene.add(beyond);
+      // The door slides sideways into the wall (Wendell, 11 October 2026: "Door had to swing through the second part invited ins
+      // space. Put it it to the side is desired"), so nothing sweeps the floor a charge comes in on.
+      var door = new THREE.Group(); door.position.set(-DW / 2, 0, DZ); scene.add(door);
+      door.add(new THREE.Mesh(new THREE.ShapeGeometry(archShape(DW / 2), 16), new THREE.MeshStandardMaterial({ color: 0x4a3426, roughness: 0.8, side: THREE.DoubleSide })));
+      var frameMat = new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.7 });
+      var arch = new THREE.Mesh(G.portal_arch, frameMat); arch.scale.setScalar(DW / 2 + 0.1); arch.position.set(0, DH - DW / 2, DZ + 0.06); scene.add(arch);
+      [-1, 1].forEach(function (k) { var post = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, DH - DW / 2, 8), frameMat); post.position.set(k * (DW / 2 + 0.1), (DH - DW / 2) / 2, DZ + 0.06); scene.add(post); });
+      var seat = new THREE.Mesh(G.gate_stone, new THREE.MeshStandardMaterial({ color: 0x7a6e66, roughness: 0.85 })); // the seat: a gate stone, squat
+      seat.scale.set(4.4, 0.46, 5.2); seat.position.set(SEAT.x, 0, SEAT.z); scene.add(seat);
+      var hemi = new THREE.HemisphereLight(0xfff4e0, 0x2a2420, 0.4); scene.add(hemi);
+      var lamp = new THREE.PointLight(0xffe0b0, 1, 34); lamp.position.set(0, RH * 0.85, 1.4); scene.add(lamp);
+      var doorLight = new THREE.PointLight(0xfff1d0, 0, 14); doorLight.position.set(0, 2, DZ + 1.2); scene.add(doorLight);
+      var avatar = buildAvatar(THREE, "self"); scene.add(avatar);
+      var FIG_K = 0.6; avatar.scale.setScalar(FIG_K); // the cave's figure is 3.6 tall for its long tunnels; in the room it stands about 2.2, under the door
+      avatar.position.set(SEAT.x, 0, SEAT.z); avatar.rotation.y = Math.PI;
+
+      // ---- the charge: a grey shape that takes the texture, and then its element's colour -------------------------------------
+      var GREY = 0x8a8a92;
+      function buildCharge() {
+        var g = new THREE.Group(), body = new THREE.Group(), S = new THREE.SphereGeometry(1, 18, 12);
+        var mat = new THREE.MeshStandardMaterial({ color: GREY, roughness: 0.6, emissive: GREY, emissiveIntensity: 0.2, transparent: true, opacity: 0.85 });
+        [[0, 1.1, 0, 0.62, 0.8, 0.55], [0.15, 1.78, 0.04, 0.38, 0.4, 0.36], [-0.24, 0.72, 0.08, 0.42, 0.45, 0.4]].forEach(function (q) {
+          var m = new THREE.Mesh(S, mat); m.position.set(q[0], q[1], q[2]); m.scale.set(q[3], q[4], q[5]); body.add(m);
+        });
+        var core = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
+        core.position.set(0, 1.2, 0.42); body.add(core); g.add(body);
+        var aura = buildAura(THREE, 1.25); g.add(aura);
+        g.userData = { mat: mat, body: body, core: core, aura: aura, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false };
+        return g;
+      }
+      function dressCharge(c) {
+        var u = c.fig.userData, look = AVATAR_LOOK[c.texture] || null, e = c.element && lookup(ELEMENTS, c.element);
+        u.sx = look ? look.sx[0] : 1; u.sy = look ? look.sy[0] : 1; u.op = look ? 0.3 + 0.55 * look.op[0] : 0.85;
+        u.want.setHex(e ? e[3] : GREY); u.steady = !!c.steady;
+      }
+      // A feeling about a feeling (Wendell, 11 October 2026: "being able to have emotions about the emotions and sensations that
+      // show up is key ... so they don't spam emotions about emotions as separate creatures"): a ring around the creature it is
+      // about, in its own colour, with the name the player writes. It flickers until it is validated with that creature.
+      function addLayer(c, name, element) {
+        var n = c.layers.length, e = element && lookup(ELEMENTS, element), hex = e ? e[3] : GREY;
+        var ring = new THREE.Mesh(new THREE.TorusGeometry(0.95 + 0.14 * n, 0.045, 8, 40), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.8, depthWrite: false }));
+        ring.rotation.x = Math.PI / 2 - 0.25; ring.position.y = 0.85 + 0.42 * n;
+        var label = labelSprite(THREE, name, "#" + new THREE.Color(hex).lerp(new THREE.Color(0xffffff), 0.5).getHexString(), 2.2); label.position.set(1.5 + 0.14 * n, ring.position.y + 0.12, 0);
+        c.fig.add(ring); c.fig.add(label);
+        var l = { name: name, element: element || null, ring: ring, label: label, steady: !!c.steady };
+        c.layers.push(l); return l;
+      }
+      // A light the charge leaves on the threshold, named by the player, for the sitting.
+      function buildLight(hex, name, n) {
+        var g = new THREE.Group();
+        var orb = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: hex })); orb.position.y = 0.32; g.add(orb);
+        var halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.22, depthWrite: false })); halo.position.y = 0.32; g.add(halo);
+        var cv = document.createElement("canvas"); cv.width = 512; cv.height = 96;
+        var cx = cv.getContext && cv.getContext("2d");
+        if (cx) { cx.font = "600 44px -apple-system,Segoe UI,Roboto,sans-serif"; cx.textAlign = "center"; cx.fillStyle = "#fff1d0"; cx.fillText(name.slice(0, 22), 256, 62); }
+        var label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false })); label.scale.set(3, 0.56, 1); label.position.y = 1.05; g.add(label);
+        g.position.set(-0.9 + 0.6 * (n % 4), 0, DZ + 0.9 + 0.5 * Math.floor(n / 4));
+        g.userData = { halo: halo, name: name };
+        return g;
+      }
+
+      // ---- the sitting -------------------------------------------------------------------------------------------------------
+      // R.phase is the step's id from ROOM_STEPS, or opening, stays, kept, goes, leaving, gone, checkin, again, end.
+      // R.active holds the creatures in the room being worked (up to three); ch is the one the player is working now. Each keeps
+      // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
+      var R = { round: 1, phase: "welcome", back: false, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [] };
+      function newCharge(first, slot) {
+        var c = { where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
+          slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [] };
+        c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
+        return c;
+      }
+      var ch = newCharge(true); R.active.push(ch);
+      function inRoom() { return R.active.filter(function (c) { return !c.gone && R.kept.indexOf(c) < 0; }); }
+      function freeSlot() { var used = inRoom().map(function (c) { return c.slot; }); for (var i = 0; i < ROOM_MAX; i++) if (used.indexOf(i) < 0) return i; return -1; }
+      function setFocus(c) {
+        if (ch !== c && R.active.indexOf(ch) >= 0) ch.phase = R.phase;
+        ch = c; HERE = SLOTS[c.slot]; FACE = { x: HERE.x / 2, z: (HERE.z + SEAT.z) / 2 };
+        R.phase = c.phase; R.back = false;
+      }
+      function labelOf(c) { return c.name.trim() || "The one " + SLOT_WORDS[c.slot]; }
+      // How brightly a creature glows, 0 to 1: its charge, up to the brightness allowed it, duller as it is worked through.
+      function levelOf(c) { return clamp(heatOf(c.t321, c.heat) / 10, 0, 1) * (c.allow.bright / 10) * c.dull; }
+      var br = { b: 0.5, t0: performance.now() / 1000, exhaling: false };
+      var fig = { x: SEAT.x, z: SEAT.z, sit: 1, yaw: Math.PI, clk: 0 };
+
+      function draw() {
+        modal.innerHTML = ""; stat.innerHTML = ""; pane.innerHTML = "";
+        var pg = page(), kids = pg.kids || [];
+        modal.appendChild(el("h2", { text: pg.title }));
+        kids.forEach(function (k) { modal.appendChild(k); });
+        stat.appendChild(el("h2", { text: pg.title })); kids.forEach(function (k) { if (k.tagName === "P") stat.appendChild(el("p", { text: k.textContent })); });
+        stat.setAttribute("data-room-phase", R.phase); stat.setAttribute("data-room-round", String(R.round));
+        pane.appendChild(el("strong", { text: pg.title }));
+        var first = kids.filter(function (k) { return k.tagName === "P"; })[0]; if (first) pane.appendChild(el("span", { text: first.textContent }));
+        if (pg.still) { closeModal(); pane.style.display = ""; return; } // a page with nothing to choose: the pane, so the room is in view
+        if (R.active.length > 1 && !R.back && ["else", "layer", "waiting"].indexOf(R.phase) < 0) modal.appendChild(focusRow());
+        modal.appendChild(row([btn("Look around", { "data-room-shrink": "" }, closeModal, true)]));
+        pane.style.display = ""; openModal();
+      }
+      function openModal() { R.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden"; }
+      function closeModal() { R.modal = false; modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); pane.style.visibility = ""; }
+      pane.addEventListener("click", function () { if (modal.childNodes.length) openModal(); });
+      function field(attr, value, hint, onInput) {
+        var f = el("input", { type: "text", class: "oagr-field", placeholder: hint, "aria-label": hint }); f.setAttribute(attr, "");
+        f.value = value || ""; f.addEventListener("input", function () { onInput(f.value); });
+        f.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); f.blur(); } });
+        return f;
+      }
+      function pickRow(attr, opts2, picked, onPick) {
+        return el("div", { class: "oagc-row" }, opts2.map(function (o) {
+          var b = el("button", { class: "alt", "aria-pressed": String(picked === o[0]), text: o[1], onclick: function () { onPick(o[0]); } }); b.setAttribute(attr, o[0]); return b;
+        }));
+      }
+      function stepBack() { return btn("Step back", { "data-room-step-back": "" }, function () { R.back = true; draw(); }, true); }
+      // Which creature is being worked: the player picks, and each keeps its own step.
+      function focusRow() {
+        return el("div", {}, [el("p", { class: "oagr-note", text: "Working with:" }), el("div", { class: "oagc-row" }, R.active.map(function (c, n) {
+          var b = el("button", { class: c === ch ? "" : "alt", "aria-pressed": String(c === ch), text: labelOf(c), onclick: function () { if (c !== ch) { setFocus(c); draw(); } } });
+          b.setAttribute("data-room-focus", String(n)); return b;
+        }))]);
+      }
+      // "What else is here?" (Wendell: "This will be the greatest use case for 'what else is here'"): first, is it about one of the
+      // creatures already here? Then it is a layer on that one. Only something new comes in through the door, as a creature of its own.
+      function elseBtn() { return btn("What else is here?", { "data-room-else": "" }, function () { R.prev = R.phase; R.phase = "else"; R.back = false; draw(); }, true); }
+      function go(phase) { R.phase = phase; R.back = false; draw(); }
+      function stepIndex(id) { for (var i = 0; i < ROOM_STEPS.length; i++) if (ROOM_STEPS[i].id === id) return i; return -1; }
+      function nextStep() { var i = stepIndex(R.phase); go(ROOM_STEPS[i + 1].id); }
+      function words(st) { return st.wave != null ? WAVE[st.wave] : [st.id, st.title, st.words]; }
+      function nm() { return ch.name || "It"; }
+
+      // The pages. Each returns { title, kids, still }. A still page (the door opening, the charge leaving) shows the pane only.
+      function page() {
+        var ph = R.phase, i = stepIndex(ph), st = i >= 0 ? ROOM_STEPS[i] : null, w = st ? words(st) : null, k = [];
+        if (R.back) {
+          return { title: "Stepped back", kids: [P("You stepped back behind your seat. " + (ch.fig.visible ? nm() + " is still here, and your" : "Your") + " words are kept.", { "data-room-paused": "" }),
+            row([btn("Go back in", { "data-room-resume": "" }, function () { R.back = false; draw(); })])] };
+        }
+        if (ph === "welcome") {
+          k.push(P(w[2], { "data-room-prompt": "" }));
+          k.push(P(ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
+          k.push(row([btn("Welcome it", { "data-room-welcome": "" }, function () { R.phase = "opening"; R.wait = "door-in"; draw(); })]));
+          return { title: w[1], kids: k };
+        }
+        if (ph === "opening") return { title: "The door", kids: [P(R.calm ? "The door opens." : "On your next out-breath, the door opens.")], still: true };
+        if (ph === "else") {
+          var here = inRoom();
+          k.push(P("Something else is here. Is it about " + (here.length > 1 ? "one of the ones" : "the one") + " already in the room?", { "data-room-else-ask": "" }));
+          k.push(el("div", { class: "oagc-row" }, here.map(function (c) {
+            var b = el("button", { text: "About " + labelOf(c), onclick: function () { R.layer = { c: c, name: "", element: null, unknown: false }; R.phase = "layer"; draw(); } });
+            b.setAttribute("data-room-else-about", String(R.active.indexOf(c))); return b;
+          })));
+          k.push(row([btn("Something new", { "data-room-else-new": "" }, somethingNew, true), btn("Back", { "data-room-else-back": "" }, function () { go(R.prev); }, true)]));
+          return { title: "What else is here?", kids: k };
+        }
+        if (ph === "layer") {
+          var L = R.layer, about = labelOf(L.c);
+          k.push(P("A feeling about " + about + ". Welcome it as part of " + about + ".", { "data-room-layer-ask": "" }));
+          var wl = btn("Welcome it with " + about, { "data-room-layer-welcome": "" }, function () {
+            addLayer(L.c, L.name.trim(), L.element); R.layer = null; go(R.prev);
+          });
+          var lready = function () { wl.disabled = !(L.name.trim() && (L.element || L.unknown)); };
+          k.push(field("data-room-layer-name", L.name, "A name for it", function (v) { L.name = v; lready(); }));
+          k.push(pickRow("data-room-layer-element", ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }).concat([["unknown", "I don't know"]]),
+            L.unknown ? "unknown" : L.element, function (v) { L.unknown = v === "unknown"; L.element = v === "unknown" ? null : v; draw(); }));
+          k.push(P(L.c.steady ? about + " is validated already, and this is validated with it." : "It is validated when " + about + " is.", { class: "oagr-note" }));
+          lready(); k.push(row([wl, btn("Back", { "data-room-else-back": "" }, function () { R.layer = null; go(R.prev); }, true)]));
+          return { title: "A feeling about a feeling", kids: k };
+        }
+        if (ph === "waiting") {
+          k.push(P("Three are in the room already. The new one waits at the door until one of them has been worked through.", { "data-room-waiting": "" }));
+          k.push(row([btn("Go on", { "data-room-next": "" }, function () { go(R.prev); })]));
+          return { title: "It waits at the door", kids: k };
+        }
+        if (ph === "witness") {
+          k.push(P(w[2], { "data-room-prompt": "" }));
+          k.push(P(ch.where ? "Where: " + ch.where + "." : "Where is it?", { "data-room-where": "" }));
+          if (window.OAGBody) k.push(row([btn(ch.where ? "It's somewhere else" : "Tap where it is", { "data-room-where-pick": "" }, function () {
+            window.OAGBody.pick().then(function (r) { if (r) { ch.where = r.label; draw(); } });
+          }, true)]));
+          k.push(P("What is it like?"));
+          k.push(pickRow("data-room-texture", TEXTURES.map(function (t) { return [t[0], t[1]]; }), ch.texture, function (v) { ch.texture = v; dressCharge(ch); draw(); }));
+          var nx = btn("Go on", { "data-room-next": "" }, nextStep); nx.disabled = !ch.texture;
+          k.push(row([nx, elseBtn(), stepBack()]));
+          return { title: w[1], kids: k };
+        }
+        if (ph === "acknowledge") {
+          k.push(P(w[2], { "data-room-prompt": "" }));
+          k.push(P("Give it a name, in your own words. Then its element, if you know it."));
+          var go1 = btn("Go on", { "data-room-next": "" }, nextStep);
+          var ready = function () { go1.disabled = !(ch.name.trim() && (ch.element || ch.elementUnknown)); };
+          k.push(field("data-room-name", ch.name, "A name for it", function (v) { ch.name = v; ready(); }));
+          k.push(pickRow("data-room-element", ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }).concat([["unknown", "I don't know"]]),
+            ch.elementUnknown ? "unknown" : ch.element, function (v) { ch.elementUnknown = v === "unknown"; ch.element = v === "unknown" ? null : v; dressCharge(ch); draw(); }));
+          ready(); k.push(row([go1, elseBtn(), stepBack()]));
+          return { title: w[1], kids: k };
+        }
+        if (st && ph !== "fork") { // allow, accept, appreciate, validate
+          k.push(P(w[2], { "data-room-prompt": "" }));
+          if (ph === "allow") { // it grows a little by itself; the player says how large, and how bright its colour can get
+            ch.allowed = true;
+            k.push(P(nm() + " grows a little as you let it be here.", { "data-room-allow": "" }));
+            allowSliders(ch.allow, "data-room-allow-slider").forEach(function (n) { k.push(n); });
+          }
+          if (ph === "validate" && ch.layers.length) k.push(P("This holds " + ch.layers.map(function (l) { return l.name; }).join(" and ") + " too.", { "data-room-validate-layers": "" }));
+          var kk = [btn("Go on", { "data-room-next": "" }, function () {
+            if (ph === "validate") { ch.steady = true; ch.dull = 0.6; ch.layers.forEach(function (l) { l.steady = true; }); dressCharge(ch); } // worked through: it dulls
+            nextStep();
+          })];
+          if (st.notNow) kk.push(btn("Not now", { "data-room-notnow": "" }, nextStep, true));
+          kk.push(elseBtn()); kk.push(stepBack()); k.push(row(kk));
+          return { title: w[1], kids: k };
+        }
+        if (ph === "fork") {
+          k.push(P(w[2], { "data-room-prompt": "" }));
+          k.push(P("What do you actually want right now?", { "data-room-goal-ask": "" }));
+          var tw = btn("Toward it", { "data-room-push": "toward" }, function () { ch.push = "toward"; startStays(); });
+          var aw = btn("Away from it", { "data-room-push": "away" }, function () { ch.push = "away"; go("goes"); }, true);
+          var ok = function () { tw.disabled = aw.disabled = !ch.goal.trim(); };
+          k.push(field("data-room-goal", ch.goal, "What you want, in your words", function (v) { ch.goal = v; ok(); }));
+          k.push(P("Is " + nm() + " pushing your next move toward it, or away from it?"));
+          ok(); k.push(row([tw, aw, stepBack()]));
+          k.push(P("What you write stays on this page.", { class: "oagr-note" }));
+          return { title: w[1], kids: k };
+        }
+        if (ph === "stays") {
+          var title = talk321(ch.t321, { name: nm(), damaged: false, skippable: true, redraw: draw, focus: function () { focusChat(modal); }, where: WHERE_ROOM, aim: "Aimed at what you want: " + ch.goal,
+            ask: function (body) {
+              body.push(P("What is one next move toward " + ch.goal + "? Write it.", { "data-room-move-ask": "" }));
+              var done = btn("That's my move", { "data-room-move-done": "" }, function () { keep(); });
+              body.push(field("data-room-move", ch.move, "One next move", function (v) { ch.move = v; done.disabled = !v.trim(); }));
+              done.disabled = !ch.move.trim(); body.push(row([done]));
+            } }, k);
+          return { title: title, kids: k };
+        }
+        if (ph === "kept") {
+          k.push(P(nm() + " has a place in the room now.", { "data-room-kept": "" }));
+          k.push(P("Your next move: " + ch.move));
+          k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("checkin"); })]));
+          return { title: "It stays", kids: k };
+        }
+        if (ph === "goes") {
+          k.push(P("Let the out-breath carry it. It leaves at its own pace, and it can come back."));
+          k.push(field("data-room-line", ch.line, "A line to it, if you want", function (v) { ch.line = v; }));
+          k.push(field("data-room-light-name", ch.lightName, "A name for the light it leaves", function (v) { ch.lightName = v; }));
+          k.push(row([btn("Breathe out", { "data-room-exhale": "" }, function () { R.phase = "leaving"; R.wait = "door-out"; draw(); }), stepBack()]));
+          return { title: "Exhale", kids: k };
+        }
+        if (ph === "leaving") return { title: "Exhale", kids: [P(R.calm ? "The door opens, and it goes when it's ready." : "On your out-breath the door opens, and it goes when it's ready.")], still: true };
+        if (ph === "gone") {
+          k.push(P("A light in its colour stays on the threshold: " + lightName() + ". The door stays ajar. It can come back.", { "data-room-gone": "" }));
+          if (ch.line.trim()) k.push(P("You told it: " + ch.line.trim()));
+          k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("checkin"); })]));
+          return { title: "It left", kids: k };
+        }
+        if (ph === "checkin") {
+          k.push(P("Did it leave, or did you get rid of it?", { "data-room-checkin-ask": "" }));
+          var ans = [["left", "It left"], ["got-rid", "I got rid of it"]];
+          if (ch.push === "toward") ans.push(["stayed", "It stayed"]);
+          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v }); workedThrough(); }));
+          k.push(P("Your answer and the round number stay on this device. What you wrote stays on this page.", { class: "oagr-note" }));
+          return { title: "For the test", kids: k };
+        }
+        if (ph === "again") {
+          k.push(P("Is anything still here that says it belongs?", { "data-room-again-ask": "" }));
+          k.push(row([btn("Yes, it comes to the door", { "data-room-again": "yes" }, restart), btn("No, the room is quiet", { "data-room-again": "no" }, function () { go("end"); }, true)]));
+          if (R.round >= ROOM_ROUNDS_REST) {
+            k.push(P("That's " + R.round + " rounds this sitting. You can rest what's left by the door, with a lantern, and come back to it another time.", { "data-room-rest-offer": "" }));
+            k.push(row([btn("Rest it by the door", { "data-room-rest": "" }, rest, true)]));
+          }
+          return { title: "Round " + R.round + " is done", kids: k };
+        }
+        // end
+        k.push(P(R.rested ? "What's left rests by the door, with a lantern beside it." : "The room is quiet.", { "data-room-end": "" }));
+        if (R.lights.length) k.push(P("On the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
+        k.push(row([btn(R.from === "cave" ? "Back to the lantern" : "Leave the room", { "data-room-leave": "" }, leave)]));
+        return { title: R.rested ? "Resting" : "The room is quiet", kids: k };
+      }
+      function lightName() { return (ch.lightName || "").trim() || nm(); }
+      // Something new while fewer than three are in: the door opens on the out-breath and it comes in to a place of its own, and
+      // the player works it now (the others keep their steps). With three in, it waits at the door.
+      function somethingNew() {
+        var sl = freeSlot();
+        if (sl < 0) { R.waiting++; R.phase = "waiting"; draw(); return; }
+        R.phase = R.prev;
+        var c = newCharge(false, sl); R.active.push(c); setFocus(c);
+        R.phase = "opening"; R.wait = "door-in"; draw();
+      }
+      // One creature is worked through: the next one in the room is worked, or one waiting at the door is welcomed, or the round ends.
+      function workedThrough() {
+        if (R.worked.indexOf(ch) < 0) R.worked.push(ch); // each W.A.V.E. worked here walks back out with the player as a spirit
+        R.active.splice(R.active.indexOf(ch), 1);
+        if (R.active.length) { var nx = R.active[0]; ch.phase = "done"; ch = nx; setFocus(nx); draw(); return; }
+        if (R.waiting > 0) { R.waiting--; var c = newCharge(false, 0); c.waited = true; R.active.push(c); ch = c; setFocus(c); draw(); return; }
+        go("again");
+      }
+      function startStays() { ch.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }; go("stays"); }
+      function keep() { // the charge takes a place in the room, beside the wall, for the sitting
+        var n = R.kept.length % 4, spot = [[-5.2, 1.4], [5.2, 1.4], [-5.4, -2.4], [5.4, -2.4]][n]; // by the wall, clear of the three places
+        R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: { x: spot[0], z: spot[1] }, t: 0, dur: 3 });
+        ch.heat = ch.t321.after; ch.dull *= 0.6; R.kept.push(ch); ch.t321 = null; go("kept");
+      }
+      function restart() {
+        R.round++; if (ch.gone) scene.remove(ch.fig);
+        ch = newCharge(false); R.active = [ch]; setFocus(ch); R.doorWant = 0; go("welcome");
+      }
+      function rest() {
+        var lan = buildLantern(THREE); lan.position.set(DW / 2 + 1.1, 0, DZ + 0.8); lan.scale.setScalar(1.3); scene.add(lan); R.lantern = lan;
+        if (ch.gone) scene.remove(ch.fig);
+        var c = newCharge(false); c.fig.visible = true; c.fig.position.set(DW / 2 + 1.9, 0, DZ + 1.1); c.fig.scale.setScalar(0.45); R.restFig = c.fig;
+        R.rested = true; R.doorWant = 0; go("end");
+      }
+      function leave() {
+        fade.style.opacity = 1;
+        setTimeout(function () {
+          cancelAnimationFrame(running); window.removeEventListener("resize", size);
+          if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
+          resolve({ rounds: R.round, rested: R.rested, spirits: R.worked.map(function (c) {
+            return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away" };
+          }) });
+        }, 520);
+      }
+
+      // ---- breath, calm, look ---------------------------------------------------------------------------------------------
+      var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
+      stage.appendChild(calmBtn);
+      var lookYaw = 0, drag = null;
+      if (renderer) {
+        var dom = renderer.domElement;
+        dom.addEventListener("pointerdown", function (e) { drag = { x: e.clientX }; });
+        dom.addEventListener("pointermove", function (e) { if (!drag) return; lookYaw = clamp(lookYaw - (e.clientX - drag.x) * 0.005, -0.9, 0.9); drag.x = e.clientX; });
+        ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function () { drag = null; }); });
+      }
+      function breathStep(nowS) {
+        var T = BREATH_S, tm = (((nowS - br.t0) % T) + T) % T, b;
+        br.exhaling = tm >= BREATH.inS;
+        b = br.exhaling ? 0.5 + 0.5 * Math.cos(Math.PI * (tm - BREATH.inS) / BREATH.outS) : 0.5 - 0.5 * Math.cos(Math.PI * tm / BREATH.inS);
+        br.b = R.calm ? 0.5 : b;
+      }
+      function size() {
+        if (!renderer) return;
+        var w = stage.clientWidth || 1, h = stage.clientHeight || 1;
+        renderer.setSize(w, h, false); camera.aspect = w / h;
+        camera.setViewOffset(w, h, 0, -h * 0.08, w, h); // the words sit high, so the room is drawn low on the screen
+        camera.updateProjectionMatrix();
+      }
+      size(); window.addEventListener("resize", size);
+
+      // Where the figure stands, and how the camera sees it, for the step. The 3-2-1 is staged as in the cave: Face it from the seat,
+      // Talk to it face to face (the camera swings with the voice), Be it from where the charge stood (the charge sits in the
+      // seat), then back to the seat. Step back stands behind the seat.
+      function targets() {
+        var t = ch.t321, tg = { p: SEAT, sit: true, look: HERE, view: "seat", c: HERE };
+        if (R.back || (t && t.paused)) return { p: BACK, sit: false, look: HERE, view: "back", c: HERE };
+        if (R.phase === "stays" && t) {
+          if (t.phase === 2 || t.phase === "check") return { p: FACE, sit: false, look: HERE, view: t.phase === 2 && t.voice === "it" ? "face-it" : "face-you", c: HERE };
+          if (t.phase === 1) return { p: HERE, sit: false, look: SEAT, view: "its", c: SEAT };
+        }
+        return tg;
+      }
+      function view(name, ax, az) {
+        var V = function (x, y, z) { return new THREE.Vector3(x, y, z); };
+        if (name === "face-you") return { pos: V(FACE.x + 2.2, 3.2, FACE.z + 3.4), aim: V(HERE.x, 0.9, HERE.z) };
+        if (name === "face-it") return { pos: V(HERE.x - 2.8, 3.6, HERE.z - 2.2), aim: V(FACE.x, 0.9, FACE.z) };
+        if (name === "its") return { pos: V(HERE.x + 1.6, 3.6, HERE.z - 4.3), aim: V(SEAT.x, 0.6, SEAT.z) };
+        if (name === "back") return { pos: V(BACK.x + 0.8, 4.6, BACK.z + 2.3), aim: V(HERE.x, 0.6, HERE.z) };
+        if (inRoom().length > 1) return { pos: V(0.4 + 0.3 * HERE.x, 6.6, 6.6), aim: V(0.6 * HERE.x, 0.2, -2) }; // higher, so all of them are in view, turned to the one worked
+        return { pos: V(1.0, 5.4, 7.0), aim: V(0, 0.6, -3) };
+      }
+      var camPos = new THREE.Vector3(), camAim = new THREE.Vector3(), snap = true, last = performance.now(), running = null, tmpC = new THREE.Color();
+
+      // ---- the frame ------------------------------------------------------------------------------------------------------
+      function frame() {
+        var now = performance.now(), dt = Math.min(0.1, (now - last) / 1000) * R.speed; last = now;
+        breathStep(now / 1000);
+        // the door: it opens on an out-breath (at once when calm), then the charge comes in, or goes out
+        if (R.wait && (R.calm || br.exhaling)) {
+          var w0 = R.wait; R.wait = null; R.doorWant = 1;
+          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { if (ch === cin) go("witness"); else cin.phase = "witness"; } }); }
+          else { var cout = ch; R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
+            cout.gone = true; cout.fig.visible = false; var l = buildLight(cout.fig.userData.want.getHex(), (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
+            if (ch === cout) go("gone"); else cout.phase = "gone";
+          } }); }
+        }
+        R.doorOpen += (R.doorWant - R.doorOpen) * Math.min(1, dt * 1.6);
+        door.position.x = -DW / 2 - (DW + 0.25) * R.doorOpen; doorLight.intensity = 1.8 * R.doorOpen;
+        R.moves = R.moves.filter(function (mv) {
+          mv.t += dt; var k = clamp(mv.t / mv.dur, 0, 1), e = k * k * (3 - 2 * k);
+          mv.c.fig.position.x = mv.from.x + (mv.to.x - mv.from.x) * e; mv.c.fig.position.z = mv.from.z + (mv.to.z - mv.from.z) * e;
+          if (mv.fadeOut) mv.c.fig.userData.fade = 1 - clamp((k - 0.75) / 0.25, 0, 1);
+          if (k >= 1) { if (mv.fadeOut) R.doorWant = 0.3; if (mv.then) mv.then(); return false; }
+          return true;
+        });
+        var inFlight = R.moves.map(function (mv) { return mv.c; });
+        // each creature where the step puts it (unless it is moving): the one being worked at its place, or in the seat while the
+        // player is it; the others at their own places
+        var tg = targets();
+        inRoom().forEach(function (c) {
+          if (inFlight.indexOf(c) >= 0 || !c.fig.visible) return;
+          var to = c === ch ? tg.c : SLOTS[c.slot], cy = to === SEAT ? 0.55 : 0, fk = Math.min(1, dt * 1.8);
+          c.fig.position.x += (to.x - c.fig.position.x) * fk; c.fig.position.z += (to.z - c.fig.position.z) * fk; c.fig.position.y += (cy - c.fig.position.y) * fk;
+        });
+        // every creature in the room: its colour eases to its element, its shape to its texture; it breathes, and flickers until
+        // validated. Allowed, it grows to the size the player set; its aura brightens with its charge and dulls as it is worked.
+        var every = R.active.concat(R.kept); if (every.indexOf(ch) < 0) every.push(ch);
+        every.forEach(function (c) {
+          var u = c.fig.userData, b = br.b, lv = levelOf(c);
+          u.col.lerp(u.want, Math.min(1, dt * 1.5)); u.mat.color.copy(u.col); u.mat.emissive.copy(u.col);
+          var flick = u.steady || R.calm ? 0 : 0.12 * Math.sin(now / 130) * Math.sin(now / 370);
+          u.mat.emissiveIntensity = 0.22 + 0.18 * b + flick + (u.steady ? 0.15 : 0) + 0.6 * u.aura.userData.level;
+          var sz = c.allowed ? 1 + c.allow.grow / 10 : 1, fs = c.fig.scale.x; c.fig.scale.setScalar(fs + (sz - fs) * Math.min(1, dt * 1.5));
+          stepAura(u.aura, u.col, lv * (u.fade == null ? 1 : u.fade), dt, R.calm);
+          c.layers.forEach(function (l, n) {
+            if (!R.calm) l.ring.rotation.z += dt * (0.4 + 0.15 * n);
+            l.ring.material.opacity = (l.steady || R.calm ? 0.85 : 0.45 + 0.35 * Math.abs(Math.sin(now / 240 + n))) * (u.fade == null ? 1 : u.fade);
+            l.label.material.opacity = u.fade == null ? 1 : u.fade;
+          });
+          u.mat.opacity = u.op * (u.fade == null ? 1 : u.fade);
+          u.body.scale.set(u.sx * (1 + 0.05 * (b - 0.5)), u.sy * (1 + 0.04 * (b - 0.5)), u.sx);
+          u.core.material.opacity = (u.steady ? 0.85 : 0.4 + 0.3 * b) * (u.fade == null ? 1 : u.fade);
+          var faceTo = c.fig.position.z > SEAT.z - 0.5 ? SLOTS[c.slot] : (fig.sit > 0.5 ? SEAT : { x: fig.x, z: fig.z });
+          c.fig.rotation.y = Math.atan2(faceTo.x - c.fig.position.x, faceTo.z - c.fig.position.z);
+        });
+        if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
+        // the figure: stands up, walks to its place, sits down again
+        var dx = tg.p.x - fig.x, dz = tg.p.z - fig.z, dist = Math.hypot(dx, dz), moving = false;
+        if (dist > 0.04) {
+          fig.sit = Math.max(0, fig.sit - dt * 1.6);
+          if (fig.sit <= 0) { var stp = Math.min(dist, dt * 1.5); fig.x += dx / dist * stp; fig.z += dz / dist * stp; moving = true; fig.clk += dt; fig.yaw = turnTo(fig.yaw, Math.atan2(dx, dz), dt * 5); }
+        } else {
+          fig.x = tg.p.x; fig.z = tg.p.z;
+          fig.yaw = turnTo(fig.yaw, Math.atan2(tg.look.x - fig.x, tg.look.z - fig.z), dt * 4);
+          if (tg.sit && Math.abs(angleDiff(fig.yaw, Math.atan2(tg.look.x - fig.x, tg.look.z - fig.z))) < 0.15) fig.sit = Math.min(1, fig.sit + dt * 1.6);
+        }
+        avatar.position.set(fig.x, 0, fig.z); avatar.rotation.y = fig.yaw;
+        poseAvatar(avatar, fig.clk, moving, dt, br.b, 0.7, R.calm);
+        var J = avatar.userData.J, sk = fig.sit * fig.sit * (3 - 2 * fig.sit);
+        if (sk > 0) {
+          ["L", "R"].forEach(function (n) {
+            J["hip" + n].rotation.x = J["hip" + n].rotation.x * (1 - sk) - 1.45 * sk; J["knee" + n].rotation.x = J["knee" + n].rotation.x * (1 - sk) + 1.45 * sk;
+            J["ankle" + n].rotation.x *= 1 - sk; J["shoulder" + n].rotation.x = J["shoulder" + n].rotation.x * (1 - sk) - 0.35 * sk; J["elbow" + n].rotation.x = J["elbow" + n].rotation.x * (1 - sk) - 0.5 * sk;
+          });
+          J.hips.position.y = J.hips.position.y * (1 - sk) + 0.6 * sk;
+          avatar.position.z = fig.z - Math.cos(fig.yaw) * 0.25 * FIG_K * sk; avatar.position.x = fig.x - Math.sin(fig.yaw) * 0.25 * FIG_K * sk; // hips back over the seat
+        }
+        loosenAvatar(avatar, 0, br.b);
+        // the room's look follows the step, as the cave's path does; the walls breathe
+        var li = stepIndex(R.phase), lg = STEP_LOOK[li >= 0 ? ROOM_STEPS[li].look : R.phase === "welcome" || R.phase === "opening" ? 0 : 6], fe = Math.min(1, dt * 1.2);
+        lamp.color.lerp(tmpC.setHex(lg.light).lerp(new THREE.Color(0xffffff), 0.45), fe);
+        hemi.intensity += (lg.hemi * 0.8 - hemi.intensity) * fe;
+        scene.fog.color.lerp(tmpC.setHex(lg.fog), fe); scene.background.copy(scene.fog.color);
+        scene.fog.density += (0.03 * lg.fogK - scene.fog.density) * fe;
+        lamp.intensity = 0.9 + 0.35 * (1 - br.b);
+        var wk = 1 + 0.015 * (br.b - 0.5); walls.scale.set(wk, 1, wk);
+        R.lights.forEach(function (l, n) { l.userData.halo.scale.setScalar(R.calm ? 1 : 1 + 0.12 * Math.sin(now / 500 + n)); });
+        // the camera
+        var vw = view(tg.view, 0, 0); R.view = tg.view;
+        if (lookYaw) { var off = vw.pos.clone().sub(vw.aim), c0 = Math.cos(lookYaw), s0 = Math.sin(lookYaw); vw.pos.set(vw.aim.x + off.x * c0 + off.z * s0, vw.pos.y, vw.aim.z - off.x * s0 + off.z * c0); }
+        if (snap) { camPos.copy(vw.pos); camAim.copy(vw.aim); snap = false; }
+        else { var f = 1 - Math.exp(-dt * 2.6); camPos.lerp(vw.pos, f); camAim.lerp(vw.aim, f); }
+        camera.position.copy(camPos); camera.lookAt(camAim);
+        if (renderer) renderer.render(scene, camera);
+        running = requestAnimationFrame(frame);
+      }
+      function angleDiff(a, b) { var d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
+      function turnTo(a, b, k) { return a + angleDiff(a, b) * Math.min(1, k); }
+
+      draw(); frame();
+
+      // ---- hooks for the browser test --------------------------------------------------------------------------------------
+      var api = window.__oagCave;
+      api.room = {
+        state: R,
+        charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
+          slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }) }; },
+        creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
+        scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
+        speed: function (v) { R.speed = v; },
+      };
+    });
+  }
+
+  // Three.js alone, for a cave that needs neither the kit nor the spots (the Big Mind cave, bigmind/bigmind.js).
+  var threeP = null;
+  function loadThree() {
+    if (window.THREE) return Promise.resolve(window.THREE);
+    if (threeP) return threeP;
+    threeP = new Promise(function (res, rej) {
+      var s = el("script", { src: THREE_URL });
+      s.onload = function () { res(window.THREE); };
+      s.onerror = function () { threeP = null; rej(new Error("three.js did not load")); };
+      document.head.appendChild(s);
+    });
+    return threeP;
+  }
+  // The engine pieces a second cave reuses (the Big Mind cave is a fork that shares them, so a fix here reaches both caves):
+  // the route, the tunnel, the pebbles, the marker and lantern, the faceless avatar and its walk, the daemon body, the breath
+  // and the page guards.
+  var kit = {
+    el: el, clamp: clamp, hashOf: hashOf, rngOf: rngOf, loadThree: loadThree,
+    makeRoute: makeRoute, ptOn: ptOn, at: at, yawFacing: yawFacing, smoothLine: smoothLine,
+    buildTube: buildTube, buildPebbles: buildPebbles, buildMarker: buildMarker, buildLantern: buildLantern,
+    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, DAEMONS: DAEMONS,
+    BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
+    // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
+    ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,
+    buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, labelSprite: labelSprite, P: P, btn: btn, row: row,
+    buildSpirit: buildSpirit, followSpirits: followSpirits, spiritHex: spiritHex, SPIRITS_SHOWN: SPIRITS_SHOWN,
+    // the Cave of Lessons' stone and light, so the Big Mind cave wears the same map (Wendell, 2026-10-13: "import the WAVE
+    // process into this map")
+    loadTiles: loadTiles, stoneOf: stoneOf, tileStone: tileStone, LAMP: LAMP,
+  };
+  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE,
+    crystalBlock: crystalBlock, geomOf: geomOf, stoneOf: stoneOf, CRYSTAL_TINTS: CRYSTAL_TINTS, CRYSTAL_RANGE: CRYSTAL_RANGE,
+    openRoom: function (o) { return load().then(function (A) { return openRoom(A, o); }); }, ROOM_STEPS: ROOM_STEPS, roomTest: readRoomTest, kit: kit };
+  // A page that only borrows the engine sets __oagCaveNoStart before loading this file, so the Cave of Lessons' doorway stays shut.
+  if (!window.__oagCaveNoStart) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start(); }
 })();
