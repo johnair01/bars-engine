@@ -563,7 +563,9 @@
           // inside the parent at all goes: a face's branch beside a narrow passage left slabs of its walls standing in the
           // passage, and its floor showing through the passage's floor (Wendell, 2026-10-13: "Cave is breaking here").
           var deep = ring[i + 1].s < t.within.s0 - WITHIN_SEAM || ring[i].s > t.within.s1 + WITHIN_SEAM;
-          cut = deep ? quadIn(t.within.tube, "wd", 1, a, b, c, d) : quadIn(t.within.tube, "w", 0.92, a, b, c, d);
+          // Its floor in there lies a hair under the parent's and flickered through it, so it goes too, out to just past the parent's stone.
+          var flo = PY[j] < -0.8 && PY[j1] < -0.8;
+          cut = deep ? quadIn(t.within.tube, flo ? "wf" : "wd", flo ? 1.2 : 1, a, b, c, d) : quadIn(t.within.tube, "w", 0.92, a, b, c, d);
         }
         if (cut) continue;
         (PY[j] < -0.8 && PY[j1] < -0.8 ? floorIdx : idx).push(a, c, b, b, c, d);
