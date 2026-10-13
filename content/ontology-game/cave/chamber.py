@@ -1,5 +1,5 @@
 """The pool chamber of the Cave of Lessons, built in Blender. Run: /home/user/blenv/bin/python content/ontology-game/cave/chamber.py [--no-render]
-Writes chamber.glb, view_front.png, view_top.png into /tmp/blender-cloud/chamber (or the folder after --out).
+Writes chamber.glb (its textures packed inside), view_front.png, view_top.png and textures/*.jpg into /tmp/blender-cloud/chamber (or the folder after --out).
 To change the chamber, edit this file: the pieces are one place(...) line each, near the end (bpt-recipe-result)."""
 import math, os, random, sys
 import bpy
@@ -23,8 +23,12 @@ def rgb(h):
     return tuple(int(h[i:i + 2], 16) / 255 for i in (1, 3, 5))
 
 
-def mat(name, colour, rough, glow=0.0):
+def mat(name, colour, rough, glow=0.0, texture=None, scale=1.0):
+    """texture: wet_stone, dry_stone or crystal_vein, made from noise and Voronoi nodes and baked to a 512 px JPEG
+    per surface; scale > 1 makes the pattern finer."""
     m = bpy.data.materials.new(name)
+    if texture:
+        m["texture"], m["scale"], m["colour"] = texture, scale, colour
     m.use_nodes = True
     p = m.node_tree.nodes["Principled BSDF"]
     p.inputs["Base Color"].default_value = (*rgb(colour), 1)
@@ -38,6 +42,8 @@ def mat(name, colour, rough, glow=0.0):
 def place(name, piece, material, loc, rot_deg, scale):
     ob = bpy.data.objects.new(name, kit[piece].copy())
     sc.collection.objects.link(ob)
+    if material.get("texture") and not ob.data.uv_layers:
+        unwrap(ob)
     ob.data.materials.clear()
     ob.data.materials.append(material)
     ob.location = loc
@@ -46,11 +52,150 @@ def place(name, piece, material, loc, rot_deg, scale):
     return ob
 
 
-# ---- materials ----
-M_WALL = mat("wall", "#6b6159", 0.85)
-M_FLOOR = mat("floor", "#5a524b", 0.9)
-M_ROCK = mat("rock", "#8c8075", 0.8)
-M_STONE = mat("stone", "#70707e", 0.8)
+def unwrap(ob):
+    for o in sc.objects:
+        o.select_set(o == ob)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.01)
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+
+# ---- textures: each turns a point into a colour, from the surface's own colour ----
+def node(nt, kind, **inputs):
+    n = nt.nodes.new(kind)
+    for k, v in inputs.items():
+        if k in n.inputs:
+            n.inputs[k].default_value = v
+        else:
+            setattr(n, k, v)
+    return n
+
+
+def ramp(nt, fac, stops):
+    r = nt.nodes.new("ShaderNodeValToRGB")
+    el = r.color_ramp.elements
+    while len(el) < len(stops):
+        el.new(0.5)
+    for e, (pos, col) in zip(el, stops):
+        e.position, e.color = pos, (*col, 1)
+    nt.links.new(fac, r.inputs["Fac"])
+    return r.outputs["Color"]
+
+
+def mix(nt, fac, a, b, blend="MIX"):
+    m = node(nt, "ShaderNodeMix", data_type="RGBA", blend_type=blend)
+    for sock, i in ((fac, 0), (a, 6), (b, 7)):
+        if isinstance(sock, float):
+            m.inputs[i].default_value = sock
+        elif isinstance(sock, tuple):
+            m.inputs[i].default_value = (*sock, 1)
+        else:
+            nt.links.new(sock, m.inputs[i])
+    return m.outputs[2]
+
+
+def shade(c, k):
+    return tuple(min(1, v * k) for v in c)
+
+
+def texture(nt, kind, colour, vec):
+    c = rgb(colour)
+    if kind == "wet_stone":  # dark mottled rock, cracks, and darker wet streaks running down
+        grain = node(nt, "ShaderNodeTexNoise", Scale=5.0, Detail=8.0, Roughness=0.62)
+        nt.links.new(vec, grain.inputs["Vector"])
+        body = ramp(nt, grain.outputs["Fac"], [(0.3, shade(c, 0.4)), (0.55, shade(c, 0.7)), (0.75, shade(c, 0.95))])
+        stretch = node(nt, "ShaderNodeVectorMath", operation="MULTIPLY")
+        stretch.inputs[1].default_value = (3.0, 3.0, 0.25)
+        nt.links.new(vec, stretch.inputs[0])
+        wet = node(nt, "ShaderNodeTexNoise", Scale=4.0, Detail=3.0)
+        nt.links.new(stretch.outputs[0], wet.inputs["Vector"])
+        wet_mask = ramp(nt, wet.outputs["Fac"], [(0.42, (0, 0, 0)), (0.58, (0.85, 0.85, 0.85))])
+        body = mix(nt, wet_mask, body, shade((c[0] * 0.75, c[1] * 0.9, c[2] * 1.1), 0.3))
+        cell = node(nt, "ShaderNodeTexVoronoi", feature="DISTANCE_TO_EDGE", Scale=0.9, Randomness=1.0)
+        nt.links.new(vec, cell.inputs["Vector"])
+        crack = ramp(nt, cell.outputs["Distance"], [(0.0, (0.35, 0.35, 0.35)), (0.03, (1, 1, 1))])
+        return mix(nt, 1.0, body, crack, "MULTIPLY")
+    if kind == "dry_stone":  # pale dusty grain with pebbles and a few lighter flecks
+        grain = node(nt, "ShaderNodeTexNoise", Scale=14.0, Detail=10.0, Roughness=0.7)
+        nt.links.new(vec, grain.inputs["Vector"])
+        body = ramp(nt, grain.outputs["Fac"], [(0.35, shade(c, 0.75)), (0.6, shade(c, 1.05)), (0.8, shade(c, 1.3))])
+        pebble = node(nt, "ShaderNodeTexVoronoi", Scale=6.0, Randomness=1.0)
+        nt.links.new(vec, pebble.inputs["Vector"])
+        tone = ramp(nt, pebble.outputs["Color"], [(0.0, shade(c, 0.85)), (1.0, shade(c, 1.15))])
+        body = mix(nt, 0.5, body, tone, "MULTIPLY")
+        edge = ramp(nt, pebble.outputs["Distance"], [(0.0, (1, 1, 1)), (0.35, (0.9, 0.9, 0.9)), (0.5, (0.65, 0.65, 0.65))])
+        body = mix(nt, 1.0, body, edge, "MULTIPLY")
+        fleck = node(nt, "ShaderNodeTexNoise", Scale=60.0, Detail=2.0)
+        nt.links.new(vec, fleck.inputs["Vector"])
+        fleck_mask = ramp(nt, fleck.outputs["Fac"], [(0.68, (0, 0, 0)), (0.72, (1, 1, 1))])
+        return mix(nt, fleck_mask, body, shade(c, 1.6))
+    if kind == "crystal_vein":  # dark rock split by thin glowing veins the colour of the crystals
+        grain = node(nt, "ShaderNodeTexNoise", Scale=6.0, Detail=6.0, Roughness=0.6)
+        nt.links.new(vec, grain.inputs["Vector"])
+        body = ramp(nt, grain.outputs["Fac"], [(0.35, shade(c, 0.22)), (0.7, shade(c, 0.45))])
+        warp = node(nt, "ShaderNodeTexNoise", Scale=2.0, Detail=2.0, Distortion=1.5)
+        nt.links.new(vec, warp.inputs["Vector"])
+        warped = node(nt, "ShaderNodeVectorMath", operation="ADD")
+        nt.links.new(vec, warped.inputs[0])
+        nt.links.new(warp.outputs["Color"], warped.inputs[1])
+        cell = node(nt, "ShaderNodeTexVoronoi", feature="DISTANCE_TO_EDGE", Scale=0.9)
+        nt.links.new(warped.outputs[0], cell.inputs["Vector"])
+        vein = ramp(nt, cell.outputs["Distance"], [(0.0, (1, 1, 1)), (0.015, (0.7, 0.7, 0.7)), (0.04, (0, 0, 0))])
+        return mix(nt, vein, body, rgb(VEIN))
+    raise ValueError(f"unknown texture {kind}")
+
+
+def bake(objects, material):
+    """Bakes the material's texture onto the first object's UVs; the others are copies of the same piece."""
+    ob = objects[0]
+    name = f"{material.name}_{ob.data.name.split('.')[0]}"
+    img = bpy.data.images.new(name, TEX, TEX)
+    m = bpy.data.materials.new(name + "_bake")
+    nt = m.node_tree
+    nt.nodes.clear()
+    coord, scale = node(nt, "ShaderNodeTexCoord"), node(nt, "ShaderNodeVectorMath", operation="MULTIPLY")
+    scale.inputs[1].default_value = tuple(material["scale"] * s for s in ob.scale)
+    nt.links.new(coord.outputs["Object"], scale.inputs[0])
+    col = texture(nt, material["texture"], material["colour"], scale.outputs[0])
+    emit, out = node(nt, "ShaderNodeEmission"), node(nt, "ShaderNodeOutputMaterial")
+    nt.links.new(col, emit.inputs["Color"])
+    nt.links.new(emit.outputs[0], out.inputs["Surface"])
+    target = node(nt, "ShaderNodeTexImage", image=img)
+    nt.nodes.active = target
+    ob.data.materials[0] = m
+    for o in sc.objects:
+        o.select_set(o == ob)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.bake(type="EMIT", margin=4)
+    path = os.path.join(OUT, "textures", name + ".jpg")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.file_format, sc.render.image_settings.quality = "JPEG", 82
+    img.save(filepath=path, quality=82)
+    bpy.data.images.remove(img)
+    img = bpy.data.images.load(path)
+    final = material.copy()
+    final.name = name
+    p, tex = final.node_tree.nodes["Principled BSDF"], final.node_tree.nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    final.node_tree.links.new(tex.outputs["Color"], p.inputs["Base Color"])
+    if material["texture"] == "crystal_vein":  # the veins glow; the dark rock barely does
+        p.inputs["Emission Color"].default_value = (1, 1, 1, 1)
+        final.node_tree.links.new(tex.outputs["Color"], p.inputs["Emission Color"])
+        p.inputs["Emission Strength"].default_value = 0.6
+    for o in objects:
+        o.data.materials[0] = final
+    bpy.data.materials.remove(m)
+    return path
+
+
+# ---- materials (texture: wet_stone, dry_stone, crystal_vein; scale: how fine) ----
+TEX, VEIN = 512, "#8f84ff"
+M_WALL = mat("wall", "#6b6159", 0.5, texture="wet_stone", scale=1.0)
+M_FLOOR = mat("floor", "#5a524b", 0.9, texture="dry_stone", scale=1.0)
+M_ROCK = mat("rock", "#8c8075", 0.8, texture="crystal_vein", scale=1.0)
+M_STONE = mat("stone", "#70707e", 0.8, texture="dry_stone", scale=1.0)
 M_WATER = mat("water", "#112933", 0.02)
 M_GLOW = mat("glow", "#7fe8c8", 0.8, glow=2.75)
 M_CRYSTAL = mat("crystal", "#8f84ff", 0.25, glow=2.25)
@@ -100,6 +245,7 @@ for part, keep in (("walls", lambda a: math.cos(a) >= 0), ("walls_front", lambda
     for p in me.polygons:
         p.use_smooth = True
     ob = add(part, me, M_WALL)
+    unwrap(ob)
     if part == "walls_front":
         ob.visible_camera = False  # cut away so the camera sees in; the GLB keeps it
 
@@ -112,7 +258,7 @@ for j in range(seg):
 me = bpy.data.meshes.new("floor")
 bm.to_mesh(me)
 bm.free()
-add("floor", me, M_FLOOR)
+unwrap(add("floor", me, M_FLOOR))
 
 # ---- pieces: name, piece, material, location (x right, y back, z up; metres), rotation (degrees), scale ----
 place("pool.1", "pool", M_WATER, (0.00, 0.50, 0.11), (0, 0, 0), (1.80, 1.80, 1.80))
@@ -136,9 +282,19 @@ place("roots.4", "root_curl", M_ROOT, (3.21, -5.57, 4.85), (180, 0, -150), (1.86
 place("crystals.1", "crystal_cluster", M_CRYSTAL, (5.11, -2.38, 0.00), (0, 0, -115), (2.20, 2.20, 2.20))
 place("crystals.1", "crystal_cluster_bed", M_ROCK, (5.11, -2.38, 0.00), (0, 0, -115), (2.20, 2.20, 2.20))
 
+# ---- bake each textured surface: one JPEG per piece and texture ----
+sc.render.engine = "CYCLES"  # Workbench and EEVEE need a GPU; the cloud has none
+sc.cycles.device, sc.cycles.samples = "CPU", 1
+groups = {}
+for o in sc.objects:
+    m = o.data.materials[0] if o.type == "MESH" and o.data.materials else None
+    if m and m.get("texture"):
+        groups.setdefault((m.name, o.data.name.split(".")[0] if o.name[:5] != "walls" else o.name), []).append(o)
+baked = [bake(objs, bpy.data.materials[mname]) for (mname, _), objs in sorted(groups.items())]
+
 glb = os.path.join(OUT, "chamber.glb")
-bpy.ops.export_scene.gltf(filepath=glb, export_format="GLB", export_apply=True, export_texcoords=False,
-                          export_normals=True)
+bpy.ops.export_scene.gltf(filepath=glb, export_format="GLB", export_apply=True, export_texcoords=True,
+                          export_normals=True, export_image_format="JPEG", export_jpeg_quality=82)
 tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in sc.objects if o.type == "MESH")
 
 if "--no-render" not in sys.argv:
@@ -152,8 +308,7 @@ if "--no-render" not in sys.argv:
     lo = bpy.data.objects.new("roof", lamp)
     lo.location = (0, -R * 0.2, H * 1.1)
     sc.collection.objects.link(lo)
-    sc.render.engine = "CYCLES"  # Workbench and EEVEE need a GPU; the cloud has none
-    sc.cycles.device, sc.cycles.samples, sc.cycles.seed = "CPU", 24, 0
+    sc.cycles.samples, sc.cycles.seed = 24, 0
     sc.cycles.use_denoising = True
     sc.render.resolution_x, sc.render.resolution_y = 640, 400
     sc.render.image_settings.file_format = "PNG"
@@ -175,4 +330,4 @@ if "--no-render" not in sys.argv:
             sc.objects[w].visible_camera = not ortho and w == "walls"  # from above, the floor's edge is the wall
         sc.render.filepath = os.path.join(OUT, f"view_{view}.png")
         bpy.ops.render.render(write_still=True)
-print(f"wrote {glb}: {os.path.getsize(glb) // 1024} KB, {tris} triangles")
+print(f"wrote {glb}: {os.path.getsize(glb) // 1024} KB, {tris} triangles, {len(baked)} textures")
