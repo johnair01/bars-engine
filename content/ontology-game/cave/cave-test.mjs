@@ -19,6 +19,9 @@ const files = {
   '/ontology-game/cave': ['cave/index.html', 'text/html'],
   '/ontology-game/cave/cave-kit.glb': ['cave/cave-kit.glb', 'model/gltf-binary'],
   '/ontology-game/cave/spots.json': ['cave/spots.json', 'application/json'],
+  '/ontology-game/cave/textures/wet_stone.jpg': ['cave/textures/wet_stone.jpg', 'image/jpeg'],
+  '/ontology-game/cave/textures/dry_stone.jpg': ['cave/textures/dry_stone.jpg', 'image/jpeg'],
+  '/ontology-game/cave/textures/crystal_vein.jpg': ['cave/textures/crystal_vein.jpg', 'image/jpeg'],
   '/ontology-game/figure.glb': ['figure.glb', 'model/gltf-binary'],
 };
 const server = http.createServer((req, res) => {
@@ -40,10 +43,10 @@ const WAVE = ['welcome', 'acknowledge', 'allow', 'accept', 'appreciate', 'valida
 const PROMPT = { welcome: "Let whatever's here be here for a moment, without needing it to be different yet.", exhale: 'Is this feeling in alignment with what you actually want right now?' };
 
 // ---- sizes: the kit and every file the page loads stay under the 3 MB phone budget ------------
-const sizes = ['cave/index.html', 'cave/cave-kit.glb', 'cave/spots.json', 'figure.glb'].map((f) => statSync(PUB + '/ontology-game/' + f).size);
+const sizes = ['cave/index.html', 'cave/cave-kit.glb', 'cave/spots.json', 'figure.glb', 'cave/textures/wet_stone.jpg', 'cave/textures/dry_stone.jpg', 'cave/textures/crystal_vein.jpg'].map((f) => statSync(PUB + '/ontology-game/' + f).size);
 const kit = sizes[1], total = sizes.reduce((a, b) => a + b, 0);
 ok(kit < 3_000_000, `the kit is ${Math.round(kit / 1024)} KB, under the 3 MB budget`);
-ok(total < 3_000_000, `the page, kit, places and figure together are ${Math.round(total / 1024)} KB, under the 3 MB budget`);
+ok(total < 3_000_000, `the page, kit, places, figure and stone tiles together are ${Math.round(total / 1024)} KB, under the 3 MB budget`);
 await page.goto(B + '/ontology-game/cave');
 const spots = await page.evaluate(() => fetch('/ontology-game/cave/spots.json').then((r) => r.json()));
 ok(spots.spots.length >= 50, `spots.json names ${spots.spots.length} places, each a portal`);

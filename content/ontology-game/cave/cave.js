@@ -163,6 +163,19 @@
     });
     return out;
   }
+  // The stone textures, baked by bake_tiles.py from the chamber's own (chamber.py, J1): seamless 512 px tiles. A tile that
+  // does not load leaves its stone a plain colour, as before.
+  var TILES = ["wet_stone", "dry_stone", "crystal_vein"];
+  function loadTiles(THREE) {
+    var loader = new THREE.TextureLoader(), out = {};
+    return Promise.all(TILES.map(function (k) {
+      return new Promise(function (res) {
+        loader.load(BASE + "textures/" + k + ".jpg", function (t) {
+          t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; out[k] = t; res();
+        }, undefined, function () { res(); });
+      });
+    })).then(function () { return out; });
+  }
   var assets = null;
   function load() {
     if (assets) return assets;
@@ -176,7 +189,9 @@
         s.onerror = function () { rej(new Error("three.js did not load")); };
         document.head.appendChild(s);
       }),
-    ]).then(function (r) { return { kit: r[0], spots: r[1].spots, THREE: r[2] }; }).catch(function (e) { assets = null; throw e; });
+    ]).then(function (r) {
+      return loadTiles(r[2]).then(function (tiles) { return { kit: r[0], spots: r[1].spots, THREE: r[2], tiles: tiles }; });
+    }).catch(function (e) { assets = null; throw e; });
     return assets;
   }
 
@@ -189,7 +204,32 @@
     g.setAttribute("position", new THREE.BufferAttribute(piece.position, 3));
     g.setAttribute("normal", new THREE.BufferAttribute(piece.normal, 3));
     g.setIndex(new THREE.BufferAttribute(piece.index, 1));
+    var p = piece.position, uv = new Float32Array(p.length / 3 * 2);
+    for (var i = 0; i < p.length / 3; i++) { uv[i * 2] = (Math.atan2(p[i * 3], p[i * 3 + 2]) / Math.PI + 1) * 0.5; uv[i * 2 + 1] = p[i * 3 + 1] * 0.5; }
+    g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
     return g;
+  }
+
+  // The stone of one tunnel: wet stone on the walls, dry stone on the floor, crystal vein on the spires and the crystals' rock
+  // beds (Wendell, 2026-10-13: "Let's incorporate what we've made so far into the cave games"). The tiles are neutral grey;
+  // the charge's wall colour tints all three. rock is the wall material and carries the other two.
+  var TILE_UNITS = 3.2; // chamber units per repeat of a tile
+  var STONE = { wall: { tile: "wet_stone", lift: 1.7 }, floor: { tile: "dry_stone", lift: 1.35 }, vein: { tile: "crystal_vein", lift: 1.9, glow: 0.55 } };
+  function stoneOf(THREE, tiles, hex) {
+    var m = {};
+    Object.keys(STONE).forEach(function (k) {
+      var st = STONE[k], map = tiles && tiles[st.tile];
+      m[k] = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.95, side: THREE.DoubleSide, map: map || null });
+      m[k].userData.lift = map ? st.lift : 1;
+      if (map && st.glow) { m[k].emissive.setHex(0xffffff); m[k].emissiveMap = map; m[k].emissiveIntensity = st.glow; }
+    });
+    var rock = m.wall; rock.userData.floor = m.floor; rock.userData.vein = m.vein; rock.userData.tiles = tiles;
+    tintStone(rock, hex);
+    return rock;
+  }
+  function tintStone(rock, hex) {
+    rock.userData.hex = hex;
+    [rock, rock.userData.floor, rock.userData.vein].forEach(function (m) { if (m) m.color.setHex(hex).multiplyScalar(m.userData.lift || 1); });
   }
 
   // A seed from words, and a small seeded random: the same scan gives the same cave.
@@ -338,17 +378,22 @@
     var s0 = o.sFrom || 0, s1 = o.sTo == null ? route.len : o.sTo, n = Math.max(2, Math.floor(s1 - s0) + 1), ds = (s1 - s0) / (n - 1);
     var ring = [], i, j;
     for (i = 0; i < n; i++) { var s = s0 + i * ds, a = at(route, s); ring.push({ s: s, x: a.x, y: a.y, z: a.z, nx: -a.fz, nz: a.fx }); }
-    var pos = new Float32Array(n * PROF * 3), jit = new Float32Array(n * PROF), seed = o.seed || 0;
+    var C = PROF + 1; // one column more than the profile: the last repeats the first, so the tiles meet without a smear
+    var pos = new Float32Array(n * C * 3), jit = new Float32Array(n * PROF), uv = new Float32Array(n * C * 2), seed = o.seed || 0;
+    var arc = [0];
+    for (j = 1; j <= PROF; j++) arc.push(arc[j - 1] + Math.hypot((PX[j % PROF] - PX[j - 1]) * o.w, (PY[j % PROF] - PY[j - 1]) * o.h));
+    for (i = 0; i < n; i++) for (j = 0; j < C; j++) { uv[(i * C + j) * 2] = ring[i].s / TILE_UNITS; uv[(i * C + j) * 2 + 1] = arc[j] / TILE_UNITS; }
     for (i = 0; i < n; i++) for (j = 0; j < PROF; j++) {
       var floor = PY[j] < -0.8, sv = ring[i].s;
       jit[i * PROF + j] = 1 + (floor ? 0.01 : 0.075) * (0.6 * Math.sin(sv * 0.37 + j * 2.1 + seed) + 0.4 * Math.sin(sv * 0.11 + j * 0.7 + seed * 1.3));
     }
     var geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    var mesh = new THREE.Mesh(geo, o.rock); mesh.frustumCulled = false;
-    var t = { mesh: mesh, holes: [], k: -1, dirty: true, n: n, ring: ring, w: o.w, h: o.h };
+    geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+    var mesh = new THREE.Mesh(geo, [o.rock.userData.floor || o.rock, o.rock]); mesh.frustumCulled = false;
+    var t = { mesh: mesh, rock: o.rock, holes: [], k: -1, dirty: true, n: n, ring: ring, w: o.w, h: o.h };
     t.index = function () {
-      var idx = [];
+      var floorIdx = [], idx = [];
       for (var i = 0; i < n - 1; i++) for (var j = 0; j < PROF; j++) {
         var j1 = (j + 1) % PROF, cut = false;
         for (var q = 0; q < t.holes.length && !cut; q++) {
@@ -356,10 +401,11 @@
           cut = ring[i].s >= H.s0 && ring[i + 1].s <= H.s1 && PX[j] * H.side > 0.05 && PX[j1] * H.side > 0.05 && PY[j] > -0.86 && PY[j1] > -0.86 && PY[j] < 0.8 && PY[j1] < 0.8;
         }
         if (cut) continue;
-        var a = i * PROF + j, b = i * PROF + j1, c = (i + 1) * PROF + j, d = (i + 1) * PROF + j1;
-        idx.push(a, c, b, b, c, d);
+        var a = i * C + j, b = i * C + j + 1, c = (i + 1) * C + j, d = (i + 1) * C + j + 1;
+        (PY[j] < -0.8 && PY[j1] < -0.8 ? floorIdx : idx).push(a, c, b, b, c, d);
       }
-      geo.setIndex(idx); t.dirty = true;
+      geo.setIndex(floorIdx.concat(idx)); geo.clearGroups();
+      geo.addGroup(0, floorIdx.length, 0); geo.addGroup(floorIdx.length, idx.length, 1); t.dirty = true;
     };
     t.addHole = function (H) { t.holes.push(H); t.index(); };
     t.update = function (k) {
@@ -368,13 +414,17 @@
       var kh = 1 + (k - 1) * 0.5;
       for (var i = 0; i < n; i++) {
         var R = ring[i], wf = o.openAt(R.s) * k * o.w;
-        for (var j = 0; j < PROF; j++) {
-          var p = (i * PROF + j) * 3, jt = jit[i * PROF + j], fl = PY[j] < -0.8, xx = PX[j] * wf * jt;
-          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[j] * o.h : PY[j] * o.h * kh * jt); pos[p + 2] = R.z + R.nz * xx;
+        for (var j = 0; j < C; j++) {
+          var jj = j % PROF, p = (i * C + j) * 3, jt = jit[i * PROF + jj], fl = PY[jj] < -0.8, xx = PX[jj] * wf * jt;
+          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[jj] * o.h : PY[jj] * o.h * kh * jt); pos[p + 2] = R.z + R.nz * xx;
         }
       }
       geo.attributes.position.needsUpdate = true;
       geo.computeVertexNormals();
+      var nm = geo.attributes.normal.array; // the seam's two columns share one normal, so the light shows no line
+      for (var i2 = 0; i2 < n; i2++) for (var q = 0; q < 3; q++) {
+        var e0 = i2 * C * 3 + q, e1 = (i2 * C + PROF) * 3 + q, avg = (nm[e0] + nm[e1]) / 2; nm[e0] = nm[e1] = avg;
+      }
       geo.computeBoundingSphere();
     };
     t.index(); t.update(1);
@@ -421,7 +471,7 @@
     var rnd = rngOf(hashOf(o.seed)), w = o.w, h = o.h, floorY = -h * 0.92;
     var rootMat = new THREE.MeshStandardMaterial({ color: DRESS_ROOT, roughness: 0.9 });
     var capMat = new THREE.MeshStandardMaterial({ color: DRESS_GLOW, emissive: DRESS_GLOW, emissiveIntensity: 0.55, roughness: 0.6 });
-    var crystalMats = {};
+    var crystalMats = {}, vein = o.rock.userData.vein || o.rock;
     var keepClear = (route.stops || []).map(function (st) { return st.s; }).concat(o.clear || []);
     function clear(s) { return keepClear.every(function (c) { return Math.abs(c - s) > 2.5; }); }
     function put(piece, mat, s, sd, off, y, size, hang) {
@@ -436,12 +486,12 @@
       if (!clear(s)) continue;
       if (G.crystal_cluster && G.crystal_cluster_bed && k >= 0.85) {
         var R = CRYSTAL_RANGE, pick = function (r) { return r[0] + rnd() * (r[1] - r[0]); };
-        var cb = crystalBlock(THREE, G, { tint: CRYSTAL_TINTS[Math.floor(rnd() * CRYSTAL_TINTS.length)][0], size: h * pick(R.size), tall: pick(R.tall), wide: pick(R.wide) }, o.rock, crystalMats);
+        var cb = crystalBlock(THREE, G, { tint: CRYSTAL_TINTS[Math.floor(rnd() * CRYSTAL_TINTS.length)][0], size: h * pick(R.size), tall: pick(R.tall), wide: pick(R.wide) }, vein, crystalMats);
         var ca = at(route, s);
         cb.position.set(ca.x + -ca.fz * sd * w * 0.32, ca.y + floorY - 0.03, ca.z + ca.fx * sd * w * 0.32); cb.rotation.y = rnd() * Math.PI * 2;
         g.add(cb); items.push({ piece: "crystal_cluster", s: s, side: sd, mesh: cb, look: cb.userData.look });
       }
-      else if (k < 0.35) put("stone_spire", o.rock, s, sd, 0.36, floorY - 0.05, h * (0.28 + rnd() * 0.18));
+      else if (k < 0.35) put("stone_spire", vein, s, sd, 0.36, floorY - 0.05, h * (0.28 + rnd() * 0.18));
       else if (k < 0.65) for (var i = 0, n = 2 + Math.floor(rnd() * 2); i < n; i++) put("glow_cap", capMat, s + (i - 1) * 0.45, sd, 0.3 + rnd() * 0.08, floorY, h * (0.12 + rnd() * 0.1));
       else if (k < 0.85) put("root_curl", rootMat, s, sd, 0.22, h * 0.9, h * (0.3 + rnd() * 0.1), true);
     }
@@ -917,7 +967,7 @@
       var G = {}; Object.keys(A.kit).forEach(function (k) { G[k] = geomOf(THREE, A.kit[k]); });
       var w = CHAMBER.w * look.w, h = CHAMBER.h;
       parts.G = G; parts.w = w; parts.h = h; parts.fog = look.fog;
-      parts.rock = new THREE.MeshStandardMaterial({ color: tex[2], roughness: 0.95, side: THREE.DoubleSide });
+      parts.tiles = A.tiles; parts.rock = stoneOf(THREE, A.tiles, tex[2]);
       var main = layoutMain(s.spot.id + ":" + s.texture, w);
       main.group = new THREE.Group(); main.w = w;
       main.openAt = function (sv) { // stretch q runs from marker q-1 to marker q; past a marker its walls ease over 8 units into the next
@@ -1076,7 +1126,7 @@
       route.w = o.wb; route.kind = kind; route.group = new THREE.Group();
       route.holes.forEach(function (H) { parent.tube.addHole(H); });
       var rock = frame.blk ? frame.blk.rock : parts.rock;
-      if (kind === "side") rock = new THREE.MeshStandardMaterial({ color: rock.color.getHex(), roughness: 0.95, side: THREE.DoubleSide });
+      if (kind === "side") rock = stoneOf(THREE, parts.tiles, rock.userData.hex);
       route.openAt = function () { return SIDE_LOOK.open; };
       route.tube = buildTube(THREE, route, { w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN });
       route.group.add(route.tube.mesh); route.group.add(buildPebbles(THREE, route, o.wb, h, route.sFrom, route.sTo));
@@ -1123,7 +1173,7 @@
       var route = makeBranch(frame, "side", depth);
       var par = frame.blk, tex = par ? par.texture : s.texture;
       var blk = { id: "b" + (++blockN), key: key, label: label, depth: depth, texture: tex, element: null, unknownEl: false, deco: [], daemon: null, stepAside: null, dug: 0, gate: [], route: route, frame: frame, touched: false };
-      blk.rock = route.tube.mesh.material; blk.rock.color.setHex((lookup(TEXTURES, tex) || TEXTURES[4])[2]);
+      blk.rock = route.tube.rock; tintStone(blk.rock, (lookup(TEXTURES, tex) || TEXTURES[4])[2]);
       dressSide(blk);
       frame.child = blk;
       stat.setAttribute("data-cave-place", "opening"); fill(label, [P("The wall opens. The path loops out from here and comes back to this spot.")]);
@@ -1236,7 +1286,7 @@
       }
     }
     function redress(blk) {
-      blk.rock.color.setHex((lookup(TEXTURES, blk.texture) || TEXTURES[4])[2]);
+      tintStone(blk.rock, (lookup(TEXTURES, blk.texture) || TEXTURES[4])[2]);
       var c = blk.route.ctx;
       if (blk.element && c.element !== blk.element) { setElementOn(c, blk.element, Math.min(blk.route.w * 0.45, 2)); blk.touched = false; decorate(blk); }
       lk.flash = Math.max(lk.flash, 0.7);
@@ -1708,6 +1758,6 @@
   }
 
 
-  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE, crystalBlock: crystalBlock, geomOf: geomOf, CRYSTAL_TINTS: CRYSTAL_TINTS, CRYSTAL_RANGE: CRYSTAL_RANGE };
+  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE, crystalBlock: crystalBlock, geomOf: geomOf, stoneOf: stoneOf, CRYSTAL_TINTS: CRYSTAL_TINTS, CRYSTAL_RANGE: CRYSTAL_RANGE };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

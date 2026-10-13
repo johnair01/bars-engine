@@ -5,6 +5,9 @@ import math, os, random, sys
 import bpy
 import bmesh
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from textures import node, rgb, texture  # noqa: E402  the three stone textures, shared with bake_tiles.py
+
 KIT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cave-kit.glb")  # pieces: pool, gate_stone, portal_arch, stone_spire, glow_cap, root_curl, crystal_cluster, crystal_cluster_bed; each 1 unit high (pool, arch: radius 1)
 OUT = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else "/tmp/blender-cloud/chamber"
 os.makedirs(OUT, exist_ok=True)
@@ -17,10 +20,6 @@ bpy.ops.import_scene.gltf(filepath=KIT)
 kit = {o.name: o.data for o in sc.objects}
 for o in list(sc.objects):
     bpy.data.objects.remove(o)
-
-
-def rgb(h):
-    return tuple(int(h[i:i + 2], 16) / 255 for i in (1, 3, 5))
 
 
 def mat(name, colour, rough, glow=0.0, texture=None, scale=1.0):
@@ -60,91 +59,6 @@ def unwrap(ob):
     bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.01)
     bpy.ops.object.mode_set(mode="OBJECT")
-
-
-# ---- textures: each turns a point into a colour, from the surface's own colour ----
-def node(nt, kind, **inputs):
-    n = nt.nodes.new(kind)
-    for k, v in inputs.items():
-        if k in n.inputs:
-            n.inputs[k].default_value = v
-        else:
-            setattr(n, k, v)
-    return n
-
-
-def ramp(nt, fac, stops):
-    r = nt.nodes.new("ShaderNodeValToRGB")
-    el = r.color_ramp.elements
-    while len(el) < len(stops):
-        el.new(0.5)
-    for e, (pos, col) in zip(el, stops):
-        e.position, e.color = pos, (*col, 1)
-    nt.links.new(fac, r.inputs["Fac"])
-    return r.outputs["Color"]
-
-
-def mix(nt, fac, a, b, blend="MIX"):
-    m = node(nt, "ShaderNodeMix", data_type="RGBA", blend_type=blend)
-    for sock, i in ((fac, 0), (a, 6), (b, 7)):
-        if isinstance(sock, float):
-            m.inputs[i].default_value = sock
-        elif isinstance(sock, tuple):
-            m.inputs[i].default_value = (*sock, 1)
-        else:
-            nt.links.new(sock, m.inputs[i])
-    return m.outputs[2]
-
-
-def shade(c, k):
-    return tuple(min(1, v * k) for v in c)
-
-
-def texture(nt, kind, colour, vec):
-    c = rgb(colour)
-    if kind == "wet_stone":  # dark mottled rock, cracks, and darker wet streaks running down
-        grain = node(nt, "ShaderNodeTexNoise", Scale=5.0, Detail=8.0, Roughness=0.62)
-        nt.links.new(vec, grain.inputs["Vector"])
-        body = ramp(nt, grain.outputs["Fac"], [(0.3, shade(c, 0.4)), (0.55, shade(c, 0.7)), (0.75, shade(c, 0.95))])
-        stretch = node(nt, "ShaderNodeVectorMath", operation="MULTIPLY")
-        stretch.inputs[1].default_value = (3.0, 3.0, 0.25)
-        nt.links.new(vec, stretch.inputs[0])
-        wet = node(nt, "ShaderNodeTexNoise", Scale=4.0, Detail=3.0)
-        nt.links.new(stretch.outputs[0], wet.inputs["Vector"])
-        wet_mask = ramp(nt, wet.outputs["Fac"], [(0.42, (0, 0, 0)), (0.58, (0.85, 0.85, 0.85))])
-        body = mix(nt, wet_mask, body, shade((c[0] * 0.75, c[1] * 0.9, c[2] * 1.1), 0.3))
-        cell = node(nt, "ShaderNodeTexVoronoi", feature="DISTANCE_TO_EDGE", Scale=0.9, Randomness=1.0)
-        nt.links.new(vec, cell.inputs["Vector"])
-        crack = ramp(nt, cell.outputs["Distance"], [(0.0, (0.35, 0.35, 0.35)), (0.03, (1, 1, 1))])
-        return mix(nt, 1.0, body, crack, "MULTIPLY")
-    if kind == "dry_stone":  # pale dusty grain with pebbles and a few lighter flecks
-        grain = node(nt, "ShaderNodeTexNoise", Scale=14.0, Detail=10.0, Roughness=0.7)
-        nt.links.new(vec, grain.inputs["Vector"])
-        body = ramp(nt, grain.outputs["Fac"], [(0.35, shade(c, 0.75)), (0.6, shade(c, 1.05)), (0.8, shade(c, 1.3))])
-        pebble = node(nt, "ShaderNodeTexVoronoi", Scale=6.0, Randomness=1.0)
-        nt.links.new(vec, pebble.inputs["Vector"])
-        tone = ramp(nt, pebble.outputs["Color"], [(0.0, shade(c, 0.85)), (1.0, shade(c, 1.15))])
-        body = mix(nt, 0.5, body, tone, "MULTIPLY")
-        edge = ramp(nt, pebble.outputs["Distance"], [(0.0, (1, 1, 1)), (0.35, (0.9, 0.9, 0.9)), (0.5, (0.65, 0.65, 0.65))])
-        body = mix(nt, 1.0, body, edge, "MULTIPLY")
-        fleck = node(nt, "ShaderNodeTexNoise", Scale=60.0, Detail=2.0)
-        nt.links.new(vec, fleck.inputs["Vector"])
-        fleck_mask = ramp(nt, fleck.outputs["Fac"], [(0.68, (0, 0, 0)), (0.72, (1, 1, 1))])
-        return mix(nt, fleck_mask, body, shade(c, 1.6))
-    if kind == "crystal_vein":  # dark rock split by thin glowing veins the colour of the crystals
-        grain = node(nt, "ShaderNodeTexNoise", Scale=6.0, Detail=6.0, Roughness=0.6)
-        nt.links.new(vec, grain.inputs["Vector"])
-        body = ramp(nt, grain.outputs["Fac"], [(0.35, shade(c, 0.22)), (0.7, shade(c, 0.45))])
-        warp = node(nt, "ShaderNodeTexNoise", Scale=2.0, Detail=2.0, Distortion=1.5)
-        nt.links.new(vec, warp.inputs["Vector"])
-        warped = node(nt, "ShaderNodeVectorMath", operation="ADD")
-        nt.links.new(vec, warped.inputs[0])
-        nt.links.new(warp.outputs["Color"], warped.inputs[1])
-        cell = node(nt, "ShaderNodeTexVoronoi", feature="DISTANCE_TO_EDGE", Scale=0.9)
-        nt.links.new(warped.outputs[0], cell.inputs["Vector"])
-        vein = ramp(nt, cell.outputs["Distance"], [(0.0, (1, 1, 1)), (0.015, (0.7, 0.7, 0.7)), (0.04, (0, 0, 0))])
-        return mix(nt, vein, body, rgb(VEIN))
-    raise ValueError(f"unknown texture {kind}")
 
 
 def bake(objects, material):
@@ -191,7 +105,7 @@ def bake(objects, material):
 
 
 # ---- materials (texture: wet_stone, dry_stone, crystal_vein; scale: how fine) ----
-TEX, VEIN = 512, "#8f84ff"
+TEX = 512
 M_WALL = mat("wall", "#6b6159", 0.5, texture="wet_stone", scale=1.0)
 M_FLOOR = mat("floor", "#5a524b", 0.9, texture="dry_stone", scale=1.0)
 M_ROCK = mat("rock", "#8c8075", 0.8, texture="crystal_vein", scale=1.0)

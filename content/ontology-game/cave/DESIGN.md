@@ -338,3 +338,15 @@ then it needs to be worked with. We can pivot to a 321 discussion with the part 
   way on from the first stone waits for its branch, as it did at the end **(choice)**: every branch is walked before the
   sensation, and each is a place the games can later live.
 - **(choice)** The written words stay on the page and are not saved with the scan.
+
+## The stone (13 October 2026)
+
+Wendell, 2026-10-13, on the J1 chamber: "ok this is perfection. Let's incorporate what we've made so far into the cave games".
+The cave now wears the chamber's three textures. `bake_tiles.py` bakes them from the same shader nodes as `chamber.py`
+(now shared in `textures.py`) as seamless 512 px tiles in `textures/` (120 KB together): each point is taken on a torus
+in 4D, so a tile meets itself with no seam. In `cave.js`, `stoneOf` makes one set per charge colour: wet stone on the
+tunnel walls, dry stone on the floor, crystal vein (its veins glow) on the stone spires and the crystals' rock beds. The tiles
+are neutral grey and the charge's wall colour tints them, so tightness, tension, numbness, strength and something else keep
+their colours. The crystals are unchanged. The tube carries UVs (along the path and round the profile, one tile per 3.2
+chamber units) and one extra column so the tiles wrap. If a tile does not load, its stone is a plain colour, as before.
+**(choice)** the tile size and how much each tint is lifted to make up for the grey (`TILE_UNITS`, `STONE` in `cave.js`).
