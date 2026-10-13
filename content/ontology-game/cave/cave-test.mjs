@@ -8,7 +8,8 @@ import { chromium } from 'playwright';
 // and 6 s exhale, and the iOS long-press guards; and, since the loop rebuild of 10 October: the way ahead opening only on a
 // choice, the pane that follows the figure through the whole walk and grows into a modal at each stop, one continuous wider
 // tunnel, side paths that loop back to the spot they left from, the daemon as a wall until its encounter is worked, and the
-// six faces' branches at the gate. Build first with `npm run build:ontology-game`, then copy this
+// six faces' branches at the gate; and the WAVE room (11 October): Take it home from a daemon by lantern and back, and the
+// room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers. Build first with `npm run build:ontology-game`, then copy this
 // file into a folder that has playwright and three@0.128.0 installed and run it there:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node cave-test.mjs
 const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url).pathname;
@@ -317,6 +318,76 @@ ok(Math.abs((await avatar()).s - sWall) < 1e-6, 'holding does not walk past the 
 await page.locator('[data-cave-pane]').click();
 await page.screenshot({ path: SHOTS + '/cave-daemon-wall.png' });
 
+// ---- the WAVE room (six-faces-council council/callsheets/wave-room.md): its helpers, then Take it home from this daemon -----
+const room = () => C(() => window.__oagCave.room && { scene: window.__oagCave.room.scene(), charge: window.__oagCave.room.charge(), round: window.__oagCave.room.state.round, phase: window.__oagCave.room.state.phase });
+const roomIn = async (shot) => { // Welcome: the door opens on an out-breath and the charge comes in; then Witness
+  await page.locator('[data-room-welcome]').click();
+  ok(await sees('[data-room-pane]') && (await room()).phase === 'opening', 'Welcome: the door waits for the out-breath, with only the pane up');
+  await page.locator('[data-room-texture]').first().waitFor({ timeout: 30000 });
+  const r = await room();
+  ok(r.scene.door > 0.8 && r.charge.visible && Math.hypot(r.charge.x - r.scene.here[0], r.charge.z - r.scene.here[1]) < 0.05, 'the door opened and the charge came in to the middle of the room');
+  if (shot) await page.screenshot({ path: SHOTS + '/room-witness.png' });
+};
+const roomToFork = async (name, element, texture, appreciate) => {
+  if (texture) await page.locator(`[data-room-texture="${texture}"]`).click();
+  await page.locator('[data-room-next]').click();
+  ok(await page.locator('[data-room-next]').isDisabled(), 'Acknowledge waits for a name and an element');
+  await page.locator('[data-room-name]').fill(name);
+  await page.locator(`[data-room-element="${element}"]`).click();
+  await page.locator('[data-room-next]').click();
+  for (const id of ['allow', 'accept']) { ok((await room()).phase === id, `${id} is a step of its own`); await page.locator('[data-room-next]').click(); }
+  ok((await room()).phase === 'appreciate' && await sees('[data-room-notnow]'), 'Appreciate offers Not now');
+  await page.locator(appreciate ? '[data-room-next]' : '[data-room-notnow]').click();
+  ok((await room()).phase === 'validate', 'Not now moves on to Validate, not a block');
+  await page.locator('[data-room-next]').click();
+  ok((await room()).charge.steady && await sees('[data-room-goal-ask]') && await page.locator('[data-room-push="toward"]').isDisabled(), 'Validate steadies its light; the fork asks what the player wants right now, before where the charge pushes');
+};
+const roomGoes = async (goal, light, shot) => {
+  await page.locator('[data-room-goal]').fill(goal);
+  await page.locator('[data-room-push="away"]').click();
+  await page.locator('[data-room-line]').fill('you can go now');
+  if (light) await page.locator('[data-room-light-name]').fill(light);
+  const lightsBefore = (await room()).scene.lights.length;
+  await page.locator('[data-room-exhale]').click();
+  if (shot) { await page.waitForTimeout(5000); await page.screenshot({ path: SHOTS + '/room-leaving.png' }); }
+  await page.locator('[data-room-gone]').waitFor({ timeout: 40000 });
+  const r = await room();
+  ok(r.charge.gone && r.scene.lights.length === lightsBefore + 1 && r.scene.lights[r.scene.lights.length - 1].name === (light || r.charge.name) && r.scene.lights[r.scene.lights.length - 1].z > r.scene.doorZ, `Goes: the charge left by the door at its own pace, and a light named "${light || r.charge.name}" stays on the threshold`);
+  await page.waitForTimeout(3000);
+  const dr = (await room()).scene.door;
+  ok(dr > 0.15 && dr < 0.6, `the door settles ajar (${dr.toFixed(2)} open)`);
+  await page.locator('[data-room-next]').click();
+};
+const roomCheckin = async (answer) => {
+  ok(await sees('[data-room-checkin-ask]') && (await page.locator('[data-room-checkin-ask]').textContent()) === 'Did it leave, or did you get rid of it?', 'after the branch the page asks: did it leave, or did you get rid of it?');
+  await page.locator(`[data-room-checkin="${answer}"]`).click();
+  ok(await sees('[data-room-again-ask]'), 'then: is anything still here that says it belongs?');
+};
+
+const sideLanterns = await C(() => window.__oagCave.lanterns());
+ok(await sees('[data-cave-take-home]'), 'the daemon\'s stop offers Take it home beside the 3-2-1');
+await page.locator('[data-cave-take-home]').click();
+await page.locator('[data-room="cave"]').waitFor();
+await page.locator('[data-room-welcome]').waitFor();
+ok((await C(() => window.__oagCave.lanterns())) === sideLanterns + 1 && !(await page.locator('[data-cave-chamber]').isVisible()), 'Take it home leaves a lantern at the spot, and the cave rests');
+const homeCharge = (await room()).charge;
+ok(homeCharge.known && homeCharge.element === 'Sadness' && homeCharge.texture === 'numbness', `the charge comes home with its feeling known, as named in the side passage (${homeCharge.element}, ${homeCharge.texture})`);
+await page.waitForTimeout(600);
+await page.screenshot({ path: SHOTS + '/room-from-cave.png' });
+await roomIn(true);
+ok((await page.locator('[data-room-texture="numbness"]').getAttribute('aria-pressed')) === 'true' && (await page.locator('[data-room-where]').textContent()).includes('heart'), 'Witness already knows where it is and its texture');
+await roomToFork('The guard', 'Sadness');
+await roomGoes('to rest', 'Night light', true);
+await roomCheckin('left');
+await page.locator('[data-room-again="no"]').click();
+ok((await page.locator('[data-room-leave]').textContent()) === 'Back to the lantern', 'when the room is quiet, the way out is back to the lantern');
+await page.locator('[data-room-leave]').click();
+await page.locator('[data-cave-home-back]').waitFor({ timeout: 15000 });
+ok((await page.locator('[data-room]').count()) === 0 && Math.abs((await avatar()).s - sWall) < 1e-6 && (await C(() => window.__oagCave.lanterns())) === sideLanterns + 1, 'the cave comes back at the lantern, the figure where it stood');
+ok(await sees('[data-cave-home-satisfied="yes"]') && await page.locator('[data-cave-skip]').count() === 0 && await page.locator('[data-cave-next]').count() === 0, 'back from the room the daemon is asked again, and it is still no skip and no way past');
+await page.locator('[data-cave-home-satisfied="not-yet"]').click();
+ok(await sees('[data-cave-dig]') && await sees('[data-cave-take-home]'), '"Not yet" puts the daemon back in the way, with its encounters');
+
 // The encounter: dig into what it holds, a loop of its own one level deeper, then the daemon is asked again.
 const sidePassage = async (depth) => {
   await gatesFirst(depth === 2);
@@ -463,6 +534,83 @@ if (src) {
   const gi = Number(/BREATH_IN_MS\s*=\s*(\d+)/.exec(src)[1]), go = Number(/BREATH_OUT_MS\s*=\s*(\d+)/.exec(src)[1]);
   ok(gi === gEnd.inS * 1000 && go === gEnd.outS * 1000, `the cave's breath is the game's own: game.jsx has ${gi} ms in and ${go} ms out`);
 } else console.log('SKIP the cave breath against game.jsx (set OAG_GAME)');
+// ---- the WAVE room on its own, from the body map: both branches, the restart, the rest offer, the test answers --------------
+await C(() => { try { localStorage.removeItem('oag:wave-room:test'); } catch (e) {} });
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor();
+await page.locator('[data-room-welcome]').waitFor();
+await page.waitForTimeout(800);
+const r0 = await room();
+ok(r0.scene.sit > 0.95 && Math.hypot(r0.scene.figure[0] - r0.scene.seat[0], r0.scene.figure[1] - r0.scene.seat[1]) < 0.05 && r0.scene.door < 0.05 && !r0.charge.visible && !r0.charge.known, 'the room: the figure sits on the seat facing a shut door, and nothing has come in yet');
+await page.screenshot({ path: SHOTS + '/room-welcome.png' });
+ok(await sees('[data-room-calm]'), 'the room has the Calm switch');
+// round 1: it stays, and the 3-2-1 is aimed at what the player wants
+await roomIn(false);
+ok((await room()).charge.color === 0x8a8a92, 'a charge from the body map comes in grey');
+await roomToFork('Knot', 'Fear', 'constriction', true);
+await page.screenshot({ path: SHOTS + '/room-fork.png' });
+await page.locator('[data-room-step-back]').click();
+await page.waitForTimeout(3000);
+ok(await sees('[data-room-paused]') && (await room()).scene.view === 'back' && (await room()).scene.sit < 0.05, 'Step back: the figure stands back behind the seat, and the words are kept');
+await page.locator('[data-room-resume]').click();
+ok((await page.locator('[data-room-goal]').inputValue()) === '' && await sees('[data-room-goal-ask]'), 'Go back in returns to the same step');
+await page.locator('[data-room-goal]').fill('a quiet evening');
+await page.locator('[data-room-push="toward"]').click();
+ok(await sees('[data-cave-321-start]'), 'Stays: the 3-2-1 begins with a charge reading');
+await page.locator('[data-cave-321-start]').click();
+ok((await page.locator('[data-cave-321-aim]').textContent()).includes('a quiet evening'), 'the 3-2-1 is aimed at what the player wants');
+await say('it', 'a knot under the chin');
+await page.locator('[data-cave-321-next]').click();
+await say('you', 'what do you want for me?');
+await page.locator('[data-cave-321-voice="it"]').click();
+await say('you', 'for you to slow down');
+await page.waitForTimeout(3500);
+ok((await room()).scene.view === 'face-it' && (await room()).scene.sit < 0.05, 'Talk to it: face to face, the camera with the voice');
+await page.screenshot({ path: SHOTS + '/room-talk.png' });
+await page.locator('[data-cave-321-next]').click();
+await say('i', 'I am the knot that keeps you careful');
+await page.waitForTimeout(4500);
+const rb = await room();
+ok(rb.scene.view === 'its' && Math.hypot(rb.scene.figure[0] - rb.scene.here[0], rb.scene.figure[1] - rb.scene.here[1]) < 0.1 && Math.hypot(rb.charge.x - rb.scene.seat[0], rb.charge.z - rb.scene.seat[1]) < 0.3, 'Be it: the player stands where it stood, and it sits in the seat');
+await page.screenshot({ path: SHOTS + '/room-be-it.png' });
+await page.locator('[data-cave-321-next]').click();
+await page.locator('[data-cave-321-after]').click();
+ok(await sees('[data-room-move-ask]') && await page.locator('[data-room-move-done]').isDisabled(), 'the 3-2-1 ends with one next move the player writes');
+await page.locator('[data-room-move]').fill('make tea and sit down');
+await page.locator('[data-room-move-done]').click();
+await page.waitForTimeout(3500);
+ok(await sees('[data-room-kept]') && (await room()).scene.kept === 1, 'the charge takes a place in the room');
+await page.screenshot({ path: SHOTS + '/room-kept.png' });
+await page.locator('[data-room-next]').click();
+await roomCheckin('stayed');
+ok(await page.locator('[data-room-rest]').count() === 0, 'no rest offer before the third round');
+// round 2: it goes, and the restart starts again at Welcome with a new charge
+await page.locator('[data-room-again="yes"]').click();
+const r2 = await room();
+ok(r2.round === 2 && r2.phase === 'welcome' && !r2.charge.visible && r2.charge.name === '', 'Yes restarts at Welcome with a new charge, round 2');
+await roomIn(false);
+await roomToFork('Fog', 'Sadness', 'numbness');
+await roomGoes('sleep', 'Blue lamp', false);
+await page.screenshot({ path: SHOTS + '/room-gone.png' });
+await roomCheckin('got-rid');
+// round 3: then the rest offer
+await page.locator('[data-room-again="yes"]').click();
+await roomIn(false);
+await roomToFork('Heat', 'Anger', 'tension');
+await roomGoes('to finish the letter', '', false);
+await roomCheckin('left');
+ok((await room()).round === 3 && await sees('[data-room-rest-offer]') && await sees('[data-room-rest]'), 'after three rounds the room offers to rest it by the door with a lantern');
+await page.locator('[data-room-rest]').click();
+ok((await room()).scene.lantern && await sees('[data-room-end]') && (await room()).scene.lights.length === 2, 'resting leaves a lantern by the door, and the two lights stay on the threshold');
+await page.screenshot({ path: SHOTS + '/room-rest.png' });
+const kept = await C(() => window.__oagCave.roomTest());
+const stored = await C(() => { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); o[k] = localStorage.getItem(k); } return JSON.stringify(o); });
+ok(kept.length === 3 && kept.map((e) => e.round).join() === '1,2,3' && kept.map((e) => e.answer).join() === 'stayed,got-rid,left' && kept.map((e) => e.branch).join() === 'stays,goes,goes', `the test answers and round numbers are kept on the device: ${JSON.stringify(kept.map((e) => [e.round, e.branch, e.answer]))}`);
+ok(!/quiet evening|make tea|Knot|Blue lamp|knot under|slow down/.test(stored), 'nothing the player wrote is stored: not the goal, the name, the move, the light or the 3-2-1');
+await page.locator('[data-room-leave]').click();
+await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
+ok(await sees('[data-cave-home]'), 'Leave the room returns to the front page');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();

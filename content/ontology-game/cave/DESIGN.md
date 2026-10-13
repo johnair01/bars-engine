@@ -338,3 +338,62 @@ then it needs to be worked with. We can pivot to a 321 discussion with the part 
   way on from the first stone waits for its branch, as it did at the end **(choice)**: every branch is walked before the
   sensation, and each is a place the games can later live.
 - **(choice)** The written words stay on the page and are not saved with the scan.
+
+## The WAVE room, first slice (11 October 2026)
+
+The brief is the Next section of six-faces-council `council/callsheets/wave-room.md`; the pass is
+`council/passes/6FACE_PASS_wave-room1_2026-10-11.md`. Wendell's words: "A player sits in a room with a door. When they welcome a
+sensation the door opens and a 'charge' shows up." The room is the cave's home: the cave is where the player explores, the room
+is where what turns up gets worked. It is `openRoom` in `cave.js`, on the same page as the cave.
+
+- **The scene, from the kit.** Four of the kit's wall rings stood upright and stacked make a round room under a low dome, with
+  the kit's floor. A door in the far wall has the kit's portal arch over it and light behind it. The seat is a gate stone,
+  squat. The player's faceless figure sits on it facing the door, at about 0.6 of the cave's size so it stands under the door
+  **(choice)**, in a plain stone colour because the charge has come out of it **(choice)**. The cave's breath (4 s in, 6 s out)
+  eases the walls and the light, and Calm stills it.
+- **Two ways in** (`wave-room-cave-link` = both). On the cave's front page, "Sit in the WAVE room" opens the body map; the place
+  tapped is where the charge is, and the room opens. At a daemon's stop in the cave, "Take it home" sits beside "Talk with it"
+  and "Work what it holds". It leaves a lantern at the spot, the cave rests, and the room opens with the charge's texture and
+  element already known (`wave-reveal`: a charge from a block starts with its feeling known). When the room is done, "Back to the
+  lantern" brings the cave back with the figure where it stood, and the daemon is asked again whether it feels satisfied. Only
+  Yes opens the way **(choice)**: the charge was worked, in another place.
+- **The flow is a table** (`ROOM_STEPS`, as `STRETCHES` is): Welcome, Witness, Acknowledge, Allow, Accept, Appreciate,
+  Validate, then the fork. The words are `WAVE` (game.jsx lines 1092-1108); Witness is the room's own step, "Feel into it. Where
+  is it in your body, and what is it like?" **(choice of words)**. Each step takes the cave's `STEP_LOOK` light for its W.A.V.E.
+  step, so the room warms and brightens as the steps climb.
+  - Welcome: "Welcome it", and the door opens on the next out-breath (at once when Calm is on). A grey shape comes in to the
+    middle of the room at its own pace.
+  - Witness: where it is (the place from the body map or the cave; "It's somewhere else" opens the body map again) and its
+    texture, which the shape takes, by the avatar's charge table.
+  - Acknowledge: a name the player writes and an element, with "I don't know". The shape takes the element's colour. Go on waits
+    for both.
+  - Allow and Accept: one page each. Appreciate has Not now, which moves on to Validate. Validate steadies the shape's
+    light (it flickers until then).
+  - The fork: the Exhale words, then "What do you actually want right now?" (`wave-room-goal` = asked in the moment; nothing
+    stored), then whether the charge pushes the next move toward it or away (`wave-room-validate-first`).
+- **Stays** (`wave-room-stay-move`): the cave's staged 3-2-1 chat, the same code (`talk321`, shared now), with a line on every
+  step naming what the player wants. Face it from the seat; Talk to it standing face to face, the camera swinging with the voice;
+  Be it standing where it stood while it sits in the seat; then back to the seat. It ends with one next move the player writes,
+  and the charge takes a place in the room for the sitting.
+- **Goes** (`wave-room-release`): a line to it if the player wants, and a name for the light it leaves. "Breathe out": the door
+  opens on the out-breath, the charge drifts out over one exhale and a little more, a light in its colour with its name stays on
+  the threshold for the sitting, and the door stays ajar. An unnamed light takes the charge's name **(choice)**.
+- **Again** (`wave-room-parts-restart`): "Is anything still here that says it belongs?" Yes starts again at Welcome with a new,
+  grey charge in the same place. From the third round on, the page also offers to rest it by the door with a lantern
+  (`wave-room-stop`), which ends the sitting with the lantern and a small shape beside it.
+- **Step back** is on every step from Witness on: the figure stands up and steps back behind the seat, the words are kept, and
+  "Go back in" returns to the same step. In the 3-2-1 the chat's own Step back does the same.
+- **The words stay on the page.** The player writes every line. The name, the goal, the 3-2-1, the move, the line and the
+  light's name live only in the page's memory for the sitting.
+- **For the test on 18 October.** After each branch the page asks "Did it leave, or did you get rid of it?" (It left, I got rid
+  of it, and It stayed after the stays branch **(choice)**). The answer, the branch, the round and the sitting's start time are
+  kept in this device's local storage under `oag:wave-room:test`; `__oagCave.roomTest()` reads them back.
+
+Left for later: the daemon and alchemy extensions, which his phone play by 18 October gates.
+
+Tests: `cave-test.mjs` adds Take it home from the daemon's stop (the lantern, the charge's feeling known, Witness already
+answered, a goes round, back to the lantern with the figure where it stood, the daemon asked again with no skip) and the room on
+its own from the body map: the seated figure and the shut door, the door waiting for the out-breath, every step in order, Not
+now, Validate steadying, the fork asking the goal first, Step back, the stays branch through the staged 3-2-1 to a written move,
+two goes rounds with named lights and the door ajar, the restart, the rest offer after round three, the three test answers kept
+with their rounds, and storage holding only those answers.
