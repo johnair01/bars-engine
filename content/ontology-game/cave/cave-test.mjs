@@ -354,6 +354,24 @@ ok(b1.turnIn <= 90, `the way in is ahead of the figure, a ${Math.round(b1.turnIn
 ok((await C(() => window.__oagCave.lanterns())) === 1, 'a lantern stands between the two openings');
 ok(b1.stops === 10, 'the loop holds six stones, the mouth, the pool, the daemon and the way out');
 await page.screenshot({ path: SHOTS + '/cave-branch.png' });
+// The seam holds (Wendell, 2026-10-13: "branching paths need hardening for these kinds of glitches. Especially since the walls
+// are breathing"): the void outside the stone is painted green and the way in is looked at from all round inside the main
+// tunnel, at two moments of the breath. No green may show.
+const greenIn = (buf) => page.evaluate(async (b64) => {
+  const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height).data; let n = 0;
+  for (let i = 0; i < d.length; i += 4) if (d[i + 1] > 180 && d[i] < 90 && d[i + 2] < 90) n++;
+  return n;
+}, buf.toString('base64'));
+await C(() => { window.__oagCave.state.voidHex = 0x00ff00; });
+const seams = await C(() => window.__oagCave.openings(false)), seamGreen = [];
+for (let ph = 0; ph < 2; ph++) {
+  for (const v of seams[0].views) { await C((c) => { window.__oagCave.state.camAt = c; }, v); await page.waitForTimeout(60); seamGreen.push(await greenIn(await page.screenshot())); }
+  await page.waitForTimeout(2500);
+}
+await C(() => { window.__oagCave.state.camAt = null; window.__oagCave.state.voidHex = null; });
+ok(seams.length === 1 && seamGreen.length >= 10 && seamGreen.every((n) => n === 0), `no void shows round the way in from ${seamGreen.length} views across the breath (green ${seamGreen.filter((n) => n).join(', ') || 'none'})`);
 const walkSamples = [];
 await page.mouse.move(330, 700); await page.mouse.down();
 for (let i = 0; i < 6; i++) { walkSamples.push(await avatar()); await page.waitForTimeout(150); }

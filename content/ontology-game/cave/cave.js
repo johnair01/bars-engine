@@ -467,14 +467,13 @@
     var vOf = function (q) { return (r.X[q] - b.x) * nx + (r.Z[q] - b.z) * nz; }, qa = 0, qb = r.X.length - 1;
     while (qa < r.X.length - 1 && vOf(qa) < o.W0 * 0.92) qa++;
     while (qb > 0 && vOf(qb) < o.W0 * 0.92) qb--;
-    // The tube itself starts well inside the parent's wall (Wendell, 2026-10-13: "the segments between the tunnels are
-    // leaving dark gaps"). It used to start at the wall, so when the parent breathed out, or its stone bulged, a ring of
-    // nothing showed between the two. Inside the parent its floor lies under the parent's own and its walls stand as the
-    // opening's jambs.
-    var qa2 = qa, qb2 = qb;
-    while (qa2 > 0 && vOf(qa2) > o.W0 * 0.6) qa2--;
-    while (qb2 < r.X.length - 1 && vOf(qb2) > o.W0 * 0.6) qb2++;
-    r.sFrom = r.S[qa2]; r.sTo = r.S[qb2]; r.sIn = Math.max(0, r.S[qa] - 0.6); r.sOut = Math.min(r.len, r.S[qb] + 0.6); // the stretch outside the parent
+    // The tube runs the whole loop, from the middle of the parent's path and back to it (Wendell, 2026-10-13: "the segments
+    // between the tunnels are leaving dark gaps", and again at the Acknowledge stretch: "branching paths need hardening for
+    // these kinds of glitches"). It used to start at the wall, then part way in, and either way its open end crossed the
+    // parent's wall where the branch meets it at a slant or under a high roof, so the void showed through the end of the
+    // tube. Inside the parent it narrows (see taper in buildTube), so its open ends lie wholly inside the parent's stone,
+    // its floor lies under the parent's own and its walls stand as the opening's jambs.
+    r.sFrom = 0; r.sTo = r.len; r.sIn = Math.max(0, r.S[qa] - 0.6); r.sOut = Math.min(r.len, r.S[qb] + 0.6); // the stretch outside the parent
     // where the ramp ends and the loop runs level (a face's branch beside a stone must stand on level stone)
     var qf = 0; while (qf < r.X.length - 1 && r.Y[qf] > b.y - o.drop + 0.05) qf++; r.sLevel = r.S[qf];
     function nearestParentS(q) {
@@ -517,6 +516,7 @@
     return { PX: px, PY: py };
   }
   (function () { var p = profileOf(0.55, 1); PX = p.PX; PY = p.PY; })();
+  var TAPER = 0.5;
   function buildTube(THREE, route, o) {
     var shape = o.shape || CAVE_SHAPE.other, prof = profileOf(shape.e, shape.roof), PX = prof.PX, PY = prof.PY;
     var s0 = o.sFrom || 0, s1 = o.sTo == null ? route.len : o.sTo, n = Math.max(2, Math.floor(s1 - s0) + 1), ds = (s1 - s0) / (n - 1);
@@ -554,10 +554,10 @@
         var j1 = (j + 1) % PROF, cut = false, a = i * C + j, b = i * C + j + 1, c = (i + 1) * C + j, d = (i + 1) * C + j + 1;
         for (var q = 0; q < t.holes.length && !cut; q++) {
           var H = t.holes[q];
-          if (H.tube) cut = ring[i].s >= H.s0 - 2 && ring[i + 1].s <= H.s1 + 2 && PX[j] * H.side > -0.2 && PX[j1] * H.side > -0.2 && quadIn(H.tube, "h" + q, 0.95, a, b, c, d);
+          if (H.tube) cut = ring[i].s >= H.s0 - 2 && ring[i + 1].s <= H.s1 + 2 && PX[j] * H.side > -0.2 && PX[j1] * H.side > -0.2 && quadIn(H.tube, "h" + q, 0.88, a, b, c, d);
           else cut = ring[i].s >= H.s0 && ring[i + 1].s <= H.s1 && PX[j] * H.side > 0.05 && PX[j1] * H.side > 0.05 && PY[j] > -0.86 && PY[j1] > -0.86 && PY[j] < 0.8 && PY[j1] < 0.8;
         }
-        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) cut = quadIn(t.within.tube, "w", 0.97, a, b, c, d);
+        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) cut = quadIn(t.within.tube, "w", 0.92, a, b, c, d);
         if (cut) continue;
         (PY[j] < -0.8 && PY[j1] < -0.8 ? floorIdx : idx).push(a, c, b, b, c, d);
       }
@@ -565,6 +565,14 @@
       geo.addGroup(0, floorIdx.length, 0); geo.addGroup(floorIdx.length, idx.length, 1); t.kIdx = t.k;
       if (!shaped) t.dirty = true;
     };
+    // A branch narrows where it lies inside its parent (o.taper: { s0, s1 }, the stretch outside it), down to TAPER at its
+    // ends, so its open ends sit wholly inside the parent's stone, clear of its walls and roof as they breathe and bulge.
+    // Its faces in there are dropped anyway (t.within), so the narrowing never shows.
+    function taperAt(sv) {
+      var tp = o.taper; if (!tp) return 1;
+      var u = sv < tp.s0 ? (tp.s0 - sv) / Math.max(1e-6, tp.s0 - s0) : sv > tp.s1 ? (sv - tp.s1) / Math.max(1e-6, s1 - tp.s1) : 0;
+      return 1 - (1 - TAPER) * Math.min(1, u);
+    }
     t.exact = function () { return !!t.within || t.holes.some(function (H) { return H.tube; }); };
     t.addHole = function (H) { t.holes.push(H); t.index(); };
     // How far inside the tunnel a point is, against the stone as it stands this frame (breath, bumps and all): ratio is 0 at
@@ -600,9 +608,10 @@
       var kh = 1 + (k - 1) * 0.5, sink = o.within ? 0.03 : 0; // a branch's floor lies a hair under its parent's, so the two never flicker where they overlap
       for (var i = 0; i < n; i++) {
         var R = ring[i], wf = o.openAt(R.s) * k * o.w * (shape.rib ? 1 - shape.rib * Math.pow(0.5 + 0.5 * Math.cos(R.s * Math.PI * 2 / shape.ribEvery + seed), 3) : 1);
+        var tp = taperAt(R.s); wf *= tp;
         for (var j = 0; j < C; j++) {
           var jj = j % PROF, p = (i * C + j) * 3, jt = jit[i * PROF + jj], fl = PY[jj] < -0.8, xx = PX[jj] * wf * jt;
-          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[jj] * o.h - sink : PY[jj] * o.h * kh * jt); pos[p + 2] = R.z + R.nz * xx;
+          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[jj] * o.h - sink : PY[jj] * o.h * kh * jt * tp); pos[p + 2] = R.z + R.nz * xx;
         }
       }
       geo.attributes.position.needsUpdate = true;
@@ -1659,7 +1668,7 @@
       if (kind === "face") rock = stoneOf(THREE, parts.tiles, FACE_LOOK[face].rock); // its own walls, so a style stays on this branch
       route.openAt = function () { return SIDE_LOOK.open; };
       var shp = CAVE_SHAPE[frame.blk ? frame.blk.texture : state.cur.texture] || CAVE_SHAPE.other;
-      route.tube = buildTube(THREE, route, { within: true, w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN, shape: shp });
+      route.tube = buildTube(THREE, route, { within: true, w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, taper: { s0: route.sIn, s1: route.sOut }, seed: depth * 13 + blockN, shape: shp });
       route.holes.forEach(function (H) { H.tube = route.tube; });
       route.tube.within = { tube: parent.tube, s0: route.sIn + 1, s1: route.sOut - 1 };
       route.tube.update(br.k); route.tube.index();
@@ -2571,6 +2580,7 @@
         else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
         if (free) keepIn(camPos, 0.96, 0.25);
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
+        if (state.camAt) { var ca = state.camAt; camera.position.set(ca[0], ca[1], ca[2]); camera.lookAt(ca[3], ca[4], ca[5]); camera.updateMatrixWorld(); } // tests: a fixed view
         var cp = ch && ch.main && ch.main.cap; if (cp) cp.mesh.visible = (camPos.x - cp.x) * cp.fx + (camPos.z - cp.z) * cp.fz > 0.3;
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
         var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : route.kind === "face" ? faceLook(route.style) : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
@@ -2723,6 +2733,29 @@
     };
     api.meeting = function () { var b = state.walk && state.walk.blk; if (!b) return null; return { met: b.met || null, phase: b.bm ? b.bm.phase : null, n: b.bm ? b.bm.n : null, heard: b.bm ? b.bm.heard : null, waiting: b.bm ? b.bm.waiting.slice() : [], waiters: (b.waiters || []).map(function (f) { return { who: f.userData.who, wait: !!f.userData.wait }; }) }; };
     api.lanterns = function () { return lanternsOn.length; };
+    // Where each opening a branch has cut stands, with views of it from inside the tunnel it opens off (for the gap check).
+    // open: also cut the way back that is still waiting, so both seams can be looked at.
+    api.openings = function (open) {
+      var out = [];
+      state.stack.forEach(function (fr) {
+        var r = fr.child && fr.child.route; if (!r) return;
+        if (open && r.pendingExit) { fr.route.tube.addHole(r.pendingExit); r.pendingExit = null; }
+        r.holes.forEach(function (H, wi) {
+          if (fr.route.tube.holes.indexOf(H) < 0) return;
+          var ms = (H.s0 + H.s1) / 2, a = at(fr.route, ms), nx = -a.fz * H.side, nz = a.fx * H.side, pw = r.pw, h = ch.h;
+          var tx = a.x + nx * pw, ty = a.y - h * 0.2, tz = a.z + nz * pw, views = [];
+          [-7, -4, 0, 4, 7].forEach(function (d) {
+            var c = at(fr.route, clamp(ms + d, 0, fr.route.len));
+            [[-0.35, 0.15], [0.1, 0.45], [-0.1, -0.4]].forEach(function (o) {
+              var v = [c.x + nx * pw * o[0], c.y + h * o[1], c.z + nz * pw * o[0], tx, ty, tz], ci = fr.route.tube.contain({ x: v[0], y: v[1], z: v[2] });
+              if (ci && ci.ratio < 0.85) views.push(v); // only from where a player's camera could stand
+            });
+          });
+          out.push({ kind: r.kind, which: wi, s: ms, views: views });
+        });
+      });
+      return out;
+    };
     api.elementScreen = function () {
       var c = ctxOf(), v = c.holder.getWorldPosition(new THREE.Vector3()); v.y += 1.4; v.project(camera);
       var r = dom.getBoundingClientRect();
