@@ -833,6 +833,50 @@ ok(cs.length === 3 && cs[2].slot === 2 && cs[2].focus, 'a third comes in to the 
 ok(/Ache · Wood/.test(await page.locator('[data-room-focus="1"]').textContent()) && await page.locator('[data-room-focus="1"][data-room-focus-element="wood"]').count() === 1, 'each part\'s chip shows the element chosen for it');
 await page.locator('[data-room-shrink]').click(); await page.waitForTimeout(800);
 await page.screenshot({ path: SHOTS + '/room-three.png' });
+// Pinch to zoom, and a creature close up (Wendell, 13 October 2026: "Let's introduce pinch to zoom in the wave room. Also the
+// ability to click on each of the spirits to have them fill the frame and have more information about it")
+const zoomOf = () => C(() => window.__oagCave.room.zoom());
+const pinch = (from, to) => C(([a, b]) => {
+  const d = document.querySelector('[data-room] canvas');
+  const ev = (t, id, x) => d.dispatchEvent(new PointerEvent(t, { pointerId: id, clientX: x, clientY: 430, bubbles: true, pointerType: 'touch', isPrimary: id === 1 }));
+  ev('pointerdown', 1, 195 - a / 2); ev('pointerdown', 2, 195 + a / 2);
+  for (let k = 1; k <= 5; k++) ev('pointermove', 2, 195 - a / 2 + a + (b - a) * k / 5);
+  ev('pointerup', 2, 195 - a / 2 + b); ev('pointerup', 1, 195 - a / 2);
+}, [from, to]);
+await pinch(100, 200);
+const z1 = await zoomOf();
+await page.waitForTimeout(1500);
+ok(Math.abs(z1 - 0.5) < 0.02 && (await room()).phase === 'witness' && (await C(() => window.__oagCave.room.close())) === null, `two fingers spread apart zoom in (×${z1.toFixed(2)}), and a pinch is not a tap`);
+await page.screenshot({ path: SHOTS + '/room-pinch-in.png' });
+await pinch(200, 100);
+ok(Math.abs((await zoomOf()) - 1) < 0.02, 'pinching them together zooms back out');
+await pinch(200, 20);
+ok(Math.abs((await zoomOf()) - 1.6) < 0.02, 'zooming out widens the view, up to a limit');
+await C(() => document.querySelector('[data-room] canvas').dispatchEvent(new WheelEvent('wheel', { deltaY: -600, bubbles: true, cancelable: true })));
+ok((await zoomOf()) < 0.8, 'the mouse wheel zooms too');
+await pinch(100, Math.round(100 * (await zoomOf()) / 1.6)); // zoomed out, so the one on the left comes into view on a phone
+await page.waitForTimeout(2500);
+await page.screenshot({ path: SHOTS + '/room-pinch-out.png' });
+const zRoom = await zoomOf();
+const drag = async (dx) => { await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(195 + dx / 2, 600, { steps: 4 }); await page.mouse.move(195 + dx, 600, { steps: 4 }); await page.mouse.up(); await page.waitForTimeout(2500); };
+let at1 = await C(() => window.__oagCave.room.screenOf(1));
+if (at1.x < 40) { await drag(-120); at1 = await C(() => window.__oagCave.room.screenOf(1)); }
+if (at1.x < 40) { await drag(240); at1 = await C(() => window.__oagCave.room.screenOf(1)); } // one finger turns the view to the one on the left
+ok(at1.x > 0 && at1.x < 390 && at1.y > 0 && at1.y < 844, `the creature to tap is in view (${Math.round(at1.x)}, ${Math.round(at1.y)}) at ×${zRoom.toFixed(2)}`);
+await page.mouse.click(at1.x, at1.y);
+await page.waitForTimeout(3000);
+const cl = await C(() => window.__oagCave.room.close());
+const card = await page.locator('[data-room-close]').textContent();
+ok(cl && cl.name === 'Ache' && (await room()).scene.view === 'close' && await sees('[data-room-close]') && (await page.locator('[data-room-modal]').getAttribute('aria-hidden')) === 'true' && !(await sees('[data-room-pane]')), 'a tap on a creature brings it close, with its card in place of the page');
+ok(card.includes('Ache') && card.includes('Wood') && card.includes('tension') && card.includes('Shame about the ache') && card.includes('Step: Allow'), 'its card says its name, element, texture, step and the feelings about it: ' + card);
+ok(Math.abs((await zoomOf()) - 1) < 0.01, 'the close-up starts at its own distance, whatever the room was zoomed to');
+const fill = await C(() => { const c = document.querySelector('[data-room] canvas'), r = c.getBoundingClientRect(), a = window.__oagCave.room.screenOf(1); return { y: (a.y - r.top) / r.height, x: (a.x - r.left) / r.width }; });
+ok(fill.y > 0.2 && fill.y < 0.5 && Math.abs(fill.x - 0.5) < 0.1, `it sits in the middle of the frame, above the card (${fill.x.toFixed(2)}, ${fill.y.toFixed(2)})`);
+await page.screenshot({ path: SHOTS + '/room-close.png' });
+ok(await sees('[data-room-close-work]'), 'a creature not being worked can be picked from its card');
+await page.locator('[data-room-close-back]').click();
+await page.waitForTimeout(2000);
+ok((await C(() => window.__oagCave.room.close())) === null && (await room()).scene.view !== 'close' && Math.abs((await zoomOf()) - zRoom) < 0.01 && await sees('[data-room-pane]') && !(await sees('[data-room-close]')), 'Back to the room returns the camera and its zoom, and the page as it was (tucked into the pane)');
 await page.locator('[data-room-pane]').click();
 await page.locator('[data-room-else]').click(); await page.locator('[data-room-else-new]').click();
 ok(await sees('[data-room-waiting]') && (await cr()).length === 3 && (await room()).scene.waiting === 1, 'a fourth waits at the door');

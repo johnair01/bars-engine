@@ -2603,7 +2603,10 @@
   var WHERE_ROOM = { 3: "You are on your seat, looking at it across the room.", 2: "You are face to face with it.", 1: "You are standing where it stood, and it sits in your seat.", check: "You are face to face with it.", after: "You are back on your seat.", paused: "You stepped back behind your seat." };
   var ROOM_CSS = ".oagr{z-index:950}.oagr .oagc-pane{transform:translate(12px,58px)}.oagr .oagc-pane:after{display:none}" +
     ".oagr-field{display:block;width:100%;box-sizing:border-box;min-height:44px;margin:.35rem 0;padding:0 .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(20,20,40,.9);color:#f4f4fa;font-size:16px}" +
-    ".oagr-note{font-size:.8rem!important;color:#aab0c4}";
+    ".oagr-note{font-size:.8rem!important;color:#aab0c4}" +
+    ".oagr-close{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;max-width:420px;margin:0 auto;max-height:40vh;overflow-y:auto;padding:.7rem .9rem;background:rgba(12,12,28,.9);border:1px solid rgba(255,241,176,.5);border-radius:16px;color:#f4f4fa;touch-action:manipulation}" +
+    ".oagr-close h2{margin:0 0 .3rem;font-size:1.15rem;color:#fff1b0;display:flex;align-items:center;gap:.5rem}.oagr-close p{margin:.25rem 0;font-size:.95rem;line-height:1.35}.oagr-close .oagc-row{margin-top:.5rem}" +
+    ".oagr-dot{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}";
 
   function readRoomTest() { try { return JSON.parse(localStorage.getItem(ROOM_TEST_KEY) || "[]"); } catch (e) { return []; } }
   function keepRoomTest(entry) { try { var all = readRoomTest(); all.push(entry); localStorage.setItem(ROOM_TEST_KEY, JSON.stringify(all)); } catch (e) { /* storage blocked: the room still plays */ } }
@@ -2717,7 +2720,7 @@
       // R.phase is the step's id from ROOM_STEPS, or opening, stays, kept, goes, leaving, gone, checkin, again, end.
       // R.active holds the creatures in the room being worked (up to three); ch is the one the player is working now. Each keeps
       // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
-      var R = { round: 1, phase: "welcome", back: false, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [] };
+      var R = { round: 1, phase: "welcome", back: false, close: null, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [] };
       function newCharge(first, slot) {
         var c = { where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [] };
@@ -2738,7 +2741,9 @@
       var br = { b: 0.5, t0: performance.now() / 1000, exhaling: false };
       var fig = { x: SEAT.x, z: SEAT.z, sit: 1, yaw: Math.PI, clk: 0 };
 
-      function draw() {
+      // A close-up (below) keeps the step's page tucked away until the player goes back to the room, and keeps its card current.
+      function draw() { drawPage(); if (R.close) { closeModal(); pane.style.display = "none"; closeCard(); } }
+      function drawPage() {
         modal.innerHTML = ""; stat.innerHTML = ""; pane.innerHTML = "";
         var pg = page(), kids = pg.kids || [];
         modal.appendChild(el("h2", { text: pg.title }));
@@ -2982,12 +2987,93 @@
       // ---- breath, calm, look ---------------------------------------------------------------------------------------------
       var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
       stage.appendChild(calmBtn);
-      var lookYaw = 0, drag = null;
+      // One finger turns the view. Two fingers pinch it nearer or farther (Wendell, 13 October 2026: "Let's introduce pinch to
+      // zoom in the wave room"), and the mouse wheel does the same on a computer. A tap on a creature brings it close (below).
+      var lookYaw = 0, drag = null, zoom = 1, ptrs = {}, pinch = null, tap = null, ZOOM_MIN = 0.3, ZOOM_MAX = 1.6;
+      function setZoom(z) { zoom = clamp(z, ZOOM_MIN, ZOOM_MAX); }
+      function spread() { var k = Object.keys(ptrs); return k.length < 2 ? 0 : Math.hypot(ptrs[k[0]].x - ptrs[k[1]].x, ptrs[k[0]].y - ptrs[k[1]].y); }
       if (renderer) {
         var dom = renderer.domElement;
-        dom.addEventListener("pointerdown", function (e) { drag = { x: e.clientX }; });
-        dom.addEventListener("pointermove", function (e) { if (!drag) return; lookYaw = clamp(lookYaw - (e.clientX - drag.x) * 0.005, -0.9, 0.9); drag.x = e.clientX; });
-        ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function () { drag = null; }); });
+        dom.addEventListener("pointerdown", function (e) {
+          ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX }; tap = { x: e.clientX, y: e.clientY, t: performance.now() }; }
+          else { drag = null; tap = null; pinch = { d: spread(), z: zoom }; }
+        });
+        dom.addEventListener("pointermove", function (e) {
+          if (!ptrs[e.pointerId]) return;
+          ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) tap = null;
+          if (pinch) { var d = spread(); if (pinch.d > 0 && d > 0) setZoom(pinch.z * pinch.d / d); return; }
+          if (!drag) return; lookYaw = clamp(lookYaw - (e.clientX - drag.x) * 0.005, -0.9, 0.9); drag.x = e.clientX;
+        });
+        ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function (e) {
+          delete ptrs[e.pointerId];
+          if (n === "pointerup" && tap && performance.now() - tap.t < 600) tapAt(e.clientX, e.clientY);
+          tap = null;
+          var left = Object.keys(ptrs);
+          if (left.length < 2) pinch = null;
+          drag = left.length === 1 ? { x: ptrs[left[0]].x } : null; // the finger still down after a pinch turns the view again
+        }); });
+        dom.addEventListener("wheel", function (e) { e.preventDefault(); setZoom(zoom * Math.exp(e.deltaY * 0.0015)); }, { passive: false });
+      }
+
+      // ---- a creature close up (Wendell, 13 October 2026: "the ability to click on each of the spirits to have them fill the
+      // frame and have more information about it") ----------------------------------------------------------------------------
+      // A tap on a creature in the room (one being worked, or one that stays by the wall) swings the camera round to its front,
+      // close enough that it fills the frame, and a card below says what is known of it: its name, element, texture, where it
+      // is in the body, its step, its charge and glow, the feelings about it, what the player wants and the next move. Back
+      // to the room returns the camera and the page where they were; the pinch and the turn work in the close-up too.
+      var closeBox = el("div", { class: "oagr-close", "data-room-close": "", style: "display:none" }); wrap.appendChild(closeBox);
+      var roomZoom = 1, roomModal = false;
+      function seen() { return R.active.concat(R.kept).filter(function (c, i, a) { return a.indexOf(c) === i && !c.gone && c.fig.visible; }); }
+      function centreOf(c) { var s = c.fig.scale.x; return new THREE.Vector3(c.fig.position.x, c.fig.position.y + 1.2 * s, c.fig.position.z); }
+      // The creature nearest the tap on screen, if the tap lands on or close to it.
+      function tapAt(x, y) {
+        if (!renderer) return;
+        var rc = renderer.domElement.getBoundingClientRect(), best = null, bestK = Infinity;
+        var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+        seen().forEach(function (c) {
+          var p = centreOf(c), e = p.clone().addScaledVector(right, c.fig.scale.x).project(camera); p.project(camera);
+          if (p.z > 1) return; // behind the camera
+          var sx = rc.left + (p.x + 1) / 2 * rc.width, sy = rc.top + (1 - p.y) / 2 * rc.height;
+          var rad = Math.hypot((e.x - p.x) / 2 * rc.width, (e.y - p.y) / 2 * rc.height), d = Math.hypot(x - sx, y - sy);
+          var k = d / (rad * 1.4 + 24); if (k < 1 && k < bestK) { best = c; bestK = k; }
+        });
+        if (best && best !== R.close) closeUp(best);
+      }
+      function closeUp(c) {
+        if (!R.close) { roomZoom = zoom; roomModal = R.modal; }
+        R.close = c; zoom = 1; lookYaw = 0;
+        closeModal(); pane.style.display = "none"; closeCard();
+      }
+      function backToRoom() {
+        if (!R.close) return;
+        R.close = null; zoom = roomZoom; lookYaw = 0; closeBox.style.display = "none"; draw();
+        if (!roomModal) closeModal(); // the page comes back as it was: open, or tucked into the pane
+      }
+      function stepName(c) {
+        var ph = c === ch ? R.phase : c.phase, i = stepIndex(ph);
+        if (R.kept.indexOf(c) >= 0) return "It stays, with a place in the room";
+        if (i >= 0) return words(ROOM_STEPS[i])[1];
+        return { opening: "Coming in through the door", stays: "Talking with you, 3-2-1", goes: "Exhale", leaving: "Leaving on the out-breath", checkin: "Worked through", done: "Worked through" }[ph] || "In the room";
+      }
+      function closeCard() {
+        var c = R.close; if (!c) return;
+        var e = c.element && lookup(ELEMENTS, c.element), t = c.texture && lookup(TEXTURES, c.texture);
+        var hex = "#" + c.fig.userData.want.getHexString(), k = [];
+        k.push(el("h2", {}, [el("span", { class: "oagr-dot", style: "background:" + hex + ";color:" + hex }), el("span", { text: c.name.trim() || "Not named yet", "data-room-close-name": "" })]));
+        k.push(P(e ? "Element: " + e[1] + ", " + e[0].toLowerCase() + ". Its clean up move: " + e[2] + "." : "Element: not known yet.", { "data-room-close-element": "" }));
+        k.push(P("It feels like " + (t ? t[1] : "nothing named yet") + "." + (c.where ? " Where: " + c.where + "." : ""), { "data-room-close-feel": "" }));
+        k.push(P("Step: " + stepName(c) + (c.steady ? ". Validated." : "."), { "data-room-close-step": "" }));
+        k.push(P("Charge " + heatOf(c.t321, c.heat) + " of 10, glowing at " + Math.round(levelOf(c) * 100) + "%" + (c.allowed ? ", allowed to grow " + c.allow.grow + " of 10" : "") + ".", { "data-room-close-charge": "" }));
+        if (c.layers.length) k.push(P("Feelings about it: " + c.layers.map(function (l) { return l.name + (l.element ? " (" + l.element.toLowerCase() + ")" : ""); }).join(", ") + ".", { "data-room-close-layers": "" }));
+        if (c.goal.trim()) k.push(P("What you want: " + c.goal.trim() + (c.push ? ". It pushes " + (c.push === "toward" ? "toward" : "away from") + " it." : "."), { "data-room-close-goal": "" }));
+        if (c.move.trim()) k.push(P("Your next move: " + c.move.trim() + "."));
+        var bs = [];
+        if (c !== ch && R.active.indexOf(c) >= 0 && R.kept.indexOf(c) < 0) bs.push(btn("Work with this one", { "data-room-close-work": "" }, function () { setFocus(c); backToRoom(); }));
+        bs.push(btn("Back to the room", { "data-room-close-back": "" }, backToRoom, bs.length > 0));
+        k.push(row(bs));
+        closeBox.innerHTML = ""; k.forEach(function (n) { closeBox.appendChild(n); }); closeBox.style.display = "";
       }
       function breathStep(nowS) {
         var T = BREATH_S, tm = (((nowS - br.t0) % T) + T) % T, b;
@@ -3022,6 +3108,10 @@
         if (name === "face-it") return { pos: V(HERE.x - 2.8, 3.6, HERE.z - 2.2), aim: V(FACE.x, 0.9, FACE.z) };
         if (name === "its") return { pos: V(HERE.x + 1.6, 3.6, HERE.z - 4.3), aim: V(SEAT.x, 0.6, SEAT.z) };
         if (name === "back") return { pos: V(BACK.x + 0.8, 4.6, BACK.z + 2.3), aim: V(HERE.x, 0.6, HERE.z) };
+        if (name === "close") { // in front of the creature, near enough that it fills the frame above the card
+          var cc = R.close, s = cc.fig.scale.x, mid = centreOf(cc), ry = cc.fig.rotation.y;
+          return { pos: V(mid.x + Math.sin(ry) * 4.4 * s, mid.y + 0.5 * s, mid.z + Math.cos(ry) * 4.4 * s), aim: V(mid.x, mid.y - 0.8 * s, mid.z) };
+        }
         if (inRoom().length > 1) return { pos: V(0.4 + 0.3 * HERE.x, 6.6, 6.6), aim: V(0.6 * HERE.x, 0.2, -2) }; // higher, so all of them are in view, turned to the one worked
         return { pos: V(1.0, 5.4, 7.0), aim: V(0, 0.6, -3) };
       }
@@ -3112,8 +3202,15 @@
         var wk = 1 + 0.015 * (br.b - 0.5); walls.scale.set(wk, 1, wk);
         R.lights.forEach(function (l, n) { l.userData.halo.scale.setScalar(R.calm ? 1 : 1 + 0.12 * Math.sin(now / 500 + n)); });
         // the camera
-        var vw = view(tg.view, 0, 0); R.view = tg.view;
+        if (R.close && (R.close.gone || !R.close.fig.visible)) backToRoom(); // it left the room while close up
+        var vw = view(R.close ? "close" : tg.view, 0, 0); R.view = R.close ? "close" : tg.view;
         if (lookYaw) { var off = vw.pos.clone().sub(vw.aim), c0 = Math.cos(lookYaw), s0 = Math.sin(lookYaw); vw.pos.set(vw.aim.x + off.x * c0 + off.z * s0, vw.pos.y, vw.aim.z - off.x * s0 + off.z * c0); }
+        // Zooming in brings the camera nearer. Zooming out past the step's own view widens the lens instead, since the walls are
+        // close behind the camera: on a phone held upright that is what brings all three creatures into view.
+        if (zoom < 1) vw.pos.sub(vw.aim).multiplyScalar(zoom).add(vw.aim);
+        var fov = zoom > 1 ? 60 + (zoom - 1) * 70 : 60; if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = fov; camera.updateProjectionMatrix(); }
+        var rr = Math.hypot(vw.pos.x, vw.pos.z), RIN = RR - 0.8; if (rr > RIN) { vw.pos.x *= RIN / rr; vw.pos.z *= RIN / rr; } // zoomed out, it stays inside the walls
+        vw.pos.y = clamp(vw.pos.y, 0.4, RH + 1.2);
         if (snap) { camPos.copy(vw.pos); camAim.copy(vw.aim); snap = false; }
         else { var f = 1 - Math.exp(-dt * 2.6); camPos.lerp(vw.pos, f); camAim.lerp(vw.aim, f); }
         camera.position.copy(camPos); camera.lookAt(camAim);
@@ -3134,6 +3231,14 @@
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
+        zoom: function () { return zoom; },
+        close: function () { return R.close ? { name: R.close.name, slot: R.close.slot, kept: R.kept.indexOf(R.close) >= 0 } : null; },
+        // where a creature is on screen (by its index in creatures(), or the n-th kept one with kept true), for a test to tap it
+        screenOf: function (n, kept) {
+          var c = kept ? R.kept[n] : R.active[n]; if (!c || !renderer) return null;
+          var rc = renderer.domElement.getBoundingClientRect(), p = centreOf(c).project(camera);
+          return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height };
+        },
       };
     });
   }
