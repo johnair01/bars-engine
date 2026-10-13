@@ -4,12 +4,14 @@
     python content/ontology-game/cave/character.py --all --out DIR [--sheet]
 
 The theme is the Taoist cultivation robe set (cc-robe-set, bpt-robe-theme), the wardrobe the 2D sprite creator also
-draws from (cs-one-studio). In J4 the set is painted onto the body as its under-layer: a crossed-collar tunic that falls
+draws from (cs-one-studio). In J4 the set is painted onto the body as its under-layer: a tunic whose crossed collar
+runs as one band over the shoulders and round the back of the neck, falling
 to mid-thigh, tied trousers, a sash and cloth shoes. The long robe, the sash as cloth and the topknot are J5's separate
 garments, skinned to this same rig.
 
-The body is the body map's figure (body/build_figure.py: the same rounded parts, 1.75 m, no face, no sex, age or skin
-colour), widened or narrowed by the build and fused into one surface. Its rig carries the cave avatar's joint names
+The body starts from the body map's figure (body/build_figure.py: rounded parts, 1.75 m, no face, no sex, age or skin
+colour) and is stylized away from it after his first look (a bigger head, a plain trunk, rounder limbs), widened or
+narrowed by the build and fused into one surface. Its rig carries the cave avatar's joint names
 (cave.js buildAvatar: hips, spine, neck, head; hip, knee, ankle; shoulder, elbow, wrist), and its one animation,
 "Walk", is cave.js poseAvatar baked at a mid stride: two steps a second, so one cycle is one second, 24 keys.
 
@@ -23,6 +25,7 @@ import bpy
 import bmesh
 from mathutils import Matrix, Vector
 from mathutils.bvhtree import BVHTree
+from mathutils.kdtree import KDTree
 
 # ---- the theme: builds and palettes ---------------------------------------------------------------------------
 # A build scales the body's widths and depths; height stays 1.75 m so the walk's stride is the same for all (a choice).
@@ -61,9 +64,13 @@ STEPS_PER_S, FPS, KEYS = 2, 24, 24          # cave.js STEPS_PER_S; one cycle (a 
 AMP = 0.4                                   # radians: cave.js clamps the swing to 0.2..0.62 by the step's length
 LEG = 0.96 - 0.085                          # hip to ankle, metres, for the hips' sink
 
-MAX_BYTES, VOXEL, TRIS = 300 * 1024, 0.007, 4200
+MAX_BYTES, VOXEL, TRIS = 300 * 1024, 0.007, 2500
 HEM, SASH, CUFF, TIE = (0.68, 0.71), (0.99, 1.07), 0.93, (0.10, 0.14)   # heights of the painted bands, metres
-CUTS = (*HEM, *SASH, CUFF, *TIE)
+NECK = 1.47                                                             # the collar stands up the neck to here
+NECK_BASE = 1.425
+CUTS = (*HEM, *SASH, CUFF, *TIE, NECK, NECK_BASE)
+SPLIT = 0.03                                                           # metres, longest edge where a line is cut
+COLLAR_R = 0.095                                                        # the collar's ring round the neck, metres
 COLLAR = 0.024                                                          # half the collar band's width, metres
 
 
@@ -106,13 +113,17 @@ def body_parts(build):
         bm.faces.new(list(reversed(verts[0])))
         bm.faces.new(verts[-1])
 
+    # Stylized, not realistic (Wendell, 2026-10-13, round 1: "build proportions are close to human but are hitting
+    # uncanny valley"): about six heads tall where build_figure.py's canon is seven and a half, a short neck, a plain
+    # tapered trunk with no waist or chest sculpting, rounder and thicker limbs, mitten hands and rounded feet, nearer
+    # the cave's capsule avatar and the daemons than the body map.
     j = joints(build)
-    ellipsoid(new("head"), (0, 0.005, 1.625), 0.078, 0.098, 0.115)
-    limb(new("neck"), (0, 0.012, 1.44), (0, 0.012, 1.57), 0.058, 0.052)
+    ellipsoid(new("head"), (0, 0.0, 1.615), 0.112, 0.118, 0.13)
+    limb(new("neck"), (0, 0.008, 1.42), (0, 0.008, 1.52), 0.06, 0.056)
     trunk = [(z, rx * wt, ry * wt) for z, rx, ry in
-             [(0.90, 0.150, 0.092), (0.98, 0.165, 0.104), (1.06, 0.152, 0.100), (1.13, 0.134, 0.092),
-              (1.21, 0.146, 0.098), (1.30, 0.163, 0.106), (1.37, 0.168, 0.096), (1.43, 0.120, 0.068)]]
-    trunk[-2] = (trunk[-2][0], 0.168 * ws, trunk[-2][2])   # the shoulders follow the shoulder span
+             [(0.90, 0.150, 0.100), (0.98, 0.158, 0.106), (1.06, 0.152, 0.104), (1.15, 0.150, 0.102),
+              (1.25, 0.158, 0.104), (1.32, 0.164, 0.102), (1.38, 0.160, 0.094), (1.44, 0.105, 0.072)]]
+    trunk[-2] = (trunk[-2][0], 0.160 * ws, trunk[-2][2])   # the shoulders follow the shoulder span
     low = new("hips")
     loft(low, trunk[:3])
     ellipsoid(low, (0, 0.0, 0.92), 0.150 * wt, 0.092 * wt, 0.06)
@@ -120,28 +131,89 @@ def body_parts(build):
     sx = j["shoulderL"][0][0]
     limb(new("spine"), (-sx + 0.02, 0.0, 1.385), (sx - 0.02, 0.0, 1.385), 0.06 * wl, 0.06 * wl)
     for n in ("L", "R"):
-        limb(new("shoulder" + n), *j["shoulder" + n], 0.047 * wl, 0.038 * wl)
-        limb(new("elbow" + n), *j["elbow" + n], 0.037 * wl, 0.029 * wl)
-        wr = Vector(j["wrist" + n][0]) * 0.4 + Vector(j["wrist" + n][1]) * 0.6
-        ellipsoid(new("wrist" + n), wr, 0.026 * wl, 0.045 * wl, 0.07)
-        limb(new("hip" + n), *j["hip" + n], 0.085 * wl, 0.055 * wl)
-        limb(new("knee" + n), *j["knee" + n], 0.053 * wl, 0.035 * wl)
+        limb(new("shoulder" + n), *j["shoulder" + n], 0.054 * wl, 0.046 * wl)
+        limb(new("elbow" + n), *j["elbow" + n], 0.045 * wl, 0.039 * wl)
+        wr = Vector(j["wrist" + n][0]) * 0.35 + Vector(j["wrist" + n][1]) * 0.65
+        ellipsoid(new("wrist" + n), wr, 0.042 * wl, 0.05 * wl, 0.06)
+        limb(new("hip" + n), *j["hip" + n], 0.088 * wl, 0.066 * wl)
+        limb(new("knee" + n), *j["knee" + n], 0.064 * wl, 0.05 * wl)
         a = Vector(j["ankle" + n][0])
-        ellipsoid(new("ankle" + n), (a.x + math.copysign(0.005, a.x), -0.035, 0.035), 0.042 * wl, 0.11, 0.036)
+        ellipsoid(new("ankle" + n), (a.x + math.copysign(0.005, a.x), -0.035, 0.045), 0.055 * wl, 0.105, 0.048)
     return parts
 
 
-def collar(build):
-    """The crossed collar's overlapping edge, worn left over right, as (x, z) ends: from the figure's left side of the
-    neck down across the chest to its right side, under the arm."""
-    return Vector((0.06, 1.42)), Vector((-0.13 * BUILDS[build][0], 1.12))
+def collar_path(bm, build):
+    """The crossed collar's centre line, laid on the body's surface as points every 4 mm, worn left over right: from
+    the figure's right side under the arm, up across the chest to the left of the neck, round the back of the neck over
+    both shoulders, then the short under-edge from the right of the neck down to where it meets the long one.
+    (Wendell, 2026-10-13, round 1: "We'd expect smooth collars that are painted on the shoulders".)"""
+    tree = BVHTree.FromBMesh(bm)
+    wt = BUILDS[build][0]
+    r, zr, a0 = COLLAR_R, 1.415, math.radians(40)                 # the ring round the neck, and where it opens in front
+
+    def ring(a):
+        return Vector((r * math.sin(a), -r * math.cos(a) + 0.008, zr))
+
+    def front(x, z):                                           # a point on the chest, seen straight from the front
+        hit = tree.ray_cast(Vector((x, -1.0, z)), Vector((0, 1, 0)))[0]
+        return hit if hit else tree.find_nearest(Vector((x, 0, z)))[0]
+
+    L, R = ring(a0), ring(-a0)
+    A = Vector((-0.125 * wt, 0, 1.13))                         # the long edge's end, the right side under the arm
+    D_t = (L.x - 0.0) / (L.x - A.x)                            # where the under-edge meets it, on the middle line
+    D = Vector((0.0, 0, L.z + (A.z - L.z) * D_t))
+    pts = []
+
+    def line(p, q):
+        n = max(2, int((Vector((q.x - p.x, q.z - p.z))).length / 0.004))
+        pts.extend(front(p.x + (q.x - p.x) * k / n, p.z + (q.z - p.z) * k / n) for k in range(n + 1))
+
+    line(A, L)
+    n = int(r * (2 * math.pi - 2 * a0) / 0.004)
+    pts.extend(tree.find_nearest(ring(a0 + (2 * math.pi - 2 * a0) * k / n))[0] for k in range(n + 1))
+    line(R, D)
+    kd = KDTree(len(pts))
+    for i, p in enumerate(pts):
+        kd.insert(p, i)
+    kd.balance()
+    return lambda co: kd.find(co)[2]
+
+
+def cut_along(bm, field):
+    """Cuts every face where field(co) changes sign, at the exact crossing, so the line field = 0 is a run of edges and a
+    band painted on one side of it ends on a smooth edge. Triangles first, so each face is crossed at most twice."""
+    # the decimated surface has triangles longer than the band is wide, so near the line its edges are first halved
+    # until none is longer than SPLIT; otherwise the band could pass between two vertices and never be cut
+    for _ in range(4):
+        long = [e for e in bm.edges if e.calc_length() > SPLIT
+                and min(abs(field(e.verts[0].co)), abs(field(e.verts[1].co)),
+                        abs(field((e.verts[0].co + e.verts[1].co) / 2))) < 0.6 * e.calc_length()]
+        if not long:
+            break
+        bmesh.ops.subdivide_edges(bm, edges=long, cuts=1, use_grid_fill=True)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    val = {v: field(v.co) for v in bm.verts}
+    made = set()
+    for e in list(bm.edges):
+        a, b = e.verts
+        fa, fb = val[a], val[b]
+        if (fa < 0) != (fb < 0) and abs(fa - fb) > 1e-9:
+            at = a.co.lerp(b.co, fa / (fa - fb))
+            _, nv = bmesh.utils.edge_split(e, a, 0.5)
+            nv.co = at                                         # placed here, not by edge_split's own fraction
+            val[nv] = 0.0
+            made.add(nv)
+    for f in list(bm.faces):
+        new = [v for v in f.verts if v in made]
+        if len(new) == 2 and not any(new[1] in e.verts for e in new[0].link_edges):
+            bmesh.utils.face_split(f, new[0], new[1])
 
 
 def joints(build):
     """{bone: (head, tail)} in Blender space: Z up, the figure faces -Y, its own left is +X (build_figure.py)."""
     _, wl, ws = BUILDS[build]
     j = {"hips": ((0, 0, 0.96), (0, 0, 1.03)), "spine": ((0, 0, 1.03), (0, 0, 1.42)),
-         "neck": ((0, 0.012, 1.42), (0, 0.012, 1.53)), "head": ((0, 0.005, 1.53), (0, 0.005, 1.75))}
+         "neck": ((0, 0.008, 1.42), (0, 0.008, 1.50)), "head": ((0, 0.0, 1.50), (0, 0.0, 1.75))}
     for n, s in (("L", 1), ("R", -1)):
         sh, el = 0.19 * ws, 0.27 * ws + 0.08 * (ws - 1)
         j["shoulder" + n] = ((s * sh, 0, 1.385), (s * el, 0.01, 1.13))
@@ -227,13 +299,8 @@ def build(build_name, palette, out_dir, theme="robe_set"):
     bm.from_mesh(fused)
     for z in CUTS:
         bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, 1))
-    p, q = collar(build_name)
-    n = Vector((-(q - p).y, 0, (q - p).x)).normalized()               # across the collar's line, in the front plane
-    for off in (-COLLAR, COLLAR):
-        co = Vector((p.x, 0, p.y)) + n * off
-        front = [f for f in bm.faces if f.calc_center_median().y < 0 and 1.05 < f.calc_center_median().z < 1.45]
-        geom = list({v for f in front for v in f.verts}) + list({e for f in front for e in f.edges}) + front
-        bmesh.ops.bisect_plane(bm, geom=geom, plane_co=co, plane_no=n)
+    collar = collar_path(bm, build_name)
+    cut_along(bm, lambda co: collar(co) - COLLAR)
     bm.to_mesh(fused)
     bm.free()
     for p in fused.polygons:
@@ -286,7 +353,9 @@ def build(build_name, palette, out_dir, theme="robe_set"):
     def paint(co, bone):
         x, y, z = co
         if bone in ("head", "neck"):
-            return SKIN
+            return SKIN if z > NECK else pal["trim"]                # the collar stands a little way up the neck
+        if z > NECK_BASE and bone == "spine":
+            return pal["trim"]                                      # and is one band all round where neck meets trunk
         if bone.startswith("wrist"):
             return SKIN
         if bone.startswith("ankle"):
@@ -302,15 +371,8 @@ def build(build_name, palette, out_dir, theme="robe_set"):
         if bone.startswith("elbow"):
             # the sleeve runs to the wrist with a cuff
             return pal["trim"] if z < CUFF else pal["tunic"]
-        if z > 1.37 and math.hypot(x, y - 0.012) < 0.105 * (1 + 0.6 * (z - 1.37) / 0.07):
-            return pal["trim"]                                      # the collar band round the neck
-        if y < 0 and 1.07 < z < 1.42:
-            # the crossed collar (collar() above)
-            p, q = collar(build_name)
-            u, w = q - p, Vector((x, z)) - p
-            s_ = max(0.0, min(1.0, w.dot(u) / u.length_squared))
-            if (w - u * s_).length < COLLAR:
-                return pal["trim"]
+        if collar(Vector(co)) < COLLAR:
+            return pal["trim"]                                      # the crossed collar (collar_path above)
         if bone.startswith("shoulder") or bone in ("spine", "hips"):
             return pal["tunic"]
         return pal["tunic"]
