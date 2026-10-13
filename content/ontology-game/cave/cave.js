@@ -497,7 +497,10 @@
   // Chamber dressing from the kit: stone_spire, glow_cap, root_curl and crystal_cluster (with its rock bed), each built
   // in Blender from a picture (build_kit.py, pictures/). Spires stand at the foot of the wall, glow caps grow in twos
   // and threes, roots hang from the roof, crystals sit on their rocks. Nothing is set near a stop, and a piece where a side passage opens is hidden. An older kit without the
-  // pieces leaves the chamber bare. The same seed dresses the same way.
+  // pieces leaves the chamber bare. The same seed dresses the same way. A kit with the grown pieces (grow.py, from procgen:
+  // Wendell, 2026-10-13, "how the mushrooms and roots cluster", "let's wire this into the cave") swaps them in: a clump of
+  // mushrooms where the caps grew, braided roots through the roof, a mat of roots pressed along the wall, and a colony with
+  // its mycelium beside the pool (dressSide). Without them the pieces from pictures grow as before.
   var DRESS_ROOT = 0x4a3426, DRESS_GLOW = 0x7fe8c8;
   // The crystal as a building block (Wendell, 2026-10-13: "vary sizes and colors from this asset to give us changeable
   // building blocks to work with"). One Blender piece gives many looks: size scales the cluster, tall stretches the
@@ -521,6 +524,10 @@
   var ZONES = { foot: [16.6, 17.3], low: [17.6, 18.6], mid: [19.2, 20.8], high: [1.5, 3], roof: [3.6, 4.6] };
   var SPIRE = { len: [0.12, 0.62], fat: [0.55, 1.5] }; // a spire's length as a share of the chamber height, and its girth
   var ZONE_SIZE = { foot: 1, low: 0.75, mid: 0.55, high: 0.5, roof: 0.5 }; // how big a piece may grow there, as a share of its floor size
+  // The grown pieces' sizes as a share of the chamber height (choices): a clump's spread, a hanging root's length, a wall
+  // mat's spread, the pool's colony's spread. GLOWS names the pieces that still show in numbness's dark.
+  var GROWN = { clump: [0.38, 0.6], hang: [0.4, 0.62], mat: [0.55, 0.85], colony: 0.62 };
+  var GLOWS = ["glow_cap", "crystal_cluster", "mush_clump"];
   // Fog of war (Wendell, 2026-10-13: "You can't see into the full cave. The avaiable lighting centers around the character and
   // any spirits that are following them"). The figure carries the light: it reaches so far and falls off, the sky light is a
   // trace, and the far cave sinks into darkened fog. Glowing things (caps, crystals, markers, the element) still show.
@@ -531,7 +538,7 @@
     rock.visible = false;
     if (rock.userData.floor) rock.userData.floor.userData.lift = (rock.userData.floor.userData.lift || 1) * 0.45;
     tintStone(rock, rock.userData.hex);
-    (dressing.userData.items || []).forEach(function (it) { if (it.piece !== "glow_cap" && it.piece !== "crystal_cluster") it.mesh.visible = false; });
+    (dressing.userData.items || []).forEach(function (it) { if (GLOWS.indexOf(it.piece) < 0) it.mesh.visible = false; });
   }
   var ELEMENT_ZONES = { Anger: ["foot", "low", "low"], Sadness: ["foot"], Joy: ["foot", "foot", "low"], Fear: ["foot", "low", "mid", "high", "roof"], Neutrality: ["foot", "foot", "low"] };
   function zoneJ(z, sd, rnd) { var r = ZONES[z], j = r[0] + rnd() * (r[1] - r[0]); return sd > 0 ? j : PROF / 2 - j; }
@@ -575,10 +582,22 @@
           sp.scale.set(len * fat, len, len * fat);
           grow("stone_spire", sp, s + i * (0.35 + rnd() * 0.7), sd, zone, { sink: 0.06, tip: 0.3 }).look = { len: Math.round(len / h * 100) / 100, fat: Math.round(fat * 100) / 100 };
         }
+      } else if (k < 0.62 && G.mush_clump) { // a grown clump of mushrooms, on the floor's edge or the wall like shelf fungus
+        zone = pickZone(["foot", "low", "low", "mid"]);
+        var cs = h * (GROWN.clump[0] + rnd() * (GROWN.clump[1] - GROWN.clump[0])) * (zone === "foot" ? 1 : 0.75);
+        grow("mush_clump", mesh("mush_clump", capMat, cs), s, sd, zone, { sink: 0.1, tip: 0.5 });
       } else if (k < 0.62) { // caps in a clump, on the floor's edge or the wall like shelf fungus
         zone = pickZone(["foot", "low", "low", "mid"]);
         for (i = 0, n2 = 2 + Math.floor(rnd() * 3); i < n2; i++)
           grow("glow_cap", mesh("glow_cap", capMat, h * (0.1 + rnd() * 0.1) * (zone === "foot" ? 1 : 0.8)), s + (i - 1) * 0.4, sd, zone, { sink: 0.15, tip: 0.8 });
+      } else if (G.root_hang && G.root_creep && rnd() < 0.45) { // a mat of roots pressed along the wall
+        zone = pickZone(["mid", "high", "high"]);
+        var ms = h * (GROWN.mat[0] + rnd() * (GROWN.mat[1] - GROWN.mat[0]));
+        grow("root_creep", mesh("root_creep", rootMat, ms), s, sd, zone, { sink: 0.35, tip: 0.25 });
+      } else if (G.root_hang) { // braided roots through the roof, thick end into the stone
+        zone = rnd() < 0.7 ? "roof" : "high";
+        var hs = h * (GROWN.hang[0] + rnd() * (GROWN.hang[1] - GROWN.hang[0]));
+        grow("root_hang", mesh("root_hang", rootMat, hs), s, sd, zone, { into: true, len: hs, sink: 0.08, tip: 0.4 });
       } else { // roots hang from the roof, thick end into the stone
         zone = rnd() < 0.7 ? "roof" : "high";
         for (i = 0, n2 = 1 + Math.floor(rnd() * 2); i < n2; i++) {
@@ -1321,6 +1340,11 @@
       var pool = stopAt(route, "pool"), pe = beside(pool.s + 9, Math.min(wb * 0.4, 2.2));
       ctx.holder.position.set(pe.x, pe.y, pe.z); route.group.add(ctx.holder);
       if (blk.element) setElementOn(ctx, blk.element, Math.min(wb * 0.45, 2));
+      if (G.mush_colony) { // the colony grows across the path from the element, its mycelium showing between the stems
+        var pc = beside(pool.s + 3, -Math.min(wb * 0.34, 2)), col = new THREE.Mesh(G.mush_colony, new THREE.MeshStandardMaterial({ color: DRESS_GLOW, emissive: DRESS_GLOW, emissiveIntensity: 0.55, roughness: 0.6 }));
+        col.position.set(pc.x, pc.y, pc.z); col.rotation.y = yawFacing(pc.a); col.scale.setScalar(Math.min(h * GROWN.colony, wb * 0.5));
+        route.group.add(col); ctx.colony = col;
+      }
       route.stops.forEach(function (st) {
         if (st.stone == null) return;
         var f = FACES[st.stone], p = beside(st.s + 2.5, wb * 0.55);
@@ -1832,7 +1856,7 @@
     };
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
-    api.sideElement = function () { var wk = state.walk, b = wk && wk.blk, c = b && b.route.ctx; return { shown: !!(c && c.elObj && c.holder.children.length), name: b && b.element, deco: b ? b.deco.length : 0 }; };
+    api.sideElement = function () { var wk = state.walk, b = wk && wk.blk, c = b && b.route.ctx; return { shown: !!(c && c.elObj && c.holder.children.length), name: b && b.element, deco: b ? b.deco.length : 0, colony: !!(c && c.colony && c.colony.parent) }; };
     api.pane = function () {
       var r = pane.getBoundingClientRect(), cs = getComputedStyle(pane);
       return { shown: pane.style.display !== "none" && pane.style.visibility !== "hidden" && r.width > 0, title: page.title, text: page.text, at: paneAt, rect: { x: r.left, y: r.top, w: r.width, h: r.height }, font: parseFloat(cs.fontSize), docked: docked };

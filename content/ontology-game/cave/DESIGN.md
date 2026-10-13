@@ -372,3 +372,14 @@ wide high domed hall, something else the cave as it was. Numbness takes his temp
 are not drawn, the floor is faint and only glowing things hang in the black. The figure carries the light (`LAMP`: reach 16,
 falling off), the sky light is a trace and the far cave sinks into darkened fog; `carryLight` gives any following spirit its
 own small light (this cave has none yet; the Big Mind cave's spirits will). Wood is a low bush with grass and a root.
+
+**Roots and mushrooms grown from numbers (13 October 2026).** Wendell: "more fractal and natural", "so they aren't so
+upright", "how the mushrooms and roots cluster", "let's wire this into the cave". The generators in
+`tools/blender-cloud/procgen.py` (roots that fork by Murray's law, mushrooms that lean, clumps and colonies) now make four
+kit pieces through `grow.py`, decimated in `build_kit.py`: `root_hang` (three hanging systems braided into one, through the
+roof and high wall, thick end in the stone), `root_creep` (a mat of creeping roots pressed flat along the middle and high
+wall), `mush_clump` (seven mushrooms, where the caps grew) and `mush_colony` (nine, with the mycelium threads showing,
+beside the pool across the path from the element). The pieces from pictures stay in the kit and grow when a kit lacks the
+grown ones. The kit went from 80 KB to 319 KB; the page and all it loads are 829 KB of the 3 MB budget. The mushrooms take
+the caps' glow and stay lit in numbness's dark. **(choice)** the seeds, the face budgets (`GROWN` in `grow.py`), the sizes
+(`GROWN` in `cave.js`), a mat in about half the root places. The Blender detail pass comes next.

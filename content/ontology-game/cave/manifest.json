@@ -30,9 +30,13 @@
         "glow_cap",
         "root_curl",
         "crystal_cluster",
-        "crystal_cluster_bed"
+        "crystal_cluster_bed",
+        "root_hang",
+        "root_creep",
+        "mush_clump",
+        "mush_colony"
       ],
-      "bytes": 81584,
+      "bytes": 326836,
       "dressing": [
         {
           "piece": "stone_spire",
@@ -87,7 +91,38 @@
           }
         }
       ],
-      "dressing_note": "Built in Blender from the pictures by tools/blender-cloud/from_picture.py (cave studio, 2026-10-12). A picture is concept only (cs-chatgpt-ai-art); the built piece is own work. outline_match is the overlap of the model's front outline with the picture's, 1.0 exact."
+      "dressing_note": "Built in Blender from the pictures by tools/blender-cloud/from_picture.py (cave studio, 2026-10-12). A picture is concept only (cs-chatgpt-ai-art); the built piece is own work. outline_match is the overlap of the model's front outline with the picture's, 1.0 exact.",
+      "grown": [
+        {
+          "piece": "root_hang",
+          "made_by": "procgen.root_cluster knot, hanging, 3 systems",
+          "where": "through the roof and high wall, thick end in the stone",
+          "faces": 1400,
+          "sized_by": "height"
+        },
+        {
+          "piece": "root_creep",
+          "made_by": "procgen.root_cluster mat, creeping, 5 systems, pressed to 0.3 deep",
+          "where": "along the middle and high wall",
+          "faces": 1800,
+          "sized_by": "span"
+        },
+        {
+          "piece": "mush_clump",
+          "made_by": "procgen.mushroom_cluster clump of 7, bell, cone and dome",
+          "where": "the caps' places: the floor's edge and the wall",
+          "faces": 2200,
+          "sized_by": "span"
+        },
+        {
+          "piece": "mush_colony",
+          "made_by": "procgen.colony of 9 with mycelium threads, dome, bell, parasol and bulbous",
+          "where": "beside the pool, across the path from the element",
+          "faces": 3000,
+          "sized_by": "span"
+        }
+      ],
+      "grown_note": "Made from numbers by tools/blender-cloud/procgen.py through cave/grow.py, decimated to the face budget in build_kit.py. Own work, no picture. Wendell, 2026-10-13: \"let's wire this into the cave\"."
     },
     {
       "id": "cave.pictures",

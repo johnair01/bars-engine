@@ -110,7 +110,11 @@ ok(Array.isArray(dressing) && dressing.length >= 4 && new Set(dressing).size >= 
 // Pieces grow out of the stone (Wendell, 2026-10-13): from the floor's edge, the walls and the roof, and spires vary in size.
 const zones = await state('s.dressZones');
 ok(new Set(zones.map((z) => z.split(':')[1])).size >= 2, `the dressing grows from ${[...new Set(zones.map((z) => z.split(':')[1]))].join(', ')}`);
-ok(zones.filter((z) => z.startsWith('root_curl')).every((z) => /:(roof|high)$/.test(z)), 'roots hang from the roof or the high wall');
+ok(zones.filter((z) => /^root_(curl|hang)/.test(z)).every((z) => /:(roof|high)$/.test(z)), 'roots hang from the roof or the high wall');
+// The grown pieces (grow.py, from procgen): mushroom clumps, braided roots through the roof, root mats along the wall.
+ok(['root_hang', 'root_creep', 'mush_clump', 'mush_colony'].every((p) => kitPieces.includes(p)), 'the kit carries the grown roots and mushrooms');
+ok(zones.filter((z) => z.startsWith('root_creep')).every((z) => /:(mid|high)$/.test(z)), 'root mats press along the middle and high wall');
+ok(dressing.some((p) => ['root_hang', 'root_creep', 'mush_clump'].includes(p)), `grown pieces dress the chamber (${dressing.filter((p) => /^(root_hang|root_creep|mush_clump)$/.test(p)).join(', ')})`);
 const spires = await state('s.spires');
 ok(spires.length < 2 || new Set(spires.map((x) => x.len)).size > 1, `the spires come in different sizes (${spires.map((x) => x.zone + ' ' + x.len).join(', ') || 'none in this chamber'})`);
 // The crystal as a building block: one Blender piece, six tints, any size, height and width (Wendell, 2026-10-13).
@@ -330,6 +334,7 @@ await page.locator('[data-cave-choice="numbness"]').click();
 await page.locator('[data-cave-next]').click();
 await walkTo('[data-cave-place="pool"]');
 ok(await sees('[data-cave-element-hidden]') && await sees('[data-cave-element-unknown]') && await C(() => window.__oagCave.sideElement().shown === false), 'at the pool the element stays out of sight until the player chooses, and "I don\'t know" is offered');
+ok(await C(() => window.__oagCave.sideElement().colony), 'a mushroom colony grows beside the pool');
 await page.locator('[data-cave-element-unknown]').click();
 ok(await sees('[data-cave-element-hidden]') && await C(() => window.__oagCave.sideElement().shown === false) && await sees('[data-cave-next]'), '"I don\'t know" keeps it hidden and lets the player go on');
 await page.locator('[data-cave-choice="Sadness"]').click();
