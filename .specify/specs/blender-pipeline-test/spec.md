@@ -224,10 +224,12 @@ into one pale mass; the root's tendrils read, its trunk is crumpled rather than 
 **Greenery (2026-10-13, same PR):** his four Blendkit picks ("Let's go with that pick and also the stylize pitcher
 plant") are in the chamber: Rock with Moss, two Fern 02 variants, two High grass clumps, the Stylized fly trap. All
 CC0. Blendkit offers them only as .blend, so they were exported to GLB at 256 px textures in the greenery thread, and
-`objects.py` reads them with a new source, `local(file, id, mesh)`, from `$CAVE_PICKS` (default
-`/mnt/project-files/3d-build/blenderkit-greenery/picks`), checking each licence sidecar and pinned id. The colour map
+`objects.py` reads them with a new source, `local(file, id, mesh)`, from `cave/picks/`, checking each licence sidecar
+and pinned id. The four GLBs (1.2 MB, CC0) are kept in git, unlike fetched assets, because no script can remake them:
+Blendkit gives only the .blend. A new pick goes the same way: export it to GLB at 256 px textures, put the GLB and its
+sidecar in `cave/picks/`, and add one `local(...)` line. The colour map
 now survives when a mix node sits between it and Base Color (the fly trap's colours were lost without it). Chamber
-1,274 KB of 3 MB. A session without the project files cannot build the chamber until the picks are copied in.
+1,274 KB of 3 MB.
 
 **Start from root-game.** Wendell's steer on `bpt-skinned-garments` (2026-10-13): "Use as much as we can from the
 root game for this as we’ve already done many garment tests there". So J5's thread begins by listing what root-game

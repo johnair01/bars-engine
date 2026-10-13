@@ -8,8 +8,9 @@
   script(builder)                a model built by a function here
   local(file, id, part)          a CC0 Blendkit model already exported to a GLB beside its licence sidecar, for the
                                  ones Blendkit offers only as .blend (the greenery picks, exported in Blender 5.2.2 at
-                                 256 px textures); read from $CAVE_PICKS, default the project's
-                                 3d-build/blenderkit-greenery/picks. part keeps one mesh of a file that holds several.
+                                 256 px textures); kept in git in cave/picks/ with a licence sidecar each, because
+                                 only a hand export in Blender can remake them ($CAVE_PICKS overrides the folder).
+                                 part keeps one mesh of a file that holds several.
 
 Each object is scaled to its height, stood on the floor (or, with hang=, hung with its top at that height, for a root
 that hangs from the roof), checked (lowest vertex within 1 cm of the floor, or highest within 1 cm of where it hangs;
@@ -29,7 +30,7 @@ import from_picture  # noqa: E402
 import prepare_asset  # noqa: E402
 
 CACHE = os.environ.get("BLENDERKIT_CACHE", "/tmp/blender-cloud/assets")
-PICKS = os.environ.get("CAVE_PICKS", "/mnt/project-files/3d-build/blenderkit-greenery/picks")
+PICKS = os.environ.get("CAVE_PICKS", os.path.join(HERE, "picks"))
 MANIFEST = os.path.join(HERE, "manifest.json")
 FLOOR_TOL, WALL_GAP, TEX_MAX = 0.01, 0.05, 256  # metres, metres, pixels
 

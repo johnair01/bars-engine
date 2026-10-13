@@ -125,6 +125,16 @@
       "grown_note": "Made from numbers by tools/blender-cloud/procgen.py through cave/grow.py, decimated to the face budget in build_kit.py. Own work, no picture. Wendell, 2026-10-13: \"let's wire this into the cave\"."
     },
     {
+      "id": "cave.picks",
+      "file": "picks/",
+      "kind": "source models",
+      "source": "Blendkit CC0 models Wendell picked (2026-10-13): Fern 02 by Poly Haven, Rock with Moss (Photoscanned) by Nik Kottmann, High grass clump by Slinc_HD Janzen, Stylized fly trap by Amal David; exported from .blend to GLB at 256 px textures, a licence sidecar beside each",
+      "licence": "CC0",
+      "bytes": 1233745,
+      "status": "built",
+      "ships": false
+    },
+    {
       "id": "cave.pictures",
       "file": "pictures/",
       "kind": "concept pictures",
