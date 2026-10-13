@@ -111,7 +111,11 @@ ok(Array.isArray(dressing) && dressing.length >= 4 && new Set(dressing).size >= 
 // Pieces grow out of the stone (Wendell, 2026-10-13): from the floor's edge, the walls and the roof, and spires vary in size.
 const zones = await state('s.dressZones');
 ok(new Set(zones.map((z) => z.split(':')[1])).size >= 2, `the dressing grows from ${[...new Set(zones.map((z) => z.split(':')[1]))].join(', ')}`);
-ok(zones.filter((z) => z.startsWith('root_curl')).every((z) => /:(roof|high)$/.test(z)), 'roots hang from the roof or the high wall');
+ok(zones.filter((z) => /^root_(curl|hang)/.test(z)).every((z) => /:(roof|high)$/.test(z)), 'roots hang from the roof or the high wall');
+// The grown pieces (grow.py, from procgen): mushroom clumps, braided roots through the roof, root mats along the wall.
+ok(['root_hang', 'root_creep', 'mush_clump', 'mush_colony'].every((p) => kitPieces.includes(p)), 'the kit carries the grown roots and mushrooms');
+ok(zones.filter((z) => z.startsWith('root_creep')).every((z) => /:(mid|high)$/.test(z)), 'root mats press along the middle and high wall');
+ok(dressing.some((p) => ['root_hang', 'root_creep', 'mush_clump'].includes(p)), `grown pieces dress the chamber (${dressing.filter((p) => /^(root_hang|root_creep|mush_clump)$/.test(p)).join(', ')})`);
 const spires = await state('s.spires');
 ok(spires.length < 2 || new Set(spires.map((x) => x.len)).size > 1, `the spires come in different sizes (${spires.map((x) => x.zone + ' ' + x.len).join(', ') || 'none in this chamber'})`);
 // The crystal as a building block: one Blender piece, six tints, any size, height and width (Wendell, 2026-10-13).
@@ -242,6 +246,17 @@ ok(!(await C(() => window.__oagCave.modal())).open && (await C(() => window.__oa
 const yaw0 = await state('s.look.yaw');
 await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(120, 600, { steps: 6 }); await page.mouse.up();
 ok(Math.abs((await state('s.look.yaw')) - yaw0) > 0.2, 'dragging looks around');
+// One touch walks and looks (Wendell, 2026-10-13): a drag keeps the hold, and pushing up lifts the camera to look down.
+const above0 = (await C(() => window.__oagCave.camInside())).above;
+await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(150, 460, { steps: 8 });
+const heldWhileDragging = await state('s.held');
+await page.waitForTimeout(900);
+const above1 = (await C(() => window.__oagCave.camInside())).above, pitchUp = await state('s.look.pitch');
+await page.mouse.up();
+ok(heldWhileDragging, 'dragging to look keeps the thumb walking');
+ok(pitchUp < 0 && above1 > above0 + 0.5, `pushing up lifts the camera to look down on the figure (${above0.toFixed(1)} to ${above1.toFixed(1)} above the floor)`);
+await page.mouse.move(195, 460); await page.mouse.down(); await page.mouse.move(195, 640, { steps: 8 }); await page.mouse.up();
+ok((await state('s.look.pitch')) > pitchUp, 'dragging down brings the camera back down');
 await page.locator('[data-cave-pane]').click();
 await page.waitForTimeout(400);
 ok((await C(() => window.__oagCave.modal())).open, 'tapping the pane opens the modal again');
@@ -341,6 +356,7 @@ await page.locator('[data-cave-choice="numbness"]').click();
 await page.locator('[data-cave-next]').click();
 await walkTo('[data-cave-place="pool"]');
 ok(await sees('[data-cave-element-hidden]') && await sees('[data-cave-element-unknown]') && await C(() => window.__oagCave.sideElement().shown === false), 'at the pool the element stays out of sight until the player chooses, and "I don\'t know" is offered');
+ok(await C(() => window.__oagCave.sideElement().colony), 'a mushroom colony grows beside the pool');
 await page.locator('[data-cave-element-unknown]').click();
 ok(await sees('[data-cave-element-hidden]') && await C(() => window.__oagCave.sideElement().shown === false) && await sees('[data-cave-next]'), '"I don\'t know" keeps it hidden and lets the player go on');
 await page.locator('[data-cave-choice="Sadness"]').click();

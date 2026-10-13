@@ -3,8 +3,9 @@
 Run with Blender's Python module (pip install bpy, 5.2.2 for Python 3.13):
     python3 content/ontology-game/cave/build_kit.py
 Output, both committed so the site build needs no Blender:
-    cave-kit.glb  six unit pieces the page scales and bends to each spot (DESIGN.md, "How it is built"), and the
-                  chamber dressing, each piece built from a picture in pictures/ (DRESSING below)
+    cave-kit.glb  six unit pieces the page scales and bends to each spot (DESIGN.md, "How it is built"), the
+                  chamber dressing, each piece built from a picture in pictures/ (DRESSING below), and the grown pieces,
+                  roots and mushrooms made from numbers (grow.py)
     spots.json    one row per named place on the figure: width, height, length, bend, light side
 
 Pieces are authored in the page's own axes (Y up, a passage along -Z) and exported with export_yup=False so the
@@ -26,6 +27,7 @@ from mathutils import Vector
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "tools", "blender-cloud"))
 import from_picture  # noqa: E402  the cave studio's picture-to-model tool
+import grow  # noqa: E402  the grown pieces: roots and mushrooms from procgen
 FIGURE = os.path.join(HERE, "..", "body", "figure.glb")
 OUT_KIT = os.path.join(HERE, "cave-kit.glb")
 OUT_SPOTS = os.path.join(HERE, "spots.json")
@@ -248,10 +250,24 @@ def dressing():
     return out
 
 
+def grown():
+    """The roots and mushrooms grow.py makes, each decimated to its face budget. Returns {piece: faces}."""
+    out = {}
+    for name, (verts, faces, budget) in grow.grown().items():
+        me = bpy.data.meshes.new(name)
+        me.from_pydata(verts, [], faces)
+        me.validate()
+        ob = bpy.data.objects.new(name, me)
+        scene.collection.objects.link(ob)
+        out[name] = len(from_picture.fit(ob, budget).data.polygons)
+    return out
+
+
 if __name__ == "__main__":
     for build in (wall_ring, floor, pool, gate_stone, portal_arch, path_tube):
         build()
     matches = dressing()
+    grown_faces = grown()
     mat = bpy.data.materials.new("Rock")
     mat.diffuse_color = (0.55, 0.5, 0.46, 1.0)
     for ob in scene.objects:
@@ -266,3 +282,4 @@ if __name__ == "__main__":
         f.write("\n")
     print(f"wrote {OUT_KIT}: {os.path.getsize(OUT_KIT) // 1024} KB; {OUT_SPOTS}: {len(spots)} spots")
     print("outline match, model against picture: " + json.dumps(matches))
+    print("grown pieces, faces: " + json.dumps(grown_faces))
