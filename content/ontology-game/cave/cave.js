@@ -1397,6 +1397,8 @@
     // One keeps walking even as they drag to move the camera. Should follow touch rules so dragging down moves the camera down
     // and pushing up moves the camera up (and has it looking down on the character)"). A drag no longer stops the walk; the
     // look eases back behind the figure only once the thumb has rested a moment (LOOK.settle).
+    // The camera goes where the finger goes, as if it were the viewer's head (Wendell, 2026-10-13): a drag to the right
+    // swings the camera to the figure's right, a drag up lifts it, a drag down lowers it. A positive yaw is the right.
     var ray = new THREE.Raycaster(), drag = null, dom = renderer.domElement;
     holdArea(dom);
     dom.addEventListener("pointerdown", function (e) {
@@ -1408,7 +1410,7 @@
       var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
       if (drag.moved > 12) {
         drag.last = Date.now();
-        state.look.yaw = clamp(state.look.yaw - dx * 0.006, -1.5, 1.5);
+        state.look.yaw = clamp(state.look.yaw + dx * 0.006, -1.5, 1.5);
         state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx, LOOK.pitch[0], LOOK.pitch[1]);
       }
     });
@@ -3157,7 +3159,7 @@
           ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
           if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) tap = null;
           if (pinch) { var d = spread(); if (pinch.d > 0 && d > 0) setZoom(pinch.z * pinch.d / d); return; }
-          if (!drag) return; lookYaw = clamp(lookYaw - (e.clientX - drag.x) * 0.005, -0.9, 0.9); drag.x = e.clientX;
+          if (!drag) return; lookYaw = clamp(lookYaw + (e.clientX - drag.x) * 0.005, -0.9, 0.9); drag.x = e.clientX;
         });
         ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function (e) {
           delete ptrs[e.pointerId];
