@@ -726,7 +726,8 @@ ok(new Set(Object.values(looks).map((l) => l.cave.e + ':' + l.cave.roof)).size =
 const lumOf = (hex) => ((hex >> 16) & 255) + ((hex >> 8) & 255) + (hex & 255);
 ok(looks.numbness.cave.walls && lumOf(looks.numbness.look.bg) < lumOf(looks.strength.look.bg), `numbness is blackness past the figure's light, its stone showing only near (dark ${looks.numbness.look.bg.toString(16)} against strength's ${looks.strength.look.bg.toString(16)})`);
 // Wendell, 2026-10-13: "We need consistent lighting throughout so people can see a radius around them but have darkness on all sides".
-const lamps = Object.values(looks).map((l) => l.look.lamp);
+// Wendell, 2026-10-13: "we need brighter light in the numbness": the numb cave's light burns brighter, the circle is the same size.
+const lamps = Object.entries(looks).map(([k, l]) => l.look.lamp / (k === 'numbness' ? 1.35 : 1));
 ok(Math.max(...lamps) - Math.min(...lamps) < 0.2 && Object.values(looks).every((l) => l.look.reach === looks.strength.look.reach), `the figure's light is the same circle in every cave (${lamps.map((v) => v.toFixed(2)).join(', ')})`);
 ok(Object.values(looks).every((l) => l.bytes < 50 * 1024), 'every charge keeps the avatar under 50 KB of geometry');
 const dressA = JSON.parse(await (async () => {

@@ -714,7 +714,10 @@
   // Looking with the thumb: how far a pixel of drag tilts, how far it can tilt (pushed up, then pulled down), how long the
   // thumb rests before the look eases back behind the figure (ms), and how close to the roof the camera may rise (choices).
   var LOOK = { pitchPerPx: 0.004, pitch: [-1.3, 0.6], settle: 600, roof: 1.75 };
-  var LAMP = { reach: 16, decay: 1.6, above: 1.9, power: 1.35, ambient: 0.22, dim: 0.35, fog: 1.6 };
+  // numbFog and numbFill (Wendell, 2026-10-13: "we need brighter light in the numbness"): the numb cave thins its fog to this
+  // share so the circle round the figure isn't hazed out, its sky light is this share of the other caves', and the figure's
+  // light burns this much brighter there. The circle is still one size, and steady along the whole walk.
+  var LAMP = { reach: 16, decay: 1.6, above: 1.9, power: 1.35, ambient: 0.22, dim: 0.35, fog: 1.6, numbFog: 0.4, numbFill: 1, numbLamp: 1.35 };
   // Numbness is hardly a cave: past the figure's light everything is lost in the black, and only glowing things hang in the
   // dark. Its stone still shows where the figure's light reaches (Wendell, 2026-10-13: "The fear cave is
   // too dark. We need consistent lighting throughout so people can see a radius around them but have darkness on all
@@ -2601,7 +2604,7 @@
         lk.light.lerp(tmpC.setHex(lg.light), fe); lk.fog.lerp(tmpC.setHex(lg.fog), fe);
         lk.fogK += (lg.fogK - lk.fogK) * fe; lk.hemi += (lg.hemi - lk.hemi) * fe; lk.flash = Math.max(0, lk.flash - dt / 1.1);
         scene.background.copy(lk.fog).multiplyScalar(LAMP.dim * (parts.shape && parts.shape.dark ? 0.25 : 1)); scene.fog.color.copy(scene.background);
-        scene.fog.density = parts.fog * lk.fogK * LAMP.fog;
+        scene.fog.density = parts.fog * lk.fogK * LAMP.fog * (parts.shape && parts.shape.dark ? LAMP.numbFog : 1); // numbness: black beyond the circle, not a haze inside it
         if (state.voidHex != null) { scene.background.setHex(state.voidHex); scene.fog.density = 0; } // tests: paint the void outside the stone to find gaps
         var mt = state.mainRoute.tube, chg = false;
         for (var qq = 0; qq < STEP_LOOK.length; qq++) {
@@ -2615,8 +2618,8 @@
         state.stack.forEach(function (fr) { if (fr.child && fr.child.route) fr.child.route.tube.update(br.k); });
         var warm = 1 - br.b, surge = lk.flash * lk.flash;
         baseLamp.copy(lk.light).lerp(tmpC.setHex(0xffffff), 0.3).lerp(tmpC.setHex(c && c.lampHex || 0xffe0b0), 0.15).lerp(WARM, warm * 0.2);
-        lamp.color.copy(baseLamp); lamp.intensity = LAMP.power + 0.15 * warm + 1.6 * surge; // the same circle of light in every stretch and every cave
-        hemi.color.setHex(0xffffff).lerp(lk.light, 0.35); hemi.intensity = (lk.hemi + 0.1 * warm + 0.4 * surge) * LAMP.ambient * (parts.shape && parts.shape.dark ? 0.4 : 1);
+        lamp.color.copy(baseLamp); lamp.intensity = LAMP.power * (parts.shape && parts.shape.dark ? LAMP.numbLamp : 1) + 0.15 * warm + 1.6 * surge; // the same circle of light in every stretch and every cave
+        hemi.color.setHex(0xffffff).lerp(lk.light, 0.35); hemi.intensity = (lk.hemi + 0.1 * warm + 0.4 * surge) * LAMP.ambient * (parts.shape && parts.shape.dark ? LAMP.numbFill : 1);
         glow.forEach(function (g) { g.m.emissiveIntensity = g.base * (0.7 + 0.6 * br.b); });
         route.markers.forEach(function (m, i) {
           var on = route.kind === "main" ? i < me().passed : i < wk.target || (wk.arrived && wk.target === i);
