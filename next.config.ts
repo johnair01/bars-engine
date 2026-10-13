@@ -8,11 +8,16 @@ const nextConfig: NextConfig = {
   // The 321 ingest route also reads files by a computed path, so the build traced public/ (161 MB of art and game builds) into
   // its function on 12 October 2026. It reads only from the Library folder outside the project.
   outputFileTracingExcludes: {
-    "*": ["./tools/**", "./content/ontology-game/cave/pictures/**", "./content/ontology-game/**/*.glb"],
+    // public/ontology-game holds the built game pages, which the browser loads and no server code reads. Vercel bundles
+    // routes into shared functions, and the one it names api/guidance traced them and crossed the same limit by 0.02 MB
+    // when the Big Mind cave joined the cave page (bars-engine PR #313).
+    "*": [
+      "./tools/**",
+      "./content/ontology-game/cave/pictures/**",
+      "./content/ontology-game/**/*.glb",
+      "./public/ontology-game/**",
+    ],
     "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
-    // The guidance route reads its flows by a computed path too (src/lib/simulation/flowLoader.ts), only from reports/ and
-    // fixtures/; it crossed the same limit by 0.02 MB when the Big Mind cave joined the cave page (bars-engine PR #313).
-    "/api/guidance": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
   },
   experimental: {
     serverActions: {
