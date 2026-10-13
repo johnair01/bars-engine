@@ -57,15 +57,16 @@
   var BREATH_OUT_MS = 6000;
   var BREATH = { inS: BREATH_IN_MS / 1000, outS: BREATH_OUT_MS / 1000 };
   var BREATH_S = BREATH.inS + BREATH.outS;
-  // The walk (a choice): while the player holds, one stretch takes exactly one breath. The first half of the stretch is
-  // walked on the inhale (4 s, 8 steps) and the second half on the exhale (6 s, 12 steps), two steps a second throughout,
-  // so the footfalls land evenly: 8 in the inhale, 12 in the exhale. The inhale strides are longer than the exhale ones.
-  var STEPS_PER_S = 2;
-  var STEPS_IN = BREATH.inS * STEPS_PER_S, STEPS_OUT = BREATH.outS * STEPS_PER_S;
+  // The walk: while the player holds, the figure walks at a steady pace, WALK_SPEED units a second, STEPS_PER_S steps a
+  // second (choices). It used to take one full breath for every stretch, which made the hall of the six slow; the breath
+  // is walked in the WAVE itself now (Wendell, 2026-10-13: "we should disambiguate the walk speed to breath. We have that
+  // built into the manual wave experience so we don't need that anymore"). The cave still breathes on its own.
+  var WALK_SPEED = 4;
+  var STEPS_PER_S = 2.5;
   var MARK_AHEAD = 3.6;  // the marker floats this far ahead of the stand
   var MARK_Y = 2.0;      // and this high above the floor
-  // How far through a stretch the avatar is after t seconds of holding: half on the inhale, half on the exhale.
-  function stretchFrac(t) { return t < BREATH.inS ? 0.5 * t / BREATH.inS : 0.5 + 0.5 * Math.min(1, (t - BREATH.inS) / BREATH.outS); }
+  // How long a stretch of D units takes to walk, in seconds of holding.
+  function stretchTime(D) { return Math.max(0.5, D / WALK_SPEED); }
   // What each stretch looks like (a choice). The seven take their light from the game's element colours (ELEMENTS below:
   // Earth, Fire, Water, Wood, Metal) and then climb to gold and daylight; the fog brightens, thins, and the walls open
   // wider as the steps climb. open scales the wall rings, fog is the fog and background colour, fogK scales the charge's
@@ -880,7 +881,7 @@
       var wr = node("wrist" + n, el, 0, -0.31, 0); put(ball, mat, wr, 0, -0.04, 0, 0.055, 0.055, 0.055);
     });
     var o = new THREE.Group(); o.add(fit);                        // the outer group is what moves
-    o.userData = { body: body, mat: mat, mat2: mat2, chest: chest, look: look, loose: -1, feet: 0, J: J, g: 0, amp: 0.3, stepsIn: 0, stepsOut: 0, stepIdx: 0 };
+    o.userData = { body: body, mat: mat, mat2: mat2, chest: chest, look: look, loose: -1, feet: 0, J: J, g: 0, amp: 0.3, stepIdx: 0 };
     return o;
   }
   // loose runs from 0 (as the player brought it) to 1 (after the last step); it eases in a step at a time.
@@ -918,9 +919,9 @@
     J.spine.scale.set(1 + 0.05 * (b - 0.5) * idle, 1 + 0.04 * (b - 0.5) * idle, 1 + 0.06 * (b - 0.5) * idle);
     J.shoulderL.position.y = J.shoulderR.position.y = 0.5 + 0.03 * (b - 0.5) * idle;
     J.neck.rotation.x = 0.05 * (0.5 - b) * idle;
-    // footfalls: step n lands at n / STEPS_PER_S seconds into the stretch, in the inhale up to STEPS_IN of them
+    // footfalls: step n lands at n / STEPS_PER_S seconds into the stretch
     var idx = Math.floor(clk * STEPS_PER_S + 1e-9);
-    while (d.stepIdx < idx) { d.stepIdx++; if (d.stepIdx <= STEPS_IN) d.stepsIn++; else d.stepsOut++; }
+    if (idx > d.stepIdx) d.stepIdx = idx;
   }
   // Bytes of geometry a group holds, counted once per geometry (the page test holds the avatar to about 50 KB).
   function geometryBytes(root) {
@@ -1393,7 +1394,6 @@
     }
     function breathStep(dt, nowS) {
       var T = BREATH_S, u, wk = state.walk;
-      if (wk && wk.moving && !state.auto && !state.calm && !(state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER)) br.t0 = nowS - (wk.t % T);
       if (state.calm) { br.target = 0.5; br.d = 0; }
       else if (state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER) {
         var prev = br.ring;
@@ -1408,10 +1408,6 @@
       br.b += (br.target - br.b) * Math.min(1, dt * 8);
       br.k = 1 + 0.08 * (br.b - 0.5);
       if (state.calm) { br.b = 0.5; br.k = 1; }
-    }
-    function paceNow() {
-      var wk = state.walk; if (!wk) return 1;
-      return wk.t < BREATH.inS ? 0.5 * BREATH_S / BREATH.inS : 0.5 * BREATH_S / BREATH.outS;
     }
 
     // ---- input: hold to walk, drag to look, tap an object -------------------------------------
@@ -1600,7 +1596,7 @@
       fill(label, kids);
       stat.setAttribute("data-cave-walking", stp.wave != null ? WAVE[i][0] : stp.face ? "face-" + stp.face : stp.place);
       wk.arrived = false; wk.ready = true; wk.s0 = wk.s; wk.D = Math.max(1, stp.s - wk.s); wk.t = 0; wk.moving = false;
-      if (avatar) { avatar.userData.stepIdx = 0; avatar.userData.stepsIn = 0; avatar.userData.stepsOut = 0; }
+      if (avatar) avatar.userData.stepIdx = 0;
       if (kind === "main") { if (i > revealed) { revealed = i; lk.flash = 1; } }
       else lk.flash = Math.max(lk.flash, 0.5);
     }
@@ -1624,9 +1620,10 @@
       }
       if (!wk.ready || wk.arrived || busy || flight || !state.held) return;
       wk.moving = true; state.walkedOnce = true;
-      wk.t = Math.min(BREATH_S, wk.t + dt * state.speed * (state.calm ? 0.8 : 1));
-      wk.s = wk.s0 + wk.D * stretchFrac(wk.t);
-      if (wk.t >= BREATH_S) { wk.s = wk.s0 + wk.D; wk.arrived = true; wk.moving = false; arrive(); }
+      var T = stretchTime(wk.D);
+      wk.t = Math.min(T, wk.t + dt * state.speed * (state.calm ? 0.8 : 1));
+      wk.s = wk.s0 + wk.D * wk.t / T;
+      if (wk.t >= T) { wk.s = wk.s0 + wk.D; wk.arrived = true; wk.moving = false; arrive(); }
     }
     function autoWalk(s1, done) {
       var wk = state.walk; state.auto = { s0: wk.s, s1: s1, k: 0, dur: Math.max(0.5, Math.abs(s1 - wk.s) / 7) / Math.max(1, state.speed / 4), clk: 0, done: done };
@@ -1861,7 +1858,7 @@
       if (wk.route.pendingExit) openWayBack(wk.route);
       autoWalk(wk.route.len, function () {
         var fr = state.stack.pop();
-        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: BREATH_S, ready: true, moving: false, target: fr.target, arrived: true, blk: fr.blk };
+        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: 0, ready: true, moving: false, target: fr.target, arrived: true, blk: fr.blk };
         busy = false; done(fr);
       });
     }
@@ -1893,7 +1890,7 @@
       busy = true; closeModal(); fade.style.opacity = 1;
       setTimeout(function () {
         var fr = state.stack[0]; state.stack = [];
-        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: BREATH_S, ready: true, moving: false, target: fr.target, arrived: true, blk: null };
+        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: 0, ready: true, moving: false, target: fr.target, arrived: true, blk: null };
         snapCam = true; busy = false; fade.style.opacity = 0;
         arrive();
       }, 520);
@@ -2533,7 +2530,7 @@
           placeDaemon(sc, stg.cd);
           if (!stT && stg.cu === 0 && stg.cd === 0 && stg.flip === 0) stg.ctx = null;
         }
-        var stepLen = state.auto ? 0.9 : wk.t < BREATH.inS ? wk.D / 2 / STEPS_IN : wk.D / 2 / STEPS_OUT;
+        var stepLen = state.auto ? 0.9 : WALK_SPEED / STEPS_PER_S;
         poseAvatar(avatar, state.auto ? state.auto.clk : wk.t, wk.moving || stMoving, dt, br.b, stepLen, state.calm);
         avatar.position.set(a.x, fl + 0.02, a.z);
         avatar.rotation.y = yawFacing(a);
@@ -2667,7 +2664,7 @@
     // ---- hooks for the browser test ----------------------------------------------------------
     var api = window.__oagCave;
     api.state = state; api.leave = leave; api.spirits = spirits; api.addSpirit = addSpirit;
-    api.breath = function () { return { b: br.b, k: br.k, calm: state.calm, ring: !!ring.parentNode, pace: paceNow() }; };
+    api.breath = function () { return { b: br.b, k: br.k, calm: state.calm, ring: !!ring.parentNode, }; };
     api.avatar = function () {
       var d = avatar.userData, wk = state.walk, a = at(wk.route, wk.s);
       return { x: avatar.position.x, y: avatar.position.y, z: avatar.position.z, scale: [d.body.scale.x, d.body.scale.y], opacity: d.mat.opacity, glow: d.mat.emissiveIntensity,
@@ -2680,8 +2677,8 @@
     };
     api.gait = function () {
       var wk = state.walk, d = avatar.userData;
-      return { t: wk.t, s: wk.s, s0: wk.s0, D: wk.D, frac: wk.D ? (wk.s - wk.s0) / wk.D : 1, phase: wk.t < BREATH.inS ? "in" : "out", moving: wk.moving, stepsIn: d.stepsIn, stepsOut: d.stepsOut,
-        inS: BREATH.inS, outS: BREATH.outS, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
+      return { t: wk.t, s: wk.s, s0: wk.s0, D: wk.D, frac: wk.D ? (wk.s - wk.s0) / wk.D : 1, moving: wk.moving, steps: d.stepIdx, time: stretchTime(wk.D),
+        inS: BREATH.inS, outS: BREATH.outS, speed: WALK_SPEED, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
     };
     api.carryLight = carryLight;
     api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k } : null; };
