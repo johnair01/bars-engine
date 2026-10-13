@@ -1433,9 +1433,11 @@
       parts.shape = CAVE_SHAPE[s.texture] || CAVE_SHAPE.other;
       main.tube = buildTube(THREE, main, { w: w, h: h, rock: parts.rock, openAt: main.openAt, seed: hashOf(s.spot.id) % 97, shape: parts.shape });
       main.group.add(main.tube.mesh); main.group.add(buildPebbles(THREE, main, w, h, 0, main.len));
-      // the tunnel's first end is stone, so looking back from the start shows rock, not the dark outside
+      // the tunnel's first end is stone, so looking back from the start shows rock, not the dark outside. It is drawn only
+      // while the camera is in front of it: at the start the camera can sit behind it, and then it would hide everything.
       var a0m = at(main, 0.4), capM = new THREE.Mesh(new THREE.CircleGeometry(1, 28), parts.rock);
       capM.position.set(a0m.x, a0m.y + h * 0.1, a0m.z); capM.rotation.y = Math.atan2(a0m.fx, a0m.fz); capM.scale.set(w * OPEN_MAX * 1.4, h * 1.6, 1); main.group.add(capM);
+      main.cap = { mesh: capM, x: a0m.x, z: a0m.z, fx: a0m.fx, fz: a0m.fz };
       main.dressing = buildDressing(THREE, main, G, { w: w, h: h, rock: parts.rock, s0: 0, s1: main.len, seed: s.spot.id + ":" + s.texture + ":dress", clear: [main.startS + 9, main.exitS] });
       main.group.add(main.dressing); darken(parts.shape, parts.rock, main.dressing);
       state.cave = { shape: CAVE_SHAPE[s.texture] ? s.texture : "other", walls: parts.rock.visible, roof: parts.shape.roof, e: parts.shape.e };
@@ -1596,8 +1598,10 @@
       route.tube.within = { tube: parent.tube, s0: route.sIn + 1, s1: route.sOut - 1 };
       route.tube.update(br.k); route.tube.index();
       // a disc of floor under each meeting, a hair below both floors: where the two tunnels' rounded lower walls cross at a
-      // slant, no sliver of the dark below can show through
-      route.cross.forEach(function (cp) {
+      // slant, no sliver of the dark below can show through. Only a level branch gets one: a passage ramps down, its floor
+      // falls away below the disc, and the disc stood over the ramp as a flat plate (Wendell, 2026-10-13: "Something funky is
+      // going on here with the floor").
+      if (!(o.drop > 0)) route.cross.forEach(function (cp) {
         var disc = new THREE.Mesh(new THREE.CircleGeometry(o.wb * 1.5, 24), rock.userData.floor || rock);
         disc.rotation.x = -Math.PI / 2; disc.position.set(cp.x, cp.y - h * 0.92 - 0.06, cp.z); route.group.add(disc);
       });
@@ -2393,6 +2397,7 @@
         else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
         if (free) keepIn(camPos, 0.96, 0.25);
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
+        var cp = ch && ch.main && ch.main.cap; if (cp) cp.mesh.visible = (camPos.x - cp.x) * cp.fx + (camPos.z - cp.z) * cp.fz > 0.3;
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
         var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : route.kind === "face" ? faceLook(route.style) : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);
         if (route.kind === "face") { // the branch wears its style: the walls ease to its rock, the motes drift in its light

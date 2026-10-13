@@ -553,7 +553,11 @@ player more effectively not unlike a drone".
 - Where two tunnels meet, each gives way only where the other's inside is, worked out from the stone as it stands and
   again as the breath moves it; faces across the seam stay on both sides, so they overlap instead of leaving a gap. A
   branch's tube starts inside its parent, its floor lies a hair under the parent's, and a disc of floor lies under each
-  meeting. The tunnel's first end is capped with stone.
+  meeting of a level branch. The tunnel's first end is capped with stone.
+- Two things that change broke (Wendell, 13 October 2026). "First screen after the first blocker text opens to black": at
+  the start the camera sat behind the cap, so the cap hid everything; it is now drawn only while the camera is in front of
+  it. "Something funky is going on here with the floor": the side passage ramps down, and its disc of floor stood over the
+  ramp as a flat plate; only a level branch (a face's) gets a disc now.
 - The camera is held inside the stone like a drone on a leash: where it wants to be, and where it is after easing, are both
   pulled back inside the tunnel that holds them best (or a tunnel's end), whatever the look does. The rise at the way out
   and the staged scenes keep their own cameras.
