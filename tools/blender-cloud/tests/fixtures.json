@@ -1,0 +1,63 @@
+{
+ "note": "Pinned CC0 assets (spec.md, Fixtures). A4 checks each is still at its index for its query. Downloads go to $W, never git. index is the Nth free cc_zero result of blenderkit_fetch.py's search for query. The ids come from spec.md; no record kept the query and index they were found by, so those are null until the first run with Blendkit reachable pins them (this environment's network refused Blendkit on 2026-10-13).",
+ "fixtures": [
+  {
+   "name": "Chair (stool)",
+   "id": "94eaeda7-5ef1-44a3-988e-4821002d8650",
+   "query": null,
+   "index": null,
+   "licence": "cc_zero",
+   "pinned": null,
+   "used_by": [
+    "A4"
+   ]
+  },
+  {
+   "name": "Dining table",
+   "id": "929d574b-02ed-4b48-ba5b-2ce3214a31d6",
+   "query": null,
+   "index": null,
+   "licence": "cc_zero",
+   "pinned": null,
+   "used_by": [
+    "G4",
+    "G5",
+    "A4"
+   ]
+  },
+  {
+   "name": "Wooden Chair, 617,708 triangles",
+   "id": "c8857203-ba76-4d34-9ee7-906293144d4e",
+   "query": "wooden chair",
+   "index": null,
+   "licence": "cc_zero",
+   "pinned": "2026-10-12",
+   "used_by": [
+    "N5",
+    "A4"
+   ]
+  },
+  {
+   "name": "Painted Wooden Chair 02",
+   "id": null,
+   "query": "wooden chair",
+   "index": 5,
+   "licence": "cc_zero",
+   "pinned": null,
+   "used_by": [
+    "A4"
+   ]
+  },
+  {
+   "name": "A multi-material asset",
+   "id": null,
+   "query": null,
+   "index": null,
+   "licence": "cc_zero",
+   "pinned": null,
+   "used_by": [
+    "A2"
+   ]
+  }
+ ]
+}
