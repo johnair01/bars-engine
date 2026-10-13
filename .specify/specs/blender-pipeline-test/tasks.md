@@ -24,10 +24,18 @@
 - [ ] [claude] 5. Network tier: V1, A1 to A4, N1, N2, N4, N5 (N5 in the background).
 - [ ] [claude] 6. After #285 merges: P1 to P6, dressing pieces on the sheet.
 
+## Part 2: words and pictures (added 2026-10-13 from his second message)
+
+- [x] [claude] Plan T1 to T3 and J1 to J5 in spec.md; four positions on the board.
+- [ ] [claude] 7a. Recipe schema and builder; T1 to T3 with token numbers.
+- [ ] [claude] 7b. J1 textures, J2 objects, J3 picture to asset.
+- [ ] [claude] 7c. J4 character creator, J5 clothing.
+
 ## Steps only Wendell can take
 
 - [ ] [wendell] N3 is `cave-studio-02`, already on Your steps.
 - [ ] [wendell] E3, after the first republish (the build thread writes the step then, with both links).
+- [ ] [wendell] J5(d), the clothing sheet (the J5 thread writes the step, with the file's location).
 
 ## Verify and ship
 

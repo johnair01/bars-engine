@@ -15,7 +15,7 @@ merge, so the build thread never edits files the cave-studio strand is working i
 
 ## Files the build thread adds
 
-All new, all under `tools/blender-cloud/tests/`. No existing file changes except one step in
+Part 1's files are all new, all under `tools/blender-cloud/tests/`. Part 2 adds `cave/scene.yaml`, its schema and a builder, planned in its own thread. No existing file changes except one step in
 `.github/workflows/frontend-check.yml`.
 
 | File | Job |
@@ -43,6 +43,13 @@ Downloaded assets, renders and summaries go in `$W` (`/tmp/blender-cloud`), neve
 5. Network tier: pin fixtures, A1 meshopt, A2 multi-material, A3 UDIM search, N4 hosts, N5 heavy run (in the
    background, summary file read once at the end).
 6. After #285 merges: P1 to P6 and the dressing pieces on the sheet.
+7. Part 2, in its own threads, one job per thread (CLAUDE.md, short sessions):
+   a. The recipe schema and builder, then T1 to T3. Token numbers come from each thread's result events, read after the
+      thread ends. If T2 fails, stop and replan Part 2 around direct code.
+   b. J1 textures, J2 objects, J3 picture to asset (needs his pictures in the Drive inbox).
+   c. J4 the character creator, then J5 clothing. J5's sheet goes on Your steps for his eye.
+   The recipe and builder touch `content/ontology-game/cave/`, which the cave-studio strand owns: Part 2 waits for #285
+   to merge, and its threads check `python3 council/strands.py` before starting.
 
 ## How a cloud session runs it
 
