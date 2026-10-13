@@ -1,12 +1,14 @@
 """The pool chamber of the Cave of Lessons, built in Blender. Run: /home/user/blenv/bin/python content/ontology-game/cave/chamber.py [--no-render]
 Writes chamber.glb (its textures packed inside), view_front.png, view_top.png and textures/*.jpg into /tmp/blender-cloud/chamber (or the folder after --out).
-To change the chamber, edit this file: the pieces are one place(...) line each, near the end (bpt-recipe-result)."""
+To change the chamber, edit this file: the pieces are one place(...) line each, near the end (bpt-recipe-result), and
+the objects one obj(...) line each (J2, objects.py). A Blendkit object needs the network the first time it is fetched."""
 import math, os, random, sys
 import bpy
 import bmesh
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from textures import node, rgb, texture  # noqa: E402  the three stone textures, shared with bake_tiles.py
+from objects import blenderkit, check, cushion, obj, picture, script  # noqa: E402  J2: placed objects
 
 KIT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cave-kit.glb")  # pieces: pool, gate_stone, portal_arch, stone_spire, glow_cap, root_curl, crystal_cluster, crystal_cluster_bed; each 1 unit high (pool, arch: radius 1)
 OUT = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else "/tmp/blender-cloud/chamber"
@@ -115,6 +117,7 @@ M_GLOW = mat("glow", "#7fe8c8", 0.8, glow=2.75)
 M_CRYSTAL = mat("crystal", "#8f84ff", 0.25, glow=2.25)
 M_ROOT = mat("root", "#4a3426", 0.9)
 M_ARCH = mat("arch", "#fff1b0", 0.8, glow=5)
+M_CLOTH = mat("cloth", "#6e2f2a", 0.95)
 
 
 def add(name, mesh, material):
@@ -196,6 +199,13 @@ place("roots.4", "root_curl", M_ROOT, (3.21, -5.57, 4.85), (180, 0, -150), (1.86
 place("crystals.1", "crystal_cluster", M_CRYSTAL, (5.11, -2.38, 0.00), (0, 0, -115), (2.20, 2.20, 2.20))
 place("crystals.1", "crystal_cluster_bed", M_ROCK, (5.11, -2.38, 0.00), (0, 0, -115), (2.20, 2.20, 2.20))
 
+# ---- objects (J2): name, source, (x, y) on the floor, turn (degrees), height (metres), byte budget, face budget,
+# material (None keeps the source's own). Sources: blenderkit(query, index, id), picture(file, mode), script(builder).
+OBJECTS = []
+obj("boulder.1", blenderkit("boulder", 0, "eff99517-c257-4525-9fe3-41bf2e367197"), (-3.20, -4.60), 30, 0.90, 120_000, 1200, None, OBJECTS)
+obj("bowl.1", picture("offering_bowl.jpg", "lathe"), (0.70, -3.40), 0, 0.30, 60_000, 400, M_STONE, OBJECTS)
+obj("cushion.1", script(cushion), (-0.80, -3.50), 0, 0.22, 20_000, 300, M_CLOTH, OBJECTS)
+
 # ---- bake each textured surface: one JPEG per piece and texture ----
 sc.render.engine = "CYCLES"  # Workbench and EEVEE need a GPU; the cloud has none
 sc.cycles.device, sc.cycles.samples = "CPU", 1
@@ -205,6 +215,7 @@ for o in sc.objects:
     if m and m.get("texture"):
         groups.setdefault((m.name, o.data.name.split(".")[0] if o.name[:5] != "walls" else o.name), []).append(o)
 baked = [bake(objs, bpy.data.materials[mname]) for (mname, _), objs in sorted(groups.items())]
+placed = check(OBJECTS, wall_r, H, OUT)
 
 glb = os.path.join(OUT, "chamber.glb")
 bpy.ops.export_scene.gltf(filepath=glb, export_format="GLB", export_apply=True, export_texcoords=True,
@@ -245,3 +256,6 @@ if "--no-render" not in sys.argv:
         sc.render.filepath = os.path.join(OUT, f"view_{view}.png")
         bpy.ops.render.render(write_still=True)
 print(f"wrote {glb}: {os.path.getsize(glb) // 1024} KB, {tris} triangles, {len(baked)} textures")
+for row in placed:
+    print(f"  {row['id']}: {row['bytes'] // 1024} KB of {row['budget_bytes'] // 1024}, {row['faces']} faces, "
+          f"lowest vertex {row['lowest_cm']} cm, {row['licence']}")
