@@ -277,7 +277,7 @@ unseen. Now the robe's rows from the chest to the neck are laid over the body fr
 nearly level top of the shoulder, and the test covers the trunk up to the neck. The hem's A-line went from 11 cm to
 3 cm, and the back hem bone follows the kicking shin a little more (`hemB` = hip + 0.6 knee), so the walk needs less
 room and the fit no longer opens the hem into a bell. `fit()` now undoes a round that leaves more points through and
-halves its next step. The robe is 117 to 126 KB. All 36 garments end at zero, and J4, J4b, J5, J5b and J5c pass.
+halves its next step. The robe is 117 to 125 KB. All 36 garments end at zero, and J4, J4b, J5, J5b and J5c pass.
 Pictures in `/mnt/project-files/3d-build/j5-round2-2026-10-13/`.
 
 ### What Part 2 does not do
