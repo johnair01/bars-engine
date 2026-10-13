@@ -5,8 +5,11 @@ const nextConfig: NextConfig = {
   // Build inputs no server code reads: the Blender studio's tools, its concept pictures and the committed models (the
   // page loads its copies from public/). File tracing pulled them into every function, and api/321/ingest crossed
   // Vercel's 250 MB limit by 0.02 MB when the cave studio added them (bars-engine PR #285).
+  // The 321 ingest route also reads files by a computed path, so the build traced public/ (161 MB of art and game builds) into
+  // its function on 12 October 2026. It reads only from the Library folder outside the project.
   outputFileTracingExcludes: {
     "*": ["./tools/**", "./content/ontology-game/cave/pictures/**", "./content/ontology-game/**/*.glb"],
+    "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
   },
   experimental: {
     serverActions: {
