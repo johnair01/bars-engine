@@ -55,10 +55,22 @@ down. A1 compresses the committed `figure.glb` when the table is not on disk, so
 replaces `urlopen` in a child process rather than listening on a port, since the hosts are fixed in the script. The
 UDIM images for G3 are made at run time by `_make_fixtures.py`, so no `synthetic/` folder is committed.
 
+## Part 2: words and pictures (added 2026-10-13 from his second message)
+
+- [x] [claude] Plan T1 to T3 and J1 to J5 in spec.md; four positions on the board.
+- [x] [claude] 7a. Recipe schema and builder; T1 to T3 with token numbers (#291). T2 missed, so the recipe is dropped
+  and jobs edit `cave/chamber.py` (`bpt-recipe-result`).
+- [x] [claude] 7b, J1 textures (#292), wired into the cave game (#294). Frame rate judged on his phone
+  (`bpt-j1-frame-rate`).
+- [ ] [claude] 7b, J2 objects: starts after his play of the cave with J1's stone in it.
+- [ ] [claude] 7b, J3 picture to asset (needs his pictures in the Drive inbox).
+- [ ] [claude] 7c. J4 character creator, J5 clothing.
+
 ## Steps only Wendell can take
 
 - [ ] [wendell] N3 is `cave-studio-02`, already on Your steps.
 - [ ] [wendell] E3, after the first republish (the build thread writes the step then, with both links).
+- [ ] [wendell] J5(d), the clothing sheet (the J5 thread writes the step, with the file's location).
 
 ## Verify and ship
 

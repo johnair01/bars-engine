@@ -19,7 +19,7 @@ cloud session says what still works, what broke, and which pictures a person has
 
 ## Purpose
 
-Plan the tests for the Blender pipeline: what each test proves, the result that fails it, where it runs, and who
+Plan the tests for the Blender pipeline, and the spikes that show whether it can change the cave from words and pictures (Part 2): what each test proves, the result that fails it, where it runs, and who
 has to be there. This kit plans; it builds nothing and changes no file under `tools/blender-cloud/` or
 `content/ontology-game/`.
 
@@ -137,6 +137,78 @@ For routine runs, the session itself can do the looking, reading the sheet as an
 ships into the cave goes to Wendell's eyes through the existing `cs-first-test` rule: he looks at its preview before
 it merges.
 
+## Part 2: what the pipeline can make from words and pictures
+
+> "we are looking to test the pipeline, but also see about using blender kit et al to use natural language to update
+> the cave and existing assets in the games we are making. we need to know if we can start from an image into assets
+> and have claude create scenes from natural language with the least amount of token usage. The test case we want to
+> have is on the cave. I want the cave to be able to proceedurally create textured details and add objects and create
+> basic work on a character creator based on a theme. The biggest test will be how we can render clothing options for
+> players exploring these worlds"
+> (Wendell, project thread, 2026-10-13)
+
+Part 1 asks whether the pipeline still works. Part 2 asks whether it can do five new jobs, all on the cave, and
+what each costs in tokens. Each is a spike with a kill line, run in the order below, cheapest first. A failed spike
+stops only its own line.
+
+### The one idea that keeps tokens low: Claude edits a recipe, a script builds it
+
+Claude never writes Blender code to change the cave. It edits a short recipe file, `cave/scene.yaml`: which
+pieces stand where, which procedural texture each surface wears, which CC0 or picture-built objects are placed, and
+for the character creator, which body, garments and colours. A fixed builder script (committed, run by anyone, in a
+Claude thread or in Codex, per `c3d-codex-rebuilds`) turns the recipe into GLBs. A change in words becomes a change
+of a few lines. The builder is read once when it is written, never on each edit.
+
+| Id | Proves | Kill line | Tier |
+|---|---|---|---|
+| T1 | A natural-language edit costs little | Ten sample asks ("add three glowing mushrooms by the pool", "make the walls wetter", "swap the gate stones for crystal"), each in a fresh short thread that reads only CLAUDE.md, the recipe and its schema. Each edit stays under 20,000 tokens beyond the thread's opening load and under 2,000 output tokens, read from the session's result events. The council's numbers, marked; the first run sets the real baseline. | net (platform), eyes |
+| T2 | The recipe path beats writing code | The same ten asks done by writing `bpy` code directly, in matched threads. The recipe path must cost at most a third of the code path in tokens, with no worse result on E1's sheet. If it does not, the recipe idea is dropped and Part 2 plans around direct code. | net (platform), eyes |
+| T3 | An edit lands as asked | For each of the ten asks, a person who did not write it reads the ask and the contact sheet and says yes or no. 8 of 10 yes passes. | eyes |
+
+**Result (2026-10-13, #291):** T1 passed (every edit under 20,000 tokens past the opening load), T3 passed (8 of 10 on
+both paths), T2 missed: the recipe cost 0.69 of the code path, where the line was a third. Both files are short, so
+the edit's own cost is small next to the opening load every thread pays. Per this section, the recipe is dropped
+(`bpt-recipe-result`, which he let stand). Claude now edits one committed Blender script for the chamber,
+`content/ontology-game/cave/chamber.py`, one `place(...)` line per piece; every job below is an edit to that script
+where the tables say "recipe line". The recipe, its builder and the token numbers stay in
+`tools/blender-cloud/recipe_trial/` as the record (`RESULTS.md`). One finding carries forward: no edit on either path
+looked at a render before calling itself done, and one look would have caught each miss, so every job thread looks at
+its render before it reports.
+
+### The five jobs
+
+| Id | Job | Proves | Kill line | Tier |
+|---|---|---|---|---|
+| J1 | Procedural textured detail | A recipe line like `walls: {texture: wet_stone, scale: 2}` gives the cave's surfaces a texture made in Blender from noise and Voronoi nodes, baked to one 512 px JPEG per surface with UVs. | The kit plus its textures stays under the 3 MB budget (`c3d-phone-budget`); the cave still passes `cave-test.mjs` at 390 by 844 and holds 30 frames a second in headless Chromium on the 4x CPU throttle; three textures (wet stone, dry stone, crystal vein) look different on the sheet. | bpy, eyes |
+| J2 | Add objects | A recipe line places an object from one of three sources: a pinned CC0 BlenderKit asset, a model built by `from_picture.py`, or a model built by script. | Each lands on the floor (lowest vertex within 1 cm of the floor), inside the chamber's walls, under its manifest budget, with a manifest row (`cs-manifest-row`). A non-CC0 source stops the build (`cs-cc0-or-own`). | bpy, net |
+| J3 | Picture to asset | One of his own concept pictures (through the Drive inbox, `cs-chatgpt-by-drive`) becomes a placed piece with no hand-written code. | Outline match at or above 0.85 and a yes on the sheet (the score trap holds: both, never the score alone). Three pictures tried; two of three pass. A picture with depth the outline tools cannot read (a figure, a garment) is expected to fail here; that is recorded, and TRELLIS.2 on his Mac (`c3d-meshy-alternatives`) is the next tool to try, outside the cloud. | bpy, eyes |
+| J4 | Character creator from a theme | A recipe block `character: {theme: robe_set, build: average, palette: dusk}` makes a player figure: the cave's faceless figure (`cave-avatar-self`, `build_figure.py`) with three builds and three palettes. | Nine figures on one sheet, each one GLB under 300 KB, each walking with the cave's walk cycle with no joint inverted (W3's check, per figure). The theme for the test is the Taoist cultivation robe set (`cc-robe-set`), so the 3D creator and the 2D one share one wardrobe (`cs-one-studio`). | bpy, eyes |
+| J5 | Clothing options (the biggest test) | Garments are separate meshes skinned to the figure's one rig, built by script from the body (offset from its surface, then thickened), with weights copied from the body, reusing root-game's garment work first (below). The game swaps them at runtime. Three garments from the robe set: long robe, sash, topknot, each in three colourways. | (a) Through the whole walk cycle, no body vertex shows through a garment at frames 0, 12, 24 and 36, from front, side and back (a script counts body vertices outside the garment's surface; zero passes, and the sheet is looked at). (b) Each garment is under 150 KB. (c) In headless Chromium, swapping a garment on the walking figure takes under 100 ms and drops no frame below 30 a second. (d) A contact sheet of 3 builds by 3 garments by 3 colourways goes to his eye, as `cc-wardrobe-gate` asks of all new clothing. | bpy, eyes, wendell |
+
+**J1 result (2026-10-13, #292, merged; in the cave game through #294, merged):** wet stone on the walls, dry stone on
+the floor and gate stones, crystal vein on the spires and crystal bed, six 512 px JPEGs. The chamber is 465 KB of the
+3 MB budget and the three textures look different. The frame-rate line is judged on his phone, not in the cloud
+(`bpt-j1-frame-rate`): the cloud browser draws without a graphics chip, so the untextured chamber already misses 30 a
+second there (27.7 on the 4x throttle; 19.7 textured).
+
+**Start from root-game.** Wendell's steer on `bpt-skinned-garments` (2026-10-13): "Use as much as we can from the
+root game for this as we’ve already done many garment tests there". So J5's thread begins by listing what root-game
+already has (`wendell-britt/root-game`, call sheet `root.md`): its garment shapes (robe, sleeves, skirt), the clothes'
+spacing off the body (6 cm, and squashed at 3 cm where two fighters press, `rg-stance-by-move`), its collision
+shapes, its cloth solver and the phone cloth it ships. Each piece is reused, ported to the cave figure, or set aside
+with a reason written in tasks.md. The root-game strand owns those files; J5 copies or imports and never edits
+them there.
+
+Cloth simulation stays out of the first round unless root-game's solver ports cheaply. Skinned garments move with
+the body; a long robe that should swing gets a few extra bones in its hem first, then root-game's solver, and only
+then anything new.
+
+### What Part 2 does not do
+
+No daemon's or spirit's words (`cs-no-written-words`). No figure has a face, and no garment or figure is built
+from a photograph of a real person. No Royalty Free model goes into a page. The 2D sprite creator in sprout is not
+touched; J4 and J5 only borrow its wardrobe.
+
 ## Who has to be there
 
 | Who | Tests |
@@ -145,7 +217,8 @@ it merges.
 | Every run, offline, with `bpy` | G3, G4, G5, R1 to R3, W1 to W4, P1 to P6 (P after #285), the local half of E3 |
 | Network | V1 (once, then cached), A1 to A4, N1, N2, N4, N5 |
 | A person's eyes | E1, E2 |
-| Wendell | N3 (step `cave-studio-02`, already on Your steps), E3 after a republish |
+| Wendell | N3 (step `cave-studio-02`, already on Your steps), E3 after a republish, J5(d) the clothing sheet |
+| Token reads (platform result events, after each thread) | T1, T2 |
 
 ## Exact or tolerance
 
@@ -184,11 +257,17 @@ spirit's words (`cs-no-written-words`).
 | Meshopt fixture | Made from the table with gltf-transform, not searched for | council: cheaper and pinned by construction |
 | The CC0 gate | Tested, never loosened. A gap G2 finds goes to the board as a finding. | Wendell, `cs-cc0-or-own` (`.specify/specs/cave-studio/request.md`) |
 | Crystal count | Floor at today's 6, hard test once fixed | cave-studio sheet, known gap |
+| How words change the cave (Part 2) | Tested first: a short recipe, `cave/scene.yaml`, against writing `bpy` code directly (T2). The recipe missed T2, so Claude edits the committed `cave/chamber.py`, one line per piece | council (Architect, Challenger); `bpt-recipe-result`, 2026-10-13 |
+| Theme for the character test | The Taoist cultivation robe set, so the 3D and 2D creators share one wardrobe | `cc-robe-set`, `cs-one-studio` |
+| How clothing is made | Separate garment meshes skinned to the figure's one rig, built by script from the body, swapped at runtime; no cloth simulation in round one | council (Architect, Challenger); his eye on the result per `cc-wardrobe-gate` |
+| Textures | Procedural nodes in Blender, baked to 512 px JPEGs, within the 3 MB budget | `c3d-phone-budget` |
+| Order of Part 2 | T1 to T3 (the recipe and its cost) first, then J1, J2, J3, J4, J5 | council: the recipe's cost decided how every later job is written |
 
 ## Reserved items
 
 None reach Wendell. Every fork above was answerable from the record, so each stands as a council position unless he
-flips it. His two tests (N3, E3) are steps, not questions.
+flips it; Part 2's four are on the Council Board as positions (`bpt-recipe`, `bpt-robe-theme`, `bpt-skinned-garments`,
+`bpt-order`). His tests (N3, E3, J5(d)) are steps, not questions.
 
 ## How we will know the plan failed
 
@@ -207,6 +286,8 @@ flips it. His two tests (N3, E3) are steps, not questions.
 - [ ] The net tier ran once; N4's host list and N5's real time and memory are recorded.
 - [ ] The first contact sheet was looked at and `LOOKED.md` has its lines.
 - [ ] After #285 merges, the P-tests pass and the sheet holds the four dressing pieces.
+- [ ] Part 2: T1 to T3 measured and recorded with token numbers; J1 to J5 each passed or stopped at its kill line, with
+  the clothing sheet in front of Wendell.
 
 ## Dependencies
 
