@@ -115,6 +115,10 @@ def _sweep(pts, rad, segments, verts, faces):
         for k in range(segments):
             a, b = base + i * segments + k, base + i * segments + (k + 1) % segments
             faces.append((a, b, b + segments, a + segments))
+    start = len(verts)
+    verts.append(sub(pts[0], mul(tangent(0), rad[0] * 0.8)))  # close the base so mat and fork starts are not open tubes
+    for k in range(segments):
+        faces.append((base + (k + 1) % segments, base + k, start))
     tip = len(verts)
     verts.append(add(pts[-1], mul(tangent(len(pts) - 1), rad[-1] * 1.2)))
     last = base + (len(pts) - 1) * segments
@@ -262,8 +266,8 @@ def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.65, **f):
         out = []
         for x, y, z in verts:
             if z > H:  # the cap pitches about the stem top, in its own direction: one rim rises, the other drops
-                x, y, zz = rotate((x, y, z - H), axis, T)
-                z = H + zz
+                x, y, zz = rotate((x, y, z - H + 0.5 * p["thick"] + 0.02), axis, T)
+                z = H - 0.5 * p["thick"] - 0.02 + zz
             x += B * z * z  # the stem curves
             x, z = x * ca + z * sa, z * ca - x * sa  # the whole mushroom leans about its base
             out.append((x * math.cos(az) - y * math.sin(az), x * math.sin(az) + y * math.cos(az), z))
@@ -297,7 +301,7 @@ def mushroom_cluster(seed=1, kind="clump", count=9, forms=("dome", "bell", "flat
       ring    a fairy ring: evenly spaced round a circle, radius `spread`, with jitter; they lean outward.
       drift   a loose line along a slow curve, biggest at one end, as along a log.
       colony  a clump plus mycelium threads between the bases (see `colony`).
-    Caps never overlap: a candidate closer than 0.8 of the two cap radii is moved outward or dropped."""
+    Caps rarely overlap: a candidate closer than 1.05 of the two cap radii is moved outward or dropped."""
     rng = random.Random(seed)
     spots = []  # (x, y, scale, outward_angle)
     if kind == "ring":
@@ -326,7 +330,7 @@ def mushroom_cluster(seed=1, kind="clump", count=9, forms=("dome", "bell", "flat
         f = dict(MUSHROOM_FORMS[form])
         rad = f["R"] * sc
         for _ in range(12):  # shove outward until clear of the others
-            if all(math.hypot(x - ox, y - oy) > 0.8 * (rad + orad) for ox, oy, orad in placed):
+            if all(math.hypot(x - ox, y - oy) > 1.05 * (rad + orad) for ox, oy, orad in placed):
                 break
             x, y = x * 1.12 + 0.02 * math.cos(away), y * 1.12 + 0.02 * math.sin(away)
         else:
