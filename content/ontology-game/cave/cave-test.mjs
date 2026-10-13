@@ -1038,10 +1038,12 @@ await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
 await page.waitForTimeout(700);
 ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again');
 // ---- the Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room") --
-// From the hall, home; in the room, walk to the Big Mind door; going in opens the Big Mind cave's mouth on this same page, with a
-// way back to the room.
-await walkLevel('[data-level-home]');
-await page.locator('[data-level-home]').click();
+// Out to the front page and into the room again; in the room, walk to the Big Mind door; going in opens the Big Mind cave's mouth
+// on this same page, with a way back to the room.
+await C(() => window.__oagCave.leave());
+await page.locator('[data-cave-level]').waitFor({ state: 'detached', timeout: 15000 });
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
 await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
 await page.locator('[data-room-welcome]').waitFor();
 await C(() => window.__oagCave.room.speed(3));
