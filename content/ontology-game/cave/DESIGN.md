@@ -361,3 +361,14 @@ edge or hang from the roof as stalactites, each its own length (most short, a fe
 floor's edge and the wall like shelf fungus; roots hang thick end into the roof. The small elements a named feeling scatters
 grow the same way: fire and stone at the foot and low wall, water pools at the foot, the young tree leans out of the wall,
 metal anywhere. **(choice)** the zones, the size ranges (`ZONES`, `ZONE_SIZE`, `SPIRE`, `ELEMENT_ZONES` in `cave.js`).
+
+**Each charge its own cave, the light the figure's own, wood as roots and grass (13 October 2026).** Wendell: "Strength,
+constriction, strength and numbness should have different cave shapes. I'm almost tempted to have the numbness not even
+have a cave structure but a blackness"; "the wood elements shouldn't be underground trees thats foolish, but roots and bushes
+and grass makes a lot more sense"; "fog of war from a lighting standpoint. You can't see into the full cave. The avaiable
+lighting centers around the character and any spirits that are following them". `CAVE_SHAPE` gives each charge a profile:
+tightness a squeezed slot whose walls pinch in every six units, tension a tall angular cave of sharp cracked stone, strength a
+wide high domed hall, something else the cave as it was. Numbness takes his temptation as the default **(choice)**: its walls
+are not drawn, the floor is faint and only glowing things hang in the black. The figure carries the light (`LAMP`: reach 16,
+falling off), the sky light is a trace and the far cave sinks into darkened fog; `carryLight` gives any following spirit its
+own small light (this cave has none yet; the Big Mind cave's spirits will). Wood is a low bush with grass and a root.

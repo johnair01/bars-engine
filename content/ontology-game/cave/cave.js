@@ -366,15 +366,30 @@
   // Wendell, 10 October 2026: "the cave is a bit narrow and there are major segments". The tunnel is now one surface swept
   // along the route (a rounded arch with a flat floor, a ring every unit, rock bumps that flow along it), so nothing breaks
   // between stretches. openAt(s) widens it along its length; update(k) breathes it. Holes cut the openings a branch leaves by.
+  // Each charge has its own cave (Wendell, 2026-10-13: "Strength, constriction, strength and numbness should have different cave
+  // shapes. I'm almost tempted to have the numbness not even have a cave structure but a blackness"). e is the profile's
+  // roundness (low: a full squarish hall; 1: a pointed diamond), roof how high the roof rises, rib how hard the walls pinch in
+  // and every how many units, jag how rough the stone is and sharp how crisp its edges. dark: the stone is lost in blackness.
+  var CAVE_SHAPE = {
+    constriction: { e: 0.8, roof: 0.82, rib: 0.22, ribEvery: 6, jag: 0.06, sharp: 1 },     // a squeezed slot that pinches in
+    tension: { e: 1.05, roof: 1.3, rib: 0, jag: 0.15, sharp: 0.3 },                       // tall, angular, cracked stone
+    numbness: { e: 0.5, roof: 1.1, rib: 0, jag: 0.02, sharp: 1, dark: true },              // hardly a cave: blackness
+    strength: { e: 0.32, roof: 1.3, rib: 0, jag: 0.035, sharp: 1 },                       // a wide, high, domed hall
+    other: { e: 0.55, roof: 1, rib: 0, jag: 0.075, sharp: 1 },                            // the cave as it was
+  };
   var PROF = 20, PX = [], PY = [];
-  (function () {
+  function profileOf(e, roof) {
+    var px = [], py = [];
     for (var j = 0; j < PROF; j++) {
-      var t = (j / PROF) * Math.PI * 2, cx = Math.cos(t), sy = Math.sin(t);
-      PX.push((cx < 0 ? -1 : 1) * Math.pow(Math.abs(cx), 0.55));
-      PY.push(0.04 + 0.96 * (sy < 0 ? -1 : 1) * Math.pow(Math.abs(sy), 0.55)); // the floor sits at -0.92 of the height
+      var t = (j / PROF) * Math.PI * 2, cx = Math.cos(t), sy = Math.sin(t), y = 0.04 + 0.96 * (sy < 0 ? -1 : 1) * Math.pow(Math.abs(sy), e);
+      px.push((cx < 0 ? -1 : 1) * Math.pow(Math.abs(cx), e));
+      py.push(y > 0 ? y * roof : y); // the floor sits at -0.92 of the height whatever the roof does
     }
-  })();
+    return { PX: px, PY: py };
+  }
+  (function () { var p = profileOf(0.55, 1); PX = p.PX; PY = p.PY; })();
   function buildTube(THREE, route, o) {
+    var shape = o.shape || CAVE_SHAPE.other, prof = profileOf(shape.e, shape.roof), PX = prof.PX, PY = prof.PY;
     var s0 = o.sFrom || 0, s1 = o.sTo == null ? route.len : o.sTo, n = Math.max(2, Math.floor(s1 - s0) + 1), ds = (s1 - s0) / (n - 1);
     var ring = [], i, j;
     for (i = 0; i < n; i++) { var s = s0 + i * ds, a = at(route, s); ring.push({ s: s, x: a.x, y: a.y, z: a.z, nx: -a.fz, nz: a.fx }); }
@@ -385,7 +400,8 @@
     for (i = 0; i < n; i++) for (j = 0; j < C; j++) { uv[(i * C + j) * 2] = ring[i].s / TILE_UNITS; uv[(i * C + j) * 2 + 1] = arc[j] / TILE_UNITS; }
     for (i = 0; i < n; i++) for (j = 0; j < PROF; j++) {
       var floor = PY[j] < -0.8, sv = ring[i].s;
-      jit[i * PROF + j] = 1 + (floor ? 0.01 : 0.075) * (0.6 * Math.sin(sv * 0.37 + j * 2.1 + seed) + 0.4 * Math.sin(sv * 0.11 + j * 0.7 + seed * 1.3));
+      var wave = 0.6 * Math.sin(sv * 0.37 + j * 2.1 + seed) + 0.4 * Math.sin(sv * 0.11 + j * 0.7 + seed * 1.3) + (shape.sharp < 1 ? 0.5 * Math.sin(sv * 1.3 + j * 3.7 + seed) : 0);
+      jit[i * PROF + j] = 1 + (floor ? 0.01 : shape.jag) * (wave < 0 ? -1 : 1) * Math.pow(Math.min(1, Math.abs(wave)), shape.sharp);
     }
     var geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
@@ -413,7 +429,7 @@
       t.k = k; t.dirty = false;
       var kh = 1 + (k - 1) * 0.5;
       for (var i = 0; i < n; i++) {
-        var R = ring[i], wf = o.openAt(R.s) * k * o.w;
+        var R = ring[i], wf = o.openAt(R.s) * k * o.w * (shape.rib ? 1 - shape.rib * Math.pow(0.5 + 0.5 * Math.cos(R.s * Math.PI * 2 / shape.ribEvery + seed), 3) : 1);
         for (var j = 0; j < C; j++) {
           var jj = j % PROF, p = (i * C + j) * 3, jt = jit[i * PROF + jj], fl = PY[jj] < -0.8, xx = PX[jj] * wf * jt;
           pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[jj] * o.h : PY[jj] * o.h * kh * jt); pos[p + 2] = R.z + R.nz * xx;
@@ -505,7 +521,19 @@
   var ZONES = { foot: [16.6, 17.3], low: [17.6, 18.6], mid: [19.2, 20.8], high: [1.5, 3], roof: [3.6, 4.6] };
   var SPIRE = { len: [0.12, 0.62], fat: [0.55, 1.5] }; // a spire's length as a share of the chamber height, and its girth
   var ZONE_SIZE = { foot: 1, low: 0.75, mid: 0.55, high: 0.5, roof: 0.5 }; // how big a piece may grow there, as a share of its floor size
-  var ELEMENT_ZONES = { Anger: ["foot", "low", "low"], Sadness: ["foot"], Joy: ["foot", "low", "mid"], Fear: ["foot", "low", "mid", "high", "roof"], Neutrality: ["foot", "foot", "low"] };
+  // Fog of war (Wendell, 2026-10-13: "You can't see into the full cave. The avaiable lighting centers around the character and
+  // any spirits that are following them"). The figure carries the light: it reaches so far and falls off, the sky light is a
+  // trace, and the far cave sinks into darkened fog. Glowing things (caps, crystals, markers, the element) still show.
+  var LAMP = { reach: 16, decay: 1.6, above: 1.9, ambient: 0.22, dim: 0.35, fog: 1.6 };
+  // Numbness is hardly a cave: its walls are lost in the dark, the floor is faint, and only glowing things hang in the black.
+  function darken(shape, rock, dressing) {
+    if (!shape || !shape.dark) return;
+    rock.visible = false;
+    if (rock.userData.floor) rock.userData.floor.userData.lift = (rock.userData.floor.userData.lift || 1) * 0.45;
+    tintStone(rock, rock.userData.hex);
+    (dressing.userData.items || []).forEach(function (it) { if (it.piece !== "glow_cap" && it.piece !== "crystal_cluster") it.mesh.visible = false; });
+  }
+  var ELEMENT_ZONES = { Anger: ["foot", "low", "low"], Sadness: ["foot"], Joy: ["foot", "foot", "low"], Fear: ["foot", "low", "mid", "high", "roof"], Neutrality: ["foot", "foot", "low"] };
   function zoneJ(z, sd, rnd) { var r = ZONES[z], j = r[0] + rnd() * (r[1] - r[0]); return sd > 0 ? j : PROF / 2 - j; }
   function buildDressing(THREE, route, G, o) {
     var g = new THREE.Group(), items = [];
@@ -701,10 +729,20 @@
     } else if (name === "Sadness") { // Water: a still pool
       add(new THREE.CylinderGeometry(r * 0.7, r * 0.75, r * 0.12, 24), mat(0x3a78d0, 0x2a58a0, 0.35, 0.2), 0, r * 0.06, 0);
       add(new THREE.TorusGeometry(r * 0.72, r * 0.06, 8, 24), mat(0x5a5f6a), 0, r * 0.1, 0).rotation.x = Math.PI / 2;
-    } else if (name === "Joy") { // Wood: a young tree
-      add(new THREE.CylinderGeometry(r * 0.08, r * 0.13, r * 1.4, 8), mat(0x6a4a2a), 0, r * 0.7, 0);
-      add(new THREE.SphereGeometry(r * 0.5, 14, 10), mat(0x4aa84a, 0x2a7a2a, 0.2), 0, r * 1.5, 0);
-      add(new THREE.SphereGeometry(r * 0.3, 12, 8), mat(0x5ac85a, 0x2a7a2a, 0.2), r * 0.3, r * 1.2, r * 0.1);
+    } else if (name === "Joy") { // Wood, as it grows underground and at a cave's mouth (Wendell, 2026-10-13: "the wood elements
+      // shouldn't be underground trees thats foolish, but roots and bushes and grass makes a lot more sense"): a low bush, tufts of
+      // grass round it, and a root that curls out of the stone beside them.
+      var leaf = mat(0x4aa84a, 0x2a7a2a, 0.25), leaf2 = mat(0x6ac85a, 0x2a7a2a, 0.25), blade = mat(0x7ad06a, 0x2a6a2a, 0.2), root = mat(0x6a4a2a, 0, 0, 0.9);
+      [[0, 0.32, 0, 0.42, leaf], [0.3, 0.26, 0.12, 0.3, leaf2], [-0.28, 0.24, -0.1, 0.32, leaf], [0.05, 0.5, -0.15, 0.26, leaf2]].forEach(function (b) {
+        add(new THREE.IcosahedronGeometry(r * b[3], 1), b[4], r * b[0], r * b[1], r * b[2]).scale.set(1.15, 0.8, 1.05);
+      });
+      for (var gi = 0; gi < 9; gi++) {
+        var ga = gi * 2.4, gr = r * (0.55 + 0.18 * (gi % 3)), gh = r * (0.35 + 0.12 * ((gi * 7) % 4));
+        var bl = add(new THREE.ConeGeometry(r * 0.035, gh, 4), blade, Math.cos(ga) * gr, gh / 2, Math.sin(ga) * gr);
+        bl.rotation.z = 0.25 * Math.cos(ga * 1.7); bl.rotation.x = 0.25 * Math.sin(ga * 1.3);
+      }
+      var curve = new THREE.CatmullRomCurve3([new THREE.Vector3(-r * 0.7, 0, r * 0.2), new THREE.Vector3(-r * 0.75, r * 0.25, r * 0.45), new THREE.Vector3(-r * 0.45, r * 0.12, r * 0.7), new THREE.Vector3(-r * 0.2, 0, r * 0.62)]);
+      add(new THREE.TubeGeometry(curve, 12, r * 0.05, 5, false), root, 0, 0, 0);
     } else if (name === "Fear") { // Metal: a crystal spire
       add(new THREE.OctahedronGeometry(r * 0.35, 0), mat(0xc8ccd4, 0x6a7080, 0.25, 0.15), 0, r * 0.9, 0).scale.set(0.6, 2, 0.6);
       add(new THREE.OctahedronGeometry(r * 0.2, 0), mat(0xaab0bc, 0x6a7080, 0.2, 0.15), r * 0.4, r * 0.35, 0).scale.set(0.6, 1.6, 0.6);
@@ -860,7 +898,10 @@
     // walk = { route, s, s0, D, t, target (a stop on the route), arrived, blk }. stack holds where each branch left from.
     // speed scales the walk clock (the test sets it above 1 to cross a stretch faster than one breath); it is 1 in play.
     var state = { sens: [], cur: null, mode: "portal", dress: null, look: { yaw: 0, pitch: 0 }, walk: null, stack: [], calm: false, ringOn: false, held: false, speed: 1, touched: false, layout: null, walkedOnce: false, modal: false, auto: null };
-    var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [];
+    var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [], carried = [], tmpV = new THREE.Vector3();
+    // A spirit that follows the player carries a small light of its own (Wendell, 2026-10-13: "The avaiable lighting centers
+    // around the character and any spirits that are following them"). This cave has no followers yet; the Big Mind cave's do.
+    function carryLight(obj, hex) { var l = new THREE.PointLight(hex || 0xc8e0ff, 0.6, LAMP.reach * 0.5, LAMP.decay); scene.add(l); carried.push({ obj: obj, light: l }); return l; }
     var docked = true;
     // The light of the stretch being walked (lk eases toward the table row), the walls' openness per stretch, and the surge on
     // a choice. revealed is the last stretch the player has chosen to walk; the ones past it stay gathered shut and dark until
@@ -874,7 +915,7 @@
 
     function clearScene() {
       while (scene.children.length) scene.remove(scene.children[0]);
-      ch = null; flight = null; busy = false; tweens = []; avatar = null; lamp = null; hemi = null; glow = []; lanternsOn = [];
+      ch = null; flight = null; busy = false; tweens = []; avatar = null; lamp = null; hemi = null; glow = []; lanternsOn = []; carried = [];
       state.walk = null; state.stack = []; state.auto = null; snapCam = true; page.has = false;
       lk.idx = 0; lk.flash = 0; revealed = -1; openCur = STEP_LOOK.map(function () { return CLOSED; });
       scene.background.setHex(0x0c0c16); scene.fog.color.setHex(0x0c0c16);
@@ -1040,10 +1081,12 @@
         var u = clamp((sv - st[q - 1].s) / 8, 0, 1); u = u * u * (3 - 2 * u);
         return openCur[q - 1] * (1 - u) + openCur[q] * u;
       };
-      main.tube = buildTube(THREE, main, { w: w, h: h, rock: parts.rock, openAt: main.openAt, seed: hashOf(s.spot.id) % 97 });
+      parts.shape = CAVE_SHAPE[s.texture] || CAVE_SHAPE.other;
+      main.tube = buildTube(THREE, main, { w: w, h: h, rock: parts.rock, openAt: main.openAt, seed: hashOf(s.spot.id) % 97, shape: parts.shape });
       main.group.add(main.tube.mesh); main.group.add(buildPebbles(THREE, main, w, h, 0, main.len));
       main.dressing = buildDressing(THREE, main, G, { w: w, h: h, rock: parts.rock, s0: 0, s1: main.len, seed: s.spot.id + ":" + s.texture + ":dress", clear: [main.startS + 9, main.exitS] });
-      main.group.add(main.dressing);
+      main.group.add(main.dressing); darken(parts.shape, parts.rock, main.dressing);
+      state.cave = { shape: CAVE_SHAPE[s.texture] ? s.texture : "other", walls: parts.rock.visible, roof: parts.shape.roof, e: parts.shape.e };
       state.dressing = main.dressing.userData.items.map(function (it) { return it.piece; });
       state.crystals = main.dressing.userData.items.filter(function (it) { return it.look && it.piece === "crystal_cluster"; }).map(function (it) { return it.look; });
       state.spires = main.dressing.userData.items.filter(function (it) { return it.piece === "stone_spire"; }).map(function (it) { return { zone: it.zone, len: it.look.len, fat: it.look.fat }; });
@@ -1061,8 +1104,8 @@
       var beam = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 40, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
       beam.position.set(xa.x, 18, xa.z); main.group.add(beam);
       scene.add(main.group); ch = { main: main, w: w, h: h };
-      lamp = new THREE.PointLight(0xffe0b0, 1.1, 70); scene.add(lamp);
-      hemi = new THREE.HemisphereLight(0xffffff, 0x302828, 0.45); scene.add(hemi);
+      lamp = new THREE.PointLight(0xffe0b0, 1.1, LAMP.reach, LAMP.decay); scene.add(lamp);
+      hemi = new THREE.HemisphereLight(0xffffff, 0x302828, 0.45 * LAMP.ambient); scene.add(hemi);
       scene.fog.density = look.fog * STEP_LOOK[0].fogK;
       lk.idx = 0; lk.light.setHex(STEP_LOOK[0].light); lk.fog.setHex(STEP_LOOK[0].fog); lk.fogK = STEP_LOOK[0].fogK; lk.hemi = STEP_LOOK[0].hemi; lk.flash = 0;
       scene.background.copy(lk.fog); scene.fog.color.copy(lk.fog);
@@ -1194,9 +1237,11 @@
       var rock = frame.blk ? frame.blk.rock : parts.rock;
       if (kind === "side") rock = stoneOf(THREE, parts.tiles, rock.userData.hex);
       route.openAt = function () { return SIDE_LOOK.open; };
-      route.tube = buildTube(THREE, route, { w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN });
+      var shp = CAVE_SHAPE[frame.blk ? frame.blk.texture : state.cur.texture] || CAVE_SHAPE.other;
+      route.tube = buildTube(THREE, route, { w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN, shape: shp });
       route.group.add(route.tube.mesh); route.group.add(buildPebbles(THREE, route, o.wb, h, route.sFrom, route.sTo));
-      route.group.add(buildDressing(THREE, route, parts.G, { w: o.wb, h: h, rock: rock, s0: route.sFrom, s1: route.sTo, seed: kind + ":" + depth + ":" + blockN }));
+      var dr = buildDressing(THREE, route, parts.G, { w: o.wb, h: h, rock: rock, s0: route.sFrom, s1: route.sTo, seed: kind + ":" + depth + ":" + blockN });
+      route.group.add(dr); darken(shp, rock, dr);
       // the two openings get a glowing rim each, and a lantern stands between them
       route.rims = route.holes.map(function (H) {
         var a = at(parent, (H.s0 + H.s1) / 2), rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
@@ -1347,7 +1392,7 @@
       if (route.tube && route.tube.mounts) route.tube.mounts = route.tube.mounts.filter(function (m) { return gone.indexOf(m.obj) < 0; });
       if (!blk.element) return;
       // Each small one grows out of the stone where its element would (2026-10-13): fire and stone from the floor's edge and low
-      // wall, water pools at the foot, the young tree leans out of the wall, metal breaks out anywhere, the roof included.
+      // wall, water pools at the foot, bushes and grass keep to the floor's edge and the low wall, metal breaks out anywhere, the roof included.
       var rnd = rngOf(hashOf(blk.key + ":" + blk.element)), zones = ELEMENT_ZONES[blk.element] || ["foot"];
       for (var i = 0; i < 8; i++) {
         var sv = route.len * (0.06 + 0.11 * i + rnd() * 0.05), sd = rnd() < 0.5 ? -1 : 1, zone = zones[Math.floor(rnd() * zones.length)];
@@ -1717,20 +1762,22 @@
         lk.idx = route.kind === "main" ? wk.target : -1;
         lk.light.lerp(tmpC.setHex(lg.light), fe); lk.fog.lerp(tmpC.setHex(lg.fog), fe);
         lk.fogK += (lg.fogK - lk.fogK) * fe; lk.hemi += (lg.hemi - lk.hemi) * fe; lk.flash = Math.max(0, lk.flash - dt / 1.1);
-        scene.background.copy(lk.fog); scene.fog.color.copy(lk.fog); scene.fog.density = parts.fog * lk.fogK;
+        scene.background.copy(lk.fog).multiplyScalar(LAMP.dim * (parts.shape && parts.shape.dark ? 0.25 : 1)); scene.fog.color.copy(scene.background);
+        scene.fog.density = parts.fog * lk.fogK * LAMP.fog;
         var mt = state.mainRoute.tube, chg = false;
         for (var qq = 0; qq < STEP_LOOK.length; qq++) {
           var goal = qq <= revealed ? STEP_LOOK[qq].open : CLOSED, nv = openCur[qq] + (goal - openCur[qq]) * fe;
           if (Math.abs(nv - openCur[qq]) > 0.0004) { openCur[qq] = nv; chg = true; }
         }
         if (chg) mt.dirty = true;
-        lamp.position.set(a.x, fl + 3.8, a.z);
+        lamp.position.set(a.x, fl + LAMP.above, a.z); // the light is the figure's own: it walks with them
+        carried.forEach(function (c2) { c2.light.position.copy(c2.obj.getWorldPosition(tmpV)); c2.light.position.y += LAMP.above * 0.6; });
         mt.update(br.k);
         state.stack.forEach(function (fr) { if (fr.child && fr.child.route) fr.child.route.tube.update(br.k); });
         var warm = 1 - br.b, surge = lk.flash * lk.flash;
         baseLamp.copy(lk.light).lerp(tmpC.setHex(0xffffff), 0.3).lerp(tmpC.setHex(c && c.lampHex || 0xffe0b0), 0.15).lerp(WARM, warm * 0.2);
         lamp.color.copy(baseLamp); lamp.intensity = 1.0 + 0.5 * warm + 1.6 * surge + 0.5 * lk.hemi;
-        hemi.color.setHex(0xffffff).lerp(lk.light, 0.35); hemi.intensity = lk.hemi + 0.1 * warm + 0.4 * surge;
+        hemi.color.setHex(0xffffff).lerp(lk.light, 0.35); hemi.intensity = (lk.hemi + 0.1 * warm + 0.4 * surge) * LAMP.ambient * (parts.shape && parts.shape.dark ? 0.4 : 1);
         glow.forEach(function (g) { g.m.emissiveIntensity = g.base * (0.7 + 0.6 * br.b); });
         route.markers.forEach(function (m, i) {
           var on = route.kind === "main" ? i < me().passed : i < wk.target || (wk.arrived && wk.target === i);
@@ -1779,6 +1826,7 @@
       return { t: wk.t, s: wk.s, s0: wk.s0, D: wk.D, frac: wk.D ? (wk.s - wk.s0) / wk.D : 1, phase: wk.t < BREATH.inS ? "in" : "out", moving: wk.moving, stepsIn: d.stepsIn, stepsOut: d.stepsOut,
         inS: BREATH.inS, outS: BREATH.outS, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
     };
+    api.carryLight = carryLight;
     api.look = function () {
       return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur.slice(), revealed: revealed, bg: scene.background.getHex(), density: scene.fog.density };
     };

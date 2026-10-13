@@ -474,6 +474,7 @@ for (const [texture, element] of [['constriction', 'Fear'], ['numbness', 'Sadnes
   if (texture === 'strength') await page.screenshot({ path: SHOTS + '/cave-strength.png' });
   if (texture === 'constriction') await page.screenshot({ path: SHOTS + '/cave-tightness.png' });
   looks[texture].dress = await state('JSON.stringify(s.dress)');
+  looks[texture].cave = await state('s.cave');
   looks[texture].rows = await state('JSON.stringify(s.layout.rows)');
   await C(() => window.__oagCave.leave(false));
   await page.locator('[data-cave-chamber]').waitFor({ state: 'detached' });
@@ -482,6 +483,8 @@ ok(looks.constriction.scale[0] < 0.7, `tightness is narrow and drawn in (width $
 ok(looks.numbness.opacity < 0.5, `numbness is fogged and translucent (opacity ${looks.numbness.opacity.toFixed(2)})`);
 ok(looks.strength.glow > looks.tension.glow + 0.4, `strength is bright (glow ${looks.strength.glow.toFixed(2)} against ${looks.tension.glow.toFixed(2)})`);
 ok(looks.tension.scale[1] > 1.1, `tension is taut (height ${looks.tension.scale[1].toFixed(2)})`);
+ok(new Set(Object.values(looks).map((l) => l.cave.e + ':' + l.cave.roof)).size === 4, `each charge has its own cave shape (${Object.entries(looks).map(([k, l]) => k + ' ' + l.cave.e + '/' + l.cave.roof).join(', ')})`);
+ok(!looks.numbness.cave.walls && looks.strength.cave.walls, 'numbness is blackness: its walls are lost in the dark');
 ok(Object.values(looks).every((l) => l.bytes < 50 * 1024), 'every charge keeps the avatar under 50 KB of geometry');
 const dressA = JSON.parse(await (async () => {
   await C((w) => window.__oagCave.dive(w), 'my left hand');
