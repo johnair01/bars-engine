@@ -62,7 +62,8 @@ UDIM images for G3 are made at run time by `_make_fixtures.py`, so no `synthetic
   and jobs edit `cave/chamber.py` (`bpt-recipe-result`).
 - [x] [claude] 7b, J1 textures (#292), wired into the cave game (#294). Frame rate judged on his phone
   (`bpt-j1-frame-rate`).
-- [ ] [claude] 7b, J2 objects: starts after his play of the cave with J1's stone in it.
+- [x] [claude] 7b, J2 objects: boulder (Blendkit CC0), offering bowl (picture), cushion (script) in chamber.py
+  through `cave/objects.py`; tests J2 and J2b pass (spec.md, J2 result).
 - [ ] [claude] 7b, J3 picture to asset (needs his pictures in the Drive inbox).
 - [ ] [claude] 7c. J4 character creator, J5 clothing.
 
