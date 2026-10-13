@@ -2287,7 +2287,7 @@
     // (bms-in-place): the same table (ROOM_STEPS) and the same 3-2-1 (talk321), here in the tunnel, without the room's door. The
     // figure sits down, and what's coming up comes along the path from ahead as a grey shape that takes its
     // texture's colour at Witness and its element's at Acknowledge, grows with Allow's sliders and steadies at Validate. A breathing
-    // ring keeps the cave's breath on every step. Standing up, partway or at the end, leaves a spirit that walks behind the figure
+    // ring keeps the cave's breath on every step. Standing up at the end of the WAVE leaves a spirit that walks behind the figure
     // with its own light (`bms-away-lighter`: breathed out at the fork, it walks lighter). The game names each charge (two words,
     // as in the Big Mind cave); the player can give it a name of their own at Acknowledge or Validate.
     var SIT_WHERE = { 3: "You are sitting where you stopped, looking at it.", 2: "You are face to face with it.", 1: "You are sitting where it sat, and it sits where you were.", check: "You are face to face with it.", after: "You are back where you sat down.", paused: "You leaned back from it, still sitting." };
@@ -2401,17 +2401,20 @@
       kids.push(breathOrb(), row([go].concat(extra)), row([stand]));
       sitPage(w[1], kids, R.id);
     }
-    // branch: stays (Toward), goes (Away: breathed out, lighter), done, stood (stood up partway). Every one leaves a spirit.
+    // branch: stays (Toward), goes (Away: breathed out, lighter), done, stood (stood up partway). A spirit emerges only from a
+    // WAVE gone through to the end (Wendell, 2026-10-13: "if you sit down without going through the whole wave process a spirit
+    // is auto created. It should only emerge once it's been engaged with"): standing up partway sends the shape back the way it
+    // came, and a spirit sat with again walks on as it was.
     function standUp(branch) {
       var S = sit; if (!S) return;
       modal.innerHTML = ""; modal.setAttribute("data-cave-sit-step", "standing"); closeModal();
       var from = S.g.position.clone(), nm = S.name.trim() || S.gen;
-      tween(branch === "goes" ? 2200 : 1200, function (k) { S.k = 1 - ease(k); }, function () {
+      tween(branch === "goes" ? 2200 : 1200, function (k) { S.k = 1 - ease(k); if (branch === "stood" && !S.spirit) S.come = ease(k); }, function () {
         scene.remove(S.g); dropLight(S.g); sit = null; modal.removeAttribute("data-cave-sit-step");
         var o = { name: nm, element: S.element, lighter: branch === "goes" };
         if (S.spirit) { o.name = S.spirit.name; o.element = S.element || S.spirit.element; o.hex = S.element ? null : S.spirit.hex; o.lighter = branch === "goes" || S.spirit.lighter; }
         o.hex = o.element ? null : sitHex(S);
-        addSpirit(o, from);
+        if (branch !== "stood" || S.spirit) addSpirit(o, from);
         unstashPage(S.back);
       });
     }

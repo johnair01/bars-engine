@@ -553,8 +553,8 @@ await page.locator('[data-cave-sit-step="welcome"]').waitFor({ timeout: 5000 });
 await page.locator('[data-cave-standup]').click();
 await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 8000 });
 const sat2 = await C(() => window.__oagCave.spirits.map((o) => o.name));
-ok(sat2.length === 2 && /^\w+ \w+$/.test(sat2[1]) && (await C(() => window.__oagCave.carried())) === 2, 'standing up partway still leaves a spirit, under the name the game gave it: ' + sat2[1]);
-for (let i = 0; i < 2; i++) {
+ok(sat2.length === 1 && (await C(() => window.__oagCave.carried())) === 1, 'standing up partway leaves no spirit: one emerges only from the whole WAVE: ' + JSON.stringify(sat2));
+for (let i = 0; i < 1; i++) {
   await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click();
 }
 await page.waitForTimeout(1800);
