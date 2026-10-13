@@ -215,6 +215,28 @@ Cloth simulation stays out of the first round unless root-game's solver ports ch
 the body; a long robe that should swing gets a few extra bones in its hem first, then root-game's solver, and only
 then anything new.
 
+**J4 result (2026-10-13):** passed on the machine half; round 2's sheet waits for his eye. `content/ontology-game/cave/character.py`
+makes a figure from a theme, a build and a palette: `--theme robe_set --build average --palette dusk`, or `--all` for
+the nine. With the recipe dropped, the "recipe block" is those three words on the command line. The body starts from
+the body map's figure (`build_figure.py`'s parts, 1.75 m, no face) in three builds (slight, average, broad), fused into
+one surface. Its rig has the cave avatar's sixteen joint names (`cave.js` buildAvatar), and its one animation, Walk, is
+`cave.js` poseAvatar baked at a mid stride: one second, 25 keys. The robe set is painted on as the under-layer in three
+palettes (dusk, jade, hemp): a crossed collar worn left over right, a tunic to mid-thigh with a hem, a sash, sleeves
+with cuffs, trousers tied at the ankle, cloth shoes. Each vertex is weighted to the body part it came from, blended with
+that part's parent or child at a joint, so an arm never pulls the trunk. Test J4 reads each walk back from the GLB:
+W3's swing and swap pass, and no knee or elbow folds the wrong way at any key; J4b bends a copy's knees forward and the
+check catches it.
+
+Round 1 (his look, 2026-10-13 22:14, `j4-look-01`): "The collars are broken so it doesn’t read as undergarments or an
+undershirt. We’d expect smooth collars that are painted on the shoulders" and "Also build proportions are close to
+human but are hitting uncanny valley". Round 2: the collar is one band laid on the surface, from the right side up
+across the chest, over both shoulders and round the back of the neck, and standing a little way up the neck. The
+surface is cut exactly along each band's edge (`cut_along`), so a band is a smooth line and never a staircase of
+triangles. The body moved away from realism: a bigger head (about six and a half heads tall, where the body map is
+seven and a half), a short neck, a plain trunk with no waist or chest sculpting, thicker limbs, mitten hands and rounded
+feet. The nine GLBs are 246 to 266 KB (line 300). The long robe, the sash as cloth and the topknot are J5's, as separate
+meshes on this rig. The figures reach the game when J5's garments are wired into `cave.js`.
+
 ### What Part 2 does not do
 
 No daemon's or spirit's words (`cs-no-written-words`). No figure has a face, and no garment or figure is built
