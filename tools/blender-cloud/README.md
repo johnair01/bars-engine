@@ -80,13 +80,15 @@ mesh. The aim: build as much as possible in code, then let the Blender pipeline 
 - **Roots** (`root_system`, styles in `ROOT_STYLES`: arching, hanging, creeping, tangled, taproot, buttress). A turtle
   grows each branch with a smooth random wander and a pull toward gravity, and forks at random. Each fork splits the
   parent's cross-section by Murray's law (r^3 = r_a^3 + r_b^3), so thickness falls off the way real branching networks
-  do. Angle, length, wander and fork rate are drawn per branch, so no two branches match. Method names for further
+  do. Angle, length, wander and fork rate are drawn per branch, so no two branches match. A last layer of fibers (`fibers`,
+  `fiber_rmax`) hangs off every thin branch and brushes each tip: hair-roots whose radius falls to 0.0006. Method names for further
   work (from memory, not checked here): L-systems with tropism (Prusinkiewicz), space colonization (Runions et al.,
   2007) for roots that fill a volume or avoid a wall, differential growth for tangles.
 - **Mushrooms** (`mushroom`, forms in `MUSHROOM_FORMS`: dome, flat, bell, cone, funnel, morel, puffball, parasol,
   bulbous). A lathe with a stem profile and a superellipse cap (radius, height, sharpness, rim lip, umbo, scalloped
   edge, tilt, pits, thickness, stem bulge, ring). `mushroom_between(a, b, t)` blends two forms, so there is a
-  continuum between them, and `jitter` varies each number per seed.
+  continuum between them, and `jitter` varies each number per seed. Each seed also leans, bends the stem and pitches the cap
+  by its own random amount (`lean`, `bend`, `cap_tilt` are the maximums; 0 stands it upright).
 - **See them:** `/home/user/blenv/bin/python procgen_sheet.py OUT.png roots|mushrooms` renders a contact sheet, seeds
   across and styles down. Look at it; the numbers do not say whether it is natural. `python3 procgen.py --selftest`
   and test PG1 check determinism and mesh validity.

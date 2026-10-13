@@ -122,6 +122,34 @@ def _sweep(pts, rad, segments, verts, faces):
         faces.append((last + k, last + (k + 1) % segments, tip))
 
 
+FIBER_SEGMENTS = 4
+
+
+def _fibers(rng, p, branches, verts, faces):
+    """The last layer: from every thin branch, fine hair-roots that dwindle almost to nothing. Radius falls linearly from
+    about a third of the branch's own to 0.0006 at the tip, with a stronger wander than the branches, so they curl."""
+    n_fib = p.get("fibers", 0.3)  # chance per point of a thin branch, and a brush of 3 to 7 at each tip
+    rmax = p.get("fiber_rmax", p["r0"] * 0.5)
+    for pts, rad in branches:
+        for i in range(2, len(pts)):
+            tip = i == len(pts) - 1
+            if not tip and (rad[i] > rmax or rng.random() > n_fib * 0.5):
+                continue
+            count = rng.randint(3, 7) if tip else 1
+            d0 = norm(sub(pts[i], pts[i - 1]))
+            for _ in range(count):
+                d = norm(rotate(d0, rotate(perp(d0), d0, rng.uniform(0, 6.283)), rng.uniform(0.4, 1.3)))
+                r0 = max(rad[i] * 0.4, 0.0016)
+                steps = rng.randint(3, 7)
+                pos, fp, fr = pts[i], [pts[i]], [r0]
+                for k in range(1, steps + 1):
+                    d = norm(add(rotate(d, rotate(perp(d), d, rng.uniform(0, 6.283)), rng.gauss(0, 0.5)), mul(p["tropism"], 0.12)))
+                    pos = add(pos, mul(d, rng.uniform(0.035, 0.07)))
+                    fp.append(pos)
+                    fr.append(lerp(r0, 0.0006, k / steps))
+                _sweep(fp, fr, FIBER_SEGMENTS, verts, faces)
+
+
 def root_system(seed=1, roots=3, spread=0.5, **style):
     """roots trunks leaving the origin, fanned by `spread` radians off the style's `up` axis. Returns (verts, faces)."""
     p = dict(ROOT_STYLES["arching"], **style)
@@ -133,6 +161,8 @@ def root_system(seed=1, roots=3, spread=0.5, **style):
         _grow(rng, p, (0.0, 0.0, 0.0), d, p["r0"] * rng.uniform(0.85, 1.15), p["length"] * rng.uniform(0.8, 1.2), out, 0)
         for pts, rad in out:
             _sweep(pts, rad, ROOT_SEGMENTS, verts, faces)
+        if p.get("fibers", 0.3) > 0:
+            _fibers(rng, p, out, verts, faces)
     return verts, faces
 
 
@@ -169,8 +199,10 @@ def mushroom_between(a, b, t):
     return out
 
 
-def mushroom(seed=1, jitter=0.12, **f):
-    """Lathe mesh of one mushroom, base at z=0. jitter varies each number by up to that fraction, per seed."""
+def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.28, **f):
+    """Lathe mesh of one mushroom, base at z=0. jitter varies each number by up to that fraction, per seed.
+    lean (radians), bend (stem curvature) and cap_tilt (radians) are maximums: each seed draws its own amount between
+    zero and the maximum, in its own direction, so a patch of them does not stand like a row of pins. Pass 0 for upright."""
     p = dict(MUSHROOM_FORMS["dome"], **f)
     rng = random.Random(seed)
     for k, v in list(p.items()):
@@ -221,6 +253,21 @@ def mushroom(seed=1, jitter=0.12, **f):
         for k in range(SIDES):
             a, b = i * SIDES + k, i * SIDES + (k + 1) % SIDES
             faces.append((a, b, b + SIDES, a + SIDES))
+    if lean or bend or cap_tilt:
+        L, B, T = rng.uniform(0.2, 1.0) * lean, rng.uniform(0.0, 1.0) * bend, rng.uniform(-1.0, 1.0) * cap_tilt
+        az = rng.uniform(0, 6.283)
+        H = p["H"]
+        ca, sa = math.cos(L), math.sin(L)
+        ct, st = math.cos(T), math.sin(T)
+        out = []
+        for x, y, z in verts:
+            if z > H:  # the cap pitches about the stem top, across the bend's plane
+                zz = z - H
+                x, z = x * ct + zz * st, H + zz * ct - x * st
+            x += B * z * z  # the stem curves
+            x, z = x * ca + z * sa, z * ca - x * sa  # the whole mushroom leans about its base
+            out.append((x * math.cos(az) - y * math.sin(az), x * math.sin(az) + y * math.cos(az), z))
+        verts = out
     return verts, faces
 
 
