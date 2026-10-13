@@ -525,3 +525,21 @@ camera down and pushing up moves the camera up (and has it looking down on the c
 walk. Dragging down lowers the camera; pushing up lifts it toward the roof (never through it) and turns it down onto the
 figure. The look eases back behind the figure only after the thumb has rested for 0.6 s. **(choice)** the tilt per pixel,
 its range, the rest time and how near the roof the camera may go (`LOOK` in `cave.js`).
+
+## Pinch to zoom and a creature close up in the WAVE room (13 October 2026)
+
+Wendell, 13 October 2026: "Let's introduce pinch to zoom in the wave room. Also the ability to click on each of the spirits
+to have them fill the frame and have more information about it."
+
+- **Pinch.** Two fingers spread apart bring the camera nearer to what the step looks at, down to a third of the distance.
+  Pinching them together goes back to the step's own view and then widens the lens, up to about 100 degrees, because
+  the walls are close behind the camera **(choice)**. On a phone held upright the widest view shows all three creatures,
+  where the step's own view can leave the one on the left off screen. The mouse wheel does the same on a computer. One
+  finger still turns the view, and the zoom stays as set until the sitting ends.
+- **A creature close up.** A tap on a creature (one being worked, or one that stays by the wall) swings the camera to
+  its front, close enough that it fills the frame, and a card below it takes the place of the step's page **(choice)**.
+  The card shows its name and colour, element and clean up move, texture, where it is in the body, its step and
+  whether it is validated, its charge and glow, the feelings about it, what the player wants and which way it pushes,
+  and the next move. "Work with this one" picks it, if it is one of the creatures still being worked; "Back to the room"
+  returns the camera, its zoom and the page as they were. Pinch and turn work in the close-up too, and the close-up ends
+  by itself if the creature leaves the room.
