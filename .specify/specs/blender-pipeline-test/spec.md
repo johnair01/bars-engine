@@ -173,11 +173,19 @@ of a few lines. The builder is read once when it is written, never on each edit.
 | J2 | Add objects | A recipe line places an object from one of three sources: a pinned CC0 BlenderKit asset, a model built by `from_picture.py`, or a model built by script. | Each lands on the floor (lowest vertex within 1 cm of the floor), inside the chamber's walls, under its manifest budget, with a manifest row (`cs-manifest-row`). A non-CC0 source stops the build (`cs-cc0-or-own`). | bpy, net |
 | J3 | Picture to asset | One of his own concept pictures (through the Drive inbox, `cs-chatgpt-by-drive`) becomes a placed piece with no hand-written code. | Outline match at or above 0.85 and a yes on the sheet (the score trap holds: both, never the score alone). Three pictures tried; two of three pass. A picture with depth the outline tools cannot read (a figure, a garment) is expected to fail here; that is recorded, and TRELLIS.2 on his Mac (`c3d-meshy-alternatives`) is the next tool to try, outside the cloud. | bpy, eyes |
 | J4 | Character creator from a theme | A recipe block `character: {theme: robe_set, build: average, palette: dusk}` makes a player figure: the cave's faceless figure (`cave-avatar-self`, `build_figure.py`) with three builds and three palettes. | Nine figures on one sheet, each one GLB under 300 KB, each walking with the cave's walk cycle with no joint inverted (W3's check, per figure). The theme for the test is the Taoist cultivation robe set (`cc-robe-set`), so the 3D creator and the 2D one share one wardrobe (`cs-one-studio`). | bpy, eyes |
-| J5 | Clothing options (the biggest test) | Garments are separate meshes skinned to the figure's one rig, built by script from the body (offset from its surface, then thickened), with weights copied from the body. The game swaps them at runtime. Three garments from the robe set: long robe, sash, topknot, each in three colourways. | (a) Through the whole walk cycle, no body vertex shows through a garment at frames 0, 12, 24 and 36, from front, side and back (a script counts body vertices outside the garment's surface; zero passes, and the sheet is looked at). (b) Each garment is under 150 KB. (c) In headless Chromium, swapping a garment on the walking figure takes under 100 ms and drops no frame below 30 a second. (d) A contact sheet of 3 builds by 3 garments by 3 colourways goes to his eye, as `cc-wardrobe-gate` asks of all new clothing. | bpy, eyes, wendell |
+| J5 | Clothing options (the biggest test) | Garments are separate meshes skinned to the figure's one rig, built by script from the body (offset from its surface, then thickened), with weights copied from the body, reusing root-game's garment work first (below). The game swaps them at runtime. Three garments from the robe set: long robe, sash, topknot, each in three colourways. | (a) Through the whole walk cycle, no body vertex shows through a garment at frames 0, 12, 24 and 36, from front, side and back (a script counts body vertices outside the garment's surface; zero passes, and the sheet is looked at). (b) Each garment is under 150 KB. (c) In headless Chromium, swapping a garment on the walking figure takes under 100 ms and drops no frame below 30 a second. (d) A contact sheet of 3 builds by 3 garments by 3 colourways goes to his eye, as `cc-wardrobe-gate` asks of all new clothing. | bpy, eyes, wendell |
 
-Cloth simulation is out of the first round. Skinned garments move with the body; a long robe that should swing gets
-a few extra bones in its hem first, and simulation only if that fails his eye. Root-game's cloth solver is a
-separate strand and is not reused here.
+**Start from root-game.** Wendell's steer on `bpt-skinned-garments` (2026-10-13): "Use as much as we can from the
+root game for this as we’ve already done many garment tests there". So J5's thread begins by listing what root-game
+already has (`wendell-britt/root-game`, call sheet `root.md`): its garment shapes (robe, sleeves, skirt), the clothes'
+spacing off the body (6 cm, and squashed at 3 cm where two fighters press, `rg-stance-by-move`), its collision
+shapes, its cloth solver and the phone cloth it ships. Each piece is reused, ported to the cave figure, or set aside
+with a reason written in tasks.md. The root-game strand owns those files; J5 copies or imports and never edits
+them there.
+
+Cloth simulation stays out of the first round unless root-game's solver ports cheaply. Skinned garments move with
+the body; a long robe that should swing gets a few extra bones in its hem first, then root-game's solver, and only
+then anything new.
 
 ### What Part 2 does not do
 
