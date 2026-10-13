@@ -1,11 +1,12 @@
-"""Builds a cave chamber from its recipe, scene.yaml (schema: RECIPE.md).
+"""Builds a cave chamber from its recipe, scene.yaml (schema: RECIPE.md). Kept as the record of T1 to T3 (RESULTS.md):
+the recipe missed its token line and was dropped (bpt-recipe-result). The chamber the game builds on is cave/chamber.py.
 
 Claude changes the cave by editing the recipe, never this script (blender-pipeline-test Part 2, `bpt-recipe`). The
 script reads the recipe, places pieces from cave-kit.glb, makes the chamber's walls and floor, renders two views and
 writes a GLB:
 
-    python3 content/ontology-game/cave/build_scene.py --check            # check the recipe only: no Blender, a second
-    /home/user/blenv/bin/python content/ontology-game/cave/build_scene.py [recipe] --out /tmp/blender-cloud/scene
+    python3 tools/blender-cloud/recipe_trial/build_scene.py --check            # check the recipe only: no Blender, a second
+    /home/user/blenv/bin/python tools/blender-cloud/recipe_trial/build_scene.py [recipe] --out /tmp/blender-cloud/scene
 
 Output in --out (kept out of git): chamber.glb, view_front.png, view_top.png, report.json. The same recipe gives the
 same file every run (the seed in `chamber`). Positions are metres on the floor: x to the right, y away from the
@@ -20,7 +21,7 @@ import sys
 import yaml
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-KIT = os.path.join(HERE, "cave-kit.glb")
+KIT = os.path.normpath(os.path.join(HERE, "..", "..", "..", "content", "ontology-game", "cave", "cave-kit.glb"))
 
 # Kit pieces a recipe may place. Each is one unit high as built (pool and arch: radius 1), so size is metres.
 PIECES = {"pool": 1.0, "gate_stone": 0.16, "portal_arch": 0.1, "stone_spire": 0.25, "glow_cap": 0.43,

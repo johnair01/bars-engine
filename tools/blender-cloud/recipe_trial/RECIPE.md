@@ -1,7 +1,10 @@
 # The chamber recipe: scene.yaml
 
+Dropped after T2 (`bpt-recipe-result`, RESULTS.md); the chamber is now `content/ontology-game/cave/chamber.py`. Kept
+as the record of what the trial's recipe sub-threads read.
+
 A change to the chamber is a change to `scene.yaml`. `build_scene.py` turns it into `chamber.glb` and two views.
-Check after every edit: `python3 content/ontology-game/cave/build_scene.py --check` (no Blender, a second). A
+Check after every edit: `python3 tools/blender-cloud/recipe_trial/build_scene.py --check` (no Blender, a second). A
 `STOP:` line names the key that is wrong.
 
 Positions are metres on the floor, `[x, y]`: x to the right, y away from the camera, `[0, 0]` the centre.

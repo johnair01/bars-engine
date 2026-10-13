@@ -1,11 +1,15 @@
 # T1 to T3: the recipe and its token cost (2026-10-13)
 
+**Outcome:** T2 missed its line, and Wendell let `bpt-recipe-result` stand (board read 0145): the recipe is dropped. The
+chamber is now `content/ontology-game/cave/chamber.py`, the code side of the trial, one `place(...)` line per piece.
+Later jobs (J1 textures on) edit that script. The recipe, its schema and its builder stay here as the record.
+
 Spec: `.specify/specs/blender-pipeline-test/spec.md`, Part 2. Board position `bpt-recipe`.
 
 ## What was built
 
-- `content/ontology-game/cave/scene.yaml`: the pool chamber as a recipe (24 lines). Schema: `cave/RECIPE.md` (37 lines).
-- `content/ontology-game/cave/build_scene.py`: the fixed builder. `--check` validates a recipe in plain Python with
+- `scene.yaml`: the pool chamber as a recipe (24 lines). Schema: `RECIPE.md` (37 lines).
+- `build_scene.py`: the fixed builder. `--check` validates a recipe in plain Python with
   no Blender, in under a second. With `bpy` it places kit pieces from `cave-kit.glb`, makes the walls and floor,
   writes `chamber.glb` (163 KB, 7,896 triangles for the default recipe) and renders a front and a top view (Cycles,
   CPU, about 24 s). The same recipe gives the same GLB, byte for byte (two runs, SHA-256 `dde8be96…`).
@@ -65,7 +69,7 @@ widens with a busier chamber, but not to three times at this size.
 ## Re-run
 
 ```bash
-python3 tools/blender-cloud/recipe_trial/make_code_baseline.py content/ontology-game/cave/scene.yaml /tmp/trial/chamber_code.py
+python3 tools/blender-cloud/recipe_trial/make_code_baseline.py tools/blender-cloud/recipe_trial/scene.yaml /tmp/trial/chamber_code.py
 # one sub-thread per ask and path, prompts in prompts.txt, model Sonnet, then:
 python3 tools/blender-cloud/recipe_trial/tokens.py r01=<transcript> c01=<transcript> ...
 python3 tools/blender-cloud/recipe_trial/sheet.py tools/blender-cloud/recipe_trial/asks.json /tmp/trial <base out> sheet.png

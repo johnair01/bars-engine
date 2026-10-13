@@ -1,5 +1,5 @@
-# The pool chamber of the Cave of Lessons, as a recipe. Edit this file to change the chamber; never the builder.
-# Schema: RECIPE.md. Check: python3 content/ontology-game/cave/build_scene.py --check
+# The pool chamber as a recipe: the T1 to T3 baseline (RESULTS.md). Dropped; the chamber is cave/chamber.py.
+# Schema: RECIPE.md. Check: python3 tools/blender-cloud/recipe_trial/build_scene.py --check
 chamber: {radius: 7, height: 5, seed: 7}
 light: {colour: "#ffd9a8", strength: 1, ambient: 0.15}
 looks:

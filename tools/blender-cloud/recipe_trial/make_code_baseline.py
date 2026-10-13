@@ -10,7 +10,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CAVE = os.path.normpath(os.path.join(HERE, "..", "..", "..", "content", "ontology-game", "cave"))
-sys.path.insert(0, CAVE)
+sys.path.insert(0, HERE)
 import build_scene  # noqa: E402
 
 r = build_scene.load(sys.argv[1])
@@ -21,14 +21,14 @@ def hexc(c):
     return "#" + "".join(f"{round(v * 255):02x}" for v in c)
 
 
-L = [f'''"""The pool chamber of the Cave of Lessons, built in Blender. Run: /home/user/blenv/bin/python chamber_code.py [--no-render]
-Writes chamber.glb, view_front.png, view_top.png into /tmp/blender-cloud/code (or the folder after --out)."""
+L = [f'''"""The pool chamber of the Cave of Lessons, built in Blender. Run: /home/user/blenv/bin/python content/ontology-game/cave/chamber.py [--no-render]
+Writes chamber.glb, view_front.png, view_top.png into /tmp/blender-cloud/chamber (or the folder after --out).\nTo change the chamber, edit this file: the pieces are one place(...) line each, near the end (bpt-recipe-result)."""
 import math, os, random, sys
 import bpy
 import bmesh
 
-KIT = "{os.path.join(CAVE, 'cave-kit.glb')}"  # pieces: pool, gate_stone, portal_arch, stone_spire, glow_cap, root_curl, crystal_cluster, crystal_cluster_bed; each 1 unit high (pool, arch: radius 1)
-OUT = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else "/tmp/blender-cloud/code"
+KIT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cave-kit.glb")  # pieces: pool, gate_stone, portal_arch, stone_spire, glow_cap, root_curl, crystal_cluster, crystal_cluster_bed; each 1 unit high (pool, arch: radius 1)
+OUT = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else "/tmp/blender-cloud/chamber"
 os.makedirs(OUT, exist_ok=True)
 R, H, SEED, ROUGH = {ch["radius"]:g}, {ch["height"]:g}, {ch["seed"]}, {ch["rough"]:g}  # chamber radius and height in metres
 LIGHT, LIGHT_STRENGTH, AMBIENT = "{hexc(lt["colour"])}", {lt["strength"]:g}, {lt["ambient"]:g}
@@ -76,7 +76,7 @@ for name, lk in r["looks"].items():
     glow = f", glow={lk['glow'] * 5:g}" if lk["glow"] else ""
     L.append(f'M_{name.upper()} = mat("{name}", "{col}", {rough:g}{glow})')
 
-src = open(os.path.join(CAVE, "build_scene.py")).read()
+src = open(os.path.join(HERE, "build_scene.py")).read()
 walls = src[src.index("    # walls and floor"):src.index("    counts, warnings")]
 walls = "\n".join(l[4:] for l in walls.splitlines())
 walls = walls.replace('ch["rough"]', "ROUGH").replace('r["walls"]', "M_WALL").replace('r["floor"]', "M_FLOOR")
