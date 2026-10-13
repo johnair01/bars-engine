@@ -517,6 +517,7 @@
   }
   (function () { var p = profileOf(0.55, 1); PX = p.PX; PY = p.PY; })();
   var TAPER = 0.5;
+  var WITHIN_SEAM = 2.5; // how far in from where a branch crosses its parent's wall its faces still overlap the parent's (units)
   function buildTube(THREE, route, o) {
     var shape = o.shape || CAVE_SHAPE.other, prof = profileOf(shape.e, shape.roof), PX = prof.PX, PY = prof.PY;
     var s0 = o.sFrom || 0, s1 = o.sTo == null ? route.len : o.sTo, n = Math.max(2, Math.floor(s1 - s0) + 1), ds = (s1 - s0) / (n - 1);
@@ -557,7 +558,13 @@
           if (H.tube) cut = ring[i].s >= H.s0 - 2 && ring[i + 1].s <= H.s1 + 2 && PX[j] * H.side > -0.2 && PX[j1] * H.side > -0.2 && quadIn(H.tube, "h" + q, 0.88, a, b, c, d);
           else cut = ring[i].s >= H.s0 && ring[i + 1].s <= H.s1 && PX[j] * H.side > 0.05 && PX[j1] * H.side > 0.05 && PY[j] > -0.86 && PY[j1] > -0.86 && PY[j] < 0.8 && PY[j1] < 0.8;
         }
-        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) cut = quadIn(t.within.tube, "w", 0.92, a, b, c, d);
+        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) {
+          // Near the seam a face goes only when it lies well inside the parent, so the two overlap there. Further in, any face
+          // inside the parent at all goes: a face's branch beside a narrow passage left slabs of its walls standing in the
+          // passage, and its floor showing through the passage's floor (Wendell, 2026-10-13: "Cave is breaking here").
+          var deep = ring[i + 1].s < t.within.s0 - WITHIN_SEAM || ring[i].s > t.within.s1 + WITHIN_SEAM;
+          cut = deep ? quadIn(t.within.tube, "wd", 1, a, b, c, d) : quadIn(t.within.tube, "w", 0.92, a, b, c, d);
+        }
         if (cut) continue;
         (PY[j] < -0.8 && PY[j1] < -0.8 ? floorIdx : idx).push(a, c, b, b, c, d);
       }
