@@ -1,0 +1,24 @@
+# The pool chamber of the Cave of Lessons, as a recipe. Edit this file to change the chamber; never the builder.
+# Schema: RECIPE.md. Check: python3 content/ontology-game/cave/build_scene.py --check
+chamber: {radius: 7, height: 5, seed: 7}
+light: {colour: "#ffd9a8", strength: 1, ambient: 0.15}
+looks:
+  wall: {colour: "#6b6159", rough: 0.85}
+  floor: {colour: "#5a524b", rough: 0.9}
+  rock: {colour: "#8c8075", rough: 0.8}
+  stone: {colour: "#70707e", rough: 0.8}
+  water: {colour: "#1f4a5c", rough: 0.1, wet: 1}
+  glow: {colour: "#7fe8c8", glow: 0.55}
+  crystal: {colour: "#8f84ff", glow: 0.45, rough: 0.25}
+  root: {colour: "#4a3426", rough: 0.9}
+  arch: {colour: "#fff1b0", glow: 1}
+walls: wall
+floor: floor
+objects:
+  - {id: pool, piece: pool, at: [0, 0.5], size: 1.8, look: water}
+  - {id: stones, piece: gate_stone, ring: {around: pool, radius: 3, count: 6}, size: 2.4, wide: 2.2, look: stone}
+  - {id: arch, piece: portal_arch, wall: {at: 0}, size: 2.6, look: arch}
+  - {id: spires, piece: stone_spire, wall: {count: 3, from: -120, to: -50}, size: [1.4, 2.2], look: rock}
+  - {id: caps, piece: glow_cap, scatter: {near: [4.3, 2.3], radius: 0.8, count: 3}, size: [0.6, 1.0], look: glow}
+  - {id: roots, piece: root_curl, wall: {count: 4, from: 30, to: 150}, hang: true, size: [1.5, 2], look: root}
+  - {id: crystals, piece: crystal_cluster, wall: {at: 115}, size: 2.2, look: crystal, bed: rock}

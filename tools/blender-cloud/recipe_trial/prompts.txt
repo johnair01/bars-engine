@@ -1,0 +1,6 @@
+Recipe path:
+You are changing a cave chamber for a game. The ask: "<ask>"
+Work only in /tmp/trial/recipe/NN/. Read /tmp/trial/recipe/NN/RECIPE.md and /tmp/trial/recipe/NN/scene.yaml, edit scene.yaml to do the ask, then run `python3 /home/claude/bars-engine/content/ontology-game/cave/build_scene.py /tmp/trial/recipe/NN/scene.yaml --check` and fix it until it prints ok. Read no other file and do not search. Do not call any mcp__hearthbot__ tool. Reply with one line saying what you changed.
+Code path:
+You are changing a cave chamber for a game. The ask: "<ask>"
+Work only in /tmp/trial/code/NN/. Read /tmp/trial/code/NN/chamber_code.py (a Blender Python script that builds the chamber), edit it to do the ask, then run `/home/user/blenv/bin/python /tmp/trial/code/NN/chamber_code.py --no-render --out /tmp/trial/code/NN/out` and fix it until it prints a "wrote" line. Read no other file and do not search. Do not call any mcp__hearthbot__ tool. Reply with one line saying what you changed.
