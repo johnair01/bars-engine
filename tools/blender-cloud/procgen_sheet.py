@@ -36,6 +36,25 @@ if kind == "roots":
             # hang them: flip so the trunk's `up` becomes the top of the cell and the tips dangle or sprawl
             add(v, f, c * gap, 0, f"{s}{c}").location.z = -r * gap
     w, h = cols * gap, len(styles) * gap
+elif kind == "clusters":
+    cols, gap = 4, 2.6
+    rows = [("clump", 11), ("ring", 11), ("drift", 9), ("colony", 11)]
+    for r, (k, n) in enumerate(rows):
+        for c in range(cols):
+            if k == "colony":
+                v, f = pg.colony(seed=c + 1, count=n)
+            else:
+                v, f, _ = pg.mushroom_cluster(seed=c + 1, kind=k, count=n, forms=("dome", "bell", "flat", "cone", "parasol")[: 3 + c % 3])
+            add(v, f, c * gap, 0, f"{k}{c}").location.y = -r * gap
+    # roots: knot and mat in the last two rows of the sheet are on a second render (kind "rootclusters")
+    w, h = cols * gap, len(rows) * gap
+elif kind == "rootclusters":
+    cols, gap = 4, 4.2
+    for r, k in enumerate(("knot", "mat")):
+        for c in range(cols):
+            v, f = pg.root_cluster(seed=c + 1, kind=k, count=5 if k == "knot" else 6)
+            add(v, f, c * gap, 0, f"{k}{c}").location.z = -r * gap
+    w, h = cols * gap, 2 * gap
 else:
     forms = list(pg.MUSHROOM_FORMS)
     cols, gap = 5, 0.9
@@ -45,10 +64,21 @@ else:
             add(v, f, c * gap, 0, f"{s}{c}").location.z = -r * 1.05
     w, h = cols * gap, len(forms) * 1.05
 cam = bpy.data.cameras.new("cam"); cam.type = "ORTHO"
+top = kind == "clusters"  # clusters are laid out on the ground: look down at them from above and in front
 cam.ortho_scale = h * 1.6 * 1.05 if kind != 'roots' else max(w, h * 1.6) * 1.05
 co = bpy.data.objects.new("cam", cam); sc.collection.objects.link(co); sc.camera = co
-co.location = (w / 2 - (0.5 * gap if kind != "roots" else 1.5), -20, -h / 2 + (0.4 if kind != "roots" else 1.2))
-co.rotation_euler = (math.radians(90), 0, 0)
+if top:
+    tilt = math.radians(25)  # from straight down
+    cx, cy = (w - gap) / 2, -(h - gap) / 2
+    co.location = (cx, cy - 20 * math.tan(tilt), 20)
+    co.rotation_euler = (tilt, 0, 0)
+    cam.ortho_scale = max(w, h * 1.6) * 1.05
+else:
+    wide = kind in ("roots", "rootclusters")
+    co.location = (w / 2 - (0.5 * gap if not wide else 1.5), -20, -h / 2 + (0.4 if not wide else 1.2))
+    co.rotation_euler = (math.radians(90), 0, 0)
+    if kind == "rootclusters":
+        cam.ortho_scale = max(w, h * 1.6) * 1.05
 sc.render.filepath = out
 bpy.ops.render.render(write_still=True)
 print("wrote", out)

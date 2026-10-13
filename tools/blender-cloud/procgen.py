@@ -271,6 +271,126 @@ def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.65, **f):
     return verts, faces
 
 
+# ---------------------------------------------------------------------------------------------------------------- clusters
+def _place(mesh, x, y, z, yaw, scale):
+    v, f = mesh
+    c, s_ = math.cos(yaw), math.sin(yaw)
+    return [(x + scale * (px * c - py * s_), y + scale * (px * s_ + py * c), z + scale * pz) for px, py, pz in v], f
+
+
+def _merge(parts):
+    verts, faces = [], []
+    for v, f in parts:
+        base = len(verts)
+        verts += v
+        faces += [tuple(i + base for i in q) for q in f]
+    return verts, faces
+
+
+CLUSTER_KINDS = ("clump", "ring", "drift", "colony")
+
+
+def mushroom_cluster(seed=1, kind="clump", count=9, forms=("dome", "bell", "flat"), spread=0.45, **opts):
+    """A group of mushrooms on the plane z=0. Returns (verts, faces, bases): bases are the ground points, for linking.
+      clump   Neyman-Scott: one or two parents, children thrown around them. The oldest (biggest) sit at the middle and
+              the babies at the edge; each leans away from the middle, the way crowded stems splay outward.
+      ring    a fairy ring: evenly spaced round a circle, radius `spread`, with jitter; they lean outward.
+      drift   a loose line along a slow curve, biggest at one end, as along a log.
+      colony  a clump plus mycelium threads between the bases (see `colony`).
+    Caps never overlap: a candidate closer than 0.8 of the two cap radii is moved outward or dropped."""
+    rng = random.Random(seed)
+    spots = []  # (x, y, scale, outward_angle)
+    if kind == "ring":
+        r = spread * 1.6
+        for i in range(count):
+            a = 6.283 * (i + rng.uniform(-0.25, 0.25)) / count
+            rr = r * (1 + rng.uniform(-0.12, 0.12))
+            spots.append((rr * math.cos(a), rr * math.sin(a), rng.uniform(0.7, 1.1), a))
+    elif kind == "drift":
+        ang = rng.uniform(0, 6.283)
+        for i in range(count):
+            t = i / max(count - 1, 1)
+            x, y = t * spread * 5 - spread * 2.5, math.sin(t * 3.0 + rng.uniform(0, 1)) * spread * 0.6 + rng.gauss(0, spread * 0.15)
+            spots.append((x * math.cos(ang) - y * math.sin(ang), x * math.sin(ang) + y * math.cos(ang), 1.15 - 0.8 * t + rng.uniform(-0.1, 0.1), ang + rng.uniform(-1.0, 1.0)))
+    else:
+        parents = [(0.0, 0.0)] + ([(rng.uniform(-1, 1) * spread * 2, rng.uniform(-1, 1) * spread * 2)] if count > 8 and rng.random() < 0.6 else [])
+        for i in range(count):
+            px, py = parents[i % len(parents)]
+            d = abs(rng.gauss(0, spread)) if i else 0.0
+            a = rng.uniform(0, 6.283)
+            spots.append((px + d * math.cos(a), py + d * math.sin(a), max(0.35, 1.15 - d / spread * 0.45 + rng.uniform(-0.12, 0.12)), a))
+    parts, bases, placed = [], [], []
+    base_form = rng.choice(forms)
+    for i, (x, y, sc, away) in enumerate(spots):
+        form = base_form if rng.random() < 0.65 else rng.choice(forms)
+        f = dict(MUSHROOM_FORMS[form])
+        rad = f["R"] * sc
+        for _ in range(12):  # shove outward until clear of the others
+            if all(math.hypot(x - ox, y - oy) > 0.8 * (rad + orad) for ox, oy, orad in placed):
+                break
+            x, y = x * 1.12 + 0.02 * math.cos(away), y * 1.12 + 0.02 * math.sin(away)
+        else:
+            continue
+        placed.append((x, y, rad))
+        # lean away from the middle: the mushroom's own lean direction is its yaw, so yaw it to face outward
+        m = mushroom(seed=rng.randrange(10 ** 6), lean=opts.get("lean", 0.45), **f)
+        yaw = away - 0.0 + rng.uniform(-0.5, 0.5)
+        parts.append(_place(m, x, y, 0.0, yaw, sc))
+        bases.append((x, y, rad))
+    v, f = _merge(parts)
+    return v, f, bases
+
+
+def root_cluster(seed=1, kind="knot", count=5, style="creeping", spread=0.35, **opts):
+    """Roots grouped. knot: several systems from nearly the same point, so trunks braid and fork into one mass.
+    mat: systems started along a line (an edge, a log) so their creeping branches overlap into a mat."""
+    rng = random.Random(seed)
+    parts = []
+    for i in range(count):
+        if kind == "mat":
+            x, y = (i / max(count - 1, 1) - 0.5) * spread * 8, rng.gauss(0, spread * 0.3)
+        else:
+            x, y = rng.gauss(0, spread * 0.25), rng.gauss(0, spread * 0.25)
+        st = dict(ROOT_STYLES[style], r0=ROOT_STYLES[style]["r0"] * rng.uniform(0.7, 1.1), length=ROOT_STYLES[style]["length"] * rng.uniform(0.6, 1.0))
+        v, f = root_system(seed=rng.randrange(10 ** 6), roots=rng.choice((1, 2)), spread=0.5, **st)
+        parts.append(_place((v, f), x, y, 0.0, rng.uniform(0, 6.283), 1.0))
+    v, f = _merge(parts)
+    return v, f
+
+
+def colony(seed=1, count=9, **opts):
+    """A mushroom clump with the mycelium showing: thin curved threads between neighbouring bases (every base to its two
+    nearest, with a sag toward the ground), and hair-roots fanning from the outer bases into the soil."""
+    rng = random.Random(seed)
+    mv, mf, bases = mushroom_cluster(seed=seed, kind="clump", count=count, **opts)
+    verts, faces = list(mv), list(mf)
+    for i, (x, y, r) in enumerate(bases):
+        near = sorted((j for j in range(len(bases)) if j != i), key=lambda j: math.hypot(bases[j][0] - x, bases[j][1] - y))[:2]
+        for j in near:
+            if j < i and i in sorted((k for k in range(len(bases)) if k != j), key=lambda k: math.hypot(bases[k][0] - bases[j][0], bases[k][1] - bases[j][1]))[:2]:
+                continue  # already drawn from the other end
+            (x2, y2, _) = bases[j]
+            n = 8
+            pts, rad = [], []
+            for k in range(n + 1):
+                t = k / n
+                pts.append((lerp(x, x2, t) + rng.gauss(0, 0.004), lerp(y, y2, t) + rng.gauss(0, 0.004), -0.01 - 0.035 * math.sin(3.1416 * t)))
+                rad.append(0.007 * (0.55 + 0.45 * max(0.0, math.sin(3.1416 * t)) ** 0.5) + 0.0015)
+            _sweep(pts, rad, FIBER_SEGMENTS + 2, verts, faces)
+    cx = sum(b[0] for b in bases) / len(bases)
+    cy = sum(b[1] for b in bases) / len(bases)
+    outer = sorted(bases, key=lambda b: -math.hypot(b[0] - cx, b[1] - cy))[:max(2, len(bases) // 3)]
+    for (x, y, r) in outer:
+        away = math.atan2(y - cy, x - cx)
+        st = dict(ROOT_STYLES["creeping"], r0=0.012, step=0.05, length=0.5, up=(math.cos(away), math.sin(away), -0.35), fibers=0.5, fork=0.2)
+        v, f = root_system(seed=rng.randrange(10 ** 6), roots=2, spread=0.4, **st)
+        v2, f2 = _place((v, f), x, y, -0.015, 0.0, 1.0)
+        base = len(verts)
+        verts += v2
+        faces += [tuple(i + base for i in q) for q in f2]
+    return verts, faces
+
+
 # ---------------------------------------------------------------------------------------------------------------- checks
 def stats(verts, faces):
     xs, ys, zs = zip(*verts)
@@ -278,6 +398,10 @@ def stats(verts, faces):
 
 
 def _selftest():
+    for k in ("clump", "ring", "drift"):
+        a = mushroom_cluster(seed=2, kind=k)
+        assert a == mushroom_cluster(seed=2, kind=k) and len(a[2]) >= 4, k
+    assert root_cluster(seed=2) == root_cluster(seed=2) and colony(seed=2) == colony(seed=2)
     for name, st in ROOT_STYLES.items():
         a, b = root_system(seed=4, **st), root_system(seed=4, **st)
         assert a == b, f"{name}: same seed, different mesh"

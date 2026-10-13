@@ -89,7 +89,12 @@ mesh. The aim: build as much as possible in code, then let the Blender pipeline 
   edge, tilt, pits, thickness, stem bulge, ring). `mushroom_between(a, b, t)` blends two forms, so there is a
   continuum between them, and `jitter` varies each number per seed. Each seed also leans, bends the stem and pitches the cap
   by its own random amount (`lean`, `bend`, `cap_tilt` are the maximums; 0 stands it upright).
-- **See them:** `/home/user/blenv/bin/python procgen_sheet.py OUT.png roots|mushrooms` renders a contact sheet, seeds
+- **Clusters** (`mushroom_cluster`, `root_cluster`, `colony`). Mushroom kinds: `clump` (parents with children thrown
+  around them, the biggest at the middle, babies at the edge, each leaning outward), `ring` (a fairy ring) and `drift`
+  (a loose curve, biggest at one end, as along a log); caps are kept from overlapping. Roots: `knot` (systems from nearly
+  one point that braid into a mass) and `mat` (systems along a line that overlap). `colony` is a clump with mycelium
+  threads linking neighbouring bases and hair-roots fanning from the outer ones.
+- **See them:** `/home/user/blenv/bin/python procgen_sheet.py OUT.png roots|mushrooms|clusters|rootclusters` renders a contact sheet, seeds
   across and styles down. Look at it; the numbers do not say whether it is natural. `python3 procgen.py --selftest`
   and test PG1 check determinism and mesh validity.
 

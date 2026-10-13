@@ -129,6 +129,9 @@ def pg1():
     shapes = [(f"root {k}", lambda s, k=k: pg.root_system(seed=s, **pg.ROOT_STYLES[k])) for k in pg.ROOT_STYLES]
     shapes += [(f"mushroom {k}", lambda s, k=k: pg.mushroom(seed=s, **pg.MUSHROOM_FORMS[k])) for k in pg.MUSHROOM_FORMS]
     shapes.append(("mushroom blend", lambda s: pg.mushroom(seed=s, **pg.mushroom_between("cone", "funnel", 0.5))))
+    shapes += [(f"mushroom {k}", lambda s, k=k: pg.mushroom_cluster(seed=s, kind=k, count=9)[:2]) for k in ("clump", "ring", "drift")]
+    shapes += [("colony", lambda s: pg.colony(seed=s)), ("root knot", lambda s: pg.root_cluster(seed=s, kind="knot")),
+               ("root mat", lambda s: pg.root_cluster(seed=s, kind="mat"))]
     for name, make in shapes:
         a = make(4)
         check(a == make(4), f"{name}: the same seed gave a different mesh")
