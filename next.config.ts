@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     "*": ["./tools/**", "./content/ontology-game/cave/pictures/**", "./content/ontology-game/**/*.glb"],
     "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
+    // The guidance route reads its flows by a computed path too (src/lib/simulation/flowLoader.ts), only from reports/ and
+    // fixtures/; it crossed the same limit by 0.02 MB when the Big Mind cave joined the cave page (bars-engine PR #313).
+    "/api/guidance": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
   },
   experimental: {
     serverActions: {
