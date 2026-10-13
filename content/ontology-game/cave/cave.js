@@ -143,6 +143,72 @@
   var FIG = 14; // chamber units per metre of the figure, for the paths that join two places
   // Game.jsx DAEMON_WORKS_FOR, line 1236.
   var DAEMON_WORKS_FOR = "You, the Player. Every daemon is there to protect you, and to work for your enjoyment.";
+  // Meeting a daemon the Big Mind way (board merge-layout, 13 October 2026: the Big Mind cave's chambers become this cave's
+  // daemon stops). Ask its permission to speak with it, step into its place, answer its questions as it, and ask a voice that
+  // is secretly speaking to step aside and wait for its own turn. The questions follow the Big Mind cave's (bigmind.js VOICES):
+  // its job, what it protects you from, how it is thanked. The Protector's cards are the workshop group's answers, from the Big
+  // Mind cave; the other six daemons' cards are written from their jobs above (a choice). A card with a second entry is an
+  // answer another part would give, so picking it brings that part out from behind the daemon (bm-dismiss-step-aside).
+  var MEET_Q = [
+    { id: "job", ask: "What is your job?" },
+    { id: "from", ask: "What do you protect me from?", multi: true },
+    { id: "thanks", ask: "How are you thanked for it?" },
+  ];
+  var MEET_CARDS = {
+    "protector": {
+      job: [["To protect."], ["To keep you safe."], ["To keep watch."], ["It's trying to keep me safe.", "ideas"], ["To keep everything in hand.", "controller"]],
+      from: [["Attack."], ["Danger, from anywhere."], ["Pain."], ["Shame."], ["Looking bad."], ["Risk."], ["Uncertainty."], ["Loss."], ["Losing control."], ["Other people, even loved ones."], ["Itself."], ["I'd fix whatever is hurting you.", "fixer"]],
+      thanks: [["I'm not."], ["Hardly ever."], ["You call me a prison."], ["It's exhausting."], ["I doubt anyone could thank me enough.", "skeptic"], ["It does its best, poor thing.", "ideas"]],
+    },
+    "controller": {
+      job: [["To set the standard."], ["To keep things in order."], ["To make sure it's done right."], ["To decide what happens next."], ["To keep every danger out.", "protector"], ["It just wants things to go well.", "ideas"]],
+      from: [["Mess."], ["Mistakes."], ["Being caught unprepared."], ["Chaos."], ["Falling short."], ["Other people's standards."], ["I'd repair whatever goes wrong.", "fixer"]],
+      thanks: [["When it goes right, nobody notices."], ["I'm called rigid."], ["Never enough."], ["Nothing is ever good enough to thank.", "skeptic"]],
+    },
+    "skeptic": {
+      job: [["To doubt."], ["To test what's true."], ["To ask whether it holds up."], ["To keep you from being fooled."], ["It's just being careful.", "ideas"], ["To keep you safe from harm.", "protector"]],
+      from: [["Being fooled."], ["False hope."], ["Looking naive."], ["Promises that don't hold."], ["Wasting yourself on what won't work."], ["I'd make it work properly myself.", "fixer"]],
+      thanks: [["I'm called negative."], ["Hardly."], ["Only when I'm proven right."], ["Nobody ever feels sorry for me.", "victim"]],
+    },
+    "fixer": {
+      job: [["To fix things."], ["To repair what's broken."], ["To hold things in place."], ["To make it better."], ["To set the standard for how it should be.", "controller"], ["It wants to help.", "ideas"]],
+      from: [["Things staying broken."], ["Feeling helpless."], ["It getting worse."], ["Being useless."], ["I doubt it can be fixed at all.", "skeptic"]],
+      thanks: [["When it's fixed, you forget me."], ["I'm told to stop meddling."], ["There's always another thing."], ["I'm the one who's broken.", "damaged-self"]],
+    },
+    "victim": {
+      job: [["To get sympathy."], ["To tell what happened to us."], ["To be seen hurting."], ["To get help."], ["It just wants to be heard.", "ideas"], ["To take the hit so you don't have to.", "damaged-self"]],
+      from: [["Being blamed."], ["Being alone with it."], ["Being ignored."], ["Having to act before you're ready."], ["I'd keep every danger out.", "protector"]],
+      thanks: [["People get tired of my stories."], ["I'm called dramatic."], ["Sometimes someone listens."], ["I doubt anyone really cares.", "skeptic"]],
+    },
+    "damaged-self": {
+      job: [["To take the damage."], ["To absorb the hit."], ["To carry what hurts."], ["To be the last resort."], ["It's broken, I think.", "ideas"], ["To fix the crack myself.", "fixer"]],
+      from: [["The full force of the blow."], ["Falling apart."], ["What can't be carried."], ["I'd stop it ever getting close.", "protector"]],
+      thanks: [["Nobody sees me."], ["I'm treated as the problem."], ["I'm hidden away."], ["Poor me, nobody ever helps.", "victim"]],
+    },
+    "emotional-body": {
+      job: [["To feel the signal."], ["To make meaning from it."], ["To turn feeling into something you can use."], ["To let it move through."], ["It's just being emotional.", "ideas"], ["To keep it all under control.", "controller"]],
+      from: [["Going numb."], ["Missing what matters."], ["Signals that pile up unfelt."], ["I'd repair the feeling so it stops.", "fixer"]],
+      thanks: [["I'm called too much."], ["I'm told to calm down."], ["Sometimes you listen."], ["I doubt feelings tell you anything.", "skeptic"]],
+    },
+  };
+  // Who else might be speaking, and how the guide names the tell (bigmind.js TRANSLATORS, widened to all seven daemons).
+  var MEET_TELL = {
+    ideas: "talked about it instead of speaking as it", protector: "took up the Protector's job of keeping you safe",
+    controller: "took up the Controller's job of setting the standard", skeptic: "doubted, which is the Skeptic's job",
+    fixer: "took up the Fixer's job of repairing things", victim: "told it as a story for sympathy, which is the Victim's way",
+    "damaged-self": "took the hit, which is the Damaged Self's job", "emotional-body": "felt it through for its meaning, which is the Emotional Body's job",
+  };
+  var MEET_OTHERS = [["ideas", "Your own ideas", "", 0x9a9aa8, ""], ["unknown", "Not sure", "", 0x6a6a74, ""]];
+  // An open line is heard for the same tells, with a plain word list (bigmind.js heard): a miss is cheap, and the player can
+  // always say it doesn't sound like the daemon.
+  function meetHeard(text, self) {
+    var t = " " + String(text || "").toLowerCase().replace(/[’]/g, "'") + " ", out = null;
+    if (/^ (it|he|she|they)\b/.test(t) || /\bit('s| is| does| wants| tries| keeps| has)\b/.test(t) || /\b(i think|maybe|perhaps|probably|i guess)\b/.test(t)) out = "ideas";
+    else if (/\b(fix|fixing|repair|solve|heal|make it better|sort it out)\b/.test(t)) out = "fixer";
+    else if (/\b(in charge|keep control|take control|manage|managing|keep order|the standard|in hand)\b/.test(t) && !/\b(lose|losing|lost|out of) control\b/.test(t)) out = "controller";
+    else if (/\b(doubt|don't believe|pointless|no point|silly)\b/.test(t) && !/self-doubt|self doubt/.test(t)) out = "skeptic";
+    return out === self ? null : out;
+  }
 
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -1763,10 +1829,24 @@
           body.push(P("A daemon stands in the way. Which one is it?"));
           body.push(choice(DAEMONS.map(function (x) { return [x[0], x[1]]; }), null, function (o) { meet(blk, o[0]); }));
           go.disabled = true;
+        } else if (!blk.met && blk.bm) {
+          title = meetCard(blk, d, body); go.disabled = true;
         } else {
           body.push(P(d[1] + "'s job: " + d[2], { "data-cave-daemon-job": "" }));
           body.push(P("Who it works for: " + DAEMON_WORKS_FOR, { "data-cave-daemon-for": "" }));
-          if (!blk.stepAside) {
+          if (!blk.met) {
+            // Met the Big Mind way (board merge-layout): its permission first. "Not now" is a full answer; the daemon still holds the
+            // way and is asked to step aside, as before (cave-daemon-wall), so nothing here becomes a skip.
+            body.push(P("May I speak with " + lowerName(d[1]) + "?", { "data-cave-bm-ask": "" }));
+            body.push(P("Ask it first. It can say no, and that is an answer too."));
+            body.push(row([
+              btn("It says yes", { "data-cave-bm-speak": "yes" }, function () { blk.bm = { phase: "q", n: 0, picked: [], heard: {}, seat: true, draft: "", waiting: [] }; placeCard(blk); }),
+              btn("Not now", { "data-cave-bm-speak": "not-now" }, function () { blk.met = "declined"; placeCard(blk); }, true),
+            ]));
+            go.disabled = true;
+          } else if (!blk.stepAside) {
+            if (blk.met === "declined" && !blk.dug) body.push(P(d[1] + " would rather not speak yet.", { "data-cave-met": "declined" }));
+            if (blk.met === "spoken" && !blk.dug) body.push(P("You stood in its place and spoke as it. It has been heard.", { "data-cave-met": "spoken" }));
             if (blk.dug) body.push(P("You worked what it was holding.", { "data-cave-dug": "" }));
             body.push(P(blk.dug ? "Will it step aside now?" : "Knowing that, will it step aside?"));
             body.push(row([
@@ -2079,6 +2159,98 @@
         ]));
         } }, body);
     }
+    // ---- meeting a daemon the Big Mind way (board merge-layout) --------------------------------------------------------
+    // blk.bm.phase: q (a question, answered as the daemon from its place), secret (another voice spoke), thank (it is asked to
+    // wait), out (the guide thanks the daemon), done. blk.met: "spoken" or "declined" once the meeting is over. The words stay
+    // on this page and are not saved, like the 3-2-1's.
+    function lowerName(n) { return n.replace(/^The /, "the "); }
+    function voiceRow(id) { return lookup(DAEMONS, id) || lookup(MEET_OTHERS, id); }
+    function meetCard(blk, d, body) {
+      var m = blk.bm, nm = lowerName(d[1]);
+      var leave = btn("Step back out", { "data-cave-bm-leave": "" }, function () { meetDone(blk); }, true);
+      if (m.phase === "secret") {
+        var why = m.tell === "felt" ? "did not feel like " + nm + " to you" : MEET_TELL[m.tell];
+        body.push(P("Wait. That answer " + why + ". Someone else has come out behind " + nm + ".", { "data-cave-bm-secret": m.tell }));
+        body.push(P("Who was speaking just then?"));
+        body.push(el("div", { class: "oagc-row" }, DAEMONS.filter(function (x) { return x[0] !== blk.daemon; }).concat(MEET_OTHERS).map(function (x) {
+          return btn(x[1], { "data-cave-bm-name": x[0] }, function () { m.who = x[0]; m.phase = "thank"; waiterOut(blk, x[0]); placeCard(blk); }, true);
+        })));
+        return "Someone else spoke";
+      }
+      if (m.phase === "thank") {
+        var w = voiceRow(m.who), wn = m.who === "ideas" ? "your own ideas" : m.who === "unknown" ? "the voice you don't know yet" : lowerName(w[1]);
+        body.push(P("Thank " + wn + " for speaking up, and ask it to wait for its own turn. Nothing it said is lost.", { "data-cave-bm-thankask": m.who }));
+        body.push(row([btn("Thank you. Please wait; you'll be heard later.", { "data-cave-bm-thank": "" }, function () {
+          if (m.waiting.indexOf(m.who) < 0) m.waiting.push(m.who);
+          waiterAside(blk); m.phase = "q"; m.lead = "Let me speak to " + nm + " again."; m.picked = []; placeCard(blk);
+        })]));
+        return "Someone else spoke";
+      }
+      if (m.phase === "out") {
+        var said = [];
+        MEET_Q.forEach(function (q) { (m.heard[q.id] || []).forEach(function (l) { said.push(l); }); });
+        if (said.length) body.push(el("div", { "data-cave-bm-heard": String(said.length) }, [P(d[1] + " said:")].concat(said.map(function (l) { return P("“" + l + "”", { class: "oagc-note" }); }))));
+        body.push(P("Thank you, " + d[1].replace(/^The /, "") + ". Every voice has a right to be heard, and you have been. I'm stepping back out to my own place now, and you have your post again.", { "data-cave-bm-thanks": "" }));
+        body.push(row([btn("Step back out", { "data-cave-bm-out": "" }, function () { meetDone(blk); })]));
+        return d[1];
+      }
+      var q = MEET_Q[m.n], cards = ((MEET_CARDS[blk.daemon] || {})[q.id] || []).slice();
+      // What it protects you from may be what you carry in (bms-protects-from): the spirits' names are cards too.
+      if (q.id === "from") spirits.forEach(function (o) { if (o.name) cards.push([o.name + "."]); });
+      body.push(P("Speaking as " + d[1] + " · " + (m.n + 1) + " of " + MEET_Q.length, { class: "oagc-note", "data-cave-bm-step": q.id }));
+      if (m.seat) body.push(P("You step into " + nm + "'s place. It steps back to where you stood, and you look back the way you came, the way it keeps watch.", { "data-cave-bm-seat": "" }));
+      if (m.lead) body.push(P(m.lead));
+      body.push(P(q.ask + " Answer as " + nm + ".", { "data-cave-bm-q": q.id }));
+      function answer(lines, out) {
+        if (out && out !== blk.daemon) { m.phase = "secret"; m.tell = out; m.draft = ""; placeCard(blk); return; }
+        m.heard[q.id] = lines; nextQ();
+      }
+      function nextQ() { m.picked = []; m.lead = null; m.seat = false; m.draft = ""; m.n++; if (m.n >= MEET_Q.length) m.phase = "out"; placeCard(blk); }
+      function firstOut(cs) { for (var i = 0; i < cs.length; i++) if (cs[i][1]) return cs[i][1]; return null; }
+      body.push(el("div", { class: "oagc-row" }, cards.map(function (c, ci) {
+        var on = m.picked.indexOf(c[0]) >= 0;
+        return el("button", { class: on ? "" : "alt", "data-cave-bm-card": String(ci), "aria-pressed": String(on), text: c[0], onclick: function () {
+          if (!q.multi) return answer([c[0]], c[1] || null);
+          var i = m.picked.indexOf(c[0]); if (i >= 0) m.picked.splice(i, 1); else m.picked.push(c[0]);
+          if (c[1] && i < 0) return answer(m.picked.slice(), c[1]);
+          placeCard(blk);
+        } });
+      })));
+      var input = el("input", { type: "text", "data-cave-bm-line": "", placeholder: "Or in its own words", maxlength: "200", enterkeyhint: "done", "aria-label": q.ask });
+      input.value = m.draft || "";
+      input.addEventListener("input", function () { m.draft = input.value; });
+      function say() { var t = input.value.trim(); if (!t) return; var picked = cards.filter(function (c) { return m.picked.indexOf(c[0]) >= 0; }); answer(m.picked.concat([t]), firstOut(picked) || meetHeard(t, blk.daemon)); }
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); say(); } });
+      body.push(el("div", { class: "oagc-compose" }, [input, el("button", { "data-cave-bm-say": "", "aria-label": "Say it", text: "↑", onclick: say })]));
+      var kids = [];
+      if (q.multi) { var done = btn("That's all of it", { "data-cave-bm-done": "" }, function () { answer(m.picked.slice(), null); }); done.disabled = !m.picked.length; kids.push(done); }
+      kids.push(btn("This doesn't sound like " + nm, { "data-cave-bm-wrong": "" }, function () { m.phase = "secret"; m.tell = "felt"; placeCard(blk); }, true));
+      kids.push(btn("Sit this one out", { "data-cave-bm-sitout": "" }, nextQ, true));
+      kids.push(leave);
+      body.push(row(kids));
+      return d[1];
+    }
+    // Stepping back out is always allowed (the Big Mind cave's Self button): the player takes their own place again.
+    function meetDone(blk) {
+      var m = blk.bm, any = Object.keys(m.heard).some(function (k) { return m.heard[k] && m.heard[k].length; });
+      m.phase = "done"; blk.met = any ? "spoken" : "declined";
+      placeCard(blk);
+    }
+    // A voice that was secretly speaking comes out behind the daemon, then walks on ahead and waits by the wall for its own turn.
+    function waiterOut(blk, id) {
+      var c = blk.route.ctx, r = blk.route, h = ch.h, vr = voiceRow(id); if (!c || c.daemonS == null || !vr) return;
+      var fig = buildDaemon(THREE, vr, h * 0.8), a = at(r, c.daemonS + 2.6), lat = (r.w || ch.w) * 0.25;
+      fig.position.set(a.x - a.fz * lat, a.y - h * 0.9, a.z + a.fx * lat); fig.rotation.y = yawFacing({ fx: -a.fx, fz: -a.fz });
+      fig.userData.who = id; r.group.add(fig); blk.waiters = (blk.waiters || []).concat([fig]); blk.bm.fig = fig;
+    }
+    function waiterAside(blk) {
+      var fig = blk.bm.fig, c = blk.route.ctx, r = blk.route, h = ch.h; blk.bm.fig = null; if (!fig || !c) return;
+      var k = blk.waiters.length - 1, s0 = c.daemonS + 2.6, s1 = c.daemonS + 10 + 3 * k, lat0 = (r.w || ch.w) * 0.25, lat1 = (r.w || ch.w) * 0.75;
+      tween(2000, function (t) {
+        var e = ease(t), a = at(r, s0 + (s1 - s0) * e), lat = lat0 + (lat1 - lat0) * e;
+        fig.position.set(a.x - a.fz * lat, a.y - h * 0.9, a.z + a.fx * lat); fig.rotation.y = yawFacing(a);
+      }, function () { var a = at(r, s1); fig.rotation.y = yawFacing({ fx: a.fz, fz: -a.fx }); fig.userData.wait = true; });
+    }
     function faceCard(blk) {
       var stp = stopOf(state.walk), f = lookup(FACES, stp.face);
       stat.setAttribute("data-cave-place", "face");
@@ -2170,6 +2342,8 @@
     // The target places for the chat's current step, or null when there is no 3-2-1 being staged. u is how far the player's
     // figure has walked toward the daemon's first place (6 is that place); cd is how far the daemon has walked to the player's.
     function stageTarget(wk, c) {
+      var b = wk && wk.blk, bm = b && !b.met && b.bm; // meeting it the Big Mind way: the player stands in its place, as at Be it
+      if (bm && wk.arrived && c && c.daemonS != null && c.daemonFig && bm.phase !== "done") return { u: 6, cd: 1, flip: 1, cam: "its" };
       var t = t321Of(wk); if (!t || !wk.arrived || !c || c.daemonS == null || !c.daemonFig) return null;
       if (t.paused) return { u: 0, cd: 0, flip: 0, cam: "far" };
       if (t.phase === 2) return { u: 3, cd: 0, flip: 0, cam: t.voice === "it" ? "face-it" : "face-you" };
@@ -2394,6 +2568,7 @@
       for (var i = 0; i < r.Y.length; i++) lowest = Math.min(lowest, r.Y[i] - b.y);
       return { kind: r.kind, len: r.len, startGap: Math.hypot(s0.x - b.x, s0.z - b.z), endGap: Math.hypot(s1.x - b.x, s1.z - b.z), lowest: lowest, stops: r.stops.length, holes: r.holes };
     };
+    api.meeting = function () { var b = state.walk && state.walk.blk; if (!b) return null; return { met: b.met || null, phase: b.bm ? b.bm.phase : null, n: b.bm ? b.bm.n : null, heard: b.bm ? b.bm.heard : null, waiting: b.bm ? b.bm.waiting.slice() : [], waiters: (b.waiters || []).map(function (f) { return { who: f.userData.who, wait: !!f.userData.wait }; }) }; };
     api.lanterns = function () { return lanternsOn.length; };
     api.elementScreen = function () {
       var c = ctxOf(), v = c.holder.getWorldPosition(new THREE.Vector3()); v.y += 1.4; v.project(camera);
@@ -2600,8 +2775,12 @@
       // Which creature is being worked: the player picks, and each keeps its own step.
       function focusRow() {
         return el("div", {}, [el("p", { class: "oagr-note", text: "Working with:" }), el("div", { class: "oagc-row" }, R.active.map(function (c, n) {
-          var b = el("button", { class: c === ch ? "" : "alt", "aria-pressed": String(c === ch), text: labelOf(c), onclick: function () { if (c !== ch) { setFocus(c); draw(); } } });
-          b.setAttribute("data-room-focus", String(n)); return b;
+          // Each part shows the element chosen for it, in its colour (Wendell, 13 October 2026: "Working on a different part
+          // should let me know what elements I've chosen for them").
+          var e = c.element && ELEMENTS.filter(function (x) { return x[0] === c.element || x[1] === c.element; })[0];
+          var b = el("button", { class: c === ch ? "" : "alt", "aria-pressed": String(c === ch), text: labelOf(c) + (e ? " · " + e[1] : ""), onclick: function () { if (c !== ch) { setFocus(c); draw(); } } });
+          if (e) b.style.borderLeft = "6px solid #" + ("00000" + e[3].toString(16)).slice(-6);
+          b.setAttribute("data-room-focus", String(n)); if (e) b.setAttribute("data-room-focus-element", e[1].toLowerCase()); return b;
         }))]);
       }
       // "What else is here?" (Wendell: "This will be the greatest use case for 'what else is here'"): first, is it about one of the
