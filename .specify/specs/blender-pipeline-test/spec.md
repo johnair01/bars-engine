@@ -270,6 +270,16 @@ aside, is in tasks.md.
   and the back at four points of the walk. The sheet is rendered from the GLBs, rebound to the figure's armature by
   bone name, the same way the game will swap them.
 
+Round 2 (his look, 2026-10-13 23:24, `j5-look-01`): "We still have issues with how the garments hang on the shoulders.
+There's peeking through on top. None of the robes do this well. Also the hems are being held open against gravity. We
+want them to hang more". The shoulder tops were not in the test's covered points (it stopped at 1.40 m), so they passed
+unseen. Now the robe's rows from the chest to the neck are laid over the body from the inside out, so they follow the
+nearly level top of the shoulder, and the test covers the trunk up to the neck. The hem's A-line went from 11 cm to
+3 cm, and the back hem bone follows the kicking shin a little more (`hemB` = hip + 0.6 knee), so the walk needs less
+room and the fit no longer opens the hem into a bell. `fit()` now undoes a round that leaves more points through and
+halves its next step. The robe is 117 to 126 KB. All 36 garments end at zero, and J4, J4b, J5, J5b and J5c pass.
+Pictures in `/mnt/project-files/3d-build/j5-round2-2026-10-13/`.
+
 ### What Part 2 does not do
 
 No daemon's or spirit's words (`cs-no-written-words`). No figure has a face, and no garment or figure is built

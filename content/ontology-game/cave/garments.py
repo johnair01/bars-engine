@@ -278,6 +278,11 @@ def robe(fig, rig, build, cw):
           or (main_bone(w) in ARMS and fig.data.vertices[i].co.z > 1.33)}
     tedges = edges_of(fig, tk)
     from_body = weight_source(fig, lambda co, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR"))
+    # the shoulders: rings round the body cannot follow the shoulder's top, which runs nearly level from the neck to
+    # the arm, so the rows there are laid over it from the inside out (Wendell, round 1: "There's peeking through on top")
+    tpolys = [list(p.vertices) for p in fig.data.polygons if all(v in tk for v in p.vertices)]
+    shoulder_tree = BVHTree.FromPolygons(rest, tpolys)
+    SH_C = Vector((0, 0, 1.22))
     verts, weights, faces, colours, rows, parts, inner = [], [], [], [], [], [], []
     for z in ROWS:
         poly = section(rest, z, 0.0, tedges)
@@ -285,7 +290,9 @@ def robe(fig, rig, build, cw):
         cy = sum(p[1] for p in poly) / len(poly)
         cx = 0.0                                           # symmetric about the middle line
         below = smooth(0.95, HEM, z)                       # 0 at the hips, 1 at the hem
-        off = (0.010 if z > 1.42 else 0.016) + 0.012 * below + 0.11 * below ** 1.3   # the A-line (root-game: a0 grows to the hem)
+        # a slight A-line: the cloth hangs, and the hem bones and the slits make room for the stride (round 1: "the
+        # hems are being held open against gravity. We want them to hang more"; it was 0.11 at the hem)
+        off = (0.010 if z > 1.42 else 0.016) + 0.012 * below + 0.03 * below ** 1.3
         row = []
         for j in range(COLS):
             th = 2 * math.pi * j / COLS                    # column 0 at the wearer's left side (+X), COLS/2 at the right
@@ -293,6 +300,11 @@ def robe(fig, rig, build, cw):
             # folds below the hips, deepening toward the hem (root-game fold(): six soft folds)
             r *= 1 + 0.05 * below * math.sin(6 * th + 0.6)
             p = Vector((cx + r * math.cos(th), cy + r * math.sin(th), z))
+            if 1.25 < z < 1.465:
+                d = (p - SH_C).normalized()
+                hit = shoulder_tree.ray_cast(SH_C + d * 0.6, -d)[0]
+                if hit is not None:
+                    p = SH_C + d * max((p - SH_C).length, (hit - SH_C).length + 0.016)
             row.append(len(verts))
             verts.append(p)
             weights.append(skirt_weights(p, from_body(p)))
@@ -365,16 +377,22 @@ def robe(fig, rig, build, cw):
     bm.from_mesh(obj.data)
     collar = C.collar_path(bm, build)
     C.cut_along(bm, lambda co: collar(co) - C.COLLAR * 1.15)
+    C.cut_along(bm, neck_band)                             # and the band round the neck, so its edge is one line
     bm.to_mesh(obj.data)
     bm.free()
     col = obj.data.color_attributes["Col"]
     for p in obj.data.polygons:
-        neck = p.center.z > 1.425 and Vector((p.center.x, p.center.y - 0.008)).length < C.COLLAR_R + 0.035
+        neck = neck_band(p.center) < 0
         if p.center.z > 1.0 and collar(p.center) < C.COLLAR * 1.15 or neck:
             for li in p.loop_indices:
                 col.data[li].color = (*cw["edge"], 1.0)
     outward(obj)
     return obj
+
+
+def neck_band(co):
+    """Negative on the robe's band round the neck: within reach of the neck, above the shoulders."""
+    return Vector((co.x, co.y - 0.008)).length - (C.COLLAR_R + 0.004) if co.z > 1.40 else 1.0
 
 
 def skirt_weights(p, body):
@@ -628,16 +646,27 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
     return counts, push
 
 
-def fit(wearer, cover, garment, keys, rounds=10, parts=None, ray_from=None):
+def fit(wearer, cover, garment, keys, rounds=14, parts=None, ray_from=None):
     """root-game's fullness, found by walking: push the cloth out (in its standing shape, along its normals) wherever
-    a covered point came through at any key, and again, until none does. Returns the rounds' counts."""
-    log = []
+    a covered point came through at any key, and again, until none does. A round that leaves more points through than
+    the best so far is undone and the next pushes are halved. Returns the rounds' counts."""
+    me = garment.data
+    log, best, scale = [], None, 1.0
     for _ in range(rounds):
         counts, push = through(wearer, cover, garment, keys, parts, ray_from)
-        log.append(sum(counts))
+        total = sum(counts)
+        log.append(total)
+        if best is not None and total > best[0]:
+            for v, co in zip(me.vertices, best[1]):          # worse than before: back to the best, smaller steps
+                v.co = co
+            me.update()
+            scale *= 0.5
+            counts, push = through(wearer, cover, garment, keys, parts, ray_from)
+            total = sum(counts)
+        if best is None or total <= best[0]:
+            best = (total, [v.co.copy() for v in me.vertices])
         if not push:
             break
-        me = garment.data
         me.update()
         spread = dict(push)
         for p in me.polygons:                              # spread each push to the face's neighbours, at half
@@ -647,7 +676,7 @@ def fit(wearer, cover, garment, keys, rounds=10, parts=None, ray_from=None):
                 for v in vs:
                     spread[v] = max(spread.get(v, 0.0), 0.5 * m)
         for v, d in spread.items():
-            me.vertices[v].co += me.vertices[v].normal * d
+            me.vertices[v].co += me.vertices[v].normal * min(d, 0.03) * scale
         me.update()
     return log
 
@@ -657,7 +686,9 @@ def cover_robe(fig):
     out = []
     for i, v in enumerate(fig.data.vertices):
         b, z = main_bone(W[i]), v.co.z
-        if b in ARMS or (b in ("hips", "spine", "hipL", "hipR", "kneeL", "kneeR") and HEM + 0.03 < z < 1.40):
+        neck = z > 1.40 and Vector((v.co.x, v.co.y - 0.008)).length < 0.08
+        if b in ARMS or (b in ("hips", "spine", "hipL", "hipR", "kneeL", "kneeR") and HEM + 0.03 < z < 1.50
+                         and not neck):
             out.append(i)
     return out
 

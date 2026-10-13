@@ -256,7 +256,7 @@ def pose(t):
     # the hem bones (J5): the front panel follows the leg that is ahead, the back panel the leg that is behind, its
     # shin kicking back included. A positive turn about X swings a hanging bone back. cave.js computes the same two.
     r["hemF"] = 0.9 * min(r["hipL"], r["hipR"])
-    r["hemB"] = 0.9 * max(r["hipL"] + 0.4 * r["kneeL"], r["hipR"] + 0.4 * r["kneeR"])
+    r["hemB"] = max(r["hipL"] + 0.6 * r["kneeL"], r["hipR"] + 0.6 * r["kneeR"])
     rot = {k: (v, 0.0) for k, v in r.items()}
     rot["spine"] = (0.07, 0.14 * sL)
     rot["hips"] = (0.0, -0.1 * sL)
