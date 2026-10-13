@@ -67,7 +67,21 @@ UDIM images for G3 are made at run time by `_make_fixtures.py`, so no `synthetic
 - [ ] [claude] 7b, J3 picture to asset (needs his pictures in the Drive inbox).
 - [x] [claude] 7c, J4 character creator: `cave/character.py`, nine figures, tests J4 and J4b pass (spec.md, J4 result).
   The sheet goes to his eye on Your steps.
-- [ ] [claude] 7c, J5 clothing.
+- [x] [claude] 7c, J5 clothing: `cave/garments.py`, robe, sash (on the body and over the robe) and topknot on all nine
+  figures; tests J5, J5b (bpy) and J5c (browser swap) pass (spec.md, J5 result). The sheet goes to his eye on Your steps.
+  What came from root-game (`wendell-britt/root-game` `engine/kit_engine.js`, read at 81c327a, nothing there edited):
+  - Reused as the method: the ring construction (rows of points round the body, a coarse count for the phone), the A-line
+    that flares toward the hem, folds that deepen toward the hem (`fold()`), side slits where the robe parts over the
+    legs (`slitColumns`), the band built on the torso plus a little for the cloth, and the crossed collar worn left over
+    right (`onCollar`, here J4's `collar_path`).
+  - Ported as a rule: hanging cloth rides the pelvis, not the legs (`skirtWeights`); the fullness rule (a hanging garment
+    is cut for the stride, not for standing), here found by walking (`fit()`).
+  - Set aside: the spring bones and cloth solver (`stepFight`, the shared cloth pass, the squash between two fighters'
+    legs). On an emulated phone the cloth step alone takes 35 to 40 ms a frame (root-game HANDOFF.md), more than a
+    frame, and its hard problems are two fighters pressing together, which the cave does not have. Two hem bones take
+    its place (spec.md, J5: "a few extra bones in its hem first").
+  - Set aside: Root's hem heights (raised to 0.40 m for its low stance; the cave figure walks upright, so the hem is
+    at 0.15 m) and its ANSUR body rows (the cave figure is J4's stylized body, measured directly).
 
 ## Steps only Wendell can take
 

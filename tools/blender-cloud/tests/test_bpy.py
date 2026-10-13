@@ -504,5 +504,49 @@ def j4b():
     return "a forward-bent knee fails the walk check"
 
 
+# ---- clothing (J5, J5b) ---------------------------------------------------------------------------------------
+
+@test("J5")
+def j5():
+    """garments.py --all puts the robe, the sash (cut on the body and over the robe) and the topknot on all nine
+    figures. (a) No covered body point comes through a garment, and no robe point through the sash worn over it, at
+    any of the walk's 25 keys; (b) each garment GLB is under 150 KB, with one skin whose joints are the figure's own
+    names. The sheet goes to the eye (cc-wardrobe-gate)."""
+    out = tmpdir("j5")
+    r, secs = run([GAME / "cave/garments.py", "--all", "--out", out], timeout=1800)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    rep = json.loads((out / "report.json").read_text())
+    rows = rep["garments"]
+    check(len(rows) == 36 and len({(x["garment"], x["build"], x["palette"]) for x in rows}) == 36,
+          f"{len(rows)} garments, want 36 (4 cuts, 3 builds, 3 palettes)")
+    rig = None
+    for row in rows:
+        check(len(row["through"]) == 25 and row["worst"] == 0,
+              f"{row['id']}: points through at some key, {row['through']}")
+        glb = out / row["file"]
+        size = glb.stat().st_size
+        check(size < 150 * 1024, f"{row['id']} is {size // 1024} KB")
+        j = glb_json(glb)
+        check(len(j.get("skins", [])) == 1 and not j.get("animations"), f"{row['id']}: want one skin, no animation")
+        names = {j["nodes"][n]["name"] for n in j["skins"][0]["joints"]}
+        if rig is None:
+            fj = glb_json(out / rep["figures"][0]["file"])
+            rig = {fj["nodes"][n]["name"] for n in fj["skins"][0]["joints"]}
+        check(names == rig, f"{row['id']}: joints {sorted(names ^ rig)} differ from the figure's")
+    sizes = [(out / x["file"]).stat().st_size for x in rows]
+    return f"36 garments on nine figures, none through at 25 keys, {min(sizes) // 1024} to {max(sizes) // 1024} KB; {secs:.0f} s"
+
+
+@test("J5b")
+def j5b():
+    """The check sees cloth that is too tight: without the walking fit (--no-fit) the robe has points through it."""
+    out = tmpdir("j5b")
+    r, _ = run([GAME / "cave/garments.py", "--no-fit", "--out", out], timeout=900)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
+    robe = next(x for x in json.loads((out / "report.json").read_text())["garments"] if x["garment"] == "robe")
+    check(robe["worst"] > 0, f"the unfitted robe passed: {robe['through']}")
+    return f"unfitted robe: {sum(robe['through'])} points through over the walk, the most at one key {robe['worst']}"
+
+
 if __name__ == "__main__":
     main()

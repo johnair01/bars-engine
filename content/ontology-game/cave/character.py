@@ -224,6 +224,10 @@ def joints(build):
         j["hip" + n] = ((s * hx, 0, 0.96), (s * (hx + 0.015), 0.0, 0.50))
         j["knee" + n] = ((s * (hx + 0.015), 0.0, 0.50), (s * (hx + 0.025), 0.015, 0.085))
         j["ankle" + n] = ((s * (hx + 0.025), 0.015, 0.085), (s * (hx + 0.03), -0.13, 0.03))
+    # two hem bones for J5's long robe, hanging from the hips: the front panel goes with whichever leg is forward and
+    # the back panel with whichever is back (garments.py). The body carries no weight on them.
+    j["hemF"] = ((0, -0.02, 0.96), (0, -0.02, 0.40))
+    j["hemB"] = ((0, 0.02, 0.96), (0, 0.02, 0.40))
     return j
 
 
@@ -231,6 +235,8 @@ PARENT = {"hips": None, "spine": "hips", "neck": "spine", "head": "neck"}
 for _n in ("L", "R"):
     PARENT.update({"shoulder" + _n: "spine", "elbow" + _n: "shoulder" + _n, "wrist" + _n: "elbow" + _n,
                    "hip" + _n: "hips", "knee" + _n: "hip" + _n, "ankle" + _n: "knee" + _n})
+PARENT.update({"hemF": "hips", "hemB": "hips"})
+HEM_BONES = ("hemF", "hemB")
 
 
 def pose(t):
@@ -247,6 +253,10 @@ def pose(t):
     r["shoulderL"], r["shoulderR"] = B * sL, B * sR
     r["elbowL"] = -(0.25 + 0.35 * max(0.0, -sL))
     r["elbowR"] = -(0.25 + 0.35 * max(0.0, -sR))
+    # the hem bones (J5): the front panel follows the leg that is ahead, the back panel the leg that is behind, its
+    # shin kicking back included. A positive turn about X swings a hanging bone back. cave.js computes the same two.
+    r["hemF"] = 0.9 * min(r["hipL"], r["hipR"])
+    r["hemB"] = 0.9 * max(r["hipL"] + 0.4 * r["kneeL"], r["hipR"] + 0.4 * r["kneeR"])
     rot = {k: (v, 0.0) for k, v in r.items()}
     rot["spine"] = (0.07, 0.14 * sL)
     rot["hips"] = (0.0, -0.1 * sL)
@@ -255,6 +265,12 @@ def pose(t):
 
 
 def build(build_name, palette, out_dir, theme="robe_set"):
+    fig, rig = make(build_name, palette, theme)
+    return export(fig, rig, build_name, palette, out_dir, theme)
+
+
+def make(build_name, palette, theme="robe_set"):
+    """The figure and its walking rig in a fresh scene, not yet exported (J5's garments are cut on these)."""
     if theme not in THEMES:
         raise SystemExit(f"no theme {theme}; there is {', '.join(THEMES)}")
     if build_name not in BUILDS or palette not in PALETTES:
@@ -327,8 +343,9 @@ def build(build_name, palette, out_dir, theme="robe_set"):
     # weights: each vertex goes to the part it lies nearest, and blends with that part's parent or child where
     # the two meet (a joint), so the surface bends at a joint and never pulls an arm into the trunk
     groups = {b: fig.vertex_groups.new(name=b) for b in PARENT}
-    near = {b: [t for bb, t in trees if bb == b] for b in PARENT}
-    links = {b: {b} | {PARENT[b]} - {None} | {c for c, p in PARENT.items() if p == b} for b in PARENT}
+    body = [b for b in PARENT if b not in HEM_BONES]
+    near = {b: [t for bb, t in trees if bb == b] for b in body}
+    links = {b: {b} | {PARENT[b]} - {None} | {c for c, p in PARENT.items() if p == b and c in body} for b in body}
     bone_of = []
     for v in fused.vertices:
         d = {}
@@ -416,7 +433,11 @@ def build(build_name, palette, out_dir, theme="robe_set"):
                 pb.keyframe_insert("location", frame=k + 1)
         prev = {pb.name: pb.rotation_quaternion.copy() for pb in rig.pose.bones}
     scene.frame_start, scene.frame_end = 1, KEYS + 1
+    return fig, rig
 
+
+def export(fig, rig, build_name, palette, out_dir, theme="robe_set"):
+    name, fused = f"{build_name}-{palette}", fig.data
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"{name}.glb")
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_normals=True,

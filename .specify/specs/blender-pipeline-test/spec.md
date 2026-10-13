@@ -237,6 +237,39 @@ seven and a half), a short neck, a plain trunk with no waist or chest sculpting,
 feet. The nine GLBs are 246 to 266 KB (line 300). The long robe, the sash as cloth and the topknot are J5's, as separate
 meshes on this rig. The figures reach the game when J5's garments are wired into `cave.js`.
 
+**J5 result (2026-10-13):** passed on the machine half; the sheet waits for his eye (`cc-wardrobe-gate`).
+`content/ontology-game/cave/garments.py` cuts three garments of the robe set on each of the nine J4 figures, each its own
+skinned mesh on the figure's rig: an ankle-length robe with wide sleeves, the crossed collar (J4's `collar_path`, left over
+right) and side slits to the knee; a sash knotted in front on the wearer's left with two tails, cut twice (`sash` on the
+body, `sash-robe` over the robe) so it sits close on either; and a topknot (hair over the crown and back of the head, a
+bun, its tie and a pin). Each comes in the three palettes (dusk, jade, hemp). What came from root-game, and what was set
+aside, is in tasks.md.
+
+- Built from the body: the robe is rings measured from the standing body's own outline at each height (where its edges
+  cross that height, since the decimated body's vertices alone miss it), offset and flared to an A-line, then thickened
+  4 mm outward. Above the hips it takes the body's weights; the sleeves take the arm's.
+- The hem bones: J4's rig gains two bones, `hemF` and `hemB`, hanging from the hips. The walk turns the front one with
+  whichever leg is ahead and the back one with whichever is behind (character.py `pose`). Below the hips the robe hangs
+  from the hips and these two, and its sides from their own thigh. The body carries no weight on them, and the J4 walk
+  tests still pass. cave.js must compute the same two when the figures are wired in.
+- (a) The test checks every covered body point, and the middle of every covered face, at all 25 keys of the walk (the
+  walk is one second, 25 keys, so the plan's frames 0, 12, 24 and 36 became every key). A point is through when it lies
+  outside the garment's surface and is not at an opening (hem, slits, cuffs, neck), or when the line out from the body's
+  middle through it meets no cloth (that second check found what the first missed where cloth folds: a speck of tunic at
+  the hip on the first sheet). Where a point came through, `fit()` pushes the cloth out and walks again: root-game's
+  fullness rule, found by walking. The robe needs one or two rounds; all 36 garments end at zero. Without the fit
+  (`--no-fit`, test J5b) the robe has points through.
+- (b) Robe 109 to 119 KB, sash 20, topknot 28 (line 150). Each garment's skin uses the figure's own joint names.
+- (c) `tools/blender-cloud/tests/j5_swap.mjs` in headless Chromium: the wardrobe is parsed and bound to the figure's
+  bones once on loading (about 50 ms for twelve garments), and a swap (take one off, put the next on) takes under 1 ms.
+  The frame after a swap is no slower than the walk's own at the median (16.7 ms). The 30 a second line is judged on
+  his phone, as J1's was (`bpt-j1-frame-rate`): the cloud browser draws without a graphics chip, and its walk alone has
+  frames of 33 to 50 ms before any swap.
+- (d) Three pictures in `/mnt/project-files/3d-build/j5-garments-2026-10-13/`: each garment alone in each palette on the
+  three builds (27 figures), the whole set on all nine, and the average dusk figure in the set from the front, the side
+  and the back at four points of the walk. The sheet is rendered from the GLBs, rebound to the figure's armature by
+  bone name, the same way the game will swap them.
+
 ### What Part 2 does not do
 
 No daemon's or spirit's words (`cs-no-written-words`). No figure has a face, and no garment or figure is built

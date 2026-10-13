@@ -125,6 +125,38 @@ def p6():
     return f"cave-test.mjs: {passes} checks passed at 390 by 844"
 
 
+@test("J5c")
+def j5c():
+    """J5(c): in headless Chromium, swapping a garment on the walking figure (j5_swap.mjs: the wardrobe loaded and
+    bound to the figure's bones once, a swap takes one off and puts the next on) takes under 100 ms, and the frame after
+    a swap is no slower than the walk's own at the median. The frame line (no frame below 30 a second) is judged on his phone, as J1's was
+    (bpt-j1-frame-rate): the cloud browser draws without a graphics chip, so its own walking frames, before any swap,
+    already miss it. The numbers are reported either way."""
+    needs("registry.npmjs.org")
+    root = W / "cave-test"
+    if not (root / "node_modules/playwright").exists():
+        root.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run(["npm", "install", "--prefix", str(root), "--silent", *[f"{k}@{v}" for k, v in CAVE_PINS.items()]],
+                           capture_output=True, text=True, timeout=900)
+        check(r.returncode == 0, f"npm install failed: {r.stderr[-300:]}")
+    out = tmpdir("j5c")
+    r = subprocess.run([BLENV, str(GAME / "cave/garments.py"), "--build", "average", "--palette", "dusk", "--out", str(out)],
+                       capture_output=True, text=True, timeout=900)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
+    shutil.copyfile(TESTS / "j5_swap.mjs", root / "j5_swap.mjs")
+    r = subprocess.run(["node", "j5_swap.mjs"], capture_output=True, text=True, cwd=root, timeout=600,
+                       env=dict(os.environ, J5_DIR=str(out)))
+    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    check(r.returncode == 0 and line, f"j5_swap.mjs failed: {r.stderr[-300:]}")
+    res = json.loads(line)
+    check(not res["errors"] and res["worst_swap_ms"] < 100, f"swap: {res}")
+    # a swap costs the frame nothing the walk alone does not: the frame after a swap is no slower, at the median
+    check(res["swap_frame_median_ms"] <= res["baseline_median_frame_ms"] + 2, f"swap frames slower: {res}")
+    return (f"{res['swaps']} swaps, worst {res['worst_swap_ms']} ms (median {res['median_swap_ms']}); frames: walking "
+            f"alone median {res['baseline_median_frame_ms']} ms, worst {res['baseline_worst_frame_ms']}; on a swap median "
+            f"{res['swap_frame_median_ms']}, worst {res['swap_frame_worst_ms']} (phone judges the 30 a second line)")
+
+
 @test("N1")
 def n1():
     needs("api.blenderkit.com", "assets.blenderkit.com")
