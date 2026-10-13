@@ -191,6 +191,18 @@ the floor and gate stones, crystal vein on the spires and crystal bed, six 512 p
 (`bpt-j1-frame-rate`): the cloud browser draws without a graphics chip, so the untextured chamber already misses 30 a
 second there (27.7 on the 4x throttle; 19.7 textured).
 
+**J2 result (2026-10-13):** passed. `content/ontology-game/cave/objects.py` adds one `obj(...)` line per object to
+`chamber.py`, from any of the three sources: Blendkit's CC0 "Boulder 01" by Poly Haven (`boulder`, result 0, pinned by
+id), a stone offering bowl that from_picture.py lathes from a stand-in picture (`pictures/offering_bowl.jpg`, outline match 0.991), and a
+sitting cushion built by script. Each stands on the floor (lowest vertex 0.0 cm), inside the walls (5 cm clear), under
+its budget (boulder 65 KB of 117, bowl 43 of 58, cushion 5 of 19) and writes its manifest row. The chamber is 565 KB
+of the 3 MB budget. Tests J2 and J2b (`test_bpy.py`): J2 builds the chamber and checks every row; J2b feeds the build a
+Royalty Free sidecar and the build stops (`cs-cc0-or-own`). Two traps found on the way: the decoded Draco boulder had
+every triangle on its own vertices, so decimating it shredded the rock until objects.py merged the vertices first; and its
+colour map read the second of two UV sets, so dropping "the extra one" turned it black. `objects.py` handles
+both. The chamber build now needs the network the first time a Blendkit object is fetched; after that it
+reads the cache under `/tmp/blender-cloud/assets`.
+
 **Start from root-game.** Wendell's steer on `bpt-skinned-garments` (2026-10-13): "Use as much as we can from the
 root game for this as we’ve already done many garment tests there". So J5's thread begins by listing what root-game
 already has (`wendell-britt/root-game`, call sheet `root.md`): its garment shapes (robe, sleeves, skirt), the clothes'

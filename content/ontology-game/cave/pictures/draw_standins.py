@@ -106,8 +106,24 @@ def root():
     return im
 
 
+def bowl():
+    """A stone offering bowl (J2's picture-built object): a wide shallow cup on a short foot, a thick rim."""
+    mask = Image.new("L", (W, H), 0)
+    d = ImageDraw.Draw(mask)
+    cx = W // 2
+    d.polygon([(cx - 70, 600), (cx - 52, 520), (cx + 52, 520), (cx + 70, 600)], fill=255)   # foot
+    d.chord((cx - 220, 230, cx + 220, 560), 0, 180, fill=255)                              # the cup
+    d.rectangle((cx - 228, 380, cx + 228, 405), fill=255)                                  # rim
+    im = shade(paper(4), mask, (196, 190, 176), (86, 80, 74), (55, 50, 46), 4, streaks=11)
+    return im
+
+
 if __name__ == "__main__":
-    for name, fn in (("stone_spire", spire), ("glow_cap", glowcap), ("root_curl", root)):
+    import sys
+    want = sys.argv[1:]  # names to draw; all when none
+    for name, fn in (("stone_spire", spire), ("glow_cap", glowcap), ("root_curl", root), ("offering_bowl", bowl)):
+        if want and name not in want:
+            continue
         path = os.path.join(HERE, name + ".jpg")
         fn().save(path, quality=88, optimize=True)
         print("wrote", path, os.path.getsize(path), "bytes")

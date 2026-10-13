@@ -1,4 +1,4 @@
-"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5. Run under the bpy venv (README); each build runs as a
+"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2 and J2b. Run under the bpy venv (README); each build runs as a
 subprocess of that same Python, in a copy of the repo under $W, so the checkout is never written.
 
 usage: /home/user/blenv/bin/python tools/blender-cloud/tests/test_bpy.py [R2,W1,...]
@@ -409,6 +409,49 @@ def e2():
     if ("walk", stamp) not in looked():
         raise AssertionError(f"walk `{stamp}` has no LOOKED.md line; sheet at {sheet}")
     return f"sheet at {sheet}; walk looked at"
+
+# ---- J2: objects in the chamber -------------------------------------------------------------------------------
+
+@test("J2")
+def j2():
+    """Each obj(...) line in chamber.py lands on the floor, inside the walls, under its budget, with a manifest row.
+    The Blendkit object needs the network the first time (then the cache under $W/assets)."""
+    root = copy_tree(tmpdir("j2"))
+    out = tmpdir("j2-out")
+    r, secs = run([root / "content/ontology-game/cave/chamber.py", "--no-render", "--out", out])
+    if r.returncode and "Blendkit fetch failed" in r.stdout + r.stderr:
+        raise Skip("Blendkit not reachable from this environment")
+    check(r.returncode == 0, f"chamber.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    rows = json.loads((out / "objects.json").read_text())
+    kinds = {row["source"].split()[0] for row in rows}
+    check({"Blendkit", "cave/objects.py"} <= kinds and any("pictures/" in row["source"] for row in rows),
+          f"want one object from each source (Blendkit, picture, script); got {[row['source'] for row in rows]}")
+    manifest = {a["id"]: a for a in json.loads((root / "content/ontology-game/cave/manifest.json").read_text())["assets"]}
+    for row in rows:
+        check(abs(row["lowest_cm"]) <= 1, f"{row['id']} stands {row['lowest_cm']} cm off the floor")
+        check(row["bytes"] <= row["budget_bytes"], f"{row['id']} is {row['bytes']} bytes, budget {row['budget_bytes']}")
+        check(row["licence"] in ("CC0", "own work"), f"{row['id']} licence {row['licence']}")
+        m = manifest.get(row["id"])
+        check(m and m["bytes"] == row["bytes"] and m["source"] and m["budget_bytes"], f"{row['id']}: no manifest row")
+    return ", ".join(f"{row['id']} {row['bytes'] // 1024} KB" for row in rows) + f"; {secs:.0f} s"
+
+
+@test("J2b")
+def j2b():
+    """A Blendkit source that is not CC0 stops the build (cs-cc0-or-own). Offline: a cached sidecar says Royalty Free."""
+    root = copy_tree(tmpdir("j2b"))
+    cache = tmpdir("j2b-cache")
+    folder = cache / "boulder-0-cc_zero"
+    folder.mkdir()
+    (folder / "Boulder_01.json").write_text(json.dumps({"name": "Boulder 01", "author": "test", "license": "royalty_free",
+                                                        "id": "eff99517-c257-4525-9fe3-41bf2e367197", "source": "test"}))
+    env = dict(os.environ, BLENDERKIT_CACHE=str(cache))
+    r = subprocess.run([PY, root / "content/ontology-game/cave/chamber.py", "--no-render", "--out", tmpdir("j2b-out")],
+                       capture_output=True, text=True, env=env, timeout=600)
+    said = r.stdout + r.stderr
+    check(r.returncode != 0 and "cs-cc0-or-own" in said, f"the build went on: exit {r.returncode}, {said[-300:]}")
+    check(not (root / "content/ontology-game/cave/manifest.json").read_text().count("royalty"), "a row was written")
+    return "Royalty Free source stopped the build"
 
 
 if __name__ == "__main__":

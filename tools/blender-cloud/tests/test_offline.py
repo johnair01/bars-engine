@@ -70,6 +70,10 @@ def g6():
         for k in ("source", "licence"):
             if not a.get(k):
                 problems.append(f"{aid} has no {k}")
+        if a.get("kind") == "object":  # packed inside chamber.glb (J2): J2 checks its bytes and budget when it builds
+            if a.get("licence") not in ("own work", "CC0"):
+                problems.append(f"{aid} licence is {a.get('licence')!r}")
+            continue
         if a.get("file") is None:
             continue  # a library with no file of its own (lib.three) is listed for its licence only
         if a.get("licence") not in ("own work", "CC0"):

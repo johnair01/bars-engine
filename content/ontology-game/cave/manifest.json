@@ -128,11 +128,11 @@
       "id": "cave.pictures",
       "file": "pictures/",
       "kind": "concept pictures",
-      "source": "pictures/draw_standins.py (stone_spire, glow_cap, root_curl: stand-ins drawn in code, own work); crystal_cluster.jpg: Wendell's ChatGPT concept picture, reference only",
+      "source": "pictures/draw_standins.py (stone_spire, glow_cap, root_curl, offering_bowl: stand-ins drawn in code, own work); crystal_cluster.jpg: Wendell's ChatGPT concept picture, reference only",
       "licence": "own work",
       "status": "built",
       "ships": false,
-      "bytes": 223390
+      "bytes": 272718
     },
     {
       "id": "cave.spots",
@@ -170,6 +170,59 @@
       "tile_units": 3.2,
       "note": "Seamless: each point is taken on a torus in 4D. Neutral grey, tinted by the charge's wall colour in cave.js (stoneOf). Wendell, 2026-10-13: \"Let's incorporate what we've made so far into the cave games\".",
       "bytes": 123175
+    },
+    {
+      "id": "chamber.boulder.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "Blendkit 'Boulder 01' by Poly Haven, https://www.blendkit.com/asset-gallery-detail/ab2917c6-22a7-4f20-9f8b-72ce5079b2f0/ (query 'boulder', result 0)",
+      "licence": "CC0",
+      "blenderkit_id": "eff99517-c257-4525-9fe3-41bf2e367197",
+      "budget_bytes": 120000,
+      "faces": 1200,
+      "at": [
+        -3.2,
+        -4.6
+      ],
+      "height_m": 0.9,
+      "bytes": 66940,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.bowl.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "cave/objects.py from pictures/offering_bowl.jpg (lathe, tools/blender-cloud/from_picture.py)",
+      "licence": "own work",
+      "outline_match": 0.991,
+      "budget_bytes": 60000,
+      "faces": 134,
+      "at": [
+        0.7,
+        -3.4
+      ],
+      "height_m": 0.3,
+      "bytes": 44504,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.cushion.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "cave/objects.py, cushion()",
+      "licence": "own work",
+      "budget_bytes": 20000,
+      "faces": 113,
+      "at": [
+        -0.8,
+        -3.5
+      ],
+      "height_m": 0.22,
+      "bytes": 5164,
+      "lowest_cm": 0.0,
+      "status": "built"
     },
     {
       "id": "daemon.figure",
