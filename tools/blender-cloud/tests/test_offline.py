@@ -81,8 +81,8 @@ def g6():
         if a.get("status") == "planned":
             continue
         p = GAME / "cave" / a["file"]
-        if p.is_dir():  # a folder of pictures: its bytes count the pictures, not the script that drew them
-            size = sum(f.stat().st_size for f in p.iterdir() if f.suffix.lower() in (".jpg", ".jpeg", ".png"))
+        if p.is_dir():  # a folder of pictures or models: its bytes count the files, not a script that drew them
+            size = sum(f.stat().st_size for f in p.iterdir() if f.is_file() and f.suffix.lower() != ".py")
         elif p.exists():
             size = p.stat().st_size
         else:

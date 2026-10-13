@@ -247,6 +247,7 @@ ok(!(await C(() => window.__oagCave.modal())).open && (await C(() => window.__oa
 const yaw0 = await state('s.look.yaw');
 await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(120, 600, { steps: 6 }); await page.mouse.up();
 ok(Math.abs((await state('s.look.yaw')) - yaw0) > 0.2, 'dragging looks around');
+ok((await state('s.look.yaw')) < yaw0 - 0.2, 'the camera follows the finger: a drag to the left swings it to the left');
 // One touch walks and looks (Wendell, 2026-10-13): a drag keeps the hold, and pushing up lifts the camera to look down.
 const above0 = (await C(() => window.__oagCave.camInside())).above;
 await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(150, 460, { steps: 8 });
