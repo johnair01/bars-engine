@@ -199,7 +199,7 @@ def mushroom_between(a, b, t):
     return out
 
 
-def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.28, **f):
+def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.65, **f):
     """Lathe mesh of one mushroom, base at z=0. jitter varies each number by up to that fraction, per seed.
     lean (radians), bend (stem curvature) and cap_tilt (radians) are maximums: each seed draws its own amount between
     zero and the maximum, in its own direction, so a patch of them does not stand like a row of pins. Pass 0 for upright."""
@@ -254,16 +254,16 @@ def mushroom(seed=1, jitter=0.12, lean=0.30, bend=0.5, cap_tilt=0.28, **f):
             a, b = i * SIDES + k, i * SIDES + (k + 1) % SIDES
             faces.append((a, b, b + SIDES, a + SIDES))
     if lean or bend or cap_tilt:
-        L, B, T = rng.uniform(0.2, 1.0) * lean, rng.uniform(0.0, 1.0) * bend, rng.uniform(-1.0, 1.0) * cap_tilt
-        az = rng.uniform(0, 6.283)
+        L, B, T = rng.uniform(0.2, 1.0) * lean, rng.uniform(0.0, 1.0) * bend, rng.uniform(0.3, 1.0) * cap_tilt
+        az, at = rng.uniform(0, 6.283), rng.uniform(0, 6.283)  # lean direction, and the cap's own tilt direction
         H = p["H"]
         ca, sa = math.cos(L), math.sin(L)
-        ct, st = math.cos(T), math.sin(T)
+        axis = (math.cos(at), math.sin(at), 0.0)
         out = []
         for x, y, z in verts:
-            if z > H:  # the cap pitches about the stem top, across the bend's plane
-                zz = z - H
-                x, z = x * ct + zz * st, H + zz * ct - x * st
+            if z > H:  # the cap pitches about the stem top, in its own direction: one rim rises, the other drops
+                x, y, zz = rotate((x, y, z - H), axis, T)
+                z = H + zz
             x += B * z * z  # the stem curves
             x, z = x * ca + z * sa, z * ca - x * sa  # the whole mushroom leans about its base
             out.append((x * math.cos(az) - y * math.sin(az), x * math.sin(az) + y * math.cos(az), z))
