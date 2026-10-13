@@ -2580,7 +2580,7 @@
         else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
         if (free) keepIn(camPos, 0.96, 0.25);
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
-        if (state.camAt) { var ca = state.camAt; camera.position.set(ca[0], ca[1], ca[2]); camera.lookAt(ca[3], ca[4], ca[5]); camera.updateMatrixWorld(); } // tests: a fixed view
+        if (state.camFix) { var ca = state.camFix; camera.position.set(ca[0], ca[1], ca[2]); camera.lookAt(ca[3], ca[4], ca[5]); camera.updateMatrixWorld(); } // tests: a fixed view
         var cp = ch && ch.main && ch.main.cap; if (cp) cp.mesh.visible = (camPos.x - cp.x) * cp.fx + (camPos.z - cp.z) * cp.fz > 0.3;
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
         var lg = route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : route.kind === "face" ? faceLook(route.style) : SIDE_LOOK, fe = 1 - Math.exp(-dt * 2.2);

@@ -367,10 +367,10 @@ const greenIn = (buf) => page.evaluate(async (b64) => {
 await C(() => { window.__oagCave.state.voidHex = 0x00ff00; });
 const seams = await C(() => window.__oagCave.openings(false)), seamGreen = [];
 for (let ph = 0; ph < 2; ph++) {
-  for (const v of seams[0].views) { await C((c) => { window.__oagCave.state.camAt = c; }, v); await page.waitForTimeout(60); seamGreen.push(await greenIn(await page.screenshot())); }
+  for (const v of seams[0].views) { await C((c) => { window.__oagCave.state.camFix = c; }, v); await page.waitForTimeout(60); seamGreen.push(await greenIn(await page.screenshot())); }
   await page.waitForTimeout(2500);
 }
-await C(() => { window.__oagCave.state.camAt = null; window.__oagCave.state.voidHex = null; });
+await C(() => { window.__oagCave.state.camFix = null; window.__oagCave.state.voidHex = null; });
 ok(seams.length === 1 && seamGreen.length >= 10 && seamGreen.every((n) => n === 0), `no void shows round the way in from ${seamGreen.length} views across the breath (green ${seamGreen.filter((n) => n).join(', ') || 'none'})`);
 const walkSamples = [];
 await page.mouse.move(330, 700); await page.mouse.down();
