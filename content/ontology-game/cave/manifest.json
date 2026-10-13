@@ -36,7 +36,7 @@
         "mush_clump",
         "mush_colony"
       ],
-      "bytes": 326836,
+      "bytes": 408228,
       "dressing": [
         {
           "piece": "stone_spire",
@@ -122,7 +122,7 @@
           "sized_by": "span"
         }
       ],
-      "grown_note": "Made from numbers by tools/blender-cloud/procgen.py through cave/grow.py, decimated to the face budget in build_kit.py. Own work, no picture. Wendell, 2026-10-13: \"let's wire this into the cave\"."
+      "grown_note": "Made from numbers by tools/blender-cloud/procgen.py through cave/grow.py, grown at the face budget with crisp cap rims, shade and baked shadow (COLOR_0) by tools/blender-cloud/detail.py, no decimation. Own work, no picture. Wendell, 2026-10-13: \"let's wire this into the cave\"."
     },
     {
       "id": "cave.pictures",

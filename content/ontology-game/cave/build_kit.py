@@ -27,7 +27,7 @@ from mathutils import Vector
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "tools", "blender-cloud"))
 import from_picture  # noqa: E402  the cave studio's picture-to-model tool
-import grow  # noqa: E402  the grown pieces: roots and mushrooms from procgen
+import detail  # noqa: E402  the grown pieces: roots and mushrooms from procgen, through the Blender detail pass
 FIGURE = os.path.join(HERE, "..", "body", "figure.glb")
 OUT_KIT = os.path.join(HERE, "cave-kit.glb")
 OUT_SPOTS = os.path.join(HERE, "spots.json")
@@ -251,16 +251,9 @@ def dressing():
 
 
 def grown():
-    """The roots and mushrooms grow.py makes, each decimated to its face budget. Returns {piece: faces}."""
-    out = {}
-    for name, (verts, faces, budget) in grow.grown().items():
-        me = bpy.data.meshes.new(name)
-        me.from_pydata(verts, [], faces)
-        me.validate()
-        ob = bpy.data.objects.new(name, me)
-        scene.collection.objects.link(ob)
-        out[name] = len(from_picture.fit(ob, budget).data.polygons)
-    return out
+    """The roots and mushrooms grow.py makes, grown at their face budgets with crisp cap rims, shade and baked shadow
+    by tools/blender-cloud/detail.py (no decimation). Returns {piece: faces}."""
+    return {name: len(ob.data.polygons) for name, ob in detail.build(scene.collection).items()}
 
 
 if __name__ == "__main__":
@@ -273,7 +266,8 @@ if __name__ == "__main__":
     for ob in scene.objects:
         ob.data.materials.append(mat)
     bpy.ops.export_scene.gltf(filepath=OUT_KIT, export_format="GLB", export_apply=True, export_yup=False,
-                              export_normals=True, export_texcoords=False, export_materials="NONE")
+                              export_normals=True, export_texcoords=False, export_materials="NONE",
+                              export_vertex_color="ACTIVE")
     spots = build_spots()
     with open(OUT_SPOTS, "w") as f:
         json.dump({"note": "Written by cave/build_kit.py from body/figure.glb. Units: chamber units "
