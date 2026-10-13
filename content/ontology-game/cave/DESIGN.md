@@ -622,14 +622,21 @@ room. Which also need the ability for players to walk around in. Another door in
 (content to be created). All of the caves need to use the same assets and have the ability to spawn spirits when one sits
 down and does a wave process."
 
-- **Walking.** A tap on the room's floor stands the figure up and walks it there, and the camera follows from behind it. The
-  step's page tucks into the pane while the player walks; tapping the pane opens the page and walks the figure back to its
-  seat, where every step is done. A tap on a creature still brings it close. **(choice)** tap to walk in the room, where the
-  tunnels hold to walk: the room is small and every step in it is already a tap.
+- **Walking.** Wendell, 13 October 2026, after walking it: "It’s impossible to have a player walk around the wave room and
+  thus move into any of the other experiences. We also need to have a rug or a seat players can sit on when they are
+  communing with spirits. Essentially we need free walking controls in this room". So the room has free walking: a stick
+  at the bottom left, and the arrow keys or W A S D on a computer, walk the figure anywhere in the room. Up on the stick is
+  away from the camera. The camera follows from behind and comes round only while the figure walks away from it, so walking
+  back or sideways goes where the thumb points; a one-finger drag turns it by hand. The stick shows whenever the room is in
+  view and hides while a page or card is open. A tap on the floor still walks the figure there, and a tap on a creature
+  still brings it close.
+- **The rug.** A round woven rug with a cushion on it is where the player sits to commune with what comes in. Walking onto
+  the rug shows "Sit down", which sits the figure on the cushion and brings the step's page back. Tapping the pane does the
+  same from anywhere in the room.
 - **Two doors behind the seat** (board `dp-door`). On the left, the Big Mind door: a pale gold arch with the seven daemons'
   colours round it, the Protector's first. On the right, the portal, now named for the six game masters: it opens the hall of
-  the six (LEVELS.md), whose tunnels are still plain. The charge's door stays the charge's door. Walking to a door opens its
-  card, with its way through and "Stay in the room". Only a charge worked through the whole W.A.V.E. goes through with them as a spirit (Wendell, 13 October 2026: "It should only emerge once it’s been engaged with"); one still being worked stays in the room.
+  the six (LEVELS.md), whose tunnels are still plain. The charge's door stays the charge's door. Walking up to a door opens its
+  card, and the camera turns to the door, with its way through and "Stay in the room". Only a charge worked through the whole W.A.V.E. goes through with them as a spirit (Wendell, 13 October 2026: "It should only emerge once it’s been engaged with"); one still being worked stays in the room.
 - **The Big Mind cave on this page.** The Big Mind door opens the Big Mind cave itself (`bigmind.js`, now built into this page
   and started only from the door), at its mouth, with "Back to the WAVE room". The room's spirits walk in with the player for
   that visit. **(choice)** the next six chambers and the centre (board `dp-seven`, `dp-centre`) are built inside the Big Mind

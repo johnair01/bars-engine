@@ -10,7 +10,7 @@ import { chromium } from 'playwright';
 // tunnel, side paths that loop back to the spot they left from, the daemon as a wall until its encounter is worked, and the
 // six faces' branches at the gate; and the WAVE room (11 October): Take it home from a daemon by lantern and back, and the
 // room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers; and the levels
-// (13 October, LEVELS.md): home base and its two doors, walking round the room, the hall of the six, a face's tunnel, the centre
+// (13 October, LEVELS.md): home base and its two doors, walking round the room (tapping, the stick, the keys, the rug), the hall of the six, a face's tunnel, the centre
 // of the self, another face, home, and the Big Mind door into the Big Mind cave on the same page. Build first with `npm run build:ontology-game`, then copy this
 // file into a folder that has playwright and three@0.128.0 installed and run it there:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node cave-test.mjs
@@ -966,6 +966,40 @@ await page.screenshot({ path: SHOTS + '/level-home-walked.png' });
 await page.locator('[data-room-pane]').click();
 await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.9, null, { timeout: 30000 });
 ok((await C(() => window.__oagCave.room.walking())).roam === null, 'opening the page again walks the figure back to its seat, and it sits');
+// Free walking (Wendell, 13 October 2026: "Essentially we need free walking controls in this room"): a stick at the bottom left
+// and the arrow keys or W A S D walk the figure anywhere; coming up to a door opens its card; the rug offers Sit down.
+await page.locator('[data-room-shrink]').click();
+await page.waitForTimeout(400);
+ok(await C(() => window.__oagCave.room.stickShown()), 'the stick shows with the room in view');
+const box = await page.locator('[data-room-stick]').boundingBox();
+const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+await page.mouse.move(cx, cy); await page.mouse.down(); await page.mouse.move(cx, cy - 50, { steps: 4 });
+await page.waitForTimeout(1500);
+let SW = await C(() => window.__oagCave.room.walking());
+await page.mouse.up();
+ok(SW.figure[1] < 0.6 && SW.sit < 0.1 && SW.view === 'roam', `pushing the stick up walks the figure forward, standing (${SW.figure.map((v) => v.toFixed(2))})`);
+ok(!(await C(() => window.__oagCave.room.sitShown())), 'off the rug, no Sit down');
+// keys: turn round with S
+await page.keyboard.down('KeyS'); await page.waitForTimeout(900); await page.keyboard.up('KeyS');
+const SW2 = await C(() => window.__oagCave.room.walking());
+ok(SW2.figure[1] > SW.figure[1] + 0.5, `the S key walks the figure back towards the camera (${SW2.figure.map((v) => v.toFixed(2))})`);
+// steer to the six game masters' door
+const ex = SW2.exits.find((e) => e.id === 'portal');
+for (let i = 0; i < 100 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x * 0.72, z * 0.72), [ex.x, ex.z]); await page.waitForTimeout(100); }
+await C(() => window.__oagCave.room.stick(0, 0));
+ok(await sees('[data-room-portal]'), 'walking freely up to the six game masters\' door opens its card');
+await page.locator('[data-room-door-stay]').click();
+await page.waitForTimeout(300);
+ok(!(await sees('[data-room-portal]')) && await C(() => window.__oagCave.room.stickShown()), 'Stay in the room shuts the card and the stick comes back');
+// back to the rug
+const seat = (await C(() => window.__oagCave.room.scene())).seat;
+for (let i = 0; i < 100 && !(await C(() => window.__oagCave.room.sitShown())); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), seat); await page.waitForTimeout(100); }
+await C(() => window.__oagCave.room.stick(0, 0));
+ok(await C(() => window.__oagCave.room.sitShown()), 'walking onto the rug offers Sit down');
+await page.screenshot({ path: SHOTS + '/level-home-stick-rug.png' });
+await page.locator('[data-room-sit]').click();
+await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.9, null, { timeout: 30000 });
+ok(await sees('[data-room-modal].open'), 'Sit down sits the figure on the cushion and brings the page back');
 await C(() => window.__oagCave.room.walkTo('portal'));
 await page.locator('[data-room-portal]').waitFor({ timeout: 30000 });
 ok((await C(() => window.__oagCave.room.walking())).atDoor === 'portal', 'walking to the six game masters\' door opens its card');
