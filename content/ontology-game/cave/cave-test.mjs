@@ -9,7 +9,8 @@ import { chromium } from 'playwright';
 // choice, the pane that follows the figure through the whole walk and grows into a modal at each stop, one continuous wider
 // tunnel, side paths that loop back to the spot they left from, the daemon as a wall until its encounter is worked, and the
 // six faces' branches at the gate; and the WAVE room (11 October): Take it home from a daemon by lantern and back, and the
-// room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers. Build first with `npm run build:ontology-game`, then copy this
+// room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers; and the levels
+// (13 October, LEVELS.md): home base's portal, the hall of the six, a face's tunnel, the centre of the self, another face, home. Build first with `npm run build:ontology-game`, then copy this
 // file into a folder that has playwright and three@0.128.0 installed and run it there:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node cave-test.mjs
 const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url).pathname;
@@ -923,6 +924,97 @@ await roomCheckin('left');
 await page.locator('[data-room-again="no"]').click();
 await page.locator('[data-room-leave]').click();
 await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
+// ---- the levels (LEVELS.md, build order step 1): home base, the hall of the six, a tunnel, the centre, another face, home -----
+// The room from the body map is home base, with a portal; the portal opens the hall; a door opens its face's tunnel; the tunnel
+// ends at the centre of the self, which wears that face and has portals to the other five; one of them opens another tunnel, and
+// the centre's ways back go home to the room.
+const lv = () => C(() => window.__oagCave.level && window.__oagCave.level());
+const lvCam = [];
+const walkLevel = async (selector) => {
+  await page.mouse.move(330, 700); await page.mouse.down();
+  const t0 = Date.now();
+  try {
+    while (!(await page.locator(selector).count())) {
+      if (Date.now() - t0 > 90000) throw new Error('timed out walking to ' + selector);
+      const a = await C(() => { const c = window.__oagCave; return { room: c.camRoom(), off: c.avatar().offPath, kind: c.avatar().route }; });
+      lvCam.push(Object.assign({ where: selector }, a));
+      await page.waitForTimeout(120);
+    }
+  } finally { await page.mouse.up(); }
+};
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor();
+await page.locator('[data-room-welcome]').waitFor();
+ok(await sees('[data-room-portal]'), 'home base: the WAVE room from the body map has a portal');
+await page.screenshot({ path: SHOTS + '/level-home.png' });
+await page.locator('[data-room-portal]').click();
+await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
+await page.locator('[data-cave-level="hall"]').waitFor();
+await page.waitForTimeout(900);
+await C(() => { window.__oagCave.state.speed = 8; });
+let L = await lv();
+ok(L.place === 'hall' && L.kind === 'round' && L.stops.join(',') === 'door:magenta,door:red,door:amber,door:orange,door:green,door:teal,home',
+  `the portal opens the hall of the six: six doors in altitude order and the portal home (${L.stops.join(', ')})`);
+ok((await C(() => window.__oagCave.pane())).title === 'The hall of the six', 'the hall names itself as the player comes in');
+await page.screenshot({ path: SHOTS + '/level-hall.png' });
+await walkLevel('[data-level-door="magenta"]');
+ok((await page.locator('[data-level-asks="magenta"]').textContent()) === "Where is the presence you're reaching for?", "at Magenta's door, its question shows");
+await page.locator('[data-level-walkon]').click();
+await walkLevel('[data-level-door="red"]');
+await page.screenshot({ path: SHOTS + '/level-hall-door.png' });
+await page.locator('[data-level-door="red"]').click();
+await page.locator('[data-cave-level="tunnel"][data-cave-level-face="red"]').waitFor();
+await page.waitForTimeout(900);
+L = await lv();
+ok(L.place === 'tunnel' && L.face === 'red' && L.kind === 'tunnel' && L.look === 0xff6a48 && L.rock === 0x7a302a && L.shape.shape === 'red',
+  "Red's door opens Red's tunnel, in Red's light, stone and cave shape");
+await page.screenshot({ path: SHOTS + '/level-tunnel-red.png' });
+await walkLevel('[data-level-go]');
+ok(await sees('[data-cave-block]'), 'a block can still open a side passage from the tunnel');
+await page.locator('[data-level-go]').click();
+await walkLevel('[data-level-centre]');
+ok((await page.locator('[data-level-asks="red"]').textContent()) === 'What power are you trying to move or assert?', 'the tunnel ends in its face\'s question');
+await page.locator('[data-level-centre]').click();
+await page.locator('[data-cave-level="centre"]').waitFor();
+await page.waitForTimeout(900);
+L = await lv();
+ok(L.place === 'centre' && L.face === 'red' && L.look === 0xff6a48 && L.stops.join(',') === 'portal:amber,portal:orange,portal:green,portal:teal,portal:magenta,ways',
+  `the centre of the self wears Red, with portals to the other five from the next face on (${L.stops.join(', ')})`);
+await page.screenshot({ path: SHOTS + '/level-centre.png' });
+await walkLevel('[data-level-portal="amber"]');
+await page.locator('[data-level-portal="amber"]').click();
+await page.locator('[data-cave-level="tunnel"][data-cave-level-face="amber"]').waitFor();
+await page.waitForTimeout(700);
+L = await lv();
+ok(L.face === 'amber' && L.visited.join(',') === 'red,amber', "Amber's portal opens Amber's tunnel, straight from the centre");
+await page.screenshot({ path: SHOTS + '/level-tunnel-amber.png' });
+await walkLevel('[data-level-go]'); await page.locator('[data-level-go]').click();
+await walkLevel('[data-level-centre]'); await page.locator('[data-level-centre]').click();
+await page.locator('[data-cave-level="centre"]').waitFor();
+await page.waitForTimeout(700);
+L = await lv();
+ok(L.face === 'amber' && L.stops[0] === 'portal:orange', 'the centre now wears Amber, the face just walked');
+await page.locator('[data-cave-pane]').click().catch(() => {});
+await walkLevel('[data-level-walkon]');
+for (let i = 0; i < 5; i++) { await page.locator('[data-level-walkon]').click(); await page.waitForTimeout(150); if (i < 4) await walkLevel('[data-level-portal]'); }
+await walkLevel('[data-level-home]');
+ok(await sees('[data-level-hall]') && await sees('[data-level-home]'), 'the ways back: the hall, or home');
+const worst = lvCam.reduce((m, c) => Math.min(m, c.room), 1e9), off = lvCam.reduce((m, c) => Math.max(m, c.off), 0);
+ok(worst > 0 && off < 0.05, `through the hall, two tunnels and the centre the camera stays inside the stone (least room ${worst.toFixed(2)}) and the figure on its path (${off.toFixed(3)})`);
+L = await lv();
+ok(L.trail.join(' > ') === 'hall > tunnel:red > centre > tunnel:amber > centre', 'the way walked: ' + L.trail.join(' > '));
+await page.locator('[data-level-home]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+ok(await sees('[data-room-portal]'), 'Go home opens the WAVE room again, with its portal');
+await page.locator('[data-room-welcome]').waitFor();
+await page.screenshot({ path: SHOTS + '/level-home-again.png' });
+await page.locator('[data-room-portal]').click();
+await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(700);
+ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again');
+await C(() => window.__oagCave.leave());
+await page.locator('[data-cave-level]').waitFor({ state: 'detached', timeout: 15000 });
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();
