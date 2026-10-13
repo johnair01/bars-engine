@@ -37,6 +37,7 @@ export function MenuPhase({ onDone }: { onDone: () => void }) {
   const [view, setView] = useState<MorningMenuView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [idCopied, setIdCopied] = useState(false)
   const [pending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -138,9 +139,18 @@ export function MenuPhase({ onDone }: { onDone: () => void }) {
         {/* Shown whenever the menu loads, sealed or not and with or without kept lines: Wendell (2026-10-12) reached
             the council setup step with nothing to seal, and the id was hidden behind the seal. */}
         {view && (
-          <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.08em', color: 'var(--bars-text-muted)', textAlign: 'center', margin: '8px 0 0', wordBreak: 'break-all', userSelect: 'all' }}>
-            Council setup · your player id: {view.playerId}
-          </p>
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: mono, fontSize: 11, color: 'var(--bars-text-secondary)', wordBreak: 'break-all' }}>
+              Your player id: <span style={{ color: 'var(--bars-text-primary)', userSelect: 'all' }}>{view.playerId}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => void navigator.clipboard?.writeText(view.playerId).then(() => setIdCopied(true)).catch(() => setError('Copy failed. Select the id and copy it by hand.'))}
+              style={{ minHeight: 32, padding: '0 10px', borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--bars-line)', fontFamily: mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--bars-text-secondary)' }}
+            >
+              {idCopied ? 'Copied' : 'Copy id'}
+            </button>
+          </div>
         )}
         <button
           type="button"
