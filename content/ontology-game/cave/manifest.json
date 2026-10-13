@@ -240,15 +240,15 @@
       "in": "chamber.glb",
       "source": "cave/objects.py from pictures/j3_mushroom.jpg (mushrooms, tools/blender-cloud/from_picture.py)",
       "licence": "own work",
-      "outline_match": 0.894,
-      "budget_bytes": 120000,
-      "faces": 1735,
+      "outline_match": 0.822,
+      "budget_bytes": 200000,
+      "faces": 2301,
       "at": [
         -4.1,
         1.6
       ],
       "height_m": 0.9,
-      "bytes": 109728,
+      "bytes": 167612,
       "lowest_cm": 0.0,
       "status": "built"
     },
@@ -266,7 +266,7 @@
         -4.8
       ],
       "height_m": 1.1,
-      "bytes": 90172,
+      "bytes": 88228,
       "lowest_cm": 0.0,
       "status": "built"
     },
@@ -384,9 +384,9 @@
       "in": "chamber.glb",
       "source": "cave/objects.py from pictures/j3_root.jpg (roots, tools/blender-cloud/from_picture.py)",
       "licence": "own work",
-      "outline_match": 0.819,
-      "budget_bytes": 110000,
-      "faces": 2267,
+      "outline_match": 0.91,
+      "budget_bytes": 290000,
+      "faces": 4612,
       "at": [
         -1.6,
         4.0
@@ -394,7 +394,7 @@
       "height_m": 2.0,
       "hangs_from_m": 4.85,
       "top_gap_cm": 0.0,
-      "bytes": 91704,
+      "bytes": 249264,
       "lowest_cm": 285.0,
       "status": "built"
     },

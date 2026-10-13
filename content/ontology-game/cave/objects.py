@@ -4,7 +4,8 @@
                                  still be the asset with that id. Anything not CC0 stops the build (cs-cc0-or-own).
   picture(file, mode)            a model built from a picture in pictures/ by tools/blender-cloud/from_picture.py; a
                                  mode that makes parts (crystals, mushrooms: the cluster and its bed) takes one
-                                 material per part, and flat=True reads a picture on a flat plain background (J3)
+                                 material per part, and flat=True reads a picture on a flat plain background (J3);
+                                 texture=True lays the picture itself on the piece as its colour (J3 round 2)
   script(builder)                a model built by a function here
   local(file, id, part)          a CC0 Blendkit model already exported to a GLB beside its licence sidecar, for the
                                  ones Blendkit offers only as .blend (the greenery picks, exported in Blender 5.2.2 at
@@ -39,8 +40,8 @@ def blenderkit(query, index, id, licence="cc_zero"):
     return {"kind": "blenderkit", "query": query, "index": index, "id": id, "licence": licence}
 
 
-def picture(file, mode, faces=400, flat=False):
-    return {"kind": "picture", "file": file, "mode": mode, "faces": faces, "flat": flat}
+def picture(file, mode, faces=400, flat=False, texture=False):
+    return {"kind": "picture", "file": file, "mode": mode, "faces": faces, "flat": flat, "texture": texture}
 
 
 def local(file, id, part=None):
@@ -157,10 +158,12 @@ def import_glb(path, faces, part=None):
 
 def from_picture_file(name, src, faces):
     mode = src["mode"]
-    mask = from_picture.outline(os.path.join(HERE, "pictures", src["file"]), colour=mode in from_picture.COLOUR,
-                                flat=src.get("flat", False), side=from_picture.FINE.get(mode, from_picture.MAX_SIDE))
+    mask, box = from_picture.outline(os.path.join(HERE, "pictures", src["file"]), colour=mode in from_picture.COLOUR,
+                                     flat=src.get("flat", False), side=from_picture.FINE.get(mode, from_picture.MAX_SIDE),
+                                     box=True)
     grid = mask[0] if mode in from_picture.COLOUR else mask
-    parts, _, iou = from_picture.build(name, mask, 1.0 / grid.shape[0], mode, src["faces"])
+    parts, _, iou = from_picture.build(name, mask, 1.0 / grid.shape[0], mode, src["faces"],
+                                       box=box if src.get("texture") else None)
     for ob in parts:
         ob.data.transform(__import__("mathutils").Matrix.Rotation(math.pi / 2, 4, "X"))  # the tool builds Y up
     row = {"source": f"cave/objects.py from pictures/{src['file']} ({mode}, tools/blender-cloud/from_picture.py)",
@@ -209,6 +212,27 @@ def cushion(bm, segments=16):
 
 # ---- placing and checking ----
 
+def picture_material(m, img):
+    """A copy of m whose colour comes from the picture (texture=True on picture(...)); its roughness stays, and a
+    glowing m glows in the picture's colours."""
+    t = m.copy()
+    t.name = m.name + "_" + img.name
+    for key in ("texture", "scale", "colour"):  # the picture replaces a baked stone pattern
+        if key in t:
+            del t[key]
+    nodes, links = t.node_tree.nodes, t.node_tree.links
+    p = nodes["Principled BSDF"]
+    uv = nodes.new("ShaderNodeUVMap")
+    uv.uv_map = "picture"
+    tex = nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    links.new(uv.outputs["UV"], tex.inputs["Vector"])
+    links.new(tex.outputs["Color"], p.inputs["Base Color"])
+    if p.inputs["Emission Strength"].default_value > 0:
+        links.new(tex.outputs["Color"], p.inputs["Emission Color"])
+    return t
+
+
 def obj(name, src, at, turn, height, budget, faces, material, objects, hang=None):
     """Builds the object, scales it to height (metres), stands it on the floor at at=(x, y), turned turn degrees. With
     hang, its top is at that height instead, as a root hangs from the roof. A source that makes several parts (a
@@ -231,6 +255,8 @@ def obj(name, src, at, turn, height, budget, faces, material, objects, hang=None
         ob.rotation_euler = (0, 0, math.radians(turn))
         if m is None:
             continue
+        if ob.get("picture"):
+            m = picture_material(m, bpy.data.images[ob["picture"]])
         ob.data.materials.clear()
         ob.data.materials.append(m)
         if m.get("texture") and not ob.data.uv_layers:  # baked by chamber.py, which needs UVs

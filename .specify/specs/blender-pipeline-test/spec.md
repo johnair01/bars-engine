@@ -221,6 +221,26 @@ but with five big shards where the picture has about ten (the P4 gap again); the
 into one pale mass; the root's tendrils read, its trunk is crumpled rather than twisted, with no green glow. Chamber
 849 KB of the 3 MB budget. Test J3 (`test_bpy.py`) checks the number half; J2 now accepts a hung piece.
 
+**J3 round 2 (2026-10-13, same PR, waiting on his look):** his notes on the first sheet: "I think we can do more with
+importing textures from the images. The shapes are pretty good but a bit flat. And we can do a bit more work with
+getting the mushrooms right. They have the vibe but are a little blobby. The root is also a bit blobby. Not readying
+as tendrils falling in a shape". What changed, all in `from_picture.py` and `objects.py`:
+- Textures: `picture(..., texture=True)` lays the picture on the piece as its colour, projected from the front (the
+  back mirrors it). The texture is the picture cut to the piece, at full size (640 px pictures), with the background
+  and the gaps between strands filled smoothly from the piece's own colours (`fill`, pull-push), so no grey and no
+  streaks show. The flat colour stays as each part's material; a glowing part glows in the picture's colours.
+- Mushrooms: each stem is now followed down the picture from under its cap to the bed and swept as its own round
+  stem, flaring into the gills and the moss, instead of one inflated mass. Each cap is a smooth dome fitted to the
+  picture's rows, as wide as the gills' skirt, with a lip and gills under it. Outline 0.894 to 0.822: the old mass
+  filled the gaps between stems, which the picture also fills with sprouts; the eye reads five mushrooms now.
+- Root: the body of the outline (thicker than `CORE` pixels) is one filled shape, because the picture's strands overlap,
+  so thinning it gave the crumpled trunk. It is now a braid of four strands winding down from the roof, as wide as
+  the body at each row, and the fine roots outside it are tubes along their centre lines that taper to a point and
+  swing toward or away from the viewer the further they fall. Outline 0.819 to 0.910; the green glow comes with the
+  texture.
+Two of three pass the 0.85 line (crystals 0.855, root 0.910). Sheet:
+`/mnt/project-files/3d-build/j3-round2-2026-10-13/j3-round2-sheet.png`. Chamber 1,482 KB of 3 MB.
+
 **Greenery (2026-10-13, same PR):** his four Blendkit picks ("Let's go with that pick and also the stylize pitcher
 plant") are in the chamber: Rock with Moss, two Fern 02 variants, two High grass clumps, the Stylized fly trap. All
 CC0. Blendkit offers them only as .blend, so they were exported to GLB at 256 px textures in the greenery thread, and
