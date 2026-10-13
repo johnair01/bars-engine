@@ -238,7 +238,7 @@
     var json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jsonLen)));
     var bin = 20 + jsonLen + 8;
     var TYPES = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array };
-    var SIZES = { SCALAR: 1, VEC3: 3 };
+    var SIZES = { SCALAR: 1, VEC3: 3, VEC4: 4 };
     function acc(i) {
       var a = json.accessors[i], v = json.bufferViews[a.bufferView], T = TYPES[a.componentType];
       return new T(buf.slice(bin + (v.byteOffset || 0) + (a.byteOffset || 0), bin + (v.byteOffset || 0) + (a.byteOffset || 0) + a.count * SIZES[a.type] * T.BYTES_PER_ELEMENT));
@@ -248,6 +248,8 @@
       if (n.mesh === undefined) return;
       var p = json.meshes[n.mesh].primitives[0];
       out[n.name] = { position: acc(p.attributes.POSITION), normal: acc(p.attributes.NORMAL), index: acc(p.indices) };
+      // the detail pass's shade and baked shadow (tools/blender-cloud/detail.py): one grey per vertex, 0 to 65535
+      if (p.attributes.COLOR_0 !== undefined) out[n.name].color = acc(p.attributes.COLOR_0);
     });
     return out;
   }
@@ -287,6 +289,19 @@
   // ---- the dressing: what the charge and the feeling do to the cave ----------------------------
   function lookup(table, key) { return table.filter(function (r) { return r[0] === key; })[0]; }
 
+  // A piece with the detail pass's vertex shade takes it in its colour and in its glow, so a glowing cap's gills and
+  // stem sit darker than its top instead of glowing as one flat shape. One shaded copy per material.
+  function shaded(THREE, mat) {
+    if (mat.userData.shaded) return mat.userData.shaded;
+    var m = mat.clone();
+    m.vertexColors = true;
+    m.onBeforeCompile = function (sh) {
+      sh.fragmentShader = sh.fragmentShader.replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n#ifdef USE_COLOR\n  totalEmissiveRadiance *= vColor.rgb;\n#endif");
+    };
+    mat.userData.shaded = m;
+    return m;
+  }
+
   function geomOf(THREE, piece) {
     var g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(piece.position, 3));
@@ -295,6 +310,11 @@
     var p = piece.position, uv = new Float32Array(p.length / 3 * 2);
     for (var i = 0; i < p.length / 3; i++) { uv[i * 2] = (Math.atan2(p[i * 3], p[i * 3 + 2]) / Math.PI + 1) * 0.5; uv[i * 2 + 1] = p[i * 3 + 1] * 0.5; }
     g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+    if (piece.color) {
+      var c = piece.color, rgb = new Float32Array(c.length / 4 * 3);
+      for (i = 0; i < c.length / 4; i++) { rgb[i * 3] = c[i * 4] / 65535; rgb[i * 3 + 1] = c[i * 4 + 1] / 65535; rgb[i * 3 + 2] = c[i * 4 + 2] / 65535; }
+      g.setAttribute("color", new THREE.BufferAttribute(rgb, 3));
+    }
     return g;
   }
 
@@ -661,7 +681,7 @@
       }
       g.add(obj); var it = { piece: piece, s: s, side: sd, zone: zone, mesh: obj }; items.push(it); return it;
     }
-    function mesh(piece, mat, size) { var m = new THREE.Mesh(G[piece], mat); m.scale.setScalar(size); return m; }
+    function mesh(piece, mat, size) { var m = new THREE.Mesh(G[piece], G[piece].attributes.color ? shaded(THREE, mat) : mat); m.scale.setScalar(size); return m; }
     for (var s = o.s0 + 3; s < o.s1 - 3; s += 4 + rnd() * 3) {
       var sd = rnd() < 0.5 ? -1 : 1, k = rnd(), i, n2, zone;
       if (!clear(s)) continue;
@@ -1683,7 +1703,7 @@
       ctx.holder.position.set(pe.x, pe.y, pe.z); route.group.add(ctx.holder);
       if (blk.element) setElementOn(ctx, blk.element, Math.min(wb * 0.45, 2));
       if (G.mush_colony) { // the colony grows across the path from the element, its mycelium showing between the stems
-        var pc = beside(pool.s + 3, -Math.min(wb * 0.34, 2)), col = new THREE.Mesh(G.mush_colony, new THREE.MeshStandardMaterial({ color: DRESS_GLOW, emissive: DRESS_GLOW, emissiveIntensity: 0.55, roughness: 0.6 }));
+        var pc = beside(pool.s + 3, -Math.min(wb * 0.34, 2)), col = new THREE.Mesh(G.mush_colony, shaded(THREE, new THREE.MeshStandardMaterial({ color: DRESS_GLOW, emissive: DRESS_GLOW, emissiveIntensity: 0.55, roughness: 0.6 })));
         col.position.set(pc.x, pc.y, pc.z); col.rotation.y = yawFacing(pc.a); col.scale.setScalar(Math.min(h * GROWN.colony, wb * 0.5));
         route.group.add(col); ctx.colony = col;
       }
