@@ -350,3 +350,14 @@ are neutral grey and the charge's wall colour tints them, so tightness, tension,
 their colours. The crystals are unchanged. The tube carries UVs (along the path and round the profile, one tile per 3.2
 chamber units) and one extra column so the tiles wrap. If a tile does not load, its stone is a plain colour, as before.
 **(choice)** the tile size and how much each tint is lifted to make up for the grey (`TILE_UNITS`, `STONE` in `cave.js`).
+
+**Growing from the stone (13 October 2026, after his first play).** Wendell: "the placement of the elements need to feel a
+lot more matural incuding having the elements comes out of the wall in various ways"; "Also the root elements are unpside
+down"; "The rock spires need do have stochastic sizes- stalagtite and stalagmites". The tube now carries mounts: a point on
+its surface (along the path and round the profile) whose piece stands on the stone's inward normal, tipped and turned a
+little, and moves with the walls as they breathe. Five zones round the profile: the floor's edge, the low, middle and high
+wall, and the roof. Crystals come in veins of one to three in any zone (smaller up the wall); spires stand from the floor's
+edge or hang from the roof as stalactites, each its own length (most short, a few long) and girth; caps grow in clumps on the
+floor's edge and the wall like shelf fungus; roots hang thick end into the roof. The small elements a named feeling scatters
+grow the same way: fire and stone at the foot and low wall, water pools at the foot, the young tree leans out of the wall,
+metal anywhere. **(choice)** the zones, the size ranges (`ZONES`, `ZONE_SIZE`, `SPIRE`, `ELEMENT_ZONES` in `cave.js`).

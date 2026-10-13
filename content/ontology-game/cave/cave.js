@@ -426,6 +426,41 @@
         var e0 = i2 * C * 3 + q, e1 = (i2 * C + PROF) * 3 + q, avg = (nm[e0] + nm[e1]) / 2; nm[e0] = nm[e1] = avg;
       }
       geo.computeBoundingSphere();
+      t.mounts.forEach(t.place);
+    };
+    // Pieces that grow out of the stone (Wendell, 2026-10-13: "the placement of the elements need to feel a lot more natural
+    // including having the elements comes out of the wall in various ways"). A mount is a point on the tube's surface: s along
+    // the path and j round the profile (fractional; 0 is the middle of the +x wall, PROF / 4 the roof, 3 PROF / 4 the floor).
+    // The piece's up axis follows the stone's inward normal, tipped and turned a little, sunk a little, and it moves with the
+    // walls as they breathe. into: the piece's up axis points into the stone, so its top is what meets it (a hanging root).
+    t.mounts = [];
+    var M3 = { p: [0, 0, 0], n: [0, 0, 0] }, UP, QA, QB, VN;
+    t.surface = function (sv, jf) {
+      var fi = clamp((sv - s0) / ds, 0, n - 1.001), i = Math.floor(fi), u = fi - i, jw = ((jf % PROF) + PROF) % PROF, j = Math.floor(jw), v = jw - j;
+      var nm = geo.attributes.normal.array, cx = 0, cy = 0, cz = 0;
+      M3.p[0] = M3.p[1] = M3.p[2] = M3.n[0] = M3.n[1] = M3.n[2] = 0;
+      [[i, j, (1 - u) * (1 - v)], [i + 1, j, u * (1 - v)], [i, j + 1, (1 - u) * v], [i + 1, j + 1, u * v]].forEach(function (c) {
+        var e = (c[0] * C + c[1]) * 3;
+        for (var q = 0; q < 3; q++) { M3.p[q] += pos[e + q] * c[2]; M3.n[q] += nm[e + q] * c[2]; }
+      });
+      var a = at(route, sv); cx = a.x - M3.p[0]; cy = a.y - M3.p[1]; cz = a.z - M3.p[2];
+      var L = Math.hypot(M3.n[0], M3.n[1], M3.n[2]) || 1, sg = (M3.n[0] * cx + M3.n[1] * cy + M3.n[2] * cz) < 0 ? -1 : 1; // the normal that faces the path
+      for (var q2 = 0; q2 < 3; q2++) M3.n[q2] *= sg / L;
+      return M3;
+    };
+    t.place = function (m) {
+      if (!UP) { UP = new THREE.Vector3(0, 1, 0); QA = new THREE.Quaternion(); QB = new THREE.Quaternion(); VN = new THREE.Vector3(); }
+      var S = t.surface(m.s, m.j), d = m.into ? -1 : 1;
+      VN.set(S.n[0] * d, S.n[1] * d, S.n[2] * d);
+      QA.setFromUnitVectors(UP, VN);
+      QB.setFromEuler(new THREE.Euler(m.tilt, m.spin, m.tilt2, "YXZ"));
+      m.obj.quaternion.copy(QA).multiply(QB);
+      var off = m.into ? m.len * (1 - m.sink) : -m.len * m.sink; // a hanging piece hangs its full length from the stone
+      m.obj.position.set(S.p[0] + S.n[0] * off, S.p[1] + S.n[1] * off, S.p[2] + S.n[2] * off);
+    };
+    t.mount = function (obj, sv, jf, o2) {
+      var m = { obj: obj, s: sv, j: jf, into: !!o2.into, len: o2.len || 0, sink: o2.sink == null ? 0.12 : o2.sink, tilt: o2.tilt || 0, tilt2: o2.tilt2 || 0, spin: o2.spin || 0 };
+      t.mounts.push(m); t.place(m); return m;
     };
     t.index(); t.update(1);
     return t;
@@ -464,36 +499,65 @@
     g.userData.look = { tint: key, size: size, tall: tall, wide: wide };
     return g;
   }
+  // Where a piece grows, round the profile on the +x side (see buildTube's mounts); the -x side mirrors it. Spires stand at the
+  // foot of the wall or hang from the roof, crystals break out of any stone, caps grow in clumps from the floor's edge and
+  // the low wall, and roots hang thick end up from the roof (Wendell, 2026-10-13: "the root elements are unpside down").
+  var ZONES = { foot: [16.6, 17.3], low: [17.6, 18.6], mid: [19.2, 20.8], high: [1.5, 3], roof: [3.6, 4.6] };
+  var SPIRE = { len: [0.12, 0.62], fat: [0.55, 1.5] }; // a spire's length as a share of the chamber height, and its girth
+  var ZONE_SIZE = { foot: 1, low: 0.75, mid: 0.55, high: 0.5, roof: 0.5 }; // how big a piece may grow there, as a share of its floor size
+  var ELEMENT_ZONES = { Anger: ["foot", "low", "low"], Sadness: ["foot"], Joy: ["foot", "low", "mid"], Fear: ["foot", "low", "mid", "high", "roof"], Neutrality: ["foot", "foot", "low"] };
+  function zoneJ(z, sd, rnd) { var r = ZONES[z], j = r[0] + rnd() * (r[1] - r[0]); return sd > 0 ? j : PROF / 2 - j; }
   function buildDressing(THREE, route, G, o) {
     var g = new THREE.Group(), items = [];
     g.userData.items = items;
     if (!G.stone_spire || !G.glow_cap || !G.root_curl) return g;
-    var rnd = rngOf(hashOf(o.seed)), w = o.w, h = o.h, floorY = -h * 0.92;
+    var rnd = rngOf(hashOf(o.seed)), w = o.w, h = o.h, floorY = -h * 0.92, tube = route.tube;
     var rootMat = new THREE.MeshStandardMaterial({ color: DRESS_ROOT, roughness: 0.9 });
     var capMat = new THREE.MeshStandardMaterial({ color: DRESS_GLOW, emissive: DRESS_GLOW, emissiveIntensity: 0.55, roughness: 0.6 });
     var crystalMats = {}, vein = o.rock.userData.vein || o.rock;
     var keepClear = (route.stops || []).map(function (st) { return st.s; }).concat(o.clear || []);
     function clear(s) { return keepClear.every(function (c) { return Math.abs(c - s) > 2.5; }); }
-    function put(piece, mat, s, sd, off, y, size, hang) {
-      var a = at(route, s), m = new THREE.Mesh(G[piece], mat);
-      m.position.set(a.x + -a.fz * sd * w * off, a.y + y, a.z + a.fx * sd * w * off);
-      m.scale.setScalar(size); m.rotation.y = rnd() * Math.PI * 2;
-      if (hang) m.rotation.x = Math.PI;
-      g.add(m); items.push({ piece: piece, s: s, side: sd, mesh: m });
-    }
-    for (var s = o.s0 + 3; s < o.s1 - 3; s += 4 + rnd() * 3) {
-      var sd = rnd() < 0.5 ? -1 : 1, k = rnd();
-      if (!clear(s)) continue;
-      if (G.crystal_cluster && G.crystal_cluster_bed && k >= 0.85) {
-        var R = CRYSTAL_RANGE, pick = function (r) { return r[0] + rnd() * (r[1] - r[0]); };
-        var cb = crystalBlock(THREE, G, { tint: CRYSTAL_TINTS[Math.floor(rnd() * CRYSTAL_TINTS.length)][0], size: h * pick(R.size), tall: pick(R.tall), wide: pick(R.wide) }, vein, crystalMats);
-        var ca = at(route, s);
-        cb.position.set(ca.x + -ca.fz * sd * w * 0.32, ca.y + floorY - 0.03, ca.z + ca.fx * sd * w * 0.32); cb.rotation.y = rnd() * Math.PI * 2;
-        g.add(cb); items.push({ piece: "crystal_cluster", s: s, side: sd, mesh: cb, look: cb.userData.look });
+    function pickZone(list) { return list[Math.floor(rnd() * list.length)]; }
+    function grow(piece, obj, s, sd, zone, opt) { // mount on the stone; an older route without mounts sets it on the floor as before
+      opt = opt || {};
+      if (tube && tube.mount) {
+        tube.mount(obj, s, zoneJ(zone, sd, rnd), { into: opt.into, len: opt.len, sink: opt.sink, tilt: (rnd() - 0.5) * (opt.tip || 0.7), tilt2: (rnd() - 0.5) * (opt.tip || 0.7), spin: rnd() * Math.PI * 2 });
+      } else {
+        var a = at(route, s); obj.position.set(a.x + -a.fz * sd * w * 0.34, a.y + floorY, a.z + a.fx * sd * w * 0.34); obj.rotation.y = rnd() * Math.PI * 2;
       }
-      else if (k < 0.35) put("stone_spire", vein, s, sd, 0.36, floorY - 0.05, h * (0.28 + rnd() * 0.18));
-      else if (k < 0.65) for (var i = 0, n = 2 + Math.floor(rnd() * 2); i < n; i++) put("glow_cap", capMat, s + (i - 1) * 0.45, sd, 0.3 + rnd() * 0.08, floorY, h * (0.12 + rnd() * 0.1));
-      else if (k < 0.85) put("root_curl", rootMat, s, sd, 0.22, h * 0.9, h * (0.3 + rnd() * 0.1), true);
+      g.add(obj); var it = { piece: piece, s: s, side: sd, zone: zone, mesh: obj }; items.push(it); return it;
+    }
+    function mesh(piece, mat, size) { var m = new THREE.Mesh(G[piece], mat); m.scale.setScalar(size); return m; }
+    for (var s = o.s0 + 3; s < o.s1 - 3; s += 4 + rnd() * 3) {
+      var sd = rnd() < 0.5 ? -1 : 1, k = rnd(), i, n2, zone;
+      if (!clear(s)) continue;
+      if (G.crystal_cluster && G.crystal_cluster_bed && k >= 0.8) { // a vein of one to three clusters, one tint, sizes falling off
+        var R = CRYSTAL_RANGE, pick = function (r) { return r[0] + rnd() * (r[1] - r[0]); }, tint = CRYSTAL_TINTS[Math.floor(rnd() * CRYSTAL_TINTS.length)][0];
+        zone = pickZone(["foot", "foot", "low", "mid", "high", "roof"]);
+        for (i = 0, n2 = 1 + Math.floor(rnd() * 3); i < n2; i++) {
+          var cb = crystalBlock(THREE, G, { tint: tint, size: h * pick(R.size) * ZONE_SIZE[zone] * (1 - 0.25 * i), tall: pick(R.tall), wide: pick(R.wide) }, vein, crystalMats);
+          grow("crystal_cluster", cb, s + (i ? (rnd() - 0.5) * 1.6 : 0), sd, zone, { sink: 0.18, tip: 0.9 }).look = cb.userData.look;
+        }
+      } else if (k < 0.35) { // spires: stalagmites from the floor, stalactites from the roof, each its own size (Wendell, 2026-10-13:
+        // "The rock spires need do have stochastic sizes- stalagtite and stalagmites"). Most are small, a few tall; thin or squat.
+        zone = rnd() < 0.55 ? pickZone(["foot", "foot", "low"]) : "roof";
+        for (i = 0, n2 = 1 + Math.floor(rnd() * 4); i < n2; i++) {
+          var sp = mesh("stone_spire", vein, 1), len = h * SPIRE.len[0] + h * (SPIRE.len[1] - SPIRE.len[0]) * Math.pow(rnd(), 1.8), fat = SPIRE.fat[0] + rnd() * (SPIRE.fat[1] - SPIRE.fat[0]);
+          len *= zone === "roof" ? 0.8 : ZONE_SIZE[zone];
+          sp.scale.set(len * fat, len, len * fat);
+          grow("stone_spire", sp, s + i * (0.35 + rnd() * 0.7), sd, zone, { sink: 0.06, tip: 0.3 }).look = { len: Math.round(len / h * 100) / 100, fat: Math.round(fat * 100) / 100 };
+        }
+      } else if (k < 0.62) { // caps in a clump, on the floor's edge or the wall like shelf fungus
+        zone = pickZone(["foot", "low", "low", "mid"]);
+        for (i = 0, n2 = 2 + Math.floor(rnd() * 3); i < n2; i++)
+          grow("glow_cap", mesh("glow_cap", capMat, h * (0.1 + rnd() * 0.1) * (zone === "foot" ? 1 : 0.8)), s + (i - 1) * 0.4, sd, zone, { sink: 0.15, tip: 0.8 });
+      } else { // roots hang from the roof, thick end into the stone
+        zone = rnd() < 0.7 ? "roof" : "high";
+        for (i = 0, n2 = 1 + Math.floor(rnd() * 2); i < n2; i++) {
+          var size = h * (0.28 + rnd() * 0.14);
+          grow("root_curl", mesh("root_curl", rootMat, size), s + i * 0.7, sd, zone, { into: true, len: size, sink: 0.1, tip: 0.4 });
+        }
+      }
     }
     if (route.tube) {
       var addHole = route.tube.addHole;
@@ -981,7 +1045,9 @@
       main.dressing = buildDressing(THREE, main, G, { w: w, h: h, rock: parts.rock, s0: 0, s1: main.len, seed: s.spot.id + ":" + s.texture + ":dress", clear: [main.startS + 9, main.exitS] });
       main.group.add(main.dressing);
       state.dressing = main.dressing.userData.items.map(function (it) { return it.piece; });
-      state.crystals = main.dressing.userData.items.filter(function (it) { return it.look; }).map(function (it) { return it.look; });
+      state.crystals = main.dressing.userData.items.filter(function (it) { return it.look && it.piece === "crystal_cluster"; }).map(function (it) { return it.look; });
+      state.spires = main.dressing.userData.items.filter(function (it) { return it.piece === "stone_spire"; }).map(function (it) { return { zone: it.zone, len: it.look.len, fat: it.look.fat }; });
+      state.dressZones = main.dressing.userData.items.map(function (it) { return it.piece + ":" + it.zone; });
       main.markers = main.stops.map(function (st, i) {
         var m = buildMarker(THREE, w, h, STEP_LOOK[i].light), a = at(main, st.s + MARK_AHEAD); m.position.set(a.x, a.y - h * 0.92 + MARK_Y, a.z); main.group.add(m); return m;
       });
@@ -1276,12 +1342,18 @@
     // colour and scatters small ones of it along both walls.
     function decorate(blk) {
       var route = blk.route, h = ch.h, wb = route.w, inner = -route.side;
-      (blk.deco || []).forEach(function (o) { route.group.remove(o); }); blk.deco = [];
+      var gone = blk.deco || [];
+      gone.forEach(function (o) { route.group.remove(o); }); blk.deco = [];
+      if (route.tube && route.tube.mounts) route.tube.mounts = route.tube.mounts.filter(function (m) { return gone.indexOf(m.obj) < 0; });
       if (!blk.element) return;
+      // Each small one grows out of the stone where its element would (2026-10-13): fire and stone from the floor's edge and low
+      // wall, water pools at the foot, the young tree leans out of the wall, metal breaks out anywhere, the roof included.
+      var rnd = rngOf(hashOf(blk.key + ":" + blk.element)), zones = ELEMENT_ZONES[blk.element] || ["foot"];
       for (var i = 0; i < 8; i++) {
-        var a = at(route, route.len * (0.08 + 0.1 * i)), lat = (i % 2 ? 1 : -1) * wb * 0.62;
-        var o = buildElement(THREE, blk.element, Math.min(wb * 0.2, 0.9));
-        o.position.set(a.x + -a.fz * inner * lat, a.y - h * 0.92, a.z + a.fx * inner * lat);
+        var sv = route.len * (0.06 + 0.11 * i + rnd() * 0.05), sd = rnd() < 0.5 ? -1 : 1, zone = zones[Math.floor(rnd() * zones.length)];
+        var o = buildElement(THREE, blk.element, Math.min(wb * 0.2, 0.9) * (0.6 + rnd() * 0.6) * (zone === "foot" ? 1 : 0.8));
+        if (route.tube && route.tube.mount) route.tube.mount(o, sv, zoneJ(zone, sd, rnd), { sink: 0.05, tilt: (rnd() - 0.5) * 0.5, tilt2: (rnd() - 0.5) * 0.5, spin: rnd() * Math.PI * 2 });
+        else { var a = at(route, sv), lat = sd * wb * 0.62; o.position.set(a.x + -a.fz * inner * lat, a.y - h * 0.92, a.z + a.fx * inner * lat); }
         route.group.add(o); blk.deco.push(o);
       }
     }
