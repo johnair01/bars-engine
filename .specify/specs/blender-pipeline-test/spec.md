@@ -221,6 +221,14 @@ but with five big shards where the picture has about ten (the P4 gap again); the
 into one pale mass; the root's tendrils read, its trunk is crumpled rather than twisted, with no green glow. Chamber
 849 KB of the 3 MB budget. Test J3 (`test_bpy.py`) checks the number half; J2 now accepts a hung piece.
 
+**Greenery (2026-10-13, same PR):** his four Blendkit picks ("Let's go with that pick and also the stylize pitcher
+plant") are in the chamber: Rock with Moss, two Fern 02 variants, two High grass clumps, the Stylized fly trap. All
+CC0. Blendkit offers them only as .blend, so they were exported to GLB at 256 px textures in the greenery thread, and
+`objects.py` reads them with a new source, `local(file, id, mesh)`, from `$CAVE_PICKS` (default
+`/mnt/project-files/3d-build/blenderkit-greenery/picks`), checking each licence sidecar and pinned id. The colour map
+now survives when a mix node sits between it and Base Color (the fly trap's colours were lost without it). Chamber
+1,274 KB of 3 MB. A session without the project files cannot build the chamber until the picks are copied in.
+
 **Start from root-game.** Wendell's steer on `bpt-skinned-garments` (2026-10-13): "Use as much as we can from the
 root game for this as we’ve already done many garment tests there". So J5's thread begins by listing what root-game
 already has (`wendell-britt/root-game`, call sheet `root.md`): its garment shapes (robe, sleeves, skirt), the clothes'

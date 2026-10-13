@@ -261,6 +261,114 @@
       "status": "built"
     },
     {
+      "id": "chamber.mossrock.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "Blendkit 'Rock with Moss (Photoscanned)' by Nik Kottmann, https://www.blendkit.com/asset-gallery-detail/79e8d4bd-b5a3-43be-97ae-2a0cf228a867/ (exported to rock-with-moss.glb)",
+      "licence": "CC0",
+      "blenderkit_id": "4e142bae-6a0f-4bdc-94f0-2521b53de988",
+      "budget_bytes": 150000,
+      "faces": 1200,
+      "at": [
+        -4.9,
+        2.8
+      ],
+      "height_m": 0.55,
+      "bytes": 76344,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.fern.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "Blendkit 'Fern 02' by Poly Haven, https://www.blendkit.com/asset-gallery-detail/b6155e0a-79eb-44da-acc2-6587f7f533da/ (exported to fern-02.glb, mesh fern_02_b)",
+      "licence": "CC0",
+      "blenderkit_id": "ac5a7010-e00c-46e7-8fbc-a8a0d9b7a9c4",
+      "budget_bytes": 170000,
+      "faces": 1199,
+      "at": [
+        -5.6,
+        -1.4
+      ],
+      "height_m": 0.5,
+      "bytes": 153684,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.fern.2",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "Blendkit 'Fern 02' by Poly Haven, https://www.blendkit.com/asset-gallery-detail/b6155e0a-79eb-44da-acc2-6587f7f533da/ (exported to fern-02.glb, mesh fern_02_a)",
+      "licence": "CC0",
+      "blenderkit_id": "ac5a7010-e00c-46e7-8fbc-a8a0d9b7a9c4",
+      "budget_bytes": 170000,
+      "faces": 784,
+      "at": [
+        2.1,
+        4.9
+      ],
+      "height_m": 0.4,
+      "bytes": 139656,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.grass.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "Blendkit 'High grass clump' by Slinc_HD Janzen, https://www.blendkit.com/asset-gallery-detail/973a530c-c5bc-4035-80ab-89cf35a83562/ (exported to high-grass-clump.glb)",
+      "licence": "CC0",
+      "blenderkit_id": "b21584e9-56bb-43a2-b00b-f0bd7e1e6c03",
+      "budget_bytes": 80000,
+      "faces": 1164,
+      "at": [
+        -1.9,
+        -4.5
+      ],
+      "height_m": 0.35,
+      "bytes": 68748,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.grass.2",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "Blendkit 'High grass clump' by Slinc_HD Janzen, https://www.blendkit.com/asset-gallery-detail/973a530c-c5bc-4035-80ab-89cf35a83562/ (exported to high-grass-clump.glb)",
+      "licence": "CC0",
+      "blenderkit_id": "b21584e9-56bb-43a2-b00b-f0bd7e1e6c03",
+      "budget_bytes": 80000,
+      "faces": 1164,
+      "at": [
+        1.9,
+        -4.2
+      ],
+      "height_m": 0.3,
+      "bytes": 68760,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
+      "id": "chamber.pitcher.1",
+      "kind": "object",
+      "in": "chamber.glb",
+      "source": "Blendkit 'Stylized fly trap' by Amal David, https://www.blendkit.com/asset-gallery-detail/0825e69e-faa3-4814-ae66-ee39c25c1d9e/ (exported to pitcher-plant.glb)",
+      "licence": "CC0",
+      "blenderkit_id": "bb9424ca-0bc6-49f2-89ff-bb66fcca60cf",
+      "budget_bytes": 120000,
+      "faces": 1200,
+      "at": [
+        4.9,
+        0.3
+      ],
+      "height_m": 0.6,
+      "bytes": 59644,
+      "lowest_cm": 0.0,
+      "status": "built"
+    },
+    {
       "id": "chamber.rootknot.1",
       "kind": "object",
       "in": "chamber.glb",

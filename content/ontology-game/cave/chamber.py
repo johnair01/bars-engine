@@ -8,7 +8,7 @@ import bmesh
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from textures import node, rgb, texture  # noqa: E402  the three stone textures, shared with bake_tiles.py
-from objects import blenderkit, check, cushion, obj, picture, script  # noqa: E402  J2: placed objects
+from objects import blenderkit, check, cushion, local, obj, picture, script  # noqa: E402  J2: placed objects
 
 KIT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cave-kit.glb")  # pieces: pool, gate_stone, portal_arch, stone_spire, glow_cap, root_curl, crystal_cluster, crystal_cluster_bed; each 1 unit high (pool, arch: radius 1)
 OUT = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else "/tmp/blender-cloud/chamber"
@@ -212,6 +212,14 @@ obj("cushion.1", script(cushion), (-0.80, -3.50), 0, 0.22, 20_000, 300, M_CLOTH,
 # J3: his concept pictures (pictures/j3_*.jpg), traced with no code of their own. Parts take a material each.
 obj("mushrooms.1", picture("j3_mushroom.jpg", "mushrooms", flat=True), (-4.10, 1.60), 20, 0.90, 120_000, 0, [M_CAP, M_STEM, M_STONE], OBJECTS)
 obj("amber.1", picture("j3_crystal.jpg", "crystals", flat=True), (3.20, -4.80), -30, 1.10, 100_000, 0, [M_AMBER, M_ROCK], OBJECTS)
+# Greenery: his Blendkit picks (2026-10-13, "Let's go with that pick and also the stylize pitcher plant"), CC0,
+# exported to GLB because Blendkit offers them only as .blend: local(file, id, mesh).
+obj("mossrock.1", local("rock-with-moss.glb", "4e142bae-6a0f-4bdc-94f0-2521b53de988"), (-4.90, 2.80), 40, 0.55, 150_000, 1200, None, OBJECTS)
+obj("fern.1", local("fern-02.glb", "ac5a7010-e00c-46e7-8fbc-a8a0d9b7a9c4", "fern_02_b"), (-5.60, -1.40), 0, 0.50, 170_000, 1200, None, OBJECTS)
+obj("fern.2", local("fern-02.glb", "ac5a7010-e00c-46e7-8fbc-a8a0d9b7a9c4", "fern_02_a"), (2.10, 4.90), 70, 0.40, 170_000, 1200, None, OBJECTS)
+obj("grass.1", local("high-grass-clump.glb", "b21584e9-56bb-43a2-b00b-f0bd7e1e6c03"), (-1.90, -4.50), 0, 0.35, 80_000, 1200, None, OBJECTS)
+obj("grass.2", local("high-grass-clump.glb", "b21584e9-56bb-43a2-b00b-f0bd7e1e6c03"), (1.90, -4.20), 120, 0.30, 80_000, 1200, None, OBJECTS)
+obj("pitcher.1", local("pitcher-plant.glb", "bb9424ca-0bc6-49f2-89ff-bb66fcca60cf"), (4.90, 0.30), -60, 0.60, 120_000, 1200, None, OBJECTS)
 obj("rootknot.1", picture("j3_root.jpg", "roots", faces=2400, flat=True), (-1.60, 4.00), 10, 2.00, 110_000, 0, M_ROOT, OBJECTS, hang=4.85)
 
 # ---- bake each textured surface: one JPEG per piece and texture ----

@@ -6,6 +6,10 @@
                                  mode that makes parts (crystals, mushrooms: the cluster and its bed) takes one
                                  material per part, and flat=True reads a picture on a flat plain background (J3)
   script(builder)                a model built by a function here
+  local(file, id, part)          a CC0 Blendkit model already exported to a GLB beside its licence sidecar, for the
+                                 ones Blendkit offers only as .blend (the greenery picks, exported in Blender 5.2.2 at
+                                 256 px textures); read from $CAVE_PICKS, default the project's
+                                 3d-build/blenderkit-greenery/picks. part keeps one mesh of a file that holds several.
 
 Each object is scaled to its height, stood on the floor (or, with hang=, hung with its top at that height, for a root
 that hangs from the roof), checked (lowest vertex within 1 cm of the floor, or highest within 1 cm of where it hangs;
@@ -25,6 +29,7 @@ import from_picture  # noqa: E402
 import prepare_asset  # noqa: E402
 
 CACHE = os.environ.get("BLENDERKIT_CACHE", "/tmp/blender-cloud/assets")
+PICKS = os.environ.get("CAVE_PICKS", "/mnt/project-files/3d-build/blenderkit-greenery/picks")
 MANIFEST = os.path.join(HERE, "manifest.json")
 FLOOR_TOL, WALL_GAP, TEX_MAX = 0.01, 0.05, 256  # metres, metres, pixels
 
@@ -35,6 +40,10 @@ def blenderkit(query, index, id, licence="cc_zero"):
 
 def picture(file, mode, faces=400, flat=False):
     return {"kind": "picture", "file": file, "mode": mode, "faces": faces, "flat": flat}
+
+
+def local(file, id, part=None):
+    return {"kind": "local", "file": file, "id": id, "part": part}
 
 
 def script(builder):
@@ -71,12 +80,49 @@ def from_blenderkit(name, src, faces):
     plain = os.path.join(folder, "decoded.glb")
     if not os.path.exists(plain):
         prepare_asset.prepare(glb, plain)
+    ob = import_glb(plain, faces)
+    row = {"source": f"Blendkit {info['name']!r} by {info['author'].strip()}, {info['source']} (query {src['query']!r}, "
+                     f"result {src['index']})", "licence": "CC0", "blenderkit_id": info["id"]}
+    return ob, row
+
+
+def from_local(name, src, faces):
+    glb = os.path.join(PICKS, src["file"])
+    side = glb[:-4] + ".json"
+    if not os.path.exists(glb) or not os.path.exists(side):
+        stop(f"{name}: {glb} or its licence sidecar is missing ($CAVE_PICKS)")
+    info = json.load(open(side))
+    if info.get("license") != "cc_zero":
+        stop(f"{name}: {info['name']!r} is {info.get('license')}, not CC0. Only CC0 or own work goes in the cave "
+             "(cs-cc0-or-own).")
+    if info.get("id") != src["id"]:
+        stop(f"{name}: {src['file']} is {info.get('name')!r} ({info.get('id')}), not the pinned {src['id']}")
+    ob = import_glb(glb, faces, src.get("part"))
+    row = {"source": f"Blendkit {info['name']!r} by {info['author'].strip()}, {info['source']} (exported to "
+                     f"{src['file']}{', mesh ' + src['part'] if src.get('part') else ''})", "licence": "CC0",
+           "blenderkit_id": info["id"]}
+    return ob, row
+
+
+def feeds_colour(node, depth=3):
+    """True if the node's output reaches a Base Color input, directly or through a few mix nodes (the pitcher plant
+    mixes its colour map with vertex colours)."""
+    for out in node.outputs:
+        for l in out.links:
+            if l.to_socket.name == "Base Color" or (depth and feeds_colour(l.to_node, depth - 1)):
+                return True
+    return False
+
+
+def import_glb(path, faces, part=None):
+    """Imports a CC0 GLB as one mesh object: its meshes joined (or only the one named part), colour map only and
+    capped, merged vertices, decimated to faces."""
     before = set(bpy.data.objects)
-    bpy.ops.import_scene.gltf(filepath=plain)
+    bpy.ops.import_scene.gltf(filepath=path)
     new = [o for o in bpy.data.objects if o not in before]
-    meshes = [o for o in new if o.type == "MESH"]
+    meshes = [o for o in new if o.type == "MESH" and (part is None or o.name == part)]
     for o in new:
-        if o.type != "MESH":
+        if o not in meshes:
             bpy.data.objects.remove(o)
     for o in bpy.context.scene.objects:
         o.select_set(o in meshes)
@@ -89,7 +135,7 @@ def from_blenderkit(name, src, faces):
     for m in ob.data.materials:  # keep only the colour map, capped: the chamber is a phone page
         nt = m.node_tree
         for n in [n for n in nt.nodes if n.type == "TEX_IMAGE"]:
-            if not any(l.to_socket.name == "Base Color" for l in n.outputs["Color"].links):
+            if not feeds_colour(n):
                 nt.nodes.remove(n)
             elif max(n.image.size) > TEX_MAX:
                 n.image.scale(min(n.image.size[0], TEX_MAX), min(n.image.size[1], TEX_MAX))
@@ -105,9 +151,7 @@ def from_blenderkit(name, src, faces):
     bm.to_mesh(ob.data)
     bm.free()
     from_picture.fit(ob, faces)
-    row = {"source": f"Blendkit {info['name']!r} by {info['author'].strip()}, {info['source']} (query {src['query']!r}, "
-                     f"result {src['index']})", "licence": "CC0", "blenderkit_id": info["id"]}
-    return ob, row
+    return ob
 
 
 def from_picture_file(name, src, faces):
@@ -137,7 +181,7 @@ def from_script(name, src, faces):
     return ob, {"source": f"cave/objects.py, {src['builder'].__name__}()", "licence": "own work"}
 
 
-SOURCES = {"blenderkit": from_blenderkit, "picture": from_picture_file, "script": from_script}
+SOURCES = {"blenderkit": from_blenderkit, "local": from_local, "picture": from_picture_file, "script": from_script}
 
 
 # ---- builders for script(...) objects: each adds one closed mesh to bm, Z up, any size ----
