@@ -364,6 +364,21 @@
     tintStone(rock, rock.userData.hex);
     return rock;
   }
+  // The room's stone laid in the room's own units, so a stone on its round wall or its floor is the size it is in a tunnel: the
+  // wall and dome wrap round the room (a whole number of tiles, so the seam behind the charge's door does not show), and the
+  // floor lies flat. mesh must already stand where it goes.
+  function roomUV(THREE, mesh, R, flat) {
+    mesh.updateMatrixWorld(true);
+    var g = mesh.geometry = mesh.geometry.clone(), p = g.attributes.position, uv = new Float32Array(p.count * 2), v = new THREE.Vector3();
+    var k = Math.round(2 * Math.PI * R / TILE_UNITS) / (2 * Math.PI);
+    for (var i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(mesh.matrixWorld);
+      if (flat) { uv[i * 2] = v.x / TILE_UNITS; uv[i * 2 + 1] = v.z / TILE_UNITS; }
+      else { uv[i * 2] = (Math.atan2(v.x, v.z) / (2 * Math.PI) + 0.5) * 2 * Math.PI * k; uv[i * 2 + 1] = v.y / TILE_UNITS; }
+    }
+    g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+    return mesh;
+  }
   function tintStone(rock, hex) {
     rock.userData.hex = hex;
     [rock, rock.userData.floor, rock.userData.vein].forEach(function (m) { if (m) m.color.setHex(hex).multiplyScalar(m.userData.lift || 1); });
@@ -1430,9 +1445,13 @@
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   // Home base (LEVELS.md): the WAVE room, opened from the body map, with a portal in its wall. Going through it opens the hall of
   // the six; "Go home" from the hall or the centre comes back here. Leaving the room by its own way out ends at the front page.
+  // Its Big Mind door (board dp-door) opens the Big Mind cave on this same page, with the room's spirits along; walking back out
+  // of that cave's mouth comes home to the room.
   function homeBase(A, home, o) {
-    return openRoom(A, { from: "body", where: o.where, portal: true }).then(function (r) {
+    var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
+    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind }).then(function (r) {
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
+      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, o); } });
       return r;
     });
   }
@@ -3170,15 +3189,17 @@
       var HERE = SLOTS[0], FACE = { x: 0, z: 0 };
       var scene = new THREE.Scene(); scene.background = new THREE.Color(0x120e10); scene.fog = new THREE.FogExp2(0x120e10, 0.03);
       var camera = new THREE.PerspectiveCamera(60, 1, 0.1, 120);
-      var rock = new THREE.MeshStandardMaterial({ color: 0x5e4e44, roughness: 0.95, side: THREE.DoubleSide });
+      // The room wears the caves' own stone (Wendell, 13 October 2026: "All of the caves need to use the same assets"): the J1
+      // tiles, wet on the walls and dry on the floor, laid at the tunnels' scale. Without the tiles it is a plain colour, as before.
+      var rock = stoneOf(THREE, A.tiles, 0x5e4e44);
       var walls = new THREE.Group(); scene.add(walls);
       for (var i = 0; i < 4; i++) { // the cave's wall rings, stood upright and stacked into a round room
         var wr = new THREE.Mesh(G.wall_ring, rock); wr.rotation.x = Math.PI / 2; wr.rotation.z = i * 0.41;
-        wr.scale.set(RR * (1 + 0.025 * (i % 2)), RR * (1 + 0.025 * (i % 2)), RH / 4 + 0.05); wr.position.y = i * RH / 4; walls.add(wr);
+        wr.scale.set(RR * (1 + 0.025 * (i % 2)), RR * (1 + 0.025 * (i % 2)), RH / 4 + 0.05); wr.position.y = i * RH / 4; walls.add(roomUV(THREE, wr, RR, false));
       }
-      var dome = new THREE.Mesh(new THREE.SphereGeometry(RR * 1.03, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2), rock); dome.scale.y = 0.45; dome.position.y = RH; walls.add(dome);
-      var floor = new THREE.Mesh(G.floor, new THREE.MeshStandardMaterial({ color: 0x3a302a, roughness: 1, side: THREE.DoubleSide }));
-      floor.scale.set(2 * RR + 1, 1, 2 * RR + 1); floor.position.set(0, 0, RR + 0.5); scene.add(floor);
+      var dome = new THREE.Mesh(new THREE.SphereGeometry(RR * 1.03, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2), rock); dome.scale.y = 0.45; dome.position.y = RH; walls.add(roomUV(THREE, dome, RR, false));
+      var floor = new THREE.Mesh(new THREE.CircleGeometry(RR + 0.5, 48), rock.userData.floor);
+      floor.rotation.x = -Math.PI / 2; scene.add(roomUV(THREE, floor, RR, true));
       function archShape(x0) { var s = new THREE.Shape(), r = DW / 2; s.moveTo(x0 - r, 0); s.lineTo(x0 + r, 0); s.lineTo(x0 + r, DH - r); s.absarc(x0, DH - r, r, 0, Math.PI, false); s.lineTo(x0 - r, 0); return s; }
       var beyond = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: 0xfff1d0 })); // the light beyond the door
       beyond.position.set(0, 0.01, DZ - 0.06); scene.add(beyond);
@@ -3193,12 +3214,29 @@
       seat.scale.set(4.4, 0.46, 5.2); seat.position.set(SEAT.x, 0, SEAT.z); scene.add(seat);
       // Home base's portal (LEVELS.md): a second arch in the wall, behind the seat and to its side, glowing faintly. The charge's
       // door stays the charge's door: what comes in comes through the door, and the player goes out through the portal.
-      if (opts.portal) {
-        var PA = 0.8, px = Math.sin(PA) * RR * 0.9, pz = Math.cos(PA) * RR * 0.9, pyaw = Math.atan2(-px, -pz);
-        var pglow = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: 0xc8b8ff, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
-        pglow.position.set(px, 0.01, pz); pglow.rotation.y = pyaw; scene.add(pglow);
-        var parch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: 0xe0d8ff })); parch.scale.setScalar(DW / 2 + 0.1);
-        parch.position.set(px - Math.sin(pyaw) * 0.06, DH - DW / 2, pz - Math.cos(pyaw) * 0.06); parch.rotation.y = pyaw; scene.add(parch);
+      // The Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room")
+      // is the same kind of arch on the other side of the seat, marked with the seven daemons' colours in the order they are met.
+      // The portal leads to the six game masters (the hall of the six). The player walks to either one; arriving opens its card.
+      var EXITS = {};
+      function exitArch(id, ang, hex, glowHex, name) {
+        var px = Math.sin(ang) * RR * 0.9, pz = Math.cos(ang) * RR * 0.9, pyaw = Math.atan2(-px, -pz);
+        var glow = new THREE.Mesh(new THREE.ShapeGeometry(archShape(0), 16), new THREE.MeshBasicMaterial({ color: glowHex, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
+        glow.position.set(px, 0.01, pz); glow.rotation.y = pyaw; scene.add(glow);
+        var a2 = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: hex })); a2.scale.setScalar(DW / 2 + 0.1);
+        a2.position.set(px - Math.sin(pyaw) * 0.06, DH - DW / 2, pz - Math.cos(pyaw) * 0.06); a2.rotation.y = pyaw; scene.add(a2);
+        var tag = labelSprite(THREE, name, "#" + new THREE.Color(hex).getHexString(), 2.6); tag.position.set(px * 0.9, DH + 0.45, pz * 0.9); scene.add(tag);
+        var k = (RR - 2.2) / (RR * 0.9); // where the figure stands to go through: just in front of it
+        EXITS[id] = { id: id, x: px, z: pz, yaw: pyaw, stand: { x: px * k, z: pz * k }, glow: glow, arch: a2 };
+        return EXITS[id];
+      }
+      if (opts.portal) exitArch("portal", 0.8, 0xe0d8ff, 0xc8b8ff, "The six game masters");
+      if (opts.bigMind) {
+        var bm = exitArch("bigmind", -0.8, 0xfff1b0, 0x9a8ad8, "Big Mind");
+        DAEMONS.forEach(function (d, n) { // seven small lights round the arch, the Protector's first on the left
+          var t = Math.PI * (1 - n / (DAEMONS.length - 1)), r = DW / 2 + 0.42, lx = Math.cos(t) * r, ly = DH - DW / 2 + Math.sin(t) * r;
+          var dot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), new THREE.MeshBasicMaterial({ color: d[3] }));
+          dot.position.set(bm.x + Math.cos(bm.yaw) * lx + Math.sin(bm.yaw) * 0.12, ly, bm.z - Math.sin(bm.yaw) * lx + Math.cos(bm.yaw) * 0.12); scene.add(dot);
+        });
       }
       var hemi = new THREE.HemisphereLight(0xfff4e0, 0x2a2420, 0.4); scene.add(hemi);
       var lamp = new THREE.PointLight(0xffe0b0, 1, 34); lamp.position.set(0, RH * 0.85, 1.4); scene.add(lamp);
@@ -3293,7 +3331,7 @@
         modal.appendChild(row([btn("Look around", { "data-room-shrink": "" }, closeModal, true)]));
         pane.style.display = ""; openModal();
       }
-      function openModal() { R.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden"; }
+      function openModal() { stopWalking(); R.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden"; }
       function closeModal() { R.modal = false; modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); pane.style.visibility = ""; }
       pane.addEventListener("click", function () { if (modal.childNodes.length) openModal(); });
       function field(attr, value, hint, onInput) {
@@ -3338,6 +3376,7 @@
         if (ph === "welcome") {
           k.push(P(w[2], { "data-room-prompt": "" }));
           k.push(P(ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
+          if (Object.keys(EXITS).length && R.round === 1) k.push(P("Tap the floor to walk round the room. " + (EXITS.bigmind && EXITS.portal ? "Behind you are two doors: Big Mind on the left, and the six game masters on the right." : "Behind you is a door."), { "data-room-walk-hint": "" }));
           k.push(row([btn("Welcome it", { "data-room-welcome": "" }, function () { R.phase = "opening"; R.wait = "door-in"; draw(); })]));
           return { title: w[1], kids: k };
         }
@@ -3511,12 +3550,12 @@
       }
       function leave(portal) {
         fade.style.opacity = 1;
-        // through the portal, whatever is still in the room comes along as a spirit too (LEVELS.md, a choice)
-        var going = portal === true ? R.worked.concat(inRoom().filter(function (c) { return R.worked.indexOf(c) < 0 && c.fig.visible; })) : R.worked;
+        // through the portal or the Big Mind door, whatever is still in the room comes along as a spirit too (LEVELS.md, a choice)
+        var going = portal === true || portal === "bigmind" ? R.worked.concat(inRoom().filter(function (c) { return R.worked.indexOf(c) < 0 && c.fig.visible; })) : R.worked;
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
-          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, spirits: going.map(function (c) {
+          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(function (c) {
             return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away" };
           }) });
         }, 520);
@@ -3525,7 +3564,6 @@
       // ---- breath, calm, look ---------------------------------------------------------------------------------------------
       var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
       stage.appendChild(calmBtn);
-      if (opts.portal) stage.appendChild(el("button", { class: "oagc-calm oagr-portalbtn", "data-room-portal": "", text: "The portal", onclick: function () { leave(true); } }));
       // One finger turns the view. Two fingers pinch it nearer or farther (Wendell, 13 October 2026: "Let's introduce pinch to
       // zoom in the wave room"), and the mouse wheel does the same on a computer. A tap on a creature brings it close (below).
       var lookYaw = 0, drag = null, zoom = 1, ptrs = {}, pinch = null, tap = null, ZOOM_MIN = 0.3, ZOOM_MAX = 1.6;
@@ -3579,6 +3617,43 @@
           var k = d / (rad * 1.4 + 24); if (k < 1 && k < bestK) { best = c; bestK = k; }
         });
         if (best && best !== R.close) closeUp(best);
+        else if (!best && !R.close) walkTap(x, y, rc);
+      }
+      // ---- walking round the room (Wendell, 13 October 2026: the WAVE room needs "the ability for players to walk around in") --
+      // A tap on the floor stands the figure up and walks it there; a tap on a door walks it to the door, and arriving opens the
+      // door's card. The step's page tucks into the pane while the player walks, and opening it again walks them back to the seat.
+      var ray = new THREE.Raycaster(), ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), doorBox = null;
+      function walkTap(x, y, rc) {
+        ray.setFromCamera(new THREE.Vector2((x - rc.left) / rc.width * 2 - 1, -((y - rc.top) / rc.height * 2 - 1)), camera);
+        var ids = Object.keys(EXITS), hit = ray.intersectObjects(ids.map(function (k) { return EXITS[k].glow; }))[0], p = new THREE.Vector3();
+        if (hit) { walkTo(ids.filter(function (k) { return EXITS[k].glow === hit.object; })[0]); return; }
+        if (!ray.ray.intersectPlane(ground, p)) return;
+        var near = ids.filter(function (k) { return Math.hypot(p.x - EXITS[k].x, p.z - EXITS[k].z) < 1.8; })[0];
+        if (near) walkTo(near); else walkTo({ x: p.x, z: p.z });
+      }
+      function walkTo(to) {
+        var ex = typeof to === "string" ? EXITS[to] : null; if (typeof to === "string" && !ex) return;
+        var q = ex ? ex.stand : to, r = Math.hypot(q.x, q.z), RW = RR - 1.6;
+        if (r > RW) q = { x: q.x * RW / r, z: q.z * RW / r };
+        R.roam = { x: q.x, z: q.z, exit: ex ? ex.id : null, arrived: false };
+        hideDoor(); closeModal();
+      }
+      function stopWalking() { if (R.roam) { R.roam = null; hideDoor(); } }
+      function hideDoor() { if (doorBox) doorBox.style.display = "none"; R.atDoor = null; }
+      // A door's card, when the figure reaches it. The Big Mind cave and the six game masters are each a door the player goes
+      // through by choice; "Stay in the room" leaves them standing by it.
+      var DOOR_WORDS = {
+        bigmind: ["Big Mind", "The way into the Big Mind cave. Seven figures stand along it, one in each chamber, the Protector first. Each is met in its own time, and you can walk back here whenever you like.", "Go in"],
+        portal: ["The six game masters", "A hall with a door for each of the six faces. What waits behind each door is still being made: for now each is a short tunnel that ends in its face's question.", "Go through"],
+      };
+      function doorCard(id) {
+        if (!doorBox) { doorBox = el("div", { class: "oagr-close", "data-room-door": "", style: "display:none" }); wrap.appendChild(doorBox); }
+        var w = DOOR_WORDS[id], go = { "data-room-door-go": id }; if (id === "portal") go["data-room-portal"] = ""; else go["data-room-bigmind"] = "";
+        var kids = [el("h2", { text: w[0] }), P(w[1])];
+        var going = R.worked.length + inRoom().filter(function (c) { return R.worked.indexOf(c) < 0 && c.fig.visible; }).length;
+        if (going) kids.push(P(going === 1 ? "The one you worked with here comes along as a spirit." : "The " + going + " you worked with here come along as spirits.", { class: "oagr-note" }));
+        kids.push(row([btn(w[2], go, function () { leave(id === "portal" ? true : id); }), btn("Stay in the room", { "data-room-door-stay": "" }, function () { hideDoor(); }, true)]));
+        doorBox.innerHTML = ""; kids.forEach(function (n) { doorBox.appendChild(n); }); doorBox.style.display = ""; R.atDoor = id;
       }
       function closeUp(c) {
         if (!R.close) { roomZoom = zoom; roomModal = R.modal; }
@@ -3634,6 +3709,7 @@
       // seat), then back to the seat. Step back stands behind the seat.
       function targets() {
         var t = ch.t321, tg = { p: SEAT, sit: true, look: HERE, view: "seat", c: HERE };
+        if (R.roam) { var ex = R.roam.exit && EXITS[R.roam.exit]; return { p: R.roam, sit: false, look: ex ? ex : { x: R.roam.x + Math.sin(fig.yaw), z: R.roam.z + Math.cos(fig.yaw) }, view: "roam", c: HERE }; }
         if (R.back || (t && t.paused)) return { p: BACK, sit: false, look: HERE, view: "back", c: HERE };
         if (R.phase === "stays" && t) {
           if (t.phase === 2 || t.phase === "check") return { p: FACE, sit: false, look: HERE, view: t.phase === 2 && t.voice === "it" ? "face-it" : "face-you", c: HERE };
@@ -3647,6 +3723,10 @@
         if (name === "face-it") return { pos: V(HERE.x - 2.8, 3.6, HERE.z - 2.2), aim: V(FACE.x, 0.9, FACE.z) };
         if (name === "its") return { pos: V(HERE.x + 1.6, 3.6, HERE.z - 4.3), aim: V(SEAT.x, 0.6, SEAT.z) };
         if (name === "back") return { pos: V(BACK.x + 0.8, 4.6, BACK.z + 2.3), aim: V(HERE.x, 0.6, HERE.z) };
+        if (name === "roam") { // behind the figure and above it, looking where it faces
+          var sy = Math.sin(fig.yaw), cy = Math.cos(fig.yaw);
+          return { pos: V(fig.x - sy * 4.2, 3.4, fig.z - cy * 4.2), aim: V(fig.x + sy * 2.6, 1.0, fig.z + cy * 2.6) };
+        }
         if (name === "close") { // in front of the creature, near enough that it fills the frame above the card
           var cc = R.close, s = cc.fig.scale.x, mid = centreOf(cc), ry = cc.fig.rotation.y;
           return { pos: V(mid.x + Math.sin(ry) * 4.4 * s, mid.y + 0.5 * s, mid.z + Math.cos(ry) * 4.4 * s), aim: V(mid.x, mid.y - 0.8 * s, mid.z) };
@@ -3713,9 +3793,10 @@
         var dx = tg.p.x - fig.x, dz = tg.p.z - fig.z, dist = Math.hypot(dx, dz), moving = false;
         if (dist > 0.04) {
           fig.sit = Math.max(0, fig.sit - dt * 1.6);
-          if (fig.sit <= 0) { var stp = Math.min(dist, dt * 1.5); fig.x += dx / dist * stp; fig.z += dz / dist * stp; moving = true; fig.clk += dt; fig.yaw = turnTo(fig.yaw, Math.atan2(dx, dz), dt * 5); }
+          if (fig.sit <= 0) { var stp = Math.min(dist, dt * (R.roam ? 2.4 : 1.5)); fig.x += dx / dist * stp; fig.z += dz / dist * stp; moving = true; fig.clk += dt; fig.yaw = turnTo(fig.yaw, Math.atan2(dx, dz), dt * 5); }
         } else {
           fig.x = tg.p.x; fig.z = tg.p.z;
+          if (R.roam && !R.roam.arrived) { R.roam.arrived = true; if (R.roam.exit) doorCard(R.roam.exit); }
           fig.yaw = turnTo(fig.yaw, Math.atan2(tg.look.x - fig.x, tg.look.z - fig.z), dt * 4);
           if (tg.sit && Math.abs(angleDiff(fig.yaw, Math.atan2(tg.look.x - fig.x, tg.look.z - fig.z))) < 0.15) fig.sit = Math.min(1, fig.sit + dt * 1.6);
         }
@@ -3771,6 +3852,11 @@
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
         zoom: function () { return zoom; },
+        // walking: walkTo("bigmind" | "portal" | { x, z }) as a tap on that door or that floor would; walking() says where things are
+        walkTo: function (to) { walkTo(to); },
+        walking: function () { return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, atDoor: R.atDoor || null, view: R.view,
+          exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
+        floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
         close: function () { return R.close ? { name: R.close.name, slot: R.close.slot, kept: R.kept.indexOf(R.close) >= 0 } : null; },
         // where a creature is on screen (by its index in creatures(), or the n-th kept one with kept true), for a test to tap it
         screenOf: function (n, kept) {

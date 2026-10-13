@@ -10,7 +10,8 @@ import { chromium } from 'playwright';
 // tunnel, side paths that loop back to the spot they left from, the daemon as a wall until its encounter is worked, and the
 // six faces' branches at the gate; and the WAVE room (11 October): Take it home from a daemon by lantern and back, and the
 // room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers; and the levels
-// (13 October, LEVELS.md): home base's portal, the hall of the six, a face's tunnel, the centre of the self, another face, home. Build first with `npm run build:ontology-game`, then copy this
+// (13 October, LEVELS.md): home base and its two doors, walking round the room, the hall of the six, a face's tunnel, the centre
+// of the self, another face, home, and the Big Mind door into the Big Mind cave on the same page. Build first with `npm run build:ontology-game`, then copy this
 // file into a folder that has playwright and three@0.128.0 installed and run it there:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node cave-test.mjs
 const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url).pathname;
@@ -947,8 +948,28 @@ await page.locator('[data-room-open]').click();
 await pickOnFigure('heart');
 await page.locator('[data-room="body"]').waitFor();
 await page.locator('[data-room-welcome]').waitFor();
-ok(await sees('[data-room-portal]'), 'home base: the WAVE room from the body map has a portal');
+let RW = await C(() => window.__oagCave.room.walking());
+ok(RW.exits.map((e) => e.id).sort().join() === 'bigmind,portal' && await sees('[data-room-walk-hint]'),
+  'home base: the WAVE room from the body map has two doors behind the seat, Big Mind and the six game masters, and says how to walk');
 await page.screenshot({ path: SHOTS + '/level-home.png' });
+// Walking round the room (Wendell, 13 October 2026): a tap on the floor stands the figure up and walks it there, the camera
+// following; opening the step's page again walks it back to the seat.
+await C(() => window.__oagCave.room.speed(3));
+await page.locator('[data-room-shrink]').click();
+await page.waitForTimeout(500);
+const floorAt = await C(() => window.__oagCave.room.floorScreen(1.5, -1));
+await page.mouse.click(floorAt.x, floorAt.y);
+await page.waitForFunction(() => { const w = window.__oagCave.room.walking(); return w.roam && w.roam.arrived; }, null, { timeout: 30000 });
+RW = await C(() => window.__oagCave.room.walking());
+ok(Math.hypot(RW.figure[0] - 1.5, RW.figure[1] + 1) < 0.6 && RW.sit < 0.1 && RW.view === 'roam', `a tap on the floor walks the figure there, standing, the camera behind it (${RW.figure.map((v) => v.toFixed(2))})`);
+await page.screenshot({ path: SHOTS + '/level-home-walked.png' });
+await page.locator('[data-room-pane]').click();
+await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.9, null, { timeout: 30000 });
+ok((await C(() => window.__oagCave.room.walking())).roam === null, 'opening the page again walks the figure back to its seat, and it sits');
+await C(() => window.__oagCave.room.walkTo('portal'));
+await page.locator('[data-room-portal]').waitFor({ timeout: 30000 });
+ok((await C(() => window.__oagCave.room.walking())).atDoor === 'portal', 'walking to the six game masters\' door opens its card');
+await page.screenshot({ path: SHOTS + '/level-home-door.png' });
 await page.locator('[data-room-portal]').click();
 await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
 await page.locator('[data-cave-level="hall"]').waitFor();
@@ -1007,15 +1028,39 @@ L = await lv();
 ok(L.trail.join(' > ') === 'hall > tunnel:red > centre > tunnel:amber > centre', 'the way walked: ' + L.trail.join(' > '));
 await page.locator('[data-level-home]').click();
 await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
-ok(await sees('[data-room-portal]'), 'Go home opens the WAVE room again, with its portal');
+ok((await C(() => window.__oagCave.room.walking())).exits.length === 2, 'Go home opens the WAVE room again, with its doors');
 await page.locator('[data-room-welcome]').waitFor();
 await page.screenshot({ path: SHOTS + '/level-home-again.png' });
-await page.locator('[data-room-portal]').click();
+await C(() => window.__oagCave.room.speed(3));
+await C(() => window.__oagCave.room.walkTo('portal'));
+await page.locator('[data-room-portal]').click({ timeout: 30000 });
 await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
 await page.waitForTimeout(700);
 ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again');
-await C(() => window.__oagCave.leave());
-await page.locator('[data-cave-level]').waitFor({ state: 'detached', timeout: 15000 });
+// ---- the Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room") --
+// From the hall, home; in the room, walk to the Big Mind door; going in opens the Big Mind cave's mouth on this same page, with a
+// way back to the room.
+await walkLevel('[data-level-home]');
+await page.locator('[data-level-home]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+await page.locator('[data-room-welcome]').waitFor();
+await C(() => window.__oagCave.room.speed(3));
+await C(() => window.__oagCave.room.walkTo('bigmind'));
+await page.locator('[data-room-bigmind]').waitFor({ timeout: 30000 });
+ok((await page.locator('[data-room-door] h2').textContent()) === 'Big Mind', 'walking to the Big Mind door opens its card');
+await page.screenshot({ path: SHOTS + '/level-home-bigmind.png' });
+await page.locator('[data-room-bigmind]').click();
+await page.locator('[data-bm-mouth]').waitFor({ timeout: 15000 });
+ok(await sees('[data-bm-enter]') && await sees('[data-bm-home]'), 'the Big Mind cave opens at its mouth on this page, with Go in and Back to the WAVE room');
+await page.locator('[data-bm-enter]').click();
+await page.locator('[data-bm-cave]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(900);
+ok(await C(() => !!(window.__oagBigMind.state)), 'Go in walks into the Big Mind cave');
+await page.screenshot({ path: SHOTS + '/level-bigmind-cave.png' });
+await C(() => { document.querySelector('[data-bm-cave]').remove(); window.__oagBigMind.start(); }); // out at the mouth again
+await page.locator('[data-bm-home]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+ok(await page.locator('[data-bm-mouth]').count() === 0, 'Back to the WAVE room closes the mouth and opens the room');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();

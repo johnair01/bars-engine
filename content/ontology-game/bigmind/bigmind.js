@@ -165,6 +165,17 @@
 
   // ---- the cave mouth: the rules from the workshop's opening, one screen (bmc-safety) ------------------------------------
   var home = null;
+  // Opened from the WAVE room's Big Mind door (the Cave of Lessons page, board dp-door): back is the way home to the room, and
+  // the spirits the player worked in the room walk in with them for this visit.
+  var fromRoom = null;
+  function open(o) {
+    fromRoom = { back: o && o.back, spirits: (o && o.spirits) || [] };
+    start();
+  }
+  function goHome() {
+    var f = fromRoom; if (home) home.remove(); home = null; fromRoom = null;
+    if (f && f.back) f.back();
+  }
   function mouth() {
     if (home) home.remove();
     var save = readSave(), resume = save.at === "hall2";
@@ -185,6 +196,7 @@
       ]),
       el("div", { class: "oagc-row" }, [
         el("button", { "data-bm-enter": "", text: resume ? "Go back in, past the Protector" : "Go in", onclick: function () { enter(resume ? "hall2" : "hall1"); } }),
+        fromRoom ? el("button", { class: "alt", "data-bm-home": "", text: "Back to the WAVE room", onclick: goHome }) : el("span", {}),
         resume ? el("button", { class: "alt", "data-bm-restart": "", text: "Start at the mouth again", onclick: function () { var s = readSave(); s.at = "mouth"; writeSave(s); enter("hall1"); } }) : el("span", {}),
       ]),
       kept,
@@ -821,6 +833,7 @@
       return [npc("You didn't come alone.")].concat(n >= 3 ? [npc("That's a lot to bring through here.")] : []);
     }
     (save.spirits || []).forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); });
+    if (fromRoom) { fromRoom.spirits.forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); }); fromRoom.spirits = []; } // the room's, once
 
     function ready() {
       show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
@@ -1206,6 +1219,7 @@
     running = requestAnimationFrame(frame);
   }
 
-  window.__oagBigMind = { start: start, heard: heard, readSave: readSave, VOICES: VOICES, STORE: STORE, state: null };
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+  window.__oagBigMind = { start: start, open: open, heard: heard, readSave: readSave, VOICES: VOICES, STORE: STORE, state: null };
+  // On the Cave of Lessons page the cave is opened from the WAVE room's door, so it waits to be asked.
+  if (!window.__oagBigMindNoStart) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start(); }
 })();

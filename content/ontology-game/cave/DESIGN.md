@@ -614,3 +614,27 @@ player more effectively not unlike a drone".
 
 **(choice)** how far the stones stand past the ramp, the reveal's timing and colours, the camera's swing (`state.peek`),
 and how close to the stone the camera may come (0.35 where it aims to be, 0.25 where it is).
+
+## Walking round the WAVE room, and its Big Mind door (13 October 2026)
+
+Wendell, overruling board row `dp-big-mind-page` (13 October, 22:34): "The big mind cave need to be accessible from the WAVE
+room. Which also need the ability for players to walk around in. Another door in the room leads to the 6 game masters
+(content to be created). All of the caves need to use the same assets and have the ability to spawn spirits when one sits
+down and does a wave process."
+
+- **Walking.** A tap on the room's floor stands the figure up and walks it there, and the camera follows from behind it. The
+  step's page tucks into the pane while the player walks; tapping the pane opens the page and walks the figure back to its
+  seat, where every step is done. A tap on a creature still brings it close. **(choice)** tap to walk in the room, where the
+  tunnels hold to walk: the room is small and every step in it is already a tap.
+- **Two doors behind the seat** (board `dp-door`). On the left, the Big Mind door: a pale gold arch with the seven daemons'
+  colours round it, the Protector's first. On the right, the portal, now named for the six game masters: it opens the hall of
+  the six (LEVELS.md), whose tunnels are still plain. The charge's door stays the charge's door. Walking to a door opens its
+  card, with its way through and "Stay in the room". What the player worked in the room goes through with them as spirits.
+- **The Big Mind cave on this page.** The Big Mind door opens the Big Mind cave itself (`bigmind.js`, now built into this page
+  and started only from the door), at its mouth, with "Back to the WAVE room". The room's spirits walk in with the player for
+  that visit. **(choice)** the next six chambers and the centre (board `dp-seven`, `dp-centre`) are built inside the Big Mind
+  cave, which already has the Protector's refusal path, the charge meter and the speaking turns, rather than as a new path in
+  this cave.
+- **One stone.** The room wears the caves' J1 tiles: wet stone on the wall and dome, dry stone on the floor, laid in the room's
+  own units so a stone is the size it is in a tunnel.
+- A sit-down that spawns a spirit without the W.A.V.E. is being fixed in its own thread (the cave branch seams work), not here.
