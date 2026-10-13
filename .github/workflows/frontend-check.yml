@@ -30,3 +30,8 @@ jobs:
 
       - name: Check (generate + verify + lint + tsc)
         run: npm run check
+
+      # Blender pipeline, offline tier only: licence gate, manifest budgets, key handling. Plain Python, no bpy.
+      # Known gaps are logged and do not fail the job (.specify/specs/blender-pipeline-test/).
+      - name: Blender pipeline tests (offline)
+        run: python3 tools/blender-cloud/tests/run.py --tier offline

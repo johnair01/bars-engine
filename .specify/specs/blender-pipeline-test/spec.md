@@ -114,7 +114,7 @@ Nobody has checked the walk cycle's numbers, only its pictures.
 
 | Id | Proves | Kill line | Match |
 |---|---|---|---|
-| P1 | Each `DRESSING` piece still matches its picture | Each piece's outline match is within 0.01 of the number in `manifest.json` (stone_spire 0.987, glow_cap 0.974, root_curl 0.89, crystal_cluster 0.829). A drop of more than 0.01 fails. A rise passes and is listed. | tolerance |
+| P1 | Each `DRESSING` piece still matches its picture | Each piece's outline match is within 0.01 of the number in `manifest.json` (stone_spire 0.987, glow_cap 0.974, root_curl 0.885, crystal_cluster 0.829). A drop of more than 0.01 fails. A rise passes and is listed. | tolerance |
 | P2 | The score is the overlap it claims to be | From the saved `_mask.npy`, the test computes intersection over union itself and gets the tool's number within 0.001. | tolerance |
 | P3 | Each mode makes the right kind of shape | lathe: the mesh is round (width and depth within 5% of each other). inflate: the mesh is one connected piece. crystals: at least two parts, the crystals and the bed. | exact |
 | P4 | The crystal count is tracked | Counts the prisms in `crystal_cluster`. Today it is 6 where his picture has about 10 (cave-studio sheet). The test records the count and is marked a known gap: it fails only if the count drops below 6. It turns into a hard test at 9 or more once the cave-studio strand fixes it. | floor |

@@ -9,20 +9,51 @@
   instead of stopping cleanly) and G2b (`build_viewer.py --allow-restricted` lets a Royalty Free model into a page,
   against `cs-cc0-or-own`). Neither is fixed here.
 
-## Before the build (next thread)
+## Before the build (build thread, 2026-10-13)
 
-- [ ] [claude] Falsify: R2 twice on #285's branch. Byte for byte, or which mesh differs.
-- [ ] [claude] Check whether #285 has merged; if so, plan against main.
-- [ ] [claude] Read the Painted Wooden Chair 02 id from its sidecar into `fixtures.json`.
+- [x] [claude] Falsify: R2 twice. #285 had merged, so it ran on main. `cave-kit.glb` and `spots.json` came out byte for
+  byte the same as committed, both runs. The exact-bytes tier stands for the kit.
+- [x] [claude] #285 merged; everything ran against main.
+- [ ] [claude] Read the Painted Wooden Chair 02 id from its sidecar into `fixtures.json`. Blocked: this environment's
+  network refused Blendkit (N4), and no sidecar is in the repo. A4 pins it on the first run that reaches Blendkit.
 
 ## Build
 
-- [ ] [claude] 1. Offline tier: G1, G2, G2b, G6, G7, and the CI step. G2 and G2b marked known gaps.
-- [ ] [claude] 2. Raise G2 and G2b on the board as positions (the record answers them).
-- [ ] [claude] 3. `bpy` tier: G3 to G5, R1 to R3, W1 to W4. Commit `walk_keys.json` after W3's frames are looked at.
-- [ ] [claude] 4. Contact sheet, `LOOKED.md`, first look written.
-- [ ] [claude] 5. Network tier: V1, A1 to A4, N1, N2, N4, N5 (N5 in the background).
-- [ ] [claude] 6. After #285 merges: P1 to P6, dressing pieces on the sheet.
+- [x] [claude] 1. Offline tier: G1, G2, G2b, G6, G7, and the CI step. G2 and G2b marked known gaps.
+- [x] [claude] 2. Raised G2 and G2b on the board as positions `bpt-licence-stop` and `bpt-no-restricted-flag`; both
+  stood (board read 0107). Fixed in `build_viewer.py`: a sidecar with no licence stops with a STOP: line, and
+  `--allow-restricted` is gone. G2 and G2b are no longer gaps. `bpt-root-curl` (P3, P5) waits for the cave-studio strand.
+- [x] [claude] 3. `bpy` tier: G3, R1 to R3, W1 to W4. `walk_keys.json` committed after the walk frames were looked at.
+  G4 and G5 skip: they need the dining table, and Blendkit is unreachable here.
+- [x] [claude] 4. Contact sheet, `LOOKED.md`, first look written.
+- [~] [claude] 5. Network tier: V1, A1, N4 ran. N1, N2, A2 to A4 and N5 skip until a session can reach Blendkit.
+- [x] [claude] 6. P1 to P6, dressing pieces on the sheet.
+
+## Results of the first full run (2026-10-13, main at fd3ce02)
+
+```
+pass: G1 G6 G7 R1 R2 R3 G3 W1 W2 W3 W4 P1 P2 E1 E2 V1 A1 P6
+known gap: G2 (no-licence sidecar crashes on KeyError), G2b (--allow-restricted), P3 (root_curl in 2 pieces),
+           P4 (7 prisms, floor 6), P5 (root_curl 682 faces, budget 500)
+fail: N4 (api.blenderkit.com, assets.blenderkit.com and cdn.jsdelivr.net refused by this environment's network)
+skipped: G4, G5, N1, N2, A2, A3, A4, N5 (each needs Blendkit)
+offline + bpy: 41 s. P6 (cave-test.mjs, 126 checks) needs npm packages, so it sits in the net tier: 200 s the first time.
+```
+
+Two findings the plan did not expect, both in `root_curl`, both already in the committed `cave-kit.glb`: the
+inflated curl has a 10-vertex blob separate from the 395-vertex body (seen on the sheet at the hook's tip), and it has
+682 faces against its 500 budget. Both are in `from_picture.py`, which the cave-studio strand owns (#289 open), so
+they are excused for `root_curl` only and go to the board as positions.
+
+Fixed 2026-10-13 by the cave-studio strand (#289, `bpt-root-curl`): inflate mode keeps only the largest connected piece,
+and `fit` decimates again until the face count fits. root_curl is one piece at 499 faces, outline match 0.885 (was
+0.89, within P1's 0.01). The crystals' rock bed and every other piece are unchanged. P3 and P5 are hard tests again.
+
+Corrections to spec.md found while building: W1's figure has 72 triangles (six boxes); the 1,318 was the whole
+published scene with the chair. W3 compares a quarter with three quarters: at the half both thighs pass straight
+down. A1 compresses the committed `figure.glb` when the table is not on disk, so it runs without Blendkit. G7's stub
+replaces `urlopen` in a child process rather than listening on a port, since the hosts are fixed in the script. The
+UDIM images for G3 are made at run time by `_make_fixtures.py`, so no `synthetic/` folder is committed.
 
 ## Part 2: words and pictures (added 2026-10-13 from his second message)
 
@@ -39,6 +70,6 @@
 
 ## Verify and ship
 
-- [ ] [claude] Offline and `bpy` tiers pass on main in one run; summary pasted here.
+- [x] [claude] Offline and `bpy` tiers pass on main in one run (known gaps reported); summary above.
 - [ ] [claude] Definition of done in spec.md checked.
 - [ ] [claude] Ledger record written; call sheet updated.

@@ -25,9 +25,79 @@
         "pool",
         "gate_stones",
         "portal_arch",
-        "path_tube"
+        "path_tube",
+        "stone_spire",
+        "glow_cap",
+        "root_curl",
+        "crystal_cluster",
+        "crystal_cluster_bed"
       ],
-      "bytes": 16916
+      "bytes": 81584,
+      "dressing": [
+        {
+          "piece": "stone_spire",
+          "built_from": "pictures/stone_spire.jpg",
+          "how": "lathe",
+          "outline_match": 0.987
+        },
+        {
+          "piece": "glow_cap",
+          "built_from": "pictures/glow_cap.jpg",
+          "how": "lathe",
+          "outline_match": 0.974
+        },
+        {
+          "piece": "root_curl",
+          "built_from": "pictures/root_curl.jpg",
+          "how": "inflate",
+          "outline_match": 0.885
+        },
+        {
+          "piece": "crystal_cluster",
+          "parts": [
+            "crystal_cluster",
+            "crystal_cluster_bed"
+          ],
+          "built_from": "pictures/crystal_cluster.jpg",
+          "picture_made_with": "ChatGPT (Wendell, Drive inbox cave-crystal-growth.png, 2026-10-12)",
+          "how": "crystals",
+          "outline_match": 0.829,
+          "varies": {
+            "note": "A building block (Wendell, 2026-10-13): cave.js crystalBlock gives each crystal its own size, height, width and tint. The rock bed is not stretched upward.",
+            "tints": [
+              "violet",
+              "ice",
+              "rose",
+              "amber",
+              "jade",
+              "smoke"
+            ],
+            "size_of_chamber_height": [
+              0.28,
+              0.62
+            ],
+            "tall": [
+              0.8,
+              1.35
+            ],
+            "wide": [
+              0.85,
+              1.2
+            ]
+          }
+        }
+      ],
+      "dressing_note": "Built in Blender from the pictures by tools/blender-cloud/from_picture.py (cave studio, 2026-10-12). A picture is concept only (cs-chatgpt-ai-art); the built piece is own work. outline_match is the overlap of the model's front outline with the picture's, 1.0 exact."
+    },
+    {
+      "id": "cave.pictures",
+      "file": "pictures/",
+      "kind": "concept pictures",
+      "source": "pictures/draw_standins.py (stone_spire, glow_cap, root_curl: stand-ins drawn in code, own work); crystal_cluster.jpg: Wendell's ChatGPT concept picture, reference only",
+      "licence": "own work",
+      "status": "built",
+      "ships": false,
+      "bytes": 223390
     },
     {
       "id": "cave.spots",
@@ -48,6 +118,23 @@
         "bend"
       ],
       "bytes": 19731
+    },
+    {
+      "id": "cave.tiles",
+      "file": "textures/",
+      "kind": "textures",
+      "source": "cave/bake_tiles.py, from the chamber's textures in cave/textures.py (J1, chamber.py)",
+      "licence": "own work",
+      "status": "built",
+      "tiles": {
+        "wet_stone": "tunnel walls",
+        "dry_stone": "tunnel floor",
+        "crystal_vein": "stone spires and the crystals' rock beds"
+      },
+      "px": 512,
+      "tile_units": 3.2,
+      "note": "Seamless: each point is taken on a torus in 4D. Neutral grey, tinted by the charge's wall colour in cave.js (stoneOf). Wendell, 2026-10-13: \"Let's incorporate what we've made so far into the cave games\".",
+      "bytes": 123175
     },
     {
       "id": "daemon.figure",
