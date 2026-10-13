@@ -126,8 +126,7 @@ def g5():
     check(r.returncode == 0, f"scene.py failed: {r.stderr[-200:]}")
     rep = json.loads((out / "report.json").read_text())
     j, b = glb_read(out / "scene.glb")
-    asset_tris = sum(j["accessors"][p["indices"]]["count"] // 3 for m in j["meshes"] if m["name"] not in WALKER_MESHES
-                     for p in m["primitives"])
+    asset_tris = sum(j["accessors"][p["indices"]]["count"] // 3 for m in j["meshes"] for p in m["primitives"]) - FIGURE_TRIS  # the six-box figure rides in the GLB
     check(4500 <= asset_tris <= 5500, f"the table has {asset_tris} triangles at a 5,000 budget")
     check(abs(rep["tris_after"] - asset_tris) <= max(2, asset_tris // 1000),
           f"report says {rep['tris_after']}, the GLB holds {asset_tris}")

@@ -35,6 +35,10 @@ def main():
                 print(l)
         if r.returncode != 0:
             results.append({"id": tier, "status": "fail", "detail": f"{script} exited {r.returncode}: {r.stderr.strip()[-300:]}"})
+    if "net" in a.tier and "bpy" in a.tier and any(x["id"] in ("G4", "G5") and x["status"] == "skip" for x in results) and (W / "assets/table.glb").exists():
+        again = subprocess.run([BLENV, str(HERE / "test_bpy.py"), "G4,G5"], capture_output=True, text=True)  # the net tier fetched the table
+        redo = [json.loads(l) for l in again.stdout.splitlines() if l.startswith("{")]
+        results = [x for x in results if x["id"] not in ("G4", "G5")] + redo
     looks = [x for x in results if x.get("eyes")]
     out = [f"# Blender pipeline tests, {time.strftime('%Y-%m-%d %H:%M')} ({time.time() - started:.0f} s, tiers {a.tier})", ""]
     passed = [x["id"] for x in results if x["status"] == "pass"]

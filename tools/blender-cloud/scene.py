@@ -101,6 +101,13 @@ if ratio < 1.0:
     for o in meshes:
         d = o.modifiers.new("Decimate", "DECIMATE"); d.ratio = ratio
 
+def tri_count_after(objs):
+    """Triangles of the meshes as exported (modifiers applied), not the ratio's estimate."""
+    dg, total = bpy.context.evaluated_depsgraph_get(), 0
+    for o in objs:
+        e = o.evaluated_get(dg); m = e.to_mesh(); m.calc_loop_triangles(); total += len(m.loop_triangles); e.to_mesh_clear()
+    return total
+
 # Group under one root, turn, scale, stand on the floor.
 asset = bpy.data.objects.new("AssetRoot", None)
 sc.collection.objects.link(asset)
@@ -117,7 +124,8 @@ cy = (min(c.y for c in corners) + max(c.y for c in corners)) / 2
 asset.location = (args.x - cx, -cy, -low)
 bpy.context.view_layer.update()
 dims = [round(max(c[i] for c in corners) - min(c[i] for c in corners), 3) for i in range(3)]
-print("ASSET", asset_path.name, "dims", dims, "tris", tris_before, "->", round(tris_before * ratio))
+tris_after = tri_count_after(meshes) if ratio < 1.0 else tris_before
+print("ASSET", asset_path.name, "dims", dims, "tris", tris_before, "->", tris_after)
 
 # ---- six-box figure ----
 def mat(name, rgb, rough=0.6):
@@ -215,7 +223,7 @@ glb = out_dir / "scene.glb"
 bpy.ops.export_scene.gltf(filepath=str(glb), export_format="GLB", use_selection=True, export_animations=True,
                           export_skins=True, export_image_format="AUTO", export_jpeg_quality=80, export_apply=True)
 size_mb = glb.stat().st_size / 1048576
-report = {"asset": asset_path.name, "dims_m": dims, "tris_before": tris_before, "tris_after": round(tris_before * ratio),
+report = {"asset": asset_path.name, "dims_m": dims, "tris_before": tris_before, "tris_after": tris_after,
           "tex_max": args.tex_max, "glb_mb": round(size_mb, 2)}
 (out_dir / "report.json").write_text(json.dumps(report, indent=2))
 print("REPORT", json.dumps(report))

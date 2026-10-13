@@ -74,8 +74,7 @@ def v1():
 def a1():
     node_pkgs()
     d = tmpdir("a1")
-    src = W / "assets/table.glb"
-    src = src if src.exists() else GAME / "body/figure.glb"  # the table needs Blendkit; the figure is pinned by being ours
+    src = fetch_table()  # G4 and G5 in the bpy tier use the same file
     packed, back = d / "meshopt.glb", d / "decoded.glb"
     r = subprocess.run([str(NODE / "node_modules/.bin/gltf-transform"), "meshopt", str(src), str(packed)],
                        capture_output=True, text=True, timeout=300)
@@ -137,14 +136,41 @@ def n1():
 def n2():
     needs("api.blenderkit.com")
     env = dict(os.environ, BLENDERKIT_SCENE_UUID="", XDG_CACHE_HOME=str(tmpdir("n2")))
-    code = ("import sys;sys.argv=['x','chair',sys.argv[1]];import importlib.util as u;"
-            "s=u.spec_from_file_location('f',sys.argv[2]);m=u.module_from_spec(s);s.loader.exec_module(m);"
+    code = ("import sys;path,out=sys.argv[1:3];sys.argv=['x','chair',out];import importlib.util as u;"
+            "s=u.spec_from_file_location('f',path);m=u.module_from_spec(s);s.loader.exec_module(m);"
             "m.scene_uuid=lambda:'';m.main()")
-    r = subprocess.run([sys.executable, "-c", code, str(tmpdir("n2out")), str(TOOLS / "blenderkit_fetch.py")],
+    r = subprocess.run([sys.executable, "-c", code, str(TOOLS / "blenderkit_fetch.py"), str(tmpdir("n2out"))],
                        capture_output=True, text=True, env=env, timeout=300)
     out = r.stdout + r.stderr
     check(r.returncode != 0 and "HTTP " in out and "Traceback" not in out, f"no clean API message: {out.strip()[-200:]}")
     return out.strip().splitlines()[-2][:150]
+
+
+def _size(f):
+    import struct
+    b = f.read_bytes()
+    if f.suffix == ".png":
+        return struct.unpack(">II", b[16:24])
+    i = 2
+    while i < len(b):  # JPEG: walk the markers to the start-of-frame
+        m, ln = b[i + 1], int.from_bytes(b[i + 2:i + 4], "big")
+        if m in (0xC0, 0xC1, 0xC2):
+            return int.from_bytes(b[i + 7:i + 9], "big"), int.from_bytes(b[i + 5:i + 7], "big")
+        i += 2 + ln
+    return (0, 0)
+
+
+def fetch_table():
+    """The dining table fixture at $W/assets/table.glb (G4, G5, A1). Falls back to our figure if it cannot be fetched."""
+    dst = W / "assets/table.glb"
+    if not dst.exists():
+        fx = next(f for f in FIXTURES["fixtures"] if f["name"] == "Dining table")
+        d = tmpdir("table")
+        fetch(fx, d)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run([sys.executable, str(TOOLS / "prepare_asset.py"), str(next(d.glob("*.glb"))), str(dst)], capture_output=True, text=True, timeout=900)
+        check(r.returncode == 0, f"prepare_asset.py failed on the table: {r.stderr[-200:]}")
+    return dst
 
 
 def fetch(fx, out):
@@ -176,13 +202,41 @@ def a4():
 @test("A2")
 def a2():
     needs("api.blenderkit.com", "assets.blenderkit.com")
-    raise Skip("no multi-material fixture pinned yet: the first run with Blendkit reachable picks one into fixtures.json")
+    fx = next(f for f in FIXTURES["fixtures"] if f["name"].startswith("Nude Female Bust"))
+    d = tmpdir("a2")
+    fetch(fx, d)
+    raw = next(d.glob("*.glb"))
+    r = subprocess.run([sys.executable, str(TOOLS / "prepare_asset.py"), str(raw), str(d / "in.glb")], capture_output=True, text=True, timeout=900)
+    check(r.returncode == 0, f"prepare_asset.py failed: {r.stderr[-200:]}")
+    r = subprocess.run([BLENV, str(TOOLS / "scene.py"), str(d / "in.glb"), str(d / "out")], capture_output=True, text=True, timeout=1200)
+    check(r.returncode == 0, f"scene.py failed: {r.stderr[-200:]}")
+
+    def read(f):
+        b = f.read_bytes()
+        n = int.from_bytes(b[12:16], "little")
+        return json.loads(b[20:20 + n])
+    before, after = read(d / "in.glb"), read(d / "out/scene.glb")
+    names = [m["name"] for m in before["materials"]]
+    check(len(names) >= 3, f"the fixture has {len(names)} materials, wanted at least 3")
+    kept = [m["name"] for m in after["materials"]]
+    check(all(n in kept for n in names), f"materials lost: {[n for n in names if n not in kept]}")
+    big = [f.name for f in (d / "out").rglob("*.*") if f.suffix in (".jpg", ".png") and max(_size(f)) > 1024]
+    check(not big, f"textures over 1024: {big}")
+    return f"{len(names)} materials in, all {len(names)} out (the figure adds {len(kept) - len(names)}); textures at or under 1024. Preview: {d / 'out/preview.png'} (eyes: E1)"
 
 
 @test("A3")
 def a3():
     needs("api.blenderkit.com")
-    raise Skip("the UDIM search runs the first time Blendkit is reachable; G3's synthetic image stands in until then")
+    fx = next(f for f in FIXTURES["fixtures"] if f["name"].startswith("Scan Old brick building"))
+    d = tmpdir("a3")
+    r = subprocess.run([sys.executable, str(TOOLS / "blenderkit_fetch.py"), fx["query"], str(d), "--index", str(fx["index"]), "--file-type", "blend"],
+                       capture_output=True, text=True, timeout=900)
+    check(r.returncode == 0 and f"id       : {fx['id']}" in r.stdout, f"fetch failed or drifted: {(r.stdout + r.stderr)[-200:]}")
+    r = subprocess.run([BLENV, str(TOOLS / "scene.py"), str(next(d.glob("*.blend"))), str(d / "out")], capture_output=True, text=True, timeout=900)
+    out = r.stdout + r.stderr
+    check(r.returncode != 0 and "STOP:" in out and "multi-tile UDIM" in out, f"scene.py did not stop with the UDIM message: {out[-200:]}")
+    return next(l for l in out.splitlines() if l.startswith("STOP:"))[:160]
 
 
 @test("N5")
@@ -194,10 +248,10 @@ def n5():
     fetch(fx, d)
     raw = next(d.glob("*.glb"))
     subprocess.run([sys.executable, str(TOOLS / "prepare_asset.py"), str(raw), str(d / "in.glb")], check=True, capture_output=True, timeout=900)
-    r = subprocess.run(["/usr/bin/time", "-v", BLENV, str(TOOLS / "scene.py"), str(d / "in.glb"), str(d / "out")],
-                       capture_output=True, text=True, timeout=1200)
+    import resource
+    r = subprocess.run([BLENV, str(TOOLS / "scene.py"), str(d / "in.glb"), str(d / "out")], capture_output=True, text=True, timeout=1200)
     secs = time.time() - start
-    peak = next((int(l.split()[-1]) for l in r.stderr.splitlines() if "Maximum resident" in l), 0) / 1048576
+    peak = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1048576  # KB to GB; the largest child, scene.py's bpy
     check(r.returncode == 0, f"scene.py failed: {r.stderr[-200:]}")
     check(secs < 600 and peak < 4, f"{secs:.0f} s, {peak:.2f} GB peak")
     return f"{secs:.0f} s, {peak:.2f} GB peak (record these; the kill line becomes twice them)"
