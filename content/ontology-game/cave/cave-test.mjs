@@ -19,6 +19,9 @@ const files = {
   '/ontology-game/cave': ['cave/index.html', 'text/html'],
   '/ontology-game/cave/cave-kit.glb': ['cave/cave-kit.glb', 'model/gltf-binary'],
   '/ontology-game/cave/spots.json': ['cave/spots.json', 'application/json'],
+  '/ontology-game/cave/textures/wet_stone.jpg': ['cave/textures/wet_stone.jpg', 'image/jpeg'],
+  '/ontology-game/cave/textures/dry_stone.jpg': ['cave/textures/dry_stone.jpg', 'image/jpeg'],
+  '/ontology-game/cave/textures/crystal_vein.jpg': ['cave/textures/crystal_vein.jpg', 'image/jpeg'],
   '/ontology-game/figure.glb': ['figure.glb', 'model/gltf-binary'],
 };
 const server = http.createServer((req, res) => {
@@ -40,10 +43,10 @@ const WAVE = ['welcome', 'acknowledge', 'allow', 'accept', 'appreciate', 'valida
 const PROMPT = { welcome: "Let whatever's here be here for a moment, without needing it to be different yet.", exhale: 'Is this feeling in alignment with what you actually want right now?' };
 
 // ---- sizes: the kit and every file the page loads stay under the 3 MB phone budget ------------
-const sizes = ['cave/index.html', 'cave/cave-kit.glb', 'cave/spots.json', 'figure.glb'].map((f) => statSync(PUB + '/ontology-game/' + f).size);
+const sizes = ['cave/index.html', 'cave/cave-kit.glb', 'cave/spots.json', 'figure.glb', 'cave/textures/wet_stone.jpg', 'cave/textures/dry_stone.jpg', 'cave/textures/crystal_vein.jpg'].map((f) => statSync(PUB + '/ontology-game/' + f).size);
 const kit = sizes[1], total = sizes.reduce((a, b) => a + b, 0);
 ok(kit < 3_000_000, `the kit is ${Math.round(kit / 1024)} KB, under the 3 MB budget`);
-ok(total < 3_000_000, `the page, kit, places and figure together are ${Math.round(total / 1024)} KB, under the 3 MB budget`);
+ok(total < 3_000_000, `the page, kit, places, figure and stone tiles together are ${Math.round(total / 1024)} KB, under the 3 MB budget`);
 await page.goto(B + '/ontology-game/cave');
 const spots = await page.evaluate(() => fetch('/ontology-game/cave/spots.json').then((r) => r.json()));
 ok(spots.spots.length >= 50, `spots.json names ${spots.spots.length} places, each a portal`);
@@ -104,6 +107,12 @@ const kitPieces = await C(() => window.__oagCave.load().then((a) => Object.keys(
 ok(['crystal_cluster', 'crystal_cluster_bed', 'glow_cap', 'root_curl', 'stone_spire'].every((p) => kitPieces.includes(p)), `the kit carries the dressing built from pictures (${kitPieces.join(', ')})`);
 const dressing = await state('s.dressing');
 ok(Array.isArray(dressing) && dressing.length >= 4 && new Set(dressing).size >= 2, `the chamber is dressed with ${dressing.length} pieces of ${new Set(dressing).size} kinds`);
+// Pieces grow out of the stone (Wendell, 2026-10-13): from the floor's edge, the walls and the roof, and spires vary in size.
+const zones = await state('s.dressZones');
+ok(new Set(zones.map((z) => z.split(':')[1])).size >= 2, `the dressing grows from ${[...new Set(zones.map((z) => z.split(':')[1]))].join(', ')}`);
+ok(zones.filter((z) => z.startsWith('root_curl')).every((z) => /:(roof|high)$/.test(z)), 'roots hang from the roof or the high wall');
+const spires = await state('s.spires');
+ok(spires.length < 2 || new Set(spires.map((x) => x.len)).size > 1, `the spires come in different sizes (${spires.map((x) => x.zone + ' ' + x.len).join(', ') || 'none in this chamber'})`);
 // The crystal as a building block: one Blender piece, six tints, any size, height and width (Wendell, 2026-10-13).
 const blocks = await C(() => window.__oagCave.load().then((a) => {
   const c = window.__oagCave, T = a.THREE, G = { crystal_cluster: c.geomOf(T, a.kit.crystal_cluster), crystal_cluster_bed: c.geomOf(T, a.kit.crystal_cluster_bed) };
@@ -465,6 +474,7 @@ for (const [texture, element] of [['constriction', 'Fear'], ['numbness', 'Sadnes
   if (texture === 'strength') await page.screenshot({ path: SHOTS + '/cave-strength.png' });
   if (texture === 'constriction') await page.screenshot({ path: SHOTS + '/cave-tightness.png' });
   looks[texture].dress = await state('JSON.stringify(s.dress)');
+  looks[texture].cave = await state('s.cave');
   looks[texture].rows = await state('JSON.stringify(s.layout.rows)');
   await C(() => window.__oagCave.leave(false));
   await page.locator('[data-cave-chamber]').waitFor({ state: 'detached' });
@@ -473,6 +483,8 @@ ok(looks.constriction.scale[0] < 0.7, `tightness is narrow and drawn in (width $
 ok(looks.numbness.opacity < 0.5, `numbness is fogged and translucent (opacity ${looks.numbness.opacity.toFixed(2)})`);
 ok(looks.strength.glow > looks.tension.glow + 0.4, `strength is bright (glow ${looks.strength.glow.toFixed(2)} against ${looks.tension.glow.toFixed(2)})`);
 ok(looks.tension.scale[1] > 1.1, `tension is taut (height ${looks.tension.scale[1].toFixed(2)})`);
+ok(new Set(Object.values(looks).map((l) => l.cave.e + ':' + l.cave.roof)).size === 4, `each charge has its own cave shape (${Object.entries(looks).map(([k, l]) => k + ' ' + l.cave.e + '/' + l.cave.roof).join(', ')})`);
+ok(!looks.numbness.cave.walls && looks.strength.cave.walls, 'numbness is blackness: its walls are lost in the dark');
 ok(Object.values(looks).every((l) => l.bytes < 50 * 1024), 'every charge keeps the avatar under 50 KB of geometry');
 const dressA = JSON.parse(await (async () => {
   await C((w) => window.__oagCave.dive(w), 'my left hand');

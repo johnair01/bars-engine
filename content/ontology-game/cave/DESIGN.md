@@ -338,3 +338,37 @@ then it needs to be worked with. We can pivot to a 321 discussion with the part 
   way on from the first stone waits for its branch, as it did at the end **(choice)**: every branch is walked before the
   sensation, and each is a place the games can later live.
 - **(choice)** The written words stay on the page and are not saved with the scan.
+
+## The stone (13 October 2026)
+
+Wendell, 2026-10-13, on the J1 chamber: "ok this is perfection. Let's incorporate what we've made so far into the cave games".
+The cave now wears the chamber's three textures. `bake_tiles.py` bakes them from the same shader nodes as `chamber.py`
+(now shared in `textures.py`) as seamless 512 px tiles in `textures/` (120 KB together): each point is taken on a torus
+in 4D, so a tile meets itself with no seam. In `cave.js`, `stoneOf` makes one set per charge colour: wet stone on the
+tunnel walls, dry stone on the floor, crystal vein (its veins glow) on the stone spires and the crystals' rock beds. The tiles
+are neutral grey and the charge's wall colour tints them, so tightness, tension, numbness, strength and something else keep
+their colours. The crystals are unchanged. The tube carries UVs (along the path and round the profile, one tile per 3.2
+chamber units) and one extra column so the tiles wrap. If a tile does not load, its stone is a plain colour, as before.
+**(choice)** the tile size and how much each tint is lifted to make up for the grey (`TILE_UNITS`, `STONE` in `cave.js`).
+
+**Growing from the stone (13 October 2026, after his first play).** Wendell: "the placement of the elements need to feel a
+lot more matural incuding having the elements comes out of the wall in various ways"; "Also the root elements are unpside
+down"; "The rock spires need do have stochastic sizes- stalagtite and stalagmites". The tube now carries mounts: a point on
+its surface (along the path and round the profile) whose piece stands on the stone's inward normal, tipped and turned a
+little, and moves with the walls as they breathe. Five zones round the profile: the floor's edge, the low, middle and high
+wall, and the roof. Crystals come in veins of one to three in any zone (smaller up the wall); spires stand from the floor's
+edge or hang from the roof as stalactites, each its own length (most short, a few long) and girth; caps grow in clumps on the
+floor's edge and the wall like shelf fungus; roots hang thick end into the roof. The small elements a named feeling scatters
+grow the same way: fire and stone at the foot and low wall, water pools at the foot, the young tree leans out of the wall,
+metal anywhere. **(choice)** the zones, the size ranges (`ZONES`, `ZONE_SIZE`, `SPIRE`, `ELEMENT_ZONES` in `cave.js`).
+
+**Each charge its own cave, the light the figure's own, wood as roots and grass (13 October 2026).** Wendell: "Strength,
+constriction, strength and numbness should have different cave shapes. I'm almost tempted to have the numbness not even
+have a cave structure but a blackness"; "the wood elements shouldn't be underground trees thats foolish, but roots and bushes
+and grass makes a lot more sense"; "fog of war from a lighting standpoint. You can't see into the full cave. The avaiable
+lighting centers around the character and any spirits that are following them". `CAVE_SHAPE` gives each charge a profile:
+tightness a squeezed slot whose walls pinch in every six units, tension a tall angular cave of sharp cracked stone, strength a
+wide high domed hall, something else the cave as it was. Numbness takes his temptation as the default **(choice)**: its walls
+are not drawn, the floor is faint and only glowing things hang in the black. The figure carries the light (`LAMP`: reach 16,
+falling off), the sky light is a trace and the far cave sinks into darkened fog; `carryLight` gives any following spirit its
+own small light (this cave has none yet; the Big Mind cave's spirits will). Wood is a low bush with grass and a root.

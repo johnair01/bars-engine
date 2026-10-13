@@ -120,6 +120,23 @@
       "bytes": 19731
     },
     {
+      "id": "cave.tiles",
+      "file": "textures/",
+      "kind": "textures",
+      "source": "cave/bake_tiles.py, from the chamber's textures in cave/textures.py (J1, chamber.py)",
+      "licence": "own work",
+      "status": "built",
+      "tiles": {
+        "wet_stone": "tunnel walls",
+        "dry_stone": "tunnel floor",
+        "crystal_vein": "stone spires and the crystals' rock beds"
+      },
+      "px": 512,
+      "tile_units": 3.2,
+      "note": "Seamless: each point is taken on a torus in 4D. Neutral grey, tinted by the charge's wall colour in cave.js (stoneOf). Wendell, 2026-10-13: \"Let's incorporate what we've made so far into the cave games\".",
+      "bytes": 123175
+    },
+    {
       "id": "daemon.figure",
       "file": "daemon.glb",
       "kind": "model",

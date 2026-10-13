@@ -97,7 +97,7 @@ ${inline(bodyMap)}
 `;
 
 // /ontology-game/cave: the Cave of Lessons, the same block work walked inside the body map (cave/DESIGN.md).
-// cave-kit.glb and spots.json are made by cave/build_kit.py and committed, so this build needs no Blender.
+// cave-kit.glb and spots.json are made by cave/build_kit.py, the stone tiles by cave/bake_tiles.py; all are committed, so this build needs no Blender.
 const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
 const caveHtml = `<!doctype html>
 <html lang="en">
@@ -125,6 +125,9 @@ mkdirSync(path.join(outDir, 'cave'), { recursive: true });
 writeFileSync(path.join(outDir, 'cave', 'index.html'), caveHtml);
 copyFileSync(path.join(srcDir, 'cave', 'cave-kit.glb'), path.join(outDir, 'cave', 'cave-kit.glb'));
 copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 'spots.json'));
+// The stone tiles, baked by cave/bake_tiles.py and committed.
+mkdirSync(path.join(outDir, 'cave', 'textures'), { recursive: true });
+for (const t of ['wet_stone', 'dry_stone', 'crystal_vein']) copyFileSync(path.join(srcDir, 'cave', 'textures', t + '.jpg'), path.join(outDir, 'cave', 'textures', t + '.jpg'));
 writeFileSync(path.join(outDir, 'index.html'), html);
 writeFileSync(path.join(outDir, 'body.html'), bodyHtml);
 copyFileSync(path.join(srcDir, 'body', 'figure.glb'), path.join(outDir, 'figure.glb'));
