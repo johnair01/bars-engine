@@ -36,6 +36,7 @@ import { TaskCard } from './TaskCard'
 import { TaskActionSheet, type SheetAction } from './TaskActionSheet'
 import { BrainstormFlow } from '@/components/brainstorm/BrainstormFlow'
 import { MenuPhase } from './MenuPhase'
+import { initialTtvPhase } from '@/lib/tap-the-vein/initial-phase'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -82,12 +83,9 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
   const [plantedTrace, setPlantedTrace] = useState<LensGoalTrace | null>(null)
 
   const sealed = initial.status === 'sealed'
-  const [phase, setPhase] = useState<Phase>(() => {
-    if (sealed) return 'seal'
-    if (initial.tasks.some(isLive)) return 'work'
-    if (initial.rawEntry.trim()) return 'commit'
-    return 'open'
-  })
+  const [phase, setPhase] = useState<Phase>(() =>
+    initialTtvPhase({ sealed, rawEntry: initial.rawEntry, tasks: initial.tasks }),
+  )
 
   const liveTasks = useMemo(() => initial.tasks.filter(isLive), [initial.tasks])
   const carriedIn = useMemo(() => liveTasks.filter((t) => t.isCarried), [liveTasks])
