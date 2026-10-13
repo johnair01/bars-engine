@@ -518,3 +518,10 @@ beside the pool across the path from the element). The pieces from pictures stay
 grown ones. The kit went from 80 KB to 319 KB; the page and all it loads are 829 KB of the 3 MB budget. The mushrooms take
 the caps' glow and stay lit in numbness's dark. **(choice)** the seeds, the face budgets (`GROWN` in `grow.py`), the sizes
 (`GROWN` in `cave.js`), a mat in about half the root places. The Blender detail pass comes next.
+
+**One touch walks and looks (13 October 2026).** Wendell: "For navigation one needs to be able to look walk and pan in the
+same touch. One keeps walking even as they drag to move the camera. Should follow touch rules so dragging down moves the
+camera down and pushing up moves the camera up (and has it looking down on the character)". A drag no longer stops the
+walk. Dragging down lowers the camera; pushing up lifts it toward the roof (never through it) and turns it down onto the
+figure. The look eases back behind the figure only after the thumb has rested for 0.6 s. **(choice)** the tilt per pixel,
+its range, the rest time and how near the roof the camera may go (`LOOK` in `cave.js`).
