@@ -301,8 +301,9 @@ def lathe(name, mask, unit, segments=12, levels=40):
     return to_object(name, bm)
 
 
-def inflate(name, mask, unit, stride=2, swell=1.25):
-    """Fills the outline with metaballs, each as big as the distance to the outline there."""
+def inflate(name, mask, unit, stride=2, swell=1.25, one=False):
+    """Fills the outline with metaballs, each as big as the distance to the outline there. one=True keeps only the
+    largest connected piece (an inflate-mode piece is one shape; the crystals' rock bed is several stones)."""
     d = distance(mask)
     h, w = mask.shape
     mb = bpy.data.metaballs.new(name + "_balls")
@@ -320,9 +321,38 @@ def inflate(name, mask, unit, stride=2, swell=1.25):
     bpy.context.view_layer.update()
     me = bpy.data.meshes.new_from_object(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()))
     bpy.data.objects.remove(ob)
+    if one:
+        keep_largest(me)
     out = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(out)
     return out
+
+
+def keep_largest(me):
+    """Keeps only the largest connected piece. Metaballs can leave a small blob loose where the outline thins out
+    (root_curl had a 10-vertex blob at the hook's tip, P3 in tools/blender-cloud/tests)."""
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    seen, islands = set(), []
+    for v in bm.verts:
+        if v.index in seen:
+            continue
+        island, todo = [], [v]
+        seen.add(v.index)
+        while todo:
+            u = todo.pop()
+            island.append(u)
+            for e in u.link_edges:
+                o = e.other_vert(u)
+                if o.index not in seen:
+                    seen.add(o.index)
+                    todo.append(o)
+        islands.append(island)
+    if len(islands) > 1:
+        islands.sort(key=len)
+        bmesh.ops.delete(bm, geom=[v for island in islands[:-1] for v in island], context="VERTS")
+        bm.to_mesh(me)
+    bm.free()
 
 
 def place(parts):
@@ -340,7 +370,11 @@ def place(parts):
 def fit(ob, faces):
     """Decimates to the face budget, puts the base on y=0 and centres it on x=0 and z=0."""
     bpy.context.view_layer.objects.active = ob
-    if len(ob.data.polygons) > faces:
+    # Decimate counts triangles, so a quad mesh can come out over the budget (root_curl came out at 682 against 500,
+    # P5): decimate again from what came out until the face count fits.
+    for _ in range(6):
+        if len(ob.data.polygons) <= faces:
+            break
         m = ob.modifiers.new("fit", "DECIMATE")
         m.ratio = faces / len(ob.data.polygons)
         bpy.context.view_layer.update()
@@ -458,11 +492,11 @@ def build(name, mask, unit, mode, faces):
         place(parts)
         sil, iou = match(parts, mask, unit)
         return parts, sil, iou
-    ob = fit((lathe if mode == "lathe" else inflate)(name, mask, unit), faces)
+    ob = fit(lathe(name, mask, unit) if mode == "lathe" else inflate(name, mask, unit, one=True), faces)
     sil, iou = match(ob, mask, unit)
     if mode == "inflate":
         for swell in (1.4, 1.55, 1.7, 1.85):
-            trial = fit(inflate(name + "_try", mask, unit, swell=swell), faces)
+            trial = fit(inflate(name + "_try", mask, unit, swell=swell, one=True), faces)
             tsil, tiou = match(trial, mask, unit)
             if tiou > iou:
                 bpy.data.objects.remove(ob)

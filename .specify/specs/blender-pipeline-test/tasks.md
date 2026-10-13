@@ -45,6 +45,10 @@ inflated curl has a 10-vertex blob separate from the 395-vertex body (seen on th
 682 faces against its 500 budget. Both are in `from_picture.py`, which the cave-studio strand owns (#289 open), so
 they are excused for `root_curl` only and go to the board as positions.
 
+Fixed 2026-10-13 by the cave-studio strand (#289, `bpt-root-curl`): inflate mode keeps only the largest connected piece,
+and `fit` decimates again until the face count fits. root_curl is one piece at 499 faces, outline match 0.885 (was
+0.89, within P1's 0.01). The crystals' rock bed and every other piece are unchanged. P3 and P5 are hard tests again.
+
 Corrections to spec.md found while building: W1's figure has 72 triangles (six boxes); the 1,318 was the whole
 published scene with the chair. W3 compares a quarter with three quarters: at the half both thighs pass straight
 down. A1 compresses the committed `figure.glb` when the table is not on disk, so it runs without Blendkit. G7's stub
