@@ -37,12 +37,18 @@
 
 ## Next
 
-- [ ] [wendell] Look at the comparison page and say whether the models are close enough to trust (board step).
+- [x] [wendell] Look at the comparison page and say whether the models are close enough to trust (board step
+  `cave-studio-03`, ticked 2026-10-12; in the thread, 2026-10-13: "This is very good").
 - [ ] [claude] Crystal mode finds six crystals where his picture has about ten, and the rocks are rounder: next pass.
 - [x] [wendell] The Drive step above: `cave-crystal-growth.png` in `Cave studio inbox`, 2026-10-12.
 - [x] [claude] Built his first picture: outline modes gave a blob (0.88), so `from_picture.py` gained `--mode crystals`
   (one prism per crystal tip, rock bed underneath, 0.83). It is a `DRESSING` row in `build_kit.py` and dresses the
   chambers (kit 84 KB; 126 of 126 checks). On the comparison page as the first row.
+- [x] [claude] The crystal as a building block (Wendell, 2026-10-13: "The next step is we want to be able to vary sizes and
+  colors from this asset to give us changeable building blocks to work with"). `crystalBlock` in `cave.js` takes size,
+  height, width and one of six tints (violet, his picture's colour, and ice, rose, amber, jade, smoke); every crystal in
+  the cave draws its own, seeded by place. The rocks are not stretched upward. Ranges are in `CRYSTAL_RANGE` and the
+  manifest. Comparison page version 3 has sliders and a row of six (127 of 127 checks).
 
 ## Verify and ship
 

@@ -61,7 +61,30 @@
           "built_from": "pictures/crystal_cluster.jpg",
           "picture_made_with": "ChatGPT (Wendell, Drive inbox cave-crystal-growth.png, 2026-10-12)",
           "how": "crystals",
-          "outline_match": 0.829
+          "outline_match": 0.829,
+          "varies": {
+            "note": "A building block (Wendell, 2026-10-13): cave.js crystalBlock gives each crystal its own size, height, width and tint. The rock bed is not stretched upward.",
+            "tints": [
+              "violet",
+              "ice",
+              "rose",
+              "amber",
+              "jade",
+              "smoke"
+            ],
+            "size_of_chamber_height": [
+              0.28,
+              0.62
+            ],
+            "tall": [
+              0.8,
+              1.35
+            ],
+            "wide": [
+              0.85,
+              1.2
+            ]
+          }
         }
       ],
       "dressing_note": "Built in Blender from the pictures by tools/blender-cloud/from_picture.py (cave studio, 2026-10-12). A picture is concept only (cs-chatgpt-ai-art); the built piece is own work. outline_match is the overlap of the model's front outline with the picture's, 1.0 exact."
