@@ -75,9 +75,9 @@ creatures). It gains a portal, an issue and a place for the guide.
 
 - **The portal.** A second arch in the room's wall, behind and to the side of the seat, glowing faintly. The charge's door
   stays the charge's door **(choice)**: what comes in comes through the door, and the player goes out through the portal, so
-  each opening keeps one meaning. The portal is there from the start of a sitting; walking through it while creatures are
-  still being worked asks whether they come along as spirits (they follow, carrying their light, `carryLight`) or wait by
-  the wall **(choice)**.
+  each opening keeps one meaning. The portal is there from the start of a sitting; a charge worked through the whole W.A.V.E.
+  comes along as a spirit (it follows, carrying its light, `carryLight`), and one still being worked stays in the room
+  (Wendell, 13 October 2026: "It should only emerge once it's been engaged with").
 - **The issue.** Before the portal opens the first time, the room asks for the issue: "What are you working through?" One
   line the player writes, about allyship or anything else, with "I'd rather not say" **(choice)**. It stays on the page and
   is not saved, like every other line the player writes in the cave. The issue travels: the tunnels and the centre read it

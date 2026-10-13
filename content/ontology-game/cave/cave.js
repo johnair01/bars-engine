@@ -3550,8 +3550,9 @@
       }
       function leave(portal) {
         fade.style.opacity = 1;
-        // through the portal or the Big Mind door, whatever is still in the room comes along as a spirit too (LEVELS.md, a choice)
-        var going = portal === true || portal === "bigmind" ? R.worked.concat(inRoom().filter(function (c) { return R.worked.indexOf(c) < 0 && c.fig.visible; })) : R.worked;
+        // Only a charge worked through the whole W.A.V.E. leaves as a spirit (Wendell, 13 October 2026: "It should only emerge once
+        // it's been engaged with"), so one still being worked stays in the room, by any door.
+        var going = R.worked;
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
@@ -3650,7 +3651,7 @@
         if (!doorBox) { doorBox = el("div", { class: "oagr-close", "data-room-door": "", style: "display:none" }); wrap.appendChild(doorBox); }
         var w = DOOR_WORDS[id], go = { "data-room-door-go": id }; if (id === "portal") go["data-room-portal"] = ""; else go["data-room-bigmind"] = "";
         var kids = [el("h2", { text: w[0] }), P(w[1])];
-        var going = R.worked.length + inRoom().filter(function (c) { return R.worked.indexOf(c) < 0 && c.fig.visible; }).length;
+        var going = R.worked.length;
         if (going) kids.push(P(going === 1 ? "The one you worked with here comes along as a spirit." : "The " + going + " you worked with here come along as spirits.", { class: "oagr-note" }));
         kids.push(row([btn(w[2], go, function () { leave(id === "portal" ? true : id); }), btn("Stay in the room", { "data-room-door-stay": "" }, function () { hideDoor(); }, true)]));
         doorBox.innerHTML = ""; kids.forEach(function (n) { doorBox.appendChild(n); }); doorBox.style.display = ""; R.atDoor = id;

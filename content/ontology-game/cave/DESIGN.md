@@ -629,7 +629,7 @@ down and does a wave process."
 - **Two doors behind the seat** (board `dp-door`). On the left, the Big Mind door: a pale gold arch with the seven daemons'
   colours round it, the Protector's first. On the right, the portal, now named for the six game masters: it opens the hall of
   the six (LEVELS.md), whose tunnels are still plain. The charge's door stays the charge's door. Walking to a door opens its
-  card, with its way through and "Stay in the room". What the player worked in the room goes through with them as spirits.
+  card, with its way through and "Stay in the room". Only a charge worked through the whole W.A.V.E. goes through with them as a spirit (Wendell, 13 October 2026: "It should only emerge once it’s been engaged with"); one still being worked stays in the room.
 - **The Big Mind cave on this page.** The Big Mind door opens the Big Mind cave itself (`bigmind.js`, now built into this page
   and started only from the door), at its mouth, with "Back to the WAVE room". The room's spirits walk in with the player for
   that visit. **(choice)** the next six chambers and the centre (board `dp-seven`, `dp-centre`) are built inside the Big Mind
