@@ -507,3 +507,21 @@ now runs on this map, and the Big Mind cave wears it.
   Its lighting is unchanged for now: the Protector's chamber keeps its blue light.
 
 **Still to do for the merge:** where the Big Mind cave's chambers sit in this map. It is on the board as `merge-layout`.
+
+**Roots and mushrooms grown from numbers (13 October 2026).** Wendell: "more fractal and natural", "so they aren't so
+upright", "how the mushrooms and roots cluster", "let's wire this into the cave". The generators in
+`tools/blender-cloud/procgen.py` (roots that fork by Murray's law, mushrooms that lean, clumps and colonies) now make four
+kit pieces through `grow.py`, decimated in `build_kit.py`: `root_hang` (three hanging systems braided into one, through the
+roof and high wall, thick end in the stone), `root_creep` (a mat of creeping roots pressed flat along the middle and high
+wall), `mush_clump` (seven mushrooms, where the caps grew) and `mush_colony` (nine, with the mycelium threads showing,
+beside the pool across the path from the element). The pieces from pictures stay in the kit and grow when a kit lacks the
+grown ones. The kit went from 80 KB to 319 KB; the page and all it loads are 829 KB of the 3 MB budget. The mushrooms take
+the caps' glow and stay lit in numbness's dark. **(choice)** the seeds, the face budgets (`GROWN` in `grow.py`), the sizes
+(`GROWN` in `cave.js`), a mat in about half the root places. The Blender detail pass comes next.
+
+**One touch walks and looks (13 October 2026).** Wendell: "For navigation one needs to be able to look walk and pan in the
+same touch. One keeps walking even as they drag to move the camera. Should follow touch rules so dragging down moves the
+camera down and pushing up moves the camera up (and has it looking down on the character)". A drag no longer stops the
+walk. Dragging down lowers the camera; pushing up lifts it toward the roof (never through it) and turns it down onto the
+figure. The look eases back behind the figure only after the thumb has rested for 0.6 s. **(choice)** the tilt per pixel,
+its range, the rest time and how near the roof the camera may go (`LOOK` in `cave.js`).
