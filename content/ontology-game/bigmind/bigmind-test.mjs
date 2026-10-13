@@ -339,7 +339,9 @@ await page.click('[data-bm-decline]');
 await page.waitForTimeout(2200);
 sv = await save();
 ok(sv.voices.protector.status === 'waiting' && sv.voices.protector.kept.length === 0 && !JSON.stringify(sv).includes('skip'), 'declining: the voice waits and nothing is marked skipped');
-ok((await page.evaluate(() => window.__oagBigMind.openAt(window.__oagBigMind.S.S_GATE + 14))) > 0.9, 'declining opens the way');
+// The gate eases open frame by frame, so a slow runner takes longer than 2.2 s: wait on the gate itself, not the clock.
+const opened = await page.waitForFunction(() => window.__oagBigMind.openAt(window.__oagBigMind.S.S_GATE + 14) > 0.9, null, { timeout: 10000 }).then(() => true, () => false);
+ok(opened, 'declining opens the way');
 await page.screenshot({ path: SHOTS + '/bm-10-declined.png' });
 await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 await page.waitForSelector('[data-bm-mouth]');
