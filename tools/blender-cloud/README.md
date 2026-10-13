@@ -72,6 +72,32 @@ match is necessary, not enough, so always look at the render. The front view onl
 is a guess: round for lathe, as thick as wide for inflate. A picture with a busy background, two objects or a
 cast shadow reads the wrong outline; the prompt on the comparison page (https://claude.ai/artifact/568K2pwc7Lz5X9Kyftbzza) asks ChatGPT for the plain kind.
 
+## Procedural shapes
+
+`procgen.py` makes roots and mushrooms from a few numbers, in plain Python (no `bpy`), so the same seed gives the same
+mesh. The aim: build as much as possible in code, then let the Blender pipeline add detail and quality.
+
+- **Roots** (`root_system`, styles in `ROOT_STYLES`: arching, hanging, creeping, tangled, taproot, buttress). A turtle
+  grows each branch with a smooth random wander and a pull toward gravity, and forks at random. Each fork splits the
+  parent's cross-section by Murray's law (r^3 = r_a^3 + r_b^3), so thickness falls off the way real branching networks
+  do. Angle, length, wander and fork rate are drawn per branch, so no two branches match. A last layer of fibers (`fibers`,
+  `fiber_rmax`) hangs off every thin branch and brushes each tip: hair-roots whose radius falls to 0.0006. Method names for further
+  work (from memory, not checked here): L-systems with tropism (Prusinkiewicz), space colonization (Runions et al.,
+  2007) for roots that fill a volume or avoid a wall, differential growth for tangles.
+- **Mushrooms** (`mushroom`, forms in `MUSHROOM_FORMS`: dome, flat, bell, cone, funnel, morel, puffball, parasol,
+  bulbous). A lathe with a stem profile and a superellipse cap (radius, height, sharpness, rim lip, umbo, scalloped
+  edge, tilt, pits, thickness, stem bulge, ring). `mushroom_between(a, b, t)` blends two forms, so there is a
+  continuum between them, and `jitter` varies each number per seed. Each seed also leans, bends the stem and pitches the cap
+  by its own random amount (`lean`, `bend`, `cap_tilt` are the maximums; 0 stands it upright).
+- **Clusters** (`mushroom_cluster`, `root_cluster`, `colony`). Mushroom kinds: `clump` (parents with children thrown
+  around them, the biggest at the middle, babies at the edge, each leaning outward), `ring` (a fairy ring) and `drift`
+  (a loose curve, biggest at one end, as along a log); caps are kept from overlapping. Roots: `knot` (systems from nearly
+  one point that braid into a mass) and `mat` (systems along a line that overlap). `colony` is a clump with mycelium
+  threads linking neighbouring bases and hair-roots fanning from the outer ones.
+- **See them:** `/home/user/blenv/bin/python procgen_sheet.py OUT.png roots|mushrooms|clusters|rootclusters` renders a contact sheet, seeds
+  across and styles down. Look at it; the numbers do not say whether it is natural. `python3 procgen.py --selftest`
+  and test PG1 check determinism and mesh validity.
+
 ## A seventh problem: licences
 
 Blendkit's Royalty Free licence lets you use a model in a web page only if no third party can open or extract it

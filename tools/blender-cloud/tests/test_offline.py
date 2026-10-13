@@ -1,4 +1,4 @@
-"""Offline tier: G1, G2, G2b, G6, G7. Plain Python 3, no third-party packages, no network. Runs in the GitHub check job.
+"""Offline tier: G1, G2, G2b, G6, G7, PG1. Plain Python 3, no third-party packages, no network. Runs in the GitHub check job.
 
 usage: python3 tools/blender-cloud/tests/test_offline.py [G1,G2,...]
 """
@@ -118,6 +118,29 @@ def g7():
         leaks = [p.name for p in written if key.encode() in p.read_bytes()]
         check(key not in r.stdout + r.stderr and not leaks, f"the key appeared in output or in {leaks}")
     return f"key on the API host only ({len(api)} API, {len(other)} asset requests); none when unset; never printed or written"
+
+
+@test("PG1")
+def pg1():
+    """procgen.py: every root style and mushroom form is deterministic per seed, varies across seeds, and is a valid mesh."""
+    sys.path.insert(0, str(TOOLS))
+    import math, procgen as pg
+    n = 0
+    shapes = [(f"root {k}", lambda s, k=k: pg.root_system(seed=s, **pg.ROOT_STYLES[k])) for k in pg.ROOT_STYLES]
+    shapes += [(f"mushroom {k}", lambda s, k=k: pg.mushroom(seed=s, **pg.MUSHROOM_FORMS[k])) for k in pg.MUSHROOM_FORMS]
+    shapes.append(("mushroom blend", lambda s: pg.mushroom(seed=s, **pg.mushroom_between("cone", "funnel", 0.5))))
+    shapes += [(f"mushroom {k}", lambda s, k=k: pg.mushroom_cluster(seed=s, kind=k, count=9)[:2]) for k in ("clump", "ring", "drift")]
+    shapes += [("colony", lambda s: pg.colony(seed=s)), ("root knot", lambda s: pg.root_cluster(seed=s, kind="knot")),
+               ("root mat", lambda s: pg.root_cluster(seed=s, kind="mat"))]
+    for name, make in shapes:
+        a = make(4)
+        check(a == make(4), f"{name}: the same seed gave a different mesh")
+        check(a != make(5), f"{name}: two seeds gave the same mesh")
+        v, f = a
+        check(all(math.isfinite(c) for p in v for c in p), f"{name}: a vertex is not a finite number")
+        check(all(0 <= i < len(v) for q in f for i in q), f"{name}: a face names a missing vertex")
+        n += 1
+    return f"{n} shapes: deterministic per seed, different across seeds, finite, valid indices"
 
 
 if __name__ == "__main__":
