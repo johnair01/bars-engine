@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdf-parse-new"],
+  // Build inputs no server code reads: the Blender studio's tools, its concept pictures and the committed models (the
+  // page loads its copies from public/). File tracing pulled them into every function, and api/321/ingest crossed
+  // Vercel's 250 MB limit by 0.02 MB when the cave studio added them (bars-engine PR #285).
+  outputFileTracingExcludes: {
+    "*": ["./tools/**", "./content/ontology-game/cave/pictures/**", "./content/ontology-game/**/*.glb"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "20mb",
@@ -36,6 +42,8 @@ const nextConfig: NextConfig = {
       { source: '/ontology-game/wave', destination: '/ontology-game/index.html' },
       // The body map's marks over time, on their own page.
       { source: '/ontology-game/body', destination: '/ontology-game/body.html' },
+      // The Cave of Lessons: the block work walked inside the body map.
+      { source: '/ontology-game/cave', destination: '/ontology-game/cave/index.html' },
     ];
   },
 };

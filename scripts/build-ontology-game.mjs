@@ -96,7 +96,35 @@ ${inline(bodyMap)}
 </html>
 `;
 
+// /ontology-game/cave: the Cave of Lessons, the same block work walked inside the body map (cave/DESIGN.md).
+// cave-kit.glb and spots.json are made by cave/build_kit.py and committed, so this build needs no Blender.
+const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
+const caveHtml = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>The Cave of Lessons · Ontology Alchemy Game</title>
+<meta name="description" content="Tap where the charge is in your body and go in. The block work, walked as a cave.">
+<style>html,body{margin:0;background:#0e0e1a;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}html{touch-action:manipulation}</style>
+</head>
+<body>
+<div id="cave-root"></div>
+<script>
+${inline(bodyMap)}
+</script>
+<script>
+${inline(caveJs)}
+</script>
+</body>
+</html>
+`;
+
 mkdirSync(outDir, { recursive: true });
+mkdirSync(path.join(outDir, 'cave'), { recursive: true });
+writeFileSync(path.join(outDir, 'cave', 'index.html'), caveHtml);
+copyFileSync(path.join(srcDir, 'cave', 'cave-kit.glb'), path.join(outDir, 'cave', 'cave-kit.glb'));
+copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 'spots.json'));
 writeFileSync(path.join(outDir, 'index.html'), html);
 writeFileSync(path.join(outDir, 'body.html'), bodyHtml);
 copyFileSync(path.join(srcDir, 'body', 'figure.glb'), path.join(outDir, 'figure.glb'));

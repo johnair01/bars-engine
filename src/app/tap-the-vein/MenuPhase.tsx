@@ -136,10 +136,12 @@ export function MenuPhase({ onDone }: { onDone: () => void }) {
             )}
           </>
         )}
+        {/* Shown whenever the menu loads, sealed or not and with or without kept lines: Wendell (2026-10-12) reached
+            the council setup step with nothing to seal, and the id was hidden behind the seal. */}
         {view && (
           <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
             <span style={{ fontFamily: mono, fontSize: 11, color: 'var(--bars-text-secondary)', wordBreak: 'break-all' }}>
-              Your player id: <span style={{ color: 'var(--bars-text-primary)' }}>{view.playerId}</span>
+              Your player id: <span style={{ color: 'var(--bars-text-primary)', userSelect: 'all' }}>{view.playerId}</span>
             </span>
             <button
               type="button"

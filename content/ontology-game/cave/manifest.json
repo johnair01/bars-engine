@@ -1,0 +1,136 @@
+{
+  "note": "The Cave of Lessons asset manifest (DESIGN.md). Game data names these ids, never file paths. Every asset lists its source and licence (council position c3d-cc0-only). status: built, planned. Every anchor on the figure is a portal; the chamber is one generic shape dressed by the charge, channel and face named at the portal (c3d-spot-shape overruled 2026-10-09). spots.json's shape fields are unused.",
+  "assets": [
+    {
+      "id": "body.figure",
+      "file": "../body/figure.glb",
+      "kind": "model",
+      "source": "body/build_figure.py",
+      "licence": "own work",
+      "status": "built",
+      "bytes": 204264
+    },
+    {
+      "id": "cave.kit",
+      "file": "cave-kit.glb",
+      "kind": "model",
+      "source": "cave/build_kit.py",
+      "licence": "own work",
+      "status": "built",
+      "budget_bytes": 3000000,
+      "day": 2,
+      "pieces": [
+        "wall_ring",
+        "floor",
+        "pool",
+        "gate_stones",
+        "portal_arch",
+        "path_tube",
+        "stone_spire",
+        "glow_cap",
+        "root_curl",
+        "crystal_cluster",
+        "crystal_cluster_bed"
+      ],
+      "bytes": 85736,
+      "dressing": [
+        {
+          "piece": "stone_spire",
+          "built_from": "pictures/stone_spire.jpg",
+          "how": "lathe",
+          "outline_match": 0.987
+        },
+        {
+          "piece": "glow_cap",
+          "built_from": "pictures/glow_cap.jpg",
+          "how": "lathe",
+          "outline_match": 0.974
+        },
+        {
+          "piece": "root_curl",
+          "built_from": "pictures/root_curl.jpg",
+          "how": "inflate",
+          "outline_match": 0.89
+        },
+        {
+          "piece": "crystal_cluster",
+          "parts": [
+            "crystal_cluster",
+            "crystal_cluster_bed"
+          ],
+          "built_from": "pictures/crystal_cluster.jpg",
+          "picture_made_with": "ChatGPT (Wendell, Drive inbox cave-crystal-growth.png, 2026-10-12)",
+          "how": "crystals",
+          "outline_match": 0.829
+        }
+      ],
+      "dressing_note": "Built in Blender from the pictures by tools/blender-cloud/from_picture.py (cave studio, 2026-10-12). A picture is concept only (cs-chatgpt-ai-art); the built piece is own work. outline_match is the overlap of the model's front outline with the picture's, 1.0 exact."
+    },
+    {
+      "id": "cave.pictures",
+      "file": "pictures/",
+      "kind": "concept pictures",
+      "source": "pictures/draw_standins.py (stone_spire, glow_cap, root_curl: stand-ins drawn in code, own work); crystal_cluster.jpg: Wendell's ChatGPT concept picture, reference only",
+      "licence": "own work",
+      "status": "built",
+      "ships": false,
+      "bytes": 223390
+    },
+    {
+      "id": "cave.spots",
+      "file": "spots.json",
+      "kind": "data",
+      "source": "cave/build_kit.py, from body/build_figure.py ANCHORS and radii",
+      "licence": "own work",
+      "status": "built",
+      "day": 2,
+      "fields": [
+        "id",
+        "words",
+        "position",
+        "side",
+        "width",
+        "height",
+        "length",
+        "bend"
+      ],
+      "bytes": 19731
+    },
+    {
+      "id": "daemon.figure",
+      "file": "daemon.glb",
+      "kind": "model",
+      "source": "cave/build_daemon.py",
+      "licence": "own work",
+      "status": "planned",
+      "budget_bytes": 500000,
+      "day": 4
+    },
+    {
+      "id": "lib.three",
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+      "kind": "script",
+      "source": "three.js r128, as body-map.js loads it",
+      "licence": "MIT",
+      "status": "built"
+    }
+  ],
+  "places": [
+    "mouth",
+    "pool",
+    "passage",
+    "gate",
+    "way_out"
+  ],
+  "place_of_block_step": {
+    "sensation": "mouth",
+    "element": "pool",
+    "daemon": "passage",
+    "gate": "gate",
+    "release": "way_out"
+  },
+  "paths": {
+    "source": "OAGBody.marks() of the current sitting, plus places named inside the cave",
+    "rule": "every pair of places named in one sitting is joined by a path inside the body; each chamber's way out holds one portal per other place"
+  }
+}

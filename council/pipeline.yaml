@@ -1,0 +1,223 @@
+# The feature pipeline: how a new feature goes from Wendell's ask to the live site, run by the six
+# faces. Read by the six-faces skill. Synced to every council repo with faces.yaml.
+#
+# Designed in council/passes/6FACE_PASS5_2026-10-02.md at Wendell's request on 2026-10-02:
+#   "steps I have to do myself should generate a step by step checklist I can run from. Things that
+#    need building should go through a production pipeline managed by the 6 faces"
+# This file is the council's design, not a ruling of Wendell's. Each part stands as a position on
+# the board until he flips it.
+
+scope:
+  runs_for: >
+    A new feature: behaviour a person can see or use, or data the product keeps, that did not exist
+    before. It starts when Wendell asks for one, or when a pass proposes one and he says yes.
+  not_for:
+    - A fix to behaviour that already exists. That gets a pass if it needs one, and a pull request.
+    - Manuscript prose in friendcraft. Canonical prose is reserved; the repo's own rules govern it.
+  repo_rules_win: >
+    Where a repo has its own spec kit rules, they win on conventions. bars-engine keeps its template,
+    its Verification Quests and its Build/Infra Blocker Protocol; the pipeline adds its sections to
+    that template instead of replacing it.
+
+where: .specify/specs/<feature-name>/   # spec.md, plan.md, tasks.md, as bars-engine already does
+
+templates: council/spec-kit/            # spec.md, plan.md, tasks.md, synced from the home repo
+
+# Three typed outputs, kept apart. A pass never mixes them.
+outputs:
+  questions: the Council Board, https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho
+  steps: the Your steps tab on the same board, named in steps_page below
+  product: a pull request per feature, on its own branch
+
+steps_page: https://claude.ai/artifact/DxyShVS8tmvJym4HAsgnho#steps   # the Your steps tab; Wendell overruled a separate page at board read 8
+
+# Deferral. Wendell asked for it at board read 20 (2026-10-03), on the oracle drafts: "We need to be
+# able to defer projects so they don't get trapped on the board, but we are also collecting data
+# about priority". Any question or position row on the board has a Defer button with a return date.
+defer:
+  until: [week, month, ask]   # in a week, in a month, or when Wendell asks for it back
+  board: a deferred row leaves the Open tab and waits in the Deferred section of the Resolved tab.
+    It returns to the Open tab by itself when its date passes. A row deferred until he asks returns
+    only when he asks.
+  council: the council does not ask about a deferred item again before its date, and does not
+    re-raise it under a new id. Work on it stops where it stands; an open pull request stays open
+    and is marked deferred.
+  record: each deferral goes in the board read's ledger record and in resolved, with decision
+    deferred, the until date, and his steer. stats.py counts deferrals per project, because a
+    deferral is data about priority.
+  # Spaced repetition. Wendell, 2026-10-03: "We want to use spaced repetition so that tasks that are
+  # deferred come back and the council can weigh in on them in new context." Spec:
+  # .specify/specs/spaced-deferral/. The numbers are the council's (pass eight, position sd-intervals).
+  spaced:
+    # Wendell, 2026-10-03: "The spaced repetition of deferrals should start with 1 hr to 6 hours to 24 hours
+    # to 3 days to a week to 2 weeks to a month". It replaced the council's week-then-double (pass eight).
+    ladder_hours: [1, 6, 24, 72, 168, 336, 720]
+    step: >
+      A spaced deferral waits the first rung longer than the item's last wait, so a wait he set by hand
+      counts. Past the top rung it stays at a month. Both readings are the session's, not his.
+    retire_after: none   # no cap; the Challenger's dissent is in pass eight
+    history: every deferral of an item stays in history on its resolved entry, also after he takes it up.
+      Record one with python3 council/due.py record, which computes the date the way the board does.
+  reweigh:
+    when: >
+      every day, in a scheduled session that starts fresh (Wendell, board questions sd-when,
+      "On its own", and sd-daily, "Every day", 2026-10-03), and also at the start of every board read. Either way,
+      python3 council/due.py --ahead 7 lists what is due now or within the coming week, and what
+      changed in each item's project since he deferred it (Wendell, 2026-10-03: "they should prepare
+      items due in the coming week"). A week with nothing due ends there, with nothing written and
+      nothing published. An item on a rung shorter than a week can come back before any run reaches
+      it, and then it waits on the Open tab with a note until a session re-weighs it.
+    routine: "'Council: daily re-weigh and move', every day 15:45 UTC, waking the standing session session_011mcRZ4vDnnis99dnptvdmu (board read 28, dy-access)"
+    how: each face casts and writes one line on what changed. The council recommends one of take it up,
+      defer again, retire, or reshape the question. All of it is written onto the row as review, on main,
+      before the item reaches the Open tab. When nothing changed, the review says so in one line.
+    reach: a re-weigh is not a new question. It goes to him on the item's own row, never under a new id.
+
+# The daily session's five moves (Wendell, 2026-10-03; pass nine; board reads 24 to 26). Settings and level:
+# council/daily.yaml. Script: council/daily.py. Spec: .specify/specs/five-moves/spec.md.
+five_moves:
+  when: every daily run, after the re-weigh of deferred items
+  how: >
+    python3 council/daily.py prints the level, today's move and the limits. The run does that move in the
+    repos daily.yaml names, finishes one change on a branch daily/<date>-<move> with a pull request and no
+    automerge label, adds at most as many board rows as its level, each with id dy-<date>-<move>, and records
+    itself with python3 council/daily.py record. When the move finds nothing, the run does research instead.
+  board_read: >
+    A session that reads the board also reads each daily run's token use and cost from that run's own
+    result event (list_events with kinds result on the standing session; modelUsage and
+    total_cost_usd) and writes it with python3 council/daily.py usage. A run does not record its own
+    cost: get_session read during a turn misses that turn, and the first run recorded $0.41 for a
+    turn that cost $2.21. When daily.py prints PROPOSE, that session puts the proposal on the board.
+
+# The reach test, applied to actions. A step goes to Wendell's checklist only if he is the only one
+# who can do it: his accounts, his money, his name, his eyes on the result, or a permission he holds.
+# Anything a session can do itself, it does.
+step_test: >
+  Only Wendell can take this step, because it needs his account, his money, his name, his judgement
+  of the result, or a permission he holds. A step a session can take is never put on his list.
+
+step_shape:   # every step on the checklist carries all of these
+  do: one action, in plain words, starting with a verb
+  where: the exact page, menu path or link where it happens
+  enter: what to type or choose, never a secret; a secret is generated on the page and never stored
+  check: how he knows it worked, as something he will see
+  device: phone or computer
+  stop_safe: whether he can stop after this step and pick up later without harm
+
+# The feature request move (Wendell, 2026-10-04): the front door to the stages below. Its dialogue is played on the
+# board as a battle, and each turn updates the board. Procedure: council/moves/feature-request.md.
+feature_request:
+  ask: >
+    "This should be a move the council does together when something like this pops up." "This should be something
+    we can run in chat that updates the board after we are done. It's a form of the 6 unpacking questions and a
+    developmental use of 321" "The output of a process like this should be a well scoped project and spec kit"
+    (Wendell, 2026-10-04, Sprout Game project thread)
+  grammar: [who is being helped, what satisfaction they are looking for, what altitudes the help needs]
+  steps:
+    "3": third person. The council describes the wanted work journalistically and answers what we are trying to
+      create and what life is like now, from the record, in request.md.
+    "2": second person. The dialogue, played as a battle on the board, one round of at most three questions at a time, covering what it gets
+      us, how it feels now, what would have to be true, and which self-sabotaging beliefs are at play.
+    "1": first person. The aligned actions from the six faces' analyses, the spec kit, and the cheapest test that
+      could show the design wrong. The result is the next run's "life now".
+  on_the_board: >
+    Every round's questions and positions go on the board, never in chat (Wendell, 2026-10-04: "This should've ended
+    up on the board and not in front of me"; position frm-questions-to-board). A round is played as a battle: a
+    battles entry in board_data.json names its rows, and each turn saves like the row's own Save ("The the board is
+    the world map and emergent new feature is like a pokemon battle", Wendell, 2026-10-04).
+  produces: request.md and the spec kit in .specify/specs/<feature>/, a ledger record, board rows, and a pull request
+  covers_stages: [intake, spec, falsify]
+
+stages:
+  - id: intake
+    owners: [shaman, diplomat]
+    produces: spec.md Purpose and user stories, with the ask quoted in Wendell's words
+    gate: >
+      The ask is quoted, and who it is for is named. Every clarifying question goes through the reach
+      test first; the spec kit interview's questions are answered from the record where it can.
+
+  - id: spec
+    owners: [architect, regent]
+    produces: spec.md design decisions, contracts, acceptance
+    gate: >
+      Each design decision says whose it is: Wendell's (cited), a source's (named) or the council's
+      (marked). Anything on the reserved list becomes a board question, never a decision.
+
+  - id: falsify
+    owners: [challenger]
+    produces: spec.md section "How we will know it failed"
+    gate: >
+      One cheap test, run before the build, that could show the design is wrong, and the result that
+      would stop the work. Root-game's rule, made general: confirm with a cheap test before building.
+
+  - id: plan
+    owners: [architect, regent]
+    produces: plan.md and tasks.md, every task tagged [claude] or [wendell]
+    gate: >
+      Every [wendell] task passes step_test and has the full step_shape. Those tasks are published to
+      the steps tab as one list for the feature before any build starts that depends on them.
+
+  - id: build
+    owners: [architect]
+    produces: a pull request on its own branch
+    gate: The repo's own checks pass, and the preview builds where the repo has one.
+
+  - id: verify
+    owners: [regent, diplomat]
+    produces: the definition of done, checked; a walk-through for a person where the feature has one
+    gate: >
+      The falsification test passed. Any check only Wendell can make (his account, his eyes) is a
+      list on the steps tab, and the feature is not done until he ticks it.
+
+  - id: ship
+    owners: [regent]
+    produces: a board position "merges on the next board read unless flipped"
+    gate: >
+      Precedent: flirtcraft pull request #5 merged this way, its position standing on 2026-10-02.
+      A feature that touches a reserved item (money, a live paywall, prose, a person's name) ships
+      only on a board question he answers.
+
+  - id: close
+    owners: [sage]
+    produces: a ledger record, tasks.md ticked, lessons_pending for anything he ruled
+    gate: Every face's contribution is named, and the dissent is listed.
+
+# Sense and respond, and transcend and include (Wendell, 2026-10-03; council/faces.yaml principles).
+strands:
+  what: >
+    A strand is one unit of work with its own branch, its own small spec, its own ledger record, and a declared fork
+    space: the files it may touch. The name and idea come from bars-engine's BARS Strand System.
+  emergent_need: >
+    When work finds a need it was not about (a broken setting, a wrong figure, a missing tool), the need becomes its
+    own strand, started in parallel. The finding is stated where it was found; the fix lives in the new strand.
+  branch: strand/<name>, or feature/<name> for a feature that runs the full pipeline
+  fork_space: >
+    Declared when the strand starts, as the files it may touch. Before a strand starts, run
+    python3 council/strands.py in the repo: any overlap with an open strand's files is sequenced, never run at once.
+  the_record_lives_on_main: >
+    Board data, ledger records and lessons are written on main, never on a strand's branch, because they are shared
+    by every strand. A strand's branch carries only its own work.
+  handoff: Each strand's pull request says what it touches, what it depends on, and what it found but left for another strand.
+
+transcend_and_include:
+  versions: A design's later version keeps the earlier version's section in its spec, with what it got wrong.
+  retire_not_delete: Superseded positions, terms and files are retired with their reason and date, and kept readable.
+  keep_the_original: A corrected figure is written beside the original and its window or setting, never over it.
+  synthesis: The Sage names what the synthesis keeps from each face, and which face's work it set down and why.
+
+retro:   # pass 13 (council/passes/6FACE_PASS13_2026-10-07.md); all five positions stood and proc-rule-retire was answered A, 2026-10-07
+  subject: the council's own record, meaning his overrules, steers and deferrals, the plumbing incidents, and lessons_pending
+    across every registered repo (collect_lessons.py). Resolved entries carry faces and pass (proc-record-face), so an
+    overrule can be traced to the face that made the row.
+  when: the daily session's Grow up day. The first one runs by hand in its own thread (proc-first-retro-by-hand); if the
+    overrules show no repeating face and reason, the rhythm is dropped.
+  lessons: each pending lesson goes on the board as a lesson position with the sentence he was answering, and folds into
+    faces.yaml when it stands (proc-fold-lessons).
+  retire: when a mechanism replaces a prose rule in CLAUDE.md, the skill or docs/pickup.md, the retro may retire the rule
+    as a board position that stands unless he flips it. The rule moves to an incident log with its reason, so it stays
+    readable and no session pays to reread it (proc-rule-retire A). This is the retro's exception to the daily run's
+    "never retire or delete anything".
+  done: a process change ships with a mechanism, a test that would show it failed, its incident in the log, and the rule
+    line count before and after (pass 13, Regent).
+  scorecard: every pass, a council pass included, opens by grading the tests the last pass on its subject set
+    (proc-scorecard-always).
