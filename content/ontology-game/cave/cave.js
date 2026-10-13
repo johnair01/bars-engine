@@ -3583,14 +3583,14 @@
       stage.appendChild(calmBtn);
       // One finger turns the view. Two fingers pinch it nearer or farther (Wendell, 13 October 2026: "Let's introduce pinch to
       // zoom in the wave room"), and the mouse wheel does the same on a computer. A tap on a creature brings it close (below).
-      var lookYaw = 0, drag = null, zoom = 1, ptrs = {}, pinch = null, tap = null, ZOOM_MIN = 0.3, ZOOM_MAX = 1.6;
+      var lookYaw = 0, lookPitch = 0, drag = null, zoom = 1, ptrs = {}, pinch = null, tap = null, ZOOM_MIN = 0.3, ZOOM_MAX = 1.6;
       function setZoom(z) { zoom = clamp(z, ZOOM_MIN, ZOOM_MAX); }
       function spread() { var k = Object.keys(ptrs); return k.length < 2 ? 0 : Math.hypot(ptrs[k[0]].x - ptrs[k[1]].x, ptrs[k[0]].y - ptrs[k[1]].y); }
       if (renderer) {
         var dom = renderer.domElement;
         dom.addEventListener("pointerdown", function (e) {
           ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
-          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX }; tap = { x: e.clientX, y: e.clientY, t: performance.now() }; }
+          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX, y: e.clientY }; tap = { x: e.clientX, y: e.clientY, t: performance.now() }; }
           else { drag = null; tap = null; pinch = { d: spread(), z: zoom }; }
         });
         dom.addEventListener("pointermove", function (e) {
@@ -3601,7 +3601,9 @@
           if (!drag) return;
           if (R.roam && R.roam.free && R.walkYaw != null) R.walkYaw += (e.clientX - drag.x) * 0.006; // walking, a drag turns the camera round the figure
           else lookYaw = clamp(lookYaw + (e.clientX - drag.x) * 0.005, -0.9, 0.9);
-          drag.x = e.clientX;
+          // up and down tilts the camera (Wendell, 13 October 2026: "you can pan the camera side to side but not up and down")
+          lookPitch = clamp(lookPitch + (e.clientY - drag.y) * 0.005, -0.7, 0.8);
+          drag.x = e.clientX; drag.y = e.clientY;
         });
         ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function (e) {
           delete ptrs[e.pointerId];
@@ -3609,7 +3611,7 @@
           tap = null;
           var left = Object.keys(ptrs);
           if (left.length < 2) pinch = null;
-          drag = left.length === 1 ? { x: ptrs[left[0]].x } : null; // the finger still down after a pinch turns the view again
+          drag = left.length === 1 ? { x: ptrs[left[0]].x, y: ptrs[left[0]].y } : null; // the finger still down after a pinch turns the view again
         }); });
         dom.addEventListener("wheel", function (e) { e.preventDefault(); setZoom(zoom * Math.exp(e.deltaY * 0.0015)); }, { passive: false });
       }
@@ -3731,12 +3733,12 @@
       }
       function closeUp(c) {
         if (!R.close) { roomZoom = zoom; roomModal = R.modal; }
-        R.close = c; zoom = 1; lookYaw = 0;
+        R.close = c; zoom = 1; lookYaw = 0; lookPitch = 0;
         closeModal(); pane.style.display = "none"; closeCard();
       }
       function backToRoom() {
         if (!R.close) return;
-        R.close = null; zoom = roomZoom; lookYaw = 0; closeBox.style.display = "none"; draw();
+        R.close = null; zoom = roomZoom; lookYaw = 0; lookPitch = 0; closeBox.style.display = "none"; draw();
         if (!roomModal) closeModal(); // the page comes back as it was: open, or tucked into the pane
       }
       function stepName(c) {
@@ -3906,6 +3908,10 @@
         if (R.walkYaw != null && moving && R.walkFwd > 0.3) R.walkYaw = turnTo(R.walkYaw, fig.yaw, dt * 0.9);
         var vw = view(R.close ? "close" : tg.view, 0, 0); R.view = R.close ? "close" : tg.view;
         if (lookYaw) { var off = vw.pos.clone().sub(vw.aim), c0 = Math.cos(lookYaw), s0 = Math.sin(lookYaw); vw.pos.set(vw.aim.x + off.x * c0 + off.z * s0, vw.pos.y, vw.aim.z - off.x * s0 + off.z * c0); }
+        if (lookPitch) { // the camera swings over or under the point it looks at, keeping its distance: drag down to look down on the room, up to look up
+          var po = vw.pos.clone().sub(vw.aim), ph = Math.hypot(po.x, po.z) || 1e-6, pl = po.length(), pe = clamp(Math.atan2(po.y, ph) + lookPitch, -0.25, 1.35);
+          vw.pos.set(vw.aim.x + po.x / ph * Math.cos(pe) * pl, vw.aim.y + Math.sin(pe) * pl, vw.aim.z + po.z / ph * Math.cos(pe) * pl);
+        }
         // Zooming in brings the camera nearer. Zooming out past the step's own view widens the lens instead, since the walls are
         // close behind the camera: on a phone held upright that is what brings all three creatures into view.
         if (zoom < 1) vw.pos.sub(vw.aim).multiplyScalar(zoom).add(vw.aim);
@@ -3944,7 +3950,7 @@
         },
         sitShown: function () { return sitBtn.style.display !== "none"; },
         stickShown: function () { return stickPad.style.display !== "none"; },
-        walking: function () { return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, atDoor: R.atDoor || null, view: R.view,
+        walking: function () { return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, pitch: lookPitch,
           exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
         floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
         close: function () { return R.close ? { name: R.close.name, slot: R.close.slot, kept: R.kept.indexOf(R.close) >= 0 } : null; },

@@ -627,7 +627,7 @@ down and does a wave process."
   communing with spirits. Essentially we need free walking controls in this room". So the room has free walking: a stick
   at the bottom left, and the arrow keys or W A S D on a computer, walk the figure anywhere in the room. Up on the stick is
   away from the camera. The camera follows from behind and comes round only while the figure walks away from it, so walking
-  back or sideways goes where the thumb points; a one-finger drag turns it by hand. The stick shows whenever the room is in
+  back or sideways goes where the thumb points. A one-finger drag turns it by hand, and a drag up or down tilts it, seated or walking (Wendell, 13 October 2026: "you can pan the camera side to side but not up and down"). The stick shows whenever the room is in
   view and hides while a page or card is open. A tap on the floor still walks the figure there, and a tap on a creature
   still brings it close.
 - **The rug.** A round woven rug with a cushion on it is where the player sits to commune with what comes in. Walking onto

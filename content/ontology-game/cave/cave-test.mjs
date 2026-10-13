@@ -979,6 +979,12 @@ let SW = await C(() => window.__oagCave.room.walking());
 await page.mouse.up();
 ok(SW.figure[1] < 0.6 && SW.sit < 0.1 && SW.view === 'roam', `pushing the stick up walks the figure forward, standing (${SW.figure.map((v) => v.toFixed(2))})`);
 ok(!(await C(() => window.__oagCave.room.sitShown())), 'off the rug, no Sit down');
+// a drag up or down tilts the camera, as a drag sideways turns it
+const camY0 = (await C(() => window.__oagCave.room.walking())).camY;
+await page.mouse.move(200, 300); await page.mouse.down(); await page.mouse.move(200, 420, { steps: 6 }); await page.mouse.up();
+await page.waitForTimeout(1200);
+const tilt = await C(() => window.__oagCave.room.walking());
+ok(tilt.pitch > 0.3 && tilt.camY > camY0 + 0.5, `a drag down tilts the camera to look down on the figure (${camY0.toFixed(2)} to ${tilt.camY.toFixed(2)})`);
 // keys: turn round with S
 await page.keyboard.down('KeyS'); await page.waitForTimeout(900); await page.keyboard.up('KeyS');
 const SW2 = await C(() => window.__oagCave.room.walking());
