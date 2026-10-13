@@ -584,3 +584,33 @@ to have them fill the frame and have more information about it."
   and the next move. "Work with this one" picks it, if it is one of the creatures still being worked; "Back to the room"
   returns the camera, its zoom and the page as they were. Pinch and turn work in the close-up too, and the close-up ends
   by itself if the creature leaves the room.
+
+**Openings ahead, one at a time, and no gaps (13 October 2026).** Wendell, at the Game masters' gate: "It's showing us
+the entrance and the exit at the same time. We should only see the entrance and it shouldn't generate behind the
+character. The character should not have to rotate more than 90 degrees to access to opening that appears. The
+transitions should also be more magical it's a bit jarring how it shows up now"; "the segments between the tunnels are
+leaving dark gaps"; and on the camera: "Camera shouldn't break the ceiling. We'll need a dynamic camera the follows the
+player more effectively not unlike a drone".
+
+- Every branch (a side passage and a face's branch) now leaves forward and comes back from behind, so the way in is ahead
+  and to the side (about a 45° turn at the gate) and the way back joins the path still walking forward.
+- Only the way in opens, with its rim. The way back opens, without a rim, once the player is round the far side of the loop.
+- An opening gathers light before it opens: a veil in the branch's colour brightens over the stone while sparks spiral in
+  and the rim turns open; the stone gives way under the veil, which thins away as the sparks drift out. The camera swings
+  round and looks toward the opening while it forms, then lets go.
+- The six stones stood on the side passage's ramp, so a level face branch cut a sloping wall and left dark gaps, and the
+  camera behind the figure ended up outside both tunnels. The first stone now stands past the ramp.
+- Where two tunnels meet, each gives way only where the other's inside is, worked out from the stone as it stands and
+  again as the breath moves it; faces across the seam stay on both sides, so they overlap instead of leaving a gap. A
+  branch's tube starts inside its parent, its floor lies a hair under the parent's, and a disc of floor lies under each
+  meeting of a level branch. The tunnel's first end is capped with stone.
+- Two things that change broke (Wendell, 13 October 2026). "First screen after the first blocker text opens to black": at
+  the start the camera sat behind the cap, so the cap hid everything; it is now drawn only while the camera is in front of
+  it. "Something funky is going on here with the floor": the side passage ramps down, and its disc of floor stood over the
+  ramp as a flat plate; only a level branch (a face's) gets a disc now.
+- The camera is held inside the stone like a drone on a leash: where it wants to be, and where it is after easing, are both
+  pulled back inside the tunnel that holds them best (or a tunnel's end), whatever the look does. The rise at the way out
+  and the staged scenes keep their own cameras.
+
+**(choice)** how far the stones stand past the ramp, the reveal's timing and colours, the camera's swing (`state.peek`),
+and how close to the stone the camera may come (0.35 where it aims to be, 0.25 where it is).
