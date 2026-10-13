@@ -991,12 +991,25 @@ const SW2 = await C(() => window.__oagCave.room.walking());
 ok(SW2.figure[1] > SW.figure[1] + 0.5, `the S key walks the figure back towards the camera (${SW2.figure.map((v) => v.toFixed(2))})`);
 // steer to the six game masters' door
 const ex = SW2.exits.find((e) => e.id === 'portal');
-for (let i = 0; i < 100 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x * 0.72, z * 0.72), [ex.x, ex.z]); await page.waitForTimeout(100); }
+for (let i = 0; i < 100 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x, ex.z]); await page.waitForTimeout(100); }
 await C(() => window.__oagCave.room.stick(0, 0));
 ok(await sees('[data-room-portal]'), 'walking freely up to the six game masters\' door opens its card');
 await page.locator('[data-room-door-stay]').click();
 await page.waitForTimeout(300);
 ok(!(await sees('[data-room-portal]')) && await C(() => window.__oagCave.room.stickShown()), 'Stay in the room shuts the card and the stick comes back');
+for (let i = 0; i < 6; i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [0, 0]); await page.waitForTimeout(100); }
+ok(!(await sees('[data-room-portal]')), 'walking away from the door leaves its card shut');
+for (let i = 0; i < 60 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x, ex.z]); await page.waitForTimeout(100); }
+await C(() => window.__oagCave.room.stick(0, 0));
+ok(await sees('[data-room-portal]'), 'walking into the door again opens its card again');
+await page.locator('[data-room-door-stay]').click();
+// walking along the wall past a door opens nothing: round the room from one side of the door to the other
+let passed = false;
+for (const a of [1.35, 1.1, 0.8, 0.5, 0.25]) {
+  for (let i = 0; i < 60; i++) { if ((await C(([x, z]) => window.__oagCave.room.steer(x, z), [Math.sin(a) * 6.4, Math.cos(a) * 6.4])) < 0.3) break; passed = passed || await sees('[data-room-door]'); await page.waitForTimeout(80); }
+}
+await C(() => window.__oagCave.room.stick(0, 0));
+ok(!passed && !(await sees('[data-room-door]')), 'walking along the wall past a door opens no card');
 // back to the rug
 const seat = (await C(() => window.__oagCave.room.scene())).seat;
 for (let i = 0; i < 100 && !(await C(() => window.__oagCave.room.sitShown())); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), seat); await page.waitForTimeout(100); }

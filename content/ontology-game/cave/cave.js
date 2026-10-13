@@ -3661,10 +3661,15 @@
           R.roam.x = fig.x; R.roam.z = fig.z;
         }
         if (!R.roam || !R.roam.free) { sitBtn.style.display = "none"; return !!w; }
-        // a door, when the figure comes up to it; the card stays shut after "Stay in the room" until the figure walks off
-        var near = Object.keys(EXITS).filter(function (k) { return Math.hypot(fig.x - EXITS[k].stand.x, fig.z - EXITS[k].stand.z) < 1.5; })[0] || null;
-        if (near && R.doorSeen !== near) { R.doorSeen = near; doorCard(near); }
-        else if (!near && R.doorSeen) { if (R.atDoor) hideDoor(); R.doorSeen = null; }
+        // A door's card opens only when the figure walks into the doorway, heading for it (Wendell, 13 October 2026: walking past
+        // "triggers opening a door I don't want to and then it doesn't let me enter said door"). Passing along the wall opens
+        // nothing, and after "Stay in the room" walking into the door again opens it again.
+        var near = Object.keys(EXITS).filter(function (k) {
+          var ex = EXITS[k], r = Math.hypot(ex.x, ex.z), nx = ex.x / r, nz = ex.z / r, dx = ex.x - fig.x, dz = ex.z - fig.z;
+          var ahead = dx * nx + dz * nz, side = Math.abs(dx * nz - dz * nx), wl = w ? Math.hypot(w.x, w.z) : 0; // ahead: how far the door is, side: how far off its middle
+          return w && ahead < 2.2 && side < DW / 2 + 0.2 && (w.x * nx + w.z * nz) / wl > 0.5; // in front of it, and walking into it
+        })[0] || null;
+        if (near && !R.atDoor) doorCard(near);
         if (R.atDoor && R.walkYaw != null) { var dE = EXITS[R.atDoor]; R.walkYaw = turnTo(R.walkYaw, Math.atan2(dE.x - fig.x, dE.z - fig.z), dt * 2.5); } // the camera turns to the door
         sitBtn.style.display = onRug() && !R.modal ? "" : "none";
         return !!w;
@@ -3714,7 +3719,7 @@
         R.roam = { x: q.x, z: q.z, exit: ex ? ex.id : null, arrived: false };
         hideDoor(); closeModal();
       }
-      function stopWalking() { if (R.roam) { R.roam = null; hideDoor(); } R.doorSeen = null; R.walkYaw = null; if (sitBtn) sitBtn.style.display = "none"; }
+      function stopWalking() { if (R.roam) { R.roam = null; hideDoor(); } R.walkYaw = null; if (sitBtn) sitBtn.style.display = "none"; }
       function hideDoor() { if (doorBox) doorBox.style.display = "none"; R.atDoor = null; }
       // A door's card, when the figure reaches it. The Big Mind cave and the six game masters are each a door the player goes
       // through by choice; "Stay in the room" leaves them standing by it.
