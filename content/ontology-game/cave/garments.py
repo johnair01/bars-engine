@@ -655,8 +655,10 @@ def hemmed(verts, faces, labels):
         for a, b in zip(f, f[1:] + f[:1]):
             count[frozenset((a, b))] = count.get(frozenset((a, b)), 0) + 1
             nxt[(a, b)] = fi
+    # the hem and the cuffs, not the neckline, and not the slits' sides where the hem's band turns up them
     edges = [(a, b, fi) for (a, b), fi in nxt.items() if count[frozenset((a, b))] == 1 and labels[fi][1]
-             and not (verts[a].z > 1.2 and abs(verts[a].x) < 0.2)]          # the hem and the cuffs, not the neckline
+             and not (verts[a].z > 1.2 and abs(verts[a].x) < 0.2)
+             and not (verts[a].z < 0.6 and abs(verts[a].z - verts[b].z) > 0.6 * (verts[a] - verts[b]).length)]
     if not edges:
         return verts, faces, labels, {}
     # each edge point's way into the cloth (away from the edge, along the surface) and the cloth's normal there
@@ -695,9 +697,10 @@ def hemmed(verts, faces, labels):
 def skirt_weights(p, body, front_panel=0.5, slit=0.0):
     """Below the hips the robe hangs from the hips, its front panel on hemF, its back panel on hemB and its sides on
     their own thigh, more so toward the hem; above them it takes the body's weights (blended between). Below the
-    slits' tops (slit 1) the sides are open, so each panel's side goes with its own panel: the front with the leg ahead,
-    the back with the leg behind, and the slit parts as the figure walks (Wendell, 2026-10-14: "the places where there
-    are slits in the robe aren't separating when they walk")."""
+    slits' tops (slit 1) the sides are open: the front panel's edge goes with its own side's thigh and the back panel's
+    edge with the leg behind, so a slit parts as its leg strides forward and closes as the leg passes back under the
+    body (Wendell, 2026-10-14: "the places where there are slits in the robe aren't separating when they walk", and
+    "the slit is supposed to separate and close as the leg moves")."""
     t = smooth(1.02, 0.55, p.z)
     if t <= 0:
         return body
@@ -705,9 +708,10 @@ def skirt_weights(p, body, front_panel=0.5, slit=0.0):
     front, back = max(0.0, -math.sin(th)) ** 1.5, max(0.0, math.sin(th)) ** 1.5
     sideways = abs(math.cos(th)) ** 2
     rest = max(0.0, 1.0 - front - back)
-    front, back = front + slit * front_panel * rest, back + slit * (1 - front_panel) * rest
+    back = back + slit * (1 - front_panel) * rest
     thigh = "hipL" if p.x > 0 else "hipR"
-    hang = {"hemF": 0.9 * front, "hemB": 0.9 * back, thigh: 0.55 * sideways * (1 - slit)}
+    hang = {"hemF": 0.9 * front, "hemB": 0.9 * back,
+            thigh: 0.55 * sideways * (1 - slit) + 0.9 * slit * front_panel * rest}
     hang["hips"] = max(0.05, 1.0 - sum(hang.values()))
     out = {}
     for b, x in body.items():
