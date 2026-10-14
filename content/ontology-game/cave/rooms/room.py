@@ -40,6 +40,8 @@ def in_metres(spec):
     for key in ("width_m", "length_m", "height_m", "wall_height_m"):
         if key in spec["shell"]:
             spec["shell"][key] *= k
+    if "cove" in spec["shell"]:
+        spec["shell"]["cove"]["watts"] *= k * k
     if "rock" in spec["shell"]:
         spec["shell"]["rock"]["size_m"] = [c * k for c in spec["shell"]["rock"]["size_m"]]
     for h in spec["shell"].get("hollows", []):
@@ -91,12 +93,65 @@ def material(name, m):
     if m.get("texture"):
         coord = node(nt, "ShaderNodeTexCoord")
         nt.links.new(texture(nt, m["texture"], m["colour"], coord.outputs["Object"]), p.inputs["Base Color"])
+    if m.get("rock"):
+        rock_surface(nt, p, m)
     return mat
+
+
+def rock_surface(nt, p, m):
+    """Rock drawn live: broad patches of lighter and darker stone, the seams and hollows darkened by ambient occlusion,
+    and moss (m["moss"], a colour) gathered in the seams in patches. Cycles only; the GLB keeps the plain colour."""
+    def mix_rgb(fac, a, b, blend="MIX"):
+        n = node(nt, "ShaderNodeMix", data_type="RGBA", blend_type=blend)
+        if isinstance(fac, float):
+            n.inputs[0].default_value = fac
+        else:
+            nt.links.new(fac, n.inputs[0])
+        for sock, v in ((n.inputs[6], a), (n.inputs[7], b)):
+            if isinstance(v, tuple):
+                sock.default_value = v
+            else:
+                nt.links.new(v, sock)
+        return n.outputs[2]
+
+    def math_(op, a, b=None, clamp=True):
+        n = node(nt, "ShaderNodeMath", operation=op)
+        n.use_clamp = clamp
+        for sock, v in zip(n.inputs, (a, b)):
+            if v is None:
+                continue
+            if isinstance(v, float):
+                sock.default_value = v
+            else:
+                nt.links.new(v, sock)
+        return n.outputs[0]
+
+    coord = node(nt, "ShaderNodeTexCoord")
+    c = rgb(m["colour"])
+    broad = node(nt, "ShaderNodeTexNoise", **{"Scale": 0.9, "Detail": 6.0, "Roughness": 0.65})
+    nt.links.new(coord.outputs["Object"], broad.inputs["Vector"])
+    stone = mix_rgb(broad.outputs["Fac"], tuple(x * 0.45 for x in c) + (1,), tuple(min(1, x * 1.3) for x in c) + (1,))
+    grain = node(nt, "ShaderNodeTexNoise", **{"Scale": 6.0, "Detail": 3.0})
+    nt.links.new(coord.outputs["Object"], grain.inputs["Vector"])
+    stone = mix_rgb(0.3, stone, grain.outputs["Color"], "OVERLAY")
+    ao = node(nt, "ShaderNodeAmbientOcclusion", samples=8)
+    ao.inputs["Distance"].default_value = m.get("seam_m", 0.6)
+    crevice = math_("SUBTRACT", 1.0, ao.outputs["AO"])
+    darker = mix_rgb(crevice, stone, (0.04, 0.03, 0.025, 1))
+    out = darker
+    if m.get("moss"):
+        patch = node(nt, "ShaderNodeTexNoise", **{"Scale": 1.4, "Detail": 4.0})
+        nt.links.new(coord.outputs["Object"], patch.inputs["Vector"])
+        patchy = math_("MULTIPLY", math_("SUBTRACT", patch.outputs["Fac"], 0.38), 6.0)
+        mossy = math_("MULTIPLY", math_("MULTIPLY", crevice, 5.0), patchy)
+        out = mix_rgb(mossy, darker, (*rgb(m["moss"]), 1))
+    nt.links.new(out, p.inputs["Base Color"])
 
 
 SHELL = SPEC["shell"]
 MATS = {k: material(k, v) for k, v in SPEC.get("materials", {}).items()}
 MATS["wall"], MATS["floor"] = material("wall", SHELL["wall"]), material("floor", SHELL["floor"])
+MATS["dome"] = material("dome", SHELL.get("dome", SHELL["wall"]))
 
 
 # ---- the shell ----
@@ -148,8 +203,9 @@ def hollow_at(a, z):
             continue
         top = 1 - u * u  # an arched outline: full height in the middle, falling to the sides
         inside = 0 <= v <= max(0.0, top) ** 0.5 and u <= 1
-        if inside:
-            back = max(back, h["depth_m"] * (1 - 0.35 * v * v))
+        if inside:  # eased in over the last stretch of the outline, so the edge is a slope, not a grid step
+            m = max(0.0, min(1.0, (1 - u) / 0.45, (max(0.0, top) ** 0.5 - v) / 0.35))
+            back = max(back, h["depth_m"] * (1 - 0.35 * v * v) * m * m * (3 - 2 * m))
         clear = max(clear, max(0.0, 1 - max(u - 1, -v, v - 1) / 0.6) if not inside else 1.0)
     return back, clear
 
@@ -196,8 +252,8 @@ def ceiling_z(x, y):
     return HW if rho >= 1 else HW + (H - HW) * math.sqrt(1 - rho * rho)
 
 
-SEG = 192 if ROCK else 96
-NW, ND = (18, 10) if ROCK else (6, 6)
+SEG = 288 if ROCK else 96
+NW, ND = (24, 10) if ROCK else (6, 6)
 WALL_Z = sorted({HW * i / NW for i in range(NW + 1)} | {h["z_m"] for h in HOLLOWS})  # a ring at each hollow's floor
 DOME_Z = [HW + (H - HW) * math.sin(math.pi / 2 * i / ND) for i in range(1, ND + 1)]
 OPEN = []  # (opening, set of cut segment indices)
@@ -252,7 +308,7 @@ def shell_part(name, zs, keep, mat):
 back, front = (lambda a: math.cos(a) >= 0), (lambda a: math.cos(a) < 0)
 shell = {"walls_back": shell_part("walls_back", WALL_Z, back, MATS["wall"]),
          "walls_front": shell_part("walls_front", WALL_Z, front, MATS["wall"]),
-         "dome": shell_part("dome", [HW] + DOME_Z, lambda a: True, MATS["wall"])}
+         "dome": shell_part("dome", [HW] + DOME_Z, lambda a: True, MATS["dome"])}
 ring = [wall_point(2 * math.pi * j / SEG, 0) for j in range(SEG)]
 shell["floor"] = mesh_object("floor", [(0, 0, 0)] + ring, [(0, (j + 1) % SEG + 1, j + 1) for j in range(SEG)], MATS["floor"])
 
@@ -467,6 +523,13 @@ for t in SPEC["things"]:
         LIGHTS.append((t["id"], t["at"], t["light"]))
 for l in SPEC.get("lights", []):
     LIGHTS.append((l["id"], l["at"], l))
+cove = SHELL.get("cove")  # lamps hidden along the top of the wall, washing the dome
+if cove:
+    for i in range(cove["count"]):
+        a = 2 * math.pi * (i + 0.5) / cove["count"]
+        r = wall_r(a) * cove.get("inset", 0.85)
+        LIGHTS.append((f"cove.{i}", [r * math.sin(a), r * math.cos(a)],
+                       {"colour": cove["colour"], "watts": cove["watts"], "at_z": HW * cove.get("at", 0.95)}))
 
 
 # ---- checks: on the floor or hung below the dome, inside the walls ----

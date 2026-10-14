@@ -103,4 +103,11 @@ faces the wall is made of; the largest face wins at each point, and the seams be
 cracks) and `hollows` (arched recesses at an angle and height, each with a flat floor). A thing with `hollow` stands
 on that hollow's floor, set back into it; a light with `hollow` sits at its mouth. Rock stays clear of doors and
 hollows. The WAVE room's crystals now sit in four hollows. Before and after: `3d-build/wave-room-test-2026-10-14/rock-walls.png`.
-Still to do: the hollows' edges step with the wall grid, the rock has no surface pattern or moss, and the dome is plain.
+
+**Rock surface, moss and a warm dome (14 October, later still).** A material with `rock` is drawn live in Blender:
+broad lighter and darker patches of stone, seams darkened by ambient occlusion, and `moss` (a colour) gathered in the
+seams in patches. A shell's `dome` takes its own material, and `cove` hides a ring of lamps along the top of the wall
+to light the dome from below. The hollows' edges ease in over a wider band, so they slope instead of stepping. Sheet:
+`3d-build/wave-room-test-2026-10-14/dome-moss.png`. The rock surface and moss are render-only; the GLB keeps the plain
+colour until a bake step exists. Still short of the concept: rubble and small stones at the foot of the walls, sharper
+rock detail, and the concept's bright, painterly light.
