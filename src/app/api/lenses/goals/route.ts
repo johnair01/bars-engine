@@ -7,22 +7,29 @@
  * @dimensions WHO:the council, WHAT:active Lens goals per domain, WHERE:morning board, ENERGY:daily planning
  * @example GET /api/lenses/goals?token=<COUNCIL_MENU_TOKEN>
  * @agentDiscoverable false
+ *
+ * @route POST /api/lenses/goals
+ * @description Adds year goals he kept on the council board as active Lens goals
+ * @permissions COUNCIL_MENU_TOKEN, as a bearer token or ?token=
+ * @example POST /api/lenses/goals {"goals":[{"domain":"health","title":"...","source":"Council Board, lens-..."}]}
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
 import { givenToken, tokenMatches } from '@/lib/council/token'
-import { LENS_DOMAINS } from '@/lib/lenses/domains'
+import { LENS_DOMAINS, isLensDomainKey } from '@/lib/lenses/domains'
+import { ensureYearlyLens } from '@/lib/lenses/onboarding-data'
 import { loadActiveLensGoals } from '@/lib/tap-the-vein/menu-data'
 
 /**
  * The board reads his Lens goals every morning without a sealed Tap the Vein menu
  * (board, `lens-board-reads-goals`, 2026-10-14). Same token and player as
- * /api/tap-the-vein/menu; it reads goals and nothing else.
+ * /api/tap-the-vein/menu; GET reads goals, POST adds the year goals he kept on the board.
  *
  * `goals` is the flat list in the menu export's shape; `domains` lists all five
  * Lens domains in order, each with its prompt and its goals, so an empty domain
  * still shows (and its prompt can seed the Tap the Vein box later, `lens-pitch-goals`).
  */
-export async function GET(req: NextRequest) {
+function councilPlayer(req: NextRequest): { playerId: string } | NextResponse {
   const secret = process.env.COUNCIL_MENU_TOKEN
   const playerId = process.env.COUNCIL_MENU_PLAYER_ID
   if (!secret || !playerId) {
@@ -31,6 +38,13 @@ export async function GET(req: NextRequest) {
   if (!tokenMatches(givenToken(req), secret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  return { playerId }
+}
+
+export async function GET(req: NextRequest) {
+  const who = councilPlayer(req)
+  if (who instanceof NextResponse) return who
+  const { playerId } = who
 
   try {
     const goals = (await loadActiveLensGoals(playerId)).map((g) => ({
@@ -53,5 +67,80 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     console.error('[api:lens-goals]', e)
     return NextResponse.json({ error: 'Failed to load Lens goals' }, { status: 500 })
+  }
+}
+
+const MAX_TITLE = 160
+const MAX_GOALS = 10
+
+type PitchedGoal = { domain: string; title: string; source?: string }
+
+/**
+ * Year goals he kept on the council board (board, `lens-pitch-goals`, 2026-10-14):
+ * the board read pitches goals for an empty domain from his Tap the Vein free write,
+ * and each one he keeps is written here as an active year goal under his yearly Lens.
+ * `source` names the board row and his quoted line; it is kept as the description.
+ *
+ * Safe to send twice: a goal whose domain and title match an active goal is
+ * returned as `existing` and not created again. Only year goals, only his player.
+ */
+export async function POST(req: NextRequest) {
+  const who = councilPlayer(req)
+  if (who instanceof NextResponse) return who
+  const { playerId } = who
+
+  let body: { goals?: PitchedGoal[] }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Body must be JSON: {"goals": [{"domain", "title", "source"}]}' }, { status: 400 })
+  }
+  const pitched = Array.isArray(body.goals) ? body.goals : []
+  if (pitched.length === 0 || pitched.length > MAX_GOALS) {
+    return NextResponse.json({ error: `Send 1 to ${MAX_GOALS} goals` }, { status: 400 })
+  }
+  const bad = pitched.filter(
+    (g) => !g || typeof g.title !== 'string' || !g.title.trim() || typeof g.domain !== 'string' || !isLensDomainKey(g.domain),
+  )
+  if (bad.length) {
+    return NextResponse.json({ error: 'Each goal needs a title and one of the five Lens domains', bad }, { status: 400 })
+  }
+
+  try {
+    const lens = await ensureYearlyLens(playerId)
+    const out: { id: string; title: string; domain: string; status: 'created' | 'existing' }[] = []
+    for (const g of pitched) {
+      const title = g.title.trim().slice(0, MAX_TITLE)
+      const same = await db.lensGoal.findFirst({
+        where: { playerId, domain: g.domain, cadence: 'year', status: 'active', title },
+        select: { id: true },
+      })
+      if (same) {
+        out.push({ id: same.id, title, domain: g.domain, status: 'existing' })
+        continue
+      }
+      const siblings = await db.lensGoal.count({
+        where: { playerId, domain: g.domain, cadence: 'year', status: 'active', parentGoalId: null },
+      })
+      const created = await db.lensGoal.create({
+        data: {
+          playerId,
+          lensId: lens.id,
+          domain: g.domain,
+          cadence: 'year',
+          title,
+          description: typeof g.source === 'string' ? g.source.slice(0, 500) : null,
+          alignmentType: 'progress',
+          status: 'active',
+          keepOrder: siblings + 1,
+        },
+        select: { id: true },
+      })
+      out.push({ id: created.id, title, domain: g.domain, status: 'created' })
+    }
+    return NextResponse.json({ goals: out }, { headers: { 'Cache-Control': 'no-store' } })
+  } catch (e) {
+    console.error('[api:lens-goals:post]', e)
+    return NextResponse.json({ error: 'Failed to save Lens goals' }, { status: 500 })
   }
 }
