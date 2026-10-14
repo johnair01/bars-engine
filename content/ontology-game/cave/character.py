@@ -84,11 +84,12 @@ THEMES = {"robe_set": {"builds": BUILDS, "palettes": PALETTES}}
 # in that protective form; integration in play is the movement completing. The rows below are a position on the board.
 NEUTRAL = {"arms": 1.0, "head": 1.0, "curve": 0.0, "stoop": 0.0, "gesture": {}}
 WARP = {
-    # PUSH held: keeps the threat at arm's length. Arms braced forward at chest height, palms out, the trunk leaning
-    # back from what it pushes, feet staggered, the back leg taking the weight
-    "protector": {"arms": 0.98, "head": 0.94, "curve": -0.08, "stoop": -0.16, "gesture": {
-        "shoulder": (1.3, 0.1), "elbow": (0.3, 0, 0.2), "wrist": (-1.1,), "neck": (0.18,),
-        "hipL": (0.32, 0.08), "kneeL": (0.12,), "hipR": (-0.22, 0.08), "kneeR": (0.3,)}},
+    # PUSH held: stop. Both palms out at chest height, fingers up, elbows bent and braced against an attacker or an
+    # obstacle, the trunk set into the push over a bent front knee, the back leg straight and driving (Wendell,
+    # 2026-10-14: the straight-armed first try "looks like a zombie")
+    "protector": {"arms": 0.98, "head": 0.94, "curve": -0.04, "stoop": 0.06, "gesture": {
+        "shoulder": (1.3, 0.12), "elbow": (0.4, 0, 0.12), "wrist": (1.55,), "neck": (-0.1,),
+        "hipL": (0.36, 0.08), "kneeL": (0.38,), "ankleL": (0.1,), "hipR": (-0.3, 0.08), "ankleR": (-0.2,)}},
     # GRASP held: not until this is handled. Fists drawn to the chest, elbows tight to the ribs, chest up, chin up,
     # feet together, rigid and tall
     "controller": {"arms": 0.92, "head": 1.04, "curve": -0.2, "stoop": 0.0, "gesture": {
