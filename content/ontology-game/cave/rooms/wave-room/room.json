@@ -1,0 +1,474 @@
+{
+  "id": "wave-room",
+  "name": "The WAVE room (test room)",
+  "description": "concept.png",
+  "translated_by": "Claude, from Wendell's ChatGPT concept picture (Cave studio inbox, quiet_cave_room_concept.png, 2026-10-14), read by eye with the figure in it as one player height",
+  "units": "player_heights",
+  "player_height_m": 1.7,
+  "axes": "player heights; x to the right as you come in, y toward the door, z up; the room's centre on the floor is 0, 0, 0",
+  "shell": {
+    "says": "a round room under a high dome, about twelve figures across, its walls big rounded rock faces with hollows for crystals",
+    "shape": "oval",
+    "width_m": 12,
+    "length_m": 12,
+    "wall_height_m": 3.2,
+    "height_m": 5.6,
+    "rough": 0.035,
+    "seed": 5,
+    "wall": {
+      "colour": "#8a7356",
+      "roughness": 0.9,
+      "rock": true,
+      "moss": "#4f5a26",
+      "seam_m": 0.7
+    },
+    "floor": {
+      "says": "a smooth dark stone floor that catches the light",
+      "colour": "#4e4239",
+      "texture": "wet_stone",
+      "roughness": 0.3
+    },
+    "rock": {
+      "says": "walls of big rounded rock faces with cracks between them",
+      "count": 130,
+      "size_m": [
+        0.6,
+        1.7
+      ],
+      "depth": 0.45,
+      "seed": 7
+    },
+    "hollows": [
+      {
+        "id": "h1",
+        "says": "a hollow in the wall holding crystals",
+        "angle_deg": -42,
+        "z_m": 0.35,
+        "width_m": 1.4,
+        "height_m": 1.3,
+        "depth_m": 0.8
+      },
+      {
+        "id": "h2",
+        "says": "a hollow in the wall holding crystals",
+        "angle_deg": 42,
+        "z_m": 0.35,
+        "width_m": 1.4,
+        "height_m": 1.3,
+        "depth_m": 0.8
+      },
+      {
+        "id": "h3",
+        "says": "a hollow in the wall holding crystals",
+        "angle_deg": -79,
+        "z_m": 0.35,
+        "width_m": 1.4,
+        "height_m": 1.3,
+        "depth_m": 0.8
+      },
+      {
+        "id": "h4",
+        "says": "a hollow in the wall holding crystals",
+        "angle_deg": 79,
+        "z_m": 0.35,
+        "width_m": 1.4,
+        "height_m": 1.3,
+        "depth_m": 0.8
+      }
+    ],
+    "dome": {
+      "says": "the dome glowing warm",
+      "colour": "#b08a62",
+      "roughness": 0.9,
+      "rock": true,
+      "glow": 0.0
+    },
+    "cove": {
+      "says": "the dome lit warm from below its rim",
+      "count": 8,
+      "colour": "#ffb46a",
+      "watts": 8,
+      "inset": 0.7,
+      "at": 1.0
+    }
+  },
+  "openings": [
+    {
+      "id": "door",
+      "says": "an arched wooden door in the far wall, light behind it",
+      "angle_deg": 0,
+      "width_m": 1.15,
+      "height_m": 2.2,
+      "frame": "arch",
+      "frame_material": "stone",
+      "fill": {
+        "kind": "blenderkit",
+        "query": "castle door",
+        "index": 0,
+        "id": "048437df-31b2-4041-9956-d048cce32092"
+      },
+      "fill_height_m": 2.1,
+      "fill_tint": "#7a5233",
+      "fill_faces": 3000
+    },
+    {
+      "id": "entrance",
+      "says": "the worn stone step where the figure stands, the way in",
+      "angle_deg": 180,
+      "width_m": 2.2,
+      "height_m": 2.4,
+      "frame": null,
+      "fill": null
+    }
+  ],
+  "materials": {
+    "stone": {
+      "colour": "#b7a588",
+      "roughness": 0.8,
+      "texture": "dry_stone"
+    },
+    "seat": {
+      "colour": "#9c8c74",
+      "roughness": 0.75,
+      "texture": "dry_stone"
+    },
+    "inlay": {
+      "colour": "#6a5a4b",
+      "roughness": 0.25
+    },
+    "amber": {
+      "colour": "#ff8a1a",
+      "roughness": 0.3,
+      "glow": 1.2
+    },
+    "rock": {
+      "colour": "#8a7b68",
+      "roughness": 0.85,
+      "texture": "dry_stone"
+    },
+    "figure": {
+      "colour": "#efe8dc",
+      "roughness": 0.7
+    }
+  },
+  "things": [
+    {
+      "id": "seat",
+      "says": "a low curved stone bench facing the door, a little in front of the middle",
+      "source": {
+        "kind": "script",
+        "builder": "bench",
+        "size": [
+          2.3,
+          0.75,
+          0.42
+        ]
+      },
+      "at": [
+        0,
+        -0.4
+      ],
+      "turn_deg": 0,
+      "height_m": 0.6,
+      "faces": 400,
+      "material": "seat"
+    },
+    {
+      "id": "circle",
+      "says": "a faint circle set into the floor in the middle, where the charge stops",
+      "source": {
+        "kind": "script",
+        "builder": "ring",
+        "size": [
+          1.8,
+          1.65,
+          0.006
+        ]
+      },
+      "at": [
+        0,
+        1.8
+      ],
+      "turn_deg": 0,
+      "material": "inlay",
+      "height_m": 0.006,
+      "faces": 600
+    },
+    {
+      "id": "plinth",
+      "says": "a small stone plinth beside the door",
+      "source": {
+        "kind": "script",
+        "builder": "block",
+        "size": [
+          0.5,
+          0.5,
+          0.55
+        ]
+      },
+      "at": [
+        1.14,
+        4.66
+      ],
+      "turn_deg": 0,
+      "height_m": 0.55,
+      "faces": 12,
+      "material": "stone"
+    },
+    {
+      "id": "lantern",
+      "says": "a lantern on the plinth, lit",
+      "source": {
+        "kind": "blenderkit",
+        "query": "small japanese stone lantern",
+        "index": 0,
+        "id": "6ede2f7a-13b6-4c59-9377-8b7f8946befb"
+      },
+      "at": [
+        1.14,
+        4.66
+      ],
+      "turn_deg": 0,
+      "height_m": 0.4,
+      "z_m": 0.55,
+      "faces": 1500,
+      "light": {
+        "colour": "#ffb060",
+        "watts": 8,
+        "at_z": 1.15
+      }
+    },
+    {
+      "id": "crystals.1",
+      "says": "amber crystals glowing in a hollow in the wall",
+      "source": {
+        "kind": "kit",
+        "piece": "crystal_cluster"
+      },
+      "turn_deg": 180,
+      "scale": 1.0,
+      "material": "amber",
+      "hollow": "h1",
+      "at": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "crystals.2",
+      "says": "amber crystals glowing in a hollow in the wall",
+      "source": {
+        "kind": "kit",
+        "piece": "crystal_cluster"
+      },
+      "turn_deg": 180,
+      "scale": 1.0,
+      "material": "amber",
+      "hollow": "h2",
+      "at": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "crystals.3",
+      "says": "amber crystals glowing in a hollow in the wall",
+      "source": {
+        "kind": "kit",
+        "piece": "crystal_cluster"
+      },
+      "turn_deg": 180,
+      "scale": 1.1,
+      "material": "amber",
+      "hollow": "h3",
+      "at": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "crystals.4",
+      "says": "amber crystals glowing in a hollow in the wall",
+      "source": {
+        "kind": "kit",
+        "piece": "crystal_cluster"
+      },
+      "turn_deg": 180,
+      "scale": 1.1,
+      "material": "amber",
+      "hollow": "h4",
+      "at": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "boulder.1",
+      "says": "mossy boulders round the edge",
+      "source": {
+        "kind": "local",
+        "file": "rock-with-moss.glb",
+        "id": "4e142bae-6a0f-4bdc-94f0-2521b53de988"
+      },
+      "at": [
+        -3.17,
+        -2.46
+      ],
+      "turn_deg": 30,
+      "height_m": 1.1,
+      "faces": 1200
+    },
+    {
+      "id": "boulder.2",
+      "says": "mossy boulders round the edge",
+      "source": {
+        "kind": "local",
+        "file": "rock-with-moss.glb",
+        "id": "4e142bae-6a0f-4bdc-94f0-2521b53de988"
+      },
+      "at": [
+        3.08,
+        -2.55
+      ],
+      "turn_deg": 200,
+      "height_m": 1.1,
+      "faces": 1200
+    },
+    {
+      "id": "boulder.3",
+      "says": "mossy boulders round the edge",
+      "source": {
+        "kind": "local",
+        "file": "rock-with-moss.glb",
+        "id": "4e142bae-6a0f-4bdc-94f0-2521b53de988"
+      },
+      "at": [
+        -2.29,
+        4.14
+      ],
+      "turn_deg": 110,
+      "height_m": 0.6,
+      "faces": 1200
+    },
+    {
+      "id": "boulder.4",
+      "says": "mossy boulders round the edge",
+      "source": {
+        "kind": "local",
+        "file": "rock-with-moss.glb",
+        "id": "4e142bae-6a0f-4bdc-94f0-2521b53de988"
+      },
+      "at": [
+        3.87,
+        2.29
+      ],
+      "turn_deg": 300,
+      "height_m": 0.8,
+      "faces": 1200
+    },
+    {
+      "id": "player",
+      "says": "the small faceless figure, back to us, looking at the door (one player height, for scale)",
+      "source": {
+        "kind": "glb",
+        "file": "../body/figure.glb"
+      },
+      "at": [
+        0,
+        -2.6
+      ],
+      "turn_deg": 180,
+      "height_m": 1.0,
+      "faces": 4000,
+      "material": "figure"
+    }
+  ],
+  "lights": [
+    {
+      "id": "beyond-door",
+      "says": "light behind the door",
+      "at": [
+        0,
+        6.6
+      ],
+      "at_z": 1.2,
+      "colour": "#ffcf80",
+      "watts": 60
+    },
+    {
+      "id": "h1.glow",
+      "says": "the light the crystals throw from their hollow",
+      "hollow": "h1",
+      "at": [
+        0,
+        0
+      ],
+      "at_z": 0,
+      "colour": "#ffa040",
+      "watts": 20
+    },
+    {
+      "id": "h2.glow",
+      "says": "the light the crystals throw from their hollow",
+      "hollow": "h2",
+      "at": [
+        0,
+        0
+      ],
+      "at_z": 0,
+      "colour": "#ffa040",
+      "watts": 20
+    },
+    {
+      "id": "h3.glow",
+      "says": "the light the crystals throw from their hollow",
+      "hollow": "h3",
+      "at": [
+        0,
+        0
+      ],
+      "at_z": 0,
+      "colour": "#ffa040",
+      "watts": 20
+    },
+    {
+      "id": "h4.glow",
+      "says": "the light the crystals throw from their hollow",
+      "hollow": "h4",
+      "at": [
+        0,
+        0
+      ],
+      "at_z": 0,
+      "colour": "#ffa040",
+      "watts": 20
+    }
+  ],
+  "fill_light": {
+    "says": null,
+    "why": "a choice: the picture's glow comes from everywhere at once; a faint warm fill stands in for it",
+    "colour": "#ffb070",
+    "strength": 0.12
+  },
+  "views": {
+    "eye": {
+      "from": [
+        0,
+        -4.7,
+        2.7
+      ],
+      "to": [
+        0,
+        3.0,
+        0
+      ],
+      "lens": 20
+    }
+  },
+  "left_out": [
+    {
+      "says": "the step the figure stands on",
+      "why": "the entrance is a plain opening; no steps yet"
+    }
+  ]
+}
