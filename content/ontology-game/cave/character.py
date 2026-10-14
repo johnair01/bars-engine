@@ -4,9 +4,8 @@
     python content/ontology-game/cave/character.py --all --out DIR [--sheet]
 
 The theme is the Taoist cultivation robe set (cc-robe-set, bpt-robe-theme), the wardrobe the 2D sprite creator also
-draws from (cs-one-studio). In J4 the set is painted onto the body as its under-layer: a tunic whose crossed collar
-runs as one band over the shoulders and round the back of the neck, falling
-to mid-thigh, tied trousers, a sash and cloth shoes. The long robe, the sash as cloth and the topknot are J5's separate
+draws from (cs-one-studio). In J4 the set is painted onto the body as its under-layer: a plain short-sleeved top to the
+waist, tied trousers, a sash and cloth shoes. The long robe, the sash as cloth and the topknot are J5's separate
 garments, skinned to this same rig.
 
 The body starts from the body map's figure (body/build_figure.py: rounded parts, 1.75 m, no face, no sex, age or skin
@@ -72,6 +71,15 @@ CUTS = (*HEM, *SASH, CUFF, *TIE, NECK, NECK_BASE)
 SPLIT = 0.03                                                           # metres, longest edge where a line is cut
 COLLAR_R = 0.095                                                        # the collar's ring round the neck, metres
 COLLAR = 0.024                                                          # half the collar band's width, metres
+
+
+NECK_C, NECK_R = Vector((0, 0, 1.47)), 0.12                            # the top's round neck: where a ball meets the body
+
+
+def neckline(co):
+    """Below zero inside the top's round neck: the ball round the neck's base, which meets the body in a ring that
+    dips a little at the front and back and runs out along the shoulders."""
+    return (co - NECK_C).length - NECK_R
 
 
 def body_parts(build):
@@ -315,8 +323,7 @@ def make(build_name, palette, theme="robe_set"):
     bm.from_mesh(fused)
     for z in CUTS:
         bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, z), plane_no=(0, 0, 1))
-    collar = collar_path(bm, build_name)
-    cut_along(bm, lambda co: collar(co) - COLLAR)
+    cut_along(bm, neckline)
     bm.to_mesh(fused)
     bm.free()
     for p in fused.polygons:
@@ -368,12 +375,13 @@ def make(build_name, palette, theme="robe_set"):
     col = fused.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
 
     def paint(co, bone):
+        # a plain top to the waist with short sleeves, over tied trousers: the long robe is J5's garment, so the
+        # under-layer does not repeat its collar, cuffs or hem (Wendell, 2026-10-14: "The figrues without robes
+        # should have bare or basic tops so they aren't duplicating the robes")
         x, y, z = co
-        if bone in ("head", "neck"):
-            return SKIN if z > NECK else pal["trim"]                # the collar stands a little way up the neck
-        if z > NECK_BASE and bone == "spine":
-            return pal["trim"]                                      # and is one band all round where neck meets trunk
-        if bone.startswith("wrist"):
+        if bone.startswith(("shoulder", "elbow")):
+            return pal["tunic"] if z > SASH[1] else SKIN            # the sleeve ends near the elbow, on a level cut
+        if bone in ("head", "neck") or bone.startswith("wrist") or neckline(Vector(co)) < 0:
             return SKIN
         if bone.startswith("ankle"):
             return pal["shoes"]
@@ -381,16 +389,8 @@ def make(build_name, palette, theme="robe_set"):
             return pal["trim"] if TIE[0] < z < TIE[1] else pal["trousers"]   # the trousers tied at the ankle
         if SASH[0] < z < SASH[1] and not bone.startswith(("shoulder", "elbow")):
             return pal["sash"]
-        if bone.startswith("hip") and bone != "hips":
-            if z > HEM[0]:
-                return pal["trim"] if z < HEM[1] else pal["tunic"]  # the tunic falls to mid-thigh, hemmed
+        if bone.startswith("hip") or z < SASH[0]:
             return pal["trousers"]
-        if bone.startswith("elbow"):
-            # the sleeve runs to the wrist with a cuff
-            return pal["trim"] if z < CUFF else pal["tunic"]
-        # no crossed collar painted on the chest: J5's robe has its own, and the painted V showed at its edges
-        if bone.startswith("shoulder") or bone in ("spine", "hips"):
-            return pal["tunic"]
         return pal["tunic"]
 
     # one colour per face, so a band's edge is a clean step and never a streak smeared along a long triangle

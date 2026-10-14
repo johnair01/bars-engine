@@ -84,6 +84,7 @@ COLOURWAYS = {
 }
 
 # the robe's cut
+SLIT_REACH = 0.10                                # metres either side of a slit that go with their own panel
 HEM, SLIT = 0.15, 0.54                           # metres above the floor: the hem shows the ankle ties; the slits are
                                                  # cut to here and hang a little higher once belted (round 3: room for the stride)
 
@@ -382,7 +383,7 @@ def arms_out(rig, ang):
 
 def drape(fig, rig, build):
     """Sew the panels round the body in the sewing pose and let the cloth fall. Returns the settled points, the
-    faces and each face's part. The rig's walk is set aside while the cloth falls and put back after."""
+    faces and each face's part (0 to 2 on the front panel, 3 to 5 on the back). The rig's walk is set aside while the cloth falls and put back after."""
     sc = bpy.context.scene
     sc.render.threads_mode, sc.render.threads = "FIXED", 1     # one thread: the solver settles the same way every time
     walk = rig.animation_data.action
@@ -448,6 +449,7 @@ def drape(fig, rig, build):
     for i, p in enumerate(flat):
         # a hem is stiffer than the cloth: the cuff's last few centimetres hang in a clean edge, not a ruffle
         hem = smooth(cuff_x - CUFF_HEM - 0.03, cuff_x - 0.01, abs(p.x)) if abs(p.x) > 0.2 else 0.0
+        hem = max(hem, smooth(HEM_CUT + CUFF_HEM + 0.03, HEM_CUT + 0.01, p.z))   # and so is the robe's hem
         near_seam = smooth(0.0, 2.5 * CLOTH_H, sk.find(Vector((p.x, 0, p.z)))[2])
         bend.add([i], max(near_seam * BEND_BODY / BEND_HEM, hem), "REPLACE")
     collide = fig.modifiers.new("Collide", "COLLISION")
@@ -475,7 +477,7 @@ def drape(fig, rig, build):
         pb.rotation_quaternion = (1, 0, 0, 0)
     sc.frame_start, sc.frame_end = 1, C.KEYS + 1
     sc.frame_set(1)
-    return co, faces, parts + parts
+    return co, faces, parts + [p + 3 for p in parts]              # the back panel's faces are numbered 3 to 5
 
 
 def trimmed(co, faces, parts, build):
@@ -491,9 +493,10 @@ def trimmed(co, faces, parts, build):
         bm.faces.new([bm.verts[i] for i in f])
     for _ in range(2):
         bmesh.ops.smooth_vert(bm, verts=bm.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
-    # a hem or cuff is a smooth line, not the free edge's ripples: round the cuffs' open edges before cutting the trim
-    cuff_edge = [v for v in bm.verts if any(len(e.link_faces) == 1 for e in v.link_edges) and v.co.z > 0.7
-                 and abs(v.co.x) > 0.2]
+    # a hem or cuff is a smooth line, not the free edge's ripples: round the cuffs' and the hem's open edges before
+    # cutting the trim
+    cuff_edge = [v for v in bm.verts if any(len(e.link_faces) == 1 for e in v.link_edges) and
+                 ((v.co.z > 0.7 and abs(v.co.x) > 0.2) or v.co.z < 0.3)]
     for _ in range(CUFF_ROUNDS):
         bmesh.ops.smooth_vert(bm, verts=cuff_edge, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
     bm.faces.ensure_lookup_table()
@@ -531,7 +534,8 @@ def trimmed(co, faces, parts, build):
               for p in me.polygons]
     keep = set()                                         # the points where two labels meet: the trim's lines, the sleeves'
     seen = {}
-    for p, lab in zip(me.polygons, labels):
+    for p, (part, t) in zip(me.polygons, labels):
+        lab = (part % 3, t)                              # the front and back of one part meet without a line kept
         for v in p.vertices:
             if seen.setdefault(v, lab) != lab:
                 keep.add(v)
@@ -590,44 +594,120 @@ def smooth_skirt(weights, verts, faces, parts, rounds=SKIRT_SMOOTH, top=1.0):
 
 
 def robe(fig, rig, build, cw):
-    """The draped robe with its trim, reduced, and weighted from the body under it."""
+    """The draped robe with its trim, reduced, hemmed, and weighted from the body under it."""
     co, faces, parts = drape(fig, rig, build)
     verts, faces, labels = reduce(*trimmed(co, faces, parts, build), ROBE_VERTS)
-    parts = [p for p, _ in labels]
     W = bone_weights(fig)
     from_body = weight_source(fig, lambda c, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR",
                                                                   "shoulderL", "shoulderR"))
     from_arm = {s: weight_source(fig, lambda c, w, s=s: main_bone(w) in ("spine", "shoulder" + s, "elbow" + s, "wrist" + s))
                 for s in "LR"}
-    sleeve_of = {}
-    for f, p in zip(faces, parts):
+    of = {}
+    for f, (p, _) in zip(faces, labels):
         for v in f:
-            sleeve_of.setdefault(v, set()).add(p)
+            of.setdefault(v, []).append(p)
+    # the slits' tops: the highest open edge of the robe's body low on its sides
+    count = {}
+    for f, (p, _) in zip(faces, labels):
+        for e in zip(f, f[1:] + f[:1]):
+            count[frozenset(e)] = count.get(frozenset(e), 0) + (1 if p % 3 == 0 else 2)
+    slit_edge = [e for e, n in count.items() if n == 1 and all(0.25 < verts[v].z < 1.0 and abs(verts[v].x) > 0.12 for v in e)]
+    slit_top = max(verts[v].z for e in slit_edge for v in e)
+    # only the cloth near a slit's edges goes with its own panel; the middle of each panel keeps its hang
+    near_slit = KDTree(len(slit_edge) * 5)
+    for n, e in enumerate(slit_edge):
+        a, b = (verts[v] for v in e)
+        for t in range(5):
+            near_slit.insert(a.lerp(b, t / 4), 5 * n + t)
+    near_slit.balance()
     weights = []
     for i, p in enumerate(verts):
-        ps = sleeve_of.get(i, {0})
-        if 0 in ps:
-            weights.append(skirt_weights(p, from_body(p)))
+        ps = of.get(i, [0])
+        if any(q % 3 == 0 for q in ps):
+            front = sum(q < 3 for q in ps) / len(ps)     # on the front panel 1, the back 0, a side seam between
+            slit = smooth(slit_top + 0.10, slit_top, p.z) * smooth(SLIT_REACH, 0.02, near_slit.find(p)[2])
+            weights.append(skirt_weights(p, from_body(p), front, slit))
         else:
-            weights.append(from_arm["L" if 1 in ps else "R"](p))
-    weights = smooth_skirt(weights, verts, faces, parts)
+            weights.append(from_arm["L" if 1 in [q % 3 for q in ps] else "R"](p))
+    weights = smooth_skirt(weights, verts, faces, [p % 3 for p, _ in labels])
+    n_faces = len(faces)
+    verts, faces, labels, src = hemmed(verts, faces, labels)
+    weights += [weights[src[i]] for i in range(len(weights), len(verts))]   # the turned hem moves with its edge
     colours = [cw["edge"] if t else cw["robe"] for _, t in labels]
-    obj = mesh_object("robe", verts, faces, colours, weights, rig, parts)
+    part = [p % 3 if f < n_faces else FACING for f, (p, _) in enumerate(labels)]
+    obj = mesh_object("robe", verts, faces, colours, weights, rig, part)
     outward(obj)
     return obj
 
 
-def skirt_weights(p, body):
+HEM_IN, HEM_UP = 0.006, 0.03                     # metres: the hem's turned edge, its thickness and how far the
+                                                 # turned-back cloth runs up inside
+FACING = 3                                       # the turned hem's faces' part: inside the cloth, never tested
+
+
+def hemmed(verts, faces, labels):
+    """The hem and the cuffs turned back inside, as a sewn hem is: the cloth goes on past its edge, round a fold
+    HEM_IN thick, and back up inside for HEM_UP, so the edge has a body of its own (Wendell, 2026-10-14: "The hems
+    also need to feel like they are more than just painted on"). The slits are left raw. Returns the points, faces and
+    labels with the turned hem added after the rest, and for each new point the edge point it was turned from."""
+    count, nxt = {}, {}
+    for fi, f in enumerate(faces):
+        for a, b in zip(f, f[1:] + f[:1]):
+            count[frozenset((a, b))] = count.get(frozenset((a, b)), 0) + 1
+            nxt[(a, b)] = fi
+    edges = [(a, b, fi) for (a, b), fi in nxt.items() if count[frozenset((a, b))] == 1 and labels[fi][1]
+             and not (verts[a].z > 1.2 and abs(verts[a].x) < 0.2)]          # the hem and the cuffs, not the neckline
+    if not edges:
+        return verts, faces, labels, {}
+    # each edge point's way into the cloth (away from the edge, along the surface) and the cloth's normal there
+    nbr = {}
+    for f in faces:
+        for a, b in zip(f, f[1:] + f[:1]):
+            nbr.setdefault(a, set()).add(b)
+            nbr.setdefault(b, set()).add(a)
+    on_edge = {v for a, b, _ in edges for v in (a, b)}
+    normal = {}
+    for f in faces:
+        n = (verts[f[1]] - verts[f[0]]).cross(verts[f[2]] - verts[f[0]])
+        for v in f:
+            if v in on_edge:
+                normal[v] = normal.get(v, Vector()) + n
+    V, F, L = list(verts), list(faces), list(labels)
+    ring, src = {}, {}
+    for v in on_edge:
+        inside = [verts[u] - verts[v] for u in nbr[v] if u not in on_edge]
+        up = sum(inside, Vector()) if inside else Vector((0, 0, 1))
+        n = normal[v].normalized()
+        up = (up - n * up.dot(n)).normalized()
+        if n.dot(Vector((verts[v].x, verts[v].y, 0))) < 0:   # the fold goes in, toward the wearer's middle
+            n = -n
+        ring[v] = len(V)
+        src[len(V)], src[len(V) + 1] = v, v
+        V.append(verts[v] - n * HEM_IN)
+        V.append(verts[v] - n * HEM_IN + up * HEM_UP)
+    for a, b, fi in edges:
+        F.append([b, a, ring[a], ring[b]])               # round the fold
+        F.append([ring[b], ring[a], ring[a] + 1, ring[b] + 1])   # and back up inside
+        L += [labels[fi], labels[fi]]
+    return V, F, L, src
+
+
+def skirt_weights(p, body, front_panel=0.5, slit=0.0):
     """Below the hips the robe hangs from the hips, its front panel on hemF, its back panel on hemB and its sides on
-    their own thigh, more so toward the hem; above them it takes the body's weights (blended between)."""
+    their own thigh, more so toward the hem; above them it takes the body's weights (blended between). Below the
+    slits' tops (slit 1) the sides are open, so each panel's side goes with its own panel: the front with the leg ahead,
+    the back with the leg behind, and the slit parts as the figure walks (Wendell, 2026-10-14: "the places where there
+    are slits in the robe aren't separating when they walk")."""
     t = smooth(1.02, 0.55, p.z)
     if t <= 0:
         return body
     th = math.atan2(p.y, p.x)
     front, back = max(0.0, -math.sin(th)) ** 1.5, max(0.0, math.sin(th)) ** 1.5
     sideways = abs(math.cos(th)) ** 2
+    rest = max(0.0, 1.0 - front - back)
+    front, back = front + slit * front_panel * rest, back + slit * (1 - front_panel) * rest
     thigh = "hipL" if p.x > 0 else "hipR"
-    hang = {"hemF": 0.9 * front, "hemB": 0.9 * back, thigh: 0.55 * sideways}
+    hang = {"hemF": 0.9 * front, "hemB": 0.9 * back, thigh: 0.55 * sideways * (1 - slit)}
     hang["hips"] = max(0.05, 1.0 - sum(hang.values()))
     out = {}
     for b, x in body.items():
@@ -791,13 +871,15 @@ def topknot(fig, rig, cw):
 # ---- the test: body points through the garment, at every key of the walk -------------------------------------
 
 def openings(obj):
-    """The open edges (hem, slits, cuffs, neck) as vertex pairs; not the sleeve's top, which is inside the robe."""
+    """The open edges (hem, slits, cuffs, neck) as vertex pairs; not the sleeve's top, which is inside the robe. A
+    turned hem's faces are not counted, so the hem's fold is the opening."""
     me = obj.data
     inner = [d.value for d in me.attributes["inner"].data]
+    part = [d.value for d in me.attributes["part"].data]
     count = {}
     for p in me.polygons:
         for e in p.edge_keys:
-            count[e] = count.get(e, 0) + 1
+            count[e] = count.get(e, 0) + (1 if part[p.index] != FACING else 0)
     return [e for e, n in count.items() if n == 1 and not (inner[e[0]] and inner[e[1]])]
 
 
@@ -807,7 +889,7 @@ def seg_dist(p, a, b):
     return (p - (a + ab * t)).length
 
 
-def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
+def through(wearer, cover, garment, keys, parts_of=None, ray_from=None, limb_of=None):
     """For each key: the covered points of `wearer` outside `garment`'s surface and not at an opening. A point is a
     vertex index, or a tuple of indices for the middle of a face (a body face can bulge through between vertices).
     parts_of(i): the garment parts (face attribute "part") that may hold point i, its own first; a point held by any
@@ -815,6 +897,8 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
     ray_from(p): where to look out from for point p, or None. A point held only by its own part (the robe's body,
     a sash's band) also counts as through when the line from there out through it meets no cloth: the nearest-face
     test alone can be fooled where cloth folds.
+    limb_of(i): the leg bone point i lies on where it may step out through a slit, or None. Such a point outside the
+    cloth is held when no cloth lies between it and its bone: it came out through the slit, not through the cloth.
     Returns ([count per key], {garment vertex: push needed})."""
     me = garment.data
     polys = [list(p.vertices) for p in me.polygons]
@@ -866,6 +950,15 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
                             held, first = False, (max(0.0, (p - loc).dot(nor)), polys[sel[fi]], sel[fi])
                 if held or first is None:
                     continue
+                limb = limb_of(i if isinstance(i, int) else i[0]) if limb_of else None
+                if limb:
+                    pb, mw = wearer.parent.pose.bones[limb], wearer.parent.matrix_world
+                    a, b = mw @ pb.head, mw @ pb.tail
+                    t = max(0.0, min(1.0, (p - a).dot(b - a) / max((b - a).length_squared, 1e-9)))
+                    to = a.lerp(b, t) - p
+                    tr, _ = tree(pids[0])
+                    if to.length > 1e-6 and tr.ray_cast(p, to.normalized(), to.length)[0] is None:
+                        continue                           # out through a slit, clear of the cloth
                 LAST_THROUGH.append((k, i, first[0]))
                 n += 1
                 d, vs, face = first
@@ -876,14 +969,14 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
     return counts, push
 
 
-def fit(wearer, cover, garment, keys, rounds=30, parts=None, ray_from=None):
+def fit(wearer, cover, garment, keys, rounds=30, parts=None, ray_from=None, limb_of=None):
     """root-game's fullness, found by walking: push the cloth out (in its standing shape, along its normals) wherever
     a covered point came through at any key, and again, until none does. A round that leaves more points through than
     the best so far is undone and the next pushes are halved. Returns the rounds' counts."""
     me = garment.data
     log, best, scale = [], None, 1.0
     for _ in range(rounds):
-        counts, push = through(wearer, cover, garment, keys, parts, ray_from)
+        counts, push = through(wearer, cover, garment, keys, parts, ray_from, limb_of)
         total = sum(counts)
         log.append(total)
         if best is not None and total > best[0]:
@@ -891,7 +984,7 @@ def fit(wearer, cover, garment, keys, rounds=30, parts=None, ray_from=None):
                 v.co = co
             me.update()
             scale *= 0.5
-            counts, push = through(wearer, cover, garment, keys, parts, ray_from)
+            counts, push = through(wearer, cover, garment, keys, parts, ray_from, limb_of)
             total = sum(counts)
         if best is None or total <= best[0]:
             best = (total, [v.co.copy() for v in me.vertices])
@@ -1046,11 +1139,17 @@ def build_all(build, palette, out_dir, do_fit=True):
     slit_top = max(rc[v].z for e in openings(R) for v in e if 0.25 < rc[v].z < 1.0 and abs(rc[v].x) > 0.12)
     # and not where the arms come out (a line from the middle out under the arm leaves through the armhole)
     axis = lambda p: Vector((0, 0, p.z)) if p.z > slit_top + 0.03 and not (p.z > 1.1 and abs(p.x) > 0.11) else None
-    log = fit(fig, cover, R, keys, parts=parts, ray_from=axis) if do_fit else []
-    counts, _ = through(fig, cover, R, keys, parts, axis)
+    # a leg below the slits' tops (and just above, where the slit spreads) may step out through a slit
+    rp = [d.value for d in R.data.attributes["part"].data]
+    body_pts = {v for f in R.data.polygons if rp[f.index] == 0 for v in f.vertices}
+    slits = max(rc[v].z for e in openings(R) for v in e if v in body_pts and 0.25 < rc[v].z < 1.0 and abs(rc[v].x) > 0.12)
+    legs = lambda i: main_bone(W[i]) if main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") and \
+        fig.data.vertices[i].co.z < slits + 0.08 else None
+    log = fit(fig, cover, R, keys, parts=parts, ray_from=axis, limb_of=legs) if do_fit else []
+    counts, _ = through(fig, cover, R, keys, parts, axis, legs)
     if do_fit and max(counts) > 0:
-        log += polish(fig, cover, R, keys, parts=parts, ray_from=axis)   # a few stubborn points: smaller, stronger pushes
-        counts, _ = through(fig, cover, R, keys, parts, axis)
+        log += polish(fig, cover, R, keys, parts=parts, ray_from=axis, limb_of=legs)   # a few stubborn points: smaller, stronger pushes
+        counts, _ = through(fig, cover, R, keys, parts, axis, legs)
     rows.append(("robe", R, counts, log, len(cover)))
     S = sash(fig, rig, cw, "sash")
     cover_s = with_faces(fig, cover_band(fig, SASH_Z[0] + 0.01, SASH_Z[-1] - 0.01))

@@ -293,6 +293,15 @@ Open: J5 passes on the average build; on slight and broad the cloth solver does 
 and some drapes leave up to 30 points through at the hips mid-stride that `fit()` does not clear. J4, J4b, J5b and
 J5c pass. Pictures in `/mnt/project-files/3d-build/j5-round3-2026-10-14/`.
 
+Round 4 (his look, 2026-10-14 16:46): "the places where there are slits in the robe aren't separating when they walk.
+The figrues without robes should have bare or basic tops so they aren't duplicating the robes. The hems also need to
+feel like they are more than just painted on". Near each slit, each panel now hangs from its own leg's hem bone, so
+the slit opens in the stride. The walk test counts a leg out through a slit as held when no cloth lies between the
+point and its bone. The hem and the cuffs are turned back inside the robe, round a 6 mm fold and 3 cm up. The hem is
+stiffened in the cloth solver and its edge is smoothed, as the cuffs already were. The figure's painted under-layer is
+a plain short-sleeved top to the waist with a round neck, over the tied trousers. Every robe is 136 to 138 KB. J4,
+J4b, J5, J5b and J5c pass. Pictures in `/mnt/project-files/3d-build/j5-round4-2026-10-14/`.
+
 ### What Part 2 does not do
 
 No daemon's or spirit's words (`cs-no-written-words`). No figure has a face, and no garment or figure is built
