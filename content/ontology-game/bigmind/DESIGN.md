@@ -297,3 +297,17 @@ Wendell, 2026-10-13: "I think we're almost to the point where we can merge the b
 now wears the Cave of Lessons' J1 stone (`K.stoneOf`, `K.tileStone`; the tiles load after the first frame) and every spirit
 carries a small light of its own in its colour. The Cave of Lessons has this cave's sit-down in place. The rest of the merge
 is in `cave/DESIGN.md`, "One map".
+
+## Each daemon's own questions (Wendell, 14 October 2026)
+
+His words: "Updating ontology for the daemons. In the game master agents and in the games itself. Questions to ask
+each daemon/concerns for each daemon". The sets are in `../daemons/questions.js`, copied from the council's
+`council/daemons/questions.yaml`, with his exact words beside each plain question. Every set asks what the daemon
+works on, who it works for, how its work serves that boss, and what would happen without it.
+
+The Protector's chamber asks his four after "What do you protect the self from?": what it protects, how that keeps
+the body alive, what that is vulnerable to (the five elements, named as the W.A.V.E. names them), and what it fears
+would happen without it. The earlier questions stay, so a charge that falls fast still reaches the ready line first.
+The test checks the chamber's four against `questions.js`, so the two cannot drift. The Controller's chamber, next
+in the build order, takes its whole set: there the player picks who it works for, and the follow-up changes with the
+answer (`byBoss`).
