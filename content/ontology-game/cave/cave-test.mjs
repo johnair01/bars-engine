@@ -209,7 +209,7 @@ await page.waitForTimeout(300);
 const fA = await free(); await page.waitForTimeout(1200); const fB = await free();
 ok(fA.s > f0.s + 6 && !fB.moving && fB.s === fA.s, `the up key walks the figure ahead (${f0.s.toFixed(1)} to ${fA.s.toFixed(1)}), and letting go stands it still`);
 const mv = samples.filter((x) => x.f.moving), pace = (mv[mv.length - 1].f.s - mv[0].f.s) / ((mv[mv.length - 1].t - mv[0].t) / 1000);
-ok(pace > 2.8 && pace < 4.6, `the pace is steady at about ${samples[0].g.speed} units a second (${pace.toFixed(1)})`);
+ok(pace > samples[0].g.speed * 0.7 && pace < samples[0].g.speed * 1.15 && samples[0].g.speed >= 6.5, `the pace is steady at about ${samples[0].g.speed} units a second, about two body lengths (${pace.toFixed(1)})`);
 const bA = []; for (let i = 0; i < 4; i++) { bA.push((await breath()).b); await page.waitForTimeout(500); }
 ok(Math.max(...bA) - Math.min(...bA) > 0.02, `the cave's own breathing carries on while the figure stands (${Math.min(...bA).toFixed(2)} to ${Math.max(...bA).toFixed(2)})`);
 const movJ = samples.filter((x) => x.j.g > 0.8);
@@ -983,6 +983,9 @@ const lv = () => C(() => window.__oagCave.level && window.__oagCave.level());
 const lvCam = [];
 const walkLevel = async (selector) => {
   await C(() => document.activeElement && document.activeElement.blur && document.activeElement.blur());
+  // At the full walk a stop's prompt shows for under a second as the figure passes; this loop looks less often than that
+  // under swiftshader, so the levels are walked at half pace (the pace itself is checked in the free-walking section).
+  const sp0 = await state('s.speed'); await C(() => { window.__oagCave.state.speed = 0.5; });
   const t0 = Date.now();
   try {
     while (!(await page.locator(selector).count())) {
@@ -994,7 +997,7 @@ const walkLevel = async (selector) => {
       lvCam.push(Object.assign({ where: selector }, a));
       await page.waitForTimeout(120);
     }
-  } finally { await page.keyboard.up('ArrowUp'); }
+  } finally { await page.keyboard.up('ArrowUp'); await C((v) => { window.__oagCave.state.speed = v; }, sp0); }
 };
 await page.locator('[data-room-open]').click();
 await pickOnFigure('heart');
@@ -1153,6 +1156,18 @@ await page.locator('[data-room-portal]').click({ timeout: 30000 });
 await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
 await page.waitForTimeout(700);
 ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again');
+// Wendell, 14 October 2026: "Camera controls are clunky in the game master space and the walking is rather slow". The camera
+// follows the figure, not the path's line: walking round the hall and across it, it comes round behind the figure.
+{
+  const wrapA = (d) => Math.atan2(Math.sin(d), Math.cos(d));
+  const h0 = await C(() => window.__oagCave.free());
+  await page.keyboard.down('ArrowUp'); await page.keyboard.down('ArrowRight'); await page.waitForTimeout(2500);
+  const h1 = await C(() => window.__oagCave.free());
+  await page.keyboard.up('ArrowRight'); await page.keyboard.up('ArrowUp');
+  ok(Math.abs(wrapA(h1.camYaw - h0.camYaw)) > 0.3 && Math.abs(wrapA(h1.camYaw - h1.yaw)) < 0.6, `walking round the hall and across it, the camera comes round behind the figure (turned ${wrapA(h1.camYaw - h0.camYaw).toFixed(2)}, ${wrapA(h1.camYaw - h1.yaw).toFixed(2)} off its back)`);
+  ok((await C(() => window.__oagCave.camRoom())) > 0, 'and stays inside the stone');
+  await page.screenshot({ path: SHOTS + '/level-hall-across.png' });
+}
 // ---- the Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room") --
 // Out to the front page and into the room again; in the room, walk to the Big Mind door; going in opens the Big Mind cave's mouth
 // on this same page, with a way back to the room.

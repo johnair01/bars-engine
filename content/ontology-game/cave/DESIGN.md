@@ -683,3 +683,20 @@ introducing running. The gates for the 6 game master room are too small. They sh
   a lit sill, and the face's name above. Each stands at its stop, so its prompt shows in front of it.
 - **(choice)** the walkable width (60% of the half width each way, 90% toward an open middle), how near a stop shows its prompt
   (2.2 units, hidden again past 3.4), and the door's size. Running comes next, on the same stick.
+
+## The camera follows the figure, and the walk is quicker (14 October 2026)
+
+Wendell, 14 October 2026: "Camera controls are clunky in the game master space and the walking is rather slow. What's going
+on there"
+
+- **What was going on.** The camera sat on the path's line behind the figure's place along it, so walking across the hall or
+  round its ring left the camera behind on the line, looking at the figure from the side. A drag to look eased back to the
+  path on its own, so a turn did not stay turned. The walk was 4 units a second, a little over one body length.
+- **The camera now follows the figure.** It sits behind the figure on a heading of its own, which eases round to the way
+  along the floor the figure is going: round a tunnel's bends, and round the ring of the hall and the centre to the next
+  door. Up on the stick walks on round; sideways walks across. Walking back toward the camera, it stays put, so the thumb
+  keeps meaning the same way. A drag turns the heading and it stays turned; walking then goes the way the camera looks. Pushed into
+  the dead end at a branch's start, it turns round to the open way. It still keeps inside the stone. (Turning toward
+  wherever the figure went was tried first: a held diagonal chased itself round the hall's ring into its walls.)
+- **The walk is 7 units a second**, about two body lengths. The steps lengthen with it so the feet do not skate.
+- **(choice)** the speed, and how fast the camera eases round (2.5 a second at a full forward push).

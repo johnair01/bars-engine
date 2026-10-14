@@ -61,7 +61,10 @@
   // second (choices). It used to take one full breath for every stretch, which made the hall of the six slow; the breath
   // is walked in the WAVE itself now (Wendell, 2026-10-13: "we should disambiguate the walk speed to breath. We have that
   // built into the manual wave experience so we don't need that anymore"). The cave still breathes on its own.
-  var WALK_SPEED = 4;
+  // Wendell, 2026-10-14, after walking the hall with the stick: "the walking is rather slow". 4 units a second was about one
+  // body length (3.6) a second; 7 is about two, an ordinary game walk, with room above it for running. Free walking takes
+  // quicker steps (STRIDE_K) so the feet keep up with the ground.
+  var WALK_SPEED = 7, STRIDE_K = 1.3;
   var STEPS_PER_S = 2.5;
   var MARK_AHEAD = 3.6;  // the marker floats this far ahead of the stand
   var MARK_Y = 2.0;      // and this high above the floor
@@ -1631,7 +1634,7 @@
       var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
       if (drag.moved > 12) {
         drag.last = Date.now();
-        state.look.yaw = clamp(state.look.yaw + dx * 0.006, -1.5, 1.5);
+        state.look.yaw = clamp(state.look.yaw + dx * 0.006, -Math.PI, Math.PI);
         state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx, LOOK.pitch[0], LOOK.pitch[1]);
       }
     });
@@ -1870,6 +1873,7 @@
       var au = state.auto;
       if (au) {
         au.k = Math.min(1, au.k + dt / au.dur); wk.s = au.s0 + (au.s1 - au.s0) * ease(au.k); wk.lat *= 1 - Math.min(1, dt * 3); wk.moving = true; au.clk += dt;
+        if (wk.camYaw != null) wk.camYaw += wrapAng(yawFacing(at(wk.route, wk.s)) - wk.camYaw) * Math.min(1, dt * 3); // the camera follows the game's own walk
         if (au.k >= 1) { state.auto = null; wk.moving = false; au.done(); }
         return;
       }
@@ -1884,14 +1888,34 @@
         var along = w.x * a.fx + w.z * a.fz, side = w.x * nx + w.z * nz;
         // Walking away from the camera against the way it faces (the camera turned round by a drag): the camera takes that way
         // as ahead, and the turn is kept in the look so the view does not jump; it eases back behind the figure as it walks.
-        if (w.fwd > 0.3 && along * wk.dir < -0.3) { wk.dir = -wk.dir; state.look.yaw = wrapAng(state.look.yaw + Math.PI); }
+        if (wk.camYaw == null) wk.camYaw = yawFacing(a);
+        if (state.look.yaw && !state.peek) { wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); state.look.yaw = 0; } // a look turned by hand becomes the way the camera follows
         var lim = walkRange(wk), s1 = clamp(wk.s + along * sp * dt, lim.lo, lim.hi);
+        var deadEnd = !r.loop && along < -0.2 && s1 <= lim.lo + 1e-3;
         if (r.loop) s1 = ((s1 % r.len) + r.len) % r.len;
         var lat1 = clamp(wk.lat + side * sp * dt, lim.latLo, lim.latHi);
-        var moved = Math.hypot(r.loop ? wrapLoop(r, s1 - wk.s) : s1 - wk.s, lat1 - wk.lat);
+        var p0 = at(r, wk.s), x0 = p0.x - p0.fz * wk.lat, z0 = p0.z + p0.fx * wk.lat;
         wk.s = s1; wk.lat = lat1;
-        wk.yaw = wk.yaw == null ? Math.atan2(w.x, w.z) : wk.yaw + wrapAng(Math.atan2(w.x, w.z) - wk.yaw) * Math.min(1, dt * 8);
-        if (moved > 1e-4) { wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * w.m; }
+        var p1 = at(r, wk.s), mx = p1.x - p1.fz * wk.lat - x0, mz = p1.z + p1.fx * wk.lat - z0, moved = Math.hypot(mx, mz);
+        if (moved > 1e-4) {
+          wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * w.m * STRIDE_K;
+          var my = Math.atan2(mx, mz); // the way the figure actually went: along a wall it slides, so it faces along the wall
+          wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
+          // Walking away from the camera, it comes round behind the figure; walking back or sideways it stays put, so the thumb
+          // keeps meaning the same way (the WAVE room's rule).
+          // It turns along the way, the way the figure is going, so up on the stick keeps walking round the bends of a tunnel and
+          // round the ring of the hall and the centre to the next door; across the way the thumb goes sideways. (Turning toward
+          // wherever the figure went made a held diagonal chase itself round the hall's ring into its walls.)
+          if (w.fwd > 0.3) {
+            if (Math.abs(along) > 0.2 && !deadEnd) wk.dir = along > 0 ? 1 : -1;
+            var want = yawFacing(at(r, wk.s)) + (wk.dir < 0 ? Math.PI : 0);
+            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+          }
+        }
+        if (deadEnd && w.fwd > 0.3) {
+          // Pushed ahead into the dead end behind (the start of a branch, the way back): the camera turns round to the open way.
+          wk.dir = 1; wk.camYaw += wrapAng(yawFacing(a) - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+        }
       }
       stopZones(wk);
     }
@@ -3056,7 +3080,7 @@
           placeDaemon(sc, stg.cd);
           if (!stT && stg.cu === 0 && stg.cd === 0 && stg.flip === 0) stg.ctx = null;
         }
-        var stepLen = state.auto ? 0.9 : WALK_SPEED / STEPS_PER_S;
+        var stepLen = state.auto ? 0.9 : WALK_SPEED / (STEPS_PER_S * STRIDE_K);
         poseAvatar(avatar, state.auto ? state.auto.clk : wk.t, wk.moving || stMoving, dt, br.b, stepLen, state.calm);
         avatar.position.set(a.x, fl + 0.02, a.z);
         avatar.rotation.y = wk.yaw != null && !state.auto ? wk.yaw : pathYaw;
@@ -3075,13 +3099,15 @@
         }
         if (sit) sitFrame(dt, nowMs, route, wk, h);
         sitBtn.disabled = !canSit();
-        if (wk.moving && (!drag || Date.now() - drag.last > LOOK.settle)) state.look.yaw *= 1 - Math.min(1, dt * 1.5); // walking, the camera comes back behind
         if (route.pendingExit && wk.s > route.len * 0.5) openWayBack(route);
-        // camera: behind on the path, and a little above; on a branch's first steps it sits straight behind the figure
-        var cbx, cbz, cby;
+        // camera: behind the figure on the way it follows (wk.camYaw), and a little above. It follows the figure itself, not the
+        // path's line (Wendell, 14 October 2026: "Camera controls are clunky in the game master space"): walking across the hall
+        // to a door, the camera comes round behind the figure as in the WAVE room. The stone keeps it inside (keepIn, below).
         var frT = state.stack[state.stack.length - 1], back = route.kind === "face" ? 3.6 : CAM_BACK; // a face's tight loop keeps the camera closer
-        if (wk.s >= back || dir < 0 || route.kind === "main" || route.level || !frT) { var cs = wk.s - back * dir, cb = at(route, route.loop ? (cs % route.len + route.len) % route.len : clamp(cs, 0, route.len)); cbx = cb.x - cb.fz * lat * 0.7; cbz = cb.z + cb.fx * lat * 0.7; cby = cb.y; }
-        else { var pb = at(frT.route, frT.s - (back - wk.s)); cbx = pb.x; cbz = pb.z; cby = pb.y; } // a branch's first steps are seen from the path it left
+        if (wk.camYaw == null) wk.camYaw = yawFacing(a);
+        a.fx = Math.sin(wk.camYaw); a.fz = Math.cos(wk.camYaw); // the way ahead, as the camera takes it
+        var cs = wk.s - back, cby = at(route, route.loop ? (cs % route.len + route.len) % route.len : clamp(cs, 0, route.len)).y;
+        var cbx = a.x - a.fx * back, cbz = a.z - a.fz * back;
         if (state.peek) { // while an opening appears the camera swings round to show it beside the figure, then lets go
           var px0 = cbx - a.x, pz0 = cbz - a.z, ox = state.peek.x - a.x, oz = state.peek.z - a.z, bestY = 0, bestD = -9;
           for (var yq = -1.4; yq <= 1.4; yq += 0.05) { // the swing that puts the opening straight past the figure; half of it frames both
@@ -3215,7 +3241,7 @@
     api.free = function () {
       var wk = state.walk; if (!wk) return null;
       var lim = walkRange(wk), r = wk.route, hw = (r.w || ch.w) * (r.kind === "main" || r.level ? r.openAt(wk.s) : SIDE_LOOK.open);
-      return { s: wk.s, lat: wk.lat, dir: wk.dir, yaw: wk.yaw, near: wk.near, target: wk.target, arrived: wk.arrived, moving: wk.moving, stop: r.stops[wk.target] ? r.stops[wk.target].s : null,
+      return { s: wk.s, lat: wk.lat, dir: wk.dir, yaw: wk.yaw, camYaw: wk.camYaw, near: wk.near, target: wk.target, arrived: wk.arrived, moving: wk.moving, stop: r.stops[wk.target] ? r.stops[wk.target].s : null,
         range: lim, halfWidth: hw, stick: stickPad.style.display !== "none", prompt: promptBox.style.display !== "none" ? promptBox.textContent : null, sit: sitBtn.style.display !== "none", modal: state.modal };
     };
     api.stick = function (x, z) { stick.x = x; stick.z = z; };
