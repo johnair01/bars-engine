@@ -2,6 +2,9 @@
 
     python content/ontology-game/cave/character.py --build average --palette dusk --out DIR
     python content/ontology-game/cave/character.py --all --out DIR [--sheet]
+    python content/ontology-game/cave/character.py --warp victim --out DIR           # one WARP row
+    python content/ontology-game/cave/character.py --daemons --out DIR [--sheet]     # the frame and every WARP row
+    python content/ontology-game/cave/character.py --one-number --out DIR [--sheet]  # the frame, eleven one number off
 
 The theme is the Taoist cultivation robe set (cc-robe-set, bpt-robe-theme), the wardrobe the 2D sprite creator also
 draws from (cs-one-studio). In J4 the set is painted onto the body as its under-layer: a tunic whose crossed collar
@@ -58,6 +61,37 @@ PALETTES = {
              "shoes": hexc("3a3029")},
 }
 THEMES = {"robe_set": {"builds": BUILDS, "palettes": PALETTES}}
+
+# ---- the warp: a blockage worn in the body ---------------------------------------------------------------------
+# Frame, flesh, warp (call sheet blender-frame-flesh-warp, item 2). An NPC generated from a player's blockage is this
+# same figure with the warp applied last: after the body is fused and before the weights are painted, so the rig, the
+# weights and the walk all follow the warped body. One row per daemon, since the record maps a blockage to the daemon
+# that holds it and the daemon to a spirit family (sg-body-from, ch1-npc-from-blockage). The numbers are first
+# choices read from each daemon's "in you" line in council/daemons/daemons.yaml, for his eye.
+#   arms      arm length, 1 = the frame (legs stay, so the height and the walk's stride stay)
+#   head      head size about the top of the neck
+#   curve     radians the upper back rounds forward across the spine (minus arches it back)
+#   stoop     radians the trunk leans forward from the waist (minus leans back)
+#   collapse  one joint held flexed: (joint, radians), knees, elbows, shoulders and neck bending their natural way
+NEUTRAL = {"arms": 1.0, "head": 1.0, "curve": 0.0, "stoop": 0.0, "collapse": None}
+WARP = {
+    # keeps the exit in view: leaning back from the room, chin drawn in, a little smaller
+    "protector": {"arms": 0.96, "head": 0.94, "curve": -0.06, "stoop": -0.07, "collapse": ("neck", -0.22)},
+    # not until this is handled: held straight and tall, chest up, hands drawn up ready
+    "controller": {"arms": 0.92, "head": 1.04, "curve": -0.14, "stoop": 0.0, "collapse": ("elbowL", 0.7)},
+    # look at the evidence: head pushed forward to peer, big-headed
+    "skeptic": {"arms": 1.0, "head": 1.12, "curve": 0.1, "stoop": 0.05, "collapse": ("neck", 0.38)},
+    # there is a problem here: leaning in with long reaching arms, one hand out to work
+    "fixer": {"arms": 1.16, "head": 0.97, "curve": 0.06, "stoop": 0.13, "collapse": ("shoulderR", 0.45)},
+    # look at what I have absorbed: slumped, weight off one leg
+    "victim": {"arms": 0.98, "head": 1.0, "curve": 0.26, "stoop": 0.04, "collapse": ("kneeL", 0.32)},
+    # it was probably me: curled round the hit, small-headed, one shoulder caved in
+    "damaged-self": {"arms": 0.93, "head": 0.88, "curve": 0.36, "stoop": 0.1, "collapse": ("shoulderL", 0.35)},
+    # this is what is actually moving: open chest, big head, long arms out
+    "emotional-body": {"arms": 1.08, "head": 1.18, "curve": -0.1, "stoop": -0.02, "collapse": ("elbowR", 0.45)},
+}
+FLEX = {"neck": 1, "shoulder": -1, "elbow": -1, "wrist": -1, "knee": 1, "ankle": -1}   # + is each joint's natural bend
+SPINE_Z = (1.03, 1.42)                                                                 # the spine bone, where curve bends
 
 # ---- the walk: cave.js poseAvatar with the stride held at its middle ------------------------------------------
 STEPS_PER_S, FPS, KEYS = 2, 24, 24          # cave.js STEPS_PER_S; one cycle (a left and a right step) is one second
@@ -233,6 +267,102 @@ for _n in ("L", "R"):
                    "hip" + _n: "hips", "knee" + _n: "hip" + _n, "ankle" + _n: "knee" + _n})
 
 
+def warp_maps(J, w):
+    """The warp as one map per bone, {bone: f(point) -> point}, each carried down the chain from its parent so a child
+    follows wherever its parent moved it. The spine bends along its length (curve) after leaning at the waist (stoop);
+    the head scales about its joint; the upper arm and forearm stretch along their own axis (arms); the collapsed
+    joint turns about its head. Everything else rides its parent rigidly."""
+    z0, z1 = SPINE_Z
+    steps = 200
+    table, p = [], Vector((0, 0, z0))
+
+    def angle(z):
+        return w["stoop"] + w["curve"] * min(1.0, max(0.0, (z - z0) / (z1 - z0)))
+
+    for k in range(steps + 1):                                   # the bent spine's centre line, by the height it had
+        table.append(p.copy())
+        z = z0 + (z1 - z0) * k / steps
+        a = angle(z + (z1 - z0) / steps / 2)
+        p += Vector((0, -math.sin(a), math.cos(a))) * ((z1 - z0) / steps)
+
+    def spine_at(z):
+        if z <= z0:
+            base = table[0]
+            off = z - z0
+        elif z >= z1:
+            base = table[-1]
+            off = z - z1
+        else:
+            t = (z - z0) / (z1 - z0) * steps
+            i = min(int(t), steps - 1)
+            base, off = table[i].lerp(table[i + 1], t - i), 0.0
+        R = Matrix.Rotation(angle(z), 3, "X")
+        return base + R @ Vector((0, 0, off)), R
+
+    def spine_map(x):
+        c, R = spine_at(x.z)
+        return c + R @ Vector((x.x, x.y, 0))
+
+    joint, bend = w["collapse"] or (None, 0.0)
+    maps, rots = {}, {}
+    for b, parent in PARENT.items():
+        h, t = Vector(J[b][0]), Vector(J[b][1])
+        if b == "spine":
+            maps[b], rots[b] = spine_map, (lambda x: spine_at(x.z)[1])
+            continue
+        if parent is None:
+            Fp, Rp = (lambda x: x.copy()), Matrix.Identity(3)
+        else:
+            Fp, Rp = maps[parent], rots[parent](h)
+        S = Matrix.Identity(3)
+        if b == "head":
+            S = S * w["head"]
+        elif b.startswith(("shoulder", "elbow")):
+            d = (t - h).normalized()
+            S = S + (w["arms"] - 1) * Matrix([[d[i] * d[j] for j in range(3)] for i in range(3)])
+        R = Matrix.Identity(3)
+        if b == joint:
+            R = Matrix.Rotation(FLEX[b.rstrip("LR")] * bend, 3, "X")
+        A, at = Rp @ R, Fp(h)
+        maps[b] = (lambda x, at=at, A=A @ S, h=h: at + A @ (x - h))
+        rots[b] = (lambda x, A=A: A)
+    return maps
+
+
+def warp_body(mesh, parts, J, w):
+    """Applies the warp to the fused surface (each vertex by its bones' maps, blended as the weights will blend them),
+    to each body part (rigidly with its own bone, so the weights read the warped parts) and to the joints.
+    Returns the warped joints and the rest positions, which the painted bands keep using."""
+    maps = warp_maps(J, w)
+    trees = [(b, BVHTree.FromBMesh(bm)) for b, bm in parts]
+    rest = [v.co.copy() for v in mesh.vertices]
+    for v in mesh.vertices:
+        _, blend = nearest_blend(v.co, trees)
+        tot = sum(blend.values())
+        v.co = sum((maps[b](v.co) * (x / tot) for b, x in blend.items()), Vector())
+    for b, bm in parts:
+        for v in bm.verts:
+            v.co = maps[b](v.co)
+    mesh.update()
+    return {b: (tuple(maps[b](Vector(h))), tuple(maps[b](Vector(t)))) for b, (h, t) in J.items()}, rest
+
+
+LINKS = {b: {b} | {PARENT[b]} - {None} | {c for c, p in PARENT.items() if p == b} for b in PARENT}
+
+
+def nearest_blend(co, trees):
+    """The part a point lies nearest, and its weights: that part, blended with its parent or child where the two meet
+    (a joint), the two strongest kept."""
+    d = {}
+    for b, t in trees:
+        d[b] = min(d.get(b, 1e9), t.find_nearest(co)[3])
+    best = min(d, key=d.get)
+    w = {b: math.exp(-(d[b] - d[best]) / 0.012) for b in LINKS[best]}
+    w = dict(sorted(w.items(), key=lambda kv: -kv[1])[:2])
+    tot = sum(w.values())
+    return best, {b: x / tot for b, x in w.items() if x / tot > 0.02}
+
+
 def pose(t):
     """cave.js poseAvatar at walk time t (seconds), moving, mid stride: {bone: (rot about X, rot about Z)} and the
     hips' drop. cave.js turns groups about their own x (the figure's left) and y (up); in Blender those are X and Z."""
@@ -254,27 +384,31 @@ def pose(t):
     return rot, drop
 
 
-def build(build_name, palette, out_dir, theme="robe_set"):
+def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=None):
+    """warp: a WARP row's name, or a dict of the warp's numbers (missing ones are the frame's) named by warp_name."""
     if theme not in THEMES:
         raise SystemExit(f"no theme {theme}; there is {', '.join(THEMES)}")
     if build_name not in BUILDS or palette not in PALETTES:
         raise SystemExit(f"builds: {', '.join(BUILDS)}; palettes: {', '.join(PALETTES)}")
+    if isinstance(warp, str):
+        if warp not in WARP:
+            raise SystemExit(f"no warp {warp}; there is {', '.join(WARP)}")
+        warp, warp_name = WARP[warp], warp
+    w = {**NEUTRAL, **(warp or {})}
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     scene.render.fps = FPS
-    name = f"{build_name}-{palette}"
+    name = f"{build_name}-{palette}" + (f"-{warp_name}" if warp_name else "")
 
     # the body: every part into one mesh, fused by a voxel remesh, smoothed and brought to a phone budget
     parts = body_parts(build_name)
     all_bm = bmesh.new()
-    trees = []
     for bone, bm in parts:
         tmp = bpy.data.meshes.new("tmp")
         bm.to_mesh(tmp)
         all_bm.from_mesh(tmp)
         bpy.data.meshes.remove(tmp)
         bm.verts.ensure_lookup_table()
-        trees.append((bone, BVHTree.FromBMesh(bm)))
     raw = bpy.data.meshes.new("Raw")
     all_bm.to_mesh(raw)
     all_bm.free()
@@ -305,11 +439,17 @@ def build(build_name, palette, out_dir, theme="robe_set"):
     bm.free()
     for p in fused.polygons:
         p.use_smooth = True
+
+    # the warp, last: the fused body, its parts and its joints, before the weights are painted
+    J = joints(build_name)
+    rest = [v.co.copy() for v in fused.vertices]
+    if w != NEUTRAL:
+        J, rest = warp_body(fused, parts, J, w)
+    trees = [(bone, BVHTree.FromBMesh(bm)) for bone, bm in parts]
     for _, bm in parts:
         bm.free()
 
     # the rig: the cave avatar's joints
-    J = joints(build_name)
     arm_data = bpy.data.armatures.new("Rig")
     rig = bpy.data.objects.new("Rig", arm_data)
     scene.collection.objects.link(rig)
@@ -327,21 +467,12 @@ def build(build_name, palette, out_dir, theme="robe_set"):
     # weights: each vertex goes to the part it lies nearest, and blends with that part's parent or child where
     # the two meet (a joint), so the surface bends at a joint and never pulls an arm into the trunk
     groups = {b: fig.vertex_groups.new(name=b) for b in PARENT}
-    near = {b: [t for bb, t in trees if bb == b] for b in PARENT}
-    links = {b: {b} | {PARENT[b]} - {None} | {c for c, p in PARENT.items() if p == b} for b in PARENT}
     bone_of = []
     for v in fused.vertices:
-        d = {}
-        for b, ts in near.items():
-            d[b] = min(t.find_nearest(v.co)[3] for t in ts)
-        best = min(d, key=d.get)
+        best, blend = nearest_blend(v.co, trees)
         bone_of.append(best)
-        w = {b: math.exp(-(d[b] - d[best]) / 0.012) for b in links[best]}
-        w = dict(sorted(w.items(), key=lambda kv: -kv[1])[:2])
-        tot = sum(w.values())
-        for b, x in w.items():
-            if x / tot > 0.02:
-                groups[b].add([v.index], x / tot, "REPLACE")
+        for b, x in blend.items():
+            groups[b].add([v.index], x, "REPLACE")
     fig.parent = rig
     mod = fig.modifiers.new("Rig", "ARMATURE")
     mod.object = rig
@@ -377,10 +508,12 @@ def build(build_name, palette, out_dir, theme="robe_set"):
             return pal["tunic"]
         return pal["tunic"]
 
-    # one colour per face, so a band's edge is a clean step and never a streak smeared along a long triangle
+    # one colour per face, so a band's edge is a clean step and never a streak smeared along a long triangle; the
+    # bands are placed on the body as it was before the warp, so a stooped figure's sash still sits at its waist
     for poly in fused.polygons:
         bones = [bone_of[i] for i in poly.vertices]
-        rgb = paint(poly.center, max(set(bones), key=bones.count))
+        centre = sum((rest[i] for i in poly.vertices), Vector()) / len(poly.vertices)
+        rgb = paint(centre, max(set(bones), key=bones.count))
         for li in poly.loop_indices:
             col.data[li].color = (*rgb, 1.0)
     mat = bpy.data.materials.new(f"Robe-{palette}")
@@ -424,7 +557,8 @@ def build(build_name, palette, out_dir, theme="robe_set"):
                               export_animation_mode="ACTIONS", export_frame_range=True, export_force_sampling=False,
                               export_vertex_color="ACTIVE", export_all_vertex_colors=False)
     size = os.path.getsize(path)
-    row = {"id": name, "theme": theme, "build": build_name, "palette": palette, "file": os.path.basename(path),
+    row = {"id": name, "theme": theme, "build": build_name, "palette": palette, "warp": warp_name,
+           "warp_numbers": {k: v for k, v in w.items() if v != NEUTRAL[k]}, "file": os.path.basename(path),
            "bytes": size, "tris": sum(len(p.vertices) - 2 for p in fused.polygons), "verts": len(fused.vertices),
            "bones": len(PARENT), "keys": KEYS + 1}
     if size > MAX_BYTES:
@@ -495,6 +629,69 @@ def sheet(rows, out_dir):
     img.save()
 
 
+# The figure sheet (call sheet item 3): one frame, average build in dusk, and eleven figures each one number away from
+# it, to look at before any row of WARP is trusted. (label, warp numbers)
+ONE_NUMBER = [
+    ("frame", {}),
+    ("arms 0.85", {"arms": 0.85}), ("arms 1.15", {"arms": 1.15}),
+    ("head 0.85", {"head": 0.85}), ("head 1.2", {"head": 1.2}),
+    ("curve 0.3", {"curve": 0.3}), ("curve -0.15", {"curve": -0.15}),
+    ("stoop 0.15", {"stoop": 0.15}), ("stoop -0.08", {"stoop": -0.08}),
+    ("neck 0.35", {"collapse": ("neck", 0.35)}), ("knee L 0.35", {"collapse": ("kneeL", 0.35)}),
+    ("shoulder L 0.4", {"collapse": ("shoulderL", 0.4)}),
+]
+
+
+def grid_sheet(rows, out_dir, file, cols=4, labels=None):
+    """The figures in rest pose on a grid, each labelled, rendered twice: turned to the front three-quarter (file.png)
+    and turned to show its left side (file-side.png), since a stoop or a curve reads from the side and arms and head
+    from the front."""
+    paths = []
+    for tag, turn in (("", 25), ("-side", -90)):
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        sc = bpy.context.scene
+        n_rows = math.ceil(len(rows) / cols)
+        gap_x, gap_z = 1.0, 2.3
+        for i, row in enumerate(rows):
+            before = set(sc.objects)
+            bpy.ops.import_scene.gltf(filepath=os.path.join(out_dir, row["file"]))
+            c, r = i % cols, i // cols
+            at = Vector(((c - (cols - 1) / 2) * gap_x, 0, ((n_rows - 1) / 2 - r) * gap_z))
+            for o in set(sc.objects) - before:
+                if o.type == "ARMATURE" and o.animation_data:
+                    o.animation_data.action = None                 # rest pose: the warp alone
+                    for pb in o.pose.bones:
+                        pb.matrix_basis = Matrix.Identity(4)
+                if o.parent is None:
+                    o.location, o.rotation_mode = at, "XYZ"
+                    o.rotation_euler = (0, 0, math.radians(turn))
+            label = (labels or {}).get(row["id"], row.get("warp") or row["id"])
+            txt = bpy.data.objects.new("label", bpy.data.curves.new("label", "FONT"))
+            txt.data.body, txt.data.size, txt.data.align_x = label, 0.12, "CENTER"
+            txt.location, txt.rotation_euler = at + Vector((0, -0.4, -0.22)), (math.radians(90), 0, 0)
+            txt.visible_shadow = False                             # or a label shades the head of the row below
+            sc.collection.objects.link(txt)
+        w, h = cols * gap_x, n_rows * gap_z
+        cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam"))
+        cam.data.type, cam.data.ortho_scale = "ORTHO", max(w, h)
+        cam.location, cam.rotation_euler = (0, -14, 0.78), (math.radians(90), 0, 0)
+        sc.collection.objects.link(cam)
+        sc.camera = cam
+        for e, rz, rx in ((3.2, 35, 50), (1.4, -140, 60)):
+            sun = bpy.data.objects.new("sun", bpy.data.lights.new("sun", "SUN"))
+            sun.data.energy, sun.rotation_euler = e, (math.radians(rx), 0, math.radians(rz))
+            sc.collection.objects.link(sun)
+        sc.world = bpy.data.worlds.new("w")
+        sc.world.color = (0.16, 0.15, 0.17)
+        sc.render.engine, sc.cycles.device, sc.cycles.samples = "CYCLES", "CPU", 24
+        sc.render.resolution_x, sc.render.resolution_y = int(260 * w), int(260 * h)
+        sc.view_settings.view_transform = "Standard"
+        sc.render.filepath = os.path.join(out_dir, f"{file}{tag}.png")
+        bpy.ops.render.render(write_still=True)
+        paths.append(sc.render.filepath)
+    return paths
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--theme", default="robe_set")
@@ -503,9 +700,28 @@ def main():
     ap.add_argument("--all", action="store_true", help="every build in every palette")
     ap.add_argument("--sheet", action="store_true", help="render sheet.png and walk.png (Cycles, CPU)")
     ap.add_argument("--out", default=os.path.join(os.environ.get("W", "/tmp/blender-cloud"), "characters"))
+    ap.add_argument("--warp", default=None, help=f"a WARP row: {', '.join(WARP)}")
+    ap.add_argument("--daemons", action="store_true", help="the frame and every WARP row, in --build and --palette")
+    ap.add_argument("--one-number", action="store_true", help="the frame and the eleven figures one number from it")
     a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
+    if a.daemons or a.one_number:
+        if a.daemons:
+            todo = [(None, None)] + [(k, None) for k in WARP]
+        else:
+            todo = [(n.replace(" ", "-").replace(".", "") if n != "frame" else None, v) for n, v in ONE_NUMBER]
+        rows = [build(a.build, a.palette, a.out, a.theme, warp=v if v is not None else k, warp_name=k)
+                for k, v in todo]
+        labels = {r["id"]: n for r, (n, _) in zip(rows, ONE_NUMBER)} if a.one_number else \
+            {r["id"]: r["warp"] or "frame" for r in rows}
+        with open(os.path.join(a.out, "report.json"), "w") as f:
+            json.dump(rows, f, indent=1)
+        for r in rows:
+            print(f"{r['id']}: {r['bytes'] // 1024} KB, {r['tris']} triangles, {r['warp_numbers']}")
+        if a.sheet:
+            print("sheets:", *grid_sheet(rows, a.out, "daemons" if a.daemons else "one-number", labels=labels))
+        return
     combos = [(b, p) for b in BUILDS for p in PALETTES] if a.all else [(a.build, a.palette)]
-    rows = [build(b, p, a.out, a.theme) for b, p in combos]
+    rows = [build(b, p, a.out, a.theme, warp=a.warp) for b, p in combos]
     with open(os.path.join(a.out, "report.json"), "w") as f:
         json.dump(rows, f, indent=1)
     for r in rows:
