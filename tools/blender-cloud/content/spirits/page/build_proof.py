@@ -1,10 +1,12 @@
 """Builds the spirit proof page from one render folder per animal base (shellback.py's OUT dir for each).
 
-    python3 build_proof.py OUT_DIR tortoise=DIR armadillo=DIR pangolin=DIR
+    python3 build_proof.py OUT_DIR tortoise=DIR armadillo=DIR pangolin=DIR [before=DIR]
 
 Writes OUT_DIR/index.html with the renders and sprites inline, and OUT_DIR/glb/<base>-<element>-<stage>.glb
 meshopt-compressed, and OUT_DIR/glb/<base>-<element>-<stage>.txt, the same file in base64, which the page fetches when a
-model is picked (the artifact host serves .txt but not .glb; publish the .txt files beside the page)."""
+model is picked (the artifact host serves .txt but not .glb; publish the .txt files beside the page).
+When the render folders hold head close-ups (shellback.py --heads), the page shows the faces too; before=DIR, a folder of
+<base>/head/<element>-<stage>.png from the last round, adds a before and after row for them."""
 import base64, io, json, pathlib, subprocess, sys
 from PIL import Image
 
@@ -57,7 +59,26 @@ for e in EL:
         f'width="300" height="300" loading="lazy"></figure>' for b, n in BASES.items())
 side += "</div>"
 
+faces = ""
+if all((pathlib.Path(SRC[b]) / "head").is_dir() for b in BASES):
+    head = lambda d, e, s: jpg(pathlib.Path(d) / "head" / f"{e}-{s}.png", 300)
+    if "before" in SRC:
+        B = pathlib.Path(SRC["before"])
+        faces += '<div class="side"><span></span>' + "".join(f'<span class="sidehead">{n}</span>' for n in BASES.values())
+        for tag, src in (("Before", lambda b: B / b), ("After", lambda b: SRC[b])):
+            faces += f"<h3>{tag}</h3>" + "".join(
+                f'<figure><img src="{head(src(b), "wood", "creature")}" alt="Wood {n.lower()}\'s face, {tag.lower()}" '
+                f'width="300" height="300" loading="lazy"></figure>' for b, n in BASES.items())
+        faces += "</div>"
+    for s_, lab in (("creature", "Living creature"), ("ascended", "Highest ally form")):
+        faces += f'<h3 class="facehead">{lab}</h3><div class="side"><span></span>' + "".join(f'<span class="sidehead">{n}</span>' for n in BASES.values())
+        for e in EL:
+            faces += f"<h3>{NAMES[e]}</h3>" + "".join(
+                f'<figure><img src="{head(SRC[b], e, s_)}" alt="{NAMES[e]} {n.lower()}\'s face, {lab.lower()}" '
+                f'width="300" height="300" loading="lazy"></figure>' for b, n in BASES.items())
+        faces += "</div>"
+
 html = (pathlib.Path(__file__).parent / "proof_template.html").read_text()
-html = html.replace("%%ROWS%%", rows).replace("%%SHEET%%", sheet).replace("%%SIDE%%", side).replace("%%FACES%%", str(largest))
+html = html.replace("%%ROWS%%", rows).replace("%%SHEET%%", sheet).replace("%%SIDE%%", side).replace("%%HEADS%%", faces).replace("%%FACES%%", str(largest))
 (OUT / "index.html").write_text(html)
 print(OUT / "index.html", round(len(html) / 1e6, 2), "MB;", sum(f.stat().st_size for f in (OUT / "glb").iterdir()) // 1024, "KB of models")

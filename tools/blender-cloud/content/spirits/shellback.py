@@ -6,13 +6,16 @@ humanoid. The gas, core and hologram are built from primitives; the living creat
 fused metaballs painted per vertex, after Wendell's "Taoist Tortoise" concept (2026-10-14: "too geometric"), and
 each element gives them its own shell, growth, colours and aura (round 2, "dramatically stronger contrasts"). Round 3
 gives every element the same lidded eye with only the iris colour changing, a lava crust in place of fire's spikes,
-and ribbons of water in place of water's ring of drops.
+and ribbons of water in place of water's ring of drops. Round 5, after the players' look at round 3, gives the tortoise
+the concept's face (a domed skull and a beak that overhangs the lower jaw, with a carved mouth seam in place of the
+painted smile) and every base a smaller, deeper-set eye whose dark iris leaves almost no white.
 Each stage is rendered with Cycles on the CPU and shrunk to a pixel sprite, so one model gives both assets (sg-assets-modular). Nothing is downloaded.
 
-    /home/user/blenv/bin/python tools/blender-cloud/content/spirits/shellback.py OUT_DIR [--samples 32] [--size 512]
+    /home/user/blenv/bin/python tools/blender-cloud/content/spirits/shellback.py OUT_DIR [--samples 32] [--size 512] [--heads]
 
 Writes OUT_DIR/render/<element>-<stage>.png, OUT_DIR/sprite/<element>-<stage>.png (96 px, three alpha steps),
-OUT_DIR/glb/<element>-<stage>.glb and OUT_DIR/report.json. The same arguments always give the same spirit.
+OUT_DIR/glb/<element>-<stage>.glb and OUT_DIR/report.json; --heads adds OUT_DIR/head/<element>-<stage>.png, a close-up
+of the living creature's and highest ally form's head. The same arguments always give the same spirit.
 """
 import argparse, json, math, os, pathlib, random, sys
 
@@ -29,6 +32,7 @@ ap.add_argument("--only", default="", help="element to build alone, for a quick 
 ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
 ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin"],
                 help="the family's animal base (round 4 adds the armadillo and the pangolin)")
+ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
 args = ap.parse_args(argv)
 OUT = pathlib.Path(args.out)
 
@@ -41,6 +45,7 @@ ELEMENTS = {
     "metal": ((0.87, 0.90, 0.92), (0.43, 0.47, 0.53)),
 }
 STAGES = ["gas", "core", "hologram", "creature", "ascended"]
+HEAD = {}  # where the last built head sits, for the --heads close-up
 
 
 def lin(c):  # sRGB to linear, so the colours match the tokens
@@ -798,30 +803,32 @@ def tassel(at, col, s=1.0):
     o = bpy.context.active_object; o.data.materials.append(red); smooth(o)
 
 
-def eye(body, toward, out, S, r=0.085):
-    """One eye for every element (round 3, Wendell: "the same eyes but with different eye color"): a pale ball sunk
-    into the head where a ray from outside meets it, so only its front shows, under a heavy upper lid and a thin lower
-    lid in the skin's colour. The iris is painted on the ball in the element's colour, never lit; the pupil stays black and
-    the catchlight white."""
+def eye(body, toward, out, S, r=0.06):
+    """One eye for every element (round 3, Wendell: "the same eyes but with different eye color"): a ball sunk deep
+    into the head where a ray from outside meets it, so only a sliver of its front shows, under a heavy upper lid and a
+    thin lower lid in the skin's colour. Round 5, after the players' look ("the big eyes are too Disney like"): the eye
+    is smaller and set deeper, and a dark iris, tinted by the element, fills nearly all of what shows, the way a
+    tortoise's does, so almost no white is left. The pupil stays black and the catchlight white."""
     out = Vector(out).normalized()
     hit, loc, _, _ = body.ray_cast(Vector(toward) + out * 2, -out)
-    at = (loc if hit else Vector(toward)) - out * r * 0.5
+    at = (loc if hit else Vector(toward)) - out * r * 0.72
     gaze = (out + Vector((0.55, 0, -0.05))).normalized()  # a little forward of straight out, so it looks ahead
     up = (Vector((0, 0, 1)) - out * out.z).normalized()
     side = up.cross(out).normalized()
     frame = Matrix((out, side, up)).transposed()  # local x along out, z up
     eb = ball("eyeball", vmat("eye", 0.25), at, r, seg=48)
-    iris, dark = S["iris"], mixc(S["iris"], (0, 0, 0), 0.55)
+    iris = mixc(S["iris"], (0.24, 0.14, 0.06), 0.5)  # a tortoise's brown, tinted by the element
+    dark = mixc(iris, (0, 0, 0), 0.6)
 
     def look(p, n):  # painted on the ball, so the iris sits flush instead of bulging out of it
         c = (p - at).normalized().dot(gaze)
-        if c > 0.95: return (0.03, 0.03, 0.03)  # pupil
-        if c > 0.79: return mixc(iris, dark, (0.95 - c) / 0.16 * 0.4) if c > 0.82 else dark  # iris, darker at its rim
-        return (0.93, 0.9, 0.82)
+        if c > 0.9: return (0.02, 0.02, 0.02)  # pupil
+        if c > 0.45: return mixc(iris, dark, (0.9 - c) / 0.45 * 0.7) if c > 0.52 else dark  # iris, darker at its rim
+        return (0.62, 0.56, 0.44)  # what little white shows is shadowed and yellowed
     bpy.context.view_layer.update(); paint(eb, look)
-    ball("glint", solid("glint", (1, 1, 1), 0.1, 3.0), at + (gaze + up * 0.22 + side * 0.12).normalized() * r, r * 0.11)
+    ball("glint", solid("glint", (1, 1, 1), 0.1, 2.0), at + (gaze + up * 0.1 + side * 0.12).normalized() * r, r * 0.08)
     lid = solid("lid", mixc(S["skin"], S["spot"], 0.25), 0.7)
-    for name, keep, s_ in (("lid_upper", lambda v: v.z > 0.42 and v.x > -0.35, 1.14), ("lid_lower", lambda v: v.z < -0.55 and v.x > -0.2, 1.08)):
+    for name, keep, s_ in (("lid_upper", lambda v: v.z > 0.18 and v.x > -0.35, 1.12), ("lid_lower", lambda v: v.z < -0.55 and v.x > -0.2, 1.08)):
         bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=r * s_)
         o = bpy.context.active_object; o.name = name
         import bmesh
@@ -843,12 +850,45 @@ def claws(foot, ahead, s=1.0):
         o.rotation_euler = Vector((0, 0, 1)).rotation_difference(ahead + Vector((0, 0, -0.5))).to_euler()
 
 
-def mouth(head, fwd_x, width, z0):
-    """A smile painted as a thin dark line across the snout."""
-    def on(p):
-        y = p.y / width
-        return p.x > head.x + fwd_x and abs(y) < 1 and abs(p.z - (z0 + 0.05 * y * y)) < 0.012
-    return on
+def mouth_seam(body, centre, z0, sweep=80, rise=0.03, r=0.008):
+    """Where the upper jaw meets the lower (round 5, the players: "the mouth is also strange", in place of round 1's
+    painted smile). Rays fired inward round the snout from centre find the skin; the seam runs through those points from
+    one corner of the mouth, round the tip, to the other, lifting by rise at the corners as the concept's does. A thin
+    dark tube half sunk into the skin draws it, and the skin darkens beside it, so it reads as a groove. Returns a test
+    for the paint: how close a point is to the seam, 0 far to 1 on it."""
+    centre = Vector(centre); pts = []
+    for k in range(41):
+        a = math.radians(-sweep + 2 * sweep * k / 40)
+        d = Vector((math.cos(a), math.sin(a), 0))
+        o = Vector((centre.x, centre.y, z0 + rise * (abs(a) / math.radians(sweep)) ** 2))
+        hit, loc, nrm, _ = body.ray_cast(o + d * 1.5, -d)
+        if hit: pts.append(loc - nrm * r * 0.4)
+    if len(pts) > 2: tube("mouth", pts, r, solid("mouthline", (0.07, 0.06, 0.05), 0.6))
+
+    def near(p):
+        if not pts: return 0.0
+        dd = min((p - q).length for q in pts[::2])
+        return max(0.0, 1 - dd / (r * 4))
+    return near
+
+
+def tortoise_head(H, s=1.0):
+    """Metaball parts for the tortoise's head, after the Taoist Tortoise concept's face: a smooth domed skull, a blunt
+    snout whose upper jaw overhangs the lower like a beak, a low brow over each eye, and a lower jaw set a little back
+    and under, so the mouth seam falls where they meet."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
+    return [("ell", v(0, 0, 0.02), 0.25 * s, (1.15, 0.86, 0.88)),       # skull
+            ("ell", v(0.2, 0, -0.03), 0.155 * s, (1.1, 0.84, 0.82)),     # upper jaw
+            ("ball", v(0.31, 0, -0.065), 0.075 * s),                     # the beak's tip
+            ("ell", v(0.12, 0, -0.15), 0.14 * s, (1.35, 0.78, 0.45)),    # lower jaw
+            ("ell", v(0.12, 0.12, 0.065), 0.06 * s, (1.5, 0.6, 0.45)),    # brows
+            ("ell", v(0.12, -0.12, 0.065), 0.06 * s, (1.5, 0.6, 0.45))]
+
+
+def nostrils(H, s=1.0):
+    """Two small dark nostrils on top of the beak's tip."""
+    at = [H + Vector((0.39, y, -0.03)) * s for y in (0.035, -0.035)]
+    return lambda p: any((p - q).length < 0.014 * s for q in at)
 
 
 def creature(sc, el, lt, dk):
@@ -864,9 +904,8 @@ def creature(sc, el, lt, dk):
     em.location = (-0.25, -0.7, 0.85); em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector((0.05, -0.8, 0.6))).to_euler()
     bpy.context.view_layer.update(); wrap_onto(em, shell)
     H = Vector((1.2, 0, 1.22))
-    parts = [("cap", (0.45, 0, 0.5), (0.98, 0, 1.02), 0.22), ("ell", H, 0.3, (1.15, 0.92, 0.88)),
-             ("ball", H + Vector((0.27, 0, -0.04)), 0.18), ("ball", H + Vector((0.02, 0.13, 0.15)), 0.11),
-             ("ball", H + Vector((0.02, -0.13, 0.15)), 0.11), ("ball", (0.5, 0, 0.42), 0.3)]
+    HEAD["at"] = H
+    parts = [("cap", (0.45, 0, 0.5), (0.98, 0, 1.02), 0.22), ("ball", (0.5, 0, 0.42), 0.3)] + tortoise_head(H, 1.2)
     feet = []
     for x, y in ((0.45, -0.52), (0.45, 0.52), (-0.65, -0.52), (-0.65, 0.52)):
         parts += [("cap", (x, y * 0.85, 0.42), (x + 0.04, y, 0.08), 0.21),
@@ -874,14 +913,15 @@ def creature(sc, el, lt, dk):
         feet.append((Vector((x + 0.06, y * 1.03, 0.04)), Vector((1, 0.5 * (1 if y > 0 else -1), 0))))
     parts.append(("cap", (-1.05, 0, 0.25), (-1.3, 0, 0.12), 0.07))
     body = blob("body", parts, 0.028, 12000)
-    smile = mouth(H, 0.2, 0.17, H.z - 0.08)
-    throat = lambda p, n: (1.0 if (n.x > 0.35 and n.z < 0.1 and p.z > 0.55 and p.x > 0.55) else 0) * (1 if p.z < H.z + 0.05 else 0)
+    seam = mouth_seam(body, H + Vector((0.16, 0, 0)), H.z - 0.115, 78, 0.035, 0.009)
+    nose = nostrils(H, 1.2)
+    throat = lambda p, n: min(1, max(0, (H.z - 0.12 - p.z) / 0.06)) if (p.x > 0.55 and (n.x > 0.3 or n.z < -0.3)) else 0
     base = skin_paint(body, 1.3, throat, S)
-    paint(body, lambda p, n: (0.12, 0.1, 0.08) if smile(p) else base(p, n))
+    paint(body, lambda p, n: (0.1, 0.08, 0.06) if nose(p) else mixc(base(p, n), (0.08, 0.07, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead)
     for s in (1, -1):
-        eye(body, H + Vector((0.1, 0, 0.08)), (0.5, s * 0.85, 0.15), S, 0.1)
+        eye(body, H + Vector((0.14, 0, 0.04)), (0.45, s * 0.88, 0.12), S, 0.07)
     drape("shawl", (0.62, 0, 0.86), (-0.3, 0, -1), 0.32, 0.62, 0.45, S["cloth"], S["trim"], f"shawl-{el}")
     beads((0.74, 0, 0.88), (0.65, 0, 0.75), 0.3, 18, 0.12, 4, lt, S)
     # a gold bell and a jade disc hang from the shell's rim on the near side
@@ -944,8 +984,8 @@ def ascended(sc, el, lt, dk):
     shell.location = (-0.24, 0, 1.25); shell.rotation_euler = (0, -math.pi / 2, 0)
     growth(rng, shell, centres, 0.62, S, lt, upright=False)
     H = Vector((0.2, 0, 2.05))
-    parts = [("ell", H, 0.22, (1.15, 0.92, 0.9)), ("ball", H + Vector((0.2, 0, -0.03)), 0.13),
-             ("ball", H + Vector((0.02, 0.1, 0.11)), 0.08), ("ball", H + Vector((0.02, -0.1, 0.11)), 0.08),
+    HEAD["at"] = H
+    parts = tortoise_head(H, 0.88) + [
              ("cap", (0.0, 0, 1.55), (0.12, 0, 1.92), 0.13), ("cap", (0, 0, 0.95), (0, 0, 1.5), 0.3),
              ("ball", (0, 0, 0.9), 0.3), ("cap", (0, -0.32, 1.52), (0, 0.32, 1.52), 0.15)]
     feet = []
@@ -958,14 +998,15 @@ def ascended(sc, el, lt, dk):
         parts += [("cap", sh, el_, 0.1), ("cap", el_, hd, 0.09), ("ball", hd + Vector((0.04, 0, 0)), 0.1)]
         hands.append(hd + Vector((0.04, 0, 0)))
     body = blob("body", parts, 0.025, 12000)
-    smile = mouth(H, 0.14, 0.12, H.z - 0.07)
-    throat = lambda p, n: 1.0 if (n.x > 0.4 and p.z > 1.5 and p.z < H.z - 0.02) else 0
+    seam = mouth_seam(body, H + Vector((0.12, 0, 0)), H.z - 0.085, 78, 0.026, 0.007)
+    nose = nostrils(H, 0.88)
+    throat = lambda p, n: min(1, max(0, (H.z - 0.09 - p.z) / 0.05)) if (p.z > 1.5 and (n.x > 0.35 or n.z < -0.3)) else 0
     base = skin_paint(body, 2.1, throat, S)
-    paint(body, lambda p, n: (0.12, 0.1, 0.08) if smile(p) else base(p, n))
+    paint(body, lambda p, n: (0.1, 0.08, 0.06) if nose(p) else mixc(base(p, n), (0.08, 0.07, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead, 0.8)
     for s in (1, -1):
-        eye(body, H + Vector((0.08, 0, 0.06)), (0.5, s * 0.85, 0.15), S, 0.075)
+        eye(body, H + Vector((0.1, 0, 0.03)), (0.45, s * 0.88, 0.12), S, 0.054)
     drape("robe", (0.02, 0, 1.12), (0, 0, -1), 0.4, 0.5, 0.85, S["cloth"], S["trim"], f"robe-{el}", 0.15)
     drape("shawl", (0.02, 0, 1.7), (0, 0, -1), 0.24, 0.5, 0.36, mixc(S["cloth"], S["trim"], 0.35), S["trim"], f"shawl-{el}", 0.5)
     plate = ball("plastron", solid("plate", S["plastron"], 0.6, metal=S["metal"]), (0.27, 0, 1.22), 0.25, (0.35, 0.8, 1.0), 24)
@@ -1149,6 +1190,7 @@ def creature_long(sc, el, lt, dk, base):
     em.location = (-0.2, -0.66, 0.8); em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector((0.05, -0.8, 0.6))).to_euler()
     bpy.context.view_layer.update(); wrap_onto(em, shell)
     H = Vector((1.36, 0, 0.62)) if arma else Vector((1.4, 0, 0.5))
+    HEAD["at"] = H
     parts = snout(H, base) + [("cap", (0.7, 0, 0.44), (H.x - 0.18, 0, H.z - 0.02), 0.2),
                               ("ball", (0.35, 0, 0.42), 0.32), ("ball", (-0.55, 0, 0.42), 0.32)]
     feet = []
@@ -1162,7 +1204,9 @@ def creature_long(sc, el, lt, dk, base):
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead, front in feet: claws(f, ahead, 1.25 if (front and not arma) else 0.9)
     for s in (1, -1):
-        eye(body, H + Vector((0.07, 0, 0.06)), (0.42, s * 0.85, 0.25), S, 0.082 if arma else 0.075)
+        # the armadillo's sits below its head shield, so the shield's rim reads as its brow
+        eye(body, H + (Vector((0.1, 0, -0.01)) if arma else Vector((0.07, 0, 0.06))), (0.42, s * 0.85, 0.15 if arma else 0.25), S,
+            0.064 if arma else 0.06)
     if arma: ears(H, S)
     head_armour(base, H, S)
     tail("tail", [(-1.3, 0, 0.32), (-1.56, -0.05, 0.22), (-1.78, -0.18, 0.12), (-1.93, -0.38, 0.07), (-1.98, -0.6, 0.05)]
@@ -1192,6 +1236,7 @@ def ascended_long(sc, el, lt, dk, base):
     shell.location = (-0.24, 0, 1.22); shell.rotation_euler = (0, -math.pi / 2, 0)
     growth(rng, shell, centres, 0.56, S, lt, upright=False)
     H = Vector((0.2, 0, 2.03))
+    HEAD["at"] = H
     parts = snout(H, base, 0.85) + [("cap", (0.0, 0, 1.55), (0.12, 0, 1.9), 0.13), ("cap", (0, 0, 0.95), (0, 0, 1.5), 0.3),
                                     ("ball", (0, 0, 0.9), 0.3), ("cap", (0, -0.32, 1.52), (0, 0.32, 1.52), 0.15)]
     feet = []
@@ -1209,7 +1254,7 @@ def ascended_long(sc, el, lt, dk, base):
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead, 0.8 if arma else 1.0)
     for s in (1, -1):
-        eye(body, H + Vector((0.06, 0, 0.05)), (0.42, s * 0.85, 0.22), S, 0.068)
+        eye(body, H + (Vector((0.08, 0, -0.01)) if arma else Vector((0.06, 0, 0.05))), (0.42, s * 0.85, 0.15 if arma else 0.22), S, 0.054)
     if arma: ears(H, S, 0.85)
     head_armour(base, H, S, 0.85)
     tail("tail", [(-0.3, 0, 0.95), (-0.55, -0.05, 0.6), (-0.72, -0.15, 0.3), (-0.8, -0.32, 0.08), (-0.7, -0.52, 0.04)]
@@ -1273,5 +1318,12 @@ for el, (lt, dk) in ELEMENTS.items():
         tris = sum(len(o.data.polygons) for o in sc.objects if o.type == "MESH")
         report["items"].append({"element": el, "stage": st, "faces": tris,
                                 "glb_kb": round(os.path.getsize(OUT / "glb" / f"{base}.glb") / 1024, 1)})
+        if args.heads and st in ("creature", "ascended"):
+            (OUT / "head").mkdir(exist_ok=True)
+            cam, h = sc.camera, HEAD["at"]
+            cam.data.ortho_scale = 0.95
+            cam.location = h + Vector((1.5, -2.1, 0.45))
+            cam.rotation_euler = (h - cam.location).to_track_quat("-Z", "Y").to_euler()
+            render(sc, OUT / "head" / f"{base}.png")
         print("done", base, tris, flush=True)
 (OUT / "report.json").write_text(json.dumps(report, indent=1))
