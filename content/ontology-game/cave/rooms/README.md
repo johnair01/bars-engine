@@ -81,3 +81,19 @@ whatever the figure is. The table after the prose is what the spec is built from
   yet. The renders show the pattern because Blender draws it live.
 - The room is too heavy for the phone as it stands. The mushroom drift alone is 10,000 faces; the 3 MB cave budget
   needs a face budget per procgen part.
+
+## The WAVE test room (14 October 2026)
+
+`wave-room/` is built from Wendell's ChatGPT concept picture (Cave studio inbox, `quiet_cave_room_concept.png`; the
+picture stays in Drive, as concept only). The spec is read off the picture by eye, with the figure in it as one player
+height, and written in player heights (`"units": "player_heights"`, `player_height_m` 1.7). `room.py` turns every size
+and position into metres, and light power by the square.
+
+Added for it: `tint` (the castle door's grey colour maps take the wood colour), an `arch` frame from the kit's portal
+arch, `bench`, `block` and `ring` builders, our own GLBs as a source (the body map's figure stands in for scale), lights
+of their own in the spec, and `views` for a camera at the player's eye that sees the dome. Concept and build side by
+side: `3d-build/wave-room-test-2026-10-14/concept-vs-built.png` in the project files.
+
+The layout carries over: the door and its lantern, the seat facing it, the ring where the charge stops, crystals round
+the wall, boulders at the edge. What the picture has and the build lacks: walls of big rock forms with hollows for the
+crystals (the shell is one smooth surface), moss in the cracks, the warm glow across the whole dome, and a pointed arch.

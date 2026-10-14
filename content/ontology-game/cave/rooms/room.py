@@ -31,6 +31,39 @@ from textures import node, rgb, texture  # noqa: E402
 
 SPEC_PATH = sys.argv[1]
 SPEC = json.load(open(SPEC_PATH))
+
+
+def in_metres(spec):
+    """A spec written in player heights ("units": "player_heights", every *_m field and every position counted in the
+    player's height) becomes metres here, at player_height_m a player height; light power goes with the square."""
+    k = spec.get("player_height_m", 1.7)
+    for key in ("width_m", "length_m", "height_m", "wall_height_m"):
+        if key in spec["shell"]:
+            spec["shell"][key] *= k
+    for o in spec.get("openings", []):
+        for key in ("width_m", "height_m", "fill_height_m"):
+            if key in o:
+                o[key] *= k
+    for t in spec.get("things", []) + spec.get("lights", []):
+        t["at"] = [c * k for c in t["at"]]
+        for key in ("height_m", "hang_m", "z_m", "scale", "at_z"):
+            if key in t:
+                t[key] *= k
+        if "watts" in t:
+            t["watts"] *= k * k
+        if "size" in t.get("source", {}):
+            t["source"]["size"] = [c * k for c in t["source"]["size"]]
+        if t.get("squash"):
+            t["squash"]["width_m"] *= k
+        if t.get("light"):
+            t["light"]["at_z"] *= k
+            t["light"]["watts"] *= k * k
+    for v in spec.get("views", {}).values():
+        v["from"], v["to"] = [c * k for c in v["from"]], [c * k for c in v["to"]]
+
+
+if SPEC.get("units") == "player_heights":
+    in_metres(SPEC)
 OUT = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else f"/tmp/blender-cloud/rooms/{SPEC['id']}"
 os.makedirs(OUT, exist_ok=True)
 FLOOR_TOL, WALL_GAP = 0.01, 0.03
@@ -164,6 +197,36 @@ def box(name, centre, size, turn, mat):
     return ob
 
 
+before_kit = set(bpy.data.objects)
+bpy.ops.import_scene.gltf(filepath=os.path.join(CAVE, "cave-kit.glb"))
+KIT = {}
+for o in set(bpy.data.objects) - before_kit:
+    if o.type == "MESH":
+        KIT[o.name.split(".")[0]] = o.data  # a kit piece can share a name with a shell part (floor)
+    bpy.data.objects.remove(o)
+KIT_ARCH = KIT["portal_arch"]
+
+
+def tint(obs, colour):
+    """Multiplies each material's colour map by colour: a model whose colours came in grey takes the words' colour."""
+    for ob in obs:
+        for i, m in enumerate(ob.data.materials):
+            t = m.copy()
+            nt = t.node_tree
+            p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+            mul = nt.nodes.new("ShaderNodeMix")
+            mul.data_type, mul.blend_type = "RGBA", "MULTIPLY"
+            mul.inputs["Factor"].default_value = 1.0
+            mul.inputs["B"].default_value = (*rgb(colour), 1)
+            link = next((l for l in nt.links if l.to_socket == p.inputs["Base Color"]), None)
+            if link:
+                nt.links.new(link.from_socket, mul.inputs["A"])
+            else:
+                mul.inputs["A"].default_value = p.inputs["Base Color"].default_value
+            nt.links.new(mul.outputs["Result"], p.inputs["Base Color"])
+            ob.data.materials[i] = t
+
+
 # ---- openings: frame, fill, and a dark backing so the hole reads as a way on ----
 OBJECTS, ROWS, LIGHTS = [], [], []
 dark = material("beyond", {"colour": "#050505", "roughness": 1.0})
@@ -177,16 +240,26 @@ for o, cut in OPEN:
     across = abs(edges[1] - edges[0]) * r0
     box(f"{o['id']}.beyond", out * (r0 + 0.6), (across + 0.6, 0.05, top), a0, dark).location.z = top / 2
     if o.get("frame"):
-        fm = MATS[o["frame"]]
+        fm = MATS[o.get("frame_material", o["frame"])]
         for k, e in enumerate(edges):
             p = Vector(wall_point(e, 0))
             box(f"{o['id']}.jamb{k}", (p.x, p.y, top / 2), (0.22, 0.4, top), a0, fm)
+        if o["frame"] == "arch":  # the kit's arch, stretched round the door, a hand's width into the room
+            arch = bpy.data.objects.new(o["id"] + ".arch", KIT_ARCH.copy())
+            sc.collection.objects.link(arch)
+            arch.data.materials.clear()
+            arch.data.materials.append(fm)
+            arch.location = out * (r0 - 0.12)
+            arch.rotation_euler = (0, 0, -a0)
+            arch.scale = ((across + 1.0) / 2.18, 1.6, o.get("fill_height_m", o["height_m"]) * 1.25 / 1.09)
         lintel_z = o.get("fill_height_m", o["height_m"])
         box(f"{o['id']}.lintel", out * r0 + Vector((0, 0, (lintel_z + top) / 2)), (across + 0.3, 0.4, top - lintel_z), a0, fm)
     if o.get("fill"):
         ob = objects.obj(o["id"], {"licence": "cc_zero", **o["fill"]}, (out.x * r0, out.y * r0), -math.degrees(a0) + o.get("fill_turn_deg", 0),
                          o["fill_height_m"], 10 ** 9, o.get("fill_faces", 3000), None, OBJECTS)
         ob.scale.x = (across - 0.05) / ob.dimensions.x if ob.dimensions.x > across else 1.0
+        if o.get("fill_tint"):
+            tint([ob], o["fill_tint"])
         ROWS.append({"id": o["id"], "says": o["says"], "kind": "opening", "row": OBJECTS[-1]["row"], "in_wall": True})
     else:
         ROWS.append({"id": o["id"], "says": o["says"], "kind": "opening", "row": {"source": "cut from the shell"},
@@ -209,15 +282,67 @@ def from_procgen(name, src, faces):
 
 
 objects.SOURCES["procgen"] = from_procgen
-BUILDERS = {"cushion": objects.cushion}
+def from_glb(name, src, faces):
+    """One of our own GLBs (the body map's figure, for a sense of scale)."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=os.path.join(CAVE, src["file"]))
+    new = [o for o in bpy.data.objects if o not in before]
+    meshes = [o for o in new if o.type == "MESH"]
+    for o in new:
+        if o not in meshes:
+            bpy.data.objects.remove(o)
+    for o in sc.objects:
+        o.select_set(o in meshes)
+    bpy.context.view_layer.objects.active = meshes[0]
+    if len(meshes) > 1:
+        bpy.ops.object.join()
+    ob = bpy.context.view_layer.objects.active
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    ob.parent = None
+    return ob, {"source": f"cave/{src['file']}", "licence": "own work"}
 
-KIT = {}
-before = set(bpy.data.objects)
-bpy.ops.import_scene.gltf(filepath=os.path.join(CAVE, "cave-kit.glb"))
-for o in set(bpy.data.objects) - before:
-    if o.type == "MESH":
-        KIT[o.name] = o.data
-    bpy.data.objects.remove(o)
+
+objects.SOURCES["glb"] = from_glb
+
+
+def block(bm, size=(1, 1, 1)):
+    """A plain stone block, size (x, y, z), standing on z=0: a plinth or a step."""
+    bmesh.ops.create_cube(bm, size=1.0)
+    bmesh.ops.scale(bm, vec=size, verts=bm.verts)
+    bmesh.ops.translate(bm, vec=(0, 0, size[2] / 2), verts=bm.verts)
+
+
+def bench(bm, size=(2.2, 0.7, 0.45), rise=0.35, n=16):
+    """A low stone bench, size (length, depth, height), its seat dipping in the middle and its ends rising like a saddle,
+    edges softened."""
+    L, D, Hb = size
+    rows = []
+    for i in range(n + 1):
+        u = i / n * 2 - 1
+        top = Hb * (1 + rise * u * u)
+        w = D * (1 - 0.12 * u * u)
+        ring = [(u * L / 2, -w / 2, 0), (u * L / 2, -w / 2 * 0.96, top * 0.97), (u * L / 2, 0, top), (u * L / 2, w / 2 * 0.96, top * 0.97),
+                (u * L / 2, w / 2, 0)]
+        rows.append([bm.verts.new(v) for v in ring])
+    for a, b in zip(rows, rows[1:]):
+        for j in range(4):
+            bm.faces.new((a[j], b[j], b[j + 1], a[j + 1]))
+        bm.faces.new((a[4], b[4], b[0], a[0]))
+    for r in (rows[0], rows[-1][::-1]):
+        bm.faces.new(r[::-1])
+
+
+def ring(bm, size=(1.0, 0.9, 0.01), n=64):
+    """A flat ring set into the floor, size (outer radius, inner radius, thickness): an inlay."""
+    ro, ri, t = size
+    loops = [[bm.verts.new((r * math.cos(2 * math.pi * j / n), r * math.sin(2 * math.pi * j / n), z)) for j in range(n)]
+             for r, z in ((ri, 0), (ro, 0), (ro, t), (ri, t))]
+    for a, b in zip(loops, loops[1:] + loops[:1]):
+        for j in range(n):
+            bm.faces.new((a[j], a[(j + 1) % n], b[(j + 1) % n], b[j]))
+
+
+BUILDERS = {"cushion": objects.cushion, "block": block, "bench": bench, "ring": ring}
 
 
 # ---- things ----
@@ -237,14 +362,24 @@ for t in SPEC["things"]:
         OBJECTS.append({"obs": [ob], "hang": None, "row": row, "free": True})
     else:
         if src["kind"] == "script":
-            src["builder"] = BUILDERS[src["builder"]]
+            fn, size = BUILDERS[src["builder"]], src.get("size")
+            src["builder"] = (lambda bm, fn=fn, size=size: fn(bm, size)) if size else fn
+            src["builder"].__name__ = fn.__name__
         ob = objects.obj(t["id"], src, tuple(t["at"]), t.get("turn_deg", 0), t["height_m"], 10 ** 9, t.get("faces", 1500),
                          mat, OBJECTS, hang=t.get("hang_m"))
         if t.get("squash"):
             ob.scale.x = ob.scale.y = t["squash"]["width_m"] / max(ob.dimensions.x, ob.dimensions.y)
+        if t.get("tint"):
+            tint(OBJECTS[-1]["obs"], t["tint"])
+        if t.get("z_m"):  # stands on something else (a lantern on its plinth)
+            for x in OBJECTS[-1]["obs"]:
+                x.location.z += t["z_m"]
+            OBJECTS[-1]["free"] = True
     ROWS.append({"id": t["id"], "says": t["says"], "kind": "thing", "row": OBJECTS[-1]["row"]})
     if t.get("light"):
         LIGHTS.append((t["id"], t["at"], t["light"]))
+for l in SPEC.get("lights", []):
+    LIGHTS.append((l["id"], l["at"], l))
 
 
 # ---- checks: on the floor or hung below the dome, inside the walls ----
@@ -315,6 +450,8 @@ if "--no-render" not in sys.argv:
         "back": ((-0.9, RY * 1.9, H * 2.1), (0, -0.2 * RY, 0.25), ("walls_back",), False),
         "top": ((0, 0, H * 4), (0, 0.0001, 0), ("walls_front", "walls_back"), True),
     }
+    for name, v in SPEC.get("views", {}).items():  # a view inside the room, at the player's eye, sees the dome too
+        views[name] = (tuple(v["from"]), tuple(v["to"]), (), False)
     keep_in_shell = {o.name for o in sc.objects if any(o.name.startswith(x["id"] + ".") for x in SPEC.get("openings", []))} | set(shell)
     dressing = [o for o in sc.objects if o.type in ("MESH", "LIGHT") and o.name not in keep_in_shell]
     work = bpy.data.objects.new("work", bpy.data.lights.new("work", "POINT"))  # the shell alone has no lamps of its own
@@ -329,8 +466,8 @@ if "--no-render" not in sys.argv:
             cam.rotation_euler = (Vector(aim) - Vector(loc)).to_track_quat("-Z", "Y").to_euler()
             cam_data.type = "ORTHO" if ortho else "PERSP"
             cam_data.ortho_scale = 2.5 * RY * sc.render.resolution_x / sc.render.resolution_y
-            cam_data.lens = 30
-            shell["dome"].visible_camera = False
+            cam_data.lens = SPEC.get("views", {}).get(view, {}).get("lens", 30)
+            shell["dome"].visible_camera = view in SPEC.get("views", {})
             for w in ("walls_front", "walls_back"):
                 shell[w].visible_camera = w not in hidden
             for o in sc.objects:  # an opening in a hidden wall goes with it: frame, door and backing
