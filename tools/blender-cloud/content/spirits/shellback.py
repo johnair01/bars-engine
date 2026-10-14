@@ -878,16 +878,21 @@ def mouth_seam(body, centre, z0, sweep=80, rise=0.03, r=0.008):
 def tortoise_head(H, s=1.0):
     """Metaball parts for the tortoise's head, after the Taoist Tortoise concept's face: a smooth domed skull, a blunt
     snout whose upper jaw overhangs the lower like a beak, a low brow over each eye, and a lower jaw set a little back
-    and under, so the mouth seam falls where they meet. Round 6 (Wendell: "We want the face to be flatter"): the skull
-    is lower and longer, its crown nearly level with the brows, and the snout a flat wedge, the way a real tortoise's
-    head runs flat from crown to beak."""
+    and under, so the mouth seam falls where they meet. Round 6 flattened the whole head and was reverted (Wendell,
+    2026-10-14: "you made the turtles HEAD flat instead of it's face flat and now it looks worse. Revert the change and
+    make the snout move 30% closer to the top of the head"): round 5's domed skull, with the snout raised by SNOUT_UP,
+    30% of the way from where it sat towards the crown."""
     v = lambda x, y, z: H + Vector((x, y, z)) * s
-    return [("ell", v(-0.03, 0, -0.01), 0.25 * s, (1.3, 0.9, 0.62)),     # skull, low and long
-            ("ell", v(0.19, 0, -0.04), 0.155 * s, (1.25, 0.86, 0.6)),    # upper jaw, a flat wedge
-            ("ell", v(0.32, 0, -0.065), 0.075 * s, (1.1, 1.0, 0.72)),    # the beak's tip
-            ("ell", v(0.12, 0, -0.14), 0.14 * s, (1.4, 0.8, 0.38)),      # lower jaw
-            ("ell", v(0.12, 0.12, 0.045), 0.06 * s, (1.5, 0.6, 0.35)),   # brows
-            ("ell", v(0.12, -0.12, 0.045), 0.06 * s, (1.5, 0.6, 0.35))]
+    u = SNOUT_UP
+    return [("ell", v(0, 0, 0.02), 0.25 * s, (1.15, 0.86, 0.88)),       # skull
+            ("ell", v(0.2, 0, -0.03 + u), 0.155 * s, (1.1, 0.84, 0.82)), # upper jaw
+            ("ball", v(0.31, 0, -0.065 + u), 0.075 * s),                 # the beak's tip
+            ("ell", v(0.12, 0, -0.15 + u), 0.14 * s, (1.35, 0.78, 0.45)), # lower jaw
+            ("ell", v(0.12, 0.12, 0.065), 0.06 * s, (1.5, 0.6, 0.45)),    # brows
+            ("ell", v(0.12, -0.12, 0.065), 0.06 * s, (1.5, 0.6, 0.45))]
+
+
+SNOUT_UP = 0.085  # the crown sits 0.24 over the head's centre and the upper jaw 0.03 under it: 30% of 0.27 up
 
 
 def nostrils(body, H, s=1.0):
@@ -923,15 +928,15 @@ def creature(sc, el, lt, dk):
         feet.append((Vector((x + 0.06, y * 1.03, 0.04)), Vector((1, 0.5 * (1 if y > 0 else -1), 0))))
     parts.append(("cap", (-1.05, 0, 0.25), (-1.3, 0, 0.12), 0.07))
     body = blob("body", parts, 0.028, 12000)
-    seam = mouth_seam(body, H + Vector((0.16, 0, 0)), H.z - 0.115, 78, 0.035, 0.009)
+    seam = mouth_seam(body, H + Vector((0.16, 0, 0)), H.z - 0.115 + SNOUT_UP * 1.2, 78, 0.035, 0.009)
     nose = nostrils(body, H, 1.2)
-    throat = lambda p, n: min(1, max(0, (H.z - 0.12 - p.z) / 0.06)) if (p.x > 0.55 and (n.x > 0.3 or n.z < -0.3)) else 0
+    throat = lambda p, n: min(1, max(0, (H.z - 0.12 + SNOUT_UP * 1.2 - p.z) / 0.06)) if (p.x > 0.55 and (n.x > 0.3 or n.z < -0.3)) else 0
     base = skin_paint(body, 1.3, throat, S)
     paint(body, lambda p, n: (0.1, 0.08, 0.06) if nose(p) else mixc(base(p, n), (0.08, 0.07, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead)
     for s in (1, -1):
-        eye(body, H + Vector((0.14, 0, -0.01)), (0.45, s * 0.88, 0.08), S, 0.07)
+        eye(body, H + Vector((0.14, 0, 0.04)), (0.45, s * 0.88, 0.12), S, 0.07)
     drape("shawl", (0.62, 0, 0.86), (-0.3, 0, -1), 0.32, 0.62, 0.45, S["cloth"], S["trim"], f"shawl-{el}")
     beads((0.74, 0, 0.88), (0.65, 0, 0.75), 0.3, 18, 0.12, 4, lt, S)
     # a gold bell and a jade disc hang from the shell's rim on the near side
@@ -1009,15 +1014,15 @@ def ascended(sc, el, lt, dk):
         parts += [("cap", sh, el_, 0.1), ("cap", el_, hd, 0.09), ("ball", hd + Vector((0.04, 0, 0)), 0.1)]
         hands.append(hd + Vector((0.04, 0, 0)))
     body = blob("body", parts, 0.025, 12000)
-    seam = mouth_seam(body, H + Vector((0.12, 0, 0)), H.z - 0.085, 78, 0.026, 0.007)
+    seam = mouth_seam(body, H + Vector((0.12, 0, 0)), H.z - 0.085 + SNOUT_UP * 0.88, 78, 0.026, 0.007)
     nose = nostrils(body, H, 0.88)
-    throat = lambda p, n: min(1, max(0, (H.z - 0.09 - p.z) / 0.05)) if (p.z > 1.5 and (n.x > 0.35 or n.z < -0.3)) else 0
+    throat = lambda p, n: min(1, max(0, (H.z - 0.09 + SNOUT_UP * 0.88 - p.z) / 0.05)) if (p.z > 1.5 and (n.x > 0.35 or n.z < -0.3)) else 0
     base = skin_paint(body, 2.1, throat, S)
     paint(body, lambda p, n: (0.1, 0.08, 0.06) if nose(p) else mixc(base(p, n), (0.08, 0.07, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead, 0.8)
     for s in (1, -1):
-        eye(body, H + Vector((0.1, 0, -0.01)), (0.45, s * 0.88, 0.08), S, 0.054)
+        eye(body, H + Vector((0.1, 0, 0.03)), (0.45, s * 0.88, 0.12), S, 0.054)
     drape("robe", (0.02, 0, 1.12), (0, 0, -1), 0.4, 0.5, 0.85, S["cloth"], S["trim"], f"robe-{el}", 0.15)
     drape("shawl", (0.02, 0, 1.7), (0, 0, -1), 0.24, 0.5, 0.36, mixc(S["cloth"], S["trim"], 0.35), S["trim"], f"shawl-{el}", 0.5)
     plate = ball("plastron", solid("plate", S["plastron"], 0.6, metal=S["metal"]), (0.27, 0, 1.22), 0.25, (0.35, 0.8, 1.0), 24)

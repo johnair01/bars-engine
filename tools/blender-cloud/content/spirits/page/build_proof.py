@@ -1,12 +1,13 @@
 """Builds the spirit proof page from one render folder per animal base (shellback.py's OUT dir for each).
 
-    python3 build_proof.py OUT_DIR tortoise=DIR armadillo=DIR pangolin=DIR [before=DIR]
+    python3 build_proof.py OUT_DIR tortoise=DIR armadillo=DIR pangolin=DIR [before=DIR] [plain-tortoise=DIR ...]
 
 Writes OUT_DIR/index.html with the renders and sprites inline, and OUT_DIR/glb/<base>-<element>-<stage>.glb
 meshopt-compressed, and OUT_DIR/glb/<base>-<element>-<stage>.txt, the same file in base64, which the page fetches when a
 model is picked (the artifact host serves .txt but not .glb; publish the .txt files beside the page).
 When the render folders hold head close-ups (shellback.py --heads), the page shows the faces too; before=DIR, a folder of
-<base>/head/<element>-<stage>.png from the last round, adds a before and after row for them."""
+<base>/head/<element>-<stage>.png from the last round, adds a before and after row for them. plain-<base>=DIR for all three bases, the same renders without the nation layer
+(shellback.py --nation), adds a with and without section."""
 import base64, io, json, pathlib, subprocess, sys
 from PIL import Image
 
@@ -78,7 +79,24 @@ if all((pathlib.Path(SRC[b]) / "head").is_dir() for b in BASES):
                 f'width="300" height="300" loading="lazy"></figure>' for b, n in BASES.items())
         faces += "</div>"
 
+nation = ""  # plain-<base>=DIR, the same base without the nation, sets each element beside its nation version
+if all(f"plain-{b}" in SRC for b in BASES):
+    for base, name in BASES.items():
+        P, W = pathlib.Path(SRC[f"plain-{base}"]), pathlib.Path(SRC[base])
+        nation += f'<div data-base="{base}"{"" if base == "armadillo" else " hidden"}>'
+        for e in EL:
+            for tag, d in (("without", P), ("met in Meridia", W)):
+                cells = "".join(f'<figure><img src="{jpg(d / "render" / f"{e}-{s}.png", 300)}" alt="{NAMES[e]} {name.lower()}, {s} stage, {tag}" '
+                                f'width="300" height="300" loading="lazy"><figcaption>{LABEL[s]}</figcaption></figure>' for s in ST)
+                nation += f'<section class="row"><h3>{NAMES[e]} {name.lower()}, {tag}</h3><div class="strip">{cells}</div></section>'
+        nation += f'<div class="sheetbox"><div class="sheethead"><span>Gas</span><span>Core</span><span>Hologram</span><span>Creature</span><span>Highest</span></div>'
+        for tag, d in (("Without", P), ("Met in Meridia", W)):
+            nation += f'<h3>{name} sprites, {tag.lower()}</h3><div class="sheet">' + "".join(
+                f'<img class="px" src="{png(d / "sprite" / f"{e}-{s}.png")}" alt="{NAMES[e]} {name.lower()} {s} sprite, {tag.lower()}" width="96" height="96">'
+                for e in EL for s in ST) + "</div>"
+        nation += "</div></div>"
+
 html = (pathlib.Path(__file__).parent / "proof_template.html").read_text()
-html = html.replace("%%ROWS%%", rows).replace("%%SHEET%%", sheet).replace("%%SIDE%%", side).replace("%%HEADS%%", faces).replace("%%FACES%%", str(largest))
+html = html.replace("%%ROWS%%", rows).replace("%%SHEET%%", sheet).replace("%%SIDE%%", side).replace("%%HEADS%%", faces).replace("%%NATION%%", nation).replace("%%FACES%%", str(largest))
 (OUT / "index.html").write_text(html)
 print(OUT / "index.html", round(len(html) / 1e6, 2), "MB;", sum(f.stat().st_size for f in (OUT / "glb").iterdir()) // 1024, "KB of models")
