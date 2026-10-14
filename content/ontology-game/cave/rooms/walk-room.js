@@ -25,6 +25,15 @@
   // just before landing still counts, so a jump never feels swallowed.
   var JUMP_H = 0.85 * PH, JUMP_T = 0.66, GRAV = 8 * JUMP_H / (JUMP_T * JUMP_T), JUMP_V = 4 * JUMP_H / JUMP_T, JUMP_GRACE = 0.12;
   var STEP = 0.2 * PH;      // a rise the figure walks up without jumping (the curve of a boulder's top)
+  // A ledge caught in the air: a top this far above the feet at the top of a jump is pulled up onto, the way a climber
+  // hauls up over an edge, so the two tall boulders (1.1) can be reached from a 0.85 jump.
+  var LEDGE = 0.4 * PH;
+  // The jump's three beats (Wendell, 14 October 2026: "something that looks like a character is mechanically gearing up for
+  // a jump, jumps and then collects themselves"): a crouch with the arms swung back, the push off with the arms thrown up,
+  // and a landing that sinks into the knees and stands back up.
+  var WINDUP = 0.14, RECOVER = 0.42;
+  // cave.js's figure, in its own design units (HIP_Y, THIGH and SHIN there): bending the knees drops the hips by this much.
+  var HIP_Y = 1.15, LEG = 0.52 + 0.5;
 
   var CSS =
     ".oagw{position:fixed;inset:0;z-index:910;background:#120e10;overflow:hidden;touch-action:none}" +
@@ -62,7 +71,7 @@
     wrap.appendChild(msg);
     wrap.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     document.body.appendChild(wrap);
-    var S = window.__oagWalkRoom = { name: name, ready: false, error: null, x: 0, z: 0, yaw: 0, camYaw: 0, moved: 0, bumps: 0, jumps: 0, landings: 0, top: 0, stoodOn: 0 };
+    var S = window.__oagWalkRoom = { name: name, ready: false, error: null, x: 0, z: 0, yaw: 0, camYaw: 0, moved: 0, bumps: 0, jumps: 0, landings: 0, top: 0, stoodOn: 0, pulls: 0 };
 
     return K.loadThree().then(function (THREE) {
       return Promise.all([loadLoader(THREE), fetch(BASE + "rooms/" + name + ".glb").then(function (r) {
@@ -116,25 +125,39 @@
         if (!/^(seat|plinth|lantern|boulder\.?\d+)$/.test(n)) return;
         box.setFromObject(parts[n]);
         var hx = (box.max.x - box.min.x) / 2, hz = (box.max.z - box.min.z) / 2, can = !/plinth|lantern/.test(n);
-        blocks.push({ name: n, x: (box.max.x + box.min.x) / 2, z: (box.max.z + box.min.z) / 2, rx: hx + BODY_R, rz: hz + BODY_R, top: can ? box.max.y : Infinity, h: box.max.y });
+        blocks.push({ name: n, x: (box.max.x + box.min.x) / 2, z: (box.max.z + box.min.z) / 2, rx: hx + BODY_R, rz: hz + BODY_R, top: can ? box.max.y : Infinity, h: box.max.y, mesh: can ? parts[n] : null });
         if (can) stands.push(parts[n]);
       });
       // The ground under a point: the highest surface of a thing that can be stood on, found by a ray cast down from a step
       // above the feet, so a top higher than that is a wall to walk into, not a floor to snap onto. The floor is 0.
       var down = new THREE.Raycaster(), DOWN = new THREE.Vector3(0, -1, 0), from = new THREE.Vector3();
-      function groundAt(x, z, y) {
-        from.set(x, y + STEP, z); down.set(from, DOWN); down.far = y + STEP + 0.01;
+      function groundAt(x, z, y, reach) {
+        reach = reach || STEP; from.set(x, y + reach, z); down.set(from, DOWN); down.far = y + reach + 0.01;
         var hit = down.intersectObjects(stands, true)[0];
         return hit ? Math.max(0, hit.point.y) : 0;
       }
+      // A thing's own height at a point (0 off its edge), from a ray cast down from above its top.
+      var high = new THREE.Raycaster();
+      function surface(b, x, z) {
+        from.set(x, b.top + PH, z); high.set(from, DOWN); high.far = b.top + PH + 0.01;
+        var hit = high.intersectObject(b.mesh, true)[0];
+        return hit ? hit.point.y : 0;
+      }
       S.bounds = { cx: CX, cz: CZ, rx: RX, rz: RZ, blocks: blocks };
       // Inside the oval, then pushed out of each block (an oval of its own, its footprint plus the figure's width).
-      function hold(x, z, y) {
+      function hold(x, z, y, reach) {
         var bumped = false, dx = x - CX, dz = z - CZ, q = (dx * dx) / (RX * RX) + (dz * dz) / (RZ * RZ);
         if (q > 1) { var k = 1 / Math.sqrt(q); x = CX + dx * k; z = CZ + dz * k; bumped = true; }
         blocks.forEach(function (b) {
-          if (y > b.top - STEP) return; // above it: it is ground, not a wall
           var ex = (x - b.x) / b.rx, ez = (z - b.z) / b.rz, d = Math.hypot(ex, ez);
+          if (d >= 1) return;
+          // A wall only where the thing rises above what the feet can take: its height under the figure, and a body's
+          // width further in, against a step (walking) or a ledge (near the top of a jump). Lower than that, it is ground.
+          if (b.mesh) {
+            var tx = b.x - x, tz = b.z - z, tl = Math.hypot(tx, tz) || 1;
+            var hgt = Math.max(surface(b, x, z), surface(b, x + tx / tl * BODY_R, z + tz / tl * BODY_R));
+            if (hgt <= y + (reach || STEP)) return;
+          }
           if (d < 1) { if (d < 1e-6) { ex = 0; ez = 1; d = 1; } x = b.x + ex / d * b.rx; z = b.z + ez / d * b.rz; bumped = true; }
         });
         return { x: x, z: z, bumped: bumped };
@@ -143,7 +166,11 @@
       // The figure, where room.py stood it: a little behind the seat, facing the door (the door is at -z).
       var av = K.buildAvatar(THREE, "self"); scene.add(av);
       var start = parts.player ? new THREE.Vector3().setFromMatrixPosition(parts.player.matrixWorld) : new THREE.Vector3(0, 0, 2.6 * PH);
-      var fig = { x: start.x, z: start.z, yaw: Math.PI, clk: 0, speed: 0, y: 0, vy: 0, air: false, want: -1, land: 0 };
+      var fig = { x: start.x, z: start.z, yaw: Math.PI, clk: 0, speed: 0, y: 0, vy: 0, air: false, want: 0, wind: -1, rec: 0, hard: 0, pull: 0 };
+      // The pose's dials, eased toward their targets each frame so one beat flows into the next: crouch (knees bent, hips
+      // down), tuck (knees drawn up in the air), reach (legs out for the landing), arms (-1 swung back, 1 thrown up), spread
+      // (arms out to the sides), lean (the chest over the knees) and w (how much of the walk the jump takes over).
+      var P = { crouch: 0, tuck: 0, reach: 0, arms: 0, spread: 0, lean: 0, w: 0 };
       var p0 = hold(fig.x, fig.z, 0); fig.x = p0.x; fig.z = p0.z;
       var camYaw = 0, camPitch = 0.12, zoom = 1, camPos = new THREE.Vector3(), camAim = new THREE.Vector3();
 
@@ -171,7 +198,7 @@
       wrap.appendChild(jumpBtn);
       jumpBtn.addEventListener("pointerdown", function (e) { e.preventDefault(); jumpBtn.classList.add("down"); jump(); });
       ["pointerup", "pointercancel", "pointerleave"].forEach(function (n) { jumpBtn.addEventListener(n, function () { jumpBtn.classList.remove("down"); }); });
-      function jump() { fig.want = performance.now() / 1000; }
+      function jump() { fig.want = JUMP_GRACE; } // kept for a moment of the room's own time, so a slow frame never drops it
       function keyUp(e) { delete keys[e.code]; }
       window.addEventListener("keydown", keyDown); window.addEventListener("keyup", keyUp);
 
@@ -206,11 +233,51 @@
         var fx = -Math.sin(camYaw), fz = -Math.cos(camYaw); // the way the camera looks, on the floor
         return { x: -z * fx - x * fz, z: -z * fz + x * fx, m: m };
       }
+      // How far above the feet a top still counts as ground: a step, or a ledge near the top of a jump and while hauling up.
+      function reachNow() { return fig.air && fig.vy < 0.35 * JUMP_V || fig.pull && fig.rec > 0 ? LEDGE : STEP; }
       function turnTo(a, b, k) { var d = Math.atan2(Math.sin(b - a), Math.cos(b - a)); return a + d * Math.min(1, k); }
+      // The jump's pose, laid over the walk. Each beat sets targets for the dials; the dials ease toward them.
+      function jumpPose(dt) {
+        var J = av.userData.J; if (!J) return;
+        var T = { crouch: 0, tuck: 0, reach: 0, arms: 0, spread: 0, lean: 0, w: 0 }, fast = 22;
+        if (fig.wind >= 0) {                      // gearing up: sink, arms back, chest forward
+          var k = fig.wind / WINDUP; T.crouch = 0.55 + 0.45 * k; T.arms = -1; T.lean = 0.7; T.w = 1; fast = 40;
+        } else if (fig.air) {
+          var up = fig.vy / JUMP_V;              // 1 at the push off, 0 at the top, below 0 coming down
+          T.w = 1; T.arms = up > 0.2 ? 1 : 0.45 + 0.5 * up; T.lean = 0.15;
+          T.tuck = up > 0.6 ? 0.2 : clamp(1 - Math.abs(up) * 1.4, 0.25, 1); // knees draw up toward the top of the arc
+          if (up < -0.2) { T.reach = clamp(-up, 0, 1); T.spread = 0.8; T.tuck = 0.2; } // coming down: legs out, arms out for balance
+          fast = up > 0.6 ? 45 : 16;
+        } else if (fig.rec > 0) {                // collecting themselves: sink into the knees, then stand back up
+          var r = fig.rec / RECOVER, sink = Math.sin(Math.min(1, (1 - r) * 3.2) * Math.PI * 0.5) * r * 1.6;
+          T.w = Math.min(1, r * 2.5); T.crouch = clamp(sink * Math.min(1, fig.hard), 0, 1); T.arms = -0.15 - 0.35 * T.crouch; T.spread = 0.5 * r;
+          T.lean = 0.6 * T.crouch;
+          if (fig.pull) { T.tuck = r; T.arms = 0.3 * r; } // a pull-up: knees come up over the edge
+          fast = 24;
+        }
+        Object.keys(P).forEach(function (n) { P[n] += (T[n] - P[n]) * Math.min(1, dt * fast); });
+        if (P.w < 0.01) return;
+        function mix(o, axis, v) { o.rotation[axis] += (v - o.rotation[axis]) * P.w; }
+        // A crouch keeps the feet planted: the thigh swings forward by a, the shin back by a, the foot stays flat, and the
+        // hips drop by the legs' length times (1 - cos a). A tuck draws the knees up without dropping the hips.
+        var a = 0.95 * P.crouch, t = 1.2 * P.tuck, rch = 0.45 * P.reach;
+        ["L", "R"].forEach(function (n, i) {
+          mix(J["hip" + n], "x", -a - t - rch + (i ? 0.08 : -0.08) * P.reach);
+          mix(J["knee" + n], "x", 2 * a + 1.6 * t + 0.25 * P.reach);
+          mix(J["ankle" + n], "x", -a - 0.3 * t + 0.2 * P.reach);
+          // arms: back is positive, up is a big negative swing; spread lifts them out to the sides
+          mix(J["shoulder" + n], "x", P.arms < 0 ? -P.arms * 0.9 : -P.arms * 2.6);
+          mix(J["shoulder" + n], "z", (i ? -1 : 1) * (0.1 + 0.9 * P.spread));
+          mix(J["elbow" + n], "x", -0.25 - 0.4 * Math.max(0, P.arms));
+        });
+        mix(J.spine, "x", 0.08 + 0.45 * P.lean);
+        mix(J.neck, "x", -0.25 * P.lean);
+        J.hips.position.y += ((HIP_Y - LEG * (1 - Math.cos(a))) - J.hips.position.y) * P.w;
+      }
       function step(dt) {
         var w = wantWalk(), moving = false;
         if (w) {
-          var sp = WALK * w.m, nx = fig.x + w.x / w.m * sp * dt, nz = fig.z + w.z / w.m * sp * dt, h = hold(nx, nz, fig.y);
+          var sp = WALK * w.m * (fig.wind >= 0 ? 0.4 : 1) * (1 - 0.5 * clamp(fig.rec / RECOVER, 0, 1) * Math.min(1, fig.hard)), nx = fig.x + w.x / w.m * sp * dt, nz = fig.z + w.z / w.m * sp * dt, h = hold(nx, nz, fig.y, reachNow());
           var moved = Math.hypot(h.x - fig.x, h.z - fig.z);
           if (h.bumped) S.bumps++;
           fig.x = h.x; fig.z = h.z; S.moved += moved;
@@ -218,36 +285,38 @@
           fig.yaw = turnTo(fig.yaw, Math.atan2(w.x, w.z), dt * 10);
           if (performance.now() - lastDrag > 900 && w.z * -Math.cos(camYaw) + w.x * -Math.sin(camYaw) > 0.5 * w.m) camYaw = turnTo(camYaw, fig.yaw + Math.PI, dt * 1.4 * w.m);
         } else fig.speed = 0;
-        // Up and down. A press is kept for a moment, so one made just before landing jumps on landing.
-        var now = performance.now() / 1000;
-        if (fig.want >= 0 && now - fig.want <= JUMP_GRACE && !fig.air) {
-          fig.vy = JUMP_V; fig.air = true; fig.want = -1; S.jumps++;
-        } else if (fig.want >= 0 && now - fig.want > JUMP_GRACE) fig.want = -1;
-        var g = groundAt(fig.x, fig.z, fig.y);
+        // Up and down. A press is kept for a moment, so one made just before landing jumps on landing. The press starts the
+        // crouch; the figure leaves the ground at the end of it.
+        if (fig.want > 0 && !fig.air && fig.wind < 0) { fig.wind = 0; fig.want = 0; }
+        else fig.want = Math.max(0, fig.want - dt);
+        if (fig.wind >= 0) {
+          fig.wind += dt;
+          if (fig.wind >= WINDUP) { fig.wind = -1; fig.vy = JUMP_V; fig.air = true; fig.pull = 0; S.jumps++; }
+        }
+        var g = groundAt(fig.x, fig.z, fig.y, reachNow());
         if (!fig.air) {
-          if (g < fig.y - 0.02 * PH) { fig.air = true; fig.vy = 0; } // walked off an edge: fall
-          else fig.y = g;                                             // up or down a gentle rise
+          if (g < fig.y - 0.02 * PH) { fig.air = true; fig.vy = 0; fig.wind = -1; } // walked off an edge: fall
+          else fig.y += (g - fig.y) * Math.min(1, dt * 16);                        // up or down a rise, or the last of a pull-up
         }
         if (fig.air) {
-          var was = fig.y;
+          var was = fig.y, reach = reachNow();
           fig.y += fig.vy * dt - GRAV * dt * dt / 2; fig.vy -= GRAV * dt; // exact for a steady pull, so a slow phone jumps as high
-          g = groundAt(fig.x, fig.z, Math.max(fig.y, was)); // from where the feet were, so a fast fall cannot pass through a top
-          if (fig.vy <= 0 && fig.y <= g) { fig.y = g; fig.air = false; fig.land = 1; S.landings++; if (g > 0.05 * PH) S.stoodOn++; }
+          g = groundAt(fig.x, fig.z, Math.max(fig.y, was), reach); // from where the feet were, so a fast fall cannot pass through a top
+          if (fig.vy <= 0.35 * JUMP_V && fig.y <= g + 0.001 || fig.vy <= 0 && fig.y <= g) {
+            fig.pull = g - was > 0.1 * PH ? 1 : 0; // the top is above where the feet were: a ledge caught, haul up onto it
+            fig.hard = clamp(-fig.vy / JUMP_V, 0.3, 1.2) + fig.pull * 0.5;
+            if (!fig.pull) fig.y = g;
+            fig.air = false; fig.vy = 0; fig.rec = RECOVER; S.landings++; if (g > 0.05 * PH) S.stoodOn++; if (fig.pull) S.pulls++;
+          }
           S.top = Math.max(S.top, fig.y / PH);
         }
-        fig.land = Math.max(0, fig.land - dt * 6);
-        if (fig.air) moving = false;
+        fig.rec = Math.max(0, fig.rec - dt);
+        if (fig.air || fig.wind >= 0) moving = false;
         if (moving) fig.clk += dt * clamp(fig.speed / WALK, 0.5, 1);
         var breath = 0.5 + 0.5 * Math.sin(performance.now() / 1000 * 2 * Math.PI / (K.BREATH.inS + K.BREATH.outS));
         av.position.set(fig.x, fig.y, fig.z); av.rotation.y = fig.yaw;
         K.poseAvatar(av, fig.clk, moving, dt, breath, Math.max(0.3, fig.speed / K.STEPS_PER_S), false);
-        // In the air the knees tuck and the arms lift; landing gives a small squash.
-        var J = av.userData.J, tuck = fig.air ? clamp(0.4 + fig.vy / JUMP_V * 0.6, 0, 1) : 0;
-        if (J && fig.air) {
-          J.hipL.rotation.x = J.hipR.rotation.x = -0.5 * tuck - 0.2; J.kneeL.rotation.x = J.kneeR.rotation.x = 0.4 + 0.8 * tuck;
-          J.ankleL.rotation.x = J.ankleR.rotation.x = -0.3; J.shoulderL.rotation.x = J.shoulderR.rotation.x = -0.6 * tuck;
-        }
-        av.scale.set(1 + 0.06 * fig.land, 1 - 0.1 * fig.land, 1 + 0.06 * fig.land);
+        jumpPose(dt);
         if (K.loosenAvatar) K.loosenAvatar(av, 0, breath);
         // The camera sits behind and above the figure. It is held inside the walls, so a turn near the rock pulls it in
         // rather than showing the room from outside.
@@ -269,7 +338,7 @@
       function frame() {
         if (!alive) return;
         var now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
-        step(dt); renderer.render(scene, camera); requestAnimationFrame(frame);
+        if (!S.paused) step(dt); renderer.render(scene, camera); requestAnimationFrame(frame);
       }
       requestAnimationFrame(frame);
       leave.addEventListener("click", function () {
@@ -279,7 +348,9 @@
       S.ready = true; S.ph = PH;
       // for the page test: hold the stick at x, z (each -1 to 1) for a while
       S.hold = function (x, z) { stick.x = x; stick.z = z; };
-      S.jump = jump;
+      S.jump = jump; S.pose = P;
+      // for the page test: stop the clock and step it by hand, so a pose can be caught at an exact moment
+      S.advance = function (secs, n) { S.paused = true; for (var i = 0; i < (n || 1); i++) step(secs); renderer.render(scene, camera); };
       S.place = function (x, z) { fig.x = x * PH; fig.z = z * PH; fig.y = 0; fig.air = false; };
       S.blocks = blocks.map(function (b) { return { name: b.name, x: b.x / PH, z: b.z / PH, rx: b.rx / PH, rz: b.rz / PH, h: b.h / PH }; });
       S.turn = function (a) { camYaw += a; lastDrag = performance.now(); };

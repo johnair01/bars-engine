@@ -131,3 +131,11 @@ a ray cast down from a step above the feet finds their own surface, so the figur
 edge and lands where the mesh is. Below a top, the thing is a wall. The seat (0.6 high) and the two lower boulders (0.6
 and 0.8) can be reached; the two tall boulders (1.1) cannot. The plinth and its lantern stay one block that cannot be
 stood on.
+
+Then: "Can't reach all of the boulders and the jump animation is a bit stiff. Want something that looks like a character
+is mechanically gearing up for a jump, jumps and then collects themselves". A thing is a wall only where its own surface,
+under the figure and a body's width further in, rises above a step (walking) or a ledge of 0.4 player heights (near the
+top of a jump), so the tall boulders' shoulders can be caught and walked up. The jump has three beats: a crouch with the
+arms swung back (0.14 s, the figure leaves the ground at its end), the push off with the arms thrown up and the knees
+drawing up toward the top, legs and arms out coming down, and a landing that sinks into the knees by how hard it came
+down and stands back up (0.42 s). Frame by frame: `3d-build/wave-room-test-2026-10-14/jump-poses.png`.
