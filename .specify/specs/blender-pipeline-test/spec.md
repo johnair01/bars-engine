@@ -280,6 +280,19 @@ room and the fit no longer opens the hem into a bell. `fit()` now undoes a round
 halves its next step. The robe is 117 to 125 KB. All 36 garments end at zero, and J4, J4b, J5, J5b and J5c pass.
 Pictures in `/mnt/project-files/3d-build/j5-round2-2026-10-13/`.
 
+Round 3 (his look, 2026-10-14 00:25, `j5-look-02`): "Yeah the shoulders are still funky. They aren't operating like
+clothes it's very obvious they are being rendered by geometry and handwaving", and "We're making it look like
+something instead of simulating what happens". The robe is no longer laid round the body by rule. It is cut as two
+flat panels (a body and two sleeves each), sewn at the shoulders, along the sleeves and down the sides to the slits,
+and dropped on the standing body by Blender's cloth solver, with the flat pattern as the cloth's rest shape, so where
+it lies flat, folds or bunches is the solver's answer. A belt at the sash's height is simulated by shrinking that band
+of cloth until it grips the waist. The draped cloth's trim is cut in at full detail, then the cloth is reduced for the
+phone with the trim's lines kept: every robe is 109 to 112 KB. The walk test no longer counts the points where the
+body faces itself a few centimetres away (under the arm, between the thighs), where real cloth is caught too.
+Open: J5 passes on the average build; on slight and broad the cloth solver does not settle the same way on every run,
+and some drapes leave up to 30 points through at the hips mid-stride that `fit()` does not clear. J4, J4b, J5b and
+J5c pass. Pictures in `/mnt/project-files/3d-build/j5-round3-2026-10-14/`.
+
 ### What Part 2 does not do
 
 No daemon's or spirit's words (`cs-no-written-words`). No figure has a face, and no garment or figure is built
