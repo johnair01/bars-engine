@@ -19,6 +19,10 @@
   var WALK = 1.6 * PH;      // full stick: 1.6 player heights a second, the cave's walking pace
   var BODY_R = 0.22 * PH;   // how close the figure's middle comes to a wall or a boulder
   var CAM = { back: 2.4 * PH, up: 1.25 * PH, aim: 0.75 * PH };
+  // The jump (Wendell, 14 October 2026: "I'm curious about adding a jump feature"): half a player height at the top, about
+  // six tenths of a second in the air. The stick still steers in the air, and a press just before landing still counts,
+  // so a jump never feels swallowed. Boulders and the seat still block the way: nothing can be jumped onto yet.
+  var JUMP_H = 0.5 * PH, JUMP_T = 0.6, GRAV = 8 * JUMP_H / (JUMP_T * JUMP_T), JUMP_V = 4 * JUMP_H / JUMP_T, JUMP_GRACE = 0.12;
 
   var CSS =
     ".oagw{position:fixed;inset:0;z-index:910;background:#120e10;overflow:hidden;touch-action:none}" +
@@ -26,6 +30,8 @@
     ".oagw .oagw-top{position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;right:10px;display:flex;gap:.5rem;align-items:flex-start;z-index:5;pointer-events:none}" +
     ".oagw .oagw-top button{pointer-events:auto}" +
     ".oagw .oagw-hint{flex:1;margin:0;padding:.45rem .6rem;background:rgba(12,12,28,.72);border-radius:10px;color:#f4f4fa;font:14px/1.3 -apple-system,Segoe UI,Roboto,sans-serif}" +
+    ".oagw .oagw-jump{position:absolute;right:calc(18px + env(safe-area-inset-right));bottom:calc(30px + env(safe-area-inset-bottom));z-index:5;width:92px;height:92px;border-radius:50%;background:rgba(20,20,40,.55);border:2px solid rgba(255,241,176,.6);color:#fff1d0;font:600 16px -apple-system,Segoe UI,Roboto,sans-serif;touch-action:none;padding:0;min-height:0}" +
+    ".oagw .oagw-jump.down{background:rgba(255,241,176,.35)}" +
     ".oagw .oagw-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff1d0;font:16px -apple-system,Segoe UI,Roboto,sans-serif}";
 
   var loaderP = null;
@@ -48,13 +54,13 @@
     K.guardPage();
     var wrap = el("div", { class: "oagc oagw", "data-walk-room": name });
     var msg = el("div", { class: "oagw-load", text: "Opening the room…" });
-    var hint = el("p", { class: "oagw-hint", "data-walk-hint": "", text: "Walk with the circle at the bottom left (or the arrow keys). Drag to turn the camera; pinch to come closer." });
+    var hint = el("p", { class: "oagw-hint", "data-walk-hint": "", text: "Walk with the circle at the bottom left (or the arrow keys). Jump with the button at the bottom right (or the space bar). Drag to turn the camera; pinch to come closer." });
     var leave = el("button", { class: "alt", "data-walk-leave": "", text: "Leave" });
     wrap.appendChild(el("div", { class: "oagw-top" }, [leave, hint]));
     wrap.appendChild(msg);
     wrap.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     document.body.appendChild(wrap);
-    var S = window.__oagWalkRoom = { name: name, ready: false, error: null, x: 0, z: 0, yaw: 0, camYaw: 0, moved: 0, bumps: 0 };
+    var S = window.__oagWalkRoom = { name: name, ready: false, error: null, x: 0, z: 0, yaw: 0, camYaw: 0, moved: 0, bumps: 0, jumps: 0, landings: 0, top: 0 };
 
     return K.loadThree().then(function (THREE) {
       return Promise.all([loadLoader(THREE), fetch(BASE + "rooms/" + name + ".glb").then(function (r) {
@@ -123,7 +129,7 @@
       // The figure, where room.py stood it: a little behind the seat, facing the door (the door is at -z).
       var av = K.buildAvatar(THREE, "self"); scene.add(av);
       var start = parts.player ? new THREE.Vector3().setFromMatrixPosition(parts.player.matrixWorld) : new THREE.Vector3(0, 0, 2.6 * PH);
-      var fig = { x: start.x, z: start.z, yaw: Math.PI, clk: 0, speed: 0 };
+      var fig = { x: start.x, z: start.z, yaw: Math.PI, clk: 0, speed: 0, y: 0, vy: 0, air: false, want: -1, land: 0 };
       var p0 = hold(fig.x, fig.z); fig.x = p0.x; fig.z = p0.z;
       var camYaw = 0, camPitch = 0.12, zoom = 1, camPos = new THREE.Vector3(), camAim = new THREE.Vector3();
 
@@ -142,7 +148,16 @@
       pad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
       ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) { pad.addEventListener(n, function (e) { if (e.pointerId === stickId) stickUp(); }); });
       var KEYS = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] };
-      function keyDown(e) { if (!KEYS[e.code]) return; keys[e.code] = true; e.preventDefault(); }
+      function keyDown(e) {
+        if (e.code === "Space") { e.preventDefault(); if (!e.repeat) jump(); return; }
+        if (!KEYS[e.code]) return; keys[e.code] = true; e.preventDefault();
+      }
+      // The jump button sits under the right thumb, across from the stick, so walking and jumping take one thumb each.
+      var jumpBtn = el("button", { class: "oagw-jump", "data-walk-jump": "", "aria-label": "Jump", text: "Jump" });
+      wrap.appendChild(jumpBtn);
+      jumpBtn.addEventListener("pointerdown", function (e) { e.preventDefault(); jumpBtn.classList.add("down"); jump(); });
+      ["pointerup", "pointercancel", "pointerleave"].forEach(function (n) { jumpBtn.addEventListener(n, function () { jumpBtn.classList.remove("down"); }); });
+      function jump() { fig.want = performance.now() / 1000; }
       function keyUp(e) { delete keys[e.code]; }
       window.addEventListener("keydown", keyDown); window.addEventListener("keyup", keyUp);
 
@@ -189,19 +204,38 @@
           fig.yaw = turnTo(fig.yaw, Math.atan2(w.x, w.z), dt * 10);
           if (performance.now() - lastDrag > 900 && w.z * -Math.cos(camYaw) + w.x * -Math.sin(camYaw) > 0.5 * w.m) camYaw = turnTo(camYaw, fig.yaw + Math.PI, dt * 1.4 * w.m);
         } else fig.speed = 0;
+        // Up and down. A press is kept for a moment, so one made just before landing jumps on landing.
+        var now = performance.now() / 1000;
+        if (fig.want >= 0 && now - fig.want <= JUMP_GRACE && !fig.air) {
+          fig.vy = JUMP_V; fig.air = true; fig.want = -1; S.jumps++;
+        } else if (fig.want >= 0 && now - fig.want > JUMP_GRACE) fig.want = -1;
+        if (fig.air) {
+          fig.y += fig.vy * dt - GRAV * dt * dt / 2; fig.vy -= GRAV * dt; // exact for a steady pull, so a slow phone jumps as high
+          if (fig.y <= 0) { fig.y = 0; fig.air = false; fig.land = 1; S.landings++; }
+          S.top = Math.max(S.top, fig.y / PH);
+        }
+        fig.land = Math.max(0, fig.land - dt * 6);
+        if (fig.air) moving = false;
         if (moving) fig.clk += dt * clamp(fig.speed / WALK, 0.5, 1);
         var breath = 0.5 + 0.5 * Math.sin(performance.now() / 1000 * 2 * Math.PI / (K.BREATH.inS + K.BREATH.outS));
-        av.position.set(fig.x, 0, fig.z); av.rotation.y = fig.yaw;
+        av.position.set(fig.x, fig.y, fig.z); av.rotation.y = fig.yaw;
         K.poseAvatar(av, fig.clk, moving, dt, breath, Math.max(0.3, fig.speed / K.STEPS_PER_S), false);
+        // In the air the knees tuck and the arms lift; landing gives a small squash.
+        var J = av.userData.J, tuck = fig.air ? clamp(0.4 + fig.vy / JUMP_V * 0.6, 0, 1) : 0;
+        if (J && fig.air) {
+          J.hipL.rotation.x = J.hipR.rotation.x = -0.5 * tuck - 0.2; J.kneeL.rotation.x = J.kneeR.rotation.x = 0.4 + 0.8 * tuck;
+          J.ankleL.rotation.x = J.ankleR.rotation.x = -0.3; J.shoulderL.rotation.x = J.shoulderR.rotation.x = -0.6 * tuck;
+        }
+        av.scale.set(1 + 0.06 * fig.land, 1 - 0.1 * fig.land, 1 + 0.06 * fig.land);
         if (K.loosenAvatar) K.loosenAvatar(av, 0, breath);
         // The camera sits behind and above the figure. It is held inside the walls, so a turn near the rock pulls it in
         // rather than showing the room from outside.
         var back = CAM.back * zoom, cx = fig.x + Math.sin(camYaw) * back * Math.cos(camPitch), cz = fig.z + Math.cos(camYaw) * back * Math.cos(camPitch);
         var dx = cx - CX, dz = cz - CZ, q = (dx * dx) / Math.pow(RX + 0.3 * PH, 2) + (dz * dz) / Math.pow(RZ + 0.3 * PH, 2);
         if (q > 1) { cx = CX + dx / Math.sqrt(q); cz = CZ + dz / Math.sqrt(q); }
-        camPos.set(cx, CAM.up + Math.sin(camPitch) * back, cz); camAim.set(fig.x, CAM.aim, fig.z);
+        camPos.set(cx, CAM.up + Math.sin(camPitch) * back + fig.y * 0.3, cz); camAim.set(fig.x, CAM.aim + fig.y * 0.5, fig.z);
         camera.position.lerp(camPos, Math.min(1, dt * 8)); camera.lookAt(camAim);
-        S.x = fig.x / PH; S.z = fig.z / PH; S.yaw = fig.yaw; S.camYaw = camYaw; S.walking = moving;
+        S.x = fig.x / PH; S.z = fig.z / PH; S.yaw = fig.yaw; S.camYaw = camYaw; S.walking = moving; S.y = fig.y / PH; S.air = fig.air;
       }
 
       function size() {
@@ -224,6 +258,7 @@
       S.ready = true; S.ph = PH;
       // for the page test: hold the stick at x, z (each -1 to 1) for a while
       S.hold = function (x, z) { stick.x = x; stick.z = z; };
+      S.jump = jump;
       S.turn = function (a) { camYaw += a; lastDrag = performance.now(); };
     }
     // Leaving before the room is drawn just closes it.

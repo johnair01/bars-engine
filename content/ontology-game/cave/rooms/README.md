@@ -122,3 +122,8 @@ no numbers in the page. Blender's lights are swapped for phone-sized ones that k
 The GLB now carries each material's plain colour: a colour drawn live from nodes cannot go into a glTF, and the exporter
 wrote white in its place. The rock surface, moss and stone pattern stay render-only until a bake step exists, and the
 walls' rock faces read smoother on the phone than in the renders, with stepped edges round the hollows.
+
+**Jumping (14 October, evening).** Wendell: "I'm curious about adding a jump feature". A Jump button under the right
+thumb (or the space bar) lifts the figure half a player height, about six tenths of a second in the air. The stick still
+steers in the air, a press just before landing still counts, the knees tuck at the top and landing gives a small squash.
+Nothing can be jumped onto yet: the boulders, the seat and the plinth still block the way.
