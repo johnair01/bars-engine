@@ -303,6 +303,28 @@ stiffened in the cloth solver and its edge is smoothed, as the cuffs already wer
 a plain short-sleeved top to the waist with a round neck, over the tied trousers. Every robe is 132 to 135 KB. J4,
 J4b, J5, J5b and J5c pass. Pictures in `/mnt/project-files/3d-build/j5-round4-2026-10-14/`.
 
+Round 5 (his look, 2026-10-14 21:15): "nope this isn't closer. We're missing something important about how the
+physics of how the bottom robe is supposed to move. It's not moving like clothes and every fix is still too
+localized and not seeing the major problem". The cause: through round 4 the skirt was draped once, standing, and then
+glued to the leg and hem bones for the whole walk, so nothing in its motion was physics, and every slit fix only
+changed which bone a point was glued to. Board position `j5-skirt-cloth`: below the belt the robe is cloth every
+frame. `cave/cloth.js` is a position-based cloth (small fixed substeps, 480 a second; stretch, bend and tether
+constraints from the robe's own edges at their standing lengths): the belt and everything above it ride the skinned
+body, the skirt hangs from the belt under gravity and carries the figure's motion as inertia, capsules round the
+thighs, shins, knees and pelvis push it out, and the front and back panels are joined only above the slits, so a slit
+parts as a leg strides through it and falls shut after. The hem's turned-back inside keeps its place in the frame of
+the hem's edge, which is stiffer than the cloth. The GLB carries what the game needs: `_CLOTH` per point (1 cloth,
+2 the hem's edge, 3 the hem turned inside, 0 rides the body) and the capsules in the robe node's extras. The same
+cloth.js runs in Node over the walk for Blender (`cave/cloth_walk.mjs`), so test J5 and the pictures show what the game
+shows: J5 counts body points through the cloth at the walk's 25 keys after two seconds of walking, and inside the
+cloth it counts by rays (a point is inside when a ray out from it crosses the cloth an odd number of times, two rays
+of three), because a swinging skirt folds and a fold's side can be the face nearest a point well inside. J5b also
+runs the cloth without its leg capsules and must see the legs come through. J5d (`j5_cloth.mjs`, headless Chromium,
+three.js r128 as cave.js loads it) puts the cloth on four walking figures through `CaveCloth.attach` and holds its cost
+under 1.5 ms a figure per 1/60 s. The slit weights of round 4 (`skirt_weights`' slit term, `SLIT_REACH`) are gone; the
+skirt's skin weights ride the pelvis and only say where the cloth starts. Pictures: `cloth-walk.png` (from the
+figure's left: a step cycle at the normal stride, one at the fast stride, a quarter turn).
+
 ### What Part 2 does not do
 
 No daemon's or spirit's words (`cs-no-written-words`). No figure has a face, and no garment or figure is built

@@ -1,0 +1,442 @@
+// The robe's skirt as cloth (J5, board position j5-skirt-cloth). Wendell, 14 October 2026, on round 4: "We're missing
+// something important about how the physics of how the bottom robe is supposed to move. It's not moving like clothes
+// and every fix is still too localized". Until round 4 the skirt was draped once standing and then glued to the leg
+// bones. Here, every frame, the skirt below the belt is a mass-spring cloth: the belt and everything above it ride the
+// skinned body, and below the belt the cloth hangs from the belt under gravity, carries the figure's own motion as
+// inertia, and is pushed out by the thighs and shins. The front and back panels are joined only above the slits, so a
+// slit parts when a leg strides through it and falls shut when the leg passes.
+//
+// One file for the game and for Blender: cave.js uses it through CaveCloth.attach (three.js), and garments.py runs
+// the same code in Node over the walk (cloth_walk.mjs) for test J5 and for the pictures, so what the test and the
+// pictures show is what the game shows.
+//
+// The solver: position-based dynamics in small fixed substeps (Macklin et al., "Small Steps in Physics Simulation",
+// 2019): verlet integration, then one pass each over the stretch, bend and tether constraints and the leg capsules.
+// Stretch constraints are the mesh's edges at their standing lengths; bend constraints join the far corners of each
+// pair of triangles that share an edge; a tether holds each free point within its standing distance (along the
+// cloth) of the nearest pinned point, so the skirt cannot stretch away from the belt however fast the figure moves.
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.CaveCloth = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  var DEFAULTS = {
+    substepHz: 480,      // substeps a second, fixed: the same motion at any frame rate
+    maxSubsteps: 16,     // per call; a long frame is slowed down rather than allowed to explode
+    gravity: [0, 0, -9.81],
+    damping: 1.2,        // per second, of each point's velocity (air)
+    stretch: 1.0,        // stiffness per substep, 0 to 1
+    bend: 0.3,           // a robe's cotton: it bridges between the legs, and folds where pushed
+    hemBend: 0.6,       // a sewn hem (points marked 2) keeps its fold and its line
+    tetherSlack: 1.04,   // a free point may be this times its standing distance from its pin
+    margin: 0.025,       // the cloth's distance kept from a capsule's surface: its thickness and the air under it
+    friction: 0.08,      // share of the cloth's sliding on a leg that the leg takes with it
+  };
+
+  function weld(rest, tol) {
+    // points at the same place are one particle (the GLB splits a point where its colour changes)
+    var n = rest.length / 3, map = new Int32Array(n), key = {}, reps = [];
+    for (var i = 0; i < n; i++) {
+      var k = Math.round(rest[3 * i] / tol) + "," + Math.round(rest[3 * i + 1] / tol) + "," + Math.round(rest[3 * i + 2] / tol);
+      if (key[k] === undefined) { key[k] = reps.length; reps.push(i); }
+      map[i] = key[k];
+    }
+    return { map: map, reps: reps };
+  }
+
+  // build({rest, tris, sim, options}): rest, the standing positions (Float32Array, x y z per vertex, model space);
+  // tris, triangle corners; sim, per vertex, 1 where the cloth is free, 2 where it is free and a sewn hem (stiff to
+// bend), and 0 where it rides the body.
+  function build(spec) {
+    var o = {}, k;
+    for (k in DEFAULTS) o[k] = DEFAULTS[k];
+    for (k in spec.options || {}) o[k] = spec.options[k];
+    var rest = spec.rest, tris = spec.tris, w = weld(rest, spec.weldTol || 1e-5), P = w.reps.length, map = w.map;
+    var free = new Uint8Array(P), stiff = new Uint8Array(P), fol = new Uint8Array(P), x0 = new Float32Array(3 * P);
+    for (var v = 0; v < map.length; v++) {
+      var p = map[v];
+      if (spec.sim[v] > 0.5) free[p] = 1;
+      if (spec.sim[v] > 1.5) stiff[p] = 1;
+      if (spec.sim[v] > 2.5) fol[p] = 1;
+      x0[3 * p] = rest[3 * v]; x0[3 * p + 1] = rest[3 * v + 1]; x0[3 * p + 2] = rest[3 * v + 2];
+    }
+    for (v = 0; v < map.length; v++) if (spec.sim[v] <= 0.5) free[map[v]] = 0;   // a point pinned anywhere is pinned
+    for (p = 0; p < P; p++) if (fol[p]) { free[p] = 0; stiff[p] = 0; }
+    var dist = function (a, b) {
+      var dx = x0[3 * a] - x0[3 * b], dy = x0[3 * a + 1] - x0[3 * b + 1], dz = x0[3 * a + 2] - x0[3 * b + 2];
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    };
+    // the edges, and for each edge the corners opposite it
+    var edges = {}, T = tris.length / 3;
+    for (var t = 0; t < T; t++) {
+      for (var c = 0; c < 3; c++) {
+        var a = map[tris[3 * t + c]], b = map[tris[3 * t + (c + 1) % 3]], opp = map[tris[3 * t + (c + 2) % 3]];
+        if (a === b) continue;
+        var ek = a < b ? a + "_" + b : b + "_" + a;
+        (edges[ek] = edges[ek] || { a: Math.min(a, b), b: Math.max(a, b), opp: [] }).opp.push(opp);
+      }
+    }
+    var st = [], bd = [], bk = [], nbr = [], adj = [];
+    for (var i = 0; i < P; i++) { nbr.push([]); adj.push([]); }
+    for (ek in edges) {
+      var e = edges[ek];
+      adj[e.a].push(e.b); adj[e.b].push(e.a);
+      if (fol[e.a] || fol[e.b] || !(free[e.a] || free[e.b])) continue;
+      st.push(e.a, e.b);
+      nbr[e.a].push(e.b); nbr[e.b].push(e.a);
+      if (e.opp.length === 2 && e.opp[0] !== e.opp[1] && (free[e.opp[0]] || free[e.opp[1]]) && !fol[e.opp[0]] && !fol[e.opp[1]]) {
+        bd.push(e.opp[0], e.opp[1]);
+        bk.push(stiff[e.opp[0]] || stiff[e.opp[1]] || stiff[e.a] || stiff[e.b] ? o.hemBend : o.bend);
+      }
+    }
+    for (ek in edges) { e = edges[ek]; if (!(free[e.a] || free[e.b]) && !fol[e.a] && !fol[e.b]) { nbr[e.a].push(e.b); nbr[e.b].push(e.a); } }
+    var stL = new Float32Array(st.length / 2), bdL = new Float32Array(bd.length / 2);
+    for (i = 0; i < stL.length; i++) stL[i] = dist(st[2 * i], st[2 * i + 1]);
+    for (i = 0; i < bdL.length; i++) bdL[i] = dist(bd[2 * i], bd[2 * i + 1]);
+    // tethers: each free point's nearest pinned point along the cloth (Dijkstra from every pin at once)
+    var gd = new Float64Array(P).fill(Infinity), pin = new Int32Array(P).fill(-1), done = new Uint8Array(P), heap = [];
+    function push(d, p) {
+      heap.push([d, p]);
+      for (var j = heap.length - 1; j > 0;) { var q = (j - 1) >> 1; if (heap[q][0] <= heap[j][0]) break; var s = heap[q]; heap[q] = heap[j]; heap[j] = s; j = q; }
+    }
+    function pop() {
+      var top = heap[0], last = heap.pop();
+      if (heap.length) {
+        heap[0] = last;
+        for (var j = 0; ;) {
+          var l = 2 * j + 1, r = l + 1, m = j;
+          if (l < heap.length && heap[l][0] < heap[m][0]) m = l;
+          if (r < heap.length && heap[r][0] < heap[m][0]) m = r;
+          if (m === j) break;
+          var s = heap[m]; heap[m] = heap[j]; heap[j] = s; j = m;
+        }
+      }
+      return top;
+    }
+    for (i = 0; i < P; i++) if (!free[i] && !fol[i]) { gd[i] = 0; pin[i] = i; push(0, i); }
+    while (heap.length) {
+      var h = pop(), p0 = h[1];
+      if (done[p0]) continue;
+      done[p0] = 1;
+      for (var n2 = 0; n2 < nbr[p0].length; n2++) {
+        var q = nbr[p0][n2], d = gd[p0] + dist(p0, q);
+        if (d < gd[q]) { gd[q] = d; pin[q] = pin[p0]; push(d, q); }
+      }
+    }
+    var th = [], thL = [];
+    for (i = 0; i < P; i++) if (free[i] && pin[i] >= 0) { th.push(i, pin[i]); thL.push(gd[i] * o.tetherSlack); }
+    // followers (points marked 3: a hem turned back inside the cloth) are not simulated: each keeps its standing place
+    // in the frame of the cloth at its anchor, the nearest cloth point it hangs from. A fold 6 mm thick cannot be
+    // held by springs alone; it flips inside out.
+    var anchor = new Int32Array(P).fill(-1), solid = [];
+    for (i = 0; i < P; i++) solid.push(fol[i] ? [] : adj[i].filter(function (q) { return !fol[q]; }));
+    for (var pass = 0; pass < 4; pass++) {
+      for (i = 0; i < P; i++) {
+        if (!fol[i] || anchor[i] >= 0) continue;
+        var best = -1, bd2 = Infinity;
+        for (var a2 = 0; a2 < adj[i].length; a2++) {
+          var q2 = adj[i][a2], an = fol[q2] ? anchor[q2] : q2;
+          if (an < 0 || (fol[q2] && pass === 0)) continue;
+          if (dist(i, q2) < bd2) { bd2 = dist(i, q2); best = an; }
+        }
+        anchor[i] = best;
+      }
+    }
+    var fl = [];
+    for (i = 0; i < P; i++) if (fol[i] && anchor[i] >= 0) fl.push(i);
+    var solidTris = [];
+    for (t = 0; t < T; t++) {
+      var ta = map[tris[3 * t]], tb = map[tris[3 * t + 1]], tc = map[tris[3 * t + 2]];
+      if (!fol[ta] && !fol[tb] && !fol[tc]) solidTris.push(ta, tb, tc);
+    }
+    var nfree = 0;
+    for (i = 0; i < P; i++) nfree += free[i];
+    var c = {
+      o: o, map: map, reps: w.reps, P: P, free: free, isFol: fol, nfree: nfree, tris: tris,
+      st: Int32Array.from(st), stL: stL, bd: Int32Array.from(bd), bdL: bdL, bdK: Float32Array.from(bk), th: Int32Array.from(th), thL: Float32Array.from(thL),
+      fol: fl, anchor: anchor, solid: solid, solidTris: Int32Array.from(solidTris), fofs: new Float32Array(3 * fl.length),
+      x: new Float32Array(3 * P), xp: new Float32Array(3 * P), tgt: new Float32Array(3 * P), tgt0: new Float32Array(3 * P),
+      caps: [], caps0: [], acc: 0, started: false,
+      out: new Float32Array(rest.length), normals: new Float32Array(rest.length), pn: new Float32Array(3 * P),
+    };
+    // the points a substep moves: the free ones, and the pins the free ones are joined to
+    var used = new Uint8Array(P);
+    [c.st, c.bd, c.th].forEach(function (a) { for (var q = 0; q < a.length; q++) used[a[q]] = 1; });
+    var act = [], fr = [];
+    for (i = 0; i < P; i++) { if (free[i]) fr.push(i); if (free[i] || (used[i] && !fol[i])) act.push(i); }
+    c.act = Int32Array.from(act); c.freeIdx = Int32Array.from(fr);
+    restFollowers(c, x0);
+    return c;
+  }
+
+  // the frame of the cloth at each anchor: its normal n, t toward the cloth beside it, and n x t
+  function frames(c, x, which) {
+    var pn = c.pn, st = c.solidTris, out = {};
+    pn.fill(0);
+    for (var k = 0; k < st.length; k += 3) {
+      var a = 3 * st[k], b = 3 * st[k + 1], d = 3 * st[k + 2];
+      var e1x = x[b] - x[a], e1y = x[b + 1] - x[a + 1], e1z = x[b + 2] - x[a + 2];
+      var e2x = x[d] - x[a], e2y = x[d + 1] - x[a + 1], e2z = x[d + 2] - x[a + 2];
+      var nx = e1y * e2z - e1z * e2y, ny = e1z * e2x - e1x * e2z, nz = e1x * e2y - e1y * e2x;
+      pn[a] += nx; pn[a + 1] += ny; pn[a + 2] += nz; pn[b] += nx; pn[b + 1] += ny; pn[b + 2] += nz;
+      pn[d] += nx; pn[d + 1] += ny; pn[d + 2] += nz;
+    }
+    for (var j = 0; j < which.length; j++) {
+      var p = which[j];
+      if (out[p]) continue;
+      var p3 = 3 * p, l = Math.hypot(pn[p3], pn[p3 + 1], pn[p3 + 2]) || 1, n = [pn[p3] / l, pn[p3 + 1] / l, pn[p3 + 2] / l];
+      var cx = 0, cy = 0, cz = 0, sn = c.solid[p];
+      for (var q = 0; q < sn.length; q++) { cx += x[3 * sn[q]] - x[p3]; cy += x[3 * sn[q] + 1] - x[p3 + 1]; cz += x[3 * sn[q] + 2] - x[p3 + 2]; }
+      var dn = cx * n[0] + cy * n[1] + cz * n[2];
+      cx -= dn * n[0]; cy -= dn * n[1]; cz -= dn * n[2];
+      var lt = Math.hypot(cx, cy, cz) || 1, t = [cx / lt, cy / lt, cz / lt];
+      out[p] = [n, t, [n[1] * t[2] - n[2] * t[1], n[2] * t[0] - n[0] * t[2], n[0] * t[1] - n[1] * t[0]]];
+    }
+    return out;
+  }
+
+  function restFollowers(c, x0) {
+    var anchors = c.fol.map(function (f) { return c.anchor[f]; }), F = frames(c, x0, anchors);
+    for (var j = 0; j < c.fol.length; j++) {
+      var f = 3 * c.fol[j], a = 3 * anchors[j], fr = F[anchors[j]], d = [x0[f] - x0[a], x0[f + 1] - x0[a + 1], x0[f + 2] - x0[a + 2]];
+      for (var k = 0; k < 3; k++) c.fofs[3 * j + k] = d[0] * fr[k][0] + d[1] * fr[k][1] + d[2] * fr[k][2];
+    }
+  }
+
+  function follow(c) {
+    var x = c.x, anchors = c.fol.map(function (f) { return c.anchor[f]; }), F = frames(c, x, anchors);
+    for (var j = 0; j < c.fol.length; j++) {
+      var f = 3 * c.fol[j], a = 3 * anchors[j], fr = F[anchors[j]], o = c.fofs;
+      for (var k = 0; k < 3; k++) x[f + k] = x[a + k] + o[3 * j] * fr[0][k] + o[3 * j + 1] * fr[1][k] + o[3 * j + 2] * fr[2][k];
+    }
+  }
+
+  // reset(cloth, targets): every point to where the skinned body puts it, at rest (a teleport, or the first frame)
+  function reset(c, targets) {
+    c.tgt.set(targets); c.tgt0.set(targets); c.x.set(targets); c.xp.set(targets);
+    c.acc = 0; c.started = true;
+    follow(c);
+  }
+
+  function lerpCaps(a, b, f) {
+    var out = [];
+    for (var i = 0; i < b.length; i++) {
+      var p = a[i] || b[i], q = b[i], s = [];
+      for (var j = 0; j < 6; j++) s.push(p.s[j] + (q.s[j] - p.s[j]) * f);
+      out.push({ s: s, r: q.r });
+    }
+    return out;
+  }
+
+  // step(cloth, dt, targets, capsules): advance by dt seconds. targets: each particle's skinned position now
+  // (Float32Array, x y z per particle, the space the cloth lives in, usually the world); a pinned point goes there,
+  // and a free one starts there on a reset. capsules: [{s: [ax, ay, az, bx, by, bz], r}] in the same space, now.
+  // Over the substeps the pins and capsules move in a straight line from where they were at the last step.
+  function step(c, dt, targets, capsules) {
+    if (!c.started) { reset(c, targets); c.caps = capsules; return 0; }
+    c.tgt0.set(c.tgt); c.tgt.set(targets);
+    c.caps0 = c.caps; c.caps = capsules;
+    var o = c.o, h = 1 / o.substepHz;
+    c.acc = Math.min(c.acc + dt, o.maxSubsteps * h);
+    var n = Math.floor(c.acc / h + 1e-6);
+    c.acc -= n * h;
+    for (var s = 1; s <= n; s++) substep(c, h, s / n);
+    var x = c.x, free = c.free, tg = c.tgt;
+    for (var i = 0; i < c.P; i++) if (!free[i] && !c.isFol[i]) { x[3 * i] = tg[3 * i]; x[3 * i + 1] = tg[3 * i + 1]; x[3 * i + 2] = tg[3 * i + 2]; }
+    follow(c);
+    return n;
+  }
+
+  function substep(c, h, f) {
+    var o = c.o, x = c.x, xp = c.xp, P = c.P, free = c.free, i, j;
+    var gx = o.gravity[0] * h * h, gy = o.gravity[1] * h * h, gz = o.gravity[2] * h * h, keep = Math.exp(-o.damping * h);
+    for (j = 0; j < c.act.length; j++) {
+      i = c.act[j];
+      var i3 = 3 * i;
+      if (!free[i]) {
+        xp[i3] = x[i3]; xp[i3 + 1] = x[i3 + 1]; xp[i3 + 2] = x[i3 + 2];
+        x[i3] = c.tgt0[i3] + (c.tgt[i3] - c.tgt0[i3]) * f;
+        x[i3 + 1] = c.tgt0[i3 + 1] + (c.tgt[i3 + 1] - c.tgt0[i3 + 1]) * f;
+        x[i3 + 2] = c.tgt0[i3 + 2] + (c.tgt[i3 + 2] - c.tgt0[i3 + 2]) * f;
+        continue;
+      }
+      var vx = (x[i3] - xp[i3]) * keep, vy = (x[i3 + 1] - xp[i3 + 1]) * keep, vz = (x[i3 + 2] - xp[i3 + 2]) * keep;
+      xp[i3] = x[i3]; xp[i3 + 1] = x[i3 + 1]; xp[i3 + 2] = x[i3 + 2];
+      x[i3] += vx + gx; x[i3 + 1] += vy + gy; x[i3 + 2] += vz + gz;
+    }
+    solve(c, c.st, c.stL, o.stretch, false);
+    solve(c, c.bd, c.bdL, c.bdK, false);
+    solve(c, c.th, c.thL, 1.0, true);
+    collide(c, lerpCaps(c.caps0, c.caps, f));
+  }
+
+  function solve(c, idx, L, k, tether) {
+    var x = c.x, free = c.free;
+    for (var e = 0, m = L.length; e < m; e++) {
+      var a = idx[2 * e], b = idx[2 * e + 1], a3 = 3 * a, b3 = 3 * b;
+      var dx = x[b3] - x[a3], dy = x[b3 + 1] - x[a3 + 1], dz = x[b3 + 2] - x[a3 + 2];
+      var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (d < 1e-9 || (tether && d <= L[e])) continue;
+      var wa = free[a] ? 1 : 0, wb = tether ? 0 : free[b] ? 1 : 0, ws = wa + wb;
+      if (!ws) continue;
+      var g = (typeof k === "number" ? k : k[e]) * (d - L[e]) / (d * ws);
+      x[a3] += wa * g * dx; x[a3 + 1] += wa * g * dy; x[a3 + 2] += wa * g * dz;
+      x[b3] -= wb * g * dx; x[b3 + 1] -= wb * g * dy; x[b3 + 2] -= wb * g * dz;
+    }
+  }
+
+  function collide(c, caps) {
+    var x = c.x, xp = c.xp, P = c.P, free = c.free, mg = c.o.margin, fr = c.o.friction;
+    for (var k = 0; k < caps.length; k++) {
+      var s = caps[k].s, r = caps[k].r + mg, r2 = r * r;
+      var ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
+      var uu = ux * ux + uy * uy + uz * uz || 1e-12;
+      var lo = Math.min(ax, s[3]) - r, hi = Math.max(ax, s[3]) + r, lo2 = Math.min(az, s[5]) - r, hi2 = Math.max(az, s[5]) + r;
+      var loy = Math.min(ay, s[4]) - r, hiy = Math.max(ay, s[4]) + r;
+      for (var j = 0, F = c.freeIdx, nf = F.length; j < nf; j++) {
+        var i = F[j], i3 = 3 * i, px = x[i3], py = x[i3 + 1], pz = x[i3 + 2];
+        if (px < lo || px > hi || pz < lo2 || pz > hi2 || py < loy || py > hiy) continue;
+        var t = ((px - ax) * ux + (py - ay) * uy + (pz - az) * uz) / uu;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        var cx = ax + ux * t, cy = ay + uy * t, cz = az + uz * t, dx = px - cx, dy = py - cy, dz = pz - cz;
+        var d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 >= r2) continue;
+        var d = Math.sqrt(d2) || 1e-9, push = (r - d) / d;
+        x[i3] += dx * push; x[i3 + 1] += dy * push; x[i3 + 2] += dz * push;
+        // friction: the sliding along the leg since the last substep is cut by a share
+        var nx = dx / d, ny = dy / d, nz = dz / d;
+        var mx = x[i3] - xp[i3], my = x[i3 + 1] - xp[i3 + 1], mz = x[i3 + 2] - xp[i3 + 2], mn = mx * nx + my * ny + mz * nz;
+        xp[i3] += fr * (mx - mn * nx); xp[i3 + 1] += fr * (my - mn * ny); xp[i3 + 2] += fr * (mz - mn * nz);
+      }
+    }
+  }
+
+  // positions(cloth): x y z per vertex of the mesh it was built from (welded points share one place); normals too
+  function positions(c, withNormals) {
+    var map = c.map, x = c.x, out = c.out;
+    for (var v = 0; v < map.length; v++) {
+      var p = 3 * map[v];
+      out[3 * v] = x[p]; out[3 * v + 1] = x[p + 1]; out[3 * v + 2] = x[p + 2];
+    }
+    if (withNormals) {
+      var pn = c.pn, tris = c.tris, nm = c.normals;
+      pn.fill(0);
+      for (var t = 0; t < tris.length; t += 3) {
+        var a = 3 * map[tris[t]], b = 3 * map[tris[t + 1]], d = 3 * map[tris[t + 2]];
+        var e1x = x[b] - x[a], e1y = x[b + 1] - x[a + 1], e1z = x[b + 2] - x[a + 2];
+        var e2x = x[d] - x[a], e2y = x[d + 1] - x[a + 1], e2z = x[d + 2] - x[a + 2];
+        var nx = e1y * e2z - e1z * e2y, ny = e1z * e2x - e1x * e2z, nz = e1x * e2y - e1y * e2x;
+        pn[a] += nx; pn[a + 1] += ny; pn[a + 2] += nz; pn[b] += nx; pn[b + 1] += ny; pn[b + 2] += nz;
+        pn[d] += nx; pn[d + 1] += ny; pn[d + 2] += nz;
+      }
+      for (v = 0; v < map.length; v++) {
+        p = 3 * map[v];
+        var l = Math.sqrt(pn[p] * pn[p] + pn[p + 1] * pn[p + 1] + pn[p + 2] * pn[p + 2]) || 1;
+        nm[3 * v] = pn[p] / l; nm[3 * v + 1] = pn[p + 1] / l; nm[3 * v + 2] = pn[p + 2] / l;
+      }
+    }
+    return out;
+  }
+
+  // ---- three.js -----------------------------------------------------------------------------------------------
+  // attach(THREE, skinned, opts): the robe's SkinnedMesh (bound to the figure's bones) becomes a plain mesh whose
+  // points are worked out on the CPU each frame: skinned above the belt, cloth below it. The GLB carries, per point,
+  // _CLOTH (1 free, 0 rides the body) and, on the mesh, extras.cloth.capsules ([{a, b, r}]: a capsule of radius r, in
+  // the robe's own units, from bone a's joint to bone b's). Returns {mesh, update(dt), reset()}. The figure's world
+  // matrices must be up to date when update runs (after the pose is set and updateMatrixWorld).
+  function attach(THREE, skinned, opts) {
+    opts = opts || {};
+    var g = skinned.geometry, pos = g.attributes.position, n = pos.count;
+    var simAttr = g.attributes._cloth || g.attributes._CLOTH;
+    var sim = new Float32Array(n);
+    for (var i = 0; i < n; i++) sim[i] = simAttr ? simAttr.getX(i) : 0;
+    var index = g.index ? g.index.array : Uint32Array.from({ length: n }, function (_, i) { return i; });
+    var extras = (skinned.userData && skinned.userData.cloth) || (skinned.parent && skinned.parent.userData.cloth) || {};
+    if (typeof extras === "string") extras = JSON.parse(extras);
+    var skel = skinned.skeleton, bones = skel.bones, byName = {};
+    bones.forEach(function (b) { byName[b.name] = b; });
+    var scale = new THREE.Vector3();
+    skinned.updateMatrixWorld(true);
+    skinned.matrixWorld.decompose(new THREE.Vector3(), new THREE.Quaternion(), scale);
+    var unit = (scale.x + scale.y + scale.z) / 3;                        // world units per robe unit
+    var up = opts.up || [0, 1, 0];
+    var o = {}, k;
+    for (k in opts.options || {}) o[k] = opts.options[k];
+    o.gravity = [-up[0] * 9.81 * unit, -up[1] * 9.81 * unit, -up[2] * 9.81 * unit];
+    if (o.margin === undefined) o.margin = DEFAULTS.margin * unit;
+    var c = build({ rest: pos.array, tris: index, sim: sim, options: o });
+    var caps = (extras.capsules || []).filter(function (q) { return byName[q.a] && byName[q.b]; });
+
+    var geo = g.clone();
+    geo.deleteAttribute("skinIndex"); geo.deleteAttribute("skinWeight");
+    var mesh = new THREE.Mesh(geo, skinned.material);
+    mesh.name = skinned.name + "-cloth";
+    mesh.frustumCulled = false;
+    skinned.visible = false;
+    (skinned.parent || opts.parent).add(mesh);
+    var si = g.attributes.skinIndex, sw = g.attributes.skinWeight, NB = bones.length;
+    var SI = new Uint16Array(4 * c.P), SW = new Float32Array(4 * c.P), R0 = new Float32Array(3 * c.P);
+    for (var p = 0; p < c.P; p++) {
+      var v0 = c.reps[p];
+      for (var j = 0; j < 4; j++) { SI[4 * p + j] = si.getComponent ? si.getComponent(v0, j) : si.array[4 * v0 + j]; SW[4 * p + j] = sw.getComponent ? sw.getComponent(v0, j) : sw.array[4 * v0 + j]; }
+      R0[3 * p] = pos.getX(v0); R0[3 * p + 1] = pos.getY(v0); R0[3 * p + 2] = pos.getZ(v0);
+    }
+    var ME = new Float32Array(16 * NB), mb = new THREE.Matrix4(), pre = new THREE.Matrix4();
+    var targets = new Float32Array(3 * c.P), inv = new THREE.Matrix4();
+
+    function skin() {
+      // world point = matrixWorld * bindMatrixInverse * sum(w * boneMatrixWorld * boneInverse) * bindMatrix * rest
+      pre.multiplyMatrices(skinned.matrixWorld, skinned.bindMatrixInverse);
+      for (var b = 0; b < NB; b++) {
+        mb.multiplyMatrices(bones[b].matrixWorld, skel.boneInverses[b]).multiply(skinned.bindMatrix).premultiply(pre);
+        ME.set(mb.elements, 16 * b);
+      }
+      for (var p = 0; p < c.P; p++) {
+        var x = R0[3 * p], y = R0[3 * p + 1], z = R0[3 * p + 2], ox = 0, oy = 0, oz = 0;
+        for (var j = 0; j < 4; j++) {
+          var w = SW[4 * p + j];
+          if (!w) continue;
+          var e = 16 * SI[4 * p + j];
+          ox += w * (ME[e] * x + ME[e + 4] * y + ME[e + 8] * z + ME[e + 12]);
+          oy += w * (ME[e + 1] * x + ME[e + 5] * y + ME[e + 9] * z + ME[e + 13]);
+          oz += w * (ME[e + 2] * x + ME[e + 6] * y + ME[e + 10] * z + ME[e + 14]);
+        }
+        targets[3 * p] = ox; targets[3 * p + 1] = oy; targets[3 * p + 2] = oz;
+      }
+    }
+    var a3 = new THREE.Vector3(), b3 = new THREE.Vector3();
+    function capsules() {
+      return caps.map(function (q) {
+        byName[q.a].getWorldPosition(a3); byName[q.b].getWorldPosition(b3);
+        return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit };
+      });
+    }
+    function write() {
+      var out = positions(c, true), pa = geo.attributes.position.array, na = geo.attributes.normal && geo.attributes.normal.array, nm = c.normals;
+      inv.copy(mesh.parent.matrixWorld).invert();
+      var e = inv.elements;
+      for (var v = 0; v < n; v++) {
+        var x = out[3 * v], y = out[3 * v + 1], z = out[3 * v + 2];
+        pa[3 * v] = e[0] * x + e[4] * y + e[8] * z + e[12];
+        pa[3 * v + 1] = e[1] * x + e[5] * y + e[9] * z + e[13];
+        pa[3 * v + 2] = e[2] * x + e[6] * y + e[10] * z + e[14];
+        if (na) {   // the parent's turn only (the figure is not stretched), normalised after
+          var nx = nm[3 * v], ny = nm[3 * v + 1], nz = nm[3 * v + 2];
+          var qx = e[0] * nx + e[4] * ny + e[8] * nz, qy = e[1] * nx + e[5] * ny + e[9] * nz, qz = e[2] * nx + e[6] * ny + e[10] * nz;
+          var l = Math.sqrt(qx * qx + qy * qy + qz * qz) || 1;
+          na[3 * v] = qx / l; na[3 * v + 1] = qy / l; na[3 * v + 2] = qz / l;
+        }
+      }
+      geo.attributes.position.needsUpdate = true;
+      if (na) geo.attributes.normal.needsUpdate = true;
+    }
+    return {
+      mesh: mesh, cloth: c, unit: unit,
+      update: function (dt) { skin(); step(c, dt, targets, capsules()); write(); },
+      reset: function () { skin(); reset(c, targets); c.caps = capsules(); write(); },
+    };
+  }
+
+  return { build: build, reset: reset, step: step, positions: positions, attach: attach, DEFAULTS: DEFAULTS };
+});

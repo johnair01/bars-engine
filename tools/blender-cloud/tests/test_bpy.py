@@ -510,8 +510,10 @@ def j4b():
 def j5():
     """garments.py --all puts the robe, the sash (cut on the body and over the robe) and the topknot on all nine
     figures. (a) No covered body point comes through a garment, and no robe point through the sash worn over it, at
-    any of the walk's 25 keys; (b) each garment GLB is under 150 KB, with one skin whose joints are the figure's own
-    names. The sheet goes to the eye (cc-wardrobe-gate)."""
+    any of the walk's 25 keys, with the robe's skirt as cloth (cloth.js run over the walk by cloth_walk.mjs, after
+    two seconds of walking); (b) each garment GLB is under 150 KB, with one skin whose joints are the figure's own
+    names; (c) each robe GLB carries what the game's cloth needs: a _CLOTH value per point, some of them cloth, and
+    the leg capsules in its extras. The sheet goes to the eye (cc-wardrobe-gate)."""
     out = tmpdir("j5")
     r, secs = run([GAME / "cave/garments.py", "--all", "--out", out], timeout=1800)
     check(r.returncode == 0, f"garments.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
@@ -533,19 +535,33 @@ def j5():
             fj = glb_json(out / rep["figures"][0]["file"])
             rig = {fj["nodes"][n]["name"] for n in fj["skins"][0]["joints"]}
         check(names == rig, f"{row['id']}: joints {sorted(names ^ rig)} differ from the figure's")
+        if row["garment"] == "robe":
+            prim = j["meshes"][0]["primitives"][0]
+            node = next(n for n in j["nodes"] if n.get("mesh") == 0)
+            caps = json.loads(node.get("extras", {}).get("cloth", "{}")).get("capsules", [])
+            check("_CLOTH" in prim["attributes"] and len(caps) >= 4 and row.get("cloth", {}).get("free", 0) > 100,
+                  f"{row['id']}: no cloth in the GLB (attributes {sorted(prim['attributes'])}, {len(caps)} capsules)")
     sizes = [(out / x["file"]).stat().st_size for x in rows]
     return f"36 garments on nine figures, none through at 25 keys, {min(sizes) // 1024} to {max(sizes) // 1024} KB; {secs:.0f} s"
 
 
 @test("J5b")
 def j5b():
-    """The check sees cloth that is too tight: without the walking fit (--no-fit) the robe has points through it."""
+    """The check sees cloth that is too tight, and cloth the legs are not pushing: without the walking fit (--no-fit)
+    the robe has points through it, and with the skirt's cloth run without its leg capsules (--no-legs) the legs come
+    through the skirt."""
     out = tmpdir("j5b")
     r, _ = run([GAME / "cave/garments.py", "--no-fit", "--out", out], timeout=900)
     check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
     robe = next(x for x in json.loads((out / "report.json").read_text())["garments"] if x["garment"] == "robe")
     check(robe["worst"] > 0, f"the unfitted robe passed: {robe['through']}")
-    return f"unfitted robe: {sum(robe['through'])} points through over the walk, the most at one key {robe['worst']}"
+    out2 = tmpdir("j5b-legs")
+    r, _ = run([GAME / "cave/garments.py", "--no-legs", "--out", out2], timeout=900)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
+    legs = next(x for x in json.loads((out2 / "report.json").read_text())["garments"] if x["garment"] == "robe")
+    check(legs["worst"] > 0, f"the cloth without its leg capsules passed: {legs['through']}")
+    return (f"unfitted robe: {sum(robe['through'])} points through over the walk, the most at one key {robe['worst']}; "
+            f"cloth without leg capsules: {sum(legs['through'])} through, the most at one key {legs['worst']}")
 
 
 if __name__ == "__main__":

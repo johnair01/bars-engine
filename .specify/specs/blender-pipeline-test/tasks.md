@@ -83,6 +83,15 @@ UDIM images for G3 are made at run time by `_make_fixtures.py`, so no `synthetic
   - Set aside: Root's hem heights (raised to 0.40 m for its low stance; the cave figure walks upright, so the hem is
     at 0.15 m) and its ANSUR body rows (the cave figure is J4's stylized body, measured directly).
 
+- [x] [claude] 7c, J5 round 5, the skirt as cloth (board position `j5-skirt-cloth`): `cave/cloth.js` (the game's
+  cloth, `CaveCloth.attach` for three.js), `cave/cloth_walk.mjs` (the same cloth over the walk for Blender), the robe
+  GLB's `_CLOTH` and capsules; tests J5, J5b (with `--no-legs`) and J5d (`j5_cloth.mjs`). Root-game's cloth solver,
+  set aside in round 1 as too slow for a phone, is replaced by a smaller one: only the skirt below the belt, about 560
+  points, about 1 ms a figure per frame in the cloud browser.
+- [ ] [claude] Wire the figures, the garments and cloth.js into `cave.js` together (inline cloth.js before cave.js in
+  `scripts/build-ontology-game.mjs`; `CaveCloth.attach(THREE, robeMesh)` once the robe is bound to the avatar's bones,
+  then `update(dt)` each frame after the pose and `updateMatrixWorld`, `reset()` after a jump).
+
 ## Steps only Wendell can take
 
 - [ ] [wendell] N3 is `cave-studio-02`, already on Your steps.

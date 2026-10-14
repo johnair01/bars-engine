@@ -157,6 +157,36 @@ def j5c():
             f"{res['swap_frame_median_ms']}, worst {res['swap_frame_worst_ms']} (phone judges the 30 a second line)")
 
 
+@test("J5d")
+def j5d():
+    """J5(d): the robe's skirt as cloth in headless Chromium with three.js r128, as cave.js will run it (j5_cloth.mjs:
+    cloth.js's CaveCloth.attach on the robe GLB, bound to the walking figure, carried forward at the walk's speed).
+    With four figures walking, every cloth point stays a number, the skirt swings away from where skinning alone puts
+    it (more than 2 cm), and the cloth costs under 1.5 ms per figure for each 1/60 s it runs (skinning on the CPU, the
+    step and writing the points). The cloud browser draws without a graphics chip, so the phone is the judge of the
+    frame rate; this bounds the cloth's own share."""
+    needs("registry.npmjs.org")
+    root = W / "cave-test"
+    if not (root / "node_modules/playwright").exists():
+        root.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run(["npm", "install", "--prefix", str(root), "--silent", *[f"{k}@{v}" for k, v in CAVE_PINS.items()]],
+                           capture_output=True, text=True, timeout=900)
+        check(r.returncode == 0, f"npm install failed: {r.stderr[-300:]}")
+    out = tmpdir("j5d")
+    r = subprocess.run([BLENV, str(GAME / "cave/garments.py"), "--build", "average", "--palette", "dusk", "--out", str(out)],
+                       capture_output=True, text=True, timeout=900)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
+    shutil.copyfile(TESTS / "j5_cloth.mjs", root / "j5_cloth.mjs")
+    r = subprocess.run(["node", "j5_cloth.mjs"], capture_output=True, text=True, cwd=root, timeout=600,
+                       env=dict(os.environ, J5_DIR=str(out), FIGURES="4", CLOTH_JS=str(GAME / "cave/cloth.js")))
+    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    check(r.returncode == 0 and line, f"j5_cloth.mjs failed: {r.stderr[-300:]}")
+    res = json.loads(line)
+    check(res["pass"], f"cloth: {res}")
+    return (f"4 figures, {res['free']} cloth points each of {res['particles']}: {res['per_figure_ms']} ms a figure per "
+            f"1/60 s (median; p95 for all four {res['p95_ms']} ms), skirt swings {res['skirt_swing_m']} m")
+
+
 @test("N1")
 def n1():
     needs("api.blenderkit.com", "assets.blenderkit.com")

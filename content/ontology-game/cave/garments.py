@@ -11,11 +11,12 @@ set (cc-robe-set), each in the robe set's three palettes (dusk, jade, hemp), for
 - robe: an ankle-length outer robe with wide sleeves to the wrist, belted at the sash's height, a crossed collar
   worn left over right (the J4 collar's own line, character.collar_path) and side slits. It is cut as two flat
   panels, sewn, and draped on the standing body by Blender's cloth solver (drape(); round 3). Above the hips it
-  takes its weights from the body under it, the sleeves from the arm. Below the hips it hangs from the hips and from
-  two hem bones in the rig (character.HEM_BONES): the front panel goes with whichever leg is ahead, the back panel
-  with whichever is behind, and the sides with their own thigh. This is root-game's rule that hanging cloth rides
-  the pelvis, not the legs (kit_engine.js skirtWeights), with hem bones where root-game runs its cloth solver
-  (spec.md, J5: "a few extra bones in its hem first").
+  takes its weights from the body under it, the sleeves from the arm. Below the belt (PIN_Z) the robe's body is
+  cloth at runtime (cloth.js; round 5, board position j5-skirt-cloth): pinned to the hips at the belt, hanging under
+  gravity, carrying the figure's motion, pushed out by leg capsules, its front and back panels free below the slits.
+  The GLB marks each point (_CLOTH) and carries the capsules (extras.cloth); its skin weights below the belt (with the
+  pelvis, root-game's rule for hanging cloth) are only where the cloth starts. The rig's hem bones (character.HEM_BONES)
+  no longer carry the robe.
 - sash: a band at the waist, knotted in front on the wearer's left with two tails. It is cut twice, once on the body
   ("sash") and once over the robe ("sash-robe"), so it sits close whichever is under it; weights come from the layer
   beneath.
@@ -84,7 +85,8 @@ COLOURWAYS = {
 }
 
 # the robe's cut
-SLIT_REACH = 0.10                                # metres either side of a slit that go with their own panel
+PIN_Z = 0.95                                     # metres: above this the robe rides the body (the sash covers 0.985
+                                                 # to 1.075); below it the robe's body is cloth (cloth.js)
 HEM, SLIT = 0.15, 0.54                           # metres above the floor: the hem shows the ankle ties; the slits are
                                                  # cut to here and hang a little higher once belted (round 3: room for the stride)
 
@@ -102,9 +104,11 @@ def main_bone(w):
 
 
 def posed(obj, frame):
-    """World positions of obj's vertices at frame, through its armature."""
+    """World positions of obj's vertices at frame, through its armature (or the cloth's, from POSED)."""
     sc = bpy.context.scene
     sc.frame_set(frame)
+    if frame in POSED.get(obj.name, {}):
+        return POSED[obj.name][frame]
     dg = bpy.context.evaluated_depsgraph_get()
     ev = obj.evaluated_get(dg)
     me = ev.to_mesh()
@@ -606,36 +610,28 @@ def robe(fig, rig, build, cw):
     for f, (p, _) in zip(faces, labels):
         for v in f:
             of.setdefault(v, []).append(p)
-    # the slits' tops: the highest open edge of the robe's body low on its sides
-    count = {}
-    for f, (p, _) in zip(faces, labels):
-        for e in zip(f, f[1:] + f[:1]):
-            count[frozenset(e)] = count.get(frozenset(e), 0) + (1 if p % 3 == 0 else 2)
-    slit_edge = [e for e, n in count.items() if n == 1 and all(0.25 < verts[v].z < 1.0 and abs(verts[v].x) > 0.12 for v in e)]
-    slit_top = max(verts[v].z for e in slit_edge for v in e)
-    # only the cloth near a slit's edges goes with its own panel; the middle of each panel keeps its hang
-    near_slit = KDTree(len(slit_edge) * 5)
-    for n, e in enumerate(slit_edge):
-        a, b = (verts[v] for v in e)
-        for t in range(5):
-            near_slit.insert(a.lerp(b, t / 4), 5 * n + t)
-    near_slit.balance()
-    weights = []
+    weights, cloth = [], []
     for i, p in enumerate(verts):
         ps = of.get(i, [0])
-        if any(q % 3 == 0 for q in ps):
-            front = sum(q < 3 for q in ps) / len(ps)     # on the front panel 1, the back 0, a side seam between
-            slit = smooth(slit_top + 0.10, slit_top, p.z) * smooth(SLIT_REACH, 0.02, near_slit.find(p)[2])
-            weights.append(skirt_weights(p, from_body(p), front, slit))
+        if all(q % 3 == 0 for q in ps):
+            weights.append(skirt_weights(p, from_body(p)))
+            cloth.append(1.0 if p.z < PIN_Z else 0.0)        # the skirt: cloth at runtime (cloth.js)
         else:
-            weights.append(from_arm["L" if 1 in [q % 3 for q in ps] else "R"](p))
+            weights.append(from_body(p) if any(q % 3 == 0 for q in ps) else from_arm["L" if 1 in [q % 3 for q in ps] else "R"](p))
+            cloth.append(0.0)
     weights = smooth_skirt(weights, verts, faces, [p % 3 for p, _ in labels])
     n_faces = len(faces)
     verts, faces, labels, src = hemmed(verts, faces, labels)
     weights += [weights[src[i]] for i in range(len(weights), len(verts))]   # the turned hem moves with its edge
+    base = list(cloth)
+    for i in range(len(cloth), len(verts)):            # the hem's edge is stiff (2); the hem turned back inside it
+        cloth.append(3.0 * base[src[i]])               # follows that edge (3)
+        cloth[src[i]] = 2.0 * base[src[i]]
     colours = [cw["edge"] if t else cw["robe"] for _, t in labels]
     part = [p % 3 if f < n_faces else FACING for f, (p, _) in enumerate(labels)]
     obj = mesh_object("robe", verts, faces, colours, weights, rig, part)
+    ca = obj.data.attributes.new("_CLOTH", "FLOAT", "POINT")    # exported as the GLB's _CLOTH: 1 cloth, 2 its hem's edge, 3 the hem turned inside, 0 rides the body
+    ca.data.foreach_set("value", cloth)
     outward(obj)
     return obj
 
@@ -694,31 +690,122 @@ def hemmed(verts, faces, labels):
     return V, F, L, src
 
 
-def skirt_weights(p, body, front_panel=0.5, slit=0.0):
-    """Below the hips the robe hangs from the hips, its front panel on hemF, its back panel on hemB and its sides on
-    their own thigh, more so toward the hem; above them it takes the body's weights (blended between). Below the
-    slits' tops (slit 1) the sides are open: the front panel's edge goes with its own side's thigh and the back panel's
-    edge with the leg behind, so a slit parts as its leg strides forward and closes as the leg passes back under the
-    body (Wendell, 2026-10-14: "the places where there are slits in the robe aren't separating when they walk", and
-    "the slit is supposed to separate and close as the leg moves")."""
-    t = smooth(1.02, 0.55, p.z)
+def skirt_weights(p, body):
+    """Below the hips the robe hangs from the hips; above them it takes the body's weights (blended between). The
+    skirt below PIN_Z is cloth at runtime (cloth.js), so these weights only say where it starts from and where it
+    goes if the cloth is off: with the pelvis, root-game's rule for hanging cloth (kit_engine.js skirtWeights)."""
+    t = smooth(1.02, 0.80, p.z)
     if t <= 0:
         return body
-    th = math.atan2(p.y, p.x)
-    front, back = max(0.0, -math.sin(th)) ** 1.5, max(0.0, math.sin(th)) ** 1.5
-    sideways = abs(math.cos(th)) ** 2
-    rest = max(0.0, 1.0 - front - back)
-    back = back + slit * (1 - front_panel) * rest
-    thigh = "hipL" if p.x > 0 else "hipR"
-    hang = {"hemF": 0.9 * front, "hemB": 0.9 * back,
-            thigh: 0.55 * sideways * (1 - slit) + 0.9 * slit * front_panel * rest}
-    hang["hips"] = max(0.05, 1.0 - sum(hang.values()))
-    out = {}
-    for b, x in body.items():
-        out[b] = out.get(b, 0.0) + (1 - t) * x
-    for b, x in hang.items():
-        out[b] = out.get(b, 0.0) + t * x
+    out = {b: (1 - t) * x for b, x in body.items()}
+    out["hips"] = out.get("hips", 0.0) + t
     return norm(out)
+
+
+# ---- the skirt as cloth (cloth.js, run over the walk by cloth_walk.mjs) -----------------------------------------
+#
+# Wendell, 2026-10-14, on round 4: "We're missing something important about how the physics of how the bottom robe is
+# supposed to move. It's not moving like clothes and every fix is still too localized". Through round 4 the skirt was
+# draped once standing and then glued to the legs by bone weights. Now it is cloth every frame, in the game and here
+# alike: the same cloth.js, which Blender runs in Node over the walk for the test and the pictures (board position
+# j5-skirt-cloth).
+
+CAPSULES = (("hipL", "kneeL"), ("kneeL", "ankleL"), ("hipR", "kneeR"), ("kneeR", "ankleR"), ("hipL", "hipR"),
+            ("kneeL", "kneeL"), ("kneeR", "kneeR"))
+CAP_PCT = 0.99                                   # a capsule's radius: this share of its body points lie inside it
+POSED = {}                                       # {object name: {frame: [Vector]}}: positions posed() gives instead
+                                                 # of the armature's (the robe's cloth over the walk)
+CLOTH_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cloth_walk.mjs")
+NO_LEGS = False                                  # --no-legs: the cloth runs without its leg capsules (test J5b)
+WARM = 2.0                                       # seconds walked before the test's keys, so the cloth has settled
+
+
+def leg_capsules(fig, build):
+    """The capsules the skirt's cloth is pushed out by: each thigh (hip to knee) and shin (knee to ankle), the pelvis
+    (hip joint to hip joint) and each knee (a ball: a bent knee's front stands out past both thigh and shin), each
+    round the body points of its own bones (the pelvis: those between the hip joints, below the waist; a knee: those
+    within 8 cm of it)."""
+    J, W = C.joints(build), bone_weights(fig)
+    out = []
+    for a, b in CAPSULES:
+        A, B = Vector(J[a][0]), Vector(J[b][0])
+        if a == b:                                       # a knee
+            own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in ("hip" + a[-1], a)
+                   and (v.co - A).length < 0.08]
+        elif a[:-1] == b[:-1]:                           # the pelvis
+            own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in ("hips", "hipL", "hipR")
+                   and 0.78 < v.co.z < 0.97 and abs(v.co.x) <= abs(A.x)]
+        else:
+            own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) == a]
+        d = sorted(seg_dist(c, A, B) for c in own)
+        out.append({"a": a, "b": b, "r": round(d[min(len(d) - 1, int(CAP_PCT * len(d)))], 4)})
+    return out
+
+
+def cloth_job(robe_obj, rig, capsules, scenarios):
+    """What cloth_walk.mjs needs: the rig at rest, the robe (points, triangles, the cloth mask, weights), the leg
+    capsules and the walks to run."""
+    order = []                                           # the bones, parents first
+    def visit(bn):
+        order.append(bn)
+        for ch in bn.children:
+            visit(ch)
+    for bn in rig.data.bones:
+        if bn.parent is None:
+            visit(bn)
+    idx = {bn.name: i for i, bn in enumerate(order)}
+    bones = [{"name": bn.name, "parent": bn.parent.name if bn.parent else None,
+              "head": list(rig.matrix_world @ bn.head_local)} for bn in order]
+    me = robe_obj.data
+    groups = {g.index: g.name for g in robe_obj.vertex_groups}
+    rest = [c for v in me.vertices for c in (robe_obj.matrix_world @ v.co)]
+    tris = [t for p in me.polygons for k in range(1, len(p.vertices) - 1) for t in (p.vertices[0], p.vertices[k], p.vertices[k + 1])]
+    weights = [[[idx[groups[g.group]], g.weight] for g in v.groups if g.weight > 0 and groups[g.group] in idx] for v in me.vertices]
+    sim = [d.value for d in me.attributes["_CLOTH"].data]
+    return {"bones": bones, "robe": {"rest": rest, "tris": tris, "sim": sim, "weights": weights},
+            "capsules": capsules, "scenarios": scenarios}
+
+
+def run_cloth(job, tag="cloth"):
+    """Run cloth_walk.mjs on a job; returns its result."""
+    d = os.path.join(os.environ.get("W", "/tmp/blender-cloud"), "cloth-jobs")
+    os.makedirs(d, exist_ok=True)
+    jp, op = os.path.join(d, tag + "-job.json"), os.path.join(d, tag + "-out.json")
+    with open(jp, "w") as f:
+        json.dump(job, f)
+    r = subprocess.run(["node", CLOTH_JS, jp, op], capture_output=True, text=True)
+    if r.returncode:
+        raise SystemExit(f"cloth_walk.mjs failed: {r.stderr[-800:]}")
+    with open(op) as f:
+        return json.load(f)
+
+
+def walk_keys():
+    """The test's walk: the 25 keys of character.py's walk, after WARM seconds of walking (frame 1 + k is key k)."""
+    return {"name": "walk", "steps": C.STEPS_PER_S, "amp": C.AMP, "turn": None,
+            "samples": [WARM + k / C.FPS for k in range(C.KEYS + 1)]}
+
+
+def cloth_scenarios():
+    """The pictures' walks, eight moments each: one step cycle at the normal stride (character.py's, two steps a
+    second); one at a fast stride (cave.js's 2.5 steps a second at its widest swing, 0.62); and a quarter turn to
+    the left over 0.75 s while walking at the normal stride, from just before it to just after."""
+    cyc = lambda steps: 2.0 / steps
+    return [{"name": "walk", "steps": C.STEPS_PER_S, "amp": C.AMP, "turn": None,
+             "samples": [WARM + i * cyc(C.STEPS_PER_S) / 8 for i in range(8)]},
+            {"name": "fast", "steps": 2.5, "amp": 0.62, "turn": None,
+             "samples": [WARM + i * cyc(2.5) / 8 for i in range(8)]},
+            {"name": "turn", "steps": C.STEPS_PER_S, "amp": C.AMP, "turn": {"at": WARM, "angle": math.pi / 2, "dur": 0.75},
+             "samples": [WARM - 0.1 + i * 0.15 for i in range(8)]}]
+
+
+def cloth_walk(robe_obj, rig, capsules):
+    """The robe over the test's walk, cloth below the belt: sets POSED for the robe at each key; returns the result."""
+    res = run_cloth(cloth_job(robe_obj, rig, capsules, [walk_keys()]), robe_obj.name)
+    s = res["scenarios"][0]["samples"]
+    POSED[robe_obj.name] = {1 + k: [Vector(x["robe"][3 * i:3 * i + 3]) for i in range(len(x["robe"]) // 3)]
+                            for k, x in enumerate(s)}
+    return res
 
 
 # ---- the sash -------------------------------------------------------------------------------------------------
@@ -893,7 +980,20 @@ def seg_dist(p, a, b):
     return (p - (a + ab * t)).length
 
 
-def through(wearer, cover, garment, keys, parts_of=None, ray_from=None, limb_of=None):
+def crossings(tree, p, d, reach=0.6):
+    """How many times the ray from p along d (unit) crosses the cloth within reach."""
+    n, o, left = 0, p.copy(), reach
+    while left > 0:
+        hit = tree.ray_cast(o, d, left)[0]
+        if hit is None:
+            return n
+        n += 1
+        left -= (hit - o).length + 1e-4
+        o = hit + d * 1e-4
+    return n
+
+
+def through(wearer, cover, garment, keys, parts_of=None, ray_from=None, limb_of=None, cloth_z=None, cloth_limb=None):
     """For each key: the covered points of `wearer` outside `garment`'s surface and not at an opening. A point is a
     vertex index, or a tuple of indices for the middle of a face (a body face can bulge through between vertices).
     parts_of(i): the garment parts (face attribute "part") that may hold point i, its own first; a point held by any
@@ -903,6 +1003,11 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None, limb_of=
     test alone can be fooled where cloth folds.
     limb_of(i): the leg bone point i lies on where it may step out through a slit, or None. Such a point outside the
     cloth is held when no cloth lies between it and its bone: it came out through the slit, not through the cloth.
+    cloth_z: below this height (the point's standing height) the garment is cloth (cloth.js), which folds and pleats
+    as it swings: a fold's side can be the face nearest a point that is well inside. There a point is inside when a
+    ray out from it (away from its leg bone where limb_of names one, else from the middle) crosses the cloth an odd
+    number of times (once through a plain skirt, three times through a fold), by two rays of three. cloth_limb(i):
+    the leg bone of point i for this test, at any height (a leg's own outward is away from its bone, not the middle).
     Returns ([count per key], {garment vertex: push needed})."""
     me = garment.data
     polys = [list(p.vertices) for p in me.polygons]
@@ -933,6 +1038,29 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None, limb_of=
             for i in idx:
                 p = wc[i] if isinstance(i, int) else sum((wc[v] for v in i), Vector()) / len(i)
                 first, held = None, False
+                i0 = i if isinstance(i, int) else i[0]
+                if cloth_z is not None and rest[i0].z < cloth_z and len(pids) == 1:
+                    limb = (cloth_limb or limb_of or (lambda _: None))(i0)
+                    if limb:
+                        pb, mw = wearer.parent.pose.bones[limb], wearer.parent.matrix_world
+                        a, b = mw @ pb.head, mw @ pb.tail
+                        t = max(0.0, min(1.0, (p - a).dot(b - a) / max((b - a).length_squared, 1e-9)))
+                        d = p - a.lerp(b, t)
+                    else:
+                        d = Vector((p.x, p.y, 0))
+                    tr, sel = tree(pids[0])
+                    if d.length > 1e-6:
+                        dn = d.normalized()            # three rays a little apart, so one along an edge or a fold
+                        odd = sum(crossings(tr, p, (Matrix.Rotation(a, 3, "Z") @ dn).normalized()) % 2   # cannot decide
+                                  for a in (-0.25, 0.0, 0.25))
+                        if odd >= 2:
+                            continue                       # inside the cloth
+                        if limb and tr.ray_cast(p, -d.normalized(), d.length)[0] is None:
+                            continue                       # out through a slit, clear of the cloth
+                        loc, nor, fi, _ = tr.find_nearest(p)
+                        LAST_THROUGH.append((k, i, (p - loc).length))
+                        n += 1
+                        continue
                 for pid in pids:
                     t, sel = tree(pid)
                     loc, nor, fi, _ = t.find_nearest(p)
@@ -1110,6 +1238,9 @@ def cover_head(fig):
 # ---- export and sheet -----------------------------------------------------------------------------------------
 
 def export_garment(obj, rig, path):
+    """The garment exported skinned, with its attributes (the robe's _CLOTH) and its custom properties as extras
+    (the robe's cloth). The thickening is not applied in the GLB (export_apply is off): the cloth is one sheet,
+    drawn from both sides."""
     sol = obj.modifiers.new("Thick", "SOLIDIFY")
     sol.thickness, sol.offset, sol.use_rim = THICK, 1.0, True
     bpy.ops.object.select_all(action="DESELECT")
@@ -1120,7 +1251,7 @@ def export_garment(obj, rig, path):
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_yup=True,
                               export_normals=True, export_texcoords=False, export_skins=True,
                               export_animations=False, export_vertex_color="ACTIVE", export_all_vertex_colors=False,
-                              export_apply=False)
+                              export_apply=False, export_attributes=True, export_extras=True)
     obj.modifiers.remove(obj.modifiers["Thick"])
     return os.path.getsize(path)
 
@@ -1149,12 +1280,26 @@ def build_all(build, palette, out_dir, do_fit=True):
     slits = max(rc[v].z for e in openings(R) for v in e if v in body_pts and 0.25 < rc[v].z < 1.0 and abs(rc[v].x) > 0.12)
     legs = lambda i: main_bone(W[i]) if main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") and \
         fig.data.vertices[i].co.z < slits + 0.08 else None
-    log = fit(fig, cover, R, keys, parts=parts, ray_from=axis, limb_of=legs) if do_fit else []
-    counts, _ = through(fig, cover, R, keys, parts, axis, legs)
+    # the walking fit shapes the robe above the belt, which rides the body; below it the cloth finds its own way
+    zs = lambda i: fig.data.vertices[i if isinstance(i, int) else i[0]].co.z
+    upper = [i for i in cover if zs(i) > PIN_Z - 0.02 or main_bone(W[i if isinstance(i, int) else i[0]]) in ARMS]
+    log = fit(fig, upper, R, keys, parts=parts, ray_from=axis, limb_of=legs) if do_fit else []
+    counts, _ = through(fig, upper, R, keys, parts, axis, legs)
     if do_fit and max(counts) > 0:
-        log += polish(fig, cover, R, keys, parts=parts, ray_from=axis, limb_of=legs)   # a few stubborn points: smaller, stronger pushes
-        counts, _ = through(fig, cover, R, keys, parts, axis, legs)
+        log += polish(fig, upper, R, keys, parts=parts, ray_from=axis, limb_of=legs)   # a few stubborn points: smaller, stronger pushes
+    if os.environ.get("GARMENTS_SAVE"):                  # for looking into a build by hand
+        bpy.ops.wm.save_as_mainfile(filepath=os.environ["GARMENTS_SAVE"])
+    caps = leg_capsules(fig, build)
+    R["cloth"] = json.dumps({"capsules": caps})          # glTF extras: cloth.js reads the leg capsules from here
+    cres = cloth_walk(R, rig, [] if NO_LEGS else caps)
+    leg = lambda i: main_bone(W[i]) if main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") else None
+    counts, _ = through(fig, cover, R, keys, parts, axis, legs, cloth_z=1.0, cloth_limb=leg)
+    for k, i, d in LAST_THROUGH[:12]:                    # where the cloth let a point through, for the log
+        j = i if isinstance(i, int) else i[0]
+        print(f"through at key {k}: {main_bone(W[j])} {tuple(round(c, 3) for c in fig.data.vertices[j].co)} by {d * 1000:.1f} mm", flush=True)
+    POSED.pop(R.name, None)
     rows.append(("robe", R, counts, log, len(cover)))
+    cloth_stats = {"particles": cres["particles"], "free": cres["free"], "node_step_ms": cres["step_ms"]}
     S = sash(fig, rig, cw, "sash")
     cover_s = with_faces(fig, cover_band(fig, SASH_Z[0] + 0.01, SASH_Z[-1] - 0.01))
     band = lambda i: (0,)                                   # held by the band or the cap, not the decoration
@@ -1179,7 +1324,8 @@ def build_all(build, palette, out_dir, do_fit=True):
         report.append({"id": name, "garment": g, "build": build, "palette": palette, "file": name + ".glb",
                        "bytes": size, "verts": len(obj.data.vertices), "tris": sum(len(p.vertices) - 2 for p in obj.data.polygons),
                        "covered": ncov, "through": counts, "worst": max(counts), "fit_rounds": log,
-                       "bones": sorted(g.name for g in obj.vertex_groups)})
+                       "bones": sorted(g.name for g in obj.vertex_groups),
+                       **({"cloth": cloth_stats} if g == "robe" else {})})
     return fig_row, report
 
 
@@ -1194,11 +1340,15 @@ def sheet(figs, rows, out_dir, walk_only=False):
         bpy.ops.import_scene.gltf(filepath=path)
         return list(set(bpy.context.scene.objects) - before)
 
+    robes, jobs = [], {}                                   # (armature, robe): the robes worn, their skirts cloth
+
     def dress(fig_objs, files):
         """Put garments on a loaded figure: every garment mesh rebound to the figure's armature (the runtime swap)."""
         arm = next(o for o in fig_objs if o.type == "ARMATURE")
         for f in files:
             for o in load(os.path.join(out_dir, f)):
+                if o.type == "MESH" and "_CLOTH" in o.data.attributes:
+                    robes.append((arm, o))
                 if o.type == "MESH":
                     mw = o.matrix_world.copy()
                     for m in o.modifiers:
@@ -1210,6 +1360,27 @@ def sheet(figs, rows, out_dir, walk_only=False):
                     o.hide_render = True
                     o.hide_viewport = True
         return arm
+
+    def cloth(scenarios):
+        """Run each worn robe's skirt over the walks (cloth_walk.mjs, the game's cloth.js): [(robe, samples)]."""
+        out = []
+        for n, (arm, robe) in enumerate(robes):
+            if robe.name not in jobs:                      # the robe as worn, before any cloth is put on it
+                jobs[robe.name] = cloth_job(robe, arm, json.loads(robe["cloth"])["capsules"], [])
+            res = run_cloth(dict(jobs[robe.name], scenarios=scenarios), f"sheet-{n}")
+            out.append((robe, [x for sc in res["scenarios"] for x in sc["samples"]]))
+            for m in [m for m in robe.modifiers if m.type == "ARMATURE"]:
+                robe.modifiers.remove(m)
+            robe.parent = None
+            robe.matrix_world = Matrix.Identity(4)
+        return out
+
+    def wear(done, i):
+        """Each robe's points at its i-th sample."""
+        for robe, samples in done:
+            pts = samples[i]["robe"]
+            robe.data.vertices.foreach_set("co", pts)
+            robe.data.update()
 
     def setup(res, scale, frame):
         bpy.context.scene.frame_set(frame)
@@ -1235,6 +1406,8 @@ def sheet(figs, rows, out_dir, walk_only=False):
             bpy.context.scene.collection.objects.link(sun)
 
     def clear():
+        robes.clear()
+        jobs.clear()
         bpy.ops.wm.read_factory_settings(use_empty=True)
         lights()
 
@@ -1251,6 +1424,7 @@ def sheet(figs, rows, out_dir, walk_only=False):
                 for o in objs:
                     if o.parent is None:
                         o.location = ((ci - 4) * 0.9, 0, (1 - bi) * 2.05)
+        wear(cloth([dict(walk_keys(), samples=[WARM + (C.KEYS // 4) / C.FPS])]), 0)
         setup((2000, 1500), 0, 1 + C.KEYS // 4)
         camera(8.6, three_q)
         bpy.context.scene.render.filepath = os.path.join(out_dir, "garments-sheet.png")
@@ -1264,6 +1438,7 @@ def sheet(figs, rows, out_dir, walk_only=False):
                 for o in objs:
                     if o.parent is None:
                         o.location = ((pi - 1) * 0.95, 0, (1 - bi) * 2.05)
+        wear(cloth([dict(walk_keys(), samples=[WARM + (C.KEYS // 4) / C.FPS])]), 0)
         setup((900, 1260), 0, 1 + C.KEYS // 4)
         camera(6.6, three_q)
         bpy.context.scene.render.filepath = os.path.join(out_dir, "set-sheet.png")
@@ -1271,11 +1446,13 @@ def sheet(figs, rows, out_dir, walk_only=False):
     # 3. the average dusk figure in the set, front, side and back, at keys 0, 6, 12 and 18
     clear()
     objs = load(os.path.join(out_dir, figs[("average", "dusk")]))
-    dress(objs, ["robe-average-dusk.glb", "sash-robe-average-dusk.glb", "topknot-average-dusk.glb"])
+    arm = dress(objs, ["robe-average-dusk.glb", "sash-robe-average-dusk.glb", "topknot-average-dusk.glb"])
+    four = cloth([dict(walk_keys(), samples=[WARM + k / C.FPS for k in (0, 6, 12, 18)])])
     strips = []
     for d in (Vector((0, -1, 0.05)), Vector((1, 0, 0.05)), Vector((0, 1, 0.05))):
         cells = []
-        for k in (0, 6, 12, 18):
+        for n, k in enumerate((0, 6, 12, 18)):
+            wear(four, n)
             setup((300 * WALK_X, 600 * WALK_X), 0, 1 + k)
             camera(2.2, d)
             bpy.context.scene.render.filepath = os.path.join(out_dir, f"_walk.png")
@@ -1287,6 +1464,47 @@ def sheet(figs, rows, out_dir, walk_only=False):
     img = bpy.data.images.new("walk", 1200 * WALK_X, 1800 * WALK_X)
     img.pixels.foreach_set(np.vstack(strips[::-1]).ravel())   # Blender's rows run bottom up: front strip on top
     img.filepath_raw = os.path.join(out_dir, "set-walk.png")
+    img.file_format = "PNG"
+    img.save()
+    # 4. the skirt as cloth, from the figure's left: a step cycle at the normal stride, one at the fast stride, and a
+    # quarter turn to the left while walking (board position j5-skirt-cloth)
+    rig_bones = []
+
+    def visit(b):
+        rig_bones.append(b)
+        for ch in b.children:
+            visit(ch)
+    for b in arm.data.bones:
+        if b.parent is None:
+            visit(b)
+    arm.animation_data.action = None
+    for pb in arm.pose.bones:
+        pb.rotation_mode = "QUATERNION"
+
+    def pose(D):                                           # the rig as cloth_walk.mjs posed it
+        for b in rig_bones:
+            m = D[b.name]
+            arm.pose.bones[b.name].matrix = Matrix([m[0:4], m[4:8], m[8:12], m[12:16]]).transposed() @ b.matrix_local
+            bpy.context.view_layer.update()
+    rows = []
+    for sc in cloth_scenarios():
+        done = cloth([sc])
+        cells = []
+        for i, x in enumerate(done[0][1]):
+            pose(x["deform"])
+            wear(done, i)
+            setup((300 * WALK_X, 600 * WALK_X), 0, 1)
+            pose(x["deform"])
+            camera(2.4, Vector((1, 0, 0.05)))
+            bpy.context.scene.render.filepath = os.path.join(out_dir, "_walk.png")
+            bpy.ops.render.render(write_still=True)
+            im = bpy.data.images.load(bpy.context.scene.render.filepath, check_existing=False)
+            cells.append(np.array(im.pixels[:], np.float32).reshape(600 * WALK_X, 300 * WALK_X, 4))
+            bpy.data.images.remove(im)
+        rows.append(np.hstack(cells))
+    img = bpy.data.images.new("cloth", rows[0].shape[1], rows[0].shape[0] * len(rows))
+    img.pixels.foreach_set(np.vstack(rows[::-1]).ravel())  # normal stride on top, then fast, then the turn
+    img.filepath_raw = os.path.join(out_dir, "cloth-walk.png")
     img.file_format = "PNG"
     img.save()
     os.remove(os.path.join(out_dir, "_walk.png"))
@@ -1301,9 +1519,12 @@ def main():
     ap.add_argument("--walk-only", action="store_true", help="with --sheet: only the average figure's walk strip")
     ap.add_argument("--sheet-only", action="store_true", help="only render the sheets from the GLBs in --out")
     ap.add_argument("--no-fit", action="store_true", help="skip the walking fit (test J5b: points come through)")
+    ap.add_argument("--no-legs", action="store_true", help="the skirt's cloth without its leg capsules (test J5b: legs come through)")
     ap.add_argument("--part", help="(used by --all) write this build's figure and garment rows to this file")
     ap.add_argument("--out", default=os.path.join(os.environ.get("W", "/tmp/blender-cloud"), "garments"))
     a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
+    global NO_LEGS
+    NO_LEGS = a.no_legs
     os.makedirs(a.out, exist_ok=True)
     if a.sheet_only:                                       # render again from the GLBs already in --out
         with open(os.path.join(a.out, "report.json")) as f:
@@ -1321,6 +1542,7 @@ def main():
             part = os.path.join(a.out, f"part-{b}-{p}.json")
             cmd = [sys.executable, os.path.abspath(__file__), "--build", b, "--palette", p, "--out", a.out, "--part", part]
             cmd += ["--no-fit"] if a.no_fit else []
+            cmd += ["--no-legs"] if a.no_legs else []
             for attempt in range(DRAPE_TRIES):
                 subprocess.run(cmd, check=True)
                 with open(part) as f:
@@ -1344,7 +1566,7 @@ def main():
                   f, indent=1)
     if a.sheet:
         sheet(figs, report, a.out, a.walk_only)
-        print("sheets:", *(os.path.join(a.out, n) for n in ("garments-sheet.png", "set-sheet.png", "set-walk.png")))
+        print("sheets:", *(os.path.join(a.out, n) for n in ("garments-sheet.png", "set-sheet.png", "set-walk.png", "cloth-walk.png")))
 
 
 if __name__ == "__main__":
