@@ -27,6 +27,8 @@ ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--sprite", type=int, default=96)
 ap.add_argument("--only", default="", help="element to build alone, for a quick look")
 ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
+ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin"],
+                help="the family's animal base (round 4 adds the armadillo and the pangolin)")
 args = ap.parse_args(argv)
 OUT = pathlib.Path(args.out)
 
@@ -298,7 +300,59 @@ def skin_paint(body, seed, throat, S):
     return fn
 
 
-SHELL_SQUASH = Vector((1.0, 0.86, 0.72))
+# The Shellback family's three animal bases (sg-body-from A: the urge picks the family, the family has two or three
+# bases). Each base sets the shell's proportions and how it is divided: the tortoise's scutes, the armadillo's
+# transverse bands between two shields, the pangolin's overlapping scales pointing back. Round 4 builds the second
+# and third; the eye, element styling and aura are shared, so the base is the only thing that changes.
+BASES = {
+    "tortoise": dict(squash=(1.0, 0.86, 0.72), pattern="scutes"),
+    "armadillo": dict(squash=(1.3, 0.8, 0.64), pattern="bands"),
+    "pangolin": dict(squash=(1.36, 0.74, 0.62), pattern="scales"),
+}
+SHELL_SQUASH = Vector(BASES[args.base]["squash"])
+
+
+def frac(x):
+    return x - math.floor(x)
+
+
+def bands_at(d):
+    """The armadillo's shell: seven movable bands across the middle, a shield of small tiles before and behind them.
+    Returns (seam, cell distance, cell id, bulge); seam is in the same units as the tortoise's voronoi seam."""
+    x0, x1, n = -0.5, 0.45, 8
+    if x0 < d.x < x1:
+        u = (d.x - x0) / (x1 - x0) * n; i = int(u); f = u - i
+        seam = 0.9 * min(f, 1 - f)
+        side = int((math.atan2(d.z, d.y) + math.pi) / (math.pi / 4))
+        return seam, abs(f - 0.5), ("b", i, side), 0.08 * f - 0.04  # each band rides up over the one behind it
+    dist, pts = noise.voronoi(d * 9.0)
+    seam = min(dist[1] - dist[0], 2.1 * min(abs(d.x - x0), abs(d.x - x1)) * 3)
+    _, big = noise.voronoi(d * 3.0)
+    return seam, dist[0] / 3, ("s",) + tuple(round(x, 2) for x in big[0]), 0.012 * noise.noise(d * 14)
+
+
+def scales_at(d):
+    """The pangolin's shell: rows of rounded scales pointing back, each row half a scale over from the last, the free
+    edge of each scale lying over the base of the ones behind it. Returns what bands_at does."""
+    R, A, lobe = 8, 5.0, 0.62
+    u = (1 - d.x) * 0.5 * R; i = math.floor(u); fr = u - i
+    phi = math.atan2(d.z, d.y)
+
+    def col(row):
+        s = phi / math.pi * A + 0.5 * (row % 2)
+        return math.floor(s), frac(s) - 0.5
+
+    jp, bp = col(i - 1)
+    reach = lobe * (1 - 4 * bp * bp)  # how far the scale in front reaches back over this row
+    if fr < reach:
+        row, j, b, pos, length = i - 1, jp, bp, fr + 1, 1 + reach
+        edge = reach - fr
+    else:
+        j, b = col(i)
+        row, pos, length = i, fr, 1 + lobe * (1 - 4 * b * b)
+        edge = fr - reach
+    seam = 0.75 * min(edge, (0.5 - abs(b)) * 0.8) if row == i else 0.75 * edge
+    return seam, abs(pos / length - 0.5), ("p", row, j), 0.1 * pos / length - 0.05
 
 
 def on_shell(d, size, lift=1.0):
@@ -323,15 +377,20 @@ def shell_mesh(name, size, S):
     bpy.ops.mesh.primitive_uv_sphere_add(segments=128, ring_count=64, radius=1.0)
     o = bpy.context.active_object; o.name = name
     g = S["growth"]
-    cols, seams, centres = [], [], {}
+    pattern = BASES[args.base]["pattern"]
+    cols, seams, centres, sums = [], [], {}, {}
     for v in o.data.vertices:
         d = v.co.normalized()
-        dist, pts = noise.voronoi(d * 3.0)
-        seam = dist[1] - dist[0]
+        if pattern == "scutes":
+            dist, pts = noise.voronoi(d * 3.0)
+            seam, cd, extra = dist[1] - dist[0], dist[0], 0.0
+        else:
+            seam, cd, cid, extra = (bands_at if pattern == "bands" else scales_at)(d)
+            if d.z > 0.15: sums.setdefault(cid, Vector()); sums[cid] += d
         m = noise.noise(d * 4.5) + 0.35 * noise.noise(d * 11)
         moss = max(0.0, min(1.0, (m + 0.05) * 4)) if (S["moss"] and d.z > 0.35) else 0.0
-        wave = math.sin(dist[0] * 50)
-        bulge = {"obsidian": 0.055 * noise.noise(d * 9) + 0.025 * noise.noise(d * 23),
+        wave = math.sin(cd * 50)
+        bulge = extra + (1.0 if pattern == "scutes" else 0.35) * {"obsidian": 0.055 * noise.noise(d * 9) + 0.025 * noise.noise(d * 23),
                  "shells": 0.008 * wave,
                  "plates": 0.045 * min(seam, 0.1) / 0.1 - 0.035,
                  "crystals": 0.05 * noise.noise(d * 6) + 0.022 * noise.noise(d * 17)}.get(g, 0.035 * moss)
@@ -341,12 +400,16 @@ def shell_mesh(name, size, S):
         v.co = p
         c = mixc(S["shell"], S["shell_hi"], max(0, min(1, 0.5 * noise.noise(d * 7) + 0.4)))
         if g == "shells" and wave > 0.55: c = mixc(c, (0.75, 0.95, 0.97), 0.5)  # wave-carved bands on each scute
-        if g == "plates": c = mixc(c, S["shell_hi"], max(0, 1 - dist[0] / 0.35) * 0.6)  # a polished boss per plate
+        if g == "plates": c = mixc(c, S["shell_hi"], max(0, 1 - cd / 0.35) * 0.6)  # a polished boss per plate
         if seam < 0.14 and not S["seam"]: c = mixc((0.12, 0.1, 0.07), c, (seam / 0.14) ** 1.5)
+        if pattern != "scutes":  # each band or scale light at its raised free edge and shaded where it tucks under
+            t = max(0.0, min(1.0, 0.5 + extra / (0.08 if pattern == "bands" else 0.1)))
+            c = mixc(mixc(c, (0, 0, 0), 0.45 * (1 - t)), S["shell_hi"], 0.5 * t * t)
         if moss: c = mixc(c, mixc(MOSS, (0.5, 0.58, 0.22), 0.5 + 0.5 * noise.noise(d * 20)), moss)
         if p.z < -0.08 * size: c = S["plastron"]
         cols.append(c); seams.append(seam if p.z > -0.08 * size else 1.0)
-        if d.z > 0.15: centres.setdefault(tuple(round(x, 3) for x in pts[0]), Vector(pts[0]).normalized())
+        if pattern == "scutes" and d.z > 0.15: centres.setdefault(tuple(round(x, 3) for x in pts[0]), Vector(pts[0]).normalized())
+    for k, v in sorted(sums.items(), key=lambda kv: str(kv[0])): centres[k] = v.normalized()
     ca = o.data.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
     for i, c in enumerate(cols): ca.data[i].color = (*lin(c), 1)
     o.data.materials.append(vmat("shell", S["rough"], metal=S["metal"])); smooth(o)
@@ -435,7 +498,7 @@ def lava_crust(rng, host, centres, size):
     """Fire (round 3, Wendell: the spikes "don't look very natural"): cooled lava swelling up out of the seams as low
     rounded basalt ridges and blisters, fused like the body and split by glowing cracks, with a few small flames
     rising from the hottest seams. Nothing has a straight side."""
-    top = sorted(centres, key=lambda c: -c.z)[:12]
+    top = sorted(centres, key=lambda c: -c.z)[:12 if args.base == "tortoise" else 6]  # fewer, so bands and scales show
     parts = []
     for i, c in enumerate(top):
         at, n = on_shell(c, size, 0.95)
@@ -458,7 +521,7 @@ def lava_crust(rng, host, centres, size):
     bpy.context.view_layer.update()
     up = (host.matrix_world.inverted().to_3x3() @ Vector((0, 0, 1))).normalized()
     hot = (((1.0, 0.8, 0.35), 0.8, 0.45), ((1.0, 0.4, 0.06), 0.4, 1.0))
-    for c in top[1:12:4]:  # three, spread over the crown
+    for c in top[1:12:4] if args.base == "tortoise" else top[0:6:2]:  # three, spread over the crown
         at, n = on_shell(c, size, 1.06)
         h = size * rng.uniform(0.13, 0.19)
         for o in flame("wisp", at + up * h * 0.25, (up * 2 + n).normalized(), h, hot): o.parent = host
@@ -919,6 +982,255 @@ def ascended(sc, el, lt, dk):
     aura(rng, S["aura"], lt, (0.0, 0, 1.15), (0.75, 0.75, 1.0), 2.35)
 
 
+# Round 4: the Shellback's other two animal bases. The armadillo carries banded armour and big upright ears, and its
+# ringed tail; the pangolin is scaled from crown to tail tip, with a long broad tail that curls round at the end. Both
+# keep round 3's lidded eye (only the iris colour changes), the element styling, the cloth, beads and aura.
+
+def along(path):
+    """at(t) gives the point and direction a fraction t of the way along a path of points, by length."""
+    pts = [Vector(p) for p in path]
+    segs = [(b - a).length for a, b in zip(pts, pts[1:])]
+    total = sum(segs)
+
+    def at(t):
+        d = t * total
+        for i, sl in enumerate(segs):
+            if d <= sl or i == len(segs) - 1:
+                return pts[i].lerp(pts[i + 1], min(1.0, d / sl)), (pts[i + 1] - pts[i]).normalized()
+            d -= sl
+    return at, total
+
+
+def across(d):
+    """Two directions square to d and to each other."""
+    u = d.cross(Vector((0, 0, 1)))
+    if u.length < 1e-3: u = d.cross(Vector((0, 1, 0)))
+    u.normalize()
+    return u, d.cross(u).normalized()
+
+
+def armour(name, S, t=0.4):
+    return solid(name, mixc(S["shell"], S["shell_hi"], t), S["rough"], metal=S["metal"])
+
+
+def underlay(name, S):
+    """What shows between bands and scales: the element's glowing seam, or a dark groove where nothing glows."""
+    return solid(name, S["seam"][0], 0.4, S["seam"][1]) if S["seam"] else solid(name, (0.12, 0.1, 0.07), 0.9)
+
+
+def tail(name, path, r0, r1, S, kind):
+    """The tail, in the shell's own material. rings: the armadillo's telescoping rings, a seam at every joint.
+    scales: the pangolin's broad overlapping scales, six to a row, each row half a scale over, their free edges
+    lifting toward the tip, over a body that shows the element's seam colour between them."""
+    at, total = along(path)
+    a, b, line = armour(f"{name}a", S, 0.3), armour(f"{name}b", S, 0.65), underlay(f"{name}seam", S)
+    if kind == "rings":
+        n = 12
+        for k in range(n):
+            t0 = k / n; r = r0 + (r1 - r0) * t0
+            p, d = at(t0 + 0.5 / n)
+            bpy.ops.mesh.primitive_cone_add(vertices=24, radius1=r, radius2=r * 0.86, depth=total / n * 1.06, location=p)
+            o = bpy.context.active_object; o.name = name; o.data.materials.append(b if k % 2 else a); smooth(o)
+            o.rotation_euler = Vector((0, 0, 1)).rotation_difference(d).to_euler()
+            q, d0 = at(t0)
+            bpy.ops.mesh.primitive_torus_add(major_radius=r * 0.94, minor_radius=max(0.008, r * 0.08), major_segments=24,
+                                             minor_segments=5, location=q)
+            o = bpy.context.active_object; o.data.materials.append(line)
+            o.rotation_euler = Vector((0, 0, 1)).rotation_difference(d0).to_euler()
+        ball("tailtip", a, at(1.0)[0], r1 * 0.9)
+        return
+    parts = []
+    for k in range(6):
+        t0, t1 = k / 6, (k + 1) / 6
+        parts.append(("cap", tuple(at(t0)[0]), tuple(at(t1)[0]), (r0 + (r1 - r0) * (t0 + t1) / 2) * 0.72))
+    core_ = blob(f"{name}core", parts, 0.02, 4000); core_.data.materials.append(line)
+    n, m = 10, 6
+    for k in range(n):
+        t = (k + 0.35) / n; r = r0 + (r1 - r0) * t
+        p, d = at(t); u, v = across(d)
+        for j in range(m):
+            ang = (j + 0.5 * (k % 2)) * 2 * math.pi / m
+            e = math.cos(ang) * u + math.sin(ang) * v
+            x = (d + e * 0.3).normalized(); z = (e - x * e.dot(x)).normalized(); y = z.cross(x)
+            o = ball(name, b if (j + k) % 2 else a, p + e * r * 0.78, 1.0,
+                     (total / n * 0.78, math.pi * r / m * 1.2, r * 0.2), 16)
+            o.rotation_euler = Matrix((x, y, z)).transposed().to_euler()
+
+
+def ears(H, S, s=1.0):
+    """The armadillo's big upright ears, leaning out and back."""
+    m = solid("ear", mixc(S["skin"], S["spot"], 0.25), 0.75)
+    for side in (1, -1):
+        o = ball("ear", m, H + Vector((-0.08, side * 0.13, 0.28)) * s, 0.19 * s, (0.5, 0.16, 1.0), 20)
+        o.rotation_euler = (-side * 0.4, -0.3, side * 0.35)
+
+
+def head_armour(base, H, S, s=1.0):
+    """The armadillo's head shield, or the pangolin's scales running from its crown down the back of its neck."""
+    m = armour("headarmour", S, 0.5)
+    if base == "armadillo":
+        ball("shield", m, H + Vector((0.02, 0, 0.13)) * s, 0.16 * s, (1.35, 0.95, 0.38), 20).rotation_euler = (0, 0.15, 0)
+        return
+    for dx, dy, dz, r in ((0.0, 0, 0.14, 0.085), (-0.14, 0.06, 0.16, 0.095), (-0.14, -0.06, 0.16, 0.095), (-0.28, 0, 0.17, 0.11)):
+        ball("crown", m, H + Vector((dx, dy, dz)) * s, r * s, (1.35, 1.0, 0.35), 16).rotation_euler = (0, -0.3, 0)
+
+
+def snout(H, base, s=1.0):
+    """Metaball parts for the long head: a rounded skull drawn out into a long tapering snout."""
+    if base == "armadillo":
+        return [("ell", H, 0.23 * s, (1.1, 0.95, 0.9)),
+                ("cap", H + Vector((0.12, 0, -0.04)) * s, H + Vector((0.46, 0, -0.2)) * s, 0.085 * s),
+                ("ball", H + Vector((0.49, 0, -0.21)) * s, 0.062 * s)]
+    return [("ell", H, 0.19 * s, (1.25, 0.85, 0.82)),
+            ("cap", H + Vector((0.12, 0, -0.03)) * s, H + Vector((0.46, 0, -0.13)) * s, 0.07 * s),
+            ("ball", H + Vector((0.48, 0, -0.14)) * s, 0.048 * s)]
+
+
+def hologram_long(lt, dk, base):
+    """The projected body of the long bases: a faceted shell whose rings run across the back, as the armadillo's bands
+    or the pangolin's rows of scales, a pointed snout, and the armadillo's ears or the pangolin's long tail."""
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+    sx, sy, sz = BASES[base]["squash"]
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=8, ring_count=9 if base == "armadillo" else 11, radius=1.0)
+    shell = bpy.context.active_object; shell.name = "shell"; shell.data.materials.append(skin)
+    for v in shell.data.vertices:  # the poles turned fore and aft, so the rings run across the back
+        x, y, z = v.co
+        v.co = Vector((z * sx * 0.92, y * sy * 0.92, max(x * sz * 0.92, -0.15)))
+    for f in shell.data.polygons: f.use_smooth = False
+    shell.location = (-0.05, 0, 0.32)
+    wire = shell.copy(); wire.data = shell.data.copy(); wire.name = "shell_edges"
+    bpy.context.scene.collection.objects.link(wire)
+    wire.data.materials.clear(); wire.data.materials.append(edge)
+    md = wire.modifiers.new("w", "WIREFRAME"); md.thickness = 0.022; md.use_replace = True
+    wire.scale = (1.01, 1.01, 1.01)
+    front = sx * 0.92 - 0.05
+    obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.22,
+             location=(front + 0.08, 0, 0.36))
+    bpy.context.active_object.scale = (1.2, 0.85, 0.8)
+    obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=5, radius1=0.1, depth=0.42,
+             location=(front + 0.42, 0, 0.3), rotation=(0, math.pi / 2 + 0.25, 0))
+    if base == "armadillo":
+        for side in (1, -1):
+            obj_from(bpy.ops.mesh.primitive_cone_add, "ear", deep, vertices=4, radius1=0.08, depth=0.28,
+                     location=(front + 0.0, side * 0.13, 0.62), rotation=(-side * 0.4, -0.3, 0))
+        obj_from(bpy.ops.mesh.primitive_cone_add, "tail", deep, vertices=6, radius1=0.11, depth=0.8,
+                 location=(-sx * 0.92 - 0.4, 0, 0.12), rotation=(0, -math.pi / 2 - 0.15, 0))
+    else:
+        for k, (r1, r2, d, x) in enumerate(((0.3, 0.2, 0.45, 0.2), (0.2, 0.09, 0.5, 0.65))):
+            t = obj_from(bpy.ops.mesh.primitive_cone_add, "tail", skin, vertices=6, radius1=r1, radius2=r2, depth=d,
+                         location=(-sx * 0.92 - x, 0, 0.18 - 0.07 * k), rotation=(0, -math.pi / 2 - 0.12, 0))
+            tw = t.copy(); tw.data = t.data.copy(); bpy.context.scene.collection.objects.link(tw)
+            tw.data.materials.clear(); tw.data.materials.append(edge)
+            md = tw.modifiers.new("w", "WIREFRAME"); md.thickness = 0.02; md.use_replace = True
+    for x, y in ((0.6, 0.45), (0.6, -0.45), (-0.65, 0.45), (-0.65, -0.45)):
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=6, radius=0.12, depth=0.4, location=(x, y, 0.0))
+    eye_ = mat("eye", (1, 1, 1), 9.0, 1.0)
+    for y in (0.12, -0.12):
+        obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.04,
+                 location=(front + 0.24, y, 0.45))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.45, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    core(lt, at=(0, 0, 0.38), size=0.2)
+
+
+def creature_long(sc, el, lt, dk, base):
+    """The living armadillo or pangolin, in its element, dressed like the tortoise sage."""
+    S = STYLE[el]
+    lights(sc)
+    rng = random.Random(f"creature-{base}-{el}")
+    arma = base == "armadillo"
+    shell, centres = shell_mesh("shell", 0.95, S)
+    shell.location = (-0.1, 0, 0.44); shell.rotation_euler = (0, -0.03 if arma else 0.06, 0)
+    growth(rng, shell, centres, 0.95, S, lt)
+    em = emblem("core", 0.38, lt)
+    em.location = (-0.2, -0.66, 0.8); em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector((0.05, -0.8, 0.6))).to_euler()
+    bpy.context.view_layer.update(); wrap_onto(em, shell)
+    H = Vector((1.36, 0, 0.62)) if arma else Vector((1.4, 0, 0.5))
+    parts = snout(H, base) + [("cap", (0.7, 0, 0.44), (H.x - 0.18, 0, H.z - 0.02), 0.2),
+                              ("ball", (0.35, 0, 0.42), 0.32), ("ball", (-0.55, 0, 0.42), 0.32)]
+    feet = []
+    for x, y in ((0.55, -0.48), (0.55, 0.48), (-0.75, -0.48), (-0.75, 0.48)):
+        parts += [("cap", (x, y * 0.85, 0.4), (x + 0.04, y, 0.08), 0.18 if arma else 0.17),
+                  ("ell", (x + 0.06, y * 1.03, 0.05), 0.2, (1.25, 1.05, 0.45))]
+        feet.append((Vector((x + 0.06, y * 1.03, 0.04)), Vector((1, 0.5 * (1 if y > 0 else -1), 0)), x > 0))
+    body = blob("body", parts, 0.028, 12000)
+    throat = lambda p, n: 1.0 if (n.z < -0.15 and p.x > 0.9) else 0
+    paint(body, skin_paint(body, 1.3, throat, S))
+    body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
+    for f, ahead, front in feet: claws(f, ahead, 1.25 if (front and not arma) else 0.9)
+    for s in (1, -1):
+        eye(body, H + Vector((0.07, 0, 0.06)), (0.42, s * 0.85, 0.25), S, 0.082 if arma else 0.075)
+    if arma: ears(H, S)
+    head_armour(base, H, S)
+    tail("tail", [(-1.3, 0, 0.32), (-1.56, -0.05, 0.22), (-1.78, -0.18, 0.12), (-1.93, -0.38, 0.07), (-1.98, -0.6, 0.05)]
+         if arma else [(-1.22, 0, 0.46), (-1.58, -0.04, 0.33), (-1.88, -0.2, 0.19), (-2.0, -0.5, 0.11),
+                       (-1.9, -0.82, 0.08), (-1.66, -1.02, 0.07)],
+         0.14 if arma else 0.33, 0.04 if arma else 0.09, S, "rings" if arma else "scales")
+    neck = Vector((H.x - 0.44, 0, H.z - 0.06))  # behind the head, so the snout and ears stay clear of the cloth
+    drape("shawl", neck, (-0.45, 0, -1), 0.22, 0.42, 0.3, S["cloth"], S["trim"], f"shawl-{base}-{el}")
+    beads(neck + Vector((0.05, 0, 0.03)), (0.7, 0, 0.7), 0.22, 16, 0.08, 4, lt, S)
+    ball("bell", solid("gold", GOLD, 0.35), (-0.45, -0.8, 0.3), 0.11)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.08, minor_radius=0.035, major_segments=20, minor_segments=8,
+                                     location=(-0.72, -0.76, 0.27), rotation=(math.pi / 2, 0, 0.5))
+    bpy.context.active_object.data.materials.append(jade_of(lt))
+    smooth(bpy.context.active_object)
+    tassel(Vector((-0.45, -0.82, 0.16)), S["tassel"], 0.9); tassel(Vector((-0.72, -0.78, 0.15)), S["tassel"], 0.9)
+    aura(rng, S["aura"], lt, (0.0, 0, 0.6), (1.55, 0.95, 0.65), 1.35)
+
+
+def ascended_long(sc, el, lt, dk, base):
+    """The highest ally form of the long bases: the tortoise sage's robe, staff and medallion, with the armadillo's
+    banded shell and ears or the pangolin's scales on its back and its long scaled tail sweeping the ground."""
+    S = STYLE[el]
+    lights(sc)
+    rng = random.Random(f"ascended-{base}-{el}")
+    arma = base == "armadillo"
+    shell, centres = shell_mesh("shell", 0.56, S)
+    shell.location = (-0.24, 0, 1.22); shell.rotation_euler = (0, -math.pi / 2, 0)
+    growth(rng, shell, centres, 0.56, S, lt, upright=False)
+    H = Vector((0.2, 0, 2.03))
+    parts = snout(H, base, 0.85) + [("cap", (0.0, 0, 1.55), (0.12, 0, 1.9), 0.13), ("cap", (0, 0, 0.95), (0, 0, 1.5), 0.3),
+                                    ("ball", (0, 0, 0.9), 0.3), ("cap", (0, -0.32, 1.52), (0, 0.32, 1.52), 0.15)]
+    feet = []
+    for y in (-0.2, 0.2):
+        parts += [("cap", (0, y, 0.85), (0.02, y * 1.1, 0.12), 0.15), ("ell", (0.09, y * 1.1, 0.05), 0.17, (1.3, 1.0, 0.45))]
+        feet.append((Vector((0.09, y * 1.1, 0.04)), Vector((1, 0.4 * (1 if y > 0 else -1), 0))))
+    hands = []
+    for s in (-1, 1):
+        sh, el_, hd = Vector((0, s * 0.42, 1.5)), Vector((0.1, s * 0.5, 1.12)), Vector((0.32, s * 0.42, 0.95))
+        parts += [("cap", sh, el_, 0.1), ("cap", el_, hd, 0.09), ("ball", hd + Vector((0.04, 0, 0)), 0.1)]
+        hands.append(hd + Vector((0.04, 0, 0)))
+    body = blob("body", parts, 0.025, 12000)
+    throat = lambda p, n: 1.0 if (n.x > 0.4 and p.z > 1.5 and p.z < H.z - 0.04) else 0
+    paint(body, skin_paint(body, 2.1, throat, S))
+    body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
+    for f, ahead in feet: claws(f, ahead, 0.8 if arma else 1.0)
+    for s in (1, -1):
+        eye(body, H + Vector((0.06, 0, 0.05)), (0.42, s * 0.85, 0.22), S, 0.068)
+    if arma: ears(H, S, 0.85)
+    head_armour(base, H, S, 0.85)
+    tail("tail", [(-0.3, 0, 0.95), (-0.55, -0.05, 0.6), (-0.72, -0.15, 0.3), (-0.8, -0.32, 0.08), (-0.7, -0.52, 0.04)]
+         if arma else [(-0.3, 0, 1.0), (-0.6, 0, 0.7), (-0.86, -0.05, 0.38), (-1.0, -0.2, 0.13), (-0.95, -0.5, 0.08),
+                       (-0.72, -0.72, 0.07)],
+         0.1 if arma else 0.22, 0.035 if arma else 0.07, S, "rings" if arma else "scales")
+    drape("robe", (0.02, 0, 1.12), (0, 0, -1), 0.4, 0.5, 0.85, S["cloth"], S["trim"], f"robe-{base}-{el}", 0.15)
+    drape("shawl", (0.02, 0, 1.7), (0, 0, -1), 0.24, 0.5, 0.36, mixc(S["cloth"], S["trim"], 0.35), S["trim"], f"shawl-{base}-{el}", 0.5)
+    plate = ball("plastron", solid("plate", S["plastron"], 0.6, metal=S["metal"]), (0.27, 0, 1.22), 0.25, (0.35, 0.8, 1.0), 24)
+    em = emblem("core", 0.17, lt, 2.6, 56)
+    em.location = (0.37, 0, 1.22); em.rotation_euler = (0, math.pi / 2, 0)
+    bpy.context.view_layer.update(); wrap_onto(em, plate, 0.01)
+    beads((0.05, 0, 1.68), (0.15, 0, 1), 0.27, 18, 0.1, 4, lt, S)
+    col, rough, metal = S["staff"]
+    h = hands[1]
+    bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.035, depth=2.15, location=(h.x, h.y + 0.02, 1.0))
+    o = bpy.context.active_object; o.data.materials.append(solid("staff", col, rough, metal=metal)); o.rotation_euler = (-0.04, 0, 0); smooth(o)
+    staff_top(el, (h.x, h.y + 0.06, 2.08), lt, S)
+    aura(rng, S["aura"], lt, (0.0, 0, 1.15), (0.8, 0.8, 1.0), 2.35)
+
+
 def render(sc, path):
     sc.render.filepath = str(path)
     bpy.ops.render.render(write_still=True)
@@ -934,24 +1246,26 @@ def sprite(src, dst, px):
     img.filepath_raw = str(dst); img.file_format = "PNG"; img.save()
 
 
-report = {"family": "shellback", "daemon": "protector", "stages": STAGES, "items": []}
+report = {"family": "shellback", "base": args.base, "daemon": "protector", "stages": STAGES, "items": []}
 for d in ("render", "sprite", "glb"): (OUT / d).mkdir(parents=True, exist_ok=True)
 for el, (lt, dk) in ELEMENTS.items():
     if args.only and el != args.only: continue
     for st in STAGES:
         if args.stages and st not in args.stages.split(","): continue
-        sc = reset(1.3, 3.8) if st == "ascended" else reset(0.75, 4.0) if st == "creature" else reset()
-        rng = random.Random(f"shellback-{el}-{st}")
+        long_ = args.base != "tortoise"
+        sc = reset(1.3, 3.8) if st == "ascended" else reset(0.7 if long_ else 0.75, 4.5 if long_ else 4.0) if st == "creature" \
+            else reset(0.35, 3.7) if (st == "hologram" and long_) else reset()
+        rng = random.Random(f"shellback-{el}-{st}")  # gas and core are the family's, the same for every base
         if st == "gas":
             gas(rng, lt, dk, 140, 0.42)
         elif st == "core":
             gas(rng, lt, dk, 40, 0.38, core_pull=0.45); core(lt)
         elif st == "hologram":
-            hologram(lt, dk)
+            hologram(lt, dk) if args.base == "tortoise" else hologram_long(lt, dk, args.base)
         elif st == "creature":
-            creature(sc, el, lt, dk)
+            creature(sc, el, lt, dk) if args.base == "tortoise" else creature_long(sc, el, lt, dk, args.base)
         else:
-            ascended(sc, el, lt, dk)
+            ascended(sc, el, lt, dk) if args.base == "tortoise" else ascended_long(sc, el, lt, dk, args.base)
         base = f"{el}-{st}"
         render(sc, OUT / "render" / f"{base}.png")
         sprite(OUT / "render" / f"{base}.png", OUT / "sprite" / f"{base}.png", args.sprite)
