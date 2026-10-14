@@ -791,3 +791,7 @@ charge spirits as a function of emergent perceptual shadow". The design is Six-f
   writes what it says. Each answer thins the shadow by 3, as a practice does, and is kept in the run (`shadow.asks`). A
   worked creature's shadow spirit walks out of the room as a spirit of its own in the shadow's colour (`shadow`,
   `shadowOf`, polarity 0, so it counts as seen). Flooding has no shadow spirit.
+- **A shadow spirit fully revealed** (Wendell, board read 14 October 2026, overruling a skip on dissolving shadow spirits):
+  once the shadow has cleared to 0 with its spirit called up, the room asks which element the shadow spirit shows (the five,
+  or "I can't tell yet"). Named, it walks out with that `element`, `revealed: true`, and a colour halfway from the shadow's
+  to its element's, so dissolving can act on it. Until then its `element` stays null and it cannot be dissolved.

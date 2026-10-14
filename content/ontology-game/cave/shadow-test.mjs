@@ -144,6 +144,7 @@ await page.waitForFunction(() => window.__left, null, { timeout: 15000 });
 const left = await C(() => window.__left);
 ok(left.spirits.length === 2 && left.spirits[0].polarity === 3, 'it leaves as a spirit still veiled, carrying its polarity');
 ok(left.spirits[1].hex === 0x4a3a5c && left.spirits[1].shadow === 'numbness' && left.spirits[1].name === 'Numbness of the blank', 'its shadow spirit walks out beside it, a spirit in the shadow\'s colour');
+ok(left.spirits[1].element === null && !left.spirits[1].revealed, 'while its shadow stands, the shadow spirit has no element, so it cannot be dissolved yet');
 
 // ---- the second signal: the charge would not come down -------------------------------------------------------------------
 await openRoom();
@@ -239,6 +240,35 @@ await page.locator('[data-room-look-again]').click();
 await welcomeIn();
 await page.waitForFunction(() => window.__oagCave.room.state.phase === 'flood', null, { timeout: 30000 });
 ok((await ch()).polarity === -7, 'its part comes in flooding: the -3 it carried and 4 more');
+
+// ---- a shadow spirit fully revealed shows its element (Wendell, board read 14 October 2026) -----------------------------------
+await openRoom();
+await welcomeIn();
+await page.locator('[data-room-cant-feel]').click();
+await page.locator('[data-room-shadow="forgetting"]').click();
+await page.locator('[data-room-shadow-spirit]').click();
+for (const d of ['protector', 'skeptic']) {
+  await page.locator(`[data-room-ask="${d}"]`).click();
+  await page.locator('[data-room-ask-line]').fill('an answer for the ' + d);
+  await page.locator('[data-room-ask-done]').click();
+}
+ok((await ch()).polarity === 0 && await sees('[data-room-shade-reveal]') && (await page.locator('[data-room-ask]').count()) === 0, 'two answers clear the shadow, and the fully revealed shadow spirit asks for its element');
+await page.locator('[data-room-shade-element="Anger"]').click();
+c = await ch();
+ok(c.shade.element === 'Anger' && (await run()).rounds[0].shadow.shadeElement === 'Anger', 'the player names its element, and the run keeps it');
+await page.locator('[data-room-ask-leave]').click();
+await witnessToFork('the slip', 'Sadness');
+await page.locator('[data-room-goal]').fill('to remember it');
+await page.locator('[data-room-push="away"]').click();
+await page.locator('[data-room-exhale]').click();
+await page.locator('[data-room-gone]').waitFor({ timeout: 30000 });
+await page.locator('[data-room-next]').click();
+await page.locator('[data-room-checkin="left"]').click();
+await page.locator('[data-room-again="no"]').click();
+await page.locator('[data-room-leave]').click();
+await page.waitForFunction(() => window.__left, null, { timeout: 15000 });
+const shown = (await C(() => window.__left)).spirits[1];
+ok(shown.element === 'Anger' && shown.revealed && shown.polarity === 0 && shown.hex === 0x954d43, 'it walks out revealed with its element, its colour halfway from the shadow\'s to Anger\'s, so it can be dissolved');
 
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`${passes} passed, ${fails} failed`);

@@ -3619,7 +3619,7 @@
       function newCharge(first, slot) {
         var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [],
-          polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null };
+          polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null, shadeElement: null, shadeUnknown: false };
         R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
@@ -3839,6 +3839,7 @@
             return { title: "The shadow spirit", kids: k };
           }
           k.push(P(ch.polarity ? "The shadow spirit of " + shadowName(ch).toLowerCase() + " stands beside " + (ch.name || "it") + ". It does the shadow's work. Ask it what that work is for." : "The shadow has cleared. Its spirit stays beside " + (ch.name || "it") + ".", { "data-room-shade": "" }));
+          if (!ch.polarity) shadeReveal(k);
           if (ch.polarity) SHADOW_ASKS.forEach(function (q) {
             var was = ch.asks.some(function (a) { return a.daemon === q[0]; });
             var b = el("button", { class: was ? "" : "alt", "aria-pressed": String(was), text: q[2], onclick: function () { ch.asking = q; ch.askLine = ""; draw(); } });
@@ -3853,6 +3854,7 @@
           k.push(P(shadowLine(ch), { "data-room-polarity-read": String(ch.polarity) }));
           if (!ch.polarity) {
             k.push(P("It is in plain sight now.", { "data-room-unveiled": "" }));
+            if (ch.shade) shadeReveal(k);
             k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("witness"); })]));
             return { title: "In plain sight", kids: k };
           }
@@ -3936,6 +3938,19 @@
         var g = buildCharge(), u = g.userData; u.col.setHex(SHADOW_HEX); u.want.setHex(SHADOW_HEX); u.mat.color.setHex(SHADOW_HEX); u.mat.emissive.setHex(SHADOW_HEX);
         g.scale.setScalar(0.55); g.position.set(c.fig.position.x + 1.4, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
       }
+      // Fully revealed, the shadow spirit shows its element, and from then on it can be dissolved like any spirit (Wendell, board
+      // read 14 October 2026). Until the player names one it stays a shadow spirit with no element.
+      function shadeReveal(k) {
+        k.push(P("Fully revealed, the shadow spirit shows an element. Which is it?", { "data-room-shade-reveal": "" }));
+        k.push(pickRow("data-room-shade-element", ELEMENTS.map(function (x) { return [x[0], x[0] + " · " + x[1]]; }).concat([["unknown", "I can't tell yet"]]),
+          ch.shadeElement || (ch.shadeUnknown ? "unknown" : null), function (v) { ch.shadeUnknown = v === "unknown"; ch.shadeElement = v === "unknown" ? null : v; draw(); }));
+      }
+      // A revealed shadow spirit's colour: halfway from the shadow's colour to its element's, so it reads as kin to both.
+      function shadeHex(e) {
+        var a = SHADOW_HEX, b = spiritHex(e), m = 0;
+        for (var i = 0; i < 24; i += 8) m |= Math.round((((a >> i) & 255) + ((b >> i) & 255)) / 2) << i;
+        return m;
+      }
       function raiseFlood(c, signal, n) {
         c.polarity = Math.max(-10, Math.min(0, c.polarity) - n); if (c.signals.indexOf(signal) < 0) c.signals.push(signal);
         if (c.shadowStart == null || c.polarity < c.shadowStart) c.shadowStart = c.polarity;
@@ -3986,7 +4001,7 @@
           texture: c.texture || null, where: c.where || null, goal: (c.goal || "").trim() || null, push: c.push, aligned: c.push ? c.push === "toward" : null,
           move: (c.move || "").trim() || null, line: (c.line || "").trim() || null, light: c.push === "away" ? (c.lightName || "").trim() || (c.name || "").trim() || null : null,
           layers: c.layers.map(function (l) { return l.name; }), worked: R.worked.indexOf(c) >= 0, kept: R.kept.indexOf(c) >= 0, reading: c.reading,
-          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice() } : null,
+          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice(), shadeElement: c.shadeElement || null } : null,
           hiddenOf: c.hiddenOf };
         Object.keys(r).forEach(function (x) { if (r[x] == null || (r[x].length === 0 && typeof r[x] !== "boolean")) delete r[x]; });
         return r;
@@ -4052,7 +4067,7 @@
           resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(function (c) {
             return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
           }).concat(shades.map(function (c) {
-            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: null, hex: SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0 };
+            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.polarity ? null : c.shadeElement || null, hex: !c.polarity && c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !c.polarity && !!c.shadeElement };
           })) });
         }, 520);
       }
@@ -4450,7 +4465,7 @@
         charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
           slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }),
           polarity: ch.polarity, shadow: ch.shadow, signals: ch.signals.slice(), opacity: u.mat.opacity, veil: u.veil.visible ? u.veil.material.opacity : 0, hiddenOf: ch.hiddenOf,
-          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.mat.color.getHex(), x: ch.shade.position.x } : null, asks: ch.asks.slice() }; },
+          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.mat.color.getHex(), x: ch.shade.position.x, element: ch.shadeElement || null } : null, asks: ch.asks.slice() }; },
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
