@@ -57,15 +57,16 @@
   var BREATH_OUT_MS = 6000;
   var BREATH = { inS: BREATH_IN_MS / 1000, outS: BREATH_OUT_MS / 1000 };
   var BREATH_S = BREATH.inS + BREATH.outS;
-  // The walk (a choice): while the player holds, one stretch takes exactly one breath. The first half of the stretch is
-  // walked on the inhale (4 s, 8 steps) and the second half on the exhale (6 s, 12 steps), two steps a second throughout,
-  // so the footfalls land evenly: 8 in the inhale, 12 in the exhale. The inhale strides are longer than the exhale ones.
-  var STEPS_PER_S = 2;
-  var STEPS_IN = BREATH.inS * STEPS_PER_S, STEPS_OUT = BREATH.outS * STEPS_PER_S;
+  // The walk: while the player holds, the figure walks at a steady pace, WALK_SPEED units a second, STEPS_PER_S steps a
+  // second (choices). It used to take one full breath for every stretch, which made the hall of the six slow; the breath
+  // is walked in the WAVE itself now (Wendell, 2026-10-13: "we should disambiguate the walk speed to breath. We have that
+  // built into the manual wave experience so we don't need that anymore"). The cave still breathes on its own.
+  var WALK_SPEED = 4;
+  var STEPS_PER_S = 2.5;
   var MARK_AHEAD = 3.6;  // the marker floats this far ahead of the stand
   var MARK_Y = 2.0;      // and this high above the floor
-  // How far through a stretch the avatar is after t seconds of holding: half on the inhale, half on the exhale.
-  function stretchFrac(t) { return t < BREATH.inS ? 0.5 * t / BREATH.inS : 0.5 + 0.5 * Math.min(1, (t - BREATH.inS) / BREATH.outS); }
+  // How long a stretch of D units takes to walk, in seconds of holding.
+  function stretchTime(D) { return Math.max(0.5, D / WALK_SPEED); }
   // What each stretch looks like (a choice). The seven take their light from the game's element colours (ELEMENTS below:
   // Earth, Fire, Water, Wood, Metal) and then climb to gold and daylight; the fog brightens, thins, and the walls open
   // wider as the steps climb. open scales the wall rings, fog is the fog and background colour, fogK scales the charge's
@@ -521,14 +522,13 @@
     var vOf = function (q) { return (r.X[q] - b.x) * nx + (r.Z[q] - b.z) * nz; }, qa = 0, qb = r.X.length - 1;
     while (qa < r.X.length - 1 && vOf(qa) < o.W0 * 0.92) qa++;
     while (qb > 0 && vOf(qb) < o.W0 * 0.92) qb--;
-    // The tube itself starts well inside the parent's wall (Wendell, 2026-10-13: "the segments between the tunnels are
-    // leaving dark gaps"). It used to start at the wall, so when the parent breathed out, or its stone bulged, a ring of
-    // nothing showed between the two. Inside the parent its floor lies under the parent's own and its walls stand as the
-    // opening's jambs.
-    var qa2 = qa, qb2 = qb;
-    while (qa2 > 0 && vOf(qa2) > o.W0 * 0.6) qa2--;
-    while (qb2 < r.X.length - 1 && vOf(qb2) > o.W0 * 0.6) qb2++;
-    r.sFrom = r.S[qa2]; r.sTo = r.S[qb2]; r.sIn = Math.max(0, r.S[qa] - 0.6); r.sOut = Math.min(r.len, r.S[qb] + 0.6); // the stretch outside the parent
+    // The tube runs the whole loop, from the middle of the parent's path and back to it (Wendell, 2026-10-13: "the segments
+    // between the tunnels are leaving dark gaps", and again at the Acknowledge stretch: "branching paths need hardening for
+    // these kinds of glitches"). It used to start at the wall, then part way in, and either way its open end crossed the
+    // parent's wall where the branch meets it at a slant or under a high roof, so the void showed through the end of the
+    // tube. Inside the parent it narrows (see taper in buildTube), so its open ends lie wholly inside the parent's stone,
+    // its floor lies under the parent's own and its walls stand as the opening's jambs.
+    r.sFrom = 0; r.sTo = r.len; r.sIn = Math.max(0, r.S[qa] - 0.6); r.sOut = Math.min(r.len, r.S[qb] + 0.6); // the stretch outside the parent
     // where the ramp ends and the loop runs level (a face's branch beside a stone must stand on level stone)
     var qf = 0; while (qf < r.X.length - 1 && r.Y[qf] > b.y - o.drop + 0.05) qf++; r.sLevel = r.S[qf];
     function nearestParentS(q) {
@@ -571,6 +571,8 @@
     return { PX: px, PY: py };
   }
   (function () { var p = profileOf(0.55, 1); PX = p.PX; PY = p.PY; })();
+  var TAPER = 0.5;
+  var WITHIN_SEAM = 2.5; // how far in from where a branch crosses its parent's wall its faces still overlap the parent's (units)
   function buildTube(THREE, route, o) {
     var shape = o.shape || CAVE_SHAPE.other, prof = profileOf(shape.e, shape.roof), PX = prof.PX, PY = prof.PY;
     var s0 = o.sFrom || 0, s1 = o.sTo == null ? route.len : o.sTo, n = Math.max(2, Math.floor(s1 - s0) + 1), ds = (s1 - s0) / (n - 1);
@@ -608,10 +610,18 @@
         var j1 = (j + 1) % PROF, cut = false, a = i * C + j, b = i * C + j + 1, c = (i + 1) * C + j, d = (i + 1) * C + j + 1;
         for (var q = 0; q < t.holes.length && !cut; q++) {
           var H = t.holes[q];
-          if (H.tube) cut = ring[i].s >= H.s0 - 2 && ring[i + 1].s <= H.s1 + 2 && PX[j] * H.side > -0.2 && PX[j1] * H.side > -0.2 && quadIn(H.tube, "h" + q, 0.95, a, b, c, d);
+          if (H.tube) cut = ring[i].s >= H.s0 - 2 && ring[i + 1].s <= H.s1 + 2 && PX[j] * H.side > -0.2 && PX[j1] * H.side > -0.2 && quadIn(H.tube, "h" + q, 0.88, a, b, c, d);
           else cut = ring[i].s >= H.s0 && ring[i + 1].s <= H.s1 && PX[j] * H.side > 0.05 && PX[j1] * H.side > 0.05 && (H.all ? !(PY[j] < -0.8 && PY[j1] < -0.8) : PY[j] > -0.86 && PY[j1] > -0.86 && PY[j] < 0.8 && PY[j1] < 0.8);
         }
-        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) cut = quadIn(t.within.tube, "w", 0.97, a, b, c, d);
+        if (!cut && t.within && (ring[i].s < t.within.s0 || ring[i + 1].s > t.within.s1)) {
+          // Near the seam a face goes only when it lies well inside the parent, so the two overlap there. Further in, any face
+          // inside the parent at all goes: a face's branch beside a narrow passage left slabs of its walls standing in the
+          // passage, and its floor showing through the passage's floor (Wendell, 2026-10-13: "Cave is breaking here").
+          var deep = ring[i + 1].s < t.within.s0 - WITHIN_SEAM || ring[i].s > t.within.s1 + WITHIN_SEAM;
+          // Its floor in there lies a hair under the parent's and flickered through it, so it goes too, out to just past the parent's stone.
+          var flo = PY[j] < -0.8 && PY[j1] < -0.8;
+          cut = deep ? quadIn(t.within.tube, flo ? "wf" : "wd", flo ? 1.2 : 1, a, b, c, d) : quadIn(t.within.tube, "w", 0.92, a, b, c, d);
+        }
         if (cut) continue;
         (PY[j] < -0.8 && PY[j1] < -0.8 ? floorIdx : idx).push(a, c, b, b, c, d);
       }
@@ -619,6 +629,14 @@
       geo.addGroup(0, floorIdx.length, 0); geo.addGroup(floorIdx.length, idx.length, 1); t.kIdx = t.k;
       if (!shaped) t.dirty = true;
     };
+    // A branch narrows where it lies inside its parent (o.taper: { s0, s1 }, the stretch outside it), down to TAPER at its
+    // ends, so its open ends sit wholly inside the parent's stone, clear of its walls and roof as they breathe and bulge.
+    // Its faces in there are dropped anyway (t.within), so the narrowing never shows.
+    function taperAt(sv) {
+      var tp = o.taper; if (!tp) return 1;
+      var u = sv < tp.s0 ? (tp.s0 - sv) / Math.max(1e-6, tp.s0 - s0) : sv > tp.s1 ? (sv - tp.s1) / Math.max(1e-6, s1 - tp.s1) : 0;
+      return 1 - (1 - TAPER) * Math.min(1, u);
+    }
     t.exact = function () { return !!t.within || t.holes.some(function (H) { return H.tube; }); };
     t.addHole = function (H) { t.holes.push(H); t.index(); };
     // How far inside the tunnel a point is, against the stone as it stands this frame (breath, bumps and all): ratio is 0 at
@@ -654,9 +672,10 @@
       var kh = 1 + (k - 1) * 0.5, sink = o.within ? 0.03 : 0; // a branch's floor lies a hair under its parent's, so the two never flicker where they overlap
       for (var i = 0; i < n; i++) {
         var R = ring[i], wf = o.openAt(R.s) * k * o.w * (shape.rib ? 1 - shape.rib * Math.pow(0.5 + 0.5 * Math.cos(R.s * Math.PI * 2 / shape.ribEvery + seed), 3) : 1);
+        var tp = taperAt(R.s); wf *= tp;
         for (var j = 0; j < C; j++) {
           var jj = j % PROF, p = (i * C + j) * 3, jt = jit[i * PROF + jj], fl = PY[jj] < -0.8, xx = PX[jj] * wf * jt;
-          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[jj] * o.h - sink : PY[jj] * o.h * kh * jt); pos[p + 2] = R.z + R.nz * xx;
+          pos[p] = R.x + R.nx * xx; pos[p + 1] = R.y + (fl ? PY[jj] * o.h - sink : PY[jj] * o.h * kh * jt * tp); pos[p + 2] = R.z + R.nz * xx;
         }
       }
       geo.attributes.position.needsUpdate = true;
@@ -759,12 +778,16 @@
   // Looking with the thumb: how far a pixel of drag tilts, how far it can tilt (pushed up, then pulled down), how long the
   // thumb rests before the look eases back behind the figure (ms), and how close to the roof the camera may rise (choices).
   var LOOK = { pitchPerPx: 0.004, pitch: [-1.3, 0.6], settle: 600, roof: 1.75 };
-  var LAMP = { reach: 16, decay: 1.6, above: 1.9, ambient: 0.22, dim: 0.35, fog: 1.6 };
-  // Numbness is hardly a cave: its walls are lost in the dark, the floor is faint, and only glowing things hang in the black.
+  // numbFog and numbFill (Wendell, 2026-10-13: "we need brighter light in the numbness"): the numb cave thins its fog to this
+  // share so the circle round the figure isn't hazed out, its sky light is this share of the other caves', and the figure's
+  // light burns this much brighter there. The circle is still one size, and steady along the whole walk.
+  var LAMP = { reach: 16, decay: 1.6, above: 1.9, power: 1.35, ambient: 0.22, dim: 0.35, fog: 1.6, numbFog: 0.4, numbFill: 1, numbLamp: 1.35 };
+  // Numbness is hardly a cave: past the figure's light everything is lost in the black, and only glowing things hang in the
+  // dark. Its stone still shows where the figure's light reaches (Wendell, 2026-10-13: "The fear cave is
+  // too dark. We need consistent lighting throughout so people can see a radius around them but have darkness on all
+  // sides"); it used to be hidden outright, so the figure walked in nothing.
   function darken(shape, rock, dressing) {
     if (!shape || !shape.dark) return;
-    rock.visible = false;
-    if (rock.userData.floor) rock.userData.floor.userData.lift = (rock.userData.floor.userData.lift || 1) * 0.45;
     tintStone(rock, rock.userData.hex);
     (dressing.userData.items || []).forEach(function (it) { if (GLOWS.indexOf(it.piece) < 0) it.mesh.visible = false; });
   }
@@ -912,7 +935,7 @@
       var wr = node("wrist" + n, el, 0, -0.31, 0); put(ball, mat, wr, 0, -0.04, 0, 0.055, 0.055, 0.055);
     });
     var o = new THREE.Group(); o.add(fit);                        // the outer group is what moves
-    o.userData = { body: body, mat: mat, mat2: mat2, chest: chest, look: look, loose: -1, feet: 0, J: J, g: 0, amp: 0.3, stepsIn: 0, stepsOut: 0, stepIdx: 0 };
+    o.userData = { body: body, mat: mat, mat2: mat2, chest: chest, look: look, loose: -1, feet: 0, J: J, g: 0, amp: 0.3, stepIdx: 0 };
     return o;
   }
   // loose runs from 0 (as the player brought it) to 1 (after the last step); it eases in a step at a time.
@@ -950,9 +973,9 @@
     J.spine.scale.set(1 + 0.05 * (b - 0.5) * idle, 1 + 0.04 * (b - 0.5) * idle, 1 + 0.06 * (b - 0.5) * idle);
     J.shoulderL.position.y = J.shoulderR.position.y = 0.5 + 0.03 * (b - 0.5) * idle;
     J.neck.rotation.x = 0.05 * (0.5 - b) * idle;
-    // footfalls: step n lands at n / STEPS_PER_S seconds into the stretch, in the inhale up to STEPS_IN of them
+    // footfalls: step n lands at n / STEPS_PER_S seconds into the stretch
     var idx = Math.floor(clk * STEPS_PER_S + 1e-9);
-    while (d.stepIdx < idx) { d.stepIdx++; if (d.stepIdx <= STEPS_IN) d.stepsIn++; else d.stepsOut++; }
+    if (idx > d.stepIdx) d.stepIdx = idx;
   }
   // Bytes of geometry a group holds, counted once per geometry (the page test holds the avatar to about 50 KB).
   function geometryBytes(root) {
@@ -1569,7 +1592,6 @@
     }
     function breathStep(dt, nowS) {
       var T = BREATH_S, u, wk = state.walk;
-      if (wk && wk.moving && !state.auto && !state.calm && !(state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER)) br.t0 = nowS - (wk.t % T);
       if (state.calm) { br.target = 0.5; br.d = 0; }
       else if (state.ringOn && nowS - br.lastRing < HOLD_ABOUT_AFTER) {
         var prev = br.ring;
@@ -1584,10 +1606,6 @@
       br.b += (br.target - br.b) * Math.min(1, dt * 8);
       br.k = 1 + 0.08 * (br.b - 0.5);
       if (state.calm) { br.b = 0.5; br.k = 1; }
-    }
-    function paceNow() {
-      var wk = state.walk; if (!wk) return 1;
-      return wk.t < BREATH.inS ? 0.5 * BREATH_S / BREATH.inS : 0.5 * BREATH_S / BREATH.outS;
     }
 
     // ---- input: hold to walk, drag to look, tap an object -------------------------------------
@@ -1805,9 +1823,10 @@
       }
       if (!wk.ready || wk.arrived || busy || flight || !state.held) return;
       wk.moving = true; state.walkedOnce = true;
-      wk.t = Math.min(BREATH_S, wk.t + dt * state.speed * (state.calm ? 0.8 : 1));
-      wk.s = wk.s0 + wk.D * stretchFrac(wk.t);
-      if (wk.t >= BREATH_S) { wk.s = wk.s0 + wk.D; wk.arrived = true; wk.moving = false; arrive(); }
+      var T = stretchTime(wk.D);
+      wk.t = Math.min(T, wk.t + dt * state.speed * (state.calm ? 0.8 : 1));
+      wk.s = wk.s0 + wk.D * wk.t / T;
+      if (wk.t >= T) { wk.s = wk.s0 + wk.D; wk.arrived = true; wk.moving = false; arrive(); }
     }
     function autoWalk(s1, done) {
       var wk = state.walk; state.auto = { s0: wk.s, s1: s1, k: 0, dur: Math.max(0.5, Math.abs(s1 - wk.s) / 7) / Math.max(1, state.speed / 4), clk: 0, done: done };
@@ -1862,7 +1881,7 @@
       if (kind === "face") rock = stoneOf(THREE, parts.tiles, FACE_LOOK[face].rock); // its own walls, so a style stays on this branch
       route.openAt = function () { return SIDE_LOOK.open; };
       var shp = CAVE_SHAPE[frame.blk ? frame.blk.texture : state.cur.texture] || CAVE_SHAPE.other;
-      route.tube = buildTube(THREE, route, { within: true, w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, seed: depth * 13 + blockN, shape: shp });
+      route.tube = buildTube(THREE, route, { within: true, w: o.wb, h: h, rock: rock, openAt: route.openAt, sFrom: route.sFrom, sTo: route.sTo, taper: { s0: route.sIn, s1: route.sOut }, seed: depth * 13 + blockN, shape: shp });
       route.holes.forEach(function (H) { H.tube = route.tube; });
       route.tube.within = { tube: parent.tube, s0: route.sIn + 1, s1: route.sOut - 1 };
       route.tube.update(br.k); route.tube.index();
@@ -2042,7 +2061,7 @@
       if (wk.route.pendingExit) openWayBack(wk.route);
       autoWalk(wk.route.len, function () {
         var fr = state.stack.pop();
-        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: BREATH_S, ready: true, moving: false, target: fr.target, arrived: true, blk: fr.blk };
+        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: 0, ready: true, moving: false, target: fr.target, arrived: true, blk: fr.blk };
         busy = false; done(fr);
       });
     }
@@ -2074,7 +2093,7 @@
       busy = true; closeModal(); fade.style.opacity = 1;
       setTimeout(function () {
         var fr = state.stack[0]; state.stack = [];
-        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: BREATH_S, ready: true, moving: false, target: fr.target, arrived: true, blk: null };
+        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: 0, ready: true, moving: false, target: fr.target, arrived: true, blk: null };
         snapCam = true; busy = false; fade.style.opacity = 0;
         arrive();
       }, 520);
@@ -2338,7 +2357,7 @@
     // (bms-in-place): the same table (ROOM_STEPS) and the same 3-2-1 (talk321), here in the tunnel, without the room's door. The
     // figure sits down, and what's coming up comes along the path from ahead as a grey shape that takes its
     // texture's colour at Witness and its element's at Acknowledge, grows with Allow's sliders and steadies at Validate. A breathing
-    // ring keeps the cave's breath on every step. Standing up, partway or at the end, leaves a spirit that walks behind the figure
+    // ring keeps the cave's breath on every step. Standing up at the end of the WAVE leaves a spirit that walks behind the figure
     // with its own light (`bms-away-lighter`: breathed out at the fork, it walks lighter). The game names each charge (two words,
     // as in the Big Mind cave); the player can give it a name of their own at Acknowledge or Validate.
     var SIT_WHERE = { 3: "You are sitting where you stopped, looking at it.", 2: "You are face to face with it.", 1: "You are sitting where it sat, and it sits where you were.", check: "You are face to face with it.", after: "You are back where you sat down.", paused: "You leaned back from it, still sitting." };
@@ -2452,17 +2471,20 @@
       kids.push(breathOrb(), row([go].concat(extra)), row([stand]));
       sitPage(w[1], kids, R.id);
     }
-    // branch: stays (Toward), goes (Away: breathed out, lighter), done, stood (stood up partway). Every one leaves a spirit.
+    // branch: stays (Toward), goes (Away: breathed out, lighter), done, stood (stood up partway). A spirit emerges only from a
+    // WAVE gone through to the end (Wendell, 2026-10-13: "if you sit down without going through the whole wave process a spirit
+    // is auto created. It should only emerge once it's been engaged with"): standing up partway sends the shape back the way it
+    // came, and a spirit sat with again walks on as it was.
     function standUp(branch) {
       var S = sit; if (!S) return;
       modal.innerHTML = ""; modal.setAttribute("data-cave-sit-step", "standing"); closeModal();
       var from = S.g.position.clone(), nm = S.name.trim() || S.gen;
-      tween(branch === "goes" ? 2200 : 1200, function (k) { S.k = 1 - ease(k); }, function () {
+      tween(branch === "goes" ? 2200 : 1200, function (k) { S.k = 1 - ease(k); if (branch === "stood" && !S.spirit) S.come = ease(k); }, function () {
         scene.remove(S.g); dropLight(S.g); sit = null; modal.removeAttribute("data-cave-sit-step");
         var o = { name: nm, element: S.element, lighter: branch === "goes" };
         if (S.spirit) { o.name = S.spirit.name; o.element = S.element || S.spirit.element; o.hex = S.element ? null : S.spirit.hex; o.lighter = branch === "goes" || S.spirit.lighter; }
         o.hex = o.element ? null : sitHex(S);
-        addSpirit(o, from);
+        if (branch !== "stood" || S.spirit) addSpirit(o, from);
         unstashPage(S.back);
       });
     }
@@ -2901,7 +2923,7 @@
           placeDaemon(sc, stg.cd);
           if (!stT && stg.cu === 0 && stg.cd === 0 && stg.flip === 0) stg.ctx = null;
         }
-        var stepLen = state.auto ? 0.9 : wk.t < BREATH.inS ? wk.D / 2 / STEPS_IN : wk.D / 2 / STEPS_OUT;
+        var stepLen = state.auto ? 0.9 : WALK_SPEED / STEPS_PER_S;
         poseAvatar(avatar, state.auto ? state.auto.clk : wk.t, wk.moving || stMoving, dt, br.b, stepLen, state.calm);
         avatar.position.set(a.x, fl + 0.02, a.z);
         avatar.rotation.y = yawFacing(a);
@@ -2963,6 +2985,7 @@
         else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
         if (free) keepIn(camPos, 0.96, 0.25);
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
+        if (state.camFix) { var ca = state.camFix; camera.position.set(ca[0], ca[1], ca[2]); camera.lookAt(ca[3], ca[4], ca[5]); camera.updateMatrixWorld(); } // tests: a fixed view
         var cp = ch && ch.main && ch.main.cap; if (cp) cp.mesh.visible = (camPos.x - cp.x) * cp.fx + (camPos.z - cp.z) * cp.fz > 0.3;
         // the look follows the choice: the stretch the player chose to walk (or the violet hush of a branch)
         var lg = route.look || (route.kind === "main" ? STEP_LOOK[clamp(wk.target, 0, 6)] : route.kind === "face" ? faceLook(route.style) : SIDE_LOOK), fe = 1 - Math.exp(-dt * 2.2);
@@ -2982,7 +3005,7 @@
         lk.light.lerp(tmpC.setHex(lg.light), fe); lk.fog.lerp(tmpC.setHex(lg.fog), fe);
         lk.fogK += (lg.fogK - lk.fogK) * fe; lk.hemi += (lg.hemi - lk.hemi) * fe; lk.flash = Math.max(0, lk.flash - dt / 1.1);
         scene.background.copy(lk.fog).multiplyScalar(LAMP.dim * (parts.shape && parts.shape.dark ? 0.25 : 1)); scene.fog.color.copy(scene.background);
-        scene.fog.density = parts.fog * lk.fogK * LAMP.fog;
+        scene.fog.density = parts.fog * lk.fogK * LAMP.fog * (parts.shape && parts.shape.dark ? LAMP.numbFog : 1); // numbness: black beyond the circle, not a haze inside it
         if (state.voidHex != null) { scene.background.setHex(state.voidHex); scene.fog.density = 0; } // tests: paint the void outside the stone to find gaps
         var mt = state.mainRoute.tube, chg = false;
         for (var qq = 0; qq < STEP_LOOK.length; qq++) {
@@ -2996,9 +3019,9 @@
         state.stack.forEach(function (fr) { if (fr.child && fr.child.route) fr.child.route.tube.update(br.k); });
         var warm = 1 - br.b, surge = lk.flash * lk.flash;
         baseLamp.copy(lk.light).lerp(tmpC.setHex(0xffffff), 0.3).lerp(tmpC.setHex(c && c.lampHex || 0xffe0b0), 0.15).lerp(WARM, warm * 0.2);
-        lamp.color.copy(baseLamp); lamp.intensity = 1.0 + 0.5 * warm + 1.6 * surge + 0.5 * lk.hemi;
+        lamp.color.copy(baseLamp); lamp.intensity = LAMP.power * (parts.shape && parts.shape.dark ? LAMP.numbLamp : 1) + 0.15 * warm + 1.6 * surge; // the same circle of light in every stretch and every cave
         waterCalm = state.calm; (waterSheen || (waterSheen = new THREE.Color())).copy(baseLamp).multiplyScalar(0.25 + 0.2 * lamp.intensity);
-        hemi.color.setHex(0xffffff).lerp(lk.light, 0.35); hemi.intensity = (lk.hemi + 0.1 * warm + 0.4 * surge) * LAMP.ambient * (parts.shape && parts.shape.dark ? 0.4 : 1);
+        hemi.color.setHex(0xffffff).lerp(lk.light, 0.35); hemi.intensity = (lk.hemi + 0.1 * warm + 0.4 * surge) * LAMP.ambient * (parts.shape && parts.shape.dark ? LAMP.numbFill : 1);
         glow.forEach(function (g) { g.m.emissiveIntensity = g.base * (0.7 + 0.6 * br.b); });
         route.markers.forEach(function (m, i) {
           var on = route.kind === "main" ? i < me().passed : i < wk.target || (wk.arrived && wk.target === i);
@@ -3038,7 +3061,7 @@
     // ---- hooks for the browser test ----------------------------------------------------------
     var api = window.__oagCave;
     api.state = state; api.leave = leave; api.spirits = spirits; api.addSpirit = addSpirit;
-    api.breath = function () { return { b: br.b, k: br.k, calm: state.calm, ring: !!ring.parentNode, pace: paceNow() }; };
+    api.breath = function () { return { b: br.b, k: br.k, calm: state.calm, ring: !!ring.parentNode, }; };
     api.avatar = function () {
       var d = avatar.userData, wk = state.walk, a = at(wk.route, wk.s);
       return { x: avatar.position.x, y: avatar.position.y, z: avatar.position.z, scale: [d.body.scale.x, d.body.scale.y], opacity: d.mat.opacity, glow: d.mat.emissiveIntensity,
@@ -3051,14 +3074,14 @@
     };
     api.gait = function () {
       var wk = state.walk, d = avatar.userData;
-      return { t: wk.t, s: wk.s, s0: wk.s0, D: wk.D, frac: wk.D ? (wk.s - wk.s0) / wk.D : 1, phase: wk.t < BREATH.inS ? "in" : "out", moving: wk.moving, stepsIn: d.stepsIn, stepsOut: d.stepsOut,
-        inS: BREATH.inS, outS: BREATH.outS, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
+      return { t: wk.t, s: wk.s, s0: wk.s0, D: wk.D, frac: wk.D ? (wk.s - wk.s0) / wk.D : 1, moving: wk.moving, steps: d.stepIdx, time: stretchTime(wk.D),
+        inS: BREATH.inS, outS: BREATH.outS, speed: WALK_SPEED, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
     };
     api.carryLight = carryLight;
     api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k } : null; };
     api.carried = function () { return carried.length; };
     api.look = function () {
-      return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur.slice(), revealed: revealed, bg: scene.background.getHex(), density: scene.fog.density };
+      return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur.slice(), revealed: revealed, bg: scene.background.getHex(), density: scene.fog.density, lamp: lamp.intensity, reach: lamp.distance };
     };
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
@@ -3123,6 +3146,29 @@
       return { place: L.place, face: L.face, visited: L.visited.slice(), trail: L.trail.slice(), kind: r && r.kind, target: state.walk ? state.walk.target : null,
         stops: r ? r.stops.map(function (st) { return st.level + (st.toFace ? ":" + st.toFace : ""); }) : [], look: r && r.look ? r.look.light : null, rock: parts.rock ? parts.rock.userData.hex : null,
         shape: state.cave, spirits: spirits.length, carried: carried.length };
+    };
+    // Where each opening a branch has cut stands, with views of it from inside the tunnel it opens off (for the gap check).
+    // open: also cut the way back that is still waiting, so both seams can be looked at.
+    api.openings = function (open) {
+      var out = [];
+      state.stack.forEach(function (fr) {
+        var r = fr.child && fr.child.route; if (!r) return;
+        if (open && r.pendingExit) { fr.route.tube.addHole(r.pendingExit); r.pendingExit = null; }
+        r.holes.forEach(function (H, wi) {
+          if (fr.route.tube.holes.indexOf(H) < 0) return;
+          var ms = (H.s0 + H.s1) / 2, a = at(fr.route, ms), nx = -a.fz * H.side, nz = a.fx * H.side, pw = r.pw, h = ch.h;
+          var tx = a.x + nx * pw, ty = a.y - h * 0.2, tz = a.z + nz * pw, views = [];
+          [-7, -4, 0, 4, 7].forEach(function (d) {
+            var c = at(fr.route, clamp(ms + d, 0, fr.route.len));
+            [[-0.35, 0.15], [0.1, 0.45], [-0.1, -0.4]].forEach(function (o) {
+              var v = [c.x + nx * pw * o[0], c.y + h * o[1], c.z + nz * pw * o[0], tx, ty, tz], ci = fr.route.tube.contain({ x: v[0], y: v[1], z: v[2] });
+              if (ci && ci.ratio < 0.85) views.push(v); // only from where a player's camera could stand
+            });
+          });
+          out.push({ kind: r.kind, which: wi, s: ms, views: views });
+        });
+      });
+      return out;
     };
     api.elementScreen = function () {
       var c = ctxOf(), v = c.holder.getWorldPosition(new THREE.Vector3()); v.y += 1.4; v.project(camera);
