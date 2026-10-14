@@ -36,7 +36,7 @@ cloth is caught there, as real cloth is, and nobody sees it (cover_robe).
 report.json carries the counts; test J5 (tools/blender-cloud/tests/test_bpy.py) requires zero and each GLB under
 150 KB. Needs bpy (tools/blender-cloud/README.md).
 """
-import argparse, json, math, os, sys
+import argparse, json, math, os, subprocess, sys
 
 import bpy
 import bmesh
@@ -51,6 +51,8 @@ GARMENTS = ("robe", "sash", "sash-robe", "topknot")
 MAX_BYTES = 150 * 1024
 THICK = 0.004                                    # metres of cloth, outward (solidify); the test uses the inner face
 LAST_THROUGH = []                                # (key, point, distance) of the last test's points through
+DRAPE_TRIES = 6                                  # processes tried at most, per build and palette, until the fit clears every point
+FIT_RADIUS = 0.08                               # metres, how far a push spreads over the cloth (falls off smoothly)
 MAX_PUSH = 0.015                                 # metres, the most one round of the fit moves a point
 TOL, EDGE = 0.002, 0.015                         # metres: outside by more than TOL counts, unless within EDGE of an opening
 ARMS = ("shoulderL", "shoulderR", "elbowL", "elbowR")
@@ -803,7 +805,7 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
                         held = True                        # inside, or a leg or a hand out through an opening
                         break
                     if first is None:
-                        first = (d, polys[sel[fi]])
+                        first = (d, polys[sel[fi]], sel[fi])
                 if held and ray_from and len(pids) == 1:
                     o = ray_from(p)
                     if o is not None:
@@ -811,16 +813,15 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
                         t, sel = tree(pids[0])
                         if d.length > 1e-6 and t.ray_cast(p, d.normalized(), 0.6)[0] is None:
                             loc, nor, fi, _ = t.find_nearest(p)
-                            held, first = False, (max(0.0, (p - loc).dot(nor)), polys[sel[fi]])
+                            held, first = False, (max(0.0, (p - loc).dot(nor)), polys[sel[fi]], sel[fi])
                 if held or first is None:
                     continue
                 LAST_THROUGH.append((k, i, first[0]))
                 n += 1
-                d, vs = first
-                rest_p = rest[i] if isinstance(i, int) else sum((rest[v] for v in i), Vector()) / len(i)
+                d, vs, face = first
                 for v in vs:
                     if d + 0.008 > push.get(v, (0.0, None))[0]:
-                        push[v] = (d + 0.008, rest_p)
+                        push[v] = (d + 0.008, face)
         counts.append(n)
     return counts, push
 
@@ -847,21 +848,26 @@ def fit(wearer, cover, garment, keys, rounds=14, parts=None, ray_from=None):
         if not push:
             break
         me.update()
-        spread = dict(push)
-        for p in me.polygons:                              # spread each push to the face's neighbours, at half
-            vs = list(p.vertices)
-            m = max((push[v] for v in vs if v in push), key=lambda dp: dp[0], default=None)
-            if m:
-                for v in vs:
-                    if v not in spread or spread[v][0] < 0.5 * m[0]:
-                        spread[v] = (0.5 * m[0], m[1])
-        for v, (d, bp) in spread.items():
-            # out along the cloth's normal, turned to point away from the body point that came through (a draped
-            # cloth folds, and a fold's normal can face the body)
-            n = me.vertices[v].normal.copy()
-            if n.dot(me.vertices[v].co - bp) < 0:
+        kd = KDTree(len(me.vertices))
+        for v in me.vertices:
+            kd.insert(v.co, v.index)
+        kd.balance()
+        part = me.attributes["part"].data
+        spread = {}
+        for v, (d, face) in push.items():
+            # out along the normal of the face the point came through (a point is through a face on its outer side
+            # by the test). A body panel's fold can face the body: there it is turned to face away from the middle
+            n = me.polygons[face].normal.copy()
+            radial = Vector((me.vertices[v].co.x, me.vertices[v].co.y, 0.0))
+            if part[face].value == 0 and radial.length > 1e-6 and n.dot(radial.normalized()) < -0.2:
                 n = -n
-            me.vertices[v].co += n * min(d, MAX_PUSH) * scale
+            dd = min(d, MAX_PUSH) * scale
+            for co, j, dist in kd.find_range(me.vertices[v].co, FIT_RADIUS):   # a smooth bump, not a spike
+                w = dd * 0.5 * (1 + math.cos(math.pi * dist / FIT_RADIUS))
+                if j not in spread or spread[j][0] < w:
+                    spread[j] = (w, n)
+        for j, (w, n) in spread.items():
+            me.vertices[j].co += n * w
         me.update()
     return log
 
@@ -967,12 +973,12 @@ def build_all(build, palette, out_dir, do_fit=True):
     fig_row = C.export(fig, rig, build, palette, out_dir)
     cw = COLOURWAYS[palette]
     rows = []
-    R = robe(fig, rig, build, cw)
     W = bone_weights(fig)
 
     def parts(i):                                          # an arm point by its own sleeve (or the robe's body), the rest by the body
         b = main_bone(W[i])
         return ((1 if b.endswith("L") else 2), 0) if b in ARMS else (0,)
+    R = robe(fig, rig, build, cw)
     cover = with_faces(fig, cover_robe(fig, R, build))
     # above the slits (wherever the belt has drawn them up to), nothing opens
     rc = [v.co for v in R.data.vertices]
@@ -1126,6 +1132,7 @@ def main():
     ap.add_argument("--sheet", action="store_true", help="render the contact sheets (Cycles, CPU)")
     ap.add_argument("--sheet-only", action="store_true", help="only render the sheets from the GLBs in --out")
     ap.add_argument("--no-fit", action="store_true", help="skip the walking fit (test J5b: points come through)")
+    ap.add_argument("--part", help="(used by --all) write this build's figure and garment rows to this file")
     ap.add_argument("--out", default=os.path.join(os.environ.get("W", "/tmp/blender-cloud"), "garments"))
     a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
     os.makedirs(a.out, exist_ok=True)
@@ -1137,7 +1144,27 @@ def main():
     combos = [(b, p) for b in C.BUILDS for p in C.PALETTES] if a.all else [(a.build, a.palette)]
     figs, report = {}, []
     for b, p in combos:
-        fr, rows = build_all(b, p, a.out, not a.no_fit)
+        if a.all:
+            # One fresh process per build and palette. The cloth solver settles differently from one process to the
+            # next (a drape of 392 points through at the start, or 91, or 297), and the fit cannot save the rare
+            # bad one, and it repeats itself inside a process. So a robe the fit leaves with points through is made
+            # again in a new process, up to DRAPE_TRIES times.
+            part = os.path.join(a.out, f"part-{b}-{p}.json")
+            cmd = [sys.executable, os.path.abspath(__file__), "--build", b, "--palette", p, "--out", a.out, "--part", part]
+            cmd += ["--no-fit"] if a.no_fit else []
+            for attempt in range(DRAPE_TRIES):
+                subprocess.run(cmd, check=True)
+                with open(part) as f:
+                    fr, rows = json.load(f)
+                os.remove(part)
+                if a.no_fit or all(r["worst"] == 0 for r in rows):
+                    break
+                print(f"{b}-{p}: a drape left points through (try {attempt + 1} of {DRAPE_TRIES}), again", flush=True)
+        else:
+            fr, rows = build_all(b, p, a.out, not a.no_fit)
+            if a.part:
+                with open(a.part, "w") as f:
+                    json.dump([fr, rows], f)
         figs[(b, p)] = fr["file"]
         report += rows
         for r in rows:
