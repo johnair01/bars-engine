@@ -89,7 +89,16 @@ WARP = {
     "damaged-self": {"arms": 0.93, "head": 0.88, "curve": 0.36, "stoop": 0.1, "collapse": ("shoulderL", 0.35)},
     # this is what is actually moving: open chest, big head, long arms out
     "emotional-body": {"arms": 1.08, "head": 1.18, "curve": -0.1, "stoop": -0.02, "collapse": ("elbowR", 0.45)},
+    # the Player, the vulnerable child at the centre, is not a daemon and holds no blockage; its row is a child's
+    # proportions (a big head, short arms) with nothing bent, so the chain of bosses can end on a figure
+    "player": {"arms": 0.88, "head": 1.28, "curve": 0.0, "stoop": 0.0, "collapse": None},
 }
+# An NPC built from a blockage keeps its daemon's row and speaks from that daemon's question set
+# (content/ontology-game/daemons/questions.js, bars-engine #329). Its answer to the boss question names who it works
+# for, and that is the next NPC the player meets: the figure below. "self" is the unwarped frame. The Protector's boss
+# is the body's survival, so it names none, and the Player has none.
+BOSSES = ("protector", "self", "controller", "player")
+NEXT_FIGURE = {"protector": "protector", "self": None, "controller": "controller", "player": "player"}
 FLEX = {"neck": 1, "shoulder": -1, "elbow": -1, "wrist": -1, "knee": 1, "ankle": -1}   # + is each joint's natural bend
 SPINE_Z = (1.03, 1.42)                                                                 # the spine bone, where curve bends
 
@@ -384,8 +393,11 @@ def pose(t):
     return rot, drop
 
 
-def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=None):
-    """warp: a WARP row's name, or a dict of the warp's numbers (missing ones are the frame's) named by warp_name."""
+def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=None, boss=None):
+    """warp: a WARP row's name, or a dict of the warp's numbers (missing ones are the frame's) named by warp_name.
+    boss: the NPC's answer to its boss question, one of BOSSES, kept on the report row as npc.boss."""
+    if boss is not None and boss not in BOSSES:
+        raise SystemExit(f"no boss {boss}; there is {', '.join(BOSSES)}")
     if theme not in THEMES:
         raise SystemExit(f"no theme {theme}; there is {', '.join(THEMES)}")
     if build_name not in BUILDS or palette not in PALETTES:
@@ -559,6 +571,8 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     size = os.path.getsize(path)
     row = {"id": name, "theme": theme, "build": build_name, "palette": palette, "warp": warp_name,
            "warp_numbers": {k: v for k, v in w.items() if v != NEUTRAL[k]}, "file": os.path.basename(path),
+           "npc": {"daemon": warp_name if warp_name in WARP else None, "boss": boss,
+                   "next": (NEXT_FIGURE[boss] or "frame") if boss else None},
            "bytes": size, "tris": sum(len(p.vertices) - 2 for p in fused.polygons), "verts": len(fused.vertices),
            "bones": len(PARENT), "keys": KEYS + 1}
     if size > MAX_BYTES:
@@ -701,6 +715,7 @@ def main():
     ap.add_argument("--sheet", action="store_true", help="render sheet.png and walk.png (Cycles, CPU)")
     ap.add_argument("--out", default=os.path.join(os.environ.get("W", "/tmp/blender-cloud"), "characters"))
     ap.add_argument("--warp", default=None, help=f"a WARP row: {', '.join(WARP)}")
+    ap.add_argument("--boss", default=None, choices=BOSSES, help="the NPC's answer to its boss question")
     ap.add_argument("--daemons", action="store_true", help="the frame and every WARP row, in --build and --palette")
     ap.add_argument("--one-number", action="store_true", help="the frame and the eleven figures one number from it")
     a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
@@ -721,7 +736,7 @@ def main():
             print("sheets:", *grid_sheet(rows, a.out, "daemons" if a.daemons else "one-number", labels=labels))
         return
     combos = [(b, p) for b in BUILDS for p in PALETTES] if a.all else [(a.build, a.palette)]
-    rows = [build(b, p, a.out, a.theme, warp=a.warp) for b, p in combos]
+    rows = [build(b, p, a.out, a.theme, warp=a.warp, boss=a.boss) for b, p in combos]
     with open(os.path.join(a.out, "report.json"), "w") as f:
         json.dump(rows, f, indent=1)
     for r in rows:

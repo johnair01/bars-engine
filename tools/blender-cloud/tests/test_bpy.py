@@ -527,14 +527,14 @@ def j4b():
 @test("J6")
 def j6():
     """The warp (call sheet blender-frame-flesh-warp, item 2): character.py --daemons makes the frame and one figure per
-    WARP row, the seven daemons. Each is one GLB under 300 KB with one skin and one Walk, passes the mesh census as a
+    WARP row: the seven daemons and the Player. Each is one GLB under 300 KB with one skin and one Walk, passes the mesh census as a
     humanoid (one closed solid, 1.6 to 1.9 m tall) and walks clean, read back from the GLB. The sheet goes to the eye."""
     out = tmpdir("j6")
     r, secs = run([GAME / "cave/character.py", "--daemons", "--out", out])
     check(r.returncode == 0, f"character.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
     rows = json.loads((out / "report.json").read_text())
-    daemons = {"protector", "controller", "skeptic", "fixer", "victim", "damaged-self", "emotional-body"}
-    check({x["warp"] for x in rows} == daemons | {None}, f"warps {[x['warp'] for x in rows]}, want the seven and the frame")
+    daemons = {"protector", "controller", "skeptic", "fixer", "victim", "damaged-self", "emotional-body", "player"}
+    check({x["warp"] for x in rows} == daemons | {None}, f"warps {[x['warp'] for x in rows]}, want the eight and the frame")
     sys.path.insert(0, str(GAME / "cave"))
     import census
     for row in rows:
@@ -547,7 +547,7 @@ def j6():
         check(not c["problems"], f"{row['id']} census: {c['problems']}")
         w = walk_check(glb)
         check(not w["problems"], f"{row['id']}: {'; '.join(w['problems'])}")
-    return f"the frame and seven daemon figures, each closed and walking clean; {secs:.0f} s"
+    return f"the frame, seven daemon figures and the Player, each closed and walking clean; {secs:.0f} s"
 
 
 # ---- the spirits' frame (S1) ----------------------------------------------------------------------------------
