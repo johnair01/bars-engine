@@ -3161,6 +3161,8 @@
     ".oagr-close{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;max-width:420px;margin:0 auto;max-height:40vh;overflow-y:auto;padding:.7rem .9rem;background:rgba(12,12,28,.9);border:1px solid rgba(255,241,176,.5);border-radius:16px;color:#f4f4fa;touch-action:manipulation}" +
     ".oagr-close h2{margin:0 0 .3rem;font-size:1.15rem;color:#fff1b0;display:flex;align-items:center;gap:.5rem}.oagr-close p{margin:.25rem 0;font-size:.95rem;line-height:1.35}.oagr-close .oagc-row{margin-top:.5rem}" +
     ".oagc button.oagr-portalbtn{right:auto;left:10px;border-color:rgba(200,184,255,.7);color:#e8e0ff}" +
+    ".oagr-door{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:min(230px,calc(100vw - 170px));padding:.6rem .7rem;background:rgba(12,12,28,.88);border:1px solid rgba(255,241,176,.55);border-radius:14px;color:#f4f4fa;touch-action:manipulation}" +
+    ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}" +
     ".oagr-stick{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:5;width:116px;height:116px;border-radius:50%;background:rgba(20,20,40,.45);border:2px solid rgba(255,241,176,.55);touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}" +
     ".oagr-knob{width:48px;height:48px;border-radius:50%;background:rgba(255,241,176,.75);box-shadow:0 0 12px rgba(255,241,176,.6);pointer-events:none}" +
     ".oagc button.oagr-sit{position:absolute;right:16px;bottom:calc(40px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.8);color:#fff1b0;background:rgba(60,30,24,.85)}" +
@@ -3651,6 +3653,11 @@
         var fx = camAim.x - camPos.x, fz = camAim.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
         return { x: -z * fx - x * fz, z: -z * fz + x * fx }; // forward times -z, plus right (-fz, fx) times x
       }
+      // In front of door k: within reach of it and not far off its middle.
+      function doorZone(k, reach, width) {
+        var ex = EXITS[k], r = Math.hypot(ex.x, ex.z), nx = ex.x / r, nz = ex.z / r, dx = ex.x - fig.x, dz = ex.z - fig.z;
+        return dx * nx + dz * nz < reach && Math.abs(dx * nz - dz * nx) < width;
+      }
       function onRug() { return Math.hypot(fig.x - SEAT.x, fig.z - SEAT.z) < RUG_R; }
       function sitDown() { sitBtn.style.display = "none"; stopWalking(); if (modal.childNodes.length) openModal(); }
       function freeWalk(dt) {
@@ -3666,17 +3673,17 @@
           }
           R.roam.x = fig.x; R.roam.z = fig.z;
         }
+        // The doors work the way doors work in most phone games (Wendell, 14 October 2026: "If you hold this position and try and
+        // use the joystick you get stuck in a loop"): standing in front of a door shows a small prompt by the right thumb with
+        // its way through, and the stick, the camera and the walk are never taken away. Walking off hides the prompt again. It
+        // shows a little before the doorway and hides a little further out, so standing on the edge does not flicker it.
+        if (R.roam) {
+          var keep = R.atDoor ? doorZone(R.atDoor, 3.4, DW / 2 + 1.0) : false;
+          var near = keep ? R.atDoor : Object.keys(EXITS).filter(function (k) { return doorZone(k, 2.6, DW / 2 + 0.4); })[0] || null;
+          if (near && near !== R.atDoor) doorCard(near);
+          else if (!near && R.atDoor) hideDoor();
+        }
         if (!R.roam || !R.roam.free) { sitBtn.style.display = "none"; return !!w; }
-        // A door's card opens only when the figure walks into the doorway, heading for it (Wendell, 13 October 2026: walking past
-        // "triggers opening a door I don't want to and then it doesn't let me enter said door"). Passing along the wall opens
-        // nothing, and after "Stay in the room" walking into the door again opens it again.
-        var near = Object.keys(EXITS).filter(function (k) {
-          var ex = EXITS[k], r = Math.hypot(ex.x, ex.z), nx = ex.x / r, nz = ex.z / r, dx = ex.x - fig.x, dz = ex.z - fig.z;
-          var ahead = dx * nx + dz * nz, side = Math.abs(dx * nz - dz * nx), wl = w ? Math.hypot(w.x, w.z) : 0; // ahead: how far the door is, side: how far off its middle
-          return w && ahead < 2.2 && side < DW / 2 + 0.2 && (w.x * nx + w.z * nz) / wl > 0.5; // in front of it, and walking into it
-        })[0] || null;
-        if (near && !R.atDoor) doorCard(near);
-        if (R.atDoor && R.walkYaw != null) { var dE = EXITS[R.atDoor]; R.walkYaw = turnTo(R.walkYaw, Math.atan2(dE.x - fig.x, dE.z - fig.z), dt * 2.5); } // the camera turns to the door
         sitBtn.style.display = onRug() && !R.modal ? "" : "none";
         return !!w;
       }
@@ -3727,19 +3734,19 @@
       }
       function stopWalking() { if (R.roam) { R.roam = null; hideDoor(); } R.walkYaw = null; if (sitBtn) sitBtn.style.display = "none"; }
       function hideDoor() { if (doorBox) doorBox.style.display = "none"; R.atDoor = null; }
-      // A door's card, when the figure reaches it. The Big Mind cave and the six game masters are each a door the player goes
-      // through by choice; "Stay in the room" leaves them standing by it.
+      // A door's prompt, while the figure stands in front of it. The Big Mind cave and the six game masters are each a door the
+      // player goes through by choice; walking away is how they stay.
       var DOOR_WORDS = {
-        bigmind: ["Big Mind", "The way into the Big Mind cave. Seven figures stand along it, one in each chamber, the Protector first. Each is met in its own time, and you can walk back here whenever you like.", "Go in"],
-        portal: ["The six game masters", "A hall with a door for each of the six faces. What waits behind each door is still being made: for now each is a short tunnel that ends in its face's question.", "Go through"],
+        bigmind: ["Big Mind", "Seven figures, one in each chamber. You can walk back here whenever you like.", "Go in"],
+        portal: ["The six game masters", "A hall with a door for each of the six faces.", "Go through"],
       };
       function doorCard(id) {
-        if (!doorBox) { doorBox = el("div", { class: "oagr-close", "data-room-door": "", style: "display:none" }); wrap.appendChild(doorBox); }
+        if (!doorBox) { doorBox = el("div", { class: "oagr-door", "data-room-door": "", style: "display:none" }); wrap.appendChild(doorBox); }
         var w = DOOR_WORDS[id], go = { "data-room-door-go": id }; if (id === "portal") go["data-room-portal"] = ""; else go["data-room-bigmind"] = "";
         var kids = [el("h2", { text: w[0] }), P(w[1])];
         var going = R.worked.length;
-        if (going) kids.push(P(going === 1 ? "The one you worked with here comes along as a spirit." : "The " + going + " you worked with here come along as spirits.", { class: "oagr-note" }));
-        kids.push(row([btn(w[2], go, function () { leave(id === "portal" ? true : id); }), btn("Stay in the room", { "data-room-door-stay": "" }, function () { hideDoor(); }, true)]));
+        if (going) kids.push(P(going === 1 ? "The one you worked with comes along as a spirit." : "The " + going + " you worked with come along as spirits.", { class: "oagr-note" }));
+        kids.push(btn(w[2], go, function () { leave(id === "portal" ? true : id); }));
         doorBox.innerHTML = ""; kids.forEach(function (n) { doorBox.appendChild(n); }); doorBox.style.display = ""; R.atDoor = id;
       }
       function closeUp(c) {
@@ -3878,7 +3885,7 @@
         if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
         // the figure: stands up, walks to its place, sits down again
         var stepping = freeWalk(dt);
-        var hideStick = R.modal || R.close || (doorBox && doorBox.style.display !== "none");
+        var hideStick = R.modal || R.close;
         if (hideStick && stickId != null) stickUp(); // the thumb lets go when the stick hides
         stickPad.style.display = hideStick ? "none" : "";
         tg = targets();
