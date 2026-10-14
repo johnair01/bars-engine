@@ -101,6 +101,8 @@ ${inline(bodyMap)}
 const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
 // The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
 const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
+// The room built from a picture by cave/rooms/room.py, walked freely from the cave's first page (cave/rooms/README.md).
+const walkRoomJs = readFileSync(path.join(srcDir, 'cave', 'rooms', 'walk-room.js'), 'utf8');
 const caveHtml = `<!doctype html>
 <html lang="en">
 <head>
@@ -117,6 +119,9 @@ ${inline(bodyMap)}
 </script>
 <script>
 ${inline(caveJs)}
+</script>
+<script>
+${inline(walkRoomJs)}
 </script>
 <script>window.__oagBigMindNoStart = true;</script>
 <script>
@@ -163,6 +168,8 @@ copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 
 // The stone tiles, baked by cave/bake_tiles.py and committed.
 mkdirSync(path.join(outDir, 'cave', 'textures'), { recursive: true });
 for (const t of ['wet_stone', 'dry_stone', 'crystal_vein']) copyFileSync(path.join(srcDir, 'cave', 'textures', t + '.jpg'), path.join(outDir, 'cave', 'textures', t + '.jpg'));
+mkdirSync(path.join(outDir, 'cave', 'rooms'), { recursive: true });
+copyFileSync(path.join(srcDir, 'cave', 'rooms', 'wave-room', 'room.glb'), path.join(outDir, 'cave', 'rooms', 'wave-room.glb'));
 writeFileSync(path.join(outDir, 'index.html'), html);
 writeFileSync(path.join(outDir, 'body.html'), bodyHtml);
 copyFileSync(path.join(srcDir, 'body', 'figure.glb'), path.join(outDir, 'figure.glb'));
