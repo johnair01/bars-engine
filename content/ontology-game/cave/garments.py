@@ -52,9 +52,15 @@ MAX_BYTES = 150 * 1024
 THICK = 0.004                                    # metres of cloth, outward (solidify); the test uses the inner face
 LAST_THROUGH = []                                # (key, point, distance) of the last test's points through
 DRAPE_TRIES = 6                                  # processes tried at most, per build and palette, until the fit clears every point
+BEND_BODY, BEND_HEM = 0.05, 0.4                  # bending stiffness of the cloth, and of a hemmed edge (the cuff)
+CUFF_HEM = 0.10                                  # metres of the cuff that is hemmed
+WALK_X = int(os.environ.get("WALK_X", "1"))          # the walk strip's resolution multiple (3 to look closely at a cuff)
+CUFF_ROUNDS = 25                                 # smoothing rounds on the cuffs' open edges, before the trim is cut
 SKIRT_SMOOTH = 6                                 # rounds of averaging the skirt's weights with its neighbours'
+FIT_MARGIN = 0.008                               # metres past the point that came through that a push aims for
 FIT_RADIUS = 0.08                               # metres, how far a push spreads over the cloth (falls off smoothly)
 MAX_PUSH = 0.015                                 # metres, the most one round of the fit moves a point
+EDGE_SLIT = 0.045                                # metres from a slit's edge within which a leg may be out
 TOL, EDGE = 0.002, 0.015                         # metres: outside by more than TOL counts, unless within EDGE of an opening
 ARMS = ("shoulderL", "shoulderR", "elbowL", "elbowR")
 TRUNK = ("hips", "spine", "neck", "hipL", "hipR", "kneeL", "kneeR", "ankleL", "ankleR")
@@ -281,7 +287,7 @@ def material(obj, name):
 # stiffness (the solver's settings in drape()).
 
 CLOTH_H = 0.022                                  # metres between the pattern's points while draping
-ROBE_VERTS = 1200                                # the draped robe is reduced to about this many points for the phone
+ROBE_VERTS = 1450                                # the draped robe is reduced to about this many points for the phone
 EASE = 0.05                                      # metres added to the chest's half width for the body panel
 HEM_CUT = 0.05                                   # the pattern's hem: the belt takes up about 0.1 m, so it hangs near HEM
 FLARE = 0.07                                     # metres the panel widens from the waist to the hem (a slight A-line)
@@ -378,6 +384,7 @@ def drape(fig, rig, build):
     """Sew the panels round the body in the sewing pose and let the cloth fall. Returns the settled points, the
     faces and each face's part. The rig's walk is set aside while the cloth falls and put back after."""
     sc = bpy.context.scene
+    sc.render.threads_mode, sc.render.threads = "FIXED", 1     # one thread: the solver settles the same way every time
     walk = rig.animation_data.action
     rig.animation_data.action = bpy.data.actions.new("Drape")
     q = arms_out(rig, ARM_OUT)
@@ -437,8 +444,12 @@ def drape(fig, rig, build):
         sk.insert(Vector((verts2[i][0], 0, verts2[i][1])), i)
     sk.balance()
     bend = cl.vertex_groups.new(name="bend")
+    cuff_x = max(abs(x) for x, _ in verts2)
     for i, p in enumerate(flat):
-        bend.add([i], smooth(0.0, 2.5 * CLOTH_H, sk.find(Vector((p.x, 0, p.z)))[2]), "REPLACE")
+        # a hem is stiffer than the cloth: the cuff's last few centimetres hang in a clean edge, not a ruffle
+        hem = smooth(cuff_x - CUFF_HEM - 0.03, cuff_x - 0.01, abs(p.x)) if abs(p.x) > 0.2 else 0.0
+        near_seam = smooth(0.0, 2.5 * CLOTH_H, sk.find(Vector((p.x, 0, p.z)))[2])
+        bend.add([i], max(near_seam * BEND_BODY / BEND_HEM, hem), "REPLACE")
     collide = fig.modifiers.new("Collide", "COLLISION")
     fig.collision.thickness_outer, fig.collision.cloth_friction = CLEAR, 5
     mod = cl.modifiers.new("Cloth", "CLOTH")
@@ -447,7 +458,7 @@ def drape(fig, rig, build):
     s.shrink_min, s.shrink_max, s.vertex_group_shrink = 0.0, BELT, "belt"   # shrink = min + (max - min) * weight
     s.quality, s.mass, s.air_damping = 10, 0.25, 1.5
     s.tension_stiffness, s.compression_stiffness, s.shear_stiffness = 20, 3, 10
-    s.bending_stiffness, s.bending_stiffness_max, s.vertex_group_bending = 0.0, 0.05, "bend"
+    s.bending_stiffness, s.bending_stiffness_max, s.vertex_group_bending = 0.0, BEND_HEM, "bend"
     cs = mod.collision_settings
     cs.collision_quality, cs.distance_min = 5, CLEAR
     cs.use_self_collision, cs.self_distance_min = True, 0.004
@@ -480,6 +491,11 @@ def trimmed(co, faces, parts, build):
         bm.faces.new([bm.verts[i] for i in f])
     for _ in range(2):
         bmesh.ops.smooth_vert(bm, verts=bm.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    # a hem or cuff is a smooth line, not the free edge's ripples: round the cuffs' open edges before cutting the trim
+    cuff_edge = [v for v in bm.verts if any(len(e.link_faces) == 1 for e in v.link_edges) and v.co.z > 0.7
+                 and abs(v.co.x) > 0.2]
+    for _ in range(CUFF_ROUNDS):
+        bmesh.ops.smooth_vert(bm, verts=cuff_edge, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
     bm.faces.ensure_lookup_table()
     before = BVHTree.FromBMesh(bm)
     bands = []
@@ -803,7 +819,11 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
     me = garment.data
     polys = [list(p.vertices) for p in me.polygons]
     part = [d.value for d in me.attributes["part"].data]
-    edges = openings(garment)
+    # a leg comes out of a slit wider than a hand comes out of a cuff: the slit's edges are open to 4.5 cm
+    rest_co = [v.co for v in me.vertices]
+    edges = [(a, b, EDGE_SLIT if (garment.name.startswith("robe") and 0.15 < min(rest_co[a].z, rest_co[b].z) and max(rest_co[a].z, rest_co[b].z) < 1.0
+                                  and max(abs(rest_co[a].x), abs(rest_co[b].x)) < 0.2) else EDGE)
+             for a, b in openings(garment)]
     groups = {}
     for i in cover:
         groups.setdefault(tuple(parts_of(i if isinstance(i, int) else i[0])) if parts_of else (None,), []).append(i)
@@ -831,7 +851,7 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
                     if loc is None:
                         continue
                     d = (p - loc).dot(nor)
-                    if d <= TOL or any(seg_dist(loc, gc[a], gc[b]) < EDGE for a, b in edges):
+                    if d <= TOL or any(seg_dist(loc, gc[a], gc[b]) < wide for a, b, wide in edges):
                         held = True                        # inside, or a leg or a hand out through an opening
                         break
                     if first is None:
@@ -850,13 +870,13 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
                 n += 1
                 d, vs, face = first
                 for v in vs:
-                    if d + 0.008 > push.get(v, (0.0, None))[0]:
-                        push[v] = (d + 0.008, face)
+                    if d + FIT_MARGIN > push.get(v, (0.0, None))[0]:
+                        push[v] = (d + FIT_MARGIN, face)
         counts.append(n)
     return counts, push
 
 
-def fit(wearer, cover, garment, keys, rounds=14, parts=None, ray_from=None):
+def fit(wearer, cover, garment, keys, rounds=30, parts=None, ray_from=None):
     """root-game's fullness, found by walking: push the cloth out (in its standing shape, along its normals) wherever
     a covered point came through at any key, and again, until none does. A round that leaves more points through than
     the best so far is undone and the next pushes are halved. Returns the rounds' counts."""
@@ -900,6 +920,17 @@ def fit(wearer, cover, garment, keys, rounds=14, parts=None, ray_from=None):
             me.vertices[j].co += n * w
         me.update()
     return log
+
+
+def polish(*args, **kw):
+    """fit() again with a narrower, stronger push, for the few points a drape's wide bumps cannot reach."""
+    global FIT_RADIUS, FIT_MARGIN, MAX_PUSH
+    keep = FIT_RADIUS, FIT_MARGIN, MAX_PUSH
+    FIT_RADIUS, FIT_MARGIN, MAX_PUSH = 0.035, 0.02, 0.02
+    try:
+        return fit(*args, rounds=20, **kw)
+    finally:
+        FIT_RADIUS, FIT_MARGIN, MAX_PUSH = keep
 
 
 def cover_robe(fig, robe_obj, build):
@@ -1017,6 +1048,9 @@ def build_all(build, palette, out_dir, do_fit=True):
     axis = lambda p: Vector((0, 0, p.z)) if p.z > slit_top + 0.03 and not (p.z > 1.1 and abs(p.x) > 0.11) else None
     log = fit(fig, cover, R, keys, parts=parts, ray_from=axis) if do_fit else []
     counts, _ = through(fig, cover, R, keys, parts, axis)
+    if do_fit and max(counts) > 0:
+        log += polish(fig, cover, R, keys, parts=parts, ray_from=axis)   # a few stubborn points: smaller, stronger pushes
+        counts, _ = through(fig, cover, R, keys, parts, axis)
     rows.append(("robe", R, counts, log, len(cover)))
     S = sash(fig, rig, cw, "sash")
     cover_s = with_faces(fig, cover_band(fig, SASH_Z[0] + 0.01, SASH_Z[-1] - 0.01))
@@ -1139,15 +1173,15 @@ def sheet(figs, rows, out_dir, walk_only=False):
     for d in (Vector((0, -1, 0.05)), Vector((1, 0, 0.05)), Vector((0, 1, 0.05))):
         cells = []
         for k in (0, 6, 12, 18):
-            setup((300, 600), 0, 1 + k)
+            setup((300 * WALK_X, 600 * WALK_X), 0, 1 + k)
             camera(2.2, d)
             bpy.context.scene.render.filepath = os.path.join(out_dir, f"_walk.png")
             bpy.ops.render.render(write_still=True)
             im = bpy.data.images.load(bpy.context.scene.render.filepath, check_existing=False)
-            cells.append(np.array(im.pixels[:], np.float32).reshape(600, 300, 4))
+            cells.append(np.array(im.pixels[:], np.float32).reshape(600 * WALK_X, 300 * WALK_X, 4))
             bpy.data.images.remove(im)
         strips.append(np.hstack(cells))
-    img = bpy.data.images.new("walk", 1200, 1800)
+    img = bpy.data.images.new("walk", 1200 * WALK_X, 1800 * WALK_X)
     img.pixels.foreach_set(np.vstack(strips[::-1]).ravel())   # Blender's rows run bottom up: front strip on top
     img.filepath_raw = os.path.join(out_dir, "set-walk.png")
     img.file_format = "PNG"
