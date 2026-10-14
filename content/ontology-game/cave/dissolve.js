@@ -100,7 +100,7 @@
   //          gone(o) (take it out of the spirits list and the scene), close() (hide the box) }
   function run(o, h) {
     var g = o.g, steps = stepsFor(o), stat = statOf(o), mana = steps.length;
-    if (!g || !g.userData.orb || o.polarity > 0) return; // hidden by perceptual shadow (polarity 1 to 10): not until it is seen
+    if (!g || !g.userData.orb || o.polarity > 0 || o.shadow) return; // hidden by perceptual shadow (polarity 1 to 10) until seen; a shadow spirit is not dissolved (sd-shadow-skip)
     o.dissolving = true;
     var m = setUp(h.THREE, g, stateOf(o)), busy = false;
     function page(i) {

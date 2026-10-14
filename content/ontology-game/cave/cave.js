@@ -2504,7 +2504,7 @@
       spiritBox.appendChild(row([btn("Breathe out, and let it go", { "data-cave-spirit-out": "" }, function () { spiritBox.style.display = "none"; letSpiritGo(o); }),
         btn("Take it home again", { "data-cave-spirit-home": "" }, function () { spiritBox.style.display = "none"; spiritHome(o); }, true)]));
       // Or dissolve it into yourself, ice to water to gas to pure spirit, for mana (dissolve.js; Wendell, 14 October 2026).
-      if (window.__oagDissolve && !(o.polarity > 0)) { // a spirit hidden by perceptual shadow (polarity above 0) waits until it is seen
+      if (window.__oagDissolve && !(o.polarity > 0) && !o.shadow) { // hidden by perceptual shadow (polarity above 0), or a shadow spirit: not dissolved
         var D = window.__oagDissolve, n = D.manaOf(o), st = D.statOf(o);
         spiritBox.appendChild(P("Or dissolve it into yourself: " + n + " mana" + (st ? " for your " + st : "") + ", and it is gone."));
         spiritBox.appendChild(row([btn("Dissolve it into yourself", { "data-cave-spirit-dissolve": "" }, function () { dissolveSpirit(o); }, true)]));

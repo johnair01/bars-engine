@@ -768,7 +768,8 @@ yourself (`cave/dissolve.js`, loaded after `cave.js`).
 - **The player's stats** are kept on this device (`oag:you:stats`) and show at the top of the spirits list. They are the
   first player stats in the cave; the spirit generator's ally stats stay the ally's.
 - **With perceptual shadow:** a spirit hidden by shadow (`o.polarity` above 0, from the perceptual shadow build) is not
-  offered for dissolving until it is seen (polarity 0 or none).
+  offered for dissolving until it is seen (polarity 0 or none). A shadow spirit (`o.shadow` set, sent out by the WAVE room
+  with no element) is not offered at all **(choice, `sd-shadow-skip`)**.
 
 Tests: cave-test.mjs, after "breathing it out lets it go": stop and keep, the full ice to pure spirit run (Power +3 for an
 Anger spirit), the lighter spirit as water (Magic +2), and the forms on the ladder.
