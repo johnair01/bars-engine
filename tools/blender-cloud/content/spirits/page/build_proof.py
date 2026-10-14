@@ -1,4 +1,4 @@
-import base64, io, json, pathlib, sys
+import base64, io, json, pathlib, subprocess, sys, tempfile
 from PIL import Image
 
 W = pathlib.Path(sys.argv[1]); OUT = pathlib.Path(sys.argv[2])
@@ -14,7 +14,14 @@ def png(path, size=None):
 
 renders = {f"{e}-{s}": png(W / "render" / f"{e}-{s}.png", 360) for e in EL for s in ST}
 sprites = {f"{e}-{s}": png(W / "sprite" / f"{e}-{s}.png") for e in EL for s in ST}
-glbs = {f"{e}-{s}": base64.b64encode((W / "glb" / f"{e}-{s}.glb").read_bytes()).decode() for e in EL for s in ST}
+def squeezed(path):
+    """The GLB with meshopt compression (the page decodes it), which takes the living stages from ~1.2 MB to ~0.26 MB."""
+    out = pathlib.Path(tempfile.mkdtemp()) / path.name
+    subprocess.run(["npx", "-y", "@gltf-transform/cli@4", "meshopt", str(path), str(out)], check=True, capture_output=True)
+    return out.read_bytes()
+
+
+glbs = {f"{e}-{s}": base64.b64encode(squeezed(W / "glb" / f"{e}-{s}.glb")).decode() for e in EL for s in ST}
 report = json.loads((W / "report.json").read_text())
 
 rows = ""

@@ -58,13 +58,13 @@ code{font-family:var(--f-mono);font-size:.86em}
     </div>
   </section>
 
-  <h2>The three stages</h2>
+  <h2>The five stages</h2>
   <ul>
     <li><strong>Gas, level 1.</strong> A drifting cloud of motes in the element's colours, thickest at the heart.</li>
     <li><strong>Core, level 3.</strong> The gas solidifies into a six-sided double pyramid, a shell scute made solid. A few motes still circle it.</li>
     <li><strong>Hologram, level 5.</strong> The core projects a faceted tortoise of light from a ring on the ground. The core shows at its chest. Beaten in a fight, it falls back into the core.</li>
-    <li><strong>Living creature.</strong> The hologram becomes flesh: a tortoise in the world, its core set in the crown of its shell.</li>
-    <li><strong>Highest ally form.</strong> The Shellback stands up as a humanoid guardian, shell on its back and core at its heart.</li>
+    <li><strong>Living creature.</strong> The hologram becomes flesh, after your Taoist Tortoise concept: a young tortoise with spotted olive skin, big eyes, a mossy shell with leaves and small flowers, a shawl with a hem shaded by its element, prayer beads with one jade bead, and a bell and jade disc on red tassels. Its core has grown into the shell as a glowing yin-yang ringed by the eight trigrams.</li>
+    <li><strong>Highest ally form.</strong> The same tortoise stands as a sage in a long robe and shawl, shell on its back, a gourd staff in hand, and its core worn as a yin-yang medallion over its heart.</li>
   </ul>
   %%ROWS%%
 
@@ -77,7 +77,7 @@ code{font-family:var(--f-mono);font-size:.86em}
 
   <h2>What this proves and what it doesn't</h2>
   <ul>
-    <li>The pipeline runs end to end in the cloud: one script builds, renders, sprites and exports all twenty-five, with nothing downloaded. The largest model file is %%FACES%% KB.</li>
+    <li>The pipeline runs end to end in the cloud: one script builds, renders, sprites and exports all twenty-five, with nothing downloaded. The largest model file is %%FACES%% KB before compression; the page carries them meshopt-compressed.</li>
     <li>The same arguments give the same spirit every time.</li>
     <li>Not yet built: the other animal bases (armadillo, pangolin), the nation styles, the parts you pick or offer, the levels for the last two stages, and animation.</li>
   </ul>
@@ -88,6 +88,7 @@ code{font-family:var(--f-mono);font-size:.86em}
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 const GLBS = %%GLBS%%;
 const EL = {earth:"Earth",wood:"Wood",fire:"Fire",water:"Water",metal:"Metal"}, ST = {gas:"Gas",core:"Core",hologram:"Hologram",creature:"Living creature",ascended:"Highest ally form"};
 const st = {el:"earth", st:"hologram"};
@@ -98,7 +99,7 @@ const scene = new THREE.Scene();
 const cam = new THREE.PerspectiveCamera(32, 4/3, 0.1, 50); cam.position.set(3.6, 2.4, 4.4);
 const ctl = new OrbitControls(cam, cv); ctl.target.set(0, 0.3, 0); ctl.enableDamping = true; ctl.autoRotate = !matchMedia("(prefers-reduced-motion: reduce)").matches; ctl.autoRotateSpeed = 1.2; ctl.enablePan = false;
 scene.add(new THREE.AmbientLight(0xffffff, 0.6)); const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(3, 5, 3); scene.add(sun);
-const loader = new GLTFLoader(); let current = null;
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder); let current = null;
 function b64(s){ const bin = atob(s), u = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u.buffer; }
 function load(){
   loader.parse(b64(GLBS[st.el+"-"+st.st]), "", g => {
