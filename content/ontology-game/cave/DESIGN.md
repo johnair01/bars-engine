@@ -657,3 +657,29 @@ down and does a wave process."
 - **One stone.** The room wears the caves' J1 tiles: wet stone on the wall and dome, dry stone on the floor, laid in the room's
   own units so a stone is the size it is in a tunnel.
 - A sit-down that spawns a spirit without the W.A.V.E. is being fixed in its own thread (the cave branch seams work), not here.
+
+## Free walking everywhere, and the hall's doors (14 October 2026)
+
+Wendell, 14 October 2026: "Ok I think we've reached the maturity where we don't have to have the walking happening on rails.
+It's causing more trouble than it's work and we need to test the ergonomics of Freeform navigation in preparation of
+introducing running. The gates for the 6 game master room are too small. They should be doors."
+
+- **Off the rails.** The caves and the levels walk the way the WAVE room does: a stick at the bottom left, and the arrow keys or
+  W A S D, walk the figure wherever the thumb points as the camera sees it, at the one steady `WALK_SPEED`. Holding the screen
+  no longer walks; a drag only looks. The figure keeps to the tunnel: it walks along it and across it, up to the floor's edge,
+  and turns to face the way it walks. In the hall of the six and the centre it can also walk in toward the open middle.
+- **The way ahead still opens on a choice.** On the main path and in a side passage the figure walks up to the stop it is
+  walking to and no further: past it the stone is gathered shut until the stop's choice (as before). It can walk back the way
+  it came. In the levels nothing is shut: every door round the hall, and both stops in a face's tunnel, can be walked to in any
+  order.
+- **Stops follow the five phone-game rules.** Coming to a stop shows a prompt by the right thumb with its name, its words and
+  "Stop here"; tapping that opens the stop's page (the stick hides until the page closes). Walking off hides the prompt, and
+  leaves an open stop. A door in the hall or the centre shows its way through on the prompt itself ("Go through", "Go home",
+  "Back to the hall"), as the room's doors do. Sit down gives way to a prompt, one at a time, and now sits at the bottom right.
+- **The camera.** It follows from behind on the path, offset with the figure across the tunnel. Walking back toward it, it
+  stays behind. A drag can turn it round; walking away from it then makes that way ahead, and it eases round behind the figure.
+- **Doors, not gates.** The hall's (and the centre's) arches are now doors: 3.2 wide and 5 tall (the figure is 3.6), a frame
+  in the face's colour run back to the stone, the opening lit with the face's light, the door leaf standing open into the hall,
+  a lit sill, and the face's name above. Each stands at its stop, so its prompt shows in front of it.
+- **(choice)** the walkable width (60% of the half width each way, 90% toward an open middle), how near a stop shows its prompt
+  (2.2 units, hidden again past 3.4), and the door's size. Running comes next, on the same stick.

@@ -1410,7 +1410,12 @@
     ".oagc button[aria-pressed=true]{outline:2px solid #fff}" +
     ".oagc button.oagc-calm,.oagc button.oagc-ringbtn{position:absolute;top:10px;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500;z-index:4}" +
     ".oagc button.oagc-calm{right:10px}.oagc button.oagc-ringbtn{left:10px}" +
-    ".oagc button.oagc-sitbtn{position:absolute;left:10px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
+    // the stick (left thumb) and a thing's prompt (right thumb), shared by the WAVE room and the caves
+    ".oagr-door{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:min(230px,calc(100vw - 170px));padding:.6rem .7rem;background:rgba(12,12,28,.88);border:1px solid rgba(255,241,176,.55);border-radius:14px;color:#f4f4fa;touch-action:manipulation}" +
+    ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}.oagr-door button+button{margin-top:.35rem}" +
+    ".oagr-stick{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:5;width:116px;height:116px;border-radius:50%;background:rgba(20,20,40,.45);border:2px solid rgba(255,241,176,.55);touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}" +
+    ".oagr-knob{width:48px;height:48px;border-radius:50%;background:rgba(255,241,176,.75);box-shadow:0 0 12px rgba(255,241,176,.6);pointer-events:none}" +
+    ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
     ".oagc-orb{width:88px;height:88px;margin:.5rem auto .1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff1b0;font-size:.8rem;letter-spacing:.06em;" +
     "background:radial-gradient(circle,rgba(255,241,176,.5),rgba(255,241,176,.14) 62%,rgba(255,241,176,0) 72%);border:1px solid rgba(255,241,176,.55);transform:scale(.55);will-change:transform}" +
     ".oagc button.oagc-spiritbtn{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
@@ -1776,7 +1781,7 @@
     }
 
     // ---- walking ---------------------------------------------------------------------------
-    function newWalk(route, blk, s) { return { route: route, s: s, s0: s, D: 1, t: 0, ready: false, moving: false, target: 0, arrived: false, blk: blk }; }
+    function newWalk(route, blk, s) { return { route: route, s: s, s0: s, sMin: s, D: 1, t: 0, ready: false, moving: false, target: 0, arrived: false, blk: blk, lat: 0, dir: 1, yaw: null, near: null }; }
     function ctxOf() { return state.walk && state.walk.route.ctx; }
     function stopAt(route, place) { for (var i = 0; i < route.stops.length; i++) if (route.stops[i].place === place) return route.stops[i]; return null; }
     function stopOf(wk) { return wk.route.stops[wk.target]; }
@@ -1794,10 +1799,12 @@
       else if (stp.face) { var f = lookup(FACES, stp.face); label = f[1] + "'s branch"; words = f[3]; }
       else { var pl = PLACE_BY[stp.place]; label = pl.step + (stp.stone != null ? " · " + FACES[stp.stone][1] : ""); words = stp.stone != null ? FACES[stp.stone][1] + ": " + FACES[stp.stone][2] + ". Its branch opens here." : PLACE_ASK[stp.place]; }
       var kids = [P(words)];
-      if (!state.walkedOnce) kids.push(P("Hold anywhere to walk. Drag to look. Tap these words to open them.", { "data-cave-hint": "" }));
+      if (!state.walkedOnce) kids.push(P("Walk with the stick, or the arrow keys. Drag to look. Tap these words to open them.", { "data-cave-hint": "" }));
       fill(label, kids);
       stat.setAttribute("data-cave-walking", stp.level ? "level-" + stp.level + (stp.toFace ? "-" + stp.toFace : "") : stp.wave != null ? WAVE[i][0] : stp.face ? "face-" + stp.face : stp.place);
       wk.arrived = false; wk.ready = true; wk.s0 = wk.s; wk.D = Math.max(1, stp.s - wk.s + (wk.route.loop && stp.s <= wk.s ? wk.route.len : 0)); wk.t = 0; wk.moving = false;
+      var was = wk.near; hidePrompt();
+      if (was != null && was !== i) wk.quiet = was; // the stop just chosen at stays quiet until the figure walks off it
       if (avatar) { avatar.userData.stepIdx = 0; avatar.userData.stepsIn = 0; avatar.userData.stepsOut = 0; }
       if (kind === "main") { if (i > revealed) { revealed = i; lk.flash = 1; } }
       else lk.flash = Math.max(lk.flash, 0.5);
@@ -1809,24 +1816,128 @@
       else if (stp.face) faceCard(wk.blk);
       else placeCard(wk.blk);
     }
-    // Holding walks the avatar; the walk clock t counts held seconds from 0 to one full breath, and lifting the thumb stops it,
-    // so the walk and its breath pause together. state.auto is a short walk the game takes itself: up out of a branch onto the
-    // path it left from.
+    // ---- free walking (Wendell, 14 October 2026: "Ok I think we've reached the maturity where we don't have to have the walking
+    // happening on rails. It's causing more trouble than it's work and we need to test the ergonomics of Freeform navigation in
+    // preparation of introducing running") -------------------------------------------------------------------------------
+    // The stick at the bottom left, or the arrow keys and W A S D, walk the figure wherever the thumb points as the camera sees
+    // it, at one steady WALK_SPEED, as in the WAVE room. The figure keeps to the tunnel: wk.s is how far along the path it is and
+    // wk.lat how far to one side of the path's line, held inside the floor. The way ahead past the stop being walked to stays
+    // gathered shut, so on the main path and a branch the figure walks up to that stop and no further; in the levels it walks
+    // anywhere. Coming to a stop shows its prompt by the right thumb (DESIGN.md, the five phone-game rules); a tap there opens
+    // its page. state.auto is still a short walk the game takes itself: up out of a branch onto the path it left from.
+    var stick = { x: 0, z: 0 }, keys = {}, stickId = null;
+    var stickPad = el("div", { class: "oagr-stick", "data-cave-stick": "", "aria-label": "Walk", role: "slider", style: "display:none" });
+    var stickKnob = el("div", { class: "oagr-knob" }); stickPad.appendChild(stickKnob); canvasBox.appendChild(stickPad);
+    var promptBox = el("div", { class: "oagr-door", "data-cave-prompt-box": "", style: "display:none" }); canvasBox.appendChild(promptBox);
+    function stickAt(e) { // a hidden stick lets go (the WAVE room's iPhone fix: a hidden stick measures 0 wide)
+      var rc = stickPad.getBoundingClientRect(), r = rc.width / 2;
+      if (!(r > 0) || stickPad.style.display === "none") { stickUp(); return; }
+      var dx = e.clientX - rc.left - r, dy = e.clientY - rc.top - r, d = Math.hypot(dx, dy), m = Math.min(d, r);
+      stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
+      stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
+    }
+    function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; }
+    holdArea(stickPad);
+    stickPad.addEventListener("pointerdown", function (e) { e.preventDefault(); stickId = e.pointerId; try { stickPad.setPointerCapture(e.pointerId); } catch (x) { /* old browsers */ } stickAt(e); });
+    stickPad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) { stickPad.addEventListener(n, function (e) { if (e.pointerId === stickId) stickUp(); }); });
+    var KEYS = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] };
+    function typing() { var a = document.activeElement; return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT"); }
+    function keyDown(e) { if (!KEYS[e.code] || typing() || !canWalk()) return; keys[e.code] = true; e.preventDefault(); }
+    function keyUp(e) { delete keys[e.code]; }
+    window.addEventListener("keydown", keyDown); window.addEventListener("keyup", keyUp);
+    // The stick shows whenever the walk is in view, and hides only while a page is open (rule 5) or the game has the figure.
+    function canWalk() { return state.mode === "chamber" && !!state.walk && state.walk.ready && !state.modal && !sit && !busy && !flight && !state.rise; }
+    function wantWalk() {
+      var x = stick.x, z = stick.z; Object.keys(keys).forEach(function (k) { x += KEYS[k][0]; z += KEYS[k][1]; });
+      var m = Math.hypot(x, z); if (!(m >= 0.15)) return null; if (m > 1) { x /= m; z /= m; m = 1; }
+      var fx = lookAt.x - camPos.x, fz = lookAt.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+      return { x: -z * fx - x * fz, z: -z * fz + x * fx, m: m, fwd: -z / m }; // forward times -z, plus right (-fz, fx) times x
+    }
+    function wrapAng(d) { while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
+    // How far along and to the side the figure may stand on the route it is walking.
+    function walkRange(wk) {
+      var r = wk.route, stp = r.stops[wk.target], hw = (r.w || ch.w) * (r.kind === "main" || r.level ? r.openAt(wk.s) : SIDE_LOOK.open);
+      var lo = r.loop ? -Infinity : Math.max(r.level ? 0.8 : wk.sMin, 0.8), hi = r.loop ? Infinity : r.len - 0.8;
+      if (!r.level && stp) hi = Math.min(hi, stp.s + 0.6); // the way ahead stays gathered shut until its stop's choice
+      if (r.level && !r.loop) hi = Math.min(hi, r.stops[r.stops.length - 1].s + 1.2); // a face's tunnel ends at its arch
+      var outer = r.doors ? -r.inner : 1, lim = hw * 0.6;
+      return { lo: lo, hi: hi, latLo: r.doors ? (outer > 0 ? -hw * 0.9 : -lim) : -lim, latHi: r.doors ? (outer > 0 ? lim : hw * 0.9) : lim };
+    }
     function walkStep(dt) {
       var wk = state.walk; if (!wk) return;
       wk.moving = false;
       var au = state.auto;
       if (au) {
-        au.k = Math.min(1, au.k + dt / au.dur); wk.s = au.s0 + (au.s1 - au.s0) * ease(au.k); wk.moving = true; au.clk += dt;
+        au.k = Math.min(1, au.k + dt / au.dur); wk.s = au.s0 + (au.s1 - au.s0) * ease(au.k); wk.lat *= 1 - Math.min(1, dt * 3); wk.moving = true; au.clk += dt;
         if (au.k >= 1) { state.auto = null; wk.moving = false; au.done(); }
         return;
       }
-      if (!wk.ready || wk.arrived || busy || flight || !state.held) return;
-      wk.moving = true; state.walkedOnce = true;
-      var T = stretchTime(wk.D);
-      wk.t = Math.min(T, wk.t + dt * state.speed * (state.calm ? 0.8 : 1));
-      wk.s = wk.s0 + wk.D * wk.t / T;
-      if (wk.t >= T) { wk.s = wk.s0 + wk.D; wk.arrived = true; wk.moving = false; arrive(); }
+      var on = canWalk();
+      stickPad.style.display = on ? "" : "none";
+      if (!on) { if (stickId != null) stickUp(); keys = {}; if (promptBox.style.display !== "none" && (state.modal || sit || busy)) promptBox.style.display = "none"; return; }
+      if (wk.near != null && promptBox.style.display === "none" && !wk.arrived) showPrompt(wk.route.stops[wk.near]);
+      if (wk.arrived) wk.lat *= 1 - Math.min(1, dt * 2); // standing at a stop is standing on its spot
+      var w = wantWalk();
+      if (w) {
+        var r = wk.route, a = at(r, wk.s), nx = -a.fz, nz = a.fx, sp = WALK_SPEED * state.speed * (state.calm ? 0.8 : 1) * w.m;
+        var along = w.x * a.fx + w.z * a.fz, side = w.x * nx + w.z * nz;
+        // Walking away from the camera against the way it faces (the camera turned round by a drag): the camera takes that way
+        // as ahead, and the turn is kept in the look so the view does not jump; it eases back behind the figure as it walks.
+        if (w.fwd > 0.3 && along * wk.dir < -0.3) { wk.dir = -wk.dir; state.look.yaw = wrapAng(state.look.yaw + Math.PI); }
+        var lim = walkRange(wk), s1 = clamp(wk.s + along * sp * dt, lim.lo, lim.hi);
+        if (r.loop) s1 = ((s1 % r.len) + r.len) % r.len;
+        var lat1 = clamp(wk.lat + side * sp * dt, lim.latLo, lim.latHi);
+        var moved = Math.hypot(r.loop ? wrapLoop(r, s1 - wk.s) : s1 - wk.s, lat1 - wk.lat);
+        wk.s = s1; wk.lat = lat1;
+        wk.yaw = wk.yaw == null ? Math.atan2(w.x, w.z) : wk.yaw + wrapAng(Math.atan2(w.x, w.z) - wk.yaw) * Math.min(1, dt * 8);
+        if (moved > 1e-4) { wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * w.m; }
+      }
+      stopZones(wk);
+    }
+    function wrapLoop(r, d) { return d - r.len * Math.round(d / r.len); }
+    // ---- stops are places the figure walks up to: a prompt by the right thumb, the page from a tap ------------------------
+    // On the main path and a branch the stop is the one being walked to; in the levels every stop is a door or a place to stand,
+    // and the one the figure is at becomes the one walked to. A zone shows a little sooner than it hides (rule 3).
+    function stopGap(r, st, s) { return r.loop ? Math.abs(wrapLoop(r, s - st.s)) : Math.abs(s - st.s); }
+    function stopZones(wk) {
+      var r = wk.route, idx = null;
+      if (wk.quiet != null && (!r.stops[wk.quiet] || stopGap(r, r.stops[wk.quiet], wk.s) > 3.4)) wk.quiet = null;
+      if (wk.near != null && r.stops[wk.near] && stopGap(r, r.stops[wk.near], wk.s) < 3.4) idx = wk.near;
+      else (r.level ? r.stops.map(function (st, i) { return i; }) : [wk.target]).forEach(function (i) {
+        if (idx == null && i !== wk.quiet && r.stops[i] && stopGap(r, r.stops[i], wk.s) < 2.2) idx = i;
+      });
+      if (idx === wk.near) return;
+      if (idx == null) { // walked off: the prompt goes, and a stop that was open is left (walking away is how a player says no)
+        wk.near = null; hidePrompt();
+        if (wk.arrived) { wk.arrived = false; hint(wk.target); }
+        return;
+      }
+      if (r.level && idx !== wk.target) hint(idx);
+      wk.near = idx; showPrompt(r.stops[idx]);
+    }
+    function hidePrompt() { promptBox.style.display = "none"; promptBox.innerHTML = ""; var wk = state.walk; if (wk) wk.near = null; }
+    function showPrompt(stp) {
+      var words, title, kids = [];
+      if (stp.level) { title = stp.title; words = stp.words; }
+      else if (stp.wave != null) { title = WAVE[state.walk.target][1]; words = WAVE[state.walk.target][2]; }
+      else if (stp.face) { var f0 = lookup(FACES, stp.face); title = f0[1] + " asks"; words = f0[3]; }
+      else { var pl = PLACE_BY[stp.place]; title = pl.step + (stp.stone != null ? " · " + FACES[stp.stone][1] : ""); words = stp.stone != null ? FACES[stp.stone][2] + "." : PLACE_ASK[stp.place]; }
+      kids.push(el("h2", { text: title })); // a stop's words are in the pane above the figure; a door's question goes with its way through
+      if (stp.toFace) kids.push(P(words, { "data-level-asks": stp.toFace }));
+      if (stp.level === "door" || stp.level === "portal") { // a door shows its way through, as the WAVE room's doors do
+        var f = lookup(FACES, stp.toFace), go = { "data-level-go-face": f[0] }; go[stp.level === "door" ? "data-level-door" : "data-level-portal"] = f[0];
+        if (stp.level === "door" && state.level.visited.indexOf(f[0]) >= 0) kids.push(P("You have walked this one. Its lantern is lit."));
+        kids.push(btn("Go through", go, function () { hidePrompt(); goTo("tunnel", f[0]); }));
+      } else if (stp.level === "home") kids.push(btn("Go home", { "data-level-home": "" }, function () { hidePrompt(); goHome(); }));
+      else if (stp.level === "ways") kids.push(btn("Back to the hall", { "data-level-hall": "" }, function () { hidePrompt(); goTo("hall"); }), btn("Go home", { "data-level-home": "" }, function () { hidePrompt(); goHome(); }, true));
+      else kids.push(btn("Stop here", { "data-cave-stop": "" }, stopHere));
+      promptBox.innerHTML = ""; kids.forEach(function (k) { promptBox.appendChild(k); }); promptBox.style.display = ""; sitBtn.style.display = "none"; // one prompt at a time
+    }
+    // A tap on the prompt: the figure stops at the stop, and its page opens.
+    function stopHere() {
+      var wk = state.walk; if (!wk || busy) return;
+      promptBox.style.display = "none"; wk.arrived = true; wk.moving = false; stickUp(); keys = {}; arrive();
     }
     function autoWalk(s1, done) {
       var wk = state.walk; state.auto = { s0: wk.s, s1: s1, k: 0, dur: Math.max(0.5, Math.abs(s1 - wk.s) / 7) / Math.max(1, state.speed / 4), clk: 0, done: done };
@@ -1995,7 +2106,7 @@
       var wk = state.walk, s = me(), depth = state.stack.length + 1, stp = stopOf(wk);
       var key = wk.blk ? wk.blk.key + ">" + PLACE_BY[stp.place].key : stepId;
       if (s.blocked.indexOf(key) < 0) s.blocked.push(key);
-      var frame = { route: wk.route, s: wk.s, target: wk.target, blk: wk.blk, key: key, label: label, kind: "side" };
+      var frame = { route: wk.route, s: wk.s, sMin: wk.sMin, target: wk.target, blk: wk.blk, key: key, label: label, kind: "side" };
       var route = makeBranch(frame, "side", depth);
       var par = frame.blk, tex = par ? par.texture : s.texture;
       var blk = { id: "b" + (++blockN), key: key, label: label, depth: depth, texture: tex, element: null, unknownEl: false, deco: [], daemon: null, stepAside: null, dug: 0, gate: [], route: route, frame: frame, touched: false };
@@ -2013,7 +2124,7 @@
     function openFace(blk, stone) {
       if (busy) return;
       var wk = state.walk, f = FACES[stone];
-      var frame = { route: wk.route, s: wk.s, target: wk.target, blk: blk, key: blk.key + ">face-" + f[0], label: f[1], kind: "face", stone: stone };
+      var frame = { route: wk.route, s: wk.s, sMin: wk.sMin, target: wk.target, blk: blk, key: blk.key + ">face-" + f[0], label: f[1], kind: "face", stone: stone };
       // the last face's branch is put away (its openings close), so neighbouring branches never cross
       if (blk.lastFace) {
         var old = blk.lastFace; scene.remove(old.group);
@@ -2061,10 +2172,12 @@
       if (wk.route.pendingExit) openWayBack(wk.route);
       autoWalk(wk.route.len, function () {
         var fr = state.stack.pop();
-        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: 0, ready: true, moving: false, target: fr.target, arrived: true, blk: fr.blk };
+        state.walk = backOn(fr, fr.blk);
         busy = false; done(fr);
       });
     }
+    // The walk on the route a branch left from, standing at the stop it left from.
+    function backOn(fr, blk) { var w = newWalk(fr.route, blk, fr.s); w.sMin = fr.sMin != null ? fr.sMin : w.sMin; w.dir = 1; w.ready = true; w.target = fr.target; w.arrived = true; w.near = fr.target; return w; }
     function release() {
       backRound(function (fr) {
         var pb = fr.blk;
@@ -2093,7 +2206,7 @@
       busy = true; closeModal(); fade.style.opacity = 1;
       setTimeout(function () {
         var fr = state.stack[0]; state.stack = [];
-        state.walk = { route: fr.route, s: fr.s, s0: fr.s, D: 0, t: 0, ready: true, moving: false, target: fr.target, arrived: true, blk: null };
+        state.walk = backOn(fr, null);
         snapCam = true; busy = false; fade.style.opacity = 0;
         arrive();
       }, 520);
@@ -2728,18 +2841,36 @@
         : { s: r.startS + r.len * n / (n + 1), level: "home", title: "The portal home", words: "The way you came in. The WAVE room is through it." });
       if (centre) { var fr = lookup(FACES, from); r.stops[0].walkTitle = "The centre of the self"; r.stops[0].walkWords = "You came by " + fr[1] + ", so the chamber wears its colour. The other five faces' portals glow round the wall."; }
       else { r.stops[0].walkTitle = "The hall of the six"; r.stops[0].walkWords = "Six doors round the wall, one for each face. Walk to one, and its question shows."; }
-      function door(s, hex, dim) { // an arch in the outer wall, its opening lit
-        var a = at(r, s), nx = -a.fz * out, nz = a.fx * out, sc = h * 0.75;
-        var arch = new THREE.Mesh(G.portal_arch, new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: dim ? 0.3 : 1 }));
-        arch.position.set(a.x + nx * w * 0.86, fl, a.z + nz * w * 0.86); arch.rotation.y = Math.atan2(nx, nz); arch.scale.setScalar(sc); r.group.add(arch);
-        var veil = new THREE.Mesh(new THREE.CircleGeometry(0.92, 32, 0, Math.PI), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: dim ? 0.12 : 0.5, side: THREE.DoubleSide, depthWrite: false }));
-        veil.position.set(a.x + nx * w * 0.9, fl, a.z + nz * w * 0.9); veil.rotation.y = arch.rotation.y; veil.scale.setScalar(sc); r.group.add(veil);
+      // A door in the outer wall, the figure's size and more (Wendell, 14 October 2026: "The gates for the 6 game master room are too
+      // small. They should be doors."): a frame in the face's colour, its opening lit with the face's light, the door leaf
+      // standing open into the hall, a lit threshold and the face's name above. It stands just in from the stone, where the
+      // wall is upright, and the frame runs back to the stone so no gap shows beside it.
+      var DOOR_W = 3.2, DOOR_H = Math.min(5, AVATAR_H * 1.4), DOOR_AT = 0.9;
+      function doorShape(x0) { var sh = new THREE.Shape(), rr = DOOR_W / 2; sh.moveTo(x0 - rr, 0); sh.lineTo(x0 + rr, 0); sh.lineTo(x0 + rr, DOOR_H - rr); sh.absarc(x0, DOOR_H - rr, rr, 0, Math.PI, false); sh.lineTo(x0 - rr, 0); return sh; }
+      function door(s, hex, dim, name) {
+        var a = at(r, s), nx = -a.fz * out, nz = a.fx * out, rr = DOOR_W / 2, g = new THREE.Group();
+        g.position.set(a.x + nx * w * DOOR_AT, fl, a.z + nz * w * DOOR_AT); g.rotation.y = Math.atan2(nx, nz); // local +z runs out into the stone
+        var lit = new THREE.Color(hex).lerp(new THREE.Color(0xffffff), 0.35);
+        var opening = new THREE.Mesh(new THREE.ShapeGeometry(doorShape(0), 20), new THREE.MeshBasicMaterial({ color: lit, transparent: true, opacity: dim ? 0.25 : 0.92, side: THREE.DoubleSide }));
+        opening.position.z = 0.35; g.add(opening);
+        var frameMat = new THREE.MeshStandardMaterial({ color: hex, emissive: hex, emissiveIntensity: dim ? 0.1 : 0.35, roughness: 0.7, transparent: !!dim, opacity: dim ? 0.4 : 1 });
+        [-1, 1].forEach(function (k) { var post = new THREE.Mesh(new THREE.BoxGeometry(0.42, DOOR_H - rr, 1.3), frameMat); post.position.set(k * (rr + 0.21), (DOOR_H - rr) / 2, 0.4); g.add(post); });
+        var arch = new THREE.Mesh(G.portal_arch, frameMat); arch.scale.set(rr + 0.21, rr + 0.21, 4); arch.position.set(0, DOOR_H - rr, 0.1); g.add(arch);
+        var cap = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W + 0.84, 0.4, 1.3), frameMat); cap.position.set(0, DOOR_H + 0.25, 0.4); g.add(cap);
+        var leafMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x5a3c28).lerp(new THREE.Color(hex), 0.3), roughness: 0.85, side: THREE.DoubleSide, transparent: !!dim, opacity: dim ? 0.4 : 1 });
+        var hinge = new THREE.Group(); hinge.position.set(-rr, 0, 0.3); hinge.rotation.y = -1.15; g.add(hinge); // open, swung in toward the hall
+        var leaf = new THREE.Mesh(new THREE.ShapeGeometry(doorShape(rr), 20), leafMat); hinge.add(leaf);
+        var sill = new THREE.Mesh(new THREE.CircleGeometry(rr + 0.4, 28, Math.PI, Math.PI), new THREE.MeshBasicMaterial({ color: lit, transparent: true, opacity: dim ? 0.1 : 0.4, depthWrite: false }));
+        sill.rotation.x = -Math.PI / 2; sill.position.set(0, 0.03, 0.3); g.add(sill);
+        if (name) { var tag = labelSprite(THREE, name, "#" + new THREE.Color(hex).getHexString(), 2.6); tag.position.set(0, DOOR_H + 0.95, 0); g.add(tag); }
+        g.userData = { w: DOOR_W, h: DOOR_H };
+        r.group.add(g); (r.doorMeshes = r.doorMeshes || []).push(g);
         return { a: a, nx: nx, nz: nz };
       }
       r.doors = {};
       r.stops.forEach(function (st) {
-        var f = st.toFace ? lookup(FACES, st.toFace) : null, d = door(st.s + 5, f ? f[4] : 0xfff1b0, false); // just ahead, so it is in view on arrival
-        if (f) r.doors[f[0]] = { x: d.a.x + d.nx * w * 0.86, z: d.a.z + d.nz * w * 0.86 };
+        var f = st.toFace ? lookup(FACES, st.toFace) : null, d = door(st.s, f ? f[4] : 0xfff1b0, false, f ? f[1] : centre ? "The ways back" : "Home"); // its prompt shows in front of it
+        if (f) r.doors[f[0]] = { x: d.a.x + d.nx * w * DOOR_AT, z: d.a.z + d.nz * w * DOOR_AT };
         if (f && !centre) { // the face's stone stands in the middle before its door
           var stone = new THREE.Mesh(G.gate_stone, new THREE.MeshStandardMaterial({ color: f[4], emissive: f[4], emissiveIntensity: 0.6, roughness: 0.8 }));
           stone.position.set(d.a.x - d.nx * (w + 1.4), fl, d.a.z - d.nz * (w + 1.4)); stone.scale.set(2.2, Math.min(h * 1.1, 3.4), 2.2); stone.userData.face = f[0]; r.group.add(stone);
@@ -2837,7 +2968,7 @@
       if (doSave && me()) save(me());
       fade.style.opacity = 1;
       setTimeout(function () {
-        cancelAnimationFrame(running); window.removeEventListener("resize", size);
+        cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
         renderer.dispose(); wrap.remove(); home.style.display = "";
         window.__oagCave.last = state;
       }, 500);
@@ -2898,7 +3029,7 @@
         if (k >= 1) { if (tw.done) tw.done(); return false; }
         return true;
       });
-      sitBtn.style.display = !sit && state.mode === "chamber" && state.walk ? "" : "none";
+      sitBtn.style.display = !sit && state.mode === "chamber" && state.walk && promptBox.style.display === "none" ? "" : "none";
       if (flight) {
         flight.t = Math.min(1, flight.t + 0.006);
         var p = flight.curve.getPoint(flight.t), q = flight.curve.getPoint(Math.min(1, flight.t + 0.02));
@@ -2907,6 +3038,8 @@
       } else if (ch && state.walk && avatar) {
         walkStep(dt);
         var wk = state.walk, route = wk.route, a = at(route, wk.s), h = ch.h, fl = a.y - h * 0.92, c = ctxOf();
+        var dir = wk.dir || 1, lat = wk.lat || 0, pathYaw = yawFacing(a);
+        a = { x: a.x - a.fz * lat, y: a.y, z: a.z + a.fx * lat, fx: a.fx * dir, fz: a.fz * dir }; // where the figure stands, and the way ahead as the camera takes it
         looseNow += (me().passed / WAVE.length - looseNow) * Math.min(1, dt * 2);
         loosenAvatar(avatar, looseNow, br.b);
         // The staged 3-2-1 (board: cave-321-form = staged): each step of the chat is a place. Face it from across the chamber; Talk
@@ -2926,7 +3059,7 @@
         var stepLen = state.auto ? 0.9 : WALK_SPEED / STEPS_PER_S;
         poseAvatar(avatar, state.auto ? state.auto.clk : wk.t, wk.moving || stMoving, dt, br.b, stepLen, state.calm);
         avatar.position.set(a.x, fl + 0.02, a.z);
-        avatar.rotation.y = yawFacing(a);
+        avatar.rotation.y = wk.yaw != null && !state.auto ? wk.yaw : pathYaw;
         if (avatar.userData.stepIdx !== avatar.userData.splashIdx) { avatar.userData.splashIdx = avatar.userData.stepIdx; if (!state.calm) splashAt(route, a.x, fl, a.z); }
         if (stg.ctx) { // the figure stands at its place in the staged scene, and the camera is set for it
           var sa = at(route, stg.ctx.daemonS - 6 + stg.cu), sd = at(route, stg.ctx.daemonS);
@@ -2935,19 +3068,19 @@
         }
         if (spirits.length) { // the spirits walk behind the figure, on the path it came along
           followSpirits(THREE, spirits, function (j) {
-            var sp = at(route, Math.max(0, wk.s - 2.2 - 1.6 * j)), d = j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2;
+            var sp = at(route, Math.max(0, wk.s - dir * (2.2 + 1.6 * j))), d = (j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2) + lat * 0.6;
             return { x: sp.x - sp.fz * d, y: sp.y - h * 0.92 + 1.7, z: sp.z + sp.fx * d };
           }, dt, nowMs, state.calm);
           spirits.forEach(function (o) { if (!o.g.parent) scene.add(o.g); });
         }
         if (sit) sitFrame(dt, nowMs, route, wk, h);
         sitBtn.disabled = !canSit();
-        if (state.held && (!drag || Date.now() - drag.last > LOOK.settle)) state.look.yaw *= 1 - Math.min(1, dt * 1.5);
+        if (wk.moving && (!drag || Date.now() - drag.last > LOOK.settle)) state.look.yaw *= 1 - Math.min(1, dt * 1.5); // walking, the camera comes back behind
         if (route.pendingExit && wk.s > route.len * 0.5) openWayBack(route);
         // camera: behind on the path, and a little above; on a branch's first steps it sits straight behind the figure
         var cbx, cbz, cby;
         var frT = state.stack[state.stack.length - 1], back = route.kind === "face" ? 3.6 : CAM_BACK; // a face's tight loop keeps the camera closer
-        if (wk.s >= back || route.kind === "main" || route.level || !frT) { var cb = at(route, route.loop ? ((wk.s - back) % route.len + route.len) % route.len : Math.max(0, wk.s - back)); cbx = cb.x; cbz = cb.z; cby = cb.y; }
+        if (wk.s >= back || dir < 0 || route.kind === "main" || route.level || !frT) { var cs = wk.s - back * dir, cb = at(route, route.loop ? (cs % route.len + route.len) % route.len : clamp(cs, 0, route.len)); cbx = cb.x - cb.fz * lat * 0.7; cbz = cb.z + cb.fx * lat * 0.7; cby = cb.y; }
         else { var pb = at(frT.route, frT.s - (back - wk.s)); cbx = pb.x; cbz = pb.z; cby = pb.y; } // a branch's first steps are seen from the path it left
         if (state.peek) { // while an opening appears the camera swings round to show it beside the figure, then lets go
           var px0 = cbx - a.x, pz0 = cbz - a.z, ox = state.peek.x - a.x, oz = state.peek.z - a.z, bestY = 0, bestD = -9;
@@ -3077,6 +3210,16 @@
       return { t: wk.t, s: wk.s, s0: wk.s0, D: wk.D, frac: wk.D ? (wk.s - wk.s0) / wk.D : 1, moving: wk.moving, steps: d.stepIdx, time: stretchTime(wk.D),
         inS: BREATH.inS, outS: BREATH.outS, speed: WALK_SPEED, stepsPerS: STEPS_PER_S, arrived: wk.arrived };
     };
+    // Free walking: where the figure is on its route and to the side of it, the way the camera takes as ahead, the stop it is at,
+    // and whether the stick and a prompt show. stick(x, z) holds the stick as a thumb would (z -1 is up), for the tests.
+    api.free = function () {
+      var wk = state.walk; if (!wk) return null;
+      var lim = walkRange(wk), r = wk.route, hw = (r.w || ch.w) * (r.kind === "main" || r.level ? r.openAt(wk.s) : SIDE_LOOK.open);
+      return { s: wk.s, lat: wk.lat, dir: wk.dir, yaw: wk.yaw, near: wk.near, target: wk.target, arrived: wk.arrived, moving: wk.moving, stop: r.stops[wk.target] ? r.stops[wk.target].s : null,
+        range: lim, halfWidth: hw, stick: stickPad.style.display !== "none", prompt: promptBox.style.display !== "none" ? promptBox.textContent : null, sit: sitBtn.style.display !== "none", modal: state.modal };
+    };
+    api.stick = function (x, z) { stick.x = x; stick.z = z; };
+    api.doors = function () { var r = state.walk && state.walk.route; return r && r.doorMeshes ? r.doorMeshes.map(function (g) { return { w: g.userData.w, h: g.userData.h }; }) : []; };
     api.carryLight = carryLight;
     api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k } : null; };
     api.carried = function () { return carried.length; };
@@ -3207,10 +3350,6 @@
     ".oagr-close{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;max-width:420px;margin:0 auto;max-height:40vh;overflow-y:auto;padding:.7rem .9rem;background:rgba(12,12,28,.9);border:1px solid rgba(255,241,176,.5);border-radius:16px;color:#f4f4fa;touch-action:manipulation}" +
     ".oagr-close h2{margin:0 0 .3rem;font-size:1.15rem;color:#fff1b0;display:flex;align-items:center;gap:.5rem}.oagr-close p{margin:.25rem 0;font-size:.95rem;line-height:1.35}.oagr-close .oagc-row{margin-top:.5rem}" +
     ".oagc button.oagr-portalbtn{right:auto;left:10px;border-color:rgba(200,184,255,.7);color:#e8e0ff}" +
-    ".oagr-door{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:min(230px,calc(100vw - 170px));padding:.6rem .7rem;background:rgba(12,12,28,.88);border:1px solid rgba(255,241,176,.55);border-radius:14px;color:#f4f4fa;touch-action:manipulation}" +
-    ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}" +
-    ".oagr-stick{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:5;width:116px;height:116px;border-radius:50%;background:rgba(20,20,40,.45);border:2px solid rgba(255,241,176,.55);touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}" +
-    ".oagr-knob{width:48px;height:48px;border-radius:50%;background:rgba(255,241,176,.75);box-shadow:0 0 12px rgba(255,241,176,.6);pointer-events:none}" +
     ".oagc button.oagr-sit{position:absolute;right:16px;bottom:calc(40px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.8);color:#fff1b0;background:rgba(60,30,24,.85)}" +
     ".oagr-dot{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}";
 
