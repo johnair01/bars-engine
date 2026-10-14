@@ -99,6 +99,8 @@ ${inline(bodyMap)}
 // /ontology-game/cave: the Cave of Lessons, the same block work walked inside the body map (cave/DESIGN.md).
 // cave-kit.glb and spots.json are made by cave/build_kit.py, the stone tiles by cave/bake_tiles.py; all are committed, so this build needs no Blender.
 const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
+// The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
+const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
 const caveHtml = `<!doctype html>
 <html lang="en">
 <head>
@@ -116,13 +118,16 @@ ${inline(bodyMap)}
 <script>
 ${inline(caveJs)}
 </script>
+<script>window.__oagBigMindNoStart = true;</script>
+<script>
+${inline(bigMindJs)}
+</script>
 </body>
 </html>
 `;
 
 // /ontology-game/big-mind: the Big Mind cave, a fork of the Cave of Lessons that borrows its engine (bigmind/DESIGN.md).
 // It needs three.js and the body map (for where a part lives in the body), so no kit or spots file is copied.
-const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
 const bigMindHtml = `<!doctype html>
 <html lang="en">
 <head>
