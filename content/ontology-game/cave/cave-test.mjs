@@ -9,7 +9,9 @@ import { chromium } from 'playwright';
 // choice, the pane that follows the figure through the whole walk and grows into a modal at each stop, one continuous wider
 // tunnel, side paths that loop back to the spot they left from, the daemon as a wall until its encounter is worked, and the
 // six faces' branches at the gate; and the WAVE room (11 October): Take it home from a daemon by lantern and back, and the
-// room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers. Build first with `npm run build:ontology-game`, then copy this
+// room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers; and the levels
+// (13 October, LEVELS.md): home base and its two doors, walking round the room (tapping, the stick, the keys, the rug), the hall of the six, a face's tunnel, the centre
+// of the self, another face, home, and the Big Mind door into the Big Mind cave on the same page. Build first with `npm run build:ontology-game`, then copy this
 // file into a folder that has playwright and three@0.128.0 installed and run it there:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node cave-test.mjs
 const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url).pathname;
@@ -924,6 +926,206 @@ await roomCheckin('left');
 await page.locator('[data-room-again="no"]').click();
 await page.locator('[data-room-leave]').click();
 await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
+// ---- the levels (LEVELS.md, build order step 1): home base, the hall of the six, a tunnel, the centre, another face, home -----
+// The room from the body map is home base, with a portal; the portal opens the hall; a door opens its face's tunnel; the tunnel
+// ends at the centre of the self, which wears that face and has portals to the other five; one of them opens another tunnel, and
+// the centre's ways back go home to the room.
+const lv = () => C(() => window.__oagCave.level && window.__oagCave.level());
+const lvCam = [];
+const walkLevel = async (selector) => {
+  await page.mouse.move(330, 700); await page.mouse.down();
+  const t0 = Date.now();
+  try {
+    while (!(await page.locator(selector).count())) {
+      if (Date.now() - t0 > 90000) throw new Error('timed out walking to ' + selector);
+      const a = await C(() => { const c = window.__oagCave; return { room: c.camRoom(), off: c.avatar().offPath, kind: c.avatar().route }; });
+      lvCam.push(Object.assign({ where: selector }, a));
+      await page.waitForTimeout(120);
+    }
+  } finally { await page.mouse.up(); }
+};
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor();
+await page.locator('[data-room-welcome]').waitFor();
+let RW = await C(() => window.__oagCave.room.walking());
+ok(RW.exits.map((e) => e.id).sort().join() === 'bigmind,portal' && await sees('[data-room-walk-hint]'),
+  'home base: the WAVE room from the body map has two doors behind the seat, Big Mind and the six game masters, and says how to walk');
+await page.screenshot({ path: SHOTS + '/level-home.png' });
+// Walking round the room (Wendell, 13 October 2026): a tap on the floor stands the figure up and walks it there, the camera
+// following; opening the step's page again walks it back to the seat.
+await C(() => window.__oagCave.room.speed(3));
+await page.locator('[data-room-shrink]').click();
+await page.waitForTimeout(500);
+const floorAt = await C(() => window.__oagCave.room.floorScreen(1.5, -1));
+await page.mouse.click(floorAt.x, floorAt.y);
+await page.waitForFunction(() => { const w = window.__oagCave.room.walking(); return w.roam && w.roam.arrived; }, null, { timeout: 30000 });
+RW = await C(() => window.__oagCave.room.walking());
+ok(Math.hypot(RW.figure[0] - 1.5, RW.figure[1] + 1) < 0.6 && RW.sit < 0.1 && RW.view === 'roam', `a tap on the floor walks the figure there, standing, the camera behind it (${RW.figure.map((v) => v.toFixed(2))})`);
+await page.screenshot({ path: SHOTS + '/level-home-walked.png' });
+await page.locator('[data-room-pane]').click();
+await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.9, null, { timeout: 30000 });
+ok((await C(() => window.__oagCave.room.walking())).roam === null, 'opening the page again walks the figure back to its seat, and it sits');
+// Free walking (Wendell, 13 October 2026: "Essentially we need free walking controls in this room"): a stick at the bottom left
+// and the arrow keys or W A S D walk the figure anywhere; coming up to a door opens its card; the rug offers Sit down.
+await page.locator('[data-room-shrink]').click();
+await page.waitForTimeout(400);
+ok(await C(() => window.__oagCave.room.stickShown()), 'the stick shows with the room in view');
+const box = await page.locator('[data-room-stick]').boundingBox();
+const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+await page.mouse.move(cx, cy); await page.mouse.down(); await page.mouse.move(cx, cy - 50, { steps: 4 });
+await page.waitForTimeout(1500);
+let SW = await C(() => window.__oagCave.room.walking());
+await page.mouse.up();
+ok(SW.figure[1] < 0.6 && SW.sit < 0.1 && SW.view === 'roam', `pushing the stick up walks the figure forward, standing (${SW.figure.map((v) => v.toFixed(2))})`);
+ok(!(await C(() => window.__oagCave.room.sitShown())), 'off the rug, no Sit down');
+// a drag up or down tilts the camera, as a drag sideways turns it
+const camY0 = (await C(() => window.__oagCave.room.walking())).camY;
+await page.mouse.move(200, 300); await page.mouse.down(); await page.mouse.move(200, 420, { steps: 6 }); await page.mouse.up();
+await page.waitForTimeout(1200);
+const tilt = await C(() => window.__oagCave.room.walking());
+ok(tilt.pitch > 0.3 && tilt.camY > camY0 + 0.5, `a drag down tilts the camera to look down on the figure (${camY0.toFixed(2)} to ${tilt.camY.toFixed(2)})`);
+// keys: turn round with S
+await page.keyboard.down('KeyS'); await page.waitForTimeout(900); await page.keyboard.up('KeyS');
+const SW2 = await C(() => window.__oagCave.room.walking());
+ok(SW2.figure[1] > SW.figure[1] + 0.5, `the S key walks the figure back towards the camera (${SW2.figure.map((v) => v.toFixed(2))})`);
+// steer to the six game masters' door
+const ex = SW2.exits.find((e) => e.id === 'portal');
+for (let i = 0; i < 100 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x, ex.z]); await page.waitForTimeout(100); }
+ok(await sees('[data-room-portal]') && await C(() => window.__oagCave.room.stickShown()), 'walking up to the six game masters\' door shows its prompt by the right thumb, and the stick stays');
+// Holding the stick into the door (Wendell, 14 October 2026: "If you hold this position and try and use the joystick you get
+// stuck in a loop"): the prompt holds still, the stick stays, nothing loops.
+let steady = true;
+for (let i = 0; i < 15; i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x * 1.3, ex.z * 1.3]); await page.waitForTimeout(100); steady = steady && await sees('[data-room-portal]') && await C(() => window.__oagCave.room.stickShown()); }
+ok(steady, 'holding the stick into the door keeps the prompt and the stick steady');
+// walking along the wall past the door shows its prompt only while in front of it
+const seen = [];
+for (const a of [0.55, 0.3, 0.05]) {
+  for (let i = 0; i < 60; i++) { if ((await C(([x, z]) => window.__oagCave.room.steer(x, z), [Math.sin(a) * 6.4, Math.cos(a) * 6.4])) < 0.3) break; seen.push(await sees('[data-room-door]')); await page.waitForTimeout(80); }
+}
+await C(() => window.__oagCave.room.stick(0, 0));
+const flips = seen.filter((v, i) => i && v !== seen[i - 1]).length;
+ok(seen.length && !(await sees('[data-room-door]')) && flips <= 1, `walking on along the wall hides the prompt again, without flickering (${flips} change)`);
+for (let i = 0; i < 60 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x, ex.z]); await page.waitForTimeout(100); }
+ok(await sees('[data-room-portal]'), 'walking back to the door shows its prompt again');
+// On an iPhone a thumb held on the stick keeps sending moves after the stick hides (Wendell, 14 October 2026: "Stay in the room
+// gets you stuck in this screen"): a touch the browser cannot capture, still moving when the page opens over the stick.
+{
+  const sb = await page.locator('[data-room-stick]').boundingBox();
+  await C(([x, y]) => document.querySelector('[data-room-stick]').dispatchEvent(new PointerEvent('pointerdown', { pointerId: 99, clientX: x, clientY: y, bubbles: true, cancelable: true })), [sb.x + 58, sb.y + 30]);
+  await page.locator('[data-room-pane]').click();
+  await C(() => { const s = document.querySelector('[data-room-stick]'); for (let i = 0; i < 5; i++) s.dispatchEvent(new PointerEvent('pointermove', { pointerId: 99, clientX: 60 + i, clientY: 700 - i, bubbles: true })); });
+  await page.locator('[data-room-shrink]').click();
+  await page.waitForTimeout(800);
+  const iw = await C(() => window.__oagCave.room.walking());
+  ok(iw.figure.every(Number.isFinite) && iw.cam.every(Number.isFinite), `a thumb still moving on the hidden stick lets go, and the room stays in view (${iw.figure.map((v) => v.toFixed(2))})`);
+}
+// back to the rug
+const seat = (await C(() => window.__oagCave.room.scene())).seat;
+for (let i = 0; i < 100 && !(await C(() => window.__oagCave.room.sitShown())); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), seat); await page.waitForTimeout(100); }
+await C(() => window.__oagCave.room.stick(0, 0));
+ok(await C(() => window.__oagCave.room.sitShown()), 'walking onto the rug offers Sit down');
+await page.screenshot({ path: SHOTS + '/level-home-stick-rug.png' });
+await page.locator('[data-room-sit]').click();
+await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.9, null, { timeout: 30000 });
+ok(await sees('[data-room-modal].open'), 'Sit down sits the figure on the cushion and brings the page back');
+await C(() => window.__oagCave.room.walkTo('portal'));
+await page.locator('[data-room-portal]').waitFor({ timeout: 30000 });
+ok((await C(() => window.__oagCave.room.walking())).atDoor === 'portal', 'walking to the six game masters\' door opens its card');
+await page.screenshot({ path: SHOTS + '/level-home-door.png' });
+await page.locator('[data-room-portal]').click();
+await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
+await page.locator('[data-cave-level="hall"]').waitFor();
+await page.waitForTimeout(900);
+await C(() => { window.__oagCave.state.speed = 8; });
+let L = await lv();
+ok(L.place === 'hall' && L.kind === 'round' && L.stops.join(',') === 'door:magenta,door:red,door:amber,door:orange,door:green,door:teal,home',
+  `the portal opens the hall of the six: six doors in altitude order and the portal home (${L.stops.join(', ')})`);
+ok((await C(() => window.__oagCave.pane())).title === 'The hall of the six', 'the hall names itself as the player comes in');
+await page.screenshot({ path: SHOTS + '/level-hall.png' });
+await walkLevel('[data-level-door="magenta"]');
+ok((await page.locator('[data-level-asks="magenta"]').textContent()) === "Where is the presence you're reaching for?", "at Magenta's door, its question shows");
+await page.locator('[data-level-walkon]').click();
+await walkLevel('[data-level-door="red"]');
+await page.screenshot({ path: SHOTS + '/level-hall-door.png' });
+await page.locator('[data-level-door="red"]').click();
+await page.locator('[data-cave-level="tunnel"][data-cave-level-face="red"]').waitFor();
+await page.waitForTimeout(900);
+L = await lv();
+ok(L.place === 'tunnel' && L.face === 'red' && L.kind === 'tunnel' && L.look === 0xff6a48 && L.rock === 0x7a302a && L.shape.shape === 'red',
+  "Red's door opens Red's tunnel, in Red's light, stone and cave shape");
+await page.screenshot({ path: SHOTS + '/level-tunnel-red.png' });
+await walkLevel('[data-level-go]');
+ok(await sees('[data-cave-block]'), 'a block can still open a side passage from the tunnel');
+await page.locator('[data-level-go]').click();
+await walkLevel('[data-level-centre]');
+ok((await page.locator('[data-level-asks="red"]').textContent()) === 'What power are you trying to move or assert?', 'the tunnel ends in its face\'s question');
+await page.locator('[data-level-centre]').click();
+await page.locator('[data-cave-level="centre"]').waitFor();
+await page.waitForTimeout(900);
+L = await lv();
+ok(L.place === 'centre' && L.face === 'red' && L.look === 0xff6a48 && L.stops.join(',') === 'portal:amber,portal:orange,portal:green,portal:teal,portal:magenta,ways',
+  `the centre of the self wears Red, with portals to the other five from the next face on (${L.stops.join(', ')})`);
+await page.screenshot({ path: SHOTS + '/level-centre.png' });
+await walkLevel('[data-level-portal="amber"]');
+await page.locator('[data-level-portal="amber"]').click();
+await page.locator('[data-cave-level="tunnel"][data-cave-level-face="amber"]').waitFor();
+await page.waitForTimeout(700);
+L = await lv();
+ok(L.face === 'amber' && L.visited.join(',') === 'red,amber', "Amber's portal opens Amber's tunnel, straight from the centre");
+await page.screenshot({ path: SHOTS + '/level-tunnel-amber.png' });
+await walkLevel('[data-level-go]'); await page.locator('[data-level-go]').click();
+await walkLevel('[data-level-centre]'); await page.locator('[data-level-centre]').click();
+await page.locator('[data-cave-level="centre"]').waitFor();
+await page.waitForTimeout(700);
+L = await lv();
+ok(L.face === 'amber' && L.stops[0] === 'portal:orange', 'the centre now wears Amber, the face just walked');
+await page.locator('[data-cave-pane]').click().catch(() => {});
+await walkLevel('[data-level-walkon]');
+for (let i = 0; i < 5; i++) { await page.locator('[data-level-walkon]').click(); await page.waitForTimeout(150); if (i < 4) await walkLevel('[data-level-portal]'); }
+await walkLevel('[data-level-home]');
+ok(await sees('[data-level-hall]') && await sees('[data-level-home]'), 'the ways back: the hall, or home');
+const worst = lvCam.reduce((m, c) => Math.min(m, c.room), 1e9), off = lvCam.reduce((m, c) => Math.max(m, c.off), 0);
+ok(worst > 0 && off < 0.05, `through the hall, two tunnels and the centre the camera stays inside the stone (least room ${worst.toFixed(2)}) and the figure on its path (${off.toFixed(3)})`);
+L = await lv();
+ok(L.trail.join(' > ') === 'hall > tunnel:red > centre > tunnel:amber > centre', 'the way walked: ' + L.trail.join(' > '));
+await page.locator('[data-level-home]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+ok((await C(() => window.__oagCave.room.walking())).exits.length === 2, 'Go home opens the WAVE room again, with its doors');
+await page.locator('[data-room-welcome]').waitFor();
+await page.screenshot({ path: SHOTS + '/level-home-again.png' });
+await C(() => window.__oagCave.room.speed(3));
+await C(() => window.__oagCave.room.walkTo('portal'));
+await page.locator('[data-room-portal]').click({ timeout: 30000 });
+await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(700);
+ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again');
+// ---- the Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room") --
+// Out to the front page and into the room again; in the room, walk to the Big Mind door; going in opens the Big Mind cave's mouth
+// on this same page, with a way back to the room.
+await C(() => window.__oagCave.leave());
+await page.locator('[data-cave-level]').waitFor({ state: 'detached', timeout: 15000 });
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+await page.locator('[data-room-welcome]').waitFor();
+await C(() => window.__oagCave.room.speed(3));
+await C(() => window.__oagCave.room.walkTo('bigmind'));
+await page.locator('[data-room-bigmind]').waitFor({ timeout: 30000 });
+ok((await page.locator('[data-room-door] h2').textContent()) === 'Big Mind', 'walking to the Big Mind door opens its card');
+await page.screenshot({ path: SHOTS + '/level-home-bigmind.png' });
+await page.locator('[data-room-bigmind]').click();
+await page.locator('[data-bm-mouth]').waitFor({ timeout: 15000 });
+ok(await sees('[data-bm-enter]') && await sees('[data-bm-home]'), 'the Big Mind cave opens at its mouth on this page, with Go in and Back to the WAVE room');
+await page.locator('[data-bm-enter]').click();
+await page.locator('[data-bm-cave]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(900);
+ok(await C(() => !!(window.__oagBigMind.state)), 'Go in walks into the Big Mind cave');
+await page.screenshot({ path: SHOTS + '/level-bigmind-cave.png' });
+await C(() => { document.querySelector('[data-bm-cave]').remove(); window.__oagBigMind.start(); }); // out at the mouth again
+await page.locator('[data-bm-home]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+ok(await page.locator('[data-bm-mouth]').count() === 0, 'Back to the WAVE room closes the mouth and opens the room');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();
