@@ -40,6 +40,11 @@ def in_metres(spec):
     for key in ("width_m", "length_m", "height_m", "wall_height_m"):
         if key in spec["shell"]:
             spec["shell"][key] *= k
+    if "rock" in spec["shell"]:
+        spec["shell"]["rock"]["size_m"] = [c * k for c in spec["shell"]["rock"]["size_m"]]
+    for h in spec["shell"].get("hollows", []):
+        for key in ("z_m", "width_m", "height_m", "depth_m"):
+            h[key] *= k
     for o in spec.get("openings", []):
         for key in ("width_m", "height_m", "fill_height_m"):
             if key in o:
@@ -108,15 +113,80 @@ def wall_r(a, t=0.0):
     return oval * (1 + SHELL.get("rough", 0.0) * (0.6 * math.sin(3 * a + PH[0]) + 0.4 * math.sin(7 * a + PH[1])))
 
 
+def wrap(da):
+    return (da + math.pi) % (2 * math.pi) - math.pi
+
+
+ROCK = SHELL.get("rock")
+LUMPS = []  # (angle, height, radius): the big rock forms the wall is made of
+if ROCK:
+    rr = random.Random(ROCK.get("seed", 1))
+    span = 2 * math.pi * (RX + RY) / 2
+    for _ in range(ROCK["count"]):
+        LUMPS.append((rr.uniform(0, 2 * math.pi), rr.uniform(-0.2, 1.15) * HW, rr.uniform(*ROCK["size_m"])))
+HOLLOWS = SHELL.get("hollows", [])
+
+
+def clear_of_openings(a, z):
+    """1 away from every opening, falling to 0 at its edge, so no rock bulges in front of a door."""
+    m = 1.0
+    for o in SPEC.get("openings", []):
+        dx = abs(wrap(a - math.radians(o["angle_deg"]))) * wall_r(a) - o["width_m"] / 2
+        dz = z - o["height_m"]
+        d = max(dx, dz)
+        m = min(m, max(0.0, min(1.0, d / 0.9)))
+    return m
+
+
+def hollow_at(a, z):
+    """How far a hollow pushes the wall back at (a, z), and how much of the rock it clears there (0 to 1)."""
+    back, clear = 0.0, 0.0
+    for h in HOLLOWS:
+        u = abs(wrap(a - math.radians(h["angle_deg"]))) * wall_r(a) / (h["width_m"] / 2)
+        v = (z - h["z_m"]) / h["height_m"]  # 0 at its flat floor, 1 at the top of its arch
+        if v < -0.15 or u > 1.6:
+            continue
+        top = 1 - u * u  # an arched outline: full height in the middle, falling to the sides
+        inside = 0 <= v <= max(0.0, top) ** 0.5 and u <= 1
+        if inside:
+            back = max(back, h["depth_m"] * (1 - 0.35 * v * v))
+        clear = max(clear, max(0.0, 1 - max(u - 1, -v, v - 1) / 0.6) if not inside else 1.0)
+    return back, clear
+
+
+def rock_in(a, z):
+    """How far the rock forms stand into the room at (a, z): each lump a rounded boulder face, the largest wins, so
+    the seams between them read as cracks."""
+    if not LUMPS:
+        return 0.0
+    best = 0.0
+    for la, lz, lr in LUMPS:
+        dx = abs(wrap(a - la)) * wall_r(a)
+        if dx > lr:
+            continue
+        d2 = (dx * dx + (z - lz) ** 2) / (lr * lr)
+        if d2 < 1:
+            best = max(best, lr * ROCK["depth"] * (1 - d2) ** 0.45)
+    return best
+
+
 def wall_point(a, z):
-    """A point on the shell at angle a and height z: straight wall to HW, then a quarter-ellipse dome to H."""
+    """A point on the shell at angle a and height z: straight wall to HW, then a quarter-ellipse dome to H, made of
+    rock forms that stand in from it and hollows cut back into it."""
     if z <= HW:
         k = 1.0
     else:
         s = min(1.0, (z - HW) / (H - HW))
         k = math.sqrt(max(0.0, 1 - s * s))
-    r = wall_r(a) * k
+    back, clear = hollow_at(a, z)
+    fade = 1.0 if z <= HW else max(0.0, 1 - (z - HW) / (0.7 * (H - HW)))
+    r = wall_r(a) * k - rock_in(a, z) * (1 - clear) * clear_of_openings(a, z) * fade + back
     return (r * math.sin(a), r * math.cos(a), z)
+
+
+def shell_r(a, z):
+    x, y, _ = wall_point(a, z)
+    return math.hypot(x, y)
 
 
 def ceiling_z(x, y):
@@ -126,9 +196,10 @@ def ceiling_z(x, y):
     return HW if rho >= 1 else HW + (H - HW) * math.sqrt(1 - rho * rho)
 
 
-SEG = 96
-WALL_Z = [HW * i / 6 for i in range(7)]
-DOME_Z = [HW + (H - HW) * math.sin(math.pi / 2 * i / 6) for i in range(1, 7)]
+SEG = 192 if ROCK else 96
+NW, ND = (18, 10) if ROCK else (6, 6)
+WALL_Z = sorted({HW * i / NW for i in range(NW + 1)} | {h["z_m"] for h in HOLLOWS})  # a ring at each hollow's floor
+DOME_Z = [HW + (H - HW) * math.sin(math.pi / 2 * i / ND) for i in range(1, ND + 1)]
 OPEN = []  # (opening, set of cut segment indices)
 for o in SPEC.get("openings", []):
     a0 = math.radians(o["angle_deg"])
@@ -172,7 +243,10 @@ def shell_part(name, zs, keep, mat):
                     idx[q] = len(verts)
                     verts.append(wall_point(2 * math.pi * (q[0] % SEG) / SEG, zs[q[1]]))
             faces.append([idx[q] for q in quad])
-    return mesh_object(name, verts, faces, mat)
+    ob = mesh_object(name, verts, faces, mat)
+    if ROCK:  # the seams between rock faces stay sharp, so they read as cracks
+        ob.data.set_sharp_from_angle(angle=math.radians(28))
+    return ob
 
 
 back, front = (lambda a: math.cos(a) >= 0), (lambda a: math.cos(a) < 0)
@@ -346,6 +420,19 @@ BUILDERS = {"cushion": objects.cushion, "block": block, "bench": bench, "ring": 
 
 
 # ---- things ----
+for t in SPEC["things"]:  # a thing in a hollow stands on its floor, set back into it
+    if t.get("hollow"):
+        h = next(x for x in HOLLOWS if x["id"] == t["hollow"])
+        a = math.radians(h["angle_deg"])
+        r = wall_r(a) + h["depth_m"] * 0.45
+        t["at"], t["z_m"] = [r * math.sin(a), r * math.cos(a)], h["z_m"]
+        t["turn_deg"] = -h["angle_deg"] + t.get("turn_deg", 0)
+for l in SPEC.get("lights", []):  # a light in a hollow sits at its mouth, half way up
+    if l.get("hollow"):
+        h = next(x for x in HOLLOWS if x["id"] == l["hollow"])
+        a = math.radians(h["angle_deg"])
+        r = wall_r(a) - 0.25
+        l["at"], l["at_z"] = [r * math.sin(a), r * math.cos(a)], h["z_m"] + h["height_m"] * 0.5
 for t in SPEC["things"]:
     src = dict(t["source"])
     src.setdefault("licence", "cc_zero")
@@ -401,7 +488,7 @@ for o in OBJECTS:
         if over:
             misses.append(f"{rec['id']}: {len(over)} vertices above the dome")
     if not rec.get("in_wall"):
-        outside = [p for p in world if math.hypot(p.x, p.y) > wall_r(math.atan2(p.x, p.y)) - WALL_GAP]
+        outside = [p for p in world if math.hypot(p.x, p.y) > shell_r(math.atan2(p.x, p.y), min(max(p.z, 0), HW)) - WALL_GAP]
         if outside:
             misses.append(f"{rec['id']}: {len(outside)} vertices within {WALL_GAP * 100:.0f} cm of the wall or past it")
 

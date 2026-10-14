@@ -95,5 +95,12 @@ of their own in the spec, and `views` for a camera at the player's eye that sees
 side: `3d-build/wave-room-test-2026-10-14/concept-vs-built.png` in the project files.
 
 The layout carries over: the door and its lantern, the seat facing it, the ring where the charge stops, crystals round
-the wall, boulders at the edge. What the picture has and the build lacks: walls of big rock forms with hollows for the
-crystals (the shell is one smooth surface), moss in the cracks, the warm glow across the whole dome, and a pointed arch.
+the wall, boulders at the edge. What the picture has and the build lacked: walls of big rock forms with hollows for the
+crystals, moss in the cracks, the warm glow across the whole dome, and a pointed arch.
+
+**Rock walls and hollows (14 October, later).** A shell can now take `rock` (count, size and depth of the rounded rock
+faces the wall is made of; the largest face wins at each point, and the seams between faces stay sharp, so they read as
+cracks) and `hollows` (arched recesses at an angle and height, each with a flat floor). A thing with `hollow` stands
+on that hollow's floor, set back into it; a light with `hollow` sits at its mouth. Rock stays clear of doors and
+hollows. The WAVE room's crystals now sit in four hollows. Before and after: `3d-build/wave-room-test-2026-10-14/rock-walls.png`.
+Still to do: the hollows' edges step with the wall grid, the rock has no surface pattern or moss, and the dome is plain.
