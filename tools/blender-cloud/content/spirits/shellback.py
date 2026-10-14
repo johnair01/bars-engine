@@ -875,19 +875,25 @@ def mouth_seam(body, centre, z0, sweep=80, rise=0.03, r=0.008):
 def tortoise_head(H, s=1.0):
     """Metaball parts for the tortoise's head, after the Taoist Tortoise concept's face: a smooth domed skull, a blunt
     snout whose upper jaw overhangs the lower like a beak, a low brow over each eye, and a lower jaw set a little back
-    and under, so the mouth seam falls where they meet."""
+    and under, so the mouth seam falls where they meet. Round 6 (Wendell: "We want the face to be flatter"): the skull
+    is lower and longer, its crown nearly level with the brows, and the snout a flat wedge, the way a real tortoise's
+    head runs flat from crown to beak."""
     v = lambda x, y, z: H + Vector((x, y, z)) * s
-    return [("ell", v(0, 0, 0.02), 0.25 * s, (1.15, 0.86, 0.88)),       # skull
-            ("ell", v(0.2, 0, -0.03), 0.155 * s, (1.1, 0.84, 0.82)),     # upper jaw
-            ("ball", v(0.31, 0, -0.065), 0.075 * s),                     # the beak's tip
-            ("ell", v(0.12, 0, -0.15), 0.14 * s, (1.35, 0.78, 0.45)),    # lower jaw
-            ("ell", v(0.12, 0.12, 0.065), 0.06 * s, (1.5, 0.6, 0.45)),    # brows
-            ("ell", v(0.12, -0.12, 0.065), 0.06 * s, (1.5, 0.6, 0.45))]
+    return [("ell", v(-0.03, 0, -0.01), 0.25 * s, (1.3, 0.9, 0.62)),     # skull, low and long
+            ("ell", v(0.19, 0, -0.04), 0.155 * s, (1.25, 0.86, 0.6)),    # upper jaw, a flat wedge
+            ("ell", v(0.32, 0, -0.065), 0.075 * s, (1.1, 1.0, 0.72)),    # the beak's tip
+            ("ell", v(0.12, 0, -0.14), 0.14 * s, (1.4, 0.8, 0.38)),      # lower jaw
+            ("ell", v(0.12, 0.12, 0.045), 0.06 * s, (1.5, 0.6, 0.35)),   # brows
+            ("ell", v(0.12, -0.12, 0.045), 0.06 * s, (1.5, 0.6, 0.35))]
 
 
-def nostrils(H, s=1.0):
-    """Two small dark nostrils on top of the beak's tip."""
-    at = [H + Vector((0.39, y, -0.03)) * s for y in (0.035, -0.035)]
+def nostrils(body, H, s=1.0):
+    """Two small dark nostrils on top of the beak's tip, found by dropping onto the skin, so they follow its shape."""
+    at = []
+    for y in (0.035, -0.035):
+        o = H + Vector((0.37, y, 0)) * s
+        hit, loc, _, _ = body.ray_cast(o + Vector((0, 0, 1)), Vector((0, 0, -1)))
+        at.append(loc if hit else o)
     return lambda p: any((p - q).length < 0.014 * s for q in at)
 
 
@@ -914,14 +920,14 @@ def creature(sc, el, lt, dk):
     parts.append(("cap", (-1.05, 0, 0.25), (-1.3, 0, 0.12), 0.07))
     body = blob("body", parts, 0.028, 12000)
     seam = mouth_seam(body, H + Vector((0.16, 0, 0)), H.z - 0.115, 78, 0.035, 0.009)
-    nose = nostrils(H, 1.2)
+    nose = nostrils(body, H, 1.2)
     throat = lambda p, n: min(1, max(0, (H.z - 0.12 - p.z) / 0.06)) if (p.x > 0.55 and (n.x > 0.3 or n.z < -0.3)) else 0
     base = skin_paint(body, 1.3, throat, S)
     paint(body, lambda p, n: (0.1, 0.08, 0.06) if nose(p) else mixc(base(p, n), (0.08, 0.07, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead)
     for s in (1, -1):
-        eye(body, H + Vector((0.14, 0, 0.04)), (0.45, s * 0.88, 0.12), S, 0.07)
+        eye(body, H + Vector((0.14, 0, -0.01)), (0.45, s * 0.88, 0.08), S, 0.07)
     drape("shawl", (0.62, 0, 0.86), (-0.3, 0, -1), 0.32, 0.62, 0.45, S["cloth"], S["trim"], f"shawl-{el}")
     beads((0.74, 0, 0.88), (0.65, 0, 0.75), 0.3, 18, 0.12, 4, lt, S)
     # a gold bell and a jade disc hang from the shell's rim on the near side
@@ -999,14 +1005,14 @@ def ascended(sc, el, lt, dk):
         hands.append(hd + Vector((0.04, 0, 0)))
     body = blob("body", parts, 0.025, 12000)
     seam = mouth_seam(body, H + Vector((0.12, 0, 0)), H.z - 0.085, 78, 0.026, 0.007)
-    nose = nostrils(H, 0.88)
+    nose = nostrils(body, H, 0.88)
     throat = lambda p, n: min(1, max(0, (H.z - 0.09 - p.z) / 0.05)) if (p.z > 1.5 and (n.x > 0.35 or n.z < -0.3)) else 0
     base = skin_paint(body, 2.1, throat, S)
     paint(body, lambda p, n: (0.1, 0.08, 0.06) if nose(p) else mixc(base(p, n), (0.08, 0.07, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead, 0.8)
     for s in (1, -1):
-        eye(body, H + Vector((0.1, 0, 0.03)), (0.45, s * 0.88, 0.12), S, 0.054)
+        eye(body, H + Vector((0.1, 0, -0.01)), (0.45, s * 0.88, 0.08), S, 0.054)
     drape("robe", (0.02, 0, 1.12), (0, 0, -1), 0.4, 0.5, 0.85, S["cloth"], S["trim"], f"robe-{el}", 0.15)
     drape("shawl", (0.02, 0, 1.7), (0, 0, -1), 0.24, 0.5, 0.36, mixc(S["cloth"], S["trim"], 0.35), S["trim"], f"shawl-{el}", 0.5)
     plate = ball("plastron", solid("plate", S["plastron"], 0.6, metal=S["metal"]), (0.27, 0, 1.22), 0.25, (0.35, 0.8, 1.0), 24)
@@ -1099,32 +1105,72 @@ def tail(name, path, r0, r1, S, kind):
 
 
 def ears(H, S, s=1.0):
-    """The armadillo's big upright ears, leaning out and back."""
+    """The armadillo's big upright ears, leaning out and back. Round 6 (Wendell: "the ears need to be a bit more
+    point"): each is a thin leaf, broad at the root and drawn to a point, set further back so the eyes stay clear."""
     m = solid("ear", mixc(S["skin"], S["spot"], 0.25), 0.75)
     for side in (1, -1):
-        o = ball("ear", m, H + Vector((-0.08, side * 0.13, 0.28)) * s, 0.19 * s, (0.5, 0.16, 1.0), 20)
-        o.rotation_euler = (-side * 0.4, -0.3, side * 0.35)
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=24, ring_count=16, radius=1.0)
+        o = bpy.context.active_object; o.name = "ear"
+        for v in o.data.vertices:  # a leaf: round at the root, tapering to a sharp tip
+            t = (v.co.z + 1) / 2
+            w = (1 - t) ** 0.6 * min(1.0, 0.35 + 2.5 * t)
+            v.co = Vector((v.co.x * 0.13 * w, v.co.y * 0.045, (t * 0.48 - 0.06))) * s
+        o.location = H + Vector((-0.14, side * 0.13, 0.12)) * s
+        o.rotation_euler = (-side * 0.45, -0.35, side * 0.3)
+        o.data.materials.append(m); smooth(o)
 
 
-def head_armour(base, H, S, s=1.0):
+def head_armour(base, H, S, s=1.0, body=None, path=(), outs=()):
     """The armadillo's head shield, or the pangolin's scales running from its crown down the back of its neck."""
     m = armour("headarmour", S, 0.5)
     if base == "armadillo":
         ball("shield", m, H + Vector((0.02, 0, 0.13)) * s, 0.16 * s, (1.35, 0.95, 0.38), 20).rotation_euler = (0, 0.15, 0)
         return
-    for dx, dy, dz, r in ((0.0, 0, 0.14, 0.085), (-0.14, 0.06, 0.16, 0.095), (-0.14, -0.06, 0.16, 0.095), (-0.28, 0, 0.17, 0.11)):
-        ball("crown", m, H + Vector((dx, dy, dz)) * s, r * s, (1.35, 1.0, 0.35), 16).rotation_euler = (0, -0.3, 0)
+    # round 6 (Wendell: "their head scales need to fold into the [shell] more than turtle or armadille. We want it to
+    # feel more like scales and they are floating more"): rows of scales run from the crown down the back of the neck
+    # and on under the shell's front rim, growing as they go, each one lifted clear of the skin with a lit gap beneath,
+    # so they read as loose scales hovering in place, not a stack on the head.
+    glow = underlay("scalegap", S)
+    rows = len(path) - 1
+    for i in range(len(path)):
+        a, out = Vector(path[i]), Vector(outs[i]).normalized()
+        ahead = (Vector(path[max(i - 1, 0)]) - Vector(path[min(i + 1, rows)])).normalized()
+        t = i / rows
+        r = (0.075 + 0.07 * t) * s
+        ahead = (ahead - out * out.dot(ahead)).normalized()
+        across = out.cross(ahead).normalized()
+        out2 = (out * math.cos(0.25) + ahead * math.sin(0.25)).normalized()  # nose dips in, tail lifts: the next row tucks under
+        frame = Matrix((across.cross(out2), across, out2)).transposed().to_euler()
+        for k in ((0,) if i == 0 else (-1, 1) if i % 2 else (-1.6, 0, 1.6)):
+            q = a + across * k * r * 0.85
+            hit, loc, nrm, _ = body.ray_cast(q + out * 1.2, -out)
+            base_at = loc if hit else q
+            lift = (0.04 + 0.03 * t) * s
+            at = base_at + out * lift
+            o = ball("scale", m, at, r, (1.3, 1.0, 0.28), 16)
+            o.rotation_euler = frame
+            ball("scalegap", glow, base_at + out * lift * 0.35, r * 0.45, (1.2, 1.0, 0.25), 12).rotation_euler = frame
 
 
 def snout(H, base, s=1.0):
     """Metaball parts for the long head: a rounded skull drawn out into a long tapering snout."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
     if base == "armadillo":
-        return [("ell", H, 0.23 * s, (1.1, 0.95, 0.9)),
-                ("cap", H + Vector((0.12, 0, -0.04)) * s, H + Vector((0.46, 0, -0.2)) * s, 0.085 * s),
-                ("ball", H + Vector((0.49, 0, -0.21)) * s, 0.062 * s)]
-    return [("ell", H, 0.19 * s, (1.25, 0.85, 0.82)),
-            ("cap", H + Vector((0.12, 0, -0.03)) * s, H + Vector((0.46, 0, -0.13)) * s, 0.07 * s),
-            ("ball", H + Vector((0.48, 0, -0.14)) * s, 0.048 * s)]
+        # round 6 (Wendell: "who9le face needs to be pointy ... with the flat snout"): no round skull and thin tube now;
+        # the head narrows all the way from the ears to the tip, and the snout is flattened top to bottom
+        return taper(v, (-0.04, 0, 0), (0.47, 0, -0.18), 0.2 * s, 0.055 * s, (1.25, 0.95, 0.8), (1.4, 0.8, 0.42))
+    # round 6 (Wendell: "pangolin needs a shorter nose than armadillo"): about two thirds as long, still tapering
+    return taper(v, (0, 0, 0), (0.31, 0, -0.1), 0.19 * s, 0.055 * s, (1.25, 0.9, 0.8), (1.3, 0.85, 0.6))
+
+
+def taper(v, a, b, r0, r1, sc0, sc1, n=9):
+    """Metaball ellipsoids close enough to fuse into one smooth taper from a to b, shrinking and flattening as they go."""
+    out = []
+    for k in range(n):
+        t = k / (n - 1)
+        out.append(("ell", v(*[x + (y - x) * t for x, y in zip(a, b)]), r0 + (r1 - r0) * t ** 0.8,
+                    tuple(x + (y - x) * t for x, y in zip(sc0, sc1))))
+    return out
 
 
 def hologram_long(lt, dk, base):
@@ -1205,10 +1251,15 @@ def creature_long(sc, el, lt, dk, base):
     for f, ahead, front in feet: claws(f, ahead, 1.25 if (front and not arma) else 0.9)
     for s in (1, -1):
         # the armadillo's sits below its head shield, so the shield's rim reads as its brow
-        eye(body, H + (Vector((0.1, 0, -0.01)) if arma else Vector((0.07, 0, 0.06))), (0.42, s * 0.85, 0.15 if arma else 0.25), S,
+        # round 6: the armadillo's eyes sit on the sides of its head, looking out more than ahead; the pangolin's are
+        # set further apart (Wendell: "space pangolin eyes a littlre more")
+        eye(body, H + (Vector((0.02, 0, -0.01)) if arma else Vector((0.02, 0, 0.05))), (0.12, s * 0.98, 0.1) if arma else (0.22, s * 0.95, 0.2), S,
             0.064 if arma else 0.06)
     if arma: ears(H, S)
-    head_armour(base, H, S)
+    head_armour(base, H, S, 1.0, body,
+                [H + Vector((0.04, 0, 0.12)), H + Vector((-0.12, 0, 0.14)), H + Vector((-0.3, 0, 0.12)), H + Vector((-0.5, 0, 0.1)),
+                 Vector((0.72, 0, 0.78)), Vector((0.55, 0, 0.92))],
+                [(0.3, 0, 1), (0, 0, 1), (-0.2, 0, 1), (-0.3, 0, 1), (-0.1, 0, 1), (-0.3, 0, 1)])
     tail("tail", [(-1.3, 0, 0.32), (-1.56, -0.05, 0.22), (-1.78, -0.18, 0.12), (-1.93, -0.38, 0.07), (-1.98, -0.6, 0.05)]
          if arma else [(-1.22, 0, 0.46), (-1.58, -0.04, 0.33), (-1.88, -0.2, 0.19), (-2.0, -0.5, 0.11),
                        (-1.9, -0.82, 0.08), (-1.66, -1.02, 0.07)],
@@ -1254,9 +1305,12 @@ def ascended_long(sc, el, lt, dk, base):
     body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead, 0.8 if arma else 1.0)
     for s in (1, -1):
-        eye(body, H + (Vector((0.08, 0, -0.01)) if arma else Vector((0.06, 0, 0.05))), (0.42, s * 0.85, 0.15 if arma else 0.22), S, 0.054)
+        eye(body, H + (Vector((0.02, 0, -0.01)) if arma else Vector((0.02, 0, 0.04))), (0.12, s * 0.98, 0.1) if arma else (0.22, s * 0.95, 0.18), S, 0.054)
     if arma: ears(H, S, 0.85)
-    head_armour(base, H, S, 0.85)
+    head_armour(base, H, S, 0.85, body,
+                [H + Vector((0.03, 0, 0.1)), H + Vector((-0.1, 0, 0.11)), H + Vector((-0.2, 0, 0.0)), Vector((-0.06, 0, 1.82)),
+                 Vector((-0.16, 0, 1.68)), Vector((-0.3, 0, 1.58))],
+                [(0.3, 0, 1), (-0.2, 0, 1), (-1, 0, 0.6), (-1, 0, 0.3), (-1, 0, 0.4), (-0.8, 0, 1)])
     tail("tail", [(-0.3, 0, 0.95), (-0.55, -0.05, 0.6), (-0.72, -0.15, 0.3), (-0.8, -0.32, 0.08), (-0.7, -0.52, 0.04)]
          if arma else [(-0.3, 0, 1.0), (-0.6, 0, 0.7), (-0.86, -0.05, 0.38), (-1.0, -0.2, 0.13), (-0.95, -0.5, 0.08),
                        (-0.72, -0.72, 0.07)],
