@@ -1363,6 +1363,7 @@ def sheet(figs, rows, out_dir, walk_only=False):
 
     def cloth(scenarios):
         """Run each worn robe's skirt over the walks (cloth_walk.mjs, the game's cloth.js): [(robe, samples)]."""
+        bpy.context.view_layer.update()                    # the figures were just moved into place
         out = []
         for n, (arm, robe) in enumerate(robes):
             if robe.name not in jobs:                      # the robe as worn, before any cloth is put on it
