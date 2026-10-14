@@ -105,6 +105,8 @@ const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8
 const walkRoomJs = readFileSync(path.join(srcDir, 'cave', 'rooms', 'walk-room.js'), 'utf8');
 // The Council Board's way into the WAVE room (#wave=board) and the run's way back to the board (cave/board-wave.js).
 const boardWaveJs = readFileSync(path.join(srcDir, 'cave', 'board-wave.js'), 'utf8');
+// Dissolving a spirit into yourself, ice to water to gas to pure spirit, for mana (cave/dissolve.js).
+const dissolveJs = readFileSync(path.join(srcDir, 'cave', 'dissolve.js'), 'utf8');
 const caveHtml = `<!doctype html>
 <html lang="en">
 <head>
@@ -127,6 +129,9 @@ ${inline(walkRoomJs)}
 </script>
 <script>
 ${inline(boardWaveJs)}
+</script>
+<script>
+${inline(dissolveJs)}
 </script>
 <script>window.__oagBigMindNoStart = true;</script>
 <script>

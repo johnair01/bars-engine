@@ -742,3 +742,33 @@ WAVE room be able to metabolize context specific charges and send the results to
   once, at the end of the sitting, rather than per creature; Tomorrow sets the due date one day on; a run belongs to the
   signed-in player, and the council reads only his.
 - `board-wave-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.
+
+## Dissolving a spirit into yourself (14 October 2026)
+
+Wendell, 14 October 2026: "Players can also dissolve charged spirits (a form of dismissal) by going through a form of
+WAVE-like process. 'Ice to water water to gas gas to pure spirit'. Ice in this case is the current density of the charge
+(allies being the highest density) and charge sprites in their particle form being their gas style energy. Pure spirit is
+mana itself. This is how players can increase their own stats by taking spirits into themselves instead of using them as
+allies".
+
+A spirit's card in the cave now offers three ways: breathe it out and let it go, take it home again, or dissolve it into
+yourself (`cave/dissolve.js`, loaded after `cave.js`).
+
+- **Four states, densest first:** ice, water, gas, pure spirit. The spirit generator's forms sit on them by density
+  **(choice)**: the living creature and the highest ally form are ice, the hologram and the core are water, the gas is gas.
+  A spirit that walks with the player walks as an ally, so it is ice; one breathed out at the room's fork walks lighter,
+  so it is water (`stateOf`; a spirit with `form` set uses the form).
+- **One breath a step**, one line each, in the W.A.V.E.'s order: Ice to water ("Warm it": thank it and let attention soften
+  it), Water to gas ("Let it rise": breathe out and let it lift as mist), Gas to pure spirit ("Breathe it in"). On screen the
+  ice shell melts off the orb, the orb slumps like water and breaks into motes, and the motes stream into the figure.
+- **Mana:** one a step, so a denser spirit pays more (ice 3, water 2, gas 1) **(choice)**. It goes into the stat the spirit's
+  element grows fastest (`spirit-five-stats`: Earth HP, Fire Power, Metal Guard, Water Magic, Wood Speed). A spirit whose
+  feeling was never named has no element, and the player picks the stat **(choice)**.
+- **It is gone after.** Stopping before the last breath keeps it as it was **(choice)**.
+- **The player's stats** are kept on this device (`oag:you:stats`) and show at the top of the spirits list. They are the
+  first player stats in the cave; the spirit generator's ally stats stay the ally's.
+- **With perceptual shadow:** a spirit hidden by shadow (`o.polarity` above 0, from the perceptual shadow build) is not
+  offered for dissolving until it is seen (polarity 0 or none).
+
+Tests: cave-test.mjs, after "breathing it out lets it go": stop and keep, the full ice to pure spirit run (Power +3 for an
+Anger spirit), the lighter spirit as water (Magic +2), and the forms on the ladder.

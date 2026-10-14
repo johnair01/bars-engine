@@ -549,6 +549,37 @@ await page.locator('[data-cave-spirit="0"]').click();
 ok(/Thank you for coming with me/.test(await page.locator('[data-cave-spirits]').textContent()) && await sees('[data-cave-spirit-home]'), 'tapping it thanks it, and offers to breathe it out or take it home again');
 await page.locator('[data-cave-spirit-out]').click();
 ok((await C(() => window.__oagCave.spirits.length)) === 0 && !(await page.locator('[data-cave-spiritbtn]').isVisible()), 'breathing it out lets it go');
+// Dissolving a spirit into yourself (dissolve.js, 14 October 2026): ice to water to gas to pure spirit, one breath a step, one
+// mana a step into the stat its element grows fastest. A spirit that walks with you is ice; one breathed out at the fork, water.
+await C(() => { window.__oagDissolveMs = 120; localStorage.removeItem('oag:you:stats'); window.__oagCave.addSpirit({ name: 'Hot Ember', element: 'Anger' }); window.__oagCave.addSpirit({ name: 'Soft Tide', element: 'Sadness', lighter: true }); });
+await page.locator('[data-cave-spiritbtn]').click();
+await page.locator('[data-cave-spirit="0"]').click();
+ok(/3 mana for your Power/.test(await page.locator('[data-cave-spirits]').textContent()), 'the card says what dissolving pays: a walking spirit is ice, three steps, three mana for its element\'s stat');
+await page.locator('[data-cave-spirit-dissolve]').click();
+ok((await page.locator('[data-cave-spirits]').getAttribute('data-dissolve-state')) === 'ice' && await sees('[data-dissolve-stop]'), 'it starts as ice, with a way to stop and keep it');
+await page.locator('[data-dissolve-stop]').click();
+ok((await C(() => window.__oagCave.spirits.length)) === 2 && !(await page.locator('[data-cave-spirits]').isVisible()) && (await C(() => window.__oagCave.spirits[0].g.userData.orb.visible)), 'stopping keeps it as it was');
+await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-dissolve]').click();
+for (const st of ['ice', 'water', 'gas']) {
+  ok((await page.locator('[data-cave-spirits]').getAttribute('data-dissolve-state')) === st, 'the spirit is ' + st);
+  if (st === 'water') await page.screenshot({ path: SHOTS + '/dissolve-water.png' });
+  if (st === 'gas') await page.screenshot({ path: SHOTS + '/dissolve-gas.png' });
+  await page.locator('[data-dissolve-breathe="' + st + '"]').click();
+  await page.waitForTimeout(400);
+}
+ok((await page.locator('[data-dissolve-gain]').getAttribute('data-dissolve-gain')) === 'Power:3' && (await C(() => JSON.parse(localStorage.getItem('oag:you:stats')).Power)) === 3, 'pure spirit is mana: Anger is Fire, so Power rises 3, kept on this device');
+ok((await C(() => window.__oagCave.spirits.map((o) => o.name))).join() === 'Soft Tide', 'the dissolved spirit is gone, the other still walks');
+await page.screenshot({ path: SHOTS + '/dissolve-end.png' });
+await page.locator('[data-dissolve-done]').click();
+await page.locator('[data-cave-spiritbtn]').click();
+ok(/Power \+3/.test(await page.locator('[data-cave-you]').textContent()), 'the spirit list shows what you have taken in');
+await page.locator('[data-cave-spirit="0"]').click();
+ok(/2 mana for your Magic/.test(await page.locator('[data-cave-spirits]').textContent()), 'a lighter spirit is water: two steps, two mana');
+await page.locator('[data-cave-spirit-dissolve]').click();
+for (const st of ['water', 'gas']) { await page.locator('[data-dissolve-breathe="' + st + '"]').click(); await page.waitForTimeout(400); }
+ok((await page.locator('[data-dissolve-gain]').getAttribute('data-dissolve-gain')) === 'Magic:2' && (await C(() => window.__oagCave.spirits.length)) === 0, 'Sadness is Water, so Magic rises 2, and no spirit is left');
+await page.locator('[data-dissolve-done]').click();
+ok(await C(() => { const D = window.__oagDissolve; return D.stateOf({ form: 'ally' }) === 'ice' && D.stateOf({ form: 'creature' }) === 'ice' && D.stateOf({ form: 'hologram' }) === 'water' && D.stateOf({ form: 'core' }) === 'water' && D.stateOf({ form: 'gas' }) === 'gas' && D.manaOf({ form: 'gas' }) === 1; }), 'the spirit generator\'s forms sit on the ladder: creature and ally ice, hologram and core water, gas gas');
 // Sitting down where you are (13 October 2026): the WAVE room's steps run in place in the tunnel, as in the Big Mind cave, and
 // standing up leaves a spirit that carries its own light.
 ok(await sees('[data-cave-sitbtn]'), 'inside the cave, Sit down is always at hand');
