@@ -51,7 +51,7 @@ const openRoom = async (o) => {
   await page.locator('[data-room-calm]').click();
   await C(() => window.__oagCave.room.speed(4));
 };
-const welcomeIn = async () => { await page.locator('[data-room-welcome]').click(); await page.waitForFunction(() => ['witness', 'shadow'].includes(window.__oagCave.room.state.phase), null, { timeout: 30000 }); };
+const welcomeIn = async () => { await page.locator('[data-room-welcome]').click(); await page.waitForFunction(() => ['witness', 'shadow', 'flood'].includes(window.__oagCave.room.state.phase), null, { timeout: 30000 }); };
 const witnessToFork = async (name, element) => {
   if (!(await page.locator('[data-room-texture][aria-pressed="true"]').count())) await page.locator('[data-room-texture="tension"]').click();
   await page.locator('[data-room-next]').click();
@@ -180,6 +180,49 @@ ok(await sees('[data-room-not-down]') && (await page.locator('[data-room-not-dow
 await page.locator('[data-room-look-again]').click();
 await welcomeIn();
 ok((await phase()) === 'shadow' && (await ch()).polarity === 4, 'and its hidden part comes in shadowed');
+
+// ---- the other pole: flooding (ps-polarity-poles, his answer "two") --------------------------------------------------------
+await openRoom();
+await welcomeIn();
+await settle();
+const calm0 = await ch();
+ok(await sees('[data-room-too-much]') && (await page.locator('[data-room-too-much]').textContent()) === "It's too much to be with", "Witness also offers \"It's too much to be with\"");
+await page.locator('[data-room-too-much]').click();
+c = await ch();
+ok((await phase()) === 'flood' && c.polarity === -6 && c.signals.join() === 'too-much', 'saying so floods it: polarity -6, the other pole');
+ok((await page.locator('[data-room-polarity-read]').textContent()).includes('Flooding 6 of 10') && (await page.locator('[data-room-practice-ask]').textContent()).includes('Breathe out for longer'), 'the flooding page reads its level and gives the first practice that turns it down');
+await page.locator('[data-room-shrink]').click(); await page.waitForTimeout(1500);
+c = await ch();
+ok(c.scale > calm0.scale * 1.4 && c.glow > 0.5 && c.veil > 0.1, `flooding grows it past its size (×${(c.scale / calm0.scale).toFixed(2)}), blazes its aura (${c.glow.toFixed(2)}) and glares in its colour`);
+await page.screenshot({ path: SHOTS + '/shadow-flooding.png' });
+await page.locator('[data-room-pane]').click();
+await page.locator('[data-room-practice]').click();
+ok((await ch()).polarity === -3 && (await page.locator('[data-room-practice-ask]').textContent()).includes("isn't it"), 'each practice turns it down by 3, and the next practice follows');
+await page.locator('[data-room-veiled]').click();
+ok((await phase()) === 'witness' && (await page.locator('[data-room-too-much]').textContent()) === 'Turn it down' && !(await sees('[data-room-cant-feel]')), 'going on while it floods, Witness keeps "Turn it down" and does not offer the hidden pole');
+await page.locator('[data-room-texture="strength"]').click();
+await page.locator('[data-room-next]').click();
+await page.locator('[data-room-name]').fill('the surge');
+await page.locator('[data-room-element="Anger"]').click();
+await page.locator('[data-room-next]').click();
+ok((await page.locator('[data-room-polarity]').textContent()) === 'Flooding 3 of 10' && (await page.locator('[data-room-polarity]').getAttribute('data-room-polarity')) === '-3', 'Allow reads the flooding pole beside size and brightness');
+for (let i = 0; i < 4; i++) await page.locator('[data-room-next]').first().click();
+await page.locator('[data-room-goal]').fill('to say no calmly');
+await page.locator('[data-room-push="toward"]').click();
+await page.locator('[data-cave-321-skip]').click();
+await C(() => { const t = window.__oagCave.room.state.active[0].t321; t.before = 9; t.after = 9; }); // stuck at the top
+await page.locator('[data-room-move]').fill('say it in one line');
+await page.locator('[data-room-move-done]').click();
+await page.locator('[data-room-kept]').waitFor({ timeout: 15000 });
+await page.locator('[data-room-next]').click();
+await page.locator('[data-room-checkin="stayed"]').click();
+ok((await page.locator('[data-room-not-down]').getAttribute('data-room-not-down')) === 'flood' && (await page.locator('[data-room-look-again]').textContent()) === 'Look again at what floods it', 'a charge stuck at 9 or more points the second signal at flooding, not hiding');
+const fr = (await run()).rounds[0];
+ok(fr.shadow.pole === 'flooding' && fr.shadow.kind === null && fr.shadow.polarity === -3 && fr.shadow.start === -6, 'the run records the flooding pole, where it started and where it is');
+await page.locator('[data-room-look-again]').click();
+await welcomeIn();
+await page.waitForFunction(() => window.__oagCave.room.state.phase === 'flood', null, { timeout: 30000 });
+ok((await ch()).polarity === -7, 'its part comes in flooding: the -3 it carried and 4 more');
 
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`${passes} passed, ${fails} failed`);

@@ -772,3 +772,12 @@ charge spirits as a function of emergent perceptual shadow". The design is Six-f
 - **The run** gives each round `shadow: { kind, polarity, start, signals, practices }`, its 3-2-1 `reading`, and
   `hiddenOf` for a hidden part, so the board's run shows when shadow came up and whether the practice thinned it.
 - `shadow-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.
+- **Flooding, polarity's other pole** (Wendell on the board, `ps-polarity-poles`: "two"). Polarity runs -10 to 10: above 0
+  the charge is hidden, below 0 it floods, too loud to work. Witness also offers "It's too much to be with" (polarity -6).
+  A round whose charge stays at 9 or 10 and does not come down points the second signal at flooding ("Look again at what
+  floods it", the part comes in at its polarity minus 4); below 9 it points at hiding as before. A flooding creature grows
+  past the size allowed it, its aura blazes past the brightness allowed it, and a glare in its own colour surrounds it.
+  Three practices turn it down in turn (a long out-breath behind the seat; name one thing in the room that isn't it;
+  picture it at arm's length, the size of a hand), each by 3. Flooding has no kinds. Allow reads "Flooding n of 10". A
+  flooding spirit walks bigger and brighter. The run records `shadow.pole` ("hidden" or "flooding"); a hidden spirit is
+  still one with polarity above 0.
