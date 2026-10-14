@@ -1,0 +1,66 @@
+# Rooms from a written description
+
+A cave room can start as a paragraph: a description Wendell gets from ChatGPT, or writes himself. The words are concept
+only, like ChatGPT pictures (`cs-chatgpt-ai-art`): every piece is rebuilt here from our own scripts or CC0 models.
+
+First proof, 14 October 2026: `listening-room/`. Renders and the before/after sheet are in the project files,
+`3d-build/room-from-text-2026-10-14/`.
+
+## The four steps
+
+1. **The description.** Plain prose, one room. `listening-room/description.md` is a stand-in written in ChatGPT's
+   style; a real one replaces it. A description comes in through the Cave studio inbox like any other ChatGPT file
+   (`cs-chatgpt-by-drive`). The prompt below gets ChatGPT to write the kind that translates well.
+2. **The spec.** Claude reads the description and writes `room.json` by the rules below. The spec is plain JSON, so it
+   can also be written or edited by hand, with no model at all.
+3. **The build.** `room.py` turns the spec into a room in Blender:
+
+   ```bash
+   /home/user/blenv/bin/python content/ontology-game/cave/rooms/room.py content/ontology-game/cave/rooms/listening-room/room.json
+   ```
+
+   It writes `room.glb`, `report.json` and six renders (the bare shell and the dressed room, each from the door, from
+   the far end and from above) to `/tmp/blender-cloud/rooms/<id>`. Setup is in `tools/blender-cloud/README.md`; a
+   BlenderKit model needs the network the first time it is fetched. The first build took about two minutes.
+4. **The look.** Open the renders before anything else. `report.json` lists every part with the words it came from,
+   its source, licence and face count, what the description had that no model can carry, and any check it missed.
+
+## Rules for writing a spec from a description
+
+- **Every part quotes its words.** Each opening and object (`things` in the spec) has `says`, the phrase it came from. Anything in the
+  description that no model can carry (a smell, a sound, an action, a mood) goes in `left_out` with what the page could do
+  with it instead. Nothing is silently dropped.
+- **Sizes become metres.** A pace is 0.75 m; "almost touch the ceiling" is about 2.6 m. The room's centre on the
+  floor is 0, 0, 0, x runs to the right as you come in and y runs away from the door.
+- **Sources, in this order.** Our own work first: a kit piece (`kit`, from `cave-kit.glb`), roots or mushrooms
+  (`procgen`), or a builder in `objects.py` (`script`). Then the greenery picks already exported (`local`). Then a
+  BlenderKit model, CC0 only, pinned by query, result number and id (`blenderkit`), so a changed search result stops
+  the build instead of swapping the model.
+- **Doors are openings.** An opening is cut from the wall at an angle (0 is the far end, 180 the door you came in by),
+  with an optional stone frame and an optional fill such as a door model. An unfilled one reads as a way on.
+- **Lights come from the description.** An object that gives light gets a `light`. A fill light is allowed only with a
+  `why`.
+
+## The prompt for ChatGPT
+
+> Describe one room in a cave inside the body, for a small 3D game. One paragraph of 150 to 250 words. Say its shape
+> and roughly how big it is (paces or steps), how high the ceiling is, every way in and out, what the floor and walls
+> are made of, every object in it and where it stands (left wall, centre, by the door), and every source of light.
+> No people or creatures. Keep each object simple enough to model.
+
+## What the first proof found
+
+- The whole path runs: 17 parts from one paragraph, every check passed (on the floor or hung below the dome, inside
+  the walls), 1.65 MB GLB, 53,000 triangles.
+- BlenderKit gave the door, the two stone lanterns, the table and the paper lantern, all CC0 and Poly Haven or
+  Davide Tirindelli. Our pipeline gave the roots, the mushrooms, the cushions and the pool; the greenery picks gave the
+  boulder and the fern.
+- The door came out pale, where the words say dark wood with iron bands. BlenderKit's glTF of this door carries grey
+  colour maps (every pixel has equal red, green and blue; one leaf averages 87% white), so the wood colour is lost
+  before it reaches us. A spec could tint a model (not built yet), or the search could try the next door.
+- The pool reads as a teal rug from above. The kit's pool is a flat disc; a still pool needs a reflective surface or
+  a darker one.
+- The GLB's walls and floor lose their stone pattern: `chamber.py` bakes the pattern to JPEGs and `room.py` does not
+  yet. The renders show the pattern because Blender draws it live.
+- The room is too heavy for the phone as it stands. The mushroom drift alone is 10,000 faces; the 3 MB cave budget
+  needs a face budget per procgen part.
