@@ -51,6 +51,8 @@ ELEMENTS = {
 }
 STAGES = ["gas", "core", "hologram", "creature", "ascended"]
 HEAD = {}  # where the last built head sits, for the --heads close-up
+LEGS = {}  # round 11: the living creature's four leg chains as built (shoulder, elbow, wrist; hip, knee, ankle), for
+           # the spirit rig (bars-engine #325); written into report.json with each creature
 
 
 def lin(c):  # sRGB to linear, so the colours match the tokens
@@ -1607,8 +1609,28 @@ def token(lt, S, at, r):
     tassel(Vector(at) - Vector((0, 0, r * 1.1)), S["tassel"], 0.6)
 
 
+def stand(legs):
+    """Name four (top, middle, foot) leg chains, fore pair first then hind, near (-Y, right) before far, in the cave
+    avatar's joint names, and check they stand: every foot on the ground and the pairs mirrored across the spine."""
+    out = {}
+    for k, (a, b, c) in enumerate(legs):
+        side = "R" if a[1] < 0 else "L"
+        names = ("shoulder", "elbow", "wrist") if k < 2 else ("hip", "knee", "ankle")
+        for n, q in zip(names, (a, b, c)):
+            out[n + side] = [round(x, 4) for x in q]
+    for n in ("shoulder", "elbow", "wrist", "hip", "knee", "ankle"):
+        l, r = out[n + "L"], out[n + "R"]
+        assert abs(l[0] - r[0]) < 1e-6 and abs(l[1] + r[1]) < 1e-6 and abs(l[2] - r[2]) < 1e-6, f"{n} not mirrored"
+    for n in ("wristL", "wristR", "ankleL", "ankleR"):
+        assert out[n][2] <= 0.09, f"{n} off the ground"
+    return out
+
+
 def fox_creature(sc, el, lt, dk):
-    """The living fox: mid-step with a forepaw lifted, head up, its brush curled high behind it, in its element."""
+    """The living fox, standing square on all four paws, head up, its brush curled high behind it, in its element.
+    Round 11 (Wendell, 2026-10-14, on the otter: the legs must suit "moving and rigging and animations"): every Romp
+    living creature stands on its own four feet, so the near forepaw that was lifted mid-step is down, the mirror of
+    the far one."""
     S, F = STYLE[el], FUR[el]
     lights(sc)
     rng = random.Random(f"creature-fox-{el}")
@@ -1619,13 +1641,14 @@ def fox_creature(sc, el, lt, dk):
                            ("ell", (0.32, 0, 0.66), 0.25, (1.2, 0.85, 1.0)),  # chest
                            ("cap", (0.25, 0, 0.64), (-0.4, 0, 0.64), 0.19),   # body
                            ("ell", (-0.45, 0, 0.64), 0.23, (1.1, 0.95, 0.95))]  # haunch
-    legs = [((0.4, -0.13, 0.55), (0.66, -0.16, 0.36), (0.74, -0.15, 0.24)),  # the near forepaw lifted
+    legs = [((0.38, -0.13, 0.55), (0.42, -0.15, 0.25), (0.47, -0.15, 0.04)),
             ((0.38, 0.13, 0.55), (0.42, 0.15, 0.25), (0.47, 0.15, 0.04)),
-            ((-0.48, -0.15, 0.52), (-0.66, -0.17, 0.25), (-0.56, -0.17, 0.04)),
-            ((-0.48, 0.15, 0.52), (-0.64, 0.17, 0.25), (-0.54, 0.17, 0.04))]
+            ((-0.48, -0.15, 0.52), (-0.65, -0.17, 0.25), (-0.55, -0.17, 0.04)),
+            ((-0.48, 0.15, 0.52), (-0.65, 0.17, 0.25), (-0.55, 0.17, 0.04))]
     for a, b, c in legs:
         parts += [("cap", a, b, 0.075), ("cap", b, c, 0.055), ("ell", tuple(Vector(c) + Vector((0.05, 0, 0))), 0.065, (1.4, 0.95, 0.6))]
     parts += [("ell", (-0.45, -0.13, 0.56), 0.17, (1.2, 0.7, 1.1)), ("ell", (-0.45, 0.13, 0.56), 0.17, (1.2, 0.7, 1.1))]  # thighs
+    LEGS.update(stand(legs))
     body = blob("body", parts, 0.024, 14000)
     fluff(body, 0.008, 16.0)
     tail = fox_tail("tail", [(-0.62, 0, 0.72), (-0.98, 0, 0.84), (-1.22, 0.04, 1.12), (-1.24, 0.1, 1.48), (-1.05, 0.14, 1.7)], 0.17, F)
@@ -1827,53 +1850,47 @@ def otter_hologram(lt, dk):
     romp_core(lt, at=(0, 0, 0.32), size=0.15)
 
 
-def river_stone(el, at, size):
-    """A flat river stone under the otter, wet-dark, faintly tinted by the element."""
-    dk = ELEMENTS[el][1]
-    o = ball("stone", solid("stone", mixc((0.34, 0.34, 0.33), dk, 0.25), 0.35), at, size, (1.0, 0.62, 0.26), 40)
-    fluff(o, 0.025 * size, 2.5, 7.0)
-    return o
-
-
 def otter_creature(sc, el, lt, dk):
-    """The living otter: rolled half onto its back on a river stone, chest and head lifted to look at you, forepaws
-    curled round its core as a jade token, hind feet in the air, its tail hanging off the stone."""
+    """The living otter, standing on its four short legs on the ground: the long low body arched a little over the
+    hips, head up and looking ahead, its thick tail running out behind, its core as a jade token hung from its beads.
+    Round 11 (Wendell, 2026-10-14: "Otters body is all jacked up. The legs point in strange ways ... The rock is also
+    strange ... this will create issues with having it move and rigging and animations"): no stone and nothing in its
+    paws, legs in mirrored chains a quadruped rig can walk."""
     S, F = STYLE[el], OTTER[el]
     lights(sc)
     rng = random.Random(f"creature-otter-{el}")
-    turn = -0.35  # the muzzle swung a little toward the camera
-    H = Vector((0.82, -0.04, 1.1))
+    H = Vector((0.86, 0, 0.71))
     HEAD["at"] = H
-    NECK["at"] = (Vector((0.62, -0.02, 0.96)), Vector((0.75, 0, 0.66)), 0.15)
-    river_stone(el, (-0.1, 0, 0.24), 0.68)
+    NECK["at"] = (Vector((0.56, 0, 0.55)), Vector((0.86, 0, 0.51)), 0.15)
     s = 1.1
-    parts = otter_head(H, s, turn) + [("cap", (0.45, 0, 0.82), (0.74, -0.03, 1.04), 0.15),  # neck, thick as the head
-                                     ("cap", (0.35, 0, 0.77), (-0.5, 0, 0.62), 0.2),  # the long body on the stone
-                                     ("ell", (0.32, 0, 0.8), 0.2, (1.15, 1.0, 1.05)),  # chest
-                                     ("ell", (-0.5, 0, 0.64), 0.21, (1.15, 1.05, 0.95))]  # hips
-    hind = [((-0.5, -0.14, 0.7), (-0.42, -0.2, 0.92), (-0.33, -0.21, 1.0)),
-            ((-0.5, 0.14, 0.7), (-0.36, 0.2, 0.86), (-0.28, 0.21, 0.96))]
-    fore = [((0.4, -0.15, 0.86), (0.58, -0.2, 0.98), (0.66, -0.17, 1.05)),
-            ((0.4, 0.15, 0.86), (0.58, 0.08, 0.98), (0.66, -0.02, 1.06))]
-    for a, b, c in hind + fore:
+    parts = otter_head(H, s) + [("cap", (0.42, 0, 0.47), (0.76, 0, 0.66), 0.14),  # neck, thick as the head
+                                ("cap", (0.36, 0, 0.41), (-0.48, 0, 0.44), 0.19),  # the long low body
+                                ("ell", (0.3, 0, 0.41), 0.2, (1.15, 1.0, 1.0)),  # chest
+                                ("ell", (-0.48, 0, 0.46), 0.21, (1.15, 1.05, 0.95))]  # hips, the back arched over them
+    legs = [((0.34, -0.13, 0.34), (0.3, -0.14, 0.19), (0.36, -0.14, 0.06)),  # forelegs, short and straight
+            ((0.34, 0.13, 0.34), (0.3, 0.14, 0.19), (0.36, 0.14, 0.06)),
+            ((-0.5, -0.15, 0.37), (-0.59, -0.16, 0.18), (-0.5, -0.16, 0.06)),  # hind legs, the hock behind
+            ((-0.5, 0.15, 0.37), (-0.59, 0.16, 0.18), (-0.5, 0.16, 0.06))]
+    LEGS.update(stand(legs))
+    for a, b, c in legs:
         parts += [("cap", a, b, 0.07), ("cap", b, c, 0.055)]
-    for a, b, c in hind:  # webbed hind feet, broad and flat, soles up
-        parts.append(("ell", tuple(Vector(c) + Vector((0.04, 0, 0.02))), 0.07, (1.5, 1.0, 0.45)))
-    for a, b, c in fore:  # small curled forepaws
-        parts.append(("ball", tuple(Vector(c) + Vector((0.02, 0, -0.01))), 0.055))
+    for a, b, c in legs[:2]:  # small round forepaws, flat on the ground
+        parts.append(("ell", tuple(Vector(c) + Vector((0.035, 0, -0.01))), 0.06, (1.3, 1.0, 0.55)))
+    for a, b, c in legs[2:]:  # webbed hind feet, broad and flat, soles down
+        parts.append(("ell", tuple(Vector(c) + Vector((0.06, 0, -0.015))), 0.07, (1.6, 1.0, 0.45)))
+    parts += [("ell", (-0.47, -0.12, 0.36), 0.15, (1.2, 0.7, 1.1)), ("ell", (-0.47, 0.12, 0.36), 0.15, (1.2, 0.7, 1.1))]  # thighs
     body = blob("body", parts, 0.022, 15000)
-    tail = otter_tail("tail", [(-0.62, 0, 0.6), (-0.98, -0.05, 0.5), (-1.22, -0.12, 0.32), (-1.32, -0.2, 0.12), (-1.25, -0.3, 0.04)], 0.15, F)
-    seam = otter_bits(body, H, S, F, s, 0.045, turn)
-    paws = [Vector(c) for a, b, c in hind + fore]
-    fn = otter_paint(H, F, s, lambda p, n: n.z > 0.45 and p.x > -0.05 and p.z > 0.85)
-    paint(body, lambda p, n: mixc(F[3] if min((p - q).length for q in paws) < 0.085 else fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
+    tail = otter_tail("tail", [(-0.64, 0, 0.44), (-0.98, 0, 0.36), (-1.26, 0, 0.25), (-1.46, 0, 0.15), (-1.58, 0, 0.09)], 0.15, F)
+    seam = otter_bits(body, H, S, F, s, 0.045)
+    fn = otter_paint(H, F, s, lambda p, n: p.x > 0.2 and n.x > 0.15 and n.z < 0.5 and p.z > 0.22, low=0.12)
+    paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.55))
-    drape("scarf", (0.56, -0.01, 0.98), (-0.7, 0, -0.7), 0.17, 0.23, 0.18, S["cloth"], S["trim"], f"scarf-otter-{el}", 0.6)
-    beads((0.6, -0.01, 0.97), (0.75, 0, 0.66), 0.19, 14, 0.06, 3, lt, S)
-    token(lt, S, (0.78, -0.17, 1.03), 0.12)  # held up between the forepaws
-    otter_growth = [Vector((0.42, 0, 1.0)), Vector((0.12, 0, 0.98)), Vector((-0.2, 0, 0.88)), Vector((-0.5, 0, 0.86))]
+    drape("scarf", (0.53, 0, 0.57), (-0.7, 0, -0.7), 0.17, 0.23, 0.18, S["cloth"], S["trim"], f"scarf-otter-{el}", 0.6)
+    beads((0.57, 0, 0.56), (0.86, 0, 0.51), 0.19, 14, 0.06, 3, lt, S)
+    token(lt, S, (0.7, -0.1, 0.35), 0.1)  # hung from the beads at its chest, as the fox wears it
+    otter_growth = [Vector((0.42, 0, 0.63)), Vector((0.12, 0, 0.61)), Vector((-0.2, 0, 0.61)), Vector((-0.5, 0, 0.65))]
     fox_growth(rng, el, S, F, lt, otter_growth, tail)
-    aura(rng, S["aura"], lt, (-0.1, 0, 0.6), (1.5, 0.85, 0.6), 1.35)
+    aura(rng, S["aura"], lt, (-0.1, 0, 0.38), (1.55, 0.85, 0.5), 1.15)
 
 
 def otter_ascended(sc, el, lt, dk):
@@ -2037,53 +2054,46 @@ def goat_hologram(lt, dk):
     romp_core(lt, at=(0, 0, 0.62), size=0.15)
 
 
-def kid_rock(el, at, size):
-    """The small rock the kid has just leapt off: rounder and taller than the otter's river stone, dry, faintly
-    tinted by the element."""
-    dk = ELEMENTS[el][1]
-    o = ball("rock", solid("rock", mixc((0.46, 0.44, 0.4), dk, 0.2), 0.8), at, size, (1.0, 0.8, 0.62), 40)
-    fluff(o, 0.06 * size, 3.0, 11.0)
-    return o
-
-
 def goat_creature(sc, el, lt, dk):
-    """The living kid: caught mid-leap off a small rock, all four hooves in the air, forelegs tucked, hind legs still
-    stretched back from the push, head up, ears flying out, its brass bell swinging at its throat."""
+    """The living kid, standing on its four slim legs with every hoof on the ground, head up, ears out, its brass bell
+    at its throat. Round 11 (Wendell, 2026-10-14, on the otter's rock: it "will create issues with having it move and
+    rigging and animations"): the mid-leap off a rock is gone with the otter's stone; the legs are mirrored chains, the
+    forelegs straight down, the hind legs bending back at the hock the way a goat's do."""
     S, F = STYLE[el], GOAT[el]
     lights(sc)
     rng = random.Random(f"creature-goat-{el}")
     s = 1.05
-    H = Vector((0.66, 0, 1.38))
+    H = Vector((0.66, 0, 1.22))
     HEAD["at"] = H
-    NECK["at"] = (Vector((0.5, 0, 1.12)), Vector((0.45, 0, 0.9)), 0.11)
-    kid_rock(el, (-0.8, 0, 0.14), 0.34)
-    parts = goat_head(H, s) + [("cap", (0.36, 0, 1.0), (0.6, 0, 1.3), 0.085),  # neck
-                               ("ell", (0.3, 0, 0.98), 0.18, (1.15, 0.8, 1.0)),  # chest
-                               ("cap", (0.28, 0, 0.98), (-0.3, 0, 0.9), 0.15),  # barrel
-                               ("ell", (-0.34, 0, 0.9), 0.17, (1.1, 0.85, 1.0))]  # haunch
-    legs = [((0.3, -0.1, 0.86), (0.48, -0.11, 0.7), (0.38, -0.11, 0.54)),  # forelegs tucked under
-            ((0.3, 0.1, 0.86), (0.5, 0.11, 0.74), (0.42, 0.11, 0.58)),
-            ((-0.38, -0.11, 0.82), (-0.6, -0.12, 0.64), (-0.84, -0.12, 0.54)),  # hind legs stretched back
-            ((-0.38, 0.11, 0.82), (-0.58, 0.12, 0.68), (-0.8, 0.12, 0.6))]
+    NECK["at"] = (Vector((0.5, 0, 0.96)), Vector((0.45, 0, 0.9)), 0.11)
+    parts = goat_head(H, s) + [("cap", (0.36, 0, 0.84), (0.6, 0, 1.14), 0.085),  # neck
+                               ("ell", (0.3, 0, 0.82), 0.18, (1.15, 0.8, 1.0)),  # chest
+                               ("cap", (0.28, 0, 0.82), (-0.3, 0, 0.74), 0.15),  # barrel
+                               ("ell", (-0.34, 0, 0.74), 0.17, (1.1, 0.85, 1.0))]  # haunch
+    legs = [((0.3, -0.1, 0.7), (0.31, -0.105, 0.38), (0.32, -0.105, 0.08)),  # forelegs straight down
+            ((0.3, 0.1, 0.7), (0.31, 0.105, 0.38), (0.32, 0.105, 0.08)),
+            ((-0.38, -0.11, 0.66), (-0.47, -0.12, 0.35), (-0.4, -0.12, 0.08)),  # hind legs, the hock behind
+            ((-0.38, 0.11, 0.66), (-0.47, 0.12, 0.35), (-0.4, 0.12, 0.08))]
+    LEGS.update(stand(legs))
     hooves = []
     for a, b, c in legs:
-        parts += [("cap", a, b, 0.05), ("cap", b, c, 0.034)]
+        parts += [("cap", a, b, 0.055), ("cap", b, c, 0.04), ("ball", b, 0.046)]  # a knobbly kid's knee at the joint
         hooves.append(Vector(c))
         parts.append(("ell", tuple(Vector(c) + (Vector(c) - Vector(b)).normalized() * 0.03), 0.038, (1.0, 0.9, 1.2)))
-    parts += [("ell", (-0.36, -0.1, 0.84), 0.12, (1.2, 0.6, 1.1)), ("ell", (-0.36, 0.1, 0.84), 0.12, (1.2, 0.6, 1.1))]  # thighs
+    parts += [("ell", (-0.36, -0.1, 0.68), 0.12, (1.2, 0.6, 1.1)), ("ell", (-0.36, 0.1, 0.68), 0.12, (1.2, 0.6, 1.1))]  # thighs
     body = blob("body", parts, 0.02, 15000)
     fluff(body, 0.006, 18.0)
-    tail = goat_tail("tail", [(-0.48, 0, 0.98), (-0.54, 0, 1.08), (-0.55, 0, 1.17)], 0.05, F)
+    tail = goat_tail("tail", [(-0.48, 0, 0.82), (-0.54, 0, 0.92), (-0.55, 0, 1.01)], 0.05, F)
     seam = goat_bits(body, H, S, F, s, 0.04)
     fn = goat_paint(H, F, s, [h + (h - Vector(b)).normalized() * 0.03 for h, (a, b, c) in zip(hooves, legs)], list(ELEMENTS).index(el) * 1.7)
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.85))
-    drape("scarf", (0.46, 0, 1.12), (-0.55, 0, -0.85), 0.11, 0.16, 0.15, S["cloth"], S["trim"], f"scarf-goat-{el}", 0.6)
-    beads((0.48, 0, 1.1), (0.45, 0, 0.9), 0.14, 12, 0.07, 3, lt, S)
-    goat_bell(lt, S, (0.6, -0.08, 0.88), 0.085)
-    spine = [Vector((0.38, 0, 1.12)), Vector((0.1, 0, 1.1)), Vector((-0.15, 0, 1.06)), Vector((-0.38, 0, 1.04))]
+    drape("scarf", (0.46, 0, 0.96), (-0.55, 0, -0.85), 0.11, 0.16, 0.15, S["cloth"], S["trim"], f"scarf-goat-{el}", 0.6)
+    beads((0.48, 0, 0.94), (0.45, 0, 0.9), 0.14, 12, 0.07, 3, lt, S)
+    goat_bell(lt, S, (0.6, -0.08, 0.72), 0.085)
+    spine = [Vector((0.38, 0, 0.96)), Vector((0.1, 0, 0.94)), Vector((-0.15, 0, 0.9)), Vector((-0.38, 0, 0.88))]
     fox_growth(rng, el, S, F, lt, spine, tail, 0.8)
-    aura(rng, S["aura"], lt, (-0.05, 0, 0.85), (1.35, 0.75, 0.7), 1.75)
+    aura(rng, S["aura"], lt, (-0.05, 0, 0.69), (1.35, 0.75, 0.7), 1.6)
 
 
 def goat_ascended(sc, el, lt, dk):
@@ -2255,7 +2265,7 @@ for el, (lt, dk) in ELEMENTS.items():
         long_ = args.base != "tortoise"
         fox, otter, goat = args.base == "fox", args.base == "otter", args.base == "goat"
         sc = reset(1.3, 3.8) if st == "ascended" else reset(0.85, 4.3) if (st == "creature" and fox) \
-            else reset(0.68, 3.2) if (st == "creature" and otter) else reset(0.8, 3.3) if (st == "creature" and goat) \
+            else reset(0.42, 3.2) if (st == "creature" and otter) else reset(0.66, 3.1) if (st == "creature" and goat) \
             else reset(0.7 if long_ else 0.75, 4.5 if long_ else 4.0) if st == "creature" \
             else reset(0.45, 3.6) if (st == "hologram" and fox) else reset(0.4, 3.5) if (st == "hologram" and otter) \
             else reset(0.5, 3.3) if (st == "hologram" and goat) \
@@ -2284,6 +2294,9 @@ for el, (lt, dk) in ELEMENTS.items():
         tris = sum(len(o.data.polygons) for o in sc.objects if o.type == "MESH")
         report["items"].append({"element": el, "stage": st, "faces": tris,
                                 "glb_kb": round(os.path.getsize(OUT / "glb" / f"{base}.glb") / 1024, 1)})
+        if st == "creature" and LEGS:
+            report["items"][-1]["legs"] = dict(LEGS)
+        LEGS.clear()
         if args.heads and st in ("creature", "ascended"):
             (OUT / "head").mkdir(exist_ok=True)
             cam, h = sc.camera, HEAD["at"]
