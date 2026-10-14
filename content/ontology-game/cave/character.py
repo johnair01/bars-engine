@@ -72,26 +72,56 @@ THEMES = {"robe_set": {"builds": BUILDS, "palettes": PALETTES}}
 #   head      head size about the top of the neck
 #   curve     radians the upper back rounds forward across the spine (minus arches it back)
 #   stoop     radians the trunk leans forward from the waist (minus leans back)
-#   collapse  one joint held flexed: (joint, radians), knees, elbows, shoulders and neck bending their natural way
-NEUTRAL = {"arms": 1.0, "head": 1.0, "curve": 0.0, "stoop": 0.0, "collapse": None}
+#   gesture   the daemon's held shape, {joint: (flex, out, turn)} in radians at rest. flex bends the joint its
+#             natural way (a minus bends it against: a wrist turned back, a head tipped up); out swings it away from
+#             the body's middle (a minus draws it in); turn turns it about the vertical toward the middle. A sided
+#             joint named without L or R ("shoulder") takes both sides, mirrored. The feet are set back on the ground
+#             after, so a figure that sinks into its knees sinks and does not float.
+#
+# Round 2 (Wendell, 2026-10-14: "more dramatic and different from each other"): each gesture is built on one of Ruella
+# Frank's six fundamental movements (yield, push, reach, grasp, pull, release), the developmental movements of contact
+# between child and caregiver. A daemon emerged to protect the vulnerable child, and its body holds the movement stuck
+# in that protective form; integration in play is the movement completing. The rows below are a position on the board.
+NEUTRAL = {"arms": 1.0, "head": 1.0, "curve": 0.0, "stoop": 0.0, "gesture": {}}
 WARP = {
-    # keeps the exit in view: leaning back from the room, chin drawn in, a little smaller
-    "protector": {"arms": 0.96, "head": 0.94, "curve": -0.06, "stoop": -0.07, "collapse": ("neck", -0.22)},
-    # not until this is handled: held straight and tall, chest up, hands drawn up ready
-    "controller": {"arms": 0.92, "head": 1.04, "curve": -0.14, "stoop": 0.0, "collapse": ("elbowL", 0.7)},
-    # look at the evidence: head pushed forward to peer, big-headed
-    "skeptic": {"arms": 1.0, "head": 1.12, "curve": 0.1, "stoop": 0.05, "collapse": ("neck", 0.38)},
-    # there is a problem here: leaning in with long reaching arms, one hand out to work
-    "fixer": {"arms": 1.16, "head": 0.97, "curve": 0.06, "stoop": 0.13, "collapse": ("shoulderR", 0.45)},
-    # look at what I have absorbed: slumped, weight off one leg
-    "victim": {"arms": 0.98, "head": 1.0, "curve": 0.26, "stoop": 0.04, "collapse": ("kneeL", 0.32)},
-    # it was probably me: curled round the hit, small-headed, one shoulder caved in
-    "damaged-self": {"arms": 0.93, "head": 0.88, "curve": 0.36, "stoop": 0.1, "collapse": ("shoulderL", 0.35)},
-    # this is what is actually moving: open chest, big head, long arms out
-    "emotional-body": {"arms": 1.08, "head": 1.18, "curve": -0.1, "stoop": -0.02, "collapse": ("elbowR", 0.45)},
-    # the Player, the vulnerable child at the centre, is not a daemon and holds no blockage; its row is a child's
-    # proportions (a big head, short arms) with nothing bent, so the chain of bosses can end on a figure
-    "player": {"arms": 0.88, "head": 1.28, "curve": 0.0, "stoop": 0.0, "collapse": None},
+    # PUSH held: keeps the threat at arm's length. Arms braced forward at chest height, palms out, the trunk leaning
+    # back from what it pushes, feet staggered, the back leg taking the weight
+    "protector": {"arms": 0.98, "head": 0.94, "curve": -0.08, "stoop": -0.16, "gesture": {
+        "shoulder": (1.3, 0.1), "elbow": (0.3, 0, 0.2), "wrist": (-1.1,), "neck": (0.18,),
+        "hipL": (0.32, 0.08), "kneeL": (0.12,), "hipR": (-0.22, 0.08), "kneeR": (0.3,)}},
+    # GRASP held: not until this is handled. Fists drawn to the chest, elbows tight to the ribs, chest up, chin up,
+    # feet together, rigid and tall
+    "controller": {"arms": 0.92, "head": 1.04, "curve": -0.2, "stoop": 0.0, "gesture": {
+        "shoulder": (0.22, -0.06), "elbow": (1.75, 0, 0.6), "wrist": (0.7,), "neck": (-0.2,), "hip": (0, -0.03)}},
+    # PULL held: look at the evidence, from a distance. Chest and head drawn back, elbows pulled behind, hands drawn
+    # in to the belly, the front foot out and the weight sunk on the back knee
+    "skeptic": {"arms": 1.0, "head": 1.12, "curve": -0.06, "stoop": -0.22, "gesture": {
+        "shoulder": (-0.45, 0.14), "elbow": (1.45, 0, 0.35), "neck": (-0.32, 0, 0.4), "head": (0, 0.14),
+        "hipL": (0.34,), "hipR": (-0.12,), "kneeR": (0.42,), "ankleL": (-0.3,)}},
+    # REACH held: there is a problem here and I'll fix it. Pitched far forward over a front knee, both long arms out
+    # to the problem, the head up to keep it in sight, the back leg trailing
+    "fixer": {"arms": 1.16, "head": 0.97, "curve": 0.1, "stoop": 0.45, "gesture": {
+        "shoulder": (1.9, -0.1), "elbow": (0.08,), "wrist": (-0.35,), "neck": (-0.6,),
+        "hipL": (0.38,), "kneeL": (0.5,), "ankleL": (0.15,), "hipR": (-0.3,)}},
+    # YIELD collapsed: look at what I have absorbed. Sunk into the ground, knees soft and given way, back rounded,
+    # head hung, arms hanging heavy and long
+    "victim": {"arms": 1.08, "head": 1.0, "curve": 0.42, "stoop": 0.18, "gesture": {
+        "hip": (0.62, 0.05), "knee": (1.2,), "ankle": (0.58,), "shoulder": (-0.12, -0.06),
+        "elbow": (0.06,), "neck": (0.75,)}},
+    # RELEASE refused: it was probably me. Curled round the hit, arms wrapped round its own middle holding the case,
+    # head down and turned away, knees drawn in
+    "damaged-self": {"arms": 0.93, "head": 0.88, "curve": 0.6, "stoop": 0.32, "gesture": {
+        "shoulderL": (0.62, -0.1), "shoulderR": (0.42, -0.1), "elbow": (1.75, 0, 0.95), "wrist": (0.4,),
+        "neck": (0.55, 0.0, 0.35), "hip": (0.22, -0.06, 0.18), "knee": (0.4,), "ankle": (0.18,)}},
+    # RELEASE too soon: this is what is actually moving. Arms flung wide and up, palms open, chest thrown up and head
+    # back, up on the front foot, giving the feeling away to anyone in reach
+    "emotional-body": {"arms": 1.08, "head": 1.18, "curve": -0.32, "stoop": -0.1, "gesture": {
+        "shoulder": (0.55, 1.45), "elbow": (0.15,), "wrist": (-0.5,), "neck": (-0.45,),
+        "hipL": (0.25, 0.04), "kneeL": (0.2,), "hipR": (-0.12, 0.04)}},
+    # the Player, the vulnerable child at the centre, is not a daemon and holds no blockage. A child's proportions
+    # (a big head, short arms) with all six movements still available: soft, upright, open, palms turned forward
+    "player": {"arms": 0.88, "head": 1.28, "curve": 0.0, "stoop": 0.0, "gesture": {
+        "shoulder": (0.12, 0.2), "elbow": (0.2,), "wrist": (-0.15,), "neck": (-0.06,)}},
 }
 # An NPC built from a blockage keeps its daemon's row and speaks from that daemon's question set
 # (content/ontology-game/daemons/questions.js, bars-engine #329). Its answer to the boss question names who it works
@@ -99,7 +129,8 @@ WARP = {
 # is the body's survival, so it names none, and the Player has none.
 BOSSES = ("protector", "self", "controller", "player")
 NEXT_FIGURE = {"protector": "protector", "self": None, "controller": "controller", "player": "player"}
-FLEX = {"neck": 1, "shoulder": -1, "elbow": -1, "wrist": -1, "knee": 1, "ankle": -1}   # + is each joint's natural bend
+FLEX = {"neck": 1, "head": 1, "shoulder": -1, "elbow": -1, "wrist": -1, "hip": -1, "knee": 1, "ankle": -1}  # + bends
+# each joint its natural way
 SPINE_Z = (1.03, 1.42)                                                                 # the spine bone, where curve bends
 
 # ---- the walk: cave.js poseAvatar with the stride held at its middle ------------------------------------------
@@ -279,8 +310,9 @@ for _n in ("L", "R"):
 def warp_maps(J, w):
     """The warp as one map per bone, {bone: f(point) -> point}, each carried down the chain from its parent so a child
     follows wherever its parent moved it. The spine bends along its length (curve) after leaning at the waist (stoop);
-    the head scales about its joint; the upper arm and forearm stretch along their own axis (arms); the collapsed
-    joint turns about its head. Everything else rides its parent rigidly."""
+    the head scales about its joint; the upper arm and forearm stretch along their own axis (arms); each joint in the
+    gesture turns about its head. Everything else rides its parent rigidly. Last, the whole figure is set back down so
+    its lowest foot stands where it stood."""
     z0, z1 = SPINE_Z
     steps = 200
     table, p = [], Vector((0, 0, z0))
@@ -312,7 +344,6 @@ def warp_maps(J, w):
         c, R = spine_at(x.z)
         return c + R @ Vector((x.x, x.y, 0))
 
-    joint, bend = w["collapse"] or (None, 0.0)
     maps, rots = {}, {}
     for b, parent in PARENT.items():
         h, t = Vector(J[b][0]), Vector(J[b][1])
@@ -329,13 +360,26 @@ def warp_maps(J, w):
         elif b.startswith(("shoulder", "elbow")):
             d = (t - h).normalized()
             S = S + (w["arms"] - 1) * Matrix([[d[i] * d[j] for j in range(3)] for i in range(3)])
-        R = Matrix.Identity(3)
-        if b == joint:
-            R = Matrix.Rotation(FLEX[b.rstrip("LR")] * bend, 3, "X")
+        R = gesture_rotation(b, w["gesture"])
         A, at = Rp @ R, Fp(h)
         maps[b] = (lambda x, at=at, A=A @ S, h=h: at + A @ (x - h))
         rots[b] = (lambda x, A=A: A)
-    return maps
+    feet = [maps[f"ankle{s}"](Vector(J[f"ankle{s}"][k])).z - J[f"ankle{s}"][k][2] for s in "LR" for k in (0, 1)]
+    down = Vector((0, 0, min(feet)))
+    return {b: (lambda x, f=f: f(x) - down) for b, f in maps.items()}
+
+
+def gesture_rotation(bone, gesture):
+    """The rest rotation a gesture gives one bone (see WARP): flex about X the joint's natural way, then out about Y and
+    turn about Z, both mirrored by side so out is away from the middle and turn is toward it."""
+    base = bone.rstrip("LR")
+    g = gesture.get(bone, gesture.get(base) if base != bone else None)
+    if not g or base not in FLEX:
+        return Matrix.Identity(3)
+    flex, out, turn = (tuple(g) + (0.0, 0.0))[:3]
+    s = {"L": -1, "R": 1}.get(bone[len(base):], 1)
+    return (Matrix.Rotation(s * turn, 3, "Z") @ Matrix.Rotation(s * out, 3, "Y")
+            @ Matrix.Rotation(FLEX[base] * flex, 3, "X"))
 
 
 def warp_body(mesh, parts, J, w):
@@ -651,12 +695,12 @@ ONE_NUMBER = [
     ("head 0.85", {"head": 0.85}), ("head 1.2", {"head": 1.2}),
     ("curve 0.3", {"curve": 0.3}), ("curve -0.15", {"curve": -0.15}),
     ("stoop 0.15", {"stoop": 0.15}), ("stoop -0.08", {"stoop": -0.08}),
-    ("neck 0.35", {"collapse": ("neck", 0.35)}), ("knee L 0.35", {"collapse": ("kneeL", 0.35)}),
-    ("shoulder L 0.4", {"collapse": ("shoulderL", 0.4)}),
+    ("neck 0.35", {"gesture": {"neck": (0.35,)}}), ("knee L 0.35", {"gesture": {"kneeL": (0.35,)}}),
+    ("shoulder L out 0.4", {"gesture": {"shoulderL": (0, 0.4)}}),
 ]
 
 
-def grid_sheet(rows, out_dir, file, cols=4, labels=None):
+def grid_sheet(rows, out_dir, file, cols=4, labels=None, gap_x=1.0):
     """The figures in rest pose on a grid, each labelled, rendered twice: turned to the front three-quarter (file.png)
     and turned to show its left side (file-side.png), since a stoop or a curve reads from the side and arms and head
     from the front."""
@@ -665,7 +709,7 @@ def grid_sheet(rows, out_dir, file, cols=4, labels=None):
         bpy.ops.wm.read_factory_settings(use_empty=True)
         sc = bpy.context.scene
         n_rows = math.ceil(len(rows) / cols)
-        gap_x, gap_z = 1.0, 2.3
+        gap_z = 2.3
         for i, row in enumerate(rows):
             before = set(sc.objects)
             bpy.ops.import_scene.gltf(filepath=os.path.join(out_dir, row["file"]))
@@ -733,7 +777,8 @@ def main():
         for r in rows:
             print(f"{r['id']}: {r['bytes'] // 1024} KB, {r['tris']} triangles, {r['warp_numbers']}")
         if a.sheet:
-            print("sheets:", *grid_sheet(rows, a.out, "daemons" if a.daemons else "one-number", labels=labels))
+            print("sheets:", *grid_sheet(rows, a.out, "daemons" if a.daemons else "one-number", labels=labels,
+                                         gap_x=1.8 if a.daemons else 1.0))   # flung arms need the room
         return
     combos = [(b, p) for b in BUILDS for p in PALETTES] if a.all else [(a.build, a.palette)]
     rows = [build(b, p, a.out, a.theme, warp=a.warp, boss=a.boss) for b, p in combos]

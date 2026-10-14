@@ -527,8 +527,9 @@ def j4b():
 @test("J6")
 def j6():
     """The warp (call sheet blender-frame-flesh-warp, item 2): character.py --daemons makes the frame and one figure per
-    WARP row: the seven daemons and the Player. Each is one GLB under 300 KB with one skin and one Walk, passes the mesh census as a
-    humanoid (one closed solid, 1.6 to 1.9 m tall) and walks clean, read back from the GLB. The sheet goes to the eye."""
+    WARP row: the seven daemons and the Player. Each is one GLB under 300 KB with one skin and one Walk, passes the mesh census
+    (the frame as a humanoid, 1.6 to 1.9 m tall; each warped figure as an NPC, the same closed solid in the box a held
+    gesture needs) and walks clean, read back from the GLB. The sheet goes to the eye."""
     out = tmpdir("j6")
     r, secs = run([GAME / "cave/character.py", "--daemons", "--out", out])
     check(r.returncode == 0, f"character.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
@@ -543,7 +544,7 @@ def j6():
         j = glb_json(glb)
         check(len(j.get("skins", [])) == 1 and [a["name"] for a in j.get("animations", [])] == ["Walk"],
               f"{row['id']}: want one skin and one Walk")
-        c = census.census(glb, "humanoid")
+        c = census.census(glb, "npc" if row["warp"] else "humanoid")
         check(not c["problems"], f"{row['id']} census: {c['problems']}")
         w = walk_check(glb)
         check(not w["problems"], f"{row['id']}: {'; '.join(w['problems'])}")
