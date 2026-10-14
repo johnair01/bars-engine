@@ -1010,6 +1010,18 @@ for (const a of [1.35, 1.1, 0.8, 0.5, 0.25]) {
 }
 await C(() => window.__oagCave.room.stick(0, 0));
 ok(!passed && !(await sees('[data-room-door]')), 'walking along the wall past a door opens no card');
+// On an iPhone a thumb held on the stick keeps sending moves after the stick hides for a door's card (Wendell, 14 October 2026:
+// "Stay in the room gets you stuck in this screen"): a touch the browser cannot capture, walked into the door, then moved.
+{
+  const sb = await page.locator('[data-room-stick]').boundingBox();
+  await C(([x, y]) => document.querySelector('[data-room-stick]').dispatchEvent(new PointerEvent('pointerdown', { pointerId: 99, clientX: x, clientY: y, bubbles: true, cancelable: true })), [sb.x + 58, sb.y + 30]);
+  for (let i = 0; i < 150 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x, ex.z]); await page.waitForTimeout(80); }
+  await C(() => { const s = document.querySelector('[data-room-stick]'); for (let i = 0; i < 5; i++) s.dispatchEvent(new PointerEvent('pointermove', { pointerId: 99, clientX: 60 + i, clientY: 700 - i, bubbles: true })); });
+  await page.locator('[data-room-door-stay]').click();
+  await page.waitForTimeout(800);
+  const iw = await C(() => window.__oagCave.room.walking());
+  ok(iw.figure.every(Number.isFinite) && iw.cam.every(Number.isFinite), `a thumb still moving on the hidden stick lets go, and Stay in the room leaves the room in view (${iw.figure.map((v) => v.toFixed(2))})`);
+}
 // back to the rug
 const seat = (await C(() => window.__oagCave.room.scene())).seat;
 for (let i = 0; i < 100 && !(await C(() => window.__oagCave.room.sitShown())); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), seat); await page.waitForTimeout(100); }

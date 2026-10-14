@@ -3624,8 +3624,13 @@
       var stickKnob = el("div", { class: "oagr-knob" }); stickPad.appendChild(stickKnob); wrap.appendChild(stickPad);
       var sitBtn = el("button", { class: "oagr-sit", "data-room-sit": "", text: "Sit down", style: "display:none", onclick: function () { sitDown(); } }); wrap.appendChild(sitBtn);
       var stickId = null;
+      // On an iPhone a thumb held on the stick keeps sending moves after the stick hides for a door's card, and a hidden stick
+      // measures 0 wide: dividing by that walked the figure to nowhere and left the room dark (Wendell, 14 October 2026: "Stay in
+      // the room gets you stuck in this screen"). A hidden stick lets go instead.
       function stickAt(e) {
-        var rc = stickPad.getBoundingClientRect(), r = rc.width / 2, dx = e.clientX - rc.left - r, dy = e.clientY - rc.top - r, d = Math.hypot(dx, dy), m = Math.min(d, r);
+        var rc = stickPad.getBoundingClientRect(), r = rc.width / 2;
+        if (!(r > 0) || stickPad.style.display === "none") { stickUp(); return; }
+        var dx = e.clientX - rc.left - r, dy = e.clientY - rc.top - r, d = Math.hypot(dx, dy), m = Math.min(d, r);
         stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
         stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
       }
@@ -3641,7 +3646,7 @@
       // What the stick and keys ask for, turned to the floor as the camera sees it: up is away from the camera.
       function wantWalk() {
         var x = stick.x, z = stick.z; Object.keys(keys).forEach(function (k) { x += KEYS[k][0]; z += KEYS[k][1]; });
-        var m = Math.hypot(x, z); if (m < 0.15) return null; if (m > 1) { x /= m; z /= m; }
+        var m = Math.hypot(x, z); if (!(m >= 0.15)) return null; if (m > 1) { x /= m; z /= m; }
         R.walkFwd = -z / Math.max(m, 1e-6); // how far the thumb points away from the camera, -1 to 1
         var fx = camAim.x - camPos.x, fz = camAim.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
         return { x: -z * fx - x * fz, z: -z * fz + x * fx }; // forward times -z, plus right (-fz, fx) times x
@@ -3649,6 +3654,7 @@
       function onRug() { return Math.hypot(fig.x - SEAT.x, fig.z - SEAT.z) < RUG_R; }
       function sitDown() { sitBtn.style.display = "none"; stopWalking(); if (modal.childNodes.length) openModal(); }
       function freeWalk(dt) {
+        if (!isFinite(fig.x) || !isFinite(fig.z) || !isFinite(fig.yaw)) { fig.x = SEAT.x; fig.z = SEAT.z; fig.yaw = Math.PI; R.walkYaw = null; R.roam = null; snap = true; } // never lost: back on the rug
         var w = R.modal || R.close ? null : wantWalk();
         if (w) {
           if (!R.roam || !R.roam.free) { R.roam = { free: true, x: fig.x, z: fig.z, exit: null, arrived: true }; R.walkYaw = fig.yaw; }
@@ -3872,7 +3878,9 @@
         if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
         // the figure: stands up, walks to its place, sits down again
         var stepping = freeWalk(dt);
-        stickPad.style.display = R.modal || R.close || (doorBox && doorBox.style.display !== "none") ? "none" : "";
+        var hideStick = R.modal || R.close || (doorBox && doorBox.style.display !== "none");
+        if (hideStick && stickId != null) stickUp(); // the thumb lets go when the stick hides
+        stickPad.style.display = hideStick ? "none" : "";
         tg = targets();
         var dx = tg.p.x - fig.x, dz = tg.p.z - fig.z, dist = Math.hypot(dx, dz), moving = stepping && fig.sit <= 0;
         if (stepping) { /* the stick has the figure */ }
@@ -3955,7 +3963,7 @@
         },
         sitShown: function () { return sitBtn.style.display !== "none"; },
         stickShown: function () { return stickPad.style.display !== "none"; },
-        walking: function () { return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, pitch: lookPitch,
+        walking: function () { return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
           exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
         floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
         close: function () { return R.close ? { name: R.close.name, slot: R.close.slot, kept: R.kept.indexOf(R.close) >= 0 } : null; },
