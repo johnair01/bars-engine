@@ -8,28 +8,31 @@ thickened, and weighted from that surface, so the game can put one on or take it
 figure's skeleton (three.js: one SkinnedMesh per garment, the figure's bones by name). Three garments from the robe
 set (cc-robe-set), each in the robe set's three palettes (dusk, jade, hemp), for each of the three builds:
 
-- robe: an ankle-length outer robe with wide sleeves to the wrist, a crossed collar worn left over right (the J4
-  collar's own line, character.collar_path) and side slits to the knee. Above the hips it takes its weights from the
-  body under it. Below the hips it hangs from the hips and from two hem bones in the rig (character.HEM_BONES): the
-  front panel goes with whichever leg is ahead, the back panel with whichever is behind, and the sides with their own
-  thigh. This is root-game's rule that hanging cloth rides the pelvis, not the legs (kit_engine.js skirtWeights), with
-  hem bones where root-game runs its cloth solver (spec.md, J5: "a few extra bones in its hem first").
+- robe: an ankle-length outer robe with wide sleeves to the wrist, belted at the sash's height, a crossed collar
+  worn left over right (the J4 collar's own line, character.collar_path) and side slits. It is cut as two flat
+  panels, sewn, and draped on the standing body by Blender's cloth solver (drape(); round 3). Above the hips it
+  takes its weights from the body under it, the sleeves from the arm. Below the hips it hangs from the hips and from
+  two hem bones in the rig (character.HEM_BONES): the front panel goes with whichever leg is ahead, the back panel
+  with whichever is behind, and the sides with their own thigh. This is root-game's rule that hanging cloth rides
+  the pelvis, not the legs (kit_engine.js skirtWeights), with hem bones where root-game runs its cloth solver
+  (spec.md, J5: "a few extra bones in its hem first").
 - sash: a band at the waist, knotted in front on the wearer's left with two tails. It is cut twice, once on the body
   ("sash") and once over the robe ("sash-robe"), so it sits close whichever is under it; weights come from the layer
   beneath.
 - topknot: hair over the crown and back of the head, gathered into a bun on top with a tie and a pin through it.
   Rigid on the head.
 
-From root-game (wendell-britt/root-game, engine/kit_engine.js; copied as ideas, nothing there is edited): the ring
-construction (rows of points round the body, the coarse count is the phone budget), the A-line cut that flares
-toward the hem, the folds that deepen toward the hem (fold()), slits where the robe must part over the legs
-(slitColumns), the band built on the torso plus a little for the cloth, and its fullness rule, that a hanging garment
-is cut wide enough for the stride rather than for standing. Here the fullness is found by walking: fit() pushes the
-cloth out wherever a body point came through it at any key of the walk, and repeats until none does.
+From root-game (wendell-britt/root-game, engine/kit_engine.js; copied as ideas, nothing there is edited): the sash's
+ring construction (rows of points round the body), the A-line cut that flares toward the hem, slits where the robe
+must part over the legs (slitColumns), and its fullness rule, that a hanging garment is cut wide enough for the
+stride rather than for standing. Here the fullness is found by walking: fit() pushes the cloth out wherever a body
+point came through it at any key of the walk, and repeats until none does.
 
 The test, per garment and build, at every one of the walk's 25 keys: a covered body point (a point of the body the
 garment covers when standing) that lies outside the garment's surface is a point through it, unless its nearest
 garment point is at an open edge (the hem, a slit, a cuff, the neck), where a leg or a hand is meant to come out.
+Where the body faces itself a few centimetres away (under the arm, between the thighs) it is not tested: the robe's
+cloth is caught there, as real cloth is, and nobody sees it (cover_robe).
 report.json carries the counts; test J5 (tools/blender-cloud/tests/test_bpy.py) requires zero and each GLB under
 150 KB. Needs bpy (tools/blender-cloud/README.md).
 """
@@ -47,6 +50,8 @@ import character as C  # noqa: E402
 GARMENTS = ("robe", "sash", "sash-robe", "topknot")
 MAX_BYTES = 150 * 1024
 THICK = 0.004                                    # metres of cloth, outward (solidify); the test uses the inner face
+LAST_THROUGH = []                                # (key, point, distance) of the last test's points through
+MAX_PUSH = 0.015                                 # metres, the most one round of the fit moves a point
 TOL, EDGE = 0.002, 0.015                         # metres: outside by more than TOL counts, unless within EDGE of an opening
 ARMS = ("shoulderL", "shoulderR", "elbowL", "elbowR")
 TRUNK = ("hips", "spine", "neck", "hipL", "hipR", "kneeL", "kneeR", "ankleL", "ankleR")
@@ -70,12 +75,8 @@ COLOURWAYS = {
 }
 
 # the robe's cut
-HEM, SLIT = 0.15, 0.48                           # metres above the floor: the hem shows the ankle ties; slits to the knee
-COLS = 28                                        # points round each row (root-game uses 16 for two fighters on a phone)
-ROWS = (1.47, 1.45, 1.43, 1.41, 1.39, 1.36, 1.32, 1.27, 1.21, 1.15, 1.09, 1.03, 0.97, 0.91, 0.85, 0.78, 0.70,
-        0.62, 0.54, 0.46, 0.38, 0.30, 0.22, HEM)
-SLEEVE_RINGS, SLEEVE_COLS = 11, 16
-CUFF_R = 0.115                                   # the wide sleeve's opening, metres (root-game's "wide" sleeve is 0.21)
+HEM, SLIT = 0.15, 0.54                           # metres above the floor: the hem shows the ankle ties; the slits are
+                                                 # cut to here and hang a little higher once belted (round 3: room for the stride)
 
 
 # ---- reading the figure ---------------------------------------------------------------------------------------
@@ -266,133 +267,291 @@ def material(obj, name):
     obj.data.materials.append(mat)
 
 
-# ---- the robe -------------------------------------------------------------------------------------------------
+# ---- the robe: cut flat, sewn, and draped on the body by Blender's cloth solver --------------------------------
+#
+# Round 3 (Wendell, 2026-10-14: "We're making it look like something instead of simulating what happens"): the robe
+# is no longer shaped round the body by rule. It is cut as two flat panels (front and back, a body and two sleeves
+# each), sewn at the shoulders, along the sleeves and down the sides to the slits, and let fall on the standing body
+# under gravity. The cloth's rest lengths and its flat bend come from the flat pattern (Blender's rest shape key), so
+# where it lies flat, folds or bunches is the solver's answer. A belt at the sash's height is simulated too: that
+# band of cloth shrinks until it grips the waist. Choices, for his eye: the pattern's sizes below, and the cloth's
+# stiffness (the solver's settings in drape()).
+
+CLOTH_H = 0.022                                  # metres between the pattern's points while draping
+ROBE_VERTS = 1150                                # the draped robe is reduced to about this many points for the phone
+EASE = 0.05                                      # metres added to the chest's half width for the body panel
+HEM_CUT = 0.05                                   # the pattern's hem: the belt takes up about 0.1 m, so it hangs near HEM
+FLARE = 0.07                                     # metres the panel widens from the waist to the hem (a slight A-line)
+NECK_HALF = 0.085                                # half the neck opening across the shoulders
+SCOOP = {-1: 0.07, 1: 0.015}                     # metres the neckline drops at the middle: front, back
+CUFF_W = 0.40                                    # the sleeve's depth at the cuff, top seam to bottom seam (a wide sleeve)
+CLEAR = 0.006                                    # metres the cloth is held off the body while it falls (room for the
+                                                 # reduction and the skinning to cut corners)
+ARM_OUT = math.radians(5)                        # the arms a little out from rest while the seams close
+BELT = 0.35                                      # how much the belt band shrinks to grip the waist
+F_SEW, F_DOWN, F_END = 50, 80, 110               # frames: sewing pose held, arms back to rest, settled
+
+
+def pattern(fig, build, shoulder):
+    """One panel's flat pattern, in (x, z): the body, A-line below the waist, its top edge the body's own shoulder
+    line (shoulder(x), measured) plus the cloth, and a sleeve on each side cut on the grain (its columns upright)
+    from the body's side above the armpit out to the wrist, deepening toward the cuff. Returns the points, the faces,
+    each face's part (0 body, 1 left sleeve, 2 right), the seam points (shared by front and back), and how far up the
+    shoulder rows each point is (for the neckline)."""
+    rest = [fig.matrix_world @ v.co for v in fig.data.vertices]
+    W = bone_weights(fig)
+    chest = max(abs(c.x) for c, w in zip(rest, W) if main_bone(w) in ("spine", "hips") and 1.05 < c.z < 1.30)
+    J = C.joints(build)
+    sh, el, wr = (Vector(J[b + "L"][0]) for b in ("shoulder", "elbow", "wrist"))
+    za = sh.z - 0.13                                     # the armpit
+    wb = max(chest, sh.x) + EASE
+    rn = NECK_HALF
+    ztop = lambda x: shoulder(max(abs(x), rn)) + 0.012
+    flare = lambda z: FLARE * smooth(1.0, HEM_CUT, z)
+    nb = max(8, round(2 * wb / CLOTH_H))
+    nlow = max(4, round((za - HEM_CUT) / CLOTH_H))
+    nup = max(3, round((ztop(wb) - za) / CLOTH_H))
+    verts, idx, upper, faces, parts, seams = [], {}, [], [], [], set()
+    for k in range(nlow + nup + 1):
+        for i in range(nb + 1):
+            u = -1 + 2 * i / nb
+            if k <= nlow:
+                z = HEM_CUT + (za - HEM_CUT) * k / nlow
+                x = u * (wb + flare(z))
+            else:
+                x = u * wb
+                z = za + (ztop(x) - za) * (k - nlow) / nup
+            idx[("b", i, k)] = len(verts)
+            verts.append((x, z))
+            upper.append(max(0.0, (k - nlow) / nup))
+    for k in range(nlow + nup):
+        for i in range(nb):
+            faces.append([idx[("b", i, k)], idx[("b", i + 1, k)], idx[("b", i + 1, k + 1)], idx[("b", i, k + 1)]])
+            parts.append(0)
+    for k in range(nlow + 1):                            # the side seams, from the armpit down to the slits
+        if verts[idx[("b", 0, k)]][1] >= SLIT:
+            seams |= {idx[("b", 0, k)], idx[("b", nb, k)]}
+    for i in range(nb + 1):                              # the shoulder seams, from the neck out
+        if abs(verts[idx[("b", i, nlow + nup)]][0]) > rn - 1e-6:
+            seams.add(idx[("b", i, nlow + nup)])
+    arm_len = (wr - sh).length
+    ns = max(6, round(arm_len / CLOTH_H))
+    below = math.pi / 2 - (abs(math.atan2(sh.x - el.x, sh.z - el.z)) + ARM_OUT)   # the sewing pose's arm
+    for s, side in ((1, "L"), (-1, "R")):
+        icol = nb if s > 0 else 0
+        top = Vector(verts[idx[("b", icol, nlow + nup)]])
+        pit = Vector(verts[idx[("b", icol, nlow)]])
+        top_end = top + Vector((s * math.cos(below), -math.sin(below))) * arm_len
+        w0 = top.y - pit.y
+        for j in range(1, ns + 1):
+            t = j / ns
+            T = top.lerp(top_end, t)
+            w = w0 + (CUFF_W - w0) * smooth(0.0, 0.9, t)
+            for m in range(nup + 1):
+                idx[(side, j, m)] = len(verts)
+                verts.append((T.x, T.y - w * (nup - m) / nup))
+                upper.append(0.0)
+        q = lambda jj, mm: idx[("b", icol, nlow + mm)] if jj == 0 else idx[(side, jj, mm)]
+        for j in range(ns):
+            for m in range(nup):
+                f = [q(j, m), q(j + 1, m), q(j + 1, m + 1), q(j, m + 1)]
+                faces.append(f if s > 0 else f[::-1])
+                parts.append(1 if s > 0 else 2)
+        for j in range(1, ns):                           # the sleeve's top and bottom seams; the cuff stays open
+            seams |= {idx[(side, j, 0)], idx[(side, j, nup)]}
+    return verts, faces, parts, seams, upper
+
+
+def arms_out(rig, ang):
+    """Pose quaternions turning each upper arm out from rest by ang, about the figure's front-to-back axis."""
+    out = {}
+    for side, s in (("L", -1), ("R", 1)):
+        B = rig.data.bones["shoulder" + side].matrix_local.to_3x3()
+        out["shoulder" + side] = (B.inverted() @ Matrix.Rotation(s * ang, 3, "Y") @ B).to_quaternion()
+    return out
+
+
+def drape(fig, rig, build):
+    """Sew the panels round the body in the sewing pose and let the cloth fall. Returns the settled points, the
+    faces and each face's part. The rig's walk is set aside while the cloth falls and put back after."""
+    sc = bpy.context.scene
+    walk = rig.animation_data.action
+    rig.animation_data.action = bpy.data.actions.new("Drape")
+    q = arms_out(rig, ARM_OUT)
+    for pb in rig.pose.bones:
+        pb.rotation_mode, pb.rotation_quaternion = "QUATERNION", (1, 0, 0, 0)
+    for f, on in ((1, 1), (F_SEW, 1), (F_DOWN, 0), (F_END, 0)):
+        for b, qq in q.items():
+            rig.pose.bones[b].rotation_quaternion = qq if on else (1, 0, 0, 0)
+            rig.pose.bones[b].keyframe_insert("rotation_quaternion", frame=f)
+    body = posed(fig, 1)
+    W = bone_weights(fig)
+    polys = [list(p.vertices) for p in fig.data.polygons]
+    tree = BVHTree.FromPolygons(body, polys)
+    top_tree = BVHTree.FromPolygons(body, [p for p in polys if all(main_bone(W[v]) not in ("head", "neck") for v in p)])
+
+    def shoulder(x):                                     # the top of the body at x (not the head or neck)
+        hits = [top_tree.ray_cast(Vector((x, y, 2.0)), Vector((0, 0, -1)))[0] for y in (-0.04, -0.02, 0, 0.02, 0.04)]
+        return max([h.z for h in hits if h is not None] or [1.40])
+
+    def depth(x, z, s):                                  # how far the body reaches toward the front (s -1) or back
+        hit = tree.ray_cast(Vector((x, s * 1.0, z)), Vector((0, -s, 0)))[0]
+        return abs(hit.y) if hit is not None and hit.y * s > -0.05 else 0.0
+    verts2, faces2, parts, seams, upper = pattern(fig, build, shoulder)
+    # the two panels: a seam point is one point shared by both. Each starts wrapped round the body in front (or
+    # behind) it, clear of it; its rest shape is the flat pattern, the front a hair in front of the back
+    verts, flat, back = [], [], {}
+    for side in (-1, 1):
+        for i, (x, z) in enumerate(verts2):
+            if side == 1 and i in seams:
+                continue
+            if i not in seams and abs(x) < NECK_HALF and upper[i] > 0:   # the neckline, scooped
+                z -= SCOOP[side] * (1 - (x / NECK_HALF) ** 2) * upper[i]
+            if side == 1:
+                back[i] = len(verts)
+            verts.append(Vector((x, 0.0 if i in seams else side * (max(depth(x, z, side), 0.03) + 0.015), z)))
+            flat.append(Vector((x, 0.0 if i in seams else side * 0.002, z)))
+    bk = lambda i: i if i in seams else back[i]
+    faces = [list(f) for f in faces2] + [[bk(i) for i in reversed(f)] for f in faces2]
+    me = bpy.data.meshes.new("robe-cloth")
+    me.from_pydata([tuple(v) for v in verts], [], faces)
+    cl = bpy.data.objects.new("robe-cloth", me)
+    sc.collection.objects.link(cl)
+    cl.shape_key_add(name="Basis")
+    rest_key = cl.shape_key_add(name="Flat")
+    for v, p in zip(rest_key.data, flat):
+        v.co = p
+    rest_key.value = 0.0
+    belt = cl.vertex_groups.new(name="belt")             # the sash's band of cloth, which shrinks to grip the waist
+    for i, p in enumerate(flat):
+        w = min(1.0, 1.5 * max(0.0, 1 - abs(p.z - 1.03) / 0.06))
+        if w > 0:
+            belt.add([i], w, "REPLACE")
+    # a seam has no crease of its own (the flat pattern folds the front onto the back there): no bending stiffness
+    # near a seam, so it lies as the cloth either side of it falls
+    sk = KDTree(len(seams))
+    for i in seams:
+        sk.insert(Vector((verts2[i][0], 0, verts2[i][1])), i)
+    sk.balance()
+    bend = cl.vertex_groups.new(name="bend")
+    for i, p in enumerate(flat):
+        bend.add([i], smooth(0.0, 2.5 * CLOTH_H, sk.find(Vector((p.x, 0, p.z)))[2]), "REPLACE")
+    collide = fig.modifiers.new("Collide", "COLLISION")
+    fig.collision.thickness_outer, fig.collision.cloth_friction = CLEAR, 5
+    mod = cl.modifiers.new("Cloth", "CLOTH")
+    s = mod.settings
+    s.rest_shape_key = rest_key
+    s.shrink_min, s.shrink_max, s.vertex_group_shrink = 0.0, BELT, "belt"   # shrink = min + (max - min) * weight
+    s.quality, s.mass, s.air_damping = 10, 0.25, 1.5
+    s.tension_stiffness, s.compression_stiffness, s.shear_stiffness = 20, 3, 10
+    s.bending_stiffness, s.bending_stiffness_max, s.vertex_group_bending = 0.0, 0.05, "bend"
+    cs = mod.collision_settings
+    cs.collision_quality, cs.distance_min = 5, CLEAR
+    cs.use_self_collision, cs.self_distance_min = True, 0.004
+    mod.point_cache.frame_start, mod.point_cache.frame_end = 1, F_END
+    sc.frame_start, sc.frame_end = 1, F_END
+    for f in range(1, F_END + 1):
+        sc.frame_set(f)
+    ev = cl.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    co = [cl.matrix_world @ v.co for v in ev.data.vertices]
+    fig.modifiers.remove(collide)
+    bpy.data.objects.remove(cl)
+    rig.animation_data.action = walk
+    for pb in rig.pose.bones:
+        pb.rotation_quaternion = (1, 0, 0, 0)
+    sc.frame_start, sc.frame_end = 1, C.KEYS + 1
+    sc.frame_set(1)
+    return co, faces, parts + parts
+
+
+def reduce(co, faces, parts, target):
+    """The draped cloth, smoothed a little (the solver's last few millimetres of chatter) and reduced to about target
+    points. Each face keeps the part of the full cloth's face nearest it."""
+    me = bpy.data.meshes.new("tmp")
+    me.from_pydata([tuple(v) for v in co], [], faces)
+    obj = bpy.data.objects.new("tmp", me)
+    bpy.context.scene.collection.objects.link(obj)
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    for _ in range(2):
+        bmesh.ops.smooth_vert(bm, verts=bm.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    bm.to_mesh(me)
+    bm.free()
+    full = BVHTree.FromPolygons([v.co.copy() for v in me.vertices], [list(p.vertices) for p in me.polygons])
+    dec = obj.modifiers.new("Dec", "DECIMATE")
+    dec.ratio = min(1.0, target / len(me.vertices))
+    out = bpy.data.meshes.new_from_object(obj.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    V = [v.co.copy() for v in out.vertices]
+    F = [list(p.vertices) for p in out.polygons]
+    P = [parts[full.find_nearest(p.center)[2]] for p in out.polygons]
+    bpy.data.objects.remove(obj)
+    bpy.data.meshes.remove(me)
+    bpy.data.meshes.remove(out)
+    return V, F, P
+
 
 def robe(fig, rig, build, cw):
-    """Rings round the body (root-game's construction), measured from the standing body at each height, offset and
-    flared to an A-line below the hips, then the two sleeves along the arms."""
+    """The draped robe, reduced, weighted from the body under it, its trim painted: the crossed collar (J4's line,
+    left over right), a band round the neckline, the hem and the cuffs."""
+    co, faces, parts = drape(fig, rig, build)
+    verts, faces, parts = reduce(co, faces, parts, ROBE_VERTS)
     W = bone_weights(fig)
-    rest = [fig.matrix_world @ v.co for v in fig.data.vertices]
-    # the trunk, and the tops of the shoulders, so the robe's body covers the shoulder caps and the sleeves start under it
-    tk = {i for i, w in enumerate(W) if main_bone(w) in TRUNK
-          or (main_bone(w) in ARMS and fig.data.vertices[i].co.z > 1.33)}
-    tedges = edges_of(fig, tk)
-    from_body = weight_source(fig, lambda co, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR"))
-    # the shoulders: rings round the body cannot follow the shoulder's top, which runs nearly level from the neck to
-    # the arm, so the rows there are laid over it from the inside out (Wendell, round 1: "There's peeking through on top")
-    tpolys = [list(p.vertices) for p in fig.data.polygons if all(v in tk for v in p.vertices)]
-    shoulder_tree = BVHTree.FromPolygons(rest, tpolys)
-    SH_C = Vector((0, 0, 1.22))
-    verts, weights, faces, colours, rows, parts, inner = [], [], [], [], [], [], []
-    for z in ROWS:
-        poly = section(rest, z, 0.0, tedges)
-        cx = sum(p[0] for p in poly) / len(poly)
-        cy = sum(p[1] for p in poly) / len(poly)
-        cx = 0.0                                           # symmetric about the middle line
-        below = smooth(0.95, HEM, z)                       # 0 at the hips, 1 at the hem
-        # a slight A-line: the cloth hangs, and the hem bones and the slits make room for the stride (round 1: "the
-        # hems are being held open against gravity. We want them to hang more"; it was 0.11 at the hem)
-        off = (0.010 if z > 1.42 else 0.016) + 0.012 * below + 0.03 * below ** 1.3
-        row = []
-        for j in range(COLS):
-            th = 2 * math.pi * j / COLS                    # column 0 at the wearer's left side (+X), COLS/2 at the right
-            r = hull_radius(poly, cx, cy, th) + off
-            # folds below the hips, deepening toward the hem (root-game fold(): six soft folds)
-            r *= 1 + 0.05 * below * math.sin(6 * th + 0.6)
-            p = Vector((cx + r * math.cos(th), cy + r * math.sin(th), z))
-            if 1.25 < z < 1.465:
-                d = (p - SH_C).normalized()
-                hit = shoulder_tree.ray_cast(SH_C + d * 0.6, -d)[0]
-                if hit is not None:
-                    p = SH_C + d * max((p - SH_C).length, (hit - SH_C).length + 0.016)
-            row.append(len(verts))
-            verts.append(p)
+    from_body = weight_source(fig, lambda c, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR",
+                                                                  "shoulderL", "shoulderR"))
+    from_arm = {s: weight_source(fig, lambda c, w, s=s: main_bone(w) in ("spine", "shoulder" + s, "elbow" + s, "wrist" + s))
+                for s in "LR"}
+    sleeve_of = {}
+    for f, p in zip(faces, parts):
+        for v in f:
+            sleeve_of.setdefault(v, set()).add(p)
+    weights = []
+    for i, p in enumerate(verts):
+        ps = sleeve_of.get(i, {0})
+        if 0 in ps:
             weights.append(skirt_weights(p, from_body(p)))
-        rows.append(row)
-    # side slits: below SLIT the side columns (0 and COLS/2) are doubled, so the front and back panels part there
-    split = {}
-    for r, z in enumerate(ROWS):
-        if z < SLIT:
-            for j in (0, COLS // 2):
-                i = rows[r][j]
-                split[(r, j)] = len(verts)
-                verts.append(verts[i].copy())
-                # the copy at the left seam (j = 0) belongs to the front panel, at the right seam to the back; each
-                # side of a slit takes its weights from a point just inside its own panel
-                nudge = Vector((0, -0.04 if j == 0 else 0.04, 0))
-                weights.append(skirt_weights(verts[i] + nudge, from_body(verts[i])))
-                weights[i] = skirt_weights(verts[i] - nudge, from_body(verts[i]))
-    for r in range(len(ROWS) - 1):
-        for j in range(COLS):
-            k = (j + 1) % COLS
-            a, b, c, d = rows[r][j], rows[r][k], rows[r + 1][k], rows[r + 1][j]
-            # the face from column j to k is on the back (y > 0) when its middle angle is under pi
-            back = 0 <= j < COLS // 2
-            if back and k == COLS // 2:                    # this face ends at the right side seam: use its back copy
-                b = split.get((r, k), b)
-                c = split.get((r + 1, k), c)
-            if not back and k == 0:                        # the front face ending at the left side seam
-                b = split.get((r, 0), b)
-                c = split.get((r + 1, 0), c)
-            faces.append([a, b, c, d])
-            parts.append(0)
-            colours.append(cw["edge"] if r == len(ROWS) - 2 else cw["robe"])   # a hem band reads as one clean edge
-    # the sleeves: a tube along each arm from the shoulder to just past the wrist, opening wide and hanging below
-    J = C.joints(build)
-    for side in ("L", "R"):
-        arm = [c for c, w in zip(rest, W) if main_bone(w) in ("shoulder" + side, "elbow" + side)]
-        from_arm = weight_source(fig, lambda co, w, s=side: main_bone(w) in ("shoulder" + s, "elbow" + s))
-        sh, el, wr = Vector(J["shoulder" + side][0]), Vector(J["elbow" + side][0]), Vector(J["wrist" + side][0])
-        fore = (Vector(J["wrist" + side][1]) - wr).normalized()
-        path = [sh.lerp(el, t / 5) for t in range(5)] + [el.lerp(wr, t / 5) for t in range(5)] + [wr + fore * 0.02]
-        ring0 = len(verts)
-        inner += range(ring0, ring0 + SLEEVE_COLS)
-        for n, c in enumerate(path):
-            t = (path[min(n + 1, len(path) - 1)] - path[max(n - 1, 0)]).normalized()
-            u = Vector((0, 0, -1)) + t * t.z
-            u = u.normalized() if u.length > 1e-6 else Vector((1, 0, 0))   # u points down, square to the arm
-            v = t.cross(u)
-            near = [p for p in arm if abs((p - c).dot(t)) < 0.02]
-            base = max([((p - c) - t * (p - c).dot(t)).length for p in near] or [0.06]) + 0.016
-            f = n / (len(path) - 1)
-            wide = base + (CUFF_R - base) * smooth(0.35, 1.0, f)   # widening toward the cuff
-            # the opening hangs a little: below the arm, scaled by how far from upright the arm is (hanging straight
-            # down, "below" is to the side, and the sleeve would leave the arm)
-            hang = (wide - base) * 0.85 * math.sqrt(max(0.0, 1 - t.z ** 2))
-            for j in range(SLEEVE_COLS):
-                a = 2 * math.pi * j / SLEEVE_COLS
-                p = c + u * (hang + wide * math.cos(a)) + v * (wide * math.sin(a))
-                verts.append(p)
-                weights.append(from_arm(c + u * min(hang, 0.02) + (p - c - u * hang).normalized() * base))
-        for n in range(len(path) - 1):
-            for j in range(SLEEVE_COLS):
-                k = (j + 1) % SLEEVE_COLS
-                a, b = ring0 + n * SLEEVE_COLS + j, ring0 + n * SLEEVE_COLS + k
-                faces.append([a, b, b + SLEEVE_COLS, a + SLEEVE_COLS])
-                parts.append(1 if side == "L" else 2)
-                colours.append(cw["edge"] if n == len(path) - 2 else cw["robe"])   # the cuff
-    obj = mesh_object("robe", verts, faces, colours, weights, rig, parts, inner)
-    # the crossed collar: J4's line (left over right, round the back of the neck) painted on the robe, cut exactly
+        else:
+            weights.append(from_arm["L" if 1 in ps else "R"](p))
+    obj = mesh_object("robe", verts, faces, [cw["robe"]] * len(faces), weights, rig, parts)
+    # the trim: bands along the neckline, the hem and the cuffs, each cut on an exact line its width in from the edge
+    co = [v.co.copy() for v in obj.data.vertices]
+    edges = openings(obj)
+    bands = []
+    for a, b in edges:
+        A, B = co[a], co[b]
+        if A.z > 1.25 and B.z > 1.25 and abs(A.x) < 0.15:
+            w = 0.022                                    # the neckline
+        elif A.z < 0.3 and B.z < 0.3:
+            w = 0.04                                     # the hem
+        elif min(A.z, B.z) > 0.7 and max(abs(A.x), abs(B.x)) > 0.2:
+            w = 0.035                                    # a cuff
+        else:
+            continue                                     # a slit: no band
+        n = max(1, int((A - B).length / 0.004))
+        bands += [(A.lerp(B, t / n), w) for t in range(n + 1)]
+    kd = KDTree(len(bands))
+    for n, (c, _) in enumerate(bands):
+        kd.insert(c, n)
+    kd.balance()
+
+    def trim(c):
+        found = kd.find_n(c, 8)
+        return min((d - bands[n][1] for _, n, d in found), default=1.0)
     bm = bmesh.new()
     bm.from_mesh(obj.data)
     collar = C.collar_path(bm, build)
-    C.cut_along(bm, lambda co: collar(co) - C.COLLAR * 1.15)
-    C.cut_along(bm, neck_band)                             # and the band round the neck, so its edge is one line
+    C.cut_along(bm, lambda c: collar(c) - C.COLLAR * 1.15)
+    C.cut_along(bm, trim)
     bm.to_mesh(obj.data)
     bm.free()
-    col = obj.data.color_attributes["Col"]
-    for p in obj.data.polygons:
-        neck = neck_band(p.center) < 0
-        if p.center.z > 1.0 and collar(p.center) < C.COLLAR * 1.15 or neck:
+    me = obj.data
+    col = me.color_attributes["Col"]
+    for p in me.polygons:
+        c = p.center
+        if (c.z > 1.0 and collar(c) < C.COLLAR * 1.15) or trim(c) < 0:
             for li in p.loop_indices:
                 col.data[li].color = (*cw["edge"], 1.0)
     outward(obj)
     return obj
-
-
-def neck_band(co):
-    """Negative on the robe's band round the neck: within reach of the neck, above the shoulders."""
-    return Vector((co.x, co.y - 0.008)).length - (C.COLLAR_R + 0.004) if co.z > 1.40 else 1.0
 
 
 def skirt_weights(p, body):
@@ -602,6 +761,8 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
     for i in cover:
         groups.setdefault(tuple(parts_of(i if isinstance(i, int) else i[0])) if parts_of else (None,), []).append(i)
     counts, push = [], {}
+    LAST_THROUGH.clear()
+    rest = [wearer.matrix_world @ v.co for v in wearer.data.vertices]
     for k in keys:
         wc = posed(wearer, 1 + k)
         gc = posed(garment, 1 + k)
@@ -638,10 +799,13 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None):
                             held, first = False, (max(0.0, (p - loc).dot(nor)), polys[sel[fi]])
                 if held or first is None:
                     continue
+                LAST_THROUGH.append((k, i, first[0]))
                 n += 1
                 d, vs = first
+                rest_p = rest[i] if isinstance(i, int) else sum((rest[v] for v in i), Vector()) / len(i)
                 for v in vs:
-                    push[v] = max(push.get(v, 0.0), d + 0.008)
+                    if d + 0.008 > push.get(v, (0.0, None))[0]:
+                        push[v] = (d + 0.008, rest_p)
         counts.append(n)
     return counts, push
 
@@ -671,24 +835,62 @@ def fit(wearer, cover, garment, keys, rounds=14, parts=None, ray_from=None):
         spread = dict(push)
         for p in me.polygons:                              # spread each push to the face's neighbours, at half
             vs = list(p.vertices)
-            m = max(push.get(v, 0.0) for v in vs)
+            m = max((push[v] for v in vs if v in push), key=lambda dp: dp[0], default=None)
             if m:
                 for v in vs:
-                    spread[v] = max(spread.get(v, 0.0), 0.5 * m)
-        for v, d in spread.items():
-            me.vertices[v].co += me.vertices[v].normal * min(d, 0.03) * scale
+                    if v not in spread or spread[v][0] < 0.5 * m[0]:
+                        spread[v] = (0.5 * m[0], m[1])
+        for v, (d, bp) in spread.items():
+            # out along the cloth's normal, turned to point away from the body point that came through (a draped
+            # cloth folds, and a fold's normal can face the body)
+            n = me.vertices[v].normal.copy()
+            if n.dot(me.vertices[v].co - bp) < 0:
+                n = -n
+            me.vertices[v].co += n * min(d, MAX_PUSH) * scale
         me.update()
     return log
 
 
-def cover_robe(fig):
+def cover_robe(fig, robe_obj, build):
+    """The body points the robe covers standing: the arms and the trunk down to just above its hem, less the neck
+    and the chest above the robe's neckline (the tunic's collar shows there, as it should)."""
     W = bone_weights(fig)
+    rc = [v.co for v in robe_obj.data.vertices]
+    edges = openings(robe_obj)
+    rim = {v for e in edges for v in e}
+    neckline = [rc[v] for v in rim if rc[v].z > 1.25 and abs(rc[v].x) < 0.16]
+    hem = max(rc[v].z for v in rim if rc[v].z < 0.3)
+    # where the body faces itself a few centimetres away (the armpit, between the thighs), the cloth caught between
+    # is pressed through one side or the other; nobody sees there, so it is not tested
+    body = [v.co for v in fig.data.vertices]
+    normals = [v.normal for v in fig.data.vertices]
+    kd = KDTree(len(body))
+    for i, c in enumerate(body):
+        kd.insert(c, i)
+    kd.balance()
+
+    J = C.joints(build)
+    shx, shz = J["shoulderL"][0][0], J["shoulderL"][0][2]
+
+    def armpit(i, c, b):
+        # under the arm: between the side of the trunk and the inside of the upper arm, below the shoulder's joint
+        if 0.11 < abs(c.x) < shx + 0.03 and shz - 0.30 < c.z < shz - 0.01:
+            if b == "spine" or (b in ARMS and abs(c.x) < shx + 0.03 - 0.03 * (shz - c.z) / 0.3):
+                return True
+        for _, j, d in kd.find_range(c, 0.045):
+            if d > 0.008 and (body[j] - c).normalized().dot(normals[i]) > 0.4 and normals[j].dot(normals[i]) < -0.2:
+                return True
+        return False
     out = []
     for i, v in enumerate(fig.data.vertices):
-        b, z = main_bone(W[i]), v.co.z
-        neck = z > 1.40 and Vector((v.co.x, v.co.y - 0.008)).length < 0.08
-        if b in ARMS or (b in ("hips", "spine", "hipL", "hipR", "kneeL", "kneeR") and HEM + 0.03 < z < 1.50
-                         and not neck):
+        b, c = main_bone(W[i]), v.co
+        if armpit(i, c, b):
+            continue
+        if c.z > 1.28 and abs(c.x) < 0.16 and b not in ARMS:
+            near = [n.z for n in neckline if abs(n.x - c.x) < 0.03 and n.y * c.y >= 0]
+            if not near or c.z > min(near) - 0.015:
+                continue
+        if b in ARMS or (b in ("hips", "spine", "hipL", "hipR", "kneeL", "kneeR") and hem + 0.03 < c.z < 1.50):
             out.append(i)
     return out
 
@@ -756,8 +958,12 @@ def build_all(build, palette, out_dir, do_fit=True):
     def parts(i):                                          # an arm point by its own sleeve (or the robe's body), the rest by the body
         b = main_bone(W[i])
         return ((1 if b.endswith("L") else 2), 0) if b in ARMS else (0,)
-    cover = with_faces(fig, cover_robe(fig))
-    axis = lambda p: Vector((0, 0, p.z)) if p.z > SLIT + 0.05 else None   # above the slits, nothing opens
+    cover = with_faces(fig, cover_robe(fig, R, build))
+    # above the slits (wherever the belt has drawn them up to), nothing opens
+    rc = [v.co for v in R.data.vertices]
+    slit_top = max(rc[v].z for e in openings(R) for v in e if 0.25 < rc[v].z < 1.0 and abs(rc[v].x) > 0.12)
+    # and not where the arms come out (a line from the middle out under the arm leaves through the armhole)
+    axis = lambda p: Vector((0, 0, p.z)) if p.z > slit_top + 0.03 and not (p.z > 1.1 and abs(p.x) > 0.11) else None
     log = fit(fig, cover, R, keys, parts=parts, ray_from=axis) if do_fit else []
     counts, _ = through(fig, cover, R, keys, parts, axis)
     rows.append(("robe", R, counts, log, len(cover)))
