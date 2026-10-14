@@ -124,6 +124,10 @@ wrote white in its place. The rock surface, moss and stone pattern stay render-o
 walls' rock faces read smoother on the phone than in the renders, with stepped edges round the hollows.
 
 **Jumping (14 October, evening).** Wendell: "I'm curious about adding a jump feature". A Jump button under the right
-thumb (or the space bar) lifts the figure half a player height, about six tenths of a second in the air. The stick still
+thumb (or the space bar) lifts the figure 0.85 of a player height, about two thirds of a second in the air. The stick still
 steers in the air, a press just before landing still counts, the knees tuck at the top and landing gives a small squash.
-Nothing can be jumped onto yet: the boulders, the seat and the plinth still block the way.
+Then: "We want them to be able to jump on objects that are in the room". The seat and the boulders can be stood on:
+a ray cast down from a step above the feet finds their own surface, so the figure walks up a gentle rise, falls off an
+edge and lands where the mesh is. Below a top, the thing is a wall. The seat (0.6 high) and the two lower boulders (0.6
+and 0.8) can be reached; the two tall boulders (1.1) cannot. The plinth and its lantern stay one block that cannot be
+stood on.

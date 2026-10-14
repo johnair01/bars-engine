@@ -19,10 +19,12 @@
   var WALK = 1.6 * PH;      // full stick: 1.6 player heights a second, the cave's walking pace
   var BODY_R = 0.22 * PH;   // how close the figure's middle comes to a wall or a boulder
   var CAM = { back: 2.4 * PH, up: 1.25 * PH, aim: 0.75 * PH };
-  // The jump (Wendell, 14 October 2026: "I'm curious about adding a jump feature"): half a player height at the top, about
-  // six tenths of a second in the air. The stick still steers in the air, and a press just before landing still counts,
-  // so a jump never feels swallowed. Boulders and the seat still block the way: nothing can be jumped onto yet.
-  var JUMP_H = 0.5 * PH, JUMP_T = 0.6, GRAV = 8 * JUMP_H / (JUMP_T * JUMP_T), JUMP_V = 4 * JUMP_H / JUMP_T, JUMP_GRACE = 0.12;
+  // The jump (Wendell, 14 October 2026: "I'm curious about adding a jump feature", then "We want them to be able to jump on
+  // objects that are in the room"): 0.85 of a player height at the top, about two thirds of a second in the air, so the
+  // seat and the lower boulders can be reached and the two tall ones cannot. The stick still steers in the air, and a press
+  // just before landing still counts, so a jump never feels swallowed.
+  var JUMP_H = 0.85 * PH, JUMP_T = 0.66, GRAV = 8 * JUMP_H / (JUMP_T * JUMP_T), JUMP_V = 4 * JUMP_H / JUMP_T, JUMP_GRACE = 0.12;
+  var STEP = 0.2 * PH;      // a rise the figure walks up without jumping (the curve of a boulder's top)
 
   var CSS =
     ".oagw{position:fixed;inset:0;z-index:910;background:#120e10;overflow:hidden;touch-action:none}" +
@@ -60,7 +62,7 @@
     wrap.appendChild(msg);
     wrap.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     document.body.appendChild(wrap);
-    var S = window.__oagWalkRoom = { name: name, ready: false, error: null, x: 0, z: 0, yaw: 0, camYaw: 0, moved: 0, bumps: 0, jumps: 0, landings: 0, top: 0 };
+    var S = window.__oagWalkRoom = { name: name, ready: false, error: null, x: 0, z: 0, yaw: 0, camYaw: 0, moved: 0, bumps: 0, jumps: 0, landings: 0, top: 0, stoodOn: 0 };
 
     return K.loadThree().then(function (THREE) {
       return Promise.all([loadLoader(THREE), fetch(BASE + "rooms/" + name + ".glb").then(function (r) {
@@ -103,23 +105,35 @@
       var top = new THREE.PointLight(0xffc890, 0.25, 14 * PH, 1.2); top.position.set(0, 4 * PH, 0); scene.add(top);
 
       // Where the figure may walk: inside the floor's oval, held off the wall, and outside the boulders, the seat, the
-      // plinth and the lantern. Every bound comes from the GLB itself, so a rebuilt room needs no numbers here.
+      // plinth and the lantern unless it is above them. Every bound comes from the GLB itself, so a rebuilt room needs no
+      // numbers here. The seat and the boulders can be stood on: their own surfaces are the ground there. The lantern
+      // stands on its plinth, so the two are one block that cannot be stood on.
       var box = new THREE.Box3(), floorBox = box.setFromObject(parts.floor || room).clone();
       var RX = (floorBox.max.x - floorBox.min.x) / 2 - 0.55 * PH, RZ = (floorBox.max.z - floorBox.min.z) / 2 - 0.55 * PH;
       var CX = (floorBox.max.x + floorBox.min.x) / 2, CZ = (floorBox.max.z + floorBox.min.z) / 2;
-      var blocks = [];
+      var blocks = [], stands = [];
       Object.keys(parts).forEach(function (n) { // three.js drops the dot from a name: boulder.1 is boulder1
         if (!/^(seat|plinth|lantern|boulder\.?\d+)$/.test(n)) return;
         box.setFromObject(parts[n]);
-        var hx = (box.max.x - box.min.x) / 2, hz = (box.max.z - box.min.z) / 2;
-        blocks.push({ name: n, x: (box.max.x + box.min.x) / 2, z: (box.max.z + box.min.z) / 2, rx: hx + BODY_R, rz: hz + BODY_R });
+        var hx = (box.max.x - box.min.x) / 2, hz = (box.max.z - box.min.z) / 2, can = !/plinth|lantern/.test(n);
+        blocks.push({ name: n, x: (box.max.x + box.min.x) / 2, z: (box.max.z + box.min.z) / 2, rx: hx + BODY_R, rz: hz + BODY_R, top: can ? box.max.y : Infinity, h: box.max.y });
+        if (can) stands.push(parts[n]);
       });
+      // The ground under a point: the highest surface of a thing that can be stood on, found by a ray cast down from a step
+      // above the feet, so a top higher than that is a wall to walk into, not a floor to snap onto. The floor is 0.
+      var down = new THREE.Raycaster(), DOWN = new THREE.Vector3(0, -1, 0), from = new THREE.Vector3();
+      function groundAt(x, z, y) {
+        from.set(x, y + STEP, z); down.set(from, DOWN); down.far = y + STEP + 0.01;
+        var hit = down.intersectObjects(stands, true)[0];
+        return hit ? Math.max(0, hit.point.y) : 0;
+      }
       S.bounds = { cx: CX, cz: CZ, rx: RX, rz: RZ, blocks: blocks };
       // Inside the oval, then pushed out of each block (an oval of its own, its footprint plus the figure's width).
-      function hold(x, z) {
+      function hold(x, z, y) {
         var bumped = false, dx = x - CX, dz = z - CZ, q = (dx * dx) / (RX * RX) + (dz * dz) / (RZ * RZ);
         if (q > 1) { var k = 1 / Math.sqrt(q); x = CX + dx * k; z = CZ + dz * k; bumped = true; }
         blocks.forEach(function (b) {
+          if (y > b.top - STEP) return; // above it: it is ground, not a wall
           var ex = (x - b.x) / b.rx, ez = (z - b.z) / b.rz, d = Math.hypot(ex, ez);
           if (d < 1) { if (d < 1e-6) { ex = 0; ez = 1; d = 1; } x = b.x + ex / d * b.rx; z = b.z + ez / d * b.rz; bumped = true; }
         });
@@ -130,7 +144,7 @@
       var av = K.buildAvatar(THREE, "self"); scene.add(av);
       var start = parts.player ? new THREE.Vector3().setFromMatrixPosition(parts.player.matrixWorld) : new THREE.Vector3(0, 0, 2.6 * PH);
       var fig = { x: start.x, z: start.z, yaw: Math.PI, clk: 0, speed: 0, y: 0, vy: 0, air: false, want: -1, land: 0 };
-      var p0 = hold(fig.x, fig.z); fig.x = p0.x; fig.z = p0.z;
+      var p0 = hold(fig.x, fig.z, 0); fig.x = p0.x; fig.z = p0.z;
       var camYaw = 0, camPitch = 0.12, zoom = 1, camPos = new THREE.Vector3(), camAim = new THREE.Vector3();
 
       // ---- the stick and the keys (the WAVE room's own, cave.js) ----------------------------------------------------------
@@ -196,7 +210,7 @@
       function step(dt) {
         var w = wantWalk(), moving = false;
         if (w) {
-          var sp = WALK * w.m, nx = fig.x + w.x / w.m * sp * dt, nz = fig.z + w.z / w.m * sp * dt, h = hold(nx, nz);
+          var sp = WALK * w.m, nx = fig.x + w.x / w.m * sp * dt, nz = fig.z + w.z / w.m * sp * dt, h = hold(nx, nz, fig.y);
           var moved = Math.hypot(h.x - fig.x, h.z - fig.z);
           if (h.bumped) S.bumps++;
           fig.x = h.x; fig.z = h.z; S.moved += moved;
@@ -209,9 +223,16 @@
         if (fig.want >= 0 && now - fig.want <= JUMP_GRACE && !fig.air) {
           fig.vy = JUMP_V; fig.air = true; fig.want = -1; S.jumps++;
         } else if (fig.want >= 0 && now - fig.want > JUMP_GRACE) fig.want = -1;
+        var g = groundAt(fig.x, fig.z, fig.y);
+        if (!fig.air) {
+          if (g < fig.y - 0.02 * PH) { fig.air = true; fig.vy = 0; } // walked off an edge: fall
+          else fig.y = g;                                             // up or down a gentle rise
+        }
         if (fig.air) {
+          var was = fig.y;
           fig.y += fig.vy * dt - GRAV * dt * dt / 2; fig.vy -= GRAV * dt; // exact for a steady pull, so a slow phone jumps as high
-          if (fig.y <= 0) { fig.y = 0; fig.air = false; fig.land = 1; S.landings++; }
+          g = groundAt(fig.x, fig.z, Math.max(fig.y, was)); // from where the feet were, so a fast fall cannot pass through a top
+          if (fig.vy <= 0 && fig.y <= g) { fig.y = g; fig.air = false; fig.land = 1; S.landings++; if (g > 0.05 * PH) S.stoodOn++; }
           S.top = Math.max(S.top, fig.y / PH);
         }
         fig.land = Math.max(0, fig.land - dt * 6);
@@ -259,6 +280,8 @@
       // for the page test: hold the stick at x, z (each -1 to 1) for a while
       S.hold = function (x, z) { stick.x = x; stick.z = z; };
       S.jump = jump;
+      S.place = function (x, z) { fig.x = x * PH; fig.z = z * PH; fig.y = 0; fig.air = false; };
+      S.blocks = blocks.map(function (b) { return { name: b.name, x: b.x / PH, z: b.z / PH, rx: b.rx / PH, rz: b.rz / PH, h: b.h / PH }; });
       S.turn = function (a) { camYaw += a; lastDrag = performance.now(); };
     }
     // Leaving before the room is drawn just closes it.
