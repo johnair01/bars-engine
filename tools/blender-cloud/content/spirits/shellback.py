@@ -3,7 +3,8 @@
 Stages (Wendell's board steers on sg-grows-into-shape and sg-holo-stages, 2026-10-14): a gas that solidifies into a
 core, which projects a holographic ally into the world, which becomes a living creature, whose highest ally form is
 humanoid. The gas, core and hologram are built from primitives; the living creature and highest ally form are
-fused metaballs painted per vertex, after Wendell's "Taoist Tortoise" concept (2026-10-14: "too geometric").
+fused metaballs painted per vertex, after Wendell's "Taoist Tortoise" concept (2026-10-14: "too geometric"), and
+each element gives them its own shell, growth, colours and aura (round 2, "dramatically stronger contrasts").
 Each stage is rendered with Cycles on the CPU and shrunk to a pixel sprite, so one model gives both assets (sg-assets-modular). Nothing is downloaded.
 
     /home/user/blenv/bin/python tools/blender-cloud/content/spirits/shellback.py OUT_DIR [--samples 32] [--size 512]
@@ -14,7 +15,7 @@ OUT_DIR/glb/<element>-<stage>.glb and OUT_DIR/report.json. The same arguments al
 import argparse, json, math, os, pathlib, random, sys
 
 import bpy
-from mathutils import Vector, noise
+from mathutils import Matrix, Quaternion, Vector, noise
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
 ap = argparse.ArgumentParser()
@@ -23,6 +24,7 @@ ap.add_argument("--samples", type=int, default=32)
 ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--sprite", type=int, default=96)
 ap.add_argument("--only", default="", help="element to build alone, for a quick look")
+ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
 args = ap.parse_args(argv)
 OUT = pathlib.Path(args.out)
 
@@ -143,14 +145,16 @@ def hologram(lt, dk):
     core(lt, at=(0, 0, 0.38), size=0.2)
 
 
-def solid(name, color, rough=0.6, glow=0.0):
-    """An opaque material for the living stages; glow is for the core and trim."""
+def solid(name, color, rough=0.6, glow=0.0, metal=0.0, alpha=1.0):
+    """An opaque material for the living stages; glow is for the core, trim and aura."""
     m = bpy.data.materials.new(name); m.use_nodes = True
     p = m.node_tree.nodes["Principled BSDF"]
     p.inputs["Base Color"].default_value = (*lin(color), 1)
     p.inputs["Roughness"].default_value = rough
+    p.inputs["Metallic"].default_value = metal
     p.inputs["Emission Color"].default_value = (*lin(color), 1)
     p.inputs["Emission Strength"].default_value = glow
+    p.inputs["Alpha"].default_value = alpha
     return m
 
 
@@ -168,12 +172,46 @@ def lights(sc):
 
 
 # The living stages follow Wendell's concept art, "Taoist Tortoise - Young Adult Concept" (2026-10-14): a soft,
-# rounded tortoise with a mossy shell carrying a yin-yang and the eight trigrams, a long neck with big eyes, stout
-# spotted legs, a shawl with a green hem, prayer beads and red tassels. The art is concept only (cs-chatgpt-ai-art);
-# every piece is rebuilt here from fused metaballs and painted per vertex, so the GLB carries the same colours.
-SKIN, SPOT, THROAT = (0.48, 0.53, 0.28), (0.25, 0.29, 0.14), (0.86, 0.80, 0.57)
-SHELLC, MOSS, CREAM, RED, GOLD = (0.56, 0.53, 0.42), (0.36, 0.47, 0.18), (0.88, 0.84, 0.72), (0.66, 0.22, 0.12), (0.72, 0.56, 0.25)
-BEAD = (0.40, 0.17, 0.10)
+# rounded tortoise with a shell carrying a yin-yang and the eight trigrams, a long neck with big eyes, stout
+# spotted legs, a shawl, prayer beads and tassels. The art is concept only (cs-chatgpt-ai-art); every piece is
+# rebuilt here from fused metaballs and painted per vertex, so the GLB carries the same colours.
+#
+# Round 2 (Wendell, 2026-10-14 17:12: "dramatically stronger contrasts" between the elements): each element sets
+# the shell's material and what grows from it, colours the skin, eyes and cloth, and adds an aura, because an aura
+# alone is lost at the 96 px sprite. Seams that glow are their own material slot, so the GLB keeps the glow.
+STYLE = {
+    "wood": dict(shell=(0.50, 0.46, 0.34), shell_hi=(0.62, 0.58, 0.46), rough=0.8, metal=0.0, moss=True, seam=None,
+                 plastron=(0.62, 0.55, 0.40), skin=(0.48, 0.55, 0.26), spot=(0.25, 0.31, 0.12), throat=(0.86, 0.82, 0.55),
+                 cloth=(0.88, 0.85, 0.70), trim=(0.20, 0.45, 0.18), tassel=(0.66, 0.22, 0.12), bead=(0.40, 0.22, 0.10),
+                 iris=(0.5, 0.3, 0.1), iris_glow=0.0, staff=((0.42, 0.28, 0.16), 0.7, 0.0),
+                 growth="sapling", aura="leaves"),
+    "fire": dict(shell=(0.09, 0.075, 0.075), shell_hi=(0.2, 0.15, 0.14), rough=0.5, metal=0.0, moss=False,
+                 seam=((1.0, 0.32, 0.04), 5.0, 0.028), plastron=(0.3, 0.12, 0.08),
+                 skin=(0.58, 0.2, 0.11), spot=(0.2, 0.06, 0.04), throat=(0.98, 0.7, 0.32),
+                 cloth=(0.5, 0.07, 0.05), trim=(0.08, 0.06, 0.06), tassel=(1.0, 0.72, 0.2), bead=(0.07, 0.06, 0.06),
+                 iris=(1.0, 0.55, 0.08), iris_glow=5.0, staff=((0.08, 0.07, 0.07), 0.3, 0.0),
+                 growth="obsidian", aura="embers"),
+    "water": dict(shell=(0.06, 0.36, 0.46), shell_hi=(0.18, 0.58, 0.64), rough=0.08, metal=0.0, moss=False,
+                  seam=((0.78, 0.97, 1.0), 2.0, 0.018), plastron=(0.75, 0.88, 0.88),
+                  skin=(0.28, 0.55, 0.64), spot=(0.1, 0.28, 0.42), throat=(0.86, 0.95, 0.94),
+                  cloth=(0.1, 0.22, 0.48), trim=(0.88, 0.96, 0.98), tassel=(0.9, 0.97, 1.0), bead=(0.92, 0.9, 0.88),
+                  iris=(0.1, 0.42, 0.9), iris_glow=1.0, staff=((0.62, 0.66, 0.66), 0.6, 0.0),
+                  growth="shells", aura="droplets"),
+    "metal": dict(shell=(0.74, 0.76, 0.8), shell_hi=(0.95, 0.96, 0.98), rough=0.38, metal=0.7, moss=False,
+                  seam=((1.0, 0.8, 0.42), 2.5, 0.016), plastron=(0.55, 0.57, 0.62),
+                  skin=(0.5, 0.56, 0.65), spot=(0.28, 0.32, 0.42), throat=(0.88, 0.89, 0.92),
+                  cloth=(0.94, 0.95, 0.97), trim=(0.24, 0.27, 0.34), tassel=(0.88, 0.7, 0.3), bead=(0.6, 0.62, 0.66),
+                  iris=(0.55, 0.8, 1.0), iris_glow=2.0, staff=((0.75, 0.77, 0.8), 0.25, 1.0),
+                  growth="plates", aura="rings"),
+    "earth": dict(shell=(0.38, 0.34, 0.29), shell_hi=(0.55, 0.5, 0.42), rough=0.95, metal=0.0, moss=False,
+                  seam=((1.0, 0.6, 0.1), 2.5, 0.02), plastron=(0.6, 0.48, 0.3),
+                  skin=(0.76, 0.56, 0.3), spot=(0.42, 0.26, 0.12), throat=(0.94, 0.84, 0.6),
+                  cloth=(0.62, 0.42, 0.18), trim=(0.26, 0.15, 0.07), tassel=(0.96, 0.68, 0.18), bead=(0.3, 0.2, 0.12),
+                  iris=(0.95, 0.62, 0.12), iris_glow=1.5, staff=((0.42, 0.28, 0.16), 0.8, 0.0),
+                  growth="crystals", aura="pebbles"),
+}
+MOSS = (0.36, 0.47, 0.18)
+GOLD = (0.72, 0.56, 0.25)
 
 
 def select_only(o):
@@ -192,13 +230,14 @@ def smooth(o):
     for p in o.data.polygons: p.use_smooth = True
 
 
-def vmat(name, rough=0.7, glow=0.0):
+def vmat(name, rough=0.7, glow=0.0, metal=0.0):
     """A material that takes its colour from the mesh's painted colours (COLOR_0 in the GLB)."""
     m = bpy.data.materials.new(name); m.use_nodes = True
     nt = m.node_tree; p = nt.nodes["Principled BSDF"]
     ca = nt.nodes.new("ShaderNodeVertexColor"); ca.layer_name = "Col"
     nt.links.new(ca.outputs["Color"], p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = rough
+    p.inputs["Metallic"].default_value = metal
     if glow:
         nt.links.new(ca.outputs["Color"], p.inputs["Emission Color"])
         p.inputs["Emission Strength"].default_value = glow
@@ -240,59 +279,91 @@ def blob(name, parts, res=0.03, faces=7000):
     return o
 
 
-def skin_paint(body, seed, throat):
-    """Olive skin with darker rounded spots and a pale throat; throat(p, n) says where the pale skin goes.
-    The spots cover the nearest third of each cell, so their size holds whatever the noise's range."""
+def skin_paint(body, seed, throat, S):
+    """Skin in the element's colour with darker rounded spots and a pale throat; throat(p, n) says where the pale
+    skin goes. The spots cover the nearest third of each cell, so their size holds whatever the noise's range."""
     cell = lambda p: noise.voronoi(p * 7.0 + Vector((seed, 0, 0)))[0][0]
     ds = sorted(cell(v.co) for v in body.data.vertices)
     lo, hi = ds[len(ds) // 6], ds[len(ds) // 3]
 
     def fn(p, n):
         d = cell(p)
-        c = SKIN
-        if d < hi: c = mixc(SPOT, SKIN, max(0, (d - lo) / (hi - lo)))
+        c = S["skin"]
+        if d < hi: c = mixc(S["spot"], S["skin"], max(0, (d - lo) / (hi - lo)))
         t = throat(p, n)
-        if t > 0: c = mixc(c, THROAT, min(1, t))
+        if t > 0: c = mixc(c, S["throat"], min(1, t))
         return mixc(c, (0.1, 0.1, 0.08), 0.12 * max(0, -n.z))  # a little darker underneath
     return fn
 
 
-def shell_mesh(name, size, el_dk):
-    """A domed shell in its own frame (dome along +z): bulging scutes with sunken seams, moss on the crown,
-    and a flat plastron underneath. Returns the object at the origin."""
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=64, ring_count=32, radius=1.0)
-    o = bpy.context.active_object; o.name = name
-    base = mixc(SHELLC, el_dk, 0.22)
-    cols = []
-    for v in o.data.vertices:
-        d = v.co.normalized()
-        dist, _ = noise.voronoi(d * 3.0)
-        seam = dist[1] - dist[0]
-        m = noise.noise(d * 4.5) + 0.35 * noise.noise(d * 11)
-        moss = max(0.0, min(1.0, (m + 0.05) * 4)) if d.z > 0.35 else 0.0
-        f = 1 + 0.035 * min(seam, 0.35) - (0.03 * (1 - seam / 0.09) if seam < 0.09 else 0) + 0.035 * moss
-        p = Vector((d.x * 1.0, d.y * 0.86, d.z * 0.72)) * size * f
-        p.z = max(p.z, -0.1 * size)
-        v.co = p
-        c = mixc(base, (0.62, 0.58, 0.46), 0.3 * noise.noise(d * 7) + 0.15)
-        if seam < 0.14: c = mixc((0.12, 0.1, 0.07), c, (seam / 0.14) ** 1.5)
-        if moss: c = mixc(c, mixc(MOSS, (0.5, 0.58, 0.22), 0.5 + 0.5 * noise.noise(d * 20)), moss)
-        if p.z < -0.08 * size: c = (0.62, 0.55, 0.40)  # plastron
-        cols.append(c)
-    ca = o.data.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
-    for i, c in enumerate(cols): ca.data[i].color = (*lin(c), 1)
-    o.data.materials.append(vmat("shell", 0.8)); smooth(o)
+SHELL_SQUASH = Vector((1.0, 0.86, 0.72))
+
+
+def on_shell(d, size, lift=1.0):
+    """The point on the shell's dome in direction d, and its outward normal, in the shell's own frame."""
+    d = Vector(d).normalized()
+    p = Vector((d.x * SHELL_SQUASH.x, d.y * SHELL_SQUASH.y, d.z * SHELL_SQUASH.z)) * size * lift
+    n = Vector((p.x / SHELL_SQUASH.x ** 2, p.y / SHELL_SQUASH.y ** 2, p.z / SHELL_SQUASH.z ** 2)).normalized()
+    return p, n
+
+
+def pin(o, host, at, up, spin=0.0):
+    """Stand o on its host at `at` (host frame), its +z along `up`, turned by spin about that axis."""
+    q = Vector((0, 0, 1)).rotation_difference(Vector(up).normalized()) @ Quaternion((0, 0, 1), spin)
+    o.rotation_euler = q.to_euler(); o.location = at; o.parent = host
     return o
 
 
-def leaves(rng, host, n, size):
-    """Small leaves and a few white flowers growing out of the shell's moss, parented to the shell."""
-    greens = [solid(f"leaf{i}", c, 0.7) for i, c in enumerate(((0.33, 0.52, 0.18), (0.45, 0.6, 0.2)))]
+def shell_mesh(name, size, S):
+    """A domed shell in its own frame (dome along +z), in its element's material: scutes with seams, which glow
+    where the element burns or shines, and a flat plastron underneath. Returns the shell and the directions of the
+    scute centres on the dome, for what grows from it."""
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=128, ring_count=64, radius=1.0)
+    o = bpy.context.active_object; o.name = name
+    g = S["growth"]
+    cols, seams, centres = [], [], {}
+    for v in o.data.vertices:
+        d = v.co.normalized()
+        dist, pts = noise.voronoi(d * 3.0)
+        seam = dist[1] - dist[0]
+        m = noise.noise(d * 4.5) + 0.35 * noise.noise(d * 11)
+        moss = max(0.0, min(1.0, (m + 0.05) * 4)) if (S["moss"] and d.z > 0.35) else 0.0
+        wave = math.sin(dist[0] * 50)
+        bulge = {"obsidian": 0.055 * noise.noise(d * 9) + 0.025 * noise.noise(d * 23),
+                 "shells": 0.008 * wave,
+                 "plates": 0.045 * min(seam, 0.1) / 0.1 - 0.035,
+                 "crystals": 0.05 * noise.noise(d * 6) + 0.022 * noise.noise(d * 17)}.get(g, 0.035 * moss)
+        f = 1 + 0.035 * min(seam, 0.35) - (0.03 * (1 - seam / 0.09) if seam < 0.09 else 0) + bulge
+        p = Vector((d.x * SHELL_SQUASH.x, d.y * SHELL_SQUASH.y, d.z * SHELL_SQUASH.z)) * size * f
+        p.z = max(p.z, -0.1 * size)
+        v.co = p
+        c = mixc(S["shell"], S["shell_hi"], max(0, min(1, 0.5 * noise.noise(d * 7) + 0.4)))
+        if g == "shells" and wave > 0.55: c = mixc(c, (0.75, 0.95, 0.97), 0.5)  # wave-carved bands on each scute
+        if g == "plates": c = mixc(c, S["shell_hi"], max(0, 1 - dist[0] / 0.35) * 0.6)  # a polished boss per plate
+        if seam < 0.14 and not S["seam"]: c = mixc((0.12, 0.1, 0.07), c, (seam / 0.14) ** 1.5)
+        if moss: c = mixc(c, mixc(MOSS, (0.5, 0.58, 0.22), 0.5 + 0.5 * noise.noise(d * 20)), moss)
+        if p.z < -0.08 * size: c = S["plastron"]
+        cols.append(c); seams.append(seam if p.z > -0.08 * size else 1.0)
+        if d.z > 0.15: centres.setdefault(tuple(round(x, 3) for x in pts[0]), Vector(pts[0]).normalized())
+    ca = o.data.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
+    for i, c in enumerate(cols): ca.data[i].color = (*lin(c), 1)
+    o.data.materials.append(vmat("shell", S["rough"], metal=S["metal"])); smooth(o)
+    if S["seam"]:
+        col, strength, thr = S["seam"]
+        o.data.materials.append(solid("seam", col, 0.4, strength))
+        for poly in o.data.polygons:
+            if sum(seams[i] for i in poly.vertices) / len(poly.vertices) < thr: poly.material_index = 1
+    return o, [c for c in centres.values() if c.z > 0.2]
+
+
+def leaves(rng, host, n, size, colors=((0.33, 0.52, 0.18), (0.45, 0.6, 0.2)), flowers=True):
+    """Small leaves and a few white flowers growing out of the shell's crown, parented to the shell."""
+    greens = [solid(f"leaf{i}", c, 0.7) for i, c in enumerate(colors)]
     petal = solid("petal", (0.95, 0.93, 0.86), 0.6); heart = solid("heart", (0.9, 0.7, 0.2), 0.6)
     verts = [v for v in host.data.vertices if v.co.z > 0.45 * size * 0.72]
     for i in range(n):
         v = verts[rng.randrange(len(verts))]
-        if i % 6 == 5:
+        if flowers and i % 6 == 5:
             for k in range(5):
                 a = k * 2 * math.pi / 5
                 bpy.ops.mesh.primitive_uv_sphere_add(segments=8, ring_count=5, radius=0.035,
@@ -306,6 +377,184 @@ def leaves(rng, host, n, size):
             q = bpy.context.active_object; q.scale = (1.5, 0.7, 0.18); q.data.materials.append(greens[i % 2])
             q.rotation_euler = (rng.uniform(-0.6, 0.6), rng.uniform(-0.6, 0.6), rng.uniform(0, 6.3))
             q.parent = host; smooth(q)
+
+
+def tube(name, pts, r, m):
+    """A round tube along points, as a mesh."""
+    cu = bpy.data.curves.new(name, "CURVE"); cu.dimensions = "3D"; cu.bevel_depth = r; cu.bevel_resolution = 3
+    sp = cu.splines.new("POLY"); sp.points.add(len(pts) - 1)
+    for i, p in enumerate(pts): sp.points[i].co = (*p, 1)
+    o = bpy.data.objects.new(name, cu); bpy.context.scene.collection.objects.link(o)
+    select_only(o); bpy.ops.object.convert(target="MESH")
+    o = bpy.context.view_layer.objects.active; o.data.materials.append(m); smooth(o)
+    return o
+
+
+def sapling(rng, host, size, lt):
+    """Wood: a young tree growing from the crown of the shell, and vines trailing down its sides."""
+    bark, vine = solid("bark", (0.36, 0.24, 0.13), 0.85), solid("vine", (0.22, 0.4, 0.14), 0.7)
+    top, _ = on_shell((0, 0, 1), size)
+    pts = [top + Vector((0.04 * math.sin(k), 0.02 * k, 0.0)) * size + Vector((0, 0, 0.13 * k * size)) for k in range(6)]
+    tube("trunk", pts, 0.045 * size, bark).parent = host
+    for a, k in ((0.6, 3), (2.6, 4), (4.4, 3)):  # three branches
+        b0 = pts[k]; b1 = b0 + Vector((math.cos(a) * 0.22, math.sin(a) * 0.22, 0.15)) * size
+        tube("branch", [b0, (b0 + b1) / 2 + Vector((0, 0, 0.04 * size)), b1], 0.022 * size, bark).parent = host
+    canopy = [solid("canopy", c, 0.75, 0.15) for c in ((0.28, 0.6, 0.2), (0.42, 0.72, 0.26), (0.2, 0.46, 0.16))]
+    for i in range(16):
+        c = pts[-1] + Vector((rng.gauss(0, 0.2), rng.gauss(0, 0.2), rng.gauss(0.02, 0.1))) * size
+        o = ball("leafclump", canopy[i % 3], c, rng.uniform(0.08, 0.13) * size, (1.2, 1.0, 0.8), 12); o.parent = host
+    for a in (-1.0, -0.2, 0.6, 2.4, 3.4):  # vines from the crown down the flanks, leafing as they go
+        path = [on_shell((math.sin(t) * math.cos(a + 0.4 * t), math.sin(t) * math.sin(a + 0.4 * t), math.cos(t)), size, 1.03)[0]
+                for t in [0.25 + 0.16 * k for k in range(9)]]
+        tube("vine", path, 0.016 * size, vine).parent = host
+        for p in path[1::2]:
+            q = ball("vineleaf", canopy[1], p, 0.05 * size, (1.6, 0.7, 0.2), 8); q.parent = host
+            q.rotation_euler = (rng.uniform(-0.8, 0.8), rng.uniform(-0.8, 0.8), rng.uniform(0, 6.3))
+
+
+def growth(rng, host, centres, size, S, lt, upright=True):
+    """What the element grows from the shell's crown."""
+    g = S["growth"]
+    rng.shuffle(centres)
+    if g == "sapling":
+        leaves(rng, host, int(34 * size), size, ((0.3, 0.55, 0.16), (0.48, 0.68, 0.2)))
+        if upright: sapling(rng, host, size, lt)
+        else:
+            vine = solid("vine", (0.22, 0.4, 0.14), 0.7); green = solid("canopy", (0.36, 0.66, 0.22), 0.75, 0.15)
+            for a in (-1.2, -0.3, 0.6, 1.5, 2.6, 3.6):
+                path = [on_shell((math.sin(t) * math.cos(a), math.sin(t) * math.sin(a), math.cos(t)), size, 1.03)[0]
+                        for t in [0.1 + 0.18 * k for k in range(8)]]
+                tube("vine", path, 0.02 * size, vine).parent = host
+                for p in path[1::2]:
+                    q = ball("vineleaf", green, p, 0.06 * size, (1.6, 0.7, 0.2), 8); q.parent = host
+                    q.rotation_euler = (rng.uniform(-0.8, 0.8), rng.uniform(-0.8, 0.8), rng.uniform(0, 6.3))
+    elif g == "obsidian":  # basalt spikes along the crown, each tipped with a glowing ember
+        dark, hot = solid("obsidian", (0.05, 0.045, 0.05), 0.2), solid("emberstone", (1.0, 0.5, 0.1), 0.4, 9.0)
+        for c in sorted(centres, key=lambda c: -c.z)[:11]:
+            at, n = on_shell(c, size, 0.98)
+            h, r = size * rng.uniform(0.24, 0.42), size * rng.uniform(0.06, 0.09)
+            spin = rng.uniform(0, 6.3)
+            bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=r, depth=h)
+            o = bpy.context.active_object; o.data.materials.append(dark); pin(o, host, at + n * h * 0.42, n, spin)
+            bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=r * 0.42, depth=h * 0.36)
+            o = bpy.context.active_object; o.data.materials.append(hot); pin(o, host, at + n * h * 0.8, n, spin)
+    elif g == "shells":  # small seashells, pearls and water beading on the crown
+        conch, pearl = solid("conch", (0.96, 0.82, 0.74), 0.3), solid("pearl", (0.95, 0.95, 0.97), 0.12, 0.3)
+        drop = solid("droplet", (0.7, 0.93, 1.0), 0.02, 0.6, alpha=0.7)
+        for i, c in enumerate(sorted(centres, key=lambda c: -c.z)[:8]):
+            at, n = on_shell(c, size, 0.99)
+            if i % 3 == 2:
+                ball("pearl", pearl, at + n * 0.03 * size, 0.05 * size, seg=12).parent = host; continue
+            bpy.ops.mesh.primitive_cone_add(vertices=16, radius1=0.07 * size, radius2=0.0, depth=0.17 * size)
+            o = bpy.context.active_object; o.data.materials.append(conch); smooth(o)
+            tw = o.modifiers.new("t", "SIMPLE_DEFORM"); tw.deform_method = "TWIST"; tw.angle = 2.5; apply_mods(o)
+            side = n.cross(Vector((0, 0, 1)) if abs(n.z) < 0.9 else Vector((1, 0, 0))).normalized()
+            pin(o, host, at + n * 0.04 * size, side + n * 0.4, rng.uniform(0, 6.3))
+        verts = [v for v in host.data.vertices if v.co.z > 0.3 * size * 0.72]
+        for _ in range(26):
+            v = verts[rng.randrange(len(verts))]
+            ball("bead", drop, v.co + v.normal * 0.015 * size, rng.uniform(0.018, 0.034) * size, (1, 1, 0.7), 10).parent = host
+    elif g == "plates":  # a rivet at the heart of every plate and a crest of blades along the spine
+        rivet, blade = solid("rivet", GOLD, 0.25, 0.4, 1.0), solid("blade", (0.86, 0.88, 0.92), 0.15, 0.6, 1.0)
+        for c in centres:
+            at, n = on_shell(c, size, 1.03)
+            ball("rivet", rivet, at, 0.032 * size, seg=10).parent = host
+        for t in (-0.75, -0.38, 0.0, 0.38, 0.75):
+            at, n = on_shell((math.sin(t), 0, math.cos(t)), size, 0.98)
+            h = (0.24 - 0.1 * abs(t)) * size
+            bpy.ops.mesh.primitive_cone_add(vertices=4, radius1=0.16 * size, depth=h)
+            o = bpy.context.active_object; o.scale = (1.0, 0.12, 1.0); o.data.materials.append(blade)
+            pin(o, host, at + n * h * 0.45, n, t * 0.3)
+    elif g == "crystals":  # amber crystal clusters breaking out of the stone
+        amber = solid("amber", (1.0, 0.62, 0.12), 0.12, 3.5)
+        for c in sorted(centres, key=lambda c: -c.z)[:7]:
+            at, n = on_shell(c, size, 0.97)
+            for k in range(rng.randint(3, 5)):
+                h, r = size * rng.uniform(0.12, 0.34), size * rng.uniform(0.03, 0.055)
+                tilt = (n + Vector((rng.gauss(0, 0.35), rng.gauss(0, 0.35), rng.gauss(0, 0.2)))).normalized()
+                bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=r, depth=h)
+                o = bpy.context.active_object; o.data.materials.append(amber); pin(o, host, at + tilt * h * 0.45, tilt)
+                bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=r, depth=r * 1.8)
+                o = bpy.context.active_object; o.data.materials.append(amber); pin(o, host, at + tilt * (h * 0.95 + r * 0.9), tilt)
+
+
+def aura(rng, kind, lt, centre, radii, top):
+    """The element's aura around the spirit: a glowing pool at its feet and the element moving in the air.
+    centre and radii bound the body; top is the height of the head."""
+    cx, cy, cz = centre; rx, ry, rz = radii
+    for k, (s, a) in enumerate(((1.0, 0.32), (1.18, 0.2), (1.38, 0.1))):  # the pool, brightest under the body
+        bpy.ops.mesh.primitive_circle_add(vertices=64, radius=1.0, fill_type="NGON", location=(cx, cy, 0.004 + 0.002 * k))
+        o = bpy.context.active_object; o.scale = (rx * s, ry * s, 1); o.data.materials.append(solid("pool", lt, 0.5, 2.0, alpha=a))
+    if kind == "embers":
+        hot = [solid(f"ember{i}", c, 0.5, 8.0) for i, c in enumerate(((1.0, 0.86, 0.4), (1.0, 0.55, 0.12), (0.9, 0.22, 0.05)))]
+        for _ in range(80):
+            u = rng.random() ** 0.8
+            z = 0.1 + u * (top + 0.5)
+            spread = 1.15 - 0.5 * u
+            p = (cx + rng.gauss(0, rx * 0.5 * spread), cy + rng.gauss(0, ry * 0.5 * spread), z)
+            ball("ember", hot[min(2, int(u * 3))], p, (0.045 - 0.028 * u) * rng.uniform(0.6, 1.2), (1, 1, 1.6), 8)
+    elif kind == "droplets":
+        drop = solid("orbit", (0.6, 0.92, 1.0), 0.03, 2.0, alpha=0.8)
+        for k in range(18):  # a tilted ring of droplets
+            a = k * 2 * math.pi / 18
+            p = Vector((math.cos(a) * rx * 1.12, math.sin(a) * ry * 1.12, 0)); p.z = cz + 0.25 * p.x + 0.12 * p.y
+            o = ball("drop", drop, (cx + p.x, cy + p.y, p.z), 0.045, (1, 1, 1), 10)
+            bpy.ops.mesh.primitive_cone_add(vertices=10, radius1=0.042, depth=0.09, location=(cx + p.x, cy + p.y, p.z + 0.06))
+            bpy.context.active_object.data.materials.append(drop); smooth(bpy.context.active_object)
+        for k, (s, a) in enumerate(((1.05, 0.95), (1.4, 0.6), (1.8, 0.3))):  # ripples spreading from the feet
+            bpy.ops.mesh.primitive_torus_add(major_radius=1.0, minor_radius=0.012, major_segments=64, minor_segments=6,
+                                             location=(cx, cy, 0.012))
+            o = bpy.context.active_object; o.scale = (rx * s * 0.8, ry * s * 0.8, 1)
+            o.data.materials.append(solid("ripple", (0.7, 0.95, 1.0), 0.2, 3.0, alpha=a))
+        for _ in range(14):  # spray rising
+            p = (cx + rng.gauss(0, rx * 0.5), cy + rng.gauss(0, ry * 0.5), rng.uniform(0.2, top + 0.2))
+            ball("spray", drop, p, rng.uniform(0.012, 0.025), seg=8)
+    elif kind == "leaves":
+        greens = [solid(f"drift{i}", c, 0.7, 0.4) for i, c in enumerate(((0.32, 0.68, 0.2), (0.55, 0.8, 0.25), (0.82, 0.78, 0.3)))]
+        for k in range(30):  # leaves drifting up in a spiral
+            t = k / 30
+            a = k * 2.4
+            r = 1.05 + 0.25 * rng.random()
+            p = (cx + math.cos(a) * rx * r, cy + math.sin(a) * ry * r, 0.12 + t * (top + 0.2))
+            o = ball("drift", greens[k % 3], p, 0.06, (1.7, 0.75, 0.15), 8)
+            o.rotation_euler = (rng.uniform(-1, 1), rng.uniform(-1, 1), a)
+        petal = solid("petal", (0.98, 0.92, 0.9), 0.6, 0.3)
+        for _ in range(8):
+            p = (cx + rng.gauss(0, rx * 0.7), cy + rng.gauss(0, ry * 0.7), rng.uniform(0.3, top))
+            ball("petal", petal, p, 0.03, (1.3, 0.8, 0.3), 8).rotation_euler = (rng.uniform(-1, 1), rng.uniform(-1, 1), 0)
+    elif kind == "rings":
+        ring = solid("ring", (0.92, 0.94, 0.98), 0.15, 3.0, 1.0)
+        gold = solid("goldring", (1.0, 0.8, 0.42), 0.2, 2.5, 1.0)
+        shard = solid("shard", (0.85, 0.88, 0.95), 0.1, 1.5, 1.0)
+        for m, s, tilt in ((ring, 1.15, (0.35, 0.18, 0)), (gold, 1.35, (-0.28, 0.42, 0.6))):
+            bpy.ops.mesh.primitive_torus_add(major_radius=1.0, minor_radius=0.014, major_segments=96, minor_segments=6,
+                                             location=(cx, cy, cz), rotation=tilt)
+            o = bpy.context.active_object; o.scale = (rx * s, ry * s, rx * s); o.data.materials.append(m)
+        for k in range(12):  # shards orbiting on the inner ring
+            a = k * 2 * math.pi / 12 + 0.2
+            p = Matrix.Rotation(0.35, 3, "X") @ Matrix.Rotation(0.18, 3, "Y") @ Vector((math.cos(a) * rx * 1.15, math.sin(a) * ry * 1.15, 0))
+            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=0, radius=0.05, location=(cx + p.x, cy + p.y, cz + p.z))
+            o = bpy.context.active_object; o.scale = (0.5, 0.5, 1.6); o.data.materials.append(shard)
+            o.rotation_euler = (rng.uniform(0, 3), rng.uniform(0, 3), a)
+    elif kind == "pebbles":
+        stone = solid("pebble", (0.46, 0.4, 0.34), 0.95)
+        amber = solid("speck", (1.0, 0.65, 0.15), 0.2, 4.0)
+        dust = solid("dust", (0.85, 0.72, 0.5), 0.9, 0.6, alpha=0.6)
+        for k in range(14):  # stones lifted into the air around it
+            a = k * 2 * math.pi / 14 + rng.uniform(-0.2, 0.2)
+            p = (cx + math.cos(a) * rx * rng.uniform(1.0, 1.3), cy + math.sin(a) * ry * rng.uniform(1.0, 1.3),
+                 rng.uniform(0.15, cz + rz * 0.9))
+            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=rng.uniform(0.04, 0.1), location=p)
+            o = bpy.context.active_object; o.data.materials.append(stone)
+            for v in o.data.vertices: v.co *= 1 + 0.25 * noise.noise(v.co * 20 + Vector((k, 0, 0)))
+            o.rotation_euler = (rng.uniform(0, 3), rng.uniform(0, 3), 0)
+        for _ in range(10):
+            p = (cx + rng.gauss(0, rx * 0.8), cy + rng.gauss(0, ry * 0.8), rng.uniform(0.2, top))
+            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=0, radius=0.035, location=p)
+            bpy.context.active_object.data.materials.append(amber)
+        for _ in range(40):
+            p = (cx + rng.gauss(0, rx * 0.8), cy + rng.gauss(0, ry * 0.8), rng.uniform(0.02, 0.45) ** 1.5)
+            ball("dust", dust, p, rng.uniform(0.01, 0.022), seg=6)
 
 
 TRIGRAMS = ("111", "110", "101", "100", "011", "010", "001", "000")
@@ -351,8 +600,8 @@ def wrap_onto(o, target, offset=0.012):
     apply_mods(o)
 
 
-def drape(name, top, down, r_top, r_bot, length, trim, seed, sides=1.0):
-    """Cloth hanging from a ring: a cream shawl or robe with soft folds and a coloured hem."""
+def drape(name, top, down, r_top, r_bot, length, base, trim, seed, sides=1.0):
+    """Cloth hanging from a ring: a shawl or robe with soft folds and a hem in a second colour."""
     rng = random.Random(seed)
     S, R = 72, 16
     ph = [rng.uniform(0, 6.3) for _ in range(3)]
@@ -367,7 +616,7 @@ def drape(name, top, down, r_top, r_bot, length, trim, seed, sides=1.0):
             verts.append((r * math.cos(a), r * math.sin(a), -t * L))
             hem = t > 0.74
             band = 0.83 < t < 0.88
-            cols.append(mixc(CREAM, (0.7, 0.66, 0.55), 0.3 * t) if not hem else (mixc(CREAM, trim, 0.3) if band else trim))
+            cols.append(mixc(base, mixc(base, (0, 0, 0), 0.4), 0.3 * t) if not hem else (mixc(base, trim, 0.3) if band else trim))
     for j in range(R):
         for i in range(S):
             a, b = j * S + i, j * S + (i + 1) % S
@@ -390,23 +639,27 @@ def ball(name, m, at, r, scale=(1, 1, 1), seg=16):
     return o
 
 
-def beads(center, axis, radius, n, droop, jade_at, lt):
+def jade_of(lt):
+    return solid("jade", mixc(lt, (0.75, 0.85, 0.78), 0.45), 0.25, 0.25)
+
+
+def beads(center, axis, radius, n, droop, jade_at, lt, S):
     """A string of prayer beads round the neck, one jade bead in the element's colour with a knot and a tassel."""
     axis = Vector(axis).normalized()
     u = axis.cross(Vector((0, 0, 1))) if abs(axis.z) < 0.95 else Vector((0, 1, 0))
     u.normalize(); v = axis.cross(u).normalized()
-    bm, jm = solid("bead", BEAD, 0.35), solid("jade", mixc(lt, (0.75, 0.85, 0.78), 0.45), 0.25, 0.25)
+    bm, jm = solid("bead", S["bead"], 0.3, metal=S["metal"]), jade_of(lt)
     for k in range(n):
         a = k * 2 * math.pi / n
         p = Vector(center) + radius * (math.cos(a) * u + math.sin(a) * v)
         p.z -= droop * max(0, math.sin(a)) ** 2
         jade = k == jade_at
         ball("bead", jm if jade else bm, p, 0.085 if jade else 0.062, seg=10)
-        if jade: tassel(p - Vector((0, 0, 0.09)), 0.75)
+        if jade: tassel(p - Vector((0, 0, 0.09)), S["tassel"], 0.75)
 
 
-def tassel(at, s=1.0):
-    gold, red = solid("gold", GOLD, 0.35), solid("tassel", RED, 0.9)
+def tassel(at, col, s=1.0):
+    gold, red = solid("gold", GOLD, 0.35), solid("tassel", col, 0.9)
     bpy.ops.mesh.primitive_torus_add(major_radius=0.035 * s, minor_radius=0.011 * s, major_segments=12, minor_segments=5,
                                      location=at, rotation=(math.pi / 2, 0, 0))
     bpy.context.active_object.data.materials.append(gold)
@@ -415,14 +668,14 @@ def tassel(at, s=1.0):
     o = bpy.context.active_object; o.data.materials.append(red); smooth(o)
 
 
-def eye(body, toward, out, r=0.085):
-    """A big round eye set into the head where a ray from outside meets it: pale ball, brown iris, black pupil
-    and a white catchlight."""
+def eye(body, toward, out, S, r=0.085):
+    """A big round eye set into the head where a ray from outside meets it: pale ball, an iris in the element's
+    colour, black pupil and a white catchlight."""
     out = Vector(out).normalized()
     hit, loc, _, _ = body.ray_cast(Vector(toward) + out * 2, -out)
     at = (loc if hit else Vector(toward)) - out * r * 0.55
     ball("eyeball", solid("eyewhite", (0.93, 0.9, 0.82), 0.3), at, r)
-    ball("iris", solid("iris", (0.5, 0.3, 0.1), 0.25), Vector(at) + out * r * 0.4, r * 0.75)
+    ball("iris", solid("iris", S["iris"], 0.25, S["iris_glow"]), Vector(at) + out * r * 0.4, r * 0.75)
     ball("pupil", solid("pupil", (0.03, 0.03, 0.03), 0.2), Vector(at) + out * r * 0.68, r * 0.45)
     ball("glint", solid("glint", (1, 1, 1), 0.1, 3.0), Vector(at) + out * r * 0.95 + Vector((0, 0, r * 0.3)), r * 0.16)
 
@@ -445,13 +698,14 @@ def mouth(head, fwd_x, width, z0):
     return on
 
 
-def creature(sc, lt, dk):
-    """The living Shellback: a young tortoise sage, after Wendell's Taoist Tortoise concept."""
+def creature(sc, el, lt, dk):
+    """The living Shellback: a young tortoise sage, after Wendell's Taoist Tortoise concept, in its element."""
+    S = STYLE[el]
     lights(sc)
-    rng = random.Random(f"creature-{lt}")
-    shell = shell_mesh("shell", 0.98, dk)
+    rng = random.Random(f"creature-{el}")
+    shell, centres = shell_mesh("shell", 0.98, S)
     shell.location = (-0.15, 0, 0.42); shell.rotation_euler = (0, -0.12, 0)
-    leaves(rng, shell, 34, 0.98)
+    growth(rng, shell, centres, 0.98, S, lt)
     # the emblem faces the viewer on the shell's flank
     em = emblem("core", 0.42, lt)
     em.location = (-0.25, -0.7, 0.85); em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector((0.05, -0.8, 0.6))).to_euler()
@@ -469,31 +723,73 @@ def creature(sc, lt, dk):
     body = blob("body", parts, 0.028, 12000)
     smile = mouth(H, 0.2, 0.17, H.z - 0.08)
     throat = lambda p, n: (1.0 if (n.x > 0.35 and n.z < 0.1 and p.z > 0.55 and p.x > 0.55) else 0) * (1 if p.z < H.z + 0.05 else 0)
-    base = skin_paint(body, 1.3, throat)
-    paint(body, lambda p, n: (0.12, 0.1, 0.08) if smile(p) else mixc(base(p, n), lt, 0.08))
-    body.data.materials.append(vmat("skin", 0.75))
+    base = skin_paint(body, 1.3, throat, S)
+    paint(body, lambda p, n: (0.12, 0.1, 0.08) if smile(p) else base(p, n))
+    body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead)
     for s in (1, -1):
-        eye(body, H + Vector((0.1, 0, 0.08)), (0.5, s * 0.85, 0.15), 0.1)
-    drape("shawl", (0.62, 0, 0.86), (-0.3, 0, -1), 0.32, 0.62, 0.45, mixc((0.27, 0.45, 0.35), dk, 0.3), f"shawl-{lt}")
-    beads((0.74, 0, 0.88), (0.65, 0, 0.75), 0.3, 18, 0.12, 4, lt)
+        eye(body, H + Vector((0.1, 0, 0.08)), (0.5, s * 0.85, 0.15), S, 0.1)
+    drape("shawl", (0.62, 0, 0.86), (-0.3, 0, -1), 0.32, 0.62, 0.45, S["cloth"], S["trim"], f"shawl-{el}")
+    beads((0.74, 0, 0.88), (0.65, 0, 0.75), 0.3, 18, 0.12, 4, lt, S)
     # a gold bell and a jade disc hang from the shell's rim on the near side
     ball("bell", solid("gold", GOLD, 0.35), (-0.45, -0.8, 0.3), 0.11)
     bpy.ops.mesh.primitive_torus_add(major_radius=0.08, minor_radius=0.035, major_segments=20, minor_segments=8,
                                      location=(-0.72, -0.76, 0.27), rotation=(math.pi / 2, 0, 0.5))
-    bpy.context.active_object.data.materials.append(solid("jade", mixc(lt, (0.75, 0.85, 0.78), 0.45), 0.25, 0.25))
+    bpy.context.active_object.data.materials.append(jade_of(lt))
     smooth(bpy.context.active_object)
-    tassel(Vector((-0.45, -0.82, 0.16)), 0.9); tassel(Vector((-0.72, -0.78, 0.15)), 0.9)
+    tassel(Vector((-0.45, -0.82, 0.16)), S["tassel"], 0.9); tassel(Vector((-0.72, -0.78, 0.15)), S["tassel"], 0.9)
+    aura(rng, S["aura"], lt, (0.1, 0, 0.7), (1.35, 0.95, 0.75), 1.55)
 
 
-def ascended(sc, lt, dk):
+def staff_top(el, at, lt, S):
+    """What the staff carries: the element in the sage's hand."""
+    x, y, z = at
+    if el == "wood":
+        green = solid("sprout", (0.36, 0.68, 0.22), 0.7, 0.2)
+        for k in range(7):
+            a = k * 2 * math.pi / 7
+            o = ball("sprout", green, (x + 0.09 * math.cos(a), y + 0.09 * math.sin(a), z + 0.05 + 0.03 * (k % 2)), 0.08, (1.6, 0.7, 0.25), 10)
+            o.rotation_euler = (0.5 * math.sin(a), -0.5 * math.cos(a), a)
+        ball("bud", solid("bud", (0.95, 0.9, 0.85), 0.5, 0.5), (x, y, z + 0.1), 0.05)
+    elif el == "fire":
+        ball("flame", solid("flamecore", (1.0, 0.7, 0.2), 0.4, 12.0), (x, y, z + 0.12), 0.1)
+        bpy.ops.mesh.primitive_cone_add(vertices=16, radius1=0.12, depth=0.36, location=(x, y, z + 0.27))
+        o = bpy.context.active_object; o.data.materials.append(solid("flame", (1.0, 0.42, 0.06), 0.5, 7.0, alpha=0.6)); smooth(o)
+        iron = solid("iron", (0.1, 0.09, 0.09), 0.3, metal=1.0)
+        for r in (0.0, math.pi / 2):
+            bpy.ops.mesh.primitive_torus_add(major_radius=0.13, minor_radius=0.014, location=(x, y, z + 0.12), rotation=(math.pi / 2, 0, r))
+            bpy.context.active_object.data.materials.append(iron)
+    elif el == "water":
+        ball("pearl", solid("orb", (0.75, 0.95, 1.0), 0.03, 2.5, alpha=0.85), (x, y, z + 0.12), 0.12)
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.16, minor_radius=0.012, location=(x, y, z + 0.12), rotation=(1.2, 0.3, 0))
+        bpy.context.active_object.data.materials.append(solid("wave", (0.7, 0.95, 1.0), 0.2, 3.0))
+    elif el == "metal":
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.15, minor_radius=0.02, location=(x, y, z + 0.17), rotation=(math.pi / 2, 0, 0.5))
+        bpy.context.active_object.data.materials.append(solid("hoop", (0.9, 0.92, 0.95), 0.15, 0.8, 1.0))
+        chime = solid("chime", GOLD, 0.2, 0.6, 1.0)
+        for k in (-1, 0, 1):
+            bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=0.012, depth=0.16, location=(x + 0.04 * k, y + 0.05 * k, z + 0.06))
+            bpy.context.active_object.data.materials.append(chime)
+    elif el == "earth":
+        amber = solid("amber", (1.0, 0.62, 0.12), 0.12, 3.5)
+        for k, (dx, dy, h) in enumerate(((0, 0, 0.3), (0.06, 0.03, 0.2), (-0.05, -0.04, 0.18))):
+            bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.045, depth=h, location=(x + dx, y + dy, z + h / 2),
+                                                rotation=(dy * 4, -dx * 4, 0))
+            bpy.context.active_object.data.materials.append(amber)
+            bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=0.045, depth=0.08, location=(x + dx * 1.3, y + dy * 1.3, z + h + 0.03),
+                                            rotation=(dy * 4, -dx * 4, 0))
+            bpy.context.active_object.data.materials.append(amber)
+
+
+def ascended(sc, el, lt, dk):
     """The highest ally form: the tortoise sage standing upright in a long robe, shell on its back, a staff in hand
-    and its core grown into a yin-yang medallion over its heart."""
+    and its core grown into a yin-yang medallion over its heart, all in its element."""
+    S = STYLE[el]
     lights(sc)
-    rng = random.Random(f"ascended-{lt}")
-    shell = shell_mesh("shell", 0.62, dk)
+    rng = random.Random(f"ascended-{el}")
+    shell, centres = shell_mesh("shell", 0.62, S)
     shell.location = (-0.24, 0, 1.25); shell.rotation_euler = (0, -math.pi / 2, 0)
-    leaves(rng, shell, 22, 0.62)
+    growth(rng, shell, centres, 0.62, S, lt, upright=False)
     H = Vector((0.2, 0, 2.05))
     parts = [("ell", H, 0.22, (1.15, 0.92, 0.9)), ("ball", H + Vector((0.2, 0, -0.03)), 0.13),
              ("ball", H + Vector((0.02, 0.1, 0.11)), 0.08), ("ball", H + Vector((0.02, -0.1, 0.11)), 0.08),
@@ -505,34 +801,32 @@ def ascended(sc, lt, dk):
         feet.append((Vector((0.09, y * 1.1, 0.04)), Vector((1, 0.4 * (1 if y > 0 else -1), 0))))
     hands = []
     for s in (-1, 1):
-        sh, el, hd = Vector((0, s * 0.42, 1.5)), Vector((0.1, s * 0.5, 1.12)), Vector((0.32, s * 0.42, 0.95))
-        parts += [("cap", sh, el, 0.1), ("cap", el, hd, 0.09), ("ball", hd + Vector((0.04, 0, 0)), 0.1)]
+        sh, el_, hd = Vector((0, s * 0.42, 1.5)), Vector((0.1, s * 0.5, 1.12)), Vector((0.32, s * 0.42, 0.95))
+        parts += [("cap", sh, el_, 0.1), ("cap", el_, hd, 0.09), ("ball", hd + Vector((0.04, 0, 0)), 0.1)]
         hands.append(hd + Vector((0.04, 0, 0)))
     body = blob("body", parts, 0.025, 12000)
     smile = mouth(H, 0.14, 0.12, H.z - 0.07)
     throat = lambda p, n: 1.0 if (n.x > 0.4 and p.z > 1.5 and p.z < H.z - 0.02) else 0
-    base = skin_paint(body, 2.1, throat)
-    paint(body, lambda p, n: (0.12, 0.1, 0.08) if smile(p) else mixc(base(p, n), lt, 0.08))
-    body.data.materials.append(vmat("skin", 0.75))
+    base = skin_paint(body, 2.1, throat, S)
+    paint(body, lambda p, n: (0.12, 0.1, 0.08) if smile(p) else base(p, n))
+    body.data.materials.append(vmat("skin", 0.75 if S["rough"] > 0.3 else 0.4))
     for f, ahead in feet: claws(f, ahead, 0.8)
     for s in (1, -1):
-        eye(body, H + Vector((0.08, 0, 0.06)), (0.5, s * 0.85, 0.15), 0.075)
-    trim = mixc((0.27, 0.45, 0.35), dk, 0.3)
-    drape("robe", (0.02, 0, 1.12), (0, 0, -1), 0.4, 0.5, 0.85, trim, f"robe-{lt}", 0.15)
-    drape("shawl", (0.02, 0, 1.7), (0, 0, -1), 0.24, 0.5, 0.36, trim, f"shawl-{lt}", 0.5)
-    plate = ball("plastron", solid("plate", (0.66, 0.6, 0.44), 0.6), (0.27, 0, 1.22), 0.25, (0.35, 0.8, 1.0), 24)
+        eye(body, H + Vector((0.08, 0, 0.06)), (0.5, s * 0.85, 0.15), S, 0.075)
+    drape("robe", (0.02, 0, 1.12), (0, 0, -1), 0.4, 0.5, 0.85, S["cloth"], S["trim"], f"robe-{el}", 0.15)
+    drape("shawl", (0.02, 0, 1.7), (0, 0, -1), 0.24, 0.5, 0.36, mixc(S["cloth"], S["trim"], 0.35), S["trim"], f"shawl-{el}", 0.5)
+    plate = ball("plastron", solid("plate", S["plastron"], 0.6, metal=S["metal"]), (0.27, 0, 1.22), 0.25, (0.35, 0.8, 1.0), 24)
     em = emblem("core", 0.17, lt, 2.6, 56)
     em.location = (0.37, 0, 1.22); em.rotation_euler = (0, math.pi / 2, 0)
     bpy.context.view_layer.update(); wrap_onto(em, plate, 0.01)
-    beads((0.05, 0, 1.68), (0.15, 0, 1), 0.27, 18, 0.1, 4, lt)
-    # a wooden staff with a gourd, held in the far hand so the medallion stays in view
-    wood = solid("staff", (0.42, 0.28, 0.16), 0.7)
+    beads((0.05, 0, 1.68), (0.15, 0, 1), 0.27, 18, 0.1, 4, lt, S)
+    # the staff, held in the far hand so the medallion stays in view, carries the element at its head
+    col, rough, metal = S["staff"]
     h = hands[1]
     bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.035, depth=2.15, location=(h.x, h.y + 0.02, 1.0))
-    o = bpy.context.active_object; o.data.materials.append(wood); o.rotation_euler = (-0.04, 0, 0); smooth(o)
-    gourd = solid("gourd", (0.78, 0.58, 0.28), 0.5)
-    ball("gourd", gourd, (h.x, h.y + 0.06, 2.12), 0.1); ball("gourd", gourd, (h.x, h.y + 0.06, 2.27), 0.07)
-    tassel(Vector((h.x, h.y + 0.1, 2.0)), 0.8)
+    o = bpy.context.active_object; o.data.materials.append(solid("staff", col, rough, metal=metal)); o.rotation_euler = (-0.04, 0, 0); smooth(o)
+    staff_top(el, (h.x, h.y + 0.06, 2.08), lt, S)
+    aura(rng, S["aura"], lt, (0.0, 0, 1.15), (0.75, 0.75, 1.0), 2.35)
 
 
 def render(sc, path):
@@ -555,7 +849,8 @@ for d in ("render", "sprite", "glb"): (OUT / d).mkdir(parents=True, exist_ok=Tru
 for el, (lt, dk) in ELEMENTS.items():
     if args.only and el != args.only: continue
     for st in STAGES:
-        sc = reset(1.2, 3.3) if st == "ascended" else reset(0.65, 3.3) if st == "creature" else reset()
+        if args.stages and st not in args.stages.split(","): continue
+        sc = reset(1.3, 3.8) if st == "ascended" else reset(0.75, 4.0) if st == "creature" else reset()
         rng = random.Random(f"shellback-{el}-{st}")
         if st == "gas":
             gas(rng, lt, dk, 140, 0.42)
@@ -564,9 +859,9 @@ for el, (lt, dk) in ELEMENTS.items():
         elif st == "hologram":
             hologram(lt, dk)
         elif st == "creature":
-            creature(sc, lt, dk)
+            creature(sc, el, lt, dk)
         else:
-            ascended(sc, lt, dk)
+            ascended(sc, el, lt, dk)
         base = f"{el}-{st}"
         render(sc, OUT / "render" / f"{base}.png")
         sprite(OUT / "render" / f"{base}.png", OUT / "sprite" / f"{base}.png", args.sprite)
