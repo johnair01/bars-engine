@@ -3,7 +3,8 @@
     python3 build_proof.py OUT_DIR tortoise=DIR armadillo=DIR pangolin=DIR
 
 Writes OUT_DIR/index.html with the renders and sprites inline, and OUT_DIR/glb/<base>-<element>-<stage>.glb
-meshopt-compressed, which the page fetches when a model is picked (publish them beside the page as its files)."""
+meshopt-compressed, and OUT_DIR/glb/<base>-<element>-<stage>.txt, the same file in base64, which the page fetches when a
+model is picked (the artifact host serves .txt but not .glb; publish the .txt files beside the page)."""
 import base64, io, json, pathlib, subprocess, sys
 from PIL import Image
 
@@ -36,6 +37,9 @@ for base, name in BASES.items():
         for s in ST:
             subprocess.run(["npx", "-y", "@gltf-transform/cli@4", "meshopt", str(W / "glb" / f"{e}-{s}.glb"),
                             str(OUT / "glb" / f"{base}-{e}-{s}.glb")], check=True, capture_output=True)
+        for s in ST:
+            g = OUT / "glb" / f"{base}-{e}-{s}.glb"
+            g.with_suffix(".txt").write_text(base64.b64encode(g.read_bytes()).decode())
     largest = max(largest, max(i["glb_kb"] for i in json.loads((W / "report.json").read_text())["items"]))
     rows += f'<div data-base="{base}"{"" if base == "armadillo" else " hidden"}>'
     for e in EL:

@@ -121,11 +121,12 @@ const ctl = new OrbitControls(cam, cv); ctl.target.set(0, 0.3, 0); ctl.enableDam
 scene.add(new THREE.AmbientLight(0xffffff, 0.6)); const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(3, 5, 3); scene.add(sun);
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder); let current = null;
 const cache = {}; let want = "";
+function b64(s){ const bin = atob(s.trim()), u = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u.buffer; }
 async function load(){
   const key = st.base+"-"+st.el+"-"+st.st; want = key;
   document.querySelectorAll("[data-base]").forEach(x => x.hidden = x.dataset.base !== st.base);
   document.getElementById("info").textContent = "Loading the model.";
-  try { cache[key] = cache[key] || await (await fetch("glb/"+key+".glb")).arrayBuffer(); }
+  try { cache[key] = cache[key] || b64(await (await fetch("glb/"+key+".txt")).text()); }
   catch(e){ document.getElementById("info").textContent = "The model did not load: " + e.message; return; }
   if(want !== key) return;
   loader.parse(cache[key].slice(0), "", g => {
