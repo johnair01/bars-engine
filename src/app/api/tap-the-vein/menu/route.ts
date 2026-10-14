@@ -18,7 +18,7 @@ import { loadActiveLensGoals, loadLatestSealedMenu } from '@/lib/tap-the-vein/me
  * built from menu items only (src/lib/tap-the-vein/menu.ts, toMenuExport).
  *
  * Required env vars:
- *   COUNCIL_MENU_TOKEN      — read-only secret; it opens this route and /api/lenses/goals, nothing else
+ *   COUNCIL_MENU_TOKEN      — read-only secret; it opens this route and /api/lenses/goals (read, and POST of goals he kept on the board), nothing else
  *   COUNCIL_MENU_PLAYER_ID  — whose menu it reads
  *
  * The token comes as `Authorization: Bearer <token>` or as `?token=<token>`.
