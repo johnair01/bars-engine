@@ -8,10 +8,11 @@ each element gives them its own shell, growth, colours and aura (round 2, "drama
 gives every element the same lidded eye with only the iris colour changing, a lava crust in place of fire's spikes,
 and ribbons of water in place of water's ring of drops. Round 5, after the players' look at round 3, gives the tortoise
 the concept's face (a domed skull and a beak that overhangs the lower jaw, with a carved mouth seam in place of the
-painted smile) and every base a smaller, deeper-set eye whose dark iris leaves almost no white.
+painted smile) and every base a smaller, deeper-set eye whose dark iris leaves almost no white. Round 7 adds the nation
+layer (--nation meridia): the regional style of where the spirit was met, over the element's, on every stage.
 Each stage is rendered with Cycles on the CPU and shrunk to a pixel sprite, so one model gives both assets (sg-assets-modular). Nothing is downloaded.
 
-    /home/user/blenv/bin/python tools/blender-cloud/content/spirits/shellback.py OUT_DIR [--samples 32] [--size 512] [--heads]
+    /home/user/blenv/bin/python tools/blender-cloud/content/spirits/shellback.py OUT_DIR [--samples 32] [--size 512] [--heads] [--nation meridia]
 
 Writes OUT_DIR/render/<element>-<stage>.png, OUT_DIR/sprite/<element>-<stage>.png (96 px, three alpha steps),
 OUT_DIR/glb/<element>-<stage>.glb and OUT_DIR/report.json; --heads adds OUT_DIR/head/<element>-<stage>.png, a close-up
@@ -33,6 +34,8 @@ ap.add_argument("--stages", default="", help="comma-separated stages to build, f
 ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin"],
                 help="the family's animal base (round 4 adds the armadillo and the pangolin)")
 ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
+ap.add_argument("--nation", default="", choices=["", "meridia"],
+                help="the nation where it was met, which adds its regional style over the element's (round 7: Meridia)")
 args = ap.parse_args(argv)
 OUT = pathlib.Path(args.out)
 
@@ -912,6 +915,7 @@ def creature(sc, el, lt, dk):
     H = Vector((1.2, 0, 1.22))
     HEAD["at"] = H
     parts = [("cap", (0.45, 0, 0.5), (0.98, 0, 1.02), 0.22), ("ball", (0.5, 0, 0.42), 0.3)] + tortoise_head(H, 1.2)
+    NECK["at"] = (Vector((0.86, 0, 0.9)), Vector((0.53, 0, 0.52)), 0.22)
     feet = []
     for x, y in ((0.45, -0.52), (0.45, 0.52), (-0.65, -0.52), (-0.65, 0.52)):
         parts += [("cap", (x, y * 0.85, 0.42), (x + 0.04, y, 0.08), 0.21),
@@ -991,6 +995,7 @@ def ascended(sc, el, lt, dk):
     growth(rng, shell, centres, 0.62, S, lt, upright=False)
     H = Vector((0.2, 0, 2.05))
     HEAD["at"] = H
+    NECK["at"] = (Vector((0.06, 0, 1.72)), Vector((0.2, 0, 1)), 0.17)
     parts = tortoise_head(H, 0.88) + [
              ("cap", (0.0, 0, 1.55), (0.12, 0, 1.92), 0.13), ("cap", (0, 0, 0.95), (0, 0, 1.5), 0.3),
              ("ball", (0, 0, 0.9), 0.3), ("cap", (0, -0.32, 1.52), (0, 0.32, 1.52), 0.15)]
@@ -1237,6 +1242,7 @@ def creature_long(sc, el, lt, dk, base):
     bpy.context.view_layer.update(); wrap_onto(em, shell)
     H = Vector((1.36, 0, 0.62)) if arma else Vector((1.4, 0, 0.5))
     HEAD["at"] = H
+    NECK["at"] = (H + Vector((-0.42, 0, -0.04)), Vector((1, 0, 0.12)), 0.2)
     parts = snout(H, base) + [("cap", (0.7, 0, 0.44), (H.x - 0.18, 0, H.z - 0.02), 0.2),
                               ("ball", (0.35, 0, 0.42), 0.32), ("ball", (-0.55, 0, 0.42), 0.32)]
     feet = []
@@ -1288,6 +1294,7 @@ def ascended_long(sc, el, lt, dk, base):
     growth(rng, shell, centres, 0.56, S, lt, upright=False)
     H = Vector((0.2, 0, 2.03))
     HEAD["at"] = H
+    NECK["at"] = (Vector((0.06, 0, 1.7)), Vector((0.2, 0, 1)), 0.17)
     parts = snout(H, base, 0.85) + [("cap", (0.0, 0, 1.55), (0.12, 0, 1.9), 0.13), ("cap", (0, 0, 0.95), (0, 0, 1.5), 0.3),
                                     ("ball", (0, 0, 0.9), 0.3), ("cap", (0, -0.32, 1.52), (0, 0.32, 1.52), 0.15)]
     feet = []
@@ -1330,6 +1337,117 @@ def ascended_long(sc, el, lt, dk, base):
     aura(rng, S["aura"], lt, (0.0, 0, 1.15), (0.8, 0.8, 1.0), 2.35)
 
 
+# Round 7: one nation style over every stage (sg-look-layers: the element sets colour, material and aura; where you
+# met the spirit sets the regional style). Meridia, the Golden Noon (Earth; clarity, trade and exchange), in stone and
+# terraces: a gold sun crest behind the head, a terraced collar of sandstone steps with gold lips, and trade coins in
+# place of the bell. The gas gathers inside a sun ring, the core sits on a terraced plinth, and the hologram stands
+# on a terraced dais of light. The nation keeps its own sandstone and gold in every element, so it reads as a second
+# axis: a Water spirit met in Meridia is still teal, wearing Meridia's stone and gold.
+NATIONS = {
+    "meridia": dict(stone=(0.84, 0.72, 0.52), stone_dk=(0.6, 0.48, 0.32), gold=(1.0, 0.76, 0.28), cord=(0.62, 0.12, 0.08)),
+}
+NECK = {}  # where each living builder's neck runs: (point, axis, radius), for the nation's collar
+CAM_DIR = Vector((3.4, -4.2, 0)).normalized()  # the sprite camera's heading, so the crest faces the sprite
+
+
+def face_cam(o, tilt=0.35):
+    o.rotation_euler = Vector((0, 0, 1)).rotation_difference((CAM_DIR + Vector((0, 0, tilt))).normalized()).to_euler()
+
+
+def sun_crest(N, at, r, light=None):
+    """The Golden Noon: a gold ring with twelve tapering rays, standing behind the head and facing the sprite camera."""
+    m = light or solid("sun", N["gold"], 0.25, 1.2, metal=0.8)
+    bpy.ops.mesh.primitive_torus_add(major_radius=r, minor_radius=r * 0.07, major_segments=48, minor_segments=8, location=at)
+    ring = bpy.context.active_object; ring.name = "sun"; ring.data.materials.append(m); smooth(ring)
+    rays = []
+    for k in range(12):
+        a = k * math.pi / 6
+        long_ = 0.55 if k % 2 == 0 else 0.35
+        bpy.ops.mesh.primitive_cone_add(vertices=4, radius1=r * 0.11, depth=r * long_, location=(0, 0, 0))
+        o = bpy.context.active_object; o.data.materials.append(m)
+        o.rotation_euler = (0, math.pi / 2, 0)  # point out along x, then fan round the ring's own axis
+        bpy.context.view_layer.update()
+        o.data.transform(o.matrix_basis); o.matrix_basis = Matrix.Identity(4)
+        o.data.transform(Matrix.Translation((r * (1.04 + long_ / 2), 0, 0)))
+        o.data.transform(Matrix.Rotation(a, 4, "Z"))
+        o.parent = ring; rays.append(o)
+    face_cam(ring)
+    return ring
+
+
+def terraces(N, at, axis, r0, steps=3, rise=0.05, step=0.06, square=False):
+    """Stepped sandstone rings, each a step wider going down the axis, each lipped in gold: Meridia's terraced hills."""
+    axis = Vector(axis).normalized()
+    rot = Vector((0, 0, 1)).rotation_difference(axis).to_euler()
+    stone, gold = solid("terrace", N["stone"], 0.85), solid("lip", N["gold"], 0.3, 0.4, metal=0.8)
+    for k in range(steps):
+        c = Vector(at) - axis * (k * rise)
+        r = r0 + k * step
+        v = 4 if square else 40
+        bpy.ops.mesh.primitive_cylinder_add(vertices=v, radius=r, depth=rise, location=c, rotation=rot)
+        o = bpy.context.active_object; o.name = "terrace"; o.data.materials.append(stone)
+        if square: o.rotation_euler.rotate_axis("Z", math.pi / 4)
+        else: smooth(o)
+        bpy.ops.mesh.primitive_torus_add(major_radius=r * (1.0 if not square else 1.08), minor_radius=0.012 + 0.004 * k,
+                                         major_segments=v * (1 if not square else 1), minor_segments=6,
+                                         location=c + axis * (rise / 2), rotation=rot)
+        lip = bpy.context.active_object; lip.data.materials.append(gold)
+        if square: lip.rotation_euler.rotate_axis("Z", math.pi / 4)
+
+
+def coins(N, at, n=3, s=1.0):
+    """Trade: a red cord strung with gold cash coins, each with its square hole."""
+    gold, hole, cord = solid("coin", N["gold"], 0.25, 0.3, metal=0.9), solid("hole", (0.05, 0.04, 0.03), 0.9), solid("cord", N["cord"], 0.9)
+    at = Vector(at)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.008 * s, depth=0.08 * s * (n + 0.5),
+                                        location=at - Vector((0, 0, 0.04 * s * (n + 0.5) - 0.02 * s)))
+    bpy.context.active_object.data.materials.append(cord)
+    for k in range(n):
+        c = at - Vector((0, 0, (0.06 + 0.085 * k) * s))
+        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.06 * s, depth=0.014 * s, location=c, rotation=(math.pi / 2, 0, 0.6))
+        o = bpy.context.active_object; o.name = "coin"; o.data.materials.append(gold); smooth(o)
+        bpy.ops.mesh.primitive_cube_add(size=0.034 * s, location=c, rotation=(math.pi / 2, 0, 0.6))
+        o = bpy.context.active_object; o.scale = (1, 1, 0.5); o.data.materials.append(hole)
+    tassel(at - Vector((0, 0, (0.06 + 0.085 * n) * s)), N["cord"], 0.7 * s)
+
+
+def nation_layer(nation, st, base, lt):
+    N = NATIONS[nation]
+    if st == "gas":
+        sun_crest(N, (0, 0, 0.35), 0.82, mat("noonlight", N["gold"], 1.4, 0.3))
+        # a fifth of the motes take the noon's gold
+        gm = mat("noonmote", N["gold"], 1.6, 0.6)
+        for o in [o for o in bpy.context.scene.objects if o.name.startswith("mote")][::5]:
+            o.data.materials.clear(); o.data.materials.append(gm)
+    elif st == "core":
+        terraces(N, (0, 0, -0.07), (0, 0, 1), 0.26, 3, 0.08, 0.13, square=True)
+        sun_crest(N, (0, 0, 0.42), 0.55, mat("noonlight", N["gold"], 1.4, 0.4))
+    elif st == "hologram":
+        light = mat("dais", N["gold"], 1.2, 0.2)
+        lip = mat("daislip", N["gold"], 2.6, 0.9)
+        for k in range(3):
+            r, z = 1.05 + (0.2 if base != "tortoise" else 0) - 0.18 * k, -0.25 + 0.05 * k
+            bpy.ops.mesh.primitive_cylinder_add(vertices=4, radius=r, depth=0.05, location=(0, 0, z), rotation=(0, 0, math.pi / 4))
+            bpy.context.active_object.data.materials.append(light)
+            bpy.ops.mesh.primitive_torus_add(major_radius=r * 1.0, minor_radius=0.014, major_segments=4, minor_segments=4,
+                                             location=(0, 0, z + 0.025), rotation=(0, 0, math.pi / 4))
+            bpy.context.active_object.data.materials.append(lip)
+        head = [o for o in bpy.context.scene.objects if o.name.startswith("head")][0].location
+        sun_crest(N, head - CAM_DIR * 0.3 + Vector((0, 0, 0.14)), 0.3, mat("crestlight", N["gold"], 2.2, 0.6))
+    else:
+        H = HEAD["at"]
+        up = st == "ascended"
+        sun_crest(N, H - CAM_DIR * (0.32 if up else 0.42) + Vector((0, 0, 0.12 if up else 0.14)), 0.27 if up else 0.33)
+        p, ax, r = NECK["at"]
+        terraces(N, p, ax, r, 3, 0.05 if up else 0.06, 0.05 if up else 0.065)
+        bell = bpy.context.scene.objects.get("bell")
+        if bell:  # the creature's gold bell becomes a string of trade coins
+            at = bell.location + Vector((0, 0, 0.1)); bpy.data.objects.remove(bell)
+            coins(N, at, 3, 1.1)
+        if up:  # the ally form wears its coins at the belt on the near side
+            coins(N, (0.36, -0.2, 1.1), 3, 0.95)
+
+
 def render(sc, path):
     sc.render.filepath = str(path)
     bpy.ops.render.render(write_still=True)
@@ -1345,7 +1463,7 @@ def sprite(src, dst, px):
     img.filepath_raw = str(dst); img.file_format = "PNG"; img.save()
 
 
-report = {"family": "shellback", "base": args.base, "daemon": "protector", "stages": STAGES, "items": []}
+report = {"family": "shellback", "base": args.base, "nation": args.nation or None, "daemon": "protector", "stages": STAGES, "items": []}
 for d in ("render", "sprite", "glb"): (OUT / d).mkdir(parents=True, exist_ok=True)
 for el, (lt, dk) in ELEMENTS.items():
     if args.only and el != args.only: continue
@@ -1365,6 +1483,8 @@ for el, (lt, dk) in ELEMENTS.items():
             creature(sc, el, lt, dk) if args.base == "tortoise" else creature_long(sc, el, lt, dk, args.base)
         else:
             ascended(sc, el, lt, dk) if args.base == "tortoise" else ascended_long(sc, el, lt, dk, args.base)
+        if args.nation:
+            nation_layer(args.nation, st, args.base, lt)
         base = f"{el}-{st}"
         render(sc, OUT / "render" / f"{base}.png")
         sprite(OUT / "render" / f"{base}.png", OUT / "sprite" / f"{base}.png", args.sprite)
