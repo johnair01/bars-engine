@@ -4,7 +4,9 @@ Stages (Wendell's board steers on sg-grows-into-shape and sg-holo-stages, 2026-1
 core, which projects a holographic ally into the world, which becomes a living creature, whose highest ally form is
 humanoid. The gas, core and hologram are built from primitives; the living creature and highest ally form are
 fused metaballs painted per vertex, after Wendell's "Taoist Tortoise" concept (2026-10-14: "too geometric"), and
-each element gives them its own shell, growth, colours and aura (round 2, "dramatically stronger contrasts").
+each element gives them its own shell, growth, colours and aura (round 2, "dramatically stronger contrasts"). Round 3
+gives every element the same lidded eye with only the iris colour changing, a lava crust in place of fire's spikes,
+and ribbons of water in place of water's ring of drops.
 Each stage is rendered with Cycles on the CPU and shrunk to a pixel sprite, so one model gives both assets (sg-assets-modular). Nothing is downloaded.
 
     /home/user/blenv/bin/python tools/blender-cloud/content/spirits/shellback.py OUT_DIR [--samples 32] [--size 512]
@@ -183,31 +185,31 @@ STYLE = {
     "wood": dict(shell=(0.50, 0.46, 0.34), shell_hi=(0.62, 0.58, 0.46), rough=0.8, metal=0.0, moss=True, seam=None,
                  plastron=(0.62, 0.55, 0.40), skin=(0.48, 0.55, 0.26), spot=(0.25, 0.31, 0.12), throat=(0.86, 0.82, 0.55),
                  cloth=(0.88, 0.85, 0.70), trim=(0.20, 0.45, 0.18), tassel=(0.66, 0.22, 0.12), bead=(0.40, 0.22, 0.10),
-                 iris=(0.5, 0.3, 0.1), iris_glow=0.0, staff=((0.42, 0.28, 0.16), 0.7, 0.0),
+                 iris=(0.5, 0.3, 0.1), staff=((0.42, 0.28, 0.16), 0.7, 0.0),
                  growth="sapling", aura="leaves"),
     "fire": dict(shell=(0.09, 0.075, 0.075), shell_hi=(0.2, 0.15, 0.14), rough=0.5, metal=0.0, moss=False,
                  seam=((1.0, 0.32, 0.04), 5.0, 0.028), plastron=(0.3, 0.12, 0.08),
                  skin=(0.58, 0.2, 0.11), spot=(0.2, 0.06, 0.04), throat=(0.98, 0.7, 0.32),
                  cloth=(0.5, 0.07, 0.05), trim=(0.08, 0.06, 0.06), tassel=(1.0, 0.72, 0.2), bead=(0.07, 0.06, 0.06),
-                 iris=(1.0, 0.55, 0.08), iris_glow=5.0, staff=((0.08, 0.07, 0.07), 0.3, 0.0),
+                 iris=(0.85, 0.32, 0.06), staff=((0.08, 0.07, 0.07), 0.3, 0.0),
                  growth="obsidian", aura="embers"),
     "water": dict(shell=(0.06, 0.36, 0.46), shell_hi=(0.18, 0.58, 0.64), rough=0.08, metal=0.0, moss=False,
                   seam=((0.78, 0.97, 1.0), 2.0, 0.018), plastron=(0.75, 0.88, 0.88),
                   skin=(0.28, 0.55, 0.64), spot=(0.1, 0.28, 0.42), throat=(0.86, 0.95, 0.94),
                   cloth=(0.1, 0.22, 0.48), trim=(0.88, 0.96, 0.98), tassel=(0.9, 0.97, 1.0), bead=(0.92, 0.9, 0.88),
-                  iris=(0.1, 0.42, 0.9), iris_glow=1.0, staff=((0.62, 0.66, 0.66), 0.6, 0.0),
-                  growth="shells", aura="droplets"),
+                  iris=(0.1, 0.42, 0.9), staff=((0.62, 0.66, 0.66), 0.6, 0.0),
+                  growth="shells", aura="streams"),
     "metal": dict(shell=(0.74, 0.76, 0.8), shell_hi=(0.95, 0.96, 0.98), rough=0.38, metal=0.7, moss=False,
                   seam=((1.0, 0.8, 0.42), 2.5, 0.016), plastron=(0.55, 0.57, 0.62),
                   skin=(0.5, 0.56, 0.65), spot=(0.28, 0.32, 0.42), throat=(0.88, 0.89, 0.92),
                   cloth=(0.94, 0.95, 0.97), trim=(0.24, 0.27, 0.34), tassel=(0.88, 0.7, 0.3), bead=(0.6, 0.62, 0.66),
-                  iris=(0.55, 0.8, 1.0), iris_glow=2.0, staff=((0.75, 0.77, 0.8), 0.25, 1.0),
+                  iris=(0.3, 0.5, 0.75), staff=((0.75, 0.77, 0.8), 0.25, 1.0),
                   growth="plates", aura="rings"),
     "earth": dict(shell=(0.38, 0.34, 0.29), shell_hi=(0.55, 0.5, 0.42), rough=0.95, metal=0.0, moss=False,
                   seam=((1.0, 0.6, 0.1), 2.5, 0.02), plastron=(0.6, 0.48, 0.3),
                   skin=(0.76, 0.56, 0.3), spot=(0.42, 0.26, 0.12), throat=(0.94, 0.84, 0.6),
                   cloth=(0.62, 0.42, 0.18), trim=(0.26, 0.15, 0.07), tassel=(0.96, 0.68, 0.18), bead=(0.3, 0.2, 0.12),
-                  iris=(0.95, 0.62, 0.12), iris_glow=1.5, staff=((0.42, 0.28, 0.16), 0.8, 0.0),
+                  iris=(0.78, 0.5, 0.1), staff=((0.42, 0.28, 0.16), 0.8, 0.0),
                   growth="crystals", aura="pebbles"),
 }
 MOSS = (0.36, 0.47, 0.18)
@@ -412,6 +414,56 @@ def sapling(rng, host, size, lt):
             q.rotation_euler = (rng.uniform(-0.8, 0.8), rng.uniform(-0.8, 0.8), rng.uniform(0, 6.3))
 
 
+def flame(name, at, up, h, cols):
+    """A small flame: a teardrop drawn up into a tip and bent a little, a pale heart inside a see-through skin."""
+    up = Vector(up).normalized(); out = []
+    for k, (col, alpha, s) in enumerate(cols):
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=10, radius=h * 0.28 * s)
+        o = bpy.context.active_object; o.name = name
+        for v in o.data.vertices:
+            t = max(0.0, v.co.z / (h * 0.28 * s))
+            v.co.x *= 1 - 0.85 * t; v.co.y *= 1 - 0.85 * t
+            v.co.z *= 1 + 2.6 * t
+            v.co.x += 0.25 * h * t * t  # the tip leans
+        o.data.materials.append(solid(name, col, 0.5, 6.0 - 2 * k, alpha=alpha)); smooth(o)
+        o.rotation_euler = Vector((0, 0, 1)).rotation_difference(up).to_euler(); o.location = at
+        out.append(o)
+    return out
+
+
+def lava_crust(rng, host, centres, size):
+    """Fire (round 3, Wendell: the spikes "don't look very natural"): cooled lava swelling up out of the seams as low
+    rounded basalt ridges and blisters, fused like the body and split by glowing cracks, with a few small flames
+    rising from the hottest seams. Nothing has a straight side."""
+    top = sorted(centres, key=lambda c: -c.z)[:12]
+    parts = []
+    for i, c in enumerate(top):
+        at, n = on_shell(c, size, 0.95)
+        parts.append(("ball", tuple(at), size * rng.uniform(0.11, 0.16)))
+        near = min((d for d in top if d is not c), key=lambda d: (d - c).length)
+        b, _ = on_shell(near, size, 0.94)
+        parts.append(("cap", tuple(at), tuple(at + (b - at) * 0.6), size * 0.07))  # a ridge running toward its neighbour
+        for _ in range(2):  # smaller blisters beside it
+            j = (c + Vector((rng.gauss(0, 0.18), rng.gauss(0, 0.18), rng.gauss(0, 0.08)))).normalized()
+            parts.append(("ball", tuple(on_shell(j, size, 0.96)[0]), size * rng.uniform(0.05, 0.08)))
+    crust = blob("crust", parts, 0.012 * size / 0.6, 6000)
+    crust.parent = host
+    rock = solid("basalt", (0.07, 0.06, 0.06), 0.55)
+    crack = solid("crack", (1.0, 0.36, 0.05), 0.4, 6.0)
+    crust.data.materials.append(rock); crust.data.materials.append(crack)
+    for poly in crust.data.polygons:
+        p = poly.center
+        dist, _ = noise.voronoi(p * (9.0 / size))
+        if dist[1] - dist[0] < 0.06: poly.material_index = 1
+    bpy.context.view_layer.update()
+    up = (host.matrix_world.inverted().to_3x3() @ Vector((0, 0, 1))).normalized()
+    hot = (((1.0, 0.8, 0.35), 0.8, 0.45), ((1.0, 0.4, 0.06), 0.4, 1.0))
+    for c in top[1:12:4]:  # three, spread over the crown
+        at, n = on_shell(c, size, 1.06)
+        h = size * rng.uniform(0.13, 0.19)
+        for o in flame("wisp", at + up * h * 0.25, (up * 2 + n).normalized(), h, hot): o.parent = host
+
+
 def growth(rng, host, centres, size, S, lt, upright=True):
     """What the element grows from the shell's crown."""
     g = S["growth"]
@@ -428,16 +480,7 @@ def growth(rng, host, centres, size, S, lt, upright=True):
                 for p in path[1::2]:
                     q = ball("vineleaf", green, p, 0.06 * size, (1.6, 0.7, 0.2), 8); q.parent = host
                     q.rotation_euler = (rng.uniform(-0.8, 0.8), rng.uniform(-0.8, 0.8), rng.uniform(0, 6.3))
-    elif g == "obsidian":  # basalt spikes along the crown, each tipped with a glowing ember
-        dark, hot = solid("obsidian", (0.05, 0.045, 0.05), 0.2), solid("emberstone", (1.0, 0.5, 0.1), 0.4, 9.0)
-        for c in sorted(centres, key=lambda c: -c.z)[:11]:
-            at, n = on_shell(c, size, 0.98)
-            h, r = size * rng.uniform(0.24, 0.42), size * rng.uniform(0.06, 0.09)
-            spin = rng.uniform(0, 6.3)
-            bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=r, depth=h)
-            o = bpy.context.active_object; o.data.materials.append(dark); pin(o, host, at + n * h * 0.42, n, spin)
-            bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=r * 0.42, depth=h * 0.36)
-            o = bpy.context.active_object; o.data.materials.append(hot); pin(o, host, at + n * h * 0.8, n, spin)
+    elif g == "obsidian": lava_crust(rng, host, centres, size)
     elif g == "shells":  # small seashells, pearls and water beading on the crown
         conch, pearl = solid("conch", (0.96, 0.82, 0.74), 0.3), solid("pearl", (0.95, 0.95, 0.97), 0.12, 0.3)
         drop = solid("droplet", (0.7, 0.93, 1.0), 0.02, 0.6, alpha=0.7)
@@ -478,6 +521,37 @@ def growth(rng, host, centres, size, S, lt, upright=True):
                 o = bpy.context.active_object; o.data.materials.append(amber); pin(o, host, at + tilt * (h * 0.95 + r * 0.9), tilt)
 
 
+def ribbon(name, rng, centre, radii, z0, z1, phase, turns, width=0.05, n=120):
+    """A thin strand of water spiralling up round the body: a flat ribbon that swells in the middle and thins to
+    nothing at both ends, turning over as it climbs, nearly clear with a brighter edge on each side."""
+    across = (-1.0, -0.88, 0.0, 0.88, 1.0)
+    verts, faces = [], []
+    wob = rng.uniform(0, 6.3)
+    for i in range(n + 1):
+        t = i / n
+        a = phase + t * turns * 2 * math.pi
+        p = Vector((centre[0] + math.cos(a) * radii[0] * (1 + 0.08 * math.sin(3 * a + wob)),
+                    centre[1] + math.sin(a) * radii[1] * (1 + 0.08 * math.sin(3 * a + wob)),
+                    z0 + (z1 - z0) * t + 0.06 * math.sin(5 * t * math.pi + wob)))
+        radial = Vector((math.cos(a), math.sin(a), 0))
+        tw = 0.7 * math.sin(2 * math.pi * t * 1.5 + wob)  # the ribbon turns over as it climbs
+        w = width * math.sin(math.pi * t) ** 0.7
+        d = Vector((0, 0, 1)) * math.cos(tw) + radial * math.sin(tw)
+        for u in across: verts.append(tuple(p + d * u * w))
+    m = len(across)
+    for i in range(n):
+        for j in range(m - 1): faces.append((i * m + j, i * m + j + 1, (i + 1) * m + j + 1, (i + 1) * m + j))
+    me = bpy.data.meshes.new(name); me.from_pydata(verts, [], faces)
+    o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o)
+    body = solid("stream", (0.62, 0.92, 1.0), 0.05, 0.8, alpha=0.2)
+    edge = solid("streamedge", (0.8, 0.97, 1.0), 0.05, 2.0, alpha=0.6)
+    for x in (body, edge): x.use_backface_culling = False; me.materials.append(x)
+    for f in me.polygons:
+        if (f.index % (m - 1)) in (0, m - 2): f.material_index = 1
+    smooth(o)
+    return o
+
+
 def aura(rng, kind, lt, centre, radii, top):
     """The element's aura around the spirit: a glowing pool at its feet and the element moving in the air.
     centre and radii bound the body; top is the height of the head."""
@@ -493,22 +567,15 @@ def aura(rng, kind, lt, centre, radii, top):
             spread = 1.15 - 0.5 * u
             p = (cx + rng.gauss(0, rx * 0.5 * spread), cy + rng.gauss(0, ry * 0.5 * spread), z)
             ball("ember", hot[min(2, int(u * 3))], p, (0.045 - 0.028 * u) * rng.uniform(0.6, 1.2), (1, 1, 1.6), 8)
-    elif kind == "droplets":
-        drop = solid("orbit", (0.6, 0.92, 1.0), 0.03, 2.0, alpha=0.8)
-        for k in range(18):  # a tilted ring of droplets
-            a = k * 2 * math.pi / 18
-            p = Vector((math.cos(a) * rx * 1.12, math.sin(a) * ry * 1.12, 0)); p.z = cz + 0.25 * p.x + 0.12 * p.y
-            o = ball("drop", drop, (cx + p.x, cy + p.y, p.z), 0.045, (1, 1, 1), 10)
-            bpy.ops.mesh.primitive_cone_add(vertices=10, radius1=0.042, depth=0.09, location=(cx + p.x, cy + p.y, p.z + 0.06))
-            bpy.context.active_object.data.materials.append(drop); smooth(bpy.context.active_object)
+    elif kind == "streams":  # round 3 (Wendell: strands of lightweight water, not spilled drops)
+        for k in range(2):
+            ribbon(f"stream{k}", rng, (cx, cy), (rx * (1.05 + 0.12 * k), ry * (1.05 + 0.12 * k)),
+                   0.12 + 0.15 * k, top * (0.8 + 0.15 * k), k * math.pi, 0.75 + 0.15 * k)
         for k, (s, a) in enumerate(((1.05, 0.95), (1.4, 0.6), (1.8, 0.3))):  # ripples spreading from the feet
             bpy.ops.mesh.primitive_torus_add(major_radius=1.0, minor_radius=0.012, major_segments=64, minor_segments=6,
                                              location=(cx, cy, 0.012))
             o = bpy.context.active_object; o.scale = (rx * s * 0.8, ry * s * 0.8, 1)
             o.data.materials.append(solid("ripple", (0.7, 0.95, 1.0), 0.2, 3.0, alpha=a))
-        for _ in range(14):  # spray rising
-            p = (cx + rng.gauss(0, rx * 0.5), cy + rng.gauss(0, ry * 0.5), rng.uniform(0.2, top + 0.2))
-            ball("spray", drop, p, rng.uniform(0.012, 0.025), seg=8)
     elif kind == "leaves":
         greens = [solid(f"drift{i}", c, 0.7, 0.4) for i, c in enumerate(((0.32, 0.68, 0.2), (0.55, 0.8, 0.25), (0.82, 0.78, 0.3)))]
         for k in range(30):  # leaves drifting up in a spiral
@@ -669,15 +736,38 @@ def tassel(at, col, s=1.0):
 
 
 def eye(body, toward, out, S, r=0.085):
-    """A big round eye set into the head where a ray from outside meets it: pale ball, an iris in the element's
-    colour, black pupil and a white catchlight."""
+    """One eye for every element (round 3, Wendell: "the same eyes but with different eye color"): a pale ball sunk
+    into the head where a ray from outside meets it, so only its front shows, under a heavy upper lid and a thin lower
+    lid in the skin's colour. The iris is painted on the ball in the element's colour, never lit; the pupil stays black and
+    the catchlight white."""
     out = Vector(out).normalized()
     hit, loc, _, _ = body.ray_cast(Vector(toward) + out * 2, -out)
-    at = (loc if hit else Vector(toward)) - out * r * 0.55
-    ball("eyeball", solid("eyewhite", (0.93, 0.9, 0.82), 0.3), at, r)
-    ball("iris", solid("iris", S["iris"], 0.25, S["iris_glow"]), Vector(at) + out * r * 0.4, r * 0.75)
-    ball("pupil", solid("pupil", (0.03, 0.03, 0.03), 0.2), Vector(at) + out * r * 0.68, r * 0.45)
-    ball("glint", solid("glint", (1, 1, 1), 0.1, 3.0), Vector(at) + out * r * 0.95 + Vector((0, 0, r * 0.3)), r * 0.16)
+    at = (loc if hit else Vector(toward)) - out * r * 0.5
+    gaze = (out + Vector((0.55, 0, -0.05))).normalized()  # a little forward of straight out, so it looks ahead
+    up = (Vector((0, 0, 1)) - out * out.z).normalized()
+    side = up.cross(out).normalized()
+    frame = Matrix((out, side, up)).transposed()  # local x along out, z up
+    eb = ball("eyeball", vmat("eye", 0.25), at, r, seg=48)
+    iris, dark = S["iris"], mixc(S["iris"], (0, 0, 0), 0.55)
+
+    def look(p, n):  # painted on the ball, so the iris sits flush instead of bulging out of it
+        c = (p - at).normalized().dot(gaze)
+        if c > 0.95: return (0.03, 0.03, 0.03)  # pupil
+        if c > 0.79: return mixc(iris, dark, (0.95 - c) / 0.16 * 0.4) if c > 0.82 else dark  # iris, darker at its rim
+        return (0.93, 0.9, 0.82)
+    bpy.context.view_layer.update(); paint(eb, look)
+    ball("glint", solid("glint", (1, 1, 1), 0.1, 3.0), at + (gaze + up * 0.22 + side * 0.12).normalized() * r, r * 0.11)
+    lid = solid("lid", mixc(S["skin"], S["spot"], 0.25), 0.7)
+    for name, keep, s_ in (("lid_upper", lambda v: v.z > 0.42 and v.x > -0.35, 1.14), ("lid_lower", lambda v: v.z < -0.55 and v.x > -0.2, 1.08)):
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=r * s_)
+        o = bpy.context.active_object; o.name = name
+        import bmesh
+        bm = bmesh.new(); bm.from_mesh(o.data)
+        bmesh.ops.delete(bm, geom=[v for v in bm.verts if not keep(v.co / (r * s_))], context="VERTS")
+        bm.to_mesh(o.data); bm.free()
+        sd = o.modifiers.new("s", "SOLIDIFY"); sd.thickness = r * 0.12; apply_mods(o)
+        o.matrix_world = Matrix.Translation(at) @ frame.to_4x4()
+        o.data.materials.append(lid); smooth(o)
 
 
 def claws(foot, ahead, s=1.0):
