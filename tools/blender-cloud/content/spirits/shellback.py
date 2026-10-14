@@ -31,8 +31,8 @@ ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--sprite", type=int, default=96)
 ap.add_argument("--only", default="", help="element to build alone, for a quick look")
 ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
-ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin"],
-                help="the family's animal base (round 4 adds the armadillo and the pangolin)")
+ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox"],
+                help="the animal base (round 4 adds the armadillo and the pangolin; round 8 the Player's Romp's fox)")
 ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
 ap.add_argument("--nation", default="", choices=["", "meridia"],
                 help="the nation where it was met, which adds its regional style over the element's (round 7: Meridia)")
@@ -316,7 +316,9 @@ BASES = {
     "tortoise": dict(squash=(1.0, 0.86, 0.72), pattern="scutes"),
     "armadillo": dict(squash=(1.3, 0.8, 0.64), pattern="bands"),
     "pangolin": dict(squash=(1.36, 0.74, 0.62), pattern="scales"),
+    "fox": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="romp"),  # round 8: the Player's Romp, no shell
 }
+FAMILY = BASES[args.base].get("family", "shellback")
 SHELL_SQUASH = Vector(BASES[args.base]["squash"])
 
 
@@ -1342,6 +1344,320 @@ def ascended_long(sc, el, lt, dk, base):
     aura(rng, S["aura"], lt, (0.0, 0, 1.15), (0.8, 0.8, 1.0), 2.35)
 
 
+# Round 8: the second body family, the Player's Romp (sg-body-from A: the urge picks the family; the Romp's bases are
+# the fox, the otter and the kid goat), with its fox base first. No concept art exists for any Romp base, so the fox is
+# built from the image prompt written for it (council/loops/prompts/spirit-generator-r8.md in the council's repo): a
+# narrow pointed muzzle, tall pointed ears with dark backs, a white bib and cheek ruff, dark stockings, and a brush of
+# a tail longer than its body with a pale tip, carried high. Where the Shellback sits, the Romp plays: the creature
+# has a forepaw lifted mid-step. The family has its own gas, drifting in a looping trail like a swishing tail, and its
+# own core, cut as a fox's jewel (the onion-tipped star ball, hoshi no tama, that foxes carry in Japanese folk tales).
+# It keeps every spirit's shared pieces: the lidded eye, the yin-yang core grown into its body, cloth, beads, tassel,
+# and the element's aura; the element sets the coat and what the tail and ruff carry, as it sets the Shellback's shell.
+FUR = {  # coat, saddle (darker along the back), pale (bib, cheeks, tail tip), stocking (legs and ear backs)
+    "wood":  ((0.56, 0.5, 0.24), (0.36, 0.36, 0.14), (0.92, 0.9, 0.74), (0.2, 0.2, 0.1)),
+    "fire":  ((0.86, 0.33, 0.1), (0.55, 0.14, 0.05), (0.98, 0.9, 0.78), (0.1, 0.05, 0.04)),
+    "water": ((0.34, 0.56, 0.7), (0.16, 0.3, 0.46), (0.9, 0.96, 0.98), (0.08, 0.14, 0.24)),
+    "metal": ((0.7, 0.72, 0.76), (0.36, 0.38, 0.44), (0.97, 0.97, 0.98), (0.12, 0.12, 0.15)),
+    "earth": ((0.84, 0.62, 0.32), (0.6, 0.4, 0.18), (0.97, 0.9, 0.74), (0.28, 0.17, 0.08)),
+}
+
+
+def romp_gas(rng, lt, dk, n=150):
+    """The Romp's gas: motes strung along a looping trail, a tail swished through the air, thickest at its head."""
+    motes = [mat(f"mote{i}", lt if i % 3 else dk, 1.8 - i * 0.4, 0.55 - i * 0.12) for i in range(3)]
+    for i in range(n):
+        t = rng.random() ** 1.6  # most motes at the trail's head
+        a = 0.6 + t * 2.4 * math.pi
+        c = Vector((0.75 * math.sin(a) * (1 - 0.45 * t), 0.5 * math.sin(2 * a) * (1 - 0.45 * t), 0.25 * math.cos(a) - 0.2 * t))
+        c += Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))) * (0.05 + 0.13 * t)
+        r = (0.03 + rng.random() * 0.06) * (1.25 - 0.6 * t)
+        obj_from(bpy.ops.mesh.primitive_ico_sphere_add, f"mote{i}", motes[i % 3], subdivisions=1, radius=r,
+                 location=(c.x, c.y, 0.38 + c.z))
+
+
+def romp_core(lt, at=(0, 0, 0.35), size=0.32):
+    """The Romp's core, cut as a fox's jewel: a faceted round pearl drawn up into a flame-like point that leans as it
+    rises, ringed below the point by a band of brighter facets."""
+    gem = mat("core", lt, 2.4, 0.95)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=10, ring_count=8, radius=size, location=at)
+    o = bpy.context.active_object; o.name = "core"; o.data.materials.append(gem)
+    for v in o.data.vertices:
+        t = max(0.0, v.co.z / size)
+        sq = 1 - 0.9 * t ** 1.5
+        a = 1.4 * t  # the point twists as it rises
+        x, y = v.co.x * sq, v.co.y * sq
+        v.co = Vector((x * math.cos(a) - y * math.sin(a) + 0.35 * size * t ** 2, x * math.sin(a) + y * math.cos(a),
+                       v.co.z * (1 + 1.3 * t ** 1.3)))
+    for f in o.data.polygons: f.use_smooth = False
+    band = mat("coreband", lt, 3.6, 0.9)
+    bpy.ops.mesh.primitive_torus_add(major_radius=size * 0.82, minor_radius=size * 0.06, major_segments=10,
+                                     minor_segments=3, location=(at[0], at[1], at[2] + size * 0.3))
+    bpy.context.active_object.data.materials.append(band)
+    return o
+
+
+def fox_hologram(lt, dk):
+    """The projected fox: a faceted body of light, its edges traced brighter, tall ears and a big tail carried high."""
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+
+    def traced(o):
+        w = o.copy(); w.data = o.data.copy(); bpy.context.scene.collection.objects.link(w)
+        w.data.materials.clear(); w.data.materials.append(edge)
+        md = w.modifiers.new("w", "WIREFRAME"); md.thickness = 0.018; md.use_replace = True
+    body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(0, 0, 0.5))
+    body.scale = (0.75, 0.32, 0.32); traced(body)
+    head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.2, location=(0.82, 0, 0.82))
+    head.scale = (1.1, 0.95, 0.85); traced(head)
+    obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=5, radius1=0.1, depth=0.34,
+             location=(1.08, 0, 0.76), rotation=(0, math.pi / 2 + 0.25, 0))
+    for side in (1, -1):
+        traced(obj_from(bpy.ops.mesh.primitive_cone_add, "ear", skin, vertices=3, radius1=0.09, depth=0.3,
+                        location=(0.76, side * 0.11, 1.07), rotation=(-side * 0.25, -0.15, 0)))
+    for x, y in ((0.5, 0.15), (0.5, -0.15), (-0.5, 0.15), (-0.5, -0.15)):
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=5, radius=0.06, depth=0.5, location=(x, y, 0.0))
+    at, _ = along([(-0.7, 0, 0.55), (-1.05, 0, 0.75), (-1.2, 0.04, 1.1), (-1.08, 0.08, 1.4)])
+    for k in range(4):  # the brush, in four facets, swelling then drawn to a point
+        t0, t1 = k / 4, (k + 1) / 4
+        p0, p1 = at(t0)[0], at(t1)[0]
+        r0, r1 = (0.1, 0.19, 0.22, 0.17)[k], (0.19, 0.22, 0.17, 0.02)[k]
+        bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=r0, radius2=r1, depth=(p1 - p0).length, location=(p0 + p1) / 2)
+        o = bpy.context.active_object; o.name = "tail"; o.data.materials.append(skin)
+        o.rotation_euler = Vector((0, 0, 1)).rotation_difference(p1 - p0).to_euler(); traced(o)
+    eye_ = mat("eye", (1, 1, 1), 9.0, 1.0)
+    for y in (0.1, -0.1):
+        obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.035, location=(0.98, y, 0.88))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.35, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    romp_core(lt, at=(0, 0, 0.48), size=0.17)
+
+
+def fox_head(H, s=1.0):
+    """Metaball parts for the fox's head: a rounded skull, a narrow muzzle drawn out to a point, cheek ruffs swept back."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
+    return [("ell", v(0, 0, 0), 0.17 * s, (1.1, 0.95, 0.85))] + \
+        taper(v, (0.1, 0, -0.035), (0.31, 0, -0.08), 0.105 * s, 0.038 * s, (1.2, 0.95, 0.85), (1.3, 0.85, 0.75), 8) + \
+        [("ell", v(-0.04, 0.11, -0.07), 0.1 * s, (1.3, 0.7, 0.9)), ("ell", v(-0.04, -0.11, -0.07), 0.1 * s, (1.3, 0.7, 0.9))]
+
+
+def fox_ears(H, F, s=1.0):
+    """Tall pointed ears in the coat's colour, dark toward the tip and pale inside, leaning a little out."""
+    inner = solid("earinner", mixc(F[2], F[0], 0.2), 0.85)
+    for side in (1, -1):
+        for name, m, sc, off in (("ear", None, (1, 0.36, 1), 0), ("earin", inner, (0.72, 0.2, 0.8), 0.024)):
+            bpy.ops.mesh.primitive_cone_add(vertices=24, radius1=0.1 * s, depth=0.24 * s)
+            o = bpy.context.active_object; o.name = name; o.scale = sc; smooth(o)
+            if m is None:  # the coat's colour, darkening to the tip
+                h = 0.12 * s
+                paint(o, lambda p, n, z0=o.location.z: mixc(F[0], F[3], max(0.0, min(1.0, ((p.z - z0) / h - 0.1) * 1.4))))
+                m = vmat("ear", 0.8)
+            o.data.materials.append(m)
+            o.rotation_euler = (-side * 0.28, -0.18, 0)
+            bpy.context.view_layer.update()
+            fwd = (o.matrix_world.to_3x3() @ Vector((1, 0, 0))).normalized()
+            o.location = H + Vector((-0.05, side * 0.1, 0.19)) * s + fwd * off * s
+
+
+def fluff(o, amt, scale=14.0, seed=0.0):
+    """Clumps of fur: push the skin out along its normals by a little noise."""
+    for v in o.data.vertices:
+        v.co += v.normal * amt * (0.5 + noise.noise(v.co * scale + Vector((seed, 0, 0))))
+
+
+def seg_dist(p, a, b):
+    a, b = Vector(a), Vector(b); ab = b - a
+    t = max(0.0, min(1.0, (p - a).dot(ab) / ab.length_squared))
+    return (p - (a + ab * t)).length
+
+
+def fox_paint(H, F, s, tail_tip, low=0.28, bib_x=0.3, bib_z=(0.55, 9.0), shins=()):
+    """The fox's coat: the element's colour, darker along the back, a pale bib, cheeks, muzzle and belly, dark
+    stockings, and the pale tip of the tail. shins are the lower leg segments, dark wherever the paw is."""
+    def fn(p, n):
+        c = mixc(F[0], F[1], max(0.0, n.z - 0.45) * 0.9)
+        head = (p - H).length < 0.42 * s
+        if head and (p.z < H.z - 0.04 * s or (p.x > H.x + 0.05 * s and n.z < 0.1)): c = F[2]  # cheeks and muzzle
+        if not head and p.x > bib_x and n.x > 0.15 and abs(p.y) < 0.13 * s and bib_z[0] < p.z < min(bib_z[1], H.z - 0.08 * s): c = F[2]  # bib
+        if n.z < -0.55: c = mixc(c, F[2], 0.7)
+        if p.z < low: c = mixc(F[3], c, max(0.0, (p.z - low + 0.12) / 0.12) if p.z > low - 0.12 else 0.0)  # stockings
+        if any(seg_dist(p, a, b) < 0.085 for a, b in shins): c = F[3]
+        if tail_tip and (p - tail_tip).length < 0.22 * s: c = F[2]
+        return c
+    return fn
+
+
+def tail_path(pts, n=14):
+    at, _ = along(pts)
+    return [at(k / (n - 1))[0] for k in range(n)]
+
+
+def fox_tail(name, pts, r, F, s=1.0):
+    """The brush: fused balls along the path, swelling past the root and drawn to a point, fluffed, the tip pale."""
+    path = tail_path(pts)
+    m = len(path) - 1
+    parts = [("ball", tuple(p), r * (0.45 + 1.1 * math.sin(math.pi * min(1.0, k / m * 0.92 + 0.08)) ** 0.8) * (1 - 0.6 * (k / m) ** 3))
+             for k, p in enumerate(path)]
+    o = blob(name, parts, 0.022 * s, 6000)
+    fluff(o, 0.03 * s, 9.0, 3.0)
+    tip = path[-1]
+    paint(o, lambda p, n: F[2] if (p - tip).length < 0.3 * s else mixc(F[0], F[1], max(0.0, n.z - 0.3) * 0.7))
+    o.data.materials.append(vmat("fur", 0.85))
+    return path
+
+
+def fox_growth(rng, el, S, F, lt, spine, tail, s=1.0):
+    """What the element does to the fox, as it does to the Shellback's shell: fire's tail burns at the tip, water's
+    trails a ribbon of water, wood's ruff and tail grow leaves and small flowers, metal wears engraved plates on its
+    shoulders and a blade crest down its tail, earth breaks out in amber crystals along its spine."""
+    tip, d_tip = tail[-1], (tail[-1] - tail[-3]).normalized()
+    if el == "fire":
+        hot = (((1.0, 0.85, 0.4), 0.85, 0.5), ((1.0, 0.45, 0.08), 0.45, 1.0))
+        for k, (dx, dy) in enumerate(((0, 0), (0.06, 0.05), (-0.05, -0.05))):
+            flame("tailfire", tip + Vector((dx, dy, 0)) * s, (d_tip + Vector((0, 0, 1.4))).normalized(), (0.42 - 0.12 * k) * s, hot)
+        glow = solid("ember", (1.0, 0.5, 0.1), 0.5, 4.0)
+        for p in tail[-5:-1]: ball("cinder", glow, p + Vector((rng.gauss(0, 0.08), rng.gauss(0, 0.08), 0.12)) * s, 0.025 * s, seg=8)
+    elif el == "water":
+        o = ribbon("tailstream", rng, (tip.x, tip.y), (0.22 * s, 0.22 * s), tip.z - 0.1 * s, tip.z + 0.5 * s, 0.0, 1.2, 0.06 * s)
+        drop = solid("droplet", (0.7, 0.93, 1.0), 0.02, 0.6, alpha=0.7)
+        for p in spine + tail[::2]:
+            ball("bead", drop, p + Vector((rng.gauss(0, 0.05), rng.gauss(0, 0.05), 0.12)) * s, rng.uniform(0.018, 0.03) * s, (1, 1, 0.7), 10)
+    elif el == "wood":
+        greens = [solid(f"leaf{i}", c, 0.7, 0.1) for i, c in enumerate(((0.3, 0.55, 0.16), (0.48, 0.68, 0.2)))]
+        petal, heart = solid("petal", (0.97, 0.95, 0.9), 0.6, 0.2), solid("heart", (0.9, 0.7, 0.2), 0.6)
+        for i, p in enumerate(spine[:3] + tail[2::2]):  # leaf sprays on the ruff and along the brush
+            for k in range(3):
+                q = ball("leaf", greens[(i + k) % 2], p + Vector((rng.gauss(0, 0.07), rng.gauss(0, 0.07), 0.13 + 0.03 * k)) * s,
+                         0.065 * s, (1.6, 0.7, 0.18), 8)
+                q.rotation_euler = (rng.uniform(-0.7, 0.7), rng.uniform(-0.7, 0.7), rng.uniform(0, 6.3))
+            if i % 2 == 0:
+                c = p + Vector((0, -0.05, 0.17)) * s
+                for k in range(5):
+                    a = k * 2 * math.pi / 5
+                    ball("petal", petal, c + Vector((math.cos(a), math.sin(a), 0)) * 0.035 * s, 0.035 * s, (1.3, 0.8, 0.35), 8).rotation_euler = (0, 0, a)
+                ball("heart", heart, c + Vector((0, 0, 0.01)) * s, 0.02 * s, seg=8)
+    elif el == "metal":
+        plate, rivet = solid("pauldron", (0.8, 0.82, 0.86), 0.25, 0.3, 0.9), solid("rivet", GOLD, 0.25, 0.4, 1.0)
+        blade = solid("blade", (0.86, 0.88, 0.92), 0.15, 0.6, 1.0)
+        for p in spine[:2]:  # plates over each shoulder
+            for side in (1, -1):
+                o = ball("pauldron", plate, p + Vector((0.02, side * 0.12, -0.02)) * s, 0.13 * s, (1.1, 0.5, 0.75), 20)
+                o.rotation_euler = (side * 0.6, 0, 0)
+                ball("rivet", rivet, p + Vector((0.02, side * 0.18, 0.04)) * s, 0.022 * s, seg=10)
+        for k, p in enumerate(tail[3:-2:2]):
+            d = (tail[min(len(tail) - 1, 4 + 2 * k)] - p).normalized()
+            up = Vector((0, 0, 1)) - d * d.z
+            bpy.ops.mesh.primitive_cone_add(vertices=4, radius1=0.09 * s, depth=0.2 * s)
+            o = bpy.context.active_object; o.scale = (1.0, 0.12, 1.0); o.data.materials.append(blade)
+            o.location = p + up.normalized() * 0.17 * s
+            o.rotation_euler = Vector((0, 0, 1)).rotation_difference(up).to_euler()
+    elif el == "earth":
+        amber = solid("amber", (1.0, 0.62, 0.12), 0.12, 3.5)
+        for p in spine[1:] + tail[3:8:2]:
+            for k in range(rng.randint(2, 4)):
+                h, r = s * rng.uniform(0.1, 0.22), s * rng.uniform(0.025, 0.045)
+                tilt = Vector((rng.gauss(0, 0.35), rng.gauss(0, 0.35), 1)).normalized()
+                at = p + Vector((0, 0, 0.08)) * s
+                bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=r, depth=h, location=at + tilt * h * 0.45)
+                o = bpy.context.active_object; o.data.materials.append(amber)
+                o.rotation_euler = Vector((0, 0, 1)).rotation_difference(tilt).to_euler()
+                bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=r, depth=r * 1.8, location=at + tilt * (h * 0.95 + r * 0.9))
+                o = bpy.context.active_object; o.data.materials.append(amber)
+                o.rotation_euler = Vector((0, 0, 1)).rotation_difference(tilt).to_euler()
+
+
+def fox_face(body, H, S, F, s, r):
+    """The fox's eyes, nose and mouth, on the shared lidded eye, its lids in the coat's colour."""
+    lids = dict(S, skin=F[0], spot=F[1])
+    for side in (1, -1):
+        eye(body, H + Vector((0.1, 0, 0.035)) * s, (0.5, side * 0.82, 0.2), lids, r)
+    tip = H + Vector((0.37, 0, -0.07)) * s
+    hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0)), Vector((-1, 0, 0)))
+    ball("nose", solid("nose", (0.04, 0.035, 0.035), 0.3), (loc if hit else tip), 0.032 * s, (1.0, 1.15, 0.8), 16)
+    return mouth_seam(body, H + Vector((0.18, 0, 0)) * s, H.z - 0.105 * s, 55, 0.02 * s, 0.006 * s)
+
+
+def fox_creature(sc, el, lt, dk):
+    """The living fox: mid-step with a forepaw lifted, head up, its brush curled high behind it, in its element."""
+    S, F = STYLE[el], FUR[el]
+    lights(sc)
+    rng = random.Random(f"creature-fox-{el}")
+    H = Vector((0.92, 0, 1.12))
+    HEAD["at"] = H
+    NECK["at"] = (Vector((0.62, 0, 0.9)), Vector((0.6, 0, 0.8)), 0.15)
+    parts = fox_head(H, 1.15) + [("cap", (0.5, 0, 0.72), (0.82, 0, 1.04), 0.14),     # neck
+                           ("ell", (0.32, 0, 0.66), 0.25, (1.2, 0.85, 1.0)),  # chest
+                           ("cap", (0.25, 0, 0.64), (-0.4, 0, 0.64), 0.19),   # body
+                           ("ell", (-0.45, 0, 0.64), 0.23, (1.1, 0.95, 0.95))]  # haunch
+    legs = [((0.4, -0.13, 0.55), (0.66, -0.16, 0.36), (0.74, -0.15, 0.24)),  # the near forepaw lifted
+            ((0.38, 0.13, 0.55), (0.42, 0.15, 0.25), (0.47, 0.15, 0.04)),
+            ((-0.48, -0.15, 0.52), (-0.66, -0.17, 0.25), (-0.56, -0.17, 0.04)),
+            ((-0.48, 0.15, 0.52), (-0.64, 0.17, 0.25), (-0.54, 0.17, 0.04))]
+    for a, b, c in legs:
+        parts += [("cap", a, b, 0.075), ("cap", b, c, 0.055), ("ell", tuple(Vector(c) + Vector((0.05, 0, 0))), 0.065, (1.4, 0.95, 0.6))]
+    parts += [("ell", (-0.45, -0.13, 0.56), 0.17, (1.2, 0.7, 1.1)), ("ell", (-0.45, 0.13, 0.56), 0.17, (1.2, 0.7, 1.1))]  # thighs
+    body = blob("body", parts, 0.024, 14000)
+    fluff(body, 0.008, 16.0)
+    tail = fox_tail("tail", [(-0.62, 0, 0.72), (-0.98, 0, 0.84), (-1.22, 0.04, 1.12), (-1.24, 0.1, 1.48), (-1.05, 0.14, 1.7)], 0.17, F)
+    seam = fox_face(body, H, S, F, 1.15, 0.068)
+    fn = fox_paint(H, F, 1.15, None, shins=[(b, c) for a, b, c in legs])
+    paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
+    body.data.materials.append(vmat("fur", 0.85))
+    fox_ears(H, F, 1.15)
+    em = emblem("core", 0.22, lt)  # the core grown into the flank, a marking that glows
+    em.location = (-0.1, -0.3, 0.72); em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector((0.1, -0.85, 0.45))).to_euler()
+    bpy.context.view_layer.update(); wrap_onto(em, body, 0.03)
+    drape("scarf", (0.66, 0, 0.94), (-0.55, 0, -0.85), 0.16, 0.22, 0.2, S["cloth"], S["trim"], f"scarf-{el}", 0.6)
+    beads((0.7, 0, 0.9), (0.6, 0, 0.8), 0.18, 14, 0.08, 3, lt, S)
+    ball("bell", solid("gold", GOLD, 0.35), (0.86, -0.04, 0.68), 0.06)
+    fox_growth(rng, el, S, F, lt, [Vector((0.5, 0, 0.92)), Vector((0.15, 0, 0.88)), Vector((-0.2, 0, 0.86)), Vector((-0.5, 0, 0.86))], tail)
+    aura(rng, S["aura"], lt, (0.0, 0, 0.75), (1.4, 0.8, 0.7), 1.75)
+
+
+def fox_ascended(sc, el, lt, dk):
+    """The fox's highest ally form: standing upright in a long robe, staff in hand, its core worn as a medallion over
+    its heart, its brush sweeping out behind it and up."""
+    S, F = STYLE[el], FUR[el]
+    lights(sc)
+    rng = random.Random(f"ascended-fox-{el}")
+    s = 0.9
+    H = Vector((0.16, 0, 2.02))
+    HEAD["at"] = H
+    NECK["at"] = (Vector((0.05, 0, 1.74)), Vector((0.2, 0, 1)), 0.13)
+    parts = fox_head(H, s) + [("cap", (0.0, 0, 1.55), (0.1, 0, 1.92), 0.11), ("cap", (0, 0, 0.95), (0, 0, 1.5), 0.26),
+                              ("ball", (0, 0, 0.9), 0.27), ("cap", (0, -0.28, 1.52), (0, 0.28, 1.52), 0.12)]
+    hands = []
+    for side in (-1, 1):
+        sh, el_, hd = Vector((0, side * 0.36, 1.5)), Vector((0.08, side * 0.44, 1.13)), Vector((0.3, side * 0.38, 0.96))
+        parts += [("cap", sh, el_, 0.08), ("cap", el_, hd, 0.07), ("ball", hd + Vector((0.04, 0, 0)), 0.08)]
+        hands.append(hd + Vector((0.04, 0, 0)))
+    for y in (-0.17, 0.17):
+        parts += [("cap", (0, y, 0.85), (0.04, y, 0.1), 0.11), ("ell", (0.1, y, 0.05), 0.11, (1.5, 0.9, 0.5))]
+    body = blob("body", parts, 0.022, 14000)
+    fluff(body, 0.007, 16.0)
+    tail = fox_tail("tail", [(-0.2, 0, 0.85), (-0.6, 0, 0.55), (-0.95, -0.1, 0.45), (-1.15, -0.2, 0.75), (-1.1, -0.25, 1.15)], 0.15, F, s)
+    seam = fox_face(body, H, S, F, s, 0.05)
+    fn = fox_paint(H, F, s, None, 0.2, -0.5, (1.6, 9.0))
+    paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
+    body.data.materials.append(vmat("fur", 0.85))
+    fox_ears(H, F, s)
+    drape("robe", (0.02, 0, 1.12), (0, 0, -1), 0.36, 0.46, 0.85, S["cloth"], S["trim"], f"robe-fox-{el}", 0.15)
+    drape("shawl", (0.02, 0, 1.68), (0, 0, -1), 0.2, 0.44, 0.34, mixc(S["cloth"], S["trim"], 0.35), S["trim"], f"shawl-fox-{el}", 0.5)
+    plate = ball("plastron", solid("plate", mixc(S["cloth"], S["trim"], 0.6), 0.6), (0.26, 0, 1.24), 0.21, (0.3, 0.8, 1.0), 24)
+    em = emblem("core", 0.15, lt, 2.6, 56)
+    em.location = (0.33, 0, 1.24); em.rotation_euler = (0, math.pi / 2, 0)
+    bpy.context.view_layer.update(); wrap_onto(em, plate, 0.01)
+    beads((0.05, 0, 1.68), (0.15, 0, 1), 0.23, 16, 0.1, 3, lt, S)
+    col, rough, metal = S["staff"]
+    h = hands[1]
+    bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.032, depth=2.15, location=(h.x, h.y + 0.02, 1.0))
+    o = bpy.context.active_object; o.data.materials.append(solid("staff", col, rough, metal=metal)); o.rotation_euler = (-0.04, 0, 0); smooth(o)
+    staff_top(el, (h.x, h.y + 0.06, 2.08), lt, S)
+    fox_growth(rng, el, S, F, lt, [Vector((0.0, 0, 1.78)), Vector((-0.06, 0, 1.6))], tail, s)
+    aura(rng, S["aura"], lt, (-0.2, 0, 1.15), (0.9, 0.8, 1.0), 2.35)
+
+
 # Round 7: one nation style over every stage (sg-look-layers: the element sets colour, material and aura; where you
 # met the spirit sets the regional style). Meridia, the Golden Noon (Earth; clarity, trade and exchange), in stone and
 # terraces: a gold sun crest behind the head, a terraced collar of sandstone steps with gold lips, and trade coins in
@@ -1468,26 +1784,31 @@ def sprite(src, dst, px):
     img.filepath_raw = str(dst); img.file_format = "PNG"; img.save()
 
 
-report = {"family": "shellback", "base": args.base, "nation": args.nation or None, "daemon": "protector", "stages": STAGES, "items": []}
+report = {"family": FAMILY, "base": args.base, "nation": args.nation or None, "daemon": "player" if FAMILY == "romp" else "protector", "stages": STAGES, "items": []}
 for d in ("render", "sprite", "glb"): (OUT / d).mkdir(parents=True, exist_ok=True)
 for el, (lt, dk) in ELEMENTS.items():
     if args.only and el != args.only: continue
     for st in STAGES:
         if args.stages and st not in args.stages.split(","): continue
         long_ = args.base != "tortoise"
-        sc = reset(1.3, 3.8) if st == "ascended" else reset(0.7 if long_ else 0.75, 4.5 if long_ else 4.0) if st == "creature" \
-            else reset(0.35, 3.7) if (st == "hologram" and long_) else reset()
-        rng = random.Random(f"shellback-{el}-{st}")  # gas and core are the family's, the same for every base
+        fox = args.base == "fox"
+        sc = reset(1.3, 3.8) if st == "ascended" else reset(0.85, 4.3) if (st == "creature" and fox) \
+            else reset(0.7 if long_ else 0.75, 4.5 if long_ else 4.0) if st == "creature" \
+            else reset(0.45, 3.6) if (st == "hologram" and fox) else reset(0.35, 3.7) if (st == "hologram" and long_) else reset()
+        rng = random.Random(f"{FAMILY}-{el}-{st}")  # gas and core are the family's, the same for every base
         if st == "gas":
-            gas(rng, lt, dk, 140, 0.42)
+            romp_gas(rng, lt, dk) if FAMILY == "romp" else gas(rng, lt, dk, 140, 0.42)
         elif st == "core":
-            gas(rng, lt, dk, 40, 0.38, core_pull=0.45); core(lt)
+            gas(rng, lt, dk, 40, 0.38, core_pull=0.45)
+            romp_core(lt, (0, 0, 0.3), 0.3) if FAMILY == "romp" else core(lt)
         elif st == "hologram":
-            hologram(lt, dk) if args.base == "tortoise" else hologram_long(lt, dk, args.base)
+            hologram(lt, dk) if args.base == "tortoise" else fox_hologram(lt, dk) if fox else hologram_long(lt, dk, args.base)
         elif st == "creature":
-            creature(sc, el, lt, dk) if args.base == "tortoise" else creature_long(sc, el, lt, dk, args.base)
+            creature(sc, el, lt, dk) if args.base == "tortoise" else fox_creature(sc, el, lt, dk) if fox \
+                else creature_long(sc, el, lt, dk, args.base)
         else:
-            ascended(sc, el, lt, dk) if args.base == "tortoise" else ascended_long(sc, el, lt, dk, args.base)
+            ascended(sc, el, lt, dk) if args.base == "tortoise" else fox_ascended(sc, el, lt, dk) if fox \
+                else ascended_long(sc, el, lt, dk, args.base)
         if args.nation:
             nation_layer(args.nation, st, args.base, lt)
         base = f"{el}-{st}"

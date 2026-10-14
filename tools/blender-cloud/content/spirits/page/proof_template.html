@@ -1,4 +1,4 @@
-<title>Shellback Spirit Proof</title>
+<title>Spirit Art Proof</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: a dark projection room. The 3D viewer opens the page, then the five element strips, then the sprite sheet.
@@ -41,20 +41,24 @@ img.px{image-rendering:pixelated;width:96px;height:96px}
 ul{max-width:66ch;padding-left:1.1rem}
 li{margin:.3rem 0}
 .side{display:grid;grid-template-columns:4.5rem repeat(3,minmax(0,1fr));gap:.6rem;align-items:center;margin-top:.8rem}
+.side.four{grid-template-columns:4.5rem repeat(4,minmax(0,1fr))}
+.pair{display:flex;flex-wrap:wrap;gap:1.4rem}
+.pair .sheet{margin-top:.3rem}
+img.px.big{width:100%;max-width:192px;height:auto;margin:auto}
 .side h3{font-size:1rem}
 .facehead{margin-top:1.4rem}
 .sidehead{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);text-align:center}
-@media (max-width:760px){.side{grid-template-columns:3.5rem repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.side{grid-template-columns:3.5rem repeat(3,minmax(0,1fr))}.side.four{grid-template-columns:3.5rem repeat(4,minmax(0,1fr))}}
 code{font-family:var(--f-mono);font-size:.86em}
 </style>
 
 <div class="wrap">
-  <div class="eyebrow">Spirit art · round 7 · the Protector's family</div>
-  <h1>Shellback: from gas to guardian</h1>
-  <p class="lede">One body family, three animal bases, five stages, five elements, and now a nation. Round 7 adds the first nation style, Meridia's, over every stage, so each spirit shows where you met it as well as what it is made of. The viewer and the rows below show the Meridia versions; the section below sets each one beside round 6.</p>
+  <div class="eyebrow">Spirit art · round 8 · the Player's family</div>
+  <h1>The Romp joins the Shellback</h1>
+  <p class="lede">A second body family. The Player's Romp plays where the Protector's Shellback sits, and its first animal base is the fox: five stages in five elements, with the same eye, cloth, beads and element styling as the Shellback, and Meridia's nation layer as a switch. The viewer opens on the fox. The Shellback's models are round 7's, met in Meridia.</p>
 
   <section class="viewer" aria-label="3D model viewer">
-    <canvas id="stage" aria-label="The selected Shellback model, turning slowly. Drag to turn it."></canvas>
+    <canvas id="stage" aria-label="The selected spirit model, turning slowly. Drag to turn it."></canvas>
     <div class="ctl">
       <div><span class="lab">Base</span><div class="chips" id="c-base"></div></div>
       <div><span class="lab">Element</span><div class="chips" id="c-el"></div></div>
@@ -64,6 +68,19 @@ code{font-family:var(--f-mono);font-size:.86em}
     </div>
   </section>
 
+  <h2>The Player's Romp: the fox</h2>
+  <p>No concept art exists for the Romp, so the fox is built from a written image prompt (<code>council/loops/prompts/spirit-generator-r8.md</code>, with prompts for the otter and the kid goat beside it). Its pose and its pieces follow that prompt:</p>
+  <ul>
+    <li><strong>Gas:</strong> motes strung along a looping trail, like a tail swished through the air, thickest at its head. The Shellback's gas is a round cloud.</li>
+    <li><strong>Core:</strong> cut as a fox's jewel, the onion-tipped star ball (hoshi no tama) foxes carry in Japanese folk tales: a faceted pearl drawn up into a leaning, twisting point with a bright band below it. The Shellback's core is a six-sided gem.</li>
+    <li><strong>Hologram:</strong> a faceted fox of light, its edges traced, with tall ears and a big tail carried high, and the jewel at its chest.</li>
+    <li><strong>Living creature:</strong> a fox mid-step with its near forepaw lifted and its head up: a narrow muzzle with a black nose, tall pointed ears, a pale bib and cheeks, dark stockings, and a brush longer than its body with a pale tip, curled high. It wears a scarf, prayer beads with one jade bead and a bell, and its core glows on its flank as the yin-yang ringed by the trigrams.</li>
+    <li><strong>Highest ally form:</strong> the fox upright in a robe and shawl, staff in hand, the core as a medallion over its heart, its brush sweeping out behind and up.</li>
+    <li><strong>Element:</strong> the element sets the coat and what the tail and ruff carry, the way it sets the Shellback's shell. Fire is a red fox whose tail tip burns. Water is blue-grey, its tail trailing a ribbon of water. Wood is olive, with leaves and white flowers in its ruff and along its brush. Metal is a silver fox in engraved shoulder plates with a blade crest down its tail. Earth is a sandy fox with amber crystals along its spine. The aura, cloth, iris and staff are the Shellback's.</li>
+  </ul>
+  <p>Below: the fox's sprites beside the tortoise's at 96 pixels, which is the check this round answers (does the fox read as a fox?), then both families' living creature and ally form in every element.</p>
+  %%ROMP%%
+
   <h2>Met in Meridia</h2>
   <p>The element sets a spirit's colour, material and aura. Where you met it sets a second layer, its nation's style, which settles on every stage. This round builds one: Meridia, the Golden Noon, the nation of clarity, trade and exchange, in stone and terraces. Meridia keeps its own sandstone and gold in every element, so a Water spirit met there is still teal and wears Meridia's stone and gold.</p>
   <ul>
@@ -72,7 +89,7 @@ code{font-family:var(--f-mono);font-size:.86em}
     <li><strong>Hologram:</strong> it stands on a terraced dais of gold light in place of the plain ring alone, with a small sun crest of light behind its head.</li>
     <li><strong>Living creature and highest ally form:</strong> a gold sun crest with twelve rays behind the head, a collar of three stepped sandstone rings with gold lips at the neck, and trade coins: the gold bell on the shell becomes a red cord of square-holed coins, and the ally form wears a second string at its belt.</li>
   </ul>
-  <p>Each base below shows every element twice: first as round 6 left it, then met in Meridia. The rows follow the base picked in the viewer.</p>
+  <p>Each Shellback base below shows every element twice: first as round 6 left it, then met in Meridia. The rows follow the base picked in the viewer (the fox's are in its own section above).</p>
   %%NATION%%
   %%HEADS%%
 
@@ -97,13 +114,13 @@ code{font-family:var(--f-mono);font-size:.86em}
     <li><strong>The armadillo.</strong> Eight bands across its back between a shield of small tiles at each end, each band lit along its raised edge and shaded where it tucks under the next. It has tall pointed ears, a pointed head that narrows into a long flat snout, eyes on the sides of its head, a shield on its head and a ringed tail.</li>
     <li><strong>The pangolin.</strong> Rows of rounded scales pointing back, each row half a scale over from the last, scales floating in rows from its crown down its neck into the shell, a short snout, wide-set eyes, big front claws, and a long broad tail of overlapping scales that curls round at the end. Between the scales shows each element's seam colour: lava for fire, foam for water, gold for metal, amber for earth.</li>
     <li><strong>Met in Meridia.</strong> Every stage carries Meridia's style over its element's: a sun ring, a terraced plinth or dais, a sun crest, a terraced collar and trade coins, in Meridia's sandstone and gold.</li>
-    <li>Gas and core belong to the family, so they are the same for all three bases. The hologram shows the base's own body.</li>
+    <li>Gas and core belong to the family, so they are the same for all three Shellback bases, and the Romp has its own. The hologram shows the base's own body.</li>
   </ul>
   <p class="note">The rows below follow the base picked in the viewer.</p>
   %%ROWS%%
 
   <h2>Sprite sheet</h2>
-  <p>Rendered from the same models at 96 pixels, with three alpha steps so the hologram stays see-through. Each base has five rows, Earth, Wood, Fire, Water, Metal, all met in Meridia.</p>
+  <p>Rendered from the same models at 96 pixels, with three alpha steps so the hologram stays see-through. Each base has five rows, Earth, Wood, Fire, Water, Metal. The Shellback's are met in Meridia; the fox's are without a nation.</p>
   <div class="sheetbox">
     <div class="sheethead"><span>Gas</span><span>Core</span><span>Hologram</span><span>Creature</span><span>Highest</span></div>
     %%SHEET%%
@@ -113,7 +130,7 @@ code{font-family:var(--f-mono);font-size:.86em}
   <ul>
     <li>The pipeline runs end to end in the cloud: one script builds, renders, sprites and exports all twenty-five for a base, with nothing downloaded. The largest model file is %%FACES%% KB before compression; the page carries them meshopt-compressed.</li>
     <li>The same arguments give the same spirit every time.</li>
-    <li>Not yet built: the other four nation styles, the parts you pick or offer, the levels for the last two stages, and animation.</li>
+    <li>Not yet built: the Romp's otter and kid goat, the other four nation styles, the parts you pick or offer, the levels for the last two stages, and animation.</li>
   </ul>
 </div>
 
@@ -123,9 +140,9 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-const BASES = {tortoise:"Tortoise", armadillo:"Armadillo", pangolin:"Pangolin"};
+const BASES = {fox:"Fox", tortoise:"Tortoise", armadillo:"Armadillo", pangolin:"Pangolin"};
 const EL = {earth:"Earth",wood:"Wood",fire:"Fire",water:"Water",metal:"Metal"}, ST = {gas:"Gas",core:"Core",hologram:"Hologram",creature:"Living creature",ascended:"Highest ally form"};
-const st = {base:"armadillo", el:"earth", st:"creature"};
+const st = {base:"fox", el:"fire", st:"creature"};
 const cv = document.getElementById("stage");
 const renderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
