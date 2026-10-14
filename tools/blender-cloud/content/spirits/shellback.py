@@ -1571,11 +1571,32 @@ def fox_face(body, H, S, F, s, r):
     """The fox's eyes, nose and mouth, on the shared lidded eye, its lids in the coat's colour."""
     lids = dict(S, skin=F[0], spot=F[1])
     for side in (1, -1):
-        eye(body, H + Vector((0.1, 0, 0.035)) * s, (0.5, side * 0.82, 0.2), lids, r)
+        # round 8 look (Wendell: "the eyes are a little too close together"): each eye moved out to the side of the
+        # skull and turned a little further out
+        eye(body, H + Vector((0.07, side * 0.055, 0.04)) * s, (0.4, side * 0.88, 0.2), lids, r)
     tip = H + Vector((0.37, 0, -0.07)) * s
     hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0)), Vector((-1, 0, 0)))
     ball("nose", solid("nose", (0.04, 0.035, 0.035), 0.3), (loc if hit else tip), 0.032 * s, (1.0, 1.15, 0.8), 16)
     return mouth_seam(body, H + Vector((0.18, 0, 0)) * s, H.z - 0.105 * s, 55, 0.02 * s, 0.006 * s)
+
+
+def bagua_on(lt, at, facing, r, glow=2.6):
+    """The core's yin-yang and trigrams, flat, standing at `at` and facing `facing`."""
+    em = emblem("core", r, lt, glow, 48)
+    em.location = at; em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector(facing).normalized()).to_euler()
+    return em
+
+
+def token(lt, S, at, r):
+    """Round 8 look (Wendell: "the bagua element is cute but doesn't play well with the fox fur"): the Romp carries its
+    core off the fur, as a jade token hung from its beads with the yin-yang and trigrams on its face, turned to the
+    sprite camera."""
+    face = (CAM_DIR + Vector((0, 0, 0.2))).normalized()
+    rot = Vector((0, 0, 1)).rotation_difference(face).to_euler()
+    bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=r, depth=r * 0.22, location=at, rotation=rot)
+    o = bpy.context.active_object; o.name = "token"; o.data.materials.append(jade_of(lt)); smooth(o)
+    bagua_on(mixc(lt, (1, 1, 1), 0.25), Vector(at) + face * r * 0.13, face, r * 0.85)
+    tassel(Vector(at) - Vector((0, 0, r * 1.1)), S["tassel"], 0.6)
 
 
 def fox_creature(sc, el, lt, dk):
@@ -1605,12 +1626,10 @@ def fox_creature(sc, el, lt, dk):
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.85))
     fox_ears(H, F, 1.15)
-    em = emblem("core", 0.22, lt)  # the core grown into the flank, a marking that glows
-    em.location = (-0.1, -0.3, 0.72); em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector((0.1, -0.85, 0.45))).to_euler()
-    bpy.context.view_layer.update(); wrap_onto(em, body, 0.03)
     drape("scarf", (0.66, 0, 0.94), (-0.55, 0, -0.85), 0.16, 0.22, 0.2, S["cloth"], S["trim"], f"scarf-{el}", 0.6)
     beads((0.7, 0, 0.9), (0.6, 0, 0.8), 0.18, 14, 0.08, 3, lt, S)
-    ball("bell", solid("gold", GOLD, 0.35), (0.86, -0.04, 0.68), 0.06)
+    ball("bell", solid("gold", GOLD, 0.35), (0.84, 0.1, 0.68), 0.06)
+    token(lt, S, (0.86, -0.1, 0.66), 0.09)
     fox_growth(rng, el, S, F, lt, [Vector((0.5, 0, 0.92)), Vector((0.15, 0, 0.88)), Vector((-0.2, 0, 0.86)), Vector((-0.5, 0, 0.86))], tail)
     aura(rng, S["aura"], lt, (0.0, 0, 0.75), (1.4, 0.8, 0.7), 1.75)
 
@@ -1638,22 +1657,43 @@ def fox_ascended(sc, el, lt, dk):
     fluff(body, 0.007, 16.0)
     tail = fox_tail("tail", [(-0.2, 0, 0.85), (-0.6, 0, 0.55), (-0.95, -0.1, 0.45), (-1.15, -0.2, 0.75), (-1.1, -0.25, 1.15)], 0.15, F, s)
     seam = fox_face(body, H, S, F, s, 0.05)
-    fn = fox_paint(H, F, s, None, 0.2, -0.5, (1.6, 9.0))
+    fn = fox_paint(H, F, s, None, 0.42, -0.5, (1.6, 9.0))
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.85))
     fox_ears(H, F, s)
-    drape("robe", (0.02, 0, 1.12), (0, 0, -1), 0.36, 0.46, 0.85, S["cloth"], S["trim"], f"robe-fox-{el}", 0.15)
-    drape("shawl", (0.02, 0, 1.68), (0, 0, -1), 0.2, 0.44, 0.34, mixc(S["cloth"], S["trim"], 0.35), S["trim"], f"shawl-fox-{el}", 0.5)
-    plate = ball("plastron", solid("plate", mixc(S["cloth"], S["trim"], 0.6), 0.6), (0.26, 0, 1.24), 0.21, (0.3, 0.8, 1.0), 24)
-    em = emblem("core", 0.15, lt, 2.6, 56)
-    em.location = (0.33, 0, 1.24); em.rotation_euler = (0, math.pi / 2, 0)
-    bpy.context.view_layer.update(); wrap_onto(em, plate, 0.01)
-    beads((0.05, 0, 1.68), (0.15, 0, 1), 0.23, 16, 0.1, 3, lt, S)
+    # round 8 look (Wendell: "we want a different outfit for the fox so the upright figures don't collide visually with
+    # the protectors"): no robe, shawl, medallion or staff. The Romp dresses as a wanderer: a short tunic over bare legs,
+    # a sash with long ends, a scarf whose tail flies back, a satchel on a strap, and a paper lantern of fox-fire on a
+    # short pole in place of the staff, the core's yin-yang drawn on its face.
+    drape("tunic", (0.02, 0, 1.46), (0, 0, -1), 0.3, 0.4, 0.5, S["cloth"], S["trim"], f"tunic-fox-{el}", 0.3)
+    sash = solid("sash", S["trim"], 0.8)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.29, minor_radius=0.045, major_segments=40, minor_segments=8, location=(0.02, 0, 1.12))
+    o = bpy.context.active_object; o.scale = (1, 1, 0.9); o.data.materials.append(sash); smooth(o)
+    for k, dz in enumerate((0.0, 0.05)):  # the sash's two long ends at the far hip
+        ball("sashend", sash, (0.12 - 0.04 * k, 0.27, 0.96 - 0.12 * k - dz), 0.06, (0.6, 0.25, 2.2), 12).rotation_euler = (0.2 * k, 0.15, 0)
+    drape("scarf", (0.05, 0, 1.74), (0.25, 0, -1), 0.14, 0.22, 0.16, S["cloth"], S["trim"], f"scarf-fox-{el}", 0.5)
+    tail_ = ball("scarftail", solid("scarftail", mixc(S["cloth"], S["trim"], 0.3), 0.9), (-0.22, -0.12, 1.66), 0.13, (1.8, 0.25, 0.5), 16)
+    tail_.rotation_euler = (0.3, 0.25, 0.35)
+    leather = solid("leather", (0.36, 0.22, 0.12), 0.7)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0.0, -0.36, 1.0)); o = bpy.context.active_object
+    o.scale = (0.24, 0.08, 0.18); o.rotation_euler = (0, 0, 0.1); o.data.materials.append(leather)
+    bev = o.modifiers.new("b", "BEVEL"); bev.width = 0.03; bev.segments = 3; apply_mods(o); smooth(o)
+    tube("strap", [(0.0, -0.36, 1.1), (0.2, -0.22, 1.35), (0.22, 0.0, 1.55), (0.12, 0.22, 1.68), (-0.08, 0.26, 1.62)], 0.018, leather)
+    beads((0.05, 0, 1.68), (0.15, 0, 1), 0.2, 14, 0.08, 3, lt, S)
     col, rough, metal = S["staff"]
-    h = hands[1]
-    bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.032, depth=2.15, location=(h.x, h.y + 0.02, 1.0))
-    o = bpy.context.active_object; o.data.materials.append(solid("staff", col, rough, metal=metal)); o.rotation_euler = (-0.04, 0, 0); smooth(o)
-    staff_top(el, (h.x, h.y + 0.06, 2.08), lt, S)
+    h = hands[0]  # the near hand holds the lantern pole forward and up
+    tip = h + Vector((0.4, -0.1, 0.5))
+    tube("pole", [h - (tip - h) * 0.15, tip], 0.022, solid("pole", col, rough, metal=metal))
+    lamp_at = tip - Vector((0, 0, 0.3))
+    tube("hook", [tip, tip + Vector((0.02, 0, -0.02)), lamp_at + Vector((0, 0, 0.13))], 0.006, solid("cord", (0.15, 0.1, 0.07), 0.8))
+    ball("lantern", solid("lantern", mixc(lt, (1, 0.96, 0.85), 0.35), 0.5, 3.0, alpha=0.9), lamp_at, 0.16, (1, 1, 1.2), 24)
+    rim = solid("rim", (0.12, 0.08, 0.06), 0.6)
+    for dz in (0.185, -0.185):
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.075, minor_radius=0.018, major_segments=20, minor_segments=6, location=lamp_at + Vector((0, 0, dz)))
+        bpy.context.active_object.data.materials.append(rim)
+    face = (CAM_DIR + Vector((0, 0, 0.1))).normalized()
+    bagua_on((0.15, 0.08, 0.05), lamp_at + face * 0.162, face, 0.11, 0.0)  # drawn in ink on the paper
+    tassel(lamp_at - Vector((0, 0, 0.24)), S["tassel"], 0.6)
     fox_growth(rng, el, S, F, lt, [Vector((0.0, 0, 1.78)), Vector((-0.06, 0, 1.6))], tail, s)
     aura(rng, S["aura"], lt, (-0.2, 0, 1.15), (0.9, 0.8, 1.0), 2.35)
 
