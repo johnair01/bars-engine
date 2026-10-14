@@ -781,3 +781,13 @@ charge spirits as a function of emergent perceptual shadow". The design is Six-f
   picture it at arm's length, the size of a hand), each by 3. Flooding has no kinds. Allow reads "Flooding n of 10". A
   flooding spirit walks bigger and brighter. The run records `shadow.pole` ("hidden" or "flooding"); a hidden spirit is
   still one with polarity above 0.
+- **Shadow spirits** (Wendell, 14 October 2026: "Shadow spirits do the work of perceptual shadows when one is working through
+  perceptual shadow one can ask what's getting in the way of the shadow clearing. We can also invoke daemons ... These
+  shadow spirits would be similar (probably just color changed) from regular spirits"). On the hidden pole's practice page,
+  "What's in the way of it clearing?" calls up the shadow spirit: the creature's body in the shadow's colour (`SHADOW_HEX`),
+  smaller, beside the one it hides. The player puts his eight questions to it, one per daemon and the Player (`SHADOW_ASKS`:
+  what is being protected, what standard upheld, what doubted or discredited, what repaired or held in place, what
+  emotional satisfaction, what sympathetic stories, what damage taken unseen, how it enjoys the game of hide and seek), and
+  writes what it says. Each answer thins the shadow by 3, as a practice does, and is kept in the run (`shadow.asks`). A
+  worked creature's shadow spirit walks out of the room as a spirit of its own in the shadow's colour (`shadow`,
+  `shadowOf`, polarity 0, so it counts as seen). Flooding has no shadow spirit.

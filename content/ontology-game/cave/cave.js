@@ -1295,6 +1295,22 @@
   var POLARITY = { aware: 6, tooMuch: 6, notDown: 4, practice: 3, floodAt: 9 };
   function occlusion(polarity) { return clamp((polarity || 0) / 10, 0, 1); }
   function flooding(polarity) { return clamp(-(polarity || 0) / 10, 0, 1); }
+  // Shadow spirits (Wendell, 14 October 2026: "Shadow spirits do the work of perceptual shadows when one is working through
+  // perceptual shadow one can ask what's getting in the way of the shadow clearing ... These shadow spirits would be similar
+  // (probably just color changed) from regular spirits"). Asking what is in the way of a shadow clearing calls up its shadow
+  // spirit, a spirit in the shadow's colour, and the player can put the daemons' questions to it. Each answered question thins
+  // the shadow as a practice does. His eight questions, by daemon: id, name, question, colour (the Player's is the centre's gold).
+  var SHADOW_HEX = 0x4a3a5c;
+  var SHADOW_ASKS = [
+    ["protector", "The Protector", "What is being protected?", 0x4a78c8],
+    ["controller", "The Controller", "What standard is being upheld?", 0x8a8f9a],
+    ["skeptic", "The Skeptic", "What is being doubted or discredited?", 0xb89a3a],
+    ["fixer", "The Fixer", "What is being repaired, or held in place?", 0xc8742a],
+    ["emotional-body", "The Emotional Body", "What emotional satisfaction comes from the shadow?", 0x3ab890],
+    ["victim", "The Victim", "What sympathetic stories are told about it?", 0x7a6aa8],
+    ["damaged-self", "The Damaged Self", "What damage is it taking, unseen, to protect the self?", 0x6a4a4a],
+    ["player", "The Player", "How is it secretly enjoying the game of hide and seek?", 0xfff1b0],
+  ];
   // Flooding has no kinds; its practices turn it down, one after another.
   var FLOOD_PRACTICES = ["Step back behind your seat. Breathe out for longer than you breathe in, three times.",
     "Name one thing in the room that isn't it: the rug, the door, your hands.",
@@ -3603,7 +3619,7 @@
       function newCharge(first, slot) {
         var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [],
-          polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null };
+          polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null };
         R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
@@ -3808,6 +3824,30 @@
             btn("Go on while it floods", { "data-room-veiled": "" }, function () { go("witness"); }, true)]));
           return { title: "Flooding", kids: k };
         }
+        if (ph === "asks") { // the shadow spirit, and the daemons' questions put to it
+          var A0 = ch.asking;
+          k.push(P(shadowLine(ch), { "data-room-polarity-read": String(ch.polarity) }));
+          if (A0) {
+            k.push(P(A0[1] + " asks the shadow spirit: " + A0[2], { "data-room-ask-q": A0[0] }));
+            var said = btn("That's what it says", { "data-room-ask-done": "" }, function () {
+              ch.asks.push({ daemon: A0[0], q: A0[2], answer: (ch.askLine || "").trim() }); ch.polarity = Math.max(0, ch.polarity - POLARITY.practice); ch.practices++;
+              ch.asking = null; ch.askLine = ""; draw();
+            });
+            k.push(field("data-room-ask-line", ch.askLine, "What it says, in your words", function (v) { ch.askLine = v; said.disabled = !v.trim(); }));
+            said.disabled = !(ch.askLine || "").trim();
+            k.push(row([said, btn("Another question", { "data-room-ask-back": "" }, function () { ch.asking = null; draw(); }, true)]));
+            return { title: "The shadow spirit", kids: k };
+          }
+          k.push(P(ch.polarity ? "The shadow spirit of " + shadowName(ch).toLowerCase() + " stands beside " + (ch.name || "it") + ". It does the shadow's work. Ask it what that work is for." : "The shadow has cleared. Its spirit stays beside " + (ch.name || "it") + ".", { "data-room-shade": "" }));
+          if (ch.polarity) SHADOW_ASKS.forEach(function (q) {
+            var was = ch.asks.some(function (a) { return a.daemon === q[0]; });
+            var b = el("button", { class: was ? "" : "alt", "aria-pressed": String(was), text: q[2], onclick: function () { ch.asking = q; ch.askLine = ""; draw(); } });
+            b.setAttribute("data-room-ask", q[0]); b.style.borderLeft = "6px solid #" + ("00000" + q[3].toString(16)).slice(-6);
+            k.push(el("div", { class: "oagc-row" }, [b]));
+          });
+          k.push(row([btn(ch.polarity ? "Back to the practice" : "Go on", { "data-room-ask-leave": "" }, function () { go(ch.polarity ? "unveil" : "witness"); }, true)]));
+          return { title: "The shadow spirit", kids: k };
+        }
         if (ph === "unveil") { // the practice that thins the shadow, 3 of polarity a time
           var sh = shadowRow(ch);
           k.push(P(shadowLine(ch), { "data-room-polarity-read": String(ch.polarity) }));
@@ -3825,6 +3865,7 @@
             done.disabled = !(ch.practiceLine || "").trim();
           }
           k.push(row([done, btn("Go on with it hidden", { "data-room-veiled": "" }, function () { go("witness"); }, true), btn("It's another shadow", { "data-room-shadow-rename": "" }, function () { go("shadow"); }, true)]));
+          k.push(row([btn("What's in the way of it clearing?", { "data-room-shadow-spirit": "" }, function () { summonShade(ch); go("asks"); }, true)]));
           return { title: sh ? sh[1] : "A shadow", kids: k };
         }
         if (ph === "stays") {
@@ -3889,6 +3930,12 @@
       function shadowRow(c) { return c.shadow ? lookup(SHADOWS, c.shadow) : null; }
       function shadowName(c) { var sh = shadowRow(c); return sh ? sh[1] : "a shadow"; }
       function shadowLine(c) { return c.polarity > 0 ? "Hidden " + c.polarity + " of 10, by " + shadowName(c).toLowerCase() + "." : c.polarity < 0 ? "Flooding " + (-c.polarity) + " of 10." : "In plain sight."; }
+      // A shadow spirit: the room's creature body in the shadow's colour, smaller, standing beside the one it hides.
+      function summonShade(c) {
+        if (c.shade) return;
+        var g = buildCharge(), u = g.userData; u.col.setHex(SHADOW_HEX); u.want.setHex(SHADOW_HEX); u.mat.color.setHex(SHADOW_HEX); u.mat.emissive.setHex(SHADOW_HEX);
+        g.scale.setScalar(0.55); g.position.set(c.fig.position.x + 1.4, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
+      }
       function raiseFlood(c, signal, n) {
         c.polarity = Math.max(-10, Math.min(0, c.polarity) - n); if (c.signals.indexOf(signal) < 0) c.signals.push(signal);
         if (c.shadowStart == null || c.polarity < c.shadowStart) c.shadowStart = c.polarity;
@@ -3939,7 +3986,7 @@
           texture: c.texture || null, where: c.where || null, goal: (c.goal || "").trim() || null, push: c.push, aligned: c.push ? c.push === "toward" : null,
           move: (c.move || "").trim() || null, line: (c.line || "").trim() || null, light: c.push === "away" ? (c.lightName || "").trim() || (c.name || "").trim() || null : null,
           layers: c.layers.map(function (l) { return l.name; }), worked: R.worked.indexOf(c) >= 0, kept: R.kept.indexOf(c) >= 0, reading: c.reading,
-          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices } : null,
+          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice() } : null,
           hiddenOf: c.hiddenOf };
         Object.keys(r).forEach(function (x) { if (r[x] == null || (r[x].length === 0 && typeof r[x] !== "boolean")) delete r[x]; });
         return r;
@@ -3998,12 +4045,15 @@
         // Only a charge worked through the whole W.A.V.E. leaves as a spirit (Wendell, 13 October 2026: "It should only emerge once
         // it's been engaged with"), so one still being worked stays in the room, by any door.
         var going = R.worked; saveRun(true);
+        var shades = going.filter(function (c) { return c.shade; }); // each shadow spirit called up walks out beside its creature
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
           resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(function (c) {
             return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
-          }) });
+          }).concat(shades.map(function (c) {
+            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: null, hex: SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0 };
+          })) });
         }, 520);
       }
 
@@ -4322,6 +4372,11 @@
           c.fig.rotation.y = Math.atan2(faceTo.x - c.fig.position.x, faceTo.z - c.fig.position.z);
         });
         if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
+        R.all.forEach(function (c) { // a shadow spirit keeps beside its creature, and goes when it goes
+          if (!c.shade) return; var sh = c.shade, su = sh.userData; sh.visible = c.fig.visible && !c.gone && c.fig.parent === scene; su.fade = c.fig.userData.fade;
+          sh.position.x += (c.fig.position.x + 1.4 * c.fig.scale.x - sh.position.x) * Math.min(1, dt * 2); sh.position.z += (c.fig.position.z + 0.5 - sh.position.z) * Math.min(1, dt * 2);
+          su.mat.opacity = 0.8 * (su.fade == null ? 1 : su.fade); su.mat.emissiveIntensity = 0.25 + 0.15 * br.b; stepAura(su.aura, su.col, 0.25, dt, R.calm);
+        });
         // the figure: stands up, walks to its place, sits down again
         var stepping = freeWalk(dt);
         var hideStick = R.modal || R.close;
@@ -4394,7 +4449,8 @@
         state: R,
         charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
           slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }),
-          polarity: ch.polarity, shadow: ch.shadow, signals: ch.signals.slice(), opacity: u.mat.opacity, veil: u.veil.visible ? u.veil.material.opacity : 0, hiddenOf: ch.hiddenOf }; },
+          polarity: ch.polarity, shadow: ch.shadow, signals: ch.signals.slice(), opacity: u.mat.opacity, veil: u.veil.visible ? u.veil.material.opacity : 0, hiddenOf: ch.hiddenOf,
+          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.mat.color.getHex(), x: ch.shade.position.x } : null, asks: ch.asks.slice() }; },
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
