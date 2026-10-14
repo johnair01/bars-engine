@@ -86,7 +86,6 @@ const walkTo = async (selector) => {
   } finally { await page.mouse.up(); }
 };
 const sees = (sel) => page.locator(sel).isVisible();
-const stretchFracOf = (t) => (t < 4 ? 0.5 * t / 4 : 0.5 + 0.5 * (t - 4) / 6);
 
 // ---- the doorway: the heart, tapped on the real figure. Tension, Anger. ------------------------
 await page.locator('[data-cave-dive]').click();
@@ -185,7 +184,8 @@ ok(ios.selectCanvas === true && ios.selectBody === true && ios.gesture === true,
 ok(ios.touchstart === true && ios.touchmove === true, 'touchstart and touchmove on the hold area are cancelled (non-passive)');
 ok(/maximum-scale=1/.test(ios.viewport) && /user-scalable=no/.test(ios.viewport), `the viewport forbids zoom (${ios.viewport})`);
 
-// ---- one stretch is one breath: hold, let go (everything pauses), hold on to the marker ----------------------
+// ---- the walk keeps a steady pace: hold, let go (everything pauses), hold on to the marker ----------------------
+// Wendell, 2026-10-13: "we should disambiguate the walk speed to breath. We have that built into the manual wave experience".
 const gait = () => C(() => window.__oagCave.gait());
 const joints = () => C(() => window.__oagCave.joints());
 const samples = [];
@@ -200,27 +200,20 @@ await page.waitForTimeout(200);
 const gA = await gait(), bA = []; await page.waitForTimeout(1500);
 const gB = await gait();
 for (let i = 0; i < 4; i++) { bA.push((await breath()).b); await page.waitForTimeout(500); }
-ok(gA.t > 2.5 && gB.t === gA.t && gB.s === gA.s, `lifting the thumb pauses the walk and its breath clock together (clock ${gA.t.toFixed(2)} s, then ${gB.t.toFixed(2)} s)`);
+ok(gA.t > 2.5 && gB.t === gA.t && gB.s === gA.s, `lifting the thumb pauses the walk (clock ${gA.t.toFixed(2)} s, then ${gB.t.toFixed(2)} s)`);
 ok(Math.max(...bA) - Math.min(...bA) > 0.02, `the cave's own breathing carries on while the walk is paused (${Math.min(...bA).toFixed(2)} to ${Math.max(...bA).toFixed(2)})`);
 t0 = Date.now(); await hold();
-let arrivedAt = 0;
 while (!(await page.locator('[data-cave-marker="welcome"]').count())) { await sample(); await page.waitForTimeout(200); if (Date.now() - t0 > 30000) break; }
 heldMs += Date.now() - t0;
 await page.mouse.up();
-const gEnd = await gait();
-ok(gEnd.t === 10 && gEnd.arrived && Math.abs(gEnd.frac - 1) < 1e-9, 'the first stretch ends at its marker after exactly one breath of holding (10 s on the walk clock)');
-ok(heldMs > 9000 && heldMs < 12500, `at normal speed it took ${(heldMs / 1000).toFixed(1)} s of holding on the wall clock`);
+const gEnd = await gait(), want = gEnd.D / gEnd.speed;
+ok(Math.abs(gEnd.t - want) < 1e-6 && gEnd.arrived && Math.abs(gEnd.frac - 1) < 1e-9, `the first stretch ends at its marker after ${want.toFixed(1)} s of holding: its length at ${gEnd.speed} units a second`);
+ok(heldMs > want * 1000 - 500 && heldMs < want * 1000 + 2500, `at normal speed it took ${(heldMs / 1000).toFixed(1)} s of holding on the wall clock`);
 ok(gEnd.inS === 4 && gEnd.outS === 6, 'the cave breathes 4 s in and 6 s out');
-const nearest = (t) => samples.reduce((m, x) => (Math.abs(x.g.t - t) < Math.abs(m.g.t - t) ? x : m));
-const half = nearest(4);
-ok(Math.abs(half.g.t - 4) < 0.5 && Math.abs(half.g.frac - stretchFracOf(half.g.t)) < 0.02 && half.g.frac > 0.4 && half.g.frac < 0.6, `the inhale carries the avatar about half the stretch (${half.g.frac.toFixed(2)} at ${half.g.t.toFixed(1)} s)`);
-const rate = (lo, hi) => { const q = samples.filter((x) => x.g.t >= lo && x.g.t <= hi); const f = q[q.length - 1], e = q[0]; return (f.g.frac - e.g.frac) / (f.g.t - e.g.t); };
-const rin = rate(0.3, 3.8), rout = rate(4.4, 9.8);
-ok(rin / rout > 1.3 && rin / rout < 1.7, `it walks faster on the inhale than the exhale (${(rin * 100).toFixed(1)}% and ${(rout * 100).toFixed(1)}% of the stretch a second)`);
-ok(gEnd.stepsIn === 8 && gEnd.stepsOut === 12 && gEnd.stepsPerS === 2, `the footfalls fit the breath: ${gEnd.stepsIn} steps in the 4 s inhale and ${gEnd.stepsOut} in the 6 s exhale, two a second`);
-ok(samples.every((x) => x.g.stepsIn + x.g.stepsOut === Math.floor(x.g.t * 2 + 1e-6)), 'a foot lands every half second all the way through, with no gaps or doubles');
-const ph = samples.map((x) => x.b.pace);
-ok(Math.min(...ph) > 0.4 && Math.max(...ph) - Math.min(...ph) > 0.3, `the pace quickens on the inhale and slows on the exhale, never below ${Math.min(...ph).toFixed(2)} of its average`);
+const rate = (lo, hi) => { const q = samples.filter((x) => x.g.t >= lo && x.g.t <= hi && x.g.D === gEnd.D); const f = q[q.length - 1], e = q[0]; return (f.g.frac - e.g.frac) / (f.g.t - e.g.t); };
+const pa = rate(0.3, 3.5), pb = rate(4.5, want - 0.3);
+ok(pa / pb > 0.9 && pa / pb < 1.1, `the pace is steady, whatever the breath (${(pa * 100).toFixed(1)}% and ${(pb * 100).toFixed(1)}% of the stretch a second)`);
+ok(samples.every((x) => x.g.steps === Math.floor(x.g.t * x.g.stepsPerS + 1e-6)), `a foot lands every ${(1 / gEnd.stepsPerS).toFixed(1)} s all the way through, with no gaps or doubles`);
 const mov = samples.filter((x) => x.j.g > 0.8);
 const rng = (f) => Math.max(...mov.map(f)) - Math.min(...mov.map(f));
 ok(mov.length > 10 && rng((x) => x.j.x.hipL) > 0.6 && rng((x) => x.j.x.shoulderL) > 0.4 && Math.max(...mov.map((x) => x.j.x.kneeL)) > 0.5, `the legs swing from the hip with the knee bending, and the arms swing too (hip range ${rng((x) => x.j.x.hipL).toFixed(2)} rad, shoulder ${rng((x) => x.j.x.shoulderL).toFixed(2)}, knee up to ${Math.max(...mov.map((x) => x.j.x.kneeL)).toFixed(2)})`);
@@ -357,6 +350,24 @@ ok(b1.turnIn <= 90, `the way in is ahead of the figure, a ${Math.round(b1.turnIn
 ok((await C(() => window.__oagCave.lanterns())) === 1, 'a lantern stands between the two openings');
 ok(b1.stops === 10, 'the loop holds six stones, the mouth, the pool, the daemon and the way out');
 await page.screenshot({ path: SHOTS + '/cave-branch.png' });
+// The seam holds (Wendell, 2026-10-13: "branching paths need hardening for these kinds of glitches. Especially since the walls
+// are breathing"): the void outside the stone is painted green and the way in is looked at from all round inside the main
+// tunnel, at two moments of the breath. No green may show.
+const greenIn = (buf) => page.evaluate(async (b64) => {
+  const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height).data; let n = 0;
+  for (let i = 0; i < d.length; i += 4) if (d[i + 1] > 180 && d[i] < 90 && d[i + 2] < 90) n++;
+  return n;
+}, buf.toString('base64'));
+await C(() => { window.__oagCave.state.voidHex = 0x00ff00; });
+const seams = await C(() => window.__oagCave.openings(false)), seamGreen = [];
+for (let ph = 0; ph < 2; ph++) {
+  for (const v of seams[0].views) { await C((c) => { window.__oagCave.state.camFix = c; }, v); await page.waitForTimeout(60); seamGreen.push(await greenIn(await page.screenshot())); }
+  await page.waitForTimeout(2500);
+}
+await C(() => { window.__oagCave.state.camFix = null; window.__oagCave.state.voidHex = null; });
+ok(seams.length === 1 && seamGreen.length >= 10 && seamGreen.every((n) => n === 0), `no void shows round the way in from ${seamGreen.length} views across the breath (green ${seamGreen.filter((n) => n).join(', ') || 'none'})`);
 const walkSamples = [];
 await page.mouse.move(330, 700); await page.mouse.down();
 for (let i = 0; i < 6; i++) { walkSamples.push(await avatar()); await page.waitForTimeout(150); }
@@ -544,8 +555,8 @@ await page.locator('[data-cave-sit-step="welcome"]').waitFor({ timeout: 5000 });
 await page.locator('[data-cave-standup]').click();
 await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 8000 });
 const sat2 = await C(() => window.__oagCave.spirits.map((o) => o.name));
-ok(sat2.length === 2 && /^\w+ \w+$/.test(sat2[1]) && (await C(() => window.__oagCave.carried())) === 2, 'standing up partway still leaves a spirit, under the name the game gave it: ' + sat2[1]);
-for (let i = 0; i < 2; i++) {
+ok(sat2.length === 1 && (await C(() => window.__oagCave.carried())) === 1, 'standing up partway leaves no spirit: one emerges only from the whole WAVE: ' + JSON.stringify(sat2));
+for (let i = 0; i < 1; i++) {
   await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click();
 }
 await page.waitForTimeout(1800);
@@ -699,6 +710,7 @@ for (const [texture, element] of [['constriction', 'Fear'], ['numbness', 'Sadnes
   looks[texture].dress = await state('JSON.stringify(s.dress)');
   looks[texture].cave = await state('s.cave');
   looks[texture].rows = await state('JSON.stringify(s.layout.rows)');
+  looks[texture].look = await C(() => window.__oagCave.look());
   await C(() => window.__oagCave.leave(false));
   await page.locator('[data-cave-chamber]').waitFor({ state: 'detached' });
 }
@@ -707,7 +719,12 @@ ok(looks.numbness.opacity < 0.5, `numbness is fogged and translucent (opacity ${
 ok(looks.strength.glow > looks.tension.glow + 0.4, `strength is bright (glow ${looks.strength.glow.toFixed(2)} against ${looks.tension.glow.toFixed(2)})`);
 ok(looks.tension.scale[1] > 1.1, `tension is taut (height ${looks.tension.scale[1].toFixed(2)})`);
 ok(new Set(Object.values(looks).map((l) => l.cave.e + ':' + l.cave.roof)).size === 4, `each charge has its own cave shape (${Object.entries(looks).map(([k, l]) => k + ' ' + l.cave.e + '/' + l.cave.roof).join(', ')})`);
-ok(!looks.numbness.cave.walls && looks.strength.cave.walls, 'numbness is blackness: its walls are lost in the dark');
+const lumOf = (hex) => ((hex >> 16) & 255) + ((hex >> 8) & 255) + (hex & 255);
+ok(looks.numbness.cave.walls && lumOf(looks.numbness.look.bg) < lumOf(looks.strength.look.bg), `numbness is blackness past the figure's light, its stone showing only near (dark ${looks.numbness.look.bg.toString(16)} against strength's ${looks.strength.look.bg.toString(16)})`);
+// Wendell, 2026-10-13: "We need consistent lighting throughout so people can see a radius around them but have darkness on all sides".
+// Wendell, 2026-10-13: "we need brighter light in the numbness": the numb cave's light burns brighter, the circle is the same size.
+const lamps = Object.entries(looks).map(([k, l]) => l.look.lamp / (k === 'numbness' ? 1.35 : 1));
+ok(Math.max(...lamps) - Math.min(...lamps) < 0.2 && Object.values(looks).every((l) => l.look.reach === looks.strength.look.reach), `the figure's light is the same circle in every cave (${lamps.map((v) => v.toFixed(2)).join(', ')})`);
 ok(Object.values(looks).every((l) => l.bytes < 50 * 1024), 'every charge keeps the avatar under 50 KB of geometry');
 const dressA = JSON.parse(await (async () => {
   await C((w) => window.__oagCave.dive(w), 'my left hand');
