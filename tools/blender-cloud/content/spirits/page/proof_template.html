@@ -53,9 +53,9 @@ code{font-family:var(--f-mono);font-size:.86em}
 </style>
 
 <div class="wrap">
-  <div class="eyebrow">Spirit art · round 8 · the Player's family</div>
-  <h1>The Romp joins the Shellback</h1>
-  <p class="lede">A second body family. The Player's Romp plays where the Protector's Shellback sits, and its first animal base is the fox: five stages in five elements, with the same eye, cloth, beads and element styling as the Shellback, and Meridia's nation layer as a switch. The viewer opens on the fox. The Shellback's models are round 7's, met in Meridia.</p>
+  <div class="eyebrow">Spirit art · round 9 · the Player's family</div>
+  <h1>The otter joins the fox</h1>
+  <p class="lede">A second body family. The Player's Romp plays where the Protector's Shellback sits, and it now has two animal bases, the fox and the otter: five stages in five elements each, with the same eye, cloth, beads and element styling as the Shellback, and Meridia's nation layer as a switch. The viewer opens on the otter, this round's new base. The Shellback's models are round 7's, met in Meridia.</p>
 
   <section class="viewer" aria-label="3D model viewer">
     <canvas id="stage" aria-label="The selected spirit model, turning slowly. Drag to turn it."></canvas>
@@ -67,6 +67,18 @@ code{font-family:var(--f-mono);font-size:.86em}
       <p class="note">The scanlines and soft glow show in the renders below. The 3D model carries the colours, glow and wire edges. The scanlines need the game's own shader, so the viewer sets the see-through skin itself.</p>
     </div>
   </section>
+
+  <h2>The Romp's second base: the otter</h2>
+  <p>Built from the otter's written image prompt (<code>council/loops/prompts/spirit-generator-r8.md</code>), since no concept sheet exists yet. It shares the fox's gas and jewel core, and it follows your look at the fox: the upright otter is a wanderer, and its core is a jade token, never a mark on the fur.</p>
+  <ul>
+    <li><strong>Gas and core:</strong> the Romp's own, the same as the fox's: motes along a looping trail, and the onion-tipped fox's jewel.</li>
+    <li><strong>Hologram:</strong> a long, low otter of light with a broad flat head, a blunt snout, small round ears, short legs and a thick tail that tapers to a point along the ground.</li>
+    <li><strong>Living creature:</strong> rolled half onto its back on a flat river stone, chest and head lifted to look at you, hind feet in the air, its forepaws curled round the jade token with the yin-yang and trigrams on its face. A broad flat skull, a blunt muzzle with fat whisker pads and white whiskers, a wide dark nose, small round ears set low, a pale throat and chin, webbed feet, and a thick tail hanging off the stone. It wears the scarf and the prayer beads with the jade bead and red tassel. No bell: the otter's prompt gives it the token in its paws.</li>
+    <li><strong>Highest ally form:</strong> upright on short legs and webbed feet, propped on its thick tail, in the Romp's wanderer outfit: short tunic, sash with long ends, scarf with its tail flying back, satchel on a strap, and the paper lantern on a short pole in its near hand. Its far paw holds the jade token to its chest, so the lantern is left plain.</li>
+    <li><strong>Element:</strong> each element sets the otter's coat and what its tail carries, as it does for the fox: a russet otter whose tail tip burns, a slate-blue one trailing a ribbon of water, an olive one with leaves and flowers along its back and tail, a grey one in shoulder plates with a blade crest down its tail, and an umber one with amber crystals along its back. Its coat is darker and sleeker than the fox's, so the two read apart at sprite size.</li>
+  </ul>
+  <p>Below: the otter's sprites beside the fox's and the tortoise's at 96 pixels, which is the check this round answers (does the otter read as an otter?), then the otter beside the fox as creature and ally form, its face, and the otter met in Meridia.</p>
+  %%OTTER%%
 
   <h2>The Player's Romp: the fox</h2>
   <p>No concept art exists for the Romp, so the fox is built from a written image prompt (<code>council/loops/prompts/spirit-generator-r8.md</code>, with prompts for the otter and the kid goat beside it). Its pose and its pieces follow that prompt:</p>
@@ -130,7 +142,7 @@ code{font-family:var(--f-mono);font-size:.86em}
   <ul>
     <li>The pipeline runs end to end in the cloud: one script builds, renders, sprites and exports all twenty-five for a base, with nothing downloaded. The largest model file is %%FACES%% KB before compression; the page carries them meshopt-compressed.</li>
     <li>The same arguments give the same spirit every time.</li>
-    <li>Not yet built: the Romp's otter and kid goat, the other four nation styles, the parts you pick or offer, the levels for the last two stages, and animation.</li>
+    <li>Not yet built: the Romp's kid goat, the other four nation styles, the parts you pick or offer, the levels for the last two stages, and animation.</li>
   </ul>
 </div>
 
@@ -140,9 +152,9 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-const BASES = {fox:"Fox", tortoise:"Tortoise", armadillo:"Armadillo", pangolin:"Pangolin"};
+const BASES = %%VIEWBASES%%;
 const EL = {earth:"Earth",wood:"Wood",fire:"Fire",water:"Water",metal:"Metal"}, ST = {gas:"Gas",core:"Core",hologram:"Hologram",creature:"Living creature",ascended:"Highest ally form"};
-const st = {base:"fox", el:"fire", st:"creature"};
+const st = {base:"%%FIRST%%", el:"fire", st:"creature"};
 const cv = document.getElementById("stage");
 const renderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
