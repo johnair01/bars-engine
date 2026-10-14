@@ -388,8 +388,7 @@ def make(build_name, palette, theme="robe_set"):
         if bone.startswith("elbow"):
             # the sleeve runs to the wrist with a cuff
             return pal["trim"] if z < CUFF else pal["tunic"]
-        if collar(Vector(co)) < COLLAR:
-            return pal["trim"]                                      # the crossed collar (collar_path above)
+        # no crossed collar painted on the chest: J5's robe has its own, and the painted V showed at its edges
         if bone.startswith("shoulder") or bone in ("spine", "hips"):
             return pal["tunic"]
         return pal["tunic"]

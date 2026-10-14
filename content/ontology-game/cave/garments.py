@@ -52,6 +52,7 @@ MAX_BYTES = 150 * 1024
 THICK = 0.004                                    # metres of cloth, outward (solidify); the test uses the inner face
 LAST_THROUGH = []                                # (key, point, distance) of the last test's points through
 DRAPE_TRIES = 6                                  # processes tried at most, per build and palette, until the fit clears every point
+SKIRT_SMOOTH = 6                                 # rounds of averaging the skirt's weights with its neighbours'
 FIT_RADIUS = 0.08                               # metres, how far a push spreads over the cloth (falls off smoothly)
 MAX_PUSH = 0.015                                 # metres, the most one round of the fit moves a point
 TOL, EDGE = 0.002, 0.015                         # metres: outside by more than TOL counts, unless within EDGE of an opening
@@ -544,6 +545,34 @@ def reduce(me, labels, keep, target):
     return V, F, L
 
 
+def smooth_skirt(weights, verts, faces, parts, rounds=SKIRT_SMOOTH, top=1.0):
+    """Cloth does not fold along the line where one point's weights change from its neighbour's: below the waist each
+    point's weights are averaged with its neighbours' a few times, so the skirt bends over a hand's breadth where a
+    leg meets it, not at a crease (Wendell, 2026-10-14: the legs "break in ways that don't look exactly like fabric")."""
+    near = [set() for _ in verts]
+    for f in faces:
+        for a in f:
+            near[a].update(v for v in f if v != a)
+    body_vert = set()
+    for f, pt in zip(faces, parts):
+        if pt == 0:
+            body_vert.update(f)
+    free = [i for i in body_vert if verts[i].z < top]
+    for _ in range(rounds):
+        new = list(weights)
+        for i in free:
+            acc = {}
+            ns = [j for j in near[i] if j in body_vert]
+            for b, x in weights[i].items():
+                acc[b] = acc.get(b, 0.0) + 0.5 * x
+            for j in ns:
+                for b, x in weights[j].items():
+                    acc[b] = acc.get(b, 0.0) + 0.5 * x / len(ns)
+            new[i] = norm(acc)
+        weights = new
+    return weights
+
+
 def robe(fig, rig, build, cw):
     """The draped robe with its trim, reduced, and weighted from the body under it."""
     co, faces, parts = drape(fig, rig, build)
@@ -565,6 +594,7 @@ def robe(fig, rig, build, cw):
             weights.append(skirt_weights(p, from_body(p)))
         else:
             weights.append(from_arm["L" if 1 in ps else "R"](p))
+    weights = smooth_skirt(weights, verts, faces, parts)
     colours = [cw["edge"] if t else cw["robe"] for _, t in labels]
     obj = mesh_object("robe", verts, faces, colours, weights, rig, parts)
     outward(obj)
@@ -1016,7 +1046,7 @@ def build_all(build, palette, out_dir, do_fit=True):
     return fig_row, report
 
 
-def sheet(figs, rows, out_dir):
+def sheet(figs, rows, out_dir, walk_only=False):
     """The contact sheet (cc-wardrobe-gate): builds down; across, each garment worn alone in each colourway, caught a
     quarter of the way through the walk from the front three-quarter. Then the whole set on each build and palette,
     and the average dusk figure in the whole set from the front, the side and the back at four points of the walk."""
@@ -1073,33 +1103,34 @@ def sheet(figs, rows, out_dir):
 
     three_q = Vector((math.sin(math.radians(-25)), -math.cos(math.radians(-25)), 0.12))
     builds, pals = list(C.BUILDS), list(C.PALETTES)
-    # 1. each garment alone: rows = builds, columns = (robe, sash, topknot) x (dusk, jade, hemp)
-    clear()
-    cols = [(g, p) for g in ("robe", "sash", "topknot") for p in pals]
-    for bi, b in enumerate(builds):
-        for ci, (g, p) in enumerate(cols):
-            objs = load(os.path.join(out_dir, figs[(b, p)]))
-            dress(objs, [f"{g}-{b}-{p}.glb"])
-            for o in objs:
-                if o.parent is None:
-                    o.location = ((ci - 4) * 0.9, 0, (1 - bi) * 2.05)
-    setup((2000, 1500), 0, 1 + C.KEYS // 4)
-    camera(8.6, three_q)
-    bpy.context.scene.render.filepath = os.path.join(out_dir, "garments-sheet.png")
-    bpy.ops.render.render(write_still=True)
-    # 2. the whole set (robe, sash over it, topknot) on each build and palette
-    clear()
-    for bi, b in enumerate(builds):
-        for pi, p in enumerate(pals):
-            objs = load(os.path.join(out_dir, figs[(b, p)]))
-            dress(objs, [f"robe-{b}-{p}.glb", f"sash-robe-{b}-{p}.glb", f"topknot-{b}-{p}.glb"])
-            for o in objs:
-                if o.parent is None:
-                    o.location = ((pi - 1) * 0.95, 0, (1 - bi) * 2.05)
-    setup((900, 1260), 0, 1 + C.KEYS // 4)
-    camera(6.6, three_q)
-    bpy.context.scene.render.filepath = os.path.join(out_dir, "set-sheet.png")
-    bpy.ops.render.render(write_still=True)
+    if not walk_only:
+        # 1. each garment alone: rows = builds, columns = (robe, sash, topknot) x (dusk, jade, hemp)
+        clear()
+        cols = [(g, p) for g in ("robe", "sash", "topknot") for p in pals]
+        for bi, b in enumerate(builds):
+            for ci, (g, p) in enumerate(cols):
+                objs = load(os.path.join(out_dir, figs[(b, p)]))
+                dress(objs, [f"{g}-{b}-{p}.glb"])
+                for o in objs:
+                    if o.parent is None:
+                        o.location = ((ci - 4) * 0.9, 0, (1 - bi) * 2.05)
+        setup((2000, 1500), 0, 1 + C.KEYS // 4)
+        camera(8.6, three_q)
+        bpy.context.scene.render.filepath = os.path.join(out_dir, "garments-sheet.png")
+        bpy.ops.render.render(write_still=True)
+        # 2. the whole set (robe, sash over it, topknot) on each build and palette
+        clear()
+        for bi, b in enumerate(builds):
+            for pi, p in enumerate(pals):
+                objs = load(os.path.join(out_dir, figs[(b, p)]))
+                dress(objs, [f"robe-{b}-{p}.glb", f"sash-robe-{b}-{p}.glb", f"topknot-{b}-{p}.glb"])
+                for o in objs:
+                    if o.parent is None:
+                        o.location = ((pi - 1) * 0.95, 0, (1 - bi) * 2.05)
+        setup((900, 1260), 0, 1 + C.KEYS // 4)
+        camera(6.6, three_q)
+        bpy.context.scene.render.filepath = os.path.join(out_dir, "set-sheet.png")
+        bpy.ops.render.render(write_still=True)
     # 3. the average dusk figure in the set, front, side and back, at keys 0, 6, 12 and 18
     clear()
     objs = load(os.path.join(out_dir, figs[("average", "dusk")]))
@@ -1130,6 +1161,7 @@ def main():
     ap.add_argument("--palette", default="dusk")
     ap.add_argument("--all", action="store_true", help="every build in every palette")
     ap.add_argument("--sheet", action="store_true", help="render the contact sheets (Cycles, CPU)")
+    ap.add_argument("--walk-only", action="store_true", help="with --sheet: only the average figure's walk strip")
     ap.add_argument("--sheet-only", action="store_true", help="only render the sheets from the GLBs in --out")
     ap.add_argument("--no-fit", action="store_true", help="skip the walking fit (test J5b: points come through)")
     ap.add_argument("--part", help="(used by --all) write this build's figure and garment rows to this file")
@@ -1174,7 +1206,7 @@ def main():
         json.dump({"figures": [{"build": b, "palette": p, "file": f} for (b, p), f in figs.items()], "garments": report},
                   f, indent=1)
     if a.sheet:
-        sheet(figs, report, a.out)
+        sheet(figs, report, a.out, a.walk_only)
         print("sheets:", *(os.path.join(a.out, n) for n in ("garments-sheet.png", "set-sheet.png", "set-walk.png")))
 
 
