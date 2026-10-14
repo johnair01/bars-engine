@@ -1,6 +1,6 @@
 """Builds the spirit proof page from one render folder per animal base (shellback.py's OUT dir for each).
 
-    python3 build_proof.py OUT_DIR tortoise=DIR armadillo=DIR pangolin=DIR [fox=DIR meridia-fox=DIR] [otter=DIR meridia-otter=DIR] [before=DIR] [plain-tortoise=DIR ...]
+    python3 build_proof.py OUT_DIR tortoise=DIR armadillo=DIR pangolin=DIR [fox=DIR meridia-fox=DIR] [otter=DIR meridia-otter=DIR] [goat=DIR meridia-goat=DIR] [before=DIR] [plain-tortoise=DIR ...]
 
 Writes OUT_DIR/index.html with the renders and sprites inline, and OUT_DIR/glb/<base>-<element>-<stage>.glb
 meshopt-compressed, and OUT_DIR/glb/<base>-<element>-<stage>.txt, the same file in base64, which the page fetches when a
@@ -10,13 +10,14 @@ When the render folders hold head close-ups (shellback.py --heads), the page sho
 (shellback.py --nation), adds a with and without section. fox=DIR (round 8, the Player's Romp) adds the fox to the viewer,
 the rows and the sprite sheet, and a section setting it beside the tortoise; meridia-fox=DIR, the fox met in Meridia, sets
 each element beside it. otter=DIR and meridia-otter=DIR (round 9) do the same for the otter, which the viewer then
-opens on, and write OUT_DIR/otter-section.html as well. A base whose folder has no glb/ keeps the models already published beside the page."""
+opens on, and write OUT_DIR/otter-section.html as well. goat=DIR and meridia-goat=DIR (round 10) add the kid goat
+the same way, beside the otter and the fox, and write OUT_DIR/goat-section.html. A base whose folder has no glb/ keeps the models already published beside the page."""
 import base64, io, json, pathlib, subprocess, sys
 from PIL import Image
 
 OUT = pathlib.Path(sys.argv[1]); SRC = dict(a.split("=", 1) for a in sys.argv[2:])
 SHELL = {"tortoise": "Tortoise", "armadillo": "Armadillo", "pangolin": "Pangolin"}
-ROMP = {b: n for b, n in (("otter", "Otter"), ("fox", "Fox")) if b in SRC}  # round 9 adds the otter, and the viewer opens on it
+ROMP = {b: n for b, n in (("goat", "Kid goat"), ("otter", "Otter"), ("fox", "Fox")) if b in SRC}  # the newest Romp base first; the viewer opens on it
 BASES = {**ROMP, **SHELL}
 FIRST = next(iter(ROMP), "armadillo")  # the base the viewer and rows open on
 EL = ["earth", "wood", "fire", "water", "metal"]; ST = ["gas", "core", "hologram", "creature", "ascended"]
@@ -134,40 +135,51 @@ if "fox" in SRC:
                 romp += f'<section class="row"><h3>{NAMES[e]} fox, {tag}</h3><div class="strip">{cells}</div></section>'
 
 
-otter = ""  # round 9: the otter beside the fox and the tortoise, side by side with the fox, its faces, and met in Meridia
-if "otter" in SRC:
-    O, F, T = pathlib.Path(SRC["otter"]), pathlib.Path(SRC["fox"]), pathlib.Path(SRC["plain-tortoise"] if "plain-tortoise" in SRC else SRC["tortoise"])
-    otter += '<div class="sheetbox"><div class="pair">' + "".join(
+def newbase(key, noun, beside, sheets):
+    """A new Romp base's section (round 9 the otter, round 10 the kid goat): its sprites beside the other bases', its
+    creature and ally form beside the last base's, its faces, and the base met in Meridia. Also written to
+    OUT_DIR/<key>-section.html, for splicing into a page that carries hand-made sections."""
+    if key not in SRC: return ""
+    N, B = pathlib.Path(SRC[key]), pathlib.Path(SRC[beside[0]])
+    out = '<div class="sheetbox"><div class="pair">' + "".join(
         f'<div><h3>{n}</h3><div class="sheethead"><span>Gas</span><span>Core</span><span>Hologram</span><span>Creature</span><span>Highest</span></div>'
         f'<div class="sheet">' + "".join(f'<img class="px" src="{png(d / "sprite" / f"{e}-{s}.png")}" alt="{NAMES[e]} {n.lower()} {s} sprite" width="96" height="96">'
-                                         for e in EL for s in ST) + "</div></div>" for n, d in (("Romp otter", O), ("Romp fox", F), ("Shellback tortoise", T))) + "</div></div>"
-    otter += '<h3 class="facehead">Living creature and highest ally form, beside the fox</h3><div class="side four"><span></span>' + "".join(
-        f'<span class="sidehead">{h}</span>' for h in ("Fox", "Otter", "Fox ally", "Otter ally"))
+                                         for e in EL for s in ST) + "</div></div>" for n, d in sheets) + "</div></div>"
+    Bn, Nn = beside[1], noun.capitalize()
+    out += f'<h3 class="facehead">Living creature and highest ally form, beside the {beside[1].lower()}</h3><div class="side four"><span></span>' + "".join(
+        f'<span class="sidehead">{h}</span>' for h in (Bn, Nn, f"{Bn} ally", f"{Nn} ally"))
     for e in EL:
-        otter += f"<h3>{NAMES[e]}</h3>" + "".join(
+        out += f"<h3>{NAMES[e]}</h3>" + "".join(
             f'<figure><img src="{jpg(d / "render" / f"{e}-{s}.png", 300)}" alt="{NAMES[e]} {n}, {LABEL[s].lower()}" width="300" height="300" loading="lazy"></figure>'
-            for s in ("creature", "ascended") for n, d in (("fox", F), ("otter", O)))
-    otter += "</div>"
-    if (O / "head").is_dir():
-        otter += '<h3 class="facehead">The otter\'s face</h3><div class="side"><span></span>' + "".join(
+            for s in ("creature", "ascended") for n, d in ((beside[1].lower(), B), (noun, N)))
+    out += "</div>"
+    if (N / "head").is_dir():
+        out += f'<h3 class="facehead">The {noun}\'s face</h3><div class="side"><span></span>' + "".join(
             f'<span class="sidehead">{h}</span>' for h in ("Living creature", "Highest ally form", "Sprite"))
         for e in EL:
-            otter += f"<h3>{NAMES[e]}</h3>" + "".join(
-                f'<figure><img src="{jpg(O / "head" / f"{e}-{s}.png", 300)}" alt="{NAMES[e]} otter\'s face, {LABEL[s].lower()}" width="300" height="300" loading="lazy"></figure>'
-                for s in ("creature", "ascended")) + f'<figure><img class="px big" src="{png(O / "sprite" / f"{e}-creature.png")}" alt="{NAMES[e]} otter creature sprite" width="96" height="96"></figure>'
-        otter += "</div>"
-    if "meridia-otter" in SRC:
-        M = pathlib.Path(SRC["meridia-otter"])
-        otter += '<h3 class="facehead">The otter met in Meridia</h3><p>The same nation switch, unchanged: sun ring, terraced plinth and dais, sun crest, terraced collar, and trade coins at the ally form\'s belt.</p>'
+            out += f"<h3>{NAMES[e]}</h3>" + "".join(
+                f'<figure><img src="{jpg(N / "head" / f"{e}-{s}.png", 300)}" alt="{NAMES[e]} {noun}\'s face, {LABEL[s].lower()}" width="300" height="300" loading="lazy"></figure>'
+                for s in ("creature", "ascended")) + f'<figure><img class="px big" src="{png(N / "sprite" / f"{e}-creature.png")}" alt="{NAMES[e]} {noun} creature sprite" width="96" height="96"></figure>'
+        out += "</div>"
+    if f"meridia-{key}" in SRC:
+        M = pathlib.Path(SRC[f"meridia-{key}"])
+        out += f'<h3 class="facehead">The {noun} met in Meridia</h3><p>The same nation switch, unchanged: sun ring, terraced plinth and dais, sun crest, terraced collar, and trade coins at the ally form\'s belt.</p>'
         for e in EL:
-            for tag, d in (("without", O), ("met in Meridia", M)):
-                cells = "".join(f'<figure><img src="{jpg(d / "render" / f"{e}-{s}.png", 300)}" alt="{NAMES[e]} otter, {s} stage, {tag}" '
+            for tag, d in (("without", N), ("met in Meridia", M)):
+                cells = "".join(f'<figure><img src="{jpg(d / "render" / f"{e}-{s}.png", 300)}" alt="{NAMES[e]} {noun}, {s} stage, {tag}" '
                                 f'width="300" height="300" loading="lazy"><figcaption>{LABEL[s]}</figcaption></figure>' for s in ST)
-                otter += f'<section class="row"><h3>{NAMES[e]} otter, {tag}</h3><div class="strip">{cells}</div></section>'
-    (OUT / "otter-section.html").write_text(otter)  # for splicing into a page that carries hand-made sections
+                out += f'<section class="row"><h3>{NAMES[e]} {noun}, {tag}</h3><div class="strip">{cells}</div></section>'
+    (OUT / f"{key}-section.html").write_text(out)
+    return out
+
+
+T = pathlib.Path(SRC["plain-tortoise"] if "plain-tortoise" in SRC else SRC["tortoise"])
+otter = newbase("otter", "otter", ("fox", "Fox"), (("Romp otter", pathlib.Path(SRC.get("otter", "."))), ("Romp fox", pathlib.Path(SRC.get("fox", "."))), ("Shellback tortoise", T)))
+goat = newbase("goat", "kid goat", ("otter", "Otter"), (("Romp kid goat", pathlib.Path(SRC.get("goat", "."))), ("Romp otter", pathlib.Path(SRC.get("otter", "."))),
+                                                    ("Romp fox", pathlib.Path(SRC.get("fox", "."))), ("Shellback tortoise", T)))
 
 html = (pathlib.Path(__file__).parent / "proof_template.html").read_text()
-html = html.replace("%%ROWS%%", rows).replace("%%SHEET%%", sheet).replace("%%SIDE%%", side).replace("%%HEADS%%", faces).replace("%%NATION%%", nation).replace("%%ROMP%%", romp).replace("%%OTTER%%", otter)\
+html = html.replace("%%ROWS%%", rows).replace("%%SHEET%%", sheet).replace("%%SIDE%%", side).replace("%%HEADS%%", faces).replace("%%NATION%%", nation).replace("%%ROMP%%", romp).replace("%%OTTER%%", otter).replace("%%GOAT%%", goat)\
     .replace("%%VIEWBASES%%", json.dumps(BASES)).replace("%%FIRST%%", FIRST).replace("%%FACES%%", str(largest))
 (OUT / "index.html").write_text(html)
 print(OUT / "index.html", round(len(html) / 1e6, 2), "MB;", sum(f.stat().st_size for f in (OUT / "glb").iterdir()) // 1024, "KB of models")

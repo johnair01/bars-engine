@@ -10,8 +10,8 @@ and ribbons of water in place of water's ring of drops. Round 5, after the playe
 the concept's face (a domed skull and a beak that overhangs the lower jaw, with a carved mouth seam in place of the
 painted smile) and every base a smaller, deeper-set eye whose dark iris leaves almost no white. Round 7 adds the nation
 layer (--nation meridia): the regional style of where the spirit was met, over the element's, on every stage.
-Round 8 adds the Player's Romp family with its fox (--base fox), round 9 its otter (--base otter), both in the Romp's
-wanderer outfit when they stand.
+Round 8 adds the Player's Romp family with its fox (--base fox), round 9 its otter (--base otter), round 10 its kid goat
+(--base goat), all in the Romp's wanderer outfit when they stand.
 Each stage is rendered with Cycles on the CPU and shrunk to a pixel sprite, so one model gives both assets (sg-assets-modular). Nothing is downloaded.
 
     /home/user/blenv/bin/python tools/blender-cloud/content/spirits/shellback.py OUT_DIR [--samples 32] [--size 512] [--heads] [--nation meridia]
@@ -33,8 +33,8 @@ ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--sprite", type=int, default=96)
 ap.add_argument("--only", default="", help="element to build alone, for a quick look")
 ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
-ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter"],
-                help="the animal base (round 4 adds the armadillo and the pangolin; round 8 the Player's Romp's fox, round 9 its otter)")
+ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat"],
+                help="the animal base (round 4 adds the armadillo and the pangolin; round 8 the Player's Romp's fox, round 9 its otter, round 10 its kid goat)")
 ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
 ap.add_argument("--nation", default="", choices=["", "meridia"],
                 help="the nation where it was met, which adds its regional style over the element's (round 7: Meridia)")
@@ -320,6 +320,7 @@ BASES = {
     "pangolin": dict(squash=(1.36, 0.74, 0.62), pattern="scales"),
     "fox": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="romp"),  # round 8: the Player's Romp, no shell
     "otter": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="romp"),  # round 9: the Romp's second base
+    "goat": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="romp"),  # round 10: the Romp's third base, the kid goat
 }
 FAMILY = BASES[args.base].get("family", "shellback")
 SHELL_SQUASH = Vector(BASES[args.base]["squash"])
@@ -811,12 +812,13 @@ def tassel(at, col, s=1.0):
     o = bpy.context.active_object; o.data.materials.append(red); smooth(o)
 
 
-def eye(body, toward, out, S, r=0.06):
+def eye(body, toward, out, S, r=0.06, bar=False, iris=None):
     """One eye for every element (round 3, Wendell: "the same eyes but with different eye color"): a ball sunk deep
     into the head where a ray from outside meets it, so only a sliver of its front shows, under a heavy upper lid and a
     thin lower lid in the skin's colour. Round 5, after the players' look ("the big eyes are too Disney like"): the eye
     is smaller and set deeper, and a dark iris, tinted by the element, fills nearly all of what shows, the way a
-    tortoise's does, so almost no white is left. The pupil stays black and the catchlight white."""
+    tortoise's does, so almost no white is left. The pupil stays black and the catchlight white. Round 10: bar=True draws a
+    goat's pupil, a level bar across the iris, and iris sets the iris's own colour (the kid's amber)."""
     out = Vector(out).normalized()
     hit, loc, _, _ = body.ray_cast(Vector(toward) + out * 2, -out)
     at = (loc if hit else Vector(toward)) - out * r * 0.72
@@ -825,12 +827,15 @@ def eye(body, toward, out, S, r=0.06):
     side = up.cross(out).normalized()
     frame = Matrix((out, side, up)).transposed()  # local x along out, z up
     eb = ball("eyeball", vmat("eye", 0.25), at, r, seg=48)
-    iris = mixc(S["iris"], (0.24, 0.14, 0.06), 0.5)  # a tortoise's brown, tinted by the element
+    iris = iris or mixc(S["iris"], (0.24, 0.14, 0.06), 0.5)  # a tortoise's brown, tinted by the element
+    gu = (up - gaze * gaze.dot(up)).normalized(); gs = gaze.cross(gu)  # level and upright across the iris
     dark = mixc(iris, (0, 0, 0), 0.6)
 
     def look(p, n):  # painted on the ball, so the iris sits flush instead of bulging out of it
         c = (p - at).normalized().dot(gaze)
-        if c > 0.9: return (0.02, 0.02, 0.02)  # pupil
+        d = (p - at).normalized()
+        if bar and c > 0.5 and abs(d.dot(gu)) < 0.1 and abs(d.dot(gs)) < 0.4: return (0.02, 0.02, 0.02)  # a goat's bar
+        if not bar and c > 0.9: return (0.02, 0.02, 0.02)  # pupil
         if c > 0.45: return mixc(iris, dark, (0.9 - c) / 0.45 * 0.7) if c > 0.52 else dark  # iris, darker at its rim
         return (0.62, 0.56, 0.44)  # what little white shows is shadowed and yellowed
     bpy.context.view_layer.update(); paint(eb, look)
@@ -1901,6 +1906,220 @@ def otter_ascended(sc, el, lt, dk):
     aura(rng, S["aura"], lt, (-0.2, 0, 1.1), (0.95, 0.8, 1.0), 2.25)
 
 
+# Round 10: the Romp's third base, the kid goat, built from its image prompt (council/loops/prompts/spirit-generator-r8.md
+# in the council's repo; no concept sheet exists yet): a short straight muzzle, two small horn buds, long floppy ears
+# held out sideways, goat eyes with a bar of a pupil across an amber iris, a small beard tuft, a short soft coat in
+# cream with patches, slim legs on small black hooves, and a short upright tail. It plays the way kids do, caught
+# mid-leap off a small rock with all four hooves in the air. It shares the Romp's gas and jewel core and, when it
+# stands, the wanderer outfit; its core is the prompt's brass bell, engraved with the yin-yang and trigrams (never a
+# mark on the coat).
+GOAT = {  # coat (cream), patch (the element's fawn), pale (muzzle, inner ear), hoof
+    "wood":  ((0.9, 0.87, 0.7), (0.5, 0.47, 0.2), (0.97, 0.95, 0.86), (0.07, 0.06, 0.05)),
+    "fire":  ((0.96, 0.85, 0.68), (0.78, 0.34, 0.12), (0.99, 0.94, 0.84), (0.07, 0.05, 0.04)),
+    "water": ((0.86, 0.9, 0.92), (0.3, 0.46, 0.6), (0.96, 0.98, 0.99), (0.05, 0.07, 0.1)),
+    "metal": ((0.9, 0.9, 0.92), (0.46, 0.48, 0.54), (0.98, 0.98, 0.99), (0.08, 0.08, 0.1)),
+    "earth": ((0.95, 0.86, 0.66), (0.66, 0.45, 0.2), (0.99, 0.94, 0.82), (0.1, 0.07, 0.04)),
+}
+AMBER = (0.86, 0.56, 0.12)
+
+
+def goat_head(H, s=1.0):
+    """Metaball parts for the kid's head: a rounded skull and a short straight muzzle, a little down from level."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
+    return [("ell", v(0, 0, 0), 0.14 * s, (1.0, 0.9, 1.0))] + \
+        taper(v, (0.07, 0, -0.045), (0.19, 0, -0.095), 0.092 * s, 0.062 * s, (1.1, 0.85, 0.95), (1.05, 0.85, 0.9), 6)
+
+
+def goat_bits(body, H, S, F, s, r):
+    """The kid's eyes (on the sides of the head, a bar of a pupil across an amber iris), its nose, horn buds, long
+    floppy ears held out sideways and the tuft of its beard. Returns the mouth seam."""
+    at = lambda x, y, z: H + Vector((x, y, z)) * s
+    lids = dict(S, skin=F[0], spot=F[1])
+    iris = mixc(S["iris"], AMBER, 0.7)
+    for side in (1, -1):
+        eye(body, at(0.05, side * 0.075, 0.035), (0.3, side * 0.92, 0.22), lids, r, bar=True, iris=iris)
+    tip = at(0.26, 0, -0.09)
+    hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0.3)), Vector((-1, 0, -0.3)).normalized())
+    ball("nose", solid("nose", mixc(F[3], (0.4, 0.3, 0.3), 0.3), 0.35), (loc if hit else tip), 0.026 * s, (0.7, 1.5, 0.9), 16)
+    horn = solid("horn", (0.24, 0.21, 0.18), 0.45)
+    for side in (1, -1):  # two small horn buds, leaning back
+        bpy.ops.mesh.primitive_cone_add(vertices=16, radius1=0.032 * s, radius2=0.008 * s, depth=0.08 * s,
+                                        location=at(-0.03, side * 0.05, 0.125), rotation=(-side * 0.15, -0.45, 0))
+        o = bpy.context.active_object; o.name = "horn"; o.data.materials.append(horn); smooth(o)
+    ear, inner = solid("ear", F[0], 0.85), solid("earinner", mixc(F[2], (0.9, 0.62, 0.58), 0.35), 0.85)
+    for side in (1, -1):  # long, broad and floppy, held out sideways, the tips drooping, their insides turned forward
+        o = ball("ear", ear, at(-0.04, side * 0.2, -0.01), 0.13 * s, (0.16, 1.0, 0.4), 20)
+        o.rotation_euler = (side * 0.45, 0, side * 0.3)
+        o = ball("earin", inner, at(-0.025, side * 0.19, -0.012), 0.11 * s, (0.1, 0.88, 0.3), 20)
+        o.rotation_euler = (side * 0.45, 0, side * 0.3)
+    o = ball("beard", solid("beard", mixc(F[0], F[1], 0.35), 0.9), at(0.17, 0, -0.17), 0.035 * s, (0.8, 0.8, 1.5), 12)
+    o.rotation_euler = (0, -0.4, 0)  # the beard tuft at the chin
+    return mouth_seam(body, at(0.15, 0, 0), H.z - 0.12 * s, 45, 0.012 * s, 0.005 * s)
+
+
+def goat_paint(H, F, s, hooves, seed):
+    """The kid's coat: cream, broken by patches of the element's fawn, a pale muzzle, and small black hooves."""
+    off = Vector((seed, 0, 0))
+    def fn(p, n):
+        c = F[0]
+        k = noise.noise(p * 3.2 + off) + 0.4 * noise.noise(p * 7.0 + off)
+        if k > -0.12: c = mixc(F[0], F[1], min(1.0, (k + 0.12) / 0.08))  # soft-edged patches
+        if (p - H).length < 0.3 * s and p.x > H.x + 0.12 * s: c = F[2]  # muzzle
+        if any((p - h).length < 0.06 * s for h in hooves): c = F[3]
+        return c
+    return fn
+
+
+def goat_tail(name, pts, r, F, s=1.0):
+    """A short upright tail, soft and a little tufted."""
+    path = tail_path(pts, 8)
+    m = len(path) - 1
+    o = blob(name, [("ball", tuple(p), r * (1 - 0.55 * (k / m))) for k, p in enumerate(path)], 0.018 * s, 2500)
+    fluff(o, 0.01 * s, 18.0, 5.0)
+    paint(o, lambda p, n: mixc(F[0], F[1], 0.5))
+    o.data.materials.append(vmat("fur", 0.85))
+    return path
+
+
+def goat_bell(lt, S, at, r):
+    """The kid's core, as its prompt gives it: a small brass bell on a cord, engraved with the yin-yang and trigrams,
+    turned to the sprite camera, the engraving lit faintly in the element's colour."""
+    brass = solid("brass", (0.86, 0.66, 0.3), 0.3, metal=1.0)
+    at = Vector(at)
+    bpy.ops.mesh.primitive_cone_add(vertices=32, radius1=r, radius2=r * 0.62, depth=r * 1.1, location=at)
+    o = bpy.context.active_object; o.name = "goatbell"; o.data.materials.append(brass); smooth(o)
+    ball("bellcrown", brass, at + Vector((0, 0, r * 0.55)), r * 0.62, (1, 1, 0.8), 24)
+    bpy.ops.mesh.primitive_torus_add(major_radius=r * 1.0, minor_radius=r * 0.1, major_segments=32, minor_segments=8,
+                                     location=at - Vector((0, 0, r * 0.55)))
+    bpy.context.active_object.data.materials.append(brass)
+    ball("clapper", solid("clapper", (0.3, 0.22, 0.12), 0.4, metal=1.0), at - Vector((0, 0, r * 0.7)), r * 0.22, seg=12)
+    bpy.ops.mesh.primitive_torus_add(major_radius=r * 0.22, minor_radius=r * 0.06, major_segments=16, minor_segments=6,
+                                     location=at + Vector((0, 0, r * 1.05)), rotation=(math.pi / 2, 0, 0))
+    bpy.context.active_object.data.materials.append(brass)
+    face = (CAM_DIR + Vector((0, 0, 0.15))).normalized()
+    bagua_on(mixc(lt, (1, 1, 1), 0.2), at + face * r * 0.86 - Vector((0, 0, r * 0.05)), face, r * 0.62, 1.4)
+
+
+def goat_hologram(lt, dk):
+    """The projected kid: a faceted body of light high on slim legs, a short muzzle, horn buds, ears out sideways,
+    a short upright tail."""
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+
+    def traced(o):
+        w = o.copy(); w.data = o.data.copy(); bpy.context.scene.collection.objects.link(w)
+        w.data.materials.clear(); w.data.materials.append(edge)
+        md = w.modifiers.new("w", "WIREFRAME"); md.thickness = 0.018; md.use_replace = True
+    body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(0, 0, 0.62))
+    body.scale = (0.6, 0.25, 0.27); traced(body)
+    traced(obj_from(bpy.ops.mesh.primitive_cylinder_add, "neck", skin, vertices=6, radius=0.1, depth=0.42,
+                    location=(0.52, 0, 0.88), rotation=(0, 0.55, 0)))
+    head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.15, location=(0.7, 0, 1.1))
+    head.scale = (1.05, 0.85, 0.95); traced(head)
+    traced(obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=6, radius1=0.09, radius2=0.055, depth=0.2,
+                    location=(0.86, 0, 1.03), rotation=(0, math.pi / 2 + 0.35, 0)))
+    for side in (1, -1):
+        traced(obj_from(bpy.ops.mesh.primitive_cone_add, "ear", skin, vertices=4, radius1=0.05, depth=0.26,
+                        location=(0.66, side * 0.22, 1.1), rotation=(-side * (math.pi / 2 - 0.25), 0, 0)))
+        obj_from(bpy.ops.mesh.primitive_cone_add, "horn", skin, vertices=4, radius1=0.03, depth=0.09,
+                 location=(0.66, side * 0.05, 1.26), rotation=(0, -0.45, 0))
+    for x, y in ((0.4, 0.12), (0.4, -0.12), (-0.4, 0.12), (-0.4, -0.12)):
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=5, radius=0.045, depth=0.66, location=(x, y, 0.13))
+    traced(obj_from(bpy.ops.mesh.primitive_cone_add, "tail", skin, vertices=5, radius1=0.06, depth=0.2,
+                    location=(-0.62, 0, 0.84), rotation=(0, -0.5, 0)))
+    eye_ = mat("eye", (1, 1, 1), 9.0, 1.0)
+    for y in (0.1, -0.1):
+        obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.03, location=(0.77, y, 1.14))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.25, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    romp_core(lt, at=(0, 0, 0.62), size=0.15)
+
+
+def kid_rock(el, at, size):
+    """The small rock the kid has just leapt off: rounder and taller than the otter's river stone, dry, faintly
+    tinted by the element."""
+    dk = ELEMENTS[el][1]
+    o = ball("rock", solid("rock", mixc((0.46, 0.44, 0.4), dk, 0.2), 0.8), at, size, (1.0, 0.8, 0.62), 40)
+    fluff(o, 0.06 * size, 3.0, 11.0)
+    return o
+
+
+def goat_creature(sc, el, lt, dk):
+    """The living kid: caught mid-leap off a small rock, all four hooves in the air, forelegs tucked, hind legs still
+    stretched back from the push, head up, ears flying out, its brass bell swinging at its throat."""
+    S, F = STYLE[el], GOAT[el]
+    lights(sc)
+    rng = random.Random(f"creature-goat-{el}")
+    s = 1.05
+    H = Vector((0.66, 0, 1.38))
+    HEAD["at"] = H
+    NECK["at"] = (Vector((0.5, 0, 1.12)), Vector((0.45, 0, 0.9)), 0.11)
+    kid_rock(el, (-0.8, 0, 0.14), 0.34)
+    parts = goat_head(H, s) + [("cap", (0.36, 0, 1.0), (0.6, 0, 1.3), 0.085),  # neck
+                               ("ell", (0.3, 0, 0.98), 0.18, (1.15, 0.8, 1.0)),  # chest
+                               ("cap", (0.28, 0, 0.98), (-0.3, 0, 0.9), 0.15),  # barrel
+                               ("ell", (-0.34, 0, 0.9), 0.17, (1.1, 0.85, 1.0))]  # haunch
+    legs = [((0.3, -0.1, 0.86), (0.48, -0.11, 0.7), (0.38, -0.11, 0.54)),  # forelegs tucked under
+            ((0.3, 0.1, 0.86), (0.5, 0.11, 0.74), (0.42, 0.11, 0.58)),
+            ((-0.38, -0.11, 0.82), (-0.6, -0.12, 0.64), (-0.84, -0.12, 0.54)),  # hind legs stretched back
+            ((-0.38, 0.11, 0.82), (-0.58, 0.12, 0.68), (-0.8, 0.12, 0.6))]
+    hooves = []
+    for a, b, c in legs:
+        parts += [("cap", a, b, 0.05), ("cap", b, c, 0.034)]
+        hooves.append(Vector(c))
+        parts.append(("ell", tuple(Vector(c) + (Vector(c) - Vector(b)).normalized() * 0.03), 0.038, (1.0, 0.9, 1.2)))
+    parts += [("ell", (-0.36, -0.1, 0.84), 0.12, (1.2, 0.6, 1.1)), ("ell", (-0.36, 0.1, 0.84), 0.12, (1.2, 0.6, 1.1))]  # thighs
+    body = blob("body", parts, 0.02, 15000)
+    fluff(body, 0.006, 18.0)
+    tail = goat_tail("tail", [(-0.48, 0, 0.98), (-0.54, 0, 1.08), (-0.55, 0, 1.17)], 0.05, F)
+    seam = goat_bits(body, H, S, F, s, 0.04)
+    fn = goat_paint(H, F, s, [h + (h - Vector(b)).normalized() * 0.03 for h, (a, b, c) in zip(hooves, legs)], list(ELEMENTS).index(el) * 1.7)
+    paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
+    body.data.materials.append(vmat("fur", 0.85))
+    drape("scarf", (0.46, 0, 1.12), (-0.55, 0, -0.85), 0.11, 0.16, 0.15, S["cloth"], S["trim"], f"scarf-goat-{el}", 0.6)
+    beads((0.48, 0, 1.1), (0.45, 0, 0.9), 0.14, 12, 0.07, 3, lt, S)
+    goat_bell(lt, S, (0.6, -0.08, 0.88), 0.085)
+    spine = [Vector((0.38, 0, 1.12)), Vector((0.1, 0, 1.1)), Vector((-0.15, 0, 1.06)), Vector((-0.38, 0, 1.04))]
+    fox_growth(rng, el, S, F, lt, spine, tail, 0.8)
+    aura(rng, S["aura"], lt, (-0.05, 0, 0.85), (1.35, 0.75, 0.7), 1.75)
+
+
+def goat_ascended(sc, el, lt, dk):
+    """The kid's highest ally form: up on its hind legs on small black hooves, slim, ears out, in the Romp's wanderer
+    outfit with the lantern in its near hand, its brass bell on a cord at its chest."""
+    S, F = STYLE[el], GOAT[el]
+    lights(sc)
+    rng = random.Random(f"ascended-goat-{el}")
+    s = 0.95
+    H = Vector((0.14, 0, 2.0))
+    HEAD["at"] = H
+    NECK["at"] = (Vector((0.04, 0, 1.74)), Vector((0.2, 0, 1)), 0.11)
+    parts = goat_head(H, s) + [("cap", (0.0, 0, 1.55), (0.08, 0, 1.9), 0.085), ("cap", (0, 0, 0.98), (0, 0, 1.5), 0.21),
+                               ("ball", (0, 0, 0.92), 0.23), ("cap", (0, -0.26, 1.52), (0, 0.26, 1.52), 0.1)]
+    hands, hooves = [], []
+    for side in (-1, 1):
+        sh, el_, hd = Vector((0, side * 0.33, 1.5)), Vector((0.08, side * 0.4, 1.14)), Vector((0.3, side * 0.35, 0.98))
+        parts += [("cap", sh, el_, 0.06), ("cap", el_, hd, 0.048), ("ell", hd + Vector((0.035, 0, 0)), 0.05, (1.0, 0.9, 1.2))]
+        hands.append(hd + Vector((0.035, 0, 0))); hooves.append(hd + Vector((0.035, 0, 0)))
+    for y in (-0.13, 0.13):  # slim hind legs on small hooves
+        parts += [("cap", (0, y, 0.88), (0.05, y, 0.48), 0.08), ("cap", (0.05, y, 0.48), (0.0, y, 0.1), 0.05),
+                  ("ell", (0.03, y, 0.05), 0.055, (1.3, 0.9, 1.0))]
+        hooves.append(Vector((0.03, y, 0.05)))
+    body = blob("body", parts, 0.02, 15000)
+    fluff(body, 0.006, 18.0)
+    tail = goat_tail("tail", [(-0.2, 0, 0.95), (-0.28, 0, 1.04), (-0.3, 0, 1.13)], 0.05, F, s)
+    seam = goat_bits(body, H, S, F, s, 0.036)
+    fn = goat_paint(H, F, s, hooves, list(ELEMENTS).index(el) * 1.7)
+    paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
+    body.data.materials.append(vmat("fur", 0.85))
+    wanderer(S, lt, el, hands[0], "goat", dz=0.0, w=0.88, ink=False, beads_at=(0.05, 0, 1.7))
+    goat_bell(lt, S, (0.3, -0.1, 1.4), 0.09)
+    fox_growth(rng, el, S, F, lt, [Vector((0.0, 0, 1.78)), Vector((-0.06, 0, 1.6))], tail, 0.7)
+    aura(rng, S["aura"], lt, (-0.1, 0, 1.15), (0.9, 0.8, 1.0), 2.35)
+
+
 # Round 7: one nation style over every stage (sg-look-layers: the element sets colour, material and aura; where you
 # met the spirit sets the regional style). Meridia, the Golden Noon (Earth; clarity, trade and exchange), in stone and
 # terraces: a gold sun crest behind the head, a terraced collar of sandstone steps with gold lips, and trade coins in
@@ -2034,11 +2253,12 @@ for el, (lt, dk) in ELEMENTS.items():
     for st in STAGES:
         if args.stages and st not in args.stages.split(","): continue
         long_ = args.base != "tortoise"
-        fox, otter = args.base == "fox", args.base == "otter"
+        fox, otter, goat = args.base == "fox", args.base == "otter", args.base == "goat"
         sc = reset(1.3, 3.8) if st == "ascended" else reset(0.85, 4.3) if (st == "creature" and fox) \
-            else reset(0.68, 3.2) if (st == "creature" and otter) \
+            else reset(0.68, 3.2) if (st == "creature" and otter) else reset(0.8, 3.3) if (st == "creature" and goat) \
             else reset(0.7 if long_ else 0.75, 4.5 if long_ else 4.0) if st == "creature" \
             else reset(0.45, 3.6) if (st == "hologram" and fox) else reset(0.4, 3.5) if (st == "hologram" and otter) \
+            else reset(0.5, 3.3) if (st == "hologram" and goat) \
             else reset(0.35, 3.7) if (st == "hologram" and long_) else reset()
         rng = random.Random(f"{FAMILY}-{el}-{st}")  # gas and core are the family's, the same for every base
         if st == "gas":
@@ -2048,13 +2268,13 @@ for el, (lt, dk) in ELEMENTS.items():
             romp_core(lt, (0, 0, 0.3), 0.3) if FAMILY == "romp" else core(lt)
         elif st == "hologram":
             hologram(lt, dk) if args.base == "tortoise" else fox_hologram(lt, dk) if fox \
-                else otter_hologram(lt, dk) if otter else hologram_long(lt, dk, args.base)
+                else otter_hologram(lt, dk) if otter else goat_hologram(lt, dk) if goat else hologram_long(lt, dk, args.base)
         elif st == "creature":
             creature(sc, el, lt, dk) if args.base == "tortoise" else fox_creature(sc, el, lt, dk) if fox \
-                else otter_creature(sc, el, lt, dk) if otter else creature_long(sc, el, lt, dk, args.base)
+                else otter_creature(sc, el, lt, dk) if otter else goat_creature(sc, el, lt, dk) if goat else creature_long(sc, el, lt, dk, args.base)
         else:
             ascended(sc, el, lt, dk) if args.base == "tortoise" else fox_ascended(sc, el, lt, dk) if fox \
-                else otter_ascended(sc, el, lt, dk) if otter else ascended_long(sc, el, lt, dk, args.base)
+                else otter_ascended(sc, el, lt, dk) if otter else goat_ascended(sc, el, lt, dk) if goat else ascended_long(sc, el, lt, dk, args.base)
         if args.nation:
             nation_layer(args.nation, st, args.base, lt)
         base = f"{el}-{st}"
