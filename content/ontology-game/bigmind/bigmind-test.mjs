@@ -236,6 +236,12 @@ await page.fill('[data-bm-line]', 'Nobody ever gives me a day off');
 await page.click('[data-bm-say]');
 await setCharge(5);
 ok(await waitStep('q-from'), 'questions closer to the evidence follow: what do you protect the self from?');
+{ // Wendell's own Protector questions (daemons/questions.js) follow, in his order and his plain wording
+  const DQ = (await import('../daemons/questions.js')).default.daemons.protector;
+  const qs = await page.evaluate(() => window.__oagBigMind.VOICES[0].questions.map((q) => [q.id, q.ask]));
+  const after = qs.slice(qs.findIndex((q) => q[0] === 'from') + 1, qs.findIndex((q) => q[0] === 'from') + 1 + DQ.length);
+  ok(JSON.stringify(after) === JSON.stringify(DQ.map((q) => [q.id, q.ask])), 'the Protector is asked Wendell\'s four questions after what it protects the self from: ' + after.map((q) => q[0]).join());
+}
 await page.click('[data-bm-modal] [data-bm-card]:has-text("Attack.")');
 await page.click('[data-bm-modal] [data-bm-card]:has-text("Shame.")');
 await page.click('[data-bm-done]');
