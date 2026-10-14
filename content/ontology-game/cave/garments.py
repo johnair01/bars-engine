@@ -278,7 +278,7 @@ def material(obj, name):
 # stiffness (the solver's settings in drape()).
 
 CLOTH_H = 0.022                                  # metres between the pattern's points while draping
-ROBE_VERTS = 1150                                # the draped robe is reduced to about this many points for the phone
+ROBE_VERTS = 1200                                # the draped robe is reduced to about this many points for the phone
 EASE = 0.05                                      # metres added to the chest's half width for the body panel
 HEM_CUT = 0.05                                   # the pattern's hem: the belt takes up about 0.1 m, so it hangs near HEM
 FLARE = 0.07                                     # metres the panel widens from the waist to the hem (a slight A-line)
@@ -464,60 +464,26 @@ def drape(fig, rig, build):
     return co, faces, parts + parts
 
 
-def reduce(co, faces, parts, target):
-    """The draped cloth, smoothed a little (the solver's last few millimetres of chatter) and reduced to about target
-    points. Each face keeps the part of the full cloth's face nearest it."""
-    me = bpy.data.meshes.new("tmp")
-    me.from_pydata([tuple(v) for v in co], [], faces)
-    obj = bpy.data.objects.new("tmp", me)
-    bpy.context.scene.collection.objects.link(obj)
+def trimmed(co, faces, parts, build):
+    """The draped cloth, smoothed a little (the solver's last few millimetres of chatter), with its trim cut in at full
+    detail: the crossed collar (J4's line, left over right) and bands along the neckline, the hem and the cuffs, each
+    on an exact line its width in from the edge. Returns the mesh, each face's part and whether it is trim, and the
+    points on the trim's lines (kept when the cloth is reduced)."""
     bm = bmesh.new()
-    bm.from_mesh(me)
+    for c in co:
+        bm.verts.new(c)
+    bm.verts.ensure_lookup_table()
+    for f in faces:
+        bm.faces.new([bm.verts[i] for i in f])
     for _ in range(2):
         bmesh.ops.smooth_vert(bm, verts=bm.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
-    bm.to_mesh(me)
-    bm.free()
-    full = BVHTree.FromPolygons([v.co.copy() for v in me.vertices], [list(p.vertices) for p in me.polygons])
-    dec = obj.modifiers.new("Dec", "DECIMATE")
-    dec.ratio = min(1.0, target / len(me.vertices))
-    out = bpy.data.meshes.new_from_object(obj.evaluated_get(bpy.context.evaluated_depsgraph_get()))
-    V = [v.co.copy() for v in out.vertices]
-    F = [list(p.vertices) for p in out.polygons]
-    P = [parts[full.find_nearest(p.center)[2]] for p in out.polygons]
-    bpy.data.objects.remove(obj)
-    bpy.data.meshes.remove(me)
-    bpy.data.meshes.remove(out)
-    return V, F, P
-
-
-def robe(fig, rig, build, cw):
-    """The draped robe, reduced, weighted from the body under it, its trim painted: the crossed collar (J4's line,
-    left over right), a band round the neckline, the hem and the cuffs."""
-    co, faces, parts = drape(fig, rig, build)
-    verts, faces, parts = reduce(co, faces, parts, ROBE_VERTS)
-    W = bone_weights(fig)
-    from_body = weight_source(fig, lambda c, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR",
-                                                                  "shoulderL", "shoulderR"))
-    from_arm = {s: weight_source(fig, lambda c, w, s=s: main_bone(w) in ("spine", "shoulder" + s, "elbow" + s, "wrist" + s))
-                for s in "LR"}
-    sleeve_of = {}
-    for f, p in zip(faces, parts):
-        for v in f:
-            sleeve_of.setdefault(v, set()).add(p)
-    weights = []
-    for i, p in enumerate(verts):
-        ps = sleeve_of.get(i, {0})
-        if 0 in ps:
-            weights.append(skirt_weights(p, from_body(p)))
-        else:
-            weights.append(from_arm["L" if 1 in ps else "R"](p))
-    obj = mesh_object("robe", verts, faces, [cw["robe"]] * len(faces), weights, rig, parts)
-    # the trim: bands along the neckline, the hem and the cuffs, each cut on an exact line its width in from the edge
-    co = [v.co.copy() for v in obj.data.vertices]
-    edges = openings(obj)
+    bm.faces.ensure_lookup_table()
+    before = BVHTree.FromBMesh(bm)
     bands = []
-    for a, b in edges:
-        A, B = co[a], co[b]
+    for e in bm.edges:
+        if len(e.link_faces) != 1:
+            continue
+        A, B = (v.co.copy() for v in e.verts)
         if A.z > 1.25 and B.z > 1.25 and abs(A.x) < 0.15:
             w = 0.022                                    # the neckline
         elif A.z < 0.3 and B.z < 0.3:
@@ -534,22 +500,71 @@ def robe(fig, rig, build, cw):
     kd.balance()
 
     def trim(c):
-        found = kd.find_n(c, 8)
-        return min((d - bands[n][1] for _, n, d in found), default=1.0)
-    bm = bmesh.new()
-    bm.from_mesh(obj.data)
+        return min((d - bands[n][1] for _, n, d in kd.find_n(c, 8)), default=1.0)
     collar = C.collar_path(bm, build)
-    C.cut_along(bm, lambda c: collar(c) - C.COLLAR * 1.15)
+    on_collar = lambda c: collar(c) - C.COLLAR * 1.15 if c.z > 1.0 else 1.0
+    C.cut_along(bm, on_collar)
     C.cut_along(bm, trim)
-    bm.to_mesh(obj.data)
+    me = bpy.data.meshes.new("robe-full")
+    bm.to_mesh(me)
     bm.free()
-    me = obj.data
-    col = me.color_attributes["Col"]
-    for p in me.polygons:
-        c = p.center
-        if (c.z > 1.0 and collar(c) < C.COLLAR * 1.15) or trim(c) < 0:
-            for li in p.loop_indices:
-                col.data[li].color = (*cw["edge"], 1.0)
+    labels = [(parts[before.find_nearest(p.center)[2]], on_collar(p.center) < 0 or trim(p.center) < 0)
+              for p in me.polygons]
+    keep = set()                                         # the points where two labels meet: the trim's lines, the sleeves'
+    seen = {}
+    for p, lab in zip(me.polygons, labels):
+        for v in p.vertices:
+            if seen.setdefault(v, lab) != lab:
+                keep.add(v)
+    return me, labels, keep
+
+
+def reduce(me, labels, keep, target):
+    """The cloth reduced to about target points for the phone, the trim's lines kept (Blender's decimation, held off
+    the kept points, where labels meet). Each face keeps its label."""
+    obj = bpy.data.objects.new("tmp", me)
+    bpy.context.scene.collection.objects.link(obj)
+    kinds = sorted(set(labels))
+    lab = me.attributes.new("lab", "INT", "FACE")       # each face's label rides through the decimation with it
+    lab.data.foreach_set("value", [kinds.index(x) for x in labels])
+    g = obj.vertex_groups.new(name="keep")
+    g.add(list(keep), 1.0, "REPLACE")
+    dec = obj.modifiers.new("Dec", "DECIMATE")
+    dec.ratio = min(1.0, target / len(me.vertices))
+    dec.vertex_group, dec.invert_vertex_group, dec.vertex_group_factor = "keep", True, 1000.0
+    out = bpy.data.meshes.new_from_object(obj.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    V = [v.co.copy() for v in out.vertices]
+    F = [list(p.vertices) for p in out.polygons]
+    L = [kinds[d.value] for d in out.attributes["lab"].data]
+    bpy.data.objects.remove(obj)
+    bpy.data.meshes.remove(me)
+    bpy.data.meshes.remove(out)
+    return V, F, L
+
+
+def robe(fig, rig, build, cw):
+    """The draped robe with its trim, reduced, and weighted from the body under it."""
+    co, faces, parts = drape(fig, rig, build)
+    verts, faces, labels = reduce(*trimmed(co, faces, parts, build), ROBE_VERTS)
+    parts = [p for p, _ in labels]
+    W = bone_weights(fig)
+    from_body = weight_source(fig, lambda c, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR",
+                                                                  "shoulderL", "shoulderR"))
+    from_arm = {s: weight_source(fig, lambda c, w, s=s: main_bone(w) in ("spine", "shoulder" + s, "elbow" + s, "wrist" + s))
+                for s in "LR"}
+    sleeve_of = {}
+    for f, p in zip(faces, parts):
+        for v in f:
+            sleeve_of.setdefault(v, set()).add(p)
+    weights = []
+    for i, p in enumerate(verts):
+        ps = sleeve_of.get(i, {0})
+        if 0 in ps:
+            weights.append(skirt_weights(p, from_body(p)))
+        else:
+            weights.append(from_arm["L" if 1 in ps else "R"](p))
+    colours = [cw["edge"] if t else cw["robe"] for _, t in labels]
+    obj = mesh_object("robe", verts, faces, colours, weights, rig, parts)
     outward(obj)
     return obj
 
