@@ -1,0 +1,123 @@
+<title>Shellback Spirit Proof</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a dark projection room. The 3D viewer opens the page, then the five element strips, then the sprite sheet.
+   Single dark look on purpose: the spirits are light, and they read only on a dark ground. */
+:root{
+  --bg:#0d0f13; --panel:#151821; --fg:#e8eae6; --muted:#9aa29d; --line:#262b35; --accent:#e8b84a;
+  --f-display:"Young Serif", Georgia, serif;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:68rem;margin:0 auto;padding-inline:clamp(16px,4vw,40px);padding-block:2.2rem 4rem}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance;line-height:1.2}
+h1{font-size:clamp(1.9rem,4.5vw,2.8rem)}
+h2{font-size:1.6rem;margin-top:3rem;margin-bottom:.6rem}
+h3{font-size:1.15rem}
+p{max-width:66ch;margin:.55rem 0}
+.eyebrow{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lede{color:var(--muted);font-size:1.08rem}
+.viewer{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:1.6rem;margin-top:1.6rem;align-items:start}
+@media (max-width:760px){.viewer{grid-template-columns:1fr}.strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+#stage{width:100%;aspect-ratio:4/3;max-width:100%;background:radial-gradient(ellipse at 50% 70%,#1b2030 0%,#0b0d11 70%);border-radius:14px;display:block;touch-action:none}
+.ctl{display:grid;gap:1rem}
+.lab{display:block;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:.3rem .8rem;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chips button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{font-size:.9rem;color:var(--muted)}
+.row{margin-top:1.4rem}
+.strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6rem;margin-top:.5rem}
+figure{margin:0;background:var(--panel);border-radius:10px;padding:.4rem}
+figure img{width:100%;height:auto;display:block}
+figcaption{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);text-align:center;padding-bottom:.2rem}
+.sheet{display:grid;grid-template-columns:repeat(5,96px);gap:8px 14px;background:var(--panel);padding:16px;border-radius:12px;width:max-content;max-width:100%;overflow-x:auto}
+.sheetbox{overflow-x:auto;margin-top:.8rem}
+img.px{image-rendering:pixelated;width:96px;height:96px}
+.sheethead{display:grid;grid-template-columns:repeat(5,96px);gap:14px;font-family:var(--f-mono);font-size:.7rem;color:var(--muted);padding-inline:16px;margin-top:1rem}
+ul{max-width:66ch;padding-left:1.1rem}
+li{margin:.3rem 0}
+code{font-family:var(--f-mono);font-size:.86em}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Spirit art · first proof · the Protector's family</div>
+  <h1>Shellback: from gas to guardian</h1>
+  <p class="lede">One body family through its five stages in all five elements. Each stage is a 3D model, and each sprite is rendered from that model, so one source gives both assets.</p>
+
+  <section class="viewer" aria-label="3D model viewer">
+    <canvas id="stage" aria-label="The selected Shellback model, turning slowly. Drag to turn it."></canvas>
+    <div class="ctl">
+      <div><span class="lab">Element</span><div class="chips" id="c-el"></div></div>
+      <div><span class="lab">Stage</span><div class="chips" id="c-st"></div></div>
+      <p class="note" id="info">Drag to turn the model.</p>
+      <p class="note">The scanlines and soft glow show in the renders below. The 3D model carries the colours, glow and wire edges. The scanlines need the game's own shader, so the viewer sets the see-through skin itself.</p>
+    </div>
+  </section>
+
+  <h2>The three stages</h2>
+  <ul>
+    <li><strong>Gas, level 1.</strong> A drifting cloud of motes in the element's colours, thickest at the heart.</li>
+    <li><strong>Core, level 3.</strong> The gas solidifies into a six-sided double pyramid, a shell scute made solid. A few motes still circle it.</li>
+    <li><strong>Hologram, level 5.</strong> The core projects a faceted tortoise of light from a ring on the ground. The core shows at its chest. Beaten in a fight, it falls back into the core.</li>
+    <li><strong>Living creature.</strong> The hologram becomes flesh: a tortoise in the world, its core set in the crown of its shell.</li>
+    <li><strong>Highest ally form.</strong> The Shellback stands up as a humanoid guardian, shell on its back and core at its heart.</li>
+  </ul>
+  %%ROWS%%
+
+  <h2>Sprite sheet</h2>
+  <p>Rendered from the same models at 96 pixels, with three alpha steps so the hologram stays see-through. Rows run Earth, Wood, Fire, Water, Metal.</p>
+  <div class="sheetbox">
+    <div class="sheethead"><span>Gas</span><span>Core</span><span>Hologram</span><span>Creature</span><span>Highest</span></div>
+    <div class="sheet">%%SHEET%%</div>
+  </div>
+
+  <h2>What this proves and what it doesn't</h2>
+  <ul>
+    <li>The pipeline runs end to end in the cloud: one script builds, renders, sprites and exports all twenty-five, with nothing downloaded. The largest model file is %%FACES%% KB.</li>
+    <li>The same arguments give the same spirit every time.</li>
+    <li>Not yet built: the other animal bases (armadillo, pangolin), the nation styles, the parts you pick or offer, the levels for the last two stages, and animation.</li>
+  </ul>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+const GLBS = %%GLBS%%;
+const EL = {earth:"Earth",wood:"Wood",fire:"Fire",water:"Water",metal:"Metal"}, ST = {gas:"Gas",core:"Core",hologram:"Hologram",creature:"Living creature",ascended:"Highest ally form"};
+const st = {el:"earth", st:"hologram"};
+const cv = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(32, 4/3, 0.1, 50); cam.position.set(3.6, 2.4, 4.4);
+const ctl = new OrbitControls(cam, cv); ctl.target.set(0, 0.3, 0); ctl.enableDamping = true; ctl.autoRotate = !matchMedia("(prefers-reduced-motion: reduce)").matches; ctl.autoRotateSpeed = 1.2; ctl.enablePan = false;
+scene.add(new THREE.AmbientLight(0xffffff, 0.6)); const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(3, 5, 3); scene.add(sun);
+const loader = new GLTFLoader(); let current = null;
+function b64(s){ const bin = atob(s), u = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u.buffer; }
+function load(){
+  loader.parse(b64(GLBS[st.el+"-"+st.st]), "", g => {
+    if(current) scene.remove(current);
+    current = g.scene; ctl.target.set(0, st.st === "ascended" ? 0.9 : 0.3, 0);
+    current.traverse(o => { if(o.isMesh){ const see = {holo:0.32, deep:0.22}[o.material.name]; if(see) o.material.opacity = see; o.material.transparent = true; o.material.depthWrite = o.material.opacity > 0.8; o.material.side = THREE.DoubleSide; } });
+    scene.add(current);
+    document.getElementById("info").textContent = EL[st.el] + " Shellback, " + ST[st.st].toLowerCase() + " stage. Drag to turn it.";
+  }, e => { document.getElementById("info").textContent = "The model did not load: " + e.message; });
+}
+function chips(id, map, key){
+  const box = document.getElementById(id);
+  for(const k in map){ const b = document.createElement("button"); b.type="button"; b.id=id+"-"+k; b.textContent=map[k];
+    b.setAttribute("aria-pressed", String(st[key]===k));
+    b.onclick = () => { st[key]=k; box.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", String(x===b))); load(); };
+    box.append(b); }
+}
+chips("c-el", EL, "el"); chips("c-st", ST, "st");
+function size(){ const w = cv.clientWidth, h = cv.clientHeight; renderer.setSize(w, h, false); cam.aspect = w/h; cam.updateProjectionMatrix(); }
+addEventListener("resize", size); size(); load();
+renderer.setAnimationLoop(() => { ctl.update(); renderer.render(scene, cam); });
+</script>
