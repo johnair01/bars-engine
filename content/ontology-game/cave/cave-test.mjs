@@ -580,6 +580,7 @@ for (const st of ['water', 'gas']) { await page.locator('[data-dissolve-breathe=
 ok((await page.locator('[data-dissolve-gain]').getAttribute('data-dissolve-gain')) === 'Magic:2' && (await C(() => window.__oagCave.spirits.length)) === 0, 'Sadness is Water, so Magic rises 2, and no spirit is left');
 await page.locator('[data-dissolve-done]').click();
 ok(await C(() => { const D = window.__oagDissolve; return D.stateOf({ form: 'ally' }) === 'ice' && D.stateOf({ form: 'creature' }) === 'ice' && D.stateOf({ form: 'hologram' }) === 'water' && D.stateOf({ form: 'core' }) === 'water' && D.stateOf({ form: 'gas' }) === 'gas' && D.manaOf({ form: 'gas' }) === 1; }), 'the spirit generator\'s forms sit on the ladder: creature and ally ice, hologram and core water, gas gas');
+ok(await C(() => { const D = window.__oagDissolve; return !D.canDissolve({ element: 'Fire', polarity: 4 }) && D.canDissolve({ element: 'Fire', polarity: -3 }) && !D.canDissolve({ shadow: 'numbness', element: null, polarity: 0 }) && D.canDissolve({ shadow: 'numbness', element: 'Water', polarity: 0 }); }), 'a spirit shadow hides waits until it is seen, and a shadow spirit until its reveal ties it to an element');
 // Sitting down where you are (13 October 2026): the WAVE room's steps run in place in the tunnel, as in the Big Mind cave, and
 // standing up leaves a spirit that carries its own light.
 ok(await sees('[data-cave-sitbtn]'), 'inside the cave, Sit down is always at hand');

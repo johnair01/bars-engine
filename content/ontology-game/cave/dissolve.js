@@ -31,6 +31,11 @@
     ["gas", "spirit", "Gas to pure spirit", "Breathe in, and take it into yourself.", "Breathe it in"],
   ];
 
+  // Not while perceptual shadow hides it (polarity 1 to 10; 0, none or flooding below 0 is seen). A shadow spirit (o.shadow) can
+  // be dissolved once it is fully revealed, and fully revealing it ties it to an element, which the WAVE room's reveal sets on
+  // o.element (Wendell, board 2026-10-14 22:52, sd-shadow-skip overruled: "It has an element and can be dissolved but only
+  // after it's fully revealed. Fully revealing it means tying it to an element.").
+  function canDissolve(o) { return !!o && !(o.polarity > 0) && !(o.shadow && !statOf(o)); }
   function stateOf(o) { return (o && o.form && FORM_STATE[o.form]) || (o && o.lighter ? "water" : "ice"); }
   function stepsFor(o) { var i = STATES.indexOf(stateOf(o)); return STEPS.slice(i); }
   function manaOf(o) { return stepsFor(o).length; }
@@ -100,7 +105,7 @@
   //          gone(o) (take it out of the spirits list and the scene), close() (hide the box) }
   function run(o, h) {
     var g = o.g, steps = stepsFor(o), stat = statOf(o), mana = steps.length;
-    if (!g || !g.userData.orb || o.polarity > 0 || o.shadow) return; // hidden by perceptual shadow (polarity 1 to 10) until seen; a shadow spirit is not dissolved (sd-shadow-skip)
+    if (!g || !g.userData.orb || !canDissolve(o)) return;
     o.dissolving = true;
     var m = setUp(h.THREE, g, stateOf(o)), busy = false;
     function page(i) {
@@ -152,6 +157,6 @@
     page(0);
   }
 
-  window.__oagDissolve = { run: run, stateOf: stateOf, stepsFor: stepsFor, manaOf: manaOf, statOf: statOf, stats: readStats, statsLine: statsLine,
+  window.__oagDissolve = { run: run, canDissolve: canDissolve, stateOf: stateOf, stepsFor: stepsFor, manaOf: manaOf, statOf: statOf, stats: readStats, statsLine: statsLine,
     STATES: STATES, FORM_STATE: FORM_STATE, STAT_OF: STAT_OF, STATS_KEY: STATS_KEY };
 })();
