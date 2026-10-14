@@ -111,3 +111,14 @@ to light the dome from below. The hollows' edges ease in over a wider band, so t
 `3d-build/wave-room-test-2026-10-14/dome-moss.png`. The rock surface and moss are render-only; the GLB keeps the plain
 colour until a bake step exists. Still short of the concept: rubble and small stones at the foot of the walls, sharper
 rock detail, and the concept's bright, painterly light.
+
+**Walking it (14 October, evening).** Wendell, 14 October 2026: "we need to test the ergonomics of Freeform navigation
+in preparation of introducing running". `walk-room.js` loads the room's GLB (copied to `rooms/wave-room.glb` beside the
+cave page by `scripts/build-ontology-game.mjs`) and walks it with the WAVE room's stick, arrow keys or W A S D. A drag
+turns the camera round the figure and a pinch brings it closer. The cave's first page has a "Walk the test room" button.
+The walkable floor and the obstacles (seat, plinth, lantern, boulders) are read from the GLB, so a rebuilt room needs
+no numbers in the page. Blender's lights are swapped for phone-sized ones that keep their place and colour.
+
+The GLB now carries each material's plain colour: a colour drawn live from nodes cannot go into a glTF, and the exporter
+wrote white in its place. The rock surface, moss and stone pattern stay render-only until a bake step exists, and the
+walls' rock faces read smoother on the phone than in the renders, with stepped edges round the hollows.

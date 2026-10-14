@@ -571,8 +571,24 @@ sc.world = world
 
 # ---- export and report ----
 glb = os.path.join(OUT, "room.glb")
+# A colour drawn live from nodes (stone, rock, moss) cannot go into a glTF, and the exporter writes white in its place.
+# Until a bake step exists, the GLB takes the material's plain colour: the link is lifted for the export and put back
+# for the renders.
+lifted = []
+for mat in bpy.data.materials:
+    if not mat.use_nodes or "Principled BSDF" not in mat.node_tree.nodes:
+        continue
+    if any(n.type == "TEX_IMAGE" for n in mat.node_tree.nodes):  # a model's own pictures (and a tint over them) export as they are
+        continue
+    sock = mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"]
+    for ln in list(sock.links):
+        if ln.from_node.type != "TEX_IMAGE":
+            lifted.append((mat.node_tree, ln.from_socket, sock))
+            mat.node_tree.links.remove(ln)
 bpy.ops.export_scene.gltf(filepath=glb, export_format="GLB", export_apply=True, export_lights=True,
                           export_image_format="JPEG", export_jpeg_quality=82)
+for nt, a, b in lifted:
+    nt.links.new(a, b)
 tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in sc.objects if o.type == "MESH")
 report = {"id": SPEC["id"], "spec": os.path.relpath(SPEC_PATH, CAVE), "glb_bytes": os.path.getsize(glb), "triangles": tris,
           "parts": [{k: v for k, v in r.items() if k != "row"} | {"source": r["row"].get("source"),
