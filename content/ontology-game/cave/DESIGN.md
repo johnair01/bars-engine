@@ -742,3 +742,33 @@ WAVE room be able to metabolize context specific charges and send the results to
   once, at the end of the sitting, rather than per creature; Tomorrow sets the due date one day on; a run belongs to the
   signed-in player, and the council reads only his.
 - `board-wave-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.
+
+## Perceptual shadow in the WAVE room (14 October 2026)
+
+Wendell, 14 October 2026: "This is around perceptual shadow specifically the shadow that stops players from being able to
+see or hold their attention on charge. The 4 shadows are forgetting, distracting, dissociating, and numbness. ... It's
+hiding charge from the self so that it can't be dealt with or worked with. From a skill development standpoint perceptual
+shadow is only triggered when peopel report they are aware of a charge but not about to perceive it and if they aren't able
+to get the charge number down. I imagine there's a polarity (alongside size, and brightness) that's also able to occlude
+charge spirits as a function of emergent perceptual shadow". The design is Six-faces-council
+`council/callsheets/perceptual-shadow.md`; its choices stand unless he flips them on the board.
+
+- **Two ways in.** Witness has a third answer, "I know it's here, but I can't feel it", which raises the creature's
+  polarity by 6. A round whose 3-2-1 reading after is no lower than before (or a board run whose charge left is no lower
+  than before) says so at its end and offers "Look again for what's hiding it": the hidden part of that creature comes to
+  the door, carrying its shadow plus 4. Nothing else raises a shadow, so most sittings never see one.
+- **Four shadows.** The player names it: Forgetting, Distracting, Dissociating or Numbness, a line each, or "I can't tell".
+  Each hides the creature its own way as polarity rises: Forgetting fades it in and out, Distracting drifts it aside,
+  Dissociating stands it back toward the door and greys it, Numbness wraps it in a fog of the numb texture's grey. All of
+  them thin its body, darken its aura and put a veil round it. At 10 only a faint outline is left.
+- **Numbness, twice.** A creature whose texture is numbness gets a note on the shadow page ("Numbness is how it feels, and it
+  can also be what keeps it out of reach") and Numbness first in the list. The texture and the shadow stay separate.
+- **The practice.** Each shadow has a practice (say its name three times; name what pulled you away; feel your feet and
+  seat; find the edge of the numb; or "look again, slowly" for an unnamed one). Each Done lowers polarity by 3. The player
+  can go on with it hidden, and Witness keeps "Work with what hides it" until it is clear.
+- **Polarity** is the third property beside size and brightness. Allow shows it as a reading, "How hidden it is", not a
+  slider: only the signals raise it and only the practice lowers it. A creature that leaves as a spirit carries its polarity
+  into the cave, where it walks dimmer.
+- **The run** gives each round `shadow: { kind, polarity, start, signals, practices }`, its 3-2-1 `reading`, and
+  `hiddenOf` for a hidden part, so the board's run shows when shadow came up and whether the practice thinned it.
+- `shadow-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.

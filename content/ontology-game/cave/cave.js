@@ -1275,6 +1275,24 @@
     return r ? r[3] : 0x9a9aa8;
   }
 
+  // Perceptual shadow (Wendell, 14 October 2026: "the shadow that stops players from being able to see or hold their attention
+  // on charge. The 4 shadows are forgetting, distracting, dissociating, and numbness ... It's hiding charge from the self so that
+  // it can't be dealt with or worked with"). Six-faces-council council/callsheets/perceptual-shadow.md. Each row: id, name, what
+  // the player feels, the practice that thins it, and whether the practice asks for a line. The numbness shadow is kin to the
+  // numbness texture (a blocker) and wears its grey, but it is a second thing: what hides the charge, not how it feels.
+  var SHADOWS = [
+    ["forgetting", "Forgetting", "It slips out of mind as soon as I turn to it.", "Say its name out loud, slowly, three times.", false],
+    ["distracting", "Distracting", "Something keeps pulling my attention away.", "Name what pulled you away. Then come back to it.", true],
+    ["dissociating", "Dissociating", "It feels far away, like it's happening to someone else.", "Feel your feet on the floor and your seat under you. Then look again.", false],
+    ["numbness", "Numbness", "Where it should be, there's only a blank.", "Find the edge of the numb: where does feeling start again?", true],
+  ];
+  var SHADOW_PLAIN = "Look again, slowly, as if for the first time."; // a shadow the player can't name yet
+  // Polarity, the third property beside size and brightness (Wendell: "a polarity (alongside size, and brightness) that's also
+  // able to occlude charge spirits as a function of emergent perceptual shadow"), 0 (clear) to 10 (only a faint outline). It is
+  // emergent: the two signals raise it and only the practice lowers it.
+  var POLARITY = { aware: 6, notDown: 4, practice: 3 };
+  function occlusion(polarity) { return clamp((polarity || 0) / 10, 0, 1); }
+
   // The 3-2-1 chat, ported from bars-engine's Clean321Flow (src/components/clean321/Clean321Flow.tsx): one thread the player
   // writes entirely (the system never writes a turn); 3 Face it, "it", one voice; 2 Talk to it, two voices with a switcher
   // (You and the daemon); 1 Be it, "I am"; a charge reading before and after. The daemon steps aside when the player says it
@@ -2477,6 +2495,8 @@
     canvasBox.appendChild(spiritBtn); wrap.appendChild(spiritBox);
     function addSpirit(o, at0) {
       var g = buildSpirit(THREE, o.name, o.hex != null ? o.hex : spiritHex(o.element)); if (o.lighter) g.userData.level = 0.2;
+      // a spirit still under a perceptual shadow walks dimmer, by its polarity
+      if (o.polarity) { var oc = occlusion(o.polarity); g.userData.level *= 1 - oc; g.userData.orb.material.opacity = 0.9 * (1 - 0.7 * oc); g.userData.polarity = o.polarity; }
       if (at0) g.position.copy(at0); else if (avatar) g.position.set(avatar.position.x, avatar.position.y + 1.7, avatar.position.z);
       scene.add(g); o.g = g; o.light = carryLight(g, g.userData.color.getHex()); spirits.push(o); spiritsUi();
     }
@@ -2517,7 +2537,7 @@
         cancelAnimationFrame(running); wrap.style.display = "none";
         openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element }).then(function (r) {
           wrap.style.display = ""; snapCam = true; last = performance.now(); render(); busy = false; fade.style.opacity = 0;
-          var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter }];
+          var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter, polarity: o.polarity }];
           back.forEach(function (x) { addSpirit(x); });
         });
       }, 520);
@@ -3530,7 +3550,10 @@
         var core = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
         core.position.set(0, 1.2, 0.42); body.add(core); g.add(body);
         var aura = buildAura(THREE, 1.25); g.add(aura);
-        g.userData = { mat: mat, body: body, core: core, aura: aura, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false };
+        // the shadow's veil: a dark haze round the creature that thickens with its polarity
+        var veil = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 12), new THREE.MeshBasicMaterial({ color: 0x1a1620, transparent: true, opacity: 0, depthWrite: false }));
+        veil.position.y = 1.15; veil.scale.y = 1.25; veil.visible = false; g.add(veil);
+        g.userData = { mat: mat, body: body, core: core, aura: aura, veil: veil, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false };
         return g;
       }
       function dressCharge(c) {
@@ -3571,7 +3594,8 @@
       var R = { round: 1, phase: "welcome", back: false, close: null, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [], all: [], startedAt: new Date().toISOString(), heat: { before: null, after: null }, ending: { kind: null, text: "" } };
       function newCharge(first, slot) {
         var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
-          slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [] };
+          slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [],
+          polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null };
         R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
@@ -3649,7 +3673,7 @@
         }
         if (ph === "welcome") {
           k.push(P(w[2], { "data-room-prompt": "" }));
-          k.push(P(ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
+          k.push(P(ch.hiddenOf ? "The part of " + ch.hiddenOf + " that stayed hidden is at the door." : ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
           if (ch.about) k.push(P("From the board: " + ch.about + ". Whatever is in the way of it is at the door.", { "data-room-about": "" }));
           if (R.from === "board" && R.round === 1 && ch === R.all[0]) heatRow(k, "before", "How much charge does it carry, 0 to 10?");
           if (Object.keys(EXITS).length && R.round === 1) k.push(P("Walk round the room with the circle at the bottom left (or the arrow keys), or tap the floor. The rug is where you sit to work with what comes in. " + (EXITS.bigmind && EXITS.portal ? "Behind you are two doors: Big Mind on the left, and the six game masters on the right." : "Behind you is a door."), { "data-room-walk-hint": "" }));
@@ -3695,6 +3719,12 @@
           k.push(P("What is it like?"));
           k.push(pickRow("data-room-texture", TEXTURES.map(function (t) { return [t[0], t[1]]; }), ch.texture, function (v) { ch.texture = v; dressCharge(ch); draw(); }));
           var nx = btn("Go on", { "data-room-next": "" }, nextStep); nx.disabled = !ch.texture;
+          // The first of the shadow's two signals: the player knows it is here and can't perceive it.
+          if (ch.polarity > 0) k.push(P(shadowLine(ch), { "data-room-shadow-left": "" }));
+          k.push(row([btn(ch.polarity > 0 ? "Work with what hides it" : "I know it's here, but I can't feel it", { "data-room-cant-feel": "" }, function () {
+            if (!ch.polarity) raiseShadow(ch, "aware", POLARITY.aware);
+            go(ch.shadowAsked ? "unveil" : "shadow");
+          }, true)]));
           k.push(row([nx, elseBtn(), stepBack()]));
           return { title: w[1], kids: k };
         }
@@ -3716,6 +3746,9 @@
             ch.allowed = true;
             k.push(P(nm() + " grows a little as you let it be here.", { "data-room-allow": "" }));
             allowSliders(ch.allow, "data-room-allow-slider").forEach(function (n) { k.push(n); });
+            // polarity, beside size and brightness: a reading, not a slider, since only the shadow raises it
+            k.push(el("div", {}, [el("p", { class: "oagc-note", text: "How hidden it is" }), el("p", { class: "oagc-read", "data-room-polarity": String(ch.polarity),
+              text: ch.polarity ? ch.polarity + " of 10, " + shadowName(ch).toLowerCase() : "In plain sight" })]));
           }
           if (ph === "validate" && ch.layers.length) k.push(P("This holds " + ch.layers.map(function (l) { return l.name; }).join(" and ") + " too.", { "data-room-validate-layers": "" }));
           var kk = [btn("Go on", { "data-room-next": "" }, function () {
@@ -3737,6 +3770,36 @@
           ok(); k.push(row([tw, aw, stepBack()]));
           k.push(P("What you write stays on this page.", { class: "oagr-note" }));
           return { title: w[1], kids: k };
+        }
+        if (ph === "shadow") { // name the shadow: which of the four is keeping it out of sight
+          k.push(P("Something is keeping " + (ch.name ? ch.name : "it") + " out of sight. Which is closest?", { "data-room-shadow-ask": "" }));
+          if (ch.texture === "numbness") k.push(P("Numbness is how it feels, and it can also be what keeps it out of reach. The second one is a shadow.", { "data-room-shadow-numb": "" }));
+          var order = ch.texture === "numbness" ? [SHADOWS[3], SHADOWS[0], SHADOWS[1], SHADOWS[2]] : SHADOWS;
+          order.forEach(function (sh) {
+            var b = el("button", { class: ch.shadow === sh[0] ? "" : "alt", "aria-pressed": String(ch.shadow === sh[0]), text: sh[1], onclick: function () { ch.shadow = sh[0]; ch.shadowAsked = true; go("unveil"); } });
+            b.setAttribute("data-room-shadow", sh[0]); k.push(el("div", { class: "oagc-row" }, [b])); k.push(P(sh[2], { class: "oagr-note" }));
+          });
+          k.push(row([btn("I can't tell", { "data-room-shadow": "unknown" }, function () { ch.shadow = null; ch.shadowAsked = true; go("unveil"); }, true), btn("Back", { "data-room-shadow-back": "" }, function () { go("witness"); }, true)]));
+          return { title: "Something hides it", kids: k };
+        }
+        if (ph === "unveil") { // the practice that thins the shadow, 3 of polarity a time
+          var sh = shadowRow(ch);
+          k.push(P(shadowLine(ch), { "data-room-polarity-read": String(ch.polarity) }));
+          if (!ch.polarity) {
+            k.push(P("It is in plain sight now.", { "data-room-unveiled": "" }));
+            k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("witness"); })]));
+            return { title: "In plain sight", kids: k };
+          }
+          k.push(P(sh ? sh[3] : SHADOW_PLAIN, { "data-room-practice-ask": "" }));
+          var done = btn("Done", { "data-room-practice": "" }, function () {
+            ch.polarity = Math.max(0, ch.polarity - POLARITY.practice); ch.practices++; ch.practiceLine = ""; draw();
+          });
+          if (sh && sh[4]) {
+            k.push(field("data-room-practice-line", ch.practiceLine, sh[0] === "distracting" ? "What pulled you away" : "Where feeling starts again", function (v) { ch.practiceLine = v; done.disabled = !v.trim(); }));
+            done.disabled = !(ch.practiceLine || "").trim();
+          }
+          k.push(row([done, btn("Go on with it hidden", { "data-room-veiled": "" }, function () { go("witness"); }, true), btn("It's another shadow", { "data-room-shadow-rename": "" }, function () { go("shadow"); }, true)]));
+          return { title: sh ? sh[1] : "A shadow", kids: k };
         }
         if (ph === "stays") {
           var title = talk321(ch.t321, { name: nm(), damaged: false, skippable: true, redraw: draw, focus: function () { focusChat(modal); }, where: WHERE_ROOM, aim: "Aimed at what you want: " + ch.goal,
@@ -3779,6 +3842,8 @@
         if (ph === "again") {
           k.push(P("Is anything still here that says it belongs?", { "data-room-again-ask": "" }));
           k.push(row([btn("Yes, it comes to the door", { "data-room-again": "yes" }, restart), btn("No, the room is quiet", { "data-room-again": "no" }, function () { go("end"); }, true)]));
+          var stuck = notDown();
+          if (stuck) lookAgainRow(k, stuck, stuck.reading.after + " of 10 after, from " + stuck.reading.before + " before");
           if (R.round >= ROOM_ROUNDS_REST) {
             k.push(P("That's " + R.round + " rounds this sitting. You can rest what's left by the door, with a lantern, and come back to it another time.", { "data-room-rest-offer": "" }));
             k.push(row([btn("Rest it by the door", { "data-room-rest": "" }, rest, true)]));
@@ -3789,8 +3854,35 @@
         k.push(P(R.rested ? "What's left rests by the door, with a lantern beside it." : "The room is quiet.", { "data-room-end": "" }));
         if (R.lights.length) k.push(P("On the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
         if (R.from === "board") boardEnding(k);
+        if (R.from === "board" && R.heat.before != null && R.heat.after != null && R.heat.after >= R.heat.before && !R.all[0].lookedAgain)
+          lookAgainRow(k, R.all[0], R.heat.after + " of 10 left, from " + R.heat.before);
         k.push(row([btn(R.from === "cave" ? "Back to the lantern" : R.from === "board" ? "Back to the board" : "Leave the room", { "data-room-leave": "" }, leave)]));
         return { title: R.rested ? "Resting" : "The room is quiet", kids: k };
+      }
+      // ---- perceptual shadow --------------------------------------------------------------------------------------------------
+      function shadowRow(c) { return c.shadow ? lookup(SHADOWS, c.shadow) : null; }
+      function shadowName(c) { var sh = shadowRow(c); return sh ? sh[1] : "a shadow"; }
+      function shadowLine(c) { return c.polarity ? "Hidden " + c.polarity + " of 10, by " + shadowName(c).toLowerCase() + "." : "In plain sight."; }
+      function raiseShadow(c, signal, n) {
+        c.polarity = Math.min(10, c.polarity + n); if (c.signals.indexOf(signal) < 0) c.signals.push(signal);
+        if (c.shadowStart == null || c.polarity > c.shadowStart) c.shadowStart = c.polarity;
+      }
+      // The second signal: a creature worked this sitting whose charge did not come down (its 3-2-1's readings).
+      function notDown() {
+        var s = R.worked.filter(function (c) { return c.reading && c.reading.after >= c.reading.before && !c.lookedAgain; });
+        return s[s.length - 1] || null;
+      }
+      function lookAgainRow(k, src, said) {
+        k.push(P("The charge didn't come down (" + said + "). Something may be hiding part of it.", { "data-room-not-down": "" }));
+        k.push(row([btn("Look again for what's hiding it", { "data-room-look-again": "" }, function () { lookAgain(src); })]));
+      }
+      // The hidden part of a creature whose charge would not come down comes to the door as a creature of its own, carrying the
+      // shadow its source had and more.
+      function lookAgain(src) {
+        src.lookedAgain = true; R.round++; if (ch.gone) scene.remove(ch.fig);
+        var c = newCharge(false); c.hiddenOf = (src.name || "").trim() || "the last one"; c.element = src.element; c.texture = src.texture;
+        c.polarity = src.polarity; c.shadow = src.shadow; raiseShadow(c, "not-down", POLARITY.notDown); dressCharge(c);
+        ch = c; R.active = [c]; setFocus(c); R.doorWant = 0; go("welcome");
       }
       // ---- the run, for the board -----------------------------------------------------------------------------------------
       // The charge 0 to 10 at the start and the end, and how the thing it was about ends (the blocker panel's five endings).
@@ -3812,7 +3904,9 @@
         var r = { from: c === R.all[0] && c.about ? "the board" : c.waited ? "waited at the door" : "came to the door", name: (c.name || "").trim(), element: c.element || null,
           texture: c.texture || null, where: c.where || null, goal: (c.goal || "").trim() || null, push: c.push, aligned: c.push ? c.push === "toward" : null,
           move: (c.move || "").trim() || null, line: (c.line || "").trim() || null, light: c.push === "away" ? (c.lightName || "").trim() || (c.name || "").trim() || null : null,
-          layers: c.layers.map(function (l) { return l.name; }), worked: R.worked.indexOf(c) >= 0, kept: R.kept.indexOf(c) >= 0 };
+          layers: c.layers.map(function (l) { return l.name; }), worked: R.worked.indexOf(c) >= 0, kept: R.kept.indexOf(c) >= 0, reading: c.reading,
+          shadow: c.signals.length ? { kind: c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices } : null,
+          hiddenOf: c.hiddenOf };
         Object.keys(r).forEach(function (x) { if (r[x] == null || (r[x].length === 0 && typeof r[x] !== "boolean")) delete r[x]; });
         return r;
       }
@@ -3852,6 +3946,7 @@
       function keep() { // the charge takes a place in the room, beside the wall, for the sitting
         var n = R.kept.length % 4, spot = [[-5.2, 1.4], [5.2, 1.4], [-5.4, -2.4], [5.4, -2.4]][n]; // by the wall, clear of the three places
         R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: { x: spot[0], z: spot[1] }, t: 0, dur: 3 });
+        ch.reading = { before: ch.t321.before, after: ch.t321.after }; // the shadow's second signal reads these
         ch.heat = ch.t321.after; ch.dull *= 0.6; R.kept.push(ch); ch.t321 = null; go("kept");
       }
       function restart() {
@@ -3873,7 +3968,7 @@
           cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
           resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(function (c) {
-            return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away" };
+            return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
           }) });
         }, 520);
       }
@@ -4135,7 +4230,7 @@
         // the door: it opens on an out-breath (at once when calm), then the charge comes in, or goes out
         if (R.wait && (R.calm || br.exhaling)) {
           var w0 = R.wait; R.wait = null; R.doorWant = 1;
-          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { if (ch === cin) go("witness"); else cin.phase = "witness"; } }); }
+          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
           else { var cout = ch; R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
             cout.gone = true; cout.fig.visible = false; var l = buildLight(cout.fig.userData.want.getHex(), (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
             if (ch === cout) go("gone"); else cout.phase = "gone";
@@ -4168,13 +4263,22 @@
           var flick = u.steady || R.calm ? 0 : 0.12 * Math.sin(now / 130) * Math.sin(now / 370);
           u.mat.emissiveIntensity = 0.22 + 0.18 * b + flick + (u.steady ? 0.15 : 0) + 0.6 * u.aura.userData.level;
           var sz = c.allowed ? 1 + c.allow.grow / 10 : 1, fs = c.fig.scale.x; c.fig.scale.setScalar(fs + (sz - fs) * Math.min(1, dt * 1.5));
-          stepAura(u.aura, u.col, lv * (u.fade == null ? 1 : u.fade), dt, R.calm);
+          stepAura(u.aura, u.col, lv * (1 - occlusion(c.polarity)) * (u.fade == null ? 1 : u.fade), dt, R.calm); // a hidden one's aura is dark
           c.layers.forEach(function (l, n) {
             if (!R.calm) l.ring.rotation.z += dt * (0.4 + 0.15 * n);
             l.ring.material.opacity = (l.steady || R.calm ? 0.85 : 0.45 + 0.35 * Math.abs(Math.sin(now / 240 + n))) * (u.fade == null ? 1 : u.fade);
             l.label.material.opacity = u.fade == null ? 1 : u.fade;
           });
           u.mat.opacity = u.op * (u.fade == null ? 1 : u.fade);
+          // Perceptual shadow: polarity hides the creature, each shadow its own way. At 10 only a faint outline shows.
+          var oc = occlusion(c.polarity), kind = c.shadow, see = 1 - 0.88 * oc;
+          if (oc > 0 && kind === "forgetting" && !R.calm) see *= 1 - oc * (0.5 + 0.5 * Math.sin(now / 900)); // it fades in and out
+          u.mat.opacity *= see; u.core.visible = oc < 0.5;
+          u.body.position.x = oc > 0 && kind === "distracting" ? oc * 0.9 * Math.sin(now / 650) : 0; // it drifts aside
+          u.body.position.z = oc > 0 && kind === "dissociating" ? -oc * 2.2 : 0; // it stands back, toward the door
+          if (oc > 0 && kind === "dissociating") { u.mat.color.lerp(tmpC.setHex(GREY), oc * 0.8); u.mat.emissive.copy(u.mat.color); }
+          u.veil.visible = oc > 0; u.veil.material.color.setHex(kind === "numbness" ? 0x6c7a8a : 0x1a1620); // numbness wears the numb texture's grey
+          u.veil.material.opacity = (kind === "numbness" ? 0.7 : 0.5) * oc * (u.fade == null ? 1 : u.fade);
           u.body.scale.set(u.sx * (1 + 0.05 * (b - 0.5)), u.sy * (1 + 0.04 * (b - 0.5)), u.sx);
           u.core.material.opacity = (u.steady ? 0.85 : 0.4 + 0.3 * b) * (u.fade == null ? 1 : u.fade);
           var faceTo = c.fig.position.z > SEAT.z - 0.5 ? SLOTS[c.slot] : (fig.sit > 0.5 ? SEAT : { x: fig.x, z: fig.z });
@@ -4252,7 +4356,8 @@
       api.room = {
         state: R,
         charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
-          slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }) }; },
+          slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }),
+          polarity: ch.polarity, shadow: ch.shadow, signals: ch.signals.slice(), opacity: u.mat.opacity, veil: u.veil.visible ? u.veil.material.opacity : 0, hiddenOf: ch.hiddenOf }; },
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
