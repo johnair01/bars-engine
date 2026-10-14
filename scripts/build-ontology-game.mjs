@@ -103,6 +103,8 @@ const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
 const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
 // The room built from a picture by cave/rooms/room.py, walked freely from the cave's first page (cave/rooms/README.md).
 const walkRoomJs = readFileSync(path.join(srcDir, 'cave', 'rooms', 'walk-room.js'), 'utf8');
+// The Council Board's way into the WAVE room (#wave=board) and the run's way back to the board (cave/board-wave.js).
+const boardWaveJs = readFileSync(path.join(srcDir, 'cave', 'board-wave.js'), 'utf8');
 const caveHtml = `<!doctype html>
 <html lang="en">
 <head>
@@ -122,6 +124,9 @@ ${inline(caveJs)}
 </script>
 <script>
 ${inline(walkRoomJs)}
+</script>
+<script>
+${inline(boardWaveJs)}
 </script>
 <script>window.__oagBigMindNoStart = true;</script>
 <script>

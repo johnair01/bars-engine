@@ -715,3 +715,30 @@ when we're testing on the computer."
 - **Click to walk.** A click (or a tap) on the floor walks the figure there, as the stick would: walls, the shut way, the stones
   and the stops all behave the same. It stops on the spot, or at a wall it cannot pass. The stick or a key takes over at once.
 - **(choice)** how near the very middle the figure goes (1.2), and the stones' reach (1.3).
+
+## The board's way into the WAVE room, and the run's way back (14 October 2026)
+
+Wendell, 14 October 2026 (Council Board, `ttv-skip-wave`): "yes, but I want it to be as interactive as possible. We want
+to move toward using the game to build the game. It should deposit me inside the WAVE room and we should move to have the
+WAVE room be able to metabolize context specific charges and send the results to the board in this case."
+
+- **In.** When Tap the Vein has been skipped two days running, the board links to
+  `/ontology-game/cave/#wave=board&charge=<words>&skips=<n>&ref=tap-the-vein--<time>&date=<YYYY-MM-DD>`
+  (Six-faces-council `docs/morning.md`). `board-wave.js` reads the hash and opens the WAVE room from the board
+  (`openRoom` with `from: "board"`). Welcome names what the sitting is about in the board's words and asks how much charge
+  it carries, 0 to 10. Acknowledge asks what is in the way of it. The rest of the room is unchanged.
+- **The ending.** When the room is quiet, it asks how today's Tap the Vein ends, with the board panel's five endings (I'll
+  do it now, Tomorrow, It needs changing, Drop it, Still stuck), a line for each, and the charge left. With none picked,
+  a move written in the room's 3-2-1 is the ending. The way out says "Back to the board".
+- **Back.** Every page saves the whole run in the blocker panel's record (`docs/blocker-panel.md` there, `engine:
+  "wave-room"`): the board's task, step, skip streak and date, the charge before and after, each creature met (name,
+  element, texture, what he wants, toward or away, the move, the line and light it left), the stage and the ending. A run
+  left half way still says what came up. The page posts it to `POST /api/council/wave-runs` under his own sign-in, a
+  short pause after each change and at once on leaving. The council's board read fetches the runs with
+  `COUNCIL_MENU_TOKEN` (`council/wave_runs.py`, run by `board/pull.py`) and lands each as `council/blockers/<ref>.json`.
+- **Signed out.** A run bars-engine does not take waits in the browser (`oag:wave-room:outbox`), and the card at the end
+  says so. Any later visit to the cave page signed in sends it.
+- Choices (stand unless he flips them): the charge asked as eleven buttons, as on the board's panel; the ending asked
+  once, at the end of the sitting, rather than per creature; Tomorrow sets the due date one day on; a run belongs to the
+  signed-in player, and the council reads only his.
+- `board-wave-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.
