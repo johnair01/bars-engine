@@ -43,10 +43,27 @@ First proof, 14 October 2026: `listening-room/`. Renders and the before/after sh
 
 ## The prompt for ChatGPT
 
-> Describe one room in a cave inside the body, for a small 3D game. One paragraph of 150 to 250 words. Say its shape
-> and roughly how big it is (paces or steps), how high the ceiling is, every way in and out, what the floor and walls
-> are made of, every object in it and where it stands (left wall, centre, by the door), and every source of light.
-> No people or creatures. Keep each object simple enough to model.
+Sizes are given in player heights, because the cave's walking figure is 3.6 units tall (`AVATAR_H` in `cave.js`), not a
+real person's 1.7 m. A description in metres or paces comes out at the wrong scale; one in player heights scales to
+whatever the figure is. The table after the prose is what the spec is built from; the prose carries the mood.
+
+> I'm designing one room for a small 3D walking game, seen on a phone. The player is a small faceless figure; use the
+> player's height as the unit for every size and distance ("2 player heights wide"). The player walks freely, so leave
+> clear walking lanes at least 1.5 player heights wide between everything.
+>
+> The room is [WHAT THE ROOM IS FOR, e.g. "the place where the player meets the six game masters, one at each of six
+> doors"]. Give it one focal point the eye goes to on entering, and 3 to 5 spots the player walks to, each at least 3
+> player heights from the next.
+>
+> Write two parts.
+>
+> 1. One paragraph of 120 to 200 words describing what the player sees on entering: shape, ceiling, floor and walls,
+>    light, and mood. No people, creatures or written words.
+> 2. A layout table. Put the room's centre at 0, 0; x runs to the right as you enter, y runs away from the entrance.
+>    One row per item, with columns: item, x, y (in player heights), width, depth, height (in player heights), what
+>    it's made of, gives light (yes/no and colour), and why it's there. Include the room's overall width, length and
+>    ceiling height, every door or opening (which wall, how wide, how tall), and the spots the player walks to.
+>    Keep it to 12 items or fewer, each simple enough to model.
 
 ## What the first proof found
 
