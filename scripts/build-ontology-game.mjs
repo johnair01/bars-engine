@@ -99,6 +99,8 @@ ${inline(bodyMap)}
 // /ontology-game/cave: the Cave of Lessons, the same block work walked inside the body map (cave/DESIGN.md).
 // cave-kit.glb and spots.json are made by cave/build_kit.py, the stone tiles by cave/bake_tiles.py; all are committed, so this build needs no Blender.
 const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
+// Wendell's question sets for each daemon (daemons/questions.js): the shadow spirit's questions in the WAVE room.
+const daemonQuestionsJs = readFileSync(path.join(srcDir, 'daemons', 'questions.js'), 'utf8');
 // The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
 const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
 // The room built from a picture by cave/rooms/room.py, walked freely from the cave's first page (cave/rooms/README.md).
@@ -118,6 +120,9 @@ const caveHtml = `<!doctype html>
 <div id="cave-root"></div>
 <script>
 ${inline(bodyMap)}
+</script>
+<script>
+${inline(daemonQuestionsJs)}
 </script>
 <script>
 ${inline(caveJs)}
@@ -152,6 +157,9 @@ const bigMindHtml = `<!doctype html>
 <script>window.__oagCaveNoStart = true;</script>
 <script>
 ${inline(bodyMap)}
+</script>
+<script>
+${inline(daemonQuestionsJs)}
 </script>
 <script>
 ${inline(caveJs)}

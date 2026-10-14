@@ -1311,6 +1311,8 @@
     ["damaged-self", "The Damaged Self", "What damage is it taking, unseen, to protect the self?", 0x6a4a4a],
     ["player", "The Player", "How is it secretly enjoying the game of hide and seek?", 0xfff1b0],
   ];
+  // Who a daemon can say it works for (daemons/questions.js `bosses`); naming a daemon offers its questions next.
+  var BOSSES = [["protector", "The Protector"], ["self", "The self"], ["controller", "The Controller"], ["player", "The Player"]];
   // Flooding has no kinds; its practices turn it down, one after another.
   var FLOOD_PRACTICES = ["Step back behind your seat. Breathe out for longer than you breathe in, three times.",
     "Name one thing in the room that isn't it: the rug, the door, your hands.",
@@ -3619,7 +3621,7 @@
       function newCharge(first, slot) {
         var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [],
-          polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null, shadeElement: null, shadeUnknown: false };
+          polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null, askAt: 0, askAnswers: [], askLine: "", askPick: null, askBoss: null, shadeElement: null, shadeUnknown: false };
         R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
@@ -3827,22 +3829,36 @@
         if (ph === "asks") { // the shadow spirit, and the daemons' questions put to it
           var A0 = ch.asking;
           k.push(P(shadowLine(ch), { "data-room-polarity-read": String(ch.polarity) }));
-          if (A0) {
-            k.push(P(A0[1] + " asks the shadow spirit: " + A0[2], { "data-room-ask-q": A0[0] }));
-            var said = btn("That's what it says", { "data-room-ask-done": "" }, function () {
-              ch.asks.push({ daemon: A0[0], q: A0[2], answer: (ch.askLine || "").trim() }); ch.polarity = Math.max(0, ch.polarity - POLARITY.practice); ch.practices++;
-              ch.asking = null; ch.askLine = ""; draw();
+          if (A0) { // one daemon's question set (daemons/questions.js), a question at a time; the set counts as one practice
+            var set = daemonSet(A0[0]), qi = ch.askAt || 0, q = set[qi], last = qi >= set.length - 1;
+            if (!qi) k.push(P(A0[1] + " asks the shadow spirit: " + A0[2], { "data-room-ask-q": A0[0] }));
+            if (q.ask !== A0[2]) k.push(P(qi ? A0[1] + ": " + askOf(q) : askOf(q), { "data-room-ask-step": q.id }));
+            var said = btn(last ? "That's what it says" : "Next question", { "data-room-ask-done": "" }, function () {
+              ch.askAnswers.push({ id: q.id, slot: q.slot, ask: askOf(q), answer: (ch.askLine || "").trim() });
+              if (q.slot === "boss") ch.askBoss = ch.askPick || null;
+              ch.askLine = ""; ch.askPick = null;
+              if (!last) { ch.askAt = qi + 1; draw(); return; }
+              ch.asks.push({ daemon: A0[0], q: A0[2], answer: ch.askAnswers[0].answer, answers: ch.askAnswers.slice(), boss: ch.askBoss || null });
+              ch.polarity = Math.max(0, ch.polarity - POLARITY.practice); ch.practices++;
+              ch.asking = null; ch.askAt = 0; ch.askAnswers = []; draw();
             });
-            k.push(field("data-room-ask-line", ch.askLine, "What it says, in your words", function (v) { ch.askLine = v; said.disabled = !v.trim(); }));
-            said.disabled = !(ch.askLine || "").trim();
-            k.push(row([said, btn("Another question", { "data-room-ask-back": "" }, function () { ch.asking = null; draw(); }, true)]));
+            var fill = function () { said.disabled = !((ch.askLine || "").trim() || ch.askPick); };
+            if (q.slot === "boss") k.push(pickRow("data-room-ask-boss", BOSSES, ch.askPick, function (v) { ch.askPick = v; draw(); }));
+            k.push(field("data-room-ask-line", ch.askLine, q.slot === "boss" ? "Or in your words" : "What it says, in your words", function (v) { ch.askLine = v; fill(); }));
+            fill();
+            k.push(row([said, btn("Another question", { "data-room-ask-back": "" }, function () { ch.asking = null; ch.askAt = 0; ch.askAnswers = []; draw(); }, true)]));
             return { title: "The shadow spirit", kids: k };
           }
           k.push(P(ch.polarity ? "The shadow spirit of " + shadowName(ch).toLowerCase() + " stands beside " + (ch.name || "it") + ". It does the shadow's work. Ask it what that work is for." : "The shadow has cleared. Its spirit stays beside " + (ch.name || "it") + ".", { "data-room-shade": "" }));
           if (!ch.polarity) shadeReveal(k);
+          var prev = ch.asks[ch.asks.length - 1], next = ch.polarity && prev && prev.boss ? lookup(SHADOW_ASKS, prev.boss) : null;
+          if (next && !ch.asks.some(function (a) { return a.daemon === next[0]; })) { // follow who it works for
+            k.push(P(lookup(SHADOW_ASKS, prev.daemon)[1] + " works for " + next[1].replace(/^The /, "the ") + ".", { "data-room-ask-chain-line": "" }));
+            k.push(row([btn("Ask " + next[1].replace(/^The /, "the ") + " next", { "data-room-ask-chain": next[0] }, function () { startAsk(next); })]));
+          }
           if (ch.polarity) SHADOW_ASKS.forEach(function (q) {
             var was = ch.asks.some(function (a) { return a.daemon === q[0]; });
-            var b = el("button", { class: was ? "" : "alt", "aria-pressed": String(was), text: q[2], onclick: function () { ch.asking = q; ch.askLine = ""; draw(); } });
+            var b = el("button", { class: was ? "" : "alt", "aria-pressed": String(was), text: q[2], onclick: function () { startAsk(q); } });
             b.setAttribute("data-room-ask", q[0]); b.style.borderLeft = "6px solid #" + ("00000" + q[3].toString(16)).slice(-6);
             k.push(el("div", { class: "oagc-row" }, [b]));
           });
@@ -3951,6 +3967,14 @@
         for (var i = 0; i < 24; i += 8) m |= Math.round((((a >> i) & 255) + ((b >> i) & 255)) / 2) << i;
         return m;
       }
+      // A daemon's question set from daemons/questions.js (window.__oagDaemonQuestions); without it, its one-line door alone.
+      function daemonSet(id) {
+        var Q = window.__oagDaemonQuestions, set = Q && Q.daemons && Q.daemons[id];
+        return set && set.length ? set : [{ id: "door", slot: "object", ask: lookup(SHADOW_ASKS, id)[2] }];
+      }
+      // A follow-up that changes with the boss named earlier in the set (the Controller's "how", for one).
+      function askOf(q) { return q.byBoss && ch.askBoss && q.byBoss[ch.askBoss] || q.ask; }
+      function startAsk(q) { ch.asking = q; ch.askAt = 0; ch.askAnswers = []; ch.askLine = ""; ch.askPick = null; ch.askBoss = null; draw(); }
       function raiseFlood(c, signal, n) {
         c.polarity = Math.max(-10, Math.min(0, c.polarity) - n); if (c.signals.indexOf(signal) < 0) c.signals.push(signal);
         if (c.shadowStart == null || c.polarity < c.shadowStart) c.shadowStart = c.polarity;

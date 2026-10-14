@@ -791,6 +791,11 @@ charge spirits as a function of emergent perceptual shadow". The design is Six-f
   writes what it says. Each answer thins the shadow by 3, as a practice does, and is kept in the run (`shadow.asks`). A
   worked creature's shadow spirit walks out of the room as a spirit of its own in the shadow's colour (`shadow`,
   `shadowOf`, polarity 0, so it counts as seen). Flooding has no shadow spirit.
+- **The daemons' question sets** (daemons/questions.js, bars-engine #329, board `dq-*`): each of the eight one-line
+  questions opens that daemon's own set, a question at a time. A boss question offers the Protector, the self, the Controller
+  and the Player; when the answer names a daemon, the room offers that daemon's set next, so the player follows who works for
+  whom. The Controller's "how" changes with the boss it names. A whole answered set counts as one practice (3 off the
+  shadow), and the run keeps every answer (`shadow.asks[].answers`, `boss`).
 - **A shadow spirit fully revealed** (Wendell, board read 14 October 2026, overruling a skip on dissolving shadow spirits):
   once the shadow has cleared to 0 with its spirit called up, the room asks which element the shadow spirit shows (the five,
   or "I can't tell yet"). Named, it walks out with that `element`, `revealed: true`, and a colour halfway from the shadow's

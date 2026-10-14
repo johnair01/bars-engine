@@ -42,6 +42,18 @@ const ch = () => C(() => window.__oagCave.room.charge());
 const phase = () => C(() => window.__oagCave.room.state.phase);
 const run = () => C(() => window.__oagCave.room.run());
 const settle = () => page.waitForTimeout(700);
+// Answers the open daemon's question set (daemons/questions.js) to its end: a boss question gets the given pick, the rest words.
+const answerSet = async (boss) => {
+  const seen = [];
+  while (await C(() => !!window.__oagCave.room.state.active[0].asking)) {
+    const step = await page.locator('[data-room-ask-step]').count() ? await page.locator('[data-room-ask-step]').textContent() : '';
+    seen.push(step);
+    if (await page.locator('[data-room-ask-boss]').count()) await page.locator(`[data-room-ask-boss="${boss}"]`).click();
+    else await page.locator('[data-room-ask-line]').fill('answer ' + seen.length);
+    await page.locator('[data-room-ask-done]').click();
+  }
+  return seen;
+};
 
 // Opens the room on its own (as the body map does), calm so the door answers at once, and walks in to Witness.
 const openRoom = async (o) => {
@@ -116,10 +128,13 @@ c = await ch();
 ok(c.shade && c.shade.visible && c.shade.color === 0x4a3a5c, 'a shadow spirit appears beside it: the same body, in the shadow\'s colour');
 await page.locator('[data-room-ask="player"]').click();
 ok((await page.locator('[data-room-ask-q]').textContent()).includes('hide and seek') && await page.locator('[data-room-ask-done]').isDisabled(), "the Player's question waits for what the shadow spirit says");
+ok((await page.locator('[data-room-ask-step]').textContent()) === 'What are you learning?', "picking the Player opens its own question set (daemons/questions.js), a question at a time");
 await page.locator('[data-room-ask-line]').fill('it likes being found only by the right person');
 await page.locator('[data-room-ask-done]').click();
+ok((await page.locator('[data-room-ask-step]').textContent()).includes('How are you growing?') && (await ch()).polarity === 6, 'one answer moves to the next question; the shadow holds until the set is done');
+const playerSteps = await answerSet();
 c = await ch();
-ok(c.polarity === 3 && c.asks.length === 1 && c.asks[0].daemon === 'player' && (await page.locator('[data-room-ask="player"]').getAttribute('aria-pressed')) === 'true', 'an answered question thins the shadow by 3, and is kept');
+ok(playerSteps.length === 5 && c.polarity === 3 && c.asks.length === 1 && c.asks[0].daemon === 'player' && c.asks[0].answers.length === 6 && c.asks[0].answer === 'it likes being found only by the right person' && (await page.locator('[data-room-ask="player"]').getAttribute('aria-pressed')) === 'true', 'an answered set thins the shadow by 3, once, and every answer is kept');
 await page.screenshot({ path: SHOTS + '/shadow-spirit.png' });
 await page.locator('[data-room-ask-leave]').click();
 await page.locator('[data-room-veiled]').click();
@@ -247,12 +262,14 @@ await welcomeIn();
 await page.locator('[data-room-cant-feel]').click();
 await page.locator('[data-room-shadow="forgetting"]').click();
 await page.locator('[data-room-shadow-spirit]').click();
-for (const d of ['protector', 'skeptic']) {
-  await page.locator(`[data-room-ask="${d}"]`).click();
-  await page.locator('[data-room-ask-line]').fill('an answer for the ' + d);
-  await page.locator('[data-room-ask-done]').click();
-}
-ok((await ch()).polarity === 0 && await sees('[data-room-shade-reveal]') && (await page.locator('[data-room-ask]').count()) === 0, 'two answers clear the shadow, and the fully revealed shadow spirit asks for its element');
+await page.locator('[data-room-ask="skeptic"]').click();
+await answerSet('controller');
+c = await ch();
+ok(c.polarity === 3 && c.asks[0].boss === 'controller' && (await page.locator('[data-room-ask-chain]').getAttribute('data-room-ask-chain')) === 'controller' && (await page.locator('[data-room-ask-chain-line]').textContent()) === 'The Skeptic works for the Controller.', 'the Skeptic says it works for the Controller, and the room offers the Controller next');
+await page.locator('[data-room-ask-chain]').click();
+const ctrlSteps = await answerSet('protector');
+ok(ctrlSteps.includes('The Controller: How are you protecting the physical body by controlling?'), "the Controller's follow-up changes with the boss it names");
+ok((await ch()).polarity === 0 && await sees('[data-room-shade-reveal]') && (await page.locator('[data-room-ask]').count()) === 0, 'two answered sets clear the shadow, and the fully revealed shadow spirit asks for its element');
 await page.locator('[data-room-shade-element="Anger"]').click();
 c = await ch();
 ok(c.shade.element === 'Anger' && (await run()).rounds[0].shadow.shadeElement === 'Anger', 'the player names its element, and the run keeps it');
