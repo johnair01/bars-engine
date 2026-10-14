@@ -1648,7 +1648,14 @@
       var kids = [];
       if (c && c.elObj) c.elObj.traverse(function (m) { if (m.isMesh) kids.push(m); });
       var hit = ray.intersectObjects(kids)[0];
-      if (hit && hit.object.userData.interact) touch();
+      if (hit && hit.object.userData.interact) { touch(); return; }
+      // A click on the floor walks the figure there (Wendell, 14 October 2026: "we want to be able to have click to walk for when
+      // we're testing on the computer"). It goes as the stick would, so walls, the shut way and the stops all behave the same.
+      var wk = state.walk;
+      if (wk && canWalk() && !state.auto) {
+        var fy = avatar ? avatar.position.y : figureAt(wk).y, o = ray.ray.origin, dv = ray.ray.direction;
+        if (dv.y < -1e-3) { var t = (fy - o.y) / dv.y; if (t > 0 && t < 200) wk.goTo = { x: o.x + dv.x * t, z: o.z + dv.z * t, stuck: 0 }; }
+      }
     });
 
     // ---- the pane and the modal ------------------------------------------------------------
@@ -1853,19 +1860,31 @@
     function canWalk() { return state.mode === "chamber" && !!state.walk && state.walk.ready && !state.modal && !sit && !busy && !flight && !state.rise; }
     function wantWalk() {
       var x = stick.x, z = stick.z; Object.keys(keys).forEach(function (k) { x += KEYS[k][0]; z += KEYS[k][1]; });
-      var m = Math.hypot(x, z); if (!(m >= 0.15)) return null; if (m > 1) { x /= m; z /= m; m = 1; }
+      var m = Math.hypot(x, z);
       var fx = lookAt.x - camPos.x, fz = lookAt.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+      var wk = state.walk;
+      if (m >= 0.15) { if (wk) wk.goTo = null; } // the stick or a key takes over from a click
+      else if (wk && wk.goTo) { // a click on the floor walks there (for playing at a computer)
+        var g = wk.goTo, p = figureAt(wk), dx = g.x - p.x, dz = g.z - p.z, d = Math.hypot(dx, dz);
+        if (d < 0.5 || g.stuck > 0.5) { wk.goTo = null; return null; }
+        dx /= d; dz /= d; return { x: dx, z: dz, m: 1, fwd: dx * fx + dz * fz, click: true };
+      }
+      if (!(m >= 0.15)) return null; if (m > 1) { x /= m; z /= m; m = 1; }
       return { x: -z * fx - x * fz, z: -z * fz + x * fx, m: m, fwd: -z / m }; // forward times -z, plus right (-fz, fx) times x
     }
     function wrapAng(d) { while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
     // How far along and to the side the figure may stand on the route it is walking.
+    function figureAt(wk) { var p = at(wk.route, wk.s); return { x: p.x - p.fz * wk.lat, y: p.y, z: p.z + p.fx * wk.lat }; }
+    var MID_R = 1.2; // how near the very middle of a round room the figure walks
     function walkRange(wk) {
       var r = wk.route, stp = r.stops[wk.target], hw = (r.w || ch.w) * (r.kind === "main" || r.level ? r.openAt(wk.s) : SIDE_LOOK.open);
       var lo = r.loop ? -Infinity : Math.max(r.level ? 0.8 : wk.sMin, 0.8), hi = r.loop ? Infinity : r.len - 0.8;
       if (!r.level && stp) hi = Math.min(hi, stp.s + 0.6); // the way ahead stays gathered shut until its stop's choice
       if (r.level && !r.loop) hi = Math.min(hi, r.stops[r.stops.length - 1].s + 1.2); // a face's tunnel ends at its arch
-      var outer = r.doors ? -r.inner : 1, lim = hw * 0.6;
-      return { lo: lo, hi: hi, latLo: r.doors ? (outer > 0 ? -hw * 0.9 : -lim) : -lim, latHi: r.doors ? (outer > 0 ? lim : hw * 0.9) : lim };
+      // In the hall and the centre the middle is open floor (Wendell, 14 October 2026: "The center is impassible"): the figure
+      // can walk in from the ring right across it.
+      var outer = r.doors ? -r.inner : 1, lim = hw * 0.6, mid = r.doors ? r.R - MID_R : 0;
+      return { lo: lo, hi: hi, latLo: r.doors ? (outer > 0 ? -mid : -lim) : -lim, latHi: r.doors ? (outer > 0 ? lim : mid) : lim };
     }
     function walkStep(dt) {
       var wk = state.walk; if (!wk) return;
@@ -1890,13 +1909,23 @@
         // as ahead, and the turn is kept in the look so the view does not jump; it eases back behind the figure as it walks.
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
         if (state.look.yaw && !state.peek) { wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); state.look.yaw = 0; } // a look turned by hand becomes the way the camera follows
-        var lim = walkRange(wk), s1 = clamp(wk.s + along * sp * dt, lim.lo, lim.hi);
+        // Round a ring, a step along at radius rho moves the angle more than on the ring itself, so the pace stays the same.
+        var inMid = r.doors ? wk.lat * r.inner : 0, rho = r.doors ? Math.max(r.R - inMid, MID_R) : 0, kS = r.doors ? r.R / rho : 1;
+        var lim = walkRange(wk), s1 = clamp(wk.s + along * sp * dt * kS, lim.lo, lim.hi);
         var deadEnd = !r.loop && along < -0.2 && s1 <= lim.lo + 1e-3;
         if (r.loop) s1 = ((s1 % r.len) + r.len) % r.len;
         var lat1 = clamp(wk.lat + side * sp * dt, lim.latLo, lim.latHi);
-        var p0 = at(r, wk.s), x0 = p0.x - p0.fz * wk.lat, z0 = p0.z + p0.fx * wk.lat;
+        var p0 = at(r, wk.s), x0 = p0.x - p0.fz * wk.lat, z0 = p0.z + p0.fx * wk.lat, sOld = wk.s, latOld = wk.lat;
         wk.s = s1; wk.lat = lat1;
+        // The hall's stones stand in the way: a step into one slides round it (along or across only), and walking away from one
+        // is always free.
+        var blocked = function () {
+          var q = figureAt(wk);
+          return r.blockers && r.blockers.some(function (b) { var d1 = Math.hypot(q.x - b.x, q.z - b.z); return d1 < b.rad && d1 < Math.hypot(x0 - b.x, z0 - b.z); });
+        };
+        if (blocked()) { wk.lat = latOld; if (blocked()) { wk.s = sOld; wk.lat = lat1; if (blocked()) wk.lat = latOld; } }
         var p1 = at(r, wk.s), mx = p1.x - p1.fz * wk.lat - x0, mz = p1.z + p1.fx * wk.lat - z0, moved = Math.hypot(mx, mz);
+        if (w.click) wk.goTo.stuck = moved > 0.3 * sp * dt ? 0 : (wk.goTo.stuck || 0) + dt; // walked into a wall: the click is done
         if (moved > 1e-4) {
           wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * w.m * STRIDE_K;
           var my = Math.atan2(mx, mz); // the way the figure actually went: along a wall it slides, so it faces along the wall
@@ -1906,10 +1935,15 @@
           // It turns along the way, the way the figure is going, so up on the stick keeps walking round the bends of a tunnel and
           // round the ring of the hall and the centre to the next door; across the way the thumb goes sideways. (Turning toward
           // wherever the figure went made a held diagonal chase itself round the hall's ring into its walls.)
-          if (w.fwd > 0.3) {
+          // Out in the open middle of the hall or the centre it turns toward the way the figure walks, when that is ahead and
+          // nothing is in the way; on the ring it turns along the ring only as much as the walk goes along it, so walking in toward
+          // the middle keeps the view.
+          if (r.doors && inMid > r.w * 0.6) {
+            if (w.fwd > 0.7 && moved > 0.6 * sp * dt) wk.camYaw += wrapAng(my - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+          } else if (w.fwd > 0.3) {
             if (Math.abs(along) > 0.2 && !deadEnd) wk.dir = along > 0 ? 1 : -1;
             var want = yawFacing(at(r, wk.s)) + (wk.dir < 0 ? Math.PI : 0);
-            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd * (r.doors ? Math.abs(along) : 1));
           }
         }
         if (deadEnd && w.fwd > 0.3) {
@@ -2891,13 +2925,14 @@
         r.group.add(g); (r.doorMeshes = r.doorMeshes || []).push(g);
         return { a: a, nx: nx, nz: nz };
       }
-      r.doors = {};
+      r.doors = {}; r.blockers = [];
       r.stops.forEach(function (st) {
         var f = st.toFace ? lookup(FACES, st.toFace) : null, d = door(st.s, f ? f[4] : 0xfff1b0, false, f ? f[1] : centre ? "The ways back" : "Home"); // its prompt shows in front of it
         if (f) r.doors[f[0]] = { x: d.a.x + d.nx * w * DOOR_AT, z: d.a.z + d.nz * w * DOOR_AT };
         if (f && !centre) { // the face's stone stands in the middle before its door
           var stone = new THREE.Mesh(G.gate_stone, new THREE.MeshStandardMaterial({ color: f[4], emissive: f[4], emissiveIntensity: 0.6, roughness: 0.8 }));
           stone.position.set(d.a.x - d.nx * (w + 1.4), fl, d.a.z - d.nz * (w + 1.4)); stone.scale.set(2.2, Math.min(h * 1.1, 3.4), 2.2); stone.userData.face = f[0]; r.group.add(stone);
+          r.blockers.push({ x: stone.position.x, z: stone.position.z, rad: 1.3 });
         }
         if (f && !centre && state.level.visited.indexOf(f[0]) >= 0) { // a door walked this sitting keeps a lantern
           var lan = buildLantern(THREE); lan.position.set(d.a.x + d.nx * w * 0.55 - d.a.fx * 2.2, fl, d.a.z + d.nz * w * 0.55 - d.a.fz * 2.2); r.group.add(lan); lanternsOn.push(lan);
@@ -3238,6 +3273,12 @@
     };
     // Free walking: where the figure is on its route and to the side of it, the way the camera takes as ahead, the stop it is at,
     // and whether the stick and a prompt show. stick(x, z) holds the stick as a thumb would (z -1 is up), for the tests.
+    // Where on the screen a spot on the floor shows (for the click-to-walk test), and how far the figure stands from the middle.
+    api.floorScreen = function (x, z) {
+      var v = new THREE.Vector3(x, avatar ? avatar.position.y : 0, z).project(camera), rc = renderer.domElement.getBoundingClientRect();
+      return { x: rc.left + (v.x + 1) / 2 * rc.width, y: rc.top + (1 - v.y) / 2 * rc.height, behind: v.z > 1 };
+    };
+    api.figure = function () { var wk = state.walk; if (!wk) return null; var p = figureAt(wk); return { x: p.x, z: p.z, fromMiddle: Math.hypot(p.x, p.z), goTo: wk.goTo ? { x: wk.goTo.x, z: wk.goTo.z } : null, blockers: (wk.route.blockers || []).length }; };
     api.free = function () {
       var wk = state.walk; if (!wk) return null;
       var lim = walkRange(wk), r = wk.route, hw = (r.w || ch.w) * (r.kind === "main" || r.level ? r.openAt(wk.s) : SIDE_LOOK.open);

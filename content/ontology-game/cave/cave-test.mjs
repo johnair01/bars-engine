@@ -465,7 +465,8 @@ ok(await page.locator('[data-cave-skip]').count() === 0 && await sees('[data-cav
 const sWall = (await avatar()).s;
 await page.locator('[data-cave-shrink]').click();
 await page.keyboard.down('ArrowUp'); await page.waitForTimeout(2500); await page.keyboard.up('ArrowUp');
-ok((await avatar()).s < sWall + 0.6 + 1e-6, 'walking on does not pass the daemon');
+const fWall = await free(); // back from the meeting the figure may stand a step short of the daemon's spot; the wall is the spot
+ok(fWall.s <= fWall.stop + 0.6 + 1e-6 && fWall.s >= sWall - 1e-6, `walking on does not pass the daemon (stood ${sWall.toFixed(1)}, now ${fWall.s.toFixed(1)}, the daemon at ${fWall.stop.toFixed(1)})`);
 await page.locator('[data-cave-pane]').click();
 await page.screenshot({ path: SHOTS + '/cave-daemon-wall.png' });
 
@@ -1167,6 +1168,31 @@ ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again
   ok(Math.abs(wrapA(h1.camYaw - h0.camYaw)) > 0.3 && Math.abs(wrapA(h1.camYaw - h1.yaw)) < 0.6, `walking round the hall and across it, the camera comes round behind the figure (turned ${wrapA(h1.camYaw - h0.camYaw).toFixed(2)}, ${wrapA(h1.camYaw - h1.yaw).toFixed(2)} off its back)`);
   ok((await C(() => window.__oagCave.camRoom())) > 0, 'and stays inside the stone');
   await page.screenshot({ path: SHOTS + '/level-hall-across.png' });
+}
+// Wendell, 14 October 2026: "The center is impassible and we want to be able to have click to walk for when we're testing on the
+// computer." A click on the floor walks the figure there, and the middle of the hall is open floor it can walk right across.
+{
+  const f0 = await C(() => window.__oagCave.figure());
+  ok(f0.blockers === 6, 'the six stones in the hall stand in the way (six to walk round)');
+  // a spot on the floor between the figure and the middle, toward the middle
+  const k = 3 / f0.fromMiddle, tx = f0.x * k, tz = f0.z * k;
+  // the player turns to face the middle (a drag would do it), then clicks there
+  await C(([x, z]) => { const s = window.__oagCave.state; s.look.yaw = 0; s.walk.camYaw = Math.atan2(-x, -z); }, [f0.x, f0.z]);
+  // the camera eases round to its new heading
+  await page.waitForFunction(([x, z, fx, fz]) => { const s = window.__oagCave.state; s.walk.camYaw = Math.atan2(-fx, -fz); s.look.yaw = 0; const p = window.__oagCave.floorScreen(x, z); return !p.behind && p.x > 40 && p.x < innerWidth - 40 && p.y > 100 && p.y < innerHeight - 200; }, [tx, tz, f0.x, f0.z], { timeout: 8000 }).catch(() => {});
+  const at = await C(([x, z]) => window.__oagCave.floorScreen(x, z), [tx, tz]);
+  const onCanvas = await C(([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && e.tagName === 'CANVAS'; }, [at.x, at.y]);
+  ok(!at.behind && onCanvas, `the middle of the hall shows on the screen to click (${Math.round(at.x)}, ${Math.round(at.y)})`);
+  await page.mouse.click(at.x, at.y);
+  const g = await C(() => window.__oagCave.figure().goTo);
+  ok(!!g && Math.hypot(g.x - tx, g.z - tz) < 1.5, `a click on the floor sets where the figure walks to (${g ? g.x.toFixed(1) + ', ' + g.z.toFixed(1) : 'none'}, the spot ${tx.toFixed(1)}, ${tz.toFixed(1)})`);
+  const reached = await page.waitForFunction(() => window.__oagCave.figure().fromMiddle < 4.5, null, { timeout: 15000 }).then(() => true, () => false);
+  const f1 = await C(() => window.__oagCave.figure());
+  ok(reached, `the figure walks there, into the middle of the hall (${f1.fromMiddle.toFixed(1)} from the middle; the ring is ${f0.fromMiddle.toFixed(1)})`);
+  await page.waitForFunction(() => !window.__oagCave.figure().goTo, null, { timeout: 5000 }).catch(() => {});
+  ok(!(await C(() => window.__oagCave.figure().goTo)), 'and stops there');
+  ok((await C(() => window.__oagCave.camRoom())) > 0, 'the camera stays inside the stone out in the middle');
+  await page.screenshot({ path: SHOTS + '/level-hall-middle.png' });
 }
 // ---- the Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room") --
 // Out to the front page and into the room again; in the room, walk to the Big Mind door; going in opens the Big Mind cave's mouth

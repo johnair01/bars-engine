@@ -700,3 +700,18 @@ on there"
   wherever the figure went was tried first: a held diagonal chased itself round the hall's ring into its walls.)
 - **The walk is 7 units a second**, about two body lengths. The steps lengthen with it so the feet do not skate.
 - **(choice)** the speed, and how fast the camera eases round (2.5 a second at a full forward push).
+
+## The open middle, and click to walk (14 October 2026)
+
+Wendell, 14 October 2026: "walking feels much better. The center is impassible and we want to be able to have click to walk for
+when we're testing on the computer."
+
+- **The middle is open floor.** The hall and the centre kept the figure on their ring: it could walk in only 6.3 units from the
+  ring, 9.7 short of the middle. Now it walks in right across the middle, to within 1.2 of the very centre. Off the ring a step
+  along it keeps the same pace (the angle moves more nearer the middle). The hall's six stones stand in the way; a step into one
+  slides round it.
+- **The camera out in the middle** turns toward the way the figure walks when that is ahead and nothing is in the way. On the
+  ring it turns along the ring only as much as the walk goes along it, so walking in toward the middle keeps the view.
+- **Click to walk.** A click (or a tap) on the floor walks the figure there, as the stick would: walls, the shut way, the stones
+  and the stops all behave the same. It stops on the spot, or at a wall it cannot pass. The stick or a key takes over at once.
+- **(choice)** how near the very middle the figure goes (1.2), and the stones' reach (1.3).
