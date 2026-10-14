@@ -614,3 +614,46 @@ player more effectively not unlike a drone".
 
 **(choice)** how far the stones stand past the ramp, the reveal's timing and colours, the camera's swing (`state.peek`),
 and how close to the stone the camera may come (0.35 where it aims to be, 0.25 where it is).
+
+## Walking round the WAVE room, and its Big Mind door (13 October 2026)
+
+Wendell, overruling board row `dp-big-mind-page` (13 October, 22:34): "The big mind cave need to be accessible from the WAVE
+room. Which also need the ability for players to walk around in. Another door in the room leads to the 6 game masters
+(content to be created). All of the caves need to use the same assets and have the ability to spawn spirits when one sits
+down and does a wave process."
+
+- **Walking.** Wendell, 13 October 2026, after walking it: "It’s impossible to have a player walk around the wave room and
+  thus move into any of the other experiences. We also need to have a rug or a seat players can sit on when they are
+  communing with spirits. Essentially we need free walking controls in this room". So the room has free walking: a stick
+  at the bottom left, and the arrow keys or W A S D on a computer, walk the figure anywhere in the room. Up on the stick is
+  away from the camera. The camera follows from behind and comes round only while the figure walks away from it, so walking
+  back or sideways goes where the thumb points. A one-finger drag turns it by hand, and a drag up or down tilts it, seated or walking (Wendell, 13 October 2026: "you can pan the camera side to side but not up and down"). The stick shows whenever the room is in
+  view and hides only while a page or a creature's card is open. A tap on the floor still walks the figure there, and a tap on a creature
+  still brings it close.
+- **Doors, the way phone games do them.** Wendell, 14 October 2026: "If you hold this position and try and use the joystick
+  you get stuck in a loop. We should take a step back and think holistically about the object interactions". The common
+  rules for touch games, which the room now follows:
+  1. The stick is never taken away. Nothing that comes up while walking covers it, hides it or moves the camera under it.
+  2. Coming near a thing shows a small prompt by the right thumb (the left thumb walks, the right one acts). The prompt
+     never stops the walk; walking off hides it, and that is how a player says no.
+  3. A zone shows its prompt a little sooner than it hides it, so standing on its edge does not flicker.
+  4. One prompt at a time: a door's prompt in front of a door, Sit down on the rug, a creature's card when it is tapped.
+  5. A full page (the step's page, a creature close up) opens only from a tap, never from walking, and it hides the stick
+     until it closes.
+  So a door shows its name, one line and its way through ("Go through", "Go in") at the bottom right while the figure stands
+  in front of it, and there is no "Stay in the room": walking away is staying.
+- **The rug.** A round woven rug with a cushion on it is where the player sits to commune with what comes in. Walking onto
+  the rug shows "Sit down", which sits the figure on the cushion and brings the step's page back. Tapping the pane does the
+  same from anywhere in the room.
+- **Two doors behind the seat** (board `dp-door`). On the left, the Big Mind door: a pale gold arch with the seven daemons'
+  colours round it, the Protector's first. On the right, the portal, now named for the six game masters: it opens the hall of
+  the six (LEVELS.md), whose tunnels are still plain. The charge's door stays the charge's door. Walking up to a door shows its
+  prompt (below), with its way through and "Stay in the room". Only a charge worked through the whole W.A.V.E. goes through with them as a spirit (Wendell, 13 October 2026: "It should only emerge once it’s been engaged with"); one still being worked stays in the room.
+- **The Big Mind cave on this page.** The Big Mind door opens the Big Mind cave itself (`bigmind.js`, now built into this page
+  and started only from the door), at its mouth, with "Back to the WAVE room". The room's spirits walk in with the player for
+  that visit. **(choice)** the next six chambers and the centre (board `dp-seven`, `dp-centre`) are built inside the Big Mind
+  cave, which already has the Protector's refusal path, the charge meter and the speaking turns, rather than as a new path in
+  this cave.
+- **One stone.** The room wears the caves' J1 tiles: wet stone on the wall and dome, dry stone on the floor, laid in the room's
+  own units so a stone is the size it is in a tunnel.
+- A sit-down that spawns a spirit without the W.A.V.E. is being fixed in its own thread (the cave branch seams work), not here.
