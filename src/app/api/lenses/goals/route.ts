@@ -11,7 +11,7 @@
  * @route POST /api/lenses/goals
  * @description Adds year goals he kept on the council board as active Lens goals
  * @permissions COUNCIL_MENU_TOKEN, as a bearer token or ?token=
- * @example POST /api/lenses/goals {"goals":[{"domain":"health","title":"...","source":"Council Board, lens-..."}]}
+ * @example POST /api/lenses/goals {"goals":[{"domain":"health","title":"...","source":"Council Board, lens-...","parentId":"<optional active goal id>"}]}
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
@@ -73,7 +73,10 @@ export async function GET(req: NextRequest) {
 const MAX_TITLE = 160
 const MAX_GOALS = 10
 
-type PitchedGoal = { domain: string; title: string; source?: string }
+type PitchedGoal = { domain: string; title: string; source?: string; parentId?: string }
+
+// One step smaller than the parent goal: the side quest that merges into the main quest (mm-menu-shape).
+const SMALLER: Record<string, string> = { year: 'quarter', quarter: 'month', month: 'week', week: 'week' }
 
 /**
  * Year goals he kept on the council board (board, `lens-pitch-goals`, 2026-10-14):
@@ -81,8 +84,12 @@ type PitchedGoal = { domain: string; title: string; source?: string }
  * and each one he keeps is written here as an active year goal under his yearly Lens.
  * `source` names the board row and his quoted line; it is kept as the description.
  *
- * Safe to send twice: a goal whose domain and title match an active goal is
- * returned as `existing` and not created again. Only year goals, only his player.
+ * A goal with `parentId` (board, `lens-intake-align`) is a smaller goal pitched for
+ * an item on his daily intake: it is created one cadence below that active goal of
+ * his, in the parent's domain.
+ *
+ * Safe to send twice: a goal whose domain, cadence, parent and title match an active
+ * goal is returned as `existing` and not created again. Only his player.
  */
 export async function POST(req: NextRequest) {
   const who = councilPlayer(req)
@@ -108,26 +115,43 @@ export async function POST(req: NextRequest) {
 
   try {
     const lens = await ensureYearlyLens(playerId)
-    const out: { id: string; title: string; domain: string; status: 'created' | 'existing' }[] = []
+    const out: { id: string; title: string; domain: string; cadence: string; status: 'created' | 'existing' | 'no-parent' }[] = []
     for (const g of pitched) {
       const title = g.title.trim().slice(0, MAX_TITLE)
+      let domain = g.domain
+      let cadence = 'year'
+      let parentGoalId: string | null = null
+      if (typeof g.parentId === 'string' && g.parentId) {
+        const parent = await db.lensGoal.findFirst({
+          where: { id: g.parentId, playerId, status: 'active' },
+          select: { id: true, domain: true, cadence: true },
+        })
+        if (!parent) {
+          out.push({ id: '', title, domain, cadence, status: 'no-parent' })
+          continue
+        }
+        domain = parent.domain
+        cadence = SMALLER[parent.cadence] ?? 'week'
+        parentGoalId = parent.id
+      }
       const same = await db.lensGoal.findFirst({
-        where: { playerId, domain: g.domain, cadence: 'year', status: 'active', title },
+        where: { playerId, domain, cadence, status: 'active', parentGoalId, title },
         select: { id: true },
       })
       if (same) {
-        out.push({ id: same.id, title, domain: g.domain, status: 'existing' })
+        out.push({ id: same.id, title, domain, cadence, status: 'existing' })
         continue
       }
       const siblings = await db.lensGoal.count({
-        where: { playerId, domain: g.domain, cadence: 'year', status: 'active', parentGoalId: null },
+        where: { playerId, domain, cadence, status: 'active', parentGoalId },
       })
       const created = await db.lensGoal.create({
         data: {
           playerId,
           lensId: lens.id,
-          domain: g.domain,
-          cadence: 'year',
+          domain,
+          cadence,
+          parentGoalId,
           title,
           description: typeof g.source === 'string' ? g.source.slice(0, 500) : null,
           alignmentType: 'progress',
@@ -136,7 +160,7 @@ export async function POST(req: NextRequest) {
         },
         select: { id: true },
       })
-      out.push({ id: created.id, title, domain: g.domain, status: 'created' })
+      out.push({ id: created.id, title, domain, cadence, status: 'created' })
     }
     return NextResponse.json({ goals: out }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {
