@@ -337,3 +337,10 @@ the player come too. The Skeptic waits at the shut mouth past it.
   to the start of its chamber; "Start at the mouth again" begins with the Protector.
 - **Tells.** In a chamber, its own voice's job is in voice and talking about it is the self's ideas; the Protector can
   now be one of the figures who speaks out of turn in a later chamber.
+- **The charge while it holds back** (Wendell, 15 October 2026, on playing the Controller: "we want to have the controllers
+  charge go down even when they are blocked this is some of the best times that the resistance is moving and we want players
+  to be able to track what makes the controller give up its resistance"). On the refusal path, Ask again first asks how
+  charged the voice is now, after what was offered (an assurance card, an assurance in the player's own words, whose words
+  are never saved, or waiting with it). A drop eases as after any answer. The charge is saved with what came before it
+  (`after: "held-<ask>"`, `why`, `from`), and each drop is shown at the keeping step ("What moved it while it held back") and
+  at the mouth ("Moved it: …"). Every voice gets this, since the chambers share the engine.
