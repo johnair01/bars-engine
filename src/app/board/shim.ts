@@ -7,7 +7,7 @@
 export const BOARD_SHIM = `<script>
 (() => {
   const BOARD = 'nonprofit', API = '/api/board/saves';
-  let docs = {}, sig = '', ready = false, lastPull = null;
+  let docs = {}, sig = '', ready = false, lastPull = null, unrecorded = null;
   const subs = [];
   const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
   const snapDoc = (c, id) => { const d = (docs[c] || {})[id]; return {id, exists: !!d, data: () => clone(d)}; };
@@ -19,17 +19,23 @@ export const BOARD_SHIM = `<script>
     if (!el){ el = document.createElement('div'); el.id = 'board-pull-note';
       el.style.cssText = 'font-size:.8rem;opacity:.75;text-align:center;padding:6px 8px 72px';
       document.body.appendChild(el); }
-    if (!lastPull){ el.textContent = 'Main has not recorded a pull from this board yet.'; return; }
-    const at = new Date(lastPull.at), mins = Math.round((Date.now() - at) / 60000);
-    el.textContent = 'Last board pull: ' + (mins < 1 ? 'just now' : mins < 120 ? mins + ' min ago' : Math.round(mins / 60) + ' h ago')
-      + (mins > 60 ? '. The pull runs every 15 minutes, so this is late; check the board-pull Action.' : '.');
-    el.style.color = mins > 60 ? 'var(--warn, #b45309)' : '';
+    const ago = mins => mins < 1 ? 'just now' : mins < 120 ? mins + ' min ago' : Math.round(mins / 60) + ' h ago';
+    const waiting = unrecorded && unrecorded.count > 0 && unrecorded.oldestReceivedAt ? unrecorded : null;
+    const wait = waiting ? Math.round((Date.now() - new Date(waiting.oldestReceivedAt)) / 60000) : 0;
+    const pulled = lastPull ? 'Last board pull: ' + ago(Math.round((Date.now() - new Date(lastPull.at)) / 60000)) + '.'
+      : 'Main has not recorded a pull from this board yet.';
+    if (waiting && wait > 60){
+      el.textContent = 'Warning: ' + waiting.count + (waiting.count === 1 ? ' save has' : ' saves have') + ' waited for main '
+        + (wait < 120 ? wait + ' min' : Math.round(wait / 60) + ' h') + ' (the oldest). ' + pulled
+        + ' Run board-pull by hand from the Actions tab of six-faces-council.';
+      el.style.color = 'var(--warn, #b45309)';
+    } else { el.textContent = pulled; el.style.color = ''; }
   }
   async function refresh(){
     const r = await fetch(API + '?board=' + BOARD, {credentials: 'same-origin', cache: 'no-store'});
     if (r.status === 401){ location.href = '/login?returnTo=/board'; return; }
     if (!r.ok) throw new Error('board load ' + r.status);
-    const j = await r.json(); lastPull = j.lastPull; pullNote();
+    const j = await r.json(); lastPull = j.lastPull; unrecorded = j.unrecorded; pullNote();
     const s = JSON.stringify(j.docs || {});
     if (s !== sig){ sig = s; docs = j.docs || {}; if (ready) notify(); }
   }
