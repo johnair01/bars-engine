@@ -2,9 +2,9 @@
 //
 // Design: content/ontology-game/bigmind/DESIGN.md, from sprout campaigns/big-mind/build-brief.md and Wendell's board of
 // 10 October 2026, 20:19. His steer (bm-phone-first, overruled): "I want it to be a fork of cave of lessons that adds
-// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and the daemon path's first two
-// chambers, the Protector's and the Controller's, each with the hallway past it; the Skeptic waits at the shut mouth of the
-// third, and the other chambers and the centre come in later builds (board dp-seven).
+// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and the daemon path's first three
+// chambers, the Protector's, the Controller's and the Skeptic's, each with the hallway past it; the Fixer waits at the shut
+// mouth of the fourth, and the other chambers and the centre come in later builds (board dp-seven).
 //
 // Needs cave/cave.js loaded first with window.__oagCaveNoStart set: this page borrows its engine (the tunnel, the faceless
 // avatar and its walk, the daemon body, the breath, the page guards) from window.__oagCave.kit, so a fix there reaches both
@@ -197,6 +197,80 @@
       know: { ask: "From here, what does the Controller want the self to know?", cards: [["I'm only trying to help."], ["It doesn't have to be perfect. It has to be safe."], ["I'm tired of holding it all."], ["Let me rest sometimes."], ["Thank me once in a while."]] },
       thanks: "Thank you, Controller. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
     },
+    // The Skeptic, third on the daemon path (board dp-seven), met with Wendell's own set for it (daemons/questions.js): what it
+    // doubts, who it works for, how doubt serves who it works for, and what happens when it is not there. His boss question
+    // for it is the plain one, so the cards name the bosses (questions.js bosses), and the Controller is one of them: it is a
+    // figure the player has met by now, so the chain shows (board dq-boss-chain). He gave one method question, so its wording
+    // stays and only the cards change with the boss. The lines, its look ("To doubt.", the lens) and the cards are written from
+    // the cave's daemon row and the council's daemons.yaml ("They cannot actually mean that. Look at the evidence."); choices,
+    // all of them.
+    {
+      id: "skeptic", name: "the Skeptic", title: "The Skeptic", daemon: "skeptic",
+      bossNames: { controller: "the Controller" },
+      arrive: "A lean figure stands in the middle of the way, a lens raised to one eye. It studies you through it, unconvinced.",
+      meet: {
+        opens: "You can't actually mean that. Show me the evidence.",
+        replies: [
+          ["Who are you?", "I check what's true. Someone has to.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear from me? I doubt you mean it. But go on.", "hear"],
+          ["I need to get through.", "Through to what? I don't believe there's anything there.", "push"],
+        ],
+        after: { hear: "I do mean it. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Checker of what's true, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Skeptic, may I speak with you for a while?", yes: "Go on. I'm listening, for now.", no: ["What would be the point?", "You'll say what everyone says.", "I doubt it."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. I don't expect much.", no: ["If I step aside, who checks what's real?", "You'd believe anything.", "Not yet. Show me you mean it."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on, then. Don't say I didn't warn you.", no: ["You haven't shown me anything yet.", "There's nothing past here worth having.", "Not yet."] },
+      },
+      fears: [["We'll be fooled again."], ["We'll get our hopes up for nothing."], ["Someone will take advantage."], ["We'll look naive."], ["Nobody will check what's true."]],
+      assure: [["I'll come back to my own place when we're done."], ["You can keep checking. I'm not asking you to believe anything."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not trying to get rid of you. I want to know you."]],
+      assured: ["...We'll see.", "Hm. I'll believe it when I see it.", "Nobody has asked what I think before. Not really."],
+      questions: [
+        { id: "what", ask: "What, or who, do you doubt?", reflect: "So that's what you won't take at its word.", cards: [
+          ["Compliments."], ["Whether people mean it."], ["That it will work out."], ["Anyone who says they care."], ["Good news."], ["Myself."],
+          ["It just doesn't trust anyone.", "ideas"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met in the chamber before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned it from my parents.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. Doubt keeps anything from getting close enough to hurt.",
+          controller: "So you answer to the Controller. Nothing gets in until you've checked it.",
+          self: "So you answer to the self. You keep it from being fooled.",
+          player: "So you answer to the vulnerable child. You keep it from hoping and being let down.",
+        } },
+        { id: "how", ask: "How does doubt serve who you work for?", reflect: "That's what the doubt is for.", cards: [
+          ["I question everything."], ["I wait for proof."], ["I find the catch."], ["I take the warmth out of it."], ["I say no before anyone else can."],
+          ["I'd fix whatever doesn't hold up.", "fixer"],
+        ], cardsByBoss: {
+          protector: [["If I don't believe it, it can't hurt us."], ["I keep everyone at arm's length."], ["I find the danger in every kindness."], ["I stop us trusting too soon."], ["I'd keep every danger out.", "protector"]],
+          controller: [["I check it before it's allowed in."], ["I find the flaw in the plan."], ["Nothing counts until it's proven."], ["I make sure we're never surprised."], ["I'd keep it all in hand myself.", "controller"]],
+          self: [["I keep it from looking foolish."], ["I stop it believing what it's told."], ["I make it earn every good thing."], ["I keep its hopes small."], ["I'd make it work properly myself.", "fixer"]],
+          player: [["If it doesn't hope, it can't be let down."], ["I tell it not to get excited."], ["I keep it from trusting anyone too fast."], ["I say it's probably nothing."]],
+        } },
+        { id: "gone", ask: "What happens when you're not there?", multi: true, reflect: "No wonder you keep watching.", cards: [
+          ["We get fooled."], ["We hope, and get hurt."], ["We believe the wrong people."], ["We look naive."], ["Somebody takes advantage."], ["I'm not sure. I've never left."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Day and night."], ["Whenever anyone says something kind."], ["Every time something good happens."], ["Even in my sleep, going over what they meant."], ["Whenever there's a promise, which is always."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Working all hours, and hardly thanked.", cards: [
+          ["I'm called negative."], ["Hardly."], ["Only when I'm proven right."], ["It's exhausting."],
+          ["Nobody notices how much I keep in hand.", "controller"], ["It thinks it's being realistic.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Lonely."], ["Tired."], ["Unappreciated."], ["Like I'm always the bad guy."], ["Like I'd love to be wrong."], ["Cold."],
+        ] },
+      ],
+      places: ["Chest", "Throat", "Belly", "Shoulders", "Jaw", "Back", "Head", "Hands", "All over"],
+      ready: "...Fine. I could step aside for a while. I'm not promising anything.",
+      notYet: "I'm not convinced yet.",
+      seat: "You are standing where the Skeptic stands. The self is back there, where you were a moment ago, and everything it hears is weighed here first.",
+      know: { ask: "From here, what does the Skeptic want the self to know?", cards: [["I'm only trying to keep you from being fooled."], ["Not everyone means it."], ["I'd love to be wrong."], ["I'm tired of checking."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Skeptic. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
   ];
   // The daemon path in the book's order (board dp-seven). Chambers are met one after another; the first figure past the
   // last chamber built waits at a shut mouth.
@@ -224,12 +298,15 @@
     if (vid !== "skeptic" && /\b(doubt|don't believe|pointless|no point|silly)\b/.test(t) && !/self-doubt|self doubt/.test(t)) return "skeptic";
     return null;
   }
-  // Who an open line names as the boss, for the boss question (null when it names none of them).
-  function heardBoss(text) {
+  // Who an open line names as the boss, for the boss question (null when it names none of them). vid is the chamber's voice
+  // (the Controller when left out): only the Controller's "myself" is control itself.
+  function heardBoss(text, vid) {
+    vid = vid || "controller";
     var t = " " + String(text || "").toLowerCase() + " ";
     if (/\b(vulnerable|child|kid|little one|younger me|inner child)\b/.test(t)) return "player";
     if (/\bprotector\b/.test(t)) return "protector";
-    if (/\b(control|controller|myself|me|no one|nobody)\b/.test(t)) return "controller"; // as the Controller, "myself" is control itself
+    if (/\b(control|controller)\b/.test(t)) return "controller";
+    if (vid === "controller" && /\b(myself|me|no one|nobody)\b/.test(t)) return "controller"; // as the Controller, "myself" is control itself
     if (/\bself\b/.test(t)) return "self";
     return null;
   }
@@ -237,8 +314,8 @@
   // ---- saving, on this device only ----------------------------------------------------------------
   // { v, chamber, at: "mouth" | "hall2", voices: { protector: { status: "spoken" | "waiting", kept: [{ q, line }], savedAt } },
   //   waiting: [translator ids] }. chamber is the daemon path's chamber the player has reached (0 the Protector, 1 the
-  //   Controller; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's record
-  //   also holds boss, who the player said it works for. The first cave saves this seed record and spawns no world (bm-world-later).
+  //   Controller, 2 the Skeptic; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's record
+  //   and the Skeptic's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
   function blank() { return { v: 1, chamber: 0, at: "mouth", voices: {}, waiting: [] }; }
   function readSave() { try { var s = JSON.parse(localStorage.getItem(STORE) || "null"); return s && s.v === 1 ? s : blank(); } catch (e) { return blank(); } }
   function writeSave(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); return true; } catch (e) { return false; } }
@@ -331,6 +408,8 @@
   }
   // The five feelings are the five elements (oag-clean-up-moves). The player picks; the game never guesses (bmw-player-names).
   var BOSS_NAME = { protector: "the Protector", self: "the self", controller: "control itself", player: "the vulnerable child" };
+  // A boss as a voice names it: to the Controller, "controller" is control itself; to the Skeptic, it is the Controller.
+  function bossName(voice, b) { return (voice && voice.bossNames && voice.bossNames[b]) || BOSS_NAME[b]; }
   var ELEMENTS = [["fire", "Fire", "anger"], ["water", "Water", "sadness"], ["wood", "Wood", "joy"], ["metal", "Metal", "fear"], ["earth", "Earth", "neutrality"]];
   var WAVE_LABEL = { welcome: "Welcome", acknowledge: "Acknowledge", allow: "Allow", accept: "Accept", appreciate: "Appreciate", validate: "Validate", exhale: "Exhale" };
   // One W.A.V.E. shown back as one line (bmw-shown), for example "Fear, Metal, in your chest: 8 to 6".
@@ -354,7 +433,7 @@
       var v = save.voices[id], voice = VOICES.filter(function (x) { return x.id === id; })[0];
       var name = voice ? voice.title : id;
       box.appendChild(el("p", { text: name + (v.keepsWay ? " (it is keeping the way for now; ask it again next time)" : v.status === "waiting" ? " (waiting; it has not spoken yet)" : "") }));
-      if (v.boss) box.appendChild(el("p", { "data-bm-keptboss": id, text: "It works for " + BOSS_NAME[v.boss] + "." }));
+      if (v.boss) box.appendChild(el("p", { "data-bm-keptboss": id, text: "It works for " + bossName(voice, v.boss) + "." }));
       if (v.kept.length) box.appendChild(el("ul", {}, v.kept.map(function (k) { return el("li", { text: k.line }); })));
       if (v.waves && v.waves.length) box.appendChild(el("ul", { "data-bm-keptwaves": id }, v.waves.map(function (w) { return el("li", { text: "W.A.V.E.: " + waveLine(w) }); })));
       box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": id, text: "Forget " + name, onclick: function () {
@@ -1056,7 +1135,13 @@
     // Who the voice works for, once the player has said (the boss question): the questions after it ask and offer by it.
     function qAsk(q) { return (q.byBoss && st.boss && q.byBoss[st.boss]) || q.ask; }
     function qCards(q) { return (q.cardsByBoss && st.boss && q.cardsByBoss[st.boss]) || q.cards; }
-    function qReflect(q) { return (q.reflectByBoss && st.boss && q.reflectByBoss[st.boss]) || q.reflect; }
+    function qReflect(q) {
+      var r = (q.reflectByBoss && st.boss && q.reflectByBoss[st.boss]) || q.reflect;
+      // The chain (board dq-boss-chain): when the boss named is a voice already heard, what it said of its own boss follows.
+      var up = q.boss && st.boss && st.boss !== V.id && save.voices[st.boss], upV = VOICES.filter(function (x) { return x.id === st.boss; })[0];
+      if (up && up.boss && upV) r += " And " + upV.name + " told you it answers to " + bossName(upV, up.boss) + ".";
+      return r;
+    }
     function askQ(i, lead) {
       var q = V.questions[i], picked = [], cardList = qCards(q);
       var cards = el("div", { class: "bm-cards" });
@@ -1072,7 +1157,7 @@
       var input = el("input", { type: "text", "data-bm-line": "", placeholder: "Or what it says, in its words", enterkeyhint: "done", maxlength: "200" });
       function say() {
         var t = input.value.trim(); if (!t) return; var lines = picked.map(function (c) { return c[0]; }).concat([t]);
-        if (q.boss) { st.boss = heardBoss(t); return answer(i, lines, null); } // naming a boss is in voice, whoever it names
+        if (q.boss) { st.boss = heardBoss(t, V.id); return answer(i, lines, null); } // naming a boss is in voice, whoever it names
         answer(i, lines, firstOut(picked) || heard(t, V.id));
       }
       input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); say(); } });
