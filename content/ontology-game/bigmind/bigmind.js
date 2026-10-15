@@ -76,6 +76,23 @@
           ["Loss."], ["Losing control."], ["Too much excitement."], ["Other people, even loved ones."], ["Itself."],
           ["I'd fix whatever is hurting it.", "fixer"], ["Maybe it protects me from feeling.", "ideas"],
         ] },
+        // Wendell's own questions for the Protector (14 October 2026, daemons/questions.js, where his exact words are): what
+        // it protects, how that keeps the body alive, what that is vulnerable to, and what it fears without it. They come
+        // after the first questions, closer to the evidence. The vulnerable cards are the five elements as the WAVE names them.
+        { id: "what", ask: "Who or what are you protecting: the self, something, or someone?", reflect: "So that's what you stand in front of.", cards: [
+          ["The self."], ["Someone I love."], ["Something precious."], ["The body."], ["A secret."], ["A younger me."],
+          ["I'd keep all of it in hand.", "controller"],
+        ] },
+        { id: "survive", ask: "How does protecting it keep the body alive?", reflect: "As far as you can tell, it's life or death.", cards: [
+          ["If it gets hurt, I don't survive."], ["It keeps us fed and housed."], ["It keeps us in the group."], ["It keeps the body out of danger."], ["I'm not sure it does anymore."],
+          ["I doubt it does, honestly.", "skeptic"],
+        ] },
+        { id: "vulnerable", ask: "What is it vulnerable to? Which feeling, which element?", multi: true, reflect: "That's what gets through.", cards: [
+          ["Anger. Fire."], ["Sadness. Water."], ["Joy. Wood."], ["Fear. Metal."], ["Feeling nothing. Earth."], ["All of them."],
+        ] },
+        { id: "afraid", ask: "What are you afraid will happen if you don't protect it?", multi: true, reflect: "That's a lot to hold back on your own.", cards: [
+          ["The self will get hurt."], ["It will be gone for good."], ["Nobody will be left to stand here."], ["Something will get out that should stay in."], ["I'll be blamed."],
+        ] },
         { id: "how", ask: "How do you do it? What happens when something gets through?", multi: true, reflect: "And when it gets through again, you build it higher.", cards: [
           ["I build walls."], ["I set borders."], ["I sound the alarm."], ["I send for reinforcements."], ["I build the wall higher."],
           ["I build a dome over everything."], ["I'd fix the breach for good.", "fixer"],
