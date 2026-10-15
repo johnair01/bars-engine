@@ -382,3 +382,22 @@ past the Skeptic now opens it. The Emotional Body waits at the shut mouth past i
   `daemons.yaml` ("There is a problem here and I should solve it."). Choices, all of them, as are the cards. In its chamber
   fixing is in voice; the Skeptic, the Controller and the Protector can speak out of turn.
 - **Saving.** `chamber` 3 is the Fixer; its record holds its boss beside the others, and the mouth shows each.
+
+## The Emotional Body's chamber (15 October 2026)
+
+The fifth chamber on the daemon path (board `dp-seven`), built on the Fixer's with no change to the meeting. "Walk on" past
+the Fixer now opens it. The Victim waits at the shut mouth past it.
+
+- **Its questions** are Wendell's four from `../daemons/questions.js`, first and in his order: what it feels, who it works
+  for, what happens if it isn't there, and how it knows it has done a good job. Its hours, how it is thanked and how that
+  feels follow. The test checks the four against `questions.js`.
+- **The boss question** is his plain "Who do you work for?", with the bosses in `questions.js` as cards. For the Emotional
+  Body "controller" is the Controller, so picking it brings what the Controller said of its own boss along (`dq-boss-chain`).
+- **How it knows it has done a good job** is his measure question, new with this chamber. His set has no method question,
+  so the measure question is the one whose cards change with the boss, and its wording stays. The plain cards (no boss, or
+  "I'm not sure anymore") include the Fixer's "When it's fixed and gone." and the Skeptic's "I doubt I ever do."
+- **Its look and lines** come from the cave's daemon row (the orb, "To receive the signal and process it into meaning") and
+  the council's `daemons.yaml` ("This is what is actually moving."; it hands the feeling off before it has finished
+  arriving). The feelings cards follow the five channels: fear, anger, sadness, joy, and flat. Choices, all of them, as are
+  the cards. In its chamber feeling is in voice; the Fixer, the Controller, the Skeptic and the Protector can speak out of turn.
+- **Saving.** `chamber` 4 is the Emotional Body; its record holds its boss beside the others, and the mouth shows each.
