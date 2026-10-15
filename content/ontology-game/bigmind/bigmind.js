@@ -407,6 +407,10 @@
     root.appendChild(home);
   }
   // The five feelings are the five elements (oag-clean-up-moves). The player picks; the game never guesses (bmw-player-names).
+  // Each drop in a voice's charge while it held back, as one line: what came before it, and the numbers.
+  function movedLines(charges) {
+    return charges.filter(function (c) { return c.why && c.from != null && c.v < c.from; }).map(function (c) { return c.why + ": " + c.from + " to " + c.v; });
+  }
   var BOSS_NAME = { protector: "the Protector", self: "the self", controller: "control itself", player: "the vulnerable child" };
   // A boss as a voice names it: to the Controller, "controller" is control itself; to the Skeptic, it is the Controller.
   function bossName(voice, b) { return (voice && voice.bossNames && voice.bossNames[b]) || BOSS_NAME[b]; }
@@ -433,6 +437,8 @@
       var v = save.voices[id], voice = VOICES.filter(function (x) { return x.id === id; })[0];
       var name = voice ? voice.title : id;
       box.appendChild(el("p", { text: name + (v.keepsWay ? " (it is keeping the way for now; ask it again next time)" : v.status === "waiting" ? " (waiting; it has not spoken yet)" : "") }));
+      var mv = movedLines(v.charges || []);
+      if (mv.length) box.appendChild(el("ul", { "data-bm-keptmoved": id }, mv.map(function (m) { return el("li", { text: "Moved it: " + m }); })));
       if (v.boss) box.appendChild(el("p", { "data-bm-keptboss": id, text: "It works for " + bossName(voice, v.boss) + "." }));
       if (v.kept.length) box.appendChild(el("ul", {}, v.kept.map(function (k) { return el("li", { text: k.line }); })));
       if (v.waves && v.waves.length) box.appendChild(el("ul", { "data-bm-keptwaves": id }, v.waves.map(function (w) { return el("li", { text: "W.A.V.E.: " + waveLine(w) }); })));
@@ -1071,7 +1077,7 @@
     }
     function unsure(key, round, onYes) {
       show([el("h2", { text: V.title }), guide("Then stay here with it a moment. Breathe with it. Nothing has to happen yet."),
-        row([btn("Ask again", function () { permit(key, round + 1, onYes); }, { "data-bm-again": "" }), leaveBtn(key)])], "unsure-" + key);
+        row([btn("Ask again", function () { blockPoll(key, round, onYes, "You waited with it"); }, { "data-bm-again": "" }), leaveBtn(key)])], "unsure-" + key);
     }
     // The refusal path. The voice says why, the player asks what it fears and answers as it would, then offers an assurance.
     function refused(key, round, onYes) {
@@ -1091,14 +1097,35 @@
     }
     function assureAsk(key, round, onYes, fear) {
       var input = el("input", { type: "text", "data-bm-assureline": "", placeholder: "Or in your own words", maxlength: "200" });
-      function offer(t) {
+      // own: the assurance was typed, so only that it was in the player's own words is recorded, never the words
+      function offer(t, own) {
         if (!t) return;
         show([el("h2", { text: V.title }), you(t), npc(V.assured[Math.min(round, V.assured.length - 1)]),
-          row([btn("Ask again", function () { permit(key, round + 1, onYes); }, { "data-bm-again": "" })])], "assured-" + key);
+          row([btn("Ask again", function () { blockPoll(key, round, onYes, own ? "An assurance in your own words" : "You offered: " + t); }, { "data-bm-again": "" })])], "assured-" + key);
       }
       show([el("h2", { text: V.title }), npc(fear), guide("That makes sense of the wall. What can you offer it?"),
         el("div", { class: "bm-cards" }, V.assure.map(function (f, fi) { return btn(f[0], function () { offer(f[0]); }, { class: "bm-card", "data-bm-assure": String(fi) }); })),
-        el("div", { class: "bm-line" }, [input, btn("Offer it", function () { offer(input.value.trim()); }, { "data-bm-offer": "" })])], "assure-" + key);
+        el("div", { class: "bm-line" }, [input, btn("Offer it", function () { offer(input.value.trim(), true); }, { "data-bm-offer": "" })])], "assure-" + key);
+    }
+    // While it holds back, its charge is asked for too (Wendell, 15 October 2026, on the Controller: "we want to have the
+    // controllers charge go down even when they are blocked this is some of the best times that the resistance is moving and we
+    // want players to be able to track what makes the controller give up its resistance"). Before it is asked again, the player
+    // says how charged it is now; a drop eases as after any answer, and the charge is saved with what came just before it (why),
+    // so the keeping step and the cave mouth can show what moved its resistance. Every voice gets this; the Controller asked for it.
+    function blockPoll(key, round, onYes, why) {
+      var cur = st.charge == null ? 7 : st.charge;
+      var num = el("b", { class: "bm-chargenum", text: String(cur) });
+      var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(cur), "data-bm-range": "", "aria-label": "Charge, 0 to 10" });
+      range.addEventListener("input", function () { num.textContent = range.value; setMeter(+range.value); });
+      show([el("h2", { text: V.title }), guide(why + "."), guide("It's still holding back. Did that move it at all? How charged is " + V.name + " now?" + (st.place ? " (in your " + st.place.toLowerCase() + ")" : "")),
+        el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
+        row([btn("That's how it is", function () {
+          var was = st.charge, v = +range.value, again = function () { permit(key, round + 1, onYes); };
+          st.charge = v; st.charges.push({ after: "held-" + key, v: v, why: why, from: was }); setMeter(v);
+          if (was != null && v < was) return eased(was, v, again);
+          again();
+        }, { "data-bm-blockcharged": "" })])], "blockpoll-" + key);
+      setMeter(cur);
     }
     // Leaving it at its post honours the refusal. Before the shift it waits; after it has spoken, it keeps the way shut.
     function leaveBtn(key) {
@@ -1281,14 +1308,16 @@
         var b = el("button", { class: "bm-card", "data-bm-keepwave": String(wi), "aria-pressed": "false", text: waveLine(w), onclick: function () { st.waveKeep[wi] = !st.waveKeep[wi]; b.setAttribute("aria-pressed", String(st.waveKeep[wi])); } });
         return b;
       });
+      var moved = movedLines(st.charges);
+      var movedBox = moved.length ? [guide("What moved it while it held back. This is saved with its charge:"), el("ul", { "data-bm-moved": "" }, moved.map(function (m) { return el("li", { text: m }); }))] : [];
       var waveBox = st.waves.length ? [guide("Your W.A.V.E.s are saved either way, on this device. Tap one to keep its feeling word with it."), el("div", { class: "bm-cards" }, waveCards)] : [];
-      if (!lines.length && !st.waves.length) return finish("waiting", [], blocked); // every question sat out: the voice has not spoken yet, and waits
+      if (!lines.length && !st.waves.length && !moved.length) return finish("waiting", [], blocked); // every question sat out: the voice has not spoken yet, and waits
       var keepOn = lines.map(function () { return false; });
       var list = el("div", { class: "bm-cards" }, lines.map(function (l, li) {
         var b = el("button", { class: "bm-card", "data-bm-keep": String(li), "aria-pressed": "false", text: l.line, onclick: function () { keepOn[li] = !keepOn[li]; b.setAttribute("aria-pressed", String(keepOn[li])); } });
         return b;
       }));
-      show([el("h2", { text: "What " + V.name + " said" })].concat(lines.length ? [guide("Tap the lines you want to keep. The rest are let go, and only what you keep is saved, on this device."), list] : [], waveBox, [
+      show([el("h2", { text: "What " + V.name + " said" })].concat(lines.length ? [guide("Tap the lines you want to keep. The rest are let go, and only what you keep is saved, on this device."), list] : [], movedBox, waveBox, [
         row([btn(blocked ? "Save" : "Save and walk on", function () { finish(status || (Object.keys(st.answers).some(function (k) { return st.answers[k]; }) ? "spoken" : "waiting"), lines.filter(function (l, li) { return keepOn[li]; }), blocked); }, { "data-bm-save": "" })])]), "keep");
     }
     // Saving at every chamber (bm-session): the voice's record, the translators waiting, and the place to come back to.
