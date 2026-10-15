@@ -24,3 +24,13 @@ export async function latestDoc(board: string, collection: string, docId: string
 export async function lastPull(board: string) {
   return db.boardPull.findFirst({ where: { board }, orderBy: { at: 'desc' }, select: { at: true, record: true } })
 }
+
+/** Saves still waiting for the pull to record them: the earliest one's receivedAt and how many there are. */
+export async function unrecordedSaves(board: string) {
+  const where = { board, recordedAt: null }
+  const [oldest, count] = await Promise.all([
+    db.boardSave.findFirst({ where, orderBy: { receivedAt: 'asc' }, select: { receivedAt: true } }),
+    db.boardSave.count({ where }),
+  ])
+  return { oldestReceivedAt: oldest?.receivedAt ?? null, count }
+}

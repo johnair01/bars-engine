@@ -76,6 +76,7 @@ export default defineConfig({
       'src/lib/cyoa-composer/__tests__/step-registry.test.ts',
       'src/lib/__tests__/vitest-include-registration.test.ts',
       'src/lib/__tests__/board-save-contract.test.ts',
+      'src/app/api/board/saves/__tests__/route.test.ts',
     ],
   },
   resolve: {

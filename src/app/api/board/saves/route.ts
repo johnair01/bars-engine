@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { isBoardOwner } from '@/lib/board/owner'
 import { applyWrite, MAX_SAVE_BYTES, RECORD_KINDS, validateSave } from '@/lib/board/save'
-import { lastPull, latestDoc, latestDocs } from '@/lib/board/store'
+import { lastPull, latestDoc, latestDocs, unrecordedSaves } from '@/lib/board/store'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -18,8 +18,8 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 export async function GET(req: NextRequest) {
   if (!(await isBoardOwner())) return NextResponse.json({ error: 'Sign in as the board owner' }, { status: 401 })
   const board = req.nextUrl.searchParams.get('board') || 'nonprofit'
-  const [docs, pull] = await Promise.all([latestDocs(board), lastPull(board)])
-  return NextResponse.json({ docs, lastPull: pull }, { headers: NO_STORE })
+  const [docs, pull, waiting] = await Promise.all([latestDocs(board), lastPull(board), unrecordedSaves(board)])
+  return NextResponse.json({ docs, lastPull: pull, unrecorded: waiting }, { headers: NO_STORE })
 }
 
 export async function POST(req: NextRequest) {
