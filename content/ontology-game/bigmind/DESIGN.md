@@ -401,3 +401,22 @@ the Fixer now opens it. The Victim waits at the shut mouth past it.
   arriving). The feelings cards follow the five channels: fear, anger, sadness, joy, and flat. Choices, all of them, as are
   the cards. In its chamber feeling is in voice; the Fixer, the Controller, the Skeptic and the Protector can speak out of turn.
 - **Saving.** `chamber` 4 is the Emotional Body; its record holds its boss beside the others, and the mouth shows each.
+
+## The Victim's chamber (15 October 2026)
+
+The sixth chamber on the daemon path (board `dp-seven`), built on the Emotional Body's with no change to the meeting. "Walk
+on" past the Emotional Body now opens it. The Damaged Self waits at the shut mouth past it.
+
+- **Its questions** are Wendell's five from `../daemons/questions.js`, first and in his order: the sympathetic stories it
+  tells, who it works for, who it advocates for, the shadow sympathy its advocacy gets it, and what happens if it isn't
+  there. Its hours, how it is thanked and how that feels follow. The test checks the five against `questions.js`.
+- **The boss question** is his plain "Who do you work for?", with the bosses in `questions.js` as cards. For the Victim
+  "controller" is the Controller, so picking it brings what the Controller said of its own boss along (`dq-boss-chain`).
+- **Who it advocates for** comes straight after the boss. His set has no method question, so the advocacy question is the
+  one whose cards change with the boss, and its wording stays: for the Controller, "The one who did everything right."; for
+  the vulnerable child, "The child nobody came for." The shadow sympathy question is a choice of several.
+- **Its look and lines** come from the cave's daemon row (the bundle it carries, the stoop, "Sympathy, through stories.") and
+  the council's `daemons.yaml` ("Look at what I have absorbed. Look at the column."; the cost goes out as a story, and the
+  sympathy becomes the right to be met on its terms). Choices, all of them, as are the cards. In its chamber the story is in
+  voice; the Controller, the Fixer, the Skeptic and the Protector can speak out of turn.
+- **Saving.** `chamber` 5 is the Victim; its record holds its boss beside the others, and the mouth shows each.

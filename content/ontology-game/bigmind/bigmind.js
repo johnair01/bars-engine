@@ -2,9 +2,9 @@
 //
 // Design: content/ontology-game/bigmind/DESIGN.md, from sprout campaigns/big-mind/build-brief.md and Wendell's board of
 // 10 October 2026, 20:19. His steer (bm-phone-first, overruled): "I want it to be a fork of cave of lessons that adds
-// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and the daemon path's first five
-// chambers, the Protector's, the Controller's, the Skeptic's, the Fixer's and the Emotional Body's, each with the hallway past
-// it; the Victim waits at the shut mouth of the sixth, and the other chambers and the centre come in later builds (board dp-seven).
+// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and the daemon path's first six
+// chambers, the Protector's, the Controller's, the Skeptic's, the Fixer's, the Emotional Body's and the Victim's, each with the
+// hallway past it; the Damaged Self waits at the shut mouth of the seventh, and the other chambers and the centre come in later builds (board dp-seven).
 //
 // Needs cave/cave.js loaded first with window.__oagCaveNoStart set: this page borrows its engine (the tunnel, the faceless
 // avatar and its walk, the daemon body, the breath, the page guards) from window.__oagCave.kit, so a fix there reaches both
@@ -420,6 +420,86 @@
       know: { ask: "From here, what does the Emotional Body want the self to know?", cards: [["Feel it before you fix it."], ["I'm not too much."], ["Everything I tell you means something."], ["I'm tired of being hushed."], ["Thank me once in a while."]] },
       thanks: "Thank you, Emotional Body. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
     },
+    // The Victim, sixth on the daemon path (board dp-seven), met with Wendell's own set for it (daemons/questions.js): the
+    // sympathetic stories it tells, who it works for, who it advocates for, the shadow sympathy its advocacy gets it, and what
+    // happens if it isn't there. His set has no method question; who it advocates for is the question that follows the boss,
+    // so that is the one whose cards change with the boss. To the Victim "controller" is the Controller, so the chain shows
+    // (board dq-boss-chain). The lines, its look (the bundle it carries, the stoop) and the cards are written from the cave's
+    // daemon row ("Sympathy, through stories.") and the council's daemons.yaml ("Look at what I have absorbed. Look at the
+    // column."; the cost goes out as a story, and the sympathy becomes the right to be met on its terms); choices, all of them.
+    {
+      id: "victim", name: "the Victim", title: "The Victim", daemon: "victim",
+      bossNames: { controller: "the Controller" },
+      arrive: "A stooped figure sits against the wall in the middle of the way, a bundle held tight in its arms. It looks up as you come near, as if it has been waiting a long time for someone to ask.",
+      meet: {
+        opens: "You'd stop for me? Nobody stops. Let me tell you what happened.",
+        replies: [
+          ["Who are you?", "I'm the one it happened to. Look at what I've carried.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear me? Most people only hear the first part. All right.", "hear"],
+          ["I need to get through.", "Of course you do. Everyone does. Nobody stays for the story.", "push"],
+        ],
+        after: { hear: "I'm not here to argue with your story. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Keeper of the story, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Victim, may I speak with you for a while?", yes: "Yes. Nobody ever asks me.", no: ["You'll say I'm making it up.", "You'll tell me to get over it.", "Not if you're only going to leave."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. Then you'll see what it's been like.", no: ["If I put it down, nobody will know what it cost.", "You'd be blamed for it.", "Not yet. You haven't heard all of it."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on. Remember what I told you.", no: ["Not until someone has heard it all.", "You'll forget it the moment you're past.", "Not yet."] },
+      },
+      fears: [["Nobody will know what it cost."], ["We'll be blamed."], ["It will happen again."], ["We'll be alone with it."], ["They'll say it never happened."]],
+      assure: [["I'll come back to my own place when we're done."], ["What happened is real. I'm not asking you to take it back."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not here to judge your story. I want to know you."]],
+      assured: ["...All right. Gently, then.", "Hm. You're still here, I suppose.", "Nobody has ever stayed this long before."],
+      questions: [
+        { id: "what", ask: "What sympathetic stories do you tell?", reflect: "So those are the stories you carry.", cards: [
+          ["How nobody was there for us."], ["How it always happens to us."], ["How much we gave, and got nothing back."], ["How they had the advantage, and we never had a chance."], ["How we were left out."], ["How hard it's been, all this time."],
+          ["It tells them to be heard, I think.", "ideas"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met four chambers before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned that stories keep people near.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. The story keeps the danger named, so nobody walks into it again.",
+          controller: "So you answer to the Controller. The story says who is to blame, so nothing is ours to answer for.",
+          self: "So you answer to the self. The story gives it the right to be heard.",
+          player: "So you answer to the vulnerable child. You tell what happened to it, because it couldn't.",
+        } },
+        // His advocacy question follows the boss, so its wording stays and its cards change with the boss, as the method
+        // cards do in the chambers before.
+        { id: "advocate", ask: "Who do you advocate for?", reflect: "So that's who you stand up for.", cards: [
+          ["The one who got hurt."], ["Everyone who was left out."], ["Us, because nobody else will."], ["Whoever is losing."], ["The one nobody believes."],
+          ["I'd make them pay for what they did.", "controller"], ["I'd fix it for them, if anyone let me.", "fixer"],
+        ], cardsByBoss: {
+          protector: [["The one who keeps getting hurt."], ["Whoever is in danger."], ["Us, so it never happens again."], ["The one who couldn't get away."], ["I'd keep every danger out.", "protector"]],
+          controller: [["The one who did everything right."], ["Whoever was treated unfairly."], ["The one who was wronged, so it's on the record."], ["Us, against the ones who broke the rules."], ["The standard they failed.", "controller"]],
+          self: [["The self, when nobody else will."], ["The one who deserves better."], ["The part that never gets a say."], ["The self, so it gets its turn to speak."], ["I doubt anyone else would.", "skeptic"]],
+          player: [["The child who was hurt."], ["The little one who couldn't speak."], ["The child nobody came for."], ["The child, so somebody finally listens."]],
+        } },
+        { id: "payoff", ask: "What shadow sympathy does your advocacy get you?", multi: true, reflect: "That's what the story buys.", cards: [
+          ["People are gentle with us."], ["Nobody can say it was our fault."], ["We get to be met on our terms."], ["We don't have to change."], ["They stay close, for a while."], ["We're the one who's right."],
+          ["I doubt it gets us anything at all.", "skeptic"],
+        ] },
+        { id: "gone", ask: "What happens if you're not there?", multi: true, reflect: "No wonder you keep telling it.", cards: [
+          ["Nobody would know what it cost."], ["It would be our fault."], ["It would happen again, and nobody would see."], ["We'd be alone with it."], ["The child would never be heard."], ["I'm not sure. I've always been here."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Always. The story never ends."], ["Whenever someone asks how we are."], ["Most of all at night, going over it."], ["Every time it nearly happens again."], ["Whenever someone else is getting the sympathy."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Telling all of it, and hardly thanked.", cards: [
+          ["People get tired of my stories."], ["I'm called dramatic."], ["Sometimes someone listens."], ["Hardly."],
+          ["I doubt anyone really cares.", "skeptic"], ["It just wants attention.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Tired."], ["Unheard."], ["Like nobody believes me."], ["Like I have to tell it louder."], ["Like I'd love to put it down for once."], ["Alone with it."],
+        ] },
+      ],
+      places: ["Chest", "Throat", "Belly", "Face", "Eyes", "Shoulders", "Arms", "Back", "All over"],
+      ready: "...All right. I can set it down for a while. It'll still be here.",
+      notYet: "You haven't heard all of it yet.",
+      seat: "You are standing where the Victim stands. The self is back there, where you were a moment ago, and everything that has ever happened to it is in the bundle in your arms.",
+      know: { ask: "From here, what does the Victim want the self to know?", cards: [["It really did happen."], ["I'm not just making a fuss."], ["I've carried this so you wouldn't forget."], ["I'm tired of telling it."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Victim. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
   ];
   // The daemon path in the book's order (board dp-seven). Chambers are met one after another; the first figure past the
   // last chamber built waits at a shut mouth.
@@ -463,8 +543,8 @@
   // ---- saving, on this device only ----------------------------------------------------------------
   // { v, chamber, at: "mouth" | "hall2", voices: { protector: { status: "spoken" | "waiting", kept: [{ q, line }], savedAt } },
   //   waiting: [translator ids] }. chamber is the daemon path's chamber the player has reached (0 the Protector, 1 the
-  //   Controller, 2 the Skeptic, 3 the Fixer, 4 the Emotional Body; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's, the Skeptic's,
-  //   the Fixer's and the Emotional Body's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
+  //   Controller, 2 the Skeptic, 3 the Fixer, 4 the Emotional Body, 5 the Victim; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's, the Skeptic's,
+  //   the Fixer's, the Emotional Body's and the Victim's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
   function blank() { return { v: 1, chamber: 0, at: "mouth", voices: {}, waiting: [] }; }
   function readSave() { try { var s = JSON.parse(localStorage.getItem(STORE) || "null"); return s && s.v === 1 ? s : blank(); } catch (e) { return blank(); } }
   function writeSave(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); return true; } catch (e) { return false; } }
