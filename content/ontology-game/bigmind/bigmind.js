@@ -2,9 +2,9 @@
 //
 // Design: content/ontology-game/bigmind/DESIGN.md, from sprout campaigns/big-mind/build-brief.md and Wendell's board of
 // 10 October 2026, 20:19. His steer (bm-phone-first, overruled): "I want it to be a fork of cave of lessons that adds
-// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and the daemon path's first three
-// chambers, the Protector's, the Controller's and the Skeptic's, each with the hallway past it; the Fixer waits at the shut
-// mouth of the fourth, and the other chambers and the centre come in later builds (board dp-seven).
+// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and the daemon path's first four
+// chambers, the Protector's, the Controller's, the Skeptic's and the Fixer's, each with the hallway past it; the Emotional
+// Body waits at the shut mouth of the fifth, and the other chambers and the centre come in later builds (board dp-seven).
 //
 // Needs cave/cave.js loaded first with window.__oagCaveNoStart set: this page borrows its engine (the tunnel, the faceless
 // avatar and its walk, the daemon body, the breath, the page guards) from window.__oagCave.kit, so a fix there reaches both
@@ -271,6 +271,79 @@
       know: { ask: "From here, what does the Skeptic want the self to know?", cards: [["I'm only trying to keep you from being fooled."], ["Not everyone means it."], ["I'd love to be wrong."], ["I'm tired of checking."], ["Thank me once in a while."]] },
       thanks: "Thank you, Skeptic. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
     },
+    // The Fixer, fourth on the daemon path (board dp-seven), met with Wendell's own set for it (daemons/questions.js): what it
+    // fixes, who it works for, how fixing (repairing or holding in place) serves who it works for, and what would happen if it
+    // weren't there. His boss question is the plain one, and to the Fixer "controller" is the Controller, met two chambers back,
+    // so the chain shows (board dq-boss-chain). He gave one method question, so its wording stays and only the cards change with
+    // the boss. The lines, its look ("To fix, in both senses", the wrench) and the cards are written from the cave's daemon row
+    // and the council's daemons.yaml ("There is a problem here and I should solve it."); choices, all of them.
+    {
+      id: "fixer", name: "the Fixer", title: "The Fixer", daemon: "fixer",
+      bossNames: { controller: "the Controller" },
+      arrive: "A figure kneels in the middle of the way with a wrench in its hand, working at something you can't see. It looks up only long enough to check whether you're broken too.",
+      meet: {
+        opens: "There's a problem here. Give me a minute and I'll have it sorted.",
+        replies: [
+          ["Who are you?", "I fix things. Somebody has to.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear from me? There's no time for that. But all right.", "hear"],
+          ["I need to get through.", "Not yet. Nothing goes through until it's fixed.", "push"],
+        ],
+        after: { hear: "I'm not here to be fixed. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Fixer of things, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Fixer, may I speak with you for a while?", yes: "While I work. Go on.", no: ["I'm in the middle of something.", "Talking doesn't fix anything.", "Not until this is sorted."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. Don't touch anything.", no: ["If I put this down, it all comes apart.", "You'd only make it worse.", "Not yet. It's nearly fixed."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on. Mind the loose bits.", no: ["It isn't safe yet. It isn't finished.", "Not while it's still broken.", "Not yet."] },
+      },
+      fears: [["It'll stay broken."], ["It'll get worse."], ["We'll be helpless."], ["I'll be useless."], ["Nobody else will fix it."]],
+      assure: [["I'll come back to my own place when we're done."], ["You can pick it up again after. I'm not asking you to stop for good."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not trying to get rid of you. I want to know you."]],
+      assured: ["...All right. Just for a minute.", "Hm. It'll keep, I suppose.", "Nobody has ever asked me to put it down before."],
+      questions: [
+        { id: "what", ask: "What, or who, do you fix?", reflect: "So that's what you keep mending.", cards: [
+          ["Feelings."], ["Other people's problems."], ["Whatever is broken."], ["Myself."], ["The mood in the room."], ["The way things should be."],
+          ["It just wants to help.", "ideas"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met two chambers before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned it from always being the helper.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. A broken thing is a way in, so you close it.",
+          controller: "So you answer to the Controller. You keep everything the way it's meant to be.",
+          self: "So you answer to the self. You make it better, so it never has to feel it.",
+          player: "So you answer to the vulnerable child. You mend what hurts it before it can cry.",
+        } },
+        { id: "how", ask: "How does fixing, repairing or holding in place, serve who you work for?", reflect: "That's what the fixing is for.", cards: [
+          ["I turn a feeling into a problem."], ["A problem has a solution."], ["I hold it in place so it can't fall apart."], ["I mend it before anyone notices."], ["I keep busy, so nothing gets felt."],
+          ["I doubt it can be fixed at all.", "skeptic"],
+        ], cardsByBoss: {
+          protector: [["A broken thing lets danger in, so I seal it."], ["I patch the hole before anything gets through."], ["I hold the walls together."], ["I make it safe again, fast."], ["I'd keep every danger out.", "protector"]],
+          controller: [["I put it back the way it's meant to be."], ["I hold everything in place."], ["I sort it before it gets out of hand."], ["I keep it to the standard."], ["I'd keep it all in hand myself.", "controller"]],
+          self: [["I make it better so it doesn't have to feel bad."], ["I make it useful, so it's wanted."], ["I improve it before anyone sees."], ["I fix it so it's never the broken one."], ["I doubt it's worth fixing.", "skeptic"]],
+          player: [["I mend what hurts it."], ["I make it stop crying."], ["I fix things so it never has to wait for help."], ["I hold it together."]],
+        } },
+        { id: "gone", ask: "What would happen if you weren't there?", multi: true, reflect: "No wonder you keep working.", cards: [
+          ["It stays broken."], ["Everything falls apart."], ["We'd have to just feel it."], ["Nobody would help."], ["We'd be helpless."], ["I'm not sure. I've never put the wrench down."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Day and night."], ["Whenever something breaks, which is always."], ["Whenever anyone is upset."], ["Even in my sleep, working on it."], ["There's always another thing."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Working all hours, and hardly thanked.", cards: [
+          ["When it's fixed, I'm forgotten."], ["I'm told to stop meddling."], ["Hardly."], ["It's exhausting."],
+          ["Nobody notices how much I keep in hand.", "controller"], ["It thinks it's being helpful.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Tired."], ["Useless, when it won't fix."], ["Unappreciated."], ["Like it's never finished."], ["Like I'd love to just sit down."], ["Alone with it."],
+        ] },
+      ],
+      places: ["Hands", "Shoulders", "Chest", "Jaw", "Belly", "Back", "Head", "Throat", "All over"],
+      ready: "...All right. I could put it down for a while. It'll keep.",
+      notYet: "It isn't finished yet.",
+      seat: "You are standing where the Fixer stands. The self is back there, where you were a moment ago, and everything it feels comes here first to be mended.",
+      know: { ask: "From here, what does the Fixer want the self to know?", cards: [["I'm only trying to help."], ["Not everything is yours to fix."], ["I'd love to just sit with you."], ["I'm tired of mending."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Fixer. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
   ];
   // The daemon path in the book's order (board dp-seven). Chambers are met one after another; the first figure past the
   // last chamber built waits at a shut mouth.
@@ -314,8 +387,8 @@
   // ---- saving, on this device only ----------------------------------------------------------------
   // { v, chamber, at: "mouth" | "hall2", voices: { protector: { status: "spoken" | "waiting", kept: [{ q, line }], savedAt } },
   //   waiting: [translator ids] }. chamber is the daemon path's chamber the player has reached (0 the Protector, 1 the
-  //   Controller, 2 the Skeptic; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's record
-  //   and the Skeptic's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
+  //   Controller, 2 the Skeptic, 3 the Fixer; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's, the Skeptic's
+  //   and the Fixer's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
   function blank() { return { v: 1, chamber: 0, at: "mouth", voices: {}, waiting: [] }; }
   function readSave() { try { var s = JSON.parse(localStorage.getItem(STORE) || "null"); return s && s.v === 1 ? s : blank(); } catch (e) { return blank(); } }
   function writeSave(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); return true; } catch (e) { return false; } }

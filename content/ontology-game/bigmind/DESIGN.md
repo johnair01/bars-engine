@@ -364,3 +364,21 @@ asks for permission and refusal path, cards and open line, charge meter, W.A.V.E
 - **Its look and lines** come from the cave's daemon row ("To doubt.", the lens) and the council's `daemons.yaml` ("They
   cannot actually mean that. Look at the evidence."). Choices, all of them, as are the cards.
 - **Saving.** `chamber` 2 is the Skeptic; its record holds its boss beside the Controller's, and the mouth shows both.
+
+## The Fixer's chamber (15 October 2026)
+
+The fourth chamber on the daemon path (board `dp-seven`), built on the Skeptic's with no change to the meeting. "Walk on"
+past the Skeptic now opens it. The Emotional Body waits at the shut mouth past it.
+
+- **Its questions** are Wendell's four from `../daemons/questions.js`, first and in his order: what it fixes, who it works
+  for, how fixing (repairing or holding in place) serves who it works for, and what would happen if it weren't there. Its
+  hours, how it is thanked and how that feels follow. The test checks the four against `questions.js`.
+- **The boss question** is his plain "Who do you work for?", with the bosses in `questions.js` as cards. For the Fixer
+  "controller" is the Controller, so picking it brings what the Controller said of its own boss along (`dq-boss-chain`).
+  "Myself" names no boss here, as in the Skeptic's chamber.
+- **How fixing serves its boss** keeps his one wording, and its cards change with the boss. He gave no follow-ups by boss
+  for the Fixer.
+- **Its look and lines** come from the cave's daemon row ("To fix, in both senses", the wrench) and the council's
+  `daemons.yaml` ("There is a problem here and I should solve it."). Choices, all of them, as are the cards. In its chamber
+  fixing is in voice; the Skeptic, the Controller and the Protector can speak out of turn.
+- **Saving.** `chamber` 3 is the Fixer; its record holds its boss beside the others, and the mouth shows each.
