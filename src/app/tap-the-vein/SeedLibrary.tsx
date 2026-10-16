@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * SeedLibrary: the commitments he set aside, to draw from later (six-faces-council council/moves/seed-library.md).
+ * SeedLibrary: the commitments he set aside, to draw from later (six-faces-council docs/seed-library.md).
  *
  * Closed until he opens it, with no count on the closed row: a resting task carries no pressure and nothing brings
  * it back unasked. Each seed can be drawn into today or let go with no reason.

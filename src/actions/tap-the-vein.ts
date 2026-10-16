@@ -659,7 +659,7 @@ function dayKey(d: Date): string {
 }
 
 /**
- * The seed library (six-faces-council council/moves/seed-library.md): set a live task aside to draw from later.
+ * The seed library (six-faces-council docs/seed-library.md): set a live task aside to draw from later.
  * It rests where it was named, out of the day's count, and nothing brings it back unasked. No reason is asked.
  */
 export async function restTask(taskId: string): Promise<TtvResult<{ task: TtvTaskDTO }>> {

@@ -2,7 +2,7 @@
  * The seed library: commitments he sets aside to draw from later.
  *
  * Wendell, on board position `ttv-fruit-is-his` (2026-10-16): "We should also be able to defer those into a seed
- * library that can be drawn from". Design: six-faces-council `council/moves/seed-library.md`.
+ * library that can be drawn from". Design: six-faces-council `docs/seed-library.md`.
  *
  * A set-aside task takes status `resting`, the design ontology's work disposition for something kept but not active.
  * Resting is not composting: a composted task is released and owes nothing, a resting one stays his to draw back.

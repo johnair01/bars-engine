@@ -14,7 +14,7 @@ import { givenToken, tokenMatches } from '@/lib/council/token'
 import { RESTING_STATUS, toSeedLibrary } from '@/lib/tap-the-vein/seed-library'
 
 /**
- * Read by the Council Board (six-faces-council council/moves/seed-library.md) so the board can show the library he
+ * Read by the Council Board (six-faces-council docs/seed-library.md) so the board can show the library he
  * draws from. Same token and player as /api/tap-the-vein/menu. Read only: drawing a seed happens in bars-engine.
  */
 export async function GET(req: NextRequest) {
