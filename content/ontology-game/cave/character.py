@@ -95,11 +95,13 @@ THEMES = {"robe_set": {"builds": BUILDS, "palettes": PALETTES}}
 # bones: a curl per finger joint and a spread of the fingers. A fist is the same hand closed, so a game can open it.
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 FINGER_BONES = tuple(f"{f}{i}" for f in FINGERS for i in (1, 2, 3))
-HAND_POSES = {                       # {finger: (knuckle, middle, tip) curl in radians}, and the fingers' spread
-    "open": {"curl": {"thumb": (0.1, 0.0, 0.0), **{f: (-0.05, 0.0, 0.0) for f in FINGERS[1:]}}, "spread": 1.0},
+HAND_POSES = {     # {finger: (knuckle, middle, tip) curl in radians}, and the spread: 0 holds the fingers as wide as
+    #               the open hand is made, a minus draws them together (Wendell, 2026-10-16, "Problem areas": spreading
+    #               them past the made hand tore the web between them)
+    "open": {"curl": {"thumb": (0.1, 0.0, 0.0), **{f: (-0.05, 0.0, 0.0) for f in FINGERS[1:]}}, "spread": 0.0},
     "relaxed": {"curl": {"thumb": (0.15, 0.2, 0.15), "index": (0.25, 0.35, 0.2), "middle": (0.3, 0.45, 0.25),
-                         "ring": (0.35, 0.5, 0.3), "pinky": (0.4, 0.55, 0.3)}, "spread": 0.3},
-    "fist": {"curl": {"thumb": (0.0, 0.5, 0.45), **{f: (1.5, 1.75, 1.1) for f in FINGERS[1:]}}, "spread": 0.0,
+                         "ring": (0.35, 0.5, 0.3), "pinky": (0.4, 0.55, 0.3)}, "spread": -0.7},
+    "fist": {"curl": {"thumb": (0.0, 0.5, 0.45), **{f: (1.5, 1.75, 1.1) for f in FINGERS[1:]}}, "spread": -1.0,
              "thumb_tip": (-0.05, 0.0, -0.08)},   # the thumb laid across the front of the folded fingers
 }
 HANDS = tuple(HAND_POSES)
@@ -109,7 +111,7 @@ WARP = {
     # obstacle, the trunk set into the push over a bent front knee, the back leg straight and driving (Wendell,
     # 2026-10-14: the straight-armed first try "looks like a zombie")
     "protector": {"arms": 0.98, "head": 0.94, "curve": -0.04, "stoop": 0.06, "hands": "open", "gesture": {
-        "shoulder": (1.3, 0.12), "elbow": (0.4, 0, 0.12), "wrist": (1.55, 0, 0, 1.4), "neck": (-0.1,),
+        "shoulder": (1.1, 0.12), "elbow": (1.0, 0, 0.12), "wrist": (0.95, 0, 0, 1.4), "neck": (-0.1,),
         "hipL": (0.36, 0.08), "kneeL": (0.38,), "ankleL": (0.1,), "hipR": (-0.3, 0.08), "ankleR": (-0.2,)}},
     # GRASP held: not until this is handled. Fists clenched and set on the hips, elbows out wide, chest up, chin up,
     # feet together, rigid and tall: the figure takes up the room and holds it (Wendell, 2026-10-16: the fists drawn
@@ -221,7 +223,10 @@ def body_parts(build):
         lay = hand_layout(build, n)
         k = HAND_K * wl ** 0.5
         palm = new("wrist" + n)
-        limb(palm, (0, 0, 0.004), (0, -0.004 * k, -0.02 * k), 0.022 * k, 0.021 * k)      # the wrist, in the cuff
+        # the wrist: a ball on the joint, which turns into itself at any bend, so a bent hand shows no stub at the
+        # cuff (Wendell, 2026-10-16, "Problem areas": the stop hand's wrist crumpled), and a neck to the palm
+        ellipsoid(palm, (0, 0, 0), 0.02 * k, 0.02 * k, 0.02 * k)
+        limb(palm, (0, -0.002 * k, -0.008 * k), (0, -0.004 * k, -0.026 * k), 0.017 * k, 0.019 * k)
         for f in FINGERS[1:]:
             h = lay[f + "1"][0]
             limb(palm, (s * 0.002, h.y * 0.35, -0.02 * k), h, 0.012 * k, lay[f + "1"][2] * 1.05)
@@ -378,7 +383,7 @@ def hand_layout(build, side):
     out = {"wrist": (Vector((0, 0, 0)), Vector((0, -0.008 * k, -0.093 * k)), 0.021 * k, 0.012 * k)}
     knuckle = {"index": (-0.029, -0.089), "middle": (-0.01, -0.093), "ring": (0.009, -0.089), "pinky": (0.026, -0.079)}
     size = {"index": (0.92, 1.0), "middle": (1.0, 1.0), "ring": (0.95, 0.95), "pinky": (0.76, 0.84)}
-    fan = {"index": -0.08, "middle": -0.02, "ring": 0.04, "pinky": 0.1}
+    fan = {"index": -0.18, "middle": -0.02, "ring": 0.12, "pinky": 0.3}  # spread wide, as the stop holds them
     for f, (y, z) in knuckle.items():
         p = Vector((s * 0.003, y * k, z * k))
         d = Vector((0, math.sin(fan[f]), -math.cos(fan[f])))
@@ -388,7 +393,7 @@ def hand_layout(build, side):
             out[f"{f}{i}"] = (p, q, rr * r * k, rr * r * k * 0.94)
             p = q
     p = Vector((-s * 0.008, -0.022 * k, -0.018 * k))           # the thumb's metacarpal starts low in the palm
-    d = Vector((-s * 0.32, -0.5, -0.8)).normalized()
+    d = Matrix.Rotation(-0.2, 3, "X") @ Vector((-s * 0.32, -0.5, -0.8)).normalized()
     for i, (seg, rr) in enumerate(((0.044, 0.0135), (0.031, 0.0118), (0.027, 0.0104)), 1):
         q = p + d * seg * k
         out[f"thumb{i}"] = (p, q, rr * k, rr * k * 0.94)
@@ -525,8 +530,9 @@ def warp_body(mesh, parts, J, w, build):
     maps = warp_maps(J, w, build)
     trees = [(b, BVHTree.FromBMesh(bm)) for b, bm in parts]
     rest = [v.co.copy() for v in mesh.vertices]
+    hands = hand_shells(mesh, trees)
     for v in mesh.vertices:
-        _, blend = nearest_blend(v.co, trees)
+        _, blend = nearest_blend(v.co, trees, hands[v.index])
         tot = sum(blend.values())
         v.co = sum((maps[b](v.co) * (x / tot) for b, x in blend.items()), Vector())
     for b, bm in parts:
@@ -539,17 +545,46 @@ def warp_body(mesh, parts, J, w, build):
 LINKS = {b: {b} | {PARENT[b]} - {None} | {c for c, p in PARENT.items() if p == b} for b in PARENT}
 
 
-def nearest_blend(co, trees):
+def hand_shells(mesh, trees):
+    """Which vertices belong to a hand: the hands are fused apart from the body, so each is its own closed shell, and a
+    shell is a hand's when most of its vertices lie nearest a hand part. Returns a bool per vertex."""
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bm.verts.ensure_lookup_table()
+    out, seen = [False] * len(bm.verts), set()
+    for v0 in bm.verts:
+        if v0.index in seen:
+            continue
+        shell, todo = [], [v0]
+        seen.add(v0.index)
+        while todo:
+            v = todo.pop()
+            shell.append(v.index)
+            for e in v.link_edges:
+                o = e.other_vert(v)
+                if o.index not in seen:
+                    seen.add(o.index)
+                    todo.append(o)
+        votes = sum(in_hand(nearest_blend(bm.verts[i].co, trees)[0]) for i in shell[::7])
+        if votes * 2 > len(shell[::7]):
+            for i in shell:
+                out[i] = True
+    bm.free()
+    return out
+
+
+def nearest_blend(co, trees, hand=None):
     """The part a point lies nearest, and its weights: that part, blended with its parent or child where the two meet
-    (a joint), the two strongest kept."""
+    (a joint), the two strongest kept. hand: True for a vertex of a hand's shell, False for the body's, which then
+    take only their own parts: the hand and the body never share a vertex, so a bent wrist turns the whole hand at
+    the cuff and neither drags the sleeve after it nor dents the cuff's end (Wendell, 2026-10-16, "Problem areas")."""
     d = {}
     for b, t in trees:
-        d[b] = min(d.get(b, 1e9), t.find_nearest(co)[3])
+        if hand is None or in_hand(b) == hand:
+            d[b] = min(d.get(b, 1e9), t.find_nearest(co)[3])
     best = min(d, key=d.get)
-    # a finger's bones are short, so they blend over less; and the hand and the body never share a vertex, so a bent
-    # wrist turns the whole hand at the cuff and neither drags the sleeve after it in spikes nor crumples the palm
-    fall = 0.004 if in_hand(best) else 0.012
-    w = {b: math.exp(-(d[b] - d[best]) / fall) for b in LINKS[best] if in_hand(b) == in_hand(best)}
+    fall = 0.004 if in_hand(best) else 0.012                    # a finger's bones are short; they blend over less
+    w = {b: math.exp(-(d[b] - d[best]) / fall) for b in LINKS[best] if b in d}
     w = dict(sorted(w.items(), key=lambda kv: -kv[1])[:2])
     tot = sum(w.values())
     return best, {b: x / tot for b, x in w.items() if x / tot > 0.02}
@@ -689,8 +724,9 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     # the two meet (a joint), so the surface bends at a joint and never pulls an arm into the trunk
     groups = {b: fig.vertex_groups.new(name=b) for b in PARENT}
     bone_of = []
+    hands = hand_shells(fused, trees)
     for v in fused.vertices:
-        best, blend = nearest_blend(v.co, trees)
+        best, blend = nearest_blend(v.co, trees, hands[v.index])
         bone_of.append(best)
         for b, x in blend.items():
             groups[b].add([v.index], x, "REPLACE")
