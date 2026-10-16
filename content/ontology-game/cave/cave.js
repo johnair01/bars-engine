@@ -870,6 +870,23 @@
     return g;
   }
 
+  // Dressing a cave that borrows the engine (the Big Mind cave; Wendell, 16 October 2026: "Dress the cave"): the Cave of
+  // Lessons' grown pieces mounted on its own tube, kept clear of the places where someone stands (o.clear, path distances).
+  // The kit is fetched after the scene is up, so the walk never waits on it; if it does not load the cave stays bare stone.
+  var kitOnly = null;
+  function dressCave(THREE, route, tube, o) {
+    var g = new THREE.Group(); g.userData.dressCave = true;
+    if (!kitOnly) kitOnly = (typeof fetch === "function" ? fetch(BASE + "cave-kit.glb") : Promise.reject(new Error("no fetch")))
+      .then(function (r) { if (!r.ok) throw new Error("cave-kit.glb " + r.status); return r.arrayBuffer(); }).then(parseKit);
+    kitOnly.then(function (kit) {
+      var G = {}; Object.keys(kit).forEach(function (k) { G[k] = geomOf(THREE, kit[k]); });
+      var had = route.tube; route.tube = tube;
+      g.add(buildDressing(THREE, route, G, { seed: o.seed || "bigmind", w: o.w, h: o.h, rock: o.rock, s0: o.s0 || 0, s1: o.s1 == null ? route.len : o.s1, clear: o.clear || [] }));
+      route.tube = had; g.userData.dressed = true;
+    }, function () { kitOnly = null; });
+    return g;
+  }
+
   // A glowing marker floating just ahead of a stand; the lit ones stay lit.
   function buildMarker(THREE, w, h, color) {
     return new THREE.Mesh(new THREE.SphereGeometry(Math.min(0.55, w * 0.14), 14, 10), new THREE.MeshBasicMaterial({ color: color || 0xfff1b0, transparent: true, opacity: 0.4 }));
@@ -1158,10 +1175,68 @@
     return g;
   }
 
-  // The daemon: one body for all seven, no face, fused rounded shapes. It differs by colour, posture and what it carries.
+  // The daemon bodies (Wendell, 16 October 2026, on the Big Mind centre: "build game-ready models for each daemon instead of
+  // placeholders"). Each is a WARP figure from character.py holding its one of the six fundamental movements (bars-engine #328,
+  // council/daemons/GESTURES.md), baked for the phone by bake_daemons.py: 16-bit positions, 8-bit normals and a band per vertex
+  // (skin, tunic, trim, sash, trousers, shoes). A body is fetched the first time a scene asks for that daemon and shared after.
+  // Until it arrives, or if it never does, the daemon wears the rounded stand-in below, so nothing waits on the network.
+  var BODY_BANDS = ["skin", "tunic", "trim", "sash", "trousers", "shoes"], BODY_FRAME_H = 1.75, bodies = {};
+  var BODY_IDS = ["protector", "controller", "skeptic", "fixer", "victim", "damaged-self", "emotional-body", "player"]; // baked; any other row keeps the stand-in
+  function parseBody(THREE, buf) {
+    var dv = new DataView(buf), jl = dv.getUint32(12, true);
+    var j = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bin = 20 + jl + 8;
+    var T = { 5123: Uint16Array, 5120: Int8Array, 5121: Uint8Array }, K = { SCALAR: 1, VEC3: 3 };
+    function acc(i) {
+      var a = j.accessors[i], v = j.bufferViews[a.bufferView], C = T[a.componentType], n = K[a.type], st = (v.byteStride || n * C.BYTES_PER_ELEMENT) / C.BYTES_PER_ELEMENT;
+      var raw = new C(buf, bin + (v.byteOffset || 0), v.byteLength / C.BYTES_PER_ELEMENT), out = new C(a.count * n);
+      for (var q = 0; q < a.count; q++) for (var c = 0; c < n; c++) out[q * n + c] = raw[q * st + c]; // drop the stride's padding
+      return out;
+    }
+    var p = j.meshes[0].primitives[0], node = j.nodes[0], geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(acc(p.attributes.POSITION), 3, true));
+    geo.setAttribute("normal", new THREE.BufferAttribute(acc(p.attributes.NORMAL), 3, true));
+    geo.setIndex(new THREE.BufferAttribute(acc(p.indices), 1));
+    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0.5, 0.5, 0.5), 0.9); // in the quantised box, which the node scales
+    return { geo: geo, band: acc(p.attributes._BAND), at: node.translation, span: node.scale };
+  }
+  function bodyOf(THREE, id) {
+    if (!bodies[id]) {
+      bodies[id] = (typeof fetch === "function" && BODY_IDS.indexOf(id) >= 0 ? fetch(BASE + "daemons/" + id + ".glb") : Promise.reject(new Error("no body for " + id)))
+        .then(function (r) { if (!r.ok) throw new Error(id + ".glb " + r.status); return r.arrayBuffer(); })
+        .then(function (b) { return parseBody(THREE, b); });
+      bodies[id].catch(function () {}); // a body that does not load leaves the stand-in in place
+    }
+    return bodies[id];
+  }
+  // Each daemon wears its own colour as its tunic, with trim and trousers drawn from it; the skin is the faceless figure's.
+  function bodyColors(THREE, d, body) {
+    var base = new THREE.Color(d[3]), pal = {
+      skin: new THREE.Color(0xd8cfc2), tunic: base, trim: base.clone().lerp(new THREE.Color(0xf1e8d4), 0.62),
+      sash: base.clone().lerp(new THREE.Color(0xb8913f), 0.7), trousers: base.clone().lerp(new THREE.Color(0x24232e), 0.72),
+      shoes: new THREE.Color(0x1e1b24) };
+    var n = body.band.length, col = new Float32Array(n * 3);
+    for (var i = 0; i < n; i++) { var c = pal[BODY_BANDS[body.band[i]]] || base; col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+    return col;
+  }
+  // Swap the stand-in's parts for the baked body, keeping the group, its material (opacity and glow already set on it stay)
+  // and anything a caller hung on it since (an aura, a carried orb).
+  function wearBody(THREE, g, d, h, body) {
+    var geo = body.geo.clone(); geo.setAttribute("color", new THREE.BufferAttribute(bodyColors(THREE, d, body), 3));
+    var mat = g.userData.mat; mat.color.setHex(0xffffff); mat.vertexColors = true; mat.needsUpdate = true;
+    g.children.filter(function (c) { return c.userData.standIn; }).forEach(function (c) { g.remove(c); });
+    var k = 0.695 * h / BODY_FRAME_H, fit = new THREE.Group(), m = new THREE.Mesh(geo, mat);
+    m.position.set(body.at[0], body.at[1], body.at[2]); m.scale.set(body.span[0], body.span[1], body.span[2]);
+    fit.scale.setScalar(k); fit.add(m); fit.userData.body = d[0]; g.add(fit);
+    if (g.userData.orb) { // the Emotional Body's signal, smaller, at the open chest (its pulse and blaze still scale it)
+      var ob = g.userData.orb; ob.geometry = new THREE.SphereGeometry(0.075 * k, 14, 10); ob.position.set(0, 1.3 * k, 0.17 * k); }
+    g.userData.body = d[0];
+  }
+
+  // The stand-in daemon: one body for all seven, no face, fused rounded shapes. It differs by colour, posture and what it
+  // carries. It shows until the baked body arrives (bodyOf), then gives way to it.
   function buildDaemon(THREE, d, h, seg) {
     var g = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: d[3], roughness: 0.7, emissive: d[3], emissiveIntensity: 0.12 });
-    function part(geo, x, y, z, sx, sy, sz) { var m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); g.add(m); return m; }
+    function part(geo, x, y, z, sx, sy, sz) { var m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.userData.standIn = true; g.add(m); return m; }
     var S = new THREE.SphereGeometry(1, (seg || [20, 14])[0], (seg || [20, 14])[1]), stoop = d[0] === "victim" ? 0.35 : d[0] === "damaged-self" ? 0.2 : 0;
     var u = h * 0.5;
     var torso = part(S, 0, u * 0.55, 0, u * 0.28, u * 0.5, u * 0.22);
@@ -1180,8 +1255,11 @@
     if (c === "wrench") { var wr = new THREE.Mesh(new THREE.BoxGeometry(u * 0.06, u * 0.5, u * 0.06), dark); wr.position.set(u * 0.42, u * 0.55, u * 0.05); wr.rotation.z = -0.5; carry(wr); }
     if (c === "bundle") { var bu = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 10), dark); bu.scale.set(u * 0.28, u * 0.22, u * 0.22); bu.position.set(0, u * 0.9, -u * 0.25); carry(bu); }
     if (c === "crack") { var cr = new THREE.Mesh(new THREE.BoxGeometry(u * 0.03, u * 0.7, u * 0.4), new THREE.MeshBasicMaterial({ color: 0x14080a })); cr.position.set(0, u * 0.6, u * 0.12); carry(cr); }
-    if (c === "orb") { var ob = new THREE.Mesh(new THREE.SphereGeometry(u * 0.14, 14, 10), new THREE.MeshBasicMaterial({ color: 0xc8fff0 })); ob.position.set(0, u * 0.7, u * 0.2); carry(ob); g.userData.orb = ob; }
+    if (c === "orb") { var ob = new THREE.Mesh(new THREE.SphereGeometry(u * 0.14, 14, 10), new THREE.MeshBasicMaterial({ color: 0xc8fff0 })); ob.position.set(0, u * 0.7, u * 0.2); carry(ob); g.userData.orb = ob; ob.userData.keep = true; }
     g.userData.mat = mat;
+    // The baked body's hands hold the movement, so what the stand-in carried goes with it; the orb stays, as the signal.
+    g.children.forEach(function (ch) { if (!ch.userData.keep) ch.userData.standIn = true; });
+    bodyOf(THREE, d[0]).then(function (body) { wearBody(THREE, g, d, h, body); }, function () {});
     return g;
   }
 
@@ -4540,7 +4618,7 @@
     el: el, clamp: clamp, hashOf: hashOf, rngOf: rngOf, loadThree: loadThree,
     makeRoute: makeRoute, ptOn: ptOn, at: at, yawFacing: yawFacing, smoothLine: smoothLine,
     buildTube: buildTube, buildPebbles: buildPebbles, buildMarker: buildMarker, buildLantern: buildLantern,
-    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, DAEMONS: DAEMONS,
+    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, dressCave: dressCave, DAEMONS: DAEMONS,
     BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
     // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
     ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,

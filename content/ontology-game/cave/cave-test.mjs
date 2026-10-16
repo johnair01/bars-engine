@@ -27,6 +27,8 @@ const files = {
   '/ontology-game/cave/textures/crystal_vein.jpg': ['cave/textures/crystal_vein.jpg', 'image/jpeg'],
   '/ontology-game/figure.glb': ['figure.glb', 'model/gltf-binary'],
 };
+// The daemon bodies (cave/bake_daemons.py), fetched by a scene that meets a daemon.
+for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) files['/ontology-game/cave/daemons/' + d + '.glb'] = ['cave/daemons/' + d + '.glb', 'model/gltf-binary'];
 const server = http.createServer((req, res) => {
   const f = files[req.url.split('?')[0]];
   if (!f) { res.writeHead(404); res.end(); return; }

@@ -889,6 +889,9 @@
     };
     var tube = K.buildTube(THREE, route, { w: W, h: H, rock: rock, openAt: route.openAt, seed: 31 });
     scene.add(tube.mesh); scene.add(K.buildPebbles(THREE, route, W, H, 0, route.len));
+    // Dressed from the Cave of Lessons' kit (cave.js dressCave), clear of the seat, the voice, the gate, the wall where the
+    // waiting voices stand and the next mouth.
+    if (K.dressCave) { var waitClear = []; for (var wc = S_GATE + 12; wc < S_GATE + 58; wc += 2) waitClear.push(wc); scene.add(K.dressCave(THREE, route, tube, { w: W, h: H, rock: rock, seed: "bigmind" + V.id, s0: 4, clear: [S_SELF, S_VOICE, S_GATE, CHAMBER_IN - 1, route.sEnd + 4].concat(waitClear) })); }
     var lamp = new THREE.PointLight(0xffe0b0, 1.2, 60); scene.add(lamp);
     var hemi = new THREE.HemisphereLight(0xc8c8ff, 0x282430, 0.42); scene.add(hemi);
     var chamberLight = new THREE.PointLight(0x6a9aff, 1.3, 34); var cl = at(route, S_VOICE); chamberLight.position.set(cl.x, floor(cl) + 5, cl.z); scene.add(chamberLight);

@@ -13,9 +13,10 @@ const NM = new URL('./node_modules/', import.meta.url).pathname;
 const server = http.createServer((req, res) => {
   const u = req.url.split('?')[0];
   const tile = /^\/ontology-game\/cave\/textures\/(wet_stone|dry_stone|crystal_vein)\.jpg$/.exec(u); // the Cave of Lessons' stone
-  const f = u === '/ontology-game/big-mind' ? 'big-mind/index.html' : u === '/ontology-game/cave' ? 'cave/index.html' : tile ? 'cave/textures/' + tile[1] + '.jpg' : null;
+  const body = /^\/ontology-game\/cave\/daemons\/([a-z-]+)\.glb$/.exec(u); // the daemon bodies (cave/bake_daemons.py)
+  const f = u === '/ontology-game/big-mind' ? 'big-mind/index.html' : u === '/ontology-game/cave' ? 'cave/index.html' : tile ? 'cave/textures/' + tile[1] + '.jpg' : body ? 'cave/daemons/' + body[1] + '.glb' : u === '/ontology-game/cave/cave-kit.glb' ? 'cave/cave-kit.glb' : null;
   if (!f) { res.writeHead(404); res.end(); return; }
-  res.writeHead(200, { 'content-type': tile ? 'image/jpeg' : 'text/html' }); res.end(readFileSync(PUB + '/ontology-game/' + f));
+  res.writeHead(200, { 'content-type': tile ? 'image/jpeg' : body || f.endsWith('.glb') ? 'model/gltf-binary' : 'text/html' }); res.end(readFileSync(PUB + '/ontology-game/' + f));
 }).listen(4571);
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }).catch(() => chromium.launch());
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
@@ -86,6 +87,14 @@ await page.click('[data-bm-run]'); await stickTo(0, 0);
 ok(await page.evaluate(() => { const k = window.__oagBigMind; k.keys.KeyW = true; const w = k.walkInput(); delete k.keys.KeyW; return w.along === 1 && w.side === 0; }), 'W walks on, as the arrow keys do');
 ok(await holdUntil('meet'), 'walking on reaches the Protector, who blocks the path');
 ok(/Nobody goes past this point/.test(await page.textContent('[data-bm-modal]')), 'the Protector speaks first');
+// The daemon bodies (cave/bake_daemons.py, from the WARP figures of #328) and the dressing from the Cave of Lessons' kit.
+await page.waitForFunction(() => window.__oagBigMind.voice.userData.body === 'protector', null, { timeout: 15000 }).catch(() => {});
+const bodyNow = await page.evaluate(() => { const v = window.__oagBigMind.voice, fit = v.children.find((c) => c.userData.body); let tris = 0; if (fit) fit.traverse((m) => { if (m.geometry && m.geometry.index) tris += m.geometry.index.count / 3; }); return { body: v.userData.body, standIn: v.children.some((c) => c.userData.standIn), tris, op: v.userData.mat.opacity }; });
+ok(bodyNow.body === 'protector' && !bodyNow.standIn, 'the Protector wears its baked body, the stand-in gone (' + JSON.stringify(bodyNow) + ')');
+ok(bodyNow.tris > 1000 && bodyNow.tris <= 7000, 'the body is within the phone budget of 7000 triangles (' + bodyNow.tris + ')');
+await page.waitForFunction(() => window.__oagBigMind.voice.parent.children.some((c) => c.userData.dressCave && c.userData.dressed), null, { timeout: 15000 }).catch(() => {});
+const dressN = await page.evaluate(() => { const d = window.__oagBigMind.voice.parent.children.find((c) => c.userData.dressCave); let n = 0; if (d) d.traverse((m) => { if (m.isMesh) n++; }); return n; });
+ok(dressN > 10, 'the cave is dressed with the kit\'s grown pieces (' + dressN + ' meshes)');
 ok(Math.abs((await st()).s - (await page.evaluate(() => window.__oagBigMind.S.S_SELF))) < 0.01, 'the figure stops in front of the voice');
 await page.screenshot({ path: SHOTS + '/bm-3-meet.png' });
 
