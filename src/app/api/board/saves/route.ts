@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { isBoardOwner } from '@/lib/board/owner'
 import { applyWrite, MAX_SAVE_BYTES, RECORD_KINDS, validateSave } from '@/lib/board/save'
+import { dispatchBoardPull } from '@/lib/board/dispatch'
 import { lastPull, latestDoc, latestDocs, unrecordedSaves } from '@/lib/board/store'
 
 export const dynamic = 'force-dynamic'
@@ -39,5 +40,6 @@ export async function POST(req: NextRequest) {
             record: RECORD_KINDS.has(collection) ? null : 'board state; not recorded on main' },
     select: { receivedAt: true },
   })
+  if (RECORD_KINDS.has(collection)) await dispatchBoardPull().catch(() => undefined)
   return NextResponse.json({ ok: true, doc, receivedAt: row.receivedAt }, { headers: NO_STORE })
 }
