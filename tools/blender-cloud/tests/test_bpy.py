@@ -524,5 +524,43 @@ def j4b():
     return "a forward-bent knee fails the walk check"
 
 
+# ---- the spirits' frame (S1) ----------------------------------------------------------------------------------
+
+@test("S1")
+def s1():
+    """Every spirit base, living creature and highest ally form, rigs skeleton first (content/spirits/rig.py): one
+    skin, the actions Idle and Walk, every bone inside the flesh, the size SIZE declares (within 10%), every foot
+    stepping, and the feet taking turns (left and right half a cycle apart). Needs shellback.py, which lands with
+    bars-engine #318; until then this skips."""
+    spirits = TOOLS / "content/spirits"
+    if not (spirits / "shellback.py").exists():
+        raise Skip("shellback.py is not on this branch yet (#318)")
+    sys.path.insert(0, str(spirits))
+    out, done = tmpdir("s1"), []
+    for base in ("tortoise", "armadillo", "pangolin", "fox"):
+        src = out / f"src-{base}"
+        r, _ = run([spirits / "shellback.py", src, "--samples", "1", "--size", "64", "--only", "earth", "--stages",
+                    "creature,ascended", "--base", base], timeout=900)
+        check(r.returncode == 0, f"shellback.py {base} exited {r.returncode}: {r.stderr[-300:]}")
+        for stage in ("creature", "ascended"):
+            r, _ = run([spirits / "rig.py", src / "glb" / f"earth-{stage}.glb", out, "--base", base, "--stage", stage])
+            line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+            check(r.returncode == 0 and line, f"rig.py {base} {stage} exited {r.returncode}: {r.stderr[-300:]}")
+            row = json.loads(line)
+            check(not row["notes"], f"{base} {stage}: {'; '.join(row['notes'])}")
+            j = glb_json(out / row["file"])
+            check(len(j.get("skins", [])) == 1, f"{base} {stage}: {len(j.get('skins', []))} skins, want one")
+            check(sorted(a["name"] for a in j.get("animations", [])) == ["Idle", "Walk"], f"{base} {stage}: want Idle and Walk")
+            steps = row["steps"]
+            for foot, st in steps.items():
+                check(st["travel"] > 0.03, f"{base} {stage}: {foot} moves {st['travel']} m in the walk")
+            for a, b in (("ankleL", "ankleR"), ("wristL", "wristR")):
+                if a in steps:
+                    gap = abs(steps[a]["ahead_at"] - steps[b]["ahead_at"])
+                    check(0.35 < gap < 0.65, f"{base} {stage}: {a} and {b} reach ahead {gap:.2f} of a cycle apart")
+            done.append(f"{base} {stage} {row['size_m']} m")
+    return "; ".join(done)
+
+
 if __name__ == "__main__":
     main()
