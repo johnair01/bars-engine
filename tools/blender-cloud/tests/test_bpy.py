@@ -1,5 +1,5 @@
-"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2, J3 and J2b. Run under the bpy venv (README); each build runs as a
-subprocess of that same Python, in a copy of the repo under $W, so the checkout is never written.
+"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2, J3 and J2b, J4 to J7. Run under the bpy venv (README); each
+build runs as a subprocess of that same Python, in a copy of the repo under $W, so the checkout is never written.
 
 usage: /home/user/blenv/bin/python tools/blender-cloud/tests/test_bpy.py [R2,W1,...]
 """
@@ -549,6 +549,36 @@ def j6():
         w = walk_check(glb)
         check(not w["problems"], f"{row['id']}: {'; '.join(w['problems'])}")
     return f"the frame, seven daemon figures and the Player, each closed and walking clean; {secs:.0f} s"
+
+
+@test("J7")
+def j7():
+    """Integration (call sheet blender-frame-flesh-warp, "the held movement completing"): character.py --warp controller
+    --integrate makes the Controller with a second action, Integrate, beside Walk, still one GLB under 300 KB that passes
+    the mesh census and walks clean. Read back from the GLB, Integrate opens both fists, takes the wrists off the hips
+    to hang, keeps the lower foot on the ground every key, folds no knee or elbow the wrong way, and holds still at
+    each end. The strips go to the eye."""
+    out = tmpdir("j7")
+    r, secs = run([GAME / "cave/character.py", "--warp", "controller", "--integrate", "--out", out])
+    check(r.returncode == 0, f"character.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    row = json.loads((out / "report.json").read_text())[0]
+    glb = out / row["file"]
+    check(glb.stat().st_size < 300 * 1024, f"{row['id']} is {glb.stat().st_size // 1024} KB")
+    j = glb_json(glb)
+    check(len(j.get("skins", [])) == 1 and sorted(a["name"] for a in j.get("animations", [])) == ["Integrate", "Walk"],
+          f"{row['id']}: want one skin, Walk and Integrate")
+    sys.path.insert(0, str(GAME / "cave"))
+    import census
+    c = census.census(glb, "npc")
+    check(not c["problems"], f"{row['id']} census: {c['problems']}")
+    w = walk_check(glb)
+    check(not w["problems"], f"{row['id']} walk: {'; '.join(w['problems'])}")
+    r, _ = run([TESTS / "_integrate_check.py", glb])
+    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    check(r.returncode == 0 and line, f"_integrate_check.py failed: {r.stderr[-300:]}")
+    g = json.loads(line)
+    check(not g["problems"], f"{row['id']} integrate: {'; '.join(g['problems'])}")
+    return f"the Controller lets go over {g['seconds']} s, fists opening x{g['opened']['L']}, walking clean; {secs:.0f} s"
 
 
 # ---- the spirits' frame (S1) ----------------------------------------------------------------------------------
