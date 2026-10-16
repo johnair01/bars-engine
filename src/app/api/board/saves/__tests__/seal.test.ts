@@ -4,6 +4,7 @@ vi.mock('server-only', () => ({}))
 const owner = vi.hoisted(() => ({ isBoardOwner: vi.fn(), boardOwnerId: vi.fn() }))
 const store = vi.hoisted(() => ({ latestDocs: vi.fn(), lastPull: vi.fn(), latestDoc: vi.fn(), unrecordedSaves: vi.fn() }))
 const seal = vi.hoisted(() => ({ writeBoardSeal: vi.fn() }))
+const aside = vi.hoisted(() => ({ setAsideFromBoard: vi.fn() }))
 const db = vi.hoisted(() => {
   const create = vi.fn().mockResolvedValue({ receivedAt: new Date('2026-10-16T18:00:00Z') })
   const d = { boardSave: { create }, $transaction: vi.fn() }
@@ -15,6 +16,7 @@ vi.mock('@/lib/board/owner', () => owner)
 vi.mock('@/lib/board/store', () => store)
 vi.mock('@/lib/board/dispatch', () => ({ dispatchBoardPull: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('@/lib/tap-the-vein/board-seal', () => seal)
+vi.mock('@/lib/tap-the-vein/board-set-aside', () => aside)
 
 import { POST } from '../route'
 
@@ -45,5 +47,25 @@ describe('POST /api/board/saves, the council seal', () => {
     await POST(post(menuSave('nonprofit')))
     expect(seal.writeBoardSeal).not.toHaveBeenCalled()
     expect(db.boardSave.create).toHaveBeenCalledTimes(1)
+  })
+
+  const seedSave = { board: 'council', collection: 'seeds', docId: 't1', mode: 'set',
+    data: { taskId: 't1', text: 'Respond to Madi', savedAt: '2026-10-16T19:00:00.000Z' } }
+
+  it('sets a council seed aside and saves it born recorded', async () => {
+    aside.setAsideFromBoard.mockResolvedValue({ ok: true, already: false })
+    const res = await POST(post(seedSave))
+    expect(res.status).toBe(200)
+    expect(aside.setAsideFromBoard).toHaveBeenCalledWith(db, 'p1', 't1')
+    const data = db.boardSave.create.mock.calls[0][0].data
+    expect(data.recordedAt).toBeInstanceOf(Date)
+    expect(data.record).toBe('set aside in bars-engine')
+  })
+
+  it('saves nothing when the task cannot rest', async () => {
+    aside.setAsideFromBoard.mockResolvedValue({ ok: false, status: 409, error: 'It is completed, so it cannot rest' })
+    const res = await POST(post(seedSave))
+    expect(res.status).toBe(409)
+    expect(db.boardSave.create).not.toHaveBeenCalled()
   })
 })

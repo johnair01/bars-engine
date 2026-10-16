@@ -6,10 +6,11 @@
 export const BOARDS = ['nonprofit', 'council'] as const
 export const COLLECTIONS = [
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks',
-  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup',
+  'morning', 'ttv', 'lists', 'contacts', 'shows', 'pickup', 'seeds',
 ] as const
-/** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup) is board state only and is
- * born recorded, so it never counts as stale. */
+/** Collections board/pull.py reads. A save to any other (contacts, shows, lists, pickup, seeds) is board state only
+ * and is born recorded, so it never counts as stale. A seeds save is recorded in bars-engine itself: it sets the task
+ * aside (src/lib/tap-the-vein/board-set-aside.ts). */
 export const RECORD_KINDS = new Set<string>([
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks', 'morning', 'ttv',
 ])
@@ -61,6 +62,11 @@ export function validateSave(input: unknown): { ok: true; save: BoardSaveInput }
     if (c === 'steer') {
       if (s.docId !== 'general') errors.push('steer lives at steer/general')
       if (!str(data.text) || !(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('steer needs text and savedAt')
+    }
+    if (c === 'seeds') {
+      if (s.board !== 'council') errors.push('the seed library is the Council Board\'s')
+      if (!nonBlank(data.taskId) || data.taskId !== s.docId) errors.push('a seed lives at seeds/<taskId> and names its taskId')
+      if (!(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('data.savedAt must be an ISO UTC time')
     }
     if (c === 'morning' && s.docId === 'menu') {
       if (!str(data.menu) || !(str(data.savedAt) && ISO.test(data.savedAt))) errors.push('the menu needs menu and savedAt')

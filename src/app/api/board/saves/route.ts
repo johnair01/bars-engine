@@ -2,7 +2,7 @@
  * @route GET|POST /api/board/saves
  * @entity SYSTEM
  * @description The boards' store (nonprofit, council): read every document, or save one, as the board's single owner;
- *   a council menu seal also writes each item as a Tap the Vein task
+ *   a council menu seal also writes each item as a Tap the Vein task, and a council seeds save sets that task aside
  * @permissions owner (bars-engine sign-in cookie naming BOARD_OWNER_PLAYER_ID)
  * @example GET /api/board/saves?board=nonprofit
  * @agentDiscoverable false
@@ -14,6 +14,7 @@ import { applyWrite, MAX_SAVE_BYTES, RECORD_KINDS, validateSave } from '@/lib/bo
 import { dispatchBoardPull } from '@/lib/board/dispatch'
 import { lastPull, latestDoc, latestDocs, unrecordedSaves } from '@/lib/board/store'
 import { writeBoardSeal } from '@/lib/tap-the-vein/board-seal'
+import { setAsideFromBoard } from '@/lib/tap-the-vein/board-set-aside'
 
 export const dynamic = 'force-dynamic'
 const NO_STORE = { 'Cache-Control': 'no-store' }
@@ -41,6 +42,19 @@ export async function POST(req: NextRequest) {
                  record: RECORD_KINDS.has(collection) ? null : 'board state; not recorded on main' }
   // The Council Board's seal: each sealed item becomes a Tap the Vein task and the menu carries its id (ttv-one-store).
   const owner = boardOwnerId()
+  // "Set aside" on the Council Board: the task rests in his seed library, recorded here, not on main (docs/seed-library.md).
+  if (board === 'council' && collection === 'seeds') {
+    if (!owner) return NextResponse.json({ error: 'BOARD_OWNER_PLAYER_ID is not set' }, { status: 503 })
+    const out = await db.$transaction(async (tx) => {
+      const r = await setAsideFromBoard(tx, owner, docId)
+      if (!r.ok) return r
+      const row = await tx.boardSave.create({ data: { ...data, recordedAt: new Date(), record: 'set aside in bars-engine',
+        data: doc as object }, select: { receivedAt: true } })
+      return { ...r, receivedAt: row.receivedAt }
+    })
+    if (!out.ok) return NextResponse.json({ error: out.error }, { status: out.status, headers: NO_STORE })
+    return NextResponse.json({ ok: true, doc, receivedAt: out.receivedAt }, { headers: NO_STORE })
+  }
   const seal = board === 'council' && collection === 'morning' && docId === 'menu' && typeof doc.menu === 'string' && owner
   const row = seal
     ? await db.$transaction(async (tx) => {

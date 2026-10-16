@@ -9,7 +9,7 @@
   "properties": {
     "board": {"enum": ["nonprofit", "council"]},
     "collection": {"enum": ["positions", "questions", "terms", "causes", "steer", "steps", "blockers", "picks",
-                            "morning", "ttv", "lists", "contacts", "shows", "pickup"]},
+                            "morning", "ttv", "lists", "contacts", "shows", "pickup", "seeds"]},
     "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\\\\u0000-\\u001f]+$"},
     "mode": {"enum": ["set", "update"], "default": "set"},
     "data": {"type": "object", "maxProperties": 200}
@@ -42,6 +42,9 @@
       {"if": {"properties": {"collection": {"const": "steer"}}},
        "then": {"properties": {"docId": {"const": "general"}, "data": {"required": ["text", "savedAt"],
          "properties": {"text": {"type": "string"}, "savedAt": {"$ref": "#/$defs/iso"}}}}}},
+      {"if": {"properties": {"collection": {"const": "seeds"}}},
+       "then": {"properties": {"board": {"const": "council"}, "data": {"required": ["taskId", "savedAt"], "properties": {
+         "taskId": {"type": "string", "minLength": 1, "pattern": "\\S"}, "savedAt": {"$ref": "#/$defs/iso"}}}}}},
       {"if": {"properties": {"collection": {"const": "morning"}, "docId": {"const": "menu"}}, "required": ["docId"]},
        "then": {"properties": {"data": {"required": ["menu", "savedAt"], "properties": {
          "menu": {"type": "string", "not": {"pattern": "\"rawEntry\""}}, "savedAt": {"$ref": "#/$defs/iso"}}}}}}
