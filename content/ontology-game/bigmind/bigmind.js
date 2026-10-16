@@ -18,6 +18,8 @@
   var STORE = "oag.bigmind.v1";
 
   // ---- the words ----------------------------------------------------------------------------
+  // Each voice's arrival describes its body as the held movement it wears (Six-faces-council council/daemons/GESTURES.md:
+  // yield, push, reach, grasp, pull, release, each held stuck in its protective form), so the words match the WARP bodies.
   // Paraphrased from the workshop transcript (/mnt/project-files/big-mind/source/big-mind-transcript.txt, 00:22 to 00:35),
   // with no line quoted longer than one line and no teacher or programme named (bm-name-internal). The cards are the group's
   // own answers (bm-cards-and-line). Cards marked out are the test of secretly speaking: each is an answer a different part
@@ -42,7 +44,7 @@
   var VOICES = [
     {
       id: "protector", name: "the Protector", title: "The Protector", daemon: "protector",
-      arrive: "A broad figure stands in the middle of the way, holding a shield. It does not move aside.",
+      arrive: "A broad figure stands in the middle of the way, both palms out at shoulder height, set into a push over its bent front knee. It does not move aside.",
       meet: {
         opens: "Stop. Nobody goes past this point.",
         replies: [
@@ -126,7 +128,7 @@
     // daemons.yaml ("Not yet. Not until this is handled."); choices, all of them.
     {
       id: "controller", name: "the Controller", title: "The Controller", daemon: "controller",
-      arrive: "A tall, narrow figure stands in the middle of the way, a measuring rod across its hands. It looks you over before you've said a word.",
+      arrive: "A tall figure stands rigid in the middle of the way, feet together, fists set on its hips and elbows out wide, chin up. It looks you over before you've said a word.",
       meet: {
         opens: "Not yet. Not until this is handled.",
         replies: [
@@ -208,7 +210,7 @@
     {
       id: "skeptic", name: "the Skeptic", title: "The Skeptic", daemon: "skeptic",
       bossNames: { controller: "the Controller" },
-      arrive: "A lean figure stands in the middle of the way, a lens raised to one eye. It studies you through it, unconvinced.",
+      arrive: "A lean figure stands in the middle of the way, drawn back from you: chest and head pulled back and turned aside, elbows behind it, hands held in at its belly, weight on its back foot. It studies you, unconvinced.",
       meet: {
         opens: "You can't actually mean that. Show me the evidence.",
         replies: [
@@ -281,7 +283,7 @@
     {
       id: "fixer", name: "the Fixer", title: "The Fixer", daemon: "fixer",
       bossNames: { controller: "the Controller" },
-      arrive: "A figure kneels in the middle of the way with a wrench in its hand, working at something you can't see. It looks up only long enough to check whether you're broken too.",
+      arrive: "A figure pitches far forward in the middle of the way, over a bent front knee, both long arms out to something you can't see. It looks up only long enough to check whether you're broken too.",
       meet: {
         opens: "There's a problem here. Give me a minute and I'll have it sorted.",
         replies: [
@@ -355,7 +357,7 @@
     {
       id: "emotional-body", name: "the Emotional Body", title: "The Emotional Body", daemon: "emotional-body",
       bossNames: { controller: "the Controller" },
-      arrive: "A glowing shape hangs in the middle of the way, its colour shifting faster than you can name it. It turns toward you as if it felt you coming before it saw you.",
+      arrive: "A figure stands in the middle of the way with its arms flung wide and up, palms open, chest thrown up and head back, up on its front foot, its colour shifting faster than you can name it. It turns toward you as if it felt you coming before it saw you.",
       meet: {
         opens: "Something's moving here. I felt you before you came round the bend.",
         replies: [
@@ -431,7 +433,7 @@
     {
       id: "victim", name: "the Victim", title: "The Victim", daemon: "victim",
       bossNames: { controller: "the Controller" },
-      arrive: "A stooped figure sits against the wall in the middle of the way, a bundle held tight in its arms. It looks up as you come near, as if it has been waiting a long time for someone to ask.",
+      arrive: "A figure has sunk low in the middle of the way, down into its knees, back rounded, head hung, arms hanging long and heavy. It looks up as you come near, as if it has been waiting a long time for someone to ask.",
       meet: {
         opens: "You'd stop for me? Nobody stops. Let me tell you what happened.",
         replies: [
@@ -513,7 +515,7 @@
     {
       id: "damaged-self", name: "the Damaged Self", title: "The Damaged Self", daemon: "damaged-self", deep: true,
       bossNames: { controller: "the Controller" },
-      arrive: "A figure stands in the middle of the way, a crack running down it from the shoulder. It doesn't brace as you come near. It turns a little, as if to take whatever you've brought on the side that's already broken.",
+      arrive: "A figure is curled forward in the middle of the way, arms wrapped round its own middle, knees drawn in, head down and turned away. It doesn't brace as you come near. It turns a little, as if to take whatever you've brought on the side that's already hurt.",
       meet: {
         opens: "I'll take that one. Whatever it is. It was probably me.",
         replies: [
@@ -596,6 +598,112 @@
     return v ? { id: id, title: v.title, daemon: v.daemon, built: true } : { id: id, title: TITLES[id], daemon: id, built: false };
   }
 
+  // ---- trust (pass big-mind-trust1, 16 October 2026, as revised on Wendell's answers of 22:05 to 22:23) --------------------
+  // Charge is the voice's burden in this sitting; trust is its relationship with the player, kept across sittings
+  // (bmt-burden-trust). Trust is three things the voice watches for: can you, will you, are you good. Can and will show as
+  // marks, each pip with a plain line of what the voice saw (bmt-trust-shown A); whether you seem good shows only in the voice's
+  // own words, against its own picture of goodness (bmt-good-in-words, bmt-goodness-models; the seven pictures are drafts). Trust
+  // actions can be taken anywhere on the path, and each voice has a right answer, which is what it needs; an action counts only
+  // when the voice's charge eases on the next check-in (bmt-honest-moves). A broken promise lowers its will mark, a push past its
+  // refusal lowers its read of your goodness, and owning it to the voice repairs it (bmt-trust-falls, bmt-accountability A). Rest,
+  // Not now, silence and "I don't know" lower nothing (bm-decline). Three-part trust is local to this cave; the ontology's
+  // TrustState is untouched (bmt-ontology-local). The lines below are choices, written from each voice's row and Wendell's
+  // question sets; the right answers too.
+  var MARKS = 3; // pips in a mark (a choice)
+  var KIND_LINES = {
+    can: { wait: "You waited with it when it held back.", hold: "You breathed a W.A.V.E. through beside it.", sit: "You sat with it.", pace: "You went slowly, as you said you would.", vouch: "Your spirits vouched for you." },
+    will: { "return": "You came back to your own place, as you promised.", visit: "You came back another day and asked again, as you promised." },
+    good: { share: "You showed it where you already share its picture of good.", honour: "You honoured its refusal.", intent: "You told it what you'd do for it." },
+  };
+  var BROKEN_LINES = { "will:return": "You said you'd come back to your own place, and left from its.", "good:push": "You pushed past its refusal." };
+  var OWN_LINES = { "will:return": "I said I'd come back to my own place, and I didn't. I'm sorry.", "good:push": "I pushed when you said no. That wasn't right." };
+  // What the return rite names as the move practised, from the honest moves seen this visit (bmt-return).
+  var PRACTISED = { wait: "waiting with a voice that held back", hold: "breathing a feeling through beside a voice", sit: "sitting with a voice without fixing it", pace: "going slowly when a voice needed it",
+    vouch: "letting the voices that trust you speak for you", "return": "keeping your word to a voice", visit: "coming back and asking again", share: "finding where you already agree with a part of you",
+    honour: "honouring a no", intent: "telling a part of you what you would do for it", repair: "owning it when you let a voice down" };
+  var TRUST = {
+    protector: { needs: { can: "wait", will: "return" }, picture: "good keeps us safe",
+      share: [["You keep us safe by watching. I keep us safe by going slowly."], ["I want the self safe too. That's why I came slowly."]],
+      read: { none: "I don't know yet what you're for.", seen: "You'd keep it safe too. I can see that now.", broken: "You pushed when I said no. That isn't how anyone keeps us safe." },
+      doubt: { can: "I don't know that you can wait when I say no.", will: "I don't know that you'll come back to your own place.", good: "I don't know yet whether you'd keep it safe." },
+      hint: { can: "That's something. But what I need to see is that you can wait when I hold back.", will: "Promises are easy. Come back to your own place when you say you will, and I'll believe it." },
+      vouch: "The Protector's spirit says you kept watch." },
+    controller: { needs: { can: "pace", will: "return" }, picture: "good meets the standard",
+      share: [["You hold the standard. I hold it too, one step at a time."], ["I want it done properly as well."]],
+      read: { none: "I haven't seen your standard yet.", seen: "You do things properly. I'll grant you that.", broken: "You rushed past a no. That isn't the standard." },
+      doubt: { can: "I don't know that you can take it one step at a time.", will: "I don't know that you'll do what you said.", good: "I don't know what your standard is." },
+      hint: { can: "Fine. But show me you can go one step at a time.", will: "Say what you'll do, then do it. Then we'll talk." },
+      vouch: "The Controller's spirit says you did it properly." },
+    skeptic: { needs: { can: "hold", will: "visit" }, picture: "good is honest about what is here",
+      share: [["You check what's true. I want to see what's true too, even when it's hard."], ["I won't pretend it's fine when it isn't."]],
+      read: { none: "I haven't seen any evidence about you yet.", seen: "You don't pretend. That's rare.", broken: "You pushed. That's what people do when they don't want to hear it." },
+      doubt: { can: "I don't believe you can actually stay with what's here.", will: "Everyone says they'll come back.", good: "I doubt you're honest about it yet." },
+      hint: { can: "Words. Show me you can stay with the feeling all the way through.", will: "I'll believe it when you come back and ask me again." },
+      vouch: "The Skeptic's spirit says the evidence held up." },
+    fixer: { needs: { can: "sit", will: "return" }, picture: "good doesn't leave what's broken",
+      share: [["You don't leave what's broken. I don't want to leave it either, so I'm staying with it."], ["I won't walk away from what hurts."]],
+      read: { none: "I don't know yet if you'd walk off and leave it.", seen: "You stay with what's broken. Without fixing it, even.", broken: "You pushed through. Something broke, and you left it." },
+      doubt: { can: "I don't know that you can sit with it without fixing it.", will: "I don't know that you'll come back and put it right.", good: "I don't know if you'd leave it broken." },
+      hint: { can: "Nice. But can you just sit with me, without fixing anything?", will: "Say you'll come back to your place, and then do it. That's a repair I'd trust." },
+      vouch: "The Fixer's spirit says you stayed with what was broken." },
+    "emotional-body": { needs: { can: "hold", will: "visit" }, picture: "good feels it all the way",
+      share: [["You feel it all the way. I'm learning to let it all the way in too."], ["I won't hurry it. I'd rather feel it."]],
+      read: { none: "I can't feel yet what you're about.", seen: "You let it all the way in. I felt that.", broken: "You pushed past me. It felt like being hushed again." },
+      doubt: { can: "I don't know that you can feel it all the way through.", will: "I don't know that you'll come back when it's moving again.", good: "I can't feel yet whether you mean it." },
+      hint: { can: "That helps. But I need to feel you stay with it all the way through.", will: "Come back when it's moving again, and ask me. Then I'll know." },
+      vouch: "The Emotional Body's spirit says you felt it all the way." },
+    victim: { needs: { can: "wait", will: "visit" }, picture: "good hears the whole story",
+      share: [["You want the whole story heard. I want to hear all of it."], ["I'm not going anywhere until you've said it."]],
+      read: { none: "I don't know yet if you'll stay for the whole of it.", seen: "You heard all of it. Nobody does that.", broken: "You pushed past me, like everyone does." },
+      doubt: { can: "I don't know that you'll stay to the end of it.", will: "Everyone says they'll come back.", good: "I don't know yet if you'd hear the whole story." },
+      hint: { can: "That's kind. But will you stay, when I say not yet?", will: "Come back another day and ask me again. Then I'll know you meant it." },
+      vouch: "The Victim's spirit says you heard the whole story." },
+    "damaged-self": { needs: { can: "pace", will: "return" }, picture: "good doesn't let someone else take the hit",
+      share: [["You won't let anyone else take the hit. I don't want you taking them all alone."], ["I'll take my share now. You don't have to take it all."]],
+      read: { none: "I don't know yet if you'd let me take it, like always.", seen: "You wouldn't let me take it all. I noticed.", broken: "You pushed. I took that one too." },
+      doubt: { can: "I don't know that you can go gently enough.", will: "I don't know that you'll come back to your own place.", good: "I don't know yet if you'd let me take the hit." },
+      hint: { can: "Thank you. But go slowly. That's what I need.", will: "Say you'll come back to your own place, and then come back." },
+      vouch: "The Damaged Self's spirit says you didn't let it take the hit alone." },
+  };
+  // The promises the player can make from the trust panel; the first is also the refusal path's first assurance.
+  var PROMISES = [["return", "I'll come back to my own place when we're done."], ["visit", "I'll come back another day and ask you again."]];
+  // Saved per voice as voices[id].trust (the Architect's shape, no words): seen [{dim, kind, at}], promises [{kind, made, kept}],
+  // broken and repaired [{dim, kind, at}], and ally (when its spirit became the player's ally).
+  function blankTrust() { return { seen: [], promises: [], broken: [], repaired: [] }; }
+  function trustOf(rec) { var t = (rec && rec.trust) || {}, b = blankTrust(); for (var k in b) b[k] = (t[k] || []).slice(); if (t.ally) b.ally = t.ally; return b; }
+  // A broken entry stands until a repair of the same dim and kind made after it.
+  function openBreaks(t) { return t.broken.filter(function (b) { return !t.repaired.some(function (r) { return r.dim === b.dim && r.kind === b.kind && r.at >= b.at; }); }); }
+  // A mark's pips: what the voice saw of the right answer (or spirits vouching, for can), less each fall not yet owned.
+  function markOf(t, vid, dim) {
+    var need = (TRUST[vid] || {}).needs || {};
+    var n = t.seen.filter(function (x) { return x.dim === dim && (x.kind === need[dim] || (dim === "can" && x.kind === "vouch")); }).length;
+    n -= openBreaks(t).filter(function (b) { return b.dim === dim; }).length;
+    return clamp(n, 0, MARKS);
+  }
+  function goodOf(t) { return openBreaks(t).some(function (b) { return b.dim === "good"; }) ? "broken" : t.seen.some(function (x) { return x.dim === "good"; }) ? "seen" : "none"; }
+  // It has seen all three: the second road past a voice (bmt-two-roads); its refusal still stays open.
+  function trusted(t, vid) { return markOf(t, vid, "can") > 0 && markOf(t, vid, "will") > 0 && goodOf(t) === "seen"; }
+  // How the voice stands toward the player, for the daemon bodies (the art thread's trust stances).
+  var STANCES = {
+    guarded: "met, and nothing seen yet: square to the player, weight back, its object held across the body",
+    testing: "it holds back and says what it hasn't seen: chin up, a half step forward, eyes on the player",
+    softening: "one thing seen (a mark or its good read): shoulders drop, the object lowers a little",
+    trusting: "all three seen: turned a little open, the object at its side",
+    willing: "willing to step aside: a half turn toward the wall, a hand toward the way on",
+    hurt: "a broken promise or a push not yet owned: turns a shoulder away, the object back up, closed",
+    repaired: "a fall owned and repaired: turns back toward the player, slower and warmer than before",
+  };
+  function stanceOf(t, vid, s) {
+    var open = openBreaks(t).length;
+    if (open) return "hurt";
+    if (s && s.willing) return "willing";
+    if (trusted(t, vid)) return "trusting";
+    if (s && s.refusedNow) return "testing";
+    if (markOf(t, vid, "can") || markOf(t, vid, "will") || goodOf(t) === "seen") return "softening";
+    if (t.repaired.length) return "repaired";
+    return "guarded";
+  }
+
   // The centre (board dp-centre: "The child is seen, not questioned", 13 October 2026; then Wendell's own Player set of 14
   // October in daemons/questions.js, newer and in his words). Squared as: the child is seen first and nothing has to be asked.
   // If the player chooses to ask, it is asked his six, gently, one at a time, in his order and plain wording, and any can be
@@ -665,6 +773,7 @@
   //   waiting: [translator ids] }. chamber is the daemon path's chamber the player has reached (0 the Protector, 1 the
   //   Controller, 2 the Skeptic, 3 the Fixer, 4 the Emotional Body, 5 the Victim, 6 the Damaged Self; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's, the Skeptic's,
   //   the Fixer's, the Emotional Body's, the Victim's and the Damaged Self's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
+  //   Each record may hold trust (see blankTrust), kept across sittings and never with words.
   function blank() { return { v: 1, chamber: 0, at: "mouth", voices: {}, waiting: [] }; }
   function readSave() { try { var s = JSON.parse(localStorage.getItem(STORE) || "null"); return s && s.v === 1 ? s : blank(); } catch (e) { return blank(); } }
   function writeSave(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); return true; } catch (e) { return false; } }
@@ -708,7 +817,11 @@
     "@media (prefers-reduced-motion:reduce){.bm-meter.eased .bm-bar s,.bm-meter.eased .bm-bar,.bm-meter.eased .bm-drop{animation-duration:.01s}}" +
     ".oagc button.bm-sitbtn,.oagc button.bm-spiritbtn{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
     ".oagc button.bm-sitbtn{left:10px}.oagc button.bm-spiritbtn{right:10px}.oagc button.bm-sitbtn:disabled{opacity:.35}" +
-    ".bm-kept{border-top:1px solid rgba(255,255,255,.12);padding:.5rem 0}.bm-kept li{color:#cfd8ff}";
+    ".bm-kept{border-top:1px solid rgba(255,255,255,.12);padding:.5rem 0}.bm-kept li{color:#cfd8ff}" +
+    ".bm-marks{font-size:12px;color:#dfe6ff;padding-left:.1rem}.bm-marks b{color:#fff1b0;font-weight:500;letter-spacing:.14em;margin:0 .6em 0 .25em}" +
+    ".bm-marks.lit b{animation:bm-glowtext 1.6s ease-out}@keyframes bm-glowtext{0%{text-shadow:0 0 0 #fff1b0}30%{text-shadow:0 0 10px #fff1b0}100%{text-shadow:0 0 0 #fff1b0}}" +
+    ".oagc button.bm-trustbtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(156,196,255,.55);color:#dfe9ff;font-weight:500}" +
+    ".oagc button.bm-trustbtn:disabled{opacity:.35}.bm-trustsaw{color:#fff1d0}.bm-trusthead{font-size:.8rem;color:#aab4d4;letter-spacing:.04em;text-transform:uppercase;margin:.7rem 0 .1rem}";
 
   function start() {
     if (!document.getElementById("oagc-css")) document.head.appendChild(el("style", { id: "oagc-css", text: K.CSS }));
@@ -749,7 +862,8 @@
         el("a", { href: "https://findahelpline.com", target: "_blank", rel: "noopener", text: "findahelpline.com" }),
       ]),
       el("div", { class: "oagc-row" }, [
-        el("button", { "data-bm-enter": "", text: !resume ? "Go in" : save.at === "hall2" ? "Go back in, past " + V0.name : "Go back in, to " + V0.name, onclick: function () { enter(save.at === "hall2" ? "hall2" : "hall1"); } }),
+        // Every visit asks again, whatever the save holds (bmt-ask-again), so going back in always meets the chamber's voice.
+        el("button", { "data-bm-enter": "", text: !resume ? "Go in" : "Go back in, to " + V0.name, onclick: function () { enter("hall1"); } }),
         fromRoom ? el("button", { class: "alt", "data-bm-home": "", text: "Back to the WAVE room", onclick: goHome }) : el("span", {}),
         resume ? el("button", { class: "alt", "data-bm-restart": "", text: "Start at the mouth again", onclick: function () { var s = readSave(); s.at = "mouth"; s.chamber = 0; writeSave(s); enter("hall1"); } }) : el("span", {}),
       ]),
@@ -777,7 +891,20 @@
     return head + ": " + w.before + " to " + w.afterCharge + (w.blocked ? " (something was in the way at " + (WAVE_LABEL[w.blocked] || w.blocked) + ")" : "");
   }
 
-  function spiritLabel(o) { var e = ELEMENTS.filter(function (x) { return x[0] === o.element; })[0]; return o.name + (e ? " (" + e[1] + ")" : ""); }
+  function spiritLabel(o) { var e = ELEMENTS.filter(function (x) { return x[0] === o.element; })[0]; return o.name + (o.ally ? " (ally)" : e ? " (" + e[1] + ")" : ""); }
+  function pips(n) { var s = ""; for (var i = 0; i < MARKS; i++) s += i < n ? "●" : "○"; return s; }
+  // A voice's trust in plain lines, for the cave mouth: its marks, what it saw, promises not yet kept, falls, and its read of you.
+  function trustLines(t, vid) {
+    var T = TRUST[vid], out = []; if (!T) return out;
+    if (!t.seen.length && !t.promises.length && !t.broken.length) return out;
+    out.push("Can you " + pips(markOf(t, vid, "can")) + "  Will you " + pips(markOf(t, vid, "will")));
+    t.seen.forEach(function (x) { var l = (KIND_LINES[x.dim] || {})[x.kind]; if (l) out.push("It saw: " + l); });
+    t.promises.filter(function (p) { return p.kept == null; }).forEach(function (p) { var pr = PROMISES.filter(function (x) { return x[0] === p.kind; })[0]; if (pr) out.push("Promise not yet kept: " + pr[1]); });
+    var open = openBreaks(t);
+    t.broken.forEach(function (b) { var l = BROKEN_LINES[b.dim + ":" + b.kind]; if (l) out.push(l + (open.indexOf(b) < 0 ? " You owned it, and it heard you." : "")); });
+    out.push("Its read of you, in its words: “" + T.read[goodOf(t)] + "”");
+    return out;
+  }
   // What you've kept: keep or forget per voice, and delete everything (bmc-safety).
   function keptList(save) {
     var ids = Object.keys(save.voices), sps = save.spirits || [];
@@ -791,6 +918,8 @@
       var mv = movedLines(v.charges || []);
       if (mv.length) box.appendChild(el("ul", { "data-bm-keptmoved": id }, mv.map(function (m) { return el("li", { text: "Moved it: " + m }); })));
       if (v.boss) box.appendChild(el("p", { "data-bm-keptboss": id, text: "It works for " + bossName(voice, v.boss) + "." }));
+      var tl = trustLines(trustOf(v), id);
+      if (tl.length) box.appendChild(el("ul", { "data-bm-kepttrust": id }, tl.map(function (m) { return el("li", { text: m }); })));
       if (v.kept.length) box.appendChild(el("ul", {}, v.kept.map(function (k) { return el("li", { text: k.line }); })));
       if (v.waves && v.waves.length) box.appendChild(el("ul", { "data-bm-keptwaves": id }, v.waves.map(function (w) { return el("li", { text: "W.A.V.E.: " + waveLine(w) }); })));
       box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": id, text: "Forget " + name, onclick: function () {
@@ -829,7 +958,11 @@
   var running = null;
   // Spirits walking with the player from one chamber into the next, handed over once (the hallway runs on, a choice).
   var carry = null;
+  // What this visit has practised, for the return rite (bmt-return): the kinds of honest move seen, in order. A visit starts at
+  // the mouth.
+  var visit = { did: [], met: [] };
   function enter(from) {
+    visit = { did: [], met: [] };
     K.loadThree().then(function (THREE) { home.style.display = "none"; play(THREE, from); })
       .catch(function (e) { alert("The cave could not open: " + e.message); });
   }
@@ -851,7 +984,9 @@
     var meter = el("div", { class: "bm-meter", "data-bm-meter": "", style: "display:none" }, [el("span", { text: V.title.replace(/^The /, "") + " (it)" }), el("div", { class: "bm-bar" }, [meterFill, meterGone, el("u", { style: "left:" + (READY * 10) + "%" })]), meterNum, meterDrop]);
     var youFill = el("i"), youNum = el("b", { text: "" });
     var meterYou = el("div", { class: "bm-meter you", "data-bm-meteryou": "", style: "display:none" }, [el("span", { text: "You" }), el("div", { class: "bm-bar" }, [youFill]), youNum]);
-    var meters = el("div", { class: "bm-meters" }, [meter, meterYou]);
+    // The two marks, can you and will you (bmt-trust-shown A): pips that fill as the voice sees the right answer honestly played.
+    var marks = el("div", { class: "bm-marks", "data-bm-marks": "", style: "display:none" });
+    var meters = el("div", { class: "bm-meters" }, [meter, marks, meterYou]);
     var easedLine = el("div", { class: "bm-eased", "data-bm-eased": "" });
     [stage, hint, ring, modal, selfBtn, meters, easedLine, fade].forEach(function (n) { wrap.appendChild(n); });
     document.body.appendChild(wrap);
@@ -869,6 +1004,13 @@
     // gate is how open the way past the voice is (0.45 shut, 1 open); held is the finger on the stage or the ring.
     var st = { phase: from, s: from === "hall2" ? S_GATE + 2 : 2, held: false, gate: from === "hall2" ? 1 : 0.45, gateGoal: from === "hall2" ? 1 : 0.45,
       clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], charge: null, charges: [], you: null, waves: [], place: null, know: null, be: {}, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1, endOpen: 0, child: {}, lat: 0, run: false };
+    // Trust, kept across sittings (see blankTrust): pending holds honest moves waiting for the next check-in, sat the kinds seen
+    // this sitting (each counts once a sitting), and prevCharge the voice's last charge from an earlier sitting, so the first
+    // check-in of a visit can show whether it eased since then.
+    var TR = TRUST[V.id], rec0 = save.voices[V.id];
+    st.trust = trustOf(rec0); st.pending = []; st.sat = {}; st.willing = false; st.refusedNow = false; st.since = new Date().toISOString();
+    st.prevCharge = rec0 && rec0.charges && rec0.charges.length ? rec0.charges[rec0.charges.length - 1].v : null;
+    if (visit.met.indexOf(V.id) < 0) visit.met.push(V.id);
     var route = layout(), tweens = [], last = performance.now(), snap = true;
     function tween(ms, fn, done) { tweens.push({ t0: performance.now(), ms: ms / st.speed, fn: fn, done: done }); }
     function ease(k) { return k * k * (3 - 2 * k); }
@@ -1014,6 +1156,7 @@
 
     // ---- the modal ------------------------------------------------------------------------------
     function show(kids, tag) {
+      if (st.trustNote && !/^(sit|wave|self|spirit|mouth|rite)/.test(tag || "")) kids = kids.slice(0, 1).concat(trustNoteEls(), kids.slice(1)); // what the voice saw, once
       modal.innerHTML = ""; kids.forEach(function (k) { if (k) modal.appendChild(k); });
       modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); modal.setAttribute("data-bm-step", tag || "");
       modal.scrollTop = 0; st.modal = true; st.held = false; stickUp(); ring.style.display = "none"; hint.textContent = "";
@@ -1047,9 +1190,9 @@
     function npc(t) { return el("p", { class: "bm-npc" }, [el("b", { text: V.title + ": " }), document.createTextNode(t)]); }
     function you(t) { return el("p", { class: "bm-you", text: "You: " + t }); }
     function arrive() {
-      st.phase = "chamber";
+      st.phase = "chamber"; marksShow();
       var M = V.meet;
-      show([el("h2", { text: V.title }), guide(V.arrive), npc(M.opens)].concat(spiritLines(), [
+      show([el("h2", { text: V.title }), guide(V.arrive), npc(M.opens)].concat(returning(), spiritLines(), vouching(), [
         el("div", { class: "bm-cards" }, M.replies.map(function (r) { return btn(r[0], function () { met(r); }, { class: "bm-card", "data-bm-reply": r[2] }); })),
         row([btn("Not now", decline, { class: "bm-link", "data-bm-decline": "" })])]), "meet");
     }
@@ -1091,13 +1234,16 @@
       if (i != null) { var said = st.answers[V.questions[i].id]; if (said) said.forEach(function (l) { kids.push(npc(l)); }); kids.push(guide(qReflect(V.questions[i]))); }
       kids.push(guide(ask + (st.place ? " (in your " + st.place.toLowerCase() + ")" : "")), el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
         row([btn("That's how it is", function () { charged(i, +range.value); }, { "data-bm-charged": "" })]),
-        row([btn("Breathe with it (W.A.V.E.)", function () { waveStart(i, ask); }, { "data-bm-wave": "" }, true)]));
+        row([btn("Breathe with it (W.A.V.E.)", function () { waveStart(i, ask); }, { "data-bm-wave": "" }, true)]),
+        st.willing ? row([btn("Ask it to step aside now", function () { permit("aside", 0, V.deep ? deepCheck : seatShift); }, { class: "bm-link", "data-bm-askaside": "" })]) : null);
       show(kids, i == null ? "charge-first" : "charge");
       setMeter(cur);
     }
-    function charged(i, v) {
+    // quiet: no new number was given (a question sat out), so it is no check-in and honest moves keep waiting.
+    function charged(i, v, quiet) {
       var was = st.charge;
       st.charge = v; st.charges.push({ after: i == null ? "start" : V.questions[i].id, v: v }); setMeter(v);
+      if (!quiet) resolvePending(was != null ? was : st.prevCharge, v);
       if (was != null && v < was) return eased(was, v, function () { afterCharge(i, v); });
       afterCharge(i, v);
     }
@@ -1123,11 +1269,15 @@
         st.modal = false; then();
       });
     }
+    // Two roads past a voice (bmt-two-roads): its charge at READY or below, or all three kinds of trust seen. Once it is willing
+    // the player can keep talking, and walking on waits for them (bmt-keep-talking).
     function afterCharge(i, v) {
-      if (v <= READY) return ready();
+      var open = v <= READY || trusted(st.trust, V.id);
+      if (open && !st.willing) return ready();
       var n = i == null ? 0 : i + 1;
       while (n < V.questions.length && st.answers[V.questions[n].id]) n++;
       if (n < V.questions.length) return askQ(n, "");
+      if (open) return ready();
       show([el("h2", { text: V.title }), npc(V.notYet), guide("You've asked it everything you know to ask. Nothing has to change yet."),
         row([btn("Sit with it, and check again", function () { chargeAsk(null, "Does it feel any different now? How charged is it?"); }, { "data-bm-recheck": "" }), leaveBtn("aside")])], "notyet");
     }
@@ -1166,14 +1316,15 @@
     function blobGone(B, ms, done) {
       tween(ms, function (k) { var e = ease(k); B.rise = 2.5 * e; B.fade = 1 - e; }, function () { scene.remove(B.g); if (done) done(); });
     }
-    function waveStart(i, ask) {
-      wv = { i: i, ask: ask, after: i == null ? "start" : V.questions[i].id, word: "", element: null, place: null, before: null, reached: null, blocked: null };
+    // back: where to go afterwards when the W.A.V.E. was not started from a poll (from the trust panel in the hallway).
+    function waveStart(i, ask, back) {
+      wv = { i: i, ask: ask, back: back || null, after: i == null ? "start" : V.questions[i].id, word: "", element: null, place: null, before: null, reached: null, blocked: null };
       var B = wv.B = chargeBlob(); tween(1400, function (k) { B.come = 1 - ease(k); });
       var sl = youSlider(st.you == null ? 5 : st.you, "Your own charge, 0 to 10");
       show([el("h2", { text: "Breathe with it" }), guide("This is about your own charge: the feeling that comes up in you while you sit with " + V.name + ". Its charge stays as you set it."),
         guide("How charged are you right now?")].concat(sl.kids, [
         row([btn("That's me right now", function () { wv.before = +sl.range.value; st.you = wv.before; youMeter(wv.before); wavePlace(); }, { "data-bm-youset": "" })]),
-        row([btn("Back to " + V.name, function () { var B = wv.B; wv = null; B.leaving = true; tween(700, function (k) { B.come = ease(k); B.fade = 1 - ease(k); }, function () { scene.remove(B.g); }); chargeAsk(i, ask); }, { class: "bm-link", "data-bm-waveback": "" })])]), "wave-you");
+        row([btn("Back to " + V.name, function () { var B = wv.B, bk = wv.back; wv = null; B.leaving = true; st.pending = st.pending.filter(function (p) { return p.kind !== "hold"; }); tween(700, function (k) { B.come = ease(k); B.fade = 1 - ease(k); }, function () { scene.remove(B.g); }); if (bk) bk(); else chargeAsk(i, ask); }, { class: "bm-link", "data-bm-waveback": "" })])]), "wave-you");
       youMeter(+sl.range.value);
     }
     function wavePlace() {
@@ -1266,7 +1417,9 @@
       st.you = v; youMeter(v);
       st.waves.push({ after: wv.after, word: wv.word || null, element: wv.element, place: wv.place, before: wv.before, afterCharge: v,
         reached: wv.reached, blocked: wv.blocked, exhale: wv.exhale || null, at: new Date().toISOString() });
-      var i = wv.i, ask = wv.ask; wv = null;
+      var i = wv.i, ask = wv.ask, bk = wv.back; wv = null;
+      pend("can", "hold"); // a W.A.V.E. breathed through beside the voice is a can-you move, counted if it eases next
+      if (bk) return bk();
       chargeAsk(i, ask); // the voice's poll comes back as after any answer; its number is the player's alone
     }
     // ---- sitting down, anywhere, and the spirits that follow -----------------------------------------------------
@@ -1420,6 +1573,7 @@
       var S = st.sit, nm = S.name.trim() || S.gen;
       hide(); modal.setAttribute("data-bm-step", "sitting"); st.modal = true; ring.style.display = "none";
       try { var s = readSave(); s.sittings = (s.sittings || []).concat([{ where: S.where, whom: S.spirit ? "spirit" : S.whom, via: S.via, branch: branch, at: new Date().toISOString() }]); writeSave(s); } catch (e) {}
+      if (S.whom === "voice" && branch !== "stood") pend("can", "sit"); // sat with it to the end: a can-you move, counted if it eases next
       var from = S.g.position.clone();
       tween(branch === "goes" ? 2200 : 1200, function (k) {
         S.k = 1 - ease(k); tube.dirty = true;
@@ -1433,11 +1587,12 @@
       });
     }
     function addSpirit(o, from) {
-      var g = K.buildSpirit(THREE, o.name, colorOf(o.element)); if (o.lighter) g.userData.level = 0.2;
+      var col = o.color != null ? o.color : colorOf(o.element);
+      var g = K.buildSpirit(THREE, o.name, col); if (o.lighter) g.userData.level = 0.2;
       if (from) g.position.copy(from); else { var a = side(Math.max(0.5, st.s - 2.2), 0.9); g.position.set(a.x, floor(a) + 1.7, a.z); }
       // each spirit carries a small light of its own, as in the Cave of Lessons (Wendell, 2026-10-13: "The avaiable lighting
       // centers around the character and any spirits that are following them")
-      o.light = new THREE.PointLight(colorOf(o.element), 0.6, K.LAMP.reach * 0.5, K.LAMP.decay); scene.add(o.light);
+      o.light = new THREE.PointLight(col, 0.6, K.LAMP.reach * 0.5, K.LAMP.decay); scene.add(o.light);
       scene.add(g); o.g = g; spirits.push(o); spiritsUi();
     }
     function letGo(o, from) {
@@ -1461,9 +1616,32 @@
         row([btn("Back", back, { class: "bm-link", "data-bm-spiritback": "" })])], "spirit-list");
     }
     function thank(o, back) {
+      if (o.ally) { // an ally walks with the player while its voice trusts them
+        show([el("h2", { text: o.name }), you("Thank you for coming with me."), guide("It walks with you while " + (VOICES.filter(function (x) { return x.id === o.ally; })[0] || {}).name + " trusts you, and vouches for you further in."),
+          row([btn("Back", back, { "data-bm-spiritback": "" })])], "spirit-thank");
+        return;
+      }
       show([el("h2", { text: o.name }), you("Thank you for coming with me."), guide("Breathe it out and let it go, or sit with it again."),
         row([btn("Breathe out, and let it go", function () { hide(); letGo(o); back(); }, { "data-bm-spiritout": "" }),
           btn("Sit with it again", function () { sitDown("me", back, o, "spirit"); }, { "data-bm-spiritsit": "" }, true)])], "spirit-thank");
+    }
+    // A voice met before is asked again (bmt-ask-again): what it said then does not stand in for today. It says where its trust
+    // stands: promises not yet kept, a fall not yet owned (bmt-trust-falls), and its read of you in its words.
+    function returning() {
+      if (!rec0 || !(rec0.status === "spoken" || rec0.keepsWay || st.trust.seen.length || st.trust.promises.length)) return [];
+      var t = st.trust, kids = [guide("You have met " + V.name + " before. What it said then doesn't stand in for today, so ask again.")];
+      if (t.promises.some(function (p) { return p.kind === "visit" && p.kept == null; })) kids.push(npc("You said you'd come back and ask me again. Here you are."));
+      if (t.promises.some(function (p) { return p.kind === "return" && p.kept == null; })) kids.push(npc("You promised to come back to your own place. I'm still waiting to see it."));
+      openBreaks(t).forEach(function (b) { kids.push(npc(b.dim === "will" ? "You said you'd come back to your own place, and you walked out from mine." : "You pushed when I said no.")); });
+      if (t.seen.length || t.broken.length) kids.push(npc(TR.read[goodOf(t)]));
+      return kids;
+    }
+    // At each later chamber the voice asks who vouches for you, and allied spirits answer in their own voice's terms; together
+    // they count once as a can-you move, if the voice eases (bmt-spirits-vouch). How many spirits you carry adds nothing.
+    function vouching() {
+      var A = allies(); if (!A.length) return [];
+      pend("can", "vouch");
+      return [npc("Who vouches for you?")].concat(A.map(function (id) { return el("p", { class: "bm-guide bm-trustsaw", "data-bm-vouch": id, text: TRUST[id].vouch }); }));
     }
     // The voices answer the spirits in what they say and how they stand, never in their charge or trust (bms-voices-respond).
     function spiritLines() {
@@ -1472,10 +1650,171 @@
     }
     (save.spirits || []).forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); });
     if (carry) { carry.forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); }); carry = null; }
+    // The spirits of voices that trust the player walk with them as allies (bmt-spirits-vouch), the chamber's own voice included.
+    PATH.forEach(function (id) { var r = save.voices[id]; if (r && trustOf(r).ally && trusted(trustOf(r), id)) allyJoins(id); });
     if (fromRoom) { fromRoom.spirits.forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); }); fromRoom.spirits = []; } // the room's, once
 
+
+    // ---- trust: marks, honest moves, falls and repair, allies ---------------------------------------------------------
+    var trustBtn = el("button", { class: "bm-trustbtn", "data-bm-trustbtn": "", text: "Trust", onclick: function () { trustOffer(); } });
+    wrap.insertBefore(trustBtn, fade);
+    function stamp() { return new Date().toISOString(); }
+    function marksUi(lit) {
+      var t = st.trust;
+      marks.innerHTML = "";
+      marks.appendChild(document.createTextNode("Can you")); marks.appendChild(el("b", { text: pips(markOf(t, V.id, "can")) }));
+      marks.appendChild(document.createTextNode("Will you")); marks.appendChild(el("b", { text: pips(markOf(t, V.id, "will")) }));
+      marks.setAttribute("data-bm-can", String(markOf(t, V.id, "can"))); marks.setAttribute("data-bm-will", String(markOf(t, V.id, "will")));
+      if (lit) { marks.classList.remove("lit"); void marks.offsetWidth; marks.classList.add("lit"); }
+    }
+    function marksShow() { marks.style.display = ""; marksUi(); }
+    // Trust is written as it changes, so a promise or a fall is kept even if the player walks out mid-chamber.
+    function trustSave() {
+      try {
+        var s = readSave(), r = s.voices[V.id] || (s.voices[V.id] = { status: "waiting", kept: [], savedAt: stamp() });
+        r.trust = st.trust; writeSave(s);
+      } catch (e) { /* this browser would not save */ }
+      marksUi();
+    }
+    // An honest move waits for the next check-in; it counts only if the voice's charge eases there (bmt-honest-moves).
+    function pend(dim, kind, repair) {
+      if (st.pending.some(function (p) { return p.dim === dim && p.kind === kind && !!p.repair === !!repair; })) return;
+      st.pending.push({ dim: dim, kind: kind, repair: !!repair });
+    }
+    // At a check-in: was is the charge before it (or the last sitting's), v the charge given now. Returns what the voice saw.
+    function resolvePending(was, v) {
+      if (was == null) return null; // nothing to compare with yet: the moves wait for a check-in that can show easing
+      var P = st.pending; st.pending = [];
+      if (!P.length || !(v < was)) return null; // a right card with no easing moves nothing
+      var at = stamp(), out = { saw: [], hint: [], ally: false };
+      P.forEach(function (x) {
+        if (x.repair) { st.trust.repaired.push({ dim: x.dim, kind: x.kind, at: at }); out.saw.push("It heard you own it."); out.good = out.good || x.dim === "good"; visit.did.push("repair"); return; }
+        var key = x.dim + ":" + x.kind; if (st.sat[key]) return; // once a sitting
+        if (x.dim === "good" || x.kind === TR.needs[x.dim] || x.kind === "vouch") {
+          st.sat[key] = true; st.trust.seen.push({ dim: x.dim, kind: x.kind, at: at });
+          out.saw.push(KIND_LINES[x.dim][x.kind]); visit.did.push(x.kind); if (x.dim === "good") out.good = true;
+        } else if (out.hint.indexOf(TR.hint[x.dim]) < 0) out.hint.push(TR.hint[x.dim]);
+      });
+      if (!st.trust.ally && trusted(st.trust, V.id)) { st.trust.ally = at; out.ally = true; allyJoins(); }
+      trustSave(); if (out.saw.length) marksUi(true);
+      st.trustNote = out;
+      return out;
+    }
+    // What the voice saw at the last check-in, said once on the next screen.
+    function trustNoteEls() {
+      var o = st.trustNote; st.trustNote = null; if (!o) return [];
+      var kids = o.saw.map(function (l) { return el("p", { class: "bm-guide bm-trustsaw", "data-bm-trustsaw": "", text: V.title + " saw it. " + l }); });
+      o.hint.forEach(function (h) { kids.push(npc(h)); });
+      if (o.good) kids.push(npc(TR.read[goodOf(st.trust)])); // its read of you, only ever in its words
+      if (o.ally) kids.push(guide("It trusts you now. Its spirit comes with you as your ally, and it will vouch for you further in."));
+      return kids;
+    }
+    // Promises (will you): made now, kept when the game sees them kept, and visible as not yet kept until then.
+    function promise(kind) {
+      if (st.trust.promises.some(function (p) { return p.kind === kind && p.kept == null; })) return;
+      st.trust.promises.push({ kind: kind, made: stamp(), kept: null }); trustSave();
+    }
+    function keepPromise(kind, before) {
+      var hit = false;
+      st.trust.promises.forEach(function (p) { if (p.kind === kind && p.kept == null && (!before || p.made < before)) { p.kept = stamp(); hit = true; } });
+      if (hit) { pend("will", kind); trustSave(); }
+      return hit;
+    }
+    // Leaving from the voice's place breaks the promise to come back to one's own (bmt-trust-falls).
+    function breakReturn() {
+      var hit = false;
+      st.trust.promises.forEach(function (p) { if (p.kind === "return" && p.kept == null) { p.kept = false; hit = true; } });
+      if (hit) { st.trust.broken.push({ dim: "will", kind: "return", at: stamp() }); trustSave(); }
+    }
+    // Pushing past its refusal lowers its read of your goodness (bmt-trust-falls).
+    function pushed(key, round, onYes) {
+      st.trust.broken.push({ dim: "good", kind: "push", at: stamp() }); trustSave();
+      show([el("h2", { text: V.title }), you(V.asks[key].ask), npc(TR.read.broken), guide("Pushing past a refusal costs its trust. Owning it later can repair it."),
+        row([btn("Go on", function () { permit(key, round + 1, onYes); }, { "data-bm-pushed": "" })])], "pushed-" + key);
+    }
+    // The voices whose spirits are your allies now: their voice trusts you (bmt-spirits-vouch).
+    function allies() {
+      var sv = readSave();
+      return PATH.filter(function (id) { return id !== V.id && sv.voices[id] && trustOf(sv.voices[id]).ally && trusted(trustOf(sv.voices[id]), id); });
+    }
+    function allyJoins(id) {
+      id = id || V.id;
+      if (spirits.some(function (o) { return o.ally === id; })) return;
+      var vv = VOICES.filter(function (x) { return x.id === id; })[0], row0 = daemonRow(id);
+      addSpirit({ name: (vv ? vv.title : id) + "'s spirit", color: row0 ? row0[3] : 0x9a9aa8, ally: id });
+    }
+    // The trust panel: what the player can show the voice, anywhere on the path. Each move waits for the next check-in.
+    function trustOffer() {
+      if (!canTrust()) return;
+      var p = stash(), back = function () { unstash(p); };
+      var said = function (line, then) {
+        show([el("h2", { text: V.title }), you(line), guide("It heard you. If it was honest, you'll see it ease the next time you check how charged it is."),
+          row([btn("Go on", then || back, { "data-bm-trustok": "" })])], "trust-said");
+      };
+      var kids = [el("h2", { text: "Show " + V.name + " who you are" }),
+        guide("It watches for three things: can you, will you, and are you good. Each voice needs something of its own. A move counts only when it's honest, and that shows as its charge easing the next time you check.")];
+      kids.push(el("p", { class: "bm-trusthead", text: "Can you" }), el("div", { class: "bm-cards" }, [
+        btn("Wait with it a breath", function () { waitBreath(back); }, { class: "bm-card", "data-bm-trust": "wait" }),
+        btn("Breathe a W.A.V.E. through beside it", function () { waveStart(st.lastPoll ? st.lastPoll.i : null, st.lastPoll ? st.lastPoll.ask : null, st.lastPoll ? null : back); }, { class: "bm-card", "data-bm-trust": "hold" }),
+        btn("Sit with it", function () { sitDown("voice", back, null, "trust"); }, { class: "bm-card", "data-bm-trust": "sit" }),
+        btn("I'll go slowly, and you can stop me.", function () { pend("can", "pace"); said("I'll go slowly, and you can stop me at any time."); }, { class: "bm-card", "data-bm-trust": "pace" }),
+      ]));
+      kids.push(el("p", { class: "bm-trusthead", text: "Will you" }), el("div", { class: "bm-cards" }, PROMISES.map(function (pr) {
+        var made = st.trust.promises.some(function (x) { return x.kind === pr[0] && x.kept == null; }), a = { class: "bm-card", "data-bm-promise": pr[0] };
+        if (made) a.disabled = "";
+        return btn(pr[1] + (made ? " (promised, not yet kept)" : ""), function () { promise(pr[0]); said(pr[1]); }, a);
+      })));
+      var line = el("input", { type: "text", maxlength: "200", placeholder: "Or where you share it, in your own words", "data-bm-shareline": "", "aria-label": "Where you share its picture of good" });
+      kids.push(el("p", { class: "bm-trusthead", text: "Are you good" }), guide("To " + V.name + ", " + TR.picture + ". Show it where you already share that, from where you stand."),
+        el("div", { class: "bm-cards" }, TR.share.map(function (c, ci) { return btn(c[0], function () { pend("good", "share"); said(c[0]); }, { class: "bm-card", "data-bm-share": String(ci) }); })),
+        el("div", { class: "bm-line" }, [line, btn("Say it", function () { var t = line.value.trim(); if (!t) return; pend("good", "share"); said(t); }, { "data-bm-sharesay": "" })]));
+      var open = openBreaks(st.trust);
+      if (open.length) {
+        kids.push(el("p", { class: "bm-trusthead", text: "Own it" }), el("div", { class: "bm-cards" }, open.filter(function (b, bi) { return open.map(function (x) { return x.dim + x.kind; }).indexOf(b.dim + b.kind) === bi; }).map(function (b) {
+          return btn(OWN_LINES[b.dim + ":" + b.kind], function () { pend(b.dim, b.kind, true); said(OWN_LINES[b.dim + ":" + b.kind]); }, { class: "bm-card", "data-bm-own": b.dim + ":" + b.kind });
+        })));
+      }
+      kids.push(row([btn("Back", back, { class: "bm-link", "data-bm-trustback": "" })]));
+      show(kids, "trust");
+    }
+    function waitBreath(back) {
+      var go = btn("I waited with it", function () { pend("can", "wait"); back(); }, { "data-bm-waited": "", disabled: "" });
+      var cue = el("p", { class: "bm-breath", text: "Breathe in…" });
+      show([el("h2", { text: "Wait with it" }), guide("Nothing to do or say. Stay with " + V.name + " for one breath."), orb(), cue, row([go])], "trust-wait");
+      tween(K.BREATH.inS * 1000, function () {}, function () { cue.textContent = "…and out"; tween(K.BREATH.outS * 1000, function () {}, function () { cue.textContent = "One breath."; go.removeAttribute("disabled"); }); });
+    }
+    function canTrust() {
+      var tag = modal.getAttribute("data-bm-step") || "";
+      return (st.phase === "hall1" || st.phase === "chamber") && !st.sit && !st.auto && !st.turned && !/^(self|eased|sit|spirit|mouth|thanks|know|be-|wave|trust|deep|keep|secret|thank$|rite)/.test(tag);
+    }
+    // A check-in outside the questions: after stepping back out, when a kept promise waits to be seen.
+    function checkIn(lead, then) {
+      var cur = st.charge == null ? 7 : st.charge;
+      var num = el("b", { class: "bm-chargenum", text: String(cur) });
+      var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(cur), "data-bm-range": "", "aria-label": "Charge, 0 to 10" });
+      range.addEventListener("input", function () { num.textContent = range.value; setMeter(+range.value); });
+      show([el("h2", { text: V.title }), guide(lead), guide("How charged is " + V.name + " now?"),
+        el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
+        row([btn("That's how it is", function () {
+          var was = st.charge, v = +range.value;
+          st.charge = v; st.charges.push({ after: "check", v: v }); setMeter(v);
+          resolvePending(was != null ? was : st.prevCharge, v);
+          if (was != null && v < was) return eased(was, v, then);
+          then();
+        }, { "data-bm-checkin": "" })])], "checkin");
+      setMeter(cur);
+    }
     function ready() {
-      show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, V.deep ? deepCheck : seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
+      st.willing = true;
+      var n = 0; while (n < V.questions.length && st.answers[V.questions[n].id] !== undefined) n++;
+      var byTrust = !(st.charge != null && st.charge <= READY) && trusted(st.trust, V.id);
+      show([el("h2", { text: V.title }), npc(V.ready), byTrust ? guide("Its charge is still high, but it has seen all three: what you can do, that you keep your word, and what you're for.") : null,
+        st.trust.seen.some(function (x) { return x.dim === "good"; }) ? npc(TR.read[goodOf(st.trust)]) : null,
+        row([btn("Ask it to step aside", function () { permit("aside", 0, V.deep ? deepCheck : seatShift); }, { "data-bm-ask": "aside" })]),
+        // Keep talking (bmt-keep-talking): its questions, or simply staying with it; walking on waits for the player.
+        row([n < V.questions.length ? btn("Keep talking with it", function () { askQ(n, ""); }, { "data-bm-keeptalking": "" }, true) : null,
+          btn("Stay with it", function () { sitDown("voice", ready, null, "stay"); }, { "data-bm-staywith": "" }, true)]),
+        row([leaveBtn("aside")])], "ready");
     }
     // Standing where the Damaged Self stands goes to the deepest place, so the cave asks first, as the Cave of Lessons does
     // before Be it (Wendell's board, bmc-safety and cave-321-damaged-self-ask): go on, rest, or go back up.
@@ -1491,6 +1830,7 @@
     // player's, as in the workshop, where the facilitator waits for the voice to come).
     function permit(key, round, onYes, lead) {
       var A = V.asks[key];
+      if (key === "speak" && round === 0) keepPromise("visit", st.since); // it was asked again on a later visit, as promised
       show([el("h2", { text: V.title }), lead || null, you(A.ask), guide("Wait for its answer. You may feel it more than see it. How does it answer?"),
         el("div", { class: "bm-cards" }, [
           btn("It lets me", function () { granted(key, onYes); }, { class: "bm-card", "data-bm-perm": "yes" }),
@@ -1499,20 +1839,24 @@
         ])], "perm-" + key);
     }
     function granted(key, onYes) {
-      st.perms[key] = (st.perms[key] || 0) + 1;
+      st.perms[key] = (st.perms[key] || 0) + 1; st.refusedNow = false;
       show([el("h2", { text: V.title }), npc(V.asks[key].yes), row([btn("Thank you", onYes, { "data-bm-thanks": key })])], "granted-" + key);
     }
     function unsure(key, round, onYes) {
       show([el("h2", { text: V.title }), guide("Then stay here with it a moment. Breathe with it. Nothing has to happen yet."),
-        row([btn("Ask again", function () { blockPoll(key, round, onYes, "You waited with it"); }, { "data-bm-again": "" }), leaveBtn(key)])], "unsure-" + key);
+        row([btn("Ask again", function () { pend("can", "wait"); blockPoll(key, round, onYes, "You waited with it"); }, { "data-bm-again": "" }), leaveBtn(key)])], "unsure-" + key);
     }
     // The refusal path. The voice says why, the player asks what it fears and answers as it would, then offers an assurance.
+    // Its refusal says what it hasn't seen yet (bmt-two-roads), and the player can wait, ask what it fears, or push (which costs
+    // its trust, bmt-trust-falls).
     function refused(key, round, onYes) {
-      var A = V.asks[key];
-      show([el("h2", { text: V.title }), npc(A.no[Math.min(round, A.no.length - 1)]),
+      var A = V.asks[key], t = st.trust, miss = markOf(t, V.id, "can") === 0 ? "can" : markOf(t, V.id, "will") === 0 ? "will" : goodOf(t) !== "seen" ? "good" : null;
+      st.refusedNow = true;
+      show([el("h2", { text: V.title }), npc(A.no[Math.min(round, A.no.length - 1)]), miss ? npc(TR.doubt[miss]) : null,
         el("div", { class: "bm-cards" }, [
           btn("What are you afraid would happen?", function () { fearAsk(key, round, onYes); }, { class: "bm-card", "data-bm-why": "" }),
-          btn("That's fair. I'll wait with you a while.", function () { unsure(key, round, onYes); }, { class: "bm-card", "data-bm-wait": "" }),
+          btn("That's fair. I'll wait with you a while.", function () { pend("good", "honour"); unsure(key, round, onYes); }, { class: "bm-card", "data-bm-wait": "" }),
+          btn("Ask again, now", function () { pushed(key, round, onYes); }, { class: "bm-card", "data-bm-push": "" }),
         ]), row([leaveBtn(key)])], "refused-" + key);
     }
     function fearAsk(key, round, onYes) {
@@ -1525,13 +1869,16 @@
     function assureAsk(key, round, onYes, fear) {
       var input = el("input", { type: "text", "data-bm-assureline": "", placeholder: "Or in your own words", maxlength: "200" });
       // own: the assurance was typed, so only that it was in the player's own words is recorded, never the words
-      function offer(t, own) {
+      // The assurances are trust moves too: the first is a promise (will you), the second and fourth say what you'd do for it
+      // (are you good), the third a pace you'll keep (can you); words of your own say what you'd do for it.
+      function offer(t, own, ai) {
         if (!t) return;
+        if (ai === 0) promise("return"); else if (ai === 2) pend("can", "pace"); else pend("good", "intent");
         show([el("h2", { text: V.title }), you(t), npc(V.assured[Math.min(round, V.assured.length - 1)]),
           row([btn("Ask again", function () { blockPoll(key, round, onYes, own ? "An assurance in your own words" : "You offered: " + t); }, { "data-bm-again": "" })])], "assured-" + key);
       }
       show([el("h2", { text: V.title }), npc(fear), guide("That makes sense of the wall. What can you offer it?"),
-        el("div", { class: "bm-cards" }, V.assure.map(function (f, fi) { return btn(f[0], function () { offer(f[0]); }, { class: "bm-card", "data-bm-assure": String(fi) }); })),
+        el("div", { class: "bm-cards" }, V.assure.map(function (f, fi) { return btn(f[0], function () { offer(f[0], false, fi); }, { class: "bm-card", "data-bm-assure": String(fi) }); })),
         el("div", { class: "bm-line" }, [input, btn("Offer it", function () { offer(input.value.trim(), true); }, { "data-bm-offer": "" })])], "assure-" + key);
     }
     // While it holds back, its charge is asked for too (Wendell, 15 October 2026, on the Controller: "we want to have the
@@ -1549,6 +1896,7 @@
         row([btn("That's how it is", function () {
           var was = st.charge, v = +range.value, again = function () { permit(key, round + 1, onYes); };
           st.charge = v; st.charges.push({ after: "held-" + key, v: v, why: why, from: was }); setMeter(v);
+          resolvePending(was != null ? was : st.prevCharge, v);
           if (was != null && v < was) return eased(was, v, again);
           again();
         }, { "data-bm-blockcharged": "" })])], "blockpoll-" + key);
@@ -1629,7 +1977,7 @@
       st.answers[V.questions[i].id] = lines;
       chargeAsk(i, "Does it feel any different? How charged is " + V.name + " now?");
     }
-    function next(i) { st.answers[V.questions[i].id] = st.answers[V.questions[i].id] || null; charged(i, st.charge); } // sitting a question out moves on at the same charge
+    function next(i) { st.answers[V.questions[i].id] = st.answers[V.questions[i].id] || null; charged(i, st.charge, true); } // sitting a question out moves on at the same charge
     // Standing in its place, speaking as it. Wendell, 12 October 2026, 21:15: "the 1 phase with the protector (and all the voices)
     // should be a bit longer and should have the option for the player to speak as the protector in their own words". So the seat
     // shift is now three turns as the voice, in the first person: who it is, what it sees from its post, and what it wants the self
@@ -1718,7 +2066,10 @@
         if (ghost) { scene.remove(ghost); ghost = null; }
         voice.visible = true; figureAt(voice, S_VOICE, 0, true);
         tween(900, function (k) { voice.traverse(function (mm) { if (mm.material) mm.material.opacity = ease(k); }); }, function () {
-          permit("pass", 0, function () { voiceAside(function () { keep(); }); }, npc("Back at my post. So."));
+          var passAsk = function () { permit("pass", 0, function () { voiceAside(function () { keep(); }); }, npc("Back at my post. So.")); };
+          // Back in its own place, as promised: the voice sees the kept promise at a check-in.
+          if (keepPromise("return")) return checkIn("You stepped back into your own place, and " + V.name + " has its post again.", passAsk);
+          passAsk();
         });
       });
     }
@@ -1753,9 +2104,13 @@
       // Every W.A.V.E. is one entry, added to the ones from earlier sittings; its feeling word only if kept (bmw-record).
       var prevWaves = (s.voices[V.id] && s.voices[V.id].waves) || [], wk = st.waveKeep || [];
       var waves = prevWaves.concat(st.waves.map(function (w, wi) { var o = {}; for (var k in w) o[k] = w[k]; if (!wk[wi]) o.word = null; return o; }));
-      s.voices[V.id] = { status: status, kept: kept, place: st.place || null, charges: st.charges.slice(), waves: waves, savedAt: new Date().toISOString() };
+      // A voice met again on a later visit (bmt-ask-again) adds to what it said before: its kept lines stay, and declining or
+      // sitting everything out today leaves it as spoken if it has spoken before.
+      var prev = s.voices[V.id] || null, was = prev && prev.status === "spoken";
+      var allKept = (prev && prev.kept || []).concat(kept.filter(function (k) { return !(prev && prev.kept || []).some(function (p) { return p.q === k.q && p.line === k.line; }); }));
+      s.voices[V.id] = { status: was ? "spoken" : status, kept: allKept, place: st.place || (prev && prev.place) || null, charges: st.charges.length || !prev ? st.charges.slice() : prev.charges || [], waves: waves, trust: st.trust, savedAt: new Date().toISOString() };
       if (blocked) s.voices[V.id].keepsWay = true; // it held the way shut; the next sitting meets it again at its post
-      if (st.boss) s.voices[V.id].boss = st.boss; // who the player said it works for (the boss question)
+      var boss = st.boss || (prev && prev.boss); if (boss) s.voices[V.id].boss = boss; // who the player said it works for (the boss question)
       s.waiting = st.waiting.slice(); s.at = blocked ? "mouth" : "hall2";
       var ok = writeSave(s);
       hide();
@@ -1775,10 +2130,13 @@
         return;
       }
       if (NEXT.centre) {
+        // At the mouth of the centre the allied spirits vouch together (bmt-spirits-vouch), each in its own voice's terms.
+        var A = allies().concat(trusted(st.trust, V.id) && st.trust.ally ? [V.id] : []);
         show([el("h2", { text: NEXT.title }), guide("This is the end of the daemon path. Past the last chamber the way opens toward the centre, and the vulnerable child waits there, with the place for the self beside it."),
+          A.length ? guide("At the mouth of the centre, your spirits vouch for you together:") : null].concat(A.map(function (id) { return el("p", { class: "bm-guide bm-trustsaw", "data-bm-vouchall": id, text: TRUST[id].vouch }); }), [
           guide("Your place is saved here. You can walk on into the centre, rest, or walk back up and out."),
           row([btn("Walk on, into the centre", toCentre, { "data-bm-tocentre": "" })]),
-          row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }, true), rest])], "end");
+          row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }, true), rest])]), "end");
         return;
       }
       show([el("h2", { text: NEXT.title }), guide("The mouth of the next chamber is shut ahead, breathing, with a light in it. Its chamber opens in the next build."),
@@ -1867,30 +2225,54 @@
     // again around the next voice from its first hallway.
     function onward() {
       var s = readSave(); s.chamber = C + 1; s.at = "mouth"; writeSave(s);
-      carry = spirits.map(function (o) { return { name: o.name, element: o.element, lighter: !!o.lighter }; });
+      carry = spirits.filter(function (o) { return !o.ally; }).map(function (o) { return { name: o.name, element: o.element, lighter: !!o.lighter }; }); // allies come back from the save
       hide(); fade.style.opacity = 1;
       setTimeout(function () { stopMouthSound(); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp); cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; play(THREE, "hall1"); }, 520);
     }
     // At the mouth the player chooses, for each spirit, to keep it for next time or let it go (bms-spirits-after = choose). What
     // is kept is its name and element, on this device.
     function leave() {
-      if (!spirits.length) { var s0 = readSave(); if (s0.spirits && s0.spirits.length) { s0.spirits = []; writeSave(s0); } return leaveNow(); }
-      var keepIt = spirits.map(function () { return true; });
+      if (st.turned) breakReturn(); // walking out from the voice's place, before stepping back into one's own
+      if (!st.rited) return rite();
+      var own = spirits.filter(function (o) { return !o.ally; }); // allies come back from the save while their voice trusts the player
+      if (!own.length) { var s0 = readSave(); if (s0.spirits && s0.spirits.length) { s0.spirits = []; writeSave(s0); } return leaveNow(); }
+      var keepIt = own.map(function () { return true; });
       show([el("h2", { text: "At the cave mouth" }), guide("These came out with you. Keep each one to come back in with you next time, or let it go here. What is kept is its name and element, on this device."),
-        el("div", { class: "bm-cards" }, spirits.map(function (o, oi) {
+        el("div", { class: "bm-cards" }, own.map(function (o, oi) {
           var b = el("button", { class: "bm-card", "data-bm-mouthspirit": String(oi), "aria-pressed": "true", text: "Keep " + spiritLabel(o), onclick: function () {
             keepIt[oi] = !keepIt[oi]; b.setAttribute("aria-pressed", String(keepIt[oi])); b.textContent = (keepIt[oi] ? "Keep " : "Let go of ") + spiritLabel(o);
           } });
           return b;
         })),
         row([btn("Walk out", function () {
-          var s = readSave(); s.spirits = spirits.filter(function (o, oi) { return keepIt[oi]; }).map(function (o) { return o.lighter ? { name: o.name, element: o.element, lighter: true } : { name: o.name, element: o.element }; });
+          var s = readSave(); s.spirits = own.filter(function (o, oi) { return keepIt[oi]; }).map(function (o) { return o.lighter ? { name: o.name, element: o.element, lighter: true } : { name: o.name, element: o.element }; });
           writeSave(s); leaveNow();
         }, { "data-bm-walkout": "" })])], "mouth-spirits");
     }
+    // The return rite at the mouth, skippable (bmt-return): thank the voices, take one breath, and go back out with one plain line
+    // naming the move practised. A facilitator holds the return; this holds it when nobody else does.
+    function rite() {
+      var skip = function () { st.rited = true; leave(); };
+      var names = PATH.filter(function (id) { return visit.met.indexOf(id) >= 0; }).map(function (id) { return (VOICES.filter(function (x) { return x.id === id; })[0] || {}).name; }).filter(Boolean);
+      var skipBtn = btn("Skip, and walk out", skip, { class: "bm-link", "data-bm-riteskip": "" });
+      show([el("h2", { text: "Before you go" }), guide("Thank the voices you met today" + (names.length ? ": " + names.join(", ").replace(/, ([^,]*)$/, names.length > 2 ? ", and $1" : " and $1") : "") + "."),
+        row([btn("Thank you, all of you", riteBreath, { "data-bm-ritethanks": "" })]), row([skipBtn])], "rite");
+      function riteBreath() {
+        var go = btn("I took a breath", riteLast, { "data-bm-ritebreath": "", disabled: "" }), cue = el("p", { class: "bm-breath", text: "Breathe in…" });
+        show([el("h2", { text: "One breath" }), guide("Take one breath here at the mouth before you go."), orb(), cue, row([go]), row([skipBtn])], "rite-breath");
+        tween(K.BREATH.inS * 1000, function () {}, function () { cue.textContent = "…and out"; tween(K.BREATH.outS * 1000, function () {}, function () { cue.textContent = "One breath."; go.removeAttribute("disabled"); }); });
+      }
+      function riteLast() {
+        var d = visit.did, k = d.length ? d[d.length - 1] : null;
+        var move = k ? PRACTISED[k] : names.length ? "asking a part of you for permission before you speak for it" : "walking in, and back out when you chose";
+        show([el("h2", { text: "Back to your day" }), el("p", { class: "bm-guide", "data-bm-ritemove": "", text: "The move you practised today: " + move + "." }),
+          guide(fromRoom ? "The WAVE room is just through the mouth." : "You can use it out there too."),
+          row([btn(fromRoom ? "Go back to the WAVE room" : "Walk out", function () { st.rited = true; st.home = !!fromRoom; leave(); }, { "data-bm-ritego": "" })])], "rite-move");
+      }
+    }
     function leaveNow() {
       fade.style.opacity = 1;
-      setTimeout(function () { stopMouthSound(); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp); cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; mouth(); }, 520);
+      setTimeout(function () { stopMouthSound(); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp); cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; if (st.home && fromRoom) goHome(); else mouth(); }, 520);
     }
 
     // ---- the frame ------------------------------------------------------------------------------
@@ -1966,6 +2348,8 @@
       spirits.forEach(function (o) { o.light.visible = o.g.visible && !o.hidden; o.light.position.set(o.g.position.x, o.g.position.y + 1.1, o.g.position.z); });
       var stance = 1 + 0.04 * Math.min(spirits.length, 3); voice.scale.x = voice.scale.z = stance; // it squares up to what you bring
       sitBtn.disabled = !canSit();
+      trustBtn.style.display = (st.phase === "hall1" || st.phase === "chamber") && !cen ? "" : "none"; trustBtn.disabled = !canTrust();
+      voice.userData.stance = stanceOf(st.trust, V.id, st); // for the daemon bodies: how it stands toward the player
       // the camera: behind on the path; in the voice's place it stands past the player, looking back the way the self came
       var want, look;
       if (st.cam === "voice") { var c = at(route, S_VOICE + 6.5), sp = at(route, S_SELF); want = new THREE.Vector3(c.x, floor(c) + 4.4, c.z); look = new THREE.Vector3(sp.x, floor(sp) + 1.8, sp.z); }
@@ -2029,11 +2413,13 @@
     var api = window.__oagBigMind; api.state = st; api.chamber = C; api.voiceId = V.id; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
     api.openAt = route.openAt; api.inCave = function (p) { var q = keepInCave(p.clone(), st.s + 2); return q.distanceTo(p) < 0.01; }; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
     api.spirits = spirits; api.centre = function () { return cen; }; api.child = nextFig; api.mouth = { light: mouthLight, glow: mouthGlow, sound: function () { return snd; } }; api.walkInput = walkInput; api.keys = keys; api.stick = stick; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
+    api.trust = function () { return st.trust; }; api.pending = function () { return st.pending; }; api.stance = function () { return stanceOf(st.trust, V.id, st); };
+    api.marks = function () { return { can: markOf(st.trust, V.id, "can"), will: markOf(st.trust, V.id, "will"), good: goodOf(st.trust), trusted: trusted(st.trust, V.id) }; };
     size(); window.addEventListener("resize", size);
     running = requestAnimationFrame(frame);
   }
 
-  window.__oagBigMind = { start: start, open: open, heard: heard, heardBoss: heardBoss, readSave: readSave, VOICES: VOICES, CENTRE: CENTRE, centreQuestions: centreQuestions, STORE: STORE, state: null };
+  window.__oagBigMind = { start: start, open: open, heard: heard, heardBoss: heardBoss, readSave: readSave, VOICES: VOICES, CENTRE: CENTRE, centreQuestions: centreQuestions, STORE: STORE, TRUST: TRUST, STANCES: STANCES, state: null };
   // On the Cave of Lessons page the cave is opened from the WAVE room's door, so it waits to be asked.
   if (!window.__oagBigMindNoStart) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start(); }
 })();
