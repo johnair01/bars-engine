@@ -665,18 +665,26 @@ await page.evaluate(() => localStorage.clear());
   await waitStep('know'); await page.click('[data-bm-know="2"]');
   await waitStep('thanks'); await page.click('[data-bm-out]');
   ok(await waitStep('perm-pass', 30000), 'stepping back out, the player asks to walk on');
+  // the charge asked for while it holds back is the Skeptic's too (the chambers share the engine)
+  await page.click('[data-bm-perm="no"]'); await page.click('[data-bm-why]'); await page.click('[data-bm-fear="0"]'); await page.click('[data-bm-assure="1"]');
+  await page.click('[data-bm-again]');
+  ok(await waitStep('blockpoll-pass') && /How charged is the Skeptic now\?/.test(await page.textContent('[data-bm-modal]')), 'held back at the last ask, the Skeptic is asked how charged it is now');
+  await page.fill('[data-bm-range]', '1'); await page.click('[data-bm-blockcharged]');
+  ok(await waitStep('eased', 3000) && /2 down to 1/.test(await page.textContent('[data-bm-eased]')), 'its drop while it holds back eases like any other');
+  ok(await waitStep('perm-pass'), 'then the player asks again');
   await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="pass"]');
   ok(await waitStep('keep', 30000) && /What the Skeptic said/.test(await page.textContent('[data-bm-modal]')), 'then its lines to keep');
   await page.click('[data-bm-keep="0"]'); await page.click('[data-bm-save]');
   await page.waitForTimeout(400);
   sv = await save();
+  ok(sv.voices.skeptic.charges.some((c) => c.after === 'held-pass' && c.from === 2 && c.v === 1 && /keep checking/.test(c.why)), 'its drop while it held back is saved with what moved it');
   ok(sv.voices.skeptic && sv.voices.skeptic.status === 'spoken' && sv.voices.skeptic.boss === 'controller' && sv.chamber === 2 && sv.at === 'hall2' && sv.voices.controller.boss === 'protector', 'its record holds who it works for, and the Controller\'s stays: ' + JSON.stringify({ boss: sv.voices.skeptic.boss, chamber: sv.chamber, at: sv.at }));
   ok(await holdUntil('end') && /The Fixer/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-onward]').count() === 1, 'past the Skeptic, the Fixer waits, and its chamber is open');
   await page.screenshot({ path: SHOTS + '/bm-17-fixer-shut.png' });
   await page.click('[data-bm-leave]');
   await page.waitForSelector('[data-bm-mouth]');
   const kept = await page.textContent('[data-bm-kept]');
-  ok(/past the Skeptic/.test(await page.textContent('[data-bm-enter]')) && /It works for the Controller\./.test(kept) && /It works for the Protector\./.test(kept), 'the mouth goes back in past the Skeptic, and says who each works for');
+  ok(/past the Skeptic/.test(await page.textContent('[data-bm-enter]')) && /It works for the Controller\./.test(kept) && /It works for the Protector\./.test(kept) && /Moved it: You offered: You can keep checking/.test(kept), 'the mouth goes back in past the Skeptic, and says who each works for and what moved the Skeptic');
 
   // the vulnerable child, named in the player's own words
   await page.click('[data-bm-forget="skeptic"]');
