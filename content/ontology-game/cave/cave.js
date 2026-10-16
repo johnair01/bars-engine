@@ -3423,8 +3423,12 @@
   function readRoomTest() { try { return JSON.parse(localStorage.getItem(ROOM_TEST_KEY) || "[]"); } catch (e) { return []; } }
   function keepRoomTest(entry) { try { var all = readRoomTest(); all.push(entry); localStorage.setItem(ROOM_TEST_KEY, JSON.stringify(all)); } catch (e) { /* storage blocked: the room still plays */ } }
 
-  // opts = { from: "body" | "cave", where (the place's words), texture, element, daemon (its name, from the cave) }. Resolves when
+  // opts = { from: "body" | "cave" | "board", where (the place's words), texture, element, daemon (its name, from the cave) }. Resolves when
   // the player leaves the room, with { rounds, rested }.
+  // From the board (Wendell, 14 October 2026, ttv-skip-wave: "It should deposit me inside the WAVE room and we should move to have
+  // the WAVE room be able to metabolize context specific charges and send the results to the board"), opts also has charge (the
+  // words of what is in the way) and onSave(run), called with the whole run at every page so a run left half way still says what
+  // came up. The run has the blocker record's shape (Six-faces-council docs/blocker-panel.md); cave/board-wave.js sends it.
   function openRoom(A, opts) {
     return new Promise(function (resolve) {
       if (!document.getElementById("oagr-css")) document.head.appendChild(el("style", { id: "oagr-css", text: ROOM_CSS }));
@@ -3564,11 +3568,11 @@
       // R.phase is the step's id from ROOM_STEPS, or opening, stays, kept, goes, leaving, gone, checkin, again, end.
       // R.active holds the creatures in the room being worked (up to three); ch is the one the player is working now. Each keeps
       // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
-      var R = { round: 1, phase: "welcome", back: false, close: null, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [] };
+      var R = { round: 1, phase: "welcome", back: false, close: null, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [], all: [], startedAt: new Date().toISOString(), heat: { before: null, after: null }, ending: { kind: null, text: "" } };
       function newCharge(first, slot) {
-        var c = { where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
+        var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [] };
-        c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
+        R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
       var ch = newCharge(true); R.active.push(ch);
@@ -3586,7 +3590,7 @@
       var fig = { x: SEAT.x, z: SEAT.z, sit: 1, yaw: Math.PI, clk: 0 };
 
       // A close-up (below) keeps the step's page tucked away until the player goes back to the room, and keeps its card current.
-      function draw() { drawPage(); if (R.close) { closeModal(); pane.style.display = "none"; closeCard(); } }
+      function draw() { drawPage(); saveRun(); if (R.close) { closeModal(); pane.style.display = "none"; closeCard(); } }
       function drawPage() {
         modal.innerHTML = ""; stat.innerHTML = ""; pane.innerHTML = "";
         var pg = page(), kids = pg.kids || [];
@@ -3646,6 +3650,8 @@
         if (ph === "welcome") {
           k.push(P(w[2], { "data-room-prompt": "" }));
           k.push(P(ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
+          if (ch.about) k.push(P("From the board: " + ch.about + ". Whatever is in the way of it is at the door.", { "data-room-about": "" }));
+          if (R.from === "board" && R.round === 1 && ch === R.all[0]) heatRow(k, "before", "How much charge does it carry, 0 to 10?");
           if (Object.keys(EXITS).length && R.round === 1) k.push(P("Walk round the room with the circle at the bottom left (or the arrow keys), or tap the floor. The rug is where you sit to work with what comes in. " + (EXITS.bigmind && EXITS.portal ? "Behind you are two doors: Big Mind on the left, and the six game masters on the right." : "Behind you is a door."), { "data-room-walk-hint": "" }));
           k.push(row([btn("Welcome it", { "data-room-welcome": "" }, function () { R.phase = "opening"; R.wait = "door-in"; draw(); })]));
           return { title: w[1], kids: k };
@@ -3694,6 +3700,7 @@
         }
         if (ph === "acknowledge") {
           k.push(P(w[2], { "data-room-prompt": "" }));
+          if (ch.about) k.push(P("What is in the way of " + ch.about + "?", { "data-room-about": "" }));
           k.push(P("Give it a name, in your own words. Then its element, if you know it."));
           var go1 = btn("Go on", { "data-room-next": "" }, nextStep);
           var ready = function () { go1.disabled = !(ch.name.trim() && (ch.element || ch.elementUnknown)); };
@@ -3781,9 +3788,48 @@
         // end
         k.push(P(R.rested ? "What's left rests by the door, with a lantern beside it." : "The room is quiet.", { "data-room-end": "" }));
         if (R.lights.length) k.push(P("On the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
-        k.push(row([btn(R.from === "cave" ? "Back to the lantern" : "Leave the room", { "data-room-leave": "" }, leave)]));
+        if (R.from === "board") boardEnding(k);
+        k.push(row([btn(R.from === "cave" ? "Back to the lantern" : R.from === "board" ? "Back to the board" : "Leave the room", { "data-room-leave": "" }, leave)]));
         return { title: R.rested ? "Resting" : "The room is quiet", kids: k };
       }
+      // ---- the run, for the board -----------------------------------------------------------------------------------------
+      // The charge 0 to 10 at the start and the end, and how the thing it was about ends (the blocker panel's five endings).
+      function heatRow(k, when, ask) {
+        k.push(P(ask, { "data-room-heat-ask": when }));
+        var n = []; for (var v = 0; v <= 10; v++) n.push([String(v), String(v)]);
+        k.push(pickRow("data-room-heat-" + when, n, R.heat[when] == null ? null : String(R.heat[when]), function (v) { R.heat[when] = +v; draw(); }));
+      }
+      var ENDINGS = [["now", "I'll do it now", "The smallest first move"], ["moved", "Tomorrow", "Why tomorrow"], ["change", "It needs changing", "What would make it doable"],
+        ["drop", "Drop it", "Why"], ["stuck", "Still stuck", "What's still in the way"]];
+      function boardEnding(k) {
+        k.push(P("And " + (opts.task || "the thing it was about") + "?", { "data-room-ending-ask": "" }));
+        k.push(pickRow("data-room-ending", ENDINGS.map(function (e) { return [e[0], e[1]]; }), R.ending.kind, function (v) { R.ending.kind = v; draw(); }));
+        var e = R.ending.kind && lookup(ENDINGS, R.ending.kind);
+        if (e) k.push(field("data-room-ending-text", R.ending.text, e[2], function (v) { R.ending.text = v; saveRun(); }));
+        heatRow(k, "after", "How much charge is left, 0 to 10?");
+      }
+      function runOf(c) {
+        var r = { from: c === R.all[0] && c.about ? "the board" : c.waited ? "waited at the door" : "came to the door", name: (c.name || "").trim(), element: c.element || null,
+          texture: c.texture || null, where: c.where || null, goal: (c.goal || "").trim() || null, push: c.push, aligned: c.push ? c.push === "toward" : null,
+          move: (c.move || "").trim() || null, line: (c.line || "").trim() || null, light: c.push === "away" ? (c.lightName || "").trim() || (c.name || "").trim() || null : null,
+          layers: c.layers.map(function (l) { return l.name; }), worked: R.worked.indexOf(c) >= 0, kept: R.kept.indexOf(c) >= 0 };
+        Object.keys(r).forEach(function (x) { if (r[x] == null || (r[x].length === 0 && typeof r[x] !== "boolean")) delete r[x]; });
+        return r;
+      }
+      // The whole run as the blocker panel saves it. A move written in the 3-2-1 is the ending when none was picked.
+      function runRecord(done) {
+        var now = new Date().toISOString(), moves = R.all.map(function (c) { return (c.move || "").trim(); }).filter(Boolean), end = null;
+        if (R.ending.kind) {
+          end = { kind: R.ending.kind, text: R.ending.text.trim(), at: now };
+          if (R.ending.kind === "moved" && opts.date) { var d = new Date(opts.date + "T12:00:00"); d.setDate(d.getDate() + 1); end.date = d.toISOString().slice(0, 10); }
+        } else if (moves.length) end = { kind: "now", text: moves.join("; "), at: now };
+        var run = { engine: "wave-room", version: 1, startedAt: R.startedAt, savedAt: now, stage: R.phase, rounds: R.all.filter(function (c) { return c.fig.visible || c.name || R.worked.indexOf(c) >= 0; }).map(runOf),
+          sittingRounds: R.round, rested: R.rested, charge: { before: R.heat.before, after: R.heat.after }, resolution: end,
+          status: end ? (end.kind === "stuck" ? "stuck" : "resolved") : "open" };
+        if (done) run.finishedAt = now;
+        return run;
+      }
+      function saveRun(done) { if (opts.onSave) try { opts.onSave(runRecord(done)); } catch (e) { /* the room still plays */ } }
       function lightName() { return (ch.lightName || "").trim() || nm(); }
       // Something new while fewer than three are in: the door opens on the out-breath and it comes in to a place of its own, and
       // the player works it now (the others keep their steps). With three in, it waits at the door.
@@ -3822,7 +3868,7 @@
         fade.style.opacity = 1;
         // Only a charge worked through the whole W.A.V.E. leaves as a spirit (Wendell, 13 October 2026: "It should only emerge once
         // it's been engaged with"), so one still being worked stays in the room, by any door.
-        var going = R.worked;
+        var going = R.worked; saveRun(true);
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
@@ -4210,6 +4256,7 @@
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
+        run: function () { return runRecord(); },
         zoom: function () { return zoom; },
         // walking: walkTo("bigmind" | "portal" | { x, z }) as a tap on that door or that floor would; walking() says where things are
         walkTo: function (to) { walkTo(to); },
