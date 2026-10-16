@@ -19,6 +19,10 @@ Each stage is rendered with Cycles on the CPU and shrunk to a pixel sprite, so o
 Writes OUT_DIR/render/<element>-<stage>.png, OUT_DIR/sprite/<element>-<stage>.png (96 px, three alpha steps),
 OUT_DIR/glb/<element>-<stage>.glb and OUT_DIR/report.json; --heads adds OUT_DIR/head/<element>-<stage>.png, a close-up
 of the living creature's and highest ally form's head. The same arguments always give the same spirit.
+
+Round 12 adds the satisfaction states (pass spirit-states 1, positions ss-markers, ss-feral-stance, ss-not-veiled):
+--state dissatisfied|neutral|satisfied poses the same model and changes its materials, and --polarity veils (above 0)
+or floods (below 0) it. The poses are the tortoise's; the material layer works on every base.
 """
 import argparse, json, math, os, pathlib, random, sys
 
@@ -38,6 +42,10 @@ ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", 
 ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
 ap.add_argument("--nation", default="", choices=["", "meridia"],
                 help="the nation where it was met, which adds its regional style over the element's (round 7: Meridia)")
+ap.add_argument("--state", default="neutral", choices=["dissatisfied", "neutral", "satisfied"],
+                help="round 12 (ss-markers): the spirit's satisfaction state, a pose plus material settings on the same model")
+ap.add_argument("--polarity", type=int, default=0,
+                help="round 12 veil test (ss-not-veiled, ps-polarity): above 0 veils the spirit, below 0 floods it")
 args = ap.parse_args(argv)
 OUT = pathlib.Path(args.out)
 
@@ -841,9 +849,10 @@ def eye(body, toward, out, S, r=0.06, bar=False, iris=None):
         if c > 0.45: return mixc(iris, dark, (0.9 - c) / 0.45 * 0.7) if c > 0.52 else dark  # iris, darker at its rim
         return (0.62, 0.56, 0.44)  # what little white shows is shadowed and yellowed
     bpy.context.view_layer.update(); paint(eb, look)
-    ball("glint", solid("glint", (1, 1, 1), 0.1, 2.0), at + (gaze + up * 0.1 + side * 0.12).normalized() * r, r * 0.08)
+    up_lid, low_lid, glint_c, glint_r, glint_g = EYE[look_state()]
+    ball("glint", solid("glint", glint_c, 0.1, glint_g), at + (gaze + up * 0.1 + side * 0.12).normalized() * r, r * glint_r)
     lid = solid("lid", mixc(S["skin"], S["spot"], 0.25), 0.7)
-    for name, keep, s_ in (("lid_upper", lambda v: v.z > 0.18 and v.x > -0.35, 1.12), ("lid_lower", lambda v: v.z < -0.55 and v.x > -0.2, 1.08)):
+    for name, keep, s_ in (("lid_upper", lambda v: v.z > up_lid and v.x > -0.35, 1.12), ("lid_lower", lambda v: v.z < low_lid and v.x > -0.2, 1.08)):
         bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=r * s_)
         o = bpy.context.active_object; o.name = name
         import bmesh
@@ -922,22 +931,25 @@ def creature(sc, el, lt, dk):
     S = STYLE[el]
     lights(sc)
     rng = random.Random(f"creature-{el}")
+    P = CREATURE_POSE[look_state()]
     shell, centres = shell_mesh("shell", 0.98, S)
-    shell.location = (-0.15, 0, 0.42); shell.rotation_euler = (0, -0.12, 0)
+    shell.location = (-0.15, 0, P["shell_z"]); shell.rotation_euler = (0, P["tip"], 0)
     growth(rng, shell, centres, 0.98, S, lt)
     # the emblem faces the viewer on the shell's flank
     em = emblem("core", 0.42, lt)
-    em.location = (-0.25, -0.7, 0.85); em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector((0.05, -0.8, 0.6))).to_euler()
+    em.location = (-0.25, -0.7, 0.85 + P["shell_z"] - 0.42); em.rotation_euler = Vector((0, 0, 1)).rotation_difference(Vector((0.05, -0.8, 0.6))).to_euler()
     bpy.context.view_layer.update(); wrap_onto(em, shell)
-    H = Vector((1.2, 0, 1.22))
+    H = Vector(P["head"])
     HEAD["at"] = H
-    parts = [("cap", (0.45, 0, 0.5), (0.98, 0, 1.02), 0.22), ("ball", (0.5, 0, 0.42), 0.3)] + tortoise_head(H, 1.2)
-    NECK["at"] = (Vector((0.86, 0, 0.9)), Vector((0.53, 0, 0.52)), 0.22)
+    root = Vector((0.45, 0, 0.5))
+    neck_end = H + Vector((-0.22, 0, -0.2))
+    parts = [("cap", tuple(root), tuple(neck_end), 0.22), ("ball", (0.5, 0, 0.42), 0.3)] + tortoise_head(H, 1.2)
+    NECK["at"] = (root + (neck_end - root) * 0.75, (neck_end - root).normalized(), 0.22)
     feet = []
-    for x, y in ((0.45, -0.52), (0.45, 0.52), (-0.65, -0.52), (-0.65, 0.52)):
-        parts += [("cap", (x, y * 0.85, 0.42), (x + 0.04, y, 0.08), 0.21),
-                  ("ell", (x + 0.06, y * 1.03, 0.05), 0.22, (1.2, 1.05, 0.45))]
-        feet.append((Vector((x + 0.06, y * 1.03, 0.04)), Vector((1, 0.5 * (1 if y > 0 else -1), 0))))
+    for (x, y), (fx, fy) in zip(((0.45, -0.52), (0.45, 0.52), (-0.65, -0.52), (-0.65, 0.52)), P["feet"]):
+        parts += [("cap", (x, y * 0.85, 0.42), (x + 0.04 + fx, y * fy, 0.08), 0.21),
+                  ("ell", (x + 0.06 + fx, y * 1.03 * fy, 0.05), 0.22, (1.2, 1.05, 0.45))]
+        feet.append((Vector((x + 0.06 + fx, y * 1.03 * fy, 0.04)), Vector((1, 0.5 * (1 if y > 0 else -1), 0))))
     parts.append(("cap", (-1.05, 0, 0.25), (-1.3, 0, 0.12), 0.07))
     body = blob("body", parts, 0.028, 12000)
     seam = mouth_seam(body, H + Vector((0.16, 0, 0)), H.z - 0.115 + SNOUT_UP * 1.2, 78, 0.035, 0.009)
@@ -949,15 +961,17 @@ def creature(sc, el, lt, dk):
     for f, ahead in feet: claws(f, ahead)
     for s in (1, -1):
         eye(body, H + Vector((0.14, 0, 0.04)), (0.45, s * 0.88, 0.12), S, 0.07)
-    drape("shawl", (0.62, 0, 0.86), (-0.3, 0, -1), 0.32, 0.62, 0.45, S["cloth"], S["trim"], f"shawl-{el}")
-    beads((0.74, 0, 0.88), (0.65, 0, 0.75), 0.3, 18, 0.12, 4, lt, S)
+    lift = Vector(P["collar"])  # the shawl and beads ride the neck's root as the head lowers or rises
+    drape("shawl", tuple(Vector((0.62, 0, 0.86)) + lift), (-0.3, 0, -1), 0.32, 0.62, 0.45, S["cloth"], S["trim"], f"shawl-{el}")
+    beads(tuple(Vector((0.74, 0, 0.88)) + lift), tuple((neck_end - root).normalized()), 0.3, 18, 0.12, 4, lt, S)
     # a gold bell and a jade disc hang from the shell's rim on the near side
-    ball("bell", solid("gold", GOLD, 0.35), (-0.45, -0.8, 0.3), 0.11)
+    dz = P["shell_z"] - 0.42 + P["rim"]  # the rim moves with the shell
+    ball("bell", solid("gold", GOLD, 0.35), (-0.45, -0.8, 0.3 + dz), 0.11)
     bpy.ops.mesh.primitive_torus_add(major_radius=0.08, minor_radius=0.035, major_segments=20, minor_segments=8,
-                                     location=(-0.72, -0.76, 0.27), rotation=(math.pi / 2, 0, 0.5))
+                                     location=(-0.72, -0.76, 0.27 + dz), rotation=(math.pi / 2, 0, 0.5))
     bpy.context.active_object.data.materials.append(jade_of(lt))
     smooth(bpy.context.active_object)
-    tassel(Vector((-0.45, -0.82, 0.16)), S["tassel"], 0.9); tassel(Vector((-0.72, -0.78, 0.15)), S["tassel"], 0.9)
+    tassel(Vector((-0.45, -0.82, 0.16 + dz)), S["tassel"], 0.9); tassel(Vector((-0.72, -0.78, 0.15 + dz)), S["tassel"], 0.9)
     aura(rng, S["aura"], lt, (0.1, 0, 0.7), (1.35, 0.95, 0.75), 1.55)
 
 
@@ -1010,19 +1024,22 @@ def ascended(sc, el, lt, dk):
     shell, centres = shell_mesh("shell", 0.62, S)
     shell.location = (-0.24, 0, 1.25); shell.rotation_euler = (0, -math.pi / 2, 0)
     growth(rng, shell, centres, 0.62, S, lt, upright=False)
-    H = Vector((0.2, 0, 2.05))
+    A = ALLY_POSE[look_state()]
+    H = Vector(A["head"])
     HEAD["at"] = H
     NECK["at"] = (Vector((0.06, 0, 1.72)), Vector((0.2, 0, 1)), 0.17)
     parts = tortoise_head(H, 0.88) + [
-             ("cap", (0.0, 0, 1.55), (0.12, 0, 1.92), 0.13), ("cap", (0, 0, 0.95), (0, 0, 1.5), 0.3),
+             ("cap", (0.0, 0, 1.55), tuple(H + Vector((-0.08, 0, -0.13))), 0.13), ("cap", (0, 0, 0.95), (0, 0, 1.5), 0.3),
              ("ball", (0, 0, 0.9), 0.3), ("cap", (0, -0.32, 1.52), (0, 0.32, 1.52), 0.15)]
     feet = []
+    w = A["stance"]
     for y in (-0.2, 0.2):
-        parts += [("cap", (0, y, 0.85), (0.02, y * 1.1, 0.12), 0.15), ("ell", (0.09, y * 1.1, 0.05), 0.17, (1.3, 1.0, 0.45))]
-        feet.append((Vector((0.09, y * 1.1, 0.04)), Vector((1, 0.4 * (1 if y > 0 else -1), 0))))
+        parts += [("cap", (0, y, 0.85), (0.02, y * 1.1 * w, 0.12), 0.15), ("ell", (0.09, y * 1.1 * w, 0.05), 0.17, (1.3, 1.0, 0.45))]
+        feet.append((Vector((0.09, y * 1.1 * w, 0.04)), Vector((1, 0.4 * (1 if y > 0 else -1), 0))))
     hands = []
     for s in (-1, 1):
-        sh, el_, hd = Vector((0, s * 0.42, 1.5)), Vector((0.1, s * 0.5, 1.12)), Vector((0.32, s * 0.42, 0.95))
+        sh = Vector((0, s * 0.42, 1.5))
+        el_, hd = (Vector((a[0], s * a[1], a[2])) for a in (A["elbow"], A["hand"]))
         parts += [("cap", sh, el_, 0.1), ("cap", el_, hd, 0.09), ("ball", hd + Vector((0.04, 0, 0)), 0.1)]
         hands.append(hd + Vector((0.04, 0, 0)))
     body = blob("body", parts, 0.025, 12000)
@@ -2241,6 +2258,210 @@ def nation_layer(nation, st, base, lt):
             coins(N, (0.36, -0.2, 1.1), 3, 0.95)
 
 
+# Round 12: the satisfaction states (pass spirit-states 1, 2026-10-16). One model, posed and re-materialled per state
+# (ss-markers), so a state costs no new model. Dissatisfied is the Protector's push held and braced, the guard kept past
+# its time (ss-feral-stance): forelegs wide, head low under the rim, shell tipped forward; a ragged aura pulling inward
+# in a darker, denser shade; narrowed eyes with a hot glint; a cracked, dimmed core; rougher shell and skin. Satisfied is
+# the push completed and open: head up and out, a wider, smooth aura with a bright rim (brightness, not gold, which
+# Meridia's crest already uses), soft open eyes, a whole and steadier core. Neutral is the render as it was. Each state
+# shows on at least two markers that are not colour: the stance and the aura's edge. The gas shows the aura only, the
+# core its core, the hologram its aura and scanline. A veiled spirit (polarity above 0, ps-polarity) is faint and fogged
+# and its state does not show (ss-not-veiled); a flooding one (below 0) is too big and too bright.
+CREATURE_POSE = {
+    "neutral": dict(shell_z=0.42, tip=-0.12, head=(1.2, 0, 1.22), feet=[(0, 1)] * 4, rim=0.0, collar=(0, 0, 0)),
+    "dissatisfied": dict(shell_z=0.37, tip=0.1, head=(1.0, 0, 0.74), rim=0.07, collar=(0.0, 0, -0.16),
+                         feet=[(0.16, 1.5), (0.16, 1.5), (-0.08, 1.2), (-0.08, 1.2)]),
+    "satisfied": dict(shell_z=0.44, tip=-0.22, head=(1.32, 0, 1.46), rim=-0.04, collar=(0.03, 0, 0.07),
+                      feet=[(0.06, 1.0), (0.06, 1.0), (0, 1.0), (0, 1.0)]),
+}
+ALLY_POSE = {  # the far hand holds the staff in every pose
+    "neutral": dict(head=(0.2, 0, 2.05), stance=1.0, elbow=(0.1, 0.5, 1.12), hand=(0.32, 0.42, 0.95)),
+    "dissatisfied": dict(head=(0.36, 0, 1.88), stance=1.7, elbow=(0.34, 0.52, 1.28), hand=(0.64, 0.36, 1.42)),
+    "satisfied": dict(head=(0.2, 0, 2.13), stance=1.1, elbow=(0.06, 0.74, 1.45), hand=(0.1, 0.98, 1.72)),
+}
+EYE = {  # upper lid's edge, lower lid's edge (in the eye's own frame), glint colour, size and glow
+    "neutral": (0.18, -0.55, (1, 1, 1), 0.08, 2.0),
+    "dissatisfied": (-0.06, -0.3, (1.0, 0.42, 0.08), 0.17, 10.0),
+    "satisfied": (0.34, -0.68, (1, 1, 1), 0.14, 3.0),
+}
+AURA = {}
+
+
+def look_state():
+    """The state the body shows: a veiled spirit's state does not show (ss-not-veiled)."""
+    return "neutral" if args.polarity > 0 else args.state
+
+
+_aura_built = aura
+
+
+def aura(rng, kind, lt, centre, radii, top):  # the same aura, with its pieces marked for the state layer
+    before = set(bpy.data.objects)
+    _aura_built(rng, kind, lt, centre, radii, top)
+    for o in set(bpy.data.objects) - before: o["aura"] = 1
+    AURA.update(centre=Vector(centre), radii=radii, top=top)
+
+
+def materials_of(o):
+    return [m for m in (o.data.materials if o.type == "MESH" else []) if m]
+
+
+def bsdf(m):
+    return m.node_tree.nodes.get("Principled BSDF") if m.use_nodes else None
+
+
+DONE = set()  # (material, step) pairs already changed: many objects share one material, which must change once
+
+
+def once(o, step):
+    """The object's materials that this step has not changed yet."""
+    out = [m for m in materials_of(o) if (m.name, step) not in DONE]
+    DONE.update((m.name, step) for m in out)
+    return out
+
+
+def tint(o, f, step="tint"):
+    """Apply f to every colour the object shows: its painted vertex colours and its materials' base colours."""
+    if o.type != "MESH": return
+    ca = o.data.color_attributes.get("Col")
+    if ca and (o.data.name, step) not in DONE:
+        DONE.add((o.data.name, step))
+        for d in ca.data: d.color = (*f(tuple(d.color[:3])), 1)
+    for m in once(o, step):
+        p = bsdf(m)
+        if p and not p.inputs["Base Color"].is_linked:
+            p.inputs["Base Color"].default_value = (*f(tuple(p.inputs["Base Color"].default_value[:3])), 1)
+        if p and not p.inputs["Emission Color"].is_linked:
+            p.inputs["Emission Color"].default_value = (*f(tuple(p.inputs["Emission Color"].default_value[:3])), 1)
+
+
+def scale_glow(o, k, step="glow"):
+    for m in once(o, step):
+        p = bsdf(m)
+        if p: p.inputs["Emission Strength"].default_value *= k
+
+
+def ring_at(name, m, c, rx, ry, z, minor=0.02):
+    bpy.ops.mesh.primitive_torus_add(major_radius=1.0, minor_radius=minor, major_segments=96, minor_segments=6, location=(c.x, c.y, z))
+    o = bpy.context.active_object; o.name = name; o.scale = (rx, ry, 1); o.data.materials.append(m)
+    return o
+
+
+def crack(o, cam, dark):
+    """A dark zig-zag split across the core, on the face the camera sees."""
+    bpy.context.view_layer.update()
+    pts = [o.matrix_world @ Vector(b) for b in o.bound_box]
+    c = sum(pts, Vector()) / 8
+    ext = max((p - c).length for p in pts)
+    d = (cam.location - c).normalized()
+    side = d.cross(Vector((0, 0, 1))).normalized(); up = side.cross(d).normalized()
+    z = [(-0.9, 0.1), (-0.45, -0.22), (-0.1, 0.18), (0.25, -0.15), (0.6, 0.2), (0.88, -0.05)]
+    path = []
+    for t, w in z:
+        q = c + up * t * ext * 0.62 + side * w * ext * 0.5
+        hit, loc, _, _ = o.ray_cast(o.matrix_world.inverted() @ (q + d * ext * 2), o.matrix_world.inverted().to_3x3() @ -d)
+        path.append((o.matrix_world @ loc) + d * 0.01 if hit else q + d * ext * 0.3)
+    tube("crack", path, max(0.012, ext * 0.035), dark)
+
+
+def state_layer(sc, st, lt, dk):
+    state, pol = look_state(), args.polarity
+    DONE.clear()
+    objs = [o for o in sc.objects if o.type == "MESH"]
+    cores = [o for o in objs if o.name.split(".")[0] in ("core", "core_top", "core_bot", "core_gem", "romp_core")]
+    motes = [o for o in objs if o.name.startswith("mote")]
+    halo = [o for o in objs if o.get("aura") or o.name.startswith("projector")] + (motes if st in ("gas", "core") else [])
+    c = AURA.get("centre", Vector((0, 0, 0.35))); rx, ry = AURA.get("radii", (0.75, 0.75, 0.6))[:2]
+    if st in ("gas", "core", "hologram"):
+        c, rx, ry = Vector((0, 0, 0.35)), (1.25 if st == "hologram" else 0.8), (1.0 if st == "hologram" else 0.8)
+    deep = mixc(dk, (0, 0, 0), 0.45)
+    if state == "dissatisfied":
+        for o in objs:  # darker: dense and solid, never faint (ss-not-veiled)
+            if o.name.startswith("glint"): continue
+            if o in halo:
+                tint(o, lambda x: mixc(x, lin(dk), 0.8))
+                for m in once(o, "dense"):
+                    p = bsdf(m)
+                    if p and not p.inputs["Alpha"].is_linked: p.inputs["Alpha"].default_value = min(0.92, p.inputs["Alpha"].default_value * 2.2)
+                scale_glow(o, 0.5)
+                if o.name.startswith("Circle"):  # the pool goes dense and dark, not bright
+                    tint(o, lambda x: lin(mixc(deep, (0, 0, 0), 0.4)), "pool"); scale_glow(o, 0.3, "pool")
+            elif o not in cores:
+                tint(o, lambda x: mixc(tuple(v * 0.3 for v in x), lin(deep), 0.15))
+                for m in materials_of(o):
+                    p = bsdf(m)
+                    if p: p.inputs["Roughness"].default_value = max(0.9, p.inputs["Roughness"].default_value)
+        for o in objs:  # rougher shell and skin
+            if o.name.split(".")[0] in ("body", "shell"):
+                tex = bpy.data.textures.new("rough", "CLOUDS"); tex.noise_scale = 0.06; tex.noise_depth = 2
+                md = o.modifiers.new("rough", "DISPLACE"); md.texture = tex; md.strength = 0.035; md.mid_level = 0.5
+        for o in halo:  # the aura pulls in toward the body
+            o.location = c + (o.location - c) * 0.72 if o.location.length > 0.01 else o.location
+            if o.name.startswith("mote"):
+                o.rotation_euler = (c - o.location).to_track_quat("Z", "Y").to_euler(); o.scale = (0.55, 0.55, 2.4)
+        for o in cores:  # cracked and dimmed
+            scale_glow(o, 0.6, "dim")
+            crack(o, sc.camera, solid("crack", (0.02, 0.01, 0.01), 0.9))
+        thorn = solid("thorn", mixc(deep, (0, 0, 0), 0.35), 0.6, 0.8, alpha=0.95)
+        rng = random.Random(f"thorns-{st}")
+        for k in range(34):  # a ragged edge of thorns, every one pointing inward
+            a = k * 2 * math.pi / 34 + rng.uniform(-0.08, 0.08)
+            z = c.z + rng.uniform(-0.45, 0.75) * (AURA.get("top", 1.2) * 0.6 if st in ("creature", "ascended") else 0.6)
+            p = Vector((c.x + math.cos(a) * rx * 1.18, c.y + math.sin(a) * ry * 1.18, max(0.05, z)))
+            L = rng.uniform(0.28, 0.55)
+            bpy.ops.mesh.primitive_cone_add(vertices=5, radius1=0.075, depth=L, location=p)
+            o = bpy.context.active_object; o.name = "thorn"; o.data.materials.append(thorn)
+            o.rotation_euler = (Vector((c.x, c.y, p.z)) - p).to_track_quat("Z", "Y").to_euler()
+        for o in objs:  # the hologram's scanline breaks up
+            for m in once(o, "scan"):
+                wv = m.node_tree.nodes.get("Wave Texture") if m.use_nodes else None
+                if wv: wv.inputs["Scale"].default_value *= 2.6; wv.inputs["Distortion"].default_value = 7.0
+    elif state == "satisfied":
+        for o in objs:
+            if o in halo:
+                d = o.location - c
+                o.location = c + Vector((d.x * 1.22, d.y * 1.22, d.z)) if d.length > 0.01 else o.location
+                if o.name.startswith("Circle") or o.name.startswith("Torus"): o.scale = (o.scale.x * 1.15, o.scale.y * 1.15, o.scale.z)
+                scale_glow(o, 1.1)
+            elif not o.name.startswith("glint"):
+                tint(o, lambda x: tuple(min(1.0, v * 1.12) for v in x)); scale_glow(o, 1.25)
+        for o in cores: scale_glow(o, 1.7, "whole")
+        rim = solid("rim", mixc(lt, (1, 1, 1), 0.55), 0.2, 7.0, alpha=0.95)
+        soft = solid("rimsoft", mixc(lt, (1, 1, 1), 0.3), 0.2, 2.5, alpha=0.35)
+        ground = 0.015 if st in ("creature", "ascended") else c.z - 0.45
+        k = 1.4 if st in ("creature", "ascended") else 1.1 if st == "hologram" else 1.25
+        ring_at("rim", rim, c, rx * k, ry * k, ground, 0.022)
+        ring_at("rimsoft", soft, c, rx * k * 1.06, ry * k * 1.06, ground, 0.05)
+        if st in ("gas", "core", "hologram"):  # a slow halo above the smaller forms
+            ring_at("halo", rim, c, rx * 0.85, ry * 0.85, c.z + 0.55, 0.016)
+        for o in (cores if st in ("core", "hologram") else []):  # the creature's emblem is already its core
+            bpy.context.view_layer.update()
+            pts = [o.matrix_world @ Vector(b) for b in o.bound_box]; cc = sum(pts, Vector()) / 8
+            ext = max((p - cc).length for p in pts)
+            if o.name.split(".")[0] != "core_bot": ring_at("corehalo", rim, cc, ext * 1.15, ext * 1.15, cc.z, 0.012)
+    if pol > 0:  # veiled: faint and fogged, the state hidden (ss-not-veiled, ps-polarity)
+        oc = min(1.0, pol / 10)
+        fog = (0.55, 0.58, 0.62)
+        for o in objs:
+            tint(o, lambda x: mixc(x, lin(fog), oc * 0.65), "veil"); scale_glow(o, 1 - oc * 0.85, "veil")
+            for m in once(o, "veilalpha"):
+                p = bsdf(m)
+                if p and not p.inputs["Alpha"].is_linked: p.inputs["Alpha"].default_value *= 1 - 0.75 * oc
+        mist = solid("fog", fog, 1.0, 0.15, alpha=0.16 * oc / 0.6)
+        for s_, dzf in ((0.85, 0.0), (1.0, 0.1), (1.15, 0.2)):
+            ball("fog", mist, (c.x, c.y, c.z + dzf), 1.0, (rx * s_, ry * s_, (AURA.get("top", 1.0) * 0.6 + 0.3) * s_), 24)
+    elif pol < 0:  # flooding: too big and too bright, a glare in its own colour
+        fl = min(1.0, -pol / 10)
+        g = Matrix.Scale(1 + 0.35 * fl, 4)
+        for o in list(sc.objects):
+            if o.type == "MESH" and not o.parent: o.matrix_world = g @ o.matrix_world
+        for o in objs: scale_glow(o, 1 + 3 * fl, "flood"); tint(o, lambda x: tuple(min(1.0, v * (1 + 0.6 * fl)) for v in x), "flood")
+        g = 1 + 0.35 * fl
+        for r, a in ((0.95, 0.08), (1.12, 0.05)):
+            ball("glare", solid("glare", mixc(lt, (1, 1, 1), 0.2), 0.3, 3.0 * fl, alpha=a), tuple(c * g),
+                 1.0, (rx * r * g, ry * r * g, (AURA.get("top", 1.0) * 0.6 + 0.2) * r * g), 32)
+
+
 def render(sc, path):
     sc.render.filepath = str(path)
     bpy.ops.render.render(write_still=True)
@@ -2256,7 +2477,7 @@ def sprite(src, dst, px):
     img.filepath_raw = str(dst); img.file_format = "PNG"; img.save()
 
 
-report = {"family": FAMILY, "base": args.base, "nation": args.nation or None, "daemon": "player" if FAMILY == "romp" else "protector", "stages": STAGES, "items": []}
+report = {"family": FAMILY, "base": args.base, "nation": args.nation or None, "state": args.state, "polarity": args.polarity, "daemon": "player" if FAMILY == "romp" else "protector", "stages": STAGES, "items": []}
 for d in ("render", "sprite", "glb"): (OUT / d).mkdir(parents=True, exist_ok=True)
 for el, (lt, dk) in ELEMENTS.items():
     if args.only and el != args.only: continue
@@ -2287,6 +2508,9 @@ for el, (lt, dk) in ELEMENTS.items():
                 else otter_ascended(sc, el, lt, dk) if otter else goat_ascended(sc, el, lt, dk) if goat else ascended_long(sc, el, lt, dk, args.base)
         if args.nation:
             nation_layer(args.nation, st, args.base, lt)
+        if args.state != "neutral" or args.polarity:
+            state_layer(sc, st, lt, dk)
+        AURA.clear()
         base = f"{el}-{st}"
         render(sc, OUT / "render" / f"{base}.png")
         sprite(OUT / "render" / f"{base}.png", OUT / "sprite" / f"{base}.png", args.sprite)
