@@ -400,7 +400,8 @@ export async function commitTask(input: {
 
     const created = await db.$transaction(async (tx) => {
       const liveCount = await tx.tapTheVeinTask.count({
-        where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] } },
+        // The board's list is everything he can do today, not commitments: board tasks stay outside the cap (ttv-one-store).
+        where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] }, source: { not: 'board' } },
       })
       if (!canCommitTtvTask(liveCount, MAX_TASKS_PER_DAY)) {
         throw new Error('TTV_CAP_REACHED')

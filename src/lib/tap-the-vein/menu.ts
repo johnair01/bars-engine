@@ -53,6 +53,8 @@ export type MenuTaskInput = {
   text: string
   status: string
   lensGoalId: string | null
+  /** The BAR this task projects into, once he keeps it as one. */
+  barId?: string | null
 }
 
 /**
@@ -112,6 +114,7 @@ export type MenuItem = {
   text: string
   source: 'task' | 'kept_line'
   taskId: string | null
+  barId?: string | null
   status: MenuItemStatus
   /** Set when the item is bridged. */
   bridge: MenuGoalRef | null
@@ -125,6 +128,10 @@ export type MorningMenuExportItem = {
   key: string
   text: string
   source: 'task' | 'kept_line'
+  /** One id from the morning to its thread (ttv-one-store); null for a kept line never committed. */
+  taskId: string | null
+  /** Set only when he kept the task as a BAR. */
+  barId: string | null
   status: 'bridged' | 'unaligned'
   goal: (MenuGoalRef & { trace: string }) | null
 }
@@ -391,7 +398,7 @@ export function buildMenu(input: {
     const goal = task.lensGoalId ? byId.get(task.lensGoalId) : undefined
     const itemKey = `task:${task.id}`
     const leftUnaligned = input.stored.lines[itemKey]?.lensGoalId === null
-    items.push(itemFor({ key: itemKey, text: task.text, source: 'task', taskId: task.id, goal, leftUnaligned }, input.goals, byId))
+    items.push({ ...itemFor({ key: itemKey, text: task.text, source: 'task', taskId: task.id, goal, leftUnaligned }, input.goals, byId), barId: task.barId ?? null })
   }
 
   for (const c of input.candidates) {
@@ -453,6 +460,8 @@ export function toMenuExport(items: MenuItem[], sessionDate: string, sealedAt: s
       key: item.key,
       text: item.text,
       source: item.source,
+      taskId: item.taskId,
+      barId: item.barId ?? null,
       status: item.bridge ? 'bridged' : 'unaligned',
       goal: item.bridge ? { ...item.bridge, trace: traceLabel(item.bridge) } : null,
     })),
