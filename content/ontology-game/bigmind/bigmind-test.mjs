@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 // Browser checks for the Big Mind cave (bigmind.js on the Cave of Lessons engine): the cave mouth and its rules, the walk to
 // the Protector, the ask, the seat shift, the cards and the open line, secretly speaking (the second figure, naming it,
 // thanking it, the voice asked again), stepping back out, keeping lines, the save on the device, the way opening, the hallway
-// past it with the waiting part, the Controller's, the Skeptic's, the Fixer's, the Emotional Body's, the Victim's and the Damaged Self's chambers, the centre shut, walking back up, resuming, forgetting and deleting, and declining.
+// past it with the waiting part, the Controller's, the Skeptic's, the Fixer's, the Emotional Body's, the Victim's and the Damaged Self's chambers, the centre and the vulnerable child, walking back up, resuming, forgetting and deleting, and declining.
 // Build first with `npm run build:ontology-game`, then run from a folder that has playwright and three@0.128.0 installed:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node bigmind-test.mjs
 const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url).pathname;
@@ -1029,7 +1029,7 @@ await page.evaluate(() => localStorage.clear());
   await page.waitForTimeout(400);
   sv = await save();
   ok(sv.voices['damaged-self'] && sv.voices['damaged-self'].status === 'spoken' && sv.voices['damaged-self'].boss === 'controller' && sv.chamber === 6 && sv.at === 'hall2' && sv.voices.victim.boss === 'controller', 'its record holds who it works for, and the others\' stay: ' + JSON.stringify({ boss: (sv.voices['damaged-self'] || {}).boss, chamber: sv.chamber, at: sv.at }));
-  ok(await holdUntil('end') && /The centre/.test(await page.textContent('[data-bm-modal]')) && /the vulnerable child/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-onward]').count() === 0, 'past the Damaged Self the path ends, and the vulnerable child waits at the shut mouth of the centre');
+  ok(await holdUntil('end') && /The centre/.test(await page.textContent('[data-bm-modal]')) && /the vulnerable child/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-onward]').count() === 0 && await page.locator('[data-bm-tocentre]').count() === 1, 'past the Damaged Self the path ends, and the vulnerable child waits at the mouth of the centre');
   await page.screenshot({ path: SHOTS + '/bm-26-centre-shut.png' });
   await page.click('[data-bm-leave]');
   await page.waitForSelector('[data-bm-mouth]');
@@ -1047,6 +1047,71 @@ await page.evaluate(() => localStorage.clear());
   ok(await waitStep('charge') && /so it never reaches the little one\./.test(await page.textContent('[data-bm-modal]')), 'a boss named in its own words is in voice');
   await setCharge(8);
   ok(await waitStep('q-how', 25000) && /I carry what it was too small to carry\./.test(await page.textContent('[data-bm-modal]')), 'working for the vulnerable child, the job cards are the child\'s');
+  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await page.evaluate(() => localStorage.clear());
+}
+
+// The centre (board dp-centre, dp-centre-asked): the shut mouth opens, the voices met on the way stand around the child as
+// spirits, the child is seen first, and if the player asks, it is asked Wendell's six Player questions gently, with no charge
+// and no permission to win, any of them let go; a voice named as in its way comes closer; only kept lines are saved.
+{
+  const PQ = (await import('../daemons/questions.js')).default.daemons.player;
+  const S = { status: 'spoken', kept: [], charges: [], waves: [] };
+  const all = { protector: S, controller: { ...S, boss: 'protector' }, skeptic: { ...S, boss: 'controller' }, fixer: { ...S, boss: 'controller' }, 'emotional-body': { ...S, boss: 'controller' }, victim: { ...S, boss: 'controller' }, 'damaged-self': { ...S, boss: 'controller' } };
+  const toCentre = async () => {
+    await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+    if (!(await holdUntil('end'))) return false;
+    await page.click('[data-bm-tocentre]');
+    return waitStep('centre', 30000);
+  };
+  await page.evaluate((all) => { localStorage.clear(); localStorage.setItem('oag.bigmind.v1', JSON.stringify({ v: 1, chamber: 6, at: 'hall2', voices: all, waiting: [] })); }, all);
+  await page.reload(); await page.waitForSelector('[data-bm-mouth]');
+  ok(await toCentre(), 'walking on past the Damaged Self goes into the centre');
+  let text = await page.textContent('[data-bm-modal]');
+  ok(/The vulnerable child/.test(text) && /as spirits: the Protector, .*and the Damaged Self\./.test(text), 'the child is met, and the voices met on the way are named as spirits there');
+  ok(/Nothing has to be asked here/.test(text) && await page.locator('[data-bm-centre="be"]').count() === 1, 'the child is seen first, and nothing has to be asked');
+  const c0 = await page.evaluate(() => { const A = window.__oagBigMind, c = A.centre(); return { n: c.voices.length, open: A.openAt(A.route.sEnd + 6), endOpen: A.state.endOpen, ids: c.voices.map((o) => o.id) }; });
+  ok(c0.n === 7 && c0.endOpen > 0.99 && c0.open > 0.95, 'the centre\'s mouth is open, and seven voice spirits stand in it: ' + JSON.stringify(c0));
+  const cq = await page.evaluate(() => window.__oagBigMind.centreQuestions().map((q) => [q.id, q.ask]));
+  ok(JSON.stringify(cq) === JSON.stringify(PQ.map((q) => [q.id, q.ask])), 'the child\'s questions are Wendell\'s six Player questions, in his order and plain wording: ' + cq.map((q) => q[0]).join());
+  await page.screenshot({ path: SHOTS + '/bm-27-centre.png' });
+
+  await page.click('[data-bm-centre="ask"]');
+  ok(await waitStep('child-learning') && (await page.textContent('[data-bm-modal]')).includes('You: ' + PQ[0].ask), 'asked gently, the child is asked what it is learning');
+  ok(await page.locator('[data-bm-perm]').count() === 0 && await page.locator('[data-bm-range]').count() === 0 && !(await page.isVisible('[data-bm-meter]')), 'there is no permission to win and no charge to read');
+  await page.click('[data-bm-modal] [data-bm-childcard]:has-text("That it\'s safe to play.")');
+  ok(await waitStep('child-growing') && /The child: That it's safe to play\./.test(await page.textContent('[data-bm-modal]')) && /So that's what you're learning\./.test(await page.textContent('[data-bm-modal]')), 'its answer is said back, and the guide answers it');
+  await page.click('[data-bm-childquiet]');
+  ok(await waitStep('child-feeling'), 'a question can be let go, and the next follows');
+  await page.click('[data-bm-modal] [data-bm-childcard]:has-text("Curious.")'); await page.click('[data-bm-modal] [data-bm-childcard]:has-text("Glad you came.")'); await page.click('[data-bm-childdone]');
+  ok(await waitStep('child-exploring') && /The child: Curious\. Glad you came\./.test(await page.textContent('[data-bm-modal]')), 'what it feels can be more than one thing');
+  await page.fill('[data-bm-childline]', 'The cracks in the walls'); await page.click('[data-bm-childsay]');
+  ok(await waitStep('child-in-the-way') && /The child: The cracks in the walls/.test(await page.textContent('[data-bm-modal]')), 'it can answer in the player\'s own words');
+  text = await page.textContent('[data-bm-modal]');
+  ok(/The Protector won't let me out to play\./.test(text) && /The Damaged Self takes every hit/.test(text), 'how the others get in its way: the cards are the voices met on the way');
+  await page.click('[data-bm-modal] [data-bm-childcard]:has-text("The Protector won\'t let me out to play.")'); await page.click('[data-bm-childdone]');
+  ok(await waitStep('child-gone') && await page.evaluate(() => window.__oagBigMind.centre().voices.filter((o) => o.near).map((o) => o.id).join()) === 'protector', 'the voice it names as in its way comes closer to it');
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: SHOTS + '/bm-28-child-near.png' });
+  await page.click('[data-bm-childquiet]');
+  ok(await waitStep('centre-rest') && /You stayed with the child\./.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-childkeep]').count() === 5, 'after the six, what it said is offered to keep');
+  await page.click('[data-bm-childkeep="0"]'); await page.click('[data-bm-centresave]');
+  ok(await waitStep('centre-end'), 'saving stays with the child');
+  let sv = await save();
+  ok(sv.centre && sv.centre.status === 'spoken' && sv.centre.kept.length === 1 && sv.centre.kept[0].line === "That it's safe to play." && sv.chamber === 6 && sv.voices['damaged-self'], 'only the kept line is saved, with the voices\' records: ' + JSON.stringify(sv.centre));
+  await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  const kept = await page.textContent('[data-bm-kept]');
+  ok(/The vulnerable child \(it spoke with you at the centre\)/.test(kept) && /That it's safe to play\./.test(kept), 'the mouth shows what the child said that was kept');
+
+  // seen, not questioned: being with it asks nothing
+  await page.click('[data-bm-forget="centre"]');
+  ok((await save()).centre === undefined, 'forgetting the centre clears it');
+  ok(await toCentre(), 'a fresh visit meets the child again');
+  await page.click('[data-bm-centre="be"]');
+  ok(await waitStep('centre-rest') && await page.locator('[data-bm-childkeep]').count() === 0, 'being with it asks nothing');
+  await page.click('[data-bm-centresave]');
+  sv = await save();
+  ok(sv.centre && sv.centre.status === 'seen' && sv.centre.kept.length === 0, 'the child is recorded as seen');
   await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
