@@ -103,7 +103,31 @@ function capsules(D, root) {
   });
 }
 
-const result = { scenarios: [], particles: cloth.P, free: cloth.nfree, stretch: cloth.stL.length, bend: cloth.bdL.length };
+// Round 8: a fold point (marked 3) must anchor to cloth on its own side of a slit. The anchor must be reachable from
+// it within FOLD_REACH edges of the mesh; across a slit the two panels meet only far above, so an anchor there is
+// further. Counted here (fold_far) and checked by J5 on every robe.
+const FOLD_REACH = 8;
+function foldFar(c) {
+  const adj = Array.from({ length: c.P }, () => []);
+  for (let t = 0; t < c.tris.length; t += 3) for (let k = 0; k < 3; k++) {
+    const a = c.map[c.tris[t + k]], b = c.map[c.tris[t + (k + 1) % 3]];
+    if (a !== b) { adj[a].push(b); adj[b].push(a); }
+  }
+  let far = 0;
+  for (const f of c.fol) {
+    const seen = new Set([f]);
+    let ring = [f], found = false;
+    for (let d = 0; d < FOLD_REACH && ring.length && !found; d++) {
+      const next = [];
+      for (const p of ring) for (const q of adj[p]) if (!seen.has(q)) { seen.add(q); next.push(q); if (q === c.anchor[f]) found = true; }
+      ring = next;
+    }
+    if (!found) far++;
+  }
+  return far;
+}
+const result = { scenarios: [], particles: cloth.P, free: cloth.nfree, stretch: cloth.stL.length, bend: cloth.bdL.length,
+  folds: cloth.fol.length, fold_far: foldFar(cloth) };
 const costs = [];
 for (const sc of job.scenarios) {
   const A = sc.amp, S = sc.steps, speed = S * 2 * LEG * Math.sin(A);
@@ -145,4 +169,4 @@ for (const sc of job.scenarios) {
 costs.sort((a, b) => a - b);
 result.step_ms = { median: costs[costs.length >> 1], p95: costs[Math.floor(costs.length * 0.95)] };
 writeFileSync(process.argv[3], JSON.stringify(result));
-console.log(JSON.stringify({ particles: cloth.P, free: cloth.nfree, step_ms: result.step_ms }));
+console.log(JSON.stringify({ particles: cloth.P, free: cloth.nfree, folds: result.folds, fold_far: result.fold_far, step_ms: result.step_ms }));

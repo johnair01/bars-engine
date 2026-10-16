@@ -56,7 +56,7 @@ DRAPE_TRIES = 6                                  # processes tried at most, per 
 BEND_BODY, BEND_HEM = 0.05, 0.4                  # bending stiffness of the cloth, and of a hemmed edge (the cuff)
 CUFF_HEM = 0.10                                  # metres of the cuff that is hemmed
 WALK_X = int(os.environ.get("WALK_X", "1"))          # the walk strip's resolution multiple (3 to look closely at a cuff)
-CUFF_ROUNDS = 25                                 # smoothing rounds on the cuffs' open edges, before the trim is cut
+CUFF_ROUNDS = 60                                 # smoothing rounds on the cuffs' open edges, before the trim is cut (25 until round 8)
 SKIRT_SMOOTH = 6                                 # rounds of averaging the skirt's weights with its neighbours'
 FIT_MARGIN = 0.008                               # metres past the point that came through that a push aims for
 FIT_RADIUS = 0.08                               # metres, how far a push spreads over the cloth (falls off smoothly)
@@ -298,7 +298,10 @@ HEM_CUT = 0.05                                   # the pattern's hem: the belt t
 FLARE = 0.07                                     # metres the panel widens from the waist to the hem (a slight A-line)
 NECK_HALF = 0.085                                # half the neck opening across the shoulders
 SCOOP = {-1: 0.07, 1: 0.015}                     # metres the neckline drops at the middle: front, back
-CUFF_W = 0.40                                    # the sleeve's depth at the cuff, top seam to bottom seam (a wide sleeve)
+SLEEVE_W = 0.40                                  # the depth the sleeve widens toward from the armpit (a wide sleeve)
+CUFF_W = 0.26                                    # the sleeve's depth at the cuff, top seam to bottom seam: from the elbow
+                                                 # it narrows to this (round 8; at 0.40 the end hung below the hand as a
+                                                 # stiff flap)
 CLEAR = 0.006                                    # metres the cloth is held off the body while it falls (room for the
                                                  # reduction and the skinning to cut corners)
 ARM_OUT = math.radians(5)                        # the arms a little out from rest while the seams close
@@ -360,7 +363,7 @@ def pattern(fig, build, shoulder):
         for j in range(1, ns + 1):
             t = j / ns
             T = top.lerp(top_end, t)
-            w = w0 + (CUFF_W - w0) * smooth(0.0, 0.9, t)
+            w = w0 + (SLEEVE_W - w0) * smooth(0.0, 0.9, t) + (CUFF_W - SLEEVE_W) * smooth(0.5, 1.0, t)
             for m in range(nup + 1):
                 idx[(side, j, m)] = len(verts)
                 verts.append((T.x, T.y - w * (nup - m) / nup))
@@ -371,7 +374,7 @@ def pattern(fig, build, shoulder):
                 f = [q(j, m), q(j + 1, m), q(j + 1, m + 1), q(j, m + 1)]
                 faces.append(f if s > 0 else f[::-1])
                 parts.append(1 if s > 0 else 2)
-        for j in range(1, ns):                           # the sleeve's top and bottom seams; the cuff stays open
+        for j in range(1, ns + 1):                       # the sleeve's top and bottom seams, to the cuff's corners; the cuff stays open
             seams |= {idx[(side, j, 0)], idx[(side, j, nup)]}
     return verts, faces, parts, seams, upper
 
@@ -1336,7 +1339,8 @@ def build_all(build, palette, out_dir, do_fit=True):
         print(f"through at key {k}: {main_bone(W[j])} {tuple(round(c, 3) for c in fig.data.vertices[j].co)} by {d * 1000:.1f} mm", flush=True)
     POSED.pop(R.name, None)
     rows.append(("robe", R, counts, log, len(cover)))
-    cloth_stats = {"particles": cres["particles"], "free": cres["free"], "node_step_ms": cres["step_ms"]}
+    cloth_stats = {"particles": cres["particles"], "free": cres["free"], "node_step_ms": cres["step_ms"],
+                   "folds": cres["folds"], "fold_far": cres["fold_far"]}
     S = sash(fig, rig, cw, "sash")
     cover_s = with_faces(fig, cover_band(fig, SASH_Z[0] + 0.01, SASH_Z[-1] - 0.01))
     band = lambda i: (0,)                                   # held by the band or the cap, not the decoration

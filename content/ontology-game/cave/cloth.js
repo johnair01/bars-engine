@@ -38,6 +38,8 @@
     hemBend: 0.6,        // a sewn hem (points marked 2) keeps its fold and its line
     hemMass: 4,          // a hem point's mass against the cloth's 1: the turned hem is three layers, and it pulls the
                          // cloth above it down
+    anchorHops: 4,       // a fold point (marked 3) anchors to the nearest cloth point within this many edges of it,
+                         // so never across a slit to the other panel
     tetherSlack: 1.02,   // a free point may be this times its standing distance from its pin
     blend: 0.2,          // a free point may stray from its skinned place by this times its distance (along the cloth)
                          // from the belt: the waist eases from the body into the cloth, never a hard edge
@@ -157,14 +159,30 @@
     // turn of the edge swung it (68 mm of frame-to-frame jitter at the fold, 27 at the edge it hung from).
     var anchor = new Int32Array(P).fill(-1), solid = [];
     for (i = 0; i < P; i++) solid.push(fol[i] ? [] : adj[i].filter(function (q) { return !fol[q]; }));
-    var near = [];
-    for (i = 0; i < P; i++) if (!fol[i] && solid[i].length) near.push(i);
+    // Round 8: the nearest among the points reachable through the mesh within anchorHops edges, never the nearest by
+    // straight distance alone. Beside a slit the nearest point by distance can lie on the other panel; when the slit
+    // parts, a fold point anchored there stretches across it in a flat cream bar (his round 7 pictures). Failing that,
+    // the nearest point found by walking further out.
+    var hops = new Int32Array(P);
     for (i = 0; i < P; i++) {
       if (!fol[i]) continue;
-      var best = -1, bd2 = Infinity;
-      for (var a2 = 0; a2 < near.length; a2++) {
-        var q2 = near[a2], d2 = dist(i, q2);
-        if (d2 < bd2) { bd2 = d2; best = q2; }
+      var best = -1, bd2 = Infinity, seen = {}, ring = [i], depth = 0;
+      seen[i] = 1;
+      while (ring.length && (depth < o.anchorHops || best < 0)) {
+        var next = [];
+        depth++;
+        for (var r = 0; r < ring.length; r++) {
+          for (var a2 = 0; a2 < adj[ring[r]].length; a2++) {
+            var q2 = adj[ring[r]][a2];
+            if (seen[q2]) continue;
+            seen[q2] = 1; next.push(q2);
+            if (!fol[q2] && solid[q2].length) {
+              var d2 = dist(i, q2);
+              if (d2 < bd2) { bd2 = d2; best = q2; hops[i] = depth; }
+            }
+          }
+        }
+        ring = next;
       }
       anchor[i] = best;
     }
@@ -182,7 +200,7 @@
     var c = {
       o: o, wi: wi, md: md, map: map, reps: w.reps, P: P, free: free, isFol: fol, nfree: nfree, tris: tris,
       st: Int32Array.from(st), stL: stL, bd: Int32Array.from(bd), bdL: bdL, bdK: Float32Array.from(bk), th: Int32Array.from(th), thL: Float32Array.from(thL),
-      fol: fl, anchor: anchor, solid: solid, solidTris: Int32Array.from(solidTris), fofs: new Float32Array(3 * fl.length),
+      fol: fl, anchor: anchor, anchorHops: hops, solid: solid, solidTris: Int32Array.from(solidTris), fofs: new Float32Array(3 * fl.length),
       x: new Float32Array(3 * P), xp: new Float32Array(3 * P), tgt: new Float32Array(3 * P), tgt0: new Float32Array(3 * P),
       caps: [], caps0: [], acc: 0, started: false,
       out: new Float32Array(rest.length), normals: new Float32Array(rest.length), pn: new Float32Array(3 * P),

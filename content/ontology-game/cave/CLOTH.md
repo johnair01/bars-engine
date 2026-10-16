@@ -1,7 +1,7 @@
 # Cloth: what we learned, and what to read before changing cloth.js
 
 The robe's skirt is cloth every frame (`cloth.js`, the same code in the game and in Blender through
-`cloth_walk.mjs`). This file holds what rounds 1 to 7 of J5 taught, so the same problems do not come back. Read it
+`cloth_walk.mjs`). This file holds what rounds 1 to 8 of J5 taught, so the same problems do not come back. Read it
 before any change to `cloth.js`, the robe's skin weights below the belt, the leg capsules or the hem bones.
 
 ## Measure first, then look
@@ -135,6 +135,27 @@ a corner in the motion scores its size. Each is a pass condition, walking (99th 
   cloth. Without the leg capsules both fall to about 7 mm, so it is contact, but none of contact without bounce (the
   cloth leaving a leg no faster than its surface), friction 0, a wider margin, half the kick, 960 substeps or a lighter
   hem moved it. It is the next place to look, after his look at round 7.
+
+## The slit hem and the sleeve cuffs (round 8)
+
+Wendell on round 7 marked five pictures ("Problem areas to fix"): flat cream bars across the hem where a slit parts,
+and the cuffs as torn cream patches on the forward arm and a stiff flap with ragged cream edges below the hand.
+
+- **A fold point anchored across a slit.** Round 7 anchored each turned-fold point (marked 3) to the nearest cloth
+  point by straight distance. Beside a slit the nearest point can be on the other panel: on the average dusk robe 3
+  of 80 fold points anchored 14 edges away through the mesh, across the slit, and when the slit parted they stretched
+  into the cream bars he circled. The anchor is now the nearest point reachable within `anchorHops` (4) edges through
+  the mesh, walking further only if none is found. All 80 then anchor within 4 edges. cloth_walk.mjs counts fold
+  points whose anchor is more than 8 edges away (`fold_far` in report.json), and J5 requires 0 on every robe.
+- **The sleeve end was 40 cm deep.** `CUFF_W` 0.40 made an open end 80 cm round, which hung from the wrist far below
+  the hand. The sleeves are skinned to the arm, not cloth, so that hanging part swung with the forearm as a stiff flap,
+  and when the arm went forward it folded over the hand, hiding the cuff band except in patches. The sleeve still
+  widens toward 0.40 (`SLEEVE_W`) from the armpit, so the upper arm has the room the walking fit needs, and from the
+  elbow it narrows to `CUFF_W` 0.26 at the end. The end then hangs a hand's depth below the wrist and the hand shows.
+  Narrowing the whole sleeve instead (`CUFF_W` 0.26 or 0.22 along its length) let the upper arm and elbow through.
+- **The cuff's corners were not sewn.** The sleeve's top and bottom seams stopped one column short of the cuff, so the
+  front and back panels' corners hung apart in a ragged tongue of trim. The seams now run to the cuff's corners. The
+  cuff's open edge is smoothed 60 rounds (was 25) before the trim is cut, which rounds the corner where the seams meet.
 
 ## Rounds 1 to 5, in one line each
 

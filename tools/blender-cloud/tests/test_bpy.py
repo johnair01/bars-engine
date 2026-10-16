@@ -513,7 +513,8 @@ def j5():
     any of the walk's 25 keys, with the robe's skirt as cloth (cloth.js run over the walk by cloth_walk.mjs, after
     two seconds of walking); (b) each garment GLB is under 150 KB, with one skin whose joints are the figure's own
     names; (c) each robe GLB carries what the game's cloth needs: a _CLOTH value per point, some of them cloth, and
-    the leg capsules in its extras. The sheet goes to the eye (cc-wardrobe-gate)."""
+    the leg capsules in its extras; (d) no point of the turned hem anchors across a slit (round 8). The sheet goes to
+    the eye (cc-wardrobe-gate)."""
     out = tmpdir("j5")
     r, secs = run([GAME / "cave/garments.py", "--all", "--out", out], timeout=1800)
     check(r.returncode == 0, f"garments.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
@@ -541,6 +542,9 @@ def j5():
             caps = json.loads(node.get("extras", {}).get("cloth", "{}")).get("capsules", [])
             check("_CLOTH" in prim["attributes"] and len(caps) >= 4 and row.get("cloth", {}).get("free", 0) > 100,
                   f"{row['id']}: no cloth in the GLB (attributes {sorted(prim['attributes'])}, {len(caps)} capsules)")
+            # round 8: no turned-hem point anchored across a slit (cloth_walk.mjs fold_far: anchor further than 8 edges)
+            check(row["cloth"].get("folds", 0) > 0 and row["cloth"].get("fold_far", 1) == 0,
+                  f"{row['id']}: {row['cloth'].get('fold_far')} of {row['cloth'].get('folds')} fold points anchored across a slit")
     sizes = [(out / x["file"]).stat().st_size for x in rows]
     return f"36 garments on nine figures, none through at 25 keys, {min(sizes) // 1024} to {max(sizes) // 1024} KB; {secs:.0f} s"
 
