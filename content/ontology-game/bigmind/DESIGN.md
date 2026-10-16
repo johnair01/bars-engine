@@ -344,3 +344,23 @@ the player come too. The Skeptic waits at the shut mouth past it.
   are never saved, or waiting with it). A drop eases as after any answer. The charge is saved with what came before it
   (`after: "held-<ask>"`, `why`, `from`), and each drop is shown at the keeping step ("What moved it while it held back") and
   at the mouth ("Moved it: …"). Every voice gets this, since the chambers share the engine.
+
+## The Skeptic's chamber (14 October 2026)
+
+The third chamber on the daemon path (board `dp-seven`), built on the Controller's with no change to the meeting: the same
+asks for permission and refusal path, cards and open line, charge meter, W.A.V.E., sitting down, speaking as it and keeping.
+"Walk on" past the Controller now opens it. The Fixer waits at the shut mouth past it.
+
+- **Its questions** are Wendell's four from `../daemons/questions.js`, first and in his order: what it doubts, who it works
+  for, how doubt serves who it works for, and what happens when it is not there. Its hours, how it is thanked and how that
+  feels follow. The test checks the four against `questions.js`.
+- **The boss question** is his plain "Who do you work for?". The cards name the bosses in `questions.js`, and for the
+  Skeptic "controller" is the Controller, whom the player met one chamber back. When the player picks a boss whose record is saved, the
+  guide adds what that voice said of its own boss ("And the Controller told you it answers to the Protector."), so the chain
+  (`dq-boss-chain`) shows in play. The player can name a boss in its own words; "myself" names none here, since only the
+  Controller's "myself" is control itself.
+- **How doubt serves its boss** keeps his one wording, and its cards change with the boss. He gave no follow-ups by boss
+  for the Skeptic.
+- **Its look and lines** come from the cave's daemon row ("To doubt.", the lens) and the council's `daemons.yaml` ("They
+  cannot actually mean that. Look at the evidence."). Choices, all of them, as are the cards.
+- **Saving.** `chamber` 2 is the Skeptic; its record holds its boss beside the Controller's, and the mouth shows both.

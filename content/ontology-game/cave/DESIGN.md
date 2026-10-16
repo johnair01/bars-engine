@@ -715,3 +715,88 @@ when we're testing on the computer."
 - **Click to walk.** A click (or a tap) on the floor walks the figure there, as the stick would: walls, the shut way, the stones
   and the stops all behave the same. It stops on the spot, or at a wall it cannot pass. The stick or a key takes over at once.
 - **(choice)** how near the very middle the figure goes (1.2), and the stones' reach (1.3).
+
+## The board's way into the WAVE room, and the run's way back (14 October 2026)
+
+Wendell, 14 October 2026 (Council Board, `ttv-skip-wave`): "yes, but I want it to be as interactive as possible. We want
+to move toward using the game to build the game. It should deposit me inside the WAVE room and we should move to have the
+WAVE room be able to metabolize context specific charges and send the results to the board in this case."
+
+- **In.** When Tap the Vein has been skipped two days running, the board links to
+  `/ontology-game/cave/#wave=board&charge=<words>&skips=<n>&ref=tap-the-vein--<time>&date=<YYYY-MM-DD>`
+  (Six-faces-council `docs/morning.md`). `board-wave.js` reads the hash and opens the WAVE room from the board
+  (`openRoom` with `from: "board"`). Welcome names what the sitting is about in the board's words and asks how much charge
+  it carries, 0 to 10. Acknowledge asks what is in the way of it. The rest of the room is unchanged.
+- **The ending.** When the room is quiet, it asks how today's Tap the Vein ends, with the board panel's five endings (I'll
+  do it now, Tomorrow, It needs changing, Drop it, Still stuck), a line for each, and the charge left. With none picked,
+  a move written in the room's 3-2-1 is the ending. The way out says "Back to the board".
+- **Back.** Every page saves the whole run in the blocker panel's record (`docs/blocker-panel.md` there, `engine:
+  "wave-room"`): the board's task, step, skip streak and date, the charge before and after, each creature met (name,
+  element, texture, what he wants, toward or away, the move, the line and light it left), the stage and the ending. A run
+  left half way still says what came up. The page posts it to `POST /api/council/wave-runs` under his own sign-in, a
+  short pause after each change and at once on leaving. The council's board read fetches the runs with
+  `COUNCIL_MENU_TOKEN` (`council/wave_runs.py`, run by `board/pull.py`) and lands each as `council/blockers/<ref>.json`.
+- **Signed out.** A run bars-engine does not take waits in the browser (`oag:wave-room:outbox`), and the card at the end
+  says so. Any later visit to the cave page signed in sends it.
+- Choices (stand unless he flips them): the charge asked as eleven buttons, as on the board's panel; the ending asked
+  once, at the end of the sitting, rather than per creature; Tomorrow sets the due date one day on; a run belongs to the
+  signed-in player, and the council reads only his.
+- `board-wave-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.
+
+## Perceptual shadow in the WAVE room (14 October 2026)
+
+Wendell, 14 October 2026: "This is around perceptual shadow specifically the shadow that stops players from being able to
+see or hold their attention on charge. The 4 shadows are forgetting, distracting, dissociating, and numbness. ... It's
+hiding charge from the self so that it can't be dealt with or worked with. From a skill development standpoint perceptual
+shadow is only triggered when peopel report they are aware of a charge but not about to perceive it and if they aren't able
+to get the charge number down. I imagine there's a polarity (alongside size, and brightness) that's also able to occlude
+charge spirits as a function of emergent perceptual shadow". The design is Six-faces-council
+`council/callsheets/perceptual-shadow.md`; its choices stand unless he flips them on the board.
+
+- **Two ways in.** Witness has a third answer, "I know it's here, but I can't feel it", which raises the creature's
+  polarity by 6. A round whose 3-2-1 reading after is no lower than before (or a board run whose charge left is no lower
+  than before) says so at its end and offers "Look again for what's hiding it": the hidden part of that creature comes to
+  the door, carrying its shadow plus 4. Nothing else raises a shadow, so most sittings never see one.
+- **Four shadows.** The player names it: Forgetting, Distracting, Dissociating or Numbness, a line each, or "I can't tell".
+  Each hides the creature its own way as polarity rises: Forgetting fades it in and out, Distracting drifts it aside,
+  Dissociating stands it back toward the door and greys it, Numbness wraps it in a fog of the numb texture's grey. All of
+  them thin its body, darken its aura and put a veil round it. At 10 only a faint outline is left.
+- **Numbness, twice.** A creature whose texture is numbness gets a note on the shadow page ("Numbness is how it feels, and it
+  can also be what keeps it out of reach") and Numbness first in the list. The texture and the shadow stay separate.
+- **The practice.** Each shadow has a practice (say its name three times; name what pulled you away; feel your feet and
+  seat; find the edge of the numb; or "look again, slowly" for an unnamed one). Each Done lowers polarity by 3. The player
+  can go on with it hidden, and Witness keeps "Work with what hides it" until it is clear.
+- **Polarity** is the third property beside size and brightness. Allow shows it as a reading, "How hidden it is", not a
+  slider: only the signals raise it and only the practice lowers it. A creature that leaves as a spirit carries its polarity
+  into the cave, where it walks dimmer.
+- **The run** gives each round `shadow: { kind, polarity, start, signals, practices }`, its 3-2-1 `reading`, and
+  `hiddenOf` for a hidden part, so the board's run shows when shadow came up and whether the practice thinned it.
+- `shadow-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.
+- **Flooding, polarity's other pole** (Wendell on the board, `ps-polarity-poles`: "two"). Polarity runs -10 to 10: above 0
+  the charge is hidden, below 0 it floods, too loud to work. Witness also offers "It's too much to be with" (polarity -6).
+  A round whose charge stays at 9 or 10 and does not come down points the second signal at flooding ("Look again at what
+  floods it", the part comes in at its polarity minus 4); below 9 it points at hiding as before. A flooding creature grows
+  past the size allowed it, its aura blazes past the brightness allowed it, and a glare in its own colour surrounds it.
+  Three practices turn it down in turn (a long out-breath behind the seat; name one thing in the room that isn't it;
+  picture it at arm's length, the size of a hand), each by 3. Flooding has no kinds. Allow reads "Flooding n of 10". A
+  flooding spirit walks bigger and brighter. The run records `shadow.pole` ("hidden" or "flooding"); a hidden spirit is
+  still one with polarity above 0.
+- **Shadow spirits** (Wendell, 14 October 2026: "Shadow spirits do the work of perceptual shadows when one is working through
+  perceptual shadow one can ask what's getting in the way of the shadow clearing. We can also invoke daemons ... These
+  shadow spirits would be similar (probably just color changed) from regular spirits"). On the hidden pole's practice page,
+  "What's in the way of it clearing?" calls up the shadow spirit: the creature's body in the shadow's colour (`SHADOW_HEX`),
+  smaller, beside the one it hides. The player puts his eight questions to it, one per daemon and the Player (`SHADOW_ASKS`:
+  what is being protected, what standard upheld, what doubted or discredited, what repaired or held in place, what
+  emotional satisfaction, what sympathetic stories, what damage taken unseen, how it enjoys the game of hide and seek), and
+  writes what it says. Each answer thins the shadow by 3, as a practice does, and is kept in the run (`shadow.asks`). A
+  worked creature's shadow spirit walks out of the room as a spirit of its own in the shadow's colour (`shadow`,
+  `shadowOf`, polarity 0, so it counts as seen). Flooding has no shadow spirit.
+- **The daemons' question sets** (daemons/questions.js, bars-engine #329, board `dq-*`): each of the eight one-line
+  questions opens that daemon's own set, a question at a time. A boss question offers the Protector, the self, the Controller
+  and the Player; when the answer names a daemon, the room offers that daemon's set next, so the player follows who works for
+  whom. The Controller's "how" changes with the boss it names. A whole answered set counts as one practice (3 off the
+  shadow), and the run keeps every answer (`shadow.asks[].answers`, `boss`).
+- **A shadow spirit fully revealed** (Wendell, board read 14 October 2026, overruling a skip on dissolving shadow spirits):
+  once the shadow has cleared to 0 with its spirit called up, the room asks which element the shadow spirit shows (the five,
+  or "I can't tell yet"). Named, it walks out with that `element`, `revealed: true`, and a colour halfway from the shadow's
+  to its element's, so dissolving can act on it. Until then its `element` stays null and it cannot be dissolved.

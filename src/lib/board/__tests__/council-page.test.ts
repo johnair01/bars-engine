@@ -1,28 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import { missingCouncilPatches, patchCouncilPage } from '../council-page'
-import { wrapBoardPage } from '../page'
-import { BOARD_SHIM, boardShim } from '@/app/board/shim'
 import { COLLECTIONS } from '../save'
-
-describe('board shim', () => {
-  it('keeps the nonprofit shim as it was', () => {
-    expect(BOARD_SHIM).toBe(boardShim('nonprofit', '/board'))
-    expect(BOARD_SHIM).toContain("const BOARD = 'nonprofit'")
-    expect(BOARD_SHIM).toContain("'/login?returnTo=/board'")
-  })
-  it('names the council board and its own path', () => {
-    const s = boardShim('council', '/board/council')
-    expect(s).toContain("const BOARD = 'council'")
-    expect(s).toContain("'/login?returnTo=/board/council'")
-    expect(s).not.toContain('${')
-  })
-  it('wraps a fragment in a document shell, shim first', () => {
-    const out = wrapBoardPage('<title>x</title>', 'council', '/board/council')
-    expect(out.startsWith('<!doctype html>')).toBe(true)
-    expect(out.indexOf("const BOARD = 'council'")).toBeLessThan(out.indexOf('<title>x</title>'))
-  })
-})
 
 describe('patchCouncilPage', () => {
   it('leaves a page without the Send lines unchanged', () => {

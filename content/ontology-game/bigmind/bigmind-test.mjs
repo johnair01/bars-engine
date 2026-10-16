@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 // Browser checks for the Big Mind cave (bigmind.js on the Cave of Lessons engine): the cave mouth and its rules, the walk to
 // the Protector, the ask, the seat shift, the cards and the open line, secretly speaking (the second figure, naming it,
 // thanking it, the voice asked again), stepping back out, keeping lines, the save on the device, the way opening, the hallway
-// past it with the waiting part, the next chamber shut, walking back up, resuming, forgetting and deleting, and declining.
+// past it with the waiting part, the Controller's and the Skeptic's chambers, the next chamber shut, walking back up, resuming, forgetting and deleting, and declining.
 // Build first with `npm run build:ontology-game`, then run from a folder that has playwright and three@0.128.0 installed:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node bigmind-test.mjs
 const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url).pathname;
@@ -577,7 +577,7 @@ await page.evaluate(() => localStorage.clear());
   ok(sv.voices.controller && sv.voices.controller.status === 'spoken' && sv.voices.controller.boss === 'protector' && sv.chamber === 1 && sv.at === 'hall2', 'its record holds who it works for: ' + JSON.stringify({ boss: sv.voices.controller.boss, chamber: sv.chamber, at: sv.at }));
   ok(sv.voices.controller.kept.map((k) => k.line).join() === 'The plan.', 'only kept lines are stored');
   ok(sv.voices.controller.charges.some((c) => c.after === 'held-pass' && c.from === 2 && c.v === 1 && /step at a time/.test(c.why)), 'the drop while it held back is saved with what moved it');
-  ok(await holdUntil('end') && /The Skeptic/.test(await page.textContent('[data-bm-modal]')) && /next build/.test(await page.textContent('[data-bm-modal]')), 'past the Controller, the Skeptic waits at a chamber still shut');
+  ok(await holdUntil('end') && /The Skeptic/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-onward]').count() === 1, 'past the Controller, the Skeptic waits, and its chamber is open');
   await page.screenshot({ path: SHOTS + '/bm-14-skeptic-shut.png' });
   await page.click('[data-bm-leave]');
   await page.waitForSelector('[data-bm-mouth]');
@@ -607,6 +607,96 @@ await page.evaluate(() => localStorage.clear());
   await page.click('[data-bm-restart]');
   await page.waitForSelector('[data-bm-cave] canvas');
   ok((await save()).chamber === 0 && await page.evaluate(() => window.__oagBigMind.voiceId) === 'protector', 'starting at the mouth again begins with the Protector');
+  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await page.evaluate(() => localStorage.clear());
+}
+
+// The Skeptic's chamber (board dp-seven, dq-boss-chain): walking on from the Controller, Wendell's own four questions, and
+// the boss question, where the Controller is one of the bosses and what it said of its own boss follows (the chain).
+{
+  const DQ = (await import('../daemons/questions.js')).default.daemons.skeptic;
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('oag.bigmind.v1', JSON.stringify({ v: 1, chamber: 1, at: 'hall2', voices: { protector: { status: 'spoken', kept: [], charges: [], waves: [] }, controller: { status: 'spoken', kept: [], charges: [], waves: [], boss: 'protector' } }, waiting: ['skeptic'] })); });
+  await page.reload(); await page.waitForSelector('[data-bm-mouth]');
+  ok(/past the Controller/.test(await page.textContent('[data-bm-enter]')), 'a save past the Controller resumes there');
+  await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+  ok(await holdUntil('end'), 'the hallway past the Controller ends at the Skeptic');
+  await page.click('[data-bm-onward]');
+  await page.waitForFunction(() => window.__oagBigMind.voiceId === 'skeptic' && window.__oagBigMind.state && window.__oagBigMind.state.phase === 'hall1', null, { timeout: 8000 }).catch(() => {});
+  let sv = await save();
+  ok(await page.evaluate(() => window.__oagBigMind.voiceId) === 'skeptic' && sv.chamber === 2 && sv.at === 'mouth', 'walking on builds the Skeptic\'s chamber, and the save moves on to it');
+  ok(JSON.stringify(sv.waiting) === '[]', 'the Skeptic no longer waits by the wall once its own chamber is reached: ' + JSON.stringify(sv.waiting));
+  const qs = await page.evaluate(() => window.__oagBigMind.VOICES[2].questions.map((q) => [q.id, q.ask]));
+  ok(JSON.stringify(qs.slice(0, DQ.length)) === JSON.stringify(DQ.map((q) => [q.id, q.ask])), 'the Skeptic is asked Wendell\'s four questions first, in his order and plain wording: ' + qs.slice(0, DQ.length).map((q) => q[0]).join());
+  ok(await page.evaluate(() => { const h = window.__oagBigMind.heard; return h('I doubt anyone means it', 'skeptic') === null && h('the skeptic is tired', 'skeptic') === 'ideas' && h('I need to fix it', 'skeptic') === 'fixer'; }), 'in its chamber, doubting is in voice, and talking about it is the self\'s ideas');
+  ok(await page.evaluate(() => { const b = window.__oagBigMind.heardBoss; return b('The Controller', 'skeptic') === 'controller' && b('Myself', 'skeptic') === null && b('the self', 'skeptic') === 'self' && b('the little one', 'skeptic') === 'player'; }), 'to the Skeptic, an open line naming the Controller names a boss, and "myself" names none');
+
+  const toBoss = async () => {
+    if (!(await holdUntil('meet'))) return false;
+    if (!/Show me the evidence\./.test(await page.textContent('[data-bm-modal]'))) return false;
+    await page.click('[data-bm-reply="hear"]'); await page.click('[data-bm-ask="speak"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="speak"]');
+    await page.click('[data-bm-place="Jaw"]'); await setCharge(8);
+    if (!(await waitStep('q-what'))) return false;
+    if (!(await page.textContent('[data-bm-modal]')).includes('You: ' + DQ[0].ask)) return false;
+    await page.click('[data-bm-modal] [data-bm-card]:has-text("Good news.")'); await setCharge(8);
+    return waitStep('q-boss');
+  };
+  ok(await toBoss(), 'the Skeptic speaks first, is met, and asked what it doubts, then who it works for');
+  let text = await page.textContent('[data-bm-modal]');
+  ok(text.includes('You: Who do you work for?') && /The Controller\./.test(text) && /The vulnerable child\./.test(text), 'the boss question is his plain one, and the Controller is among the bosses');
+  await page.screenshot({ path: SHOTS + '/bm-15-skeptic-boss.png' });
+  await page.click('[data-bm-modal] [data-bm-card]:has-text("The Controller.")');
+  ok(await waitStep('charge'), 'the guide answers who it works for');
+  text = await page.textContent('[data-bm-modal]');
+  ok(/Nothing gets in until you've checked it\./.test(text) && /And the Controller told you it answers to the Protector\./.test(text), 'working for the Controller, the chain shows: the Controller answers to the Protector');
+  await setCharge(8);
+  ok(await waitStep('q-how'), 'then how doubt serves it');
+  text = await page.textContent('[data-bm-modal]');
+  ok(text.includes('You: ' + DQ.find((q) => q.id === 'how').ask) && /I check it before it's allowed in\./.test(text), 'his method question stays, with cards for the Controller');
+  await page.screenshot({ path: SHOTS + '/bm-16-skeptic-how.png' });
+  await page.click('[data-bm-modal] [data-bm-card]:has-text("I find the flaw in the plan.")'); await setCharge(7);
+  ok(await waitStep('q-gone', 25000), 'then what happens when it is not there');
+  await page.click('[data-bm-modal] [data-bm-card]:has-text("We get fooled.")'); await page.click('[data-bm-done]');
+  await setCharge(2);
+  ok(await waitStep('eased', 3000) && /The Skeptic lets its breath out/.test(await page.textContent('[data-bm-eased]')), 'its easing is its own');
+  ok(await waitStep('ready') && /I'm not promising anything/.test(await page.textContent('[data-bm-modal]')), 'below the line, it offers to step aside');
+  await page.click('[data-bm-ask="aside"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="aside"]');
+  ok(await waitStep('be-who') && /where the Skeptic stands/.test(await page.textContent('[data-bm-modal]')), 'the player stands where the Skeptic stands');
+  await page.click('[data-bm-bepass="who"]'); await page.click('[data-bm-bepass="see"]');
+  await waitStep('know'); await page.click('[data-bm-know="2"]');
+  await waitStep('thanks'); await page.click('[data-bm-out]');
+  ok(await waitStep('perm-pass', 30000), 'stepping back out, the player asks to walk on');
+  // the charge asked for while it holds back is the Skeptic's too (the chambers share the engine)
+  await page.click('[data-bm-perm="no"]'); await page.click('[data-bm-why]'); await page.click('[data-bm-fear="0"]'); await page.click('[data-bm-assure="1"]');
+  await page.click('[data-bm-again]');
+  ok(await waitStep('blockpoll-pass') && /How charged is the Skeptic now\?/.test(await page.textContent('[data-bm-modal]')), 'held back at the last ask, the Skeptic is asked how charged it is now');
+  await page.fill('[data-bm-range]', '1'); await page.click('[data-bm-blockcharged]');
+  ok(await waitStep('eased', 3000) && /2 down to 1/.test(await page.textContent('[data-bm-eased]')), 'its drop while it holds back eases like any other');
+  ok(await waitStep('perm-pass'), 'then the player asks again');
+  await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="pass"]');
+  ok(await waitStep('keep', 30000) && /What the Skeptic said/.test(await page.textContent('[data-bm-modal]')), 'then its lines to keep');
+  await page.click('[data-bm-keep="0"]'); await page.click('[data-bm-save]');
+  await page.waitForTimeout(400);
+  sv = await save();
+  ok(sv.voices.skeptic.charges.some((c) => c.after === 'held-pass' && c.from === 2 && c.v === 1 && /keep checking/.test(c.why)), 'its drop while it held back is saved with what moved it');
+  ok(sv.voices.skeptic && sv.voices.skeptic.status === 'spoken' && sv.voices.skeptic.boss === 'controller' && sv.chamber === 2 && sv.at === 'hall2' && sv.voices.controller.boss === 'protector', 'its record holds who it works for, and the Controller\'s stays: ' + JSON.stringify({ boss: sv.voices.skeptic.boss, chamber: sv.chamber, at: sv.at }));
+  ok(await holdUntil('end') && /The Fixer/.test(await page.textContent('[data-bm-modal]')) && /next build/.test(await page.textContent('[data-bm-modal]')), 'past the Skeptic, the Fixer waits at a chamber still shut');
+  await page.screenshot({ path: SHOTS + '/bm-17-fixer-shut.png' });
+  await page.click('[data-bm-leave]');
+  await page.waitForSelector('[data-bm-mouth]');
+  const kept = await page.textContent('[data-bm-kept]');
+  ok(/past the Skeptic/.test(await page.textContent('[data-bm-enter]')) && /It works for the Controller\./.test(kept) && /It works for the Protector\./.test(kept) && /Moved it: You offered: You can keep checking/.test(kept), 'the mouth goes back in past the Skeptic, and says who each works for and what moved the Skeptic');
+
+  // the vulnerable child, named in the player's own words
+  await page.click('[data-bm-forget="skeptic"]');
+  sv = await save();
+  ok(sv.voices.skeptic === undefined && sv.chamber === 2 && sv.at === 'mouth' && sv.voices.controller, 'forgetting the Skeptic goes back to its chamber, and the Controller\'s record stays');
+  await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+  ok(await toBoss(), 'a fresh sitting meets the Skeptic again');
+  await page.fill('[data-bm-line]', 'The little one, so it never gets let down');
+  await page.click('[data-bm-say]');
+  ok(await waitStep('charge') && !/told you it answers/.test(await page.textContent('[data-bm-modal]')), 'a boss named in its own words is in voice, and the child is the end of the chain');
+  await setCharge(8);
+  ok(await waitStep('q-how') && /If it doesn't hope, it can't be let down\./.test(await page.textContent('[data-bm-modal]')), 'working for the vulnerable child, the cards are the child\'s');
   await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
