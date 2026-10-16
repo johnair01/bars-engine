@@ -19,6 +19,7 @@ export type SheetAction =
   | { kind: 'start' }
   | { kind: 'complete' }
   | { kind: 'carry' }
+  | { kind: 'rest' }
   | { kind: 'plant'; experienceIntent: string; dissatisfaction: string[]; satisfaction: string[] }
   | { kind: 'compost'; reason: string }
   | { kind: 'assign'; campaignId: string; visibility: 'campaign' | null }
@@ -130,6 +131,7 @@ export function TaskActionSheet({
             )}
             <ActionRow icon="✓" iconColor={gem} label="Complete" hint="pave a brick · ♦+1" disabled={busy} onClick={() => onAction({ kind: 'complete' })} />
             <ActionRow icon="↻" label="Carry to tomorrow" hint="keeps the thread" disabled={busy} onClick={() => onAction({ kind: 'carry' })} />
+            <ActionRow icon="❖" label="Set aside" hint="to the seed library · draw it back any day" disabled={busy} onClick={() => onAction({ kind: 'rest' })} />
             <ActionRow icon="❀" label="Plant in Garden" hint="grow this quest under today's lens" disabled={busy} onClick={() => setMode('plant')} />
             <ActionRow icon="↩" label="Compost" hint="return to field" disabled={busy} onClick={() => setMode('compost')} />
             <ActionRow icon="◇" label="Assign to campaign" hint="private by default" disabled={busy} onClick={() => setMode('assign')} />
