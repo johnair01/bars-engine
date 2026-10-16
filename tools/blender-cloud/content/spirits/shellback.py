@@ -24,6 +24,7 @@ Round 12 adds the satisfaction states (pass spirit-states 1, positions ss-marker
 --state dissatisfied|neutral|satisfied poses the same model and changes its materials, and --polarity veils (above 0)
 or floods (below 0) it. The poses are the tortoise's; the material layer works on every base.
 Round 13 adds the Fixer's Tinker family with its raccoon (--base raccoon), its stance the Fixer's reach in each state.
+Round 14 adds the Tinker's beaver (--base beaver) and aye-aye (--base ayeaye) on the raccoon's gas, core, stances and outfit.
 """
 import argparse, json, math, os, pathlib, random, sys
 
@@ -38,7 +39,7 @@ ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--sprite", type=int, default=96)
 ap.add_argument("--only", default="", help="element to build alone, for a quick look")
 ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
-ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat", "raccoon"],
+ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat", "raccoon", "beaver", "ayeaye"],
                 help="the animal base (round 4 adds the armadillo and the pangolin; round 8 the Player's Romp's fox, round 9 its otter, round 10 its kid goat)")
 ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
 ap.add_argument("--nation", default="", choices=["", "meridia"],
@@ -333,6 +334,8 @@ BASES = {
     "otter": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="romp"),  # round 9: the Romp's second base
     "goat": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="romp"),  # round 10: the Romp's third base, the kid goat
     "raccoon": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="tinker"),  # round 13: the Fixer's Tinker, first base
+    "beaver": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="tinker"),  # round 14: the Tinker's builder
+    "ayeaye": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="tinker"),  # round 14: the Tinker's mender
 }
 FAMILY = BASES[args.base].get("family", "shellback")
 SHELL_SQUASH = Vector(BASES[args.base]["squash"])
@@ -2301,9 +2304,177 @@ def tool_roll(at, length, axis, S):
                       Vector(at) + axis * (length / 2 + 0.07 + 0.03 * k) + Vector((off, 0, 0.04))], 0.012, brass)
 
 
+# Round 14: the Tinker's other two bases from their image prompts (spirit-generator-r13.md): the beaver, who builds and
+# patches, and the aye-aye, who taps and probes with one long finger. Both stand on the raccoon's stances (TINKER_POSE,
+# TINKER_ALLY), wear its tool roll, scarf, beads, cog and ally outfit, and differ in head, face, coat, tail and build.
+BEAVER = {  # coat, saddle (darker along the back), pale (cheeks, chin, belly), dark (nose, hands, feet, tail)
+    "wood":  ((0.44, 0.31, 0.18), (0.3, 0.2, 0.11), (0.64, 0.52, 0.37), (0.17, 0.14, 0.12)),
+    "fire":  ((0.52, 0.27, 0.15), (0.35, 0.15, 0.08), (0.74, 0.5, 0.34), (0.15, 0.08, 0.06)),
+    "water": ((0.36, 0.35, 0.38), (0.22, 0.24, 0.3), (0.6, 0.62, 0.64), (0.11, 0.13, 0.17)),
+    "metal": ((0.52, 0.49, 0.46), (0.37, 0.35, 0.33), (0.78, 0.76, 0.72), (0.15, 0.15, 0.16)),
+    "earth": ((0.5, 0.35, 0.2), (0.35, 0.23, 0.12), (0.72, 0.58, 0.4), (0.18, 0.12, 0.08)),
+}
+INCISOR = (0.92, 0.5, 0.12)
+AYEAYE = {  # coat (shaggy, near black), guard (pale guard hairs), face (paler), dark (hands, feet, ear skin)
+    "wood":  ((0.2, 0.19, 0.15), (0.72, 0.7, 0.6), (0.55, 0.5, 0.4), (0.08, 0.07, 0.06)),
+    "fire":  ((0.25, 0.13, 0.1), (0.86, 0.66, 0.5), (0.63, 0.45, 0.36), (0.08, 0.04, 0.03)),
+    "water": ((0.13, 0.16, 0.22), (0.68, 0.76, 0.84), (0.48, 0.54, 0.6), (0.05, 0.06, 0.09)),
+    "metal": ((0.24, 0.24, 0.26), (0.85, 0.85, 0.88), (0.6, 0.6, 0.62), (0.07, 0.07, 0.08)),
+    "earth": ((0.26, 0.19, 0.13), (0.8, 0.7, 0.54), (0.6, 0.5, 0.38), (0.09, 0.06, 0.04)),
+}
+
+
+def beaver_head(H, s=1.0, turn=0.0):
+    """Metaball parts for the beaver's head: blunt and rounded, full cheeks, a short broad muzzle."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
+    return [("ell", v(0, 0, 0), 0.17 * s, (1.05, 1.12, 0.92)),
+            ("ell", v(0.05, 0.1, -0.05), 0.1 * s, (1.0, 0.9, 0.9)), ("ell", v(0.05, -0.1, -0.05), 0.1 * s, (1.0, 0.9, 0.9))] + \
+        taper(v, (0.1, 0, -0.04 - turn * 0.02), (0.21, 0, -0.07 - turn * 0.05), 0.1 * s, 0.075 * s, (1.0, 1.15, 0.9), (1.0, 1.25, 0.85), 6)
+
+
+def beaver_face(body, H, S, F, s, r):
+    """The beaver's small dark eyes, broad black nose, two orange incisors and small round ears. Returns the mouth seam."""
+    lids = dict(S, skin=F[1], spot=F[1])
+    for side in (1, -1):
+        eye(body, H + Vector((0.08, side * 0.1, 0.035)) * s, (0.4, side * 0.9, 0.2), lids, r * 0.75)
+    tip = H + Vector((0.3, 0, -0.06)) * s
+    hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0.1)), Vector((-1, 0, -0.1)).normalized())
+    ball("nose", solid("nose", (0.04, 0.035, 0.035), 0.3), (loc if hit else tip), 0.034 * s, (0.9, 1.5, 0.8), 16)
+    tooth = solid("incisor", INCISOR, 0.25)
+    for side in (1, -1):  # two incisors under the lip, the beaver's mark at 96 px
+        bpy.ops.mesh.primitive_cube_add(size=1, location=H + Vector((0.255, side * 0.017, -0.15)) * s)
+        o = bpy.context.active_object; o.name = "incisor"; o.data.materials.append(tooth)
+        o.scale = (0.018 * s, 0.03 * s, 0.06 * s); o.rotation_euler = (0, -0.2, 0)
+    ear = solid("ear", F[1], 0.85)
+    for side in (1, -1):  # small round ears, set low and wide
+        ball("ear", ear, H + Vector((-0.05, side * 0.15, 0.09)) * s, 0.042 * s, (0.6, 1.0, 1.0), 16)
+    return mouth_seam(body, H + Vector((0.14, 0, 0)) * s, H.z - 0.12 * s, 50, 0.01 * s, 0.006 * s)
+
+
+def beaver_paint(H, F, s, hands, low=0.14, belly=(0.35, 0.6)):
+    """The beaver's dense coat, darker along the back with flecks of guard hair, paler at the cheeks, chin and belly,
+    with dark hands and feet."""
+    def fn(p, n):
+        c = mixc(F[0], F[1], max(0.0, n.z - 0.3) * 0.9)
+        c = mixc(c, F[1], 0.3 * max(0.0, noise.noise(p * 30.0)))
+        d = (p - H) / s
+        if d.length < 0.34:
+            if d.x > 0.05 and d.z < -0.03: c = mixc(c, F[2], 0.7)  # cheeks and chin
+            if d.x > 0.24: c = mixc(c, F[3], 0.5)
+        elif n.z < -0.45 or (n.x > 0.5 and belly[0] < p.z < belly[1] and abs(p.y) < 0.18): c = mixc(c, F[2], 0.45)
+        if p.z < low or any((p - h).length < 0.08 for h in hands): c = F[3]
+        return c
+    return fn
+
+
+def beaver_tail(name, pts, r, F, s=1.0):
+    """The broad flat tail held level behind: flat discs fused along the path, a furred root, then a dark paddle
+    crossed with scales."""
+    path = tail_path(pts, 10)
+    m = len(path) - 1
+    parts = [("ell", tuple(p), r * (0.7 if k / m < 0.2 else 0.55 + 1.3 * math.sin(math.pi * min(1.0, 0.15 + k / m * 0.85)) ** 0.6),
+              (1.0, 1.0, 0.7 if k / m < 0.2 else 0.26)) for k, p in enumerate(path)]
+    o = blob(name, parts, 0.015 * s, 4000)
+
+    def fn(p, n):
+        k = min(range(len(path)), key=lambda i: (p - path[i]).length)
+        if k / m < 0.2: return mixc(F[0], F[1], 0.4)
+        q = p * 40.0 / s
+        hide = mixc(F[3], F[1], 0.35)
+        return mixc(hide, (0.03, 0.03, 0.03), 0.4) if (math.sin(q.x + q.y) > 0.8 or math.sin(q.x - q.y) > 0.8) else hide
+    paint(o, fn)
+    o.data.materials.append(vmat("hide", 0.55))
+    return path
+
+
+def ayeaye_head(H, s=1.0, turn=0.0):
+    """Metaball parts for the aye-aye's head: a round skull and a short tapered muzzle."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
+    return [("ell", v(0, 0, 0), 0.145 * s, (1.0, 1.02, 0.95))] + \
+        taper(v, (0.08, 0, -0.03 - turn * 0.02), (0.19, 0, -0.065 - turn * 0.05), 0.075 * s, 0.035 * s, (1.0, 1.0, 0.9), (1.1, 0.9, 0.8), 6)
+
+
+def ayeaye_face(body, H, S, F, s, r):
+    """The aye-aye's large round eyes set to the front, its small nose, and its huge thin ears of dark skin, open to
+    the front and the sides. Returns the mouth seam."""
+    lids = dict(S, skin=F[2], spot=F[2])
+    for side in (1, -1):
+        eye(body, H + Vector((0.1, side * 0.07, 0.025)) * s, (0.75, side * 0.6, 0.12), lids, r * 1.9)
+    tip = H + Vector((0.24, 0, -0.065)) * s
+    hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0.1)), Vector((-1, 0, -0.1)).normalized())
+    ball("nose", solid("nose", (0.3, 0.2, 0.2), 0.4), (loc if hit else tip), 0.02 * s, (1.0, 1.2, 0.8), 12)
+    outer, inner = solid("ear", mixc(F[3], F[0], 0.3), 0.7), solid("earin", mixc(F[3], (0.4, 0.26, 0.26), 0.4), 0.6)
+    for side in (1, -1):  # huge thin ears, taller than the head
+        at = H + Vector((-0.04, side * 0.16, 0.17)) * s
+        o = ball("ear", outer, at, 0.16 * s, (0.1, 0.78, 1.15), 24)
+        o.rotation_euler = (side * 0.3, 0, side * 0.25)
+        o = ball("earin", inner, at + Vector((0.014, side * 0.004, 0)) * s, 0.14 * s, (0.08, 0.68, 1.02), 24)
+        o.rotation_euler = (side * 0.3, 0, side * 0.25)
+    return mouth_seam(body, H + Vector((0.12, 0, 0)) * s, H.z - 0.09 * s, 40, 0.01 * s, 0.005 * s)
+
+
+def ayeaye_paint(H, F, s, hands, low=0.14, belly=(0.35, 0.6)):
+    """The aye-aye's shaggy near-black coat shot with pale guard hairs, a paler face and throat, dark hands and feet."""
+    def fn(p, n):
+        c = F[0]
+        c = mixc(c, F[1], 0.14 + 0.1 * noise.noise(p * 20.0))  # pale guard hairs through the dark coat
+        d = (p - H) / s
+        if d.length < 0.3 and d.x > 0.02 and d.z < 0.05: c = mixc(c, F[2], 0.75)  # the pale face
+        if p.z < low or any((p - h).length < 0.075 for h in hands): c = F[3]
+        return c
+    return fn
+
+
+def ayeaye_tail(name, pts, r, F, s=1.0):
+    """The long bushy tail, shaggy and dark, its guard hairs pale."""
+    path = tail_path(pts)
+    m = len(path) - 1
+    o = blob(name, [("ball", tuple(p), r * (0.6 + 0.5 * math.sin(math.pi * min(1.0, k / m * 0.9 + 0.1)))) for k, p in enumerate(path)],
+             0.022 * s, 6000)
+    fluff(o, 0.04 * s, 8.0, 5.0)
+    paint(o, lambda p, n: mixc(F[0], F[1], 0.16 + 0.12 * noise.noise(p * 20.0)))
+    o.data.materials.append(vmat("fur", 0.9))
+    return path
+
+
+TINKER = {  # each Tinker base's colours, head, face, coat, tail; its girth, height, hind-foot size and head size
+    "raccoon": dict(F=RACCOON, head=raccoon_head, face=raccoon_face, paint=raccoon_paint, tail=raccoon_tail, girth=1.0, tall=1.0, hind=1.0, s=1.25),
+    "beaver": dict(F=BEAVER, head=beaver_head, face=beaver_face, paint=beaver_paint, tail=beaver_tail, girth=1.2, tall=0.86, hind=1.5, s=1.3),
+    "ayeaye": dict(F=AYEAYE, head=ayeaye_head, face=ayeaye_face, paint=ayeaye_paint, tail=ayeaye_tail, girth=0.8, tall=1.06, hind=1.0, s=1.2),
+}
+
+
+def tinker_tail(T, F, rump, lift, s=1.0, upright=None):
+    """Each base's tail: the raccoon's ringed brush, the beaver's paddle held level (laid on the ground behind it when it
+    stands), the aye-aye's long bushy tail curling up."""
+    b = args.base
+    if upright is not None:
+        hip = upright
+        pts = {"raccoon": [(-0.2, 0, hip), (-0.5, 0, hip - 0.25), (-0.72, -0.05, hip - 0.3), (-0.9, -0.1, hip - 0.15)],
+               "beaver": [(-0.18, 0, hip - 0.15), (-0.4, 0, 0.2), (-0.7, -0.02, 0.07), (-1.0, -0.04, 0.06)],
+               "ayeaye": [(-0.2, 0, hip), (-0.55, 0, hip - 0.2), (-0.85, -0.05, hip - 0.1), (-1.0, -0.1, hip + 0.25)]}[b]
+        return T["tail"]("tail", pts, {"raccoon": 0.1, "beaver": 0.14, "ayeaye": 0.1}[b], F, s)
+    off = {"raccoon": [(-0.2, 0, 0.0), (-0.45, 0, 0.05 + 0.2 * lift), (-0.66, 0, 0.12 + 0.55 * lift), (-0.78, 0, 0.22 + 0.9 * lift)],
+           "beaver": [(-0.22, 0, -0.08), (-0.42, 0, -0.1 + 0.08 * lift), (-0.68, 0, -0.1 + 0.16 * lift), (-0.92, 0, -0.1 + 0.24 * lift)],
+           "ayeaye": [(-0.2, 0, 0.0), (-0.52, 0, 0.08 + 0.25 * lift), (-0.8, 0, 0.22 + 0.6 * lift), (-0.95, 0, 0.42 + 0.95 * lift)]}[b]
+    return T["tail"]("tail", [tuple(rump + Vector(o)) for o in off], {"raccoon": 0.11, "beaver": 0.15, "ayeaye": 0.12}[b], F)
+
+
+def ayeaye_finger(f, d, color, up=0.35, s=1.0):
+    """The aye-aye's one very long thin middle finger, lifted to tap; d is the way the hand points."""
+    d = Vector(d).normalized()
+    o = ball("tapfinger", solid("finger", color, 0.6), f + (d * 0.17 + Vector((0, 0, 0.06))) * s, 0.014 * s, (1, 1, 1), 10)
+    o.scale = (9.0, 0.7, 0.7)
+    o.rotation_euler = (Quaternion((0, 1, 0), -up) @ Vector((1, 0, 0)).rotation_difference(d)).to_euler()
+    return o
+
+
 def tinker_hologram(lt, dk):
-    """The projected raccoon: a faceted body of light, low and round-backed, wide rounded ears, a mask band across the
-    eyes, and a thick tail of five rings."""
+    """The projected Tinker: a faceted body of light, low and round-backed, each base's head, ears and tail (the
+    raccoon's mask band and five rings, the beaver's teeth and flat paddle, the aye-aye's huge ears, big eyes and
+    bushy tail)."""
+    if args.base != "raccoon":
+        return tinker_hologram_other(lt, dk)
     skin = mat("holo", lt, 1.1, 0.32, scan=True)
     edge = mat("edge", lt, 2.2, 0.9)
     deep = mat("deep", lt, 0.9, 0.22, scan=True)
@@ -2341,53 +2512,103 @@ def tinker_hologram(lt, dk):
     tinker_core(lt, at=(0, 0, 0.55), size=0.15)
 
 
+def tinker_hologram_other(lt, dk):
+    """The projected beaver or aye-aye, built like the raccoon's: the beaver blunt-headed with small ears, a bar of
+    teeth and a flat paddle tail; the aye-aye slight, with huge ears, big eyes and a long bushy tail."""
+    beaver = args.base == "beaver"
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+
+    def traced(o):
+        w = o.copy(); w.data = o.data.copy(); bpy.context.scene.collection.objects.link(w)
+        w.data.materials.clear(); w.data.materials.append(edge)
+        md = w.modifiers.new("w", "WIREFRAME"); md.thickness = 0.018; md.use_replace = True
+    body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(-0.05, 0, 0.52 if beaver else 0.58))
+    body.scale = (0.66, 0.4, 0.37) if beaver else (0.56, 0.27, 0.28); body.rotation_euler = (0, 0.12, 0); traced(body)
+    head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.22 if beaver else 0.17,
+                    location=(0.72, 0, 0.72 if beaver else 0.8))
+    head.scale = (1.05, 1.15, 0.9) if beaver else (1.0, 1.0, 0.95); traced(head)
+    traced(obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=5, radius1=0.12 if beaver else 0.07, depth=0.18 if beaver else 0.15,
+                    location=(0.92 if beaver else 0.86, 0, 0.67 if beaver else 0.76), rotation=(0, math.pi / 2 + 0.25, 0)))
+    eye_ = mat("eye", (1, 1, 1), 9.0, 1.0)
+    if beaver:
+        obj_from(bpy.ops.mesh.primitive_cube_add, "teeth", mat("teeth", mixc(lt, (1, 0.6, 0.2), 0.5), 3.0, 0.95), size=1,
+                 location=(0.98, 0, 0.56)).scale = (0.02, 0.05, 0.06)
+        for side in (1, -1):
+            traced(obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "ear", skin, subdivisions=1, radius=0.055, location=(0.62, side * 0.2, 0.88)))
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.025, location=(0.84, side * 0.12, 0.79))
+        paddle = obj_from(bpy.ops.mesh.primitive_cube_add, "tail", deep, size=1, location=(-0.98, 0, 0.36))
+        paddle.scale = (0.5, 0.3, 0.05); paddle.rotation_euler = (0, 0.12, 0); traced(paddle)
+    else:
+        for side in (1, -1):
+            o = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "ear", deep, subdivisions=1, radius=0.17, location=(0.66, side * 0.17, 1.0))
+            o.scale = (0.18, 0.8, 1.15); o.rotation_euler = (side * 0.35, 0, side * 0.55); traced(o)
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.045, location=(0.84, side * 0.075, 0.82))
+        at, _ = along([(-0.55, 0, 0.6), (-0.9, 0, 0.7), (-1.1, 0, 0.95), (-1.15, 0, 1.25)])
+        for k in range(5):  # one long bushy tail, thickest in the middle
+            p0, p1 = at(k / 5)[0], at((k + 1) / 5)[0]
+            bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.09 + 0.05 * math.sin(math.pi * (k + 0.5) / 5), depth=(p1 - p0).length, location=(p0 + p1) / 2)
+            o = bpy.context.active_object; o.name = "tail"; o.data.materials.append(skin)
+            o.rotation_euler = Vector((0, 0, 1)).rotation_difference(p1 - p0).to_euler(); traced(o)
+    for x, y in ((0.36, 0.17), (0.36, -0.17), (-0.42, 0.17), (-0.42, -0.17)) if beaver else ((0.36, 0.13), (0.36, -0.13), (-0.38, 0.13), (-0.38, -0.13)):
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=5, radius=0.075 if beaver else 0.05, depth=0.5, location=(x, y, 0.05))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.3, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    tinker_core(lt, at=(0, 0, 0.55), size=0.15)
+
+
 def tinker_creature(sc, el, lt, dk):
-    """The living raccoon on its own four feet, nothing in its paws, its tool roll strapped across its back and its
-    brass cog at its chest. Its stance is the Fixer's reach for the state it is in (TINKER_POSE)."""
-    S, F = STYLE[el], RACCOON[el]
+    """The living Tinker (raccoon, beaver or aye-aye) on its own four feet, nothing in its paws, its tool roll strapped
+    across its back and its brass cog at its chest. Its stance is the Fixer's reach for the state it is in
+    (TINKER_POSE); each base scales it to its own build (TINKER: girth, height, hind feet)."""
+    T = TINKER[args.base]
+    S, F = STYLE[el], T["F"][el]
     P = TINKER_POSE[look_state()]
     lights(sc)
-    rng = random.Random(f"creature-raccoon-{el}")
-    s = 1.25
-    H = Vector(P["head"])
+    rng = random.Random(f"creature-{args.base}-{el}")
+    s, g, t = T["s"], T["girth"], T["tall"]
+    H = Vector(P["head"]); H.z *= t
     HEAD["at"] = H
-    cz, rz = P["chest"], P["rump"]
+    cz, rz = P["chest"] * t, P["rump"] * t
     chest, rump = Vector((0.3, 0, cz)), Vector((-0.4, 0, rz))
     neck0 = chest + Vector((0.12, 0, 0.08))
-    NECK["at"] = (neck0 + (H - neck0) * 0.4, (H - neck0).normalized(), 0.15)
+    NECK["at"] = (neck0 + (H - neck0) * 0.4, (H - neck0).normalized(), 0.15 * g)
     turn = 1.0 if look_state() == "dissatisfied" else 0.0
-    parts = raccoon_head(H, s, turn) + [("cap", tuple(neck0), tuple(H + Vector((-0.08, 0, -0.04))), 0.15),  # neck
-                                        ("ell", tuple(chest), 0.25, (1.1, 0.95, 1.0)),  # chest
-                                        ("cap", tuple(chest), tuple(rump), 0.24),  # barrel
-                                        ("ell", tuple(rump + Vector((0, 0, 0.03))), 0.29, (1.05, 1.0, 1.0))]  # the round rump
+    parts = T["head"](H, s, turn) + [("cap", tuple(neck0), tuple(H + Vector((-0.08, 0, -0.04))), 0.15 * g),  # neck
+                                     ("ell", tuple(chest), 0.25 * g, (1.1, 0.95, 1.0)),  # chest
+                                     ("cap", tuple(chest), tuple(rump), 0.24 * g),  # barrel
+                                     ("ell", tuple(rump + Vector((0, 0, 0.03))), 0.29 * g, (1.05, 1.0, 1.0))]  # the round rump
     fx, hx = P["fore"], P["hind"]
-    legs = [((0.28, -0.12, cz - 0.08), ((0.28 + fx) / 2 + 0.02, -0.13, max(0.24, cz * 0.45)), (fx, -0.13, 0.06)),
-            ((0.28, 0.12, cz - 0.08), ((0.28 + fx) / 2 + 0.02, 0.13, max(0.24, cz * 0.45)), (fx, 0.13, 0.06)),
-            ((-0.42, -0.14, rz - 0.06), ((-0.42 + hx) / 2 + 0.1, -0.15, rz * 0.42), (hx, -0.15, 0.06)),
-            ((-0.42, 0.14, rz - 0.06), ((-0.42 + hx) / 2 + 0.1, 0.15, rz * 0.42), (hx, 0.15, 0.06))]
+    legs = [((0.28, -0.12 * g, cz - 0.08), ((0.28 + fx) / 2 + 0.02, -0.13 * g, max(0.24, cz * 0.45)), (fx, -0.13 * g, 0.06)),
+            ((0.28, 0.12 * g, cz - 0.08), ((0.28 + fx) / 2 + 0.02, 0.13 * g, max(0.24, cz * 0.45)), (fx, 0.13 * g, 0.06)),
+            ((-0.42, -0.14 * g, rz - 0.06), ((-0.42 + hx) / 2 + 0.1, -0.15 * g, rz * 0.42), (hx, -0.15 * g, 0.06)),
+            ((-0.42, 0.14 * g, rz - 0.06), ((-0.42 + hx) / 2 + 0.1, 0.15 * g, rz * 0.42), (hx, 0.15 * g, 0.06))]
     LEGS.update(stand(legs))
     hands = []
     for k, (a, b, c) in enumerate(legs):
-        parts += [("cap", a, b, 0.09 if k < 2 else 0.1), ("cap", b, c, 0.066)]
+        parts += [("cap", a, b, (0.09 if k < 2 else 0.1) * g), ("cap", b, c, 0.066 * g)]
         foot = Vector(c) + Vector((0.05, 0, -0.02))
-        parts.append(("ell", tuple(foot), 0.06, (1.5, 1.0, 0.5)))  # long flat hands and feet
+        parts.append(("ell", tuple(foot), 0.06 * (T["hind"] if k > 1 else 1.0), (1.5, 1.0, 0.5)))  # long flat hands and feet (the beaver's webbed hind feet broad)
         hands.append(foot)
-    parts += [("ell", (-0.42, -0.13, rz - 0.04), 0.16, (1.15, 0.7, 1.1)), ("ell", (-0.42, 0.13, rz - 0.04), 0.16, (1.15, 0.7, 1.1))]  # thighs
+    parts += [("ell", (-0.42, -0.13 * g, rz - 0.04), 0.16 * g, (1.15, 0.7, 1.1)), ("ell", (-0.42, 0.13 * g, rz - 0.04), 0.16 * g, (1.15, 0.7, 1.1))]  # thighs
     body = blob("body", parts, 0.022, 15000)
     fluff(body, 0.008, 18.0)
-    for f in hands:  # five dark fingers on every hand
+    for i, f in enumerate(hands):  # five dark fingers on every hand
         for k in (-2, -1, 0, 1, 2):
+            if args.base == "ayeaye" and i < 2 and k == 0:  # the aye-aye's long middle finger, lifted to tap
+                ayeaye_finger(f + Vector((0.0, 0, -0.012)), (1, 0, 0), F[3], 0.5 if look_state() != "dissatisfied" else 0.3)
+                continue
             ball("finger", solid("finger", F[3], 0.6), f + Vector((0.09, k * 0.026, -0.012)), 0.018, (1.8, 0.8, 0.7), 8)
-    lift = P["tail"]
-    tail = raccoon_tail("tail", [tuple(rump + Vector((-0.2, 0, 0.0))), tuple(rump + Vector((-0.45, 0, 0.05 + 0.2 * lift))),
-                                 tuple(rump + Vector((-0.66, 0, 0.12 + 0.55 * lift))), tuple(rump + Vector((-0.78, 0, 0.22 + 0.9 * lift)))], 0.11, F)
-    seam = raccoon_face(body, H, S, F, s, 0.058)
-    fn = raccoon_paint(H, F, s, hands, 0.1)
+    tail = tinker_tail(T, F, rump, P["tail"])
+    seam = T["face"](body, H, S, F, s, 0.058)
+    fn = T["paint"](H, F, s, hands, 0.1)
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.85))
-    back = (chest + rump) / 2 + Vector((0, 0, 0.27))
+    back = (chest + rump) / 2 + Vector((0, 0, 0.27 * g))
     tool_roll(back, 0.46, (0, 1, 0), S)
-    drape("scarf", tuple(NECK["at"][0]), (-0.55, 0, -0.85), 0.13, 0.18, 0.15, S["cloth"], S["trim"], f"scarf-raccoon-{el}", 0.6)
+    drape("scarf", tuple(NECK["at"][0]), (-0.55, 0, -0.85), 0.13, 0.18, 0.15, S["cloth"], S["trim"], f"scarf-{args.base}-{el}", 0.6)
     beads(tuple(NECK["at"][0] + Vector((0.02, 0, -0.02))), tuple(NECK["at"][1]), 0.15, 12, 0.07, 3, lt, S)
     tinker_core(lt, chest + Vector((0.24, -0.08, -0.12)), 0.08)
     spine = [neck0, chest + Vector((0, 0, 0.18)), back, rump + Vector((0, 0, 0.22))]
@@ -2396,47 +2617,52 @@ def tinker_creature(sc, el, lt, dk):
 
 
 def tinker_ascended(sc, el, lt, dk):
-    """The raccoon's highest ally form, upright as a tinkerer of light: a leather work apron, a tool belt with a small
+    """The Tinker's highest ally form (raccoon, beaver or aye-aye), upright as a tinkerer of light: a leather work apron, a tool belt with a small
     hammer and pliers, brass goggles pushed up on its brow, its cog at its chest. Its stance is the Fixer's reach for
     the state it is in (TINKER_ALLY): held and pitched far forward with both long hands out when dissatisfied, arms
     open and low when satisfied."""
-    S, F = STYLE[el], RACCOON[el]
+    T = TINKER[args.base]
+    g = T["girth"]
+    S, F = STYLE[el], T["F"][el]
     A = TINKER_ALLY[look_state()]
     lights(sc)
-    rng = random.Random(f"ascended-raccoon-{el}")
+    rng = random.Random(f"ascended-{args.base}-{el}")
     s = 0.95
     H = Vector(A["head"])
     HEAD["at"] = H
     lean, hip = A["lean"], A["hip"]
     top = Vector((lean, 0, 1.5))
     NECK["at"] = (top + (H - top) * 0.45, (H - top).normalized(), 0.12)
-    parts = raccoon_head(H, s) + [("cap", tuple(top), tuple(H + Vector((-0.06, 0, -0.1))), 0.1),
-                                  ("cap", (0, 0, hip + 0.05), tuple(top), 0.28), ("ball", (0, 0, hip), 0.3),
-                                  ("cap", tuple(top + Vector((0, -0.3, 0))), tuple(top + Vector((0, 0.3, 0))), 0.13)]
+    parts = T["head"](H, s) + [("cap", tuple(top), tuple(H + Vector((-0.06, 0, -0.1))), 0.1 * g),
+                               ("cap", (0, 0, hip + 0.05), tuple(top), 0.28 * g), ("ball", (0, 0, hip), 0.3 * g),
+                               ("cap", tuple(top + Vector((0, -0.3, 0))), tuple(top + Vector((0, 0.3, 0))), 0.13 * g)]
     hands, ends = [], []
     for side, hd, eb in zip((-1, 1), A["hands"], A["elbows"]):
         sh = top + Vector((0, side * 0.34, 0))
         hd, eb = Vector(hd), Vector(eb)
         reach = (hd - eb).normalized()
-        parts += [("cap", tuple(sh), tuple(eb), 0.085), ("cap", tuple(eb), tuple(hd), 0.068),
+        parts += [("cap", tuple(sh), tuple(eb), 0.085 * g), ("cap", tuple(eb), tuple(hd), 0.068 * g),
                   ("ell", tuple(hd + reach * 0.04), 0.065, (1.4, 1.0, 0.6))]
         hands.append(hd + reach * 0.04); ends.append(reach)
     feet = []
     for (fx, fy), y in zip(A["feet"], (-0.15, 0.15)):
         knee = Vector(((fx + 0.0) / 2 + 0.1, (fy + y) / 2, (hip + 0.06) / 2 + 0.02))
-        parts += [("cap", (0, y, hip - 0.05), tuple(knee), 0.13), ("cap", tuple(knee), (fx, fy, 0.08), 0.08),
-                  ("ell", (fx + 0.06, fy, 0.05), 0.065, (1.6, 1.0, 0.5))]
+        parts += [("cap", (0, y, hip - 0.05), tuple(knee), 0.13 * g), ("cap", tuple(knee), (fx, fy, 0.08), 0.08 * g),
+                  ("ell", (fx + 0.06, fy, 0.05), 0.065 * T["hind"], (1.6, 1.0, 0.5))]
         feet.append(Vector((fx + 0.06, fy, 0.05)))
     body = blob("body", parts, 0.02, 15000)
     fluff(body, 0.006, 18.0)
     for f, d in zip(hands, ends):  # long dark fingers, spread on the reaching hands
         side = d.cross(Vector((0, 0, 1))).normalized() if abs(d.z) < 0.95 else Vector((0, 1, 0))
         for k in (-2, -1, 0, 1, 2):
+            if args.base == "ayeaye" and k == 0:  # the long middle finger, lifted to tap
+                ayeaye_finger(f - d * 0.06, d, F[3], 0.3, 0.9)
+                continue
             o = ball("finger", solid("finger", F[3], 0.6), f + d * 0.07 + side * k * 0.022, 0.014, (1, 1, 1), 8)
             o.scale = (2.2, 0.8, 0.8); o.rotation_euler = Vector((1, 0, 0)).rotation_difference(d + side * k * 0.15).to_euler()
-    tail = raccoon_tail("tail", [(-0.2, 0, hip), (-0.5, 0, hip - 0.25), (-0.72, -0.05, hip - 0.3), (-0.9, -0.1, hip - 0.15)], 0.1, F, s)
-    seam = raccoon_face(body, H, S, F, s, 0.042)
-    fn = raccoon_paint(H, F, s, hands + feet, 0.14, (1.0, 1.45))
+    tail = tinker_tail(T, F, None, 0.0, s, upright=hip)
+    seam = T["face"](body, H, S, F, s, 0.042)
+    fn = T["paint"](H, F, s, hands + feet, 0.14, (1.0, 1.45))
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.85))
     # the apron hangs from the chest, a front panel only, tilted with the body
