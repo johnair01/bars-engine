@@ -2713,15 +2713,15 @@ IRON = (0.3, 0.31, 0.33)
 HOLDFAST_POSE = {  # chest and rump heights, the head, fore and hind feet along the body and apart, the tail's lift, legs locked
     "neutral": dict(chest=0.46, rump=0.48, head=(0.94, 0, 0.5), fore=0.38, hind=-0.42, spread=1.0, tail=-0.1, chin=0.0, lock=False),
     "dissatisfied": dict(chest=0.66, rump=0.52, head=(0.82, 0, 1.0), fore=0.3, hind=-0.3, spread=0.45, tail=0.9, chin=1.0, lock=True),
-    "satisfied": dict(chest=0.42, rump=0.44, head=(1.0, 0, 0.42), fore=0.5, hind=-0.52, spread=1.25, tail=-0.35, chin=-0.4, lock=False),
+    "satisfied": dict(chest=0.38, rump=0.4, head=(1.04, 0, 0.36), fore=0.56, hind=-0.6, spread=1.7, tail=-0.5, chin=-0.5, lock=False),
 }
 HOLDFAST_ALLY = {  # torso lean (back is negative), head, both hands (near, far) with their elbows, near and far foot, fists
     "neutral": dict(lean=0.0, head=(0.12, 0, 1.88), hands=((0.12, -0.42, 1.0), (0.12, 0.42, 1.0)),
                     elbows=((0.0, -0.44, 1.28), (0.0, 0.44, 1.28)), feet=((0.04, -0.15), (0.04, 0.15)), hip=0.9, fist=True, chin=0.0),
     "dissatisfied": dict(lean=-0.1, head=(-0.04, 0, 2.02), hands=((0.02, -0.33, 1.0), (0.02, 0.33, 1.0)),
                          elbows=((-0.08, -0.78, 1.26), (-0.08, 0.78, 1.26)), feet=((0.04, -0.06), (0.04, 0.06)), hip=0.96, fist=True, chin=1.0),
-    "satisfied": dict(lean=0.03, head=(0.16, 0, 1.86), hands=((0.22, -0.56, 0.98), (0.22, 0.56, 0.98)),
-                      elbows=((0.04, -0.48, 1.28), (0.04, 0.48, 1.28)), feet=((0.04, -0.18), (0.04, 0.18)), hip=0.9, fist=False, chin=-0.3),
+    "satisfied": dict(lean=0.03, head=(0.16, 0, 1.86), hands=((0.3, -0.86, 1.08), (0.3, 0.86, 1.08)),
+                      elbows=((0.1, -0.62, 1.26), (0.1, 0.62, 1.26)), feet=((0.04, -0.22), (0.04, 0.22)), hip=0.88, fist=False, chin=-0.3),
 }
 
 
