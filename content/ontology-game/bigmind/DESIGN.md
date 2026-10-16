@@ -48,7 +48,7 @@ the falsification test. If Wendell does not catch a second voice speaking or fee
    (`bm-cards-and-line`).
 10. **The way opens.** The walls past the chamber widen and the light surges, as in the Cave of Lessons.
 11. **The second hallway.** The parts that were asked to wait stand by the wall; walking past one shows that it waits for
-    its own turn. The hallway ends at the Controller, standing in the shut mouth of the next chamber, which says it opens
+    its own turn. The hallway ends at the Controller, at the shut mouth of the next chamber (it shows no figure now: see "The shut mouth and free walking"), which says it opens
     in the next build. Walk back up, or rest.
 
 **Declining** (`bm-decline`) is a full move. The Protector steps to the wall and waits, the way opens, and the save marks
@@ -472,3 +472,14 @@ stands unless he flips it.
 - **Not yet built.** The centre's two ways, to the hall of the six and the second cave (Big Mind and Big Heart,
   `bm-center`, `lv-centre-altitude`), are named as shut. The guide revealed as the integrated voice (`bm-guide`) is not yet
   shown.
+
+## The shut mouth and free walking (boards `bmt-hidden-next`, `bmt-free-walk`, 16 October 2026)
+
+- The end of each hallway shows the shut mouth and no figure. It breathes with the cave: a light in the next voice's colour
+  (the child's warm gold before the centre) and a low filtered-noise sound, both stronger the nearer the player is, and both
+  gone as the mouth opens. The sound starts at the first touch or key and is closed with the cave. The child at the centre
+  is built hidden and appears as the mouth opens. Voices already met still wait by the wall.
+- The player walks freely in both hallways: the stick at the bottom left, the arrow keys or W A S D, forward, back and to
+  either side inside the walls. Run (button, or Shift) is about twice as fast. Holding anywhere still walks straight on.
+- Thresholds still stop the player: forward ends at the voice (first hallway) and at the mouth (second); back stops at the
+  cave mouth and at the voice's gate. Chamber dialogue, the sit-down and the Self button are unchanged.

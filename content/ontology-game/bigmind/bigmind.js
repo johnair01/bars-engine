@@ -682,6 +682,8 @@
     ".bm-line{display:flex;gap:.35rem;margin-top:.45rem}.bm-line input{flex:1;min-width:0;font-size:16px;padding:.5rem .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:#14142a;color:#fff}" +
     ".oagc button.bm-link{background:none;border:none;color:#aab4d4;font-weight:400;text-decoration:underline;padding:.4rem .2rem}" +
     ".oagc button.bm-self{position:absolute;top:10px;left:10px;z-index:4;background:rgba(20,20,40,.75);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500}" +
+    ".oagc button.bm-run{position:absolute;right:10px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:4;min-width:64px;background:rgba(20,20,40,.55);border:2px solid rgba(255,241,176,.55);color:#fff1b0;font-weight:500;border-radius:999px}" +
+    ".oagc button.bm-run[aria-pressed=true]{background:rgba(255,241,176,.35)}" +
     ".bm-hint{position:absolute;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));text-align:center;color:#e8e2c8;font-size:15px;z-index:2;pointer-events:none;text-shadow:0 1px 3px #000;padding:0 1rem}" +
     ".bm-npc{color:#cfe0ff;font-size:1.02rem}.bm-npc b{color:#9cc4ff}.bm-you{color:#fff1d0;text-align:right;font-style:normal}" +
     ".bm-meters{position:absolute;top:12px;right:10px;left:84px;z-index:4;display:flex;flex-direction:column;gap:5px;pointer-events:none}" +
@@ -814,7 +816,7 @@
   // ---- the cave --------------------------------------------------------------------------------
   // The route (a choice): hallway, chamber, hallway, the next chamber's closed mouth, along one gently winding line. The
   // chamber is the tunnel widened; past the voice the way stays gathered shut until the voice has spoken or been held back.
-  var W = 4.4, H = 3, CHAMBER_IN = 40, CHAMBER_OUT = 72, S_VOICE = 58, S_SELF = 52, S_GATE = 61, WALK = 2.6, WAIT_D = 2.2; // WAIT_D: how far from the middle a waiting part stands
+  var W = 4.4, H = 3, CHAMBER_IN = 40, CHAMBER_OUT = 72, S_VOICE = 58, S_SELF = 52, S_GATE = 61, WALK = 2.6, RUN_K = 2.1, WAIT_D = 2.2; // WAIT_D: how far from the middle a waiting part stands
   function layout() {
     var pts = [], z;
     for (z = 0; z <= 124; z += 2) pts.push({ x: 2.2 * Math.sin(z * 0.07) + 1.2 * Math.sin(z * 0.023 + 1), z: -z });
@@ -866,7 +868,7 @@
     // phase: hall1 (walking to the voice), chamber (the dialogue), hall2 (walking on), end (the next chamber's mouth).
     // gate is how open the way past the voice is (0.45 shut, 1 open); held is the finger on the stage or the ring.
     var st = { phase: from, s: from === "hall2" ? S_GATE + 2 : 2, held: false, gate: from === "hall2" ? 1 : 0.45, gateGoal: from === "hall2" ? 1 : 0.45,
-      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], charge: null, charges: [], you: null, waves: [], place: null, know: null, be: {}, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1, endOpen: 0, child: {} };
+      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], charge: null, charges: [], you: null, waves: [], place: null, know: null, be: {}, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1, endOpen: 0, child: {}, lat: 0, run: false };
     var route = layout(), tweens = [], last = performance.now(), snap = true;
     function tween(ms, fn, done) { tweens.push({ t0: performance.now(), ms: ms / st.speed, fn: fn, done: done }); }
     function ease(k) { return k * k * (3 - 2 * k); }
@@ -911,10 +913,34 @@
     var motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xfff1b0, size: 0.16, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
     motes.position.copy(easeRing.position); scene.add(motes);
     var calmBlue = new THREE.Color(0x6a9aff), calmWarm = new THREE.Color(0xffd49a);
-    // Past the last chamber the figure at the shut mouth is the vulnerable child: the faceless avatar, small and warm (a choice).
-    var nextFig = NEXT.centre ? K.buildAvatar(THREE, "other") : K.buildDaemon(THREE, daemonRow(NEXT.daemon), 6);
-    if (NEXT.centre) { nextFig.scale.setScalar(0.55); nextFig.userData.mat.color.setHex(0xffd49a); nextFig.userData.mat.emissive.setHex(0xffd49a); nextFig.userData.mat.emissiveIntensity = 0.35; }
-    seeThrough(nextFig, 0.55); figureAt(nextFig, route.sEnd + 4, 0, true); scene.add(nextFig);
+    // The shut mouth at the hallway's end shows no figure (board bmt-hidden-next, Wendell, 16 October 2026): it breathes with the
+    // cave, a light in it in the next voice's colour and a low sound that comes up as the player nears. Only the centre keeps a
+    // figure, the vulnerable child, hidden until the mouth opens: the faceless avatar, small and warm (a choice).
+    var nextFig = null, mouthCol = 0xffd49a;
+    if (NEXT.centre) {
+      nextFig = K.buildAvatar(THREE, "other"); nextFig.scale.setScalar(0.55); nextFig.userData.mat.color.setHex(0xffd49a); nextFig.userData.mat.emissive.setHex(0xffd49a); nextFig.userData.mat.emissiveIntensity = 0.35;
+      seeThrough(nextFig, 0.55); figureAt(nextFig, route.sEnd + 4, 0, true); nextFig.visible = false; scene.add(nextFig);
+    } else { var nrow = daemonRow(NEXT.daemon); if (nrow && nrow[3] != null) mouthCol = nrow[3]; }
+    var mo = at(route, route.sEnd + 3.4);
+    var mouthLight = new THREE.PointLight(mouthCol, 0, 20); mouthLight.position.set(mo.x, floor(mo) + 1.8, mo.z); scene.add(mouthLight);
+    var mouthGlow = new THREE.Mesh(new THREE.CircleGeometry(1.7, 40), new THREE.MeshBasicMaterial({ color: mouthCol, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    mouthGlow.position.set(mo.x, floor(mo) + 1.7, mo.z); mouthGlow.rotation.y = K.yawFacing(mo); scene.add(mouthGlow);
+    // The sound: brown noise through a low filter, swelling and settling with the breath. It starts at the first touch (a page
+    // may not make sound before one) and is closed with the cave.
+    var snd = null;
+    function mouthSound() {
+      if (snd !== null) return;
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext; if (!AC) { snd = false; return; }
+        var ac = new AC(), n = ac.sampleRate * 2, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0), l = 0;
+        for (var i = 0; i < n; i++) { l = (l + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = l * 3.5; }
+        var src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+        var fl = ac.createBiquadFilter(); fl.type = "lowpass"; fl.frequency.value = 200;
+        var gn = ac.createGain(); gn.gain.value = 0; src.connect(fl); fl.connect(gn); gn.connect(ac.destination); src.start();
+        snd = { ac: ac, gain: gn, filter: fl };
+      } catch (e) { snd = false; }
+    }
+    function stopMouthSound() { if (snd) { try { snd.gain.gain.value = 0; snd.ac.close(); } catch (e) { /* already closed */ } } snd = false; }
     var avatar = K.buildAvatar(THREE, "other"); scene.add(avatar);
     var ghost = null, figures = [];
     // Translators already waiting from an earlier sitting stand by the wall of the second hallway.
@@ -929,7 +955,7 @@
 
     // ---- input: hold anywhere to walk -----------------------------------------------------------
     K.holdArea(stage); K.holdArea(ring);
-    function down(e) { if (st.modal) return; e.preventDefault(); st.held = true; }
+    function down(e) { if (st.modal) return; e.preventDefault(); mouthSound(); st.held = true; }
     function up() { st.held = false; }
     // Seated, a drag on the scene turns the camera around the charge while the panel stays open (Wendell, 12 October 2026,
     // 22:53: "be able to look at the scene from all sides"). The camera keeps inside the cave: see keepInCave.
@@ -951,13 +977,46 @@
       p.y = clamp(p.y, floor(a) + 0.5, a.y + 0.45 * H * o);
       return p;
     }
+    // Free walking and running (board bmt-free-walk, Wendell, 16 October 2026): the stick at the bottom left, or the arrow keys and
+    // W A S D, walk the figure wherever the thumb points, forward, back and to either side inside the walls; Run (or Shift) goes
+    // faster. Holding anywhere still walks straight on. The chamber threshold still stops the player: forward ends at the voice
+    // in the first hallway and at the mouth in the second, and the way back stops at the mouth and at the voice's gate.
+    var stick = { x: 0, z: 0 }, keys = {}, stickId = null;
+    var stickPad = el("div", { class: "oagr-stick", "data-bm-stick": "", "aria-label": "Walk", role: "slider", style: "bottom:calc(76px + env(safe-area-inset-bottom));left:10px;width:104px;height:104px" });
+    var stickKnob = el("div", { class: "oagr-knob" }); stickPad.appendChild(stickKnob);
+    var runBtn = el("button", { class: "bm-run", "data-bm-run": "", "aria-pressed": "false", text: "Run", onclick: function () { st.run = !st.run; runBtn.setAttribute("aria-pressed", String(st.run)); } });
+    wrap.appendChild(stickPad); wrap.appendChild(runBtn);
+    function stickAt(e) {
+      var rc = stickPad.getBoundingClientRect(), r = rc.width / 2;
+      if (!(r > 0)) { stickUp(); return; }
+      var dx = e.clientX - rc.left - r, dy = e.clientY - rc.top - r, d = Math.hypot(dx, dy), m = Math.min(d, r);
+      stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
+      stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
+    }
+    function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; }
+    K.holdArea(stickPad);
+    stickPad.addEventListener("pointerdown", function (e) { e.preventDefault(); mouthSound(); stickId = e.pointerId; try { stickPad.setPointerCapture(e.pointerId); } catch (x) { /* old browsers */ } stickAt(e); });
+    stickPad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) { stickPad.addEventListener(n, function (e) { if (e.pointerId === stickId) stickUp(); }); });
+    var KEYS = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] };
+    function typing() { var a = document.activeElement; return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT"); }
+    function keyDown(e) { if (e.code === "ShiftLeft" || e.code === "ShiftRight") { keys.Shift = true; return; } if (!KEYS[e.code] || typing() || st.modal) return; mouthSound(); keys[e.code] = true; e.preventDefault(); }
+    function keyUp(e) { delete keys[e.code]; if (e.code === "ShiftLeft" || e.code === "ShiftRight") delete keys.Shift; }
+    window.addEventListener("keydown", keyDown); window.addEventListener("keyup", keyUp);
+    // Where the thumb or keys point, in the path's frame: along is forward (up on the stick), side is to the right.
+    function walkInput() {
+      var x = stick.x, z = stick.z; Object.keys(keys).forEach(function (k) { if (KEYS[k]) { x += KEYS[k][0]; z += KEYS[k][1]; } });
+      var m = Math.hypot(x, z);
+      if (m >= 0.15) { if (m > 1) { x /= m; z /= m; m = 1; } return { along: -z / m, side: x / m, m: m }; }
+      return st.held ? { along: 1, side: 0, m: 1 } : null;
+    }
     [stage, ring].forEach(function (n) { n.addEventListener("pointerdown", down); n.addEventListener("pointerup", up); n.addEventListener("pointercancel", up); n.addEventListener("pointerleave", up); });
 
     // ---- the modal ------------------------------------------------------------------------------
     function show(kids, tag) {
       modal.innerHTML = ""; kids.forEach(function (k) { if (k) modal.appendChild(k); });
       modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); modal.setAttribute("data-bm-step", tag || "");
-      modal.scrollTop = 0; st.modal = true; st.held = false; ring.style.display = "none"; hint.textContent = "";
+      modal.scrollTop = 0; st.modal = true; st.held = false; stickUp(); ring.style.display = "none"; hint.textContent = "";
     }
     function hide() { modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); modal.setAttribute("data-bm-step", ""); st.modal = false; ring.style.display = ""; }
     function guide(t) { return el("p", { class: "bm-guide", text: t }); }
@@ -1709,20 +1768,20 @@
       st.phase = "end";
       var rest = btn("Rest here", function () { hide(); st.phase = "rest"; hint.textContent = "Resting. Tap Self to walk back up."; }, { "data-bm-rest": "" }, true);
       if (NEXT && NEXT.built && !NEXT.centre) {
-        show([el("h2", { text: NEXT.title }), guide("Another figure waits at the mouth of the next chamber. Its chamber is open."),
+        show([el("h2", { text: NEXT.title }), guide("The mouth of the next chamber is shut ahead, breathing, with a light in it. Its chamber is open."),
           guide("Your place is saved here. You can walk on into its chamber, rest, or walk back up and out."),
           row([btn("Walk on, to " + NEXT.title.replace(/^The /, "the "), onward, { "data-bm-onward": "" })]),
           row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }, true), rest])], "end");
         return;
       }
       if (NEXT.centre) {
-        show([el("h2", { text: NEXT.title }), guide("This is the end of the daemon path. Past the last chamber the way opens toward the centre, and a small figure waits at its mouth: the vulnerable child, with the place for the self beside it."),
+        show([el("h2", { text: NEXT.title }), guide("This is the end of the daemon path. Past the last chamber the way opens toward the centre, and the vulnerable child waits there, with the place for the self beside it."),
           guide("Your place is saved here. You can walk on into the centre, rest, or walk back up and out."),
           row([btn("Walk on, into the centre", toCentre, { "data-bm-tocentre": "" })]),
           row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }, true), rest])], "end");
         return;
       }
-      show([el("h2", { text: NEXT.title }), guide("Another figure waits at the mouth of the next chamber. Its chamber opens in the next build."),
+      show([el("h2", { text: NEXT.title }), guide("The mouth of the next chamber is shut ahead, breathing, with a light in it. Its chamber opens in the next build."),
         guide("Your place is saved here. You can rest, or walk back up and out."),
         row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }), rest])], "end");
     }
@@ -1732,7 +1791,7 @@
     var cen = null;
     function toCentre() {
       hide(); st.phase = "centre"; st.auto = true; ring.style.display = "none";
-      var sv = readSave(), sC = route.sEnd + 4, s0 = st.s, m = nextFig.userData.mat;
+      var sv = readSave(), sC = route.sEnd + 4, s0 = st.s, m = nextFig.userData.mat; nextFig.visible = true;
       cen = { s: sC, said: {}, voices: [], lat: 0 };
       PATH.forEach(function (id, j) {
         if (!sv.voices[id]) return;
@@ -1810,7 +1869,7 @@
       var s = readSave(); s.chamber = C + 1; s.at = "mouth"; writeSave(s);
       carry = spirits.map(function (o) { return { name: o.name, element: o.element, lighter: !!o.lighter }; });
       hide(); fade.style.opacity = 1;
-      setTimeout(function () { cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; play(THREE, "hall1"); }, 520);
+      setTimeout(function () { stopMouthSound(); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp); cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; play(THREE, "hall1"); }, 520);
     }
     // At the mouth the player chooses, for each spirit, to keep it for next time or let it go (bms-spirits-after = choose). What
     // is kept is its name and element, on this device.
@@ -1831,7 +1890,7 @@
     }
     function leaveNow() {
       fade.style.opacity = 1;
-      setTimeout(function () { cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; mouth(); }, 520);
+      setTimeout(function () { stopMouthSound(); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp); cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; mouth(); }, 520);
     }
 
     // ---- the frame ------------------------------------------------------------------------------
@@ -1862,19 +1921,28 @@
       var g0 = st.gate; st.gate += (st.gateGoal - st.gate) * Math.min(1, dt * 1.6); if (Math.abs(st.gate - g0) > 1e-4) tube.dirty = true;
       tube.update(1 + 0.07 * (br.b - 0.5));
       st.flash = Math.max(0, st.flash - dt / 1.4);
-      // the walk
-      if (!st.auto && !st.modal && st.held && (st.phase === "hall1" || st.phase === "hall2")) {
-        var goal = st.phase === "hall1" ? S_SELF : route.sEnd;
-        st.s = Math.min(goal, st.s + WALK * st.speed * dt); st.moving = st.s < goal;
-        if (st.s >= goal - 1e-3) { st.moving = false; st.held = false; if (st.phase === "hall1") arrive(); else theEnd(); }
+      var walkable = !st.modal && !st.auto && (st.phase === "hall1" || st.phase === "hall2"); stickPad.style.display = runBtn.style.display = walkable ? "" : "none";
+      // the walk: free inside the walls, stopped at the thresholds
+      var wdir = null;
+      if (!st.auto && !st.modal && (st.phase === "hall1" || st.phase === "hall2")) {
+        var w = walkInput(), goal = st.phase === "hall1" ? S_SELF : route.sEnd, lo = st.phase === "hall1" ? 1 : S_GATE + 1;
+        if (w) {
+          var run = st.run || keys.Shift, sp = WALK * (run ? RUN_K : 1) * st.speed * w.m, s1 = clamp(st.s + w.along * sp * dt, lo, goal);
+          var lim = 0.5 * W * route.openAt(s1), l1 = clamp(st.lat + w.side * sp * dt, -lim, lim);
+          st.moving = Math.abs(s1 - st.s) + Math.abs(l1 - st.lat) > 1e-5; st.s = s1; st.lat = l1; st.pace = run ? RUN_K : 1; wdir = w;
+          if (st.s >= goal - 1e-3) { st.moving = false; st.held = false; stickUp(); Object.keys(keys).forEach(function (k) { delete keys[k]; }); if (st.phase === "hall1") arrive(); else theEnd(); }
+        } else st.moving = false;
       } else if (!st.auto) st.moving = false;
-      if (st.moving) st.clk += dt * st.speed;
+      if (st.phase !== "hall1" && st.phase !== "hall2") st.lat *= 1 - Math.min(1, dt * 3);
+      if (st.moving) st.clk += dt * st.speed * (st.pace || 1);
       var a = at(route, st.s), fl = floor(a);
       K.loosenAvatar(avatar, 0.5, br.b);
       K.poseAvatar(avatar, st.clk, st.moving, dt, br.b, WALK / K.STEPS_PER_S, false);
-      avatar.position.set(a.x, fl + 0.02, a.z);
+      var pa = side(st.s, st.lat); avatar.position.set(pa.x, floor(pa) + 0.02, pa.z);
       if (cen) { var ab = side(st.s, cen.lat); avatar.position.set(ab.x, floor(ab) + 0.02, ab.z); } // the self's place, beside the child
-      var face = K.yawFacing(a) + (st.turned || st.back ? Math.PI : 0); avatar.rotation.y = face;
+      if (wdir && st.moving) { var fy = Math.atan2(wdir.along * a.fx - wdir.side * a.fz, wdir.along * a.fz + wdir.side * a.fx), dy = fy - (st.yaw == null ? fy : st.yaw); st.yaw = (st.yaw == null ? fy : st.yaw) + Math.atan2(Math.sin(dy), Math.cos(dy)) * Math.min(1, dt * 10); }
+      else if (st.yaw != null) { var d0 = K.yawFacing(a) - st.yaw; st.yaw += Math.atan2(Math.sin(d0), Math.cos(d0)) * Math.min(1, dt * 6); }
+      var face = (st.phase === "hall1" || st.phase === "hall2") && st.yaw != null ? st.yaw : K.yawFacing(a) + (st.turned || st.back ? Math.PI : 0); avatar.rotation.y = face;
       var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches, SI = st.sit;
       if (SI) {
         avatar.position.y -= 0.75 * SI.k; avatar.scale.y = 1 - 0.3 * SI.k;
@@ -1918,7 +1986,7 @@
       else if (cen) { // at the centre: the child framed low under the panel, the self beside it and the voices around it
         var cb0 = side(cen.s - 6, -0.3), ch = at(route, cen.s); want = new THREE.Vector3(cb0.x, floor(cb0) + 3.2, cb0.z); look = new THREE.Vector3(ch.x, floor(ch) + 2.6, ch.z);
       }
-      else { var b = at(route, Math.max(0, st.s - 6.2)); want = new THREE.Vector3(b.x, floor(b) + 4.6, b.z); look = new THREE.Vector3(a.x + a.fx * 3.4, fl + 2.2, a.z + a.fz * 3.4); }
+      else { var b = side(Math.max(0, st.s - 6.2), st.lat * 0.6); want = new THREE.Vector3(b.x, floor(b) + 4.6, b.z); look = new THREE.Vector3(a.x + a.fx * 3.4 - a.fz * st.lat * 0.8, fl + 2.2, a.z + a.fz * 3.4 + a.fx * st.lat * 0.8); }
       if (snap) { camPos.copy(want); aim.copy(look); snap = false; } else { var f = 1 - Math.exp(-dt * (st.cam === "voice" ? 2.2 : 6)); camPos.lerp(want, f); aim.lerp(look, f); }
       camera.position.copy(camPos); camera.lookAt(aim);
       lamp.position.set(a.x, fl + 3.8, a.z); lamp.intensity = 1.1 + 0.3 * (1 - br.b) + 1.8 * st.flash * st.flash;
@@ -1948,11 +2016,19 @@
           else if (/waits? here/.test(hint.textContent)) hint.textContent = "";
         }
       }
+      // the shut mouth breathes: light and sound follow the cave's breath, stronger the nearer the player is, and open out as it opens
+      var nearM = st.phase === "hall2" || st.phase === "end" || st.phase === "rest" ? clamp(0.2 + 0.8 * (st.s - (S_GATE + 2)) / (route.sEnd - S_GATE - 2), 0.2, 1) : 0.12, fadeM = 1 - clamp(st.endOpen || 0, 0, 1);
+      var mbr = still ? 0.5 : br.b;
+      mouthLight.intensity = (0.3 + 1.6 * mbr) * nearM * fadeM; mouthGlow.material.opacity = (0.1 + 0.3 * mbr) * nearM * fadeM; mouthGlow.scale.setScalar(0.9 + 0.25 * mbr);
+      if (snd) {
+        var t0 = snd.ac.currentTime, mute = !(st.phase === "hall2" || st.phase === "end" || st.phase === "rest") || st.modal && st.phase === "hall2";
+        snd.gain.gain.setTargetAtTime(mute ? 0 : 0.06 * nearM * fadeM * (0.3 + 0.7 * mbr), t0, 0.25); snd.filter.frequency.setTargetAtTime(160 + 260 * mbr, t0, 0.25);
+      }
       renderer.render(scene, camera);
     }
     var api = window.__oagBigMind; api.state = st; api.chamber = C; api.voiceId = V.id; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
     api.openAt = route.openAt; api.inCave = function (p) { var q = keepInCave(p.clone(), st.s + 2); return q.distanceTo(p) < 0.01; }; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
-    api.spirits = spirits; api.centre = function () { return cen; }; api.child = nextFig; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
+    api.spirits = spirits; api.centre = function () { return cen; }; api.child = nextFig; api.mouth = { light: mouthLight, glow: mouthGlow, sound: function () { return snd; } }; api.walkInput = walkInput; api.keys = keys; api.stick = stick; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
     size(); window.addEventListener("resize", size);
     running = requestAnimationFrame(frame);
   }
