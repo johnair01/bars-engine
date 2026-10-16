@@ -72,7 +72,7 @@ THEMES = {"robe_set": {"builds": BUILDS, "palettes": PALETTES}}
 #   head      head size about the top of the neck
 #   curve     radians the upper back rounds forward across the spine (minus arches it back)
 #   stoop     radians the trunk leans forward from the waist (minus leans back)
-#   hands     the hands' shape, one of HANDS, or a (left, right) pair: an open palm or a fist (Wendell, 2026-10-14:
+#   hands     the hands' pose, one of HANDS, or a (left, right) pair: open, relaxed or a fist (Wendell, 2026-10-14:
 #             "Some gestures are palm out and others are balled fists we need the rig to be able to make this
 #             distinction")
 #   gesture   the daemon's held shape, {joint: (flex, out, turn, twist)} in radians at rest. flex bends the joint its
@@ -87,8 +87,23 @@ THEMES = {"robe_set": {"builds": BUILDS, "palettes": PALETTES}}
 # Frank's six fundamental movements (yield, push, reach, grasp, pull, release), the developmental movements of contact
 # between child and caregiver. A daemon emerged to protect the vulnerable child, and its body holds the movement stuck
 # in that protective form; integration in play is the movement completing. The rows below are a position on the board.
-HANDS = ("open", "fist")
-NEUTRAL = {"arms": 1.0, "head": 1.0, "curve": 0.0, "stoop": 0.0, "hands": "open", "gesture": {}}
+#
+# The hands are rigged the way game hands are (Wendell, 2026-10-16: "Let's do some research on how to properly rig and
+# use hands"; council/daemons/HANDS.md): the wrist bone is the palm, and each finger is a chain of three bones,
+# knuckle, middle and tip, the thumb's first one its metacarpal, set low in the palm so the thumb can swing across it.
+# The mesh is made once, open and straight-fingered so the fingers fuse apart, and a hand's shape is a pose of those
+# bones: a curl per finger joint and a spread of the fingers. A fist is the same hand closed, so a game can open it.
+FINGERS = ("thumb", "index", "middle", "ring", "pinky")
+FINGER_BONES = tuple(f"{f}{i}" for f in FINGERS for i in (1, 2, 3))
+HAND_POSES = {                       # {finger: (knuckle, middle, tip) curl in radians}, and the fingers' spread
+    "open": {"curl": {"thumb": (0.1, 0.0, 0.0), **{f: (-0.05, 0.0, 0.0) for f in FINGERS[1:]}}, "spread": 1.0},
+    "relaxed": {"curl": {"thumb": (0.15, 0.2, 0.15), "index": (0.25, 0.35, 0.2), "middle": (0.3, 0.45, 0.25),
+                         "ring": (0.35, 0.5, 0.3), "pinky": (0.4, 0.55, 0.3)}, "spread": 0.3},
+    "fist": {"curl": {"thumb": (0.0, 0.5, 0.45), **{f: (1.5, 1.75, 1.1) for f in FINGERS[1:]}}, "spread": 0.0,
+             "thumb_tip": (-0.05, 0.0, -0.08)},   # the thumb laid across the front of the folded fingers
+}
+HANDS = tuple(HAND_POSES)
+NEUTRAL = {"arms": 1.0, "head": 1.0, "curve": 0.0, "stoop": 0.0, "hands": "relaxed", "gesture": {}}
 WARP = {
     # PUSH held: stop. Both palms out at chest height, fingers up, elbows bent and braced against an attacker or an
     # obstacle, the trunk set into the push over a bent front knee, the back leg straight and driving (Wendell,
@@ -96,10 +111,11 @@ WARP = {
     "protector": {"arms": 0.98, "head": 0.94, "curve": -0.04, "stoop": 0.06, "hands": "open", "gesture": {
         "shoulder": (1.3, 0.12), "elbow": (0.4, 0, 0.12), "wrist": (1.55, 0, 0, 1.4), "neck": (-0.1,),
         "hipL": (0.36, 0.08), "kneeL": (0.38,), "ankleL": (0.1,), "hipR": (-0.3, 0.08), "ankleR": (-0.2,)}},
-    # GRASP held: not until this is handled. Fists drawn to the chest, elbows tight to the ribs, chest up, chin up,
-    # feet together, rigid and tall
+    # GRASP held: not until this is handled. Fists clenched and set on the hips, elbows out wide, chest up, chin up,
+    # feet together, rigid and tall: the figure takes up the room and holds it (Wendell, 2026-10-16: the fists drawn
+    # to the chest "still looks weird"; they read as a boxer's guard, not a grip)
     "controller": {"arms": 0.92, "head": 1.04, "curve": -0.2, "stoop": 0.0, "hands": "fist", "gesture": {
-        "shoulder": (0.22, -0.06), "elbow": (1.75, 0, 0.6), "wrist": (0.7,), "neck": (-0.2,), "hip": (0, -0.03)}},
+        "shoulder": (-0.5, 0.78, -0.05, 1.56), "elbow": (1.24, 0, 0.12), "neck": (-0.2,), "hip": (0, -0.03)}},
     # PULL held: look at the evidence, from a distance. Chest and head drawn back, elbows pulled behind, hands drawn
     # in to the belly, the front foot out and the weight sunk on the back knee
     "skeptic": {"arms": 1.0, "head": 1.12, "curve": -0.06, "stoop": -0.22, "hands": "fist", "gesture": {
@@ -107,7 +123,7 @@ WARP = {
         "hipL": (0.34,), "hipR": (-0.12,), "kneeR": (0.42,), "ankleL": (-0.3,)}},
     # REACH held: there is a problem here and I'll fix it. Pitched far forward over a front knee, both long arms out
     # to the problem, the head up to keep it in sight, the back leg trailing
-    "fixer": {"arms": 1.16, "head": 0.97, "curve": 0.1, "stoop": 0.45, "gesture": {
+    "fixer": {"arms": 1.16, "head": 0.97, "curve": 0.1, "stoop": 0.45, "hands": "open", "gesture": {
         "shoulder": (1.9, -0.1), "elbow": (0.08,), "wrist": (-0.35,), "neck": (-0.6,),
         "hipL": (0.38,), "kneeL": (0.5,), "ankleL": (0.15,), "hipR": (-0.3,)}},
     # YIELD collapsed: look at what I have absorbed. Sunk into the ground, knees soft and given way, back rounded,
@@ -122,7 +138,7 @@ WARP = {
         "neck": (0.55, 0.0, 0.35), "hip": (0.22, -0.06, 0.18), "knee": (0.4,), "ankle": (0.18,)}},
     # RELEASE too soon: this is what is actually moving. Arms flung wide and up, palms open, chest thrown up and head
     # back, up on the front foot, giving the feeling away to anyone in reach
-    "emotional-body": {"arms": 1.08, "head": 1.18, "curve": -0.32, "stoop": -0.1, "gesture": {
+    "emotional-body": {"arms": 1.08, "head": 1.18, "curve": -0.32, "stoop": -0.1, "hands": "open", "gesture": {
         "shoulder": (0.55, 1.45), "elbow": (0.15,), "wrist": (-0.5,), "neck": (-0.45,),
         "hipL": (0.25, 0.04), "kneeL": (0.2,), "hipR": (-0.12, 0.04)}},
     # the Player, the vulnerable child at the centre, is not a daemon and holds no blockage. A child's proportions
@@ -145,8 +161,8 @@ STEPS_PER_S, FPS, KEYS = 2, 24, 24          # cave.js STEPS_PER_S; one cycle (a 
 AMP = 0.4                                   # radians: cave.js clamps the swing to 0.2..0.62 by the step's length
 LEG = 0.96 - 0.085                          # hip to ankle, metres, for the hips' sink
 
-MAX_BYTES, VOXEL, TRIS = 300 * 1024, 0.007, 2150
-HAND_VOXEL, HAND_TRIS = 0.0035, 500                                     # each hand, fused on its own
+MAX_BYTES, VOXEL, TRIS = 300 * 1024, 0.007, 1850
+HAND_VOXEL, HAND_TRIS = 0.0025, 650                                     # each hand, fused on its own
 HEM, SASH, CUFF, TIE = (0.68, 0.71), (0.99, 1.07), 0.915, (0.10, 0.14)   # heights of the painted bands, metres
 NECK = 1.47                                                             # the collar stands up the neck to here
 NECK_BASE = 1.425
@@ -156,9 +172,8 @@ COLLAR_R = 0.095                                                        # the co
 COLLAR = 0.024                                                          # half the collar band's width, metres
 
 
-def body_parts(build, hands=("open", "open")):
+def body_parts(build):
     """The body map's parts (build_figure.py, the same numbers), each tagged with the bone that carries it.
-    hands: the (left, right) hand shapes, each one of HANDS.
     Returns [(bone, bmesh)], one bmesh per part so each vertex of the fused surface can find the part it came from."""
     wt, wl, ws = BUILDS[build]
     parts = []
@@ -196,34 +211,35 @@ def body_parts(build, hands=("open", "open")):
         bm.faces.new(list(reversed(verts[0])))
         bm.faces.new(verts[-1])
 
-    def hand(bm, bone, side, shape, wl):
-        """A hand hung from the wrist joint, built pointing down with its palm to the body and its thumb forward, then
-        turned to the wrist bone. open: a palm with four fingers fanned and the thumb out, the hand that says stop.
-        fist: the fingers rolled into a block, knuckles forward of the palm, the thumb across them."""
-        s = 1 if side == "L" else -1                              # the palm faces -s along X, toward the body
-        k = 1.2 * wl ** 0.5
-        limb(bm, (0, 0, 0), (0, -0.002, -0.03 * k), 0.022 * k, 0.022 * k)   # the wrist, inside the forearm's end
-        if shape == "open":
-            ellipsoid(bm, (0, -0.002, -0.05 * k), 0.019, 0.04 * k, 0.045 * k)
-            for i, (ln, y) in enumerate(((0.058, -0.027), (0.066, -0.009), (0.063, 0.009), (0.05, 0.026))):
-                a = Vector((0, y * k, -0.08 * k))
-                fan = Vector((0, (i - 1.5) * 0.12, -1)).normalized()
-                limb(bm, a, a + fan * ln * k, 0.0098 * k, 0.0088 * k)
-            t0 = Vector((-s * 0.006, -0.03 * k, -0.035 * k))
-            limb(bm, t0, t0 + Vector((-s * 0.012, -0.6, -0.8)).normalized() * 0.048 * k, 0.012 * k, 0.0105 * k)
-        else:
-            ellipsoid(bm, (s * 0.002, -0.004, -0.055 * k), 0.034, 0.042 * k, 0.043 * k)
-            for y in (-0.024, -0.008, 0.008, 0.024):               # the knuckles, on the back of the fist's top
-                ellipsoid(bm, (s * 0.012, y * k, -0.09 * k), 0.016, 0.012, 0.012)
-            t0 = Vector((-s * 0.02, -0.035 * k, -0.04 * k))
-            limb(bm, t0, Vector((-s * 0.03, -0.004, -0.085 * k)), 0.012, 0.011)
-        h, t = Vector(bone[0]), Vector(bone[1])
-        M = Matrix.Translation(h) @ Vector((0, 0, -1)).rotation_difference((t - h).normalized()).to_matrix().to_4x4()
-        bmesh.ops.transform(bm, matrix=M, verts=bm.verts)
+    def hand(n):
+        """The hand open at rest (hand_layout), one part per bone: the palm a block of four metacarpals from the
+        wrist to the knuckles, filled and padded, and each finger bone a tapered limb; the thumb's metacarpal carries
+        the ball of the thumb, which moves with it."""
+        origin, M = hand_frame(build, n)
+        s = 1 if n == "L" else -1
+        M4 = Matrix.Translation(origin) @ M.to_4x4()
+        lay = hand_layout(build, n)
+        k = HAND_K * wl ** 0.5
+        palm = new("wrist" + n)
+        limb(palm, (0, 0, 0.004), (0, -0.004 * k, -0.02 * k), 0.022 * k, 0.021 * k)      # the wrist, in the cuff
+        for f in FINGERS[1:]:
+            h = lay[f + "1"][0]
+            limb(palm, (s * 0.002, h.y * 0.35, -0.02 * k), h, 0.012 * k, lay[f + "1"][2] * 1.05)
+        ellipsoid(palm, (-s * 0.002, -0.003 * k, -0.056 * k), 0.014 * k, 0.036 * k, 0.034 * k)
+        for b, (h, t, ra, rb) in lay.items():
+            if b == "wrist":
+                continue
+            bm = new(b + n)
+            limb(bm, h, t, ra, rb)
+            if b == "thumb1":
+                ellipsoid(bm, h.lerp(t, 0.45) + Vector((s * 0.004, 0.01 * k, 0.0)), 0.012 * k, 0.017 * k, 0.025 * k)
+        for b, bm in parts:
+            if in_hand(b) and b.endswith(n):
+                bmesh.ops.transform(bm, matrix=M4, verts=bm.verts)
 
     # Stylized, not realistic (Wendell, 2026-10-13, round 1: "build proportions are close to human but are hitting
     # uncanny valley"): about six heads tall where build_figure.py's canon is seven and a half, a short neck, a plain
-    # tapered trunk with no waist or chest sculpting, rounder and thicker limbs, mitten hands and rounded feet, nearer
+    # tapered trunk with no waist or chest sculpting, rounder and thicker limbs, plain hands and rounded feet, nearer
     # the cave's capsule avatar and the daemons than the body map.
     j = joints(build)
     ellipsoid(new("head"), (0, 0.0, 1.615), 0.112, 0.118, 0.13)
@@ -241,7 +257,7 @@ def body_parts(build, hands=("open", "open")):
     for n in ("L", "R"):
         limb(new("shoulder" + n), *j["shoulder" + n], 0.054 * wl, 0.046 * wl)
         limb(new("elbow" + n), *j["elbow" + n], 0.045 * wl, 0.031 * wl)
-        hand(new("wrist" + n), j["wrist" + n], n, hands[0 if n == "L" else 1], wl)
+        hand(n)
         limb(new("hip" + n), *j["hip" + n], 0.088 * wl, 0.066 * wl)
         limb(new("knee" + n), *j["knee" + n], 0.064 * wl, 0.05 * wl)
         a = Vector(j["ankle" + n][0])
@@ -325,8 +341,9 @@ def joints(build):
         sh, el = 0.19 * ws, 0.27 * ws + 0.08 * (ws - 1)
         j["shoulder" + n] = ((s * sh, 0, 1.385), (s * el, 0.01, 1.13))
         j["elbow" + n] = ((s * el, 0.01, 1.13), (s * (el + 0.075 * wl ** 0.5), -0.02, 0.89))
-        w = j["elbow" + n][1]
-        j["wrist" + n] = (w, (w[0] + s * 0.02, -0.03, 0.76))
+        origin, M = hand_frame(build, n)
+        for b, (h, t, _, _) in hand_layout(build, n).items():
+            j[b + n] = (tuple(origin + M @ h), tuple(origin + M @ t))
         hx = 0.09 * wl ** 0.5
         j["hip" + n] = ((s * hx, 0, 0.96), (s * (hx + 0.015), 0.0, 0.50))
         j["knee" + n] = ((s * (hx + 0.015), 0.0, 0.50), (s * (hx + 0.025), 0.015, 0.085))
@@ -334,13 +351,96 @@ def joints(build):
     return j
 
 
+HAND_K = 1.02           # the hand's scale: wrist crease to middle fingertip 0.19 m at the frame's 1.75 m, near a
+#                        person's (hand length is about a tenth of height); it grows with the arm's thickness
+
+
+def hand_frame(build, side):
+    """The hand's frame: its origin at the wrist joint (the forearm's end) and the rotation that turns the hand from
+    its own frame (hanging down -Z, palm toward the body, thumb forward -Y) to the forearm's line at rest."""
+    _, wl, ws = BUILDS[build]
+    s = 1 if side == "L" else -1
+    el = 0.27 * ws + 0.08 * (ws - 1)
+    w = Vector((s * (el + 0.075 * wl ** 0.5), -0.02, 0.89))
+    d = Vector((w[0] + s * 0.02, -0.03, 0.76)) - w
+    return w, Vector((0, 0, -1)).rotation_difference(d.normalized()).to_matrix()
+
+
+def hand_layout(build, side):
+    """The hand at rest in its own frame (hand_frame), open with the fingers straight and a little fanned:
+    {bone: (head, tail, radius at head, radius at tail)} for the wrist (the palm, wrist crease to the middle knuckle)
+    and each finger bone. Proportions from life: the palm about as long as the middle finger, the knuckles on an arch
+    with the middle one lowest, the index and ring a little shorter than the middle and the little finger about three
+    quarters of it; a finger's three bones about 5 : 3 : 2.5 (council/daemons/HANDS.md)."""
+    _, wl, _ = BUILDS[build]
+    s = 1 if side == "L" else -1
+    k = HAND_K * wl ** 0.5
+    out = {"wrist": (Vector((0, 0, 0)), Vector((0, -0.008 * k, -0.093 * k)), 0.021 * k, 0.012 * k)}
+    knuckle = {"index": (-0.029, -0.089), "middle": (-0.01, -0.093), "ring": (0.009, -0.089), "pinky": (0.026, -0.079)}
+    size = {"index": (0.92, 1.0), "middle": (1.0, 1.0), "ring": (0.95, 0.95), "pinky": (0.76, 0.84)}
+    fan = {"index": -0.08, "middle": -0.02, "ring": 0.04, "pinky": 0.1}
+    for f, (y, z) in knuckle.items():
+        p = Vector((s * 0.003, y * k, z * k))
+        d = Vector((0, math.sin(fan[f]), -math.cos(fan[f])))
+        ln, r = size[f]
+        for i, (seg, rr) in enumerate(((0.045, 0.0098), (0.029, 0.0091), (0.023, 0.0083)), 1):
+            q = p + d * seg * ln * k
+            out[f"{f}{i}"] = (p, q, rr * r * k, rr * r * k * 0.94)
+            p = q
+    p = Vector((-s * 0.008, -0.022 * k, -0.018 * k))           # the thumb's metacarpal starts low in the palm
+    d = Vector((-s * 0.32, -0.5, -0.8)).normalized()
+    for i, (seg, rr) in enumerate(((0.044, 0.0135), (0.031, 0.0118), (0.027, 0.0104)), 1):
+        q = p + d * seg * k
+        out[f"thumb{i}"] = (p, q, rr * k, rr * k * 0.94)
+        p = q
+    return out
+
+
+def hand_rotations(build, side, shape):
+    """A hand pose (HAND_POSES) as each finger bone's rotation in the world at rest: a curl about the bone's hinge,
+    which takes a finger toward the palm and the thumb across it, and at the knuckle a spread about the palm's
+    normal, away from the middle finger (for the thumb, away from the index)."""
+    s = 1 if side == "L" else -1
+    _, M = hand_frame(build, side)
+    pose, out, layout = HAND_POSES[shape], {}, hand_layout(build, side)
+    fan = {"thumb": -0.2, "index": -0.1, "middle": 0.0, "ring": 0.08, "pinky": 0.2}
+    for f in FINGERS:
+        for i in (1, 2, 3):
+            h, t, _, _ = layout[f"{f}{i}"]
+            d = (t - h).normalized()
+            toward = Vector((-s * 0.55, 1, 0.1)) if f == "thumb" else Vector((-s, 0, 0))
+            R = Matrix.Rotation(pose["curl"][f][i - 1], 3, d.cross(toward).normalized())
+            if i == 1:
+                R = Matrix.Rotation(pose["spread"] * fan[f], 3, "X") @ R
+            out[f"{f}{i}"] = R
+    if "thumb_tip" in pose:             # swing the whole thumb from its root so its tip lands where the pose puts it
+        h = layout["thumb1"][0]
+        A, at = Matrix.Identity(3), h.copy()
+        for i in (2, 3):
+            a, b, _, _ = layout[f"thumb{i}"]
+            A = A @ out[f"thumb{i}"]
+            at = at + A @ (b - a)
+        at = at + (layout["thumb1"][1] - h)
+        x, y, z = pose["thumb_tip"]
+        k = HAND_K * BUILDS[build][1] ** 0.5
+        out["thumb1"] = (at - h).rotation_difference(Vector((s * x, y * k, z * k)) - h).to_matrix()
+    return {b: M @ R @ M.transposed() for b, R in out.items()}
+
+
 PARENT = {"hips": None, "spine": "hips", "neck": "spine", "head": "neck"}
 for _n in ("L", "R"):
     PARENT.update({"shoulder" + _n: "spine", "elbow" + _n: "shoulder" + _n, "wrist" + _n: "elbow" + _n,
                    "hip" + _n: "hips", "knee" + _n: "hip" + _n, "ankle" + _n: "knee" + _n})
+    for _f in FINGERS:
+        PARENT.update({f"{_f}1{_n}": "wrist" + _n, f"{_f}2{_n}": f"{_f}1{_n}", f"{_f}3{_n}": f"{_f}2{_n}"})
+BODY = tuple(b for b in PARENT if b.rstrip("LR") not in FINGER_BONES)     # the bones the walk moves
 
 
-def warp_maps(J, w):
+def in_hand(bone):
+    return bone.rstrip("LR") in ("wrist",) + FINGER_BONES
+
+
+def warp_maps(J, w, build):
     """The warp as one map per bone, {bone: f(point) -> point}, each carried down the chain from its parent so a child
     follows wherever its parent moved it. The spine bends along its length (curve) after leaning at the waist (stoop);
     the head scales about its joint; the upper arm and forearm stretch along their own axis (arms); each joint in the
@@ -377,6 +477,8 @@ def warp_maps(J, w):
         c, R = spine_at(x.z)
         return c + R @ Vector((x.x, x.y, 0))
 
+    hands = (w["hands"],) * 2 if isinstance(w["hands"], str) else tuple(w["hands"])
+    fingers = {b + n: R for n, shape in zip("LR", hands) for b, R in hand_rotations(build, n, shape).items()}
     maps, rots = {}, {}
     for b, parent in PARENT.items():
         h, t = Vector(J[b][0]), Vector(J[b][1])
@@ -393,7 +495,7 @@ def warp_maps(J, w):
         elif b.startswith(("shoulder", "elbow")):
             d = (t - h).normalized()
             S = S + (w["arms"] - 1) * Matrix([[d[i] * d[j] for j in range(3)] for i in range(3)])
-        R = gesture_rotation(b, w["gesture"])
+        R = fingers[b] if b in fingers else gesture_rotation(b, w["gesture"])
         A, at = Rp @ R, Fp(h)
         maps[b] = (lambda x, at=at, A=A @ S, h=h: at + A @ (x - h))
         rots[b] = (lambda x, A=A: A)
@@ -416,11 +518,11 @@ def gesture_rotation(bone, gesture):
             @ Matrix.Rotation(FLEX[base] * flex, 3, "X") @ Matrix.Rotation(s * twist, 3, "Z"))
 
 
-def warp_body(mesh, parts, J, w):
+def warp_body(mesh, parts, J, w, build):
     """Applies the warp to the fused surface (each vertex by its bones' maps, blended as the weights will blend them),
     to each body part (rigidly with its own bone, so the weights read the warped parts) and to the joints.
     Returns the warped joints and the rest positions, which the painted bands keep using."""
-    maps = warp_maps(J, w)
+    maps = warp_maps(J, w, build)
     trees = [(b, BVHTree.FromBMesh(bm)) for b, bm in parts]
     rest = [v.co.copy() for v in mesh.vertices]
     for v in mesh.vertices:
@@ -444,7 +546,10 @@ def nearest_blend(co, trees):
     for b, t in trees:
         d[b] = min(d.get(b, 1e9), t.find_nearest(co)[3])
     best = min(d, key=d.get)
-    w = {b: math.exp(-(d[b] - d[best]) / 0.012) for b in LINKS[best]}
+    # a finger's bones are short, so they blend over less; and the hand and the body never share a vertex, so a bent
+    # wrist turns the whole hand at the cuff and neither drags the sleeve after it in spikes nor crumples the palm
+    fall = 0.004 if in_hand(best) else 0.012
+    w = {b: math.exp(-(d[b] - d[best]) / fall) for b in LINKS[best] if in_hand(b) == in_hand(best)}
     w = dict(sorted(w.items(), key=lambda kv: -kv[1])[:2])
     tot = sum(w.values())
     return best, {b: x / tot for b, x in w.items() if x / tot > 0.02}
@@ -523,18 +628,18 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     hands = (w["hands"],) * 2 if isinstance(w["hands"], str) else tuple(w["hands"])
     if any(h not in HANDS for h in hands):
         raise SystemExit(f"hands: {', '.join(HANDS)}")
-    parts = body_parts(build_name, hands)
+    parts = body_parts(build_name)
     # the body fused by a voxel remesh, smoothed and brought to a phone budget; each hand fused on its own at a finer
     # voxel and its own budget, then joined, so the body's decimation never eats the fingers (Wendell, 2026-10-15:
     # "Hands look very weird the wrists are in the wrong place and too large and the hands too small")
-    body = fuse([bm for bone, bm in parts if not bone.startswith("wrist")], VOXEL, (0.8, 8), TRIS)
+    body = fuse([bm for bone, bm in parts if not in_hand(bone)], VOXEL, (0.8, 8), TRIS)
     joined = bmesh.new()
     joined.from_mesh(body)
-    for bone, bm in parts:
-        if bone.startswith("wrist"):
-            hand_mesh = fuse([bm], HAND_VOXEL, (0.5, 3), HAND_TRIS)
-            joined.from_mesh(hand_mesh)
-            bpy.data.meshes.remove(hand_mesh)
+    for n in "LR":
+        hand_mesh = fuse([bm for bone, bm in parts if in_hand(bone) and bone.endswith(n)], HAND_VOXEL, (0.5, 2),
+                         HAND_TRIS)
+        joined.from_mesh(hand_mesh)
+        bpy.data.meshes.remove(hand_mesh)
     for _, bm in parts:
         bm.verts.ensure_lookup_table()
     fused = bpy.data.meshes.new("Fused")
@@ -560,8 +665,7 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     # the warp, last: the fused body, its parts and its joints, before the weights are painted
     J = joints(build_name)
     rest = [v.co.copy() for v in fused.vertices]
-    if w != NEUTRAL:
-        J, rest = warp_body(fused, parts, J, w)
+    J, rest = warp_body(fused, parts, J, w, build_name)        # always: a hand at rest is posed (NEUTRAL relaxed)
     trees = [(bone, BVHTree.FromBMesh(bm)) for bone, bm in parts]
     for _, bm in parts:
         bm.free()
@@ -604,7 +708,7 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
             return SKIN if z > NECK else pal["trim"]                # the collar stands a little way up the neck
         if z > NECK_BASE and bone == "spine":
             return pal["trim"]                                      # and is one band all round where neck meets trunk
-        if bone.startswith("wrist"):
+        if in_hand(bone):
             return SKIN
         if bone.startswith("ankle"):
             return pal["shoes"]
@@ -653,6 +757,8 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
         t = k / FPS
         rot, drop = pose(t % 1.0)
         for pb in rig.pose.bones:
+            if pb.name not in BODY:
+                continue                                           # the walk leaves the fingers as posed
             Bm = pb.bone.matrix_local.to_3x3()
             ax, az = rot.get(pb.name, (0.0, 0.0))
             R = Matrix.Rotation(az, 3, "Z") @ Matrix.Rotation(ax, 3, "X")
@@ -664,7 +770,7 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
             if pb.name == "hips":
                 pb.location = Bm.inverted() @ Vector((0, 0, -drop))
                 pb.keyframe_insert("location", frame=k + 1)
-        prev = {pb.name: pb.rotation_quaternion.copy() for pb in rig.pose.bones}
+        prev = {pb.name: pb.rotation_quaternion.copy() for pb in rig.pose.bones if pb.name in BODY}
     scene.frame_start, scene.frame_end = 1, KEYS + 1
 
     os.makedirs(out_dir, exist_ok=True)
