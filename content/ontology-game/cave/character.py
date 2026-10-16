@@ -145,8 +145,9 @@ STEPS_PER_S, FPS, KEYS = 2, 24, 24          # cave.js STEPS_PER_S; one cycle (a 
 AMP = 0.4                                   # radians: cave.js clamps the swing to 0.2..0.62 by the step's length
 LEG = 0.96 - 0.085                          # hip to ankle, metres, for the hips' sink
 
-MAX_BYTES, VOXEL, TRIS = 300 * 1024, 0.007, 2500
-HEM, SASH, CUFF, TIE = (0.68, 0.71), (0.99, 1.07), 0.93, (0.10, 0.14)   # heights of the painted bands, metres
+MAX_BYTES, VOXEL, TRIS = 300 * 1024, 0.007, 2150
+HAND_VOXEL, HAND_TRIS = 0.0035, 500                                     # each hand, fused on its own
+HEM, SASH, CUFF, TIE = (0.68, 0.71), (0.99, 1.07), 0.915, (0.10, 0.14)   # heights of the painted bands, metres
 NECK = 1.47                                                             # the collar stands up the neck to here
 NECK_BASE = 1.425
 CUTS = (*HEM, *SASH, CUFF, *TIE, NECK, NECK_BASE)
@@ -200,15 +201,16 @@ def body_parts(build, hands=("open", "open")):
         turned to the wrist bone. open: a palm with four fingers fanned and the thumb out, the hand that says stop.
         fist: the fingers rolled into a block, knuckles forward of the palm, the thumb across them."""
         s = 1 if side == "L" else -1                              # the palm faces -s along X, toward the body
-        k = 0.92 * wl ** 0.5
+        k = 1.2 * wl ** 0.5
+        limb(bm, (0, 0, 0), (0, -0.002, -0.03 * k), 0.022 * k, 0.022 * k)   # the wrist, inside the forearm's end
         if shape == "open":
-            ellipsoid(bm, (0, -0.002, -0.05 * k), 0.017, 0.04 * k, 0.045 * k)
-            for i, (ln, y) in enumerate(((0.06, -0.026), (0.068, -0.009), (0.065, 0.008), (0.052, 0.024))):
+            ellipsoid(bm, (0, -0.002, -0.05 * k), 0.019, 0.04 * k, 0.045 * k)
+            for i, (ln, y) in enumerate(((0.058, -0.027), (0.066, -0.009), (0.063, 0.009), (0.05, 0.026))):
                 a = Vector((0, y * k, -0.08 * k))
-                fan = Vector((0, (i - 1.5) * 0.18, -1)).normalized()
-                limb(bm, a, a + fan * ln * k, 0.0105, 0.0095)
-            t0 = Vector((-s * 0.004, -0.03 * k, -0.035 * k))
-            limb(bm, t0, t0 + Vector((-s * 0.012, -0.6, -0.8)).normalized() * 0.05 * k, 0.012, 0.0105)
+                fan = Vector((0, (i - 1.5) * 0.12, -1)).normalized()
+                limb(bm, a, a + fan * ln * k, 0.0098 * k, 0.0088 * k)
+            t0 = Vector((-s * 0.006, -0.03 * k, -0.035 * k))
+            limb(bm, t0, t0 + Vector((-s * 0.012, -0.6, -0.8)).normalized() * 0.048 * k, 0.012 * k, 0.0105 * k)
         else:
             ellipsoid(bm, (s * 0.002, -0.004, -0.055 * k), 0.034, 0.042 * k, 0.043 * k)
             for y in (-0.024, -0.008, 0.008, 0.024):               # the knuckles, on the back of the fist's top
@@ -238,7 +240,7 @@ def body_parts(build, hands=("open", "open")):
     limb(new("spine"), (-sx + 0.02, 0.0, 1.385), (sx - 0.02, 0.0, 1.385), 0.06 * wl, 0.06 * wl)
     for n in ("L", "R"):
         limb(new("shoulder" + n), *j["shoulder" + n], 0.054 * wl, 0.046 * wl)
-        limb(new("elbow" + n), *j["elbow" + n], 0.045 * wl, 0.039 * wl)
+        limb(new("elbow" + n), *j["elbow" + n], 0.045 * wl, 0.031 * wl)
         hand(new("wrist" + n), j["wrist" + n], n, hands[0 if n == "L" else 1], wl)
         limb(new("hip" + n), *j["hip" + n], 0.088 * wl, 0.066 * wl)
         limb(new("knee" + n), *j["knee" + n], 0.064 * wl, 0.05 * wl)
@@ -469,6 +471,35 @@ def pose(t):
     return rot, drop
 
 
+def fuse(bms, voxel, smooth, tris):
+    """Parts fused into one closed surface: a voxel remesh, a smooth (factor, iterations), and a decimation to about
+    tris triangles. Returns a new mesh."""
+    raw = bpy.data.meshes.new("Raw")
+    all_bm = bmesh.new()
+    for bm in bms:
+        tmp = bpy.data.meshes.new("tmp")
+        bm.to_mesh(tmp)
+        all_bm.from_mesh(tmp)
+        bpy.data.meshes.remove(tmp)
+    all_bm.to_mesh(raw)
+    all_bm.free()
+    ob = bpy.data.objects.new("Fusing", raw)
+    bpy.context.scene.collection.objects.link(ob)
+    for kind, opts in (("REMESH", {"mode": "VOXEL", "voxel_size": voxel}),
+                       ("SMOOTH", {"factor": smooth[0], "iterations": smooth[1]}), ("DECIMATE", {"ratio": 1.0})):
+        m = ob.modifiers.new(kind, kind)
+        for k, v in opts.items():
+            setattr(m, k, v)
+    dg = bpy.context.evaluated_depsgraph_get()
+    whole = len(ob.evaluated_get(dg).data.polygons) * 2            # quads, as triangles
+    ob.modifiers["DECIMATE"].ratio = min(1.0, tris / whole)         # every build lands near the same count
+    dg = bpy.context.evaluated_depsgraph_get()
+    out = bpy.data.meshes.new_from_object(ob.evaluated_get(dg))
+    bpy.data.objects.remove(ob)
+    bpy.data.meshes.remove(raw)
+    return out
+
+
 def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=None, boss=None):
     """warp: a WARP row's name, or a dict of the warp's numbers (missing ones are the frame's) named by warp_name.
     boss: the NPC's answer to its boss question, one of BOSSES, kept on the report row as npc.boss."""
@@ -493,30 +524,25 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
     if any(h not in HANDS for h in hands):
         raise SystemExit(f"hands: {', '.join(HANDS)}")
     parts = body_parts(build_name, hands)
-    all_bm = bmesh.new()
+    # the body fused by a voxel remesh, smoothed and brought to a phone budget; each hand fused on its own at a finer
+    # voxel and its own budget, then joined, so the body's decimation never eats the fingers (Wendell, 2026-10-15:
+    # "Hands look very weird the wrists are in the wrong place and too large and the hands too small")
+    body = fuse([bm for bone, bm in parts if not bone.startswith("wrist")], VOXEL, (0.8, 8), TRIS)
+    joined = bmesh.new()
+    joined.from_mesh(body)
     for bone, bm in parts:
-        tmp = bpy.data.meshes.new("tmp")
-        bm.to_mesh(tmp)
-        all_bm.from_mesh(tmp)
-        bpy.data.meshes.remove(tmp)
+        if bone.startswith("wrist"):
+            hand_mesh = fuse([bm], HAND_VOXEL, (0.5, 3), HAND_TRIS)
+            joined.from_mesh(hand_mesh)
+            bpy.data.meshes.remove(hand_mesh)
+    for _, bm in parts:
         bm.verts.ensure_lookup_table()
-    raw = bpy.data.meshes.new("Raw")
-    all_bm.to_mesh(raw)
-    all_bm.free()
-    fig = bpy.data.objects.new("Figure", raw)
+    fused = bpy.data.meshes.new("Fused")
+    joined.to_mesh(fused)
+    joined.free()
+    bpy.data.meshes.remove(body)
+    fig = bpy.data.objects.new("Figure", fused)
     scene.collection.objects.link(fig)
-    for kind, opts in (("REMESH", {"mode": "VOXEL", "voxel_size": VOXEL}), ("SMOOTH", {"factor": 0.8, "iterations": 8}),
-                       ("DECIMATE", {"ratio": 1.0})):
-        m = fig.modifiers.new(kind, kind)
-        for k, v in opts.items():
-            setattr(m, k, v)
-    dg = bpy.context.evaluated_depsgraph_get()
-    whole = len(fig.evaluated_get(dg).data.polygons) * 2            # quads, as triangles
-    fig.modifiers["DECIMATE"].ratio = TRIS / whole                  # every build lands near the same count
-    dg = bpy.context.evaluated_depsgraph_get()
-    fused = bpy.data.meshes.new_from_object(fig.evaluated_get(dg))
-    fig.modifiers.clear()
-    fig.data = fused
     fused.name = f"Figure-{name}"
     # cut the surface level at each painted band's edge (hem, sash, cuff, ankle tie), so a band ends on an edge
     # and not across the long thin triangles the decimation leaves on the limbs
