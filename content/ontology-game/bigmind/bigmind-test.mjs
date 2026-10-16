@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 // Browser checks for the Big Mind cave (bigmind.js on the Cave of Lessons engine): the cave mouth and its rules, the walk to
 // the Protector, the ask, the seat shift, the cards and the open line, secretly speaking (the second figure, naming it,
 // thanking it, the voice asked again), stepping back out, keeping lines, the save on the device, the way opening, the hallway
-// past it with the waiting part, the Controller's, the Skeptic's, the Fixer's, the Emotional Body's and the Victim's chambers, the next chamber shut, walking back up, resuming, forgetting and deleting, and declining.
+// past it with the waiting part, the Controller's, the Skeptic's, the Fixer's, the Emotional Body's, the Victim's and the Damaged Self's chambers, the centre shut, walking back up, resuming, forgetting and deleting, and declining.
 // Build first with `npm run build:ontology-game`, then run from a folder that has playwright and three@0.128.0 installed:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node bigmind-test.mjs
 const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url).pathname;
@@ -939,8 +939,8 @@ await page.evaluate(() => localStorage.clear());
   await page.waitForTimeout(400);
   sv = await save();
   ok(sv.voices.victim && sv.voices.victim.status === 'spoken' && sv.voices.victim.boss === 'controller' && sv.chamber === 5 && sv.at === 'hall2' && sv.voices['emotional-body'].boss === 'controller', 'its record holds who it works for, and the others\' stay: ' + JSON.stringify({ boss: (sv.voices.victim || {}).boss, chamber: sv.chamber, at: sv.at }));
-  ok(await holdUntil('end') && /The Damaged Self/.test(await page.textContent('[data-bm-modal]')) && /next build/.test(await page.textContent('[data-bm-modal]')), 'past the Victim, the Damaged Self waits at a chamber still shut');
-  await page.screenshot({ path: SHOTS + '/bm-24-damaged-self-shut.png' });
+  ok(await holdUntil('end') && /The Damaged Self/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-onward]').count() === 1, 'past the Victim, the Damaged Self waits, and its chamber is open');
+  await page.screenshot({ path: SHOTS + '/bm-24-damaged-self-waits.png' });
   await page.click('[data-bm-leave]');
   await page.waitForSelector('[data-bm-mouth]');
   const kept = await page.textContent('[data-bm-kept]');
@@ -957,6 +957,96 @@ await page.evaluate(() => localStorage.clear());
   ok(await waitStep('charge') && /because it couldn't\./.test(await page.textContent('[data-bm-modal]')), 'a boss named in its own words is in voice');
   await setCharge(8);
   ok(await waitStep('q-advocate', 25000) && /The child nobody came for\./.test(await page.textContent('[data-bm-modal]')), 'working for the vulnerable child, the advocacy cards are the child\'s');
+  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await page.evaluate(() => localStorage.clear());
+}
+
+// The Damaged Self's chamber, the last on the path (board dp-seven, dq-boss-chain, dp-centre): walking on from the Victim,
+// Wendell's own five questions, the job that changes with the boss, the deepest-place check before standing where it
+// stands, and the vulnerable child waiting at the shut mouth of the centre.
+{
+  const DQ = (await import('../daemons/questions.js')).default.daemons['damaged-self'];
+  const S = { status: 'spoken', kept: [], charges: [], waves: [] };
+  await page.evaluate((S) => { localStorage.clear(); localStorage.setItem('oag.bigmind.v1', JSON.stringify({ v: 1, chamber: 5, at: 'hall2', voices: { protector: S, controller: { ...S, boss: 'protector' }, skeptic: { ...S, boss: 'controller' }, fixer: { ...S, boss: 'controller' }, 'emotional-body': { ...S, boss: 'controller' }, victim: { ...S, boss: 'controller' } }, waiting: [] })); }, S);
+  await page.reload(); await page.waitForSelector('[data-bm-mouth]');
+  ok(/past the Victim/.test(await page.textContent('[data-bm-enter]')), 'a save past the Victim resumes there');
+  await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+  ok(await holdUntil('end') && /The Damaged Self/.test(await page.textContent('[data-bm-modal]')), 'the hallway past the Victim ends at the Damaged Self');
+  await page.click('[data-bm-onward]');
+  await page.waitForFunction(() => window.__oagBigMind.voiceId === 'damaged-self' && window.__oagBigMind.state && window.__oagBigMind.state.phase === 'hall1', null, { timeout: 8000 }).catch(() => {});
+  let sv = await save();
+  ok(await page.evaluate(() => window.__oagBigMind.voiceId) === 'damaged-self' && sv.chamber === 6 && sv.at === 'mouth', 'walking on builds the Damaged Self\'s chamber, and the save moves on to it');
+  const qs = await page.evaluate(() => window.__oagBigMind.VOICES[6].questions.map((q) => [q.id, q.ask]));
+  ok(JSON.stringify(qs.slice(0, DQ.length)) === JSON.stringify(DQ.map((q) => [q.id, q.ask])), 'the Damaged Self is asked Wendell\'s five questions first, in his order and plain wording: ' + qs.slice(0, DQ.length).map((q) => q[0]).join());
+  ok(await page.evaluate(() => { const h = window.__oagBigMind.heard; return h("I'll take that one, I always do", 'damaged-self') === null && h('the damaged self wants to be broken', 'damaged-self') === 'ideas' && h('I just want to fix it', 'damaged-self') === 'fixer'; }), 'in its chamber, taking the hit is in voice, talking about it is the self\'s ideas, and fixing it is the Fixer');
+  ok(await page.evaluate(() => { const b = window.__oagBigMind.heardBoss; return b('The Controller', 'damaged-self') === 'controller' && b('Myself', 'damaged-self') === null; }), 'to the Damaged Self, an open line naming the Controller names a boss, and "myself" names none');
+
+  const toBoss = async () => {
+    if (!(await holdUntil('meet'))) return false;
+    if (!/It was probably me\./.test(await page.textContent('[data-bm-modal]'))) return false;
+    await page.click('[data-bm-reply="hear"]'); await page.click('[data-bm-ask="speak"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="speak"]');
+    await page.click('[data-bm-place="Chest"]'); await setCharge(8);
+    if (!(await waitStep('q-what'))) return false;
+    if (!(await page.textContent('[data-bm-modal]')).includes('You: ' + DQ[0].ask)) return false;
+    await page.click('[data-bm-modal] [data-bm-card]:has-text("The blame.")'); await setCharge(8);
+    if (!(await waitStep('q-from', 25000))) return false;
+    if (!(await page.textContent('[data-bm-modal]')).includes('You: ' + DQ[1].ask)) return false;
+    await page.click('[data-bm-modal] [data-bm-card]:has-text("From whoever was angry.")'); await setCharge(8);
+    return waitStep('q-boss', 25000);
+  };
+  ok(await toBoss(), 'the Damaged Self speaks first, is met, and asked what damage it takes and from whom, then who it works for');
+  let text = await page.textContent('[data-bm-modal]');
+  ok(text.includes('You: Who do you work for?') && /The Controller\./.test(text) && /The vulnerable child\./.test(text), 'the boss question is his plain one, and the Controller is among the bosses');
+  await page.click('[data-bm-modal] [data-bm-card]:has-text("The Controller.")');
+  ok(await waitStep('charge'), 'the guide answers who it works for');
+  text = await page.textContent('[data-bm-modal]');
+  ok(/the fault is put on you/.test(text) && /And the Controller told you it answers to the Protector\./.test(text), 'working for the Controller, the chain shows: the Controller answers to the Protector');
+  await setCharge(8);
+  ok(await waitStep('q-how', 25000), 'then how its job changes by who it works for');
+  text = await page.textContent('[data-bm-modal]');
+  ok(text.includes('You: ' + DQ.find((q) => q.id === 'how').ask) && /I take the fault, so the standard stays\./.test(text) && !/I take whatever gets through\./.test(text), 'his method question keeps its wording, with cards for the Controller');
+  await page.screenshot({ path: SHOTS + '/bm-25-damaged-self-how.png' });
+  await page.click('[data-bm-modal] [data-bm-card]:has-text("I take the fault, so the standard stays.")');
+  await setCharge(7);
+  ok(await waitStep('q-gone', 25000) && (await page.textContent('[data-bm-modal]')).includes('You: ' + DQ.find((q) => q.id === 'gone').ask), 'then what would happen if it weren\'t there');
+  await page.click('[data-bm-modal] [data-bm-card]:has-text("It would reach the child.")'); await page.click('[data-bm-done]');
+  await setCharge(2);
+  ok(await waitStep('eased', 3000) && /The Damaged Self lets its breath out/.test(await page.textContent('[data-bm-eased]')), 'its easing is its own');
+  ok(await waitStep('ready') && /the deepest place/.test(await page.textContent('[data-bm-modal]')), 'below the line, it offers to step aside');
+  await page.click('[data-bm-ask="aside"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="aside"]');
+  ok(await waitStep('deep') && /goes to the deepest place\. Do you want to go on, rest, or go back up\?/.test(await page.textContent('[data-bm-modal]')), 'before standing where it stands, the cave asks first');
+  await page.click('[data-bm-deep="rest"]');
+  ok(await waitStep('deep-rest') && await page.locator('[data-bm-deep="continue"]').count() === 1, 'resting keeps the choice open');
+  await page.click('[data-bm-deep="continue"]');
+  ok(await waitStep('be-who') && /where the Damaged Self stands/.test(await page.textContent('[data-bm-modal]')), 'going on, the player stands where the Damaged Self stands');
+  await page.click('[data-bm-bepass="who"]'); await page.click('[data-bm-bepass="see"]');
+  await waitStep('know'); await page.click('[data-bm-know="0"]');
+  await waitStep('thanks'); await page.click('[data-bm-out]');
+  ok(await waitStep('perm-pass', 30000), 'stepping back out, the player asks to walk on');
+  await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="pass"]');
+  ok(await waitStep('keep', 30000) && /What the Damaged Self said/.test(await page.textContent('[data-bm-modal]')), 'then its lines to keep');
+  await page.click('[data-bm-keep="0"]'); await page.click('[data-bm-save]');
+  await page.waitForTimeout(400);
+  sv = await save();
+  ok(sv.voices['damaged-self'] && sv.voices['damaged-self'].status === 'spoken' && sv.voices['damaged-self'].boss === 'controller' && sv.chamber === 6 && sv.at === 'hall2' && sv.voices.victim.boss === 'controller', 'its record holds who it works for, and the others\' stay: ' + JSON.stringify({ boss: (sv.voices['damaged-self'] || {}).boss, chamber: sv.chamber, at: sv.at }));
+  ok(await holdUntil('end') && /The centre/.test(await page.textContent('[data-bm-modal]')) && /the vulnerable child/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-onward]').count() === 0, 'past the Damaged Self the path ends, and the vulnerable child waits at the shut mouth of the centre');
+  await page.screenshot({ path: SHOTS + '/bm-26-centre-shut.png' });
+  await page.click('[data-bm-leave]');
+  await page.waitForSelector('[data-bm-mouth]');
+  const kept = await page.textContent('[data-bm-kept]');
+  ok(/past the Damaged Self/.test(await page.textContent('[data-bm-enter]')) && (kept.match(/It works for the Controller\./g) || []).length === 5, 'the mouth goes back in past the Damaged Self, and says who each works for');
+
+  // going back up at the check, then the vulnerable child named in the player's own words
+  await page.click('[data-bm-forget="damaged-self"]');
+  sv = await save();
+  ok(sv.voices['damaged-self'] === undefined && sv.chamber === 6 && sv.at === 'mouth' && sv.voices.victim, 'forgetting the Damaged Self goes back to its chamber, and the Victim\'s record stays');
+  await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+  ok(await toBoss(), 'a fresh sitting meets the Damaged Self again');
+  await page.fill('[data-bm-line]', 'The little one inside, so it never reaches them');
+  await page.click('[data-bm-say]');
+  ok(await waitStep('charge') && /so it never reaches the little one\./.test(await page.textContent('[data-bm-modal]')), 'a boss named in its own words is in voice');
+  await setCharge(8);
+  ok(await waitStep('q-how', 25000) && /I carry what it was too small to carry\./.test(await page.textContent('[data-bm-modal]')), 'working for the vulnerable child, the job cards are the child\'s');
   await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
