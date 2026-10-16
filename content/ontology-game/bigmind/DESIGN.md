@@ -443,5 +443,32 @@ The seventh and last chamber on the daemon path (board `dp-seven`), built on the
   to go on, rest, or go back up?" Resting keeps the choice open; going back up leaves it at its post, nothing marked skipped.
 - **Saving.** `chamber` 6 is the Damaged Self; its record holds its boss beside the others, and the mouth shows each.
 - **Past the last chamber** the path ends at the centre (`dp-centre`: "the vulnerable child, and the player's own self beside
-  it"). The figure at the shut mouth is the vulnerable child: the faceless avatar, small and warm. There is no "Walk on"; the
-  centre opens in a later build.
+  it"). The figure at the shut mouth is the vulnerable child: the faceless avatar, small and warm. "Walk on, into the centre"
+  opens it (below).
+
+## The centre: the vulnerable child (16 October 2026)
+
+The end of the daemon path. Board `dp-centre` (13 October) said "The child is seen, not questioned"; Wendell's own Player
+set in `../daemons/questions.js` (14 October) is newer and in his words. Both hold, as board position `dp-centre-asked`, which
+stands unless he flips it.
+
+- **The way in.** Past the Damaged Self, "Walk on, into the centre" opens the shut mouth and the player walks in to stand
+  beside the child. The voices met on the way (every voice with a record in the save) come in as spirits in their own
+  daemon colours and stand around the child, beyond it and to both sides (`bms-spirits-follow`). The spirits walking with
+  the player keep following.
+- **Seen first.** "Nothing has to be asked here." "Be with it" ends the visit with nothing asked.
+- **Asked gently, only if the player chooses.** "Ask it, gently" asks his six, in his order and plain wording (read from
+  `questions.js` at run time; the test checks them): what are you learning, how are you growing, what are you feeling, what
+  are you exploring, how do the other daemons get in your way, what would happen if you weren't there. Each has cards and a
+  line for the child's words; "Let this one go" passes one and "That's enough for now" stops. Feeling and in-the-way take
+  more than one card.
+- **No charge, no permission.** The child is not a voice blocking the way, so there is no meter, no ask to step aside and
+  no secretly speaking; what it says buys nothing (the ontology: intimate disclosure is not progression currency).
+- **In its way.** The cards are one line per voice met ("The Protector won't let me out to play.", "The Damaged Self takes
+  every hit, so I never get to try.") and two that name none. A voice it names comes closer to it. The guide answers: "Every
+  one of them was trying to keep you safe." (the core premise: the voices emerged to protect the child).
+- **Saving.** Only lines the player keeps are saved, as `centre: { status: "seen" | "spoken", kept, savedAt }`; the mouth
+  shows them with "Forget the centre". The cards and lines are choices, all of them.
+- **Not yet built.** The centre's two ways, to the hall of the six and the second cave (Big Mind and Big Heart,
+  `bm-center`, `lv-centre-altitude`), are named as shut. The guide revealed as the integrated voice (`bm-guide`) is not yet
+  shown.
