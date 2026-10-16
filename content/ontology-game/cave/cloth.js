@@ -21,18 +21,38 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  // Round 6 (Wendell on round 5: "now we need the physics of the bottom hem to pull the robes down. The cloth is defying
+  // gravity in a lot of ways. Also there’s jitteriness in the belt"): the reasons and sources are in CLOTH.md.
   var DEFAULTS = {
     substepHz: 480,      // substeps a second, fixed: the same motion at any frame rate
     maxSubsteps: 16,     // per call; a long frame is slowed down rather than allowed to explode
     gravity: [0, 0, -9.81],
-    damping: 1.2,        // per second, of each point's velocity (air)
-    stretch: 1.0,        // stiffness per substep, 0 to 1
+    damping: 0.3,        // per second, of each point's whole velocity: low, so it does not slow the fall
+    dragQ: 20,           // the air across the cloth's face, quadratic (1/m: 0.5 x air density x Cd over the cloth's
+    dragL: 8,            // mass per m2; 20 is a light cotton's, tuned by eye and by the float measure in CLOTH.md), and
+                         // linear (1/s); both on the motion across the cloth, so it slows flapping, not the fall along it
+    relDamp: 0,          // per second, of the motion along the cloth relative to the body near it
+    stretch: 1.0,        // stiffness per substep, 0 to 1 (fixed substeps, so the same at any frame rate)
+    compress: 0.2,       // the share of it that resists squashing: cloth buckles into folds rather than holding a sheet
     bend: 0.3,           // a robe's cotton: it bridges between the legs, and folds where pushed
-    hemBend: 0.6,       // a sewn hem (points marked 2) keeps its fold and its line
-    tetherSlack: 1.04,   // a free point may be this times its standing distance from its pin
-    margin: 0.025,       // the cloth's distance kept from a capsule's surface: its thickness and the air under it
-    friction: 0.08,      // share of the cloth's sliding on a leg that the leg takes with it
+    hemBend: 0.6,        // a sewn hem (points marked 2) keeps its fold and its line
+    hemMass: 4,          // a hem point's mass against the cloth's 1: the turned hem is three layers, and it pulls the
+                         // cloth above it down
+    tetherSlack: 1.02,   // a free point may be this times its standing distance from its pin
+    blend: 0.2,          // a free point may stray from its skinned place by this times its distance (along the cloth)
+                         // from the belt: the waist eases from the body into the cloth, never a hard edge
+    blendStiff: 0.1,     // share of the overshoot taken back each substep (1: a hard limit; less, a pull the legs beat)
+    blendClear: 0.08,    // metres: cloth this near a leg capsule (past its margin) is left to the leg, not the band
+    blendDepth: 2,       // metres along the cloth from the belt that the band reaches; below it the cloth is free
+    margin: 0.025,       // the cloth's distance kept from a capsule's surface: its points are 4 cm apart, and the
+                         // triangles between them must clear the leg too
+    backstop: 0.8,       // a capsule marked backstop (the pelvis) pushes a point out no further than its skinned place,
+                         // at least this share of its radius: it is fatter than the hips it stands for
+    friction: 0,         // share of the cloth's sliding on a leg that the leg takes with it
+    kick: 1,             // share of a leg's push the cloth keeps as speed: 1, the cloth moves with the leg that pushes it
+                         // (at 0 the cloth lags the leg and the knee comes through between its points)
   };
+
 
   function weld(rest, tol) {
     // points at the same place are one particle (the GLB splits a point where its colour changes)
@@ -126,6 +146,8 @@
     }
     var th = [], thL = [];
     for (i = 0; i < P; i++) if (free[i] && pin[i] >= 0) { th.push(i, pin[i]); thL.push(gd[i] * o.tetherSlack); }
+    var md = new Float32Array(P).fill(Infinity);
+    if (o.blend > 0) for (i = 0; i < P; i++) if (free[i] && gd[i] < o.blendDepth) md[i] = gd[i] * o.blend;
     // followers (points marked 3: a hem turned back inside the cloth) are not simulated: each keeps its standing place
     // in the frame of the cloth at its anchor, the nearest cloth point it hangs from. A fold 6 mm thick cannot be
     // held by springs alone; it flips inside out.
@@ -152,8 +174,10 @@
     }
     var nfree = 0;
     for (i = 0; i < P; i++) nfree += free[i];
+    var wi = new Float32Array(P);
+    for (i = 0; i < P; i++) wi[i] = free[i] ? (stiff[i] ? 1 / o.hemMass : 1) : 0;
     var c = {
-      o: o, map: map, reps: w.reps, P: P, free: free, isFol: fol, nfree: nfree, tris: tris,
+      o: o, wi: wi, md: md, map: map, reps: w.reps, P: P, free: free, isFol: fol, nfree: nfree, tris: tris,
       st: Int32Array.from(st), stL: stL, bd: Int32Array.from(bd), bdL: bdL, bdK: Float32Array.from(bk), th: Int32Array.from(th), thL: Float32Array.from(thL),
       fol: fl, anchor: anchor, solid: solid, solidTris: Int32Array.from(solidTris), fofs: new Float32Array(3 * fl.length),
       x: new Float32Array(3 * P), xp: new Float32Array(3 * P), tgt: new Float32Array(3 * P), tgt0: new Float32Array(3 * P),
@@ -224,7 +248,7 @@
     for (var i = 0; i < b.length; i++) {
       var p = a[i] || b[i], q = b[i], s = [];
       for (var j = 0; j < 6; j++) s.push(p.s[j] + (q.s[j] - p.s[j]) * f);
-      out.push({ s: s, r: q.r });
+      out.push({ s: s, r: q.r, bs: q.bs });
     }
     return out;
   }
@@ -241,6 +265,8 @@
     c.acc = Math.min(c.acc + dt, o.maxSubsteps * h);
     var n = Math.floor(c.acc / h + 1e-6);
     c.acc -= n * h;
+    if (n && (o.dragQ || o.dragL || o.relDamp)) pointNormals(c);
+    c.span = n * h;
     for (var s = 1; s <= n; s++) substep(c, h, s / n);
     var x = c.x, free = c.free, tg = c.tgt;
     for (var i = 0; i < c.P; i++) if (!free[i] && !c.isFol[i]) { x[3 * i] = tg[3 * i]; x[3 * i + 1] = tg[3 * i + 1]; x[3 * i + 2] = tg[3 * i + 2]; }
@@ -248,9 +274,28 @@
     return n;
   }
 
+  // each point's unit normal (from the cloth's own triangles), for the air's drag across it
+  function pointNormals(c) {
+    var x = c.x, pn = c.pn, st = c.solidTris;
+    pn.fill(0);
+    for (var k = 0; k < st.length; k += 3) {
+      var a = 3 * st[k], b = 3 * st[k + 1], d = 3 * st[k + 2];
+      var e1x = x[b] - x[a], e1y = x[b + 1] - x[a + 1], e1z = x[b + 2] - x[a + 2];
+      var e2x = x[d] - x[a], e2y = x[d + 1] - x[a + 1], e2z = x[d + 2] - x[a + 2];
+      var nx = e1y * e2z - e1z * e2y, ny = e1z * e2x - e1x * e2z, nz = e1x * e2y - e1y * e2x;
+      pn[a] += nx; pn[a + 1] += ny; pn[a + 2] += nz; pn[b] += nx; pn[b + 1] += ny; pn[b + 2] += nz;
+      pn[d] += nx; pn[d + 1] += ny; pn[d + 2] += nz;
+    }
+    var F = c.freeIdx;
+    for (var j = 0; j < F.length; j++) {
+      var p = 3 * F[j], l = Math.sqrt(pn[p] * pn[p] + pn[p + 1] * pn[p + 1] + pn[p + 2] * pn[p + 2]) || 1;
+      pn[p] /= l; pn[p + 1] /= l; pn[p + 2] /= l;
+    }
+  }
+
   function substep(c, h, f) {
     var o = c.o, x = c.x, xp = c.xp, P = c.P, free = c.free, i, j;
-    var gx = o.gravity[0] * h * h, gy = o.gravity[1] * h * h, gz = o.gravity[2] * h * h, keep = Math.exp(-o.damping * h);
+    var drag = (o.dragQ || o.dragL || o.relDamp) && c.span > 0, gx = o.gravity[0] * h * h, gy = o.gravity[1] * h * h, gz = o.gravity[2] * h * h, keep = Math.exp(-o.damping * h);
     for (j = 0; j < c.act.length; j++) {
       i = c.act[j];
       var i3 = 3 * i;
@@ -262,32 +307,84 @@
         continue;
       }
       var vx = (x[i3] - xp[i3]) * keep, vy = (x[i3 + 1] - xp[i3 + 1]) * keep, vz = (x[i3 + 2] - xp[i3 + 2]) * keep;
+      if (drag) {
+        // the air across the cloth: the motion along its normal, relative to the body's own motion there (the air
+        // near a walking body moves with it), is slowed; the motion along the cloth (its fall) is not
+        var pn = c.pn, s = h / c.span, rx = vx - (c.tgt[i3] - c.tgt0[i3]) * s, ry = vy - (c.tgt[i3 + 1] - c.tgt0[i3 + 1]) * s,
+          rz = vz - (c.tgt[i3 + 2] - c.tgt0[i3 + 2]) * s, un = rx * pn[i3] + ry * pn[i3 + 1] + rz * pn[i3 + 2];
+        var cut = (o.dragQ * Math.abs(un) / h + o.dragL) * h * c.wi[i];
+        if (cut > 1) cut = 1;
+        vx -= cut * un * pn[i3]; vy -= cut * un * pn[i3 + 1]; vz -= cut * un * pn[i3 + 2];
+        if (o.relDamp) {                               // and every way, gently: what a leg threw, the air takes back
+          var kr = 1 - Math.exp(-o.relDamp * h);
+          rx -= un * pn[i3]; ry -= un * pn[i3 + 1]; rz -= un * pn[i3 + 2];
+          vx -= kr * rx; vy -= kr * ry; vz -= kr * rz;
+        }
+      }
       xp[i3] = x[i3]; xp[i3 + 1] = x[i3 + 1]; xp[i3 + 2] = x[i3 + 2];
       x[i3] += vx + gx; x[i3 + 1] += vy + gy; x[i3 + 2] += vz + gz;
     }
-    solve(c, c.st, c.stL, o.stretch, false);
+    solve(c, c.st, c.stL, o.stretch, false, o.compress);
     solve(c, c.bd, c.bdL, c.bdK, false);
     solve(c, c.th, c.thL, 1.0, true);
-    collide(c, lerpCaps(c.caps0, c.caps, f));
+    var caps = lerpCaps(c.caps0, c.caps, f);
+    if (o.blend > 0) leash(c, f, caps);                 // before the legs: a leg's push wins over the leash
+    collide(c, caps, f);
   }
 
-  function solve(c, idx, L, k, tether) {
-    var x = c.x, free = c.free;
+  // the blend band at the belt: a free point at most md from where the skin puts it (Unity's and Chaos's max distance)
+  // The skinned place is first moved out of any leg capsule it has sunk into (skin weights cannot follow a bending
+  // knee), so the leash never pulls cloth into a leg.
+  function leash(c, f, caps) {
+    var x = c.x, F = c.freeIdx, md = c.md, t0 = c.tgt0, t1 = c.tgt, mg = c.o.margin, q = [0, 0, 0];
+    for (var j = 0; j < F.length; j++) {
+      var i = F[j], m = md[i];
+      if (m === Infinity) continue;
+      var i3 = 3 * i, near = false;
+      for (var k0 = 0; k0 < caps.length && !near; k0++) {   // cloth on or near a leg is the leg's to move
+        if (caps[k0].bs) continue;
+        var s0 = caps[k0].s, r0 = caps[k0].r + mg + c.o.blendClear, vx = s0[3] - s0[0], vy = s0[4] - s0[1], vz = s0[5] - s0[2];
+        var vv = vx * vx + vy * vy + vz * vz || 1e-12, t9 = ((x[i3] - s0[0]) * vx + (x[i3 + 1] - s0[1]) * vy + (x[i3 + 2] - s0[2]) * vz) / vv;
+        t9 = t9 < 0 ? 0 : t9 > 1 ? 1 : t9;
+        var fx = x[i3] - s0[0] - vx * t9, fy = x[i3 + 1] - s0[1] - vy * t9, fz = x[i3 + 2] - s0[2] - vz * t9;
+        near = fx * fx + fy * fy + fz * fz < r0 * r0;
+      }
+      if (near) continue;
+      q[0] = t0[i3] + (t1[i3] - t0[i3]) * f; q[1] = t0[i3 + 1] + (t1[i3 + 1] - t0[i3 + 1]) * f; q[2] = t0[i3 + 2] + (t1[i3 + 2] - t0[i3 + 2]) * f;
+      for (var k = 0; k < caps.length; k++) {
+        if (caps[k].bs) continue;                       // the pelvis's backstop already measures from the skin
+        var s = caps[k].s, r = caps[k].r + mg, ux = s[3] - s[0], uy = s[4] - s[1], uz = s[5] - s[2];
+        var uu = ux * ux + uy * uy + uz * uz || 1e-12, t = ((q[0] - s[0]) * ux + (q[1] - s[1]) * uy + (q[2] - s[2]) * uz) / uu;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        var ex = q[0] - s[0] - ux * t, ey = q[1] - s[1] - uy * t, ez = q[2] - s[2] - uz * t, e2 = ex * ex + ey * ey + ez * ez;
+        if (e2 >= r * r || e2 < 1e-12) continue;
+        var e = Math.sqrt(e2), out = (r - e) / e;
+        q[0] += ex * out; q[1] += ey * out; q[2] += ez * out;
+      }
+      var dx = x[i3] - q[0], dy = x[i3 + 1] - q[1], dz = x[i3 + 2] - q[2], d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (d <= m) continue;
+      var k = (d - m) / d * c.o.blendStiff;
+      x[i3] -= k * dx; x[i3 + 1] -= k * dy; x[i3 + 2] -= k * dz;
+    }
+  }
+
+  function solve(c, idx, L, k, tether, squash) {
+    var x = c.x, wi = c.wi;
     for (var e = 0, m = L.length; e < m; e++) {
       var a = idx[2 * e], b = idx[2 * e + 1], a3 = 3 * a, b3 = 3 * b;
       var dx = x[b3] - x[a3], dy = x[b3 + 1] - x[a3 + 1], dz = x[b3 + 2] - x[a3 + 2];
       var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (d < 1e-9 || (tether && d <= L[e])) continue;
-      var wa = free[a] ? 1 : 0, wb = tether ? 0 : free[b] ? 1 : 0, ws = wa + wb;
+      var wa = tether ? (wi[a] ? 1 : 0) : wi[a], wb = tether ? 0 : wi[b], ws = wa + wb;
       if (!ws) continue;
-      var g = (typeof k === "number" ? k : k[e]) * (d - L[e]) / (d * ws);
+      var g = (typeof k === "number" ? k : k[e]) * (d < L[e] && squash !== undefined ? squash : 1) * (d - L[e]) / (d * ws);
       x[a3] += wa * g * dx; x[a3 + 1] += wa * g * dy; x[a3 + 2] += wa * g * dz;
       x[b3] -= wb * g * dx; x[b3 + 1] -= wb * g * dy; x[b3 + 2] -= wb * g * dz;
     }
   }
 
-  function collide(c, caps) {
-    var x = c.x, xp = c.xp, P = c.P, free = c.free, mg = c.o.margin, fr = c.o.friction;
+  function collide(c, caps, f) {
+    var x = c.x, xp = c.xp, P = c.P, free = c.free, mg = c.o.margin, fr = c.o.friction, kick = c.o.kick, back = c.o.backstop, t0 = c.tgt0, t1 = c.tgt;
     for (var k = 0; k < caps.length; k++) {
       var s = caps[k].s, r = caps[k].r + mg, r2 = r * r;
       var ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
@@ -302,8 +399,20 @@
         var cx = ax + ux * t, cy = ay + uy * t, cz = az + uz * t, dx = px - cx, dy = py - cy, dz = pz - cz;
         var d2 = dx * dx + dy * dy + dz * dz;
         if (d2 >= r2) continue;
-        var d = Math.sqrt(d2) || 1e-9, push = (r - d) / d;
+        var rr = r;
+        if (back && caps[k].bs) {
+          // the backstop: the skin's own place for this point is never inside the leg, so a capsule wider than the
+          // body there pushes the point out only as far as its skinned place
+          var qx = t0[i3] + (t1[i3] - t0[i3]) * f, qy = t0[i3 + 1] + (t1[i3 + 1] - t0[i3 + 1]) * f, qz = t0[i3 + 2] + (t1[i3 + 2] - t0[i3 + 2]) * f;
+          var tq = ((qx - ax) * ux + (qy - ay) * uy + (qz - az) * uz) / uu;
+          tq = tq < 0 ? 0 : tq > 1 ? 1 : tq;
+          var ex = qx - ax - ux * tq, ey = qy - ay - uy * tq, ez = qz - az - uz * tq, dq = Math.sqrt(ex * ex + ey * ey + ez * ez);
+          if (dq < rr) rr = Math.max(dq, caps[k].r * back);
+          if (d2 >= rr * rr) continue;
+        }
+        var d = Math.sqrt(d2) || 1e-9, push = (rr - d) / d;
         x[i3] += dx * push; x[i3 + 1] += dy * push; x[i3 + 2] += dz * push;
+        if (kick < 1) { xp[i3] += (1 - kick) * dx * push; xp[i3 + 1] += (1 - kick) * dy * push; xp[i3 + 2] += (1 - kick) * dz * push; }
         // friction: the sliding along the leg since the last substep is cut by a share
         var nx = dx / d, ny = dy / d, nz = dz / d;
         var mx = x[i3] - xp[i3], my = x[i3 + 1] - xp[i3 + 1], mz = x[i3 + 2] - xp[i3 + 2], mn = mx * nx + my * ny + mz * nz;
@@ -365,6 +474,7 @@
     for (k in opts.options || {}) o[k] = opts.options[k];
     o.gravity = [-up[0] * 9.81 * unit, -up[1] * 9.81 * unit, -up[2] * 9.81 * unit];
     if (o.margin === undefined) o.margin = DEFAULTS.margin * unit;
+    if (o.dragQ === undefined) o.dragQ = DEFAULTS.dragQ / unit;           // 1/m: per world unit
     var c = build({ rest: pos.array, tris: index, sim: sim, options: o });
     var caps = (extras.capsules || []).filter(function (q) { return byName[q.a] && byName[q.b]; });
 
@@ -409,7 +519,7 @@
     function capsules() {
       return caps.map(function (q) {
         byName[q.a].getWorldPosition(a3); byName[q.b].getWorldPosition(b3);
-        return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit };
+        return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit, bs: !!q.backstop };
       });
     }
     function write() {

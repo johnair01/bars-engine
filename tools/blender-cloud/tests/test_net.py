@@ -162,7 +162,9 @@ def j5d():
     """J5(d): the robe's skirt as cloth in headless Chromium with three.js r128, as cave.js will run it (j5_cloth.mjs:
     cloth.js's CaveCloth.attach on the robe GLB, bound to the walking figure, carried forward at the walk's speed).
     With four figures walking, every cloth point stays a number, the skirt swings away from where skinning alone puts
-    it (more than 2 cm), and the cloth costs under 1.5 ms per figure for each 1/60 s it runs (skinning on the CPU, the
+    it (more than 2 cm), a fifth figure standing still keeps its belt row still against the body (round 6: the largest
+    frame-to-frame change in the motion of the free points within 6 cm of the belt, relative to their skinned places,
+    under 0.2 mm), and the cloth costs under 1.5 ms per figure for each 1/60 s it runs (skinning on the CPU, the
     step and writing the points). The cloud browser draws without a graphics chip, so the phone is the judge of the
     frame rate; this bounds the cloth's own share."""
     needs("registry.npmjs.org")
@@ -184,7 +186,8 @@ def j5d():
     res = json.loads(line)
     check(res["pass"], f"cloth: {res}")
     return (f"4 figures, {res['free']} cloth points each of {res['particles']}: {res['per_figure_ms']} ms a figure per "
-            f"1/60 s (median; p95 for all four {res['p95_ms']} ms), skirt swings {res['skirt_swing_m']} m")
+            f"1/60 s (median; p95 for all four {res['p95_ms']} ms), skirt swings {res['skirt_swing_m']} m, belt still to "
+            f"{res['belt_jitter_mm']} mm standing ({res['belt_walk_jitter_mm']} mm walking, p99)")
 
 
 @test("N1")

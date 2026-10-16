@@ -4,6 +4,10 @@
 // CaveCloth's update (skinning on the CPU, the cloth's step, writing the points) every frame for six seconds, as the
 // cost of 1/60 s of cloth (the cloth steps 480 times a second whatever the frame rate, so a slow frame costs more), and
 // checks the cloth is alive: every point a number, and the hem swinging away from where plain skinning would put it.
+// Round 6 (his note on round 5: "there’s jitteriness in the belt"): one more figure stands still, and the belt row (the
+// free points within 6 cm of the belt) must keep still against the body: belt_jitter_mm, the largest frame-to-frame
+// change in its motion relative to its skinned place (|second difference|), under 0.2 mm standing; the same while
+// walking is reported (belt_walk_jitter_mm, 99th percentile).
 //   J5_DIR=$W/j5 FIGURES=4 node j5_cloth.mjs        (prints one JSON line; J5_SHOT=path saves a picture)
 import http from 'node:http';
 import { readFileSync, existsSync, writeFileSync } from 'node:fs';
@@ -36,7 +40,7 @@ const loader = new THREE.GLTFLoader();
 const parse = buf => new Promise((ok, no) => loader.parse(buf, '', ok, no));
 const figBuf = await (await fetch('/glb/${figure}')).arrayBuffer(), robeBuf = await (await fetch('/glb/${robe}')).arrayBuffer();
 const walkers = [];
-for (let n = 0; n < ${FIGURES}; n++) {
+for (let n = 0; n <= ${FIGURES}; n++) {                // the last one stands still
   const fig = await parse(figBuf.slice(0));
   const root = new THREE.Group();
   root.add(fig.scene);
@@ -54,19 +58,31 @@ for (let n = 0; n < ${FIGURES}; n++) {
   root.updateMatrixWorld(true);
   const cloth = CaveCloth.attach(THREE, mesh, {});
   cloth.reset();
-  walkers.push({ root, mixer, cloth, mesh });
+  // the belt row: free points within 6 cm (in the robe's height) of the highest free point
+  const c = cloth.cloth, rp = mesh.geometry.attributes.position, up = [];
+  for (let p = 0; p < c.P; p++) if (c.free[p]) up.push([p, rp.getY(c.reps[p])]);
+  const top = Math.max(...up.map(q => q[1])), belt = up.filter(q => q[1] > top - 0.06).map(q => q[0]);
+  walkers.push({ root, mixer, cloth, mesh, still: n === ${FIGURES}, belt, hist: [], jit: [] });
 }
+const still = walkers.pop(); still.root.position.set(0, 0, -3); walkers.push(still);
 const SPEED = 1.36;                                  // m/s: character.py's stride at two steps a second
 const costs = [], t0 = performance.now();
 let last = t0, bad = 0, swing = 0;
 cam.position.set(4.5, 1.3, 2.0);
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  for (const w of walkers) { w.mixer.update(dt); w.root.translateZ(SPEED * dt); }
+  for (const w of walkers) if (!w.still) { w.mixer.update(dt); w.root.translateZ(SPEED * dt); }
   scene.updateMatrixWorld(true);
   const a = performance.now();
-  for (const w of walkers) w.cloth.update(dt);
+  for (const w of walkers) if (!w.still) w.cloth.update(dt);
   costs.push((performance.now() - a) / Math.max(1e-3, dt * 60));   // per 1/60 s of cloth: a slow frame steps more
+  still.cloth.update(dt);
+  for (const w of [walkers[0], still]) {           // the belt row's motion against its skinned place
+    const c = w.cloth.cloth, rel = w.belt.map(p => [0, 1, 2].map(k => c.x[3 * p + k] - c.tgt[3 * p + k]));
+    w.hist.push(rel); if (w.hist.length > 3) w.hist.shift();
+    if (now - t0 > 3000 && w.hist.length === 3) for (let j = 0; j < rel.length; j++)
+      w.jit.push(1000 * Math.hypot(...[0, 1, 2].map(k => w.hist[2][j][k] - 2 * w.hist[1][j][k] + w.hist[0][j][k])));
+  }
   const w0 = walkers[0];
   cam.lookAt(w0.root.position.x, 0.8, w0.root.position.z); cam.position.z = w0.root.position.z + 2.0;
   renderer.render(scene, cam);
@@ -79,7 +95,8 @@ function frame(now) {
     for (let i = 0; i < c.P; i++) if (c.free[i]) ds.push(Math.hypot(x[3*i]-tg[3*i], x[3*i+1]-tg[3*i+1], x[3*i+2]-tg[3*i+2]));
     ds.sort((a, b) => a - b);
     swing = ds[Math.floor(ds.length * 0.9)];        // the swing of the skirt's lower part, not one stray point
-    window.__done = { unit: w0.cloth.unit, grav: w0.cloth.cloth.o.gravity, costs, bad, swing, particles: c.P, free: c.nfree, verts: w0.mesh.geometry.attributes.position.count };
+    const wj = walkers[0].jit.sort((a, b) => a - b);
+    window.__done = { beltStill: Math.max(0, ...still.jit), beltWalk: wj[Math.floor(wj.length * 0.99)], beltN: still.belt.length, unit: w0.cloth.unit, grav: w0.cloth.cloth.o.gravity, costs, bad, swing, particles: c.P, free: c.nfree, verts: w0.mesh.geometry.attributes.position.count };
     return;
   }
   requestAnimationFrame(frame);
@@ -117,6 +134,7 @@ const perFigure = med / FIGURES;
 console.log(JSON.stringify({
   figures: FIGURES, frames: c.length, median_ms: +(med || 0).toFixed(2), p95_ms: +(p95 || 0).toFixed(2),
   per_figure_ms: +(perFigure || 0).toFixed(2), unit: done.unit, gravity: done.grav, particles: done.particles, free: done.free, verts: done.verts,
-  not_numbers: done.bad, skirt_swing_m: +(done.swing || 0).toFixed(3), errors,
-  pass: !errors.length && done.bad === 0 && done.swing > 0.02 && perFigure < 1.5,
+  not_numbers: done.bad, skirt_swing_m: +(done.swing || 0).toFixed(3), belt_points: done.beltN,
+  belt_jitter_mm: +(done.beltStill || 0).toFixed(3), belt_walk_jitter_mm: +(done.beltWalk || 0).toFixed(3), errors,
+  pass: !errors.length && done.bad === 0 && done.swing > 0.02 && perFigure < 1.5 && done.beltN > 0 && done.beltStill < 0.2,
 }));

@@ -691,14 +691,26 @@ def hemmed(verts, faces, labels):
 
 
 def skirt_weights(p, body):
-    """Below the hips the robe hangs from the hips; above them it takes the body's weights (blended between). The
-    skirt below PIN_Z is cloth at runtime (cloth.js), so these weights only say where it starts from and where it
-    goes if the cloth is off: with the pelvis, root-game's rule for hanging cloth (kit_engine.js skirtWeights)."""
-    t = smooth(1.02, 0.80, p.z)
+    """Below the hips the robe hangs from the hips, its front panel on hemF, its back panel on hemB and its sides on
+    their own thigh, more so toward the hem (round 4's swing; hemB now follows the thigh behind, not the heel); above them it takes the body's weights (blended
+    between). The skirt below PIN_Z is cloth at runtime (cloth.js), and these weights give each cloth point its skinned
+    place: where the cloth starts, where the waist's blend band and the pelvis's backstop measure from, and where it
+    goes if the cloth is off. Round 5 hung it from the pelvis alone, so the band could only hold the cloth to a skirt
+    that never moved with the legs, and the leg capsules and the band fought (round 6, CLOTH.md)."""
+    t = smooth(1.02, 0.55, p.z)
     if t <= 0:
         return body
-    out = {b: (1 - t) * x for b, x in body.items()}
-    out["hips"] = out.get("hips", 0.0) + t
+    th = math.atan2(p.y, p.x)
+    front, back = max(0.0, -math.sin(th)) ** 1.5, max(0.0, math.sin(th)) ** 1.5
+    sideways = abs(math.cos(th)) ** 2
+    thigh = "hipL" if p.x > 0 else "hipR"
+    hang = {"hemF": 0.9 * front, "hemB": 0.9 * back, thigh: 0.55 * sideways}
+    hang["hips"] = max(0.05, 1.0 - sum(hang.values()))
+    out = {}
+    for b, x in body.items():
+        out[b] = out.get(b, 0.0) + (1 - t) * x
+    for b, x in hang.items():
+        out[b] = out.get(b, 0.0) + t * x
     return norm(out)
 
 
@@ -738,7 +750,11 @@ def leg_capsules(fig, build):
         else:
             own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) == a]
         d = sorted(seg_dist(c, A, B) for c in own)
-        out.append({"a": a, "b": b, "r": round(d[min(len(d) - 1, int(CAP_PCT * len(d)))], 4)})
+        cap = {"a": a, "b": b, "r": round(d[min(len(d) - 1, int(CAP_PCT * len(d)))], 4)}
+        if a != b and a[:-1] == b[:-1]:
+            cap["backstop"] = True                       # the pelvis: wider than the hips, so it pushes a point out no
+                                                         # further than its skinned place (cloth.js backstop, round 6)
+        out.append(cap)
     return out
 
 
@@ -788,15 +804,18 @@ def walk_keys():
 
 def cloth_scenarios():
     """The pictures' walks, eight moments each: one step cycle at the normal stride (character.py's, two steps a
-    second); one at a fast stride (cave.js's 2.5 steps a second at its widest swing, 0.62); and a quarter turn to
-    the left over 0.75 s while walking at the normal stride, from just before it to just after."""
+    second); one at a fast stride (cave.js's 2.5 steps a second at its widest swing, 0.62); a quarter turn to the
+    left over 0.75 s while walking at the normal stride, from just before it to just after; and (round 6) a stop: the
+    walk eases out to standing over 0.4 s, and the cloth settles until it hangs straight down, three seconds on."""
     cyc = lambda steps: 2.0 / steps
     return [{"name": "walk", "steps": C.STEPS_PER_S, "amp": C.AMP, "turn": None,
              "samples": [WARM + i * cyc(C.STEPS_PER_S) / 8 for i in range(8)]},
             {"name": "fast", "steps": 2.5, "amp": 0.62, "turn": None,
              "samples": [WARM + i * cyc(2.5) / 8 for i in range(8)]},
             {"name": "turn", "steps": C.STEPS_PER_S, "amp": C.AMP, "turn": {"at": WARM, "angle": math.pi / 2, "dur": 0.75},
-             "samples": [WARM - 0.1 + i * 0.15 for i in range(8)]}]
+             "samples": [WARM - 0.1 + i * 0.15 for i in range(8)]},
+            {"name": "stop", "steps": C.STEPS_PER_S, "amp": C.AMP, "turn": None, "stop": {"at": WARM, "dur": 0.4},
+             "samples": [WARM + t for t in (0.0, 0.2, 0.4, 0.6, 0.9, 1.3, 2.0, 3.0)]}]
 
 
 def cloth_walk(robe_obj, rig, capsules):
@@ -811,6 +830,8 @@ def cloth_walk(robe_obj, rig, capsules):
 # ---- the sash -------------------------------------------------------------------------------------------------
 
 SASH_Z = (0.985, 0.995, 1.030, 1.065, 1.075)
+TAIL_OFF = 0.022                                 # metres the tails lie off the robe (round 6: the cloth below the
+                                                 # belt moves up to 2 cm from its skinned place there; at 1.2 cm it hid them)
 
 
 def sash(under, rig, cw, name):
@@ -829,7 +850,9 @@ def sash(under, rig, cw, name):
     N = 32
     for n, z in enumerate(SASH_Z):
         poly = section(rest, z, 0.0, sedges)
-        lip = 0.003 if n in (0, len(SASH_Z) - 1) else 0.008   # the edges roll in to the cloth beneath
+        # the edges roll in to the cloth beneath: its outer face, THICK out (round 6: at 3 mm the robe's outer face
+        # showed through the band's edges in ragged teeth)
+        lip = THICK + (0.003 if n in (0, len(SASH_Z) - 1) else 0.008)
         row = []
         for j in range(N):
             th = 2 * math.pi * j / N
@@ -863,14 +886,14 @@ def sash(under, rig, cw, name):
         faces.append([k0 + v.index for v in f.verts])
         colours.append(cw["knot"])
     bm.free()
-    # two tails hanging from the knot, lying on the cloth beneath at 1 cm off it
+    # two tails hanging from the knot, lying on the cloth beneath at TAIL_OFF off it
     for x0, end, width in ((0.045, 0.80, 0.042), (0.085, 0.84, 0.038)):
         t0 = len(verts)
         zs = [1.01 - (1.01 - end) * k / 6 for k in range(7)]
         for k, z in enumerate(zs):
             x = x0 + 0.01 * k / 6
             for dx in (-width / 2, width / 2):
-                p = front_of(x + dx, z, 0.012 + 0.002 * k)
+                p = front_of(x + dx, z, TAIL_OFF + 0.002 * k)
                 verts.append(p)
                 weights.append(src(p))
         for k in range(6):
@@ -1006,7 +1029,8 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None, limb_of=
     cloth_z: below this height (the point's standing height) the garment is cloth (cloth.js), which folds and pleats
     as it swings: a fold's side can be the face nearest a point that is well inside. There a point is inside when a
     ray out from it (away from its leg bone where limb_of names one, else from the middle) crosses the cloth an odd
-    number of times (once through a plain skirt, three times through a fold), by two rays of three. cloth_limb(i):
+    number of times (once through a plain skirt, three times through a fold), by two rays of three; a point on the
+    inside of a leg, facing the other, looks out from the middle instead (round 6). cloth_limb(i):
     the leg bone of point i for this test, at any height (a leg's own outward is away from its bone, not the middle).
     Returns ([count per key], {garment vertex: push needed})."""
     me = garment.data
@@ -1051,6 +1075,12 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None, limb_of=
                     tr, sel = tree(pids[0])
                     if d.length > 1e-6:
                         dn = d.normalized()            # three rays a little apart, so one along an edge or a fold
+                        rad = Vector((p.x, p.y, 0))
+                        if limb and rad.length > 1e-6 and dn.dot(rad.normalized()) < -0.3:
+                            # the inside of a leg, facing the other one: a ray from there crosses the gap between the
+                            # legs, where the weighted cloth now hangs (round 6), so a hidden point read as through.
+                            # From there look out from the middle instead, out past its own leg to the robe's side.
+                            dn = rad.normalized()
                         odd = sum(crossings(tr, p, (Matrix.Rotation(a, 3, "Z") @ dn).normalized()) % 2   # cannot decide
                                   for a in (-0.25, 0.0, 0.25))
                         if odd >= 2:
@@ -1468,7 +1498,7 @@ def sheet(figs, rows, out_dir, walk_only=False):
     img.file_format = "PNG"
     img.save()
     # 4. the skirt as cloth, from the figure's left: a step cycle at the normal stride, one at the fast stride, and a
-    # quarter turn to the left while walking (board position j5-skirt-cloth)
+    # quarter turn to the left while walking (board position j5-skirt-cloth), and a stop to standing still (round 6)
     rig_bones = []
 
     def visit(b):
@@ -1504,7 +1534,7 @@ def sheet(figs, rows, out_dir, walk_only=False):
             bpy.data.images.remove(im)
         rows.append(np.hstack(cells))
     img = bpy.data.images.new("cloth", rows[0].shape[1], rows[0].shape[0] * len(rows))
-    img.pixels.foreach_set(np.vstack(rows[::-1]).ravel())  # normal stride on top, then fast, then the turn
+    img.pixels.foreach_set(np.vstack(rows[::-1]).ravel())  # normal stride on top, then fast, the turn, the stop
     img.filepath_raw = os.path.join(out_dir, "cloth-walk.png")
     img.file_format = "PNG"
     img.save()

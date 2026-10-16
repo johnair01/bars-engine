@@ -261,10 +261,11 @@ def pose(t):
     r["shoulderL"], r["shoulderR"] = B * sL, B * sR
     r["elbowL"] = -(0.25 + 0.35 * max(0.0, -sL))
     r["elbowR"] = -(0.25 + 0.35 * max(0.0, -sR))
-    # the hem bones (J5): the front panel follows the leg that is ahead, the back panel the leg that is behind, its
-    # shin kicking back included. A positive turn about X swings a hanging bone back. cave.js computes the same two.
+    # the hem bones (J5): the front panel follows the leg that is ahead, the back panel the thigh that is behind. A
+    # positive turn about X swings a hanging bone back. Round 6: no longer the shin's kick too; the robe's cloth is held
+    # near these bones (cloth.js blend), and a back panel that rose with the heel held the cloth up (CLOTH.md).
     r["hemF"] = 0.9 * min(r["hipL"], r["hipR"])
-    r["hemB"] = max(r["hipL"] + 0.6 * r["kneeL"], r["hipR"] + 0.6 * r["kneeR"])
+    r["hemB"] = 0.9 * max(r["hipL"], r["hipR"])
     rot = {k: (v, 0.0) for k, v in r.items()}
     rot["spine"] = (0.07, 0.14 * sL)
     rot["hips"] = (0.0, -0.1 * sL)

@@ -6,11 +6,11 @@
 //   bones: [{name, parent, head: [x, y, z]}]           the rig at rest, parents first
 //   robe: {rest: [x y z ...], tris: [...], sim: [0|1 per vertex], weights: [[[bone index, w], ...] per vertex]}
 //   capsules: [{a, b, r}]                                 a leg capsule from bone a's joint to bone b's
-//   scenarios: [{name, steps, amp, turn: {at, angle, dur} | null, samples: [t, ...]}]
-//   options: cloth.js options (optional)
+//   scenarios: [{name, steps, amp, turn: {at, angle, dur} | null, stop: {at, dur} | null, samples: [t, ...]}]
+//   options: cloth.js options (optional; CLOTH_OPTS, a JSON object in the environment, overrides them)
 // The figure stands for STAND seconds, eases into the walk over EASE seconds and walks on; t is seconds since it set
 // off. It moves forward at the speed its stride gives (cave.js: the swing is asin(step / 2 / leg)), and a turn swings
-// its heading by angle radians over dur seconds. The cloth runs at 60 frames a second, as in the game.
+// its heading by angle radians over dur seconds, and a stop eases the walk out to standing over dur seconds. The cloth runs at 60 frames a second, as in the game.
 // OUT: per scenario, per sample t: the robe's points and each bone's deform matrix (4 x 4, column-major, as Blender's
 // armature uses them), in the figure's own frame (the walk's travel and turn taken out), so Blender can draw them at the
 // origin; and the cloth's cost per frame.
@@ -34,7 +34,7 @@ function pose(t, A, S) {
   r.elbowL = -(0.25 + 0.35 * Math.max(0, -sL));
   r.elbowR = -(0.25 + 0.35 * Math.max(0, -sR));
   r.hemF = 0.9 * Math.min(r.hipL, r.hipR);
-  r.hemB = Math.max(r.hipL + 0.6 * r.kneeL, r.hipR + 0.6 * r.kneeR);
+  r.hemB = 0.9 * Math.max(r.hipL, r.hipR);
   const rot = {};
   for (const k in r) rot[k] = [r[k], 0];
   rot.spine = [0.07, 0.14 * sL];
@@ -79,7 +79,7 @@ function deforms(p, ease) {
 }
 
 const robe = job.robe, nv = robe.rest.length / 3;
-const cloth = Cloth.build({ rest: Float32Array.from(robe.rest), tris: Uint32Array.from(robe.tris), sim: Float32Array.from(robe.sim), options: job.options || {} });
+const cloth = Cloth.build({ rest: Float32Array.from(robe.rest), tris: Uint32Array.from(robe.tris), sim: Float32Array.from(robe.sim), options: Object.assign({}, job.options || {}, JSON.parse(process.env.CLOTH_OPTS || '{}')) });
 function skinned(D, root) {
   const out = new Float32Array(3 * cloth.P);
   const W = D.map(d => mul(root, d));
@@ -95,7 +95,7 @@ function skinned(D, root) {
 function capsules(D, root) {
   return job.capsules.map(c => {
     const a = ap(mul(root, D[bi[c.a]]), bones[bi[c.a]].head), b = ap(mul(root, D[bi[c.b]]), bones[bi[c.b]].head);
-    return { s: [...a, ...b], r: c.r };
+    return { s: [...a, ...b], r: c.r, bs: !!c.backstop };
   });
 }
 
@@ -117,7 +117,9 @@ for (const sc of job.scenarios) {
     }
     const dt = time - prev;
     prev = time;
-    const ease = Math.max(0, Math.min(1, (time + EASE) / EASE)), e = ease * ease * (3 - 2 * ease);
+    let ease = Math.max(0, Math.min(1, (time + EASE) / EASE));
+    if (sc.stop && time > sc.stop.at) ease = Math.min(ease, Math.max(0, 1 - (time - sc.stop.at) / sc.stop.dur));   // comes to a halt
+    const e = ease * ease * (3 - 2 * ease);
     const tw = Math.max(0, time);                            // the walk's own clock
     if (sc.turn && time > sc.turn.at) heading = sc.turn.angle * Math.min(1, (time - sc.turn.at) / sc.turn.dur);
     pos[0] += Math.sin(heading) * speed * e * dt; pos[1] -= Math.cos(heading) * speed * e * dt;
