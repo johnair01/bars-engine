@@ -4,7 +4,9 @@ bpy venv. Prints one JSON line.
 usage: python _walk_check.py FIGURE.glb
 Joints are read where the glTF puts them (each bone's head, posed, in world space), so the check does not trust the
 builder. The figure faces -Y and its own left is +X once imported (Z up).
-  swing   at a quarter of the cycle the thighs swing opposite ways, and by three quarters they have swapped (W3)
+  swing   at a quarter of the cycle the thighs swing opposite ways from where they stand at rest, and by three
+          quarters they have swapped (W3); measured from the rest pose, so a figure held in a stance (a daemon's
+          gesture, character.py WARP) still has to swing its legs
   knees   every key, each shin folds backward from its thigh or stays straight; never forward
   elbows  every key, each forearm folds forward from its upper arm or stays straight; never backward
   loop    the last key's pose is the first key's
@@ -48,8 +50,12 @@ for k, h in enumerate(H):
             problems.append(f"elbow{s} folds backward at key {k}")
 
 
+REST = {b.name: rig.matrix_world @ b.head_local for b in rig.data.bones}
+
+
 def thigh_y(h, s):
-    return (h["knee" + s] - h["hip" + s]).normalized().y  # - forward, + back
+    """- forward, + back of the thigh's direction at rest."""
+    return (h["knee" + s] - h["hip" + s]).normalized().y - (REST["knee" + s] - REST["hip" + s]).normalized().y
 
 
 q1, q3 = H[n // 4], H[3 * n // 4]

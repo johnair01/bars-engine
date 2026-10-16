@@ -1,6 +1,6 @@
 """The mesh census: what a GLB's meshes are made of, and whether a figure's body is one closed solid of a stated size.
 
-    python3 content/ontology-game/cave/census.py FILE.glb [--kind humanoid|spirit|chamber] [--json]
+    python3 content/ontology-game/cave/census.py FILE.glb [--kind humanoid|npc|spirit|chamber] [--json]
 
 Plain Python, no bpy, so it runs anywhere the offline tests run. Per mesh it counts vertices (merged by position, as
 glTF splits them at every seam), triangles, open edges (one triangle), non-manifold edges (three or more), loose
@@ -11,16 +11,22 @@ MAX_DEGENERATE degenerate triangles, and the file's box lies within BOX["humanoi
 boolean, a physics collider or a print, and nothing asserted it before (call sheet blender-frame-flesh-warp).
 Kit-bashed spirits and the chamber only report: their pieces are open shells by design, read as sprites. Exit 1 when a
 figure that must pass does not.
+
+An NPC is a humanoid warped into its daemon's gesture (character.py WARP): it passes the same solid test inside a
+wider box, since a held gesture flings the arms wide (Emotional Body, 1.5 m), reaches them forward (Fixer, 1.2 m
+deep) or sinks the figure into its knees (Victim, 1.4 m tall). The box still catches a figure built at the wrong
+scale.
 """
 import argparse, json, math, struct, sys
 
 # metres: (min, max) across x, y and z of the whole file, Y up as glTF stores it. A cave character is 1.75 m.
 BOX = {
     "humanoid": ((0.3, 1.0), (1.6, 1.9), (0.15, 0.8)),
+    "npc": ((0.3, 1.9), (1.2, 1.95), (0.15, 1.4)),
     "spirit": ((0.05, 3.0), (0.05, 3.0), (0.05, 3.0)),
     "chamber": ((1.0, 200.0), (0.5, 50.0), (1.0, 200.0)),
 }
-MUST_PASS = {"humanoid"}
+MUST_PASS = {"humanoid", "npc"}
 MAX_DEGENERATE = 8          # a remesh leaves a few slivers of no area; they render as nothing and break nothing
 WELD = 1e-5                 # metres: vertices this close are one
 
