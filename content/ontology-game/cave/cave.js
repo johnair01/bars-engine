@@ -2487,9 +2487,11 @@
       spiritBtn.setAttribute("data-cave-spirits-n", String(n));
     }
     function spiritPanel(o) {
+      if (spirits.some(function (x) { return x.dissolving; })) return; // a spirit dissolving keeps the box until it is done
       spiritBox.innerHTML = ""; spiritBox.style.display = "";
       if (!o) {
         spiritBox.appendChild(el("h2", { text: "Spirits with you" })); spiritBox.appendChild(P("Tap one to thank it."));
+        var you = window.__oagDissolve && window.__oagDissolve.statsLine(); if (you) spiritBox.appendChild(P("You: " + you, { class: "oagc-you", "data-cave-you": "" }));
         spiritBox.appendChild(el("div", { class: "oagc-row" }, spirits.map(function (x, i) {
           var b = btn(x.name, { "data-cave-spirit": String(i) }, function () { spiritPanel(x); }, true); return b;
         })));
@@ -2501,6 +2503,18 @@
       spiritBox.appendChild(P("Breathe it out and let it go, or take it home and sit with it again."));
       spiritBox.appendChild(row([btn("Breathe out, and let it go", { "data-cave-spirit-out": "" }, function () { spiritBox.style.display = "none"; letSpiritGo(o); }),
         btn("Take it home again", { "data-cave-spirit-home": "" }, function () { spiritBox.style.display = "none"; spiritHome(o); }, true)]));
+      // Or dissolve it into yourself, ice to water to gas to pure spirit, for mana (dissolve.js; Wendell, 14 October 2026).
+      if (window.__oagDissolve && window.__oagDissolve.canDissolve(o)) { // not while shadow hides it, nor a shadow spirit until revealed (sd-shadow-reveal)
+        var D = window.__oagDissolve, n = D.manaOf(o), st = D.statOf(o);
+        spiritBox.appendChild(P("Or dissolve it into yourself: " + n + " mana" + (st ? " for your " + st : "") + ", and it is gone."));
+        spiritBox.appendChild(row([btn("Dissolve it into yourself", { "data-cave-spirit-dissolve": "" }, function () { dissolveSpirit(o); }, true)]));
+      }
+    }
+    function dissolveSpirit(o) {
+      window.__oagDissolve.run(o, { THREE: THREE, box: spiritBox, tween: tween,
+        you: function () { return avatar ? new THREE.Vector3(avatar.position.x, avatar.position.y + 1.2, avatar.position.z) : null; },
+        gone: function (x) { var i = spirits.indexOf(x); if (i >= 0) spirits.splice(i, 1); scene.remove(x.g); dropLight(x.g); spiritsUi(); },
+        close: function () { spiritBox.style.display = "none"; } });
     }
     function letSpiritGo(o) {
       var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); spiritsUi();
