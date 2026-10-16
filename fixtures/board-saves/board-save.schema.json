@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wendell-britt/Six-faces-council/blob/main/schema/board-save.schema.json",
+  "title": "Board save",
+  "description": "One write from the board page to bars-engine (POST /api/board/saves). The same contract is checked by tests/test_save_contract.py here and src/lib/__tests__/board-save-contract.test.ts in bars-engine, against the fixtures in tests/fixtures/board-saves. A save with mode set carries the whole document; mode update carries a patch that bars-engine merges onto the latest document, so the per-collection rules apply to set only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["board", "collection", "docId", "data"],
+  "properties": {
+    "board": {"enum": ["nonprofit", "council"]},
+    "collection": {"enum": ["positions", "questions", "terms", "causes", "steer", "steps", "blockers", "picks",
+                            "morning", "ttv", "lists", "contacts", "shows", "pickup"]},
+    "docId": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\\\\u0000-\\u001f]+$"},
+    "mode": {"enum": ["set", "update"], "default": "set"},
+    "data": {"type": "object", "maxProperties": 200}
+  },
+  "$defs": {
+    "iso": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"},
+    "decided": {
+      "anyOf": [
+        {"required": ["deferred"], "properties": {"deferred": {"const": true}}},
+        {"required": ["steer"], "properties": {"steer": {"type": "string", "minLength": 1, "pattern": "\\S"}}}
+      ]
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"mode": {"const": "update"}}, "required": ["mode"]}, "then": {}, "else": {"allOf": [
+      {"if": {"properties": {"collection": {"enum": ["positions", "questions", "terms", "causes", "picks", "blockers"]}}},
+       "then": {"properties": {"data": {"required": ["savedAt"], "properties": {"savedAt": {"$ref": "#/$defs/iso"}}}}}},
+      {"if": {"properties": {"collection": {"const": "positions"}}},
+       "then": {"properties": {"data": {"anyOf": [
+         {"required": ["status"], "properties": {"status": {"enum": ["stands", "overrule", "retire"]}}},
+         {"$ref": "#/$defs/decided"}]}}}},
+      {"if": {"properties": {"collection": {"const": "questions"}}},
+       "then": {"properties": {"data": {"anyOf": [
+         {"required": ["choice"], "properties": {"choice": {"type": "string", "minLength": 1}}},
+         {"required": ["choices"], "properties": {"choices": {"type": "array", "minItems": 1, "items": {"type": "string"}}}},
+         {"$ref": "#/$defs/decided"}]}}}},
+      {"if": {"properties": {"collection": {"const": "picks"}}},
+       "then": {"properties": {"data": {"required": ["text", "date"], "properties": {
+         "text": {"type": "string", "minLength": 1}, "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"}}}}}},
+      {"if": {"properties": {"collection": {"const": "steer"}}},
+       "then": {"properties": {"docId": {"const": "general"}, "data": {"required": ["text", "savedAt"],
+         "properties": {"text": {"type": "string"}, "savedAt": {"$ref": "#/$defs/iso"}}}}}},
+      {"if": {"properties": {"collection": {"const": "morning"}, "docId": {"const": "menu"}}, "required": ["docId"]},
+       "then": {"properties": {"data": {"required": ["menu", "savedAt"], "properties": {
+         "menu": {"type": "string", "not": {"pattern": "\"rawEntry\""}}, "savedAt": {"$ref": "#/$defs/iso"}}}}}}
+    ]}}
+  ]
+}

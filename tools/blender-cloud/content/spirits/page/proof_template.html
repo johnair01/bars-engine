@@ -1,0 +1,206 @@
+<title>Spirit Art Proof</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a dark projection room. The 3D viewer opens the page, then the five element strips, then the sprite sheet.
+   Single dark look on purpose: the spirits are light, and they read only on a dark ground. */
+:root{
+  --bg:#0d0f13; --panel:#151821; --fg:#e8eae6; --muted:#9aa29d; --line:#262b35; --accent:#e8b84a;
+  --f-display:"Young Serif", Georgia, serif;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:68rem;margin:0 auto;padding-inline:clamp(16px,4vw,40px);padding-block:2.2rem 4rem}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance;line-height:1.2}
+h1{font-size:clamp(1.9rem,4.5vw,2.8rem)}
+h2{font-size:1.6rem;margin-top:3rem;margin-bottom:.6rem}
+h3{font-size:1.15rem}
+p{max-width:66ch;margin:.55rem 0}
+.eyebrow{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lede{color:var(--muted);font-size:1.08rem}
+.viewer{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:1.6rem;margin-top:1.6rem;align-items:start}
+@media (max-width:760px){.viewer{grid-template-columns:1fr}.strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+#stage{width:100%;aspect-ratio:4/3;max-width:100%;background:radial-gradient(ellipse at 50% 70%,#1b2030 0%,#0b0d11 70%);border-radius:14px;display:block;touch-action:none}
+.ctl{display:grid;gap:1rem}
+.lab{display:block;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:.3rem .8rem;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chips button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{font-size:.9rem;color:var(--muted)}
+.row{margin-top:1.4rem}
+.strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6rem;margin-top:.5rem}
+figure{margin:0;background:var(--panel);border-radius:10px;padding:.4rem}
+figure img{width:100%;height:auto;display:block}
+figcaption{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);text-align:center;padding-bottom:.2rem}
+.sheet{margin-bottom:1rem;display:grid;grid-template-columns:repeat(5,96px);gap:8px 14px;background:var(--panel);padding:16px;border-radius:12px;width:max-content;max-width:100%;overflow-x:auto}
+.sheetbox{overflow-x:auto;margin-top:.8rem}
+img.px{image-rendering:pixelated;width:96px;height:96px}
+.sheethead{display:grid;grid-template-columns:repeat(5,96px);gap:14px;font-family:var(--f-mono);font-size:.7rem;color:var(--muted);padding-inline:16px;margin-top:1rem}
+ul{max-width:66ch;padding-left:1.1rem}
+li{margin:.3rem 0}
+.side{display:grid;grid-template-columns:4.5rem repeat(3,minmax(0,1fr));gap:.6rem;align-items:center;margin-top:.8rem}
+.side.four{grid-template-columns:4.5rem repeat(4,minmax(0,1fr))}
+.pair{display:flex;flex-wrap:wrap;gap:1.4rem}
+.pair .sheet{margin-top:.3rem}
+img.px.big{width:100%;max-width:192px;height:auto;margin:auto}
+.side h3{font-size:1rem}
+.facehead{margin-top:1.4rem}
+.sidehead{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);text-align:center}
+@media (max-width:760px){.side{grid-template-columns:3.5rem repeat(3,minmax(0,1fr))}.side.four{grid-template-columns:3.5rem repeat(4,minmax(0,1fr))}}
+code{font-family:var(--f-mono);font-size:.86em}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Spirit art · round 10 · the Player's family</div>
+  <h1>The kid goat completes the Romp</h1>
+  <p class="lede">The Player's Romp plays where the Protector's Shellback sits, and it now has all three of its animal bases: the fox, the otter and the kid goat, five stages in five elements each, with the same eye, cloth, beads and element styling as the Shellback, and Meridia's nation layer as a switch. The viewer opens on the kid goat, this round's new base. The Shellback's models are round 7's, met in Meridia.</p>
+
+  <section class="viewer" aria-label="3D model viewer">
+    <canvas id="stage" aria-label="The selected spirit model, turning slowly. Drag to turn it."></canvas>
+    <div class="ctl">
+      <div><span class="lab">Base</span><div class="chips" id="c-base"></div></div>
+      <div><span class="lab">Element</span><div class="chips" id="c-el"></div></div>
+      <div><span class="lab">Stage</span><div class="chips" id="c-st"></div></div>
+      <p class="note" id="info">Drag to turn the model.</p>
+      <p class="note">The scanlines and soft glow show in the renders below. The 3D model carries the colours, glow and wire edges. The scanlines need the game's own shader, so the viewer sets the see-through skin itself.</p>
+    </div>
+  </section>
+
+  <h2>The Romp's third base: the kid goat</h2>
+  <p>Built from the kid goat's written image prompt (<code>council/loops/prompts/spirit-generator-r8.md</code>), since no concept sheet exists yet. It shares the Romp's gas and jewel core, wears the Romp's wanderer outfit when it stands, and carries its core as the prompt's brass bell, never as a mark on the coat.</p>
+  <ul>
+    <li><strong>Gas and core:</strong> the Romp's own, the same as the fox's and the otter's.</li>
+    <li><strong>Hologram:</strong> a kid of light standing high on four slim legs, with a short muzzle, two horn buds, its ears held out sideways and a short upright tail.</li>
+    <li><strong>Living creature:</strong> caught mid-leap off a small rock with all four hooves in the air, forelegs tucked and hind legs still stretched back from the push. A rounded skull and a short straight muzzle, two small horn buds, long floppy ears held out sideways, a small beard tuft, and a short soft coat in cream broken by patches in the colour of its element, on slim legs and small black hooves. Its eyes are the shared lidded eye with an amber iris and a goat's level bar of a pupil. It wears the scarf and the prayer beads with the jade bead and red tassel, and its core hangs at its throat as a small brass bell engraved with the yin-yang and trigrams, lit faintly in the colour of its element.</li>
+    <li><strong>Highest ally form:</strong> up on its hind legs on small hooves, slim, ears out, in the Romp's wanderer outfit: short tunic, sash with long ends, scarf with its tail flying back, satchel on a strap, and the paper lantern on a short pole in its near hand. The engraved bell hangs at its chest, so the lantern is left plain.</li>
+    <li><strong>Element:</strong> its element sets the colour of the coat's patches and what grows along its back and tail, as it does for the fox and the otter: a cream kid with rust patches whose tail burns, one with slate-blue patches trailing a ribbon of water, one with olive patches and leaves and flowers along its back, one with grey patches in shoulder plates, and one with fawn patches and amber crystals along its back. Its cream coat keeps it pale beside the darker otter and the red fox.</li>
+  </ul>
+  <p>Below: the kid goat's sprites beside the otter's, the fox's and the tortoise's at 96 pixels, which is the check this round answers (does the kid goat read as a kid goat?), then the kid goat beside the otter as creature and ally form, its face, and the kid goat met in Meridia.</p>
+  %%GOAT%%
+
+  <h2>The Romp's second base: the otter</h2>
+  <p>Built from the otter's written image prompt (<code>council/loops/prompts/spirit-generator-r8.md</code>), since no concept sheet exists yet. It shares the fox's gas and jewel core, and it follows your look at the fox: the upright otter is a wanderer, and its core is a jade token, never a mark on the fur.</p>
+  <ul>
+    <li><strong>Gas and core:</strong> the Romp's own, the same as the fox's: motes along a looping trail, and the onion-tipped fox's jewel.</li>
+    <li><strong>Hologram:</strong> a long, low otter of light with a broad flat head, a blunt snout, small round ears, short legs and a thick tail that tapers to a point along the ground.</li>
+    <li><strong>Living creature:</strong> rolled half onto its back on a flat river stone, chest and head lifted to look at you, hind feet in the air, its forepaws curled round the jade token with the yin-yang and trigrams on its face. A broad flat skull, a blunt muzzle with fat whisker pads and white whiskers, a wide dark nose, small round ears set low, a pale throat and chin, webbed feet, and a thick tail hanging off the stone. It wears the scarf and the prayer beads with the jade bead and red tassel. No bell: the otter's prompt gives it the token in its paws.</li>
+    <li><strong>Highest ally form:</strong> upright on short legs and webbed feet, propped on its thick tail, in the Romp's wanderer outfit: short tunic, sash with long ends, scarf with its tail flying back, satchel on a strap, and the paper lantern on a short pole in its near hand. Its far paw holds the jade token to its chest, so the lantern is left plain.</li>
+    <li><strong>Element:</strong> each element sets the otter's coat and what its tail carries, as it does for the fox: a russet otter whose tail tip burns, a slate-blue one trailing a ribbon of water, an olive one with leaves and flowers along its back and tail, a grey one in shoulder plates with a blade crest down its tail, and an umber one with amber crystals along its back. Its coat is darker and sleeker than the fox's, so the two read apart at sprite size.</li>
+  </ul>
+  <p>Below: the otter's sprites beside the fox's and the tortoise's at 96 pixels, which is the check this round answers (does the otter read as an otter?), then the otter beside the fox as creature and ally form, its face, and the otter met in Meridia.</p>
+  %%OTTER%%
+
+  <h2>The Player's Romp: the fox</h2>
+  <p>No concept art exists for the Romp, so the fox is built from a written image prompt (<code>council/loops/prompts/spirit-generator-r8.md</code>, with prompts for the otter and the kid goat beside it). Its pose and its pieces follow that prompt:</p>
+  <ul>
+    <li><strong>Gas:</strong> motes strung along a looping trail, like a tail swished through the air, thickest at its head. The Shellback's gas is a round cloud.</li>
+    <li><strong>Core:</strong> cut as a fox's jewel, the onion-tipped star ball (hoshi no tama) foxes carry in Japanese folk tales: a faceted pearl drawn up into a leaning, twisting point with a bright band below it. The Shellback's core is a six-sided gem.</li>
+    <li><strong>Hologram:</strong> a faceted fox of light, its edges traced, with tall ears and a big tail carried high, and the jewel at its chest.</li>
+    <li><strong>Living creature:</strong> a fox mid-step with its near forepaw lifted and its head up: a narrow muzzle with a black nose, tall pointed ears, a pale bib and cheeks, dark stockings, and a brush longer than its body with a pale tip, curled high. It wears a scarf and prayer beads with a bell, and its core hangs from the beads as a jade token with the yin-yang and trigrams on its face. After your look the token replaced the glowing mark on its flank, which fought the fur, and the eyes sit further apart.</li>
+    <li><strong>Highest ally form:</strong> the fox upright as a wanderer, not a sage, so it stands apart from the Shellback's robed protectors. It wears a short tunic over bare legs in dark stockings, a sash with long ends, a scarf whose tail flies back, and a satchel on a strap. In place of the staff it carries a paper lantern of fox-fire on a short pole, with the yin-yang and trigrams drawn in ink on its face. Its brush sweeps out behind and up.</li>
+    <li><strong>Element:</strong> the element sets the coat and what the tail and ruff carry, the way it sets the Shellback's shell. Fire is a red fox whose tail tip burns. Water is blue-grey, its tail trailing a ribbon of water. Wood is olive, with leaves and white flowers in its ruff and along its brush. Metal is a silver fox in engraved shoulder plates with a blade crest down its tail. Earth is a sandy fox with amber crystals along its spine. The aura, cloth colours and iris are the Shellback's, and the lantern glows in the element's colour.</li>
+  </ul>
+  <p>Below: the fox's sprites beside the tortoise's at 96 pixels, which is the check this round answers (does the fox read as a fox?), then both families' living creature and ally form in every element.</p>
+  %%ROMP%%
+
+  <h2>Met in Meridia</h2>
+  <p>The element sets a spirit's colour, material and aura. Where you met it sets a second layer, its nation's style, which settles on every stage. This round builds one: Meridia, the Golden Noon, the nation of clarity, trade and exchange, in stone and terraces. Meridia keeps its own sandstone and gold in every element, so a Water spirit met there is still teal and wears Meridia's stone and gold.</p>
+  <ul>
+    <li><strong>Gas:</strong> a fifth of the motes take the noon's gold, and the cloud gathers inside a faint sun ring.</li>
+    <li><strong>Core:</strong> the gem floats over a terraced plinth of three square sandstone steps, each lipped in gold, inside a sun ring.</li>
+    <li><strong>Hologram:</strong> it stands on a terraced dais of gold light in place of the plain ring alone, with a small sun crest of light behind its head.</li>
+    <li><strong>Living creature and highest ally form:</strong> a gold sun crest with twelve rays behind the head, a collar of three stepped sandstone rings with gold lips at the neck, and trade coins: the gold bell on the shell becomes a red cord of square-holed coins, and the ally form wears a second string at its belt.</li>
+  </ul>
+  <p>Each Shellback base below shows every element twice: first as round 6 left it, then met in Meridia. The rows follow the base picked in the viewer (the fox's are in its own section above).</p>
+  %%NATION%%
+  %%HEADS%%
+
+  <h2>Three bases side by side</h2>
+  <p>The living creature of each base in each element. All three share the eye, the cloth and the beads, and each element gives all three the same shell, growth and aura. Only the body changes.</p>
+  %%SIDE%%
+
+  <h2>The five stages</h2>
+  <ul>
+    <li><strong>Gas, level 1.</strong> A drifting cloud of motes in the element's colours, thickest at the heart.</li>
+    <li><strong>Core, level 3.</strong> The gas solidifies into a six-sided double pyramid, a shell scute made solid. A few motes still circle it.</li>
+    <li><strong>Hologram, level 5.</strong> The core projects a faceted body of light, in its base's shape, from a ring on the ground. The core shows at its chest. Beaten in a fight, it falls back into the core.</li>
+    <li><strong>Living creature.</strong> The hologram becomes flesh, after your Taoist Tortoise concept: a young tortoise with the concept's face, a shawl, prayer beads with one jade bead, and a bell and jade disc on tassels. Its core has grown into the shell as a glowing yin-yang ringed by the eight trigrams. Every element has the same small, deep-set eye, and only the iris's tint changes. The element decides the shell, what grows from it, the skin, the iris, the cloth and an aura:
+      <ul>
+        <li><strong>Fire:</strong> black basalt shell split by glowing lava seams, a crust of cooled lava swelling out of the seams in rounded ridges with glowing cracks, three small flames on the crown, red skin, amber-red irises, crimson cloth, embers rising.</li>
+        <li><strong>Water:</strong> wet teal shell carved with wave bands and foam seams, seashells and pearls, beads of water, blue skin and robe, two thin ribbons of water spiralling up around it and ripples at its feet.</li>
+        <li><strong>Wood:</strong> the moss grown into a young tree, vines down the flanks, green skin, leaves drifting up around it.</li>
+        <li><strong>Metal:</strong> polished silver plates with gold-lit seams, a rivet on every plate and a crest of blades, steel-blue skin, white cloth, two rings orbiting with shards.</li>
+        <li><strong>Earth:</strong> stone shell with amber seams and amber crystals breaking through, ochre skin and cloth, pebbles floating and dust at its feet.</li>
+      </ul></li>
+    <li><strong>Highest ally form.</strong> The same tortoise stands as a sage in a long robe and shawl, shell on its back, its core worn as a yin-yang medallion over its heart. The robe, shell and aura follow its element, and the staff carries the element at its head: a sprouting bud, a caged flame, a water orb, a ring of chimes, an amber cluster.</li>
+    <li><strong>The armadillo.</strong> Eight bands across its back between a shield of small tiles at each end, each band lit along its raised edge and shaded where it tucks under the next. It has tall pointed ears, a pointed head that narrows into a long flat snout, eyes on the sides of its head, a shield on its head and a ringed tail.</li>
+    <li><strong>The pangolin.</strong> Rows of rounded scales pointing back, each row half a scale over from the last, scales floating in rows from its crown down its neck into the shell, a short snout, wide-set eyes, big front claws, and a long broad tail of overlapping scales that curls round at the end. Between the scales shows each element's seam colour: lava for fire, foam for water, gold for metal, amber for earth.</li>
+    <li><strong>Met in Meridia.</strong> Every stage carries Meridia's style over its element's: a sun ring, a terraced plinth or dais, a sun crest, a terraced collar and trade coins, in Meridia's sandstone and gold.</li>
+    <li>Gas and core belong to the family, so they are the same for all three Shellback bases, and the Romp has its own. The hologram shows the base's own body.</li>
+  </ul>
+  <p class="note">The rows below follow the base picked in the viewer.</p>
+  %%ROWS%%
+
+  <h2>Sprite sheet</h2>
+  <p>Rendered from the same models at 96 pixels, with three alpha steps so the hologram stays see-through. Each base has five rows, Earth, Wood, Fire, Water, Metal. The Shellback's are met in Meridia; the fox's are without a nation.</p>
+  <div class="sheetbox">
+    <div class="sheethead"><span>Gas</span><span>Core</span><span>Hologram</span><span>Creature</span><span>Highest</span></div>
+    %%SHEET%%
+  </div>
+
+  <h2>What this proves and what it doesn't</h2>
+  <ul>
+    <li>The pipeline runs end to end in the cloud: one script builds, renders, sprites and exports all twenty-five for a base, with nothing downloaded. The largest model file is %%FACES%% KB before compression; the page carries them meshopt-compressed.</li>
+    <li>The same arguments give the same spirit every time.</li>
+    <li>Not yet built: the Romp's kid goat, the other four nation styles, the parts you pick or offer, the levels for the last two stages, and animation.</li>
+  </ul>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+const BASES = %%VIEWBASES%%;
+const EL = {earth:"Earth",wood:"Wood",fire:"Fire",water:"Water",metal:"Metal"}, ST = {gas:"Gas",core:"Core",hologram:"Hologram",creature:"Living creature",ascended:"Highest ally form"};
+const st = {base:"%%FIRST%%", el:"fire", st:"creature"};
+const cv = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(32, 4/3, 0.1, 50); cam.position.set(3.6, 2.4, 4.4);
+const ctl = new OrbitControls(cam, cv); ctl.target.set(0, 0.3, 0); ctl.enableDamping = true; ctl.autoRotate = !matchMedia("(prefers-reduced-motion: reduce)").matches; ctl.autoRotateSpeed = 1.2; ctl.enablePan = false;
+scene.add(new THREE.AmbientLight(0xffffff, 0.6)); const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(3, 5, 3); scene.add(sun);
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder); let current = null;
+const cache = {}; let want = "";
+function b64(s){ const bin = atob(s.trim()), u = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u.buffer; }
+async function load(){
+  const key = st.base+"-"+st.el+"-"+st.st; want = key;
+  document.querySelectorAll("[data-base]").forEach(x => x.hidden = x.dataset.base !== st.base);
+  document.getElementById("info").textContent = "Loading the model.";
+  try { cache[key] = cache[key] || b64(await (await fetch("glb/"+key+".txt")).text()); }
+  catch(e){ document.getElementById("info").textContent = "The model did not load: " + e.message; return; }
+  if(want !== key) return;
+  loader.parse(cache[key].slice(0), "", g => {
+    if(current) scene.remove(current);
+    current = g.scene; ctl.target.set(0, st.st === "ascended" ? 0.9 : 0.3, 0);
+    current.traverse(o => { if(o.isMesh){ const see = {holo:0.32, deep:0.22}[o.material.name]; if(see) o.material.opacity = see; o.material.transparent = true; o.material.depthWrite = o.material.opacity > 0.8; o.material.side = THREE.DoubleSide; } });
+    scene.add(current);
+    document.getElementById("info").textContent = EL[st.el] + " " + BASES[st.base].toLowerCase() + ", " + ST[st.st].toLowerCase() + " stage. Drag to turn it.";
+  }, e => { document.getElementById("info").textContent = "The model did not load: " + e.message; });
+}
+function chips(id, map, key){
+  const box = document.getElementById(id);
+  for(const k in map){ const b = document.createElement("button"); b.type="button"; b.id=id+"-"+k; b.textContent=map[k];
+    b.setAttribute("aria-pressed", String(st[key]===k));
+    b.onclick = () => { st[key]=k; box.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", String(x===b))); load(); };
+    box.append(b); }
+}
+chips("c-base", BASES, "base"); chips("c-el", EL, "el"); chips("c-st", ST, "st");
+function size(){ const w = cv.clientWidth, h = cv.clientHeight; renderer.setSize(w, h, false); cam.aspect = w/h; cam.updateProjectionMatrix(); }
+addEventListener("resize", size); size(); load();
+renderer.setAnimationLoop(() => { ctl.update(); renderer.render(scene, cam); });
+</script>
