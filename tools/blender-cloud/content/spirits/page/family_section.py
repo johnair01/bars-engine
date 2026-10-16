@@ -1,6 +1,6 @@
 """Round 13: a new family's first base as a page section and sheets, set beside the bases already built.
 
-    python3 family_section.py OUT_DIR NEW=DIR [Fox=DIR Tortoise=DIR ...] --noun raccoon --intro intro.html [--states DIR]
+    python3 family_section.py OUT_DIR NEW=DIR [Fox=DIR Tortoise=DIR ...] --noun=raccoon --intro=intro.html [--states=DIR]
 
 NEW is the new base's shellback.py OUT folder (neutral); every other NAME=DIR is an earlier base, shown beside it in the
 order given. --states is a states_sheet.py OUT folder, whose state sheet, squint sheet and veil trio join the section.
