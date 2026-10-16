@@ -36,6 +36,16 @@ import { ensureTodayLens } from '@/lib/lenses/ensure'
 import { addBarToHandForPlayer, type OverflowContext } from '@/lib/hand-service'
 import { writePlantTriadToBar } from '@/lib/garden/plant'
 import { mintQuestFromText } from '@/lib/quests/mint'
+import {
+  drawNote,
+  isOutOfDay,
+  LIBRARY_NOTE_KIND,
+  RESTABLE_STATUSES,
+  RESTING_STATUS,
+  restNote,
+  toSeedLibrary,
+  type SeedLibraryEntry,
+} from '@/lib/tap-the-vein/seed-library'
 
 /** Maturity/provenance for a TTV task's projected BAR (mirrors captureBar). */
 const TTV_BAR_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
@@ -141,6 +151,8 @@ const EXIT_STATES = new Set([
 const ALLOWED_TRANSITIONS: Record<string, Set<string>> = {
   committed: new Set(['in_progress', ...EXIT_STATES]),
   in_progress: new Set([...EXIT_STATES]),
+  // The seed library: a resting task can be let go from there. Drawing it back is drawSeed, not a status change.
+  [RESTING_STATUS]: new Set(['composted']),
   // Exit states are terminal — no outbound transitions (carry clones a fresh task instead).
 }
 
@@ -642,6 +654,144 @@ export async function carryTask(taskId: string): Promise<TtvResult<{ newSessionI
   }
 }
 
+function dayKey(d: Date): string {
+  return startOfDay(d).toISOString().slice(0, 10)
+}
+
+/**
+ * The seed library (six-faces-council council/moves/seed-library.md): set a live task aside to draw from later.
+ * It rests where it was named, out of the day's count, and nothing brings it back unasked. No reason is asked.
+ */
+export async function restTask(taskId: string): Promise<TtvResult<{ task: TtvTaskDTO }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  try {
+    const task = await db.tapTheVeinTask.findUnique({
+      where: { id: taskId },
+      select: { id: true, playerId: true, status: true },
+    })
+    if (!task) return { error: 'Task not found' }
+    if (task.playerId !== player.id) return { error: 'Forbidden' }
+    if (!RESTABLE_STATUSES.has(task.status)) return { error: `Cannot set aside a ${task.status} task` }
+
+    const updated = await db.$transaction(async (tx) => {
+      const t = await tx.tapTheVeinTask.update({
+        where: { id: task.id },
+        data: { status: RESTING_STATUS },
+        select: TASK_SELECT,
+      })
+      await tx.tapTheVeinTaskNote.create({
+        data: { taskId: task.id, playerId: player.id, kind: LIBRARY_NOTE_KIND, body: restNote(dayKey(new Date())) },
+      })
+      return t
+    })
+
+    revalidatePath('/tap-the-vein')
+    return { task: toTaskDTO(updated, new Map(), null) }
+  } catch (e) {
+    console.error('[ttv:restTask]', e)
+    return { error: 'Failed to set the task aside' }
+  }
+}
+
+/** Everything resting in his seed library, most recently set aside first. */
+export async function getSeedLibrary(): Promise<TtvResult<{ seeds: SeedLibraryEntry[] }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+  try {
+    return { seeds: await loadSeedLibrary(player.id) }
+  } catch (e) {
+    console.error('[ttv:getSeedLibrary]', e)
+    return { error: 'Failed to load the seed library' }
+  }
+}
+
+async function loadSeedLibrary(playerId: string): Promise<SeedLibraryEntry[]> {
+  const rows = await db.tapTheVeinTask.findMany({
+    where: { playerId, status: RESTING_STATUS },
+    select: {
+      id: true,
+      originalText: true,
+      updatedAt: true,
+      lensGoalId: true,
+      barId: true,
+      questId: true,
+      dailySession: { select: { sessionDate: true } },
+    },
+  })
+  return toSeedLibrary(rows)
+}
+
+/**
+ * Draw a seed back into today: the same task (same id, same quest or BAR) moves into today's session as a fresh
+ * commitment, so one id still runs from the morning it was named (`ttv-one-store`). It counts toward the day's cap
+ * like any commitment, and it is not a carry: carryCount stays as it was.
+ */
+export async function drawSeed(taskId: string): Promise<TtvResult<{ task: TtvTaskDTO }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  try {
+    const task = await db.tapTheVeinTask.findUnique({
+      where: { id: taskId },
+      select: { id: true, playerId: true, status: true, dailySession: { select: { sessionDate: true } } },
+    })
+    if (!task) return { error: 'Task not found' }
+    if (task.playerId !== player.id) return { error: 'Forbidden' }
+    if (task.status !== RESTING_STATUS) return { error: 'That task is not in the seed library' }
+
+    const today = startOfDay()
+    const updated = await db.$transaction(async (tx) => {
+      const session = await tx.tapTheVeinDailySession.upsert({
+        where: { playerId_sessionDate: { playerId: player.id, sessionDate: today } },
+        update: {},
+        create: { playerId: player.id, sessionDate: today, rawEntry: '', wordCount: 0 },
+        select: { id: true },
+      })
+      const live = await tx.tapTheVeinTask.count({
+        where: { dailySessionId: session.id, status: { in: [...ACTIVE_TTV_TASK_STATUSES] }, source: { not: 'board' } },
+      })
+      if (!canCommitTtvTask(live, MAX_TASKS_PER_DAY)) throw new Error('TTV_CAP_REACHED')
+      const maxRank = await tx.tapTheVeinTask.aggregate({
+        where: { dailySessionId: session.id },
+        _max: { priorityRank: true },
+      })
+      const t = await tx.tapTheVeinTask.update({
+        where: { id: task.id },
+        data: {
+          status: 'committed',
+          dailySessionId: session.id,
+          priorityRank: nextHistoricalPriorityRank(maxRank._max.priorityRank),
+        },
+        select: TASK_SELECT,
+      })
+      await tx.tapTheVeinTaskNote.create({
+        data: {
+          taskId: task.id,
+          playerId: player.id,
+          kind: LIBRARY_NOTE_KIND,
+          body: drawNote(dayKey(today), dayKey(task.dailySession.sessionDate)),
+        },
+      })
+      await tx.tapTheVeinDailySession.update({
+        where: { id: session.id },
+        data: { committedTaskCount: { increment: 1 } },
+      })
+      return t
+    })
+
+    revalidatePath('/tap-the-vein')
+    return { task: toTaskDTO(updated, new Map(), null) }
+  } catch (e) {
+    if (e instanceof Error && e.message === 'TTV_CAP_REACHED') {
+      return { error: `Today already has ${MAX_TASKS_PER_DAY} commitments; finish, carry or set one aside first` }
+    }
+    console.error('[ttv:drawSeed]', e)
+    return { error: 'Failed to draw the seed' }
+  }
+}
+
 /**
  * Keep/plant gesture (CGLA H1, lazy) — promote a task into a BAR so it joins the
  * core loop. Idempotent; returns the (existing or new) barId.
@@ -779,7 +929,7 @@ export async function upgradeTaskToQuest(taskId: string): Promise<TtvResult<{ ta
  */
 export type TtvPanelSummary = {
   status: 'not_started' | 'in_progress' | 'sealed'
-  setForToday: number // committed/in_progress/completed/assigned/upgraded — excludes composted + carried_over
+  setForToday: number // committed/in_progress/completed/assigned/upgraded — excludes composted, carried_over and resting
   carried: number // carried-in, still live
   completed: number
   sealedAt: string | null
@@ -831,11 +981,9 @@ export async function getTodayPanelSummary(): Promise<TtvResult<TtvPanelSummary>
       return { status: 'not_started', setForToday: 0, carried: 0, completed: 0, sealedAt: null, blocked: 0, openTasks: [] }
     }
 
-    const setForToday = session.tasks.filter(
-      (t) => t.status !== 'composted' && t.status !== 'carried_over',
-    ).length
+    const setForToday = session.tasks.filter((t) => !isOutOfDay(t.status)).length
     const carried = session.tasks.filter(
-      (t) => t.status !== 'composted' && t.status !== 'carried_over' && (t.carryCount > 0 || !!t.carriedFromDailySessionId),
+      (t) => !isOutOfDay(t.status) && (t.carryCount > 0 || !!t.carriedFromDailySessionId),
     ).length
     const completed = session.tasks.filter((t) => t.status === 'completed').length
 

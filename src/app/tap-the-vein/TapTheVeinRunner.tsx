@@ -22,6 +22,8 @@ import {
   commitTask,
   updateTaskStatus,
   carryTask,
+  restTask,
+  drawSeed,
   plantTask,
   sealSession,
   saveBrainstormCandidates,
@@ -37,6 +39,8 @@ import { TaskActionSheet, type SheetAction } from './TaskActionSheet'
 import { BrainstormFlow } from '@/components/brainstorm/BrainstormFlow'
 import { MenuPhase } from './MenuPhase'
 import { initialTtvPhase } from '@/lib/tap-the-vein/initial-phase'
+import { isOutOfDay, type SeedLibraryEntry } from '@/lib/tap-the-vein/seed-library'
+import { SeedLibrary } from './SeedLibrary'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -58,16 +62,18 @@ type Props = {
   campaigns: TtvCampaignOption[]
   /** The next year lens not yet locked in: one lens a morning (mm-intake-one-a-morning). */
   lensDomain?: LensDomainKey | null
+  /** What he set aside to draw from later. */
+  seeds?: SeedLibraryEntry[]
 }
 
 function countWords(s: string) {
   return s.trim().split(/\s+/).filter(Boolean).length
 }
 function isLive(t: TtvTaskDTO) {
-  return t.status !== 'composted' && t.status !== 'carried_over'
+  return !isOutOfDay(t.status)
 }
 
-export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null }: Props) {
+export function TapTheVeinRunner({ initial, element, nationName, vibulons, campaigns, lensDomain = null, seeds = [] }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -167,6 +173,8 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
             return updateTaskStatus({ taskId: id, status: 'completed' })
           case 'carry':
             return carryTask(id)
+          case 'rest':
+            return restTask(id)
           case 'plant':
             return plantTask({
               taskId: id,
@@ -289,6 +297,14 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               onOpenMenu={(t) => setMenuTask(t)}
               onOpenMorningMenu={() => setPhase('menu')}
               onSeal={() => run(() => sealSession(), () => setPhase('seal'))}
+              library={
+                <SeedLibrary
+                  seeds={seeds}
+                  pending={pending}
+                  onDraw={(id) => run(() => drawSeed(id))}
+                  onLetGo={(id) => run(() => updateTaskStatus({ taskId: id, status: 'composted', compostReason: 'no_reason' }))}
+                />
+              }
             />
           )}
 
@@ -758,7 +774,9 @@ function WorkPhase({
   onOpenMenu,
   onOpenMorningMenu,
   onSeal,
+  library,
 }: {
+  library?: React.ReactNode
   tasks: TtvTaskDTO[]
   liveTasks: TtvTaskDTO[]
   element: ElementKey
@@ -799,8 +817,10 @@ function WorkPhase({
       </div>
 
       <p style={{ fontFamily: mono, fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', textAlign: 'center', margin: '16px 0 0' }}>
-        Tap a card · start · complete · carry · compost · assign · upgrade
+        Tap a card · start · complete · carry · set aside · compost · assign · upgrade
       </p>
+
+      {library}
 
       <button
         type="button"

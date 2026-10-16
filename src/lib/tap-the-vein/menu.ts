@@ -365,7 +365,7 @@ export function suggestBridge(text: string, goals: TtvLensGoalOption[]): MenuSug
 
 // ─── The menu ───────────────────────────────────────────────────────────────
 
-const LIVE_EXCLUDED = new Set(['composted', 'carried_over'])
+const LIVE_EXCLUDED = new Set(['composted', 'carried_over', 'resting'])
 
 /**
  * Today's kept lines as menu items. Kept lines are today's live tasks and the
