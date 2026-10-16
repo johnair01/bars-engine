@@ -297,3 +297,50 @@ Wendell, 2026-10-13: "I think we're almost to the point where we can merge the b
 now wears the Cave of Lessons' J1 stone (`K.stoneOf`, `K.tileStone`; the tiles load after the first frame) and every spirit
 carries a small light of its own in its colour. The Cave of Lessons has this cave's sit-down in place. The rest of the merge
 is in `cave/DESIGN.md`, "One map".
+
+## Each daemon's own questions (Wendell, 14 October 2026)
+
+His words: "Updating ontology for the daemons. In the game master agents and in the games itself. Questions to ask
+each daemon/concerns for each daemon". The sets are in `../daemons/questions.js`, copied from the council's
+`council/daemons/questions.yaml`, with his exact words beside each plain question. Every set asks what the daemon
+works on, who it works for, how its work serves that boss, and what would happen without it.
+
+The Protector's chamber asks his four after "What do you protect the self from?": what it protects, how that keeps
+the body alive, what that is vulnerable to (the five elements, named as the W.A.V.E. names them), and what it fears
+would happen without it. The earlier questions stay, so a charge that falls fast still reaches the ready line first.
+The test checks the chamber's four against `questions.js`, so the two cannot drift. The Controller's chamber, next
+in the build order, takes its whole set: there the player picks who it works for, and the follow-up changes with the
+answer (`byBoss`).
+
+## The Controller's chamber (14 October 2026)
+
+The second chamber on the daemon path (board `dp-seven`), built on the Protector's: the same meeting, the three asks for
+permission and the refusal path, the cards and the open line, the charge meter and its easing, the W.A.V.E. on your own
+charge, sitting down, speaking as the voice and the keeping step. The hallway past the Protector now ends at the
+Controller's open chamber; "Walk on" builds the cave again around it from its first hallway, and the spirits walking with
+the player come too. The Skeptic waits at the shut mouth past it.
+
+- **Its questions** are Wendell's five from `../daemons/questions.js`, first and in his order: what it controls, who it
+  works for, how it does that work, what happens if its standards are violated, and what happens when it is not there.
+  Its hours, how it is thanked and how that feels follow, as in the Protector's chamber. The test checks the five and the
+  boss follow-ups against `questions.js`.
+- **The boss question** (`dq-boss-chain`) is where the chain shows in play. The player picks who it works for: the
+  Protector, the self, control itself or the vulnerable child (the Player, `bosses` in `questions.js`), or names it in its
+  own words, which is always in voice. The guide answers by boss, and the method question that follows changes with the
+  answer: his three follow-ups (`byBoss`), and for the vulnerable child, where he gave none, the plain question. The
+  method question's cards change by boss too. The boss is saved with the Controller's record and shown at the mouth ("It
+  works for the Protector.").
+- **Its look and lines** come from the cave's daemon row ("To set the standard.", the rod) and the council's
+  `daemons.yaml` ("Not yet. Not until this is handled."). Choices, all of them, as are the cards.
+- **Saving.** The save gains `chamber` (0 the Protector, 1 the Controller); older saves are at 0. Reaching a chamber takes
+  its voice off the list of parts waiting by the wall, since it is heard there now. Forgetting a voice sends the player back
+  to the start of its chamber; "Start at the mouth again" begins with the Protector.
+- **Tells.** In a chamber, its own voice's job is in voice and talking about it is the self's ideas; the Protector can
+  now be one of the figures who speaks out of turn in a later chamber.
+- **The charge while it holds back** (Wendell, 15 October 2026, on playing the Controller: "we want to have the controllers
+  charge go down even when they are blocked this is some of the best times that the resistance is moving and we want players
+  to be able to track what makes the controller give up its resistance"). On the refusal path, Ask again first asks how
+  charged the voice is now, after what was offered (an assurance card, an assurance in the player's own words, whose words
+  are never saved, or waiting with it). A drop eases as after any answer. The charge is saved with what came before it
+  (`after: "held-<ask>"`, `why`, `from`), and each drop is shown at the keeping step ("What moved it while it held back") and
+  at the mouth ("Moved it: …"). Every voice gets this, since the chambers share the engine.

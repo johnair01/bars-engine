@@ -5202,3 +5202,36 @@ model WaveRoomRun {
   @@index([playerId, savedAt])
   @@map("wave_room_runs")
 }
+
+/// The Nonprofit Board's saves (six-faces-council board-off-vendor-quota, 2026-10-16). Append-only: every write from
+/// the board page is one row holding the whole document after the write, so the latest row per (board, collection,
+/// docId) is the document, and nothing is ever overwritten. The council's board-pull GitHub Action reads unrecorded rows
+/// through /api/board/pull and marks them recorded once main holds them. Contract: schema/board-save.schema.json in
+/// six-faces-council, mirrored by src/lib/board/save.ts.
+model BoardSave {
+  id         String    @id @default(cuid())
+  board      String
+  collection String
+  docId      String    @map("doc_id")
+  data       Json
+  receivedAt DateTime  @default(now()) @map("received_at")
+  recordedAt DateTime? @map("recorded_at")
+  record     String?
+  source     String    @default("board")
+
+  @@index([board, collection, docId, receivedAt])
+  @@index([board, recordedAt])
+  @@map("board_saves")
+}
+
+/// One row per acknowledged board pull, so the board page can show when main last caught up.
+model BoardPull {
+  id       String   @id @default(cuid())
+  board    String
+  at       DateTime @default(now())
+  recorded Int
+  record   String
+
+  @@index([board, at])
+  @@map("board_pulls")
+}
