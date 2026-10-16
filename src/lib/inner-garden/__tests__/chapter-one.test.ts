@@ -1,0 +1,91 @@
+import assert from 'node:assert/strict'
+import { parseSeedMetabolization, effectiveMaturity } from '@/lib/bar-seed-metabolization'
+import {
+  CHAPTER_ONE_STARTER_SCENARIOS,
+  INNER_GARDEN_CHAPTER_ONE_SOURCE,
+  INNER_GARDEN_CHAPTER_ONE_SOURCE_BAR,
+  MTGOA_CHAPTER_ONE_ALLYSHIP_DOMAIN,
+  MTGOA_CHAPTER_ONE_CAMPAIGN_REF,
+  MTGOA_CHAPTER_ONE_MOVE_TYPE,
+  buildChapterOneResultBarDraft,
+  buildChapterOneSourceBarDraft,
+  findChapterOneStarterScenario,
+} from '@/lib/inner-garden/chapter-one'
+
+const draft = {
+  signal: 'I keep noticing people talk around the actual problem.',
+  resistance: 'I am afraid naming it will make me difficult.',
+  emotionId: 'fear',
+  seedQuality: 72,
+  cultivationAction: 'name_the_charge',
+  harvestedInsight: 'The fear is asking for a cleaner question, not silence.',
+  firstMove: 'Ask one honest question in the planning thread.',
+  starterScenarioId: 'stayed_quiet',
+  usefulnessRating: 5,
+  clarityRating: 4,
+  confusingPart: 'I wanted to know what seed quality changes later.',
+}
+
+function testSourceDraft() {
+  const source = buildChapterOneSourceBarDraft(draft)
+  assert.equal(source.type, 'bar')
+  assert.equal(source.questSource, INNER_GARDEN_CHAPTER_ONE_SOURCE_BAR)
+  assert.equal(source.campaignRef, MTGOA_CHAPTER_ONE_CAMPAIGN_REF)
+  assert.equal(source.allyshipDomain, MTGOA_CHAPTER_ONE_ALLYSHIP_DOMAIN)
+  assert.equal(source.moveType, MTGOA_CHAPTER_ONE_MOVE_TYPE)
+  assert.equal(source.gameMasterFace, 'shaman')
+
+  const metadata = JSON.parse(source.agentMetadata)
+  assert.equal(metadata.chapter, 1)
+  assert.equal(metadata.signal, draft.signal)
+  assert.equal(metadata.resistance, draft.resistance)
+  assert.equal(metadata.starterScenarioId, draft.starterScenarioId)
+}
+
+function testResultDraft() {
+  const result = buildChapterOneResultBarDraft({
+    sourceBarId: 'bar_source',
+    sourceTitle: 'Call to Play: people talk around the problem',
+    sourceSeedMetabolization: null,
+    sourceNation: 'metal',
+    sourceIntensity: '4',
+    draft,
+    completedAt: '2026-06-24T00:00:00.000Z',
+  })
+
+  assert.equal(result.sourceBarId, 'bar_source')
+  assert.equal(result.questSource, INNER_GARDEN_CHAPTER_ONE_SOURCE)
+  assert.equal(result.campaignRef, MTGOA_CHAPTER_ONE_CAMPAIGN_REF)
+  assert.equal(result.allyshipDomain, MTGOA_CHAPTER_ONE_ALLYSHIP_DOMAIN)
+  assert.equal(result.moveType, MTGOA_CHAPTER_ONE_MOVE_TYPE)
+  assert.equal(result.nation, 'metal')
+  assert.match(result.description, /First move: Ask one honest question/)
+
+  const metadata = JSON.parse(result.agentMetadata)
+  assert.equal(metadata.source, INNER_GARDEN_CHAPTER_ONE_SOURCE)
+  assert.equal(metadata.chapter, 1)
+  assert.equal(metadata.firstMove, draft.firstMove)
+  assert.equal(metadata.seedQuality, 72)
+  assert.equal(metadata.starterScenarioId, draft.starterScenarioId)
+  assert.equal(metadata.playtestFeedback.usefulnessRating, 5)
+  assert.equal(metadata.playtestFeedback.clarityRating, 4)
+  assert.equal(metadata.playtestFeedback.confusingPart, draft.confusingPart)
+
+  const parsed = parseSeedMetabolization(result.seedMetabolization)
+  assert.equal(effectiveMaturity(parsed), 'context_named')
+  assert.equal(parsed.contextNote, draft.harvestedInsight)
+}
+
+function testStarterScenarios() {
+  assert.equal(CHAPTER_ONE_STARTER_SCENARIOS.length, 3)
+  const scenario = findChapterOneStarterScenario('make_it_worse')
+  assert.ok(scenario)
+  assert.match(scenario.signal, /afraid/)
+  assert.equal(findChapterOneStarterScenario('missing'), null)
+}
+
+testSourceDraft()
+testResultDraft()
+testStarterScenarios()
+
+console.log('inner-garden chapter one: BAR drafts OK')
