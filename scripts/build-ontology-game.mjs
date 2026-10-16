@@ -181,6 +181,10 @@ copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 
 // The stone tiles, baked by cave/bake_tiles.py and committed.
 mkdirSync(path.join(outDir, 'cave', 'textures'), { recursive: true });
 for (const t of ['wet_stone', 'dry_stone', 'crystal_vein']) copyFileSync(path.join(srcDir, 'cave', 'textures', t + '.jpg'), path.join(outDir, 'cave', 'textures', t + '.jpg'));
+// The daemon bodies, baked by cave/bake_daemons.py from character.py's WARP figures and committed. cave.js fetches one
+// only when a scene asks for that daemon.
+mkdirSync(path.join(outDir, 'cave', 'daemons'), { recursive: true });
+for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) copyFileSync(path.join(srcDir, 'cave', 'daemons', d + '.glb'), path.join(outDir, 'cave', 'daemons', d + '.glb'));
 mkdirSync(path.join(outDir, 'cave', 'rooms'), { recursive: true });
 copyFileSync(path.join(srcDir, 'cave', 'rooms', 'wave-room', 'room.glb'), path.join(outDir, 'cave', 'rooms', 'wave-room.glb'));
 writeFileSync(path.join(outDir, 'index.html'), html);
