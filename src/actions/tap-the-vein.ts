@@ -44,6 +44,9 @@ import {
   RESTING_STATUS,
   restNote,
   toSeedLibrary,
+  keepNote,
+  libraryDays,
+  resurfacing,
   type SeedLibraryEntry,
 } from '@/lib/tap-the-vein/seed-library'
 
@@ -719,9 +722,49 @@ async function loadSeedLibrary(playerId: string): Promise<SeedLibraryEntry[]> {
       barId: true,
       questId: true,
       dailySession: { select: { sessionDate: true } },
+      notes: { where: { kind: LIBRARY_NOTE_KIND }, select: { body: true, createdAt: true } },
     },
   })
   return toSeedLibrary(rows)
+}
+
+/**
+ * Keep a resurfaced seed resting (six-faces-council docs/seed-library.md): it climbs one rung of the ladder and comes
+ * back later. The note keeps the path. Nothing else about the task changes.
+ */
+export async function keepResting(taskId: string): Promise<TtvResult<{ dueDay: string }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+
+  try {
+    const task = await db.tapTheVeinTask.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        playerId: true,
+        status: true,
+        updatedAt: true,
+        notes: { where: { kind: LIBRARY_NOTE_KIND }, select: { body: true, createdAt: true } },
+      },
+    })
+    if (!task) return { error: 'Task not found' }
+    if (task.playerId !== player.id) return { error: 'Forbidden' }
+    if (task.status !== RESTING_STATUS) return { error: 'That task is not in the seed library' }
+
+    const now = new Date()
+    const today = now.toISOString().slice(0, 10)
+    const { restDay, keepDays } = libraryDays(task.notes, task.updatedAt)
+    const { dueDay } = resurfacing(restDay, [...keepDays, today], today)
+    await db.tapTheVeinTaskNote.create({
+      data: { taskId: task.id, playerId: player.id, kind: LIBRARY_NOTE_KIND, body: keepNote(today, dueDay) },
+    })
+
+    revalidatePath('/tap-the-vein')
+    return { dueDay }
+  } catch (e) {
+    console.error('[ttv:keepResting]', e)
+    return { error: 'Failed to keep the seed resting' }
+  }
 }
 
 /**
