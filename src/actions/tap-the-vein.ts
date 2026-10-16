@@ -145,6 +145,7 @@ const ALLOWED_TRANSITIONS: Record<string, Set<string>> = {
 }
 
 const COMPOST_REASONS = new Set([
+  'no_reason',
   'not_relevant',
   'already_done',
   'assigned_elsewhere',
