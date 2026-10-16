@@ -78,6 +78,9 @@ export default defineConfig({
       'src/lib/__tests__/board-save-contract.test.ts',
       'src/app/api/board/saves/__tests__/route.test.ts',
       'src/lib/board/__tests__/dispatch.test.ts',
+      'src/lib/board/__tests__/council-page.test.ts',
+      'src/app/board/council/__tests__/route.test.ts',
+      'src/app/api/board/pull/__tests__/route.test.ts',
     ],
   },
   resolve: {

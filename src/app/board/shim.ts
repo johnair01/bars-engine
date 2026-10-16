@@ -4,9 +4,12 @@
  * page makes to bars-engine itself (the Tap the Vein status check), as a same-origin fetch. Nothing else is offered:
  * the page's Send button is hidden by board/nonprofit/build.py, and the board-pull Action records saves on main.
  */
-export const BOARD_SHIM = `<script>
+export type BoardName = 'nonprofit' | 'council'
+
+/** The shim for one board. `path` is where that page is served, so a signed-out save returns to it after /login. */
+export const boardShim = (board: BoardName, path: string) => `<script>
 (() => {
-  const BOARD = 'nonprofit', API = '/api/board/saves';
+  const BOARD = '${board}', API = '/api/board/saves';
   let docs = {}, sig = '', ready = false, lastPull = null, unrecorded = null;
   const subs = [];
   const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
@@ -33,7 +36,7 @@ export const BOARD_SHIM = `<script>
   }
   async function refresh(){
     const r = await fetch(API + '?board=' + BOARD, {credentials: 'same-origin', cache: 'no-store'});
-    if (r.status === 401){ location.href = '/login?returnTo=/board'; return; }
+    if (r.status === 401){ location.href = '/login?returnTo=${path}'; return; }
     if (!r.ok) throw new Error('board load ' + r.status);
     const j = await r.json(); lastPull = j.lastPull; unrecorded = j.unrecorded; pullNote();
     const s = JSON.stringify(j.docs || {});
@@ -70,3 +73,5 @@ export const BOARD_SHIM = `<script>
   window.claude = {use: name => name === 'db' ? dbReady : name === 'mcp' ? Promise.resolve(mcp) : Promise.resolve(null)};
 })();
 </script>`
+
+export const BOARD_SHIM = boardShim('nonprofit', '/board')

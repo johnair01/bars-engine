@@ -13,6 +13,11 @@ export const COLLECTIONS = [
 export const RECORD_KINDS = new Set<string>([
   'positions', 'questions', 'terms', 'causes', 'steer', 'steps', 'blockers', 'picks', 'morning', 'ttv',
 ])
+/** The `board` of a request: absent means the nonprofit board; anything not in BOARDS is null. */
+export function parseBoard(v: unknown): (typeof BOARDS)[number] | null {
+  if (v === undefined || v === null || v === '') return 'nonprofit'
+  return BOARDS.includes(v as never) ? (v as (typeof BOARDS)[number]) : null
+}
 export const MAX_SAVE_BYTES = 256 * 1024
 
 export type BoardSaveInput = {
