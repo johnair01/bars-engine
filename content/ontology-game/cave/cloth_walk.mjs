@@ -23,23 +23,27 @@ const job = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 const STAND = 0.5, EASE = 0.6, FPS = 60, LEG = 0.96 - 0.085;   // character.py LEG
 
 // ---- the walk: character.py pose(), with the stride's amplitude and the steps a second as parameters ------------
+// max(0, x) and |x| with their corners rounded over -SOFT..SOFT, as character.py ramp() and sabs() (round 7)
+const SOFT = 0.3;
+const ramp = (x, e = SOFT) => x <= -e ? 0 : x >= e ? x : 2 * e * (((x + e) / (2 * e)) ** 3 - ((x + e) / (2 * e)) ** 4 / 2);
+const sabs = (x, e = SOFT) => ramp(x, e) + ramp(-x, e);
 function pose(t, A, S) {
   const ph = t * Math.PI * S, sL = Math.sin(ph), sR = Math.sin(ph + Math.PI), r = {};
   r.hipL = -A * sL; r.hipR = -A * sR;
-  r.kneeL = 0.12 + 0.95 * Math.max(0, Math.cos(ph));
-  r.kneeR = 0.12 + 0.95 * Math.max(0, Math.cos(ph + Math.PI));
+  r.kneeL = 0.12 + 0.95 * ramp(Math.cos(ph));
+  r.kneeR = 0.12 + 0.95 * ramp(Math.cos(ph + Math.PI));
   r.ankleL = -(r.hipL + r.kneeL) * 0.8; r.ankleR = -(r.hipR + r.kneeR) * 0.8;
   const B = A * 0.85;
   r.shoulderL = B * sL; r.shoulderR = B * sR;
-  r.elbowL = -(0.25 + 0.35 * Math.max(0, -sL));
-  r.elbowR = -(0.25 + 0.35 * Math.max(0, -sR));
-  r.hemF = 0.9 * Math.min(r.hipL, r.hipR);
-  r.hemB = 0.9 * Math.max(r.hipL, r.hipR);
+  r.elbowL = -(0.25 + 0.35 * ramp(-sL));
+  r.elbowR = -(0.25 + 0.35 * ramp(-sR));
+  r.hemF = -0.9 * A * sabs(sL);                    // 0.9 min(hipL, hipR), rounded
+  r.hemB = 0.9 * A * sabs(sL);                     // 0.9 max(hipL, hipR), rounded
   const rot = {};
   for (const k in r) rot[k] = [r[k], 0];
   rot.spine = [0.07, 0.14 * sL];
   rot.hips = [0, -0.1 * sL];
-  return { rot, drop: LEG * (1 - Math.cos(A)) * 0.85 * Math.abs(sL) };
+  return { rot, drop: LEG * (1 - Math.cos(A)) * 0.85 * sabs(sL) };
 }
 
 // 4 x 4 matrices, column-major

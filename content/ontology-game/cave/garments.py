@@ -1567,7 +1567,7 @@ def main():
     if a.sheet_only:                                       # render again from the GLBs already in --out
         with open(os.path.join(a.out, "report.json")) as f:
             rep = json.load(f)
-        sheet({(r["build"], r["palette"]): r["file"] for r in rep["figures"]}, rep["garments"], a.out)
+        sheet({(r["build"], r["palette"]): r["file"] for r in rep["figures"]}, rep["garments"], a.out, a.walk_only)
         return
     combos = [(b, p) for b in C.BUILDS for p in C.PALETTES] if a.all else [(a.build, a.palette)]
     figs, report = {}, []

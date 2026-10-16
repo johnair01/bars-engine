@@ -1,7 +1,7 @@
 # Cloth: what we learned, and what to read before changing cloth.js
 
 The robe's skirt is cloth every frame (`cloth.js`, the same code in the game and in Blender through
-`cloth_walk.mjs`). This file holds what rounds 1 to 6 of J5 taught, so the same problems do not come back. Read it
+`cloth_walk.mjs`). This file holds what rounds 1 to 7 of J5 taught, so the same problems do not come back. Read it
 before any change to `cloth.js`, the robe's skin weights below the belt, the leg capsules or the hem bones.
 
 ## Measure first, then look
@@ -104,6 +104,37 @@ at a fixed 60 frames a second. Before round 6 it used the headless browser's own
 where the cloth's 16 substeps covered 33 ms of a 50 ms frame, and both the jitter and the cost were wrong. Some motion at the belt while walking is the walk itself: `pose()` drops the
 hips by `|sin|`, which has a corner at each footfall. That is the figure's walk, J4's, and it moves the belt with
 the body.
+
+## The cuffs, the ankles and the hem (round 7)
+
+Wendell on round 6: "Better hems around arms and legs still a bit jittery". J5d now measures the sleeve cuffs, the
+ankle ties, the hem's edge and its turned fold as **jitter**: a point's frame-to-frame change in speed (its second
+difference) less the mean of that change over the five frames around it. A smooth swing, however fast, scores nothing;
+a corner in the motion scores its size. Each is a pass condition, walking (99th percentile) and standing (largest).
+
+- **The walk turned corners.** cave.js poseAvatar, which J4 baked, bends the knee by `max(0, cos)`, folds the elbow by
+  `max(0, -sin)` and sinks the hips by `|sin|`. Each starts at full speed from a standstill, twice a step: the knee's
+  speed jumps by 6 radians a second, which throws the ankle 45 mm off its path in one frame at 60 a second. The cuffs
+  and ankles are skinned, not cloth, so this was all of their jitter. `ramp()` and `sabs()` (character.py and
+  cloth_walk.mjs) round each corner over ±0.3: the slope is a smoothstep, so neither the speed nor the acceleration
+  jumps. The knee keeps 3° more bend at its straightest. cave.js's own avatar still walks with the corners; the
+  figures bring their own Walk to the game.
+- **The clip began late.** The glTF exporter writes a key's time as frame / fps, so a walk keyed from frame 1 started
+  its clip at 1/24 s, and three.js held the first pose that long at every loop: a hitch once a second. The GLB's keys
+  now start at frame 0.
+- **The GLB carries 60 keys a second.** One a frame at the game's 60, from `pose()` itself, made only while the GLB is
+  written (Blender keeps its 24 Bezier keys for the through test). Alone, 60 keys did not help (the corners were the
+  cause), but they keep the game on the formula the Node walk and the pictures use. 9 KB more per figure.
+- Cuffs 29 to 1.6 mm, ankle ties 35 to 3.2 mm walking; both 0 standing.
+- **The fold hung from the edge.** The turned hem (points marked 3) followed the hem's edge in a frame whose `t` pointed
+  at all the edge point's neighbours. The two along the edge cancel to the hem's curve, so where the hem curved round a
+  shin `t` swung between up the cloth and into the curve, and the fold, 3 cm deep, swung with it as a stiff lip. It cut
+  through the cloth in the cream teeth along the hem in the round 6 pictures. Each fold point now follows the cloth
+  point it lies against, so it keeps only its 6 mm off the cloth and takes the cloth's own curve: 68 to 31 mm.
+- **The hem's edge meets the shins.** The edge (28 mm) and the skirt (22 mm) jitter where the shins pass through the
+  cloth. Without the leg capsules both fall to about 7 mm, so it is contact, but none of contact without bounce (the
+  cloth leaving a leg no faster than its surface), friction 0, a wider margin, half the kick, 960 substeps or a lighter
+  hem moved it. It is the next place to look, after his look at round 7.
 
 ## Rounds 1 to 5, in one line each
 

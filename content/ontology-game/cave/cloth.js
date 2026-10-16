@@ -150,21 +150,23 @@
     var md = new Float32Array(P).fill(Infinity);
     if (o.blend > 0) for (i = 0; i < P; i++) if (free[i] && gd[i] < o.blendDepth) md[i] = gd[i] * o.blend;
     // followers (points marked 3: a hem turned back inside the cloth) are not simulated: each keeps its standing place
-    // in the frame of the cloth at its anchor, the nearest cloth point it hangs from. A fold 6 mm thick cannot be
-    // held by springs alone; it flips inside out.
+    // in the frame of the cloth at its anchor. A fold 6 mm thick cannot be held by springs alone; it flips inside out.
+    // Round 7: the anchor is the cloth point nearest the follower standing, the one it lies against, so it keeps only
+    // its 6 mm off the cloth and follows the cloth's own curve. Until round 6 the whole fold hung from the hem's edge
+    // as a stiff lip 3 cm deep: where the cloth curved round a shin the lip cut through it in cream teeth, and every
+    // turn of the edge swung it (68 mm of frame-to-frame jitter at the fold, 27 at the edge it hung from).
     var anchor = new Int32Array(P).fill(-1), solid = [];
     for (i = 0; i < P; i++) solid.push(fol[i] ? [] : adj[i].filter(function (q) { return !fol[q]; }));
-    for (var pass = 0; pass < 4; pass++) {
-      for (i = 0; i < P; i++) {
-        if (!fol[i] || anchor[i] >= 0) continue;
-        var best = -1, bd2 = Infinity;
-        for (var a2 = 0; a2 < adj[i].length; a2++) {
-          var q2 = adj[i][a2], an = fol[q2] ? anchor[q2] : q2;
-          if (an < 0 || (fol[q2] && pass === 0)) continue;
-          if (dist(i, q2) < bd2) { bd2 = dist(i, q2); best = an; }
-        }
-        anchor[i] = best;
+    var near = [];
+    for (i = 0; i < P; i++) if (!fol[i] && solid[i].length) near.push(i);
+    for (i = 0; i < P; i++) {
+      if (!fol[i]) continue;
+      var best = -1, bd2 = Infinity;
+      for (var a2 = 0; a2 < near.length; a2++) {
+        var q2 = near[a2], d2 = dist(i, q2);
+        if (d2 < bd2) { bd2 = d2; best = q2; }
       }
+      anchor[i] = best;
     }
     var fl = [];
     for (i = 0; i < P; i++) if (fol[i] && anchor[i] >= 0) fl.push(i);

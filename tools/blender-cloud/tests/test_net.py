@@ -165,7 +165,9 @@ def j5d():
     it (more than 2 cm), a fifth figure standing still keeps its belt row still against the body (round 6: the largest
     frame-to-frame change in the motion of the free points within 6 cm of the belt, relative to their skinned places,
     under 0.2 mm), the walking figure's belt row keeps under 10 mm (99th percentile; the walk's own quaternion keys
-    once made it 132 mm), and the cloth costs under 2.5 ms per figure for each 1/60 s of game time (skinning on the
+    once made it 132 mm), the sleeve cuffs, ankle ties, hem edge and turned hem stay under their jitter limits walking
+    and standing (round 7: j5_cloth.mjs LIMITS; the walk's corners made the cuffs 29 mm and the ankles 35), and the
+    cloth costs under 2.5 ms per figure for each 1/60 s of game time (skinning on the
     CPU, the step and writing the points). The cloud browser draws without a graphics chip, so the phone is the judge of the
     frame rate; this bounds the cloth's own share."""
     needs("registry.npmjs.org")
@@ -188,7 +190,8 @@ def j5d():
     check(res["pass"], f"cloth: {res}")
     return (f"4 figures, {res['free']} cloth points each of {res['particles']}: {res['per_figure_ms']} ms a figure per "
             f"1/60 s (median; p95 for all four {res['p95_ms']} ms), skirt swings {res['skirt_swing_m']} m, belt still to "
-            f"{res['belt_jitter_mm']} mm standing ({res['belt_walk_jitter_mm']} mm walking, p99)")
+            f"{res['belt_jitter_mm']} mm standing ({res['belt_walk_jitter_mm']} mm walking, p99); walking jitter p99: "
+            + ", ".join(f"{k} {res['jitter_mm'][k + 'Walk']} mm" for k in ("cuff", "ties", "hem", "fold")))
 
 
 @test("N1")

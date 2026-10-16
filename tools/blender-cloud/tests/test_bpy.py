@@ -493,9 +493,9 @@ def j4b():
     root = copy_tree(tmpdir("j4b"))
     src = root / "content/ontology-game/cave/character.py"
     text = src.read_text()
-    bent = "0.12 + 0.95 * max(0.0, math.cos(ph))"
+    bent = "0.12 + 0.95 * ramp(math.cos(ph))"
     check(bent in text, "the knee line moved; update J4b")
-    src.write_text(text.replace(bent, "-(0.12 + 0.95 * max(0.0, math.cos(ph)))"))
+    src.write_text(text.replace(bent, "-(0.12 + 0.95 * ramp(math.cos(ph)))"))
     out = tmpdir("j4b-out")
     r, _ = run([src, "--out", out])
     check(r.returncode == 0, f"character.py exited {r.returncode}: {r.stderr[-300:]}")

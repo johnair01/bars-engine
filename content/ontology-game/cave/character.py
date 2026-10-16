@@ -12,7 +12,9 @@ The body starts from the body map's figure (body/build_figure.py: rounded parts,
 colour) and is stylized away from it after his first look (a bigger head, a plain trunk, rounder limbs), widened or
 narrowed by the build and fused into one surface. Its rig carries the cave avatar's joint names
 (cave.js buildAvatar: hips, spine, neck, head; hip, knee, ankle; shoulder, elbow, wrist), and its one animation,
-"Walk", is cave.js poseAvatar baked at a mid stride: two steps a second, so one cycle is one second, 24 keys.
+"Walk", is cave.js poseAvatar baked at a mid stride: two steps a second, so one cycle is one second, 24 keys in
+Blender and 60 in the GLB (one a frame in the game), with the corners of poseAvatar's max() and abs() rounded (round 7
+of J5, ramp()).
 
 Each figure is one GLB under 300 KB (the kill line). report.json says, per figure, its bytes, triangles and the walk's
 joint checks; the test (J4 in tools/blender-cloud/tests/test_bpy.py) checks the exported GLBs again on their own.
@@ -60,6 +62,7 @@ THEMES = {"robe_set": {"builds": BUILDS, "palettes": PALETTES}}
 
 # ---- the walk: cave.js poseAvatar with the stride held at its middle ------------------------------------------
 STEPS_PER_S, FPS, KEYS = 2, 24, 24          # cave.js STEPS_PER_S; one cycle (a left and a right step) is one second
+EXPORT_FPS = 60                             # the GLB's walk: a key a frame at the game's 60 (round 7)
 AMP = 0.4                                   # radians: cave.js clamps the swing to 0.2..0.62 by the step's length
 LEG = 0.96 - 0.085                          # hip to ankle, metres, for the hips' sink
 
@@ -247,6 +250,25 @@ PARENT.update({"hemF": "hips", "hemB": "hips"})
 HEM_BONES = ("hemF", "hemB")
 
 
+SOFT = 0.3                                  # the width of the walk's rounded corners (round 7)
+
+
+def ramp(x, e=SOFT):
+    """max(0, x) with its corner rounded over -e..e so its speed and its acceleration never jump (its slope is a
+    smoothstep). J4's walk took max(0, x) and |x| straight from cave.js: the knee began to bend, the elbow to fold and
+    the hips to sink at full speed from a standstill, twice a step, and the ankles and cuffs jerked (round 7)."""
+    if x <= -e:
+        return 0.0
+    if x >= e:
+        return x
+    u = (x + e) / (2 * e)
+    return 2 * e * (u ** 3 - u ** 4 / 2)
+
+
+def sabs(x, e=SOFT):
+    return ramp(x, e) + ramp(-x, e)
+
+
 def pose(t):
     """cave.js poseAvatar at walk time t (seconds), moving, mid stride: {bone: (rot about X, rot about Z)} and the
     hips' drop. cave.js turns groups about their own x (the figure's left) and y (up); in Blender those are X and Z."""
@@ -254,22 +276,22 @@ def pose(t):
     sL, sR = math.sin(ph), math.sin(ph + math.pi)
     r = {}
     r["hipL"], r["hipR"] = -A * sL, -A * sR
-    r["kneeL"] = 0.12 + 0.95 * max(0.0, math.cos(ph))
-    r["kneeR"] = 0.12 + 0.95 * max(0.0, math.cos(ph + math.pi))
+    r["kneeL"] = 0.12 + 0.95 * ramp(math.cos(ph))
+    r["kneeR"] = 0.12 + 0.95 * ramp(math.cos(ph + math.pi))
     r["ankleL"], r["ankleR"] = -(r["hipL"] + r["kneeL"]) * 0.8, -(r["hipR"] + r["kneeR"]) * 0.8
     B = A * 0.85
     r["shoulderL"], r["shoulderR"] = B * sL, B * sR
-    r["elbowL"] = -(0.25 + 0.35 * max(0.0, -sL))
-    r["elbowR"] = -(0.25 + 0.35 * max(0.0, -sR))
+    r["elbowL"] = -(0.25 + 0.35 * ramp(-sL))
+    r["elbowR"] = -(0.25 + 0.35 * ramp(-sR))
     # the hem bones (J5): the front panel follows the leg that is ahead, the back panel the thigh that is behind. A
     # positive turn about X swings a hanging bone back. Round 6: no longer the shin's kick too; the robe's cloth is held
     # near these bones (cloth.js blend), and a back panel that rose with the heel held the cloth up (CLOTH.md).
-    r["hemF"] = 0.9 * min(r["hipL"], r["hipR"])
-    r["hemB"] = 0.9 * max(r["hipL"], r["hipR"])
+    r["hemF"] = -0.9 * A * sabs(sL)                               # 0.9 min(hipL, hipR), rounded
+    r["hemB"] = 0.9 * A * sabs(sL)                                # 0.9 max(hipL, hipR), rounded
     rot = {k: (v, 0.0) for k, v in r.items()}
     rot["spine"] = (0.07, 0.14 * sL)
     rot["hips"] = (0.0, -0.1 * sL)
-    drop = LEG * (1 - math.cos(A)) * 0.85 * abs(sL)
+    drop = LEG * (1 - math.cos(A)) * 0.85 * sabs(sL)
     return rot, drop
 
 
@@ -411,14 +433,22 @@ def make(build_name, palette, theme="robe_set"):
     fused.materials.append(mat)
 
     # the walk
-    act = bpy.data.actions.new("Walk")
     rig.animation_data_create()
+    rig.animation_data.action = key_walk(rig, FPS)
+    scene.frame_start, scene.frame_end = 1, KEYS + 1
+    return fig, rig
+
+
+def key_walk(rig, fps, name="Walk", first=1):
+    """The walk (one second, pose()) keyed fps times a second as a new action, from frame first."""
+    act = bpy.data.actions.new(name)
+    held = rig.animation_data.action
     rig.animation_data.action = act
     for pb in rig.pose.bones:
         pb.rotation_mode = "QUATERNION"
-    for k in range(KEYS + 1):
-        t = k / FPS
-        rot, drop = pose(t % 1.0)
+    prev = {}
+    for k in range(fps + 1):
+        rot, drop = pose((k / fps) % 1.0)
         for pb in rig.pose.bones:
             Bm = pb.bone.matrix_local.to_3x3()
             ax, az = rot.get(pb.name, (0.0, 0.0))
@@ -427,13 +457,13 @@ def make(build_name, palette, theme="robe_set"):
             if k and q.dot(prev[pb.name]) < 0:
                 q.negate()                                         # keep the keys on one side, so they interpolate short
             pb.rotation_quaternion = q
-            pb.keyframe_insert("rotation_quaternion", frame=k + 1)
+            pb.keyframe_insert("rotation_quaternion", frame=k + first)
             if pb.name == "hips":
                 pb.location = Bm.inverted() @ Vector((0, 0, -drop))
-                pb.keyframe_insert("location", frame=k + 1)
+                pb.keyframe_insert("location", frame=k + first)
         prev = {pb.name: pb.rotation_quaternion.copy() for pb in rig.pose.bones}
-    scene.frame_start, scene.frame_end = 1, KEYS + 1
-    return fig, rig
+    rig.animation_data.action = held
+    return act
 
 
 def export(fig, rig, build_name, palette, out_dir, theme="robe_set"):
@@ -446,14 +476,31 @@ def export(fig, rig, build_name, palette, out_dir, theme="robe_set"):
     # round, so the hips and hem bones swung and snapped back every step: the jitter under the belt in the game.
     # three.js slerps linear quaternion keys the short way. Blender keeps its Bezier curves, which garments.py's
     # through test poses from (linear keys in Blender let the slight figure's knee through by 1 to 3 points).
-    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_normals=True,
-                              export_texcoords=False, export_skins=True, export_animations=True,
-                              export_animation_mode="ACTIONS", export_frame_range=True, export_force_sampling=True,
-                              export_vertex_color="ACTIVE", export_all_vertex_colors=False)
+    # Round 7 (his note on round 6: "Better hems around arms and legs still a bit jittery"): the game gets the walk keyed
+    # 60 times a second, one key a frame, from pose() itself. At 24 linear keys a second the elbows, knees and ankles
+    # turned a corner in speed at every key, 2 or 3 frames apart, and the cuffs and ankles shook with it (CLOTH.md).
+    # The keys start at frame 0: the exporter writes a key's time as frame / fps, and keys from frame 1 started the clip
+    # at 1/24 s, so three.js held the first pose that long at every loop, a hitch once a second.
+    # Blender keeps its own 24 Bezier keys for the through test; the dense action exists only while the GLB is written.
+    sc, keep = bpy.context.scene, rig.animation_data.action
+    held = (sc.render.fps, sc.frame_start, sc.frame_end)
+    keep.name, dense = "Walk-blender", key_walk(rig, EXPORT_FPS, first=0)
+    rig.animation_data.action = dense
+    sc.render.fps, sc.frame_start, sc.frame_end = EXPORT_FPS, 0, EXPORT_FPS
+    try:
+        bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_normals=True,
+                                  export_texcoords=False, export_skins=True, export_animations=True,
+                                  export_animation_mode="ACTIVE_ACTIONS", export_frame_range=True,
+                                  export_force_sampling=True, export_vertex_color="ACTIVE", export_all_vertex_colors=False)
+    finally:
+        rig.animation_data.action = keep
+        bpy.data.actions.remove(dense)
+        keep.name = "Walk"
+        sc.render.fps, sc.frame_start, sc.frame_end = held
     size = os.path.getsize(path)
     row = {"id": name, "theme": theme, "build": build_name, "palette": palette, "file": os.path.basename(path),
            "bytes": size, "tris": sum(len(p.vertices) - 2 for p in fused.polygons), "verts": len(fused.vertices),
-           "bones": len(PARENT), "keys": KEYS + 1}
+           "bones": len(PARENT), "keys": EXPORT_FPS + 1}
     if size > MAX_BYTES:
         raise SystemExit(f"{name}.glb is {size // 1024} KB, over the {MAX_BYTES // 1024} KB line")
     return row
