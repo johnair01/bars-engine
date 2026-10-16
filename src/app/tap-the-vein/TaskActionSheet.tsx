@@ -23,7 +23,9 @@ export type SheetAction =
   | { kind: 'compost'; reason: string }
   | { kind: 'assign'; campaignId: string; visibility: 'campaign' | null }
 
+// A release owes no reason (composting decision; council pass ttv-loop 1, `ttv-fruit-is-his`), so letting go comes first.
 const COMPOST_REASONS: Array<{ key: string; label: string; hint: string }> = [
+  { key: 'no_reason', label: 'Just let it go', hint: 'no reason needed' },
   { key: 'not_relevant', label: 'Not relevant', hint: 'stopped mattering' },
   { key: 'already_done', label: 'Already done', hint: 'handled earlier' },
   { key: 'assigned_elsewhere', label: 'Assigned elsewhere', hint: 'someone else owns it' },
@@ -137,9 +139,9 @@ export function TaskActionSheet({
         {mode === 'compost' && (
           <div>
             <Eyebrow>Compost · return to the field</Eyebrow>
-            <Title>Why let this one go?</Title>
+            <Title>Let this one go?</Title>
             <p style={{ fontFamily: body, fontSize: 12.5, lineHeight: 1.5, color: 'var(--bars-text-secondary)', margin: '6px 0 12px' }}>
-              Composting isn&rsquo;t failure — it feeds the soil. The reason is kept with the card.
+              Composting isn&rsquo;t failure — it feeds the soil. A reason is optional; if you pick one, it is kept with the card.
             </p>
             <div className="flex flex-col gap-2">
               {COMPOST_REASONS.map((r) => (

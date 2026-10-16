@@ -42,6 +42,7 @@ const STATUS_STYLE: Record<string, StatusStyle> = {
 }
 
 const REASON_LABEL: Record<string, string> = {
+  no_reason: 'let go',
   not_relevant: 'not relevant',
   already_done: 'already done',
   assigned_elsewhere: 'assigned elsewhere',

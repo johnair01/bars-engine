@@ -669,7 +669,8 @@ function CommitPhase({
         </select>
       ) : (
         <p style={{ marginTop: 14, fontFamily: mono, fontSize: 9, letterSpacing: '0.06em', color: 'var(--bars-text-muted)' }}>
-          No weekly goals yet — <a href="/lenses" style={{ color: purple, textDecoration: 'underline' }}>set one in Lenses</a> to align today&rsquo;s quests, or commit them as shadow quests.
+          No weekly goals yet. Commit them as they are: a task with no home yet is fine, and the council suggests one
+          from your saved free writes (pass ttv-loop 1). Or <a href="/lenses" style={{ color: purple, textDecoration: 'underline' }}>set one in Lenses</a>.
         </p>
       ))}
 
