@@ -225,8 +225,10 @@ def body_parts(build):
         palm = new("wrist" + n)
         # the wrist: a ball on the joint, which turns into itself at any bend, so a bent hand shows no stub at the
         # cuff (Wendell, 2026-10-16, "Problem areas": the stop hand's wrist crumpled), and a neck to the palm
-        ellipsoid(palm, (0, 0, 0), 0.02 * k, 0.02 * k, 0.02 * k)
-        limb(palm, (0, -0.002 * k, -0.008 * k), (0, -0.004 * k, -0.026 * k), 0.017 * k, 0.019 * k)
+        # (Wendell, 2026-10-16: the stop's wrists "still a little weird", a knob at the heel): the heel is as wide as
+        # the cuff's end, flat as a wrist is, so the two meet at a bend
+        ellipsoid(palm, (0, 0, 0), 0.021 * k, 0.021 * k, 0.021 * k)
+        ellipsoid(palm, (0, -0.003 * k, -0.02 * k), 0.016 * k, 0.027 * k, 0.022 * k)
         for f in FINGERS[1:]:
             h = lay[f + "1"][0]
             limb(palm, (s * 0.002, h.y * 0.35, -0.02 * k), h, 0.012 * k, lay[f + "1"][2] * 1.05)
@@ -261,7 +263,7 @@ def body_parts(build):
     limb(new("spine"), (-sx + 0.02, 0.0, 1.385), (sx - 0.02, 0.0, 1.385), 0.06 * wl, 0.06 * wl)
     for n in ("L", "R"):
         limb(new("shoulder" + n), *j["shoulder" + n], 0.054 * wl, 0.046 * wl)
-        limb(new("elbow" + n), *j["elbow" + n], 0.045 * wl, 0.031 * wl)
+        limb(new("elbow" + n), *j["elbow" + n], 0.045 * wl, 0.026 * wl)     # the forearm narrows to the wrist
         hand(n)
         limb(new("hip" + n), *j["hip" + n], 0.088 * wl, 0.066 * wl)
         limb(new("knee" + n), *j["knee" + n], 0.064 * wl, 0.05 * wl)
