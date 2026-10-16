@@ -3,12 +3,14 @@
 /**
  * SeedLibrary: the commitments he set aside, to draw from later (six-faces-council docs/seed-library.md).
  *
- * Closed until he opens it, with no count on the closed row: a resting task carries no pressure and nothing brings
- * it back unasked. Each seed can be drawn into today or let go with no reason.
+ * The library itself is closed until he opens it, with no count on the closed row. A few seeds come back on their
+ * own day of the spaced-resurfacing ladder (Wendell, 2026-10-16: "use spaced repetition to get it back into the
+ * board"): they show open, above the closed row, in Resurfaced. Each seed can be drawn into today or let go with no
+ * reason; a resurfaced one can also be kept resting, which sends it further up the ladder.
  */
 
 import { useState } from 'react'
-import type { SeedLibraryEntry } from '@/lib/tap-the-vein/seed-library'
+import { resurfacedToday, type SeedLibraryEntry } from '@/lib/tap-the-vein/seed-library'
 
 const mono = 'var(--bars-font-mono)'
 const display = 'var(--bars-font-display)'
@@ -80,6 +82,72 @@ export function SeedLibrary({
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/** The seeds that came back today, open on the day's work view. Renders nothing on a day none came back. */
+export function Resurfaced({
+  seeds,
+  pending,
+  onDraw,
+  onKeep,
+  onLetGo,
+}: {
+  seeds: SeedLibraryEntry[]
+  pending: boolean
+  onDraw: (id: string) => void
+  onKeep: (id: string) => void
+  onLetGo: (id: string) => void
+}) {
+  const back = resurfacedToday(seeds)
+  if (back.length === 0) return null
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <p style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--bars-text-secondary)', margin: 0 }}>
+        Back from the seed library
+      </p>
+      <div className="flex flex-col gap-2" style={{ marginTop: 8 }}>
+        {back.map((s) => (
+          <div
+            key={s.id}
+            className="rounded-xl"
+            style={{ padding: '10px 12px', background: 'var(--bars-surface-card)', boxShadow: 'inset 0 1px 0 var(--bars-inset-top), inset 0 0 0 1px var(--bars-line)' }}
+          >
+            <p style={{ fontFamily: body, fontSize: 13.5, color: 'var(--bars-text-primary)', margin: 0 }}>{s.text}</p>
+            <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.08em', color: 'var(--bars-text-muted)', margin: '3px 0 0' }}>
+              named {s.fromDay} · set aside {s.restDay}
+            </p>
+            <div className="flex flex-wrap gap-3" style={{ marginTop: 8 }}>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => onDraw(s.id)}
+                style={{ fontFamily: display, fontWeight: 700, fontSize: 12.5, color: purple, background: 'none', opacity: pending ? 0.5 : 1 }}
+              >
+                Draw into today
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => onKeep(s.id)}
+                style={{ fontFamily: display, fontWeight: 600, fontSize: 12.5, color: 'var(--bars-text-secondary)', background: 'none', opacity: pending ? 0.5 : 1 }}
+              >
+                Keep resting
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => onLetGo(s.id)}
+                style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', background: 'none', opacity: pending ? 0.5 : 1 }}
+              >
+                Let go
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

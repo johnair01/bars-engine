@@ -24,6 +24,7 @@ import {
   carryTask,
   restTask,
   drawSeed,
+  keepResting,
   plantTask,
   sealSession,
   saveBrainstormCandidates,
@@ -40,7 +41,7 @@ import { BrainstormFlow } from '@/components/brainstorm/BrainstormFlow'
 import { MenuPhase } from './MenuPhase'
 import { initialTtvPhase } from '@/lib/tap-the-vein/initial-phase'
 import { isOutOfDay, type SeedLibraryEntry } from '@/lib/tap-the-vein/seed-library'
-import { SeedLibrary } from './SeedLibrary'
+import { Resurfaced, SeedLibrary } from './SeedLibrary'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -298,12 +299,21 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
               onOpenMorningMenu={() => setPhase('menu')}
               onSeal={() => run(() => sealSession(), () => setPhase('seal'))}
               library={
-                <SeedLibrary
-                  seeds={seeds}
-                  pending={pending}
-                  onDraw={(id) => run(() => drawSeed(id))}
-                  onLetGo={(id) => run(() => updateTaskStatus({ taskId: id, status: 'composted', compostReason: 'no_reason' }))}
-                />
+                <>
+                  <Resurfaced
+                    seeds={seeds}
+                    pending={pending}
+                    onDraw={(id) => run(() => drawSeed(id))}
+                    onKeep={(id) => run(() => keepResting(id))}
+                    onLetGo={(id) => run(() => updateTaskStatus({ taskId: id, status: 'composted', compostReason: 'no_reason' }))}
+                  />
+                  <SeedLibrary
+                    seeds={seeds}
+                    pending={pending}
+                    onDraw={(id) => run(() => drawSeed(id))}
+                    onLetGo={(id) => run(() => updateTaskStatus({ taskId: id, status: 'composted', compostReason: 'no_reason' }))}
+                  />
+                </>
               }
             />
           )}
