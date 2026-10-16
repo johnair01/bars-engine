@@ -11,8 +11,8 @@ garments.py writes to `$W/cloth-jobs`, about two seconds a run). It measures:
 
 - **float**: how far above its standing height a hem point sits while no leg is within 5 cm of it. A hem with
   nothing under it should hang at or below its standing height. Round 5: 70 mm on average at a normal stride.
-  Round 6: about 3 mm.
-- **back hem rise**: the 95th percentile of the back hem's rise over the walk. Round 5: 27 cm. Round 6: about 11 cm.
+  Round 6: about 4 mm.
+- **back hem rise**: the 95th percentile of the back hem's rise over the walk. Round 5: 27 cm. Round 6: about 13 cm.
 - **stand**: the hem's height after the figure has stood for four seconds. It must hang at or a few mm below its
   draped height.
 - **bulge under the belt**: how far the cloth just below the belt strays from its skinned place. Round 5: 5.5 cm
@@ -72,7 +72,24 @@ and the knee comes through between its points. Leave it at 1.
 
 ## The belt
 
-Wendell on round 5: "there’s jitteriness in the belt now". Round 6 found two causes and fixed both:
+Wendell on round 5: "there’s jitteriness in the belt now". Round 6 found four causes and fixed all of them:
+
+- **The walk's keys swung the long way round.** Blender keyed the walk with Bezier curves, and the glTF exporter
+  wrote them as cubic splines whose quaternions flip sign between some keys (hips, `hemB`, both hips' joints, both
+  shoulders) with tangents near 48. three.js interpolates cubic quaternion keys component by component and does not
+  take the short way, so between those keys the hips and the hem bones swung and snapped back on every step. The belt
+  row's skinned places jumped 3 cm from one frame to the next. The export now samples the walk at every frame and
+  writes linear keys (`export_force_sampling`, `character.py`), and three.js slerps linear quaternion keys the short
+  way. J5d's walking belt measure went from 132 mm to 6 mm. Blender keeps its Bezier curves: keyed linear in Blender
+  too, the walk moved off the formula between keys and the slight figure's knee came through by 1 to 3 points. Blender
+  never showed this, because Blender evaluates its own curves, and the Node walk (`cloth_walk.mjs`) poses by formula.
+  Only a test in three.js with the exported GLB sees what the game sees. Any new animation goes through J5d or a test
+  like it.
+- **A point on the edge of the leg clearance buzzed.** The blend band let go of any point within `blendClear` of a
+  leg and pulled every other point. A point sitting on that edge was pulled one substep and let go the next, and
+  buzzed by 1.5 mm at 30 a second on a figure standing still. The pull now fades in over a second `blendClear` beyond
+  the first (smoothstep), and the buzz is gone (3.4 mm to under 0.03 mm in J5d). Fading it in inside the first band
+  instead let the knee through.
 
 - **The robe showed through the sash.** The robe is solidified 4 mm outward (`THICK`), and the sash's edges sat 3
   mm off the robe's inner face. At every bend the robe's outer face came through the band's edges in ragged teeth.
@@ -82,7 +99,9 @@ Wendell on round 5: "there’s jitteriness in the belt now". Round 6 found two c
   the band hold it to 1.5 cm standing, and the tails lie `TAIL_OFF` (2.2 cm) off the robe.
 
 J5d (`j5_cloth.mjs`) stands a fifth figure still and fails if the belt row's motion relative to the body changes by
-more than 0.2 mm from frame to frame. Some motion at the belt while walking is the walk itself: `pose()` drops the
+more than 0.2 mm from frame to frame, or by more than 10 mm (99th percentile) on a walking figure. It runs game time
+at a fixed 60 frames a second. Before round 6 it used the headless browser's own frame time (about 16 a second),
+where the cloth's 16 substeps covered 33 ms of a 50 ms frame, and both the jitter and the cost were wrong. Some motion at the belt while walking is the walk itself: `pose()` drops the
 hips by `|sin|`, which has a corner at each footfall. That is the figure's walk, J4's, and it moves the belt with
 the body.
 
@@ -93,8 +112,9 @@ the body.
   bones remain only as the cloth's skinned place.
 - **A fold 6 mm thick cannot be held by springs.** The turned hem (points marked 3) is not simulated. Each point
   follows its anchor's frame, or the fold flips inside out.
-- **Friction on a leg carries cloth up.** Round 5 used 0.08. Round 6 uses 0, since with the band in place the
-  cloth needs no help to stay on a leg.
+- **Friction keeps cloth with the leg under it.** Round 5 used 0.08. Round 6 tried 0 and the back of the knee came
+  through on some drapes: the band pulled the cloth one way while the leg slid out from under it. At 0.15 every drape
+  tested holds, and the float barely changes (`friction`).
 - **The through test is ray parity.** A body point is covered when a ray out from its bone crosses the cloth an
   odd number of times (one crossing for a plain skirt, three through a fold). The nearest face alone is fooled
   where cloth folds.
@@ -113,7 +133,10 @@ the body.
 - Macklin, Müller, Chentanez, "XPBD: Position-Based Simulation of Compliant Constrained Dynamics", 2016, and
   Macklin et al., "Small Steps in Physics Simulation", 2019: substeps over iterations. `cloth.js` runs fixed
   substeps (480 a second), so its stiffnesses do not change with the frame rate. A change to `substepHz` changes
-  every stiffness, and XPBD compliance is the way to make them independent of it.
+  every stiffness, and XPBD compliance is the way to make them independent of it. Each frame is cut into whole
+  substeps no longer than 1/480 s, so the cloth always lands on the body's time. Carrying a remainder over to the
+  next frame made a 60-frame second hold 7, 8 or 9 substeps a frame by rounding, and the pins covered each frame's move
+  at a varying speed. The cloth costs about 1.9 ms per figure for each 1/60 s in headless Chromium.
 - Kim, Chentanez, Müller-Fischer, "Long Range Attachments: A Method to Simulate Inextensible Clothing in Computer
   Games", SCA 2012, https://diglib.eg.org/items/909412a2-8791-41ce-acba-f084965a2633/full: the tethers. Unreal
   warns they can look puppet-like when tight. `tetherSlack` is 1.02.

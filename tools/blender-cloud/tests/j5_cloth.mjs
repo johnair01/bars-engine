@@ -6,8 +6,12 @@
 // checks the cloth is alive: every point a number, and the hem swinging away from where plain skinning would put it.
 // Round 6 (his note on round 5: "there’s jitteriness in the belt"): one more figure stands still, and the belt row (the
 // free points within 6 cm of the belt) must keep still against the body: belt_jitter_mm, the largest frame-to-frame
-// change in its motion relative to its skinned place (|second difference|), under 0.2 mm standing; the same while
-// walking is reported (belt_walk_jitter_mm, 99th percentile).
+// change in its motion relative to its skinned place (|second difference|), under 0.2 mm standing, and the same while
+// walking (belt_walk_jitter_mm, 99th percentile) under 10 mm. The walking check caught the walk itself: the GLB's cubic
+// quaternion keys flipped sign between keys, and three.js swung the hips and hem bones the long way round (132 mm;
+// linear keys, 6 mm). Game time runs at a fixed 60 frames a second, so a slow headless frame does not stand in for
+// the cloth: before round 6 a 50 ms frame stepped only 33 ms of cloth and was counted as three frames, which
+// understated the cost (about 1.2 ms then, about 1.9 ms per figure counted honestly; the budget is 2.5 ms).
 //   J5_DIR=$W/j5 FIGURES=4 node j5_cloth.mjs        (prints one JSON line; J5_SHOT=path saves a picture)
 import http from 'node:http';
 import { readFileSync, existsSync, writeFileSync } from 'node:fs';
@@ -67,10 +71,12 @@ for (let n = 0; n <= ${FIGURES}; n++) {                // the last one stands st
 const still = walkers.pop(); still.root.position.set(0, 0, -3); walkers.push(still);
 const SPEED = 1.36;                                  // m/s: character.py's stride at two steps a second
 const costs = [], t0 = performance.now();
-let last = t0, bad = 0, swing = 0;
+let last = t0, bad = 0, swing = 0, nf = 0;
 cam.position.set(4.5, 1.3, 2.0);
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  // game time runs at 60 frames a second whatever the headless browser manages (about 16 here): at a 50 ms frame the
+  // cloth's 16 sub-steps cover only 33 ms while the body moves the whole 50, which reads as jitter that is not the cloth's
+  const dt = 1 / 60; last = now;
   for (const w of walkers) if (!w.still) { w.mixer.update(dt); w.root.translateZ(SPEED * dt); }
   scene.updateMatrixWorld(true);
   const a = performance.now();
@@ -80,13 +86,13 @@ function frame(now) {
   for (const w of [walkers[0], still]) {           // the belt row's motion against its skinned place
     const c = w.cloth.cloth, rel = w.belt.map(p => [0, 1, 2].map(k => c.x[3 * p + k] - c.tgt[3 * p + k]));
     w.hist.push(rel); if (w.hist.length > 3) w.hist.shift();
-    if (now - t0 > 3000 && w.hist.length === 3) for (let j = 0; j < rel.length; j++)
+    if (w.n = (w.n || 0) + 1, w.n > 180 && w.hist.length === 3) for (let j = 0; j < rel.length; j++)
       w.jit.push(1000 * Math.hypot(...[0, 1, 2].map(k => w.hist[2][j][k] - 2 * w.hist[1][j][k] + w.hist[0][j][k])));
   }
   const w0 = walkers[0];
   cam.lookAt(w0.root.position.x, 0.8, w0.root.position.z); cam.position.z = w0.root.position.z + 2.0;
   renderer.render(scene, cam);
-  if (now - t0 > 6000) {
+  if (++nf > 360) {
     // alive: every point a number; the free points away from where skinning alone puts them (the hem swings)
     const c = w0.cloth.cloth, x = c.x;
     for (let i = 0; i < x.length; i++) if (!isFinite(x[i])) bad++;
@@ -136,5 +142,5 @@ console.log(JSON.stringify({
   per_figure_ms: +(perFigure || 0).toFixed(2), unit: done.unit, gravity: done.grav, particles: done.particles, free: done.free, verts: done.verts,
   not_numbers: done.bad, skirt_swing_m: +(done.swing || 0).toFixed(3), belt_points: done.beltN,
   belt_jitter_mm: +(done.beltStill || 0).toFixed(3), belt_walk_jitter_mm: +(done.beltWalk || 0).toFixed(3), errors,
-  pass: !errors.length && done.bad === 0 && done.swing > 0.02 && perFigure < 1.5 && done.beltN > 0 && done.beltStill < 0.2,
+  pass: !errors.length && done.bad === 0 && done.swing > 0.02 && perFigure < 2.5 && done.beltN > 0 && done.beltStill < 0.2 && done.beltWalk < 10,
 }));

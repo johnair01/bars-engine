@@ -164,8 +164,9 @@ def j5d():
     With four figures walking, every cloth point stays a number, the skirt swings away from where skinning alone puts
     it (more than 2 cm), a fifth figure standing still keeps its belt row still against the body (round 6: the largest
     frame-to-frame change in the motion of the free points within 6 cm of the belt, relative to their skinned places,
-    under 0.2 mm), and the cloth costs under 1.5 ms per figure for each 1/60 s it runs (skinning on the CPU, the
-    step and writing the points). The cloud browser draws without a graphics chip, so the phone is the judge of the
+    under 0.2 mm), the walking figure's belt row keeps under 10 mm (99th percentile; the walk's own quaternion keys
+    once made it 132 mm), and the cloth costs under 2.5 ms per figure for each 1/60 s of game time (skinning on the
+    CPU, the step and writing the points). The cloud browser draws without a graphics chip, so the phone is the judge of the
     frame rate; this bounds the cloth's own share."""
     needs("registry.npmjs.org")
     root = W / "cave-test"

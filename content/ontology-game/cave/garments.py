@@ -1321,8 +1321,15 @@ def build_all(build, palette, out_dir, do_fit=True):
         bpy.ops.wm.save_as_mainfile(filepath=os.environ["GARMENTS_SAVE"])
     caps = leg_capsules(fig, build)
     R["cloth"] = json.dumps({"capsules": caps})          # glTF extras: cloth.js reads the leg capsules from here
-    cres = cloth_walk(R, rig, [] if NO_LEGS else caps)
     leg = lambda i: main_bone(W[i]) if main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") else None
+    for opts in json.loads(os.environ.get("CLOTH_SWEEP", "[]")):   # for tuning: cloth.js options tried on this one drape
+        os.environ["CLOTH_OPTS"] = json.dumps(opts)
+        cloth_walk(R, rig, caps)
+        n, _ = through(fig, cover, R, keys, parts, axis, legs, cloth_z=1.0, cloth_limb=leg)
+        print(f"sweep {json.dumps(opts)}: through {max(n)} at worst, {sum(n)} in all", flush=True)
+        POSED.pop(R.name, None)
+    os.environ.pop("CLOTH_OPTS", None) if os.environ.get("CLOTH_SWEEP") else None
+    cres = cloth_walk(R, rig, [] if NO_LEGS else caps)
     counts, _ = through(fig, cover, R, keys, parts, axis, legs, cloth_z=1.0, cloth_limb=leg)
     for k, i, d in LAST_THROUGH[:12]:                    # where the cloth let a point through, for the log
         j = i if isinstance(i, int) else i[0]

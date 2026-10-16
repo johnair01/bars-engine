@@ -440,9 +440,15 @@ def export(fig, rig, build_name, palette, out_dir, theme="robe_set"):
     name, fused = f"{build_name}-{palette}", fig.data
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"{name}.glb")
+    # The walk is sampled at every frame and written as linear keys (J5 round 6). Written from Blender's Bezier curves
+    # (export_force_sampling off) it became cubic splines whose quaternions flip sign between some keys (hips, hemB,
+    # hipL/R, shoulders) with tangents near 48; three.js interpolates those component by component, the long way
+    # round, so the hips and hem bones swung and snapped back every step: the jitter under the belt in the game.
+    # three.js slerps linear quaternion keys the short way. Blender keeps its Bezier curves, which garments.py's
+    # through test poses from (linear keys in Blender let the slight figure's knee through by 1 to 3 points).
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_normals=True,
                               export_texcoords=False, export_skins=True, export_animations=True,
-                              export_animation_mode="ACTIONS", export_frame_range=True, export_force_sampling=False,
+                              export_animation_mode="ACTIONS", export_frame_range=True, export_force_sampling=True,
                               export_vertex_color="ACTIVE", export_all_vertex_colors=False)
     size = os.path.getsize(path)
     row = {"id": name, "theme": theme, "build": build_name, "palette": palette, "file": os.path.basename(path),

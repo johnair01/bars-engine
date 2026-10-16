@@ -24,7 +24,7 @@
   // Round 6 (Wendell on round 5: "now we need the physics of the bottom hem to pull the robes down. The cloth is defying
   // gravity in a lot of ways. Also there’s jitteriness in the belt"): the reasons and sources are in CLOTH.md.
   var DEFAULTS = {
-    substepHz: 480,      // substeps a second, fixed: the same motion at any frame rate
+    substepHz: 480,      // substeps a second, at least: a frame is cut into whole substeps no longer than 1/480 s
     maxSubsteps: 16,     // per call; a long frame is slowed down rather than allowed to explode
     gravity: [0, 0, -9.81],
     damping: 0.3,        // per second, of each point's whole velocity: low, so it does not slow the fall
@@ -48,7 +48,8 @@
                          // triangles between them must clear the leg too
     backstop: 0.8,       // a capsule marked backstop (the pelvis) pushes a point out no further than its skinned place,
                          // at least this share of its radius: it is fatter than the hips it stands for
-    friction: 0,         // share of the cloth's sliding on a leg that the leg takes with it
+    friction: 0.15,      // share of the cloth's sliding on a leg that the leg takes with it: cloth on a leg goes
+                         // with it, or the leg slides out from under the band's pull and through the cloth
     kick: 1,             // share of a leg's push the cloth keeps as speed: 1, the cloth moves with the leg that pushes it
                          // (at 0 the cloth lags the leg and the knee comes through between its points)
   };
@@ -261,10 +262,12 @@
     if (!c.started) { reset(c, targets); c.caps = capsules; return 0; }
     c.tgt0.set(c.tgt); c.tgt.set(targets);
     c.caps0 = c.caps; c.caps = capsules;
-    var o = c.o, h = 1 / o.substepHz;
-    c.acc = Math.min(c.acc + dt, o.maxSubsteps * h);
-    var n = Math.floor(c.acc / h + 1e-6);
-    c.acc -= n * h;
+    // The frame is cut into whole substeps of at most 1/substepHz, so the cloth always lands on the body's time. Round
+    // 6 found the old way (fixed substeps and the remainder carried to the next frame) jittered: at 60 frames a second
+    // the frame held 7, 8 or 9 substeps by rounding, so the pins covered the same move in 7 or 9 substeps and the
+    // cloth felt the body speed up and slow down every frame. A frame longer than maxSubsteps allows is slowed down.
+    var o = c.o, T = Math.min(dt, o.maxSubsteps / o.substepHz);
+    var n = T > 0 ? Math.ceil(T * o.substepHz - 1e-6) : 0, h = n ? T / n : 1 / o.substepHz;
     if (n && (o.dragQ || o.dragL || o.relDamp)) pointNormals(c);
     c.span = n * h;
     for (var s = 1; s <= n; s++) substep(c, h, s / n);
@@ -340,16 +343,20 @@
     for (var j = 0; j < F.length; j++) {
       var i = F[j], m = md[i];
       if (m === Infinity) continue;
-      var i3 = 3 * i, near = false;
-      for (var k0 = 0; k0 < caps.length && !near; k0++) {   // cloth on or near a leg is the leg's to move
+      // Cloth on or near a leg (within blendClear) is the leg's to move. Beyond that the pull fades in over a second
+      // blendClear rather than switching on at once: a point sitting on the edge was pulled one substep and let go
+      // the next, and buzzed (round 6, the belt row of a figure standing still).
+      var i3 = 3 * i, w = 1;
+      for (var k0 = 0; k0 < caps.length && w > 0; k0++) {
         if (caps[k0].bs) continue;
-        var s0 = caps[k0].s, r0 = caps[k0].r + mg + c.o.blendClear, vx = s0[3] - s0[0], vy = s0[4] - s0[1], vz = s0[5] - s0[2];
+        var s0 = caps[k0].s, vx = s0[3] - s0[0], vy = s0[4] - s0[1], vz = s0[5] - s0[2];
         var vv = vx * vx + vy * vy + vz * vz || 1e-12, t9 = ((x[i3] - s0[0]) * vx + (x[i3 + 1] - s0[1]) * vy + (x[i3 + 2] - s0[2]) * vz) / vv;
         t9 = t9 < 0 ? 0 : t9 > 1 ? 1 : t9;
         var fx = x[i3] - s0[0] - vx * t9, fy = x[i3 + 1] - s0[1] - vy * t9, fz = x[i3 + 2] - s0[2] - vz * t9;
-        near = fx * fx + fy * fy + fz * fz < r0 * r0;
+        var w0 = (Math.sqrt(fx * fx + fy * fy + fz * fz) - caps[k0].r - mg) / (c.o.blendClear || 1e-9) - 1;
+        if (w0 < w) w = w0;
       }
-      if (near) continue;
+      if (w <= 0) continue;
       q[0] = t0[i3] + (t1[i3] - t0[i3]) * f; q[1] = t0[i3 + 1] + (t1[i3 + 1] - t0[i3 + 1]) * f; q[2] = t0[i3 + 2] + (t1[i3 + 2] - t0[i3 + 2]) * f;
       for (var k = 0; k < caps.length; k++) {
         if (caps[k].bs) continue;                       // the pelvis's backstop already measures from the skin
@@ -363,7 +370,7 @@
       }
       var dx = x[i3] - q[0], dy = x[i3 + 1] - q[1], dz = x[i3 + 2] - q[2], d = Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (d <= m) continue;
-      var k = (d - m) / d * c.o.blendStiff;
+      var k = (d - m) / d * c.o.blendStiff * (w < 1 ? w * w * (3 - 2 * w) : 1);
       x[i3] -= k * dx; x[i3 + 1] -= k * dy; x[i3 + 2] -= k * dz;
     }
   }
