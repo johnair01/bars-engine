@@ -19,7 +19,10 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=sys.argv[1])
 sc = bpy.context.scene
 rig = next(o for o in sc.objects if o.type == "ARMATURE")
-act = rig.animation_data.action
+act = bpy.data.actions.get("Walk") or rig.animation_data.action     # a figure may carry Integrate beside it
+for tr in list(rig.animation_data.nla_tracks):
+    rig.animation_data.nla_tracks.remove(tr)
+rig.animation_data.action = act
 f0, f1 = (int(round(x)) for x in act.frame_range)
 TOL = 0.02  # a straight limb, within about a degree
 

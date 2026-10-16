@@ -34,7 +34,7 @@ before publishing.** The orientation and scale of a new asset are found by eye: 
 | `from_picture.py` | Build a model from one front-view picture (lathe or inflate), score its outline against the picture, render it. |
 | `procgen.py` | Roots and mushrooms from numbers: forking roots, leaning mushrooms, clumps, mats and colonies. Pure Python. |
 | `detail.py` | The detail pass on the cave's grown pieces: each grown at its face budget (no decimation), cap rims kept sharp, a grey shade and baked shadow per vertex (`COLOR_0`). `--counts` needs no `bpy`. |
-| `content/ontology-game/cave/character.py` | The character creator (J4): a faceless figure from a theme, build and palette, rigged with the cave avatar's joints and walking with its walk cycle. `--all --sheet` makes the nine and their sheet. `WARP` bends the same figure into an NPC, one row per daemon, applied after the body is fused and before the weights (`--warp`, `--daemons`, `--one-number`). |
+| `content/ontology-game/cave/character.py` | The character creator (J4): a faceless figure from a theme, build and palette, rigged with the cave avatar's joints and walking with its walk cycle. `--all --sheet` makes the nine and their sheet. `WARP` bends the same figure into an NPC, one row per daemon, applied after the body is fused and before the weights (`--warp`, `--daemons`, `--one-number`). `--warp controller --integrate` adds a second action, Integrate: the held shape letting go into the Player's open stance (`INTEGRATE`). |
 
 ## The six problems, and what each became
 

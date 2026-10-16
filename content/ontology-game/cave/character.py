@@ -26,7 +26,7 @@ import argparse, json, math, os, sys
 
 import bpy
 import bmesh
-from mathutils import Matrix, Vector
+from mathutils import Matrix, Quaternion, Vector
 from mathutils.bvhtree import BVHTree
 from mathutils.kdtree import KDTree
 
@@ -154,6 +154,23 @@ WARP = {
 # is the body's survival, so it names none, and the Player has none.
 BOSSES = ("protector", "self", "controller", "player")
 NEXT_FIGURE = {"protector": "protector", "self": None, "controller": "controller", "player": "player"}
+# Integration (call sheet blender-frame-flesh-warp, "the held movement completing"): a daemon's held shape lets go into
+# the Player's open stance, a push that lands, a grasp that lets go. It is a second action beside Walk, "Integrate",
+# keyed on the pose bones from the warped rest, so the daemon keeps its own proportions and only its held shape moves.
+# The move is SECS long after a held beat, then rests: HOLD seconds still at each end. Each joint moves over its own part
+# of the move, (start, end) as fractions of it, eased in and out; a joint not named moves over the whole. Fingers are
+# named by finger ("index"), or as "fingers" for all five. Wendell, 2026-10-16: "Perfect. Let's do the next thing".
+INTEGRATE_TO = {"curve": WARP["player"]["curve"], "stoop": WARP["player"]["stoop"], "hands": "relaxed",
+                "gesture": WARP["player"]["gesture"]}
+INTEGRATE = {
+    # GRASP lets go: the elbows swing in and down first, so the fists come off the hips outward and never through
+    # them; the shoulders follow and the fists open on the way down, the thumb last, as the chest and chin settle
+    "controller": {"secs": 3.0, "hold": 0.5, "phase": {
+        "elbow": (0.0, 0.55), "wrist": (0.05, 0.6), "shoulder": (0.15, 0.85), "spine": (0.25, 1.0),
+        "neck": (0.3, 1.0), "head": (0.3, 1.0), "hip": (0.4, 1.0), "knee": (0.4, 1.0), "ankle": (0.4, 1.0),
+        "index": (0.3, 0.85), "middle": (0.33, 0.88), "ring": (0.36, 0.91), "pinky": (0.39, 0.94),
+        "thumb": (0.45, 1.0)}},
+}
 FLEX = {"neck": 1, "head": 1, "shoulder": -1, "elbow": -1, "wrist": -1, "hip": -1, "knee": 1, "ankle": -1}  # + bends
 # each joint its natural way
 SPINE_Z = (1.03, 1.42)                                                                 # the spine bone, where curve bends
@@ -525,23 +542,114 @@ def gesture_rotation(bone, gesture):
             @ Matrix.Rotation(FLEX[base] * flex, 3, "X") @ Matrix.Rotation(s * twist, 3, "Z"))
 
 
+def rest_turns(J, w, build):
+    """Each bone's turn from the frame under a warp, as warp_maps gives it (rotation only, no stretch): a joint's own
+    gesture or finger pose after its parent's turn. The spine bends along its length, so the spine bone takes the turn
+    of its chord, half the curve on top of the stoop, and a bone hung on it takes the turn where it hangs."""
+    z0, z1 = SPINE_Z
+    hands = (w["hands"],) * 2 if isinstance(w["hands"], str) else tuple(w["hands"])
+    fingers = {b + n: R for n, shape in zip("LR", hands) for b, R in hand_rotations(build, n, shape).items()}
+    out = {}
+    for b, parent in PARENT.items():
+        if b == "spine":
+            out[b] = Matrix.Rotation(w["stoop"] + w["curve"] / 2, 3, "X")
+            continue
+        z = J[b][0][2]
+        Rp = (Matrix.Identity(3) if parent is None else out[parent] if parent != "spine" else
+              Matrix.Rotation(w["stoop"] + w["curve"] * min(1.0, max(0.0, (z - z0) / (z1 - z0))), 3, "X"))
+        out[b] = Rp @ (fingers[b] if b in fingers else gesture_rotation(b, w["gesture"]))
+    return out
+
+
+def fcurves(act):
+    """An action's F-curves: Blender 5 keeps them in the action's layers and slots."""
+    if hasattr(act, "fcurves"):
+        return list(act.fcurves)
+    return [fc for layer in act.layers for strip in layer.strips for bag in strip.channelbags for fc in bag.fcurves]
+
+
+def integrate_action(rig, J, w, w_to, build, plan):
+    """The Integrate action: every bone turns from the warped rest (w) to the stance w_to, each over its own part of
+    the move (plan, an INTEGRATE row), and the hips rise or sink so the lower foot stays on the ground."""
+    held, to = rest_turns(J, w, build), rest_turns(J, w_to, build)
+    world = {b: to[b] @ held[b].inverted() for b in PARENT}       # each bone's turn in the world, rest to stance
+    goal = {}
+    for pb in rig.pose.bones:
+        Bm = pb.bone.matrix_local.to_3x3()
+        parent = PARENT[pb.name]
+        local = world[parent].inverted() @ world[pb.name] if parent else world[pb.name]
+        goal[pb.name] = (Bm.inverted() @ local @ Bm).to_quaternion()
+
+    def part(bone):
+        base = bone.rstrip("LR")
+        name = base[:-1] if base in FINGER_BONES else base
+        return plan["phase"].get(name, plan["phase"].get("fingers" if base in FINGER_BONES else name, (0.0, 1.0)))
+
+    def ease(x):
+        x = min(1.0, max(0.0, x))
+        return x * x * (3 - 2 * x)
+
+    hold, secs = plan["hold"], plan["secs"]
+    n = round((2 * hold + secs) * FPS)
+    feet = [b for b in PARENT if b.startswith("ankle")]
+    ground = min(min(rig.data.bones[b].head_local.z, rig.data.bones[b].tail_local.z) for b in feet)
+    hips = rig.pose.bones["hips"]
+    rig.animation_data.action = None                                       # pose freely, then key
+    frames = []
+    for k in range(n + 1):
+        t = (k / FPS - hold) / secs
+        rot = {}
+        for pb in rig.pose.bones:
+            a, b = part(pb.name)
+            rot[pb.name] = pb.rotation_quaternion = Quaternion().slerp(goal[pb.name], ease((t - a) / (b - a)))
+        hips.location = (0, 0, 0)
+        bpy.context.view_layer.update()
+        low = min(min((rig.matrix_world @ rig.pose.bones[b].head).z, (rig.matrix_world @ rig.pose.bones[b].tail).z)
+                  for b in feet)
+        frames.append((rot, hips.bone.matrix_local.to_3x3().inverted() @ Vector((0, 0, ground - low))))
+    # keys every STEP frames, and for each bone only across its own part of the move (it holds still either side),
+    # straight lines between them: the eased curve is in the keys, and the figure stays under its byte line
+    STEP = 3
+    act = bpy.data.actions.new("Integrate")
+    rig.animation_data.action = act
+    h0 = round(hold * FPS)
+    for pb in rig.pose.bones:
+        if abs(goal[pb.name].angle) < 1e-3:
+            continue
+        a, b = (h0 + round(x * secs * FPS) for x in part(pb.name))
+        for k in sorted({a, b, *range(a, b, STEP)}):
+            pb.rotation_quaternion = frames[k][0][pb.name]
+            pb.keyframe_insert("rotation_quaternion", frame=k + 1)
+    for k in sorted({0, n, *range(h0, n - h0, STEP), n - h0}):
+        hips.location = frames[k][1]
+        hips.keyframe_insert("location", frame=k + 1)
+    for fc in fcurves(act):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+    return act, n
+
+
 def warp_body(mesh, parts, J, w, build):
     """Applies the warp to the fused surface (each vertex by its bones' maps, blended as the weights will blend them),
     to each body part (rigidly with its own bone, so the weights read the warped parts) and to the joints.
-    Returns the warped joints and the rest positions, which the painted bands keep using."""
+    Returns the warped joints, the rest positions, which the painted bands keep using, and each vertex's blend, which
+    the weights reuse: read on the unwarped body, where a fist's fingers lie apart from its palm and a hand set on the
+    hip lies apart from the hip, so a held shape can be let go (Integrate) without the surface tearing."""
     maps = warp_maps(J, w, build)
     trees = [(b, BVHTree.FromBMesh(bm)) for b, bm in parts]
     rest = [v.co.copy() for v in mesh.vertices]
     hands = hand_shells(mesh, trees)
+    blends = []
     for v in mesh.vertices:
         _, blend = nearest_blend(v.co, trees, hands[v.index])
+        blends.append(blend)
         tot = sum(blend.values())
         v.co = sum((maps[b](v.co) * (x / tot) for b, x in blend.items()), Vector())
     for b, bm in parts:
         for v in bm.verts:
             v.co = maps[b](v.co)
     mesh.update()
-    return {b: (tuple(maps[b](Vector(h))), tuple(maps[b](Vector(t)))) for b, (h, t) in J.items()}, rest
+    return {b: (tuple(maps[b](Vector(h))), tuple(maps[b](Vector(t)))) for b, (h, t) in J.items()}, rest, blends
 
 
 LINKS = {b: {b} | {PARENT[b]} - {None} | {c for c, p in PARENT.items() if p == b} for b in PARENT}
@@ -642,9 +750,10 @@ def fuse(bms, voxel, smooth, tris):
     return out
 
 
-def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=None, boss=None):
+def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=None, boss=None, integrate=False):
     """warp: a WARP row's name, or a dict of the warp's numbers (missing ones are the frame's) named by warp_name.
-    boss: the NPC's answer to its boss question, one of BOSSES, kept on the report row as npc.boss."""
+    boss: the NPC's answer to its boss question, one of BOSSES, kept on the report row as npc.boss.
+    integrate: add the Integrate action beside Walk (INTEGRATE, by the warp's name)."""
     if boss is not None and boss not in BOSSES:
         raise SystemExit(f"no boss {boss}; there is {', '.join(BOSSES)}")
     if theme not in THEMES:
@@ -700,9 +809,9 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
         p.use_smooth = True
 
     # the warp, last: the fused body, its parts and its joints, before the weights are painted
-    J = joints(build_name)
+    J0 = J = joints(build_name)
     rest = [v.co.copy() for v in fused.vertices]
-    J, rest = warp_body(fused, parts, J, w, build_name)        # always: a hand at rest is posed (NEUTRAL relaxed)
+    J, rest, blends = warp_body(fused, parts, J, w, build_name)        # always: a hand at rest is posed (NEUTRAL relaxed)
     trees = [(bone, BVHTree.FromBMesh(bm)) for bone, bm in parts]
     for _, bm in parts:
         bm.free()
@@ -722,15 +831,15 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
             arm_data.edit_bones[bone].parent = arm_data.edit_bones[parent]
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    # weights: each vertex goes to the part it lies nearest, and blends with that part's parent or child where
-    # the two meet (a joint), so the surface bends at a joint and never pulls an arm into the trunk
+    # weights: each vertex goes to the part it lay nearest before the warp, and blends with that part's parent or
+    # child where the two meet (a joint), so the surface bends at a joint and never pulls an arm into the trunk. The
+    # bands are painted by the part each vertex lies nearest now
     groups = {b: fig.vertex_groups.new(name=b) for b in PARENT}
     bone_of = []
     hands = hand_shells(fused, trees)
     for v in fused.vertices:
-        best, blend = nearest_blend(v.co, trees, hands[v.index])
-        bone_of.append(best)
-        for b, x in blend.items():
+        bone_of.append(nearest_blend(v.co, trees, hands[v.index])[0])
+        for b, x in blends[v.index].items():
             groups[b].add([v.index], x, "REPLACE")
     fig.parent = rig
     mod = fig.modifiers.new("Rig", "ARMATURE")
@@ -810,12 +919,26 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
                 pb.keyframe_insert("location", frame=k + 1)
         prev = {pb.name: pb.rotation_quaternion.copy() for pb in rig.pose.bones if pb.name in BODY}
     scene.frame_start, scene.frame_end = 1, KEYS + 1
+    keys = {"Walk": KEYS + 1}
+    if integrate:
+        if warp_name not in INTEGRATE:
+            raise SystemExit(f"no integration for {warp_name}; there is {', '.join(INTEGRATE)}")
+        walk = act
+        for pb in rig.pose.bones:
+            pb.location, pb.rotation_quaternion = (0, 0, 0), (1, 0, 0, 0)
+        act, n = integrate_action(rig, J0, w, {**w, **INTEGRATE_TO}, build_name, INTEGRATE[warp_name])
+        keys["Integrate"] = n + 1
+        for a_ in (walk, act):                                      # both actions export, each on its own track
+            tr = rig.animation_data.nla_tracks.new()
+            tr.name = a_.name
+            tr.strips.new(a_.name, 1, a_)
+        rig.animation_data.action = None
 
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"{name}.glb")
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_normals=True,
                               export_texcoords=False, export_skins=True, export_animations=True,
-                              export_animation_mode="ACTIONS", export_frame_range=True, export_force_sampling=False,
+                              export_animation_mode="ACTIONS", export_frame_range=not integrate, export_force_sampling=False,
                               export_vertex_color="ACTIVE", export_all_vertex_colors=False)
     size = os.path.getsize(path)
     row = {"id": name, "theme": theme, "build": build_name, "palette": palette, "warp": warp_name,
@@ -823,7 +946,7 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
            "npc": {"daemon": warp_name if warp_name in WARP else None, "boss": boss,
                    "next": (NEXT_FIGURE[boss] or "frame") if boss else None},
            "bytes": size, "tris": sum(len(p.vertices) - 2 for p in fused.polygons), "verts": len(fused.vertices),
-           "bones": len(PARENT), "keys": KEYS + 1}
+           "bones": len(PARENT), "keys": KEYS + 1, "actions": keys}
     if size > MAX_BYTES:
         raise SystemExit(f"{name}.glb is {size // 1024} KB, over the {MAX_BYTES // 1024} KB line")
     return row
@@ -955,6 +1078,58 @@ def grid_sheet(rows, out_dir, file, cols=4, labels=None, gap_x=1.0):
     return paths
 
 
+def integrate_strip(row, out_dir, cells=7):
+    """The Integrate action as strips of the one figure at even points from held to open: integrate.png from the front
+    three-quarter, integrate-side.png from its left, and integrate-hands.png close on the right hand."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    sc = bpy.context.scene
+    bpy.ops.import_scene.gltf(filepath=os.path.join(out_dir, row["file"]))
+    rig = next(o for o in sc.objects if o.type == "ARMATURE")
+    rig.animation_data.action = bpy.data.actions["Integrate"]
+    for tr in list(rig.animation_data.nla_tracks):
+        rig.animation_data.nla_tracks.remove(tr)
+    n = row["actions"]["Integrate"]
+    cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam"))
+    cam.data.type = "ORTHO"
+    sc.collection.objects.link(cam)
+    sc.camera = cam
+    for e, rz, rx in ((3.2, 35, 50), (1.4, -140, 60), (1.2, 100, 60)):
+        sun = bpy.data.objects.new("sun", bpy.data.lights.new("sun", "SUN"))
+        sun.data.energy, sun.rotation_euler = e, (math.radians(rx), 0, math.radians(rz))
+        sc.collection.objects.link(sun)
+    sc.world = bpy.data.worlds.new("w")
+    sc.world.color = (0.16, 0.15, 0.17)
+    sc.render.engine, sc.cycles.device, sc.cycles.samples = "CYCLES", "CPU", 24
+    sc.view_settings.view_transform = "Standard"
+    import numpy as np
+    paths = []
+    for tag, turn, aim, scale, (w, h) in (("", 25, (0, 0, 0.9), 2.3, (360, 560)), ("-side", 90, (0, 0, 0.9), 2.3, (360, 560)),
+                                         ("-hands", 25, None, 0.55, (300, 300))):
+        d = Vector((math.sin(math.radians(-turn)), -math.cos(math.radians(-turn)), 0.08)).normalized()
+        cam.data.ortho_scale = scale
+        sc.render.resolution_x, sc.render.resolution_y = w, h
+        imgs = []
+        for i in range(cells):
+            f = 1 + round(i * (n - 1) / (cells - 1))
+            sc.frame_set(f)
+            at = Vector(aim) if aim else rig.matrix_world @ rig.pose.bones["wristR"].tail
+            cam.location = at + d * 10
+            cam.rotation_euler = (-d).to_track_quat("-Z", "Y").to_euler()
+            sc.render.filepath = os.path.join(out_dir, f"_cell{tag}_{i}.png")
+            bpy.ops.render.render(write_still=True)
+            im = bpy.data.images.load(sc.render.filepath)
+            imgs.append(np.array(im.pixels[:], np.float32).reshape(h, w, 4))
+            bpy.data.images.remove(im)
+            os.remove(sc.render.filepath)
+        img = bpy.data.images.new("strip" + tag, w * cells, h)
+        img.pixels.foreach_set(np.hstack(imgs).ravel())
+        img.filepath_raw = os.path.join(out_dir, f"integrate{tag}.png")
+        img.file_format = "PNG"
+        img.save()
+        paths.append(img.filepath_raw)
+    return paths
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--theme", default="robe_set")
@@ -967,6 +1142,7 @@ def main():
     ap.add_argument("--boss", default=None, choices=BOSSES, help="the NPC's answer to its boss question")
     ap.add_argument("--daemons", action="store_true", help="the frame and every WARP row, in --build and --palette")
     ap.add_argument("--one-number", action="store_true", help="the frame and the eleven figures one number from it")
+    ap.add_argument("--integrate", action="store_true", help="with --warp: add the Integrate action beside Walk")
     a = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
     if a.daemons or a.one_number:
         if a.daemons:
@@ -986,12 +1162,14 @@ def main():
                                          gap_x=1.8 if a.daemons else 1.0))   # flung arms need the room
         return
     combos = [(b, p) for b in BUILDS for p in PALETTES] if a.all else [(a.build, a.palette)]
-    rows = [build(b, p, a.out, a.theme, warp=a.warp, boss=a.boss) for b, p in combos]
+    rows = [build(b, p, a.out, a.theme, warp=a.warp, boss=a.boss, integrate=a.integrate) for b, p in combos]
     with open(os.path.join(a.out, "report.json"), "w") as f:
         json.dump(rows, f, indent=1)
     for r in rows:
         print(f"{r['id']}: {r['bytes'] // 1024} KB, {r['tris']} triangles, {r['bones']} bones, {r['keys']} keys")
-    if a.sheet:
+    if a.sheet and a.integrate:
+        print("strips:", *integrate_strip(rows[0], a.out))
+    elif a.sheet:
         sheet(rows, a.out)
         print(f"sheet: {os.path.join(a.out, 'sheet.png')}, {os.path.join(a.out, 'walk.png')}")
 
