@@ -483,3 +483,46 @@ stands unless he flips it.
   either side inside the walls. Run (button, or Shift) is about twice as fast. Holding anywhere still walks straight on.
 - Thresholds still stop the player: forward ends at the voice (first hallway) and at the mouth (second); back stops at the
   cave mouth and at the voice's gate. Chamber dialogue, the sit-down and the Self button are unchanged.
+
+## Trust (pass `big-mind-trust1`, his answers of 16 October 2026, 22:05 to 22:23)
+
+- **Charge and trust.** Charge is the voice's burden in this sitting; trust is its relationship with the player, kept across
+  sittings in the save as `voices[id].trust = { seen: [{dim, kind, at}], promises: [{kind, made, kept}], broken, repaired,
+  ally }`, never with words (`bmt-burden-trust`). Three-part trust is local to the cave; the ontology's TrustState is untouched
+  (`bmt-ontology-local`).
+- **Marks.** Two marks beside the charge, "Can you" and "Will you", three pips each, every pip with a plain line of what the
+  voice saw. Whether the player seems good shows only in the voice's words, against its own picture of good: the Protector,
+  good keeps us safe; the Controller, good meets the standard; the Skeptic, good is honest about what is here; the Fixer, good
+  doesn't leave what's broken; the Emotional Body, good feels it all the way; the Victim, good hears the whole story; the
+  Damaged Self, good doesn't let someone else take the hit (`bmt-trust-shown` A, `bmt-goodness-models`, drafts).
+- **Honest moves.** The Trust button works in the first hallway, in the chamber and between questions; the refusal path's
+  moves count too. Can you: wait with it a breath (or wait through its refusal), breathe a W.A.V.E. through beside it, sit
+  with it, promise to go slowly. Will you: promise to come back to your own place (kept by stepping back out of its seat),
+  or to come back another day and ask again (kept by asking on a later visit). Are you good: show where you already share its
+  picture, honour its refusal, or say what you'd do for it. Every move waits for the next check-in and counts only if the
+  charge eases there; a question sat out is no check-in. Each voice has a right answer for can and will (the Protector: wait,
+  return; the Controller: pace, return; the Skeptic: hold, visit; the Fixer: sit, return; the Emotional Body: hold, visit;
+  the Victim: wait, visit; the Damaged Self: pace, return). Another move that eases fills nothing, and the voice says what it
+  needs instead. Each kind counts once a sitting (`bmt-honest-moves`).
+- **Falls and repair.** Walking out of the cave from the voice's seat breaks the promise to come back to one's own place and
+  lowers the will mark; "Ask again, now" after a refusal is a push and lowers its read of the player's goodness. Owning it,
+  from the Trust panel, is an honest move and repairs it at an eased check-in. Rest, Not now, silence and "I don't know" lower
+  nothing (`bmt-trust-falls`, `bmt-accountability` A).
+- **Two roads and keep talking.** A voice offers to step aside at charge 3 or below or once it has seen all three (a can pip,
+  a will pip, its good read); its refusal stays open and says what it hasn't seen yet. Once it is willing the player can keep
+  talking (its remaining questions) or stay with it (a sit-down with it), and each check-in offers "Ask it to step aside now"
+  (`bmt-two-roads`, `bmt-keep-talking`).
+- **Spirits vouch.** A voice that trusts the player gives its spirit as an ally, which walks with them while that trust holds.
+  At each later chamber the voice asks who vouches for you and each ally answers in its own voice's terms ("The Protector's
+  spirit says you kept watch."); together they count once as a can-you move if the voice eases. At the mouth of the centre the
+  allies vouch together. How many spirits are carried adds nothing (`bmt-spirits-vouch`). Build 3's meeting spirit is to
+  become this ally; until then the ally is a spirit in the voice's colour named for it.
+- **Ask again.** Going back in always enters the chamber's first hallway, so the voice is asked again whatever the save
+  holds; a voice met before says so, and what it said before stays with it if it is declined today (`bmt-ask-again`).
+- **The return.** Walking out passes a skippable rite: thank the voices met, take one breath, and one plain line naming the
+  move practised this visit; from the WAVE room, it goes back to the room (`bmt-return`).
+- **Trust stances**, for the daemon bodies (`window.__oagBigMind.STANCES`; the voice's current one is
+  `voice.userData.stance`): guarded, testing, softening, trusting, willing, hurt, repaired.
+- **Arrivals.** Each voice's arrival line describes its body as the held movement in Six-faces-council
+  `council/daemons/GESTURES.md` (push, grasp, pull, reach, release too soon, yield collapsed, release refused), so the words
+  match the WARP bodies.
