@@ -160,12 +160,17 @@ NEXT_FIGURE = {"protector": "protector", "self": None, "controller": "controller
 # The move is SECS long after a held beat, then rests: HOLD seconds still at each end. Each joint moves over its own part
 # of the move, (start, end) as fractions of it, eased in and out; a joint not named moves over the whole. Fingers are
 # named by finger ("index"), or as "fingers" for all five. Wendell, 2026-10-16: "Perfect. Let's do the next thing".
+# A row's "to" merges over INTEGRATE_TO, for a daemon whose open stance is not the Player's own.
 INTEGRATE_TO = {"curve": WARP["player"]["curve"], "stoop": WARP["player"]["stoop"], "hands": "relaxed",
                 "gesture": WARP["player"]["gesture"]}
 INTEGRATE = {
     # GRASP lets go: the elbows swing in and down first, so the fists come off the hips outward and never through
     # them; the shoulders follow and the fists open on the way down, the thumb last, as the chest and chin settle
-    "controller": {"secs": 3.0, "hold": 0.5, "phase": {
+    # The arms end hanging loose at the sides, close in and a little forward, elbows soft, and the back settles a
+    # little forward (Wendell, 2026-10-16: "Let the controller hands fall to their sides in a slightly more relaxed
+    # posture at the end"; the Player's own stance left them splayed out from the body)
+    "controller": {"secs": 3.0, "hold": 0.5, "to": {"curve": 0.03, "stoop": 0.03, "gesture": {
+        "shoulder": (0.06, 0.0), "elbow": (0.18,), "wrist": (0.0,), "neck": (0.02,)}}, "phase": {
         "elbow": (0.0, 0.55), "wrist": (0.05, 0.6), "shoulder": (0.15, 0.85), "spine": (0.25, 1.0),
         "neck": (0.3, 1.0), "head": (0.3, 1.0), "hip": (0.4, 1.0), "knee": (0.4, 1.0), "ankle": (0.4, 1.0),
         "index": (0.3, 0.85), "middle": (0.33, 0.88), "ring": (0.36, 0.91), "pinky": (0.39, 0.94),
@@ -926,7 +931,8 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
         walk = act
         for pb in rig.pose.bones:
             pb.location, pb.rotation_quaternion = (0, 0, 0), (1, 0, 0, 0)
-        act, n = integrate_action(rig, J0, w, {**w, **INTEGRATE_TO}, build_name, INTEGRATE[warp_name])
+        act, n = integrate_action(rig, J0, w, {**w, **INTEGRATE_TO, **INTEGRATE[warp_name].get("to", {})},
+                                 build_name, INTEGRATE[warp_name])
         keys["Integrate"] = n + 1
         for a_ in (walk, act):                                      # both actions export, each on its own track
             tr = rig.animation_data.nla_tracks.new()
