@@ -5181,3 +5181,57 @@ model MythRead {
   @@index([source, createdAt])
   @@map("myth_reads")
 }
+
+/// A WAVE room run opened from the Council Board (Tap the Vein skipped two days running, and later any board
+/// charge). The page saves the whole run at every step; the council reads it with COUNCIL_MENU_TOKEN and lands it
+/// as blockers/<ref> on its main (Six-faces-council docs/blocker-panel.md, engine "wave-room").
+/// Wendell, 2026-10-14 (board, ttv-skip-wave): "the WAVE room be able to metabolize context specific charges and
+/// send the results to the board".
+model WaveRoomRun {
+  id        String   @id @default(cuid())
+  playerId  String   @map("player_id")
+  /// The board's id for the run, e.g. tap-the-vein--mg8x2k1q
+  ref       String
+  /// The blocker record as the room last saved it
+  record    Json
+  savedAt   DateTime @map("saved_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([playerId, ref])
+  @@index([playerId, savedAt])
+  @@map("wave_room_runs")
+}
+
+/// The Nonprofit Board's saves (six-faces-council board-off-vendor-quota, 2026-10-16). Append-only: every write from
+/// the board page is one row holding the whole document after the write, so the latest row per (board, collection,
+/// docId) is the document, and nothing is ever overwritten. The council's board-pull GitHub Action reads unrecorded rows
+/// through /api/board/pull and marks them recorded once main holds them. Contract: schema/board-save.schema.json in
+/// six-faces-council, mirrored by src/lib/board/save.ts.
+model BoardSave {
+  id         String    @id @default(cuid())
+  board      String
+  collection String
+  docId      String    @map("doc_id")
+  data       Json
+  receivedAt DateTime  @default(now()) @map("received_at")
+  recordedAt DateTime? @map("recorded_at")
+  record     String?
+  source     String    @default("board")
+
+  @@index([board, collection, docId, receivedAt])
+  @@index([board, recordedAt])
+  @@map("board_saves")
+}
+
+/// One row per acknowledged board pull, so the board page can show when main last caught up.
+model BoardPull {
+  id       String   @id @default(cuid())
+  board    String
+  at       DateTime @default(now())
+  recorded Int
+  record   String
+
+  @@index([board, at])
+  @@map("board_pulls")
+}
