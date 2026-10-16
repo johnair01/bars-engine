@@ -64,6 +64,26 @@ await page.waitForFunction((a) => window.__oagBigMind.state.s > a, s0 + 2, { tim
 await page.mouse.up();
 ok((await st()).s > s0 + 2, 'holding the stage walks the figure along the path');
 
+// Free walking (board bmt-free-walk): the stick walks sideways and back as well as on, inside the walls; Run is faster.
+const stickTo = (x, z) => page.evaluate(([x, z]) => { const k = window.__oagBigMind.stick; k.x = x; k.z = z; }, [x, z]);
+const bm = () => page.evaluate(() => { const s = window.__oagBigMind.state; return { s: s.s, lat: s.lat, pace: s.pace, moving: s.moving }; });
+ok(await page.locator('[data-bm-stick]').isVisible() && await page.locator('[data-bm-run]').isVisible(), 'the walk stick and Run show while the player can walk');
+await stickTo(1, 0);
+await page.waitForFunction(() => window.__oagBigMind.state.lat > 1, null, { timeout: 4000 }).catch(() => {});
+let wk = await bm();
+ok(wk.lat > 1 && wk.lat <= 0.5 * 4.4 + 0.01, 'the stick walks sideways, held inside the walls: ' + wk.lat.toFixed(2));
+await stickTo(1, 0); await page.waitForTimeout(800); wk = await bm();
+ok(wk.lat <= 0.5 * 4.4 + 0.01, 'the walls hold the figure however long the stick is pushed: ' + wk.lat.toFixed(2));
+const sBack = (await bm()).s; await stickTo(0, 1);
+await page.waitForFunction((a) => window.__oagBigMind.state.s < a - 0.5, sBack, { timeout: 4000 }).catch(() => {});
+ok((await bm()).s < sBack - 0.5, 'the stick walks back as well as on');
+await stickTo(0, 1); await page.waitForTimeout(1500);
+ok((await bm()).s >= 1 - 1e-6, 'walking back stops at the mouth of the cave');
+await page.click('[data-bm-run]');
+await stickTo(0, -1); await page.waitForFunction(() => window.__oagBigMind.state.pace > 1, null, { timeout: 4000 }).catch(() => {});
+ok((await bm()).pace > 1.5, 'Run walks faster');
+await page.click('[data-bm-run]'); await stickTo(0, 0);
+ok(await page.evaluate(() => { const k = window.__oagBigMind; k.keys.KeyW = true; const w = k.walkInput(); delete k.keys.KeyW; return w.along === 1 && w.side === 0; }), 'W walks on, as the arrow keys do');
 ok(await holdUntil('meet'), 'walking on reaches the Protector, who blocks the path');
 ok(/Nobody goes past this point/.test(await page.textContent('[data-bm-modal]')), 'the Protector speaks first');
 ok(Math.abs((await st()).s - (await page.evaluate(() => window.__oagBigMind.S.S_SELF))) < 0.01, 'the figure stops in front of the voice');
@@ -306,6 +326,11 @@ await hold(true);
 await page.waitForFunction(() => /waits? here/.test(document.querySelector('[data-bm-hint]').textContent), null, { timeout: 15000 }).then(() => ok(true, 'the part that was asked to wait stands in the hallway past the chamber'), () => ok(false, 'the waiting part is met in the hallway'));
 await page.screenshot({ path: SHOTS + '/bm-7-waiting-part.png' });
 ok(await holdUntil('end'), 'the hallway ends at the mouth of the next chamber');
+ok(await page.evaluate(() => window.__oagBigMind.child === null), 'the shut mouth shows no figure');
+ok(await page.evaluate(() => { const m = window.__oagBigMind.mouth; return m.light.intensity > 0.2 && m.glow.material.opacity > 0.05; }), 'the shut mouth breathes, with its light on');
+ok(!/figure/i.test(await page.textContent('[data-bm-modal]')), 'the end of the hallway names no figure at the mouth');
+const lights = new Set(); for (let i = 0; i < 12; i++) { lights.add((await page.evaluate(() => window.__oagBigMind.mouth.light.intensity)).toFixed(2)); await page.waitForTimeout(700); }
+ok(lights.size > 3, 'the light rises and falls with the breath: ' + lights.size + ' levels seen');
 ok(/The Controller/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-onward]').count() === 1, 'the Controller waits there, and its chamber is open');
 await page.screenshot({ path: SHOTS + '/bm-8-next-chamber.png' });
 await page.click('[data-bm-leave]');
@@ -1030,6 +1055,7 @@ await page.evaluate(() => localStorage.clear());
   sv = await save();
   ok(sv.voices['damaged-self'] && sv.voices['damaged-self'].status === 'spoken' && sv.voices['damaged-self'].boss === 'controller' && sv.chamber === 6 && sv.at === 'hall2' && sv.voices.victim.boss === 'controller', 'its record holds who it works for, and the others\' stay: ' + JSON.stringify({ boss: (sv.voices['damaged-self'] || {}).boss, chamber: sv.chamber, at: sv.at }));
   ok(await holdUntil('end') && /The centre/.test(await page.textContent('[data-bm-modal]')) && /the vulnerable child/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-onward]').count() === 0 && await page.locator('[data-bm-tocentre]').count() === 1, 'past the Damaged Self the path ends, and the vulnerable child waits at the mouth of the centre');
+  ok(await page.evaluate(() => window.__oagBigMind.child && !window.__oagBigMind.child.visible), 'the child is hidden while the mouth is shut');
   await page.screenshot({ path: SHOTS + '/bm-26-centre-shut.png' });
   await page.click('[data-bm-leave]');
   await page.waitForSelector('[data-bm-mouth]');
