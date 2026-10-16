@@ -79,6 +79,7 @@ export default defineConfig({
       'src/app/api/board/saves/__tests__/route.test.ts',
       'src/app/api/board/saves/__tests__/seal.test.ts',
       'src/lib/tap-the-vein/__tests__/board-seal.test.ts',
+      'src/lib/tap-the-vein/__tests__/board-set-aside.test.ts',
       'src/app/board/__tests__/shim.test.ts',
       'src/lib/board/__tests__/dispatch.test.ts',
     ],

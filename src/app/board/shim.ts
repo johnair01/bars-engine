@@ -2,7 +2,8 @@
  * Stands in for the claude.ai runtime (`window.claude.use`) so six-faces-council's board pages run unchanged on
  * bars-engine. `db` is backed by /api/board/saves (same origin, his sign-in cookie); `mcp` answers only the one call the
  * page makes to bars-engine itself (the Tap the Vein status check), as a same-origin fetch. Nothing else is offered:
- * the pages' Send button is hidden by the board builds, and the board-pull Action records saves on main.
+ * the pages' Send button is hidden by the board builds, and the board-pull Action records saves on main. `barsEngine`
+ * marks the host, so the Council Board offers "Set aside" only where the save reaches bars-engine (seeds collection).
  * boardHome names the board the page saves as (`nonprofit` on /board, `council` on /board/council).
  */
 export function boardShim(boardHome: string, returnTo = '/board'): string {
@@ -70,7 +71,8 @@ export function boardShim(boardHome: string, returnTo = '/board'): string {
     setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh().catch(() => {}); });
     return db; }, () => null);
-  window.claude = {use: name => name === 'db' ? dbReady : name === 'mcp' ? Promise.resolve(mcp) : Promise.resolve(null)};
+  // barsEngine tells the page its saves reach bars-engine, so a Council Board "Set aside" can rest the task here.
+  window.claude = {barsEngine: true, use: name => name === 'db' ? dbReady : name === 'mcp' ? Promise.resolve(mcp) : Promise.resolve(null)};
 })();
 </script>`
 }
