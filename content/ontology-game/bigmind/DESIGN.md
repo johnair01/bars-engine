@@ -297,3 +297,178 @@ Wendell, 2026-10-13: "I think we're almost to the point where we can merge the b
 now wears the Cave of Lessons' J1 stone (`K.stoneOf`, `K.tileStone`; the tiles load after the first frame) and every spirit
 carries a small light of its own in its colour. The Cave of Lessons has this cave's sit-down in place. The rest of the merge
 is in `cave/DESIGN.md`, "One map".
+
+## Each daemon's own questions (Wendell, 14 October 2026)
+
+His words: "Updating ontology for the daemons. In the game master agents and in the games itself. Questions to ask
+each daemon/concerns for each daemon". The sets are in `../daemons/questions.js`, copied from the council's
+`council/daemons/questions.yaml`, with his exact words beside each plain question. Every set asks what the daemon
+works on, who it works for, how its work serves that boss, and what would happen without it.
+
+The Protector's chamber asks his four after "What do you protect the self from?": what it protects, how that keeps
+the body alive, what that is vulnerable to (the five elements, named as the W.A.V.E. names them), and what it fears
+would happen without it. The earlier questions stay, so a charge that falls fast still reaches the ready line first.
+The test checks the chamber's four against `questions.js`, so the two cannot drift. The Controller's chamber, next
+in the build order, takes its whole set: there the player picks who it works for, and the follow-up changes with the
+answer (`byBoss`).
+
+## The Controller's chamber (14 October 2026)
+
+The second chamber on the daemon path (board `dp-seven`), built on the Protector's: the same meeting, the three asks for
+permission and the refusal path, the cards and the open line, the charge meter and its easing, the W.A.V.E. on your own
+charge, sitting down, speaking as the voice and the keeping step. The hallway past the Protector now ends at the
+Controller's open chamber; "Walk on" builds the cave again around it from its first hallway, and the spirits walking with
+the player come too. The Skeptic waits at the shut mouth past it.
+
+- **Its questions** are Wendell's five from `../daemons/questions.js`, first and in his order: what it controls, who it
+  works for, how it does that work, what happens if its standards are violated, and what happens when it is not there.
+  Its hours, how it is thanked and how that feels follow, as in the Protector's chamber. The test checks the five and the
+  boss follow-ups against `questions.js`.
+- **The boss question** (`dq-boss-chain`) is where the chain shows in play. The player picks who it works for: the
+  Protector, the self, control itself or the vulnerable child (the Player, `bosses` in `questions.js`), or names it in its
+  own words, which is always in voice. The guide answers by boss, and the method question that follows changes with the
+  answer: his three follow-ups (`byBoss`), and for the vulnerable child, where he gave none, the plain question. The
+  method question's cards change by boss too. The boss is saved with the Controller's record and shown at the mouth ("It
+  works for the Protector.").
+- **Its look and lines** come from the cave's daemon row ("To set the standard.", the rod) and the council's
+  `daemons.yaml` ("Not yet. Not until this is handled."). Choices, all of them, as are the cards.
+- **Saving.** The save gains `chamber` (0 the Protector, 1 the Controller); older saves are at 0. Reaching a chamber takes
+  its voice off the list of parts waiting by the wall, since it is heard there now. Forgetting a voice sends the player back
+  to the start of its chamber; "Start at the mouth again" begins with the Protector.
+- **Tells.** In a chamber, its own voice's job is in voice and talking about it is the self's ideas; the Protector can
+  now be one of the figures who speaks out of turn in a later chamber.
+- **The charge while it holds back** (Wendell, 15 October 2026, on playing the Controller: "we want to have the controllers
+  charge go down even when they are blocked this is some of the best times that the resistance is moving and we want players
+  to be able to track what makes the controller give up its resistance"). On the refusal path, Ask again first asks how
+  charged the voice is now, after what was offered (an assurance card, an assurance in the player's own words, whose words
+  are never saved, or waiting with it). A drop eases as after any answer. The charge is saved with what came before it
+  (`after: "held-<ask>"`, `why`, `from`), and each drop is shown at the keeping step ("What moved it while it held back") and
+  at the mouth ("Moved it: …"). Every voice gets this, since the chambers share the engine.
+
+## The Skeptic's chamber (14 October 2026)
+
+The third chamber on the daemon path (board `dp-seven`), built on the Controller's with no change to the meeting: the same
+asks for permission and refusal path, cards and open line, charge meter, W.A.V.E., sitting down, speaking as it and keeping.
+"Walk on" past the Controller now opens it. The Fixer waits at the shut mouth past it.
+
+- **Its questions** are Wendell's four from `../daemons/questions.js`, first and in his order: what it doubts, who it works
+  for, how doubt serves who it works for, and what happens when it is not there. Its hours, how it is thanked and how that
+  feels follow. The test checks the four against `questions.js`.
+- **The boss question** is his plain "Who do you work for?". The cards name the bosses in `questions.js`, and for the
+  Skeptic "controller" is the Controller, whom the player met one chamber back. When the player picks a boss whose record is saved, the
+  guide adds what that voice said of its own boss ("And the Controller told you it answers to the Protector."), so the chain
+  (`dq-boss-chain`) shows in play. The player can name a boss in its own words; "myself" names none here, since only the
+  Controller's "myself" is control itself.
+- **How doubt serves its boss** keeps his one wording, and its cards change with the boss. He gave no follow-ups by boss
+  for the Skeptic.
+- **Its look and lines** come from the cave's daemon row ("To doubt.", the lens) and the council's `daemons.yaml` ("They
+  cannot actually mean that. Look at the evidence."). Choices, all of them, as are the cards.
+- **Saving.** `chamber` 2 is the Skeptic; its record holds its boss beside the Controller's, and the mouth shows both.
+
+## The Fixer's chamber (15 October 2026)
+
+The fourth chamber on the daemon path (board `dp-seven`), built on the Skeptic's with no change to the meeting. "Walk on"
+past the Skeptic now opens it. The Emotional Body waits at the shut mouth past it.
+
+- **Its questions** are Wendell's four from `../daemons/questions.js`, first and in his order: what it fixes, who it works
+  for, how fixing (repairing or holding in place) serves who it works for, and what would happen if it weren't there. Its
+  hours, how it is thanked and how that feels follow. The test checks the four against `questions.js`.
+- **The boss question** is his plain "Who do you work for?", with the bosses in `questions.js` as cards. For the Fixer
+  "controller" is the Controller, so picking it brings what the Controller said of its own boss along (`dq-boss-chain`).
+  "Myself" names no boss here, as in the Skeptic's chamber.
+- **How fixing serves its boss** keeps his one wording, and its cards change with the boss. He gave no follow-ups by boss
+  for the Fixer.
+- **Its look and lines** come from the cave's daemon row ("To fix, in both senses", the wrench) and the council's
+  `daemons.yaml` ("There is a problem here and I should solve it."). Choices, all of them, as are the cards. In its chamber
+  fixing is in voice; the Skeptic, the Controller and the Protector can speak out of turn.
+- **Saving.** `chamber` 3 is the Fixer; its record holds its boss beside the others, and the mouth shows each.
+
+## The Emotional Body's chamber (15 October 2026)
+
+The fifth chamber on the daemon path (board `dp-seven`), built on the Fixer's with no change to the meeting. "Walk on" past
+the Fixer now opens it. The Victim waits at the shut mouth past it.
+
+- **Its questions** are Wendell's four from `../daemons/questions.js`, first and in his order: what it feels, who it works
+  for, what happens if it isn't there, and how it knows it has done a good job. Its hours, how it is thanked and how that
+  feels follow. The test checks the four against `questions.js`.
+- **The boss question** is his plain "Who do you work for?", with the bosses in `questions.js` as cards. For the Emotional
+  Body "controller" is the Controller, so picking it brings what the Controller said of its own boss along (`dq-boss-chain`).
+- **How it knows it has done a good job** is his measure question, new with this chamber. His set has no method question,
+  so the measure question is the one whose cards change with the boss, and its wording stays. The plain cards (no boss, or
+  "I'm not sure anymore") include the Fixer's "When it's fixed and gone." and the Skeptic's "I doubt I ever do."
+- **Its look and lines** come from the cave's daemon row (the orb, "To receive the signal and process it into meaning") and
+  the council's `daemons.yaml` ("This is what is actually moving."; it hands the feeling off before it has finished
+  arriving). The feelings cards follow the five channels: fear, anger, sadness, joy, and flat. Choices, all of them, as are
+  the cards. In its chamber feeling is in voice; the Fixer, the Controller, the Skeptic and the Protector can speak out of turn.
+- **Saving.** `chamber` 4 is the Emotional Body; its record holds its boss beside the others, and the mouth shows each.
+
+## The Victim's chamber (15 October 2026)
+
+The sixth chamber on the daemon path (board `dp-seven`), built on the Emotional Body's with no change to the meeting. "Walk
+on" past the Emotional Body now opens it. The Damaged Self waits at the shut mouth past it.
+
+- **Its questions** are Wendell's five from `../daemons/questions.js`, first and in his order: the sympathetic stories it
+  tells, who it works for, who it advocates for, the shadow sympathy its advocacy gets it, and what happens if it isn't
+  there. Its hours, how it is thanked and how that feels follow. The test checks the five against `questions.js`.
+- **The boss question** is his plain "Who do you work for?", with the bosses in `questions.js` as cards. For the Victim
+  "controller" is the Controller, so picking it brings what the Controller said of its own boss along (`dq-boss-chain`).
+- **Who it advocates for** comes straight after the boss. His set has no method question, so the advocacy question is the
+  one whose cards change with the boss, and its wording stays: for the Controller, "The one who did everything right."; for
+  the vulnerable child, "The child nobody came for." The shadow sympathy question is a choice of several.
+- **Its look and lines** come from the cave's daemon row (the bundle it carries, the stoop, "Sympathy, through stories.") and
+  the council's `daemons.yaml` ("Look at what I have absorbed. Look at the column."; the cost goes out as a story, and the
+  sympathy becomes the right to be met on its terms). Choices, all of them, as are the cards. In its chamber the story is in
+  voice; the Controller, the Fixer, the Skeptic and the Protector can speak out of turn.
+- **Saving.** `chamber` 5 is the Victim; its record holds its boss beside the others, and the mouth shows each.
+
+## The Damaged Self's chamber, and the shut mouth of the centre (15 October 2026)
+
+The seventh and last chamber on the daemon path (board `dp-seven`), built on the Victim's with no change to the meeting.
+"Walk on" past the Victim now opens it.
+
+- **Its questions** are Wendell's five from `../daemons/questions.js`, first and in his order: what damage it takes, from
+  what or whom, who it works for, how its job changes depending on who it works for, and what would happen if it weren't
+  there. Its hours, how it is thanked and how that feels follow. The test checks the five against `questions.js`.
+- **The boss question** is his plain "Who do you work for?". For the Damaged Self "controller" is the Controller, so picking
+  it brings what the Controller said of its own boss along (`dq-boss-chain`).
+- **How its job changes** comes straight after the boss, with his wording, and its cards change with the boss: for the
+  Protector, "I'm the shield behind the shield."; for the Controller, "I take the fault, so the standard stays."; for the
+  self, "I hold everything it's ashamed of."; for the vulnerable child, "I carry what it was too small to carry."
+- **Its look and lines** come from the cave's daemon row (the crack, the slighter stoop, "To take the damage. It is the
+  Protector's last resort") and the council's `daemons.yaml` ("I will take that one. It was probably me."; it books the hit
+  as a fault in how the self is built). Choices, all of them, as are the cards. In its chamber taking the hit is in voice;
+  the Fixer, the Victim, the Controller, the Skeptic and the Protector can speak out of turn.
+- **Before standing where it stands** the chamber asks first, as the Cave of Lessons does before Be it with the Damaged Self
+  (`bmc-safety`, `cave-321-damaged-self-ask`): "Standing where the Damaged Self stands goes to the deepest place. Do you want
+  to go on, rest, or go back up?" Resting keeps the choice open; going back up leaves it at its post, nothing marked skipped.
+- **Saving.** `chamber` 6 is the Damaged Self; its record holds its boss beside the others, and the mouth shows each.
+- **Past the last chamber** the path ends at the centre (`dp-centre`: "the vulnerable child, and the player's own self beside
+  it"). The figure at the shut mouth is the vulnerable child: the faceless avatar, small and warm. "Walk on, into the centre"
+  opens it (below).
+
+## The centre: the vulnerable child (16 October 2026)
+
+The end of the daemon path. Board `dp-centre` (13 October) said "The child is seen, not questioned"; Wendell's own Player
+set in `../daemons/questions.js` (14 October) is newer and in his words. Both hold, as board position `dp-centre-asked`, which
+stands unless he flips it.
+
+- **The way in.** Past the Damaged Self, "Walk on, into the centre" opens the shut mouth and the player walks in to stand
+  beside the child. The voices met on the way (every voice with a record in the save) come in as spirits in their own
+  daemon colours and stand around the child, beyond it and to both sides (`bms-spirits-follow`). The spirits walking with
+  the player keep following.
+- **Seen first.** "Nothing has to be asked here." "Be with it" ends the visit with nothing asked.
+- **Asked gently, only if the player chooses.** "Ask it, gently" asks his six, in his order and plain wording (read from
+  `questions.js` at run time; the test checks them): what are you learning, how are you growing, what are you feeling, what
+  are you exploring, how do the other daemons get in your way, what would happen if you weren't there. Each has cards and a
+  line for the child's words; "Let this one go" passes one and "That's enough for now" stops. Feeling and in-the-way take
+  more than one card.
+- **No charge, no permission.** The child is not a voice blocking the way, so there is no meter, no ask to step aside and
+  no secretly speaking; what it says buys nothing (the ontology: intimate disclosure is not progression currency).
+- **In its way.** The cards are one line per voice met ("The Protector won't let me out to play.", "The Damaged Self takes
+  every hit, so I never get to try.") and two that name none. A voice it names comes closer to it. The guide answers: "Every
+  one of them was trying to keep you safe." (the core premise: the voices emerged to protect the child).
+- **Saving.** Only lines the player keeps are saved, as `centre: { status: "seen" | "spoken", kept, savedAt }`; the mouth
+  shows them with "Forget the centre". The cards and lines are choices, all of them.
+- **Not yet built.** The centre's two ways, to the hall of the six and the second cave (Big Mind and Big Heart,
+  `bm-center`, `lv-centre-altitude`), are named as shut. The guide revealed as the integrated voice (`bm-guide`) is not yet
+  shown.

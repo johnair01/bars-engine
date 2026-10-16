@@ -54,7 +54,7 @@ export function CommitmentWorkspace({ workspace }: { workspace: TtvTaskWorkspace
   const { task, notes, shrinkChargeHref } = workspace
   const blocked = !!task.blockedAt
   const done = task.status === 'completed'
-  const terminal = done || task.status === 'composted' || task.status === 'carried_over'
+  const terminal = done || task.status === 'composted' || task.status === 'carried_over' || task.status === 'resting'
 
   const run = <T,>(fn: () => Promise<T | { error: string }>, after?: () => void) => {
     setError(null)

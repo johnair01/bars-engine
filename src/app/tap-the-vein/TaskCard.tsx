@@ -9,6 +9,7 @@
  *   completed            → satisfied / growing (✓ + "♦ +1 · brick paved")
  *   composted            → dissatisfied / composted (crosshatch + dimmed, shows reason)
  *   carried_over (out)   → neutral / seed, terminal ("carried →"), dimmed
+ *   resting              → neutral / seed, set aside to the seed library, dimmed
  *   assigned_to_campaign → neutral / seed (terminal)
  *   upgraded_to_quest    → satisfied / growing (terminal)
  *
@@ -37,11 +38,13 @@ const STATUS_STYLE: Record<string, StatusStyle> = {
   completed: { altitude: 'satisfied', stage: 'growing', label: 'Done', floating: false, terminal: true },
   composted: { altitude: 'dissatisfied', stage: 'composted', label: 'Composted', floating: false, terminal: true },
   carried_over: { altitude: 'neutral', stage: 'seed', label: 'Carried →', floating: false, terminal: true },
+  resting: { altitude: 'neutral', stage: 'seed', label: 'In the seed library', floating: false, terminal: true },
   assigned_to_campaign: { altitude: 'neutral', stage: 'seed', label: 'Assigned', floating: false, terminal: true },
   upgraded_to_quest: { altitude: 'satisfied', stage: 'growing', label: 'Upgraded', floating: false, terminal: true },
 }
 
 const REASON_LABEL: Record<string, string> = {
+  no_reason: 'let go',
   not_relevant: 'not relevant',
   already_done: 'already done',
   assigned_elsewhere: 'assigned elsewhere',

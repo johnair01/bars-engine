@@ -2,8 +2,10 @@
 //
 // Design: content/ontology-game/bigmind/DESIGN.md, from sprout campaigns/big-mind/build-brief.md and Wendell's board of
 // 10 October 2026, 20:19. His steer (bm-phone-first, overruled): "I want it to be a fork of cave of lessons that adds
-// chambers between cave hallways with a voice blocking the path". This first build holds the cave mouth, the Protector's
-// chamber and the hallway past it; the other six chambers and the centre wait on his playtest.
+// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and all seven chambers of the
+// daemon path, the Protector's, the Controller's, the Skeptic's, the Fixer's, the Emotional Body's, the Victim's and the
+// Damaged Self's, each with the hallway past it (board dp-seven); past the last, the path ends at the centre, where the
+// vulnerable child is met (board dp-centre, and Wendell's Player questions in daemons/questions.js).
 //
 // Needs cave/cave.js loaded first with window.__oagCaveNoStart set: this page borrows its engine (the tunnel, the faceless
 // avatar and its walk, the daemon body, the breath, the page guards) from window.__oagCave.kit, so a fix there reaches both
@@ -21,12 +23,14 @@
   // own answers (bm-cards-and-line). Cards marked out are the test of secretly speaking: each is an answer a different part
   // would give, so picking one brings the second figure out (bm-dismiss-step-aside). Which cards are out is a choice.
   var TRANSLATORS = {
-    ideas: { name: "the self's own ideas", short: "The self's ideas", waits: "The self's ideas wait here for their own turn.", tell: "talked about the Protector instead of speaking as it" },
+    // {name} is the voice of the chamber the tell was heard in.
+    ideas: { name: "the self's own ideas", short: "The self's ideas", waits: "The self's ideas wait here for their own turn.", tell: "talked about {name} instead of speaking as it" },
+    protector: { name: "the Protector", short: "The Protector", waits: "The Protector waits here; you have met it already.", tell: "took up the Protector's job of keeping the self safe", daemon: "protector" },
     fixer: { name: "the Fixer", short: "The Fixer", waits: "The Fixer waits here for its own chamber.", tell: "took up the Fixer's job of repairing things", daemon: "fixer" },
     controller: { name: "the Controller", short: "The Controller", waits: "The Controller waits here for its own chamber.", tell: "took up the Controller's job of keeping things in hand", daemon: "controller" },
     skeptic: { name: "the Skeptic", short: "The Skeptic", waits: "The Skeptic waits here for its own chamber.", tell: "doubted, which is the Skeptic's job", daemon: "skeptic" },
     unknown: { name: "a voice not met yet", short: "Not sure", waits: "A voice not met yet waits here for its turn.", tell: "" },
-    felt: { tell: "did not feel like the Protector to you" },
+    felt: { tell: "did not feel like {name} to you" },
   };
   // The chamber is a conversation (Wendell, 10 October 2026, 21:48: "There needs to be more back and forth between the
   // player and the protector. We have to ask its permission to step aside and if the player feels it doesn't want to give
@@ -76,6 +80,23 @@
           ["Loss."], ["Losing control."], ["Too much excitement."], ["Other people, even loved ones."], ["Itself."],
           ["I'd fix whatever is hurting it.", "fixer"], ["Maybe it protects me from feeling.", "ideas"],
         ] },
+        // Wendell's own questions for the Protector (14 October 2026, daemons/questions.js, where his exact words are): what
+        // it protects, how that keeps the body alive, what that is vulnerable to, and what it fears without it. They come
+        // after the first questions, closer to the evidence. The vulnerable cards are the five elements as the WAVE names them.
+        { id: "what", ask: "Who or what are you protecting: the self, something, or someone?", reflect: "So that's what you stand in front of.", cards: [
+          ["The self."], ["Someone I love."], ["Something precious."], ["The body."], ["A secret."], ["A younger me."],
+          ["I'd keep all of it in hand.", "controller"],
+        ] },
+        { id: "survive", ask: "How does protecting it keep the body alive?", reflect: "As far as you can tell, it's life or death.", cards: [
+          ["If it gets hurt, I don't survive."], ["It keeps us fed and housed."], ["It keeps us in the group."], ["It keeps the body out of danger."], ["I'm not sure it does anymore."],
+          ["I doubt it does, honestly.", "skeptic"],
+        ] },
+        { id: "vulnerable", ask: "What is it vulnerable to? Which feeling, which element?", multi: true, reflect: "That's what gets through.", cards: [
+          ["Anger. Fire."], ["Sadness. Water."], ["Joy. Wood."], ["Fear. Metal."], ["Feeling nothing. Earth."], ["All of them."],
+        ] },
+        { id: "afraid", ask: "What are you afraid will happen if you don't protect it?", multi: true, reflect: "That's a lot to hold back on your own.", cards: [
+          ["The self will get hurt."], ["It will be gone for good."], ["Nobody will be left to stand here."], ["Something will get out that should stay in."], ["I'll be blamed."],
+        ] },
         { id: "how", ask: "How do you do it? What happens when something gets through?", multi: true, reflect: "And when it gets through again, you build it higher.", cards: [
           ["I build walls."], ["I set borders."], ["I sound the alarm."], ["I send for reinforcements."], ["I build the wall higher."],
           ["I build a dome over everything."], ["I'd fix the breach for good.", "fixer"],
@@ -96,24 +117,555 @@
       know: { ask: "From here, what does the Protector want the self to know?", cards: [["I'm still here."], ["I did my best."], ["I'm tired."], ["Let me rest sometimes."], ["Thank me once in a while."]] },
       thanks: "Thank you, Protector. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
     },
+    // The Controller, second on the daemon path (board dp-seven), met with Wendell's own set for it (daemons/questions.js):
+    // what it controls, who it works for, how it does that work, what happens if its standards are violated, and what
+    // happens when it is not there. The boss question is where the chain shows in play (board dq-boss-chain): the player
+    // picks who it works for, and the method question that follows changes with the answer (byBoss, his words for three
+    // bosses; the vulnerable child has none, so the plain question stays). Its cards change with the boss too. The lines,
+    // its look ("To set the standard.", the rod) and the cards are written from the cave's daemon row and the council's
+    // daemons.yaml ("Not yet. Not until this is handled."); choices, all of them.
+    {
+      id: "controller", name: "the Controller", title: "The Controller", daemon: "controller",
+      arrive: "A tall, narrow figure stands in the middle of the way, a measuring rod across its hands. It looks you over before you've said a word.",
+      meet: {
+        opens: "Not yet. Not until this is handled.",
+        replies: [
+          ["Who are you?", "I set the standard. Someone has to.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear from me? Fine. But we do this properly, one step at a time.", "hear"],
+          ["I need to get through.", "Not like this. You're not ready yet.", "push"],
+        ],
+        after: { hear: "Then I'd like to hear from you, properly, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Keeper of the standard, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Controller, may I speak with you for a while?", yes: "Go ahead. Keep it in order.", no: ["Not until I know where this is going.", "Last time this got out of hand.", "Not yet."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. I'll be watching how you do it.", no: ["If I step aside, who holds the standard?", "You'd do it differently. That's the trouble.", "Not yet. Ask me again."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on, then. Mind the standard.", no: ["You haven't got it right yet.", "What's ahead needs a plan.", "Not yet."] },
+      },
+      fears: [["Everything will fall apart."], ["We'll be caught unprepared."], ["Someone will see us get it wrong."], ["Nobody will hold the line."], ["I won't be needed."]],
+      assure: [["I'll come back to my own place when we're done."], ["Nothing will be undone. The standard stays yours."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not trying to get rid of you. I want to know you."]],
+      assured: ["...Fine. One step at a time.", "Hm. I'll be checking.", "Nobody has asked me what I need before."],
+      questions: [
+        { id: "what", ask: "What, or who, are you controlling?", reflect: "So that's what you keep in hand.", cards: [
+          ["How I come across."], ["My time."], ["What I say, before I say it."], ["The plan."], ["The people around me."], ["The feeling, before it shows."],
+          ["I'd keep all of us safe.", "protector"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player
+        // is the vulnerable child).
+        { id: "boss", boss: true, ask: "Who do you work for: the Protector, the self, control itself, or the vulnerable child?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The self.", null, "self"], ["Control itself.", null, "controller"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it works for my parents.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. You keep it all in hand so the body stays safe.",
+          self: "So you answer to the self. You hold it to a standard.",
+          controller: "So you answer to control itself. Nobody else gives the orders.",
+          player: "So you answer to the vulnerable child. You keep it from being hurt again.",
+        } },
+        { id: "how", ask: "How are you doing the work of who you work for?", reflect: "That's how the work gets done.", byBoss: {
+          protector: "How are you protecting the physical body by controlling?",
+          self: "What standards are you setting for the self?",
+          controller: "What standards are you setting about control itself?",
+        }, cards: [
+          ["I set the standard."], ["I make plans."], ["I rehearse what to say."], ["I wait for the right moment."], ["I check everything twice."],
+          ["I'd fix it so it never goes wrong.", "fixer"],
+        ], cardsByBoss: {
+          protector: [["If everything is in hand, nothing can hurt us."], ["I plan for every danger."], ["I keep the body out of risk."], ["I stop us before we act."], ["I'd fix it so it never goes wrong.", "fixer"]],
+          self: [["Do it right, or don't do it."], ["Never look foolish."], ["Be ready before you begin."], ["Always know what to say."], ["Never need help."]],
+          controller: [["Control is better than no control."], ["Know the outcome before you start."], ["Nothing happens that I didn't plan."], ["Rules are rules."], ["If I let go once, I'll never get it back."]],
+          player: [["I keep it still so it can't be hurt."], ["I keep it from trying anything new."], ["I decide when it's safe to play."], ["I make the plans so it doesn't have to."]],
+        } },
+        { id: "violated", ask: "What happens if your standards are violated?", multi: true, reflect: "That's what you're holding off.", cards: [
+          ["I tighten everything."], ["I go over it again and again."], ["I blame the self."], ["I shut it all down."], ["Everything falls apart."],
+          ["I doubt they were worth having.", "skeptic"],
+        ] },
+        { id: "gone", ask: "What happens when you're not there?", multi: true, reflect: "No wonder you never leave.", cards: [
+          ["Chaos."], ["We get caught out."], ["Someone gets hurt."], ["The self makes a fool of itself."], ["Nothing gets done."], ["I'm not sure. I've never left."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Day and night."], ["Every waking hour."], ["Before anything happens, and after."], ["Even in my sleep, going over it."], ["Whenever anything feels uncertain, which is always."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Working all hours, and hardly thanked.", cards: [
+          ["I'm not."], ["When it goes to plan, nobody notices."], ["The self calls me rigid."], ["It's exhausting."],
+          ["I doubt anyone could thank me enough.", "skeptic"], ["It means well, really.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Unfair."], ["Tense."], ["Tired."], ["Unappreciated."], ["Lonely."], ["Like nobody sees what I hold."],
+        ] },
+      ],
+      places: ["Chest", "Throat", "Belly", "Shoulders", "Jaw", "Back", "Head", "Hands", "All over"],
+      ready: "...Alright. I think I could step aside for a while, if you do it properly.",
+      notYet: "I'm not ready to hand anything over yet.",
+      seat: "You are standing where the Controller stands. The self is back there, where you were a moment ago, and every move it makes is measured here first.",
+      know: { ask: "From here, what does the Controller want the self to know?", cards: [["I'm only trying to help."], ["It doesn't have to be perfect. It has to be safe."], ["I'm tired of holding it all."], ["Let me rest sometimes."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Controller. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
+    // The Skeptic, third on the daemon path (board dp-seven), met with Wendell's own set for it (daemons/questions.js): what it
+    // doubts, who it works for, how doubt serves who it works for, and what happens when it is not there. His boss question
+    // for it is the plain one, so the cards name the bosses (questions.js bosses), and the Controller is one of them: it is a
+    // figure the player has met by now, so the chain shows (board dq-boss-chain). He gave one method question, so its wording
+    // stays and only the cards change with the boss. The lines, its look ("To doubt.", the lens) and the cards are written from
+    // the cave's daemon row and the council's daemons.yaml ("They cannot actually mean that. Look at the evidence."); choices,
+    // all of them.
+    {
+      id: "skeptic", name: "the Skeptic", title: "The Skeptic", daemon: "skeptic",
+      bossNames: { controller: "the Controller" },
+      arrive: "A lean figure stands in the middle of the way, a lens raised to one eye. It studies you through it, unconvinced.",
+      meet: {
+        opens: "You can't actually mean that. Show me the evidence.",
+        replies: [
+          ["Who are you?", "I check what's true. Someone has to.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear from me? I doubt you mean it. But go on.", "hear"],
+          ["I need to get through.", "Through to what? I don't believe there's anything there.", "push"],
+        ],
+        after: { hear: "I do mean it. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Checker of what's true, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Skeptic, may I speak with you for a while?", yes: "Go on. I'm listening, for now.", no: ["What would be the point?", "You'll say what everyone says.", "I doubt it."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. I don't expect much.", no: ["If I step aside, who checks what's real?", "You'd believe anything.", "Not yet. Show me you mean it."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on, then. Don't say I didn't warn you.", no: ["You haven't shown me anything yet.", "There's nothing past here worth having.", "Not yet."] },
+      },
+      fears: [["We'll be fooled again."], ["We'll get our hopes up for nothing."], ["Someone will take advantage."], ["We'll look naive."], ["Nobody will check what's true."]],
+      assure: [["I'll come back to my own place when we're done."], ["You can keep checking. I'm not asking you to believe anything."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not trying to get rid of you. I want to know you."]],
+      assured: ["...We'll see.", "Hm. I'll believe it when I see it.", "Nobody has asked what I think before. Not really."],
+      questions: [
+        { id: "what", ask: "What, or who, do you doubt?", reflect: "So that's what you won't take at its word.", cards: [
+          ["Compliments."], ["Whether people mean it."], ["That it will work out."], ["Anyone who says they care."], ["Good news."], ["Myself."],
+          ["It just doesn't trust anyone.", "ideas"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met in the chamber before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned it from my parents.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. Doubt keeps anything from getting close enough to hurt.",
+          controller: "So you answer to the Controller. Nothing gets in until you've checked it.",
+          self: "So you answer to the self. You keep it from being fooled.",
+          player: "So you answer to the vulnerable child. You keep it from hoping and being let down.",
+        } },
+        { id: "how", ask: "How does doubt serve who you work for?", reflect: "That's what the doubt is for.", cards: [
+          ["I question everything."], ["I wait for proof."], ["I find the catch."], ["I take the warmth out of it."], ["I say no before anyone else can."],
+          ["I'd fix whatever doesn't hold up.", "fixer"],
+        ], cardsByBoss: {
+          protector: [["If I don't believe it, it can't hurt us."], ["I keep everyone at arm's length."], ["I find the danger in every kindness."], ["I stop us trusting too soon."], ["I'd keep every danger out.", "protector"]],
+          controller: [["I check it before it's allowed in."], ["I find the flaw in the plan."], ["Nothing counts until it's proven."], ["I make sure we're never surprised."], ["I'd keep it all in hand myself.", "controller"]],
+          self: [["I keep it from looking foolish."], ["I stop it believing what it's told."], ["I make it earn every good thing."], ["I keep its hopes small."], ["I'd make it work properly myself.", "fixer"]],
+          player: [["If it doesn't hope, it can't be let down."], ["I tell it not to get excited."], ["I keep it from trusting anyone too fast."], ["I say it's probably nothing."]],
+        } },
+        { id: "gone", ask: "What happens when you're not there?", multi: true, reflect: "No wonder you keep watching.", cards: [
+          ["We get fooled."], ["We hope, and get hurt."], ["We believe the wrong people."], ["We look naive."], ["Somebody takes advantage."], ["I'm not sure. I've never left."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Day and night."], ["Whenever anyone says something kind."], ["Every time something good happens."], ["Even in my sleep, going over what they meant."], ["Whenever there's a promise, which is always."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Working all hours, and hardly thanked.", cards: [
+          ["I'm called negative."], ["Hardly."], ["Only when I'm proven right."], ["It's exhausting."],
+          ["Nobody notices how much I keep in hand.", "controller"], ["It thinks it's being realistic.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Lonely."], ["Tired."], ["Unappreciated."], ["Like I'm always the bad guy."], ["Like I'd love to be wrong."], ["Cold."],
+        ] },
+      ],
+      places: ["Chest", "Throat", "Belly", "Shoulders", "Jaw", "Back", "Head", "Hands", "All over"],
+      ready: "...Fine. I could step aside for a while. I'm not promising anything.",
+      notYet: "I'm not convinced yet.",
+      seat: "You are standing where the Skeptic stands. The self is back there, where you were a moment ago, and everything it hears is weighed here first.",
+      know: { ask: "From here, what does the Skeptic want the self to know?", cards: [["I'm only trying to keep you from being fooled."], ["Not everyone means it."], ["I'd love to be wrong."], ["I'm tired of checking."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Skeptic. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
+    // The Fixer, fourth on the daemon path (board dp-seven), met with Wendell's own set for it (daemons/questions.js): what it
+    // fixes, who it works for, how fixing (repairing or holding in place) serves who it works for, and what would happen if it
+    // weren't there. His boss question is the plain one, and to the Fixer "controller" is the Controller, met two chambers back,
+    // so the chain shows (board dq-boss-chain). He gave one method question, so its wording stays and only the cards change with
+    // the boss. The lines, its look ("To fix, in both senses", the wrench) and the cards are written from the cave's daemon row
+    // and the council's daemons.yaml ("There is a problem here and I should solve it."); choices, all of them.
+    {
+      id: "fixer", name: "the Fixer", title: "The Fixer", daemon: "fixer",
+      bossNames: { controller: "the Controller" },
+      arrive: "A figure kneels in the middle of the way with a wrench in its hand, working at something you can't see. It looks up only long enough to check whether you're broken too.",
+      meet: {
+        opens: "There's a problem here. Give me a minute and I'll have it sorted.",
+        replies: [
+          ["Who are you?", "I fix things. Somebody has to.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear from me? There's no time for that. But all right.", "hear"],
+          ["I need to get through.", "Not yet. Nothing goes through until it's fixed.", "push"],
+        ],
+        after: { hear: "I'm not here to be fixed. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Fixer of things, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Fixer, may I speak with you for a while?", yes: "While I work. Go on.", no: ["I'm in the middle of something.", "Talking doesn't fix anything.", "Not until this is sorted."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. Don't touch anything.", no: ["If I put this down, it all comes apart.", "You'd only make it worse.", "Not yet. It's nearly fixed."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on. Mind the loose bits.", no: ["It isn't safe yet. It isn't finished.", "Not while it's still broken.", "Not yet."] },
+      },
+      fears: [["It'll stay broken."], ["It'll get worse."], ["We'll be helpless."], ["I'll be useless."], ["Nobody else will fix it."]],
+      assure: [["I'll come back to my own place when we're done."], ["You can pick it up again after. I'm not asking you to stop for good."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not trying to get rid of you. I want to know you."]],
+      assured: ["...All right. Just for a minute.", "Hm. It'll keep, I suppose.", "Nobody has ever asked me to put it down before."],
+      questions: [
+        { id: "what", ask: "What, or who, do you fix?", reflect: "So that's what you keep mending.", cards: [
+          ["Feelings."], ["Other people's problems."], ["Whatever is broken."], ["Myself."], ["The mood in the room."], ["The way things should be."],
+          ["It just wants to help.", "ideas"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met two chambers before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned it from always being the helper.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. A broken thing is a way in, so you close it.",
+          controller: "So you answer to the Controller. You keep everything the way it's meant to be.",
+          self: "So you answer to the self. You make it better, so it never has to feel it.",
+          player: "So you answer to the vulnerable child. You mend what hurts it before it can cry.",
+        } },
+        { id: "how", ask: "How does fixing, repairing or holding in place, serve who you work for?", reflect: "That's what the fixing is for.", cards: [
+          ["I turn a feeling into a problem."], ["A problem has a solution."], ["I hold it in place so it can't fall apart."], ["I mend it before anyone notices."], ["I keep busy, so nothing gets felt."],
+          ["I doubt it can be fixed at all.", "skeptic"],
+        ], cardsByBoss: {
+          protector: [["A broken thing lets danger in, so I seal it."], ["I patch the hole before anything gets through."], ["I hold the walls together."], ["I make it safe again, fast."], ["I'd keep every danger out.", "protector"]],
+          controller: [["I put it back the way it's meant to be."], ["I hold everything in place."], ["I sort it before it gets out of hand."], ["I keep it to the standard."], ["I'd keep it all in hand myself.", "controller"]],
+          self: [["I make it better so it doesn't have to feel bad."], ["I make it useful, so it's wanted."], ["I improve it before anyone sees."], ["I fix it so it's never the broken one."], ["I doubt it's worth fixing.", "skeptic"]],
+          player: [["I mend what hurts it."], ["I make it stop crying."], ["I fix things so it never has to wait for help."], ["I hold it together."]],
+        } },
+        { id: "gone", ask: "What would happen if you weren't there?", multi: true, reflect: "No wonder you keep working.", cards: [
+          ["It stays broken."], ["Everything falls apart."], ["We'd have to just feel it."], ["Nobody would help."], ["We'd be helpless."], ["I'm not sure. I've never put the wrench down."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Day and night."], ["Whenever something breaks, which is always."], ["Whenever anyone is upset."], ["Even in my sleep, working on it."], ["There's always another thing."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Working all hours, and hardly thanked.", cards: [
+          ["When it's fixed, I'm forgotten."], ["I'm told to stop meddling."], ["Hardly."], ["It's exhausting."],
+          ["Nobody notices how much I keep in hand.", "controller"], ["It thinks it's being helpful.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Tired."], ["Useless, when it won't fix."], ["Unappreciated."], ["Like it's never finished."], ["Like I'd love to just sit down."], ["Alone with it."],
+        ] },
+      ],
+      places: ["Hands", "Shoulders", "Chest", "Jaw", "Belly", "Back", "Head", "Throat", "All over"],
+      ready: "...All right. I could put it down for a while. It'll keep.",
+      notYet: "It isn't finished yet.",
+      seat: "You are standing where the Fixer stands. The self is back there, where you were a moment ago, and everything it feels comes here first to be mended.",
+      know: { ask: "From here, what does the Fixer want the self to know?", cards: [["I'm only trying to help."], ["Not everything is yours to fix."], ["I'd love to just sit with you."], ["I'm tired of mending."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Fixer. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
+    // The Emotional Body, fifth on the daemon path (board dp-seven), met with Wendell's own set for it (daemons/questions.js):
+    // what it feels, who it works for, what happens if it isn't there, and how it knows it has done a good job. His set has no
+    // method question; its measure question is new to the chambers, so that is the one whose cards change with the boss. To
+    // the Emotional Body "controller" is the Controller, met three chambers back, so the chain shows (board dq-boss-chain). The
+    // lines, its look (the orb, "To receive the signal and process it into meaning") and the cards are written from the cave's
+    // daemon row and the council's daemons.yaml ("This is what is actually moving."; it hands the feeling off before it has
+    // finished arriving); choices, all of them. The feelings card follows the five channels: fear, anger, sadness, joy, flat.
+    {
+      id: "emotional-body", name: "the Emotional Body", title: "The Emotional Body", daemon: "emotional-body",
+      bossNames: { controller: "the Controller" },
+      arrive: "A glowing shape hangs in the middle of the way, its colour shifting faster than you can name it. It turns toward you as if it felt you coming before it saw you.",
+      meet: {
+        opens: "Something's moving here. I felt you before you came round the bend.",
+        replies: [
+          ["Who are you?", "I'm what feels it first. This is what is actually moving.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear me? Most people want me quieter. All right.", "hear"],
+          ["I need to get through.", "Not while this is still coming in. Not until I know what it means.", "push"],
+        ],
+        after: { hear: "I'm not here to calm you down. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Feeler of things, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Emotional Body, may I speak with you for a while?", yes: "Yes. I've been waiting for someone to ask.", no: ["It's too much right now.", "You'll only tell me to calm down.", "Not while it's still coming in."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. It'll still be moving when you get here.", no: ["If I stop feeling it, nobody will.", "You'd go numb.", "Not yet. It hasn't finished arriving."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on. Feel your way.", no: ["It isn't finished. I haven't said what it means.", "Not while it's still this strong.", "Not yet."] },
+      },
+      fears: [["It'll be lost."], ["Nobody will feel it."], ["We'll go numb."], ["It'll come out all wrong."], ["I'll be too much."]],
+      assure: [["I'll come back to my own place when we're done."], ["You can feel it again after. I'm not asking you to stop for good."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not trying to calm you down. I want to know you."]],
+      assured: ["...All right. Gently, then.", "Hm. It'll still be here, I suppose.", "Nobody has ever asked me before. They only ask me to stop."],
+      questions: [
+        { id: "what", ask: "What do you feel?", reflect: "So that's what's moving.", cards: [
+          ["Everything, all at once."], ["Fear."], ["Anger."], ["Sadness."], ["Joy."], ["Nothing. It's gone flat."],
+          ["It feels too much, I think.", "ideas"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met three chambers before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned to feel for everyone.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. You feel the danger first, so it can move in time.",
+          controller: "So you answer to the Controller. You feel it, and it decides what's allowed out.",
+          self: "So you answer to the self. You feel it, so it knows what it wants.",
+          player: "So you answer to the vulnerable child. You feel what it can't say yet.",
+        } },
+        { id: "gone", ask: "What happens if you're not there?", multi: true, reflect: "No wonder you keep feeling.", cards: [
+          ["Nothing would mean anything."], ["We'd go numb."], ["Nobody would know what's wrong."], ["It would all come out sideways."], ["The child would be alone with it."], ["I'm not sure. I've never stopped."],
+        ] },
+        // His measure question, new with this chamber: how it knows the feeling landed. Its wording stays; the cards change with
+        // the boss, as the method cards do in the chambers before.
+        { id: "good-job", ask: "How do you know you've done a good job?", reflect: "That's how you know it landed.", cards: [
+          ["When the feeling has finished moving."], ["When it has a name."], ["When it turns into something we can use."], ["When somebody thanks me for it."], ["When nobody can tell."],
+          ["When it's fixed and gone.", "fixer"], ["I doubt I ever do.", "skeptic"],
+        ], cardsByBoss: {
+          protector: [["When we're safe again."], ["When the warning got through in time."], ["When we moved before it hit."], ["When the fear can rest."], ["When nothing can get in.", "protector"]],
+          controller: [["When it came out the way it should."], ["When nobody saw too much."], ["When it was felt at the right time, in the right place."], ["When it stayed in proportion."], ["When it's all kept in hand.", "controller"]],
+          self: [["When it knows what it wants."], ["When it feels like itself again."], ["When the feeling made sense."], ["When it could say it out loud."], ["When it's fixed and gone.", "fixer"]],
+          player: [["When the child isn't alone with it."], ["When it got to cry, or laugh."], ["When someone listened."], ["When it felt safe enough to feel."]],
+        } },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Always. I never switch off."], ["Whenever something moves."], ["Most of all at night."], ["Before anyone else knows."], ["Every time someone in the room feels something."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Feeling all of it, and hardly thanked.", cards: [
+          ["I'm called too much."], ["I'm told to calm down."], ["Sometimes you listen."], ["Hardly."],
+          ["I doubt feelings tell you anything.", "skeptic"], ["It's just being emotional.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Tired."], ["Unheard."], ["Too much."], ["Like I have to shout to be felt."], ["Like I'd love to be felt for once."], ["Alone with it."],
+        ] },
+      ],
+      places: ["Chest", "Throat", "Belly", "Face", "Eyes", "Shoulders", "Hands", "Back", "All over"],
+      ready: "...All right. I can let it move without me for a while. It'll still be here.",
+      notYet: "It hasn't finished arriving.",
+      seat: "You are standing where the Emotional Body stands. The self is back there, where you were a moment ago, and everything it feels arrives here first.",
+      know: { ask: "From here, what does the Emotional Body want the self to know?", cards: [["Feel it before you fix it."], ["I'm not too much."], ["Everything I tell you means something."], ["I'm tired of being hushed."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Emotional Body. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
+    // The Victim, sixth on the daemon path (board dp-seven), met with Wendell's own set for it (daemons/questions.js): the
+    // sympathetic stories it tells, who it works for, who it advocates for, the shadow sympathy its advocacy gets it, and what
+    // happens if it isn't there. His set has no method question; who it advocates for is the question that follows the boss,
+    // so that is the one whose cards change with the boss. To the Victim "controller" is the Controller, so the chain shows
+    // (board dq-boss-chain). The lines, its look (the bundle it carries, the stoop) and the cards are written from the cave's
+    // daemon row ("Sympathy, through stories.") and the council's daemons.yaml ("Look at what I have absorbed. Look at the
+    // column."; the cost goes out as a story, and the sympathy becomes the right to be met on its terms); choices, all of them.
+    {
+      id: "victim", name: "the Victim", title: "The Victim", daemon: "victim",
+      bossNames: { controller: "the Controller" },
+      arrive: "A stooped figure sits against the wall in the middle of the way, a bundle held tight in its arms. It looks up as you come near, as if it has been waiting a long time for someone to ask.",
+      meet: {
+        opens: "You'd stop for me? Nobody stops. Let me tell you what happened.",
+        replies: [
+          ["Who are you?", "I'm the one it happened to. Look at what I've carried.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear me? Most people only hear the first part. All right.", "hear"],
+          ["I need to get through.", "Of course you do. Everyone does. Nobody stays for the story.", "push"],
+        ],
+        after: { hear: "I'm not here to argue with your story. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Keeper of the story, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Victim, may I speak with you for a while?", yes: "Yes. Nobody ever asks me.", no: ["You'll say I'm making it up.", "You'll tell me to get over it.", "Not if you're only going to leave."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. Then you'll see what it's been like.", no: ["If I put it down, nobody will know what it cost.", "You'd be blamed for it.", "Not yet. You haven't heard all of it."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on. Remember what I told you.", no: ["Not until someone has heard it all.", "You'll forget it the moment you're past.", "Not yet."] },
+      },
+      fears: [["Nobody will know what it cost."], ["We'll be blamed."], ["It will happen again."], ["We'll be alone with it."], ["They'll say it never happened."]],
+      assure: [["I'll come back to my own place when we're done."], ["What happened is real. I'm not asking you to take it back."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not here to judge your story. I want to know you."]],
+      assured: ["...All right. Gently, then.", "Hm. You're still here, I suppose.", "Nobody has ever stayed this long before."],
+      questions: [
+        { id: "what", ask: "What sympathetic stories do you tell?", reflect: "So those are the stories you carry.", cards: [
+          ["How nobody was there for us."], ["How it always happens to us."], ["How much we gave, and got nothing back."], ["How they had the advantage, and we never had a chance."], ["How we were left out."], ["How hard it's been, all this time."],
+          ["It tells them to be heard, I think.", "ideas"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met four chambers before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned that stories keep people near.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. The story keeps the danger named, so nobody walks into it again.",
+          controller: "So you answer to the Controller. The story says who is to blame, so nothing is ours to answer for.",
+          self: "So you answer to the self. The story gives it the right to be heard.",
+          player: "So you answer to the vulnerable child. You tell what happened to it, because it couldn't.",
+        } },
+        // His advocacy question follows the boss, so its wording stays and its cards change with the boss, as the method
+        // cards do in the chambers before.
+        { id: "advocate", ask: "Who do you advocate for?", reflect: "So that's who you stand up for.", cards: [
+          ["The one who got hurt."], ["Everyone who was left out."], ["Us, because nobody else will."], ["Whoever is losing."], ["The one nobody believes."],
+          ["I'd make them pay for what they did.", "controller"], ["I'd fix it for them, if anyone let me.", "fixer"],
+        ], cardsByBoss: {
+          protector: [["The one who keeps getting hurt."], ["Whoever is in danger."], ["Us, so it never happens again."], ["The one who couldn't get away."], ["I'd keep every danger out.", "protector"]],
+          controller: [["The one who did everything right."], ["Whoever was treated unfairly."], ["The one who was wronged, so it's on the record."], ["Us, against the ones who broke the rules."], ["The standard they failed.", "controller"]],
+          self: [["The self, when nobody else will."], ["The one who deserves better."], ["The part that never gets a say."], ["The self, so it gets its turn to speak."], ["I doubt anyone else would.", "skeptic"]],
+          player: [["The child who was hurt."], ["The little one who couldn't speak."], ["The child nobody came for."], ["The child, so somebody finally listens."]],
+        } },
+        { id: "payoff", ask: "What shadow sympathy does your advocacy get you?", multi: true, reflect: "That's what the story buys.", cards: [
+          ["People are gentle with us."], ["Nobody can say it was our fault."], ["We get to be met on our terms."], ["We don't have to change."], ["They stay close, for a while."], ["We're the one who's right."],
+          ["I doubt it gets us anything at all.", "skeptic"],
+        ] },
+        { id: "gone", ask: "What happens if you're not there?", multi: true, reflect: "No wonder you keep telling it.", cards: [
+          ["Nobody would know what it cost."], ["It would be our fault."], ["It would happen again, and nobody would see."], ["We'd be alone with it."], ["The child would never be heard."], ["I'm not sure. I've always been here."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Always. The story never ends."], ["Whenever someone asks how we are."], ["Most of all at night, going over it."], ["Every time it nearly happens again."], ["Whenever someone else is getting the sympathy."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Telling all of it, and hardly thanked.", cards: [
+          ["People get tired of my stories."], ["I'm called dramatic."], ["Sometimes someone listens."], ["Hardly."],
+          ["I doubt anyone really cares.", "skeptic"], ["It just wants attention.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Tired."], ["Unheard."], ["Like nobody believes me."], ["Like I have to tell it louder."], ["Like I'd love to put it down for once."], ["Alone with it."],
+        ] },
+      ],
+      places: ["Chest", "Throat", "Belly", "Face", "Eyes", "Shoulders", "Arms", "Back", "All over"],
+      ready: "...All right. I can set it down for a while. It'll still be here.",
+      notYet: "You haven't heard all of it yet.",
+      seat: "You are standing where the Victim stands. The self is back there, where you were a moment ago, and everything that has ever happened to it is in the bundle in your arms.",
+      know: { ask: "From here, what does the Victim want the self to know?", cards: [["It really did happen."], ["I'm not just making a fuss."], ["I've carried this so you wouldn't forget."], ["I'm tired of telling it."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Victim. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
+    // The Damaged Self, seventh and last on the daemon path (board dp-seven), met with Wendell's own set for it
+    // (daemons/questions.js): what damage it takes, from what or whom, who it works for, how its job changes depending on who
+    // it works for, and what would happen if it weren't there. His method question is "How does your job change", so its
+    // wording stays and its cards change with the boss, as in the chambers before. To the Damaged Self "controller" is the
+    // Controller, so the chain shows (board dq-boss-chain). The lines, its look (the crack, the slighter stoop) and the cards
+    // are written from the cave's daemon row ("To take the damage. It is the Protector's last resort") and the council's
+    // daemons.yaml ("I will take that one. It was probably me."; it absorbs the hit and books it as a fault in how the self is
+    // built); choices, all of them. deep: standing where it stands is the deepest place, so the cave asks first (bmc-safety,
+    // cave-321-damaged-self-ask).
+    {
+      id: "damaged-self", name: "the Damaged Self", title: "The Damaged Self", daemon: "damaged-self", deep: true,
+      bossNames: { controller: "the Controller" },
+      arrive: "A figure stands in the middle of the way, a crack running down it from the shoulder. It doesn't brace as you come near. It turns a little, as if to take whatever you've brought on the side that's already broken.",
+      meet: {
+        opens: "I'll take that one. Whatever it is. It was probably me.",
+        replies: [
+          ["Who are you?", "I'm the one who takes it, when nothing else could keep it out.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear from me? Nobody asks the broken one anything. All right.", "hear"],
+          ["I need to get through.", "Go on, then. Push. I'm used to it.", "push"],
+        ],
+        after: { hear: "I'm not here to hit you, or to blame you. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Keeper of the hits, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Damaged Self, may I speak with you for a while?", yes: "If you want. I don't have much to say that's any good.", no: ["You'll only find more that's wrong with us.", "It's safer if nobody looks.", "Not if it's going to hurt."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. It's heavy here. Be careful.", no: ["If I step aside, it hits the child.", "You couldn't take it.", "Not yet. It still hurts too much."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on. Go gently, there.", no: ["What's past me is the softest place. Nothing goes there.", "Not while something might still come.", "Not yet."] },
+      },
+      fears: [["The next hit will land on the child."], ["We'll be found out."], ["It will prove what's wrong with us."], ["We'll fall apart."], ["There'll be nothing left to take it."]],
+      assure: [["I'll come back to my own place when we're done."], ["Nothing you took was your fault. I'm not here to add to it."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not here to fix you or get rid of you. I want to know you."]],
+      assured: ["...All right. Gently, then.", "Hm. You didn't flinch.", "Nobody has ever stayed with the broken part before."],
+      questions: [
+        { id: "what", ask: "What kind of damage do you take?", reflect: "So that's what you take on.", cards: [
+          ["The blame."], ["The shame."], ["The hurt nobody else could keep out."], ["The hit, so it lands on me and not further in."], ["Being the one who's wrong."], ["Every time it didn't work out."],
+          ["It thinks it's broken, I think.", "ideas"],
+        ] },
+        { id: "from", ask: "From what, or from whom?", reflect: "So that's where it comes from.", cards: [
+          ["From the people closest to us."], ["From whoever was angry."], ["From the world, when it got too much."], ["From inside, when we let ourselves down."], ["From the hits the Protector couldn't stop."], ["I'm not sure. It just comes."],
+          ["I'd stop them ever getting close.", "protector"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met five chambers before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned that taking it was the only way to stay safe.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. When its shield isn't enough, you are the last thing standing.",
+          controller: "So you answer to the Controller. When the standard isn't met, the fault is put on you.",
+          self: "So you answer to the self. You take what it can't bear to look at.",
+          player: "So you answer to the vulnerable child. You take the hit so it never reaches the little one.",
+        } },
+        // His method question: its wording stays and its cards change with the boss.
+        { id: "how", ask: "How does your job change depending on who you work for?", reflect: "So that's how the job changes.", cards: [
+          ["I take whatever gets through."], ["I take the blame, so nobody else has to."], ["I break, so the rest doesn't."], ["I go quiet and carry it."], ["I agree it was me, so it stops."],
+          ["I'd fix the crack myself.", "fixer"], ["Poor me, nobody ever helps.", "victim"],
+        ], cardsByBoss: {
+          protector: [["I'm the shield behind the shield."], ["I take what the Protector couldn't stop."], ["I let it land on me, so it goes no further."], ["I'm the last resort."], ["I'd keep every danger out.", "protector"]],
+          controller: [["I'm the reason it wasn't good enough."], ["I take the fault, so the standard stays."], ["I'm the one who gets marked down."], ["I hold the failure, so the plan still stands."], ["I'd keep it all in hand myself.", "controller"]],
+          self: [["I hold everything it's ashamed of."], ["I keep the case against it."], ["I'm where it puts what it can't look at."], ["I take the blame so it can keep going."], ["I doubt it would want to know.", "skeptic"]],
+          player: [["I take the hit so it doesn't reach the child."], ["I'm hurt, so the little one isn't."], ["I stand in front of it."], ["I carry what it was too small to carry."]],
+        } },
+        { id: "gone", ask: "What would happen if you weren't there?", multi: true, reflect: "No wonder you keep taking it.", cards: [
+          ["It would reach the child."], ["Nothing would take the hit."], ["We'd break all the way."], ["The truth about us would get out."], ["The Protector would have nothing behind it."], ["I'm not sure. I've always been here."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Always. The hits don't stop."], ["Whenever someone is disappointed."], ["Most of all at night, going over what we did wrong."], ["Every time something goes wrong."], ["Whenever the Protector can't hold it."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Taking all of it, and hardly thanked.", cards: [
+          ["Nobody sees me."], ["I'm treated as the problem."], ["I'm hidden away."], ["Hardly."],
+          ["Poor me, nobody ever helps.", "victim"], ["It just wants to be broken.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Heavy."], ["Ashamed."], ["Worn through."], ["Like it really was my fault."], ["Like I'd love to set it down for once."], ["Alone with it."],
+        ] },
+      ],
+      places: ["Chest", "Belly", "Shoulders", "Back", "Throat", "Face", "Gut", "Heart", "All over"],
+      ready: "...All right. I could step aside for a while. Go gently. It's the deepest place.",
+      notYet: "It still hurts too much.",
+      seat: "You are standing where the Damaged Self stands. The self is back there, where you were a moment ago, and every hit that got past everything else lands here, and the softest place is just behind you.",
+      know: { ask: "From here, what does the Damaged Self want the self to know?", cards: [["It wasn't all your fault."], ["I took it so you wouldn't have to."], ["I'm not what's wrong with you."], ["I'm tired of taking it."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Damaged Self. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
   ];
-  var NEXT = { id: "controller", title: "The Controller", daemon: "controller" };
+  // The daemon path in the book's order (board dp-seven). Chambers are met one after another; the first figure past the
+  // last chamber built waits at a shut mouth. Past the last chamber is the centre, where the path ends at the vulnerable
+  // child (board dp-centre: "until you reach the center - the player/vulnerable child").
+  var PATH = ["protector", "controller", "skeptic", "fixer", "emotional-body", "victim", "damaged-self"];
+  var TITLES = { skeptic: "The Skeptic", fixer: "The Fixer", "emotional-body": "The Emotional Body", victim: "The Victim", "damaged-self": "The Damaged Self" };
+  function voiceAt(c) { return VOICES[Math.min(Math.max(0, c | 0), VOICES.length - 1)]; }
+  // What waits past chamber c: the next voice built, or the next figure on the path with its chamber still shut.
+  function nextAfter(c) {
+    var id = PATH[c + 1]; if (!id) return { id: "centre", title: "The centre", centre: true, built: true };
+    var v = VOICES.filter(function (x) { return x.id === id; })[0];
+    return v ? { id: id, title: v.title, daemon: v.daemon, built: true } : { id: id, title: TITLES[id], daemon: id, built: false };
+  }
+
+  // The centre (board dp-centre: "The child is seen, not questioned", 13 October 2026; then Wendell's own Player set of 14
+  // October in daemons/questions.js, newer and in his words). Squared as: the child is seen first and nothing has to be asked.
+  // If the player chooses to ask, it is asked his six, gently, one at a time, in his order and plain wording, and any can be
+  // left unanswered ("Let this one go"). There is no charge to read and no permission to win: the child is not a voice
+  // blocking the way, and what it says is not a price for anything (the ontology's "intimate disclosure is not progression
+  // currency"). The voices met on the way are there as spirits (bms-spirits-follow); a voice the child names as in its way
+  // comes closer. The cards are written from the core premise (the voices emerged to protect the child) and are choices,
+  // all of them. Board position dp-centre-asked records this; it stands unless he flips it.
+  var CENTRE = {
+    title: "The vulnerable child",
+    arrive: "The way opens into a small round place, warm and still. The child is here, small and glowing, and it has been waiting a long time. Beside it is a place for the self, and you stand in it.",
+    seen: "Nothing has to be asked here. You can simply be with the child, or you can ask it something, gently, and let it answer in its own time.",
+    questions: {
+      learning: { reflect: "So that's what you're learning.", cards: [["That it's safe to play."], ["That I'm allowed to want what I want."], ["How to be here."], ["That the others are looking after me."], ["Something new every day."], ["I don't know yet."]] },
+      growing: { reflect: "That's how you grow.", cards: [["Slowly."], ["When someone stays with me."], ["When I get to try."], ["When nobody hurries me."], ["I'm not sure I am."]] },
+      feeling: { multi: true, reflect: "Thank you for showing me.", cards: [["Small."], ["Curious."], ["Scared."], ["Glad you came."], ["Tired."], ["Everything at once."]] },
+      exploring: { reflect: "That's where you're looking.", cards: [["Everything."], ["What's past the cave."], ["What the voices are for."], ["Who you are."], ["Not much. I don't get out."]] },
+      // The voices the player met on the way are the cards here, one line each, plus two that name none of them.
+      "in-the-way": { multi: true, reflect: "So that's how they get in your way. Every one of them was trying to keep you safe.", byVoice: {
+        protector: "The Protector won't let me out to play.", controller: "The Controller says it isn't the time.", skeptic: "The Skeptic says it's silly.",
+        fixer: "The Fixer keeps trying to make me better.", "emotional-body": "The Emotional Body feels it all before I can.", victim: "The Victim tells my story for me.",
+        "damaged-self": "The Damaged Self takes every hit, so I never get to try.",
+      }, cards: [["They all talk over me."], ["They don't, right now."]] },
+      gone: { reflect: "No wonder they all work so hard to keep you safe.", cards: [["Nobody would play."], ["Everything would be work."], ["The others would have nothing to look after."], ["Nothing would ever be new."], ["I'm not sure. I've always been here."]] },
+    },
+    // Used only when daemons/questions.js did not load: his six, in his order.
+    fallback: [["learning", "What are you learning?"], ["growing", "How are you growing?"], ["feeling", "What are you feeling?"], ["exploring", "What are you exploring?"], ["in-the-way", "How do the other daemons get in your way?"], ["gone", "What would happen if you weren't there?"]],
+    rest: "You stayed with the child. That is enough.",
+    beyond: "Past the child, two ways wait shut for now: the hall of the six, and the second cave. They open in a later build.",
+  };
+  // The child's questions: Wendell's Player set from daemons/questions.js, with the centre's cards.
+  function centreQuestions() {
+    var D = (typeof window !== "undefined" && window.__oagDaemonQuestions && window.__oagDaemonQuestions.daemons.player) || null;
+    var list = D ? D.map(function (q) { return [q.id, q.ask]; }) : CENTRE.fallback;
+    return list.map(function (x) { var c = CENTRE.questions[x[0]] || { reflect: "Thank you for telling me.", cards: [] }; return { id: x[0], ask: x[1], reflect: c.reflect, cards: c.cards, multi: !!c.multi, byVoice: c.byVoice || null }; });
+  }
 
   // An open line is heard for the same tells (bm-four-steps: in voice or out of voice, never right or wrong). A choice: a
   // plain word list, so a miss is cheap and the player can always say it feels wrong.
-  function heard(text) {
+  // vid is the voice of the chamber (the Protector when left out): talking about it is the self's ideas, and its own job
+  // is in voice there.
+  function heard(text, vid) {
+    vid = vid || "protector";
     var t = " " + String(text || "").toLowerCase().replace(/[’]/g, "'") + " ";
-    if (/\b(the|my|this|our) protector\b/.test(t) || /^ (it|he|she|they)\b/.test(t) || /\bit('s| is| does| wants| tries| protects| keeps| has)\b/.test(t) || /\b(i think|maybe|perhaps|probably|i guess)\b/.test(t)) return "ideas";
-    if (/\b(fix|fixing|repair|solve|heal|make it better|sort it out)\b/.test(t)) return "fixer";
-    if (/\b(in charge|keep control|take control|manage|managing|plan|keep order|the standard|in hand)\b/.test(t) && !/\b(lose|losing|lost|out of) control\b/.test(t)) return "controller";
-    if (/\b(doubt|don't believe|pointless|no point|silly)\b/.test(t) && !/self-doubt|self doubt/.test(t)) return "skeptic";
+    var about = new RegExp("\\b(the|my|this|our) " + vid.replace("-", " ") + "\\b");
+    if (about.test(t) || /^ (it|he|she|they)\b/.test(t) || /\bit('s| is| does| wants| tries| protects| keeps| has)\b/.test(t) || /\b(i think|maybe|perhaps|probably|i guess)\b/.test(t)) return "ideas";
+    if (vid !== "fixer" && /\b(fix|fixing|repair|solve|heal|make it better|sort it out)\b/.test(t)) return "fixer";
+    if (vid !== "controller" && /\b(in charge|keep control|take control|manage|managing|plan|keep order|the standard|in hand)\b/.test(t) && !/\b(lose|losing|lost|out of) control\b/.test(t)) return "controller";
+    if (vid !== "skeptic" && /\b(doubt|don't believe|pointless|no point|silly)\b/.test(t) && !/self-doubt|self doubt/.test(t)) return "skeptic";
+    return null;
+  }
+  // Who an open line names as the boss, for the boss question (null when it names none of them). vid is the chamber's voice
+  // (the Controller when left out): only the Controller's "myself" is control itself.
+  function heardBoss(text, vid) {
+    vid = vid || "controller";
+    var t = " " + String(text || "").toLowerCase() + " ";
+    if (/\b(vulnerable|child|kid|little one|younger me|inner child)\b/.test(t)) return "player";
+    if (/\bprotector\b/.test(t)) return "protector";
+    if (/\b(control|controller)\b/.test(t)) return "controller";
+    if (vid === "controller" && /\b(myself|me|no one|nobody)\b/.test(t)) return "controller"; // as the Controller, "myself" is control itself
+    if (/\bself\b/.test(t)) return "self";
     return null;
   }
 
   // ---- saving, on this device only ----------------------------------------------------------------
-  // { v, at: "mouth" | "hall2", voices: { protector: { status: "spoken" | "waiting", kept: [{ q, line }], savedAt } },
-  //   waiting: [translator ids] }. The first cave saves this seed record and spawns no world (bm-world-later).
-  function blank() { return { v: 1, at: "mouth", voices: {}, waiting: [] }; }
+  // { v, chamber, at: "mouth" | "hall2", voices: { protector: { status: "spoken" | "waiting", kept: [{ q, line }], savedAt } },
+  //   waiting: [translator ids] }. chamber is the daemon path's chamber the player has reached (0 the Protector, 1 the
+  //   Controller, 2 the Skeptic, 3 the Fixer, 4 the Emotional Body, 5 the Victim, 6 the Damaged Self; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's, the Skeptic's,
+  //   the Fixer's, the Emotional Body's, the Victim's and the Damaged Self's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
+  function blank() { return { v: 1, chamber: 0, at: "mouth", voices: {}, waiting: [] }; }
   function readSave() { try { var s = JSON.parse(localStorage.getItem(STORE) || "null"); return s && s.v === 1 ? s : blank(); } catch (e) { return blank(); } }
   function writeSave(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); return true; } catch (e) { return false; } }
   function wipe() { try { localStorage.removeItem(STORE); } catch (e) {} }
@@ -178,7 +730,7 @@
   }
   function mouth() {
     if (home) home.remove();
-    var save = readSave(), resume = save.at === "hall2";
+    var save = readSave(), C = save.chamber || 0, V0 = voiceAt(C), resume = save.at === "hall2" || C > 0;
     var root = document.getElementById("cave-root") || document.body;
     var kept = keptList(save);
     home = el("div", { class: "oagc", "data-bm-mouth": "" }, [el("div", { class: "bm-home" }, [
@@ -195,15 +747,22 @@
         el("a", { href: "https://findahelpline.com", target: "_blank", rel: "noopener", text: "findahelpline.com" }),
       ]),
       el("div", { class: "oagc-row" }, [
-        el("button", { "data-bm-enter": "", text: resume ? "Go back in, past the Protector" : "Go in", onclick: function () { enter(resume ? "hall2" : "hall1"); } }),
+        el("button", { "data-bm-enter": "", text: !resume ? "Go in" : save.at === "hall2" ? "Go back in, past " + V0.name : "Go back in, to " + V0.name, onclick: function () { enter(save.at === "hall2" ? "hall2" : "hall1"); } }),
         fromRoom ? el("button", { class: "alt", "data-bm-home": "", text: "Back to the WAVE room", onclick: goHome }) : el("span", {}),
-        resume ? el("button", { class: "alt", "data-bm-restart": "", text: "Start at the mouth again", onclick: function () { var s = readSave(); s.at = "mouth"; writeSave(s); enter("hall1"); } }) : el("span", {}),
+        resume ? el("button", { class: "alt", "data-bm-restart": "", text: "Start at the mouth again", onclick: function () { var s = readSave(); s.at = "mouth"; s.chamber = 0; writeSave(s); enter("hall1"); } }) : el("span", {}),
       ]),
       kept,
     ])]);
     root.appendChild(home);
   }
   // The five feelings are the five elements (oag-clean-up-moves). The player picks; the game never guesses (bmw-player-names).
+  // Each drop in a voice's charge while it held back, as one line: what came before it, and the numbers.
+  function movedLines(charges) {
+    return charges.filter(function (c) { return c.why && c.from != null && c.v < c.from; }).map(function (c) { return c.why + ": " + c.from + " to " + c.v; });
+  }
+  var BOSS_NAME = { protector: "the Protector", self: "the self", controller: "control itself", player: "the vulnerable child" };
+  // A boss as a voice names it: to the Controller, "controller" is control itself; to the Skeptic, it is the Controller.
+  function bossName(voice, b) { return (voice && voice.bossNames && voice.bossNames[b]) || BOSS_NAME[b]; }
   var ELEMENTS = [["fire", "Fire", "anger"], ["water", "Water", "sadness"], ["wood", "Wood", "joy"], ["metal", "Metal", "fear"], ["earth", "Earth", "neutrality"]];
   var WAVE_LABEL = { welcome: "Welcome", acknowledge: "Acknowledge", allow: "Allow", accept: "Accept", appreciate: "Appreciate", validate: "Validate", exhale: "Exhale" };
   // One W.A.V.E. shown back as one line (bmw-shown), for example "Fear, Metal, in your chest: 8 to 6".
@@ -220,19 +779,32 @@
   // What you've kept: keep or forget per voice, and delete everything (bmc-safety).
   function keptList(save) {
     var ids = Object.keys(save.voices), sps = save.spirits || [];
-    if (!ids.length && !sps.length) return el("span", {});
+    if (!ids.length && !sps.length && !save.centre) return el("span", {});
     var box = el("div", { class: "bm-kept", "data-bm-kept": "" }, [el("p", { text: "What you've kept, on this device:" })]);
     if (sps.length) box.appendChild(el("p", { "data-bm-keptspirits": "", text: "Spirits that come back in with you: " + sps.map(spiritLabel).join(", ") + "." }));
     ids.forEach(function (id) {
       var v = save.voices[id], voice = VOICES.filter(function (x) { return x.id === id; })[0];
       var name = voice ? voice.title : id;
       box.appendChild(el("p", { text: name + (v.keepsWay ? " (it is keeping the way for now; ask it again next time)" : v.status === "waiting" ? " (waiting; it has not spoken yet)" : "") }));
+      var mv = movedLines(v.charges || []);
+      if (mv.length) box.appendChild(el("ul", { "data-bm-keptmoved": id }, mv.map(function (m) { return el("li", { text: "Moved it: " + m }); })));
+      if (v.boss) box.appendChild(el("p", { "data-bm-keptboss": id, text: "It works for " + bossName(voice, v.boss) + "." }));
       if (v.kept.length) box.appendChild(el("ul", {}, v.kept.map(function (k) { return el("li", { text: k.line }); })));
       if (v.waves && v.waves.length) box.appendChild(el("ul", { "data-bm-keptwaves": id }, v.waves.map(function (w) { return el("li", { text: "W.A.V.E.: " + waveLine(w) }); })));
       box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": id, text: "Forget " + name, onclick: function () {
-        var s = readSave(); delete s.voices[id]; if (id === "protector") { s.at = "mouth"; s.waiting = []; } writeSave(s); mouth();
+        // Forgetting a voice sends the player back to its chamber's start; forgetting the Protector clears who waits too.
+        var s = readSave(), k = VOICES.indexOf(voice); delete s.voices[id];
+        if (k >= 0 && k <= (s.chamber || 0)) { s.chamber = k; s.at = "mouth"; if (k === 0) s.waiting = []; }
+        writeSave(s); mouth();
       } })]));
     });
+    if (save.centre) {
+      box.appendChild(el("p", { "data-bm-keptcentre": "", text: CENTRE.title.replace(/^The /, "The ") + (save.centre.status === "spoken" ? " (it spoke with you at the centre)" : " (you were with it at the centre)") }));
+      if (save.centre.kept.length) box.appendChild(el("ul", {}, save.centre.kept.map(function (k) { return el("li", { text: k.line }); })));
+      box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": "centre", text: "Forget the centre", onclick: function () {
+        var s = readSave(); delete s.centre; writeSave(s); mouth();
+      } })]));
+    }
     box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-wipe": "", text: "Delete everything", onclick: function () {
       if (window.confirm("Delete everything the cave has kept on this device?")) { wipe(); mouth(); }
     } })]));
@@ -253,13 +825,17 @@
   function bump(s, a, b, ramp) { return clamp((s - a) / ramp, 0, 1) * clamp((b - s) / ramp, 0, 1); }
 
   var running = null;
+  // Spirits walking with the player from one chamber into the next, handed over once (the hallway runs on, a choice).
+  var carry = null;
   function enter(from) {
     K.loadThree().then(function (THREE) { home.style.display = "none"; play(THREE, from); })
       .catch(function (e) { alert("The cave could not open: " + e.message); });
   }
 
   function play(THREE, from) {
-    var save = readSave(), V = VOICES[0];
+    var save = readSave(), C = save.chamber || 0, V = voiceAt(C), NEXT = nextAfter(C);
+    // A part asked to wait for its own chamber is heard there: it no longer waits by the wall once its chamber is reached.
+    if (save.waiting.indexOf(V.id) >= 0) { save.waiting = save.waiting.filter(function (x) { return x !== V.id; }); writeSave(save); }
     var wrap = el("div", { class: "oagc", "data-bm-cave": "" });
     var stage = el("div", { class: "oagc-stage", "data-bm-stage": "" });
     var modal = el("div", { class: "oagc-modal", "data-bm-modal": "", "aria-hidden": "true" });
@@ -290,7 +866,7 @@
     // phase: hall1 (walking to the voice), chamber (the dialogue), hall2 (walking on), end (the next chamber's mouth).
     // gate is how open the way past the voice is (0.45 shut, 1 open); held is the finger on the stage or the ring.
     var st = { phase: from, s: from === "hall2" ? S_GATE + 2 : 2, held: false, gate: from === "hall2" ? 1 : 0.45, gateGoal: from === "hall2" ? 1 : 0.45,
-      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], charge: null, charges: [], you: null, waves: [], place: null, know: null, be: {}, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1 };
+      clk: 0, moving: false, cam: "behind", modal: false, answers: {}, perms: {}, fears: [], charge: null, charges: [], you: null, waves: [], place: null, know: null, be: {}, translators: [], waiting: save.waiting.slice(), asked: 0, flash: 0, speed: 1, endOpen: 0, child: {} };
     var route = layout(), tweens = [], last = performance.now(), snap = true;
     function tween(ms, fn, done) { tweens.push({ t0: performance.now(), ms: ms / st.speed, fn: fn, done: done }); }
     function ease(k) { return k * k * (3 - 2 * k); }
@@ -305,7 +881,7 @@
       var o = 1 + 0.85 * bump(s, CHAMBER_IN, CHAMBER_OUT, 7);
       var g = clamp((s - S_GATE) / 5, 0, 1), u = g * g * (3 - 2 * g);
       o *= 1 - u + u * st.gate;
-      var e = clamp((s - (route.sEnd + 2)) / 5, 0, 1); o *= 1 - 0.5 * e; // the next chamber's mouth, shut for now
+      var e = clamp((s - (route.sEnd + 2)) / 5, 0, 1); o *= 1 - 0.5 * e * (1 - (st.endOpen || 0)); // the next chamber's mouth, shut until the centre opens
       if (st.sit) o *= 1 - 0.16 * st.sit.k * clamp(1 - Math.abs(s - st.s) / 14, 0, 1); // the walls draw in around a sitting (a choice)
       return o;
     };
@@ -335,7 +911,10 @@
     var motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xfff1b0, size: 0.16, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
     motes.position.copy(easeRing.position); scene.add(motes);
     var calmBlue = new THREE.Color(0x6a9aff), calmWarm = new THREE.Color(0xffd49a);
-    var nextFig = K.buildDaemon(THREE, daemonRow(NEXT.daemon), 6); seeThrough(nextFig, 0.55); figureAt(nextFig, route.sEnd + 4, 0, true); scene.add(nextFig);
+    // Past the last chamber the figure at the shut mouth is the vulnerable child: the faceless avatar, small and warm (a choice).
+    var nextFig = NEXT.centre ? K.buildAvatar(THREE, "other") : K.buildDaemon(THREE, daemonRow(NEXT.daemon), 6);
+    if (NEXT.centre) { nextFig.scale.setScalar(0.55); nextFig.userData.mat.color.setHex(0xffd49a); nextFig.userData.mat.emissive.setHex(0xffd49a); nextFig.userData.mat.emissiveIntensity = 0.35; }
+    seeThrough(nextFig, 0.55); figureAt(nextFig, route.sEnd + 4, 0, true); scene.add(nextFig);
     var avatar = K.buildAvatar(THREE, "other"); scene.add(avatar);
     var ghost = null, figures = [];
     // Translators already waiting from an earlier sitting stand by the wall of the second hallway.
@@ -429,7 +1008,7 @@
     // below, the Protector trusts the player enough to offer to step aside (READY is a choice).
     var READY = 3;
     function body() {
-      var kids = [el("h2", { text: V.title }), guide("Before you ask it anything, notice it. Where does the Protector live in your body?"),
+      var kids = [el("h2", { text: V.title }), guide("Before you ask it anything, notice it. Where does " + V.name + " live in your body?"),
         el("div", { class: "bm-cards" }, V.places.map(function (pl) { return btn(pl, function () { placed(pl); }, { class: "bm-card", "data-bm-place": pl }); }))];
       if (window.OAGBody && window.OAGBody.pick) kids.push(row([btn("Show me on the body map", function () {
         hide(); window.OAGBody.pick().then(function (r) { if (r) placed(r.label); else body(); });
@@ -437,7 +1016,7 @@
       kids.push(row([btn("I can't find it yet", function () { placed(null); }, { class: "bm-link", "data-bm-noplace": "" })]));
       show(kids, "body");
     }
-    function placed(pl) { st.place = pl; chargeAsk(null, "How charged is the Protector right now?"); }
+    function placed(pl) { st.place = pl; chargeAsk(null, "How charged is " + V.name + " right now?"); }
     function setMeter(v) {
       meter.style.display = ""; meterFill.style.width = (v * 10) + "%"; meterNum.textContent = String(v);
       meter.setAttribute("data-bm-charge", String(v)); meter.classList.toggle("ready", v <= READY);
@@ -450,7 +1029,7 @@
       var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(cur), "data-bm-range": "", "aria-label": "Charge, 0 to 10" });
       range.addEventListener("input", function () { num.textContent = range.value; setMeter(+range.value); });
       var kids = [el("h2", { text: V.title })];
-      if (i != null) { var said = st.answers[V.questions[i].id]; if (said) said.forEach(function (l) { kids.push(npc(l)); }); kids.push(guide(V.questions[i].reflect)); }
+      if (i != null) { var said = st.answers[V.questions[i].id]; if (said) said.forEach(function (l) { kids.push(npc(l)); }); kids.push(guide(qReflect(V.questions[i]))); }
       kids.push(guide(ask + (st.place ? " (in your " + st.place.toLowerCase() + ")" : "")), el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
         row([btn("That's how it is", function () { charged(i, +range.value); }, { "data-bm-charged": "" })]),
         row([btn("Breathe with it (W.A.V.E.)", function () { waveStart(i, ask); }, { "data-bm-wave": "" }, true)]));
@@ -473,7 +1052,7 @@
       meter.classList.remove("eased"); void meter.offsetWidth; meter.classList.add("eased");
       meter.setAttribute("data-bm-eases", String(st.eases));
       easedLine.innerHTML = "";
-      easedLine.appendChild(document.createTextNode(crossed ? "The Protector lets its breath out." : drop >= 3 ? "The Protector eases a lot." : "The Protector eases."));
+      easedLine.appendChild(document.createTextNode(crossed ? V.title + " lets its breath out." : drop >= 3 ? V.title + " eases a lot." : V.title + " eases."));
       easedLine.appendChild(el("small", { text: was + " down to " + v }));
       easedLine.classList.add("on");
       var big = Math.min(1, 0.45 + drop * 0.18 + (crossed ? 0.35 : 0)), still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -833,10 +1412,20 @@
       return [npc("You didn't come alone.")].concat(n >= 3 ? [npc("That's a lot to bring through here.")] : []);
     }
     (save.spirits || []).forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); });
+    if (carry) { carry.forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); }); carry = null; }
     if (fromRoom) { fromRoom.spirits.forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); }); fromRoom.spirits = []; } // the room's, once
 
     function ready() {
-      show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
+      show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, V.deep ? deepCheck : seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
+    }
+    // Standing where the Damaged Self stands goes to the deepest place, so the cave asks first, as the Cave of Lessons does
+    // before Be it (Wendell's board, bmc-safety and cave-321-damaged-self-ask): go on, rest, or go back up.
+    function deepCheck() {
+      show([el("h2", { text: "Before you stand where it stands" }), guide("Standing where " + V.name + " stands goes to the deepest place. Do you want to go on, rest, or go back up?"),
+        row([btn("Go on", seatShift, { "data-bm-deep": "continue" }),
+          btn("Rest", function () { show([el("h2", { text: "Resting" }), guide("Take as long as you need. " + V.title + " is still standing aside."),
+            row([btn("Go on", seatShift, { "data-bm-deep": "continue" }), btn("Go back up", function () { keepsPost("aside"); }, { "data-bm-deep": "up" }, true)])], "deep-rest"); }, { "data-bm-deep": "rest" }, true),
+          btn("Go back up", function () { keepsPost("aside"); }, { "data-bm-deep": "up" }, true)])], "deep");
     }
 
     // Asking permission. The player reads the voice's answer, so the voice is never forced (a choice: the read is the
@@ -856,7 +1445,7 @@
     }
     function unsure(key, round, onYes) {
       show([el("h2", { text: V.title }), guide("Then stay here with it a moment. Breathe with it. Nothing has to happen yet."),
-        row([btn("Ask again", function () { permit(key, round + 1, onYes); }, { "data-bm-again": "" }), leaveBtn(key)])], "unsure-" + key);
+        row([btn("Ask again", function () { blockPoll(key, round, onYes, "You waited with it"); }, { "data-bm-again": "" }), leaveBtn(key)])], "unsure-" + key);
     }
     // The refusal path. The voice says why, the player asks what it fears and answers as it would, then offers an assurance.
     function refused(key, round, onYes) {
@@ -870,20 +1459,41 @@
     function fearAsk(key, round, onYes) {
       var input = el("input", { type: "text", "data-bm-fearline": "", placeholder: "Or say what it says, in its words", maxlength: "200" });
       function said(t) { if (!t) return; st.fears.push(t); assureAsk(key, round, onYes, t); }
-      show([el("h2", { text: V.title }), you("What are you afraid would happen?"), guide("Let it answer. What does the Protector say?"),
+      show([el("h2", { text: V.title }), you("What are you afraid would happen?"), guide("Let it answer. What does " + V.name + " say?"),
         el("div", { class: "bm-cards" }, V.fears.map(function (f, fi) { return btn(f[0], function () { said(f[0]); }, { class: "bm-card", "data-bm-fear": String(fi) }); })),
         el("div", { class: "bm-line" }, [input, btn("It says this", function () { said(input.value.trim()); }, { "data-bm-fearsay": "" })])], "fear-" + key);
     }
     function assureAsk(key, round, onYes, fear) {
       var input = el("input", { type: "text", "data-bm-assureline": "", placeholder: "Or in your own words", maxlength: "200" });
-      function offer(t) {
+      // own: the assurance was typed, so only that it was in the player's own words is recorded, never the words
+      function offer(t, own) {
         if (!t) return;
         show([el("h2", { text: V.title }), you(t), npc(V.assured[Math.min(round, V.assured.length - 1)]),
-          row([btn("Ask again", function () { permit(key, round + 1, onYes); }, { "data-bm-again": "" })])], "assured-" + key);
+          row([btn("Ask again", function () { blockPoll(key, round, onYes, own ? "An assurance in your own words" : "You offered: " + t); }, { "data-bm-again": "" })])], "assured-" + key);
       }
       show([el("h2", { text: V.title }), npc(fear), guide("That makes sense of the wall. What can you offer it?"),
         el("div", { class: "bm-cards" }, V.assure.map(function (f, fi) { return btn(f[0], function () { offer(f[0]); }, { class: "bm-card", "data-bm-assure": String(fi) }); })),
-        el("div", { class: "bm-line" }, [input, btn("Offer it", function () { offer(input.value.trim()); }, { "data-bm-offer": "" })])], "assure-" + key);
+        el("div", { class: "bm-line" }, [input, btn("Offer it", function () { offer(input.value.trim(), true); }, { "data-bm-offer": "" })])], "assure-" + key);
+    }
+    // While it holds back, its charge is asked for too (Wendell, 15 October 2026, on the Controller: "we want to have the
+    // controllers charge go down even when they are blocked this is some of the best times that the resistance is moving and we
+    // want players to be able to track what makes the controller give up its resistance"). Before it is asked again, the player
+    // says how charged it is now; a drop eases as after any answer, and the charge is saved with what came just before it (why),
+    // so the keeping step and the cave mouth can show what moved its resistance. Every voice gets this; the Controller asked for it.
+    function blockPoll(key, round, onYes, why) {
+      var cur = st.charge == null ? 7 : st.charge;
+      var num = el("b", { class: "bm-chargenum", text: String(cur) });
+      var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(cur), "data-bm-range": "", "aria-label": "Charge, 0 to 10" });
+      range.addEventListener("input", function () { num.textContent = range.value; setMeter(+range.value); });
+      show([el("h2", { text: V.title }), guide(why + "."), guide("It's still holding back. Did that move it at all? How charged is " + V.name + " now?" + (st.place ? " (in your " + st.place.toLowerCase() + ")" : "")),
+        el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
+        row([btn("That's how it is", function () {
+          var was = st.charge, v = +range.value, again = function () { permit(key, round + 1, onYes); };
+          st.charge = v; st.charges.push({ after: "held-" + key, v: v, why: why, from: was }); setMeter(v);
+          if (was != null && v < was) return eased(was, v, again);
+          again();
+        }, { "data-bm-blockcharged": "" })])], "blockpoll-" + key);
+      setMeter(cur);
     }
     // Leaving it at its post honours the refusal. Before the shift it waits; after it has spoken, it keeps the way shut.
     function leaveBtn(key) {
@@ -891,7 +1501,7 @@
     }
     function keepsPost(key) {
       if (key === "pass") {
-        show([el("h2", { text: V.title }), npc("Thank you for not pushing."), guide("The Protector keeps the way for now. What it said is still yours to keep, and you can come back and ask again another day."),
+        show([el("h2", { text: V.title }), npc("Thank you for not pushing."), guide(V.title + " keeps the way for now. What it said is still yours to keep, and you can come back and ask again another day."),
           row([btn("Go on", function () { keep(true); }, { "data-bm-next": "" })])], "post-" + key);
         return;
       }
@@ -917,26 +1527,40 @@
         tween(700, function () {}, function () { knowAsk(0); });
       });
     }
+    // Who the voice works for, once the player has said (the boss question): the questions after it ask and offer by it.
+    function qAsk(q) { return (q.byBoss && st.boss && q.byBoss[st.boss]) || q.ask; }
+    function qCards(q) { return (q.cardsByBoss && st.boss && q.cardsByBoss[st.boss]) || q.cards; }
+    function qReflect(q) {
+      var r = (q.reflectByBoss && st.boss && q.reflectByBoss[st.boss]) || q.reflect;
+      // The chain (board dq-boss-chain): when the boss named is a voice already heard, what it said of its own boss follows.
+      var up = q.boss && st.boss && st.boss !== V.id && save.voices[st.boss], upV = VOICES.filter(function (x) { return x.id === st.boss; })[0];
+      if (up && up.boss && upV) r += " And " + upV.name + " told you it answers to " + bossName(upV, up.boss) + ".";
+      return r;
+    }
     function askQ(i, lead) {
-      var q = V.questions[i], picked = [];
+      var q = V.questions[i], picked = [], cardList = qCards(q);
       var cards = el("div", { class: "bm-cards" });
       // What it protects the self from may be what the player carries in (bms-protects-from): the spirits' names are cards too.
       var carried = q.id === "from" ? spirits.map(function (o) { return [o.name + "."]; }) : [];
-      q.cards.concat(carried).forEach(function (c, ci) {
+      cardList.concat(carried).forEach(function (c, ci) {
         var b = el("button", { class: "bm-card", "data-bm-card": String(ci), "aria-pressed": "false", text: c[0], onclick: function () {
           if (q.multi) { var on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", String(on)); if (on) picked.push(c); else picked.splice(picked.indexOf(c), 1); doneBtn.disabled = !picked.length; }
-          else answer(i, [c[0]], c[1] || null);
+          else { if (q.boss) st.boss = c[2] || null; answer(i, [c[0]], c[1] || null); }
         } });
         cards.appendChild(b);
       });
       var input = el("input", { type: "text", "data-bm-line": "", placeholder: "Or what it says, in its words", enterkeyhint: "done", maxlength: "200" });
-      function say() { var t = input.value.trim(); if (!t) return; var lines = picked.map(function (c) { return c[0]; }).concat([t]); answer(i, lines, firstOut(picked) || heard(t)); }
+      function say() {
+        var t = input.value.trim(); if (!t) return; var lines = picked.map(function (c) { return c[0]; }).concat([t]);
+        if (q.boss) { st.boss = heardBoss(t, V.id); return answer(i, lines, null); } // naming a boss is in voice, whoever it names
+        answer(i, lines, firstOut(picked) || heard(t, V.id));
+      }
       input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); say(); } });
       var doneBtn = q.multi ? btn("That's all of it", function () { answer(i, picked.map(function (c) { return c[0]; }), firstOut(picked)); }, { "data-bm-done": "", disabled: "" }) : null;
-      show([el("h2", { text: V.title }), lead ? guide(lead) : null, you(q.ask), carried.length ? guide("You came in with " + (carried.length === 1 ? "a spirit" : carried.length + " spirits") + ". Might it be protecting you from what you carry?") : null, guide("What does the Protector say?"), cards,
+      show([el("h2", { text: V.title }), lead ? guide(lead) : null, you(qAsk(q)), carried.length ? guide("You came in with " + (carried.length === 1 ? "a spirit" : carried.length + " spirits") + ". Might it be protecting you from what you carry?") : null, guide("What does " + V.name + " say?"), cards,
         el("div", { class: "bm-line" }, [input, btn("Say it", say, { "data-bm-say": "" })]),
         doneBtn ? row([doneBtn]) : null,
-        row([btn("This doesn't sound like the Protector", function () { secret("felt", i); }, { class: "bm-link", "data-bm-wrong": "" }),
+        row([btn("This doesn't sound like " + V.name, function () { secret("felt", i); }, { class: "bm-link", "data-bm-wrong": "" }),
           btn("Sit this one out", function () { next(i); }, { class: "bm-link", "data-bm-sitout": "" })])], "q-" + q.id);
     }
     function firstOut(cs) { for (var i = 0; i < cs.length; i++) if (cs[i][1]) return cs[i][1]; return null; }
@@ -944,7 +1568,7 @@
     function answer(i, lines, out) {
       if (out) return secret(out, i);
       st.answers[V.questions[i].id] = lines;
-      chargeAsk(i, "Does it feel any different? How charged is the Protector now?");
+      chargeAsk(i, "Does it feel any different? How charged is " + V.name + " now?");
     }
     function next(i) { st.answers[V.questions[i].id] = st.answers[V.questions[i].id] || null; charged(i, st.charge); } // sitting a question out moves on at the same charge
     // Standing in its place, speaking as it. Wendell, 12 October 2026, 21:15: "the 1 phase with the protector (and all the voices)
@@ -982,11 +1606,12 @@
     function secret(tell, i) {
       var fig = translatorFigure(tell === "felt" ? "unknown" : tell);
       figureAt(fig, S_VOICE + 2.6, 1.8, true); scene.add(fig); st.secret = fig; figures.push(fig);
-      var why = (TRANSLATORS[tell] || {}).tell;
-      var opts = ["ideas", "fixer", "controller", "skeptic", "unknown"].map(function (id) {
+      var why = ((TRANSLATORS[tell] || {}).tell || "").replace("{name}", V.name);
+      // whoever might have spoken, never the voice of this chamber itself
+      var opts = ["ideas", "protector", "fixer", "controller", "skeptic", "unknown"].filter(function (id) { return id !== V.id; }).map(function (id) {
         return btn(TRANSLATORS[id].short, function () { named(id, i, fig); }, { "data-bm-name": id }, true);
       });
-      show([el("h2", { text: "Someone else spoke" }), guide("Wait. That answer " + why + ". Another figure has come out behind the Protector."),
+      show([el("h2", { text: "Someone else spoke" }), guide("Wait. That answer " + why + ". Another figure has come out behind " + V.name + "."),
         guide("Who was speaking just then?"), row(opts)], "secret");
     }
     function named(id, i, fig) {
@@ -1001,7 +1626,7 @@
       if (st.waiting.indexOf(fig.userData.id) < 0) st.waiting.push(fig.userData.id);
       tween(2200, function (k) { var e = ease(k); figureAt(fig, s0 + (spot - s0) * e, 1.8 + (-WAIT_D - 1.8) * e, false); }, function () {
         fig.rotation.y += -Math.PI / 2; fig.userData.wait = true; st.secret = null;
-        askQ(i, "Let me speak to the Protector again.");
+        askQ(i, "Let me speak to " + V.name + " again.");
       });
     }
 
@@ -1051,14 +1676,16 @@
         var b = el("button", { class: "bm-card", "data-bm-keepwave": String(wi), "aria-pressed": "false", text: waveLine(w), onclick: function () { st.waveKeep[wi] = !st.waveKeep[wi]; b.setAttribute("aria-pressed", String(st.waveKeep[wi])); } });
         return b;
       });
+      var moved = movedLines(st.charges);
+      var movedBox = moved.length ? [guide("What moved it while it held back. This is saved with its charge:"), el("ul", { "data-bm-moved": "" }, moved.map(function (m) { return el("li", { text: m }); }))] : [];
       var waveBox = st.waves.length ? [guide("Your W.A.V.E.s are saved either way, on this device. Tap one to keep its feeling word with it."), el("div", { class: "bm-cards" }, waveCards)] : [];
-      if (!lines.length && !st.waves.length) return finish("waiting", [], blocked); // every question sat out: the voice has not spoken yet, and waits
+      if (!lines.length && !st.waves.length && !moved.length) return finish("waiting", [], blocked); // every question sat out: the voice has not spoken yet, and waits
       var keepOn = lines.map(function () { return false; });
       var list = el("div", { class: "bm-cards" }, lines.map(function (l, li) {
         var b = el("button", { class: "bm-card", "data-bm-keep": String(li), "aria-pressed": "false", text: l.line, onclick: function () { keepOn[li] = !keepOn[li]; b.setAttribute("aria-pressed", String(keepOn[li])); } });
         return b;
       }));
-      show([el("h2", { text: "What the Protector said" })].concat(lines.length ? [guide("Tap the lines you want to keep. The rest are let go, and only what you keep is saved, on this device."), list] : [], waveBox, [
+      show([el("h2", { text: "What " + V.name + " said" })].concat(lines.length ? [guide("Tap the lines you want to keep. The rest are let go, and only what you keep is saved, on this device."), list] : [], movedBox, waveBox, [
         row([btn(blocked ? "Save" : "Save and walk on", function () { finish(status || (Object.keys(st.answers).some(function (k) { return st.answers[k]; }) ? "spoken" : "waiting"), lines.filter(function (l, li) { return keepOn[li]; }), blocked); }, { "data-bm-save": "" })])]), "keep");
     }
     // Saving at every chamber (bm-session): the voice's record, the translators waiting, and the place to come back to.
@@ -1069,19 +1696,121 @@
       var waves = prevWaves.concat(st.waves.map(function (w, wi) { var o = {}; for (var k in w) o[k] = w[k]; if (!wk[wi]) o.word = null; return o; }));
       s.voices[V.id] = { status: status, kept: kept, place: st.place || null, charges: st.charges.slice(), waves: waves, savedAt: new Date().toISOString() };
       if (blocked) s.voices[V.id].keepsWay = true; // it held the way shut; the next sitting meets it again at its post
+      if (st.boss) s.voices[V.id].boss = st.boss; // who the player said it works for (the boss question)
       s.waiting = st.waiting.slice(); s.at = blocked ? "mouth" : "hall2";
       var ok = writeSave(s);
       hide();
       if (blocked) { leave(); return; }
       st.phase = "hall2";
-      hint.textContent = status === "waiting" ? "The Protector waits by the wall. The way is open." : (ok ? "Saved. The way is open." : "The way is open. (This browser would not save.)");
+      hint.textContent = status === "waiting" ? V.title + " waits by the wall. The way is open." : (ok ? "Saved. The way is open." : "The way is open. (This browser would not save.)");
       hint.setAttribute("data-bm-status", status);
     }
     function theEnd() {
       st.phase = "end";
+      var rest = btn("Rest here", function () { hide(); st.phase = "rest"; hint.textContent = "Resting. Tap Self to walk back up."; }, { "data-bm-rest": "" }, true);
+      if (NEXT && NEXT.built && !NEXT.centre) {
+        show([el("h2", { text: NEXT.title }), guide("Another figure waits at the mouth of the next chamber. Its chamber is open."),
+          guide("Your place is saved here. You can walk on into its chamber, rest, or walk back up and out."),
+          row([btn("Walk on, to " + NEXT.title.replace(/^The /, "the "), onward, { "data-bm-onward": "" })]),
+          row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }, true), rest])], "end");
+        return;
+      }
+      if (NEXT.centre) {
+        show([el("h2", { text: NEXT.title }), guide("This is the end of the daemon path. Past the last chamber the way opens toward the centre, and a small figure waits at its mouth: the vulnerable child, with the place for the self beside it."),
+          guide("Your place is saved here. You can walk on into the centre, rest, or walk back up and out."),
+          row([btn("Walk on, into the centre", toCentre, { "data-bm-tocentre": "" })]),
+          row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }, true), rest])], "end");
+        return;
+      }
       show([el("h2", { text: NEXT.title }), guide("Another figure waits at the mouth of the next chamber. Its chamber opens in the next build."),
         guide("Your place is saved here. You can rest, or walk back up and out."),
-        row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }), btn("Rest here", function () { hide(); st.phase = "rest"; hint.textContent = "Resting. Tap Self to walk back up."; }, { "data-bm-rest": "" }, true)])], "end");
+        row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }), rest])], "end");
+    }
+    // ---- the centre: the vulnerable child (board dp-centre, dp-centre-asked) ------------------------------------------------
+    // The shut mouth opens and the player walks in to stand beside the child. The voices met on the way come in as spirits, in
+    // their own colours, and stand around it (bms-spirits-follow); the spirits walking with the player keep following.
+    var cen = null;
+    function toCentre() {
+      hide(); st.phase = "centre"; st.auto = true; ring.style.display = "none";
+      var sv = readSave(), sC = route.sEnd + 4, s0 = st.s, m = nextFig.userData.mat;
+      cen = { s: sC, said: {}, voices: [], lat: 0 };
+      PATH.forEach(function (id, j) {
+        if (!sv.voices[id]) return;
+        var vv = VOICES.filter(function (x) { return x.id === id; })[0], row0 = daemonRow(id);
+        var g = K.buildSpirit(THREE, vv ? vv.title : id, row0 ? row0[3] : 0x9a9aa8);
+        var a = at(route, Math.max(0, st.s - 2)); g.position.set(a.x, floor(a) + 1.7, a.z); scene.add(g);
+        cen.voices.push({ id: id, g: g, near: false });
+      });
+      tween(3200, function (k) {
+        var e = ease(k); st.endOpen = e; tube.dirty = true; st.s = s0 + (sC - 0.4 - s0) * e; cen.lat = 1.2 * e * e; st.moving = k < 0.95;
+        seeThrough(nextFig, 0.55 + 0.45 * e); m.emissiveIntensity = 0.35 + 0.25 * e;
+      }, function () { st.auto = false; st.moving = false; centreArrive(); });
+    }
+    function child(t) { return el("p", { class: "bm-npc" }, [el("b", { text: "The child: " }), document.createTextNode(t)]); }
+    function metNames() { return cen.voices.map(function (o) { var vv = VOICES.filter(function (x) { return x.id === o.id; })[0]; return vv ? vv.name : o.id; }); }
+    function centreArrive() {
+      var names = metNames();
+      show([el("h2", { text: CENTRE.title }), guide(CENTRE.arrive),
+        names.length ? guide("The voices you met on the way are here with you, as spirits: " + names.join(", ").replace(/, ([^,]*)$/, names.length > 2 ? ", and $1" : " and $1") + ".") : null,
+        guide(CENTRE.seen),
+        row([btn("Be with it", centreRest, { "data-bm-centre": "be" }), btn("Ask it, gently", function () { childQ(0); }, { "data-bm-centre": "ask" }, true)])], "centre");
+    }
+    function childQ(i, lead) {
+      var Q = centreQuestions(); if (i >= Q.length) return centreRest();
+      var q = Q[i], picked = [];
+      var list = (q.byVoice ? cen.voices.filter(function (o) { return q.byVoice[o.id]; }).map(function (o) { return [q.byVoice[o.id], o.id]; }) : []).concat(q.cards);
+      var doneBtn = q.multi ? btn("That's all of it", function () { said(picked.map(function (c) { return c[0]; }), picked); }, { "data-bm-childdone": "", disabled: "" }) : null;
+      var cards = el("div", { class: "bm-cards" }, list.map(function (c, ci) {
+        var b = btn(c[0], function () {
+          if (!q.multi) return said([c[0]], [c]);
+          var on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", String(on));
+          if (on) picked.push(c); else picked.splice(picked.indexOf(c), 1); doneBtn.disabled = !picked.length;
+        }, { class: "bm-card", "data-bm-childcard": String(ci), "aria-pressed": "false" });
+        return b;
+      }));
+      var input = el("input", { type: "text", "data-bm-childline": "", placeholder: "Or what it says, in its words", enterkeyhint: "done", maxlength: "200" });
+      function say() { var t = input.value.trim(); if (t) said(picked.map(function (c) { return c[0]; }).concat([t]), picked); }
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); say(); } });
+      // A voice the child names as in its way comes closer to it.
+      function said(lines, cs) {
+        st.child[q.id] = lines;
+        cs.forEach(function (c) { cen.voices.forEach(function (o) { if (o.id === c[1]) o.near = true; }); });
+        childQ(i + 1, [child(lines.join(" ")), guide(q.reflect)]);
+      }
+      show([el("p", { class: "bm-wavestep", text: "Asking gently · " + (i + 1) + " of " + Q.length }), el("h2", { text: CENTRE.title })].concat(lead || [], [
+        you(q.ask), guide("Let it answer in its own time. What does the child say?"), cards,
+        el("div", { class: "bm-line" }, [input, btn("Say it", say, { "data-bm-childsay": "" })]),
+        doneBtn ? row([doneBtn]) : null,
+        row([btn("Let this one go", function () { childQ(i + 1); }, { class: "bm-link", "data-bm-childquiet": "" }),
+          btn("That's enough for now", centreRest, { class: "bm-link", "data-bm-childenough": "" })])]), "child-" + q.id);
+    }
+    // Only lines the player keeps are stored, as in the chambers (bm-cards-and-line).
+    function centreRest() {
+      var lines = [];
+      centreQuestions().forEach(function (q) { (st.child[q.id] || []).forEach(function (l) { lines.push({ q: q.id, line: l }); }); });
+      var keepOn = lines.map(function () { return false; });
+      var list = el("div", { class: "bm-cards" }, lines.map(function (l, li) {
+        var b = el("button", { class: "bm-card", "data-bm-childkeep": String(li), "aria-pressed": "false", text: l.line, onclick: function () { keepOn[li] = !keepOn[li]; b.setAttribute("aria-pressed", String(keepOn[li])); } });
+        return b;
+      }));
+      show([el("h2", { text: "With the child" }), guide(CENTRE.rest)].concat(lines.length ? [guide("Tap what the child said that you want to keep. The rest is let go, and only what you keep is saved, on this device."), list] : [], [
+        guide(CENTRE.beyond),
+        row([btn("Save, and stay a while", function () { saveCentre(lines.length ? "spoken" : "seen", lines.filter(function (l, li) { return keepOn[li]; })); }, { "data-bm-centresave": "" })])]), "centre-rest");
+    }
+    function saveCentre(status, kept) {
+      var s = readSave(); s.centre = { status: status, kept: kept, savedAt: new Date().toISOString() };
+      var ok = writeSave(s);
+      var rest = btn("Rest here", function () { hide(); st.phase = "rest"; hint.textContent = "Resting with the child. Tap Self to walk back up."; }, { "data-bm-rest": "" }, true);
+      show([el("h2", { text: CENTRE.title }), guide(ok ? "Saved, on this device." : "This browser would not save."), guide("You can rest here with the child, or walk back up and out."),
+        row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }), rest])], "centre-end");
+    }
+    // Into the next chamber: the save moves on to it, the spirits walking with the player come along, and the cave is built
+    // again around the next voice from its first hallway.
+    function onward() {
+      var s = readSave(); s.chamber = C + 1; s.at = "mouth"; writeSave(s);
+      carry = spirits.map(function (o) { return { name: o.name, element: o.element, lighter: !!o.lighter }; });
+      hide(); fade.style.opacity = 1;
+      setTimeout(function () { cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; play(THREE, "hall1"); }, 520);
     }
     // At the mouth the player chooses, for each spirit, to keep it for next time or let it go (bms-spirits-after = choose). What
     // is kept is its name and element, on this device.
@@ -1120,7 +1849,7 @@
       K.stepAura(C.g.userData.aura, bc, (lit ? (C.allow.bright / 10) * (1 - C.dull) : 0.12) * fd, dt, still);
       if (fd < 1) { var au = C.g.userData.aura.userData; au.halo.material.opacity *= fd; au.sparks.material.opacity *= fd; }
     }
-    var br = { b: 0.5, t0: performance.now() / 1000 }, camPos = new THREE.Vector3(), aim = new THREE.Vector3(), tmpC = new THREE.Color();
+    var br = { b: 0.5, t0: performance.now() / 1000 }, camPos = new THREE.Vector3(), aim = new THREE.Vector3(), tmpC = new THREE.Color(), tmpV = new THREE.Vector3();
     function frame(now) {
       running = requestAnimationFrame(frame);
       var dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -1144,6 +1873,7 @@
       K.loosenAvatar(avatar, 0.5, br.b);
       K.poseAvatar(avatar, st.clk, st.moving, dt, br.b, WALK / K.STEPS_PER_S, false);
       avatar.position.set(a.x, fl + 0.02, a.z);
+      if (cen) { var ab = side(st.s, cen.lat); avatar.position.set(ab.x, floor(ab) + 0.02, ab.z); } // the self's place, beside the child
       var face = K.yawFacing(a) + (st.turned || st.back ? Math.PI : 0); avatar.rotation.y = face;
       var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches, SI = st.sit;
       if (SI) {
@@ -1160,6 +1890,11 @@
         ob.setAttribute("data-bm-orb", inn ? "in" : "out");
       }
       K.followSpirits(THREE, spirits, function (j) { var sa = side(Math.max(0.5, st.s - 2.2 - 1.6 * j), j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2); return { x: sa.x, y: floor(sa) + 1.7, z: sa.z }; }, dt, now, still);
+      if (cen) cen.voices.forEach(function (o, j) { // around the child, beyond it and to both sides; one named as in its way stands closer
+        var n = cen.voices.length, ang = (n === 1 ? 0 : -1.75 + 3.5 * j / (n - 1)), r = o.near ? 1.5 : 2.6, ca = side(cen.s + r * Math.cos(ang), r * Math.sin(ang));
+        tmpV.set(ca.x, floor(ca) + 1.5 + (still ? 0 : 0.15 * Math.sin(now / 800 + j * 1.7)), ca.z); o.g.position.lerp(tmpV, Math.min(1, dt * 1.6));
+        K.stepAura(o.g.userData.aura, o.g.userData.color, o.near ? 0.7 : 0.45, dt, still);
+      });
       spirits.forEach(function (o) { o.light.visible = o.g.visible && !o.hidden; o.light.position.set(o.g.position.x, o.g.position.y + 1.1, o.g.position.z); });
       var stance = 1 + 0.04 * Math.min(spirits.length, 3); voice.scale.x = voice.scale.z = stance; // it squares up to what you bring
       sitBtn.disabled = !canSit();
@@ -1179,6 +1914,9 @@
           want.set(T.x + fr.fx * along - fr.fz * lat, T.y + 0.6 + Math.sin(el0) * r, T.z + fr.fz * along + fr.fx * lat);
           keepInCave(want, st.s + 2); var dd = want.distanceTo(T); look.set(T.x, T.y + dd * 0.4 + 0.3, T.z); // still under the panel
         }
+      }
+      else if (cen) { // at the centre: the child framed low under the panel, the self beside it and the voices around it
+        var cb0 = side(cen.s - 6, -0.3), ch = at(route, cen.s); want = new THREE.Vector3(cb0.x, floor(cb0) + 3.2, cb0.z); look = new THREE.Vector3(ch.x, floor(ch) + 2.6, ch.z);
       }
       else { var b = at(route, Math.max(0, st.s - 6.2)); want = new THREE.Vector3(b.x, floor(b) + 4.6, b.z); look = new THREE.Vector3(a.x + a.fx * 3.4, fl + 2.2, a.z + a.fz * 3.4); }
       if (snap) { camPos.copy(want); aim.copy(look); snap = false; } else { var f = 1 - Math.exp(-dt * (st.cam === "voice" ? 2.2 : 6)); camPos.lerp(want, f); aim.lerp(look, f); }
@@ -1212,14 +1950,14 @@
       }
       renderer.render(scene, camera);
     }
-    var api = window.__oagBigMind; api.state = st; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
+    var api = window.__oagBigMind; api.state = st; api.chamber = C; api.voiceId = V.id; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
     api.openAt = route.openAt; api.inCave = function (p) { var q = keepInCave(p.clone(), st.s + 2); return q.distanceTo(p) < 0.01; }; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
-    api.spirits = spirits; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
+    api.spirits = spirits; api.centre = function () { return cen; }; api.child = nextFig; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
     size(); window.addEventListener("resize", size);
     running = requestAnimationFrame(frame);
   }
 
-  window.__oagBigMind = { start: start, open: open, heard: heard, readSave: readSave, VOICES: VOICES, STORE: STORE, state: null };
+  window.__oagBigMind = { start: start, open: open, heard: heard, heardBoss: heardBoss, readSave: readSave, VOICES: VOICES, CENTRE: CENTRE, centreQuestions: centreQuestions, STORE: STORE, state: null };
   // On the Cave of Lessons page the cave is opened from the WAVE room's door, so it waits to be asked.
   if (!window.__oagBigMindNoStart) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start(); }
 })();

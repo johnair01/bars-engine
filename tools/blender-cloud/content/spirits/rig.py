@@ -40,6 +40,8 @@ SIZE = {
     "armadillo": {"creature": ("length", 1.0, 2.55), "ascended": ("height", 1.45, 2.32)},  # a giant armadillo's body
     "pangolin":  {"creature": ("length", 0.9, 2.55), "ascended": ("height", 1.45, 2.32)},  # a giant pangolin's body
     "fox":       {"creature": ("length", 0.75, 2.05), "ascended": ("height", 1.4, 2.32)},  # a red fox, nose to rump
+    "otter":     {"creature": ("length", 1.0, 1.81), "ascended": ("height", 1.3, 2.32)},  # a river otter, head and body
+    "goat":      {"creature": ("length", 0.7, 1.43), "ascended": ("height", 1.2, 2.32)},  # a kid of a few months
 }
 
 
@@ -122,15 +124,41 @@ def quadruped(base):
         j["chest"] = ((-0.05, 0, 0.64), (0.4, 0, 0.68), 0.24)
         j["neck"] = ((0.4, 0, 0.68), (0.82, 0, 1.04), 0.14)
         j["head"] = ((0.82, 0, 1.04), (H.x + 0.36, 0, H.z - 0.06), 0.17)
-        legs = [((0.4, -0.13, 0.55), (0.66, -0.16, 0.36), (0.74, -0.15, 0.24), "R", True),  # the near forepaw, lifted
+        # spirit round 11 (#318 6ac49aa+): the fox stands square, its near forepaw down (shellback.py LEGS)
+        legs = [((0.38, -0.13, 0.55), (0.42, -0.15, 0.25), (0.47, -0.15, 0.04), "R", True),
                 ((0.38, 0.13, 0.55), (0.42, 0.15, 0.25), (0.47, 0.15, 0.04), "L", True),
-                ((-0.48, -0.15, 0.52), (-0.66, -0.17, 0.25), (-0.56, -0.17, 0.04), "R", False),
-                ((-0.48, 0.15, 0.52), (-0.64, 0.17, 0.25), (-0.54, 0.17, 0.04), "L", False)]
+                ((-0.48, -0.15, 0.52), (-0.65, -0.17, 0.25), (-0.55, -0.17, 0.04), "R", False),
+                ((-0.48, 0.15, 0.52), (-0.65, 0.17, 0.25), (-0.55, 0.17, 0.04), "L", False)]
         for a, b, c, side, front in legs:
             names = ("shoulder", "elbow", "wrist") if front else ("hip", "knee", "ankle")
             _leg(j, [n + side for n in names], a, b, c, tuple(Vector(c) + Vector((0.14, 0, 0))), 0.075)
         path = [(-0.5, 0, 0.66), (-0.62, 0, 0.72), (-0.98, 0, 0.84), (-1.22, 0.04, 1.12), (-1.24, 0.1, 1.48), (-1.05, 0.14, 1.7)]
         _tail(j, _tail_points(path, 5), 0.17, 0.12)
+    elif base in ("otter", "goat"):
+        # spirit round 11: the otter and the kid standing on four feet (shellback.py otter_creature, goat_creature;
+        # the leg chains are the builder's LEGS, written into report.json with each creature)
+        otter = base == "otter"
+        if otter:
+            j["hips"] = ((-0.5, 0, 0.45), (-0.05, 0, 0.43), 0.2)
+            j["chest"] = ((-0.05, 0, 0.43), (0.36, 0, 0.41), 0.2)
+            j["neck"] = ((0.36, 0, 0.43), (0.76, 0, 0.66), 0.14)
+            j["head"] = ((0.76, 0, 0.66), (1.12, 0, 0.67), 0.15)
+            fore, hind, r = ((0.34, 0.13, 0.34), (0.3, 0.14, 0.19), (0.36, 0.14, 0.06)), \
+                ((-0.5, 0.15, 0.37), (-0.59, 0.16, 0.18), (-0.5, 0.16, 0.06)), 0.07
+            path, n, r0, r1 = [(-0.5, 0, 0.45), (-0.64, 0, 0.44), (-0.98, 0, 0.36), (-1.26, 0, 0.25), (-1.46, 0, 0.15), (-1.58, 0, 0.09)], 5, 0.15, 0.04
+        else:
+            j["hips"] = ((-0.36, 0, 0.74), (0.0, 0, 0.78), 0.16)
+            j["chest"] = ((0.0, 0, 0.78), (0.3, 0, 0.82), 0.16)
+            j["neck"] = ((0.3, 0, 0.84), (0.6, 0, 1.14), 0.085)
+            j["head"] = ((0.6, 0, 1.14), (0.86, 0, 1.12), 0.13)
+            fore, hind, r = ((0.3, 0.1, 0.7), (0.31, 0.105, 0.38), (0.32, 0.105, 0.08)), \
+                ((-0.38, 0.11, 0.66), (-0.47, 0.12, 0.35), (-0.4, 0.12, 0.08)), 0.05
+            path, n, r0, r1 = [(-0.36, 0, 0.8), (-0.48, 0, 0.82), (-0.54, 0, 0.92), (-0.55, 0, 1.01)], 3, 0.05, 0.03
+        for s in (1, -1):
+            for chain, names in ((fore, ("shoulder", "elbow", "wrist")), (hind, ("hip", "knee", "ankle"))):
+                a, b, c = [(x, y * s, z) for x, y, z in chain]
+                _leg(j, [n_ + ("L" if s > 0 else "R") for n_ in names], a, b, c, (c[0] + 0.12, c[1], c[2]), r)
+        _tail(j, _tail_points(path, n), r0, r1)
     else:
         raise SystemExit(f"no frame for base {base}")
     return j
@@ -250,7 +278,7 @@ def walk_pose(kind, base, t):
             r[f"tail{k}"] = (0.0, 0.0, 0.12 * math.sin(ph * 2 - 0.6 * k))
         return r, Vector((0, 0, -0.03 * abs(sL)))
     # four legs, a walk in four beats: left hind, left fore, right hind, right fore, a quarter cycle apart
-    A = {"tortoise": 0.32, "armadillo": 0.42, "pangolin": 0.38, "fox": 0.5}[base]
+    A = {"tortoise": 0.32, "armadillo": 0.42, "pangolin": 0.38, "fox": 0.5, "otter": 0.4, "goat": 0.45}[base]
     offs = {"hipL": 0.0, "shoulderL": 0.25, "hipR": 0.5, "shoulderR": 0.75}
     for up, o in offs.items():
         a = ph - 2 * math.pi * o
@@ -264,11 +292,6 @@ def walk_pose(kind, base, t):
         else:
             r[up], r[low] = (0.0, u - 0.2 * lift, 0.0), (0.0, -0.45 * lift, 0.0)   # the hock folds the other way
         r[paw] = (0.0, -(r[up][1] + r[low][1]), 0.0)                    # the paw stays level with the ground
-    if base == "fox":
-        # the builder's fox stands with its near forepaw raised; the walk puts it on the ground first
-        r["shoulderR"] = (0.0, r["shoulderR"][1] + 0.8, 0.0)
-        r["elbowR"] = (0.0, r["elbowR"][1] - 0.45, 0.0)
-        r["wristR"] = (0.0, -(r["shoulderR"][1] + r["elbowR"][1]), 0.0)
     roll = 0.04 * math.sin(2 * ph)
     r["hips"] = (roll, 0.0, 0.05 * math.sin(ph))
     r["chest"] = (-roll, 0.0, -0.05 * math.sin(ph))

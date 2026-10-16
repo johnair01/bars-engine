@@ -103,6 +103,21 @@ step_shape:   # every step on the checklist carries all of these
   check: how he knows it worked, as something he will see
   device: phone or computer
   stop_safe: whether he can stop after this step and pick up later without harm
+  inputs: >
+    every file, link or account the step needs, named with where it lives (a full path on his Mac, a link, or the
+    attachment on the previous step). A session confirms each input exists before the step is published.
+
+# A missing input (Wendell, 2026-10-12, guide-sync gs-1, which sent him to unzip a file that was never on his Mac:
+# "if there is a task for me it needs to have all the context and be able to point me where I'm supposed to find
+# things. If its missing I need a task to find it and I need the reason why the info is important and a remediation
+# strategy that can be handled by the game masters"). A step never points at a thing nobody has checked exists.
+# When an input cannot be found, the step becomes a find-it step: it says what is missing, why it matters (what
+# breaks without it), where it was last known, and the remediation the game masters will run if he cannot find it
+# (rebuild it from its source, or park the step as optional when nothing else waits on it).
+step_missing_input:
+  find_it_step: what is missing, where it was last seen, and one way he can look
+  why_it_matters: what breaks, and for whom, if it stays missing
+  remediation: what the game masters do if he cannot find it, so the step never ends as a dead stop
 
 # The feature request move (Wendell, 2026-10-04): the front door to the stages below. Its dialogue is played on the
 # board as a battle, and each turn updates the board. Procedure: council/moves/feature-request.md.

@@ -1,3 +1,5 @@
+import { isOutOfDay } from './seed-library'
+
 export type TtvPhase = 'open' | 'freewrite' | 'brainstorm' | 'commit' | 'menu' | 'work' | 'seal'
 
 type PhaseTask = { status: string; isCarried: boolean }
@@ -14,7 +16,7 @@ export function initialTtvPhase(session: {
   tasks: PhaseTask[]
 }): TtvPhase {
   if (session.sealed) return 'seal'
-  const live = session.tasks.filter((t) => t.status !== 'composted' && t.status !== 'carried_over')
+  const live = session.tasks.filter((t) => !isOutOfDay(t.status))
   const hasOwnLive = live.some((t) => !t.isCarried)
   const hasEntry = session.rawEntry.trim().length > 0
   if (hasOwnLive) return 'work'
