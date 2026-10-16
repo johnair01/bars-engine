@@ -420,3 +420,28 @@ on" past the Emotional Body now opens it. The Damaged Self waits at the shut mou
   sympathy becomes the right to be met on its terms). Choices, all of them, as are the cards. In its chamber the story is in
   voice; the Controller, the Fixer, the Skeptic and the Protector can speak out of turn.
 - **Saving.** `chamber` 5 is the Victim; its record holds its boss beside the others, and the mouth shows each.
+
+## The Damaged Self's chamber, and the shut mouth of the centre (15 October 2026)
+
+The seventh and last chamber on the daemon path (board `dp-seven`), built on the Victim's with no change to the meeting.
+"Walk on" past the Victim now opens it.
+
+- **Its questions** are Wendell's five from `../daemons/questions.js`, first and in his order: what damage it takes, from
+  what or whom, who it works for, how its job changes depending on who it works for, and what would happen if it weren't
+  there. Its hours, how it is thanked and how that feels follow. The test checks the five against `questions.js`.
+- **The boss question** is his plain "Who do you work for?". For the Damaged Self "controller" is the Controller, so picking
+  it brings what the Controller said of its own boss along (`dq-boss-chain`).
+- **How its job changes** comes straight after the boss, with his wording, and its cards change with the boss: for the
+  Protector, "I'm the shield behind the shield."; for the Controller, "I take the fault, so the standard stays."; for the
+  self, "I hold everything it's ashamed of."; for the vulnerable child, "I carry what it was too small to carry."
+- **Its look and lines** come from the cave's daemon row (the crack, the slighter stoop, "To take the damage. It is the
+  Protector's last resort") and the council's `daemons.yaml` ("I will take that one. It was probably me."; it books the hit
+  as a fault in how the self is built). Choices, all of them, as are the cards. In its chamber taking the hit is in voice;
+  the Fixer, the Victim, the Controller, the Skeptic and the Protector can speak out of turn.
+- **Before standing where it stands** the chamber asks first, as the Cave of Lessons does before Be it with the Damaged Self
+  (`bmc-safety`, `cave-321-damaged-self-ask`): "Standing where the Damaged Self stands goes to the deepest place. Do you want
+  to go on, rest, or go back up?" Resting keeps the choice open; going back up leaves it at its post, nothing marked skipped.
+- **Saving.** `chamber` 6 is the Damaged Self; its record holds its boss beside the others, and the mouth shows each.
+- **Past the last chamber** the path ends at the centre (`dp-centre`: "the vulnerable child, and the player's own self beside
+  it"). The figure at the shut mouth is the vulnerable child: the faceless avatar, small and warm. There is no "Walk on"; the
+  centre opens in a later build.

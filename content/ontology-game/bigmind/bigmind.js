@@ -2,9 +2,10 @@
 //
 // Design: content/ontology-game/bigmind/DESIGN.md, from sprout campaigns/big-mind/build-brief.md and Wendell's board of
 // 10 October 2026, 20:19. His steer (bm-phone-first, overruled): "I want it to be a fork of cave of lessons that adds
-// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and the daemon path's first six
-// chambers, the Protector's, the Controller's, the Skeptic's, the Fixer's, the Emotional Body's and the Victim's, each with the
-// hallway past it; the Damaged Self waits at the shut mouth of the seventh, and the other chambers and the centre come in later builds (board dp-seven).
+// chambers between cave hallways with a voice blocking the path". It holds the cave mouth and all seven chambers of the
+// daemon path, the Protector's, the Controller's, the Skeptic's, the Fixer's, the Emotional Body's, the Victim's and the
+// Damaged Self's, each with the hallway past it (board dp-seven); past the last, the vulnerable child waits at the shut mouth
+// of the centre, which comes in a later build (board dp-centre).
 //
 // Needs cave/cave.js loaded first with window.__oagCaveNoStart set: this page borrows its engine (the tunnel, the faceless
 // avatar and its walk, the daemon body, the breath, the page guards) from window.__oagCave.kit, so a fix there reaches both
@@ -500,15 +501,97 @@
       know: { ask: "From here, what does the Victim want the self to know?", cards: [["It really did happen."], ["I'm not just making a fuss."], ["I've carried this so you wouldn't forget."], ["I'm tired of telling it."], ["Thank me once in a while."]] },
       thanks: "Thank you, Victim. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
     },
+    // The Damaged Self, seventh and last on the daemon path (board dp-seven), met with Wendell's own set for it
+    // (daemons/questions.js): what damage it takes, from what or whom, who it works for, how its job changes depending on who
+    // it works for, and what would happen if it weren't there. His method question is "How does your job change", so its
+    // wording stays and its cards change with the boss, as in the chambers before. To the Damaged Self "controller" is the
+    // Controller, so the chain shows (board dq-boss-chain). The lines, its look (the crack, the slighter stoop) and the cards
+    // are written from the cave's daemon row ("To take the damage. It is the Protector's last resort") and the council's
+    // daemons.yaml ("I will take that one. It was probably me."; it absorbs the hit and books it as a fault in how the self is
+    // built); choices, all of them. deep: standing where it stands is the deepest place, so the cave asks first (bmc-safety,
+    // cave-321-damaged-self-ask).
+    {
+      id: "damaged-self", name: "the Damaged Self", title: "The Damaged Self", daemon: "damaged-self", deep: true,
+      bossNames: { controller: "the Controller" },
+      arrive: "A figure stands in the middle of the way, a crack running down it from the shoulder. It doesn't brace as you come near. It turns a little, as if to take whatever you've brought on the side that's already broken.",
+      meet: {
+        opens: "I'll take that one. Whatever it is. It was probably me.",
+        replies: [
+          ["Who are you?", "I'm the one who takes it, when nothing else could keep it out.", "who"],
+          ["I'm not here to get past you. I'd like to hear from you.", "Hear from me? Nobody asks the broken one anything. All right.", "hear"],
+          ["I need to get through.", "Go on, then. Push. I'm used to it.", "push"],
+        ],
+        after: { hear: "I'm not here to hit you, or to blame you. I'd like to hear from you, if you'll let me.", push: "Then before I go anywhere, I'd like to hear from you.", who: "Keeper of the hits, I'd like to hear from you." },
+      },
+      asks: {
+        speak: { ask: "Damaged Self, may I speak with you for a while?", yes: "If you want. I don't have much to say that's any good.", no: ["You'll only find more that's wrong with us.", "It's safer if nobody looks.", "Not if it's going to hurt."] },
+        aside: { ask: "Will you step aside, and let me stand where you stand, so I can see what you see?", yes: "For a while. It's heavy here. Be careful.", no: ["If I step aside, it hits the child.", "You couldn't take it.", "Not yet. It still hurts too much."] },
+        pass: { ask: "Will you let me walk on past you?", yes: "Go on. Go gently, there.", no: ["What's past me is the softest place. Nothing goes there.", "Not while something might still come.", "Not yet."] },
+      },
+      fears: [["The next hit will land on the child."], ["We'll be found out."], ["It will prove what's wrong with us."], ["We'll fall apart."], ["There'll be nothing left to take it."]],
+      assure: [["I'll come back to my own place when we're done."], ["Nothing you took was your fault. I'm not here to add to it."], ["I'll go one step at a time, and you can stop me at any time."], ["I'm not here to fix you or get rid of you. I want to know you."]],
+      assured: ["...All right. Gently, then.", "Hm. You didn't flinch.", "Nobody has ever stayed with the broken part before."],
+      questions: [
+        { id: "what", ask: "What kind of damage do you take?", reflect: "So that's what you take on.", cards: [
+          ["The blame."], ["The shame."], ["The hurt nobody else could keep out."], ["The hit, so it lands on me and not further in."], ["Being the one who's wrong."], ["Every time it didn't work out."],
+          ["It thinks it's broken, I think.", "ideas"],
+        ] },
+        { id: "from", ask: "From what, or from whom?", reflect: "So that's where it comes from.", cards: [
+          ["From the people closest to us."], ["From whoever was angry."], ["From the world, when it got too much."], ["From inside, when we let ourselves down."], ["From the hits the Protector couldn't stop."], ["I'm not sure. It just comes."],
+          ["I'd stop them ever getting close.", "protector"],
+        ] },
+        // A card's third place names the boss (questions.js bosses: protector, self, controller, player, where the player is
+        // the vulnerable child). Here "controller" is the Controller, met five chambers before.
+        { id: "boss", boss: true, ask: "Who do you work for?", reflect: "That's who you answer to.", cards: [
+          ["The Protector.", null, "protector"], ["The Controller.", null, "controller"], ["The self.", null, "self"], ["The vulnerable child.", null, "player"], ["I'm not sure anymore."],
+          ["Maybe it learned that taking it was the only way to stay safe.", "ideas"],
+        ], reflectByBoss: {
+          protector: "So you answer to the Protector. When its shield isn't enough, you are the last thing standing.",
+          controller: "So you answer to the Controller. When the standard isn't met, the fault is put on you.",
+          self: "So you answer to the self. You take what it can't bear to look at.",
+          player: "So you answer to the vulnerable child. You take the hit so it never reaches the little one.",
+        } },
+        // His method question: its wording stays and its cards change with the boss.
+        { id: "how", ask: "How does your job change depending on who you work for?", reflect: "So that's how the job changes.", cards: [
+          ["I take whatever gets through."], ["I take the blame, so nobody else has to."], ["I break, so the rest doesn't."], ["I go quiet and carry it."], ["I agree it was me, so it stops."],
+          ["I'd fix the crack myself.", "fixer"], ["Poor me, nobody ever helps.", "victim"],
+        ], cardsByBoss: {
+          protector: [["I'm the shield behind the shield."], ["I take what the Protector couldn't stop."], ["I let it land on me, so it goes no further."], ["I'm the last resort."], ["I'd keep every danger out.", "protector"]],
+          controller: [["I'm the reason it wasn't good enough."], ["I take the fault, so the standard stays."], ["I'm the one who gets marked down."], ["I hold the failure, so the plan still stands."], ["I'd keep it all in hand myself.", "controller"]],
+          self: [["I hold everything it's ashamed of."], ["I keep the case against it."], ["I'm where it puts what it can't look at."], ["I take the blame so it can keep going."], ["I doubt it would want to know.", "skeptic"]],
+          player: [["I take the hit so it doesn't reach the child."], ["I'm hurt, so the little one isn't."], ["I stand in front of it."], ["I carry what it was too small to carry."]],
+        } },
+        { id: "gone", ask: "What would happen if you weren't there?", multi: true, reflect: "No wonder you keep taking it.", cards: [
+          ["It would reach the child."], ["Nothing would take the hit."], ["We'd break all the way."], ["The truth about us would get out."], ["The Protector would have nothing behind it."], ["I'm not sure. I've always been here."],
+        ] },
+        { id: "hours", ask: "And what are your hours?", reflect: "Those are long hours.", cards: [
+          ["Always. The hits don't stop."], ["Whenever someone is disappointed."], ["Most of all at night, going over what we did wrong."], ["Every time something goes wrong."], ["Whenever the Protector can't hold it."],
+        ] },
+        { id: "pay", ask: "How are you thanked for all of this?", reflect: "Taking all of it, and hardly thanked.", cards: [
+          ["Nobody sees me."], ["I'm treated as the problem."], ["I'm hidden away."], ["Hardly."],
+          ["Poor me, nobody ever helps.", "victim"], ["It just wants to be broken.", "ideas"],
+        ] },
+        { id: "feel", ask: "How does that feel?", reflect: "Thank you for telling me.", cards: [
+          ["Heavy."], ["Ashamed."], ["Worn through."], ["Like it really was my fault."], ["Like I'd love to set it down for once."], ["Alone with it."],
+        ] },
+      ],
+      places: ["Chest", "Belly", "Shoulders", "Back", "Throat", "Face", "Gut", "Heart", "All over"],
+      ready: "...All right. I could step aside for a while. Go gently. It's the deepest place.",
+      notYet: "It still hurts too much.",
+      seat: "You are standing where the Damaged Self stands. The self is back there, where you were a moment ago, and every hit that got past everything else lands here, and the softest place is just behind you.",
+      know: { ask: "From here, what does the Damaged Self want the self to know?", cards: [["It wasn't all your fault."], ["I took it so you wouldn't have to."], ["I'm not what's wrong with you."], ["I'm tired of taking it."], ["Thank me once in a while."]] },
+      thanks: "Thank you, Damaged Self. Every voice has a right to be heard, and you have been. I'm going to step back out now and let you have your post again.",
+    },
   ];
   // The daemon path in the book's order (board dp-seven). Chambers are met one after another; the first figure past the
-  // last chamber built waits at a shut mouth.
+  // last chamber built waits at a shut mouth. Past the last chamber is the centre, where the path ends at the vulnerable
+  // child (board dp-centre: "until you reach the center - the player/vulnerable child").
   var PATH = ["protector", "controller", "skeptic", "fixer", "emotional-body", "victim", "damaged-self"];
   var TITLES = { skeptic: "The Skeptic", fixer: "The Fixer", "emotional-body": "The Emotional Body", victim: "The Victim", "damaged-self": "The Damaged Self" };
   function voiceAt(c) { return VOICES[Math.min(Math.max(0, c | 0), VOICES.length - 1)]; }
   // What waits past chamber c: the next voice built, or the next figure on the path with its chamber still shut.
   function nextAfter(c) {
-    var id = PATH[c + 1]; if (!id) return null;
+    var id = PATH[c + 1]; if (!id) return { id: "centre", title: "The centre", centre: true, built: false };
     var v = VOICES.filter(function (x) { return x.id === id; })[0];
     return v ? { id: id, title: v.title, daemon: v.daemon, built: true } : { id: id, title: TITLES[id], daemon: id, built: false };
   }
@@ -543,8 +626,8 @@
   // ---- saving, on this device only ----------------------------------------------------------------
   // { v, chamber, at: "mouth" | "hall2", voices: { protector: { status: "spoken" | "waiting", kept: [{ q, line }], savedAt } },
   //   waiting: [translator ids] }. chamber is the daemon path's chamber the player has reached (0 the Protector, 1 the
-  //   Controller, 2 the Skeptic, 3 the Fixer, 4 the Emotional Body, 5 the Victim; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's, the Skeptic's,
-  //   the Fixer's, the Emotional Body's and the Victim's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
+  //   Controller, 2 the Skeptic, 3 the Fixer, 4 the Emotional Body, 5 the Victim, 6 the Damaged Self; saves from before the Controller have none and are at 0), and at is the place in it. The Controller's, the Skeptic's,
+  //   the Fixer's, the Emotional Body's, the Victim's and the Damaged Self's records also hold boss, who the player said each works for. The first cave saves this seed record and spawns no world (bm-world-later).
   function blank() { return { v: 1, chamber: 0, at: "mouth", voices: {}, waiting: [] }; }
   function readSave() { try { var s = JSON.parse(localStorage.getItem(STORE) || "null"); return s && s.v === 1 ? s : blank(); } catch (e) { return blank(); } }
   function writeSave(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); return true; } catch (e) { return false; } }
@@ -784,7 +867,10 @@
     var motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xfff1b0, size: 0.16, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
     motes.position.copy(easeRing.position); scene.add(motes);
     var calmBlue = new THREE.Color(0x6a9aff), calmWarm = new THREE.Color(0xffd49a);
-    var nextFig = K.buildDaemon(THREE, daemonRow(NEXT.daemon), 6); seeThrough(nextFig, 0.55); figureAt(nextFig, route.sEnd + 4, 0, true); scene.add(nextFig);
+    // Past the last chamber the figure at the shut mouth is the vulnerable child: the faceless avatar, small and warm (a choice).
+    var nextFig = NEXT.centre ? K.buildAvatar(THREE, "other") : K.buildDaemon(THREE, daemonRow(NEXT.daemon), 6);
+    if (NEXT.centre) { nextFig.scale.setScalar(0.55); nextFig.userData.mat.color.setHex(0xffd49a); nextFig.userData.mat.emissive.setHex(0xffd49a); nextFig.userData.mat.emissiveIntensity = 0.35; }
+    seeThrough(nextFig, 0.55); figureAt(nextFig, route.sEnd + 4, 0, true); scene.add(nextFig);
     var avatar = K.buildAvatar(THREE, "other"); scene.add(avatar);
     var ghost = null, figures = [];
     // Translators already waiting from an earlier sitting stand by the wall of the second hallway.
@@ -1286,7 +1372,16 @@
     if (fromRoom) { fromRoom.spirits.forEach(function (o) { addSpirit({ name: o.name, element: o.element, lighter: !!o.lighter }); }); fromRoom.spirits = []; } // the room's, once
 
     function ready() {
-      show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
+      show([el("h2", { text: V.title }), npc(V.ready), row([btn("Ask it to step aside", function () { permit("aside", 0, V.deep ? deepCheck : seatShift); }, { "data-bm-ask": "aside" }), leaveBtn("aside")])], "ready");
+    }
+    // Standing where the Damaged Self stands goes to the deepest place, so the cave asks first, as the Cave of Lessons does
+    // before Be it (Wendell's board, bmc-safety and cave-321-damaged-self-ask): go on, rest, or go back up.
+    function deepCheck() {
+      show([el("h2", { text: "Before you stand where it stands" }), guide("Standing where " + V.name + " stands goes to the deepest place. Do you want to go on, rest, or go back up?"),
+        row([btn("Go on", seatShift, { "data-bm-deep": "continue" }),
+          btn("Rest", function () { show([el("h2", { text: "Resting" }), guide("Take as long as you need. " + V.title + " is still standing aside."),
+            row([btn("Go on", seatShift, { "data-bm-deep": "continue" }), btn("Go back up", function () { keepsPost("aside"); }, { "data-bm-deep": "up" }, true)])], "deep-rest"); }, { "data-bm-deep": "rest" }, true),
+          btn("Go back up", function () { keepsPost("aside"); }, { "data-bm-deep": "up" }, true)])], "deep");
     }
 
     // Asking permission. The player reads the voice's answer, so the voice is never forced (a choice: the read is the
@@ -1576,7 +1671,13 @@
           row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }, true), rest])], "end");
         return;
       }
-      show([el("h2", { text: NEXT ? NEXT.title : "The centre" }), guide("Another figure waits at the mouth of the next chamber. Its chamber opens in the next build."),
+      if (NEXT.centre) {
+        show([el("h2", { text: NEXT.title }), guide("This is the end of the daemon path. Past the last chamber the way opens toward the centre, and a small figure waits at its mouth: the vulnerable child, with the place for the self beside it. The centre opens in the next build."),
+          guide("Your place is saved here. You can rest, or walk back up and out."),
+          row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }), rest])], "end");
+        return;
+      }
+      show([el("h2", { text: NEXT.title }), guide("Another figure waits at the mouth of the next chamber. Its chamber opens in the next build."),
         guide("Your place is saved here. You can rest, or walk back up and out."),
         row([btn("Walk back up", function () { leave(); }, { "data-bm-leave": "" }), rest])], "end");
     }
