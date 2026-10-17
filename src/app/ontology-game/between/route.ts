@@ -1,7 +1,7 @@
 /**
  * @route GET /ontology-game/between
  * @entity PLAYER
- * @description The Between: a 3D garden two people tend together, under the WAVE room's dome
+ * @description The Between: a 3D garden two people tend together, in a hollow under a great tree's roots
  * @permissions signed-in player (bars_player_id cookie); the garden itself opens only to its two members or an invite link
  * @relationships PLAYER (BetweenGarden)
  * @example GET /ontology-game/between?g=clx...&invite=...
@@ -15,13 +15,14 @@ export const dynamic = 'force-dynamic'
 /**
  * Six-faces-council bh-move-to-bars-engine (2026-10-17): the page that would not open on his iPhone inside the Claude
  * app now lives beside the caves. This route only checks the sign-in and hands out the page; the scene is
- * public/between/garden.js and the store is /api/between.
+ * public/between/garden.js (the hollow and the creature in hollow.js and creature.js, round 2) and the store is
+ * /api/between.
  */
 const PAGE = `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#15110d">
+<meta name="theme-color" content="#1a1018">
 <title>The Between</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
@@ -35,12 +36,13 @@ const PAGE = `<!doctype html>
 </head><body>
 <div id="stage" aria-label="The garden. Tap the floor to walk there; drag to look around."></div>
 <div id="labels" aria-hidden="true"></div>
-<div class="loading" id="loading"><div><h1>The Between</h1><p id="loadMsg">Opening the garden…</p><p id="loadStep" style="font-size:.8rem;opacity:.6;margin-top:8px">starting</p></div></div>
+<div class="loading" id="loading"><div><h1>The Between</h1><p id="loadMsg">Opening the hollow…</p><p id="loadStep" style="font-size:.8rem;opacity:.6;margin-top:8px">starting</p></div></div>
 
 <div class="hud" id="hud" hidden>
   <div class="top">
     <div class="namecard" id="namecard"></div>
     <div class="topbtns">
+      <button class="glassbtn" type="button" data-act="sound" id="soundBtn" aria-pressed="true">Sound on</button>
       <button class="glassbtn" type="button" data-open="away" id="awayBtn">While you were away</button>
       <button class="glassbtn" type="button" data-open="menu">More</button>
     </div>

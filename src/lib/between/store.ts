@@ -65,7 +65,7 @@ export async function snapshot(gardenId: string, who: Who) {
 
 export async function setPresence(gardenId: string, playerId: string, p: Doc) {
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) / 100 : null)
-  const data: Doc = { x: num(p.x), z: num(p.z), h: num(p.h), w: !!p.w, tx: num(p.tx), tz: num(p.tz), wave: num(p.wave) }
+  const data: Doc = { x: num(p.x), z: num(p.z), h: num(p.h), w: !!p.w, tx: num(p.tx), tz: num(p.tz), wave: num(p.wave), s: p.s === 0 || p.s === 1 ? p.s : null }
   await db.betweenPresence.upsert({
     where: { gardenId_playerId: { gardenId, playerId } },
     create: { gardenId, playerId, data: asJson(data) },
