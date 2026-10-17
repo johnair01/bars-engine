@@ -204,15 +204,18 @@ HONORED = {
     "fixer": {"curve": 0.08, "stoop": 0.2, "hands": ("relaxed", "open"), "gesture": {
         "shoulderR": (1.35, 0.1), "elbowR": (0.2,), "wristR": (0.0, 0, 0, -1.3), "shoulderL": (0.1, 0.12),
         "elbowL": (0.3,), "neck": (0.3,), "hip": (0.15,), "knee": (0.3,), "ankle": (0.15,)}},
-    # YIELD honored: rest and receiving. Sunk low into wide, strong knees, the back straight and the head up, both
-    # palms open and turned forward at its sides: I can take the weight, and let it be held.
-    "victim": {"curve": 0.0, "stoop": 0.0, "hands": "open", "gesture": {
-        "hip": (0.65, 0.22), "knee": (1.15,), "ankle": (0.5,), "shoulder": (0.1, 0.4, 0.0, -0.9), "elbow": (0.15,),
-        "neck": (-0.12,)}},
-    # RELEASE honored (it refused to): the arms that wrapped the hit open into a shelter. Upright, chest open, both
-    # arms out and forward at waist height, ready to hold the child, the head up.
-    "damaged-self": {"curve": -0.05, "stoop": 0.0, "hands": "relaxed", "gesture": {
-        "shoulder": (0.8, 0.5), "elbow": (0.7, 0, 0.3), "neck": (-0.05,)}},
+    # YIELD honored: the storyteller (Wendell, 2026-10-17: "The victim let go needs a sort of jester or performer
+    # stance. They've become the storyteller"). Up on its feet, chest up, one arm swept high to present the tale, the
+    # other held out palm up, "and then...", the front foot forward and the head tipped.
+    "victim": {"curve": -0.1, "stoop": 0.0, "hands": "open", "gesture": {
+        "shoulderL": (0.4, 1.6), "elbowL": (0.3,), "shoulderR": (0.9, 0.3, 0.0, -1.2), "elbowR": (0.4,),
+        "hipL": (0.35, 0.05), "kneeL": (0.2,), "hipR": (-0.15,), "neck": (-0.1, 0.0, 0.25)}},
+    # RELEASE honored (it refused to): bring it on (Wendell, 2026-10-17: "I want the damaged self to almost take on a
+    # bring it on stance"). A wide stance with the front foot forward, chest thrust out and chin up, both arms flung open
+    # and low with the palms turned forward: hit me, I can take it, so the child never has to.
+    "damaged-self": {"curve": -0.28, "stoop": 0.0, "hands": "open", "gesture": {
+        "hipL": (0.3, 0.18), "kneeL": (0.35,), "hipR": (-0.2, 0.18), "ankleR": (-0.15,),
+        "shoulder": (0.1, 0.8, 0.0, -1.0), "elbow": (0.15,), "neck": (-0.18,)}},
     # RELEASE honored (it released too soon): the feeling held and given in its time. Both feet planted, both hands on
     # the heart, the chest open and the head lifted.
     "emotional-body": {"curve": -0.12, "stoop": 0.0, "hands": "open", "gesture": {
@@ -1026,7 +1029,8 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
                    "next": (NEXT_FIGURE[boss] or "frame") if boss else None},
            "bytes": size, "tris": sum(len(p.vertices) - 2 for p in fused.polygons), "verts": len(fused.vertices),
            "bones": len(PARENT), "keys": KEYS + 1, "actions": keys}
-    if size > MAX_BYTES:
+    # a figure with the let-go carries a second action; the cave never loads it whole (bake_daemons.py keeps the keys)
+    if size > MAX_BYTES + (24 * 1024 if integrate else 0):
         raise SystemExit(f"{name}.glb is {size // 1024} KB, over the {MAX_BYTES // 1024} KB line")
     return row
 

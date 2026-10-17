@@ -812,8 +812,8 @@ not in a neutral pose but essentially in the honored version of their pose empow
 charged. How would these voices relate to a healthy inner child", then "we need 'let go' stances for all the daemons".
 So `character.py` has `HONORED`, each movement completed in health, standing toward a child who is safe (the Protector a
 boundary with a hand on its heart, the Controller offering a hand, the Skeptic considering, the Fixer reaching down to help
-up, the Victim rooted low with open palms, the Damaged Self's arms opened into a shelter, the Emotional Body's hands on its
-heart), and `charged`, the held warp times 1.4. It writes both beside each figure (`X.stances.json`), and every daemon's
+up, the Victim the storyteller with a performer's flourish, the Damaged Self's "bring it on", the Emotional Body's hands on
+its heart; the Victim and Damaged Self from his notes of 17 October), and `charged`, the held warp times 1.4. It writes both beside each figure (`X.stances.json`), and every daemon's
 Integrate action now ends in its honored form (`--warp X --integrate`).
 
 In `cave.js` the body is a `SkinnedMesh` that poses itself each time it is drawn from its group's `userData.stance`

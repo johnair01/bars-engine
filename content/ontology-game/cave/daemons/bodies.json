@@ -3,17 +3,17 @@
  "bodies": [
   {
    "id": "protector",
-   "bytes": 110810,
-   "tris": 6306,
-   "verts": 3971,
+   "bytes": 111278,
+   "tris": 6328,
+   "verts": 3992,
    "joints": 46,
    "height": 1.743,
    "bands": {
-    "skin": 925,
-    "tunic": 1272,
-    "trim": 1086,
-    "sash": 151,
-    "trousers": 406,
+    "skin": 923,
+    "tunic": 1283,
+    "trim": 1096,
+    "sash": 152,
+    "trousers": 407,
     "shoes": 131
    },
    "integrate": true
@@ -71,34 +71,34 @@
   },
   {
    "id": "victim",
-   "bytes": 115578,
-   "tris": 6306,
-   "verts": 3955,
+   "bytes": 116094,
+   "tris": 6328,
+   "verts": 3976,
    "joints": 46,
    "height": 1.381,
    "bands": {
-    "skin": 925,
-    "tunic": 1255,
-    "trim": 1081,
-    "sash": 151,
-    "trousers": 415,
+    "skin": 923,
+    "tunic": 1266,
+    "trim": 1091,
+    "sash": 152,
+    "trousers": 416,
     "shoes": 128
    },
    "integrate": true
   },
   {
    "id": "damaged-self",
-   "bytes": 111238,
-   "tris": 6306,
-   "verts": 3953,
+   "bytes": 116462,
+   "tris": 6328,
+   "verts": 3974,
    "joints": 46,
    "height": 1.447,
    "bands": {
-    "skin": 925,
-    "tunic": 1256,
-    "trim": 1081,
-    "sash": 151,
-    "trousers": 405,
+    "skin": 923,
+    "tunic": 1267,
+    "trim": 1091,
+    "sash": 152,
+    "trousers": 406,
     "shoes": 135
    },
    "integrate": true
