@@ -819,7 +819,7 @@ function refreshHud() {
   const hud = $("#hud"); if (hud.hidden) return;
   const V = view(); const g = V.g;
   const nc = $("#namecard");
-  if (!g) { nc.innerHTML = `<h1>The Between</h1><span class="sub">No garden here yet</span>`; }
+  if (!g) { nc.innerHTML = `<h1>The Between</h1><span class="sub">${storeDown ? "The room only: the store did not answer" : "No garden here yet"}</span>`; }
   else if (g.phase === "closed") { nc.innerHTML = `<h1>The Between</h1><span class="sub">This garden is closed</span>`; }
   else {
     const s = satisfaction(V.items), st = stateOf(s), stale = isStale(g);
@@ -834,7 +834,8 @@ function refreshHud() {
 
   const hint = $("#hint");
   const others = [...peers.values()].filter(p => p.uid !== me);
-  if (!g) hint.textContent = "Tap the floor to walk. Drag to look around.";
+  if (storeDown) hint.textContent = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again.";
+  else if (!g) hint.textContent = "Tap the floor to walk. Drag to look around.";
   else if (g.phase === "closed") hint.textContent = "The garden is closed. Its history is yours to keep from More.";
   else if (!isMember(g)) hint.textContent = members(g).length >= 2 ? "This garden is held by two people. You can look around." : "A spark is waiting here. Walk up to it.";
   else if (g.phase === "spark") hint.textContent = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap the floor to walk, drag to look.`;
@@ -849,7 +850,8 @@ function refreshHud() {
 
   // tools
   const tools = [];
-  if (!g) tools.push(`<button type="button" data-open="setup">Plant a spark here</button>`);
+  if (storeDown) {}
+  else if (!g) tools.push(`<button type="button" data-open="setup">Plant a spark here</button>`);
   else if (g.phase !== "closed" && isMember(g) && !readOnly) {
     tools.push(`<button type="button" data-open="offer">${g.phase === "spark" ? "Tend the spark" : "Offer something"}</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="agreement">Plant an agreement</button>`);
@@ -1307,7 +1309,7 @@ function refresh() {
    (bh-async-first, six-faces-council 2026-10-17). No live channel: a write shows here at once and on the
    other screen at its next poll.
    =================================================================================================== */
-let pollTimer = null, polling = false, pollAgain = false, stopped = false, roomOk = null;
+let pollTimer = null, polling = false, pollAgain = false, stopped = false, roomOk = null, storeDown = false;
 function pollSoon() { if (!gardenId || stopped) return; if (polling) { pollAgain = true; return; } clearTimeout(pollTimer); pollTimer = setTimeout(poll, 120); }
 function toLogin() { stopped = true; location.href = "/login?returnTo=" + encodeURIComponent(location.pathname + location.search); }
 function stop(msg) {
@@ -1374,7 +1376,10 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
     if (gardenId) first = await api("/api/between/" + gardenId + "/poll", { invite });
   } catch (e) {
     if (e && e.code === "unauthenticated") return toLogin();
-    return stop((e && e.code === "permission_denied") || (e && e.code === "not_found") ? e.message : "The garden's store did not answer. Check your connection and open the page again.");
+    if ((e && e.code === "permission_denied") || (e && e.code === "not_found")) return stop(e.message);
+    // The store is down (or not set up yet, as on a preview deploy before its migration): open the room anyway, so
+    // walking and the 3D still work, and say plainly that nothing is saved.
+    storeDown = true; stopped = true; me = me || "you"; first = null; gardenId = null;
   }
   if (first) {
     take(first);
@@ -1389,7 +1394,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   if (!roomOk) loadStep("building the cave");
   try { await roomP; } catch { return; }
   $("#loading").hidden = true; $("#hud").hidden = false;
-  if (!garden) openSheet("setup");
+  if (!garden && !storeDown) openSheet("setup");
   refresh();
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);
