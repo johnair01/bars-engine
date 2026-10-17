@@ -1464,8 +1464,10 @@
         kids.push(guide("Name the feeling to yourself in one word, then pick its element."), el("div", { class: "bm-line" }, [word]), el("div", { class: "bm-cards" }, els));
         go.push(btn(WAVE_BTN[id], function () { wv.word = word.value.trim(); wv.element = picked; climbed(n); }, { "data-bm-wavego": id, disabled: "" }));
       } else if (id === "exhale") {
-        go.push(btn("Yes, let it stay", function () { wv.exhale = "stay"; blobStays(); waveAfter(); }, { "data-bm-exhale": "stay", disabled: "" }),
-          btn("No, exhale and release", function () { wv.exhale = "release"; blobReleased(); }, { "data-bm-exhale": "release", disabled: "" }, true));
+        // The breath comes after the answer (Wendell, 17 October 2026: "This should start the breath AFTER they decided if it's in
+        // alignment or not"), so the two answers are open at once and exhaleBreath takes the breath.
+        go.push(btn("Yes, let it stay", function () { exhaleBreath("stay", n); }, { "data-bm-exhale": "stay" }),
+          btn("No, exhale and release", function () { exhaleBreath("release", n); }, { "data-bm-exhale": "release" }, true));
       } else {
         if (id === "allow") {
           // Allow grows it, by the same two sliders as the sitting and the WAVE room (K.allowSliders).
@@ -1484,16 +1486,34 @@
         if (id === "validate") B.dull = 0.6; // worked through: it dulls, as in the WAVE room
         go.unshift(btn(WAVE_BTN[id], function () { if (rung) climbed(n); else waveStep(n + 1); }, { "data-bm-wavego": id, disabled: "" }));
       }
-      kids.push(orb(), cue, el("div", { class: "oagc-row bm-wave" }, go));
+      if (id === "exhale") kids.push(el("div", { class: "oagc-row bm-wave" }, go));
+      else kids.push(orb(), cue, el("div", { class: "oagc-row bm-wave" }, go));
       var side = [];
       if (rung && wv.reached) side.push(btn("This is as far as I can honestly go today", function () { waveStep(WAVE.length - 2); }, { class: "bm-link", "data-bm-wavestop": "" }));
       side.push(btn("Something's in the way", function () { waveBlocked(id); }, { class: "bm-link", "data-bm-waveblock": "" }));
       kids.push(row(side));
       show(kids, "wave-" + id);
+      if (id === "exhale") return;
       var BR = K.BREATH, inMs = BR.inS * 1000, outMs = BR.outS * 1000;
       tween(inMs, function () {}, function () { cue.textContent = "…and out"; tween(outMs, function () {}, function () {
         cue.textContent = "One breath."; go.forEach(function (b) { b.removeAttribute("disabled"); });
       }); });
+    }
+    // The Exhale's one breath, after the answer: in, then on the out-breath it either stays and walks with you, or lifts and goes.
+    function exhaleBreath(choice, n) {
+      wv.exhale = choice;
+      var cue = el("p", { class: "bm-breath", "data-bm-breath": "", text: "Breathe in…" });
+      show([el("p", { class: "bm-wavestep", text: "W.A.V.E. · " + (n + 1) + " of " + WAVE.length }), el("h2", { text: WAVE[n][1] }),
+        guide(choice === "stay" ? "Let it stay. Breathe with it once." : "Breathe in, and let it go on the out-breath."), orb(), cue], "wave-exhale-breath");
+      tween(K.BREATH.inS * 1000, function () {}, function () {
+        cue.textContent = "…and out";
+        if (choice === "release") return blobReleased(); // it lifts and goes over the out-breath
+        tween(K.BREATH.outS * 1000, function () {}, function () {
+          blobStays();
+          if (modal.getAttribute("data-bm-step") === "self") { paused = { then: waveAfter }; return; }
+          waveAfter();
+        });
+      });
     }
     function climbed(n) { wv.reached = WAVE[n][0]; waveStep(n + 1); }
     function blobStays() {
