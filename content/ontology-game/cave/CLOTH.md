@@ -267,6 +267,33 @@ so every point of them moved on the same frame as the forearm, and uniform motio
   to the side had its chains built on the wrong points, and its cuffs jittered 11 mm. The joints now come back through
   the bone's own skinning, the way `skin()` places points, and any figure's chains match.
 
+## The sleeve panels (round 12)
+
+Wendell chose `cd-sleeve-open` C, "Re-cut into panels" (2026-10-17). Below 0.3 of the forearm each sleeve's top and
+bottom seams are open (`garments.py` `panels()`), so it hangs as a front and a back panel. Two ways of moving the
+panels have been tried; neither is ready for his look.
+
+- **Panels on spring chains** (`springPanels`, the default). Each panel hangs on two detuned chains and moves as the
+  rigid turn and shift of its rings, as round 11's ring did. On the average dusk robe (Node walk, 2026-10-17 rerun):
+  41 forearm points through at the worst key, rim strays 21 cm (95th percentile), coherence 0.64 to 0.84. A panel
+  moved whole sweeps its triangles across the forearm: pushing points off the arm one by one cannot stop a triangle
+  whose corners land on both sides of it.
+- **Panels as cloth** (`SLEEVE_CLOTH=1 garments.py`): the panels are marked cloth like the skirt below the belt, so the
+  cuff's edge becomes a weighted hem (2) and its turned trim followers (3), and the forearm and hand capsules collide
+  with the sleeve's cloth only (`slvIdx`). The mitten hand is flatter than its 6 cm capsule and the cuff hugs it (176
+  cuff points start inside it), so an arm capsule keeps a point no nearer than its skinned place, the backstop rule
+  (`collide`), and the blend band ignores arm capsules. `armBlend` sets the panels' reach (`armLen` makes it grow
+  faster toward the cuff). Through on the average robe: 11 at the worst key at `armBlend` 0.5, 2 at 0.3, 23 at 0.8;
+  the remaining points sit at the elbow, where the bending forearm meets the panels' tops. T1 trades against it: at
+  0.3 the rim lags 0 frames, coherence 0.94; at 0.6 with `armLen` 0.12 it lags 4, coherence 0.83 walking and 0.69
+  fast, but the rim strays 28 to 43 cm. In the browser clip the panels fall in toward the forearm and bunch, the
+  forearm shows bare between them and the cuff trim hangs below the hand in spikes. Cost: about 3.4 ms a step in Node
+  for the whole robe (the skirt alone about 2.3).
+- **What T1 asks may be out of reach for a short panel.** A cloth pendulum 15 cm long swings at about 1.3 Hz, above the
+  walk's 1 Hz arm swing, so it follows the arm in phase: coherence stays near 0.9 unless the band lets it fly.
+- The rim jitter cloth_walk.mjs prints (about 55 mm walking, both ways) is not J5d's: it spans the frames the walk cuts
+  short at each sample. J5d's cuff measure in the browser is the one to trust.
+
 ## Rounds 1 to 5, in one line each
 
 - **Bone weights never move like cloth.** Rounds 1 to 4 drove the skirt with hem bones and slit weights. Every fix

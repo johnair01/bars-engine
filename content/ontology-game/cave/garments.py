@@ -653,6 +653,7 @@ def smooth_skirt(weights, verts, faces, parts, rounds=SKIRT_SMOOTH, top=1.0):
 
 PANEL_FROM = 0.3                                 # round 12: the sleeve's seams open from this share of the forearm
                                                  # (from the elbow) to the cuff, so each sleeve hangs as two panels
+SLEEVE_CLOTH = os.environ.get("SLEEVE_CLOTH") == "1"   # the panels as cloth (cloth.js), not on spring chains (CLOTH.md)
 PANEL_GAP = 0.003                                # metres between the two sides of an opened seam at rest (cloth.js
                                                  # welds points closer than 1e-5 m, and would sew it shut again)
 
@@ -730,10 +731,15 @@ def robe(fig, rig, build, cw):
                 # its shape (round 10; its nearest body points mixed the hand and the hip in)
                 s = "L" if 1 in [q % 3 for q in ps] else "R"
                 E, Wr = (Vector(J[b + s][0]) for b in ("elbow", "wrist"))
-                b = smooth(0.3, 0.7, (p - E).dot(Wr - E) / (Wr - E).length_squared)
+                ta = (p - E).dot(Wr - E) / (Wr - E).length_squared
+                b = smooth(0.3, 0.7, ta)
                 w = {k: (1 - b) * x for k, x in from_arm[s](p).items()}
                 w["elbow" + s] = w.get("elbow" + s, 0.0) + b
                 weights.append(norm(w))
+                # round 12, second pass: below where its seams open the sleeve's panels are cloth, as the skirt is
+                # below the belt, hung from the sleeve above and pushed aside by the forearm and the hand
+                cloth.append(1.0 if SLEEVE_CLOTH and ta > PANEL_FROM else 0.0)
+                continue
             cloth.append(0.0)
     weights = smooth_skirt(weights, verts, faces, [p % 3 for p, _ in labels])
     n_faces = len(faces)
