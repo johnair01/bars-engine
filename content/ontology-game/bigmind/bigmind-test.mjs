@@ -1379,6 +1379,15 @@ await page.evaluate(() => localStorage.clear());
   await page.click('[data-cave-321-next]'); await page.fill('[data-cave-321-charge="after"]', '2'); await page.click('[data-cave-321-after]');
   ok(/and spoke as it\./.test(await page.textContent('[data-bm-modal]')), 'it says you spoke as it');
   await page.click('[data-bm-talkdone]');
+  { // the let-go (bars-engine #356): a 3-2-1 that leaves the voice willing plays its Integrate action, ending honored
+    const pose = () => page.evaluate(() => window.__oagCave.kit.bodyPose(window.__oagBigMind.voice));
+    ok(await waitStep('letgo', 15000) && /The Protector lets go\./.test(await page.textContent('[data-bm-eased]')), 'a 3-2-1 that leaves it willing plays its let-go, and the cave says so');
+    ok(await page.waitForFunction(() => window.__oagCave.kit.bodyPose(window.__oagBigMind.voice).integrate >= 0, null, { timeout: 5000 }).then(() => true, () => false), 'its body plays the Integrate action (' + JSON.stringify(await pose()) + ')');
+    ok(await waitStep('ready', 20000), 'when the let-go ends, it is willing');
+    await page.waitForTimeout(1500);
+    const lp = await pose();
+    ok(lp.stance === 'willing' && lp.integrate < 0 && lp.now.open > 0.9, 'it stands honored and willing after it (' + JSON.stringify(lp) + ')');
+  }
   ok(await waitStep('ready', 15000) && await page.locator('[data-bm-talk]').count() === 1, 'at 3 or below it is willing, and it can still be talked through');
   await page.click('[data-bm-talk]'); await waitStep('talk-321'); await page.click('[data-cave-321-skip]');
   ok(await page.locator('[data-bm-talkback]').count() === 1, 'skipping the 3-2-1 goes straight back');

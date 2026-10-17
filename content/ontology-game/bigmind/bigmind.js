@@ -737,7 +737,8 @@
   function stanceOf(t, vid, s) {
     var open = openBreaks(t).length;
     if (open) return "hurt";
-    if (s && s.willing) return "willing";
+    if (s && s.letting) return "held"; // a let-go about to play starts from the held shape (bigmind.js letGoVoice)
+    if (s && (s.willing || s.letGone)) return "willing"; // a let-go leaves it willing (the cave's ready step follows)
     if (trusted(t, vid)) return "trusting";
     if (s && s.refusedNow) return "testing";
     if (markOf(t, vid, "can") || markOf(t, vid, "will") || goodOf(t) === "seen") return "softening";
@@ -855,7 +856,7 @@
     "@keyframes bm-glow{0%{box-shadow:0 0 0 rgba(255,241,176,0)}25%{box-shadow:0 0 14px rgba(255,241,176,.9)}100%{box-shadow:0 0 0 rgba(255,241,176,0)}}" +
     "@keyframes bm-rise{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(16px)}}" +
     ".bm-eased{position:absolute;left:0;right:0;top:34%;text-align:center;z-index:3;color:#fff1d0;font-size:1.15rem;text-shadow:0 1px 4px #000;pointer-events:none;opacity:0;transition:opacity .4s;padding:0 1.2rem}" +
-    ".bm-eased.on{opacity:1}.bm-eased small{display:block;font-size:.9rem;color:#dfe6ff;margin-top:.25rem}" +
+    ".bm-eased.on{opacity:1}.bm-eased.top{top:9%}.bm-eased small{display:block;font-size:.9rem;color:#dfe6ff;margin-top:.25rem}" +
     "@media (prefers-reduced-motion:reduce){.bm-meter.eased .bm-bar s,.bm-meter.eased .bm-bar,.bm-meter.eased .bm-drop{animation-duration:.01s}}" +
     ".oagc button.bm-sitbtn,.oagc button.bm-spiritbtn{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
     ".oagc button.bm-sitbtn{left:10px}.oagc button.bm-spiritbtn{right:10px}.oagc button.bm-sitbtn:disabled{opacity:.35}" +
@@ -1055,7 +1056,7 @@
     // this sitting (each counts once a sitting), and prevCharge the voice's last charge from an earlier sitting, so the first
     // check-in of a visit can show whether it eased since then.
     var TR = TRUST[V.id], rec0 = save.voices[V.id];
-    st.trust = trustOf(rec0); st.pending = []; st.sat = {}; st.willing = false; st.refusedNow = false; st.since = new Date().toISOString();
+    st.trust = trustOf(rec0); st.pending = []; st.sat = {}; st.willing = false; st.refusedNow = false; st.letGone = false; st.letting = false; st.letGoLater = false; st.letCam = false; st.since = new Date().toISOString();
     st.prevCharge = rec0 && rec0.charges && rec0.charges.length ? rec0.charges[rec0.charges.length - 1].v : null;
     if (visit.met.indexOf(V.id) < 0) visit.met.push(V.id);
     var route = layout(), tweens = [], last = performance.now(), snap = true;
@@ -1232,7 +1233,7 @@
     function resume() {
       var p = paused; paused = null;
       if (p && p.then) { hide(); return p.then(); }
-      if (p && p.tag === "eased") { hide(); modal.setAttribute("data-bm-step", "eased"); st.modal = true; ring.style.display = "none"; return; }
+      if (p && (p.tag === "eased" || p.tag === "letgo")) { hide(); modal.setAttribute("data-bm-step", p.tag); st.modal = true; ring.style.display = "none"; return; }
       if (p && p.open) { modal.innerHTML = ""; p.html.forEach(function (n) { modal.appendChild(n); }); modal.setAttribute("data-bm-step", p.tag); } else hide();
     }
 
@@ -1350,6 +1351,36 @@
         st.easing = null; easedLine.classList.remove("on"); meterDrop.textContent = "";
         if (modal.getAttribute("data-bm-step") === "self") { paused = { then: then }; return; } // the Self button was taken mid-breath
         st.modal = false; then();
+      });
+    }
+    // The let-go (bars-engine #356): when a 3-2-1 ends with the voice willing, its body plays its Integrate action once a
+    // visit, its held shape opening into its honored form, then stands willing. From its seat the voice is out of sight, so
+    // it lets go when it is back at its post (stepOut).
+    function letGoDue(v) {
+      return !st.letGone && !openBreaks(st.trust).length && (st.willing || v <= READY || trusted(st.trust, V.id));
+    }
+    function letGoVoice(then) {
+      st.letGone = true;
+      var rig = voice.userData.rig;
+      if (!rig || !rig.integrate) return then();
+      hide(); modal.innerHTML = ""; modal.setAttribute("data-bm-step", "letgo"); st.modal = true; ring.style.display = "none";
+      easedLine.innerHTML = "";
+      easedLine.appendChild(document.createTextNode(V.title + " lets go."));
+      easedLine.appendChild(el("small", { text: "This is how it stands when it is honored." }));
+      easedLine.classList.add("on", "top");
+      st.letting = true; st.letCam = true; // it eases back to its held shape first, where the action starts
+      tween(700, function () {}, function () {
+        st.letting = false; // the action ends honored, and its stance (willing) stays there
+        K.integrateBody(voice);
+        var waits = 0;
+        (function wait() {
+          if (rig.playing >= 0 && waits++ < 200) return tween(100, function () {}, wait); // the body plays it as it is drawn
+          tween(900, function () {}, function () {
+            easedLine.classList.remove("on", "top"); st.letCam = false;
+            if (modal.getAttribute("data-bm-step") === "self") { paused = { then: then }; return; } // the Self button was taken mid-let-go
+            st.modal = false; then();
+          });
+        })();
       });
     }
     // Two roads past a voice (bmt-two-roads): its charge at READY or below, or all three kinds of trust seen. Once it is willing
@@ -1534,7 +1565,7 @@
     }
     function canSit() {
       var tag = modal.getAttribute("data-bm-step") || "";
-      return !st.sit && !st.auto && !st.turned && st.cam !== "voice" && !/^(self|eased|sit|spirit|mouth|thanks|know|be-|wave-releasing|talk|perm-be)/.test(tag);
+      return !st.sit && !st.auto && !st.turned && st.cam !== "voice" && !/^(self|eased|letgo|sit|spirit|mouth|thanks|know|be-|wave-releasing|talk|perm-be)/.test(tag);
     }
     function sitOffer() {
       if (!canSit()) return;
@@ -1692,7 +1723,7 @@
     }
     function spiritList() {
       var tag = modal.getAttribute("data-bm-step") || "";
-      if (!spirits.length || st.sit || st.auto || /^(self|eased|sit|spirit|mouth|talk)/.test(tag)) return;
+      if (!spirits.length || st.sit || st.auto || /^(self|eased|letgo|sit|spirit|mouth|talk)/.test(tag)) return;
       var p = stash(), back = function () { unstash(p); };
       show([el("h2", { text: "Spirits with you" }), guide("Tap one to thank it."),
         el("div", { class: "bm-cards" }, spirits.map(function (o, oi) { return btn(spiritLabel(o), function () { thank(o, back); }, { class: "bm-card", "data-bm-spirit": String(oi) }); })),
@@ -1879,7 +1910,7 @@
     }
     function canTrust() {
       var tag = modal.getAttribute("data-bm-step") || "";
-      return (st.phase === "hall1" || st.phase === "chamber") && !st.sit && !st.auto && !st.turned && !/^(self|eased|sit|spirit|mouth|thanks|know|be-|wave|trust|deep|keep|secret|thank$|rite|talk|meet-feel)/.test(tag);
+      return (st.phase === "hall1" || st.phase === "chamber") && !st.sit && !st.auto && !st.turned && !/^(self|eased|letgo|sit|spirit|mouth|thanks|know|be-|wave|trust|deep|keep|secret|thank$|rite|talk|meet-feel)/.test(tag);
     }
     // A check-in outside the questions: after stepping back out, when a kept promise waits to be seen.
     function checkIn(lead, then) {
@@ -2053,8 +2084,10 @@
               var was = st.charge, v = t.after;
               st.charge = v; st.charges.push({ after: "321", v: v }); setMeter(v);
               resolvePending(was != null ? was : st.prevCharge, v);
-              if (was != null && v < was) return eased(was, v, then);
-              then();
+              var go = then;
+              if (letGoDue(v)) { if (st.turned) st.letGoLater = true; else go = function () { letGoVoice(then); }; }
+              if (was != null && v < was) return eased(was, v, go);
+              go();
             }, { "data-bm-talkdone": "" })]));
           } }, body);
         show([el("h2", { text: title })].concat(body), "talk-321");
@@ -2196,6 +2229,7 @@
         voice.visible = true; figureAt(voice, S_VOICE, 0, true);
         tween(900, function (k) { voice.traverse(function (mm) { if (mm.material) mm.material.opacity = ease(k); }); }, function () {
           var passAsk = function () { permit("pass", 0, function () { voiceAside(function () { keep(); }); }, npc("Back at my post. So.")); };
+          if (st.letGoLater) { st.letGoLater = false; var ask0 = passAsk; passAsk = function () { letGoVoice(ask0); }; }
           // Back in its own place, as promised: the voice sees the kept promise at a check-in.
           if (keepPromise("return")) return checkIn("You stepped back into your own place, and " + V.name + " has its post again.", passAsk);
           passAsk();
@@ -2483,7 +2517,10 @@
       voice.userData.stance = stanceOf(st.trust, V.id, st); // for the daemon bodies: how it stands toward the player
       // the camera: behind on the path; in the voice's place it stands past the player, looking back the way the self came
       var want, look;
-      if (st.cam === "voice") { var c = at(route, S_VOICE + 6.5), sp = at(route, S_SELF); want = new THREE.Vector3(c.x, floor(c) + 4.4, c.z); look = new THREE.Vector3(sp.x, floor(sp) + 1.8, sp.z); }
+      if (st.letCam) { // the let-go: off to the side of the player, so its whole body shows (letGoVoice)
+        var lc = side(S_VOICE - 7.5, 1.7), lv = at(route, S_VOICE); want = new THREE.Vector3(lc.x, floor(lc) + 2.6, lc.z); look = new THREE.Vector3(lv.x, floor(lv) + 1.7, lv.z);
+      }
+      else if (st.cam === "voice") { var c = at(route, S_VOICE + 6.5), sp = at(route, S_SELF); want = new THREE.Vector3(c.x, floor(c) + 4.4, c.z); look = new THREE.Vector3(sp.x, floor(sp) + 1.8, sp.z); }
       else if (SI && SI.g) { // sitting with a charge: close and to the side, aimed above it so it shows under the panel as the choices change it
         var T = SI.g.position, cb = side(Math.max(0, st.s - 2.6), 1.3), dx = T.x - cb.x, dz = T.z - cb.z, d = Math.sqrt(dx * dx + dz * dz);
         want = new THREE.Vector3(cb.x, Math.max(floor(cb), T.y) + 2.1, cb.z); look = new THREE.Vector3(T.x, T.y + d * 0.42 + 0.35, T.z);
