@@ -55,6 +55,17 @@
                          // with it, or the leg slides out from under the band's pull and through the cloth
     kick: 1,             // share of a leg's push the cloth keeps as speed: 1, the cloth moves with the leg that pushes it
                          // (at 0 the cloth lags the leg and the knee comes through between its points)
+    // Round 11, the sleeves' spring chains (CLOTH.md, "The sleeves (round 11)"; board position cd-sleeve-springs).
+    springs: true,       // false: the sleeves ride the forearm exactly, as rounds 1 to 10 did
+    springChains: 3,     // chains per sleeve, evenly round it (the arms hang, so the sleeve's end is a bell round the hand)
+    springFrom: 0.4,     // the chains' roots, as a share of the forearm from the elbow: the sleeve rides the arm above
+    springEase: 0.3,     // over this share of the forearm past the roots, the sleeve eases from riding the arm into the swing
+    springHz: 1.0,       // the chain's own swing, cycles a second: slower than the arm's step, so the rim trails it
+    springZeta: 0.7,     // its damping ratio: under 1, so the rim swings past and settles after the arm stops
+    springAir: 0.4,      // 1/s: drag on the joint's own motion through the air (the rim trails a walking figure)
+    springMax: 0.6,      // a link's stray from where the arm holds it, as a share of its length, that the drawn sleeve eases
+                         // toward and never passes (r tanh(d / r)): a soft max distance, as Chaos and Unity paint one
+    springSkin: 0.004,   // metres the sleeve's points keep off the forearm and hand capsules (the hand is inside the cuff)
   };
 
 
@@ -213,6 +224,7 @@
     for (i = 0; i < P; i++) { if (free[i]) fr.push(i); if (free[i] || (used[i] && !fol[i])) act.push(i); }
     c.act = Int32Array.from(act); c.freeIdx = Int32Array.from(fr);
     restFollowers(c, x0);
+    if (spec.sleeves) c.sl = buildSprings(c, x0, spec.sleeves);   // built either way, so a test can measure both
     return c;
   }
 
@@ -276,6 +288,7 @@
 
   // reset(cloth, targets): every point to where the skinned body puts it, at rest (a teleport, or the first frame)
   function reset(c, targets) {
+    if (c.sl) { c.raw.set(targets); targets = resetSprings(c, targets); }
     c.tgt.set(targets); c.tgt0.set(targets); c.x.set(targets); c.xp.set(targets);
     c.acc = 0; c.started = true;
     follow(c);
@@ -286,7 +299,7 @@
     for (var i = 0; i < b.length; i++) {
       var p = a[i] || b[i], q = b[i], s = [];
       for (var j = 0; j < 6; j++) s.push(p.s[j] + (q.s[j] - p.s[j]) * f);
-      out.push({ s: s, r: q.r, rb: q.rb, bs: q.bs });
+      out.push({ s: s, r: q.r, rb: q.rb, bs: q.bs, arm: q.arm });
     }
     return out;
   }
@@ -296,9 +309,12 @@
   // and a free one starts there on a reset. capsules: [{s: [ax, ay, az, bx, by, bz], r}] in the same space, now.
   // Over the substeps the pins and capsules move in a straight line from where they were at the last step.
   function step(c, dt, targets, capsules) {
+    var all = capsules;
+    capsules = capsules.filter(function (q) { return !q.arm; });   // the arms' capsules are the sleeves' (round 11)
     if (!c.started) { reset(c, targets); c.caps = capsules; return 0; }
-    c.tgt0.set(c.tgt); c.tgt.set(targets);
     c.caps0 = c.caps; c.caps = capsules;
+    if (c.sl) { c.raw0.set(c.raw); c.raw.set(targets); if (c.o.springs) targets = stepSprings(c, dt, all); }
+    c.tgt0.set(c.tgt); c.tgt.set(targets);
     // The frame is cut into whole substeps of at most 1/substepHz, so the cloth always lands on the body's time. Round
     // 6 found the old way (fixed substeps and the remainder carried to the next frame) jittered: at 60 frames a second
     // the frame held 7, 8 or 9 substeps by rounding, so the pins covered the same move in 7 or 9 substeps and the
@@ -493,6 +509,258 @@
     return out;
   }
 
+  // ---- the sleeves' spring chains (round 11) ---------------------------------------------------------------------
+  // Wendell on round 10: "They are moving like solid objects and not clothes." The sleeves are skinned, so every point
+  // of them moved on the same frame as the forearm, and uniform motion is what makes cloth read as stiff (Bi, Jin,
+  // Nienborg and Xiao, Journal of Vision 2019; pass cloth-designer1). Each sleeve now hangs from springChains short
+  // chains, the spring bones stylized games put on sleeves and sashes (VRM's spring bone: stiffness toward where the
+  // parent holds the link, drag, capsule colliders). The chains run evenly round the sleeve from springFrom of the
+  // forearm to the sleeve's end, with a ring of joints at the root, the middle and the end; each joint is a damped
+  // spring toward where the arm would hold it, hung from the joint before it, so the delay grows toward the free edge.
+  // The sleeve between two rings moves with their rigid turn and shift, so the round 10 cuff ring keeps its shape and
+  // tilts and swings whole. The hand inside the cuff limits how far it can trail; both limits are smooth (CLOTH.md,
+  // "The sleeves (round 11)"). Plain JavaScript here, so the game, the Node walk (cloth_walk.mjs) and J5d run the same
+  // springs (three-vrm-springbone needs three.js and a VRM's nodes; the Node walk has neither).
+  //
+  // sleeves: [{side, elbow: [x, y, z], wrist: [x, y, z], verts: [vertex index, ...]}], at rest in the space of rest:
+  // one per sleeve, the vertices that ride that forearm (sleevesFrom finds them from the skin weights).
+  function sm(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+  function buildSprings(c, x0, sleeves) {
+    var o = c.o, gl = Math.hypot(o.gravity[0], o.gravity[1], o.gravity[2]) || 1;
+    var g = [o.gravity[0] / gl, o.gravity[1] / gl, o.gravity[2] / gl], K = Math.max(3, o.springChains | 0), arms = [];
+    var dot = function (a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; };
+    var cross = function (a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; };
+    var unit = function (a) { var l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+    sleeves.forEach(function (sl) {
+      var E = sl.elbow, A = [sl.wrist[0] - E[0], sl.wrist[1] - E[1], sl.wrist[2] - E[2]], L = Math.hypot(A[0], A[1], A[2]);
+      if (!L) return;
+      // round the forearm: d the way down (or, for an arm hanging nearly straight down, any way across it)
+      var a = unit(A), gd = dot(g, a), d = [g[0] - gd * a[0], g[1] - gd * a[1], g[2] - gd * a[2]];
+      if (Math.hypot(d[0], d[1], d[2]) < 0.3) d = Math.abs(a[0]) < 0.9 ? cross(a, [1, 0, 0]) : cross(a, [0, 1, 0]);
+      d = unit(d);
+      var sd = cross(a, d);
+      var seen = {}, pts = [];
+      sl.verts.forEach(function (v) {
+        var p = c.map[v];
+        if (seen[p] || c.free[p] || c.isFol[p]) return;
+        seen[p] = 1;
+        var r = [x0[3 * p] - E[0], x0[3 * p + 1] - E[1], x0[3 * p + 2] - E[2]], t = dot(r, a) / L;
+        var q = [r[0] - t * L * a[0], r[1] - t * L * a[1], r[2] - t * L * a[2]];
+        pts.push({ p: p, t: t, th: Math.atan2(dot(q, sd), dot(q, d)), rho: Math.hypot(q[0], q[1], q[2]) });
+      });
+      pts = pts.filter(function (q) { return q.t > o.springFrom - 0.1; });
+      if (pts.length < 8 * K) return;
+      var tEnd = Math.max.apply(null, pts.map(function (q) { return q.t; })), T0 = o.springFrom;
+      if (tEnd < T0 + 0.2) return;
+      var ts = [T0, (T0 + tEnd) / 2, tEnd], chains = [];
+      for (var k = 0; k < K; k++) {
+        var th = 2 * Math.PI * k / K, joints = [];
+        ts.forEach(function (tj, j) {
+          // a joint is the middle of the four sleeve points nearest it (along the arm and round it), so where the arm
+          // holds it is the middle of their skinned places, and nothing about the bones is needed at run time
+          var near = pts.map(function (q) {
+            var dth = Math.atan2(Math.sin(q.th - th), Math.cos(q.th - th));
+            return [(q.t - tj) * (q.t - tj) / 0.01 + dth * dth / 0.25, q.p];
+          }).sort(function (u, w) { return u[0] - w[0]; }).slice(0, 4).map(function (u) { return u[1]; });
+          joints.push(Int32Array.from(near));
+        });
+        chains.push({ th: th, joints: joints });
+      }
+      var N = ts.length, idx = [], amp = [], seg = [], uu = [];
+      pts.forEach(function (q) {
+        var am = sm(T0, T0 + o.springEase, q.t);
+        if (am <= 1e-4) return;
+        var j = 0;
+        while (j < N - 2 && q.t > ts[j + 1]) j++;
+        idx.push(q.p); amp.push(am); seg.push(j); uu.push(Math.max(0, Math.min(1, (q.t - ts[j]) / (ts[j + 1] - ts[j]))));
+      });
+      // how far the sleeve reaches from its first root joint (with room for the swing): capsules further off are skipped
+      var r0 = chains[0].joints[0], cx = 0, cy = 0, cz = 0;
+      for (var q = 0; q < r0.length; q++) { cx += x0[3 * r0[q]] / r0.length; cy += x0[3 * r0[q] + 1] / r0.length; cz += x0[3 * r0[q] + 2] / r0.length; }
+      var reach = 0;
+      idx.forEach(function (p) { reach = Math.max(reach, Math.hypot(x0[3 * p] - cx, x0[3 * p + 1] - cy, x0[3 * p + 2] - cz)); });
+      // the rim: the sleeve's last few cm, which T1 measures (lag and coherence with the forearm)
+      var rim = pts.filter(function (q) { return q.t > tEnd - 0.1; }).map(function (q) { return q.p; });
+      arms.push({ rim: Int32Array.from(rim), side: sl.side, reach: 1.5 * reach, chains: chains, N: N, K: K, idx: Int32Array.from(idx), amp: Float32Array.from(amp),
+        seg: Int32Array.from(seg), u: Float32Array.from(uu), x: new Float32Array(3 * K * N), v: new Float32Array(3 * K * N),
+        S: new Float32Array(3 * K * N), S0: new Float32Array(3 * K * N), F: new Float32Array(15 * N), px: new Float32Array(3 * K), y: new Float32Array(3 * K * N) });
+    });
+    c.raw = new Float32Array(3 * c.P); c.raw0 = new Float32Array(3 * c.P); c.sout = new Float32Array(3 * c.P);
+    return arms.length ? arms : null;
+  }
+
+  // where the arm holds each joint (the middle of its points' skinned places), between the last frame (f 0) and now
+  function holds(c, arm, f, out) {
+    var r0 = c.raw0, r1 = c.raw;
+    for (var k = 0; k < arm.K; k++) for (var j = 0; j < arm.N; j++) {
+      var J = arm.chains[k].joints[j], sx = 0, sy = 0, sz = 0, o3 = 3 * (k * arm.N + j);
+      for (var q = 0; q < J.length; q++) {
+        var p = 3 * J[q];
+        sx += r0[p] + (r1[p] - r0[p]) * f; sy += r0[p + 1] + (r1[p + 1] - r0[p + 1]) * f; sz += r0[p + 2] + (r1[p + 2] - r0[p + 2]) * f;
+      }
+      var n = J.length || 1;
+      out[o3] = sx / n; out[o3 + 1] = sy / n; out[o3 + 2] = sz / n;
+    }
+  }
+
+  function resetSprings(c, targets) {
+    c.raw0.set(targets);
+    c.sl.forEach(function (arm) { holds(c, arm, 1, arm.S); arm.x.set(arm.S); arm.y.set(arm.S); arm.v.fill(0); });
+    return targets;
+  }
+
+  // two points to a distance apart, each moved half the way
+  function link(x, a, b, L) {
+    var dx = x[b] - x[a], dy = x[b + 1] - x[a + 1], dz = x[b + 2] - x[a + 2], d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1e-9, f = 0.5 * (d - L) / d;
+    x[a] += dx * f; x[a + 1] += dy * f; x[a + 2] += dz * f; x[b] -= dx * f; x[b + 1] -= dy * f; x[b + 2] -= dz * f;
+  }
+
+  // a sleeve point's swing (from raw to x, at i), kept off a capsule (the hand, the forearm, a leg): the part of it
+  // toward the capsule's line is eased toward the gap the point had there, gap tanh(s / gap), so however far the chain
+  // swings, the point never reaches the capsule, and nothing stops it dead between two frames (J5d counts that as
+  // jitter). The rest of the swing is left alone.
+  function keepOff(x, raw, i, cp, pad) {
+    var sg = cp.s, ax = sg[3] - sg[0], ay = sg[4] - sg[1], az = sg[5] - sg[2], aa = ax * ax + ay * ay + az * az || 1e-12;
+    var t = Math.max(0, Math.min(1, ((raw[i] - sg[0]) * ax + (raw[i + 1] - sg[1]) * ay + (raw[i + 2] - sg[2]) * az) / aa));
+    var nx = raw[i] - sg[0] - t * ax, ny = raw[i + 1] - sg[1] - t * ay, nz = raw[i + 2] - sg[2] - t * az, d = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    if (d < 1e-9) return;
+    nx /= d; ny /= d; nz /= d;
+    var gap = Math.max(0, d - capR(cp, t) - pad) + 1e-4, s = -((x[i] - raw[i]) * nx + (x[i + 1] - raw[i + 1]) * ny + (x[i + 2] - raw[i + 2]) * nz);
+    if (s <= 0) return;
+    var cut = s - gap * Math.tanh(s / gap);
+    x[i] += cut * nx; x[i + 1] += cut * ny; x[i + 2] += cut * nz;
+  }
+
+  function stepSprings(c, dt, caps) {
+    var o = c.o, w = 2 * Math.PI * o.springHz, ks = w * w, kd = 2 * o.springZeta * w, air = o.springAir;
+    var n = dt > 0 ? Math.ceil(Math.min(dt, o.maxSubsteps / o.substepHz) * o.substepHz / 2 - 1e-6) : 0, h = n ? dt / n : 0;
+    c.sl.forEach(function (arm) {
+      var x = arm.x, v = arm.v, S = arm.S, S0 = arm.S0, N = arm.N, y = arm.y;
+      for (var s = 1; s <= n; s++) {
+        S0.set(S); holds(c, arm, s / n, S);
+        for (var k = 0; k < arm.K; k++) { var b = 3 * k * N; x[b] = S[b]; x[b + 1] = S[b + 1]; x[b + 2] = S[b + 2]; }   // the roots ride the arm
+        for (var j = 1; j < N; j++) {
+          var px = arm.px;
+          for (k = 0; k < arm.K; k++) {
+            var i = 3 * (k * N + j), pi = i - 3;
+            px[3 * k] = x[i]; px[3 * k + 1] = x[i + 1]; px[3 * k + 2] = x[i + 2];
+            // a spring toward where the arm would hold this joint, hung from the joint before it; it stiffens as the
+            // joint strays (four times as stiff at springMax), so the swing is bounded with no hard stop to jolt it
+            var r0 = o.springMax * Math.hypot(S[i] - S[pi], S[i + 1] - S[pi + 1], S[i + 2] - S[pi + 2]) || 1e-9;
+            var gx = x[pi] + S[i] - S[pi] - x[i], gy = x[pi + 1] + S[i + 1] - S[pi + 1] - x[i + 1], gz = x[pi + 2] + S[i + 2] - S[pi + 2] - x[i + 2];
+            var stiff = ks * (1 + 3 * (gx * gx + gy * gy + gz * gz) / (r0 * r0)), G = [gx, gy, gz];
+            for (var e = 0; e < 3; e++) {
+              var vs = (S[i + e] - S0[i + e]) / h;
+              v[i + e] += h * (stiff * G[e] - kd * (v[i + e] - vs) - air * v[i + e]);
+              x[i + e] += h * v[i + e];
+            }
+          }
+          for (var it = 0; it < 2; it++) {
+            // the ring: the joints at the same distance along each chain keep their distances from each other, so the
+            // sleeve swings as a ring; and each link keeps its length
+            for (k = 0; k < arm.K; k++) {
+              var ia = 3 * (k * N + j), ib = 3 * (((k + 1) % arm.K) * N + j);
+              link(x, ia, ib, Math.hypot(S[ia] - S[ib], S[ia + 1] - S[ib + 1], S[ia + 2] - S[ib + 2]));
+            }
+            for (k = 0; k < arm.K; k++) {
+              i = 3 * (k * N + j); pi = i - 3;
+              var len = Math.hypot(S[i] - S[pi], S[i + 1] - S[pi + 1], S[i + 2] - S[pi + 2]);
+              var dx = x[i] - x[pi], dy = x[i + 1] - x[pi + 1], dz = x[i + 2] - x[pi + 2], dl = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1e-9;
+              x[i] = x[pi] + dx * len / dl; x[i + 1] = x[pi + 1] + dy * len / dl; x[i + 2] = x[pi + 2] + dz * len / dl;
+            }
+          }
+          for (k = 0; k < arm.K; k++) {
+            i = 3 * (k * N + j);
+            v[i] = (x[i] - px[3 * k]) / h; v[i + 1] = (x[i + 1] - px[3 * k + 1]) / h; v[i + 2] = (x[i + 2] - px[3 * k + 2]) / h;
+          }
+        }
+      }
+      // what is drawn: each link's stray from where the arm holds it, eased toward at most springMax (r0 tanh(d / r0)),
+      // so even a hard swing never carries the cuff further than the hand inside it allows
+      for (k = 0; k < arm.K; k++) {
+        var b0 = 3 * k * N;
+        y[b0] = S[b0]; y[b0 + 1] = S[b0 + 1]; y[b0 + 2] = S[b0 + 2];
+        for (j = 1; j < N; j++) {
+          i = b0 + 3 * j; pi = i - 3;
+          var lx = S[i] - S[pi], ly = S[i + 1] - S[pi + 1], lz = S[i + 2] - S[pi + 2], L = Math.sqrt(lx * lx + ly * ly + lz * lz) || 1e-9;
+          var ox = x[i] - x[pi] - lx, oy = x[i + 1] - x[pi + 1] - ly, oz = x[i + 2] - x[pi + 2] - lz, ol = Math.sqrt(ox * ox + oy * oy + oz * oz);
+          var R0 = o.springMax * L, sat = ol > 1e-9 ? R0 * Math.tanh(ol / R0) / ol : 1;
+          var wx = lx + ox * sat, wy = ly + oy * sat, wz = lz + oz * sat, wl = Math.sqrt(wx * wx + wy * wy + wz * wz) || 1e-9;
+          y[i] = y[pi] + wx * L / wl; y[i + 1] = y[pi + 1] + wy * L / wl; y[i + 2] = y[pi + 2] + wz * L / wl;
+        }
+      }
+      // each ring of joints as a rigid turn and shift, from where the arm holds it to where the springs have it: the
+      // frame of its first three joints, and its middle. The sleeve between two rings blends their two, so each
+      // cross-section of the sleeve, the cuff's clean ring above all, keeps its shape and tilts and swings whole
+      var F = arm.F;
+      for (j = 0; j < N; j++) {
+        var f = 15 * j, A = frame3(S, N, j), B = frame3(y, N, j);
+        for (var r = 0; r < 3; r++) for (var cc = 0; cc < 3; cc++)
+          F[f + 3 * cc + r] = B[r] * A[cc] + B[3 + r] * A[3 + cc] + B[6 + r] * A[6 + cc];   // R = B A^T, column-major
+        var mS = [0, 0, 0], mX = [0, 0, 0];
+        for (k = 0; k < arm.K; k++) for (e = 0; e < 3; e++) { mS[e] += S[3 * (k * N + j) + e] / arm.K; mX[e] += y[3 * (k * N + j) + e] / arm.K; }
+        F.set(mS, f + 9); F.set(mX, f + 12);
+      }
+    });
+    // the sleeve's points: each moves with the rings about it, as much as the sleeve there has eased into the swing
+    var out = c.sout, raw = c.raw, solid = caps.filter(function (q) { return !q.bs; });
+    out.set(raw);
+    c.sl.forEach(function (arm) {
+      var F = arm.F, S = arm.S, near = solid.filter(function (cp) {   // only the capsules within reach of this sleeve
+        var sg = cp.s, ax = sg[3] - sg[0], ay = sg[4] - sg[1], az = sg[5] - sg[2], aa = ax * ax + ay * ay + az * az || 1e-12;
+        var t = Math.max(0, Math.min(1, ((S[0] - sg[0]) * ax + (S[1] - sg[1]) * ay + (S[2] - sg[2]) * az) / aa));
+        return Math.hypot(S[0] - sg[0] - t * ax, S[1] - sg[1] - t * ay, S[2] - sg[2] - t * az) < arm.reach + Math.max(cp.r, cp.rb || 0);
+      });
+      for (var m = 0; m < arm.idx.length; m++) {
+        var p = 3 * arm.idx[m], qx = raw[p], qy = raw[p + 1], qz = raw[p + 2], j = arm.seg[m], u = arm.u[m], ox = 0, oy = 0, oz = 0;
+        for (var e = 0; e < 2; e++) {
+          var f = 15 * (j + e), we = e ? u : 1 - u, dx = qx - F[f + 9], dy = qy - F[f + 10], dz = qz - F[f + 11];
+          ox += we * (F[f + 12] + F[f] * dx + F[f + 3] * dy + F[f + 6] * dz);
+          oy += we * (F[f + 13] + F[f + 1] * dx + F[f + 4] * dy + F[f + 7] * dz);
+          oz += we * (F[f + 14] + F[f + 2] * dx + F[f + 5] * dy + F[f + 8] * dz);
+        }
+        var am = arm.amp[m];
+        out[p] = qx + am * (ox - qx); out[p + 1] = qy + am * (oy - qy); out[p + 2] = qz + am * (oz - qz);
+        for (var q = 0; q < near.length; q++) keepOff(out, raw, p, near[q], near[q].arm ? o.springSkin : o.margin);
+      }
+    });
+    return out;
+  }
+
+  // the orthonormal frame (three columns, row by row: e1, e2, n) of the first three joints of ring j
+  function frame3(P, N, j) {
+    var a = 3 * j, b = 3 * (N + j), d = 3 * (2 * N + j);
+    var e1 = [P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]], g = [P[d] - P[a], P[d + 1] - P[a + 1], P[d + 2] - P[a + 2]];
+    var l = Math.hypot(e1[0], e1[1], e1[2]) || 1;
+    e1 = [e1[0] / l, e1[1] / l, e1[2] / l];
+    var n = [e1[1] * g[2] - e1[2] * g[1], e1[2] * g[0] - e1[0] * g[2], e1[0] * g[1] - e1[1] * g[0]];
+    l = Math.hypot(n[0], n[1], n[2]) || 1;
+    n = [n[0] / l, n[1] / l, n[2] / l];
+    var e2 = [n[1] * e1[2] - n[2] * e1[1], n[2] * e1[0] - n[0] * e1[2], n[0] * e1[1] - n[1] * e1[0]];
+    return e1.concat(e2, n);
+  }
+
+  // sleevesFrom(names, heads, weightsOf, nv): the sleeves for build(), from the bones' names and joints at rest (heads,
+  // [x, y, z] per bone, in the space of rest) and each vertex's skin weights (weightsOf(v): [[bone index, w], ...]).
+  // A sleeve's vertices are those whose weights lie mostly on its forearm (elbowL or R) and wrist.
+  function sleevesFrom(names, heads, weightsOf, nv) {
+    var at = {};
+    names.forEach(function (nm, i) { at[nm] = i; });
+    var out = [];
+    ["L", "R"].forEach(function (sd) {
+      var e = at["elbow" + sd], w = at["wrist" + sd];
+      if (e === undefined || w === undefined) return;
+      var verts = [];
+      for (var v = 0; v < nv; v++) {
+        var ws = weightsOf(v), on = 0, all = 0;
+        for (var q = 0; q < ws.length; q++) { all += ws[q][1]; if (ws[q][0] === e || ws[q][0] === w) on += ws[q][1]; }
+        if (all > 0 && on / all > 0.5) verts.push(v);
+      }
+      out.push({ side: sd, elbow: heads[e], wrist: heads[w], verts: verts });
+    });
+    return out;
+  }
+
   // ---- three.js -----------------------------------------------------------------------------------------------
   // attach(THREE, skinned, opts): the robe's SkinnedMesh (bound to the figure's bones) becomes a plain mesh whose
   // points are worked out on the CPU each frame: skinned above the belt, cloth below it. The GLB carries, per point,
@@ -521,7 +789,24 @@
     if (o.margin === undefined) o.margin = DEFAULTS.margin * unit;
     if (o.dragQ === undefined) o.dragQ = DEFAULTS.dragQ / unit;           // 1/m: per world unit
     if (o.blendAcc === undefined) o.blendAcc = DEFAULTS.blendAcc * unit;
-    var c = build({ rest: pos.array, tris: index, sim: sim, options: o });
+    // the sleeves' spring chains (round 11): each bone's joint in the robe's own space, found the way skin() places
+    // points: the bone's own skinning carries a rest point to the world, so its inverse carries the joint, where the
+    // bone is now, back to rest. (The bind matrices alone gave the joints moved by wherever the figure stood when the
+    // skeleton was bound: a figure half a metre to one side had its sleeves' chains built on the wrong points.)
+    var skel0 = skinned.skeleton, jm = new THREE.Matrix4(), jw = new THREE.Vector3();
+    var heads = skel0.bones.map(function (b, i) {
+      b.updateMatrixWorld(true);
+      jm.multiplyMatrices(skinned.matrixWorld, skinned.bindMatrixInverse).multiply(b.matrixWorld).multiply(skel0.boneInverses[i]).multiply(skinned.bindMatrix).invert();
+      jw.setFromMatrixPosition(b.matrixWorld).applyMatrix4(jm);
+      return [jw.x, jw.y, jw.z];
+    });
+    var si0 = g.attributes.skinIndex, sw0 = g.attributes.skinWeight;
+    var sleeves = sleevesFrom(skel0.bones.map(function (b) { return b.name; }), heads, function (v) {
+      var r = [];
+      for (var j = 0; j < 4; j++) r.push([si0.getComponent ? si0.getComponent(v, j) : si0.array[4 * v + j], sw0.getComponent ? sw0.getComponent(v, j) : sw0.array[4 * v + j]]);
+      return r;
+    }, n);
+    var c = build({ rest: pos.array, tris: index, sim: sim, options: o, sleeves: sleeves });
     var caps = (extras.capsules || []).filter(function (q) { return byName[q.a] && byName[q.b]; });
 
     var geo = g.clone();
@@ -565,7 +850,7 @@
     function capsules() {
       return caps.map(function (q) {
         byName[q.a].getWorldPosition(a3); byName[q.b].getWorldPosition(b3);
-        return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit, rb: q.rb === undefined ? undefined : q.rb * unit, bs: !!q.backstop };
+        return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit, rb: q.rb === undefined ? undefined : q.rb * unit, bs: !!q.backstop, arm: !!q.arm };
       });
     }
     function write() {
@@ -590,9 +875,9 @@
     return {
       mesh: mesh, cloth: c, unit: unit,
       update: function (dt) { skin(); step(c, dt, targets, capsules()); write(); },
-      reset: function () { skin(); reset(c, targets); c.caps = capsules(); write(); },
+      reset: function () { skin(); reset(c, targets); c.caps = capsules().filter(function (q) { return !q.arm; }); write(); },
     };
   }
 
-  return { build: build, reset: reset, step: step, positions: positions, attach: attach, DEFAULTS: DEFAULTS };
+  return { build: build, reset: reset, step: step, positions: positions, attach: attach, sleevesFrom: sleevesFrom, DEFAULTS: DEFAULTS };
 });

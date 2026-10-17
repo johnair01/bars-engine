@@ -84,7 +84,9 @@ function deforms(p, ease) {
 }
 
 const robe = job.robe, nv = robe.rest.length / 3;
-const cloth = Cloth.build({ rest: Float32Array.from(robe.rest), tris: Uint32Array.from(robe.tris), sim: Float32Array.from(robe.sim), options: Object.assign({}, job.options || {}, JSON.parse(process.env.CLOTH_OPTS || '{}')) });
+// round 11: the sleeves hang from spring chains, found from the same weights the game's GLB carries
+const sleeves = Cloth.sleevesFrom(bones.map(b => b.name), bones.map(b => b.head), v => robe.weights[v], nv);
+const cloth = Cloth.build({ rest: Float32Array.from(robe.rest), tris: Uint32Array.from(robe.tris), sim: Float32Array.from(robe.sim), sleeves, options: Object.assign({}, job.options || {}, JSON.parse(process.env.CLOTH_OPTS || '{}')) });
 function skinned(D, root) {
   const out = new Float32Array(3 * cloth.P);
   const W = D.map(d => mul(root, d));
@@ -100,7 +102,7 @@ function skinned(D, root) {
 function capsules(D, root) {
   return job.capsules.map(c => {
     const a = ap(mul(root, D[bi[c.a]]), bones[bi[c.a]].head), b = ap(mul(root, D[bi[c.b]]), bones[bi[c.b]].head);
-    return { s: [...a, ...b], r: c.r, rb: c.rb, bs: !!c.backstop };
+    return { s: [...a, ...b], r: c.r, rb: c.rb, bs: !!c.backstop, arm: !!c.arm };
   });
 }
 
@@ -127,13 +129,77 @@ function foldFar(c) {
   }
   return far;
 }
+// Round 11 (his note on round 10: "They are moving like solid objects and not clothes"; pass cloth-designer1, tests T1
+// and T2). Each frame after the first second: the sleeve rim's points where the springs have them and where the
+// forearm alone would (cloth.raw), and how far any sleeve point has moved into the forearm, the hand or a leg past where
+// skinning puts it. T1: the rim's lag behind the forearm, in frames (the shift that best lines its motion up with the
+// forearm's), and its coherence with the forearm (the correlation of the two motions at no shift: 1 for a skinned
+// sleeve); rim_swing_mm, how far the rim strays from where the forearm alone would hold it (95th percentile). T2: arm_mm, the most any sleeve point goes into the forearm or hand capsule past where skinning puts it, and
+// leg_mm, the same for the legs.
+const arms = cloth.sl || [];
+function segDist(p, a, b) {
+  const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], ap2 = [p[0] - a[0], p[1] - a[1], p[2] - a[2]];
+  const t = Math.max(0, Math.min(1, (ab[0] * ap2[0] + ab[1] * ap2[1] + ab[2] * ap2[2]) / (ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1)));
+  return Math.hypot(ap2[0] - t * ab[0], ap2[1] - t * ab[1], ap2[2] - t * ab[2]);
+}
+function capDepth(p, c) {
+  const s = c.s, a = s.slice(0, 3), b = s.slice(3, 6), ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / (ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2 || 1)));
+  const r = c.rb === undefined ? c.r : c.r + (c.rb - c.r) * t;
+  return r - segDist(p, a, b);
+}
+function sleeveFrame(D, root, caps) {
+  const raw = cloth.raw, x = cloth.x, at = (a, p) => [a[3 * p], a[3 * p + 1], a[3 * p + 2]];
+  const fr = { rim: [], arm: 0, leg: 0 };
+  for (const a of arms) {
+    for (const p of a.rim) fr.rim.push([at(x, p), at(raw, p)]);
+    for (const p of a.idx) {
+      const q = at(x, p), r = at(raw, p);
+      for (const c of caps) if (!c.bs) {
+        const d = capDepth(q, c) - Math.max(0, capDepth(r, c));
+        if (c.arm) fr.arm = Math.max(fr.arm, d); else fr.leg = Math.max(fr.leg, d);
+      }
+    }
+  }
+  return fr;
+}
+function sleeveMeasure(track) {
+  if (!track.length || !track[0].rim.length) return null;
+  const T = track.length, n = track[0].rim.length, vel = (k, t, j) => [0, 1, 2].map(i => (track[t].rim[j][k][i] - track[t - 1].rim[j][k][i]) * FPS);
+  const V = [0, 1].map(k => Array.from({ length: n }, (_, j) => Array.from({ length: T - 1 }, (_, t) => vel(k, t + 1, j))));
+  for (const k of [0, 1]) for (const series of V[k]) for (let i = 0; i < 3; i++) {   // each point's mean motion taken out
+    const m = series.reduce((a, v) => a + v[i], 0) / series.length;
+    for (const v of series) v[i] -= m;
+  }
+  const corr = tau => {
+    let sxy = 0, sxx = 0, syy = 0;
+    for (let j = 0; j < n; j++) for (let t = tau; t < T - 1; t++) {
+      const a = V[0][j][t], b = V[1][j][t - tau];
+      sxy += a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; sxx += a[0] ** 2 + a[1] ** 2 + a[2] ** 2; syy += b[0] ** 2 + b[1] ** 2 + b[2] ** 2;
+    }
+    return sxy / Math.sqrt(sxx * syy || 1);
+  };
+  let lag = 0, best = -2;
+  for (let tau = 0; tau <= 20; tau++) { const c = corr(tau); if (c > best) { best = c; lag = tau; } }
+  // jitter, as J5d measures it: a point's frame-to-frame change in speed less its mean over the five frames about it
+  const jit = [];
+  for (let t = 6; t < T; t++) for (let j = 0; j < n; j++) {
+    const d2 = u => [0, 1, 2].map(i => track[u].rim[j][0][i] - 2 * track[u - 1].rim[j][0][i] + track[u - 2].rim[j][0][i]);
+    const D = [t - 4, t - 3, t - 2, t - 1, t].map(d2);
+    jit.push(1000 * Math.hypot(...[0, 1, 2].map(i => D[2][i] - (D[0][i] + D[1][i] + D[2][i] + D[3][i] + D[4][i]) / 5)));
+  }
+  jit.sort((a, b) => a - b);
+  const off = track.flatMap(f => f.rim.map(([q, r]) => Math.hypot(q[0] - r[0], q[1] - r[1], q[2] - r[2]))).sort((a, b) => a - b);
+  return { rim_points: n, frames: T, lag_frames: lag, rim_jitter_mm: +jit[Math.floor(jit.length * 0.99)].toFixed(2), rim_swing_mm: +(1000 * off[Math.floor(off.length * 0.95)]).toFixed(1), coherence: +corr(0).toFixed(3), best_coherence: +best.toFixed(3),
+    arm_mm: +(1000 * Math.max(...track.map(f => f.arm))).toFixed(1), leg_mm: +(1000 * Math.max(...track.map(f => f.leg))).toFixed(1) };
+}
 const result = { scenarios: [], particles: cloth.P, free: cloth.nfree, stretch: cloth.stL.length, bend: cloth.bdL.length,
   folds: cloth.fol.length, fold_far: foldFar(cloth) };
 const costs = [];
 for (const sc of job.scenarios) {
   const A = sc.amp, S = sc.steps, speed = S * 2 * LEG * Math.sin(A);
   cloth.started = false;
-  let pos = [0, 0], heading = 0, out = [], si = 0;
+  let pos = [0, 0], heading = 0, out = [], si = 0, track = [];
   const samples = [...sc.samples].sort((a, b) => a - b);
   // frames at 60 a second, with a step ending exactly on each sample's time too
   let time = -STAND - EASE, prev = time, f = 0;
@@ -154,9 +220,10 @@ for (const sc of job.scenarios) {
     pos[0] += Math.sin(heading) * speed * e * dt; pos[1] -= Math.cos(heading) * speed * e * dt;
     const root = mul(T(pos[0], pos[1], 0), RZ(heading));
     const D = deforms(pose(tw, A, S), e);
-    const t0 = performance.now();
-    Cloth.step(cloth, dt, skinned(D, root), capsules(D, root));
+    const t0 = performance.now(), caps = capsules(D, root);
+    Cloth.step(cloth, dt, skinned(D, root), caps);
     if (f > 10 && Math.abs(dt - 1 / FPS) < 1e-9) costs.push(performance.now() - t0);
+    if (time > 1 && Math.abs(dt - 1 / FPS) < 1e-9) track.push(sleeveFrame(D, root, caps));
     while (si < samples.length && time >= samples[si] - 1e-9) {
       const back = inv(root), x = Cloth.positions(cloth, false), pts = new Array(3 * nv);
       for (let v = 0; v < nv; v++) { const q = ap(back, [x[3 * v], x[3 * v + 1], x[3 * v + 2]]); pts[3 * v] = +q[0].toFixed(5); pts[3 * v + 1] = +q[1].toFixed(5); pts[3 * v + 2] = +q[2].toFixed(5); }
@@ -165,9 +232,10 @@ for (const sc of job.scenarios) {
     }
     if (si >= samples.length) break;
   }
-  result.scenarios.push({ name: sc.name, speed, samples: out });
+  result.scenarios.push({ name: sc.name, speed, samples: out, sleeves: sleeveMeasure(track) });
 }
 costs.sort((a, b) => a - b);
 result.step_ms = { median: costs[costs.length >> 1], p95: costs[Math.floor(costs.length * 0.95)] };
 writeFileSync(process.argv[3], JSON.stringify(result));
-console.log(JSON.stringify({ particles: cloth.P, free: cloth.nfree, folds: result.folds, fold_far: result.fold_far, step_ms: result.step_ms }));
+result.sleeves = Object.fromEntries(result.scenarios.map(s => [s.name, s.sleeves]));
+console.log(JSON.stringify({ sleeves: result.sleeves, particles: cloth.P, free: cloth.nfree, folds: result.folds, fold_far: result.fold_far, step_ms: result.step_ms }));
