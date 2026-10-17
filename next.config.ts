@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
       "./content/ontology-game/cave/pictures/**",
       "./content/ontology-game/**/*.glb",
       "./public/ontology-game/**",
+      // The Between's page and models (7 MB of .glb), loaded only by the browser. The first preview of bars-engine
+      // PR #357 pushed api/guidance to 254.91 MB without this line.
+      "./public/between/**",
     ],
     "/api/321/ingest": ["./public/**/*", "./content/**/*", "./docs/**/*", "./.specify/**/*"],
   },
