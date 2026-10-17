@@ -491,7 +491,8 @@ def export(fig, rig, build_name, palette, out_dir, theme="robe_set"):
         bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_normals=True,
                                   export_texcoords=False, export_skins=True, export_animations=True,
                                   export_animation_mode="ACTIVE_ACTIONS", export_frame_range=True,
-                                  export_force_sampling=True, export_vertex_color="ACTIVE", export_all_vertex_colors=False)
+                                  export_force_sampling=True, export_vertex_color="ACTIVE", export_all_vertex_colors=False,
+                                  export_nla_strips_merged_animation_name="Walk")   # the clip's name (round 9: else "Animation")
     finally:
         rig.animation_data.action = keep
         bpy.data.actions.remove(dense)

@@ -26,7 +26,9 @@ import { chromium } from 'playwright';
 // loop's hitch), fold 68 (it hung from the hem's edge as a stiff lip); after: 1.6, 3.2 and 31 to 36. The hem's edge
 // (27 to 38 by the drape) and the skirt (22 to 27) are the cloth meeting the shins: without the leg capsules both fall
 // to about 7. Their limits only keep them from getting worse.
-const LIMITS = { cuff: [5, 0.5], ties: [8, 0.5], hem: [50, 0.5], fold: [50, 0.5] };
+// Round 9 (his note on round 8: "Let’s do the shins fix"): the shake was the blend band, not the contact. Hem 28.7 to
+// 16.8, fold 33.7 to 20.3, skirt 22.3 to 14.2 (CLOTH.md, round 9); the limits now hold that.
+const LIMITS = { cuff: [5, 0.5], ties: [8, 0.5], hem: [24, 0.5], fold: [28, 0.5] };
 const DIR = process.env.J5_DIR, FIGURES = +(process.env.FIGURES || 4);
 const NM = new URL('./node_modules/', import.meta.url).pathname;
 const CLOTH = process.env.CLOTH_JS || join(dirname(fileURLToPath(import.meta.url)), 'cloth.js');

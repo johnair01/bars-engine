@@ -728,6 +728,7 @@ def skirt_weights(p, body):
 CAPSULES = (("hipL", "kneeL"), ("kneeL", "ankleL"), ("hipR", "kneeR"), ("kneeR", "ankleR"), ("hipL", "hipR"),
             ("kneeL", "kneeL"), ("kneeR", "kneeR"))
 CAP_PCT = 0.99                                   # a capsule's radius: this share of its body points lie inside it
+TAPER_FROM = 0.75                                # a leg capsule's lower radius (rb): from its points this far down it
 POSED = {}                                       # {object name: {frame: [Vector]}}: positions posed() gives instead
                                                  # of the armature's (the robe's cloth over the walk)
 CLOTH_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cloth_walk.mjs")
@@ -754,6 +755,13 @@ def leg_capsules(fig, build):
             own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) == a]
         d = sorted(seg_dist(c, A, B) for c in own)
         cap = {"a": a, "b": b, "r": round(d[min(len(d) - 1, int(CAP_PCT * len(d)))], 4)}
+        if a != b and a[:-1] != b[:-1]:
+            # a thigh or shin tapers toward its lower joint: radius r at a, rb at b (round 9: a shin as wide as its
+            # calf all the way down held the hem 1.3 cm off the ankle; cloth.js narrows the capsule between them)
+            u = B - A
+            low = sorted(seg_dist(c, A, B) for c in own if (c - A).dot(u) / u.length_squared >= TAPER_FROM)
+            if low:
+                cap["rb"] = round(min(cap["r"], low[min(len(low) - 1, int(CAP_PCT * len(low)))]), 4)
         if a != b and a[:-1] == b[:-1]:
             cap["backstop"] = True                       # the pelvis: wider than the hips, so it pushes a point out no
                                                          # further than its skinned place (cloth.js backstop, round 6)

@@ -43,8 +43,9 @@
     tetherSlack: 1.02,   // a free point may be this times its standing distance from its pin
     blend: 0.2,          // a free point may stray from its skinned place by this times its distance (along the cloth)
                          // from the belt: the waist eases from the body into the cloth, never a hard edge
-    blendStiff: 0.1,     // share of the overshoot taken back each substep (1: a hard limit; less, a pull the legs beat)
-    blendClear: 0.08,    // metres: cloth this near a leg capsule (past its margin) is left to the leg, not the band
+    blendK: 400,         // 1/s2: the band's pull on a point past its reach, per metre past it (round 9: a force, not a
+    blendAcc: 80,        // m/s2: at most this (8 g), so a point thrown far by a leg is drawn back, never yanked
+    blendDamp: 10,       // 1/s: the band damps the point's motion away from its skinned place while it pulls
     blendDepth: 2,       // metres along the cloth from the belt that the band reaches; below it the cloth is free
     margin: 0.025,       // the cloth's distance kept from a capsule's surface: its points are 4 cm apart, and the
                          // triangles between them must clear the leg too
@@ -231,8 +232,10 @@
       var p = which[j];
       if (out[p]) continue;
       var p3 = 3 * p, l = Math.hypot(pn[p3], pn[p3 + 1], pn[p3 + 2]) || 1, n = [pn[p3] / l, pn[p3 + 1] / l, pn[p3 + 2] / l];
-      var cx = 0, cy = 0, cz = 0, sn = c.solid[p];
-      for (var q = 0; q < sn.length; q++) { cx += x[3 * sn[q]] - x[p3]; cy += x[3 * sn[q] + 1] - x[p3 + 1]; cz += x[3 * sn[q] + 2] - x[p3 + 2]; }
+      // t: toward one neighbour, chosen once at rest (round 9). The sum toward all of them, used before, cancels to
+      // almost nothing at an anchor inside the cloth, and its direction then swung with every micron of drift: a fold
+      // point on a figure standing still shook 0.9 mm while its anchor crept 5 microns a frame.
+      var r = c.tref[p], cx = x[3 * r] - x[p3], cy = x[3 * r + 1] - x[p3 + 1], cz = x[3 * r + 2] - x[p3 + 2];
       var dn = cx * n[0] + cy * n[1] + cz * n[2];
       cx -= dn * n[0]; cy -= dn * n[1]; cz -= dn * n[2];
       var lt = Math.hypot(cx, cy, cz) || 1, t = [cx / lt, cy / lt, cz / lt];
@@ -242,7 +245,21 @@
   }
 
   function restFollowers(c, x0) {
-    var anchors = c.fol.map(function (f) { return c.anchor[f]; }), F = frames(c, x0, anchors);
+    var anchors = c.fol.map(function (f) { return c.anchor[f]; });
+    // each anchor's t neighbour: the one most along the cloth beside it at rest (the sum toward all its neighbours)
+    c.tref = {};
+    anchors.forEach(function (p) {
+      if (c.tref[p] !== undefined) return;
+      var sn = c.solid[p], p3 = 3 * p, sx = 0, sy = 0, sz = 0, best = sn[0], bd = -Infinity;
+      for (var q = 0; q < sn.length; q++) { sx += x0[3 * sn[q]] - x0[p3]; sy += x0[3 * sn[q] + 1] - x0[p3 + 1]; sz += x0[3 * sn[q] + 2] - x0[p3 + 2]; }
+      for (q = 0; q < sn.length; q++) {
+        var ex = x0[3 * sn[q]] - x0[p3], ey = x0[3 * sn[q] + 1] - x0[p3 + 1], ez = x0[3 * sn[q] + 2] - x0[p3 + 2];
+        var dd = (ex * sx + ey * sy + ez * sz) / (Math.hypot(ex, ey, ez) || 1);
+        if (dd > bd) { bd = dd; best = sn[q]; }
+      }
+      c.tref[p] = best;
+    });
+    var F = frames(c, x0, anchors);
     for (var j = 0; j < c.fol.length; j++) {
       var f = 3 * c.fol[j], a = 3 * anchors[j], fr = F[anchors[j]], d = [x0[f] - x0[a], x0[f + 1] - x0[a + 1], x0[f + 2] - x0[a + 2]];
       for (var k = 0; k < 3; k++) c.fofs[3 * j + k] = d[0] * fr[k][0] + d[1] * fr[k][1] + d[2] * fr[k][2];
@@ -269,7 +286,7 @@
     for (var i = 0; i < b.length; i++) {
       var p = a[i] || b[i], q = b[i], s = [];
       for (var j = 0; j < 6; j++) s.push(p.s[j] + (q.s[j] - p.s[j]) * f);
-      out.push({ s: s, r: q.r, bs: q.bs });
+      out.push({ s: s, r: q.r, rb: q.rb, bs: q.bs });
     }
     return out;
   }
@@ -351,38 +368,30 @@
     solve(c, c.bd, c.bdL, c.bdK, false);
     solve(c, c.th, c.thL, 1.0, true);
     var caps = lerpCaps(c.caps0, c.caps, f);
-    if (o.blend > 0) leash(c, f, caps);                 // before the legs: a leg's push wins over the leash
+    if (o.blend > 0) leash(c, f, caps, h);                 // before the legs: a leg's push wins over the leash
     collide(c, caps, f);
   }
 
-  // the blend band at the belt: a free point at most md from where the skin puts it (Unity's and Chaos's max distance)
-  // The skinned place is first moved out of any leg capsule it has sunk into (skin weights cannot follow a bending
-  // knee), so the leash never pulls cloth into a leg.
-  function leash(c, f, caps) {
-    var x = c.x, F = c.freeIdx, md = c.md, t0 = c.tgt0, t1 = c.tgt, mg = c.o.margin, q = [0, 0, 0];
+  // the blend band at the belt: a free point past md from where the skin puts it (Unity's and Chaos's max distance) is
+  // drawn back by a force, at most blendAcc, and damped while it is drawn. Round 9 found the old band (a projection that
+  // took a share of the overshoot back each substep, switched off within blendClear of a leg) was the hem's shake at the
+  // shins: a point a leg had carried 25 cm past its reach was let go and caught again as the leg passed, and each catch
+  // moved it 25 mm in a substep, an acceleration of thousands of m/s2 switched on and off (CLOTH.md, round 9). The
+  // skinned place is first moved out of any leg capsule it has sunk into (skin weights cannot follow a bending knee),
+  // so the band never draws cloth into a leg, and a leg, a hard contact, always beats a bounded force.
+  function leash(c, f, caps, h) {
+    var x = c.x, xp = c.xp, F = c.freeIdx, md = c.md, t0 = c.tgt0, t1 = c.tgt, mg = c.o.margin, q = [0, 0, 0];
+    var K = c.o.blendK, amax = c.o.blendAcc, damp = 1 - Math.exp(-c.o.blendDamp * h), sp = h / c.span;
     for (var j = 0; j < F.length; j++) {
-      var i = F[j], m = md[i];
+      var i = F[j], m = md[i], i3 = 3 * i;
       if (m === Infinity) continue;
-      // Cloth on or near a leg (within blendClear) is the leg's to move. Beyond that the pull fades in over a second
-      // blendClear rather than switching on at once: a point sitting on the edge was pulled one substep and let go
-      // the next, and buzzed (round 6, the belt row of a figure standing still).
-      var i3 = 3 * i, w = 1;
-      for (var k0 = 0; k0 < caps.length && w > 0; k0++) {
-        if (caps[k0].bs) continue;
-        var s0 = caps[k0].s, vx = s0[3] - s0[0], vy = s0[4] - s0[1], vz = s0[5] - s0[2];
-        var vv = vx * vx + vy * vy + vz * vz || 1e-12, t9 = ((x[i3] - s0[0]) * vx + (x[i3 + 1] - s0[1]) * vy + (x[i3 + 2] - s0[2]) * vz) / vv;
-        t9 = t9 < 0 ? 0 : t9 > 1 ? 1 : t9;
-        var fx = x[i3] - s0[0] - vx * t9, fy = x[i3 + 1] - s0[1] - vy * t9, fz = x[i3 + 2] - s0[2] - vz * t9;
-        var w0 = (Math.sqrt(fx * fx + fy * fy + fz * fz) - caps[k0].r - mg) / (c.o.blendClear || 1e-9) - 1;
-        if (w0 < w) w = w0;
-      }
-      if (w <= 0) continue;
       q[0] = t0[i3] + (t1[i3] - t0[i3]) * f; q[1] = t0[i3 + 1] + (t1[i3 + 1] - t0[i3 + 1]) * f; q[2] = t0[i3 + 2] + (t1[i3 + 2] - t0[i3 + 2]) * f;
       for (var k = 0; k < caps.length; k++) {
         if (caps[k].bs) continue;                       // the pelvis's backstop already measures from the skin
-        var s = caps[k].s, r = caps[k].r + mg, ux = s[3] - s[0], uy = s[4] - s[1], uz = s[5] - s[2];
+        var s = caps[k].s, ux = s[3] - s[0], uy = s[4] - s[1], uz = s[5] - s[2];
         var uu = ux * ux + uy * uy + uz * uz || 1e-12, t = ((q[0] - s[0]) * ux + (q[1] - s[1]) * uy + (q[2] - s[2]) * uz) / uu;
         t = t < 0 ? 0 : t > 1 ? 1 : t;
+        var r = capR(caps[k], t) + mg;
         var ex = q[0] - s[0] - ux * t, ey = q[1] - s[1] - uy * t, ez = q[2] - s[2] - uz * t, e2 = ex * ex + ey * ey + ez * ez;
         if (e2 >= r * r || e2 < 1e-12) continue;
         var e = Math.sqrt(e2), out = (r - e) / e;
@@ -390,10 +399,18 @@
       }
       var dx = x[i3] - q[0], dy = x[i3 + 1] - q[1], dz = x[i3 + 2] - q[2], d = Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (d <= m) continue;
-      var k = (d - m) / d * c.o.blendStiff * (w < 1 ? w * w * (3 - 2 * w) : 1);
-      x[i3] -= k * dx; x[i3 + 1] -= k * dy; x[i3 + 2] -= k * dz;
+      var nx = dx / d, ny = dy / d, nz = dz / d, a = K * (d - m);
+      if (a > amax) a = amax;
+      // the point's speed away from its skinned place (per substep), less the skin's own
+      var vr = (x[i3] - xp[i3] - (t1[i3] - t0[i3]) * sp) * nx + (x[i3 + 1] - xp[i3 + 1] - (t1[i3 + 1] - t0[i3 + 1]) * sp) * ny +
+        (x[i3 + 2] - xp[i3 + 2] - (t1[i3 + 2] - t0[i3 + 2]) * sp) * nz;
+      var dv = a * h * h + damp * vr;
+      x[i3] -= dv * nx; x[i3 + 1] -= dv * ny; x[i3 + 2] -= dv * nz;
     }
   }
+
+  // a capsule's radius at t along it (0 at a, 1 at b): a leg tapers from thigh to knee and from calf to ankle
+  function capR(cap, t) { return cap.rb === undefined ? cap.r : cap.r + (cap.rb - cap.r) * t; }
 
   function solve(c, idx, L, k, tether, squash) {
     var x = c.x, wi = c.wi;
@@ -413,11 +430,11 @@
   function collide(c, caps, f) {
     var x = c.x, xp = c.xp, P = c.P, free = c.free, mg = c.o.margin, fr = c.o.friction, kick = c.o.kick, back = c.o.backstop, t0 = c.tgt0, t1 = c.tgt;
     for (var k = 0; k < caps.length; k++) {
-      var s = caps[k].s, r = caps[k].r + mg, r2 = r * r;
+      var s = caps[k].s, r = caps[k].r + mg, r2 = r * r, rmax = Math.max(r, capR(caps[k], 1) + mg);
       var ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
       var uu = ux * ux + uy * uy + uz * uz || 1e-12;
-      var lo = Math.min(ax, s[3]) - r, hi = Math.max(ax, s[3]) + r, lo2 = Math.min(az, s[5]) - r, hi2 = Math.max(az, s[5]) + r;
-      var loy = Math.min(ay, s[4]) - r, hiy = Math.max(ay, s[4]) + r;
+      var lo = Math.min(ax, s[3]) - rmax, hi = Math.max(ax, s[3]) + rmax, lo2 = Math.min(az, s[5]) - rmax, hi2 = Math.max(az, s[5]) + rmax;
+      var loy = Math.min(ay, s[4]) - rmax, hiy = Math.max(ay, s[4]) + rmax;
       for (var j = 0, F = c.freeIdx, nf = F.length; j < nf; j++) {
         var i = F[j], i3 = 3 * i, px = x[i3], py = x[i3 + 1], pz = x[i3 + 2];
         if (px < lo || px > hi || pz < lo2 || pz > hi2 || py < loy || py > hiy) continue;
@@ -425,6 +442,7 @@
         t = t < 0 ? 0 : t > 1 ? 1 : t;
         var cx = ax + ux * t, cy = ay + uy * t, cz = az + uz * t, dx = px - cx, dy = py - cy, dz = pz - cz;
         var d2 = dx * dx + dy * dy + dz * dz;
+        if (caps[k].rb !== undefined) { r = capR(caps[k], t) + mg; r2 = r * r; }
         if (d2 >= r2) continue;
         var rr = r;
         if (back && caps[k].bs) {
@@ -502,6 +520,7 @@
     o.gravity = [-up[0] * 9.81 * unit, -up[1] * 9.81 * unit, -up[2] * 9.81 * unit];
     if (o.margin === undefined) o.margin = DEFAULTS.margin * unit;
     if (o.dragQ === undefined) o.dragQ = DEFAULTS.dragQ / unit;           // 1/m: per world unit
+    if (o.blendAcc === undefined) o.blendAcc = DEFAULTS.blendAcc * unit;
     var c = build({ rest: pos.array, tris: index, sim: sim, options: o });
     var caps = (extras.capsules || []).filter(function (q) { return byName[q.a] && byName[q.b]; });
 
@@ -546,7 +565,7 @@
     function capsules() {
       return caps.map(function (q) {
         byName[q.a].getWorldPosition(a3); byName[q.b].getWorldPosition(b3);
-        return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit, bs: !!q.backstop };
+        return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit, rb: q.rb === undefined ? undefined : q.rb * unit, bs: !!q.backstop };
       });
     }
     function write() {

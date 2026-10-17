@@ -1,7 +1,7 @@
 # Cloth: what we learned, and what to read before changing cloth.js
 
 The robe's skirt is cloth every frame (`cloth.js`, the same code in the game and in Blender through
-`cloth_walk.mjs`). This file holds what rounds 1 to 8 of J5 taught, so the same problems do not come back. Read it
+`cloth_walk.mjs`). This file holds what rounds 1 to 9 of J5 taught, so the same problems do not come back. Read it
 before any change to `cloth.js`, the robe's skin weights below the belt, the leg capsules or the hem bones.
 
 ## Measure first, then look
@@ -36,8 +36,9 @@ point out no further than the point's skinned place. Chaos Cloth and APEX call t
 at the belt behaves like a stiff bell: once a leg has pushed it out, nothing brings it back but gravity on a
 light sheet. Games fix this by keeping each cloth point within a distance of its skinned place. Unity calls it
 `ClothSkinningCoefficient.maxDistance`, and Chaos calls it Max Distance, painted from 0 at the waist upward. Here it
-is `blend` (0.2 times the point's distance from the belt along the cloth). `blendStiff` (0.1) makes it a pull
-rather than a wall, so a leg always wins. Two conditions made it work:
+is `blend` (0.2 times the point's distance from the belt along the cloth). Since round 9 the pull is a bounded
+force (`blendK`, `blendAcc`, `blendDamp`), so a leg always wins; rounds 6 to 8 took a share of the overshoot back
+each substep (`blendStiff` 0.1), which round 9 found was the hem's shake at the shins. Two conditions made it work:
 
 - The skinned place must follow the legs. Round 5 hung the whole skirt's skin from the pelvis. A band toward a skirt
   that never moves fights every leg, and the knee came through the cloth (test J5, 120 points). Round 6 skins the
@@ -47,8 +48,8 @@ rather than a wall, so a leg always wins. Two conditions made it work:
   hem up behind the kicking heel (25 cm). `hemB` now follows the thigh behind (`0.9 max(hipL, hipR)`), in
   `character.py` and `cloth_walk.mjs` alike.
 
-The band skips cloth that is on a leg or within 8 cm of one (`blendClear`), and it first lifts the skinned place out
-of any capsule it has sunk into. A band that pulls cloth into a bending knee shows the knee through the gaps between
+Rounds 6 to 8 skipped cloth on a leg or within 8 cm of one (`blendClear`); round 9 dropped that, since a bounded
+force never beats a leg. The band first lifts the skinned place out of any capsule it has sunk into. A band that pulls cloth into a bending knee shows the knee through the gaps between
 the cloth's points.
 
 **3. A hem has weight.** `hemMass` 4: the hem's edge points weigh four times the cloth's, since a turned hem is
@@ -89,7 +90,8 @@ Wendell on round 5: "there’s jitteriness in the belt now". Round 6 found four 
   leg and pulled every other point. A point sitting on that edge was pulled one substep and let go the next, and
   buzzed by 1.5 mm at 30 a second on a figure standing still. The pull now fades in over a second `blendClear` beyond
   the first (smoothstep), and the buzz is gone (3.4 mm to under 0.03 mm in J5d). Fading it in inside the first band
-  instead let the knee through.
+  instead let the knee through. Round 9 removed the switch: the band
+  is now a bounded force that is always on.
 
 - **The robe showed through the sash.** The robe is solidified 4 mm outward (`THICK`), and the sash's edges sat 3
   mm off the robe's inner face. At every bend the robe's outer face came through the band's edges in ragged teeth.
@@ -156,6 +158,49 @@ and the cuffs as torn cream patches on the forward arm and a stiff flap with rag
 - **The cuff's corners were not sewn.** The sleeve's top and bottom seams stopped one column short of the cuff, so the
   front and back panels' corners hung apart in a ragged tongue of trim. The seams now run to the cuff's corners. The
   cuff's open edge is smoothed 60 rounds (was 25) before the trim is cut, which rounds the corner where the seams meet.
+
+## The hem at the shins (round 9)
+
+Wendell on round 8: "Let’s do the shins fix and then I think we’re golden." The hem's edge shook where the shins
+pass (J5d walking p99: hem 28.7 mm, skirt 22, fold 34; at a fast stride 86 mm in the Node rig). Round 7 had tried
+every contact option without effect, and this round found why: the shake was the blend band, not the contact.
+
+- **Where the shake came from.** A Node rig logged, for the worst 1% of hem jitter, which solver step moved the point.
+  Most of those points touched no leg; they were the slit corners and the hem beside them. The band moved them,
+  and the stretch and bend constraints passed it on. A leg striding through a slit carries the corner up to 40 cm from
+  its skinned place, 25 cm past the band's reach. The band let go within `blendClear` of a leg and took 10% of the
+  overshoot back every substep everywhere else, so as the shin passed, the corner was caught (25 mm in one substep),
+  dropped and caught again. A projection of 25 mm a substep at 480 a second is an acceleration of about 12,000 m/s2,
+  switched on and off. The fade from round 6 smoothed the switch over distance, but the leg covers that distance in a
+  frame or two.
+- **The fix: the band is a force.** Past its reach a point is drawn back by `blendK` (400 /s2) per metre past it, at
+  most `blendAcc` (80 m/s2), and its motion away from its skinned place is damped by `blendDamp` (10 /s). The pull is
+  on everywhere (no `blendClear`), so nothing switches when a leg passes; a leg is a hard contact and always beats
+  a bounded force. This is how Unity's and Chaos's skinning constraints are meant to be used: a soft pull toward the
+  skin, never a snap. J5d walking p99: hem 28.7 to 16.8 mm, skirt 22.3 to 14.2, fold 33.7 to 20.3, belt 8.1 to 5.6.
+  At a fast stride the hem went from 86 to 27 mm. The hem hangs better too: float 9.6 to -0.6 mm walking.
+- **What it costs.** The back hem flies higher behind the trailing leg at a fast stride (p95 rise 8 to 18 cm, about
+  the same at a normal stride). The old band hauled it down by the same yank that made the shake. If it reads too
+  lively, raise `blendAcc` (it trades straight back toward the shake: at 150, the fast hem's jitter rises again).
+- **The legs taper.** Each thigh and shin capsule was as wide as its widest point all the way down, so at the hem's
+  height the shin's capsule stood about 1.3 cm off the ankle and the hem caught on air. Capsules now carry `rb`, the
+  radius at their lower joint (garments.py, from the points in the bottom quarter): shin 6.3 to 5.3 cm, thigh 8.8 to
+  7.1. It lowered the float and the standing hem's drift (18.6 to 10.8 mm) more than the jitter.
+- **A fold point shook on a figure standing still.** J5d caught it once the band changed: a turned-fold point moved
+  0.9 mm a frame while the cloth point it follows crept 5 microns. The follower's frame took its direction `t` from the
+  sum toward all the anchor's neighbours, which cancels to almost nothing at an anchor inside the cloth (round 8's
+  anchors can be), so `t` swung with every micron. `t` now points at one neighbour, chosen once at rest: 0.9 to 0.08
+  mm standing, and the walking fold fell from 27 to 21 mm.
+- **The figures' clip is named Walk again.** Blender 5.2's exporter names the clip of the active action
+  `export_nla_strips_merged_animation_name` ("Animation" by default), so J4 failed on round 8's export; character.py
+  now passes "Walk".
+- **Tried and dropped.** Velocity-level contact (the cloth leaves a leg no faster than the leg's surface), friction
+  relative to the leg's surface, a soft pre-contact zone, damping along the edges, a stiffer hem line and heavier
+  slit corners: none moved the jitter, and the soft zone made it worse. A band that shifts the point without changing
+  its speed halved the jitter but let the hem float 3 cm, the round 5 problem. 960 substeps made it worse, since
+  stiffness per substep grows with the count (XPBD's compliance would fix that; not needed now).
+- **How to measure.** Before guessing, log which step moves the worst points (the round 9 rig: solver phase per
+  substep, per point). The worst points were not where the eye looked.
 
 ## Rounds 1 to 5, in one line each
 
