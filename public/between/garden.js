@@ -6,6 +6,8 @@ import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, SEATS, WALK_R, DAIS_Y } from "./hollow.js";
 import { createCreature } from "./creature.js";
 import { createAmbient } from "./ambient.js";
+import { installPaint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
+installPaint();
 
 /* ===================================================================================================
    The Between, in 3D. A room two people share. The garden's store (Postgres behind /api/between) keeps
