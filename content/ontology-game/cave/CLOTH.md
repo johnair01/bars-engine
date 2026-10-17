@@ -202,6 +202,29 @@ every contact option without effect, and this round found why: the shake was the
 - **How to measure.** Before guessing, log which step moves the worst points (the round 9 rig: solver phase per
   substep, per point). The worst points were not where the eye looked.
 
+## The cuffs (round 10)
+
+Wendell on round 9's queue: "we do still need to fix the cuffs". His round 7 marks circled the cuffs as torn cream
+patches and a flap with ragged edges below the hand; round 8 shortened the flap and sewed the corners, but at rest the
+cuff's edge was still a crumpled loop with a tongue hanging below the hand, and the trim cut along it came out ragged.
+The sleeves are skinned, not cloth, so all of this is geometry and weights, and it stands whatever the skirt's cloth
+becomes.
+
+- **The drape crumples the sleeve's end.** The cloth solver lets the sleeve's end fall round the hand and settle in
+  folds, and its open edge comes out a ragged loop. 60 rounds of smoothing along that edge (round 8) rounded the
+  ripples but pulled the loop into the hand. `clean_cuffs()` now rebuilds the last `CUFF_LOFT` (10 cm) of each sleeve
+  from the drape: each ring of the pattern round the forearm keeps its size and its droop, but its points are spread
+  evenly round it, its radius keeps only `CUFF_HARM` (2) harmonics and its reach along the forearm only a tilt. The
+  rings ease into that shape toward the edge, so the sleeve narrows into the cuff without a crease. The hem keeps its
+  60 rounds; the cuffs skip them.
+- **The tongue was the turned fold at the seam.** Where the cuff's ring crosses the top and bottom seams the front
+  and back panels face apart, so the cloth's normal there cancels, and the turned fold (`hemmed()`) shot off along
+  whatever was left: a spike below the hand. The fold also turned in toward the wearer's middle, which on the ring's
+  inner side is outward. A cuff's fold now turns in toward its forearm's axis, all the way round.
+- **The cuff rides the forearm.** A sleeve point took the weights of its nearest body points, which near the hand
+  mixed the hand in. From the middle of the forearm on, the sleeve now blends to the forearm alone, so the ring keeps
+  its shape as the arm swings.
+
 ## Rounds 1 to 5, in one line each
 
 - **Bone weights never move like cloth.** Rounds 1 to 4 drove the skirt with hem bones and slit weights. Every fix
