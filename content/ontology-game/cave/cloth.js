@@ -522,7 +522,7 @@
   // showed through the cloth wherever the panel slid across it. Each edge's nearest point to a capsule's line is
   // pushed out to its radius, its two ends moved by their share of it.
   function edgeCollide(c, caps) {
-    var x = c.x, wi = c.wi, se = c.se, mg = c.o.armMargin;
+    var x = c.x, wi = c.wi, se = c.se, mg = c.o.armMargin, t1 = c.tgt;
     for (var k = 0; k < caps.length; k++) {
       if (!caps[k].arm) continue;
       var s = caps[k].s, ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
@@ -541,6 +541,14 @@
         var px = x[a] + vx * sE - (ax + ux * tC), py = x[a + 1] + vy * sE - (ay + uy * tC), pz = x[a + 2] + vz * sE - (az + uz * tC);
         var r = capR(caps[k], tC) + mg, d = Math.sqrt(px * px + py * py + pz * pz);
         if (d >= r || d < 1e-9) continue;
+        // the backstop, as collide() keeps for points: the edge's skinned place, if it is nearer the arm's line than
+        // the capsule (the sleeve hugs a forearm thinner than its capsule near the elbow), is as far as it is pushed
+        var qx = t1[a] + (t1[b] - t1[a]) * sE - ax, qy = t1[a + 1] + (t1[b + 1] - t1[a + 1]) * sE - ay, qz = t1[a + 2] + (t1[b + 2] - t1[a + 2]) * sE - az;
+        var tq = (qx * ux + qy * uy + qz * uz) / uu;
+        tq = tq < 0 ? 0 : tq > 1 ? 1 : tq;
+        var dq = Math.hypot(qx - ux * tq, qy - uy * tq, qz - uz * tq);
+        if (dq < r) r = dq;
+        if (d >= r) continue;
         var wa = wi[se[e]] * (1 - sE), wb = wi[se[e + 1]] * sE, sw = wa * (1 - sE) + wb * sE;
         if (sw < 1e-9) continue;
         var g = (r - d) / d / sw;
