@@ -4,6 +4,8 @@
 // clip shows the swing after the arm stops. Game time is a fixed 1/60 s a frame; every frame is saved as a picture,
 // and ffmpeg makes the clip at full speed and at a third of it.
 //   J5_DIR=$W/j5 OUT=$W/clip A='{"springs":false}' B='{}' LABELS='round 10|round 11' node j5_clip.mjs
+// J5_DIR_B, another garments.py --out folder: the right figure wears its robe instead (round 12's re-cut sleeves
+// against round 11's, each with the same cloth.js)
 // (run from a folder whose node_modules has three@0.128.0 and playwright, as test_net.py's cave-test does)
 import http from 'node:http';
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -23,6 +25,8 @@ const CLOTH = process.env.CLOTH_JS || join(dirname(fileURLToPath(import.meta.url
 const report = JSON.parse(readFileSync(join(DIR, 'report.json'), 'utf8'));
 const figure = report.figures.find(f => f.build === BUILD && f.palette === 'dusk').file;
 const robe = report.garments.find(g => g.build === BUILD && g.palette === 'dusk' && g.garment === 'robe').file;
+const DIR_B = process.env.J5_DIR_B;
+const robeB = DIR_B ? JSON.parse(readFileSync(join(DIR_B, 'report.json'), 'utf8')).garments.find(g => g.build === BUILD && g.palette === 'dusk' && g.garment === 'robe').file : robe;
 mkdirSync(join(OUT, 'frames'), { recursive: true });
 
 const page = `<!doctype html><html><body style="margin:0;background:#1d1f24;overflow:hidden">
@@ -40,8 +44,9 @@ document.body.appendChild(renderer.domElement);
 const loader = new THREE.GLTFLoader();
 const parse = buf => new Promise((ok, no) => loader.parse(buf, '', ok, no));
 const figBuf = await (await fetch('/glb/${figure}')).arrayBuffer(), robeBuf = await (await fetch('/glb/${robe}')).arrayBuffer();
+const robeBufs = [robeBuf, ${DIR_B ? "await (await fetch('/glbB/" + robeB + "')).arrayBuffer()" : 'robeBuf'}];
 const sides = [];
-for (const opts of [${A}, ${B}]) {
+for (const [si, opts] of [${A}, ${B}].entries()) {
   const scene = new THREE.Scene();
   scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 1.1));
   const sun = new THREE.DirectionalLight(0xffffff, 0.9); sun.position.set(-3, 4, 2); scene.add(sun);
@@ -52,7 +57,7 @@ for (const opts of [${A}, ${B}]) {
   const root = new THREE.Group(); root.add(fig.scene); scene.add(root);
   const mixer = new THREE.AnimationMixer(fig.scene), act = mixer.clipAction(fig.animations[0]); act.play();
   const bones = {}; fig.scene.traverse(o => { if (o.isBone) bones[o.name] = o; });
-  const g = await parse(robeBuf.slice(0));
+  const g = await parse(robeBufs[si].slice(0));
   let mesh; g.scene.traverse(o => { if (o.isSkinnedMesh) mesh = o; });
   mesh.bind(new THREE.Skeleton(mesh.skeleton.bones.map(b => bones[b.name]), mesh.skeleton.boneInverses), mesh.bindMatrix);
   fig.scene.add(mesh);
@@ -96,6 +101,7 @@ const server = http.createServer((req, res) => {
   if (u === '/GLTFLoader.js') { f = join(NM, 'three/examples/js/loaders/GLTFLoader.js'); type = 'text/javascript'; }
   if (u === '/cloth.js') { f = CLOTH; type = 'text/javascript'; }
   if (u.startsWith('/glb/')) { f = join(DIR, u.slice(5)); type = 'model/gltf-binary'; }
+  if (u.startsWith('/glbB/')) { f = join(DIR_B, u.slice(6)); type = 'model/gltf-binary'; }
   if (!f || !existsSync(f)) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'content-type': type });
   res.end(readFileSync(f));

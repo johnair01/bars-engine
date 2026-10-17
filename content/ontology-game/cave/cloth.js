@@ -60,12 +60,21 @@
     springChains: 3,     // chains per sleeve, evenly round it (the arms hang, so the sleeve's end is a bell round the hand)
     springFrom: 0.4,     // the chains' roots, as a share of the forearm from the elbow: the sleeve rides the arm above
     springEase: 0.3,     // over this share of the forearm past the roots, the sleeve eases from riding the arm into the swing
-    springHz: 1.0,       // the chain's own swing, cycles a second: slower than the arm's step, so the rim trails it
-    springZeta: 0.7,     // its damping ratio: under 1, so the rim swings past and settles after the arm stops
+    springHz: 0.6,       // the chain's own swing, cycles a second: slower than the arm's step, so the rim trails it
+                         // (round 11 1.0; a panel hung free swings slower, round 12)
+    springZeta: 0.8,     // its damping ratio: under 1, so the rim swings past and settles after the arm stops
     springAir: 0.4,      // 1/s: drag on the joint's own motion through the air (the rim trails a walking figure)
-    springMax: 0.6,      // a link's stray from where the arm holds it, as a share of its length, that the drawn sleeve eases
+    springMax: 1.2,      // (round 11 0.6, when the hand filled a closed cuff) a link's stray from where the arm holds it, as a share of its length, that the drawn sleeve eases
                          // toward and never passes (r tanh(d / r)): a soft max distance, as Chaos and Unity paint one
-    springSkin: 0.004,   // metres the sleeve's points keep off the forearm and hand capsules (the hand is inside the cuff)
+    springSkin: 0,       // metres the sleeve's points keep off the forearm and hand capsules (round 11 0.004, the hand
+                         // inside a closed cuff; a panel may touch the hand and slide off it)
+    // Round 12, the sleeves re-cut into panels (CLOTH.md, "The sleeve panels (round 12)"; board cd-sleeve-open C).
+    springHold: null,    // [near, far], metres from the forearm's or hand's line: a panel point skinning puts nearer
+                         // than near rides the arm, one beyond far swings in full, smoothly between (off: see CLOTH.md)
+    springPanels: true,  // a sleeve whose seams are open below springFrom (garments.py panels()) hangs as its panels,
+                         // each on its own chains with nothing joining it to the others; false: one ring, as round 11
+    panelChains: 2,      // chains per panel, at a quarter and three quarters of its width
+    springDetune: 0.2,   // the panels' own swings differ by this share either side of springHz, so they fall out of step
   };
 
 
@@ -525,6 +534,47 @@
   // sleeves: [{side, elbow: [x, y, z], wrist: [x, y, z], verts: [vertex index, ...]}], at rest in the space of rest:
   // one per sleeve, the vertices that ride that forearm (sleevesFrom finds them from the skin weights).
   function sm(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+  // the panels of a sleeve cut open below springFrom (round 12): its points past T0, in the pieces they fall into when
+  // joined only by the cloth's own triangles. null unless there are two or more pieces of eight points or more (a
+  // sleeve sewn shut is one ring, as round 11 hung it). A stray point past T0 in no panel joins the nearest round it.
+  function panelsOf(c, pts, T0) {
+    var at = {}, n = 0;
+    pts.forEach(function (q) { if (q.t > T0) at[q.p] = q; });
+    var nb = {}, tris = c.tris, map = c.map;
+    for (var t = 0; t < tris.length; t += 3) {
+      for (var e = 0; e < 3; e++) {
+        var a = map[tris[t + e]], b = map[tris[t + (e + 1) % 3]];
+        if (a === b || !at[a] || !at[b]) continue;
+        (nb[a] = nb[a] || []).push(b); (nb[b] = nb[b] || []).push(a);
+      }
+    }
+    var seen = {}, parts = [];
+    Object.keys(at).forEach(function (k) {
+      var p0 = +k;
+      if (seen[p0]) return;
+      var comp = [], stack = [p0];
+      seen[p0] = 1;
+      while (stack.length) {
+        var p = stack.pop();
+        comp.push(at[p]);
+        (nb[p] || []).forEach(function (q) { if (!seen[q]) { seen[q] = 1; stack.push(q); } });
+      }
+      parts.push(comp);
+    });
+    var big = parts.filter(function (pp) { return pp.length >= 8; }), small = parts.filter(function (pp) { return pp.length < 8; });
+    if (big.length < 2) return null;
+    big.sort(function (a, b) { return mean(a) - mean(b); });
+    function mean(pp) { var x = 0, y = 0; pp.forEach(function (q) { x += Math.cos(q.th); y += Math.sin(q.th); }); return Math.atan2(y, x); }
+    small.forEach(function (pp) {
+      pp.forEach(function (q) {
+        var best = 0, bd = Infinity;
+        big.forEach(function (bp, g) { var d = Math.abs(Math.atan2(Math.sin(q.th - mean(bp)), Math.cos(q.th - mean(bp)))); if (d < bd) { bd = d; best = g; } });
+        big[best].push(q);
+      });
+    });
+    return big;
+  }
+
   function buildSprings(c, x0, sleeves) {
     var o = c.o, gl = Math.hypot(o.gravity[0], o.gravity[1], o.gravity[2]) || 1;
     var g = [o.gravity[0] / gl, o.gravity[1] / gl, o.gravity[2] / gl], K = Math.max(3, o.springChains | 0), arms = [];
@@ -532,6 +582,7 @@
     var cross = function (a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; };
     var unit = function (a) { var l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
     sleeves.forEach(function (sl) {
+      var K = Math.max(3, o.springChains | 0);
       var E = sl.elbow, A = [sl.wrist[0] - E[0], sl.wrist[1] - E[1], sl.wrist[2] - E[2]], L = Math.hypot(A[0], A[1], A[2]);
       if (!L) return;
       // round the forearm: d the way down (or, for an arm hanging nearly straight down, any way across it)
@@ -552,27 +603,46 @@
       if (pts.length < 8 * K) return;
       var tEnd = Math.max.apply(null, pts.map(function (q) { return q.t; })), T0 = o.springFrom;
       if (tEnd < T0 + 0.2) return;
-      var ts = [T0, (T0 + tEnd) / 2, tEnd], chains = [];
-      for (var k = 0; k < K; k++) {
-        var th = 2 * Math.PI * k / K, joints = [];
-        ts.forEach(function (tj, j) {
+      var ts = [T0, (T0 + tEnd) / 2, tEnd], chains = [], groups = [];
+      var wrap = function (x) { return Math.atan2(Math.sin(x), Math.cos(x)); };
+      function chain(th, among, g) {
+        var joints = [];
+        ts.forEach(function (tj) {
           // a joint is the middle of the four sleeve points nearest it (along the arm and round it), so where the arm
           // holds it is the middle of their skinned places, and nothing about the bones is needed at run time
-          var near = pts.map(function (q) {
-            var dth = Math.atan2(Math.sin(q.th - th), Math.cos(q.th - th));
+          var near = among.map(function (q) {
+            var dth = wrap(q.th - th);
             return [(q.t - tj) * (q.t - tj) / 0.01 + dth * dth / 0.25, q.p];
           }).sort(function (u, w) { return u[0] - w[0]; }).slice(0, 4).map(function (u) { return u[1]; });
           joints.push(Int32Array.from(near));
         });
-        chains.push({ th: th, joints: joints });
+        chains.push({ th: th, joints: joints, g: g });
       }
-      var N = ts.length, idx = [], amp = [], seg = [], uu = [];
+      // round 12: a sleeve cut open below springFrom falls into its panels there, and each hangs on its own chains
+      var parts = o.springPanels ? panelsOf(c, pts, T0) : null;
+      if (parts) {
+        parts.forEach(function (pp, g) {
+          var mx = 0, my = 0;
+          pp.forEach(function (q) { mx += Math.cos(q.th); my += Math.sin(q.th); });
+          var mid = Math.atan2(my, mx), hs = Math.max.apply(null, pp.map(function (q) { return Math.abs(wrap(q.th - mid)); }));
+          var pc = Math.max(2, o.panelChains | 0);
+          groups.push({ c0: chains.length, n: pc, hz: o.springHz * (1 + (g % 2 ? 1 : -1) * o.springDetune) });
+          for (var k = 0; k < pc; k++) chain(mid + hs * (2 * (k + 0.5) / pc - 1), pp, g);
+          pp.forEach(function (q) { q.g = g; });
+        });
+      } else {
+        groups.push({ c0: 0, n: K, hz: o.springHz });
+        for (var k = 0; k < K; k++) chain(2 * Math.PI * k / K, pts, 0);
+        pts.forEach(function (q) { q.g = 0; });
+      }
+      K = chains.length;
+      var N = ts.length, idx = [], amp = [], seg = [], uu = [], gp = [];
       pts.forEach(function (q) {
         var am = sm(T0, T0 + o.springEase, q.t);
         if (am <= 1e-4) return;
         var j = 0;
         while (j < N - 2 && q.t > ts[j + 1]) j++;
-        idx.push(q.p); amp.push(am); seg.push(j); uu.push(Math.max(0, Math.min(1, (q.t - ts[j]) / (ts[j + 1] - ts[j]))));
+        idx.push(q.p); amp.push(am); seg.push(j); uu.push(Math.max(0, Math.min(1, (q.t - ts[j]) / (ts[j + 1] - ts[j])))); gp.push(q.g);
       });
       // how far the sleeve reaches from its first root joint (with room for the swing): capsules further off are skipped
       var r0 = chains[0].joints[0], cx = 0, cy = 0, cz = 0;
@@ -580,10 +650,12 @@
       var reach = 0;
       idx.forEach(function (p) { reach = Math.max(reach, Math.hypot(x0[3 * p] - cx, x0[3 * p + 1] - cy, x0[3 * p + 2] - cz)); });
       // the rim: the sleeve's last few cm, which T1 measures (lag and coherence with the forearm)
-      var rim = pts.filter(function (q) { return q.t > tEnd - 0.1; }).map(function (q) { return q.p; });
-      arms.push({ rim: Int32Array.from(rim), side: sl.side, reach: 1.5 * reach, chains: chains, N: N, K: K, idx: Int32Array.from(idx), amp: Float32Array.from(amp),
+      var rimq = pts.filter(function (q) { return q.t > tEnd - 0.1; });
+      var rims = groups.map(function (_, g) { return Int32Array.from(rimq.filter(function (q) { return q.g === g; }).map(function (q) { return q.p; })); });
+      arms.push({ rim: Int32Array.from(rimq.map(function (q) { return q.p; })), rims: rims, side: sl.side, reach: 1.5 * reach, chains: chains, groups: groups,
+        N: N, K: K, idx: Int32Array.from(idx), amp: Float32Array.from(amp), gp: Int32Array.from(gp),
         seg: Int32Array.from(seg), u: Float32Array.from(uu), x: new Float32Array(3 * K * N), v: new Float32Array(3 * K * N),
-        S: new Float32Array(3 * K * N), S0: new Float32Array(3 * K * N), F: new Float32Array(15 * N), px: new Float32Array(3 * K), y: new Float32Array(3 * K * N) });
+        S: new Float32Array(3 * K * N), S0: new Float32Array(3 * K * N), F: new Float32Array(15 * N * groups.length), px: new Float32Array(3 * K), y: new Float32Array(3 * K * N) });
     });
     c.raw = new Float32Array(3 * c.P); c.raw0 = new Float32Array(3 * c.P); c.sout = new Float32Array(3 * c.P);
     return arms.length ? arms : null;
@@ -631,8 +703,13 @@
     x[i] += cut * nx; x[i + 1] += cut * ny; x[i + 2] += cut * nz;
   }
 
+  function segDist3(px, py, pz, sg) {
+    var ax = sg[3] - sg[0], ay = sg[4] - sg[1], az = sg[5] - sg[2], aa = ax * ax + ay * ay + az * az || 1e-12;
+    var t = Math.max(0, Math.min(1, ((px - sg[0]) * ax + (py - sg[1]) * ay + (pz - sg[2]) * az) / aa));
+    return Math.hypot(px - sg[0] - t * ax, py - sg[1] - t * ay, pz - sg[2] - t * az);
+  }
   function stepSprings(c, dt, caps) {
-    var o = c.o, w = 2 * Math.PI * o.springHz, ks = w * w, kd = 2 * o.springZeta * w, air = o.springAir;
+    var o = c.o, air = o.springAir;
     var n = dt > 0 ? Math.ceil(Math.min(dt, o.maxSubsteps / o.substepHz) * o.substepHz / 2 - 1e-6) : 0, h = n ? dt / n : 0;
     c.sl.forEach(function (arm) {
       var x = arm.x, v = arm.v, S = arm.S, S0 = arm.S0, N = arm.N, y = arm.y;
@@ -642,7 +719,7 @@
         for (var j = 1; j < N; j++) {
           var px = arm.px;
           for (k = 0; k < arm.K; k++) {
-            var i = 3 * (k * N + j), pi = i - 3;
+            var i = 3 * (k * N + j), pi = i - 3, w = 2 * Math.PI * arm.groups[arm.chains[k].g].hz, ks = w * w, kd = 2 * o.springZeta * w;
             px[3 * k] = x[i]; px[3 * k + 1] = x[i + 1]; px[3 * k + 2] = x[i + 2];
             // a spring toward where the arm would hold this joint, hung from the joint before it; it stiffens as the
             // joint strays (four times as stiff at springMax), so the swing is bounded with no hard stop to jolt it
@@ -657,11 +734,15 @@
           }
           for (var it = 0; it < 2; it++) {
             // the ring: the joints at the same distance along each chain keep their distances from each other, so the
-            // sleeve swings as a ring; and each link keeps its length
-            for (k = 0; k < arm.K; k++) {
-              var ia = 3 * (k * N + j), ib = 3 * (((k + 1) % arm.K) * N + j);
-              link(x, ia, ib, Math.hypot(S[ia] - S[ib], S[ia + 1] - S[ib + 1], S[ia + 2] - S[ib + 2]));
-            }
+            // sleeve swings as a ring (a panel: only its own chains are joined, so it parts from the others); and
+            // each link keeps its length
+            arm.groups.forEach(function (gr) {
+              var ring = gr.n > 2;
+              for (var q = 0; q < (ring ? gr.n : gr.n - 1); q++) {
+                var ia = 3 * ((gr.c0 + q) * N + j), ib = 3 * ((gr.c0 + (q + 1) % gr.n) * N + j);
+                link(x, ia, ib, Math.hypot(S[ia] - S[ib], S[ia + 1] - S[ib + 1], S[ia + 2] - S[ib + 2]));
+              }
+            });
             for (k = 0; k < arm.K; k++) {
               i = 3 * (k * N + j); pi = i - 3;
               var len = Math.hypot(S[i] - S[pi], S[i + 1] - S[pi + 1], S[i + 2] - S[pi + 2]);
@@ -692,45 +773,65 @@
       // each ring of joints as a rigid turn and shift, from where the arm holds it to where the springs have it: the
       // frame of its first three joints, and its middle. The sleeve between two rings blends their two, so each
       // cross-section of the sleeve, the cuff's clean ring above all, keeps its shape and tilts and swings whole
+      // (a panel: its own frame, from its chains' joints across it and the way down it)
       var F = arm.F;
-      for (j = 0; j < N; j++) {
-        var f = 15 * j, A = frame3(S, N, j), B = frame3(y, N, j);
-        for (var r = 0; r < 3; r++) for (var cc = 0; cc < 3; cc++)
-          F[f + 3 * cc + r] = B[r] * A[cc] + B[3 + r] * A[3 + cc] + B[6 + r] * A[6 + cc];   // R = B A^T, column-major
-        var mS = [0, 0, 0], mX = [0, 0, 0];
-        for (k = 0; k < arm.K; k++) for (e = 0; e < 3; e++) { mS[e] += S[3 * (k * N + j) + e] / arm.K; mX[e] += y[3 * (k * N + j) + e] / arm.K; }
-        F.set(mS, f + 9); F.set(mX, f + 12);
-      }
+      arm.groups.forEach(function (gr, g) {
+        for (var j = 0; j < N; j++) {
+          var f = 15 * (g * N + j), A = frameOf(S, N, gr, j), B = frameOf(y, N, gr, j);
+          for (var r = 0; r < 3; r++) for (var cc = 0; cc < 3; cc++)
+            F[f + 3 * cc + r] = B[r] * A[cc] + B[3 + r] * A[3 + cc] + B[6 + r] * A[6 + cc];   // R = B A^T, column-major
+          var mS = [0, 0, 0], mX = [0, 0, 0];
+          for (var k = gr.c0; k < gr.c0 + gr.n; k++) for (var e = 0; e < 3; e++) { mS[e] += S[3 * (k * N + j) + e] / gr.n; mX[e] += y[3 * (k * N + j) + e] / gr.n; }
+          F.set(mS, f + 9); F.set(mX, f + 12);
+        }
+      });
     });
     // the sleeve's points: each moves with the rings about it, as much as the sleeve there has eased into the swing
     var out = c.sout, raw = c.raw, solid = caps.filter(function (q) { return !q.bs; });
     out.set(raw);
     c.sl.forEach(function (arm) {
-      var F = arm.F, S = arm.S, near = solid.filter(function (cp) {   // only the capsules within reach of this sleeve
-        var sg = cp.s, ax = sg[3] - sg[0], ay = sg[4] - sg[1], az = sg[5] - sg[2], aa = ax * ax + ay * ay + az * az || 1e-12;
-        var t = Math.max(0, Math.min(1, ((S[0] - sg[0]) * ax + (S[1] - sg[1]) * ay + (S[2] - sg[2]) * az) / aa));
-        return Math.hypot(S[0] - sg[0] - t * ax, S[1] - sg[1] - t * ay, S[2] - sg[2] - t * az) < arm.reach + Math.max(cp.r, cp.rb || 0);
-      });
+      // every capsule, near or far (round 12): a capsule let in only once it came within reach jolted the point it
+      // then eased away, a frame-to-frame jump J5d counts as jitter; far off, the easing is nothing anyway
+      var F = arm.F, near = solid;
       for (var m = 0; m < arm.idx.length; m++) {
         var p = 3 * arm.idx[m], qx = raw[p], qy = raw[p + 1], qz = raw[p + 2], j = arm.seg[m], u = arm.u[m], ox = 0, oy = 0, oz = 0;
         for (var e = 0; e < 2; e++) {
-          var f = 15 * (j + e), we = e ? u : 1 - u, dx = qx - F[f + 9], dy = qy - F[f + 10], dz = qz - F[f + 11];
+          var f = 15 * (arm.gp[m] * arm.N + j + e), we = e ? u : 1 - u, dx = qx - F[f + 9], dy = qy - F[f + 10], dz = qz - F[f + 11];
           ox += we * (F[f + 12] + F[f] * dx + F[f + 3] * dy + F[f + 6] * dz);
           oy += we * (F[f + 13] + F[f + 1] * dx + F[f + 4] * dy + F[f + 7] * dz);
           oz += we * (F[f + 14] + F[f + 2] * dx + F[f + 5] * dy + F[f + 8] * dz);
         }
-        var am = arm.amp[m];
+        // round 12: the cloth hugging the hand or the forearm stays with it, the rest of the panel swings: a panel
+        // swung freely sweeps its triangles through the hand inside the cuff, which no point-by-point push stops
+        var am = arm.amp[m], dh = Infinity;
+        if (o.springHold) for (var q0 = 0; q0 < near.length; q0++) if (near[q0].arm) {
+          var sg = near[q0].s;
+          dh = Math.min(dh, segDist3(qx, qy, qz, sg));
+        }
+        if (o.springHold && dh < Infinity) am *= sm(o.springHold[0], o.springHold[1], dh);
         out[p] = qx + am * (ox - qx); out[p + 1] = qy + am * (oy - qy); out[p + 2] = qz + am * (oz - qz);
-        for (var q = 0; q < near.length; q++) keepOff(out, raw, p, near[q], near[q].arm ? o.springSkin : o.margin);
+        for (var q = 0; q < near.length; q++) {
+          keepOff(out, raw, p, near[q], near[q].arm ? o.springSkin : o.margin);
+        }
       }
     });
     return out;
   }
 
-  // the orthonormal frame (three columns, row by row: e1, e2, n) of the first three joints of ring j
-  function frame3(P, N, j) {
-    var a = 3 * j, b = 3 * (N + j), d = 3 * (2 * N + j);
-    var e1 = [P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]], g = [P[d] - P[a], P[d + 1] - P[a + 1], P[d + 2] - P[a + 2]];
+  // the orthonormal frame (three columns, row by row: e1, e2, n) of ring j of a group of chains: a ring of three or
+  // more, from its first three joints; a panel's two, from the joint across it and the way down it at that ring
+  function frameOf(P, N, gr, j) {
+    var a = 3 * (gr.c0 * N + j), b = 3 * ((gr.c0 + 1) * N + j);
+    if (gr.n > 2) return frame3(P, a, b, 3 * ((gr.c0 + 2) * N + j));
+    var j0 = j ? j - 1 : 0, j1 = j ? j : 1, a0 = 3 * (gr.c0 * N + j0), b0 = 3 * ((gr.c0 + 1) * N + j0), a1 = 3 * (gr.c0 * N + j1), b1 = 3 * ((gr.c0 + 1) * N + j1);
+    var dn = [0, 1, 2].map(function (e) { return (P[a1 + e] + P[b1 + e] - P[a0 + e] - P[b0 + e]) / 2; });
+    var e1 = [P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]];
+    return frameFrom(e1, dn);
+  }
+  function frame3(P, a, b, d) {
+    return frameFrom([P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]], [P[d] - P[a], P[d + 1] - P[a + 1], P[d + 2] - P[a + 2]]);
+  }
+  function frameFrom(e1, g) {
     var l = Math.hypot(e1[0], e1[1], e1[2]) || 1;
     e1 = [e1[0] / l, e1[1] / l, e1[2] / l];
     var n = [e1[1] * g[2] - e1[2] * g[1], e1[2] * g[0] - e1[0] * g[2], e1[0] * g[1] - e1[1] * g[0]];

@@ -150,9 +150,10 @@ function capDepth(p, c) {
 }
 function sleeveFrame(D, root, caps) {
   const raw = cloth.raw, x = cloth.x, at = (a, p) => [a[3 * p], a[3 * p + 1], a[3 * p + 2]];
-  const fr = { rim: [], arm: 0, leg: 0 };
+  const fr = { rim: [], panels: [], arm: 0, leg: 0 };
   for (const a of arms) {
     for (const p of a.rim) fr.rim.push([at(x, p), at(raw, p)]);
+    if (a.groups.length > 1) for (const r of a.rims) if (r.length) fr.panels.push(Array.from(r, p => [at(x, p), at(raw, p)]));
     for (const p of a.idx) {
       const q = at(x, p), r = at(raw, p);
       for (const c of caps) if (!c.bs) {
@@ -163,9 +164,33 @@ function sleeveFrame(D, root, caps) {
   }
   return fr;
 }
-function sleeveMeasure(track) {
-  if (!track.length || !track[0].rim.length) return null;
-  const T = track.length, n = track[0].rim.length, vel = (k, t, j) => [0, 1, 2].map(i => (track[t].rim[j][k][i] - track[t - 1].rim[j][k][i]) * FPS);
+function sleeveMeasure(frames) {
+  if (!frames.length || !frames[0].rim.length) return null;
+  const m = Object.assign(rimMeasure(frames.map(f => f.rim)), {
+    arm_mm: +(1000 * Math.max(...frames.map(f => f.arm))).toFixed(1), leg_mm: +(1000 * Math.max(...frames.map(f => f.leg))).toFixed(1) });
+  // round 12: each panel's rim on its own (T1 per panel), and how much in step the panels swing with each other: the
+  // correlation of each pair's swing (its rim's motion less the forearm's, averaged over the rim; 1, one piece)
+  const P = frames[0].panels.length;
+  if (P) {
+    m.panels = Array.from({ length: P }, (_, q) => {
+      const r = rimMeasure(frames.map(f => f.panels[q]));
+      return { rim_points: r.rim_points, lag_frames: r.lag_frames, coherence: r.coherence, rim_swing_mm: r.rim_swing_mm, rim_jitter_mm: r.rim_jitter_mm };
+    });
+    const swing = q => frames.slice(1).map((f, t) => [0, 1, 2].map(i => f.panels[q].reduce((a, [x, r], j) => a + (x[i] - r[i]) - (frames[t].panels[q][j][0][i] - frames[t].panels[q][j][1][i]), 0) / f.panels[q].length));
+    const S = Array.from({ length: P }, (_, q) => swing(q)), sync = [];
+    for (let a = 0; a + 1 < P; a += 2) {                 // the two panels of one sleeve
+      let sxy = 0, sxx = 0, syy = 0;
+      S[a].forEach((u, t) => { const v = S[a + 1][t]; for (let i = 0; i < 3; i++) { sxy += u[i] * v[i]; sxx += u[i] ** 2; syy += v[i] ** 2; } });
+      sync.push(+(sxy / Math.sqrt(sxx * syy || 1)).toFixed(3));
+    }
+    m.panel_sync = sync;
+    m.panel_lag = [Math.min(...m.panels.map(q => q.lag_frames)), Math.max(...m.panels.map(q => q.lag_frames))];
+    m.panel_coherence = Math.max(...m.panels.map(q => q.coherence));
+  }
+  return m;
+}
+function rimMeasure(track) {
+  const T = track.length, n = track[0].length, vel = (k, t, j) => [0, 1, 2].map(i => (track[t][j][k][i] - track[t - 1][j][k][i]) * FPS);
   const V = [0, 1].map(k => Array.from({ length: n }, (_, j) => Array.from({ length: T - 1 }, (_, t) => vel(k, t + 1, j))));
   for (const k of [0, 1]) for (const series of V[k]) for (let i = 0; i < 3; i++) {   // each point's mean motion taken out
     const m = series.reduce((a, v) => a + v[i], 0) / series.length;
@@ -184,14 +209,13 @@ function sleeveMeasure(track) {
   // jitter, as J5d measures it: a point's frame-to-frame change in speed less its mean over the five frames about it
   const jit = [];
   for (let t = 6; t < T; t++) for (let j = 0; j < n; j++) {
-    const d2 = u => [0, 1, 2].map(i => track[u].rim[j][0][i] - 2 * track[u - 1].rim[j][0][i] + track[u - 2].rim[j][0][i]);
+    const d2 = u => [0, 1, 2].map(i => track[u][j][0][i] - 2 * track[u - 1][j][0][i] + track[u - 2][j][0][i]);
     const D = [t - 4, t - 3, t - 2, t - 1, t].map(d2);
     jit.push(1000 * Math.hypot(...[0, 1, 2].map(i => D[2][i] - (D[0][i] + D[1][i] + D[2][i] + D[3][i] + D[4][i]) / 5)));
   }
   jit.sort((a, b) => a - b);
-  const off = track.flatMap(f => f.rim.map(([q, r]) => Math.hypot(q[0] - r[0], q[1] - r[1], q[2] - r[2]))).sort((a, b) => a - b);
-  return { rim_points: n, frames: T, lag_frames: lag, rim_jitter_mm: +jit[Math.floor(jit.length * 0.99)].toFixed(2), rim_swing_mm: +(1000 * off[Math.floor(off.length * 0.95)]).toFixed(1), coherence: +corr(0).toFixed(3), best_coherence: +best.toFixed(3),
-    arm_mm: +(1000 * Math.max(...track.map(f => f.arm))).toFixed(1), leg_mm: +(1000 * Math.max(...track.map(f => f.leg))).toFixed(1) };
+  const off = track.flatMap(f => f.map(([q, r]) => Math.hypot(q[0] - r[0], q[1] - r[1], q[2] - r[2]))).sort((a, b) => a - b);
+  return { rim_points: n, frames: T, lag_frames: lag, rim_jitter_mm: +jit[Math.floor(jit.length * 0.99)].toFixed(2), rim_swing_mm: +(1000 * off[Math.floor(off.length * 0.95)]).toFixed(1), coherence: +corr(0).toFixed(3), best_coherence: +best.toFixed(3) };
 }
 const result = { scenarios: [], particles: cloth.P, free: cloth.nfree, stretch: cloth.stL.length, bend: cloth.bdL.length,
   folds: cloth.fol.length, fold_far: foldFar(cloth) };
@@ -236,6 +260,6 @@ for (const sc of job.scenarios) {
 }
 costs.sort((a, b) => a - b);
 result.step_ms = { median: costs[costs.length >> 1], p95: costs[Math.floor(costs.length * 0.95)] };
+result.sleeves = Object.fromEntries(result.scenarios.map(s => [s.name, s.sleeves]));   // before the write: garments.py reads it from the file
 writeFileSync(process.argv[3], JSON.stringify(result));
-result.sleeves = Object.fromEntries(result.scenarios.map(s => [s.name, s.sleeves]));
 console.log(JSON.stringify({ sleeves: result.sleeves, particles: cloth.P, free: cloth.nfree, folds: result.folds, fold_far: result.fold_far, step_ms: result.step_ms }));

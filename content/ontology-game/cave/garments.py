@@ -651,12 +651,63 @@ def smooth_skirt(weights, verts, faces, parts, rounds=SKIRT_SMOOTH, top=1.0):
     return weights
 
 
+PANEL_FROM = 0.3                                 # round 12: the sleeve's seams open from this share of the forearm
+                                                 # (from the elbow) to the cuff, so each sleeve hangs as two panels
+PANEL_GAP = 0.003                                # metres between the two sides of an opened seam at rest (cloth.js
+                                                 # welds points closer than 1e-5 m, and would sew it shut again)
+
+
+def panels(verts, faces, labels, J):
+    """The sleeves re-cut into panels (round 12; Wendell chose cd-sleeve-open C, "Re-cut into panels", 2026-10-17, on
+    his note on round 10: "They are moving like solid objects and not clothes"). A sleeve is its front and back panels
+    sewn along its top and bottom seams; below PANEL_FROM of the forearm those seams are opened, each seam point split
+    in two, one for each panel's faces, set PANEL_GAP apart. Each panel then hangs on its own spring chains in
+    cloth.js, so the two part and swing out of step, and the hand passes between them. Returns the points and faces,
+    and for each new point the point it was split from."""
+    V, F = list(verts), [list(f) for f in faces]
+    of = {}
+    for fi, ((p, _), f) in enumerate(zip(labels, F)):
+        for v in f:
+            of.setdefault(v, set()).add(p)
+    src = {}
+    for side, front in (("L", 1), ("R", 2)):
+        E, Wr = (Vector(J[b + side][0]) for b in ("elbow", "wrist"))
+        A = Wr - E
+        t = lambda p: (p - E).dot(A) / A.length_squared
+        seam = {v for v, ps in of.items() if front in ps and front + 3 in ps and t(verts[v]) > PANEL_FROM}
+        if not seam:
+            continue
+        twin = {}
+        for v in seam:
+            twin[v] = len(V)
+            src[len(V)] = v
+            V.append(verts[v].copy())
+        inward = {v: [Vector(), Vector()] for v in seam}   # each side's way into its own panel, away from the seam
+        for fi, f in enumerate(F):
+            p = labels[fi][0]
+            if p not in (front, front + 3):
+                continue
+            k = 0 if p == front else 1
+            for v in f:
+                if v in seam:
+                    inward[v][k] += sum((verts[u] - verts[v] for u in f if u not in seam), Vector())
+            if k:
+                F[fi] = [twin.get(v, v) for v in f]
+        for v in seam:
+            for k, i in ((0, v), (1, twin[v])):
+                d = inward[v][k]
+                if d.length > 1e-9:
+                    V[i] = verts[v] + d.normalized() * (PANEL_GAP / 2)
+    return V, F, src
+
+
 def robe(fig, rig, build, cw):
-    """The draped robe with its trim, reduced, hemmed, and weighted from the body under it."""
+    """The draped robe with its trim, reduced, re-cut into sleeve panels, hemmed, and weighted from the body under it."""
     co, faces, parts = drape(fig, rig, build)
     verts, faces, labels = reduce(*trimmed(co, faces, parts, build), ROBE_VERTS)
     W = bone_weights(fig)
     J = C.joints(build)
+    verts, faces, _ = panels(verts, faces, labels, J)
     from_body = weight_source(fig, lambda c, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR",
                                                                   "shoulderL", "shoulderR"))
     from_arm = {s: weight_source(fig, lambda c, w, s=s: main_bone(w) in ("spine", "shoulder" + s, "elbow" + s, "wrist" + s))
@@ -1453,8 +1504,17 @@ def build_all(build, palette, out_dir, do_fit=True):
     rp = [d.value for d in R.data.attributes["part"].data]
     body_pts = {v for f in R.data.polygons if rp[f.index] == 0 for v in f.vertices}
     slits = max(rc[v].z for e in openings(R) for v in e if v in body_pts and 0.25 < rc[v].z < 1.0 and abs(rc[v].x) > 0.12)
-    legs = lambda i: main_bone(W[i]) if main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") and \
-        fig.data.vertices[i].co.z < slits + 0.08 else None
+    J = C.joints(build)
+
+    def opened(i):                                         # round 12: a forearm point past where the sleeve's seams open
+        b = main_bone(W[i])
+        if b not in ("elbowL", "elbowR"):
+            return False
+        E, Wr = (Vector(J[n + b[-1]][0]) for n in ("elbow", "wrist"))
+        return (fig.data.vertices[i].co - E).dot(Wr - E) / (Wr - E).length_squared > PANEL_FROM - 0.05
+    # a leg below the slits' tops may step out through a slit, and a forearm show between its sleeve's two panels
+    legs = lambda i: main_bone(W[i]) if (main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") and
+                                         fig.data.vertices[i].co.z < slits + 0.08) or opened(i) else None
     # the walking fit shapes the robe above the belt, which rides the body; below it the cloth finds its own way
     zs = lambda i: fig.data.vertices[i if isinstance(i, int) else i[0]].co.z
     upper = [i for i in cover if zs(i) > PIN_Z - 0.02 or main_bone(W[i if isinstance(i, int) else i[0]]) in ARMS]
