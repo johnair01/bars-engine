@@ -85,6 +85,10 @@
     armGap: 0,           // share of its skinned gap to the forearm's and hand's line that a panel point keeps: a panel
                          // may swing out and slide round the arm, and never falls in onto it (0: only the capsule)
     armGapMax: 0.2,      // metres: the farthest from a capsule's line the gap is kept
+    seamOpen: null,      // [at the cut, at the cuff], metres the two sides of an opened seam may part (null: freely)
+    armEdges: false,     // the panels' edges collide with the forearm and hand too, not only their points (edgeCollide)
+    seamFrom: 0,         // how far down the panel (0 the cut, 1 the cuff) the slit starts to open past seamOpen[0]
+    seamPair: 0.006,     // metres apart at rest that makes two sleeve points the two sides of one opened seam
     panelChains: 2,      // chains per panel, at a quarter and three quarters of its width
     springDetune: 0.2,   // the panels' own swings differ by this share either side of springHz, so they fall out of step
   };
@@ -245,11 +249,37 @@
     for (i = 0; i < P; i++) { if (free[i]) fr.push(i); if (free[i] || (used[i] && !fol[i])) act.push(i); }
     c.act = Int32Array.from(act); c.freeIdx = Int32Array.from(fr);
     restFollowers(c, x0);
-    c.slv = new Uint8Array(P);                                    // the free points of a sleeve cut into cloth panels
+    c.slv = new Uint8Array(P);
+    c.slT = new Float32Array(P);                                  // and how far down its panel, 0 at the cut, 1 at the cuff                                    // the free points of a sleeve cut into cloth panels
     if (spec.sleeves) c.sl = buildSprings(c, x0, spec.sleeves);
     var sv = [];
     for (i = 0; i < P; i++) if (c.slv[i]) sv.push(i);
     c.slvIdx = Int32Array.from(sv);
+    // the opened seams as slits (round 12, third pass): the two sides of a seam split by garments.py panels() may part
+    // by seamOpen[0] at the cut and up to seamOpen[1] at the cuff, so the sleeve opens toward the hand, as the skirt's
+    // slits do, and the panels never swing apart to show the whole forearm
+    var sp = [], spL = [];
+    if (o.seamOpen && sv.length) {
+      var cell = {}, key = function (i) { return Math.floor(x0[3 * i] / 0.01) + "," + Math.floor(x0[3 * i + 1] / 0.01) + "," + Math.floor(x0[3 * i + 2] / 0.01); };
+      for (i = 0; i < sv.length; i++) (cell[key(sv[i])] = cell[key(sv[i])] || []).push(sv[i]);
+      var linked = {};
+      for (i = 0; i < c.st.length; i += 2) linked[c.st[i] + "_" + c.st[i + 1]] = linked[c.st[i + 1] + "_" + c.st[i]] = 1;
+      for (i = 0; i < sv.length; i++) {
+        var a = sv[i], ka = [Math.floor(x0[3 * a] / 0.01), Math.floor(x0[3 * a + 1] / 0.01), Math.floor(x0[3 * a + 2] / 0.01)];
+        for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) for (var dz = -1; dz <= 1; dz++) {
+          (cell[(ka[0] + dx) + "," + (ka[1] + dy) + "," + (ka[2] + dz)] || []).forEach(function (b) {
+            if (b <= a || linked[a + "_" + b] || c.isFol[a] || c.isFol[b] || dist(a, b) > o.seamPair) return;
+            var tt = (c.slT[a] + c.slT[b]) / 2;
+            tt = Math.max(0, (tt - o.seamFrom) / (1 - o.seamFrom || 1));
+            sp.push(a, b); spL.push(dist(a, b) + o.seamOpen[0] + (o.seamOpen[1] - o.seamOpen[0]) * tt);
+          });
+        }
+      }
+    }
+    c.sp = Int32Array.from(sp); c.spL = Float32Array.from(spL);
+    var se = [];
+    for (i = 0; i < c.st.length; i += 2) if (c.slv[c.st[i]] || c.slv[c.st[i + 1]]) se.push(c.st[i], c.st[i + 1]);
+    c.se = Int32Array.from(se);
     if (o.armCompress !== null && sv.length) {
       c.stSq = new Float32Array(c.stL.length).fill(o.compress);
       for (i = 0; i < c.stSq.length; i++) if (c.slv[c.st[2 * i]] || c.slv[c.st[2 * i + 1]]) c.stSq[i] = o.armCompress;
@@ -424,9 +454,11 @@
     solve(c, c.st, c.stL, o.stretch, false, c.stSq || o.compress);
     solve(c, c.bd, c.bdL, c.bdK, false);
     solve(c, c.th, c.thL, 1.0, true);
+    if (c.sp.length) solve(c, c.sp, c.spL, 1.0, false, 0);   // a slit's two sides: held only from parting too far
     var caps = lerpCaps(c.caps0, c.caps, f);
     if (o.blend > 0) leash(c, f, caps, h);                 // before the legs: a leg's push wins over the leash
     collide(c, caps, f);
+    if (o.armEdges && c.se.length) edgeCollide(c, caps);
   }
 
   // the blend band at the belt: a free point past md from where the skin puts it (Unity's and Chaos's max distance) is
@@ -482,6 +514,39 @@
       var g = (typeof k === "number" ? k : k[e]) * (d < L[e] && squash !== undefined ? (typeof squash === "number" ? squash : squash[e]) : 1) * (d - L[e]) / (d * ws);
       x[a3] += wa * g * dx; x[a3 + 1] += wa * g * dy; x[a3 + 2] += wa * g * dz;
       x[b3] -= wb * g * dx; x[b3 + 1] -= wb * g * dy; x[b3 + 2] -= wb * g * dz;
+    }
+  }
+
+  // round 12, third pass: the sleeve panels' edges against the forearm and hand. Points 2 to 4 cm apart round a
+  // forearm 6 cm across can land either side of it while the edge between them cuts through the arm, so the arm
+  // showed through the cloth wherever the panel slid across it. Each edge's nearest point to a capsule's line is
+  // pushed out to its radius, its two ends moved by their share of it.
+  function edgeCollide(c, caps) {
+    var x = c.x, wi = c.wi, se = c.se, mg = c.o.armMargin;
+    for (var k = 0; k < caps.length; k++) {
+      if (!caps[k].arm) continue;
+      var s = caps[k].s, ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
+      var uu = ux * ux + uy * uy + uz * uz || 1e-12;
+      for (var e = 0; e < se.length; e += 2) {
+        var a = 3 * se[e], b = 3 * se[e + 1];
+        var vx = x[b] - x[a], vy = x[b + 1] - x[a + 1], vz = x[b + 2] - x[a + 2], vv = vx * vx + vy * vy + vz * vz || 1e-12;
+        var wx = x[a] - ax, wy = x[a + 1] - ay, wz = x[a + 2] - az;
+        var uv = ux * vx + uy * vy + uz * vz, uw = ux * wx + uy * wy + uz * wz, vw = vx * wx + vy * wy + vz * wz;
+        var den = uu * vv - uv * uv, sE = den > 1e-12 ? (uv * uw - uu * vw) / den : 0;
+        sE = sE < 0 ? 0 : sE > 1 ? 1 : sE;
+        var tC = (uw + sE * uv) / uu;
+        tC = tC < 0 ? 0 : tC > 1 ? 1 : tC;
+        sE = (tC * uv - vw) / vv; sE = sE < 0 ? 0 : sE > 1 ? 1 : sE;
+        if (sE < 0.02 || sE > 0.98) continue;            // an end: the points' own test has it
+        var px = x[a] + vx * sE - (ax + ux * tC), py = x[a + 1] + vy * sE - (ay + uy * tC), pz = x[a + 2] + vz * sE - (az + uz * tC);
+        var r = capR(caps[k], tC) + mg, d = Math.sqrt(px * px + py * py + pz * pz);
+        if (d >= r || d < 1e-9) continue;
+        var wa = wi[se[e]] * (1 - sE), wb = wi[se[e + 1]] * sE, sw = wa * (1 - sE) + wb * sE;
+        if (sw < 1e-9) continue;
+        var g = (r - d) / d / sw;
+        x[a] += px * g * wa; x[a + 1] += py * g * wa; x[a + 2] += pz * g * wa;
+        x[b] += px * g * wb; x[b + 1] += py * g * wb; x[b + 2] += pz * g * wb;
+      }
     }
   }
 
@@ -644,7 +709,8 @@
       if (cl.length >= 16) {
         var tE = Math.max.apply(null, cl.map(function (q) { return q.t; }));
         var parts = panelsOf(c, cl, -Infinity) || [cl];
-        parts.forEach(function (pp, g) { pp.forEach(function (q) { q.g = g; c.slv[q.p] = 1; }); });
+        var tS = Math.min.apply(null, cl.map(function (q) { return q.t; }));
+        parts.forEach(function (pp, g) { pp.forEach(function (q) { q.g = g; c.slv[q.p] = 1; c.slT[q.p] = tE > tS ? (q.t - tS) / (tE - tS) : 1; }); });
         var rq = cl.filter(function (q) { return q.t > tE - 0.1; });
         arms.push({ cloth: true, side: sl.side, K: 0, N: 0, chains: [], groups: parts.map(function () { return {}; }),
           idx: Int32Array.from(cl.map(function (q) { return q.p; })), rim: Int32Array.from(rq.map(function (q) { return q.p; })),
