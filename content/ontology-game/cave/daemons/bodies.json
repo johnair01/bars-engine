@@ -1,11 +1,12 @@
 {
- "note": "Baked by bake_daemons.py from character.py --daemons (bars-engine #328). Phone budget: 96 KB and 7000 triangles a body.",
+ "note": "Baked by bake_daemons.py from character.py --daemons (bars-engine #328), skinned, with the Integrate action where character.py --integrate made one (#351). Phone budget: 128 KB and 7000 triangles a body.",
  "bodies": [
   {
    "id": "protector",
-   "bytes": 91080,
+   "bytes": 111278,
    "tris": 6328,
    "verts": 3992,
+   "joints": 46,
    "height": 1.743,
    "bands": {
     "skin": 923,
@@ -14,13 +15,15 @@
     "sash": 152,
     "trousers": 407,
     "shoes": 131
-   }
+   },
+   "integrate": true
   },
   {
    "id": "controller",
-   "bytes": 90980,
+   "bytes": 115526,
    "tris": 6328,
    "verts": 3984,
+   "joints": 46,
    "height": 1.736,
    "bands": {
     "skin": 923,
@@ -29,13 +32,15 @@
     "sash": 152,
     "trousers": 408,
     "shoes": 134
-   }
+   },
+   "integrate": true
   },
   {
    "id": "skeptic",
-   "bytes": 90808,
+   "bytes": 115866,
    "tris": 6328,
    "verts": 3971,
+   "joints": 46,
    "height": 1.717,
    "bands": {
     "skin": 923,
@@ -44,13 +49,15 @@
     "sash": 152,
     "trousers": 404,
     "shoes": 132
-   }
+   },
+   "integrate": true
   },
   {
    "id": "fixer",
-   "bytes": 91336,
+   "bytes": 114002,
    "tris": 6328,
    "verts": 4012,
+   "joints": 46,
    "height": 1.691,
    "bands": {
     "skin": 923,
@@ -59,13 +66,15 @@
     "sash": 152,
     "trousers": 408,
     "shoes": 134
-   }
+   },
+   "integrate": true
   },
   {
    "id": "victim",
-   "bytes": 90868,
+   "bytes": 116094,
    "tris": 6328,
    "verts": 3976,
+   "joints": 46,
    "height": 1.381,
    "bands": {
     "skin": 923,
@@ -74,13 +83,15 @@
     "sash": 152,
     "trousers": 416,
     "shoes": 128
-   }
+   },
+   "integrate": true
   },
   {
    "id": "damaged-self",
-   "bytes": 90852,
+   "bytes": 116462,
    "tris": 6328,
    "verts": 3974,
+   "joints": 46,
    "height": 1.447,
    "bands": {
     "skin": 923,
@@ -89,13 +100,15 @@
     "sash": 152,
     "trousers": 406,
     "shoes": 135
-   }
+   },
+   "integrate": true
   },
   {
    "id": "emotional-body",
-   "bytes": 91216,
+   "bytes": 111242,
    "tris": 6328,
    "verts": 4002,
+   "joints": 46,
    "height": 1.699,
    "bands": {
     "skin": 923,
@@ -104,13 +117,15 @@
     "sash": 152,
     "trousers": 408,
     "shoes": 134
-   }
+   },
+   "integrate": true
   },
   {
    "id": "player",
-   "bytes": 90872,
+   "bytes": 108576,
    "tris": 6328,
    "verts": 3976,
+   "joints": 46,
    "height": 1.813,
    "bands": {
     "skin": 923,
@@ -119,7 +134,8 @@
     "sash": 152,
     "trousers": 408,
     "shoes": 134
-   }
+   },
+   "integrate": false
   }
  ]
 }
