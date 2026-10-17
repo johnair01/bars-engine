@@ -2935,7 +2935,7 @@ def koala_head(H, s=1.0, turn=0.0):
     v = lambda x, y, z: H + Vector((x, y, z)) * s
     return [("ell", v(0, 0, 0), 0.18 * s, (0.95, 1.12, 0.98)),
             ("ell", v(0.03, 0.1, -0.06), 0.1 * s, (1.0, 0.9, 0.85)), ("ell", v(0.03, -0.1, -0.06), 0.1 * s, (1.0, 0.9, 0.85))] + \
-        taper(v, (0.08, 0, -0.035), (0.12, 0, -0.05 + turn * 0.03), 0.09 * s, 0.075 * s, (1.0, 1.0, 1.0), (0.9, 1.0, 1.1), 4)
+        taper(v, (0.06, 0, -0.035), (0.09, 0, -0.05 + turn * 0.03), 0.09 * s, 0.08 * s, (1.0, 1.0, 1.0), (0.9, 1.0, 1.1), 4)
 
 
 def koala_face(body, H, S, F, s, r, turn=0.0):
@@ -2944,15 +2944,15 @@ def koala_face(body, H, S, F, s, r, turn=0.0):
     lids = dict(S, skin=F[1], spot=F[1])
     for side in (1, -1):
         eye(body, H + Vector((0.12, side * 0.085, 0.04)) * s, (0.6, side * 0.75, 0.15), lids, r * 0.7)
-    tip = H + Vector((0.22, 0, -0.04 + turn * 0.03)) * s
+    tip = H + Vector((0.2, 0, -0.04 + turn * 0.03)) * s
     hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0)), Vector((-1, 0, 0)))
     nose = ball("nose", solid("nose", (0.05, 0.045, 0.045), 0.35), (loc if hit else tip) + Vector((-0.012, 0, 0)) * s, 0.055 * s, (0.75, 0.8, 1.3), 20)
     nose.rotation_euler = (0, 0.3 - turn * 0.2, 0)
     fringe, ear = solid("earrim", F[2], 0.95), solid("ear", mixc(F[0], F[1], 0.3), 0.9)
-    for side in (1, -1):  # big round ears standing out from the sides of the head, a pale fringe round each
-        at = H + Vector((-0.04, side * 0.2, 0.11)) * s
-        o = ball("earrim", fringe, at, 0.12 * s, (0.4, 1.0, 1.0), 24); o.rotation_euler = (side * 0.35, 0, side * 0.3); fluff(o, 0.02 * s, 18.0, 2.0)
-        o = ball("ear", ear, at + Vector((0.025, side * 0.01, -0.005)) * s, 0.09 * s, (0.35, 1.0, 1.0), 20); o.rotation_euler = (side * 0.35, 0, side * 0.3)
+    for side in (1, -1):  # big round ears set out to the sides of the head, a shaggy pale fringe round each
+        at = H + Vector((-0.03, side * 0.22, 0.06)) * s
+        o = ball("earrim", fringe, at, 0.115 * s, (0.4, 1.0, 0.95), 24); o.rotation_euler = (side * 0.9, 0, side * 0.35); fluff(o, 0.035 * s, 22.0, 2.0)
+        o = ball("ear", ear, at + Vector((0.03, side * 0.012, -0.004)) * s, 0.085 * s, (0.35, 1.0, 0.95), 20); o.rotation_euler = (side * 0.9, 0, side * 0.35)
     return mouth_seam(body, H + Vector((0.1, 0, 0)) * s, H.z - 0.12 * s, 40, 0.008 * s, 0.006 * s)
 
 
