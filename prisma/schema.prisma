@@ -5235,3 +5235,115 @@ model BoardPull {
   @@index([board, at])
   @@map("board_pulls")
 }
+
+/// The Between (six-faces-council relationship-creature, bh-* positions, 2026-10-17): a garden two people tend, moved
+/// off the claude.ai artifact store. Each table holds its page document as JSON in the shape the 3D page already used
+/// (garden/main, items, spirits, daemons, shown, data/users/<id>/...), with the ids the server checks pulled out as
+/// columns. Only the garden's members read or write it; whoever holds the invite token may see the spark and ask to join.
+model BetweenGarden {
+  id          String   @id @default(cuid())
+  startedById String   @map("started_by_id")
+  inviteToken String   @unique @map("invite_token")
+  data        Json
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members  BetweenMember[]
+  items    BetweenItem[]
+  spirits  BetweenSpirit[]
+  daemons  BetweenDaemon[]
+  shown    BetweenShown[]
+  privates BetweenPrivate[]
+  presence BetweenPresence[]
+
+  @@index([startedById])
+  @@map("between_gardens")
+}
+
+model BetweenMember {
+  gardenId String   @map("garden_id")
+  playerId String   @map("player_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+  garden   BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, playerId])
+  @@index([playerId])
+  @@map("between_members")
+}
+
+/// Agreements and offerings (kind, status and who planted it are inside data, as the page writes them).
+model BetweenItem {
+  gardenId  String   @map("garden_id")
+  id        String
+  byId      String   @map("by_id")
+  data      Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  garden    BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, id])
+  @@map("between_items")
+}
+
+/// Visiting spirits: they stay their owner's.
+model BetweenSpirit {
+  gardenId  String   @map("garden_id")
+  id        String
+  ownerId   String   @map("owner_id")
+  data      Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  garden    BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, id])
+  @@map("between_spirits")
+}
+
+/// Daemons brought into the garden: only their owner calls them or sends them home.
+model BetweenDaemon {
+  gardenId  String   @map("garden_id")
+  id        String
+  ownerId   String   @map("owner_id")
+  data      Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  garden    BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, id])
+  @@map("between_daemons")
+}
+
+/// Pictures one person chose to show (rc-pictures-private); the unshown ones never leave their browser.
+model BetweenShown {
+  gardenId  String   @map("garden_id")
+  playerId  String   @map("player_id")
+  data      Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  garden    BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, playerId])
+  @@map("between_shown")
+}
+
+/// Each person's private notes on a garden: "garden" (last seen, what they keep) and "spark" (the spark they tended
+/// alone, kept out of the shared garden when the other person joined). Nobody else reads them.
+model BetweenPrivate {
+  gardenId  String   @map("garden_id")
+  playerId  String   @map("player_id")
+  key       String
+  data      Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  garden    BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, playerId, key])
+  @@map("between_privates")
+}
+
+/// Where each person stands right now, written by the page's poll (bh-async-first: polling, no live channel).
+model BetweenPresence {
+  gardenId  String   @map("garden_id")
+  playerId  String   @map("player_id")
+  data      Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  garden    BetweenGarden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+
+  @@id([gardenId, playerId])
+  @@map("between_presence")
+}
