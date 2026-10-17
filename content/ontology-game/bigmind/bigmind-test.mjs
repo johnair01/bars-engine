@@ -104,6 +104,11 @@ await page.waitForFunction(() => window.__oagBigMind.voice.userData.body === 'pr
 const bodyNow = await page.evaluate(() => { const v = window.__oagBigMind.voice, fit = v.children.find((c) => c.userData.body); let tris = 0; if (fit) fit.traverse((m) => { if (m.geometry && m.geometry.index) tris += m.geometry.index.count / 3; }); return { body: v.userData.body, standIn: v.children.some((c) => c.userData.standIn), tris, op: v.userData.mat.opacity }; });
 ok(bodyNow.body === 'protector' && !bodyNow.standIn, 'the Protector wears its baked body, the stand-in gone (' + JSON.stringify(bodyNow) + ')');
 ok(bodyNow.tris > 1000 && bodyNow.tris <= 7000, 'the body is within the phone budget of 7000 triangles (' + bodyNow.tris + ')');
+{ // the body is skinned to its rig and stands as the voice's trust says (cave.js bodyPose, the stances of #355)
+  await page.waitForTimeout(1500);
+  const sk = await page.evaluate(() => { const v = window.__oagBigMind.voice; let m = null; v.traverse((o) => { if (o.isSkinnedMesh) m = o; }); return { skinned: !!m, bones: m ? m.skeleton.bones.length : 0, pose: window.__oagCave.kit.bodyPose(v), stance: v.userData.stance }; });
+  ok(sk.skinned && sk.bones === 46 && sk.pose && sk.pose.stance === sk.stance, 'the body is skinned to its 46 joints and holds the voice\'s stance (' + JSON.stringify({ bones: sk.bones, stance: sk.stance, pose: sk.pose && sk.pose.stance }) + ')');
+}
 await page.waitForFunction(() => window.__oagBigMind.voice.parent.children.some((c) => c.userData.dressCave && c.userData.dressed), null, { timeout: 15000 }).catch(() => {});
 const dressN = await page.evaluate(() => { const d = window.__oagBigMind.voice.parent.children.find((c) => c.userData.dressCave); let n = 0; if (d) d.traverse((m) => { if (m.isMesh) n++; }); return n; });
 ok(dressN > 10, 'the cave is dressed with the kit\'s grown pieces (' + dressN + ' meshes)');
@@ -1204,6 +1209,8 @@ await page.evaluate(() => localStorage.clear());
   await page.click('[data-bm-push]');
   t = await trust();
   ok(await waitStep('pushed-speak') && t.broken.length === 1 && t.broken[0].dim === 'good' && t.broken[0].kind === 'push' && await page.evaluate(() => window.__oagBigMind.stance()) === 'hurt', 'pushing past its refusal is a fall: its read of you drops, and it stands hurt');
+  await page.waitForTimeout(1500);
+  { const hp = await page.evaluate(() => window.__oagCave.kit.bodyPose(window.__oagBigMind.voice)); ok(hp && hp.stance === 'hurt' && hp.now.yaw < -0.3 && hp.now.head > 0.1, 'its body turns a shoulder away and closes (' + JSON.stringify(hp && hp.now) + ')'); }
   ok(/That isn't how anyone keeps us safe\./.test(await page.textContent('[data-bm-modal]')), 'it says so in its own words');
   await page.click('[data-bm-pushed]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="speak"]');
   await page.click('[data-bm-place="Chest"]'); await page.fill('[data-bm-range]', '8'); await page.click('[data-bm-charged]');

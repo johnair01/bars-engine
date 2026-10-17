@@ -176,6 +176,69 @@ INTEGRATE = {
         "index": (0.3, 0.85), "middle": (0.33, 0.88), "ring": (0.36, 0.91), "pinky": (0.39, 0.94),
         "thumb": (0.45, 1.0)}},
 }
+# The two ends a voice's trust moves its body between in the cave (cave.js BODY_STANCES, the trust stances of bars-engine
+# #355). Wendell, 2026-10-16, on the first skinned stances: "They need to end not in a neutral pose but essentially in the
+# honored version of their pose empowered and healthy versus resistant and charged. How would these voices relate to a
+# healthy inner child". CHARGED is the held movement pushed further (every number of its WARP row times CHARGE): the voice
+# resisting, hurt or guarded. HONORED is the same movement completed in health, the job it does for a child who is safe:
+# each row stands toward the child (the player, in front of it) and keeps its own movement.
+CHARGE = 1.4
+HONORED = {
+    # PUSH honored: the boundary that holds. Planted wide and tall, the left arm out low to the side, keeping a space
+    # for the child behind it; the right hand open on its own heart. Behind me you can play.
+    "protector": {"curve": -0.08, "stoop": 0.0, "hands": "open", "gesture": {
+        "shoulderL": (0.1, 0.8), "elbowL": (0.1,), "shoulderR": (0.2, 0.1), "elbowR": (1.85, 0, 1.0),
+        "hipL": (0.0, 0.12), "hipR": (0.0, 0.12), "neck": (-0.05,)}},
+    # GRASP honored: holding the structure lightly, for the child. Upright and easy, chin level, the right hand held out
+    # low and open, palm up, offering a hand to hold; the left loose at its side.
+    "controller": {"curve": -0.04, "stoop": 0.0, "hands": ("relaxed", "open"), "gesture": {
+        "shoulderR": (1.1, 0.0), "elbowR": (0.4, 0, 0.2), "wristR": (0.0, 0, 0, -1.3), "shoulderL": (0.06, 0.05),
+        "elbowL": (0.18,), "neck": (0.0,)}},
+    # PULL honored: discernment that looks out for the child. Weight even, leaning in a little, a hand at the chin,
+    # the other arm across the body under that elbow: considering, not withdrawing.
+    "skeptic": {"curve": 0.0, "stoop": 0.08, "hands": "relaxed", "gesture": {
+        "shoulderR": (0.5, 0.1), "elbowR": (2.4, 0, 0.6), "shoulderL": (0.3, 0.05), "elbowL": (1.6, 0, 1.0),
+        "neck": (0.05,)}},
+    # REACH honored: a hand down to help the child up, offered, not grabbing. A soft forward lean over soft knees, the
+    # right arm out and down, palm up; the left easy; the head bowed to the child.
+    "fixer": {"curve": 0.08, "stoop": 0.2, "hands": ("relaxed", "open"), "gesture": {
+        "shoulderR": (1.35, 0.1), "elbowR": (0.2,), "wristR": (0.0, 0, 0, -1.3), "shoulderL": (0.1, 0.12),
+        "elbowL": (0.3,), "neck": (0.3,), "hip": (0.15,), "knee": (0.3,), "ankle": (0.15,)}},
+    # YIELD honored: the storyteller (Wendell, 2026-10-17: "The victim let go needs a sort of jester or performer
+    # stance. They've become the storyteller"). Up on its feet, chest up, one arm swept high to present the tale, the
+    # other held out palm up, "and then...", the front foot forward and the head tipped.
+    "victim": {"curve": -0.1, "stoop": 0.0, "hands": "open", "gesture": {
+        "shoulderL": (0.4, 1.6), "elbowL": (0.3,), "shoulderR": (0.9, 0.3, 0.0, -1.2), "elbowR": (0.4,),
+        "hipL": (0.35, 0.05), "kneeL": (0.2,), "hipR": (-0.15,), "neck": (-0.1, 0.0, 0.25)}},
+    # RELEASE honored (it refused to): bring it on (Wendell, 2026-10-17: "I want the damaged self to almost take on a
+    # bring it on stance"). A wide stance with the front foot forward, chest thrust out and chin up, both arms flung open
+    # and low with the palms turned forward: hit me, I can take it, so the child never has to.
+    "damaged-self": {"curve": -0.28, "stoop": 0.0, "hands": "open", "gesture": {
+        "hipL": (0.3, 0.18), "kneeL": (0.35,), "hipR": (-0.2, 0.18), "ankleR": (-0.15,),
+        "shoulder": (0.1, 0.8, 0.0, -1.0), "elbow": (0.15,), "neck": (-0.18,)}},
+    # RELEASE honored (it released too soon): the feeling held and given in its time. Both feet planted, both hands on
+    # the heart, the chest open and the head lifted.
+    "emotional-body": {"curve": -0.12, "stoop": 0.0, "hands": "open", "gesture": {
+        "shoulderL": (0.2, 0.1), "elbowL": (1.85, 0, 1.0), "shoulderR": (0.25, 0.1), "elbowR": (1.75, 0, 1.1),
+        "neck": (-0.18,)}},
+    # the Player, healthy: open and at play, arms up and out, head up
+    "player": {"curve": -0.05, "stoop": 0.0, "hands": "open", "gesture": {
+        "shoulder": (0.6, 1.45), "elbow": (0.5,), "neck": (-0.2,)}},
+}
+
+# Every daemon lets go (Wendell, 2026-10-16: "we need 'let go' stances for all the daemons"): each one's Integrate action
+# ends in its honored form above, and the Controller's too, in place of the relaxed arms of #352. The six new rows borrow
+# the Controller's order of joints (elbows and wrists first, the trunk and head after, the thumbs last).
+for _name, _honored in HONORED.items():
+    if _name != "player":
+        INTEGRATE[_name] = {"secs": 3.0, "hold": 0.5, "phase": INTEGRATE["controller"]["phase"], "to": _honored}
+
+def charged(w):
+    """The held movement pushed further: every number of the row's warp times CHARGE."""
+    return {**w, "curve": w["curve"] * CHARGE, "stoop": w["stoop"] * CHARGE,
+            "gesture": {k: tuple(x * CHARGE for x in v) for k, v in w["gesture"].items()}}
+
+
 FLEX = {"neck": 1, "head": 1, "shoulder": -1, "elbow": -1, "wrist": -1, "hip": -1, "knee": 1, "ankle": -1}  # + bends
 # each joint its natural way
 SPINE_Z = (1.03, 1.42)                                                                 # the spine bone, where curve bends
@@ -942,6 +1005,19 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
 
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"{name}.glb")
+    # each bone's turn in the world from the held rest to each end of the trust stances, as integrate_action turns
+    # bones, in glTF's axes (Blender's x, z, -y) as x, y, z, w
+    held = rest_turns(J0, w, build_name)
+    ends = {}
+    for end, w_to in (("honored", {**w, **HONORED.get(warp_name or "player", HONORED["player"])}), ("charged", charged(w))):
+        to = rest_turns(J0, w_to, build_name)
+        ends[end] = {}
+        for b in PARENT:
+            q = (to[b] @ held[b].inverted()).to_quaternion()
+            ends[end][b] = [round(q.x, 5), round(q.z, 5), round(-q.y, 5), round(q.w, 5)]
+    with open(os.path.join(out_dir, f"{name}.stances.json"), "w") as f:
+        json.dump({"note": "each bone's world turn from the held rest to the honored and charged ends (character.py "
+                           "HONORED, charged)", **ends}, f)
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_normals=True,
                               export_texcoords=False, export_skins=True, export_animations=True,
                               export_animation_mode="ACTIONS", export_frame_range=not integrate, export_force_sampling=False,
@@ -953,7 +1029,8 @@ def build(build_name, palette, out_dir, theme="robe_set", warp=None, warp_name=N
                    "next": (NEXT_FIGURE[boss] or "frame") if boss else None},
            "bytes": size, "tris": sum(len(p.vertices) - 2 for p in fused.polygons), "verts": len(fused.vertices),
            "bones": len(PARENT), "keys": KEYS + 1, "actions": keys}
-    if size > MAX_BYTES:
+    # a figure with the let-go carries a second action; the cave never loads it whole (bake_daemons.py keeps the keys)
+    if size > MAX_BYTES + (24 * 1024 if integrate else 0):
         raise SystemExit(f"{name}.glb is {size // 1024} KB, over the {MAX_BYTES // 1024} KB line")
     return row
 
