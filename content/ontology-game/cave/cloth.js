@@ -78,6 +78,11 @@
     armLen: 0,           // (see armBlend) 0: the reach grows with the length along the cloth, as the skirt's
     armMargin: 0.012,    // the sleeve panels' cloth kept this far off the forearm and hand (their points are closer
                          // together than the skirt's, round a thinner limb)
+    armBend: null,       // the sleeve panels' cloth's bend (null: bend, the skirt's): a panel's short span folds and bunches
+                         // at the skirt's 0.3; nearer the hem's it keeps its line as it swings
+    armGap: 0,           // share of its skinned gap to the forearm's and hand's line that a panel point keeps: a panel
+                         // may swing out and slide round the arm, and never falls in onto it (0: only the capsule)
+    armGapMax: 0.2,      // metres: the farthest from a capsule's line the gap is kept
     panelChains: 2,      // chains per panel, at a quarter and three quarters of its width
     springDetune: 0.2,   // the panels' own swings differ by this share either side of springHz, so they fall out of step
   };
@@ -243,6 +248,10 @@
     var sv = [];
     for (i = 0; i < P; i++) if (c.slv[i]) sv.push(i);
     c.slvIdx = Int32Array.from(sv);
+    if (o.armBend !== null) for (i = 0; i < c.bdK.length; i++) {
+      var ba = c.bd[2 * i], bb = c.bd[2 * i + 1];
+      if ((c.slv[ba] || c.slv[bb]) && Math.abs(c.bdK[i] - o.bend) < 1e-6) c.bdK[i] = o.armBend;
+    }
     // a panel's reach grows faster than its length from the sleeve it hangs from: held near the elbow, where the
     // forearm bends against it, and free toward the cuff (armLen: metres along the cloth at which it is armBlend)
     for (i = 0; i < sv.length; i++) if (c.md[sv[i]] !== Infinity) {
@@ -477,6 +486,8 @@
       var s = caps[k].s, r = caps[k].r + mg, r2 = r * r, rmax = Math.max(r, capR(caps[k], 1) + mg);
       var ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
       var uu = ux * ux + uy * uy + uz * uz || 1e-12;
+      var gap = caps[k].arm ? c.o.armGap : 0;
+      if (gap) rmax = Math.max(rmax, c.o.armGapMax);
       var lo = Math.min(ax, s[3]) - rmax, hi = Math.max(ax, s[3]) + rmax, lo2 = Math.min(az, s[5]) - rmax, hi2 = Math.max(az, s[5]) + rmax;
       var loy = Math.min(ay, s[4]) - rmax, hiy = Math.max(ay, s[4]) + rmax;
       for (var j = 0, F = caps[k].arm ? c.slvIdx : c.freeIdx, nf = F.length; j < nf; j++) {
@@ -487,7 +498,7 @@
         var cx = ax + ux * t, cy = ay + uy * t, cz = az + uz * t, dx = px - cx, dy = py - cy, dz = pz - cz;
         var d2 = dx * dx + dy * dy + dz * dz;
         if (caps[k].rb !== undefined) { r = capR(caps[k], t) + mg; r2 = r * r; }
-        if (d2 >= r2) continue;
+        if (d2 >= r2 && !gap) continue;
         var rr = r;
         if (caps[k].arm || (back && caps[k].bs)) {
           // the backstop: the skin's own place for this point is never inside the leg, so a capsule wider than the
@@ -499,6 +510,8 @@
           // an arm's capsule (round 12, the sleeve panels as cloth) stands for a hand and a forearm the cuff hugs, and
           // the mitten hand is flatter than its capsule: a panel point is kept no nearer than its skinned place
           if (dq < rr) rr = caps[k].arm ? dq : Math.max(dq, caps[k].r * back);
+          // the rest gap (round 12): the panel keeps a share of the distance its skinned place has from the arm's line
+          if (gap) rr = Math.max(rr, Math.min(gap * dq, c.o.armGapMax));
           if (d2 >= rr * rr) continue;
         }
         var d = Math.sqrt(d2) || 1e-9, push = (rr - d) / d;
