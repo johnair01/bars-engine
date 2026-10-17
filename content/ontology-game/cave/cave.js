@@ -1177,27 +1177,46 @@
 
   // The daemon bodies (Wendell, 16 October 2026, on the Big Mind centre: "build game-ready models for each daemon instead of
   // placeholders"). Each is a WARP figure from character.py holding its one of the six fundamental movements (bars-engine #328,
-  // council/daemons/GESTURES.md), baked for the phone by bake_daemons.py: 16-bit positions, 8-bit normals and a band per vertex
-  // (skin, tunic, trim, sash, trousers, shoes). A body is fetched the first time a scene asks for that daemon and shared after.
-  // Until it arrives, or if it never does, the daemon wears the rounded stand-in below, so nothing waits on the network.
+  // council/daemons/GESTURES.md), baked for the phone by bake_daemons.py: 16-bit positions, 8-bit normals, and per vertex its
+  // two joints, the first one's weight and its band (skin, tunic, trim, sash, trousers, shoes). The rig rides along (46 joints,
+  // the hands' included), so the body is skinned and holds its trust stance (bodyStance below). A body is fetched the first time
+  // a scene asks for that daemon and shared after. Until it arrives, or if it never does, the daemon wears the rounded stand-in
+  // below, so nothing waits on the network.
   var BODY_BANDS = ["skin", "tunic", "trim", "sash", "trousers", "shoes"], BODY_FRAME_H = 1.75, bodies = {};
   var BODY_IDS = ["protector", "controller", "skeptic", "fixer", "victim", "damaged-self", "emotional-body", "player"]; // baked; any other row keeps the stand-in
   function parseBody(THREE, buf) {
     var dv = new DataView(buf), jl = dv.getUint32(12, true);
     var j = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bin = 20 + jl + 8;
-    var T = { 5123: Uint16Array, 5120: Int8Array, 5121: Uint8Array }, K = { SCALAR: 1, VEC3: 3 };
+    var T = { 5123: Uint16Array, 5120: Int8Array, 5121: Uint8Array }, K = { SCALAR: 1, VEC3: 3, VEC4: 4 };
     function acc(i) {
       var a = j.accessors[i], v = j.bufferViews[a.bufferView], C = T[a.componentType], n = K[a.type], st = (v.byteStride || n * C.BYTES_PER_ELEMENT) / C.BYTES_PER_ELEMENT;
       var raw = new C(buf, bin + (v.byteOffset || 0), v.byteLength / C.BYTES_PER_ELEMENT), out = new C(a.count * n);
       for (var q = 0; q < a.count; q++) for (var c = 0; c < n; c++) out[q * n + c] = raw[q * st + c]; // drop the stride's padding
       return out;
     }
-    var p = j.meshes[0].primitives[0], node = j.nodes[0], geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(acc(p.attributes.POSITION), 3, true));
+    function view(i, C) { var v = j.bufferViews[i]; return new C(buf.slice(bin + (v.byteOffset || 0), bin + (v.byteOffset || 0) + v.byteLength)); }
+    var p = j.meshes[0].primitives[0], node = j.nodes[0], rig = node.extras, geo = new THREE.BufferGeometry();
+    var qp = acc(p.attributes.POSITION), sk = acc(p.attributes._SKIN), n = qp.length / 3;
+    var pos = new Float32Array(n * 3), si = new Uint16Array(n * 4), sw = new Float32Array(n * 4), band = new Uint8Array(n);
+    for (var i = 0; i < n; i++) {
+      for (var c = 0; c < 3; c++) pos[i * 3 + c] = node.translation[c] + qp[i * 3 + c] / 65535 * node.scale[c]; // in the figure's metres, as the rig is
+      si[i * 4] = sk[i * 4]; si[i * 4 + 1] = sk[i * 4 + 1]; sw[i * 4] = sk[i * 4 + 2] / 255; sw[i * 4 + 1] = 1 - sk[i * 4 + 2] / 255; band[i] = sk[i * 4 + 3];
+    }
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     geo.setAttribute("normal", new THREE.BufferAttribute(acc(p.attributes.NORMAL), 3, true));
+    geo.setAttribute("skinIndex", new THREE.BufferAttribute(si, 4));
+    geo.setAttribute("skinWeight", new THREE.BufferAttribute(sw, 4));
     geo.setIndex(new THREE.BufferAttribute(acc(p.indices), 1));
-    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0.5, 0.5, 0.5), 0.9); // in the quantised box, which the node scales
-    return { geo: geo, band: acc(p.attributes._BAND), at: node.translation, span: node.scale };
+    geo.computeBoundingSphere();
+    var act = null, I = rig.integrate;
+    if (I) { // the Integrate action (character.py --integrate, bars-engine #351): straight-line keys at 24 a second
+      var fr = view(I.frames, Uint16Array), va = view(I.values, Int16Array), f0 = 0, v0 = 0;
+      act = { fps: I.fps, length: I.length, channels: I.channels.map(function (ch) {
+        var w = ch[1] === "r" ? 4 : 3, k = ch[2], o = { joint: ch[0], path: ch[1], frames: [], values: [] };
+        for (var q = 0; q < k; q++) { o.frames.push(fr[f0 + q]); var x = []; for (var c = 0; c < w; c++) x.push(va[v0 + q * w + c] / 32767); o.values.push(x); }
+        f0 += k; v0 += k * w; return o; }) };
+    }
+    return { geo: geo, band: band, joints: rig.joints, honored: rig.honored, charged: rig.charged, integrate: act };
   }
   function bodyOf(THREE, id) {
     if (!bodies[id]) {
@@ -1218,18 +1237,159 @@
     for (var i = 0; i < n; i++) { var c = pal[BODY_BANDS[body.band[i]]] || base; col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
     return col;
   }
-  // Swap the stand-in's parts for the baked body, keeping the group, its material (opacity and glow already set on it stay)
-  // and anything a caller hung on it since (an aura, a carried orb).
+
+  // How a voice stands toward the player (bigmind.js STANCES, bars-engine #355). Each body moves between two ends of its own
+  // held movement (character.py HONORED and charged; Wendell, 16 October 2026: "They need to end not in a neutral pose but
+  // essentially in the honored version of their pose empowered and healthy versus resistant and charged"). open runs from -1,
+  // the movement charged and resisting, through 0, the baked held shape, to 1, the movement honored, as it stands for a healthy
+  // child. Then the figure's own turn (yaw, + to its left), its lean and the head's nod (+ forward and down), the head's tilt,
+  // a step (metres, + toward the player) and a reach of the right hand toward the way on. tau is how slowly it moves there
+  // (seconds). The shifts are large on purpose, so a change of trust reads at a glance (his note on the first look: "many of
+  // the daemons are too subtle in their changes"). A body with no stance holds its baked shape and breathes.
+  var BODY_STANCES = {
+    held: { open: 0, yaw: 0, lean: 0, head: 0, tilt: 0, step: 0, reach: 0, tau: 0.5 },
+    guarded: { open: -0.5, yaw: 0, lean: -0.12, head: 0, tilt: 0, step: -0.15, reach: 0, tau: 0.5 },       // square to the player, weight back, charged
+    testing: { open: -0.3, yaw: 0, lean: 0.06, head: -0.35, tilt: 0, step: 0.3, reach: 0, tau: 0.4 },      // chin up, a half step forward
+    softening: { open: 0.45, yaw: 0, lean: 0.04, head: 0.12, tilt: 0, step: 0, reach: 0, tau: 0.8 },       // halfway to its honored form
+    trusting: { open: 0.85, yaw: 0.25, lean: 0, head: 0, tilt: 0.06, step: 0, reach: 0, tau: 0.9 },        // nearly honored, turned a little open
+    willing: { open: 1, yaw: 0.9, lean: 0, head: 0, tilt: 0, step: 0, reach: 0.8, tau: 0.9 },              // honored, a half turn toward the wall, a hand toward the way on
+    hurt: { open: -1, yaw: -0.9, lean: 0.15, head: 0.3, tilt: 0, step: -0.25, reach: 0, tau: 0.25 },       // fully charged, a shoulder turned away
+    repaired: { open: 1, yaw: 0, lean: -0.03, head: -0.05, tilt: 0.15, step: 0, reach: 0, tau: 1.6 },      // honored and facing the player, arriving slowly
+  };
+  var STANCE_KEYS = ["open", "yaw", "lean", "head", "tilt", "step", "reach"];
+  var reducedMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The rig for one worn body: bones from the baked rest (the bind pose), each joint's rest turn in the figure's space, and
+  // the order to pose them in, parents first.
+  function bodyRig(THREE, body) {
+    var J = body.joints, n = J.length, bones = [], kids = [], roots = [];
+    J.forEach(function (r) { var b = new THREE.Bone(); b.name = r[0]; b.position.fromArray(r[2]); b.quaternion.fromArray(r[3]); bones.push(b); kids.push([]); });
+    J.forEach(function (r, i) { if (r[1] < 0) roots.push(i); else { bones[r[1]].add(bones[i]); kids[r[1]].push(i); } });
+    roots.forEach(function (i) { bones[i].updateMatrixWorld(true); }); // the chain alone, so the inverses are the figure's own
+    var order = [], restW = [], restP = [];
+    (function walk(list) { list.forEach(function (i) { order.push(i); walk(kids[i]); }); })(roots);
+    order.forEach(function (i) {
+      var pi = J[i][1], q = new THREE.Quaternion().fromArray(J[i][3]), p = new THREE.Vector3().fromArray(J[i][2]);
+      if (pi >= 0) { q.premultiply(restW[pi]); p.applyQuaternion(restW[pi]).add(restP[pi]); }
+      restW[i] = q; restP[i] = p;
+    });
+    function find(nm) { for (var i = 0; i < n; i++) if (J[i][0] === nm) return i; return -1; }
+    function under(i) { var out = [i]; kids[i].forEach(function (k) { out = out.concat(under(k)); }); return out; }
+    var hips = find("hips"), feet = [find("ankleL"), find("ankleR")];
+    // each end as every joint's own turn under its parent, so a stance between them bends each joint on its own, as the
+    // Integrate action does, and a hand never swings through the wrist's world path
+    function locals(turns) {
+      var W = turns.map(function (q, i) { return new THREE.Quaternion().fromArray(q).multiply(restW[i]); });
+      return W.map(function (w, i) { var pi = J[i][1]; return pi < 0 ? w.clone() : W[pi].clone().invert().multiply(w); });
+    }
+    var rig = { bones: bones, roots: roots, order: order, parent: J.map(function (r) { return r[1]; }),
+      restLocal: J.map(function (r) { return [r[2], r[3]]; }), restW: restW, restP: restP,
+      restL: J.map(function (r) { return new THREE.Quaternion().fromArray(r[3]); }), honored: locals(body.honored), charged: locals(body.charged),
+      hips: hips, spine: find("spine"), head: find("neck"), arm: find("shoulderR"), feet: feet,
+      under: { spine: under(find("spine")), head: under(find("neck")), arm: under(find("shoulderR")), all: under(hips) },
+      ground: Math.min(restP[feet[0]].y, restP[feet[1]].y), skeleton: new THREE.Skeleton(bones),
+      W: bones.map(function () { return new THREE.Quaternion(); }), P: bones.map(function () { return new THREE.Vector3(); }),
+      cur: {}, t: 0, last: 0, integrate: body.integrate, playing: -1 };
+    STANCE_KEYS.forEach(function (k) { rig.cur[k] = 0; });
+    return rig;
+  }
+  var tq = null, tq2 = null, tv = null, AX = null, REACH = null;
+  function bodyTemps(THREE) {
+    if (tq) return;
+    tq = new THREE.Quaternion(); tq2 = new THREE.Quaternion(); tv = new THREE.Vector3();
+    AX = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
+    REACH = new THREE.Vector3(-0.45, -0.2, 0.87).normalize(); // ahead, out to its right and a little down (it faces +z; its right is -x)
+  }
+  // Turn every bone in a list by q in the figure's space, about the first one's joint (it rides as a rigid piece).
+  function turnPart(rig, list, q) { for (var k = 0; k < list.length; k++) rig.W[list[k]].premultiply(q); }
+  function poseRig(THREE, rig, c, breath) {
+    var o = rig.order, J = rig.bones;
+    var end = c.open < 0 ? rig.charged : rig.honored, f = Math.min(1, Math.abs(c.open));
+    for (var k = 0; k < o.length; k++) {
+      var i = o[k], pi = rig.parent[i];
+      rig.W[i].copy(rig.restL[i]).slerp(end[i], f);
+      if (pi >= 0) rig.W[i].premultiply(rig.W[pi]);
+    }
+    if (c.lean + breath) turnPart(rig, rig.under.spine, tq.setFromAxisAngle(AX.x, c.lean + breath));
+    if (c.head || c.tilt) { tq.setFromAxisAngle(AX.x, c.head); tq2.setFromAxisAngle(AX.z, c.tilt); turnPart(rig, rig.under.head, tq.multiply(tq2)); }
+    if (c.reach > 0.001) { // the right arm swings to point toward the way on (a bone runs along its own +y)
+      tv.set(0, 1, 0).applyQuaternion(rig.W[rig.arm]);
+      tq.setFromUnitVectors(tv, REACH);
+      turnPart(rig, rig.under.arm, tq2.set(0, 0, 0, 1).slerp(tq, Math.min(1, c.reach)));
+    }
+    if (c.yaw) turnPart(rig, rig.under.all, tq.setFromAxisAngle(AX.y, c.yaw));
+    // each bone's own turn under its parent, and where its joint lands, so the lower foot can be set back on the ground
+    var low = Infinity;
+    for (k = 0; k < o.length; k++) {
+      i = o[k]; pi = rig.parent[i];
+      if (pi < 0) { J[i].quaternion.copy(rig.W[i]); rig.P[i].copy(rig.restP[i]); }
+      else { J[i].quaternion.copy(tq.copy(rig.W[pi]).invert()).multiply(rig.W[i]); rig.P[i].copy(J[i].position).applyQuaternion(rig.W[pi]).add(rig.P[pi]); }
+      if (i === rig.feet[0] || i === rig.feet[1]) low = Math.min(low, rig.P[i].y);
+    }
+    J[rig.hips].position.copy(rig.restP[rig.hips]);
+    J[rig.hips].position.y += rig.ground - low;
+    J[rig.hips].position.z += c.step;
+  }
+  // The Integrate action at frame f: the baked rest, then each keyed joint's own turn (and the hips' shift) at f.
+  function playRig(rig, f) {
+    var A = rig.integrate, J = rig.bones;
+    rig.order.forEach(function (i) { var r = J[i]; r.position.fromArray(rig.restLocal[i][0]); r.quaternion.fromArray(rig.restLocal[i][1]); });
+    A.channels.forEach(function (ch) {
+      var F = ch.frames, V = ch.values, k = 0;
+      while (k < F.length - 1 && F[k + 1] <= f) k++;
+      var a = V[k], b = V[Math.min(k + 1, F.length - 1)], u = k + 1 < F.length && F[k + 1] > F[k] ? Math.min(1, Math.max(0, (f - F[k]) / (F[k + 1] - F[k]))) : 0;
+      var bone = J[ch.joint];
+      if (ch.path === "r") { tq.set(a[0], a[1], a[2], a[3]); tq2.set(b[0], b[1], b[2], b[3]); bone.quaternion.copy(tq).slerp(tq2, u).normalize(); }
+      else bone.position.set(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u);
+    });
+  }
+  // One step of a worn body: ease toward its group's stance (userData.stance), breathe, or run the Integrate action.
+  function stepBody(THREE, g, rig, dt) {
+    bodyTemps(THREE); rig.t += dt;
+    if (rig.playing >= 0) {
+      rig.playing = Math.min(rig.integrate.length, rig.playing + dt * rig.integrate.fps); playRig(rig, rig.playing);
+      if (rig.playing < rig.integrate.length) return;
+      // let go: it stands honored (the action's end is open 1) and from here moves by its stance again
+      rig.playing = -1; STANCE_KEYS.forEach(function (k) { rig.cur[k] = k === "open" ? 1 : 0; }); g.userData.letGo = true;
+    }
+    var want = BODY_STANCES[g.userData.stance] || BODY_STANCES.held, e = reducedMotion ? 1 : 1 - Math.exp(-dt / want.tau);
+    STANCE_KEYS.forEach(function (k) { rig.cur[k] += (want[k] - rig.cur[k]) * e; });
+    poseRig(THREE, rig, rig.cur, reducedMotion ? 0 : 0.012 * Math.sin(rig.t * 1.5));
+  }
+  // Swap the stand-in's parts for the baked body, skinned to its rig, keeping the group, its material (opacity and glow already
+  // set on it stay) and anything a caller hung on it since (an aura, a carried orb). The body poses itself each time it is drawn.
   function wearBody(THREE, g, d, h, body) {
     var geo = body.geo.clone(); geo.setAttribute("color", new THREE.BufferAttribute(bodyColors(THREE, d, body), 3));
-    var mat = g.userData.mat; mat.color.setHex(0xffffff); mat.vertexColors = true; mat.needsUpdate = true;
+    var mat = g.userData.mat; mat.color.setHex(0xffffff); mat.vertexColors = true; mat.skinning = true; mat.needsUpdate = true;
     g.children.filter(function (c) { return c.userData.standIn; }).forEach(function (c) { g.remove(c); });
-    var k = 0.695 * h / BODY_FRAME_H, fit = new THREE.Group(), m = new THREE.Mesh(geo, mat);
-    m.position.set(body.at[0], body.at[1], body.at[2]); m.scale.set(body.span[0], body.span[1], body.span[2]);
+    var k = 0.695 * h / BODY_FRAME_H, fit = new THREE.Group(), m = new THREE.SkinnedMesh(geo, mat), rig = bodyRig(THREE, body);
+    rig.roots.forEach(function (i) { m.add(rig.bones[i]); });
+    m.bind(rig.skeleton, new THREE.Matrix4()); // the rig sits in the mesh's own space, so the bind is the identity
+    m.frustumCulled = false; // a stance can reach past the rest shape's bounds
+    m.onBeforeRender = function () {
+      var now = typeof performance !== "undefined" ? performance.now() : Date.now(), dt = rig.last ? Math.min(0.1, (now - rig.last) / 1000) : 0;
+      rig.last = now; stepBody(THREE, g, rig, dt); m.updateMatrixWorld(true); rig.skeleton.update();
+    };
     fit.scale.setScalar(k); fit.add(m); fit.userData.body = d[0]; g.add(fit);
     if (g.userData.orb) { // the Emotional Body's signal, smaller, at the open chest (its pulse and blaze still scale it)
       var ob = g.userData.orb; ob.geometry = new THREE.SphereGeometry(0.075 * k, 14, 10); ob.position.set(0, 1.3 * k, 0.17 * k); }
-    g.userData.body = d[0];
+    g.userData.body = d[0]; g.userData.rig = rig;
+    stepBody(THREE, g, rig, 1); // straight into its stance on the first frame
+  }
+  // Let a worn body go: its Integrate action (character.py INTEGRATE, every daemon since Wendell's "we need 'let go' stances
+  // for all the daemons", 16 October 2026) moves its held shape into its honored form. When the action ends the body stands
+  // honored and moves by its stance again, so a scene sets a stance that stays honored (repaired, willing) as it calls this.
+  // No scene calls it yet. Returns its length in seconds, or 0 when the body has none.
+  function integrateBody(g) {
+    var rig = g && g.userData.rig;
+    if (!rig || !rig.integrate) return 0;
+    rig.playing = 0; return rig.integrate.length / rig.integrate.fps;
+  }
+  // Where a worn body's pose stands now, for tests and the viewer: its stance, the eased numbers and the Integrate frame.
+  function bodyPose(g) {
+    var rig = g && g.userData.rig;
+    if (!rig) return null;
+    var c = {}; STANCE_KEYS.forEach(function (k) { c[k] = rig.cur[k]; });
+    return { stance: g.userData.stance || "held", now: c, integrate: rig.playing, joints: rig.bones.length };
   }
 
   // The stand-in daemon: one body for all seven, no face, fused rounded shapes. It differs by colour, posture and what it
@@ -4618,7 +4778,7 @@
     el: el, clamp: clamp, hashOf: hashOf, rngOf: rngOf, loadThree: loadThree,
     makeRoute: makeRoute, ptOn: ptOn, at: at, yawFacing: yawFacing, smoothLine: smoothLine,
     buildTube: buildTube, buildPebbles: buildPebbles, buildMarker: buildMarker, buildLantern: buildLantern,
-    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, dressCave: dressCave, DAEMONS: DAEMONS,
+    buildAvatar: buildAvatar, loosenAvatar: loosenAvatar, poseAvatar: poseAvatar, buildDaemon: buildDaemon, daemonBody: bodyOf, integrateBody: integrateBody, bodyPose: bodyPose, BODY_STANCES: BODY_STANCES, dressCave: dressCave, DAEMONS: DAEMONS,
     BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
     // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
     ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,
