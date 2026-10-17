@@ -46,8 +46,8 @@ async function holdUntil(stepName) {
   await hold(true);
   if (stepName !== 'end') return waitStep(stepName);
   // the approach check-in comes first at each hallway's end (build 4); the older checks skip it
-  const r = await page.waitForFunction(() => /^(end|approach-line)$/.test(document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') || ''), null, { timeout: 20000 }).then(() => true, () => false);
-  if (r && (await page.getAttribute('[data-bm-modal]', 'data-bm-step')) === 'approach-line') await page.click('[data-bm-apskipall]');
+  const r = await page.waitForFunction(() => /^(end|approach-body)$/.test(document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') || ''), null, { timeout: 20000 }).then(() => true, () => false);
+  if (r && (await page.getAttribute('[data-bm-modal]', 'data-bm-step')) === 'approach-body') await page.click('[data-bm-apskipall]');
   return r && waitStep0('end', 5000);
 }
 // Every visit asks again (board bmt-ask-again): going back in meets the chamber's voice once more, and declining opens the way.
@@ -1447,40 +1447,48 @@ await page.evaluate(() => localStorage.clear());
   };
   await startAt();
   await hold(true);
-  ok(await waitStep0('approach-line'), 'at the end of the hallway, the check-in comes before the shut mouth');
-  ok(/and then\.\.\.$/.test((await page.textContent('[data-bm-modal] .bm-voice')).trim()), 'the Victim\'s one line ends "and then..."');
-  await page.click('[data-bm-apgo]');
-  ok(await waitStep0('approach-body'), 'the body ask comes first');
+  ok(await waitStep0('approach-body'), 'at the end of the hallway, the check-in opens on the body ask, before the shut mouth');
+  ok(!/and then\.\.\./.test(await text()) && (await page.locator('[data-bm-apgo]').count()) === 0, 'there is no "and then..." line');
   const bodyText = await text();
-  ok(/Bracing/.test(bodyText) && /Flinging open/.test(bodyText) && !/Protector|Controller|Skeptic|Fixer|Victim|Damaged/.test(bodyText.replace(/The (Controller)/, '')), 'plain movement words, never a daemon');
-  ok(!/\d/.test(bodyText.replace(/Protector|Controller/g, '')) , 'no screen prints a number');
-  await page.click('[data-bm-ap="gripping"]');
-  ok(await waitStep0('approach-feel'), 'then the feeling');
+  ok(/What does it feel like\?/.test(bodyText) && /What is your body doing\?/.test(bodyText) && /Tightness/.test(bodyText) && /Numbness/.test(bodyText) && /Moving freely/.test(bodyText) && /Bracing/.test(bodyText) && /Flinging open/.test(bodyText), 'one card, two rows: the texture words and the movement words');
+  ok(!/Protector|Controller|Skeptic|Fixer|Victim|Damaged|Emotional Body/.test(bodyText), 'it names no daemon');
+  ok(!/\d/.test(bodyText), 'no screen prints a number');
+  // the chamber is the Protector's: bracing matches, gripping (the Controller's) merges
+  await page.click('[data-bm-aptex="tension"]'); await page.click('[data-bm-ap="bracing"]'); await page.click('[data-bm-apdone]');
+  ok(await waitStep0('approach-feel') && (await page.locator('[data-bm-merged]').count()) === 0, 'a movement that belongs to this voice shows nothing merged');
   await page.click('[data-bm-ap="fire"]');
   ok(await waitStep0('approach-veil'), 'then how near it is');
-  const col = await page.evaluate(() => window.__oagBigMind.mouth.light.color.getHex());
-  ok(col === await page.evaluate(() => window.__oagCave.kit.spiritHex('fire')), 'the mouth\'s light took the element\'s colour at once');
-  ok(await page.evaluate(() => { const a = window.__oagBigMind.approachSpirit; return a && a.body === 'gripping' && a.element === 'fire'; }) && await page.evaluate(() => window.__oagBigMind.approachSpirit && true), 'the meeting spirit forms from the answers so far');
+  ok(await page.evaluate(() => window.__oagBigMind.mouth.light.color.getHex()) === await page.evaluate(() => window.__oagCave.kit.spiritHex('fire')), 'the mouth\'s light took the element\'s colour at once');
+  ok(await page.evaluate(() => { const a = window.__oagBigMind.approachSpirit; return a && a.body === 'bracing' && a.texture === 'tension' && a.element === 'fire' && a.family === 'protector' && a.merged === null; }), 'the meeting spirit forms from the answers, family the chamber\'s daemon');
   await page.click('[data-bm-ap="veiled"]');
   ok(await waitStep0('end'), 'a faint answer never shows the settled ask: it goes straight on');
   let sv = await save();
-  ok(sv.voices.protector.approach && sv.voices.protector.approach.body === 'gripping' && sv.voices.protector.approach.feeling === 'fire' && sv.voices.protector.approach.veil === 'veiled' && sv.voices.protector.approach.state === null && !!sv.voices.protector.approach.at, 'the answers are saved, no words: ' + JSON.stringify(sv.voices.protector.approach));
-  // not faint: the settled ask shows
+  const ap = sv.voices.protector.approach;
+  ok(ap && ap.body === 'bracing' && ap.texture === 'tension' && ap.feeling === 'fire' && ap.veil === 'veiled' && ap.state === null && !('merged' in ap) && !!ap.at, 'a match saves no merged: ' + JSON.stringify(ap));
+  // a movement of another voice: merged, unnamed
   await startAt(); await hold(true);
-  await waitStep0('approach-line'); await page.click('[data-bm-apgo]');
-  await page.click('[data-bm-apskip]'); await page.click('[data-bm-ap="none"]'); await waitStep0('approach-veil');
+  await waitStep0('approach-body'); await page.click('[data-bm-ap="gripping"]'); await page.click('[data-bm-apdone]');
+  ok(await waitStep0('approach-feel') && /Something of another voice is in this one\./.test(await text()) && !/Controller/.test(await text()), 'a mismatch says something of another voice is in this one, and names no daemon');
+  ok(await page.evaluate(() => { const a = window.__oagBigMind.approachSpirit; return a && a.merged === 'controller' && a.family === 'protector'; }), 'the spirit wears the other daemon\'s gas');
+  await page.click('[data-bm-apskip]'); await waitStep0('approach-veil');
   await page.click('[data-bm-ap="clear"]');
   ok(await waitStep0('approach-state'), 'when not faint, the settled ask shows');
   await page.click('[data-bm-ap="wants"]');
   ok(await waitStep0('end'), 'and the walk goes on');
   sv = await save();
-  ok(sv.voices.protector.approach.body === null && sv.voices.protector.approach.state === 'wants', 'a skipped ask is saved as nothing');
+  ok(sv.voices.protector.approach.merged === 'controller' && sv.voices.protector.approach.texture === null && sv.voices.protector.approach.state === 'wants', 'a mismatch saves merged; a skipped ask is saved as nothing');
+  // either, both or neither: sensation alone
+  await startAt(); await hold(true);
+  await waitStep0('approach-body'); await page.click('[data-bm-aptex="numbness"]'); await page.click('[data-bm-apdone]');
+  ok(await waitStep0('approach-feel') && await page.evaluate(() => window.__oagBigMind.approachSpirit.texture === 'numbness'), 'a sensation alone is enough');
+  await page.click('[data-bm-apskipall]');
+  ok(await waitStep0('end') && (await save()).voices.protector.approach.texture === 'numbness', 'skip all passes, keeping what was answered');
   // skip all passes, and saves nothing when nothing was answered; it is asked every visit
   await startAt(); await hold(true);
-  await waitStep0('approach-line'); await page.click('[data-bm-apskipall]');
+  await waitStep0('approach-body'); await page.click('[data-bm-apskipall]');
   ok(await waitStep0('end') && !(await save()).voices.protector.approach, 'skip all passes and keeps nothing');
   await startAt(); await hold(true);
-  ok(await waitStep0('approach-line'), 'asked again on every visit');
+  ok(await waitStep0('approach-body'), 'asked again on every visit');
   await page.evaluate(() => localStorage.clear());
 }
 
