@@ -26,6 +26,7 @@ or floods (below 0) it. The poses are the tortoise's; the material layer works o
 Round 13 adds the Fixer's Tinker family with its raccoon (--base raccoon), its stance the Fixer's reach in each state.
 Round 14 adds the Tinker's beaver (--base beaver) and aye-aye (--base ayeaye) on the raccoon's gas, core, stances and outfit.
 Round 15 adds the Controller's Holdfast family with its badger (--base badger), its stance the Controller's grasp in each state.
+Round 16 adds the Holdfast's meerkat (--base meerkat) and koala (--base koala) on the badger's gas, core, stances and coat.
 """
 import argparse, json, math, os, pathlib, random, sys
 
@@ -40,7 +41,7 @@ ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--sprite", type=int, default=96)
 ap.add_argument("--only", default="", help="element to build alone, for a quick look")
 ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
-ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat", "raccoon", "beaver", "ayeaye", "badger"],
+ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat", "raccoon", "beaver", "ayeaye", "badger", "meerkat", "koala"],
                 help="the animal base (round 4 adds the armadillo and the pangolin; round 8 the Player's Romp's fox, round 9 its otter, round 10 its kid goat)")
 ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
 ap.add_argument("--nation", default="", choices=["", "meridia"],
@@ -338,6 +339,8 @@ BASES = {
     "beaver": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="tinker"),  # round 14: the Tinker's builder
     "ayeaye": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="tinker"),  # round 14: the Tinker's mender
     "badger": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="holdfast"),  # round 15: the Controller's Holdfast, first base
+    "meerkat": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="holdfast"),  # round 16: the Holdfast's sentry
+    "koala": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="holdfast"),  # round 16: the Holdfast's keeper
 }
 FAMILY = BASES[args.base].get("family", "shellback")
 SHELL_SQUASH = Vector(BASES[args.base]["squash"])
@@ -2856,14 +2859,159 @@ def badger_tail(name, pts, r, F, s=1.0):
     return path
 
 
-HOLDFAST = {  # each Holdfast base's colours, head, face, coat and tail; its girth, height and head size
-    "badger": dict(F=BADGER, head=badger_head, face=badger_face, paint=badger_paint, tail=badger_tail, girth=1.0, tall=1.0, s=1.3),
+MEERKAT = {  # coat (sandy), saddle (the faint dark bands across the back), pale (face, throat, belly), dark (eye patches, ears, tail tip, feet)
+    "wood":  ((0.68, 0.56, 0.4), (0.4, 0.31, 0.2), (0.86, 0.79, 0.64), (0.12, 0.09, 0.06)),
+    "fire":  ((0.74, 0.5, 0.32), (0.46, 0.25, 0.14), (0.92, 0.78, 0.6), (0.14, 0.06, 0.04)),
+    "water": ((0.6, 0.58, 0.54), (0.34, 0.36, 0.38), (0.84, 0.84, 0.82), (0.06, 0.08, 0.11)),
+    "metal": ((0.7, 0.67, 0.6), (0.44, 0.42, 0.4), (0.9, 0.89, 0.86), (0.1, 0.1, 0.11)),
+    "earth": ((0.72, 0.55, 0.34), (0.44, 0.31, 0.17), (0.9, 0.78, 0.58), (0.13, 0.08, 0.04)),
 }
+KOALA = {  # coat (dense grey), saddle (darker over the back), pale (chest, chin, ear fringes), dark (nose, hands, feet)
+    "wood":  ((0.44, 0.44, 0.43), (0.31, 0.31, 0.3), (0.88, 0.87, 0.83), (0.1, 0.1, 0.1)),
+    "fire":  ((0.5, 0.41, 0.38), (0.35, 0.25, 0.22), (0.92, 0.85, 0.8), (0.12, 0.07, 0.06)),
+    "water": ((0.4, 0.45, 0.5), (0.27, 0.31, 0.37), (0.86, 0.89, 0.92), (0.06, 0.08, 0.11)),
+    "metal": ((0.52, 0.52, 0.54), (0.37, 0.37, 0.4), (0.93, 0.93, 0.94), (0.1, 0.1, 0.12)),
+    "earth": ((0.48, 0.42, 0.35), (0.33, 0.28, 0.21), (0.9, 0.86, 0.78), (0.12, 0.09, 0.06)),
+}
+
+
+def meerkat_head(H, s=1.0, turn=0.0):
+    """Metaball parts for the meerkat's head: a small rounded skull, narrow, drawn to a pointed snout. turn lifts the
+    snout (positive, chin up) or drops it."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
+    return [("ell", v(0, 0, 0), 0.115 * s, (1.1, 0.95, 0.9))] + \
+        taper(v, (0.07, 0, -0.02), (0.25, 0, -0.045 + turn * 0.06), 0.075 * s, 0.022 * s, (1.1, 0.9, 0.85), (1.2, 0.8, 0.8), 8)
+
+
+def meerkat_face(body, H, S, F, s, r, turn=0.0):
+    """The meerkat's small dark eyes set in dark patches, a small dark nose on its pointed snout, and small dark
+    crescent ears low on the sides of its head. Returns the mouth seam."""
+    lids = dict(S, skin=F[3], spot=F[3])
+    for side in (1, -1):
+        eye(body, H + Vector((0.07, side * 0.06, 0.035)) * s, (0.5, side * 0.85, 0.15), lids, r * 0.8)
+    tip = H + Vector((0.28, 0, -0.045 + turn * 0.06)) * s
+    hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0.05)), Vector((-1, 0, -0.05)).normalized())
+    ball("nose", solid("nose", (0.04, 0.03, 0.03), 0.35), (loc if hit else tip), 0.02 * s, (0.9, 1.2, 0.9), 12)
+    ear = solid("ear", F[3], 0.85)
+    for side in (1, -1):  # small dark crescents, set low and back on the sides of the head
+        o = ball("ear", ear, H + Vector((-0.05, side * 0.1, 0.01)) * s, 0.04 * s, (0.35, 0.8, 1.0), 16)
+        o.rotation_euler = (0, 0, side * 0.5)
+    return mouth_seam(body, H + Vector((0.12, 0, 0)) * s, H.z - 0.075 * s, 45, 0.008 * s, 0.005 * s)
+
+
+def meerkat_paint(H, F, s, feet, low=0.2, upright=False):
+    """The meerkat's sandy coat with faint dark bands across the back, a pale face, throat and belly, dark patches
+    round the eyes, and dark feet."""
+    def fn(p, n):
+        c = F[0]
+        if n.z > 0.25 and not upright: c = mixc(c, F[1], 0.55 * max(0.0, math.sin(p.x * 34.0)) ** 2 * min(1.0, (n.z - 0.25) * 3))  # bands
+        if upright and n.x < -0.3: c = mixc(c, F[1], 0.5 * max(0.0, math.sin(p.z * 30.0)) ** 2)  # bands down the back
+        c = mixc(c, F[1], 0.12 * abs(noise.noise(p * 26.0)) * 3)
+        d = (p - H) / s
+        if d.length < 0.3:
+            c = mixc(F[0], F[2], 0.6)
+            for side in (1, -1):  # the dark patches round the eyes
+                if (d - Vector((0.07, side * 0.065, 0.03))).length < 0.055: c = F[3]
+            if d.x > 0.22: c = mixc(c, F[3], 0.4)
+            return c
+        if n.z < -0.35 or (upright and n.x > 0.4 and abs(p.y) < 0.2): c = mixc(c, F[2], 0.6)  # pale throat and belly
+        if any((p - f).length < 0.06 for f in feet): c = mixc(F[3], F[0], 0.3)
+        return c
+    return fn
+
+
+def meerkat_tail(name, pts, r, F, s=1.0):
+    """The meerkat's long thin tail, tapering to a dark tip."""
+    path = tail_path(pts, 12)
+    m = len(path) - 1
+    o = blob(name, [("ball", tuple(p), r * (1 - 0.7 * k / m)) for k, p in enumerate(path)], 0.014 * s, 3000)
+    paint(o, lambda p, n: F[3] if (p - path[-1]).length < 0.16 * s else mixc(F[0], F[1], 0.2))
+    o.data.materials.append(vmat("fur", 0.85))
+    return path
+
+
+def koala_head(H, s=1.0, turn=0.0):
+    """Metaball parts for the koala's head: broad and round, with full cheeks and only a short flat face."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
+    return [("ell", v(0, 0, 0), 0.18 * s, (0.95, 1.12, 0.98)),
+            ("ell", v(0.03, 0.1, -0.06), 0.1 * s, (1.0, 0.9, 0.85)), ("ell", v(0.03, -0.1, -0.06), 0.1 * s, (1.0, 0.9, 0.85))] + \
+        taper(v, (0.06, 0, -0.035), (0.09, 0, -0.05 + turn * 0.03), 0.09 * s, 0.08 * s, (1.0, 1.0, 1.0), (0.9, 1.0, 1.1), 4)
+
+
+def koala_face(body, H, S, F, s, r, turn=0.0):
+    """The koala's small dark eyes, its big dark leathery nose, longer than it is wide, and its large round fluffy ears
+    fringed in white. Returns the mouth seam."""
+    lids = dict(S, skin=F[1], spot=F[1])
+    for side in (1, -1):
+        eye(body, H + Vector((0.12, side * 0.085, 0.04)) * s, (0.6, side * 0.75, 0.15), lids, r * 0.7)
+    tip = H + Vector((0.2, 0, -0.04 + turn * 0.03)) * s
+    hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0)), Vector((-1, 0, 0)))
+    nose = ball("nose", solid("nose", (0.05, 0.045, 0.045), 0.35), (loc if hit else tip) + Vector((-0.012, 0, 0)) * s, 0.055 * s, (0.75, 0.8, 1.3), 20)
+    nose.rotation_euler = (0, 0.3 - turn * 0.2, 0)
+    fringe, ear = solid("earrim", F[2], 0.95), solid("ear", mixc(F[0], F[1], 0.3), 0.9)
+    for side in (1, -1):  # big round ears set out to the sides of the head, a shaggy pale fringe round each
+        at = H + Vector((-0.03, side * 0.22, 0.06)) * s
+        o = ball("earrim", fringe, at, 0.115 * s, (0.4, 1.0, 0.95), 24); o.rotation_euler = (side * 0.9, 0, side * 0.35); fluff(o, 0.035 * s, 22.0, 2.0)
+        o = ball("ear", ear, at + Vector((0.03, side * 0.012, -0.004)) * s, 0.085 * s, (0.35, 1.0, 0.95), 20); o.rotation_euler = (side * 0.9, 0, side * 0.35)
+    return mouth_seam(body, H + Vector((0.1, 0, 0)) * s, H.z - 0.12 * s, 40, 0.008 * s, 0.006 * s)
+
+
+def koala_paint(H, F, s, feet, low=0.2, upright=False):
+    """The koala's dense grey coat, darker over the back, pale at the chin, chest and belly, with dark hands and feet."""
+    def fn(p, n):
+        c = mixc(F[0], F[1], max(0.0, n.z - 0.3) * 0.8)
+        c = mixc(c, F[2], 0.1 * abs(noise.noise(p * 24.0)) * 3)
+        d = (p - H) / s
+        if d.length < 0.3:
+            if d.x > 0.1 and d.z < -0.06: c = mixc(c, F[2], 0.8)  # pale chin
+            return c
+        if n.z < -0.5 or (n.x > 0.4 and abs(p.y) < (0.18 if upright else 0.1) and (p.z > 1.0 if upright else 0.25 < p.z < 0.6)):
+            c = mixc(c, F[2], 0.7)  # pale chest and belly
+        if any((p - f).length < 0.07 for f in feet): c = F[3]
+        return c
+    return fn
+
+
+def koala_tail(name, pts, r, F, s=1.0):
+    """The koala has almost no tail: a small furred stub at the rump."""
+    path = tail_path(pts, 6)
+    o = blob(name, [("ball", tuple(p), r * (1 - 0.3 * k / 5)) for k, p in enumerate(path)], 0.015 * s, 1500)
+    fluff(o, 0.01 * s, 14.0, 4.0)
+    paint(o, lambda p, n: mixc(F[0], F[1], 0.3))
+    o.data.materials.append(vmat("fur", 0.9))
+    return path
+
+
+HOLDFAST = {  # each Holdfast base's colours, head, face, coat and tail; its girth, height, body length, head size and neck
+    "badger": dict(F=BADGER, head=badger_head, face=badger_face, paint=badger_paint, tail=badger_tail, girth=1.0, tall=1.0, long=1.0, s=1.3, neck=(0, 0), low=0.2),
+    "meerkat": dict(F=MEERKAT, head=meerkat_head, face=meerkat_face, paint=meerkat_paint, tail=meerkat_tail, girth=0.72, tall=1.08, long=0.92, s=1.25, neck=(-0.1, 0.32), low=-1.0),
+    "koala": dict(F=KOALA, head=koala_head, face=koala_face, paint=koala_paint, tail=koala_tail, girth=1.12, tall=0.9, long=0.82, s=1.3, neck=(-0.1, 0.06), low=-1.0),
+}
+
+
+def holdfast_tail(T, F, rump, lift, s=1.0, upright=None):
+    """Each base's tail: the badger's short stiff one, the meerkat's long thin one (laid on the ground behind it, a
+    third foot, when it stands), the koala's stub."""
+    b = args.base
+    if upright is not None:
+        hip = upright
+        pts = {"badger": [(-0.24, 0, hip - 0.05), (-0.36, 0, hip - 0.12), (-0.44, 0, hip - 0.22)],
+               "meerkat": [(-0.2, 0, hip - 0.08), (-0.38, 0, hip - 0.4), (-0.6, 0, 0.12), (-0.92, -0.04, 0.06)],
+               "koala": [(-0.27, 0, hip - 0.1), (-0.31, 0, hip - 0.14)]}[b]
+        return T["tail"]("tail", pts, {"badger": 0.065, "meerkat": 0.05, "koala": 0.06}[b], F, s)
+    off = {"badger": [(-0.22, 0, 0.02), (-0.34, 0, 0.04 + 0.12 * lift), (-0.44, 0, 0.06 + 0.26 * lift)],
+           "meerkat": [(-0.18, 0, 0.0), (-0.42, 0, -0.06 + 0.25 * lift), (-0.66, 0, -0.1 + 0.55 * lift), (-0.88, 0, -0.12 + 0.85 * lift)],
+           "koala": [(-0.17, 0, -0.02), (-0.22, 0, -0.03)]}[b]
+    pts = [rump + Vector(o) for o in off]
+    pts = [tuple(Vector((p.x, p.y, max(0.07, p.z)))) for p in pts]  # never through the ground
+    return T["tail"]("tail", pts, {"badger": 0.07, "meerkat": 0.05, "koala": 0.075}[b], F)
 
 
 def holdfast_hologram(lt, dk):
     """The projected badger: a faceted body of light, low and broad, a wedge head with its two stripes, small ears
     and a short tail."""
+    if args.base != "badger":
+        return holdfast_hologram_other(lt, dk)
     skin = mat("holo", lt, 1.1, 0.32, scan=True)
     edge = mat("edge", lt, 2.2, 0.9)
     deep = mat("deep", lt, 0.9, 0.22, scan=True)
@@ -2894,6 +3042,57 @@ def holdfast_hologram(lt, dk):
     holdfast_core(lt, at=(0, 0, 0.5), size=0.15)
 
 
+def holdfast_hologram_other(lt, dk):
+    """The projected meerkat or koala, built like the badger's: the meerkat slight, its head held high on a long neck,
+    with dark eye patches and a long thin tail; the koala round, its big head with big round ears and a big nose, no
+    tail to speak of."""
+    meer = args.base == "meerkat"
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+
+    def traced(o):
+        w = o.copy(); w.data = o.data.copy(); bpy.context.scene.collection.objects.link(w)
+        w.data.materials.clear(); w.data.materials.append(edge)
+        md = w.modifiers.new("w", "WIREFRAME"); md.thickness = 0.018; md.use_replace = True
+    eye_ = mat("eye", (1, 1, 1), 9.0, 1.0)
+    body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(-0.05, 0, 0.5))
+    body.scale = (0.56, 0.26, 0.26) if meer else (0.52, 0.42, 0.38); body.rotation_euler = (0, -0.2 if meer else 0.0, 0); traced(body)
+    if meer:
+        traced(obj_from(bpy.ops.mesh.primitive_cylinder_add, "neck", skin, vertices=6, radius=0.09, depth=0.36,
+                        location=(0.5, 0, 0.78), rotation=(0, 0.45, 0)))
+        head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.13, location=(0.62, 0, 0.98))
+        head.scale = (1.1, 0.95, 0.9); traced(head)
+        traced(obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=5, radius1=0.07, depth=0.2,
+                        location=(0.8, 0, 0.94), rotation=(0, math.pi / 2 + 0.15, 0)))
+        for side in (1, -1):
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "patch", mat("patch", dk, 0.6, 0.8), subdivisions=1, radius=0.045,
+                     location=(0.69, side * 0.07, 1.0)).scale = (0.6, 0.6, 1.0)
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.02, location=(0.71, side * 0.08, 1.01))
+            traced(obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "ear", skin, subdivisions=1, radius=0.04, location=(0.56, side * 0.12, 0.99)))
+        at, _ = along([(-0.55, 0, 0.42), (-0.85, 0, 0.3), (-1.1, 0, 0.32), (-1.25, 0, 0.45)])
+        for k in range(5):  # one long thin tail, tapering to a dark tip
+            p0, p1 = at(k / 5)[0], at((k + 1) / 5)[0]
+            bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.05 - 0.008 * k, depth=(p1 - p0).length, location=(p0 + p1) / 2)
+            o = bpy.context.active_object; o.name = "tail"; o.data.materials.append(skin if k < 4 else deep)
+            o.rotation_euler = Vector((0, 0, 1)).rotation_difference(p1 - p0).to_euler(); traced(o)
+    else:
+        head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.25, location=(0.52, 0, 0.78))
+        head.scale = (0.95, 1.1, 0.98); traced(head)
+        nose = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "nose", mat("nose", dk, 0.8, 0.9), subdivisions=1, radius=0.06, location=(0.76, 0, 0.74))
+        nose.scale = (0.7, 0.8, 1.3)
+        for side in (1, -1):
+            o = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "ear", skin, subdivisions=1, radius=0.15, location=(0.46, side * 0.28, 0.93))
+            o.scale = (0.35, 1.0, 1.0); traced(o)
+            obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", eye_, subdivisions=1, radius=0.022, location=(0.72, side * 0.1, 0.83))
+    for x, y in ((0.32, 0.12), (0.32, -0.12), (-0.38, 0.12), (-0.38, -0.12)) if meer else ((0.3, 0.2), (0.3, -0.2), (-0.34, 0.2), (-0.34, -0.2)):
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=5, radius=0.05 if meer else 0.085, depth=0.46, location=(x, y, 0.04))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.3, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    holdfast_core(lt, at=(0, 0, 0.5), size=0.15)
+
+
 def holdfast_creature(sc, el, lt, dk):
     """The living Holdfast (the badger) on its own four feet, nothing in its paws, its key ring and clasped core at its
     chest. Its stance is the Controller's grasp for the state it is in (HOLDFAST_POSE)."""
@@ -2903,10 +3102,11 @@ def holdfast_creature(sc, el, lt, dk):
     lights(sc)
     rng = random.Random(f"creature-{args.base}-{el}")
     s, g, t = T["s"], T["girth"], T["tall"]
-    H = Vector(P["head"]); H.z *= t
+    L, nk = T["long"], T["neck"]
+    H = Vector(P["head"]); H.x = H.x * L + nk[0]; H.z = H.z * t + nk[1]
     HEAD["at"] = H
     cz, rz = P["chest"] * t, P["rump"] * t
-    chest, rump = Vector((0.28, 0, cz)), Vector((-0.38, 0, rz))
+    chest, rump = Vector((0.28 * L, 0, cz)), Vector((-0.38 * L, 0, rz))
     neck0 = chest + Vector((0.12, 0, 0.04))
     NECK["at"] = (neck0 + (H - neck0) * 0.4, (H - neck0).normalized(), 0.16 * g)
     flat_ = (1.0, 1.42 * g, 0.86)
@@ -2914,9 +3114,9 @@ def holdfast_creature(sc, el, lt, dk):
     for k in range(6):  # a broad, flat body, from the chest back to the rump
         u = k / 5
         parts.append(("ell", tuple(chest + (rump - chest) * u), (0.24 + 0.03 * math.sin(math.pi * u)) * g, flat_))
-    fx, hx, sp = P["fore"], P["hind"], P["spread"]
+    fx, hx, sp = P["fore"] * L, P["hind"] * L, P["spread"]
     legs = []
-    for x0, z0, x1, y0, y1, k in ((0.3, cz - 0.1, fx, 0.15, 0.17, 0), (-0.4, rz - 0.1, hx, 0.17, 0.18, 1)):
+    for x0, z0, x1, y0, y1, k in ((0.3 * L, cz - 0.1, fx, 0.15, 0.17, 0), (-0.4 * L, rz - 0.1, hx, 0.17, 0.18, 1)):
         for side in (-1, 1):
             a = (x0, side * y0 * g, z0)
             c = (x1, side * y1 * g * sp, 0.06)
@@ -2934,7 +3134,7 @@ def holdfast_creature(sc, el, lt, dk):
         parts.append(("ell", tuple(foot), 0.065, (1.4, 1.1, 0.5)))
         feet.append(foot)
     for side in (-1, 1):  # heavy shoulders and thighs
-        parts += [("ell", (0.3, side * 0.15 * g, cz - 0.04), 0.15 * g, (1.0, 0.8, 1.1)), ("ell", (-0.4, side * 0.16 * g, rz - 0.04), 0.16 * g, (1.15, 0.75, 1.1))]
+        parts += [("ell", (0.3 * L, side * 0.15 * g, cz - 0.04), 0.15 * g, (1.0, 0.8, 1.1)), ("ell", (-0.4 * L, side * 0.16 * g, rz - 0.04), 0.16 * g, (1.15, 0.75, 1.1))]
     body = blob("body", parts, 0.022, 15000)
     fluff(body, 0.01, 20.0)
     horn = solid("claw", (0.78, 0.74, 0.62), 0.45)
@@ -2944,15 +3144,15 @@ def holdfast_creature(sc, el, lt, dk):
         for k in (-2, -1, 0, 1, 2):
             o = ball("claw", horn, f + Vector((0.07 + n_ * (0.3 if grip else 0.6), k * 0.022, -0.02 if grip else -0.03)), 0.012, (n_ / 0.012 * (0.5 if grip else 0.7), 0.7, 0.6), 8)
             if grip: o.rotation_euler = (0, 0.7, 0)
-    tail = T["tail"]("tail", [tuple(rump + Vector(o)) for o in ((-0.22, 0, 0.02), (-0.34, 0, 0.04 + 0.12 * P["tail"]), (-0.44, 0, 0.06 + 0.26 * P["tail"]))], 0.07, F)
+    tail = holdfast_tail(T, F, rump, P["tail"])
     seam = T["face"](body, H, S, F, s, 0.055, P["chin"])
-    fn = T["paint"](H, F, s, feet, 0.2)
+    fn = T["paint"](H, F, s, feet, T["low"])
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.85))
     drape("scarf", tuple(NECK["at"][0]), (-0.55, 0, -0.85), 0.14, 0.19, 0.14, S["cloth"], S["trim"], f"scarf-{args.base}-{el}", 0.6)
     beads(tuple(NECK["at"][0] + Vector((0.02, 0, -0.02))), tuple(NECK["at"][1]), 0.16, 12, 0.07, 3, lt, S)
-    key_ring(chest + Vector((0.3, 0.1, -0.1)), 0.9)
-    holdfast_core(lt, chest + Vector((0.28, -0.1, -0.08)), 0.08)
+    key_ring(chest + Vector((0.3 * g, 0.1 * g, -0.1)), 0.9)
+    holdfast_core(lt, chest + Vector((0.28 * g, -0.1 * g, -0.08)), 0.08)
     back = (chest + rump) / 2 + Vector((0, 0, 0.2 * g))
     spine = [neck0 + Vector((0, 0, 0.12)), chest + Vector((0, 0, 0.18)), back, rump + Vector((0, 0, 0.18))]
     fox_growth(rng, el, S, F, lt, spine, tail, 0.8)
@@ -2970,7 +3170,7 @@ def holdfast_ascended(sc, el, lt, dk):
     A = HOLDFAST_ALLY[look_state()]
     lights(sc)
     rng = random.Random(f"ascended-{args.base}-{el}")
-    s = 0.95
+    s = 0.95 * T["s"] / 1.3
     H = Vector(A["head"])
     HEAD["at"] = H
     lean, hip = A["lean"], A["hip"]
@@ -3004,9 +3204,9 @@ def holdfast_ascended(sc, el, lt, dk):
             else:  # open, the fingers loose and the claws hanging
                 o = ball("claw", horn, f + d * 0.09 + side * k * 0.03, 0.012, (1, 1, 1), 8)
                 o.scale = (2.4, 0.8, 0.8); o.rotation_euler = Vector((1, 0, 0)).rotation_difference(d + side * k * 0.12).to_euler()
-    tail = badger_tail("tail", [(-0.24, 0, hip - 0.05), (-0.36, 0, hip - 0.12), (-0.44, 0, hip - 0.22)], 0.065, F, s)
+    tail = holdfast_tail(T, F, None, 0.0, s, upright=hip)
     seam = T["face"](body, H, S, F, s, 0.042, A["chin"])
-    fn = T["paint"](H, F, s, hands + feet, 0.14, upright=True)
+    fn = T["paint"](H, F, s, hands + feet, min(0.14, T["low"]), upright=True)
     paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
     body.data.materials.append(vmat("fur", 0.85))
     coat_c = mixc(S["trim"], (0.06, 0.06, 0.08), 0.6)  # a dark coat in the element's shade: the jacket to the belt, its skirt to the knee
