@@ -344,6 +344,37 @@ the springs leave 17 forearm points through at the walk (J5 fails) and the cloth
   (`c.tgt`) against the drawn skinned sleeve before tuning anything else. Edge collision only covers edges; a forearm
   capsule can also pass through a panel's face.
 
+### Round 13: why the forearm showed bare, and the fix (2026-10-17)
+
+- **The targets were right.** The sleeve points' skinned places (`c.tgt`) cover the forearm: rays out from the
+  forearm's line between 0.35 and 0.95 of its length meet the skinned sleeve 98 to 100% of the time. The cloth met them
+  67% of the time at the walk, and still under 80% with a leash 50 times tighter (`blendK` 20000, `blendAcc` 2000,
+  `armBlend` 0.05), so the leash was never the cause. Standing still, the cloth covered 88 to 94%.
+- **The cause: collision forgot which side of the arm a point belongs on.** `collide` pushes a point out of the arm's
+  capsule along the line from the arm to the point. When the swinging forearm passed a panel point (its faces are up to
+  13 cm across, wider than the forearm, so the arm slips between points), the point was then pushed out on the far
+  side and held there, and the leash's bounded pull could not drag it back across the arm. The sleeve trailed behind a
+  bare forearm.
+- **The fix, `armSide` (0.05 m, on by default).** Within 5 cm of a forearm or hand capsule, beside its line (not past
+  its ends, so the cuff below the hand stays free), a panel point on the far side of the arm from its skinned place is
+  put back across the arm along that place's direction. Average dusk robe, Node walk: forearm covered 96% (min 92%), the
+  sleeve's mean stray from its skinned place 1.8 cm (p90 3.4) against 5.1 (p90 14.3), panel area 4% over skinned
+  against 22%. The close clip against round 11 shows the sleeve over the forearm to the wrist at every frame.
+  Measure: `/mnt/project-files/3d-build/j5-round13-2026-10-17/cover.mjs` (`ANY=1` counts any crossing, as the eye
+  does; without it, ray parity).
+- **Two follow-ups the fix needed.** Moved all the way out, a point at the arm's side (just past the plane through
+  the arm's line) jumped back and forth every few substeps: a standing figure's cuff shook 38 mm in J5d. The point now
+  goes half way out (0.5 of the capsule, or of its skinned place if nearer), and the move carries its last place with
+  it, so it gains no speed. And `armEdges` (round 12) is off: the edges were pushed out on the wrong side as the points
+  were, and they shook the walking cuff 18 mm; with `armSide` the forearm stays covered without them, and J5d's cost
+  drops from 5.85 to 4.4 ms a figure.
+- **Still open: J5d's walking cuff shakes 14.2 mm against its 12 mm line** (round 12, before this fix: 10.7). Standing
+  0.02, cost 4.38 ms, sleeve lag 1 frame, coherence 0.96. The Node proxy (`jit.mjs` in the folder below, the hf()
+  measure on the sleeve points past 0.85 of the panel) reads 8 to 9 mm; it does not use J5d's own cuff set (the 59
+  points within 4 cm of the sleeve's far end), so the next step is to measure that set in Node, find which points
+  shake, and try `armSide` 0.03 or the half way share 0.3 before touching the line.
+- T1 stays reported, not gated (`cd-panel-t1-eye`): rim lag 0 to 1 frames, coherence 0.95 to 0.96 at the walk.
+
 ## Rounds 1 to 5, in one line each
 
 - **Bone weights never move like cloth.** Rounds 1 to 4 drove the skirt with hem bones and slit weights. Every fix

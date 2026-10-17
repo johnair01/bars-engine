@@ -85,8 +85,12 @@
     armGap: 0,           // share of its skinned gap to the forearm's and hand's line that a panel point keeps: a panel
                          // may swing out and slide round the arm, and never falls in onto it (0: only the capsule)
     armGapMax: 0.2,      // metres: the farthest from a capsule's line the gap is kept
+    armSide: 0.05,       // metres from a forearm's or hand's capsule within which a panel point keeps the side of the arm
+                         // its skinned place is on (round 13): a point the arm has passed is put back on that side, not
+                         // pushed out where it is, which held the panels behind a forearm that had swung through them
     seamOpen: [0.003, 0.05], // [at the cut, at the cuff], metres the two sides of an opened seam may part (null: freely)
-    armEdges: true,      // the panels' edges collide with the forearm and hand too, not only their points (edgeCollide)
+    armEdges: false,     // the panels' edges collide with the forearm and hand too (edgeCollide; round 12's default, off since
+                         // round 13: armSide covers the forearm, and the edges pushed out on the wrong side shook the cuff)
     seamFrom: 0.5,       // how far down the panel (0 the cut, 1 the cuff) the slit starts to open past seamOpen[0]
     seamPair: 0.006,     // metres apart at rest that makes two sleeve points the two sides of one opened seam
     panelChains: 2,      // chains per panel, at a quarter and three quarters of its width
@@ -569,7 +573,7 @@
     var x = c.x, xp = c.xp, P = c.P, free = c.free, mg = c.o.margin, fr = c.o.friction, kick = c.o.kick, back = c.o.backstop, t0 = c.tgt0, t1 = c.tgt;
     for (var k = 0; k < caps.length; k++) {
       mg = caps[k].arm ? c.o.armMargin : c.o.margin;
-      var s = caps[k].s, r = caps[k].r + mg, r2 = r * r, rmax = Math.max(r, capR(caps[k], 1) + mg);
+      var s = caps[k].s, r = caps[k].r + mg, r2 = r * r, rmax = Math.max(r, capR(caps[k], 1) + mg) + (caps[k].arm ? c.o.armSide || 0 : 0);
       var ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
       var uu = ux * ux + uy * uy + uz * uz || 1e-12;
       var gap = caps[k].arm ? c.o.armGap : 0;
@@ -584,7 +588,8 @@
         var cx = ax + ux * t, cy = ay + uy * t, cz = az + uz * t, dx = px - cx, dy = py - cy, dz = pz - cz;
         var d2 = dx * dx + dy * dy + dz * dz;
         if (caps[k].rb !== undefined) { r = capR(caps[k], t) + mg; r2 = r * r; }
-        if (d2 >= r2 && !gap) continue;
+        var side = caps[k].arm && c.o.armSide && t > 0 && t < 1;   // beside the arm's line, not past its ends
+        if (d2 >= r2 && !gap && !(side && d2 < (r + c.o.armSide) * (r + c.o.armSide))) continue;
         var rr = r;
         if (caps[k].arm || (back && caps[k].bs)) {
           // the backstop: the skin's own place for this point is never inside the leg, so a capsule wider than the
@@ -598,6 +603,16 @@
           if (dq < rr) rr = caps[k].arm ? dq : Math.max(dq, caps[k].r * back);
           // the rest gap (round 12): the panel keeps a share of the distance its skinned place has from the arm's line
           if (gap) rr = Math.max(rr, Math.min(gap * dq, c.o.armGapMax));
+          // the side (round 13): a point on the far side of the arm's line from its skinned place goes back across
+          // the arm along that place's direction, half as far out as the capsule (or its skinned place, if nearer)
+          if (side && dq > 1e-6) {
+            var sx = ex / dq, sy = ey / dq, sz = ez / dq, sd = dx * sx + dy * sy + dz * sz;
+            if (sd < 0) {   // moved with its last place too, so the move adds no speed (a kick there shook the cuff 28 mm)
+              var mv = 0.5 * Math.min(rr, dq) - sd;   // half way out: all the way out, a point at the arm's side jumped back and forth
+              x[i3] += sx * mv; x[i3 + 1] += sy * mv; x[i3 + 2] += sz * mv; xp[i3] += sx * mv; xp[i3 + 1] += sy * mv; xp[i3 + 2] += sz * mv;
+              continue;
+            }
+          }
           if (d2 >= rr * rr) continue;
         }
         var d = Math.sqrt(d2) || 1e-9, push = (rr - d) / d;
