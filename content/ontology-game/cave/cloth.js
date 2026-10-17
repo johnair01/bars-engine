@@ -90,7 +90,10 @@
                          // pushed out where it is, which held the panels behind a forearm that had swung through them
     armSideT: 0.9,       // round 13b: the cuff's last tenth of the panel (slT above this) is only pushed out, not put back
                          // across the arm; the put-back flipped cuff points from side to side (J5d cuff 15.2 mm to 12.4)
-    armSideShare: 0.5,   // how far out, as a share of the capsule (or its skinned place), a point put back across the arm goes
+    armSideShare: 1,     // how far out, as a share of the capsule (or its skinned place), a point put back across the arm goes:
+                         // round 13 put it half way, inside the forearm (J5 T2: the slight robe's sleeve 7.4 mm into the
+                         // arm walking, 22.8 at the fast swing); all the way out, now that the cuff's tip is left out of
+                         // the put-back, holds T2 at 0 and shakes the cuff less (Node, cuff set 9.5 to 8.1 mm)
     folSkin: true,       // a sleeve's turned-back cuff keeps its skinned offset from its anchor, not an offset in the cloth's
                          // own frame: that frame turned with every twitch of the panel's normal and shook the fold more
                          // than its anchor (round 13b: fold 15.2 mm against its anchors' 12.0; with this and armSideT 9.5)
@@ -614,11 +617,11 @@
           // the rest gap (round 12): the panel keeps a share of the distance its skinned place has from the arm's line
           if (gap) rr = Math.max(rr, Math.min(gap * dq, c.o.armGapMax));
           // the side (round 13): a point on the far side of the arm's line from its skinned place goes back across
-          // the arm along that place's direction, half as far out as the capsule (or its skinned place, if nearer)
+          // the arm along that place's direction, armSideShare as far out as the capsule (or its skinned place, if nearer)
           if (side && dq > 1e-6) {
             var sx = ex / dq, sy = ey / dq, sz = ez / dq, sd = dx * sx + dy * sy + dz * sz;
             if (sd < 0) {   // moved with its last place too, so the move adds no speed (a kick there shook the cuff 28 mm)
-              var mv = (c.o.armSideShare === undefined ? 0.5 : c.o.armSideShare) * Math.min(rr, dq) - sd;   // half way out: all the way out, a point at the arm's side jumped back and forth
+              var mv = (c.o.armSideShare === undefined ? 1 : c.o.armSideShare) * Math.min(rr, dq) - sd;   // (round 13: all the way out jumped back and forth at the cuff's tip, now left out by armSideT)
               x[i3] += sx * mv; x[i3 + 1] += sy * mv; x[i3 + 2] += sz * mv; xp[i3] += sx * mv; xp[i3 + 1] += sy * mv; xp[i3 + 2] += sz * mv;
               continue;
             }

@@ -374,9 +374,12 @@ the springs leave 17 forearm points through at the walk (J5 fails) and the cloth
   fold kept its offset in the cloth's own frame, and that frame turned with every twitch of the panel's normal, so the
   fold swung more than the point it hangs from. `folSkin` (on) keeps a sleeve fold at its skinned offset from its
   anchor instead (11.4 mm). `armSideT` 0.9 leaves the panel's last tenth to the capsule's plain push, not the put-back
-  across the arm, which flipped cuff points from side to side (9.5 mm in Node). The share is now an option
-  (`armSideShare`, 0.5); 0.3 shook more (16.3), and `armSide` 0.03 did nothing (15.9). The forearm stays covered:
-  0.98 / 0.96 mean, 0.96 / 0.96 least (`ANY=1 cover.mjs`). J5d: cuff 9.4 mm, cost 3.65 ms a figure, standing still.
+  across the arm, which flipped cuff points from side to side (9.5 mm in Node). `armSide` 0.03 did nothing (15.9).
+- **Round 13b: J5 T2 failed on round 13's half way put-back.** The put-back set a point half the capsule's radius from
+  the arm's line, inside the forearm: the slight robe's sleeve went 7.4 mm into the arm walking and 22.8 at the fast
+  swing (T2's line is 1 mm). The share is now an option, `armSideShare`, at 1 (all the way out): with the cuff's tip
+  out of the put-back it no longer jumps, T2 reads 0, and the cuff set shakes 8.1 mm in Node (0.3 shook 16.3). The
+  forearm stays covered: 0.98 / 0.97 mean, 0.96 / 0.95 least (`ANY=1 cover.mjs`).
 - T1 stays reported, not gated (`cd-panel-t1-eye`): rim lag 0 to 1 frames, coherence 0.95 to 0.96 at the walk.
 
 ## Rounds 1 to 5, in one line each
