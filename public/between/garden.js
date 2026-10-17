@@ -3,6 +3,9 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
+import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, SEATS, WALK_R, DAIS_Y } from "./hollow.js";
+import { createCreature } from "./creature.js";
+import { createAmbient } from "./ambient.js";
 
 /* ===================================================================================================
    The Between, in 3D. A room two people share. The garden's store (Postgres behind /api/between) keeps
@@ -25,10 +28,11 @@ const DAEMONS = {
 };
 const ELEMENTS = { Wood: 0x6fae5a, Fire: 0xe0663a, Earth: 0xc9a35a, Metal: 0xc8ccd4, Water: 0x4f8fd0 };
 const FORMS = { fox: "Fox", tortoise: "Tortoise" };
-const BETWEEN_AT = new THREE.Vector3(0, 0, -3);
-const SPAWN = [new THREE.Vector3(-1.2, 0, 3.2), new THREE.Vector3(1.2, 0, 3.2)];
-const ROOM_R = 8.4;
-const OBST = [[-5.4, 4.2, 2.1], [5.25, 4.3, 2.1], [-3.9, -7.05, 1.2], [6.6, -3.9, 1.6], [1.95, -7.9, 0.7], [0, -3, 0.9]];
+/* Round 2 (2026-10-17): the WAVE dome gave way to the hollow under the roots (hollow.js). The Between sits in the middle
+   of the mossy dais, between the two cushions; you arrive on the flagstones just in front of it. */
+const BETWEEN_AT = new THREE.Vector3(0, 0, -0.35);
+const SPAWN = [new THREE.Vector3(-0.8, 0, 3.1), new THREE.Vector3(0.8, 0, 3.1)];
+const LOW_POWER = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || Math.min(innerWidth, innerHeight) < 600;
 
 /* ---------- state ---------- */
 let me = null, gardenId = null, invite = null, myInvite = null;
@@ -181,40 +185,32 @@ const cssHue = n => "#" + n.toString(16).padStart(6, "0");
    The room
    =================================================================================================== */
 const stage = $("#stage");
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+const renderer = new THREE.WebGLRenderer({ antialias: !LOW_POWER || (window.devicePixelRatio || 1) < 2, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOW_POWER ? 1.5 : 1.75));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.9;
+renderer.toneMappingExposure = 1.05;
 stage.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0d0a08);
-scene.fog = new THREE.Fog(0x0d0a08, 14, 34);
-const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 80);
-const hemi = new THREE.HemisphereLight(0xffe6c4, 0x2a2018, 0.8);
-scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffd9a8, 0.9); sun.position.set(3, 9, 4); scene.add(sun);
-const coveLights = [];
-for (let i = 0; i < 8; i++) {
-  const a = i / 8 * Math.PI * 2 + 0.39;
-  const l = new THREE.PointLight(0xffb36b, 9, 11, 1.6); l.position.set(Math.sin(a) * 6.6, 4.2, Math.cos(a) * 6.6); scene.add(l); coveLights.push(l);
-}
-const doorLight = new THREE.PointLight(0xffe2b0, 18, 12, 1.5); doorLight.position.set(0, 2.4, -9); scene.add(doorLight);
-const betweenLight = new THREE.PointLight(0x9ad8cf, 14, 9, 1.4); betweenLight.position.set(BETWEEN_AT.x, 2.2, BETWEEN_AT.z); scene.add(betweenLight);
+scene.background = new THREE.Color(0x1a1018);
+scene.fog = new THREE.Fog(0x24161a, 10, 30);
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+let hollow = null;
+const betweenLight = new THREE.PointLight(0x9ad8cf, 5, 6, 1.5); betweenLight.position.set(BETWEEN_AT.x, DAIS_Y + 1.1, BETWEEN_AT.z + 0.3); scene.add(betweenLight);
 let lightScale = 1;
 
-function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 68 : 55; camera.updateProjectionMatrix(); }
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 66 : 50; camera.updateProjectionMatrix(); }
 addEventListener("resize", resize); resize();
 
 const loader = new GLTFLoader();
-/* Models are plain .glb files served beside the page; the WAVE room's dome comes from the cave's own build. */
-const MODELS = "/between/m/", ROOM_GLB = "/ontology-game/cave/rooms/wave-room.glb";
+/* Models are plain .glb files served beside the page; the hollow itself is built in code (hollow.js). */
+const MODELS = "/between/m/";
 const loadGltf = url => loader.loadAsync(url);
 function loadStep(msg) { const el = $("#loadStep"); if (el) el.textContent = msg; }
 const templates = {};
 function loadModel(name) {
   if (!templates[name]) templates[name] = loadGltf(MODELS + name + ".glb").then(g => {
-    const root = g.scene; root.updateMatrixWorld(true);
+    const root = g.scene; mergeByParent(root); root.updateMatrixWorld(true);
     let box = new THREE.Box3();
     root.traverse(o => { if (o.isMesh) { if (o.isSkinnedMesh) { o.computeBoundingBox(); const b = o.boundingBox.clone().applyMatrix4(o.matrixWorld); box.union(b); } else box.expandByObject(o); } });
     return { scene: root, anims: g.animations, box };
@@ -231,6 +227,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const k = height / Math.max(tall, 0.01);
   obj.scale.setScalar(k);
   obj.position.y = -t.box.min.y * k;
+  const t0box = t.box.min.y;
   const holder = new THREE.Group(); holder.add(obj);
   if (opts && opts.ring != null) { // whose it is shows as a ring of light at its feet; bodies keep their own colours
     const r = new THREE.Mesh(new THREE.RingGeometry(opts.ringR || 0.42, (opts.ringR || 0.42) + (opts.ringW || 0.09), 40), new THREE.MeshBasicMaterial({ color: opts.ring, transparent: true, opacity: opts.ringA || 0.85, side: THREE.DoubleSide, depthWrite: false }));
@@ -252,28 +249,51 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   for (const n of ["Walk", "Idle"]) { const c = clip(n); if (c) acts[n] = mixer.clipAction(c); }
   if (acts.Idle) acts.Idle.play();
   let walking = false;
+  /* Poses made in code over the clip (the player model has a walk and nothing else): sitting cross-legged on a cushion,
+     and a wave of the right hand. Bone axes were read off player.glb: hip X lifts the thigh forward, knee X folds the
+     shin, shoulder Z raises the arm to the side. */
+  const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "shoulderL", "shoulderR", "elbowL", "elbowR", "spine", "neck"]) { const b = obj.getObjectByName(n); if (b) bones[n] = { b, q: b.quaternion.clone() }; }
+  const hipsY = bones.hips ? bones.hips.b.position.y : 0;
+  const qe = new THREE.Quaternion(), eu = new THREE.Euler();
+  const bend = (n, x, y, z, w) => { const B = bones[n]; if (!B) return; qe.setFromEuler(eu.set(x * w, y * w, z * w, "XYZ")); B.b.quaternion.copy(B.q).multiply(qe); };
+  let sit = 0, waveT = -9, rest = 0;
   return {
-    holder, mixer,
+    holder, mixer, isPlayer: !!bones.hipL, scale: k,
     setWalking(w) {
       if (w === walking) return; walking = w;
       if (acts.Walk) { if (w) { acts.Walk.reset().fadeIn(0.2).play(); acts.Idle && acts.Idle.fadeOut(0.2); } else { acts.Walk.fadeOut(0.3); if (acts.Idle) acts.Idle.reset().fadeIn(0.3).play(); } }
+    },
+    wave(t) { waveT = t; },
+    /* After mixer.update: sitting (0..1 eases in), waving for 1.6 s, and for animals a curled-up rest (0..1). */
+    pose(t, dt, wantSit, wantRest) {
+      sit += ((wantSit ? 1 : 0) - sit) * Math.min(1, dt * 5);
+      rest += ((wantRest ? 1 : 0) - rest) * Math.min(1, dt * 3);
+      if (bones.hipL && sit > 0.01) {
+        const w = sit;
+        if (acts.Walk && wantSit) acts.Walk.weight = 0;
+        for (const [n, x, y, z] of [["hipL", -1.5, -0.35, -0.65], ["hipR", -1.5, 0.35, 0.65], ["kneeL", 2.45, 0, 0], ["kneeR", 2.45, 0, 0], ["spine", 0.12, 0, 0], ["neck", 0.18, 0, 0],
+          ["shoulderL", -0.75, 0, -0.25], ["shoulderR", -0.75, 0, 0.25], ["elbowL", -0.9, 0, 0], ["elbowR", -0.9, 0, 0]]) bend(n, x, y, z, w);
+        bones.hips.b.position.y = hipsY - 0.84 * w;
+      } else if (bones.hips) bones.hips.b.position.y = hipsY;
+      if (acts.Walk && !wantSit && acts.Walk.weight === 0) acts.Walk.weight = 1;
+      const wv = t - waveT;
+      if (bones.shoulderR && wv < 1.6) {
+        const w = Math.sin(Math.min(1, wv / 1.6) * Math.PI) * 1.4; const wt = Math.min(1, w);
+        bend("shoulderR", 0, 0, 2.5, wt); bend("elbowR", 0, 0, Math.sin(wv * 14) * 0.6, wt);
+      }
+      if (!bones.hipL) { // a spirit settling down: low, still, breathing
+        obj.scale.set(k * (1 + rest * 0.12), k * (1 - rest * 0.38), k * (1 + rest * 0.12));
+        obj.position.y = -t0box * k * (1 - rest * 0.38);
+        mixer.timeScale = 1 - rest * 0.85;
+      }
     },
   };
 }
 const FACE = 0; // the bodies face +z in their files
 
 let roomReady = false;
-async function buildRoom() {
-  const g = await loadGltf(ROOM_GLB);
-  const drop = [];
-  g.scene.traverse(o => {
-    if (o.isLight) drop.push(o); // the file's lamps are in Blender watts; this page lights the cave itself
-    if (o.isMesh && /^(player|seat)$/i.test(o.name)) o.visible = false;
-    if (o.isMesh && o.name === "door_2") o.position.x -= 0.7;
-    if (o.isMesh && o.name === "door_3") o.position.x += 0.7;
-  });
-  drop.forEach(o => o.parent && o.parent.remove(o));
-  scene.add(g.scene);
+function buildRoom() {
+  hollow = buildHollow(scene, { lowPower: LOW_POWER });
   roomReady = true;
 }
 
@@ -298,77 +318,56 @@ function placeLabel(el, pos) {
   el.style.top = ((1 - tmpV.y) / 2 * innerHeight) + "px";
 }
 
-/* ---------- the Between (or the spark) ---------- */
-const between = new THREE.Group(); between.position.copy(BETWEEN_AT); scene.add(between);
-const matA = new THREE.MeshStandardMaterial({ color: 0x5fc0b5, emissive: 0x2f8f86, emissiveIntensity: 0.6, roughness: 0.35, transparent: true, opacity: 0.92 });
-const matB = new THREE.MeshStandardMaterial({ color: 0xd48bc0, emissive: 0x9a4f86, emissiveIntensity: 0.6, roughness: 0.35, transparent: true, opacity: 0.85 });
-const body = new THREE.Group(); between.add(body);
-const lobeA = new THREE.Mesh(new THREE.SphereGeometry(0.62, 32, 24), matA); lobeA.position.set(-0.26, 0.95, 0); lobeA.scale.set(1, 1.08, 0.9);
-const lobeB = new THREE.Mesh(new THREE.SphereGeometry(0.62, 32, 24), matB); lobeB.position.set(0.26, 0.95, 0.02); lobeB.scale.set(1, 1.08, 0.9);
-const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1b1612, roughness: 0.4 });
-const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.075, 16, 12), eyeMat); eyeL.position.set(-0.2, 1.1, 0.56);
-const eyeR = eyeL.clone(); eyeR.position.x = 0.2;
-const leafGeo = new THREE.ConeGeometry(0.12, 0.5, 8);
-const leafL = new THREE.Mesh(leafGeo, matA); leafL.position.set(-0.2, 1.72, 0); leafL.rotation.z = 0.5;
-const leafR = new THREE.Mesh(leafGeo, matB); leafR.position.set(0.2, 1.72, 0); leafR.rotation.z = -0.5;
-body.add(lobeA, lobeB, eyeL, eyeR, leafL, leafR);
-const flameMat = new THREE.MeshStandardMaterial({ color: 0xd48bc0, emissive: 0xd48bc0, emissiveIntensity: 1.3, transparent: true, opacity: 0.85 });
-const spark = new THREE.Group(); between.add(spark);
-const flame = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.1, 20, 1, true), flameMat); flame.position.y = 1.15;
-const flameCore = new THREE.Mesh(new THREE.SphereGeometry(0.3, 20, 16), flameMat); flameCore.position.y = 0.7;
-spark.add(flame, flameCore);
-const mound = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.15, 0.22, 28), new THREE.MeshStandardMaterial({ color: 0x3b3128, roughness: 0.95 }));
-mound.position.y = 0.11; between.add(mound);
-/* sparks: the aura, fast and jagged when charged, slow when allied */
-const MOTES = 40;
+/* ---------- the Between (or the spark): the creature from the concept views (creature.js) ---------- */
+const between = new THREE.Group(); between.position.copy(BETWEEN_AT).setY(DAIS_Y); scene.add(between);
+const creature = createCreature(); between.add(creature.group);
+/* motes: the aura, fast and jagged when charged, slow when allied */
+const MOTES = 28;
 const moteGeo = new THREE.BufferGeometry(); moteGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(MOTES * 3), 3));
-const moteMat = new THREE.PointsMaterial({ color: 0xd48bc0, size: 0.09, transparent: true, opacity: 0.9, depthWrite: false });
+const moteMat = new THREE.PointsMaterial({ color: 0xd48bc0, size: 0.09, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending, map: (() => {
+  const c = document.createElement("canvas"); c.width = c.height = 32; const x = c.getContext("2d"); const gr = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = gr; x.fillRect(0, 0, 32, 32); return new THREE.CanvasTexture(c); })() });
 const motes = new THREE.Points(moteGeo, moteMat); between.add(motes);
 const fedOrbs = new THREE.Group(); between.add(fedOrbs);
 let look = { phase: "spark", state: "steadied", stale: false, sat: 3 };
 
+/* Who the creature notices: the nearest person within reach, you or the other. */
+function creatureTarget() {
+  let best = null, bd = 2.8;
+  const c = p => { const d = Math.hypot(p.x - BETWEEN_AT.x, p.z - BETWEEN_AT.z); if (d < bd) { bd = d; best = p; } };
+  if (meState.body) c(meState.pos);
+  for (const p of peers.values()) if (p.body) c(p.pos);
+  return best;
+}
+const TOGETHER_FACE = new THREE.Vector3(0, 0, 2.5);
+function bothSitting() {
+  if (!(meState.sitting)) return false;
+  for (const p of peers.values()) if (p.sitting && p.uid !== me) return true;
+  return false;
+}
 function stepBetween(t, dt) {
   const { phase, state, stale, sat } = look;
   const breath = (t % 10) < 4 ? Math.sin((t % 10) / 4 * Math.PI / 2) : Math.cos(((t % 10) - 4) / 6 * Math.PI / 2); // 4 s in, 6 s out
-  const grow = 0.72 + sat * 0.04;
-  spark.visible = phase === "spark";
-  body.visible = phase !== "spark";
-  if (phase === "spark") {
-    const f = 0.85 + Math.sin(t * 9) * 0.06 + Math.sin(t * 23) * 0.04;
-    spark.scale.set(grow * f, grow * (0.9 + 0.12 * breath), grow * f);
-    flameMat.emissiveIntensity = stale ? 0.3 : 1.1 + Math.sin(t * 7) * 0.3;
-  } else {
-    const s = grow * (1 + 0.04 * breath);
-    body.scale.setScalar(s);
-    const jitter = state === "charged" ? 0.03 : 0;
-    body.position.set((Math.random() - .5) * jitter, (Math.random() - .5) * jitter, 0);
-    leafL.visible = leafR.visible = state === "allied";
-    const lift = state === "allied" ? 1 : 0;
-    eyeL.scale.y = eyeR.scale.y = state === "charged" ? 0.35 : 1;
-    matA.emissiveIntensity = stale ? 0.08 : 0.45 + 0.3 * breath + 0.2 * lift;
-    matB.emissiveIntensity = stale ? 0.08 : 0.45 + 0.3 * (1 - breath) + 0.2 * lift;
-  }
-  const grey = new THREE.Color(0x8d857b);
-  matA.color.setHex(0x5fc0b5); matB.color.setHex(0xd48bc0); flameMat.color.setHex(0xd48bc0);
-  if (stale) { matA.color.lerp(grey, 0.75); matB.color.lerp(grey, 0.75); flameMat.color.lerp(grey, 0.75); }
+  const together = bothSitting();
+  // sitting together, it turns to face you both (the cushions sit side by side behind it)
+  creature.update(t, dt, { phase, state, stale, sat, target: together ? TOGETHER_FACE : creatureTarget(), together });
   const p = moteGeo.attributes.position.array;
   const speed = state === "charged" ? 2.6 : state === "allied" ? 0.35 : 0.8;
-  const rad = state === "allied" ? 1.5 : 1.1;
+  const rad = state === "allied" ? 1.0 : 0.8;
   for (let i = 0; i < MOTES; i++) {
     const a = i / MOTES * Math.PI * 2 + t * speed * (i % 2 ? 1 : -0.7);
-    const r = rad + (state === "charged" ? Math.sin(t * 13 + i * 3) * 0.25 : Math.sin(t + i) * 0.08);
-    p[i * 3] = Math.cos(a) * r; p[i * 3 + 1] = 0.5 + ((i * 0.37 + t * (state === "charged" ? 0.9 : 0.25)) % 1.6); p[i * 3 + 2] = Math.sin(a) * r;
+    const r = rad + (state === "charged" ? Math.sin(t * 13 + i * 3) * 0.2 : Math.sin(t + i) * 0.06);
+    p[i * 3] = Math.cos(a) * r; p[i * 3 + 1] = 0.2 + ((i * 0.37 + t * (state === "charged" ? 0.9 : 0.25)) % 1.3); p[i * 3 + 2] = Math.sin(a) * r;
   }
   moteGeo.attributes.position.needsUpdate = true;
-  moteMat.color.setHex(stale ? 0x8d857b : state === "charged" ? 0xd48bc0 : state === "allied" ? 0xbff0c0 : 0x9ad8cf);
-  moteMat.opacity = stale ? 0.25 : 0.85;
-  fedOrbs.children.forEach((o, i) => { const a = t * 0.4 + i / Math.max(1, fedOrbs.children.length) * Math.PI * 2; o.position.set(Math.cos(a) * 1.25, 2.1 + Math.sin(t * 1.3 + i) * 0.12, Math.sin(a) * 1.25); });
-  const target = stale ? 0.45 : 1;
+  moteMat.color.setHex(stale ? 0x8d857b : phase === "spark" ? 0xd48bc0 : state === "charged" ? 0xd48bc0 : state === "allied" ? 0xbff0c0 : 0x9ad8cf);
+  moteMat.opacity = stale ? 0.2 : 0.75;
+  fedOrbs.children.forEach((o, i) => { const a = t * 0.4 + i / Math.max(1, fedOrbs.children.length) * Math.PI * 2; o.position.set(Math.cos(a) * 0.9, 1.45 + Math.sin(t * 1.3 + i) * 0.1, Math.sin(a) * 0.9); });
+  const target = stale ? 0.55 : 1;
   lightScale += (target - lightScale) * Math.min(1, dt * 1.5);
-  betweenLight.intensity = (phase === "spark" ? 8 : 14) * lightScale * (0.85 + 0.15 * breath);
+  betweenLight.intensity = (phase === "spark" ? 3 : 5) * (stale ? 0.3 : 1) * (0.85 + 0.15 * breath) * (together ? 2.2 : 1);
   betweenLight.color.setHex(phase === "spark" ? 0xd48bc0 : state === "charged" ? 0xd9a0c8 : 0x9ad8cf);
-  coveLights.forEach(l => l.intensity = 9 * lightScale);
-  hemi.intensity = 0.8 * lightScale;
+  if (hollow) hollow.update(t, dt, lightScale, camera.position, lastFocus);
 }
 
 /* ===================================================================================================
@@ -383,39 +382,60 @@ function ringPos(id, r0) {
     const x = BETWEEN_AT.x + Math.cos(a) * rr, z = BETWEEN_AT.z + Math.sin(a) * rr;
     if (walkable(x, z, 0.4)) return { x, z };
   }
-  return { x: BETWEEN_AT.x + 2.5, z: BETWEEN_AT.z + 1 };
+  return { x: BETWEEN_AT.x + 1.8, z: BETWEEN_AT.z - 0.8 };
 }
-const stoneMat = new THREE.MeshStandardMaterial({ color: 0x6b5d4e, roughness: 0.9 });
+const stoneMat = new THREE.MeshStandardMaterial({ color: 0x8a7a68, roughness: 0.85, flatShading: true });
 const soilMat = new THREE.MeshStandardMaterial({ color: 0x2c2219, roughness: 1 });
 const stemMat = new THREE.MeshStandardMaterial({ color: 0x5c8a4a, roughness: 0.7 });
 const amberMat = new THREE.MeshStandardMaterial({ color: 0xe2a85c, emissive: 0xb0742a, emissiveIntensity: 0.6 });
+/* Agreements grow as the glowing lotus of the concept views: a closed bud while drafted, a swelling bud when proposed,
+   open in both hues once agreed, drooping amber when up for revisit, a stone when retired, soil when composted. */
+const petalGeo = (() => { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.quadraticCurveTo(0.09, 0.12, 0, 0.28); sh.quadraticCurveTo(-0.09, 0.12, 0, 0);
+  const g = new THREE.ShapeGeometry(sh, 5); const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, x * x * 3 + y * y * 0.8); } g.computeVertexNormals(); return g; })();
+const lilyPad = (() => { const g = new THREE.CircleGeometry(0.26, 16, 0.3, Math.PI * 2 - 0.6); g.rotateX(-Math.PI / 2); return g; })();
+const padMat = new THREE.MeshStandardMaterial({ color: 0x4f7a34, roughness: 0.7, side: THREE.DoubleSide });
+const petalMats = new Map();
+const petalMat = c => { if (!petalMats.has(c)) petalMats.set(c, new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.55, roughness: 0.5, side: THREE.DoubleSide })); return petalMats.get(c); };
+function lotusHead(colors, open, droop) {
+  const head = new THREE.Group();
+  const rings = [[6, 0], [5, 0.5]];
+  rings.forEach(([n, off], ri) => {
+    for (let i = 0; i < n; i++) {
+      const c = colors[(i + ri) % colors.length];
+      const m = new THREE.Mesh(petalGeo, petalMat(c));
+      const piv = new THREE.Group(); piv.rotation.y = (i + off) / n * Math.PI * 2; m.rotation.x = -(ri ? 0.35 : 0.55) * open - 0.12; m.scale.setScalar(ri ? 0.8 : 1); piv.add(m); head.add(piv);
+    }
+  });
+  const heart = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), amberMat); heart.position.y = 0.04; head.add(heart);
+  head.rotation.z = droop;
+  return head;
+}
 function plantMesh(it, g) {
   const grp = new THREE.Group();
   const by = new THREE.Color(hueOf(it.by, g));
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.42, 0.12, 14), soilMat); base.position.y = 0.06; grp.add(base);
   const st = it.status, pend = !!it.pending;
-  const emit = c => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.55, roughness: 0.5 });
+  const pad = new THREE.Mesh(lilyPad, padMat); pad.position.y = 0.02; grp.add(pad);
   if (st === "retired") {
-    const s = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5, 0.12), stoneMat); s.position.y = 0.3; grp.add(s);
+    const s = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2, 0), stoneMat); s.position.y = 0.14; s.scale.set(1, 0.7, 0.8); grp.add(s);
   } else if (st === "composted") {
-    base.scale.set(1.1, 1.6, 1.1);
+    pad.visible = false; const m = new THREE.Mesh(new THREE.SphereGeometry(0.25, 10, 6), soilMat); m.scale.y = 0.35; grp.add(m);
   } else {
-    const h = st === "draft" ? 0.25 : st === "proposed" ? 0.55 : 0.85;
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, h, 6), stemMat); stem.position.y = 0.12 + h / 2; grp.add(stem);
-    if (st === "revisit") { stem.rotation.z = 0.5; stem.position.x = 0.12; }
-    const top = 0.12 + h;
-    if (st === "draft") { const b = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), emit(by)); b.position.y = top; grp.add(b); }
-    else if (st === "proposed") { const b = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), emit(by)); b.position.y = top; b.userData.pulse = true; grp.add(b); }
-    else {
-      const petals = st === "revisit" ? [0xe2a85c] : [0x5fc0b5, 0xd48bc0];
-      for (let i = 0; i < 6; i++) {
-        const p = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), emit(petals[i % petals.length]));
-        const a = i / 6 * Math.PI * 2; p.position.set(Math.cos(a) * 0.15 + (st === "revisit" ? 0.3 : 0), top - (st === "revisit" ? 0.2 : 0), Math.sin(a) * 0.15); p.scale.y = 0.6; grp.add(p);
-      }
-      const c = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), amberMat); c.position.set(st === "revisit" ? 0.3 : 0, top - (st === "revisit" ? 0.2 : 0), 0); grp.add(c);
-    }
-    if (pend) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.025, 8, 24), amberMat); r.rotation.x = Math.PI / 2; r.position.y = 0.2; r.userData.pulse = true; grp.add(r); }
+    const h = st === "draft" ? 0.18 : st === "proposed" ? 0.34 : 0.42;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.024, h, 6), stemMat); stem.position.y = h / 2; grp.add(stem);
+    if (st === "revisit") { stem.rotation.z = 0.45; stem.position.x = 0.08; }
+    let head;
+    if (st === "draft") head = lotusHead([by.getHex()], 0.05, 0), head.scale.setScalar(0.55);
+    else if (st === "proposed") { head = lotusHead([by.getHex()], 0.25, 0); head.scale.setScalar(0.8); head.userData.pulse = true; }
+    else if (st === "revisit") head = lotusHead([0xe2a85c], 0.6, 0.9);
+    else head = lotusHead([0x7fe0d0, 0xf0a6d8], 1, 0); // agreed: open, in both hues
+    head.position.set(st === "revisit" ? 0.2 : 0, h, 0); grp.add(head);
+    grp.scale.setScalar(1.5);
+    if (head.userData.pulse) head.userData.keep = true;
+    grp.traverse(o => { if (o.userData && o.userData.pulse) o.userData.keep = true; });
+    if (st === "agreed") { const halo = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffd0ec, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })); halo.position.y = h + 0.05; grp.add(halo); }
+    if (pend) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.02, 8, 24), amberMat); r.rotation.x = Math.PI / 2; r.position.y = 0.08; r.userData.pulse = true; grp.add(r); }
   }
+  mergeStatic(grp);
   return grp;
 }
 function orbMesh(it, g) {
@@ -447,12 +467,15 @@ function syncThings() {
     let t = things.get(id);
     if (t && t.sig !== sig) { gardenGroup.remove(t.group); t = null; }
     if (!t) {
-      const pos = it.pos || ringPos(id, it.kind === "agreement" ? 2.6 : 1.7);
+      // a spot saved under the old dome may fall in a wall or the stream here: nudge it onto open ground
+      const raw = it.pos || ringPos(id, it.kind === "agreement" ? 1.6 : 1.1);
+      const pos = walkable(raw.x, raw.z, 0.25) ? raw : pushOut(new THREE.Vector3(raw.x, 0, raw.z), 0.3);
       const group = it.kind === "agreement" ? plantMesh(it, g) : orbMesh(it, g);
-      group.position.set(pos.x, 0, pos.z);
+      group.position.set(pos.x, groundY(pos.x, pos.z), pos.z);
       gardenGroup.add(group);
       t = { id, kind: it.kind === "agreement" ? "agreement" : "offering", group, pos: new THREE.Vector3(pos.x, 0, pos.z), sig };
       things.set(id, t);
+      t.pos.y = 0;
       if (syncThings.prev && !was && it.by !== me) burst(t.pos, hueOf(it.by, g));
     }
     t.item = it;
@@ -467,7 +490,7 @@ function syncThings() {
 }
 function flyIn(id, it) {
   const t = things.get(id);
-  const from = t ? t.pos.clone().setY(0.62) : (it && it.pos ? new THREE.Vector3(it.pos.x, 0.62, it.pos.z) : new THREE.Vector3(BETWEEN_AT.x + 2, 0.62, BETWEEN_AT.z + 2));
+  const from = t ? t.pos.clone().setY(groundY(t.pos.x, t.pos.z) + 0.62) : (it && it.pos ? new THREE.Vector3(it.pos.x, groundY(it.pos.x, it.pos.z) + 0.62, it.pos.z) : new THREE.Vector3(BETWEEN_AT.x + 1.5, DAIS_Y + 0.62, BETWEEN_AT.z + 1));
   const m = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffe2b0 }));
   m.position.copy(from); scene.add(m);
   fly.push({ m, from, t0: performance.now() / 1000 });
@@ -483,27 +506,13 @@ function burst(pos, color) {
    Walkers: spirits and daemons. Each walks a path drawn from its own seed and the shared clock, so both
    people see it in the same place without any messages. Called over, it walks to that spot and waits.
    =================================================================================================== */
-function walkable(x, z, pad = 0.35) {
-  if (Math.hypot(x, z) > ROOM_R - pad) return false;
-  for (const [ox, oz, r] of OBST) if (Math.hypot(x - ox, z - oz) < r + pad) return false;
-  return true;
-}
-function pushOut(v, pad = 0.35) {
-  const d = Math.hypot(v.x, v.z), max = ROOM_R - pad;
-  if (d > max) { v.x *= max / d; v.z *= max / d; }
-  for (const [ox, oz, r] of OBST) {
-    const dx = v.x - ox, dz = v.z - oz, dd = Math.hypot(dx, dz), m = r + pad;
-    if (dd < m && dd > 1e-4) { v.x = ox + dx / dd * m; v.z = oz + dz / dd * m; }
-  }
-  return v;
-}
 const LEG = 9; // seconds per leg: about five walking, the rest standing
 function waypoint(seed, k, mode) {
   const r = rng(hash(seed + ":" + k));
   for (let i = 0; i < 30; i++) {
     let x, z;
     if (mode === "near" || (mode === "mixed" && r() < 0.5)) { const a = r() * Math.PI * 2, rr = 1.4 + r() * 1.6; x = BETWEEN_AT.x + Math.cos(a) * rr; z = BETWEEN_AT.z + Math.sin(a) * rr; }
-    else { const a = r() * Math.PI * 2, rr = Math.sqrt(r()) * (ROOM_R - 0.8); x = Math.cos(a) * rr; z = Math.sin(a) * rr; }
+    else { const a = r() * Math.PI * 2, rr = Math.sqrt(r()) * (WALK_R - 0.6); x = Math.cos(a) * rr; z = Math.sin(a) * rr; }
     if (walkable(x, z, 0.5)) return new THREE.Vector2(x, z);
   }
   return new THREE.Vector2(0, 2);
@@ -561,7 +570,23 @@ async function syncWalkers() {
 /* ===================================================================================================
    People: you, and whoever else is in the room right now
    =================================================================================================== */
-const meState = { pos: new THREE.Vector3(), yaw: Math.PI, target: null, body: null, keys: new Set(), placed: false };
+const meState = { pos: new THREE.Vector3(), yaw: Math.PI, target: null, body: null, keys: new Set(), placed: false, seatWant: null, sitting: false };
+/* Your cushion: teal for whoever started the garden, plum for whoever joined. Someone only visiting has none. */
+function mySeat() {
+  const g = view().g;
+  if (!g) return 0;
+  if (g.startedBy === me) return 0;
+  return isMember(g) ? 1 : -1;
+}
+function seatOf(uid) { const g = view().g; if (!g || !g.members || !g.members[uid]) return -1; return g.startedBy === uid ? 0 : 1; }
+const seatPos = i => new THREE.Vector3(SEATS[i].x, 0, SEATS[i].z);
+const othersHere = () => [...peers.values()].filter(p => p.uid !== me);
+function ownerSeatNow(uid) {
+  if (uid === me) return meState.sitting ? meState.seatWant : null;
+  for (const p of peers.values()) if (p.uid === uid && p.sitting) return p.seat;
+  return null;
+}
+function standUp() { meState.seatWant = null; if (meState.sitting) { meState.sitting = false; sendPresence(); } }
 const peers = new Map(); // peer -> { uid, body, pos, yaw, cur, walking }
 let myBodyHue = null;
 async function ensureMyBody() {
@@ -596,7 +621,7 @@ function presenceNow() {
   if (!me || !meState.placed) return null;
   const t = meState.target;
   return { x: +meState.pos.x.toFixed(2), z: +meState.pos.z.toFixed(2), h: +meState.yaw.toFixed(2), w: !!(t || meState.keys.size),
-    tx: t ? +t.x.toFixed(2) : null, tz: t ? +t.z.toFixed(2) : null, wave: myWave };
+    tx: t ? +t.x.toFixed(2) : null, tz: t ? +t.z.toFixed(2) : null, wave: myWave, s: meState.sitting ? meState.seatWant : null };
 }
 function sendPresence() { if (meState.wasWalking !== undefined) pollSoon(); }
 function onPeers(list) {
@@ -608,11 +633,13 @@ function onPeers(list) {
     let e = peers.get(uid);
     const fresh = !e;
     if (!e) { e = { peer: uid, uid, pos: new THREE.Vector3(pr.x, 0, pr.z), yaw: pr.h || 0 }; peers.set(uid, e); }
-    const clamp = v => Math.max(-ROOM_R, Math.min(ROOM_R, v));
+    const clamp = v => Math.max(-WALK_R, Math.min(WALK_R, v));
     const goal = pr.w && typeof pr.tx === "number" ? [pr.tx, pr.tz] : [pr.x, pr.z];
     e.tx = clamp(goal[0]); e.tz = clamp(goal[1]); e.th = +pr.h || 0;
+    e.seat = pr.s === 0 || pr.s === 1 ? pr.s : null;
+    if (e.seat != null) { e.tx = SEATS[e.seat].x; e.tz = SEATS[e.seat].z; }
     if (Math.hypot(pr.x - e.pos.x, pr.z - e.pos.z) > 4) e.pos.set(pr.x, 0, pr.z); // too far behind to walk: catch up
-    if (pr.wave && pr.wave !== e.wave) { if (!fresh && now() - pr.wave < 15000) { burst(new THREE.Vector3(pr.x, 0, pr.z), 0xffe2b0); waves.push({ peer: uid, t0: performance.now() / 1000 }); } e.wave = pr.wave; }
+    if (pr.wave && pr.wave !== e.wave) { if (!fresh && now() - pr.wave < 15000) { burst(new THREE.Vector3(pr.x, groundY(pr.x, pr.z), pr.z), 0xffe2b0); waves.push({ peer: uid, t0: performance.now() / 1000 }); if (e.body) e.body.wave(performance.now() / 1000); } e.wave = pr.wave; }
     ensurePeerBody(e);
   }
   for (const [k, e] of peers) if (!seen.has(k)) { if (e.body) scene.remove(e.body.holder); peers.delete(k); const l = labels.get("p:" + k); if (l) { l.remove(); labels.delete("p:" + k); } }
@@ -624,16 +651,17 @@ const waves = [];
    Input: tap the floor to walk there, tap a thing to walk to it, drag to look around, pinch or wheel to zoom.
    Keys: WASD or arrows.
    =================================================================================================== */
-let camYaw = 0, camPitch = 0.42, camDist = 6.2;
+const lastFocus = new THREE.Vector3(0, 1, 0);
+let camYaw = 0, camPitch = 0.5, camDist = innerWidth < innerHeight ? 4.4 : 5.2, camTogether = false, togetherK = 0;
 const pointers = new Map(); let dragMoved = 0, pinch0 = null;
 const ray = new THREE.Raycaster(); const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 renderer.domElement.addEventListener("pointerdown", e => { pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); dragMoved = 0; if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: camDist }; } renderer.domElement.setPointerCapture(e.pointerId); });
 renderer.domElement.addEventListener("pointermove", e => {
   const p = pointers.get(e.pointerId); if (!p) return;
   const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-  if (pointers.size === 2 && pinch0) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(3, Math.min(11, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
+  if (pointers.size === 2 && pinch0) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
   dragMoved += Math.abs(dx) + Math.abs(dy);
-  if (dragMoved > 6) { camYaw -= dx * 0.006; camPitch = Math.max(0.12, Math.min(1.15, camPitch + dy * 0.004)); }
+  if (dragMoved > 6) { camYaw -= dx * 0.006; camPitch = Math.max(0.05, Math.min(1.1, camPitch + dy * 0.004)); }
 });
 function endPointer(e) {
   const p = pointers.get(e.pointerId); pointers.delete(e.pointerId); if (pointers.size < 2) pinch0 = null;
@@ -642,8 +670,8 @@ function endPointer(e) {
 }
 renderer.domElement.addEventListener("pointerup", endPointer);
 renderer.domElement.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); pinch0 = null; });
-renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); camDist = Math.max(3, Math.min(11, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
-addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; e.preventDefault(); } });
+renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
+addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
 addEventListener("keyup", e => meState.keys.delete(e.key.toLowerCase()));
 addEventListener("blur", () => meState.keys.clear());
 
@@ -653,24 +681,38 @@ function tapAt(cx, cy) {
   // things first: the nearest one whose sphere the ray passes through
   let best = null, bestD = Infinity;
   const consider = (key, pos, r) => { const d = ray.ray.distanceToPoint(pos); if (d < r) { const along = ray.ray.origin.distanceTo(pos); if (along < bestD) { bestD = along; best = { key, pos }; } } };
-  consider("between", BETWEEN_AT.clone().setY(1), 1.0);
+  consider("between", BETWEEN_AT.clone().setY(DAIS_Y + 0.5), 0.7);
+  SEATS.forEach((st, i) => consider("seat:" + i, seatPos(i).setY(DAIS_Y + 0.15), 0.45));
   for (const [id, t] of things) consider("item:" + id, t.pos.clone().setY(0.4), 0.5);
   for (const [k, w] of walkers) if (w.holder) consider("w:" + k, w.holder.position.clone().setY(w.type === "spirit" ? 0.4 : 0.9), 0.6);
-  for (const [k, p] of peers) consider("p:" + k, p.pos.clone().setY(0.9), 0.5);
+  for (const [k, p] of peers) consider("p:" + k, p.pos.clone().setY(groundY(p.pos.x, p.pos.z) + 0.9), 0.5);
+  if (best && best.key.startsWith("seat:")) {
+    selected = best.key;
+    const i = +best.key.slice(5);
+    if (i === mySeat()) { meState.seatWant = i; meState.target = seatPos(i); } // walk to your cushion and sit
+    else { standUp(); const dir = meState.pos.clone().sub(best.pos).setY(0); if (dir.length() > 1.3) meState.target = pushOut(best.pos.clone().setY(0).add(dir.normalize().multiplyScalar(1.1))); }
+    refreshHud(); return;
+  }
   if (best) {
+    standUp();
     selected = best.key;
     const dir = meState.pos.clone().sub(best.pos).setY(0); const d = dir.length();
     if (d > 1.3) { dir.normalize(); meState.target = pushOut(best.pos.clone().add(dir.multiplyScalar(1.1))); }
     refreshHud(); return;
   }
   const hit = new THREE.Vector3();
-  if (ray.ray.intersectPlane(floorPlane, hit)) { meState.target = pushOut(hit); selected = null; refreshHud(); }
+  // the floor: the dais is raised, so try its top first, then the flagstones
+  const daisPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -DAIS_Y);
+  if (ray.ray.intersectPlane(daisPlane, hit) && Math.hypot(hit.x, hit.z) < 2.6) { meState.target = pushOut(hit.setY(0)); standUp(); selected = null; refreshHud(); return; }
+  if (ray.ray.intersectPlane(floorPlane, hit)) { meState.target = pushOut(hit); standUp(); selected = null; refreshHud(); }
 }
 
 /* ===================================================================================================
    Frame loop
    =================================================================================================== */
 const clock = new THREE.Clock();
+/* ?cam=x,y,z,lx,ly,lz pins the camera, for screenshots set beside the concept views */
+let debugCam = (() => { const v = new URLSearchParams(location.search).get("cam"); const a = v ? v.split(",").map(Number) : null; return a && a.length === 6 && a.every(Number.isFinite) ? a : null; })();
 let nearKey = null;
 function frame() {
   const dt = Math.min(0.05, clock.getDelta());
@@ -690,17 +732,22 @@ function frame() {
       if (move.length() < 0.08) { meState.target = null; move.set(0, 0, 0); }
     }
     const walking = move.lengthSq() > 1e-6;
+    // reached your cushion: sit, facing the Between
+    if (meState.seatWant != null && !walking && !meState.sitting && meState.pos.distanceTo(seatPos(meState.seatWant)) < 0.15) { meState.sitting = true; sendPresence(); }
+    if (meState.sitting) { const sp = seatPos(meState.seatWant); meState.pos.copy(sp); let d = SEATS[meState.seatWant].yaw - meState.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); meState.yaw += d * Math.min(1, dt * 6); }
     if (walking) {
       const step = Math.min(move.length(), 2.3 * dt);
       move.normalize();
-      meState.pos.add(move.clone().multiplyScalar(step)); pushOut(meState.pos);
+      meState.pos.add(move.clone().multiplyScalar(step)); if (meState.seatWant == null || meState.pos.distanceTo(seatPos(meState.seatWant)) > 0.9) pushOut(meState.pos);
       const want = Math.atan2(move.x, move.z);
       let d = want - meState.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); meState.yaw += d * Math.min(1, dt * 10);
     }
     meState.body.setWalking(walking);
     meState.body.holder.position.copy(meState.pos);
+    meState.body.holder.position.y = meState.sitting ? DAIS_Y + 0.17 : groundY(meState.pos.x, meState.pos.z);
     meState.body.holder.rotation.y = meState.yaw + FACE;
     meState.body.mixer.update(dt);
+    meState.body.pose(t, dt, meState.sitting, false);
     if (walking !== meState.wasWalking || (walking && meState.target !== meState.sentTarget)) { meState.sentTarget = meState.target; sendPresence(); }
     meState.wasWalking = walking;
   }
@@ -710,25 +757,34 @@ function frame() {
     const gx = p.tx - p.pos.x, gz = p.tz - p.pos.z, gd = Math.hypot(gx, gz);
     p.walking = gd > 0.08;
     if (p.walking) { const step = Math.min(gd, 2.3 * dt); p.pos.x += gx / gd * step; p.pos.z += gz / gd * step; }
-    const want = p.walking ? Math.atan2(gx, gz) : p.th;
+    const want = p.walking ? Math.atan2(gx, gz) : p.seat != null ? SEATS[p.seat].yaw : p.th;
     let d = want - p.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); p.yaw += d * Math.min(1, dt * 8);
+    p.sitting = p.seat != null && !p.walking;
+    if (p.sitting) { const want2 = SEATS[p.seat].yaw; let d2 = want2 - p.yaw; d2 = Math.atan2(Math.sin(d2), Math.cos(d2)); p.yaw += d2 * Math.min(1, dt * 6); }
     p.body.setWalking(p.walking);
     p.body.holder.position.copy(p.pos);
+    p.body.holder.position.y = p.sitting ? DAIS_Y + 0.17 : groundY(p.pos.x, p.pos.z);
     p.body.holder.rotation.y = p.yaw + FACE;
-    const wv = waves.find(w => w.peer === k && t - w.t0 < 1.4);
-    p.body.holder.position.y = wv ? Math.abs(Math.sin((t - wv.t0) * 9)) * 0.12 : 0;
     p.body.mixer.update(dt);
+    p.body.pose(t, dt, p.sitting, false);
   }
   // walkers
   const ws = [...walkers.values()].filter(w => w.ready);
   for (const w of ws) {
-    const { p, moving, dir } = walkerPos(w, tShared);
-    w.holder.position.set(p.x, 0, p.y);
+    let { p, moving, dir } = walkerPos(w, tShared);
+    // a spirit whose owner sits down comes and curls up beside their cushion
+    const os = w.type === "spirit" ? ownerSeatNow(w.doc.owner) : null;
+    if (os != null) { const sp = SEATS[os]; p = new THREE.Vector2(sp.x + Math.sign(sp.x) * 0.8, sp.z + 0.35); moving = false; }
+    if (!w.cur) w.cur = p.clone();
+    const gap = p.clone().sub(w.cur), gl = gap.length();
+    if (gl > 0.02) { const step = Math.min(gl, 1.8 * dt); w.cur.add(gap.multiplyScalar(step / gl)); if (gl > 0.08) { moving = true; w.dirOverride = gap.clone(); } else w.dirOverride = null; } else w.dirOverride = null;
+    w.rest = os != null && gl < 0.1;
+    w.holder.position.set(w.cur.x, groundY(w.cur.x, w.cur.y), w.cur.y);
     w.moving = moving;
   }
   for (const w of ws) {
     let yawTo = null;
-    if (w.moving) { const dd = walkerPos(w, tShared).dir; if (dd.lengthSq() > 1e-4) yawTo = Math.atan2(dd.x, dd.y); w.meeting = null; }
+    if (w.moving) { const dd = w.dirOverride || walkerPos(w, tShared).dir; if (dd.lengthSq() > 1e-4) yawTo = Math.atan2(dd.x, dd.y); w.meeting = null; }
     else {
       // standing: turn to the nearest other walker, or to the Between, and meet it
       let nb = null, nd = 2.6;
@@ -741,27 +797,38 @@ function frame() {
     w.holder.rotation.y = w.yaw + FACE;
     w.body.setWalking(w.moving);
     w.body.mixer.update(dt);
+    w.body.pose(t, dt, false, w.rest);
   }
   // the Between and the garden
   stepBetween(t, dt);
-  for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) c.scale.setScalar(1 + Math.sin(t * 4) * 0.15); });
+  for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
     const f = fly[i], u = Math.min(1, (t - f.t0) / 1.6);
-    const to = BETWEEN_AT.clone().setY(1.1);
+    const to = BETWEEN_AT.clone().setY(DAIS_Y + 0.55);
     f.m.position.lerpVectors(f.from, to, u * u * (3 - 2 * u)); f.m.position.y += Math.sin(u * Math.PI) * 1.4;
-    if (u >= 1) { scene.remove(f.m); fly.splice(i, 1); burst(BETWEEN_AT, 0xffe2b0); }
+    if (u >= 1) { scene.remove(f.m); fly.splice(i, 1); burst(BETWEEN_AT.clone().setY(DAIS_Y), 0xffe2b0); creature.bounce(t); }
   }
   for (let i = bursts.length - 1; i >= 0; i--) {
     const b = bursts[i], u = (t - b.t0) / 1.2;
     b.m.scale.setScalar(1 + u * 3); b.m.material.opacity = Math.max(0, 0.9 * (1 - u));
     if (u >= 1) { scene.remove(b.m); bursts.splice(i, 1); }
   }
-  // camera follows you
-  const focus = meState.pos.clone().setY(1.2);
+  // camera: follows you, kept inside the hollow; when you both sit, it eases down to the low view behind the cushions
+  const tog = bothSitting();
+  if (tog !== camTogether) {
+    camTogether = tog;
+    if (tog) { camYaw = 0; camPitch = innerWidth < innerHeight ? 0.22 : 0.16; camDist = innerWidth < innerHeight ? 4.9 : 3.5; } else { camPitch = 0.5; camDist = innerWidth < innerHeight ? 4.4 : 5.2; }
+  }
+  togetherK += ((tog ? 1 : 0) - togetherK) * Math.min(1, dt * 1.6);
+  // frame you and the Between together when you are near it, so both fill a phone screen
+  const meFocus = meState.pos.clone().setY((meState.sitting ? DAIS_Y + 0.75 : groundY(meState.pos.x, meState.pos.z) + 1.0));
+  const toB = Math.hypot(meState.pos.x - BETWEEN_AT.x, meState.pos.z - BETWEEN_AT.z);
+  if (toB < 5) meFocus.lerp(BETWEEN_AT.clone().setY(DAIS_Y + 0.6), 0.4 * (1 - toB / 5) + 0.1);
+  const focus = meFocus.lerp(new THREE.Vector3(0, DAIS_Y + 0.6, -0.4), togetherK);
   const cp = new THREE.Vector3(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist).add(focus);
-  const cd = Math.hypot(cp.x, cp.z); if (cd > 9.6) { cp.x *= 9.6 / cd; cp.z *= 9.6 / cd; }
-  cp.y = Math.min(cp.y, 5);
-  camera.position.lerp(cp, Math.min(1, dt * 6)); camera.lookAt(focus);
+  clampCamera(cp, focus);
+  camera.position.lerp(cp, Math.min(1, dt * 4)); camera.lookAt(focus); lastFocus.copy(focus);
+  if (debugCam) { camera.position.set(debugCam[0], debugCam[1], debugCam[2]); camera.lookAt(debugCam[3], debugCam[4], debugCam[5]); }
   renderer.render(scene, camera);
   drawLabels(t);
   // what is near you
@@ -777,6 +844,8 @@ function nearest() {
   let best = null, bd = 2.0;
   const c = (key, pos) => { const d = Math.hypot(pos.x - meState.pos.x, pos.z - meState.pos.z); if (d < bd) { bd = d; best = key; } };
   c("between", BETWEEN_AT);
+  SEATS.forEach((st, i) => { if (!(meState.sitting && meState.seatWant === i)) c("seat:" + i, seatPos(i)); });
+  if (meState.sitting) return "seat:" + meState.seatWant;
   for (const [id, t] of things) c("item:" + id, t.pos);
   for (const [k, w] of walkers) if (w.holder) c("w:" + k, w.holder.position);
   if (!best) { bd = 1.4; for (const [k, p] of peers) c("p:" + k, p.pos); }
@@ -784,6 +853,7 @@ function nearest() {
 }
 function posOf(key) {
   if (key === "between") return BETWEEN_AT;
+  if (key.startsWith("seat:")) return seatPos(+key.slice(5));
   if (key.startsWith("item:")) { const t = things.get(key.slice(5)); return t && t.pos; }
   if (key.startsWith("w:")) { const w = walkers.get(key.slice(2)); return w && w.holder && w.holder.position; }
   if (key.startsWith("p:")) { const p = peers.get(key.slice(2)); return p && p.pos; }
@@ -794,19 +864,19 @@ function drawLabels(t) {
   const V = view(); const g = V.g;
   if (g && g.phase !== "closed") {
     const nm = betweenName(V.items) || (g.phase === "spark" ? "The spark" : "The Between");
-    placeLabel(label("between", nm, ""), BETWEEN_AT.clone().setY(2.6));
+    placeLabel(label("between", nm, ""), BETWEEN_AT.clone().setY(DAIS_Y + (g.phase === "spark" ? 1.0 : 1.45)));
   }
-  if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(1.95));
-  for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(1.95));
+  if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting ? DAIS_Y + 1.35 : groundY(meState.pos.x, meState.pos.z) + 1.95));
+  for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting ? DAIS_Y + 1.35 : groundY(p.pos.x, p.pos.z) + 1.95));
   for (const [k, w] of walkers) {
     if (!w.holder) continue;
     const d = w.doc;
     const txt = w.type === "spirit" ? `${d.name} · ${possessive(d.owner, g)}` : `${(DAEMONS[d.which] || ["Daemon"])[0]} · ${possessive(d.owner, g)}`;
     const el = label("w:" + k, txt, w.holder.position.distanceTo(meState.pos) > 6 ? "dim" : "");
-    placeLabel(el, w.holder.position.clone().setY(w.type === "spirit" ? 1.15 : 1.95));
+    placeLabel(el, w.holder.position.clone().setY(w.holder.position.y + (w.type === "spirit" ? (w.rest ? 0.75 : 1.15) : 1.95)));
     if (w.meeting && w.type === "daemon" && w.meeting.doc.owner !== d.owner) {
       const b = label("m:" + k, "meets " + (w.meeting.type === "spirit" ? w.meeting.doc.name : (DAEMONS[w.meeting.doc.which] || ["a daemon"])[0]), "bubble");
-      placeLabel(b, w.holder.position.clone().setY(2.3));
+      placeLabel(b, w.holder.position.clone().setY(w.holder.position.y + 2.3));
     }
   }
   for (const [k, el] of labels) if (!el._seen) { el.remove(); labels.delete(k); }
@@ -839,7 +909,7 @@ function refreshHud() {
   else if (g.phase === "closed") hint.textContent = "The garden is closed. Its history is yours to keep from More.";
   else if (!isMember(g)) hint.textContent = members(g).length >= 2 ? "This garden is held by two people. You can look around." : "A spark is waiting here. Walk up to it.";
   else if (g.phase === "spark") hint.textContent = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap the floor to walk, drag to look.`;
-  else if (others.length) hint.textContent = `${nameOf(others[0].uid, g)} is here with you now.`;
+  else if (others.length) hint.textContent = `${nameOf(others[0].uid, g)} is here with you now.` + (bothSitting() ? " You are sitting together." : meState.sitting ? "" : " Tap your cushion to sit with them.");
   else hint.textContent = `${nameOf(other(g), g)} is not here right now. What you do waits for them.`;
 
   // near
@@ -879,6 +949,17 @@ function nearHtml(key, V, g) {
     else if (canTend) acts = `<button type="button" data-open="offer">${g.phase === "spark" ? "Tend it" : "Offer something"}</button><button class="glassbtn" type="button" data-act="checkin">Check in</button>`;
     else if (!isMember(g) && members(g).length < 2) acts = g.joinRequest && g.joinRequest.uid === me ? `<span class="small">You asked to join. It changes once they say yes.</span>` : `<button type="button" data-act="join">Ask to join</button>`;
     return `<div class="what">${txt}</div>${acts ? `<div class="row">${acts}</div>` : ""}`;
+  }
+  if (key.startsWith("seat:")) {
+    const i = +key.slice(5), mine = i === mySeat();
+    const hue = i ? "plum" : "teal";
+    if (mine) return meState.sitting
+      ? `<div class="what"><b>Your cushion</b><span class="t">${bothSitting() ? "Sitting together. Stay as long as you like." : othersHere().length ? esc(nameOf(othersHere()[0].uid, g)) + " is here. Their cushion is the other one." : "Sitting with the Between. When the other person comes in, they find you here."}</span></div><div class="row"><button class="glassbtn" type="button" data-act="stand">Stand up</button>${othersHere().length ? `<button class="glassbtn" type="button" data-act="wave">Wave</button>` : ""}</div>`
+      : `<div class="what"><b>Your cushion</b><span class="t">The ${hue} one is yours.</span></div><div class="row"><button type="button" data-act="sit">Sit here</button></div>`;
+    const uid = members(g).find(u => seatOf(u) === i);
+    const theirs = uid ? nameOf(uid, g) : (g.phase === "spark" ? g.setup.who : "the other person");
+    const there = [...peers.values()].some(p => p.uid === uid && p.sitting);
+    return `<div class="what"><b>${esc(theirs)}'s cushion</b><span class="t">${there ? "They are sitting here now." : `The ${hue} one waits for ${esc(theirs)}.`}</span></div>`;
   }
   if (key.startsWith("item:")) {
     const id = key.slice(5), it = V.items.get(id); if (!it) return "";
@@ -1131,6 +1212,13 @@ async function takeCopy() {
   catch { toast("Saving did not work in this browser. Try again in another one."); }
 }
 
+/* ---------- sound: starts on the first tap, if it is on ---------- */
+const ambient = createAmbient();
+function soundLabel() { const b = $("#soundBtn"); if (!b) return; b.textContent = ambient.on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", ambient.on ? "true" : "false"); }
+addEventListener("pointerdown", () => ambient.wake(), { capture: true });
+document.addEventListener("visibilitychange", () => { document.hidden ? ambient.pause() : ambient.resume(); });
+soundLabel();
+
 /* ---------- clicks, forms ---------- */
 document.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-act],[data-open],[data-close]");
@@ -1138,6 +1226,7 @@ document.addEventListener("click", async ev => {
   if (b.hasAttribute("data-close")) { closeSheet(); return; }
   if (b.dataset.open) { openSheet(b.dataset.open, b.dataset.id); return; }
   const a = b.dataset.act, id = b.dataset.id;
+  if (a === "sound") { ambient.toggle(); soundLabel(); return; }
   const V = view(); const g = V.g;
   b.disabled = true;
   try {
@@ -1188,8 +1277,11 @@ document.addEventListener("click", async ev => {
       myWave = now(); pollSoon();
       toast("It noticed you.");
     }
+    else if (a === "sit") { const i = mySeat(); if (i >= 0) { meState.seatWant = i; meState.target = seatPos(i); } }
+    else if (a === "stand") { const i = meState.seatWant ?? 0; standUp(); meState.target = pushOut(seatPos(i).add(new THREE.Vector3(Math.sign(SEATS[i].x) * 0.4, 0, 1.0))); }
     else if (a === "wave") {
-      burst(meState.pos, hueOf(me, g));
+      burst(meState.pos.clone().setY(groundY(meState.pos.x, meState.pos.z)), hueOf(me, g));
+      if (meState.body) meState.body.wave(performance.now() / 1000);
       myWave = now(); pollSoon();
     }
     else if (a === "show") {
@@ -1353,12 +1445,12 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
    Boot
    =================================================================================================== */
 (async function boot() {
-  loadStep("loading the cave");
-  const roomP = buildRoom().catch(e => {
+  loadStep("building the hollow");
+  const roomP = Promise.resolve().then(buildRoom).catch(e => {
     $("#loadMsg").innerHTML = `The garden did not load. Check your connection and open the page again.<br><small style="opacity:.6">${esc((e && (e.message || e.type)) || e)}</small><br><button type="button" onclick="location.reload()" style="margin-top:12px">Try again</button>`;
     throw e;
   });
-  roomP.then(() => loadStep(roomOk = "cave built"), () => {});
+  roomP.then(() => loadStep(roomOk = "hollow built"), () => {});
   const q = new URLSearchParams(location.search);
   gardenId = q.get("g"); invite = q.get("invite");
   loadStep("finding your garden");
@@ -1391,7 +1483,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   } else gardenLoaded = true;
   (ls.get("between.outbox." + gardenId + "." + me) || []).forEach(o => outbox.push(o));
   placeMe();
-  if (!roomOk) loadStep("building the cave");
+  if (!roomOk) loadStep("building the hollow");
   try { await roomP; } catch { return; }
   $("#loading").hidden = true; $("#hud").hidden = false;
   if (!garden && !storeDown) openSheet("setup");
@@ -1401,4 +1493,5 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite }) };
+window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite }),
+  seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; }, screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; } };
