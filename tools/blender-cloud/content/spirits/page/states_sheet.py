@@ -6,7 +6,8 @@ Each DIR is a shellback.py OUT folder. Writes OUT_DIR/state-sheet.jpg (five form
 OUT_DIR/state-sprites.png (the fifteen 96 px sprites, labelled), OUT_DIR/squint.png (the same fifteen sprites shuffled and
 numbered, no labels), OUT_DIR/squint-key.json (which number is which), OUT_DIR/veil.jpg (the dissatisfied creature beside
 the veiled and the flooding one) and OUT_DIR/states-section.html, the page section with everything inline.
-The shuffle is seeded, so the same folders always give the same squint sheet."""
+The shuffle is seeded, so the same folders always give the same squint sheet. Round 19: --seed sets the seed (each base
+should pass its own, since rounds 17 and 18 shared one layout); it defaults to round 12's."""
 import base64, io, json, pathlib, random, sys
 from PIL import Image, ImageDraw, ImageFont
 
@@ -59,7 +60,7 @@ sp.save(OUT / "state-sprites.png")
 
 # the squint test: fifteen sprites shuffled, numbered, no labels
 cells = [(s, st) for s in STATES for st in ST]
-random.Random("squint-r12").shuffle(cells)
+random.Random(opt.get("seed", "squint-r12")).shuffle(cells)
 Z = 2  # shown at twice their size, pixel for pixel, the way the game scales them
 sq = Image.new("RGBA", (5 * (P * Z + G) + G, 3 * (P * Z + G + 22) + G), BG + (255,)); d = ImageDraw.Draw(sq)
 for k, (s, st) in enumerate(cells):
