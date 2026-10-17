@@ -3418,7 +3418,7 @@ HEDGEHOG = {  # coat (the fur under and between the spines), band (the spines' d
     "earth": ((0.66, 0.52, 0.34), (0.4, 0.26, 0.12), (0.92, 0.82, 0.62), (0.1, 0.07, 0.04)),
 }
 PALLAS = {  # coat (long grey), saddle (darker over the back), frost (the white tips, face and chin), dark (cheek bars, tail rings, brow spots)
-    "wood":  ((0.56, 0.53, 0.48), (0.4, 0.37, 0.32), (0.92, 0.9, 0.86), (0.08, 0.07, 0.06)),
+    "wood":  ((0.42, 0.4, 0.36), (0.3, 0.28, 0.24), (0.92, 0.9, 0.86), (0.08, 0.07, 0.06)),
     "fire":  ((0.62, 0.5, 0.42), (0.46, 0.32, 0.24), (0.95, 0.88, 0.8), (0.1, 0.05, 0.04)),
     "water": ((0.5, 0.54, 0.58), (0.34, 0.38, 0.44), (0.9, 0.93, 0.95), (0.05, 0.07, 0.1)),
     "metal": ((0.62, 0.62, 0.64), (0.44, 0.44, 0.47), (0.95, 0.95, 0.96), (0.08, 0.08, 0.09)),
@@ -3429,10 +3429,10 @@ HEDGEHOG_POSE = {  # as HEDGE_POSE, plus how far the spines stand (0 flat, 1 rai
     "dissatisfied": dict(chest=0.27, rump=0.34, head=(0.4, 0.08, 0.2), yaw=1.0, chin=-1.2, ears=0.0, fore=0.36, hind=-0.24, spread=1.15, tail=0.0, brace=True, spines=1.0),
     "satisfied": dict(chest=0.35, rump=0.31, head=(0.56, -0.05, 0.4), yaw=-0.35, chin=0.7, ears=1.2, fore=0.32, hind=-0.34, spread=1.05, tail=0.0, brace=False, spines=0.0),
 }
-PALLAS_POSE = {
-    "neutral": dict(chest=0.44, rump=0.44, head=(0.56, 0, 0.62), yaw=0.0, chin=0.0, ears=1.0, fore=0.34, hind=-0.44, spread=1.0, tail=0.2, brace=False),
-    "dissatisfied": dict(chest=0.36, rump=0.33, head=(0.44, 0.12, 0.5), yaw=1.0, chin=-0.45, ears=0.0, fore=0.46, hind=-0.32, spread=1.2, tail=-0.4, brace=True),
-    "satisfied": dict(chest=0.5, rump=0.42, head=(0.62, -0.06, 0.72), yaw=-0.35, chin=0.25, ears=1.2, fore=0.36, hind=-0.46, spread=1.05, tail=0.9, brace=False),
+PALLAS_POSE = {  # low and round, the head sitting straight on the shoulders with no neck showing
+    "neutral": dict(chest=0.42, rump=0.42, head=(0.68, 0, 0.6), yaw=0.0, chin=0.0, ears=1.0, fore=0.34, hind=-0.44, spread=1.0, tail=0.2, brace=False),
+    "dissatisfied": dict(chest=0.36, rump=0.33, head=(0.6, 0.1, 0.5), yaw=1.0, chin=-0.45, ears=0.0, fore=0.46, hind=-0.32, spread=1.2, tail=-0.4, brace=True),
+    "satisfied": dict(chest=0.48, rump=0.42, head=(0.72, -0.05, 0.68), yaw=-0.35, chin=0.25, ears=1.2, fore=0.36, hind=-0.46, spread=1.05, tail=0.9, brace=False),
 }
 
 
@@ -3531,54 +3531,62 @@ def hedgehog_tail(name, pts, r, F, s=1.0):
     return path
 
 
+PALLAS_R = {}  # the cat's head turn as built, so the face paint lands in the head's own frame
+
+
 def pallas_head(H, s=1.0, chin=0.0, yaw=0.0):
-    """Metaball parts for the Pallas's cat's head: broad and flat, wide at the cheeks, with only a short muzzle."""
-    v, _ = hedge_turn(H, s, chin, yaw)
-    return [("ell", v(0, 0, 0), 0.13 * s, (0.95, 1.22, 0.86)),
-            ("ell", v(0.02, 0.09, -0.04), 0.08 * s, (0.9, 1.0, 0.85)), ("ell", v(0.02, -0.09, -0.04), 0.08 * s, (0.9, 1.0, 0.85)),
-            ("ell", v(0.11, 0, -0.04), 0.06 * s, (0.9, 1.15, 0.85))]
+    """Metaball parts for the Pallas's cat's head, after reference photos (iNaturalist, 2026-10-17): round and flat in
+    front like an owl's, wider at the cheeks where the fur flares, the muzzle barely standing out of the face."""
+    v, R = hedge_turn(H, s, chin, yaw)
+    PALLAS_R.update(H=H, s=s, R=R)
+    return [("ell", v(0, 0, 0), 0.14 * s, (0.82, 1.12, 0.92)),
+            ("ell", v(-0.01, 0.1, -0.05), 0.09 * s, (0.8, 1.0, 0.85)), ("ell", v(-0.01, -0.1, -0.05), 0.09 * s, (0.8, 1.0, 0.85)),
+            ("ell", v(0.085, 0, -0.045), 0.05 * s, (0.6, 1.15, 0.7))]
 
 
 def pallas_face(body, H, S, F, s, r, chin=0.0, yaw=0.0, ears=1.0):
-    """The Pallas's cat's pale gold eyes, set forward under heavy brows, its small nose, and its low round ears set wide
-    on the sides of the head: flattened out to the sides when it is wary. Returns the mouth seam."""
+    """The Pallas's cat's big round pale gold eyes set forward high in the flat face, its small nose, and its tiny round
+    ears set low and wide on the sides of the head, half lost in the fur: flattened right out when it is wary.
+    Returns the mouth seam."""
     v, R = hedge_turn(H, s, chin, yaw)
     lids = dict(S, skin=F[0], spot=F[1])
     for side in (1, -1):
-        eye(body, v(0.09, side * 0.062, 0.03), R @ Vector((0.85, side * 0.4, 0.1)), lids, r * 0.85, iris=(0.86, 0.74, 0.36))
-    brow = solid("brow", mixc(F[0], F[2], 0.4), 0.9)
-    for side in (1, -1):  # the heavy brows
-        o = ball("brow", brow, v(0.1, side * 0.062, 0.07), 0.04 * s, (0.6, 1.2, 0.45), 14)
-        o.rotation_euler = (0, -0.2 + 0.45 * chin, yaw)
-    tip = v(0.17, 0, -0.03)
+        eye(body, v(0.1, side * 0.056, 0.03), R @ Vector((0.95, side * 0.28, 0.06)), lids, r * 1.15, iris=(0.86, 0.76, 0.3))
+    tip = v(0.12, 0, -0.02)
     d = (R @ Vector((1, 0, 0))).normalized()
     hit, loc, _, _ = body.ray_cast(tip + d, -d)
-    ball("nose", solid("nose", (0.32, 0.22, 0.22), 0.4), (loc if hit else tip), 0.02 * s, (0.7, 1.2, 0.8), 12)
-    ear = solid("ear", mixc(F[0], F[1], 0.4), 0.9)
+    ball("nose", solid("nose", (0.36, 0.24, 0.24), 0.4), (loc if hit else tip), 0.016 * s, (0.7, 1.3, 0.8), 12)
+    ear = solid("ear", mixc(F[0], F[1], 0.5), 0.9)
     flat_ = 1 - min(ears, 1.0)
-    for side in (1, -1):  # short and rounded, set wide and low, tipped out to the side; flattened right out when wary
-        o = ball("ear", ear, v(-0.02, side * 0.14, 0.035 - 0.02 * flat_), 0.042 * s, (0.35, 0.9, 0.7), 16)
-        o.rotation_euler = (side * (0.95 + 0.6 * flat_ - 0.2 * (ears - 1.0)), -0.2, yaw)
-    return mouth_seam(body, v(0.1, 0, 0), v(0.1, 0, -0.08).z, 50, 0.007 * s, 0.005 * s)
+    for side in (1, -1):  # tiny and rounded, set low and wide, tipped out to the side
+        o = ball("ear", ear, v(-0.04, side * 0.135, 0.045 - 0.02 * flat_), 0.032 * s, (0.4, 0.85, 0.7), 14)
+        o.rotation_euler = (side * (1.0 + 0.5 * flat_ - 0.15 * (ears - 1.0)), -0.2, yaw)
+    return mouth_seam(body, v(0.07, 0, 0), v(0.07, 0, -0.085).z, 45, 0.006 * s, 0.004 * s)
 
 
 def pallas_paint(H, F, s, feet, low=0.2, upright=False, seed=0.0):
-    """The Pallas's cat's coat: long and grey, darker over the back, every tip frosted white; a pale face and chin, two
-    black bars across each cheek, black spots on the brow, faint bars on the legs."""
+    """The Pallas's cat's coat, after the photos: long and grey, every tip frosted white, faint dark bars across the back
+    and loins; on the face a pale muzzle and chin, a pale ring round each eye and a pale brow over it, two dark lines
+    running back from each eye across the cheek, and small dark spots on the crown."""
     def fn(p, n):
-        d = (p - H) / s
         frost = max(0.0, noise.noise(p * 30.0 + Vector((seed, 0, 0))))
-        if d.length < 0.32:
-            c = mixc(mixc(F[0], F[1], 0.25), F[2], 0.1 + 0.25 * frost)
-            if (d.z < -0.05 and d.x > 0.03) or (d.x > 0.09 and d.z < 0.01): c = F[2]  # the white chin and muzzle
-            for k in (0, 1):  # two black bars back across each cheek
-                if abs(d.y) > 0.07 and d.x < 0.07 and abs(d.z - (0.0 - 0.035 * k) - 0.12 * (0.07 - d.x)) < 0.012: c = F[3]
-            if d.z > 0.08 and d.x > -0.04 and abs(math.sin(d.y * 60)) > 0.8: c = mixc(c, F[3], 0.7)  # brow spots
+        hh = PALLAS_R.get("H", H)
+        d = (p - hh) / s
+        if d.length < 0.3:
+            q = PALLAS_R["R"].transposed() @ d if "R" in PALLAS_R else d  # the head's own frame, x along the face
+            c = mixc(F[0], F[2], 0.05 + 0.2 * frost)
+            ay = abs(q.y)
+            if q.x > 0.06 and q.z < 0.0: c = F[2]  # the pale muzzle and chin
+            for k, dz in enumerate((0.0, -0.035)):  # two dark lines back from the eye's outer corner across the cheek
+                if 0.07 < ay < 0.15 and -0.04 < q.x < 0.08 and abs(q.z - (0.015 + dz) + 0.35 * (0.08 - q.x)) < 0.014: c = F[3]
+            if q.x > 0.02 and abs(ay - 0.056) < 0.04 and -0.005 < q.z - 0.03 < 0.045 and ((ay - 0.056) ** 2 + (q.z - 0.03) ** 2) > 0.0009: c = mixc(c, F[2], 0.45)  # pale ring and brow
+            if q.z > 0.08 and q.x > -0.06 and noise.noise(q * 60.0) > 0.25: c = mixc(c, F[3], 0.75)  # crown spots
             return c
-        c = mixc(F[0], F[1], max(0.0, n.z - 0.2) * 0.7)
-        c = mixc(c, F[2], 0.55 * frost)
+        c = mixc(F[0], F[1], max(0.0, n.z - 0.2) * 0.6)
+        c = mixc(c, F[2], 0.25 * frost)
+        if not upright and n.z > 0.1 and p.x < -0.05 and math.sin(p.x * 26) > 0.75: c = mixc(c, F[3], 0.35)  # bars on the loins
         if n.z < -0.4 or (upright and n.x > 0.4 and abs(p.y) < 0.16): c = mixc(c, F[2], 0.35)
-        if not upright and p.z < low and abs(math.sin(p.z * 40)) > 0.85: c = mixc(c, F[3], 0.45)  # leg bars
+        if not upright and p.z < low and abs(math.sin(p.z * 40)) > 0.85: c = mixc(c, F[3], 0.35)  # leg bars
         return c
     return fn
 
@@ -3596,8 +3604,8 @@ def pallas_tail(name, pts, r, F, s=1.0):
     def fn(p, n):
         k = min(range(len(path)), key=lambda i: (p - path[i]).length)
         t = cum[k] / total
-        if t > 0.86: return F[3]
-        return F[3] if t > 0.45 and math.sin(t * 40) > 0.55 else mixc(F[0], F[2], 0.3)
+        if t > 0.88: return F[3]
+        return F[3] if t > 0.3 and math.sin(t * 34) > 0.6 else mixc(F[0], F[2], 0.3)
     paint(o, fn)
     o.data.materials.append(vmat("fur", 0.9))
     return path
@@ -3705,9 +3713,9 @@ HEDGE = {  # each Hedge base's colours, head, face, coat and tail; its girth, he
                      pose=HEDGEHOG_POSE, ally=short_ally(0.24), body_r=0.2, body_sc=(1.1, 1.05, 0.95), neck_r=(0.1, 0.09), leg_r=(0.05, 0.055, 0.04),
                      toes="claws", fluffy=0.006, low=0.16, lift=0.1, aura=(0.4, (0.95, 0.75, 0.55), 1.1), cam=(0.36, 2.9), cam_h=(0.35, 3.3),
                      cam_a=(1.2, 4.1), ally_g=1.15, ally_s=1.0),
-    "pallas": dict(F=PALLAS, head=pallas_head, face=pallas_face, paint=pallas_paint, tail=pallas_tail, girth=1.1, tall=1.0, long=0.82, s=1.15,
-                   pose=PALLAS_POSE, ally=short_ally(0.22), body_r=0.2, body_sc=(1.05, 1.1, 1.0), neck_r=(0.11, 0.1), leg_r=(0.065, 0.07, 0.05),
-                   toes="none", fluffy=0.025, low=0.28, lift=0.04, aura=(0.5, (1.15, 0.8, 0.65), 1.35), cam=(0.5, 3.4), cam_h=(0.4, 3.4),
+    "pallas": dict(F=PALLAS, head=pallas_head, face=pallas_face, paint=pallas_paint, tail=pallas_tail, girth=1.2, tall=1.0, long=0.8, s=1.2,
+                   pose=PALLAS_POSE, ally=short_ally(0.26), scarf=0.8, body_r=0.22, body_sc=(1.0, 1.1, 1.0), neck_r=(0.17, 0.15), leg_r=(0.07, 0.075, 0.055),
+                   toes="none", fluffy=0.018, low=0.28, lift=0.04, aura=(0.5, (1.15, 0.8, 0.65), 1.35), cam=(0.5, 3.4), cam_h=(0.4, 3.4),
                    cam_a=(1.2, 4.1), ally_g=1.1, ally_s=0.95),
 }
 
@@ -3810,7 +3818,7 @@ def hedge_creature(sc, el, lt, dk):
     body.data.materials.append(vmat("fur", 0.9))
     if args.base == "hedgehog":
         hedgehog_spines(body, H, chest, rump, F, s, P["spines"], seed=f"spines-{el}")
-    k_ = nr[0] / 0.11
+    k_ = T.get("scarf", nr[0] / 0.11)
     drape("scarf", tuple(NECK["at"][0]), tuple(-NECK["at"][1]), 0.12 * k_, 0.16 * k_, 0.13, S["cloth"], S["trim"], f"scarf-{args.base}-{el}", 0.6)
     beads(tuple(NECK["at"][0] + Vector((0.0, 0, -0.04))), tuple(NECK["at"][1]), 0.14, 12, 0.08, 3, lt, S)
     hand_lens(chest + Vector((0.27 * g, 0.08 * g, -0.06)), 0.85, NECK["at"][0] + Vector((0.06, 0.06, -0.06)))
