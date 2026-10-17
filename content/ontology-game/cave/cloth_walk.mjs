@@ -150,7 +150,8 @@ function capDepth(p, c) {
 }
 function sleeveFrame(D, root, caps) {
   const raw = cloth.raw, x = cloth.x, at = (a, p) => [a[3 * p], a[3 * p + 1], a[3 * p + 2]];
-  const fr = { rim: [], panels: [], arm: 0, leg: 0 };
+  const fr = { rim: [], panels: [], arm: 0, leg: 0, fallIn: 0, n: 0 };
+  const armCaps = caps.filter(c => c.arm);
   for (const a of arms) {
     for (const p of a.rim) fr.rim.push([at(x, p), at(raw, p)]);
     if (a.groups.length > 1) for (const r of a.rims) if (r.length) fr.panels.push(Array.from(r, p => [at(x, p), at(raw, p)]));
@@ -160,14 +161,38 @@ function sleeveFrame(D, root, caps) {
         const d = capDepth(q, c) - Math.max(0, capDepth(r, c));
         if (c.arm) fr.arm = Math.max(fr.arm, d); else fr.leg = Math.max(fr.leg, d);
       }
+      // round 12, the bunching: a panel point of cloth fallen in toward the arm, nearer its line than 0.6 of the gap
+      // its skinned place has
+      if (cloth.slv[p] && armCaps.length) {
+        const g = Math.min(...armCaps.map(c => segDist(q, c.s.slice(0, 3), c.s.slice(3, 6)))), g0 = Math.min(...armCaps.map(c => segDist(r, c.s.slice(0, 3), c.s.slice(3, 6))));
+        fr.n++; if (g < 0.6 * g0) fr.fallIn++; if (process.env.DBG) (globalThis.R = globalThis.R || []).push(g / g0);
+      }
     }
   }
+  // round 12, the cuff trim's spikes: a sleeve's turned trim (followers) points up the sleeve from its edge at rest;
+  // spike, the share of them pointing down past the edge instead (their offset against the way to the anchor's
+  // neighbour up the cloth)
+  let sp = 0, sn = 0;
+  for (const f of trimFol) {
+    const a = cloth.anchor[f], r = cloth.tref[a], o = [0, 1, 2].map(i => x[3 * f + i] - x[3 * a + i]), u = [0, 1, 2].map(i => x[3 * r + i] - x[3 * a + i]);
+    const cs = (o[0] * u[0] + o[1] * u[1] + o[2] * u[2]) / (Math.hypot(...o) * Math.hypot(...u) || 1);
+    sn++; if (cs < trimRest.get(f) - 1) sp++;
+  }
+  fr.spike = sn ? sp / sn : 0;
   return fr;
+}
+const trimFol = Array.from(cloth.fol).filter(f => cloth.slv[cloth.anchor[f]]), trimRest = new Map();
+if (process.env.DBG) console.error("trim", trimFol.length, cloth.fol.length, cloth.slvIdx.length);
+for (const f of trimFol) {   // the rest: the job's points are per vertex, the cloth's per welded particle
+  const R = (p, i) => robe.rest[3 * cloth.reps[p] + i], a = cloth.anchor[f], r = cloth.tref[a];
+  const o = [0, 1, 2].map(i => R(f, i) - R(a, i)), u = [0, 1, 2].map(i => R(r, i) - R(a, i));
+  trimRest.set(f, (o[0] * u[0] + o[1] * u[1] + o[2] * u[2]) / (Math.hypot(...o) * Math.hypot(...u) || 1));
 }
 function sleeveMeasure(frames) {
   if (!frames.length || !frames[0].rim.length) return null;
   const m = Object.assign(rimMeasure(frames.map(f => f.rim)), {
-    arm_mm: +(1000 * Math.max(...frames.map(f => f.arm))).toFixed(1), leg_mm: +(1000 * Math.max(...frames.map(f => f.leg))).toFixed(1) });
+    arm_mm: +(1000 * Math.max(...frames.map(f => f.arm))).toFixed(1), leg_mm: +(1000 * Math.max(...frames.map(f => f.leg))).toFixed(1),
+    fall_in: +Math.max(...frames.map(f => f.n ? f.fallIn / f.n : 0)).toFixed(3), trim_spike: +Math.max(...frames.map(f => f.spike)).toFixed(3) });
   // round 12: each panel's rim on its own (T1 per panel), and how much in step the panels swing with each other: the
   // correlation of each pair's swing (its rim's motion less the forearm's, averaged over the rim; 1, one piece)
   const P = frames[0].panels.length;
@@ -263,3 +288,4 @@ result.step_ms = { median: costs[costs.length >> 1], p95: costs[Math.floor(costs
 result.sleeves = Object.fromEntries(result.scenarios.map(s => [s.name, s.sleeves]));   // before the write: garments.py reads it from the file
 writeFileSync(process.argv[3], JSON.stringify(result));
 console.log(JSON.stringify({ sleeves: result.sleeves, particles: cloth.P, free: cloth.nfree, folds: result.folds, fold_far: result.fold_far, step_ms: result.step_ms }));
+if (process.env.DBG) { const R = globalThis.R.sort((a, b) => a - b); console.error('ratio pct', [0.01, 0.05, 0.1, 0.5, 0.9].map(q => R[Math.floor(q * R.length)].toFixed(2)), R.length); }

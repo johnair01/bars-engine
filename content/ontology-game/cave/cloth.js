@@ -80,6 +80,8 @@
                          // together than the skirt's, round a thinner limb)
     armBend: null,       // the sleeve panels' cloth's bend (null: bend, the skirt's): a panel's short span folds and bunches
                          // at the skirt's 0.3; nearer the hem's it keeps its line as it swings
+    armCompress: null,   // the share of stretch that resists squashing in the sleeve panels' cloth (null: compress, the
+                         // skirt's): a panel squashed across its width narrows into a strip and gathers below the hand
     armGap: 0,           // share of its skinned gap to the forearm's and hand's line that a panel point keeps: a panel
                          // may swing out and slide round the arm, and never falls in onto it (0: only the capsule)
     armGapMax: 0.2,      // metres: the farthest from a capsule's line the gap is kept
@@ -248,6 +250,10 @@
     var sv = [];
     for (i = 0; i < P; i++) if (c.slv[i]) sv.push(i);
     c.slvIdx = Int32Array.from(sv);
+    if (o.armCompress !== null && sv.length) {
+      c.stSq = new Float32Array(c.stL.length).fill(o.compress);
+      for (i = 0; i < c.stSq.length; i++) if (c.slv[c.st[2 * i]] || c.slv[c.st[2 * i + 1]]) c.stSq[i] = o.armCompress;
+    }
     if (o.armBend !== null) for (i = 0; i < c.bdK.length; i++) {
       var ba = c.bd[2 * i], bb = c.bd[2 * i + 1];
       if ((c.slv[ba] || c.slv[bb]) && Math.abs(c.bdK[i] - o.bend) < 1e-6) c.bdK[i] = o.armBend;
@@ -415,7 +421,7 @@
       xp[i3] = x[i3]; xp[i3 + 1] = x[i3 + 1]; xp[i3 + 2] = x[i3 + 2];
       x[i3] += vx + gx; x[i3 + 1] += vy + gy; x[i3 + 2] += vz + gz;
     }
-    solve(c, c.st, c.stL, o.stretch, false, o.compress);
+    solve(c, c.st, c.stL, o.stretch, false, c.stSq || o.compress);
     solve(c, c.bd, c.bdL, c.bdK, false);
     solve(c, c.th, c.thL, 1.0, true);
     var caps = lerpCaps(c.caps0, c.caps, f);
@@ -473,7 +479,7 @@
       if (d < 1e-9 || (tether && d <= L[e])) continue;
       var wa = tether ? (wi[a] ? 1 : 0) : wi[a], wb = tether ? 0 : wi[b], ws = wa + wb;
       if (!ws) continue;
-      var g = (typeof k === "number" ? k : k[e]) * (d < L[e] && squash !== undefined ? squash : 1) * (d - L[e]) / (d * ws);
+      var g = (typeof k === "number" ? k : k[e]) * (d < L[e] && squash !== undefined ? (typeof squash === "number" ? squash : squash[e]) : 1) * (d - L[e]) / (d * ws);
       x[a3] += wa * g * dx; x[a3 + 1] += wa * g * dy; x[a3 + 2] += wa * g * dz;
       x[b3] -= wb * g * dx; x[b3 + 1] -= wb * g * dy; x[b3 + 2] -= wb * g * dz;
     }
