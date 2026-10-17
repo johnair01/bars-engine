@@ -42,7 +42,14 @@ const waitStep = async (s, ms = 20000) => {
 const st = () => page.evaluate(() => { const s = window.__oagBigMind.state; return s && { phase: s.phase, s: s.s, gate: s.gate, cam: s.cam, waiting: s.waiting.slice(), answers: s.answers }; });
 const save = () => page.evaluate(() => JSON.parse(localStorage.getItem('oag.bigmind.v1') || 'null'));
 async function hold(on) { await page.evaluate((on) => { const s = window.__oagBigMind.state; s.speed = 6; s.held = on; }, on); }
-async function holdUntil(stepName) { await hold(true); const r = await waitStep(stepName); return r; }
+async function holdUntil(stepName) {
+  await hold(true);
+  if (stepName !== 'end') return waitStep(stepName);
+  // the approach check-in comes first at each hallway's end (build 4); the older checks skip it
+  const r = await page.waitForFunction(() => /^(end|approach-body)$/.test(document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') || ''), null, { timeout: 20000 }).then(() => true, () => false);
+  if (r && (await page.getAttribute('[data-bm-modal]', 'data-bm-step')) === 'approach-body') await page.click('[data-bm-apskipall]');
+  return r && waitStep0('end', 5000);
+}
 // Every visit asks again (board bmt-ask-again): going back in meets the chamber's voice once more, and declining opens the way.
 async function passAgain() {
   if (!(await holdUntil('meet'))) return false;
@@ -1437,6 +1444,63 @@ await page.evaluate(() => localStorage.clear());
   await page.click('[data-bm-feel="none"]');
   ok(await waitStep0('meet') && /Who vouches for you\?/.test(await page.textContent('[data-bm-modal]')) && await page.evaluate(() => window.__oagBigMind.spirits.some((o) => o.meet === 'controller' && o.name === 'No word yet' && !o.element)), 'No word yet spawns a grey spirit, and then the voice asks who vouches for you');
   await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await page.evaluate(() => localStorage.clear());
+}
+
+
+// the approach check-in at the end of the hallway (pass daemon-meeting1, build 4)
+{
+  const fast = () => page.evaluate(() => { window.__oagBigMind.state.speed = 6; });
+  const text = () => page.textContent('[data-bm-modal]');
+  const startAt = async (extra = {}) => {
+    await page.evaluate((x) => { localStorage.clear(); localStorage.setItem('oag.bigmind.v1', JSON.stringify({ v: 1, chamber: 0, at: 'hall2', voices: { protector: { status: 'spoken', kept: [], savedAt: '2026-10-17T00:00:00.000Z', spirit: { name: 'Curious', element: 'earth' }, ...x } }, waiting: [] })); }, extra);
+    await page.reload(); await page.waitForSelector('[data-bm-mouth]');
+    await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas'); await fast(); await passAgain();
+  };
+  await startAt();
+  await hold(true);
+  ok(await waitStep0('approach-body'), 'at the end of the hallway, the check-in opens on the body ask, before the shut mouth');
+  ok(!/and then\.\.\./.test(await text()) && (await page.locator('[data-bm-apgo]').count()) === 0, 'there is no "and then..." line');
+  const bodyText = await text();
+  ok(/What does it feel like\?/.test(bodyText) && /What is your body doing\?/.test(bodyText) && /Tightness/.test(bodyText) && /Numbness/.test(bodyText) && /Moving freely/.test(bodyText) && /Bracing/.test(bodyText) && /Flinging open/.test(bodyText), 'one card, two rows: the texture words and the movement words');
+  ok(!/Protector|Controller|Skeptic|Fixer|Victim|Damaged|Emotional Body/.test(bodyText), 'it names no daemon');
+  ok(!/\d/.test(bodyText), 'no screen prints a number');
+  // the chamber is the Protector's: bracing matches, gripping (the Controller's) merges
+  await page.click('[data-bm-aptex="tension"]'); await page.click('[data-bm-ap="bracing"]'); await page.click('[data-bm-apdone]');
+  ok(await waitStep0('approach-feel') && (await page.locator('[data-bm-merged]').count()) === 0, 'a movement that belongs to this voice shows nothing merged');
+  await page.click('[data-bm-ap="fire"]');
+  ok(await waitStep0('approach-veil'), 'then how near it is');
+  ok(await page.evaluate(() => window.__oagBigMind.mouth.light.color.getHex()) === await page.evaluate(() => window.__oagCave.kit.spiritHex('fire')), 'the mouth\'s light took the element\'s colour at once');
+  ok(await page.evaluate(() => { const a = window.__oagBigMind.approachSpirit; return a && a.body === 'bracing' && a.texture === 'tension' && a.element === 'fire' && a.family === 'protector' && a.merged === null; }), 'the meeting spirit forms from the answers, family the chamber\'s daemon');
+  await page.click('[data-bm-ap="veiled"]');
+  ok(await waitStep0('end'), 'a faint answer never shows the settled ask: it goes straight on');
+  let sv = await save();
+  const ap = sv.voices.protector.approach;
+  ok(ap && ap.body === 'bracing' && ap.texture === 'tension' && ap.feeling === 'fire' && ap.veil === 'veiled' && ap.state === null && !('merged' in ap) && !!ap.at, 'a match saves no merged: ' + JSON.stringify(ap));
+  // a movement of another voice: merged, unnamed
+  await startAt(); await hold(true);
+  await waitStep0('approach-body'); await page.click('[data-bm-ap="gripping"]'); await page.click('[data-bm-apdone]');
+  ok(await waitStep0('approach-feel') && /Something of another voice is in this one\./.test(await text()) && !/Controller/.test(await text()), 'a mismatch says something of another voice is in this one, and names no daemon');
+  ok(await page.evaluate(() => { const a = window.__oagBigMind.approachSpirit; return a && a.merged === 'controller' && a.family === 'protector'; }), 'the spirit wears the other daemon\'s gas');
+  await page.click('[data-bm-apskip]'); await waitStep0('approach-veil');
+  await page.click('[data-bm-ap="clear"]');
+  ok(await waitStep0('approach-state'), 'when not faint, the settled ask shows');
+  await page.click('[data-bm-ap="wants"]');
+  ok(await waitStep0('end'), 'and the walk goes on');
+  sv = await save();
+  ok(sv.voices.protector.approach.merged === 'controller' && sv.voices.protector.approach.texture === null && sv.voices.protector.approach.state === 'wants', 'a mismatch saves merged; a skipped ask is saved as nothing');
+  // either, both or neither: sensation alone
+  await startAt(); await hold(true);
+  await waitStep0('approach-body'); await page.click('[data-bm-aptex="numbness"]'); await page.click('[data-bm-apdone]');
+  ok(await waitStep0('approach-feel') && await page.evaluate(() => window.__oagBigMind.approachSpirit.texture === 'numbness'), 'a sensation alone is enough');
+  await page.click('[data-bm-apskipall]');
+  ok(await waitStep0('end') && (await save()).voices.protector.approach.texture === 'numbness', 'skip all passes, keeping what was answered');
+  // skip all passes, and saves nothing when nothing was answered; it is asked every visit
+  await startAt(); await hold(true);
+  await waitStep0('approach-body'); await page.click('[data-bm-apskipall]');
+  ok(await waitStep0('end') && !(await save()).voices.protector.approach, 'skip all passes and keeps nothing');
+  await startAt(); await hold(true);
+  ok(await waitStep0('approach-body'), 'asked again on every visit');
   await page.evaluate(() => localStorage.clear());
 }
 

@@ -2304,8 +2304,99 @@
       hint.textContent = status === "waiting" ? V.title + " waits by the wall. The way is open." : (ok ? "Saved. The way is open." : "The way is open. (This browser would not save.)");
       hint.setAttribute("data-bm-status", status);
     }
+    // ---- the approach check-in (pass daemon-meeting1, build 4) ------------------------------------------------------------------
+    // In each hallway, before the shut mouth, up to four asks, each skippable, in this order: the body (one card, two rows: what it
+    // feels like, in the texture words, and what it is doing, in plain movement words, never a daemon), the feeling (the five, or own
+    // words, or no word yet), whether it is faint, too much or clear (veiled, flooding, clear), and, only when it is not faint,
+    // whether it sits all right (the state band). Each answer shows at once: the mouth's light takes the element's colour and
+    // the meeting spirit forms from the layers so far. Skip all and walking on always pass; it is asked every visit. Saved as
+    // voices[id].approach = { body, texture, feeling, veil, state, at } plus merged when the movement belongs to another voice, no
+    // words, no numbers (dmt-approach-checkin, dmt-body-blockers, dmt-two-axes, dmt-same-order). The spirit's family is always the
+    // chamber's daemon; a merged one wears the other daemon's gas and says "Something of another voice is in this one", unnamed.
+    var MOVES = [["bracing", "Bracing"], ["gripping", "Gripping"], ["pulling-back", "Pulling back"], ["leaning-in", "Leaning in"], ["sinking", "Sinking"], ["curling-in", "Curling in"], ["flinging-open", "Flinging open"]];
+    // Whose movement each is (book order, dmt-body-blockers): a movement that belongs to another voice marks the spirit as merged.
+    var MOVE_OF = { bracing: "protector", gripping: "controller", "pulling-back": "skeptic", "leaning-in": "fixer", sinking: "victim", "curling-in": "damaged-self", "flinging-open": "emotional-body" };
+    var SENSES = [["constriction", "Tightness"], ["tension", "Tension"], ["strength", "Strength"], ["numbness", "Numbness"], ["free", "Moving freely"], ["other", "Something else"]];
+    var VEILS = [["veiled", "Faint, or far away"], ["flooding", "Too much"], ["clear", "Clear"]];
+    var STATES = [["settled", "It sits all right"], ["neither", "Neither"], ["wants", "It wants something"]];
+    var appSpirit = null;
+    function approachShow(a) {
+      // The mouth's light takes the element's colour and the meeting spirit forms from the layers so far (dmt-spirit-from-answers).
+      var hex = a.element ? K.spiritHex(a.element) : mouthCol;
+      if (a.element) { mouthCol = hex; mouthLight.color.setHex(hex); mouthGlow.material.color.setHex(hex); }
+      if (!a.body && !a.texture && !a.element && !a.veil && !a.state) return;
+      var tx = a.texture && a.texture !== "free" ? K.TEXTURES.filter(function (t) { return t[0] === a.texture; })[0] : null;
+      if (!a.element && tx) hex = tx[2]; // a sensation tints the spirit until a feeling is named
+      var gasId = a.merged || V.id, grow = daemonRow(gasId), gas = grow && grow[3] != null ? grow[3] : hex; // the chamber's gas: the voice's own, or the other's if merged
+      if (!appSpirit) {
+        var g = K.buildSpirit(THREE, "meeting spirit", hex); g.userData.label.visible = false; var ap = at(route, route.sEnd + 1.6); g.position.set(ap.x, floor(ap) + 1.5, ap.z); scene.add(g);
+        appSpirit = { g: g, light: new THREE.PointLight(hex, 0.5, K.LAMP.reach * 0.5, K.LAMP.decay), y: g.position.y, wants: false, still: false }; appSpirit.light.position.copy(g.position); scene.add(appSpirit.light);
+      }
+      var g2 = appSpirit.g;
+      g2.userData.color.setHex(gas); g2.userData.orb.material.color.setHex(hex); appSpirit.light.color.setHex(hex);
+      g2.userData.level = a.veil === "veiled" ? 0.15 : a.veil === "flooding" ? 0.95 : 0.45; // polarity: veiled is dim, flooding is bright
+      g2.scale.setScalar(a.veil === "flooding" ? 1.35 : a.veil === "veiled" ? 0.8 : 1);
+      appSpirit.wants = a.state === "wants"; appSpirit.still = a.state === "settled"; // state band: settled holds still, wanting reaches
+      g2.visible = true;
+      api.approachSpirit = { body: a.body, texture: a.texture, element: a.element, veil: a.veil, state: a.state, family: V.id, merged: a.merged || null };
+    }
+    function approach(done) {
+      var a = { body: null, texture: null, element: null, veil: null, state: null, feeling: null, merged: null }, asked = 0;
+      function finishApproach() {
+        if (asked && (a.body || a.texture || a.feeling || a.veil || a.state)) {
+          try {
+            var s = readSave(), r = s.voices[V.id];
+            if (r) { r.approach = { body: a.body, texture: a.texture, feeling: a.feeling, veil: a.veil, state: a.state, at: stamp() }; if (a.merged) r.approach.merged = a.merged; writeSave(s); }
+          } catch (e) { /* this browser would not save */ }
+        }
+        hide(); done();
+      }
+      function skipAll() { finishApproach(); }
+      // A movement that belongs to another voice is kept as merged, and said without a name (dmt-body-blockers).
+      function mergedNote() { return a.merged ? el("p", { class: "bm-guide", "data-bm-merged": a.merged, text: "Something of another voice is in this one." }) : null; }
+      function ask(tag, prompt, cards, extra, pick) {
+        asked++;
+        show([el("h2", { text: "Before the way on" }), guide(prompt), mergedNote(), el("div", { class: "bm-cards" }, cards.map(function (c) { return btn(c[1], function () { pick(c[0]); }, { class: "bm-card", "data-bm-ap": c[0] }); })), extra || null,
+          row([btn("Skip this", function () { pick(null); }, { class: "bm-link", "data-bm-apskip": "" }), btn("Skip all, walk on", skipAll, { class: "bm-link", "data-bm-apskipall": "" })])], tag);
+      }
+      // One card, two rows (dmt-body-blockers): what it feels like, and what the body is doing; either, both or neither.
+      function body() {
+        asked++;
+        var rows = {};
+        function pickRow(key, label, items, attr) {
+          var box = el("div", { class: "bm-cards", "data-bm-aprow": key });
+          items.forEach(function (c) {
+            var b = btn(c[1], function () {
+              rows[key] = rows[key] === c[0] ? null : c[0];
+              Array.prototype.forEach.call(box.childNodes, function (n) { n.classList.toggle("on", n.getAttribute(attr) === rows[key]); n.setAttribute("aria-pressed", n.getAttribute(attr) === rows[key] ? "true" : "false"); });
+            }, { class: "bm-card", "aria-pressed": "false" }); b.setAttribute(attr, c[0]); box.appendChild(b);
+          });
+          return [guide(label), box];
+        }
+        function go() {
+          a.texture = rows.texture || null; a.body = rows.move || null;
+          a.merged = a.body && MOVE_OF[a.body] !== V.id ? MOVE_OF[a.body] : null;
+          approachShow(a); feeling();
+        }
+        show([el("h2", { text: "Before the way on" }), guide("Before you go on, notice your body.")].concat(pickRow("texture", "What does it feel like?", SENSES, "data-bm-aptex"), pickRow("move", "What is your body doing?", MOVES, "data-bm-ap"),
+          [row([btn("That's it", go, { "data-bm-apdone": "" }), btn("Skip all, walk on", skipAll, { class: "bm-link", "data-bm-apskipall": "" })])]), "approach-body");
+      }
+      function feeling() {
+        var input = el("input", { type: "text", "data-bm-apline": "", placeholder: "Or in your own words", maxlength: "60", enterkeyhint: "done", "aria-label": "In your own words" });
+        function own() { if (input.value.trim()) { a.feeling = "own"; approachShow(a); veil(); } }
+        input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); own(); } });
+        ask("approach-feel", "And the feeling, if there is one?", ELEMENTS.map(function (e) { return [e[0], e[2].charAt(0).toUpperCase() + e[2].slice(1) + " (" + e[1] + ")"]; }).concat([["none", NO_WORD]]),
+          el("div", { class: "bm-line" }, [input, btn("That's it", own, { "data-bm-apsay": "" })]), function (v) {
+            a.feeling = v; a.element = v && v !== "none" ? v : null; approachShow(a); veil();
+          });
+      }
+      function veil() { ask("approach-veil", "How near is it?", VEILS, null, function (v) { a.veil = v; approachShow(a); if (v === "veiled") finishApproach(); else state(); }); }
+      function state() { ask("approach-state", "Where it is, how does it sit?", STATES, null, function (v) { a.state = v; approachShow(a); finishApproach(); }); }
+      body();
+    }
     function theEnd() {
       st.phase = "end";
+      if (!st.approached) { st.approached = true; return approach(theEnd); }
       var rest = btn("Rest here", function () { hide(); st.phase = "rest"; hint.textContent = "Resting. Tap Self to walk back up."; }, { "data-bm-rest": "" }, true);
       if (NEXT && NEXT.built && !NEXT.centre) {
         show([el("h2", { text: NEXT.title }), guide("The mouth of the next chamber is shut ahead, breathing, with a light in it. Its chamber is open."),
@@ -2524,6 +2615,7 @@
         if (ob.textContent !== (inn ? "in" : "out")) ob.textContent = inn ? "in" : "out";
         ob.setAttribute("data-bm-orb", inn ? "in" : "out");
       }
+      if (appSpirit) { var ag = appSpirit.g; ag.position.y = appSpirit.y + (still || appSpirit.still ? 0 : (appSpirit.wants ? 0.22 : 0.1) * Math.sin(now / 700)); K.stepAura(ag.userData.aura, ag.userData.color, ag.userData.level, dt, still); }
       K.followSpirits(THREE, spirits, function (j) { var sa = side(Math.max(0.5, st.s - 2.2 - 1.6 * j), j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2); return { x: sa.x, y: floor(sa) + 1.7, z: sa.z }; }, dt, now, still);
       if (cen) cen.voices.forEach(function (o, j) { // around the child, beyond it and to both sides; one named as in its way stands closer
         var n = cen.voices.length, ang = (n === 1 ? 0 : -1.75 + 3.5 * j / (n - 1)), r = o.near ? 1.5 : 2.6, ca = side(cen.s + r * Math.cos(ang), r * Math.sin(ang));
