@@ -25,6 +25,7 @@ Round 12 adds the satisfaction states (pass spirit-states 1, positions ss-marker
 or floods (below 0) it. The poses are the tortoise's; the material layer works on every base.
 Round 13 adds the Fixer's Tinker family with its raccoon (--base raccoon), its stance the Fixer's reach in each state.
 Round 14 adds the Tinker's beaver (--base beaver) and aye-aye (--base ayeaye) on the raccoon's gas, core, stances and outfit.
+Round 15 adds the Controller's Holdfast family with its badger (--base badger), its stance the Controller's grasp in each state.
 """
 import argparse, json, math, os, pathlib, random, sys
 
@@ -39,7 +40,7 @@ ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--sprite", type=int, default=96)
 ap.add_argument("--only", default="", help="element to build alone, for a quick look")
 ap.add_argument("--stages", default="", help="comma-separated stages to build, for a quick look")
-ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat", "raccoon", "beaver", "ayeaye"],
+ap.add_argument("--base", default="tortoise", choices=["tortoise", "armadillo", "pangolin", "fox", "otter", "goat", "raccoon", "beaver", "ayeaye", "badger"],
                 help="the animal base (round 4 adds the armadillo and the pangolin; round 8 the Player's Romp's fox, round 9 its otter, round 10 its kid goat)")
 ap.add_argument("--heads", action="store_true", help="also render a close-up of the creature's and ally form's head")
 ap.add_argument("--nation", default="", choices=["", "meridia"],
@@ -336,6 +337,7 @@ BASES = {
     "raccoon": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="tinker"),  # round 13: the Fixer's Tinker, first base
     "beaver": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="tinker"),  # round 14: the Tinker's builder
     "ayeaye": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="tinker"),  # round 14: the Tinker's mender
+    "badger": dict(squash=(1.0, 1.0, 1.0), pattern="none", family="holdfast"),  # round 15: the Controller's Holdfast, first base
 }
 FAMILY = BASES[args.base].get("family", "shellback")
 SHELL_SQUASH = Vector(BASES[args.base]["squash"])
@@ -2694,6 +2696,340 @@ def tinker_ascended(sc, el, lt, dk):
     aura(rng, S["aura"], lt, (lean * 0.5, 0, 1.15), (0.9 + lean * 0.4, 0.8, 1.0), 2.35)
 
 
+# Round 15: the Controller's family, the Holdfast (council/loops/prompts/spirit-generator-r15.md), first base the
+# badger. A holdfast is the grip that keeps hold, and the Controller's movement is grasp (GESTURES.md: fists set on the
+# hips, elbows out wide, chest and chin up, feet together, rigid and tall). A dissatisfied Holdfast holds that grasp and
+# pushes it further: legs locked straight, all four feet drawn in together under it, chest and chin raised high, back
+# stiff, tail up, claws dug in. A satisfied one has let go: low and easy, feet set wide, head level and soft, tail down,
+# claws flat. The family's own pieces are the clasped core and a ring of iron keys.
+BADGER = {  # coat (silver-grey back), saddle (darker along the spine), pale (the white face and ear tips), dark (stripes, legs, belly)
+    "wood":  ((0.4, 0.4, 0.37), (0.22, 0.22, 0.2), (0.95, 0.95, 0.9), (0.06, 0.06, 0.05)),
+    "fire":  ((0.44, 0.34, 0.3), (0.27, 0.16, 0.12), (0.97, 0.9, 0.84), (0.08, 0.04, 0.03)),
+    "water": ((0.36, 0.41, 0.47), (0.2, 0.25, 0.32), (0.92, 0.95, 0.97), (0.04, 0.06, 0.09)),
+    "metal": ((0.48, 0.49, 0.53), (0.28, 0.29, 0.33), (0.97, 0.97, 0.98), (0.06, 0.06, 0.08)),
+    "earth": ((0.46, 0.39, 0.3), (0.28, 0.21, 0.14), (0.95, 0.9, 0.8), (0.08, 0.05, 0.03)),
+}
+IRON = (0.3, 0.31, 0.33)
+HOLDFAST_POSE = {  # chest and rump heights, the head, fore and hind feet along the body and apart, the tail's lift, legs locked
+    "neutral": dict(chest=0.46, rump=0.48, head=(0.94, 0, 0.5), fore=0.38, hind=-0.42, spread=1.0, tail=-0.1, chin=0.0, lock=False),
+    "dissatisfied": dict(chest=0.66, rump=0.52, head=(0.82, 0, 1.0), fore=0.3, hind=-0.3, spread=0.45, tail=0.9, chin=1.0, lock=True),
+    "satisfied": dict(chest=0.38, rump=0.4, head=(1.04, 0, 0.36), fore=0.56, hind=-0.6, spread=1.7, tail=-0.5, chin=-0.5, lock=False),
+}
+HOLDFAST_ALLY = {  # torso lean (back is negative), head, both hands (near, far) with their elbows, near and far foot, fists
+    "neutral": dict(lean=0.0, head=(0.12, 0, 1.88), hands=((0.12, -0.42, 1.0), (0.12, 0.42, 1.0)),
+                    elbows=((0.0, -0.44, 1.28), (0.0, 0.44, 1.28)), feet=((0.04, -0.15), (0.04, 0.15)), hip=0.9, fist=True, chin=0.0),
+    "dissatisfied": dict(lean=-0.1, head=(-0.04, 0, 2.02), hands=((0.02, -0.33, 1.0), (0.02, 0.33, 1.0)),
+                         elbows=((-0.08, -0.78, 1.26), (-0.08, 0.78, 1.26)), feet=((0.04, -0.06), (0.04, 0.06)), hip=0.96, fist=True, chin=1.0),
+    "satisfied": dict(lean=0.03, head=(0.16, 0, 1.86), hands=((0.3, -0.86, 1.08), (0.3, 0.86, 1.08)),
+                      elbows=((0.1, -0.62, 1.26), (0.1, 0.62, 1.26)), feet=((0.04, -0.22), (0.04, 0.22)), hip=0.88, fist=False, chin=-0.3),
+}
+
+
+def holdfast_gas(rng, lt, dk, n=150):
+    """The Holdfast's gas: motes drawn in tight to a clenched fist, four knuckles in a row along its top, the fingers
+    curled under, the thumb laid across them, and a short wrist trailing back."""
+    motes = [mat(f"mote{i}", lt if i % 3 else dk, 1.8 - i * 0.4, 0.55 - i * 0.12) for i in range(3)]
+    for i in range(n):
+        t = rng.random()
+        if t < 0.34:  # the back of the hand, a squat ball
+            d = Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))).normalized() * rng.random() ** 0.5
+            c = Vector((d.x * 0.24, d.y * 0.26, d.z * 0.2)); r = 0.05
+        elif t < 0.6:  # four knuckles in a row along the top front
+            k = i % 4
+            c = Vector((0.2, -0.2 + k * 0.133, 0.17)) + Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))) * 0.035; r = 0.045
+        elif t < 0.8:  # the fingers curled down and back under the palm
+            k = i % 4; u = rng.random()
+            a = u * math.pi * 0.9
+            c = Vector((0.2 + 0.14 * math.sin(a), -0.2 + k * 0.133, 0.17 - 0.32 * (1 - math.cos(a)) / 2 * 1.1)) + \
+                Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))) * 0.02; r = 0.035
+        elif t < 0.9:  # the thumb across the front of the curled fingers
+            u = rng.random()
+            c = Vector((0.3 + 0.06 * math.sin(u * math.pi), -0.3 + 0.3 * u, -0.02 + 0.02 * u)) + \
+                Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))) * 0.02; r = 0.04
+        else:  # the wrist, trailing back and down
+            u = rng.random()
+            c = Vector((-0.2 - 0.5 * u, 0, -0.08 - 0.12 * u)) + Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))) * (0.1 - 0.05 * u); r = 0.04 * (1 - 0.5 * u)
+        c *= 1.7; r *= (0.8 + rng.random() * 0.6) * 1.5
+        obj_from(bpy.ops.mesh.primitive_ico_sphere_add, f"mote{i}", motes[i % 3], subdivisions=1, radius=r,
+                 location=(c.x, c.y, 0.42 + c.z))
+
+
+def holdfast_core(lt, at=(0, 0, 0.35), size=0.32, face=None):
+    """The Holdfast's core: a faceted gem cut square, gripped by four iron claws that reach round from behind its rim
+    and close over its face, the yin-yang and trigrams between them, turned to the sprite camera."""
+    face = (face or (CAM_DIR + Vector((0, 0, 0.35)))).normalized()
+    rot = Vector((0, 0, 1)).rotation_difference(face)
+    at = Vector(at)
+    gem = mat("core", lt, 2.4, 0.95)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=size * 0.82, depth=size * 0.4, location=at, rotation=rot.to_euler())
+    o = bpy.context.active_object; o.name = "core"; o.data.materials.append(gem)
+    for f in o.data.polygons: f.use_smooth = False
+    claw = mat("coreclaw", mixc(lt, IRON, 0.55), 1.2, 0.95)
+    u = rot @ Vector((1, 0, 0)); v = rot @ Vector((0, 1, 0))
+    for k in range(4):
+        a = (k + 0.5) * math.pi / 2
+        d = math.cos(a) * u + math.sin(a) * v
+        pts = [at - face * size * 0.3 + d * size * 0.7, at - face * size * 0.12 + d * size * 0.98,
+               at + face * size * 0.26 + d * size * 0.9, at + face * size * 0.3 + d * size * 0.62]
+        tube("coreclaw", pts, size * 0.07, claw)
+        ball("coreclaw", claw, pts[-1], size * 0.08, seg=10)
+    bagua_on(mixc(lt, (1, 1, 1), 0.3), at + face * size * 0.21, face, size * 0.55)
+    return o
+
+
+def key_ring(at, s=1.0, n=3):
+    """A ring of iron keys, hung at the chest or the belt."""
+    iron = solid("iron", IRON, 0.35, metal=1.0)
+    at = Vector(at)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.05 * s, minor_radius=0.009 * s, major_segments=24, minor_segments=6,
+                                     location=at, rotation=(math.pi / 2, 0, 0.6))
+    bpy.context.active_object.name = "keyring"; bpy.context.active_object.data.materials.append(iron)
+    for k in range(n):
+        a = (k - (n - 1) / 2) * 0.45
+        top = at + Vector((math.sin(a) * 0.05, 0, -0.05 * math.cos(a))) * s
+        d = Vector((math.sin(a) * 0.5, 0, -1)).normalized()
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.022 * s, minor_radius=0.007 * s, major_segments=16, minor_segments=5,
+                                         location=top + d * 0.02 * s, rotation=(math.pi / 2, 0, 0.6))
+        bpy.context.active_object.data.materials.append(iron)
+        tube("key", [top + d * 0.04 * s, top + d * 0.15 * s], 0.008 * s, iron)
+        bpy.ops.mesh.primitive_cube_add(size=1, location=top + d * 0.13 * s + Vector((0.015, 0, 0)) * s)
+        b = bpy.context.active_object; b.scale = (0.03 * s, 0.008 * s, 0.022 * s); b.data.materials.append(iron)
+
+
+def badger_head(H, s=1.0, turn=0.0):
+    """Metaball parts for the badger's head: a low wedge, broad at the cheeks, tapering to a long blunt snout. turn
+    lifts the snout (positive, chin up) or drops it (negative)."""
+    v = lambda x, y, z: H + Vector((x, y, z)) * s
+    return [("ell", v(0, 0, 0), 0.15 * s, (1.1, 1.0, 0.8)),
+            ("ell", v(-0.02, 0.09, -0.03), 0.09 * s, (1.0, 0.8, 0.85)), ("ell", v(-0.02, -0.09, -0.03), 0.09 * s, (1.0, 0.8, 0.85))] + \
+        taper(v, (0.1, 0, -0.02), (0.31, 0, -0.04 + turn * 0.07), 0.095 * s, 0.035 * s, (1.1, 0.95, 0.8), (1.2, 0.9, 0.8), 8)
+
+
+def badger_face(body, H, S, F, s, r, turn=0.0):
+    """The badger's small dark eyes inside its two black stripes, its broad black nose, and its small round ears
+    tipped in white. Returns the mouth seam."""
+    lids = dict(S, skin=F[3], spot=F[3])
+    for side in (1, -1):
+        eye(body, H + Vector((0.11, side * 0.06, 0.025)) * s, (0.45, side * 0.85, 0.2), lids, r * 0.85)
+    tip = H + Vector((0.34, 0, -0.04 + turn * 0.07)) * s
+    hit, loc, _, _ = body.ray_cast(tip + Vector((1, 0, 0.05)), Vector((-1, 0, -0.05)).normalized())
+    ball("nose", solid("nose", (0.03, 0.03, 0.03), 0.3), (loc if hit else tip), 0.036 * s, (0.9, 1.3, 0.85), 16)
+    rim, ear = solid("earrim", F[2], 0.85), solid("ear", F[3], 0.85)
+    for side in (1, -1):  # small round ears set low and wide, white at the tip
+        o = ball("ear", ear, H + Vector((-0.08, side * 0.125, 0.07)) * s, 0.05 * s, (0.45, 1.0, 0.9), 20)
+        o.rotation_euler = (side * 0.5, 0, 0)
+        o = ball("earrim", rim, H + Vector((-0.085, side * 0.13, 0.105)) * s, 0.032 * s, (0.4, 1.0, 0.6), 16)
+        o.rotation_euler = (side * 0.5, 0, 0)
+    return mouth_seam(body, H + Vector((0.18, 0, 0)) * s, H.z - 0.08 * s, 50, 0.012 * s, 0.006 * s)
+
+
+def badger_paint(H, F, s, feet, low=0.2, upright=False):
+    """The badger's coat: a silver-grey grizzled back darker along the spine; a white face with a black stripe from
+    each side of the nose back over the eye to the ear; black throat, chest, belly and legs."""
+    def fn(p, n):
+        g = noise.noise(p * 30.0)
+        c = mixc(F[0], F[1], max(0.0, n.z - 0.3) * 1.1)
+        c = mixc(c, F[2] if g > 0 else F[3], 0.16 * abs(g) * 3)  # coarse grizzled guard hairs
+        d = (p - H) / s
+        if d.length < 0.4:
+            c = F[2]  # the white face
+            if 0.028 < abs(d.y) < 0.08 and d.z > -0.05 and -0.16 < d.x < 0.3: c = F[3]  # the two stripes
+            if d.z < -0.075 and d.x < 0.14: c = F[3]  # dark throat
+            if d.x > 0.3: c = mixc(c, F[3], 0.7)  # the snout darkens to the nose
+            return c
+        front = n.x > 0.45 and (p.z < 1.45 if upright else True)
+        if p.z < low or n.z < -0.4 or (front and not upright and p.x > 0.2) or (upright and front and p.z < 1.4 and abs(p.y) < 0.2):
+            c = F[3]  # black legs, belly, chest
+        if any((p - f).length < 0.07 for f in feet): c = F[3]
+        return c
+    return fn
+
+
+def badger_tail(name, pts, r, F, s=1.0):
+    """A short, stiff, grizzled tail."""
+    path = tail_path(pts, 8)
+    m = len(path) - 1
+    o = blob(name, [("ball", tuple(p), r * (1 - 0.5 * (k / m) ** 1.5)) for k, p in enumerate(path)], 0.02 * s, 2000)
+    fluff(o, 0.01 * s, 14.0, 3.0)
+    paint(o, lambda p, n: mixc(F[0], F[2], 0.25))
+    o.data.materials.append(vmat("fur", 0.85))
+    return path
+
+
+HOLDFAST = {  # each Holdfast base's colours, head, face, coat and tail; its girth, height and head size
+    "badger": dict(F=BADGER, head=badger_head, face=badger_face, paint=badger_paint, tail=badger_tail, girth=1.0, tall=1.0, s=1.3),
+}
+
+
+def holdfast_hologram(lt, dk):
+    """The projected badger: a faceted body of light, low and broad, a wedge head with its two stripes, small ears
+    and a short tail."""
+    skin = mat("holo", lt, 1.1, 0.32, scan=True)
+    edge = mat("edge", lt, 2.2, 0.9)
+    deep = mat("deep", lt, 0.9, 0.22, scan=True)
+
+    def traced(o):
+        w = o.copy(); w.data = o.data.copy(); bpy.context.scene.collection.objects.link(w)
+        w.data.materials.clear(); w.data.materials.append(edge)
+        md = w.modifiers.new("w", "WIREFRAME"); md.thickness = 0.018; md.use_replace = True
+    body = obj_from(bpy.ops.mesh.primitive_uv_sphere_add, "body", skin, segments=8, ring_count=6, radius=1.0, location=(-0.05, 0, 0.46))
+    body.scale = (0.66, 0.42, 0.3); traced(body)
+    head = obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "head", skin, subdivisions=1, radius=0.19, location=(0.66, 0, 0.5))
+    head.scale = (1.1, 1.0, 0.8); traced(head)
+    traced(obj_from(bpy.ops.mesh.primitive_cone_add, "snout", skin, vertices=5, radius1=0.12, depth=0.3,
+                    location=(0.9, 0, 0.47), rotation=(0, math.pi / 2 + 0.08, 0)))
+    for side in (1, -1):  # the two dark stripes from the nose back over the eyes
+        o = obj_from(bpy.ops.mesh.primitive_cube_add, "stripe", mat("stripe", dk, 0.6, 0.8), size=1, location=(0.78, side * 0.07, 0.57))
+        o.scale = (0.44, 0.04, 0.03); o.rotation_euler = (0, 0.12, 0)
+        traced(obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "ear", skin, subdivisions=1, radius=0.055, location=(0.56, side * 0.17, 0.62)))
+        obj_from(bpy.ops.mesh.primitive_ico_sphere_add, "eye", mat("eye", (1, 1, 1), 9.0, 1.0), subdivisions=1, radius=0.025,
+                 location=(0.8, side * 0.07, 0.6))
+    traced(obj_from(bpy.ops.mesh.primitive_cone_add, "tail", skin, vertices=5, radius1=0.08, depth=0.28,
+                    location=(-0.78, 0, 0.5), rotation=(0, -math.pi / 2 - 0.4, 0)))
+    for x, y in ((0.36, 0.2), (0.36, -0.2), (-0.4, 0.2), (-0.4, -0.2)):
+        obj_from(bpy.ops.mesh.primitive_cylinder_add, "leg", deep, vertices=5, radius=0.075, depth=0.42, location=(x, y, 0.02))
+    ring = mat("ring", lt, 2.0, 0.7)
+    obj_from(bpy.ops.mesh.primitive_torus_add, "projector", ring, major_radius=1.3, minor_radius=0.018,
+             major_segments=48, minor_segments=4, location=(0, 0, -0.22))
+    holdfast_core(lt, at=(0, 0, 0.5), size=0.15)
+
+
+def holdfast_creature(sc, el, lt, dk):
+    """The living Holdfast (the badger) on its own four feet, nothing in its paws, its key ring and clasped core at its
+    chest. Its stance is the Controller's grasp for the state it is in (HOLDFAST_POSE)."""
+    T = HOLDFAST[args.base]
+    S, F = STYLE[el], T["F"][el]
+    P = HOLDFAST_POSE[look_state()]
+    lights(sc)
+    rng = random.Random(f"creature-{args.base}-{el}")
+    s, g, t = T["s"], T["girth"], T["tall"]
+    H = Vector(P["head"]); H.z *= t
+    HEAD["at"] = H
+    cz, rz = P["chest"] * t, P["rump"] * t
+    chest, rump = Vector((0.28, 0, cz)), Vector((-0.38, 0, rz))
+    neck0 = chest + Vector((0.12, 0, 0.04))
+    NECK["at"] = (neck0 + (H - neck0) * 0.4, (H - neck0).normalized(), 0.16 * g)
+    flat_ = (1.0, 1.42 * g, 0.86)
+    parts = T["head"](H, s, P["chin"]) + [("cap", tuple(neck0), tuple(H + Vector((-0.08, 0, -0.02))), 0.15 * g)]
+    for k in range(6):  # a broad, flat body, from the chest back to the rump
+        u = k / 5
+        parts.append(("ell", tuple(chest + (rump - chest) * u), (0.24 + 0.03 * math.sin(math.pi * u)) * g, flat_))
+    fx, hx, sp = P["fore"], P["hind"], P["spread"]
+    legs = []
+    for x0, z0, x1, y0, y1, k in ((0.3, cz - 0.1, fx, 0.15, 0.17, 0), (-0.4, rz - 0.1, hx, 0.17, 0.18, 1)):
+        for side in (-1, 1):
+            a = (x0, side * y0 * g, z0)
+            c = (x1, side * y1 * g * sp, 0.06)
+            if P["lock"]:  # locked straight: the middle joint on the line
+                b = tuple((Vector(a) + Vector(c)) / 2)
+            else:
+                b = ((x0 + x1) / 2 + (0.03 if k == 0 else 0.07), side * (y0 + y1 * sp) / 2 * g, max(0.18, z0 * 0.45))
+            legs.append((a, b, c))
+    legs = [legs[0], legs[1], legs[2], legs[3]]
+    LEGS.update(stand(legs))
+    feet = []
+    for k, (a, b, c) in enumerate(legs):
+        parts += [("cap", a, b, (0.1 if k < 2 else 0.11) * g), ("cap", b, c, 0.075 * g)]
+        foot = Vector(c) + Vector((0.04, 0, -0.02))
+        parts.append(("ell", tuple(foot), 0.065, (1.4, 1.1, 0.5)))
+        feet.append(foot)
+    for side in (-1, 1):  # heavy shoulders and thighs
+        parts += [("ell", (0.3, side * 0.15 * g, cz - 0.04), 0.15 * g, (1.0, 0.8, 1.1)), ("ell", (-0.4, side * 0.16 * g, rz - 0.04), 0.16 * g, (1.15, 0.75, 1.1))]
+    body = blob("body", parts, 0.022, 15000)
+    fluff(body, 0.01, 20.0)
+    horn = solid("claw", (0.78, 0.74, 0.62), 0.45)
+    grip = look_state() == "dissatisfied"
+    for i, f in enumerate(feet):  # long pale digging claws on the forefeet, short ones behind; dug in when it grips
+        n_ = 0.07 if i < 2 else 0.04
+        for k in (-2, -1, 0, 1, 2):
+            o = ball("claw", horn, f + Vector((0.07 + n_ * (0.3 if grip else 0.6), k * 0.022, -0.02 if grip else -0.03)), 0.012, (n_ / 0.012 * (0.5 if grip else 0.7), 0.7, 0.6), 8)
+            if grip: o.rotation_euler = (0, 0.7, 0)
+    tail = T["tail"]("tail", [tuple(rump + Vector(o)) for o in ((-0.22, 0, 0.02), (-0.34, 0, 0.04 + 0.12 * P["tail"]), (-0.44, 0, 0.06 + 0.26 * P["tail"]))], 0.07, F)
+    seam = T["face"](body, H, S, F, s, 0.055, P["chin"])
+    fn = T["paint"](H, F, s, feet, 0.2)
+    paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
+    body.data.materials.append(vmat("fur", 0.85))
+    drape("scarf", tuple(NECK["at"][0]), (-0.55, 0, -0.85), 0.14, 0.19, 0.14, S["cloth"], S["trim"], f"scarf-{args.base}-{el}", 0.6)
+    beads(tuple(NECK["at"][0] + Vector((0.02, 0, -0.02))), tuple(NECK["at"][1]), 0.16, 12, 0.07, 3, lt, S)
+    key_ring(chest + Vector((0.3, 0.1, -0.1)), 0.9)
+    holdfast_core(lt, chest + Vector((0.28, -0.1, -0.08)), 0.08)
+    back = (chest + rump) / 2 + Vector((0, 0, 0.2 * g))
+    spine = [neck0 + Vector((0, 0, 0.12)), chest + Vector((0, 0, 0.18)), back, rump + Vector((0, 0, 0.18))]
+    fox_growth(rng, el, S, F, lt, spine, tail, 0.8)
+    aura(rng, S["aura"], lt, (0.0, 0, 0.55), (1.35, 0.85, 0.7), 1.4)
+
+
+def holdfast_ascended(sc, el, lt, dk):
+    """The Holdfast's highest ally form, upright as a warden of light: a long stiff coat buttoned to a high collar, a
+    belt with its ring of keys, the clasped core at its chest. Its stance is the Controller's grasp for the state it is
+    in (HOLDFAST_ALLY): fists set on the hips, elbows out wide, chest and chin up and feet together when dissatisfied,
+    held further and leaning back; hands open and low at its sides when satisfied."""
+    T = HOLDFAST[args.base]
+    g = T["girth"]
+    S, F = STYLE[el], T["F"][el]
+    A = HOLDFAST_ALLY[look_state()]
+    lights(sc)
+    rng = random.Random(f"ascended-{args.base}-{el}")
+    s = 0.95
+    H = Vector(A["head"])
+    HEAD["at"] = H
+    lean, hip = A["lean"], A["hip"]
+    top = Vector((lean, 0, 1.52))
+    NECK["at"] = (top + (H - top) * 0.45, (H - top).normalized(), 0.12)
+    parts = T["head"](H, s, A["chin"]) + [("cap", tuple(top), tuple(H + Vector((-0.06, 0, -0.1))), 0.12 * g),
+                                         ("cap", (0, 0, hip + 0.05), tuple(top), 0.29 * g), ("ball", (0, 0, hip), 0.31 * g),
+                                         ("cap", tuple(top + Vector((0, -0.31, 0))), tuple(top + Vector((0, 0.31, 0))), 0.14 * g)]
+    hands, ends = [], []
+    for side, hd, eb in zip((-1, 1), A["hands"], A["elbows"]):
+        sh = top + Vector((0, side * 0.34, 0))
+        hd, eb = Vector(hd), Vector(eb)
+        reach = (hd - eb).normalized()
+        parts += [("cap", tuple(sh), tuple(eb), 0.09 * g), ("cap", tuple(eb), tuple(hd), 0.075 * g)]
+        parts.append(("ball", tuple(hd + reach * 0.04), 0.07) if A["fist"] else ("ell", tuple(hd + reach * 0.04), 0.065, (0.9, 0.5, 1.4)))
+        hands.append(hd + reach * 0.04); ends.append(reach)
+    feet = []
+    for (fx, fy), y in zip(A["feet"], (-0.15, 0.15)):
+        knee = Vector(((fx + 0.0) / 2 + 0.05, (fy + y) / 2, (hip + 0.06) / 2 + 0.02))
+        parts += [("cap", (0, y, hip - 0.05), tuple(knee), 0.13 * g), ("cap", tuple(knee), (fx, fy, 0.08), 0.085 * g),
+                  ("ell", (fx + 0.06, fy, 0.05), 0.07, (1.6, 1.0, 0.5))]
+        feet.append(Vector((fx + 0.06, fy, 0.05)))
+    body = blob("body", parts, 0.02, 15000)
+    fluff(body, 0.007, 18.0)
+    horn = solid("claw", (0.78, 0.74, 0.62), 0.45)
+    for f, d in zip(hands, ends):
+        side = d.cross(Vector((0, 0, 1))).normalized() if abs(d.z) < 0.95 else Vector((0, 1, 0))
+        for k in (-1.5, -0.5, 0.5, 1.5):
+            if A["fist"]:  # curled shut: claw tips folded in against the palm
+                ball("claw", horn, f + d * 0.05 + side * k * 0.024 + Vector((0, 0, -0.03)), 0.012, (1.3, 0.8, 0.8), 8)
+            else:  # open, the fingers loose and the claws hanging
+                o = ball("claw", horn, f + d * 0.09 + side * k * 0.03, 0.012, (1, 1, 1), 8)
+                o.scale = (2.4, 0.8, 0.8); o.rotation_euler = Vector((1, 0, 0)).rotation_difference(d + side * k * 0.12).to_euler()
+    tail = badger_tail("tail", [(-0.24, 0, hip - 0.05), (-0.36, 0, hip - 0.12), (-0.44, 0, hip - 0.22)], 0.065, F, s)
+    seam = T["face"](body, H, S, F, s, 0.042, A["chin"])
+    fn = T["paint"](H, F, s, hands + feet, 0.14, upright=True)
+    paint(body, lambda p, n: mixc(fn(p, n), (0.06, 0.05, 0.05), 0.6 * seam(p)))
+    body.data.materials.append(vmat("fur", 0.85))
+    coat_c = mixc(S["trim"], (0.06, 0.06, 0.08), 0.6)  # a dark coat in the element's shade: the jacket to the belt, its skirt to the knee
+    drape("coat", tuple(top + Vector((0.0, 0, 0.02))), (lean * 0.4, 0, -1), 0.31 * g, 0.37 * g, 0.6, coat_c, coat_c, f"coat-{el}", 0.0)
+    drape("coatskirt", (lean * 0.25, 0, hip + 0.14), (lean * 0.3, 0, -1), 0.36 * g, 0.46 * g, 0.58, coat_c, S["trim"], f"skirt-{el}", 0.1)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=0.16, depth=0.17, location=NECK["at"][0] + Vector((0, 0, -0.03)),
+                                        rotation=Vector((0, 0, 1)).rotation_difference(NECK["at"][1]).to_euler())
+    o = bpy.context.active_object; o.name = "collar"; o.data.materials.append(solid("collar", coat_c, 0.8)); smooth(o)
+    brass = solid("brass", BRASS, 0.3, metal=1.0)
+    for k in range(5):  # buttons up the front to the collar
+        z = hip + 0.1 + k * 0.11
+        x = lean * (z - hip) / (1.52 - hip) + 0.33 * g * (1 - 0.06 * k)
+        ball("button", brass, (x, 0, z), 0.022, seg=10)
+    belt = solid("belt", (0.16, 0.1, 0.06), 0.7)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.36 * g, minor_radius=0.03, major_segments=40, minor_segments=8, location=(lean * 0.25, 0, hip + 0.12))
+    o = bpy.context.active_object; o.name = "belt"; o.data.materials.append(belt); smooth(o)
+    key_ring((lean * 0.25 + 0.12, -0.34 * g, hip + 0.08), 1.1)
+    beads(tuple(NECK["at"][0] - Vector((0, 0, 0.06))), (0.12 + lean * 0.5, 0, 1), 0.18, 14, 0.07, 3, lt, S)
+    holdfast_core(lt, top + Vector((0.3, -0.06, -0.24)), 0.09)
+    fox_growth(rng, el, S, F, lt, [top + Vector((-0.05, 0, 0.12)), top + Vector((-0.12, 0, -0.1))], tail, 0.7)
+    aura(rng, S["aura"], lt, (lean * 0.5, 0, 1.15), (0.95, 0.85, 1.0), 2.4)
+
+
 # Round 7: one nation style over every stage (sg-look-layers: the element sets colour, material and aura; where you
 # met the spirit sets the regional style). Meridia, the Golden Noon (Earth; clarity, trade and exchange), in stone and
 # terraces: a gold sun crest behind the head, a terraced collar of sandstone steps with gold lips, and trade coins in
@@ -3024,7 +3360,7 @@ def sprite(src, dst, px):
     img.filepath_raw = str(dst); img.file_format = "PNG"; img.save()
 
 
-report = {"family": FAMILY, "base": args.base, "nation": args.nation or None, "state": args.state, "polarity": args.polarity, "daemon": {"romp": "player", "tinker": "fixer"}.get(FAMILY, "protector"), "stages": STAGES, "items": []}
+report = {"family": FAMILY, "base": args.base, "nation": args.nation or None, "state": args.state, "polarity": args.polarity, "daemon": {"romp": "player", "tinker": "fixer", "holdfast": "controller"}.get(FAMILY, "protector"), "stages": STAGES, "items": []}
 for d in ("render", "sprite", "glb"): (OUT / d).mkdir(parents=True, exist_ok=True)
 for el, (lt, dk) in ELEMENTS.items():
     if args.only and el != args.only: continue
@@ -3033,7 +3369,9 @@ for el, (lt, dk) in ELEMENTS.items():
         long_ = args.base != "tortoise"
         fox, otter, goat = args.base == "fox", args.base == "otter", args.base == "goat"
         tinker = FAMILY == "tinker"
-        sc = reset(1.25, 4.0) if (st == "ascended" and tinker) else reset(1.3, 3.8) if st == "ascended" \
+        hold = FAMILY == "holdfast"
+        sc = reset(1.25, 4.0) if (st == "ascended" and hold) else reset(0.55, 3.8) if (st == "creature" and hold) \
+            else reset(0.4, 3.4) if (st == "hologram" and hold) else reset(1.25, 4.0) if (st == "ascended" and tinker) else reset(1.3, 3.8) if st == "ascended" \
             else reset(0.6, 4.0) if (st == "creature" and tinker) else reset(0.45, 3.5) if (st == "hologram" and tinker) else reset(0.85, 4.3) if (st == "creature" and fox) \
             else reset(0.42, 3.2) if (st == "creature" and otter) else reset(0.66, 3.1) if (st == "creature" and goat) \
             else reset(0.7 if long_ else 0.75, 4.5 if long_ else 4.0) if st == "creature" \
@@ -3042,18 +3380,18 @@ for el, (lt, dk) in ELEMENTS.items():
             else reset(0.35, 3.7) if (st == "hologram" and long_) else reset()
         rng = random.Random(f"{FAMILY}-{el}-{st}")  # gas and core are the family's, the same for every base
         if st == "gas":
-            romp_gas(rng, lt, dk) if FAMILY == "romp" else tinker_gas(rng, lt, dk) if tinker else gas(rng, lt, dk, 140, 0.42)
+            romp_gas(rng, lt, dk) if FAMILY == "romp" else tinker_gas(rng, lt, dk) if tinker else holdfast_gas(rng, lt, dk) if hold else gas(rng, lt, dk, 140, 0.42)
         elif st == "core":
             gas(rng, lt, dk, 40, 0.38, core_pull=0.45)
-            romp_core(lt, (0, 0, 0.3), 0.3) if FAMILY == "romp" else tinker_core(lt, (0, 0, 0.32), 0.3) if tinker else core(lt)
+            romp_core(lt, (0, 0, 0.3), 0.3) if FAMILY == "romp" else tinker_core(lt, (0, 0, 0.32), 0.3) if tinker else holdfast_core(lt, (0, 0, 0.32), 0.3) if hold else core(lt)
         elif st == "hologram":
-            tinker_hologram(lt, dk) if tinker else hologram(lt, dk) if args.base == "tortoise" else fox_hologram(lt, dk) if fox \
+            tinker_hologram(lt, dk) if tinker else holdfast_hologram(lt, dk) if hold else hologram(lt, dk) if args.base == "tortoise" else fox_hologram(lt, dk) if fox \
                 else otter_hologram(lt, dk) if otter else goat_hologram(lt, dk) if goat else hologram_long(lt, dk, args.base)
         elif st == "creature":
-            tinker_creature(sc, el, lt, dk) if tinker else creature(sc, el, lt, dk) if args.base == "tortoise" else fox_creature(sc, el, lt, dk) if fox \
+            tinker_creature(sc, el, lt, dk) if tinker else holdfast_creature(sc, el, lt, dk) if hold else creature(sc, el, lt, dk) if args.base == "tortoise" else fox_creature(sc, el, lt, dk) if fox \
                 else otter_creature(sc, el, lt, dk) if otter else goat_creature(sc, el, lt, dk) if goat else creature_long(sc, el, lt, dk, args.base)
         else:
-            tinker_ascended(sc, el, lt, dk) if tinker else ascended(sc, el, lt, dk) if args.base == "tortoise" else fox_ascended(sc, el, lt, dk) if fox \
+            tinker_ascended(sc, el, lt, dk) if tinker else holdfast_ascended(sc, el, lt, dk) if hold else ascended(sc, el, lt, dk) if args.base == "tortoise" else fox_ascended(sc, el, lt, dk) if fox \
                 else otter_ascended(sc, el, lt, dk) if otter else goat_ascended(sc, el, lt, dk) if goat else ascended_long(sc, el, lt, dk, args.base)
         if args.nation:
             nation_layer(args.nation, st, args.base, lt)

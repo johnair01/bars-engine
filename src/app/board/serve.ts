@@ -3,6 +3,7 @@
  * in a document shell, and served only to the board's owner. Saves go to Postgres through /api/board/saves. */
 import { NextRequest, NextResponse } from 'next/server'
 import { isBoardOwner } from '@/lib/board/owner'
+import { patchCouncilPage } from '@/lib/board/council-page'
 import { boardShim } from './shim'
 
 const PAGES: Record<string, string> = {
@@ -18,7 +19,7 @@ async function page(board: string): Promise<string | null> {
   if (hit && Date.now() - hit.at < 5 * 60_000) return hit.html
   try {
     const r = await fetch(PAGES[board], { cache: 'no-store' })
-    if (r.ok) { const html = await r.text(); caches.set(board, { html, at: Date.now() }); return html }
+    if (r.ok) { const raw = await r.text(), html = board === 'council' ? patchCouncilPage(raw) : raw; caches.set(board, { html, at: Date.now() }); return html }
   } catch { /* keep the last good copy */ }
   return hit?.html ?? null
 }

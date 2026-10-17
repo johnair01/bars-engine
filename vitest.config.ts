@@ -81,7 +81,10 @@ export default defineConfig({
       'src/lib/tap-the-vein/__tests__/board-seal.test.ts',
       'src/lib/tap-the-vein/__tests__/board-set-aside.test.ts',
       'src/app/board/__tests__/shim.test.ts',
+      'src/app/board/__tests__/serve.test.ts',
       'src/lib/board/__tests__/dispatch.test.ts',
+      'src/lib/board/__tests__/council-page.test.ts',
+      'src/app/api/board/pull/__tests__/route.test.ts',
     ],
   },
   resolve: {
