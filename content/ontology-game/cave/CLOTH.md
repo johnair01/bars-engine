@@ -322,6 +322,28 @@ panels have been tried; neither is ready for his look.
   150 KB, T1's line as a board position, then the clip against round 11 and Wendell's look. Pictures:
   `/mnt/project-files/3d-build/j5-panels-r12c-2026-10-17/`.
 
+### Round 12, the defaults (2026-10-17)
+
+The cloth panels are now the sleeves: `garments.py` marks them cloth unless `SLEEVE_CLOTH=0`, and cloth.js runs them
+with `armEdges` on and the opened seams as slits (`seamOpen` [0.003, 0.05], `seamFrom` 0.5). On the average dusk robe
+the springs leave 17 forearm points through at the walk (J5 fails) and the cloth panels none.
+
+- Size: the cloth panels put the robe at 156,436 bytes. Each point's colour is now written as four bytes instead of
+  four 16-bit numbers (`colours_as_bytes`, after `tidy_nodes`): 147,452 bytes, under the 150 KB line.
+- Cost (J5d, four figures, the same cloud runner): springs 2.65 ms a figure, cloth panels 5.5, 4.85 to 5.0 once
+  `edgeCollide` skips edges outside each capsule's box. Running the edges every other substep saved 0.6 ms more and
+  made the cuff shake 15.5 mm; it was undone. J5d's line for a robe with cloth sleeves is 5.5 ms and the cloth cuff's
+  walking shake 12 mm (10.7 measured); board position `cd-panel-cost`, and his phone judges the frame rate.
+- J5d's page counted the cloth sleeves as the skirt's belt row (42 mm walking); it now leaves sleeve points out of the
+  belt, skirt, hem and fold groups, and its largest-of with a spread no longer overflows on the longer arrays.
+- T1 is reported, not gated (board position `cd-panel-t1-eye`): the panels read lag 0, coherence 0.91 in the browser.
+- Still open: in the close clip against round 11 (`VIEW=side DIST=1.6 LOOK_Y=0.85`, project files
+  `3d-build/j5-panels-r12d-2026-10-17/`) the near forearm shows bare from elbow to wrist mid-swing, the panels trailing
+  behind it, with f0d3875's cloth.js too. Tighter leashes make it no better (`armBlend` 0.3 and 0.15 leave the whole
+  forearm bare), so the panels' leash target itself may sit off the forearm: check the sleeve points' skinned targets
+  (`c.tgt`) against the drawn skinned sleeve before tuning anything else. Edge collision only covers edges; a forearm
+  capsule can also pass through a panel's face.
+
 ## Rounds 1 to 5, in one line each
 
 - **Bone weights never move like cloth.** Rounds 1 to 4 drove the skirt with hem bones and slit weights. Every fix

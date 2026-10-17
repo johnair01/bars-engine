@@ -85,9 +85,9 @@
     armGap: 0,           // share of its skinned gap to the forearm's and hand's line that a panel point keeps: a panel
                          // may swing out and slide round the arm, and never falls in onto it (0: only the capsule)
     armGapMax: 0.2,      // metres: the farthest from a capsule's line the gap is kept
-    seamOpen: null,      // [at the cut, at the cuff], metres the two sides of an opened seam may part (null: freely)
-    armEdges: false,     // the panels' edges collide with the forearm and hand too, not only their points (edgeCollide)
-    seamFrom: 0,         // how far down the panel (0 the cut, 1 the cuff) the slit starts to open past seamOpen[0]
+    seamOpen: [0.003, 0.05], // [at the cut, at the cuff], metres the two sides of an opened seam may part (null: freely)
+    armEdges: true,      // the panels' edges collide with the forearm and hand too, not only their points (edgeCollide)
+    seamFrom: 0.5,       // how far down the panel (0 the cut, 1 the cuff) the slit starts to open past seamOpen[0]
     seamPair: 0.006,     // metres apart at rest that makes two sleeve points the two sides of one opened seam
     panelChains: 2,      // chains per panel, at a quarter and three quarters of its width
     springDetune: 0.2,   // the panels' own swings differ by this share either side of springHz, so they fall out of step
@@ -527,8 +527,15 @@
       if (!caps[k].arm) continue;
       var s = caps[k].s, ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
       var uu = ux * ux + uy * uy + uz * uz || 1e-12;
+      // the capsule's box, grown by its radius and margin: an edge with both ends past one side of it cannot touch
+      // it (most edges, the other sleeve's above all; in the browser it saves about 0.6 ms a figure of the edges' 1.6)
+      var R = Math.max(caps[k].r, caps[k].rb === undefined ? 0 : caps[k].rb) + mg;
+      var x0 = Math.min(ax, s[3]) - R, x1 = Math.max(ax, s[3]) + R, y0 = Math.min(ay, s[4]) - R, y1 = Math.max(ay, s[4]) + R,
+        z0 = Math.min(az, s[5]) - R, z1 = Math.max(az, s[5]) + R;
       for (var e = 0; e < se.length; e += 2) {
         var a = 3 * se[e], b = 3 * se[e + 1];
+        if ((x[a] < x0 && x[b] < x0) || (x[a] > x1 && x[b] > x1) || (x[a + 1] < y0 && x[b + 1] < y0) ||
+            (x[a + 1] > y1 && x[b + 1] > y1) || (x[a + 2] < z0 && x[b + 2] < z0) || (x[a + 2] > z1 && x[b + 2] > z1)) continue;
         var vx = x[b] - x[a], vy = x[b + 1] - x[a + 1], vz = x[b + 2] - x[a + 2], vv = vx * vx + vy * vy + vz * vz || 1e-12;
         var wx = x[a] - ax, wy = x[a + 1] - ay, wz = x[a + 2] - az;
         var uv = ux * vx + uy * vy + uz * vz, uw = ux * wx + uy * wy + uz * wz, vw = vx * wx + vy * wy + vz * wz;

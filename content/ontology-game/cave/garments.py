@@ -653,7 +653,7 @@ def smooth_skirt(weights, verts, faces, parts, rounds=SKIRT_SMOOTH, top=1.0):
 
 PANEL_FROM = 0.3                                 # round 12: the sleeve's seams open from this share of the forearm
                                                  # (from the elbow) to the cuff, so each sleeve hangs as two panels
-SLEEVE_CLOTH = os.environ.get("SLEEVE_CLOTH") == "1"   # the panels as cloth (cloth.js), not on spring chains (CLOTH.md)
+SLEEVE_CLOTH = os.environ.get("SLEEVE_CLOTH", "1") != "0"   # the panels as cloth (cloth.js; the default since round 12), 0: on spring chains (CLOTH.md)
 PANEL_GAP = 0.003                                # metres between the two sides of an opened seam at rest (cloth.js
                                                  # welds points closer than 1e-5 m, and would sew it shut again)
 
@@ -1480,12 +1480,40 @@ def tidy_nodes(path):
                 node[k] = [round(v, 6) + 0.0 for v in node[k]]
         if all(abs(v - 1) < 1e-6 for v in node.get("scale", (2,))):
             del node["scale"]
+    rest = colours_as_bytes(j, b[20 + n:])
     text = json.dumps(j, separators=(",", ":")).encode()
     text += b" " * (-len(text) % 4)
-    rest = b[20 + n:]
     out = b[:8] + struct.pack("<I", 12 + 8 + len(text) + len(rest)) + struct.pack("<I", len(text)) + b"JSON" + text + rest
     with open(path, "wb") as f:
         f.write(out)
+
+
+def colours_as_bytes(j, rest):
+    """Round 12: each point's colour written as four bytes, not four 16-bit numbers (the exporter's choice). The cloth
+    sleeves' extra points put the robe 3 KB over its 150 KB line, and a byte a channel is all a flat colour needs.
+    rest is the GLB's BIN chunk (its 8-byte header first); returns it repacked, with j's buffer views moved to match."""
+    import struct
+    if len(rest) < 8 or rest[4:8] != b"BIN\0":
+        return rest
+    data = rest[8:8 + struct.unpack("<I", rest[:4])[0]]
+    views = [data[v.get("byteOffset", 0):v.get("byteOffset", 0) + v["byteLength"]] for v in j["bufferViews"]]
+    for mesh in j.get("meshes", []):
+        for prim in mesh["primitives"]:
+            a = j["accessors"][prim["attributes"].get("COLOR_0", -1)] if "COLOR_0" in prim["attributes"] else None
+            if not a or a["componentType"] != 5123 or a.get("byteOffset", 0) or j["bufferViews"][a["bufferView"]].get("byteStride"):
+                continue
+            src = views[a["bufferView"]]
+            vals = struct.unpack(f"<{len(src) // 2}H", src)
+            views[a["bufferView"]] = bytes(min(255, (v * 255 + 32767) // 65535) for v in vals)
+            a["componentType"], a["normalized"] = 5121, True
+    out = bytearray()
+    for v, bv in zip(views, j["bufferViews"]):
+        out += b"\0" * (-len(out) % 4)
+        bv["byteOffset"], bv["byteLength"] = len(out), len(v)
+        out += v
+    out += b"\0" * (-len(out) % 4)
+    j["buffers"][0]["byteLength"] = len(out)
+    return struct.pack("<I", len(out)) + b"BIN\0" + bytes(out)
 
 
 def build_all(build, palette, out_dir, do_fit=True):
