@@ -29,6 +29,9 @@ export async function POST(req: NextRequest) {
   if (!from || !garden) return NextResponse.json({ error: 'Send { from, garden } with a spark garden' }, { status: 400 })
   const have = await db.betweenGarden.findFirst({ where: { startedById: owner, data: { path: ['carriedFrom'], equals: from } }, select: { id: true } })
   if (have) return NextResponse.json({ id: have.id, carried: 'already' })
+  // He may have planted the spark again on bars-engine while the carry waited: then there is nothing to carry.
+  const planted = await db.betweenGarden.findFirst({ where: { startedById: owner, NOT: { data: { path: ['phase'], equals: 'closed' } } }, select: { id: true } })
+  if (planted) return NextResponse.json({ id: planted.id, carried: 'not needed' })
   const { id } = await plant(owner, garden)
   return NextResponse.json({ id, carried: 'now' })
 }
