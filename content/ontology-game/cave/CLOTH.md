@@ -312,9 +312,15 @@ panels have been tried; neither is ready for his look.
   made it worse: it pushes the sleeve off the arm from the elbow down, because near the elbow the capsules are fatter
   than the sleeve that hugs the arm (the reason the point backstop exists). With `armEdges` and slits the walk's T1
   coherence first went under 0.8 (0.797 walking, 0.64 fast), for a sleeve that no longer covers the arm.
-- **Next:** give `edgeCollide` the point backstop (an edge kept no nearer the arm's line than its skinned place, as
-  `collide` does for points), and check each arm capsule's radius against the sleeve's skinned inner surface along
-  the forearm; then the close clip again. Pictures: `/mnt/project-files/3d-build/j5-panels-r12c-2026-10-17/`.
+- **The backstop on edges covers the forearm again.** `edgeCollide` now keeps the point backstop (an edge pushed no
+  further out than its skinned place). With `{"armEdges": true, "seamOpen": [0.003, 0.05], "seamFrom": 0.5}` the
+  close clip shows the sleeve covering the forearm to the wrist, the hand coming out of it and the trim trailing
+  (`edges-backstop-close.jpg` and `-slow.mp4` in the folder below). Node walk: rim swing 65 mm walking and 104 fast,
+  arm 0.2 mm (T2), the panels out of step with each other (sync 0.36 and 0.41), but coherence 0.93 and lag 0 (T1
+  fails, as the 1.3 Hz finding above predicts). Cost 4.9 ms a step in Node for the whole robe, against 3.4 without.
+- **Next:** make those options the cloth sleeve's defaults, check J5d's cost line in the browser, the robe under
+  150 KB, T1's line as a board position, then the clip against round 11 and Wendell's look. Pictures:
+  `/mnt/project-files/3d-build/j5-panels-r12c-2026-10-17/`.
 
 ## Rounds 1 to 5, in one line each
 
