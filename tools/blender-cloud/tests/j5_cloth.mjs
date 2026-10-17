@@ -32,6 +32,12 @@ import { chromium } from 'playwright';
 // Round 9 (his note on round 8: "Let’s do the shins fix"): the shake was the blend band, not the contact. Hem 28.7 to
 // 16.8, fold 33.7 to 20.3, skirt 22.3 to 14.2 (CLOTH.md, round 9); the limits now hold that.
 const LIMITS = { cuff: [5, 0.5], ties: [8, 0.5], hem: [24, 0.5], fold: [28, 0.5] };
+// Round 12 (board cd-panel-cost): with the sleeve panels as cloth the cuff is the panels' weighted hem, which swings
+// as the skirt's hem does, and the panels add about 400 cloth points to the skirt's 570: the cloud's cost line for
+// such a robe is 5.5 ms a figure (springs measured 2.65 on the same runner, cloth panels 4.85 to 5.0; edges every
+// other substep saved 0.6 ms and made the cuff shake 15.5 mm) and the cuff's walking
+// limit 12 mm (10.7 measured); his phone judges the frame rate (bpt-j1-frame-rate).
+const CLOTH_SLEEVES = { cost: 5.5, cuff: 12 };
 const DIR = process.env.J5_DIR, FIGURES = +(process.env.FIGURES || 4);
 const NM = new URL('./node_modules/', import.meta.url).pathname;
 const CLOTH = process.env.CLOTH_JS || join(dirname(fileURLToPath(import.meta.url)), 'cloth.js');
@@ -77,7 +83,9 @@ for (let n = 0; n <= ${FIGURES}; n++) {                // the last one stands st
   cloth.reset();
   // the belt row: free points within 6 cm (in the robe's height) of the highest free point
   const c = cloth.cloth, rp = mesh.geometry.attributes.position, up = [];
-  for (let p = 0; p < c.P; p++) if (c.free[p]) up.push([p, rp.getY(c.reps[p])]);
+  // (round 12: the sleeve panels are cloth too, c.slv; they are not the skirt)
+  for (let p = 0; p < c.P; p++) if (c.free[p] && c.slv[p]) window.__slCloth = true;
+  for (let p = 0; p < c.P; p++) if (c.free[p] && !c.slv[p]) up.push([p, rp.getY(c.reps[p])]);
   const top = Math.max(...up.map(q => q[1])), belt = up.filter(q => q[1] > top - 0.06).map(q => q[0]);
   // Round 7 (his note on round 6: "Better hems around arms and legs still a bit jittery"): the sleeve cuffs and the
   // robe's hem edge (robe points), and the ankle ties (the figure's own points, skinned on the CPU here as the GPU would)
@@ -96,7 +104,7 @@ for (let n = 0; n <= ${FIGURES}; n++) {                // the last one stands st
   // the robe's cloth by its mark (_CLOTH): 1 the skirt, 2 the hem's edge, 3 the hem turned back inside it
   const simA = mesh.geometry.attributes._CLOTH || mesh.geometry.attributes._cloth, mark = p => Math.round(simA.getX(c.reps[p]));
   const skirt = [], hem = [], fold = [];
-  for (let p = 0; p < c.P; p++) if (c.free[p] || mark(p) === 3) [null, skirt, hem, fold][mark(p)].push(p);
+  for (let p = 0; p < c.P; p++) if ((c.free[p] || mark(p) === 3) && !c.slv[p]) [null, skirt, hem, fold][mark(p)].push(p);
   let body; fig.scene.traverse(o => { if (o.isSkinnedMesh && o !== mesh) body = o; });
   const fb = {}; body.skeleton.bones.forEach((b, i) => { fb[b.name] = i; });
   const ties = [];
@@ -163,7 +171,7 @@ function frame(now) {
     swing = ds[Math.floor(ds.length * 0.9)];        // the swing of the skirt's lower part, not one stray point
     const wj = walkers[0].jit.sort((a, b) => a - b);
     const p99 = a => { a.sort((x, y) => x - y); return a[Math.floor(a.length * 0.99)] || 0; };
-    const J = {}; for (const k in w0.hf) { J[k + 'Walk'] = p99(w0.hf[k]); J[k + 'Still'] = Math.max(0, ...still.hf[k]); J[k + 'N'] = w0[k].length; }
+    const J = {}; for (const k in w0.hf) { J[k + 'Walk'] = p99(w0.hf[k]); J[k + 'Still'] = still.hf[k].reduce((m, v) => Math.max(m, v), 0); J[k + 'N'] = w0[k].length; }
     // T1 (pass cloth-designer1): the cuffs' lag behind the forearm, the shift in frames that best lines up their motion
     // with where the arm alone would carry them, and their coherence with it at no shift (1 for a skinned sleeve)
     const T = w0.rimTrack, sl = {};
@@ -176,7 +184,7 @@ function frame(now) {
       let lag = 0, best = -2; for (let tau = 0; tau <= 20; tau++) { const c = corr(tau); if (c > best) { best = c; lag = tau; } }
       sl.lag = lag; sl.coherence = corr(0);
     }
-    window.__done = { sl, J, beltStill: Math.max(0, ...still.jit), beltWalk: wj[Math.floor(wj.length * 0.99)], beltN: still.belt.length, unit: w0.cloth.unit, grav: w0.cloth.cloth.o.gravity, costs, bad, swing, particles: c.P, free: c.nfree, verts: w0.mesh.geometry.attributes.position.count };
+    window.__done = { slCloth: !!window.__slCloth, sl, J, beltStill: still.jit.reduce((m, v) => Math.max(m, v), 0), beltWalk: wj[Math.floor(wj.length * 0.99)], beltN: still.belt.length, unit: w0.cloth.unit, grav: w0.cloth.cloth.o.gravity, costs, bad, swing, particles: c.P, free: c.nfree, verts: w0.mesh.geometry.attributes.position.count };
     return;
   }
   requestAnimationFrame(frame);
@@ -219,6 +227,7 @@ console.log(JSON.stringify({
   sleeve_lag_frames: done.sl && done.sl.lag, sleeve_coherence: done.sl && done.sl.coherence !== undefined ? +done.sl.coherence.toFixed(3) : null,
   jitter_mm: Object.fromEntries(Object.entries(done.J || {}).map(([k, v]) => [k, +v.toFixed(3)])), errors,
   // round 7: the cuffs, the ankle ties, the hem's edge and its fold, walking (p99) and standing (largest), in mm
-  pass: !errors.length && done.bad === 0 && done.swing > 0.02 && perFigure < 2.5 && done.beltN > 0 && done.beltStill < 0.2 && done.beltWalk < 10 &&
-    Object.entries(LIMITS).every(([k, [walk, still]]) => done.J[k + 'N'] > 0 && done.J[k + 'Walk'] < walk && done.J[k + 'Still'] < still),
+  sleeves: done.slCloth ? 'cloth' : 'springs',
+  pass: !errors.length && done.bad === 0 && done.swing > 0.02 && perFigure < (done.slCloth ? CLOTH_SLEEVES.cost : 2.5) && done.beltN > 0 && done.beltStill < 0.2 && done.beltWalk < 10 &&
+    Object.entries(LIMITS).every(([k, [walk, still]]) => done.J[k + 'N'] > 0 && done.J[k + 'Walk'] < (k === 'cuff' && done.slCloth ? CLOTH_SLEEVES.cuff : walk) && done.J[k + 'Still'] < still),
 }));

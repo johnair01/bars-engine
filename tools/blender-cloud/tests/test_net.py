@@ -167,7 +167,8 @@ def j5d():
     under 0.2 mm), the walking figure's belt row keeps under 10 mm (99th percentile; the walk's own quaternion keys
     once made it 132 mm), the sleeve cuffs, ankle ties, hem edge and turned hem stay under their jitter limits walking
     and standing (round 7: j5_cloth.mjs LIMITS; the walk's corners made the cuffs 29 mm and the ankles 35), and the
-    cloth costs under 2.5 ms per figure for each 1/60 s of game time (skinning on the
+    cloth costs under 2.5 ms per figure for each 1/60 s of game time (5.5 with the sleeve panels as cloth, round 12, board
+    cd-panel-cost; skinning on the
     CPU, the step and writing the points). The cloud browser draws without a graphics chip, so the phone is the judge of the
     frame rate; this bounds the cloth's own share."""
     needs("registry.npmjs.org")
