@@ -15,6 +15,9 @@
 // Round 7 (his note on round 6: "Better hems around arms and legs still a bit jittery"): the same for the sleeve
 // cuffs, the ankle ties, the hem's edge and its turned fold, measured as jitter: the frame-to-frame change in a point's
 // speed less its mean over the five frames around it (hf()), so a smooth swing scores nothing and a kink scores its size.
+// Round 11 (his note on round 10: "They are moving like solid objects and not clothes"): the sleeves hang from spring
+// chains; the cuffs' lag behind the forearm and their coherence with it are reported (T1, pass cloth-designer1), and
+// the cuff's jitter limit still holds them.
 //   J5_DIR=$W/j5 FIGURES=4 node j5_cloth.mjs        (prints one JSON line; J5_SHOT=path saves a picture)
 import http from 'node:http';
 import { readFileSync, existsSync, writeFileSync } from 'node:fs';
@@ -102,7 +105,7 @@ for (let n = 0; n <= ${FIGURES}; n++) {                // the last one stands st
     for (let v = 0; v < bp.count; v++) if (dom(body.geometry, v) === fb['knee' + sd]) pts.push([v, bp.getY(v)]);
     const lo = Math.min(...pts.map(q => q[1])); pts.filter(q => q[1] < lo + 0.04).forEach(q => ties.push(q[0]));
   }
-  walkers.push({ root, mixer, cloth, mesh, body, still: n === ${FIGURES}, belt, cuff, skirt, hem, fold, ties, hist: [], jit: [], seen: [], hf: { cuff: [], skirt: [], hem: [], fold: [], ties: [] } });
+  walkers.push({ root, mixer, cloth, mesh, body, still: n === ${FIGURES}, belt, cuff, skirt, hem, fold, ties, hist: [], jit: [], seen: [], rimTrack: [], hf: { cuff: [], skirt: [], hem: [], fold: [], ties: [] } });
 }
 const still = walkers.pop(); still.root.position.set(0, 0, -3); walkers.push(still);
 const SPEED = 1.36;                                  // m/s: character.py's stride at two steps a second
@@ -138,6 +141,10 @@ function frame(now) {
   for (const w of [walkers[0], still]) {           // the cuffs, hem and ties in the world, for the high-frequency jitter
     const x = w.cloth.cloth.x, at = p => [x[3 * p], x[3 * p + 1], x[3 * p + 2]];
     const tie = v => { w.body.boneTransform(v, v3); v3.applyMatrix4(w.body.matrixWorld); return [v3.x, v3.y, v3.z]; };
+    if (w === walkers[0] && w.n > 180) {             // round 11 (T1): the cuffs where the springs have them, and where the arm alone would
+      const raw = w.cloth.cloth.raw;
+      if (raw) w.rimTrack.push([w.cuff.map(at), w.cuff.map(p => [raw[3 * p], raw[3 * p + 1], raw[3 * p + 2]])]);
+    }
     w.seen.push({ cuff: w.cuff.map(at), skirt: w.skirt.map(at), hem: w.hem.map(at), fold: w.fold.map(at), ties: w.ties.map(tie) });
     if (w.seen.length > 7) w.seen.shift();
     if (w.n > 180 && w.seen.length === 7) for (const k in w.hf) w.hf[k].push(...hf(w.seen, k));
@@ -157,7 +164,19 @@ function frame(now) {
     const wj = walkers[0].jit.sort((a, b) => a - b);
     const p99 = a => { a.sort((x, y) => x - y); return a[Math.floor(a.length * 0.99)] || 0; };
     const J = {}; for (const k in w0.hf) { J[k + 'Walk'] = p99(w0.hf[k]); J[k + 'Still'] = Math.max(0, ...still.hf[k]); J[k + 'N'] = w0[k].length; }
-    window.__done = { J, beltStill: Math.max(0, ...still.jit), beltWalk: wj[Math.floor(wj.length * 0.99)], beltN: still.belt.length, unit: w0.cloth.unit, grav: w0.cloth.cloth.o.gravity, costs, bad, swing, particles: c.P, free: c.nfree, verts: w0.mesh.geometry.attributes.position.count };
+    // T1 (pass cloth-designer1): the cuffs' lag behind the forearm, the shift in frames that best lines up their motion
+    // with where the arm alone would carry them, and their coherence with it at no shift (1 for a skinned sleeve)
+    const T = w0.rimTrack, sl = {};
+    if (T.length > 30) {
+      const V = k => T[0][0].map((_, j) => T.slice(1).map((f, t) => [0, 1, 2].map(i => f[k][j][i] - T[t][k][j][i])));
+      const A = V(0), B = V(1);
+      for (const s of [A, B]) for (const series of s) for (let i = 0; i < 3; i++) { const m = series.reduce((a, v) => a + v[i], 0) / series.length; for (const v of series) v[i] -= m; }
+      const corr = tau => { let xy = 0, xx = 0, yy = 0; for (let j = 0; j < A.length; j++) for (let t = tau; t < A[j].length; t++) { const a = A[j][t], b = B[j][t - tau];
+        xy += a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; xx += a[0] ** 2 + a[1] ** 2 + a[2] ** 2; yy += b[0] ** 2 + b[1] ** 2 + b[2] ** 2; } return xy / Math.sqrt(xx * yy || 1); };
+      let lag = 0, best = -2; for (let tau = 0; tau <= 20; tau++) { const c = corr(tau); if (c > best) { best = c; lag = tau; } }
+      sl.lag = lag; sl.coherence = corr(0);
+    }
+    window.__done = { sl, J, beltStill: Math.max(0, ...still.jit), beltWalk: wj[Math.floor(wj.length * 0.99)], beltN: still.belt.length, unit: w0.cloth.unit, grav: w0.cloth.cloth.o.gravity, costs, bad, swing, particles: c.P, free: c.nfree, verts: w0.mesh.geometry.attributes.position.count };
     return;
   }
   requestAnimationFrame(frame);
@@ -197,6 +216,7 @@ console.log(JSON.stringify({
   per_figure_ms: +(perFigure || 0).toFixed(2), unit: done.unit, gravity: done.grav, particles: done.particles, free: done.free, verts: done.verts,
   not_numbers: done.bad, skirt_swing_m: +(done.swing || 0).toFixed(3), belt_points: done.beltN,
   belt_jitter_mm: +(done.beltStill || 0).toFixed(3), belt_walk_jitter_mm: +(done.beltWalk || 0).toFixed(3),
+  sleeve_lag_frames: done.sl && done.sl.lag, sleeve_coherence: done.sl && done.sl.coherence !== undefined ? +done.sl.coherence.toFixed(3) : null,
   jitter_mm: Object.fromEntries(Object.entries(done.J || {}).map(([k, v]) => [k, +v.toFixed(3)])), errors,
   // round 7: the cuffs, the ankle ties, the hem's edge and its fold, walking (p99) and standing (largest), in mm
   pass: !errors.length && done.bad === 0 && done.swing > 0.02 && perFigure < 2.5 && done.beltN > 0 && done.beltStill < 0.2 && done.beltWalk < 10 &&

@@ -1,7 +1,8 @@
 # Cloth: what we learned, and what to read before changing cloth.js
 
 The robe's skirt is cloth every frame (`cloth.js`, the same code in the game and in Blender through
-`cloth_walk.mjs`). This file holds what rounds 1 to 9 of J5 taught, so the same problems do not come back. Read it
+`cloth_walk.mjs`), and since round 11 its sleeves hang from spring chains in the same file. This file holds what
+rounds 1 to 11 of J5 taught, so the same problems do not come back. Read it
 before any change to `cloth.js`, the robe's skin weights below the belt, the leg capsules or the hem bones.
 
 ## Measure first, then look
@@ -225,6 +226,47 @@ becomes.
   mixed the hand in. From the middle of the forearm on, the sleeve now blends to the forearm alone, so the ring keeps
   its shape as the arm swings.
 
+## The sleeves (round 11)
+
+Wendell on round 10: "Better but still bad. They are moving like solid objects and not clothes." The six-face pass
+`cloth-designer1` (council, 2026-10-17; board position `cd-sleeve-springs`) named the cause: the sleeves were skinned,
+so every point of them moved on the same frame as the forearm, and uniform motion is what makes cloth read as stiff
+(Bi, Jin, Nienborg and Xiao, Journal of Vision 2019). Stylized games give sleeves and sashes spring bones.
+
+- **Three spring chains per sleeve** (`cloth.js`, the `spring*` options). Each runs from 40% down the forearm
+  (`springFrom`) to the sleeve's end, with joints at its root, its middle and its end, evenly round the sleeve. A
+  joint is the middle of the four sleeve points nearest it, so where the arm would hold it comes from the same skinned
+  points the robe already has, and the GLB needs no new bones. Each joint is a damped spring (`springHz` 1.0,
+  `springZeta` 0.7) toward where the arm would hold it, hung from the joint before it, so the delay grows toward the
+  free edge, and the sleeve swings past and settles after the arm stops. The joints of each ring keep their distances,
+  and the sleeve between two rings moves with their rigid turn and shift blended, so each cross-section, the round 10
+  cuff ring above all, keeps its shape and tilts and swings whole. Plain JavaScript in `cloth.js`, so the game, the
+  Node walk and J5d run the same springs; `three-vrm-springbone` needs three.js and a VRM's nodes, and the Node walk
+  has neither.
+- **The hand is inside the cuff, and it decides how far the cuff can trail.** Left free, the chains trail the forearm
+  by 6 frames with a coherence of 0.68 (T1's target), and the hand passes 6 cm through the cuff. Two limits keep it
+  out, both smooth, because J5d counts any hard stop as jitter (a hard angle clamp and a hard push off the hand made
+  the cuffs 27 and 31 mm; the limit is 5):
+  - a soft max distance: a link's drawn stray from where the arm holds it is `r tanh(d / r)` with `r` = `springMax`
+    (0.6) times its length, and the spring stiffens as it strays (four times at `r`);
+  - each sleeve point's swing toward the forearm, the hand or a leg is eased toward the gap it had there,
+    `gap tanh(s / gap)`, so it never reaches the capsule (`keepOff`). The forearm and hand capsules are new in the GLB's
+    extras (`arm_capsules` in garments.py, marked `arm`; the skirt does not use them).
+- **The measures** (`cloth_walk.mjs` sleeves, J5d `sleeve_lag_frames` and `sleeve_coherence`): T1, the rim's lag
+  behind the forearm in frames and its coherence with it (1 skinned; asks 3 to 6 frames and under 0.8); T2, `arm_mm`
+  and `leg_mm`, the most a sleeve point goes into the forearm, hand or a leg past where skinning puts it, at the walk
+  and at cave.js's fast swing (J5 requires 1 mm or less on every robe). Round 11 on the average robe: lag 2 frames,
+  coherence 0.94 to 0.95, the rim strays up to 11 cm (95th percentile), cuff jitter 2.8 mm walking, 0 standing, and
+  the springs cost about 0.16 ms a figure in Node (J5d: 2.25 ms a figure for all the cloth, round 10 1.98).
+- **T1 does not pass with this cut**, and the reason is the cut: a cuff that hugs the hand cannot trail it by 3 to 6
+  frames, since 4 frames behind a hand moving 1.2 m/s is 8 cm. A wider opening would let it (round 8 narrowed it
+  from 0.40 to 0.26 because the skinned flap hung stiffly below the hand; with springs a wider bell would swing). A
+  cut is his ruling (`cd-keep-cut`), so it goes to the board.
+- **A bug the springs found.** `attach` first placed each bone's joint from the bind matrices alone, and on J5d's
+  figures those joints came out shifted by the figure's own offset from the middle of the line: a figure half a metre
+  to the side had its chains built on the wrong points, and its cuffs jittered 11 mm. The joints now come back through
+  the bone's own skinning, the way `skin()` places points, and any figure's chains match.
+
 ## Rounds 1 to 5, in one line each
 
 - **Bone weights never move like cloth.** Rounds 1 to 4 drove the skirt with hem bones and slit weights. Every fix
@@ -266,5 +308,9 @@ becomes.
 - NVIDIA PhysX cloth guide, https://docs.nvidia.com/gameworks/content/gameworkslibrary/physx/guide/Manual/Cloth.html:
   inertia scale and local-space simulation for fast characters, and why a variable time step makes cloth jitter.
   `cloth.js` keeps a fixed sub-step.
+- Bi, Jin, Nienborg and Xiao, Journal of Vision 2019 (as cited by the council's pass cloth-designer1): changing only
+  how uniformly nearby points move changed how stiff cloth looked (round 11's coherence).
+- VRM spring bone (pixiv, `@pixiv/three-vrm-springbone`): stiffness toward where the parent holds a link, drag, and
+  sphere and capsule colliders; round 11's chains follow it in plain JavaScript.
 - Choi and Ko, "Stable but responsive cloth", SIGGRAPH 2002: buckling, which cloth does instead of resisting
   compression.

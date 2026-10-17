@@ -843,6 +843,30 @@ def leg_capsules(fig, build):
     return out
 
 
+HAND_PCT = 0.9                                   # the hand's capsule: this share of the hand's points inside it (a flat
+                                                 # hand in a round capsule; it only stops a sleeve point coming closer)
+
+
+def arm_capsules(fig, build):
+    """The forearm and hand capsules the sleeves' spring chains keep their points off (cloth.js, round 11): the
+    forearm from the elbow to the wrist round the forearm's own points, and the hand from the wrist to the middle
+    finger's last knuckle round the hand's. Marked arm, so the skirt's cloth does not use them."""
+    W = bone_weights(fig)
+    out = []
+    for s in "LR":
+        J = C.joints(build)
+        hand = tuple(n + s for n in ("wrist",) + C.FINGER_BONES)
+        for a, b, own, pct in (("elbow" + s, "wrist" + s, ("elbow" + s,), CAP_PCT),
+                               ("wrist" + s, "middle3" + s, hand, HAND_PCT)):
+            if b not in J:
+                continue
+            A, B = Vector(J[a][0]), Vector(J[b][0])
+            d = sorted(seg_dist(v.co, A, B) for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in own)
+            if d:
+                out.append({"a": a, "b": b, "r": round(d[min(len(d) - 1, int(pct * len(d)))], 4), "arm": True})
+    return out
+
+
 def cloth_job(robe_obj, rig, capsules, scenarios):
     """What cloth_walk.mjs needs: the rig at rest, the robe (points, triangles, the cloth mask, weights), the leg
     capsules and the walks to run."""
@@ -903,9 +927,16 @@ def cloth_scenarios():
              "samples": [WARM + t for t in (0.0, 0.2, 0.4, 0.6, 0.9, 1.3, 2.0, 3.0)]}]
 
 
+def fast_swing():
+    """Round 11 (test T2): cave.js's fast stride (2.5 steps a second at its widest swing, 0.62) for three seconds, so the
+    sleeves' spring chains are measured at the hardest arm swing the game has (cloth_walk.mjs: arm_mm, leg_mm)."""
+    return {"name": "fast", "steps": 2.5, "amp": 0.62, "turn": None, "samples": [WARM + 1.0]}
+
+
 def cloth_walk(robe_obj, rig, capsules):
-    """The robe over the test's walk, cloth below the belt: sets POSED for the robe at each key; returns the result."""
-    res = run_cloth(cloth_job(robe_obj, rig, capsules, [walk_keys()]), robe_obj.name)
+    """The robe over the test's walk, cloth below the belt: sets POSED for the robe at each key; returns the result.
+    The fast swing runs after it, for the sleeves' measures only."""
+    res = run_cloth(cloth_job(robe_obj, rig, capsules, [walk_keys(), fast_swing()]), robe_obj.name)
     s = res["scenarios"][0]["samples"]
     POSED[robe_obj.name] = {1 + k: [Vector(x["robe"][3 * i:3 * i + 3]) for i in range(len(x["robe"]) // 3)]
                             for k, x in enumerate(s)}
@@ -1433,8 +1464,8 @@ def build_all(build, palette, out_dir, do_fit=True):
         log += polish(fig, upper, R, keys, parts=parts, ray_from=axis, limb_of=legs)   # a few stubborn points: smaller, stronger pushes
     if os.environ.get("GARMENTS_SAVE"):                  # for looking into a build by hand
         bpy.ops.wm.save_as_mainfile(filepath=os.environ["GARMENTS_SAVE"])
-    caps = leg_capsules(fig, build)
-    R["cloth"] = json.dumps({"capsules": caps})          # glTF extras: cloth.js reads the leg capsules from here
+    caps = leg_capsules(fig, build) + arm_capsules(fig, build)
+    R["cloth"] = json.dumps({"capsules": caps})          # glTF extras: cloth.js reads the leg and arm capsules from here
     leg = lambda i: main_bone(W[i]) if main_bone(W[i]) in ("hipL", "hipR", "kneeL", "kneeR") else None
     for opts in json.loads(os.environ.get("CLOTH_SWEEP", "[]")):   # for tuning: cloth.js options tried on this one drape
         os.environ["CLOTH_OPTS"] = json.dumps(opts)
@@ -1451,7 +1482,7 @@ def build_all(build, palette, out_dir, do_fit=True):
     POSED.pop(R.name, None)
     rows.append(("robe", R, counts, log, len(cover)))
     cloth_stats = {"particles": cres["particles"], "free": cres["free"], "node_step_ms": cres["step_ms"],
-                   "folds": cres["folds"], "fold_far": cres["fold_far"]}
+                   "folds": cres["folds"], "fold_far": cres["fold_far"], "sleeves": cres.get("sleeves")}
     S = sash(fig, rig, cw, "sash")
     cover_s = with_faces(fig, cover_band(fig, SASH_Z[0] + 0.01, SASH_Z[-1] - 0.01))
     band = lambda i: (0,)                                   # held by the band or the cap, not the decoration
