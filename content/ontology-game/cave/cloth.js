@@ -88,6 +88,12 @@
     armSide: 0.05,       // metres from a forearm's or hand's capsule within which a panel point keeps the side of the arm
                          // its skinned place is on (round 13): a point the arm has passed is put back on that side, not
                          // pushed out where it is, which held the panels behind a forearm that had swung through them
+    armSideT: 0.9,       // round 13b: the cuff's last tenth of the panel (slT above this) is only pushed out, not put back
+                         // across the arm; the put-back flipped cuff points from side to side (J5d cuff 15.2 mm to 12.4)
+    armSideShare: 0.5,   // how far out, as a share of the capsule (or its skinned place), a point put back across the arm goes
+    folSkin: true,       // a sleeve's turned-back cuff keeps its skinned offset from its anchor, not an offset in the cloth's
+                         // own frame: that frame turned with every twitch of the panel's normal and shook the fold more
+                         // than its anchor (round 13b: fold 15.2 mm against its anchors' 12.0; with this and armSideT 9.5)
     seamOpen: [0.003, 0.05], // [at the cut, at the cuff], metres the two sides of an opened seam may part (null: freely)
     armEdges: false,     // the panels' edges collide with the forearm and hand too (edgeCollide; round 12's default, off since
                          // round 13: armSide covers the forearm, and the edges pushed out on the wrong side shook the cuff)
@@ -355,6 +361,10 @@
     var x = c.x, anchors = c.fol.map(function (f) { return c.anchor[f]; }), F = frames(c, x, anchors);
     for (var j = 0; j < c.fol.length; j++) {
       var f = 3 * c.fol[j], a = 3 * anchors[j], fr = F[anchors[j]], o = c.fofs;
+      if (c.o.folSkin && c.slv[anchors[j]]) {
+        for (k = 0; k < 3; k++) x[f + k] = x[a + k] + c.tgt[f + k] - c.tgt[a + k];
+        continue;
+      }
       for (var k = 0; k < 3; k++) x[f + k] = x[a + k] + o[3 * j] * fr[0][k] + o[3 * j + 1] * fr[1][k] + o[3 * j + 2] * fr[2][k];
     }
   }
@@ -588,7 +598,7 @@
         var cx = ax + ux * t, cy = ay + uy * t, cz = az + uz * t, dx = px - cx, dy = py - cy, dz = pz - cz;
         var d2 = dx * dx + dy * dy + dz * dz;
         if (caps[k].rb !== undefined) { r = capR(caps[k], t) + mg; r2 = r * r; }
-        var side = caps[k].arm && c.o.armSide && t > 0 && t < 1;   // beside the arm's line, not past its ends
+        var side = caps[k].arm && c.o.armSide && t > 0 && t < 1 && !(c.slT[i] > (c.o.armSideT === undefined ? 2 : c.o.armSideT));   // beside the arm's line, not past its ends
         if (d2 >= r2 && !gap && !(side && d2 < (r + c.o.armSide) * (r + c.o.armSide))) continue;
         var rr = r;
         if (caps[k].arm || (back && caps[k].bs)) {
@@ -608,7 +618,7 @@
           if (side && dq > 1e-6) {
             var sx = ex / dq, sy = ey / dq, sz = ez / dq, sd = dx * sx + dy * sy + dz * sz;
             if (sd < 0) {   // moved with its last place too, so the move adds no speed (a kick there shook the cuff 28 mm)
-              var mv = 0.5 * Math.min(rr, dq) - sd;   // half way out: all the way out, a point at the arm's side jumped back and forth
+              var mv = (c.o.armSideShare === undefined ? 0.5 : c.o.armSideShare) * Math.min(rr, dq) - sd;   // half way out: all the way out, a point at the arm's side jumped back and forth
               x[i3] += sx * mv; x[i3 + 1] += sy * mv; x[i3 + 2] += sz * mv; xp[i3] += sx * mv; xp[i3 + 1] += sy * mv; xp[i3 + 2] += sz * mv;
               continue;
             }

@@ -368,11 +368,15 @@ the springs leave 17 forearm points through at the walk (J5 fails) and the cloth
   it, so it gains no speed. And `armEdges` (round 12) is off: the edges were pushed out on the wrong side as the points
   were, and they shook the walking cuff 18 mm; with `armSide` the forearm stays covered without them, and J5d's cost
   drops from 5.85 to 4.4 ms a figure.
-- **Still open: J5d's walking cuff shakes 14.2 mm against its 12 mm line** (round 12, before this fix: 10.7). Standing
-  0.02, cost 4.38 ms, sleeve lag 1 frame, coherence 0.96. The Node proxy (`jit.mjs` in the folder below, the hf()
-  measure on the sleeve points past 0.85 of the panel) reads 8 to 9 mm; it does not use J5d's own cuff set (the 59
-  points within 4 cm of the sleeve's far end), so the next step is to measure that set in Node, find which points
-  shake, and try `armSide` 0.03 or the half way share 0.3 before touching the line.
+- **Round 13b: the walking cuff, 14.2 mm to 9.4 (line 12).** J5d's cuff set (the 59 points within 4 cm of the
+  sleeve's far end) is all turned-back cuff: fold points that follow an anchor on the panel's last row. Measured in
+  Node (`cuffset-jit.mjs`, the hf() measure on that set), the folds shook 15.2 mm against their anchors' 12.0: each
+  fold kept its offset in the cloth's own frame, and that frame turned with every twitch of the panel's normal, so the
+  fold swung more than the point it hangs from. `folSkin` (on) keeps a sleeve fold at its skinned offset from its
+  anchor instead (11.4 mm). `armSideT` 0.9 leaves the panel's last tenth to the capsule's plain push, not the put-back
+  across the arm, which flipped cuff points from side to side (9.5 mm in Node). The share is now an option
+  (`armSideShare`, 0.5); 0.3 shook more (16.3), and `armSide` 0.03 did nothing (15.9). The forearm stays covered:
+  0.98 / 0.96 mean, 0.96 / 0.96 least (`ANY=1 cover.mjs`). J5d: cuff 9.4 mm, cost 3.65 ms a figure, standing still.
 - T1 stays reported, not gated (`cd-panel-t1-eye`): rim lag 0 to 1 frames, coherence 0.95 to 0.96 at the walk.
 
 ## Rounds 1 to 5, in one line each
