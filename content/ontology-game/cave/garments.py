@@ -1118,7 +1118,11 @@ def through(wearer, cover, garment, keys, parts_of=None, ray_from=None, limb_of=
                     if o is not None:
                         d = Vector((p.x - o.x, p.y - o.y, 0))
                         t, sel = tree(pids[0])
-                        if d.length > 1e-6 and t.ray_cast(p, d.normalized(), 0.6)[0] is None:
+                        # the line out may leave the body panel through the armhole and cross the sleeve, which
+                        # covers it too: since the hands' rig (main, 2026-10-16) the slight figure's back next to the
+                        # armhole is the spine's, and a line out from there met only the sleeve at keys 14 to 22
+                        if d.length > 1e-6 and t.ray_cast(p, d.normalized(), 0.6)[0] is None \
+                                and tree(None)[0].ray_cast(p, d.normalized(), 0.6)[0] is None:
                             loc, nor, fi, _ = t.find_nearest(p)
                             held, first = False, (max(0.0, (p - loc).dot(nor)), polys[sel[fi]], sel[fi])
                 if held or first is None:
@@ -1294,7 +1298,32 @@ def export_garment(obj, rig, path):
                               export_animations=False, export_vertex_color="ACTIVE", export_all_vertex_colors=False,
                               export_apply=False, export_attributes=True, export_extras=True)
     obj.modifiers.remove(obj.modifiers["Thick"])
+    tidy_nodes(path)
     return os.path.getsize(path)
+
+
+def tidy_nodes(path):
+    """The GLB's bones written short: each rest turn and offset to 6 places, a scale within a millionth of 1 left
+    out. The rig carries the hands' 30 finger bones (the daemon hands), and the exporter's
+    17-digit numbers for every bone put each robe 2 KB over its 150 KB line; the inverse bind matrices in the binary
+    are untouched, so the skin binds the same."""
+    import struct
+    with open(path, "rb") as f:
+        b = f.read()
+    n = struct.unpack("<I", b[12:16])[0]
+    j = json.loads(b[20:20 + n])
+    for node in j.get("nodes", []):
+        for k in ("rotation", "translation", "scale"):
+            if k in node:
+                node[k] = [round(v, 6) + 0.0 for v in node[k]]
+        if all(abs(v - 1) < 1e-6 for v in node.get("scale", (2,))):
+            del node["scale"]
+    text = json.dumps(j, separators=(",", ":")).encode()
+    text += b" " * (-len(text) % 4)
+    rest = b[20 + n:]
+    out = b[:8] + struct.pack("<I", 12 + 8 + len(text) + len(rest)) + struct.pack("<I", len(text)) + b"JSON" + text + rest
+    with open(path, "wb") as f:
+        f.write(out)
 
 
 def build_all(build, palette, out_dir, do_fit=True):
