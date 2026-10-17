@@ -1568,7 +1568,10 @@
   ];
   // talk321(t, o, body): o = { name, damaged (the Damaged Self's check before Be it), redraw, focus, where (the staged
   // places' words, by step), aim (a line shown on every step, or none), before(body) (more for the first page, or none),
-  // ask(body) (the last page, after the charge reading), skippable (a Skip button on every page that goes straight to ask) }.
+  // ask(body) (the last page, after the charge reading), skippable (a Skip button on every page that goes straight to ask),
+  // beforeOne(go, stay) (asked before Be it opens: go() opens it, stay() goes on to the charge reading without it; the Big Mind
+  // cave asks the voice's permission here, board bmt-321-offer), cards(ph, voice) (lines the player can tap to send, for the
+  // phase and the voice speaking; a line in brackets is a gesture) }. The WAVE room and the cave pass neither.
   // Wendell, 12 October 2026, 23:11: "321s are optional and should have an option to skip". The sit-down and the WAVE room
   // pass skippable; the cave's 3-2-1 with a daemon in the way does not, since it is how the daemon steps aside.
   // The cave aims it at the daemon standing in the way; the WAVE room aims it at what the player wants right now.
@@ -1581,6 +1584,10 @@
       var out = el("span", { class: "oagc-read", "data-cave-321-read": which, text: t[which] + " of 10" });
       inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; });
       return el("div", { class: "oagc-slide" }, [inp, out]);
+    }
+    function toOne() {
+      if (!o.beforeOne) { t.phase = 1; o.redraw(); return; }
+      o.beforeOne(function () { t.phase = 1; o.redraw(); }, function () { t.phase = "after"; o.redraw(); });
     }
     var stepBack = btn("Step back", { "data-cave-321-back": "" }, function () { t.draft = ""; t.paused = true; o.redraw(); }, true);
     var skip = o.skippable ? btn("Skip the 3-2-1", { "data-cave-321-skip": "" }, function () { t.draft = ""; t.skipped = true; t.phase = "ask"; o.redraw(); }, true) : null;
@@ -1606,7 +1613,7 @@
       body.push(P(WHERE.check, { "data-cave-321-where": "" }));
       body.push(P("Being " + n + " goes to the deepest place. Do you want to go on, rest, or go back up?", { "data-cave-321-checkask": "" }));
       body.push(row([
-        btn("Continue", { "data-cave-321-check": "continue" }, function () { t.phase = 1; o.redraw(); }),
+        btn("Continue", { "data-cave-321-check": "continue" }, toOne),
         btn("Rest", { "data-cave-321-check": "rest" }, function () { t.paused = true; o.redraw(); }, true),
         btn("Go back up", { "data-cave-321-check": "up" }, function () { t.phase = 2; o.redraw(); }, true),
       ]));
@@ -1644,8 +1651,12 @@
       };
       ta.addEventListener("input", function () { t.draft = ta.value; });
       ta.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); send(); } });
+      var cards = o.cards ? o.cards(ph, voice) : [];
+      if (cards.length) body.push(el("div", { class: "oagc-row", "data-cave-321-cards": "" }, cards.map(function (c, ci) {
+        return btn(c, { "data-cave-321-card": String(ci) }, function () { ta.value = c; send(); }, true);
+      })));
       body.push(el("div", { class: "oagc-compose" }, [ta, el("button", { "data-cave-321-send": "", "aria-label": "Send", text: "↑", onclick: send })]));
-      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; t.phase = ph === 1 ? "after" : ph === 2 && o.damaged ? "check" : ph - 1; o.redraw(); }), stepBack, skip]));
+      body.push(row([btn(k[6], { "data-cave-321-next": "" }, function () { t.draft = ""; if (ph === 2 && !o.damaged) return toOne(); t.phase = ph === 1 ? "after" : ph === 2 ? "check" : ph - 1; o.redraw(); }), stepBack, skip]));
     }
     return title;
   }

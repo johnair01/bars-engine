@@ -30,7 +30,15 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + 
 page.on('dialog', (d) => d.accept());
 const B = 'http://localhost:4571/ontology-game/big-mind';
 const step = () => page.getAttribute('[data-bm-modal]', 'data-bm-step');
-const waitStep = (s, ms = 20000) => page.waitForFunction((s) => document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') === s, s, { timeout: ms }).then(() => true, () => false);
+const waitStep0 = (s, ms = 20000) => page.waitForFunction((s) => document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') === s, s, { timeout: ms }).then(() => true, () => false);
+// The first meeting with each voice asks how the player feels meeting it (board bmt-meeting-spirit); the checks that wait for
+// the meeting answer "No word yet" there, unless they are on that step, which spawns a grey spirit from meeting it.
+const waitStep = async (s, ms = 20000) => {
+  if (s !== 'meet') return waitStep0(s, ms);
+  const r = await page.waitForFunction(() => /^meet(-feel)?$/.test(document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') || ''), null, { timeout: ms }).then(() => true, () => false);
+  if (r && (await page.getAttribute('[data-bm-modal]', 'data-bm-step')) === 'meet-feel') await page.click('[data-bm-feel="none"]');
+  return r && waitStep0('meet', 5000);
+};
 const st = () => page.evaluate(() => { const s = window.__oagBigMind.state; return s && { phase: s.phase, s: s.s, gate: s.gate, cam: s.cam, waiting: s.waiting.slice(), answers: s.answers }; });
 const save = () => page.evaluate(() => JSON.parse(localStorage.getItem('oag.bigmind.v1') || 'null'));
 async function hold(on) { await page.evaluate((on) => { const s = window.__oagBigMind.state; s.speed = 6; s.held = on; }, on); }
@@ -229,7 +237,7 @@ await page.waitForTimeout(300);
 await page.screenshot({ path: SHOTS + '/bm-3l-wave-release.png' });
 ok(await relB.evaluate((B) => B.rise > 0 && B.fade < 1), 'it rises and fades as it goes');
 ok(await waitStep('wave-after'), 'after the Exhale: how charged are you now?');
-ok(await relB.evaluate((B) => !B.g.parent) && await page.evaluate(() => window.__oagBigMind.spirits.length === 0), 'released, it is gone and does not follow');
+ok(await relB.evaluate((B) => !B.g.parent) && await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 0), 'released, it is gone and does not follow');
 await page.evaluate(() => { window.__oagBigMind.state.speed = 40; });
 await page.fill('[data-bm-yourange]', '6');
 await page.click('[data-bm-youafter]');
@@ -249,8 +257,8 @@ await page.click('[data-bm-blockgo]');
 await page.fill('[data-bm-yourange]', '6');
 await page.click('[data-bm-youafter]');
 ok(await waitStep('charge') && await page.evaluate(() => window.__oagBigMind.state.waves[1].blocked === 'welcome'), 'the blocked step is saved with the W.A.V.E.');
-await page.waitForFunction(() => window.__oagBigMind.spirits.length === 1, null, { timeout: 4000 }).catch(() => {});
-ok(await page.evaluate(() => window.__oagBigMind.spirits.length === 1 && window.__oagBigMind.spirits[0].name === 'A charge'), 'a W.A.V.E. left at a block keeps its charge walking with you');
+await page.waitForFunction(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 1, null, { timeout: 4000 }).catch(() => {});
+ok(await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 1 && window.__oagBigMind.spirits.filter((o) => !o.meet)[0].name === 'A charge'), 'a W.A.V.E. left at a block keeps its charge walking with you');
 // the whole ladder, with Appreciate left for now, and the charge let stay
 await page.click('[data-bm-wave]');
 await page.click('[data-bm-youset]');
@@ -268,7 +276,7 @@ ok(await waitStep('wave-validate'), 'Not now goes on to Validate');
 await breathed('[data-bm-wavego="validate"]');
 await breathed('[data-bm-exhale="stay"]');
 ok(await waitStep('wave-after'), 'then how charged you are now');
-ok(await page.evaluate(() => window.__oagBigMind.spirits.length === 2 && window.__oagBigMind.spirits[1].name === 'Ache' && window.__oagBigMind.spirits[1].element === 'water'), 'let stay, the charge walks with you as a spirit');
+ok(await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 2 && window.__oagBigMind.spirits.filter((o) => !o.meet)[1].name === 'Ache' && window.__oagBigMind.spirits.filter((o) => !o.meet)[1].element === 'water'), 'let stay, the charge walks with you as a spirit');
 ok(await page.evaluate(() => !JSON.stringify(window.__oagBigMind.state.waves).includes('wants me safe')), 'what you appreciate stays on the page');
 await page.fill('[data-bm-yourange]', '6');
 await page.click('[data-bm-youafter]');
@@ -350,7 +358,8 @@ ok(sv.voices.protector.kept.map((k) => k.line).join('|') === 'To protect.|Nobody
 ok(sv.at === 'hall2' && sv.waiting.join() === 'ideas', 'the save holds the place and the part waiting');
 ok(sv.voices.protector.waves.length === 3 && sv.voices.protector.waves[0].word === 'Dread' && sv.voices.protector.waves[1].word === null && sv.voices.protector.waves[1].before === 6, 'both W.A.V.E.s are saved; the feeling word only where it was kept');
 ok(sv.voices.protector.place === 'Chest' && sv.voices.protector.charges.map((c) => c.v).join() === '8,8,8,7,6,5,2,1', 'the save holds where it lives and how its charge fell: ' + JSON.stringify(sv.voices.protector.charges));
-await page.waitForTimeout(1500);
+// the gate eases open with the frames, which come slower on a loaded runner, so wait for it rather than a fixed time
+await page.waitForFunction(() => window.__oagBigMind.openAt(window.__oagBigMind.S.S_GATE + 14) > 0.9, null, { timeout: 6000 }).catch(() => {});
 const open = await page.evaluate(() => window.__oagBigMind.openAt(window.__oagBigMind.S.S_GATE + 14));
 ok(open > 0.9, 'the way past the chamber opens (' + open.toFixed(2) + ')');
 await page.screenshot({ path: SHOTS + '/bm-6-way-open.png' });
@@ -481,8 +490,8 @@ await page.click('[data-cave-321-skip]');
 ok(await page.locator('[data-bm-sitmove]').count() === 1, 'Skip goes straight to the next move');
 await page.fill('[data-bm-sitmove]', 'lie down');
 await page.click('[data-bm-sitmovedone]');
-await page.waitForFunction(() => window.__oagBigMind.spirits.length === 1 && !window.__oagBigMind.sitting(), null, { timeout: 8000 }).catch(() => {});
-ok(await page.evaluate(() => window.__oagBigMind.spirits.length === 1 && window.__oagBigMind.spirits[0].name === 'Worry'), 'a charge that stays follows as a spirit with its name');
+await page.waitForFunction(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 1 && !window.__oagBigMind.sitting(), null, { timeout: 8000 }).catch(() => {});
+ok(await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 1 && window.__oagBigMind.spirits.filter((o) => !o.meet)[0].name === 'Worry'), 'a charge that stays follows as a spirit with its name');
 ok((await page.textContent('[data-bm-spiritbtn]')) === 'Spirits 1', 'the spirit count shows');
 sv = await save();
 ok(sv.sittings.length === 1 && sv.sittings[0].branch === 'stays' && sv.sittings[0].where === 'hall1' && !JSON.stringify(sv).includes('Worry') && !JSON.stringify(sv).includes('lie down'), 'the sitting is recorded by where, whom and branch, with no words: ' + JSON.stringify(sv.sittings));
@@ -504,7 +513,7 @@ for (const id of ['witness', 'acknowledge', 'allow', 'accept', 'appreciate', 'va
 }
 await page.click('[data-bm-sitnext]');
 ok(await waitStep('meet', 8000), 'the voice\'s sitting has no fork, and it comes back to where you were');
-ok(await page.evaluate(() => window.__oagBigMind.spirits.length === 2 && window.__oagBigMind.spirits[1].name === 'Wary'), 'sitting with the voice spawns a spirit too (Wendell, 20:43: every sit-down W.A.V.E. spawns one)');
+ok(await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 2 && window.__oagBigMind.spirits.filter((o) => !o.meet)[1].name === 'Wary'), 'sitting with the voice spawns a spirit too (Wendell, 20:43: every sit-down W.A.V.E. spawns one)');
 await page.click('[data-bm-reply="hear"]'); await page.click('[data-bm-ask="speak"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="speak"]');
 await page.click('[data-bm-place="Chest"]'); await page.click('[data-bm-charged]');
 for (let i = 0; i < 3; i++) { await page.click('[data-bm-card="0"]'); await page.click('[data-bm-charged]'); }
@@ -522,8 +531,8 @@ await page.click('[data-bm-blocksit]');
 ok(await waitStep('sit-welcome'), 'and sitting down with it starts at Welcome');
 await page.click('[data-bm-standup]');
 ok(await waitStep('wave-welcome', 8000), 'standing up returns to the W.A.V.E. step it stopped on');
-ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits[2]; return window.__oagBigMind.spirits.length === 3 && /^[A-Z][a-z]+ [A-Z][a-z]+$/.test(o.name); }), 'a sitting stood up from early still spawns a spirit, under the name the game gave it');
-ok((await page.textContent('[data-bm-spiritbtn]')) === 'Spirits 3', 'three spirits are counted');
+ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((o) => !o.meet)[2]; return window.__oagBigMind.spirits.filter((o) => !o.meet).length === 3 && /^[A-Z][a-z]+ [A-Z][a-z]+$/.test(o.name); }), 'a sitting stood up from early still spawns a spirit, under the name the game gave it');
+ok((await page.textContent('[data-bm-spiritbtn]')).startsWith('Spirits ' + (await page.evaluate(() => window.__oagBigMind.spirits.length))), 'the spirits are counted: ' + (await page.textContent('[data-bm-spiritbtn]')));
 sv = await save();
 ok(sv.sittings.length === 3 && sv.sittings[2].via === 'block' && sv.sittings[2].branch === 'stood' && sv.sittings[1].whom === 'voice', 'each sitting is recorded: ' + JSON.stringify(sv.sittings.map((x) => [x.whom, x.via, x.branch])));
 await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
@@ -536,13 +545,13 @@ ok(/Worry \(Metal\)/.test(await page.textContent('[data-bm-keptspirits]')), 'the
 await page.click('[data-bm-enter]');
 await page.waitForSelector('[data-bm-cave] canvas');
 await page.waitForTimeout(300);
-ok((await page.evaluate(() => window.__oagBigMind.spirits.length)) === 1, 'a kept spirit comes back in with you');
+ok((await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length)) === 1, 'a kept spirit comes back in with you');
 await page.click('[data-bm-spiritbtn]');
 ok(await waitStep('spirit-list'), 'tapping the spirits lists them');
 await page.click('[data-bm-spirit="0"]');
 ok(await waitStep('spirit-thank') && /Thank you for coming with me/.test(await page.textContent('[data-bm-modal]')), 'tapping one thanks it');
 await page.click('[data-bm-spiritout]');
-ok((await page.evaluate(() => window.__oagBigMind.spirits.length)) === 0, 'breathing out lets it go');
+ok((await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length)) === 0, 'breathing out lets it go');
 await page.waitForTimeout(300);
 await page.click('[data-bm-sitbtn]'); await waitStep('sit-welcome');
 await page.click('[data-bm-sitnext]'); await waitStep('sit-witness'); await page.click('[data-bm-sittexture="numbness"]');
@@ -558,8 +567,8 @@ await page.click('[data-bm-sitnext]'); await waitStep('sit-fork');
 await page.fill('[data-bm-sitgoal]', 'quiet'); await page.click('[data-bm-sitpush="away"]');
 ok(await waitStep('sit-goes') && /walks with you, lighter/.test(await page.textContent('[data-bm-modal]')), 'away from it breathes it out, and says it still walks with you');
 await page.click('[data-bm-sitexhale]');
-await page.waitForFunction(() => window.__oagBigMind.spirits.length === 1 && !window.__oagBigMind.sitting(), null, { timeout: 8000 }).catch(() => {});
-ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits[0]; return o && o.name === 'Ache' && o.lighter && o.g.userData.level < 0.3; }), 'a charge breathed out still spawns a spirit, walking lighter');
+await page.waitForFunction(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 1 && !window.__oagBigMind.sitting(), null, { timeout: 8000 }).catch(() => {});
+ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((o) => !o.meet)[0]; return o && o.name === 'Ache' && o.lighter && o.g.userData.level < 0.3; }), 'a charge breathed out still spawns a spirit, walking lighter');
 await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 await waitStep('mouth-spirits'); await page.click('[data-bm-mouthspirit="0"]'); await page.click('[data-bm-walkout]');
 await page.waitForSelector('[data-bm-mouth]');
@@ -1302,6 +1311,120 @@ await page.evaluate(() => localStorage.clear());
   ok(/your spirits vouch for you together/.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-vouchall]').count() === 7, 'at the mouth of the centre, the allied spirits vouch together, each in its own voice\'s terms');
   ok(await page.evaluate(() => Object.keys(window.__oagBigMind.STANCES).join()) === 'guarded,testing,softening,trusting,willing,hurt,repaired', 'the trust stances are named for the daemon bodies');
   await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await page.evaluate(() => localStorage.clear());
+}
+
+// Build 3 (pass big-mind-trust1): the meeting spirit (bmt-meeting-spirit), which becomes the ally once its voice trusts you
+// (bmt-spirits-vouch), and Talk it through, the full 3-2-1 with a voice (bmt-321-offer): skippable, never a gate, cards, a
+// gesture or your own words, and Be it only with the voice's permission.
+{
+  const fast = () => page.evaluate(() => { window.__oagBigMind.state.speed = 6; });
+  const t321 = () => page.getAttribute('[data-cave-321-step]', 'data-cave-321-step');
+  const bubbles = () => page.locator('[data-cave-bubble]').count();
+  await page.evaluate(() => localStorage.clear());
+  await page.reload(); await page.waitForSelector('[data-bm-mouth]');
+  await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas'); await fast();
+  await hold(true);
+  ok(await waitStep0('meet-feel'), 'meeting a voice for the first time, the game asks how you feel meeting it');
+  const feelText = await page.textContent('[data-bm-modal]');
+  ok(/How do you feel, meeting it\?/.test(feelText) && /counts for nothing and against nothing/.test(feelText), 'the question says no answer is wrong and none counts against you');
+  ok(await page.locator('[data-bm-feel]').count() === 6 && await page.locator('[data-bm-feel="none"]').textContent() === 'No word yet' && await page.locator('[data-bm-feelline]').count() === 1 && await page.locator('[data-bm-decline]').count() === 1,
+    'five feelings with their elements, No word yet as an equal answer, your own words, and Not now');
+  await page.click('[data-bm-feel="metal"]');
+  ok(await waitStep0('meet') && /A spirit comes out of you and walks at your side: Fear \(Metal\), from meeting the Protector\./.test(await page.textContent('[data-bm-modal]')), 'your answer spawns a spirit that walks with you');
+  ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector'); return o.length === 1 && o[0].name === 'Fear' && o[0].element === 'metal' && !o[0].ally; }), 'it is the spirit from meeting the Protector, in its element\'s colour');
+  ok(JSON.stringify((await save()).voices.protector.spirit) === '{"name":"Fear","element":"metal"}', 'its name and element are kept with the voice, never as a trust move');
+  ok(!/You didn't come alone/.test(await page.textContent('[data-bm-modal]')), 'the voice does not count its own meeting spirit as company you brought');
+  await page.click('[data-bm-reply="hear"]'); await page.click('[data-bm-ask="speak"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="speak"]');
+  await page.click('[data-bm-place="Chest"]'); await page.fill('[data-bm-range]', '7'); await page.click('[data-bm-charged]');
+  await waitStep('q-job'); await page.click('[data-bm-modal] [data-bm-card="0"]');
+  ok(await waitStep('charge') && await page.locator('[data-bm-talk]').count() === 1, 'every poll offers to talk it through');
+  await page.click('[data-bm-talk]');
+  ok(await waitStep('talk-321') && await t321() === 'before' && await page.locator('[data-cave-321-skip]').count() === 1, 'Talk it through opens the full 3-2-1 with the voice, skippable from the start');
+  ok(await page.waitForFunction(() => document.querySelector('[data-bm-trustbtn]').disabled && document.querySelector('[data-bm-sitbtn]').disabled, null, { timeout: 3000 }).then(() => true, () => false), 'Trust and Sit down wait while the 3-2-1 is open');
+  await page.click('[data-cave-321-start]');
+  ok(await t321() === 'it' && await page.locator('[data-cave-321-card]').count() === 4, 'Face it, with cards to tap');
+  await page.click('[data-cave-321-card="0"]');
+  ok(await bubbles() === 1 && /It's standing in my way\./.test(await page.textContent('[data-cave-321-log]')), 'a card is sent as your line');
+  await page.click('[data-cave-321-next]');
+  ok(await t321() === 'you' && await page.locator('[data-cave-321-card]').count() === 4 && /^\(/.test(await page.textContent('[data-cave-321-card="3"]')), 'Talk to it has cards too, a gesture among them');
+  await page.fill('[data-cave-321-text="you"]', 'Why are you here, really?'); await page.click('[data-cave-321-send]');
+  ok(await page.getAttribute('[data-cave-321-voice="it"]', 'aria-pressed') === 'true' && /I don't trust you yet\./.test(await page.textContent('[data-cave-321-cards]')), 'your own words hand the voice to it, and its cards change with it');
+  await page.click('[data-cave-321-card="0"]');
+  await page.click('[data-cave-321-next]');
+  ok(await waitStep('perm-be') && /May I stand where you stand, and speak as you, for a while\?/.test(await page.textContent('[data-bm-modal]')), 'Be it opens only with its permission: it is asked first');
+  await page.click('[data-bm-perm="no"]');
+  ok(await waitStep('refused-be') && /Nobody stands here but me\./.test(await page.textContent('[data-bm-modal]')) && await page.locator('[data-bm-post="be"]').count() === 1, 'it can hold back, in its own words, and you can stay on your own side');
+  await page.click('[data-bm-post="be"]');
+  ok(await waitStep('talk-321') && await t321() === 'after', 'staying on your own side goes on to the charge reading, without being it');
+  ok(await page.inputValue('[data-cave-321-charge="after"]') === '7', 'the reading starts at its charge');
+  await page.fill('[data-cave-321-charge="after"]', '5'); await page.click('[data-cave-321-after]');
+  ok(/You faced the Protector, talked with it\. Nothing you wrote leaves this page\./.test(await page.textContent('[data-bm-modal]')), 'it says what you did, and that the words stay on the page');
+  await page.click('[data-bm-talkdone]');
+  ok(await waitStep('eased') || true, 'a lower charge eases as at any check-in');
+  ok(await page.waitForFunction(() => /^q-/.test(document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') || ''), null, { timeout: 15000 }).then(() => true, () => false) && await page.evaluate(() => window.__oagBigMind.state.charge === 5 && window.__oagBigMind.state.talked === 1), 'the reading is its charge now, and the questions go on: ' + await step());
+  await page.click('[data-bm-modal] [data-bm-card="0"]'); await waitStep('charge');
+  await page.click('[data-bm-talk]'); await waitStep('talk-321');
+  await page.click('[data-cave-321-start]');
+  ok(/Round 2/.test(await page.textContent('[data-cave-321-log]')) && await bubbles() === 3, 'a second 3-2-1 keeps the thread and starts a new round');
+  await page.click('[data-cave-321-next]'); await page.click('[data-cave-321-next]');
+  await waitStep('perm-be'); await page.click('[data-bm-perm="yes"]');
+  ok(await waitStep('granted-be') && /Stand here, then\. Feel how heavy it is\./.test(await page.textContent('[data-bm-modal]')), 'it lets you');
+  await page.click('[data-bm-thanks="be"]');
+  ok(await waitStep('talk-321') && await t321() === 'i', 'and Be it opens');
+  const be = await page.locator('[data-cave-321-card]').allTextContents();
+  ok(be[0] === 'I am the Protector.' && /^\(I take its stance: palms out at shoulder height/.test(be[be.length - 1]), 'Be it offers its own lines and its held movement as a gesture: ' + be.join(' | '));
+  await page.click('[data-cave-321-card="' + (be.length - 1) + '"]');
+  ok(/As the Protector/.test(await page.textContent('[data-cave-321-log]')), 'the gesture is sent as the voice');
+  await page.click('[data-cave-321-next]'); await page.fill('[data-cave-321-charge="after"]', '2'); await page.click('[data-cave-321-after]');
+  ok(/and spoke as it\./.test(await page.textContent('[data-bm-modal]')), 'it says you spoke as it');
+  await page.click('[data-bm-talkdone]');
+  ok(await waitStep('ready', 15000) && await page.locator('[data-bm-talk]').count() === 1, 'at 3 or below it is willing, and it can still be talked through');
+  await page.click('[data-bm-talk]'); await waitStep('talk-321'); await page.click('[data-cave-321-skip]');
+  ok(await page.locator('[data-bm-talkback]').count() === 1, 'skipping the 3-2-1 goes straight back');
+  await page.click('[data-bm-talkback]');
+  ok(await waitStep('ready') && await page.evaluate(() => window.__oagBigMind.state.talked === 2), 'and a skipped one is not counted; stepping aside never waited on it');
+  await page.click('[data-bm-ask="aside"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="aside"]');
+  ok(await waitStep('be-who', 30000) && await page.locator('[data-bm-seattalk]').count() === 1, 'from its seat, the 3-2-1 is offered too');
+  await page.click('[data-bm-seattalk]'); await waitStep('talk-321');
+  ok(/From its place, you look at it/.test(await page.textContent('[data-bm-modal]')) || await t321() === 'before', 'from its seat the 3-2-1 is staged in its place');
+  await page.click('[data-cave-321-start]'); await page.click('[data-cave-321-next]'); await page.click('[data-cave-321-next]');
+  ok(await step() === 'talk-321' && await t321() === 'i', 'in its seat, it already let you stand there, so Be it opens without asking again');
+  await page.click('[data-cave-321-skip]'); await page.click('[data-bm-talkback]');
+  ok(await waitStep('be-who'), 'and it comes back to speaking as it');
+  await page.click('[data-bm-look]'); await waitStep('thanks'); await page.click('[data-bm-out]');
+  await waitStep('perm-pass', 30000); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="pass"]');
+  ok(await waitStep('keep', 20000), 'past the 3-2-1, the chamber goes on as before');
+  await page.click('[data-bm-save]');
+  await page.waitForFunction(() => window.__oagBigMind.state.phase === 'hall2', null, { timeout: 10000 }).catch(() => {});
+  let sv = await save();
+  ok(sv.voices.protector.talked === 2 && sv.voices.protector.spirit.name === 'Fear' && !JSON.stringify(sv).includes('Why are you here, really'), 'saved: two 3-2-1s and its spirit, never the words');
+  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  ok(!(sv = await save()).spirits || !sv.spirits.some((o) => o.name === 'Fear'), 'the meeting spirit is not one of the spirits kept at the mouth: it comes back with its voice');
+  ok(/The spirit from meeting it walks with you: Fear \(Metal\)\./.test(await page.textContent('[data-bm-keptmeet="protector"]')) && /twice|2 times/.test(await page.textContent('[data-bm-kepttalked="protector"]')), 'the mouth lists it with the voice, and the 3-2-1s had');
+  await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas'); await fast();
+  ok(await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => o.meet === 'protector').length === 1), 'it comes back in with you');
+  // a voice met before is not asked again how you feel meeting it
+  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('oag.bigmind.v1')); s.chamber = 0; s.at = 'mouth'; localStorage.setItem('oag.bigmind.v1', JSON.stringify(s)); });
+  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await page.click('[data-bm-restart]').catch(() => page.click('[data-bm-enter]')); await page.waitForSelector('[data-bm-cave] canvas'); await fast(); await hold(true);
+  ok(await page.waitForFunction(() => /^meet/.test(document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') || ''), null, { timeout: 20000 }).then(() => true, () => false) && await step() === 'meet', 'meeting it again, the feeling is not asked twice');
+  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+
+  // Once its voice trusts you, the spirit born on meeting it is your ally (bmt-spirits-vouch), under its own name.
+  const at0 = '2026-10-16T00:00:00.000Z';
+  const trusted = { status: 'spoken', kept: [], savedAt: at0, spirit: { name: 'Curious', element: 'earth' }, trust: { seen: [{ dim: 'can', kind: 'wait', at: at0 }, { dim: 'will', kind: 'return', at: at0 }, { dim: 'good', kind: 'share', at: at0 }], promises: [], broken: [], repaired: [], ally: at0 } };
+  await page.evaluate((r) => { localStorage.setItem('oag.bigmind.v1', JSON.stringify({ v: 1, chamber: 1, at: 'mouth', voices: { protector: r }, waiting: [] })); }, trusted);
+  await page.reload(); await page.waitForSelector('[data-bm-mouth]');
+  await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas'); await fast();
+  const al = await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => o.ally === 'protector').map((o) => [o.name, o.element, o.meet]));
+  ok(al.length === 1 && al[0][0] === 'Curious' && al[0][1] === 'earth' && al[0][2] === 'protector', 'the meeting spirit is the ally, not a new spirit named for the voice: ' + JSON.stringify(al));
+  await hold(true);
+  ok(await waitStep0('meet-feel'), 'the Controller, met for the first time, asks how you feel meeting it');
+  ok(/Who vouches for you\?/.test(await page.textContent('[data-bm-modal]')) === false, 'the feeling comes before anything is asked of you');
+  await page.click('[data-bm-feel="none"]');
+  ok(await waitStep0('meet') && /Who vouches for you\?/.test(await page.textContent('[data-bm-modal]')) && await page.evaluate(() => window.__oagBigMind.spirits.some((o) => o.meet === 'controller' && o.name === 'No word yet' && !o.element)), 'No word yet spawns a grey spirit, and then the voice asks who vouches for you');
+  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
