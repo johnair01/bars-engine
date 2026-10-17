@@ -42,7 +42,14 @@ const waitStep = async (s, ms = 20000) => {
 const st = () => page.evaluate(() => { const s = window.__oagBigMind.state; return s && { phase: s.phase, s: s.s, gate: s.gate, cam: s.cam, waiting: s.waiting.slice(), answers: s.answers }; });
 const save = () => page.evaluate(() => JSON.parse(localStorage.getItem('oag.bigmind.v1') || 'null'));
 async function hold(on) { await page.evaluate((on) => { const s = window.__oagBigMind.state; s.speed = 6; s.held = on; }, on); }
-async function holdUntil(stepName) { await hold(true); const r = await waitStep(stepName); return r; }
+async function holdUntil(stepName) {
+  await hold(true);
+  if (stepName !== 'end') return waitStep(stepName);
+  // the approach check-in comes first at each hallway's end (build 4); the older checks skip it
+  const r = await page.waitForFunction(() => /^(end|approach-line)$/.test(document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') || ''), null, { timeout: 20000 }).then(() => true, () => false);
+  if (r && (await page.getAttribute('[data-bm-modal]', 'data-bm-step')) === 'approach-line') await page.click('[data-bm-apskipall]');
+  return r && waitStep0('end', 5000);
+}
 // Every visit asks again (board bmt-ask-again): going back in meets the chamber's voice once more, and declining opens the way.
 async function passAgain() {
   if (!(await holdUntil('meet'))) return false;
@@ -1425,6 +1432,55 @@ await page.evaluate(() => localStorage.clear());
   await page.click('[data-bm-feel="none"]');
   ok(await waitStep0('meet') && /Who vouches for you\?/.test(await page.textContent('[data-bm-modal]')) && await page.evaluate(() => window.__oagBigMind.spirits.some((o) => o.meet === 'controller' && o.name === 'No word yet' && !o.element)), 'No word yet spawns a grey spirit, and then the voice asks who vouches for you');
   await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await page.evaluate(() => localStorage.clear());
+}
+
+
+// the approach check-in at the end of the hallway (pass daemon-meeting1, build 4)
+{
+  const fast = () => page.evaluate(() => { window.__oagBigMind.state.speed = 6; });
+  const text = () => page.textContent('[data-bm-modal]');
+  const startAt = async (extra = {}) => {
+    await page.evaluate((x) => { localStorage.clear(); localStorage.setItem('oag.bigmind.v1', JSON.stringify({ v: 1, chamber: 0, at: 'hall2', voices: { protector: { status: 'spoken', kept: [], savedAt: '2026-10-17T00:00:00.000Z', spirit: { name: 'Curious', element: 'earth' }, ...x } }, waiting: [] })); }, extra);
+    await page.reload(); await page.waitForSelector('[data-bm-mouth]');
+    await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas'); await fast(); await passAgain();
+  };
+  await startAt();
+  await hold(true);
+  ok(await waitStep0('approach-line'), 'at the end of the hallway, the check-in comes before the shut mouth');
+  ok(/and then\.\.\.$/.test((await page.textContent('[data-bm-modal] .bm-voice')).trim()), 'the Victim\'s one line ends "and then..."');
+  await page.click('[data-bm-apgo]');
+  ok(await waitStep0('approach-body'), 'the body ask comes first');
+  const bodyText = await text();
+  ok(/Bracing/.test(bodyText) && /Flinging open/.test(bodyText) && !/Protector|Controller|Skeptic|Fixer|Victim|Damaged/.test(bodyText.replace(/The (Controller)/, '')), 'plain movement words, never a daemon');
+  ok(!/\d/.test(bodyText.replace(/Protector|Controller/g, '')) , 'no screen prints a number');
+  await page.click('[data-bm-ap="gripping"]');
+  ok(await waitStep0('approach-feel'), 'then the feeling');
+  await page.click('[data-bm-ap="fire"]');
+  ok(await waitStep0('approach-veil'), 'then how near it is');
+  const col = await page.evaluate(() => window.__oagBigMind.mouth.light.color.getHex());
+  ok(col === await page.evaluate(() => window.__oagCave.kit.spiritHex('fire')), 'the mouth\'s light took the element\'s colour at once');
+  ok(await page.evaluate(() => { const a = window.__oagBigMind.approachSpirit; return a && a.body === 'gripping' && a.element === 'fire'; }) && await page.evaluate(() => window.__oagBigMind.approachSpirit && true), 'the meeting spirit forms from the answers so far');
+  await page.click('[data-bm-ap="veiled"]');
+  ok(await waitStep0('end'), 'a faint answer never shows the settled ask: it goes straight on');
+  let sv = await save();
+  ok(sv.voices.protector.approach && sv.voices.protector.approach.body === 'gripping' && sv.voices.protector.approach.feeling === 'fire' && sv.voices.protector.approach.veil === 'veiled' && sv.voices.protector.approach.state === null && !!sv.voices.protector.approach.at, 'the answers are saved, no words: ' + JSON.stringify(sv.voices.protector.approach));
+  // not faint: the settled ask shows
+  await startAt(); await hold(true);
+  await waitStep0('approach-line'); await page.click('[data-bm-apgo]');
+  await page.click('[data-bm-apskip]'); await page.click('[data-bm-ap="none"]'); await waitStep0('approach-veil');
+  await page.click('[data-bm-ap="clear"]');
+  ok(await waitStep0('approach-state'), 'when not faint, the settled ask shows');
+  await page.click('[data-bm-ap="wants"]');
+  ok(await waitStep0('end'), 'and the walk goes on');
+  sv = await save();
+  ok(sv.voices.protector.approach.body === null && sv.voices.protector.approach.state === 'wants', 'a skipped ask is saved as nothing');
+  // skip all passes, and saves nothing when nothing was answered; it is asked every visit
+  await startAt(); await hold(true);
+  await waitStep0('approach-line'); await page.click('[data-bm-apskipall]');
+  ok(await waitStep0('end') && !(await save()).voices.protector.approach, 'skip all passes and keeps nothing');
+  await startAt(); await hold(true);
+  ok(await waitStep0('approach-line'), 'asked again on every visit');
   await page.evaluate(() => localStorage.clear());
 }
 
