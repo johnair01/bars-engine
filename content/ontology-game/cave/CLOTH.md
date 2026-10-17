@@ -294,6 +294,28 @@ panels have been tried; neither is ready for his look.
 - The rim jitter cloth_walk.mjs prints (about 55 mm walking, both ways) is not J5d's: it spans the frames the walk cuts
   short at each sample. J5d's cuff measure in the browser is the one to trust.
 
+### Round 12, third pass: why the forearm shows bare (2026-10-17)
+
+- **Look in the close clip, not the Node numbers.** `j5_clip.mjs` with `VIEW=side DIST=1.6 LOOK_Y=0.85 WALK=3 STAND=1`
+  shows the sleeves at hand size; the default camera hides what goes wrong. The Node walk's own measures stayed clean
+  while the clip was wrong: no panel point fell in toward the arm (`fall_in`, the share nearer the arm's line than 0.6
+  of its skinned gap: 0), no cuff trim turned over (`trim_spike`: 0), and the panels kept their width and area.
+- **The cause.** Each cloth sleeve drifts off its forearm as a whole, toward the body and back: mean offset from the
+  skinned place 5 cm inward on the left sleeve and 11 cm back on the right (Node probe of `CaveCloth.attach` on the
+  GLB, `/mnt/project-files/3d-build/j5-panels-r12c-2026-10-17/probe.mjs`). Every point stays outside the arm's
+  capsules, but the triangles between them cross the forearm, so the forearm shows through the sleeve from elbow to
+  wrist and only the trim ring is seen, trailing the hand. J5's through test lets a forearm show between the two panels
+  (garments.py, round 12), so it reads 0 at every key while the whole forearm is out.
+- **Tried, all off by default, none fixes it:** `armBend` 0.6 and `armCompress` 1 (stiffer panels), `armGap` 0.8 (a
+  panel point keeps 0.8 of its skinned gap from the arm's line), `seamOpen`/`seamFrom` (the opened seams as slits held
+  to 0.3 to 6 cm, even held shut). `armEdges` (`edgeCollide`: each panel edge pushed off the forearm and hand capsules)
+  made it worse: it pushes the sleeve off the arm from the elbow down, because near the elbow the capsules are fatter
+  than the sleeve that hugs the arm (the reason the point backstop exists). With `armEdges` and slits the walk's T1
+  coherence first went under 0.8 (0.797 walking, 0.64 fast), for a sleeve that no longer covers the arm.
+- **Next:** give `edgeCollide` the point backstop (an edge kept no nearer the arm's line than its skinned place, as
+  `collide` does for points), and check each arm capsule's radius against the sleeve's skinned inner surface along
+  the forearm; then the close clip again. Pictures: `/mnt/project-files/3d-build/j5-panels-r12c-2026-10-17/`.
+
 ## Rounds 1 to 5, in one line each
 
 - **Bone weights never move like cloth.** Rounds 1 to 4 drove the skirt with hem bones and slit weights. Every fix

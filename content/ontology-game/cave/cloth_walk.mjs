@@ -165,7 +165,7 @@ function sleeveFrame(D, root, caps) {
       // its skinned place has
       if (cloth.slv[p] && armCaps.length) {
         const g = Math.min(...armCaps.map(c => segDist(q, c.s.slice(0, 3), c.s.slice(3, 6)))), g0 = Math.min(...armCaps.map(c => segDist(r, c.s.slice(0, 3), c.s.slice(3, 6))));
-        fr.n++; if (g < 0.6 * g0) fr.fallIn++; if (process.env.DBG) (globalThis.R = globalThis.R || []).push(g / g0);
+        fr.n++; if (g < 0.6 * g0) fr.fallIn++;
       }
     }
   }
@@ -182,7 +182,6 @@ function sleeveFrame(D, root, caps) {
   return fr;
 }
 const trimFol = Array.from(cloth.fol).filter(f => cloth.slv[cloth.anchor[f]]), trimRest = new Map();
-if (process.env.DBG) console.error("trim", trimFol.length, cloth.fol.length, cloth.slvIdx.length);
 for (const f of trimFol) {   // the rest: the job's points are per vertex, the cloth's per welded particle
   const R = (p, i) => robe.rest[3 * cloth.reps[p] + i], a = cloth.anchor[f], r = cloth.tref[a];
   const o = [0, 1, 2].map(i => R(f, i) - R(a, i)), u = [0, 1, 2].map(i => R(r, i) - R(a, i));
@@ -288,4 +287,3 @@ result.step_ms = { median: costs[costs.length >> 1], p95: costs[Math.floor(costs
 result.sleeves = Object.fromEntries(result.scenarios.map(s => [s.name, s.sleeves]));   // before the write: garments.py reads it from the file
 writeFileSync(process.argv[3], JSON.stringify(result));
 console.log(JSON.stringify({ sleeves: result.sleeves, particles: cloth.P, free: cloth.nfree, folds: result.folds, fold_far: result.fold_far, step_ms: result.step_ms }));
-if (process.env.DBG) { const R = globalThis.R.sort((a, b) => a - b); console.error('ratio pct', [0.01, 0.05, 0.1, 0.5, 0.9].map(q => R[Math.floor(q * R.length)].toFixed(2)), R.length); }
