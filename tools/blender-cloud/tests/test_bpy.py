@@ -513,15 +513,79 @@ def j4b():
     root = copy_tree(tmpdir("j4b"))
     src = root / "content/ontology-game/cave/character.py"
     text = src.read_text()
-    bent = "0.12 + 0.95 * max(0.0, math.cos(ph))"
+    bent = "0.12 + 0.95 * ramp(math.cos(ph))"
     check(bent in text, "the knee line moved; update J4b")
-    src.write_text(text.replace(bent, "-(0.12 + 0.95 * max(0.0, math.cos(ph)))"))
+    src.write_text(text.replace(bent, "-(0.12 + 0.95 * ramp(math.cos(ph)))"))
     out = tmpdir("j4b-out")
     r, _ = run([src, "--out", out])
     check(r.returncode == 0, f"character.py exited {r.returncode}: {r.stderr[-300:]}")
     w = walk_check(out / "average-dusk.glb")
     check(any("kneeL folds forward" in p for p in w["problems"]), f"the forward knee went unseen: {w}")
     return "a forward-bent knee fails the walk check"
+
+
+# ---- clothing (J5, J5b) ---------------------------------------------------------------------------------------
+
+@test("J5")
+def j5():
+    """garments.py --all puts the robe, the sash (cut on the body and over the robe) and the topknot on all nine
+    figures. (a) No covered body point comes through a garment, and no robe point through the sash worn over it, at
+    any of the walk's 25 keys, with the robe's skirt as cloth (cloth.js run over the walk by cloth_walk.mjs, after
+    two seconds of walking); (b) each garment GLB is under 150 KB, with one skin whose joints are the figure's own
+    names; (c) each robe GLB carries what the game's cloth needs: a _CLOTH value per point, some of them cloth, and
+    the leg capsules in its extras; (d) no point of the turned hem anchors across a slit (round 8). The sheet goes to
+    the eye (cc-wardrobe-gate)."""
+    out = tmpdir("j5")
+    r, secs = run([GAME / "cave/garments.py", "--all", "--out", out], timeout=1800)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    rep = json.loads((out / "report.json").read_text())
+    rows = rep["garments"]
+    check(len(rows) == 36 and len({(x["garment"], x["build"], x["palette"]) for x in rows}) == 36,
+          f"{len(rows)} garments, want 36 (4 cuts, 3 builds, 3 palettes)")
+    rig = None
+    for row in rows:
+        check(len(row["through"]) == 25 and row["worst"] == 0,
+              f"{row['id']}: points through at some key, {row['through']}")
+        glb = out / row["file"]
+        size = glb.stat().st_size
+        check(size < 150 * 1024, f"{row['id']} is {size // 1024} KB")
+        j = glb_json(glb)
+        check(len(j.get("skins", [])) == 1 and not j.get("animations"), f"{row['id']}: want one skin, no animation")
+        names = {j["nodes"][n]["name"] for n in j["skins"][0]["joints"]}
+        if rig is None:
+            fj = glb_json(out / rep["figures"][0]["file"])
+            rig = {fj["nodes"][n]["name"] for n in fj["skins"][0]["joints"]}
+        check(names == rig, f"{row['id']}: joints {sorted(names ^ rig)} differ from the figure's")
+        if row["garment"] == "robe":
+            prim = j["meshes"][0]["primitives"][0]
+            node = next(n for n in j["nodes"] if n.get("mesh") == 0)
+            caps = json.loads(node.get("extras", {}).get("cloth", "{}")).get("capsules", [])
+            check("_CLOTH" in prim["attributes"] and len(caps) >= 4 and row.get("cloth", {}).get("free", 0) > 100,
+                  f"{row['id']}: no cloth in the GLB (attributes {sorted(prim['attributes'])}, {len(caps)} capsules)")
+            # round 8: no turned-hem point anchored across a slit (cloth_walk.mjs fold_far: anchor further than 8 edges)
+            check(row["cloth"].get("folds", 0) > 0 and row["cloth"].get("fold_far", 1) == 0,
+                  f"{row['id']}: {row['cloth'].get('fold_far')} of {row['cloth'].get('folds')} fold points anchored across a slit")
+    sizes = [(out / x["file"]).stat().st_size for x in rows]
+    return f"36 garments on nine figures, none through at 25 keys, {min(sizes) // 1024} to {max(sizes) // 1024} KB; {secs:.0f} s"
+
+
+@test("J5b")
+def j5b():
+    """The check sees cloth that is too tight, and cloth the legs are not pushing: without the walking fit (--no-fit)
+    the robe has points through it, and with the skirt's cloth run without its leg capsules (--no-legs) the legs come
+    through the skirt."""
+    out = tmpdir("j5b")
+    r, _ = run([GAME / "cave/garments.py", "--no-fit", "--out", out], timeout=900)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
+    robe = next(x for x in json.loads((out / "report.json").read_text())["garments"] if x["garment"] == "robe")
+    check(robe["worst"] > 0, f"the unfitted robe passed: {robe['through']}")
+    out2 = tmpdir("j5b-legs")
+    r, _ = run([GAME / "cave/garments.py", "--no-legs", "--out", out2], timeout=900)
+    check(r.returncode == 0, f"garments.py exited {r.returncode}: {r.stderr[-300:]}")
+    legs = next(x for x in json.loads((out2 / "report.json").read_text())["garments"] if x["garment"] == "robe")
+    check(legs["worst"] > 0, f"the cloth without its leg capsules passed: {legs['through']}")
+    return (f"unfitted robe: {sum(robe['through'])} points through over the walk, the most at one key {robe['worst']}; "
+            f"cloth without leg capsules: {sum(legs['through'])} through, the most at one key {legs['worst']}")
 
 
 @test("J6")
