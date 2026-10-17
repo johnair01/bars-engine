@@ -203,6 +203,54 @@ colour map read the second of two UV sets, so dropping "the extra one" turned it
 both. The chamber build now needs the network the first time a Blendkit object is fetched; after that it
 reads the cache under `/tmp/blender-cloud/assets`.
 
+**J3 result (2026-10-13, waiting on his look):** two of three pass on the number, and his eye decides the rest.
+His three ChatGPT pictures (`pictures/j3_mushroom.jpg`, `j3_crystal.jpg`, `j3_root.jpg`, from the J3 vibe interview)
+are three `obj(...)` lines in `chamber.py` with no code of their own. Mushrooms 0.894, amber crystals 0.855, root
+knot 0.819 (below 0.85, as the brief expected for its fine tendrils). What it took, all in `from_picture.py`:
+- `--flat` (`picture(..., flat=True)`): on a flat plain background the old Otsu cut dropped the pale parts (the
+  lilac stems and caps), so the mushroom traced only its moss bed. The new cut takes anything a few times the edge's
+  own noise away from the grey. The kit's dressing reads as before (R2 and P1 pass).
+- Mode `mushrooms`: each cap is a piece of the strongest colour, read square to its own lean and lathed, with gills
+  under the rim; stems and bed are inflated; three parts, three materials (violet caps, pale stems, stone bed).
+- Mode `roots`: the outline thinned to centre lines, a round tube along each, as thick as the picture is wide, so
+  tendrils stay tendrils. The thick trunk criss-crosses into folds; inflating it instead scored 0.732 and lost the
+  look, so tubes stand.
+- `obj(..., hang=4.85)` hangs a piece from the roof; a picture source with parts takes one material per part.
+Seen on the sheet (`/mnt/project-files/3d-build/j3-result-2026-10-13/j3-sheet.png`): the crystals read as crystals
+but with five big shards where the picture has about ten (the P4 gap again); the mushroom caps read, the stems fuse
+into one pale mass; the root's tendrils read, its trunk is crumpled rather than twisted, with no green glow. Chamber
+849 KB of the 3 MB budget. Test J3 (`test_bpy.py`) checks the number half; J2 now accepts a hung piece.
+
+**J3 round 2 (2026-10-13, same PR, waiting on his look):** his notes on the first sheet: "I think we can do more with
+importing textures from the images. The shapes are pretty good but a bit flat. And we can do a bit more work with
+getting the mushrooms right. They have the vibe but are a little blobby. The root is also a bit blobby. Not readying
+as tendrils falling in a shape". What changed, all in `from_picture.py` and `objects.py`:
+- Textures: `picture(..., texture=True)` lays the picture on the piece as its colour, projected from the front (the
+  back mirrors it). The texture is the picture cut to the piece, at full size (640 px pictures), with the background
+  and the gaps between strands filled smoothly from the piece's own colours (`fill`, pull-push), so no grey and no
+  streaks show. The flat colour stays as each part's material; a glowing part glows in the picture's colours.
+- Mushrooms: each stem is now followed down the picture from under its cap to the bed and swept as its own round
+  stem, flaring into the gills and the moss, instead of one inflated mass. Each cap is a smooth dome fitted to the
+  picture's rows, as wide as the gills' skirt, with a lip and gills under it. Outline 0.894 to 0.822: the old mass
+  filled the gaps between stems, which the picture also fills with sprouts; the eye reads five mushrooms now.
+- Root: the body of the outline (thicker than `CORE` pixels) is one filled shape, because the picture's strands overlap,
+  so thinning it gave the crumpled trunk. It is now a braid of four strands winding down from the roof, as wide as
+  the body at each row, and the fine roots outside it are tubes along their centre lines that taper to a point and
+  swing toward or away from the viewer the further they fall. Outline 0.819 to 0.910; the green glow comes with the
+  texture.
+Two of three pass the 0.85 line (crystals 0.855, root 0.910). Sheet:
+`/mnt/project-files/3d-build/j3-round2-2026-10-13/j3-round2-sheet.png`. Chamber 1,482 KB of 3 MB.
+
+**Greenery (2026-10-13, same PR):** his four Blendkit picks ("Let's go with that pick and also the stylize pitcher
+plant") are in the chamber: Rock with Moss, two Fern 02 variants, two High grass clumps, the Stylized fly trap. All
+CC0. Blendkit offers them only as .blend, so they were exported to GLB at 256 px textures in the greenery thread, and
+`objects.py` reads them with a new source, `local(file, id, mesh)`, from `cave/picks/`, checking each licence sidecar
+and pinned id. The four GLBs (1.2 MB, CC0) are kept in git, unlike fetched assets, because no script can remake them:
+Blendkit gives only the .blend. A new pick goes the same way: export it to GLB at 256 px textures, put the GLB and its
+sidecar in `cave/picks/`, and add one `local(...)` line. The colour map
+now survives when a mix node sits between it and Base Color (the fly trap's colours were lost without it). Chamber
+1,274 KB of 3 MB.
+
 **Start from root-game.** Wendell's steer on `bpt-skinned-garments` (2026-10-13): "Use as much as we can from the
 root game for this as we’ve already done many garment tests there". So J5's thread begins by listing what root-game
 already has (`wendell-britt/root-game`, call sheet `root.md`): its garment shapes (robe, sleeves, skirt), the clothes'

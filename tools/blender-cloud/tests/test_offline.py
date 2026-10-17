@@ -81,8 +81,8 @@ def g6():
         if a.get("status") == "planned":
             continue
         p = GAME / "cave" / a["file"]
-        if p.is_dir():  # a folder of pictures: its bytes count the pictures, not the script that drew them
-            size = sum(f.stat().st_size for f in p.iterdir() if f.suffix.lower() in (".jpg", ".jpeg", ".png"))
+        if p.is_dir():  # a folder of pictures or models: its bytes count the files, not a script that drew them
+            size = sum(f.stat().st_size for f in p.iterdir() if f.is_file() and f.suffix.lower() != ".py")
         elif p.exists():
             size = p.stat().st_size
         else:
@@ -140,6 +140,23 @@ def d1():
     v, f = procgen.mushroom(seed=5)
     check(len(v) == (procgen.RINGS * 2 + 5) * procgen.SIDES, f"the default mushroom changed: {len(v)} vertices")
     return ", ".join(f"{n} {len(x[1])}/{x[3]}" for n, x in a.items()) + " faces"
+
+
+@test("C1")
+def c1():
+    """The mesh census (cave/census.py): the body map's figure passes as a humanoid (one closed solid, 1.75 m tall),
+    a figure with a hole punched in it fails, and the chamber kit only reports."""
+    sys.path.insert(0, str(GAME / "cave"))
+    import census
+    fig = census.census(GAME / "body/figure.glb", "humanoid")
+    check(not fig["problems"], f"figure.glb: {fig['problems']}")
+    check(1.6 < fig["size_m"][1] < 1.9, f"figure.glb is {fig['size_m'][1]} m tall")
+    holed = census.count([(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)], [(0, 2, 1), (0, 1, 3), (1, 2, 3)])
+    check(holed["open_edges"] == 3, f"a tetrahedron missing a face shows {holed['open_edges']} open edges, want 3")
+    kit = census.census(GAME / "cave/cave-kit.glb", "chamber")
+    check(not kit["must_pass"] and not kit["problems"], "the chamber is report-only")
+    t = fig["total"]
+    return f"figure {t['tris']} tris closed, {fig['size_m'][1]} m; kit {kit['total']['open_edges']} open edges reported"
 
 
 if __name__ == "__main__":

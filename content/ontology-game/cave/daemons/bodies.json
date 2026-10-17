@@ -1,0 +1,125 @@
+{
+ "note": "Baked by bake_daemons.py from character.py --daemons (bars-engine #328). Phone budget: 96 KB and 7000 triangles a body.",
+ "bodies": [
+  {
+   "id": "protector",
+   "bytes": 91080,
+   "tris": 6328,
+   "verts": 3992,
+   "height": 1.743,
+   "bands": {
+    "skin": 923,
+    "tunic": 1283,
+    "trim": 1096,
+    "sash": 152,
+    "trousers": 407,
+    "shoes": 131
+   }
+  },
+  {
+   "id": "controller",
+   "bytes": 90980,
+   "tris": 6328,
+   "verts": 3984,
+   "height": 1.736,
+   "bands": {
+    "skin": 923,
+    "tunic": 1277,
+    "trim": 1090,
+    "sash": 152,
+    "trousers": 408,
+    "shoes": 134
+   }
+  },
+  {
+   "id": "skeptic",
+   "bytes": 90808,
+   "tris": 6328,
+   "verts": 3971,
+   "height": 1.717,
+   "bands": {
+    "skin": 923,
+    "tunic": 1268,
+    "trim": 1092,
+    "sash": 152,
+    "trousers": 404,
+    "shoes": 132
+   }
+  },
+  {
+   "id": "fixer",
+   "bytes": 91336,
+   "tris": 6328,
+   "verts": 4012,
+   "height": 1.691,
+   "bands": {
+    "skin": 923,
+    "tunic": 1300,
+    "trim": 1095,
+    "sash": 152,
+    "trousers": 408,
+    "shoes": 134
+   }
+  },
+  {
+   "id": "victim",
+   "bytes": 90868,
+   "tris": 6328,
+   "verts": 3976,
+   "height": 1.381,
+   "bands": {
+    "skin": 923,
+    "tunic": 1266,
+    "trim": 1091,
+    "sash": 152,
+    "trousers": 416,
+    "shoes": 128
+   }
+  },
+  {
+   "id": "damaged-self",
+   "bytes": 90852,
+   "tris": 6328,
+   "verts": 3974,
+   "height": 1.447,
+   "bands": {
+    "skin": 923,
+    "tunic": 1267,
+    "trim": 1091,
+    "sash": 152,
+    "trousers": 406,
+    "shoes": 135
+   }
+  },
+  {
+   "id": "emotional-body",
+   "bytes": 91216,
+   "tris": 6328,
+   "verts": 4002,
+   "height": 1.699,
+   "bands": {
+    "skin": 923,
+    "tunic": 1303,
+    "trim": 1082,
+    "sash": 152,
+    "trousers": 408,
+    "shoes": 134
+   }
+  },
+  {
+   "id": "player",
+   "bytes": 90872,
+   "tris": 6328,
+   "verts": 3976,
+   "height": 1.813,
+   "bands": {
+    "skin": 923,
+    "tunic": 1268,
+    "trim": 1091,
+    "sash": 152,
+    "trousers": 408,
+    "shoes": 134
+   }
+  }
+ ]
+}

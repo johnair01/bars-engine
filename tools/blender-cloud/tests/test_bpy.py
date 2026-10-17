@@ -1,5 +1,5 @@
-"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2 and J2b. Run under the bpy venv (README); each build runs as a
-subprocess of that same Python, in a copy of the repo under $W, so the checkout is never written.
+"""bpy tier: G3 to G5, R1 to R3, W1 to W4, P1 to P5, J2, J3 and J2b, J4 to J7. Run under the bpy venv (README); each
+build runs as a subprocess of that same Python, in a copy of the repo under $W, so the checkout is never written.
 
 usage: /home/user/blenv/bin/python tools/blender-cloud/tests/test_bpy.py [R2,W1,...]
 """
@@ -428,12 +428,32 @@ def j2():
           f"want one object from each source (Blendkit, picture, script); got {[row['source'] for row in rows]}")
     manifest = {a["id"]: a for a in json.loads((root / "content/ontology-game/cave/manifest.json").read_text())["assets"]}
     for row in rows:
-        check(abs(row["lowest_cm"]) <= 1, f"{row['id']} stands {row['lowest_cm']} cm off the floor")
+        if "hangs_from_m" in row:  # a root hung from the roof: its top, not its foot, is where it is placed
+            check(abs(row["top_gap_cm"]) <= 1, f"{row['id']} hangs {row['top_gap_cm']} cm below its roof point")
+        else:
+            check(abs(row["lowest_cm"]) <= 1, f"{row['id']} stands {row['lowest_cm']} cm off the floor")
         check(row["bytes"] <= row["budget_bytes"], f"{row['id']} is {row['bytes']} bytes, budget {row['budget_bytes']}")
         check(row["licence"] in ("CC0", "own work"), f"{row['id']} licence {row['licence']}")
         m = manifest.get(row["id"])
         check(m and m["bytes"] == row["bytes"] and m["source"] and m["budget_bytes"], f"{row['id']}: no manifest row")
+    _chamber_rows[:] = rows
     return ", ".join(f"{row['id']} {row['bytes'] // 1024} KB" for row in rows) + f"; {secs:.0f} s"
+
+
+_chamber_rows = []
+
+
+@test("J3")
+def j3():
+    """His concept pictures (pictures/j3_*.jpg) became placed pieces with no code of their own: two of the three
+    trace at 0.85 or better. The other half of the kill line is his yes on the sheet (E1), never the score alone."""
+    if not _chamber_rows:
+        raise Skip("needs J2's chamber build")
+    rows = [r for r in _chamber_rows if "pictures/j3_" in r["source"]]
+    check(len(rows) == 3, f"want the three J3 pictures placed; got {[r['id'] for r in rows]}")
+    passed = [r for r in rows if r["outline_match"] >= 0.85]
+    check(len(passed) >= 2, "outline match: " + ", ".join(f"{r['id']} {r['outline_match']}" for r in rows))
+    return ", ".join(f"{r['id']} {r['outline_match']}" for r in rows)
 
 
 @test("J2b")
@@ -566,6 +586,101 @@ def j5b():
     check(legs["worst"] > 0, f"the cloth without its leg capsules passed: {legs['through']}")
     return (f"unfitted robe: {sum(robe['through'])} points through over the walk, the most at one key {robe['worst']}; "
             f"cloth without leg capsules: {sum(legs['through'])} through, the most at one key {legs['worst']}")
+
+
+@test("J6")
+def j6():
+    """The warp (call sheet blender-frame-flesh-warp, item 2): character.py --daemons makes the frame and one figure per
+    WARP row: the seven daemons and the Player. Each is one GLB under 300 KB with one skin and one Walk, passes the mesh census
+    (the frame as a humanoid, 1.6 to 1.9 m tall; each warped figure as an NPC, the same closed solid in the box a held
+    gesture needs) and walks clean, read back from the GLB. The sheet goes to the eye."""
+    out = tmpdir("j6")
+    r, secs = run([GAME / "cave/character.py", "--daemons", "--out", out])
+    check(r.returncode == 0, f"character.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    rows = json.loads((out / "report.json").read_text())
+    daemons = {"protector", "controller", "skeptic", "fixer", "victim", "damaged-self", "emotional-body", "player"}
+    check({x["warp"] for x in rows} == daemons | {None}, f"warps {[x['warp'] for x in rows]}, want the eight and the frame")
+    sys.path.insert(0, str(GAME / "cave"))
+    import census
+    for row in rows:
+        glb = out / row["file"]
+        check(glb.stat().st_size < 300 * 1024, f"{row['id']} is {glb.stat().st_size // 1024} KB")
+        j = glb_json(glb)
+        check(len(j.get("skins", [])) == 1 and [a["name"] for a in j.get("animations", [])] == ["Walk"],
+              f"{row['id']}: want one skin and one Walk")
+        c = census.census(glb, "npc" if row["warp"] else "humanoid")
+        check(not c["problems"], f"{row['id']} census: {c['problems']}")
+        w = walk_check(glb)
+        check(not w["problems"], f"{row['id']}: {'; '.join(w['problems'])}")
+    return f"the frame, seven daemon figures and the Player, each closed and walking clean; {secs:.0f} s"
+
+
+@test("J7")
+def j7():
+    """Integration (call sheet blender-frame-flesh-warp, "the held movement completing"): character.py --warp controller
+    --integrate makes the Controller with a second action, Integrate, beside Walk, still one GLB under 300 KB that passes
+    the mesh census and walks clean. Read back from the GLB, Integrate opens both fists, takes the wrists off the hips
+    to hang, keeps the lower foot on the ground every key, folds no knee or elbow the wrong way, and holds still at
+    each end. The strips go to the eye."""
+    out = tmpdir("j7")
+    r, secs = run([GAME / "cave/character.py", "--warp", "controller", "--integrate", "--out", out])
+    check(r.returncode == 0, f"character.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
+    row = json.loads((out / "report.json").read_text())[0]
+    glb = out / row["file"]
+    check(glb.stat().st_size < 300 * 1024, f"{row['id']} is {glb.stat().st_size // 1024} KB")
+    j = glb_json(glb)
+    check(len(j.get("skins", [])) == 1 and sorted(a["name"] for a in j.get("animations", [])) == ["Integrate", "Walk"],
+          f"{row['id']}: want one skin, Walk and Integrate")
+    sys.path.insert(0, str(GAME / "cave"))
+    import census
+    c = census.census(glb, "npc")
+    check(not c["problems"], f"{row['id']} census: {c['problems']}")
+    w = walk_check(glb)
+    check(not w["problems"], f"{row['id']} walk: {'; '.join(w['problems'])}")
+    r, _ = run([TESTS / "_integrate_check.py", glb])
+    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    check(r.returncode == 0 and line, f"_integrate_check.py failed: {r.stderr[-300:]}")
+    g = json.loads(line)
+    check(not g["problems"], f"{row['id']} integrate: {'; '.join(g['problems'])}")
+    return f"the Controller lets go over {g['seconds']} s, fists opening x{g['opened']['L']}, walking clean; {secs:.0f} s"
+
+
+# ---- the spirits' frame (S1) ----------------------------------------------------------------------------------
+
+@test("S1")
+def s1():
+    """Every spirit base, living creature and highest ally form, rigs skeleton first (content/spirits/rig.py): one
+    skin, the actions Idle and Walk, every bone inside the flesh, the size SIZE declares (within 10%), every foot
+    stepping, and the feet taking turns (left and right half a cycle apart). Needs shellback.py, which lands with
+    bars-engine #318; until then this skips."""
+    spirits = TOOLS / "content/spirits"
+    if not (spirits / "shellback.py").exists():
+        raise Skip("shellback.py is not on this branch yet (#318)")
+    sys.path.insert(0, str(spirits))
+    out, done = tmpdir("s1"), []
+    for base in ("tortoise", "armadillo", "pangolin", "fox"):
+        src = out / f"src-{base}"
+        r, _ = run([spirits / "shellback.py", src, "--samples", "1", "--size", "64", "--only", "earth", "--stages",
+                    "creature,ascended", "--base", base], timeout=900)
+        check(r.returncode == 0, f"shellback.py {base} exited {r.returncode}: {r.stderr[-300:]}")
+        for stage in ("creature", "ascended"):
+            r, _ = run([spirits / "rig.py", src / "glb" / f"earth-{stage}.glb", out, "--base", base, "--stage", stage])
+            line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+            check(r.returncode == 0 and line, f"rig.py {base} {stage} exited {r.returncode}: {r.stderr[-300:]}")
+            row = json.loads(line)
+            check(not row["notes"], f"{base} {stage}: {'; '.join(row['notes'])}")
+            j = glb_json(out / row["file"])
+            check(len(j.get("skins", [])) == 1, f"{base} {stage}: {len(j.get('skins', []))} skins, want one")
+            check(sorted(a["name"] for a in j.get("animations", [])) == ["Idle", "Walk"], f"{base} {stage}: want Idle and Walk")
+            steps = row["steps"]
+            for foot, st in steps.items():
+                check(st["travel"] > 0.03, f"{base} {stage}: {foot} moves {st['travel']} m in the walk")
+            for a, b in (("ankleL", "ankleR"), ("wristL", "wristR")):
+                if a in steps:
+                    gap = abs(steps[a]["ahead_at"] - steps[b]["ahead_at"])
+                    check(0.35 < gap < 0.65, f"{base} {stage}: {a} and {b} reach ahead {gap:.2f} of a cycle apart")
+            done.append(f"{base} {stage} {row['size_m']} m")
+    return "; ".join(done)
 
 
 if __name__ == "__main__":

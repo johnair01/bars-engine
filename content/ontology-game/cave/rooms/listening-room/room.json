@@ -1,0 +1,156 @@
+{
+  "id": "listening-room",
+  "name": "The Listening Room",
+  "description": "description.md",
+  "translated_by": "Claude, from description.md, by the steps in ../README.md (2026-10-14)",
+  "axes": "metres; x to the right as you come in, y away from the door, z up; the room's centre on the floor is 0, 0, 0",
+  "shell": {
+    "says": "an oval chamber, perhaps ten paces long and seven wide, with a low domed ceiling you could almost touch with an outstretched hand",
+    "shape": "oval",
+    "width_m": 5.4,
+    "length_m": 7.6,
+    "height_m": 2.6,
+    "dome": true,
+    "rough": 0.05,
+    "seed": 3,
+    "wall": {"colour": "#6b6159", "texture": "wet_stone", "roughness": 0.5},
+    "floor": {"says": "the packed-earth floor", "colour": "#5e4b3a", "texture": "dry_stone", "roughness": 0.95}
+  },
+  "openings": [
+    {
+      "id": "door",
+      "says": "a heavy wooden door, iron-banded and swollen with damp",
+      "angle_deg": 180,
+      "width_m": 1.4,
+      "height_m": 2.1,
+      "frame": "stone",
+      "fill": {"kind": "blenderkit", "query": "castle door", "index": 0, "id": "048437df-31b2-4041-9956-d048cce32092"},
+      "fill_height_m": 2.05,
+      "fill_turn_deg": 0
+    },
+    {
+      "id": "way-on",
+      "says": "a narrow opening in the rock leads deeper into the dark",
+      "angle_deg": 0,
+      "width_m": 0.8,
+      "height_m": 1.8,
+      "frame": null,
+      "fill": null
+    }
+  ],
+  "materials": {
+    "stone": {"colour": "#70707e", "roughness": 0.8, "texture": "dry_stone"},
+    "cloth": {"colour": "#8a3530", "roughness": 0.95},
+    "root": {"colour": "#b9a58a", "roughness": 0.85},
+    "glow": {"colour": "#5fe0c0", "roughness": 0.7, "glow": 1.4},
+    "water": {"colour": "#112933", "roughness": 0.02}
+  },
+  "things": [
+    {
+      "id": "lantern.left",
+      "says": "Two squat stone lanterns flank the doorway, their warm light pooling on the packed-earth floor",
+      "source": {"kind": "blenderkit", "query": "small japanese stone lantern", "index": 0, "id": "6ede2f7a-13b6-4c59-9377-8b7f8946befb"},
+      "at": [-1.15, -2.6], "turn_deg": 0, "height_m": 0.75, "faces": 1500,
+      "light": {"colour": "#ffb060", "watts": 30, "at_z": 0.9}
+    },
+    {
+      "id": "lantern.right",
+      "says": "Two squat stone lanterns flank the doorway",
+      "source": {"kind": "blenderkit", "query": "small japanese stone lantern", "index": 0, "id": "6ede2f7a-13b6-4c59-9377-8b7f8946befb"},
+      "at": [1.15, -2.6], "turn_deg": 0, "height_m": 0.75, "faces": 1500,
+      "light": {"colour": "#ffb060", "watts": 30, "at_z": 0.9}
+    },
+    {
+      "id": "table",
+      "says": "a low round table of dark wood",
+      "source": {"kind": "blenderkit", "query": "round wooden table", "index": 0, "id": "0730853c-7efa-4b98-95d2-d80c3bd66fe5"},
+      "at": [0.0, 0.1], "turn_deg": 0, "height_m": 0.4, "faces": 1500, "squash": {"width_m": 1.1}
+    },
+    {
+      "id": "cushion.1",
+      "says": "ringed by three faded red cushions",
+      "source": {"kind": "script", "builder": "cushion"},
+      "at": [0.0, -0.85], "turn_deg": 0, "height_m": 0.18, "faces": 300, "material": "cloth"
+    },
+    {
+      "id": "cushion.2",
+      "says": "ringed by three faded red cushions",
+      "source": {"kind": "script", "builder": "cushion"},
+      "at": [0.74, 0.53], "turn_deg": 0, "height_m": 0.18, "faces": 300, "material": "cloth"
+    },
+    {
+      "id": "cushion.3",
+      "says": "ringed by three faded red cushions",
+      "source": {"kind": "script", "builder": "cushion"},
+      "at": [-0.74, 0.53], "turn_deg": 0, "height_m": 0.18, "faces": 300, "material": "cloth"
+    },
+    {
+      "id": "paper-lantern",
+      "says": "a paper lantern hangs from a pale root that has pushed through the ceiling, casting a soft amber glow",
+      "source": {"kind": "blenderkit", "query": "hanging paper lantern", "index": 0, "id": "e76dc427-bb7a-436a-b2ce-30b6659d3e4f"},
+      "at": [0.0, 0.1], "turn_deg": 0, "height_m": 0.9, "faces": 1500, "hang_m": 2.3,
+      "light": {"colour": "#ffb347", "watts": 60, "at_z": 1.65}
+    },
+    {
+      "id": "root.centre",
+      "says": "a pale root that has pushed through the ceiling",
+      "source": {"kind": "procgen", "make": "roots", "style": "hanging", "seed": 11, "roots": 1},
+      "at": [0.0, 0.1], "turn_deg": 0, "height_m": 0.5, "faces": 0, "hang_m": 2.6, "material": "root"
+    },
+    {
+      "id": "roots.1",
+      "says": "More roots thread down from the dome, thin and searching, some brushing the floor",
+      "source": {"kind": "procgen", "make": "roots", "style": "hanging", "seed": 21, "roots": 3},
+      "at": [-1.1, 1.6], "turn_deg": 20, "height_m": 1.9, "faces": 0, "hang_m": 2.5, "material": "root"
+    },
+    {
+      "id": "roots.2",
+      "says": "More roots thread down from the dome",
+      "source": {"kind": "procgen", "make": "roots", "style": "hanging", "seed": 33, "roots": 2},
+      "at": [1.2, 1.9], "turn_deg": 140, "height_m": 1.4, "faces": 0, "hang_m": 2.45, "material": "root"
+    },
+    {
+      "id": "roots.3",
+      "says": "some brushing the floor",
+      "source": {"kind": "procgen", "make": "roots", "style": "hanging", "seed": 47, "roots": 2},
+      "at": [0.9, -1.4], "turn_deg": 260, "height_m": 2.3, "faces": 0, "hang_m": 2.4, "material": "root"
+    },
+    {
+      "id": "mushrooms.left",
+      "says": "Along the left wall, a colony of small mushrooms glows a cool blue-green, the only light in that half of the room",
+      "source": {"kind": "procgen", "make": "mushrooms", "cluster": "drift", "seed": 5, "count": 14},
+      "at": [-1.75, 0.3], "turn_deg": 90, "height_m": 0.22, "faces": 0, "material": "glow",
+      "light": {"colour": "#5fe0c0", "watts": 15, "at_z": 0.3}
+    },
+    {
+      "id": "boulder",
+      "says": "a moss-covered boulder rests beside a shallow pool",
+      "source": {"kind": "local", "file": "rock-with-moss.glb", "id": "4e142bae-6a0f-4bdc-94f0-2521b53de988"},
+      "at": [1.55, 1.05], "turn_deg": 40, "height_m": 0.7, "faces": 1200
+    },
+    {
+      "id": "pool",
+      "says": "a shallow pool, perfectly still, reflecting the lantern above",
+      "source": {"kind": "kit", "piece": "pool"},
+      "at": [1.45, -0.3], "turn_deg": 0, "scale": 0.75, "z_m": 0.02, "material": "water"
+    },
+    {
+      "id": "fern",
+      "says": "A fern grows from a crack at the water's edge",
+      "source": {"kind": "local", "file": "fern-02.glb", "id": "ac5a7010-e00c-46e7-8fbc-a8a0d9b7a9c4", "part": "fern_02_b"},
+      "at": [2.05, -0.75], "turn_deg": 200, "height_m": 0.45, "faces": 1200
+    }
+  ],
+  "fill_light": {
+    "says": null,
+    "why": "a choice: the description lights the room only with lanterns and mushrooms, which reads too dark on a phone, so a faint warm fill stands in for the eye adjusting",
+    "colour": "#ffd9a8",
+    "strength": 0.06
+  },
+  "left_out": [
+    {"says": "You push open a heavy wooden door ... and step down", "why": "an action, not a thing: the page plays it as the door opening when the player comes in"},
+    {"says": "as though someone left mid-conversation", "why": "a mood, carried by the three cushions pulled back from the table"},
+    {"says": "You can smell damp earth", "why": "a smell: no model; the page can show it as a line of text on entering"},
+    {"says": "somewhere water drips at a slow, steady rhythm, like a heartbeat", "why": "a sound: an audio cue for the page, not a model"}
+  ]
+}

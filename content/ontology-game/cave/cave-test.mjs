@@ -9,7 +9,9 @@ import { chromium } from 'playwright';
 // choice, the pane that follows the figure through the whole walk and grows into a modal at each stop, one continuous wider
 // tunnel, side paths that loop back to the spot they left from, the daemon as a wall until its encounter is worked, and the
 // six faces' branches at the gate; and the WAVE room (11 October): Take it home from a daemon by lantern and back, and the
-// room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers. Build first with `npm run build:ontology-game`, then copy this
+// room on its own from the body map through both branches, the restart, the rest offer and the on-device test answers; and the levels
+// (13 October, LEVELS.md): home base and its two doors, walking round the room (tapping, the stick, the keys, the rug), the hall of the six, a face's tunnel, the centre
+// of the self, another face, home, and the Big Mind door into the Big Mind cave on the same page. Build first with `npm run build:ontology-game`, then copy this
 // file into a folder that has playwright and three@0.128.0 installed and run it there:
 //   OAG_PUBLIC=/path/to/bars-engine/public OAG_SHOTS=/some/dir node cave-test.mjs
 const PUB = process.env.OAG_PUBLIC || new URL('../../../public', import.meta.url).pathname;
@@ -25,6 +27,8 @@ const files = {
   '/ontology-game/cave/textures/crystal_vein.jpg': ['cave/textures/crystal_vein.jpg', 'image/jpeg'],
   '/ontology-game/figure.glb': ['figure.glb', 'model/gltf-binary'],
 };
+// The daemon bodies (cave/bake_daemons.py), fetched by a scene that meets a daemon.
+for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) files['/ontology-game/cave/daemons/' + d + '.glb'] = ['cave/daemons/' + d + '.glb', 'model/gltf-binary'];
 const server = http.createServer((req, res) => {
   const f = files[req.url.split('?')[0]];
   if (!f) { res.writeHead(404); res.end(); return; }
@@ -72,19 +76,21 @@ const breath = () => C(() => window.__oagCave.breath());
 // Hold a thumb on the canvas until the selector shows (the avatar walks while held), then lift it.
 const camSamples = [];
 const walkTo = async (selector) => {
-  await page.mouse.move(330, 700); await page.mouse.down();
+  await C(() => document.activeElement && document.activeElement.blur && document.activeElement.blur());
   const t0 = Date.now();
   try {
     while (!(await page.locator(selector).count())) {
       if (Date.now() - t0 > 90000) throw new Error('timed out walking to ' + selector);
+      await page.keyboard.down('ArrowUp'); // again each time: a page that opened and closed let go of the keys
+      const stop = page.locator('[data-cave-prompt-box]:visible [data-cave-stop]');
+      if (await stop.count()) { await page.keyboard.up('ArrowUp'); await stop.click(); }
       const ci = await page.evaluate(() => window.__oagCave.camInside && window.__oagCave.camInside());
       if (ci) camSamples.push(Object.assign({ where: selector }, ci));
       await page.waitForTimeout(120);
     }
-  } finally { await page.mouse.up(); }
+  } finally { await page.keyboard.up('ArrowUp'); }
 };
 const sees = (sel) => page.locator(sel).isVisible();
-const stretchFracOf = (t) => (t < 4 ? 0.5 * t / 4 : 0.5 + 0.5 * (t - 4) / 6);
 
 // ---- the doorway: the heart, tapped on the real figure. Tension, Anger. ------------------------
 await page.locator('[data-cave-dive]').click();
@@ -183,52 +189,74 @@ ok(ios.selectCanvas === true && ios.selectBody === true && ios.gesture === true,
 ok(ios.touchstart === true && ios.touchmove === true, 'touchstart and touchmove on the hold area are cancelled (non-passive)');
 ok(/maximum-scale=1/.test(ios.viewport) && /user-scalable=no/.test(ios.viewport), `the viewport forbids zoom (${ios.viewport})`);
 
-// ---- one stretch is one breath: hold, let go (everything pauses), hold on to the marker ----------------------
+// ---- free walking (Wendell, 14 October 2026: "we don't have to have the walking happening on rails ... we need to test the
+// ergonomics of Freeform navigation in preparation of introducing running"): the stick and the arrow keys walk the figure
+// anywhere in the tunnel at one steady pace; the way ahead stays shut past the stop; a stop shows a prompt by the right thumb,
+// and its page opens only from a tap. ---------------------------------------------------------------------------------------
 const gait = () => C(() => window.__oagCave.gait());
 const joints = () => C(() => window.__oagCave.joints());
+const free = () => C(() => window.__oagCave.free());
 const samples = [];
-const sample = async () => { const [g, j, b, a, p] = [await gait(), await joints(), await breath(), await avatar(), await C(() => window.__oagCave.pane())]; samples.push({ g, j, b, a, p }); };
-const hold = async () => { await page.mouse.move(330, 700); await page.mouse.down(); };
-let heldMs = 0, t0 = Date.now();
-await hold();
+const sample = async () => { const [g, j, b, a, p, f] = [await gait(), await joints(), await breath(), await avatar(), await C(() => window.__oagCave.pane()), await free()]; samples.push({ g, j, b, a, p, f, t: Date.now() }); };
+const f0 = await free();
+ok(f0.stick && !f0.prompt && !f0.modal, 'the walk shows the stick at the bottom left, and no prompt');
+const stickBox = await page.locator('[data-cave-stick]').boundingBox();
+ok(stickBox && stickBox.x < 60 && stickBox.y + stickBox.height > 844 - 80, `the stick sits under the left thumb (${stickBox && Math.round(stickBox.x)}, ${stickBox && Math.round(stickBox.y)})`);
+await page.keyboard.down('ArrowUp');
+let t0 = Date.now();
 while (Date.now() - t0 < 3000) { await sample(); await page.waitForTimeout(200); }
-await page.mouse.up(); heldMs += Date.now() - t0;
+await page.keyboard.up('ArrowUp');
 await page.screenshot({ path: SHOTS + '/cave-walk.png' });
-await page.waitForTimeout(200);
-const gA = await gait(), bA = []; await page.waitForTimeout(1500);
-const gB = await gait();
-for (let i = 0; i < 4; i++) { bA.push((await breath()).b); await page.waitForTimeout(500); }
-ok(gA.t > 2.5 && gB.t === gA.t && gB.s === gA.s, `lifting the thumb pauses the walk and its breath clock together (clock ${gA.t.toFixed(2)} s, then ${gB.t.toFixed(2)} s)`);
-ok(Math.max(...bA) - Math.min(...bA) > 0.02, `the cave's own breathing carries on while the walk is paused (${Math.min(...bA).toFixed(2)} to ${Math.max(...bA).toFixed(2)})`);
-t0 = Date.now(); await hold();
-let arrivedAt = 0;
-while (!(await page.locator('[data-cave-marker="welcome"]').count())) { await sample(); await page.waitForTimeout(200); if (Date.now() - t0 > 30000) break; }
-heldMs += Date.now() - t0;
-await page.mouse.up();
-const gEnd = await gait();
-ok(gEnd.t === 10 && gEnd.arrived && Math.abs(gEnd.frac - 1) < 1e-9, 'the first stretch ends at its marker after exactly one breath of holding (10 s on the walk clock)');
-ok(heldMs > 9000 && heldMs < 12500, `at normal speed it took ${(heldMs / 1000).toFixed(1)} s of holding on the wall clock`);
-ok(gEnd.inS === 4 && gEnd.outS === 6, 'the cave breathes 4 s in and 6 s out');
-const nearest = (t) => samples.reduce((m, x) => (Math.abs(x.g.t - t) < Math.abs(m.g.t - t) ? x : m));
-const half = nearest(4);
-ok(Math.abs(half.g.t - 4) < 0.5 && Math.abs(half.g.frac - stretchFracOf(half.g.t)) < 0.02 && half.g.frac > 0.4 && half.g.frac < 0.6, `the inhale carries the avatar about half the stretch (${half.g.frac.toFixed(2)} at ${half.g.t.toFixed(1)} s)`);
-const rate = (lo, hi) => { const q = samples.filter((x) => x.g.t >= lo && x.g.t <= hi); const f = q[q.length - 1], e = q[0]; return (f.g.frac - e.g.frac) / (f.g.t - e.g.t); };
-const rin = rate(0.3, 3.8), rout = rate(4.4, 9.8);
-ok(rin / rout > 1.3 && rin / rout < 1.7, `it walks faster on the inhale than the exhale (${(rin * 100).toFixed(1)}% and ${(rout * 100).toFixed(1)}% of the stretch a second)`);
-ok(gEnd.stepsIn === 8 && gEnd.stepsOut === 12 && gEnd.stepsPerS === 2, `the footfalls fit the breath: ${gEnd.stepsIn} steps in the 4 s inhale and ${gEnd.stepsOut} in the 6 s exhale, two a second`);
-ok(samples.every((x) => x.g.stepsIn + x.g.stepsOut === Math.floor(x.g.t * 2 + 1e-6)), 'a foot lands every half second all the way through, with no gaps or doubles');
-const ph = samples.map((x) => x.b.pace);
-ok(Math.min(...ph) > 0.4 && Math.max(...ph) - Math.min(...ph) > 0.3, `the pace quickens on the inhale and slows on the exhale, never below ${Math.min(...ph).toFixed(2)} of its average`);
-const mov = samples.filter((x) => x.j.g > 0.8);
-const rng = (f) => Math.max(...mov.map(f)) - Math.min(...mov.map(f));
-ok(mov.length > 10 && rng((x) => x.j.x.hipL) > 0.6 && rng((x) => x.j.x.shoulderL) > 0.4 && Math.max(...mov.map((x) => x.j.x.kneeL)) > 0.5, `the legs swing from the hip with the knee bending, and the arms swing too (hip range ${rng((x) => x.j.x.hipL).toFixed(2)} rad, shoulder ${rng((x) => x.j.x.shoulderL).toFixed(2)}, knee up to ${Math.max(...mov.map((x) => x.j.x.kneeL)).toFixed(2)})`);
-ok(mov.filter((x) => x.j.x.hipL * x.j.x.hipR < 0 && x.j.x.shoulderL * x.j.x.hipL < 0).length > mov.length * 0.7, 'the legs alternate and each arm swings against the leg on its side');
-ok(rng((x) => x.j.hipsY) > 0.02 && rng((x) => x.j.x.hipL) > 10 * Math.abs(j0.x.hipL), 'the hips rise and sink as the figure walks');
-ok(samples.every((x) => x.a.offPath < 1e-6) && samples[samples.length - 1].a.s > samples[0].a.s + 10, 'holding walks the avatar forward, and it stays on the path line');
-
-ok(samples.every((x) => x.p.shown && x.p.at && x.p.at.y + x.p.at.h <= x.p.at.headY + 2 && Math.abs(x.p.at.x + x.p.at.w / 2 - x.p.at.headX) < 150),
-  `the pane is shown above the figure's head for the whole walk (${samples.length} samples)`);
+await page.waitForTimeout(300);
+const fA = await free(); await page.waitForTimeout(1200); const fB = await free();
+ok(fA.s > f0.s + 6 && !fB.moving && fB.s === fA.s, `the up key walks the figure ahead (${f0.s.toFixed(1)} to ${fA.s.toFixed(1)}), and letting go stands it still`);
+const mv = samples.filter((x) => x.f.moving), pace = (mv[mv.length - 1].f.s - mv[0].f.s) / ((mv[mv.length - 1].t - mv[0].t) / 1000);
+ok(pace > samples[0].g.speed * 0.7 && pace < samples[0].g.speed * 1.15 && samples[0].g.speed >= 6.5, `the pace is steady at about ${samples[0].g.speed} units a second, about two body lengths (${pace.toFixed(1)})`);
+const bA = []; for (let i = 0; i < 4; i++) { bA.push((await breath()).b); await page.waitForTimeout(500); }
+ok(Math.max(...bA) - Math.min(...bA) > 0.02, `the cave's own breathing carries on while the figure stands (${Math.min(...bA).toFixed(2)} to ${Math.max(...bA).toFixed(2)})`);
+const movJ = samples.filter((x) => x.j.g > 0.8);
+const rng = (f) => Math.max(...movJ.map(f)) - Math.min(...movJ.map(f));
+ok(movJ.length > 5 && rng((x) => x.j.x.hipL) > 0.6 && rng((x) => x.j.x.shoulderL) > 0.4 && Math.max(...movJ.map((x) => x.j.x.kneeL)) > 0.5, `the legs swing from the hip with the knee bending, and the arms swing too (hip range ${rng((x) => x.j.x.hipL).toFixed(2)} rad, shoulder ${rng((x) => x.j.x.shoulderL).toFixed(2)})`);
+ok(movJ.filter((x) => x.j.x.hipL * x.j.x.hipR < 0 && x.j.x.shoulderL * x.j.x.hipL < 0).length > movJ.length * 0.7, 'the legs alternate and each arm swings against the leg on its side');
+ok(samples.every((x) => x.p.shown && x.p.at && x.p.at.y + x.p.at.h <= x.p.at.headY + 2 && Math.abs(x.p.at.x + x.p.at.w / 2 - x.p.at.headX) < 150), `the pane is shown above the figure's head for the whole walk (${samples.length} samples)`);
 ok(samples.every((x) => x.p.at.x >= 0 && x.p.at.x + x.p.at.w <= 390 && x.p.at.y >= 50), 'the pane stays inside the screen and below the buttons');
+// the stick, held to the right: the figure steps to the side, and the floor's edge holds it
+await page.mouse.move(stickBox.x + stickBox.width / 2, stickBox.y + stickBox.height / 2); await page.mouse.down();
+await page.mouse.move(stickBox.x + stickBox.width - 2, stickBox.y + stickBox.height / 2, { steps: 4 });
+await page.waitForTimeout(2500);
+const fS = await free(), avS = await avatar();
+await page.mouse.up(); await page.waitForTimeout(200);
+ok(Math.abs(fS.lat - fA.lat) > 1 && Math.abs(fS.lat) <= fS.halfWidth * 0.6 + 1e-6, `the stick to the right walks the figure across the tunnel, up to the floor's edge and no further (${fS.lat.toFixed(2)} of a ${fS.halfWidth.toFixed(1)} half width)`);
+ok(Math.abs((await free()).s - fA.s) < 2 && avS.offPath > 1, 'off the path\'s line, the figure stands where it was walked');
+ok((await C(() => window.__oagCave.camInside())).inside, 'the camera follows it, inside the tunnel');
+// walking down the stick comes back toward the camera
+await page.keyboard.down('ArrowDown'); await page.waitForTimeout(1200); await page.keyboard.up('ArrowDown');
+const fD = await free();
+ok(fD.s < fS.s - 2 && fD.dir === 1, `the down key walks back toward the camera, which stays behind (${fS.s.toFixed(1)} to ${fD.s.toFixed(1)})`);
+// up to the welcome marker: its prompt shows by the right thumb, and the way past it stays shut
+await page.keyboard.down('ArrowUp');
+t0 = Date.now();
+while (!(await free()).prompt) { await page.waitForTimeout(150); if (Date.now() - t0 > 30000) break; }
+const fP = await free();
+await page.waitForTimeout(2000);
+const fQ = await free();
+await page.keyboard.up('ArrowUp');
+const promptBox = await page.locator('[data-cave-prompt-box]').boundingBox();
+ok(fP.prompt && /Welcome/.test(fP.prompt) && /Stop here/.test(fP.prompt) && !fP.modal && fP.stick, `coming to the marker shows its prompt (${fP.prompt}), and the stick stays`);
+ok(promptBox && promptBox.x + promptBox.width > 390 - 30 && promptBox.y + promptBox.height > 844 - 90, 'the prompt sits by the right thumb');
+ok(fQ.s <= fQ.stop + 0.6 + 1e-6 && !(await C(() => window.__oagCave.modal())).open, `holding on, the figure stops at the marker: the way ahead is shut until the choice (${fQ.s.toFixed(1)}, the marker at ${fQ.stop.toFixed(1)}), and no page opens from walking`);
+ok(!fP.sit, 'one prompt at a time: Sit down gives way to the marker\'s prompt');
+await page.keyboard.down('ArrowDown'); await page.waitForTimeout(1600); await page.keyboard.up('ArrowDown');
+ok(!(await free()).prompt, 'walking off hides the prompt again');
+await page.keyboard.down('ArrowUp');
+t0 = Date.now();
+while (!(await free()).prompt) { await page.waitForTimeout(150); if (Date.now() - t0 > 30000) break; }
+await page.keyboard.up('ArrowUp');
+await page.screenshot({ path: SHOTS + '/cave-prompt.png' });
+await page.locator('[data-cave-stop]').click();
+await page.locator('[data-cave-marker="welcome"]').waitFor();
+await page.waitForTimeout(300);
+ok(!(await free()).stick, 'a tap on Stop here opens the marker\'s page, which hides the stick until it closes');
 
 // ---- at the marker: the modal holds the choices, and nothing changes until one is made ----------------------
 const md1 = await C(() => window.__oagCave.modal()), pn1 = await C(() => window.__oagCave.pane());
@@ -247,14 +275,12 @@ const yaw0 = await state('s.look.yaw');
 await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(120, 600, { steps: 6 }); await page.mouse.up();
 ok(Math.abs((await state('s.look.yaw')) - yaw0) > 0.2, 'dragging looks around');
 ok((await state('s.look.yaw')) < yaw0 - 0.2, 'the camera follows the finger: a drag to the left swings it to the left');
-// One touch walks and looks (Wendell, 2026-10-13): a drag keeps the hold, and pushing up lifts the camera to look down.
+// Pushing up lifts the camera to look down (Wendell, 2026-10-13); the stick does the walking now.
 const above0 = (await C(() => window.__oagCave.camInside())).above;
 await page.mouse.move(195, 600); await page.mouse.down(); await page.mouse.move(150, 460, { steps: 8 });
-const heldWhileDragging = await state('s.held');
 await page.waitForTimeout(900);
 const above1 = (await C(() => window.__oagCave.camInside())).above, pitchUp = await state('s.look.pitch');
 await page.mouse.up();
-ok(heldWhileDragging, 'dragging to look keeps the thumb walking');
 ok(pitchUp < 0 && above1 > above0 + 0.5, `pushing up lifts the camera to look down on the figure (${above0.toFixed(1)} to ${above1.toFixed(1)} above the floor)`);
 await page.mouse.move(195, 460); await page.mouse.down(); await page.mouse.move(195, 640, { steps: 8 }); await page.mouse.up();
 ok((await state('s.look.pitch')) > pitchUp, 'dragging down brings the camera back down');
@@ -355,11 +381,30 @@ ok(b1.turnIn <= 90, `the way in is ahead of the figure, a ${Math.round(b1.turnIn
 ok((await C(() => window.__oagCave.lanterns())) === 1, 'a lantern stands between the two openings');
 ok(b1.stops === 10, 'the loop holds six stones, the mouth, the pool, the daemon and the way out');
 await page.screenshot({ path: SHOTS + '/cave-branch.png' });
+// The seam holds (Wendell, 2026-10-13: "branching paths need hardening for these kinds of glitches. Especially since the walls
+// are breathing"): the void outside the stone is painted green and the way in is looked at from all round inside the main
+// tunnel, at two moments of the breath. No green may show.
+const greenIn = (buf) => page.evaluate(async (b64) => {
+  const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height).data; let n = 0;
+  for (let i = 0; i < d.length; i += 4) if (d[i + 1] > 180 && d[i] < 90 && d[i + 2] < 90) n++;
+  return n;
+}, buf.toString('base64'));
+await C(() => { window.__oagCave.state.voidHex = 0x00ff00; });
+const seams = await C(() => window.__oagCave.openings(false)), seamGreen = [];
+for (let ph = 0; ph < 2; ph++) {
+  for (const v of seams[0].views) { await C((c) => { window.__oagCave.state.camFix = c; }, v); await page.waitForTimeout(60); seamGreen.push(await greenIn(await page.screenshot())); }
+  await page.waitForTimeout(2500);
+}
+await C(() => { window.__oagCave.state.camFix = null; window.__oagCave.state.voidHex = null; });
+ok(seams.length === 1 && seamGreen.length >= 10 && seamGreen.every((n) => n === 0), `no void shows round the way in from ${seamGreen.length} views across the breath (green ${seamGreen.filter((n) => n).join(', ') || 'none'})`);
 const walkSamples = [];
-await page.mouse.move(330, 700); await page.mouse.down();
-for (let i = 0; i < 6; i++) { walkSamples.push(await avatar()); await page.waitForTimeout(150); }
-await page.locator('[data-cave-stone="magenta"]').waitFor({ timeout: 60000 }); await page.mouse.up();
-ok(walkSamples.every((a) => a.route === 'branch' || a.route === 'side') && walkSamples.every((a) => a.offPath < 1e-6), 'the avatar walks the side path on its line');
+await page.keyboard.down('ArrowUp');
+for (let i = 0; i < 6; i++) { walkSamples.push([await avatar(), await free()]); await page.waitForTimeout(150); }
+await page.keyboard.up('ArrowUp');
+await walkTo('[data-cave-stone="magenta"]');
+ok(walkSamples.every(([a, f]) => (a.route === 'branch' || a.route === 'side') && Math.abs(f.lat) <= f.halfWidth * 0.6 + 1e-6), 'the avatar walks the side passage, inside its floor');
 ok((await C(() => window.__oagCave.tunnel())).holes === 1, 'walking out to the gate, the main wall still shows only the way in');
 ok(await page.locator('[data-cave-stone-says]').count() === 1 && await page.locator('[data-cave-next]').isDisabled(), 'the passage opens on the first of the six gates, and the way on waits for its branch');
 await gatesFirst(true);
@@ -421,8 +466,9 @@ ok(await sees('[data-cave-wall]') && await sees('[data-cave-dig]') && await page
 ok(await page.locator('[data-cave-skip]').count() === 0 && await sees('[data-cave-321]'), 'a daemon in the way offers no skip, and offers the 3-2-1 talk');
 const sWall = (await avatar()).s;
 await page.locator('[data-cave-shrink]').click();
-await page.mouse.move(330, 700); await page.mouse.down(); await page.waitForTimeout(2500); await page.mouse.up();
-ok(Math.abs((await avatar()).s - sWall) < 1e-6, 'holding does not walk past the daemon');
+await page.keyboard.down('ArrowUp'); await page.waitForTimeout(2500); await page.keyboard.up('ArrowUp');
+const fWall = await free(); // back from the meeting the figure may stand a step short of the daemon's spot; the wall is the spot
+ok(fWall.s <= fWall.stop + 0.6 + 1e-6 && fWall.s >= sWall - 1e-6, `walking on does not pass the daemon (stood ${sWall.toFixed(1)}, now ${fWall.s.toFixed(1)}, the daemon at ${fWall.stop.toFixed(1)})`);
 await page.locator('[data-cave-pane]').click();
 await page.screenshot({ path: SHOTS + '/cave-daemon-wall.png' });
 
@@ -475,6 +521,7 @@ const roomCheckin = async (answer) => {
 
 const sideLanterns = await C(() => window.__oagCave.lanterns());
 ok(await sees('[data-cave-take-home]'), 'the daemon\'s stop offers Take it home beside the 3-2-1');
+const sHome = (await avatar()).s;
 await page.locator('[data-cave-take-home]').click();
 await page.locator('[data-room="cave"]').waitFor();
 await page.locator('[data-room-welcome]').waitFor();
@@ -492,7 +539,7 @@ await page.locator('[data-room-again="no"]').click();
 ok((await page.locator('[data-room-leave]').textContent()) === 'Back to the lantern', 'when the room is quiet, the way out is back to the lantern');
 await page.locator('[data-room-leave]').click();
 await page.locator('[data-cave-home-back]').waitFor({ timeout: 15000 });
-ok((await page.locator('[data-room]').count()) === 0 && Math.abs((await avatar()).s - sWall) < 1e-6 && (await C(() => window.__oagCave.lanterns())) === sideLanterns + 1, 'the cave comes back at the lantern, the figure where it stood');
+ok((await page.locator('[data-room]').count()) === 0 && Math.abs((await avatar()).s - sHome) < 1e-6 && (await C(() => window.__oagCave.lanterns())) === sideLanterns + 1, 'the cave comes back at the lantern, the figure where it stood');
 const sp = await C(() => window.__oagCave.spirits.map((o) => ({ name: o.name, element: o.element, lighter: o.lighter, hex: o.g.userData.color.getHex() })));
 ok(sp.length === 1 && sp[0].name === 'The guard' && sp[0].element === 'Sadness' && sp[0].lighter && sp[0].hex === 0x3a78d0, 'the charge worked in the room walks back into the cave as a spirit, in its colour with its name, lighter for being breathed out: ' + JSON.stringify(sp));
 ok((await page.locator('[data-cave-spiritbtn]').textContent()) === 'Spirits 1', 'the cave counts the spirits with you');
@@ -542,8 +589,8 @@ await page.locator('[data-cave-sit-step="welcome"]').waitFor({ timeout: 5000 });
 await page.locator('[data-cave-standup]').click();
 await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 8000 });
 const sat2 = await C(() => window.__oagCave.spirits.map((o) => o.name));
-ok(sat2.length === 2 && /^\w+ \w+$/.test(sat2[1]) && (await C(() => window.__oagCave.carried())) === 2, 'standing up partway still leaves a spirit, under the name the game gave it: ' + sat2[1]);
-for (let i = 0; i < 2; i++) {
+ok(sat2.length === 1 && (await C(() => window.__oagCave.carried())) === 1, 'standing up partway leaves no spirit: one emerges only from the whole WAVE: ' + JSON.stringify(sat2));
+for (let i = 0; i < 1; i++) {
   await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click();
 }
 await page.waitForTimeout(1800);
@@ -697,6 +744,7 @@ for (const [texture, element] of [['constriction', 'Fear'], ['numbness', 'Sadnes
   looks[texture].dress = await state('JSON.stringify(s.dress)');
   looks[texture].cave = await state('s.cave');
   looks[texture].rows = await state('JSON.stringify(s.layout.rows)');
+  looks[texture].look = await C(() => window.__oagCave.look());
   await C(() => window.__oagCave.leave(false));
   await page.locator('[data-cave-chamber]').waitFor({ state: 'detached' });
 }
@@ -705,7 +753,12 @@ ok(looks.numbness.opacity < 0.5, `numbness is fogged and translucent (opacity ${
 ok(looks.strength.glow > looks.tension.glow + 0.4, `strength is bright (glow ${looks.strength.glow.toFixed(2)} against ${looks.tension.glow.toFixed(2)})`);
 ok(looks.tension.scale[1] > 1.1, `tension is taut (height ${looks.tension.scale[1].toFixed(2)})`);
 ok(new Set(Object.values(looks).map((l) => l.cave.e + ':' + l.cave.roof)).size === 4, `each charge has its own cave shape (${Object.entries(looks).map(([k, l]) => k + ' ' + l.cave.e + '/' + l.cave.roof).join(', ')})`);
-ok(!looks.numbness.cave.walls && looks.strength.cave.walls, 'numbness is blackness: its walls are lost in the dark');
+const lumOf = (hex) => ((hex >> 16) & 255) + ((hex >> 8) & 255) + (hex & 255);
+ok(looks.numbness.cave.walls && lumOf(looks.numbness.look.bg) < lumOf(looks.strength.look.bg), `numbness is blackness past the figure's light, its stone showing only near (dark ${looks.numbness.look.bg.toString(16)} against strength's ${looks.strength.look.bg.toString(16)})`);
+// Wendell, 2026-10-13: "We need consistent lighting throughout so people can see a radius around them but have darkness on all sides".
+// Wendell, 2026-10-13: "we need brighter light in the numbness": the numb cave's light burns brighter, the circle is the same size.
+const lamps = Object.entries(looks).map(([k, l]) => l.look.lamp / (k === 'numbness' ? 1.35 : 1));
+ok(Math.max(...lamps) - Math.min(...lamps) < 0.2 && Object.values(looks).every((l) => l.look.reach === looks.strength.look.reach), `the figure's light is the same circle in every cave (${lamps.map((v) => v.toFixed(2)).join(', ')})`);
 ok(Object.values(looks).every((l) => l.bytes < 50 * 1024), 'every charge keeps the avatar under 50 KB of geometry');
 const dressA = JSON.parse(await (async () => {
   await C((w) => window.__oagCave.dive(w), 'my left hand');
@@ -717,6 +770,7 @@ ok(looks.numbness.dress !== looks.tension.dress && looks.numbness.rows !== looks
 let src = null; try { src = readFileSync(GAME, 'utf8'); } catch (e) { /* the test folder has no copy of game.jsx */ }
 if (src) {
   const gi = Number(/BREATH_IN_MS\s*=\s*(\d+)/.exec(src)[1]), go = Number(/BREATH_OUT_MS\s*=\s*(\d+)/.exec(src)[1]);
+  const gEnd = await C(() => window.__oagCave.gait());
   ok(gi === gEnd.inS * 1000 && go === gEnd.outS * 1000, `the cave's breath is the game's own: game.jsx has ${gi} ms in and ${go} ms out`);
 } else console.log('SKIP the cave breath against game.jsx (set OAG_GAME)');
 // ---- the WAVE room on its own, from the body map: both branches, the restart, the rest offer, the test answers --------------
@@ -924,6 +978,250 @@ await roomCheckin('left');
 await page.locator('[data-room-again="no"]').click();
 await page.locator('[data-room-leave]').click();
 await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
+// ---- the levels (LEVELS.md, build order step 1): home base, the hall of the six, a tunnel, the centre, another face, home -----
+// The room from the body map is home base, with a portal; the portal opens the hall; a door opens its face's tunnel; the tunnel
+// ends at the centre of the self, which wears that face and has portals to the other five; one of them opens another tunnel, and
+// the centre's ways back go home to the room.
+const lv = () => C(() => window.__oagCave.level && window.__oagCave.level());
+const lvCam = [];
+const walkLevel = async (selector) => {
+  await C(() => document.activeElement && document.activeElement.blur && document.activeElement.blur());
+  // At the full walk a stop's prompt shows for under a second as the figure passes; this loop looks less often than that
+  // under swiftshader, so the levels are walked at half pace (the pace itself is checked in the free-walking section).
+  const sp0 = await state('s.speed'); await C(() => { window.__oagCave.state.speed = 0.5; });
+  const t0 = Date.now();
+  try {
+    while (!(await page.locator(selector).count())) {
+      if (Date.now() - t0 > 90000) throw new Error('timed out walking to ' + selector);
+      await page.keyboard.down('ArrowUp');
+      const stop = page.locator('[data-cave-prompt-box]:visible [data-cave-stop]');
+      if (await stop.count()) { await page.keyboard.up('ArrowUp'); await stop.click(); }
+      const a = await C(() => { const c = window.__oagCave, f = c.free(); return { room: c.camRoom(), off: Math.abs(f.lat) - f.halfWidth * 0.9, kind: c.avatar().route }; });
+      lvCam.push(Object.assign({ where: selector }, a));
+      await page.waitForTimeout(120);
+    }
+  } finally { await page.keyboard.up('ArrowUp'); await C((v) => { window.__oagCave.state.speed = v; }, sp0); }
+};
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor();
+await page.locator('[data-room-welcome]').waitFor();
+let RW = await C(() => window.__oagCave.room.walking());
+ok(RW.exits.map((e) => e.id).sort().join() === 'bigmind,portal' && await sees('[data-room-walk-hint]'),
+  'home base: the WAVE room from the body map has two doors behind the seat, Big Mind and the six game masters, and says how to walk');
+await page.screenshot({ path: SHOTS + '/level-home.png' });
+// Walking round the room (Wendell, 13 October 2026): a tap on the floor stands the figure up and walks it there, the camera
+// following; opening the step's page again walks it back to the seat.
+await C(() => window.__oagCave.room.speed(3));
+await page.locator('[data-room-shrink]').click();
+await page.waitForTimeout(500);
+const floorAt = await C(() => window.__oagCave.room.floorScreen(1.5, -1));
+await page.mouse.click(floorAt.x, floorAt.y);
+await page.waitForFunction(() => { const w = window.__oagCave.room.walking(); return w.roam && w.roam.arrived; }, null, { timeout: 30000 });
+RW = await C(() => window.__oagCave.room.walking());
+ok(Math.hypot(RW.figure[0] - 1.5, RW.figure[1] + 1) < 0.6 && RW.sit < 0.1 && RW.view === 'roam', `a tap on the floor walks the figure there, standing, the camera behind it (${RW.figure.map((v) => v.toFixed(2))})`);
+await page.screenshot({ path: SHOTS + '/level-home-walked.png' });
+await page.locator('[data-room-pane]').click();
+await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.9, null, { timeout: 30000 });
+ok((await C(() => window.__oagCave.room.walking())).roam === null, 'opening the page again walks the figure back to its seat, and it sits');
+// Free walking (Wendell, 13 October 2026: "Essentially we need free walking controls in this room"): a stick at the bottom left
+// and the arrow keys or W A S D walk the figure anywhere; coming up to a door opens its card; the rug offers Sit down.
+await page.locator('[data-room-shrink]').click();
+await page.waitForTimeout(400);
+ok(await C(() => window.__oagCave.room.stickShown()), 'the stick shows with the room in view');
+const box = await page.locator('[data-room-stick]').boundingBox();
+const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+await page.mouse.move(cx, cy); await page.mouse.down(); await page.mouse.move(cx, cy - 50, { steps: 4 });
+await page.waitForTimeout(1500);
+let SW = await C(() => window.__oagCave.room.walking());
+await page.mouse.up();
+ok(SW.figure[1] < 0.6 && SW.sit < 0.1 && SW.view === 'roam', `pushing the stick up walks the figure forward, standing (${SW.figure.map((v) => v.toFixed(2))})`);
+ok(!(await C(() => window.__oagCave.room.sitShown())), 'off the rug, no Sit down');
+// a drag up or down tilts the camera, as a drag sideways turns it
+const camY0 = (await C(() => window.__oagCave.room.walking())).camY;
+await page.mouse.move(200, 300); await page.mouse.down(); await page.mouse.move(200, 420, { steps: 6 }); await page.mouse.up();
+await page.waitForTimeout(1200);
+const tilt = await C(() => window.__oagCave.room.walking());
+ok(tilt.pitch > 0.3 && tilt.camY > camY0 + 0.5, `a drag down tilts the camera to look down on the figure (${camY0.toFixed(2)} to ${tilt.camY.toFixed(2)})`);
+// keys: turn round with S
+await page.keyboard.down('KeyS'); await page.waitForTimeout(900); await page.keyboard.up('KeyS');
+const SW2 = await C(() => window.__oagCave.room.walking());
+ok(SW2.figure[1] > SW.figure[1] + 0.5, `the S key walks the figure back towards the camera (${SW2.figure.map((v) => v.toFixed(2))})`);
+// steer to the six game masters' door
+const ex = SW2.exits.find((e) => e.id === 'portal');
+for (let i = 0; i < 100 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x, ex.z]); await page.waitForTimeout(100); }
+ok(await sees('[data-room-portal]') && await C(() => window.__oagCave.room.stickShown()), 'walking up to the six game masters\' door shows its prompt by the right thumb, and the stick stays');
+// Holding the stick into the door (Wendell, 14 October 2026: "If you hold this position and try and use the joystick you get
+// stuck in a loop"): the prompt holds still, the stick stays, nothing loops.
+let steady = true;
+for (let i = 0; i < 15; i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x * 1.3, ex.z * 1.3]); await page.waitForTimeout(100); steady = steady && await sees('[data-room-portal]') && await C(() => window.__oagCave.room.stickShown()); }
+ok(steady, 'holding the stick into the door keeps the prompt and the stick steady');
+// walking along the wall past the door shows its prompt only while in front of it
+const seen = [];
+for (const a of [0.55, 0.3, 0.05]) {
+  for (let i = 0; i < 60; i++) { if ((await C(([x, z]) => window.__oagCave.room.steer(x, z), [Math.sin(a) * 6.4, Math.cos(a) * 6.4])) < 0.3) break; seen.push(await sees('[data-room-door]')); await page.waitForTimeout(80); }
+}
+await C(() => window.__oagCave.room.stick(0, 0));
+const flips = seen.filter((v, i) => i && v !== seen[i - 1]).length;
+ok(seen.length && !(await sees('[data-room-door]')) && flips <= 1, `walking on along the wall hides the prompt again, without flickering (${flips} change)`);
+for (let i = 0; i < 60 && !(await sees('[data-room-portal]')); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), [ex.x, ex.z]); await page.waitForTimeout(100); }
+ok(await sees('[data-room-portal]'), 'walking back to the door shows its prompt again');
+// On an iPhone a thumb held on the stick keeps sending moves after the stick hides (Wendell, 14 October 2026: "Stay in the room
+// gets you stuck in this screen"): a touch the browser cannot capture, still moving when the page opens over the stick.
+{
+  const sb = await page.locator('[data-room-stick]').boundingBox();
+  await C(([x, y]) => document.querySelector('[data-room-stick]').dispatchEvent(new PointerEvent('pointerdown', { pointerId: 99, clientX: x, clientY: y, bubbles: true, cancelable: true })), [sb.x + 58, sb.y + 30]);
+  await page.locator('[data-room-pane]').click();
+  await C(() => { const s = document.querySelector('[data-room-stick]'); for (let i = 0; i < 5; i++) s.dispatchEvent(new PointerEvent('pointermove', { pointerId: 99, clientX: 60 + i, clientY: 700 - i, bubbles: true })); });
+  await page.locator('[data-room-shrink]').click();
+  await page.waitForTimeout(800);
+  const iw = await C(() => window.__oagCave.room.walking());
+  ok(iw.figure.every(Number.isFinite) && iw.cam.every(Number.isFinite), `a thumb still moving on the hidden stick lets go, and the room stays in view (${iw.figure.map((v) => v.toFixed(2))})`);
+}
+// back to the rug
+const seat = (await C(() => window.__oagCave.room.scene())).seat;
+for (let i = 0; i < 100 && !(await C(() => window.__oagCave.room.sitShown())); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), seat); await page.waitForTimeout(100); }
+await C(() => window.__oagCave.room.stick(0, 0));
+ok(await C(() => window.__oagCave.room.sitShown()), 'walking onto the rug offers Sit down');
+await page.screenshot({ path: SHOTS + '/level-home-stick-rug.png' });
+await page.locator('[data-room-sit]').click();
+await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.9, null, { timeout: 30000 });
+ok(await sees('[data-room-modal].open'), 'Sit down sits the figure on the cushion and brings the page back');
+await C(() => window.__oagCave.room.walkTo('portal'));
+await page.locator('[data-room-portal]').waitFor({ timeout: 30000 });
+ok((await C(() => window.__oagCave.room.walking())).atDoor === 'portal', 'walking to the six game masters\' door opens its card');
+await page.screenshot({ path: SHOTS + '/level-home-door.png' });
+await page.locator('[data-room-portal]').click();
+await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
+await page.locator('[data-cave-level="hall"]').waitFor();
+await page.waitForTimeout(900);
+await C(() => { window.__oagCave.state.speed = 8; });
+let L = await lv();
+ok(L.place === 'hall' && L.kind === 'round' && L.stops.join(',') === 'door:magenta,door:red,door:amber,door:orange,door:green,door:teal,home',
+  `the portal opens the hall of the six: six doors in altitude order and the portal home (${L.stops.join(', ')})`);
+ok((await C(() => window.__oagCave.pane())).title === 'The hall of the six', 'the hall names itself as the player comes in');
+// Wendell, 14 October 2026: "The gates for the 6 game master room are too small. They should be doors."
+const doors = await C(() => window.__oagCave.doors()), figH = 3.6;
+ok(doors.length === 7 && doors.every((d) => d.h >= figH * 1.3 && d.w >= 3), `the hall's seven doors are doors, taller than the figure (${doors[0] && doors[0].w} wide, ${doors[0] && doors[0].h.toFixed(1)} tall, the figure ${figH})`);
+await page.screenshot({ path: SHOTS + '/level-hall.png' });
+await walkLevel('[data-level-door="magenta"]');
+ok((await page.locator('[data-level-asks="magenta"]').textContent()) === "Where is the presence you're reaching for?", "at Magenta's door, its question shows");
+await walkLevel('[data-level-door="red"]');
+await page.screenshot({ path: SHOTS + '/level-hall-door.png' });
+await page.locator('[data-level-door="red"]').click();
+await page.locator('[data-cave-level="tunnel"][data-cave-level-face="red"]').waitFor();
+await page.waitForTimeout(900);
+L = await lv();
+ok(L.place === 'tunnel' && L.face === 'red' && L.kind === 'tunnel' && L.look === 0xff6a48 && L.rock === 0x7a302a && L.shape.shape === 'red',
+  "Red's door opens Red's tunnel, in Red's light, stone and cave shape");
+await page.screenshot({ path: SHOTS + '/level-tunnel-red.png' });
+await walkLevel('[data-level-go]');
+ok(await sees('[data-cave-block]'), 'a block can still open a side passage from the tunnel');
+await page.locator('[data-level-go]').click();
+await walkLevel('[data-level-centre]');
+ok((await page.locator('[data-level-asks="red"]').textContent()) === 'What power are you trying to move or assert?', 'the tunnel ends in its face\'s question');
+await page.locator('[data-level-centre]').click();
+await page.locator('[data-cave-level="centre"]').waitFor();
+await page.waitForTimeout(900);
+L = await lv();
+ok(L.place === 'centre' && L.face === 'red' && L.look === 0xff6a48 && L.stops.join(',') === 'portal:amber,portal:orange,portal:green,portal:teal,portal:magenta,ways',
+  `the centre of the self wears Red, with portals to the other five from the next face on (${L.stops.join(', ')})`);
+await page.screenshot({ path: SHOTS + '/level-centre.png' });
+await walkLevel('[data-level-portal="amber"]');
+await page.locator('[data-level-portal="amber"]').click();
+await page.locator('[data-cave-level="tunnel"][data-cave-level-face="amber"]').waitFor();
+await page.waitForTimeout(700);
+L = await lv();
+ok(L.face === 'amber' && L.visited.join(',') === 'red,amber', "Amber's portal opens Amber's tunnel, straight from the centre");
+await page.screenshot({ path: SHOTS + '/level-tunnel-amber.png' });
+await walkLevel('[data-level-go]'); await page.locator('[data-level-go]').click();
+await walkLevel('[data-level-centre]'); await page.locator('[data-level-centre]').click();
+await page.locator('[data-cave-level="centre"]').waitFor();
+await page.waitForTimeout(700);
+L = await lv();
+ok(L.face === 'amber' && L.stops[0] === 'portal:orange', 'the centre now wears Amber, the face just walked');
+await page.locator('[data-cave-pane]').click().catch(() => {});
+await page.locator('[data-cave-close]').click(); // a walk's page closes with Keep walking, and the stick comes back
+await walkLevel('[data-level-hall]');
+ok(await sees('[data-level-hall]') && await sees('[data-level-home]'), 'the ways back: the hall, or home');
+const worst = lvCam.reduce((m, c) => Math.min(m, c.room), 1e9), off = lvCam.reduce((m, c) => Math.max(m, c.off), 0);
+ok(worst > 0 && off <= 0, `through the hall, two tunnels and the centre the camera stays inside the stone (least room ${worst.toFixed(2)}) and the figure on the floor (${off.toFixed(3)})`);
+L = await lv();
+ok(L.trail.join(' > ') === 'hall > tunnel:red > centre > tunnel:amber > centre', 'the way walked: ' + L.trail.join(' > '));
+await page.locator('[data-level-home]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+ok((await C(() => window.__oagCave.room.walking())).exits.length === 2, 'Go home opens the WAVE room again, with its doors');
+await page.locator('[data-room-welcome]').waitFor();
+await page.screenshot({ path: SHOTS + '/level-home-again.png' });
+await C(() => window.__oagCave.room.speed(3));
+await C(() => window.__oagCave.room.walkTo('portal'));
+await page.locator('[data-room-portal]').click({ timeout: 30000 });
+await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(700);
+ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again');
+// Wendell, 14 October 2026: "Camera controls are clunky in the game master space and the walking is rather slow". The camera
+// follows the figure, not the path's line: walking round the hall and across it, it comes round behind the figure.
+{
+  const wrapA = (d) => Math.atan2(Math.sin(d), Math.cos(d));
+  const h0 = await C(() => window.__oagCave.free());
+  await page.keyboard.down('ArrowUp'); await page.keyboard.down('ArrowRight'); await page.waitForTimeout(2500);
+  const h1 = await C(() => window.__oagCave.free());
+  await page.keyboard.up('ArrowRight'); await page.keyboard.up('ArrowUp');
+  ok(Math.abs(wrapA(h1.camYaw - h0.camYaw)) > 0.3 && Math.abs(wrapA(h1.camYaw - h1.yaw)) < 0.6, `walking round the hall and across it, the camera comes round behind the figure (turned ${wrapA(h1.camYaw - h0.camYaw).toFixed(2)}, ${wrapA(h1.camYaw - h1.yaw).toFixed(2)} off its back)`);
+  ok((await C(() => window.__oagCave.camRoom())) > 0, 'and stays inside the stone');
+  await page.screenshot({ path: SHOTS + '/level-hall-across.png' });
+}
+// Wendell, 14 October 2026: "The center is impassible and we want to be able to have click to walk for when we're testing on the
+// computer." A click on the floor walks the figure there, and the middle of the hall is open floor it can walk right across.
+{
+  const f0 = await C(() => window.__oagCave.figure());
+  ok(f0.blockers === 6, 'the six stones in the hall stand in the way (six to walk round)');
+  // a spot on the floor between the figure and the middle, toward the middle
+  const k = 3 / f0.fromMiddle, tx = f0.x * k, tz = f0.z * k;
+  // the player turns to face the middle (a drag would do it), then clicks there
+  await C(([x, z]) => { const s = window.__oagCave.state; s.look.yaw = 0; s.walk.camYaw = Math.atan2(-x, -z); }, [f0.x, f0.z]);
+  // the camera eases round to its new heading
+  await page.waitForFunction(([x, z, fx, fz]) => { const s = window.__oagCave.state; s.walk.camYaw = Math.atan2(-fx, -fz); s.look.yaw = 0; const p = window.__oagCave.floorScreen(x, z); return !p.behind && p.x > 40 && p.x < innerWidth - 40 && p.y > 100 && p.y < innerHeight - 200; }, [tx, tz, f0.x, f0.z], { timeout: 8000 }).catch(() => {});
+  const at = await C(([x, z]) => window.__oagCave.floorScreen(x, z), [tx, tz]);
+  const onCanvas = await C(([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && e.tagName === 'CANVAS'; }, [at.x, at.y]);
+  ok(!at.behind && onCanvas, `the middle of the hall shows on the screen to click (${Math.round(at.x)}, ${Math.round(at.y)})`);
+  await page.mouse.click(at.x, at.y);
+  const g = await C(() => window.__oagCave.figure().goTo);
+  ok(!!g && Math.hypot(g.x - tx, g.z - tz) < 1.5, `a click on the floor sets where the figure walks to (${g ? g.x.toFixed(1) + ', ' + g.z.toFixed(1) : 'none'}, the spot ${tx.toFixed(1)}, ${tz.toFixed(1)})`);
+  const reached = await page.waitForFunction(() => window.__oagCave.figure().fromMiddle < 4.5, null, { timeout: 15000 }).then(() => true, () => false);
+  const f1 = await C(() => window.__oagCave.figure());
+  ok(reached, `the figure walks there, into the middle of the hall (${f1.fromMiddle.toFixed(1)} from the middle; the ring is ${f0.fromMiddle.toFixed(1)})`);
+  await page.waitForFunction(() => !window.__oagCave.figure().goTo, null, { timeout: 5000 }).catch(() => {});
+  ok(!(await C(() => window.__oagCave.figure().goTo)), 'and stops there');
+  ok((await C(() => window.__oagCave.camRoom())) > 0, 'the camera stays inside the stone out in the middle');
+  await page.screenshot({ path: SHOTS + '/level-hall-middle.png' });
+}
+// ---- the Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room") --
+// Out to the front page and into the room again; in the room, walk to the Big Mind door; going in opens the Big Mind cave's mouth
+// on this same page, with a way back to the room.
+await C(() => window.__oagCave.leave());
+await page.locator('[data-cave-level]').waitFor({ state: 'detached', timeout: 15000 });
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+await page.locator('[data-room-welcome]').waitFor();
+await C(() => window.__oagCave.room.speed(3));
+await C(() => window.__oagCave.room.walkTo('bigmind'));
+await page.locator('[data-room-bigmind]').waitFor({ timeout: 30000 });
+ok((await page.locator('[data-room-door] h2').textContent()) === 'Big Mind', 'walking to the Big Mind door opens its card');
+await page.screenshot({ path: SHOTS + '/level-home-bigmind.png' });
+await page.locator('[data-room-bigmind]').click();
+await page.locator('[data-bm-mouth]').waitFor({ timeout: 15000 });
+ok(await sees('[data-bm-enter]') && await sees('[data-bm-home]'), 'the Big Mind cave opens at its mouth on this page, with Go in and Back to the WAVE room');
+await page.locator('[data-bm-enter]').click();
+await page.locator('[data-bm-cave]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(900);
+ok(await C(() => !!(window.__oagBigMind.state)), 'Go in walks into the Big Mind cave');
+await page.screenshot({ path: SHOTS + '/level-bigmind-cave.png' });
+await C(() => { document.querySelector('[data-bm-cave]').remove(); window.__oagBigMind.start(); }); // out at the mouth again
+await page.locator('[data-bm-home]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+ok(await page.locator('[data-bm-mouth]').count() === 0, 'Back to the WAVE room closes the mouth and opens the room');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();

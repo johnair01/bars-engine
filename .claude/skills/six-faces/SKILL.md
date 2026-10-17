@@ -9,6 +9,12 @@ Read `council/faces.yaml` first. It holds each face's lens, what it delivers, wh
 levels lose, its standing test, and its lessons. The lessons are Wendell's words from past rulings.
 A face carries them into its argument. Do not restate a lens from memory; the file is the standard.
 
+For any pass that designs, builds, reviews or translates a game, game system, design tool, adaptive
+player experience or Emotional Alchemy mechanic, also load the `design-ontology` skill. Read
+`ontology/manifest.yaml` and `ontology/v0.1/QUICKSTART.md`, then select the task-specific load profile.
+Give every face the same ontology context. The ontology constrains the council's design claims; the
+faces remain bounded lenses from `council/faces.yaml` and do not silently rewrite it.
+
 ## The shape of a pass
 
 1. **Header.** Date, who called it, the question in his words, and what pass this is on the subject.
@@ -41,7 +47,10 @@ A face carries them into its argument. Do not restate a lens from memory; the fi
    there), Open Up (brainstorm every possible move, unjudged, as Wendell's Idea Storm does), Clean Up (clear
    what blocks the work and compost what does not serve), Grow Up (the test, measurement or reading that
    makes the next attempt better, with web research where it helps), and Show Up (distill to at most five
-   moves). Each also says what it protects the Player from and makes more enjoyable, asks at most two
+   moves). Before the moves it answers its own question set from `council/daemons/questions.yaml` about the
+   problem (Wendell, 2026-10-14): what it works on, who it works for, how its work serves that boss, and what
+   would happen without it. When two reports name different bosses for the same problem, the face says so: it
+   shows which part is really driving the decision. Each also says what it protects the Player from and makes more enjoyable, asks at most two
    questions, and names where it would overreach. The face uses what helps, says which daemon it came
    from, and stops a daemon where its overreach line says. A daemon's questions go through the reach test
    like any other. Before reading a report, the face saves it and runs `python3 council/daemons/check_report.py
@@ -142,11 +151,19 @@ do not run it; `scope` in the file says which is which.
    shape: do, where, enter, check, device, and whether it is safe to stop after. Publish the feature's steps
    as one list with `ArtifactData` to the board's store, named as `steps_page` in `pipeline.yaml`: a `lists/<feature>` document
    (title, repo, why, source, order, created) and `steps/<feature>-<nn>` documents (list, n, do, where, href,
-   enter, generate, check, device, stopSafe, optional, due, done). Every step carries `due`, a YYYY-MM-DD
+   enter, generate, check, device, stopSafe, optional, due, done, files). A step that asks him to review a draft, image or
+   link carries it in `files` (`[{id, title, kind: text|image|link, text, src, href, caption}]`), so the card shows it in
+   full with a notes box, and never points him at a project file (Wendell, 2026-10-14: "If I Can click the file see whats
+   going on and update the notes that would get me unblocked"). His notes land in `fileNotes` and pull.py lists them. Every step carries `due`, a YYYY-MM-DD
    date (Wendell, 2026-10-06: deadlines let him metabolize the blocking charge a step raises). The page shows it,
    flags a step past it, and lets him move it; each move is kept in `moved`. Read a slipped step's note and
    moves before the work that waits on it. A secret is never written to a step. A step
    that needs one sets `generate` to its length, and the page makes it on his device without storing it.
+   **Every input is checked before the step is published** (Wendell, 2026-10-12: "if there is a task for me it needs
+   to have all the context and be able to point me where I'm supposed to find things"). A step names each file, link or
+   account it needs and where it lives. If an input cannot be found, publish a find-it step instead: what is missing,
+   why it matters, where it was last seen, and the remediation the game masters will run if he cannot find it
+   (`step_missing_input` in `pipeline.yaml`).
 5. **Read his ticks.** The page records `done`, `doneAt` and `note` on each step. Read the list before any
    work that waits on a step. A note is a report from him; answer it in the next reply or in the pass.
 6. **Ship.** A feature whose gates pass goes on the board as a position that merges on the next board read

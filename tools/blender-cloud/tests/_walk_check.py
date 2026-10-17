@@ -4,7 +4,9 @@ bpy venv. Prints one JSON line.
 usage: python _walk_check.py FIGURE.glb
 Joints are read where the glTF puts them (each bone's head, posed, in world space), so the check does not trust the
 builder. The figure faces -Y and its own left is +X once imported (Z up).
-  swing   at a quarter of the cycle the thighs swing opposite ways, and by three quarters they have swapped (W3)
+  swing   at a quarter of the cycle the thighs swing opposite ways from where they stand at rest, and by three
+          quarters they have swapped (W3); measured from the rest pose, so a figure held in a stance (a daemon's
+          gesture, character.py WARP) still has to swing its legs
   knees   every key, each shin folds backward from its thigh or stays straight; never forward
   elbows  every key, each forearm folds forward from its upper arm or stays straight; never backward
   loop    the last key's pose is the first key's
@@ -17,7 +19,10 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=sys.argv[1])
 sc = bpy.context.scene
 rig = next(o for o in sc.objects if o.type == "ARMATURE")
-act = rig.animation_data.action
+act = bpy.data.actions.get("Walk") or rig.animation_data.action     # a figure may carry Integrate beside it
+for tr in list(rig.animation_data.nla_tracks):
+    rig.animation_data.nla_tracks.remove(tr)
+rig.animation_data.action = act
 f0, f1 = (int(round(x)) for x in act.frame_range)
 TOL = 0.02  # a straight limb, within about a degree
 
@@ -48,8 +53,12 @@ for k, h in enumerate(H):
             problems.append(f"elbow{s} folds backward at key {k}")
 
 
+REST = {b.name: rig.matrix_world @ b.head_local for b in rig.data.bones}
+
+
 def thigh_y(h, s):
-    return (h["knee" + s] - h["hip" + s]).normalized().y  # - forward, + back
+    """- forward, + back of the thigh's direction at rest."""
+    return (h["knee" + s] - h["hip" + s]).normalized().y - (REST["knee" + s] - REST["hip" + s]).normalized().y
 
 
 q1, q3 = H[n // 4], H[3 * n // 4]

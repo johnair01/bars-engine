@@ -49,7 +49,7 @@ fi
 
 base="${COUNCIL_SOURCE_BASE:-https://raw.githubusercontent.com/$home_repo/$ref}"
 label="$home_repo@$ref"; [ -n "${COUNCIL_SOURCE_BASE:-}" ] && label="$COUNCIL_SOURCE_BASE"
-files="council/faces.yaml council/pipeline.yaml council/spec-kit/spec.md council/spec-kit/plan.md council/spec-kit/tasks.md .claude/skills/six-faces/SKILL.md council/portable/six-faces/SKILL.md council/tools/voice_lint.py council/hooks/council-sync.sh council/daemons/daemons.yaml council/daemons/check_report.py council/daemons/save_report.py council/iching/hexagrams.yaml council/iching/cast.py council/strands.py council/census.py .claude/agents/daemon-protector.md .claude/agents/daemon-controller.md .claude/agents/daemon-skeptic.md .claude/agents/daemon-fixer.md .claude/agents/daemon-victim.md .claude/agents/daemon-damaged-self.md .claude/agents/daemon-emotional-body.md .claude/agents/daemon-player.md"
+files="council/faces.yaml council/pipeline.yaml council/spec-kit/spec.md council/spec-kit/plan.md council/spec-kit/tasks.md .claude/skills/six-faces/SKILL.md council/portable/six-faces/SKILL.md council/tools/voice_lint.py council/hooks/council-sync.sh council/daemons/daemons.yaml council/daemons/questions.yaml council/daemons/check_report.py council/daemons/save_report.py council/iching/hexagrams.yaml council/iching/cast.py council/strands.py council/census.py .claude/agents/daemon-protector.md .claude/agents/daemon-controller.md .claude/agents/daemon-skeptic.md .claude/agents/daemon-fixer.md .claude/agents/daemon-victim.md .claude/agents/daemon-damaged-self.md .claude/agents/daemon-emotional-body.md .claude/agents/daemon-player.md"
 changed=""; failed=""
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 for f in $files; do

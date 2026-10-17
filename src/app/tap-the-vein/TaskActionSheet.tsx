@@ -19,11 +19,14 @@ export type SheetAction =
   | { kind: 'start' }
   | { kind: 'complete' }
   | { kind: 'carry' }
+  | { kind: 'rest' }
   | { kind: 'plant'; experienceIntent: string; dissatisfaction: string[]; satisfaction: string[] }
   | { kind: 'compost'; reason: string }
   | { kind: 'assign'; campaignId: string; visibility: 'campaign' | null }
 
+// A release owes no reason (composting decision; council pass ttv-loop 1, `ttv-fruit-is-his`), so letting go comes first.
 const COMPOST_REASONS: Array<{ key: string; label: string; hint: string }> = [
+  { key: 'no_reason', label: 'Just let it go', hint: 'no reason needed' },
   { key: 'not_relevant', label: 'Not relevant', hint: 'stopped mattering' },
   { key: 'already_done', label: 'Already done', hint: 'handled earlier' },
   { key: 'assigned_elsewhere', label: 'Assigned elsewhere', hint: 'someone else owns it' },
@@ -128,6 +131,7 @@ export function TaskActionSheet({
             )}
             <ActionRow icon="✓" iconColor={gem} label="Complete" hint="pave a brick · ♦+1" disabled={busy} onClick={() => onAction({ kind: 'complete' })} />
             <ActionRow icon="↻" label="Carry to tomorrow" hint="keeps the thread" disabled={busy} onClick={() => onAction({ kind: 'carry' })} />
+            <ActionRow icon="❖" label="Set aside" hint="to the seed library · draw it back any day" disabled={busy} onClick={() => onAction({ kind: 'rest' })} />
             <ActionRow icon="❀" label="Plant in Garden" hint="grow this quest under today's lens" disabled={busy} onClick={() => setMode('plant')} />
             <ActionRow icon="↩" label="Compost" hint="return to field" disabled={busy} onClick={() => setMode('compost')} />
             <ActionRow icon="◇" label="Assign to campaign" hint="private by default" disabled={busy} onClick={() => setMode('assign')} />
@@ -137,9 +141,9 @@ export function TaskActionSheet({
         {mode === 'compost' && (
           <div>
             <Eyebrow>Compost · return to the field</Eyebrow>
-            <Title>Why let this one go?</Title>
+            <Title>Let this one go?</Title>
             <p style={{ fontFamily: body, fontSize: 12.5, lineHeight: 1.5, color: 'var(--bars-text-secondary)', margin: '6px 0 12px' }}>
-              Composting isn&rsquo;t failure — it feeds the soil. The reason is kept with the card.
+              Composting isn&rsquo;t failure — it feeds the soil. A reason is optional; if you pick one, it is kept with the card.
             </p>
             <div className="flex flex-col gap-2">
               {COMPOST_REASONS.map((r) => (

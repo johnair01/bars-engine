@@ -614,3 +614,189 @@ player more effectively not unlike a drone".
 
 **(choice)** how far the stones stand past the ramp, the reveal's timing and colours, the camera's swing (`state.peek`),
 and how close to the stone the camera may come (0.35 where it aims to be, 0.25 where it is).
+
+## Walking round the WAVE room, and its Big Mind door (13 October 2026)
+
+Wendell, overruling board row `dp-big-mind-page` (13 October, 22:34): "The big mind cave need to be accessible from the WAVE
+room. Which also need the ability for players to walk around in. Another door in the room leads to the 6 game masters
+(content to be created). All of the caves need to use the same assets and have the ability to spawn spirits when one sits
+down and does a wave process."
+
+- **Walking.** Wendell, 13 October 2026, after walking it: "It’s impossible to have a player walk around the wave room and
+  thus move into any of the other experiences. We also need to have a rug or a seat players can sit on when they are
+  communing with spirits. Essentially we need free walking controls in this room". So the room has free walking: a stick
+  at the bottom left, and the arrow keys or W A S D on a computer, walk the figure anywhere in the room. Up on the stick is
+  away from the camera. The camera follows from behind and comes round only while the figure walks away from it, so walking
+  back or sideways goes where the thumb points. A one-finger drag turns it by hand, and a drag up or down tilts it, seated or walking (Wendell, 13 October 2026: "you can pan the camera side to side but not up and down"). The stick shows whenever the room is in
+  view and hides only while a page or a creature's card is open. A tap on the floor still walks the figure there, and a tap on a creature
+  still brings it close.
+- **Doors, the way phone games do them.** Wendell, 14 October 2026: "If you hold this position and try and use the joystick
+  you get stuck in a loop. We should take a step back and think holistically about the object interactions". The common
+  rules for touch games, which the room now follows:
+  1. The stick is never taken away. Nothing that comes up while walking covers it, hides it or moves the camera under it.
+  2. Coming near a thing shows a small prompt by the right thumb (the left thumb walks, the right one acts). The prompt
+     never stops the walk; walking off hides it, and that is how a player says no.
+  3. A zone shows its prompt a little sooner than it hides it, so standing on its edge does not flicker.
+  4. One prompt at a time: a door's prompt in front of a door, Sit down on the rug, a creature's card when it is tapped.
+  5. A full page (the step's page, a creature close up) opens only from a tap, never from walking, and it hides the stick
+     until it closes.
+  So a door shows its name, one line and its way through ("Go through", "Go in") at the bottom right while the figure stands
+  in front of it, and there is no "Stay in the room": walking away is staying.
+- **The rug.** A round woven rug with a cushion on it is where the player sits to commune with what comes in. Walking onto
+  the rug shows "Sit down", which sits the figure on the cushion and brings the step's page back. Tapping the pane does the
+  same from anywhere in the room.
+- **Two doors behind the seat** (board `dp-door`). On the left, the Big Mind door: a pale gold arch with the seven daemons'
+  colours round it, the Protector's first. On the right, the portal, now named for the six game masters: it opens the hall of
+  the six (LEVELS.md), whose tunnels are still plain. The charge's door stays the charge's door. Walking up to a door shows its
+  prompt (below), with its way through and "Stay in the room". Only a charge worked through the whole W.A.V.E. goes through with them as a spirit (Wendell, 13 October 2026: "It should only emerge once it’s been engaged with"); one still being worked stays in the room.
+- **The Big Mind cave on this page.** The Big Mind door opens the Big Mind cave itself (`bigmind.js`, now built into this page
+  and started only from the door), at its mouth, with "Back to the WAVE room". The room's spirits walk in with the player for
+  that visit. **(choice)** the next six chambers and the centre (board `dp-seven`, `dp-centre`) are built inside the Big Mind
+  cave, which already has the Protector's refusal path, the charge meter and the speaking turns, rather than as a new path in
+  this cave.
+- **One stone.** The room wears the caves' J1 tiles: wet stone on the wall and dome, dry stone on the floor, laid in the room's
+  own units so a stone is the size it is in a tunnel.
+- A sit-down that spawns a spirit without the W.A.V.E. is being fixed in its own thread (the cave branch seams work), not here.
+
+## Free walking everywhere, and the hall's doors (14 October 2026)
+
+Wendell, 14 October 2026: "Ok I think we've reached the maturity where we don't have to have the walking happening on rails.
+It's causing more trouble than it's work and we need to test the ergonomics of Freeform navigation in preparation of
+introducing running. The gates for the 6 game master room are too small. They should be doors."
+
+- **Off the rails.** The caves and the levels walk the way the WAVE room does: a stick at the bottom left, and the arrow keys or
+  W A S D, walk the figure wherever the thumb points as the camera sees it, at the one steady `WALK_SPEED`. Holding the screen
+  no longer walks; a drag only looks. The figure keeps to the tunnel: it walks along it and across it, up to the floor's edge,
+  and turns to face the way it walks. In the hall of the six and the centre it can also walk in toward the open middle.
+- **The way ahead still opens on a choice.** On the main path and in a side passage the figure walks up to the stop it is
+  walking to and no further: past it the stone is gathered shut until the stop's choice (as before). It can walk back the way
+  it came. In the levels nothing is shut: every door round the hall, and both stops in a face's tunnel, can be walked to in any
+  order.
+- **Stops follow the five phone-game rules.** Coming to a stop shows a prompt by the right thumb with its name, its words and
+  "Stop here"; tapping that opens the stop's page (the stick hides until the page closes). Walking off hides the prompt, and
+  leaves an open stop. A door in the hall or the centre shows its way through on the prompt itself ("Go through", "Go home",
+  "Back to the hall"), as the room's doors do. Sit down gives way to a prompt, one at a time, and now sits at the bottom right.
+- **The camera.** It follows from behind on the path, offset with the figure across the tunnel. Walking back toward it, it
+  stays behind. A drag can turn it round; walking away from it then makes that way ahead, and it eases round behind the figure.
+- **Doors, not gates.** The hall's (and the centre's) arches are now doors: 3.2 wide and 5 tall (the figure is 3.6), a frame
+  in the face's colour run back to the stone, the opening lit with the face's light, the door leaf standing open into the hall,
+  a lit sill, and the face's name above. Each stands at its stop, so its prompt shows in front of it.
+- **(choice)** the walkable width (60% of the half width each way, 90% toward an open middle), how near a stop shows its prompt
+  (2.2 units, hidden again past 3.4), and the door's size. Running comes next, on the same stick.
+
+## The camera follows the figure, and the walk is quicker (14 October 2026)
+
+Wendell, 14 October 2026: "Camera controls are clunky in the game master space and the walking is rather slow. What's going
+on there"
+
+- **What was going on.** The camera sat on the path's line behind the figure's place along it, so walking across the hall or
+  round its ring left the camera behind on the line, looking at the figure from the side. A drag to look eased back to the
+  path on its own, so a turn did not stay turned. The walk was 4 units a second, a little over one body length.
+- **The camera now follows the figure.** It sits behind the figure on a heading of its own, which eases round to the way
+  along the floor the figure is going: round a tunnel's bends, and round the ring of the hall and the centre to the next
+  door. Up on the stick walks on round; sideways walks across. Walking back toward the camera, it stays put, so the thumb
+  keeps meaning the same way. A drag turns the heading and it stays turned; walking then goes the way the camera looks. Pushed into
+  the dead end at a branch's start, it turns round to the open way. It still keeps inside the stone. (Turning toward
+  wherever the figure went was tried first: a held diagonal chased itself round the hall's ring into its walls.)
+- **The walk is 7 units a second**, about two body lengths. The steps lengthen with it so the feet do not skate.
+- **(choice)** the speed, and how fast the camera eases round (2.5 a second at a full forward push).
+
+## The open middle, and click to walk (14 October 2026)
+
+Wendell, 14 October 2026: "walking feels much better. The center is impassible and we want to be able to have click to walk for
+when we're testing on the computer."
+
+- **The middle is open floor.** The hall and the centre kept the figure on their ring: it could walk in only 6.3 units from the
+  ring, 9.7 short of the middle. Now it walks in right across the middle, to within 1.2 of the very centre. Off the ring a step
+  along it keeps the same pace (the angle moves more nearer the middle). The hall's six stones stand in the way; a step into one
+  slides round it.
+- **The camera out in the middle** turns toward the way the figure walks when that is ahead and nothing is in the way. On the
+  ring it turns along the ring only as much as the walk goes along it, so walking in toward the middle keeps the view.
+- **Click to walk.** A click (or a tap) on the floor walks the figure there, as the stick would: walls, the shut way, the stones
+  and the stops all behave the same. It stops on the spot, or at a wall it cannot pass. The stick or a key takes over at once.
+- **(choice)** how near the very middle the figure goes (1.2), and the stones' reach (1.3).
+
+## The board's way into the WAVE room, and the run's way back (14 October 2026)
+
+Wendell, 14 October 2026 (Council Board, `ttv-skip-wave`): "yes, but I want it to be as interactive as possible. We want
+to move toward using the game to build the game. It should deposit me inside the WAVE room and we should move to have the
+WAVE room be able to metabolize context specific charges and send the results to the board in this case."
+
+- **In.** When Tap the Vein has been skipped two days running, the board links to
+  `/ontology-game/cave/#wave=board&charge=<words>&skips=<n>&ref=tap-the-vein--<time>&date=<YYYY-MM-DD>`
+  (Six-faces-council `docs/morning.md`). `board-wave.js` reads the hash and opens the WAVE room from the board
+  (`openRoom` with `from: "board"`). Welcome names what the sitting is about in the board's words and asks how much charge
+  it carries, 0 to 10. Acknowledge asks what is in the way of it. The rest of the room is unchanged.
+- **The ending.** When the room is quiet, it asks how today's Tap the Vein ends, with the board panel's five endings (I'll
+  do it now, Tomorrow, It needs changing, Drop it, Still stuck), a line for each, and the charge left. With none picked,
+  a move written in the room's 3-2-1 is the ending. The way out says "Back to the board".
+- **Back.** Every page saves the whole run in the blocker panel's record (`docs/blocker-panel.md` there, `engine:
+  "wave-room"`): the board's task, step, skip streak and date, the charge before and after, each creature met (name,
+  element, texture, what he wants, toward or away, the move, the line and light it left), the stage and the ending. A run
+  left half way still says what came up. The page posts it to `POST /api/council/wave-runs` under his own sign-in, a
+  short pause after each change and at once on leaving. The council's board read fetches the runs with
+  `COUNCIL_MENU_TOKEN` (`council/wave_runs.py`, run by `board/pull.py`) and lands each as `council/blockers/<ref>.json`.
+- **Signed out.** A run bars-engine does not take waits in the browser (`oag:wave-room:outbox`), and the card at the end
+  says so. Any later visit to the cave page signed in sends it.
+- Choices (stand unless he flips them): the charge asked as eleven buttons, as on the board's panel; the ending asked
+  once, at the end of the sitting, rather than per creature; Tomorrow sets the due date one day on; a run belongs to the
+  signed-in player, and the council reads only his.
+- `board-wave-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.
+
+## Perceptual shadow in the WAVE room (14 October 2026)
+
+Wendell, 14 October 2026: "This is around perceptual shadow specifically the shadow that stops players from being able to
+see or hold their attention on charge. The 4 shadows are forgetting, distracting, dissociating, and numbness. ... It's
+hiding charge from the self so that it can't be dealt with or worked with. From a skill development standpoint perceptual
+shadow is only triggered when peopel report they are aware of a charge but not about to perceive it and if they aren't able
+to get the charge number down. I imagine there's a polarity (alongside size, and brightness) that's also able to occlude
+charge spirits as a function of emergent perceptual shadow". The design is Six-faces-council
+`council/callsheets/perceptual-shadow.md`; its choices stand unless he flips them on the board.
+
+- **Two ways in.** Witness has a third answer, "I know it's here, but I can't feel it", which raises the creature's
+  polarity by 6. A round whose 3-2-1 reading after is no lower than before (or a board run whose charge left is no lower
+  than before) says so at its end and offers "Look again for what's hiding it": the hidden part of that creature comes to
+  the door, carrying its shadow plus 4. Nothing else raises a shadow, so most sittings never see one.
+- **Four shadows.** The player names it: Forgetting, Distracting, Dissociating or Numbness, a line each, or "I can't tell".
+  Each hides the creature its own way as polarity rises: Forgetting fades it in and out, Distracting drifts it aside,
+  Dissociating stands it back toward the door and greys it, Numbness wraps it in a fog of the numb texture's grey. All of
+  them thin its body, darken its aura and put a veil round it. At 10 only a faint outline is left.
+- **Numbness, twice.** A creature whose texture is numbness gets a note on the shadow page ("Numbness is how it feels, and it
+  can also be what keeps it out of reach") and Numbness first in the list. The texture and the shadow stay separate.
+- **The practice.** Each shadow has a practice (say its name three times; name what pulled you away; feel your feet and
+  seat; find the edge of the numb; or "look again, slowly" for an unnamed one). Each Done lowers polarity by 3. The player
+  can go on with it hidden, and Witness keeps "Work with what hides it" until it is clear.
+- **Polarity** is the third property beside size and brightness. Allow shows it as a reading, "How hidden it is", not a
+  slider: only the signals raise it and only the practice lowers it. A creature that leaves as a spirit carries its polarity
+  into the cave, where it walks dimmer.
+- **The run** gives each round `shadow: { kind, polarity, start, signals, practices }`, its 3-2-1 `reading`, and
+  `hiddenOf` for a hidden part, so the board's run shows when shadow came up and whether the practice thinned it.
+- `shadow-test.mjs` checks it in a browser, the way `cave-test.mjs` is run.
+- **Flooding, polarity's other pole** (Wendell on the board, `ps-polarity-poles`: "two"). Polarity runs -10 to 10: above 0
+  the charge is hidden, below 0 it floods, too loud to work. Witness also offers "It's too much to be with" (polarity -6).
+  A round whose charge stays at 9 or 10 and does not come down points the second signal at flooding ("Look again at what
+  floods it", the part comes in at its polarity minus 4); below 9 it points at hiding as before. A flooding creature grows
+  past the size allowed it, its aura blazes past the brightness allowed it, and a glare in its own colour surrounds it.
+  Three practices turn it down in turn (a long out-breath behind the seat; name one thing in the room that isn't it;
+  picture it at arm's length, the size of a hand), each by 3. Flooding has no kinds. Allow reads "Flooding n of 10". A
+  flooding spirit walks bigger and brighter. The run records `shadow.pole` ("hidden" or "flooding"); a hidden spirit is
+  still one with polarity above 0.
+- **Shadow spirits** (Wendell, 14 October 2026: "Shadow spirits do the work of perceptual shadows when one is working through
+  perceptual shadow one can ask what's getting in the way of the shadow clearing. We can also invoke daemons ... These
+  shadow spirits would be similar (probably just color changed) from regular spirits"). On the hidden pole's practice page,
+  "What's in the way of it clearing?" calls up the shadow spirit: the creature's body in the shadow's colour (`SHADOW_HEX`),
+  smaller, beside the one it hides. The player puts his eight questions to it, one per daemon and the Player (`SHADOW_ASKS`:
+  what is being protected, what standard upheld, what doubted or discredited, what repaired or held in place, what
+  emotional satisfaction, what sympathetic stories, what damage taken unseen, how it enjoys the game of hide and seek), and
+  writes what it says. Each answer thins the shadow by 3, as a practice does, and is kept in the run (`shadow.asks`). A
+  worked creature's shadow spirit walks out of the room as a spirit of its own in the shadow's colour (`shadow`,
+  `shadowOf`, polarity 0, so it counts as seen). Flooding has no shadow spirit.
+- **The daemons' question sets** (daemons/questions.js, bars-engine #329, board `dq-*`): each of the eight one-line
+  questions opens that daemon's own set, a question at a time. A boss question offers the Protector, the self, the Controller
+  and the Player; when the answer names a daemon, the room offers that daemon's set next, so the player follows who works for
+  whom. The Controller's "how" changes with the boss it names. A whole answered set counts as one practice (3 off the
+  shadow), and the run keeps every answer (`shadow.asks[].answers`, `boss`).
+- **A shadow spirit fully revealed** (Wendell, board read 14 October 2026, overruling a skip on dissolving shadow spirits):
+  once the shadow has cleared to 0 with its spirit called up, the room asks which element the shadow spirit shows (the five,
+  or "I can't tell yet"). Named, it walks out with that `element`, `revealed: true`, and a colour halfway from the shadow's
+  to its element's, so dissolving can act on it. Until then its `element` stays null and it cannot be dissolved.

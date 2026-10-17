@@ -45,7 +45,7 @@ export async function loadMenuForSession(playerId: string, sessionDate: Date): P
       morningMenu: true,
       // rawEntry is deliberately not selected: the free write never feeds the menu (mm-raw).
       tasks: {
-        select: { id: true, originalText: true, status: true, lensGoalId: true },
+        select: { id: true, originalText: true, status: true, lensGoalId: true, barId: true },
         orderBy: [{ priorityRank: 'asc' }, { createdAt: 'asc' }],
       },
     },
@@ -54,7 +54,7 @@ export async function loadMenuForSession(playerId: string, sessionDate: Date): P
   const goals = await loadActiveLensGoals(playerId)
   const stored = parseStoredMenu(session.morningMenu)
   const items = buildMenu({
-    tasks: session.tasks.map((t) => ({ id: t.id, text: t.originalText, status: t.status, lensGoalId: t.lensGoalId })),
+    tasks: session.tasks.map((t) => ({ id: t.id, text: t.originalText, status: t.status, lensGoalId: t.lensGoalId, barId: t.barId })),
     candidates: parseBrainstormCandidates(session.brainstormCandidates),
     goals,
     stored,

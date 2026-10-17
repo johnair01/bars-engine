@@ -8,8 +8,8 @@
  * @example GET /api/tap-the-vein/menu?date=2026-10-09&token=<COUNCIL_MENU_TOKEN>
  * @agentDiscoverable false
  */
-import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { givenToken, tokenMatches } from '@/lib/council/token'
 import { loadActiveLensGoals, loadLatestSealedMenu } from '@/lib/tap-the-vein/menu-data'
 
 /**
@@ -18,33 +18,20 @@ import { loadActiveLensGoals, loadLatestSealedMenu } from '@/lib/tap-the-vein/me
  * built from menu items only (src/lib/tap-the-vein/menu.ts, toMenuExport).
  *
  * Required env vars:
- *   COUNCIL_MENU_TOKEN      — read-only secret; it opens this route and nothing else
+ *   COUNCIL_MENU_TOKEN      — read-only secret; it opens this route and /api/lenses/goals (read, and POST of goals he kept on the board), nothing else
  *   COUNCIL_MENU_PLAYER_ID  — whose menu it reads
  *
  * The token comes as `Authorization: Bearer <token>` or as `?token=<token>`.
  * The query form is Wendell's ruling (board, `mm-menu-transport`, 2026-10-09):
  * the council reaches production only through the Vercel connector, which sends
  * a plain GET with no custom headers. The cost is that the token appears in
- * request logs; it can read this one menu and nothing else, and rotating it is
+ * request logs; it can read this one menu and his Lens goals, nothing else, and rotating it is
  * one env-var change.
  *
  * Optional query: ?date=YYYY-MM-DD for that day's menu; default is the latest sealed.
  * The response adds `goals`, his active Lens goals at read time, so the council
  * can bridge backlog items to goals the same way.
  */
-function givenToken(req: NextRequest): string | null {
-  const header = req.headers.get('authorization')
-  if (header?.startsWith('Bearer ')) return header.slice('Bearer '.length)
-  return req.nextUrl.searchParams.get('token')
-}
-
-function tokenMatches(token: string | null, secret: string): boolean {
-  if (!token) return false
-  const given = Buffer.from(token)
-  const expected = Buffer.from(secret)
-  return given.length === expected.length && timingSafeEqual(given, expected)
-}
-
 export async function GET(req: NextRequest) {
   const secret = process.env.COUNCIL_MENU_TOKEN
   const playerId = process.env.COUNCIL_MENU_PLAYER_ID

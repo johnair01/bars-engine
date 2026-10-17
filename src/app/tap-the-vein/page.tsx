@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { getToday, listPlayerCampaigns } from '@/actions/tap-the-vein'
+import { getSeedLibrary, getToday, listPlayerCampaigns } from '@/actions/tap-the-vein'
 import type { ElementKey } from '@/lib/ui/card-tokens'
 import { loadNextLensDomain } from '@/lib/lenses/onboarding-data'
 import { TapTheVeinRunner } from './TapTheVeinRunner'
@@ -34,7 +34,7 @@ export default async function TapTheVeinPage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
-  const [today, campaignsRes] = await Promise.all([getToday(), listPlayerCampaigns()])
+  const [today, campaignsRes, libraryRes] = await Promise.all([getToday(), listPlayerCampaigns(), getSeedLibrary()])
 
   if ('error' in today) {
     return (
@@ -63,6 +63,7 @@ export default async function TapTheVeinPage() {
       nationName={player.nation?.name ?? null}
       vibulons={vibulons}
       lensDomain={lensDomain}
+      seeds={'error' in libraryRes ? [] : libraryRes.seeds}
       campaigns={'error' in campaignsRes ? [] : campaignsRes.campaigns}
     />
   )

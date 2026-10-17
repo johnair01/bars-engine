@@ -99,6 +99,14 @@ ${inline(bodyMap)}
 // /ontology-game/cave: the Cave of Lessons, the same block work walked inside the body map (cave/DESIGN.md).
 // cave-kit.glb and spots.json are made by cave/build_kit.py, the stone tiles by cave/bake_tiles.py; all are committed, so this build needs no Blender.
 const caveJs = readFileSync(path.join(srcDir, 'cave', 'cave.js'), 'utf8');
+// Wendell's question sets for each daemon (daemons/questions.js): the shadow spirit's questions in the WAVE room.
+const daemonQuestionsJs = readFileSync(path.join(srcDir, 'daemons', 'questions.js'), 'utf8');
+// The Big Mind cave rides on the same page, opened from the WAVE room's Big Mind door (board dp-door).
+const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
+// The room built from a picture by cave/rooms/room.py, walked freely from the cave's first page (cave/rooms/README.md).
+const walkRoomJs = readFileSync(path.join(srcDir, 'cave', 'rooms', 'walk-room.js'), 'utf8');
+// The Council Board's way into the WAVE room (#wave=board) and the run's way back to the board (cave/board-wave.js).
+const boardWaveJs = readFileSync(path.join(srcDir, 'cave', 'board-wave.js'), 'utf8');
 const caveHtml = `<!doctype html>
 <html lang="en">
 <head>
@@ -114,7 +122,20 @@ const caveHtml = `<!doctype html>
 ${inline(bodyMap)}
 </script>
 <script>
+${inline(daemonQuestionsJs)}
+</script>
+<script>
 ${inline(caveJs)}
+</script>
+<script>
+${inline(walkRoomJs)}
+</script>
+<script>
+${inline(boardWaveJs)}
+</script>
+<script>window.__oagBigMindNoStart = true;</script>
+<script>
+${inline(bigMindJs)}
 </script>
 </body>
 </html>
@@ -122,7 +143,6 @@ ${inline(caveJs)}
 
 // /ontology-game/big-mind: the Big Mind cave, a fork of the Cave of Lessons that borrows its engine (bigmind/DESIGN.md).
 // It needs three.js and the body map (for where a part lives in the body), so no kit or spots file is copied.
-const bigMindJs = readFileSync(path.join(srcDir, 'bigmind', 'bigmind.js'), 'utf8');
 const bigMindHtml = `<!doctype html>
 <html lang="en">
 <head>
@@ -137,6 +157,9 @@ const bigMindHtml = `<!doctype html>
 <script>window.__oagCaveNoStart = true;</script>
 <script>
 ${inline(bodyMap)}
+</script>
+<script>
+${inline(daemonQuestionsJs)}
 </script>
 <script>
 ${inline(caveJs)}
@@ -158,6 +181,12 @@ copyFileSync(path.join(srcDir, 'cave', 'spots.json'), path.join(outDir, 'cave', 
 // The stone tiles, baked by cave/bake_tiles.py and committed.
 mkdirSync(path.join(outDir, 'cave', 'textures'), { recursive: true });
 for (const t of ['wet_stone', 'dry_stone', 'crystal_vein']) copyFileSync(path.join(srcDir, 'cave', 'textures', t + '.jpg'), path.join(outDir, 'cave', 'textures', t + '.jpg'));
+// The daemon bodies, baked by cave/bake_daemons.py from character.py's WARP figures and committed. cave.js fetches one
+// only when a scene asks for that daemon.
+mkdirSync(path.join(outDir, 'cave', 'daemons'), { recursive: true });
+for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) copyFileSync(path.join(srcDir, 'cave', 'daemons', d + '.glb'), path.join(outDir, 'cave', 'daemons', d + '.glb'));
+mkdirSync(path.join(outDir, 'cave', 'rooms'), { recursive: true });
+copyFileSync(path.join(srcDir, 'cave', 'rooms', 'wave-room', 'room.glb'), path.join(outDir, 'cave', 'rooms', 'wave-room.glb'));
 writeFileSync(path.join(outDir, 'index.html'), html);
 writeFileSync(path.join(outDir, 'body.html'), bodyHtml);
 copyFileSync(path.join(srcDir, 'body', 'figure.glb'), path.join(outDir, 'figure.glb'));
