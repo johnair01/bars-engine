@@ -297,3 +297,33 @@ Wendell, 2026-10-13: "I think we're almost to the point where we can merge the b
 now wears the Cave of Lessons' J1 stone (`K.stoneOf`, `K.tileStone`; the tiles load after the first frame) and every spirit
 carries a small light of its own in its colour. The Cave of Lessons has this cave's sit-down in place. The rest of the merge
 is in `cave/DESIGN.md`, "One map".
+
+## The daemon path: all seven chambers and the centre (13 and 14 October 2026)
+
+Wendell, 13 October 2026, 22:22: "you do W.A.V.E. to work though any emergent blockers that arise from trying to get past the
+figures until they let you pass. You would then do all of this for all 7 daemons until you reach the center - the
+player/vulnerable child". Pass `daemon-path1` (Six-faces-council), board positions `dp-seven`, `dp-pass-rule`, `dp-progress`,
+`dp-centre`. A first build put the path in `cave.js` as a separate route from the WAVE room (bars-engine #314, first version).
+Wendell, 14 October 2026, 00:37, turned that down: "we should be expanding the more fleshed out room ... If it DOES have new
+stuff we should be integrating it into the other artifact and making sure that the codebase reflects this". So the path is
+this cave, the one the WAVE room's Big Mind door opens (#313), and the separate route is gone.
+
+- **Seven chambers in the book's order** (ds-daemon-order A): Protector, Controller, Skeptic, Fixer, Emotional Body, Victim,
+  Damaged Self. Each runs the Protector's whole conversation: the meeting, the three permissions with the refusal path, the
+  body place and charge with the easing, both charges and the W.A.V.E., the questions with secretly speaking, the seat shift
+  and the three speaking turns, and keeping lines. The other six voices' job, what-they-keep-you-from and thanks cards are
+  `cave.js` `MEET_CARDS` (#301's meeting), passed through the kit; their meeting, refusal lines and fears are written from
+  their jobs (a choice). Every voice is asked the core three: its job, who it works for, its hours.
+- **Secretly speaking** widens to every daemon: any of the other six can be the one heard (`MEET_TELL`), and an open line is
+  heard against the voice in front of the player, so fixing is the Fixer's own job but a tell in the Controller's chamber.
+- **On into the next chamber.** At the end of each hallway the next figure waits at its chamber's mouth. "Walk into its
+  chamber" carries on the same visit with the spirits walking in; "Walk back up" leaves as before.
+- **A voice that has spoken walks on as a spirit** in its daemon's colour (dp-centre). One that only waited stays at its wall.
+- **Saving** adds `vi`, the chamber the place is at (0 to 6), and `centre`. A voice that keeps the way past the first chamber
+  is met again at its own chamber, not the Protector's. A save from before has no `vi` and reads as the first chamber.
+- **The centre.** Past the seventh chamber the way widens in warm light, and the child stands there: the player's faceless
+  figure, small. It is seen, not questioned. The voices that walked down stand round the child and the self, and the player can
+  sit down with the child.
+
+Not carried over from the first version: its third door in the WAVE room (#313's Big Mind door is the way in) and the walk
+cave's side passage from a figure (here a block is worked by sitting down, as the Big Mind cave already does).
