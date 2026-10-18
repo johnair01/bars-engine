@@ -1341,9 +1341,24 @@ await page.evaluate(() => localStorage.clear());
   ok(await page.locator('[data-bm-feel]').count() === 6 && await page.locator('[data-bm-feel="none"]').textContent() === 'No word yet' && await page.locator('[data-bm-feelline]').count() === 1 && await page.locator('[data-bm-decline]').count() === 1,
     'five feelings with their elements, No word yet as an equal answer, your own words, and Not now');
   await page.click('[data-bm-feel="metal"]');
+  // The family cloud (sic-family-cloud): the spirit is of the Protector's family, born a gas, its motes streaming out of the
+  // daemon's body toward the spirit's place, then gathered into the family's shape.
+  const born = await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector')[0], f = o && o.g.userData.form;
+    return f && { family: f.family, stage: f.stage, motes: f.motes, from: !!f.from, born: f.born, orb: !!o.g.children.find((c) => c.isMesh && c.geometry && c.geometry.type === 'SphereGeometry') }; });
+  ok(born && born.family === 'protector' && born.stage === 'gas' && born.motes === 150 && !born.orb, 'the meeting spirit is built as the Protector family\'s gas, motes in place of the orb: ' + JSON.stringify(born));
+  ok(born && born.from && born.born < 1, 'on its birth the motes stream from the daemon\'s body');
+  await page.waitForTimeout(500);
+  const near = await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector')[0], f = o.g.userData.form, L = o.g.children[0].userData.layers[0];
+    o.g.updateMatrixWorld(true); const p = L.pts.geometry.attributes.position.array, v = new (window.THREE.Vector3)(p[0], p[1], p[2]); L.pts.localToWorld(v);
+    return { born: f.born, toDaemon: f.from ? v.distanceTo(f.from) : null, daemonToSpirit: f.from ? f.from.distanceTo(o.g.position) : null, toSpirit: v.distanceTo(o.g.position) }; });
+  ok(near.born > 0 && near.born < 1 && near.toSpirit > 1, 'partway through its birth the motes are out between the daemon and the spirit: ' + JSON.stringify(near));
+  await page.waitForTimeout(2200);
+  const after = await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector')[0], L = o.g.children[0].userData.layers[0], p = L.pts.geometry.attributes.position.array;
+    o.g.updateMatrixWorld(true); const v = new (window.THREE.Vector3)(p[0], p[1], p[2]); L.pts.localToWorld(v); return { born: o.g.userData.form.born, toSpirit: v.distanceTo(o.g.position) }; });
+  ok(after.born === 1 && after.toSpirit < 1, 'the motes have moved from the daemon into the spirit\'s cloud: ' + JSON.stringify({ near, after }));
   ok(await waitStep0('meet') && /A spirit comes out of you and walks at your side: Fear \(Metal\), from meeting the Protector\./.test(await page.textContent('[data-bm-modal]')), 'your answer spawns a spirit that walks with you');
   ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector'); return o.length === 1 && o[0].name === 'Fear' && o[0].element === 'metal' && !o[0].ally; }), 'it is the spirit from meeting the Protector, in its element\'s colour');
-  ok(JSON.stringify((await save()).voices.protector.spirit) === '{"name":"Fear","element":"metal"}', 'its name and element are kept with the voice, never as a trust move');
+  ok(JSON.stringify((await save()).voices.protector.spirit) === '{"name":"Fear","element":"metal","family":"protector","stage":"gas"}', 'its name, element, family and stage are kept with the voice, never as a trust move');
   ok(!/You didn't come alone/.test(await page.textContent('[data-bm-modal]')), 'the voice does not count its own meeting spirit as company you brought');
   await page.click('[data-bm-reply="hear"]'); await page.click('[data-bm-ask="speak"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="speak"]');
   await page.click('[data-bm-place="Chest"]'); await page.fill('[data-bm-range]', '7'); await page.click('[data-bm-charged]');
