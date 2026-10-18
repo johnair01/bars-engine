@@ -1424,6 +1424,9 @@
       if (d.walker || !body.walk) return;
       var J = body.joints, bones = J.map(function (r) { var b = new THREE.Bone(); b.name = r[0]; b.position.fromArray(r[2]); b.quaternion.fromArray(r[3]); return b; });
       J.forEach(function (r, i) { if (r[1] >= 0) bones[r[1]].add(bones[i]); });
+      // the chain alone, before the skeleton is made, so its inverses are the rest pose (as bodyRig does); left at the
+      // identity, every vertex is carried off by its bones' whole rest turn and the figure blows up into shards
+      J.forEach(function (r, i) { if (r[1] < 0) bones[i].updateMatrixWorld(true); });
       var geo = body.geo.clone(); geo.setAttribute("color", new THREE.BufferAttribute(bodyColors(THREE, [0, 0, 0, d.look.color], body), 3));
       var mat = new THREE.MeshStandardMaterial({ vertexColors: true, skinning: true, roughness: 0.75, transparent: true, emissive: d.look.color, emissiveIntensity: 0.1 });
       var m = new THREE.SkinnedMesh(geo, mat);
