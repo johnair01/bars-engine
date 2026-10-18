@@ -9,7 +9,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { currentPlayer, whoIs, write } from '@/lib/between/store'
-import { invitedView, parsePath, type Doc, type Op } from '@/lib/between/rules'
+import { invitedView, itemFor, parsePath, type Doc, type Op } from '@/lib/between/rules'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +33,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ gar
   const res = await write(gardenId, found.who, target, op, data)
   if (!res.ok) return NextResponse.json({ error: res.error, code: res.status === 403 ? 'permission_denied' : 'invalid_argument' }, { status: res.status })
   // Someone who only holds the invite link asked to join: they get back the spark as they may see it, never the hopes.
-  const doc = !found.who.member && target.table === 'garden' && res.doc ? invitedView(res.doc) : res.doc
+  // A sealed charge the writer has not opened comes back without its words, as the poll sends it.
+  const doc = !found.who.member && target.table === 'garden' && res.doc ? invitedView(res.doc)
+    : target.table === 'items' && res.doc ? itemFor(player.id, res.doc) : res.doc
   return NextResponse.json({ ok: true, doc })
 }

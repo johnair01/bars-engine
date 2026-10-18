@@ -102,6 +102,18 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
   }
 }
 
+/**
+ * An item as `me` may see it. A sealed charge someone else offered keeps its words on the server until `me` opens it:
+ * the page used to hide them only on screen, so they reached the other person's device (council cc-seal-fix-first).
+ */
+export function itemFor(me: string, item: Doc): Doc {
+  if (!item.sealed || item.by === me || (isObj(item.opened) && item.opened[me])) return item
+  const out: Doc = { ...item, text: '' }
+  if (isObj(item.history))
+    out.history = Object.fromEntries(Object.entries(item.history).map(([k, e]) => [k, isObj(e) && e.by === item.by && 'text' in e ? { ...e, text: '' } : e]))
+  return out
+}
+
 /** What someone holding only the invite link sees of the garden: the spark, who started it, never the hopes. */
 export function invitedView(g: Doc): Doc {
   const setup = isObj(g.setup) ? { who: g.setup.who ?? null, kind: g.setup.kind ?? null } : null

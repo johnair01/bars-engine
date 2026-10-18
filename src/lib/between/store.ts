@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import { cookies } from 'next/headers'
 import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
-import { type Doc, type Op, type Target, type Who, invitedView, mayWrite, merge } from './rules'
+import { type Doc, type Op, type Target, type Who, invitedView, itemFor, mayWrite, merge } from './rules'
 
 /**
  * The Between's Postgres store (six-faces-council bh-move-to-bars-engine, 2026-10-17). The page polls one snapshot
@@ -58,7 +58,7 @@ export async function snapshot(gardenId: string, who: Who) {
     Object.fromEntries(rows.map(r => [key(r), asDoc(r.data)]))
   return {
     member: true, invite: g.inviteToken, garden: data, names, peers,
-    items: byId(items, r => r.id), spirits: byId(spirits, r => r.id), daemons: byId(daemons, r => r.id),
+    items: Object.fromEntries(items.map(r => [r.id, itemFor(who.playerId, asDoc(r.data))])), spirits: byId(spirits, r => r.id), daemons: byId(daemons, r => r.id),
     shown: byId(shown, r => r.playerId), mine: byId(mine, r => r.key),
   }
 }
