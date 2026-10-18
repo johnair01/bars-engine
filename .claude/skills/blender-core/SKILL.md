@@ -10,6 +10,9 @@ metadata:
 
 # Blender Core (5.2 LTS+)
 
+> bars-engine cloud: read the header of `tools/blender-cloud/skill_run.py` before anything else here. It lists this
+> container's limits (no EGL, no meshopt) and the three calls a web prop needs, so most tasks need no other SKILL.md.
+
 ## Route to the specialized skill
 | Task | Skill |
 |---|---|
