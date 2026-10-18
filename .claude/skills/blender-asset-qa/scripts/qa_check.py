@@ -2,7 +2,7 @@
 
 Pass the objects of ONE asset (they are checked together: islands far from all others = floating).
 Usage:
-  blender -b f.blend -P qa_check.py -- [--objects A B] [--profile game|render|print|roblox]
+  blender -b f.blend -P qa_check.py -- [--objects A B] [--profile game|render|print|roblox|vertexcolor]
       [--eps 0.001] [--tol 0.002] [--no-modifiers] [--max-tris 300000]
   MCP: import qa_check; print(qa_check.run(objects=["Chair"], profile="game"))
 Returns {"pass": bool, "errors": [...], "warnings": [...], "objects": {name: metrics}}.
@@ -28,7 +28,11 @@ PROFILES = {
     "render": dict(zf="e", fl="e", inv="w", inc="w", nm=None, bd=None, dg="w", dup="w", ng=None, sc="w", uv="w", wt="w"),
     "print":  dict(zf="e", fl="e", inv="e", inc="e", nm="e", bd="e", dg="e", dup="e", ng=None, sc="w", uv=None, wt=None),
     "roblox": dict(zf="e", fl="e", inv="e", inc="e", nm="w", bd="w", dg="e", dup="w", ng="e", sc="e", uv="e", wt="e"),
+    # vertex-coloured figures: colour lives in a colour attribute, so no UV is expected, and small
+    # detached islands are intended dust/spark particles (listed as one warning, not errors)
+    "vertexcolor": dict(zf="e", fl="e", inv="e", inc="e", nm="w", bd=None, dg="e", dup="w", ng="w", sc="e", uv=None, wt="e"),
 }
+PARTICLE_VERTS = {"vertexcolor": 64}    # islands up to this many verts count as particles
 TRI_LIMIT = {"roblox": 20000}
 
 
@@ -216,6 +220,10 @@ def run(objects=None, profile="game", eps=0.001, tol=0.002, no_modifiers=False, 
             bm_l.from_mesh(ob.data)
             m.update(_uv_stats(ob, bm_l))
             bm_l.free()
+            if profile == "vertexcolor":
+                m["color_attributes"] = len(ob.data.color_attributes)
+                if not m["color_attributes"] and m["uv_maps"] == 0:
+                    warnings.append(f"{ob.name}: no colour attribute and no UV map (nothing carries colour)")
             if m["uv_maps"] == 0:
                 flag("uv", f"{ob.name}: no UV map")
             else:
@@ -327,6 +335,12 @@ def run(objects=None, profile="game", eps=0.001, tol=0.002, no_modifiers=False, 
                 p = loc + d * 1e-5
             rec = {"object": info["ob"], "island_verts": len(vs), "center": bx.r(tuple(info["center"]), 3)}
             (enclosed if hits % 2 == 1 else floating).append(rec)
+    pmax = PARTICLE_VERTS.get(profile, 0)
+    particles = [f for f in floating if f["island_verts"] <= pmax]
+    if particles:
+        floating = [f for f in floating if f["island_verts"] > pmax]
+        warnings.append(f"{len(particles)} small detached islands treated as particles "
+                        f"(<= {pmax} verts each), e.g. {[p_['center'] for p_ in particles[:3]]}")
     for f in floating:
         flag("fl", f"floating/detached part in {f['object']} ({f['island_verts']} verts at {f['center']})")
     if enclosed:
