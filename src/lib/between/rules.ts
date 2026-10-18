@@ -3,9 +3,11 @@
  * write what. Kept pure so the tests can walk every rule without Postgres (src/lib/between/__tests__/rules.test.ts).
  *
  * The 3D page (public/between/garden.js) writes the same paths it wrote to the claude.ai artifact store:
- * garden/main, items/<id>, spirits/<id>, daemons/<id>, shown/<player id>, data/users/<player id>/garden|spark.
+ * garden/main, items/<id>, spirits/<id>, daemons/<id>, shown/<player id>, data/users/<player id>/garden|spark|pouch.
  * Six-faces-council relationship-creature callsheet, positions bh-move-to-bars-engine and the rc-* rulings.
  */
+
+import { ALL_CANONICAL_MOVES } from '@/lib/quest-grammar/move-engine'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
 export type Doc = { [k: string]: Json }
@@ -14,7 +16,10 @@ export type Target =
   | { table: 'garden' }
   | { table: 'items' | 'spirits' | 'daemons'; id: string }
   | { table: 'shown'; playerId: string }
-  | { table: 'privates'; playerId: string; key: 'garden' | 'spark' }
+  | { table: 'privates'; playerId: string; key: PrivateKey }
+
+const PRIVATE_KEYS = ['garden', 'spark', 'pouch'] as const
+type PrivateKey = (typeof PRIVATE_KEYS)[number]
 
 export type Op = 'set' | 'update' | 'delete'
 
@@ -28,8 +33,8 @@ export function parsePath(path: unknown): Target | null {
     if (p[0] === 'items' || p[0] === 'spirits' || p[0] === 'daemons') return { table: p[0], id: p[1] }
     if (p[0] === 'shown') return { table: 'shown', playerId: p[1] }
   }
-  if (p.length === 4 && p[0] === 'data' && p[1] === 'users' && ID.test(p[2]) && (p[3] === 'garden' || p[3] === 'spark'))
-    return { table: 'privates', playerId: p[2], key: p[3] }
+  if (p.length === 4 && p[0] === 'data' && p[1] === 'users' && ID.test(p[2]) && (PRIVATE_KEYS as readonly string[]).includes(p[3]))
+    return { table: 'privates', playerId: p[2], key: p[3] as PrivateKey }
   return null
 }
 
@@ -90,6 +95,9 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
     case 'items':
       if (op === 'set' && (!data || data.by !== me)) return no(400, 'An item is planted by whoever sets it down.')
       if (op !== 'set' && !cur) return no(404, 'That is no longer in the garden.')
+      if (op === 'update' && data && 'by' in data && data.by !== cur!.by) return no(400, 'Who made it does not change.')
+      if (op === 'set' && cur && cur.by !== me) return no(400, 'Who made it does not change.')
+      if (data?.kind === 'lantern' || cur?.kind === 'lantern') return lanternWrite(me, op, data, cur)
       return yes
     case 'spirits':
     case 'daemons':
@@ -97,10 +105,83 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (!cur) return no(404, 'That is no longer in the garden.')
       return cur.owner === me ? yes : no(403, 'It stays its owner\'s; you can greet it.')
     case 'shown':
-    case 'privates':
       return target.playerId === me ? yes : no(403, 'That is the other person\'s own.')
+    case 'privates':
+      if (target.playerId !== me) return no(403, 'That is the other person\'s own.')
+      return target.key === 'pouch' && op !== 'delete' ? pouchWrite(op === 'set' ? data! : merge(cur ?? {}, data!)) : yes
   }
 }
+
+/* ---------- the hearth: embers and lanterns (council pass crafting-charge1, slice 1) ----------
+ * Working a charge with one of the fifteen moves leaves an ember in the maker's private pouch. The ember stores the
+ * move; its element is the move's own (move-engine.ts), so a move from another element is refused (cc-move-sets-element).
+ * The ember holds no words, and where its charge came from is not recorded, so an unoffered charge makes the same ember
+ * as an offered one. Its glow (the charge's intensity, or none) is private: it never reaches a shared row
+ * (cc-pouch-private, cc-intensity-look). A lantern made from it is a shared item and an offer: only its maker moves, takes
+ * back or composts it, and the other person can only add their own yes (cc-lantern-offer). */
+
+export const ELEMENTS = ['wood', 'fire', 'earth', 'metal', 'water'] as const
+type Element = (typeof ELEMENTS)[number]
+
+/** Each move's element pair; a transcend move stays in its element. */
+export const MOVES: Record<string, { name: string; from: Element; to: Element }> = Object.fromEntries(
+  ALL_CANONICAL_MOVES.map(m => {
+    const from = (m.fromElement ?? m.element) as Element
+    return [m.id, { name: m.name, from, to: (m.toElement ?? from) as Element }]
+  }),
+)
+
+const EMBER_KEYS = new Set(['move', 'feel', 'glow', 'state', 'at', 'lantern'])
+const LANTERN_KEYS = new Set(['kind', 'by', 'hue', 'element', 'pos', 'yes', 'status', 'at', 'history'])
+const LOG_KEYS = new Set(['act', 'by', 'at'])
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
+
+/** May this pouch stand? Every ember names a real move, matches the feeling it was worked from, and holds no words. */
+export function pouchWrite(pouch: Doc): Verdict {
+  for (const k of Object.keys(pouch)) if (k !== 'embers') return no(400, 'The pouch holds embers only.')
+  const embers = pouch.embers ?? {}
+  if (!isObj(embers)) return no(400, 'The pouch holds embers only.')
+  for (const e of Object.values(embers)) {
+    if (e === null) continue
+    if (!isObj(e)) return no(400, 'An ember is a small thing.')
+    for (const k of Object.keys(e)) if (!EMBER_KEYS.has(k)) return no(400, 'An ember keeps no words.')
+    const m = typeof e.move === 'string' ? MOVES[e.move] : undefined
+    if (!m) return no(400, 'Choose one of the fifteen moves.')
+    if (e.feel != null && e.feel !== m.from) return no(400, 'That move starts from another feeling.')
+    if (e.glow != null && !(isNum(e.glow) && Number.isInteger(e.glow) && e.glow >= 1 && e.glow <= 5)) return no(400, 'Glow is 1 to 5, or none.')
+    if (e.state !== 'held' && e.state !== 'lit') return no(400, 'An ember is held or lit.')
+  }
+  return yes
+}
+
+const logOk = (h: Json | undefined, who?: string) =>
+  h == null || (isObj(h) && Object.values(h).every(e => e === null || (isObj(e) && Object.keys(e).every(k => LOG_KEYS.has(k)) && (!who || e.by === who))))
+
+function lanternWrite(me: string, op: Op, data: Doc | null, cur: Doc | null): Verdict {
+  const maker = cur ? cur.by : data?.by
+  if (op === 'delete') return maker === me ? yes : no(403, 'Only its maker takes a lantern back.')
+  if (maker !== me) {
+    // The other person answers the offer: their own yes (or taking it back), and a line in the log in their name.
+    const keys = Object.keys(data!)
+    if (!keys.every(k => k === 'yes' || k === 'history')) return no(400, 'A lantern stays its maker\'s; you can welcome it.')
+    const y = data!.yes
+    if (y !== undefined && !(isObj(y) && Object.keys(y).every(k => k === me) && Object.values(y).every(v => v === null || isNum(v))))
+      return no(400, 'You can only answer for yourself.')
+    return logOk(data!.history, me) ? yes : no(400, 'The log names acts, nothing more.')
+  }
+  const next = op === 'set' ? data! : merge(cur ?? {}, data!)
+  for (const k of Object.keys(next)) if (!LANTERN_KEYS.has(k)) return no(400, 'A lantern carries no words and no glow of the feeling.')
+  if (next.kind !== 'lantern') return no(400, 'A lantern stays a lantern.')
+  if (next.element != null && !(ELEMENTS as readonly string[]).includes(next.element as string)) return no(400, 'That is not an element.')
+  if (!isObj(next.pos) || !isNum(next.pos.x) || !isNum(next.pos.z)) return no(400, 'Set it somewhere in the hollow.')
+  if (op !== 'set' && data && 'yes' in data) return no(400, 'Only the other person says yes.')
+  if (op === 'set' && isObj(next.yes) && Object.keys(next.yes).length) return no(400, 'Only the other person says yes.')
+  return logOk(next.history) ? yes : no(400, 'The log names acts, nothing more.')
+}
+
+/** A lantern counts toward the Between once, when someone other than its maker has said yes. */
+export const lanternLit = (it: Doc) =>
+  it.kind === 'lantern' && isObj(it.yes) && Object.entries(it.yes).some(([k, v]) => k !== it.by && isNum(v))
 
 /**
  * An item as `me` may see it. A sealed charge someone else offered keeps its words on the server until `me` opens it:

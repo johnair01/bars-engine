@@ -103,6 +103,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .sheet .choice button { background: var(--soft); color: var(--ink); border-color: var(--line); text-align: left; border-radius: 12px; font-weight: 400; }
 .sheet .choice button b { display: block; font-family: var(--display); }
 .sheet .close { justify-self: end; }
+/* the hearth: embers are small glowing dots; a chosen button is outlined */
+.sheet .choice button.on, .sheet .dots button.on { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.sheet .dots button { background: var(--soft); color: var(--ink); border-color: var(--line); min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; padding: 6px 10px; }
+.ember { display: inline-block; width: var(--s, 14px); height: var(--s, 14px); border-radius: 50%; vertical-align: middle; margin-right: 6px;
+  background: radial-gradient(circle at 40% 38%, #fff6e0 0 18%, var(--c, #e2a85c) 55%, transparent 72%); box-shadow: 0 0 calc(var(--s, 14px) * .6) var(--c, #e2a85c); }
+.sheet .dots .ember { margin: 0; }
 .sheet .credit { font-size: .8rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
 .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.25); z-index: 9; }
 
