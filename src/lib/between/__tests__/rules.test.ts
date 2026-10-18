@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { carriedGarden, invitedView, mayWrite, merge, parsePath, plantedGarden, type Doc, type Who } from '@/lib/between/rules'
+import { carriedGarden, invitedView, itemFor, mayWrite, merge, parsePath, plantedGarden, type Doc, type Who } from '@/lib/between/rules'
 
 const A = 'playerA', B = 'playerB', C = 'playerC'
 const member = (playerId: string): Who => ({ playerId, member: true, invited: false })
@@ -80,7 +80,22 @@ function testCarry() {
   assert.equal(carriedGarden(A, { ...art, phase: 'between' }, 'x'), null)
 }
 
+function testSealedWordsStayOnTheServer() {
+  // cc-seal-fix-first (architect T8): B's poll holds none of A's sealed words until B opens it.
+  const charge: Doc = { kind: 'charge', text: 'what I worked through', by: A, sealed: true, opened: {}, status: 'offered',
+    history: { h1: { by: A, act: 'offered a charge', text: 'what I worked through' }, h2: { by: B, act: 'let it pass', text: 'mine' } } }
+  const toB = itemFor(B, charge)
+  assert.equal(toB.text, '')
+  assert.ok(!JSON.stringify(toB).includes('worked through'), 'no copy of the words anywhere in what B gets')
+  assert.equal((toB.history as Doc).h2 && ((toB.history as Doc).h2 as Doc).text, 'mine', 'B keeps their own words')
+  assert.equal(itemFor(A, charge), charge, 'the maker sees their own')
+  assert.equal(itemFor(B, { ...charge, opened: { [B]: true } }).text, 'what I worked through', 'opened, it reads')
+  assert.equal(itemFor(B, { ...charge, sealed: false }).text, 'what I worked through', 'unsealed offerings read as before')
+  assert.equal(charge.text, 'what I worked through', 'the stored item is left alone')
+}
+
 testPaths()
+testSealedWordsStayOnTheServer()
 testMergeMatchesThePage()
 testStrangersAndInvitees()
 testWelcome()
