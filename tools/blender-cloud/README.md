@@ -27,6 +27,7 @@ before publishing.** The orientation and scale of a new asset are found by eye: 
 
 | File | Job |
 |---|---|
+| `skill_run.py` | Runs a vendored blender-skills script (`.claude/skills/blender-*`, e.g. `blender-asset-qa/qa_check.py`) under the bpy package, on a `--glb` or `--blend`. |
 | `blenderkit_fetch.py` | Search, take the Nth free result, download one file type. CC0 by default. `--selftest` checks the whole API path. Writes a `.json` sidecar with name, author, licence. |
 | `prepare_asset.py` | Decode Draco or meshopt compression so `bpy` can import the GLB. |
 | `scene.py` | Import the asset, decimate to a triangle budget, cap textures, build the six-box figure with a 7-bone rig and a 48-frame walk, render, export, report. |
