@@ -551,6 +551,16 @@ stands unless he flips it.
 - **The hooks in cave.js** `talk321`: `o.beforeOne(go, stay)` and `o.cards(ph, voice)`, both optional, so the WAVE room
   and the Cave of Lessons are unchanged.
 
+## The let-go after a willing 3-2-1 (17 October 2026)
+
+When a 3-2-1 ends and the voice is willing (its charge at 3 or below, all three kinds of trust seen, or already willing),
+the panel steps away and its body plays its let-go: it eases back to its held shape, then its Integrate action (cave.js
+`integrateBody`, bars-engine #356) opens that shape into its honored form, the one Wendell approved for each daemon, and it
+stands willing from there. The cave says "The Protector lets go. This is how it stands when it is honored." and the
+chamber goes on to its ready step. It plays once a visit, after any easing, never while a fall is not yet owned, and only
+after a 3-2-1 that was had (a skipped one does not count). From its seat the voice is out of sight, so it lets go when it
+is back at its post, before it is asked to let the player pass. The Self button pauses it like the easing.
+
 ## The approach check-in (build 4, pass daemon-meeting1, amended on dmt-body-blockers)
 
 At the end of each hallway, before the shut mouth, up to four skippable asks in order: the body (one card, two rows: "What does

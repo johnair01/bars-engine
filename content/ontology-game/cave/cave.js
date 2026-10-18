@@ -1378,7 +1378,7 @@
   // Let a worn body go: its Integrate action (character.py INTEGRATE, every daemon since Wendell's "we need 'let go' stances
   // for all the daemons", 16 October 2026) moves its held shape into its honored form. When the action ends the body stands
   // honored and moves by its stance again, so a scene sets a stance that stays honored (repaired, willing) as it calls this.
-  // No scene calls it yet. Returns its length in seconds, or 0 when the body has none.
+  // Big Mind plays it when a 3-2-1 ends with the voice willing (bigmind.js letGoVoice). Returns its length in seconds, or 0 when the body has none.
   function integrateBody(g) {
     var rig = g && g.userData.rig;
     if (!rig || !rig.integrate) return 0;
