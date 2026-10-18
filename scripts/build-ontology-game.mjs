@@ -185,6 +185,9 @@ for (const t of ['wet_stone', 'dry_stone', 'crystal_vein']) copyFileSync(path.jo
 // only when a scene asks for that daemon.
 mkdirSync(path.join(outDir, 'cave', 'daemons'), { recursive: true });
 for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) copyFileSync(path.join(srcDir, 'cave', 'daemons', d + '.glb'), path.join(outDir, 'cave', 'daemons', d + '.glb'));
+// The player's own figure: Average Dusk walking a CMU mocap clip (rig_mocap, bake_daemons.py --walker), worn over the avatar.
+mkdirSync(path.join(outDir, 'cave', 'player'), { recursive: true });
+copyFileSync(path.join(srcDir, 'cave', 'player', 'walker.glb'), path.join(outDir, 'cave', 'player', 'walker.glb'));
 mkdirSync(path.join(outDir, 'cave', 'rooms'), { recursive: true });
 copyFileSync(path.join(srcDir, 'cave', 'rooms', 'wave-room', 'room.glb'), path.join(outDir, 'cave', 'rooms', 'wave-room.glb'));
 writeFileSync(path.join(outDir, 'index.html'), html);
