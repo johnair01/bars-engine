@@ -1563,6 +1563,65 @@
     }
     p.needsUpdate = true; u.sparks.geometry.setDrawRange(0, n);
   }
+  // The 0 to 10 sliders, drawn as a charge dial (gd-web-bits): a ring that fills from calm green toward a full red, a knob the
+  // thumb drags round it, and the reading in its middle. The range input stays inside it, unseen, so arrow keys, a screen
+  // reader and the test checks work it as before; a drag or a tap on the ring sets the input and sends its input event, and the
+  // dial redraws from that event, so the input is the one truth. o = { low, high (the end words), read (the reading's element,
+  // else one is made), text(v) (the reading's words), hue (false keeps one colour, for a dial that is not a charge) }.
+  var DIAL_A0 = Math.PI * 0.75, DIAL_SWEEP = Math.PI * 1.5, DIAL_R = 52, DIAL_C = 70, SVGNS = "http://www.w3.org/2000/svg";
+  function dialHex(f) { // calm to full: green, gold, coral
+    var a = [[106, 200, 160], [240, 200, 100], [226, 106, 78]], i = f < 0.5 ? 0 : 1, k = f < 0.5 ? f * 2 : (f - 0.5) * 2;
+    return "rgb(" + a[i].map(function (c, j) { return Math.round(c + (a[i + 1][j] - c) * k); }).join(",") + ")";
+  }
+  function dial(inp, o) {
+    o = o || {};
+    var lo = +inp.min || 0, hi = +inp.max || 10;
+    function sv(tag, a) { var e = document.createElementNS(SVGNS, tag); Object.keys(a).forEach(function (k) { e.setAttribute(k, a[k]); }); return e; }
+    function pt(f, r) { var a = DIAL_A0 + DIAL_SWEEP * f; return (DIAL_C + r * Math.cos(a)).toFixed(1) + " " + (DIAL_C + r * Math.sin(a)).toFixed(1); }
+    function arc(f) { return "M" + pt(0, DIAL_R) + " A" + DIAL_R + " " + DIAL_R + " 0 " + (DIAL_SWEEP * f > Math.PI ? 1 : 0) + " 1 " + pt(f, DIAL_R); }
+    var g = sv("svg", { viewBox: "0 0 140 128", class: "oagc-dial-ring", "aria-hidden": "true" });
+    g.appendChild(sv("path", { d: arc(1), class: "oagc-dial-track" }));
+    for (var t = 0; t <= hi - lo; t++) { var tf = t / (hi - lo), p0 = pt(tf, DIAL_R + 10).split(" "), p1 = pt(tf, DIAL_R + (t % 5 ? 13 : 16)).split(" "); g.appendChild(sv("line", { x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1], class: "oagc-dial-tick" })); }
+    var fill = sv("path", { class: "oagc-dial-fill" }), knob = sv("circle", { r: "9", class: "oagc-dial-knob" });
+    g.appendChild(fill); g.appendChild(knob);
+    var read = o.read || el("b", { class: "oagc-dial-num" });
+    var mid = el("div", { class: "oagc-dial-mid" }, [read]);
+    if (o.low != null) g.appendChild(sv("text", { x: "22", y: "126", class: "oagc-dial-end" })).textContent = o.low;
+    if (o.high != null) g.appendChild(sv("text", { x: "118", y: "126", class: "oagc-dial-end" })).textContent = o.high;
+    inp.classList.add("oagc-dial-input");
+    var box = el("div", { class: "oagc-dial" }, [g, mid, inp]);
+    function draw() {
+      var v = +inp.value, f = (v - lo) / (hi - lo), col = o.hue === false ? "#9cc4ff" : dialHex(f), c = pt(f, DIAL_R).split(" ");
+      fill.setAttribute("d", f > 0 ? arc(f) : "M" + pt(0, DIAL_R) + " L" + pt(0, DIAL_R)); fill.style.stroke = col;
+      knob.setAttribute("cx", c[0]); knob.setAttribute("cy", c[1]); knob.style.stroke = col;
+      if (!o.read || o.text) read.textContent = (o.text || String)(v);
+      box.setAttribute("data-dial-value", String(v));
+    }
+    function setFrom(ev) {
+      var r = g.getBoundingClientRect(), x = (ev.clientX - r.left) * 140 / r.width - DIAL_C, y = (ev.clientY - r.top) * 128 / r.height - DIAL_C;
+      var a = Math.atan2(y, x) - DIAL_A0; a = ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      if (a > DIAL_SWEEP) a = a - DIAL_SWEEP < 2 * Math.PI - a ? DIAL_SWEEP : 0; // the gap at the bottom snaps to the nearer end
+      var v = Math.round(lo + (hi - lo) * a / DIAL_SWEEP);
+      if (String(v) !== inp.value) { inp.value = String(v); inp.dispatchEvent(new Event("input", { bubbles: true })); inp.dispatchEvent(new Event("change", { bubbles: true })); }
+    }
+    var held = null;
+    box.addEventListener("pointerdown", function (ev) { held = ev.pointerId; try { box.setPointerCapture(held); } catch (e) { /* an old browser keeps the drag inside the dial */ } setFrom(ev); ev.preventDefault(); });
+    box.addEventListener("pointermove", function (ev) { if (held === ev.pointerId) setFrom(ev); });
+    function up(ev) { if (held === ev.pointerId) { held = null; try { inp.focus({ preventScroll: true }); } catch (e) { /* focus is a nicety */ } } }
+    box.addEventListener("pointerup", up); box.addEventListener("pointercancel", up);
+    inp.addEventListener("input", draw); inp.addEventListener("change", draw);
+    draw();
+    return box;
+  }
+  // A word to the player that used to be a browser alert box: a line at the foot of the screen, read out (role status, or
+  // role alert for a failure), gone by itself after a while or at a tap. One at a time; a new one replaces the last.
+  function notice(text, failed) {
+    var old = document.querySelector("[data-oag-notice]"); if (old) old.remove();
+    var n = el("div", { class: "oagc-notice" + (failed ? " failed" : ""), role: failed ? "alert" : "status", "data-oag-notice": failed ? "failed" : "" }, [el("span", { text: text }), el("button", { type: "button", "aria-label": "Close", text: "×", onclick: function () { n.remove(); } })]);
+    document.body.appendChild(n);
+    setTimeout(function () { n.remove(); }, failed ? 12000 : 6000);
+    return n;
+  }
   // Allow (Wendell, 11 October 2026): "When you are allowing I want the creature to get a bit bigger. I want peopel to be able to
   // decide how large it is gets via slider and how bright it can get in its emotional color." a = { grow, bright }, each 0 to 10.
   // grow is how much larger it gets (0 its own size, 10 twice it); bright is the most it can glow, which the charge fills.
@@ -1572,9 +1631,9 @@
       ["bright", "How bright its colour can get", function (v) { return v + " of 10"; }]].map(function (q) {
       var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "aria-label": q[1] }); inp.setAttribute(attr, q[0]);
       inp.value = a[q[0]];
-      var out = el("span", { class: "oagc-read", text: q[2](a[q[0]]) }); out.setAttribute(attr + "-read", q[0]);
-      inp.addEventListener("input", function () { a[q[0]] = +inp.value; out.textContent = q[2](a[q[0]]); if (onChange) onChange(); });
-      return el("div", {}, [el("p", { class: "oagc-note", text: q[1] }), el("div", { class: "oagc-slide" }, [inp, out])]);
+      var out = el("span", { class: "oagc-read" }); out.setAttribute(attr + "-read", q[0]);
+      inp.addEventListener("input", function () { a[q[0]] = +inp.value; if (onChange) onChange(); });
+      return el("div", { class: "oagc-dialcol" }, [el("p", { class: "oagc-note", text: q[1] }), dial(inp, { read: out, text: q[2], low: "0", high: "10" })]);
     });
   }
   // How charged a creature is, 0 to 10, from its 3-2-1: the reading before while it is worked, the reading after once given.
@@ -1685,9 +1744,9 @@
     function slider(which) {
       var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "data-cave-321-charge": which, "aria-label": "Charge, 0 to 10" });
       inp.value = t[which];
-      var out = el("span", { class: "oagc-read", "data-cave-321-read": which, text: t[which] + " of 10" });
-      inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; });
-      return el("div", { class: "oagc-slide" }, [inp, out]);
+      var out = el("span", { class: "oagc-read", "data-cave-321-read": which });
+      inp.addEventListener("input", function () { t[which] = +inp.value; });
+      return dial(inp, { read: out, text: function (v) { return v + " of 10"; }, low: "calm", high: "full" });
     }
     function toOne() {
       if (!o.beforeOne) { t.phase = 1; o.redraw(); return; }
@@ -1800,6 +1859,15 @@
     ".oagc-compose{display:flex;gap:.35rem;margin-top:.4rem}.oagc-compose input{flex:1;min-width:0;min-height:44px;padding:0 .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(20,20,40,.9);color:#f4f4fa;font-size:16px}" +
     ".oagc-compose button{min-width:44px;padding:.5rem}" +
     ".oagc-slide{display:flex;align-items:center;gap:.6rem;margin:.4rem 0}.oagc-slide input{flex:1;min-height:44px}.oagc-read{white-space:nowrap;font-size:.9rem;color:#fff1b0}" +
+    ".oagc-dial{position:relative;width:min(180px,100%);margin:.3rem auto;touch-action:none;cursor:pointer;-webkit-user-select:none;user-select:none}.oagc-dial-ring{display:block;width:100%;height:auto;overflow:visible}" +
+    ".oagc-dial-track{fill:none;stroke:rgba(255,255,255,.14);stroke-width:12;stroke-linecap:round}.oagc-dial-fill{fill:none;stroke-width:12;stroke-linecap:round}" +
+    ".oagc-dial-tick{stroke:rgba(255,255,255,.35);stroke-width:1.5}.oagc-dial-knob{fill:#fff1d0;stroke-width:4}.oagc-dial-end{fill:#aab0c4;font-size:11px;text-anchor:middle}" +
+    ".oagc-dial-mid{position:absolute;left:0;right:0;top:44%;transform:translateY(-50%);text-align:center;pointer-events:none;font-size:1.05rem;color:#fff1b0;font-weight:600}.oagc-dial-mid .oagc-read{font-size:1.05rem}" +
+    ".oagc-dial-input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;pointer-events:none}" +
+    ".oagc-dial:focus-within{outline:2px solid #fff1b0;outline-offset:4px;border-radius:12px}" +
+    ".oagc-dialcol{display:inline-block;vertical-align:top;width:calc(50% - .4rem);margin-right:.4rem;text-align:center}" +
+    ".oagc-notice{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));z-index:2000;display:flex;align-items:center;gap:.5rem;max-width:min(92vw,420px);padding:.55rem .6rem .55rem .9rem;border-radius:12px;background:rgba(16,18,36,.94);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font:14px/1.35 -apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.45)}" +
+    ".oagc-notice.failed{border-color:rgba(226,106,78,.7)}.oagc-notice button{min-width:44px;min-height:44px;background:none;border:none;color:#fff1d0;font-size:1.3rem;cursor:pointer}" +
     ".oagc-note{font-size:.8rem!important;color:#aab0c4;margin:.4rem 0 0!important}" +
     ".oagc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:normal;pointer-events:none}" +
     ".oagc-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}" +
@@ -1883,7 +1951,7 @@
     var root = document.getElementById("cave-root") || document.body;
     var stage = el("div", { class: "oagc-title-stage", "aria-hidden": "true" });
     function roomFrom(where) {
-      return load().then(function (A) { return homeBase(A, home, { where: where }); }).catch(function (e) { alert("The room could not open: " + e.message); });
+      return load().then(function (A) { return homeBase(A, home, { where: where }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
     }
     function pickThen(go) { window.OAGBody.pick().then(function (r) { if (r) go(r.label); }); }
     var menuBox = el("div", { class: "oagc-title-menu" });
@@ -1947,7 +2015,7 @@
       keepLast("bigmind", l.where);
       home.style.display = "none";
       window.__oagBigMind.open({ spirits: [], back: function () { home.style.display = ""; if (l.where) homeBase(A, home, { where: l.where }); } });
-    }).catch(function (e) { alert("The cave could not open: " + e.message); });
+    }).catch(function (e) { notice("The cave could not open: " + e.message, true); });
   }
   // The title's scene: the kit's portal arch as the cave mouth, a tunnel going back into blue dark, spires and glowing caps,
   // and the player's figure (Average Dusk, worn as in the cave) standing in the mouth, breathing, its light at the chest.
@@ -2033,12 +2101,12 @@
       var spot = spotNamed(A, label);
       if (!spot) {
         // A typed place the figure does not name is not guessed at; the player is sent back to tap the figure.
-        alert("That place is not on the figure yet. Tap the figure to choose one.");
+        notice("That place is not on the figure yet. Tap the figure to choose one.");
         return;
       }
       keepLast("cave", label);
       enter(A, spot, home);
-    }).catch(function (e) { alert("The cave could not open: " + e.message); });
+    }).catch(function (e) { notice("The cave could not open: " + e.message, true); });
   }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   // Home base (LEVELS.md): the WAVE room, opened from the body map, with a portal in its wall. Going through it opens the hall of
@@ -3564,7 +3632,7 @@
       window.OAGBody.pick().then(function (r) {
         if (!r) return;
         var sp = spotNamed(A, r.label);
-        if (!sp) { alert("That place is not on the figure yet. Tap the figure to choose one."); return; }
+        if (!sp) { notice("That place is not on the figure yet. Tap the figure to choose one."); return; }
         if (!state.sens.filter(function (o) { return o.id === sp.id; }).length) addSensation(sp);
         if (state.walk.arrived) arrive();
       });
@@ -5266,7 +5334,7 @@
     BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
     // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
     ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,
-    buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, labelSprite: labelSprite, P: P, btn: btn, row: row,
+    buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, dial: dial, notice: notice, labelSprite: labelSprite, P: P, btn: btn, row: row,
     buildSpirit: buildSpirit, followSpirits: followSpirits, spiritHex: spiritHex, SPIRITS_SHOWN: SPIRITS_SHOWN,
     // the Cave of Lessons' stone and light, so the Big Mind cave wears the same map (Wendell, 2026-10-13: "import the WAVE
     // process into this map")

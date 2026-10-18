@@ -847,7 +847,7 @@
     ".bm-wavestep{font-size:.8rem;color:#aab4d4;letter-spacing:.04em;text-transform:uppercase;margin:0}" +
     ".bm-bar{position:relative;flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.14);overflow:hidden}.bm-bar i{position:absolute;left:0;top:0;bottom:0;background:#e0704a;transition:width .5s,background .5s}" +
     ".bm-bar u{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.6)}.bm-meter.ready .bm-bar i{background:#6ac8a0}.bm-meter b{min-width:1.2em;text-align:right}" +
-    ".bm-charge{display:flex;align-items:center;gap:.5rem;margin:.6rem 0 .2rem;font-size:12px;color:#aab4d4}.bm-charge input{flex:1;height:36px;accent-color:#e0704a}" +
+    ".bm-charge{margin:.5rem 0 .2rem}" +
     ".bm-chargeline{text-align:center;margin:.1rem 0}.bm-chargenum{font-size:1.4rem;color:#fff1b0}" +
     ".bm-bar s{position:absolute;top:0;bottom:0;background:#fff1b0;opacity:0;text-decoration:none}" +
     ".bm-meter.eased .bm-bar s{animation:bm-drain 1.6s ease-out forwards}.bm-meter.eased .bm-bar{animation:bm-glow 1.6s ease-out}" +
@@ -860,7 +860,12 @@
     "@media (prefers-reduced-motion:reduce){.bm-meter.eased .bm-bar s,.bm-meter.eased .bm-bar,.bm-meter.eased .bm-drop{animation-duration:.01s}}" +
     ".oagc button.bm-sitbtn,.oagc button.bm-spiritbtn{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
     ".oagc button.bm-sitbtn{left:10px}.oagc button.bm-spiritbtn{right:10px}.oagc button.bm-sitbtn:disabled{opacity:.35}" +
-    ".bm-kept{border-top:1px solid rgba(255,255,255,.12);padding:.5rem 0}.bm-kept li{color:#cfd8ff}" +
+    ".bm-kept{border-top:1px solid rgba(255,255,255,.12);padding:.5rem 0}.bm-kept>p{margin:.2rem 0 .4rem;color:#aab4d4;font-size:.85rem}" +
+    ".bm-keptcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem}" +
+    ".bm-keptcard{background:rgba(26,30,58,.92);border:1px solid rgba(156,196,255,.25);border-left:4px solid var(--bm-voice,#9cc4ff);border-radius:12px;padding:.55rem .7rem;display:flex;flex-direction:column;gap:.15rem}" +
+    ".bm-keptcard h3{margin:0;font-size:.98rem;color:#fff1d0}.bm-keptcard .bm-keptstate{margin:0;font-size:.8rem;color:#aab4d4}" +
+    ".bm-keptcard ul{margin:.25rem 0 0;padding-left:1.05rem}.bm-keptcard li{color:#cfd8ff;font-size:.88rem;margin:.1rem 0}.bm-keptcard p{margin:.15rem 0;font-size:.88rem}" +
+    ".bm-keptcard .oagc-row{margin-top:auto;padding-top:.35rem}.bm-keptchips{display:flex;flex-wrap:wrap;gap:.3rem}.bm-keptchips span{padding:.2rem .55rem;border-radius:999px;background:rgba(156,196,255,.14);border:1px solid rgba(156,196,255,.35);font-size:.85rem;color:#eef2ff}" +
     ".bm-marks{font-size:12px;color:#dfe6ff;padding-left:.1rem}.bm-marks b{color:#fff1b0;font-weight:500;letter-spacing:.14em;margin:0 .6em 0 .25em}" +
     ".bm-marks.lit b{animation:bm-glowtext 1.6s ease-out}@keyframes bm-glowtext{0%{text-shadow:0 0 0 #fff1b0}30%{text-shadow:0 0 10px #fff1b0}100%{text-shadow:0 0 0 #fff1b0}}" +
     ".oagc button.bm-trustbtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(156,196,255,.55);color:#dfe9ff;font-weight:500}" +
@@ -948,26 +953,44 @@
     out.push("Its read of you, in its words: “" + T.read[goodOf(t)] + "”");
     return out;
   }
-  // What you've kept: keep or forget per voice, and delete everything (bmc-safety).
+  // A charge, 0 to 10, read on the kit's drawn dial (gd-web-bits): the number in its middle, calm and full at its ends.
+  function chargeDial(range, num) {
+    var line = el("span", { class: "bm-chargeline" }, [num, document.createTextNode(" of 10")]);
+    return el("div", { class: "bm-charge" }, [K.dial(range, { read: line, low: "calm", high: "full" })]);
+  }
+  // What you've kept: keep or forget per voice, and delete everything (bmc-safety). Each voice is a card (gd-web-bits): its name
+  // and where it stands at the top, what was kept and what moved it inside, Forget at its foot, its edge in the daemon's colour.
+  // Delete everything asks once more on the page itself, with no browser box.
   function keptList(save) {
     var ids = Object.keys(save.voices), sps = save.spirits || [];
     if (!ids.length && !sps.length && !save.centre) return el("span", {});
-    var box = el("div", { class: "bm-kept", "data-bm-kept": "" }, [el("p", { text: "What you've kept, on this device:" })]);
-    if (sps.length) box.appendChild(el("p", { "data-bm-keptspirits": "", text: "Spirits that come back in with you: " + sps.map(spiritLabel).join(", ") + "." }));
+    var cards = el("div", { class: "bm-keptcards" });
+    var box = el("div", { class: "bm-kept", "data-bm-kept": "" }, [el("p", { text: "What you've kept, on this device" }), cards]);
+    function card(attrs, title, state, hex) {
+      var c = el("section", attrs, [el("h3", { text: title }), state ? el("p", { class: "bm-keptstate", text: state }) : null]);
+      c.className = "bm-keptcard";
+      if (hex != null) c.style.setProperty("--bm-voice", "#" + ("00000" + hex.toString(16)).slice(-6));
+      cards.appendChild(c); return c;
+    }
+    function lines(attrs, list) { var u = el("ul", attrs, list.map(function (m) { return el("li", { text: m }); })); return u; }
+    if (sps.length) {
+      var sc = card({ "data-bm-keptcard": "spirits" }, "Spirits with you", "They come back in with you.");
+      sc.appendChild(el("div", { class: "bm-keptchips", "data-bm-keptspirits": "" }, sps.map(function (o) { return el("span", { text: spiritLabel(o) }); })));
+    }
     ids.forEach(function (id) {
       var v = save.voices[id], voice = VOICES.filter(function (x) { return x.id === id; })[0];
-      var name = voice ? voice.title : id;
-      box.appendChild(el("p", { text: name + (v.keepsWay ? " (it is keeping the way for now; ask it again next time)" : v.status === "waiting" ? " (waiting; it has not spoken yet)" : "") }));
+      var name = voice ? voice.title : id, row0 = voice && K.DAEMONS.filter(function (d) { return d[0] === voice.daemon; })[0];
+      var c = card({ "data-bm-keptcard": id }, name, v.keepsWay ? "It is keeping the way for now; ask it again next time." : v.status === "waiting" ? "Waiting; it has not spoken yet." : "", row0 ? row0[3] : null);
+      if (v.kept.length) c.appendChild(lines({}, v.kept.map(function (k) { return k.line; })));
       var mv = movedLines(v.charges || []);
-      if (mv.length) box.appendChild(el("ul", { "data-bm-keptmoved": id }, mv.map(function (m) { return el("li", { text: "Moved it: " + m }); })));
-      if (v.boss) box.appendChild(el("p", { "data-bm-keptboss": id, text: "It works for " + bossName(voice, v.boss) + "." }));
-      if (v.spirit && !v.spirit.gone) box.appendChild(el("p", { "data-bm-keptmeet": id, text: "The spirit from meeting it walks with you: " + spiritLabel({ name: v.spirit.name, element: v.spirit.element }) + "." }));
-      if (v.talked) box.appendChild(el("p", { "data-bm-kepttalked": id, text: "You talked it through with it " + (v.talked === 1 ? "once" : v.talked + " times") + ". The words were not kept." }));
+      if (mv.length) c.appendChild(lines({ "data-bm-keptmoved": id }, mv.map(function (m) { return "Moved it: " + m; })));
+      if (v.boss) c.appendChild(el("p", { "data-bm-keptboss": id, text: "It works for " + bossName(voice, v.boss) + "." }));
+      if (v.spirit && !v.spirit.gone) c.appendChild(el("p", { "data-bm-keptmeet": id, text: "The spirit from meeting it walks with you: " + spiritLabel({ name: v.spirit.name, element: v.spirit.element }) + "." }));
+      if (v.talked) c.appendChild(el("p", { "data-bm-kepttalked": id, text: "You talked it through with it " + (v.talked === 1 ? "once" : v.talked + " times") + ". The words were not kept." }));
       var tl = trustLines(trustOf(v), id);
-      if (tl.length) box.appendChild(el("ul", { "data-bm-kepttrust": id }, tl.map(function (m) { return el("li", { text: m }); })));
-      if (v.kept.length) box.appendChild(el("ul", {}, v.kept.map(function (k) { return el("li", { text: k.line }); })));
-      if (v.waves && v.waves.length) box.appendChild(el("ul", { "data-bm-keptwaves": id }, v.waves.map(function (w) { return el("li", { text: "W.A.V.E.: " + waveLine(w) }); })));
-      box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": id, text: "Forget " + name, onclick: function () {
+      if (tl.length) c.appendChild(lines({ "data-bm-kepttrust": id }, tl));
+      if (v.waves && v.waves.length) c.appendChild(lines({ "data-bm-keptwaves": id }, v.waves.map(function (w) { return "W.A.V.E.: " + waveLine(w); })));
+      c.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": id, text: "Forget " + name, onclick: function () {
         // Forgetting a voice sends the player back to its chamber's start; forgetting the Protector clears who waits too.
         var s = readSave(), k = VOICES.indexOf(voice); delete s.voices[id];
         if (k >= 0 && k <= (s.chamber || 0)) { s.chamber = k; s.at = "mouth"; if (k === 0) s.waiting = []; }
@@ -975,15 +998,24 @@
       } })]));
     });
     if (save.centre) {
-      box.appendChild(el("p", { "data-bm-keptcentre": "", text: CENTRE.title.replace(/^The /, "The ") + (save.centre.status === "spoken" ? " (it spoke with you at the centre)" : " (you were with it at the centre)") }));
-      if (save.centre.kept.length) box.appendChild(el("ul", {}, save.centre.kept.map(function (k) { return el("li", { text: k.line }); })));
-      box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": "centre", text: "Forget the centre", onclick: function () {
+      var cc = card({ "data-bm-keptcard": "centre", "data-bm-keptcentre": "" }, CENTRE.title, save.centre.status === "spoken" ? "It spoke with you at the centre." : "You were with it at the centre.");
+      if (save.centre.kept.length) cc.appendChild(lines({}, save.centre.kept.map(function (k) { return k.line; })));
+      cc.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-forget": "centre", text: "Forget the centre", onclick: function () {
         var s = readSave(); delete s.centre; writeSave(s); mouth();
       } })]));
     }
-    box.appendChild(el("div", { class: "oagc-row" }, [el("button", { class: "alt", "data-bm-wipe": "", text: "Delete everything", onclick: function () {
-      if (window.confirm("Delete everything the cave has kept on this device?")) { wipe(); mouth(); }
-    } })]));
+    var wipeRow = el("div", { class: "oagc-row" });
+    function wipeAsk() {
+      wipeRow.textContent = "";
+      wipeRow.appendChild(el("button", { class: "alt", "data-bm-wipe": "", text: "Delete everything", onclick: function () {
+        wipeRow.textContent = "";
+        wipeRow.appendChild(el("p", { "data-bm-wipeask": "", text: "Delete everything the cave has kept on this device?" }));
+        wipeRow.appendChild(el("button", { "data-bm-wipeyes": "", text: "Yes, delete it all", onclick: function () { wipe(); mouth(); } }));
+        wipeRow.appendChild(el("button", { class: "alt", "data-bm-wipeno": "", text: "Keep it", onclick: wipeAsk }));
+        var yes = wipeRow.querySelector("[data-bm-wipeyes]"); if (yes) yes.focus();
+      } }));
+    }
+    wipeAsk(); box.appendChild(wipeRow);
     return box;
   }
 
@@ -1009,7 +1041,7 @@
   function enter(from) {
     visit = { did: [], met: [] };
     K.loadThree().then(function (THREE) { home.style.display = "none"; play(THREE, from); })
-      .catch(function (e) { alert("The cave could not open: " + e.message); });
+      .catch(function (e) { K.notice("The cave could not open: " + e.message, true); });
   }
 
   function play(THREE, from) {
@@ -1338,7 +1370,7 @@
       range.addEventListener("input", function () { num.textContent = range.value; setMeter(+range.value); });
       var kids = [el("h2", { text: V.title })];
       if (i != null) { var said = st.answers[V.questions[i].id]; if (said) said.forEach(function (l) { kids.push(npc(l)); }); kids.push(guide(qReflect(V.questions[i]))); }
-      kids.push(guide(ask + (st.place ? " (in your " + st.place.toLowerCase() + ")" : "")), el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
+      kids.push(guide(ask + (st.place ? " (in your " + st.place.toLowerCase() + ")" : "")), chargeDial(range, num),
         row([btn("That's how it is", function () { charged(i, +range.value); }, { "data-bm-charged": "" })]),
         row([btn("Breathe with it (W.A.V.E.)", function () { waveStart(i, ask); }, { "data-bm-wave": "" }, true),
           btn("Talk it through (3-2-1)", function () { talkThrough(function () { chargeAsk(i, ask); }, function () { afterCharge(i, st.charge); }); }, { "data-bm-talk": "" }, true)]),
@@ -1435,7 +1467,7 @@
       var num = el("b", { class: "bm-chargenum", text: String(start) });
       var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(start), "data-bm-yourange": "", "aria-label": label });
       range.addEventListener("input", function () { num.textContent = range.value; youMeter(+range.value); });
-      return { range: range, kids: [el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")])] };
+      return { range: range, kids: [chargeDial(range, num)] };
     }
     // The charge being worked shows in the scene through the whole W.A.V.E. (Wendell, 12 October 2026, 21:15: "there should be a
     // spirit that is apearing that represents the charge that is being worked on EVEN in this WAVE context. it should follow the
@@ -1964,7 +1996,7 @@
       var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(cur), "data-bm-range": "", "aria-label": "Charge, 0 to 10" });
       range.addEventListener("input", function () { num.textContent = range.value; setMeter(+range.value); });
       show([el("h2", { text: V.title }), guide(lead), guide("How charged is " + V.name + " now?"),
-        el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
+        chargeDial(range, num),
         row([btn("That's how it is", function () {
           var was = st.charge, v = +range.value;
           st.charge = v; st.charges.push({ after: "check", v: v }); setMeter(v);
@@ -2063,7 +2095,7 @@
       var range = el("input", { type: "range", min: "0", max: "10", step: "1", value: String(cur), "data-bm-range": "", "aria-label": "Charge, 0 to 10" });
       range.addEventListener("input", function () { num.textContent = range.value; setMeter(+range.value); });
       show([el("h2", { text: V.title }), guide(why + "."), guide("It's still holding back. Did that move it at all? How charged is " + V.name + " now?" + (st.place ? " (in your " + st.place.toLowerCase() + ")" : "")),
-        el("div", { class: "bm-charge" }, [el("span", { text: "calm 0" }), range, el("span", { text: "10 full" })]), el("p", { class: "bm-chargeline" }, [num, document.createTextNode(" out of 10")]),
+        chargeDial(range, num),
         row([btn("That's how it is", function () {
           var was = st.charge, v = +range.value, again = function () { permit(key, round + 1, onYes); };
           st.charge = v; st.charges.push({ after: "held-" + key, v: v, why: why, from: was }); setMeter(v);

@@ -27,7 +27,8 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (c) passes++
 const page = await ctx.newPage();
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
-page.on('dialog', (d) => d.accept());
+const dialogs = []; // gd-web-bits: no browser alert or confirm box anywhere
+page.on('dialog', (d) => { dialogs.push(d.type() + ': ' + d.message()); d.accept(); });
 const B = 'http://localhost:4571/ontology-game/big-mind';
 const step = () => page.getAttribute('[data-bm-modal]', 'data-bm-step');
 const waitStep0 = (s, ms = 20000) => page.waitForFunction((s) => document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') === s, s, { timeout: ms }).then(() => true, () => false);
@@ -391,6 +392,7 @@ await page.click('[data-bm-mouthspirit="0"]'); await page.click('[data-bm-mouths
 await page.waitForSelector('[data-bm-mouth]');
 ok(/Go back in, to the Protector/.test(await page.textContent('[data-bm-enter]')), 'back at the mouth, the cave offers to go back in to the Protector, to ask it again');
 ok(/To protect\./.test(await page.textContent('[data-bm-kept]')), 'the mouth lists what has been kept');
+ok(await page.locator('[data-bm-kept] .bm-keptcard[data-bm-keptcard="protector"]').count() === 1 && await page.locator('[data-bm-keptcard="protector"] [data-bm-forget="protector"]').count() === 1, 'what is kept is a card per voice, with Forget on its card');
 ok(/W\.A\.V\.E\.: Dread, Metal, in your chest: 8 to 6/.test(await page.textContent('[data-bm-kept]')), 'the mouth lists each W.A.V.E. as one line');
 await page.screenshot({ path: SHOTS + '/bm-9-mouth-kept.png' });
 await page.click('[data-bm-enter]');
@@ -437,6 +439,10 @@ await page.screenshot({ path: SHOTS + '/bm-10-declined.png' });
 await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 await page.waitForSelector('[data-bm-mouth]');
 await page.click('[data-bm-wipe]');
+ok(await page.isVisible('[data-bm-wipeask]') && (await save()) !== null, 'delete everything asks once more on the page, and nothing is gone yet');
+await page.click('[data-bm-wipeno]');
+ok(await page.isVisible('[data-bm-wipe]') && (await save()) !== null, 'Keep it puts the button back and keeps the save');
+await page.click('[data-bm-wipe]'); await page.click('[data-bm-wipeyes]');
 await page.waitForTimeout(200);
 ok((await save()) === null, 'delete everything clears the device');
 
@@ -1188,7 +1194,7 @@ await page.evaluate(() => localStorage.clear());
   ok(sv.centre && sv.centre.status === 'spoken' && sv.centre.kept.length === 1 && sv.centre.kept[0].line === "That it's safe to play." && sv.chamber === 6 && sv.voices['damaged-self'], 'only the kept line is saved, with the voices\' records: ' + JSON.stringify(sv.centre));
   await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   const kept = await page.textContent('[data-bm-kept]');
-  ok(/The vulnerable child \(it spoke with you at the centre\)/.test(kept) && /That it's safe to play\./.test(kept), 'the mouth shows what the child said that was kept');
+  ok(/The vulnerable child\s*It spoke with you at the centre\./.test(kept) && /That it's safe to play\./.test(kept), 'the mouth shows what the child said that was kept');
 
   // seen, not questioned: being with it asks nothing
   await page.click('[data-bm-forget="centre"]');
@@ -1557,6 +1563,7 @@ p2.on('pageerror', (e) => errors.push('cave pageerror: ' + e.message));
 await p2.goto('http://localhost:4571/ontology-game/cave');
 ok(await p2.waitForSelector('[data-cave-home]', { timeout: 5000 }).then(() => true, () => false), 'the Cave of Lessons still opens its doorway');
 ok(await p2.evaluate(() => !!window.__oagCave.kit.buildTube), 'the shared engine is exported for the fork');
+ok(dialogs.length === 0, 'no browser alert or confirm box' + (dialogs.length ? ': ' + dialogs.join('; ') : ''));
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join('; ') : ''));
 console.log(passes + ' passed, ' + fails + ' failed');
 await browser.close(); server.close();

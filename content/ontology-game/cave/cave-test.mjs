@@ -44,6 +44,8 @@ let passes = 0, fails = 0;
 const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (c) passes++; else { fails++; process.exitCode = 1; } };
 const page = await ctx.newPage();
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+const dialogs = []; // gd-web-bits: no browser alert or confirm box anywhere
+page.on('dialog', (d) => { dialogs.push(d.type() + ': ' + d.message()); d.dismiss(); });
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 const B = 'http://localhost:4569';
 const WAVE = ['welcome', 'acknowledge', 'allow', 'accept', 'appreciate', 'validate', 'exhale'];
@@ -654,6 +656,16 @@ let glow9 = null;
 for (const round of [1, 2]) {
   ok(await sees('[data-cave-321-step="before"]') || round === 2, '3-2-1 opens with a charge reading before');
   if (round === 1) {
+    // gd-web-bits: the slider is a drawn dial. A tap at the top of its ring reads 5; a drag down its right side climbs toward 10.
+    const ring = await page.locator('[data-cave-321-charge="before"]').locator('xpath=..').locator('svg').boundingBox();
+    const at = (f) => { const a = Math.PI * 0.75 + Math.PI * 1.5 * f; return [ring.x + ring.width * (70 + 52 * Math.cos(a)) / 140, ring.y + ring.height * (70 + 52 * Math.sin(a)) / 128]; };
+    await page.mouse.click(...at(0.5));
+    ok((await page.locator('[data-cave-321-read="before"]').textContent()) === '5 of 10' && (await page.inputValue('[data-cave-321-charge="before"]')) === '5', 'a tap at the top of the charge dial reads 5 of 10');
+    await page.mouse.move(...at(0.5)); await page.mouse.down(); await page.mouse.move(...at(0.75), { steps: 4 }); await page.mouse.move(...at(0.8), { steps: 2 }); await page.mouse.up();
+    ok((await page.inputValue('[data-cave-321-charge="before"]')) === '8', 'dragging round the dial sets the charge (8)');
+    await page.locator('[data-cave-321-charge="before"]').focus(); await page.keyboard.press('ArrowRight');
+    ok((await page.inputValue('[data-cave-321-charge="before"]')) === '9' && (await page.locator('[data-cave-321-read="before"]').textContent()) === '9 of 10', 'the arrow keys still move it, and the dial follows');
+    await page.screenshot({ path: SHOTS + '/cave-charge-dial.png' });
     await charge('before', 9); ok((await page.locator('[data-cave-321-read="before"]').textContent()) === '9 of 10', 'the before reading follows the slider');
     ok(await sees('[data-cave-allow-slider="grow"]') && await sees('[data-cave-allow-slider="bright"]'), 'at the daemon, Allow\'s two sliders: how large it gets and how bright it can glow');
     await page.locator('[data-cave-allow-slider="grow"]').evaluate((e) => { e.value = 10; e.dispatchEvent(new Event('input', { bubbles: true })); });
@@ -1344,6 +1356,9 @@ await page.waitForTimeout(300);
 CT = await cteach();
 ok(CT.done.includes('mark') && CT.shown === null, 'stopping there learns the mark ' + JSON.stringify(CT.done));
 ok(JSON.parse(await C(() => localStorage.getItem('oag.tutorial.v1'))).filter((x) => ['mark', 'stone'].includes(x)).length === 2, 'the cave\'s lessons are kept with the room\'s, as ids');
+await C(() => window.__oagCave.dive('nowhere on the figure'));
+ok(await page.locator('[data-oag-notice]').waitFor({ timeout: 5000 }).then(() => true, () => false) && /not on the figure yet/.test(await page.textContent('[data-oag-notice]')), 'a place the figure does not name is said in a line on the page, not a browser box');
+ok(dialogs.length === 0, 'no browser alert or confirm box' + (dialogs.length ? ': ' + dialogs.join(' | ') : ''));
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();
