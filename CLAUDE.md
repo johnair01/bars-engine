@@ -16,6 +16,12 @@ and for any worker a session starts.
 - A worker sees only its prompt and this file. Put this rule in the prompt of any worker that might ask him
   anything.
 
+## Hand off before the context passes 150,000 tokens
+
+A PostToolUse hook (`.claude/settings.json`, `council/tools/context_size.py --hook`, a copy of the council's) adds the
+handoff order to every tool result once the session rereads 150,000 tokens a call. Finish the step, record the work in
+the repo and on the board, send the coordinator the handoff, drop PR watches and resolve. Why: council #272.
+
 Wendell, 2026-10-04: *"If you need rulings from me this should've gone to the council?"*
 
 ## UI Work — Read First
