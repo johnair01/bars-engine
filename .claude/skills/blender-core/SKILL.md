@@ -80,10 +80,13 @@ Raw form: `blender -b in.blend --factory-startup --python-exit-code 1 -P x.py --
 - [references/bpy-patterns.md](references/bpy-patterns.md): verified snippets for bmesh, attributes, numpy, temp_override, depsgraph, drivers, append/link, handlers and timers.
 
 ## In bars-engine (local note, not upstream)
-Vendored from https://github.com/EL4CTEO/blender-skills at 71d031d (MIT, `LICENSE.blender-skills`): blender-core,
-blender-asset-qa, blender-simulation, blender-scene-setup. Blender here is the `bpy==5.2.2` pip package
+Vendored from https://github.com/EL4CTEO/blender-skills at 71d031d (MIT, `LICENSE.blender-skills`): all of its
+skills except blender-addon-development (we write no add-ons). Blender here is the `bpy==5.2.2` pip package
 (tools/blender-cloud/README.md), with no executable, so run a skill script with
 `/home/user/blenv/bin/python tools/blender-cloud/skill_run.py <skill>/<script>.py [--glb F | --blend F] -- <args>`
 instead of `run_in_blender.py`. There is no MCP `look`: check renders with our contact sheets
 (tools/blender-cloud/tests/contact_sheet.py) in an Agent worker. The game's robe cloth is our own runtime solver
 (content/ontology-game/cave/cloth.js, CLOTH.md); blender-simulation covers Blender's solvers only.
+Checked here on 2026-10-18: `export_asset.py --preset web` wrote a working GLB but no meshopt compression
+(`extensionsUsed` empty under bpy 5.2.2), so read the GLB's extensions before counting on it. The Unity, Unreal and
+Roblox references are inert unless a task names those engines.
