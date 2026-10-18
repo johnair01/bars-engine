@@ -58,6 +58,7 @@ const answerSet = async (boss) => {
 // Opens the room on its own (as the body map does), calm so the door answers at once, and walks in to Witness.
 const openRoom = async (o) => {
   await page.goto(B + '/ontology-game/cave/');
+  await C(() => localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors"]')); // the Arrival's lessons are cave-test's
   await C((opts) => { window.__left = null; window.__oagCave.openRoom(opts).then((r) => { window.__left = r; }); }, o || { from: 'body' });
   await page.locator('[data-room-welcome]').waitFor({ timeout: 30000 });
   await page.locator('[data-room-calm]').click();
