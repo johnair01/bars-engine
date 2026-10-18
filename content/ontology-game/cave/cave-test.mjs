@@ -94,6 +94,20 @@ const walkTo = async (selector) => {
 };
 const sees = (sel) => page.locator(sel).isVisible();
 
+// ---- the title screen (gd-title-as-game): the cave mouth in 3D, the walker in it, Begin, and the gear's settings ------
+await page.waitForFunction(() => window.__oagTitle && window.__oagTitle.walker(), null, { timeout: 60000 }).catch(() => {});
+ok(await page.evaluate(() => window.__oagTitle.live() && window.__oagTitle.walker()), 'the title draws the cave mouth with the walker standing in it');
+ok(await page.locator('[data-title-continue]').count() === 0 && (await page.locator('[data-title-begin]').textContent()) === 'Begin', 'a new player sees Begin and no Continue');
+await page.locator('[data-title-settings]').click();
+ok(await sees('[data-title-settings-panel]'), 'the gear opens the settings');
+await page.locator('[data-setting="sound"]').click();
+await page.evaluate(() => localStorage.setItem('oag.tutorial.v1', '["walk"]'));
+await page.locator('[data-setting="replay"]').click();
+const set1 = await page.evaluate(() => ({ s: JSON.parse(localStorage.getItem('oag.settings.v1')), t: localStorage.getItem('oag.tutorial.v1') }));
+ok(set1.s.sound === false && set1.t === null, 'sound off is kept, and the walkthrough is cleared to show again ' + JSON.stringify(set1.s));
+await page.locator('[data-setting="sound"]').click(); await page.locator('[data-setting="close"]').click();
+ok(!(await sees('[data-title-settings-panel]')), 'Done closes the settings');
+
 // ---- the doorway: the heart, tapped on the real figure. Tension, Anger. ------------------------
 await page.locator('[data-cave-dive]').click();
 await pickOnFigure('heart');
@@ -857,6 +871,7 @@ ok(!/quiet evening|make tea|Knot|Blue lamp|knot under|slow down/.test(stored), '
 await page.locator('[data-room-leave]').click();
 await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
 ok(await sees('[data-cave-home]'), 'Leave the room returns to the front page');
+ok(await page.waitForSelector('[data-title-continue="room"]', { timeout: 5000 }).then(() => true, () => false), 'the front page then offers Continue, back to the WAVE room');
 // ---- the room's second slice (Wendell, 11 October 2026): up to three at once, a feeling about a feeling, Allow's sliders, the glow -----
 await page.locator('[data-room-open]').click();
 await pickOnFigure('heart');
