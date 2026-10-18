@@ -1134,7 +1134,7 @@
       } catch (e) { snd = false; }
     }
     function stopMouthSound() { if (snd) { try { snd.gain.gain.value = 0; snd.ac.close(); } catch (e) { /* already closed */ } } snd = false; }
-    var avatar = K.buildAvatar(THREE, "other"); scene.add(avatar);
+    var avatar = K.buildAvatar(THREE, "other", true); scene.add(avatar);
     var ghost = null, figures = [];
     // Translators already waiting from an earlier sitting stand by the wall of the second hallway.
     st.waiting.forEach(function (id, i) { var f = translatorFigure(id); f.userData.wait = true; figureAt(f, S_GATE + 14 + i * 6, -WAIT_D, false); f.rotation.y += -Math.PI / 2; scene.add(f); figures.push(f); });

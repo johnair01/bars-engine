@@ -29,6 +29,8 @@ const files = {
 };
 // The daemon bodies (cave/bake_daemons.py), fetched by a scene that meets a daemon.
 for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) files['/ontology-game/cave/daemons/' + d + '.glb'] = ['cave/daemons/' + d + '.glb', 'model/gltf-binary'];
+// The player's own figure, Average Dusk on its mocap walk (bake_daemons.py --walker).
+files['/ontology-game/cave/player/walker.glb'] = ['cave/player/walker.glb', 'model/gltf-binary'];
 const server = http.createServer((req, res) => {
   const f = files[req.url.split('?')[0]];
   if (!f) { res.writeHead(404); res.end(); return; }
@@ -229,8 +231,12 @@ await page.mouse.up(); await page.waitForTimeout(200);
 ok(Math.abs(fS.lat - fA.lat) > 1 && Math.abs(fS.lat) <= fS.halfWidth * 0.6 + 1e-6, `the stick to the right walks the figure across the tunnel, up to the floor's edge and no further (${fS.lat.toFixed(2)} of a ${fS.halfWidth.toFixed(1)} half width)`);
 ok(Math.abs((await free()).s - fA.s) < 2 && avS.offPath > 1, 'off the path\'s line, the figure stands where it was walked');
 ok((await C(() => window.__oagCave.camInside())).inside, 'the camera follows it, inside the tunnel');
-// walking down the stick comes back toward the camera
-await page.keyboard.down('ArrowDown'); await page.waitForTimeout(1200); await page.keyboard.up('ArrowDown');
+// walking down the stick comes back toward the camera (the walker's clip frames are read on the way)
+const wk0 = await C(() => window.__oagCave.walker());
+ok(wk0.worn && wk0.standInShown === 0 && wk0.joints >= 30 && wk0.length > 20, `the player wears Average Dusk on its mocap walk (${wk0.joints} joints, ${wk0.length} frames), the stand-in's parts hidden`);
+const wf = [];
+await page.keyboard.down('ArrowDown'); for (let i = 0; i < 10; i++) { await page.waitForTimeout(120); wf.push((await C(() => window.__oagCave.walker())).frame); } await page.keyboard.up('ArrowDown');
+ok(new Set(wf.map((f) => f.toFixed(1))).size >= 6, `walking turns the mocap clip (frames ${wf.map((f) => f.toFixed(1)).join(', ')})`);
 const fD = await free();
 ok(fD.s < fS.s - 2 && fD.dir === 1, `the down key walks back toward the camera, which stays behind (${fS.s.toFixed(1)} to ${fD.s.toFixed(1)})`);
 // up to the welcome marker: its prompt shows by the right thumb, and the way past it stays shut
