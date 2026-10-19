@@ -109,6 +109,8 @@ const set1 = await page.evaluate(() => ({ s: JSON.parse(localStorage.getItem('oa
 ok(set1.s.sound === false && set1.t === null, 'sound off is kept, and the walkthrough is cleared to show again ' + JSON.stringify(set1.s));
 await page.locator('[data-setting="sound"]').click(); await page.locator('[data-setting="close"]').click();
 ok(!(await sees('[data-title-settings-panel]')), 'Done closes the settings');
+// The WAVE room's lessons are learned here, so the rooms below open as a returning player's do; the Arrival is checked at the end.
+await page.evaluate(() => localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors"]'));
 
 // ---- the doorway: the heart, tapped on the real figure. Tension, Anger. ------------------------
 await page.locator('[data-cave-dive]').click();
@@ -1287,8 +1289,8 @@ await pickOnFigure('heart');
 await page.locator('[data-room="body"]').waitFor();
 await page.locator('[data-room-welcome]').waitFor();
 let RW = await C(() => window.__oagCave.room.walking());
-ok(RW.exits.map((e) => e.id).sort().join() === 'bigmind,portal' && await sees('[data-room-walk-hint]'),
-  'home base: the WAVE room from the body map has two doors behind the seat, Big Mind and the six game masters, and says how to walk');
+ok(RW.exits.map((e) => e.id).sort().join() === 'bigmind,portal' && await page.locator('[data-room-walk-hint]').count() === 0,
+  'home base: the WAVE room from the body map has two doors behind the seat, Big Mind and the six game masters, and no paragraph on walking');
 await page.screenshot({ path: SHOTS + '/level-home.png' });
 // Walking round the room (Wendell, 13 October 2026): a tap on the floor stands the figure up and walks it there, the camera
 // following; opening the step's page again walks it back to the seat.
@@ -1545,6 +1547,60 @@ await C(() => { document.querySelector('[data-bm-cave]').remove(); window.__oagB
 await page.locator('[data-bm-home]').click();
 await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
 ok(await page.locator('[data-bm-mouth]').count() === 0, 'Back to the WAVE room closes the mouth and opens the room');
+// ---- the Arrival (six-faces-council council/callsheets/game-demo.md: gd-lantern-guide, gd-teach-by-doing, gd-skip-and-replay) ----
+// A new player's first WAVE room: the page is tucked away and the player's light teaches the room one glyph at a time, each
+// gone once done: walk, look, tap the floor, sit on the rug, the doors. "I know this" skips one. Kept in oag.tutorial.v1.
+await C(() => localStorage.removeItem('oag.tutorial.v1'));
+await page.reload();
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(900);
+const teach = () => C(() => window.__oagCave.room.teach());
+const figAt = async () => (await C(() => window.__oagCave.room.walking())).figure;
+let T = await teach(), F = await figAt();
+ok(!T.modal && T.lesson === 'walk' && T.shown === 'walk' && await sees('[data-room-teach]') && await sees('[data-room-stick]'), 'a new player arrives with the page tucked away, the stick in view, and a glyph teaching the walk ' + JSON.stringify(T));
+ok(Math.hypot(T.lantern[0] - F[0], T.lantern[2] - F[1]) > 1, 'the light has left the chest and waits ahead of the figure');
+ok(await page.locator('[data-room-walk-hint]').count() === 0 && (await page.locator('[data-room-teach]').textContent()).trim() === '' && await sees('[data-room-teach-skip]'), 'no paragraph: the glyph and "I know this" are all the words');
+await C(() => window.__oagCave.room.speed(3));
+{
+  const sb = await page.locator('[data-room-stick]').boundingBox(), sx = sb.x + sb.width / 2, sy = sb.y + sb.height / 2;
+  await page.mouse.move(sx, sy); await page.mouse.down(); await page.mouse.move(sx, sy - 50, { steps: 4 }); await page.waitForTimeout(900); await page.mouse.up();
+}
+T = await teach();
+ok(T.done.includes('walk') && T.lesson === 'look' && T.shown === 'look', 'walking once with the stick finishes the walk, and the light moves on to looking ' + JSON.stringify(T.done));
+ok((await C(() => localStorage.getItem('oag.tutorial.v1'))) === '["walk"]', 'the lesson is kept on this device, as its id only');
+await page.mouse.move(120, 230); await page.mouse.down(); await page.mouse.move(260, 240, { steps: 6 }); await page.mouse.up();
+await page.waitForTimeout(300);
+T = await teach();
+ok(T.lesson === 'tap' && T.shown === 'tap' && Math.hypot(T.lantern[0] - T.tapAt.x, T.lantern[2] - T.tapAt.z) < 1.5, 'a drag finishes looking, and the light floats down to a spot on the floor ' + T.lantern.map((v) => v.toFixed(1)));
+await page.screenshot({ path: SHOTS + '/arrival-tap.png' });
+const spot = await C((p) => window.__oagCave.room.floorScreen(p.x, p.z), T.tapAt);
+ok(!spot.behind && await C(([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && e.tagName === 'CANVAS'; }, [spot.x, spot.y]), `the light's spot is on the floor in view (${Math.round(spot.x)}, ${Math.round(spot.y)})`);
+await page.mouse.click(spot.x, spot.y);
+await page.waitForTimeout(400);
+T = await teach();
+ok(T.lesson === 'rug' && T.shown === 'rug', 'tapping the floor finishes the tap, and the light goes to the rug');
+await page.locator('[data-room-pane]').click();
+await page.waitForTimeout(300);
+T = await teach();
+ok(T.modal && T.done.includes('rug') && T.shown === null && await sees('[data-room-welcome]'), 'sitting down brings up the first page and finishes the rug; no glyph over the page');
+await page.locator('[data-room-shrink]').click();
+await page.waitForTimeout(300);
+T = await teach();
+ok(T.lesson === 'doors' && T.shown === 'doors', 'looking round again, the light shows the two doors');
+await page.screenshot({ path: SHOTS + '/arrival-doors.png' });
+await page.locator('[data-room-teach-skip]').click();
+await page.waitForTimeout(600);
+T = await teach(); F = await figAt();
+ok(T.lesson === null && T.shown === null && !T.live && T.done.length === 5 && Math.hypot(T.lantern[0] - F[0], T.lantern[2] - F[1]) < 0.6, '"I know this" skips the doors; all learned, the light goes home to the chest');
+await page.reload();
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(600);
+T = await teach();
+ok(T.modal && !T.live && T.shown === null && await sees('[data-room-welcome]'), 'back again, nothing is taught twice: the room opens on its first page');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();

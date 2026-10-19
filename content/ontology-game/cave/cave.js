@@ -1395,6 +1395,10 @@
   // Where the player last played, for the title's Continue: { v, at: "room" | "cave" | "bigmind", where (the body place) }.
   function readLast() { try { var l = JSON.parse(localStorage.getItem(LAST_KEY) || "null"); return l && l.v === 1 && l.at ? l : null; } catch (e) { return null; } }
   function keepLast(at, where) { try { localStorage.setItem(LAST_KEY, JSON.stringify({ v: 1, at: at, where: where || "" })); } catch (e) {} }
+  // The walkthrough (gd-skip-and-replay): the ids of the lessons done, kept as a list with no words. The title's
+  // "Show the walkthrough again" removes the key, and every lesson shows again.
+  function readTutorial() { try { var t = JSON.parse(localStorage.getItem(TUTORIAL_KEY) || "[]"); return Array.isArray(t) ? t : []; } catch (e) { return []; } }
+  function keepTutorial(done) { try { localStorage.setItem(TUTORIAL_KEY, JSON.stringify(done)); } catch (e) {} }
   // The rig for one worn body: bones from the baked rest (the bind pose), each joint's rest turn in the figure's space, and
   // the order to pose them in, parents first.
   function bodyRig(THREE, body) {
@@ -4637,6 +4641,24 @@
     { id: "validate", wave: 5, look: 5 },
     { id: "fork", wave: 6, look: 6 },
   ];
+  // The Arrival (gd-lantern-guide, gd-teach-by-doing): the WAVE room's lessons, in order. The player's light leaves the chest,
+  // floats to what the lesson is about and waits there with one glyph beside it until the player does the thing once. label
+  // is for screen readers only; the screen shows the glyph. A lesson done out of order is done (T2: nothing taught twice).
+  var ROOM_LESSONS = [
+    { id: "walk", label: "Walk with the stick at the bottom left, or the arrow keys." },
+    { id: "look", label: "Drag across the room to look around." },
+    { id: "tap", label: "Tap the floor where the light is to walk there." },
+    { id: "rug", label: "Walk to the rug and sit down to begin." },
+    { id: "doors", label: "Walk up to a door to see where it goes." },
+  ];
+  var TEACH_SVG = { // drawn in the light's colour, 44 px; no words
+    walk: '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="24" cy="24" r="19" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="24" cy="18" r="7" fill="currentColor"/><path d="M24 30v10M19 35l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>' +
+      '<svg class="oagr-keys" viewBox="0 0 60 44" width="60" height="44" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="21" y="2" width="18" height="18" rx="3"/><rect x="2" y="24" width="18" height="18" rx="3"/><rect x="21" y="24" width="18" height="18" rx="3"/><rect x="40" y="24" width="18" height="18" rx="3"/></g><g fill="currentColor"><path d="M30 6l5 7h-10z"/><path d="M6 33l7-5v10z"/><path d="M30 38l5-7h-10z"/><path d="M54 33l-7-5v10z"/></g></svg>',
+    look: '<svg viewBox="0 0 64 48" width="58" height="44" aria-hidden="true"><circle cx="32" cy="22" r="7" fill="currentColor"/><path d="M6 38h52M6 38l6-5M6 38l6 5M58 38l-6-5M58 38l-6 5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>',
+    tap: '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="24" cy="24" r="6" fill="currentColor"/><circle class="oagr-ring" cx="24" cy="24" r="13" fill="none" stroke="currentColor" stroke-width="2"/><circle class="oagr-ring" cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".6"/></svg>',
+    rug: '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><ellipse cx="24" cy="38" rx="20" ry="7" fill="none" stroke="currentColor" stroke-width="2.5"/><ellipse cx="24" cy="38" rx="11" ry="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M24 4v20M17 17l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>',
+    doors: '<svg viewBox="0 0 64 48" width="58" height="44" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 44V20a9 9 0 0 1 18 0v24"/><path d="M40 44V20a9 9 0 0 1 18 0v24"/></g><path d="M28 30h8M33 26l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  };
   var ROOM_ROUNDS_REST = 3; // board wave-room-stop: after three rounds in a sitting, offer to rest it by the door with a lantern
   var ROOM_TEST_KEY = "oag:wave-room:test"; // the 18 October test: the answer and the round, on this device only
   // Where the player stands at each step of the 3-2-1 in the room (the staged form, board cave-321-form, as in the cave).
@@ -4650,6 +4672,16 @@
     ".oagc button.oagr-spirits{position:absolute;right:16px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.55);color:#fff1d0;background:rgba(20,20,40,.85)}" +
     ".oagr-load{width:min(300px,calc(100vw - 170px))}.oagr-load button[aria-pressed=true]{border-color:#fff1b0;background:rgba(80,70,30,.85)}" +
     ".oagc button.oagr-sit{position:absolute;right:16px;bottom:calc(40px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.8);color:#fff1b0;background:rgba(60,30,24,.85)}" +
+    ".oagr-teach{position:absolute;z-index:5;display:none;flex-direction:column;align-items:center;gap:.35rem;color:#fff1b0;pointer-events:none;transform:translate(-50%,-100%);filter:drop-shadow(0 0 6px rgba(255,220,150,.8))}" +
+    ".oagr-teach .oagr-glyphs{display:flex;gap:.6rem;align-items:center;animation:oagr-pulse 1.6s ease-in-out infinite}.oagr-teach.still .oagr-glyphs,.oagr-teach.still .oagr-ring{animation:none}" +
+    ".oagr-teach .oagr-ring{transform-origin:24px 24px;animation:oagr-ripple 1.6s ease-out infinite}" +
+    ".oagc button.oagr-skip{position:absolute;left:50%;right:auto;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom));z-index:5;min-height:40px;padding:0 1rem;font-size:14px;border-radius:20px;border-color:rgba(255,241,176,.55);background:rgba(12,12,28,.8);color:#f4f4fa}" +
+    "@media (pointer:coarse){.oagr-teach .oagr-keys{display:none}}" +
+    ".oagr-teach[data-room-teach-off=left]:before,.oagr-teach[data-room-teach-off=right]:after{content:'';width:0;height:0;border:12px solid transparent;align-self:center}" +
+    ".oagr-teach[data-room-teach-off]{flex-direction:column}.oagr-teach[data-room-teach-off=left]{flex-direction:row}.oagr-teach[data-room-teach-off=right]{flex-direction:row}" +
+    ".oagr-teach[data-room-teach-off=left]:before{border-right:14px solid currentColor;border-left:0}.oagr-teach[data-room-teach-off=right]:after{border-left:14px solid currentColor;border-right:0}" +
+    "@media (prefers-reduced-motion:reduce){.oagr-teach .oagr-glyphs,.oagr-teach .oagr-ring{animation:none}}" +
+    "@keyframes oagr-pulse{0%,100%{opacity:.75}50%{opacity:1}}@keyframes oagr-ripple{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.1);opacity:0}}" +
     ".oagr-dot{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}";
 
   function readRoomTest() { try { return JSON.parse(localStorage.getItem(ROOM_TEST_KEY) || "[]"); } catch (e) { return []; } }
@@ -4750,6 +4782,11 @@
       var avatar = buildAvatar(THREE, "self", true); scene.add(avatar);
       var FIG_K = 0.6; avatar.scale.setScalar(FIG_K); // the cave's figure is 3.6 tall for its long tunnels; in the room it stands about 2.2, under the door
       avatar.position.set(SEAT.x, 0, SEAT.z); avatar.rotation.y = Math.PI;
+      // The player's own light (gd-lantern-guide), the glow at the chest as on the title. It leaves the chest to teach.
+      var lantern = new THREE.Group(), lanternLight = new THREE.PointLight(0xffd9a0, 0.7, 6);
+      lantern.add(new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 10), new THREE.MeshBasicMaterial({ color: 0xfff1d0 })));
+      lantern.add(new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.25, depthWrite: false })));
+      lantern.add(lanternLight); scene.add(lantern);
 
       // ---- the charge: a grey shape that takes the texture, and then its element's colour -------------------------------------
       var GREY = 0x8a8a92;
@@ -4824,6 +4861,15 @@
       function levelOf(c) { return clamp(heatOf(c.t321, c.heat) / 10, 0, 1) * (c.allow.bright / 10) * c.dull; }
       var br = { b: 0.5, t0: performance.now() / 1000, exhaling: false };
       var fig = { x: SEAT.x, z: SEAT.z, sit: 1, yaw: Math.PI, clk: 0 };
+      // The Arrival's state: the lessons this room teaches (the doors only where there are doors), the ones done (kept in
+      // oag.tutorial.v1), and the light. live is set once the first page has been tucked away for the lessons.
+      var guide = { lessons: ROOM_LESSONS.filter(function (l) { return l.id !== "doors" || Object.keys(EXITS).length; }), done: readTutorial(), live: false, dragged: 0, tapAt: { x: -2.6, z: 0.4 }, shown: null, lantern: null, at: null, box: null };
+      function lessonNow() { return guide.live ? guide.lessons.filter(function (l) { return guide.done.indexOf(l.id) < 0; })[0] || null : null; }
+      function learn(id) {
+        if (guide.done.indexOf(id) >= 0) return;
+        guide.done.push(id); keepTutorial(guide.done);
+        if (!lessonNow()) guide.live = false; // all learned: the light goes home to the chest
+      }
 
       // A close-up (below) keeps the step's page tucked away until the player goes back to the room, and keeps its card current.
       function draw() { drawPage(); saveRun(); if (R.close) { closeModal(); pane.style.display = "none"; closeCard(); } }
@@ -4841,7 +4887,7 @@
         modal.appendChild(row([btn("Look around", { "data-room-shrink": "" }, closeModal, true)]));
         pane.style.display = ""; openModal();
       }
-      function openModal() { stopWalking(); if (stickKnob) stickUp(); R.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden"; }
+      function openModal() { if (guide.live) learn("rug"); stopWalking(); if (stickKnob) stickUp(); R.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden"; }
       function closeModal() { R.modal = false; modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); pane.style.visibility = ""; }
       pane.addEventListener("click", function () { if (modal.childNodes.length) openModal(); });
       function field(attr, value, hint, onInput) {
@@ -4888,7 +4934,6 @@
           k.push(P(ch.hiddenOf ? "The part of " + ch.hiddenOf + " that stayed hidden is at the door." : ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
           if (ch.about) k.push(P("From the board: " + ch.about + ". Whatever is in the way of it is at the door.", { "data-room-about": "" }));
           if (R.from === "board" && R.round === 1 && ch === R.all[0]) heatRow(k, "before", "How much charge does it carry, 0 to 10?");
-          if (Object.keys(EXITS).length && R.round === 1) k.push(P("Walk round the room with the circle at the bottom left (or the arrow keys), or tap the floor. The rug is where you sit to work with what comes in. " + (EXITS.bigmind && EXITS.portal ? "Behind you are two doors: Big Mind on the left, and the six game masters on the right." : "Behind you is a door."), { "data-room-walk-hint": "" }));
           k.push(row([btn("Welcome it", { "data-room-welcome": "" }, function () { R.phase = "opening"; R.wait = "door-in"; draw(); })]));
           return { title: w[1], kids: k };
         }
@@ -5303,6 +5348,7 @@
           if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) tap = null;
           if (pinch) { var d = spread(); if (pinch.d > 0 && d > 0) setZoom(pinch.z * pinch.d / d); return; }
           if (!drag) return;
+          guide.dragged += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); if (guide.dragged > 60) learn("look");
           if (R.roam && R.roam.free && R.walkYaw != null) R.walkYaw += (e.clientX - drag.x) * 0.006; // walking, a drag turns the camera round the figure
           else lookYaw = clamp(lookYaw + (e.clientX - drag.x) * 0.005, -0.9, 0.9);
           // up and down tilts the camera (Wendell, 13 October 2026: "you can pan the camera side to side but not up and down")
@@ -5391,6 +5437,7 @@
             var sp = dt * 2.6 * Math.min(1, Math.hypot(w.x, w.z)), nx = fig.x + w.x * sp, nz = fig.z + w.z * sp, r = Math.hypot(nx, nz), RW = RR - 1.4;
             if (r > RW) { nx *= RW / r; nz *= RW / r; }
             fig.x = nx; fig.z = nz; fig.clk += dt; fig.yaw = turnTo(fig.yaw, Math.atan2(w.x, w.z), dt * 8);
+            learn("walk");
           }
           R.roam.x = fig.x; R.roam.z = fig.z;
         }
@@ -5442,6 +5489,7 @@
       var ray = new THREE.Raycaster(), ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), doorBox = null;
       function walkTap(x, y, rc) {
         ray.setFromCamera(new THREE.Vector2((x - rc.left) / rc.width * 2 - 1, -((y - rc.top) / rc.height * 2 - 1)), camera);
+        learn("tap");
         var ids = Object.keys(EXITS), hit = ray.intersectObjects(ids.map(function (k) { return EXITS[k].glow; }))[0], p = new THREE.Vector3();
         if (hit) { walkTo(ids.filter(function (k) { return EXITS[k].glow === hit.object; })[0]); return; }
         if (!ray.ray.intersectPlane(ground, p)) return;
@@ -5465,6 +5513,7 @@
       };
       function doorCard(id) {
         if (!doorBox) { doorBox = el("div", { class: "oagr-door", "data-room-door": "", style: "display:none" }); wrap.appendChild(doorBox); }
+        learn("doors");
         var w = DOOR_WORDS[id], go = { "data-room-door-go": id }; if (id === "portal") go["data-room-portal"] = ""; else go["data-room-bigmind"] = "";
         var kids = [el("h2", { text: w[0] }), P(w[1])];
         var going = R.worked.length;
@@ -5681,18 +5730,74 @@
         if (snap) { camPos.copy(vw.pos); camAim.copy(vw.aim); snap = false; }
         else { var f = 1 - Math.exp(-dt * 2.6); camPos.lerp(vw.pos, f); camAim.lerp(vw.aim, f); }
         camera.position.copy(camPos); camera.lookAt(camAim);
+        teachStep(dt, now, sk);
         if (renderer) renderer.render(scene, camera);
         running = requestAnimationFrame(frame);
+      }
+      // ---- the Arrival: the light floats to the lesson and its glyph waits beside it -----------------------------------------
+      var teachBox = el("div", { class: "oagr-teach", "data-room-teach": "", role: "status" }); wrap.appendChild(teachBox);
+      // "I know this" stays still at the bottom, so a thumb can find it while the light moves.
+      var skipBtn = btn("I know this", { "data-room-teach-skip": "", class: "alt oagr-skip", style: "display:none" }, function () { var L = lessonNow(); if (L) learn(L.id); });
+      wrap.appendChild(skipBtn);
+      var lanternAt = new THREE.Vector3(), lanternWant = new THREE.Vector3(), lanternSet = false;
+      function lessonSpot(id, out) { // where the light waits for each lesson, in the room
+        var fx = Math.sin(fig.yaw), fz = Math.cos(fig.yaw);
+        if (id === "walk") return out.set(fig.x + fx * 1.8, 1.3, fig.z + fz * 1.8);
+        if (id === "look") return out.set(SLOTS[1].x, 2.2, SLOTS[1].z);
+        if (id === "tap") return out.set(guide.tapAt.x, 0.35, guide.tapAt.z);
+        if (id === "rug") return out.set(SEAT.x, 0.7, SEAT.z);
+        var ex = Object.keys(EXITS).map(function (k) { return EXITS[k]; }).sort(function (a, b) { return Math.hypot(a.x - fig.x, a.z - fig.z) - Math.hypot(b.x - fig.x, b.z - fig.z); })[0];
+        return out.set(ex.x * 0.85, 1.9, ex.z * 0.85); // in the nearer doorway
+      }
+      function teachStep(dt, now, sk) {
+        var L = R.modal || R.close || R.phase === "opening" ? null : lessonNow(), still = R.calm || reducedMotion;
+        if (L) lessonSpot(L.id, lanternWant);
+        else lanternWant.set(fig.x + Math.sin(fig.yaw) * 0.42 * FIG_K, (2.42 - 0.9 * sk) * FIG_K, fig.z + Math.cos(fig.yaw) * 0.42 * FIG_K); // home: the chest
+        if (!lanternSet || still) { lanternAt.copy(lanternWant); lanternSet = true; }
+        else lanternAt.lerp(lanternWant, 1 - Math.exp(-dt * (L ? 2.2 : 6)));
+        lantern.position.copy(lanternAt); if (L && !still) lantern.position.y += 0.06 * Math.sin(now / 450);
+        lantern.scale.setScalar(L ? 1.5 : 1); lanternLight.intensity = L ? 1.1 : 0.5 + 0.3 * br.b;
+        if (!L || !renderer) { if (guide.shown) { teachBox.style.display = "none"; skipBtn.style.display = "none"; guide.shown = null; } return; }
+        if (guide.shown !== L.id) {
+          if (L.id === "tap") { // a spot on the floor in view: under the middle of the screen, a little below centre, inside the walls
+            camera.updateMatrixWorld(); ray.setFromCamera(new THREE.Vector2(0, -0.3), camera);
+            var tp = new THREE.Vector3(); if (!ray.ray.intersectPlane(ground, tp)) tp.set(fig.x, 0, fig.z - 2);
+            var tr = Math.hypot(tp.x, tp.z), TW = RR - 2.2; guide.tapAt = tr > TW ? { x: tp.x * TW / tr, z: tp.z * TW / tr } : { x: tp.x, z: tp.z };
+          }
+          teachBox.innerHTML = ""; teachBox.setAttribute("data-room-teach", L.id); teachBox.setAttribute("aria-label", L.label);
+          var gl = el("div", { class: "oagr-glyphs" }); gl.innerHTML = TEACH_SVG[L.id]; teachBox.appendChild(gl);
+          teachBox.style.display = "flex"; skipBtn.style.display = ""; guide.shown = L.id;
+        }
+        teachBox.classList.toggle("still", still);
+        var rc = renderer.domElement.getBoundingClientRect(), sx, sy, off = false, cs = null;
+        if (L.id === "walk") { var sb = stickPad.getBoundingClientRect(); sx = sb.left + sb.width / 2 + 30; sy = sb.top - 12; } // above the stick
+        else if (L.id === "look") { sx = rc.left + rc.width / 2; sy = rc.top + rc.height * 0.42; }
+        else {
+          camera.updateMatrixWorld(); var q = lantern.position.clone().project(camera), cs = lantern.position.clone().applyMatrix4(camera.matrixWorldInverse);
+          off = cs.z > 0 || Math.abs(q.x) > 0.85 || Math.abs(q.y) > 0.9; // behind the camera or past the edge: the glyph waits at that side, pointing
+          if (off) { sx = cs.x < 0 ? rc.left : rc.right; sy = rc.top + rc.height * 0.5; }
+          else { sx = rc.left + (q.x + 1) / 2 * rc.width; sy = rc.top + (1 - q.y) / 2 * rc.height - 26; }
+        }
+        teachBox.setAttribute("data-room-teach-off", off ? (cs.x < 0 ? "left" : "right") : "");
+        var bw = teachBox.offsetWidth / 2;
+        sx = clamp(sx, rc.left + bw + 8, rc.right - bw - 8); sy = clamp(sy, rc.top + teachBox.offsetHeight + 8, rc.bottom - 150);
+        teachBox.style.left = sx + "px"; teachBox.style.top = sy + "px";
       }
       function angleDiff(a, b) { var d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
       function turnTo(a, b, k) { return a + angleDiff(a, b) * Math.min(1, k); }
 
-      draw(); frame();
+      draw();
+      // A room with lessons to teach opens with its first page tucked into the pane, so the light can show the way round first;
+      // sitting on the rug (or opening the pane) brings the page up and finishes the rug's lesson. From the board the player
+      // came to work a charge, so the page stays up and the lessons wait until they look round. No WebGL, no lessons.
+      if (renderer && guide.lessons.some(function (l) { return guide.done.indexOf(l.id) < 0; })) { if (R.from !== "board") closeModal(); guide.live = true; }
+      frame();
 
       // ---- hooks for the browser test --------------------------------------------------------------------------------------
       var api = window.__oagCave;
       api.room = {
         state: R,
+        teach: function () { var L = lessonNow(); return { lesson: L && L.id, done: guide.done.slice(), shown: teachBox.style.display !== "none" && !!guide.shown ? guide.shown : null, live: guide.live, lantern: [lantern.position.x, lantern.position.y, lantern.position.z], tapAt: guide.tapAt, modal: R.modal }; },
         charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
           slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }),
           polarity: ch.polarity, shadow: ch.shadow, signals: ch.signals.slice(), opacity: u.mat.opacity, veil: u.veil.visible ? u.veil.material.opacity : 0, hiddenOf: ch.hiddenOf,
