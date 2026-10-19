@@ -1130,6 +1130,8 @@
     var snd = null;
     function mouthSound() {
       if (snd !== null) return;
+      var set = window.__oagCave && window.__oagCave.settings ? window.__oagCave.settings() : null;
+      if (set && set.sound === false) { snd = false; return; } // the title's gear turned the sound off
       try {
         var AC = window.AudioContext || window.webkitAudioContext; if (!AC) { snd = false; return; }
         var ac = new AC(), n = ac.sampleRate * 2, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0), l = 0;

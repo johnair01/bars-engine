@@ -1362,7 +1362,24 @@
     repaired: { open: 1, yaw: 0, lean: -0.03, head: -0.05, tilt: 0.15, step: 0, reach: 0, tau: 1.6 },      // honored and facing the player, arriving slowly
   };
   var STANCE_KEYS = ["open", "yaw", "lean", "head", "tilt", "step", "reach"];
-  var reducedMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The player's settings from the title screen's gear (gd-title-as-game), kept in this browser only: sound on or off, and
+  // still (reduced motion) as the device asks unless the player sets it. reducedMotion follows them as they change.
+  var SETTINGS_KEY = "oag.settings.v1", TUTORIAL_KEY = "oag.tutorial.v1", LAST_KEY = "oag.last.v1";
+  function readSettings() {
+    var s = null; try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null"); } catch (e) {}
+    return s && s.v === 1 ? s : { v: 1, sound: true, still: null };
+  }
+  var settings = readSettings();
+  function deviceStill() { return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches; }
+  function stillNow() { return settings.still == null ? deviceStill() : !!settings.still; }
+  var reducedMotion = stillNow();
+  function setSetting(k, v) {
+    settings[k] = v; reducedMotion = stillNow();
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  }
+  // Where the player last played, for the title's Continue: { v, at: "room" | "cave" | "bigmind", where (the body place) }.
+  function readLast() { try { var l = JSON.parse(localStorage.getItem(LAST_KEY) || "null"); return l && l.v === 1 && l.at ? l : null; } catch (e) { return null; } }
+  function keepLast(at, where) { try { localStorage.setItem(LAST_KEY, JSON.stringify({ v: 1, at: at, where: where || "" })); } catch (e) {} }
   // The rig for one worn body: bones from the baked rest (the bind pose), each joint's rest turn in the figure's space, and
   // the order to pose them in, parents first.
   function bodyRig(THREE, body) {
@@ -1908,7 +1925,26 @@
     ".oagc-marks{margin-top:2px;font-size:11px;color:#dfe6ff;text-shadow:0 1px 3px #000}.oagc-marks b{color:#fff1b0;margin:0 .6em 0 .25em;letter-spacing:.1em;font-weight:600}.oagc-trustsaw{color:#fff1d0}" +
     "@media (prefers-reduced-motion:reduce){.oagc-meter.eased .oagc-bar{animation-duration:.01s}}" +
     ".oagc-fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:5}" +
-    ".oagc-home{padding:2rem 1rem;max-width:34rem;margin:auto;text-align:center}.oagc-home h1{font-size:1.5rem;color:#fff}";
+    ".oagc-home{padding:2rem 1rem;max-width:34rem;margin:auto;text-align:center}.oagc-home h1{font-size:1.5rem;color:#fff}" +
+    // the title screen: the cave mouth in 3D behind, the name and the ways in over its lower part
+    ".oagc-title{position:fixed;inset:0;overflow:hidden;background:#07070f;color:#f4f4fa;font:16px/1.45 system-ui,-apple-system,sans-serif}" +
+    ".oagc-title-stage,.oagc-title-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}" +
+    ".oagc-title-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(7,7,15,.55),rgba(7,7,15,0) 30%,rgba(7,7,15,0) 52%,rgba(7,7,15,.92) 82%)}" +
+    ".oagc-title-name{position:absolute;left:16px;right:16px;top:calc(9vh + env(safe-area-inset-top));text-align:center;pointer-events:none}" +
+    ".oagc-title-name h1{margin:0;font:600 clamp(1.9rem,7vw,3.2rem)/1.1 Georgia,serif;color:#fff1d0;letter-spacing:.02em;text-shadow:0 2px 18px rgba(0,0,0,.8)}" +
+    ".oagc-title-name p{margin:.5rem 0 0;color:#d8dcef;text-shadow:0 1px 8px #000}" +
+    ".oagc-title-menu{position:absolute;left:16px;right:16px;bottom:calc(5vh + env(safe-area-inset-bottom));max-width:22rem;margin:0 auto;display:flex;flex-direction:column;gap:.6rem;align-items:stretch;text-align:center}" +
+    ".oagc-title-menu button{min-height:48px;border-radius:12px;font-size:1.05rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,241,176,.55);background:rgba(20,20,40,.82);color:#fff1d0}" +
+    ".oagc-title-menu button.main{background:#fff1d0;color:#16122a;border-color:#fff1d0}" +
+    ".oagc-title-menu button.link{min-height:44px;background:none;border:0;font-weight:400;font-size:.95rem;color:#c8d2ff;text-decoration:underline}" +
+    ".oagc-title-menu small{color:#aeb4cc;font-size:14px}" +
+    ".oagc-title button:focus-visible{outline:3px solid #9cc4ff;outline-offset:2px}" +
+    ".oagc .oagc-gear{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(20,20,40,.7);color:#fff1d0;font-size:26px;line-height:1;padding:0;cursor:pointer}" +
+    ".oagc-settings{position:absolute;left:16px;right:16px;top:calc(70px + env(safe-area-inset-top));max-width:22rem;margin:0 auto;padding:1rem;border-radius:16px;background:rgba(12,12,28,.96);border:1px solid rgba(255,241,176,.5);z-index:2}" +
+    ".oagc-settings h2{margin:0 0 .6rem;font-size:1.15rem;color:#fff}" +
+    ".oagc-settings label{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:44px;font-size:1rem}" +
+    ".oagc-settings input{width:22px;height:22px}.oagc-settings small{display:block;color:#aeb4cc;font-size:14px;margin:-.2rem 0 .4rem}" +
+    ".oagc-settings button{min-height:44px;width:100%;margin-top:.5rem;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(30,30,56,.9);color:#f4f4fa;font-size:1rem;cursor:pointer}";
 
   // The page-wide guards (iOS long press and pinch): no context menu, no selection start, no gesture zoom. Typed text in an
   // input is left alone. Added once; the cave test dispatches these events and checks they were cancelled.
@@ -1926,25 +1962,153 @@
     ["touchstart", "touchmove"].forEach(function (n) { node.addEventListener(n, function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false }); });
   }
 
+  // The title screen (gd-title-as-game): the cave mouth in 3D with the player's figure standing in it, its light at the chest,
+  // and the ways in: Continue (when there is a place to go back to), Begin (the WAVE room, where the walkthrough starts),
+  // straight into the cave, and the gear for sound, still motion and the walkthrough again. With no WebGL the words stay.
   function start() {
     if (!document.getElementById("oagc-css")) document.head.appendChild(el("style", { id: "oagc-css", text: CSS }));
     guardPage();
     var root = document.getElementById("cave-root") || document.body;
-    var home = el("div", { class: "oagc", "data-cave-home": "" }, [el("div", { class: "oagc-home" }, [
-      el("h1", { text: "The Cave of Lessons" }),
-      el("p", { text: "Your body is the world. Tap where the charge is, and go in." }),
-      el("button", { "data-cave-dive": "", text: "Find the place", onclick: function () {
-        window.OAGBody.pick().then(function (r) { if (r) dive(r.label, home); });
-      } }),
-      // The WAVE room on its own, from the body map (board wave-room-cave-link = both): tap where the charge is, and sit with it.
-      el("p", { text: "Or sit with it at home: a room with a door, where a charge is welcomed in, worked, and let go." }),
-      el("button", { class: "alt", "data-room-open": "", text: "Sit in the WAVE room", onclick: function () {
-        window.OAGBody.pick().then(function (r) {
-          if (r) load().then(function (A) { return homeBase(A, home, { where: r.label }); }).catch(function (e) { alert("The room could not open: " + e.message); });
-        });
-      } }),
+    var stage = el("div", { class: "oagc-title-stage", "aria-hidden": "true" });
+    function roomFrom(where) {
+      return load().then(function (A) { return homeBase(A, home, { where: where }); }).catch(function (e) { alert("The room could not open: " + e.message); });
+    }
+    function pickThen(go) { window.OAGBody.pick().then(function (r) { if (r) go(r.label); }); }
+    var menuBox = el("div", { class: "oagc-title-menu" });
+    function drawMenu() {
+    var last = continueTo(), menu = [];
+    if (last) menu.push(el("button", { class: "main", "data-title-continue": last.at, text: "Continue", onclick: function () { goOn(last); } }),
+      el("small", { "data-title-continue-where": "", text: last.label }));
+    menu.push(
+      // Begin opens the WAVE room from the body map (board wave-room-cave-link = both): tap where the charge is, and sit with it.
+      el("button", { class: last ? "" : "main", "data-room-open": "", "data-title-begin": "", text: last ? "Begin again" : "Begin", onclick: function () { pickThen(roomFrom); } }),
+      el("button", { class: "link", "data-cave-dive": "", text: "Or tap the body and go straight into the cave", onclick: function () {
+        pickThen(function (label) { dive(label, home); });
+      } }));
+    menuBox.innerHTML = ""; menu.forEach(function (k) { menuBox.appendChild(k); });
+    }
+    drawMenu();
+    var panel = el("div", { class: "oagc-settings", "data-title-settings-panel": "", role: "dialog", "aria-label": "Settings", style: "display:none" });
+    function toggle(key, text, note, on, set) {
+      var box = el("input", { type: "checkbox", "data-setting": key, onchange: function () { set(box.checked); } }); box.checked = on;
+      return [el("label", {}, [el("span", { text: text }), box]), note ? el("small", { text: note }) : null];
+    }
+    function drawPanel() {
+      panel.innerHTML = "";
+      [el("h2", { text: "Settings" })]
+        .concat(toggle("sound", "Sound", "", settings.sound !== false, function (v) { setSetting("sound", v); }))
+        .concat(toggle("still", "Still motion", settings.still == null ? "Following your device's setting." : "", stillNow(), function (v) { setSetting("still", v); drawPanel(); }))
+        .concat([el("button", { "data-setting": "replay", text: "Show the walkthrough again", onclick: function (e) {
+          try { localStorage.removeItem(TUTORIAL_KEY); } catch (er) {}
+          e.target.textContent = "The walkthrough will show again";
+        } }), el("button", { "data-setting": "close", text: "Done", onclick: function () { panel.style.display = "none"; gear.focus(); } })])
+        .forEach(function (k) { if (k) panel.appendChild(k); });
+    }
+    var gear = el("button", { class: "oagc-gear", "data-title-settings": "", "aria-label": "Settings", text: "⚙", onclick: function () {
+      if (panel.style.display === "none") { drawPanel(); panel.style.display = ""; panel.querySelector("input").focus(); } else panel.style.display = "none";
+    } });
+    var home = el("div", { class: "oagc", "data-cave-home": "" }, [el("div", { class: "oagc-title", "data-title": "" }, [
+      stage, el("div", { class: "oagc-title-shade" }),
+      el("div", { class: "oagc-title-name" }, [el("h1", { text: "The Cave of Lessons" }), el("p", { text: "Your body is the world. Find where the charge is, and go in." })]),
+      menuBox, gear, panel,
     ])]);
     root.appendChild(home);
+    titleScene(stage, home, function () { drawMenu(); panel.style.display = "none"; });
+  }
+  // Continue: the last place played (oag.last.v1), or, for a player from before it was kept, a Big Mind save with a voice met.
+  function continueTo() {
+    var l = readLast();
+    if (!l) {
+      var bm = window.__oagBigMind && window.__oagBigMind.readSave ? window.__oagBigMind.readSave() : null;
+      if (bm && (bm.chamber > 0 || Object.keys(bm.voices || {}).length)) l = { v: 1, at: "bigmind", where: "" };
+    }
+    if (!l || (l.at !== "bigmind" && !l.where)) return null;
+    l.label = l.at === "bigmind" ? "Back to the Big Mind cave" : l.at === "room" ? "Back to the WAVE room, with " + l.where : "Back into the cave at " + l.where;
+    return l;
+  }
+  function goOn(l) {
+    var home = document.querySelector("[data-cave-home]");
+    if (l.at === "cave") return dive(l.where, home);
+    load().then(function (A) {
+      if (l.at === "room") return homeBase(A, home, { where: l.where });
+      // Big Mind's own way out comes back here: to the room it was opened from, or to the title
+      keepLast("bigmind", l.where);
+      home.style.display = "none";
+      window.__oagBigMind.open({ spirits: [], back: function () { home.style.display = ""; if (l.where) homeBase(A, home, { where: l.where }); } });
+    }).catch(function (e) { alert("The cave could not open: " + e.message); });
+  }
+  // The title's scene: the kit's portal arch as the cave mouth, a tunnel going back into blue dark, spires and glowing caps,
+  // and the player's figure (Average Dusk, worn as in the cave) standing in the mouth, breathing, its light at the chest.
+  // It draws only while the title is showing; leaving it for the cave or the room lets its renderer go, and coming back makes
+  // a new one.
+  function titleScene(stage, home, onShow) {
+    var live = null, A = null, raf = 0, t0 = 0, noGL = false, was = true;
+    function shown() { return home.isConnected && home.style.display !== "none" && document.querySelectorAll(".oagc").length === 1; }
+    function build() {
+      var THREE = A.THREE, renderer;
+      try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { return null; }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      stage.appendChild(renderer.domElement);
+      var scene = new THREE.Scene(); scene.background = new THREE.Color(0x07070f); scene.fog = new THREE.FogExp2(0x07070f, 0.045);
+      var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 120);
+      var tall = false, G = {}; Object.keys(A.kit).forEach(function (k) { G[k] = geomOf(THREE, A.kit[k]); });
+      function stone(tile, hex, rep) {
+        var m = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.92 });
+        if (A.tiles[tile]) { m.map = A.tiles[tile].clone(); m.map.needsUpdate = true; m.map.repeat.set(rep, rep); }
+        return m;
+      }
+      function put(piece, mat, x, y, z, sx, sy, sz, ry) {
+        var m = new THREE.Mesh(G[piece], G[piece].attributes.color ? shaded(THREE, mat) : mat);
+        m.position.set(x, y, z); m.scale.set(sx, sy == null ? sx : sy, sz == null ? sx : sz); m.rotation.y = ry || 0; scene.add(m); return m;
+      }
+      var rock = stone("dry_stone", 0x6d6478, 3), wet = stone("wet_stone", 0x4b4a5e, 4), cap = new THREE.MeshStandardMaterial({ color: 0x9fd8ff, emissive: 0x5fb8ff, emissiveIntensity: 0.9, roughness: 0.5 });
+      var crys = new THREE.MeshStandardMaterial({ color: 0xffe6a8, emissive: 0xffc860, emissiveIntensity: 0.7, roughness: 0.3 });
+      // the mouth: the arch, thickened by stacking, and the tunnel behind it
+      for (var i = 0; i < 6; i++) put("portal_arch", rock, 0, 0, -0.6 - i * 0.35, 3.3 + i * 0.05, 3.3 + i * 0.03, 2);
+      put("path_tube", wet, 0, 0, -1.2, 3.4, 3.4, 14);
+      put("floor", wet, 0, 0.01, 16, 18, 1, 32);
+      [[-4.6, -0.4, 1.6], [4.8, -0.8, 1.9], [-6.2, 1.2, 1.2], [6.4, 0.6, 1.4], [-3.4, -3, 1], [3.6, -4, 0.9]].forEach(function (p, k) { put("stone_spire", rock, p[0], 0, p[1], p[2], p[2] * (2.6 - k * 0.15), p[2], k); });
+      [[-2.9, 1.2, 0.9], [3.1, 0.9, 0.7], [-3.6, -5, 0.6], [2.4, -7, 0.5]].forEach(function (p, k) { put("glow_cap", cap, p[0], 0, p[1], p[2], p[2], p[2], k * 1.3); });
+      put("crystal_cluster", crys, 3.9, 0, 1.7, 1.1); put("root_hang", rock, -1.2, 3.25, -0.6, 1.4, 1.2, 1.4);
+      scene.add(new THREE.HemisphereLight(0x8a90c8, 0x0c0a14, 0.35));
+      var deep = new THREE.PointLight(0x6f9cff, 2.2, 30, 2); deep.position.set(0, 2.2, -10); scene.add(deep);
+      var rim = new THREE.PointLight(0x9fd8ff, 0.8, 14, 2); rim.position.set(-3, 1.2, 1.6); scene.add(rim);
+      // the figure, the light at its chest and the warm pool that light makes on the floor
+      // hidden until Average Dusk is worn, so the stand-in never flashes; if the walker cannot load, the stand-in shows
+      var av = buildAvatar(THREE, "other", true), d = av.userData; av.position.set(0.15, 0, 0.6); av.rotation.y = -0.3; av.scale.setScalar(0.72); scene.add(av);
+      av.visible = false; Promise.resolve(d.wearing).then(function () { av.visible = true; }, function () { av.visible = true; });
+      var lantern = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff1d0 }));
+      lantern.position.set(0, 2.42, 0.42); av.add(lantern);
+      var warm = new THREE.PointLight(0xffd99a, 1.6, 9, 2); warm.position.set(0, 2.42, 1.2); av.add(warm);
+      function size() {
+        var w = stage.clientWidth || window.innerWidth, h = stage.clientHeight || window.innerHeight;
+        renderer.setSize(w, h, false); camera.aspect = w / h;
+        tall = w < h; camera.fov = tall ? 60 : 46; camera.updateProjectionMatrix(); // a phone held upright sees the whole mouth
+      }
+      window.addEventListener("resize", size); size();
+      return { renderer: renderer, scene: scene, camera: camera, d: d, tall: function () { return tall; }, lantern: lantern, warm: warm, size: size, dispose: function () {
+        window.removeEventListener("resize", size); renderer.dispose(); if (renderer.forceContextLoss) renderer.forceContextLoss(); renderer.domElement.remove();
+      } };
+    }
+    function frame(now) {
+      raf = requestAnimationFrame(frame);
+      var on = shown();
+      if (on && !was) onShow(); // back from the cave or the room: Continue names the place just left
+      was = on;
+      if (!on) { if (live) { live.dispose(); live = null; } return; }
+      if (noGL) return;
+      if (!live) { live = build(); if (!live) { noGL = true; return; } t0 = now; }
+      var t = (now - t0) / 1000, still = reducedMotion, b = still ? 0.5 : 0.5 - 0.5 * Math.cos(t * 2 * Math.PI / BREATH_S);
+      if (live.d.walker) poseWalker(live.d, 0, 0, b);
+      var sway = still ? 0 : Math.sin(t * 0.12);
+      var far = live.tall() ? 12.5 : 9.2;
+      live.camera.position.set(1.2 * sway, 2.4 + (still ? 0 : 0.08 * Math.sin(t * 0.2)), far);
+      live.camera.lookAt(0, live.tall() ? 1.5 : 1.9, 0);
+      live.lantern.scale.setScalar(0.9 + 0.2 * b); live.warm.intensity = 1.3 + 0.6 * b;
+      live.renderer.render(live.scene, live.camera);
+    }
+    window.__oagTitle = { live: function () { return !!live; }, walker: function () { return !!(live && live.d.walker); } };
+    load().then(function (a) { A = a; raf = requestAnimationFrame(frame); }).catch(function () { /* the words and buttons stand alone */ });
   }
 
   var running = null;
@@ -1960,6 +2124,7 @@
         alert("That place is not on the figure yet. Tap the figure to choose one.");
         return;
       }
+      keepLast("cave", label);
       enter(A, spot, home);
     }).catch(function (e) { alert("The cave could not open: " + e.message); });
   }
@@ -1970,7 +2135,9 @@
   // of that cave's mouth comes home to the room.
   function homeBase(A, home, o) {
     var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
+    keepLast("room", o.where);
     return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind }).then(function (r) {
+      if (r && r.bigmind) keepLast("bigmind", o.where);
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
       else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, o); } });
       return r;
@@ -5454,7 +5621,7 @@
     // process into this map")
     loadTiles: loadTiles, stoneOf: stoneOf, tileStone: tileStone, LAMP: LAMP,
   };
-  window.__oagCave = { start: start, load: load, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE,
+  window.__oagCave = { start: start, load: load, settings: function () { return settings; }, setSetting: setSetting, dive: function (label) { return dive(label, document.querySelector("[data-cave-home]")); }, layoutMain: layoutMain, WAVE: WAVE,
     crystalBlock: crystalBlock, geomOf: geomOf, stoneOf: stoneOf, CRYSTAL_TINTS: CRYSTAL_TINTS, CRYSTAL_RANGE: CRYSTAL_RANGE,
     openRoom: function (o) { return load().then(function (A) { return openRoom(A, o); }); },
     levels: function (o) { return load().then(function (A) { enter(A, null, document.querySelector("[data-cave-home]"), o || {}); }); }, ROOM_STEPS: ROOM_STEPS, roomTest: readRoomTest, kit: kit, buildElement: buildElement, buildPool: buildPool,
