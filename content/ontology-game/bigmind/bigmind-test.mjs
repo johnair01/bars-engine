@@ -290,6 +290,17 @@ ok(u2.gas > 0 && u2.gas < 1, 'partway through, the gas is drawing in and fading 
 await page.waitForTimeout(2600);
 await page.screenshot({ path: SHOTS + '/bm-3m-spirit-core.png' });
 ok((await prot()).gas === 0, 'then the core stands where the gas was');
+// One store (sic-one-store): the same spirit is kept in oag.spirits.v1 with its family, sittings and a lineage of the sittings,
+// and its stage is never stored there. The loadout holds three at most.
+const store1 = await page.evaluate(() => JSON.parse(localStorage.getItem('oag.spirits.v1')));
+const sp1 = store1 && store1.spirits.filter((x) => x.id === 'meet-protector')[0];
+ok(sp1 && sp1.family === 'protector' && sp1.sittings === 2 && sp1.lineage.length === 2 && sp1.born.where && !('stage' in sp1) && sp1.loadout === false, 'the meeting spirit is kept in oag.spirits.v1 with family, sittings and a lineage, and no stored stage: ' + JSON.stringify(sp1));
+const lo = await page.evaluate(() => { const S = window.__oagSpiritStore, r = [];
+  ['a', 'b', 'c'].forEach((k) => S.put({ id: 'x-' + k, name: k, family: 'fixer', sittings: 0 }));
+  r.push(S.setLoadout('meet-protector', true), S.setLoadout('x-a', true), S.setLoadout('x-b', true), S.setLoadout('x-c', true));
+  r.push(S.loadout().length, S.setLoadout('x-a', false), S.setLoadout('x-c', true), S.loadout().length, S.put({ id: 'meet-protector', sittings: 1 }).sittings);
+  ['x-a', 'x-b', 'x-c'].forEach((k) => S.remove(k)); S.setLoadout('meet-protector', false); return r; });
+ok(JSON.stringify(lo) === '[true,true,true,false,3,true,true,3,2]', 'three spirits at most walk in the loadout, a fourth is refused until one rests, and sittings never go down: ' + JSON.stringify(lo));
 // the checks below count this run's W.A.V.E.s and charges, so the extra W.A.V.E. and the charge its block left are taken back
 await page.evaluate((b) => { const B = window.__oagBigMind; B.state.waves.length = b.waves;
   B.spirits.filter((o) => !o.meet).slice(b.charges).forEach((o) => { B.spirits.splice(B.spirits.indexOf(o), 1); o.g.parent.remove(o.g); if (o.light) o.light.parent.remove(o.light); }); }, before);

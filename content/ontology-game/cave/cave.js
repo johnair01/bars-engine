@@ -1569,6 +1569,8 @@
   // the character until dismissed"). One look serves every cave: an orb in its element's colour, its aura, and its name above it.
   // followSpirits floats them toward spot(j), the j-th place in view; past SPIRITS_SHOWN they are hidden and only counted.
   var SPIRITS_SHOWN = 3;
+  var SPIRIT_STORE = window.__oagSpiritStore || null, spiritForms = window.__oagSpiritForms || null; // oag.spirits.v1 and the forms
+  function sittingStage(n) { return spiritForms && spiritForms.stageOf ? spiritForms.stageOf(n) : "gas"; }
   // A spirit of a daemon's family (form.family, the daemon's id) wears the family's gas in place of the orb (cave/spirit-forms.js,
   // board sic-family-cloud); form.from, a world point, streams its motes in from the daemon's body. Without a family it is the orb.
   function buildSpirit(THREE, name, hex, form) {
@@ -2848,10 +2850,13 @@
     var spiritBtn = el("button", { class: "oagc-spiritbtn", "data-cave-spiritbtn": "", style: "display:none", onclick: function () { spiritPanel(); } });
     var spiritBox = el("div", { class: "oagc-spirits", "data-cave-spirits": "", style: "display:none" });
     canvasBox.appendChild(spiritBtn); wrap.appendChild(spiritBox);
+    // A spirit of a family (a met daemon's, kept in oag.spirits.v1) wears the form its sittings give it; the rest are orbs.
     function addSpirit(o, at0) {
-      var g = buildSpirit(THREE, o.name, o.hex != null ? o.hex : spiritHex(o.element)); if (o.lighter) g.userData.level = 0.2;
+      if (o.family && spirits.some(function (x) { return x.family === o.family && x.name === o.name; })) return; // already walking with you
+      if (o.family && !o.stage) o.stage = sittingStage(o.sittings || 0);
+      var g = buildSpirit(THREE, o.name, o.hex != null ? o.hex : spiritHex(o.element), o.family ? { family: o.family, stage: o.stage } : null); if (o.lighter) g.userData.level = 0.2;
       // a spirit still under a perceptual shadow walks dimmer, by its polarity
-      if (o.polarity) { var oc = occlusion(o.polarity), fl = flooding(o.polarity); g.userData.level = g.userData.level * (1 - oc) + (1 - g.userData.level) * fl; g.userData.orb.material.opacity = 0.9 * (1 - 0.7 * oc);
+      if (o.polarity && g.userData.orb) { var oc = occlusion(o.polarity), fl = flooding(o.polarity); g.userData.level = g.userData.level * (1 - oc) + (1 - g.userData.level) * fl; g.userData.orb.material.opacity = 0.9 * (1 - 0.7 * oc);
         g.userData.orb.scale.setScalar(1 + 0.8 * fl); g.userData.polarity = o.polarity; } // a flooding one walks bigger and blazes
       if (at0) g.position.copy(at0); else if (avatar) g.position.set(avatar.position.x, avatar.position.y + 1.7, avatar.position.z);
       scene.add(g); o.g = g; o.light = carryLight(g, g.userData.color.getHex()); spirits.push(o); spiritsUi();
@@ -2884,6 +2889,14 @@
       var li = o.light && o.light.intensity;
       tween(1600, function (k) { g.position.y = y0 + 2.5 * ease(k); g.traverse(function (m) { if (m.material) m.material.opacity = 0.9 * (1 - k); }); if (o.light) o.light.intensity = li * (1 - k); }, function () { scene.remove(g); dropLight(g); });
     }
+    // A sitting with a spirit of a family counts once a run, whether or not anything shifted (time spent together), and the store
+    // keeps the count; its stage comes from the count alone (spirit-forms.js stageOf).
+    var satRun = {};
+    function sittingCounted(o) {
+      var key = o.id || o.name; if (satRun[key]) return; satRun[key] = true;
+      o.sittings = (o.sittings || 0) + 1; o.stage = sittingStage(o.sittings);
+      try { if (SPIRIT_STORE && o.id) SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings }, "Cave of Lessons"); } catch (e) { /* the sitting still counted */ }
+    }
     // Sitting with it again: the room opens with its feeling known. What is worked there comes back out; if nothing is, it does.
     function spiritHome(o) {
       if (busy || !state.walk) return;
@@ -2893,7 +2906,7 @@
         cancelAnimationFrame(running); wrap.style.display = "none";
         openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element }).then(function (r) {
           wrap.style.display = ""; snapCam = true; last = performance.now(); render(); busy = false; fade.style.opacity = 0;
-          var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter, polarity: o.polarity }];
+          var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter, polarity: o.polarity, family: o.family, id: o.id, sittings: o.sittings, stage: o.stage }];
           back.forEach(function (x) { addSpirit(x); });
         });
       }, 520);
@@ -3031,6 +3044,7 @@
         var o = { name: nm, element: S.element, lighter: branch === "goes" };
         if (S.spirit) { o.name = S.spirit.name; o.element = S.element || S.spirit.element; o.hex = S.element ? null : S.spirit.hex; o.lighter = branch === "goes" || S.spirit.lighter; }
         o.hex = o.element ? null : sitHex(S);
+        if (S.spirit && S.spirit.family) { o.family = S.spirit.family; o.id = S.spirit.id; o.sittings = S.spirit.sittings || 0; if (branch !== "stood") sittingCounted(o); }
         if (branch !== "stood" || S.spirit) addSpirit(o, from);
         unstashPage(S.back);
       });
@@ -3184,6 +3198,11 @@
       state.sens.push(state.cur);
       buildLevel("hall");
       (o.spirits || []).forEach(function (sp) { addSpirit(sp); });
+      addLoadout();
+    }
+    // The three the player chose in the WAVE room walk in from the one store (board sic-loadout-three).
+    function addLoadout() {
+      try { if (SPIRIT_STORE) SPIRIT_STORE.loadout().forEach(function (t) { if (t.family) addSpirit({ id: t.id, name: t.name, element: t.element, family: t.family, sittings: t.sittings }); }); } catch (e) { /* no store: only the ones from the room */ }
     }
     function goTo(place, face) {
       if (busy) return;
@@ -3800,6 +3819,8 @@
     ".oagr-close{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;max-width:420px;margin:0 auto;max-height:40vh;overflow-y:auto;padding:.7rem .9rem;background:rgba(12,12,28,.9);border:1px solid rgba(255,241,176,.5);border-radius:16px;color:#f4f4fa;touch-action:manipulation}" +
     ".oagr-close h2{margin:0 0 .3rem;font-size:1.15rem;color:#fff1b0;display:flex;align-items:center;gap:.5rem}.oagr-close p{margin:.25rem 0;font-size:.95rem;line-height:1.35}.oagr-close .oagc-row{margin-top:.5rem}" +
     ".oagc button.oagr-portalbtn{right:auto;left:10px;border-color:rgba(200,184,255,.7);color:#e8e0ff}" +
+    ".oagc button.oagr-spirits{position:absolute;right:16px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.55);color:#fff1d0;background:rgba(20,20,40,.85)}" +
+    ".oagr-load{width:min(300px,calc(100vw - 170px))}.oagr-load button[aria-pressed=true]{border-color:#fff1b0;background:rgba(80,70,30,.85)}" +
     ".oagc button.oagr-sit{position:absolute;right:16px;bottom:calc(40px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.8);color:#fff1b0;background:rgba(60,30,24,.85)}" +
     ".oagr-dot{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}";
 
@@ -4478,6 +4499,25 @@
       var stick = { x: 0, z: 0 }, keys = {}, stickPad = el("div", { class: "oagr-stick", "data-room-stick": "", "aria-label": "Walk", role: "slider" });
       var stickKnob = el("div", { class: "oagr-knob" }); stickPad.appendChild(stickKnob); wrap.appendChild(stickPad);
       var sitBtn = el("button", { class: "oagr-sit", "data-room-sit": "", text: "Sit down", style: "display:none", onclick: function () { sitDown(); } }); wrap.appendChild(sitBtn);
+      // The loadout (board sic-loadout-three): on the rug the player chooses which three of the spirits kept in oag.spirits.v1 walk
+      // with them; the rest rest here. Nothing is locked behind a stage, and a spirit's sittings are not shown as a score.
+      var loadBtn = el("button", { class: "oagr-spirits", "data-room-spirits": "", text: "Your spirits", style: "display:none", onclick: function () { loadoutCard(); } }); wrap.appendChild(loadBtn);
+      var loadBox = el("div", { class: "oagr-door oagr-load", "data-room-loadout": "", style: "display:none" }); wrap.appendChild(loadBox);
+      function keptSpirits() { try { return SPIRIT_STORE ? SPIRIT_STORE.all().filter(function (t) { return t.family; }) : []; } catch (e) { return []; } }
+      function stageWord(t) { var st = sittingStage(t.sittings || 0), fam = spiritForms && spiritForms.FAMILIES[t.family] && spiritForms.FAMILIES[t.family][0]; return (fam ? fam + ", " : "") + st; }
+      function loadoutCard(note) {
+        var all = keptSpirits(), max = SPIRIT_STORE ? SPIRIT_STORE.MAX_LOADOUT : 3, n = all.filter(function (t) { return t.loadout; }).length;
+        var kids = [el("h2", { text: "Your spirits" }), P("Up to " + max + " walk with you. The rest rest here and wait.", { "data-room-loadout-count": String(n) })];
+        if (note) kids.push(P(note, { class: "oagr-note", "data-room-loadout-note": "" }));
+        all.forEach(function (t) {
+          kids.push(btn(t.name + " (" + stageWord(t) + ")", { "data-room-loadout-spirit": t.id, "aria-pressed": String(!!t.loadout) }, function () {
+            var ok = SPIRIT_STORE.setLoadout(t.id, !t.loadout);
+            loadoutCard(ok ? null : "Already " + max + " walk with you. Let one rest first.");
+          }, true));
+        });
+        kids.push(btn("Back to the room", { "data-room-loadout-back": "" }, function () { loadBox.style.display = "none"; }));
+        loadBox.innerHTML = ""; kids.forEach(function (k) { loadBox.appendChild(k); }); loadBox.style.display = "";
+      }
       var stickId = null;
       // On an iPhone a thumb held on the stick keeps sending moves after the stick hides for a door's card, and a hidden stick
       // measures 0 wide: dividing by that walked the figure to nowhere and left the room dark (Wendell, 14 October 2026: "Stay in
@@ -4536,8 +4576,10 @@
           if (near && near !== R.atDoor) doorCard(near);
           else if (!near && R.atDoor) hideDoor();
         }
-        if (!R.roam || !R.roam.free) { sitBtn.style.display = "none"; return !!w; }
+        if (!R.roam || !R.roam.free) { sitBtn.style.display = "none"; loadBtn.style.display = "none"; loadBox.style.display = "none"; return !!w; }
         sitBtn.style.display = onRug() && !R.modal ? "" : "none";
+        loadBtn.style.display = onRug() && !R.modal && keptSpirits().length ? "" : "none";
+        if (R.modal) loadBox.style.display = "none";
         return !!w;
       }
 
@@ -4585,7 +4627,7 @@
         R.roam = { x: q.x, z: q.z, exit: ex ? ex.id : null, arrived: false };
         hideDoor(); closeModal();
       }
-      function stopWalking() { if (R.roam) { R.roam = null; hideDoor(); } R.walkYaw = null; if (sitBtn) sitBtn.style.display = "none"; }
+      function stopWalking() { if (R.roam) { R.roam = null; hideDoor(); } R.walkYaw = null; if (sitBtn) sitBtn.style.display = "none"; if (loadBtn) { loadBtn.style.display = "none"; loadBox.style.display = "none"; } }
       function hideDoor() { if (doorBox) doorBox.style.display = "none"; R.atDoor = null; }
       // A door's prompt, while the figure stands in front of it. The Big Mind cave and the six game masters are each a door the
       // player goes through by choice; walking away is how they stay.
