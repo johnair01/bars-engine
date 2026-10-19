@@ -1887,7 +1887,7 @@
     ".oagc button.alt{background:rgba(20,20,40,.85);border:1px solid rgba(255,255,255,.3);color:#e0e0e0;font-weight:400}" +
     ".oagc button[aria-pressed=true]{outline:2px solid #fff}" +
     ".oagc button.oagc-calm,.oagc button.oagc-ringbtn{position:absolute;top:10px;background:rgba(20,20,40,.7);border:1px solid rgba(255,255,255,.35);color:#e8e8f0;font-weight:500;z-index:4}" +
-    ".oagc button.oagc-calm{right:10px}.oagc button.oagc-ringbtn{left:10px}" +
+    ".oagc button.oagc-calm{right:10px}.oagc button.oagr-ship{right:84px}.oagc button.oagc-ringbtn{left:10px}" +
     // the stick (left thumb) and a thing's prompt (right thumb), shared by the WAVE room and the caves
     ".oagr-door{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:min(230px,calc(100vw - 170px));padding:.6rem .7rem;background:rgba(12,12,28,.88);border:1px solid rgba(255,241,176,.55);border-radius:14px;color:#f4f4fa;touch-action:manipulation}" +
     ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}.oagr-door button+button{margin-top:.35rem}" +
@@ -1972,7 +1972,7 @@
     var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
     return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind }).then(function (r) {
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
-      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, o); } });
+      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { if (window.__oagVessel) window.__oagVessel.store.visited("bigmind"); homeBase(A, home, o); } });
       return r;
     });
   }
@@ -3344,6 +3344,7 @@
     }
     // The spirit born on meeting the daemon becomes the ally; one let go, or never born, is sent in its own colour.
     function allyJoins(id) {
+      if (window.__oagVessel) window.__oagVessel.store.ally(id); // an ally makes the ship a part (board iv-daemon-not-part, his steer)
       var sid = "meet-" + id, mine = spirits.filter(function (o) { return o.id === sid; })[0];
       if (mine) { mine.ally = id; return mine; }
       if (spirits.some(function (o) { return o.ally === id; })) return null;
@@ -3718,6 +3719,7 @@
       if (busy) return;
       busy = true; closeModal();
       var where = state.level.where; leave(false);
+      if (window.__oagVessel) window.__oagVessel.store.visited("hall"); // a visit that ends mines the place's fuel for the ship
       setTimeout(function () { homeBase(A, home, { where: where }); }, 540);
     }
     function buildLevel(place, face) {
@@ -4939,7 +4941,7 @@
       }
       // One creature is worked through: the next one in the room is worked, or one waiting at the door is welcomed, or the round ends.
       function workedThrough() {
-        if (R.worked.indexOf(ch) < 0) R.worked.push(ch); // each W.A.V.E. worked here walks back out with the player as a spirit
+        if (R.worked.indexOf(ch) < 0) { R.worked.push(ch); shipEmber(ch); } // each W.A.V.E. worked here walks back out with the player as a spirit
         R.active.splice(R.active.indexOf(ch), 1);
         if (R.active.length) { var nx = R.active[0]; ch.phase = "done"; ch = nx; setFocus(nx); draw(); return; }
         if (R.waiting > 0) { R.waiting--; var c = newCharge(false, 0); c.waited = true; R.active.push(c); ch = c; setFocus(c); draw(); return; }
@@ -4980,6 +4982,18 @@
       }
 
       // ---- breath, calm, look ---------------------------------------------------------------------------------------------
+      // The WAVE room is the ship's cabin (Six-faces-council council/callsheets/inner-vessel.md). Each charge worked through the
+      // whole W.A.V.E. gives the ship one ember (a 3-2-1 in it makes it a 3-2-1 ember, its bonus when the charge dropped by more
+      // than 2), and the spirits aboard power the ship. The ship's dock opens from the button by Calm.
+      function shipEmber(c) {
+        var VS = window.__oagVessel && window.__oagVessel.store; if (!VS) return;
+        var drop = (c.heatStart != null ? c.heatStart : 6) - c.heat;
+        VS.route({ source: c.t321 ? "321" : "wave", element: c.element || null, intensity: c.heat, bonus: !!c.t321 && drop > 2 });
+        VS.spirits();
+      }
+      if (window.__oagVessel) stage.appendChild(el("button", { class: "oagc-calm oagr-ship", "data-room-ship": "", text: "The ship", onclick: function () {
+        stopWalking(); window.__oagVessel.openDock(wrap, {});
+      } }));
       var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
       stage.appendChild(calmBtn);
       // One finger turns the view. Two fingers pinch it nearer or farther (Wendell, 13 October 2026: "Let's introduce pinch to
