@@ -889,6 +889,99 @@ await page.locator('[data-cave-marker="allow"]').waitFor();
 await page.waitForTimeout(700);
 ok(Math.abs((await avatar()).s - sAllow) < 1e-6 && (await state('JSON.stringify(s.sens[0].skipped)')) === '["allow"]', 'Skip returns to the marker it left from, and the skip is kept on the scan');
 
+const MK4 = 'allow';
+// ---- trust kept across visits and the falls (sic-first-cave-sitting, 4e) -----------------------------------------------
+// A daemon met twice, in two side passages from the same marker. The first visit: it refuses, the player waits and then pushes
+// past (a fall), owns it, promises to come back to their own place and to ask again another day, and leaves from its place by
+// a skip (a fall). The second visit, after trustRevisit (a new visit that has only what the device kept): it remembers, the
+// visit promise is kept, the player owns the other fall, promises again, closes the page in its place (a fall) and promises a
+// third time, which releasing keeps.
+const T4 = (id) => C((i) => window.__oagCave.trust(i), id);
+const stored4 = () => C(() => window.__oagCave.trustStored());
+const kinds4 = (a) => a.map((b) => b.dim + ':' + b.kind).join();
+const readRound4 = async (first, before, after) => {
+  if (first) { await page.locator('[data-cave-321]').click(); await charge('before', before); await page.locator('[data-cave-321-start]').click(); }
+  else await page.locator('[data-cave-satisfied="not-yet"]').click();
+  await say('it', 'it is a wall'); await page.locator('[data-cave-321-next]').click();
+  await say('you', 'what do you want?'); await say('you', 'I want you safe'); await page.locator('[data-cave-321-next]').click();
+  await say('i', 'I am the part that guards'); await page.locator('[data-cave-321-next]').click();
+  await charge('after', after); await page.locator('[data-cave-321-after]').click();
+};
+const toPassage4 = async () => {
+  await page.locator('[data-cave-block]').click();
+  await page.locator('[data-cave-place="walk"]').waitFor();
+  await C(() => { window.__oagCave.state.walk.blk.gate = ['magenta', 'red', 'amber', 'orange', 'green', 'teal']; }); // the six branches are walked elsewhere
+  for (let i = 0; i < 6; i++) { await walkTo('[data-cave-stone-says]'); await page.locator('[data-cave-next]').click(); } // each stone's page, its branch counted as walked
+  await walkTo('[data-cave-place="mouth"]'); await page.locator('[data-cave-next]').click();
+  await walkTo('[data-cave-place="pool"]'); await page.locator('[data-cave-next]').click();
+  await walkTo('[data-cave-place="passage"]');
+  await page.locator('[data-cave-choice="fixer"]').click(); await page.locator('[data-cave-ap-skipall]').click();
+};
+await C(() => window.__oagCave.trustClear());
+await toPassage4();
+ok(await page.locator('[data-cave-returning]').count() === 0, 'a daemon never met before does not say it remembers');
+await page.locator('[data-cave-bm-speak="not-now"]').click();
+ok(await sees('[data-cave-met="declined"]') && await sees('[data-cave-honour]') && await sees('[data-cave-push]') && /sit with it/.test(await page.locator('[data-cave-doubt="can"]').textContent()), 'a refusal says what it has not seen yet, and the player can wait with it or ask again now');
+await page.locator('[data-cave-honour]').click();
+ok((await T4('fixer')).pending.includes('good:honour') && await page.locator('[data-cave-honour]').isDisabled() && await sees('[data-cave-honoured]'), 'waiting with a refusal is a move that waits for the next reading');
+await page.locator('[data-cave-push]').click();
+const pu = await T4('fixer');
+ok(pu.good === 'broken' && pu.stance === 'hurt' && !pu.pending.includes('good:honour') && /broke/.test(await page.locator('[data-cave-pushed]').textContent()) && await sees('[data-cave-bm-speak="yes"]'), `asking again at once is a push: its read of you breaks, it turns hurt, it speaks in its words and asks again (${pu.good}, ${pu.stance})`);
+ok(kinds4((await stored4()).fixer.broken) === 'good:push', 'the fall is written to the device as it happens');
+await page.locator('[data-cave-bm-speak="not-now"]').click();
+await page.locator('[data-cave-aside="not-yet"]').click();
+await page.locator('[data-cave-trustbtn]').click();
+ok(await sees('[data-cave-own="good:push"]') && await page.locator('[data-cave-own]').count() === 1, 'Own it offers the one fall it has not heard owned');
+await page.locator('[data-cave-promise="return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await page.locator('[data-cave-trustbtn]').click(); await page.locator('[data-cave-promise="visit"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await page.locator('[data-cave-trustbtn]').click(); await page.locator('[data-cave-own="good:push"]').click();
+ok((await T4('fixer')).pending.includes('good:push'), 'owning it waits for the next reading, as every move does');
+await page.locator('[data-cave-trust-ok]').click();
+const st1 = (await stored4()).fixer;
+ok(st1.promises.map((p) => p.kind + ':' + p.kept).join() === 'return:null,visit:null' && st1.promises.every((p) => Object.keys(p).join() === 'kind,made,kept'), 'both promises are kept on the device as not yet kept, with no block in them');
+await readRound4(true, 9, 7);
+const ow = await T4('fixer');
+ok(ow.good === 'none' && ow.stance === 'repaired' && kinds4((await stored4()).fixer.repaired) === 'good:push' && /own it/.test(await page.locator('[data-cave-trustsaw]').first().textContent()), `the reading eased, so it heard the player own it: the fall is repaired and its stance is ${ow.stance}`);
+// Leaving from its place: the walk is inside the daemon's side passage, so a skip out breaks the promise to come back to one's own.
+ok((await C(() => window.__oagCave.voicePlace())).join() === 'fixer', 'inside its side passage, the player is in the daemon\'s place');
+await C(() => window.__oagCave.stepAside());
+await page.locator('[data-cave-skip]').click();
+await page.locator(`[data-cave-marker="${MK4}"]`).waitFor();
+await page.waitForTimeout(700);
+const st2 = (await stored4()).fixer;
+ok(kinds4(st2.broken) === 'good:push,will:return' && st2.promises[0].kept === false && st2.promises[1].kept === null && (await C(() => window.__oagCave.voicePlace())).length === 0, `skipping out from its place broke the promise to return: ${kinds4(st2.broken)}; the visit promise stands`);
+// A second visit has only what the device kept.
+await C(() => window.__oagCave.trustRevisit());
+await toPassage4();
+ok(await sees('[data-cave-returning]') && await page.locator('[data-cave-remembers]').count() === 1 && /walked out from mine/.test(await page.locator('[data-cave-remembers="will:return"]').textContent()), 'meeting it again, it says it remembers, and names the fall not yet owned (the owned one is not named)');
+const rv = await T4('fixer');
+ok(rv.stance === 'hurt' && (await stored4()).fixer.promises[1].kept && (await stored4()).fixer.promises[1].kept !== null, `it stands hurt as it was left, and the visit promise is kept by coming back (${rv.stance})`);
+await page.locator('[data-cave-bm-speak="not-now"]').click();
+await page.locator('[data-cave-aside="not-yet"]').click();
+await page.locator('[data-cave-trustbtn]').click();
+ok(await sees('[data-cave-own="will:return"]') && await page.locator('[data-cave-own]').count() === 1, 'Own it offers the broken promise to return, and only it');
+await page.locator('[data-cave-own="will:return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await readRound4(true, 9, 7);
+const ow2 = await T4('fixer');
+ok(ow2.stance === 'repaired' && kinds4((await stored4()).fixer.repaired) === 'good:push,will:return', `owning the broken promise, and the reading easing, repairs it too (${ow2.stance})`);
+await page.locator('[data-cave-trustbtn]').click();
+ok(await page.locator('[data-cave-promise="return"]').isEnabled(), 'a promise that was broken can be made again');
+await page.locator('[data-cave-promise="return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await C(() => window.dispatchEvent(new Event('pagehide')));
+const st3 = (await stored4()).fixer;
+ok(kinds4(st3.broken) === 'good:push,will:return,will:return' && st3.promises[2].kept === false && (await T4('fixer')).stance === 'hurt', 'closing the page in its place breaks the promise just as leaving does');
+await page.locator('[data-cave-trustbtn]').click(); await page.locator('[data-cave-promise="return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await C(() => window.__oagCave.stepAside());
+await page.waitForTimeout(1000);
+await page.locator('[data-cave-next]').click();
+await walkTo('[data-cave-release]');
+await page.locator('[data-cave-release]').click();
+await page.locator(`[data-cave-marker="${MK4}"]`).waitFor();
+const st4 = (await stored4()).fixer;
+ok(st4.promises[3].kept && st4.promises[3].kept !== false && st4.promises.length === 4, 'coming back round and releasing keeps the promise to return to one\'s own place, and the device has it');
+await C(() => window.__oagCave.trustClear());
+ok(Object.keys(await stored4()).length === 0, 'clearing a run clears what the device kept');
+
 const camIn = camSamples.filter((c) => c.inside).length, camOut = camSamples.filter((c) => !c.inside);
 ok(camIn >= camSamples.length * 0.97, `the camera stays inside the tunnel while walking (${camIn} of ${camSamples.length} samples)` + (camOut.length ? ' outside at: ' + JSON.stringify(camOut.slice(0, 4)) : ''));
 
@@ -1282,6 +1375,26 @@ let L = await lv();
 ok(L.place === 'hall' && L.kind === 'round' && L.stops.join(',') === 'door:magenta,door:red,door:amber,door:orange,door:green,door:teal,home',
   `the portal opens the hall of the six: six doors in altitude order and the portal home (${L.stops.join(', ')})`);
 ok((await C(() => window.__oagCave.pane())).title === 'The hall of the six', 'the hall names itself as the player comes in');
+{
+// Self and Run (sic-first-cave-sitting, 4e): Big Mind's two buttons, in the hall. Walked at the plain pace, so no stop is reached.
+await C(() => { window.__oagCave.state.speed = 1; });
+ok(await sees('[data-cave-self]') && await sees('[data-cave-run]') && (await page.locator('[data-cave-run]').getAttribute('aria-pressed')) === 'false', 'the hall has Self and Run on the screen, Run off');
+const hold4 = async (ms, key = 'ArrowUp') => { const a0 = await avatar(); await page.keyboard.down(key); await page.waitForTimeout(ms); await page.keyboard.up(key); const a1 = await avatar(); return Math.hypot(a1.x - a0.x, a1.z - a0.z); };
+const runNow = () => C(() => window.__oagCave.gait().run);
+const r0 = await runNow();
+await page.locator('[data-cave-run]').click();
+const r1 = await runNow(), pressed = await page.locator('[data-cave-run]').getAttribute('aria-pressed');
+await page.locator('[data-cave-run]').click();
+await page.keyboard.down('Shift'); const r2 = await runNow(); await page.keyboard.up('Shift'); const r3 = await runNow();
+ok(r0 === 1 && r1 === 2.1 && pressed === 'true' && r2 === 2.1 && r3 === 1, `Run, or Shift held, walks at 2.1 times the pace, and lets go (${r0}, ${r1}, ${r2}, ${r3})`);
+await page.locator('[data-cave-self]').click();
+const dSelf = await hold4(400);
+ok(await sees('[data-cave-selfbox]') && /nothing has to happen next/i.test(await page.locator('[data-cave-selfbox]').textContent()) && dSelf < 0.05, `Self takes control back: the walk stops and nothing has to happen next (${dSelf.toFixed(2)} moved)`);
+await page.locator('[data-cave-self-goon]').click();
+const dOn = await hold4(400);
+ok(!(await sees('[data-cave-selfbox]')) && dOn > 0.5, 'Go on gives the walk back');
+await C(() => { window.__oagCave.state.speed = 8; });
+}
 // Wendell, 14 October 2026: "The gates for the 6 game master room are too small. They should be doors."
 const doors = await C(() => window.__oagCave.doors()), figH = 3.6;
 ok(doors.length === 7 && doors.every((d) => d.h >= figH * 1.3 && d.w >= 3), `the hall's seven doors are doors, taller than the figure (${doors[0] && doors[0].w} wide, ${doors[0] && doors[0].h.toFixed(1)} tall, the figure ${figH})`);
@@ -1341,6 +1454,18 @@ await page.locator('[data-room-portal]').click({ timeout: 30000 });
 await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
 await page.waitForTimeout(700);
 ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again');
+// Walk back out leaves for the WAVE room, and the portal brings the player to the hall again.
+await page.locator('[data-cave-self]').click();
+await page.locator('[data-cave-self-out]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+ok(!(await sees('[data-cave-selfbox]')), 'Self\'s Walk back out leaves the hall for the WAVE room');
+await page.locator('[data-room-welcome]').waitFor();
+await C(() => window.__oagCave.room.speed(3));
+await C(() => window.__oagCave.room.walkTo('portal'));
+await page.locator('[data-room-portal]').click({ timeout: 30000 });
+await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(700);
+await C(() => { window.__oagCave.state.speed = 8; });
 // Wendell, 14 October 2026: "Camera controls are clunky in the game master space and the walking is rather slow". The camera
 // follows the figure, not the path's line: walking round the hall and across it, it comes round behind the figure.
 {
