@@ -1,10 +1,17 @@
 """Retarget a BVH walk onto a Rigify game skeleton whose rest pose differs (A-pose vs T-pose).
 Per bone: R_T(t) = R_S(t) @ R_S_rest^-1 @ Q^-1 @ R_T_rest, Q = minimal rotation taking the source rest bone
 direction to the target's. One gait cycle is found by pose matching, resampled to 24 fps, made to loop in place
-(hips forward travel removed by a linear detrend; sway and bob kept), and keyed as action 'MocapWalk'."""
+(hips forward travel removed by a linear detrend; sway and bob kept), and keyed as action 'MocapWalk'.
+Options after the three paths: --action NAME (default MocapWalk; MocapRun for a run) and --period LO,HI, the cycle's
+length range in source frames at 120 fps (default 90,200, a walk; a run's cycle is about 0.6 s, so 55,110).
+The cycle's travel per loop in the figure's metres is stored on the action as 'travel_m', for the game's foot speed."""
 import bpy,sys,math
 from mathutils import Matrix,Quaternion,Vector
-blend,bvh,out=sys.argv[-3:]
+argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[-3:]
+opt={argv[i]:argv[i+1] for i in range(len(argv)-1) if argv[i].startswith('--')}
+blend,bvh,out=[a for i,a in enumerate(argv) if not a.startswith('--') and not (i and argv[i-1].startswith('--'))]
+ACT=opt.get('--action','MocapWalk')
+PLO,PHI=map(int,opt.get('--period','90,200').split(','))
 bpy.ops.wm.open_mainfile(filepath=blend)
 sc=bpy.context.scene; sc.render.fps=24
 T=bpy.data.objects['GAME_RIG_Figure']
@@ -41,8 +48,8 @@ for f in range(f0,f1+1):
     sc.frame_set(f); feat[f]=[S.pose.bones[n].matrix_basis.to_quaternion() for n in legs]
 def dist(a,b): return sum(1-abs(x.dot(y)) for x,y in zip(feat[a],feat[b]))
 best=None
-for start in range(f0+20,f0+80):
-    for P in range(90,200):
+for start in range(f0+min(20,PLO//4),f0+min(80,max(25,f1-f0-PHI))):
+    for P in range(PLO,PHI):
         if start+P>f1-5: break
         d=dist(start,start+P)
         if best is None or d<best[0]: best=(d,start,P)
@@ -81,6 +88,10 @@ def build(corr):
 # own swing stay, because only the cycle mean goes.
 LEVEL_YAW=('spine','spine.001','spine.002','spine.003','spine.004','spine.005','spine.006')
 LEVEL_PITCH=('spine.005','spine.006')
+# The shoulders (clavicles) are levelled whole: the CMU subjects carry them raised 15-20 degrees above our figure's rest
+# on average, which read as a shrug in the game (Wendell, 2026-10-18: "The rigging's shoulders are a little too high").
+# Their mean turn over the cycle goes, so they sit at the figure's rest and keep only the clip's swing about it.
+LEVEL_FULL=('shoulder.L','shoulder.R')
 def mean_delta(frames):
     acc={n:[0.0,0.0,0.0] for n in LEVEL_YAW}
     for M,_ in frames:
@@ -88,6 +99,13 @@ def mean_delta(frames):
             e=(M[n].to_3x3()@Trest[n].to_3x3().inverted()).to_euler('XYZ')
             for i in range(3): acc[n][i]+=e[i]/N
     return acc
+def mean_turn(frames,n):
+    qs=[(M[n].to_3x3()@Trest[n].to_3x3().inverted()).to_quaternion() for M,_ in frames]
+    a=Quaternion((0,0,0,0))
+    for q in qs:
+        if q.dot(qs[0])<0: q.negate()
+        a=Quaternion([x+y for x,y in zip(a,q)])
+    return a.normalized()
 raw=build({})
 mean=mean_delta(raw)
 corr={}
@@ -95,6 +113,9 @@ for n in LEVEL_YAW:
     pitch=mean[n][0] if n in LEVEL_PITCH else 0.0
     corr[n]=Matrix.Rotation(-mean[n][2],3,'Z')@Matrix.Rotation(-pitch,3,'X')
     print('level',n,'yaw',round(math.degrees(mean[n][2]),1),'pitch',round(math.degrees(mean[n][0]),1))
+for n in LEVEL_FULL:
+    q=mean_turn(raw,n); corr[n]=q.inverted().to_matrix()
+    print('level',n,'mean turn',round(math.degrees(q.angle),1))
 frames=[M for M,_ in build(corr)]
 W=raw[-1][1]
 # hips translation: scale, detrend forward travel, put the lowest ankle at the rest ankle height
@@ -107,7 +128,8 @@ sc.frame_set(start); a=(Srw@S.pose.bones['Hips'].matrix).translation.copy()
 sc.frame_set(start+P); b=(Srw@S.pose.bones['Hips'].matrix).translation.copy()
 step=(b-a)/N; step.z=0
 dt=[hp[k]-step*k for k in range(N)]; mean=sum(dt,Vector())/N
-print('source travel per cycle',[round(x,2) for x in (b-a)],'-> speed m/s(target scale)',round((b-a).xy.length*ratio/(P/120),3))
+travel_m=(b-a).xy.length*ratio
+print('source travel per cycle',[round(x,2) for x in (b-a)],'-> speed m/s(target scale)',round(travel_m/(P/120),3),'travel_m',round(travel_m,3))
 def recompute(shift):
     for k,fr in enumerate(frames):
         p=(hp[k]-step*k-mean)*ratio+shift
@@ -133,7 +155,7 @@ for fr in frames: fr['_hips'].z+=dz
 rebuild()
 print('hips z shift',round(dz,3),'ratio',round(ratio,4))
 # key it
-act=bpy.data.actions.new('MocapWalk')
+act=bpy.data.actions.new(ACT); act['travel_m']=round(travel_m,4); act.use_fake_user=True  # a second clip keeps the first
 T.animation_data_create(); T.animation_data.action=act
 for pb in T.pose.bones: pb.rotation_mode='QUATERNION'
 prevq={}

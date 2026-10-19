@@ -901,16 +901,13 @@
     home = el("div", { class: "oagc", "data-bm-mouth": "" }, [el("div", { class: "bm-home" }, [
       el("h1", { text: "The Big Mind cave" }),
       el("p", { text: "A walk inward, one voice at a time. In each chamber a voice stands in the way. You are asked if it may speak, and if you say yes, you step into its place and answer as it." }),
-      el("ul", {}, [
-        el("li", { text: "You may sit out any question, or any voice. A voice you hold back simply waits." }),
-        el("li", { text: "You can take control back at any time. The Self button at the top always brings you back to being yourself." }),
-        el("li", { text: "You can walk back up and out whenever you like. Your place is saved at every chamber." }),
-        el("li", { text: "What you keep stays on this device. Nothing is sent anywhere." }),
-      ]),
+      // gd-mouth-in-world: the rest of the old rules list is taught by the light in the first hallway (Self, the way back);
+      // the crisis line stays here as words, always, and so does what leaves the device, which no glyph can show.
       el("div", { class: "bm-safe", "data-bm-safety": "" }, [
         el("div", { text: "This is a game, not therapy. If you are in crisis or thinking of harming yourself, call or text 988 in the US, or find a line near you at " }),
         el("a", { href: "https://findahelpline.com", target: "_blank", rel: "noopener", text: "findahelpline.com" }),
       ]),
+      el("p", { class: "bm-device", "data-bm-device": "", text: "What you keep stays on this device. Nothing is sent anywhere." }),
       el("div", { class: "oagc-row" }, [
         // Every visit asks again, whatever the save holds (bmt-ask-again), so going back in always meets the chamber's voice.
         el("button", { "data-bm-enter": "", text: !resume ? "Go in" : "Go back in, to " + V0.name, onclick: function () { enter("hall1"); } }),
@@ -1130,6 +1127,8 @@
     var snd = null;
     function mouthSound() {
       if (snd !== null) return;
+      var set = window.__oagCave && window.__oagCave.settings ? window.__oagCave.settings() : null;
+      if (set && set.sound === false) { snd = false; return; } // the title's gear turned the sound off
       try {
         var AC = window.AudioContext || window.webkitAudioContext; if (!AC) { snd = false; return; }
         var ac = new AC(), n = ac.sampleRate * 2, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0), l = 0;
@@ -1186,6 +1185,29 @@
     var stickKnob = el("div", { class: "oagr-knob" }); stickPad.appendChild(stickKnob);
     var runBtn = el("button", { class: "bm-run", "data-bm-run": "", "aria-pressed": "false", text: "Run", onclick: function () { st.run = !st.run; runBtn.setAttribute("aria-pressed", String(st.run)); } });
     wrap.appendChild(stickPad); wrap.appendChild(runBtn);
+    // The walkthrough in the first hallway (gd-mouth-in-world, gd-teach-by-doing): the mouth's rules list became the light's
+    // lessons here, the walk, Run, Self and the way back, and Spirits and Trust each get one glyph the first time their button shows.
+    function shown(n) { return !!n && n.style.display !== "none"; }
+    var teach = K.teacher(THREE, { wrap: wrap, scene: scene, camera: camera, canvas: renderer.domElement, lessons: K.BIGMIND_LESSONS, size: 1.6,
+      still: function () { return K.reducedMotion(); },
+      ready: function (id) {
+        if (st.modal || st.auto || st.sit) return false;
+        var walking = st.phase === "hall1" || st.phase === "hall2";
+        if (id === "walk") return walking && shown(stickPad);
+        if (!teach.has("walk")) return false;
+        if (id === "run") return walking && shown(runBtn);
+        if (id === "self") return st.phase === "hall1" && shown(selfBtn);
+        if (id === "back") return st.phase === "hall1" && st.s > 10 && shown(stickPad);
+        if (id === "spirits") return shown(spiritBtn);
+        return shown(trustBtn) && !trustBtn.disabled; // trust
+      },
+      spot: function (id, v) {
+        var k = { walk: 4, run: 9, back: -5 }[id]; if (k == null) return false; // a button's lesson: the light stays at the chest
+        var p = at(route, clamp(st.s + k, 0, route.len)); v.set(p.x, floor(p) + 2.4, p.z); return true;
+      },
+      anchor: function (id) { return { walk: stickPad, run: runBtn, self: selfBtn, back: stickPad, spirits: spiritBtn, trust: trustBtn }[id] || null; },
+      home: function (v) { return avatar.userData.chest.getWorldPosition(v); },
+    });
     function stickAt(e) {
       var rc = stickPad.getBoundingClientRect(), r = rc.width / 2;
       if (!(r > 0)) { stickUp(); return; }
@@ -1231,6 +1253,7 @@
 
     var paused = null;
     function selfPause() {
+      teach.learn("self");
       if (modal.getAttribute("data-bm-step") === "self") return;
       // Taking control back (bmc-safety): the walk stops, and nothing has to happen next.
       paused = { html: Array.prototype.slice.call(modal.childNodes), tag: modal.getAttribute("data-bm-step"), open: st.modal };
@@ -1776,6 +1799,7 @@
       spiritBtn.setAttribute("data-bm-spirits", String(n));
     }
     function spiritList() {
+      teach.learn("spirits");
       var tag = modal.getAttribute("data-bm-step") || "";
       if (!spirits.length || st.sit || st.auto || /^(self|eased|letgo|sit|spirit|mouth|talk)/.test(tag)) return;
       var p = stash(), back = function () { unstash(p); };
@@ -1932,6 +1956,7 @@
     // The trust panel: what the player can show the voice, anywhere on the path. Each move waits for the next check-in.
     function trustOffer() {
       if (!canTrust()) return;
+      teach.learn("trust");
       var p = stash(), back = function () { unstash(p); };
       var said = function (line, then) {
         show([el("h2", { text: V.title }), you(line), guide("It heard you. If it was honest, you'll see it ease the next time you check how charged it is."),
@@ -2628,6 +2653,7 @@
         if (w) {
           var run = st.run || keys.Shift, sp = WALK * (run ? RUN_K : 1) * st.speed * w.m, s1 = clamp(st.s + w.along * sp * dt, lo, goal);
           var lim = 0.5 * W * route.openAt(s1), l1 = clamp(st.lat + w.side * sp * dt, -lim, lim);
+          if (Math.abs(s1 - st.s) + Math.abs(l1 - st.lat) > 1e-5) { teach.learn("walk"); if (run) teach.learn("run"); if (w.along < -0.3) teach.learn("back"); }
           st.moving = Math.abs(s1 - st.s) + Math.abs(l1 - st.lat) > 1e-5; st.s = s1; st.lat = l1; st.pace = run ? RUN_K : 1; wdir = w;
           if (st.s >= goal - 1e-3) { st.moving = false; st.held = false; stickUp(); Object.keys(keys).forEach(function (k) { delete keys[k]; }); if (st.phase === "hall1") arrive(); else theEnd(); }
         } else st.moving = false;
@@ -2714,7 +2740,7 @@
       } else if (easeRing.material.opacity) { easeRing.material.opacity = 0; motes.material.opacity = 0; voice.scale.y = 1; }
       // the hint: the one line under the scene
       if (!st.modal && !st.auto) {
-        if (st.phase === "hall1") hint.textContent = st.s < 6 ? "Hold anywhere to walk. Let go to stop." : "";
+        if (st.phase === "hall1") hint.textContent = ""; // the walk is the light's first lesson now, not a line of words
         if (st.phase === "hall2") {
           var near = figures.filter(function (fg) { return fg.userData.wait && Math.abs(fg.position.z - a.z) < 5 && Math.abs(fg.position.x - a.x) < 9; })[0];
           if (near) hint.textContent = (TRANSLATORS[near.userData.id] || TRANSLATORS.unknown).waits;
@@ -2729,9 +2755,10 @@
         var t0 = snd.ac.currentTime, mute = !(st.phase === "hall2" || st.phase === "end" || st.phase === "rest") || st.modal && st.phase === "hall2";
         snd.gain.gain.setTargetAtTime(mute ? 0 : 0.06 * nearM * fadeM * (0.3 + 0.7 * mbr), t0, 0.25); snd.filter.frequency.setTargetAtTime(160 + 260 * mbr, t0, 0.25);
       }
+      teach.step(dt, now);
       renderer.render(scene, camera);
     }
-    var api = window.__oagBigMind; api.state = st; api.chamber = C; api.voiceId = V.id; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
+    var api = window.__oagBigMind; api.teach = function () { return teach.probe(); }; api.state = st; api.chamber = C; api.voiceId = V.id; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
     api.openAt = route.openAt; api.inCave = function (p) { var q = keepInCave(p.clone(), st.s + 2); return q.distanceTo(p) < 0.01; }; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
     api.newRun = function () { satThisRun = {}; }; // what a new visit does to the once-a-run count
     api.spirits = spirits; api.centre = function () { return cen; }; api.child = nextFig; api.mouth = { light: mouthLight, glow: mouthGlow, sound: function () { return snd; } }; api.walkInput = walkInput; api.keys = keys; api.stick = stick; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };

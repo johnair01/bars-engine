@@ -20,15 +20,12 @@
 import type { EmotionChannel } from './types'
 import type { AlchemyAltitude } from './types'
 import moveTable from '../quest-grammar/move-table.json'
+import { SHENG_CYCLE, KE_CYCLE } from './wuxing-cycles'
 
 export type SceneType = 'transcend' | 'generate' | 'control'
 
 // Both cycles and what each family does to satisfaction come from the move table, a copy of six-faces-council
 // schema/move-table.json (src/lib/quest-grammar/__tests__/move-table.test.ts keeps them in step).
-// shēng 生: joy(Wood) → anger(Fire) → neutrality(Earth) → fear(Metal) → sadness(Water) → joy(Wood)
-// kè 克:    joy(Wood) → neutrality(Earth) → sadness(Water) → anger(Fire) → fear(Metal) → joy(Wood)
-const SHENG_CYCLE = moveTable.cycles.sheng as Record<EmotionChannel, EmotionChannel>
-const KE_CYCLE = moveTable.cycles.ke as Record<EmotionChannel, EmotionChannel>
 
 const ALTITUDE_ORDER = moveTable.states as AlchemyAltitude[]
 
