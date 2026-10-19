@@ -19,30 +19,9 @@
 
 import type { EmotionChannel } from './types'
 import type { AlchemyAltitude } from './types'
+import { SHENG_CYCLE, KE_CYCLE } from './wuxing-cycles'
 
 export type SceneType = 'transcend' | 'generate' | 'control'
-
-// Generation (shēng 生) cycle: Wood→Fire→Earth→Metal→Water→Wood
-// In Emotional Alchemy channels (see elements.ts):
-//   joy(Wood) → anger(Fire) → neutrality(Earth) → fear(Metal) → sadness(Water) → joy(Wood)
-const SHENG_CYCLE: Record<EmotionChannel, EmotionChannel> = {
-  joy:        'anger',
-  anger:      'neutrality',
-  neutrality: 'fear',
-  fear:       'sadness',
-  sadness:    'joy',
-}
-
-// Control/destruction (kè 克) cycle: Wood→Earth→Water→Fire→Metal→Wood
-// In Emotional Alchemy channels:
-//   joy(Wood) → neutrality(Earth) → sadness(Water) → anger(Fire) → fear(Metal) → joy(Wood)
-const KE_CYCLE: Record<EmotionChannel, EmotionChannel> = {
-  joy:        'neutrality',
-  neutrality: 'sadness',
-  sadness:    'anger',
-  anger:      'fear',
-  fear:       'joy',
-}
 
 const ALTITUDE_ORDER: AlchemyAltitude[] = ['dissatisfied', 'neutral', 'satisfied']
 

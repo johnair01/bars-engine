@@ -1,0 +1,214 @@
+# The questions to ask each daemon. Wendell's own, given in the project thread of 2026-10-14 (23:07 UTC):
+# "Updating ontology for the daemons. In the game master agents and in the games itself. Questions to ask each
+# daemon/concerns for each daemon".
+#
+# This file is the home of the question sets. daemons.yaml is a refreshed copy of friendcraft and would lose anything
+# added to it, so the sets live here, beside it, and travel to every council repo with it (council/install.py).
+# Each question keeps his exact words in `words`, cut at his question marks and never edited. `ask` is the plain form
+# a session wrote for a player or a daemon to answer; where the two differ, `words` wins.
+#
+# Every set shares one skeleton, so a question can be lined up across the daemons (`slot`):
+#   object   what or who the daemon works on
+#   boss     who it works for
+#   method   how its work serves who it works for
+#   stakes   what would happen if it were not there
+# A set can add slots of its own (vulnerable_to, violated, measure, advocates_for, payoff, source, growth,
+# blocked_by). The Protector has no boss question: its boss is the body's survival, which its method question asks.
+# The Player has no boss either; it is the centre the others work for or against.
+#
+# Bosses a daemon can name. His Controller line lists them: "(The protector? The self, the controller, the vulnerable
+# child)". The Player and the vulnerable child are one figure here (daemons.yaml `player`, "Player/vulnerable child").
+bosses: [protector, self, controller, player]
+
+daemons:
+  - id: protector
+    verb: protect
+    questions:
+      - id: what
+        slot: object
+        words: "who/what are you protecting? (The self/something/someone)"
+        ask: "Who or what are you protecting: the self, something, or someone?"
+      - id: survive
+        slot: method
+        words: "how is protecting going to ensure your physical survival?"
+        ask: "How does protecting it keep the body alive?"
+      - id: vulnerable
+        slot: vulnerable_to
+        words: "What is the thing you’re protecting vulnerable to? (Elemental energy/feeling)"
+        ask: "What is it vulnerable to? Which feeling, which element?"
+        answers_from: elements   # fire anger, water sadness, wood joy, metal fear, earth neutrality
+      - id: afraid
+        slot: stakes
+        words: "what are you afraid of will happen if you don’t protect it?"
+        ask: "What are you afraid will happen if you don't protect it?"
+
+  - id: controller
+    verb: control
+    questions:
+      - id: what
+        slot: object
+        words: "what/who are you controlling?"
+        ask: "What, or who, are you controlling?"
+      - id: boss
+        slot: boss
+        words: "Who do you work for? (The protector? The self, the controller, the vulnerable child)"
+        ask: "Who do you work for: the Protector, the self, control itself, or the vulnerable child?"
+      - id: how
+        slot: method
+        words: "how are you doing the work of who you are working for?"
+        ask: "How are you doing the work of who you work for?"
+        by_boss:
+          protector:
+            words: "Protector- how are you protecting the physical body by controlling"
+            ask: "How are you protecting the physical body by controlling?"
+          self:
+            words: "self- what standards are you setting for the self?"
+            ask: "What standards are you setting for the self?"
+          controller:
+            words: "the controller- what standards are you setting about control itself?"
+            ask: "What standards are you setting about control itself?"
+      - id: violated
+        slot: violated
+        words: "what happens if your standards are violated?"
+        ask: "What happens if your standards are violated?"
+      - id: gone
+        slot: stakes
+        words: "What happens when you’re not there?"
+        ask: "What happens when you're not there?"
+
+  - id: skeptic
+    verb: doubt
+    questions:
+      - id: what
+        slot: object
+        words: "what/who do you doubt?"
+        ask: "What, or who, do you doubt?"
+      - id: boss
+        slot: boss
+        words: "Who do you work for?"
+        ask: "Who do you work for?"
+      - id: how
+        slot: method
+        words: "How does doubt serve who you work for?"
+        ask: "How does doubt serve who you work for?"
+      - id: gone
+        slot: stakes
+        words: "What happens when you’re not there?"
+        ask: "What happens when you're not there?"
+
+  - id: fixer
+    verb: fix
+    questions:
+      - id: what
+        slot: object
+        words: "what/who do you fix?"
+        ask: "What, or who, do you fix?"
+      - id: boss
+        slot: boss
+        words: "Who do you work for?"
+        ask: "Who do you work for?"
+      - id: how
+        slot: method
+        words: "How does fixing (repairing or holding in place) serve who you work for?"
+        ask: "How does fixing, repairing or holding in place, serve who you work for?"
+      - id: gone
+        slot: stakes
+        words: "What would happen if you’re not there?"
+        ask: "What would happen if you weren't there?"
+
+  - id: emotional-body
+    verb: feel
+    questions:
+      - id: what
+        slot: object
+        words: "what do you feel?"
+        ask: "What do you feel?"
+      - id: boss
+        slot: boss
+        words: "Who do you work for?"
+        ask: "Who do you work for?"
+      - id: gone
+        slot: stakes
+        words: "What happens if you’re not there?"
+        ask: "What happens if you're not there?"
+      - id: good-job
+        slot: measure
+        words: "How does do you know you’ve done a good job?"
+        ask: "How do you know you've done a good job?"
+
+  - id: victim
+    verb: tell sympathetic stories
+    questions:
+      - id: what
+        slot: object
+        words: "what sympathetic stories do you tell?"
+        ask: "What sympathetic stories do you tell?"
+      - id: boss
+        slot: boss
+        words: "Who do you work for?"
+        ask: "Who do you work for?"
+      - id: advocate
+        slot: advocates_for
+        words: "Who do you advocate for?"
+        ask: "Who do you advocate for?"
+      - id: payoff
+        slot: payoff
+        words: "What shadow sympathy does your advocacy get you?"
+        ask: "What shadow sympathy does your advocacy get you?"
+      - id: gone
+        slot: stakes
+        words: "What happens if you’re not there?"
+        ask: "What happens if you're not there?"
+
+  - id: damaged-self
+    verb: take damage
+    questions:
+      - id: what
+        slot: object
+        words: "What kind of damage do you take?"
+        ask: "What kind of damage do you take?"
+      - id: from
+        slot: source
+        words: "From what/who?"
+        ask: "From what, or from whom?"
+      - id: boss
+        slot: boss
+        words: "Who do you work for?"
+        ask: "Who do you work for?"
+      - id: how
+        slot: method
+        words: "How does your job change depending on who you work for?"
+        ask: "How does your job change depending on who you work for?"
+      - id: gone
+        slot: stakes
+        words: "What would happen if you weren’t there?"
+        ask: "What would happen if you weren't there?"
+
+  - id: player
+    verb: play
+    alias: the vulnerable child
+    questions:
+      - id: learning
+        slot: object
+        words: "what are you learning?"
+        ask: "What are you learning?"
+      - id: growing
+        slot: growth
+        words: "How are you growing?"
+        ask: "How are you growing?"
+      - id: feeling
+        slot: growth
+        words: "What are you feeling?"
+        ask: "What are you feeling?"
+      - id: exploring
+        slot: growth
+        words: "What are you exploring?"
+        ask: "What are you exploring?"
+      - id: in-the-way
+        slot: blocked_by
+        words: "How does the other daemons get in your way?"
+        ask: "How do the other daemons get in your way?"
+      - id: gone
+        slot: stakes
+        words: "What would happen if you weren’t there?"
+        ask: "What would happen if you weren't there?"
