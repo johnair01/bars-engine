@@ -432,9 +432,25 @@ await page.locator('[data-cave-next]').click();
 await walkTo('[data-cave-place="passage"]');
 ok(await page.locator('[data-cave-next]').count() === 0, 'the daemon\'s stop has no Continue until it stands aside');
 await page.locator('[data-cave-choice="protector"]').click();
+// The approach check-in (sic-first-cave-sitting, 4b): before the daemon is asked for its time, up to four asks, each skippable.
+ok(await sees('[data-cave-ap="body"]') && await page.locator('[data-cave-bm-ask]').count() === 0 && await page.locator('[data-cave-next]').count() === 0, 'a daemon at the passage first gets the approach check-in: the body, and no permission ask or way past yet');
+await page.locator('[data-cave-ap-tex="tension"]').click(); await page.locator('[data-cave-ap-move="gripping"]').click(); await page.locator('[data-cave-ap-done]').click();
+ok(await sees('[data-cave-ap="feel"]') && await sees('[data-cave-ap-merged="controller"]') && (await C(() => window.__oagCave.approach())).spirit, 'the body answered: a movement that belongs to another voice says "something of another voice", unnamed, and a meeting spirit forms before the daemon');
+await page.locator('[data-cave-ap-feel="fear"]').click(); ok(await sees('[data-cave-ap="veil"]'), 'the feeling answered, then how near it is');
+await page.locator('[data-cave-ap-veil="clear"]').click(); ok(await sees('[data-cave-ap="state"]'), 'clear: the state band is asked; faint would have ended it');
+await page.locator('[data-cave-ap-state="wants"]').click();
+const apSaved = await C(() => window.__oagCave.approach());
+ok(apSaved.done && !apSaved.spirit && apSaved.saved && apSaved.saved.texture === 'tension' && apSaved.saved.body === 'gripping' && apSaved.saved.feeling === 'fear' && apSaved.saved.veil === 'clear' && apSaved.saved.state === 'wants' && apSaved.saved.merged === 'controller', 'the answers are kept on the sitting, words and numbers none: ' + JSON.stringify(apSaved.saved));
 // Met the Big Mind way (board merge-layout): its permission first, then its place, then its questions answered as it.
 ok(await sees('[data-cave-bm-ask]') && await page.locator('[data-cave-aside]').count() === 0 && await page.locator('[data-cave-next]').count() === 0 && await page.locator('[data-cave-skip]').count() === 0, 'meeting a daemon starts by asking its permission to speak with it, with no way past and no skip');
+const spiritsBefore = await C(() => window.__oagCave.spirits.length);
 await page.locator('[data-cave-bm-speak="yes"]').click();
+// The meeting spirit (sic-first-cave-sitting, 4b): asked once per voice; a spirit of the daemon's family is born and kept as meet-<voice id>.
+ok(await sees('[data-cave-bm-feel-ask]') && await page.locator('[data-cave-bm-q]').count() === 0, 'yes: first, how do you feel meeting it');
+await page.locator('[data-cave-bm-feel="fear"]').click();
+const born = await C(() => ({ n: window.__oagCave.spirits.length, s: window.__oagCave.spirits.map((o) => ({ id: o.id, family: o.family, stage: o.stage, name: o.name })), store: window.__oagSpiritStore.get('meet-protector') }));
+const mine = born.s.filter((o) => o.id === 'meet-protector')[0];
+ok(born.n === spiritsBefore + 1 && mine && mine.family === 'protector' && mine.stage === 'gas' && mine.name === 'Fear' && born.store && born.store.family === 'protector' && born.store.element === 'Fear' && born.store.sittings === 0, 'a Protector spirit named Fear is born as a gas, walks with you and is kept in the store as meet-protector: ' + JSON.stringify(mine) + JSON.stringify(born.store));
 ok(await sees('[data-cave-bm-seat]') && await sees('[data-cave-bm-q="job"]'), 'yes: the player steps into its place, and its first question is its job');
 await page.waitForFunction(() => window.__oagCave.stage().cam === 'its' && window.__oagCave.stage().cu > 5.5, null, { timeout: 8000 }).catch(() => {});
 const stIn = await C(() => window.__oagCave.stage());
@@ -645,7 +661,9 @@ const sidePassage = async (depth) => {
   await walkTo('[data-cave-place="mouth"]'); await page.locator('[data-cave-next]').click();
   await walkTo('[data-cave-place="pool"]'); await page.locator('[data-cave-next]').click();
   await walkTo('[data-cave-place="passage"]');
-  await page.locator('[data-cave-choice="skeptic"]').click(); await page.locator('[data-cave-bm-speak="not-now"]').click();
+  await page.locator('[data-cave-choice="skeptic"]').click(); await page.locator('[data-cave-ap-skipall]').click();
+  ok((await C(() => window.__oagCave.approach())).done && (await C(() => window.__oagCave.approach())).saved === null, 'Skip all, walk on passes the check-in and keeps nothing');
+  await page.locator('[data-cave-bm-speak="not-now"]').click();
   ok(await sees('[data-cave-met="declined"]') && await page.locator('[data-cave-skip]').count() === 0, '"Not now" is an answer: the daemon still holds the way and is asked to step aside, with no skip');
   await page.locator('[data-cave-aside="yes"]').click();
   await page.waitForTimeout(1000);
