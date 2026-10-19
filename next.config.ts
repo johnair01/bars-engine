@@ -27,6 +27,10 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "20mb",
     },
   },
+  // Tap the Vein's embed is framed only by the Council Board on this same site (/board/council).
+  async headers() {
+    return [{ source: "/tap-the-vein/embed", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] }];
+  },
   // Legacy /hand route renamed to /vault (see .specify/specs/hand-vault-rename).
   // 301-redirect old links/bookmarks, preserving sub-paths and query params.
   async redirects() {
