@@ -869,6 +869,7 @@
     ".bm-marks{font-size:12px;color:#dfe6ff;padding-left:.1rem}.bm-marks b{color:#fff1b0;font-weight:500;letter-spacing:.14em;margin:0 .6em 0 .25em}" +
     ".bm-marks.lit b{animation:bm-glowtext 1.6s ease-out}@keyframes bm-glowtext{0%{text-shadow:0 0 0 #fff1b0}30%{text-shadow:0 0 10px #fff1b0}100%{text-shadow:0 0 0 #fff1b0}}" +
     ".oagc button.bm-trustbtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(156,196,255,.55);color:#dfe9ff;font-weight:500}" +
+    ".oagc:has(.oagc-modal.open) button.bm-sitbtn,.oagc:has(.oagc-modal.open) button.bm-trustbtn{bottom:auto;top:calc(50vh - 3.4rem)}" + // above an open sheet, which never passes half the screen
     ".oagc button.bm-trustbtn:disabled{opacity:.35}.bm-trustsaw{color:#fff1d0}.bm-trusthead{font-size:.8rem;color:#aab4d4;letter-spacing:.04em;text-transform:uppercase;margin:.7rem 0 .1rem}";
 
   function start() {
@@ -2699,9 +2700,9 @@
         var lc = side(S_VOICE - 7.5, 1.7), lv = at(route, S_VOICE); want = new THREE.Vector3(lc.x, floor(lc) + 2.6, lc.z); look = new THREE.Vector3(lv.x, floor(lv) + 1.7, lv.z);
       }
       else if (st.cam === "voice") { var c = at(route, S_VOICE + 6.5), sp = at(route, S_SELF); want = new THREE.Vector3(c.x, floor(c) + 4.4, c.z); look = new THREE.Vector3(sp.x, floor(sp) + 1.8, sp.z); }
-      else if (SI && SI.g) { // sitting with a charge: close and to the side, aimed above it so it shows under the panel as the choices change it
+      else if (SI && SI.g) { // sitting with a charge: close and to the side, aimed just above it so it shows above the sheet (PR 5) as the choices change it
         var T = SI.g.position, cb = side(Math.max(0, st.s - 2.6), 1.3), dx = T.x - cb.x, dz = T.z - cb.z, d = Math.sqrt(dx * dx + dz * dz);
-        want = new THREE.Vector3(cb.x, Math.max(floor(cb), T.y) + 2.1, cb.z); look = new THREE.Vector3(T.x, T.y + d * 0.42 + 0.35, T.z);
+        want = new THREE.Vector3(cb.x, Math.max(floor(cb), T.y) + 2.1, cb.z); look = new THREE.Vector3(T.x, T.y + d * 0.1 + 0.1, T.z);
         var O = st.orbit;
         if (O && (O.yaw || O.pitch)) { // turned by a drag: swing around the charge, closer in, then back inside the cave
           // In the path's frame: the camera keeps its distance by going further along the path where the walls stop it going
@@ -2710,7 +2711,7 @@
           var mLat = 0.55 * W * route.openAt(frS), lat = clamp(Math.sin(O.yaw) * rh, -mLat, mLat);
           var along = (Math.cos(O.yaw) >= 0 ? -1 : 1) * Math.sqrt(Math.max(0, rh * rh - lat * lat));
           want.set(T.x + fr.fx * along - fr.fz * lat, T.y + 0.6 + Math.sin(el0) * r, T.z + fr.fz * along + fr.fx * lat);
-          keepInCave(want, st.s + 2); var dd = want.distanceTo(T); look.set(T.x, T.y + dd * 0.4 + 0.3, T.z); // still under the panel
+          keepInCave(want, st.s + 2); var dd = want.distanceTo(T); look.set(T.x, T.y + dd * 0.1 + 0.1, T.z); // still above the sheet
         }
       }
       else if (cen) { // at the centre: the child framed low under the panel, the self beside it and the voices around it

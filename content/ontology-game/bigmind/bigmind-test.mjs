@@ -472,13 +472,14 @@ ok(await page.evaluate(() => window.__oagBigMind.sitting().name === 'Worry'), 't
 await page.waitForTimeout(700);
 const seen = await page.evaluate(() => {
   const B = window.__oagBigMind, g = B.state.sit.g, v = g.position.clone(); g.updateMatrixWorld(); g.getWorldPosition(v); v.project(B.camera);
-  const m = document.querySelector('.oagc-modal').getBoundingClientRect();
-  return { y: (1 - v.y) / 2 * innerHeight, x: (v.x + 1) / 2 * innerWidth, panel: m.bottom, h: innerHeight, w: innerWidth };
+  const m = document.querySelector('.oagc-modal').getBoundingClientRect(), rc = [...document.querySelectorAll('canvas')].map((c) => c.getBoundingClientRect()).sort((p, q) => q.width * q.height - p.width * p.height)[0];
+  return { y: rc.top + (1 - v.y) / 2 * rc.height, x: rc.left + (v.x + 1) / 2 * rc.width, panel: m.top, h: innerHeight, w: innerWidth };
 });
-ok(seen.y > seen.panel + 10 && seen.y < seen.h - 10 && seen.x > 10 && seen.x < seen.w - 10, 'at Acknowledge the camera frames the charge below the panel (y ' + seen.y.toFixed(0) + ', panel ends ' + seen.panel.toFixed(0) + ')');
+// PR 5 (Wendell, 19 October 2026): the page is a sheet in the bottom half, so the charge is framed above it
+ok(seen.y < seen.panel - 10 && seen.y > 10 && seen.x > 10 && seen.x < seen.w - 10, 'at Acknowledge the camera frames the charge above the sheet (y ' + seen.y.toFixed(0) + ', sheet starts ' + seen.panel.toFixed(0) + ')');
 await page.screenshot({ path: SHOTS + '/bm-6-sit-acknowledge.png' });
 const cam0 = await page.evaluate(() => window.__oagBigMind.camera.position.toArray());
-await page.mouse.move(195, 760); await page.mouse.down(); await page.mouse.move(345, 700, { steps: 8 }); await page.mouse.up();
+await page.mouse.move(195, 300); await page.mouse.down(); await page.mouse.move(345, 240, { steps: 8 }); await page.mouse.up();
 await page.waitForTimeout(800);
 const orbit = await page.evaluate(() => {
   const B = window.__oagBigMind, c = B.camera.position;

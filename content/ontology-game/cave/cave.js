@@ -1651,6 +1651,9 @@
   // words before it ride with it. The page's own buttons (Go on, Step back, Look around) stay at the sheet's foot. Every card
   // stays in the page, scrolled out of view, so a screen reader, the keyboard and the tests reach all of it.
   var sheetAt = {};
+  // where a sheet is: a dot per card, the one in view filled; no numbers on screen (Big Mind's check-in prints none), and a
+  // screen reader hears "card 2 of 3"
+  function dots(n, at, len) { var t = ""; for (var i = 0; i < len; i++) t += i === at ? "●" : "○"; n.textContent = t; n.setAttribute("aria-label", "card " + (at + 1) + " of " + len); }
   function isCtl(k) { return /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(k.tagName) || !!k.querySelector("input,textarea,select,button"); }
   function isActs(k) { // a row of the page's own buttons: no field, and nothing to pick (a choice carries aria-pressed)
     return (k.tagName === "BUTTON" || k.classList.contains("oagc-row")) && isCtl(k) && !k.querySelector("input,textarea,select,[aria-pressed]") && !k.hasAttribute("aria-pressed");
@@ -1675,12 +1678,12 @@
       var where = el("span", { class: "oagc-cardnum", "data-oag-card-at": "" });
       function show(i, smooth) {
         at = clamp(i, 0, cards.length - 1); sheetAt = {}; sheetAt[key] = at;
-        where.textContent = (at + 1) + " of " + cards.length; back.disabled = at === 0; next.disabled = at === cards.length - 1;
+        dots(where, at, cards.length); back.disabled = at === 0; next.disabled = at === cards.length - 1;
         strip.setAttribute("data-oag-card-shown", String(at));
         var x = at * strip.clientWidth; if (Math.abs(strip.scrollLeft - x) > 2) strip.scrollTo({ left: x, behavior: smooth && !reducedMotion ? "smooth" : "auto" });
       }
       back.onclick = function () { show(at - 1, true); }; next.onclick = function () { show(at + 1, true); };
-      strip.addEventListener("scroll", function () { var w = strip.clientWidth; if (!w) return; var i = Math.round(strip.scrollLeft / w); if (i !== at) { at = i; sheetAt = {}; sheetAt[key] = at; where.textContent = (at + 1) + " of " + cards.length; back.disabled = at === 0; next.disabled = at === cards.length - 1; strip.setAttribute("data-oag-card-shown", String(at)); } }, { passive: true });
+      strip.addEventListener("scroll", function () { var w = strip.clientWidth; if (!w) return; var i = Math.round(strip.scrollLeft / w); if (i !== at) { at = i; sheetAt = {}; sheetAt[key] = at; dots(where, at, cards.length); back.disabled = at === 0; next.disabled = at === cards.length - 1; strip.setAttribute("data-oag-card-shown", String(at)); } }, { passive: true });
       // a field or a choice reached by Tab or by a screen reader brings its card into view
       strip.addEventListener("focusin", function (e) { var c = e.target.closest && e.target.closest("[data-oag-card]"); if (c) show(+c.getAttribute("data-oag-card")); });
       box.appendChild(strip); box.appendChild(el("div", { class: "oagc-pager" }, [back, where, next]));
@@ -1895,7 +1898,11 @@
   function focusChat(modal) {
     var i = modal.querySelector("[data-cave-321-text]"), l = modal.querySelector("[data-cave-321-log]");
     if (l) l.scrollTop = l.scrollHeight;
-    if (i) modal.scrollTop = modal.scrollHeight;
+    if (i) { // to its end, then back up if that left the text box above the sheet's top or under its foot (PR 5's bottom sheet)
+      modal.scrollTop = modal.scrollHeight;
+      var a = modal.getBoundingClientRect(), b = i.getBoundingClientRect(), f = modal.querySelector(".oagc-sheetfoot"), fh = f ? f.getBoundingClientRect().height : 0;
+      if (b.top < a.top + 8) modal.scrollTop -= a.top + 8 - b.top; else if (b.bottom > a.bottom - fh - 8) modal.scrollTop += b.bottom - (a.bottom - fh - 8);
+    }
     if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
   }
 
@@ -1920,7 +1927,7 @@
     ".oagc-cards{display:flex;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}.oagc-cards::-webkit-scrollbar{display:none}" +
     ".oagc-cardpage{flex:0 0 100%;min-width:0;scroll-snap-align:start;box-sizing:border-box;padding:0 .1rem}" +
     ".oagc-pager{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.5rem}.oagc-pager button{min-height:40px;padding:0 .8rem}.oagc-pager button:disabled{opacity:.3}" +
-    ".oagc-cardnum{font-size:.85rem;color:#aeb4cc}" +
+    ".oagc-cardnum{font-size:.85rem;letter-spacing:.3em;color:#aeb4cc}" +
     ".oagc-sheetfoot{position:sticky;bottom:0;margin:.5rem -.9rem 0;padding:.4rem .9rem calc(.6rem + env(safe-area-inset-bottom));background:#0f0f22;border-top:1px solid rgba(255,255,255,.08)}.oagc-sheetfoot .oagc-row:first-child{margin-top:0}" +
     ".oagc button.oagc-menubtn{position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;z-index:7;min-height:44px;padding:0 .9rem;border-radius:22px;background:rgba(14,14,30,.82);border:1px solid rgba(255,241,176,.5);color:#fff1d0;font-weight:600}" +
     ".oagc-menu{position:absolute;top:calc(62px + env(safe-area-inset-top));left:10px;z-index:7;width:min(300px,calc(100vw - 20px));max-height:calc(100vh - 90px);overflow-y:auto;padding:.4rem;border-radius:16px;background:#0f0f22;border:1px solid rgba(255,241,176,.45);box-shadow:0 8px 28px rgba(0,0,0,.55)}.oagc-menu[hidden]{display:none}" +
@@ -1976,7 +1983,7 @@
     ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}.oagr-door button+button{margin-top:.35rem}" +
     ".oagr-stick{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:5;width:116px;height:116px;border-radius:50%;background:rgba(20,20,40,.45);border:2px solid rgba(255,241,176,.55);touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}" +
     ".oagr-knob{width:48px;height:48px;border-radius:50%;background:rgba(255,241,176,.75);box-shadow:0 0 12px rgba(255,241,176,.6);pointer-events:none}" +
-    ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
+    ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc:has(.oagc-modal.open) .oagc-sitbtn{bottom:auto;top:calc(50vh - 3.4rem)}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
     ".oagc-orb{width:88px;height:88px;margin:.5rem auto .1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff1b0;font-size:.8rem;letter-spacing:.06em;" +
     "background:radial-gradient(circle,rgba(255,241,176,.5),rgba(255,241,176,.14) 62%,rgba(255,241,176,0) 72%);border:1px solid rgba(255,241,176,.55);transform:scale(.55);will-change:transform}" +
     ".oagc button.oagc-spiritbtn{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +

@@ -292,7 +292,12 @@ ok(!(await free()).stick, 'a tap on Stop here opens the marker\'s page, which hi
 const md1 = await C(() => window.__oagCave.modal()), pn1 = await C(() => window.__oagCave.pane());
 ok(md1.open && md1.buttons.includes('Go on') && md1.buttons.includes("This step won't go further") && md1.text.includes(PROMPT.welcome), `stopping grows the pane into a modal with every choice of the stop (${md1.buttons.join(', ')})`);
 ok(!pn1.shown, 'while the modal is open the small pane is put away');
-ok(md1.rect.y >= 50 && md1.rect.y + md1.rect.h < 844 * 0.65, `the modal sits high, so the figure and the way ahead stay in sight below it (${Math.round(md1.rect.y)} to ${Math.round(md1.rect.y + md1.rect.h)} px)`);
+{ // PR 5 (Wendell, 19 October 2026): the page is a solid sheet in the bottom half, and the figure stands in sight above it
+  await page.waitForTimeout(450);
+  md1.rect = (await C(() => window.__oagCave.modal())).rect;
+  const fs = await C(() => { const a = window.__oagCave.avatar(); return window.__oagCave.floorScreen(a.x, a.z); });
+  ok(md1.rect.y >= 844 * 0.5 - 1 && md1.rect.y + md1.rect.h <= 845 && !fs.behind && fs.y > 40 && fs.y < md1.rect.y, `the page is a sheet in the bottom half (${Math.round(md1.rect.y)} to ${Math.round(md1.rect.y + md1.rect.h)} px) and the figure stands above it (feet at ${Math.round(fs.y)} px)`);
+}
 ok(await sees('[data-cave-shut]'), 'the marker says the way ahead opens when you choose');
 const lkA = await C(() => window.__oagCave.look());
 await page.waitForTimeout(2500);
@@ -831,8 +836,9 @@ ok(await page.locator('[data-oag-menu] [data-room-calm]').count() === 1 && await
   await page.locator('[data-oag-menubtn]:visible').click();
   const mn = await C(() => { const p = document.querySelector('[data-oag-menu]:not([hidden])'); return p && { rows: p.querySelectorAll('.oagc-menurow').length, keys: p.querySelectorAll('.oagc-menurow.key').length, calm: !!p.querySelector('[data-room-calm][data-glyph]'), about: p.querySelector('[data-room-calm] + small').textContent }; });
   ok(mn && mn.calm && mn.keys === 4 && /out-breath/.test(mn.about), 'the Menu opens with Calm, its glyph and what it does, and a key to the stick, the rug, the doors and the words');
-  await page.mouse.click(200, 300);
-  ok(await C(() => document.querySelector('[data-oag-menu]').hidden), 'a tap outside folds the Menu away');
+  const sht = await C(() => { const r = document.querySelector('[data-room-modal]').getBoundingClientRect(); return { left: r.left + 10, top: r.top + 2, height: 8 }; });
+  await page.mouse.click(sht.left + 4, sht.top + sht.height / 2); // on the sheet's top edge: outside the Menu, and no walk starts
+  ok(await C(() => ![...document.querySelectorAll('[data-oag-menu]')].some((p) => !p.hidden)), 'a tap outside folds the Menu away');
   await page.locator('[data-room-shrink]').click(); await page.waitForTimeout(300);
   for (let i = 0; i < 40 && (await C(() => window.__oagCave.room.steer(0, -0.6))) > 0.3; i++) await page.waitForTimeout(120);
   let minK = 9; for (let i = 0; i < 30; i++) { await C(() => window.__oagCave.room.steer(0, 5.5)); minK = Math.min(minK, (await C(() => window.__oagCave.room.walking())).inCushion); await page.waitForTimeout(120); }
@@ -1030,7 +1036,7 @@ ok((await cr()).length === 1 && (await room()).phase === 'witness', 'then the th
 await roomToFork('Heat', 'Anger', 'constriction');
 await roomGoes('to finish', '', false);
 await page.locator('[data-room-checkin="got-rid"]').click();
-ok(await sees('[data-room-welcome]') && (await page.locator('[data-room-welcome]').locator('xpath=../..').textContent()).includes('waited at the door') && (await room()).scene.waiting === 0, 'with the room clear, the one that waited at the door is welcomed');
+ok(await sees('[data-room-welcome]') && (await C(() => document.querySelector('[data-room-welcome]').closest('[data-room-modal]').textContent)).includes('waited at the door') && (await room()).scene.waiting === 0, 'with the room clear, the one that waited at the door is welcomed');
 await roomIn(false);
 await roomToFork('Last', 'Neutrality', 'tension');
 await roomGoes('rest', '', false);
