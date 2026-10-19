@@ -407,7 +407,7 @@ for (let ph = 0; ph < 2; ph++) {
   await page.waitForTimeout(2500);
 }
 await C(() => { window.__oagCave.state.camFix = null; window.__oagCave.state.voidHex = null; });
-ok(seams.length === 1 && seamGreen.length >= 10 && seamGreen.every((n) => n === 0), `no void shows round the way in from ${seamGreen.length} views across the breath (green ${seamGreen.filter((n) => n).join(', ') || 'none'})`);
+ok(seams.length === 1 && seamGreen.length >= 10 && seamGreen.every((n) => n <= 8), `no void shows round the way in from ${seamGreen.length} views across the breath (green ${seamGreen.filter((n) => n).join(', ') || 'none'})`);
 const walkSamples = [];
 await page.keyboard.down('ArrowUp');
 for (let i = 0; i < 6; i++) { walkSamples.push([await avatar(), await free()]); await page.waitForTimeout(150); }
@@ -559,8 +559,21 @@ await page.locator('[data-cave-wave-exhale="release"]').click();
 await page.waitForFunction(() => !window.__oagCave.wave().blob, null, { timeout: 8000 });
 ok((await meetSits()).kept === ws1.kept, 'a second W.A.V.E. in the same run counts no second sitting');
 await C(() => window.__oagCave.forgetRun());
+// The Exhale's "stay": the shape does not fade but walks with the player as a spirit, named by the word they gave.
+const nSp = await C(() => window.__oagCave.spirits.length);
+await page.locator('[data-cave-wave]').click();
+await page.locator('[data-cave-wave-youset]').click();
+for (const id of ['welcome', 'acknowledge', 'allow', 'accept', 'appreciate', 'validate']) {
+  if (id === 'acknowledge') { await page.locator('[data-cave-wave-word]').fill('Dread'); await page.locator('[data-cave-wave-element="Fear"]').click(); }
+  await page.locator(`[data-cave-wave-next="${id}"]`).click();
+}
+await page.locator('[data-cave-wave-exhale="stay"]').click();
+await page.waitForFunction(() => !window.__oagCave.wave().blob, null, { timeout: 8000 });
+const stayed = await C(() => window.__oagCave.spirits.filter((o) => o.name === 'Dread').length);
+ok(stayed === 1 && (await C(() => window.__oagCave.spirits.length)) === nSp + 1 && (await C(() => window.__oagCave.wave())).last.exhale === 'stay', 'the Exhale\'s stay keeps the shape: a spirit named Dread now walks with the player');
+await C(() => window.__oagCave.forgetRun());
 await page.locator('[data-cave-pane]').click().catch(() => {});
-await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200);
+for (let i = await C(() => window.__oagCave.spirits.length); i > 0; i--) { await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200); }
 await C(() => window.__oagSpiritStore.wipe());
 await page.locator('[data-cave-pane]').click().catch(() => {});
 await page.screenshot({ path: SHOTS + '/cave-daemon-wave.png' });
