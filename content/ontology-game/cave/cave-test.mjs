@@ -824,6 +824,25 @@ const r0 = await room();
 ok(r0.scene.sit > 0.95 && Math.hypot(r0.scene.figure[0] - r0.scene.seat[0], r0.scene.figure[1] - r0.scene.seat[1]) < 0.05 && r0.scene.door < 0.05 && !r0.charge.visible && !r0.charge.known, 'the room: the figure sits on the seat facing a shut door, and nothing has come in yet');
 await page.screenshot({ path: SHOTS + '/room-welcome.png' });
 ok(await page.locator('[data-oag-menu] [data-room-calm]').count() === 1 && await sees('[data-oag-menubtn]'), 'the room has the Calm switch, in its Menu');
+// PR 5, screen space (Wendell, 19 October 2026): the page is a solid sheet in the bottom half, the Menu holds the switches and a key
+{
+  const sh = await C(() => { const m = document.querySelector('[data-room-modal]'), r = m.getBoundingClientRect(), bg = getComputedStyle(m).backgroundColor; return { top: r.top, h: r.height, vh: innerHeight, bg, lift: getComputedStyle(document.querySelector('.oagc canvas')).transform }; });
+  ok(sh.h <= sh.vh * 0.5 + 1 && sh.top >= sh.vh * 0.5 - 1 && !/rgba/.test(sh.bg) && sh.lift !== 'none', `the step's page is a solid sheet in the bottom half (${Math.round(sh.h)} of ${sh.vh}px, ${sh.bg}) and the room is lifted above it`);
+  await page.locator('[data-oag-menubtn]:visible').click();
+  const mn = await C(() => { const p = document.querySelector('[data-oag-menu]:not([hidden])'); return p && { rows: p.querySelectorAll('.oagc-menurow').length, keys: p.querySelectorAll('.oagc-menurow.key').length, calm: !!p.querySelector('[data-room-calm][data-glyph]'), about: p.querySelector('[data-room-calm] + small').textContent }; });
+  ok(mn && mn.calm && mn.keys === 4 && /out-breath/.test(mn.about), 'the Menu opens with Calm, its glyph and what it does, and a key to the stick, the rug, the doors and the words');
+  await page.mouse.click(200, 300);
+  ok(await C(() => document.querySelector('[data-oag-menu]').hidden), 'a tap outside folds the Menu away');
+  await page.locator('[data-room-shrink]').click(); await page.waitForTimeout(300);
+  for (let i = 0; i < 40 && (await C(() => window.__oagCave.room.steer(0, -0.6))) > 0.3; i++) await page.waitForTimeout(120);
+  let minK = 9; for (let i = 0; i < 30; i++) { await C(() => window.__oagCave.room.steer(0, 5.5)); minK = Math.min(minK, (await C(() => window.__oagCave.room.walking())).inCushion); await page.waitForTimeout(120); }
+  await C(() => window.__oagCave.room.stick(0, 0));
+  ok(minK > 0.97, `walking straight at the seat stops at the cushion's edge (nearest ${minK.toFixed(2)} of its reach)`);
+  await page.locator('[data-room-pane]').click();
+  await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.95, null, { timeout: 30000 });
+  const sat = await C(() => window.__oagCave.room.walking());
+  ok(Math.abs(sat.pelvisLow - sat.seatTop) < 0.06, `back on the seat, the figure sits on the cushion (pelvis ${sat.pelvisLow.toFixed(2)}, cushion top ${sat.seatTop})`);
+}
 // round 1: it stays, and the 3-2-1 is aimed at what the player wants
 await roomIn(false);
 ok((await room()).charge.color === 0x8a8a92, 'a charge from the body map comes in grey');
