@@ -1,0 +1,132 @@
+// The spirit's forms in the caves (Six-faces-council council/callsheets/spirits-in-caves.md, board sic-family-cloud). A spirit
+// born from meeting a daemon belongs to that daemon's family, and its first stage is a gas: a cloud of motes in its element's
+// colour, drawn into the family's shape as the spirit page draws it (bars-engine tools/blender-cloud/content/spirits/shellback.py,
+// the *_gas functions; page https://claude.ai/artifact/B9zYsNyxe6UVhRF3jcNP85). The Protector's Shellback gas is the plain cloud
+// densest at the heart; the Damaged Self and the Emotional Body have no body family yet, so they wear the same plain cloud.
+// cave.js buildSpirit asks this file for the form when a spirit carries a family; the core, hologram and later stages come
+// with sic-unfold-by-sitting.
+(function () {
+  "use strict";
+  // daemon id -> [family name, gas shape]
+  var FAMILIES = {
+    protector: ["Shellback", "cloud"], player: ["Romp", "trail"], fixer: ["Tinker", "reach"], controller: ["Holdfast", "fist"],
+    skeptic: ["Hedge", "question"], victim: ["Ballad", "tear"], "damaged-self": [null, "cloud"], "emotional-body": [null, "cloud"],
+  };
+  var MOTES = 150, SCALE = 0.55, STREAM_MS = 1800, FADE_MS = 1200;
+  var reducedMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function rngOf(seed) { // mulberry32, so a family's shape is the same every time
+    var a = 0; for (var i = 0; i < seed.length; i++) a = (a * 31 + seed.charCodeAt(i)) | 0;
+    return function () { a = (a + 0x6d2b79f5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  function gauss(r) { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+  // Each shape returns [x, y, z, size]: x across the view, y up, z toward the viewer, in the spirit page's units (about one
+  // spirit across), centred on the heart. The page's 3D shapes (trail, reach, fist) are turned three quarters to the viewer, as
+  // its sprite camera sees them; the question mark and the tear face the viewer, as on the page.
+  // Each is turned (about the up axis) and tipped toward the viewer so its telling part shows: the trail's loops, the arm's five
+  // fingers fanned, the fist's row of knuckles. The in-game camera looks down on the spirits a little as well.
+  var VIEW = { trail: [-0.68, 0.45], reach: [-0.3, 0.7], fist: [-1.25, 0.4] }, BIG = 1.3;
+  function fromPage(v, x, y, z) { // the page is z-up with x forward
+    var cT = Math.cos(VIEW[v][0]), sT = Math.sin(VIEW[v][0]), cP = Math.cos(VIEW[v][1]), sP = Math.sin(VIEW[v][1]);
+    var X = x * cT - y * sT, Y = z, Z = -(x * sT + y * cT);
+    return [X * BIG, (Y * cP + Z * sP) * BIG, (Z * cP - Y * sP) * BIG];
+  }
+  var SHAPES = {
+    cloud: function (r, i) { // gas(rng, lt, dk, 140, 0.42): a drifting cloud, densest at the heart
+      return [gauss(r) * 0.42, gauss(r) * 0.42 * 0.8, gauss(r) * 0.42, 0.035 + r() * 0.07];
+    },
+    trail: function (r, i) { // romp_gas: a looping trail like a swished tail, thickest at its head
+      var t = Math.pow(r(), 1.6), a = 0.6 + t * 2.4 * Math.PI, w = 0.05 + 0.13 * t;
+      var p = fromPage("trail", 0.75 * Math.sin(a) * (1 - 0.45 * t) + gauss(r) * w, 0.5 * Math.sin(2 * a) * (1 - 0.45 * t) + gauss(r) * w, 0.25 * Math.cos(a) - 0.2 * t + gauss(r) * w);
+      return p.concat([(0.03 + r() * 0.06) * (1.25 - 0.6 * t)]);
+    },
+    reach: function (r, i) { // tinker_gas: a long reaching arm that splays into five fingers, thickest at the shoulder
+      var t = Math.pow(r(), 1.3), c, sp;
+      if (t < 0.72) { var u = t / 0.72; c = [-0.75 + 1.35 * u, 0, 0.05 + 0.18 * u]; sp = 0.16 - 0.08 * u; }
+      else { var u2 = (t - 0.72) / 0.28, k = i % 5, a = (k - 2) * 0.32; c = [0.6 + 0.35 * u2 * Math.cos(a), 0.35 * u2 * Math.sin(a), 0.23 + 0.08 * u2 * (1 - Math.abs(k - 2) / 2)]; sp = 0.03; }
+      return fromPage("reach", c[0] + gauss(r) * sp, c[1] + gauss(r) * sp, c[2] + gauss(r) * sp - 0.1).concat([(0.025 + r() * 0.05) * (1.3 - 0.7 * t)]);
+    },
+    fist: function (r, i) { // holdfast_gas: motes drawn in tight to a clenched fist, knuckles on top, thumb across, wrist trailing
+      var t = r(), c, s;
+      if (t < 0.34) { var d = [gauss(r), gauss(r), gauss(r)], n = Math.hypot(d[0], d[1], d[2]) || 1, m = Math.sqrt(r()); c = [d[0] / n * m * 0.24, d[1] / n * m * 0.26, d[2] / n * m * 0.2]; s = 0.05; }
+      else if (t < 0.6) { c = [0.2 + gauss(r) * 0.035, -0.2 + (i % 4) * 0.133 + gauss(r) * 0.035, 0.17 + gauss(r) * 0.035]; s = 0.045; }
+      else if (t < 0.8) { var a = r() * Math.PI * 0.9; c = [0.2 + 0.14 * Math.sin(a) + gauss(r) * 0.02, -0.2 + (i % 4) * 0.133 + gauss(r) * 0.02, 0.17 - 0.32 * (1 - Math.cos(a)) / 2 * 1.1 + gauss(r) * 0.02]; s = 0.035; }
+      else if (t < 0.9) { var u = r(); c = [0.3 + 0.06 * Math.sin(u * Math.PI) + gauss(r) * 0.02, -0.3 + 0.3 * u + gauss(r) * 0.02, -0.02 + 0.02 * u + gauss(r) * 0.02]; s = 0.04; }
+      else { var u3 = r(), w = 0.1 - 0.05 * u3; c = [-0.2 - 0.5 * u3 + gauss(r) * w, gauss(r) * w, -0.08 - 0.12 * u3 + gauss(r) * w]; s = 0.04 * (1 - 0.5 * u3); }
+      return fromPage("fist", c[0] * 1.7, c[1] * 1.7, c[2] * 1.7).concat([s * (0.8 + r() * 0.6) * 1.5]);
+    },
+    question: function (r, i) { // hedge_gas: a question mark facing the viewer, hook over a short stem, and its dot
+      var t = r(), x, y, s = 0.05;
+      if (t < 0.62) { var a = (200 - 290 * r()) * Math.PI / 180; x = 0.3 * Math.cos(a); y = 0.42 + 0.3 * Math.sin(a); }
+      else if (t < 0.86) { x = 0; y = 0.12 - 0.26 * r(); }
+      else { x = 0; y = -0.42; s = 0.06; }
+      return [(x + gauss(r) * 0.035) * 1.35, (y + gauss(r) * 0.035) * 1.35, gauss(r) * 0.035 * 1.35, s * (0.8 + r() * 0.6) * 1.5];
+    },
+    tear: function (r, i) { // ballad_gas: a teardrop, point up, and three dots trailing away to the right ("and then...")
+      var t = r(), x, y, s = 0.05;
+      if (t < 0.74) { var a = r() * 2 * Math.PI; x = -0.14 + 0.36 * Math.sin(a) * Math.sin(a / 2); y = 0.05 + 0.4 * Math.cos(a); }
+      else { x = 0.3 + 0.17 * Math.floor(r() * 3); y = -0.3; s = 0.045; }
+      return [(x + gauss(r) * 0.03) * 1.35, (y + gauss(r) * 0.03) * 1.35, gauss(r) * 0.03 * 1.35, s * (0.8 + r() * 0.6) * 1.5];
+    },
+  };
+
+  function familyOf(id) { return FAMILIES[id] ? id : null; }
+  var dotTex = null;
+  function dot(THREE) { // a soft round mote
+    if (dotTex) return dotTex;
+    var cv = document.createElement("canvas"); cv.width = cv.height = 64; var cx = cv.getContext && cv.getContext("2d");
+    if (cx) { var gr = cx.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.45, "rgba(255,255,255,0.75)"); gr.addColorStop(1, "rgba(255,255,255,0)"); cx.fillStyle = gr; cx.fillRect(0, 0, 64, 64); }
+    return (dotTex = new THREE.CanvasTexture(cv));
+  }
+
+  // The gas: two layers of motes (small and large) in the element's colour, every third mote darker as on the page. The group
+  // turns to face the camera, the motes drift about their places, and while it is being born they stream in from `from` (a
+  // world point, the daemon's body), each on its own delay. With reduced motion the motes hold still and the gas fades in.
+  function buildGas(THREE, family, hex, o) {
+    o = o || {};
+    var shape = SHAPES[(FAMILIES[family] || [null, "cloud"])[1]], r = rngOf("gas:" + family);
+    var root = new THREE.Group(), layers = [], all = [];
+    var mat0 = new THREE.PointsMaterial({ color: hex, size: 0.09, map: dot(THREE), transparent: true, opacity: 0.95, depthWrite: false, vertexColors: true, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+    var mat1 = mat0.clone(); mat1.size = 0.16;
+    var parts = [[], []];
+    for (var i = 0; i < MOTES; i++) { var m = shape(r, i); parts[m[3] > 0.07 ? 1 : 0].push({ x: m[0] * SCALE, y: m[1] * SCALE, z: m[2] * SCALE, ph: r() * 6.283, sp: 0.6 + r(), dl: r() * 0.55, dark: i % 3 === 0 }); }
+    [mat0, mat1].forEach(function (mat, li) {
+      var ms = parts[li], pos = new Float32Array(ms.length * 3), col = new Float32Array(ms.length * 3);
+      ms.forEach(function (m, j) { var k = m.dark ? 0.55 : 1; col[j * 3] = col[j * 3 + 1] = col[j * 3 + 2] = k; pos[j * 3] = m.x; pos[j * 3 + 1] = m.y; pos[j * 3 + 2] = m.z; });
+      var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)); geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+      var pts = new THREE.Points(geo, mat); pts.frustumCulled = false; root.add(pts); layers.push({ pts: pts, ms: ms }); all = all.concat(ms);
+    });
+    var t0 = (typeof performance !== "undefined" ? performance : Date).now(), from = o.from ? o.from.clone() : null, last = -1;
+    var state = { family: family, stage: "gas", motes: all.length, born: from ? 0 : 1, from: from, still: reducedMotion };
+    var inv = new THREE.Vector3(), wp = new THREE.Vector3();
+    layers[0].pts.onBeforeRender = function (renderer, scene, camera) {
+      var now = (typeof performance !== "undefined" ? performance : Date).now(); if (now === last) return; last = now;
+      // face the camera about the up axis, so the page's shapes read as drawn
+      root.getWorldPosition(wp); root.rotation.y = Math.atan2(camera.position.x - wp.x, camera.position.z - wp.z) - (root.parent ? root.parent.rotation.y : 0);
+      var age = now - t0, sec = now / 1000;
+      if (reducedMotion) { var f = Math.min(1, age / FADE_MS); mat0.opacity = 0.95 * f; mat1.opacity = 0.95 * f; state.born = f; return; }
+      var b = from ? Math.min(1, age / STREAM_MS) : 1; state.born = b;
+      if (from && b < 1) { inv.copy(from); root.worldToLocal(inv); } // the daemon's body, in the gas's own frame this frame
+      layers.forEach(function (L) {
+        var a = L.pts.geometry.attributes.position, p = a.array;
+        L.ms.forEach(function (m, j) {
+          var x = m.x + 0.025 * Math.sin(sec * m.sp + m.ph), y = m.y + 0.025 * Math.sin(sec * m.sp * 1.3 + m.ph * 2), z = m.z + 0.025 * Math.cos(sec * m.sp + m.ph);
+          if (from && b < 1) { var k = Math.max(0, Math.min(1, (b - m.dl * 0.45) / 0.55)), e = k * k * (3 - 2 * k), arc = Math.sin(e * Math.PI) * 0.35; x = inv.x + (x - inv.x) * e; y = inv.y + (y - inv.y) * e + arc; z = inv.z + (z - inv.z) * e; }
+          p[j * 3] = x; p[j * 3 + 1] = y; p[j * 3 + 2] = z;
+        });
+        a.needsUpdate = true;
+      });
+      if (b >= 1) from = null;
+    };
+    root.userData = { form: state, layers: layers, material: mat0, materials: [mat0, mat1] };
+    return root;
+  }
+  // Tint every layer at once (the orb's material.color in the cave's code)
+  function tintProxy(root) {
+    var mats = root.userData.materials;
+    return { material: { color: { setHex: function (h) { mats.forEach(function (m) { m.color.setHex(h); }); }, getHex: function () { return mats[0].color.getHex(); } } } };
+  }
+
+  window.__oagSpiritForms = { FAMILIES: FAMILIES, familyOf: familyOf, buildGas: buildGas, tintProxy: tintProxy, SHAPES: SHAPES };
+})();
