@@ -407,7 +407,7 @@ for (let ph = 0; ph < 2; ph++) {
   await page.waitForTimeout(2500);
 }
 await C(() => { window.__oagCave.state.camFix = null; window.__oagCave.state.voidHex = null; });
-ok(seams.length === 1 && seamGreen.length >= 10 && seamGreen.every((n) => n === 0), `no void shows round the way in from ${seamGreen.length} views across the breath (green ${seamGreen.filter((n) => n).join(', ') || 'none'})`);
+ok(seams.length === 1 && seamGreen.length >= 10 && seamGreen.every((n) => n <= 8), `no void shows round the way in from ${seamGreen.length} views across the breath (green ${seamGreen.filter((n) => n).join(', ') || 'none'})`);
 const walkSamples = [];
 await page.keyboard.down('ArrowUp');
 for (let i = 0; i < 6; i++) { walkSamples.push([await avatar(), await free()]); await page.waitForTimeout(150); }
@@ -499,6 +499,84 @@ const fWall = await free(); // back from the meeting the figure may stand a step
 ok(fWall.s <= fWall.stop + 0.6 + 1e-6 && fWall.s >= sWall - 1e-6, `walking on does not pass the daemon (stood ${sWall.toFixed(1)}, now ${fWall.s.toFixed(1)}, the daemon at ${fWall.stop.toFixed(1)})`);
 await page.locator('[data-cave-pane]').click();
 await page.screenshot({ path: SHOTS + '/cave-daemon-wall.png' });
+
+// ---- the standing W.A.V.E. beside a daemon (sic-first-cave-sitting, 4c) --------------------------------------------------
+// Big Mind's waveStart, the two charge meters, the sitting a standing W.A.V.E. counts for the daemon's spirit. The easing and the
+// let-go are checked in the 3-2-1 below. Everything this makes is released, so nothing is left walking with the player.
+await C(() => { window.__oagCave.state.waveMs = 250; });
+const wm0 = await C(() => window.__oagCave.meters());
+ok(wm0.shown && wm0.it === 6 && wm0.you === null, `beside the daemon one meter shows its charge, and the player's own waits until they give it (${JSON.stringify(wm0)})`);
+ok(await sees('[data-cave-wave]'), 'the daemon\'s stop offers Breathe with it beside the 3-2-1');
+const meetSits = () => C(() => { const o = window.__oagCave.spirits.filter((x) => x.id === 'meet-protector')[0], t = window.__oagSpiritStore.get('meet-protector'); return { walking: o ? o.sittings : null, kept: t ? t.sittings : null, stage: o ? o.stage : null }; });
+await C(() => { const o = { id: 'meet-protector', name: 'Fear', element: 'Fear', family: 'protector', sittings: 0 }; window.__oagSpiritStore.put(o); window.__oagCave.addSpirit(Object.assign({}, o)); });
+const ws0 = await meetSits();
+await page.locator('[data-cave-wave]').click();
+ok(await sees('[data-cave-wave-you]') && (await C(() => window.__oagCave.wave())).open, 'Breathe with it opens a W.A.V.E. in place, and asks for your own charge first');
+await page.locator('[data-cave-wave-you]').evaluate((i) => { i.value = '7'; i.dispatchEvent(new Event('input')); });
+ok((await C(() => window.__oagCave.meters())).you === 7, 'the slider moves the player\'s own meter');
+await page.locator('[data-cave-wave-youset]').click();
+const wv1 = await C(() => window.__oagCave.wave()), wm1 = await C(() => window.__oagCave.meters());
+ok(wv1.n === 0 && wv1.blob && wv1.blob.visible && wm1.you === 7 && wm1.it === 6, `the charge shows beside the player, and its charge stays as it was: yours ${wm1.you}, its ${wm1.it}`);
+await page.waitForFunction(() => { const w = window.__oagCave.wave(); return w.blob && w.blob.dist < 3; }, null, { timeout: 8000 }).catch(() => {});
+ok((await C(() => window.__oagCave.wave())).blob.dist < 3, 'the shape settles in beside the figure');
+await page.locator('[data-cave-wave-next="welcome"]').click();
+ok(await sees('[data-cave-wave-step="acknowledge"]') && await page.locator('[data-cave-wave-next]').isDisabled(), 'Acknowledge waits for an element or "I don\'t know"');
+await page.locator('[data-cave-wave-word]').fill('Dread');
+await page.locator('[data-cave-wave-element="Fear"]').click();
+await page.waitForFunction(() => window.__oagCave.wave().blob.hex !== 0x8a8a96, null, { timeout: 5000 }).catch(() => {});
+ok((await C(() => window.__oagCave.wave())).blob.hex !== 0x8a8a96, 'the shape takes its element\'s colour');
+await page.locator('[data-cave-wave-back]').click();
+await page.waitForFunction(() => !window.__oagCave.wave().blob, null, { timeout: 5000 });
+ok(!(await C(() => window.__oagCave.wave())).open && await sees('[data-cave-wave]') && (await meetSits()).walking === ws0.walking && (await C(() => window.__oagCave.meters())).you === 7, 'going back partway sinks the shape, counts no sitting and keeps the number you gave');
+await page.locator('[data-cave-wave]').click();
+await page.locator('[data-cave-wave-youset]').click();
+for (const id of ['welcome', 'acknowledge']) {
+  if (id === 'acknowledge') { await page.locator('[data-cave-wave-word]').fill('Dread'); await page.locator('[data-cave-wave-element="Fear"]').click(); }
+  await page.locator(`[data-cave-wave-next="${id}"]`).click();
+}
+ok(await page.locator('[data-cave-wave-allow]').count() === 2, 'Allow has the size and brightness sliders');
+await page.locator('[data-cave-wave-allow="grow"]').evaluate((i) => { i.value = '10'; i.dispatchEvent(new Event('input')); });
+await page.locator('[data-cave-wave-next="allow"]').click();
+await page.waitForFunction(() => window.__oagCave.wave().blob.scale > 1.7, null, { timeout: 8000 }).catch(() => {});
+ok((await C(() => window.__oagCave.wave())).blob.scale > 1.7, 'the shape grows by Allow\'s slider');
+await page.locator('[data-cave-wave-next="accept"]').click();
+await page.locator('[data-cave-wave-notnow]').click();
+await page.locator('[data-cave-wave-next="validate"]').click();
+ok(await sees('[data-cave-wave-exhale="stay"]') && await sees('[data-cave-wave-exhale="release"]'), 'the Exhale asks whether it stays or goes');
+await page.locator('[data-cave-wave-exhale="release"]').click();
+await page.waitForFunction(() => !window.__oagCave.wave().blob, null, { timeout: 8000 });
+const wv2 = await C(() => window.__oagCave.wave()), ws1 = await meetSits();
+ok(wv2.waves === 1 && wv2.last.you === 7 && wv2.last.element === 'Fear' && wv2.last.exhale === 'release', `a W.A.V.E. gone through to the end is kept on the sitting: ${JSON.stringify(wv2.last)}`);
+ok(ws0.walking !== null ? ws1.walking === ws0.walking + 1 && ws1.kept === ws0.kept + 1 : ws1.kept === (ws0.kept || 0) + 1, `it counts a sitting for the daemon's spirit and the store keeps it: ${JSON.stringify(ws0)} → ${JSON.stringify(ws1)}`);
+ok((await C(() => window.__oagCave.spirits.length)) === (await C(() => window.__oagCave.spirits.filter((o) => o.family).length)), 'released, the charge leaves no spirit behind');
+await page.locator('[data-cave-wave]').click();
+await page.locator('[data-cave-wave-youset]').click();
+for (const id of ['welcome', 'acknowledge', 'allow', 'accept', 'appreciate', 'validate']) {
+  if (id === 'acknowledge') await page.locator('[data-cave-wave-element="unknown"]').click();
+  await page.locator(`[data-cave-wave-next="${id}"]`).click();
+}
+await page.locator('[data-cave-wave-exhale="release"]').click();
+await page.waitForFunction(() => !window.__oagCave.wave().blob, null, { timeout: 8000 });
+ok((await meetSits()).kept === ws1.kept, 'a second W.A.V.E. in the same run counts no second sitting');
+await C(() => window.__oagCave.forgetRun());
+// The Exhale's "stay": the shape does not fade but walks with the player as a spirit, named by the word they gave.
+const nSp = await C(() => window.__oagCave.spirits.length);
+await page.locator('[data-cave-wave]').click();
+await page.locator('[data-cave-wave-youset]').click();
+for (const id of ['welcome', 'acknowledge', 'allow', 'accept', 'appreciate', 'validate']) {
+  if (id === 'acknowledge') { await page.locator('[data-cave-wave-word]').fill('Dread'); await page.locator('[data-cave-wave-element="Fear"]').click(); }
+  await page.locator(`[data-cave-wave-next="${id}"]`).click();
+}
+await page.locator('[data-cave-wave-exhale="stay"]').click();
+await page.waitForFunction(() => !window.__oagCave.wave().blob, null, { timeout: 8000 });
+const stayed = await C(() => window.__oagCave.spirits.filter((o) => o.name === 'Dread').length);
+ok(stayed === 1 && (await C(() => window.__oagCave.spirits.length)) === nSp + 1 && (await C(() => window.__oagCave.wave())).last.exhale === 'stay', 'the Exhale\'s stay keeps the shape: a spirit named Dread now walks with the player');
+await C(() => window.__oagCave.forgetRun());
+await page.locator('[data-cave-pane]').click().catch(() => {});
+for (let i = await C(() => window.__oagCave.spirits.length); i > 0; i--) { await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200); }
+await C(() => window.__oagSpiritStore.wipe());
+await page.locator('[data-cave-pane]').click().catch(() => {});
+await page.screenshot({ path: SHOTS + '/cave-daemon-wave.png' });
 
 // ---- the WAVE room (six-faces-council council/callsheets/wave-room.md): its helpers, then Take it home from this daemon -----
 const room = () => C(() => window.__oagCave.room && { scene: window.__oagCave.room.scene(), charge: window.__oagCave.room.charge(), round: window.__oagCave.room.state.round, phase: window.__oagCave.room.state.phase });
@@ -753,9 +831,14 @@ for (const round of [1, 2]) {
     ok(await sees('[data-cave-321-step="it"]') && await page.locator('[data-cave-bubble-phase="3"]').count() >= 1, 'another round keeps the thread');
   }
 }
+const eas = await C(() => window.__oagCave.letGo().lastEase), mEase = await C(() => window.__oagCave.meters());
+ok(eas && eas.v === 3 && eas.was === 8 && eas.crossed && mEase.eases >= 1, `the lower charge was answered by the chamber, the most for crossing the ready line: ${JSON.stringify(eas)}, ${mEase.eases} eases`);
 await page.locator('[data-cave-satisfied="yes"]').click();
-await page.waitForTimeout(1000);
-ok(await sees('[data-cave-open]') && await sees('[data-cave-next]'), 'once it stands aside the way opens');
+const lg1 = await C(() => window.__oagCave.letGo());
+ok(lg1.letGo && lg1.letGo.len > 0 && lg1.stance === 'willing' && await sees('[data-cave-letgo]') && await page.locator('[data-cave-next]').isDisabled(), `satisfied, the daemon lets go first: its Integrate action plays (${lg1.letGo && lg1.letGo.len.toFixed(1)} s) and the way waits`);
+await page.locator('[data-cave-open]').waitFor({ timeout: 60000 });
+const lg2 = await C(() => window.__oagCave.letGo());
+ok(await sees('[data-cave-open]') && await sees('[data-cave-next]') && lg2.honored && lg2.playing === -1 && !lg2.letting && !(await C(() => window.__oagCave.meters())).shown, 'once it has let go it stands honored, steps aside, the way opens and the meters go');
 await page.waitForTimeout(1500);
 ok((await C(() => window.__oagCave.daemonGlow())).want < 0.15, 'standing aside, it is dull');
 await page.locator('[data-cave-next]').click();

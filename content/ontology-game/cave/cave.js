@@ -1674,7 +1674,7 @@
       var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "data-cave-321-charge": which, "aria-label": "Charge, 0 to 10" });
       inp.value = t[which];
       var out = el("span", { class: "oagc-read", "data-cave-321-read": which, text: t[which] + " of 10" });
-      inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; });
+      inp.addEventListener("input", function () { t[which] = +inp.value; out.textContent = t[which] + " of 10"; if (o.onCharge) o.onCharge(); });
       return el("div", { class: "oagc-slide" }, [inp, out]);
     }
     function toOne() {
@@ -1810,6 +1810,11 @@
     ".oagc-spirits h2{font-size:1.1rem;color:#fff;margin:0 0 .3rem}.oagc-spirits p{margin:.3rem 0;font-size:.95rem}.oagc-spirits .oagc-you{color:#fff1d0}" +
     ".oagc-style{position:absolute;top:62px;right:10px;z-index:4;max-width:calc(100vw - 20px);min-height:44px;padding:0 .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(20,20,40,.85);color:#f4f4fa;font-size:16px}" +
     ".oagc-ring{position:absolute;left:50%;bottom:14px;width:88px;height:88px;margin-left:-44px;border-radius:50%;border:3px solid rgba(255,241,176,.85);background:rgba(255,241,176,.12);display:flex;align-items:center;justify-content:center;text-align:center;font-size:.68rem;line-height:1.15;color:#fff1b0;z-index:2;touch-action:none}" +
+    ".oagc-meters{position:absolute;top:10px;right:10px;z-index:4;width:132px;pointer-events:none}.oagc-meter{display:flex;align-items:center;gap:.35rem;margin:0 0 4px;font-size:11px;color:#dfe6ff;text-shadow:0 1px 3px #000}.oagc-meter span{width:2.2em}" +
+    ".oagc-bar{position:relative;flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden}.oagc-bar s{display:block;height:100%;width:0;background:#e0704a;transition:width .3s}.oagc-meter[data-cave-meter=you] .oagc-bar s{background:#6fb7e8}.oagc-meter b{width:1.4em;text-align:right;font-weight:600;color:#fff1b0}" +
+    ".oagc-meter.eased .oagc-bar{animation:oagc-glow 1.6s ease-out}@keyframes oagc-glow{0%{box-shadow:0 0 0 #fff1b0}30%{box-shadow:0 0 10px #fff1b0}100%{box-shadow:0 0 0 #fff1b0}}" +
+    ".oagc-eased{position:absolute;left:0;right:0;top:34%;text-align:center;z-index:3;color:#fff1d0;font-size:1.15rem;text-shadow:0 1px 4px #000;pointer-events:none;opacity:0;transition:opacity .4s;padding:0 1.2rem}.oagc-eased.on{opacity:1}.oagc-eased small{display:block;font-size:.9rem;color:#dfe6ff;margin-top:.25rem}" +
+    "@media (prefers-reduced-motion:reduce){.oagc-meter.eased .oagc-bar{animation-duration:.01s}}" +
     ".oagc-fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:5}" +
     ".oagc-home{padding:2rem 1rem;max-width:34rem;margin:auto;text-align:center}.oagc-home h1{font-size:1.5rem;color:#fff}";
 
@@ -2755,6 +2760,8 @@
           title = approachCard(blk, d, body); go.disabled = true;
         } else if (!blk.met && blk.bm) {
           title = meetCard(blk, d, body); go.disabled = true;
+        } else if (blk.wv) {
+          title = waveCard(blk, d, body); go.disabled = true;
         } else {
           body.push(P(d[1] + "'s job: " + d[2], { "data-cave-daemon-job": "" }));
           body.push(P("Who it works for: " + DAEMON_WORKS_FOR, { "data-cave-daemon-for": "" }));
@@ -2779,7 +2786,8 @@
             ]));
             go.disabled = true;
           } else if (blk.stepAside === "yes") {
-            body.push(P(d[1] + " stepped to the wall, and the way is open.", { "data-cave-open": "" }));
+            if (blk.letting) { body.push(P(d[1] + " lets go.", { "data-cave-letgo": "" })); go.disabled = true; }
+            else body.push(P(d[1] + " stepped to the wall, and the way is open.", { "data-cave-open": "" }));
           } else {
             // Wendell, 10 October 2026: "This type of blocker shouldn't be able to be moved past and there should be an encounter
             // where they only stand aside after resolving the emergent issue presented by the daemon." The way stays shut; the
@@ -2806,6 +2814,7 @@
                 btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); }, true),
                 btn("Take it home", { "data-cave-take-home": "" }, function () { takeHome(blk, d); }, true),
               ]));
+              body.push(row([btn("Breathe with it (W.A.V.E.)", { "data-cave-wave": "" }, function () { waveStart(blk); }, true)]));
             } else {
               title = chat321(blk, d, t, body);
             }
@@ -2831,6 +2840,7 @@
         if (stp.place !== "way_out") kids.push(btn("This step won't go further", { "data-cave-block": "" }, function () { openBlock(p.key, p.step); }, true));
         if (stp.place !== "way_out" && !daemonHolds(blk)) kids.push(btn("Skip", { "data-cave-skip": "" }, skip, true));
       }
+      meterUi(stp.place === "passage" ? blk : null);
       fill(title, body.concat([row(kids)]));
     }
     // "Take it home" (board wave-room-cave-link = both, by lantern): a lantern is left at this spot, the cave rests, and the charge
@@ -2861,6 +2871,26 @@
     var spiritBtn = el("button", { class: "oagc-spiritbtn", "data-cave-spiritbtn": "", style: "display:none", onclick: function () { spiritPanel(); } });
     var spiritBox = el("div", { class: "oagc-spirits", "data-cave-spirits": "", style: "display:none" });
     canvasBox.appendChild(spiritBtn); wrap.appendChild(spiritBox);
+    // The two charges (Wendell's board answer bmw-whose-charge, 11 October 2026: "Two charges, yours and its"): the daemon's ("it")
+    // is the 3-2-1's reading, the player's own ("you") is what a standing W.A.V.E. beside it works. Only "it" decides whether it
+    // steps aside. Shown while a daemon holds the passage.
+    function meterBar(key, label) {
+      var fill = el("s"), num = el("b", { text: "" }), box = el("div", { class: "oagc-meter", "data-cave-meter": key, style: "display:none" }, [el("span", { text: label }), el("div", { class: "oagc-bar" }, [fill]), num]);
+      return { box: box, fill: fill, num: num };
+    }
+    var meterIt = meterBar("it", "It"), meterYou = meterBar("you", "You"), meterBox = el("div", { class: "oagc-meters", "data-cave-meters": "", style: "display:none" }, [meterIt.box, meterYou.box]);
+    var easedLine = el("div", { class: "oagc-eased", "data-cave-eased": "", "aria-live": "polite" });
+    wrap.appendChild(meterBox); wrap.appendChild(easedLine);
+    function setMeter(m, v) {
+      m.box.style.display = v == null ? "none" : "";
+      if (v != null) { m.fill.style.width = (v * 10) + "%"; m.num.textContent = String(v); m.box.setAttribute("data-cave-meter-value", String(v)); }
+    }
+    function meterUi(blk) {
+      var on = blk && blk.daemon && blk.met && blk.dm && blk.stepAside !== "yes";
+      meterBox.style.display = on ? "" : "none";
+      if (!on) return;
+      setMeter(meterIt, heatOf(blk.t321, blk.dm.heat)); setMeter(meterYou, blk.wv && blk.wv.n < 0 ? blk.wv.you : blk.you);
+    }
     // A spirit of a family (a met daemon's, kept in oag.spirits.v1) wears the form its sittings give it; the rest are orbs.
     function addSpirit(o, at0) {
       if (o.family && spirits.some(function (x) { return x.family === o.family && x.name === o.name; })) return; // already walking with you
@@ -3081,6 +3111,10 @@
       body.material.emissiveIntensity = S.valid ? 0.35 : 0.25 + (state.calm ? 0 : 0.12 * Math.sin(nowMs / 90));
       stepAura(S.g.userData.aura, col, S.allowed ? S.allow.bright / 10 : 0.3, dt, state.calm);
       if (S.light) S.light.color.copy(col);
+      stepOrb(dt);
+    }
+    // The breath orb in the open page: in for 4 s, out for 6.
+    function stepOrb(dt) {
       var ob = modal.querySelector("[data-cave-orb]");
       if (ob) {
         ob._t = (ob._t + dt) % (BREATH.inS + BREATH.outS);
@@ -3096,19 +3130,153 @@
     function daemonHolds(b) { while (b) { if (b.daemon && b.stepAside !== "yes") return true; b = b.frame.blk; } return false; }
     // The 3-2-1 with the daemon in the way (talk321, above, holds the chat). Asked at the end whether it feels satisfied.
     function chat321(blk, d, t, body) {
-      return talk321(t, { name: d[1], damaged: blk.daemon === "damaged-self", redraw: function () { placeCard(blk); }, focus: function () { focusChat(modal); },
+      return talk321(t, { name: d[1], damaged: blk.daemon === "damaged-self", redraw: function () { placeCard(blk); }, focus: function () { focusChat(modal); }, onCharge: function () { meterUi(blk); },
         // Allow, at the daemon (callsheet wave-room, Next: the room's sliders reach the cave's daemons): it grows a little by itself
         before: function (body) {
           body.push(el("div", { "data-cave-allow": "" }, [el("p", { text: "Allow it: let it be as big and as bright as it is." })].concat(allowSliders(blk.dm, "data-cave-allow-slider"))));
         },
         ask: function (body) {
+        if (t.after < t.before && t.easedRound !== t.rounds) { t.easedRound = t.rounds; easeReward(blk, d, t.before, t.after); } // the chamber answers a lower charge
         body.push(P("Does " + d[1] + " feel satisfied?", { "data-cave-321-ask": "" }));
         body.push(P("Charge " + t.before + " → " + t.after + (t.after < t.before ? ", down " + (t.before - t.after) + "." : ".") + " Your words stay on this page and are not saved."));
         body.push(row([
-          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.dm.heat = t.after; blk.stepAside = "yes"; blk.t321 = null; moveDaemon(blk); placeCard(blk); }),
+          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.dm.heat = t.after; blk.stepAside = "yes"; blk.t321 = null; letGoDaemon(blk, d); }),
           btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { t.phase = 3; t.rounds++; t.before = t.after; t.msgs.push({ round: t.rounds, divider: true }); placeCard(blk); }, true),
         ]));
         } }, body);
+    }
+    // The reward for a lower charge (Wendell, 11 October 2026: "There should be a visual reward for when the charge goes down"), as in
+    // Big Mind's `eased`: a ring of warm light spreads out from the daemon's feet, its meter drains with a glow, and a line says so.
+    // A bigger drop gives a wider ring; crossing the ready line (3) gives the most. Reduced motion: no ring, the line and the glow.
+    var READY = 3;
+    function easeReward(blk, d, was, v) {
+      var drop = was - v, crossed = was > READY && v <= READY, nm = d[1], c = blk.route.ctx, fig = c && c.daemonFig;
+      blk.eases = (blk.eases || 0) + 1;
+      meterIt.box.setAttribute("data-cave-eases", String(blk.eases)); meterIt.box.classList.remove("eased"); void meterIt.box.offsetWidth; meterIt.box.classList.add("eased");
+      easedLine.innerHTML = ""; easedLine.appendChild(document.createTextNode(crossed ? nm + " lets its breath out." : drop >= 3 ? nm + " eases a lot." : nm + " eases."));
+      easedLine.appendChild(el("small", { text: was + " down to " + v })); easedLine.classList.add("on");
+      var big = Math.min(1, 0.45 + drop * 0.18 + (crossed ? 0.35 : 0)), ring = null;
+      blk.lastEase = { was: was, v: v, big: big, crossed: crossed };
+      if (fig && fig.parent && !reducedMotion) {
+        ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.25, 48), new THREE.MeshBasicMaterial({ color: 0xffe6a0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+        ring.rotation.x = -Math.PI / 2; ring.position.set(fig.position.x, fig.position.y + 0.06, fig.position.z); fig.parent.add(ring);
+      }
+      tween(crossed ? 2600 : 2100, function (k) {
+        if (ring) { ring.scale.setScalar(1 + (1.5 + 3 * big) * ease(k)); ring.material.opacity = 0.75 * big * (1 - k); }
+      }, function () { if (ring && ring.parent) ring.parent.remove(ring); easedLine.classList.remove("on"); });
+    }
+    // The let-go (bars-engine #356, in Big Mind `letGoVoice`): when the 3-2-1 ends with the daemon satisfied, its body plays its
+    // Integrate action once, the held shape opening into its honored form, and then stands willing as it steps to the wall.
+    function letGoDaemon(blk, d) {
+      var c = blk.route.ctx, fig = c && c.daemonFig, len = fig ? integrateBody(fig) : 0;
+      blk.letGo = { len: len, done: false };
+      if (!len) { blk.letGo.done = true; moveDaemon(blk); return placeCard(blk); }
+      blk.letting = true; fig.userData.stance = "willing"; // it ends honored and stays there
+      easedLine.innerHTML = ""; easedLine.appendChild(document.createTextNode(d[1] + " lets go.")); easedLine.appendChild(el("small", { text: "This is how it stands when it is honored." })); easedLine.classList.add("on");
+      placeCard(blk);
+      var waits = 0;
+      (function wait() {
+        var rig = fig.userData.rig;
+        if (rig && rig.playing >= 0 && waits++ < 600) return setTimeout(wait, 100); // not tween(): a tween started from a tween's end is dropped by the render loop's filter
+        setTimeout(function () { blk.letting = false; blk.letGo.done = true; easedLine.classList.remove("on"); moveDaemon(blk); placeCard(blk); }, 900);
+      })();
+    }
+
+    // ---- the standing W.A.V.E. beside a daemon (sic-first-cave-sitting, 4c) -------------------------------------------------
+    // Big Mind's `waveStart`: an offer beside the daemon, never required. It is on the player's own charge ("you"); the daemon's
+    // charge ("it") stays as the 3-2-1 left it and only that decides whether it steps aside (bmw-number-stays). The player sets their
+    // own number, then goes through the W.A.V.E.'s steps standing where they stand, one breath each, the charge showing beside them
+    // as a shape that takes its element's colour at Acknowledge, grows by Allow's sliders and dulls at Validate. At the Exhale it
+    // either stays and walks with the player as a spirit, or rises and fades. A W.A.V.E. gone through to the end counts a sitting
+    // for the spirit of this daemon's family (once a run), as the sitting in Big Mind does; going back partway counts none.
+    function waveStart(blk) {
+      blk.wv = { n: -1, you: blk.you == null ? 5 : blk.you, word: "", element: null, unknown: false, allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, valid: false, appreciate: "", step: 0 };
+      var g = new THREE.Group(), au = buildAura(THREE, 0.9);
+      var m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 20, 14), new THREE.MeshStandardMaterial({ color: 0x8a8a96, emissive: 0x8a8a96, emissiveIntensity: 0.25, transparent: true, opacity: 0.85, roughness: 0.7 }));
+      m.position.y = 0.6; g.add(m); g.add(au); g.userData = { body: m, aura: au, color: new THREE.Color(0x8a8a96) };
+      g.visible = false; scene.add(g);
+      blk.wv.blob = { g: g, come: 1, rise: 0, fade: 1, light: carryLight(g, 0x9a9aa8), route: blk.route };
+      waveBlob = blk.wv; placeCard(blk);
+    }
+    var waveBlob = null;
+    function waveHex(W) { return W.element ? spiritHex(W.element) : 0x8a8a96; }
+    function waveGone(blk, how) { // how: "back" (sinks away), "release" (rises and fades), "stay" (walks with you as a spirit)
+      var W = blk.wv, B = W.blob, from = B.g.position.clone();
+      blk.wv = null; // waveBlob keeps drawing it until it is gone
+      tween(how === "release" ? 2200 : 1200, function (k) { var e = ease(k); if (how === "release") { B.rise = 2.5 * e; B.fade = 1 - e; } else if (how === "back") { B.fade = 1 - e; } }, function () {
+        scene.remove(B.g); dropLight(B.g); if (waveBlob === W) waveBlob = null;
+        if (how === "stay") addSpirit({ name: (W.word.trim() || genName()), element: W.element, hex: W.element ? null : 0x8a8a96 }, from);
+      });
+      placeCard(blk);
+    }
+    function waveCount(blk) { // a sitting for the spirit of this daemon's family, once a run
+      var id = "meet-" + blk.daemon, o = spirits.filter(function (x) { return x.id === id; })[0];
+      if (o) { var was = o.stage; sittingCounted(o); if (o.stage !== was && o.g.userData.unfold) o.g.userData.unfold(o.stage, true); return o; }
+      try {
+        var t = SPIRIT_STORE && SPIRIT_STORE.get(id);
+        if (t && !satRun[id]) { satRun[id] = true; SPIRIT_STORE.put({ id: id, name: t.name, element: t.element, family: t.family, sittings: (t.sittings || 0) + 1 }, "Cave of Lessons"); }
+      } catch (e) { /* the W.A.V.E. still happened */ }
+      return null;
+    }
+    function waveCard(blk, d, body) {
+      var W = blk.wv, nm = lowerName(d[1]);
+      var back = btn("Back to " + nm, { "data-cave-wave-back": "" }, function () { waveGone(blk, "back"); }, true);
+      if (W.n < 0) {
+        body.push(P("Breathe with it", { class: "oagc-note", "data-cave-wave-step": "you" }));
+        body.push(P("This is about your own charge: the feeling that comes up in you while you stand with " + nm + ". Its charge stays as you set it. How charged are you right now?"));
+        var num = el("span", { class: "oagc-read", "data-cave-wave-you-read": "", text: W.you + " of 10" });
+        var inp = el("input", { type: "range", min: "0", max: "10", step: "1", "data-cave-wave-you": "", "aria-label": "Your own charge, 0 to 10" }); inp.value = W.you;
+        inp.addEventListener("input", function () { W.you = +inp.value; num.textContent = W.you + " of 10"; setMeter(meterYou, W.you); });
+        body.push(el("div", { class: "oagc-slide" }, [inp, num]));
+        body.push(row([btn("That's me right now", { "data-cave-wave-youset": "" }, function () { blk.you = W.you; W.n = 0; W.blob.g.visible = true; W.blob.come = 1; tween(1400, function (k) { W.blob.come = 1 - ease(k); }); meterUi(blk); placeCard(blk); }), back]));
+        return "Breathe with it";
+      }
+      var R = WAVE[W.n], id = R[0], cont = btn("Go on", { "data-cave-wave-next": id }, function () { if (id === "validate") W.valid = true; W.n++; placeCard(blk); }), extra = [];
+      body.push(P("Standing W.A.V.E. beside " + nm + " · " + (W.n + 1) + " of " + WAVE.length, { class: "oagc-note", "data-cave-wave-step": id }), P(R[2]));
+      var gate = id !== "exhale";
+      if (id === "acknowledge") {
+        body.push(P("Name the feeling to yourself in one word, then pick its element. You can say you don't know."));
+        body.push(line("data-cave-wave-word", W.word, "One word for the feeling", function (v) { W.word = v; }));
+        body.push(cards(ELEMENTS.map(function (x) { return [x[0], x[1] + " · " + x[0]]; }).concat([["unknown", "I don't know"]]), W.unknown ? "unknown" : W.element, "data-cave-wave-element",
+          function (v) { W.unknown = v === "unknown"; W.element = W.unknown ? null : v; placeCard(blk); }));
+        if (!(W.element || W.unknown)) cont.disabled = true, gate = false;
+      } else if (id === "allow") {
+        W.allowed = true;
+        body.push(P((W.word.trim() || "It") + " grows a little as you let it be here."));
+        allowSliders(W.allow, "data-cave-wave-allow").forEach(function (n) { body.push(n); });
+      } else if (id === "appreciate") {
+        body.push(line("data-cave-wave-appreciate", W.appreciate, "In your own words, if you want", function (v) { W.appreciate = v; }), P("You may not find anything to appreciate today, and that's all right."));
+        extra.push(btn("Not now", { "data-cave-wave-notnow": "" }, function () { W.n++; placeCard(blk); }, true));
+      } else if (id === "exhale") {
+        cont = btn("Yes, let it stay", { "data-cave-wave-exhale": "stay" }, function () { waveDone(blk, "stay"); });
+        extra.push(btn("No, exhale and release", { "data-cave-wave-exhale": "release" }, function () { waveDone(blk, "release"); }, true));
+      }
+      if (id !== "exhale") body.push(breathOrb());
+      // One step, one breath: its button wakes when the breath has been taken (the cave's own 4 s in, 6 s out).
+      if (gate && W.gateStep !== W.n) { W.gateStep = W.n; W.gateOpen = false; var at = W.n; tween(state.waveMs != null ? state.waveMs : BREATH_S * 1000, function () {}, function () { if (blk.wv === W && W.n === at) { W.gateOpen = true; if (W.go) W.go.disabled = false; } }); }
+      if (gate && !W.gateOpen) cont.disabled = true;
+      W.go = cont;
+      body.push(row([cont].concat(extra)));
+      body.push(row([back]));
+      return R[1];
+    }
+    function waveDone(blk, how) {
+      var W = blk.wv; blk.waves = (blk.waves || 0) + 1; W.exhale = how;
+      blk.lastWave = { you: W.you, word: W.word.trim(), element: W.element, exhale: how, allow: { grow: W.allow.grow, bright: W.allow.bright } };
+      waveCount(blk); waveGone(blk, how);
+    }
+    // Each frame: the shape comes in beside the figure, takes its colour, grows and brightens by Allow, and dulls at Validate.
+    function waveFrame(dt, nowMs, route, wk, h) {
+      var W = waveBlob, B = W && W.blob; if (!B || B.route !== route) return;
+      stepOrb(dt);
+      var a = at(route, Math.min(route.len || 1e9, wk.s + 1.8 + 9 * B.come)), e = 1.3;
+      B.g.position.set(a.x - a.fz * e, a.y - h * 0.92 + 0.95 + 0.05 * Math.sin(nowMs / 700) + B.rise, a.z + a.fx * e);
+      var hex = waveHex(W), body = B.g.userData.body, col = B.g.userData.color.lerp(tmpC.setHex(hex), Math.min(1, dt * 3));
+      body.material.color.copy(col); body.material.emissive.copy(col);
+      var grow = W.allowed ? 1 + W.allow.grow / 10 : 1; B.g.scale.setScalar(B.g.scale.x + (grow - B.g.scale.x) * Math.min(1, dt * 2));
+      body.material.opacity = 0.85 * B.fade; body.material.emissiveIntensity = W.valid ? 0.15 : 0.25 + (state.calm ? 0 : 0.12 * Math.sin(nowMs / 90));
+      stepAura(B.g.userData.aura, col, (W.allowed ? W.allow.bright / 10 : 0.3) * (W.valid ? 0.5 : 1) * B.fade, dt, state.calm);
+      if (B.light) B.light.color.copy(col);
     }
     // ---- meeting a daemon the Big Mind way (board merge-layout) --------------------------------------------------------
     // blk.bm.phase: q (a question, answered as the daemon from its place), secret (another voice spoke), thank (it is asked to
@@ -3652,6 +3820,7 @@
           spirits.forEach(function (o) { if (!o.g.parent) scene.add(o.g); });
         }
         if (sit) sitFrame(dt, nowMs, route, wk, h);
+        waveFrame(dt, nowMs, route, wk, h);
         sitBtn.disabled = !canSit();
         if (route.pendingExit && wk.s > route.len * 0.5) openWayBack(route);
         // camera: behind the figure on the way it follows (wk.camYaw), and a little above. It follows the figure itself, not the
@@ -3823,6 +3992,10 @@
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
     api.branchStyle = function () { var r = state.walk && state.walk.route; return { shown: styleSel.style.display !== "none", value: styleSel.value, style: r && r.style || null, rock: r && r.kind === "face" ? r.tube.rock.userData.hex : null, light: lk.light.getHex(), motes: !!(r && r.motes) }; };
+    api.forgetRun = function () { satRun = {}; }; // a test counts sittings again as a new run would
+    api.meters = function () { return { shown: meterBox.style.display !== "none", it: meterIt.box.style.display === "none" ? null : +meterIt.box.getAttribute("data-cave-meter-value"), you: meterYou.box.style.display === "none" ? null : +meterYou.box.getAttribute("data-cave-meter-value"), eases: +(meterIt.box.getAttribute("data-cave-eases") || 0), easeLine: easedLine.classList.contains("on") }; };
+    api.wave = function () { var b = waveBlob, c = ctxOf(), k = c && c.daemonBlk; return { open: !!(k && k.wv), n: k && k.wv ? k.wv.n : null, blob: b ? { hex: b.blob.g.userData.color.getHex(), scale: b.blob.g.scale.x, visible: b.blob.g.visible, dist: Math.hypot(b.blob.g.position.x - avatar.position.x, b.blob.g.position.z - avatar.position.z), fade: b.blob.fade } : null, last: k && k.lastWave || null, waves: k ? k.waves || 0 : 0, you: k ? k.you : null }; };
+    api.letGo = function () { var c = ctxOf(), k = c && c.daemonBlk, fig = c && c.daemonFig, rig = fig && fig.userData.rig; return { letGo: k && k.letGo || null, letting: !!(k && k.letting), playing: rig ? rig.playing : null, honored: !!(fig && fig.userData.letGo), stance: fig && fig.userData.stance || null, lastEase: k && k.lastEase || null }; };
     api.daemonGlow = function () { var c = ctxOf(); if (!c || !c.daemonAura) return null; var dm = c.daemonBlk.dm; return { level: c.daemonAura.userData.level, want: daemonLevel(c.daemonBlk), scale: c.daemonFig.scale.x, grow: dm.grow, bright: dm.bright, allowed: dm.allowed }; };
     api.sideElement = function () { var wk = state.walk, b = wk && wk.blk, c = b && b.route.ctx; return { shown: !!(c && c.elObj && c.holder.children.length), name: b && b.element, deco: b ? b.deco.length : 0, colony: !!(c && c.colony && c.colony.parent) }; };
     api.pane = function () {
