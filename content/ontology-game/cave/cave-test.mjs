@@ -110,7 +110,8 @@ ok(set1.s.sound === false && set1.t === null, 'sound off is kept, and the walkth
 await page.locator('[data-setting="sound"]').click(); await page.locator('[data-setting="close"]').click();
 ok(!(await sees('[data-title-settings-panel]')), 'Done closes the settings');
 // The WAVE room's lessons are learned here, so the rooms below open as a returning player's do; the Arrival is checked at the end.
-await page.evaluate(() => localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors"]'));
+// The cave's own lessons (a glowing mark, a word stone) are learned too; they are checked after the Arrival.
+await page.evaluate(() => localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors","mark","stone"]'));
 
 // ---- the doorway: the heart, tapped on the real figure. Tension, Anger. ------------------------
 await page.locator('[data-cave-dive]').click();
@@ -1601,6 +1602,50 @@ await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
 await page.waitForTimeout(600);
 T = await teach();
 ok(T.modal && !T.live && T.shown === null && await sees('[data-room-welcome]'), 'back again, nothing is taught twice: the room opens on its first page');
+
+// ---- the cave's lessons (council/callsheets/game-demo.md, gd-teach-by-doing): a word stone (the pane over the figure) and a
+// glowing mark (its prompt by the right thumb), taught where they first show. The walk and the look the room taught are not.
+await C(() => localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors"]'));
+await page.goto(B + '/ontology-game/cave');
+await page.locator('[data-cave-dive]').click();
+await pickOnFigure('heart');
+await page.locator('[data-cave-choice="tension"]').click();
+await page.locator('[data-cave-choice="Anger"]').click();
+await page.locator('[data-cave-place="walk"]').waitFor();
+const cteach = () => C(() => window.__oagCave.teach());
+const cIs = (id, ms = 15000) => page.waitForFunction((id) => window.__oagCave.teach().shown === id, id, { timeout: ms }).then(() => true, () => false);
+const modalOpen = () => C(() => document.querySelector('[data-cave-modal]').classList.contains('open'));
+let CT;
+await page.waitForFunction(() => window.__oagCave.teach && (window.__oagCave.teach().shown || window.__oagCave.free().stick), null, { timeout: 15000 }).catch(() => {});
+await page.waitForTimeout(500);
+CT = await cteach();
+ok(!['walk', 'look'].includes(CT.shown) && !['walk', 'look'].includes(CT.lesson), 'T2: in the cave the walk and the look the room taught are not taught again ' + JSON.stringify(CT));
+if (CT.shown !== 'stone' && await modalOpen()) await page.locator('[data-cave-modal] [data-cave-shrink], [data-cave-modal] [data-cave-close]').first().click();
+ok(await cIs('stone'), 'the words over the figure (a word stone) get a glyph');
+CT = await cteach();
+const pb = await page.locator('[data-cave-pane]').boundingBox(), gp = await page.locator('[data-teach="stone"]').boundingBox();
+ok(!CT.away && gp && pb && gp.y + gp.height <= pb.y + 4 && Math.abs(gp.x + gp.width / 2 - (pb.x + pb.width / 2)) < pb.width, 'its glyph sits just over the words, and the light stays at the chest ' + JSON.stringify(CT));
+ok((await page.locator('[data-teach="stone"]').textContent()).trim() === '' && await sees('[data-teach-skip]'), 'the glyph has no words; "I know this" is beside it');
+await page.locator('[data-cave-pane]').click();
+await page.waitForTimeout(300);
+CT = await cteach();
+ok(CT.done.includes('stone') && CT.shown !== 'stone' && await modalOpen(), 'tapping the words opens all of them and learns the word stone');
+await page.screenshot({ path: SHOTS + '/cave-teach-stone.png' });
+await page.locator('[data-cave-modal] [data-cave-shrink], [data-cave-modal] [data-cave-close]').first().click();
+// walk up to the first stop: its glowing mark's prompt comes up by the right thumb, and the light floats out to the mark
+let markSeen = false;
+await page.keyboard.down('ArrowUp');
+for (let i = 0; i < 300 && !markSeen; i++) { markSeen = (await cteach()).shown === 'mark'; if (!markSeen) await page.waitForTimeout(100); }
+await page.keyboard.up('ArrowUp');
+CT = await cteach();
+const prb = await page.locator('[data-cave-prompt-box]').boundingBox(), gm = await page.locator('[data-teach="mark"]').boundingBox();
+ok(markSeen && CT.away && gm && prb && gm.y + gm.height <= prb.y + 4, 'at a glowing mark the light floats out to it and the glyph waits over its prompt ' + JSON.stringify(CT));
+await page.screenshot({ path: SHOTS + '/cave-teach-mark.png' });
+await page.locator('[data-cave-prompt-box] [data-cave-stop]').click();
+await page.waitForTimeout(300);
+CT = await cteach();
+ok(CT.done.includes('mark') && CT.shown === null, 'stopping there learns the mark ' + JSON.stringify(CT.done));
+ok(JSON.parse(await C(() => localStorage.getItem('oag.tutorial.v1'))).filter((x) => ['mark', 'stone'].includes(x)).length === 2, 'the cave\'s lessons are kept with the room\'s, as ids');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();

@@ -18,6 +18,7 @@ const files = {
   '/ontology-game/cave/textures/dry_stone.jpg': ['cave/textures/dry_stone.jpg', 'image/jpeg'],
   '/ontology-game/cave/textures/crystal_vein.jpg': ['cave/textures/crystal_vein.jpg', 'image/jpeg'],
   '/ontology-game/figure.glb': ['figure.glb', 'model/gltf-binary'],
+  '/ontology-game/cave/player/walker.glb': ['cave/player/walker.glb', 'model/gltf-binary'], // the player's own figure (bake_daemons.py --walker)
 };
 const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];
