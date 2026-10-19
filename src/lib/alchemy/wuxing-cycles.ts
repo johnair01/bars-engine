@@ -6,25 +6,11 @@
  */
 
 import type { EmotionChannel } from './types'
+import moveTable from '../quest-grammar/move-table.json'
 
-// Generation (shēng 生) cycle: Wood→Fire→Earth→Metal→Water→Wood
-// In Emotional Alchemy channels (see elements.ts):
-//   joy(Wood) → anger(Fire) → neutrality(Earth) → fear(Metal) → sadness(Water) → joy(Wood)
-export const SHENG_CYCLE: Record<EmotionChannel, EmotionChannel> = {
-  joy:        'anger',
-  anger:      'neutrality',
-  neutrality: 'fear',
-  fear:       'sadness',
-  sadness:    'joy',
-}
-
-// Control/destruction (kè 克) cycle: Wood→Earth→Water→Fire→Metal→Wood
-// In Emotional Alchemy channels:
-//   joy(Wood) → neutrality(Earth) → sadness(Water) → anger(Fire) → fear(Metal) → joy(Wood)
-export const KE_CYCLE: Record<EmotionChannel, EmotionChannel> = {
-  joy:        'neutrality',
-  neutrality: 'sadness',
-  sadness:    'anger',
-  anger:      'fear',
-  fear:       'joy',
-}
+// Both cycles come from the move table, a copy of six-faces-council schema/move-table.json
+// (src/lib/quest-grammar/__tests__/move-table.test.ts keeps them in step).
+// shēng 生: joy(Wood) → anger(Fire) → neutrality(Earth) → fear(Metal) → sadness(Water) → joy(Wood)
+// kè 克:    joy(Wood) → neutrality(Earth) → sadness(Water) → anger(Fire) → fear(Metal) → joy(Wood)
+export const SHENG_CYCLE = moveTable.cycles.sheng as Record<EmotionChannel, EmotionChannel>
+export const KE_CYCLE = moveTable.cycles.ke as Record<EmotionChannel, EmotionChannel>
