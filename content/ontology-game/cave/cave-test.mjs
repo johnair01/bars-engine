@@ -763,6 +763,26 @@ await page.locator('[data-cave-dug]').waitFor({ timeout: 30000 });
 ok((await C(() => window.__oagCave.depth())) === 1 && await sees('[data-cave-aside="yes"]'), 'coming back round, the daemon is asked again');
 // Still not yet: the 3-2-1, round after round, until it is satisfied.
 await page.locator('[data-cave-aside="not-yet"]').click();
+// Trust and allies (sic-first-cave-sitting, 4d): the moves a player can make to the daemon, the fixer's spirit vouching as an ally,
+// and what the first reading that eases shows. The marks, the pending moves and the stance come from window.__oagCave.trust().
+const tr0 = await C(() => window.__oagCave.trust());
+ok(tr0.can === 0 && tr0.will === 0 && tr0.good === 'none' && !tr0.ally && tr0.marks.can === 0 && await sees('[data-cave-trustbtn]'), `a daemon just met has seen nothing: ${JSON.stringify(tr0.marks)}`);
+await C(() => { window.__oagCave.trustSet('fixer', { seen: [{ dim: 'can', kind: 'sit', at: 'x' }, { dim: 'will', kind: 'return', at: 'x' }, { dim: 'good', kind: 'share', at: 'x' }], ally: 'x' }); window.__oagCave.allyJoins('fixer'); });
+ok((await C(() => window.__oagCave.spirits.filter((o) => o.ally === 'fixer').length)) === 1, 'the Fixer trusts the player, so its spirit joins as an ally');
+await page.locator('[data-cave-trustbtn]').click();
+ok(await sees('[data-cave-trust="wait"]') && await sees('[data-cave-trust="hold"]') && await sees('[data-cave-trust="sit"]') && await sees('[data-cave-trust="pace"]') && await sees('[data-cave-promise="return"]') && await sees('[data-cave-promise="visit"]') && await sees('[data-cave-share="0"]'), 'Show it who you are offers can you, will you and are you good');
+await page.locator('[data-cave-trust="wait"]').click();
+ok(await page.locator('[data-cave-trust-waited="wait"]').isDisabled(), 'waiting with it takes a breath: its button wakes after');
+await page.locator('[data-cave-trust-waited="wait"]:not([disabled])').waitFor({ timeout: 8000 });
+await page.locator('[data-cave-trust-waited="wait"]').click();
+ok(await sees('[data-cave-trustbtn]') && (await C(() => window.__oagCave.trust())).pending.includes('can:wait'), 'a move waits for the next reading: nothing is on the marks yet');
+await page.locator('[data-cave-trustbtn]').click(); await page.locator('[data-cave-promise="return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await page.locator('[data-cave-trustbtn]').click();
+ok(await page.locator('[data-cave-promise="return"]').isDisabled() && (await C(() => window.__oagCave.trust())).promises.join() === 'return:open', 'a promise made is shown as not yet kept');
+await page.locator('[data-cave-share="0"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await page.locator('[data-cave-trustbtn]').click(); await page.locator('[data-cave-trust="pace"]').click(); await page.locator('[data-cave-trust-ok]').click();
+const tr1 = await C(() => window.__oagCave.trust());
+ok(await sees('[data-cave-vouch="fixer"]') && /Fixer/.test(await page.locator('[data-cave-vouch="fixer"]').textContent()) && tr1.vouched && ['can:pace', 'can:vouch', 'can:wait', 'good:share'].every((k) => tr1.pending.includes(k)), `the allied Fixer vouches for the player, and the moves are pending: ${tr1.pending}`);
 await page.locator('[data-cave-321]').click();
 const charge = (which, v) => page.locator(`[data-cave-321-charge="${which}"]`).evaluate((e, x) => { e.value = x; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
 const say = async (k, text) => { await page.locator(`[data-cave-321-text="${k}"]`).fill(text); await page.locator('[data-cave-321-send]').click(); };
@@ -827,6 +847,14 @@ for (const round of [1, 2]) {
   await page.locator('[data-cave-321-after]').click();
   ok(await sees('[data-cave-321-ask]') && await page.locator('[data-cave-next]').count() === 0 && await page.locator('[data-cave-skip]').count() === 0, `after round ${round} the daemon is asked if it feels satisfied, with no way past and no skip`);
   if (round === 1) {
+    const tr2 = await C(() => window.__oagCave.trust());
+    ok(tr2.can === 2 && tr2.will === 0 && tr2.good === 'seen' && !tr2.trusted && tr2.marks.can === 2 && tr2.pending.length === 0 && tr2.seen.sort().join() === 'can:vouch,can:wait,good:share', `the reading eased, so the moves count: waiting and the Fixer's vouching make two pips; the share is its read of you; pacing was not what it needs. ${JSON.stringify(tr2.seen)}`);
+    ok(await page.locator('[data-cave-trustsaw]').count() === 3 && await page.locator('[data-cave-trusthint]').count() === 1 && await page.locator('[data-cave-trustread]').count() === 1 && /safe too/.test(await page.locator('[data-cave-trustread]').textContent()) && tr2.stance === 'softening', 'it says what it saw, hints at what it needs, reads you in its own words and softens');
+    await page.locator('[data-cave-pane]').click().catch(() => {});
+    await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click();
+    ok(await sees('[data-cave-ally="fixer"]'), 'the ally says why it walks with you');
+    await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200);
+    await C(() => window.__oagCave.trustClear());
     await page.locator('[data-cave-satisfied="not-yet"]').click();
     ok(await sees('[data-cave-321-step="it"]') && await page.locator('[data-cave-bubble-phase="3"]').count() >= 1, 'another round keeps the thread');
   }

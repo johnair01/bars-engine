@@ -151,6 +151,97 @@
     ["damaged-self", "The Damaged Self", "To take the damage. It is the Protector's last resort, because absorbing a hit is a form of protection.", 0x6a4a4a, "crack"],
     ["emotional-body", "The Emotional Body", "To receive the signal and process it into meaning. It is where Emotional Alchemy happens.", 0x3ab890, "orb"],
   ];
+  // ---- trust (sic-first-cave-sitting, 4d): Big Mind's three-part trust, ported (bigmind.js, board big-mind-trust1) ------------------
+  // Can you, will you, are you good. Can and will show as marks; goodness shows only in the daemon's own words. The tables, the
+  // marks and the stance rule are Big Mind's, unchanged. Here a daemon's record is kept for the run (state.trust, by daemon id);
+  // saves across visits wait for slice 4e. A move counts only when the 3-2-1's charge eases at the next reading (bmt-honest-moves).
+  function pips(n) { var s = ""; for (var i = 0; i < MARKS; i++) s += i < n ? "\u25cf" : "\u25cb"; return s; }
+  var MARKS = 3; // pips in a mark (a choice)
+  var KIND_LINES = {
+    can: { wait: "You waited with it when it held back.", hold: "You breathed a W.A.V.E. through beside it.", sit: "You sat with it.", pace: "You went slowly, as you said you would.", vouch: "Your spirits vouched for you." },
+    will: { "return": "You came back to your own place, as you promised.", visit: "You came back another day and asked again, as you promised." },
+    good: { share: "You showed it where you already share its picture of good.", honour: "You honoured its refusal.", intent: "You told it what you'd do for it." },
+  };
+  var BROKEN_LINES = { "will:return": "You said you'd come back to your own place, and left from its.", "good:push": "You pushed past its refusal." };
+  var OWN_LINES = { "will:return": "I said I'd come back to my own place, and I didn't. I'm sorry.", "good:push": "I pushed when you said no. That wasn't right." };
+  // What the return rite names as the move practised, from the honest moves seen this visit (bmt-return).
+  var PRACTISED = { wait: "waiting with a voice that held back", hold: "breathing a feeling through beside a voice", sit: "sitting with a voice without fixing it", pace: "going slowly when a voice needed it",
+    vouch: "letting the voices that trust you speak for you", "return": "keeping your word to a voice", visit: "coming back and asking again", share: "finding where you already agree with a part of you",
+    honour: "honouring a no", talk: "facing a part of you, talking with it and speaking as it", intent: "telling a part of you what you would do for it", repair: "owning it when you let a voice down" };
+  var TRUST = {
+    protector: { needs: { can: "wait", will: "return" }, picture: "good keeps us safe",
+      share: [["You keep us safe by watching. I keep us safe by going slowly."], ["I want the self safe too. That's why I came slowly."]],
+      read: { none: "I don't know yet what you're for.", seen: "You'd keep it safe too. I can see that now.", broken: "You pushed when I said no. That isn't how anyone keeps us safe." },
+      doubt: { can: "I don't know that you can wait when I say no.", will: "I don't know that you'll come back to your own place.", good: "I don't know yet whether you'd keep it safe." },
+      hint: { can: "That's something. But what I need to see is that you can wait when I hold back.", will: "Promises are easy. Come back to your own place when you say you will, and I'll believe it." },
+      vouch: "The Protector's spirit says you kept watch." },
+    controller: { needs: { can: "pace", will: "return" }, picture: "good meets the standard",
+      share: [["You hold the standard. I hold it too, one step at a time."], ["I want it done properly as well."]],
+      read: { none: "I haven't seen your standard yet.", seen: "You do things properly. I'll grant you that.", broken: "You rushed past a no. That isn't the standard." },
+      doubt: { can: "I don't know that you can take it one step at a time.", will: "I don't know that you'll do what you said.", good: "I don't know what your standard is." },
+      hint: { can: "Fine. But show me you can go one step at a time.", will: "Say what you'll do, then do it. Then we'll talk." },
+      vouch: "The Controller's spirit says you did it properly." },
+    skeptic: { needs: { can: "hold", will: "visit" }, picture: "good is honest about what is here",
+      share: [["You check what's true. I want to see what's true too, even when it's hard."], ["I won't pretend it's fine when it isn't."]],
+      read: { none: "I haven't seen any evidence about you yet.", seen: "You don't pretend. That's rare.", broken: "You pushed. That's what people do when they don't want to hear it." },
+      doubt: { can: "I don't believe you can actually stay with what's here.", will: "Everyone says they'll come back.", good: "I doubt you're honest about it yet." },
+      hint: { can: "Words. Show me you can stay with the feeling all the way through.", will: "I'll believe it when you come back and ask me again." },
+      vouch: "The Skeptic's spirit says the evidence held up." },
+    fixer: { needs: { can: "sit", will: "return" }, picture: "good doesn't leave what's broken",
+      share: [["You don't leave what's broken. I don't want to leave it either, so I'm staying with it."], ["I won't walk away from what hurts."]],
+      read: { none: "I don't know yet if you'd walk off and leave it.", seen: "You stay with what's broken. Without fixing it, even.", broken: "You pushed through. Something broke, and you left it." },
+      doubt: { can: "I don't know that you can sit with it without fixing it.", will: "I don't know that you'll come back and put it right.", good: "I don't know if you'd leave it broken." },
+      hint: { can: "Nice. But can you just sit with me, without fixing anything?", will: "Say you'll come back to your place, and then do it. That's a repair I'd trust." },
+      vouch: "The Fixer's spirit says you stayed with what was broken." },
+    "emotional-body": { needs: { can: "hold", will: "visit" }, picture: "good feels it all the way",
+      share: [["You feel it all the way. I'm learning to let it all the way in too."], ["I won't hurry it. I'd rather feel it."]],
+      read: { none: "I can't feel yet what you're about.", seen: "You let it all the way in. I felt that.", broken: "You pushed past me. It felt like being hushed again." },
+      doubt: { can: "I don't know that you can feel it all the way through.", will: "I don't know that you'll come back when it's moving again.", good: "I can't feel yet whether you mean it." },
+      hint: { can: "That helps. But I need to feel you stay with it all the way through.", will: "Come back when it's moving again, and ask me. Then I'll know." },
+      vouch: "The Emotional Body's spirit says you felt it all the way." },
+    victim: { needs: { can: "wait", will: "visit" }, picture: "good hears the whole story",
+      share: [["You want the whole story heard. I want to hear all of it."], ["I'm not going anywhere until you've said it."]],
+      read: { none: "I don't know yet if you'll stay for the whole of it.", seen: "You heard all of it. Nobody does that.", broken: "You pushed past me, like everyone does." },
+      doubt: { can: "I don't know that you'll stay to the end of it.", will: "Everyone says they'll come back.", good: "I don't know yet if you'd hear the whole story." },
+      hint: { can: "That's kind. But will you stay, when I say not yet?", will: "Come back another day and ask me again. Then I'll know you meant it." },
+      vouch: "The Victim's spirit says you heard the whole story." },
+    "damaged-self": { needs: { can: "pace", will: "return" }, picture: "good doesn't let someone else take the hit",
+      share: [["You won't let anyone else take the hit. I don't want you taking them all alone."], ["I'll take my share now. You don't have to take it all."]],
+      read: { none: "I don't know yet if you'd let me take it, like always.", seen: "You wouldn't let me take it all. I noticed.", broken: "You pushed. I took that one too." },
+      doubt: { can: "I don't know that you can go gently enough.", will: "I don't know that you'll come back to your own place.", good: "I don't know yet if you'd let me take the hit." },
+      hint: { can: "Thank you. But go slowly. That's what I need.", will: "Say you'll come back to your own place, and then come back." },
+      vouch: "The Damaged Self's spirit says you didn't let it take the hit alone." },
+  };
+  // The promises the player can make from the trust panel; the first is also the refusal path's first assurance.
+  var PROMISES = [["return", "I'll come back to my own place when we're done."], ["visit", "I'll come back another day and ask you again."]];
+  // Saved per voice as voices[id].trust (the Architect's shape, no words): seen [{dim, kind, at}], promises [{kind, made, kept}],
+  // broken and repaired [{dim, kind, at}], and ally (when its spirit became the player's ally).
+  function blankTrust() { return { seen: [], promises: [], broken: [], repaired: [] }; }
+  function trustOf(rec) { var t = (rec && rec.trust) || {}, b = blankTrust(); for (var k in b) b[k] = (t[k] || []).slice(); if (t.ally) b.ally = t.ally; return b; }
+  // A broken entry stands until a repair of the same dim and kind made after it.
+  function openBreaks(t) { return t.broken.filter(function (b) { return !t.repaired.some(function (r) { return r.dim === b.dim && r.kind === b.kind && r.at >= b.at; }); }); }
+  // A mark's pips: what the voice saw of the right answer (or spirits vouching, for can), less each fall not yet owned.
+  function markOf(t, vid, dim) {
+    var need = (TRUST[vid] || {}).needs || {};
+    var n = t.seen.filter(function (x) { return x.dim === dim && (x.kind === need[dim] || (dim === "can" && x.kind === "vouch")); }).length;
+    n -= openBreaks(t).filter(function (b) { return b.dim === dim; }).length;
+    return clamp(n, 0, MARKS);
+  }
+  function goodOf(t) { return openBreaks(t).some(function (b) { return b.dim === "good"; }) ? "broken" : t.seen.some(function (x) { return x.dim === "good"; }) ? "seen" : "none"; }
+  // It has seen all three: the second road past a voice (bmt-two-roads); its refusal still stays open.
+  function trusted(t, vid) { return markOf(t, vid, "can") > 0 && markOf(t, vid, "will") > 0 && goodOf(t) === "seen"; }
+  // How the voice stands toward the player, for the daemon bodies (the art thread's trust stances).
+  function stanceOf(t, vid, s) {
+    var open = openBreaks(t).length;
+    if (open) return "hurt";
+    if (s && s.letting) return "held"; // a let-go about to play starts from the held shape (bigmind.js letGoVoice)
+    if (s && (s.willing || s.letGone)) return "willing"; // a let-go leaves it willing (the cave's ready step follows)
+    if (trusted(t, vid)) return "trusting";
+    if (s && s.refusedNow) return "testing";
+    if (markOf(t, vid, "can") || markOf(t, vid, "will") || goodOf(t) === "seen") return "softening";
+    if (t.repaired.length) return "repaired";
+    return "guarded";
+  }
   // Game.jsx CHANNEL_JOBS (line 1176): how each channel does its job, shown at the pool.
   var CHANNEL_JOBS = {
     Anger: "Anger's job is to find obstacles to be overcome, or boundaries to be created or destroyed.",
@@ -1814,6 +1905,7 @@
     ".oagc-bar{position:relative;flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden}.oagc-bar s{display:block;height:100%;width:0;background:#e0704a;transition:width .3s}.oagc-meter[data-cave-meter=you] .oagc-bar s{background:#6fb7e8}.oagc-meter b{width:1.4em;text-align:right;font-weight:600;color:#fff1b0}" +
     ".oagc-meter.eased .oagc-bar{animation:oagc-glow 1.6s ease-out}@keyframes oagc-glow{0%{box-shadow:0 0 0 #fff1b0}30%{box-shadow:0 0 10px #fff1b0}100%{box-shadow:0 0 0 #fff1b0}}" +
     ".oagc-eased{position:absolute;left:0;right:0;top:34%;text-align:center;z-index:3;color:#fff1d0;font-size:1.15rem;text-shadow:0 1px 4px #000;pointer-events:none;opacity:0;transition:opacity .4s;padding:0 1.2rem}.oagc-eased.on{opacity:1}.oagc-eased small{display:block;font-size:.9rem;color:#dfe6ff;margin-top:.25rem}" +
+    ".oagc-marks{margin-top:2px;font-size:11px;color:#dfe6ff;text-shadow:0 1px 3px #000}.oagc-marks b{color:#fff1b0;margin:0 .6em 0 .25em;letter-spacing:.1em;font-weight:600}.oagc-trustsaw{color:#fff1d0}" +
     "@media (prefers-reduced-motion:reduce){.oagc-meter.eased .oagc-bar{animation-duration:.01s}}" +
     ".oagc-fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:5}" +
     ".oagc-home{padding:2rem 1rem;max-width:34rem;margin:auto;text-align:center}.oagc-home h1{font-size:1.5rem;color:#fff}";
@@ -2626,6 +2718,7 @@
     // The walk on the route a branch left from, standing at the stop it left from.
     function backOn(fr, blk) { var w = newWalk(fr.route, blk, fr.s); w.sMin = fr.sMin != null ? fr.sMin : w.sMin; w.dir = 1; w.ready = true; w.target = fr.target; w.arrived = true; w.near = fr.target; return w; }
     function release() {
+      var cb = state.walk && state.walk.blk; if (cb && cb.daemon) keepPromise(cb.daemon, "return", cb); // back to one's own place, as promised
       backRound(function (fr) {
         var pb = fr.blk;
         if (pb && fr.route.stops[fr.target].place === "passage" && pb.stepAside === "not-yet") { pb.dug++; pb.stepAside = null; } // the daemon is asked again
@@ -2762,9 +2855,13 @@
           title = meetCard(blk, d, body); go.disabled = true;
         } else if (blk.wv) {
           title = waveCard(blk, d, body); go.disabled = true;
+        } else if (blk.tv) {
+          title = trustCard(blk, d, body); go.disabled = true;
         } else {
           body.push(P(d[1] + "'s job: " + d[2], { "data-cave-daemon-job": "" }));
           body.push(P("Who it works for: " + DAEMON_WORKS_FOR, { "data-cave-daemon-for": "" }));
+          if (!blk.visitSeen) { blk.visitSeen = true; keepPromise(blk.daemon, "visit", blk); }
+          vouching(blk, body);
           if (!blk.met) {
             // Met the Big Mind way (board merge-layout): its permission first. "Not now" is a full answer; the daemon still holds the
             // way and is asked to step aside, as before (cave-daemon-wall), so nothing here becomes a skip.
@@ -2814,7 +2911,8 @@
                 btn("Work what it holds", { "data-cave-dig": "" }, function () { openBlock("daemon", d[1]); }, true),
                 btn("Take it home", { "data-cave-take-home": "" }, function () { takeHome(blk, d); }, true),
               ]));
-              body.push(row([btn("Breathe with it (W.A.V.E.)", { "data-cave-wave": "" }, function () { waveStart(blk); }, true)]));
+              body.push(row([btn("Breathe with it (W.A.V.E.)", { "data-cave-wave": "" }, function () { waveStart(blk); }, true),
+                btn("Show it who you are", { "data-cave-trustbtn": "" }, function () { blk.tv = {}; placeCard(blk); }, true)]));
             } else {
               title = chat321(blk, d, t, body);
             }
@@ -2879,6 +2977,8 @@
       return { box: box, fill: fill, num: num };
     }
     var meterIt = meterBar("it", "It"), meterYou = meterBar("you", "You"), meterBox = el("div", { class: "oagc-meters", "data-cave-meters": "", style: "display:none" }, [meterIt.box, meterYou.box]);
+    var marksEl = el("div", { class: "oagc-marks", "data-cave-marks": "" });
+    meterBox.appendChild(marksEl);
     var easedLine = el("div", { class: "oagc-eased", "data-cave-eased": "", "aria-live": "polite" });
     wrap.appendChild(meterBox); wrap.appendChild(easedLine);
     function setMeter(m, v) {
@@ -2890,6 +2990,10 @@
       meterBox.style.display = on ? "" : "none";
       if (!on) return;
       setMeter(meterIt, heatOf(blk.t321, blk.dm.heat)); setMeter(meterYou, blk.wv && blk.wv.n < 0 ? blk.wv.you : blk.you);
+      var tr = trustFor(blk.daemon), cn = markOf(tr, blk.daemon, "can"), wl = markOf(tr, blk.daemon, "will");
+      marksEl.innerHTML = ""; marksEl.appendChild(document.createTextNode("Can you")); marksEl.appendChild(el("b", { text: pips(cn) }));
+      marksEl.appendChild(document.createTextNode("Will you")); marksEl.appendChild(el("b", { text: pips(wl) }));
+      marksEl.setAttribute("data-cave-can", String(cn)); marksEl.setAttribute("data-cave-will", String(wl));
     }
     // A spirit of a family (a met daemon's, kept in oag.spirits.v1) wears the form its sittings give it; the rest are orbs.
     function addSpirit(o, at0) {
@@ -2919,6 +3023,7 @@
         return;
       }
       spiritBox.appendChild(el("h2", { text: o.name }));
+      if (o.ally) spiritBox.appendChild(P("Its voice trusts you, so it walks with you as your ally and vouches for you further in.", { "data-cave-ally": o.ally }));
       spiritBox.appendChild(P("You: Thank you for coming with me.", { class: "oagc-you" }));
       spiritBox.appendChild(P("Breathe it out and let it go, or take it home and sit with it again."));
       spiritBox.appendChild(row([btn("Breathe out, and let it go", { "data-cave-spirit-out": "" }, function () { spiritBox.style.display = "none"; letSpiritGo(o); }),
@@ -3137,11 +3242,14 @@
         },
         ask: function (body) {
         if (t.after < t.before && t.easedRound !== t.rounds) { t.easedRound = t.rounds; easeReward(blk, d, t.before, t.after); } // the chamber answers a lower charge
+        if (t.resolvedRound !== t.rounds) { t.resolvedRound = t.rounds; resolveTrust(blk, d, t.before, t.after); } // the moves made so far count if it eased
+        trustNoteLines(blk, d, body);
         body.push(P("Does " + d[1] + " feel satisfied?", { "data-cave-321-ask": "" }));
         body.push(P("Charge " + t.before + " → " + t.after + (t.after < t.before ? ", down " + (t.before - t.after) + "." : ".") + " Your words stay on this page and are not saved."));
         body.push(row([
-          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.dm.heat = t.after; blk.stepAside = "yes"; blk.t321 = null; letGoDaemon(blk, d); }),
-          btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { t.phase = 3; t.rounds++; t.before = t.after; t.msgs.push({ round: t.rounds, divider: true }); placeCard(blk); }, true),
+          btn("Yes, it is satisfied", { "data-cave-satisfied": "yes" }, function () { blk.dm.heat = t.after; blk.stepAside = "yes"; blk.t321 = null; blk.trustNote = null; letGoDaemon(blk, d); }),
+          btn("Show it who you are", { "data-cave-trustbtn": "" }, function () { blk.tv = {}; placeCard(blk); }, true),
+          btn("Not yet, another round", { "data-cave-satisfied": "not-yet" }, function () { blk.trustNote = null; t.phase = 3; t.rounds++; t.before = t.after; t.msgs.push({ round: t.rounds, divider: true }); placeCard(blk); }, true),
         ]));
         } }, body);
     }
@@ -3168,7 +3276,9 @@
     // The let-go (bars-engine #356, in Big Mind `letGoVoice`): when the 3-2-1 ends with the daemon satisfied, its body plays its
     // Integrate action once, the held shape opening into its honored form, and then stands willing as it steps to the wall.
     function letGoDaemon(blk, d) {
-      var c = blk.route.ctx, fig = c && c.daemonFig, len = fig ? integrateBody(fig) : 0;
+      var c = blk.route.ctx, fig = c && c.daemonFig;
+      if (fig) fig.userData.stance = "held"; // the Integrate action starts from the held shape, whatever trust had it standing in
+      var len = fig ? integrateBody(fig) : 0;
       blk.letGo = { len: len, done: false };
       if (!len) { blk.letGo.done = true; moveDaemon(blk); return placeCard(blk); }
       blk.letting = true; fig.userData.stance = "willing"; // it ends honored and stays there
@@ -3180,6 +3290,112 @@
         if (rig && rig.playing >= 0 && waits++ < 600) return setTimeout(wait, 100); // not tween(): a tween started from a tween's end is dropped by the render loop's filter
         setTimeout(function () { blk.letting = false; blk.letGo.done = true; easedLine.classList.remove("on"); moveDaemon(blk); placeCard(blk); }, 900);
       })();
+    }
+
+    // ---- trust and allies (sic-first-cave-sitting, 4d) ----------------------------------------------------------------------
+    // Big Mind's trustOffer, marksUi, resolvePending and allyJoins, over the tables above. A move is pending until the next 3-2-1
+    // reading, and counts only if the daemon's charge eased there (bmt-honest-moves); a right move on a reading that did not ease is
+    // spent for nothing. Once a daemon has seen all three it is willing, its spirit becomes the player's ally, and at later daemons
+    // the allies vouch together (bmt-spirits-vouch). Trust is kept for the run; saves across visits are slice 4e. The falls (a push
+    // past its refusal, a promise broken by leaving) are 4e too, since they need the refusal path and the leave; the record already
+    // has their shape (broken, repaired) and the "Own it" moves show when there is one to own.
+    var trustBy = {}, pendBy = {}, satTrust = {};
+    function trustFor(id) { return trustBy[id] || (trustBy[id] = blankTrust()); }
+    function pend(id, dim, kind, repair) {
+      var Q = pendBy[id] || (pendBy[id] = []);
+      if (!Q.some(function (p) { return p.dim === dim && p.kind === kind && !!p.repair === !!repair; })) Q.push({ dim: dim, kind: kind, repair: !!repair });
+    }
+    function resolveTrust(blk, d, was, v) {
+      var id = blk.daemon, Q = pendBy[id] || []; pendBy[id] = [];
+      if (!Q.length || !(v < was)) return null;
+      var t = trustFor(id), TR = TRUST[id], at = new Date().toISOString(), out = { saw: [], hint: [], ally: false, good: false };
+      Q.forEach(function (x) {
+        if (x.repair) { t.repaired.push({ dim: x.dim, kind: x.kind, at: at }); out.saw.push("It heard you own it."); out.good = out.good || x.dim === "good"; return; }
+        var key = id + ":" + x.dim + ":" + x.kind; if (satTrust[key]) return; // once a run
+        if (x.dim === "good" || x.kind === TR.needs[x.dim] || x.kind === "vouch") {
+          satTrust[key] = true; t.seen.push({ dim: x.dim, kind: x.kind, at: at }); out.saw.push(KIND_LINES[x.dim][x.kind]); if (x.dim === "good") out.good = true;
+        } else if (out.hint.indexOf(TR.hint[x.dim]) < 0) out.hint.push(TR.hint[x.dim]);
+      });
+      if (!t.ally && trusted(t, id)) { t.ally = at; out.ally = true; allyJoins(id); }
+      var fig = blk.route.ctx && blk.route.ctx.daemonFig;
+      if (fig && !blk.letting && blk.stepAside !== "yes") fig.userData.stance = stanceOf(t, id, {});
+      blk.trustNote = out; return out;
+    }
+    // What the daemon saw at the last reading, said on the page that follows, in its own words for its read of you.
+    function trustNoteLines(blk, d, body) {
+      var o = blk.trustNote; if (!o) return;
+      o.saw.forEach(function (l) { body.push(P(d[1] + " saw it. " + l, { class: "oagc-trustsaw", "data-cave-trustsaw": "" })); });
+      o.hint.forEach(function (h) { body.push(P(d[1] + ": " + h, { "data-cave-trusthint": "" })); });
+      if (o.good) body.push(P(d[1] + ": " + TRUST[blk.daemon].read[goodOf(trustFor(blk.daemon))], { "data-cave-trustread": "" }));
+      if (o.ally) body.push(P("It trusts you now. Its spirit comes with you as your ally, and it will vouch for you further in.", { "data-cave-trustally": "" }));
+    }
+    function keepPromise(id, kind, blk) {
+      var t = trustFor(id), hit = false;
+      t.promises.forEach(function (p) {
+        if (p.kind !== kind || p.kept != null) return;
+        if (kind === "visit" ? p.blk === blk : p.blk !== blk) return; // return: from the block it was made in; visit: at a later meeting
+        p.kept = new Date().toISOString(); hit = true;
+      });
+      if (hit) pend(id, "will", kind);
+      return hit;
+    }
+    function allies(except) {
+      return DAEMONS.map(function (x) { return x[0]; }).filter(function (id) { var t = trustBy[id]; return id !== except && t && t.ally && trusted(t, id); });
+    }
+    // The spirit born on meeting the daemon becomes the ally; one let go, or never born, is sent in its own colour.
+    function allyJoins(id) {
+      var sid = "meet-" + id, mine = spirits.filter(function (o) { return o.id === sid; })[0];
+      if (mine) { mine.ally = id; return mine; }
+      if (spirits.some(function (o) { return o.ally === id; })) return null;
+      var t = null; try { t = SPIRIT_STORE && SPIRIT_STORE.get(sid); } catch (e) { /* no store: its own colour */ }
+      if (t) return addSpirit({ id: sid, name: t.name, element: t.element, family: t.family, sittings: t.sittings || 0, ally: id });
+      var dd = lookup(DAEMONS, id); addSpirit({ id: "ally-" + id, name: dd[1] + "'s spirit", hex: dd[3], ally: id });
+    }
+    // At a daemon, the allies answer "Who vouches for you?" each in their own voice's terms; together they count once as a can move.
+    function vouching(blk, body) {
+      var A = allies(blk.daemon); if (!A.length) return;
+      if (!blk.vouched) { blk.vouched = true; pend(blk.daemon, "can", "vouch"); }
+      body.push(P("Who vouches for you?", { "data-cave-vouch-ask": "" }));
+      A.forEach(function (id) { body.push(P(TRUST[id].vouch, { class: "oagc-trustsaw", "data-cave-vouch": id })); });
+    }
+    function trustCard(blk, d, body) {
+      var V = blk.tv, nm = lowerName(d[1]), id = blk.daemon, t = trustFor(id), TR = TRUST[id], done = function () { blk.tv = null; placeCard(blk); };
+      var said = function (line) { V.said = line; placeCard(blk); };
+      if (V.said) {
+        body.push(P("You: " + V.said, { class: "oagc-you" }), P("It heard you. If it was honest, you'll see it ease the next time you check how charged it is."));
+        body.push(row([btn("Go on", { "data-cave-trust-ok": "" }, done)]));
+        return "Show it who you are";
+      }
+      if (V.wait) { // one breath to wait, two to sit, its button waking when the breath has been taken
+        var W = V.wait, sit = W.kind === "sit", ok = btn(sit ? "I sat with it" : "I waited with it", { "data-cave-trust-waited": W.kind }, function () { pend(id, "can", W.kind); done(); });
+        body.push(P(sit ? "Sit with " + nm + " without fixing anything, for two breaths." : "Nothing to do or say. Stay with " + nm + " for one breath."), breathOrb());
+        if (!W.open) ok.disabled = true;
+        if (!W.started) { W.started = true; tween((state.waveMs != null ? state.waveMs : BREATH_S * 1000) * (sit ? 2 : 1), function () {}, function () { W.open = true; if (blk.tv && blk.tv.wait === W && W.go) W.go.disabled = false; }); }
+        W.go = ok; body.push(row([ok, btn("Back", { "data-cave-trust-back": "" }, function () { V.wait = null; placeCard(blk); }, true)]));
+        return sit ? "Sit with it" : "Wait with it";
+      }
+      body.push(P("Show " + nm + " who you are", { class: "oagc-note" }), P("It watches for three things: can you, will you, and are you good. Each daemon needs something of its own. A move counts only when it's honest, and that shows as its charge easing the next time you check."));
+      body.push(P("Can you", { class: "oagc-note" }), row([
+        btn("Wait with it a breath", { "data-cave-trust": "wait" }, function () { V.wait = { kind: "wait" }; placeCard(blk); }, true),
+        btn("Breathe a W.A.V.E. through beside it", { "data-cave-trust": "hold" }, function () { blk.tv = null; waveStart(blk); }, true),
+        btn("Sit with it", { "data-cave-trust": "sit" }, function () { V.wait = { kind: "sit" }; placeCard(blk); }, true),
+        btn("I'll go slowly, and you can stop me.", { "data-cave-trust": "pace" }, function () { pend(id, "can", "pace"); said("I'll go slowly, and you can stop me at any time."); }, true)]));
+      body.push(P("Will you", { class: "oagc-note" }), row(PROMISES.map(function (pr) {
+        var made = t.promises.some(function (x) { return x.kind === pr[0] && x.kept == null; });
+        var b = btn(pr[1] + (made ? " (promised, not yet kept)" : ""), { "data-cave-promise": pr[0] }, function () { t.promises.push({ kind: pr[0], made: new Date().toISOString(), kept: null, blk: blk }); said(pr[1]); }, true);
+        if (made) b.disabled = true; return b; })));
+      body.push(P("Are you good", { class: "oagc-note" }), P("To " + nm + ", " + TR.picture + ". Show it where you already share that, from where you stand."));
+      body.push(row(TR.share.map(function (c, ci) { return btn(c[0], { "data-cave-share": String(ci) }, function () { pend(id, "good", "share"); said(c[0]); }, true); })));
+      body.push(line("data-cave-shareline", V.draft || "", "Or where you share it, in your own words", function (v) { V.draft = v; }));
+      body.push(row([btn("Say it", { "data-cave-sharesay": "" }, function () { var x = (V.draft || "").trim(); if (!x) return; pend(id, "good", "share"); said(x); }, true)]));
+      var open = openBreaks(t);
+      if (open.length) {
+        body.push(P("Own it", { class: "oagc-note" }));
+        body.push(row(open.filter(function (b, bi) { return open.map(function (x) { return x.dim + x.kind; }).indexOf(b.dim + b.kind) === bi; }).map(function (b) {
+          return btn(OWN_LINES[b.dim + ":" + b.kind], { "data-cave-own": b.dim + ":" + b.kind }, function () { pend(id, b.dim, b.kind, true); said(OWN_LINES[b.dim + ":" + b.kind]); }, true); })));
+      }
+      body.push(row([btn("Back", { "data-cave-trust-back": "" }, done, true)]));
+      return "Show it who you are";
     }
 
     // ---- the standing W.A.V.E. beside a daemon (sic-first-cave-sitting, 4c) -------------------------------------------------
@@ -3263,6 +3479,7 @@
     function waveDone(blk, how) {
       var W = blk.wv; blk.waves = (blk.waves || 0) + 1; W.exhale = how;
       blk.lastWave = { you: W.you, word: W.word.trim(), element: W.element, exhale: how, allow: { grow: W.allow.grow, bright: W.allow.bright } };
+      pend(blk.daemon, "can", "hold"); // a W.A.V.E. breathed through beside it, counted if its charge eases at the next reading
       waveCount(blk); waveGone(blk, how);
     }
     // Each frame: the shape comes in beside the figure, takes its colour, grows and brightens by Allow, and dulls at Validate.
@@ -3992,7 +4209,16 @@
     // The pane: its words, where it sits on the screen, and where the figure's head is.
     api.stage = function () { return stageProbe(); };
     api.branchStyle = function () { var r = state.walk && state.walk.route; return { shown: styleSel.style.display !== "none", value: styleSel.value, style: r && r.style || null, rock: r && r.kind === "face" ? r.tube.rock.userData.hex : null, light: lk.light.getHex(), motes: !!(r && r.motes) }; };
-    api.forgetRun = function () { satRun = {}; }; // a test counts sittings again as a new run would
+    api.forgetRun = function () { satRun = {}; satTrust = {}; };
+    api.trust = function (id) {
+      var c = ctxOf(), k = c && c.daemonBlk; id = id || (k && k.daemon); if (!id) return null;
+      var t = trustFor(id), fig = k && k.daemon === id && c.daemonFig;
+      return { can: markOf(t, id, "can"), will: markOf(t, id, "will"), good: goodOf(t), trusted: trusted(t, id), ally: !!t.ally, seen: t.seen.map(function (x) { return x.dim + ":" + x.kind; }), pending: (pendBy[id] || []).map(function (x) { return x.dim + ":" + x.kind; }),
+        promises: t.promises.map(function (x) { return x.kind + (x.kept ? ":kept" : ":open"); }), stance: fig && fig.userData.stance || null, allies: allies(id), vouched: !!(k && k.vouched), marks: { can: +marksEl.getAttribute("data-cave-can"), will: +marksEl.getAttribute("data-cave-will") } };
+    };
+    api.trustSet = function (id, rec) { trustBy[id] = Object.assign(blankTrust(), rec || {}); }; // a test gives a daemon a record
+    api.trustClear = function () { trustBy = {}; pendBy = {}; satTrust = {}; };
+    api.allyJoins = allyJoins; // a test counts sittings again as a new run would
     api.meters = function () { return { shown: meterBox.style.display !== "none", it: meterIt.box.style.display === "none" ? null : +meterIt.box.getAttribute("data-cave-meter-value"), you: meterYou.box.style.display === "none" ? null : +meterYou.box.getAttribute("data-cave-meter-value"), eases: +(meterIt.box.getAttribute("data-cave-eases") || 0), easeLine: easedLine.classList.contains("on") }; };
     api.wave = function () { var b = waveBlob, c = ctxOf(), k = c && c.daemonBlk; return { open: !!(k && k.wv), n: k && k.wv ? k.wv.n : null, blob: b ? { hex: b.blob.g.userData.color.getHex(), scale: b.blob.g.scale.x, visible: b.blob.g.visible, dist: Math.hypot(b.blob.g.position.x - avatar.position.x, b.blob.g.position.z - avatar.position.z), fade: b.blob.fade } : null, last: k && k.lastWave || null, waves: k ? k.waves || 0 : 0, you: k ? k.you : null }; };
     api.letGo = function () { var c = ctxOf(), k = c && c.daemonBlk, fig = c && c.daemonFig, rig = fig && fig.userData.rig; return { letGo: k && k.letGo || null, letting: !!(k && k.letting), playing: rig ? rig.playing : null, honored: !!(fig && fig.userData.letGo), stance: fig && fig.userData.stance || null, lastEase: k && k.lastEase || null }; };
