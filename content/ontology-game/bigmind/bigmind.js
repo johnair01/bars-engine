@@ -17,6 +17,11 @@
   var el = K.el, clamp = K.clamp, at = K.at;
   // a family spirit's stage from how many times it has been sat with (spirit-forms.js, board sic-unfold-by-sitting)
   function stageOf(n) { var SF = K.spiritForms; return SF && SF.stageOf ? SF.stageOf(n) : "gas"; }
+  // The one store for spirits kept between runs (cave/spirit-store.js, board sic-one-store): the spirit born on meeting a voice is
+  // kept there as "meet-<voice id>", and the player's loadout of three walks in from it. This save keeps its own copy as before.
+  function SS() { return window.__oagSpiritStore || null; }
+  function stored(id) { try { return SS() ? SS().get("meet-" + id) : null; } catch (e) { return null; } }
+  function sittingsOf(id, rec) { var t = stored(id); return Math.max((rec && rec.sittings) || 0, t ? t.sittings : 0); }
   var STORE = "oag.bigmind.v1";
 
   // ---- the words ----------------------------------------------------------------------------
@@ -1276,7 +1281,8 @@
       arrive();
     }
     // Its name and element are kept with the voice, so it comes back in with the player and can become their ally.
-    function meetSave(o) {
+    function meetSave(o, sat) {
+      try { var ss = SS(); if (ss && o.family) { if (o.gone) ss.remove("meet-" + o.meet); else ss.put({ id: "meet-" + o.meet, name: o.name, element: o.element, family: o.family, sittings: o.sittings || 0 }, sat ? "Big Mind" : null); } } catch (e) { /* the store is a copy; the save below still holds it */ }
       try {
         var s = readSave(), r = s.voices[o.meet] || (s.voices[o.meet] = { status: "waiting", kept: [], savedAt: stamp() });
         r.spirit = { name: o.name, element: o.element || null }; if (o.family) { r.spirit.family = o.family; r.spirit.sittings = o.sittings || 0; r.spirit.stage = stageOf(o.sittings); } if (o.gone) r.spirit.gone = true; writeSave(s);
@@ -1742,9 +1748,11 @@
       var key = o.meet || o.name; if (satThisRun[key]) return false; satThisRun[key] = true;
       var was = o.stage || "gas"; o.sittings = (o.sittings || 0) + 1; o.stage = stageOf(o.sittings);
       if (o.stage !== was && o.g && o.g.userData.unfold) o.g.userData.unfold(o.stage, true);
-      if (o.meet) meetSave(o);
+      if (o.meet) meetSave(o, true);
+      else if (o.loadout) { try { if (SS()) SS().put({ id: o.loadout, name: o.name, element: o.element, family: o.family, sittings: o.sittings }, "Big Mind"); } catch (e) { /* the sitting still counted */ } }
       return o.stage !== was;
     }
+    function spiritFor(id) { return meetSpirit(id) || {}; }
     function meetSpirit(id) { return spirits.filter(function (o) { return o.meet === id && !o.leaving; })[0] || null; }
     function addSpirit(o, from) {
       var col = o.color != null ? o.color : colorOf(o.element);
@@ -1815,8 +1823,15 @@
     PATH.forEach(function (id) {
       var r = save.voices[id]; if (!r) return;
       if (trustOf(r).ally && trusted(trustOf(r), id)) return allyJoins(id);
-      if (r.spirit && !r.spirit.gone) addSpirit({ name: r.spirit.name, element: r.spirit.element, meet: id, family: r.spirit.family || id, sittings: r.spirit.sittings || 0, stage: stageOf(r.spirit.sittings) });
+      if (r.spirit && !r.spirit.gone) { var n0 = sittingsOf(id, r.spirit); addSpirit({ name: r.spirit.name, element: r.spirit.element, meet: id, family: r.spirit.family || id, sittings: n0, stage: stageOf(n0) }); meetSave(spiritFor(id)); }
     });
+    // The loadout the player chose in the WAVE room (cave/spirit-store.js) walks in too, the ones not already here by their voice.
+    try {
+      if (SS()) SS().loadout().forEach(function (t) {
+        if (!t.family || spirits.some(function (o) { return o.meet && "meet-" + o.meet === t.id; })) return;
+        addSpirit({ name: t.name, element: t.element, family: t.family, loadout: t.id, sittings: t.sittings, stage: stageOf(t.sittings) });
+      });
+    } catch (e) { /* no store: the save's spirits are enough */ }
     if (fromRoom) { fromRoom.spirits.forEach(function (o) { addSpirit(kept(o)); }); fromRoom.spirits = []; } // the room's, once
 
 
@@ -1910,7 +1925,7 @@
       var mine = spirits.filter(function (o) { return o.meet === id; })[0];
       if (mine) { mine.ally = id; spiritsUi(); return; }
       var rec = readSave().voices[id], ms = rec && rec.spirit && !rec.spirit.gone ? rec.spirit : null;
-      if (ms) return addSpirit({ name: ms.name, element: ms.element, meet: id, ally: id, family: ms.family || id, sittings: ms.sittings || 0, stage: stageOf(ms.sittings) });
+      if (ms) { var n1 = sittingsOf(id, ms); return addSpirit({ name: ms.name, element: ms.element, meet: id, ally: id, family: ms.family || id, sittings: n1, stage: stageOf(n1) }); }
       var vv = VOICES.filter(function (x) { return x.id === id; })[0], row0 = daemonRow(id);
       addSpirit({ name: (vv ? vv.title : id) + "'s spirit", color: row0 ? row0[3] : 0x9a9aa8, ally: id });
     }
@@ -2527,7 +2542,7 @@
     // again around the next voice from its first hallway.
     function onward() {
       var s = readSave(); s.chamber = C + 1; s.at = "mouth"; writeSave(s);
-      carry = spirits.filter(function (o) { return !o.ally && !o.meet; }).map(kept); // allies come back from the save
+      carry = spirits.filter(function (o) { return !o.ally && !o.meet && !o.loadout; }).map(kept); // allies come back from the save
       hide(); fade.style.opacity = 1;
       setTimeout(function () { stopMouthSound(); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp); cancelAnimationFrame(running); window.removeEventListener("resize", size); renderer.dispose(); wrap.remove(); api.state = null; play(THREE, "hall1"); }, 520);
     }
@@ -2536,7 +2551,7 @@
     function leave() {
       if (st.turned) breakReturn(); // walking out from the voice's place, before stepping back into one's own
       if (!st.rited) return rite();
-      var own = spirits.filter(function (o) { return !o.ally && !o.meet; }); // allies and meeting spirits come back from their voice's record
+      var own = spirits.filter(function (o) { return !o.ally && !o.meet && !o.loadout; }); // allies and meeting spirits come back from their voice's record
       if (!own.length) { var s0 = readSave(); if (s0.spirits && s0.spirits.length) { s0.spirits = []; writeSave(s0); } return leaveNow(); }
       var keepIt = own.map(function () { return true; });
       show([el("h2", { text: "At the cave mouth" }), guide("These came out with you. Keep each one to come back in with you next time, or let it go here. What is kept is its name and element, on this device."),

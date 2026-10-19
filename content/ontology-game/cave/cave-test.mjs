@@ -1089,6 +1089,16 @@ const seat = (await C(() => window.__oagCave.room.scene())).seat;
 for (let i = 0; i < 100 && !(await C(() => window.__oagCave.room.sitShown())); i++) { await C(([x, z]) => window.__oagCave.room.steer(x, z), seat); await page.waitForTimeout(100); }
 await C(() => window.__oagCave.room.stick(0, 0));
 ok(await C(() => window.__oagCave.room.sitShown()), 'walking onto the rug offers Sit down');
+// The loadout (sic-loadout-three): with spirits kept in oag.spirits.v1, the rug offers Your spirits, three at most walk with you.
+ok(!(await page.locator('[data-room-spirits]').isVisible()), 'with no spirit kept, the rug offers no loadout');
+await page.evaluate(() => { const S = window.__oagSpiritStore; [['protector', 'Fear', 'metal', 4], ['fixer', 'Hurry', 'fire', 0], ['skeptic', 'Doubt', 'water', 2], ['victim', 'Sorrow', 'earth', 0]].forEach(([f, n, e, k]) => S.put({ id: 'meet-' + f, name: n, element: e, family: f, sittings: k })); });
+await page.waitForFunction(() => document.querySelector('[data-room-spirits]')?.style.display !== 'none', null, { timeout: 5000 }).catch(() => {});
+await page.locator('[data-room-spirits]').click();
+ok((await page.locator('[data-room-loadout-spirit]').count()) === 4 && /hologram/.test(await page.locator('[data-room-loadout-spirit="meet-protector"]').textContent()), 'Your spirits lists each kept spirit with its family and the stage its sittings give it');
+for (const f of ['protector', 'fixer', 'skeptic', 'victim']) await page.locator('[data-room-loadout-spirit="meet-' + f + '"]').click();
+ok((await page.evaluate(() => window.__oagSpiritStore.loadout().map((t) => t.id).join())) === 'meet-protector,meet-fixer,meet-skeptic' && /Let one rest/.test(await page.locator('[data-room-loadout-note]').textContent()), 'the fourth is refused until one rests: ' + await page.evaluate(() => window.__oagSpiritStore.loadout().map((t) => t.id).join()));
+await page.locator('[data-room-loadout-back]').click();
+await page.evaluate(() => { const S = window.__oagSpiritStore; ['protector', 'fixer', 'skeptic', 'victim'].forEach((f) => S.remove('meet-' + f)); });
 await page.screenshot({ path: SHOTS + '/level-home-stick-rug.png' });
 await page.locator('[data-room-sit]').click();
 await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.9, null, { timeout: 30000 });
