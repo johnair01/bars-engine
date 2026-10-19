@@ -845,7 +845,7 @@
     ".oagc button.bm-run[aria-pressed=true]{background:rgba(255,241,176,.35)}" +
     ".bm-hint{position:absolute;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));text-align:center;color:#e8e2c8;font-size:15px;z-index:2;pointer-events:none;text-shadow:0 1px 3px #000;padding:0 1rem}" +
     ".bm-npc{color:#cfe0ff;font-size:1.02rem}.bm-npc b{color:#9cc4ff}.bm-you{color:#fff1d0;text-align:right;font-style:normal}" +
-    ".bm-meters{position:absolute;top:12px;right:10px;left:84px;z-index:4;display:flex;flex-direction:column;gap:5px;pointer-events:none}" +
+    ".bm-meters{position:absolute;top:12px;right:10px;left:122px;z-index:4;display:flex;flex-direction:column;gap:5px;pointer-events:none}" +
     ".bm-meter{position:relative;display:flex;align-items:center;gap:.4rem;font-size:12px;color:#dfe6ff}.bm-meter>span:first-child{width:6.4em;flex:none;white-space:nowrap}" +
     ".bm-meter.you .bm-bar i{background:#c89cff}" +
     ".bm-breath{text-align:center;color:#fff1b0;font-size:1rem;margin:.5rem 0;min-height:1.4em}.oagc .bm-wave button:disabled{opacity:.45}" +
@@ -876,6 +876,7 @@
     ".bm-marks{font-size:12px;color:#dfe6ff;padding-left:.1rem}.bm-marks b{color:#fff1b0;font-weight:500;letter-spacing:.14em;margin:0 .6em 0 .25em}" +
     ".bm-marks.lit b{animation:bm-glowtext 1.6s ease-out}@keyframes bm-glowtext{0%{text-shadow:0 0 0 #fff1b0}30%{text-shadow:0 0 10px #fff1b0}100%{text-shadow:0 0 0 #fff1b0}}" +
     ".oagc button.bm-trustbtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(156,196,255,.55);color:#dfe9ff;font-weight:500}" +
+    ".oagc:has(.oagc-modal.open) button.bm-sitbtn,.oagc:has(.oagc-modal.open) button.bm-trustbtn{bottom:auto;top:calc(50vh - 3.4rem)}" + // above an open sheet, which never passes half the screen
     ".oagc button.bm-trustbtn:disabled{opacity:.35}.bm-trustsaw{color:#fff1d0}.bm-trusthead{font-size:.8rem;color:#aab4d4;letter-spacing:.04em;text-transform:uppercase;margin:.7rem 0 .1rem}";
 
   function start() {
@@ -1072,7 +1073,7 @@
     var marks = el("div", { class: "bm-marks", "data-bm-marks": "", style: "display:none" });
     var meters = el("div", { class: "bm-meters" }, [meter, marks, meterYou]);
     var easedLine = el("div", { class: "bm-eased", "data-bm-eased": "" });
-    [stage, hint, ring, modal, selfBtn, meters, easedLine, fade].forEach(function (n) { wrap.appendChild(n); });
+    [stage, hint, ring, modal, meters, easedLine, fade].forEach(function (n) { wrap.appendChild(n); });
     document.body.appendChild(wrap);
     fade.style.opacity = 1; setTimeout(function () { fade.style.opacity = 0; }, 30);
 
@@ -1237,7 +1238,7 @@
         var k = { walk: 4, run: 9, back: -5 }[id]; if (k == null) return false; // a button's lesson: the light stays at the chest
         var p = at(route, clamp(st.s + k, 0, route.len)); v.set(p.x, floor(p) + 2.4, p.z); return true;
       },
-      anchor: function (id) { return { walk: stickPad, run: runBtn, self: selfBtn, back: stickPad, spirits: spiritBtn, trust: trustBtn }[id] || null; },
+      anchor: function (id) { var n = { walk: stickPad, run: runBtn, self: selfBtn, back: stickPad, spirits: spiritBtn, trust: trustBtn }[id] || null; return n && bmMenu ? bmMenu.at(n) : n; },
       home: function (v) { return avatar.userData.chest.getWorldPosition(v); },
     });
     function stickAt(e) {
@@ -1269,7 +1270,8 @@
     // ---- the modal ------------------------------------------------------------------------------
     function show(kids, tag) {
       if (st.trustNote && !/^(sit|wave|self|spirit|mouth|rite)/.test(tag || "")) kids = kids.slice(0, 1).concat(trustNoteEls(), kids.slice(1)); // what the voice saw, once
-      modal.innerHTML = ""; kids.forEach(function (k) { if (k) modal.appendChild(k); });
+      modal.innerHTML = ""; kids = kids.filter(Boolean);
+      var head = kids[0] && kids[0].tagName === "H2" ? kids.shift().textContent : null; K.sheet(modal, head, kids); // the input sheet, in cards (cave.js sheet)
       modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); modal.setAttribute("data-bm-step", tag || "");
       modal.scrollTop = 0; st.modal = true; st.held = false; stickUp(); ring.style.display = "none"; hint.textContent = "";
     }
@@ -1639,7 +1641,14 @@
     var SIT_WHERE = { 3: "You are sitting where you stopped, looking at it.", 2: "You are face to face with it.", 1: "You are sitting where it sat, and it sits where you were.", check: "You are face to face with it.", after: "You are back where you sat down.", paused: "You leaned back from it, still sitting." };
     var sitBtn = el("button", { class: "bm-sitbtn", "data-bm-sitbtn": "", text: "Sit down", onclick: function () { sitOffer(); } });
     var spiritBtn = el("button", { class: "bm-spiritbtn", "data-bm-spiritbtn": "", style: "display:none", onclick: function () { spiritList(); } });
-    wrap.insertBefore(sitBtn, fade); wrap.insertBefore(spiritBtn, fade);
+    wrap.insertBefore(sitBtn, fade);
+    // Self and Spirits live in the Menu (Wendell, 19 October 2026: "the buttons are taking up too much space on the screen");
+    // Sit down and Trust stay out, the moment's own actions, shown only when they can be done.
+    var bmMenu = K.menu(wrap, [
+      { btn: selfBtn, glyph: "◉", about: "Stop and be yourself again. The walk pauses, and nothing has to happen next." },
+      { btn: spiritBtn, glyph: "✦", about: "The spirits walking with you. Thank one, then breathe it out or take it home." },
+      { glyph: "◎", word: "The walk stick", about: "Hold it and push the way you want to go. Run goes faster." },
+      { glyph: "▮", word: "The bars at the top", about: "How charged the voice is (it), and you, once you give your own." }]);
     var spirits = [], SHOW_SPIRITS = K.SPIRITS_SHOWN;
     function colorOf(element) { return K.spiritHex(element); }
     function stash() { return { html: Array.prototype.slice.call(modal.childNodes), tag: modal.getAttribute("data-bm-step"), open: st.modal }; }
@@ -2732,9 +2741,9 @@
         var lc = side(S_VOICE - 7.5, 1.7), lv = at(route, S_VOICE); want = new THREE.Vector3(lc.x, floor(lc) + 2.6, lc.z); look = new THREE.Vector3(lv.x, floor(lv) + 1.7, lv.z);
       }
       else if (st.cam === "voice") { var c = at(route, S_VOICE + 6.5), sp = at(route, S_SELF); want = new THREE.Vector3(c.x, floor(c) + 4.4, c.z); look = new THREE.Vector3(sp.x, floor(sp) + 1.8, sp.z); }
-      else if (SI && SI.g) { // sitting with a charge: close and to the side, aimed above it so it shows under the panel as the choices change it
+      else if (SI && SI.g) { // sitting with a charge: close and to the side, aimed just above it so it shows above the sheet (PR 5) as the choices change it
         var T = SI.g.position, cb = side(Math.max(0, st.s - 2.6), 1.3), dx = T.x - cb.x, dz = T.z - cb.z, d = Math.sqrt(dx * dx + dz * dz);
-        want = new THREE.Vector3(cb.x, Math.max(floor(cb), T.y) + 2.1, cb.z); look = new THREE.Vector3(T.x, T.y + d * 0.42 + 0.35, T.z);
+        want = new THREE.Vector3(cb.x, Math.max(floor(cb), T.y) + 2.1, cb.z); look = new THREE.Vector3(T.x, T.y + d * 0.1 + 0.1, T.z);
         var O = st.orbit;
         if (O && (O.yaw || O.pitch)) { // turned by a drag: swing around the charge, closer in, then back inside the cave
           // In the path's frame: the camera keeps its distance by going further along the path where the walls stop it going
@@ -2743,7 +2752,7 @@
           var mLat = 0.55 * W * route.openAt(frS), lat = clamp(Math.sin(O.yaw) * rh, -mLat, mLat);
           var along = (Math.cos(O.yaw) >= 0 ? -1 : 1) * Math.sqrt(Math.max(0, rh * rh - lat * lat));
           want.set(T.x + fr.fx * along - fr.fz * lat, T.y + 0.6 + Math.sin(el0) * r, T.z + fr.fz * along + fr.fx * lat);
-          keepInCave(want, st.s + 2); var dd = want.distanceTo(T); look.set(T.x, T.y + dd * 0.4 + 0.3, T.z); // still under the panel
+          keepInCave(want, st.s + 2); var dd = want.distanceTo(T); look.set(T.x, T.y + dd * 0.1 + 0.1, T.z); // still above the sheet
         }
       }
       else if (cen) { // at the centre: the child framed low under the panel, the self beside it and the voices around it

@@ -1762,6 +1762,75 @@
     setTimeout(function () { n.remove(); }, failed ? 12000 : 6000);
     return n;
   }
+  // The Menu (Wendell, 19 October 2026: "the buttons are taking up too much space on the screen ... they are randomly placed and
+  // players are telling me they don't quite know what everything or anything means"): one button in the top-left corner gathers
+  // a scene's switches, each its glyph and its word with a line on what it does, and a key to what is on the screen. Out on the
+  // screen stay the stick and the one action the moment calls for (Sit down, a door's card). items: { btn, glyph, about } for a
+  // switch (the scene's own button, moved in, so its handler and its data attribute stay), { glyph, word, about } for the key.
+  function menu(parent, items) {
+    var open = el("button", { class: "oagc-menubtn", "data-oag-menubtn": "", "data-glyph": "☰", "aria-expanded": "false", "aria-haspopup": "true", text: "Menu" });
+    var panel = el("div", { class: "oagc-menu", "data-oag-menu": "", role: "menu" }); panel.hidden = true;
+    function shut() { panel.hidden = true; open.setAttribute("aria-expanded", "false"); }
+    open.addEventListener("click", function () { panel.hidden = !panel.hidden; open.setAttribute("aria-expanded", String(!panel.hidden)); });
+    items.forEach(function (it) {
+      if (it.btn) {
+        it.btn.setAttribute("data-glyph", it.glyph); it.btn.setAttribute("role", "menuitem");
+        it.btn.addEventListener("click", shut); // the switch does its work, and the menu folds away so the room is in view
+        panel.appendChild(el("div", { class: "oagc-menurow" }, [it.btn, el("small", { text: it.about })]));
+      } else panel.appendChild(el("div", { class: "oagc-menurow key" }, [el("b", { "data-glyph": it.glyph, text: it.word }), el("small", { text: it.about })]));
+    });
+    document.addEventListener("pointerdown", function (e) { if (!panel.hidden && !panel.contains(e.target) && !open.contains(e.target)) shut(); }, true);
+    parent.appendChild(open); parent.appendChild(panel);
+    // a lesson's glyph points at the switch, or at the Menu while the switch is folded inside it
+    return { button: open, panel: panel, shut: shut, at: function (b) { return panel.hidden && panel.contains(b) ? open : b; } };
+  }
+  // The input sheet (Wendell, 19 October 2026: "the input screens are too big and one can see the action underneath ... breaking
+  // the screens up so their data isn't one semitransparent block"): the page's modal is a solid sheet at the foot of the screen,
+  // no taller than half of it, and while it is open the scene is lifted into the top half (CSS). A page's questions become
+  // cards side by side, one in view, with Back and Next; each control (a field, a dial, a row of choices) ends its card, and the
+  // words before it ride with it. The page's own buttons (Go on, Step back, Look around) stay at the sheet's foot. Every card
+  // stays in the page, scrolled out of view, so a screen reader, the keyboard and the tests reach all of it.
+  var sheetAt = {};
+  // where a sheet is: a dot per card, the one in view filled; no numbers on screen (Big Mind's check-in prints none), and a
+  // screen reader hears "card 2 of 3"
+  function dots(n, at, len) { var t = ""; for (var i = 0; i < len; i++) t += i === at ? "●" : "○"; n.textContent = t; n.setAttribute("aria-label", "card " + (at + 1) + " of " + len); }
+  function isCtl(k) { return /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(k.tagName) || !!k.querySelector("input,textarea,select,button"); }
+  function isActs(k) { // a row of the page's own buttons: no field, and nothing to pick (a choice carries aria-pressed)
+    return (k.tagName === "BUTTON" || k.classList.contains("oagc-row")) && isCtl(k) && !k.querySelector("input,textarea,select,[aria-pressed]") && !k.hasAttribute("aria-pressed");
+  }
+  function sheet(box, title, kids, foot) {
+    kids = kids.filter(Boolean); foot = (foot || []).filter(Boolean);
+    var tail = []; while (kids.length && isActs(kids[kids.length - 1])) tail.unshift(kids.pop());
+    foot = tail.concat(foot);
+    var cards = [[]], shut = false;
+    kids.forEach(function (k) {
+      if (shut) { cards.push([]); shut = false; }
+      cards[cards.length - 1].push(k); if (isCtl(k)) shut = true;
+    });
+    if (cards.length > 1 && !cards[cards.length - 1].some(isCtl)) { var last = cards.pop(); cards[cards.length - 1] = cards[cards.length - 1].concat(last); } // words after the last question ride with it
+    if (title) box.appendChild(el("h2", { text: title }));
+    var key = title + "|" + cards.length, at = Math.min(sheetAt[key] || 0, cards.length - 1);
+    if (cards.length < 2) { cards[0].forEach(function (k) { box.appendChild(k); }); }
+    else {
+      var strip = el("div", { class: "oagc-cards", "data-oag-cards": String(cards.length) });
+      cards.forEach(function (c, i) { strip.appendChild(el("div", { class: "oagc-cardpage", "data-oag-card": String(i) }, c)); });
+      var back = el("button", { class: "alt", "data-oag-card-back": "", text: "‹ Back" }), next = el("button", { class: "alt", "data-oag-card-next": "", text: "Next ›" });
+      var where = el("span", { class: "oagc-cardnum", "data-oag-card-at": "" });
+      function show(i, smooth) {
+        at = clamp(i, 0, cards.length - 1); sheetAt = {}; sheetAt[key] = at;
+        dots(where, at, cards.length); back.disabled = at === 0; next.disabled = at === cards.length - 1;
+        strip.setAttribute("data-oag-card-shown", String(at));
+        var x = at * strip.clientWidth; if (Math.abs(strip.scrollLeft - x) > 2) strip.scrollTo({ left: x, behavior: smooth && !reducedMotion ? "smooth" : "auto" });
+      }
+      back.onclick = function () { show(at - 1, true); }; next.onclick = function () { show(at + 1, true); };
+      strip.addEventListener("scroll", function () { var w = strip.clientWidth; if (!w) return; var i = Math.round(strip.scrollLeft / w); if (i !== at) { at = i; sheetAt = {}; sheetAt[key] = at; dots(where, at, cards.length); back.disabled = at === 0; next.disabled = at === cards.length - 1; strip.setAttribute("data-oag-card-shown", String(at)); } }, { passive: true });
+      // a field or a choice reached by Tab or by a screen reader brings its card into view
+      strip.addEventListener("focusin", function (e) { var c = e.target.closest && e.target.closest("[data-oag-card]"); if (c) show(+c.getAttribute("data-oag-card")); });
+      box.appendChild(strip); box.appendChild(el("div", { class: "oagc-pager" }, [back, where, next]));
+      show(at); requestAnimationFrame(function () { show(at); });
+    }
+    if (foot.length) box.appendChild(el("div", { class: "oagc-sheetfoot" }, foot));
+  }
   // Allow (Wendell, 11 October 2026): "When you are allowing I want the creature to get a bit bigger. I want peopel to be able to
   // decide how large it is gets via slider and how bright it can get in its emotional color." a = { grow, bright }, each 0 to 10.
   // grow is how much larger it gets (0 its own size, 10 twice it); bright is the most it can glow, which the charge fills.
@@ -1974,7 +2043,11 @@
   function focusChat(modal) {
     var i = modal.querySelector("[data-cave-321-text]"), l = modal.querySelector("[data-cave-321-log]");
     if (l) l.scrollTop = l.scrollHeight;
-    if (i) modal.scrollTop = modal.scrollHeight;
+    if (i) { // to its end, then back up if that left the text box above the sheet's top or under its foot (PR 5's bottom sheet)
+      modal.scrollTop = modal.scrollHeight;
+      var a = modal.getBoundingClientRect(), b = i.getBoundingClientRect(), f = modal.querySelector(".oagc-sheetfoot"), fh = f ? f.getBoundingClientRect().height : 0;
+      if (b.top < a.top + 8) modal.scrollTop -= a.top + 8 - b.top; else if (b.bottom > a.bottom - fh - 8) modal.scrollTop += b.bottom - (a.bottom - fh - 8);
+    }
     if (i) { try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); } }
   }
 
@@ -1987,14 +2060,28 @@
     ".oagc{position:fixed;inset:0;z-index:900;background:#0e0e1a;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}" +
     ".oagc canvas{display:block;position:absolute;inset:0;width:100%;height:100%;touch-action:none}" +
     ".oagc-stage{position:absolute;inset:0;touch-action:none}" +
-    ".oagc-card{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));background:rgba(20,20,40,.96);border-top:1px solid rgba(255,255,255,.12);max-height:62vh;overflow-y:auto;touch-action:manipulation}" +
+    ".oagc-card{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));background:#0f0f22;border-top:1px solid rgba(255,255,255,.12);max-height:50vh;overflow-y:auto;touch-action:manipulation}" +
     // the pane: small, in the scene, above the figure's head with a tail pointing down at it
     ".oagc-pane{position:absolute;left:0;top:0;z-index:3;width:max-content;max-width:min(270px,calc(100vw - 24px));padding:.45rem .65rem .5rem;background:rgba(12,12,28,.8);border:1px solid rgba(255,241,176,.55);border-radius:12px;color:#f4f4fa;font-size:15px;line-height:1.3;will-change:transform;cursor:pointer;touch-action:manipulation}" +
     ".oagc-pane strong{display:block;color:#fff1b0;font-size:16px;margin-bottom:.15rem}.oagc-pane span{display:block}.oagc-pane small{display:block;margin-top:.3rem;color:#aab0c4;font-size:12px}" +
     ".oagc-pane:after{content:'';position:absolute;left:var(--tail,50%);bottom:-8px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top-color:rgba(255,241,176,.55)}" +
-    // the modal: the pane grown large, near the top so the figure and the way ahead stay in sight below it
-    ".oagc-modal{position:absolute;left:12px;right:12px;top:58px;z-index:4;max-width:420px;margin:0 auto;max-height:calc(62vh - 58px);overflow-y:auto;padding:.8rem .9rem;background:rgba(12,12,28,.86);border:1px solid rgba(255,241,176,.5);border-radius:16px;opacity:0;transform:scale(.35);pointer-events:none;transition:opacity .22s,transform .25s;touch-action:manipulation}" +
+    // the modal: a solid sheet at the foot of the screen, half its height at most, the scene lifted above it (sheet(), below)
+    ".oagc-modal{position:absolute;left:0;right:0;bottom:0;z-index:6;max-width:520px;margin:0 auto;max-height:50vh;overflow-y:auto;padding:.75rem .9rem 0;background:#0f0f22;border:1px solid rgba(255,241,176,.45);border-bottom:0;border-radius:18px 18px 0 0;box-shadow:0 -8px 28px rgba(0,0,0,.55);opacity:0;transform:translateY(100%);pointer-events:none;transition:opacity .22s,transform .25s;touch-action:manipulation}" +
     ".oagc-modal.open{opacity:1;transform:none;pointer-events:auto}" +
+    ".oagc canvas{transition:transform .35s ease}.oagc:has(.oagc-modal.open) canvas{transform:translateY(-25vh)}" +
+    ".oagc-cards{display:flex;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}.oagc-cards::-webkit-scrollbar{display:none}" +
+    ".oagc-cardpage{flex:0 0 100%;min-width:0;scroll-snap-align:start;box-sizing:border-box;padding:0 .1rem}" +
+    ".oagc-pager{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.5rem}.oagc-pager button{min-height:40px;padding:0 .8rem}.oagc-pager button:disabled{opacity:.3}" +
+    ".oagc-cardnum{font-size:.85rem;letter-spacing:.3em;color:#aeb4cc}" +
+    ".oagc-sheetfoot{position:sticky;bottom:0;margin:.5rem -.9rem 0;padding:.4rem .9rem calc(.6rem + env(safe-area-inset-bottom));background:#0f0f22;border-top:1px solid rgba(255,255,255,.08)}.oagc-sheetfoot .oagc-row:first-child{margin-top:0}" +
+    ".oagc button.oagc-menubtn{position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;z-index:7;min-height:44px;padding:0 .9rem;border-radius:22px;background:rgba(14,14,30,.82);border:1px solid rgba(255,241,176,.5);color:#fff1d0;font-weight:600}" +
+    ".oagc-menu{position:absolute;top:calc(62px + env(safe-area-inset-top));left:10px;z-index:7;width:min(300px,calc(100vw - 20px));max-height:calc(100vh - 90px);overflow-y:auto;padding:.4rem;border-radius:16px;background:#0f0f22;border:1px solid rgba(255,241,176,.45);box-shadow:0 8px 28px rgba(0,0,0,.55)}.oagc-menu[hidden]{display:none}" +
+    ".oagc-menurow{display:flex;flex-direction:column;align-items:stretch;padding:.3rem .35rem}.oagc-menurow small{color:#aeb4cc;font-size:13px;line-height:1.3;margin:.15rem .2rem 0 2.3rem}" +
+    ".oagc-menurow:has(> button[style*='display: none']),.oagc-menurow:has(> button[style*='display:none']){display:none}" +
+    ".oagc .oagc-menu .oagc-menurow > button{position:static!important;transform:none!important;inset:auto!important;width:100%;text-align:left;min-height:44px;border-radius:10px;background:rgba(30,30,56,.9);border:1px solid rgba(255,255,255,.22);color:#f4f4fa;font-weight:500}" +
+    ".oagc-menurow > button[aria-pressed=true]{border-color:rgba(255,241,176,.8)!important;background:rgba(70,60,30,.9)!important}" +
+    ".oagc-menurow.key{border-top:1px solid rgba(255,255,255,.08)}.oagc-menurow.key b{font-weight:600;color:#fff1d0;padding:.2rem .2rem 0}" +
+    ".oagc [data-glyph]::before{content:attr(data-glyph);display:inline-block;width:1.6em;text-align:center;margin-right:.5em;color:#fff1b0}" +
     ".oagc-modal h2{margin:0 0 .35rem;font-size:1.15rem;color:#fff1b0}.oagc-modal p{margin:.35rem 0;font-size:1rem;line-height:1.35}.oagc-modal .oagc-row{margin-top:.5rem}" +
     ".oagc-card h2{margin:0 0 .3rem;font-size:1rem;color:#fff}.oagc-card h3{margin:.55rem 0 0;font-size:.82rem;color:#aab;font-weight:600}.oagc-card p{margin:.3rem 0;font-size:.92rem}" +
     ".oagc-log{display:flex;flex-direction:column;gap:.4rem;max-height:22vh;overflow-y:auto;margin:.4rem 0;padding:.3rem;border-radius:8px;background:rgba(0,0,0,.25)}" +
@@ -2044,7 +2131,7 @@
     ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}.oagr-door button+button{margin-top:.35rem}" +
     ".oagr-stick{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:5;width:116px;height:116px;border-radius:50%;background:rgba(20,20,40,.45);border:2px solid rgba(255,241,176,.55);touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}" +
     ".oagr-knob{width:48px;height:48px;border-radius:50%;background:rgba(255,241,176,.75);box-shadow:0 0 12px rgba(255,241,176,.6);pointer-events:none}" +
-    ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
+    ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc:has(.oagc-modal.open) .oagc-sitbtn{bottom:auto;top:calc(50vh - 3.4rem)}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
     ".oagc-orb{width:88px;height:88px;margin:.5rem auto .1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff1b0;font-size:.8rem;letter-spacing:.06em;" +
     "background:radial-gradient(circle,rgba(255,241,176,.5),rgba(255,241,176,.14) 62%,rgba(255,241,176,0) 72%);border:1px solid rgba(255,241,176,.55);transform:scale(.55);will-change:transform}" +
     ".oagc button.oagc-spiritbtn{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}" +
@@ -2363,7 +2450,6 @@
       if (show && !ring.parentNode) canvasBox.appendChild(ring); else if (!show && ring.parentNode) ring.remove();
       if (!show) br.ringHeld = false;
     }
-    canvasBox.appendChild(calmBtn); canvasBox.appendChild(ringBtn);
     // The branch's style: shown while walking a face's branch, set to that face at first; any face's look can dress it.
     var styleSel = el("select", { class: "oagc-style", "data-cave-branch-style": "", "aria-label": "This branch's style" });
     FACES.forEach(function (f) { styleSel.appendChild(el("option", { value: f[0], text: f[1] + " · " + FACE_LOOK[f[0]].vibe })); });
@@ -2473,11 +2559,8 @@
       if (page.text) pane.appendChild(el("span", { text: page.text }));
       if (foot) pane.appendChild(el("small", { text: foot }));
       pane.style.display = "";
-      modal.appendChild(el("h2", { text: title }));
-      paras.forEach(function (p) { modal.appendChild(p); });
-      ctls.forEach(function (c) { modal.appendChild(c); });
-      if (ctls.length) { modal.appendChild(row([btn("Look around", { "data-cave-shrink": "" }, closeModal, true)])); openModal(); }
-      else { modal.appendChild(row([btn("Keep walking", { "data-cave-close": "" }, closeModal, true)])); closeModal(); }
+      sheet(modal, title, paras.concat(ctls), [row([ctls.length ? btn("Look around", { "data-cave-shrink": "" }, closeModal, true) : btn("Keep walking", { "data-cave-close": "" }, closeModal, true)])]);
+      if (ctls.length) openModal(); else closeModal();
     }
 
     // ---- the doorway: one question per page, and the cave changes with each answer -------------
@@ -3318,7 +3401,14 @@
     var spirits = [];
     var spiritBtn = el("button", { class: "oagc-spiritbtn", "data-cave-spiritbtn": "", style: "display:none", onclick: function () { spiritPanel(); } });
     var spiritBox = el("div", { class: "oagc-spirits", "data-cave-spirits": "", style: "display:none" });
-    canvasBox.appendChild(spiritBtn); wrap.appendChild(spiritBox);
+    wrap.appendChild(spiritBox);
+    // The cave's switches, in the Menu (menu(), above): Breath ring, Calm and Spirits, each with what it does, and a key.
+    menu(canvasBox, [
+      { btn: ringBtn, glyph: "◯", about: "A ring at the foot of the screen. Hold it to breathe in, let go to breathe out." },
+      { btn: calmBtn, glyph: "≈", about: "Stills the water and the breath. Tap it again to let them move." },
+      { btn: spiritBtn, glyph: "✦", about: "The spirits walking with you. Thank one, then breathe it out or take it home." },
+      { glyph: "◎", word: "The walk stick", about: "Hold it and push the way you want to go." },
+      { glyph: "❝", word: "The words above you", about: "Where you are and what is asked here. Tap them to open the questions." }]);
     // The two charges (Wendell's board answer bmw-whose-charge, 11 October 2026: "Two charges, yours and its"): the daemon's ("it")
     // is the 3-2-1's reading, the player's own ("you") is what a standing W.A.V.E. beside it works. Only "it" decides whether it
     // steps aside. Shown while a daemon holds the passage.
@@ -3441,7 +3531,7 @@
     }
     function sitPage(title, kids, tag) {
       modal.innerHTML = ""; modal.setAttribute("data-cave-sit-step", tag);
-      modal.appendChild(el("h2", { text: title })); kids.forEach(function (k) { if (k) modal.appendChild(k); });
+      sheet(modal, title, kids);
       pane.innerHTML = ""; pane.appendChild(el("strong", { text: title }));
       page.title = title; page.text = ""; openModal();
     }
@@ -4934,6 +5024,8 @@
       rug.rotation.x = -Math.PI / 2; rug.position.set(SEAT.x, 0.015, SEAT.z); scene.add(rug);
       var seat = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 0.46, 24), new THREE.MeshStandardMaterial({ color: 0x8c3b2e, roughness: 0.9 })); // the cushion
       seat.position.set(SEAT.x, 0.23, SEAT.z + 0.15); seat.scale.z = 1.15; scene.add(seat);
+      var SEAT_TOP = 0.46, CUSHION_R = 0.7 + 0.28; // its top, and how near the figure's middle comes to its edge (its own half-width)
+      function cushionIn(x, z) { var dx = x - SEAT.x, dz = (z - SEAT.z - 0.15) / 1.15; return { dx: dx, dz: dz, k: Math.max(1e-4, Math.hypot(dx, dz) / CUSHION_R) / 1 }; }
       // Home base's portal (LEVELS.md): a second arch in the wall, behind the seat and to its side, glowing faintly. The charge's
       // door stays the charge's door: what comes in comes through the door, and the player goes out through the portal.
       // The Big Mind door (board dp-door; Wendell, 13 October 2026: "The big mind cave need to be accessible from the WAVE room")
@@ -5060,15 +5152,13 @@
       function drawPage() {
         modal.innerHTML = ""; stat.innerHTML = ""; pane.innerHTML = "";
         var pg = page(), kids = pg.kids || [];
-        modal.appendChild(el("h2", { text: pg.title }));
-        kids.forEach(function (k) { modal.appendChild(k); });
         stat.appendChild(el("h2", { text: pg.title })); kids.forEach(function (k) { if (k.tagName === "P") stat.appendChild(el("p", { text: k.textContent })); });
         stat.setAttribute("data-room-phase", R.phase); stat.setAttribute("data-room-round", String(R.round));
         pane.appendChild(el("strong", { text: pg.title }));
         var first = kids.filter(function (k) { return k.tagName === "P"; })[0]; if (first) pane.appendChild(el("span", { text: first.textContent }));
-        if (pg.still) { closeModal(); pane.style.display = ""; return; } // a page with nothing to choose: the pane, so the room is in view
-        if (R.active.length > 1 && !R.back && ["else", "layer", "waiting"].indexOf(R.phase) < 0) modal.appendChild(focusRow());
-        modal.appendChild(row([btn("Look around", { "data-room-shrink": "" }, closeModal, true)]));
+        if (pg.still) { sheet(modal, pg.title, kids); closeModal(); pane.style.display = ""; return; } // a page with nothing to choose: the pane, so the room is in view
+        sheet(modal, pg.title, kids, [R.active.length > 1 && !R.back && ["else", "layer", "waiting"].indexOf(R.phase) < 0 ? focusRow() : null,
+          row([btn("Look around", { "data-room-shrink": "" }, closeModal, true)])]);
         pane.style.display = ""; openModal();
       }
       function openModal() { if (guide.live) learn("rug"); stopWalking(); if (stickKnob) stickUp(); R.modal = true; modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); pane.style.visibility = "hidden"; }
@@ -5513,7 +5603,13 @@
 
       // ---- breath, calm, look ---------------------------------------------------------------------------------------------
       var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
-      stage.appendChild(calmBtn);
+      // The room's switch and its key, in the Menu (menu(), above); Sit down and a door's card show when they can be used.
+      menu(wrap, [
+        { btn: calmBtn, glyph: "≈", about: "Doors open without waiting for your out-breath, and the breath stills. Tap it again to undo." },
+        { glyph: "◎", word: "The walk stick", about: "Hold it and push the way you want to go. Arrow keys and W A S D work too." },
+        { glyph: "◌", word: "The rug", about: "Walk onto it and tap Sit down to work what you brought in." },
+        { glyph: "⌂", word: "The doors", about: "Walk up to one and its card says where it leads." },
+        { glyph: "❝", word: "The words at the top", about: "The step you are on. Tap them to open its questions." }]);
       // One finger turns the view. Two fingers pinch it nearer or farther (Wendell, 13 October 2026: "Let's introduce pinch to
       // zoom in the wave room"), and the mouse wheel does the same on a computer. A tap on a creature brings it close (below).
       var lookYaw = 0, lookPitch = 0, drag = null, zoom = 1, ptrs = {}, pinch = null, tap = null, ZOOM_MIN = 0.3, ZOOM_MAX = 1.6;
@@ -5601,7 +5697,10 @@
         var x = stick.x, z = stick.z; Object.keys(keys).forEach(function (k) { x += KEYS[k][0]; z += KEYS[k][1]; });
         var m = Math.hypot(x, z); if (!(m >= 0.15)) return null; if (m > 1) { x /= m; z /= m; }
         R.walkFwd = -z / Math.max(m, 1e-6); // how far the thumb points away from the camera, -1 to 1
-        var fx = camAim.x - camPos.x, fz = camAim.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+        // The stick's forward is the camera's as the thumb went down, and it holds while the thumb stays (19 October 2026, the
+        // WAVE room's "funky" camera): the camera can then swing round behind the figure without bending the way it walks.
+        if (!R.stickFrame) { var fx0 = camAim.x - camPos.x, fz0 = camAim.z - camPos.z, fl0 = Math.hypot(fx0, fz0) || 1; R.stickFrame = { x: fx0 / fl0, z: fz0 / fl0 }; }
+        var fx = R.stickFrame.x, fz = R.stickFrame.z;
         return { x: -z * fx - x * fz, z: -z * fz + x * fx }; // forward times -z, plus right (-fz, fx) times x
       }
       // In front of door k: within reach of it and not far off its middle.
@@ -5614,12 +5713,16 @@
       function freeWalk(dt) {
         if (!isFinite(fig.x) || !isFinite(fig.z) || !isFinite(fig.yaw)) { fig.x = SEAT.x; fig.z = SEAT.z; fig.yaw = Math.PI; R.walkYaw = null; R.roam = null; snap = true; } // never lost: back on the rug
         var w = R.modal || R.close ? null : wantWalk();
+        if (!w) R.stickFrame = null; // the thumb is off: the next push takes the camera's forward afresh
         if (w) {
           if (!R.roam || !R.roam.free) { R.roam = { free: true, x: fig.x, z: fig.z, exit: null, arrived: true }; R.walkYaw = fig.yaw; }
           fig.sit = Math.max(0, fig.sit - dt * 2.4);
           if (fig.sit <= 0) {
             var sp = dt * 2.6 * Math.min(1, Math.hypot(w.x, w.z)), nx = fig.x + w.x * sp, nz = fig.z + w.z * sp, r = Math.hypot(nx, nz), RW = RR - 1.4;
             if (r > RW) { nx *= RW / r; nz *= RW / r; }
+            // The cushion is solid (Wendell, 19 October 2026: "the character needs to actually be able to sit on the seat as opposed
+            // to walking through it"): a step that would go further into it slides round its edge; stepping off it is free.
+            var cq = cushionIn(nx, nz); if (cq.k < 1 && cq.k < cushionIn(fig.x, fig.z).k) { nx = SEAT.x + cq.dx / cq.k * 1.0; nz = SEAT.z + 0.15 + cq.dz / cq.k * 1.0 * 1.15; }
             fig.x = nx; fig.z = nz; fig.clk += dt; fig.yaw = turnTo(fig.yaw, Math.atan2(w.x, w.z), dt * 8);
             learn("walk");
           }
@@ -5775,7 +5878,11 @@
         if (name === "back") return { pos: V(BACK.x + 0.8, 4.6, BACK.z + 2.3), aim: V(HERE.x, 0.6, HERE.z) };
         if (name === "roam") { // behind the figure and above it, looking where it faces
           var ry0 = R.roam && R.roam.free && R.walkYaw != null ? R.walkYaw : fig.yaw, sy = Math.sin(ry0), cy = Math.cos(ry0);
-          return { pos: V(fig.x - sy * 4.2, 3.4, fig.z - cy * 4.2), aim: V(fig.x + sy * 2.6, 1.0, fig.z + cy * 2.6) };
+          // Near a wall the camera comes in along the line behind the figure, and rises, instead of sliding sideways round the
+          // wall: d is how far back it can stand and stay a little inside the room.
+          var bR = RR - 1.1, pb = fig.x * sy + fig.z * cy, disc = pb * pb - (fig.x * fig.x + fig.z * fig.z - bR * bR);
+          var d = disc > 0 ? clamp(pb + Math.sqrt(disc), 1.6, 4.2) : 1.6;
+          return { pos: V(fig.x - sy * d, 3.4 + (4.2 - d) * 0.55, fig.z - cy * d), aim: V(fig.x + sy * 2.6, 1.0, fig.z + cy * 2.6) };
         }
         if (name === "close") { // in front of the creature, near enough that it fills the frame above the card
           var cc = R.close, s = cc.fig.scale.x, mid = centreOf(cc), ry = cc.fig.rotation.y;
@@ -5898,7 +6005,9 @@
         if (R.close && (R.close.gone || !R.close.fig.visible)) backToRoom(); // it left the room while close up
         // The camera comes round behind the figure only while it walks away from the camera, so walking back towards the
         // camera or sideways keeps going the way the thumb points instead of circling; a drag turns it by hand.
-        if (R.walkYaw != null && moving && R.walkFwd > 0.3) R.walkYaw = turnTo(R.walkYaw, fig.yaw, dt * 0.9);
+        // Walking any way, the camera comes round behind the figure (it used to follow only a walk away from it, so a walk to the
+        // doors behind the seat came face on into a camera pinned to the wall).
+        if (R.walkYaw != null && moving) R.walkYaw = turnTo(R.walkYaw, fig.yaw, dt * (R.walkFwd > 0.3 ? 0.9 : 1.6));
         var vw = view(R.close ? "close" : tg.view, 0, 0); R.view = R.close ? "close" : tg.view;
         if (lookYaw) { var off = vw.pos.clone().sub(vw.aim), c0 = Math.cos(lookYaw), s0 = Math.sin(lookYaw); vw.pos.set(vw.aim.x + off.x * c0 + off.z * s0, vw.pos.y, vw.aim.z - off.x * s0 + off.z * c0); }
         if (lookPitch) { // the camera swings over or under the point it looks at, keeping its distance: drag down to look down on the room, up to look up
@@ -5997,12 +6106,12 @@
         stick: function (x, y) { stick.x = x || 0; stick.z = y || 0; },
         steer: function (x, z) {
           var wx = x - fig.x, wz = z - fig.z, m = Math.hypot(wx, wz); if (m < 0.05) { stick.x = 0; stick.z = 0; return m; }
-          wx /= m; wz /= m; var fx = camAim.x - camPos.x, fz = camAim.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+          wx /= m; wz /= m; var fx = R.stickFrame ? R.stickFrame.x : camAim.x - camPos.x, fz = R.stickFrame ? R.stickFrame.z : camAim.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
           stick.x = wx * -fz + wz * fx; stick.z = -(wx * fx + wz * fz); return m;
         },
         sitShown: function () { return sitBtn.style.display !== "none"; },
         stickShown: function () { return stickPad.style.display !== "none"; },
-        walking: function () { return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
+        walking: function () { var hp = new THREE.Vector3(); avatar.userData.J.hips.getWorldPosition(hp); var bb = new THREE.Box3().setFromObject(avatar.userData.J.hips.children.filter(function (c) { return c.isMesh; })[0] || avatar.userData.J.hips); return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, hips: [hp.x, hp.y, hp.z], pelvisLow: bb.min.y, seatTop: SEAT_TOP, inCushion: cushionIn(fig.x, fig.z).k, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
           exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
         floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
         close: function () { return R.close ? { name: R.close.name, slot: R.close.slot, kept: R.kept.indexOf(R.close) >= 0 } : null; },
@@ -6040,7 +6149,7 @@
     BREATH: BREATH, STEPS_PER_S: STEPS_PER_S, CSS: CSS, guardPage: guardPage, holdArea: holdArea,
     // the WAVE room's own pieces, so a cave that sits down in place runs the room's steps, not a copy (Big Mind cave, bms-in-place)
     ROOM_STEPS: ROOM_STEPS, WAVE: WAVE, ELEMENTS: ELEMENTS, TEXTURES: TEXTURES, talk321: talk321, focusChat: focusChat,
-    buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, dial: dial, notice: notice, labelSprite: labelSprite, P: P, btn: btn, row: row,
+    buildAura: buildAura, stepAura: stepAura, allowSliders: allowSliders, dial: dial, notice: notice, menu: menu, sheet: sheet, labelSprite: labelSprite, P: P, btn: btn, row: row,
     buildSpirit: buildSpirit, followSpirits: followSpirits, spiritHex: spiritHex, SPIRITS_SHOWN: SPIRITS_SHOWN, spiritForms: window.__oagSpiritForms,
     // the Cave of Lessons' stone and light, so the Big Mind cave wears the same map (Wendell, 2026-10-13: "import the WAVE
     // process into this map")
