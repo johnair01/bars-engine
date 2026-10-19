@@ -3531,6 +3531,7 @@
         return d[1];
       }
       if (m.phase === "feel") return feelCard(blk, d, body, leave);
+      if (m.phase === "room") return roomCard(blk, d, body);
       var q = MEET_Q[m.n], cards = ((MEET_CARDS[blk.daemon] || {})[q.id] || []).slice();
       // What it protects you from may be what you carry in (bms-protects-from): the spirits' names are cards too.
       if (q.id === "from") spirits.forEach(function (o) { if (o.name) cards.push([o.name + "."]); });
@@ -3595,12 +3596,38 @@
       body.push(row([btn("Not now, go on", { "data-cave-bm-feelskip": "" }, function () { m.phase = "q"; placeCard(blk); }, true), leave]));
       return d[1];
     }
+    // A new spirit joins the ones that walk with you, up to the loadout's three. With three already walking, one of them has to rest
+    // in the WAVE room to make room for it, or it stays here and is asked for again next time (Wendell on sic-first-cave-sitting,
+    // 2026-10-19: "you can also find a new spirit in the cave, but you'd need to dismiss one of your own to make room for it if you
+    // go into the cave with max spirits").
+    function ownWalking() { return spirits.filter(function (o) { return o.family && !o.hidden && !o.resting; }); }
+    function maxWalking() { return SPIRIT_STORE ? SPIRIT_STORE.MAX_LOADOUT : SPIRITS_SHOWN; }
     function felt(blk, d, name, element) {
+      if (ownWalking().length >= maxWalking()) { blk.bm.newSp = { name: name, element: element }; blk.bm.phase = "room"; placeCard(blk); return; }
+      born(blk, name, element);
+    }
+    function roomCard(blk, d, body) {
+      var m = blk.bm, sp = m.newSp, own = ownWalking();
+      body.push(P("A spirit of " + lowerName(d[1]) + " is here: " + sp.name + ". " + own.length + " of yours walk with you, as many as can. To take it with you, let one of yours rest in the WAVE room. It keeps everything it has lived through.", { "data-cave-bm-room": String(own.length) }));
+      body.push(el("div", { class: "oagc-row" }, own.map(function (o) {
+        return btn("Let " + o.name + " rest", { "data-cave-bm-rest": o.id || o.name }, function () { restSpirit(o); born(blk, sp.name, sp.element); }, true);
+      })));
+      body.push(row([btn("Leave it here", { "data-cave-bm-leaveit": "" }, function () { m.newSp = null; m.phase = "q"; placeCard(blk); }, true)]));
+      return d[1];
+    }
+    // Resting: it leaves the walk and waits in the WAVE room, out of the loadout, with its sittings kept.
+    function restSpirit(o) {
+      o.resting = true; var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); spiritsUi();
+      try { if (SPIRIT_STORE && o.id) { SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings }, "Cave of Lessons"); SPIRIT_STORE.setLoadout(o.id, false); } } catch (e) { /* it still rests */ }
+      var g = o.g, li = o.light && o.light.intensity;
+      tween(900, function (k) { g.traverse(function (n) { if (n.material) n.material.opacity = 0.9 * (1 - k); }); if (o.light) o.light.intensity = li * (1 - k); }, function () { scene.remove(g); dropLight(g); });
+    }
+    function born(blk, name, element) {
       var m = blk.bm, fig = blk.route.ctx.daemonFig, o = { id: "meet-" + blk.daemon, name: name, element: element, family: blk.daemon, stage: "gas", sittings: 0 };
       if (fig) o.from = new THREE.Box3().setFromObject(fig).getCenter(new THREE.Vector3()); // its motes stream out of the daemon's body
       addSpirit(o, avatar ? new THREE.Vector3(avatar.position.x, avatar.position.y + 1.7, avatar.position.z) : null);
-      try { if (SPIRIT_STORE) SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: 0 }, "Cave of Lessons"); } catch (e) { /* the spirit still walks with you */ }
-      blk.felt = o.id; m.phase = "q"; placeCard(blk);
+      try { if (SPIRIT_STORE) { SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: 0 }, "Cave of Lessons"); SPIRIT_STORE.setLoadout(o.id, true); } } catch (e) { /* the spirit still walks with you */ }
+      blk.felt = o.id; m.newSp = null; m.phase = "q"; placeCard(blk);
     }
     // The approach check-in (pass daemon-meeting1, build 4), here before the daemon is asked for its time: up to four asks, each
     // skippable, in this order: the body (what it feels like, what it is doing), the feeling, whether it is faint, too much or clear,
@@ -4585,6 +4612,7 @@
           k.push(P(ch.hiddenOf ? "The part of " + ch.hiddenOf + " that stayed hidden is at the door." : ch.waited ? "The one that waited at the door is still there." : R.round > 1 ? "Something else is at the door." : ch.known ? "You brought it home from the cave. Its feeling comes with it." : "You are on your seat, facing the door."));
           if (ch.about) k.push(P("From the board: " + ch.about + ". Whatever is in the way of it is at the door.", { "data-room-about": "" }));
           if (R.from === "board" && R.round === 1 && ch === R.all[0]) heatRow(k, "before", "How much charge does it carry, 0 to 10?");
+          if (elder && R.round === 1) k.push(P("Beside the door an elder spirit, a Shellback, lifts its head to greet you. It has grown through all five forms a spirit can take. Tap it to see them.", { "data-room-elder-hello": "" }));
           if (Object.keys(EXITS).length && R.round === 1) k.push(P("Walk round the room with the circle at the bottom left (or the arrow keys), or tap the floor. The rug is where you sit to work with what comes in. " + (EXITS.bigmind && EXITS.portal ? "Behind you are two doors: Big Mind on the left, and the six game masters on the right." : "Behind you is a door."), { "data-room-walk-hint": "" }));
           k.push(row([btn("Welcome it", { "data-room-welcome": "" }, function () { R.phase = "opening"; R.wait = "door-in"; draw(); })]));
           return { title: w[1], kids: k };
@@ -5043,6 +5071,48 @@
         kids.push(btn("Back to the room", { "data-room-loadout-back": "" }, function () { loadBox.style.display = "none"; }));
         loadBox.innerHTML = ""; kids.forEach(function (k) { loadBox.appendChild(k); }); loadBox.style.display = "";
       }
+      // ---- the elder spirit (board sic-demo-showcase = elder; Six-faces-council council/callsheets/spirits-in-caves.md, slice 5) ----
+      // A grown ally already lives in home base, beside the door, and greets the player in the first round. A tap on it
+      // shows the five forms it came through, one after another, and then each on its own button. It is a Shellback, the first
+      // family whose creature and ally are drawn. It belongs to the room: never in the store or the loadout, and it stays here.
+      var ELDER_FORMS = [["gas", "Cloud", "Every spirit begins as a cloud, the day you meet its daemon."], ["core", "Core", "Sat with twice, the cloud draws in to a core."],
+        ["hologram", "Hologram", "Sat with four times, the core opens into a likeness of its animal."], ["creature", "Creature", "Sat with six times, the likeness takes a body."],
+        ["ally", "Standing ally", "Sat with eight times, it stands beside you as an ally."]];
+      var ELDER_AT = { x: -1.7, y: 0.9, z: -4.9 }, ELDER_Y = { creature: 0.42, ally: 0.42 }, ELDER_SIZE = 1.6, ELDER_STEP_MS = 1600, elder = null, elderShow = null;
+      var elderBox = el("div", { class: "oagr-door oagr-load", "data-room-elder": "", style: "display:none" }); wrap.appendChild(elderBox);
+      function elderWear(stage) {
+        var g = buildSpirit(THREE, "Shellback, an elder", lookup(DAEMONS, "protector")[3], { family: "protector", stage: stage });
+        g.scale.setScalar(ELDER_SIZE); g.position.set(ELDER_AT.x, ELDER_Y[stage] || ELDER_AT.y, ELDER_AT.z); g.rotation.y = 0.6; g.userData.level = 0.6;
+        if (elder) scene.remove(elder.g);
+        elder = { g: g, stage: stage }; scene.add(g);
+      }
+      function elderCard() {
+        clearTimeout(elderShow); elderShow = null;
+        var cur = ELDER_FORMS.filter(function (f) { return f[0] === elder.stage; })[0];
+        var kids = [el("h2", { text: "Shellback, an elder" }),
+          P("I came through five forms, one after another, as someone sat with me. A spirit you meet begins where I began.", { "data-room-elder-says": "" }),
+          P(cur[2], { "data-room-elder-form": cur[0] }),
+          el("div", { class: "oagc-row" }, ELDER_FORMS.map(function (f) {
+            return btn(f[1], { "data-room-elder-stage": f[0], "aria-pressed": String(f[0] === elder.stage) }, function () { elderWear(f[0]); elderCard(); }, f[0] !== elder.stage);
+          })),
+          btn("Back to the room", { "data-room-elder-back": "" }, function () { elderClose(); })];
+        elderBox.innerHTML = ""; kids.forEach(function (k) { elderBox.appendChild(k); }); elderBox.style.display = "";
+      }
+      // The five forms a breath apart, cloud to standing ally, and the card waits on the ally; with reduced motion it shows the ally.
+      function elderOpen() {
+        var n = 0;
+        function next() { elderWear(ELDER_FORMS[n][0]); elderCard(); n++; if (n < ELDER_FORMS.length) elderShow = setTimeout(next, ELDER_STEP_MS); }
+        if (reducedMotion) { elderWear("ally"); elderCard(); } else next();
+      }
+      function elderClose() { clearTimeout(elderShow); elderShow = null; elderBox.style.display = "none"; if (elder.stage !== "ally") elderWear("ally"); }
+      function elderScreen() {
+        if (!elder || !renderer) return null;
+        var rc = renderer.domElement.getBoundingClientRect(), c = elder.g.position.clone(), e = c.clone();
+        e.addScaledVector(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), ELDER_SIZE * 0.7); c.project(camera); e.project(camera);
+        if (c.z > 1) return null;
+        return { x: rc.left + (c.x + 1) / 2 * rc.width, y: rc.top + (1 - c.y) / 2 * rc.height, r: Math.hypot((e.x - c.x) / 2 * rc.width, (e.y - c.y) / 2 * rc.height) };
+      }
+      if (opts.portal && spiritForms && spiritForms.buildForm) elderWear("ally");
       var stickId = null;
       // On an iPhone a thumb held on the stick keeps sending moves after the stick hides for a door's card, and a hidden stick
       // measures 0 wide: dividing by that walked the figure to nowhere and left the room dark (Wendell, 14 October 2026: "Stay in
@@ -5122,6 +5192,7 @@
       function tapAt(x, y) {
         if (!renderer) return;
         var rc = renderer.domElement.getBoundingClientRect(), best = null, bestK = Infinity;
+        var es = !R.close && elderScreen(); if (es && Math.hypot(x - es.x, y - es.y) < es.r + 24) { elderOpen(); return; }
         var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
         seen().forEach(function (c) {
           var p = centreOf(c), e = p.clone().addScaledVector(right, c.fig.scale.x).project(camera); p.project(camera);
@@ -5358,6 +5429,7 @@
         lamp.intensity = 0.9 + 0.35 * (1 - br.b);
         var wk = 1 + 0.015 * (br.b - 0.5); walls.scale.set(wk, 1, wk);
         R.lights.forEach(function (l, n) { l.userData.halo.scale.setScalar(R.calm ? 1 : 1 + 0.12 * Math.sin(now / 500 + n)); });
+        if (elder) { stepAura(elder.g.userData.aura, elder.g.userData.color, elder.g.userData.level, dt, R.calm); if (!reducedMotion && !ELDER_Y[elder.stage]) elder.g.position.y = ELDER_AT.y + 0.06 * Math.sin(now / 1100); } // the creature and the ally stand
         // the camera
         if (R.close && (R.close.gone || !R.close.fig.visible)) backToRoom(); // it left the room while close up
         // The camera comes round behind the figure only while it walks away from the camera, so walking back towards the
@@ -5413,6 +5485,8 @@
         walking: function () { return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
           exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
         floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
+        // the elder spirit (slice 5): its form, whether its card shows, and where it is on screen for a test to tap it
+        elder: function () { if (!elder) return null; var f = elder.g.userData.form; return { stage: elder.stage, drawn: f ? f.drawn : null, card: elderBox.style.display !== "none", x: elder.g.position.x, z: elder.g.position.z, screen: elderScreen() }; },
         close: function () { return R.close ? { name: R.close.name, slot: R.close.slot, kept: R.kept.indexOf(R.close) >= 0 } : null; },
         // where a creature is on screen (by its index in creatures(), or the n-th kept one with kept true), for a test to tap it
         screenOf: function (n, kept) {

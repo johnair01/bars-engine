@@ -5,7 +5,8 @@
 // densest at the heart; the Damaged Self and the Emotional Body have no body family yet, so they wear the same plain cloud.
 // cave.js buildSpirit asks this file for the form when a spirit carries a family. As the spirit is sat with it unfolds
 // (board sic-unfold-by-sitting): its gas draws in to the family's core, and the core opens into the family's hologram, both
-// baked from the page's GLBs by bake_spirits.py and fetched only when a spirit first needs them. Creature and ally come after.
+// baked from the page's GLBs by bake_spirits.py and fetched only when a spirit first needs them. Creature and ally are baked for
+// the Shellback only so far (LATE), the forms the elder spirit in the WAVE room shows (board sic-demo-showcase).
 (function () {
   "use strict";
   // daemon id -> [family name, gas shape]
@@ -133,12 +134,16 @@
   // ---- the unfolding (board sic-unfold-by-sitting) ------------------------------------------------------------------------
   // A spirit's stage comes from how many times it has been sat with, and nothing else: gas at 0, core at 2, hologram at 4,
   // creature at 6 and standing ally at 8 (the 6-face pass of 18 October, its Architect, keeping the page's 1-3-5 spacing). The
-  // caves count one sitting a run for each spirit. Creature and ally have no cave form yet, so a spirit past its hologram
-  // wears the hologram until they come.
+  // caves count one sitting a run for each spirit. Creature and ally are drawn for the families in LATE (bake_spirits.py LATE);
+  // a spirit of another family past its hologram wears the hologram until they come.
   var STAGES = ["gas", "core", "hologram", "creature", "ally"], AT = [0, 2, 4, 6, 8], DRAWN = { gas: 1, core: 1, hologram: 1 };
+  var LATE = { shellback: { creature: 1, ally: 1 } };
   var UNFOLD_MS = 2400, Y0 = 0.35; // the page's spirits stand on their heart, 0.35 up
   function stageOf(n) { n = n | 0; for (var i = AT.length - 1; i > 0; i--) if (n >= AT[i]) return STAGES[i]; return "gas"; }
-  function drawnStage(stage) { var i = Math.max(0, STAGES.indexOf(stage)); while (i > 0 && !DRAWN[STAGES[i]]) i--; return STAGES[i]; }
+  function drawnStage(stage, family) {
+    var late = LATE[FILES[family] || "shellback"] || {}, i = Math.max(0, STAGES.indexOf(stage));
+    while (i > 0 && !DRAWN[STAGES[i]] && !late[STAGES[i]]) i--; return STAGES[i];
+  }
   // daemon id -> the baked forms it wears (bake_spirits.py SOURCES, each family's first base with GLBs). The Holdfast has
   // none baked yet, so the Controller wears the Shellback's, as the Damaged Self and the Emotional Body do.
   var FILES = { protector: "shellback", player: "romp", fixer: "tinker", skeptic: "hedge", victim: "ballad" };
@@ -182,7 +187,8 @@
       var m = new THREE.Mesh(geo, mat); m.userData.look = L; m.frustumCulled = false; g.add(m);
     });
     g.userData.stage = stage; g.scale.setScalar(SCALE);
-    if (stage === "hologram") g.rotation.y = -Math.PI / 2 + 0.7;
+    if (stage !== "core") g.rotation.y = -Math.PI / 2 + 0.7;
+    if (stage === "ally") g.rotation.y += Math.PI; // the standing ally's export faces the other way; it turns its front, heart and all, to the viewer
     return g;
   }
   // Unfold the spirit built by buildForm into `to` (a stage name). It fetches the form's file the first time any spirit
@@ -190,7 +196,7 @@
   // around it. Without animate (a spirit that comes back in already unfolded) the new form is simply there; with reduced
   // motion it fades in where it stands.
   function unfold(THREE, root, to, animate) {
-    var st = root.userData.form, want = drawnStage(to); st.stage = STAGES.indexOf(to) >= 0 ? to : st.stage;
+    var st = root.userData.form, want = drawnStage(to, st.family); st.stage = STAGES.indexOf(to) >= 0 ? to : st.stage;
     if (want === st.drawn || want === st.unfolding) return Promise.resolve(root);
     st.unfolding = want;
     return loadStage(st.family, want).then(function (parts) {
