@@ -31,6 +31,10 @@ jobs:
       - name: Check (generate + verify + lint + tsc)
         run: npm run check
 
+      # The inner vessel's model in the Cave of Lessons (content/ontology-game/cave/vessel.js). Plain node, no browser.
+      - name: Ship model checks
+        run: npm run test:vessel
+
       # Blender pipeline, offline tier only: licence gate, manifest budgets, key handling. Plain Python, no bpy.
       # Known gaps are logged and do not fail the job (.specify/specs/blender-pipeline-test/).
       - name: Blender pipeline tests (offline)
