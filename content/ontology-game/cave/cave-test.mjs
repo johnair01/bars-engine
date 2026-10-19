@@ -491,7 +491,7 @@ const born = await C(() => ({ n: window.__oagCave.spirits.length, s: window.__oa
 const mine = born.s.filter((o) => o.id === 'meet-protector')[0];
 ok(born.n === spiritsBefore + 3 && mine && mine.family === 'protector' && mine.stage === 'gas' && mine.name === 'Fear' && born.store && born.store.family === 'protector' && born.store.element === 'Fear' && born.store.sittings === 0, 'a Protector spirit named Fear is born as a gas, walks with you and is kept in the store as meet-protector: ' + JSON.stringify(mine) + JSON.stringify(born.store));
 // The later checks count the spirits that come out of worked charges, so this one is let go and the store wiped.
-while (await C(() => window.__oagCave.spirits.length) > spiritsBefore) { await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(300); }
+while (await C(() => window.__oagCave.spirits.length) > spiritsBefore) { await menuTap('[data-cave-spirits-n]'); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(300); }
 await page.waitForTimeout(2200);
 await C(() => window.__oagSpiritStore.wipe());
 ok(await sees('[data-cave-bm-seat]') && await sees('[data-cave-bm-q="job"]'), 'yes: the player steps into its place, and its first question is its job');
