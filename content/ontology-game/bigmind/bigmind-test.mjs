@@ -14,7 +14,8 @@ const server = http.createServer((req, res) => {
   const u = req.url.split('?')[0];
   const tile = /^\/ontology-game\/cave\/textures\/(wet_stone|dry_stone|crystal_vein)\.jpg$/.exec(u); // the Cave of Lessons' stone
   const body = /^\/ontology-game\/cave\/daemons\/([a-z-]+)\.glb$/.exec(u); // the daemon bodies (cave/bake_daemons.py)
-  const f = u === '/ontology-game/big-mind' ? 'big-mind/index.html' : u === '/ontology-game/cave' ? 'cave/index.html' : tile ? 'cave/textures/' + tile[1] + '.jpg' : body ? 'cave/daemons/' + body[1] + '.glb' : u === '/ontology-game/cave/cave-kit.glb' ? 'cave/cave-kit.glb' : u === '/ontology-game/cave/player/walker.glb' ? 'cave/player/walker.glb' : null;
+  const sp = /^\/ontology-game\/cave\/spirits\/([a-z]+-(core|hologram))\.glb$/.exec(u); // the spirits' forms (cave/bake_spirits.py)
+  const f = u === '/ontology-game/big-mind' ? 'big-mind/index.html' : u === '/ontology-game/cave' ? 'cave/index.html' : tile ? 'cave/textures/' + tile[1] + '.jpg' : body ? 'cave/daemons/' + body[1] + '.glb' : u === '/ontology-game/cave/cave-kit.glb' ? 'cave/cave-kit.glb' : u === '/ontology-game/cave/player/walker.glb' ? 'cave/player/walker.glb' : sp ? 'cave/spirits/' + sp[1] + '.glb' : null;
   if (!f) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'content-type': tile ? 'image/jpeg' : body || f.endsWith('.glb') ? 'model/gltf-binary' : 'text/html' }); res.end(readFileSync(PUB + '/ontology-game/' + f));
 }).listen(4571);
@@ -267,6 +268,44 @@ await page.click('[data-bm-blockgo]');
 await page.fill('[data-bm-yourange]', '6');
 await page.click('[data-bm-youafter]');
 ok(await waitStep('charge') && await page.evaluate(() => window.__oagBigMind.state.waves[1].blocked === 'welcome'), 'the blocked step is saved with the W.A.V.E.');
+// The unfolding (sic-unfold-by-sitting): each W.A.V.E. beside the Protector is a sitting for the spirit born from meeting it,
+// counted once a run; two sittings open its gas into the Shellback's core, fetched then and only then.
+const prot = () => page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector')[0], f = o && o.g.userData.form;
+  return o && { sittings: o.sittings, stage: o.stage, form: f && f.stage, drawn: f && f.drawn, gas: f && f.gas, parts: f && f.mesh ? f.mesh.children.length : 0,
+    saved: JSON.parse(localStorage.getItem('oag.bigmind.v1')).voices.protector.spirit }; });
+const u1 = await prot();
+ok(u1 && u1.sittings === 1 && u1.stage === "gas" && u1.saved.sittings === 1 && u1.saved.stage === "gas", 'two W.A.V.E.s beside the Protector in one run count one sitting for its meeting spirit, still a gas: ' + JSON.stringify(u1));
+const spiritGets = [];
+page.on('request', (r) => { if (/\/cave\/spirits\//.test(r.url())) spiritGets.push(r.url().split('/').pop()); });
+const before = await page.evaluate(() => ({ waves: window.__oagBigMind.state.waves.length, charges: window.__oagBigMind.spirits.filter((o) => !o.meet).length }));
+await page.evaluate(() => { window.__oagBigMind.newRun(); window.__oagBigMind.state.speed = 3; });
+await page.click('[data-bm-wave]'); await page.click('[data-bm-youset]'); await page.click('[data-bm-wavenoplace]'); await page.click('[data-bm-waveblock]');
+await page.click('[data-bm-blockgo]'); await page.fill('[data-bm-yourange]', '6'); await page.click('[data-bm-youafter]');
+await waitStep('charge');
+await page.waitForFunction(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector')[0]; return o && o.g.userData.form.drawn === 'core'; }, null, { timeout: 5000 }).catch(() => {});
+await page.waitForTimeout(600);
+const u2 = await prot();
+ok(u2.sittings === 2 && u2.stage === 'core' && u2.form === 'core' && u2.saved.sittings === 2 && u2.saved.stage === 'core', 'a W.A.V.E. in the next run is its second sitting, and its stage comes from the count: the core: ' + JSON.stringify(u2));
+ok(u2.drawn === 'core' && u2.parts === 4 && spiritGets.join() === 'shellback-core.glb', 'it unfolds into the Shellback\'s core, the one file fetched when it was needed: ' + JSON.stringify({ parts: u2.parts, spiritGets }));
+ok(u2.gas > 0 && u2.gas < 1, 'partway through, the gas is drawing in and fading as the core grows: ' + u2.gas);
+await page.waitForTimeout(2600);
+await page.screenshot({ path: SHOTS + '/bm-3m-spirit-core.png' });
+ok((await prot()).gas === 0, 'then the core stands where the gas was');
+// One store (sic-one-store): the same spirit is kept in oag.spirits.v1 with its family, sittings and a lineage of the sittings,
+// and its stage is never stored there. The loadout holds three at most.
+const store1 = await page.evaluate(() => JSON.parse(localStorage.getItem('oag.spirits.v1')));
+const sp1 = store1 && store1.spirits.filter((x) => x.id === 'meet-protector')[0];
+ok(sp1 && sp1.family === 'protector' && sp1.sittings === 2 && sp1.lineage.length === 2 && sp1.born.where && !('stage' in sp1) && sp1.loadout === false, 'the meeting spirit is kept in oag.spirits.v1 with family, sittings and a lineage, and no stored stage: ' + JSON.stringify(sp1));
+const lo = await page.evaluate(() => { const S = window.__oagSpiritStore, r = [];
+  ['a', 'b', 'c'].forEach((k) => S.put({ id: 'x-' + k, name: k, family: 'fixer', sittings: 0 }));
+  r.push(S.setLoadout('meet-protector', true), S.setLoadout('x-a', true), S.setLoadout('x-b', true), S.setLoadout('x-c', true));
+  r.push(S.loadout().length, S.setLoadout('x-a', false), S.setLoadout('x-c', true), S.loadout().length, S.put({ id: 'meet-protector', sittings: 1 }).sittings);
+  ['x-a', 'x-b', 'x-c'].forEach((k) => S.remove(k)); S.setLoadout('meet-protector', false); return r; });
+ok(JSON.stringify(lo) === '[true,true,true,false,3,true,true,3,2]', 'three spirits at most walk in the loadout, a fourth is refused until one rests, and sittings never go down: ' + JSON.stringify(lo));
+// the checks below count this run's W.A.V.E.s and charges, so the extra W.A.V.E. and the charge its block left are taken back
+await page.evaluate((b) => { const B = window.__oagBigMind; B.state.waves.length = b.waves;
+  B.spirits.filter((o) => !o.meet).slice(b.charges).forEach((o) => { B.spirits.splice(B.spirits.indexOf(o), 1); o.g.parent.remove(o.g); if (o.light) o.light.parent.remove(o.light); }); }, before);
+await page.evaluate(() => { window.__oagBigMind.state.speed = 40; });
 await page.waitForFunction(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 1, null, { timeout: 4000 }).catch(() => {});
 ok(await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 1 && window.__oagBigMind.spirits.filter((o) => !o.meet)[0].name === 'A charge'), 'a W.A.V.E. left at a block keeps its charge walking with you');
 // the whole ladder, with Appreciate left for now, and the charge let stay
@@ -1342,9 +1381,24 @@ await page.evaluate(() => localStorage.clear());
   ok(await page.locator('[data-bm-feel]').count() === 6 && await page.locator('[data-bm-feel="none"]').textContent() === 'No word yet' && await page.locator('[data-bm-feelline]').count() === 1 && await page.locator('[data-bm-decline]').count() === 1,
     'five feelings with their elements, No word yet as an equal answer, your own words, and Not now');
   await page.click('[data-bm-feel="metal"]');
+  // The family cloud (sic-family-cloud): the spirit is of the Protector's family, born a gas, its motes streaming out of the
+  // daemon's body toward the spirit's place, then gathered into the family's shape.
+  const born = await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector')[0], f = o && o.g.userData.form;
+    return f && { family: f.family, stage: f.stage, motes: f.motes, from: !!f.from, born: f.born, orb: !!o.g.children.find((c) => c.isMesh && c.geometry && c.geometry.type === 'SphereGeometry') }; });
+  ok(born && born.family === 'protector' && born.stage === 'gas' && born.motes === 150 && !born.orb, 'the meeting spirit is built as the Protector family\'s gas, motes in place of the orb: ' + JSON.stringify(born));
+  ok(born && born.from && born.born < 1, 'on its birth the motes stream from the daemon\'s body');
+  await page.waitForTimeout(500);
+  const near = await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector')[0], f = o.g.userData.form, L = o.g.children[0].userData.layers[0];
+    o.g.updateMatrixWorld(true); const p = L.pts.geometry.attributes.position.array, v = new (window.THREE.Vector3)(p[0], p[1], p[2]); L.pts.localToWorld(v);
+    return { born: f.born, toDaemon: f.from ? v.distanceTo(f.from) : null, daemonToSpirit: f.from ? f.from.distanceTo(o.g.position) : null, toSpirit: v.distanceTo(o.g.position) }; });
+  ok(near.born > 0 && near.born < 1 && near.toSpirit > 1, 'partway through its birth the motes are out between the daemon and the spirit: ' + JSON.stringify(near));
+  await page.waitForTimeout(2200);
+  const after = await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector')[0], L = o.g.children[0].userData.layers[0], p = L.pts.geometry.attributes.position.array;
+    o.g.updateMatrixWorld(true); const v = new (window.THREE.Vector3)(p[0], p[1], p[2]); L.pts.localToWorld(v); return { born: o.g.userData.form.born, toSpirit: v.distanceTo(o.g.position) }; });
+  ok(after.born === 1 && after.toSpirit < 1, 'the motes have moved from the daemon into the spirit\'s cloud: ' + JSON.stringify({ near, after }));
   ok(await waitStep0('meet') && /A spirit comes out of you and walks at your side: Fear \(Metal\), from meeting the Protector\./.test(await page.textContent('[data-bm-modal]')), 'your answer spawns a spirit that walks with you');
   ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((x) => x.meet === 'protector'); return o.length === 1 && o[0].name === 'Fear' && o[0].element === 'metal' && !o[0].ally; }), 'it is the spirit from meeting the Protector, in its element\'s colour');
-  ok(JSON.stringify((await save()).voices.protector.spirit) === '{"name":"Fear","element":"metal"}', 'its name and element are kept with the voice, never as a trust move');
+  ok(JSON.stringify((await save()).voices.protector.spirit) === '{"name":"Fear","element":"metal","family":"protector","sittings":0,"stage":"gas"}', 'its name, element, family and stage are kept with the voice, never as a trust move');
   ok(!/You didn't come alone/.test(await page.textContent('[data-bm-modal]')), 'the voice does not count its own meeting spirit as company you brought');
   await page.click('[data-bm-reply="hear"]'); await page.click('[data-bm-ask="speak"]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="speak"]');
   await page.click('[data-bm-place="Chest"]'); await page.fill('[data-bm-range]', '7'); await page.click('[data-bm-charged]');
