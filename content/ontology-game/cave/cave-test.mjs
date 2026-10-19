@@ -95,6 +95,11 @@ const walkTo = async (selector) => {
   } finally { await page.keyboard.up('ArrowUp'); }
 };
 const sees = (sel) => page.locator(sel).isVisible();
+// A switch in the Menu (PR 5): open the Menu first when the switch is folded inside it, then tap it.
+async function menuTap(sel) {
+  if (!(await page.locator(sel).first().isVisible()) || (await page.locator('[data-oag-menu]:has(' + sel + ')').count() && await page.locator('[data-oag-menu]:has(' + sel + ')').first().isHidden())) await page.locator('[data-oag-menubtn]:visible').first().click();
+  await page.locator(sel).first().click();
+}
 
 // ---- the title screen (gd-title-as-game): the cave mouth in 3D, the walker in it, Begin, and the gear's settings ------
 await page.waitForFunction(() => window.__oagTitle && window.__oagTitle.walker(), null, { timeout: 60000 }).catch(() => {});
@@ -321,7 +326,7 @@ const bs = bsamples.map((x) => x.b), ks = bsamples.map((x) => x.k);
 ok(Math.max(...bs) - Math.min(...bs) > 0.2 && Math.max(...ks) - Math.min(...ks) > 0.004, `the cave breathes: the breath runs ${Math.min(...bs).toFixed(2)} to ${Math.max(...bs).toFixed(2)} and the walls ease ${Math.min(...ks).toFixed(3)} to ${Math.max(...ks).toFixed(3)}`);
 const sy = idleJ.map((x) => x.spineScale), shy = idleJ.map((x) => x.shoulderY);
 ok(Math.max(...sy) - Math.min(...sy) > 0.008 && Math.max(...shy) - Math.min(...shy) > 0.01 && idleJ.every((x) => x.g < 0.05), `standing, the avatar breathes: its chest swells and its shoulders lift with the cave's breath (chest ${(Math.max(...sy) - Math.min(...sy)).toFixed(3)}, shoulders ${(Math.max(...shy) - Math.min(...shy)).toFixed(3)})`);
-await page.locator('[data-cave-ringbtn]').click();
+await menuTap('[data-cave-ringbtn]');
 ok(await sees('[data-cave-ring]'), 'the optional breath ring can be turned on');
 const rb0 = (await breath()).b;
 const rbox = await page.locator('[data-cave-ring]').boundingBox();
@@ -331,13 +336,13 @@ const rb1 = (await breath()).b;
 await page.mouse.up(); await page.waitForTimeout(3600);
 const rb2 = (await breath()).b;
 ok(rb1 > 0.8 && rb2 < rb1 - 0.25, `the cave follows the ring: holding fills the breath (${rb0.toFixed(2)} to ${rb1.toFixed(2)}), letting go empties it (${rb2.toFixed(2)})`);
-await page.locator('[data-cave-calm]').click();
+await menuTap('[data-cave-calm]');
 await page.waitForTimeout(900);
 const calm = [];
 for (let i = 0; i < 5; i++) { calm.push(await breath()); await page.waitForTimeout(450); }
 ok(calm.every((x) => x.b === 0.5 && x.k === 1 && x.calm) && !calm[0].ring && !(await sees('[data-cave-ring]')), 'the calm button stills the breath and hides the ring');
-await page.locator('[data-cave-calm]').click();
-await page.locator('[data-cave-ringbtn]').click(); // ring off again
+await menuTap('[data-cave-calm]');
+await menuTap('[data-cave-ringbtn]'); // ring off again
 await page.screenshot({ path: SHOTS + '/cave-marker.png' });
 
 
@@ -571,11 +576,11 @@ ok((await page.locator('[data-cave-spiritbtn]').textContent()) === 'Spirits 1', 
 await page.waitForTimeout(800);
 ok(await C(() => { const g = window.__oagCave.spirits[0].g, a = window.__oagCave.avatar(); return g.visible && Math.hypot(g.position.x - a.x, g.position.z - a.z) < 6; }), 'the spirit floats by the figure');
 await page.screenshot({ path: SHOTS + '/cave-spirit.png' });
-await page.locator('[data-cave-spiritbtn]').click();
+await menuTap('[data-cave-spiritbtn]');
 await page.locator('[data-cave-spirit="0"]').click();
 ok(/Thank you for coming with me/.test(await page.locator('[data-cave-spirits]').textContent()) && await sees('[data-cave-spirit-home]'), 'tapping it thanks it, and offers to breathe it out or take it home again');
 await page.locator('[data-cave-spirit-out]').click();
-ok((await C(() => window.__oagCave.spirits.length)) === 0 && !(await page.locator('[data-cave-spiritbtn]').isVisible()), 'breathing it out lets it go');
+ok((await C(() => window.__oagCave.spirits.length)) === 0 && (await page.locator('[data-cave-spiritbtn]').evaluate((b) => b.style.display)) === 'none', 'breathing it out lets it go');
 // Sitting down where you are (13 October 2026): the WAVE room's steps run in place in the tunnel, as in the Big Mind cave, and
 // standing up leaves a spirit that carries its own light.
 ok(await sees('[data-cave-sitbtn]'), 'inside the cave, Sit down is always at hand');
@@ -616,7 +621,7 @@ await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 8
 const sat2 = await C(() => window.__oagCave.spirits.map((o) => o.name));
 ok(sat2.length === 1 && (await C(() => window.__oagCave.carried())) === 1, 'standing up partway leaves no spirit: one emerges only from the whole WAVE: ' + JSON.stringify(sat2));
 for (let i = 0; i < 1; i++) {
-  await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click();
+  await menuTap('[data-cave-spiritbtn]'); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click();
 }
 await page.waitForTimeout(1800);
 ok((await C(() => window.__oagCave.spirits.length)) === 0 && (await C(() => window.__oagCave.carried())) === 0, 'a spirit breathed out takes its light with it');
@@ -818,7 +823,7 @@ await page.waitForTimeout(800);
 const r0 = await room();
 ok(r0.scene.sit > 0.95 && Math.hypot(r0.scene.figure[0] - r0.scene.seat[0], r0.scene.figure[1] - r0.scene.seat[1]) < 0.05 && r0.scene.door < 0.05 && !r0.charge.visible && !r0.charge.known, 'the room: the figure sits on the seat facing a shut door, and nothing has come in yet');
 await page.screenshot({ path: SHOTS + '/room-welcome.png' });
-ok(await sees('[data-room-calm]'), 'the room has the Calm switch');
+ok(await page.locator('[data-oag-menu] [data-room-calm]').count() === 1 && await sees('[data-oag-menubtn]'), 'the room has the Calm switch, in its Menu');
 // round 1: it stays, and the 3-2-1 is aimed at what the player wants
 await roomIn(false);
 ok((await room()).charge.color === 0x8a8a92, 'a charge from the body map comes in grey');

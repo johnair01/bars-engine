@@ -838,7 +838,7 @@
     ".oagc button.bm-run[aria-pressed=true]{background:rgba(255,241,176,.35)}" +
     ".bm-hint{position:absolute;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));text-align:center;color:#e8e2c8;font-size:15px;z-index:2;pointer-events:none;text-shadow:0 1px 3px #000;padding:0 1rem}" +
     ".bm-npc{color:#cfe0ff;font-size:1.02rem}.bm-npc b{color:#9cc4ff}.bm-you{color:#fff1d0;text-align:right;font-style:normal}" +
-    ".bm-meters{position:absolute;top:12px;right:10px;left:84px;z-index:4;display:flex;flex-direction:column;gap:5px;pointer-events:none}" +
+    ".bm-meters{position:absolute;top:12px;right:10px;left:122px;z-index:4;display:flex;flex-direction:column;gap:5px;pointer-events:none}" +
     ".bm-meter{position:relative;display:flex;align-items:center;gap:.4rem;font-size:12px;color:#dfe6ff}.bm-meter>span:first-child{width:6.4em;flex:none;white-space:nowrap}" +
     ".bm-meter.you .bm-bar i{background:#c89cff}" +
     ".bm-breath{text-align:center;color:#fff1b0;font-size:1rem;margin:.5rem 0;min-height:1.4em}.oagc .bm-wave button:disabled{opacity:.45}" +
@@ -1065,7 +1065,7 @@
     var marks = el("div", { class: "bm-marks", "data-bm-marks": "", style: "display:none" });
     var meters = el("div", { class: "bm-meters" }, [meter, marks, meterYou]);
     var easedLine = el("div", { class: "bm-eased", "data-bm-eased": "" });
-    [stage, hint, ring, modal, selfBtn, meters, easedLine, fade].forEach(function (n) { wrap.appendChild(n); });
+    [stage, hint, ring, modal, meters, easedLine, fade].forEach(function (n) { wrap.appendChild(n); });
     document.body.appendChild(wrap);
     fade.style.opacity = 1; setTimeout(function () { fade.style.opacity = 0; }, 30);
 
@@ -1230,7 +1230,7 @@
         var k = { walk: 4, run: 9, back: -5 }[id]; if (k == null) return false; // a button's lesson: the light stays at the chest
         var p = at(route, clamp(st.s + k, 0, route.len)); v.set(p.x, floor(p) + 2.4, p.z); return true;
       },
-      anchor: function (id) { return { walk: stickPad, run: runBtn, self: selfBtn, back: stickPad, spirits: spiritBtn, trust: trustBtn }[id] || null; },
+      anchor: function (id) { var n = { walk: stickPad, run: runBtn, self: selfBtn, back: stickPad, spirits: spiritBtn, trust: trustBtn }[id] || null; return n && bmMenu ? bmMenu.at(n) : n; },
       home: function (v) { return avatar.userData.chest.getWorldPosition(v); },
     });
     function stickAt(e) {
@@ -1262,7 +1262,8 @@
     // ---- the modal ------------------------------------------------------------------------------
     function show(kids, tag) {
       if (st.trustNote && !/^(sit|wave|self|spirit|mouth|rite)/.test(tag || "")) kids = kids.slice(0, 1).concat(trustNoteEls(), kids.slice(1)); // what the voice saw, once
-      modal.innerHTML = ""; kids.forEach(function (k) { if (k) modal.appendChild(k); });
+      modal.innerHTML = ""; kids = kids.filter(Boolean);
+      var head = kids[0] && kids[0].tagName === "H2" ? kids.shift().textContent : null; K.sheet(modal, head, kids); // the input sheet, in cards (cave.js sheet)
       modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); modal.setAttribute("data-bm-step", tag || "");
       modal.scrollTop = 0; st.modal = true; st.held = false; stickUp(); ring.style.display = "none"; hint.textContent = "";
     }
@@ -1629,7 +1630,14 @@
     var SIT_WHERE = { 3: "You are sitting where you stopped, looking at it.", 2: "You are face to face with it.", 1: "You are sitting where it sat, and it sits where you were.", check: "You are face to face with it.", after: "You are back where you sat down.", paused: "You leaned back from it, still sitting." };
     var sitBtn = el("button", { class: "bm-sitbtn", "data-bm-sitbtn": "", text: "Sit down", onclick: function () { sitOffer(); } });
     var spiritBtn = el("button", { class: "bm-spiritbtn", "data-bm-spiritbtn": "", style: "display:none", onclick: function () { spiritList(); } });
-    wrap.insertBefore(sitBtn, fade); wrap.insertBefore(spiritBtn, fade);
+    wrap.insertBefore(sitBtn, fade);
+    // Self and Spirits live in the Menu (Wendell, 19 October 2026: "the buttons are taking up too much space on the screen");
+    // Sit down and Trust stay out, the moment's own actions, shown only when they can be done.
+    var bmMenu = K.menu(wrap, [
+      { btn: selfBtn, glyph: "◉", about: "Stop and be yourself again. The walk pauses, and nothing has to happen next." },
+      { btn: spiritBtn, glyph: "✦", about: "The spirits walking with you. Thank one, then breathe it out or take it home." },
+      { glyph: "◎", word: "The walk stick", about: "Hold it and push the way you want to go. Run goes faster." },
+      { glyph: "▮", word: "The bars at the top", about: "How charged the voice is (it), and you, once you give your own." }]);
     var spirits = [], SHOW_SPIRITS = K.SPIRITS_SHOWN;
     function colorOf(element) { return K.spiritHex(element); }
     function stash() { return { html: Array.prototype.slice.call(modal.childNodes), tag: modal.getAttribute("data-bm-step"), open: st.modal }; }
