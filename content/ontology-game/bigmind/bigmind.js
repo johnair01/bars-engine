@@ -15,6 +15,8 @@
   var K = window.__oagCave && window.__oagCave.kit;
   if (!K) { document.body.textContent = "The cave engine (cave.js) did not load."; return; }
   var el = K.el, clamp = K.clamp, at = K.at;
+  // a family spirit's stage from how many times it has been sat with (spirit-forms.js, board sic-unfold-by-sitting)
+  function stageOf(n) { var SF = K.spiritForms; return SF && SF.stageOf ? SF.stageOf(n) : "gas"; }
   var STORE = "oag.bigmind.v1";
 
   // ---- the words ----------------------------------------------------------------------------
@@ -1268,7 +1270,7 @@
     function felt(name, element, how) {
       st.felt = how;
       // It is of the voice's family and is born a gas, its motes streaming out of the voice's body (sic-family-cloud).
-      var o = { name: name, element: element, meet: V.id, family: V.id, stage: "gas", bornFrom: new THREE.Box3().setFromObject(voice).getCenter(new THREE.Vector3()) };
+      var o = { name: name, element: element, meet: V.id, family: V.id, stage: "gas", sittings: 0, bornFrom: new THREE.Box3().setFromObject(voice).getCenter(new THREE.Vector3()) };
       var me = side(st.s, st.lat || 0); addSpirit(o, new THREE.Vector3(me.x, floor(me) + 1.2, me.z));
       meetSave(o);
       arrive();
@@ -1277,7 +1279,7 @@
     function meetSave(o) {
       try {
         var s = readSave(), r = s.voices[o.meet] || (s.voices[o.meet] = { status: "waiting", kept: [], savedAt: stamp() });
-        r.spirit = { name: o.name, element: o.element || null }; if (o.family) { r.spirit.family = o.family; r.spirit.stage = o.stage || "gas"; } if (o.gone) r.spirit.gone = true; writeSave(s);
+        r.spirit = { name: o.name, element: o.element || null }; if (o.family) { r.spirit.family = o.family; r.spirit.sittings = o.sittings || 0; r.spirit.stage = stageOf(o.sittings); } if (o.gone) r.spirit.gone = true; writeSave(s);
       } catch (e) { /* this browser would not save */ }
     }
     function met(r) {
@@ -1554,6 +1556,7 @@
         reached: wv.reached, blocked: wv.blocked, exhale: wv.exhale || null, at: new Date().toISOString() });
       var i = wv.i, ask = wv.ask, bk = wv.back; wv = null;
       pend("can", "hold"); // a W.A.V.E. breathed through beside the voice is a can-you move, counted if it eases next
+      satWith(meetSpirit(V.id)); // and a sitting for the spirit born from meeting it, if it walks with the player
       if (bk) return bk();
       chargeAsk(i, ask); // the voice's poll comes back as after any answer; its number is the player's alone
     }
@@ -1715,21 +1718,37 @@
       }, function () {
         scene.remove(S.g); st.sit = null;
         var lighter = branch === "goes";
-        if (S.spirit) { S.spirit.hidden = false; if (S.element) S.spirit.element = S.element; S.spirit.lighter = lighter; S.spirit.g.userData.level = lighter ? 0.2 : 0.45; if (S.spirit.meet) meetSave(S.spirit); }
+        if (S.spirit) { S.spirit.hidden = false; if (S.element) S.spirit.element = S.element; S.spirit.lighter = lighter; S.spirit.g.userData.level = lighter ? 0.2 : 0.45; if (S.spirit.meet) meetSave(S.spirit); if (branch !== "stood") satWith(S.spirit); }
         else addSpirit({ name: nm, element: S.element, lighter: lighter }, from);
+        if (S.whom === "voice" && branch !== "stood") satWith(meetSpirit(V.id)); // a sitting with the voice is one for its spirit
         if (modal.getAttribute("data-bm-step") === "self") { paused = { then: S.back }; return; }
         st.modal = false; S.back();
       });
     }
-    // What a spirit keeps between visits: its name and element, lighter if breathed out, and its family and stage if it has one.
+    // What a spirit keeps between visits: its name and element, lighter if breathed out, and its family, how many times it has
+    // been sat with and the stage that count gives it, if it has a family.
     function kept(o) {
       var k = { name: o.name, element: o.element }; if (o.lighter) k.lighter = true;
-      if (o.family) { k.family = o.family; k.stage = o.stage || "gas"; }
+      if (o.family) { k.family = o.family; k.sittings = o.sittings || 0; k.stage = stageOf(k.sittings); }
       return k;
     }
+    // The unfolding (board sic-unfold-by-sitting): a spirit of a family counts one sitting a run, from a sitting with it, a
+    // sitting with the voice it was born from or a standing W.A.V.E. beside that voice, and a sitting that ends with no shift
+    // counts the same (time spent together). Its stage comes from the count alone (spirit-forms.js stageOf: a core at two, a
+    // hologram at four), and it unfolds where it walks when the count crosses one.
+    var satThisRun = {};
+    function satWith(o) {
+      if (!o || !o.family || o.leaving) return false;
+      var key = o.meet || o.name; if (satThisRun[key]) return false; satThisRun[key] = true;
+      var was = o.stage || "gas"; o.sittings = (o.sittings || 0) + 1; o.stage = stageOf(o.sittings);
+      if (o.stage !== was && o.g && o.g.userData.unfold) o.g.userData.unfold(o.stage, true);
+      if (o.meet) meetSave(o);
+      return o.stage !== was;
+    }
+    function meetSpirit(id) { return spirits.filter(function (o) { return o.meet === id && !o.leaving; })[0] || null; }
     function addSpirit(o, from) {
       var col = o.color != null ? o.color : colorOf(o.element);
-      var g = K.buildSpirit(THREE, o.name, col, o.family ? { family: o.family, from: o.bornFrom } : null); if (o.lighter) g.userData.level = 0.2; delete o.bornFrom;
+      var g = K.buildSpirit(THREE, o.name, col, o.family ? { family: o.family, from: o.bornFrom, stage: o.stage } : null); if (o.lighter) g.userData.level = 0.2; delete o.bornFrom;
       if (from) g.position.copy(from); else { var a = side(Math.max(0.5, st.s - 2.2), 0.9); g.position.set(a.x, floor(a) + 1.7, a.z); }
       // each spirit carries a small light of its own, as in the Cave of Lessons (Wendell, 2026-10-13: "The avaiable lighting
       // centers around the character and any spirits that are following them")
@@ -1796,7 +1815,7 @@
     PATH.forEach(function (id) {
       var r = save.voices[id]; if (!r) return;
       if (trustOf(r).ally && trusted(trustOf(r), id)) return allyJoins(id);
-      if (r.spirit && !r.spirit.gone) addSpirit({ name: r.spirit.name, element: r.spirit.element, meet: id, family: r.spirit.family || id, stage: r.spirit.stage || "gas" });
+      if (r.spirit && !r.spirit.gone) addSpirit({ name: r.spirit.name, element: r.spirit.element, meet: id, family: r.spirit.family || id, sittings: r.spirit.sittings || 0, stage: stageOf(r.spirit.sittings) });
     });
     if (fromRoom) { fromRoom.spirits.forEach(function (o) { addSpirit(kept(o)); }); fromRoom.spirits = []; } // the room's, once
 
@@ -1891,7 +1910,7 @@
       var mine = spirits.filter(function (o) { return o.meet === id; })[0];
       if (mine) { mine.ally = id; spiritsUi(); return; }
       var rec = readSave().voices[id], ms = rec && rec.spirit && !rec.spirit.gone ? rec.spirit : null;
-      if (ms) return addSpirit({ name: ms.name, element: ms.element, meet: id, ally: id, family: ms.family || id, stage: ms.stage || "gas" });
+      if (ms) return addSpirit({ name: ms.name, element: ms.element, meet: id, ally: id, family: ms.family || id, sittings: ms.sittings || 0, stage: stageOf(ms.sittings) });
       var vv = VOICES.filter(function (x) { return x.id === id; })[0], row0 = daemonRow(id);
       addSpirit({ name: (vv ? vv.title : id) + "'s spirit", color: row0 ? row0[3] : 0x9a9aa8, ally: id });
     }
@@ -2699,6 +2718,7 @@
     }
     var api = window.__oagBigMind; api.state = st; api.chamber = C; api.voiceId = V.id; api.route = route; api.S = { S_SELF: S_SELF, S_VOICE: S_VOICE, S_GATE: S_GATE };
     api.openAt = route.openAt; api.inCave = function (p) { var q = keepInCave(p.clone(), st.s + 2); return q.distanceTo(p) < 0.01; }; api.camera = camera; api.figures = figures; api.voice = voice; api.chamberLight = chamberLight;
+    api.newRun = function () { satThisRun = {}; }; // what a new visit does to the once-a-run count
     api.spirits = spirits; api.centre = function () { return cen; }; api.child = nextFig; api.mouth = { light: mouthLight, glow: mouthGlow, sound: function () { return snd; } }; api.walkInput = walkInput; api.keys = keys; api.stick = stick; api.sitting = function () { return st.sit; }; api.wave = function () { return wv; };
     api.trust = function () { return st.trust; }; api.pending = function () { return st.pending; }; api.stance = function () { return stanceOf(st.trust, V.id, st); };
     api.marks = function () { return { can: markOf(st.trust, V.id, "can"), will: markOf(st.trust, V.id, "will"), good: goodOf(st.trust), trusted: trusted(st.trust, V.id) }; };

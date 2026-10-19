@@ -1573,10 +1573,10 @@
   // board sic-family-cloud); form.from, a world point, streams its motes in from the daemon's body. Without a family it is the orb.
   function buildSpirit(THREE, name, hex, form) {
     var g = new THREE.Group(), SF = window.__oagSpiritForms, fam = form && form.family && SF ? SF.familyOf(form.family) : null;
-    var gas = fam ? SF.buildGas(THREE, fam, hex, { from: form.from }) : null;
+    var gas = fam ? (SF.buildForm || SF.buildGas)(THREE, fam, hex, { from: form.from, stage: form.stage }) : null;
     var orb = gas ? SF.tintProxy(gas) : new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }));
     var au = buildAura(THREE, 0.7), label = labelSprite(THREE, name, "#fff1d0", 2.4); label.position.y = 0.95;
-    g.add(gas || orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label, level: 0.45, form: gas ? gas.userData.form : null };
+    g.add(gas || orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label, level: 0.45, form: gas ? gas.userData.form : null, unfold: gas ? gas.userData.unfold : null };
     return g;
   }
   function followSpirits(THREE, list, spot, dt, now, still) {

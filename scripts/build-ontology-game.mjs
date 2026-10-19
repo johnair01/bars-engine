@@ -8,7 +8,7 @@
 // compile of about 270 KB on every load). This compiles once at build time with the
 // TypeScript compiler the repo already has, so a client's phone downloads React and the
 // compiled game only.
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import ts from 'typescript';
@@ -196,6 +196,10 @@ for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damag
 // The player's own figure: Average Dusk walking a CMU mocap clip (rig_mocap, bake_daemons.py --walker), worn over the avatar.
 mkdirSync(path.join(outDir, 'cave', 'player'), { recursive: true });
 copyFileSync(path.join(srcDir, 'cave', 'player', 'walker.glb'), path.join(outDir, 'cave', 'player', 'walker.glb'));
+// The spirits' core and hologram per family (cave/bake_spirits.py, from the spirit page's GLBs), fetched by spirit-forms.js
+// only when a spirit first unfolds into one (board sic-unfold-by-sitting).
+mkdirSync(path.join(outDir, 'cave', 'spirits'), { recursive: true });
+for (const f of readdirSync(path.join(srcDir, 'cave', 'spirits'))) if (f.endsWith('.glb')) copyFileSync(path.join(srcDir, 'cave', 'spirits', f), path.join(outDir, 'cave', 'spirits', f));
 mkdirSync(path.join(outDir, 'cave', 'rooms'), { recursive: true });
 copyFileSync(path.join(srcDir, 'cave', 'rooms', 'wave-room', 'room.glb'), path.join(outDir, 'cave', 'rooms', 'wave-room.glb'));
 writeFileSync(path.join(outDir, 'index.html'), html);
