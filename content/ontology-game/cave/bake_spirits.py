@@ -1,0 +1,156 @@
+"""The spirits' core and hologram for the phone: the spirit page's GLBs, stripped to what the cave draws.
+
+shellback.py (tools/blender-cloud/content/spirits) writes five GLBs per base and element: gas, core, hologram, creature and
+ascended. The cave draws the gas itself as motes (spirit-forms.js); this bakes the next two stages a spirit unfolds into as
+it is sat with (Six-faces-council council/callsheets/spirits-in-caves.md, board sic-unfold-by-sitting). Creature and ally
+come after.
+
+Every element of a base has the same shapes; only the colour differs, and the cave colours a spirit by its element's own
+hex (cave.js spiritHex). So one file per family and stage is kept, its meshes joined by material, each material keeping
+its tone (its colour against the element's light tint: 1 for the light, about a third for the dark), its opacity and its
+glow, and white for the eyes. Positions are quantised to 16 bits (KHR_mesh_quantization, dequantised by the node's
+scale and translation), normals and UVs are dropped (the cave draws spirits unlit), indices are 16 bits.
+
+Plain Python, no bpy. Run it on the spirit page's output folder (the shared folder's 3d-build/spirit-shellback-2026-10-14):
+
+  python3 content/ontology-game/cave/bake_spirits.py /mnt/project-files/3d-build/spirit-shellback-2026-10-14 \
+      content/ontology-game/cave/spirits
+
+bigmind-test checks the files against BUDGET_BYTES.
+"""
+import json, math, os, struct, sys
+
+BUDGET_BYTES = 64 * 1024
+STAGES = ["core", "hologram"]
+ELEMENT = "fire"  # the shapes are read from one element; the colours are the cave's
+# family file -> the base folder under the spirit page's output, its first base with GLBs. The Holdfast (the Controller's,
+# rounds 15 and 16) has no GLBs yet, so the Controller wears the Shellback's plain forms, as the Damaged Self and the
+# Emotional Body do (spirit-forms.js FAMILIES).
+SOURCES = {
+    "shellback": "glb",
+    "romp": "round11/fox/glb",
+    "tinker": "round13/raccoon-neutral/glb",
+    "hedge": "round18/pallas-photo-rebuild/pallas-neutral/glb",
+    "ballad": "round19/donkey-neutral/glb",
+}
+COMP = {5126: ("f", 4), 5125: ("I", 4), 5123: ("H", 2), 5121: ("B", 1)}
+WIDTH = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}
+
+
+def read_glb(path):
+    b = open(path, "rb").read()
+    jl = struct.unpack_from("<I", b, 12)[0]
+    j = json.loads(b[20:20 + jl])
+    return j, b[20 + jl + 8:]
+
+
+def accessor(j, bin_, i):
+    a = j["accessors"][i]; v = j["bufferViews"][a["bufferView"]]
+    f, size = COMP[a["componentType"]]; n = WIDTH[a["type"]]
+    stride = v.get("byteStride", size * n); off = v.get("byteOffset", 0) + a.get("byteOffset", 0)
+    return [struct.unpack_from("<" + f * n, bin_, off + q * stride) for q in range(a["count"])]
+
+
+def quat_apply(q, p):
+    x, y, z, w = q; px, py, pz = p
+    ix, iy, iz, iw = w * px + y * pz - z * py, w * py + z * px - x * pz, w * pz + x * py - y * px, -x * px - y * py - z * pz
+    return (ix * w + iw * -x + iy * -z - iz * -y, iy * w + iw * -y + iz * -x - ix * -z, iz * w + iw * -z + ix * -y - iy * -x)
+
+
+def world(n, p):
+    s = n.get("scale", (1, 1, 1)); p = (p[0] * s[0], p[1] * s[1], p[2] * s[2])
+    p = quat_apply(n.get("rotation", (0, 0, 0, 1)), p)
+    t = n.get("translation", (0, 0, 0))
+    return (p[0] + t[0], p[1] + t[1], p[2] + t[2])
+
+
+# shellback.py's scan materials (mat(..., scan=True)) lose their alpha in the glTF export, which writes 1; the page's own
+SCAN_ALPHA = {"holo": 0.32, "deep": 0.22}
+
+
+def lum(c): return (c[0] + c[1] + c[2]) / 3
+
+
+def look(m, light):
+    """A material's tone against the light tint, its opacity and glow; white stays white (the eyes, a glint)."""
+    pbr = m.get("pbrMetallicRoughness", {}); base = pbr.get("baseColorFactor")
+    emit = m.get("emissiveFactor"); strength = m.get("extensions", {}).get("KHR_materials_emissive_strength", {}).get("emissiveStrength", 1)
+    col = base[:3] if base else emit or (1, 1, 1)
+    alpha = base[3] if base else 1.0
+    white = min(col) > 0.95
+    alpha = SCAN_ALPHA.get(m.get("name", "").split(".")[0], alpha)
+    return {"tone": 1.0 if white else round(min(1.6, lum(col) / max(1e-6, lum(light))), 3), "white": white,
+            "opacity": round(alpha, 3), "glow": round(min(4.0, (lum(emit) if emit else 0) * strength), 3)}
+
+
+def bake(src, out):
+    j, bin_ = read_glb(src)
+    mats = j.get("materials", [])
+    light = None  # the element's light tint, as the page's core wears it
+    for m in mats:
+        if m.get("name", "").startswith("core") and m.get("pbrMetallicRoughness", {}).get("baseColorFactor"):
+            light = m["pbrMetallicRoughness"]["baseColorFactor"][:3]; break
+    light = light or (1, 1, 1)
+    groups = {}  # material index -> [positions, indices]
+    for n in j["nodes"]:
+        if "mesh" not in n: continue
+        for p in j["meshes"][n["mesh"]]["primitives"]:
+            g = groups.setdefault(p.get("material", -1), [[], []])
+            base = len(g[0])
+            g[0].extend(world(n, v) for v in accessor(j, bin_, p["attributes"]["POSITION"]))
+            g[1].extend(base + i[0] for i in accessor(j, bin_, p["indices"]))
+    allp = [v for g in groups.values() for v in g[0]]
+    lo = [min(v[k] for v in allp) for k in range(3)]; hi = [max(v[k] for v in allp) for k in range(3)]
+    mid = [(lo[k] + hi[k]) / 2 for k in range(3)]; half = [max(1e-6, (hi[k] - lo[k]) / 2) for k in range(3)]
+    blob, views, accs, prims, tris = bytearray(), [], [], [], 0
+    def put(data, target):
+        while len(blob) % 4: blob.append(0)
+        views.append({"buffer": 0, "byteOffset": len(blob), "byteLength": len(data), "target": target}); blob.extend(data)
+        return len(views) - 1
+    for mi, (pos, idx) in sorted(groups.items()):
+        assert len(pos) < 65536, src
+        # with the normals and UVs gone, corners that sat apart only for them are one vertex again
+        seen, keep, remap = {}, [], []
+        for v in pos:
+            k = tuple(max(-32767, min(32767, round((v[c] - mid[c]) / half[c] * 32767))) for c in range(3))
+            if k not in seen: seen[k] = len(keep); keep.append(k)
+            remap.append(seen[k])
+        idx = [remap[i] for i in idx]; pos = keep
+        q = bytearray()
+        for k in pos: q += struct.pack("<hhhh", *k, 0)
+        pv = put(q, 34962); views[pv]["byteStride"] = 8
+        iv = put(struct.pack("<%dH" % len(idx), *idx), 34963)
+        accs.append({"bufferView": pv, "componentType": 5122, "normalized": True, "count": len(pos), "type": "VEC3",
+                     "min": [-1, -1, -1], "max": [1, 1, 1]})
+        accs.append({"bufferView": iv, "componentType": 5123, "count": len(idx), "type": "SCALAR"})
+        m = mats[mi] if mi >= 0 else {}
+        prims.append({"attributes": {"POSITION": len(accs) - 2}, "indices": len(accs) - 1,
+                      "extras": dict(look(m, light), name=m.get("name", ""))})
+        tris += len(idx) // 3
+    gltf = {"asset": {"version": "2.0", "generator": "bars-engine bake_spirits.py"}, "extensionsUsed": ["KHR_mesh_quantization"],
+            "extensionsRequired": ["KHR_mesh_quantization"], "scene": 0, "scenes": [{"nodes": [0]}],
+            "nodes": [{"name": os.path.basename(out)[:-4], "mesh": 0, "scale": half, "translation": mid}],
+            "meshes": [{"primitives": prims}], "accessors": accs, "bufferViews": views, "buffers": [{"byteLength": len(blob)}]}
+    js = json.dumps(gltf, separators=(",", ":")).encode()
+    js += b" " * (-len(js) % 4); blob += b"\0" * (-len(blob) % 4)
+    data = struct.pack("<III", 0x46546C67, 2, 12 + 8 + len(js) + 8 + len(blob)) + struct.pack("<II", len(js), 0x4E4F534A) + js + \
+        struct.pack("<II", len(blob), 0x004E4942) + bytes(blob)
+    open(out, "wb").write(data)
+    return len(data), tris, os.path.getsize(src)
+
+
+def main(root, dest):
+    os.makedirs(dest, exist_ok=True)
+    report = {}
+    for fam, sub in SOURCES.items():
+        for st in STAGES:
+            src = os.path.join(root, sub, "%s-%s.glb" % (ELEMENT, st)); out = os.path.join(dest, "%s-%s.glb" % (fam, st))
+            size, tris, was = bake(src, out)
+            assert size <= BUDGET_BYTES, (out, size)
+            report["%s-%s" % (fam, st)] = {"bytes": size, "tris": tris, "source_bytes": was, "source": "%s/%s-%s.glb" % (sub, ELEMENT, st)}
+            print("%-16s %6d bytes (from %7d), %5d triangles" % (fam + "-" + st, size, was, tris))
+    json.dump(report, open(os.path.join(dest, "report.json"), "w"), indent=1)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2])
