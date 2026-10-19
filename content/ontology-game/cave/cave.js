@@ -2966,6 +2966,8 @@
         element: spirit ? spirit.element : null, unknown: false, allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, valid: false, goal: "", move: "", appreciate: "",
         t321: { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }, k: 0, come: 1, spirit: spirit || null, route: wk.route, s: wk.s };
       if (spirit) { var i = spirits.indexOf(spirit); if (i >= 0) spirits.splice(i, 1); scene.remove(spirit.g); dropLight(spirit.g); spiritsUi(); }
+      // The spirits you brought settle around you as you sit (board sic-first-cave-sitting): the ones walking in view, three at most.
+      S.around = spirits.filter(function (o) { return !o.hidden; }).slice(0, SPIRITS_SHOWN);
       state.held = false; sitBtn.style.display = "none";
       var g = new THREE.Group(), au = buildAura(THREE, 0.9);
       var m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 20, 14), new THREE.MeshStandardMaterial({ color: 0x8a8a96, emissive: 0x8a8a96, emissiveIntensity: 0.25, transparent: true, opacity: 0.85, roughness: 0.7 }));
@@ -2996,6 +2998,7 @@
       }
       var R = ROOM_STEPS[S.n], w = R.wave != null ? WAVE[R.wave] : [R.id, R.title, R.words];
       var kids = [P("Sitting with what's coming up · " + (S.n + 1) + " of " + ROOM_STEPS.length, { class: "oagc-note" }), P(w[2])];
+      if (S.n === 0 && S.around.length) kids.splice(1, 0, P(S.around.map(function (o) { return o.name; }).join(", ").replace(/, ([^,]*)$/, " and $1") + (S.around.length > 1 ? " settle" : " settles") + " around you.", { class: "oagc-note", "data-cave-sit-around": String(S.around.length) }));
       var go = btn("Go on", { "data-cave-sitnext": "" }, function () { if (R.id === "validate") S.valid = true; sitNext(); }), extra = [];
       if (R.id === "witness") {
         kids.push(P(S.place ? "Where: " + S.place + "." : "Where is it in your body?"));
@@ -3045,6 +3048,12 @@
         if (S.spirit) { o.name = S.spirit.name; o.element = S.element || S.spirit.element; o.hex = S.element ? null : S.spirit.hex; o.lighter = branch === "goes" || S.spirit.lighter; }
         o.hex = o.element ? null : sitHex(S);
         if (S.spirit && S.spirit.family) { o.family = S.spirit.family; o.id = S.spirit.id; o.sittings = S.spirit.sittings || 0; if (branch !== "stood") sittingCounted(o); }
+        // Each spirit that sat around you counts the sitting too, once a run, and unfolds where it is if the count crosses a stage.
+        if (branch !== "stood") S.around.forEach(function (x) {
+          if (!x.family || spirits.indexOf(x) < 0) return;
+          var was = x.stage; sittingCounted(x);
+          if (x.stage !== was && x.g.userData.unfold) x.g.userData.unfold(x.stage, true);
+        });
         if (branch !== "stood" || S.spirit) addSpirit(o, from);
         unstashPage(S.back);
       });
@@ -3521,7 +3530,12 @@
           stCam = stageCam(stg.cam, sa, sd, h, t321Of(wk));
         }
         if (spirits.length) { // the spirits walk behind the figure, on the path it came along
+          var seated = sit && sit.route === route;
           followSpirits(THREE, spirits, function (j) {
+            if (seated) { // sitting, they settle round the figure: one at each side, one behind
+              var sq = at(route, Math.max(0, wk.s + (j === 2 ? -1.3 : 0.5))), e = j === 0 ? 1.4 : j === 1 ? -1.4 : 0;
+              return { x: sq.x - sq.fz * e, y: sq.y - h * 0.92 + 1.0, z: sq.z + sq.fx * e };
+            }
             var sp = at(route, Math.max(0, wk.s - dir * (2.2 + 1.6 * j))), d = (j === 0 ? 0.9 : j === 1 ? -1.1 : 0.2) + lat * 0.6;
             return { x: sp.x - sp.fz * d, y: sp.y - h * 0.92 + 1.7, z: sp.z + sp.fx * d };
           }, dt, nowMs, state.calm);
@@ -3690,7 +3704,8 @@
     api.stick = function (x, z) { stick.x = x; stick.z = z; };
     api.doors = function () { var r = state.walk && state.walk.route; return r && r.doorMeshes ? r.doorMeshes.map(function (g) { return { w: g.userData.w, h: g.userData.h }; }) : []; };
     api.carryLight = carryLight;
-    api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k } : null; };
+    api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k,
+      around: sit.around.map(function (o) { return { name: o.name, d: Math.hypot(o.g.position.x - avatar.position.x, o.g.position.z - avatar.position.z), y: o.g.position.y - avatar.position.y }; }) } : null; };
     api.carried = function () { return carried.length; };
     api.look = function () {
       return { idx: lk.idx, light: lk.light.getHex(), fog: lk.fog.getHex(), fogK: lk.fogK, open: openCur.slice(), revealed: revealed, bg: scene.background.getHex(), density: scene.fog.density, lamp: lamp.intensity, reach: lamp.distance };
