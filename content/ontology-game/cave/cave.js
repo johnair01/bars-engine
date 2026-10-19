@@ -1097,7 +1097,7 @@
     // footfalls: step n lands at n / STEPS_PER_S seconds into the stretch
     var idx = Math.floor(clk * STEPS_PER_S + 1e-9);
     if (idx > d.stepIdx) d.stepIdx = idx;
-    if (d.walker) poseWalker(d, clk, g, b);
+    if (d.walker) poseWalker(d, dt, g, b);
   }
   // Bytes of geometry a group holds, counted once per geometry (the page test holds the avatar to about 50 KB). The worn
   // walker is a downloaded body held to bake_daemons.py's phone budget instead, so it is left out here.
@@ -1316,12 +1316,12 @@
     function keysOf(I) {
       if (!I) return null;
       var fr = view(I.frames, Uint16Array), va = view(I.values, Int16Array), f0 = 0, v0 = 0;
-      return { fps: I.fps, length: I.length, channels: I.channels.map(function (ch) {
+      return { fps: I.fps, length: I.length, travel: I.travel, channels: I.channels.map(function (ch) {
         var w = ch[1] === "r" ? 4 : 3, k = ch[2], o = { joint: ch[0], path: ch[1], frames: [], values: [] };
         for (var q = 0; q < k; q++) { o.frames.push(fr[f0 + q]); var x = []; for (var c = 0; c < w; c++) x.push(va[v0 + q * w + c] / 32767); o.values.push(x); }
         f0 += k; v0 += k * w; return o; }) };
     }
-    return { geo: geo, band: band, joints: rig.joints, honored: rig.honored, charged: rig.charged, integrate: keysOf(rig.integrate), walk: keysOf(rig.walk) };
+    return { geo: geo, band: band, joints: rig.joints, honored: rig.honored, charged: rig.charged, integrate: keysOf(rig.integrate), walk: keysOf(rig.walk), run: keysOf(rig.run) };
   }
   function bodyOf(THREE, id) {
     if (!bodies[id]) {
@@ -1513,8 +1513,11 @@
   // used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217."
   // It is worn over the jointed stand-in once it loads: the stand-in's parts hide but its joints keep moving, so the gait
   // checks, the footfalls and anything hung on the avatar still work, and with no network the stand-in simply stays.
-  // The clip turns once every two steps of the game's walk clock, blended in and out with the walk; standing, the figure
-  // holds the clip's passing pose (legs together, arms at its sides) and breathes.
+  // Wendell, 18 October 2026: "the figure should move to a standing position when they stop running and we need a running
+  // animation". The run is CMU subject 35, trial 18 (a jog), retargeted the same way as action MocapRun. Walk and run are
+  // blended by how fast the figure really goes, and the clips turn at the rate that keeps the feet on the ground (each
+  // clip's travel a loop, in the figure's metres, rides in the baked file). Stopped, the figure eases to its rest pose,
+  // standing upright with its arms at its sides, and breathes.
   var walkerBody = null;
   function walkerOf(THREE) {
     if (!walkerBody) {
@@ -1552,29 +1555,51 @@
       m.frustumCulled = false; m.scale.setScalar(DESIGN_H / BODY_FRAME_H); m.userData.walker = true;
       d.body.traverse(function (o) { if (o.isMesh) o.visible = false; });
       d.body.add(m);
-      var W = body.walk, chans = W.channels.map(function (ch) { return { ch: ch, bone: bones[ch.joint], idle: ch.path === "r" ? new THREE.Quaternion() : new THREE.Vector3() }; });
-      // the passing pose: the frame where both thighs hang nearest their rest
-      var legs = chans.filter(function (c) { return c.ch.path === "r" && /^thigh\.[LR]$/.test(J[c.ch.joint][0]); });
-      var best = 0, bestD = Infinity, qa = new THREE.Quaternion(), qr = new THREE.Quaternion();
-      for (var f = 0; f < W.length; f++) {
-        var dd = 0; legs.forEach(function (c) { dd += keyAt(c.ch, f, qa).angleTo(qr.fromArray(J[c.ch.joint][3])); });
-        if (dd < bestD) { bestD = dd; best = f; }
+      // standing is the rest pose: upright, legs together, arms at the sides
+      var W = body.walk, Rn = body.run, chans = W.channels.map(function (ch) {
+        var r = J[ch.joint], run = Rn && Rn.channels.filter(function (k) { return k.joint === ch.joint && k.path === ch.path; })[0];
+        return { ch: ch, run: run || null, bone: bones[ch.joint], idle: ch.path === "r" ? new THREE.Quaternion().fromArray(r[3]) : new THREE.Vector3().fromArray(r[2]) };
+      });
+      // the run starts its loop at another point of the stride: the run frame whose legs match the walk's first frame, so
+      // the two blend in step
+      var legs = chans.filter(function (c) { return c.run && c.ch.path === "r" && /^(thigh|shin)\.[LR]$/.test(J[c.ch.joint][0]); });
+      var off = 0, bestD = Infinity, qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
+      for (var f = 0; Rn && f < Rn.length; f++) {
+        var dd = 0; legs.forEach(function (c) { dd += keyAt(c.run, f, qa).angleTo(keyAt(c.ch, 0, qb)); });
+        if (dd < bestD) { bestD = dd; off = f; }
       }
-      chans.forEach(function (c) { keyAt(c.ch, best, c.idle); });
       var ci = J.findIndex(function (r) { return r[0] === "spine.003"; }), chest = chans.some(function (c) { return c.ch.joint === ci && c.ch.path === "r"; }) ? bones[ci] : null;
-      d.walker = { mesh: m, mat: mat, bones: bones, walk: W, chans: chans, idleFrame: best, chest: chest,
-        tq: new THREE.Quaternion(), tv: new THREE.Vector3(), ax: new THREE.Vector3(1, 0, 0), q1: new THREE.Quaternion() };
+      d.walker = { mesh: m, mat: mat, bones: bones, walk: W, run: Rn || null, runOff: off, chans: chans, idleFrame: 0, chest: chest, ph: 0, r: 0, v: 0, at: null, f: 0,
+        tq: new THREE.Quaternion(), tq2: new THREE.Quaternion(), tv: new THREE.Vector3(), tv2: new THREE.Vector3(), ax: new THREE.Vector3(1, 0, 0), q1: new THREE.Quaternion(), ws: new THREE.Vector3() };
     });
   }
-  // One frame of the walker: the clip at the walk clock's phase, blended from the passing pose by the walk's weight g,
-  // with the stand-in's opacity and glow, and its breath when standing.
-  function poseWalker(d, clk, g, b) {
-    var w = d.walker, W = w.walk, f = ((clk * STEPS_PER_S / 2) % 1 + 1) % 1 * W.length;
+  // One frame of the walker. Its speed over the ground (measured from where the figure was) picks the blend of walk and run
+  // and the rate the shared stride phase turns at; the stride is blended from the rest pose by the walk's weight g, with
+  // the stand-in's opacity and glow, and its breath when standing.
+  function poseWalker(d, dt, g, b) {
+    var w = d.walker, W = w.walk, Rn = w.run, p = w.mesh.parent ? w.mesh.getWorldPosition(w.tv2) : null;
+    var v = 0;
+    if (p && w.at && dt > 0) v = Math.min(30, Math.hypot(p.x - w.at.x, p.z - w.at.z) / dt);
+    if (p) w.at = (w.at || p.clone()).copy(p);
+    w.v += (v - w.v) * Math.min(1, dt * 8);
+    var ws = w.mesh.getWorldScale(w.ws).x || 1, tW = (W.travel || 1.45) * ws, tR = Rn ? (Rn.travel || 2.46) * ws : tW;
+    // natural speeds, world units a second: the walk about 2.7 in the cave, the run about 6.4
+    var vW = tW / (W.length / 24), vR = Rn ? tR / (Rn.length / 24) : vW;
+    var rt = Rn ? Math.max(0, Math.min(1, (w.v - 1.2 * vW) / Math.max(0.1, 0.8 * vR - 1.2 * vW))) : 0;
+    w.r += (rt - w.r) * Math.min(1, dt * 4);
+    var r = w.r;
+    if (g > 0.01) w.ph = (w.ph + dt * Math.max(w.v, 0.6 * vW) / (tW + (tR - tW) * r)) % 1;
+    var f = w.ph * W.length, fr = Rn ? ((w.ph * Rn.length + w.runOff) % Rn.length) : 0;
     w.f = f;
     for (var i = 0; i < w.chans.length; i++) {
       var c = w.chans[i];
-      if (c.ch.path === "r") c.bone.quaternion.copy(c.idle).slerp(keyAt(c.ch, f, w.tq), g);
-      else c.bone.position.copy(c.idle).lerp(keyAt(c.ch, f, w.tv), g);
+      if (c.ch.path === "r") {
+        keyAt(c.ch, f, w.tq); if (c.run && r > 0) w.tq.slerp(keyAt(c.run, fr, w.tq2), r);
+        c.bone.quaternion.copy(c.idle).slerp(w.tq, g);
+      } else {
+        keyAt(c.ch, f, w.tv); if (c.run && r > 0) w.tv.lerp(keyAt(c.run, fr, w.tv2), r);
+        c.bone.position.copy(c.idle).lerp(w.tv, g);
+      }
     }
     if (w.chest) w.chest.quaternion.multiply(w.q1.setFromAxisAngle(w.ax, -0.04 * (b - 0.5) * (1 - g)));
     w.mat.opacity = d.mat.opacity; w.mat.emissiveIntensity = d.mat.emissiveIntensity * 0.6;
@@ -4343,7 +4368,7 @@
       var w = avatar && avatar.userData.walker, shown = 0;
       if (!w) return { worn: false };
       avatar.userData.body.traverse(function (o) { if (o.isMesh && o.visible && !o.userData.walker) shown++; });
-      return { worn: true, frame: w.f, length: w.walk.length, idleFrame: w.idleFrame, joints: w.bones.length, standInShown: shown, opacity: w.mat.opacity };
+      return { worn: true, frame: w.f, length: w.walk.length, run: w.r, speed: w.v, runLength: w.run ? w.run.length : 0, idleFrame: w.idleFrame, joints: w.bones.length, standInShown: shown, opacity: w.mat.opacity };
     };
     api.gait = function () {
       var wk = state.walk, d = avatar.userData;
