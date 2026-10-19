@@ -48,6 +48,8 @@ let passes = 0, fails = 0;
 const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (c) passes++; else { fails++; process.exitCode = 1; } };
 const page = await ctx.newPage();
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+const dialogs = []; // gd-web-bits: no browser alert or confirm box anywhere
+page.on('dialog', (d) => { dialogs.push(d.type() + ': ' + d.message()); d.dismiss(); });
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 const B = 'http://localhost:4569';
 const WAVE = ['welcome', 'acknowledge', 'allow', 'accept', 'appreciate', 'validate', 'exhale'];
@@ -97,6 +99,28 @@ const walkTo = async (selector) => {
   } finally { await page.keyboard.up('ArrowUp'); }
 };
 const sees = (sel) => page.locator(sel).isVisible();
+// A switch in the Menu (PR 5): open the Menu first when the switch is folded inside it, then tap it.
+async function menuTap(sel) {
+  if (!(await page.locator(sel).first().isVisible()) || (await page.locator('[data-oag-menu]:has(' + sel + ')').count() && await page.locator('[data-oag-menu]:has(' + sel + ')').first().isHidden())) await page.locator('[data-oag-menubtn]:visible').first().click();
+  await page.locator(sel).first().click();
+}
+
+// ---- the title screen (gd-title-as-game): the cave mouth in 3D, the walker in it, Begin, and the gear's settings ------
+await page.waitForFunction(() => window.__oagTitle && window.__oagTitle.walker(), null, { timeout: 60000 }).catch(() => {});
+ok(await page.evaluate(() => window.__oagTitle.live() && window.__oagTitle.walker()), 'the title draws the cave mouth with the walker standing in it');
+ok(await page.locator('[data-title-continue]').count() === 0 && (await page.locator('[data-title-begin]').textContent()) === 'Begin', 'a new player sees Begin and no Continue');
+await page.locator('[data-title-settings]').click();
+ok(await sees('[data-title-settings-panel]'), 'the gear opens the settings');
+await page.locator('[data-setting="sound"]').click();
+await page.evaluate(() => localStorage.setItem('oag.tutorial.v1', '["walk"]'));
+await page.locator('[data-setting="replay"]').click();
+const set1 = await page.evaluate(() => ({ s: JSON.parse(localStorage.getItem('oag.settings.v1')), t: localStorage.getItem('oag.tutorial.v1') }));
+ok(set1.s.sound === false && set1.t === null, 'sound off is kept, and the walkthrough is cleared to show again ' + JSON.stringify(set1.s));
+await page.locator('[data-setting="sound"]').click(); await page.locator('[data-setting="close"]').click();
+ok(!(await sees('[data-title-settings-panel]')), 'Done closes the settings');
+// The WAVE room's lessons are learned here, so the rooms below open as a returning player's do; the Arrival is checked at the end.
+// The cave's own lessons (a glowing mark, a word stone) are learned too; they are checked after the Arrival.
+await page.evaluate(() => localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors","mark","stone"]'));
 
 // ---- the doorway: the heart, tapped on the real figure. Tension, Anger. ------------------------
 await page.locator('[data-cave-dive]').click();
@@ -273,7 +297,12 @@ ok(!(await free()).stick, 'a tap on Stop here opens the marker\'s page, which hi
 const md1 = await C(() => window.__oagCave.modal()), pn1 = await C(() => window.__oagCave.pane());
 ok(md1.open && md1.buttons.includes('Go on') && md1.buttons.includes("This step won't go further") && md1.text.includes(PROMPT.welcome), `stopping grows the pane into a modal with every choice of the stop (${md1.buttons.join(', ')})`);
 ok(!pn1.shown, 'while the modal is open the small pane is put away');
-ok(md1.rect.y >= 50 && md1.rect.y + md1.rect.h < 844 * 0.65, `the modal sits high, so the figure and the way ahead stay in sight below it (${Math.round(md1.rect.y)} to ${Math.round(md1.rect.y + md1.rect.h)} px)`);
+{ // PR 5 (Wendell, 19 October 2026): the page is a solid sheet in the bottom half, and the figure stands in sight above it
+  await page.waitForTimeout(450);
+  md1.rect = (await C(() => window.__oagCave.modal())).rect;
+  const fs = await C(() => { const a = window.__oagCave.avatar(); return window.__oagCave.floorScreen(a.x, a.z); });
+  ok(md1.rect.y >= 844 * 0.5 - 1 && md1.rect.y + md1.rect.h <= 845 && !fs.behind && fs.y > 40 && fs.y < md1.rect.y, `the page is a sheet in the bottom half (${Math.round(md1.rect.y)} to ${Math.round(md1.rect.y + md1.rect.h)} px) and the figure stands above it (feet at ${Math.round(fs.y)} px)`);
+}
 ok(await sees('[data-cave-shut]'), 'the marker says the way ahead opens when you choose');
 const lkA = await C(() => window.__oagCave.look());
 await page.waitForTimeout(2500);
@@ -307,7 +336,7 @@ const bs = bsamples.map((x) => x.b), ks = bsamples.map((x) => x.k);
 ok(Math.max(...bs) - Math.min(...bs) > 0.2 && Math.max(...ks) - Math.min(...ks) > 0.004, `the cave breathes: the breath runs ${Math.min(...bs).toFixed(2)} to ${Math.max(...bs).toFixed(2)} and the walls ease ${Math.min(...ks).toFixed(3)} to ${Math.max(...ks).toFixed(3)}`);
 const sy = idleJ.map((x) => x.spineScale), shy = idleJ.map((x) => x.shoulderY);
 ok(Math.max(...sy) - Math.min(...sy) > 0.008 && Math.max(...shy) - Math.min(...shy) > 0.01 && idleJ.every((x) => x.g < 0.05), `standing, the avatar breathes: its chest swells and its shoulders lift with the cave's breath (chest ${(Math.max(...sy) - Math.min(...sy)).toFixed(3)}, shoulders ${(Math.max(...shy) - Math.min(...shy)).toFixed(3)})`);
-await page.locator('[data-cave-ringbtn]').click();
+await menuTap('[data-cave-ringbtn]');
 ok(await sees('[data-cave-ring]'), 'the optional breath ring can be turned on');
 const rb0 = (await breath()).b;
 const rbox = await page.locator('[data-cave-ring]').boundingBox();
@@ -317,13 +346,13 @@ const rb1 = (await breath()).b;
 await page.mouse.up(); await page.waitForTimeout(3600);
 const rb2 = (await breath()).b;
 ok(rb1 > 0.8 && rb2 < rb1 - 0.25, `the cave follows the ring: holding fills the breath (${rb0.toFixed(2)} to ${rb1.toFixed(2)}), letting go empties it (${rb2.toFixed(2)})`);
-await page.locator('[data-cave-calm]').click();
+await menuTap('[data-cave-calm]');
 await page.waitForTimeout(900);
 const calm = [];
 for (let i = 0; i < 5; i++) { calm.push(await breath()); await page.waitForTimeout(450); }
 ok(calm.every((x) => x.b === 0.5 && x.k === 1 && x.calm) && !calm[0].ring && !(await sees('[data-cave-ring]')), 'the calm button stills the breath and hides the ring');
-await page.locator('[data-cave-calm]').click();
-await page.locator('[data-cave-ringbtn]').click(); // ring off again
+await menuTap('[data-cave-calm]');
+await menuTap('[data-cave-ringbtn]'); // ring off again
 await page.screenshot({ path: SHOTS + '/cave-marker.png' });
 
 
@@ -663,11 +692,11 @@ ok((await page.locator('[data-cave-spiritbtn]').textContent()) === 'Spirits 1', 
 await page.waitForTimeout(800);
 ok(await C(() => { const g = window.__oagCave.spirits[0].g, a = window.__oagCave.avatar(); return g.visible && Math.hypot(g.position.x - a.x, g.position.z - a.z) < 6; }), 'the spirit floats by the figure');
 await page.screenshot({ path: SHOTS + '/cave-spirit.png' });
-await page.locator('[data-cave-spiritbtn]').click();
+await menuTap('[data-cave-spiritbtn]');
 await page.locator('[data-cave-spirit="0"]').click();
 ok(/Thank you for coming with me/.test(await page.locator('[data-cave-spirits]').textContent()) && await sees('[data-cave-spirit-home]'), 'tapping it thanks it, and offers to breathe it out or take it home again');
 await page.locator('[data-cave-spirit-out]').click();
-ok((await C(() => window.__oagCave.spirits.length)) === 0 && !(await page.locator('[data-cave-spiritbtn]').isVisible()), 'breathing it out lets it go');
+ok((await C(() => window.__oagCave.spirits.length)) === 0 && (await page.locator('[data-cave-spiritbtn]').evaluate((b) => b.style.display)) === 'none', 'breathing it out lets it go');
 // Sitting down where you are (13 October 2026): the WAVE room's steps run in place in the tunnel, as in the Big Mind cave, and
 // standing up leaves a spirit that carries its own light.
 ok(await sees('[data-cave-sitbtn]'), 'inside the cave, Sit down is always at hand');
@@ -708,7 +737,7 @@ await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 8
 const sat2 = await C(() => window.__oagCave.spirits.map((o) => o.name));
 ok(sat2.length === 1 && (await C(() => window.__oagCave.carried())) === 1, 'standing up partway leaves no spirit: one emerges only from the whole WAVE: ' + JSON.stringify(sat2));
 for (let i = 0; i < 1; i++) {
-  await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click();
+  await menuTap('[data-cave-spiritbtn]'); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click();
 }
 // The let-go tween runs on frames, so under a slow renderer it is waited for, not timed.
 await page.waitForFunction(() => window.__oagCave.spirits.length === 0 && window.__oagCave.carried() === 0, null, { timeout: 10000 }).catch(() => {});
@@ -801,6 +830,16 @@ let glow9 = null;
 for (const round of [1, 2]) {
   ok(await sees('[data-cave-321-step="before"]') || round === 2, '3-2-1 opens with a charge reading before');
   if (round === 1) {
+    // gd-web-bits: the slider is a drawn dial. A tap at the top of its ring reads 5; a drag down its right side climbs toward 10.
+    const ring = await page.locator('[data-cave-321-charge="before"]').locator('xpath=..').locator('svg').boundingBox();
+    const at = (f) => { const a = Math.PI * 0.75 + Math.PI * 1.5 * f; return [ring.x + ring.width * (70 + 52 * Math.cos(a)) / 140, ring.y + ring.height * (70 + 52 * Math.sin(a)) / 128]; };
+    await page.mouse.click(...at(0.5));
+    ok((await page.locator('[data-cave-321-read="before"]').textContent()) === '5 of 10' && (await page.inputValue('[data-cave-321-charge="before"]')) === '5', 'a tap at the top of the charge dial reads 5 of 10');
+    await page.mouse.move(...at(0.5)); await page.mouse.down(); await page.mouse.move(...at(0.75), { steps: 4 }); await page.mouse.move(...at(0.8), { steps: 2 }); await page.mouse.up();
+    ok((await page.inputValue('[data-cave-321-charge="before"]')) === '8', 'dragging round the dial sets the charge (8)');
+    await page.locator('[data-cave-321-charge="before"]').focus(); await page.keyboard.press('ArrowRight');
+    ok((await page.inputValue('[data-cave-321-charge="before"]')) === '9' && (await page.locator('[data-cave-321-read="before"]').textContent()) === '9 of 10', 'the arrow keys still move it, and the dial follows');
+    await page.screenshot({ path: SHOTS + '/cave-charge-dial.png' });
     await charge('before', 9); ok((await page.locator('[data-cave-321-read="before"]').textContent()) === '9 of 10', 'the before reading follows the slider');
     ok(await sees('[data-cave-allow-slider="grow"]') && await sees('[data-cave-allow-slider="bright"]'), 'at the daemon, Allow\'s two sliders: how large it gets and how bright it can glow');
     await page.locator('[data-cave-allow-slider="grow"]').evaluate((e) => { e.value = 10; e.dispatchEvent(new Event('input', { bubbles: true })); });
@@ -900,6 +939,99 @@ await page.locator('[data-cave-marker="allow"]').waitFor();
 await page.waitForTimeout(700);
 ok(Math.abs((await avatar()).s - sAllow) < 1e-6 && (await state('JSON.stringify(s.sens[0].skipped)')) === '["allow"]', 'Skip returns to the marker it left from, and the skip is kept on the scan');
 
+const MK4 = 'allow';
+// ---- trust kept across visits and the falls (sic-first-cave-sitting, 4e) -----------------------------------------------
+// A daemon met twice, in two side passages from the same marker. The first visit: it refuses, the player waits and then pushes
+// past (a fall), owns it, promises to come back to their own place and to ask again another day, and leaves from its place by
+// a skip (a fall). The second visit, after trustRevisit (a new visit that has only what the device kept): it remembers, the
+// visit promise is kept, the player owns the other fall, promises again, closes the page in its place (a fall) and promises a
+// third time, which releasing keeps.
+const T4 = (id) => C((i) => window.__oagCave.trust(i), id);
+const stored4 = () => C(() => window.__oagCave.trustStored());
+const kinds4 = (a) => a.map((b) => b.dim + ':' + b.kind).join();
+const readRound4 = async (first, before, after) => {
+  if (first) { await page.locator('[data-cave-321]').click(); await charge('before', before); await page.locator('[data-cave-321-start]').click(); }
+  else await page.locator('[data-cave-satisfied="not-yet"]').click();
+  await say('it', 'it is a wall'); await page.locator('[data-cave-321-next]').click();
+  await say('you', 'what do you want?'); await say('you', 'I want you safe'); await page.locator('[data-cave-321-next]').click();
+  await say('i', 'I am the part that guards'); await page.locator('[data-cave-321-next]').click();
+  await charge('after', after); await page.locator('[data-cave-321-after]').click();
+};
+const toPassage4 = async () => {
+  await page.locator('[data-cave-block]').click();
+  await page.locator('[data-cave-place="walk"]').waitFor();
+  await C(() => { window.__oagCave.state.walk.blk.gate = ['magenta', 'red', 'amber', 'orange', 'green', 'teal']; }); // the six branches are walked elsewhere
+  for (let i = 0; i < 6; i++) { await walkTo('[data-cave-stone-says]'); await page.locator('[data-cave-next]').click(); } // each stone's page, its branch counted as walked
+  await walkTo('[data-cave-place="mouth"]'); await page.locator('[data-cave-next]').click();
+  await walkTo('[data-cave-place="pool"]'); await page.locator('[data-cave-next]').click();
+  await walkTo('[data-cave-place="passage"]');
+  await page.locator('[data-cave-choice="fixer"]').click(); await page.locator('[data-cave-ap-skipall]').click();
+};
+await C(() => window.__oagCave.trustClear());
+await toPassage4();
+ok(await page.locator('[data-cave-returning]').count() === 0, 'a daemon never met before does not say it remembers');
+await page.locator('[data-cave-bm-speak="not-now"]').click();
+ok(await sees('[data-cave-met="declined"]') && await sees('[data-cave-honour]') && await sees('[data-cave-push]') && /sit with it/.test(await page.locator('[data-cave-doubt="can"]').textContent()), 'a refusal says what it has not seen yet, and the player can wait with it or ask again now');
+await page.locator('[data-cave-honour]').click();
+ok((await T4('fixer')).pending.includes('good:honour') && await page.locator('[data-cave-honour]').isDisabled() && await sees('[data-cave-honoured]'), 'waiting with a refusal is a move that waits for the next reading');
+await page.locator('[data-cave-push]').click();
+const pu = await T4('fixer');
+ok(pu.good === 'broken' && pu.stance === 'hurt' && !pu.pending.includes('good:honour') && /broke/.test(await page.locator('[data-cave-pushed]').textContent()) && await sees('[data-cave-bm-speak="yes"]'), `asking again at once is a push: its read of you breaks, it turns hurt, it speaks in its words and asks again (${pu.good}, ${pu.stance})`);
+ok(kinds4((await stored4()).fixer.broken) === 'good:push', 'the fall is written to the device as it happens');
+await page.locator('[data-cave-bm-speak="not-now"]').click();
+await page.locator('[data-cave-aside="not-yet"]').click();
+await page.locator('[data-cave-trustbtn]').click();
+ok(await sees('[data-cave-own="good:push"]') && await page.locator('[data-cave-own]').count() === 1, 'Own it offers the one fall it has not heard owned');
+await page.locator('[data-cave-promise="return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await page.locator('[data-cave-trustbtn]').click(); await page.locator('[data-cave-promise="visit"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await page.locator('[data-cave-trustbtn]').click(); await page.locator('[data-cave-own="good:push"]').click();
+ok((await T4('fixer')).pending.includes('good:push'), 'owning it waits for the next reading, as every move does');
+await page.locator('[data-cave-trust-ok]').click();
+const st1 = (await stored4()).fixer;
+ok(st1.promises.map((p) => p.kind + ':' + p.kept).join() === 'return:null,visit:null' && st1.promises.every((p) => Object.keys(p).join() === 'kind,made,kept'), 'both promises are kept on the device as not yet kept, with no block in them');
+await readRound4(true, 9, 7);
+const ow = await T4('fixer');
+ok(ow.good === 'none' && ow.stance === 'repaired' && kinds4((await stored4()).fixer.repaired) === 'good:push' && /own it/.test(await page.locator('[data-cave-trustsaw]').first().textContent()), `the reading eased, so it heard the player own it: the fall is repaired and its stance is ${ow.stance}`);
+// Leaving from its place: the walk is inside the daemon's side passage, so a skip out breaks the promise to come back to one's own.
+ok((await C(() => window.__oagCave.voicePlace())).join() === 'fixer', 'inside its side passage, the player is in the daemon\'s place');
+await C(() => window.__oagCave.stepAside());
+await page.locator('[data-cave-skip]').click();
+await page.locator(`[data-cave-marker="${MK4}"]`).waitFor();
+await page.waitForTimeout(700);
+const st2 = (await stored4()).fixer;
+ok(kinds4(st2.broken) === 'good:push,will:return' && st2.promises[0].kept === false && st2.promises[1].kept === null && (await C(() => window.__oagCave.voicePlace())).length === 0, `skipping out from its place broke the promise to return: ${kinds4(st2.broken)}; the visit promise stands`);
+// A second visit has only what the device kept.
+await C(() => window.__oagCave.trustRevisit());
+await toPassage4();
+ok(await sees('[data-cave-returning]') && await page.locator('[data-cave-remembers]').count() === 1 && /walked out from mine/.test(await page.locator('[data-cave-remembers="will:return"]').textContent()), 'meeting it again, it says it remembers, and names the fall not yet owned (the owned one is not named)');
+const rv = await T4('fixer');
+ok(rv.stance === 'hurt' && (await stored4()).fixer.promises[1].kept && (await stored4()).fixer.promises[1].kept !== null, `it stands hurt as it was left, and the visit promise is kept by coming back (${rv.stance})`);
+await page.locator('[data-cave-bm-speak="not-now"]').click();
+await page.locator('[data-cave-aside="not-yet"]').click();
+await page.locator('[data-cave-trustbtn]').click();
+ok(await sees('[data-cave-own="will:return"]') && await page.locator('[data-cave-own]').count() === 1, 'Own it offers the broken promise to return, and only it');
+await page.locator('[data-cave-own="will:return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await readRound4(true, 9, 7);
+const ow2 = await T4('fixer');
+ok(ow2.stance === 'repaired' && kinds4((await stored4()).fixer.repaired) === 'good:push,will:return', `owning the broken promise, and the reading easing, repairs it too (${ow2.stance})`);
+await page.locator('[data-cave-trustbtn]').click();
+ok(await page.locator('[data-cave-promise="return"]').isEnabled(), 'a promise that was broken can be made again');
+await page.locator('[data-cave-promise="return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await C(() => window.dispatchEvent(new Event('pagehide')));
+const st3 = (await stored4()).fixer;
+ok(kinds4(st3.broken) === 'good:push,will:return,will:return' && st3.promises[2].kept === false && (await T4('fixer')).stance === 'hurt', 'closing the page in its place breaks the promise just as leaving does');
+await page.locator('[data-cave-trustbtn]').click(); await page.locator('[data-cave-promise="return"]').click(); await page.locator('[data-cave-trust-ok]').click();
+await C(() => window.__oagCave.stepAside());
+await page.waitForTimeout(1000);
+await page.locator('[data-cave-next]').click();
+await walkTo('[data-cave-release]');
+await page.locator('[data-cave-release]').click();
+await page.locator(`[data-cave-marker="${MK4}"]`).waitFor();
+const st4 = (await stored4()).fixer;
+ok(st4.promises[3].kept && st4.promises[3].kept !== false && st4.promises.length === 4, 'coming back round and releasing keeps the promise to return to one\'s own place, and the device has it');
+await C(() => window.__oagCave.trustClear());
+ok(Object.keys(await stored4()).length === 0, 'clearing a run clears what the device kept');
+
 const camIn = camSamples.filter((c) => c.inside).length, camOut = camSamples.filter((c) => !c.inside);
 ok(camIn >= camSamples.length * 0.97, `the camera stays inside the tunnel while walking (${camIn} of ${camSamples.length} samples)` + (camOut.length ? ' outside at: ' + JSON.stringify(camOut.slice(0, 4)) : ''));
 
@@ -966,7 +1098,27 @@ await page.waitForTimeout(800);
 const r0 = await room();
 ok(r0.scene.sit > 0.95 && Math.hypot(r0.scene.figure[0] - r0.scene.seat[0], r0.scene.figure[1] - r0.scene.seat[1]) < 0.05 && r0.scene.door < 0.05 && !r0.charge.visible && !r0.charge.known, 'the room: the figure sits on the seat facing a shut door, and nothing has come in yet');
 await page.screenshot({ path: SHOTS + '/room-welcome.png' });
-ok(await sees('[data-room-calm]'), 'the room has the Calm switch');
+ok(await page.locator('[data-oag-menu] [data-room-calm]').count() === 1 && await sees('[data-oag-menubtn]'), 'the room has the Calm switch, in its Menu');
+// PR 5, screen space (Wendell, 19 October 2026): the page is a solid sheet in the bottom half, the Menu holds the switches and a key
+{
+  const sh = await C(() => { const m = document.querySelector('[data-room-modal]'), r = m.getBoundingClientRect(), bg = getComputedStyle(m).backgroundColor; return { top: r.top, h: r.height, vh: innerHeight, bg, lift: getComputedStyle(document.querySelector('.oagc canvas')).transform }; });
+  ok(sh.h <= sh.vh * 0.5 + 1 && sh.top >= sh.vh * 0.5 - 1 && !/rgba/.test(sh.bg) && sh.lift !== 'none', `the step's page is a solid sheet in the bottom half (${Math.round(sh.h)} of ${sh.vh}px, ${sh.bg}) and the room is lifted above it`);
+  await page.locator('[data-oag-menubtn]:visible').click();
+  const mn = await C(() => { const p = document.querySelector('[data-oag-menu]:not([hidden])'); return p && { rows: p.querySelectorAll('.oagc-menurow').length, keys: p.querySelectorAll('.oagc-menurow.key').length, calm: !!p.querySelector('[data-room-calm][data-glyph]'), about: p.querySelector('[data-room-calm] + small').textContent }; });
+  ok(mn && mn.calm && mn.keys === 4 && /out-breath/.test(mn.about), 'the Menu opens with Calm, its glyph and what it does, and a key to the stick, the rug, the doors and the words');
+  const sht = await C(() => { const r = document.querySelector('[data-room-modal]').getBoundingClientRect(); return { left: r.left + 10, top: r.top + 2, height: 8 }; });
+  await page.mouse.click(sht.left + 4, sht.top + sht.height / 2); // on the sheet's top edge: outside the Menu, and no walk starts
+  ok(await C(() => ![...document.querySelectorAll('[data-oag-menu]')].some((p) => !p.hidden)), 'a tap outside folds the Menu away');
+  await page.locator('[data-room-shrink]').click(); await page.waitForTimeout(300);
+  for (let i = 0; i < 40 && (await C(() => window.__oagCave.room.steer(0, -0.6))) > 0.3; i++) await page.waitForTimeout(120);
+  let minK = 9; for (let i = 0; i < 30; i++) { await C(() => window.__oagCave.room.steer(0, 5.5)); minK = Math.min(minK, (await C(() => window.__oagCave.room.walking())).inCushion); await page.waitForTimeout(120); }
+  await C(() => window.__oagCave.room.stick(0, 0));
+  ok(minK > 0.97, `walking straight at the seat stops at the cushion's edge (nearest ${minK.toFixed(2)} of its reach)`);
+  await page.locator('[data-room-pane]').click();
+  await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.95, null, { timeout: 30000 });
+  const sat = await C(() => window.__oagCave.room.walking());
+  ok(Math.abs(sat.pelvisLow - sat.seatTop) < 0.06, `back on the seat, the figure sits on the cushion (pelvis ${sat.pelvisLow.toFixed(2)}, cushion top ${sat.seatTop})`);
+}
 // round 1: it stays, and the 3-2-1 is aimed at what the player wants
 await roomIn(false);
 ok((await room()).charge.color === 0x8a8a92, 'a charge from the body map comes in grey');
@@ -1034,6 +1186,7 @@ ok(!/quiet evening|make tea|Knot|Blue lamp|knot under|slow down/.test(stored), '
 await page.locator('[data-room-leave]').click();
 await page.locator('[data-room]').waitFor({ state: 'detached', timeout: 15000 });
 ok(await sees('[data-cave-home]'), 'Leave the room returns to the front page');
+ok(await page.waitForSelector('[data-title-continue="room"]', { timeout: 5000 }).then(() => true, () => false), 'the front page then offers Continue, back to the WAVE room');
 // ---- the room's second slice (Wendell, 11 October 2026): up to three at once, a feeling about a feeling, Allow's sliders, the glow -----
 await page.locator('[data-room-open]').click();
 await pickOnFigure('heart');
@@ -1153,7 +1306,7 @@ ok((await cr()).length === 1 && (await room()).phase === 'witness', 'then the th
 await roomToFork('Heat', 'Anger', 'constriction');
 await roomGoes('to finish', '', false);
 await page.locator('[data-room-checkin="got-rid"]').click();
-ok(await sees('[data-room-welcome]') && (await page.locator('[data-room-welcome]').locator('xpath=../..').textContent()).includes('waited at the door') && (await room()).scene.waiting === 0, 'with the room clear, the one that waited at the door is welcomed');
+ok(await sees('[data-room-welcome]') && (await C(() => document.querySelector('[data-room-welcome]').closest('[data-room-modal]').textContent)).includes('waited at the door') && (await room()).scene.waiting === 0, 'with the room clear, the one that waited at the door is welcomed');
 await roomIn(false);
 await roomToFork('Last', 'Neutrality', 'tension');
 await roomGoes('rest', '', false);
@@ -1190,8 +1343,8 @@ await pickOnFigure('heart');
 await page.locator('[data-room="body"]').waitFor();
 await page.locator('[data-room-welcome]').waitFor();
 let RW = await C(() => window.__oagCave.room.walking());
-ok(RW.exits.map((e) => e.id).sort().join() === 'bigmind,portal' && await sees('[data-room-walk-hint]'),
-  'home base: the WAVE room from the body map has two doors behind the seat, Big Mind and the six game masters, and says how to walk');
+ok(RW.exits.map((e) => e.id).sort().join() === 'bigmind,portal' && await page.locator('[data-room-walk-hint]').count() === 0,
+  'home base: the WAVE room from the body map has two doors behind the seat, Big Mind and the six game masters, and no paragraph on walking');
 await page.screenshot({ path: SHOTS + '/level-home.png' });
 // Walking round the room (Wendell, 13 October 2026): a tap on the floor stands the figure up and walks it there, the camera
 // following; opening the step's page again walks it back to the seat.
@@ -1293,6 +1446,26 @@ let L = await lv();
 ok(L.place === 'hall' && L.kind === 'round' && L.stops.join(',') === 'door:magenta,door:red,door:amber,door:orange,door:green,door:teal,home',
   `the portal opens the hall of the six: six doors in altitude order and the portal home (${L.stops.join(', ')})`);
 ok((await C(() => window.__oagCave.pane())).title === 'The hall of the six', 'the hall names itself as the player comes in');
+{
+// Self and Run (sic-first-cave-sitting, 4e): Big Mind's two buttons, in the hall. Walked at the plain pace, so no stop is reached.
+await C(() => { window.__oagCave.state.speed = 1; });
+ok(await sees('[data-cave-self]') && await sees('[data-cave-run]') && (await page.locator('[data-cave-run]').getAttribute('aria-pressed')) === 'false', 'the hall has Self and Run on the screen, Run off');
+const hold4 = async (ms, key = 'ArrowUp') => { const a0 = await avatar(); await page.keyboard.down(key); await page.waitForTimeout(ms); await page.keyboard.up(key); const a1 = await avatar(); return Math.hypot(a1.x - a0.x, a1.z - a0.z); };
+const runNow = () => C(() => window.__oagCave.gait().run);
+const r0 = await runNow();
+await page.locator('[data-cave-run]').click();
+const r1 = await runNow(), pressed = await page.locator('[data-cave-run]').getAttribute('aria-pressed');
+await page.locator('[data-cave-run]').click();
+await page.keyboard.down('Shift'); const r2 = await runNow(); await page.keyboard.up('Shift'); const r3 = await runNow();
+ok(r0 === 1 && r1 === 2.1 && pressed === 'true' && r2 === 2.1 && r3 === 1, `Run, or Shift held, walks at 2.1 times the pace, and lets go (${r0}, ${r1}, ${r2}, ${r3})`);
+await page.locator('[data-cave-self]').click();
+const dSelf = await hold4(400);
+ok(await sees('[data-cave-selfbox]') && /nothing has to happen next/i.test(await page.locator('[data-cave-selfbox]').textContent()) && dSelf < 0.05, `Self takes control back: the walk stops and nothing has to happen next (${dSelf.toFixed(2)} moved)`);
+await page.locator('[data-cave-self-goon]').click();
+const dOn = await hold4(400);
+ok(!(await sees('[data-cave-selfbox]')) && dOn > 0.5, 'Go on gives the walk back');
+await C(() => { window.__oagCave.state.speed = 8; });
+}
 // Wendell, 14 October 2026: "The gates for the 6 game master room are too small. They should be doors."
 const doors = await C(() => window.__oagCave.doors()), figH = 3.6;
 ok(doors.length === 7 && doors.every((d) => d.h >= figH * 1.3 && d.w >= 3), `the hall's seven doors are doors, taller than the figure (${doors[0] && doors[0].w} wide, ${doors[0] && doors[0].h.toFixed(1)} tall, the figure ${figH})`);
@@ -1352,6 +1525,18 @@ await page.locator('[data-room-portal]').click({ timeout: 30000 });
 await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
 await page.waitForTimeout(700);
 ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again');
+// Walk back out leaves for the WAVE room, and the portal brings the player to the hall again.
+await page.locator('[data-cave-self]').click();
+await page.locator('[data-cave-self-out]').click();
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+ok(!(await sees('[data-cave-selfbox]')), 'Self\'s Walk back out leaves the hall for the WAVE room');
+await page.locator('[data-room-welcome]').waitFor();
+await C(() => window.__oagCave.room.speed(3));
+await C(() => window.__oagCave.room.walkTo('portal'));
+await page.locator('[data-room-portal]').click({ timeout: 30000 });
+await page.locator('[data-cave-level="hall"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(700);
+await C(() => { window.__oagCave.state.speed = 8; });
 // Wendell, 14 October 2026: "Camera controls are clunky in the game master space and the walking is rather slow". The camera
 // follows the figure, not the path's line: walking round the hall and across it, it comes round behind the figure.
 {
@@ -1416,6 +1601,107 @@ await C(() => { document.querySelector('[data-bm-cave]').remove(); window.__oagB
 await page.locator('[data-bm-home]').click();
 await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
 ok(await page.locator('[data-bm-mouth]').count() === 0, 'Back to the WAVE room closes the mouth and opens the room');
+// ---- the Arrival (six-faces-council council/callsheets/game-demo.md: gd-lantern-guide, gd-teach-by-doing, gd-skip-and-replay) ----
+// A new player's first WAVE room: the page is tucked away and the player's light teaches the room one glyph at a time, each
+// gone once done: walk, look, tap the floor, sit on the rug, the doors. "I know this" skips one. Kept in oag.tutorial.v1.
+await C(() => localStorage.removeItem('oag.tutorial.v1'));
+await page.reload();
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(900);
+const teach = () => C(() => window.__oagCave.room.teach());
+const figAt = async () => (await C(() => window.__oagCave.room.walking())).figure;
+let T = await teach(), F = await figAt();
+ok(!T.modal && T.lesson === 'walk' && T.shown === 'walk' && await sees('[data-room-teach]') && await sees('[data-room-stick]'), 'a new player arrives with the page tucked away, the stick in view, and a glyph teaching the walk ' + JSON.stringify(T));
+ok(Math.hypot(T.lantern[0] - F[0], T.lantern[2] - F[1]) > 1, 'the light has left the chest and waits ahead of the figure');
+ok(await page.locator('[data-room-walk-hint]').count() === 0 && (await page.locator('[data-room-teach]').textContent()).trim() === '' && await sees('[data-room-teach-skip]'), 'no paragraph: the glyph and "I know this" are all the words');
+await C(() => window.__oagCave.room.speed(3));
+{
+  const sb = await page.locator('[data-room-stick]').boundingBox(), sx = sb.x + sb.width / 2, sy = sb.y + sb.height / 2;
+  await page.mouse.move(sx, sy); await page.mouse.down(); await page.mouse.move(sx, sy - 50, { steps: 4 }); await page.waitForTimeout(900); await page.mouse.up();
+}
+T = await teach();
+ok(T.done.includes('walk') && T.lesson === 'look' && T.shown === 'look', 'walking once with the stick finishes the walk, and the light moves on to looking ' + JSON.stringify(T.done));
+ok((await C(() => localStorage.getItem('oag.tutorial.v1'))) === '["walk"]', 'the lesson is kept on this device, as its id only');
+await page.mouse.move(120, 230); await page.mouse.down(); await page.mouse.move(260, 240, { steps: 6 }); await page.mouse.up();
+await page.waitForTimeout(300);
+T = await teach();
+ok(T.lesson === 'tap' && T.shown === 'tap' && Math.hypot(T.lantern[0] - T.tapAt.x, T.lantern[2] - T.tapAt.z) < 1.5, 'a drag finishes looking, and the light floats down to a spot on the floor ' + T.lantern.map((v) => v.toFixed(1)));
+await page.screenshot({ path: SHOTS + '/arrival-tap.png' });
+const spot = await C((p) => window.__oagCave.room.floorScreen(p.x, p.z), T.tapAt);
+ok(!spot.behind && await C(([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && e.tagName === 'CANVAS'; }, [spot.x, spot.y]), `the light's spot is on the floor in view (${Math.round(spot.x)}, ${Math.round(spot.y)})`);
+await page.mouse.click(spot.x, spot.y);
+await page.waitForTimeout(400);
+T = await teach();
+ok(T.lesson === 'rug' && T.shown === 'rug', 'tapping the floor finishes the tap, and the light goes to the rug');
+await page.locator('[data-room-pane]').click();
+await page.waitForTimeout(300);
+T = await teach();
+ok(T.modal && T.done.includes('rug') && T.shown === null && await sees('[data-room-welcome]'), 'sitting down brings up the first page and finishes the rug; no glyph over the page');
+await page.locator('[data-room-shrink]').click();
+await page.waitForTimeout(300);
+T = await teach();
+ok(T.lesson === 'doors' && T.shown === 'doors', 'looking round again, the light shows the two doors');
+await page.screenshot({ path: SHOTS + '/arrival-doors.png' });
+await page.locator('[data-room-teach-skip]').click();
+await page.waitForTimeout(600);
+T = await teach(); F = await figAt();
+ok(T.lesson === null && T.shown === null && !T.live && T.done.length === 5 && Math.hypot(T.lantern[0] - F[0], T.lantern[2] - F[1]) < 0.6, '"I know this" skips the doors; all learned, the light goes home to the chest');
+await page.reload();
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room="body"]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(600);
+T = await teach();
+ok(T.modal && !T.live && T.shown === null && await sees('[data-room-welcome]'), 'back again, nothing is taught twice: the room opens on its first page');
+
+// ---- the cave's lessons (council/callsheets/game-demo.md, gd-teach-by-doing): a word stone (the pane over the figure) and a
+// glowing mark (its prompt by the right thumb), taught where they first show. The walk and the look the room taught are not.
+await C(() => localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors"]'));
+await page.goto(B + '/ontology-game/cave');
+await page.locator('[data-cave-dive]').click();
+await pickOnFigure('heart');
+await page.locator('[data-cave-choice="tension"]').click();
+await page.locator('[data-cave-choice="Anger"]').click();
+await page.locator('[data-cave-place="walk"]').waitFor();
+const cteach = () => C(() => window.__oagCave.teach());
+const cIs = (id, ms = 15000) => page.waitForFunction((id) => window.__oagCave.teach().shown === id, id, { timeout: ms }).then(() => true, () => false);
+const modalOpen = () => C(() => document.querySelector('[data-cave-modal]').classList.contains('open'));
+let CT;
+await page.waitForFunction(() => window.__oagCave.teach && (window.__oagCave.teach().shown || window.__oagCave.free().stick), null, { timeout: 15000 }).catch(() => {});
+await page.waitForTimeout(500);
+CT = await cteach();
+ok(!['walk', 'look'].includes(CT.shown) && !['walk', 'look'].includes(CT.lesson), 'T2: in the cave the walk and the look the room taught are not taught again ' + JSON.stringify(CT));
+if (CT.shown !== 'stone' && await modalOpen()) await page.locator('[data-cave-modal] [data-cave-shrink], [data-cave-modal] [data-cave-close]').first().click();
+ok(await cIs('stone'), 'the words over the figure (a word stone) get a glyph');
+CT = await cteach();
+const pb = await page.locator('[data-cave-pane]').boundingBox(), gp = await page.locator('[data-teach="stone"]').boundingBox();
+ok(!CT.away && gp && pb && gp.y + gp.height <= pb.y + 4 && Math.abs(gp.x + gp.width / 2 - (pb.x + pb.width / 2)) < pb.width, 'its glyph sits just over the words, and the light stays at the chest ' + JSON.stringify(CT));
+ok((await page.locator('[data-teach="stone"]').textContent()).trim() === '' && await sees('[data-teach-skip]'), 'the glyph has no words; "I know this" is beside it');
+await page.locator('[data-cave-pane]').click();
+await page.waitForTimeout(300);
+CT = await cteach();
+ok(CT.done.includes('stone') && CT.shown !== 'stone' && await modalOpen(), 'tapping the words opens all of them and learns the word stone');
+await page.screenshot({ path: SHOTS + '/cave-teach-stone.png' });
+await page.locator('[data-cave-modal] [data-cave-shrink], [data-cave-modal] [data-cave-close]').first().click();
+// walk up to the first stop: its glowing mark's prompt comes up by the right thumb, and the light floats out to the mark
+let markSeen = false;
+await page.keyboard.down('ArrowUp');
+for (let i = 0; i < 300 && !markSeen; i++) { markSeen = (await cteach()).shown === 'mark'; if (!markSeen) await page.waitForTimeout(100); }
+await page.keyboard.up('ArrowUp');
+CT = await cteach();
+const prb = await page.locator('[data-cave-prompt-box]').boundingBox(), gm = await page.locator('[data-teach="mark"]').boundingBox();
+ok(markSeen && CT.away && gm && prb && gm.y + gm.height <= prb.y + 4, 'at a glowing mark the light floats out to it and the glyph waits over its prompt ' + JSON.stringify(CT));
+await page.screenshot({ path: SHOTS + '/cave-teach-mark.png' });
+await page.locator('[data-cave-prompt-box] [data-cave-stop]').click();
+await page.waitForTimeout(300);
+CT = await cteach();
+ok(CT.done.includes('mark') && CT.shown === null, 'stopping there learns the mark ' + JSON.stringify(CT.done));
+ok(JSON.parse(await C(() => localStorage.getItem('oag.tutorial.v1'))).filter((x) => ['mark', 'stone'].includes(x)).length === 2, 'the cave\'s lessons are kept with the room\'s, as ids');
+await C(() => window.__oagCave.dive('nowhere on the figure'));
+ok(await page.locator('[data-oag-notice]').waitFor({ timeout: 5000 }).then(() => true, () => false) && /not on the figure yet/.test(await page.textContent('[data-oag-notice]')), 'a place the figure does not name is said in a line on the page, not a browser box');
+ok(dialogs.length === 0, 'no browser alert or confirm box' + (dialogs.length ? ': ' + dialogs.join(' | ') : ''));
 // ---- the elder spirit (slice 5, board sic-demo-showcase = elder): a grown Shellback lives in home base and shows its five forms
 await page.goto(B + '/ontology-game/cave');
 await page.locator('[data-room-open]').click();

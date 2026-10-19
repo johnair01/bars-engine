@@ -26,9 +26,15 @@ const errors = [];
 let passes = 0, fails = 0;
 const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (c) passes++; else { fails++; process.exitCode = 1; } };
 const page = await ctx.newPage();
+// A switch in the Menu (PR 5): open the Menu first when the switch is folded inside it, then tap it.
+async function menuTap(sel) {
+  if (!(await page.locator(sel).first().isVisible()) || (await page.locator('[data-oag-menu]:has(' + sel + ')').count() && await page.locator('[data-oag-menu]:has(' + sel + ')').first().isHidden())) await page.locator('[data-oag-menubtn]:visible').first().click();
+  await page.locator(sel).first().click();
+}
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
-page.on('dialog', (d) => d.accept());
+const dialogs = []; // gd-web-bits: no browser alert or confirm box anywhere
+page.on('dialog', (d) => { dialogs.push(d.type() + ': ' + d.message()); d.accept(); });
 const B = 'http://localhost:4571/ontology-game/big-mind';
 const step = () => page.getAttribute('[data-bm-modal]', 'data-bm-step');
 const waitStep0 = (s, ms = 20000) => page.waitForFunction((s) => document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') === s, s, { timeout: ms }).then(() => true, () => false);
@@ -70,7 +76,7 @@ await page.evaluate(() => localStorage.clear());
 await page.reload(); await page.waitForSelector('[data-bm-mouth]');
 const mouthText = await page.textContent('[data-bm-mouth]');
 ok(/not therapy/.test(mouthText) && /988/.test(mouthText), 'the cave mouth says it is a game, not therapy, with a crisis line');
-ok(/sit out/i.test(mouthText) && /take control back/i.test(mouthText) && /walk back up/i.test(mouthText), 'the mouth gives the three rules: sit out, take control back, walk back up');
+ok(!/sit out|take control back|walk back up/i.test(mouthText) && await page.locator('[data-bm-mouth] li').count() === 0, 'the mouth lists no rules: they are the first hallway\'s lessons (gd-mouth-in-world)');
 ok(/Nothing is sent anywhere/.test(mouthText), 'the mouth says nothing leaves the device');
 ok(!/Genpo|Big Mind Process|Zen Center/i.test(await page.content()), 'no teacher or programme is named on the page');
 await page.screenshot({ path: SHOTS + '/bm-1-mouth.png' });
@@ -78,7 +84,8 @@ await page.screenshot({ path: SHOTS + '/bm-1-mouth.png' });
 await page.click('[data-bm-enter]');
 await page.waitForSelector('[data-bm-cave] canvas');
 await page.waitForTimeout(600);
-ok(/Hold anywhere to walk/.test(await page.textContent('[data-bm-hint]')), 'the hallway says how to walk');
+await page.waitForFunction(() => window.__oagBigMind.teach && window.__oagBigMind.teach().shown === 'walk', null, { timeout: 8000 }).catch(() => {});
+ok((await page.textContent('[data-bm-hint]')).trim() === '' && await page.locator('[data-teach="walk"]').isVisible(), 'the hallway teaches the walk with a glyph, not a line of words');
 await page.screenshot({ path: SHOTS + '/bm-2-hallway.png' });
 const shut = await page.evaluate(() => { const A = window.__oagBigMind, S = A.S; return { before: A.openAt(S.S_VOICE), past: A.openAt(S.S_GATE + 14), hall: A.openAt(10) }; });
 ok(shut.before > 1.6 && shut.hall < 1.05, 'the chamber is the tunnel widened: ' + shut.before.toFixed(2) + ' against the hallway ' + shut.hall.toFixed(2));
@@ -132,7 +139,7 @@ ok(Math.abs((await st()).s - (await page.evaluate(() => window.__oagBigMind.S.S_
 await page.screenshot({ path: SHOTS + '/bm-3-meet.png' });
 
 // Self, at any time
-await page.click('[data-bm-selfbtn]');
+await menuTap('[data-bm-selfbtn]');
 ok(await waitStep('self'), 'the Self button takes control back at any point');
 await page.click('[data-bm-goon]');
 ok(await waitStep('meet'), 'going on returns to the same moment');
@@ -429,6 +436,7 @@ await page.click('[data-bm-mouthspirit="0"]'); await page.click('[data-bm-mouths
 await page.waitForSelector('[data-bm-mouth]');
 ok(/Go back in, to the Protector/.test(await page.textContent('[data-bm-enter]')), 'back at the mouth, the cave offers to go back in to the Protector, to ask it again');
 ok(/To protect\./.test(await page.textContent('[data-bm-kept]')), 'the mouth lists what has been kept');
+ok(await page.locator('[data-bm-kept] .bm-keptcard[data-bm-keptcard="protector"]').count() === 1 && await page.locator('[data-bm-keptcard="protector"] [data-bm-forget="protector"]').count() === 1, 'what is kept is a card per voice, with Forget on its card');
 ok(/W\.A\.V\.E\.: Dread, Metal, in your chest: 8 to 6/.test(await page.textContent('[data-bm-kept]')), 'the mouth lists each W.A.V.E. as one line');
 await page.screenshot({ path: SHOTS + '/bm-9-mouth-kept.png' });
 await page.click('[data-bm-enter]');
@@ -439,7 +447,7 @@ ok(/You have met the Protector before/.test(await page.textContent('[data-bm-mod
 await page.click('[data-bm-decline]'); await page.waitForTimeout(2200);
 sv = await save();
 ok(sv.voices.protector.status === 'spoken' && sv.voices.protector.kept.length === 3 && sv.voices.protector.trust.seen.length >= 1, 'declining it today keeps what it said before, and its trust');
-await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
+await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 await page.waitForSelector('[data-bm-mouth]');
 await page.click('[data-bm-forget="protector"]');
 ok((await save()).voices.protector === undefined, 'forget removes the voice\'s record');
@@ -472,9 +480,13 @@ ok(sv.voices.protector.status === 'waiting' && sv.voices.protector.kept.length =
 const opened = await page.waitForFunction(() => window.__oagBigMind.openAt(window.__oagBigMind.S.S_GATE + 14) > 0.9, null, { timeout: 10000 }).then(() => true, () => false);
 ok(opened, 'declining opens the way');
 await page.screenshot({ path: SHOTS + '/bm-10-declined.png' });
-await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
+await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 await page.waitForSelector('[data-bm-mouth]');
 await page.click('[data-bm-wipe]');
+ok(await page.isVisible('[data-bm-wipeask]') && (await save()) !== null, 'delete everything asks once more on the page, and nothing is gone yet');
+await page.click('[data-bm-wipeno]');
+ok(await page.isVisible('[data-bm-wipe]') && (await save()) !== null, 'Keep it puts the button back and keeps the save');
+await page.click('[data-bm-wipe]'); await page.click('[data-bm-wipeyes]');
 await page.waitForTimeout(200);
 ok((await save()) === null, 'delete everything clears the device');
 
@@ -499,13 +511,14 @@ ok(await page.evaluate(() => window.__oagBigMind.sitting().name === 'Worry'), 't
 await page.waitForTimeout(700);
 const seen = await page.evaluate(() => {
   const B = window.__oagBigMind, g = B.state.sit.g, v = g.position.clone(); g.updateMatrixWorld(); g.getWorldPosition(v); v.project(B.camera);
-  const m = document.querySelector('.oagc-modal').getBoundingClientRect();
-  return { y: (1 - v.y) / 2 * innerHeight, x: (v.x + 1) / 2 * innerWidth, panel: m.bottom, h: innerHeight, w: innerWidth };
+  const m = document.querySelector('.oagc-modal').getBoundingClientRect(), rc = [...document.querySelectorAll('canvas')].map((c) => c.getBoundingClientRect()).sort((p, q) => q.width * q.height - p.width * p.height)[0];
+  return { y: rc.top + (1 - v.y) / 2 * rc.height, x: rc.left + (v.x + 1) / 2 * rc.width, panel: m.top, h: innerHeight, w: innerWidth };
 });
-ok(seen.y > seen.panel + 10 && seen.y < seen.h - 10 && seen.x > 10 && seen.x < seen.w - 10, 'at Acknowledge the camera frames the charge below the panel (y ' + seen.y.toFixed(0) + ', panel ends ' + seen.panel.toFixed(0) + ')');
+// PR 5 (Wendell, 19 October 2026): the page is a sheet in the bottom half, so the charge is framed above it
+ok(seen.y < seen.panel - 10 && seen.y > 10 && seen.x > 10 && seen.x < seen.w - 10, 'at Acknowledge the camera frames the charge above the sheet (y ' + seen.y.toFixed(0) + ', sheet starts ' + seen.panel.toFixed(0) + ')');
 await page.screenshot({ path: SHOTS + '/bm-6-sit-acknowledge.png' });
 const cam0 = await page.evaluate(() => window.__oagBigMind.camera.position.toArray());
-await page.mouse.move(195, 760); await page.mouse.down(); await page.mouse.move(345, 700, { steps: 8 }); await page.mouse.up();
+await page.mouse.move(195, 300); await page.mouse.down(); await page.mouse.move(345, 240, { steps: 8 }); await page.mouse.up();
 await page.waitForTimeout(800);
 const orbit = await page.evaluate(() => {
   const B = window.__oagBigMind, c = B.camera.position;
@@ -584,7 +597,7 @@ ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((o) 
 ok((await page.textContent('[data-bm-spiritbtn]')).startsWith('Spirits ' + (await page.evaluate(() => window.__oagBigMind.spirits.length))), 'the spirits are counted: ' + (await page.textContent('[data-bm-spiritbtn]')));
 sv = await save();
 ok(sv.sittings.length === 3 && sv.sittings[2].via === 'block' && sv.sittings[2].branch === 'stood' && sv.sittings[1].whom === 'voice', 'each sitting is recorded: ' + JSON.stringify(sv.sittings.map((x) => [x.whom, x.via, x.branch])));
-await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
+await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 ok(await waitStep('mouth-spirits'), 'at the mouth, each spirit is kept for next time or let go');
 await page.click('[data-bm-mouthspirit="1"]'); await page.click('[data-bm-mouthspirit="2"]');
 await page.click('[data-bm-walkout]');
@@ -595,7 +608,7 @@ await page.click('[data-bm-enter]');
 await page.waitForSelector('[data-bm-cave] canvas');
 await page.waitForTimeout(300);
 ok((await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length)) === 1, 'a kept spirit comes back in with you');
-await page.click('[data-bm-spiritbtn]');
+await menuTap('[data-bm-spiritbtn]');
 ok(await waitStep('spirit-list'), 'tapping the spirits lists them');
 await page.click('[data-bm-spirit="0"]');
 ok(await waitStep('spirit-thank') && /Thank you for coming with me/.test(await page.textContent('[data-bm-modal]')), 'tapping one thanks it');
@@ -618,7 +631,7 @@ ok(await waitStep('sit-goes') && /walks with you, lighter/.test(await page.textC
 await page.click('[data-bm-sitexhale]');
 await page.waitForFunction(() => window.__oagBigMind.spirits.filter((o) => !o.meet).length === 1 && !window.__oagBigMind.sitting(), null, { timeout: 8000 }).catch(() => {});
 ok(await page.evaluate(() => { const o = window.__oagBigMind.spirits.filter((o) => !o.meet)[0]; return o && o.name === 'Ache' && o.lighter && o.g.userData.level < 0.3; }), 'a charge breathed out still spawns a spirit, walking lighter');
-await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
+await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 await waitStep('mouth-spirits'); await page.click('[data-bm-mouthspirit="0"]'); await page.click('[data-bm-walkout]');
 await page.waitForSelector('[data-bm-mouth]');
 ok(JSON.stringify((await save()).spirits) === '[]', 'with every spirit let go, nothing is kept');
@@ -714,7 +727,7 @@ await page.evaluate(() => localStorage.clear());
   ok(text.includes('You: How are you doing the work of who you work for?') && /I keep it still so it can't be hurt\./.test(text), 'working for the vulnerable child, the plain question stays and the cards are the child\'s');
 
   // naming the boss in its own words
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
   ok(await toBoss(), 'and again');
   await page.fill('[data-bm-line]', 'Control itself. Nobody else gives the orders');
@@ -722,11 +735,11 @@ await page.evaluate(() => localStorage.clear());
   ok(await waitStep('charge'), 'a boss named in its own words is in voice, with no second figure');
   await setCharge(8);
   ok(await waitStep('q-how') && (await page.textContent('[data-bm-modal]')).includes(how.byBoss.controller), 'working for control itself, it is asked what standards it sets about control');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.click('[data-bm-restart]');
   await page.waitForSelector('[data-bm-cave] canvas');
   ok((await save()).chamber === 0 && await page.evaluate(() => window.__oagBigMind.voiceId) === 'protector', 'starting at the mouth again begins with the Protector');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
@@ -817,7 +830,7 @@ await page.evaluate(() => localStorage.clear());
   ok(await waitStep('charge') && !/told you it answers/.test(await page.textContent('[data-bm-modal]')), 'a boss named in its own words is in voice, and the child is the end of the chain');
   await setCharge(8);
   ok(await waitStep('q-how') && /If it doesn't hope, it can't be let down\./.test(await page.textContent('[data-bm-modal]')), 'working for the vulnerable child, the cards are the child\'s');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
@@ -909,7 +922,7 @@ await page.evaluate(() => localStorage.clear());
   ok(await waitStep('charge') && /so it never has to feel it\./.test(await page.textContent('[data-bm-modal]')), 'a boss named in its own words is in voice');
   await setCharge(8);
   ok(await waitStep('q-how') && /I make it useful, so it's wanted\./.test(await page.textContent('[data-bm-modal]')), 'working for the self, the cards are the self\'s');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
@@ -993,7 +1006,7 @@ await page.evaluate(() => localStorage.clear());
   await setCharge(8);
   await waitStep('q-gone', 25000); await page.click('[data-bm-sitout]');
   ok(await waitStep('q-good-job', 25000) && /When the child isn't alone with it\./.test(await page.textContent('[data-bm-modal]')), 'working for the vulnerable child, the measure cards are the child\'s');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
@@ -1080,7 +1093,7 @@ await page.evaluate(() => localStorage.clear());
   ok(await waitStep('charge') && /because it couldn't\./.test(await page.textContent('[data-bm-modal]')), 'a boss named in its own words is in voice');
   await setCharge(8);
   ok(await waitStep('q-advocate', 25000) && /The child nobody came for\./.test(await page.textContent('[data-bm-modal]')), 'working for the vulnerable child, the advocacy cards are the child\'s');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
@@ -1172,7 +1185,7 @@ await page.evaluate(() => localStorage.clear());
   ok(await waitStep('charge') && /so it never reaches the little one\./.test(await page.textContent('[data-bm-modal]')), 'a boss named in its own words is in voice');
   await setCharge(8);
   ok(await waitStep('q-how', 25000) && /I carry what it was too small to carry\./.test(await page.textContent('[data-bm-modal]')), 'working for the vulnerable child, the job cards are the child\'s');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
@@ -1226,7 +1239,7 @@ await page.evaluate(() => localStorage.clear());
   ok(sv.centre && sv.centre.status === 'spoken' && sv.centre.kept.length === 1 && sv.centre.kept[0].line === "That it's safe to play." && sv.chamber === 6 && sv.voices['damaged-self'], 'only the kept line is saved, with the voices\' records: ' + JSON.stringify(sv.centre));
   await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   const kept = await page.textContent('[data-bm-kept]');
-  ok(/The vulnerable child \(it spoke with you at the centre\)/.test(kept) && /That it's safe to play\./.test(kept), 'the mouth shows what the child said that was kept');
+  ok(/The vulnerable child\s*It spoke with you at the centre\./.test(kept) && /That it's safe to play\./.test(kept), 'the mouth shows what the child said that was kept');
 
   // seen, not questioned: being with it asks nothing
   await page.click('[data-bm-forget="centre"]');
@@ -1237,7 +1250,7 @@ await page.evaluate(() => localStorage.clear());
   await page.click('[data-bm-centresave]');
   sv = await save();
   ok(sv.centre && sv.centre.status === 'seen' && sv.centre.kept.length === 0, 'the child is recorded as seen');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
@@ -1301,7 +1314,7 @@ await page.evaluate(() => localStorage.clear());
   ok(await waitStep('q-what', 15000) && /You'd keep it safe too\. I can see that now\./.test(await page.textContent('[data-bm-modal]')) && (await marks()).good === 'seen', 'showing where you share its picture of good, honestly: its read of you, in its words only');
   ok(await page.evaluate(() => window.__oagBigMind.stance()) === 'softening', 'it stands softer');
   // walking out: the return rite
-  await page.click('[data-bm-selfbtn]'); await click0('[data-bm-leave]');
+  await menuTap('[data-bm-selfbtn]'); await click0('[data-bm-leave]');
   ok(await waitStep('rite') && /Thank the voices you met today: the Protector\./.test(await page.textContent('[data-bm-modal]')), 'walking out, the return rite asks to thank the voices met');
   await click0('[data-bm-ritethanks]');
   ok(await waitStep('rite-breath') && await page.isDisabled('[data-bm-ritebreath]'), 'then one breath');
@@ -1316,7 +1329,7 @@ await page.evaluate(() => localStorage.clear());
   ok(await holdUntil('meet') && /You said you'd come back and ask me again\. Here you are\./.test(await page.textContent('[data-bm-modal]')), 'going back in, it remembers the promise to come back and ask again');
   await page.click('[data-bm-reply="hear"]'); await page.click('[data-bm-ask="speak"]');
   ok((await trust()).promises[0].kept && (await page.evaluate(() => window.__oagBigMind.pending().some((p) => p.kind === 'visit'))), 'asking again keeps it, and the voice will see it at the next check-in');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
 
   // the second road, keep talking, and a fall from the voice's place: a Controller that has seen all three
   const at0 = '2026-10-16T00:00:00.000Z';
@@ -1341,7 +1354,7 @@ await page.evaluate(() => localStorage.clear());
   ok(await page.locator('[data-bm-askaside]').count() === 1, 'each check-in now offers to ask it to step aside');
   await page.click('[data-bm-askaside]'); await page.click('[data-bm-perm="yes"]'); await page.click('[data-bm-thanks="aside"]');
   ok(await waitStep('be-who', 30000), 'it steps aside and the player stands in its place');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   const c = (await save()).voices.controller.trust;
   ok(c.broken.some((b) => b.dim === 'will' && b.kind === 'return') && c.promises[0].kept === false, 'walking out from its place breaks the promise to come back to your own: a fall');
   ok(/You said you'd come back to your own place, and left from its\./.test(await page.textContent('[data-bm-kepttrust="controller"]')), 'the mouth says so plainly');
@@ -1349,7 +1362,7 @@ await page.evaluate(() => localStorage.clear());
   ok(await page.evaluate(() => window.__oagBigMind.marks().will) === 0 && await page.evaluate(() => window.__oagBigMind.stance()) === 'hurt', 'its will mark has fallen, and it stands hurt until the fall is owned');
   ok(await page.evaluate(() => !window.__oagBigMind.spirits.some((o) => o.ally === 'controller')), 'its spirit does not walk with you while its trust is down');
   ok(await holdUntil('meet') && /you walked out from mine/.test(await page.textContent('[data-bm-modal]')), 'and it says so when you come back');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
 
   // at the mouth of the centre the allied spirits vouch together
   const allT = {}; ['protector', 'controller', 'skeptic', 'fixer', 'emotional-body', 'victim', 'damaged-self'].forEach((id) => { const need = { protector: 'wait', controller: 'pace', skeptic: 'hold', fixer: 'sit', 'emotional-body': 'hold', victim: 'wait', 'damaged-self': 'pace' }[id], will = { skeptic: 'visit', 'emotional-body': 'visit', victim: 'visit' }[id] || 'return'; const f = full(need); f.seen[1].kind = will; f.promises = []; allT[id] = { ...S, boss: 'controller', trust: f }; });
@@ -1472,17 +1485,17 @@ await page.evaluate(() => localStorage.clear());
   await page.waitForFunction(() => window.__oagBigMind.state.phase === 'hall2', null, { timeout: 10000 }).catch(() => {});
   let sv = await save();
   ok(sv.voices.protector.talked === 2 && sv.voices.protector.spirit.name === 'Fear' && !JSON.stringify(sv).includes('Why are you here, really'), 'saved: two 3-2-1s and its spirit, never the words');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   ok(!(sv = await save()).spirits || !sv.spirits.some((o) => o.name === 'Fear'), 'the meeting spirit is not one of the spirits kept at the mouth: it comes back with its voice');
   ok(/The spirit from meeting it walks with you: Fear \(Metal\)\./.test(await page.textContent('[data-bm-keptmeet="protector"]')) && /twice|2 times/.test(await page.textContent('[data-bm-kepttalked="protector"]')), 'the mouth lists it with the voice, and the 3-2-1s had');
   await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas'); await fast();
   ok(await page.evaluate(() => window.__oagBigMind.spirits.filter((o) => o.meet === 'protector').length === 1), 'it comes back in with you');
   // a voice met before is not asked again how you feel meeting it
   await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('oag.bigmind.v1')); s.chamber = 0; s.at = 'mouth'; localStorage.setItem('oag.bigmind.v1', JSON.stringify(s)); });
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.click('[data-bm-restart]').catch(() => page.click('[data-bm-enter]')); await page.waitForSelector('[data-bm-cave] canvas'); await fast(); await hold(true);
   ok(await page.waitForFunction(() => /^meet/.test(document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') || ''), null, { timeout: 20000 }).then(() => true, () => false) && await step() === 'meet', 'meeting it again, the feeling is not asked twice');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
 
   // Once its voice trusts you, the spirit born on meeting it is your ally (bmt-spirits-vouch), under its own name.
   const at0 = '2026-10-16T00:00:00.000Z';
@@ -1497,7 +1510,7 @@ await page.evaluate(() => localStorage.clear());
   ok(/Who vouches for you\?/.test(await page.textContent('[data-bm-modal]')) === false, 'the feeling comes before anything is asked of you');
   await page.click('[data-bm-feel="none"]');
   ok(await waitStep0('meet') && /Who vouches for you\?/.test(await page.textContent('[data-bm-modal]')) && await page.evaluate(() => window.__oagBigMind.spirits.some((o) => o.meet === 'controller' && o.name === 'No word yet' && !o.element)), 'No word yet spawns a grey spirit, and then the voice asks who vouches for you');
-  await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
+  await menuTap('[data-bm-selfbtn]'); await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   await page.evaluate(() => localStorage.clear());
 }
 
@@ -1558,12 +1571,59 @@ await page.evaluate(() => localStorage.clear());
   await page.evaluate(() => localStorage.clear());
 }
 
+// ---- the walkthrough in the first hallway (Six-faces-council council/callsheets/game-demo.md: gd-mouth-in-world, gd-teach-by-doing) ----
+// The old rules list is the light's lessons now: the walk, Run, Self and the way back, one glyph at a time, each gone once done
+// or skipped, kept in oag.tutorial.v1; Spirits and Trust are taught the first time their buttons show. Nothing is taught twice.
+await page.evaluate(() => localStorage.clear());
+await page.goto(B); await page.waitForSelector('[data-bm-mouth]');
+await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+const tch = () => page.evaluate(() => window.__oagBigMind.teach());
+const tchIs = (id) => page.waitForFunction((id) => window.__oagBigMind.teach().shown === id, id, { timeout: 8000 }).then(() => true, () => false);
+const learned = (id) => page.waitForFunction((id) => window.__oagBigMind.teach().done.indexOf(id) >= 0, id, { timeout: 8000 }).then(() => true, () => false);
+ok(await tchIs('walk'), 'a new player\'s first hallway opens on the walk lesson');
+let TB = await tch();
+ok(TB.away && TB.visible && (await page.locator('[data-teach]').first().textContent()).trim() === '' && await page.locator('[data-teach-skip]').isVisible(), 'the light floats ahead and the glyph has no words, beside "I know this" ' + JSON.stringify(TB));
+await page.evaluate(() => { const s = window.__oagBigMind.state; s.speed = 2; s.held = true; });
+ok(await learned('walk'), 'holding to walk learns the walk');
+await page.evaluate(() => { window.__oagBigMind.state.held = false; });
+ok(await tchIs('run'), 'then Run is taught, by its button');
+const rb = await page.locator('[data-bm-run]').boundingBox(), gb = await page.locator('[data-teach="run"]').boundingBox();
+ok(gb && rb && gb.y + gb.height <= rb.y + 2 && Math.abs(gb.x + gb.width / 2 - (rb.x + rb.width / 2)) < 60, 'the run glyph sits just above the Run button');
+await page.click('[data-bm-run]');
+await page.evaluate(() => { window.__oagBigMind.state.held = true; });
+ok(await learned('run'), 'walking with Run on learns it');
+await page.evaluate(() => { const s = window.__oagBigMind.state; s.held = false; s.run = false; });
+ok(await tchIs('self'), 'then the Self button');
+const sb = await page.locator('[data-oag-menubtn]').boundingBox(), gs = await page.locator('[data-teach="self"]').boundingBox();
+ok(gs && sb && gs.y >= sb.y + sb.height - 2, 'the Self glyph sits under the Menu at the top, where Self is folded, pointing up at it');
+await page.click('[data-teach-skip]');
+ok(await learned('self'), '"I know this" skips a lesson for good');
+await page.evaluate(() => { window.__oagBigMind.state.s = 14; });
+ok(await tchIs('back'), 'past the first stretch, the way back is taught by the stick');
+await page.keyboard.down('ArrowDown'); ok(await learned('back'), 'walking back learns it'); await page.keyboard.up('ArrowDown');
+TB = await tch();
+ok(['walk', 'run', 'self', 'back'].every((id) => TB.done.includes(id)) && JSON.parse(await page.evaluate(() => localStorage.getItem('oag.tutorial.v1'))).length === TB.done.length, 'the lessons are kept on this device, as ids ' + JSON.stringify(TB.done));
+ok(await tchIs('trust'), 'the Trust button, once it can be used, gets its glyph the first time');
+const tb = await page.locator('[data-bm-trustbtn]').boundingBox(), gt = await page.locator('[data-teach="trust"]').boundingBox();
+ok(gt && tb && gt.y + gt.height <= tb.y + 2, 'the Trust glyph sits just above its button, pointing down at it');
+await page.click('[data-teach-skip]');
+ok(await learned('trust'), 'and "I know this" skips it');
+await page.waitForFunction(() => !window.__oagBigMind.teach().visible, null, { timeout: 5000 }).catch(() => {});
+ok(!(await tch()).visible && !(await page.locator('[data-teach-skip]').isVisible()), 'with nothing left to teach here, the light goes home to the chest');
+await page.screenshot({ path: SHOTS + '/bm-teach.png' });
+await page.reload(); await page.waitForSelector('[data-bm-mouth]'); await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+await page.waitForTimeout(800);
+TB = await tch();
+ok(!['walk', 'run', 'self', 'back'].includes(TB.shown) && !['walk', 'run', 'self', 'back'].includes(TB.lesson), 'T2: going back in, nothing learned is taught again ' + JSON.stringify(TB));
+await page.evaluate(() => localStorage.clear());
+
 // the Cave of Lessons still opens on its own page
 const p2 = await ctx.newPage();
 p2.on('pageerror', (e) => errors.push('cave pageerror: ' + e.message));
 await p2.goto('http://localhost:4571/ontology-game/cave');
 ok(await p2.waitForSelector('[data-cave-home]', { timeout: 5000 }).then(() => true, () => false), 'the Cave of Lessons still opens its doorway');
 ok(await p2.evaluate(() => !!window.__oagCave.kit.buildTube), 'the shared engine is exported for the fork');
+ok(dialogs.length === 0, 'no browser alert or confirm box' + (dialogs.length ? ': ' + dialogs.join('; ') : ''));
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join('; ') : ''));
 console.log(passes + ' passed, ' + fails + ' failed');
 await browser.close(); server.close();

@@ -12,7 +12,7 @@
   "source": "glb/fire-hologram.glb"
  },
  "romp-core": {
-  "bytes": 13364,
+  "bytes": 13368,
   "tris": 1000,
   "source_bytes": 125604,
   "source": "round11/fox/glb/fire-core.glb"

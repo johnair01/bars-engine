@@ -138,7 +138,7 @@
   // a spirit of another family past its hologram wears the hologram until they come.
   var STAGES = ["gas", "core", "hologram", "creature", "ally"], AT = [0, 2, 4, 6, 8], DRAWN = { gas: 1, core: 1, hologram: 1 };
   var LATE = { shellback: { creature: 1, ally: 1 } };
-  var UNFOLD_MS = 2400, Y0 = 0.35; // the page's spirits stand on their heart, 0.35 up
+  var UNFOLD_MS = 2400, Y0 = 0.35, ALLY_TURN = 2.2; // the page's spirits stand on their heart, 0.35 up
   function stageOf(n) { n = n | 0; for (var i = AT.length - 1; i > 0; i--) if (n >= AT[i]) return STAGES[i]; return "gas"; }
   function drawnStage(stage, family) {
     var late = LATE[FILES[family] || "shellback"] || {}, i = Math.max(0, STAGES.indexOf(stage));
@@ -188,7 +188,7 @@
     });
     g.userData.stage = stage; g.scale.setScalar(SCALE);
     if (stage !== "core") g.rotation.y = -Math.PI / 2 + 0.7;
-    if (stage === "ally") g.rotation.y += Math.PI; // the standing ally's export faces the other way; it turns its front, heart and all, to the viewer
+    if (stage === "ally") g.rotation.y += ALLY_TURN; // the standing ally turns round so its front, eyes and heart face the viewer
     return g;
   }
   // Unfold the spirit built by buildForm into `to` (a stage name). It fetches the form's file the first time any spirit

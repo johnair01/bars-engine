@@ -107,7 +107,7 @@ def bake(src, out, late=False):
     parent = {c: i for i, n in enumerate(j["nodes"]) for c in n.get("children", [])}
     def placed(i, v):  # through the node and every parent above it (the creature's and ally's parts hang off a root)
         while i is not None: v = world(j["nodes"][i], v); i = parent.get(i)
-        return (v[0], -v[2], v[1]) if late else v  # their export is y-up; the cave reads the page's z-up
+        return (v[0], -v[2], v[1])  # Blender's glTF export is y-up; the cave reads the page's z-up
     for ni, n in enumerate(j["nodes"]):
         if "mesh" not in n: continue
         for p in j["meshes"][n["mesh"]]["primitives"]:

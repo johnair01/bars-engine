@@ -65,12 +65,12 @@ from their element token overrides — no additional sprite generation needed.
 
 **Semantic purpose:** Phase and move encoding. Altitude (dissatisfied/neutral/satisfied) and
 stage (seed/growing/composted) are already handled by CSS tokens. The missing piece: move icons.
-**Format:** 4 move icons at 24×24px. One per move family: Wake Up / Grow Up / Show Up / Clean Up.
+**Format:** 5 move icons at 24×24px. One per move: Wake Up / Open Up / Clean Up / Grow Up / Show Up.
 Designed as compass-direction marks (↑→↓←) or elemental directional glyphs. Pixel art weight.
 **Used in:** OrientationCompass quadrant labels, VaultFourMovesStrip badges, quest card
 move-affiliation mark, DashboardActionButtons.
 **Forkability:** Move icons are game grammar, not nation skin — they stay constant across forks.
-A fork may restyle them but the four-move semantic is fixed.
+A fork may restyle them but the five-move semantic is fixed.
 
 ### Register 6: Zone/Texture — *What kind of space is this?*
 
