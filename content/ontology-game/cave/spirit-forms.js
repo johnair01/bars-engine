@@ -3,8 +3,9 @@
 // colour, drawn into the family's shape as the spirit page draws it (bars-engine tools/blender-cloud/content/spirits/shellback.py,
 // the *_gas functions; page https://claude.ai/artifact/B9zYsNyxe6UVhRF3jcNP85). The Protector's Shellback gas is the plain cloud
 // densest at the heart; the Damaged Self and the Emotional Body have no body family yet, so they wear the same plain cloud.
-// cave.js buildSpirit asks this file for the form when a spirit carries a family; the core, hologram and later stages come
-// with sic-unfold-by-sitting.
+// cave.js buildSpirit asks this file for the form when a spirit carries a family. As the spirit is sat with it unfolds
+// (board sic-unfold-by-sitting): its gas draws in to the family's core, and the core opens into the family's hologram, both
+// baked from the page's GLBs by bake_spirits.py and fetched only when a spirit first needs them. Creature and ally come after.
 (function () {
   "use strict";
   // daemon id -> [family name, gas shape]
@@ -98,20 +99,21 @@
       var pts = new THREE.Points(geo, mat); pts.frustumCulled = false; root.add(pts); layers.push({ pts: pts, ms: ms }); all = all.concat(ms);
     });
     var t0 = (typeof performance !== "undefined" ? performance : Date).now(), from = o.from ? o.from.clone() : null, last = -1;
-    var state = { family: family, stage: "gas", motes: all.length, born: from ? 0 : 1, from: from, still: reducedMotion };
+    var state = { family: family, stage: "gas", drawn: "gas", motes: all.length, born: from ? 0 : 1, from: from, still: reducedMotion, hex: hex, gas: 1, mesh: null };
     var inv = new THREE.Vector3(), wp = new THREE.Vector3();
     layers[0].pts.onBeforeRender = function (renderer, scene, camera) {
       var now = (typeof performance !== "undefined" ? performance : Date).now(); if (now === last) return; last = now;
       // face the camera about the up axis, so the page's shapes read as drawn
       root.getWorldPosition(wp); root.rotation.y = Math.atan2(camera.position.x - wp.x, camera.position.z - wp.z) - (root.parent ? root.parent.rotation.y : 0);
       var age = now - t0, sec = now / 1000;
-      if (reducedMotion) { var f = Math.min(1, age / FADE_MS); mat0.opacity = 0.95 * f; mat1.opacity = 0.95 * f; state.born = f; return; }
+      if (reducedMotion) { var f = Math.min(1, age / FADE_MS); mat0.opacity = 0.95 * f * state.gas; mat1.opacity = 0.95 * f * state.gas; state.born = f; return; }
+      var gather = 0.2 + 0.8 * state.gas; // the motes draw in to the heart as the core takes their place
       var b = from ? Math.min(1, age / STREAM_MS) : 1; state.born = b;
       if (from && b < 1) { inv.copy(from); root.worldToLocal(inv); } // the daemon's body, in the gas's own frame this frame
       layers.forEach(function (L) {
         var a = L.pts.geometry.attributes.position, p = a.array;
         L.ms.forEach(function (m, j) {
-          var x = m.x + 0.025 * Math.sin(sec * m.sp + m.ph), y = m.y + 0.025 * Math.sin(sec * m.sp * 1.3 + m.ph * 2), z = m.z + 0.025 * Math.cos(sec * m.sp + m.ph);
+          var x = (m.x + 0.025 * Math.sin(sec * m.sp + m.ph)) * gather, y = (m.y + 0.025 * Math.sin(sec * m.sp * 1.3 + m.ph * 2)) * gather, z = (m.z + 0.025 * Math.cos(sec * m.sp + m.ph)) * gather;
           if (from && b < 1) { var k = Math.max(0, Math.min(1, (b - m.dl * 0.45) / 0.55)), e = k * k * (3 - 2 * k), arc = Math.sin(e * Math.PI) * 0.35; x = inv.x + (x - inv.x) * e; y = inv.y + (y - inv.y) * e + arc; z = inv.z + (z - inv.z) * e; }
           p[j * 3] = x; p[j * 3 + 1] = y; p[j * 3 + 2] = z;
         });
@@ -122,11 +124,109 @@
     root.userData = { form: state, layers: layers, material: mat0, materials: [mat0, mat1] };
     return root;
   }
-  // Tint every layer at once (the orb's material.color in the cave's code)
+  // Tint every layer at once (the orb's material.color in the cave's code), and the core or hologram it has unfolded into
   function tintProxy(root) {
-    var mats = root.userData.materials;
-    return { material: { color: { setHex: function (h) { mats.forEach(function (m) { m.color.setHex(h); }); }, getHex: function () { return mats[0].color.getHex(); } } } };
+    var mats = root.userData.materials, st = root.userData.form;
+    return { material: { color: { setHex: function (h) { mats.forEach(function (m) { m.color.setHex(h); }); st.hex = h; if (st.mesh) tintStage(st.mesh, h); }, getHex: function () { return mats[0].color.getHex(); } } } };
   }
 
-  window.__oagSpiritForms = { FAMILIES: FAMILIES, familyOf: familyOf, buildGas: buildGas, tintProxy: tintProxy, SHAPES: SHAPES };
+  // ---- the unfolding (board sic-unfold-by-sitting) ------------------------------------------------------------------------
+  // A spirit's stage comes from how many times it has been sat with, and nothing else: gas at 0, core at 2, hologram at 4,
+  // creature at 6 and standing ally at 8 (the 6-face pass of 18 October, its Architect, keeping the page's 1-3-5 spacing). The
+  // caves count one sitting a run for each spirit. Creature and ally have no cave form yet, so a spirit past its hologram
+  // wears the hologram until they come.
+  var STAGES = ["gas", "core", "hologram", "creature", "ally"], AT = [0, 2, 4, 6, 8], DRAWN = { gas: 1, core: 1, hologram: 1 };
+  var UNFOLD_MS = 2400, Y0 = 0.35; // the page's spirits stand on their heart, 0.35 up
+  function stageOf(n) { n = n | 0; for (var i = AT.length - 1; i > 0; i--) if (n >= AT[i]) return STAGES[i]; return "gas"; }
+  function drawnStage(stage) { var i = Math.max(0, STAGES.indexOf(stage)); while (i > 0 && !DRAWN[STAGES[i]]) i--; return STAGES[i]; }
+  // daemon id -> the baked forms it wears (bake_spirits.py SOURCES, each family's first base with GLBs). The Holdfast has
+  // none baked yet, so the Controller wears the Shellback's, as the Damaged Self and the Emotional Body do.
+  var FILES = { protector: "shellback", player: "romp", fixer: "tinker", skeptic: "hedge", victim: "ballad" };
+  function fileOf(family, stage) { return (FILES[family] || "shellback") + "-" + stage; }
+  var files = {};
+  function loadStage(family, stage) {
+    var key = fileOf(family, stage), base = window.__oagCaveBase || "/ontology-game/cave/";
+    if (!files[key]) {
+      files[key] = (typeof fetch === "function" ? fetch(base + "spirits/" + key + ".glb") : Promise.reject(new Error("no fetch")))
+        .then(function (r) { if (!r.ok) throw new Error(key + ".glb " + r.status); return r.arrayBuffer(); }).then(parseStage);
+      files[key].catch(function () {}); // a form that does not load leaves the spirit in the form it has
+    }
+    return files[key];
+  }
+  // bake_spirits.py's files: one node whose scale and translation undo the 16-bit positions, one primitive per material,
+  // each with its tone, opacity and glow in its extras
+  function parseStage(buf) {
+    var dv = new DataView(buf), jl = dv.getUint32(12, true);
+    var j = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bin = 20 + jl + 8, node = j.nodes[0], S = node.scale, T = node.translation;
+    return j.meshes[0].primitives.map(function (p) {
+      var a = j.accessors[p.attributes.POSITION], v = j.bufferViews[a.bufferView], ia = j.accessors[p.indices], iv = j.bufferViews[ia.bufferView];
+      var raw = new Int16Array(buf, bin + (v.byteOffset || 0), a.count * 4), pos = new Float32Array(a.count * 3);
+      for (var q = 0; q < a.count; q++) { // the page is z-up with x forward
+        var x = raw[q * 4] / 32767 * S[0] + T[0], y = raw[q * 4 + 1] / 32767 * S[1] + T[1], z = raw[q * 4 + 2] / 32767 * S[2] + T[2];
+        pos[q * 3] = x; pos[q * 3 + 1] = z - Y0; pos[q * 3 + 2] = -y;
+      }
+      var o = (iv.byteOffset || 0) + bin;
+      return { pos: pos, index: new Uint16Array(buf.slice(o, o + ia.count * 2)), look: p.extras || {} };
+    });
+  }
+  function toneHex(THREE, hex, look) { return look.white ? new THREE.Color(0xffffff) : new THREE.Color(hex).multiplyScalar(look.tone == null ? 1 : look.tone); }
+  function tintStage(mesh, hex) { mesh.children.forEach(function (m) { var L = m.userData.look; if (!L.white) m.material.color.setHex(hex).multiplyScalar(L.tone == null ? 1 : L.tone); }); }
+  function fadeStage(mesh, k) { mesh.children.forEach(function (m) { m.material.opacity = m.userData.look.opacity * k; }); }
+  // A core turns slowly on its axis; a hologram stands three quarters to the viewer, its head toward them, and hovers.
+  function buildStage(THREE, parts, hex, stage) {
+    var g = new THREE.Group();
+    parts.forEach(function (P) {
+      var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(P.pos, 3)); geo.setIndex(new THREE.BufferAttribute(P.index, 1));
+      var L = P.look, mat = new THREE.MeshBasicMaterial({ color: toneHex(THREE, hex, L), transparent: true, opacity: L.opacity == null ? 1 : L.opacity, depthWrite: false,
+        side: THREE.DoubleSide, blending: L.glow >= 0.7 ? THREE.AdditiveBlending : THREE.NormalBlending });
+      var m = new THREE.Mesh(geo, mat); m.userData.look = L; m.frustumCulled = false; g.add(m);
+    });
+    g.userData.stage = stage; g.scale.setScalar(SCALE);
+    if (stage === "hologram") g.rotation.y = -Math.PI / 2 + 0.7;
+    return g;
+  }
+  // Unfold the spirit built by buildForm into `to` (a stage name). It fetches the form's file the first time any spirit
+  // needs it; the gas draws in and fades as the core grows out of it, or the core swells and fades as the hologram opens
+  // around it. Without animate (a spirit that comes back in already unfolded) the new form is simply there; with reduced
+  // motion it fades in where it stands.
+  function unfold(THREE, root, to, animate) {
+    var st = root.userData.form, want = drawnStage(to); st.stage = STAGES.indexOf(to) >= 0 ? to : st.stage;
+    if (want === st.drawn || want === st.unfolding) return Promise.resolve(root);
+    st.unfolding = want;
+    return loadStage(st.family, want).then(function (parts) {
+      if (st.unfolding !== want) return root;
+      var next = buildStage(THREE, parts, st.hex, want), prev = st.mesh, gas0 = st.gas, ms = !animate ? 0 : reducedMotion ? FADE_MS : UNFOLD_MS;
+      root.add(next); st.mesh = next; st.drawn = want; st.unfolding = null; st.unfoldedAt = (typeof performance !== "undefined" ? performance : Date).now();
+      function step(t) {
+        var e = t * t * (3 - 2 * t);
+        fadeStage(next, e); if (!reducedMotion) next.scale.setScalar(SCALE * (0.3 + 0.7 * e));
+        if (prev) { fadeStage(prev, 1 - e); if (!reducedMotion) prev.scale.setScalar(SCALE * (1 + 0.5 * e)); }
+        st.gas = gas0 * (1 - e); root.userData.materials.forEach(function (m) { if (!reducedMotion) m.opacity = 0.95 * st.gas; });
+        if (t >= 1 && prev) { root.remove(prev); prev = null; }
+      }
+      var t0 = st.unfoldedAt, spin = 0, last = t0, done = !ms;
+      if (done) step(1);
+      next.children[0].onBeforeRender = function () {
+        var now = (typeof performance !== "undefined" ? performance : Date).now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
+        if (!done) { var t = Math.min(1, (now - t0) / ms); step(t); done = t >= 1; }
+        if (reducedMotion) return;
+        if (want === "core") { spin += dt * 0.6; next.rotation.y = spin; }
+        else next.position.y = 0.04 * Math.sin(now / 900);
+      };
+      return root;
+    });
+  }
+  // The form a family's spirit wears at its stage: the gas, unfolded at once to the core or hologram if it is past the gas.
+  // o.from streams a new spirit's motes out of the daemon's body (a newborn is always a gas).
+  function buildForm(THREE, family, hex, o) {
+    o = o || {};
+    var stage = STAGES.indexOf(o.stage) > 0 ? o.stage : "gas";
+    var root = buildGas(THREE, family, hex, { from: stage === "gas" ? o.from : null });
+    root.userData.unfold = function (to, animate) { return unfold(THREE, root, to, animate !== false); };
+    if (stage !== "gas") unfold(THREE, root, stage, false);
+    return root;
+  }
+
+  window.__oagSpiritForms = { FAMILIES: FAMILIES, familyOf: familyOf, buildGas: buildGas, buildForm: buildForm, tintProxy: tintProxy, SHAPES: SHAPES,
+    STAGES: STAGES, AT: AT, stageOf: stageOf, drawnStage: drawnStage, fileOf: fileOf, loadStage: loadStage };
 })();
