@@ -24,6 +24,8 @@ import { hasFooter } from '@/lib/ui/footer-surfaces'
  * site section.
  */
 const BARE_ROUTES = new Set<string>([
+  // Tap the Vein inside the Council Board's Morning tab: the board is the chrome.
+  '/tap-the-vein/embed',
   '/mastering-allyship',
   '/mastering-allyship/clean-up',
   '/mastering-allyship/open-up',
