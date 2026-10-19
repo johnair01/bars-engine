@@ -7,15 +7,8 @@ import { linkCheckInToEncounter } from '@/actions/threshold-encounter'
 import type { EmotionChannel, AlchemyAltitude } from '@/lib/alchemy/types'
 import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
 import { CultivationCard } from '@/components/ui/CultivationCard'
+import { SHENG_CYCLE, KE_CYCLE } from '@/lib/alchemy/wuxing-cycles'
 import { useNation } from '@/lib/ui/nation-provider'
-
-// Inlined from wuxing.ts — avoids pulling server-only imports into client bundle
-const SHENG_CYCLE: Record<string, string> = {
-  anger: 'joy', joy: 'neutrality', neutrality: 'sadness', sadness: 'fear', fear: 'anger',
-}
-const KE_CYCLE: Record<string, string> = {
-  anger: 'neutrality', neutrality: 'fear', fear: 'joy', joy: 'sadness', sadness: 'anger',
-}
 
 // Canonical channel → element mapping (matches wuxing.ts ontology)
 // anger=fire, joy=wood, neutrality=earth, fear=metal, sadness=water

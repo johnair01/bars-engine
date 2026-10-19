@@ -28,7 +28,8 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (c) passes++
 const page = await ctx.newPage();
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
-page.on('dialog', (d) => d.accept());
+const dialogs = []; // gd-web-bits: no browser alert or confirm box anywhere
+page.on('dialog', (d) => { dialogs.push(d.type() + ': ' + d.message()); d.accept(); });
 const B = 'http://localhost:4571/ontology-game/big-mind';
 const step = () => page.getAttribute('[data-bm-modal]', 'data-bm-step');
 const waitStep0 = (s, ms = 20000) => page.waitForFunction((s) => document.querySelector('[data-bm-modal]')?.getAttribute('data-bm-step') === s, s, { timeout: ms }).then(() => true, () => false);
@@ -70,7 +71,7 @@ await page.evaluate(() => localStorage.clear());
 await page.reload(); await page.waitForSelector('[data-bm-mouth]');
 const mouthText = await page.textContent('[data-bm-mouth]');
 ok(/not therapy/.test(mouthText) && /988/.test(mouthText), 'the cave mouth says it is a game, not therapy, with a crisis line');
-ok(/sit out/i.test(mouthText) && /take control back/i.test(mouthText) && /walk back up/i.test(mouthText), 'the mouth gives the three rules: sit out, take control back, walk back up');
+ok(!/sit out|take control back|walk back up/i.test(mouthText) && await page.locator('[data-bm-mouth] li').count() === 0, 'the mouth lists no rules: they are the first hallway\'s lessons (gd-mouth-in-world)');
 ok(/Nothing is sent anywhere/.test(mouthText), 'the mouth says nothing leaves the device');
 ok(!/Genpo|Big Mind Process|Zen Center/i.test(await page.content()), 'no teacher or programme is named on the page');
 await page.screenshot({ path: SHOTS + '/bm-1-mouth.png' });
@@ -78,7 +79,8 @@ await page.screenshot({ path: SHOTS + '/bm-1-mouth.png' });
 await page.click('[data-bm-enter]');
 await page.waitForSelector('[data-bm-cave] canvas');
 await page.waitForTimeout(600);
-ok(/Hold anywhere to walk/.test(await page.textContent('[data-bm-hint]')), 'the hallway says how to walk');
+await page.waitForFunction(() => window.__oagBigMind.teach && window.__oagBigMind.teach().shown === 'walk', null, { timeout: 8000 }).catch(() => {});
+ok((await page.textContent('[data-bm-hint]')).trim() === '' && await page.locator('[data-teach="walk"]').isVisible(), 'the hallway teaches the walk with a glyph, not a line of words');
 await page.screenshot({ path: SHOTS + '/bm-2-hallway.png' });
 const shut = await page.evaluate(() => { const A = window.__oagBigMind, S = A.S; return { before: A.openAt(S.S_VOICE), past: A.openAt(S.S_GATE + 14), hall: A.openAt(10) }; });
 ok(shut.before > 1.6 && shut.hall < 1.05, 'the chamber is the tunnel widened: ' + shut.before.toFixed(2) + ' against the hallway ' + shut.hall.toFixed(2));
@@ -429,6 +431,7 @@ await page.click('[data-bm-mouthspirit="0"]'); await page.click('[data-bm-mouths
 await page.waitForSelector('[data-bm-mouth]');
 ok(/Go back in, to the Protector/.test(await page.textContent('[data-bm-enter]')), 'back at the mouth, the cave offers to go back in to the Protector, to ask it again');
 ok(/To protect\./.test(await page.textContent('[data-bm-kept]')), 'the mouth lists what has been kept');
+ok(await page.locator('[data-bm-kept] .bm-keptcard[data-bm-keptcard="protector"]').count() === 1 && await page.locator('[data-bm-keptcard="protector"] [data-bm-forget="protector"]').count() === 1, 'what is kept is a card per voice, with Forget on its card');
 ok(/W\.A\.V\.E\.: Dread, Metal, in your chest: 8 to 6/.test(await page.textContent('[data-bm-kept]')), 'the mouth lists each W.A.V.E. as one line');
 await page.screenshot({ path: SHOTS + '/bm-9-mouth-kept.png' });
 await page.click('[data-bm-enter]');
@@ -475,6 +478,10 @@ await page.screenshot({ path: SHOTS + '/bm-10-declined.png' });
 await page.click('[data-bm-selfbtn]'); await page.click('[data-bm-leave]');
 await page.waitForSelector('[data-bm-mouth]');
 await page.click('[data-bm-wipe]');
+ok(await page.isVisible('[data-bm-wipeask]') && (await save()) !== null, 'delete everything asks once more on the page, and nothing is gone yet');
+await page.click('[data-bm-wipeno]');
+ok(await page.isVisible('[data-bm-wipe]') && (await save()) !== null, 'Keep it puts the button back and keeps the save');
+await page.click('[data-bm-wipe]'); await page.click('[data-bm-wipeyes]');
 await page.waitForTimeout(200);
 ok((await save()) === null, 'delete everything clears the device');
 
@@ -1226,7 +1233,7 @@ await page.evaluate(() => localStorage.clear());
   ok(sv.centre && sv.centre.status === 'spoken' && sv.centre.kept.length === 1 && sv.centre.kept[0].line === "That it's safe to play." && sv.chamber === 6 && sv.voices['damaged-self'], 'only the kept line is saved, with the voices\' records: ' + JSON.stringify(sv.centre));
   await page.click('[data-bm-leave]'); await page.waitForSelector('[data-bm-mouth]');
   const kept = await page.textContent('[data-bm-kept]');
-  ok(/The vulnerable child \(it spoke with you at the centre\)/.test(kept) && /That it's safe to play\./.test(kept), 'the mouth shows what the child said that was kept');
+  ok(/The vulnerable child\s*It spoke with you at the centre\./.test(kept) && /That it's safe to play\./.test(kept), 'the mouth shows what the child said that was kept');
 
   // seen, not questioned: being with it asks nothing
   await page.click('[data-bm-forget="centre"]');
@@ -1558,12 +1565,59 @@ await page.evaluate(() => localStorage.clear());
   await page.evaluate(() => localStorage.clear());
 }
 
+// ---- the walkthrough in the first hallway (Six-faces-council council/callsheets/game-demo.md: gd-mouth-in-world, gd-teach-by-doing) ----
+// The old rules list is the light's lessons now: the walk, Run, Self and the way back, one glyph at a time, each gone once done
+// or skipped, kept in oag.tutorial.v1; Spirits and Trust are taught the first time their buttons show. Nothing is taught twice.
+await page.evaluate(() => localStorage.clear());
+await page.goto(B); await page.waitForSelector('[data-bm-mouth]');
+await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+const tch = () => page.evaluate(() => window.__oagBigMind.teach());
+const tchIs = (id) => page.waitForFunction((id) => window.__oagBigMind.teach().shown === id, id, { timeout: 8000 }).then(() => true, () => false);
+const learned = (id) => page.waitForFunction((id) => window.__oagBigMind.teach().done.indexOf(id) >= 0, id, { timeout: 8000 }).then(() => true, () => false);
+ok(await tchIs('walk'), 'a new player\'s first hallway opens on the walk lesson');
+let TB = await tch();
+ok(TB.away && TB.visible && (await page.locator('[data-teach]').first().textContent()).trim() === '' && await page.locator('[data-teach-skip]').isVisible(), 'the light floats ahead and the glyph has no words, beside "I know this" ' + JSON.stringify(TB));
+await page.evaluate(() => { const s = window.__oagBigMind.state; s.speed = 2; s.held = true; });
+ok(await learned('walk'), 'holding to walk learns the walk');
+await page.evaluate(() => { window.__oagBigMind.state.held = false; });
+ok(await tchIs('run'), 'then Run is taught, by its button');
+const rb = await page.locator('[data-bm-run]').boundingBox(), gb = await page.locator('[data-teach="run"]').boundingBox();
+ok(gb && rb && gb.y + gb.height <= rb.y + 2 && Math.abs(gb.x + gb.width / 2 - (rb.x + rb.width / 2)) < 60, 'the run glyph sits just above the Run button');
+await page.click('[data-bm-run]');
+await page.evaluate(() => { window.__oagBigMind.state.held = true; });
+ok(await learned('run'), 'walking with Run on learns it');
+await page.evaluate(() => { const s = window.__oagBigMind.state; s.held = false; s.run = false; });
+ok(await tchIs('self'), 'then the Self button');
+const sb = await page.locator('[data-bm-selfbtn]').boundingBox(), gs = await page.locator('[data-teach="self"]').boundingBox();
+ok(gs && sb && gs.y >= sb.y + sb.height - 2, 'the Self glyph sits under the button at the top, pointing up at it');
+await page.click('[data-teach-skip]');
+ok(await learned('self'), '"I know this" skips a lesson for good');
+await page.evaluate(() => { window.__oagBigMind.state.s = 14; });
+ok(await tchIs('back'), 'past the first stretch, the way back is taught by the stick');
+await page.keyboard.down('ArrowDown'); ok(await learned('back'), 'walking back learns it'); await page.keyboard.up('ArrowDown');
+TB = await tch();
+ok(['walk', 'run', 'self', 'back'].every((id) => TB.done.includes(id)) && JSON.parse(await page.evaluate(() => localStorage.getItem('oag.tutorial.v1'))).length === TB.done.length, 'the lessons are kept on this device, as ids ' + JSON.stringify(TB.done));
+ok(await tchIs('trust'), 'the Trust button, once it can be used, gets its glyph the first time');
+const tb = await page.locator('[data-bm-trustbtn]').boundingBox(), gt = await page.locator('[data-teach="trust"]').boundingBox();
+ok(gt && tb && gt.y + gt.height <= tb.y + 2, 'the Trust glyph sits just above its button, pointing down at it');
+await page.click('[data-teach-skip]');
+ok(await learned('trust'), 'and "I know this" skips it');
+await page.waitForFunction(() => !window.__oagBigMind.teach().visible, null, { timeout: 5000 }).catch(() => {});
+ok(!(await tch()).visible && !(await page.locator('[data-teach-skip]').isVisible()), 'with nothing left to teach here, the light goes home to the chest');
+await page.screenshot({ path: SHOTS + '/bm-teach.png' });
+await page.reload(); await page.waitForSelector('[data-bm-mouth]'); await page.click('[data-bm-enter]'); await page.waitForSelector('[data-bm-cave] canvas');
+await page.waitForTimeout(800);
+TB = await tch();
+ok(!['walk', 'run', 'self', 'back'].includes(TB.shown) && !['walk', 'run', 'self', 'back'].includes(TB.lesson), 'T2: going back in, nothing learned is taught again ' + JSON.stringify(TB));
+await page.evaluate(() => localStorage.clear());
+
 // the Cave of Lessons still opens on its own page
 const p2 = await ctx.newPage();
 p2.on('pageerror', (e) => errors.push('cave pageerror: ' + e.message));
 await p2.goto('http://localhost:4571/ontology-game/cave');
 ok(await p2.waitForSelector('[data-cave-home]', { timeout: 5000 }).then(() => true, () => false), 'the Cave of Lessons still opens its doorway');
 ok(await p2.evaluate(() => !!window.__oagCave.kit.buildTube), 'the shared engine is exported for the fork');
+ok(dialogs.length === 0, 'no browser alert or confirm box' + (dialogs.length ? ': ' + dialogs.join('; ') : ''));
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join('; ') : ''));
 console.log(passes + ' passed, ' + fails + ' failed');
 await browser.close(); server.close();
