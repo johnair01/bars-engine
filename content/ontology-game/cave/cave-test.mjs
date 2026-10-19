@@ -31,6 +31,8 @@ const files = {
 for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damaged-self', 'emotional-body', 'player']) files['/ontology-game/cave/daemons/' + d + '.glb'] = ['cave/daemons/' + d + '.glb', 'model/gltf-binary'];
 // The player's own figure, Average Dusk on its mocap walk (bake_daemons.py --walker).
 files['/ontology-game/cave/player/walker.glb'] = ['cave/player/walker.glb', 'model/gltf-binary'];
+// The family spirits' core and hologram (bake_spirits.py), fetched when a spirit unfolds.
+for (const f of ['shellback', 'romp', 'tinker', 'hedge', 'ballad']) for (const st of ['core', 'hologram']) files['/ontology-game/cave/spirits/' + f + '-' + st + '.glb'] = ['cave/spirits/' + f + '-' + st + '.glb', 'model/gltf-binary'];
 const server = http.createServer((req, res) => {
   const f = files[req.url.split('?')[0]];
   if (!f) { res.writeHead(404); res.end(); return; }
@@ -235,7 +237,8 @@ ok((await C(() => window.__oagCave.camInside())).inside, 'the camera follows it,
 const wk0 = await C(() => window.__oagCave.walker());
 ok(wk0.worn && wk0.standInShown === 0 && wk0.joints >= 30 && wk0.length > 20, `the player wears Average Dusk on its mocap walk (${wk0.joints} joints, ${wk0.length} frames), the stand-in's parts hidden`);
 const wf = [];
-await page.keyboard.down('ArrowDown'); for (let i = 0; i < 10; i++) { await page.waitForTimeout(120); wf.push((await C(() => window.__oagCave.walker())).frame); } await page.keyboard.up('ArrowDown');
+// at least ten samples, more while a slow renderer has shown fewer than six frames
+await page.keyboard.down('ArrowDown'); for (let i = 0; i < 10 || (i < 40 && new Set(wf.map((f) => f.toFixed(1))).size < 6); i++) { await page.waitForTimeout(120); wf.push((await C(() => window.__oagCave.walker())).frame); } await page.keyboard.up('ArrowDown');
 ok(new Set(wf.map((f) => f.toFixed(1))).size >= 6, `walking turns the mocap clip (frames ${wf.map((f) => f.toFixed(1)).join(', ')})`);
 const fD = await free();
 ok(fD.s < fS.s - 2 && fD.dir === 1, `the down key walks back toward the camera, which stays behind (${fS.s.toFixed(1)} to ${fD.s.toFixed(1)})`);
@@ -599,8 +602,39 @@ ok(sat2.length === 1 && (await C(() => window.__oagCave.carried())) === 1, 'stan
 for (let i = 0; i < 1; i++) {
   await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click();
 }
-await page.waitForTimeout(1800);
+// The let-go tween runs on frames, so under a slow renderer it is waited for, not timed.
+await page.waitForFunction(() => window.__oagCave.spirits.length === 0 && window.__oagCave.carried() === 0, null, { timeout: 10000 }).catch(() => {});
 ok((await C(() => window.__oagCave.spirits.length)) === 0 && (await C(() => window.__oagCave.carried())) === 0, 'a spirit breathed out takes its light with it');
+// The sitting with your spirits (sic-first-cave-sitting): the spirits you brought settle around you as you sit, and each family
+// spirit counts the whole W.A.V.E. as a sitting and unfolds where it sits when the count crosses a stage.
+await C(() => { const S = window.__oagSpiritStore, A = window.__oagCave.addSpirit;
+  [['protector', 'Fear', 'metal', 1], ['fixer', 'Hurry', 'fire', 0]].forEach(([f, n, e, k]) => { S.put({ id: 'meet-' + f, name: n, element: e, family: f, sittings: k }); A({ id: 'meet-' + f, name: n, element: e, family: f, sittings: k }); }); });
+await page.locator('[data-cave-sitbtn]').click();
+await page.locator('[data-cave-sit-step="welcome"]').waitFor({ timeout: 5000 });
+ok((await page.locator('[data-cave-sit-around="2"]').textContent()) === 'Fear and Hurry settle around you.', 'sitting down, the spirits you brought settle around you');
+await page.waitForFunction(() => { const s = window.__oagCave.sitting(); return s && s.around.length === 2 && s.around.every((o) => o.d < 2); }, null, { timeout: 10000 }).catch(() => {});
+const ring = (await C(() => window.__oagCave.sitting())).around;
+ok(ring.length === 2 && ring.every((o) => o.d < 2) && Math.abs(ring[0].d - ring[1].d) < 0.6, 'they sit close by the seated figure, one at each side: ' + JSON.stringify(ring.map((o) => [o.name, +o.d.toFixed(2)])));
+await page.locator('[data-cave-sitnext]').click();
+await page.locator('[data-cave-sittexture="tension"]').click(); await page.locator('[data-cave-sitnext]').click();
+await page.locator('[data-cave-sitelement="Fear"]').click(); await page.locator('[data-cave-sitnext]').click();
+for (let i = 0; i < 2; i++) await page.locator('[data-cave-sitnext]').click();
+await page.locator('[data-cave-sitnotnow]').click(); await page.locator('[data-cave-sitnext]').click();
+await page.locator('[data-cave-sitgoal]').fill('to rest'); await page.locator('[data-cave-sitpush="away"]').click(); await page.locator('[data-cave-sitexhale]').click();
+await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 10000 });
+await page.waitForFunction(() => { const o = window.__oagCave.spirits.filter((x) => x.id === 'meet-protector')[0]; return o && o.g.userData.form.drawn === 'core'; }, null, { timeout: 10000 }).catch(() => {});
+const after = await C(() => window.__oagCave.spirits.filter((o) => o.family).map((o) => ({ id: o.id, n: o.sittings, stage: o.stage, drawn: o.g.userData.form.drawn, kept: window.__oagSpiritStore.get(o.id).sittings })));
+ok(after.length === 2 && after[0].n === 2 && after[0].stage === 'core' && after[0].drawn === 'core' && after[0].kept === 2 && after[1].n === 1 && after[1].stage === 'gas' && after[1].kept === 1,
+  'standing up, each counts the sitting and the store keeps it; Fear, at two, unfolds into its core where it sat: ' + JSON.stringify(after));
+await page.locator('[data-cave-sitbtn]').click();
+await page.locator('[data-cave-sit-step="welcome"]').waitFor({ timeout: 5000 });
+await page.locator('[data-cave-standup]').click();
+await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 10000 });
+ok((await C(() => window.__oagCave.spirits.filter((o) => o.family).map((o) => o.sittings).join())) === '2,1', 'standing up partway counts no sitting');
+await C(() => { const S = window.__oagSpiritStore; ['protector', 'fixer'].forEach((f) => S.remove('meet-' + f)); });
+for (let i = 0; i < 3; i++) { await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); }
+await page.waitForFunction(() => window.__oagCave.spirits.length === 0 && window.__oagCave.carried() === 0, null, { timeout: 10000 }).catch(() => {});
+ok((await C(() => window.__oagCave.spirits.length)) === 0, 'thanked and breathed out, the three leave the walk as it was');
 ok(await sees('[data-cave-home-satisfied="yes"]') && await page.locator('[data-cave-skip]').count() === 0 && await page.locator('[data-cave-next]').count() === 0, 'back from the room the daemon is asked again, and it is still no skip and no way past');
 await page.locator('[data-cave-home-satisfied="not-yet"]').click();
 ok(await sees('[data-cave-dig]') && await sees('[data-cave-take-home]'), '"Not yet" puts the daemon back in the way, with its encounters');
@@ -1204,7 +1238,8 @@ ok((await lv()).trail.join(',') === 'hall', 'and the portal opens the hall again
   await page.mouse.click(at.x, at.y);
   const g = await C(() => window.__oagCave.figure().goTo);
   ok(!!g && Math.hypot(g.x - tx, g.z - tz) < 1.5, `a click on the floor sets where the figure walks to (${g ? g.x.toFixed(1) + ', ' + g.z.toFixed(1) : 'none'}, the spot ${tx.toFixed(1)}, ${tz.toFixed(1)})`);
-  const reached = await page.waitForFunction(() => window.__oagCave.figure().fromMiddle < 4.5, null, { timeout: 15000 }).then(() => true, () => false);
+  // 30 s: late in a full run the slow renderer walked it 11.6 of the 16 in 15 s (2026-10-19)
+  const reached = await page.waitForFunction(() => window.__oagCave.figure().fromMiddle < 4.5, null, { timeout: 30000 }).then(() => true, () => false);
   const f1 = await C(() => window.__oagCave.figure());
   ok(reached, `the figure walks there, into the middle of the hall (${f1.fromMiddle.toFixed(1)} from the middle; the ring is ${f0.fromMiddle.toFixed(1)})`);
   await page.waitForFunction(() => !window.__oagCave.figure().goTo, null, { timeout: 5000 }).catch(() => {});
