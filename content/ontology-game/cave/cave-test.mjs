@@ -613,7 +613,7 @@ const stayed = await C(() => window.__oagCave.spirits.filter((o) => o.name === '
 ok(stayed === 1 && (await C(() => window.__oagCave.spirits.length)) === nSp + 1 && (await C(() => window.__oagCave.wave())).last.exhale === 'stay', 'the Exhale\'s stay keeps the shape: a spirit named Dread now walks with the player');
 await C(() => window.__oagCave.forgetRun());
 await page.locator('[data-cave-pane]').click().catch(() => {});
-for (let i = await C(() => window.__oagCave.spirits.length); i > 0; i--) { await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200); }
+for (let i = await C(() => window.__oagCave.spirits.length); i > 0; i--) { await menuTap('[data-cave-spirits-n]'); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200); }
 await C(() => window.__oagSpiritStore.wipe());
 await page.locator('[data-cave-pane]').click().catch(() => {});
 await page.screenshot({ path: SHOTS + '/cave-daemon-wave.png' });
@@ -901,7 +901,7 @@ for (const round of [1, 2]) {
     ok(tr2.can === 2 && tr2.will === 0 && tr2.good === 'seen' && !tr2.trusted && tr2.marks.can === 2 && tr2.pending.length === 0 && tr2.seen.sort().join() === 'can:vouch,can:wait,good:share', `the reading eased, so the moves count: waiting and the Fixer's vouching make two pips; the share is its read of you; pacing was not what it needs. ${JSON.stringify(tr2.seen)}`);
     ok(await page.locator('[data-cave-trustsaw]').count() === 3 && await page.locator('[data-cave-trusthint]').count() === 1 && await page.locator('[data-cave-trustread]').count() === 1 && /safe too/.test(await page.locator('[data-cave-trustread]').textContent()) && tr2.stance === 'softening', 'it says what it saw, hints at what it needs, reads you in its own words and softens');
     await page.locator('[data-cave-pane]').click().catch(() => {});
-    await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click();
+    await menuTap('[data-cave-spirits-n]'); await page.locator('[data-cave-spirit="0"]').click();
     ok(await sees('[data-cave-ally="fixer"]'), 'the ally says why it walks with you');
     await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200);
     await C(() => window.__oagCave.trustClear());
