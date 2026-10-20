@@ -104,8 +104,9 @@
     var inv = new THREE.Vector3(), wp = new THREE.Vector3();
     layers[0].pts.onBeforeRender = function (renderer, scene, camera) {
       var now = (typeof performance !== "undefined" ? performance : Date).now(); if (now === last) return; last = now;
-      // face the camera about the up axis, so the page's shapes read as drawn
-      root.getWorldPosition(wp); root.rotation.y = Math.atan2(camera.position.x - wp.x, camera.position.z - wp.z) - (root.parent ? root.parent.rotation.y : 0);
+      // face the camera about the up axis, so the page's shapes read as drawn, or face o.faceAt (a world point) if it is given
+      var aim = o.faceAt || camera.position;
+      root.getWorldPosition(wp); root.rotation.y = Math.atan2(aim.x - wp.x, aim.z - wp.z) - (root.parent ? root.parent.rotation.y : 0);
       var age = now - t0, sec = now / 1000;
       if (reducedMotion) { var f = Math.min(1, age / FADE_MS); mat0.opacity = 0.95 * f * state.gas; mat1.opacity = 0.95 * f * state.gas; state.born = f; return; }
       var gather = 0.2 + 0.8 * state.gas; // the motes draw in to the heart as the core takes their place
@@ -138,7 +139,7 @@
   // a spirit of another family past its hologram wears the hologram until they come.
   var STAGES = ["gas", "core", "hologram", "creature", "ally"], AT = [0, 2, 4, 6, 8], DRAWN = { gas: 1, core: 1, hologram: 1 };
   var LATE = { shellback: { creature: 1, ally: 1 } };
-  var UNFOLD_MS = 2400, Y0 = 0.35, ALLY_TURN = 2.2; // the page's spirits stand on their heart, 0.35 up
+  var UNFOLD_MS = 2400, Y0 = 0.35, ALLY_TURN = -0.7; // the page's spirits stand on their heart, 0.35 up
   function stageOf(n) { n = n | 0; for (var i = AT.length - 1; i > 0; i--) if (n >= AT[i]) return STAGES[i]; return "gas"; }
   function drawnStage(stage, family) {
     var late = LATE[FILES[family] || "shellback"] || {}, i = Math.max(0, STAGES.indexOf(stage));
@@ -170,25 +171,40 @@
         var x = raw[q * 4] / 32767 * S[0] + T[0], y = raw[q * 4 + 1] / 32767 * S[1] + T[1], z = raw[q * 4 + 2] / 32767 * S[2] + T[2];
         pos[q * 3] = x; pos[q * 3 + 1] = z - Y0; pos[q * 3 + 2] = -y;
       }
-      var o = (iv.byteOffset || 0) + bin;
-      return { pos: pos, index: new Uint16Array(buf.slice(o, o + ia.count * 2)), look: p.extras || {} };
+      var o = (iv.byteOffset || 0) + bin, col = null;
+      if (p.attributes.COLOR_0 != null) { // the creature's and ally's painted parts: sRGB bytes, four to a vertex
+        var ca = j.accessors[p.attributes.COLOR_0], cv = j.bufferViews[ca.bufferView], cb = new Uint8Array(buf, bin + (cv.byteOffset || 0), ca.count * 4);
+        col = new Float32Array(ca.count * 3); for (var c = 0; c < ca.count; c++) { col[c * 3] = cb[c * 4] / 255; col[c * 3 + 1] = cb[c * 4 + 1] / 255; col[c * 3 + 2] = cb[c * 4 + 2] / 255; }
+      }
+      return { pos: pos, index: new Uint16Array(buf.slice(o, o + ia.count * 2)), col: col, look: p.extras || {} };
     });
   }
   function toneHex(THREE, hex, look) { return look.white ? new THREE.Color(0xffffff) : new THREE.Color(hex).multiplyScalar(look.tone == null ? 1 : look.tone); }
-  function tintStage(mesh, hex) { mesh.children.forEach(function (m) { var L = m.userData.look; if (!L.white) m.material.color.setHex(hex).multiplyScalar(L.tone == null ? 1 : L.tone); }); }
-  function fadeStage(mesh, k) { mesh.children.forEach(function (m) { m.material.opacity = m.userData.look.opacity * k; }); }
+  // a painted part (the creature's and ally's) keeps its own colour; only the light-made parts take the family's tint
+  function painted(L) { return !!(L.rgb || L.paint); }
+  function tintStage(mesh, hex) { mesh.children.forEach(function (m) { var L = m.userData.look; if (!L.white && !painted(L)) m.material.color.setHex(hex).multiplyScalar(L.tone == null ? 1 : L.tone); }); }
+  function fadeStage(mesh, k) { mesh.children.forEach(function (m) { m.material.opacity = m.userData.look.opacity * k; if (painted(m.userData.look)) m.material.transparent = k < 1; }); }
   // A core turns slowly on its axis; a hologram stands three quarters to the viewer, its head toward them, and hovers.
+  // Each drawn form's front (its eyes) is its own +x, and the form's root faces the viewer with its +z, so a turn of -pi/2
+  // puts the eyes on the viewer. The hologram and creature stand three quarters to the viewer; the ally faces them square.
+  function turnOf(stage) { return stage === "core" ? 0 : -Math.PI / 2 + 0.7 + (stage === "ally" ? ALLY_TURN : 0); }
   function buildStage(THREE, parts, hex, stage) {
     var g = new THREE.Group();
     parts.forEach(function (P) {
       var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(P.pos, 3)); geo.setIndex(new THREE.BufferAttribute(P.index, 1));
-      var L = P.look, mat = new THREE.MeshBasicMaterial({ color: toneHex(THREE, hex, L), transparent: true, opacity: L.opacity == null ? 1 : L.opacity, depthWrite: false,
+      var L = P.look, mat;
+      if (painted(L)) { // a body, not light: lit, solid, in its own paint, with a little glow of its own so the dim room does not swallow it
+        geo.computeVertexNormals();
+        if (P.col) geo.setAttribute("color", new THREE.BufferAttribute(P.col, 3));
+        var paint = L.rgb ? new THREE.Color(L.rgb[0], L.rgb[1], L.rgb[2]) : new THREE.Color(0xffffff);
+        mat = new THREE.MeshLambertMaterial({ color: paint, vertexColors: !!P.col, transparent: true, opacity: 1, side: THREE.DoubleSide,
+          emissive: (L.rgb ? paint.clone() : new THREE.Color(0x3a3530)).multiplyScalar(L.glow >= 0.7 ? 1 : 0.35) });
+      } else mat = new THREE.MeshBasicMaterial({ color: toneHex(THREE, hex, L), transparent: true, opacity: L.opacity == null ? 1 : L.opacity, depthWrite: false,
         side: THREE.DoubleSide, blending: L.glow >= 0.7 ? THREE.AdditiveBlending : THREE.NormalBlending });
       var m = new THREE.Mesh(geo, mat); m.userData.look = L; m.frustumCulled = false; g.add(m);
     });
     g.userData.stage = stage; g.scale.setScalar(SCALE);
-    if (stage !== "core") g.rotation.y = -Math.PI / 2 + 0.7;
-    if (stage === "ally") g.rotation.y += ALLY_TURN; // the standing ally turns round so its front, eyes and heart face the viewer
+    g.rotation.y = turnOf(stage);
     return g;
   }
   // Unfold the spirit built by buildForm into `to` (a stage name). It fetches the form's file the first time any spirit
@@ -227,7 +243,7 @@
   function buildForm(THREE, family, hex, o) {
     o = o || {};
     var stage = STAGES.indexOf(o.stage) > 0 ? o.stage : "gas";
-    var root = buildGas(THREE, family, hex, { from: stage === "gas" ? o.from : null });
+    var root = buildGas(THREE, family, hex, { from: stage === "gas" ? o.from : null, faceAt: o.faceAt });
     root.userData.unfold = function (to, animate) { return unfold(THREE, root, to, animate !== false); };
     if (stage !== "gas") unfold(THREE, root, stage, false);
     return root;

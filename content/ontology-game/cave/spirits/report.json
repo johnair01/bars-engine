@@ -60,14 +60,14 @@
   "source": "round19/donkey-neutral/glb/fire-hologram.glb"
  },
  "shellback-creature": {
-  "bytes": 147900,
+  "bytes": 160112,
   "tris": 12914,
   "source_bytes": 1225488,
   "source": "glb/fire-creature.glb",
   "simplify": "--ratio 0.1 --error 0.01"
  },
  "shellback-ally": {
-  "bytes": 131108,
+  "bytes": 142724,
   "tris": 11423,
   "source_bytes": 1172536,
   "source": "glb/fire-ascended.glb",

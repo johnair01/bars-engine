@@ -1869,7 +1869,7 @@
   // board sic-family-cloud); form.from, a world point, streams its motes in from the daemon's body. Without a family it is the orb.
   function buildSpirit(THREE, name, hex, form) {
     var g = new THREE.Group(), SF = window.__oagSpiritForms, fam = form && form.family && SF ? SF.familyOf(form.family) : null;
-    var gas = fam ? (SF.buildForm || SF.buildGas)(THREE, fam, hex, { from: form.from, stage: form.stage }) : null;
+    var gas = fam ? (SF.buildForm || SF.buildGas)(THREE, fam, hex, { from: form.from, stage: form.stage, faceAt: form.faceAt }) : null;
     var orb = gas ? SF.tintProxy(gas) : new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }));
     var au = buildAura(THREE, 0.7), label = labelSprite(THREE, name, "#fff1d0", 2.4); label.position.y = 0.95;
     g.add(gas || orb); g.add(au); g.add(label); g.userData = { aura: au, color: new THREE.Color(hex), orb: orb, label: label, level: 0.45, form: gas ? gas.userData.form : null, unfold: gas ? gas.userData.unfold : null };
@@ -5707,11 +5707,11 @@
       var ELDER_FORMS = [["gas", "Cloud", "Every spirit begins as a cloud, the day you meet its daemon."], ["core", "Core", "Sat with twice, the cloud draws in to a core."],
         ["hologram", "Hologram", "Sat with four times, the core opens into a likeness of its animal."], ["creature", "Creature", "Sat with six times, the likeness takes a body."],
         ["ally", "Standing ally", "Sat with eight times, it stands beside you as an ally."]];
-      var ELDER_AT = { x: -1.7, y: 0.9, z: -4.9 }, ELDER_Y = { creature: 0.42, ally: 0.42 }, ELDER_SIZE = 1.6, ELDER_STEP_MS = 1600, elder = null, elderShow = null;
+      var ELDER_AT = { x: -1.7, y: 0.9, z: -4.9 }, ELDER_Y = { creature: 0.42, ally: 0.42 }, ELDER_SIZE = 1.6, ELDER_FACES = new THREE.Vector3(0, 0, 0), ELDER_STEP_MS = 1600, elder = null, elderShow = null;
       var elderBox = el("div", { class: "oagr-door oagr-load", "data-room-elder": "", style: "display:none" }); wrap.appendChild(elderBox);
       function elderWear(stage) {
-        var g = buildSpirit(THREE, "Shellback, an elder", lookup(DAEMONS, "protector")[3], { family: "protector", stage: stage });
-        g.scale.setScalar(ELDER_SIZE); g.position.set(ELDER_AT.x, ELDER_Y[stage] || ELDER_AT.y, ELDER_AT.z); g.rotation.y = 0.6; g.userData.level = 0.6;
+        var g = buildSpirit(THREE, "Shellback, an elder", lookup(DAEMONS, "protector")[3], { family: "protector", stage: stage, faceAt: ELDER_FACES }); // it faces the middle of the room, not the camera
+        g.scale.setScalar(ELDER_SIZE); g.position.set(ELDER_AT.x, ELDER_Y[stage] || ELDER_AT.y, ELDER_AT.z); g.userData.level = 0.6;
         if (elder) scene.remove(elder.g);
         elder = { g: g, stage: stage }; scene.add(g);
       }

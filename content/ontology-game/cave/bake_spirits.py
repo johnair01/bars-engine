@@ -75,6 +75,7 @@ SCAN_ALPHA = {"holo": 0.32, "deep": 0.22}
 
 
 def lum(c): return (c[0] + c[1] + c[2]) / 3
+def srgb(c): return [round(max(0.0, min(1.0, x)) ** (1 / 2.2), 3) for x in c[:3]]  # the cave's renderer writes colours as given
 
 
 # The creature's and ally's painted materials (shader nodes, no base colour in the glTF) take the element's colour at a tone.
@@ -89,7 +90,8 @@ def look(m, light, late=False):
     alpha = base[3] if base else 1.0
     white = min(col) > 0.95
     painted = late and not base and not emit
-    if painted: return {"tone": PAINTED.get(m.get("name", "").split(".")[0], 0.85), "white": False, "opacity": 1.0, "glow": 0}
+    if painted: return {"tone": PAINTED.get(m.get("name", "").split(".")[0], 0.85), "white": False, "opacity": 1.0, "glow": 0, "paint": "vertex"}
+    if late and not white: return {"tone": 1.0, "white": False, "opacity": 1.0, "glow": round(min(4.0, (lum(emit) if emit else 0) * strength), 3), "rgb": srgb(col)}
     alpha = SCAN_ALPHA.get(m.get("name", "").split(".")[0], alpha)
     return {"tone": 1.0 if white else round(min(1.6, lum(col) / max(1e-6, lum(light))), 3), "white": white,
             "opacity": round(alpha, 3), "glow": round(min(4.0, (lum(emit) if emit else 0) * strength), 3)}
@@ -111,9 +113,10 @@ def bake(src, out, late=False):
     for ni, n in enumerate(j["nodes"]):
         if "mesh" not in n: continue
         for p in j["meshes"][n["mesh"]]["primitives"]:
-            g = groups.setdefault(p.get("material", -1), [[], []])
+            g = groups.setdefault(p.get("material", -1), [[], [], []])
             base = len(g[0])
             g[0].extend(placed(ni, v) for v in accessor(j, bin_, p["attributes"]["POSITION"]))
+            if late and "COLOR_0" in p["attributes"]: g[2].extend(accessor(j, bin_, p["attributes"]["COLOR_0"]))
             g[1].extend(base + i[0] for i in accessor(j, bin_, p["indices"]))
     allp = [v for g in groups.values() for v in g[0]]
     lo = [min(v[k] for v in allp) for k in range(3)]; hi = [max(v[k] for v in allp) for k in range(3)]
@@ -123,13 +126,15 @@ def bake(src, out, late=False):
         while len(blob) % 4: blob.append(0)
         views.append({"buffer": 0, "byteOffset": len(blob), "byteLength": len(data), "target": target}); blob.extend(data)
         return len(views) - 1
-    for mi, (pos, idx) in sorted(groups.items()):
+    for mi, (pos, idx, cols) in sorted(groups.items()):
         assert len(pos) < 65536, src
         # with the normals and UVs gone, corners that sat apart only for them are one vertex again
-        seen, keep, remap = {}, [], []
-        for v in pos:
+        seen, keep, remap, kcol = {}, [], [], []
+        for vi, v in enumerate(pos):
             k = tuple(max(-32767, min(32767, round((v[c] - mid[c]) / half[c] * 32767))) for c in range(3))
-            if k not in seen: seen[k] = len(keep); keep.append(k)
+            if k not in seen:
+                seen[k] = len(keep); keep.append(k)
+                if len(cols) == len(pos): kcol.append(cols[vi])
             remap.append(seen[k])
         idx = [remap[i] for i in idx]; pos = keep
         q = bytearray()
@@ -140,7 +145,13 @@ def bake(src, out, late=False):
                      "min": [-1, -1, -1], "max": [1, 1, 1]})
         accs.append({"bufferView": iv, "componentType": 5123, "count": len(idx), "type": "SCALAR"})
         m = mats[mi] if mi >= 0 else {}
-        prims.append({"attributes": {"POSITION": len(accs) - 2}, "indices": len(accs) - 1,
+        attrs = {"POSITION": len(accs) - 2}
+        if kcol:  # the creature's and ally's painted skin, shell and cloth: one sRGB byte colour per vertex
+            c = bytearray()
+            for col in kcol: c += bytes(round(x * 255) for x in srgb(col)) + b"\xff"
+            cv = put(bytes(c), 34962)
+            accs.append({"bufferView": cv, "componentType": 5121, "normalized": True, "count": len(kcol), "type": "VEC4"}); attrs["COLOR_0"] = len(accs) - 1
+        prims.append({"attributes": attrs, "indices": len(accs) - (2 if kcol else 1),
                       "extras": dict(look(m, light, late), name=m.get("name", ""))})
         tris += len(idx) // 3
     gltf = {"asset": {"version": "2.0", "generator": "bars-engine bake_spirits.py"}, "extensionsUsed": ["KHR_mesh_quantization"],
