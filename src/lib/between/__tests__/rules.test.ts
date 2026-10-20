@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { carriedGarden, invitedView, itemFor, mayWrite, merge, parsePath, plantedGarden, type Doc, type Who } from '@/lib/between/rules'
+import { carriedGarden, invitedView, itemFor, lanternLit, mayWrite, merge, MOVES, parsePath, plantedGarden, type Doc, type Who } from '@/lib/between/rules'
 
 const A = 'playerA', B = 'playerB', C = 'playerC'
 const member = (playerId: string): Who => ({ playerId, member: true, invited: false })
@@ -12,6 +12,7 @@ function testPaths() {
   assert.deepEqual(parsePath('items/ilmn-ab12'), { table: 'items', id: 'ilmn-ab12' })
   assert.deepEqual(parsePath('shown/' + A), { table: 'shown', playerId: A })
   assert.deepEqual(parsePath(`data/users/${A}/spark`), { table: 'privates', playerId: A, key: 'spark' })
+  assert.deepEqual(parsePath(`data/users/${A}/pouch`), { table: 'privates', playerId: A, key: 'pouch' })
   for (const bad of ['garden/other', 'items', 'items/a/b', 'data/users/x/notes', '../x', 'items/a b', 7])
     assert.equal(parsePath(bad), null, String(bad))
 }
@@ -94,6 +95,70 @@ function testSealedWordsStayOnTheServer() {
   assert.equal(charge.text, 'what I worked through', 'the stored item is left alone')
 }
 
+/* The hearth (council pass crafting-charge1): architect tests T1, T2, T3, T7, T9. */
+const between = () => spark({ phase: 'between', members: { [A]: {}, [B]: {} } })
+const pouch = (id: string) => ({ table: 'privates', playerId: id, key: 'pouch' }) as const
+const ember = (extra: Doc = {}): Doc => ({ move: 'fire_metal', feel: 'fire', glow: 4, state: 'held', at: 5, lantern: null, ...extra })
+const lantern = (extra: Doc = {}): Doc => ({ kind: 'lantern', by: A, hue: '#e8a', element: null, pos: { x: 1, z: 2 }, yes: {}, status: 'offered', at: 6,
+  history: { h1: { act: 'made', by: A, at: 6 } }, ...extra })
+
+function testEmberTakesTheMovesElement() { // T1
+  const g = between(), w = (e: Doc) => mayWrite(member(A), g, pouch(A), 'update', { embers: { e1: e } }, null).ok
+  assert.equal(Object.keys(MOVES).length, 15)
+  assert.deepEqual(MOVES.fire_metal, { name: 'Temper Action', from: 'fire', to: 'metal' })
+  assert.deepEqual(MOVES.water_transcend.from, MOVES.water_transcend.to, 'a transcend move stays in its element')
+  assert.equal(w(ember()), true)
+  assert.equal(w(ember({ feel: 'water' })), false, 'a move from another feeling is refused')
+  assert.equal(w(ember({ move: 'shout' })), false, 'one of the fifteen moves')
+  assert.equal(w(ember({ glow: null, feel: null })), true, 'glow and feeling may go unsaid')
+  assert.equal(w(ember({ glow: 9 })), false)
+  assert.equal(w(ember({ state: 'spent' })), false, 'an ember is never used up')
+  assert.equal(mayWrite(member(B), g, pouch(A), 'update', { embers: { e1: ember() } }, null).ok, false, 'the other person\'s pouch')
+}
+
+function testNoWordsOrGlowInShare() { // T2
+  const g = between(), w = (e: Doc) => mayWrite(member(A), g, pouch(A), 'update', { embers: { e1: e } }, null).ok
+  assert.equal(w(ember({ text: 'what I felt' })), false, 'an ember keeps no words')
+  assert.equal(mayWrite(member(A), g, pouch(A), 'set', { embers: {}, note: 'x' }, null).ok, false)
+  const set = (d: Doc) => mayWrite(member(A), g, { table: 'items', id: 'l1' }, 'set', d, null).ok
+  assert.equal(set(lantern()), true)
+  for (const leak of [{ glow: 4 }, { intensity: 4 }, { text: 'why' }, { move: 'fire_metal' }] as Doc[])
+    assert.equal(set(lantern(leak)), false, 'a shared lantern carries none of ' + Object.keys(leak)[0])
+  assert.equal(set(lantern({ element: 'fire' })), true, 'its maker may show the element')
+  assert.equal(set(lantern({ element: 'plasma' })), false)
+  assert.equal(set(lantern({ yes: { [A]: 1 } })), false, 'a maker does not welcome their own lantern')
+}
+
+function testUnofferedChargeMakesTheSameEmber() { // T3
+  // Nothing in an ember can say where the charge came from: a source field is refused like any other.
+  const g = between()
+  assert.equal(mayWrite(member(A), g, pouch(A), 'update', { embers: { e1: ember({ source: 'offered' }) } }, null).ok, false)
+  assert.equal(mayWrite(member(A), g, pouch(A), 'update', { embers: { e1: ember({ charge: 'i123' }) } }, null).ok, false)
+}
+
+function testMakersMark() { // T7, cc-lantern-offer
+  const g = between(), it = { table: 'items', id: 'l1' } as const, cur = lantern()
+  assert.equal(mayWrite(member(B), g, it, 'update', { by: B }, cur).ok, false, 'the other person cannot change the maker')
+  assert.equal(mayWrite(member(B), g, it, 'update', { pos: { x: 0, z: 0 } }, cur).ok, false, 'only its maker moves it')
+  assert.equal(mayWrite(member(B), g, it, 'delete', null, cur).ok, false, 'only its maker takes it back')
+  assert.equal(mayWrite(member(B), g, it, 'set', lantern({ by: B }), cur).ok, false, 'nor overwrites it')
+  assert.equal(mayWrite(member(B), g, it, 'update', { yes: { [B]: 9 }, history: { h2: { act: 'welcomed', by: B, at: 9 } } }, cur).ok, true)
+  assert.equal(mayWrite(member(B), g, it, 'update', { yes: { [A]: 9 } }, cur).ok, false, 'answers only for themself')
+  assert.equal(mayWrite(member(A), g, it, 'update', { yes: { [B]: 9 } }, cur).ok, false, 'the maker cannot answer for them')
+  assert.equal(mayWrite(member(A), g, it, 'update', { pos: { x: 3, z: 1 } }, cur).ok, true)
+  assert.equal(mayWrite(member(A), g, it, 'delete', null, cur).ok, true, 'its maker composts it, owing nothing')
+  assert.equal(mayWrite(member(B), g, { table: 'items', id: 'c1' }, 'update', { by: B }, { kind: 'charge', by: A }).ok, false, 'no item changes maker')
+  assert.equal(lanternLit(cur), false, 'an offer counts for nothing yet')
+  assert.equal(lanternLit(merge(cur, { yes: { [B]: 9 } })), true, 'it counts once the other says yes')
+  assert.equal(lanternLit(merge(cur, { yes: { [B]: null } })), false, 'and stops if they take it back')
+}
+
+function testLogNamesActsWithoutCounts() { // T9
+  const g = between(), it = { table: 'items', id: 'l1' } as const
+  assert.equal(mayWrite(member(A), g, it, 'set', lantern({ history: { h1: { act: 'made', by: A, at: 6, n: 3 } } }), null).ok, false)
+  assert.equal(mayWrite(member(B), g, it, 'update', { history: { h2: { act: 'welcomed', by: A, at: 9 } } }, lantern()).ok, false, 'a line in their own name')
+}
+
 testPaths()
 testSealedWordsStayOnTheServer()
 testMergeMatchesThePage()
@@ -102,4 +167,9 @@ testWelcome()
 testOwnership()
 testInvitedViewHidesHopes()
 testCarry()
+testEmberTakesTheMovesElement()
+testNoWordsOrGlowInShare()
+testUnofferedChargeMakesTheSameEmber()
+testMakersMark()
+testLogNamesActsWithoutCounts()
 console.log('between rules: all passed')

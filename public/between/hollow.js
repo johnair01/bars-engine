@@ -18,7 +18,7 @@ export const SEATS = [                               // teal for whoever started
   { x: 0.95, z: 0.5, yaw: Math.atan2(-0.95, -1.7), hue: 0x8f3f78 },
 ];
 export const TABLE = { x: 0, z: 1.3, r: 0.5 };
-const HEARTH = { x: 3.9, z: 3.1 };
+export const HEARTH = { x: 3.9, z: 3.1 };
 const SHELF = { x: 5.0, z: 0.4 };
 export const LANTERNS = [new THREE.Vector3(-2.3, 3.0, 1.7), new THREE.Vector3(1.8, 3.25, -2.1)];
 // the stream runs down the left side (seen from the cushions, facing the opening) and out over the ledge
@@ -193,6 +193,7 @@ export function buildHollow(scene, opts = {}) {
     for (const x0 of [64, 192]) { c.beginPath(); c.moveTo(x0, 220); c.quadraticCurveTo(x0 + 10, 130, x0 - 4, 40); c.stroke();
       for (let k = 0; k < 6; k++) { const y = 200 - k * 28, s = k % 2 ? 1 : -1; c.beginPath(); c.ellipse(x0 + s * 14, y, 12, 5, s * 0.6, 0, Math.PI * 2); c.stroke(); } }
   });
+  paperShared = paperTex;
   const weave = (base, a, b) => canvasTex(256, 256, (c, w, h) => {
     c.fillStyle = base; c.fillRect(0, 0, w, h);
     for (let y = 0; y < h; y += 32) { c.fillStyle = y % 64 ? a : b; c.fillRect(0, y + 10, w, 6); for (let x = 0; x < w; x += 32) { c.beginPath(); c.moveTo(x + 16, y + 2); c.lineTo(x + 26, y + 13); c.lineTo(x + 16, y + 24); c.lineTo(x + 6, y + 13); c.closePath(); c.fill(); } }
@@ -581,5 +582,28 @@ export function buildHollow(scene, opts = {}) {
   cushions.forEach(c => c.userData.keep = true);
   mergeStatic(root);
   return { root, update, cushions };
+}
+/* A standing paper lantern made at the hearth (council pass crafting-charge1): the hanging lanterns' body and paper, on a
+   small wooden foot, one size for all. It glows by its own emissive paper and carries no point light. */
+let paperShared = null;
+const lanternParts = {};
+const lanternMats = new Map();
+export function paperLantern(color, bright = 1) {
+  if (!lanternParts.geo) {
+    const pts = []; for (let k = 0; k <= 10; k++) { const u = k / 10; pts.push(new THREE.Vector2(0.24 * Math.sin(0.25 + u * (Math.PI - 0.5)) + 0.04, u * 0.62 - 0.31)); }
+    lanternParts.geo = new THREE.LatheGeometry(pts, 18);
+    lanternParts.cap = new THREE.CylinderGeometry(0.12, 0.12, 0.05, 12);
+    lanternParts.foot = new THREE.CylinderGeometry(0.15, 0.19, 0.08, 12);
+    lanternParts.wood = new THREE.MeshStandardMaterial({ color: 0x3e2c1e, roughness: 0.8 });
+  }
+  const key = color + ":" + bright;
+  if (!lanternMats.has(key)) {
+    const c = new THREE.Color(color).lerp(new THREE.Color(0xffd9a0), 0.25);
+    lanternMats.set(key, new THREE.MeshStandardMaterial({ map: paperShared, color: 0xfff1d6, emissive: c, emissiveMap: paperShared, emissiveIntensity: 1.1 * bright, roughness: 0.9, side: THREE.DoubleSide }));
+  }
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(lanternParts.geo, lanternMats.get(key)); body.position.y = 0.43; g.add(body);
+  for (const [geo, y] of [[lanternParts.cap, 0.76], [lanternParts.cap, 0.1], [lanternParts.foot, 0.04]]) { const m = new THREE.Mesh(geo, lanternParts.wood); m.position.y = y; g.add(m); }
+  return g;
 }
 export { hash };
