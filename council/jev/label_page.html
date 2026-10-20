@@ -1,0 +1,210 @@
+<title>Asset Statement Labels</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: one statement per screen, a single centred column. Progress at the top, the document's words first,
+   the code second, three large answers last. No tables. Spec: .specify/specs/jev-asset-labelling-page/spec.md */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --fg:#17212b; --muted:#566371; --line:#d3dae1;
+  --accent:#2a5ea8; --accent-ink:#ffffff; --accent-soft:#e3ecf8;
+  --match:#1e7a4c; --match-soft:#e0f2e8; --differ:#9a5200; --differ-soft:#fbead4; --unsure:#4c5a69; --unsure-soft:#e5e9ee;
+  --code-bg:#f5f7f9; --mark:#fff2b8;
+  --body:"Atkinson Hyperlegible","Helvetica Neue",Arial,sans-serif; --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#12181e; --panel:#1b232b; --fg:#e8edf2; --muted:#9aa7b4; --line:#33404c;
+  --accent:#7fb0f0; --accent-ink:#0c1620; --accent-soft:#1f3047;
+  --match:#6ed0a0; --match-soft:#173a2a; --differ:#f0b46a; --differ-soft:#40290f; --unsure:#aab6c2; --unsure-soft:#2a343e;
+  --code-bg:#151c23; --mark:#4a4220; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#12181e; --panel:#1b232b; --fg:#e8edf2; --muted:#9aa7b4; --line:#33404c;
+  --accent:#7fb0f0; --accent-ink:#0c1620; --accent-soft:#1f3047;
+  --match:#6ed0a0; --match-soft:#173a2a; --differ:#f0b46a; --differ-soft:#40290f; --unsure:#aab6c2; --unsure-soft:#2a343e;
+  --code-bg:#151c23; --mark:#4a4220; color-scheme:dark; }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:1.0625rem;line-height:1.55;padding-block:20px 56px;padding-inline:16px;margin:0}
+main{max-width:44rem;margin:0 auto;display:grid;gap:18px;min-width:0}
+main > *{min-width:0;max-width:100%}
+.said strong{font-weight:700}
+.said code{font:.92em var(--mono);background:var(--code-bg);padding:1px 5px;border-radius:4px}
+h1{font-size:1.5rem;line-height:1.25;margin:0;text-wrap:balance}
+h2{font-size:.82rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:700}
+p{margin:0}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.count{color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{display:flex;gap:4px}
+.bar i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.bar i.done{background:var(--accent)}
+.bar i.here{background:var(--fg)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.said{font-size:1.2rem;line-height:1.45;overflow-wrap:anywhere}
+.where{margin-top:10px;color:var(--muted);font-size:.92rem;overflow-wrap:anywhere}
+.code{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;margin-top:10px;overflow:hidden;min-width:0;max-width:100%}
+.code summary,.code .cap{padding:9px 12px;font-size:.88rem;color:var(--muted);cursor:pointer;overflow-wrap:anywhere}
+.code .cap{cursor:default;border-bottom:1px solid var(--line)}
+.code pre{margin:0;padding:10px 0;overflow-x:auto;font:.86rem/1.55 var(--mono)}
+.code pre span{display:block;padding:0 12px;white-space:pre}
+.code pre span.m{background:var(--mark)}
+.ask{font-size:1.2rem;font-weight:700;text-wrap:balance}
+.answers{display:grid;gap:10px}
+.answers button{font:inherit;font-weight:700;font-size:1.1rem;text-align:left;padding:16px 18px;border-radius:10px;border:2px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;min-height:56px;display:flex;flex-direction:column;gap:2px}
+.answers button small{font-weight:400;font-size:.92rem;color:var(--muted)}
+.answers button.agrees{border-color:var(--match)}.answers button.disagrees{border-color:var(--differ)}.answers button.cannot{border-color:var(--unsure)}
+.answers button[aria-pressed="true"].agrees{background:var(--match-soft)}
+.answers button[aria-pressed="true"].disagrees{background:var(--differ-soft)}
+.answers button[aria-pressed="true"].cannot{background:var(--unsure-soft)}
+button:focus-visible,summary:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;padding:12px 18px;border-radius:10px;border:2px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;min-height:48px}
+.btn.quiet{background:transparent;color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+details.help,details.note{margin-top:2px}
+details summary{cursor:pointer;color:var(--accent);font-weight:700}
+details.help ul{margin:8px 0 0;padding-left:20px;display:grid;gap:6px}
+textarea{width:100%;font:inherit;font-size:1rem;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:76px;margin-top:8px}
+.saved{color:var(--muted);font-size:.9rem;min-height:1.3em}
+.notice{background:var(--differ-soft);color:var(--differ);border-radius:8px;padding:10px 12px;font-size:.95rem}
+.summary{display:grid;gap:10px}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.9rem}
+.pill.agrees{background:var(--match-soft);color:var(--match)}.pill.disagrees{background:var(--differ-soft);color:var(--differ)}.pill.cannot{background:var(--unsure-soft);color:var(--unsure)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<main id="app" aria-live="polite">
+  <p>Loading the statements…</p>
+</main>
+
+<script id="cards" type="application/json">[{"id": "AS-001", "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md", "line": 69, "statement": "- **FR1**: Add `Asset` model: id, type, url, mimeType, metadataJson, ownerId, customBarId?, createdAt. Types: `bar_attachment`, `sprite`, `tile`.", "code": [{"path": "prisma/schema.prisma", "from": 1347, "to": 1360, "marked": [1349, 1351, 1354, 1356, 1357, 1358], "text": "}\n\nmodel Asset {\n  id           String     @id @default(cuid())\n  type         String\n  url          String\n  mimeType     String?    @map(\"mime_type\")\n  metadataJson String?    @map(\"metadata_json\")\n  side         String?\n  ownerId      String     @map(\"owner_id\")\n  customBarId  String?    @map(\"custom_bar_id\")\n  createdAt    DateTime   @default(now())\n  customBar    CustomBar? @relation(fields: [customBarId], references: [id])\n  owner        Player     @relation(fields: [ownerId], references: [id], onDelete: Cascade)"}]}, {"id": "AS-002", "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md", "line": 71, "statement": "- **FR3**: Asset storage: Vercel Blob when BLOB_READ_WRITE_TOKEN set; else `public/uploads/assets/{id}/{filename}`.", "code": [{"path": "src/actions/assets.ts", "from": 9, "to": 15, "marked": [11], "text": "import { getAssetRotation } from '@/lib/asset-utils'\n\nconst UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'assets')\nconst MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB\nconst MAX_PDF_BYTES = 10 * 1024 * 1024 // 10 MB\nconst ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']\nconst ALLOWED_PDF_TYPE = 'application/pdf'"}, {"path": "src/actions/assets.ts", "from": 80, "to": 86, "marked": [82], "text": "    const buffer = Buffer.from(bytes)\n\n    const token = process.env.BLOB_READ_WRITE_TOKEN\n    if (token) {\n      const blob = await put(\n        `assets/${asset.id}${ext}`,\n        buffer,"}]}, {"id": "AS-005", "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md", "line": 99, "statement": "type String // bar_attachment | sprite | tile", "code": [{"path": "prisma/schema.prisma", "from": 1349, "to": 1355, "marked": [1351], "text": "model Asset {\n  id           String     @id @default(cuid())\n  type         String\n  url          String\n  mimeType     String?    @map(\"mime_type\")\n  metadataJson String?    @map(\"metadata_json\")\n  side         String?"}]}, {"id": "AS-006", "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md", "line": 102, "statement": "metadataJson String? @map(\"metadata_json\") // { intention?, altText?, ... }", "code": [{"path": "prisma/schema.prisma", "from": 1352, "to": 1358, "marked": [1354], "text": "  url          String\n  mimeType     String?    @map(\"mime_type\")\n  metadataJson String?    @map(\"metadata_json\")\n  side         String?\n  ownerId      String     @map(\"owner_id\")\n  customBarId  String?    @map(\"custom_bar_id\")\n  createdAt    DateTime   @default(now())"}]}, {"id": "AS-007", "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md", "line": 106, "statement": "owner Player @relation(fields: [ownerId], references: [id])", "code": [{"path": "prisma/schema.prisma", "from": 1358, "to": 1364, "marked": [1360], "text": "  createdAt    DateTime   @default(now())\n  customBar    CustomBar? @relation(fields: [customBarId], references: [id])\n  owner        Player     @relation(fields: [ownerId], references: [id], onDelete: Cascade)\n\n  @@index([customBarId])\n  @@index([type])\n  @@map(\"assets\")"}]}, {"id": "AS-011", "doc": ".specify/specs/asset-management-bar-upload-walkable-sprites/spec.md", "line": 240, "statement": "- Asset upload: max file size 5 MB for images; 10 MB for PDFs.", "code": [{"path": "src/app/api/assets/upload/route.ts", "from": 29, "to": 36, "marked": [31, 32], "text": "\nconst ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf']\nconst MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB\nconst MAX_PDF_BYTES = 10 * 1024 * 1024 // 10 MB\n\nasync function requirePlayerId(): Promise<string> {\n  const cookieStore = await cookies()\n  const playerId = cookieStore.get('bars_player_id')?.value"}, {"path": "src/app/api/assets/upload/route.ts", "from": 107, "to": 113, "marked": [109], "text": "        return {\n          allowedContentTypes: ALLOWED_TYPES,\n          maximumSizeInBytes: MAX_PDF_BYTES,\n          tokenPayload: clientPayload,\n        }\n      },\n      onUploadCompleted: async ({ blob, tokenPayload }) => {"}, {"path": "src/actions/signal-quest-media.ts", "from": 5, "to": 11, "marked": [7], "text": "\nconst IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']\nconst MAX_SIZE = 4 * 1024 * 1024 // 4 MB\n\n/**\n * Upload a photo for the \"Share Your Signal\" (system-feedback) quest.\n * Stores on public blob; URL is submitted with quest completion inputs for metabolizing visuals."}, {"path": "src/app/api/party/valkyrie/upload/route.ts", "from": 5, "to": 12, "marked": [7, 8], "text": "import { requirePartyPlayer } from '@/lib/valkyrie-party/http'\n\nconst ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']\nconst MAX_BYTES = 8 * 1024 * 1024\n\nfunction assetTypeForKind(kind: string) {\n  switch (kind) {\n    case 'quest_completion':"}]}, {"id": "AS-014", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 31, "statement": "- Nation sigil: 24×24px pixel glyph. 5 glyphs (one per element-nation). Designed, not Unicode.", "code": [{"path": "scripts/validate-sprite-layers.ts", "from": 43, "to": 49, "marked": [45], "text": "  { dir: 'public/sprites/walkable/archetype',     width: 512, height: 64, channels: 4, label: 'walkable archetype sheet' },\n  // Sigil marks — not yet generated, skipped if directory doesn't exist\n  { dir: 'public/sprites/sigils/nation',          width: 24,  height: 24, channels: 4, label: 'nation sigil' },\n  { dir: 'public/sprites/sigils/archetype',       width: 16,  height: 16, channels: 4, label: 'archetype mark' },\n]\n\ninterface Failure {"}]}, {"id": "AS-015", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 32, "statement": "- Archetype mark: 16×16px geometric mark. 8 marks (role marks, shared across nations).", "code": [{"path": "scripts/validate-sprite-layers.ts", "from": 44, "to": 50, "marked": [46], "text": "  // Sigil marks — not yet generated, skipped if directory doesn't exist\n  { dir: 'public/sprites/sigils/nation',          width: 24,  height: 24, channels: 4, label: 'nation sigil' },\n  { dir: 'public/sprites/sigils/archetype',       width: 16,  height: 16, channels: 4, label: 'archetype mark' },\n]\n\ninterface Failure {\n  file: string"}]}, {"id": "AS-016", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 33, "statement": "**Asset count:** 13 marks total. Not yet generated.", "code": [{"path": "scripts/validate-sprite-layers.ts", "from": 42, "to": 50, "marked": [44, 45, 46], "text": "  { dir: 'public/sprites/walkable/nation',        width: 512, height: 64, channels: 4, label: 'walkable nation sheet' },\n  { dir: 'public/sprites/walkable/archetype',     width: 512, height: 64, channels: 4, label: 'walkable archetype sheet' },\n  // Sigil marks — not yet generated, skipped if directory doesn't exist\n  { dir: 'public/sprites/sigils/nation',          width: 24,  height: 24, channels: 4, label: 'nation sigil' },\n  { dir: 'public/sprites/sigils/archetype',       width: 16,  height: 16, channels: 4, label: 'archetype mark' },\n]\n\ninterface Failure {\n  file: string"}, {"path": "src/lib/avatar-utils.ts", "from": 8, "to": 14, "marked": [10], "text": " * 2. **Walk sprite (Register 4)** — `getWalkableSpriteUrl()` → `public/sprites/walkable/{nationKey}-{archetypeKey}.png`\n *    composited in Pixi (`RoomRenderer`). Nation sheet tints align with `ELEMENT_TOKENS` via `nation-element.ts`.\n * 3. **Provenance stamp (Register 2)** — planned `resolveProvenanceStamp()` (provenance-stamp-system spec) — BAR/quest corners.\n */\n\nexport type AvatarConfig = {\n    nationKey: string"}]}, {"id": "AS-017", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 44, "statement": "**Format:** 64×96px cropped square. Derived from Cosmic art — CSS crop at `object-position: center 15%`", "code": [{"path": "src/lib/ui/register-portrait.ts", "from": 2, "to": 8, "marked": [4], "text": " * ARDS Register 3 (Portrait) — shared CSS for conversation-scale faces.\n * Stack uses layered parts (Avatar.tsx); Register 3 crop/vignette matches spec:\n * `object-position: center 15%` + element-colored edge treatment.\n * @see docs/SEMANTIC_REGISTERS.md\n */\n\nimport type { CSSProperties } from 'react'"}, {"path": "src/lib/ui/register-portrait.ts", "from": 13, "to": 19, "marked": [15], "text": "/** Stacked portrait layers: slight upward crop so the face reads in circular frames. */\nexport const REGISTER_PORTRAIT_IMG_CLASSES =\n  'absolute inset-0 w-full h-full object-cover object-[center_15%]'\n\n/** Ring + soft glow from element frame token (Register 1 palette). */\nexport function registerPortraitShellStyle(element: ElementKey): CSSProperties {\n  const t = ELEMENT_TOKENS[element]"}]}, {"id": "AS-024", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 68, "statement": "**Format:** 4 move icons at 24×24px. One per move family: Wake Up / Grow Up / Show Up / Clean Up.", "code": []}, {"id": "AS-025", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 79, "statement": "**Format:** Tileable 64×64px RGBA PNG. Near-black on `#0a0908` base. Subtle grain — readable", "code": []}, {"id": "AS-026", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 91, "statement": "No image assets required — color derives from ELEMENT_TOKENS automatically.", "code": [{"path": "src/lib/ui/card-tokens.ts", "from": 37, "to": 43, "marked": [39], "text": "// Purple (#7c3aed range) is reserved for liminal / primary action states.\n\nexport const ELEMENT_TOKENS = {\n  fire: {\n    sigil:      '火',\n    label:      'Fire',      // English name — always render alongside the sigil\n    emotion:    'Anger',     // emotional channel this element carries"}]}, {"id": "AS-029", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 115, "statement": "resolveProvenanceStamp(config) → sigil + mark chip (BAR card corner)", "code": [{"path": "src/lib/avatar-utils.ts", "from": 8, "to": 14, "marked": [10], "text": " * 2. **Walk sprite (Register 4)** — `getWalkableSpriteUrl()` → `public/sprites/walkable/{nationKey}-{archetypeKey}.png`\n *    composited in Pixi (`RoomRenderer`). Nation sheet tints align with `ELEMENT_TOKENS` via `nation-element.ts`.\n * 3. **Provenance stamp (Register 2)** — planned `resolveProvenanceStamp()` (provenance-stamp-system spec) — BAR/quest corners.\n */\n\nexport type AvatarConfig = {\n    nationKey: string"}]}, {"id": "AS-032", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 162, "statement": "- All colors must trace to `ELEMENT_TOKENS` or `SURFACE_TOKENS` in `card-tokens.ts`. No hardcoded hex.", "code": [{"path": "src/lib/ui/card-tokens.ts", "from": 37, "to": 43, "marked": [39], "text": "// Purple (#7c3aed range) is reserved for liminal / primary action states.\n\nexport const ELEMENT_TOKENS = {\n  fire: {\n    sigil:      '火',\n    label:      'Fire',      // English name — always render alongside the sigil\n    emotion:    'Anger',     // emotional channel this element carries"}, {"path": "src/lib/ui/card-tokens.ts", "from": 203, "to": 209, "marked": [205], "text": "// ─── Surface Tokens — Register 6 Zone/Texture (ambient surfaces; pair with zone-*.png tiles) ─\n\nexport const SURFACE_TOKENS = {\n  bgBase:        '#0a0908',   // screen background (imperceptibly warm, not pure black)\n  surfaceCard:   '#1a1a18',   // card body\n  surfaceElevated: '#242420', // modals, bottom sheets\n  surfaceInset:  '#111110',   // description wells within cards"}, {"path": "src/lib/ui/card-art-registry.ts", "from": 681, "to": 689, "marked": [683, 685], "text": "// Each member: { color_hex, color_weight } for Ideogram's color_palette API param.\n\nexport const ELEMENT_PALETTE_HINTS = {\n  fire: [\n    { color_hex: '#1a1a18', color_weight: 0.40 },\n    { color_hex: '#c1392b', color_weight: 0.25 },\n    { color_hex: '#e8671a', color_weight: 0.20 },\n    { color_hex: '#e74c3c', color_weight: 0.15 },\n  ],"}]}, {"id": "AS-033", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 166, "statement": "- `src/lib/ui/card-tokens.ts` — ELEMENT_TOKENS, SURFACE_TOKENS (authoritative color source)", "code": [{"path": "src/lib/ui/card-tokens.ts", "from": 37, "to": 43, "marked": [39], "text": "// Purple (#7c3aed range) is reserved for liminal / primary action states.\n\nexport const ELEMENT_TOKENS = {\n  fire: {\n    sigil:      '火',\n    label:      'Fire',      // English name — always render alongside the sigil\n    emotion:    'Anger',     // emotional channel this element carries"}, {"path": "src/lib/ui/card-tokens.ts", "from": 203, "to": 209, "marked": [205], "text": "// ─── Surface Tokens — Register 6 Zone/Texture (ambient surfaces; pair with zone-*.png tiles) ─\n\nexport const SURFACE_TOKENS = {\n  bgBase:        '#0a0908',   // screen background (imperceptibly warm, not pure black)\n  surfaceCard:   '#1a1a18',   // card body\n  surfaceElevated: '#242420', // modals, bottom sheets\n  surfaceInset:  '#111110',   // description wells within cards"}]}, {"id": "AS-034", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 167, "statement": "- `src/lib/avatar-utils.ts` — AvatarConfig, getWalkableSpriteUrl (existing; extend with resolvers)", "code": [{"path": "src/lib/avatar-utils.ts", "from": 153, "to": 159, "marked": [155], "text": " * See docs/WALKABLE_SPRITES.md for format.\n */\nexport function getWalkableSpriteUrl(config: AvatarConfig | null): string {\n    if (!config?.nationKey || !config?.archetypeKey) {\n        return '/sprites/walkable/default.png'\n    }\n    const key = `${config.nationKey}-${config.archetypeKey}`"}]}, {"id": "AS-036", "doc": ".specify/specs/asset-register-design-system/spec.md", "line": 170, "statement": "- `.specify/specs/provenance-stamp-system/spec.md` — Provenance Stamp implementation", "code": []}, {"id": "AS-064", "doc": ".specify/specs/book-upload-vercel-client-exception/spec.md", "line": 56, "statement": "3. Upload a PDF (< 4.5 MB for Hobby).", "code": [{"path": "src/app/api/books/upload/route.ts", "from": 38, "to": 44, "marked": [40], "text": "        await requireAdmin()\n\n        if (!pathname.startsWith('books/') || !pathname.endsWith('.pdf')) {\n          throw new Error('Invalid pathname: must be books/{id}.pdf')\n        }\n\n        let bookId: string | null = null"}, {"path": "src/app/api/books/upload/route.ts", "from": 59, "to": 65, "marked": [61], "text": "        return {\n          allowedContentTypes: ['application/pdf'],\n          maximumSizeInBytes: 100 * 1024 * 1024, // 100 MB\n          tokenPayload: clientPayload,\n        }\n      },\n      onUploadCompleted: async ({ blob, tokenPayload }) => {"}]}, {"id": "AS-147", "doc": "docs/ENV_AND_VERCEL.md", "line": 33, "statement": "For BAR photo uploads and book PDFs: `BLOB_READ_WRITE_TOKEN` (from Vercel Blob store — create in Dashboard → Storage). Without it, uploads fail with FUNCTION_PAYLOAD_TOO_LARGE or fall back to local filesystem (which fails on Vercel).", "code": [{"path": "src/actions/assets.ts", "from": 80, "to": 86, "marked": [82], "text": "    const buffer = Buffer.from(bytes)\n\n    const token = process.env.BLOB_READ_WRITE_TOKEN\n    if (token) {\n      const blob = await put(\n        `assets/${asset.id}${ext}`,\n        buffer,"}, {"path": "src/actions/assets.ts", "from": 91, "to": 97, "marked": [93], "text": "        data: { url: blob.url },\n      })\n    } else {\n      const dir = path.join(UPLOAD_DIR, asset.id)\n      await mkdir(dir, { recursive: true })\n      const filename = `file${ext}`\n      await writeFile(path.join(dir, filename), buffer)"}, {"path": "src/app/api/assets/upload/route.ts", "from": 19, "to": 25, "marked": [21], "text": " * avoiding FUNCTION_PAYLOAD_TOO_LARGE. Do not send files through server actions.\n *\n * Requires: BLOB_READ_WRITE_TOKEN in Vercel env\n */\n\nimport { NextResponse } from 'next/server'\nimport { cookies } from 'next/headers'"}]}]</script>
+<script>
+(function(){
+  var CARDS = JSON.parse(document.getElementById('cards').textContent);
+  var LABELS = {agrees:'The code matches', disagrees:'They differ', 'cannot tell':'I can’t tell'};
+  var CSS = {agrees:'agrees', disagrees:'disagrees', 'cannot tell':'cannot'};
+  var labels = {}, notes = {}, idx = null, started = false, db = null, local = false, saving = '';
+  var app = document.getElementById('app');
+
+  function store(k, v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){} return null; }
+  function el(tag, cls, text){ var n=document.createElement(tag); if(cls) n.className=cls; if(text!==undefined) n.textContent=text; return n; }
+  // Display only: show the document's own words without markdown symbols. The stored statement is never changed.
+  function rich(node, text){
+    var t = text.replace(/^\s*[-*]\s+/, '');
+    t.split(/(\*\*[^*]+\*\*|`[^`]+`)/).forEach(function(part){
+      if(!part) return;
+      if(part.slice(0,2)==='**' && part.slice(-2)==='**') node.appendChild(el('strong',null,part.slice(2,-2)));
+      else if(part[0]==='`' && part.slice(-1)==='`') node.appendChild(el('code',null,part.slice(1,-1)));
+      else node.appendChild(document.createTextNode(part));
+    });
+    return node;
+  }
+  function firstOpen(){ for(var i=0;i<CARDS.length;i++){ if(!labels[CARDS[i].id]) return i; } return CARDS.length; }
+
+  function persist(id, label, note){
+    var rec = {label:label, note:note||'', savedAt:new Date().toISOString()};
+    labels[id] = rec.label; notes[id] = rec.note;
+    store('asset-labels', JSON.stringify({labels:labels, notes:notes}));
+    if(db){ db.doc('labels/'+id).set(rec).then(function(){ saving='Saved.'; paintSaved(); }, function(){ saving='Could not save to the shared record. Your answer is kept in this browser.'; local=true; paintSaved(); }); }
+    else { saving='Saved in this browser only.'; paintSaved(); }
+  }
+  function paintSaved(){ var s=document.getElementById('saved'); if(s) s.textContent=saving; }
+
+  function progress(){
+    var bar = el('div','bar'); bar.setAttribute('role','img'); bar.setAttribute('aria-label', Object.keys(labels).length+' of '+CARDS.length+' answered');
+    CARDS.forEach(function(c,i){ var d=document.createElement('i'); if(labels[c.id]) d.className='done'; if(i===idx) d.className='here'; bar.appendChild(d); });
+    return bar;
+  }
+
+  function intro(){
+    app.textContent='';
+    app.appendChild(el('h1',null,'Do the documents match the code?'));
+    var p = el('div','panel');
+    p.appendChild(el('p',null,'There are '+CARDS.length+' statements from the asset documents. You will see one at a time. For each, read what the document says, look at the code beside it, and choose one answer.'));
+    var u = el('p',null,'There are no wrong answers, and “I can’t tell” is a good answer. You can stop whenever you like. Each answer saves as you give it, and you will come back to where you left off.'); u.style.marginTop='10px'; p.appendChild(u);
+    app.appendChild(p);
+    var done = Object.keys(labels).length;
+    var go = el('button','btn', done ? 'Continue where I left off' : 'Start');
+    go.addEventListener('click', function(){ started=true; idx=firstOpen(); render(); });
+    app.appendChild(go);
+  }
+
+  function codeBlock(c, open){
+    var box = el('div','code');
+    var cap = c.path+', lines '+c.from+' to '+c.to;
+    var head, body = document.createElement('pre');
+    c.text.split('\n').forEach(function(t,i){ var n=c.from+i, s=el('span', c.marked.indexOf(n)>-1?'m':'', t||' '); body.appendChild(s); });
+    if(open){ head = el('div','cap','The code ('+cap+')'); box.appendChild(head); box.appendChild(body); }
+    else { var d=document.createElement('details'); var s=el('summary',null,'More code ('+cap+')'); d.appendChild(s); d.appendChild(body); box.appendChild(d); }
+    return box;
+  }
+
+  function card(){
+    var c = CARDS[idx]; app.textContent='';
+    var top = el('div','top'); top.appendChild(el('h1',null,'Statement '+(idx+1)+' of '+CARDS.length));
+    top.appendChild(el('span','count', Object.keys(labels).length+' answered')); app.appendChild(top); app.appendChild(progress());
+    if(local){ app.appendChild(el('div','notice','Answers are being kept in this browser only, so the council cannot read them yet.')); }
+
+    var said = el('section','panel'); said.appendChild(el('h2',null,'What the document says'));
+    said.appendChild(rich(el('p','said'), c.statement));
+    said.appendChild(el('p','where','Written in '+c.doc+', line '+c.line+'.')); app.appendChild(said);
+
+    var code = el('section','panel'); code.appendChild(el('h2',null,'What the code does'));
+    if(!c.code.length){ code.appendChild(el('p',null,'No code lines are listed for this statement. Choose “I can’t tell” if you cannot decide from the document alone.')); }
+    c.code.forEach(function(x,i){ code.appendChild(codeBlock(x, i===0)); });
+    app.appendChild(code);
+
+    var ask = el('section','panel'); ask.appendChild(el('p','ask','Does the code do what the document says?')); ask.style.display='grid'; ask.style.gap='12px';
+    var help = document.createElement('details'); help.className='help'; help.appendChild(el('summary',null,'How do I decide?'));
+    var ul = document.createElement('ul');
+    ['The code matches: the code does what the document says.','They differ: someone who trusted the document would be misled by what the code does.','I can’t tell: you cannot decide from what is shown. That is a fine answer.'].forEach(function(t){ ul.appendChild(el('li',null,t)); });
+    help.appendChild(ul); ask.appendChild(help);
+    var ans = el('div','answers');
+    [['agrees','The code matches','The document and the code say the same thing.'],['disagrees','They differ','The code does something else, or something more.'],['cannot tell','I can’t tell','Not enough to go on here.']].forEach(function(a){
+      var b = el('button', CSS[a[0]]); b.type='button'; b.id='ans-'+CSS[a[0]]; b.setAttribute('aria-pressed', labels[c.id]===a[0] ? 'true':'false');
+      b.appendChild(document.createTextNode(a[1])); b.appendChild(el('small',null,a[2]));
+      b.addEventListener('click', function(){ persist(c.id, a[0], (document.getElementById('note')||{}).value); render(); });
+      ans.appendChild(b);
+    });
+    ask.appendChild(ans);
+    var nd = document.createElement('details'); nd.className='note'; if(notes[c.id]) nd.open=true; nd.appendChild(el('summary',null,'Add a note (optional)'));
+    var ta = document.createElement('textarea'); ta.id='note'; ta.value = notes[c.id]||''; ta.setAttribute('aria-label','Note for this statement'); nd.appendChild(ta);
+    ta.addEventListener('change', function(){ if(labels[c.id]) persist(c.id, labels[c.id], ta.value); });
+    ask.appendChild(nd);
+    var sv = el('p','saved', labels[c.id] ? 'You answered: '+LABELS[labels[c.id]]+'.' : ''); sv.id='saved'; ask.appendChild(sv);
+    app.appendChild(ask);
+
+    var nav = el('div','nav');
+    var back = el('button','btn quiet','Back'); back.type='button'; back.disabled = idx===0; back.addEventListener('click', function(){ idx=Math.max(0,idx-1); render(); });
+    var next = el('button','btn', labels[c.id] ? (idx===CARDS.length-1 ? 'Finish' : 'Next') : 'Skip for now'); next.type='button';
+    next.addEventListener('click', function(){ idx = idx+1; if(idx>=CARDS.length) idx=CARDS.length; render(); });
+    nav.appendChild(back); nav.appendChild(next); app.appendChild(nav);
+  }
+
+  function summary(){
+    app.textContent=''; var left = CARDS.filter(function(c){return !labels[c.id];}).length;
+    app.appendChild(el('h1',null, left ? 'That is all of them for now' : 'All '+CARDS.length+' are answered'));
+    var p = el('section','panel summary');
+    var counts = {agrees:0,disagrees:0,'cannot tell':0}; CARDS.forEach(function(c){ if(labels[c.id]) counts[labels[c.id]]++; });
+    ['agrees','disagrees','cannot tell'].forEach(function(k){ var r=el('p'); var pill=el('span','pill '+CSS[k], LABELS[k]); r.appendChild(pill); r.appendChild(document.createTextNode('  '+counts[k])); p.appendChild(r); });
+    if(left) p.appendChild(el('p',null, left+' statement'+(left===1?' is':'s are')+' still unanswered. You can go back to them whenever you like.'));
+    p.appendChild(el('p',null,'Thank you. The council reads these answers from the shared record, so there is nothing to send.'));
+    app.appendChild(p);
+    var row = el('div','nav'); var rev = el('button','btn quiet','Review from the start'); rev.type='button'; rev.addEventListener('click', function(){ idx=0; render(); });
+    row.appendChild(rev);
+    if(left){ var go=el('button','btn','Answer the rest'); go.type='button'; go.addEventListener('click', function(){ idx=firstOpen(); render(); }); row.appendChild(go); }
+    app.appendChild(row);
+  }
+
+  function render(){ if(!started) return intro(); if(idx>=CARDS.length) return summary(); card(); window.scrollTo(0,0); }
+
+  try{ var s = JSON.parse(store('asset-labels')||'null'); if(s){ labels=s.labels||{}; notes=s.notes||{}; } }catch(e){}
+  render();
+  if(window.claude && window.claude.use){
+    window.claude.use('db').then(function(d){
+      if(!d){ local=true; return; }
+      db = d;
+      db.collection('labels').onSnapshot(function(snap){
+        snap.docs.forEach(function(x){ if(x.exists){ var v=x.data(); if(v && v.label){ labels[x.id]=v.label; notes[x.id]=v.note||''; } } });
+        if(!started) render();
+      }, function(){});
+    }, function(){ local=true; });
+  } else { local=true; }
+})();
+</script>
