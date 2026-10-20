@@ -1,0 +1,207 @@
+{
+ "date": "2026-10-20",
+ "scope": "the 20 asset-admin rows",
+ "note": "Wendell's labels are as saved on the labelling page on 2026-10-20 (19 of 20 answered; AS-016 unanswered). Reader A and reader B were independent model readers with the code open, blind to Wendell's labels and to each other. A consensus is not a ruling: Wendell decides rows where the readers differ.",
+ "rows": [
+  {
+   "id": "AS-001",
+   "wendell": "cannot tell",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "All listed fields exist (plus an extra 'side' field), but no code ever stores 'sprite' or 'tile' assets, while the party upload stores three other types the list omits.",
+   "reason_b": "The Asset table has all the listed fields, but the code never creates 'sprite' or 'tile' assets and does create other types such as 'party_quest_completion', so the type list is wrong."
+  },
+  {
+   "id": "AS-002",
+   "wendell": "cannot tell",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "The local fallback saves every file as 'file' plus its extension, not under its own filename, and the main upload route has no local fallback at all; it refuses without the token.",
+   "reason_b": "Only the old, deprecated upload action falls back to the local uploads folder, and it names the file 'file' plus extension; the main upload route refuses outright when the Blob token is missing."
+  },
+  {
+   "id": "AS-005",
+   "wendell": "disagrees",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "The type field is a free string with no such comment, and the stored values are 'bar_attachment' and three 'party_...' types; 'sprite' and 'tile' are never written.",
+   "reason_b": "The type field is a plain text field as stated, but the values actually written are 'bar_attachment' and three 'party_' types, never 'sprite' or 'tile'."
+  },
+  {
+   "id": "AS-006",
+   "wendell": "disagrees",
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "The metadata field is defined exactly as stated, optional and mapped to metadata_json, and it holds an optional intention (and rotation) as a JSON object.",
+   "reason_b": "The metadata field exists as optional text stored in the 'metadata_json' column and holds an intention; altText is never written, but the comment marks every key as optional."
+  },
+  {
+   "id": "AS-007",
+   "wendell": "disagrees",
+   "reader_a": "disagrees",
+   "reader_b": "agrees",
+   "readers": "differ",
+   "consensus": null,
+   "reason_a": "The owner link exists, but the code adds a cascade rule, so deleting a player also deletes all their assets, which the statement's plain relation would not do.",
+   "reason_b": "Each asset is linked to its owning Player through ownerId as stated; the code also deletes a player's assets when the player is deleted, which the statement does not mention."
+  },
+  {
+   "id": "AS-011",
+   "wendell": "agrees",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "The upload forms check 5 MB for images, but the server route that actually issues upload permission allows any file, images included, up to 10 MB.",
+   "reason_b": "The main upload route lets every file, images included, go up to 10 MB; the 5 MB image limit is defined there but never used, and survives only in the deprecated action."
+  },
+  {
+   "id": "AS-014",
+   "wendell": "disagrees",
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "The sprite checker requires nation sigils to be 24 by 24 pixels, and the code has exactly five nations; the glyphs themselves do not exist yet, which the spec admits.",
+   "reason_b": "The sprite checker expects nation sigils at exactly 24 by 24 pixels, and the game has five nations; no sigil files exist yet, which the spec itself says."
+  },
+  {
+   "id": "AS-015",
+   "wendell": "disagrees",
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "The sprite checker requires archetype marks to be 16 by 16 pixels, matching the statement; the marks have not been made yet, as the spec says.",
+   "reason_b": "The sprite checker expects archetype marks at exactly 16 by 16 pixels, and there are eight archetypes in the portrait outfit folder."
+  },
+  {
+   "id": "AS-016",
+   "wendell": null,
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "No sigil or archetype mark images exist in the repo (the public/sprites folder has no sigils folder), and the code itself notes they are not yet generated.",
+   "reason_b": "Five nation sigils plus eight archetype marks make 13, and the sigils folder does not exist, so the marks are indeed not yet made."
+  },
+  {
+   "id": "AS-017",
+   "wendell": "cannot tell",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "The 'center 15%' crop matches, but the portrait crops the layered 64-pixel avatar parts, not the Cosmic art, and nothing sets a 64 by 96 size (which is not square anyway).",
+   "reason_b": "The 15% upward crop matches, but the portrait is built from layered sprite parts in a round 64 by 64 frame, not cropped from the Cosmic art at 64 by 96."
+  },
+  {
+   "id": "AS-024",
+   "wendell": "cannot tell",
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "There are exactly four move icons, Wake Up, Clean Up, Grow Up and Show Up, and each image file is 24 by 24 pixels.",
+   "reason_b": "Four move icons exist, one each for Wake Up, Clean Up, Grow Up and Show Up, and each image file is 24 by 24 pixels."
+  },
+  {
+   "id": "AS-025",
+   "wendell": "cannot tell",
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "The zone textures are 64 by 64 colour-with-transparency PNGs built from the near-black #0a0908 base with faint noise, and they tile as repeating backgrounds.",
+   "reason_b": "The three zone textures are 64 by 64 pixel RGBA images, made by a script on a near-black #0a0908 base with low grain, and tiled over that same base colour."
+  },
+  {
+   "id": "AS-026",
+   "wendell": "cannot tell",
+   "reader_a": "disagrees",
+   "reader_b": "agrees",
+   "readers": "differ",
+   "consensus": null,
+   "reason_a": "The ceremony wrapper does pass element colours from the tokens, but the 'ceremony-completion-glow' animation it relies on is not defined in any stylesheet, so no coloured effect appears.",
+   "reason_b": "The ceremony glow uses no images and takes its colours from ELEMENT_TOKENS; however, the CSS class it relies on is not defined in any stylesheet."
+  },
+  {
+   "id": "AS-029",
+   "wendell": "cannot tell",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "No function called resolveProvenanceStamp exists anywhere in the code; the only mention is a comment calling it planned.",
+   "reason_b": "No function called resolveProvenanceStamp exists anywhere in the code; the only mention is a comment calling it planned."
+  },
+  {
+   "id": "AS-032",
+   "wendell": "disagrees",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "Colours are typed in directly as hex codes in several places, such as a copied palette in the card art registry and a dark ink default in the move icon.",
+   "reason_b": "Hex colours are typed directly into code in many places, for example the palette hints in the card art registry and page backgrounds like bg-[#0a0908], instead of referring to the token tables."
+  },
+  {
+   "id": "AS-033",
+   "wendell": "cannot tell",
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "The file exists and defines both ELEMENT_TOKENS and SURFACE_TOKENS, and other code imports its colours from it.",
+   "reason_b": "The file card-tokens.ts exists at that path and exports both ELEMENT_TOKENS and SURFACE_TOKENS."
+  },
+  {
+   "id": "AS-034",
+   "wendell": "cannot tell",
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "The file exists and defines both AvatarConfig and getWalkableSpriteUrl; the planned resolvers are described as future work, not as present.",
+   "reason_b": "The file avatar-utils.ts exists at that path and defines both AvatarConfig and getWalkableSpriteUrl; the resolvers are described as future work."
+  },
+  {
+   "id": "AS-036",
+   "wendell": "cannot tell",
+   "reader_a": "agrees",
+   "reader_b": "agrees",
+   "readers": "agree",
+   "consensus": "agrees",
+   "reason_a": "The referenced spec file exists and is the Provenance Stamp System spec describing the two-part seal.",
+   "reason_b": "The provenance stamp spec exists at exactly that path and describes the stamp's design and implementation."
+  },
+  {
+   "id": "AS-064",
+   "wendell": "disagrees",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "The book form now uploads straight from the browser to Blob storage with a 100 MB limit, so the 4.5 MB ceiling the test step implies no longer applies.",
+   "reason_b": "The book form now sends the PDF straight from the browser to Blob storage with a 100 MB cap, so the 4.5 MB Hobby limit no longer applies to it."
+  },
+  {
+   "id": "AS-147",
+   "wendell": "disagrees",
+   "reader_a": "disagrees",
+   "reader_b": "disagrees",
+   "readers": "agree",
+   "consensus": "disagrees",
+   "reason_a": "The token is required, but without it the BAR photo route refuses with a clear 503 'requires BLOB_READ_WRITE_TOKEN' message; only old, unused server actions fall back to local files.",
+   "reason_b": "Without the token, the main BAR upload route now stops with a clear 'requires BLOB_READ_WRITE_TOKEN' error; the file-too-large error comes from sending files through the server, not from the missing token."
+  }
+ ]
+}

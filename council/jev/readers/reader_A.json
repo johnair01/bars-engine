@@ -1,0 +1,212 @@
+[
+ {
+  "id": "AS-001",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "All listed fields exist (plus an extra 'side' field), but no code ever stores 'sprite' or 'tile' assets, while the party upload stores three other types the list omits.",
+  "evidence": [
+   "prisma/schema.prisma:1355 — side         String?",
+   "src/app/api/assets/upload/route.ts:139 — type: 'bar_attachment',",
+   "src/app/api/party/valkyrie/upload/route.ts:13 — return 'party_quest_completion'",
+   "src/app/api/party/valkyrie/upload/route.ts:63 — type: assetTypeForKind(kind),"
+  ]
+ },
+ {
+  "id": "AS-002",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The local fallback saves every file as 'file' plus its extension, not under its own filename, and the main upload route has no local fallback at all; it refuses without the token.",
+  "evidence": [
+   "src/actions/assets.ts:96 — const filename = `file${ext}`",
+   "src/actions/assets.ts:98 — const url = `/uploads/assets/${asset.id}/${filename}`",
+   "src/app/api/assets/upload/route.ts:43 — if (!process.env.BLOB_READ_WRITE_TOKEN) {",
+   "src/app/api/assets/upload/route.ts:49 — { status: 503 }"
+  ]
+ },
+ {
+  "id": "AS-005",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The type field is a free string with no such comment, and the stored values are 'bar_attachment' and three 'party_...' types; 'sprite' and 'tile' are never written.",
+  "evidence": [
+   "prisma/schema.prisma:1351 — type         String",
+   "src/app/api/party/valkyrie/upload/route.ts:15 — return 'party_oracle_override'",
+   "src/app/api/party/valkyrie/upload/route.ts:17 — return 'party_altar_media'"
+  ]
+ },
+ {
+  "id": "AS-006",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The metadata field is defined exactly as stated, optional and mapped to metadata_json, and it holds an optional intention (and rotation) as a JSON object.",
+  "evidence": [
+   "prisma/schema.prisma:1354 — metadataJson String?    @map(\"metadata_json\")",
+   "src/actions/assets.ts:72 — metadataJson: intention ? JSON.stringify({ intention }) : null,"
+  ]
+ },
+ {
+  "id": "AS-007",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The owner link exists, but the code adds a cascade rule, so deleting a player also deletes all their assets, which the statement's plain relation would not do.",
+  "evidence": [
+   "prisma/schema.prisma:1360 — owner        Player     @relation(fields: [ownerId], references: [id], onDelete: Cascade)"
+  ]
+ },
+ {
+  "id": "AS-011",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The upload forms check 5 MB for images, but the server route that actually issues upload permission allows any file, images included, up to 10 MB.",
+  "evidence": [
+   "src/app/api/assets/upload/route.ts:31 — const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB",
+   "src/app/api/assets/upload/route.ts:109 — maximumSizeInBytes: MAX_PDF_BYTES,",
+   "src/components/admin/BarAttachmentForm.tsx:7 — const MAX_IMAGE_MB = 5",
+   "src/app/api/party/valkyrie/upload/route.ts:8 — const MAX_BYTES = 8 * 1024 * 1024"
+  ]
+ },
+ {
+  "id": "AS-014",
+  "label": "agrees",
+  "confidence": "medium",
+  "reason": "The sprite checker requires nation sigils to be 24 by 24 pixels, and the code has exactly five nations; the glyphs themselves do not exist yet, which the spec admits.",
+  "evidence": [
+   "scripts/validate-sprite-layers.ts:45 — { dir: 'public/sprites/sigils/nation',          width: 24,  height: 24, channels: 4, label: 'nation sigil' },",
+   "src/lib/ui/nation-element.ts:10 — /** Canonical nation slug → element (five nations + lobby trading floor). */"
+  ]
+ },
+ {
+  "id": "AS-015",
+  "label": "agrees",
+  "confidence": "medium",
+  "reason": "The sprite checker requires archetype marks to be 16 by 16 pixels, matching the statement; the marks have not been made yet, as the spec says.",
+  "evidence": [
+   "scripts/validate-sprite-layers.ts:46 — { dir: 'public/sprites/sigils/archetype',       width: 16,  height: 16, channels: 4, label: 'archetype mark' },",
+   "scripts/validate-sprite-layers.ts:44 — // Sigil marks — not yet generated, skipped if directory doesn't exist"
+  ]
+ },
+ {
+  "id": "AS-016",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "No sigil or archetype mark images exist in the repo (the public/sprites folder has no sigils folder), and the code itself notes they are not yet generated.",
+  "evidence": [
+   "scripts/validate-sprite-layers.ts:44 — // Sigil marks — not yet generated, skipped if directory doesn't exist",
+   "src/lib/avatar-utils.ts:10 — 3. **Provenance stamp (Register 2)** — planned `resolveProvenanceStamp()`"
+  ]
+ },
+ {
+  "id": "AS-017",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The 'center 15%' crop matches, but the portrait crops the layered 64-pixel avatar parts, not the Cosmic art, and nothing sets a 64 by 96 size (which is not square anyway).",
+  "evidence": [
+   "src/lib/ui/register-portrait.ts:15 — 'absolute inset-0 w-full h-full object-cover object-[center_15%]'",
+   "src/components/Avatar.tsx:43 — const specs = config ? getAvatarPartSpecs(config) : []",
+   "src/lib/avatar-parts.ts:70 — path: `/sprites/parts/base/${genderKey}.png`"
+  ]
+ },
+ {
+  "id": "AS-024",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "There are exactly four move icons, Wake Up, Clean Up, Grow Up and Show Up, and each image file is 24 by 24 pixels.",
+  "evidence": [
+   "src/lib/ui/move-icons.ts:2 — four move icons, 24×24 monochrome PNGs.",
+   "src/lib/ui/move-icons.ts:7 — 'wake-up': '/icons/moves/wake-up.png',",
+   "scripts/generate-move-icons.ts:11 — const SIZE = 24"
+  ]
+ },
+ {
+  "id": "AS-025",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The zone textures are 64 by 64 colour-with-transparency PNGs built from the near-black #0a0908 base with faint noise, and they tile as repeating backgrounds.",
+  "evidence": [
+   "scripts/generate-zone-textures.ts:2 — ARDS Register 6 — tileable 64×64 zone textures (dark base, subtle variation).",
+   "scripts/generate-zone-textures.ts:14 — /** Near-black base aligned with SURFACE_TOKENS.bgBase #0a0908 */",
+   "src/lib/ui/zone-surfaces.ts:23 — backgroundRepeat: 'repeat',"
+  ]
+ },
+ {
+  "id": "AS-026",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The ceremony wrapper does pass element colours from the tokens, but the 'ceremony-completion-glow' animation it relies on is not defined in any stylesheet, so no coloured effect appears.",
+  "evidence": [
+   "src/components/cyoa/ceremony/CompletionGlow.tsx:91 — ...elementCssVars(element),",
+   "src/components/cyoa/ceremony/CompletionGlow.tsx:99 — active && 'ceremony-completion-glow',",
+   "src/components/cyoa/ceremony/CompletionGlow.tsx:15 — Register 7 (Ceremony) — ceremony-completion-glow class in cultivation-cards.css."
+  ]
+ },
+ {
+  "id": "AS-029",
+  "label": "disagrees",
+  "confidence": "high",
+  "reason": "No function called resolveProvenanceStamp exists anywhere in the code; the only mention is a comment calling it planned.",
+  "evidence": [
+   "src/lib/avatar-utils.ts:10 — 3. **Provenance stamp (Register 2)** — planned `resolveProvenanceStamp()` (provenance-stamp-system spec) — BAR/quest corners."
+  ]
+ },
+ {
+  "id": "AS-032",
+  "label": "disagrees",
+  "confidence": "high",
+  "reason": "Colours are typed in directly as hex codes in several places, such as a copied palette in the card art registry and a dark ink default in the move icon.",
+  "evidence": [
+   "src/lib/ui/card-art-registry.ts:685 — { color_hex: '#1a1a18', color_weight: 0.40 },",
+   "src/components/deck/MoveIcon.tsx:13 — color = '#150a04',"
+  ]
+ },
+ {
+  "id": "AS-033",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The file exists and defines both ELEMENT_TOKENS and SURFACE_TOKENS, and other code imports its colours from it.",
+  "evidence": [
+   "src/lib/ui/card-tokens.ts:39 — export const ELEMENT_TOKENS = {",
+   "src/lib/ui/card-tokens.ts:205 — export const SURFACE_TOKENS = {",
+   "src/lib/ui/zone-surfaces.ts:8 — import { SURFACE_TOKENS } from '@/lib/ui/card-tokens'"
+  ]
+ },
+ {
+  "id": "AS-034",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The file exists and defines both AvatarConfig and getWalkableSpriteUrl; the planned resolvers are described as future work, not as present.",
+  "evidence": [
+   "src/lib/avatar-utils.ts:13 — export type AvatarConfig = {",
+   "src/lib/avatar-utils.ts:155 — export function getWalkableSpriteUrl(config: AvatarConfig | null): string {"
+  ]
+ },
+ {
+  "id": "AS-036",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The referenced spec file exists and is the Provenance Stamp System spec describing the two-part seal.",
+  "evidence": [
+   ".specify/specs/provenance-stamp-system/spec.md:1 — # Spec: Provenance Stamp System"
+  ]
+ },
+ {
+  "id": "AS-064",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The book form now uploads straight from the browser to Blob storage with a 100 MB limit, so the 4.5 MB ceiling the test step implies no longer applies.",
+  "evidence": [
+   "src/app/admin/books/BookUploadForm.tsx:52 — handleUploadUrl: `${window.location.origin}/api/books/upload`,",
+   "src/app/api/books/upload/route.ts:61 — maximumSizeInBytes: 100 * 1024 * 1024, // 100 MB"
+  ]
+ },
+ {
+  "id": "AS-147",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The token is required, but without it the BAR photo route refuses with a clear 503 'requires BLOB_READ_WRITE_TOKEN' message; only old, unused server actions fall back to local files.",
+  "evidence": [
+   "src/app/api/assets/upload/route.ts:47 — 'Asset upload requires BLOB_READ_WRITE_TOKEN. Add it in Vercel Dashboard → Storage → Blob.',",
+   "src/actions/assets.ts:28 — @deprecated Use client-side upload via /api/assets/upload and uploadBarAsset from",
+   "src/actions/books.ts:115 — await mkdir(UPLOAD_DIR, { recursive: true })"
+  ]
+ }
+]

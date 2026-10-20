@@ -1,0 +1,213 @@
+[
+ {
+  "id": "AS-001",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The Asset table has all the listed fields, but the code never creates 'sprite' or 'tile' assets and does create other types such as 'party_quest_completion', so the type list is wrong.",
+  "evidence": [
+   "prisma/schema.prisma:1351 — type         String",
+   "src/app/api/party/valkyrie/upload/route.ts:13 — return 'party_quest_completion'",
+   "src/app/api/party/valkyrie/upload/route.ts:63 — type: assetTypeForKind(kind),",
+   "src/actions/assets.ts:69 — type: 'bar_attachment',"
+  ]
+ },
+ {
+  "id": "AS-002",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "Only the old, deprecated upload action falls back to the local uploads folder, and it names the file 'file' plus extension; the main upload route refuses outright when the Blob token is missing.",
+  "evidence": [
+   "src/actions/assets.ts:28 — @deprecated Use client-side upload via /api/assets/upload",
+   "src/actions/assets.ts:96 — const filename = `file${ext}`",
+   "src/app/api/assets/upload/route.ts:47 — 'Asset upload requires BLOB_READ_WRITE_TOKEN. Add it in Vercel Dashboard → Storage → Blob.',"
+  ]
+ },
+ {
+  "id": "AS-005",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The type field is a plain text field as stated, but the values actually written are 'bar_attachment' and three 'party_' types, never 'sprite' or 'tile'.",
+  "evidence": [
+   "prisma/schema.prisma:1351 — type         String",
+   "src/app/api/party/valkyrie/upload/route.ts:15 — return 'party_oracle_override'",
+   "src/app/api/party/valkyrie/upload/route.ts:17 — return 'party_altar_media'"
+  ]
+ },
+ {
+  "id": "AS-006",
+  "label": "agrees",
+  "confidence": "medium",
+  "reason": "The metadata field exists as optional text stored in the 'metadata_json' column and holds an intention; altText is never written, but the comment marks every key as optional.",
+  "evidence": [
+   "prisma/schema.prisma:1354 — metadataJson String?    @map(\"metadata_json\")",
+   "src/actions/assets.ts:72 — metadataJson: intention ? JSON.stringify({ intention }) : null,",
+   "src/actions/assets.ts:156 — meta.rotationDegrees = next"
+  ]
+ },
+ {
+  "id": "AS-007",
+  "label": "agrees",
+  "confidence": "medium",
+  "reason": "Each asset is linked to its owning Player through ownerId as stated; the code also deletes a player's assets when the player is deleted, which the statement does not mention.",
+  "evidence": [
+   "prisma/schema.prisma:1360 — owner        Player     @relation(fields: [ownerId], references: [id], onDelete: Cascade)"
+  ]
+ },
+ {
+  "id": "AS-011",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The main upload route lets every file, images included, go up to 10 MB; the 5 MB image limit is defined there but never used, and survives only in the deprecated action.",
+  "evidence": [
+   "src/app/api/assets/upload/route.ts:31 — const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB",
+   "src/app/api/assets/upload/route.ts:109 — maximumSizeInBytes: MAX_PDF_BYTES,",
+   "src/actions/assets.ts:61 — const maxBytes = isPdf ? MAX_PDF_BYTES : MAX_IMAGE_BYTES"
+  ]
+ },
+ {
+  "id": "AS-014",
+  "label": "agrees",
+  "confidence": "medium",
+  "reason": "The sprite checker expects nation sigils at exactly 24 by 24 pixels, and the game has five nations; no sigil files exist yet, which the spec itself says.",
+  "evidence": [
+   "scripts/validate-sprite-layers.ts:45 — { dir: 'public/sprites/sigils/nation',          width: 24,  height: 24, channels: 4, label: 'nation sigil' },",
+   "src/lib/nation/nations.ts:5 — Metal (Argyra) → Water (Lamenth) → Wood (Virelune) → Fire (Pyrakanth) → Earth (Meridia)"
+  ]
+ },
+ {
+  "id": "AS-015",
+  "label": "agrees",
+  "confidence": "medium",
+  "reason": "The sprite checker expects archetype marks at exactly 16 by 16 pixels, and there are eight archetypes in the portrait outfit folder.",
+  "evidence": [
+   "scripts/validate-sprite-layers.ts:46 — { dir: 'public/sprites/sigils/archetype',       width: 16,  height: 16, channels: 4, label: 'archetype mark' },",
+   "scripts/validate-sprite-layers.ts:44 — // Sigil marks — not yet generated, skipped if directory doesn't exist"
+  ]
+ },
+ {
+  "id": "AS-016",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "Five nation sigils plus eight archetype marks make 13, and the sigils folder does not exist, so the marks are indeed not yet made.",
+  "evidence": [
+   "scripts/validate-sprite-layers.ts:44 — // Sigil marks — not yet generated, skipped if directory doesn't exist",
+   "src/lib/avatar-utils.ts:10 — **Provenance stamp (Register 2)** — planned `resolveProvenanceStamp()`"
+  ]
+ },
+ {
+  "id": "AS-017",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The 15% upward crop matches, but the portrait is built from layered sprite parts in a round 64 by 64 frame, not cropped from the Cosmic art at 64 by 96.",
+  "evidence": [
+   "src/lib/ui/register-portrait.ts:15 — 'absolute inset-0 w-full h-full object-cover object-[center_15%]'",
+   "src/lib/ui/register-portrait.ts:3 — Stack uses layered parts (Avatar.tsx); Register 3 crop/vignette matches spec:",
+   "src/components/Avatar.tsx:26 — lg: 'w-16 h-16 text-lg',",
+   "src/components/world/TradePanel.tsx:31 — size=\"lg\""
+  ]
+ },
+ {
+  "id": "AS-024",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "Four move icons exist, one each for Wake Up, Clean Up, Grow Up and Show Up, and each image file is 24 by 24 pixels.",
+  "evidence": [
+   "src/lib/ui/move-icons.ts:2 — ARDS Register 5 (Frame/Chrome) — four move icons, 24×24 monochrome PNGs.",
+   "src/lib/ui/move-icons.ts:7 — 'wake-up': '/icons/moves/wake-up.png',",
+   "src/lib/ui/move-icons.ts:10 — 'show-up': '/icons/moves/show-up.png',"
+  ]
+ },
+ {
+  "id": "AS-025",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The three zone textures are 64 by 64 pixel RGBA images, made by a script on a near-black #0a0908 base with low grain, and tiled over that same base colour.",
+  "evidence": [
+   "scripts/generate-zone-textures.ts:2 — ARDS Register 6 — tileable 64×64 zone textures (dark base, subtle variation).",
+   "scripts/generate-zone-textures.ts:14 — /** Near-black base aligned with SURFACE_TOKENS.bgBase #0a0908 */",
+   "src/lib/ui/zone-surfaces.ts:23 — backgroundRepeat: 'repeat',"
+  ]
+ },
+ {
+  "id": "AS-026",
+  "label": "agrees",
+  "confidence": "medium",
+  "reason": "The ceremony glow uses no images and takes its colours from ELEMENT_TOKENS; however, the CSS class it relies on is not defined in any stylesheet.",
+  "evidence": [
+   "src/lib/ui/card-tokens.ts:18 — Register 7 Ceremony — elementCssVars / gem+glow for ritual feedback; no separate image register.",
+   "src/components/cyoa/ceremony/CompletionGlow.tsx:91 — ...elementCssVars(element),"
+  ]
+ },
+ {
+  "id": "AS-029",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "No function called resolveProvenanceStamp exists anywhere in the code; the only mention is a comment calling it planned.",
+  "evidence": [
+   "src/lib/avatar-utils.ts:10 — **Provenance stamp (Register 2)** — planned `resolveProvenanceStamp()` (provenance-stamp-system spec) — BAR/quest corners."
+  ]
+ },
+ {
+  "id": "AS-032",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "Hex colours are typed directly into code in many places, for example the palette hints in the card art registry and page backgrounds like bg-[#0a0908], instead of referring to the token tables.",
+  "evidence": [
+   "src/lib/ui/card-art-registry.ts:680 — Derived from ELEMENT_TOKENS — locked to card-tokens.ts values.",
+   "src/lib/ui/card-art-registry.ts:685 — { color_hex: '#1a1a18', color_weight: 0.40 },",
+   "src/app/build-log/page.tsx:47 — <main className=\"min-h-screen bg-[#0a0908] px-4 py-12 text-[#e8e6e0] sm:px-6 lg:px-8\">"
+  ]
+ },
+ {
+  "id": "AS-033",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The file card-tokens.ts exists at that path and exports both ELEMENT_TOKENS and SURFACE_TOKENS.",
+  "evidence": [
+   "src/lib/ui/card-tokens.ts:39 — export const ELEMENT_TOKENS = {",
+   "src/lib/ui/card-tokens.ts:205 — export const SURFACE_TOKENS = {"
+  ]
+ },
+ {
+  "id": "AS-034",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The file avatar-utils.ts exists at that path and defines both AvatarConfig and getWalkableSpriteUrl; the resolvers are described as future work.",
+  "evidence": [
+   "src/lib/avatar-utils.ts:13 — export type AvatarConfig = {",
+   "src/lib/avatar-utils.ts:155 — export function getWalkableSpriteUrl(config: AvatarConfig | null): string {"
+  ]
+ },
+ {
+  "id": "AS-036",
+  "label": "agrees",
+  "confidence": "high",
+  "reason": "The provenance stamp spec exists at exactly that path and describes the stamp's design and implementation.",
+  "evidence": [
+   ".specify/specs/provenance-stamp-system/spec.md:1 — # Spec: Provenance Stamp System"
+  ]
+ },
+ {
+  "id": "AS-064",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "The book form now sends the PDF straight from the browser to Blob storage with a 100 MB cap, so the 4.5 MB Hobby limit no longer applies to it.",
+  "evidence": [
+   "src/app/api/books/upload/route.ts:61 — maximumSizeInBytes: 100 * 1024 * 1024, // 100 MB",
+   "src/app/admin/books/BookUploadForm.tsx:52 — handleUploadUrl: `${window.location.origin}/api/books/upload`,",
+   "src/actions/books.ts:37 — Bypasses Vercel's 4.5 MB request limit by not receiving file bytes."
+  ]
+ },
+ {
+  "id": "AS-147",
+  "label": "disagrees",
+  "confidence": "medium",
+  "reason": "Without the token, the main BAR upload route now stops with a clear 'requires BLOB_READ_WRITE_TOKEN' error; the file-too-large error comes from sending files through the server, not from the missing token.",
+  "evidence": [
+   "src/app/api/assets/upload/route.ts:43 — if (!process.env.BLOB_READ_WRITE_TOKEN) {",
+   "src/app/api/assets/upload/route.ts:49 — { status: 503 }",
+   "src/actions/assets.ts:29 — @/lib/asset-upload-client. Server actions hit FUNCTION_PAYLOAD_TOO_LARGE for photos.",
+   "src/actions/assets.ts:93 — } else {"
+  ]
+ }
+]
