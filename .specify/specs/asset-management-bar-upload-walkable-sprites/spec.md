@@ -66,9 +66,9 @@ Enable (1) BAR asset upload — attaching images and files to quests with ritual
 
 ### Asset model
 
-- **FR1**: Add `Asset` model: id, type, url, mimeType, metadataJson, ownerId, customBarId?, createdAt. Types: `bar_attachment`, `sprite`, `tile`.
+- **FR1**: Add `Asset` model: id, type, url, mimeType, metadataJson, ownerId, customBarId?, createdAt. Types as written by the code (checked 2026-10-20): `bar_attachment`, and from the Valkyrie party upload route `party_quest_completion`, `party_oracle_override` and `party_altar_media`. `sprite` and `tile` were planned here and no code writes them. The model also has a `side` field.
 - **FR2**: Add `CustomBar.attachmentIds` (JSON string array of Asset IDs) or relation `CustomBar.assets` for multiple attachments.
-- **FR3**: Asset storage: Vercel Blob when BLOB_READ_WRITE_TOKEN set; else `public/uploads/assets/{id}/{filename}`.
+- **FR3**: Asset storage: Vercel Blob. The main upload route (`/api/assets/upload`) returns a 503 naming `BLOB_READ_WRITE_TOKEN` when the token is missing. Only the deprecated server action in `src/actions/assets.ts` falls back to local storage, at `public/uploads/assets/{id}/file{ext}` (the file is always named `file`, not by its own filename).
 - **FR4**: Roles: creator (uploader), steward (can edit/delete if instance-scoped), admin (full access).
 
 ### BAR upload
@@ -96,14 +96,14 @@ Enable (1) BAR asset upload — attaching images and files to quests with ritual
 ```prisma
 model Asset {
   id           String    @id @default(cuid())
-  type         String    // bar_attachment | sprite | tile
+  type         String    // bar_attachment | party_quest_completion | party_oracle_override | party_altar_media (sprite and tile were planned and are not written)
   url          String    // Vercel Blob URL or /uploads/assets/...
   mimeType     String?   @map("mime_type")
   metadataJson String?   @map("metadata_json") // { intention?, altText?, ... }
   ownerId      String    @map("owner_id")
   customBarId  String?   @map("custom_bar_id")
   createdAt    DateTime  @default(now())
-  owner        Player    @relation(fields: [ownerId], references: [id])
+  owner        Player    @relation(fields: [ownerId], references: [id], onDelete: Cascade)  // deleting a player deletes their assets
   customBar    CustomBar? @relation(fields: [customBarId], references: [id])
 
   @@index([customBarId])
@@ -237,7 +237,7 @@ Document fully in `docs/WALKABLE_SPRITES.md`.
 
 ## Non-functional Requirements
 
-- Asset upload: max file size 5 MB for images; 10 MB for PDFs.
+- Asset upload: the attachment and swap forms check 5 MB for images and 10 MB for PDFs in the browser. The server route (`/api/assets/upload`) issues upload tokens up to 10 MB for every file type, images included, so a client that skips the form check can upload an image up to 10 MB. Signal media (4 MB) and Valkyrie uploads (8 MB) have their own limits.
 - Walkable sprites: must render at 60fps; optimize sprite sheet size.
 - Presence: position updates debounced (e.g. 500ms) to reduce writes.
 
