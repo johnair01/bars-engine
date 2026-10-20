@@ -42,6 +42,14 @@ None. The statements are doc and code text, with no player data.
 - **The cheap test, run before building further:** Wendell labels the first three statements without help, and says whether it felt like a spreadsheet.
 - **The result that stops the work:** he stalls on a card, or says it still feels like data entry. Then the card carries too much, and the code view is the first part to cut or fold.
 
+## Result of the cheap test, 2026-10-20
+
+Wendell answered 19 of the 20 statements in about five minutes (saved times 22:56 to 23:02 UTC), then said: "it was very hard and it feels like something the llm should be able to verify for me". Nine of his answers were "can't tell". The stop condition above applies: the work of judging a statement against code is hard for a person who does not read the code, however the screen looks.
+
+Two independent model readers with the code open were then run blind to his labels and to each other (`council/jev/readers/`, comparison in `council/jev/asset_labels_compared.json`). They agree on 18 of 20 (9 agree, 9 differ). His labels match their consensus on 4 of the 19 he answered. The council spot-checked three of the readers' claims in the code (the missing `resolveProvenanceStamp`, the 100 MB book upload limit, and the undefined `ceremony-completion-glow` class) and each held.
+
+What changes: the labelling page stays as the way to review rows where the readers differ, and the board position `jev-asset-readers-label` makes model readers the first labelling step. The page is no longer the main route to labels.
+
 ## Definition of done
 
 - [ ] 20 cards render with the doc statement and code excerpts, at desktop and phone width, in light and dark.
