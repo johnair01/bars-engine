@@ -5829,7 +5829,8 @@
       function tapAt(x, y) {
         if (!renderer) return;
         var rc = renderer.domElement.getBoundingClientRect(), best = null, bestK = Infinity;
-        var es = !R.close && elderScreen(); if (es && Math.hypot(x - es.x, y - es.y) < es.r + 24) { elderOpen(); return; }
+        // the elder takes a tap on itself, except while the guide is teaching the tap on the floor (its spot can fall by the elder)
+        var es = !R.close && guide.shown !== "tap" && elderScreen(); if (es && Math.hypot(x - es.x, y - es.y) < es.r) { elderOpen(); return; }
         var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
         seen().forEach(function (c) {
           var p = centreOf(c), e = p.clone().addScaledVector(right, c.fig.scale.x).project(camera); p.project(camera);
