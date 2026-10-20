@@ -769,7 +769,7 @@ await page.locator('[data-cave-standup]').click();
 await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 10000 });
 ok((await C(() => window.__oagCave.spirits.filter((o) => o.family).map((o) => o.sittings).join())) === '2,1', 'standing up partway counts no sitting');
 await C(() => { const S = window.__oagSpiritStore; ['protector', 'fixer'].forEach((f) => S.remove('meet-' + f)); });
-for (let i = 0; i < 3; i++) { await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); }
+for (let i = 0; i < 3; i++) { await menuTap('[data-cave-spiritbtn]'); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); }
 await page.waitForFunction(() => window.__oagCave.spirits.length === 0 && window.__oagCave.carried() === 0, null, { timeout: 10000 }).catch(() => {});
 ok((await C(() => window.__oagCave.spirits.length)) === 0, 'thanked and breathed out, the three leave the walk as it was');
 ok(await sees('[data-cave-home-satisfied="yes"]') && await page.locator('[data-cave-skip]').count() === 0 && await page.locator('[data-cave-next]').count() === 0, 'back from the room the daemon is asked again, and it is still no skip and no way past');
