@@ -11,7 +11,7 @@ export default async function AdminLayout({
     const player = await getCurrentPlayer()
 
     if (!player) {
-        redirect('/conclave')
+        redirect('/login?returnTo=%2Fadmin')
     }
 
     // Strict Admin Check
