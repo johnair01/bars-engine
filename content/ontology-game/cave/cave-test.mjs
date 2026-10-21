@@ -1429,6 +1429,8 @@ for (let i = 0; i < 100 && !(await C(() => window.__oagCave.room.sitShown())); i
 await C(() => window.__oagCave.room.stick(0, 0));
 ok(await C(() => window.__oagCave.room.sitShown()), 'walking onto the rug offers Sit down');
 // The loadout (sic-loadout-three): with spirits kept in oag.spirits.v1, the rug offers Your spirits, three at most walk with you.
+await C(() => window.__oagSpiritStore.wipe()); // the charges worked above were summoned into the store (gs-door-gas)
+await page.waitForTimeout(300);
 ok(!(await page.locator('[data-room-spirits]').isVisible()), 'with no spirit kept, the rug offers no loadout');
 await page.evaluate(() => { const S = window.__oagSpiritStore; [['protector', 'Fear', 'metal', 4], ['fixer', 'Hurry', 'fire', 0], ['skeptic', 'Doubt', 'water', 2], ['victim', 'Sorrow', 'earth', 0]].forEach(([f, n, e, k]) => S.put({ id: 'meet-' + f, name: n, element: e, family: f, sittings: k })); });
 await page.waitForFunction(() => document.querySelector('[data-room-spirits]')?.style.display !== 'none', null, { timeout: 5000 }).catch(() => {});
@@ -1750,6 +1752,7 @@ const el2 = await C(() => window.__oagCave.room.elder());
 ok(!el2.card && el2.stage === 'ally' && !(await C(() => window.__oagSpiritStore.all().some((t) => /elder/.test(t.id)))), 'the X closes it: it stands as the ally again, and it is never put in your store');
 // ---- door spirits (boards gs-two-acts, gs-door-gas, gs-same-charge-grows, council #340; Wendell, 21 October 2026: "the blobs
 // that emerge from the door need to be the energy gas energy spirits and then sitting grows them into creatures and allies")
+{
 const chargeForm = () => C(() => { const u = window.__oagCave.room.state.all[0].fig.userData, f = u.form && u.form.userData.form; return { blob: u.blob, stage: f && f.stage, drawn: f && f.drawn, motes: f && f.motes }; });
 const chargeSpirits = () => C(() => window.__oagSpiritStore.all().filter((t) => t.family === 'charge').map((t) => ({ id: t.id, name: t.name, n: t.sittings })));
 const leaveHome = async () => {
@@ -1808,6 +1811,7 @@ await leaveHome();
 const grown = await C(() => ({ t: window.__oagSpiritStore.get('charge-preview'), n: window.__oagSpiritStore.all().length }));
 ok(grown.t && grown.t.sittings === 8 && grown.n === n3, 'the sitting adds one to its sittings (8, an ally) and no store entry: ' + JSON.stringify(grown));
 await C(() => window.__oagSpiritStore.wipe());
+}
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();
