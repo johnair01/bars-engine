@@ -102,17 +102,17 @@
       var pts = new THREE.Points(geo, mat); pts.frustumCulled = false; root.add(pts); layers.push({ pts: pts, ms: ms }); all = all.concat(ms);
     });
     var t0 = (typeof performance !== "undefined" ? performance : Date).now(), from = o.from ? o.from.clone() : null, last = -1;
-    var state = { family: family, stage: "gas", drawn: "gas", motes: all.length, born: from ? 0 : 1, from: from, still: reducedMotion, hex: hex, gas: 1, mesh: null };
+    var state = { family: family, stage: "gas", drawn: "gas", motes: all.length, born: from ? 0 : 1, from: from, still: reducedMotion, hex: hex, gas: 1, mesh: null, spread: 0, faceAt: null };
     var inv = new THREE.Vector3(), wp = new THREE.Vector3();
     layers[0].pts.onBeforeRender = function (renderer, scene, camera) {
       var now = (typeof performance !== "undefined" ? performance : Date).now(); if (now === last) return; last = now;
       // face the camera about the up axis, so the page's shapes read as drawn, or face o.faceAt (a world point) if it is given
-      var aim = o.faceAt || camera.position;
+      var aim = state.faceAt || o.faceAt || camera.position; // state.faceAt: a walking creature faces where it goes
       var py = 0; for (var pa = root.parent; pa; pa = pa.parent) py += pa.rotation.y; // every turn above it (the room's charge sits two groups down)
       root.getWorldPosition(wp); root.rotation.y = Math.atan2(aim.x - wp.x, aim.z - wp.z) - py;
       var age = now - t0, sec = now / 1000;
       if (reducedMotion) { var f = Math.min(1, age / FADE_MS); mat0.opacity = 0.95 * f * state.gas; mat1.opacity = 0.95 * f * state.gas; state.born = f; return; }
-      var gather = 0.2 + 0.8 * state.gas; // the motes draw in to the heart as the core takes their place
+      var gather = (0.2 + 0.8 * state.gas) * (1 + state.spread); // the motes draw in to the heart as the core takes their place; an undefined gas spreads them wide
       var b = from ? Math.min(1, age / STREAM_MS) : 1; state.born = b;
       if (from && b < 1) { inv.copy(from); root.worldToLocal(inv); } // the daemon's body, in the gas's own frame this frame
       layers.forEach(function (L) {
@@ -132,7 +132,7 @@
   // Tint every layer at once (the orb's material.color in the cave's code), and the core or hologram it has unfolded into
   function tintProxy(root) {
     var mats = root.userData.materials, st = root.userData.form;
-    return { material: { color: { setHex: function (h) { mats.forEach(function (m) { m.color.setHex(h); }); st.hex = h; if (st.mesh) tintStage(st.mesh, h); }, getHex: function () { return mats[0].color.getHex(); } } } };
+    return { material: { color: { setHex: function (h) { mats.forEach(function (m) { m.color.setHex(h); }); st.hex = h; if (st.mesh) tintStage(st.mesh, h, st.family === "charge"); }, getHex: function () { return mats[0].color.getHex(); } } } };
   }
 
   // ---- the unfolding (board sic-unfold-by-sitting) ------------------------------------------------------------------------
@@ -185,7 +185,16 @@
   function toneHex(THREE, hex, look) { return look.white ? new THREE.Color(0xffffff) : new THREE.Color(hex).multiplyScalar(look.tone == null ? 1 : look.tone); }
   // a painted part (the creature's and ally's) keeps its own colour; only the light-made parts take the family's tint
   function painted(L) { return !!(L.rgb || L.paint); }
-  function tintStage(mesh, hex) { mesh.children.forEach(function (m) { var L = m.userData.look; if (!L.white && !painted(L)) m.material.color.setHex(hex).multiplyScalar(L.tone == null ? 1 : L.tone); }); }
+  // A charge's creature and ally borrow the Shellback's painted bodies, so `paint` also leans their paint toward the charge's
+  // element, which tells them from the elder Shellback at the door (board gw-form-by-step).
+  function tintStage(mesh, hex, paint) {
+    mesh.children.forEach(function (m) {
+      var L = m.userData.look;
+      if (painted(L)) { if (paint && m.userData.paint0) m.material.color.copy(m.userData.paint0).lerp(m.userData.toward.setHex(hex), PAINT_LEAN); }
+      else if (!L.white) m.material.color.setHex(hex).multiplyScalar(L.tone == null ? 1 : L.tone);
+    });
+  }
+  var PAINT_LEAN = 0.45;
   function fadeStage(mesh, k) { mesh.children.forEach(function (m) { m.material.opacity = m.userData.look.opacity * k; if (painted(m.userData.look)) m.material.transparent = k < 1; }); }
   // A core turns slowly on its axis; a hologram stands three quarters to the viewer, its head toward them, and hovers.
   // Each drawn form's front (its eyes) is its own +x, and the form's root faces the viewer with its +z, so a turn of -pi/2
@@ -205,6 +214,7 @@
       } else mat = new THREE.MeshBasicMaterial({ color: toneHex(THREE, hex, L), transparent: true, opacity: L.opacity == null ? 1 : L.opacity, depthWrite: false,
         side: THREE.DoubleSide, blending: L.glow >= 0.7 ? THREE.AdditiveBlending : THREE.NormalBlending });
       var m = new THREE.Mesh(geo, mat); m.userData.look = L; m.frustumCulled = false; g.add(m);
+      if (painted(L)) { m.userData.paint0 = mat.color.clone(); m.userData.toward = new THREE.Color(); }
     });
     g.userData.stage = stage; g.scale.setScalar(SCALE);
     g.rotation.y = turnOf(stage);
@@ -253,5 +263,5 @@
   }
 
   window.__oagSpiritForms = { FAMILIES: FAMILIES, familyOf: familyOf, buildGas: buildGas, buildForm: buildForm, tintProxy: tintProxy, SHAPES: SHAPES,
-    STAGES: STAGES, AT: AT, stageOf: stageOf, drawnStage: drawnStage, fileOf: fileOf, loadStage: loadStage };
+    STAGES: STAGES, AT: AT, stageOf: stageOf, turnOf: turnOf, drawnStage: drawnStage, fileOf: fileOf, loadStage: loadStage };
 })();

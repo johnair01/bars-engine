@@ -2304,12 +2304,14 @@
     root.appendChild(home);
     titleScene(stage, home, function () { drawMenu(); panel.style.display = "none"; });
     // A link straight into the WAVE room, for a preview: #go=home opens it as Begin does, at the chest. &grown=N first keeps one
-    // summoned spirit at N sittings and brings it home with you, so its next sitting is seen (6: a creature that becomes an ally).
+    // summoned spirit at N sittings and brings it home with you, so its next sitting is seen (7: a creature that becomes an ally).
+    // &hidden=N brings the first charge in with a hidden part already on it, at polarity N (signal "preview"), so it comes in to
+    // "Something hides it" and its shadow spirit's gate is a few taps away. They combine: #go=home&grown=7&hidden=6.
     var hq = String(location.hash || "");
     if (/(?:^|[#&])go=home(?:&|$)/.test(hq)) {
-      var gn = /[#&]grown=(\d+)/.exec(hq), sp = null;
+      var gn = /[#&]grown=(\d+)/.exec(hq), hd = /[#&]hidden=(\d+)/.exec(hq), sp = null;
       if (gn && SPIRIT_STORE) try { SPIRIT_STORE.remove("charge-preview"); sp = SPIRIT_STORE.put({ id: "charge-preview", name: "Humming Ember", element: "Anger", family: "charge", sittings: +gn[1] }, "a preview link"); } catch (e) { sp = null; }
-      load().then(function (A) { return homeBase(A, home, { where: "Chest", spirit: sp }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
+      load().then(function (A) { return homeBase(A, home, { where: "Chest", spirit: sp, hidden: hd ? Math.min(10, +hd[1]) : 0 }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
     }
   }
   // Continue: the last place played (oag.last.v1), or, for a player from before it was kept, a Big Mind save with a voice met.
@@ -2433,7 +2435,7 @@
   function homeBase(A, home, o) {
     var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
     keepLast("room", o.where);
-    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind, spirit: o.spirit || null }).then(function (r) {
+    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind, spirit: o.spirit || null, hidden: o.hidden || 0 }).then(function (r) {
       if (r && r.bigmind) keepLast("bigmind", o.where);
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
       else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, { where: o.where }); } });
@@ -5176,9 +5178,10 @@
       // ---- the charge: a grey shape that takes the texture, and then its element's colour -------------------------------------
       // Since 21 October 2026 the charge is a gas spirit (Wendell: "the blobs that emerge from the door need to be the energy gas
       // energy spirits"; board gs-door-gas): a cloud of motes from spirit-forms.js, drawn when it first comes in (formIn), whose
-      // motes stream out of the doorway. A charge that is one of your spirits come home (opts.spirit) wears that spirit's form at
-      // its stage. u.mat holds the colour and opacity the room works out each frame (syncForm puts them on the motes); the
-      // shadow's spirit (blob) keeps the old grey shape for now.
+      // motes stream out of the doorway. Every charge comes in as a gas, even one of your spirits come home (opts.spirit): it is
+      // fed to that spirit at the end and unfolds to its stage then (grow; Wendell, 21 October 2026: "it still showed up as a
+      // creature instead of the gas when it entered the room"). u.mat holds the colour and opacity the room works out each frame
+      // (syncForm puts them on the motes). The shadow spirit is a smaller gas of its own (summonShade, below).
       var GREY = 0x8a8a92, SF = window.__oagSpiritForms || null, FORM_K = 2.2, FORM_Y = 1.1, FORM_AT = { hologram: 1.8, creature: 1.3, ally: 1.3 };
       function buildCharge(blob) {
         var g = new THREE.Group(), body = new THREE.Group(), S = new THREE.SphereGeometry(1, 18, 12);
@@ -5197,34 +5200,79 @@
         return g;
       }
       // The charge's gas, drawn the first time it is seen: from (a world point, the doorway) streams its motes in. A spirit come
-      // home is drawn at the stage its sittings give it, in its own family's forms.
+      // home wears its own family's forms, and comes in as their gas like any charge; it takes its stage when it is fed.
       function formIn(c, from) {
         var u = c.fig.userData; if (u.blob || u.form) return;
         var sp = c.spirit, fam = sp && sp.family && SF.familyOf(sp.family) ? sp.family : "charge";
-        var f = SF.buildForm(THREE, fam, u.col.getHex(), { from: from || null, stage: sp ? sittingStage(sp.sittings || 0) : "gas" });
+        var f = SF.buildForm(THREE, fam, u.col.getHex(), { from: from || null, stage: "gas" });
         f.position.y = FORM_Y; f.scale.setScalar(FORM_K); u.body.add(f); u.form = f; u.tint = SF.tintProxy(f);
       }
+      // Defined by the work (board gw-form-by-step; Wendell, 21 October 2026: "the spirit should show up in an occluded gas form and
+      // as it's worked through should turn into a fully formed spirit"): a new charge comes in as an occluded gas, its motes spread
+      // wide, grey, faint, behind a dark haze, and each step of the W.A.V.E. done (definition: steps credited / ROOM_STEPS) gathers
+      // the motes, clears the haze and brings up its element's colour. A spirit of yours come home is defined the same way, step
+      // by step (it was defined at once until 21 October 2026). The stage still comes from sittings only, so a W.A.V.E. never jumps
+      // a stage.
+      // Until 21 October 2026 it came in fainter (0.3), spread wider (1.3), in the blobs' grey and behind a thicker haze (0.42),
+      // and was too hard to find on a phone (Wendell: "I can't see the spirit that has shown up in the room"); now its undefined
+      // motes are a pale grey that shows against the stone.
+      var HAZE = 0x2a2630, FAINT = 0.6, HAZE_K = 0.24, SPREAD = 0.8, greyC = new THREE.Color(0xc4c4d0), defC = new THREE.Color();
+      function definition(c) { var n = 0; for (var id in c.credit) if (c.credit[id]) n++; return Math.min(1, n / ROOM_STEPS.length); }
       // Each frame the motes (and the core, hologram, creature or ally it has unfolded into) wear u.mat's colour and opacity.
-      function syncForm(u, now) {
-        var f = u.form, st = f.userData.form, k = clamp(u.mat.opacity / 0.85, 0, 1);
-        u.tint.material.color.setHex(u.mat.color.getHex());
+      function syncForm(c, now, dt) {
+        var u = c.fig.userData, f = u.form, st = f.userData.form, k = clamp(u.mat.opacity / 0.85, 0, 1), d = definition(c), fade = u.fade == null ? 1 : u.fade;
+        u.def = u.def == null ? d : u.def + (d - u.def) * Math.min(1, dt * 1.5);
+        st.spread = SPREAD * (1 - u.def);
+        u.tint.material.color.setHex(defC.copy(greyC).lerp(u.mat.color, u.def).getHex());
+        k *= FAINT + (1 - FAINT) * u.def;
+        if (!c.polarity && 1 - u.def > 0.01) { u.veil.visible = true; u.veil.material.color.setHex(HAZE); u.veil.material.opacity = HAZE_K * (1 - u.def) * fade; u.veil.scale.set(1.1, 1.35, 1.1); }
         var kw = FORM_AT[st.drawn] || FORM_K; f.scale.setScalar(f.scale.x + (kw - f.scale.x) * 0.06); // the drawn bodies are bigger than the cloud
+        walkForm(c, u, f, st, dt);
         if (st.mesh && now - (st.unfoldedAt || 0) < 2700) return; // the unfolding fades the forms itself
         f.userData.materials.forEach(function (m) { m.opacity = 0.95 * st.gas * k; });
         if (st.mesh) st.mesh.children.forEach(function (m) { var L = m.userData.look || {}; m.material.opacity = (L.opacity == null ? 1 : L.opacity) * k; if (L.rgb || L.paint) m.material.transparent = k < 1; });
+      }
+      // Walking (Wendell, 21 October 2026: "spirit should be walking on the ground (if and when they turn into a creature) and ...
+      // we need walking animations"). The creature and ally bodies are static meshes, so the gait is drawn here: the body's lowest
+      // point is kept on the floor (measured each frame, a frame behind), and while it moves it bobs a step at GAIT_HZ, rolls side
+      // to side, squashes a little and faces where it goes. The gas, core and hologram float as before.
+      var GAIT_HZ = 2, STEP_UP = 0.05, ROLL = 0.05, SQUASH = 0.04, WALKS = { creature: 1, ally: 1 }, footBox = new THREE.Box3();
+      function walkForm(c, u, f, st, dt) {
+        var p = c.fig.position, vx = 0, vz = 0;
+        if (u.lastX != null && dt > 0) { vx = (p.x - u.lastX) / dt; vz = (p.z - u.lastZ) / dt; }
+        u.lastX = p.x; u.lastZ = p.z;
+        if (!st.mesh || !WALKS[st.drawn] || !SF.turnOf) { f.position.y = FORM_Y; f.rotation.z = 0; st.faceAt = null; u.walking = false; u.ground = null; return; }
+        var sy = c.fig.scale.y * u.body.scale.y, sc = f.scale.x;
+        { c.fig.updateMatrixWorld(true); footBox.setFromObject(st.mesh); if (isFinite(footBox.min.y)) u.low = ((footBox.min.y - p.y) / sy - f.position.y) / f.scale.y; }
+        u.walking = Math.hypot(vx, vz) > 0.15 && !reducedMotion;
+        var w = u.gaitW = (u.gaitW || 0) + ((u.walking && !R.calm ? 1 : 0) - (u.gaitW || 0)) * Math.min(1, dt * 4);
+        if (u.walking) {
+          u.gait = (u.gait || 0) + dt * GAIT_HZ * Math.PI * 2;
+          var yaw = Math.atan2(vx, vz) - (SF.turnOf(st.drawn) + Math.PI / 2); // the root's yaw that puts the body's front along the walk
+          st.faceAt = (st.faceAt || new THREE.Vector3()).set(p.x + 10 * Math.sin(yaw), p.y, p.z + 10 * Math.cos(yaw));
+        } else st.faceAt = null;
+        var ph = u.gait || 0, sqY = sc * (1 - SQUASH * w * Math.abs(Math.cos(ph)));
+        f.scale.y = sqY; f.rotation.z = ROLL * w * Math.sin(ph);
+        f.position.y = u.low == null ? FORM_Y : STEP_UP * w * Math.abs(Math.sin(ph)) / sy - sqY * u.low;
+        u.ground = p.y;
       }
       // Growing (boards gs-two-acts, gs-same-charge-grows): a W.A.V.E. worked on a charge one of your spirits carries (the
       // spirit taken home, or a summoned spirit of the same name) adds one sitting to it, and it unfolds in front of you if that
       // crosses a stage (sic-unfold-by-sitting). It never makes a second spirit. Counted once a charge. Only a charge you keep
       // grows: one let go by the door leaves as it came (Wendell, 21 October 2026: "when I finished and released the spirit it
       // evolved and stayed in the room instead of being released").
-      function grow(c) {
-        if (c.grownTo != null || c.push !== "toward") return;
-        if (!c.spirit && SPIRIT_STORE && c.name.trim()) { // a charge you have summoned before, by its name
+      // A charge let become a vibeulon (c.unkept) never grows a spirit either (board gw-unkept-vibeulon). Feed <name> on the kept
+      // card grows it there and then, so the gas it came in as unfolds to its stage by the wall, in front of you.
+      function carrier(c) { // the spirit of yours this charge is: the one come home, or a charge you have summoned before, by its name
+        if (!c.spirit && SPIRIT_STORE && c.name.trim()) {
           var nm = c.name.trim().toLowerCase();
           try { c.spirit = SPIRIT_STORE.all().filter(function (t) { return t.family === "charge" && (t.name || "").trim().toLowerCase() === nm; })[0] || null; } catch (e) { c.spirit = null; }
         }
-        if (!c.spirit) return;
+        return c.spirit || null;
+      }
+      function grow(c) {
+        if (c.grownTo != null || c.push !== "toward" || c.unkept) return;
+        if (!carrier(c)) return;
         c.grownTo = (c.spirit.sittings || 0) + 1;
         var u = c.fig.userData, to = sittingStage(c.grownTo);
         if (u.form && u.form.userData.form.stage !== to) { u.form.userData.unfold(to, true); c.unfolds = to; }
@@ -5246,10 +5294,12 @@
         var l = { name: name, element: element || null, ring: ring, label: label, steady: !!c.steady };
         c.layers.push(l); return l;
       }
-      // A light the charge leaves on the threshold, named by the player, for the sitting.
+      // The vibeulon a charge not kept condenses into on the threshold (board gw-unkept-vibeulon; it was a light until 21 October
+      // 2026), named by the player: a gold coin standing on its edge in a halo, for the sitting. The count goes to the purse.
+      var VIBEULON_GOLD = 0xe8c050;
       function buildLight(hex, name, n) {
         var g = new THREE.Group();
-        var orb = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: hex })); orb.position.y = 0.32; g.add(orb);
+        var orb = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.05, 24), new THREE.MeshBasicMaterial({ color: hex })); orb.rotation.x = Math.PI / 2; orb.position.y = 0.32; g.add(orb);
         var halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.22, depthWrite: false })); halo.position.y = 0.32; g.add(halo);
         var cv = document.createElement("canvas"); cv.width = 512; cv.height = 96;
         var cx = cv.getContext && cv.getContext("2d");
@@ -5266,10 +5316,11 @@
       // its own step in c.phase while another is worked. R.waiting counts the ones that came while three were in.
       var R = { round: 1, phase: "welcome", back: false, close: null, calm: false, speed: 1, lights: [], kept: [], rested: false, sitting: Date.now(), from: opts.from || "body", modal: false, view: "seat", doorOpen: 0, doorWant: 0, wait: null, moves: [], active: [], waiting: 0, prev: null, layer: null, worked: [], all: [], startedAt: new Date().toISOString(), heat: { before: null, after: null }, ending: { kind: null, text: "" } };
       function newCharge(first, slot) {
-        var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
+        var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false, credit: {}, keepAs: null, unkept: false, home: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [],
           polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null, askAt: 0, askAnswers: [], askLine: "", askPick: null, askBoss: null, shadeElement: null, shadeUnknown: false };
-        if (first && opts.spirit) { c.spirit = opts.spirit; c.name = opts.spirit.name || ""; c.element = c.element || opts.spirit.element || null; c.known = !!c.element; }
+        if (first && opts.spirit) { c.spirit = opts.spirit; c.home = true; c.name = opts.spirit.name || ""; c.element = c.element || opts.spirit.element || null; c.known = !!c.element; }
+        if (first && opts.hidden > 0) raiseShadow(c, "preview", opts.hidden); // a preview link's hidden part (#go=home&hidden=N)
         R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
@@ -5341,7 +5392,9 @@
       function elseBtn() { return btn("What else is here?", { "data-room-else": "" }, function () { R.prev = R.phase; R.phase = "else"; R.back = false; draw(); }, true); }
       function go(phase) { R.phase = phase; R.back = false; draw(); }
       function stepIndex(id) { for (var i = 0; i < ROOM_STEPS.length; i++) if (ROOM_STEPS[i].id === id) return i; return -1; }
-      function nextStep() { var i = stepIndex(R.phase); go(ROOM_STEPS[i + 1].id); }
+      // Each step done defines the charge a little more (board gw-form-by-step); Not now gives no credit, and a step done twice
+      // (after Step back) counts once.
+      function nextStep(noCredit) { var i = stepIndex(R.phase); if (noCredit !== true) ch.credit[R.phase] = true; go(ROOM_STEPS[i + 1].id); }
       function words(st) { return st.wave != null ? WAVE[st.wave] : [st.id, st.title, st.words]; }
       function nm() { return ch.name || "It"; }
 
@@ -5441,15 +5494,15 @@
             if (ph === "validate") { ch.steady = true; ch.dull = 0.6; ch.layers.forEach(function (l) { l.steady = true; }); dressCharge(ch); } // worked through: it dulls
             nextStep();
           })];
-          if (st.notNow) kk.push(btn("Not now", { "data-room-notnow": "" }, nextStep, true));
+          if (st.notNow) kk.push(btn("Not now", { "data-room-notnow": "" }, function () { nextStep(true); }, true));
           kk.push(elseBtn()); kk.push(stepBack()); k.push(row(kk));
           return { title: w[1], kids: k };
         }
         if (ph === "fork") {
           k.push(P(w[2], { "data-room-prompt": "" }));
           k.push(P("What do you actually want right now?", { "data-room-goal-ask": "" }));
-          var tw = btn("Toward it", { "data-room-push": "toward" }, function () { ch.push = "toward"; startStays(); });
-          var aw = btn("Away from it", { "data-room-push": "away" }, function () { ch.push = "away"; go("goes"); }, true);
+          var tw = btn("Toward it", { "data-room-push": "toward" }, function () { ch.push = "toward"; ch.credit.fork = true; startStays(); });
+          var aw = btn("Away from it", { "data-room-push": "away" }, function () { ch.push = "away"; ch.credit.fork = true; ch.unkept = true; go("goes"); }, true);
           var ok = function () { tw.disabled = aw.disabled = !ch.goal.trim(); };
           k.push(field("data-room-goal", ch.goal, "What you want, in your words", function (v) { ch.goal = v; ok(); }));
           k.push(P("Is " + nm() + " pushing your next move toward it, or away from it?"));
@@ -5462,10 +5515,10 @@
           if (ch.texture === "numbness") k.push(P("Numbness is how it feels, and it can also be what keeps it out of reach. The second one is a shadow.", { "data-room-shadow-numb": "" }));
           var order = ch.texture === "numbness" ? [SHADOWS[3], SHADOWS[0], SHADOWS[1], SHADOWS[2]] : SHADOWS;
           order.forEach(function (sh) {
-            var b = el("button", { class: ch.shadow === sh[0] ? "" : "alt", "aria-pressed": String(ch.shadow === sh[0]), text: sh[1], onclick: function () { ch.shadow = sh[0]; ch.shadowAsked = true; go("unveil"); } });
+            var b = el("button", { class: ch.shadow === sh[0] ? "" : "alt", "aria-pressed": String(ch.shadow === sh[0]), text: sh[1], onclick: function () { ch.shadow = sh[0]; ch.shadowAsked = true; summonShade(ch); go("unveil"); } });
             b.setAttribute("data-room-shadow", sh[0]); k.push(el("div", { class: "oagc-row" }, [b])); k.push(P(sh[2], { class: "oagr-note" }));
           });
-          k.push(row([btn("I can't tell", { "data-room-shadow": "unknown" }, function () { ch.shadow = null; ch.shadowAsked = true; go("unveil"); }, true), btn("Back", { "data-room-shadow-back": "" }, function () { go("witness"); }, true)]));
+          k.push(row([btn("I can't tell", { "data-room-shadow": "unknown" }, function () { ch.shadow = null; ch.shadowAsked = true; summonShade(ch); go("unveil"); }, true), btn("Back", { "data-room-shadow-back": "" }, function () { go(shadeOpen(ch) ? "unveil" : "witness"); }, true)]));
           return { title: "Something hides it", kids: k };
         }
         if (ph === "flood") { // the practice that turns a flooding charge down, 3 of polarity a time
@@ -5505,7 +5558,7 @@
             return { title: "The shadow spirit", kids: k };
           }
           k.push(P(ch.polarity ? "The shadow spirit of " + shadowName(ch).toLowerCase() + " stands beside " + (ch.name || "it") + ". It does the shadow's work. Ask it what that work is for." : "The shadow has cleared. Its spirit stays beside " + (ch.name || "it") + ".", { "data-room-shade": "" }));
-          if (!ch.polarity) shadeReveal(k);
+          var clear = true; if (!ch.polarity) { shadeReveal(k); clear = shadeChoice(k); }
           var prev = ch.asks[ch.asks.length - 1], next = ch.polarity && prev && prev.boss ? lookup(SHADOW_ASKS, prev.boss) : null;
           if (next && !ch.asks.some(function (a) { return a.daemon === next[0]; })) { // follow who it works for
             k.push(P(lookup(SHADOW_ASKS, prev.daemon)[1] + " works for " + next[1].replace(/^The /, "the ") + ".", { "data-room-ask-chain-line": "" }));
@@ -5517,7 +5570,7 @@
             b.setAttribute("data-room-ask", q[0]); b.style.borderLeft = "6px solid #" + ("00000" + q[3].toString(16)).slice(-6);
             k.push(el("div", { class: "oagc-row" }, [b]));
           });
-          k.push(row([btn(ch.polarity ? "Back to the practice" : "Go on", { "data-room-ask-leave": "" }, function () { go(ch.polarity ? "unveil" : "witness"); }, true)]));
+          if (clear) k.push(row([btn(ch.polarity ? "Back to the practice" : "Go on", { "data-room-ask-leave": "" }, function () { go(ch.polarity ? "unveil" : "witness"); }, true)]));
           return { title: "The shadow spirit", kids: k };
         }
         if (ph === "unveil") { // the practice that thins the shadow, 3 of polarity a time
@@ -5526,7 +5579,7 @@
           if (!ch.polarity) {
             k.push(P("It is in plain sight now.", { "data-room-unveiled": "" }));
             if (ch.shade) shadeReveal(k);
-            k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("witness"); })]));
+            if (!ch.shade || shadeChoice(k)) k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("witness"); })]));
             return { title: "In plain sight", kids: k };
           }
           k.push(P(sh ? sh[3] : SHADOW_PLAIN, { "data-room-practice-ask": "" }));
@@ -5537,7 +5590,9 @@
             k.push(field("data-room-practice-line", ch.practiceLine, sh[0] === "distracting" ? "What pulled you away" : "Where feeling starts again", function (v) { ch.practiceLine = v; done.disabled = !v.trim(); }));
             done.disabled = !(ch.practiceLine || "").trim();
           }
-          k.push(row([done, btn("Go on with it hidden", { "data-room-veiled": "" }, function () { go("witness"); }, true), btn("It's another shadow", { "data-room-shadow-rename": "" }, function () { go("shadow"); }, true)]));
+          // Its shadow spirit is a gate (Wendell, 21 October 2026: "that part has to be worked though ... before moving on to the
+          // existing spirit"): while it stands, there is no going on with it hidden.
+          k.push(row([done, shadeOpen(ch) ? null : btn("Go on with it hidden", { "data-room-veiled": "" }, function () { go("witness"); }, true), btn("It's another shadow", { "data-room-shadow-rename": "" }, function () { go("shadow"); }, true)].filter(Boolean)));
           k.push(row([btn("What's in the way of it clearing?", { "data-room-shadow-spirit": "" }, function () { summonShade(ch); go("asks"); }, true)]));
           return { title: sh ? sh[1] : "A shadow", kids: k };
         }
@@ -5551,22 +5606,29 @@
             } }, k);
           return { title: title, kids: k };
         }
+        // Summoning has a price (Wendell, 21 October 2026; board gw-summon-price): a W.A.V.E. finished mints a vibeulon, and a charge
+        // kept as a spirit keeps that vibeulon in it. So the player chooses: keep it (or feed the spirit of theirs it is), or let it
+        // condense into a vibeulon as it goes out the door.
         if (ph === "kept") {
+          var sp = carrier(ch);
           k.push(P(nm() + " has a place in the room now.", { "data-room-kept": "" }));
           k.push(P("Your next move: " + ch.move));
-          k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("checkin"); })]));
+          k.push(P(sp ? "Feed it to " + sp.name + " and it grows by one sitting, with the vibeulon this W.A.V.E. makes inside it. Or let it condense into the vibeulon and go." :
+            "Keep it as a spirit, and the vibeulon this W.A.V.E. makes stays inside it. Or let it condense into the vibeulon and go.", { "data-room-price": String(SUMMON_PRICE) }));
+          k.push(row([btn(sp ? "Feed " + sp.name : "Keep it as a spirit", { "data-room-keep": "spirit" }, function () { ch.keepAs = "spirit"; grow(ch); go("checkin"); }),
+            btn("Let it become a vibeulon", { "data-room-keep": "vibeulon" }, function () { unkeep(ch); }, true)]));
           return { title: "It stays", kids: k };
         }
         if (ph === "goes") {
           k.push(P("Let the out-breath carry it. It leaves at its own pace, and it can come back."));
           k.push(field("data-room-line", ch.line, "A line to it, if you want", function (v) { ch.line = v; }));
-          k.push(field("data-room-light-name", ch.lightName, "A name for the light it leaves", function (v) { ch.lightName = v; }));
+          k.push(field("data-room-light-name", ch.lightName, "A name for the vibeulon it becomes", function (v) { ch.lightName = v; }));
           k.push(row([btn("Breathe out", { "data-room-exhale": "" }, function () { R.phase = "leaving"; R.wait = "door-out"; draw(); }), stepBack()]));
           return { title: "Exhale", kids: k };
         }
         if (ph === "leaving") return { title: "Exhale", kids: [P(R.calm ? "The door opens, and it goes when it's ready." : "On your out-breath the door opens, and it goes when it's ready.")], still: true };
         if (ph === "gone") {
-          k.push(P("A light in its colour stays on the threshold: " + lightName() + ". The door stays ajar. It can come back.", { "data-room-gone": "" }));
+          k.push(P("On the threshold it condensed into a vibeulon: " + lightName() + ". " + (ch.purse != null ? "You hold " + ch.purse + (ch.purse === 1 ? " vibeulon. " : " vibeulons. ") : "") + "The door stays ajar. It can come back.", { "data-room-gone": "" }));
           if (ch.line.trim()) k.push(P("You told it: " + ch.line.trim()));
           k.push(row([btn("Go on", { "data-room-next": "" }, function () { go("checkin"); })]));
           return { title: "It left", kids: k };
@@ -5574,8 +5636,8 @@
         if (ph === "checkin") {
           k.push(P("Did it leave, or did you get rid of it?", { "data-room-checkin-ask": "" }));
           var ans = [["left", "It left"], ["got-rid", "I got rid of it"]];
-          if (ch.push === "toward") ans.push(["stayed", "It stayed"]);
-          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v }); workedThrough(); }));
+          if (ch.push === "toward" && !ch.unkept) ans.push(["stayed", "It stayed"]);
+          k.push(pickRow("data-room-checkin", ans, null, function (v) { keepRoomTest({ t: Date.now(), sitting: R.sitting, round: R.round, branch: ch.push === "toward" ? "stays" : "goes", answer: v, vibeulon: !!ch.unkept }); workedThrough(); }));
           k.push(P("Your answer and the round number stay on this device. What you wrote stays on this page.", { class: "oagr-note" }));
           return { title: "For the test", kids: k };
         }
@@ -5592,7 +5654,7 @@
         }
         // end
         k.push(P(R.rested ? "What's left rests by the door, with a lantern beside it." : "The room is quiet.", { "data-room-end": "" }));
-        if (R.lights.length) k.push(P("On the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
+        if (R.lights.length) k.push(P("Vibeulons on the threshold: " + R.lights.map(function (l) { return l.userData.name; }).join(", ") + "."));
         if (R.from === "board") boardEnding(k);
         if (R.from === "board" && R.heat.before != null && R.heat.after != null && R.heat.after >= R.heat.before && !R.all[0].lookedAgain)
           lookAgainRow(k, R.all[0], R.heat.after + " of 10 left, from " + R.heat.before, R.heat.after);
@@ -5603,11 +5665,65 @@
       function shadowRow(c) { return c.shadow ? lookup(SHADOWS, c.shadow) : null; }
       function shadowName(c) { var sh = shadowRow(c); return sh ? sh[1] : "a shadow"; }
       function shadowLine(c) { return c.polarity > 0 ? "Hidden " + c.polarity + " of 10, by " + shadowName(c).toLowerCase() + "." : c.polarity < 0 ? "Flooding " + (-c.polarity) + " of 10." : "In plain sight."; }
-      // A shadow spirit: the room's creature body in the shadow's colour, smaller, standing beside the one it hides.
+      // A shadow spirit (Wendell, 21 October 2026: "The part that was hiding it is still showing up as the blobs instead of its own
+      // gas form and that part has to be worked though and turned into a vibeulon/released or accepted as a spirit before moving
+      // on to the existing spirit"): a gas of its own in the shadow's colour, smaller, beside the one it hides, its motes streaming
+      // out of it as soon as the shadow is named. While the shadow stands it is faint and spread; it gathers as the practice and
+      // the asks bring the polarity down (its definition is how far it has come to 0). Cleared, it is a gate: kept as a spirit it
+      // takes a place by the wall and walks out with you; let go, it condenses into a vibeulon on the threshold. Only then does
+      // the W.A.V.E. go on with the one it hid. Its motes are drawn over the room, not added to it, so a dark gas reads as dark.
+      var SHADE_K = 1.5, SHADE_Y = 0.9, SHADE_DX = 1.5, SHADE_FAINT = 0.35;
       function summonShade(c) {
         if (c.shade) return;
-        var g = buildCharge(true), u = g.userData; u.col.setHex(SHADOW_HEX); u.want.setHex(SHADOW_HEX); u.mat.color.setHex(SHADOW_HEX); u.mat.emissive.setHex(SHADOW_HEX);
-        g.scale.setScalar(0.55); g.position.set(c.fig.position.x + 1.4, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
+        var g = new THREE.Group(); g.position.set(c.fig.position.x + SHADE_DX, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
+        if (!SF) { var b = buildCharge(true), bu = b.userData; bu.mat.color.setHex(SHADOW_HEX); b.scale.setScalar(0.55); g.add(b); g.userData = { blob: b, def: 0 }; return; }
+        var f = SF.buildForm(THREE, "charge", SHADOW_HEX, { from: new THREE.Vector3(c.fig.position.x, FORM_Y, c.fig.position.z) });
+        f.userData.materials.forEach(function (m) { m.blending = THREE.NormalBlending; m.size *= 1.5; m.needsUpdate = true; }); // bigger motes, so the smaller gas still reads
+        f.position.y = SHADE_Y; f.scale.setScalar(SHADE_K); g.add(f);
+        g.userData = { form: f, tint: SF.tintProxy(f), def: 0, fade: null };
+      }
+      function shadeOpen(c) { return !!(c.shade && !c.shadeKeep); }
+      function shadeHexOf(c) { return c.shadeElement && !c.polarity ? shadeHex(c.shadeElement) : SHADOW_HEX; }
+      // Each frame: beside its creature until it is chosen for; defined as the shadow thins; its colour kin to its element once named.
+      function syncShade(c, dt) {
+        var sh = c.shade, su = sh.userData, f = su.form, src = c.fig.userData;
+        sh.visible = !su.gone && (c.shadeKeep ? true : c.fig.visible && !c.gone && c.fig.parent === scene);
+        if (!c.shadeKeep) {
+          sh.position.x += (c.fig.position.x + SHADE_DX * c.fig.scale.x - sh.position.x) * Math.min(1, dt * 2); sh.position.z += (c.fig.position.z + 0.5 - sh.position.z) * Math.min(1, dt * 2);
+        }
+        var d = c.polarity <= 0 ? 1 : c.shadowStart > 0 ? clamp(1 - c.polarity / c.shadowStart, 0, 1) : 0;
+        su.def += (d - su.def) * Math.min(1, dt * 1.5);
+        var fade = (su.fade == null ? 1 : su.fade) * (c.shadeKeep || src.fade == null ? 1 : src.fade);
+        if (!f) { su.blob.children[0].children.forEach(function (m) { m.material.opacity = 0.8 * fade; }); return; }
+        var st = f.userData.form; st.spread = SPREAD * (1 - su.def);
+        if (su.tint.material.color.getHex() !== shadeHexOf(c)) su.tint.material.color.setHex(shadeHexOf(c));
+        f.userData.materials.forEach(function (m) { m.opacity = 0.95 * st.gas * (SHADE_FAINT + (1 - SHADE_FAINT) * su.def) * fade; });
+      }
+      // The gate's two ways, once the shadow has cleared. Returns true once one is chosen, so the page can offer to go on.
+      function shadeChoice(k) {
+        var c = ch;
+        if (c.shadeKeep) {
+          k.push(P(c.shadeKeep === "spirit" ? "The shadow spirit has a place by the wall now. It walks out with you." : c.shade.userData.gone ? "On the threshold it condensed into a vibeulon: " + shadeLight(c) + "." : "The shadow spirit goes to the door, to condense into a vibeulon there.", { "data-room-shade-kept": c.shadeKeep }));
+          return true;
+        }
+        k.push(P("Keep it as a spirit, and it takes a place by the wall and walks out with you. Or let it condense into a vibeulon on the threshold. Then you go on with " + nm() + ".", { "data-room-shade-ask": "" }));
+        k.push(row([btn("Keep it as a spirit", { "data-room-shade-keep": "spirit" }, function () { keepShade(c, "spirit"); }),
+          btn("Let it become a vibeulon", { "data-room-shade-keep": "vibeulon" }, function () { keepShade(c, "vibeulon"); }, true)]));
+        return false;
+      }
+      function shadeLight(c) { return shadowName(c) + ((c.name || "").trim() ? " of " + c.name.trim() : ""); }
+      function keepShade(c, how) {
+        var sh = c.shade, from = { x: sh.position.x, z: sh.position.z }; c.shadeKeep = how;
+        if (how === "spirit") R.moves.push({ c: { fig: sh }, from: from, to: keptSpot("shade"), t: 0, dur: 3 });
+        else { // to the door and out, as an unkept charge goes, and a vibeulon on the threshold for the purse
+          R.doorWant = 1;
+          R.moves.push({ c: { fig: sh }, from: from, to: { x: 0, z: DZ - 3 }, t: -0.3, dur: 4.5, fadeOut: true, then: function () {
+            sh.userData.gone = true; sh.visible = false; var l = buildLight(VIBEULON_GOLD, shadeLight(c), R.lights.length); scene.add(l); R.lights.push(l);
+            if (!c.shadeMinted) { c.shadeMinted = true; try { c.shadePurse = SPIRIT_STORE ? SPIRIT_STORE.mint(SUMMON_PRICE, "the WAVE room") : null; } catch (e) { c.shadePurse = null; } }
+            if (ch === c && (R.phase === "unveil" || R.phase === "asks")) draw();
+          } });
+        }
+        draw();
       }
       // Fully revealed, the shadow spirit shows its element, and from then on it can be dissolved like any spirit (Wendell, board
       // read 14 October 2026). Until the player names one it stays a shadow spirit with no element.
@@ -5680,7 +5796,7 @@
           texture: c.texture || null, where: c.where || null, goal: (c.goal || "").trim() || null, push: c.push, aligned: c.push ? c.push === "toward" : null,
           move: (c.move || "").trim() || null, line: (c.line || "").trim() || null, light: c.push === "away" ? (c.lightName || "").trim() || (c.name || "").trim() || null : null,
           layers: c.layers.map(function (l) { return l.name; }), worked: R.worked.indexOf(c) >= 0, kept: R.kept.indexOf(c) >= 0, reading: c.reading,
-          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice(), shadeElement: c.shadeElement || null } : null,
+          shadow: c.signals.length ? { pole: c.shadowStart < 0 ? "flooding" : "hidden", kind: c.shadowStart < 0 ? null : c.shadow || "unnamed", polarity: c.polarity, start: c.shadowStart, signals: c.signals.slice(), practices: c.practices, asks: c.asks.slice(), shadeElement: c.shadeElement || null, shadeKeep: c.shadeKeep || null } : null,
           hiddenOf: c.hiddenOf };
         Object.keys(r).forEach(function (x) { if (r[x] == null || (r[x].length === 0 && typeof r[x] !== "boolean")) delete r[x]; });
         return r;
@@ -5718,11 +5834,21 @@
         go("again");
       }
       function startStays() { ch.t321 = { phase: "before", rounds: 1, msgs: [], voice: "you", draft: "", before: 6, after: 3 }; go("stays"); }
-      function keep() { // the charge takes a place in the room, beside the wall, for the sitting
-        var n = R.kept.length % 4, spot = [[-5.2, 1.4], [5.2, 1.4], [-5.4, -2.4], [5.4, -2.4]][n]; // by the wall, clear of the three places
-        R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: { x: spot[0], z: spot[1] }, t: 0, dur: 3 });
+      // A kept charge takes a place toward the back wall, right of the door, clear of the three places and the way in, where the
+      // seat's camera sees it on a phone held upright; a kept shadow spirit takes one on the left, in front of the elder, so a fed
+      // charge's ally never stands beside the elder's. The places by the side walls (x 5.2) were out of frame (Wendell, 21 October
+      // 2026: "I can't see the spirit that has shown up in the room").
+      var KEPT_AT = { charge: [[1.4, -4.4], [1.8, -6.2], [2.0, -2.9], [-2.4, -2.6]], shade: [[-0.9, -3.4], [-2.3, -3.3], [0.9, -6.0], [2.3, -4.2]] }, spotsUsed = { charge: 0, shade: 0 };
+      function keptSpot(kind) { var L = KEPT_AT[kind || "charge"], q = L[spotsUsed[kind || "charge"]++ % L.length]; return { x: q[0], z: q[1] }; }
+      function keep() { // the charge takes a place in the room, by the wall, for the sitting
+        R.moves.push({ c: ch, from: { x: ch.fig.position.x, z: ch.fig.position.z }, to: keptSpot("charge"), t: 0, dur: 3 });
         ch.reading = { before: ch.t321.before, after: ch.t321.after }; // the shadow's second signal reads these
         ch.heat = ch.t321.after; ch.dull *= 0.6; R.kept.push(ch); ch.t321 = null; go("kept");
+      }
+      var SUMMON_PRICE = 1; // the vibeulon a finished W.A.V.E. mints, which a kept spirit keeps inside it (board gw-summon-price)
+      function unkeep(c) { // a kept charge let go after all: it leaves the wall by the door and condenses into a vibeulon there
+        c.keepAs = "vibeulon"; c.unkept = true; var i = R.kept.indexOf(c); if (i >= 0) R.kept.splice(i, 1);
+        R.phase = "leaving"; R.wait = "door-out"; draw();
       }
       function restart() {
         R.round++; if (ch.gone) scene.remove(ch.fig);
@@ -5736,7 +5862,7 @@
       }
       // What a worked charge leaves as (boards gs-two-acts, gs-door-gas): one it grew is that spirit, with its sittings one up and
       // no new entry in oag.spirits.v1; any other kept charge is a newly summoned spirit, stored once, at gas (0 sittings). One let
-      // go by the door is not kept: nothing is stored or grown, and its light stays on the threshold.
+      // go by the door is not kept: nothing is stored or grown, and it is a vibeulon in the purse (leave() does not take it along).
       function spiritOf(c, n) {
         var o = { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
         if (c.push !== "toward") return o;
@@ -5751,13 +5877,13 @@
         fade.style.opacity = 1;
         // Only a charge worked through the whole W.A.V.E. leaves as a spirit (Wendell, 13 October 2026: "It should only emerge once
         // it's been engaged with"), so one still being worked stays in the room, by any door.
-        var going = R.worked; saveRun(true);
-        var shades = going.filter(function (c) { return c.shade; }); // each shadow spirit called up walks out beside its creature
+        var going = R.worked.filter(function (c) { return !c.unkept; }); saveRun(true); // one let become a vibeulon is in the purse, not walking with you
+        var shades = R.all.filter(function (c) { return c.shade && c.shadeKeep === "spirit"; }); // only a shadow spirit kept walks out; one let go is a vibeulon in the purse
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
           resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(spiritOf).concat(shades.map(function (c) {
-            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.polarity ? null : c.shadeElement || null, hex: !c.polarity && c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !c.polarity && !!c.shadeElement };
+            return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.shadeElement || null, hex: c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !!c.shadeElement };
           })) });
         }, 520);
       }
@@ -6019,7 +6145,7 @@
         learn("doors");
         var w = DOOR_WORDS[id], go = { "data-room-door-go": id }; if (id === "portal") go["data-room-portal"] = ""; else go["data-room-bigmind"] = "";
         var kids = [el("h2", { text: w[0] }), P(w[1])];
-        var going = R.worked.length;
+        var going = R.worked.filter(function (c) { return !c.unkept; }).length;
         if (going) kids.push(P(going === 1 ? "The one you worked with comes along as a spirit." : "The " + going + " you worked with come along as spirits.", { class: "oagr-note" }));
         kids.push(btn(w[2], go, function () { leave(id === "portal" ? true : id); }));
         doorBox.innerHTML = ""; kids.forEach(function (n) { doorBox.appendChild(n); }); doorBox.style.display = ""; R.atDoor = id;
@@ -6116,9 +6242,10 @@
         // the door: it opens on an out-breath (at once when calm), then the charge comes in, or goes out
         if (R.wait && (R.calm || br.exhaling)) {
           var w0 = R.wait; R.wait = null; R.doorWant = 1;
-          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); formIn(cin, new THREE.Vector3(0, 1.4, DZ + 0.2)); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.polarity < 0 ? "flood" : cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
+          if (w0 === "door-in") { var cin = ch; cin.credit.welcome = true; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); formIn(cin, new THREE.Vector3(0, 1.4, DZ + 0.2)); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.polarity < 0 ? "flood" : cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
           else { var cout = ch; grow(cout); R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: cout.unfolds ? -3.4 : -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
-            cout.gone = true; cout.fig.visible = false; var l = buildLight(cout.fig.userData.want.getHex(), (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
+            cout.gone = true; cout.fig.visible = false; var l = buildLight(VIBEULON_GOLD, (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
+            if (!cout.minted) { cout.minted = true; try { cout.purse = SPIRIT_STORE ? SPIRIT_STORE.mint(SUMMON_PRICE, "the WAVE room") : null; } catch (e) { cout.purse = null; } }
             if (ch === cout) go("gone"); else cout.phase = "gone";
           } }); }
         }
@@ -6174,12 +6301,8 @@
           c.fig.rotation.y = Math.atan2(faceTo.x - c.fig.position.x, faceTo.z - c.fig.position.z);
         });
         if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
-        R.all.forEach(function (c) { var u = c.fig.userData; if (u.blob || !c.fig.visible) return; if (!u.form) formIn(c, null); syncForm(u, now); });
-        R.all.forEach(function (c) { // a shadow spirit keeps beside its creature, and goes when it goes
-          if (!c.shade) return; var sh = c.shade, su = sh.userData; sh.visible = c.fig.visible && !c.gone && c.fig.parent === scene; su.fade = c.fig.userData.fade;
-          sh.position.x += (c.fig.position.x + 1.4 * c.fig.scale.x - sh.position.x) * Math.min(1, dt * 2); sh.position.z += (c.fig.position.z + 0.5 - sh.position.z) * Math.min(1, dt * 2);
-          su.mat.opacity = 0.8 * (su.fade == null ? 1 : su.fade); su.mat.emissiveIntensity = 0.25 + 0.15 * br.b; stepAura(su.aura, su.col, 0.25, dt, R.calm);
-        });
+        R.all.forEach(function (c) { var u = c.fig.userData; if (u.blob || !c.fig.visible) return; if (!u.form) formIn(c, null); syncForm(c, now, dt); });
+        R.all.forEach(function (c) { if (c.shade) syncShade(c, dt); }); // a shadow spirit keeps beside its creature until it is chosen for
         // the figure: stands up, walks to its place, sits down again
         var stepping = freeWalk(dt);
         var hideStick = R.modal || R.close;
@@ -6314,8 +6437,17 @@
         charge: function () { var u = ch.fig.userData; return { name: ch.name, element: ch.element, texture: ch.texture, known: ch.known, visible: ch.fig.visible, gone: ch.gone, x: ch.fig.position.x, z: ch.fig.position.z, color: u.mat.color.getHex(), steady: u.steady, goal: ch.goal,
           slot: ch.slot, scale: ch.fig.scale.x, glow: u.aura.userData.level, want: levelOf(ch), allow: { grow: ch.allow.grow, bright: ch.allow.bright }, allowed: ch.allowed, layers: ch.layers.map(function (l) { return { name: l.name, element: l.element, steady: l.steady }; }),
           polarity: ch.polarity, shadow: ch.shadow, signals: ch.signals.slice(), opacity: u.mat.opacity, veil: u.veil.visible ? u.veil.material.opacity : 0, hiddenOf: ch.hiddenOf,
-          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.mat.color.getHex(), x: ch.shade.position.x, element: ch.shadeElement || null } : null, asks: ch.asks.slice() }; },
+          shade: ch.shade ? { visible: ch.shade.visible, color: ch.shade.userData.tint ? ch.shade.userData.tint.material.color.getHex() : SHADOW_HEX, x: ch.shade.position.x, z: ch.shade.position.z, element: ch.shadeElement || null,
+            drawn: ch.shade.userData.form ? ch.shade.userData.form.userData.form.drawn : "blob", motes: ch.shade.userData.form ? ch.shade.userData.form.userData.form.motes : 0, def: ch.shade.userData.def, spread: ch.shade.userData.form ? ch.shade.userData.form.userData.form.spread : null,
+            keep: ch.shadeKeep || null, gone: !!ch.shade.userData.gone, open: shadeOpen(ch) } : null, asks: ch.asks.slice() }; },
         creatures: function () { return R.active.map(function (c) { return { name: c.name, slot: c.slot, phase: c === ch ? R.phase : c.phase, focus: c === ch, x: c.fig.position.x, z: c.fig.position.z, visible: c.fig.visible, layers: c.layers.length }; }); },
+        // the charge's form: how defined it is, the stage drawn, whether it walks, and its lowest point above its own ground
+        form: function () {
+          var u = ch.fig.userData, f = u.form, st = f && f.userData.form, low = null;
+          if (st && st.mesh) { ch.fig.updateMatrixWorld(true); footBox.setFromObject(st.mesh); low = footBox.min.y - ch.fig.position.y; }
+          return { def: u.def == null ? null : u.def, credited: definition(ch), drawn: st ? st.drawn : null, spread: st ? st.spread : null, walking: !!u.walking, low: low, veil: u.veil.visible ? u.veil.material.opacity : 0 };
+        },
+        vibeulons: function () { try { return SPIRIT_STORE ? SPIRIT_STORE.vibeulons() : null; } catch (e) { return null; } },
         scene: function () { return { door: R.doorOpen, doorX: door.position.x, doorW: DW, waiting: R.waiting, lights: R.lights.map(function (l) { return { name: l.userData.name, z: l.position.z }; }), kept: R.kept.length, lantern: !!R.lantern, view: R.view, sit: fig.sit, figure: [fig.x, fig.z], doorZ: DZ, seat: [SEAT.x, SEAT.z], here: [HERE.x, HERE.z] }; },
         speed: function (v) { R.speed = v; },
         run: function () { return runRecord(); },
@@ -6333,6 +6465,17 @@
         stickShown: function () { return stickPad.style.display !== "none"; },
         walking: function () { var hp = new THREE.Vector3(); avatar.userData.J.hips.getWorldPosition(hp); var bb = new THREE.Box3().setFromObject(avatar.userData.J.hips.children.filter(function (c) { return c.isMesh; })[0] || avatar.userData.J.hips); return { roam: R.roam ? { x: R.roam.x, z: R.roam.z, exit: R.roam.exit, arrived: R.roam.arrived } : null, figure: [fig.x, fig.z], sit: fig.sit, hips: [hp.x, hp.y, hp.z], pelvisLow: bb.min.y, worn: walkerJoints(avatar), seatTop: SEAT_TOP, inCushion: cushionIn(fig.x, fig.z).k, atDoor: R.atDoor || null, view: R.view, camY: camPos.y, cam: [camPos.x, camPos.y, camPos.z], aim: [camAim.x, camAim.y, camAim.z], pitch: lookPitch,
           exits: Object.keys(EXITS).map(function (k) { return { id: k, x: EXITS[k].x, z: EXITS[k].z }; }) }; },
+        // where a charge's form (or its shade's) is on screen, how opaque it is drawn, and whether it is clear of the card
+        seen: function (which) {
+          var c = typeof which === "number" ? R.all[which] : ch, root = which === "shade" ? ch.shade : c.fig, f = root && (which === "shade" ? root.userData.form : c.fig.userData.form);
+          if (!f || !renderer) return null;
+          var st = f.userData.form; root.updateMatrixWorld(true);
+          var bb = st.mesh ? new THREE.Box3().setFromObject(st.mesh) : null, mid = bb ? bb.getCenter(new THREE.Vector3()) : f.getWorldPosition(new THREE.Vector3()), p = mid.clone().project(camera), rc = renderer.domElement.getBoundingClientRect();
+          var op = st.mesh ? Math.max.apply(null, st.mesh.children.map(function (m) { return m.material.opacity; })) : f.userData.materials[0].opacity;
+          var card = modal.classList.contains("open") ? modal.getBoundingClientRect().top : rc.bottom, sy = rc.top + (1 - p.y) / 2 * rc.height;
+          return { stage: st.stage, drawn: st.drawn, gas: st.gas, opacity: op, visible: root.visible && f.visible, ndc: [p.x, p.y, p.z], x: rc.left + (p.x + 1) / 2 * rc.width, y: sy,
+            inFrame: Math.abs(p.x) < 0.95 && Math.abs(p.y) < 0.95 && p.z < 1, aboveCard: sy < card, card: card, world: [mid.x, mid.y, mid.z], low: bb ? bb.min.y : null };
+        },
         floorScreen: function (x, z) { if (!renderer) return null; var rc = renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3(x, 0, z).project(camera); return { x: rc.left + (p.x + 1) / 2 * rc.width, y: rc.top + (1 - p.y) / 2 * rc.height, behind: p.z > 1 }; },
         // the elder spirit (slice 5): its form, whether its card shows, and where it is on screen for a test to tap it
         elder: function () { if (!elder) return null; var f = elder.g.userData.form; return { stage: elder.stage, drawn: f ? f.drawn : null, card: elderBox.style.display !== "none", x: elder.g.position.x, z: elder.g.position.z, screen: elderScreen() }; },

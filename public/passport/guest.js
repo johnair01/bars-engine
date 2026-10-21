@@ -33,6 +33,7 @@
   }
 
   // fold(spiritsRecord, vesselRecord, guestId, at) -> passport. Pure: the records are what the places stored, or null.
+  function purse(spirits) { var n = spirits && spirits.v === 1 ? Number(spirits.vibeulons) : 0; return n > 0 ? Math.floor(n) : 0; }
   function fold(spirits, vessel, guestId, at) {
     var reached = {};
     var list = spirits && spirits.v === 1 && Array.isArray(spirits.spirits) ? spirits.spirits.filter(function (r) { return r && r.id; }) : [];
@@ -58,7 +59,7 @@
       spirits: out,
       hand: [], // Chapter 1's end writes its hand here once the demo is done (pass calrunia-world1, build brief 4)
       qi: 0, // the ship's fuel is its own gauge, not the qi meter (cw-qi-meter-scales); no place fills qi yet
-      vibeulons: 0,
+      vibeulons: purse(spirits), // the WAVE room mints them into oag.spirits.v1 (board gw-unkept-vibeulon); the ship mints none yet
       embers: embers,
       places_reached: PLACES.filter(function (p) { return reached[p]; }),
       updated_at: at || new Date().toISOString(),
