@@ -2842,6 +2842,11 @@
       var m = Math.hypot(x, z);
       var fx = lookAt.x - camPos.x, fz = lookAt.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       var wk = state.walk;
+      // In the hall and the centre the stick's forward is the camera's as the thumb went down, and it holds while the thumb stays
+      // (home base's R.stickFrame, 19 October 2026): the camera comes round behind the figure without bending the way it walks.
+      // A look turned by hand turns it too (walkStep). In a tunnel the camera turns along the way, so the stick keeps the live view.
+      if (m >= 0.15 && wk && wk.route.doors) { if (state.stickYaw == null) state.stickYaw = Math.atan2(fx, fz); fx = Math.sin(state.stickYaw); fz = Math.cos(state.stickYaw); }
+      else state.stickYaw = null; // the thumb is off: the next push takes the camera's forward afresh
       if (m >= 0.15) { if (wk) wk.goTo = null; } // the stick or a key takes over from a click
       else if (wk && wk.goTo) { // a click on the floor walks there (for playing at a computer)
         var g = wk.goTo, p = figureAt(wk), dx = g.x - p.x, dz = g.z - p.z, d = Math.hypot(dx, dz);
@@ -2889,7 +2894,13 @@
         // Walking away from the camera against the way it faces (the camera turned round by a drag): the camera takes that way
         // as ahead, and the turn is kept in the look so the view does not jump; it eases back behind the figure as it walks.
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
-        if (state.look.yaw && !state.peek) { wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); state.look.yaw = 0; } // a look turned by hand becomes the way the camera follows
+        if (state.look.yaw && !state.peek) { // a look turned by hand becomes the way the camera follows, and the stick's forward with it
+          wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); if (state.stickYaw != null) state.stickYaw = wrapAng(state.stickYaw + state.look.yaw); state.look.yaw = 0;
+        }
+        // The figure faces the way the stick points (Wendell, 2026-10-21: "The player should face in the direction of the stick"),
+        // not the way it slid along a wall or round a stone.
+        var my = Math.atan2(w.x, w.z);
+        wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
         // Round a ring, a step along at radius rho moves the angle more than on the ring itself, so the pace stays the same.
         var inMid = r.doors ? wk.lat * r.inner : 0, rho = r.doors ? Math.max(r.R - inMid, MID_R) : 0, kS = r.doors ? r.R / rho : 1;
         var lim = walkRange(wk), s1 = clamp(wk.s + along * sp * dt * kS, lim.lo, lim.hi);
@@ -2913,18 +2924,16 @@
         if (moved > 1e-4) {
           state.handHold = Math.max(0, state.handHold - dt);
           wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * runK() * w.m * STRIDE_K; teach.learn("walk");
-          var my = Math.atan2(mx, mz); // the way the figure actually went: along a wall it slides, so it faces along the wall
-          wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
           // Walking away from the camera, it comes round behind the figure; walking back or sideways it stays put, so the thumb
           // keeps meaning the same way (the WAVE room's rule).
           // It turns along the way, the way the figure is going, so up on the stick keeps walking round the bends of a tunnel and
           // round the ring of the hall and the centre to the next door; across the way the thumb goes sideways. (Turning toward
           // wherever the figure went made a held diagonal chase itself round the hall's ring into its walls.)
-          // Out in the open middle of the hall or the centre it turns toward the way the figure walks, when that is ahead and
-          // nothing is in the way; on the ring it turns along the ring only as much as the walk goes along it, so walking in toward
-          // the middle keeps the view.
-          if (r.doors && inMid > r.w * 0.6) {
-            if (w.fwd > 0.7 && moved > 0.6 * sp * dt) wk.camYaw += wrapAng(my - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * autoK;
+          // In the hall and the centre, ring and open middle alike, it comes round behind the way the figure faces, which is the
+          // stick's way; the stick's forward is held while the thumb stays, so the turn does not chase itself round the ring. (The
+          // turn along the ring flipped half round when a held frame took the walk backward along it, round 1, 2026-10-21.)
+          if (r.doors) {
+            if (w.fwd > 0.3) wk.camYaw += wrapAng(wk.yaw - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * autoK;
           } else if (w.fwd > 0.3) {
             if (Math.abs(along) > 0.2 && !deadEnd) wk.dir = along > 0 ? 1 : -1;
             var want = yawFacing(at(r, wk.s)) + (wk.dir < 0 ? Math.PI : 0);
