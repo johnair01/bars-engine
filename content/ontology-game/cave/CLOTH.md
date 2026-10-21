@@ -382,6 +382,32 @@ the springs leave 17 forearm points through at the walk (J5 fails) and the cloth
   forearm stays covered: 0.98 / 0.97 mean, 0.96 / 0.95 least (`ANY=1 cover.mjs`).
 - T1 stays reported, not gated (`cd-panel-t1-eye`): rim lag 0 to 1 frames, coherence 0.95 to 0.96 at the walk.
 
+### Round 14: the sleeve is one tube again, with a cloth hem band (2026-10-21)
+
+Wendell on round 9: "the sleeve hems should flow like the shin hem does"; on the round 12/13 panels: "still quite bad...
+sleeves aren't operating as one piece, hand moves through them, weird strings". Measured over the walk in Node
+(`hem.mjs`, `cover.mjs SEG=hand`, `heel.mjs` in `/mnt/project-files/3d-build/j5-sleeve-hem-2026-10-21/probes/`):
+
+- **What the shin hem does that the sleeve did not.** Shin hem: its points trail their skinned places by 4 frames,
+  coherence 0.52, sway 27 cm peak to peak. Round 13b's sleeve end: 1 frame, 0.99, 6 cm: it moved with the hand.
+- **Why the panels cannot get there.** Even with no arm contact at all a 15 cm panel trails only 2 frames (it swings
+  faster than the arm). Air that moves with the trunk instead of the forearm (`armAir`) plus a put-back that eases out
+  down the panel (`armSideFade`) did get the panels' ends to 3 frames, 0.94, 18 cm, but the hand came out of the
+  sleeve: rays from the hand met the sleeve 25 to 34% of the time against 65 to 87% for round 13b. A sleeve end can only
+  trail a hand it surrounds if there is room between them, and two open panels let the hand leave instead.
+- **The change.** `garments.py` keeps each sleeve one closed tube (`SLEEVE_TUBE`, no `panels()`), skinned to the arm,
+  and only its last `SLEEVE_BAND` (12 cm) is cloth: a hem band hung from the tube, weighted as the skirt's hem is, held
+  within `armBlend` (1) of its skinned place, swinging in the trunk's air (`armAir` 1), and kept no nearer the forearm
+  and hand than its skinned place (the backstop). The cuff opens to `CUFF_W` 0.40 (round 8's bell) so the band has room
+  round the hand. No slits, so no strings; `armSide` is 0 (nothing to put back across).
+- **Numbers (average dusk robe, walk):** forearm covered 1.00 both sides; the hand inside the sleeve as often as
+  skinned (cloth equals skinned); band end lag 1 frame, coherence 0.98, stray 8.7 cm p95, sway 7 cm peak to peak,
+  jitter 9.7 mm p99; J5d cuff set 9.1 mm (line 12). Robe 138,852 bytes. The band swings, but far less than the shin
+  hem: a 12 cm hem band on a sleeve that rides the arm cannot trail like 70 cm of skirt.
+- **Heels.** Each ankle gets a ball capsule (garments.py `CAPSULES`, the foot's points within 8 cm). In this walk the
+  foot comes through the skirt in 6 of 80 sampled frames, almost all toes at ankle height in front (the hem stepping
+  over the foot), one heel point at the back; round 13b's robe: 4 of 80.
+
 ## Rounds 1 to 5, in one line each
 
 - **Bone weights never move like cloth.** Rounds 1 to 4 drove the skirt with hem bones and slit weights. Every fix

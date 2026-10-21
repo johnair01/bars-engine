@@ -300,9 +300,9 @@ FLARE = 0.07                                     # metres the panel widens from 
 NECK_HALF = 0.085                                # half the neck opening across the shoulders
 SCOOP = {-1: 0.07, 1: 0.015}                     # metres the neckline drops at the middle: front, back
 SLEEVE_W = 0.40                                  # the depth the sleeve widens toward from the armpit (a wide sleeve)
-CUFF_W = 0.26                                    # the sleeve's depth at the cuff, top seam to bottom seam: from the elbow
-                                                 # it narrows to this (round 8; at 0.40 the end hung below the hand as a
-                                                 # stiff flap)
+CUFF_W = float(os.environ.get("CUFF_W", "0.40"))   # the sleeve's depth at the cuff, top seam to bottom seam (round 14: back to
+                                                 # 0.40, a bell with room round the hand for its cloth hem band to swing in;
+                                                 # round 8 narrowed it to 0.26 when the skinned end hung as a stiff flap)
 CLEAR = 0.006                                    # metres the cloth is held off the body while it falls (room for the
                                                  # reduction and the skinning to cut corners)
 ARM_OUT = math.radians(5)                        # the arms a little out from rest while the seams close
@@ -654,6 +654,9 @@ def smooth_skirt(weights, verts, faces, parts, rounds=SKIRT_SMOOTH, top=1.0):
 PANEL_FROM = 0.3                                 # round 12: the sleeve's seams open from this share of the forearm
                                                  # (from the elbow) to the cuff, so each sleeve hangs as two panels
 SLEEVE_CLOTH = os.environ.get("SLEEVE_CLOTH", "1") != "0"   # the panels as cloth (cloth.js; the default since round 12), 0: on spring chains (CLOTH.md)
+SLEEVE_TUBE = os.environ.get("SLEEVE_TUBE", "1") != "0"     # round 14: each sleeve stays one closed tube that rides the
+                                                 # arm, and only a band at its end is cloth (0: round 12's open panels)
+SLEEVE_BAND = float(os.environ.get("SLEEVE_BAND", "0.12"))                              # round 14: metres of the sleeve's end that are cloth (the hem band)
 PANEL_GAP = 0.003                                # metres between the two sides of an opened seam at rest (cloth.js
                                                  # welds points closer than 1e-5 m, and would sew it shut again)
 
@@ -708,7 +711,8 @@ def robe(fig, rig, build, cw):
     verts, faces, labels = reduce(*trimmed(co, faces, parts, build), ROBE_VERTS)
     W = bone_weights(fig)
     J = C.joints(build)
-    verts, faces, _ = panels(verts, faces, labels, J)
+    if not SLEEVE_TUBE:
+        verts, faces, _ = panels(verts, faces, labels, J)
     from_body = weight_source(fig, lambda c, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR",
                                                                   "shoulderL", "shoulderR"))
     from_arm = {s: weight_source(fig, lambda c, w, s=s: main_bone(w) in ("spine", "shoulder" + s, "elbow" + s, "wrist" + s))
@@ -717,6 +721,12 @@ def robe(fig, rig, build, cw):
     for f, (p, _) in zip(faces, labels):
         for v in f:
             of.setdefault(v, []).append(p)
+    band = {}                                    # round 14: per sleeve, the share of the forearm where its cloth band starts
+    for s, k in (("L", 1), ("R", 2)):
+        E, Wr = (Vector(J[b + s][0]) for b in ("elbow", "wrist"))
+        A = Wr - E
+        far = max(((verts[i] - E).dot(A) / A.length_squared for i, ps in of.items() if all(q % 3 == k for q in ps)), default=1.0)
+        band[s] = far - SLEEVE_BAND / A.length
     weights, cloth = [], []
     for i, p in enumerate(verts):
         ps = of.get(i, [0])
@@ -738,7 +748,8 @@ def robe(fig, rig, build, cw):
                 weights.append(norm(w))
                 # round 12, second pass: below where its seams open the sleeve's panels are cloth, as the skirt is
                 # below the belt, hung from the sleeve above and pushed aside by the forearm and the hand
-                cloth.append(1.0 if SLEEVE_CLOTH and ta > PANEL_FROM else 0.0)
+                # round 14: a sleeve kept one tube is cloth only in its hem band, as the skirt's hem hangs from it
+                cloth.append(1.0 if SLEEVE_CLOTH and ta > (band[s] if SLEEVE_TUBE else PANEL_FROM) else 0.0)
                 continue
             cloth.append(0.0)
     weights = smooth_skirt(weights, verts, faces, [p % 3 for p, _ in labels])
@@ -857,7 +868,7 @@ def skirt_weights(p, body):
 # j5-skirt-cloth).
 
 CAPSULES = (("hipL", "kneeL"), ("kneeL", "ankleL"), ("hipR", "kneeR"), ("kneeR", "ankleR"), ("hipL", "hipR"),
-            ("kneeL", "kneeL"), ("kneeR", "kneeR"))
+            ("kneeL", "kneeL"), ("kneeR", "kneeR"), ("ankleL", "ankleL"), ("ankleR", "ankleR"))
 CAP_PCT = 0.99                                   # a capsule's radius: this share of its body points lie inside it
 TAPER_FROM = 0.75                                # a leg capsule's lower radius (rb): from its points this far down it
 POSED = {}                                       # {object name: {frame: [Vector]}}: positions posed() gives instead
@@ -869,15 +880,16 @@ WARM = 2.0                                       # seconds walked before the tes
 
 def leg_capsules(fig, build):
     """The capsules the skirt's cloth is pushed out by: each thigh (hip to knee) and shin (knee to ankle), the pelvis
-    (hip joint to hip joint) and each knee (a ball: a bent knee's front stands out past both thigh and shin), each
-    round the body points of its own bones (the pelvis: those between the hip joints, below the waist; a knee: those
-    within 8 cm of it)."""
+    (hip joint to hip joint), each knee (a ball: a bent knee's front stands out past both thigh and shin) and each
+    heel (a ball at the ankle, round 14: a heel kicked up behind at the end of a stride came out through the back of
+    the skirt), each round the body points of its own bones (the pelvis: those between the hip joints, below the
+    waist; a knee: those within 8 cm of it; an ankle: its foot's points within 8 cm of it, the heel and the instep)."""
     J, W = C.joints(build), bone_weights(fig)
     out = []
     for a, b in CAPSULES:
         A, B = Vector(J[a][0]), Vector(J[b][0])
-        if a == b:                                       # a knee
-            own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in ("hip" + a[-1], a)
+        if a == b:                                       # a knee, or a heel
+            own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in ((a,) if a.startswith("ankle") else ("hip" + a[-1], a))
                    and (v.co - A).length < 0.08]
         elif a[:-1] == b[:-1]:                           # the pelvis
             own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in ("hips", "hipL", "hipR")
@@ -1542,7 +1554,7 @@ def build_all(build, palette, out_dir, do_fit=True):
 
     def opened(i):                                         # round 12: a forearm point past where the sleeve's seams open
         b = main_bone(W[i])
-        if b not in ("elbowL", "elbowR"):
+        if SLEEVE_TUBE or b not in ("elbowL", "elbowR"):   # round 14: a tube sleeve has no opening to show through
             return False
         E, Wr = (Vector(J[n + b[-1]][0]) for n in ("elbow", "wrist"))
         return (fig.data.vertices[i].co - E).dot(Wr - E) / (Wr - E).length_squared > PANEL_FROM - 0.05
