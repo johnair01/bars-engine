@@ -44,6 +44,7 @@ import { isOutOfDay, type SeedLibraryEntry } from '@/lib/tap-the-vein/seed-libra
 import { Resurfaced, SeedLibrary } from './SeedLibrary'
 import { Unchosen } from './Unchosen'
 import type { UnchosenLine, UnchosenPattern } from '@/lib/tap-the-vein/unchosen'
+import type { PitchView } from '@/lib/tap-the-vein/unchosen-read'
 
 const WORD_FLOOR = 750
 const mono = 'var(--bars-font-mono)'
@@ -68,7 +69,7 @@ type Props = {
   /** What he set aside to draw from later. */
   seeds?: SeedLibraryEntry[]
   /** Lines named on past mornings and not chosen, and the words that keep coming back (pass unchosen1). */
-  unchosen?: { lines: UnchosenLine[]; patterns: UnchosenPattern[] }
+  unchosen?: { lines: UnchosenLine[]; patterns: UnchosenPattern[]; pitches?: PitchView[]; sample?: boolean }
   /** ?view=unchosen opens that section, so a preview link lands on it. */
   openUnchosen?: boolean
 }
@@ -329,7 +330,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
                     onDraw={(id) => run(() => drawSeed(id))}
                     onLetGo={(id) => run(() => updateTaskStatus({ taskId: id, status: 'composted', compostReason: 'no_reason' }))}
                   />
-                  <Unchosen lines={unchosen.lines} patterns={unchosen.patterns} defaultOpen={openUnchosen} />
+                  <Unchosen lines={unchosen.lines} patterns={unchosen.patterns} pitches={unchosen.pitches} sample={unchosen.sample} defaultOpen={openUnchosen} />
                 </>
               }
             />
@@ -340,7 +341,7 @@ export function TapTheVeinRunner({ initial, element, nationName, vibulons, campa
           )}
 
           {(phase === 'open' || phase === 'seal') && (
-            <Unchosen lines={unchosen.lines} patterns={unchosen.patterns} defaultOpen={openUnchosen} />
+            <Unchosen lines={unchosen.lines} patterns={unchosen.patterns} pitches={unchosen.pitches} sample={unchosen.sample} defaultOpen={openUnchosen} />
           )}
         </main>
       </div>
