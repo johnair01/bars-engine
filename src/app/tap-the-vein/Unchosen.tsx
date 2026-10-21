@@ -8,10 +8,15 @@
  * Closed until he opens it, with no count on the closed row, like the seed library (sl-no-pressure). Read-only: a
  * line here is not owed anything, and a word that keeps returning is something still arising, never avoidance
  * (tb-loss-not-avoidance).
+ *
+ * The council's weekly read (uc-who-reads B) sits under the words: each pattern it read, with one pitch and the lines
+ * it came from. A pitch is an offer, never a task (uc-no-duty). When a pattern returns, the new pitch replaces the old
+ * and the old one shows muted underneath as composted, so he can see it get sharper (his steer on uc-pattern-returns).
  */
 
 import { useState } from 'react'
 import type { UnchosenLine, UnchosenPattern } from '@/lib/tap-the-vein/unchosen'
+import type { PitchView } from '@/lib/tap-the-vein/unchosen-read'
 
 const mono = 'var(--bars-font-mono)'
 const body = 'var(--bars-font-body)'
@@ -35,7 +40,51 @@ function byDay(lines: UnchosenLine[]): [string, UnchosenLine[]][] {
   return [...days.entries()]
 }
 
-export function Unchosen({ lines, patterns, defaultOpen = false }: { lines: UnchosenLine[]; patterns: UnchosenPattern[]; defaultOpen?: boolean }) {
+function Pitches({ pitches }: { pitches: PitchView[] }) {
+  return (
+    <div className="rounded-xl" style={card}>
+      <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bars-text-muted)', margin: 0 }}>
+        The council&rsquo;s read · yours to take or leave
+      </p>
+      {pitches.map((p) => (
+        <div key={p.id} style={{ marginTop: 10 }}>
+          <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.08em', color: purple, margin: 0 }}>
+            {p.word} · {p.face} · week of {p.weekOf}
+          </p>
+          <p style={{ fontFamily: body, fontSize: 12.5, color: 'var(--bars-text-secondary)', margin: '3px 0 0' }}>{p.kernel}</p>
+          <p style={{ fontFamily: body, fontSize: 13.5, color: 'var(--bars-text-primary)', margin: '4px 0 0' }}>{p.pitch}</p>
+          <ul style={{ margin: '4px 0 0', padding: 0, listStyle: 'none' }}>
+            {p.quotes.map((q, i) => (
+              <li key={`${q.day}-${i}`} style={{ fontFamily: body, fontSize: 12, color: 'var(--bars-text-secondary)', marginTop: 2 }}>
+                &ldquo;{q.text}&rdquo; <span style={{ fontFamily: mono, fontSize: 8.5, color: 'var(--bars-text-muted)' }}>{q.day}</span>
+              </li>
+            ))}
+          </ul>
+          {p.composted.map((c, i) => (
+            <p key={i} style={{ fontFamily: body, fontSize: 12, color: 'var(--bars-text-muted)', margin: '4px 0 0', textDecoration: 'line-through' }}>
+              {c.pitch}{' '}
+              <span style={{ fontFamily: mono, fontSize: 8.5, textDecoration: 'none', display: 'inline-block' }}>composted, week of {c.weekOf}</span>
+            </p>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function Unchosen({
+  lines,
+  patterns,
+  pitches = [],
+  sample = false,
+  defaultOpen = false,
+}: {
+  lines: UnchosenLine[]
+  patterns: UnchosenPattern[]
+  pitches?: PitchView[]
+  sample?: boolean
+  defaultOpen?: boolean
+}) {
   const [open, setOpen] = useState(defaultOpen)
   const [word, setWord] = useState<string | null>(null)
   const picked = patterns.find((p) => p.word === word) ?? null
@@ -53,6 +102,11 @@ export function Unchosen({ lines, patterns, defaultOpen = false }: { lines: Unch
 
       {open && (
         <div className="flex flex-col gap-2" style={{ marginTop: 8 }}>
+          {sample && (
+            <p style={{ fontFamily: mono, fontSize: 8.5, letterSpacing: '0.08em', color: 'var(--bars-text-muted)', margin: 0 }}>
+              SAMPLE MORNINGS, NOT YOURS: drop &amp;sample=1 from the address to see your own.
+            </p>
+          )}
           {lines.length === 0 && (
             <p style={{ fontFamily: body, fontSize: 12.5, color: 'var(--bars-text-muted)', margin: 0 }}>
               Nothing yet. Lines you name in a brainstorm and don&rsquo;t pick show here from the next morning on.
@@ -103,6 +157,8 @@ export function Unchosen({ lines, patterns, defaultOpen = false }: { lines: Unch
               )}
             </div>
           )}
+
+          {pitches.length > 0 && <Pitches pitches={pitches} />}
 
           {byDay(lines).map(([day, dayLines]) => (
             <div key={day} className="rounded-xl" style={card}>
