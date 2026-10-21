@@ -125,6 +125,7 @@
     "test:ttv-phase": "npx tsx src/lib/tap-the-vein/__tests__/initial-phase.test.ts",
     "test:ttv-history": "npx tsx src/lib/tap-the-vein/__tests__/vein-history.test.ts",
     "test:ttv-seed-library": "npx tsx src/lib/tap-the-vein/__tests__/seed-library.test.ts",
+    "test:ttv-unchosen": "npx tsx src/lib/tap-the-vein/__tests__/unchosen.test.ts",
     "test:between": "npx tsx src/lib/between/__tests__/rules.test.ts",
     "test:vitest": "vitest run",
     "test:inner-garden-game": "node scripts/smoke-inner-garden-game.mjs",
