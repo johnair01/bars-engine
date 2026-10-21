@@ -13,6 +13,8 @@
   var FAMILIES = {
     protector: ["Shellback", "cloud"], player: ["Romp", "trail"], fixer: ["Tinker", "reach"], controller: ["Holdfast", "fist"],
     skeptic: ["Hedge", "question"], victim: ["Ballad", "tear"], "damaged-self": [null, "cloud"], "emotional-body": [null, "cloud"],
+    // a charge summoned in the WAVE room (board gs-door-gas): no daemon's family, so the plain cloud and the Shellback's forms
+    charge: [null, "cloud"],
   };
   var MOTES = 150, SCALE = 0.55, STREAM_MS = 1800, FADE_MS = 1200;
   var reducedMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -106,7 +108,8 @@
       var now = (typeof performance !== "undefined" ? performance : Date).now(); if (now === last) return; last = now;
       // face the camera about the up axis, so the page's shapes read as drawn, or face o.faceAt (a world point) if it is given
       var aim = o.faceAt || camera.position;
-      root.getWorldPosition(wp); root.rotation.y = Math.atan2(aim.x - wp.x, aim.z - wp.z) - (root.parent ? root.parent.rotation.y : 0);
+      var py = 0; for (var pa = root.parent; pa; pa = pa.parent) py += pa.rotation.y; // every turn above it (the room's charge sits two groups down)
+      root.getWorldPosition(wp); root.rotation.y = Math.atan2(aim.x - wp.x, aim.z - wp.z) - py;
       var age = now - t0, sec = now / 1000;
       if (reducedMotion) { var f = Math.min(1, age / FADE_MS); mat0.opacity = 0.95 * f * state.gas; mat1.opacity = 0.95 * f * state.gas; state.born = f; return; }
       var gather = 0.2 + 0.8 * state.gas; // the motes draw in to the heart as the core takes their place
