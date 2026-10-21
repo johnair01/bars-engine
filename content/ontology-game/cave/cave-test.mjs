@@ -33,6 +33,8 @@ for (const d of ['protector', 'controller', 'skeptic', 'fixer', 'victim', 'damag
 files['/ontology-game/cave/player/walker.glb'] = ['cave/player/walker.glb', 'model/gltf-binary'];
 // The family spirits' core and hologram (bake_spirits.py), fetched when a spirit unfolds.
 for (const f of ['shellback', 'romp', 'tinker', 'hedge', 'ballad']) for (const st of ['core', 'hologram']) files['/ontology-game/cave/spirits/' + f + '-' + st + '.glb'] = ['cave/spirits/' + f + '-' + st + '.glb', 'model/gltf-binary'];
+// The Shellback's creature and ally, the first family drawn in all five forms (the elder spirit in home base, slice 5).
+for (const st of ['creature', 'ally']) files['/ontology-game/cave/spirits/shellback-' + st + '.glb'] = ['cave/spirits/shellback-' + st + '.glb', 'model/gltf-binary'];
 const server = http.createServer((req, res) => {
   const f = files[req.url.split('?')[0]];
   if (!f) { res.writeHead(404); res.end(); return; }
@@ -476,12 +478,21 @@ const spiritsBefore = await C(() => window.__oagCave.spirits.length);
 await page.locator('[data-cave-bm-speak="yes"]').click();
 // The meeting spirit (sic-first-cave-sitting, 4b): asked once per voice; a spirit of the daemon's family is born and kept as meet-<voice id>.
 ok(await sees('[data-cave-bm-feel-ask]') && await page.locator('[data-cave-bm-q]').count() === 0, 'yes: first, how do you feel meeting it');
+// With three of your own walking, a new spirit needs room: one of yours rests in the WAVE room, or it is left here (Wendell on
+// sic-first-cave-sitting, 2026-10-19: "you'd need to dismiss one of your own to make room for it if you go into the cave with max spirits").
+const own3 = [['own-a', 'Hush', 'Water', 'victim'], ['own-b', 'Spark', 'Fire', 'player'], ['own-c', 'Hold', 'Metal', 'controller']];
+await C((t) => t.forEach(([id, name, element, family]) => { const S = window.__oagSpiritStore; S.put({ id, name, element, family, sittings: 1 }); S.setLoadout(id, true); window.__oagCave.addSpirit({ id, name, element, family, sittings: 1 }); }), own3);
 await page.locator('[data-cave-bm-feel="fear"]').click();
+ok(await sees('[data-cave-bm-room="3"]') && await page.locator('[data-cave-bm-rest]').count() === 3 && await sees('[data-cave-bm-leaveit]') && !(await C(() => window.__oagSpiritStore.get('meet-protector'))), 'three of yours walking: the new spirit waits while you choose one to rest or leave it here, and nothing is kept yet');
+await page.locator('[data-cave-bm-rest="own-b"]').click();
+const rested = await C(() => ({ b: window.__oagSpiritStore.get('own-b'), walking: window.__oagCave.spirits.map((o) => o.id), meet: window.__oagSpiritStore.get('meet-protector') }));
+ok(rested.b && !rested.b.loadout && rested.b.sittings === 1 && rested.walking.indexOf('own-b') < 0 && rested.meet && rested.meet.loadout, 'Spark rests in the WAVE room, out of the loadout with its sitting kept, and the new spirit takes its place in the loadout: ' + JSON.stringify(rested));
 const born = await C(() => ({ n: window.__oagCave.spirits.length, s: window.__oagCave.spirits.map((o) => ({ id: o.id, family: o.family, stage: o.stage, name: o.name })), store: window.__oagSpiritStore.get('meet-protector') }));
 const mine = born.s.filter((o) => o.id === 'meet-protector')[0];
-ok(born.n === spiritsBefore + 1 && mine && mine.family === 'protector' && mine.stage === 'gas' && mine.name === 'Fear' && born.store && born.store.family === 'protector' && born.store.element === 'Fear' && born.store.sittings === 0, 'a Protector spirit named Fear is born as a gas, walks with you and is kept in the store as meet-protector: ' + JSON.stringify(mine) + JSON.stringify(born.store));
+ok(born.n === spiritsBefore + 3 && mine && mine.family === 'protector' && mine.stage === 'gas' && mine.name === 'Fear' && born.store && born.store.family === 'protector' && born.store.element === 'Fear' && born.store.sittings === 0, 'a Protector spirit named Fear is born as a gas, walks with you and is kept in the store as meet-protector: ' + JSON.stringify(mine) + JSON.stringify(born.store));
 // The later checks count the spirits that come out of worked charges, so this one is let go and the store wiped.
-await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200);
+while (await C(() => window.__oagCave.spirits.length) > spiritsBefore) { await menuTap('[data-cave-spirits-n]'); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(300); }
+await page.waitForTimeout(2200);
 await C(() => window.__oagSpiritStore.wipe());
 ok(await sees('[data-cave-bm-seat]') && await sees('[data-cave-bm-q="job"]'), 'yes: the player steps into its place, and its first question is its job');
 await page.waitForFunction(() => window.__oagCave.stage().cam === 'its' && window.__oagCave.stage().cu > 5.5, null, { timeout: 8000 }).catch(() => {});
@@ -602,7 +613,7 @@ const stayed = await C(() => window.__oagCave.spirits.filter((o) => o.name === '
 ok(stayed === 1 && (await C(() => window.__oagCave.spirits.length)) === nSp + 1 && (await C(() => window.__oagCave.wave())).last.exhale === 'stay', 'the Exhale\'s stay keeps the shape: a spirit named Dread now walks with the player');
 await C(() => window.__oagCave.forgetRun());
 await page.locator('[data-cave-pane]').click().catch(() => {});
-for (let i = await C(() => window.__oagCave.spirits.length); i > 0; i--) { await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200); }
+for (let i = await C(() => window.__oagCave.spirits.length); i > 0; i--) { await menuTap('[data-cave-spirits-n]'); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200); }
 await C(() => window.__oagSpiritStore.wipe());
 await page.locator('[data-cave-pane]').click().catch(() => {});
 await page.screenshot({ path: SHOTS + '/cave-daemon-wave.png' });
@@ -758,7 +769,7 @@ await page.locator('[data-cave-standup]').click();
 await page.waitForFunction(() => !window.__oagCave.sitting(), null, { timeout: 10000 });
 ok((await C(() => window.__oagCave.spirits.filter((o) => o.family).map((o) => o.sittings).join())) === '2,1', 'standing up partway counts no sitting');
 await C(() => { const S = window.__oagSpiritStore; ['protector', 'fixer'].forEach((f) => S.remove('meet-' + f)); });
-for (let i = 0; i < 3; i++) { await page.locator('[data-cave-spiritbtn]').click(); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); }
+for (let i = 0; i < 3; i++) { await menuTap('[data-cave-spiritbtn]'); await page.locator('[data-cave-spirit="0"]').click(); await page.locator('[data-cave-spirit-out]').click(); }
 await page.waitForFunction(() => window.__oagCave.spirits.length === 0 && window.__oagCave.carried() === 0, null, { timeout: 10000 }).catch(() => {});
 ok((await C(() => window.__oagCave.spirits.length)) === 0, 'thanked and breathed out, the three leave the walk as it was');
 ok(await sees('[data-cave-home-satisfied="yes"]') && await page.locator('[data-cave-skip]').count() === 0 && await page.locator('[data-cave-next]').count() === 0, 'back from the room the daemon is asked again, and it is still no skip and no way past');
@@ -890,7 +901,7 @@ for (const round of [1, 2]) {
     ok(tr2.can === 2 && tr2.will === 0 && tr2.good === 'seen' && !tr2.trusted && tr2.marks.can === 2 && tr2.pending.length === 0 && tr2.seen.sort().join() === 'can:vouch,can:wait,good:share', `the reading eased, so the moves count: waiting and the Fixer's vouching make two pips; the share is its read of you; pacing was not what it needs. ${JSON.stringify(tr2.seen)}`);
     ok(await page.locator('[data-cave-trustsaw]').count() === 3 && await page.locator('[data-cave-trusthint]').count() === 1 && await page.locator('[data-cave-trustread]').count() === 1 && /safe too/.test(await page.locator('[data-cave-trustread]').textContent()) && tr2.stance === 'softening', 'it says what it saw, hints at what it needs, reads you in its own words and softens');
     await page.locator('[data-cave-pane]').click().catch(() => {});
-    await page.locator('[data-cave-spirits-n]').click(); await page.locator('[data-cave-spirit="0"]').click();
+    await menuTap('[data-cave-spirits-n]'); await page.locator('[data-cave-spirit="0"]').click();
     ok(await sees('[data-cave-ally="fixer"]'), 'the ally says why it walks with you');
     await page.locator('[data-cave-spirit-out]').click(); await page.waitForTimeout(2200);
     await C(() => window.__oagCave.trustClear());
@@ -1691,6 +1702,43 @@ ok(JSON.parse(await C(() => localStorage.getItem('oag.tutorial.v1'))).filter((x)
 await C(() => window.__oagCave.dive('nowhere on the figure'));
 ok(await page.locator('[data-oag-notice]').waitFor({ timeout: 5000 }).then(() => true, () => false) && /not on the figure yet/.test(await page.textContent('[data-oag-notice]')), 'a place the figure does not name is said in a line on the page, not a browser box');
 ok(dialogs.length === 0, 'no browser alert or confirm box' + (dialogs.length ? ': ' + dialogs.join(' | ') : ''));
+// ---- the elder spirit (slice 5, board sic-demo-showcase = elder): a grown Shellback lives in home base and shows its five forms
+await page.goto(B + '/ontology-game/cave');
+await page.locator('[data-room-open]').click();
+await pickOnFigure('heart');
+await page.locator('[data-room-welcome]').waitFor();
+ok(await sees('[data-room-elder-hello]'), 'home base: an elder spirit greets you in the first round');
+await page.waitForFunction(() => window.__oagCave.room.elder() && window.__oagCave.room.elder().drawn === 'ally', null, { timeout: 10000 }).catch(() => {});
+const el0 = await C(() => window.__oagCave.room.elder());
+ok(el0 && el0.stage === 'ally' && el0.drawn === 'ally' && !el0.card, 'the elder stands as a Shellback ally, drawn in its own form: ' + JSON.stringify(el0));
+await page.locator('[data-room-shrink]').click(); await page.waitForTimeout(600);
+const elAt = (await C(() => window.__oagCave.room.elder())).screen;
+ok(elAt && elAt.x > 0 && elAt.x < 390 && elAt.y > 0 && elAt.y < 844, 'the elder is in view from the seat: ' + JSON.stringify(elAt));
+await page.mouse.click(elAt.x, elAt.y);
+const el1 = await C(() => window.__oagCave.room.elder());
+ok(el1.card && el1.stage === 'gas' && await sees('[data-room-elder-says]') && await page.locator('[data-room-elder-stage]').count() === 5, 'a tap on it opens its card on the first of its five forms, the cloud, with a button for each');
+const seenForms = [];
+for (let i = 0; i < 40 && seenForms.length < 5; i++) { const st = (await C(() => window.__oagCave.room.elder())).stage; if (seenForms[seenForms.length - 1] !== st) seenForms.push(st); await page.waitForTimeout(250); }
+ok(seenForms.join() === 'gas,core,hologram,creature,ally', 'it goes through its forms in order, a breath each: ' + seenForms.join());
+await page.locator('[data-room-elder-stage="creature"]').click();
+await page.waitForFunction(() => window.__oagCave.room.elder().drawn === 'creature', null, { timeout: 10000 }).catch(() => {});
+ok((await C(() => window.__oagCave.room.elder())).drawn === 'creature' && await sees('[data-room-elder-form="creature"]'), 'Creature shows the Shellback creature and says what brings it');
+await page.screenshot({ path: SHOTS + '/room-elder-creature.png' });
+// Wendell, 21 October 2026: "Need to be able to minimize or x out of the menu so the player and the spirit can be in shot"
+const elderBoxAt = async () => page.locator('[data-room-elder]').boundingBox();
+const bOpen = await elderBoxAt();
+ok(bOpen && bOpen.height < 190, 'the open card is small, one line and one row of forms: ' + JSON.stringify(bOpen));
+await page.locator('[data-room-elder-min]').click();
+const bMin = await elderBoxAt();
+ok(bMin && bMin.height < 60 && bMin.width < 240 && await sees('[data-room-elder-chip]') && !(await sees('[data-room-elder-stage="ally"]')) && (await C(() => window.__oagCave.room.elder())).card, 'the fold button leaves a small chip: ' + JSON.stringify(bMin));
+const both = await C(() => { const e = window.__oagCave.room.elder().screen, r = document.querySelector('[data-room-elder]').getBoundingClientRect(); return e && !(e.x > r.left && e.x < r.right && e.y > r.top && e.y < r.bottom); });
+ok(both, 'folded, the chip does not cover the elder');
+await page.screenshot({ path: SHOTS + '/room-elder-folded.png' });
+await page.locator('[data-room-elder-chip]').click();
+ok(await sees('[data-room-elder-stage="ally"]') && await sees('[data-room-elder-x]'), 'a tap on the chip opens the card again');
+await page.locator('[data-room-elder-x]').click();
+const el2 = await C(() => window.__oagCave.room.elder());
+ok(!el2.card && el2.stage === 'ally' && !(await C(() => window.__oagSpiritStore.all().some((t) => /elder/.test(t.id)))), 'the X closes it: it stands as the ally again, and it is never put in your store');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();
