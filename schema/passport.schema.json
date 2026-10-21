@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bars-engine.vercel.app/schema/passport.schema.json",
+  "title": "Calrunian passport",
+  "description": "The one player record that crosses Calrunia's places (six-faces-council pass calrunia-world1, cw-passport; registry calrunia/world.yaml). It carries no level or rank. Checked by src/lib/passport/passport.ts validatePassport and src/lib/__tests__/passport-contract.test.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "player",
+    "spirits",
+    "hand",
+    "qi",
+    "vibeulons",
+    "embers",
+    "places_reached",
+    "updated_at"
+  ],
+  "properties": {
+    "v": {
+      "const": 1
+    },
+    "player": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "guest_id"
+      ],
+      "description": "Signed in: id and name are the Player's. A guest has only guest_id. Written by sign-in alone.",
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "guest_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "properties": {
+            "guest_id": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "spirits": {
+      "type": "array",
+      "description": "Owner: cave. At most three have loadout true. A spirit's stage is never stored.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "element",
+          "family",
+          "sittings",
+          "born",
+          "lineage",
+          "loadout",
+          "care"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "element": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "family": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sittings": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "born": {
+            "type": "object",
+            "required": [
+              "where",
+              "at"
+            ],
+            "properties": {
+              "where": {
+                "type": "string"
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "lineage": {
+            "type": "array",
+            "maxItems": 60,
+            "items": {
+              "type": "object",
+              "required": [
+                "where",
+                "at"
+              ],
+              "properties": {
+                "where": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "loadout": {
+            "type": "boolean"
+          },
+          "care": {
+            "description": "Spirit care (spirit-care.md); null until a place tracks it.",
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "last",
+                  "state"
+                ],
+                "properties": {
+                  "last": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "state": {
+                    "enum": [
+                      "well",
+                      "corrupted",
+                      "dead"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "hand": {
+      "type": "array",
+      "description": "Owner: sprout (Chapter 1's end deals it).",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "from"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "card",
+              "bar"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "from": {
+            "$ref": "#/$defs/place"
+          }
+        }
+      }
+    },
+    "qi": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Owner: vessel. A meter practice fills (cw-qi-meter-scales)."
+    },
+    "vibeulons": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Owner: vessel. Condensed qi; the only currency that crosses places."
+    },
+    "embers": {
+      "type": "array",
+      "description": "Owner: vessel (inner-vessel1).",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "element",
+          "look",
+          "state",
+          "at",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "element": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "look": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "state": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 40
+          }
+        }
+      }
+    },
+    "places_reached": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Every place adds only its own id.",
+      "items": {
+        "$ref": "#/$defs/place"
+      }
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "place": {
+      "enum": [
+        "vessel",
+        "sprout",
+        "cave",
+        "root",
+        "between",
+        "element-lands"
+      ]
+    }
+  }
+}
