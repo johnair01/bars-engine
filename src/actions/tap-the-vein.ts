@@ -19,6 +19,13 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { MAX_TASKS_PER_DAY } from '@/lib/tap-the-vein/constants'
 import { normalizeChargeLevel, parseBrainstormCandidates } from '@/lib/tap-the-vein/charge'
 import {
+  toUnchosen,
+  unchosenPatterns,
+  UNCHOSEN_WINDOW_DAYS,
+  type UnchosenLine,
+  type UnchosenPattern,
+} from '@/lib/tap-the-vein/unchosen'
+import {
   TTV_CHARGE_LEVELS,
   TTV_NOTE_KINDS,
   type TtvBrainstormCandidate,
@@ -708,6 +715,28 @@ export async function getSeedLibrary(): Promise<TtvResult<{ seeds: SeedLibraryEn
   } catch (e) {
     console.error('[ttv:getSeedLibrary]', e)
     return { error: 'Failed to load the seed library' }
+  }
+}
+
+/**
+ * The lines he named on past mornings and did not choose, and the words that keep coming back in them
+ * (six-faces-council pass unchosen1). Read-only: nothing here moves a line or asks anything of him.
+ */
+export async function getUnchosen(): Promise<TtvResult<{ lines: UnchosenLine[]; patterns: UnchosenPattern[] }>> {
+  const player = await getCurrentPlayer()
+  if (!player) return { error: 'Not authenticated' }
+  try {
+    const today = startOfDay()
+    const since = new Date(today.getTime() - UNCHOSEN_WINDOW_DAYS * 86_400_000)
+    const rows = await db.tapTheVeinDailySession.findMany({
+      where: { playerId: player.id, sessionDate: { gte: since, lt: today } },
+      select: { sessionDate: true, brainstormCandidates: true, morningMenu: true, tasks: { select: { originalText: true } } },
+    })
+    const lines = toUnchosen(rows, today.toISOString().slice(0, 10))
+    return { lines, patterns: unchosenPatterns(lines) }
+  } catch (e) {
+    console.error('[ttv:getUnchosen]', e)
+    return { error: 'Failed to load unchosen lines' }
   }
 }
 
