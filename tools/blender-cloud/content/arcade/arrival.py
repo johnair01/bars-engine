@@ -393,8 +393,8 @@ cam = bpy.data.objects.new('cam', bpy.data.cameras.new('cam')); scene.collection
 cam.data.sensor_width = 36; cam.data.lens = 36; cam.data.clip_start = 0.02; cam.data.clip_end = 400
 
 SCR_X = -(AISLE + 0.75 * 0.1 - 0.02) + 0.002          # the left screens' plane
-END_DIST = 2.05                                       # camera to screen at the hold
-END_LIFT = 0.255                                      # camera above the screen's centre, so the marquee is in frame
+END_DIST = 1.3                                        # camera to screen at the hold (round 3, his note: the screen bigger in frame)
+END_LIFT = 0.05                                       # camera a little above the screen centre
 P_START = (Vector((0.15, 6.5, 1.75)), Vector((math.radians(88), 0, math.radians(180))))
 P_END = (Vector((SCR_X + END_DIST, CH1_Y, SCR_Z + END_LIFT)), Vector((math.radians(90), 0, math.radians(90))))
 
