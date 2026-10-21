@@ -24,8 +24,12 @@ export const HOSTED_CAMPAIGNS_KEY = 'hostedCampaigns'
 export interface HostedCampaignFields {
   /** Her name as it should appear in public. */
   name: string
+  /** The practice's own name, if it has one. */
+  practice: string
   /** One line about the work and who it helps. */
   tagline: string
+  /** The opening scene: who this work is for, in her words. */
+  hook: string
   /** Two or three short paragraphs, blank-line separated. */
   story: string
   /** Free text so "$3,000" and "3000" both work; the bar parses digits. */
@@ -53,11 +57,25 @@ export interface HostedCampaignFields {
 
 export type HostedFieldKey = keyof HostedCampaignFields
 
+/** One thing a visitor can book with her. Authored, not edited from her link (yet). */
+export interface HostedService {
+  key: string
+  title: string
+  /** Shown as the price; `rate` replaces it for the service marked `usesRate`. */
+  price: string
+  usesRate?: boolean
+  length: string
+  body: string
+  /** The choice text that leads to this service on the page's path. */
+  choice: string
+}
+
 export interface HostedCampaign {
   slug: string
   /** `CampaignLead.campaignRef` for everyone who joins. */
   campaignRef: string
   fields: HostedCampaignFields
+  services: HostedService[]
 }
 
 /** Labels and placeholder prompts, in the order the edit form shows them. */
@@ -69,7 +87,9 @@ export const FIELD_SPEC: ReadonlyArray<{
   url?: boolean
 }> = [
   { key: 'name', label: 'Your name, as it should appear', prompt: 'Annastasia' },
+  { key: 'practice', label: 'Your practice\'s name', prompt: 'The name of your practice' },
   { key: 'tagline', label: 'One line about your work', prompt: 'What you do and who it helps' },
+  { key: 'hook', label: 'Who this is for (the first scene a visitor reads)', prompt: 'A short paragraph a visitor will recognize themselves in.', long: true },
   { key: 'story', label: 'Your story', prompt: 'Two or three short paragraphs. What you are building, who it is for, and what support makes possible.', long: true },
   { key: 'goal', label: 'Goal amount', prompt: '$ goal' },
   { key: 'raised', label: 'Raised so far', prompt: '$0' },
@@ -96,7 +116,7 @@ export const DOMAIN_ASK: Record<AllyshipDomainKey, HostedFieldKey> = {
   SKILLFUL_ORGANIZING: 'askOrganizing',
 }
 
-const MAX_LEN: Partial<Record<HostedFieldKey, number>> = { story: 6000 }
+const MAX_LEN: Partial<Record<HostedFieldKey, number>> = { story: 6000, hook: 2000 }
 const DEFAULT_MAX = 600
 
 function blankFields(): HostedCampaignFields {
@@ -105,13 +125,57 @@ function blankFields(): HostedCampaignFields {
 
 /**
  * Authored defaults. Blank means "show the placeholder prompt", which is what she
- * sees until she fills it in. Only what the record already holds is filled.
+ * sees until she fills it in. Only what the record already holds is filled: for
+ * Annastasia, the copy from her Balancing Act Coaching website, which she sent on
+ * 2026-10-21 for this page ("Very flexible").
  */
 export const HOSTED_CAMPAIGNS: Record<string, HostedCampaign> = {
   annastasia: {
     slug: 'annastasia',
     campaignRef: 'hosted-annastasia',
-    fields: { ...blankFields(), name: 'Annastasia', episode: 'Wednesday, October 28' },
+    fields: {
+      ...blankFields(),
+      name: 'Annastasia',
+      practice: 'Balancing Act Coaching',
+      tagline: 'Coaching to help you step off the tightrope and onto solid ground.',
+      hook:
+        "Sometimes, life feels less like a dance and more like a high-wire act. We're all juggling the demands of relationships, career, and personal health, and it's easy to feel dizzy, overwhelmed, and completely out of balance.",
+      story: [
+        "Balancing Act Coaching began in 2025 from a belief that finding balance shouldn't feel impossible. In a world that often feels unsteady, the mission is to provide concrete strategies to help you navigate and thrive.",
+        'Annastasia is not your average coach. Her philosophy is built on the intersection of skill and expression. She synthesizes professional training in Integrative Wellness Coaching with her background as an educator, and the creative, adaptive skills learned through dance and even clowning. This blend makes the coaching not only insightful but also deeply human.',
+        'Her singular goal is to help you cultivate lasting inner resilience: increasing your personal agency and self-efficacy, turning daily overwhelm into purposeful action and fulfillment.',
+      ].join('\n\n'),
+      bookWhat: 'A free consultation, a 60-minute coaching session, or body doubling',
+      rate: '$100 a session, with sliding scale options (reach out!)',
+      episode: 'Wednesday, October 28',
+    },
+    services: [
+      {
+        key: 'consult',
+        title: 'Consultation',
+        price: 'No cost',
+        length: '15 to 30 minutes',
+        body: "Curious if you're a good fit? Have questions about what to expect? Want to know if life coaching is right for you? A free consultation gets your questions answered and begins the conversation.",
+        choice: "I'm not sure coaching is for me yet",
+      },
+      {
+        key: 'coaching',
+        title: 'Coaching',
+        price: '$100',
+        usesRate: true,
+        length: '60 minutes',
+        body: 'Personalized sessions that cater to your own experiences. You work as a team to meet your goals and find a balance you can sustain.',
+        choice: 'I want to learn to walk the wire',
+      },
+      {
+        key: 'doubling',
+        title: 'Body Doubling',
+        price: '$20 to $50',
+        length: '15 to 60 minutes',
+        body: 'Writing an email? Making a grocery list? Running an errand? Need a pep talk? Body doubling is support for the tasks that are easier with someone rooting for you.',
+        choice: 'I need someone in the ring while I do the thing',
+      },
+    ],
   },
 }
 

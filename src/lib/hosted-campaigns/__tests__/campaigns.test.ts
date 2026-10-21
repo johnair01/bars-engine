@@ -14,7 +14,8 @@ describe('hosted campaigns', () => {
     expect(parseHostedStore('not json')).toEqual({})
     const c = resolveHosted('Annastasia', {})
     expect(c?.fields.name).toBe('Annastasia')
-    expect(c?.fields.story).toBe('')
+    expect(c?.fields.practice).toBe('Balancing Act Coaching')
+    expect(c?.services.map((s) => s.key)).toEqual(['consult', 'coaching', 'doubling'])
   })
 
   it('layers stored edits over defaults, and a stored blank clears a default', () => {

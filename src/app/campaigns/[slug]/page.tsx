@@ -28,6 +28,7 @@ import {
 import { getHostedStore } from '@/lib/hosted-campaigns/server'
 import { JoinForm } from './JoinForm'
 import { EditLinkBox } from './EditLinkBox'
+import { Paths, sceneFor } from './Paths'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const c = getHostedDefault(slug)
   return {
     title: c ? `Back ${c.fields.name} — an allyship campaign` : 'Campaign',
-    description: 'Three ways to put resources behind a new practice, and a place to join the campaign.',
+    description: c?.fields.tagline || 'Choose your way in: get support, back a new practice, or pass the word.',
   }
 }
 
@@ -55,37 +56,20 @@ function Val({ f, k }: { f: HostedCampaignFields; k: HostedFieldKey }) {
   )
 }
 
-function Way({ title, body, href, label }: { title: string; body: React.ReactNode; href: string; label: string }) {
-  return (
-    <div className="flex flex-col gap-2 rounded-lg p-4" style={{ background: 'var(--bars-surface-card)', border: '1px solid var(--bars-line)' }}>
-      <h3 style={{ fontFamily: 'var(--bars-font-display)', fontSize: 'var(--bars-text-lg)', color: 'var(--bars-text-primary)' }}>{title}</h3>
-      <p style={{ color: 'var(--bars-text-secondary)' }}>{body}</p>
-      {href ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="self-start rounded-md px-4 py-2 font-semibold"
-          style={{ background: 'var(--bars-earth-gem)', color: 'var(--bars-bg-base)' }}
-        >
-          {label}
-        </a>
-      ) : (
-        <span className="self-start rounded-md px-4 py-2 text-sm" style={{ color: 'var(--bars-text-muted)', border: '1px dashed var(--bars-line-dashed)' }}>
-          {label}: link coming
-        </span>
-      )}
-    </div>
-  )
-}
-
-export default async function HostedCampaignPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
+export default async function HostedCampaignPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ path?: string | string[] }>
+}) {
+  const [{ slug }, sp] = await Promise.all([params, searchParams])
   const [store, isAdmin] = await Promise.all([getHostedStore(), isCurrentPlayerAdmin()])
   const campaign = resolveHosted(slug, store)
   if (!campaign) notFound()
   const f = campaign.fields
   const pct = progressPercent(f)
+  const scene = sceneFor(typeof sp.path === 'string' ? sp.path : undefined, campaign)
   const h2 = { fontFamily: 'var(--bars-font-display)', fontSize: 'var(--bars-text-xl)', color: 'var(--bars-text-primary)' }
 
   return (
@@ -95,7 +79,7 @@ export default async function HostedCampaignPage({ params }: { params: Promise<{
 
         <header className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase" style={{ letterSpacing: 'var(--bars-tracking-wide)', color: 'var(--bars-earth-gem)' }}>
-            An allyship campaign
+            An allyship campaign{f.practice ? <> for {f.practice}</> : null}
           </p>
           <h1 style={{ fontFamily: 'var(--bars-font-display)', fontSize: 'var(--bars-text-4xl)', lineHeight: 'var(--bars-leading-tight)' }}>
             Back <Val f={f} k="name" />
@@ -115,26 +99,12 @@ export default async function HostedCampaignPage({ params }: { params: Promise<{
           </div>
         </header>
 
-        <section className="flex flex-col gap-3">
-          <h2 style={h2}>The story</h2>
-          {f.story ? (
-            f.story.split(/\n{2,}/).map((p, i) => <p key={i} style={{ whiteSpace: 'pre-line' }}>{p}</p>)
-          ) : (
-            <p><Val f={f} k="story" /></p>
-          )}
+        <section id="stage" className="scroll-mt-6 rounded-xl p-5" style={{ background: 'var(--bars-surface-inset)', border: '1px solid var(--bars-line)' }}>
+          <Paths campaign={campaign} scene={scene} val={(k) => <Val f={f} k={k} />} />
         </section>
 
-        <section className="flex flex-col gap-3">
-          <h2 style={h2}>Three ways to put resources behind it</h2>
-          <div className="grid gap-3">
-            <Way title="Give to the GoFundMe" href={f.gofundmeUrl} label="Donate" body={<>A one-time gift for <Val f={f} k="gofundmeFor" />.</>} />
-            <Way title="Join the Patreon" href={f.patreonUrl} label="Join" body="A small monthly pledge is income she can plan around. Following for free counts too." />
-            <Way title="Book a session" href={f.bookingUrl} label="Book" body={<><Val f={f} k="bookWhat" />. Rate: <Val f={f} k="rate" />.</>} />
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <h2 style={h2}>Be part of the campaign</h2>
+        <section id="join" className="flex scroll-mt-6 flex-col gap-3">
+          <h2 style={h2}>Join the crew</h2>
           <p style={{ color: 'var(--bars-text-secondary)' }}>
             Every campaign runs on four kinds of work. Pick the one you can do without strain and tell her you are in.
           </p>
