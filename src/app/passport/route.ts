@@ -69,8 +69,9 @@ button:disabled{opacity:.5}details{margin-top:16px}pre{white-space:pre-wrap;word
   function who(html) { el("who").innerHTML = html; }
   show(guest, false);
   who('<div class="row"><span>' + (demo ? "A sample guest passport. Nothing in this browser was read or changed." : "You are a guest. This passport lives in this browser.") + "</span></div>");
-  fetch("/api/passport", { credentials: "same-origin" }).then(function (r) { return r.status === 401 ? null : r.json(); }).then(function (res) {
+  fetch("/api/passport", { credentials: "same-origin" }).then(function (r) { return r.status === 401 ? null : r.json().then(function (j) { return r.ok ? j : { closed: j.error || "not open" }; }); }).then(function (res) {
     var back = encodeURIComponent(location.pathname + location.search);
+    if (res && res.closed) { who(el("who").innerHTML + '<p class="dim">Signed in, but keeping a passport opens once this ships (' + esc(res.closed) + ").</p>"); return; }
     if (!res) { who(el("who").innerHTML + '<p><a class="btn" href="/login?returnTo=' + back + '">Sign in to keep it</a></p>'); return; }
     if (res.passport) show(res.passport, true);
     who('<div class="row"><span>Signed in as <strong>' + esc(res.player.name) + "</strong>" + (res.passport ? "" : ". Your passport starts when you keep this one.") + '</span></div><p><button id="claim">' + (res.passport ? "Bring in what this browser holds" : "Keep this passport") + "</button></p>");

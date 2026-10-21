@@ -18,8 +18,15 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const player = await currentPlayer()
   if (!player) return NextResponse.json({ error: 'Sign in to keep a passport' }, { status: 401 })
-  return NextResponse.json({ player, passport: await passportOf(player.id) })
+  try {
+    return NextResponse.json({ player, passport: await passportOf(player.id) })
+  } catch {
+    return notReady()
+  }
 }
+
+/** A preview build skips migrations (scripts/build-with-env.ts), so the passports table may not be there yet. */
+const notReady = () => NextResponse.json({ error: 'The passport store is not open on this deployment yet' }, { status: 503 })
 
 export async function POST(req: NextRequest) {
   const player = await currentPlayer()
@@ -28,5 +35,9 @@ export async function POST(req: NextRequest) {
   const r = validatePassport(body?.guest)
   if (!r.ok) return NextResponse.json({ error: 'Not a passport', errors: r.errors }, { status: 400 })
   if (r.passport.player.id !== null) return NextResponse.json({ error: 'Only a guest passport can be claimed' }, { status: 400 })
-  return NextResponse.json({ player, passport: await claim(player, r.passport) })
+  try {
+    return NextResponse.json({ player, passport: await claim(player, r.passport) })
+  } catch {
+    return notReady()
+  }
 }
