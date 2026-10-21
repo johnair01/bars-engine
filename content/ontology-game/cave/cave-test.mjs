@@ -1429,6 +1429,8 @@ for (let i = 0; i < 100 && !(await C(() => window.__oagCave.room.sitShown())); i
 await C(() => window.__oagCave.room.stick(0, 0));
 ok(await C(() => window.__oagCave.room.sitShown()), 'walking onto the rug offers Sit down');
 // The loadout (sic-loadout-three): with spirits kept in oag.spirits.v1, the rug offers Your spirits, three at most walk with you.
+await C(() => window.__oagSpiritStore.wipe()); // the charges worked above were summoned into the store (gs-door-gas)
+await page.waitForTimeout(300);
 ok(!(await page.locator('[data-room-spirits]').isVisible()), 'with no spirit kept, the rug offers no loadout');
 await page.evaluate(() => { const S = window.__oagSpiritStore; [['protector', 'Fear', 'metal', 4], ['fixer', 'Hurry', 'fire', 0], ['skeptic', 'Doubt', 'water', 2], ['victim', 'Sorrow', 'earth', 0]].forEach(([f, n, e, k]) => S.put({ id: 'meet-' + f, name: n, element: e, family: f, sittings: k })); });
 await page.waitForFunction(() => document.querySelector('[data-room-spirits]')?.style.display !== 'none', null, { timeout: 5000 }).catch(() => {});
@@ -1748,6 +1750,104 @@ ok(await sees('[data-room-elder-stage="ally"]') && await sees('[data-room-elder-
 await page.locator('[data-room-elder-x]').click();
 const el2 = await C(() => window.__oagCave.room.elder());
 ok(!el2.card && el2.stage === 'ally' && !(await C(() => window.__oagSpiritStore.all().some((t) => /elder/.test(t.id)))), 'the X closes it: it stands as the ally again, and it is never put in your store');
+// ---- door spirits (boards gs-two-acts, gs-door-gas, gs-same-charge-grows, council #340; Wendell, 21 October 2026: "the blobs
+// that emerge from the door need to be the energy gas energy spirits and then sitting grows them into creatures and allies")
+{
+const chargeForm = () => C(() => { const u = window.__oagCave.room.state.all[0].fig.userData, f = u.form && u.form.userData.form; return { blob: u.blob, stage: f && f.stage, drawn: f && f.drawn, motes: f && f.motes }; });
+const chargeSpirits = () => C(() => window.__oagSpiritStore.all().filter((t) => t.family === 'charge').map((t) => ({ id: t.id, name: t.name, n: t.sittings })));
+const leaveHome = async () => {
+  await page.locator('[data-room-again="no"]').click();
+  await page.locator('[data-room-leave]').click();
+  await page.waitForFunction(() => !window.__oagCave.room, null, { timeout: 15000 }).catch(() => {});
+};
+const roomKeeps = async (goal, move) => { // Toward it: the 3-2-1 skipped, one next move, and the charge takes its place in the room
+  await page.locator('[data-room-goal]').fill(goal);
+  await page.locator('[data-room-push="toward"]').click();
+  await page.locator('[data-cave-321-skip]').click();
+  await page.locator('[data-room-move]').fill(move);
+  await page.locator('[data-room-move-done]').click();
+  await page.locator('[data-room-kept]').waitFor({ timeout: 15000 });
+  await page.locator('[data-room-next]').click();
+  await roomCheckin('stayed');
+};
+const knowsIt = async () => { // the spirit come home: Acknowledge already knows it, by its name and feeling
+  await page.locator('[data-room-texture="tension"]').click();
+  await page.locator('[data-room-next]').click();
+  ok((await page.locator('[data-room-name]').inputValue()) === 'Humming Ember' && !(await page.locator('[data-room-next]').isDisabled()), 'Acknowledge already knows the spirit come home, by its name and feeling');
+  for (const id of ['acknowledge', 'allow', 'accept']) await page.locator('[data-room-next]').click();
+  await page.locator('[data-room-notnow]').click();
+  await page.locator('[data-room-next]').click();
+};
+await C(() => { window.__oagSpiritStore.wipe(); localStorage.setItem('oag.tutorial.v1', '["walk","look","tap","rug","doors","mark","stone"]'); });
+await page.goto(B + '/ontology-game/cave?door=1#go=home');
+ok(await page.locator('[data-room-welcome]').waitFor({ timeout: 20000 }).then(() => true, () => false), '#go=home opens the WAVE room without the body tap');
+await roomIn();
+const gas1 = await chargeForm();
+ok(!gas1.blob && gas1.stage === 'gas' && gas1.drawn === 'gas' && gas1.motes > 100, 'the charge that comes in by the door is a gas spirit, a cloud of motes: ' + JSON.stringify(gas1));
+await page.screenshot({ path: SHOTS + '/room-door-gas.png' });
+await roomToFork('Old Tide', 'Sadness', 'numbness');
+await roomGoes('to rest', null);
+await roomCheckin('left');
+await leaveHome();
+const s0 = await chargeSpirits();
+ok(s0.length === 0, 'a charge let go by the door is not kept: no spirit is summoned (Wendell, 21 October 2026): ' + JSON.stringify(s0));
+await page.goto(B + '/ontology-game/cave?door=2#go=home');
+await page.locator('[data-room-welcome]').waitFor({ timeout: 20000 });
+await roomIn();
+await roomToFork('Old Tide', 'Sadness', 'numbness');
+await roomKeeps('to rest', 'sit by the window');
+await leaveHome();
+const s1 = await chargeSpirits();
+ok(s1.length === 1 && s1[0].name === 'Old Tide' && s1[0].n === 0, 'a W.A.V.E. on a new charge kept in the room summons one spirit, stored once at gas: ' + JSON.stringify(s1));
+await page.goto(B + '/ontology-game/cave?door=3#go=home');
+await page.locator('[data-room-welcome]').waitFor({ timeout: 20000 });
+await roomIn();
+await roomToFork('Old Tide', 'Sadness', 'numbness');
+await roomKeeps('to rest', 'sit by the window');
+await leaveHome();
+const s2 = await chargeSpirits();
+ok(s2.length === 1 && s2[0].id === s1[0].id && s2[0].n === 1, 'the same charge kept again grows that spirit by a sitting and adds no entry: ' + JSON.stringify(s2));
+await page.goto(B + '/ontology-game/cave?door=4#go=home&grown=7');
+await page.locator('[data-room-welcome]').waitFor({ timeout: 20000 });
+await roomIn();
+await page.waitForFunction(() => { const u = window.__oagCave.room.state.all[0].fig.userData; return u.form && u.form.userData.form.drawn === 'creature'; }, null, { timeout: 15000 }).catch(() => {});
+const cr = await chargeForm();
+ok(cr.stage === 'creature' && cr.drawn === 'creature', 'a spirit brought home at 7 sittings comes in by the door as the creature it is: ' + JSON.stringify(cr));
+await page.screenshot({ path: SHOTS + '/room-door-creature.png' });
+const n3 = (await C(() => window.__oagSpiritStore.all().length));
+await knowsIt();
+await page.locator('[data-room-goal]').fill('to rest');
+await page.locator('[data-room-push="away"]').click();
+await page.locator('[data-room-line]').fill('thank you');
+await page.locator('[data-room-exhale]').click();
+await page.locator('[data-room-gone]').waitFor({ timeout: 40000 });
+ok((await chargeForm()).drawn === 'creature', 'let go by the door, it leaves as the creature it came in as; it does not grow');
+await page.locator('[data-room-next]').click();
+await roomCheckin('left');
+await leaveHome();
+const let1 = await C(() => ({ t: window.__oagSpiritStore.get('charge-preview'), n: window.__oagSpiritStore.all().length }));
+ok(let1.t && let1.t.sittings === 7 && let1.n === n3, 'and its sittings stay at 7: ' + JSON.stringify(let1));
+await page.goto(B + '/ontology-game/cave?door=5#go=home&grown=7');
+await page.locator('[data-room-welcome]').waitFor({ timeout: 20000 });
+await roomIn();
+await knowsIt();
+await page.locator('[data-room-goal]').fill('to rest');
+await page.locator('[data-room-push="toward"]').click();
+await page.locator('[data-cave-321-skip]').click();
+await page.locator('[data-room-move]').fill('sit by the window');
+await page.locator('[data-room-move-done]').click();
+await page.locator('[data-room-kept]').waitFor({ timeout: 15000 });
+await page.locator('[data-room-next]').click();
+await roomCheckin('stayed');
+await page.waitForFunction(() => { const u = window.__oagCave.room.state.all[0].fig.userData; return u.form.userData.form.drawn === 'ally'; }, null, { timeout: 15000 }).catch(() => {});
+ok((await chargeForm()).drawn === 'ally', 'kept in the room and worked through, it unfolds into an ally where it stays');
+await page.waitForTimeout(1500);
+await page.screenshot({ path: SHOTS + '/room-door-ally.png' });
+await leaveHome();
+const grown = await C(() => ({ t: window.__oagSpiritStore.get('charge-preview'), n: window.__oagSpiritStore.all().length }));
+ok(grown.t && grown.t.sittings === 8 && grown.n === n3, 'the sitting adds one to its sittings (8, an ally) and no store entry: ' + JSON.stringify(grown));
+await C(() => window.__oagSpiritStore.wipe());
+}
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 console.log(`\n${passes} passed, ${fails} failed`);
 await browser.close(); server.close();

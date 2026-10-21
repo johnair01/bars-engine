@@ -2303,6 +2303,14 @@
     ])]);
     root.appendChild(home);
     titleScene(stage, home, function () { drawMenu(); panel.style.display = "none"; });
+    // A link straight into the WAVE room, for a preview: #go=home opens it as Begin does, at the chest. &grown=N first keeps one
+    // summoned spirit at N sittings and brings it home with you, so its next sitting is seen (6: a creature that becomes an ally).
+    var hq = String(location.hash || "");
+    if (/(?:^|[#&])go=home(?:&|$)/.test(hq)) {
+      var gn = /[#&]grown=(\d+)/.exec(hq), sp = null;
+      if (gn && SPIRIT_STORE) try { SPIRIT_STORE.remove("charge-preview"); sp = SPIRIT_STORE.put({ id: "charge-preview", name: "Humming Ember", element: "Anger", family: "charge", sittings: +gn[1] }, "a preview link"); } catch (e) { sp = null; }
+      load().then(function (A) { return homeBase(A, home, { where: "Chest", spirit: sp }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
+    }
   }
   // Continue: the last place played (oag.last.v1), or, for a player from before it was kept, a Big Mind save with a voice met.
   function continueTo() {
@@ -2425,10 +2433,10 @@
   function homeBase(A, home, o) {
     var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
     keepLast("room", o.where);
-    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind }).then(function (r) {
+    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind, spirit: o.spirit || null }).then(function (r) {
       if (r && r.bigmind) keepLast("bigmind", o.where);
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
-      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, o); } });
+      else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, { where: o.where }); } });
       return r;
     });
   }
@@ -3558,7 +3566,7 @@
       var i = spirits.indexOf(o); if (i >= 0) spirits.splice(i, 1); scene.remove(o.g); dropLight(o.g); spiritsUi();
       setTimeout(function () {
         cancelAnimationFrame(running); wrap.style.display = "none";
-        openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element }).then(function (r) {
+        openRoom(A, { from: "cave", where: me() ? me().spot.words : "", element: o.element, spirit: o.id ? { id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings || 0 } : null }).then(function (r) {
           wrap.style.display = ""; snapCam = true; last = performance.now(); render(); busy = false; fade.style.opacity = 0;
           var back = (r && r.spirits) || []; if (!back.length) back = [{ name: o.name, element: o.element, hex: o.hex, lighter: o.lighter, polarity: o.polarity, family: o.family, id: o.id, sittings: o.sittings, stage: o.stage }];
           back.forEach(function (x) { addSpirit(x); });
@@ -5166,21 +5174,60 @@
       lantern.add(lanternLight); scene.add(lantern);
 
       // ---- the charge: a grey shape that takes the texture, and then its element's colour -------------------------------------
-      var GREY = 0x8a8a92;
-      function buildCharge() {
+      // Since 21 October 2026 the charge is a gas spirit (Wendell: "the blobs that emerge from the door need to be the energy gas
+      // energy spirits"; board gs-door-gas): a cloud of motes from spirit-forms.js, drawn when it first comes in (formIn), whose
+      // motes stream out of the doorway. A charge that is one of your spirits come home (opts.spirit) wears that spirit's form at
+      // its stage. u.mat holds the colour and opacity the room works out each frame (syncForm puts them on the motes); the
+      // shadow's spirit (blob) keeps the old grey shape for now.
+      var GREY = 0x8a8a92, SF = window.__oagSpiritForms || null, FORM_K = 2.2, FORM_Y = 1.1, FORM_AT = { hologram: 1.8, creature: 1.3, ally: 1.3 };
+      function buildCharge(blob) {
         var g = new THREE.Group(), body = new THREE.Group(), S = new THREE.SphereGeometry(1, 18, 12);
         var mat = new THREE.MeshStandardMaterial({ color: GREY, roughness: 0.6, emissive: GREY, emissiveIntensity: 0.2, transparent: true, opacity: 0.85 });
-        [[0, 1.1, 0, 0.62, 0.8, 0.55], [0.15, 1.78, 0.04, 0.38, 0.4, 0.36], [-0.24, 0.72, 0.08, 0.42, 0.45, 0.4]].forEach(function (q) {
+        blob = blob || !SF;
+        if (blob) [[0, 1.1, 0, 0.62, 0.8, 0.55], [0.15, 1.78, 0.04, 0.38, 0.4, 0.36], [-0.24, 0.72, 0.08, 0.42, 0.45, 0.4]].forEach(function (q) {
           var m = new THREE.Mesh(S, mat); m.position.set(q[0], q[1], q[2]); m.scale.set(q[3], q[4], q[5]); body.add(m);
         });
         var core = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
-        core.position.set(0, 1.2, 0.42); body.add(core); g.add(body);
+        core.position.set(0, 1.2, 0.42); if (blob) body.add(core); g.add(body);
         var aura = buildAura(THREE, 1.25); g.add(aura);
         // the shadow's veil: a dark haze round the creature that thickens with its polarity
         var veil = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 12), new THREE.MeshBasicMaterial({ color: 0x1a1620, transparent: true, opacity: 0, depthWrite: false }));
         veil.position.y = 1.15; veil.scale.y = 1.25; veil.visible = false; g.add(veil);
-        g.userData = { mat: mat, body: body, core: core, aura: aura, veil: veil, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false };
+        g.userData = { mat: mat, body: body, core: core, aura: aura, veil: veil, col: new THREE.Color(GREY), want: new THREE.Color(GREY), sx: 1, sy: 1, op: 0.85, steady: false, blob: blob, form: null };
         return g;
+      }
+      // The charge's gas, drawn the first time it is seen: from (a world point, the doorway) streams its motes in. A spirit come
+      // home is drawn at the stage its sittings give it, in its own family's forms.
+      function formIn(c, from) {
+        var u = c.fig.userData; if (u.blob || u.form) return;
+        var sp = c.spirit, fam = sp && sp.family && SF.familyOf(sp.family) ? sp.family : "charge";
+        var f = SF.buildForm(THREE, fam, u.col.getHex(), { from: from || null, stage: sp ? sittingStage(sp.sittings || 0) : "gas" });
+        f.position.y = FORM_Y; f.scale.setScalar(FORM_K); u.body.add(f); u.form = f; u.tint = SF.tintProxy(f);
+      }
+      // Each frame the motes (and the core, hologram, creature or ally it has unfolded into) wear u.mat's colour and opacity.
+      function syncForm(u, now) {
+        var f = u.form, st = f.userData.form, k = clamp(u.mat.opacity / 0.85, 0, 1);
+        u.tint.material.color.setHex(u.mat.color.getHex());
+        var kw = FORM_AT[st.drawn] || FORM_K; f.scale.setScalar(f.scale.x + (kw - f.scale.x) * 0.06); // the drawn bodies are bigger than the cloud
+        if (st.mesh && now - (st.unfoldedAt || 0) < 2700) return; // the unfolding fades the forms itself
+        f.userData.materials.forEach(function (m) { m.opacity = 0.95 * st.gas * k; });
+        if (st.mesh) st.mesh.children.forEach(function (m) { var L = m.userData.look || {}; m.material.opacity = (L.opacity == null ? 1 : L.opacity) * k; if (L.rgb || L.paint) m.material.transparent = k < 1; });
+      }
+      // Growing (boards gs-two-acts, gs-same-charge-grows): a W.A.V.E. worked on a charge one of your spirits carries (the
+      // spirit taken home, or a summoned spirit of the same name) adds one sitting to it, and it unfolds in front of you if that
+      // crosses a stage (sic-unfold-by-sitting). It never makes a second spirit. Counted once a charge. Only a charge you keep
+      // grows: one let go by the door leaves as it came (Wendell, 21 October 2026: "when I finished and released the spirit it
+      // evolved and stayed in the room instead of being released").
+      function grow(c) {
+        if (c.grownTo != null || c.push !== "toward") return;
+        if (!c.spirit && SPIRIT_STORE && c.name.trim()) { // a charge you have summoned before, by its name
+          var nm = c.name.trim().toLowerCase();
+          try { c.spirit = SPIRIT_STORE.all().filter(function (t) { return t.family === "charge" && (t.name || "").trim().toLowerCase() === nm; })[0] || null; } catch (e) { c.spirit = null; }
+        }
+        if (!c.spirit) return;
+        c.grownTo = (c.spirit.sittings || 0) + 1;
+        var u = c.fig.userData, to = sittingStage(c.grownTo);
+        if (u.form && u.form.userData.form.stage !== to) { u.form.userData.unfold(to, true); c.unfolds = to; }
       }
       function dressCharge(c) {
         var u = c.fig.userData, look = AVATAR_LOOK[c.texture] || null, e = c.element && lookup(ELEMENTS, c.element);
@@ -5222,6 +5269,7 @@
         var c = { about: first ? opts.charge || "" : "", where: opts.where || "", texture: first ? opts.texture || null : null, element: first ? opts.element || null : null, known: !!(first && opts.element), name: "", goal: "", push: null, t321: null, move: "", line: "", lightName: "", steady: false, gone: false,
           slot: slot || 0, phase: "welcome", allow: { grow: ALLOW_GROW, bright: ALLOW_BRIGHT }, allowed: false, heat: 6, dull: 1, layers: [],
           polarity: 0, shadow: null, shadowStart: null, signals: [], practices: 0, shadowAsked: false, reading: null, hiddenOf: null, asks: [], shade: null, asking: null, askAt: 0, askAnswers: [], askLine: "", askPick: null, askBoss: null, shadeElement: null, shadeUnknown: false };
+        if (first && opts.spirit) { c.spirit = opts.spirit; c.name = opts.spirit.name || ""; c.element = c.element || opts.spirit.element || null; c.known = !!c.element; }
         R.all.push(c); c.fig = buildCharge(); c.fig.visible = false; c.fig.position.set(0, 0, DZ - 2.5); scene.add(c.fig); dressCharge(c);
         return c;
       }
@@ -5558,7 +5606,7 @@
       // A shadow spirit: the room's creature body in the shadow's colour, smaller, standing beside the one it hides.
       function summonShade(c) {
         if (c.shade) return;
-        var g = buildCharge(), u = g.userData; u.col.setHex(SHADOW_HEX); u.want.setHex(SHADOW_HEX); u.mat.color.setHex(SHADOW_HEX); u.mat.emissive.setHex(SHADOW_HEX);
+        var g = buildCharge(true), u = g.userData; u.col.setHex(SHADOW_HEX); u.want.setHex(SHADOW_HEX); u.mat.color.setHex(SHADOW_HEX); u.mat.emissive.setHex(SHADOW_HEX);
         g.scale.setScalar(0.55); g.position.set(c.fig.position.x + 1.4, 0, c.fig.position.z + 0.5); scene.add(g); c.shade = g;
       }
       // Fully revealed, the shadow spirit shows its element, and from then on it can be dissolved like any spirit (Wendell, board
@@ -5663,7 +5711,7 @@
       }
       // One creature is worked through: the next one in the room is worked, or one waiting at the door is welcomed, or the round ends.
       function workedThrough() {
-        if (R.worked.indexOf(ch) < 0) R.worked.push(ch); // each W.A.V.E. worked here walks back out with the player as a spirit
+        grow(ch); if (R.worked.indexOf(ch) < 0) R.worked.push(ch); // each W.A.V.E. worked here walks back out with the player as a spirit
         R.active.splice(R.active.indexOf(ch), 1);
         if (R.active.length) { var nx = R.active[0]; ch.phase = "done"; ch = nx; setFocus(nx); draw(); return; }
         if (R.waiting > 0) { R.waiting--; var c = newCharge(false, 0); c.waited = true; R.active.push(c); ch = c; setFocus(c); draw(); return; }
@@ -5686,6 +5734,19 @@
         var c = newCharge(false); c.fig.visible = true; c.fig.position.set(DW / 2 + 1.9, 0, DZ + 1.1); c.fig.scale.setScalar(0.45); R.restFig = c.fig;
         R.rested = true; R.doorWant = 0; go("end");
       }
+      // What a worked charge leaves as (boards gs-two-acts, gs-door-gas): one it grew is that spirit, with its sittings one up and
+      // no new entry in oag.spirits.v1; any other kept charge is a newly summoned spirit, stored once, at gas (0 sittings). One let
+      // go by the door is not kept: nothing is stored or grown, and its light stays on the threshold.
+      function spiritOf(c, n) {
+        var o = { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
+        if (c.push !== "toward") return o;
+        grow(c);
+        if (c.spirit) { o.id = c.spirit.id; o.family = c.spirit.family || "charge"; o.sittings = c.grownTo; o.name = c.spirit.name || o.name; o.element = c.spirit.element || o.element; o.hex = spiritHex(o.element); }
+        else { o.id = "charge-" + Date.now().toString(36) + "-" + n; o.family = "charge"; o.sittings = 0; o.summoned = true; }
+        o.stage = sittingStage(o.sittings);
+        try { if (SPIRIT_STORE) SPIRIT_STORE.put({ id: o.id, name: o.name, element: o.element, family: o.family, sittings: o.sittings }, "the WAVE room"); } catch (e) { /* it still walks out with you */ }
+        return o;
+      }
       function leave(portal) {
         fade.style.opacity = 1;
         // Only a charge worked through the whole W.A.V.E. leaves as a spirit (Wendell, 13 October 2026: "It should only emerge once
@@ -5695,9 +5756,7 @@
         setTimeout(function () {
           cancelAnimationFrame(running); window.removeEventListener("resize", size); window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp);
           if (renderer) renderer.dispose(); wrap.remove(); api.room = null;
-          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(function (c) {
-            return { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
-          }).concat(shades.map(function (c) {
+          resolve({ rounds: R.round, rested: R.rested, portal: portal === true, bigmind: portal === "bigmind", spirits: going.map(spiritOf).concat(shades.map(function (c) {
             return { name: shadowName(c) + " of " + ((c.name || "").trim() || "a charge"), element: c.polarity ? null : c.shadeElement || null, hex: !c.polarity && c.shadeElement ? shadeHex(c.shadeElement) : SHADOW_HEX, shadow: c.shadow || "unnamed", shadowOf: (c.name || "").trim() || null, polarity: 0, revealed: !c.polarity && !!c.shadeElement };
           })) });
         }, 520);
@@ -6057,8 +6116,8 @@
         // the door: it opens on an out-breath (at once when calm), then the charge comes in, or goes out
         if (R.wait && (R.calm || br.exhaling)) {
           var w0 = R.wait; R.wait = null; R.doorWant = 1;
-          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.polarity < 0 ? "flood" : cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
-          else { var cout = ch; R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
+          if (w0 === "door-in") { var cin = ch; cin.fig.visible = true; cin.fig.position.set(0, 0, DZ - 2.5); formIn(cin, new THREE.Vector3(0, 1.4, DZ + 0.2)); R.moves.push({ c: cin, from: { x: 0, z: DZ - 2.5 }, to: SLOTS[cin.slot], t: -1.4, dur: 3.6, then: function () { var nx = cin.polarity < 0 ? "flood" : cin.signals.length && !cin.shadowAsked ? "shadow" : "witness"; if (ch === cin) go(nx); else cin.phase = nx; } }); }
+          else { var cout = ch; grow(cout); R.moves.push({ c: cout, from: { x: cout.fig.position.x, z: cout.fig.position.z }, to: { x: 0, z: DZ - 3 }, t: cout.unfolds ? -3.4 : -1.2, dur: BREATH.outS + 2, fadeOut: true, then: function () {
             cout.gone = true; cout.fig.visible = false; var l = buildLight(cout.fig.userData.want.getHex(), (cout.lightName || "").trim() || cout.name || "It", R.lights.length); scene.add(l); R.lights.push(l); R.doorWant = 0.3;
             if (ch === cout) go("gone"); else cout.phase = "gone";
           } }); }
@@ -6115,6 +6174,7 @@
           c.fig.rotation.y = Math.atan2(faceTo.x - c.fig.position.x, faceTo.z - c.fig.position.z);
         });
         if (R.restFig) R.restFig.userData.mat.opacity = 0.5;
+        R.all.forEach(function (c) { var u = c.fig.userData; if (u.blob || !c.fig.visible) return; if (!u.form) formIn(c, null); syncForm(u, now); });
         R.all.forEach(function (c) { // a shadow spirit keeps beside its creature, and goes when it goes
           if (!c.shade) return; var sh = c.shade, su = sh.userData; sh.visible = c.fig.visible && !c.gone && c.fig.parent === scene; su.fade = c.fig.userData.fade;
           sh.position.x += (c.fig.position.x + 1.4 * c.fig.scale.x - sh.position.x) * Math.min(1, dt * 2); sh.position.z += (c.fig.position.z + 0.5 - sh.position.z) * Math.min(1, dt * 2);
