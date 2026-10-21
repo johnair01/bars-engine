@@ -91,6 +91,7 @@ scripts/bootstrap-creation-quests-output.json
 /public/game/
 /public/understood-app/
 /public/ontology-game/
+/public/calrunia/arrive/
 /understood-game/node_modules/
 /understood-game/dist/
 .prisma_hash

@@ -1,0 +1,32 @@
+ship-medium.glb, structure-platform-dock.glb and Textures/colormap.png are from Kenney's Pirate Kit 2.1
+(https://kenney.nl/assets/pirate-kit), unchanged. They are CC0; the kit's own licence file follows.
+Used by /calrunia/arrive (content/calrunia/arrive/ship-scene.js).
+
+	
+
+	Pirate Kit (2.1)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 17-02-2026 13:57
+	
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You can use this content for personal, educational, and commercial purposes.
+
+	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
+
+			------------------------------
+
+	• Website : www.kenney.nl
+	• Donate  : www.kenney.nl/donate
+
+	• Patreon : patreon.com/kenney
+	
+	Follow on social media for updates:
+
+	• Twitter:	 twitter.com/KenneyNL
+	• BlueSky:	 kenney.bsky.social
+	• Instagram: instagram.com/kenney_nl
