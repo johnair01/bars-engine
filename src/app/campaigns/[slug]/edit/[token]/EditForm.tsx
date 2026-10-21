@@ -57,6 +57,9 @@ export function EditForm({
         <a href={`/campaigns/${slug}`} target="_blank" rel="noopener noreferrer" className="self-start underline" style={{ color: 'var(--bars-earth-gem)' }}>
           Open your page
         </a>
+        <a href={`/campaigns/${slug}/edit/${token}/intake`} className="self-start font-semibold underline" style={{ color: 'var(--bars-earth-gem)' }}>
+          Build your GoFundMe and Patreon pages, one step at a time
+        </a>
       </header>
 
       {FIELD_SPEC.map((f) => (

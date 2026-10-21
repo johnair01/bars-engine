@@ -16,6 +16,7 @@
  */
 
 import { ALLYSHIP_DOMAINS, type AllyshipDomainKey } from '@/lib/allyship-domains'
+import { parseIntake, type HostedIntake } from './intake'
 
 /** `AppConfig.theme` key that holds every hosted campaign's edits and edit token. */
 export const HOSTED_CAMPAIGNS_KEY = 'hostedCampaigns'
@@ -188,6 +189,8 @@ export interface HostedStoredEntry {
   fields?: Partial<HostedCampaignFields>
   editToken?: string
   updatedAt?: string
+  /** Her GoFundMe and Patreon intake answers and STUCK? presses (`intake.ts`). */
+  intake?: HostedIntake
 }
 
 export type HostedStore = Record<string, HostedStoredEntry>
@@ -206,6 +209,7 @@ export function parseHostedStore(theme: string | null | undefined): HostedStore 
         fields: cleanFields(e.fields),
         editToken: typeof e.editToken === 'string' ? e.editToken : undefined,
         updatedAt: typeof e.updatedAt === 'string' ? e.updatedAt : undefined,
+        ...(e.intake ? { intake: parseIntake(e.intake) } : {}),
       }
     }
     return out
