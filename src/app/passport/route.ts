@@ -2,7 +2,7 @@
  * @route GET /passport
  * @entity PLAYER
  * @description The Calrunian passport: what a player carries between Calrunia's places, as a guest or signed in, and the claim at sign-in
- * @permissions public; the claim needs a signed-in player (bars_player_id cookie)
+ * @permissions developer view, linked only from /admin/games, noindex; the claim needs a signed-in player (bars_player_id cookie)
  * @relationships PLAYER (Passport)
  * @example GET /passport?demo=1
  * @agentDiscoverable false
@@ -21,7 +21,8 @@ const PAGE = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#14121a">
-<title>Calrunian passport</title>
+<meta name="robots" content="noindex">
+<title>Calrunian passport (dev view)</title>
 <style>
 :root{--bg:#14121a;--card:#1f1b28;--ink:#efe9dc;--dim:#a49cb2;--line:#3a3348;--accent:#e2b65c;--ok:#7fc79a}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
@@ -31,7 +32,8 @@ main{max-width:640px;margin:0 auto;padding:20px 16px 48px}h1{font-size:1.5rem;ma
 .tag.on{border-color:var(--ok);color:var(--ok)}button,a.btn{background:var(--accent);color:#1b1408;border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;text-decoration:none;display:inline-block;cursor:pointer}
 button:disabled{opacity:.5}details{margin-top:16px}pre{white-space:pre-wrap;word-break:break-word;font-size:.8rem;color:var(--dim)}#msg{min-height:1.5em}
 </style></head><body><main>
-<h1>Your passport</h1>
+<p class="dim">Developer view. Players do not see this page.</p>
+<h1>Passport</h1>
 <p class="lede">What you carry between Calrunia's places: your spirits, your hand, qi, vibeulons, embers and the places you have reached. No place can rank you here.</p>
 <div id="who" class="card"></div>
 <h2>Places reached</h2><div id="places"></div>

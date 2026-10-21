@@ -74,10 +74,10 @@ export const DEV_GAMES: DevGame[] = [
   },
   {
     id: 'passport',
-    title: 'Calrunian passport',
-    blurb: 'What a player carries between Calrunia’s places, as a guest or signed in.',
+    title: 'Calrunian passport (dev view)',
+    blurb: 'Developer view of the record that crosses Calrunia’s places. Players never see this page; they see their spirit waiting on the ship.',
     play: '/passport',
-    access: 'public',
+    access: 'owner',
     jumps: [{ label: 'Sample passport', href: '/passport?demo=1' }],
     source: ['schema/passport.schema.json', 'public/passport/guest.js', 'src/lib/passport', 'src/app/passport/route.ts'],
     tests: ['npx vitest run src/lib/__tests__/passport-contract.test.ts'],
