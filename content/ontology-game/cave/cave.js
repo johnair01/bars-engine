@@ -2551,7 +2551,9 @@
       try { dom.setPointerCapture(e.pointerId); } catch (x) {}
       var p = ptrs[e.pointerId] = { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t: e.timeStamp, drag: false, walk: false }; // the event's own time: a busy frame does not stretch a tap
       if (!floater && stickPad) floater = floatStick(stickPad);
-      if (stickId == null && floater && canWalk() && floater.wants(e)) { p.walk = true; stickId = e.pointerId; floater.at(e); stickAt(e); }
+      // A second finger while the stick's has not yet moved off its tap: the two are a pinch, not a walk and a look
+      var sp0 = stickId != null && ptrs[stickId]; if (sp0 && Math.hypot(sp0.x - sp0.x0, sp0.y - sp0.y0) < TOUCH.px) { sp0.walk = false; stickUp(); }
+      else if (stickId == null && floater && canWalk() && floater.wants(e)) { p.walk = true; stickId = e.pointerId; floater.at(e); stickAt(e); }
       var l = lookers(); if (l.length === 2) { pinch = { d: spread(l), z: state.zoom }; l.forEach(function (q) { q.drag = true; }); }
       state.held = true;
     });
@@ -5756,7 +5758,9 @@
         var floatR = null, stickTap = null; // the floating stick and the tap a thumb on it may still be (ctl-split-thumbs, ctl-tap-rule)
         dom.addEventListener("pointerdown", function (e) {
           if (!floatR) floatR = floatStick(stickPad);
-          if (stickId == null && !R.modal && !R.close && floatR.wants(e)) {
+          // A second finger while the stick's has not yet moved off its tap: the two are a pinch, not a walk and a look
+          if (stickId != null && stickTap) { ptrs[stickId] = { x: stickTap.x, y: stickTap.y }; stickTap = null; stickUp(); }
+          else if (stickId == null && !R.modal && !R.close && floatR.wants(e)) {
             try { dom.setPointerCapture(e.pointerId); } catch (x) {}
             stickId = e.pointerId; floatR.at(e); stickAt(e); stickTap = { x: e.clientX, y: e.clientY, t: e.timeStamp }; return;
           }
