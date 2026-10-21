@@ -5347,3 +5347,17 @@ model BetweenPresence {
   @@id([gardenId, playerId])
   @@map("between_presence")
 }
+
+/// The Calrunian passport (six-faces-council pass calrunia-world1, cw-passport): the one record that crosses Calrunia's places,
+/// beside the Between's tables. `data` is the whole passport in the shape of schema/passport.schema.json; playerId is Player.id
+/// as a plain column, the way the Between keeps its owners. A guest's passport lives in the browser until sign-in claims it
+/// (POST /api/passport); `claimedGuestIds` lists the guest passports folded in, so a second claim of the same one is a no-op.
+model Passport {
+  playerId        String   @id @map("player_id")
+  data            Json
+  claimedGuestIds String[] @default([]) @map("claimed_guest_ids")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("passports")
+}

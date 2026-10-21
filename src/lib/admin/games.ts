@@ -73,6 +73,18 @@ export const DEV_GAMES: DevGame[] = [
     prSearch: 'Between',
   },
   {
+    id: 'passport',
+    title: 'Calrunian passport',
+    blurb: 'What a player carries between Calrunia’s places, as a guest or signed in.',
+    play: '/passport',
+    access: 'public',
+    jumps: [{ label: 'Sample passport', href: '/passport?demo=1' }],
+    source: ['schema/passport.schema.json', 'public/passport/guest.js', 'src/lib/passport', 'src/app/passport/route.ts'],
+    tests: ['npx vitest run src/lib/__tests__/passport-contract.test.ts'],
+    callsheets: ['calrunia-world'],
+    prSearch: 'passport',
+  },
+  {
     id: 'vein',
     title: 'Tap the Vein',
     blurb: 'The daily morning ritual: free-write, then pick a seed from the menu.',
