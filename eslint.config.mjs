@@ -28,6 +28,10 @@ const eslintConfig = defineConfig([
     // Agent worktrees and generated files:
     ".claude/**",
     "prisma/generated/**",
+    // Bundles that `npm run build` writes into public/ (gitignored; minified, not project source):
+    "public/game/**",
+    "public/understood-app/**",
+    "public/ontology-game/**",
     // Vendor / third-party dirs:
     "LibreSprite/**",
     "backend/.venv/**",

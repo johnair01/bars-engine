@@ -2,7 +2,8 @@
  * Run: npx tsx src/lib/tap-the-vein/__tests__/vein-history.test.ts
  *
  * The vein history export (pass ttv-loop 1): free writes verbatim, oldest first,
- * empty days dropped, each seed's BAR maturity read, composted BARs named.
+ * empty days dropped, each seed's BAR maturity read, composted BARs named, and
+ * (pass ttv-bars 1) each seed's blockedAt and the count of its notes.
  */
 
 import { parseSince, seedMaturity, toVeinHistory, type VeinSessionRow } from '@/lib/tap-the-vein/vein-history'
@@ -36,7 +37,7 @@ const sessions: VeinSessionRow[] = [
     rawEntry: 'I want the book out by spring.\nAnd a body that can carry it.',
     wordCount: 13,
     lensCategory: 'career',
-    tasks: [task('a', { barId: 'bar-a' }), task('b', { barId: 'bar-b', blockedAt: new Date() }), task('c')],
+    tasks: [task('a', { barId: 'bar-a' }), task('b', { barId: 'bar-b', blockedAt: new Date('2026-10-15T09:00:00.000Z'), _count: { notes: 3 } }), task('c')],
   },
   {
     sessionDate: new Date('2026-10-12T00:00:00.000Z'),
@@ -67,6 +68,9 @@ function run() {
   assert(a.maturity === 'elaborated', 'maturity read from the BAR')
   assert(b.maturity === 'composted' && b.blocked, 'archived BAR reads as composted; blocked flag')
   assert(c.maturity === null, 'a task with no BAR has no maturity')
+  assert(b.blockedAt === '2026-10-15T09:00:00.000Z' && a.blockedAt === null, 'blockedAt carried as ISO, null when not blocked')
+  assert(b.notes === 3 && a.notes === 0, 'notes is a count, 0 when the route gave none')
+  assert(!('body' in b) && !('_count' in b), 'no note text and no raw count object in the export')
   assert(seedMaturity({ id: 'x', seedMetabolization: null, archivedAt: null }) === 'captured', 'default maturity is captured')
 
   assert(parseSince(null, now)?.toISOString().slice(0, 10) === '2026-07-18', 'default window is 90 days')

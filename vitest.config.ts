@@ -76,6 +76,7 @@ export default defineConfig({
       'src/lib/cyoa-composer/__tests__/step-registry.test.ts',
       'src/lib/__tests__/vitest-include-registration.test.ts',
       'src/lib/__tests__/board-save-contract.test.ts',
+      'src/lib/__tests__/passport-contract.test.ts',
       'src/app/api/board/saves/__tests__/route.test.ts',
       'src/app/api/board/saves/__tests__/seal.test.ts',
       'src/lib/tap-the-vein/__tests__/board-seal.test.ts',
@@ -85,6 +86,8 @@ export default defineConfig({
       'src/lib/board/__tests__/dispatch.test.ts',
       'src/lib/board/__tests__/council-page.test.ts',
       'src/app/api/board/pull/__tests__/route.test.ts',
+      'src/app/api/board/import/__tests__/route.test.ts',
+      'src/app/api/board/session-writes/__tests__/route.test.ts',
     ],
   },
   resolve: {

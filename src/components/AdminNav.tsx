@@ -25,6 +25,7 @@ const SECTIONS: {
     hint: 'Learn the world',
     items: [
       { name: 'Dashboard', href: '/admin', icon: '🏠' },
+      { name: 'Games', href: '/admin/games', icon: '🎮' },
       { name: 'Onboarding', href: '/admin/onboarding', icon: '✨' },
       { name: 'Instances', href: '/admin/instances', icon: '🧩' },
       { name: 'Players', href: '/admin/players', icon: '👥' },

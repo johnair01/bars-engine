@@ -34,27 +34,28 @@ export default async function AdminDashboard() {
                 </div>
             </header>
 
-            {/* ── PRIMARY ACTIONS (what you do most) ──────── */}
-            <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <ActionCard
-                    href="/admin/campaigns/create"
-                    title="Create Campaign"
-                    description="Launch a new campaign with wizard"
-                    accent="amber"
-                />
-                <ActionCard
-                    href="/admin/campaigns/review"
-                    title="Review Campaigns"
-                    description="Approve or reject draft campaigns"
-                    accent="emerald"
-                />
-                <ActionCard
-                    href="/event"
-                    title="Live Event Page"
-                    description="View the public campaign page"
-                    accent="sky"
-                />
+            {/* ── WHAT YOU USE MOST ──────────────────────── */}
+            <section className="space-y-3">
+                <div className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold">What you use most</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <ActionCard href="/board/council" title="Council Board" description="Questions waiting on you, and the Morning tab" accent="amber" external />
+                    <ActionCard href="/board" title="Nonprofit Board" description="The nonprofit's rows" accent="amber" external />
+                    <ActionCard href="/admin/games" title="Games" description="Every game: play links, source, tests, open work" accent="violet" />
+                    <ActionCard href="/ontology-game/cave" title="Cave of Lessons" description="Daemons, spirits and W.A.V.E." accent="emerald" external />
+                    <ActionCard href="/ontology-game/between" title="The Between" description="The garden two people tend" accent="emerald" external />
+                    <ActionCard href="/tap-the-vein" title="Tap the Vein" description="The morning ritual" accent="emerald" external />
+                    <ActionCard href="/admin/campaigns/review" title="Campaigns" description="Approve drafts, then open a campaign page" accent="sky" />
+                    <ActionCard href="/admin/players" title="Players" description="Accounts and roles" accent="sky" />
+                    <ActionCard href="/games" title="Games home" description="What a player sees after sign-in" accent="sky" external />
+                </div>
             </section>
+
+            {/* ── EVERYTHING ELSE (kept, folded away) ──────── */}
+            <details className="group rounded-xl border border-zinc-800/60 bg-zinc-900/10 p-4">
+                <summary className="cursor-pointer text-sm text-zinc-400 hover:text-white select-none">
+                    Everything else: campaigns, content, players, system, and the reset zone
+                </summary>
+                <div className="space-y-8 mt-4">
 
             {/* ── MANAGE (organized by what you're managing) ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -106,15 +107,19 @@ export default async function AdminDashboard() {
 
             {/* ── DANGER ZONE ─────────────────────────────── */}
             <AdminResetZone />
+                </div>
+            </details>
         </div>
     )
 }
 
-function ActionCard({ href, title, description, accent }: {
+function ActionCard({ href, title, description, accent, external }: {
     href: string
     title: string
     description: string
     accent: 'amber' | 'emerald' | 'sky' | 'violet'
+    /** Leaves the admin suite (a board or a game). */
+    external?: boolean
 }) {
     const colors = {
         amber: 'border-amber-800/40 hover:border-amber-600/60 text-amber-400',
@@ -127,7 +132,7 @@ function ActionCard({ href, title, description, accent }: {
             href={href}
             className={`block rounded-xl border bg-zinc-900/40 p-5 transition-all hover:-translate-y-0.5 ${colors[accent]}`}
         >
-            <div className="text-sm font-bold text-white">{title}</div>
+            <div className="text-sm font-bold text-white">{title}{external && <span className="text-zinc-600 font-normal"> ↗</span>}</div>
             <div className="text-xs text-zinc-500 mt-1">{description}</div>
         </Link>
     )

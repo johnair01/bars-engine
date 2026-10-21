@@ -35,6 +35,9 @@ jobs:
       - name: Ship model checks
         run: npm run test:vessel
 
+      - name: Move table (one cell per move on every surface)
+        run: npm run test:move-table
+
       # Blender pipeline, offline tier only: licence gate, manifest budgets, key handling. Plain Python, no bpy.
       # Known gaps are logged and do not fail the job (.specify/specs/blender-pipeline-test/).
       - name: Blender pipeline tests (offline)

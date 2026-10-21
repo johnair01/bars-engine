@@ -25,7 +25,7 @@ export interface CanonicalMove {
 
 /** 5 Transcend moves (vertical completion) — Energy +2 */
 export const TRANSCEND_MOVES: CanonicalMove[] = [
-  { id: 'metal_transcend', name: 'Step Through (Excitement)', category: 'Transcend', element: 'metal', primaryWaveStage: 'showUp', energyDelta: 2, narrative: 'Fear → opportunity' },
+  { id: 'metal_transcend', name: 'Step Through (Wonder-Excitement)', category: 'Transcend', element: 'metal', primaryWaveStage: 'showUp', energyDelta: 2, narrative: 'Fear → opportunity' },
   { id: 'water_transcend', name: 'Reclaim Meaning', category: 'Transcend', element: 'water', primaryWaveStage: 'cleanUp', energyDelta: 2, narrative: 'Sadness → value restored' },
   { id: 'wood_transcend', name: 'Commit to Growth', category: 'Transcend', element: 'wood', primaryWaveStage: 'growUp', energyDelta: 2, narrative: 'Joy → sustained vitality' },
   { id: 'fire_transcend', name: 'Achieve Breakthrough (Triumph)', category: 'Transcend', element: 'fire', primaryWaveStage: 'showUp', energyDelta: 2, narrative: 'Anger → boundary honored' },
