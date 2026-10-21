@@ -4982,6 +4982,10 @@
     ".oagc button.oagr-portalbtn{right:auto;left:10px;border-color:rgba(200,184,255,.7);color:#e8e0ff}" +
     ".oagc button.oagr-spirits{position:absolute;right:16px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.55);color:#fff1d0;background:rgba(20,20,40,.85)}" +
     ".oagr-load{width:min(300px,calc(100vw - 170px))}.oagr-load button[aria-pressed=true]{border-color:#fff1b0;background:rgba(80,70,30,.85)}" +
+    ".oagr-door.oagr-elder{width:min(300px,calc(100vw - 28px));padding:.45rem .55rem}.oagr-elder-head{display:flex;align-items:center;gap:.35rem}.oagr-elder-head h2{flex:1;margin:0;font-size:.95rem}" +
+    ".oagr-door.oagr-elder .oagr-elder-head button{width:2rem;min-width:2rem;height:2rem;padding:0;margin:0;font-size:1.1rem;line-height:1}.oagr-door.oagr-elder p{margin:.2rem 0 .1rem;font-size:.8rem;line-height:1.25}" +
+    ".oagr-door.oagr-elder .oagc-row{flex-wrap:nowrap;gap:.25rem;margin-top:.3rem}.oagr-door.oagr-elder .oagc-row button{flex:1;width:auto;min-width:0;margin:0;padding:.35rem .1rem;font-size:.72rem}" +
+    ".oagr-door.oagr-elder.oagr-elder-min{width:auto;padding:0;background:none;border:0}.oagr-door.oagr-elder.oagr-elder-min button{width:auto;padding:.4rem .7rem;font-size:.8rem}" +
     ".oagc button.oagr-sit{position:absolute;right:16px;bottom:calc(40px + env(safe-area-inset-bottom));z-index:5;border-color:rgba(255,241,176,.8);color:#fff1b0;background:rgba(60,30,24,.85)}" +
     ".oagr-dot{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}";
 
@@ -5704,36 +5708,47 @@
       // A grown ally already lives in home base, beside the door, and greets the player in the first round. A tap on it
       // shows the five forms it came through, one after another, and then each on its own button. It is a Shellback, the first
       // family whose creature and ally are drawn. It belongs to the room: never in the store or the loadout, and it stays here.
-      var ELDER_FORMS = [["gas", "Cloud", "Every spirit begins as a cloud, the day you meet its daemon."], ["core", "Core", "Sat with twice, the cloud draws in to a core."],
-        ["hologram", "Hologram", "Sat with four times, the core opens into a likeness of its animal."], ["creature", "Creature", "Sat with six times, the likeness takes a body."],
-        ["ally", "Standing ally", "Sat with eight times, it stands beside you as an ally."]];
+      var ELDER_FORMS = [["gas", "Cloud", "Every spirit begins as a cloud, the day you meet its daemon.", "Cloud"], ["core", "Core", "Sat with twice, the cloud draws in to a core.", "Core"],
+        ["hologram", "Hologram", "Sat with four times, the core opens into a likeness of its animal.", "Hologram"], ["creature", "Creature", "Sat with six times, the likeness takes a body.", "Creature"],
+        ["ally", "Standing ally", "Sat with eight times, it stands beside you as an ally.", "Ally"]];
       var ELDER_AT = { x: -1.7, y: 0.9, z: -4.9 }, ELDER_Y = { creature: 0.42, ally: 0.42 }, ELDER_SIZE = 1.6, ELDER_FACES = new THREE.Vector3(0, 0, 0), ELDER_STEP_MS = 1600, elder = null, elderShow = null;
-      var elderBox = el("div", { class: "oagr-door oagr-load", "data-room-elder": "", style: "display:none" }); wrap.appendChild(elderBox);
+      var elderBox = el("div", { class: "oagr-door oagr-load oagr-elder", "data-room-elder": "", style: "display:none" }); wrap.appendChild(elderBox);
       function elderWear(stage) {
         var g = buildSpirit(THREE, "Shellback, an elder", lookup(DAEMONS, "protector")[3], { family: "protector", stage: stage, faceAt: ELDER_FACES }); // it faces the middle of the room, not the camera
         g.scale.setScalar(ELDER_SIZE); g.position.set(ELDER_AT.x, ELDER_Y[stage] || ELDER_AT.y, ELDER_AT.z); g.userData.level = 0.6;
         if (elder) scene.remove(elder.g);
-        elder = { g: g, stage: stage }; scene.add(g);
+        elder = { g: g, stage: stage }; scene.add(g); elderLabel();
       }
+      // The card stays small so the figure and the elder both stay in shot (Wendell, 21 October 2026: "Need to be able to minimize
+      // or x out of the menu so the player and the spirit can be in shot"): one line, the forms in one row of short buttons, a fold
+      // button that leaves only a chip (a tap opens it again), and an X that closes it. The elder's floating name shrinks while open.
+      var elderMin = false;
+      function elderLabel() { var l = elder && elder.g.userData.label, open = elderBox.style.display !== "none"; if (l) l.scale.set(open ? 1.2 : 2.4, (open ? 1.2 : 2.4) * 0.1875, 1); }
       function elderCard() {
         clearTimeout(elderShow); elderShow = null;
-        var cur = ELDER_FORMS.filter(function (f) { return f[0] === elder.stage; })[0];
-        var kids = [el("h2", { text: "Shellback, an elder" }),
-          P("I came through five forms, one after another, as someone sat with me. A spirit you meet begins where I began.", { "data-room-elder-says": "" }),
-          P(cur[2], { "data-room-elder-form": cur[0] }),
-          el("div", { class: "oagc-row" }, ELDER_FORMS.map(function (f) {
-            return btn(f[1], { "data-room-elder-stage": f[0], "aria-pressed": String(f[0] === elder.stage) }, function () { elderWear(f[0]); elderCard(); }, f[0] !== elder.stage);
-          })),
-          btn("Back to the room", { "data-room-elder-back": "" }, function () { elderClose(); })];
-        elderBox.innerHTML = ""; kids.forEach(function (k) { elderBox.appendChild(k); }); elderBox.style.display = "";
+        var cur = ELDER_FORMS.filter(function (f) { return f[0] === elder.stage; })[0], kids;
+        elderBox.classList.toggle("oagr-elder-min", elderMin);
+        if (elderMin) {
+          kids = [btn("Shellback: " + cur[1] + " \u25B4", { "data-room-elder-chip": "", "aria-label": "Open the elder's card" }, function () { elderMin = false; elderCard(); })];
+        } else {
+          kids = [el("div", { class: "oagr-elder-head" }, [el("h2", { text: "Shellback, an elder" }),
+              btn("\u2013", { "data-room-elder-min": "", "aria-label": "Fold the card down", title: "Fold" }, function () { elderMin = true; elderCard(); }, true),
+              btn("\u00D7", { "data-room-elder-x": "", "aria-label": "Close", title: "Close" }, function () { elderClose(); }, true)]),
+            P(cur[2], { "data-room-elder-says": "", "data-room-elder-form": cur[0] }),
+            el("div", { class: "oagc-row" }, ELDER_FORMS.map(function (f) {
+              return btn(f[3], { "data-room-elder-stage": f[0], "aria-pressed": String(f[0] === elder.stage), "aria-label": f[1] }, function () { elderWear(f[0]); elderCard(); }, f[0] !== elder.stage);
+            }))];
+        }
+        elderBox.innerHTML = ""; kids.forEach(function (k) { elderBox.appendChild(k); }); elderBox.style.display = ""; elderLabel();
       }
       // The five forms a breath apart, cloud to standing ally, and the card waits on the ally; with reduced motion it shows the ally.
+      // Folded, the chip keeps counting through the forms.
       function elderOpen() {
-        var n = 0;
+        var n = 0; elderMin = false;
         function next() { elderWear(ELDER_FORMS[n][0]); elderCard(); n++; if (n < ELDER_FORMS.length) elderShow = setTimeout(next, ELDER_STEP_MS); }
         if (reducedMotion) { elderWear("ally"); elderCard(); } else next();
       }
-      function elderClose() { clearTimeout(elderShow); elderShow = null; elderBox.style.display = "none"; if (elder.stage !== "ally") elderWear("ally"); }
+      function elderClose() { clearTimeout(elderShow); elderShow = null; elderMin = false; elderBox.style.display = "none"; if (elder.stage !== "ally") elderWear("ally"); elderLabel(); }
       function elderScreen() {
         if (!elder || !renderer) return null;
         var rc = renderer.domElement.getBoundingClientRect(), c = elder.g.position.clone(), e = c.clone();
