@@ -164,6 +164,7 @@ M = {
     'ceil': material('ceil', hexc('#1a1626')),
     'body': [material('body%d' % i, hexc(h)) for i, h in enumerate(['#3a2e52', '#2e3350', '#4a2f48', '#33284a'])],
     'trim': material('trim', hexc('#1c1724')),
+    'wall': material('wall', hexc('#241d33')),
     'panel': material('panel', hexc('#5b4a6e')),
     'gold_body': material('gold_body', hexc('#5a3b2c')),
     'gold': material('gold', hexc('#f2c55c'), emit=6.0),
@@ -176,32 +177,36 @@ ROAD_IMG = road_mist_image()
 CH1_SCREEN = material('ch1_screen', (1, 1, 1, 1), emit=1.6, image=ROAD_IMG)
 
 AISLE = 1.5            # cabinet fronts stand at x = +-AISLE
-PITCH = 1.05           # cabinet spacing along the corridor
-CH1_Y = 4 - 12 * PITCH # the Chapter 1 cabinet, on the left (on the cabinet grid)
+PITCH = 1.3            # cabinet spacing along the corridor: a 0.86 m cabinet and a gap of about 0.45 m (round 2, his note)
+CH1_Y = 4 - 9 * PITCH  # the Chapter 1 cabinet, on the left (on the cabinet grid)
 SCR_W, SCR_H, SCR_Z = 0.62, 0.465, 1.36
+UPPER = 0.95           # the upper body's height at scale 1; other cabinets stand 0.8 to 1.3 of it (round 2: varied heights)
 
 
 HALL = Mesh()
 
 
-def cabinet(side, y, ch1=False):
-    """One upright cabinet, box-modelled, its front facing the aisle. side -1 is left (x < 0)."""
+def cabinet(side, y, ch1=False, hs=1.0):
+    """One upright cabinet, box-modelled, its front facing the aisle. side -1 is left (x < 0). hs scales the upper body's
+    height (the base and control panel stay at hand height); the Chapter 1 cabinet keeps 1, so the hold frames it the same."""
     s = side
     body = M['gold_body'] if ch1 else random.choice(M['body'])
-    d, w = 0.75, 0.86
+    d, w, up = 0.75, 0.86, UPPER * hs
+    top = 1.0 + up                                                              # the upper body's top
+    sz = SCR_Z if ch1 else 1.0 + (SCR_Z - 1.0) * hs                             # screen centre, scaled with the body
     cx = s * (AISLE + d / 2)
     HALL.box((d, w, 1.0), (cx, y, 0.5), body)                                  # base
-    HALL.box((d * 0.8, w, 0.95), (cx + s * d * 0.1, y, 1.475), body)          # upper, set back
+    HALL.box((d * 0.8, w, up), (cx + s * d * 0.1, y, 1.0 + up / 2), body)     # upper, set back
     HALL.box((0.36, w + 0.02, 0.09), (s * (AISLE + 0.06), y, 1.02), M['panel'], rot=(0, s * -0.35, 0))  # control panel
-    HALL.box((d * 0.8, w + 0.06, 0.24), (cx + s * d * 0.1, y, 2.06), M['trim'])                         # marquee housing
+    HALL.box((d * 0.8, w + 0.06, 0.24), (cx + s * d * 0.1, y, top + 0.11), M['trim'])                   # marquee housing
     for dy in (-1, 1):
-        HALL.box((d + 0.02, 0.04, 2.1), (cx, y + dy * (w / 2 + 0.01), 1.05), M['trim'])                 # side rails
+        HALL.box((d + 0.02, 0.04, top + 0.15), (cx, y + dy * (w / 2 + 0.01), (top + 0.15) / 2), M['trim'])  # side rails
     rot = (math.pi / 2, 0, s * -math.pi / 2)                                    # vertical, facing the aisle
     fx = s * (AISLE + d * 0.1 - 0.02)
     scr = (Vector((fx - s * 0.002, y, SCR_Z)), Euler(rot)) if ch1 else None
-    HALL.quad((SCR_W, SCR_H), (fx - s * 0.002, y, SCR_Z), rot, CH1_SCREEN if ch1 else random.choice(SCREENS))
-    HALL.quad((SCR_W + 0.1, SCR_H + 0.1), (fx + s * 0.004, y, SCR_Z), rot, M['trim'])
-    HALL.quad((w * 0.92, 0.17), (fx - s * 0.002, y, 2.06), rot, M['gold'] if ch1 else random.choice(MARQ))
+    HALL.quad((SCR_W, SCR_H), (fx - s * 0.002, y, sz), rot, CH1_SCREEN if ch1 else random.choice(SCREENS))
+    HALL.quad((SCR_W + 0.1, SCR_H + 0.1), (fx + s * 0.004, y, sz), rot, M['trim'])
+    HALL.quad((w * 0.92, 0.17), (fx - s * 0.002, y, top + 0.11), rot, M['gold'] if ch1 else random.choice(MARQ))
     for b in range(2):                                                          # two buttons on the panel
         HALL.box((0.05, 0.05, 0.04), (s * (AISLE + 0.06), y + (b - 0.5) * 0.18, 1.08), random.choice(MARQ))
     if ch1:
@@ -216,15 +221,17 @@ def cabinet(side, y, ch1=False):
 
 HALL.box((8, 220, 0.1), (0, -100, -0.05), M['floor'])
 HALL.box((8, 220, 0.1), (0, -100, 3.2), M['ceil'])
+for side in (-1, 1):                                                            # back walls, seen through the gaps
+    HALL.box((0.1, 220, 3.2), (side * (AISLE + 0.95), -100, 1.6), M['wall'])
 STRIP = material('strip', hexc('#d9b8ff'), emit=2.5)
 ch1 = None
-for i in range(-4, 110):
+for i in range(-4, 89):                                                        # to y = -110, just short of the far glow
     y = 4 - i * PITCH
     for side in (-1, 1):
         is1 = side == -1 and abs(y - CH1_Y) < 1e-6
-        s = cabinet(side, y, ch1=is1)
+        s = cabinet(side, y, ch1=is1, hs=1.0 if is1 else random.choice((0.8, 0.88, 0.96, 1.06, 1.16, 1.3)))
         if is1: ch1 = s
-    if i % 6 == 0:                                                              # strip lights overhead, receding
+    if i % 4 == 0:                                                              # strip lights overhead, receding
         HALL.box((0.08, 0.9, 0.03), (0, y, 3.13), STRIP)
 if ch1 is None:                                                                 # snap CH1_Y onto the grid
     raise SystemExit('CH1_Y is not on the cabinet grid')
