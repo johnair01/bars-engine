@@ -8,11 +8,15 @@ Two shots, low poly, dusk palette, every mesh box-modelled here (no downloaded p
   shot two (5 s)  the camera pushes into that screen (the white-out is added by the encoder), and comes out on a misty
                   road toward the settlement's south gate.
 
+Round 3 (his note on round 2): each cabinet height is a cabinet type with its own screen shape (TYPES: cocktail, cabaret,
+candy, upright, vertical shooter, widescreen deluxe), and every control panel carries ball-top joysticks and round buttons.
+
 Fog is a shader term (view distance through an exponential), not a volume, so the CPU render stays cheap.
 Renders with Cycles on the CPU (EEVEE needs a GPU, see ../../README.md "Still true").
 
   /home/user/blenv/bin/python arrival.py OUT --still            # one corridor still, OUT/still.png (look at it first)
   /home/user/blenv/bin/python arrival.py OUT [--step N]         # every Nth frame of both shots, then posters and screen-rect.json
+  /home/user/blenv/bin/python arrival.py OUT --still --side Y  # square-on to the right-hand wall at y = Y, to check the types
   bash encode.sh OUT                                            # MP4 (H.264) and WebM per shot, under 3 MB each
 
 OUT gets shot1/0001.png..., shot2/0001.png..., poster-shot1-first.png, poster-shot1-last.png, poster-shot2-first.png,
@@ -23,7 +27,7 @@ import json, math, os, random, shutil, sys
 
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
-from mathutils import Euler, Vector
+from mathutils import Euler, Matrix, Vector
 
 ARGS = sys.argv[1:]
 OUT = os.path.abspath(ARGS[0] if ARGS and not ARGS[0].startswith('--') else '/tmp/arcade')
@@ -97,7 +101,7 @@ class Mesh:
         return self.mats.index(mat)
 
     def _add(self, verts, faces, loc, rot, mat):
-        R = Euler(rot).to_matrix(); o = len(self.v); mi = self._mat(mat)
+        R = rot if isinstance(rot, Matrix) else Euler(rot).to_matrix(); o = len(self.v); mi = self._mat(mat)
         self.v += [tuple(R @ Vector(p) + Vector(loc)) for p in verts]
         self.f += [tuple(o + i for i in fc) for fc in faces]; self.m += [mi] * len(faces)
 
@@ -113,6 +117,22 @@ class Mesh:
     def cone(self, r, h, loc, mat, n=6):
         vs = [(r * math.cos(2 * math.pi * i / n), r * math.sin(2 * math.pi * i / n), -h / 2) for i in range(n)] + [(0, 0, h / 2)]
         self._add(vs, [tuple(range(n - 1, -1, -1))] + [(i, (i + 1) % n, n) for i in range(n)], loc, (0, 0, 0), mat)
+
+    def cyl(self, r, h, loc, mat, rot=(0, 0, 0), n=12):
+        """A prism standing on local z (its base at loc), for buttons, stick shafts and base plates."""
+        vs = [(r * math.cos(2 * math.pi * i / n), r * math.sin(2 * math.pi * i / n), z) for z in (0, h) for i in range(n)]
+        fs = [tuple(range(n - 1, -1, -1)), tuple(range(n, 2 * n))] + [(i, (i + 1) % n, n + (i + 1) % n, n + i) for i in range(n)]
+        self._add(vs, fs, loc, rot, mat)
+
+    def ball(self, r, loc, mat, n=10, rings=6):
+        vs = [(0, 0, -r)] + [(r * math.sin(math.pi * k / rings) * math.cos(2 * math.pi * i / n), r * math.sin(math.pi * k / rings) * math.sin(2 * math.pi * i / n),
+                               -r * math.cos(math.pi * k / rings)) for k in range(1, rings) for i in range(n)] + [(0, 0, r)]
+        top = len(vs) - 1; fs = [(0, (i + 1) % n + 1, i + 1) for i in range(n)]
+        for k in range(rings - 2):
+            a, b = 1 + k * n, 1 + (k + 1) * n
+            fs += [(a + i, a + (i + 1) % n, b + (i + 1) % n, b + i) for i in range(n)]
+        fs += [(top - n + i, top - n + (i + 1) % n, top) for i in range(n)]
+        self._add(vs, fs, loc, (0, 0, 0), mat)
 
     def finish(self, name):
         me = bpy.data.meshes.new(name); me.from_pydata(self.v, [], self.f)
@@ -180,37 +200,130 @@ AISLE = 1.5            # cabinet fronts stand at x = +-AISLE
 PITCH = 1.3            # cabinet spacing along the corridor: a 0.86 m cabinet and a gap of about 0.45 m (round 2, his note)
 CH1_Y = 4 - 9 * PITCH  # the Chapter 1 cabinet, on the left (on the cabinet grid)
 SCR_W, SCR_H, SCR_Z = 0.62, 0.465, 1.36
-UPPER = 0.95           # the upper body's height at scale 1; other cabinets stand 0.8 to 1.3 of it (round 2: varied heights)
 
 
 HALL = Mesh()
 
 
-def cabinet(side, y, ch1=False, hs=1.0):
-    """One upright cabinet, box-modelled, its front facing the aisle. side -1 is left (x < 0). hs scales the upper body's
-    height (the base and control panel stay at hand height); the Chapter 1 cabinet keeps 1, so the hold frames it the same."""
-    s = side
+# Cabinet types (round 3, his note: "the height change needs to also have screen shapes to match the new heights"). Proportions
+# from real cabinets, scaled up a little to stand beside the Chapter 1 cabinet: a cocktail table (0.76 x 0.53 x 0.94 m, the
+# screen face-up under glass), a cabaret or mini upright (about 1.5 m, a 13-19 in 4:3 screen), a Japanese candy cabinet (Sega
+# Astro City, 1445 x 750 x 905 mm, a big 4:3 screen leaning well back, a rounded top, played sitting), the standard upright
+# (1.73 x 0.61 x 0.84 m, 4:3), the vertical shooter (Galaga, 1942: the same monitor turned to 3:4 portrait) and a later deluxe
+# (16:9 widescreen, a big lit topper). Sources: Arcade Otaku wiki (Astro City), Prime Time Amusements (upright), Betson
+# (cocktail), ArcadeControls forum (mini); the vertical and deluxe sizes are estimates.
+#   w, d   width along the corridor, depth          base, top   the lower body's top (hand height), the upper body's top
+#   scr    screen width, height, centre height, tilt back from vertical in degrees (90: face up)
+#   marq   marquee height (0: none)                 players, buttons   per cabinet, per player
+TYPES = {
+    'cocktail': dict(w=0.62, d=0.80, base=0.76, top=0.76, scr=(0.46, 0.345, 0.0, 90), marq=0, players=2, buttons=2),
+    'cabaret': dict(w=0.58, d=0.66, base=0.92, top=1.58, scr=(0.36, 0.27, 1.27, 12), marq=0.14, players=1, buttons=3),
+    'candy': dict(w=0.86, d=0.88, base=0.74, top=1.56, scr=(0.62, 0.465, 1.13, 24), marq=0.0, players=2, buttons=6),
+    'upright': dict(w=0.80, d=0.84, base=1.0, top=1.95, scr=(0.56, 0.42, 1.40, 12), marq=0.24, players=2, buttons=3),
+    'vertical': dict(w=0.70, d=0.82, base=1.0, top=2.06, scr=(0.42, 0.56, 1.47, 12), marq=0.22, players=1, buttons=2),
+    'deluxe': dict(w=1.04, d=0.88, base=1.0, top=2.30, scr=(0.88, 0.495, 1.64, 6), marq=0.30, players=2, buttons=4),
+}
+CH1_TYPE = dict(w=0.86, d=0.75, base=1.0, top=1.95, scr=(SCR_W, SCR_H, SCR_Z, 0), marq=0.24, players=2, buttons=3)
+BUTTON = [material('button%d' % i, hexc(h), emit=0.9) for i, h in enumerate(SCREEN_HUES + ['#f4f0e8'])]
+M['metal'] = material('metal', hexc('#9a98a6'), rough=0.3)
+M['coin'] = material('coin', hexc('#ff5a3c'), emit=4.0)
+M['stool'] = material('stool', hexc('#7a2e3a'), rough=0.6)
+
+
+def controls(P, R, w, players, buttons, s):
+    """Joysticks and buttons on a control panel whose top centre is P and whose rotation is R (local z: the panel's normal,
+    local x: the cabinet's depth, local y: along the corridor). Each player has a ball-top stick on a shaft and a base plate,
+    then round buttons in a row (or two rows of three, the Japanese layout); round 2's two square buttons read as blocks."""
+    at = lambda u, v, h=0.0: P + R @ Vector((u, v, h))
+    span = w / players
+    for p in range(players):
+        vc = -w / 2 + span * (p + 0.5)
+        stick = vc - span * 0.26
+        HALL.box((0.075, 0.075, 0.006), at(0, stick, 0.003), M['trim'], rot=R)                   # base plate
+        HALL.cyl(0.021, 0.004, at(0, stick, 0.006), M['trim'], rot=R)                            # dust washer
+        HALL.cyl(0.0065, 0.075, at(0, stick, 0.006), M['metal'], rot=R, n=8)                     # shaft
+        HALL.ball(0.021, at(0, stick, 0.098), random.choice(BUTTON[:6]))                         # ball top
+        rows = 2 if buttons >= 6 else 1; per = buttons // rows
+        hue = random.choice(BUTTON)
+        for r in range(rows):
+            for k in range(per):
+                v = stick + 0.085 + k * 0.042 + r * 0.012                                        # rows offset, so they arc
+                u = (s * 0.023 * (1 - 2 * r)) if rows == 2 else 0.0
+                u += s * 0.006 * (1 - abs(k - (per - 1) / 2))                                     # a gentle arc in each row
+                HALL.cyl(0.0195, 0.006, at(u, v, 0), M['trim'], rot=R)                            # bezel ring
+                HALL.cyl(0.0152, 0.016, at(u, v, 0.004), hue if r == 0 or rows == 1 else BUTTON[(BUTTON.index(hue) + 1) % len(BUTTON)], rot=R)
+
+
+def cabinet(side, y, ch1=False, kind=None):
+    """One cabinet of a type in TYPES, box-modelled, its front facing the aisle. side -1 is left (x < 0). The Chapter 1
+    cabinet keeps round 1's upright with its screen square-on, so the hold frames it the same and screen-rect stays put."""
+    s = side; T = CH1_TYPE if ch1 else TYPES[kind]
     body = M['gold_body'] if ch1 else random.choice(M['body'])
-    d, w, up = 0.75, 0.86, UPPER * hs
-    top = 1.0 + up                                                              # the upper body's top
-    sz = SCR_Z if ch1 else 1.0 + (SCR_Z - 1.0) * hs                             # screen centre, scaled with the body
+    w, d, base, top, marq = T['w'], T['d'], T['base'], T['top'], T['marq']
+    sw, sh, sz, tilt = T['scr']
     cx = s * (AISLE + d / 2)
-    HALL.box((d, w, 1.0), (cx, y, 0.5), body)                                  # base
-    HALL.box((d * 0.8, w, up), (cx + s * d * 0.1, y, 1.0 + up / 2), body)     # upper, set back
-    HALL.box((0.36, w + 0.02, 0.09), (s * (AISLE + 0.06), y, 1.02), M['panel'], rot=(0, s * -0.35, 0))  # control panel
-    HALL.box((d * 0.8, w + 0.06, 0.24), (cx + s * d * 0.1, y, top + 0.11), M['trim'])                   # marquee housing
-    for dy in (-1, 1):
-        HALL.box((d + 0.02, 0.04, top + 0.15), (cx, y + dy * (w / 2 + 0.01), (top + 0.15) / 2), M['trim'])  # side rails
+    face = s * (AISLE + 0.2 * d)                                                 # the upper body's front plane
     rot = (math.pi / 2, 0, s * -math.pi / 2)                                    # vertical, facing the aisle
-    fx = s * (AISLE + d * 0.1 - 0.02)
-    scr = (Vector((fx - s * 0.002, y, SCR_Z)), Euler(rot)) if ch1 else None
-    HALL.quad((SCR_W, SCR_H), (fx - s * 0.002, y, sz), rot, CH1_SCREEN if ch1 else random.choice(SCREENS))
-    HALL.quad((SCR_W + 0.1, SCR_H + 0.1), (fx + s * 0.004, y, sz), rot, M['trim'])
-    HALL.quad((w * 0.92, 0.17), (fx - s * 0.002, y, top + 0.11), rot, M['gold'] if ch1 else random.choice(MARQ))
-    for b in range(2):                                                          # two buttons on the panel
-        HALL.box((0.05, 0.05, 0.04), (s * (AISLE + 0.06), y + (b - 0.5) * 0.18, 1.08), random.choice(MARQ))
+    R = Matrix.Rotation(s * -math.radians(tilt), 3, 'Y') @ Euler(rot).to_matrix()
+    n = R @ Vector((0, 0, 1))                                                   # the screen's normal, toward the player
+    screen_mat = CH1_SCREEN if ch1 else random.choice(SCREENS)
+    scr = None
+    if kind == 'cocktail':
+        HALL.box((d, w, base), (cx, y, base / 2), body)
+        HALL.box((d + 0.04, w + 0.04, 0.025), (cx, y, base + 0.0125), M['trim'])                # glass top and its rim
+        HALL.quad((sw, sh), (cx, y, base + 0.027), R, screen_mat)
+        for e in (-1, 1):                                                                       # a player at each end
+            ey = y + e * (w / 2 + 0.07)
+            HALL.box((0.30, 0.14, 0.07), (cx, ey, base - 0.06), M['panel'])
+            Rp = Matrix.Rotation(e * 0.25, 3, 'X')
+            controls(Vector((cx, ey, base - 0.025)), Rp @ Matrix.Rotation(math.pi / 2, 3, 'Z'), 0.30, 1, 2, s)
+        HALL.box((0.02, 0.18, 0.22), (s * (AISLE - 0.005), y, 0.36), M['trim'])                 # coin door on the aisle side
+        for dz in (-0.04, 0.04): HALL.box((0.012, 0.02, 0.04), (s * (AISLE - 0.016), y + dz, 0.4), M['coin'])
+        return None
+    HALL.box((d, w, base), (cx, y, base / 2), body)                                            # base
+    cap = 0.2 if kind == 'candy' else 0.0                                       # the candy cabinet's rounded top, its radius
+    HALL.box((d * 0.8, w, top - base - cap), (cx + s * d * 0.1, y, (base + top - cap) / 2), body)   # upper, set back
+    if cap:
+        HALL.box((d * 0.8 - cap, w, cap), (cx + s * (d * 0.1 + cap / 2), y, top - cap / 2), body)
+        HALL.cyl(cap, w, (face + s * cap, y - w / 2, top - cap), body, rot=(-math.pi / 2, 0, 0), n=16)
+    HALL.box((0.02, w + 0.01, 0.1), (s * (AISLE - 0.005), y, 0.05), M['trim'])                # kick plate
+    door_z = min(0.42, base * 0.45)
+    HALL.box((0.02, 0.22, 0.28), (s * (AISLE - 0.005), y, door_z), M['trim'])                 # coin door
+    for dy in (-0.05, 0.05): HALL.box((0.012, 0.024, 0.045), (s * (AISLE - 0.016), y + dy, door_z + 0.06), M['coin'])
+    # the screen: square-on for Chapter 1 (round 1's place), otherwise leaning back by its type's tilt, standing proud of the
+    # body by enough that its top edge clears the front; a bezel slab behind it and a chin under it
     if ch1:
-        bpy.ops.object.text_add(location=(fx - s * 0.01, y, 2.025), rotation=rot)
+        c = Vector((s * (AISLE + d * 0.1 - 0.02) - s * 0.002, y, sz))
+        scr = (c.copy(), Euler(rot))
+    else:
+        c = Vector((face - s * (0.03 + (sh / 2 + 0.05) * math.sin(math.radians(tilt))), y, sz))
+    HALL.quad((sw, sh), c, R, screen_mat)
+    HALL.box((sw + 0.1, sh + 0.1, 0.05), c - n * 0.027, M['trim'], rot=R)
+    low = c - R @ Vector((0, sh / 2 + 0.05, 0))                                                # the bezel's bottom edge
+    if low.z > base + 0.02:
+        HALL.box((abs(face - low.x) + 0.02, w * 0.96, low.z - base), ((face + low.x) / 2, y, (base + low.z) / 2), body)
+    # the top: a marquee housing over the screen (lit), or for the candy cabinet a rounded cap with a thin lit strip
+    if kind == 'candy':
+        a = math.radians(40)                                                    # a thin lit strip on the curve
+        HALL.quad((w * 0.8, 0.07), (face + s * cap * (1 - math.cos(a)) - s * 0.004, y, top - cap + cap * math.sin(a)),
+                  Matrix.Rotation(s * -a, 3, 'Y') @ Euler(rot).to_matrix(),
+                  random.choice(MARQ))
+        HALL.cyl(0.18, 0.48, (s * (AISLE - 0.5), y, 0), M['stool'], n=10)                    # the stool it is played from
+    elif marq:
+        hx = cx + s * d * 0.1 - s * 0.03
+        HALL.box((d * 0.8 + 0.06, w + 0.06, marq), (hx, y, top + marq / 2 - 0.01), M['trim'])
+        mx = (s * (AISLE + d * 0.1 - 0.02) - s * 0.002) if ch1 else hx - s * (d * 0.4 + 0.032)
+        HALL.quad((w * 0.92, marq * 0.7), (mx, y, top + marq / 2 - 0.01), rot, M['gold'] if ch1 else random.choice(MARQ))
+        for dy in (-1, 1):
+            HALL.box((d + 0.02, 0.04, top + marq * 0.6), (cx, y + dy * (w / 2 + 0.01), (top + marq * 0.6) / 2), M['trim'])  # side rails
+    # the control panel, sloped toward the player, with sticks and round buttons
+    pd = 0.42 if kind == 'candy' else 0.36
+    Rp = Euler((0, s * (-0.22 if kind == 'candy' else -0.35), 0)).to_matrix()
+    pc = Vector((s * (AISLE + 0.06), y, base + 0.02))
+    HALL.box((pd, w + 0.02, 0.09), pc, M['panel'], rot=Rp)
+    controls(pc + Rp @ Vector((0, 0, 0.045)), Rp, w, T['players'], T['buttons'], s)
+    if ch1:
+        bpy.ops.object.text_add(location=(s * (AISLE + d * 0.1 - 0.02) - s * 0.01, y, 2.025), rotation=rot)
         t = bpy.context.object; t.data.body = 'CHAPTER 1'; t.data.align_x = 'CENTER'; t.data.size = 0.11
         t.data.extrude = 0.004; t.data.materials.append(M['gold_text'])
         # a warm lamp hung above it, so the eye finds it from far off
@@ -229,7 +342,7 @@ for i in range(-4, 89):                                                        #
     y = 4 - i * PITCH
     for side in (-1, 1):
         is1 = side == -1 and abs(y - CH1_Y) < 1e-6
-        s = cabinet(side, y, ch1=is1, hs=1.0 if is1 else random.choice((0.8, 0.88, 0.96, 1.06, 1.16, 1.3)))
+        s = cabinet(side, y, ch1=is1, kind=None if is1 else random.choice(list(TYPES)))
         if is1: ch1 = s
     if i % 4 == 0:                                                              # strip lights overhead, receding
         HALL.box((0.08, 0.9, 0.03), (0, y, 3.13), STRIP)
@@ -345,7 +458,9 @@ os.makedirs(OUT, exist_ok=True)
 if STILL:
     f = int(ARGS[ARGS.index('--frame') + 1]) if '--frame' in ARGS else int(2.5 * FPS)
     shot = ARGS[ARGS.index('--shot') + 1] if '--shot' in ARGS else '1'
-    if shot == '1': set_pose(*shot1_pose(f))
+    if '--side' in ARGS:                                   # checking the cabinet types: square-on to the right wall
+        cam.data.lens = 18; set_pose(Vector((-1.2, float(ARGS[ARGS.index('--side') + 1]), 1.4)), Vector((math.radians(84), 0, math.radians(-90))))
+    elif shot == '1': set_pose(*shot1_pose(f))
     else: set_pose(*shot2_pose(f), road=f >= PUSH)
     render(os.path.join(OUT, 'still.png'))
     print('STILL', os.path.join(OUT, 'still.png'), json.dumps(screen_rect()))
