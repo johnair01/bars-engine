@@ -66,6 +66,7 @@ export default defineConfig({
       'src/lib/ally-campaign/__tests__/disclosure-invariant.test.ts',
       'src/lib/ally-campaign/__tests__/attribution.test.ts',
       'src/lib/hosted-campaigns/__tests__/campaigns.test.ts',
+      'src/lib/hosted-campaigns/__tests__/intake.test.ts',
       'src/lib/open-up/__tests__/events.test.ts',
       'src/lib/open-up/__tests__/outbound.test.ts',
       'src/lib/clean-up/__tests__/check-content.test.ts',
