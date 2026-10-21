@@ -5215,9 +5215,11 @@
       }
       // Growing (boards gs-two-acts, gs-same-charge-grows): a W.A.V.E. worked on a charge one of your spirits carries (the
       // spirit taken home, or a summoned spirit of the same name) adds one sitting to it, and it unfolds in front of you if that
-      // crosses a stage (sic-unfold-by-sitting). It never makes a second spirit. Counted once a charge.
+      // crosses a stage (sic-unfold-by-sitting). It never makes a second spirit. Counted once a charge. Only a charge you keep
+      // grows: one let go by the door leaves as it came (Wendell, 21 October 2026: "when I finished and released the spirit it
+      // evolved and stayed in the room instead of being released").
       function grow(c) {
-        if (c.grownTo != null) return;
+        if (c.grownTo != null || c.push !== "toward") return;
         if (!c.spirit && SPIRIT_STORE && c.name.trim()) { // a charge you have summoned before, by its name
           var nm = c.name.trim().toLowerCase();
           try { c.spirit = SPIRIT_STORE.all().filter(function (t) { return t.family === "charge" && (t.name || "").trim().toLowerCase() === nm; })[0] || null; } catch (e) { c.spirit = null; }
@@ -5733,9 +5735,11 @@
         R.rested = true; R.doorWant = 0; go("end");
       }
       // What a worked charge leaves as (boards gs-two-acts, gs-door-gas): one it grew is that spirit, with its sittings one up and
-      // no new entry in oag.spirits.v1; any other is a newly summoned spirit, stored once, at gas (0 sittings).
+      // no new entry in oag.spirits.v1; any other kept charge is a newly summoned spirit, stored once, at gas (0 sittings). One let
+      // go by the door is not kept: nothing is stored or grown, and its light stays on the threshold.
       function spiritOf(c, n) {
         var o = { name: (c.name || "").trim() || "A charge", element: c.element || null, hex: spiritHex(c.element), lighter: c.push === "away", polarity: c.polarity || 0 };
+        if (c.push !== "toward") return o;
         grow(c);
         if (c.spirit) { o.id = c.spirit.id; o.family = c.spirit.family || "charge"; o.sittings = c.grownTo; o.name = c.spirit.name || o.name; o.element = c.spirit.element || o.element; o.hex = spiritHex(o.element); }
         else { o.id = "charge-" + Date.now().toString(36) + "-" + n; o.family = "charge"; o.sittings = 0; o.summoned = true; }
