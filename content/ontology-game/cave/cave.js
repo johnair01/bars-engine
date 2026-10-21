@@ -2844,11 +2844,15 @@
       var m = Math.hypot(x, z);
       var fx = lookAt.x - camPos.x, fz = lookAt.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       var wk = state.walk;
-      // In the hall and the centre the stick's forward is the camera's as the thumb went down, and it holds while the thumb stays
-      // (home base's R.stickFrame, 19 October 2026): the camera comes round behind the figure without bending the way it walks.
+      // In the hall and the centre the stick's forward is the camera's as the thumb went down, held while the thumb stays (home
+      // base's R.stickFrame, 19 October 2026), and carried round with the ring: kept as a turn off the ring's way, so up held still
+      // walks round the ring to the next door, and the camera can come round behind the figure without bending the way it walks.
       // A look turned by hand turns it too (walkStep). In a tunnel the camera turns along the way, so the stick keeps the live view.
-      if (m >= 0.15 && wk && wk.route.doors) { if (state.stickYaw == null) state.stickYaw = Math.atan2(fx, fz); fx = Math.sin(state.stickYaw); fz = Math.cos(state.stickYaw); }
-      else state.stickYaw = null; // the thumb is off: the next push takes the camera's forward afresh
+      if (m >= 0.15 && wk && wk.route.doors) {
+        var ringYaw = yawFacing(at(wk.route, wk.s));
+        if (state.stickOff == null) state.stickOff = wrapAng(Math.atan2(fx, fz) - ringYaw);
+        state.stickYaw = ringYaw + state.stickOff; fx = Math.sin(state.stickYaw); fz = Math.cos(state.stickYaw);
+      } else state.stickYaw = state.stickOff = null; // the thumb is off: the next push takes the camera's forward afresh
       if (m >= 0.15) { if (wk) wk.goTo = null; } // the stick or a key takes over from a click
       else if (wk && wk.goTo) { // a click on the floor walks there (for playing at a computer)
         var g = wk.goTo, p = figureAt(wk), dx = g.x - p.x, dz = g.z - p.z, d = Math.hypot(dx, dz);
@@ -2897,7 +2901,7 @@
         // as ahead, and the turn is kept in the look so the view does not jump; it eases back behind the figure as it walks.
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
         if (state.look.yaw && !state.peek) { // a look turned by hand becomes the way the camera follows, and the stick's forward with it
-          wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); if (state.stickYaw != null) state.stickYaw = wrapAng(state.stickYaw + state.look.yaw); state.look.yaw = 0;
+          wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); if (state.stickOff != null) state.stickOff = wrapAng(state.stickOff + state.look.yaw); state.look.yaw = 0;
         }
         // The figure faces the way the stick points (Wendell, 2026-10-21: "The player should face in the direction of the stick"),
         // not the way it slid along a wall or round a stone.
@@ -2932,9 +2936,11 @@
           // round the ring of the hall and the centre to the next door; across the way the thumb goes sideways. (Turning toward
           // wherever the figure went made a held diagonal chase itself round the hall's ring into its walls.)
           // In the hall and the centre, ring and open middle alike, it comes round behind the way the figure faces, which is the
-          // stick's way; the stick's forward is held while the thumb stays, so the turn does not chase itself round the ring. (The
-          // turn along the ring flipped half round when a held frame took the walk backward along it, round 1, 2026-10-21.)
+          // stick's way; the stick's forward is held off the ring's way while the thumb stays, so the turn does not chase itself
+          // round the ring. (The turn along the ring flipped half round when a frame held still in the world took the walk backward
+          // along it, round 1, 2026-10-21.)
           if (r.doors) {
+            wk.camYaw += wrapAng(yawFacing(at(r, wk.s)) - yawFacing(a)) * autoK; // it rides round with the ring, as the stick's forward does
             if (w.fwd > 0.3) wk.camYaw += wrapAng(wk.yaw - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * autoK;
           } else if (w.fwd > 0.3) {
             if (Math.abs(along) > 0.2 && !deadEnd) wk.dir = along > 0 ? 1 : -1;

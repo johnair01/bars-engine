@@ -52,6 +52,12 @@ await page.keyboard.down('ArrowLeft'); await page.waitForTimeout(800);
 const c1 = await C(() => ({ yaw: window.__oagCave.state.walk.yaw, frame: window.__oagCave.state.stickYaw }));
 await page.keyboard.up('ArrowLeft');
 ok(c1.frame != null && Math.abs(wrapA(c1.yaw - (c1.frame + Math.PI / 2))) < 0.35, `left on the stick faces left of the camera (${c1.frame == null ? 'no frame' : wrapA(c1.yaw - c1.frame).toFixed(2)}, want 1.57)`);
+// 4. up held: the figure still walks round the ring (the levels walk to the next door this way), with the camera behind it
+const u0 = await C(() => window.__oagCave.free());
+await page.keyboard.down('ArrowUp'); await page.waitForTimeout(3000);
+const u1 = await C(() => window.__oagCave.free());
+await page.keyboard.up('ArrowUp');
+ok(Math.abs(u1.s - u0.s) > 8 && Math.abs(wrapA(u1.camYaw - u1.yaw)) < 0.6, `up held walks round the ring (${(u1.s - u0.s).toFixed(1)} along it, camera ${wrapA(u1.camYaw - u1.yaw).toFixed(2)} off the figure's back)`);
 await page.screenshot({ path: process.env.SHOT || '/dev/null' }).catch(() => {});
 ok(!errs.length, 'no page errors' + (errs.length ? ': ' + errs.slice(0, 3).join(' | ') : ''));
 console.log(`${fails ? 'FAIL' : 'PASS'}: ${fails} failed`);
