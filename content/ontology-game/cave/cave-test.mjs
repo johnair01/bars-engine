@@ -1774,6 +1774,8 @@ const roomKeeps = async (goal, move) => { // Toward it: the 3-2-1 skipped, one n
   return label;
 };
 const roomForm = () => C(() => window.__oagCave.room.form());
+const seenOf = (w) => C((w) => window.__oagCave.room.seen(w), w); // where the form is on the 390x844 screen, and how opaque
+const inView = (s) => s && s.visible && s.inFrame && s.aboveCard && s.opacity > 0.3;
 const purse = () => C(() => window.__oagSpiritStore.vibeulons());
 const knowsIt = async () => { // the spirit come home: Acknowledge already knows it, by its name and feeling
   await page.locator('[data-room-texture="tension"]').click();
@@ -1792,7 +1794,7 @@ ok(!gas1.blob && gas1.stage === 'gas' && gas1.drawn === 'gas' && gas1.motes > 10
 await page.screenshot({ path: SHOTS + '/room-door-gas.png' });
 // Defined by the work (board gw-form-by-step): it comes in an occluded gas, and each step done defines it by an eighth
 const d0 = await roomForm();
-ok(d0.credited === 1 / 8 && d0.drawn === 'gas' && d0.spread > 1 && d0.veil > 0, 'a new charge comes in as an occluded gas: welcomed only, its motes spread wide behind a haze: ' + JSON.stringify(d0));
+ok(d0.credited === 1 / 8 && d0.drawn === 'gas' && d0.spread > 0.5 && d0.veil > 0, 'a new charge comes in as an occluded gas: welcomed only, its motes spread wide behind a haze: ' + JSON.stringify(d0));
 await page.locator('[data-room-texture="numbness"]').click();
 await page.locator('[data-room-next]').click();
 const d1 = await roomForm();
@@ -1859,22 +1861,19 @@ await roomCheckin('left');
 await leaveHome();
 const s3 = await chargeSpirits();
 ok(s3.length === 1 && s3[0].n === 1, 'no spirit is stored for it, and Old Tide is untouched: ' + JSON.stringify(s3));
+// A spirit of yours come home comes in as a gas like any charge, and is defined step by step (Wendell, 21 October 2026: "it still
+// showed up as a creature instead of the gas when it entered the room"); it takes its stage only when it is fed
 await page.goto(B + '/ontology-game/cave?door=4#go=home&grown=7');
 await page.locator('[data-room-welcome]').waitFor({ timeout: 20000 });
 await page.waitForTimeout(1500);
 await page.locator('[data-room-welcome]').click();
-const feet = [];
-for (let i = 0; i < 400 && !(await page.locator('[data-room-texture]').first().isVisible()); i++) { const f = await roomForm(); if (f.drawn === 'creature' && f.low != null) feet.push([+f.low.toFixed(3), f.walking]); await page.waitForTimeout(60); }
-// From its first step in (the unfolding behind the closed door settles its body first): standing, its lowest point is on the
-// floor (within 0.03); walking, it never sinks and lifts no more than its step (STEP_UP 0.05 in cave.js)
-feet.splice(0, Math.max(0, feet.findIndex((f) => f[1])));
-const worstStand = feet.filter((f) => !f[1]).reduce((m, f) => Math.max(m, Math.abs(f[0])), 0), walkLows = feet.filter((f) => f[1]).map((f) => f[0]);
-ok(feet.length >= 10 && worstStand < 0.03 && walkLows.length > 0 && walkLows.every((l) => l > -0.03 && l < 0.06), `the creature walks in on the floor: standing within 0.03 of it (worst ${worstStand}), walking between -0.03 and its 0.05 step (${Math.min(...walkLows)} to ${Math.max(...walkLows)}), in ${feet.length} samples, ${walkLows.length} walking`);
+await page.waitForTimeout(2600);
+await page.screenshot({ path: SHOTS + '/room-door-grown-gas.png' });
 await page.locator('[data-room-texture]').first().waitFor({ timeout: 30000 });
-await page.waitForFunction(() => { const u = window.__oagCave.room.state.all[0].fig.userData; return u.form && u.form.userData.form.drawn === 'creature'; }, null, { timeout: 15000 }).catch(() => {});
-const cr = await chargeForm();
-ok(cr.stage === 'creature' && cr.drawn === 'creature', 'a spirit brought home at 7 sittings comes in by the door as the creature it is: ' + JSON.stringify(cr));
-await page.screenshot({ path: SHOTS + '/room-door-creature.png' });
+await page.waitForTimeout(1500);
+const cr = await chargeForm(), dg = await roomForm(), sw = await seenOf();
+ok(!cr.blob && cr.stage === 'gas' && cr.drawn === 'gas' && dg.credited === 1 / 8, 'a spirit brought home at 7 sittings comes in by the door as a gas, welcomed only, like any charge: ' + JSON.stringify(cr) + ' ' + dg.credited);
+ok(inView(sw), 'at Witness it is in view on a phone, above the card, its motes plain to see: ' + JSON.stringify(sw && { ndc: sw.ndc.map((v) => +v.toFixed(2)), opacity: +sw.opacity.toFixed(2), y: Math.round(sw.y), card: Math.round(sw.card) }));
 const n3 = (await C(() => window.__oagSpiritStore.all().length));
 await knowsIt();
 await page.locator('[data-room-goal]').fill('to rest');
@@ -1882,7 +1881,7 @@ await page.locator('[data-room-push="away"]').click();
 await page.locator('[data-room-line]').fill('thank you');
 await page.locator('[data-room-exhale]').click();
 await page.locator('[data-room-gone]').waitFor({ timeout: 40000 });
-ok((await chargeForm()).drawn === 'creature', 'let go by the door, it leaves as the creature it came in as; it does not grow');
+ok((await chargeForm()).drawn === 'gas', 'let go by the door, it leaves as the gas it came in as; it does not grow');
 await page.locator('[data-room-next]').click();
 await roomCheckin('left');
 await leaveHome();
@@ -1898,16 +1897,103 @@ await page.locator('[data-cave-321-skip]').click();
 await page.locator('[data-room-move]').fill('sit by the window');
 await page.locator('[data-room-move-done]').click();
 await page.locator('[data-room-kept]').waitFor({ timeout: 15000 });
+await page.waitForTimeout(3500); // it walks to its place by the wall
+const sk = await seenOf();
+ok(inView(sk) && sk.drawn === 'gas', 'on the kept card it stands by the wall in view, still the gas it came in as: ' + JSON.stringify(sk && { ndc: sk.ndc.map((v) => +v.toFixed(2)), opacity: +sk.opacity.toFixed(2), world: sk.world.map((v) => +v.toFixed(1)) }));
 ok((await page.locator('[data-room-keep="spirit"]').textContent()) === 'Feed Humming Ember', 'for a charge one of your spirits carries, the kept card offers to feed that spirit');
 await page.locator('[data-room-keep="spirit"]').click();
-await roomCheckin('stayed');
 await page.waitForFunction(() => { const u = window.__oagCave.room.state.all[0].fig.userData; return u.form.userData.form.drawn === 'ally'; }, null, { timeout: 15000 }).catch(() => {});
-ok((await chargeForm()).drawn === 'ally', 'kept in the room and worked through, it unfolds into an ally where it stays');
-await page.waitForTimeout(1500);
+ok((await chargeForm()).drawn === 'ally' && (await room()).phase === 'checkin', 'fed, it unfolds from its gas into an ally where it stands, in front of you, before the check-in');
+await page.waitForTimeout(2800);
+const sa = await seenOf();
+ok(inView(sa) && sa.drawn === 'ally', 'the fed spirit is in view on the check-in card: ' + JSON.stringify(sa && { ndc: sa.ndc.map((v) => +v.toFixed(2)), opacity: +sa.opacity.toFixed(2), y: Math.round(sa.y), card: Math.round(sa.card) }));
 await page.screenshot({ path: SHOTS + '/room-door-ally.png' });
+// Walking (STEP_UP 0.05, ROLL 0.05 in cave.js): moved across the floor, the ally's lowest point never sinks under it and lifts no
+// more than its step and the roll of its wide body (measured a frame behind)
+await C(() => { const R = window.__oagCave.room.state, c = R.all[0], p = c.fig.position; R.moves.push({ c, from: { x: p.x, z: p.z }, to: { x: p.x - 1.6, z: p.z + 0.4 }, t: 0, dur: 3 }); });
+const feet = [];
+for (let i = 0; i < 60; i++) { const f = await roomForm(); if (f.low != null) feet.push([+f.low.toFixed(3), f.walking]); await page.waitForTimeout(60); }
+const walkLows = feet.filter((f) => f[1]).map((f) => f[0]);
+ok(walkLows.length >= 5 && walkLows.every((l) => l > -0.03 && l < 0.08), `the ally walks on the floor: walking, its lowest point between -0.03 and its 0.05 step with its wider body's roll (${Math.min(...walkLows)} to ${Math.max(...walkLows)}), ${walkLows.length} samples`);
+await roomCheckin('stayed');
 await leaveHome();
 const grown = await C(() => ({ t: window.__oagSpiritStore.get('charge-preview'), n: window.__oagSpiritStore.all().length }));
 ok(grown.t && grown.t.sittings === 8 && grown.n === n3, 'the sitting adds one to its sittings (8, an ally) and no store entry: ' + JSON.stringify(grown));
+// Both preview hashes at once: the spirit come home, with a hidden part on it, comes in a gas to "Something hides it"
+await page.goto(B + '/ontology-game/cave?door=6#go=home&grown=7&hidden=6');
+await page.locator('[data-room-welcome]').waitFor({ timeout: 20000 });
+await page.locator('[data-room-welcome]').click();
+await page.locator('[data-room-shadow="forgetting"]').waitFor({ timeout: 30000 });
+const h6 = await room();
+ok(h6.phase === 'shadow' && h6.charge.polarity === 6 && h6.charge.signals.join() === 'preview' && h6.charge.name === 'Humming Ember' && (await chargeForm()).drawn === 'gas', '#go=home&grown=7&hidden=6: the spirit come home comes in a gas, hidden 6 of 10, to name what hides it');
+// The shadow spirit (Wendell, 21 October 2026: "The part that was hiding it is still showing up as the blobs instead of its own
+// gas form and that part has to be worked though and turned into a vibeulon/released or accepted as a spirit before moving on")
+const shadeRoom = async (n) => { // the room on its own (so leave() hands back its spirits), its first charge hidden 6
+  await page.goto(B + '/ontology-game/cave?shade=' + n);
+  await C(() => { window.__left = null; window.__oagCave.openRoom({ from: 'body', hidden: 6 }).then((r) => { window.__left = r; }); });
+  await page.locator('[data-room-welcome]').waitFor({ timeout: 30000 });
+  await page.locator('[data-room-welcome]').click();
+  await page.locator('[data-room-shadow="forgetting"]').waitFor({ timeout: 30000 });
+  ok(!(await room()).charge.shade, 'before its shadow is named there is no shadow spirit');
+  await page.locator('[data-room-shadow="forgetting"]').click();
+  await page.waitForTimeout(1500);
+};
+const shadeOf = async () => (await room()).charge.shade;
+await shadeRoom(1);
+let sh = await shadeOf();
+ok(sh && sh.drawn === 'gas' && sh.motes > 100 && sh.color === 0x4a3a5c && sh.open && sh.def < 0.2 && sh.spread > 0.5, 'naming the shadow calls up its shadow spirit at once: a gas of its own in the shadow\'s colour, faint and spread, not the grey blobs: ' + JSON.stringify(sh));
+const ss = await seenOf('shade');
+ok(ss && ss.visible && ss.inFrame && ss.opacity > 0.1, 'and it stands in view beside the one it hides: ' + JSON.stringify(ss && { ndc: ss.ndc.map((v) => +v.toFixed(2)), opacity: +ss.opacity.toFixed(2) }));
+ok((await page.locator('[data-room-veiled]').count()) === 0, 'while it stands there is no going on with it hidden');
+await page.locator('[data-room-practice]').click();
+await page.waitForTimeout(1200);
+const shMid = await shadeOf();
+ok(shMid.def > sh.def + 0.2 && shMid.spread < sh.spread, `as the practice thins the shadow, the shadow spirit gathers (defined ${sh.def.toFixed(2)} to ${shMid.def.toFixed(2)})`);
+await page.locator('[data-room-practice]').click();
+ok((await room()).phase === 'unveil' && await sees('[data-room-shade-reveal]') && await sees('[data-room-shade-keep="spirit"]') && await sees('[data-room-shade-keep="vibeulon"]') && (await page.locator('[data-room-next]').count()) === 0,
+  'cleared, the card shows the shadow spirit\'s element and asks to keep it as a spirit or let it become a vibeulon, with no way on to Witness until then');
+await page.locator('[data-room-shade-element="Fear"]').click();
+await page.waitForTimeout(1500);
+await page.screenshot({ path: SHOTS + '/room-shade-gate.png' });
+const pu6 = await purse(), lights6 = (await room()).scene.lights.length;
+await page.locator('[data-room-shade-keep="vibeulon"]').click();
+await page.waitForFunction((n) => window.__oagCave.room.scene().lights.length > n, lights6, { timeout: 30000 }).catch(() => {});
+sh = await shadeOf();
+ok(sh.keep === 'vibeulon' && sh.gone && !sh.visible && (await room()).scene.lights.length === lights6 + 1 && (await purse()) === pu6 + 1, 'Let it become a vibeulon: it goes out the door and condenses into a vibeulon on the threshold, one more in the purse');
+await page.locator('[data-room-next]').click();
+ok((await room()).phase === 'witness', 'only then does Go on return to the charge it hid, at Witness');
+ok((await C(() => window.__oagCave.room.run())).rounds[0].shadow.shadeKeep === 'vibeulon', 'the run records the choice');
+const shadeOut = async () => { // Away from it, out the door, and leave the room
+  await page.locator('[data-room-texture="tension"]').click();
+  await page.locator('[data-room-next]').click();
+  await page.locator('[data-room-name]').fill('Pale Hum');
+  await page.locator('[data-room-element="Fear"]').click();
+  for (let i = 0; i < 5; i++) await page.locator('[data-room-next]').first().click();
+  await page.locator('[data-room-goal]').fill('to rest');
+  await page.locator('[data-room-push="away"]').click();
+  await page.locator('[data-room-exhale]').click();
+  await page.locator('[data-room-gone]').waitFor({ timeout: 40000 });
+  await page.locator('[data-room-next]').click();
+  await page.locator('[data-room-checkin="left"]').click();
+  await page.locator('[data-room-again="no"]').click();
+  await page.locator('[data-room-leave]').click();
+  await page.waitForFunction(() => window.__left, null, { timeout: 15000 });
+  return (await C(() => window.__left)).spirits;
+};
+const out6 = await shadeOut();
+ok(!out6.some((t) => t.shadow), 'a shadow spirit let become a vibeulon does not walk out with you: ' + JSON.stringify(out6));
+await shadeRoom(2);
+await page.locator('[data-room-practice]').click();
+await page.locator('[data-room-practice]').click();
+await page.locator('[data-room-shade-element="Fear"]').click();
+await page.locator('[data-room-shade-keep="spirit"]').click();
+await page.waitForTimeout(3500);
+sh = await shadeOf();
+const sk2 = await seenOf('shade');
+ok(sh.keep === 'spirit' && !sh.gone && sh.visible && sk2.inFrame && Math.hypot(sh.x - 1.5, sh.z + 1.9) > 1, 'Keep it as a spirit: it takes a place by the wall, in view: ' + JSON.stringify({ x: sh.x, z: sh.z, ndc: sk2.ndc.map((v) => +v.toFixed(2)) }));
+await page.locator('[data-room-next]').click();
+const out7 = await shadeOut();
+ok(out7.filter((t) => t.shadow).length === 1 && out7[0].element === 'Fear' && out7[0].revealed && out7[0].name === 'Forgetting of Pale Hum', 'kept, it walks out with you, revealed with its element: ' + JSON.stringify(out7));
 await C(() => window.__oagSpiritStore.wipe());
 }
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
