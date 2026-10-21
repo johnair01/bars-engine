@@ -85,6 +85,8 @@ export default defineConfig({
       'src/lib/board/__tests__/dispatch.test.ts',
       'src/lib/board/__tests__/council-page.test.ts',
       'src/app/api/board/pull/__tests__/route.test.ts',
+      'src/app/api/board/import/__tests__/route.test.ts',
+      'src/app/api/board/session-writes/__tests__/route.test.ts',
     ],
   },
   resolve: {
