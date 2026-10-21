@@ -500,7 +500,7 @@ function syncThings() {
       group.position.set(pos.x, groundY(pos.x, pos.z), pos.z);
       // an ask to move a shared agreement: a faint ring where it would go, until the other person answers
       if (it.moveAsk && it.moveAsk.pos) {
-        const ring = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.34, 32), new THREE.MeshBasicMaterial({ color: hueOf(it.moveAsk.by, g), transparent: true, opacity: 0.7, depthWrite: false }));
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.26, 0.4, 40), new THREE.MeshBasicMaterial({ color: hueOf(it.moveAsk.by, g), transparent: true, opacity: 0.9, depthWrite: false }));
         ring.rotation.x = -Math.PI / 2; ring.userData.pulse = true;
         ring.position.set(it.moveAsk.pos.x - pos.x, groundY(it.moveAsk.pos.x, it.moveAsk.pos.z) - group.position.y + 0.03, it.moveAsk.pos.z - pos.z);
         group.add(ring);
@@ -882,7 +882,7 @@ function frame() {
   }
   for (const w of ws) {
     let yawTo = null;
-    if (w.moving) { const dd = w.dirOverride || walkerPos(w, tShared).dir; if (dd.lengthSq() > 1e-4) yawTo = Math.atan2(dd.x, dd.y); w.meeting = null; }
+    if (w.moving) { w.person = null; const dd = w.dirOverride || walkerPos(w, tShared).dir; if (dd.lengthSq() > 1e-4) yawTo = Math.atan2(dd.x, dd.y); w.meeting = null; }
     else {
       // standing: a spirit turns to whoever has come near; then to the thing it is sniffing; else the nearest walker, or the Between
       let nb = null, nd = 2.6, person = null;
@@ -892,6 +892,7 @@ function frame() {
         for (const q of near) { const d = Math.hypot(q.x - w.holder.position.x, q.z - w.holder.position.z); if (d < pd) { pd = d; person = q; } }
       }
       for (const o of ws) { if (o === w) continue; const d = o.holder.position.distanceTo(w.holder.position); if (d < nd) { nd = d; nb = o; } }
+      w.person = person;
       const tgt = person || w.sniff || (nb ? nb.holder.position : (w.holder.position.distanceTo(BETWEEN_AT) < 3.4 ? BETWEEN_AT : null));
       if (tgt) yawTo = Math.atan2(tgt.x - w.holder.position.x, tgt.z - w.holder.position.z);
       w.meeting = nb;
@@ -899,7 +900,7 @@ function frame() {
     if (yawTo != null) { let d = yawTo - w.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); w.yaw += d * Math.min(1, dt * 5); }
     w.holder.rotation.y = w.yaw + FACE;
     // a sniff: the nose dips toward the thing, twice a second, while it stands there and nobody has come near
-    const sn = w.type === "spirit" && !w.moving && w.sniff && !w.rest ? Math.max(0, Math.sin(t * 6.5)) * 0.16 : 0;
+    const sn = w.type === "spirit" && !w.moving && w.sniff && !w.rest && !w.person ? Math.max(0, Math.sin(t * 6.5)) * 0.16 : 0;
     w.holder.rotation.x += (sn - w.holder.rotation.x) * Math.min(1, dt * 10);
     w.body.setWalking(w.moving);
     w.body.mixer.update(dt);
