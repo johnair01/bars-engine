@@ -1,10 +1,39 @@
 # The Work and DBT in the Cave of Lessons: a mapping and a gap list
 
-**Date:** 2026-10-22. **Status:** proposal. Nothing here is a ruling, and no ontology file was edited.
+**Date:** 2026-10-22. **Status:** proposal, with four rulings from the owner recorded in section 1A. No ontology file was edited.
 
 Paths: `C/` is six-faces-council (the ontology and the council record), `B/` is bars-engine. Both were read on branch
 `claude/work-dbt-ontology-mapping-s6hfgy`. The seven directions at the top of section 3 are the owner's proposals, and this
 doc tests them against the record.
+
+## 1A. Rulings recorded (owner, in chat, 2026-10-22)
+
+A chat answer counts as a ruling (six-faces-council `CLAUDE.md`). Each is recorded here with the words used. The rest of the
+doc follows them, and where a ruling meets an earlier record the doc says so and does not hide it.
+
+1. **The faces correspond to the integral levels, and play can show them.** On the doc's line "A player's choice of face says
+   nothing about their level": "Not nothing these faces do correspond to the integral levels so they do show what level of
+   complexity and level of development they are working with the players don't need to know this at the beginning but will
+   emerge through skillful play."
+   - *Meets:* the face-namespaces decision, forbidden inferences 2, 3 and 16 (a player's sect or choice never silently becomes an
+     altitude judgment; any assessment use needs disclosure, evidence, contestability and a way to take part without accepting it).
+   - *What stands:* the decision keeps the altitude claim as a bounded, contestable object (framework, subject, line or domain,
+     context, evidence, time, uncertainty, correction path) and bars deriving whole-person worth.
+   - *Consequence, not resolved here:* a level that emerges and is not shown at the start is an undisclosed classification unless
+     the game tells the player it exists. See C18.
+2. **Streaks are allowed, as assessment data.** "We can allow streaks at this will be data for any coach or teacher that's using
+   this as an assessment tool. But it's not coercive just emergent data of where and under what context streaks weren't
+   maintained."
+   - *Flips:* the standing no-streak position (C1). The player-facing rule stays: no countdown, no guilt message, no penalty.
+   - *Consequence:* the coach or teacher is a new audience for a player's data, which needs a permission grant (C19).
+3. **Engagement is rewarded and no answer is rewarded above another.** "No particular answer can be more rewarding than another
+   but we do want to reward people for engaging."
+   - *Consequence:* "engaging" needs a definition that a "pass" and a "not now" still meet, or the reward becomes pressure to
+     disclose (C20).
+4. **The Work and DBT are adapted, cited on a works-cited page, and made the owner's own.** "My plan is to adapt the work and
+   DBT. These will be in a work cited page and one of the main goals is to make these implementations my own."
+   - *Answers:* the naming question (`tw-names`), toward generic names with citation. A works-cited page is in section 8.
+   - *Not answered:* whether adapting the practices needs the rights holders' permission. That stays with counsel (C10).
 
 ## 1. What this doc does and does not do
 
@@ -33,7 +62,8 @@ The six share one archetypal lineage and live in five separate namespaces: altit
 player-facing sect identity and council lens. A shared name does not make them one object, and choosing a face says
 nothing about the player's developmental altitude (`C/ontology/v0.1/source/council-phase-a/face-namespaces/council-decision.md`,
 forbidden inferences 2, 3 and 16). In this doc "game master" means the cave's player-facing use and the council lens.
-Nothing here assigns a face to a player.
+Nothing here assigns a face to a player at the start. Under ruling 1, how a player plays can later show the level of
+complexity they are working at, under the safeguards in C18.
 
 | Face | Altitude | Council lens (`C/council/faces.yaml`) | Cave question (`B/content/ontology-game/game.jsx`, `precisionQuestions`) | Tunnel minigame, first sketch (`B/content/ontology-game/cave/LEVELS.md`) | The Protector daemon at this altitude (`C/council/daemons/daemons.yaml`) |
 |---|---|---|---|---|---|
@@ -127,7 +157,8 @@ Each rule is a position or ruling already on record.
    roadblock "does not prove misaligned intention", and AI may not psychologize it (Quickstart, "Roadblocks and intention").
 8. Composting is valid completion. After it, backlog pressure, overdue status and guilt or shame messaging stop
    (`design-ontology-v0.1.yaml`, `active_behaviors_that_stop`).
-9. No streaks. "A streak is coercion dressed as care" (`C/council/passes/6FACE_PASS_inner-vessel1_2026-10-18.md`, line 168);
+9. No coercive streaks. This rule was "no streaks" until the owner's ruling 2 (section 1A). What the sources said stands for the
+   player-facing side: "A streak is coercion dressed as care" (`C/council/passes/6FACE_PASS_inner-vessel1_2026-10-18.md`, line 168);
    "no clocks, streaks, daily limits or random failure" (same, line 294); "No floor to clear · no streak to keep ·
    stuckness is data, not failure" (`C/docs/morning.md`, Tap the Vein).
 10. Real stakes are allowed when disclosed beforehand. Spirits can die, and the player is told when a spirit bonds (spirit-care
@@ -181,8 +212,9 @@ Holding and examining a line means the player can keep it, which collides with r
 
 Four rules for the loop, each from the record:
 
-- **The answer to Q1 earns nothing.** The Work accepts yes or no. The game must not reward "no", because rule 4 says a drive
-  must not prove meaning, and rule 1 says a reward makes the answer the point. Progress comes from doing the step.
+- **No answer to Q1 earns more than another.** The Work accepts yes or no. The game must not reward "no" above "yes", because
+  rule 4 says a drive must not prove meaning, and rule 1 says a reward makes the answer the point. Under ruling 3, taking the
+  step is what the game rewards.
 - **"Three examples" is the practice and never a gate.** A round that ends with zero examples is a valid ending (rules 5 and 6),
   and "pass" counts the same as a full list. The research note already flags filler as the proxy-capture risk.
 - **Hear the daemon before testing its line.** Daemons are protective functions, and The Work tests a thought's truth. The
@@ -236,7 +268,8 @@ Each skill below is first taught in that face's tunnel, in that tunnel's look. A
 
 Limits on this table:
 
-- It is a lens fit. A player who is strong in one tunnel has shown nothing about their altitude or worth (rule 13).
+- It is a lens fit. Under ruling 1, skilled play in a tunnel can show the complexity the player works at in that line. That is a
+  bounded claim about one domain at one time, open to correction, and never a statement about the person's worth (rule 13, C18).
 - LEVELS.md says every minigame needs its own council pass first. This table is the input to that pass.
 - The Challenger and Regent rows are the least settled. Putting body-first distress skills under the red tunnel reads
   correctly for the push-timed-to-breath mechanic. A distressed child entering a "red" tunnel may need them in a calmer look,
@@ -302,7 +335,7 @@ the player. These are lenses for the design pass and give no runtime authority.
   tested for truth. T04's own `whenNotToUse` already lists "external danger" and "active overwhelm".
 - No scoring of answers, no required disclosure and no free-text reading by the system. The gate fires on the player's own
   choice, so a non-AI route holds the whole thing.
-- The age tier is a deployment setting. It claims nothing about the player's altitude, capacity or worth.
+- The age tier is a deployment setting. It claims nothing about the player's altitude, capacity or worth. Any altitude reading comes from play and not from age.
 
 ### 3.8 Direction 5: streak loss as a remediation path
 
@@ -323,8 +356,12 @@ opening a remediation path with no count and no penalty.
 4. **The commitment bends by composting.** A broken run is a self-made commitment past its due date. The Regent's lens
    (obligation or preference) decides what happens to it: repair, renegotiate, rest or compost. Composting ends the obligation
    and stops the pressure (rule 8).
-5. **No count is shown.** If the owner wants a visible run number, it must pass the research note's test: visible, chosen
-   and exitable. That is a separate decision (Q2).
+5. **Streaks are kept as data (ruling 2).** The game records where, and under what declared context, a run was not
+   maintained. A coach or teacher using the game as an assessment tool reads that record. The player-facing rules hold:
+   no countdown, no guilt message, no penalty, and declared rest pauses the run. The research note's test applies to what the
+   player sees of it: visible (the player can see what is recorded and who sees it), chosen (the player agrees to the coach or
+   teacher view) and exitable (the player can stop sharing). A streak is an observation of behavior and shows nothing about
+   motive (evidence authority).
 
 ### 3.9 Perceptual shadow, the four kinds and the daemons inside the loop
 
@@ -361,16 +398,16 @@ column means the repo already settles it, and the position stands unless the own
 
 | # | Direction | Conflict or gap | Source | Position that stands | Decides |
 |---|---|---|---|---|---|
-| C1 | 5 | Streaks are barred everywhere in the record; the direction names a streak | inner-vessel pass, line 168 and 294; `C/docs/morning.md`; spirit-care pass (Challenger: "never a countdown or a streak") | Lapse path with no count (3.8). A visible run number would need a ruling | Owner (Q2) |
+| C1 | 5 | **Answered by ruling 2.** Streaks were barred in the record; the owner allows them as assessment data | inner-vessel pass, line 168 and 294; `C/docs/morning.md`; spirit-care pass (Challenger: "never a countdown or a streak") | Streaks kept as data, with no countdown, guilt message or penalty (3.8) | Ruled |
 | C2 | 7 | The research note says no children's version is in scope, and the audience is adult helpers. The `inner-creatures` strand shows children are in Wendell's plans. The tiers presuppose children | research note, `decision_or_open_authority`; `C/council/callsheets/inner-creatures.md` | Treat the note's child findings as a conservative floor. A children's tier is not a build target until the owner sets it | Owner (Q1) |
 | C3 | 7 | The "four faces" name collides with the Six Faces namespace | research note, `ontology_objects`; face-namespaces decision | Say "shadow kinds" in all text | Record |
 | C4 | 7 | The daemon wall has no skip (Wendell, 10 October); the direction asks for an always-available exit | `cave/DESIGN.md`, "No skip at a daemon"; research note's exitable test | A pause is not a skip: Step back and Calm are on every page, Take it home and the room's rest-by-the-door are the other exits, and the daemon still holds the way | Record. The trauma tier's wording needs a read |
 | C5 | 7 | A gate that detects harm needs input. The record reads no free text, keeps nothing, and treats AI inference as proposal only. Mandated reporting, a trusted adult and child-data law are not in the record | rules 5, 12, 15; research note (child-data law, line 149) | Fire the gate on the player's own button or choice only | Owner and counsel (Q3) |
 | C6 | 1, 2 | "Hold and examine" means keeping thought lines. The cave keeps words on the page, with Big Mind as the one local-list exception | rule 15; `game-demo.md` PR 4 | Keep lines on the device by default, with Forget and Delete on each card; sync needs a permission grant (purpose, audience, duration) | Record |
-| C7 | 4 | Octalysis "Accomplishment" often means points and badges. The ontology allows capability within a named line and bars whole-person rank | Quickstart 6; Marble kata README | Show accomplishment as the creature or spirit changing; no points, badge or level | Record |
+| C7 | 4 | Octalysis "Accomplishment" often means points and badges. The ontology allows capability within a named line and bars whole-person rank | Quickstart 6; Marble kata README | Show accomplishment as the creature or spirit changing. Ruling 3 rewards engagement and not any particular answer; the reward's form (points, badges, creature growth) is still open | Record |
 | C8 | 2 | The Work tests a thought's truth. The cave treats daemons as protectors and keeps the player's meaning theirs. T04 lists its own misuse | rule 2; daemons; T04 `misuse` | Inquiry starts after the daemon is heard, with its permission; the game never marks an answer right (3.2) | Record |
 | C9 | 3 | Skills belong to branches and not to faces (LEVELS.md), while the direction asks which game master holds which skill | `LEVELS.md`, "Branches are the skills downstream" | A skill branch, taught first in the face tunnel that fits; any block forks to it. The table in 3.4 is the input to each tunnel's pass | Council pass |
-| C10 | 3 | DBT and The Work are named by their authors. The record's rule: a source's word is cited and never renamed. Both have owners and publishers whose terms are not in the record | `faces.yaml` (Regent term test); bars-engine registry uses the generic name "Belief Inquiry" | Use generic names with a lineage line until permission is held | Owner and counsel (Q4) |
+| C10 | 3 | DBT and The Work are named by their authors. The record's rule: a source's word is cited and never renamed. Both have owners and publishers whose terms are not in the record | `faces.yaml` (Regent term test); bars-engine registry uses the generic name "Belief Inquiry" | Ruling 4: adapt, cite on a works-cited page, make it the owner's own. Use generic names with a lineage line. Whether adaptation needs permission is a counsel question | Counsel |
 | C11 | 7 | Treatment claims. The Work and DBT are practices a clinician teaches. The cave says "a game, not therapy". The adult trauma tier is the nearest to a therapy claim | rules 11 and 14; research note | Claim only a player-reported change in this sitting; clinician read before the child and trauma tiers | Owner (Q5) |
 | C12 | 7 | Window of tolerance as a safety check: polarity is a player-reported teaching heuristic, and self-report can confabulate | research note, `ontology_objects` and `mechanical_claims` | Use polarity to offer a practice and never to clear the player as safe | Record |
 | C13 | 3 | Wise Mind, Big Mind, Sage and the centre of the self collide; Validate and Accept each carry two senses | 3.3 | Wise Mind is the centre of the self; keep Big Mind's name for its cave | Council term pass (owner locks) |
@@ -378,10 +415,13 @@ column means the repo already settles it, and the position stands unless the own
 | C15 | 3 | No skill inventory exists as data. DBT skills need a table: name, module, step list, when not to use, move, face | `B/src/lib/emotional-alchemy/registry.ts` has the tool shape (T01 to T11) | Add DBT as registry entries with the same fields | Build |
 | C16 | 7 | A trusted adult needs a model: who, how chosen, what they see. The Between handles pairs, not a guardian and a child | privacy and consent authority (Quickstart): authority intersects for relational material | Not designed. No guardian sees a child's lines | Owner and counsel (Q3) |
 | C17 | all | The extension must be able to play with no AI. The record is explicit | rule 12 | Templates for every prompt; any AI reading of lines is an optional proposal | Record |
+| C18 | 1 | Ruling 1 lets play show a level that is not shown at the start. The face-namespaces decision bars an undisclosed, uncorrectable altitude judgment | face-namespaces decision, forbidden inferences 2, 3, 16 and the altitude-claim object | Keep the claim bounded (framework, domain, evidence, time, uncertainty) and correctable. The player is told the game can read this, even if not at the start. A player can take part without accepting it. Children's tier: not designed | Owner and council pass |
+| C19 | 5 | A coach or teacher reading streak data is a new audience. The permission envelope binds audience, purpose, duration and revocation, and for children a guardian is also an authority | privacy and consent authority (Quickstart); C16 | The player sees what is shared and with whom, and can stop it. No coach view without a grant | Owner and counsel |
+| C20 | 3 | "Reward engagement" can become pressure to disclose or to produce. A "pass" must still count as engagement, or disclosure becomes progression currency | rule 5; research note, `agency_and_consent` item 1 | Engagement means taking the step: an answer, a pass, or "not now" at a stop. Reward is the same for all three. Rewards never scale with length or intimacy | Council pass |
 
 ## 5. Open questions for the owner
 
-The reach test (`C/council/faces.yaml`, `reach_test`) leaves five questions the record cannot answer. Each is written in the
+The reach test (`C/council/faces.yaml`, `reach_test`) leaves four questions the record cannot answer. Ruling 2 answered `tw-streak`, and ruling 4 narrowed `tw-names` to a counsel question. Each is written in the
 board's row format: options, the consequence of each, why only the owner can answer, and why it was not asked before. Per the
 repo rule they go on the Council Board and not into chat. **They have not been landed**, because that needs a write to
 six-faces-council `board/board_data.json` on main and a republish, which this session did not do. IDs are working names.
@@ -396,12 +436,8 @@ six-faces-council `board/board_data.json` on main and a republish, which this se
   `inner-creatures` direction.
 - *Also decide:* whether mortal spirits apply to children.
 
-**`tw-streak`: a visible run counter or none?**
-- *Options:* (a) none, with the lapse path in 3.8; (b) an opt-in run the player can see, freeze and delete; (c) a default run.
-- *Consequences:* (a) matches rule 9 and costs a familiar hook. (b) passes the visible, chosen and exitable test and needs a
-  ruling that flips the standing position. (c) contradicts the record and the Duolingo owl warning in the spirit-care pass.
-- *Why only the owner:* it flips a standing council position and changes what gets built.
-- *Why not asked before:* the record had no proposal to remove the no-streak line until now.
+**`tw-streak`: answered by ruling 2 (section 1A).** Streaks are kept as assessment data and never as pressure. The open parts are
+the coach or teacher's permission grant and what the player sees (C19).
 
 **`tw-gate-input`: how does the gate know something happened?**
 - *Options:* (a) the player's own button or choice only; (b) the same, plus a trusted adult chosen in advance who is told when
@@ -411,12 +447,9 @@ six-faces-council `board/board_data.json` on main and a republish, which this se
 - *Why only the owner:* money, consent and release are reserved, and a legal read on child-data and reporting duties is needed.
 - *Why not asked before:* no children's tier existed in the record.
 
-**`tw-names`: brand names or generic names?**
-- *Options:* (a) generic names with a lineage line ("Belief Inquiry", "skills from DBT"); (b) the brand names, with permission
-  from the rights holders.
-- *Consequences:* (a) ships now and matches the registry. (b) carries recognition and a permissions and licence cost.
-- *Why only the owner:* money and anything that names a person are reserved.
-- *Why not asked before:* nothing in the record used either name outside the registry's lineage line.
+**`tw-names`: narrowed by ruling 4.** The plan is to adapt the practices, cite them on a works-cited page (section 8) and make
+the implementations the owner's own, which points to generic names with a lineage line. Whether adaptation needs the rights
+holders' permission is a legal read and stays open (C10).
 
 **`tw-clinician`: is a clinician lined up for the read?**
 - *Options:* (a) a named clinician reads the Work and DBT branches, the gate and the child tier before any child or trauma-tier
@@ -425,9 +458,12 @@ six-faces-council `board/board_data.json` on main and a republish, which this se
 - *Why only the owner:* the fact is theirs. The `inner-creatures` sheet already lists a clinician read as pending.
 - *Why not asked before:* it was listed and never put as a question.
 
+New items from the rulings, for the next council pass and not yet board rows: C18 (how an emerging level is disclosed and
+corrected), C19 (the coach or teacher's grant) and C20 (what counts as engagement).
+
 Positions that stand without a question (they are answered by the record): "shadow kinds" and not "faces" (C3); pause is not
 skip (C4); thought lines stay on the device with Forget and Delete (C6); accomplishment shows as the creature changing, with
-no badge or level (C7); inquiry starts after the daemon is heard, and no answer earns a reward (C8); Wise Mind is the centre
+no badge or level (C7); inquiry starts after the daemon is heard, and no answer earns more than another (C8); Wise Mind is the centre
 of the self (C13); every prompt has a non-AI template (C17).
 
 ## 6. AQAL attention
@@ -461,13 +497,28 @@ Not checked:
 
 Recommended order, smallest first:
 
-1. Land the five rows in section 5 on the Council Board and read the answers.
+1. Land the remaining rows in section 5 (`tw-audience`, `tw-gate-input`, `tw-clinician`) on the Council Board, and add rows for C18 to C20.
 2. Run one six-face pass on 3.4 and 3.7, with the Regent, Diplomat and Shaman lenses weighted for the gate.
 3. Scout T04, T06 and T07 in the registry and add DBT entries with the same fields (C15). That is the cheapest probe and
    needs no UI.
 4. If the owner chooses to proceed, scaffold a spec kit per `.agents/skills/spec-kit-translator/SKILL.md` with a Verification
    Quest. Read `UI_COVENANT.md` before any UI.
 5. Book the clinician and legal reads before any child or trauma-tier player sees a build.
+
+## 8. Works cited (starter list for the adaptation)
+
+Details are from memory and need checking against the editions the owner uses before the page is published.
+
+- Katie, Byron, with Stephen Mitchell. *Loving What Is: Four Questions That Can Change Your Life.* Harmony Books, 2002. The
+  four questions and the turnarounds.
+- Linehan, Marsha M. *DBT Skills Training Manual*, 2nd ed. Guilford Press, 2015. The four modules and skills named in the brief
+  (Wise Mind, observe and describe, TIPP, STOP, self-soothe, check the facts, opposite action, DEAR MAN, GIVE, FAST).
+- Chou, Yu-kai. *Actionable Gamification: Beyond Points, Badges, and Leaderboards.* 2015. The eight core drives.
+- Repo lineage, already cited in the doc: bars-engine `registry.ts` T04 (Belief Inquiry), T06, T07; the Marble Skill Taxonomy v1
+  (`withmarbleapp/os-taxonomy`); the Emotional Alchemy canon in this repo.
+
+Each adapted skill should carry a line saying what it was adapted from and what changed, so "making it your own" shows on the page
+and the debt is plain.
 
 ## Sources
 
