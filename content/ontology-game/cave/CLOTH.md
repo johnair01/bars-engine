@@ -400,13 +400,19 @@ sleeves aren't operating as one piece, hand moves through them, weird strings". 
   within `armBlend` (1) of its skinned place, swinging in the trunk's air (`armAir` 1), and kept no nearer the forearm
   and hand than its skinned place (the backstop). The cuff opens to `CUFF_W` 0.40 (round 8's bell) so the band has room
   round the hand. No slits, so no strings; `armSide` is 0 (nothing to put back across).
-- **Numbers (average dusk robe, walk):** forearm covered 1.00 both sides; the hand inside the sleeve as often as
-  skinned (cloth equals skinned); band end lag 1 frame, coherence 0.98, stray 8.7 cm p95, sway 7 cm peak to peak,
-  jitter 9.7 mm p99; J5d cuff set 9.1 mm (line 12). Robe 138,852 bytes. The band swings, but far less than the shin
-  hem: a 12 cm hem band on a sleeve that rides the arm cannot trail like 70 cm of skirt.
-- **Heels.** Each ankle gets a ball capsule (garments.py `CAPSULES`, the foot's points within 8 cm). In this walk the
-  foot comes through the skirt in 6 of 80 sampled frames, almost all toes at ankle height in front (the hem stepping
-  over the foot), one heel point at the back; round 13b's robe: 4 of 80.
+- **The hem band's shake was friction.** With the legs' friction (0.15) on the sleeve's cloth the band caught on the hand
+  and let go: J5d cuff 12.3 mm, over its 12 mm line. `armFriction` 0.05 (0 hardly moves the band: 2.4 cm of sway).
+- **Numbers (average dusk robe, walk, Node):** forearm covered 0.99 to 1.00; the hand inside the sleeve exactly as
+  often as when skinned (0.56 / 0.68 of rays from the hand meet the sleeve, cloth and skinned alike; round 13b's panels
+  0.65 / 0.87 skinned, and the trailing panels tried above 0.25 / 0.34); band end lag 1 frame, coherence 0.99, sway
+  5.2 cm peak to peak (8.1 at a fast stride), jitter 7.6 mm p99. J5d passes: cuff 8.2 mm walking, 2.65 ms a figure
+  (round 13b 3.65). Robe about 135 KB. The band moves, but far less than the shin hem (26 cm, lag 5): a 12 cm band on
+  a sleeve that rides the arm cannot trail like 70 cm of skirt.
+- **Heels.** A ball capsule at each ankle was tried and dropped: it put J5d's walking hem and fold past their lines
+  (27.0 and 30.7 mm). In this walk the foot comes through the skirt in 6 of 80 sampled frames, almost all toes at ankle
+  height in front (the hem over the planted foot), one heel point behind (`heel.mjs`); round 13b's robe: 4 of 80.
+- **The wrist's twist** (`twist.mjs`) is 11.5 degrees and constant in character.py's walk, 7 to 11 in the mocap walk:
+  it does not pinch the sleeve, which rides the forearm bone alone from the middle of the forearm on (round 10).
 
 ## Rounds 1 to 5, in one line each
 
