@@ -26,6 +26,12 @@ function print(value: string | null | undefined) {
   }
 }
 
+function describeHeader(value: string | null) {
+  if (value === null) return null
+  const space = value.indexOf(' ')
+  return { scheme: space > 0 ? value.slice(0, space) : null, length: value.length, valuePrint: print(space > 0 ? value.slice(space + 1) : value) }
+}
+
 export async function GET(req: NextRequest) {
   const secret = process.env.COUNCIL_MENU_TOKEN
   const given = givenToken(req)
@@ -34,6 +40,10 @@ export async function GET(req: NextRequest) {
       server: print(secret),
       sent: print(given),
       match: !!secret && tokenMatches(given, secret),
+      // How the key arrived, without the key: the egress proxy may send it in another shape than `Bearer <key>`.
+      authorization: describeHeader(req.headers.get('authorization')),
+      headers: [...req.headers.keys()].filter((k) => /auth|key|token/i.test(k)),
+      query: [...req.nextUrl.searchParams.keys()],
       deployment: process.env.VERCEL_DEPLOYMENT_ID ?? null,
     },
     { headers: { 'Cache-Control': 'no-store' } },
