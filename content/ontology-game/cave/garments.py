@@ -38,6 +38,7 @@ report.json carries the counts; test J5 (tools/blender-cloud/tests/test_bpy.py) 
 150 KB. Needs bpy (tools/blender-cloud/README.md).
 """
 import argparse, json, math, os, subprocess, sys
+from concurrent.futures import ThreadPoolExecutor
 
 import bpy
 import bmesh
@@ -909,9 +910,20 @@ def leg_capsules(fig, build):
             cap["backstop"] = True                       # the pelvis: wider than the hips, so it pushes a point out no
                                                          # further than its skinned place (cloth.js backstop, round 6)
         out.append(cap)
+    for s in "LR" if FOOT_CAP else "":
+        # round 15: the foot, from the ankle's joint to its toe (the ankle bone's tail), round the foot's own points,
+        # so the skirt's front is pushed off the toes as they swing through (cloth.js and cloth_walk.mjs carry bp)
+        A, B = (Vector(c) for c in J["ankle" + s])
+        own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) == "ankle" + s]
+        d = sorted(seg_dist(c, A, B) for c in own)
+        r = d[min(len(d) - 1, int(CAP_PCT * len(d)))] * FOOT_CAP
+        out.append({"a": "ankle" + s, "b": "ankle" + s, "bp": [round(c, 4) for c in B], "r": round(r, 4), "foot": True,
+                    **({"backstop": True} if FOOT_BACK else {})})
     return out
 
 
+FOOT_CAP = float(os.environ.get("FOOT_CAP", "0"))  # round 15: the foot capsule's radius, as a share of its 99% fit (0: none)
+FOOT_BACK = os.environ.get("FOOT_BACK", "0") != "0"
 HAND_PCT = 0.9                                   # the hand's capsule: this share of the hand's points inside it (a flat
                                                  # hand in a round capsule; it only stops a sleeve point coming closer)
 
@@ -964,6 +976,7 @@ def run_cloth(job, tag="cloth"):
     """Run cloth_walk.mjs on a job; returns its result."""
     d = os.path.join(os.environ.get("W", "/tmp/blender-cloud"), "cloth-jobs")
     os.makedirs(d, exist_ok=True)
+    tag = f"{tag}-{os.getpid()}"                         # builds run side by side (round 15): one job file each
     jp, op = os.path.join(d, tag + "-job.json"), os.path.join(d, tag + "-out.json")
     with open(jp, "w") as f:
         json.dump(job, f)
@@ -1823,29 +1836,39 @@ def main():
         return
     combos = [(b, p) for b in C.BUILDS for p in C.PALETTES] if a.all else [(a.build, a.palette)]
     figs, report = {}, []
-    for b, p in combos:
-        if a.all:
-            # One fresh process per build and palette. The cloth solver settles differently from one process to the
-            # next (a drape of 392 points through at the start, or 91, or 297), and the fit cannot save the rare
-            # bad one, and it repeats itself inside a process. So a robe the fit leaves with points through is made
-            # again in a new process, up to DRAPE_TRIES times.
-            part = os.path.join(a.out, f"part-{b}-{p}.json")
-            cmd = [sys.executable, os.path.abspath(__file__), "--build", b, "--palette", p, "--out", a.out, "--part", part]
-            cmd += ["--no-fit"] if a.no_fit else []
-            cmd += ["--no-legs"] if a.no_legs else []
-            for attempt in range(DRAPE_TRIES):
-                subprocess.run(cmd, check=True)
-                with open(part) as f:
-                    fr, rows = json.load(f)
-                os.remove(part)
-                if a.no_fit or all(r["worst"] == 0 for r in rows):
-                    break
-                print(f"{b}-{p}: a drape left points through (try {attempt + 1} of {DRAPE_TRIES}), again", flush=True)
-        else:
+
+    def one(b, p):
+        if not a.all:
             fr, rows = build_all(b, p, a.out, not a.no_fit)
             if a.part:
                 with open(a.part, "w") as f:
                     json.dump([fr, rows], f)
+            return fr, rows
+        # One fresh process per build and palette. The cloth solver settles differently from one process to the
+        # next (a drape of 392 points through at the start, or 91, or 297), and the fit cannot save the rare
+        # bad one, and it repeats itself inside a process. So a robe the fit leaves with points through is made
+        # again in a new process, up to DRAPE_TRIES times.
+        part = os.path.join(a.out, f"part-{b}-{p}.json")
+        cmd = [sys.executable, os.path.abspath(__file__), "--build", b, "--palette", p, "--out", a.out, "--part", part]
+        cmd += ["--no-fit"] if a.no_fit else []
+        cmd += ["--no-legs"] if a.no_legs else []
+        for attempt in range(DRAPE_TRIES):
+            subprocess.run(cmd, check=True)
+            with open(part) as f:
+                fr, rows = json.load(f)
+            os.remove(part)
+            if a.no_fit or all(r["worst"] == 0 for r in rows):
+                break
+            print(f"{b}-{p}: a drape left points through (try {attempt + 1} of {DRAPE_TRIES}), again", flush=True)
+        return fr, rows
+    # round 15: the nine builds run side by side, one process a core (in a row they ran past J5's 1800 s on 4 cores)
+    # (bpy only runs on the main thread: a single build is made here, not in the pool)
+    if a.all:
+        with ThreadPoolExecutor(max(1, min(len(combos), int(os.environ.get("GARMENTS_JOBS", os.cpu_count() or 1))))) as ex:
+            done = list(ex.map(lambda c: one(*c), combos))
+    else:
+        done = [one(*combos[0])]
+    for (b, p), (fr, rows) in zip(combos, done):
         figs[(b, p)] = fr["file"]
         report += rows
         for r in rows:

@@ -5,7 +5,7 @@
 // JOB (written by garments.py, Blender's space: Z up, the figure faces -Y, metres):
 //   bones: [{name, parent, head: [x, y, z]}]           the rig at rest, parents first
 //   robe: {rest: [x y z ...], tris: [...], sim: [0|1 per vertex], weights: [[[bone index, w], ...] per vertex]}
-//   capsules: [{a, b, r, rb}]                             a leg capsule from bone a's joint to bone b's, radius r at a
+//   capsules: [{a, b, r, rb, bp}]                         a leg capsule from bone a's joint to bone b's, radius r at a
 //                                                         and rb at b (a leg tapers; rb is optional)
 //   scenarios: [{name, steps, amp, turn: {at, angle, dur} | null, stop: {at, dur} | null, samples: [t, ...]}]
 //   options: cloth.js options (optional; CLOTH_OPTS, a JSON object in the environment, overrides them)
@@ -101,7 +101,7 @@ function skinned(D, root) {
 }
 function capsules(D, root) {
   return job.capsules.map(c => {
-    const a = ap(mul(root, D[bi[c.a]]), bones[bi[c.a]].head), b = ap(mul(root, D[bi[c.b]]), bones[bi[c.b]].head);
+    const a = ap(mul(root, D[bi[c.a]]), bones[bi[c.a]].head), b = ap(mul(root, D[bi[c.b]]), c.bp || bones[bi[c.b]].head);   // bp: a rest point riding bone b (round 15, the foot)
     return { s: [...a, ...b], r: c.r, rb: c.rb, bs: !!c.backstop, arm: !!c.arm };
   });
 }

@@ -1156,10 +1156,19 @@
         targets[3 * p] = ox; targets[3 * p + 1] = oy; targets[3 * p + 2] = oz;
       }
     }
-    var a3 = new THREE.Vector3(), b3 = new THREE.Vector3();
+    var a3 = new THREE.Vector3(), b3 = new THREE.Vector3(), bm = new THREE.Matrix4();
+    var boneIx = {};
+    skel0.bones.forEach(function (b, i) { boneIx[b.name] = i; });
     function capsules() {
       return caps.map(function (q) {
         byName[q.a].getWorldPosition(a3); byName[q.b].getWorldPosition(b3);
+        if (q.bp) {
+          // round 15: a capsule may end at a rest point that rides bone b (a foot: the ankle's joint to its toe),
+          // carried as skin() carries a point. bp is in Blender's space (Z up), the robe's is glTF's (Y up)
+          bm.multiplyMatrices(skinned.matrixWorld, skinned.bindMatrixInverse).multiply(byName[q.b].matrixWorld)
+            .multiply(skel0.boneInverses[boneIx[q.b]]).multiply(skinned.bindMatrix);
+          b3.set(q.bp[0], q.bp[2], -q.bp[1]).applyMatrix4(bm);
+        }
         return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit, rb: q.rb === undefined ? undefined : q.rb * unit, bs: !!q.backstop, arm: !!q.arm };
       });
     }
