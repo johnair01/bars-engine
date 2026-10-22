@@ -868,7 +868,7 @@ def skirt_weights(p, body):
 # j5-skirt-cloth).
 
 CAPSULES = (("hipL", "kneeL"), ("kneeL", "ankleL"), ("hipR", "kneeR"), ("kneeR", "ankleR"), ("hipL", "hipR"),
-            ("kneeL", "kneeL"), ("kneeR", "kneeR"), ("ankleL", "ankleL"), ("ankleR", "ankleR"))
+            ("kneeL", "kneeL"), ("kneeR", "kneeR"))
 CAP_PCT = 0.99                                   # a capsule's radius: this share of its body points lie inside it
 TAPER_FROM = 0.75                                # a leg capsule's lower radius (rb): from its points this far down it
 POSED = {}                                       # {object name: {frame: [Vector]}}: positions posed() gives instead
@@ -880,16 +880,16 @@ WARM = 2.0                                       # seconds walked before the tes
 
 def leg_capsules(fig, build):
     """The capsules the skirt's cloth is pushed out by: each thigh (hip to knee) and shin (knee to ankle), the pelvis
-    (hip joint to hip joint), each knee (a ball: a bent knee's front stands out past both thigh and shin) and each
-    heel (a ball at the ankle, round 14: a heel kicked up behind at the end of a stride came out through the back of
-    the skirt), each round the body points of its own bones (the pelvis: those between the hip joints, below the
-    waist; a knee: those within 8 cm of it; an ankle: its foot's points within 8 cm of it, the heel and the instep)."""
+    (hip joint to hip joint) and each knee (a ball: a bent knee's front stands out past both thigh and shin), each
+    round the body points of its own bones (the pelvis: those between the hip joints, below the waist; a knee: those
+    within 8 cm of it). Round 14 tried a ball at each ankle for the heel: J5d's walking hem and fold shook past their
+    lines (27 and 31 mm), and the foot came through the skirt no less often in the Node walk, so it is not used."""
     J, W = C.joints(build), bone_weights(fig)
     out = []
     for a, b in CAPSULES:
         A, B = Vector(J[a][0]), Vector(J[b][0])
-        if a == b:                                       # a knee, or a heel
-            own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in ((a,) if a.startswith("ankle") else ("hip" + a[-1], a))
+        if a == b:                                       # a knee
+            own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in ("hip" + a[-1], a)
                    and (v.co - A).length < 0.08]
         elif a[:-1] == b[:-1]:                           # the pelvis
             own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) in ("hips", "hipL", "hipR")

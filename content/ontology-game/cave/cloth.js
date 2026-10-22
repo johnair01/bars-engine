@@ -94,6 +94,9 @@
     armSideFade: null,   // round 14, tried on the panels: from this share of the panel down to armSideT the put-back eases
                          // from whole to none (0.45 with armSideT 0.6 let the panels' ends trail the hand by 3 frames, but
                          // the hand came out of the sleeve: CLOTH.md "Round 14"); null: whole down to armSideT
+    armFriction: 0.05,   // round 14: the friction of the forearm and hand on the sleeve's cloth (null: friction, the legs'). The
+                         // hem band slides round the hand; with the legs' 0.15 it caught and let go (J5d cuff 12.3 mm in the
+                         // browser; Node: 0 gives 4.1 mm but the band hardly moves, 2.4 cm; 0.05 gives 7.4 mm and 5.2 cm)
     armAir: 1,           // round 14: the air the sleeve's cloth swings through moves with the trunk (the pelvis), not with
                          // the forearm, by this share at the cuff (eased in from the cut by slT); 0: the air moves with the
                          // arm, as the skirt's air moves with the legs. The arm swings through still air, so its sleeve's
@@ -619,6 +622,7 @@
     var x = c.x, xp = c.xp, P = c.P, free = c.free, mg = c.o.margin, fr = c.o.friction, kick = c.o.kick, back = c.o.backstop, t0 = c.tgt0, t1 = c.tgt;
     for (var k = 0; k < caps.length; k++) {
       mg = caps[k].arm ? c.o.armMargin : c.o.margin;
+      fr = caps[k].arm && c.o.armFriction !== null && c.o.armFriction !== undefined ? c.o.armFriction : c.o.friction;
       var s = caps[k].s, r = caps[k].r + mg, r2 = r * r, rmax = Math.max(r, capR(caps[k], 1) + mg) + (caps[k].arm ? c.o.armSide || 0 : 0);
       var ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
       var uu = ux * ux + uy * uy + uz * uz || 1e-12;
