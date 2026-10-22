@@ -74,8 +74,8 @@ The cave is the ontology game played inside the body map (`B/content/ontology-ga
   which the code comment calls "basic mindfulness".
 - **The daemon is a wall.** Wendell's ruling of 10 October: "If a daemon pops up then it needs to be worked with. We can
   pivot to a 321 discussion with the part until it feels satisfied." The cave asks permission first ("May I speak with the
-  Protector?"), and "Not now is an answer, not a skip". The daemon still holds the way, and Step back and "Rest it by the
-  door" stay available.
+  Protector?"), and "Not now is an answer, not a skip". The daemon still holds the way. Step back out is on every page of the
+  meeting, and Take it home carries the charge to the room.
 - **Spirits.** A worked charge leaves as a spirit that walks with the player and carries a light. A council position
   (`sc-*`, 20 October, from Wendell's ruling that spirits can die or be corrupted from neglect) adds a decline ladder, a
   declared rest, and mortality disclosed when a spirit bonds (`C/council/passes/6FACE_PASS_spirit-care1_2026-10-20.md`).
@@ -207,7 +207,7 @@ practices already do distress tolerance's job. The brief's bridge, "check the fa
 Metal's clean up move and Q1 are neighbors, and Q1 asks the same thing of a thought that Metal asks of a fear.
 
 **(proposal)** DBT skills enter as rows in LEVELS.md's block-to-skill table and as entries in a skill inventory, with the
-face tunnels dressing them. The record has no DBT content today (searched: no hits for DBT, dialectical or Linehan in either repo).
+face tunnels dressing them. The record has no DBT content today (searched both repos: no DBT or Linehan content; "dialectical" appears only in an unrelated book summary).
 
 Name collisions to settle before any DBT word reaches a player (rule: a source's word is cited, never renamed):
 
@@ -294,7 +294,7 @@ the player. These are lenses for the design pass and give no runtime authority.
 |---|---|---|---|---|---|
 | Younger kids | Never asked for in text. A "something happened that hurt or scared me" button, if any, ends the game's part and routes to a trusted adult | Creature-level work: feelings, breathing, naming. Whether to offer simple thought inquiry for everyday upsets (a friend left me out) is open (Q1) | Step back, Calm, "Not now" on every page | Trusted adult | `inner-creatures` strand (children raise creatures); Marble kata; the clinician read it lists as pending |
 | Middle and high school | Event card, locked once made, never inquired | Inquiry into thoughts only; preset lines allowed | Step back, Calm, rest by the door | Trusted adult named in advance; crisis line as text | Rules 5, 6, 14 |
-| Adult trauma healing | Event card or none; locked | Deeper inquiry, with polarity check-ins between steps | Always-available pause (all of the above); no step ends the sitting for the player | Crisis line as text plus a path to professional support (new) | Polarity as window of tolerance; T04 and T07 `whenNotToUse` |
+| Adult trauma healing | Event card or none; locked | Deeper inquiry, with polarity check-ins between steps | Always-available pause (all of the above); no step ends the sitting for the player | Crisis line as text plus a path to professional support (new) | Polarity as window of tolerance; T04 `whenNotToUse` |
 
 **Hard stops in every tier** **(proposal)**:
 
@@ -364,7 +364,7 @@ column means the repo already settles it, and the position stands unless the own
 | C1 | 5 | Streaks are barred everywhere in the record; the direction names a streak | inner-vessel pass, line 168 and 294; `C/docs/morning.md`; spirit-care pass (Challenger: "never a countdown or a streak") | Lapse path with no count (3.8). A visible run number would need a ruling | Owner (Q2) |
 | C2 | 7 | The research note says no children's version is in scope, and the audience is adult helpers. The `inner-creatures` strand shows children are in Wendell's plans. The tiers presuppose children | research note, `decision_or_open_authority`; `C/council/callsheets/inner-creatures.md` | Treat the note's child findings as a conservative floor. A children's tier is not a build target until the owner sets it | Owner (Q1) |
 | C3 | 7 | The "four faces" name collides with the Six Faces namespace | research note, `ontology_objects`; face-namespaces decision | Say "shadow kinds" in all text | Record |
-| C4 | 7 | The daemon wall has no skip (Wendell, 10 October); the direction asks for an always-available exit | `cave/DESIGN.md`, "No skip at a daemon"; research note's exitable test | A pause is not a skip: Step back, Calm and rest by the door stay on every page, and the daemon still holds the way | Record. The trauma tier's wording needs a read |
+| C4 | 7 | The daemon wall has no skip (Wendell, 10 October); the direction asks for an always-available exit | `cave/DESIGN.md`, "No skip at a daemon"; research note's exitable test | A pause is not a skip: Step back and Calm are on every page, Take it home and the room's rest-by-the-door are the other exits, and the daemon still holds the way | Record. The trauma tier's wording needs a read |
 | C5 | 7 | A gate that detects harm needs input. The record reads no free text, keeps nothing, and treats AI inference as proposal only. Mandated reporting, a trusted adult and child-data law are not in the record | rules 5, 12, 15; research note (child-data law, line 149) | Fire the gate on the player's own button or choice only | Owner and counsel (Q3) |
 | C6 | 1, 2 | "Hold and examine" means keeping thought lines. The cave keeps words on the page, with Big Mind as the one local-list exception | rule 15; `game-demo.md` PR 4 | Keep lines on the device by default, with Forget and Delete on each card; sync needs a permission grant (purpose, audience, duration) | Record |
 | C7 | 4 | Octalysis "Accomplishment" often means points and badges. The ontology allows capability within a named line and bars whole-person rank | Quickstart 6; Marble kata README | Show accomplishment as the creature or spirit changing; no points, badge or level | Record |
