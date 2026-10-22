@@ -414,6 +414,52 @@ sleeves aren't operating as one piece, hand moves through them, weird strings". 
 - **The wrist's twist** (`twist.mjs`) is 11.5 degrees and constant in character.py's walk, 7 to 11 in the mocap walk:
   it does not pinch the sleeve, which rides the forearm bone alone from the middle of the forearm on (round 10).
 
+### Round 15: no sliver faces in the reduced robe; the foot capsule stays off (2026-10-22)
+
+Measured on the slight and average dusk robes (`garments.py --build ... --palette dusk`, its `through at key` lines)
+and in Node (`heel.mjs`, `j5_cloth.mjs`, copied from `/mnt/project-files/3d-build/j5-sleeve-hem-2026-10-21/probes/`):
+
+- **What was through on the slight robe.** After the cloth walk, 12 points at keys 2 to 5: the front of the left knee
+  (thigh and knee points at 0.44 to 0.51 m), 12 to 18 cm from any slit's edge, not at a slit and not the forearm. Every
+  cloth point stood at its capsule's radius plus the margin (103 mm from the knee ball's middle); the knee came through
+  the middle of a face. Blender's decimation (`reduce`, ROBE_VERTS) had laid the flat skirt in slivers: the face over
+  the knee had sides of 5, 30 and 34 cm, and the reduced robes had 520 to 550 cloth edges over 10 cm, the longest 34 to
+  37 cm. Keeping a spread of points through the decimation (one every 8 cm) did not help: it still made slivers between them.
+- **The change.** After the decimation, each face's longest edge is cut at its middle while it is longer than `MAX_EDGE`
+  (0.14 m; longest-edge bisection, so no face gets thinner). That adds about 450 points, so `ROBE_VERTS` drops from 1450
+  to 1100 and the robes keep their size (129 to 144 KB, under the 150 KB line; 0.12 m with 1200 made the slight robe
+  157 KB). The slight robe: none through. A retry could not fix this: the same drape made the same slivers.
+- **Retries change something.** `DRAPE_TRIES` is 3 (was 6) and each try drapes with its own `CLEAR`
+  (`DRAPE_CLEARS` 0.006, 0.004, 0.005). Alone, the slight dusk robe left none through at 0.006 (three runs), 1 at
+  0.004 (a belt point), 6 at 0.005 (the forearm inside the tube), and 212 at 0.008 and 487 at 0.010, so the tries
+  stay near 0.006.
+- **The heels came from the slivers too.** Foot points through the skirt in 80 sampled frames of the walk (average
+  dusk; round 14: 6), and J5d's walking hem and fold jitter (lines 24 and 28). Two drapes came out of the same settings,
+  so both are shown:
+
+  | foot capsule | poke frames | J5d hem / fold (mm) |
+  |---|---|---|
+  | round 14 robe, none | 6 | 19.6 / 20.1 |
+  | none | 0 (drape A), 1 (drape B, twice) | 16.3 / 18.6 (A), 15.1 / 18.9 (B) |
+  | `FOOT_CAP` 0.8 | 2 (B) | 16.5 / 19.4 |
+  | 0.9 | 15 (a third drape) | 18.9 / 20.0 |
+  | 1.0 | 3 (B) | 17.5 / 21.9 |
+  | 0.8, `FOOT_BACK` | 1 (B) | 16.1 / 19.5 |
+  | 0.9, `FOOT_BACK` | 2 (A) | 16.7 / 20.6 |
+  | 1.0, `FOOT_BACK` | 0 (A) | 19.1 / 21.0 |
+
+  No capsule setting does better than none, and each shakes the hem more, so `FOOT_CAP` stays 0 and the front hem is not
+  cut higher.
+- **Masking and skinning (docs/3d-math.md rule 8 in the council's repo).** The toes that poke sit below the hem (0.15 m
+  above the floor), outside what the robe covers, so a body mask could not hide them. The knee points sit under the skirt,
+  but below the slits' tops (0.54 m), where the leg steps out through a slit in the walk, so masking them would leave a
+  hole that shows through the slit. Skinning the hem to the shin would stop the shin hem's swing, which is the motion
+  the sleeves were asked to match (round 14); the skirt already rides capsule pushes with a soft margin (2.5 cm), and
+  J5 and the probes already test by rays cast out from body points.
+- **Tests.** J5 passes on all nine (36 garments, none through at 25 keys, 23 to 144 KB, 427 s on 4 cores); an
+  earlier run, with tries at 0.006, 0.008 and 0.010, failed on the slight dusk robe alone. J5d passes: 3.23 ms a figure
+  (2.65 in round 14: the robe has about 300 more cloth points), walking jitter cuff 3.7, ties 3.2, hem 17.7, fold 18.3 mm.
+
 ## Rounds 1 to 5, in one line each
 
 - **Bone weights never move like cloth.** Rounds 1 to 4 drove the skirt with hem bones and slit weights. Every fix
@@ -432,7 +478,7 @@ sleeves aren't operating as one piece, hand moves through them, weird strings". 
 - **Update the view layer before reading the figure's places.** Blender's `view_layer.update()` must run after posing
   and before reading posed points, or the sheet shows the last pose's cloth on this pose's body.
 - **Drapes differ from process to process.** Blender's drape settles differently each run, and one run in four or
-  so leaves a few points through. `garments.py --all` re-drapes those in a fresh process (`DRAPE_TRIES`). Compare
+  so leaves a few points through. `garments.py --all` re-drapes those in a fresh process (`DRAPE_TRIES`), each with its own `CLEAR` (round 15). Compare
   cloth settings on the same drape, and give each parallel run its own `W`. The cloth jobs live in `$W/cloth-jobs`,
   and two runs sharing one `W` overwrite each other's jobs.
 

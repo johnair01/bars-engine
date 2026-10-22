@@ -53,7 +53,12 @@ GARMENTS = ("robe", "sash", "sash-robe", "topknot")
 MAX_BYTES = 150 * 1024
 THICK = 0.004                                    # metres of cloth, outward (solidify); the test uses the inner face
 LAST_THROUGH = []                                # (key, point, distance) of the last test's points through
-DRAPE_TRIES = 6                                  # processes tried at most, per build and palette, until the fit clears every point
+DRAPE_TRIES = 3                                  # processes tried at most, per build and palette, until the fit clears every point;
+                                                 # round 15: each try drapes with the cloth held off the body by its own CLEAR
+                                                 # (DRAPE_CLEARS), since a fresh process with the same settings mostly came out
+                                                 # the same (the slight robe six times over, 12 through after the cloth walk)
+DRAPE_CLEARS = (0.006, 0.004, 0.005)             # metres, CLEAR for each try (the slight dusk robe: 0.006 none through
+                                                 # alone, 0.004 1, 0.005 6, while 0.008 left 212 and 0.010 487)
 BEND_BODY, BEND_HEM = 0.05, 0.4                  # bending stiffness of the cloth, and of a hemmed edge (the cuff)
 CUFF_HEM = 0.10                                  # metres of the cuff that is hemmed
 WALK_X = int(os.environ.get("WALK_X", "1"))          # the walk strip's resolution multiple (3 to look closely at a cuff)
@@ -294,7 +299,9 @@ def material(obj, name):
 # stiffness (the solver's settings in drape()).
 
 CLOTH_H = 0.022                                  # metres between the pattern's points while draping
-ROBE_VERTS = 1450                                # the draped robe is reduced to about this many points for the phone
+ROBE_VERTS = int(os.environ.get("ROBE_VERTS", "1100"))  # the draped robe is reduced to about this many points for the phone
+                                                 # (round 15: 1450 before MAX_EDGE's cuts, which add about 450 back: the cloth
+                                                 # job's robe has 1530 to 1590 points, against 1590 to 1610 before)
 EASE = 0.05                                      # metres added to the chest's half width for the body panel
 HEM_CUT = 0.05                                   # the pattern's hem: the belt takes up about 0.1 m, so it hangs near HEM
 FLARE = 0.07                                     # metres the panel widens from the waist to the hem (a slight A-line)
@@ -304,7 +311,7 @@ SLEEVE_W = 0.40                                  # the depth the sleeve widens t
 CUFF_W = float(os.environ.get("CUFF_W", "0.40"))   # the sleeve's depth at the cuff, top seam to bottom seam (round 14: back to
                                                  # 0.40, a bell with room round the hand for its cloth hem band to swing in;
                                                  # round 8 narrowed it to 0.26 when the skinned end hung as a stiff flap)
-CLEAR = 0.006                                    # metres the cloth is held off the body while it falls (room for the
+CLEAR = float(os.environ.get("DRAPE_CLEAR", "0.006"))  # metres the cloth is held off the body while it falls (room for the
                                                  # reduction and the skinning to cut corners)
 ARM_OUT = math.radians(5)                        # the arms a little out from rest while the seams close
 BELT = 0.35                                      # how much the belt band shrinks to grip the waist
@@ -601,6 +608,32 @@ def trimmed(co, faces, parts, build):
     return me, labels, keep
 
 
+MAX_EDGE = float(os.environ.get("MAX_EDGE", "0.14"))   # round 15: metres; no face of the reduced robe has a longer edge
+                                                 # (0: no limit). Blender's decimation lays flat cloth (the skirt's front
+                                                 # over the thigh) in slivers 30 to 37 cm long. The cloth.js capsules hold
+                                                 # only the points off a leg, so the knee pushed a sliver's ends out and
+                                                 # came through its middle (the slight robe, 12 points at keys 2 to 5)
+
+
+def split_long(me, limit):
+    """Each face's longest edge, while it is longer than limit, cut in two at its middle (longest-edge bisection:
+    a sliver's long side is halved and the new faces are no thinner), the faces made triangles again."""
+    if limit <= 0:
+        return
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    for _ in range(8):
+        long = {max(f.edges, key=lambda e: e.calc_length()) for f in bm.faces}
+        long = [e for e in long if e.calc_length() > limit]
+        if not long:
+            break
+        bmesh.ops.subdivide_edges(bm, edges=long, cuts=1, use_grid_fill=False)
+        bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3])
+    bm.to_mesh(me)
+    bm.free()
+
+
 def reduce(me, labels, keep, target):
     """The cloth reduced to about target points for the phone, the trim's lines kept (Blender's decimation, held off
     the kept points, where labels meet). Each face keeps its label."""
@@ -615,6 +648,7 @@ def reduce(me, labels, keep, target):
     dec.ratio = min(1.0, target / len(me.vertices))
     dec.vertex_group, dec.invert_vertex_group, dec.vertex_group_factor = "keep", True, 1000.0
     out = bpy.data.meshes.new_from_object(obj.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    split_long(out, MAX_EDGE)
     V = [v.co.copy() for v in out.vertices]
     F = [list(p.vertices) for p in out.polygons]
     L = [kinds[d.value] for d in out.attributes["lab"].data]
@@ -1853,13 +1887,14 @@ def main():
         cmd += ["--no-fit"] if a.no_fit else []
         cmd += ["--no-legs"] if a.no_legs else []
         for attempt in range(DRAPE_TRIES):
-            subprocess.run(cmd, check=True)
+            env = dict(os.environ, DRAPE_CLEAR=str(DRAPE_CLEARS[min(attempt, len(DRAPE_CLEARS) - 1)]))
+            subprocess.run(cmd, check=True, env=env)
             with open(part) as f:
                 fr, rows = json.load(f)
             os.remove(part)
             if a.no_fit or all(r["worst"] == 0 for r in rows):
                 break
-            print(f"{b}-{p}: a drape left points through (try {attempt + 1} of {DRAPE_TRIES}), again", flush=True)
+            print(f"{b}-{p}: a drape left points through (try {attempt + 1} of {DRAPE_TRIES}), again with another CLEAR", flush=True)
         return fr, rows
     # round 15: the nine builds run side by side, one process a core (in a row they ran past J5's 1800 s on 4 cores)
     # (bpy only runs on the main thread: a single build is made here, not in the pool)
