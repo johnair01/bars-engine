@@ -39,8 +39,7 @@ doc follows them, and where a ruling meets an earlier record the doc says so and
 
 It does three things. It summarizes what the ontology says about the six game masters, the cave, perceptual shadow and
 the daemons (section 2). It maps the seven design directions onto that structure (section 3). It lists where the
-directions conflict with the record or fall into a gap (section 4), and it ends with the few questions only the owner can
-answer (section 5).
+directions conflict with the record or fall into a gap (section 4), and it ends with the six-face pass and the two questions that still reach the owner (section 5).
 
 It does not do four things:
 
@@ -49,7 +48,7 @@ It does not do four things:
 - It does not read Katie's or Linehan's source texts. The four questions, the three turnarounds, the four DBT modules and
   the skill acronyms are used as the brief gives them.
 - It does not replace a clinician read or a legal read. Section 4 marks where each is needed.
-- It does not land board rows. Section 5 holds the questions in the board's row format, ready to land.
+- It does not land board rows. Section 5 records the six-face pass and the board rows.
 
 Words marked **(proposal)** are this doc's. Words marked **(record)** cite the repo. Where the repo already settles
 something, the doc says so and the item stands as a position unless the owner flips it.
@@ -419,52 +418,40 @@ column means the repo already settles it, and the position stands unless the own
 | C19 | 5 | A coach or teacher reading streak data is a new audience. The permission envelope binds audience, purpose, duration and revocation, and for children a guardian is also an authority | privacy and consent authority (Quickstart); C16 | The player sees what is shared and with whom, and can stop it. No coach view without a grant | Owner and counsel |
 | C20 | 3 | "Reward engagement" can become pressure to disclose or to produce. A "pass" must still count as engagement, or disclosure becomes progression currency | rule 5; research note, `agency_and_consent` item 1 | Engagement means taking the step: an answer, a pass, or "not now" at a stop. Reward is the same for all three. Rewards never scale with length or intimacy | Council pass |
 
-## 5. Open questions for the owner
+## 5. Questions, after the six faces weighed in
 
-The reach test (`C/council/faces.yaml`, `reach_test`) leaves four questions the record cannot answer. Ruling 2 answered `tw-streak`, and ruling 4 narrowed `tw-names` to a counsel question. Each is written in the
-board's row format: options, the consequence of each, why only the owner can answer, and why it was not asked before. Per the
-repo rule they go on the Council Board and not into chat. **They have not been landed**, because that needs a write to
-six-faces-council `board/board_data.json` on main and a republish, which this session did not do. IDs are working names.
+On 2026-10-22 the owner asked that no question stay open unless the six faces had weighed in. Pass `work-dbt1`
+(`C/council/passes/6FACE_PASS_work-dbt1_2026-10-22.md`) ran all six, each with an I Ching cast, and the Sage synthesized.
+Three of the five drafted questions had record answers and are now positions on the Council Board. Two remain questions.
+The rows are on the board's source on main (six-faces-council). The claude.ai artifact copy has not been republished,
+because it lives in another organization from this session's.
 
-**`tw-audience`: which tiers are in scope, and in what order?**
-- *Options:* (a) adult and middle/high school first, children later; (b) all three together; (c) children only.
-- *Consequences:* (a) keeps to the research note's floor and puts the clinician read ahead of the children's tier. (b) adds the
-  children's data, adult-presence and mortality questions to the first build. (c) puts the whole safety burden on the
-  least-evidenced tier.
-- *Why only the owner:* audience, consent and release are reserved items, and the council record points two ways (C2, C14).
-- *Why not asked before:* the brief that created it is new. Also the record's "no kids' version" position is narrower than the
-  `inner-creatures` direction.
-- *Also decide:* whether mortal spirits apply to children.
+**Positions that stand unless flipped** (five faces recommended A on the first three):
 
-**`tw-streak`: answered by ruling 2 (section 1A).** Streaks are kept as assessment data and never as pressure. The open parts are
-the coach or teacher's permission grant and what the player sees (C19).
+- `tw-audience`: adults and middle/high school first. Children are a declared non-target for the first build, which ships with the
+  child code paths absent. Audience is reserved, so the owner can ratify or flip it.
+- `tw-gate-input`: the harm gate fires on the player's own button or choice only. The trusted-adult field exists empty and off
+  until a guardian model and counsel have read it.
+- `tw-level-disclosure`: a level reading is told once at first use, as a bounded claim, with contest and play-without paths. No
+  reading goes to a coach before the player is told.
+- `tw-tier-gate`: no child or trauma-tier build without a named reader's written read.
+- `tw-coach-test`: a coach view ships only if a classroom player can decline it without losing baseline reward or standing.
 
-**`tw-gate-input`: how does the gate know something happened?**
-- *Options:* (a) the player's own button or choice only; (b) the same, plus a trusted adult chosen in advance who is told when
-  the button is used; (c) free-text reading by the system.
-- *Consequences:* (a) keeps rules 5 and 12 and cannot catch what a player does not choose to say. (b) adds a guardian model (C16)
-  and a data path. (c) breaks the non-AI route and the privacy envelope and needs counsel.
-- *Why only the owner:* money, consent and release are reserved, and a legal read on child-data and reporting duties is needed.
-- *Why not asked before:* no children's tier existed in the record.
+**Questions that reach the owner** (all six faces named on each row):
 
-**`tw-names`: narrowed by ruling 4.** The plan is to adapt the practices, cite them on a works-cited page (section 8) and make
-the implementations the owner's own, which points to generic names with a lineage line. Whether adaptation needs the rights
-holders' permission is a legal read and stays open (C10).
+- `tw-clinician`: is there a named clinician who will read the Work and DBT branches, the harm gate and the child tier before any
+  child or trauma-tier player sees a build? Only the fact is the owner's, and naming a person is reserved.
+- `tw-permission`: does the owner authorise paying counsel to read the adaptation before the first public build? Money is reserved.
 
-**`tw-clinician`: is a clinician lined up for the read?**
-- *Options:* (a) a named clinician reads the Work and DBT branches, the gate and the child tier before any child or trauma-tier
-  play; (b) none yet, so those tiers wait.
-- *Consequences:* (a) unblocks the tiers. (b) keeps scope to the adult skills-practice tier.
-- *Why only the owner:* the fact is theirs. The `inner-creatures` sheet already lists a clinician read as pending.
-- *Why not asked before:* it was listed and never put as a question.
+**Flags from the pass.** The pass was close to unanimous on three questions, which the Sage treats as a flag: no face tried
+option B on gate input or C on level disclosure. The Challenger named streak data plus engagement rewards as a coercion path
+in classrooms. The Regent noted that ruling 1 stands only as a bounded, disclosed, correctable claim, and an amendment to the
+face-namespaces decision needs a new council decision with an exception record.
 
-New items from the rulings, for the next council pass and not yet board rows: C18 (how an emerging level is disclosed and
-corrected), C19 (the coach or teacher's grant) and C20 (what counts as engagement).
-
-Positions that stand without a question (they are answered by the record): "shadow kinds" and not "faces" (C3); pause is not
-skip (C4); thought lines stay on the device with Forget and Delete (C6); accomplishment shows as the creature changing, with
-no badge or level (C7); inquiry starts after the daemon is heard, and no answer earns more than another (C8); Wise Mind is the centre
-of the self (C13); every prompt has a non-AI template (C17).
+Positions that stand without a question (answered by the record): "shadow kinds" and not "faces" (C3); pause is not skip (C4);
+thought lines stay on the device with Forget and Delete (C6); accomplishment shows as the creature changing (C7); inquiry
+starts after the daemon is heard, and no answer earns more than another (C8); Wise Mind is the centre of the self (C13); every
+prompt has a non-AI template (C17). C19 and C20 are positions on the board (`tw-coach-grant`, `tw-ruling-reward`).
 
 ## 6. AQAL attention
 
@@ -497,8 +484,8 @@ Not checked:
 
 Recommended order, smallest first:
 
-1. Land the remaining rows in section 5 (`tw-audience`, `tw-gate-input`, `tw-clinician`) on the Council Board, and add rows for C18 to C20.
-2. Run one six-face pass on 3.4 and 3.7, with the Regent, Diplomat and Shaman lenses weighted for the gate.
+1. Read the owner's answers to `tw-clinician` and `tw-permission`, and a ratify-or-flip on `tw-audience`.
+2. Run a six-face pass on 3.4 (the face table) and 3.7 (the harm gate). Pass `work-dbt1` covered the five questions only.
 3. Scout T04, T06 and T07 in the registry and add DBT entries with the same fields (C15). That is the cheapest probe and
    needs no UI.
 4. If the owner chooses to proceed, scaffold a spec kit per `.agents/skills/spec-kit-translator/SKILL.md` with a Verification
