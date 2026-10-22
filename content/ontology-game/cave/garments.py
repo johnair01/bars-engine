@@ -38,6 +38,7 @@ report.json carries the counts; test J5 (tools/blender-cloud/tests/test_bpy.py) 
 150 KB. Needs bpy (tools/blender-cloud/README.md).
 """
 import argparse, json, math, os, subprocess, sys
+from concurrent.futures import ThreadPoolExecutor
 
 import bpy
 import bmesh
@@ -52,7 +53,12 @@ GARMENTS = ("robe", "sash", "sash-robe", "topknot")
 MAX_BYTES = 150 * 1024
 THICK = 0.004                                    # metres of cloth, outward (solidify); the test uses the inner face
 LAST_THROUGH = []                                # (key, point, distance) of the last test's points through
-DRAPE_TRIES = 6                                  # processes tried at most, per build and palette, until the fit clears every point
+DRAPE_TRIES = 3                                  # processes tried at most, per build and palette, until the fit clears every point;
+                                                 # round 15: each try drapes with the cloth held off the body by its own CLEAR
+                                                 # (DRAPE_CLEARS), since a fresh process with the same settings mostly came out
+                                                 # the same (the slight robe six times over, 12 through after the cloth walk)
+DRAPE_CLEARS = (0.006, 0.004, 0.005)             # metres, CLEAR for each try (the slight dusk robe: 0.006 none through
+                                                 # alone, 0.004 1, 0.005 6, while 0.008 left 212 and 0.010 487)
 BEND_BODY, BEND_HEM = 0.05, 0.4                  # bending stiffness of the cloth, and of a hemmed edge (the cuff)
 CUFF_HEM = 0.10                                  # metres of the cuff that is hemmed
 WALK_X = int(os.environ.get("WALK_X", "1"))          # the walk strip's resolution multiple (3 to look closely at a cuff)
@@ -293,17 +299,19 @@ def material(obj, name):
 # stiffness (the solver's settings in drape()).
 
 CLOTH_H = 0.022                                  # metres between the pattern's points while draping
-ROBE_VERTS = 1450                                # the draped robe is reduced to about this many points for the phone
+ROBE_VERTS = int(os.environ.get("ROBE_VERTS", "1100"))  # the draped robe is reduced to about this many points for the phone
+                                                 # (round 15: 1450 before MAX_EDGE's cuts, which add about 450 back: the cloth
+                                                 # job's robe has 1530 to 1590 points, against 1590 to 1610 before)
 EASE = 0.05                                      # metres added to the chest's half width for the body panel
 HEM_CUT = 0.05                                   # the pattern's hem: the belt takes up about 0.1 m, so it hangs near HEM
 FLARE = 0.07                                     # metres the panel widens from the waist to the hem (a slight A-line)
 NECK_HALF = 0.085                                # half the neck opening across the shoulders
 SCOOP = {-1: 0.07, 1: 0.015}                     # metres the neckline drops at the middle: front, back
 SLEEVE_W = 0.40                                  # the depth the sleeve widens toward from the armpit (a wide sleeve)
-CUFF_W = 0.26                                    # the sleeve's depth at the cuff, top seam to bottom seam: from the elbow
-                                                 # it narrows to this (round 8; at 0.40 the end hung below the hand as a
-                                                 # stiff flap)
-CLEAR = 0.006                                    # metres the cloth is held off the body while it falls (room for the
+CUFF_W = float(os.environ.get("CUFF_W", "0.40"))   # the sleeve's depth at the cuff, top seam to bottom seam (round 14: back to
+                                                 # 0.40, a bell with room round the hand for its cloth hem band to swing in;
+                                                 # round 8 narrowed it to 0.26 when the skinned end hung as a stiff flap)
+CLEAR = float(os.environ.get("DRAPE_CLEAR", "0.006"))  # metres the cloth is held off the body while it falls (room for the
                                                  # reduction and the skinning to cut corners)
 ARM_OUT = math.radians(5)                        # the arms a little out from rest while the seams close
 BELT = 0.35                                      # how much the belt band shrinks to grip the waist
@@ -600,6 +608,32 @@ def trimmed(co, faces, parts, build):
     return me, labels, keep
 
 
+MAX_EDGE = float(os.environ.get("MAX_EDGE", "0.14"))   # round 15: metres; no face of the reduced robe has a longer edge
+                                                 # (0: no limit). Blender's decimation lays flat cloth (the skirt's front
+                                                 # over the thigh) in slivers 30 to 37 cm long. The cloth.js capsules hold
+                                                 # only the points off a leg, so the knee pushed a sliver's ends out and
+                                                 # came through its middle (the slight robe, 12 points at keys 2 to 5)
+
+
+def split_long(me, limit):
+    """Each face's longest edge, while it is longer than limit, cut in two at its middle (longest-edge bisection:
+    a sliver's long side is halved and the new faces are no thinner), the faces made triangles again."""
+    if limit <= 0:
+        return
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    for _ in range(8):
+        long = {max(f.edges, key=lambda e: e.calc_length()) for f in bm.faces}
+        long = [e for e in long if e.calc_length() > limit]
+        if not long:
+            break
+        bmesh.ops.subdivide_edges(bm, edges=long, cuts=1, use_grid_fill=False)
+        bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3])
+    bm.to_mesh(me)
+    bm.free()
+
+
 def reduce(me, labels, keep, target):
     """The cloth reduced to about target points for the phone, the trim's lines kept (Blender's decimation, held off
     the kept points, where labels meet). Each face keeps its label."""
@@ -614,6 +648,7 @@ def reduce(me, labels, keep, target):
     dec.ratio = min(1.0, target / len(me.vertices))
     dec.vertex_group, dec.invert_vertex_group, dec.vertex_group_factor = "keep", True, 1000.0
     out = bpy.data.meshes.new_from_object(obj.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    split_long(out, MAX_EDGE)
     V = [v.co.copy() for v in out.vertices]
     F = [list(p.vertices) for p in out.polygons]
     L = [kinds[d.value] for d in out.attributes["lab"].data]
@@ -654,6 +689,9 @@ def smooth_skirt(weights, verts, faces, parts, rounds=SKIRT_SMOOTH, top=1.0):
 PANEL_FROM = 0.3                                 # round 12: the sleeve's seams open from this share of the forearm
                                                  # (from the elbow) to the cuff, so each sleeve hangs as two panels
 SLEEVE_CLOTH = os.environ.get("SLEEVE_CLOTH", "1") != "0"   # the panels as cloth (cloth.js; the default since round 12), 0: on spring chains (CLOTH.md)
+SLEEVE_TUBE = os.environ.get("SLEEVE_TUBE", "1") != "0"     # round 14: each sleeve stays one closed tube that rides the
+                                                 # arm, and only a band at its end is cloth (0: round 12's open panels)
+SLEEVE_BAND = float(os.environ.get("SLEEVE_BAND", "0.12"))                              # round 14: metres of the sleeve's end that are cloth (the hem band)
 PANEL_GAP = 0.003                                # metres between the two sides of an opened seam at rest (cloth.js
                                                  # welds points closer than 1e-5 m, and would sew it shut again)
 
@@ -708,7 +746,8 @@ def robe(fig, rig, build, cw):
     verts, faces, labels = reduce(*trimmed(co, faces, parts, build), ROBE_VERTS)
     W = bone_weights(fig)
     J = C.joints(build)
-    verts, faces, _ = panels(verts, faces, labels, J)
+    if not SLEEVE_TUBE:
+        verts, faces, _ = panels(verts, faces, labels, J)
     from_body = weight_source(fig, lambda c, w: main_bone(w) in ("hips", "spine", "neck", "hipL", "hipR",
                                                                   "shoulderL", "shoulderR"))
     from_arm = {s: weight_source(fig, lambda c, w, s=s: main_bone(w) in ("spine", "shoulder" + s, "elbow" + s, "wrist" + s))
@@ -717,6 +756,12 @@ def robe(fig, rig, build, cw):
     for f, (p, _) in zip(faces, labels):
         for v in f:
             of.setdefault(v, []).append(p)
+    band = {}                                    # round 14: per sleeve, the share of the forearm where its cloth band starts
+    for s, k in (("L", 1), ("R", 2)):
+        E, Wr = (Vector(J[b + s][0]) for b in ("elbow", "wrist"))
+        A = Wr - E
+        far = max(((verts[i] - E).dot(A) / A.length_squared for i, ps in of.items() if all(q % 3 == k for q in ps)), default=1.0)
+        band[s] = far - SLEEVE_BAND / A.length
     weights, cloth = [], []
     for i, p in enumerate(verts):
         ps = of.get(i, [0])
@@ -738,7 +783,8 @@ def robe(fig, rig, build, cw):
                 weights.append(norm(w))
                 # round 12, second pass: below where its seams open the sleeve's panels are cloth, as the skirt is
                 # below the belt, hung from the sleeve above and pushed aside by the forearm and the hand
-                cloth.append(1.0 if SLEEVE_CLOTH and ta > PANEL_FROM else 0.0)
+                # round 14: a sleeve kept one tube is cloth only in its hem band, as the skirt's hem hangs from it
+                cloth.append(1.0 if SLEEVE_CLOTH and ta > (band[s] if SLEEVE_TUBE else PANEL_FROM) else 0.0)
                 continue
             cloth.append(0.0)
     weights = smooth_skirt(weights, verts, faces, [p % 3 for p, _ in labels])
@@ -871,7 +917,8 @@ def leg_capsules(fig, build):
     """The capsules the skirt's cloth is pushed out by: each thigh (hip to knee) and shin (knee to ankle), the pelvis
     (hip joint to hip joint) and each knee (a ball: a bent knee's front stands out past both thigh and shin), each
     round the body points of its own bones (the pelvis: those between the hip joints, below the waist; a knee: those
-    within 8 cm of it)."""
+    within 8 cm of it). Round 14 tried a ball at each ankle for the heel: J5d's walking hem and fold shook past their
+    lines (27 and 31 mm), and the foot came through the skirt no less often in the Node walk, so it is not used."""
     J, W = C.joints(build), bone_weights(fig)
     out = []
     for a, b in CAPSULES:
@@ -897,9 +944,20 @@ def leg_capsules(fig, build):
             cap["backstop"] = True                       # the pelvis: wider than the hips, so it pushes a point out no
                                                          # further than its skinned place (cloth.js backstop, round 6)
         out.append(cap)
+    for s in "LR" if FOOT_CAP else "":
+        # round 15: the foot, from the ankle's joint to its toe (the ankle bone's tail), round the foot's own points,
+        # so the skirt's front is pushed off the toes as they swing through (cloth.js and cloth_walk.mjs carry bp)
+        A, B = (Vector(c) for c in J["ankle" + s])
+        own = [v.co for i, v in enumerate(fig.data.vertices) if main_bone(W[i]) == "ankle" + s]
+        d = sorted(seg_dist(c, A, B) for c in own)
+        r = d[min(len(d) - 1, int(CAP_PCT * len(d)))] * FOOT_CAP
+        out.append({"a": "ankle" + s, "b": "ankle" + s, "bp": [round(c, 4) for c in B], "r": round(r, 4), "foot": True,
+                    **({"backstop": True} if FOOT_BACK else {})})
     return out
 
 
+FOOT_CAP = float(os.environ.get("FOOT_CAP", "0"))  # round 15: the foot capsule's radius, as a share of its 99% fit (0: none)
+FOOT_BACK = os.environ.get("FOOT_BACK", "0") != "0"
 HAND_PCT = 0.9                                   # the hand's capsule: this share of the hand's points inside it (a flat
                                                  # hand in a round capsule; it only stops a sleeve point coming closer)
 
@@ -952,6 +1010,7 @@ def run_cloth(job, tag="cloth"):
     """Run cloth_walk.mjs on a job; returns its result."""
     d = os.path.join(os.environ.get("W", "/tmp/blender-cloud"), "cloth-jobs")
     os.makedirs(d, exist_ok=True)
+    tag = f"{tag}-{os.getpid()}"                         # builds run side by side (round 15): one job file each
     jp, op = os.path.join(d, tag + "-job.json"), os.path.join(d, tag + "-out.json")
     with open(jp, "w") as f:
         json.dump(job, f)
@@ -1542,7 +1601,7 @@ def build_all(build, palette, out_dir, do_fit=True):
 
     def opened(i):                                         # round 12: a forearm point past where the sleeve's seams open
         b = main_bone(W[i])
-        if b not in ("elbowL", "elbowR"):
+        if SLEEVE_TUBE or b not in ("elbowL", "elbowR"):   # round 14: a tube sleeve has no opening to show through
             return False
         E, Wr = (Vector(J[n + b[-1]][0]) for n in ("elbow", "wrist"))
         return (fig.data.vertices[i].co - E).dot(Wr - E) / (Wr - E).length_squared > PANEL_FROM - 0.05
@@ -1811,29 +1870,40 @@ def main():
         return
     combos = [(b, p) for b in C.BUILDS for p in C.PALETTES] if a.all else [(a.build, a.palette)]
     figs, report = {}, []
-    for b, p in combos:
-        if a.all:
-            # One fresh process per build and palette. The cloth solver settles differently from one process to the
-            # next (a drape of 392 points through at the start, or 91, or 297), and the fit cannot save the rare
-            # bad one, and it repeats itself inside a process. So a robe the fit leaves with points through is made
-            # again in a new process, up to DRAPE_TRIES times.
-            part = os.path.join(a.out, f"part-{b}-{p}.json")
-            cmd = [sys.executable, os.path.abspath(__file__), "--build", b, "--palette", p, "--out", a.out, "--part", part]
-            cmd += ["--no-fit"] if a.no_fit else []
-            cmd += ["--no-legs"] if a.no_legs else []
-            for attempt in range(DRAPE_TRIES):
-                subprocess.run(cmd, check=True)
-                with open(part) as f:
-                    fr, rows = json.load(f)
-                os.remove(part)
-                if a.no_fit or all(r["worst"] == 0 for r in rows):
-                    break
-                print(f"{b}-{p}: a drape left points through (try {attempt + 1} of {DRAPE_TRIES}), again", flush=True)
-        else:
+
+    def one(b, p):
+        if not a.all:
             fr, rows = build_all(b, p, a.out, not a.no_fit)
             if a.part:
                 with open(a.part, "w") as f:
                     json.dump([fr, rows], f)
+            return fr, rows
+        # One fresh process per build and palette. The cloth solver settles differently from one process to the
+        # next (a drape of 392 points through at the start, or 91, or 297), and the fit cannot save the rare
+        # bad one, and it repeats itself inside a process. So a robe the fit leaves with points through is made
+        # again in a new process, up to DRAPE_TRIES times.
+        part = os.path.join(a.out, f"part-{b}-{p}.json")
+        cmd = [sys.executable, os.path.abspath(__file__), "--build", b, "--palette", p, "--out", a.out, "--part", part]
+        cmd += ["--no-fit"] if a.no_fit else []
+        cmd += ["--no-legs"] if a.no_legs else []
+        for attempt in range(DRAPE_TRIES):
+            env = dict(os.environ, DRAPE_CLEAR=str(DRAPE_CLEARS[min(attempt, len(DRAPE_CLEARS) - 1)]))
+            subprocess.run(cmd, check=True, env=env)
+            with open(part) as f:
+                fr, rows = json.load(f)
+            os.remove(part)
+            if a.no_fit or all(r["worst"] == 0 for r in rows):
+                break
+            print(f"{b}-{p}: a drape left points through (try {attempt + 1} of {DRAPE_TRIES}), again with another CLEAR", flush=True)
+        return fr, rows
+    # round 15: the nine builds run side by side, one process a core (in a row they ran past J5's 1800 s on 4 cores)
+    # (bpy only runs on the main thread: a single build is made here, not in the pool)
+    if a.all:
+        with ThreadPoolExecutor(max(1, min(len(combos), int(os.environ.get("GARMENTS_JOBS", os.cpu_count() or 1))))) as ex:
+            done = list(ex.map(lambda c: one(*c), combos))
+    else:
+        done = [one(*combos[0])]
+    for (b, p), (fr, rows) in zip(combos, done):
         figs[(b, p)] = fr["file"]
         report += rows
         for r in rows:

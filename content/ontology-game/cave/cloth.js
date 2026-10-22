@@ -73,7 +73,7 @@
                          // than near rides the arm, one beyond far swings in full, smoothly between (off: see CLOTH.md)
     springPanels: true,  // a sleeve whose seams are open below springFrom (garments.py panels()) hangs as its panels,
                          // each on its own chains with nothing joining it to the others; false: one ring, as round 11
-    armBlend: 0.5,       // the blend band's reach for a sleeve panel's cloth (blend for the skirt's): a panel hangs
+    armBlend: 1,         // (round 14: 1, for the tube's hem band; the panels had 0.5) the blend band's reach for a sleeve panel's cloth (blend for the skirt's): a panel hangs
                          // from its sleeve a hand's breadth above the cuff, so it may stray further for its length
     armLen: 0,           // (see armBlend) 0: the reach grows with the length along the cloth, as the skirt's
     armMargin: 0.012,    // the sleeve panels' cloth kept this far off the forearm and hand (their points are closer
@@ -85,11 +85,22 @@
     armGap: 0,           // share of its skinned gap to the forearm's and hand's line that a panel point keeps: a panel
                          // may swing out and slide round the arm, and never falls in onto it (0: only the capsule)
     armGapMax: 0.2,      // metres: the farthest from a capsule's line the gap is kept
-    armSide: 0.05,       // metres from a forearm's or hand's capsule within which a panel point keeps the side of the arm
+    armSide: 0,          // (round 14: 0, the sleeve is one tube again and the arm cannot pass between panels; the panels,
+                         // garments.py SLEEVE_TUBE=0, need 0.05) metres from a forearm's or hand's capsule within which a panel point keeps the side of the arm
                          // its skinned place is on (round 13): a point the arm has passed is put back on that side, not
                          // pushed out where it is, which held the panels behind a forearm that had swung through them
     armSideT: 0.9,       // round 13b: the cuff's last tenth of the panel (slT above this) is only pushed out, not put back
                          // across the arm; the put-back flipped cuff points from side to side (J5d cuff 15.2 mm to 12.4)
+    armSideFade: null,   // round 14, tried on the panels: from this share of the panel down to armSideT the put-back eases
+                         // from whole to none (0.45 with armSideT 0.6 let the panels' ends trail the hand by 3 frames, but
+                         // the hand came out of the sleeve: CLOTH.md "Round 14"); null: whole down to armSideT
+    armFriction: 0.05,   // round 14: the friction of the forearm and hand on the sleeve's cloth (null: friction, the legs'). The
+                         // hem band slides round the hand; with the legs' 0.15 it caught and let go (J5d cuff 12.3 mm in the
+                         // browser; Node: 0 gives 4.1 mm but the band hardly moves, 2.4 cm; 0.05 gives 7.4 mm and 5.2 cm)
+    armAir: 1,           // round 14: the air the sleeve's cloth swings through moves with the trunk (the pelvis), not with
+                         // the forearm, by this share at the cuff (eased in from the cut by slT); 0: the air moves with the
+                         // arm, as the skirt's air moves with the legs. The arm swings through still air, so its sleeve's
+                         // end trails it (Wendell on round 9: "the sleeve hems should flow like the shin hem does")
     armSideShare: 1,     // how far out, as a share of the capsule (or its skinned place), a point put back across the arm goes:
                          // round 13 put it half way, inside the forearm (J5 T2: the slight robe's sleeve 7.4 mm into the
                          // arm walking, 22.8 at the fast swing); all the way out, now that the cuff's tip is left out of
@@ -403,6 +414,7 @@
     c.caps0 = c.caps; c.caps = capsules;
     if (c.sl) { c.raw0.set(c.raw); c.raw.set(targets); if (c.o.springs) targets = stepSprings(c, dt, all); }
     c.tgt0.set(c.tgt); c.tgt.set(targets);
+    if (c.o.armAir && c.slvIdx.length) bodyMotion(c);
     // The frame is cut into whole substeps of at most 1/substepHz, so the cloth always lands on the body's time. Round
     // 6 found the old way (fixed substeps and the remainder carried to the next frame) jittered: at 60 frames a second
     // the frame held 7, 8 or 9 substeps by rounding, so the pins covered the same move in 7 or 9 substeps and the
@@ -416,6 +428,23 @@
     for (var i = 0; i < c.P; i++) if (!free[i] && !c.isFol[i]) { x[3 * i] = tg[3 * i]; x[3 * i + 1] = tg[3 * i + 1]; x[3 * i + 2] = tg[3 * i + 2]; }
     follow(c);
     return n;
+  }
+
+  // round 14: how far the trunk moved this frame, the air a walking body carries with it: the middle of the pelvis's
+  // capsule (marked backstop), or, on a robe without one, the mean of the points that ride the body
+  function bodyMotion(c) {
+    var bv = c.bodyV || (c.bodyV = [0, 0, 0]), i;
+    bv[0] = bv[1] = bv[2] = 0;
+    for (i = 0; i < c.caps.length; i++) if (c.caps[i].bs && c.caps0[i]) {
+      var a = c.caps[i].s, b = c.caps0[i].s;
+      bv[0] = (a[0] + a[3] - b[0] - b[3]) / 2; bv[1] = (a[1] + a[4] - b[1] - b[4]) / 2; bv[2] = (a[2] + a[5] - b[2] - b[5]) / 2;
+      return;
+    }
+    var n = 0;
+    for (i = 0; i < c.P; i++) if (!c.free[i] && !c.isFol[i]) {
+      bv[0] += c.tgt[3 * i] - c.tgt0[3 * i]; bv[1] += c.tgt[3 * i + 1] - c.tgt0[3 * i + 1]; bv[2] += c.tgt[3 * i + 2] - c.tgt0[3 * i + 2]; n++;
+    }
+    if (n) { bv[0] /= n; bv[1] /= n; bv[2] /= n; }
   }
 
   // each point's unit normal (from the cloth's own triangles), for the air's drag across it
@@ -455,7 +484,14 @@
         // the air across the cloth: the motion along its normal, relative to the body's own motion there (the air
         // near a walking body moves with it), is slowed; the motion along the cloth (its fall) is not
         var pn = c.pn, s = h / c.span, rx = vx - (c.tgt[i3] - c.tgt0[i3]) * s, ry = vy - (c.tgt[i3 + 1] - c.tgt0[i3 + 1]) * s,
-          rz = vz - (c.tgt[i3 + 2] - c.tgt0[i3 + 2]) * s, un = rx * pn[i3] + ry * pn[i3 + 1] + rz * pn[i3 + 2];
+          rz = vz - (c.tgt[i3 + 2] - c.tgt0[i3 + 2]) * s;
+        if (c.slv[i] && o.armAir) {   // a sleeve's end swings through the trunk's air, not the forearm's (round 14)
+          var bw = o.armAir * c.slT[i], bv = c.bodyV;
+          rx = vx - ((1 - bw) * (c.tgt[i3] - c.tgt0[i3]) + bw * bv[0]) * s;
+          ry = vy - ((1 - bw) * (c.tgt[i3 + 1] - c.tgt0[i3 + 1]) + bw * bv[1]) * s;
+          rz = vz - ((1 - bw) * (c.tgt[i3 + 2] - c.tgt0[i3 + 2]) + bw * bv[2]) * s;
+        }
+        var un = rx * pn[i3] + ry * pn[i3 + 1] + rz * pn[i3 + 2];
         var cut = (o.dragQ * Math.abs(un) / h + o.dragL) * h * c.wi[i];
         if (cut > 1) cut = 1;
         vx -= cut * un * pn[i3]; vy -= cut * un * pn[i3 + 1]; vz -= cut * un * pn[i3 + 2];
@@ -586,6 +622,7 @@
     var x = c.x, xp = c.xp, P = c.P, free = c.free, mg = c.o.margin, fr = c.o.friction, kick = c.o.kick, back = c.o.backstop, t0 = c.tgt0, t1 = c.tgt;
     for (var k = 0; k < caps.length; k++) {
       mg = caps[k].arm ? c.o.armMargin : c.o.margin;
+      fr = caps[k].arm && c.o.armFriction !== null && c.o.armFriction !== undefined ? c.o.armFriction : c.o.friction;
       var s = caps[k].s, r = caps[k].r + mg, r2 = r * r, rmax = Math.max(r, capR(caps[k], 1) + mg) + (caps[k].arm ? c.o.armSide || 0 : 0);
       var ax = s[0], ay = s[1], az = s[2], ux = s[3] - ax, uy = s[4] - ay, uz = s[5] - az;
       var uu = ux * ux + uy * uy + uz * uz || 1e-12;
@@ -622,8 +659,17 @@
             var sx = ex / dq, sy = ey / dq, sz = ez / dq, sd = dx * sx + dy * sy + dz * sz;
             if (sd < 0) {   // moved with its last place too, so the move adds no speed (a kick there shook the cuff 28 mm)
               var mv = (c.o.armSideShare === undefined ? 1 : c.o.armSideShare) * Math.min(rr, dq) - sd;   // (round 13: all the way out jumped back and forth at the cuff's tip, now left out by armSideT)
+              // round 14: eased out toward the free end of the panel; a point moved only part of the way is then pushed
+              // out of the capsule where it is, as the free end is
+              var fd = c.o.armSideFade, sT = c.o.armSideT, part = fd !== null && fd !== undefined && sT > fd && c.slT[i] > fd;
+              if (part) mv *= (sT - c.slT[i]) / (sT - fd);
               x[i3] += sx * mv; x[i3 + 1] += sy * mv; x[i3 + 2] += sz * mv; xp[i3] += sx * mv; xp[i3 + 1] += sy * mv; xp[i3 + 2] += sz * mv;
-              continue;
+              if (!part) continue;
+              px = x[i3]; py = x[i3 + 1]; pz = x[i3 + 2];
+              t = ((px - ax) * ux + (py - ay) * uy + (pz - az) * uz) / uu;
+              t = t < 0 ? 0 : t > 1 ? 1 : t;
+              cx = ax + ux * t; cy = ay + uy * t; cz = az + uz * t; dx = px - cx; dy = py - cy; dz = pz - cz;
+              d2 = dx * dx + dy * dy + dz * dz;
             }
           }
           if (d2 >= rr * rr) continue;
@@ -1110,10 +1156,19 @@
         targets[3 * p] = ox; targets[3 * p + 1] = oy; targets[3 * p + 2] = oz;
       }
     }
-    var a3 = new THREE.Vector3(), b3 = new THREE.Vector3();
+    var a3 = new THREE.Vector3(), b3 = new THREE.Vector3(), bm = new THREE.Matrix4();
+    var boneIx = {};
+    skel0.bones.forEach(function (b, i) { boneIx[b.name] = i; });
     function capsules() {
       return caps.map(function (q) {
         byName[q.a].getWorldPosition(a3); byName[q.b].getWorldPosition(b3);
+        if (q.bp) {
+          // round 15: a capsule may end at a rest point that rides bone b (a foot: the ankle's joint to its toe),
+          // carried as skin() carries a point. bp is in Blender's space (Z up), the robe's is glTF's (Y up)
+          bm.multiplyMatrices(skinned.matrixWorld, skinned.bindMatrixInverse).multiply(byName[q.b].matrixWorld)
+            .multiply(skel0.boneInverses[boneIx[q.b]]).multiply(skinned.bindMatrix);
+          b3.set(q.bp[0], q.bp[2], -q.bp[1]).applyMatrix4(bm);
+        }
         return { s: [a3.x, a3.y, a3.z, b3.x, b3.y, b3.z], r: q.r * unit, rb: q.rb === undefined ? undefined : q.rb * unit, bs: !!q.backstop, arm: !!q.arm };
       });
     }
