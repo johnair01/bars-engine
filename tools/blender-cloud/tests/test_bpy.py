@@ -5,6 +5,10 @@ usage: /home/user/blenv/bin/python tools/blender-cloud/tests/test_bpy.py [R2,W1,
 """
 import json, math, os, pathlib, subprocess, sys, time
 
+import bpy  # noqa: F401 - importing bpy is what puts mathutils on the path
+import mathutils
+from mathutils.bvhtree import BVHTree
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ast, hashlib
 
@@ -31,15 +35,51 @@ def mesh_counts(glb):
 
 # ---- rebuilds -------------------------------------------------------------------------------------------------
 
+def figure_shape(glb):
+    """Each primitive's vertex and triangle counts, and the surface itself: vertices and triangles.
+
+    A hash cannot say this across machines. The same figure built on another Blender comes out with its vertices in
+    another order, in the seventh digit of a float, and split differently where two vertices coincide, so the bytes
+    differ while the body does not: measured 2026-10-22 at 0.7 mm of surface difference and 172k differing bytes.
+    """
+    j, bin_ = glb_read(glb)
+    counts, points, faces = [], [], []
+    for mesh in j["meshes"]:
+        for prim in mesh["primitives"]:
+            pos = accessor(j, bin_, prim["attributes"]["POSITION"])
+            idx = [t[0] for t in accessor(j, bin_, prim["indices"])]
+            offset = len(points)
+            points += [mathutils.Vector(p) for p in pos]
+            faces += [(idx[k] + offset, idx[k + 1] + offset, idx[k + 2] + offset) for k in range(0, len(idx), 3)]
+            counts.append((len(pos), len(idx) // 3))
+    return counts, points, faces
+
+
+def surface_gap(points, other_points, other_faces):
+    """The farthest any of these vertices sits from the other surface, in metres: nearest vertex would lie where two
+    builds split a seam differently, nearest surface does not."""
+    tree = BVHTree.FromPolygons(other_points, other_faces, all_triangles=True)
+    return max(tree.find_nearest(p)[3] for p in points)
+
+
 @test("R1")
 def r1():
-    root = copy_tree(tmpdir("r1"))
-    r, secs = run([root / "content/ontology-game/body/build_figure.py"])
-    _timing["R1"] = secs
-    check(r.returncode == 0, f"build_figure.py exited {r.returncode}: {r.stderr[-300:]}")
-    got, want = sha(root / "content/ontology-game/body/figure.glb"), sha(GAME / "body/figure.glb")
-    check(got == want, f"figure.glb differs from the committed file ({got[:12]} vs {want[:12]})")
-    return f"figure.glb byte for byte, {secs:.1f} s"
+    """The pinned figure rebuilds the same here twice, and it is the committed figure: same primitive counts, and
+    every vertex of each within 2 mm of the other's surface."""
+    runs = []
+    for n in (1, 2):
+        root = copy_tree(tmpdir(f"r1-{n}"))
+        r, secs = run([root / "content/ontology-game/body/build_figure.py"])
+        _timing.setdefault("R1", secs)
+        check(r.returncode == 0, f"build_figure.py run {n} exited {r.returncode}: {r.stderr[-300:]}")
+        runs.append(root / "content/ontology-game/body/figure.glb")
+    check(sha(runs[0]) == sha(runs[1]), "two builds here differ, so the figure is not deterministic on this machine")
+    counts, points, faces = figure_shape(runs[0])
+    want_counts, want_points, want_faces = figure_shape(GAME / "body/figure.glb")
+    check(counts == want_counts, f"primitive sizes differ from the committed figure: {counts} vs {want_counts}")
+    gap = max(surface_gap(points, want_points, want_faces), surface_gap(want_points, points, faces))
+    check(gap < 0.002, f"the surface sits up to {gap * 1000:.2f} mm from the committed figure")
+    return f"figure.glb twice the same, within {gap * 1000:.2f} mm of the committed surface, {secs:.1f} s"
 
 
 @test("R2")
@@ -555,9 +595,10 @@ def j6():
 def j7():
     """Integration (call sheet blender-frame-flesh-warp, "the held movement completing"): character.py --warp controller
     --integrate makes the Controller with a second action, Integrate, beside Walk, still one GLB under 300 KB that passes
-    the mesh census and walks clean. Read back from the GLB, Integrate opens both fists, takes the wrists off the hips
-    to hang, keeps the lower foot on the ground every key, folds no knee or elbow the wrong way, and holds still at
-    each end. The strips go to the eye."""
+    the mesh census and walks clean. Read back from the GLB, Integrate opens both fists, takes the wrists off the hips,
+    ends in the honored stance (the left arm loose at its side, the right offered forward for the child to hold),
+    keeps the lower foot on the ground every key, folds no knee or elbow the wrong way, and holds still at each end.
+    The strips go to the eye."""
     out = tmpdir("j7")
     r, secs = run([GAME / "cave/character.py", "--warp", "controller", "--integrate", "--out", out])
     check(r.returncode == 0, f"character.py exited {r.returncode}: {(r.stdout + r.stderr)[-500:]}")
