@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { carriedGarden, invitedView, itemFor, lanternLit, mayWrite, merge, MOVES, parsePath, plantedGarden, type Doc, type Who } from '@/lib/between/rules'
+import { carriedGarden, homeWrite, invitedView, itemFor, lanternLit, mayWrite, merge, MOVES, parsePath, plantedGarden, plantedHome, roomSummary, type Doc, type Who } from '@/lib/between/rules'
 
 const A = 'playerA', B = 'playerB', C = 'playerC'
 const member = (playerId: string): Who => ({ playerId, member: true, invited: false })
@@ -159,6 +159,103 @@ function testLogNamesActsWithoutCounts() { // T9
   assert.equal(mayWrite(member(B), g, it, 'update', { history: { h2: { act: 'welcomed', by: A, at: 9 } } }, lantern()).ok, false, 'a line in their own name')
 }
 
+/* ---------- rooms, the homeroom, looks, invitations (br-* positions) ---------- */
+const room = (extra: Doc = {}): Doc => spark({ phase: 'between', members: { [A]: {}, [B]: {} }, ...extra })
+const G = { table: 'garden' } as const
+
+function testHomeIsOnePersons() {
+  const h = plantedHome(A, 5)
+  assert.equal(h.kind, 'home'); assert.equal(h.phase, 'home'); assert.deepEqual(Object.keys(h.members as Doc), [A])
+  assert.equal(mayWrite(invited(B), h, G, 'update', { joinRequest: { uid: B } }, h).ok, false, 'nobody asks to join a homeroom')
+  assert.equal(mayWrite(stranger(B), h, { table: 'items', id: 'i1' }, 'set', { by: B }, null).ok, false)
+  assert.equal(mayWrite(member(A), h, G, 'update', { members: { [B]: {} } }, h).ok, false)
+  assert.equal(mayWrite(member(A), h, G, 'update', { phase: 'between' }, h).ok, false)
+  assert.equal(mayWrite(member(A), h, G, 'update', { invitations: { i1: { by: A, kind: 'sit' } } }, h).ok, false)
+  assert.equal(mayWrite(member(A), h, G, 'update', { kind: 'room' }, h).ok, false, 'a homeroom stays a homeroom')
+  assert.equal(mayWrite(member(A), h, G, 'update', { style: 'moonlit', lastTendedAt: 9 }, h).ok, true)
+  assert.equal(mayWrite(member(A), h, { table: 'items', id: 'i1' }, 'set', { by: A, kind: 'checkin' }, null).ok, true)
+  assert.equal(mayWrite(member(B), h, { table: 'items', id: 'i1' }, 'update', { text: 'x' }, { by: A }).ok, false, 'items from anyone else are refused')
+}
+
+function testRoomIsAlwaysARoom() {
+  const g = plantedGarden(A, { setup: { who: 'Ari' }, kind: 'home', looks: { [A]: 'a.average.light.afro.black.coat.violet', [B]: 'b.round.black.page.red.dress.saffron' }, invitations: { x: { by: B } } })!
+  assert.equal(g.kind, 'room', 'a planted garden cannot pose as a homeroom')
+  assert.deepEqual(g.looks, { [A]: 'a.average.light.afro.black.coat.violet' }, 'only your own look comes in with it')
+  assert.deepEqual(g.invitations, {}); assert.equal(g.style, 'dusk-hollow')
+  assert.equal(mayWrite(member(A), room(), G, 'update', { kind: 'home' }, room()).ok, false)
+}
+
+function testStyleIsThePlace() {
+  const g = room()
+  assert.equal(mayWrite(member(B), g, G, 'update', { style: 'ember-rain' }, g).ok, true, 'either person changes the style, no yes')
+  assert.equal(mayWrite(member(B), g, G, 'update', { style: '<b>' }, g).ok, false)
+}
+
+function testLooksOwnKey() {
+  const g = room(), look = 'c.slender.umber.sweep.blue.jacket.violet'
+  assert.equal(mayWrite(member(B), g, G, 'update', { looks: { [B]: look } }, g).ok, true)
+  assert.equal(mayWrite(member(B), g, G, 'update', { looks: { [A]: look } }, g).ok, false, 'only your own look')
+  assert.equal(mayWrite(member(B), g, G, 'update', { looks: { [B]: 'data:image/png;base64,xx' } }, g).ok, false, 'a look is choices, never a photo')
+  assert.equal(mayWrite(member(B), g, G, 'update', { looks: { [B]: null } }, g).ok, true)
+}
+
+function testInvitations() {
+  const g = room(), sit = { by: A, kind: 'sit', when: 100, note: 'tea at the hearth?', at: 50, answer: null }
+  assert.equal(mayWrite(member(A), g, G, 'update', { invitations: { s1: sit } }, g).ok, true)
+  assert.equal(mayWrite(member(A), g, G, 'update', { invitations: { s1: { ...sit, by: B } } }, g).ok, false, 'in your own name')
+  assert.equal(mayWrite(member(A), g, G, 'update', { invitations: { s1: { ...sit, answer: 'yes' } } }, g).ok, false, 'no answering your own')
+  assert.equal(mayWrite(member(A), g, G, 'update', { invitations: { s1: { ...sit, note: 'x'.repeat(281) } } }, g).ok, false)
+  assert.equal(mayWrite(member(A), g, G, 'update', { invitations: { s1: { ...sit, kind: 'join' } } }, g).ok, false)
+  assert.equal(mayWrite(member(A), spark(), G, 'update', { invitations: { s1: sit } }, spark()).ok, false, 'a spark has nobody to invite to sit')
+  const sent = room({ invitations: { s1: sit } })
+  assert.equal(mayWrite(member(B), sent, G, 'update', { invitations: { s1: { answer: 'yes', answeredAt: 60 } } }, sent).ok, true)
+  assert.equal(mayWrite(member(B), sent, G, 'update', { invitations: { s1: { answer: 'maybe' } } }, sent).ok, false)
+  assert.equal(mayWrite(member(B), sent, G, 'update', { invitations: { s1: { note: 'changed' } } }, sent).ok, false, 'the invitation stays theirs')
+  assert.equal(mayWrite(member(B), sent, G, 'update', { invitations: { s1: null } }, sent).ok, false)
+  assert.equal(mayWrite(member(A), sent, G, 'update', { invitations: { s1: { when: 200 } } }, sent).ok, true)
+  assert.equal(mayWrite(member(A), sent, G, 'update', { invitations: { s1: null } }, sent).ok, true, 'who sent it takes it back')
+}
+
+function testHomePrivateDoc() {
+  const h = plantedHome(A), path = parsePath(`data/users/${A}/home`)!
+  assert.deepEqual(path, { table: 'privates', playerId: A, key: 'home' })
+  const doc = { look: 'a.average.light.afro.black.coat.violet', goals: { g1: { text: 'Say the hard thing kindly', room: 'gardenX', at: 1 } }, checkins: { c1: { feel: 'water', line: 'tired', at: 2 } }, lastCheckin: 2 }
+  assert.equal(mayWrite(member(A), h, path, 'set', doc, null).ok, true)
+  assert.equal(mayWrite(member(B), h, path, 'set', doc, null).ok, false)
+  assert.equal(mayWrite(member(A), room(), path, 'set', doc, null).ok, false, 'the look and hopes live in the homeroom')
+  assert.equal(homeWrite({ ...doc, score: 3 }).ok, false)
+  assert.equal(homeWrite({ goals: { g1: { text: '' } } }).ok, false)
+  assert.equal(homeWrite({ checkins: { c1: { feel: 'joy', at: 1 } } }).ok, false, 'one of the five feelings')
+  assert.equal(mayWrite(member(A), h, path, 'update', { goals: { g1: null } }, doc).ok, true)
+}
+
+function testRoomSummary() {
+  const now = 100 * 864e5
+  const g = room({ lastTendedAt: now - 6 * 864e5, style: 'moonlit',
+    invitations: { s1: { by: B, kind: 'sit', when: now + 1, answer: null }, s0: { by: A, kind: 'sit', when: now - 864e5, answer: 'yes' } } })
+  const items: { id: string; data: Doc }[] = [
+    { id: 'ag1', data: { kind: 'agreement', status: 'proposed', by: B, yes: { [B]: true }, text: 'secret words' } },
+    { id: 'ag2', data: { kind: 'agreement', status: 'proposed', by: A, yes: { [A]: true } } },
+    { id: 'ag3', data: { kind: 'agreement', status: 'revisit', by: A, yes: {} } },
+    { id: 'of1', data: { kind: 'charge', status: 'offered', by: B, sealed: true, text: 'sealed words' } },
+    { id: 'of2', data: { kind: 'idea', status: 'offered', by: A } },
+    { id: 'ln1', data: { kind: 'lantern', status: 'offered', by: B, yes: {} } },
+    { id: 'ln2', data: { kind: 'lantern', status: 'offered', by: B, yes: { [A]: 5 } } },
+    { id: 'pk1', data: { kind: 'agreement', status: 'agreed', by: A, pending: { act: 'retire', by: B } } },
+    { id: 'old', data: { kind: 'charge', status: 'composted', by: B } },
+  ]
+  const s = roomSummary(A, 'gX', g, items, { now, names: { [B]: 'Bea' }, hereNow: true })
+  assert.deepEqual(s.waiting.map(w => w.id + ':' + w.what).sort(), ['ag1:agreement', 'ln1:lantern', 'of1:offer', 'pk1:ask'])
+  assert.deepEqual(s.revisit, ['ag3'])
+  assert.deepEqual(s.invitations.map(i => i.id), ['s1'])
+  assert.equal(s.lastSatTogether, now - 864e5)
+  assert.equal(s.stale, true); assert.equal(s.person, B); assert.equal(s.who, 'Ari'); assert.equal(s.style, 'moonlit'); assert.equal(s.hereNow, true)
+  assert.ok(!JSON.stringify(s).includes('words'), 'the summary carries no item words')
+  const forB = roomSummary(B, 'gX', g, items, { now, names: { [A]: 'Alex' } })
+  assert.equal(forB.who, 'Alex', 'the person who joined sees the starter\'s name')
+  assert.equal(roomSummary(A, 'gS', spark({ joinRequest: { uid: C } }), [], { now }).joinWaiting, true)
+}
+
 testPaths()
 testSealedWordsStayOnTheServer()
 testMergeMatchesThePage()
@@ -172,4 +269,11 @@ testNoWordsOrGlowInShare()
 testUnofferedChargeMakesTheSameEmber()
 testMakersMark()
 testLogNamesActsWithoutCounts()
+testHomeIsOnePersons()
+testRoomIsAlwaysARoom()
+testStyleIsThePlace()
+testLooksOwnKey()
+testInvitations()
+testHomePrivateDoc()
+testRoomSummary()
 console.log('between rules: all passed')

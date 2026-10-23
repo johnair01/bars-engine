@@ -1,7 +1,7 @@
 /**
  * @route GET /api/between
  * @entity PLAYER
- * @description The Between gardens the signed-in player tends, newest first
+ * @description The signed-in player's homeroom (made on the first call) and the rooms they tend, newest first, each with what it waits on
  * @permissions signed-in player (bars_player_id cookie)
  * @relationships PLAYER (BetweenMember)
  * @example GET /api/between
@@ -13,7 +13,7 @@
  * @example POST /api/between { "data": { "setup": { "who": "...", "kind": "Friendship", "hopes": "..." } } }
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { currentPlayer, gardensOf, plant } from '@/lib/between/store'
+import { currentPlayer, ensureHome, plant } from '@/lib/between/store'
 import { plantedGarden, type Doc } from '@/lib/between/rules'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +21,8 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const player = await currentPlayer()
   if (!player) return NextResponse.json({ error: 'Sign in to bars-engine to open the garden' }, { status: 401 })
-  return NextResponse.json({ me: player.id, name: player.name, gardens: await gardensOf(player.id) })
+  const { home, gardens } = await ensureHome(player.id)
+  return NextResponse.json({ me: player.id, name: player.name, home, gardens })
 }
 
 export async function POST(req: NextRequest) {

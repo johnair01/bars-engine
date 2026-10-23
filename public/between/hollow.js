@@ -466,14 +466,17 @@ export function buildHollow(scene, opts = {}) {
   }
 
   /* ---------- the valley outside: sky, sun, mountains, forest, river (unlit, no fog) ---------- */
+  let sunM = null, starMat = null;
   {
     const sky = new THREE.ShaderMaterial({
-      side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uSun: { value: new THREE.Vector3(0.18, 0.05, -1).normalize() } },
+      side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uSun: { value: new THREE.Vector3(0.18, 0.05, -1).normalize() },
+        uTop: { value: new THREE.Vector3(0.17, 0.12, 0.36) }, uMid: { value: new THREE.Vector3(0.52, 0.33, 0.62) },
+        uLow: { value: new THREE.Vector3(0.98, 0.56, 0.40) }, uHor: { value: new THREE.Vector3(1.0, 0.74, 0.48) } },
       vertexShader: "varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: `varying vec3 vDir; uniform vec3 uSun;
+      fragmentShader: `varying vec3 vDir; uniform vec3 uSun, uTop, uMid, uLow, uHor;
         void main(){
           float h = vDir.y;
-          vec3 top = vec3(0.17,0.12,0.36), mid = vec3(0.52,0.33,0.62), low = vec3(0.98,0.56,0.40), hor = vec3(1.0,0.74,0.48);
+          vec3 top = uTop, mid = uMid, low = uLow, hor = uHor; // the room style sets these (public/calrunia/room-styles.js)
           vec3 c = mix(low, mid, smoothstep(0.02,0.22,h)); c = mix(c, top, smoothstep(0.2,0.65,h)); c = mix(hor, c, smoothstep(-0.02,0.06,h));
           float s = max(dot(vDir, uSun), 0.0);
           c += vec3(1.0,0.6,0.3) * pow(s, 18.0) * 0.6 + vec3(1.0,0.85,0.6) * pow(s, 400.0) * 2.0;
@@ -483,7 +486,7 @@ export function buildHollow(scene, opts = {}) {
         }`,
     });
     const skyM = new THREE.Mesh(new THREE.SphereGeometry(95, 32, 16), sky); skyM.renderOrder = -2; root.add(skyM);
-    const sunM = new THREE.Mesh(new THREE.CircleGeometry(3.2, 32), new THREE.MeshBasicMaterial({ color: 0xffcf86, fog: false }));
+    sunM = new THREE.Mesh(new THREE.CircleGeometry(3.2, 32), new THREE.MeshBasicMaterial({ color: 0xffcf86, fog: false }));
     sunM.position.set(0.18, 0.05, -1).normalize().multiplyScalar(88); sunM.position.y = 3.4; sunM.lookAt(0, 0, 0); root.add(sunM);
     // mountain ranges, far to near
     const range = (dist, base, amp, col, seed, peaks) => {
@@ -524,7 +527,8 @@ export function buildHollow(scene, opts = {}) {
     const stars = new THREE.BufferGeometry(), sp = [];
     for (let i = 0; i < 70; i++) { const a = -1.4 + r() * 2.8, e = 0.35 + r() * 0.5; sp.push(Math.sin(a) * Math.cos(e) * 90, Math.sin(e) * 90, -Math.cos(a) * Math.cos(e) * 90); }
     stars.setAttribute("position", new THREE.Float32BufferAttribute(sp, 3));
-    root.add(new THREE.Points(stars, new THREE.PointsMaterial({ color: 0xfff4e0, size: 2.5, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.7 })));
+    starMat = new THREE.PointsMaterial({ color: 0xfff4e0, size: 2.5, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.7 });
+    root.add(new THREE.Points(stars, starMat));
     anim.sky = sky;
   }
 
@@ -542,6 +546,8 @@ export function buildHollow(scene, opts = {}) {
   const hemi = new THREE.HemisphereLight(0xffcf9a, 0x2a1c22, 0.55); root.add(hemi);
   const dusk = new THREE.DirectionalLight(0x8a7ad8, 0.9); dusk.position.set(0.5, 3, -10); root.add(dusk);
   const rim = new THREE.DirectionalLight(0xff9a6a, 0.35); rim.position.set(2, 1.5, -12); root.add(rim);
+  // the strengths the flicker moves around; a room style changes them (public/calrunia/room-styles.js applyStyle)
+  const base = { hemi: 0.55, fire: 16, lantern: 7 };
   const fire = new THREE.PointLight(0xff8a3a, 16, 10, 1.5); fire.position.set(HEARTH.x * 0.82, 0.8, HEARTH.z * 0.82); root.add(fire);
 
   /* ---------- once a frame ---------- */
@@ -553,12 +559,12 @@ export function buildHollow(scene, opts = {}) {
     }
     // fire flicker, and the light it throws
     const fl = 0.75 + Math.sin(t * 11.3) * 0.08 + Math.sin(t * 23.7) * 0.06 + Math.sin(t * 5.1) * 0.08;
-    fire.intensity = 16 * fl * scale;
+    fire.intensity = base.fire * fl * scale;
     for (const f of anim.flames) { const k = 0.8 + Math.sin(t * 9 + f.ph) * 0.18 + Math.sin(t * 21 + f.ph * 2) * 0.1; f.m.scale.set(f.base.x * (1.1 - k * 0.2), f.base.y * k * 1.15, f.base.z); f.m.position.x = f.x + Math.sin(t * 6 + f.ph) * 0.03; }
-    for (const L of anim.lanterns) { L.g.rotation.z = Math.sin(t * 0.7 + L.ph) * 0.03; L.g.rotation.x = Math.sin(t * 0.5 + L.ph) * 0.025; L.light.intensity = 7 * scale * (0.93 + Math.sin(t * 7 + L.ph) * 0.04 + Math.sin(t * 17 + L.ph) * 0.03); }
+    for (const L of anim.lanterns) { L.g.rotation.z = Math.sin(t * 0.7 + L.ph) * 0.03; L.g.rotation.x = Math.sin(t * 0.5 + L.ph) * 0.025; L.light.intensity = base.lantern * scale * (0.93 + Math.sin(t * 7 + L.ph) * 0.04 + Math.sin(t * 17 + L.ph) * 0.03); }
     if (anim.water) anim.water.uniforms.uT.value = t;
     if (anim.crystalLight) { anim.crystalLight.intensity = 6 * (0.85 + Math.sin(t * 1.3) * 0.15); anim.crystalMat.emissiveIntensity = 1.2 + Math.sin(t * 1.3) * 0.25; }
-    hemi.intensity = 0.55 * (0.6 + 0.4 * scale);
+    hemi.intensity = base.hemi * (0.6 + 0.4 * scale);
     // vines sway
     if (anim.vines) {
       const { mesh, strands } = anim.vines; let k = 0;
@@ -581,7 +587,9 @@ export function buildHollow(scene, opts = {}) {
   for (const f of anim.flames) f.m.userData.keep = true;
   cushions.forEach(c => c.userData.keep = true);
   mergeStatic(root);
-  return { root, update, cushions };
+  // what a room style sets (public/calrunia/room-styles.js applyStyle); values only
+  const handles = { sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base };
+  return { root, update, cushions, handles };
 }
 /* A standing paper lantern made at the hearth (council pass crafting-charge1): the hanging lanterns' body and paper, on a
    small wooden foot, one size for all. It glows by its own emissive paper and carries no point light. */
