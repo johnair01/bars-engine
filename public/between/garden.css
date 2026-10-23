@@ -117,3 +117,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .loading { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--glass-muted); }
 .loading h1 { color: var(--glass-ink); font-size: 1.6rem; margin-bottom: 8px; }
 @media (max-width: 420px) { .hud button { padding: 8px 12px; font-size: .84rem; } }
+/* caption mode (round 4): words wait unseen, keeping their place, and come in a line at a time */
+.cw { opacity: 0; transition: opacity .35s ease; }
+.cw.on { opacity: 1; }
+[data-reading] { cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .cw { transition: none; } }

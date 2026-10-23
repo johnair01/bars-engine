@@ -7,6 +7,7 @@ import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, merg
 import { createCreature } from "./creature.js";
 import { createAmbient } from "./ambient.js";
 import { installPaint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
+import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // round 4: caption mode
 installPaint();
 
 /* ===================================================================================================
@@ -68,7 +69,7 @@ const ls = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
-function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 3400); }
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; readIn(t); clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, Math.max(3400, readMs(msg.split(/\s+/).length) + 2600)); }
 function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -480,7 +481,8 @@ function syncThings() {
   for (const [id, it] of V.items) {
     const lan = it.kind === "lantern";
     nextStatus.set(id, lan ? "lantern:" + (it.element || "") + (lanternLit(it) ? "+lit" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z : "")
-      : it.status + (it.pending ? "+p" : "") + (it.opened && it.opened[me] ? "+o" : ""));
+      : it.status + (it.pending ? "+p" : "") + (it.opened && it.opened[me] ? "+o" : "") + ":" + (it.pos ? it.pos.x + "," + it.pos.z : "")
+        + (it.moveAsk && it.moveAsk.pos ? ">" + it.moveAsk.pos.x + "," + it.moveAsk.pos.z : ""));
     const shownHere = lan ? true : it.kind === "agreement" ? it.status !== "composted" || now() - it.at < 864e5 * 30 : it.status === "offered";
     const was = prevStatus.get(id);
     if (was && was.startsWith("offered") && (it.status === "received" || it.status === "kept")) flyIn(id);
@@ -496,6 +498,13 @@ function syncThings() {
       const pos = walkable(raw.x, raw.z, 0.25) ? raw : pushOut(new THREE.Vector3(raw.x, 0, raw.z), 0.3);
       const group = it.kind === "agreement" ? plantMesh(it, g) : lan ? lanternMesh(it, g) : orbMesh(it, g);
       group.position.set(pos.x, groundY(pos.x, pos.z), pos.z);
+      // an ask to move a shared agreement: a faint ring where it would go, until the other person answers
+      if (it.moveAsk && it.moveAsk.pos) {
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.26, 0.4, 40), new THREE.MeshBasicMaterial({ color: hueOf(it.moveAsk.by, g), transparent: true, opacity: 0.9, depthWrite: false }));
+        ring.rotation.x = -Math.PI / 2; ring.userData.pulse = true;
+        ring.position.set(it.moveAsk.pos.x - pos.x, groundY(it.moveAsk.pos.x, it.moveAsk.pos.z) - group.position.y + 0.03, it.moveAsk.pos.z - pos.z);
+        group.add(ring);
+      }
       gardenGroup.add(group);
       t = { id, kind: it.kind === "agreement" ? "agreement" : lan ? "lantern" : "offering", group, pos: new THREE.Vector3(pos.x, 0, pos.z), sig };
       things.set(id, t);
@@ -553,17 +562,44 @@ function walkerPos(w, tSec) {
   }
   const mode = w.type === "daemon" ? (look.state === "charged" ? "near" : "mixed") : (look.state === "allied" ? "near" : "mixed");
   const k = Math.floor(tSec / LEG), f = (tSec % LEG) / LEG;
-  const a = waypoint(w.id, k, mode), b = waypoint(w.id, k + 1, mode);
+  const spirit = w.type === "spirit";
+  const a = spirit ? spiritStop(w.id, k, mode) : waypoint(w.id, k, mode), b = spirit ? spiritStop(w.id, k + 1, mode) : waypoint(w.id, k + 1, mode);
   const walkFrac = 0.55;
+  let p, walking;
+  if (spirit && legHalts(w.id, k)) {
+    // a spirit stops partway, looks about, then goes on: two eased walks with a rest between
+    const m = a.clone().lerp(b, 0.45), ease = u => u * u * (3 - 2 * u);
+    if (f < 0.26) { p = a.clone().lerp(m, ease(f / 0.26)); walking = true; }
+    else if (f < 0.36) { p = m; walking = false; }
+    else if (f < 0.62) { p = m.clone().lerp(b, ease((f - 0.36) / 0.26)); walking = true; }
+    else { p = b.clone(); walking = false; }
+    if (!walking) { const out = { p, moving: false, dir: b.clone().sub(a) }; if (f >= 0.62 && b.sniff) out.sniff = b.sniff; return out; }
+    return { p, moving: true, dir: f < 0.26 ? m.clone().sub(a) : b.clone().sub(m) };
+  }
   const u = f < walkFrac ? f / walkFrac : 1;
   const e = u * u * (3 - 2 * u);
-  const p = a.clone().lerp(b, e);
+  p = a.clone().lerp(b, e);
   // just let go after being called over: walk from where it waited back onto its own path
   if (d.stay && now() - d.stay.until < 6000) {
     const v = (now() - d.stay.until) / 6000;
     return { p: new THREE.Vector2(d.stay.x, d.stay.z).lerp(p, v), moving: true, dir: p.clone().sub(new THREE.Vector2(d.stay.x, d.stay.z)) };
   }
-  return { p, moving: f < walkFrac, dir: b.clone().sub(a) };
+  return { p, moving: f < walkFrac, dir: b.clone().sub(a), sniff: f >= walkFrac && b.sniff ? b.sniff : null };
+}
+/* Spirits that move like animals (ba-round4-comfort, Ari's note 5). Every choice comes from the spirit's id, the leg number
+   and where the garden's things stand, so both screens see the same stop at the same moment on the shared clock. */
+const legHalts = (id, k) => rng(hash(id + ":halt:" + k))() < 0.4;
+function spiritStop(id, k, mode) {
+  const b = waypoint(id, k, mode);
+  if (rng(hash(id + ":sniff:" + k))() >= 0.45) return b;
+  // go and sniff at the thing nearest this stop, if one stands within reach
+  let best = null, bd = 3.2;
+  for (const t of [...things.values()].sort((x, y) => x.id < y.id ? -1 : 1)) { const d = Math.hypot(t.pos.x - b.x, t.pos.z - b.y); if (d < bd) { bd = d; best = t; } }
+  if (!best) return b;
+  const away = new THREE.Vector2(b.x - best.pos.x, b.y - best.pos.z); if (away.lengthSq() < 1e-4) away.set(0, 1);
+  const at = new THREE.Vector2(best.pos.x, best.pos.z).add(away.normalize().multiplyScalar(0.5));
+  if (!walkable(at.x, at.y, 0.3)) return b;
+  at.sniff = best.pos; return at;
 }
 const walkers = new Map(); // id -> { id, type, doc, body, holder, ready }
 async function syncWalkers() {
@@ -586,6 +622,7 @@ async function syncWalkers() {
         ? await makeBody(model, 1.6, ELEMENTS[x.doc.element] ?? 0xc9a35a, 0.35, { ring, ringR: 0.55, ringW: 0.05, ringA: 0.6 })
         : await makeBody(model, 1.62, null, 0, { ring, ringR: 0.36, ringW: 0.05, ringA: 0.6 });
       if (walkers.get(key) !== w) return;
+      b.holder.rotation.order = "YXZ"; // yaw, then the nose can dip on its own axis
       w.body = b; w.holder = b.holder; w.ready = true; scene.add(b.holder);
     })().catch(() => {});
   }
@@ -679,34 +716,58 @@ const lastFocus = new THREE.Vector3(0, 1, 0);
 let camYaw = 0, camPitch = 0.5, camDist = innerWidth < innerHeight ? 4.4 : 5.2, camTogether = false, togetherK = 0;
 const pointers = new Map(); let dragMoved = 0, pinch0 = null;
 const ray = new THREE.Raycaster(); const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-renderer.domElement.addEventListener("pointerdown", e => { pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); dragMoved = 0; if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: camDist }; } renderer.domElement.setPointerCapture(e.pointerId); });
+/* Carrying: a drag that starts on something of yours you have tapped moves it instead of the view (ba-round4-comfort). */
+let carry = null;
+function floorAt(cx, cy) {
+  ray.setFromCamera(new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1), camera);
+  const hit = new THREE.Vector3(), daisPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -DAIS_Y);
+  return (ray.ray.intersectPlane(daisPlane, hit) && Math.hypot(hit.x, hit.z) < 2.4) || ray.ray.intersectPlane(floorPlane, hit) ? hit : null;
+}
+function carryStart(cx, cy) {
+  if (!selected || !selected.startsWith("item:") || placing) return null;
+  const id = selected.slice(5), t = things.get(id); if (!t || moveRight(t.item) !== "own") return null;
+  ray.setFromCamera(new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1), camera);
+  return ray.ray.distanceToPoint(t.pos.clone().setY(0.4)) < 0.6 ? { id, t, from: t.group.position.clone(), ok: true } : null;
+}
+renderer.domElement.addEventListener("pointerdown", e => { pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); dragMoved = 0; if (pointers.size === 1) carry = carryStart(e.clientX, e.clientY); else if (carry) { carry.t.group.position.copy(carry.from); carry = null; } if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: camDist }; } renderer.domElement.setPointerCapture(e.pointerId); });
 renderer.domElement.addEventListener("pointermove", e => {
   const p = pointers.get(e.pointerId); if (!p) return;
   const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   if (pointers.size === 2 && pinch0) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
   dragMoved += Math.abs(dx) + Math.abs(dy);
+  if (carry) {
+    const h = floorAt(e.clientX, e.clientY);
+    if (h) { carry.ok = walkable(h.x, h.z, 0.3); carry.t.group.position.set(h.x, groundY(h.x, h.z), h.z); carry.at = h; }
+    return;
+  }
   if (dragMoved > 6) { camYaw -= dx * 0.006; camPitch = Math.max(0.05, Math.min(1.1, camPitch + dy * 0.004)); }
 });
 function endPointer(e) {
   const p = pointers.get(e.pointerId); pointers.delete(e.pointerId); if (pointers.size < 2) pinch0 = null;
+  const c = carry; carry = null;
+  if (c && dragMoved > 6 && c.at) {
+    if (c.ok) { c.t.pos.set(c.at.x, 0, c.at.z); moveItem(c.id, { x: +c.at.x.toFixed(2), z: +c.at.z.toFixed(2) }); }
+    else { c.t.group.position.copy(c.from); toast("Somewhere on open ground."); }
+    return;
+  }
   if (!p || dragMoved > 6 || pointers.size) return;
   tapAt(e.clientX, e.clientY);
 }
 renderer.domElement.addEventListener("pointerup", endPointer);
-renderer.domElement.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); pinch0 = null; });
+renderer.domElement.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); pinch0 = null; if (carry) { carry.t.group.position.copy(carry.from); carry = null; } });
 renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
 addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
 addEventListener("keyup", e => meState.keys.delete(e.key.toLowerCase()));
 addEventListener("blur", () => meState.keys.clear());
 
-/* Setting a lantern somewhere: after "Move it", the next tap on open floor is where it stands. */
+/* Setting something of yours somewhere: after "Move it", the next tap on open floor is where it stands (or a drag takes it there). */
 let placing = null;
 function placeAt() {
   const hit = new THREE.Vector3();
   const daisPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -DAIS_Y);
   const on = (ray.ray.intersectPlane(daisPlane, hit) && Math.hypot(hit.x, hit.z) < 2.4) || ray.ray.intersectPlane(floorPlane, hit);
   if (!on || !walkable(hit.x, hit.z, 0.3)) { toast("Somewhere on open ground."); return; }
-  placeLantern(placing, { x: +hit.x.toFixed(2), z: +hit.z.toFixed(2) });
+  moveItem(placing.id, { x: +hit.x.toFixed(2), z: +hit.z.toFixed(2) });
 }
 function tapAt(cx, cy) {
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
@@ -807,7 +868,8 @@ function frame() {
   // walkers
   const ws = [...walkers.values()].filter(w => w.ready);
   for (const w of ws) {
-    let { p, moving, dir } = walkerPos(w, tShared);
+    let { p, moving, dir, sniff } = walkerPos(w, tShared);
+    w.sniff = sniff || null;
     // a spirit whose owner sits down comes and curls up beside their cushion
     const os = w.type === "spirit" ? ownerSeatNow(w.doc.owner) : null;
     if (os != null) { const sp = SEATS[os]; p = new THREE.Vector2(sp.x + Math.sign(sp.x) * 0.8, sp.z + 0.35); moving = false; }
@@ -820,17 +882,26 @@ function frame() {
   }
   for (const w of ws) {
     let yawTo = null;
-    if (w.moving) { const dd = w.dirOverride || walkerPos(w, tShared).dir; if (dd.lengthSq() > 1e-4) yawTo = Math.atan2(dd.x, dd.y); w.meeting = null; }
+    if (w.moving) { w.person = null; const dd = w.dirOverride || walkerPos(w, tShared).dir; if (dd.lengthSq() > 1e-4) yawTo = Math.atan2(dd.x, dd.y); w.meeting = null; }
     else {
-      // standing: turn to the nearest other walker, or to the Between, and meet it
-      let nb = null, nd = 2.6;
+      // standing: a spirit turns to whoever has come near; then to the thing it is sniffing; else the nearest walker, or the Between
+      let nb = null, nd = 2.6, person = null;
+      if (w.type === "spirit") {
+        let pd = 2.2;
+        const near = [...(meState.body ? [meState.pos] : []), ...othersHere().map(o => o.pos)];
+        for (const q of near) { const d = Math.hypot(q.x - w.holder.position.x, q.z - w.holder.position.z); if (d < pd) { pd = d; person = q; } }
+      }
       for (const o of ws) { if (o === w) continue; const d = o.holder.position.distanceTo(w.holder.position); if (d < nd) { nd = d; nb = o; } }
-      const tgt = nb ? nb.holder.position : (w.holder.position.distanceTo(BETWEEN_AT) < 3.4 ? BETWEEN_AT : null);
+      w.person = person;
+      const tgt = person || w.sniff || (nb ? nb.holder.position : (w.holder.position.distanceTo(BETWEEN_AT) < 3.4 ? BETWEEN_AT : null));
       if (tgt) yawTo = Math.atan2(tgt.x - w.holder.position.x, tgt.z - w.holder.position.z);
       w.meeting = nb;
     }
     if (yawTo != null) { let d = yawTo - w.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); w.yaw += d * Math.min(1, dt * 5); }
     w.holder.rotation.y = w.yaw + FACE;
+    // a sniff: the nose dips toward the thing, twice a second, while it stands there and nobody has come near
+    const sn = w.type === "spirit" && !w.moving && w.sniff && !w.rest && !w.person ? Math.max(0, Math.sin(t * 6.5)) * 0.16 : 0;
+    w.holder.rotation.x += (sn - w.holder.rotation.x) * Math.min(1, dt * 10);
     w.body.setWalking(w.moving);
     w.body.mixer.update(dt);
     w.body.pose(t, dt, false, w.rest);
@@ -940,22 +1011,23 @@ function refreshHud() {
   $("#awayBtn").innerHTML = "While you were away" + (away.length ? '<span class="dot" title="New tending"></span>' : "");
   $("#awayBtn").hidden = !(g && isMember(g) && g.phase === "between");
 
-  const hint = $("#hint");
+  const hint = $("#hint"); let hintText = "";
   const others = [...peers.values()].filter(p => p.uid !== me);
-  if (storeDown) hint.textContent = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again.";
-  else if (!g) hint.textContent = "Tap the floor to walk. Drag to look around.";
-  else if (g.phase === "closed") hint.textContent = "The garden is closed. Its history is yours to keep from More.";
-  else if (!isMember(g)) hint.textContent = members(g).length >= 2 ? "This garden is held by two people. You can look around." : "A spark is waiting here. Walk up to it.";
-  else if (g.phase === "spark") hint.textContent = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap the floor to walk, drag to look.`;
-  else if (placing) hint.textContent = "Tap the floor where the lantern should stand, or set it down where you are.";
-  else if (others.length) hint.textContent = `${nameOf(others[0].uid, g)} is here with you now.` + (bothSitting() ? " You are sitting together." : meState.sitting ? "" : " Tap your cushion to sit with them.");
-  else hint.textContent = `${nameOf(other(g), g)} is not here right now. What you do waits for them.`;
+  if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again.";
+  else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
+  else if (g.phase === "closed") hintText = "The garden is closed. Its history is yours to keep from More.";
+  else if (!isMember(g)) hintText = members(g).length >= 2 ? "This garden is held by two people. You can look around." : "A spark is waiting here. Walk up to it.";
+  else if (g.phase === "spark") hintText = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap the floor to walk, drag to look.`;
+  else if (placing) hintText = placing.ask ? "Tap the floor where you would like it. It moves there when they say yes." : "Tap the floor where it should stand, or drag it there, or set it down where you are.";
+  else if (others.length) hintText = `${nameOf(others[0].uid, g)} is here with you now.` + (bothSitting() ? " You are sitting together." : meState.sitting ? "" : " Tap your cushion to sit with them.");
+  else hintText = `${nameOf(other(g), g)} is not here right now. What you do waits for them.`;
+  if (hint._h !== hintText) { hint.textContent = hint._h = hintText; readIn(hint); }
 
   // near
   const near = $("#near");
   const key = nearKey;
   const html = key ? nearHtml(key, V, g) : "";
-  near.hidden = !html; if (near._h !== html) { near.innerHTML = html; near._h = html; }
+  near.hidden = !html; if (near._h !== html) { near.innerHTML = html; near._h = html; readIn(near); }
 
   // tools
   const tools = [];
@@ -975,6 +1047,13 @@ function refreshHud() {
   if (placing && !storeDown) tools.unshift(`<button type="button" data-act="lanternHere">Set it down here</button><button class="glassbtn" type="button" data-act="lanternCancel">Leave it where it was</button>`);
   const th = tools.join("");
   const te = $("#tools"); if (te._h !== th) { te.innerHTML = th; te._h = th; }
+}
+function moveActs(id, it, g) {
+  const ma = it.moveAsk;
+  if (ma && ma.by !== me) return `<span class="small">${esc(nameOf(ma.by, g))} asks to move it to the ring on the floor.</span><button type="button" data-act="moveYes" data-id="${id}">Yes, move it</button><button class="quiet" type="button" data-act="moveNo" data-id="${id}">Not now</button>`;
+  if (ma) return `<span class="small">You asked to move it. It waits for their yes.</span><button class="quiet" type="button" data-act="moveNo" data-id="${id}">Take the ask back</button>`;
+  const r = moveRight(it);
+  return r ? `<button class="ghost" type="button" data-act="move" data-id="${id}">${r === "shared" ? "Ask to move it" : "Move it"}</button>` : "";
 }
 function nearHtml(key, V, g) {
   if (!g) return "";
@@ -1015,6 +1094,7 @@ function nearHtml(key, V, g) {
         else if (it.status === "agreed") acts = `<button class="ghost" type="button" data-act="ask:revisit" data-id="${id}">Ask to revisit</button><button class="ghost" type="button" data-act="ask:broken" data-id="${id}">Name a break</button><button class="quiet" type="button" data-act="ask:retire" data-id="${id}">Ask to retire</button>`;
         else if (it.status === "revisit") acts = `<button class="ghost" type="button" data-open="rewrite" data-id="${id}">Rewrite</button><button type="button" data-act="propose" data-id="${id}">Propose again</button><button class="quiet" type="button" data-act="ask:compost" data-id="${id}">Ask to compost</button>`;
       }
+      acts += canTend ? moveActs(id, it, g) : "";
       return `<div class="what"><b>Agreement</b> · ${esc(AG_LABEL[it.status])}, from ${esc(nameOf(it.by, g))}<span class="t">${esc(it.text)}</span></div>${acts ? `<div class="row">${acts}</div>` : ""}`;
     }
     if (it.kind === "lantern") {
@@ -1023,7 +1103,7 @@ function nearHtml(key, V, g) {
         : yesMine ? "You welcomed it into your home together." : `${esc(nameOf(it.by, g))} made it at the hearth and offers it to you.`;
       let acts = "";
       if (canTend) acts = mineIt
-        ? `<button class="ghost" type="button" data-act="lanternMove" data-id="${id}">Move it</button><button class="quiet" type="button" data-act="lanternBack" data-id="${id}">Take it back</button><button class="quiet" type="button" data-act="lanternCompost" data-id="${id}">Compost it</button>`
+        ? `<button class="ghost" type="button" data-act="move" data-id="${id}">Move it</button><button class="quiet" type="button" data-act="lanternBack" data-id="${id}">Take it back</button><button class="quiet" type="button" data-act="lanternCompost" data-id="${id}">Compost it</button>`
         : yesMine ? `<button class="quiet" type="button" data-act="lanternNo" data-id="${id}">Take back my welcome</button>` : `<button type="button" data-act="lanternYes" data-id="${id}">Welcome it</button>`;
       return `<div class="what"><b>A paper lantern</b> · ${esc(possessive(it.by, g))}<span class="t">${txt}</span></div>${acts ? `<div class="row">${acts}</div>` : ""}`;
     }
@@ -1033,6 +1113,7 @@ function nearHtml(key, V, g) {
       ? `<span class="small">Waiting for their yes.</span><button class="quiet" type="button" data-act="withdraw" data-id="${id}">Withdraw</button>`
       : sealedForMe ? `<button class="ghost" type="button" data-act="open" data-id="${id}">Open it</button><button class="quiet" type="button" data-act="decline" data-id="${id}">Let it pass unopened</button>`
       : `<button type="button" data-act="receive" data-id="${id}">Yes, take it in</button><button class="quiet" type="button" data-act="decline" data-id="${id}">Let it pass</button>`;
+    if (canTend) acts += moveActs(id, it, g);
     return `<div class="what"><b>${esc(KINDS[it.kind] || "Offering")}</b> · offered by ${esc(nameOf(it.by, g))}<span class="t">${sealedForMe ? "Sealed. You can open it, or let it pass without reading it." : esc(it.text)}</span></div>${acts ? `<div class="row">${acts}</div>` : ""}`;
   }
   if (key.startsWith("w:")) {
@@ -1103,9 +1184,30 @@ async function makeLantern(eid) {
   await touch(); hd = {}; closeSheet();
   toast("Your lantern stands by the hearth, an offer to " + nameOf(other(g), g) + ".");
 }
-async function placeLantern(id, pos) {
+/* Moving things (ba-round4-comfort, Ari's note 2): what you made moves when you move it. A shared agreement moves only on
+   the other person's yes, the way its other asks wait (rc-offer-received). The other person's own things stay where they set them. */
+function moveRight(it) {
+  if (!it || readOnly) return null;
+  if (it.kind === "lantern") return it.by === me ? "own" : null;
+  if (it.kind === "agreement") return it.status === "draft" ? (it.by === me ? "own" : null) : ["proposed", "agreed", "revisit"].includes(it.status) ? "shared" : null;
+  return it.by === me && it.status === "offered" ? "own" : null;
+}
+async function moveItem(id, pos) {
   placing = null;
-  await op("items/" + id, "update", { pos, history: lanternLog("moved") }); await touch(); refresh();
+  const { items: its, g } = view(); const it = its.get(id); const right = moveRight(it);
+  if (!right) { refreshHud(); return; }
+  if (right === "shared") {
+    await op("items/" + id, "update", { moveAsk: { by: me, at: now(), pos }, history: hist("asked to move an agreement") });
+    toast(`Asked. It moves when ${nameOf(other(g), g)} says yes.`);
+  } else await op("items/" + id, "update", { pos, history: it.kind === "lantern" ? lanternLog("moved") : hist(it.kind === "agreement" ? "moved a draft agreement" : "moved an offering") });
+  await touch(); refresh();
+}
+async function moveAnswer(id, yes) {
+  const it = view().items.get(id); if (!it || !it.moveAsk) return;
+  const asker = it.moveAsk.by === me;
+  await op("items/" + id, "update", yes && !asker ? { pos: it.moveAsk.pos, moveAsk: null, history: hist("agreed to move an agreement") }
+    : { moveAsk: null, history: hist(asker ? "took back a request to move an agreement" : "said not now to moving an agreement") });
+  await touch();
 }
 async function unmakeLantern(id, compost) {
   await op("items/" + id, "delete");
@@ -1229,6 +1331,7 @@ function renderSheet() {
   inner._h = h; inner.innerHTML = h;
   for (const [id, v] of Object.entries(keep)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; }
   $("#sheet").hidden = false; $("#scrim").hidden = false;
+  readIn(inner);
   const first = $("#sheetInner").querySelector("input, textarea, select"); if (first && !keep[first.id]) setTimeout(() => first.focus({ preventScroll: true }), 50);
 }
 function picturesSheet(g, V) {
@@ -1276,7 +1379,9 @@ function menuSheet(g, V) {
       <button class="quiet" type="button" data-open="quiet">Need a silent exit?</button>
       <button class="quiet" type="button" data-close>Close</button>
     </div>
-    <div class="stack small"><h3>How to move</h3><p class="muted">Tap the floor to walk there. Tap something to walk up to it. Drag to look around; pinch or scroll to come closer. On a keyboard, WASD or the arrows walk.</p>
+    <div class="stack small"><h3>Reading pace</h3><p class="muted">Words come in a line at a time at this pace. Tap any text to show the rest at once. Still shows everything at once.</p>
+      <div class="row" role="group" aria-label="Reading pace">${Object.entries(PACES).map(([k, [l]]) => `<button class="${getPace() === k ? "" : "ghost"}" type="button" data-act="pace:${k}" aria-pressed="${getPace() === k}">${l}</button>`).join("")}</div></div>
+    <div class="stack small"><h3>How to move</h3><p class="muted">Tap the floor to walk there. Tap something to walk up to it. Drag to look around, or drag something of yours you have tapped to carry it; pinch or scroll to come closer. On a keyboard, WASD or the arrows walk.</p>
     ${g && g.phase === "spark" && g.startedBy === me && myInvite ? `<p class="muted">To invite ${esc(g.setup.who)}, send them this garden's invitation link. They sign in to bars-engine (or make an account), then ask to join at the spark, and you welcome them in.</p>
       <div class="row"><button class="ghost" type="button" data-act="inviteLink">Copy the invitation link</button></div>` : ""}</div>
     <p class="credit">Inspired by Eri Kardos, <i>Relationship Agreements</i> (2016). The garden's words are the council's own; nothing here quotes the book. Your pictures stay in this browser until you choose to show them. No AI runs on this page.</p></div>`;
@@ -1348,7 +1453,8 @@ document.addEventListener("click", async ev => {
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
   if (a === "hGlow") { hd.glow = +id || null; renderSheet(); return; }
   if (a === "hEmber") { hd.ember = hd.ember === id ? null : id; renderSheet(); return; }
-  if (a === "lanternMove") { placing = id; selected = null; refreshHud(); toast("Tap the floor where it should stand."); return; }
+  if (a === "move") { const it = view().items.get(id); const r = moveRight(it); if (!r) return; placing = { id, ask: r === "shared" }; selected = null; refreshHud(); toast(r === "shared" ? "Tap the floor where you would like it." : "Tap the floor where it should stand, or drag it."); return; }
+  if (a.startsWith("pace:")) { setPace(a.slice(5)); if (gardenId && isMember(view().g)) { myPrivate.captions = getPace(); savePriv(); } renderSheet(); return; }
   if (a === "lanternCancel") { placing = null; refreshHud(); return; }
   const V = view(); const g = V.g;
   b.disabled = true;
@@ -1358,7 +1464,8 @@ document.addEventListener("click", async ev => {
     else if (a === "notyet") await itemAct(id, "notyet", "");
     else if (a === "hKeep") await keepEmber();
     else if (a === "hLantern") await makeLantern(id);
-    else if (a === "lanternHere") { if (placing) await placeLantern(placing, spotAhead(0.9)); }
+    else if (a === "lanternHere") { if (placing) await moveItem(placing.id, spotAhead(0.9)); }
+    else if (a === "moveYes" || a === "moveNo") await moveAnswer(id, a === "moveYes");
     else if (a === "lanternBack" || a === "lanternCompost") await unmakeLantern(id, a === "lanternCompost");
     else if (a === "lanternYes") { await op("items/" + id, "update", { yes: { [me]: now() }, history: lanternLog("welcomed") }); await touch(); toast("Welcomed. It lights your home together."); }
     else if (a === "lanternNo") await op("items/" + id, "update", { yes: { [me]: null } });
@@ -1613,6 +1720,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
       myPrivate = { ...((first.mine || {}).garden || {}) };
       awaySince = myPrivate.lastSeen || null;
       myPrivate.lastSeen = now(); savePriv();
+      if (myPrivate.captions && myPrivate.captions !== getPace()) setPace(myPrivate.captions);
     }
   } else gardenLoaded = true;
   (ls.get("between.outbox." + gardenId + "." + me) || []).forEach(o => outbox.push(o));
