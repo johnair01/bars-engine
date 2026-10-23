@@ -35,6 +35,17 @@ doc follows them, and where a ruling meets an earlier record the doc says so and
    - *Answers:* the naming question (`tw-names`), toward generic names with citation. A works-cited page is in section 8.
    - *Not answered:* whether adapting the practices needs the rights holders' permission. That stays with counsel (C10).
 
+## 1B. Answers recorded (owner, on the board, 2026-10-23) and pass work-dbt 3
+
+His five answers are positions on the council board: a named clinician reads first (`tw-clinician-named`); counsel only if a
+rights holder objects (`tw-permission-on-objection`); players can see streaks (`tw-streaks-visible`); rewards come from
+completing things and doing the work past the inner blocks, and pass and not-now do not count the same
+(`tw-reward-completion`); Wise Mind and Big Mind are "PAST the player which is the vulnerable child", with emotion
+"down stream of the player self" (`tw-wise-mind-past`). Six-face pass work-dbt 3 (six-faces-council
+`council/passes/6FACE_PASS_work-dbt3_2026-10-23.md`) tested them and added six positions: `tw-emotion-mind-place`,
+`tw-streak-kept`, `tw-completion-content-blind`, `tw-safety-exits-outside`, `tw-face-table-3`, `tw-tipp-trim`. No new
+question for the owner. Sections 3.3, 3.4, 3.7, 3.8 and C1, C10, C11, C13 and C20 follow them.
+
 ## 1. What this doc does and does not do
 
 It does three things. It summarizes what the ontology says about the six game masters, the cave, perceptual shadow and
@@ -243,9 +254,13 @@ face tunnels dressing them. The record has no DBT content today (searched both r
 Name collisions to settle before any DBT word reaches a player (rule: a source's word is cited, never renamed):
 
 - **Wise Mind, Big Mind, Sage, centre of the self.** Wise Mind is DBT's integration of emotion mind and reasonable mind.
-  Big Mind is the existing cave of seven voices. The Sage lens and the centre of the self already mean "the smallest
-  coherent whole". **(proposal)** Treat Wise Mind as the centre of the self, treat emotion mind as the Emotional Body daemon and
-  reasonable mind as the Architect's tunnel, and keep Big Mind's name for its cave only.
+  Big Mind is the existing cave of seven voices. **Settled (`tw-wise-mind-past`, `tw-emotion-mind-place`):** the Player is
+  the vulnerable child, and every daemon emerged to protect it. Feeling arises in the Player ("What are you feeling?" is the
+  Player's question). The Emotional Body daemon ("where charge lives") is the daemon that took over handling that feeling.
+  Emotion mind is the state when the Emotional Body has the joystick. Reasonable mind is a state when another daemon leads,
+  left unmapped (Controller and Skeptic are nearest). Wise Mind and Big Mind are the way past the Player, where the daemons
+  stand around the child as spirits. Validate-first (3.6) is the Emotional Body's honoured form, "release in its time". DBT's
+  three words are cited and do not become cave names.
 - **Validate.** The WAVE step validates the player's own charge. DBT's validation, and GIVE's V, validates another person. They
   are different acts under one word.
 - **Accept** (a WAVE step) and **radical acceptance** are neighbors. Neither defines the other.
@@ -256,23 +271,27 @@ Name collisions to settle before any DBT word reaches a player (rule: a source's
 
 Each skill below is first taught in that face's tunnel, in that tunnel's look. Any block anywhere can still fork to the skill.
 
-| Face | The Work | DBT | Why this face | Tunnel minigame it extends |
+Revised by pass work-dbt 3 (`tw-face-table-3`). Every inquiry and turnaround is aimed at a daemon's thought line, never at
+the Player, who is the vulnerable child. DBT's own names stay in the lineage column. Player-facing names come from a term
+pass (C10).
+
+| Face | The Work | DBT skill (lineage name) | Why this face | Tunnel minigame it extends |
 |---|---|---|---|---|
-| Shaman | Q3 (how do you react: body, feeling); turnaround to the self | Observe, describe, participate (mindfulness) | felt sense and presence; Witness is the Shaman's step | Presence: the thought's owner is called in as a spirit |
+| Shaman | Q3 (how do you react: body, feeling); turnaround to the self, on the daemon's line only | Observe, describe, participate (mindfulness) | felt sense and presence; Witness is the Shaman's step | Presence: the thought's owner is called in as a spirit |
 | Architect | Q1 and Q2; three real examples; evidence | Check the facts; chain analysis (see 3.8) | testing and evidence; "Is the binary false?" is Q2's question | The mechanism: crystals link event, thought, feeling, action |
-| Challenger | Turnaround to the opposite | TIPP and the body-first distress skills; opposite action; DEAR MAN | force, edge and falsification; the held push timed to the breath already is TIPP's paced breathing | The push |
-| Regent | "Should" thoughts, sorted as obligation or preference; whose business it is | FAST (fair, apologies, stick to values, truthful); the commitment lifecycle in 3.8 | obligations, boundaries, definition of done | The vow |
-| Diplomat | Turnaround to the other | GIVE; validating others; DEAR MAN's negotiating half | perspectives, who is excluded, bridge | The voices (the 3-2-1's Be it staging) |
-| Sage | Q4; read the issue back from each face's side | Wise Mind; dialectics (both-and) | integration, "where do the five conflict" | The pattern; the centre of the self |
+| Challenger | Turnaround to the opposite | TIPP, paced breathing and paired relaxation only (`tw-tipp-trim`); opposite action | force, edge and falsification; the held push timed to the breath already is paced breathing | The push |
+| Regent | "Should" thoughts, sorted as obligation or preference; whose business it is | FAST; the commitment lifecycle in 3.8 | obligations, boundaries, definition of done | The vow |
+| Diplomat | Turnaround to the other, never toward a person who harmed the player | DEAR MAN (all of it); GIVE; validating others | perspectives, who is excluded, bridge | The voices (the 3-2-1's Be it staging) |
+| Sage | Q4 ("who would you be without the thought"); read the issue back from each face's side | Wise Mind, as the way past the Player toward Big Mind; dialectics (both-and) | integration, "where do the five conflict" | The pattern; the hall of the six at Big Mind's centre |
 
 Limits on this table:
 
 - It is a lens fit. Under ruling 1, skilled play in a tunnel can show the complexity the player works at in that line. That is a
   bounded claim about one domain at one time, open to correction, and never a statement about the person's worth (rule 13, C18).
 - LEVELS.md says every minigame needs its own council pass first. This table is the input to that pass.
-- The Challenger and Regent rows are the least settled. Putting body-first distress skills under the red tunnel reads
-  correctly for the push-timed-to-breath mechanic. A distressed child entering a "red" tunnel may need them in a calmer look,
-  so the skill branch (any look) matters more than the tunnel assignment (C9).
+- Body-first distress skills sit under the red tunnel for the push-timed-to-breath mechanic. A distressed player may need them
+  in a calmer look, so the skill branch (any look) matters more than the tunnel assignment (C9). DEAR MAN moved wholly to the
+  Diplomat in pass work-dbt 3 (it was split with the Challenger).
 
 ### 3.5 Direction 4: Octalysis, white hat first
 
@@ -328,6 +347,20 @@ the player. These are lenses for the design pass and give no runtime authority.
 | Middle and high school | Event card, locked once made, never inquired | Inquiry into thoughts only; preset lines allowed | Step back, Calm, rest by the door | Trusted adult named in advance; crisis line as text | Rules 5, 6, 14 |
 | Adult trauma healing | Event card or none; locked | Deeper inquiry, with polarity check-ins between steps | Always-available pause (all of the above); no step ends the sitting for the player | Crisis line as text plus a path to professional support (new) | Polarity as window of tolerance; T04 `whenNotToUse` |
 
+**Added by pass work-dbt 3:**
+
+- **Tiers closed until the clinician read.** The younger-kids, middle and high school and adult trauma tiers stay closed until
+  a named clinician has read the branches, this gate and the child tier (`tw-clinician-named`, `tw-tier-gate`). Nobody is
+  named yet (board step `work-dbt-clinician-01`). The adult skills build goes ahead.
+- **Safety exits sit outside reward accounting** (`tw-safety-exits-outside`). Calm, Step back, the flooding practices and the
+  danger hard stop never cost a reward and never break a run. Finishing a distress practice counts as completing a step.
+- **Completion is content-blind** (`tw-completion-content-blind`). A preset line, a picture or a private line completes a step
+  the same as typed words. The event card never counts toward completion.
+- **TIPP trimmed** (`tw-tipp-trim`). Only paced breathing and paired relaxation are offered. The cold-water and intense-exercise
+  steps are left out of every tier (their medical cautions are from memory, for the clinician to check).
+- **The gate protects the Player.** The Protector daemon emerged to protect the vulnerable child, and the Player is that child.
+  The gate is the Protector's job in the fiction, and no inquiry is aimed at the Player.
+
 **Hard stops in every tier** **(proposal)**:
 
 - A thought that says the player is in danger now ("I'm not safe") routes to help words and a trusted person, and is never
@@ -355,7 +388,9 @@ opening a remediation path with no count and no penalty.
 4. **The commitment bends by composting.** A broken run is a self-made commitment past its due date. The Regent's lens
    (obligation or preference) decides what happens to it: repair, renegotiate, rest or compost. Composting ends the obligation
    and stops the pressure (rule 8).
-5. **Streaks are kept as data (ruling 2).** The game records where, and under what declared context, a run was not
+5. **Streaks are kept as data (ruling 2), and players see them (`tw-streaks-visible`) as runs kept (`tw-streak-kept`).** A
+   run that ends stays on the page as a finished run: no counter that drops to zero, no reset, no red. A sitting ended by a
+   safety exit counts as declared rest. The game records where, and under what declared context, a run was not
    maintained. A coach or teacher using the game as an assessment tool reads that record. The player-facing rules hold:
    no countdown, no guilt message, no penalty, and declared rest pauses the run. The research note's test applies to what the
    player sees of it: visible (the player can see what is recorded and who sees it), chosen (the player agrees to the coach or
@@ -397,7 +432,7 @@ column means the repo already settles it, and the position stands unless the own
 
 | # | Direction | Conflict or gap | Source | Position that stands | Decides |
 |---|---|---|---|---|---|
-| C1 | 5 | **Answered by ruling 2.** Streaks were barred in the record; the owner allows them as assessment data | inner-vessel pass, line 168 and 294; `C/docs/morning.md`; spirit-care pass (Challenger: "never a countdown or a streak") | Streaks kept as data, with no countdown, guilt message or penalty (3.8) | Ruled |
+| C1 | 5 | **Answered by ruling 2.** Streaks were barred in the record; the owner allows them as assessment data | inner-vessel pass, line 168 and 294; `C/docs/morning.md`; spirit-care pass (Challenger: "never a countdown or a streak") | Streaks kept as data and visible to the player as runs kept, with no countdown, reset, guilt message or penalty (3.8; `tw-streaks-visible`, `tw-streak-kept`) | Ruled |
 | C2 | 7 | The research note says no children's version is in scope, and the audience is adult helpers. The `inner-creatures` strand shows children are in Wendell's plans. The tiers presuppose children | research note, `decision_or_open_authority`; `C/council/callsheets/inner-creatures.md` | Treat the note's child findings as a conservative floor. A children's tier is not a build target until the owner sets it | Owner (Q1) |
 | C3 | 7 | The "four faces" name collides with the Six Faces namespace | research note, `ontology_objects`; face-namespaces decision | Say "shadow kinds" in all text | Record |
 | C4 | 7 | The daemon wall has no skip (Wendell, 10 October); the direction asks for an always-available exit | `cave/DESIGN.md`, "No skip at a daemon"; research note's exitable test | A pause is not a skip: Step back and Calm are on every page, Take it home and the room's rest-by-the-door are the other exits, and the daemon still holds the way | Record. The trauma tier's wording needs a read |
@@ -406,17 +441,17 @@ column means the repo already settles it, and the position stands unless the own
 | C7 | 4 | Octalysis "Accomplishment" often means points and badges. The ontology allows capability within a named line and bars whole-person rank | Quickstart 6; Marble kata README | Show accomplishment as the creature or spirit changing. Ruling 3 rewards engagement and not any particular answer; the reward's form (points, badges, creature growth) is still open | Record |
 | C8 | 2 | The Work tests a thought's truth. The cave treats daemons as protectors and keeps the player's meaning theirs. T04 lists its own misuse | rule 2; daemons; T04 `misuse` | Inquiry starts after the daemon is heard, with its permission; the game never marks an answer right (3.2) | Record |
 | C9 | 3 | Skills belong to branches and not to faces (LEVELS.md), while the direction asks which game master holds which skill | `LEVELS.md`, "Branches are the skills downstream" | A skill branch, taught first in the face tunnel that fits; any block forks to it. The table in 3.4 is the input to each tunnel's pass | Council pass |
-| C10 | 3 | DBT and The Work are named by their authors. The record's rule: a source's word is cited and never renamed. Both have owners and publishers whose terms are not in the record | `faces.yaml` (Regent term test); bars-engine registry uses the generic name "Belief Inquiry" | Ruling 4: adapt, cite on a works-cited page, make it the owner's own. Use generic names with a lineage line. Whether adaptation needs permission is a counsel question | Counsel |
-| C11 | 7 | Treatment claims. The Work and DBT are practices a clinician teaches. The cave says "a game, not therapy". The adult trauma tier is the nearest to a therapy claim | rules 11 and 14; research note | Claim only a player-reported change in this sitting; clinician read before the child and trauma tiers | Owner (Q5) |
+| C10 | 3 | DBT and The Work are named by their authors. The record's rule: a source's word is cited and never renamed. Both have owners and publishers whose terms are not in the record | `faces.yaml` (Regent term test); bars-engine registry uses the generic name "Belief Inquiry" | Ruling 4: adapt, cite on a works-cited page, make it the owner's own. Use generic names with a lineage line. DBT's names (DEAR MAN, GIVE, FAST, TIPP, Wise Mind) stay in a lineage column; player-facing names come from a term pass. Counsel only if a rights holder objects (`tw-permission-on-objection`) | Ruled |
+| C11 | 7 | Treatment claims. The Work and DBT are practices a clinician teaches. The cave says "a game, not therapy". The adult trauma tier is the nearest to a therapy claim | rules 11 and 14; research note | Claim only a player-reported change in this sitting. A named clinician reads before the child and trauma tiers, which stay closed until then (`tw-clinician-named`); the name is pending (board step `work-dbt-clinician-01`) | Ruled, name pending |
 | C12 | 7 | Window of tolerance as a safety check: polarity is a player-reported teaching heuristic, and self-report can confabulate | research note, `ontology_objects` and `mechanical_claims` | Use polarity to offer a practice and never to clear the player as safe | Record |
-| C13 | 3 | Wise Mind, Big Mind, Sage and the centre of the self collide; Validate and Accept each carry two senses | 3.3 | Wise Mind is the centre of the self; keep Big Mind's name for its cave | Council term pass (owner locks) |
+| C13 | 3 | Wise Mind, Big Mind, Sage and the centre of the self collide; Validate and Accept each carry two senses | 3.3 | Wise Mind and Big Mind are one trajectory past the Player; emotion mind is the state when the Emotional Body daemon leads (3.3; `tw-wise-mind-past`, `tw-emotion-mind-place`). Validate and Accept still carry two senses | Ruled; Validate and Accept go to a term pass |
 | C14 | 5 | Mortal spirits (Wendell, 20 October) and a streak remediation both attach loss to inattention. For children this multiplies the stakes | spirit-care pass; Shaman and Challenger warnings about a guilt meter | The four-player simulation (`C/council/spirit-care/sim.py`) runs before any child sees decline | Owner (Q1) |
 | C15 | 3 | No skill inventory exists as data. DBT skills need a table: name, module, step list, when not to use, move, face | `B/src/lib/emotional-alchemy/registry.ts` has the tool shape (T01 to T11) | Add DBT as registry entries with the same fields | Build |
 | C16 | 7 | A trusted adult needs a model: who, how chosen, what they see. The Between handles pairs, not a guardian and a child | privacy and consent authority (Quickstart): authority intersects for relational material | Not designed. No guardian sees a child's lines | Owner and counsel (Q3) |
 | C17 | all | The extension must be able to play with no AI. The record is explicit | rule 12 | Templates for every prompt; any AI reading of lines is an optional proposal | Record |
 | C18 | 1 | Ruling 1 lets play show a level that is not shown at the start. The face-namespaces decision bars an undisclosed, uncorrectable altitude judgment | face-namespaces decision, forbidden inferences 2, 3, 16 and the altitude-claim object | Keep the claim bounded (framework, domain, evidence, time, uncertainty) and correctable. The player is told the game can read this, even if not at the start. A player can take part without accepting it. Children's tier: not designed | Owner and council pass |
 | C19 | 5 | A coach or teacher reading streak data is a new audience. The permission envelope binds audience, purpose, duration and revocation, and for children a guardian is also an authority | privacy and consent authority (Quickstart); C16 | The player sees what is shared and with whom, and can stop it. No coach view without a grant | Owner and counsel |
-| C20 | 3 | "Reward engagement" can become pressure to disclose or to produce. A "pass" must still count as engagement, or disclosure becomes progression currency | rule 5; research note, `agency_and_consent` item 1 | Engagement means taking the step: an answer, a pass, or "not now" at a stop. Reward is the same for all three. Rewards never scale with length or intimacy | Council pass |
+| C20 | 3 | "Reward engagement" can become pressure to disclose or to produce. A "pass" must still count as engagement, or disclosure becomes progression currency | rule 5; research note, `agency_and_consent` item 1 | Rewards come from completing steps and doing the work past inner blocks; a pass or not-now costs nothing and earns no reward (`tw-reward-completion`). Completion is content-blind, so a preset line completes a step, and safety exits sit outside the count (`tw-completion-content-blind`, `tw-safety-exits-outside`). Rewards never scale with length or intimacy | Ruled |
 
 ## 5. Questions, after the six faces weighed in
 
