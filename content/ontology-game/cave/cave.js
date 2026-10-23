@@ -896,6 +896,13 @@
   // Looking with the thumb: how far a pixel of drag tilts, how far it can tilt (pushed up, then pulled down), how long the
   // thumb rests before the look eases back behind the figure (ms), and how close to the roof the camera may rise (choices).
   var LOOK = { pitchPerPx: 0.004, pitch: [-1.3, 0.6], settle: 600, roof: 1.75 };
+  // Touch on a phone (controls round 1, Six-faces-council council/callsheets/cave-controls.md; Wendell, 2026-10-21: "Ok the
+  // controls are pretty clunky still"). A touch that moves less than px and lifts within ms is a tap, anything else a drag
+  // (ctl-tap-rule). A thing that takes a tap answers within min px of it on screen, half again in still mode (ctl-generous-taps).
+  // A look turned by hand holds for hold seconds of walking before the camera eases back behind the figure, the camera
+  // follows at follow (it was 6), and pinch zooms its distance between zoom[0] and zoom[1] (ctl-gentle-camera). Still mode
+  // turns at still of the pace and moves the camera by itself not at all (ctl-still-mode).
+  var TOUCH = { px: 10, ms: 500, min: 48, hold: 2, follow: 3, zoom: [0.55, 1.5], still: 0.6 };
   // numbFog and numbFill (Wendell, 2026-10-13: "we need brighter light in the numbness"): the numb cave thins its fog to this
   // share so the circle round the figure isn't hazed out, its sky light is this share of the other caves', and the figure's
   // light burns this much brighter there. The circle is still one size, and steady along the whole walk.
@@ -2130,6 +2137,8 @@
     ".oagr-door{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:min(230px,calc(100vw - 170px));padding:.6rem .7rem;background:rgba(12,12,28,.88);border:1px solid rgba(255,241,176,.55);border-radius:14px;color:#f4f4fa;touch-action:manipulation}" +
     ".oagr-door h2{margin:0 0 .2rem;font-size:1.05rem;color:#fff1b0}.oagr-door p{margin:.15rem 0 .45rem;font-size:.85rem;line-height:1.3}.oagr-door button{width:100%}.oagr-door button+button{margin-top:.35rem}" +
     ".oagr-stick{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:5;width:116px;height:116px;border-radius:50%;background:rgba(20,20,40,.45);border:2px solid rgba(255,241,176,.55);touch-action:none;display:flex;align-items:center;justify-content:center;cursor:grab}" +
+    ".oagr-stick.oagr-afloat{background:rgba(20,20,40,.3);cursor:grabbing}.oagr-still .oagr-stick{width:150px;height:150px}.oagr-still .oagr-knob{width:60px;height:60px}" +
+    ".oagr button.oagr-talk{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;width:88px;height:88px;min-width:88px;padding:0;border-radius:50%;background:rgba(20,20,40,.82);border:2px solid rgba(255,241,176,.7);color:#fff1d0;font-size:1rem;font-weight:600;touch-action:manipulation}" +
     ".oagr-knob{width:48px;height:48px;border-radius:50%;background:rgba(255,241,176,.75);box-shadow:0 0 12px rgba(255,241,176,.6);pointer-events:none}" +
     ".oagc button.oagc-sitbtn{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));z-index:5;background:rgba(20,20,40,.78);border:1px solid rgba(255,241,176,.45);color:#fff1d0;font-weight:500}.oagc:has(.oagc-modal.open) .oagc-sitbtn{bottom:auto;top:calc(50vh - 3.4rem)}.oagc button.oagc-sitbtn:disabled{opacity:.35}" +
     ".oagc-orb{width:88px;height:88px;margin:.5rem auto .1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff1b0;font-size:.8rem;letter-spacing:.06em;" +
@@ -2182,6 +2191,32 @@
   function holdArea(node) {
     ["touchstart", "touchmove"].forEach(function (n) { node.addEventListener(n, function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false }); });
   }
+  // The floating stick (ctl-split-thumbs): a thumb that lands on the left half of the screen brings the walk stick under it,
+  // and the stick goes back to its corner when the thumb lifts. A mouse keeps the corner stick, and drags to look anywhere.
+  function floatStick(pad) {
+    return {
+      wants: function (e) {
+        var box = pad.offsetParent; if (!box || e.pointerType === "mouse" || pad.style.display === "none") return false;
+        var r = box.getBoundingClientRect(); return e.clientX - r.left < r.width / 2;
+      },
+      at: function (e) {
+        var r = pad.offsetParent.getBoundingClientRect(), w = pad.offsetWidth / 2;
+        pad.style.left = Math.round(e.clientX - r.left - w) + "px"; pad.style.top = Math.round(e.clientY - r.top - w) + "px"; pad.style.bottom = "auto";
+        pad.classList.add("oagr-afloat");
+      },
+      home: function () { pad.style.left = pad.style.top = pad.style.bottom = ""; pad.classList.remove("oagr-afloat"); },
+    };
+  }
+  // The ring on the floor where a tap sends the figure (ctl-generous-taps). It fades as the figure comes to it.
+  function tapRing(THREE) {
+    var m = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.46, 32), new THREE.MeshBasicMaterial({ color: 0xfff1b0, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+    m.rotation.x = -Math.PI / 2; m.renderOrder = 3; m.visible = false; m.userData.k = 0;
+    m.userData.put = function (scene, x, y, z) { if (m.parent !== scene) scene.add(m); m.position.set(x, y + 0.04, z); m.visible = true; m.userData.k = 1; };
+    m.userData.step = function (dt, on) { var u = m.userData; u.k = on ? Math.min(1, u.k + dt * 4) : Math.max(0, u.k - dt * 2.5); m.material.opacity = 0.8 * u.k; m.visible = u.k > 0.01; };
+    return m;
+  }
+  // Within reach of a tap: the thing's own size on screen, but never less than TOUCH.min (more in still mode).
+  function tapReach(r) { return Math.max(r || 0, TOUCH.min * (reducedMotion ? 1.5 : 1)); }
 
   // The title screen (gd-title-as-game): the cave mouth in 3D with the player's figure standing in it, its light at the chest,
   // and the ways in: Continue (when there is a place to go back to), Begin (the WAVE room, where the walkthrough starts),
@@ -2235,6 +2270,12 @@
     ])]);
     root.appendChild(home);
     titleScene(stage, home, function () { drawMenu(); panel.style.display = "none"; });
+    // Skip-ahead for a preview link, so a look starts where the change is: ?go=elder opens home base (at the heart, or ?at=) with
+    // the figure by the elder spirit, and ?go=cave goes straight into the cave there.
+    var skip = null; try { skip = new URLSearchParams(window.location.search); } catch (e) {}
+    var skipGo = skip && skip.get("go"), skipAt = (skip && skip.get("at")) || "my heart";
+    if (skipGo === "elder" || skipGo === "home") load().then(function (A) { return homeBase(A, home, { where: skipAt, near: skipGo === "elder" ? "elder" : null }); }).catch(function (e) { notice("The room could not open: " + e.message, true); });
+    else if (skipGo === "cave") dive(skipAt, home);
   }
   // Continue: the last place played (oag.last.v1), or, for a player from before it was kept, a Big Mind save with a voice met.
   function continueTo() {
@@ -2357,7 +2398,7 @@
   function homeBase(A, home, o) {
     var bigMind = !!(window.__oagBigMind && window.__oagBigMind.open);
     keepLast("room", o.where);
-    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind }).then(function (r) {
+    return openRoom(A, { from: "body", where: o.where, portal: true, bigMind: bigMind, near: o.near }).then(function (r) {
       if (r && r.bigmind) keepLast("bigmind", o.where);
       if (r && r.portal) enter(A, null, home, { where: o.where, spirits: r.spirits || [] });
       else if (r && r.bigmind) window.__oagBigMind.open({ spirits: r.spirits || [], back: function () { homeBase(A, home, o); } });
@@ -2398,7 +2439,7 @@
     // walk = { route, s, s0, D, t, target (a stop on the route), arrived, blk }. stack holds where each branch left from.
     // speed scales the walk clock (the test sets it above 1 to cross a stretch faster than one breath); it is 1 in play.
     var state = { sens: [], cur: null, mode: "portal", dress: null, look: { yaw: 0, pitch: 0 }, walk: null, stack: [], calm: false, ringOn: false, held: false, speed: 1, touched: false, layout: null, walkedOnce: false, modal: false, auto: null };
-    var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [], carried = [], tmpV = new THREE.Vector3();
+    var parts = {}, ch = null, flight = null, busy = false, tweens = [], blockN = 0, snapCam = true, avatar = null, lamp = null, hemi = null, glow = [], carried = [], tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpV3 = new THREE.Vector3();
     // A spirit that follows the player carries a small light of its own (Wendell, 2026-10-13: "The avaiable lighting centers
     // around the character and any spirits that are following them"). The spirits back from the WAVE room carry one each.
     function carryLight(obj, hex) { var l = new THREE.PointLight(hex || 0xc8e0ff, 0.6, LAMP.reach * 0.5, LAMP.decay); scene.add(l); carried.push({ obj: obj, light: l }); return l; }
@@ -2491,39 +2532,71 @@
     // look eases back behind the figure only once the thumb has rested a moment (LOOK.settle).
     // The camera goes where the finger goes, as if it were the viewer's head (Wendell, 2026-10-13): a drag to the right
     // swings the camera to the figure's right, a drag up lifts it, a drag down lowers it. A positive yaw is the right.
-    var ray = new THREE.Raycaster(), drag = null, dom = renderer.domElement;
+    // Round 1 of the phone controls (TOUCH, above): each finger is followed on its own, so a thumb walking on the left and a
+    // thumb looking on the right never take each other's place (ctl-split-thumbs). A finger that lands on the left half brings
+    // the stick under it; one on the right looks; two on the right pinch the camera nearer or farther; the mouse wheel zooms too.
+    var ray = new THREE.Raycaster(), ptrs = {}, pinch = null, dom = renderer.domElement, floater = null, lastLook = 0, looked = 0, tapMark = tapRing(THREE);
+    state.zoom = 1; state.handHold = 0;
+    function lookers() { return Object.keys(ptrs).filter(function (k) { return !ptrs[k].walk; }).map(function (k) { return ptrs[k]; }); }
+    function spread(l) { return l.length < 2 ? 0 : Math.hypot(l[0].x - l[1].x, l[0].y - l[1].y); }
+    function lookBy(dx, dy) {
+      var k = reducedMotion ? TOUCH.still : 1;
+      lastLook = Date.now(); state.handHold = TOUCH.hold;
+      state.look.yaw = clamp(state.look.yaw + dx * 0.006 * k, -Math.PI, Math.PI);
+      state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx * k, LOOK.pitch[0], LOOK.pitch[1]);
+      looked += Math.abs(dx) + Math.abs(dy); if (looked > 60 && teach) teach.learn("look");
+    }
     holdArea(dom);
     dom.addEventListener("pointerdown", function (e) {
       try { dom.setPointerCapture(e.pointerId); } catch (x) {}
-      drag = { x: e.clientX, y: e.clientY, moved: 0, t: Date.now(), last: 0 }; state.held = true;
+      var p = ptrs[e.pointerId] = { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t: e.timeStamp, drag: false, walk: false }; // the event's own time: a busy frame does not stretch a tap
+      if (!floater && stickPad) floater = floatStick(stickPad);
+      // A second finger while the stick's has not yet moved off its tap: the two are a pinch, not a walk and a look
+      var sp0 = stickId != null && ptrs[stickId]; if (sp0 && Math.hypot(sp0.x - sp0.x0, sp0.y - sp0.y0) < TOUCH.px) { sp0.walk = false; stickUp(); }
+      else if (stickId == null && floater && canWalk() && floater.wants(e)) { p.walk = true; stickId = e.pointerId; floater.at(e); stickAt(e); }
+      var l = lookers(); if (l.length === 2) { pinch = { d: spread(l), z: state.zoom }; l.forEach(function (q) { q.drag = true; }); }
+      state.held = true;
     });
     dom.addEventListener("pointermove", function (e) {
-      if (!drag) return;
-      var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
-      if (drag.moved > 12) {
-        drag.last = Date.now();
-        state.look.yaw = clamp(state.look.yaw + dx * 0.006, -Math.PI, Math.PI);
-        state.look.pitch = clamp(state.look.pitch + dy * LOOK.pitchPerPx, LOOK.pitch[0], LOOK.pitch[1]);
-        if (drag.moved > 60 && teach) teach.learn("look");
-      }
+      var p = ptrs[e.pointerId]; if (!p) return;
+      var dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+      if (!p.drag && Math.hypot(p.x - p.x0, p.y - p.y0) >= TOUCH.px) { p.drag = true; dx = p.x - p.x0; dy = p.y - p.y0; } // no dead band: past the line, all of it counts
+      if (p.walk) { if (stickId === e.pointerId) stickAt(e); return; }
+      if (pinch) { var d = spread(lookers()); if (pinch.d > 0 && d > 0) state.zoom = clamp(pinch.z * pinch.d / d, TOUCH.zoom[0], TOUCH.zoom[1]); return; }
+      if (p.drag) lookBy(dx, dy);
     });
-    function lift() { state.held = false; drag = null; }
-    dom.addEventListener("pointercancel", lift);
+    function lift(e, up) {
+      var p = ptrs[e.pointerId]; delete ptrs[e.pointerId];
+      if (p && p.walk && stickId === e.pointerId) stickUp();
+      if (lookers().length < 2) pinch = null;
+      state.held = Object.keys(ptrs).length > 0;
+      return up && p && !p.drag && e.timeStamp - p.t < TOUCH.ms ? p : null;
+    }
+    dom.addEventListener("pointercancel", function (e) { lift(e, false); });
+    dom.addEventListener("wheel", function (e) { e.preventDefault(); state.zoom = clamp(state.zoom * Math.exp(e.deltaY * 0.0015), TOUCH.zoom[0], TOUCH.zoom[1]); }, { passive: false });
+    // The element answers a tap on it or near it (tapReach), so a near miss no longer walks the figure away from it.
+    function nearElement(x, y, r) {
+      var c = ctxOf(); if (!c || !c.elObj || !c.elObj.visible) return false;
+      var bx = new THREE.Box3().setFromObject(c.elObj); if (bx.isEmpty()) return false;
+      var sp = bx.getBoundingSphere(new THREE.Sphere()), m = sp.center.clone().project(camera);
+      if (m.z > 1) return false;
+      var e2 = sp.center.clone().addScaledVector(tmpV.setFromMatrixColumn(camera.matrixWorld, 0), sp.radius).project(camera);
+      var sx = r.left + (m.x + 1) / 2 * r.width, sy = r.top + (1 - m.y) / 2 * r.height, rad = Math.hypot((e2.x - m.x) / 2 * r.width, (e2.y - m.y) / 2 * r.height);
+      return Math.hypot(x - sx, y - sy) < tapReach(rad);
+    }
     dom.addEventListener("pointerup", function (e) {
-      var wasTap = drag && drag.moved < 8 && Date.now() - drag.t < 350; lift();
+      var wasTap = lift(e, true);
       if (!wasTap || !ch || busy) return;
-      var r = dom.getBoundingClientRect(), c = ctxOf();
+      var r = dom.getBoundingClientRect();
+      if (nearElement(e.clientX, e.clientY, r)) { touch(); return; }
       ray.setFromCamera({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }, camera);
-      var kids = [];
-      if (c && c.elObj) c.elObj.traverse(function (m) { if (m.isMesh) kids.push(m); });
-      var hit = ray.intersectObjects(kids)[0];
-      if (hit && hit.object.userData.interact) { touch(); return; }
       // A click on the floor walks the figure there (Wendell, 14 October 2026: "we want to be able to have click to walk for when
       // we're testing on the computer"). It goes as the stick would, so walls, the shut way and the stops all behave the same.
+      // A ring on the floor marks where it is going.
       var wk = state.walk;
       if (wk && canWalk() && !state.auto) {
         var fy = avatar ? avatar.position.y : figureAt(wk).y, o = ray.ray.origin, dv = ray.ray.direction;
-        if (dv.y < -1e-3) { var t = (fy - o.y) / dv.y; if (t > 0 && t < 200) wk.goTo = { x: o.x + dv.x * t, z: o.z + dv.z * t, stuck: 0 }; }
+        if (dv.y < -1e-3) { var t = (fy - o.y) / dv.y; if (t > 0 && t < 200) { wk.goTo = { x: o.x + dv.x * t, z: o.z + dv.z * t, stuck: 0 }; tapMark.userData.put(scene, wk.goTo.x, fy, wk.goTo.z); } }
       }
     });
 
@@ -2736,7 +2809,7 @@
       stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
       stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
     }
-    function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; }
+    function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; if (floater) floater.home(); }
     holdArea(stickPad);
     stickPad.addEventListener("pointerdown", function (e) { e.preventDefault(); stickId = e.pointerId; try { stickPad.setPointerCapture(e.pointerId); } catch (x) { /* old browsers */ } stickAt(e); });
     stickPad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
@@ -2771,6 +2844,15 @@
       var m = Math.hypot(x, z);
       var fx = lookAt.x - camPos.x, fz = lookAt.z - camPos.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       var wk = state.walk;
+      // In the hall and the centre the stick's forward is the camera's as the thumb went down, held while the thumb stays (home
+      // base's R.stickFrame, 19 October 2026), and carried round with the ring: kept as a turn off the ring's way, so up held still
+      // walks round the ring to the next door, and the camera can come round behind the figure without bending the way it walks.
+      // A look turned by hand turns it too (walkStep). In a tunnel the camera turns along the way, so the stick keeps the live view.
+      if (m >= 0.15 && wk && wk.route.doors) {
+        var ringYaw = yawFacing(at(wk.route, wk.s));
+        if (state.stickOff == null) state.stickOff = wrapAng(Math.atan2(fx, fz) - ringYaw);
+        state.stickYaw = ringYaw + state.stickOff; fx = Math.sin(state.stickYaw); fz = Math.cos(state.stickYaw);
+      } else state.stickYaw = state.stickOff = null; // the thumb is off: the next push takes the camera's forward afresh
       if (m >= 0.15) { if (wk) wk.goTo = null; } // the stick or a key takes over from a click
       else if (wk && wk.goTo) { // a click on the floor walks there (for playing at a computer)
         var g = wk.goTo, p = figureAt(wk), dx = g.x - p.x, dz = g.z - p.z, d = Math.hypot(dx, dz);
@@ -2806,6 +2888,8 @@
       }
       var on = canWalk();
       stickPad.style.display = runBtn.style.display = on ? "" : "none";
+      wrap.classList.toggle("oagr-still", reducedMotion);
+      tapMark.userData.step(dt, on && !!(wk && wk.goTo));
       if (!on) { if (stickId != null) stickUp(); keys = {}; if (promptBox.style.display !== "none" && (state.modal || sit || busy)) promptBox.style.display = "none"; return; }
       if (wk.near != null && promptBox.style.display === "none" && !wk.arrived) showPrompt(wk.route.stops[wk.near]);
       if (wk.arrived) wk.lat *= 1 - Math.min(1, dt * 2); // standing at a stop is standing on its spot
@@ -2816,7 +2900,13 @@
         // Walking away from the camera against the way it faces (the camera turned round by a drag): the camera takes that way
         // as ahead, and the turn is kept in the look so the view does not jump; it eases back behind the figure as it walks.
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
-        if (state.look.yaw && !state.peek) { wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); state.look.yaw = 0; } // a look turned by hand becomes the way the camera follows
+        if (state.look.yaw && !state.peek) { // a look turned by hand becomes the way the camera follows, and the stick's forward with it
+          wk.camYaw = wrapAng(wk.camYaw + state.look.yaw); if (state.stickOff != null) state.stickOff = wrapAng(state.stickOff + state.look.yaw); state.look.yaw = 0;
+        }
+        // The figure faces the way the stick points (Wendell, 2026-10-21: "The player should face in the direction of the stick"),
+        // not the way it slid along a wall or round a stone.
+        var my = Math.atan2(w.x, w.z);
+        wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
         // Round a ring, a step along at radius rho moves the angle more than on the ring itself, so the pace stays the same.
         var inMid = r.doors ? wk.lat * r.inner : 0, rho = r.doors ? Math.max(r.R - inMid, MID_R) : 0, kS = r.doors ? r.R / rho : 1;
         var lim = walkRange(wk), s1 = clamp(wk.s + along * sp * dt * kS, lim.lo, lim.hi);
@@ -2834,29 +2924,33 @@
         if (blocked()) { wk.lat = latOld; if (blocked()) { wk.s = sOld; wk.lat = lat1; if (blocked()) wk.lat = latOld; } }
         var p1 = at(r, wk.s), mx = p1.x - p1.fz * wk.lat - x0, mz = p1.z + p1.fx * wk.lat - z0, moved = Math.hypot(mx, mz);
         if (w.click) wk.goTo.stuck = moved > 0.3 * sp * dt ? 0 : (wk.goTo.stuck || 0) + dt; // walked into a wall: the click is done
+        // The camera turns by itself only once a look turned by hand has held for TOUCH.hold seconds of walking, and in still
+        // mode never (ctl-gentle-camera, ctl-still-mode): the hand turn and the follow no longer pull against each other.
+        var autoK = reducedMotion || state.handHold > 0 ? 0 : 1;
         if (moved > 1e-4) {
+          state.handHold = Math.max(0, state.handHold - dt);
           wk.moving = true; state.walkedOnce = true; wk.t += dt * state.speed * runK() * w.m * STRIDE_K; teach.learn("walk");
-          var my = Math.atan2(mx, mz); // the way the figure actually went: along a wall it slides, so it faces along the wall
-          wk.yaw = wk.yaw == null ? my : wk.yaw + wrapAng(my - wk.yaw) * Math.min(1, dt * 10);
           // Walking away from the camera, it comes round behind the figure; walking back or sideways it stays put, so the thumb
           // keeps meaning the same way (the WAVE room's rule).
           // It turns along the way, the way the figure is going, so up on the stick keeps walking round the bends of a tunnel and
           // round the ring of the hall and the centre to the next door; across the way the thumb goes sideways. (Turning toward
           // wherever the figure went made a held diagonal chase itself round the hall's ring into its walls.)
-          // Out in the open middle of the hall or the centre it turns toward the way the figure walks, when that is ahead and
-          // nothing is in the way; on the ring it turns along the ring only as much as the walk goes along it, so walking in toward
-          // the middle keeps the view.
-          if (r.doors && inMid > r.w * 0.6) {
-            if (w.fwd > 0.7 && moved > 0.6 * sp * dt) wk.camYaw += wrapAng(my - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+          // In the hall and the centre, ring and open middle alike, it comes round behind the way the figure faces, which is the
+          // stick's way; the stick's forward is held off the ring's way while the thumb stays, so the turn does not chase itself
+          // round the ring. (The turn along the ring flipped half round when a frame held still in the world took the walk backward
+          // along it, round 1, 2026-10-21.)
+          if (r.doors) {
+            wk.camYaw += wrapAng(yawFacing(at(r, wk.s)) - yawFacing(a)) * autoK; // it rides round with the ring, as the stick's forward does
+            if (w.fwd > 0.3) wk.camYaw += wrapAng(wk.yaw - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * autoK;
           } else if (w.fwd > 0.3) {
             if (Math.abs(along) > 0.2 && !deadEnd) wk.dir = along > 0 ? 1 : -1;
             var want = yawFacing(at(r, wk.s)) + (wk.dir < 0 ? Math.PI : 0);
-            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd * (r.doors ? Math.abs(along) : 1));
+            wk.camYaw += wrapAng(want - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd * (r.doors ? Math.abs(along) : 1)) * autoK;
           }
         }
         if (deadEnd && w.fwd > 0.3) {
           // Pushed ahead into the dead end behind (the start of a branch, the way back): the camera turns round to the open way.
-          wk.dir = 1; wk.camYaw += wrapAng(yawFacing(a) - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd);
+          wk.dir = 1; wk.camYaw += wrapAng(yawFacing(a) - wk.camYaw) * Math.min(1, dt * 2.5 * w.fwd) * (reducedMotion ? 0 : 1);
         }
       }
       stopZones(wk);
@@ -4574,11 +4668,14 @@
         // camera: behind the figure on the way it follows (wk.camYaw), and a little above. It follows the figure itself, not the
         // path's line (Wendell, 14 October 2026: "Camera controls are clunky in the game master space"): walking across the hall
         // to a door, the camera comes round behind the figure as in the WAVE room. The stone keeps it inside (keepIn, below).
-        var frT = state.stack[state.stack.length - 1], back = route.kind === "face" ? 3.6 : CAM_BACK; // a face's tight loop keeps the camera closer
+        var frT = state.stack[state.stack.length - 1], back = (route.kind === "face" ? 3.6 : CAM_BACK) * (state.zoom || 1); // a face's tight loop keeps the camera closer; a pinch moves it
         if (wk.camYaw == null) wk.camYaw = yawFacing(a);
         a.fx = Math.sin(wk.camYaw); a.fz = Math.cos(wk.camYaw); // the way ahead, as the camera takes it
         var cs = wk.s - back, cby = at(route, route.loop ? (cs % route.len + route.len) % route.len : clamp(cs, 0, route.len)).y;
         var cbx = a.x - a.fx * back, cbz = a.z - a.fz * back;
+        // A tilt by hand eases back to level once the thumb has rested LOOK.settle ms and the figure walks on (ctl-gentle-camera).
+        if (!reducedMotion && wk.moving && Date.now() - lastLook > LOOK.settle) state.look.pitch *= Math.exp(-dt * 1.2);
+        if (state.peek && reducedMotion) state.peek = null; // still mode: the camera does not swing round to show an opening
         if (state.peek) { // while an opening appears the camera swings round to show it beside the figure, then lets go
           var px0 = cbx - a.x, pz0 = cbz - a.z, ox = state.peek.x - a.x, oz = state.peek.z - a.z, bestY = 0, bestD = -9;
           for (var yq = -1.4; yq <= 1.4; yq += 0.05) { // the swing that puts the opening straight past the figure; half of it frames both
@@ -4610,10 +4707,24 @@
           if (best && (best.ratio > f || best.room < m)) { var q = best.clamp(f, m); v.set(q.x, q.y, q.z); }
         };
         var free = !stCam && !state.rise && !state.camAt;
-        if (free) keepIn(want, 0.94, 0.35);
+        // Then a ray from the figure's head out to where the camera wants to be stops it in front of the first stone on the way
+        // (ctl-gentle-camera, as Cinemachine's deoccluder does), and the camera eases there: near a wall it closes in on the figure
+        // along its own line instead of being shoved sideways after the ease, which jumped. Only where the ease itself would cut
+        // through stone is the camera brought in at once, and keepIn stays the backstop where the head is not clear.
+        var pivot = tmpV2.set(a.x, fl + 1.6, a.z), probe = tmpV3;
+        var clear = function (v) { return tubes.some(function (tb) { var c2 = tb.contain(v, true); return c2 && c2.ratio <= 0.96 && c2.room >= 0.25; }); };
+        var pullIn = function (v) {
+          if (!clear(pivot)) return false;
+          var lo = 0, hi = 1, N = 10, i;
+          for (i = 1; i <= N; i++) { probe.lerpVectors(pivot, v, i / N); if (!clear(probe)) { hi = i / N; break; } lo = i / N; }
+          if (lo >= 1) return true;
+          for (i = 0; i < 4; i++) { var mid = (lo + hi) / 2; probe.lerpVectors(pivot, v, mid); if (clear(probe)) lo = mid; else hi = mid; }
+          v.lerpVectors(pivot, v, lo); return true;
+        };
+        if (free) { keepIn(want, 0.94, 0.35); pullIn(want); }
         if (snapCam) { camPos.copy(want); lookAt.copy(aim); snapCam = false; }
-        else { var f = 1 - Math.exp(-dt * (stCam ? 3 : 6)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
-        if (free) keepIn(camPos, 0.96, 0.25);
+        else { var f = 1 - Math.exp(-dt * (stCam ? 3 : TOUCH.follow)); camPos.lerp(want, f); lookAt.lerp(aim, f); }
+        if (free && !clear(camPos) && !pullIn(camPos)) keepIn(camPos, 0.96, 0.25); // the ease cut a corner: come in along the line
         camera.position.copy(camPos); camera.lookAt(lookAt); camera.updateMatrixWorld();
         if (state.camFix) { var ca = state.camFix; camera.position.set(ca[0], ca[1], ca[2]); camera.lookAt(ca[3], ca[4], ca[5]); camera.updateMatrixWorld(); } // tests: a fixed view
         var cp = ch && ch.main && ch.main.cap; if (cp) cp.mesh.visible = (camPos.x - cp.x) * cp.fx + (camPos.z - cp.z) * cp.fz > 0.3;
@@ -4730,6 +4841,7 @@
         range: lim, halfWidth: hw, stick: stickPad.style.display !== "none", prompt: promptBox.style.display !== "none" ? promptBox.textContent : null, sit: sitBtn.style.display !== "none", modal: state.modal };
     };
     api.stick = function (x, z) { stick.x = x; stick.z = z; };
+    api.camAt = function () { return camera.position.toArray(); }; // tests: where the camera is this frame
     api.doors = function () { var r = state.walk && state.walk.route; return r && r.doorMeshes ? r.doorMeshes.map(function (g) { return { w: g.userData.w, h: g.userData.h }; }) : []; };
     api.carryLight = carryLight;
     api.sitting = function () { return sit ? { n: sit.n, phase: sit.phase, name: sit.name || sit.gen, hex: sit.g.userData.color.getHex(), scale: sit.g.scale.x, k: sit.k,
@@ -5649,15 +5761,24 @@
       function spread() { var k = Object.keys(ptrs); return k.length < 2 ? 0 : Math.hypot(ptrs[k[0]].x - ptrs[k[1]].x, ptrs[k[0]].y - ptrs[k[1]].y); }
       if (renderer) {
         var dom = renderer.domElement;
+        var floatR = null, stickTap = null; // the floating stick and the tap a thumb on it may still be (ctl-split-thumbs, ctl-tap-rule)
         dom.addEventListener("pointerdown", function (e) {
+          if (!floatR) floatR = floatStick(stickPad);
+          // A second finger while the stick's has not yet moved off its tap: the two are a pinch, not a walk and a look
+          if (stickId != null && stickTap) { ptrs[stickId] = { x: stickTap.x, y: stickTap.y }; stickTap = null; stickUp(); }
+          else if (stickId == null && !R.modal && !R.close && floatR.wants(e)) {
+            try { dom.setPointerCapture(e.pointerId); } catch (x) {}
+            stickId = e.pointerId; floatR.at(e); stickAt(e); stickTap = { x: e.clientX, y: e.clientY, t: e.timeStamp }; return;
+          }
           ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
-          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX, y: e.clientY }; tap = { x: e.clientX, y: e.clientY, t: performance.now() }; }
+          if (Object.keys(ptrs).length === 1) { drag = { x: e.clientX, y: e.clientY }; tap = { x: e.clientX, y: e.clientY, t: e.timeStamp }; }
           else { drag = null; tap = null; pinch = { d: spread(), z: zoom }; }
         });
         dom.addEventListener("pointermove", function (e) {
+          if (e.pointerId === stickId) { if (stickTap && Math.hypot(e.clientX - stickTap.x, e.clientY - stickTap.y) >= TOUCH.px) stickTap = null; stickAt(e); return; }
           if (!ptrs[e.pointerId]) return;
           ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
-          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) tap = null;
+          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) >= TOUCH.px) tap = null;
           if (pinch) { var d = spread(); if (pinch.d > 0 && d > 0) setZoom(pinch.z * pinch.d / d); return; }
           if (!drag) return;
           guide.dragged += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); if (guide.dragged > 60) learn("look");
@@ -5668,8 +5789,13 @@
           drag.x = e.clientX; drag.y = e.clientY;
         });
         ["pointerup", "pointercancel"].forEach(function (n) { dom.addEventListener(n, function (e) {
+          if (e.pointerId === stickId) {
+            var st = stickTap; stickTap = null; stickUp();
+            if (n === "pointerup" && st && e.timeStamp - st.t < TOUCH.ms) tapAt(e.clientX, e.clientY);
+            return;
+          }
           delete ptrs[e.pointerId];
-          if (n === "pointerup" && tap && performance.now() - tap.t < 600) tapAt(e.clientX, e.clientY);
+          if (n === "pointerup" && tap && e.timeStamp - tap.t < TOUCH.ms) tapAt(e.clientX, e.clientY);
           tap = null;
           var left = Object.keys(ptrs);
           if (left.length < 2) pinch = null;
@@ -5723,6 +5849,14 @@
       // or x out of the menu so the player and the spirit can be in shot"): one line, the forms in one row of short buttons, a fold
       // button that leaves only a chip (a tap opens it again), and an X that closes it. The elder's floating name shrinks while open.
       var elderMin = false;
+      // Talk (ctl-generous-taps): standing by the elder, a round 88px button by the right thumb opens its card, so the thumb
+      // does not have to find the creature on the screen. It sits above a door's card when one is up.
+      var talkBtn = el("button", { class: "oagr-talk", "data-room-talk": "", "aria-label": "Talk to the elder", text: "Talk", style: "display:none", onclick: function () { elderOpen(); } }); wrap.appendChild(talkBtn);
+      function talkShow() {
+        var on = !!elder && !R.modal && !R.close && elderBox.style.display === "none" && Math.hypot(fig.x - ELDER_AT.x, fig.z - ELDER_AT.z) < 3.2;
+        talkBtn.style.display = on ? "" : "none";
+        if (on) talkBtn.style.bottom = doorBox && doorBox.style.display !== "none" ? "calc(" + (doorBox.offsetHeight + 30) + "px + env(safe-area-inset-bottom))" : "";
+      }
       function elderLabel() { var l = elder && elder.g.userData.label, open = elderBox.style.display !== "none"; if (l) l.scale.set(open ? 1.2 : 2.4, (open ? 1.2 : 2.4) * 0.1875, 1); }
       function elderCard() {
         clearTimeout(elderShow); elderShow = null;
@@ -5757,6 +5891,15 @@
         return { x: rc.left + (c.x + 1) / 2 * rc.width, y: rc.top + (1 - c.y) / 2 * rc.height, r: Math.hypot((e.x - c.x) / 2 * rc.width, (e.y - c.y) / 2 * rc.height) };
       }
       if (opts.portal && spiritForms && spiritForms.buildForm) elderWear("ally");
+      // A preview link's skip-ahead (?go=elder): the figure stands up off the rug beside the elder, facing it.
+      var skipNear = opts.near === "elder"; // done on the first frame the room is free to walk, after its opening page has settled
+      function standByElder() {
+        skipNear = false; if (!elder) return;
+        // come from the rug's side, and stand a step to its right, so the camera behind the figure sees the elder past its shoulder
+        var dx = ELDER_AT.x - SEAT.x, dz = ELDER_AT.z - SEAT.z, d = Math.hypot(dx, dz); dx /= d; dz /= d;
+        fig.x = ELDER_AT.x - dx * 2.6 - dz * 1.2; fig.z = ELDER_AT.z - dz * 2.6 + dx * 1.2; fig.sit = 0; fig.yaw = Math.atan2(dx, dz);
+        R.roam = { free: true, x: fig.x, z: fig.z, exit: null, arrived: true }; R.walkYaw = fig.yaw;
+      }
       var stickId = null;
       // On an iPhone a thumb held on the stick keeps sending moves after the stick hides for a door's card, and a hidden stick
       // measures 0 wide: dividing by that walked the figure to nowhere and left the room dark (Wendell, 14 October 2026: "Stay in
@@ -5768,7 +5911,7 @@
         stick.x = d ? dx / d * m / r : 0; stick.z = d ? dy / d * m / r : 0;
         stickKnob.style.transform = "translate(" + stick.x * r * 0.6 + "px," + stick.z * r * 0.6 + "px)";
       }
-      function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; }
+      function stickUp() { stickId = null; stick.x = 0; stick.z = 0; stickKnob.style.transform = ""; if (floatR) floatR.home(); }
       stickPad.addEventListener("pointerdown", function (e) { e.preventDefault(); stickId = e.pointerId; try { stickPad.setPointerCapture(e.pointerId); } catch (x) { /* old browsers */ } stickAt(e); });
       stickPad.addEventListener("pointermove", function (e) { if (e.pointerId === stickId) stickAt(e); });
       ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) { stickPad.addEventListener(n, function (e) { if (e.pointerId === stickId) stickUp(); }); });
@@ -5797,6 +5940,7 @@
       function sitDown() { sitBtn.style.display = "none"; stopWalking(); if (modal.childNodes.length) openModal(); }
       function freeWalk(dt) {
         if (!isFinite(fig.x) || !isFinite(fig.z) || !isFinite(fig.yaw)) { fig.x = SEAT.x; fig.z = SEAT.z; fig.yaw = Math.PI; R.walkYaw = null; R.roam = null; snap = true; } // never lost: back on the rug
+        if (skipNear && !R.modal && !R.close) standByElder();
         var w = R.modal || R.close ? null : wantWalk();
         if (!w) R.stickFrame = null; // the thumb is off: the next push takes the camera's forward afresh
         if (w) {
@@ -5823,6 +5967,7 @@
           if (near && near !== R.atDoor) doorCard(near);
           else if (!near && R.atDoor) hideDoor();
         }
+        talkShow(); wrap.classList.toggle("oagr-still", reducedMotion);
         if (!R.roam || !R.roam.free) { sitBtn.style.display = "none"; loadBtn.style.display = "none"; loadBox.style.display = "none"; return !!w; }
         sitBtn.style.display = onRug() && !R.modal ? "" : "none";
         loadBtn.style.display = onRug() && !R.modal && keptSpirits().length ? "" : "none";
@@ -5845,14 +5990,14 @@
         if (!renderer) return;
         var rc = renderer.domElement.getBoundingClientRect(), best = null, bestK = Infinity;
         // the elder takes a tap on itself, except while the guide is teaching the tap on the floor (its spot can fall by the elder)
-        var es = !R.close && guide.shown !== "tap" && elderScreen(); if (es && Math.hypot(x - es.x, y - es.y) < es.r) { elderOpen(); return; }
+        var es = !R.close && guide.shown !== "tap" && elderScreen(); if (es && Math.hypot(x - es.x, y - es.y) < tapReach(es.r)) { elderOpen(); return; }
         var right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
         seen().forEach(function (c) {
           var p = centreOf(c), e = p.clone().addScaledVector(right, c.fig.scale.x).project(camera); p.project(camera);
           if (p.z > 1) return; // behind the camera
           var sx = rc.left + (p.x + 1) / 2 * rc.width, sy = rc.top + (1 - p.y) / 2 * rc.height;
           var rad = Math.hypot((e.x - p.x) / 2 * rc.width, (e.y - p.y) / 2 * rc.height), d = Math.hypot(x - sx, y - sy);
-          var k = d / (rad * 1.4 + 24); if (k < 1 && k < bestK) { best = c; bestK = k; }
+          var k = d / Math.max(rad * 1.4 + 24, tapReach(0)); if (k < 1 && k < bestK) { best = c; bestK = k; }
         });
         if (best && best !== R.close) closeUp(best);
         else if (!best && !R.close) walkTap(x, y, rc);
