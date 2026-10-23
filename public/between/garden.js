@@ -8,6 +8,12 @@ import { createCreature } from "./creature.js";
 import { createAmbient } from "./ambient.js";
 import { installPaint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // round 4: caption mode
+/* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
+   and Big Mind take as they are. */
+import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
+import { STYLES as ROOM_STYLES, styleOf, applyStyle } from "../calrunia/room-styles.js";
+import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
+import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
 installPaint();
 
 /* ===================================================================================================
@@ -57,6 +63,14 @@ const items = new Map(), spirits = new Map(), daemons = new Map(), shown = new M
 const names = {};
 let awaySince = null, myPrivate = {}, myPouch = null, readOnly = false;
 let sheetName = null, sheetArg = null, selected = null;
+/* The homeroom (br-home-is-a-room): `list` is GET /api/between (your home and a summary of each room), `myHome` your
+   private home doc (look, goals, check-ins), `lookDraft` the Look sheet's choices before they are kept. */
+let list = null, homeId = null, myHome = {}, lookDraft = null;
+const isHome = g => !!(g && g.kind === "home");
+const ROOM_URL = id => "/ontology-game/between" + (id ? "?g=" + encodeURIComponent(id) : "");
+/* Chapter 1's creator reads the same look text (br-look-is-sprouts). Sprout has no public address yet: this is the creator
+   branch's preview, behind the Vercel sign-in. */
+const CHAPTER1_LOOK = t => "https://sprout-git-claude-project-thr-7fd764-wendells-projects-9c1b16dc.vercel.app/creator.html?look=" + encodeURIComponent(t);
 const outbox = [];
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -102,7 +116,7 @@ async function rawOp(o) {
 function apply(path, doc) {
   const [c, id] = path.split("/");
   if (path === "garden/main") garden = doc;
-  else if (c === "data") { if (path === privPath()) myPrivate = { ...(doc || {}) }; else if (path === pouchPath()) myPouch = doc || null; }
+  else if (c === "data") { if (path === privPath()) myPrivate = { ...(doc || {}) }; else if (path === pouchPath()) myPouch = doc || null; else if (path === homePath()) setHome(doc); }
   else { const map = { items, spirits, daemons, shown }[c]; if (map) doc ? map.set(id, doc) : map.delete(id); }
   refresh();
 }
@@ -237,6 +251,22 @@ function loadModel(name) {
   return templates[name];
 }
 
+/* A look on the player figure: player.glb is coloured by vertex, six colours read off the file (linear): skin, the robe,
+   its light under-layer, the trousers, the sash, and the shoes. A look sets the skin and the dyed cloth (main, light,
+   shade, trim) from look.js colorsOf; the shoes stay. The figure has no hair mesh, so hair colour waits for one. */
+const FIGURE_SLOTS = [[[0.69, 0.62, 0.53], "skin"], [[0.06, 0.05, 0.19], 0], [[0.81, 0.74, 0.56], 1], [[0.03, 0.03, 0.06], 2], [[0.48, 0.28, 0.05], 3], [[0.01, 0.01, 0.02], null]];
+function paintLook(mesh, colors) {
+  const src = mesh.geometry.attributes.color; if (!src) return;
+  const to = FIGURE_SLOTS.map(([, k]) => k === null ? null : new THREE.Color(k === "skin" ? colors.skin : colors.cloth[k]));
+  const geo = mesh.geometry.clone(), col = geo.attributes.color;
+  for (let i = 0; i < col.count; i++) {
+    const r = col.getX(i), g = col.getY(i), b = col.getZ(i);
+    let best = 0, bd = Infinity;
+    FIGURE_SLOTS.forEach(([c], k) => { const d = (c[0] - r) ** 2 + (c[1] - g) ** 2 + (c[2] - b) ** 2; if (d < bd) { bd = d; best = k; } });
+    if (to[best]) col.setXYZ(i, to[best].r, to[best].g, to[best].b);
+  }
+  col.needsUpdate = true; mesh.geometry = geo;
+}
 /* Bodies are cloned from one template each; their colour is set per owner on a copy of the robe. */
 async function makeBody(model, height, tint, tintAmt, opts) {
   const t = await loadModel(model);
@@ -255,6 +285,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   obj.traverse(o => {
     if (o.isMesh) {
       o.frustumCulled = false;
+      if (opts && opts.colors) paintLook(o, opts.colors);
       if (tint != null) {
         const mats = Array.isArray(o.material) ? o.material : [o.material];
         const nm = mats.map(m => { const c = m.clone(); if (c.color && !/eye|glint|lid/i.test(m.name || "")) c.color.lerp(new THREE.Color(tint), tintAmt); return c; });
@@ -349,6 +380,16 @@ const moteMat = new THREE.PointsMaterial({ color: 0xd48bc0, size: 0.09, transpar
 const motes = new THREE.Points(moteGeo, moteMat); between.add(motes);
 const fedOrbs = new THREE.Group(); between.add(fedOrbs);
 let look = { phase: "spark", state: "steadied", stale: false, sat: 3 };
+/* The homeroom has no Between: where it would sit stands a tall mirror, and walking up to it opens the Look sheet. */
+const mirror = new THREE.Group(); mirror.position.copy(BETWEEN_AT).setY(DAIS_Y); mirror.visible = false; scene.add(mirror);
+{
+  const wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.7 });
+  const frame = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.045, 8, 40), wood); frame.scale.y = 1.55; frame.position.y = 1.0; mirror.add(frame);
+  const glass = new THREE.Mesh(new THREE.CircleGeometry(0.4, 40), new THREE.MeshStandardMaterial({ color: 0xb8ccd8, metalness: 0.9, roughness: 0.12, emissive: 0x30404c, emissiveIntensity: 0.6 }));
+  glass.scale.y = 1.55; glass.position.set(0, 1.0, 0.005); mirror.add(glass);
+  const back = glass.clone(); back.material = wood; back.rotation.y = Math.PI; back.position.z = -0.005; mirror.add(back);
+  for (const sx of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.42, 6), wood); leg.position.set(sx * 0.16, 0.19, -0.06); leg.rotation.z = sx * 0.12; mirror.add(leg); }
+}
 
 /* Who the creature notices: the nearest person within reach, you or the other. */
 function creatureTarget() {
@@ -649,14 +690,25 @@ function ownerSeatNow(uid) {
 }
 function standUp() { meState.seatWant = null; if (meState.sitting) { meState.sitting = false; sendPresence(); } }
 const peers = new Map(); // peer -> { uid, body, pos, yaw, cur, walking }
-let myBodyHue = null;
+let myBodyHue = null, myBodyLook = null, myBodyBusy = false;
+/* Whose look: yours is the Look sheet's draft while it is open, else your homeroom's; the other person's is the one they
+   copied into this room (garden.looks, br-look-is-sprouts). */
+function lookOf(uid) {
+  if (uid === me) return (sheetName === "look" && lookDraft ? lookText(lookDraft) : null) || myHome.look || (list && list.home && list.home.look) || null;
+  const g = view().g;
+  return g && g.looks && typeof g.looks[uid] === "string" ? g.looks[uid] : null;
+}
 async function ensureMyBody() {
   const g = view().g;
-  const hue = hueOf(me, g);
-  if (meState.body && myBodyHue === hue) return;
-  const b = await makeBody("player", 1.7, null, 0, { ring: hue });
-  if (meState.body) scene.remove(meState.body.holder);
-  meState.body = b; myBodyHue = hue; scene.add(b.holder);
+  const hue = hueOf(me, g), lk = lookOf(me);
+  if ((meState.body && myBodyHue === hue && myBodyLook === lk) || myBodyBusy) return;
+  myBodyBusy = true;
+  try {
+    const b = await makeBody("player", 1.7, null, 0, { ring: hue, colors: lk ? colorsOf(lk) : null });
+    if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
+    meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
+  } finally { myBodyBusy = false; }
+  if (myBodyHue !== hueOf(me, view().g) || myBodyLook !== lookOf(me)) ensureMyBody();
 }
 function placeMe() {
   if (meState.placed) return;
@@ -665,14 +717,14 @@ function placeMe() {
   meState.pos.copy(spot); meState.yaw = Math.PI; meState.placed = true;
 }
 async function ensurePeerBody(p) {
-  const hue = hueOf(p.uid, view().g);
-  if (p.body && p.hue === hue) return;
+  const hue = hueOf(p.uid, view().g), lk = lookOf(p.uid);
+  if (p.body && p.hue === hue && p.look === lk) return;
   if (p.loading) return; p.loading = true;
-  const b = await makeBody("player", 1.7, null, 0, { ring: hue });
+  const b = await makeBody("player", 1.7, null, 0, { ring: hue, colors: lk ? colorsOf(lk) : null });
   p.loading = false;
   if (!peers.has(p.peer)) return;
   if (p.body) scene.remove(p.body.holder);
-  p.body = b; p.hue = hue; scene.add(b.holder);
+  p.body = b; p.hue = hue; p.look = lk; scene.add(b.holder);
 }
 let lastPresence = 0, lastSent = "";
 /* Where you stand goes out with each poll, with where you are walking to, so the other screen walks your figure there
@@ -793,6 +845,7 @@ function tapAt(cx, cy) {
     standUp();
     selected = best.key;
     if (best.key === "hearth" && hearthOpen()) openSheet("hearth");
+    if (best.key === "between" && isHome(view().g)) openSheet("look");
     const dir = meState.pos.clone().sub(best.pos).setY(0); const d = dir.length();
     if (d > 1.3) { dir.normalize(); meState.target = pushOut(best.pos.clone().add(dir.multiplyScalar(1.1))); }
     refreshHud(); return;
@@ -972,8 +1025,8 @@ function drawLabels(t) {
   for (const el of labels.values()) el._seen = false;
   const V = view(); const g = V.g;
   if (g && g.phase !== "closed") {
-    const nm = betweenName(V.items) || (g.phase === "spark" ? "The spark" : "The Between");
-    placeLabel(label("between", nm, ""), BETWEEN_AT.clone().setY(DAIS_Y + (g.phase === "spark" ? 1.0 : 1.45)));
+    const nm = isHome(g) ? "The mirror" : betweenName(V.items) || (g.phase === "spark" ? "The spark" : "The Between");
+    placeLabel(label("between", nm, ""), BETWEEN_AT.clone().setY(DAIS_Y + (isHome(g) ? 1.95 : g.phase === "spark" ? 1.0 : 1.45)));
   }
   if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting ? DAIS_Y + 1.35 : groundY(meState.pos.x, meState.pos.z) + 1.95));
   for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting ? DAIS_Y + 1.35 : groundY(p.pos.x, p.pos.z) + 1.95));
@@ -999,6 +1052,7 @@ function refreshHud() {
   const V = view(); const g = V.g;
   const nc = $("#namecard");
   if (!g) { nc.innerHTML = `<h1>The Between</h1><span class="sub">${storeDown ? "The room only: the store did not answer" : "No garden here yet"}</span>`; }
+  else if (isHome(g)) { nc.innerHTML = `<h1>Your homeroom</h1><span class="sub">Only you come in here · ${esc(styleOf(g.style).name)}</span>`; }
   else if (g.phase === "closed") { nc.innerHTML = `<h1>The Between</h1><span class="sub">This garden is closed</span>`; }
   else {
     const s = satisfaction(V.items), st = stateOf(s), stale = isStale(g);
@@ -1015,6 +1069,7 @@ function refreshHud() {
   const others = [...peers.values()].filter(p => p.uid !== me);
   if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again.";
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
+  else if (isHome(g)) hintText = "Your own room. Walk up to the mirror to change how you look. Your rooms are behind Rooms.";
   else if (g.phase === "closed") hintText = "The garden is closed. Its history is yours to keep from More.";
   else if (!isMember(g)) hintText = members(g).length >= 2 ? "This garden is held by two people. You can look around." : "A spark is waiting here. Walk up to it.";
   else if (g.phase === "spark") hintText = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap the floor to walk, drag to look.`;
@@ -1033,6 +1088,15 @@ function refreshHud() {
   const tools = [];
   if (storeDown) {}
   else if (!g) tools.push(`<button type="button" data-open="setup">Plant a spark here</button>`);
+  else if (isHome(g)) {
+    const invs = (list && list.gardens || []).reduce((n, r) => n + (r.invitations || []).length, 0);
+    tools.push(`<button type="button" data-open="rooms">Rooms</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="look">Look</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="checkin">Check in</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="goals">Goals</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="invitations">Invitations${invs ? '<span class="dot" title="Waiting for your answer"></span>' : ""}</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="style">Style</button>`);
+  }
   else if (g.phase !== "closed" && isMember(g) && !readOnly) {
     tools.push(`<button type="button" data-open="offer">${g.phase === "spark" ? "Tend the spark" : "Offer something"}</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="agreement">Plant an agreement</button>`);
@@ -1040,13 +1104,34 @@ function refreshHud() {
     tools.push(`<button class="glassbtn" type="button" data-open="daemon">Bring a daemon</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="hearth">Hearth</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="pictures">Pictures</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="invite">Invite</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="style">Style</button>`);
     if (others.length) tools.push(`<button class="glassbtn" type="button" data-act="wave">Wave</button>`);
-  } else if (g.phase !== "closed" && !isMember(g) && members(g).length < 2 && !readOnly) {
+  }
+  if (g && !isHome(g) && homeId && !storeDown) tools.push(`<button class="glassbtn" type="button" data-act="goHome">Home</button>`); else if (g.phase !== "closed" && !isMember(g) && members(g).length < 2 && !readOnly) {
     tools.push(g.joinRequest && g.joinRequest.uid === me ? `<button class="glassbtn" type="button" data-act="unjoin">Take back my request</button>` : `<button type="button" data-act="join">Ask to join</button>`);
   }
   if (placing && !storeDown) tools.unshift(`<button type="button" data-act="lanternHere">Set it down here</button><button class="glassbtn" type="button" data-act="lanternCancel">Leave it where it was</button>`);
   const th = tools.join("");
   const te = $("#tools"); if (te._h !== th) { te.innerHTML = th; te._h = th; }
+
+  // next: what the Between suggests now, one move per lane at most (br-next-moves-three-lanes)
+  const moves = storeDown || !g || g.phase === "closed" || (!isHome(g) && !isMember(g)) ? [] : nextMoves(g);
+  const nx = $("#next");
+  const nh = moves.length ? `<span class="eyebrow">Next</span>${moves.map((m, i) => `<button type="button" class="${i ? "nmore" : "nfirst"}" data-act="next" data-id="${esc(m.act)}"><span class="lane">${esc(LANE_NAMES[m.lane])}</span> <b>${esc(m.title)}</b>${i ? "" : `<span class="t">${esc(m.line)}</span>`}</button>`).join("")}` : "";
+  nx.hidden = !nh || !!nearKey || !!placing; if (nx._h !== nh) { nx.innerHTML = nh; nx._h = nh; }
+}
+/* The moves for here: in the homeroom, across every room; inside a room, that room only. Your own lane reads your
+   homeroom, so checking in with yourself is part of the loop wherever you are. */
+function homeState() {
+  const h = list && list.home;
+  return { lastCheckin: myHome.lastCheckin ?? (h && h.lastCheckin) ?? null, goals: myHome.goals ? Object.values(myHome.goals).filter(Boolean) : (h && h.goals) || [] };
+}
+function nextMoves(g) {
+  const rooms = (list && list.gardens || []).filter(r => r.phase !== "closed");
+  if (isHome(g)) return suggest({ home: homeState(), rooms });
+  const here = rooms.find(r => r.id === gardenId);
+  return suggest({ home: homeState(), rooms: here ? [here] : [], here: gardenId });
 }
 function moveActs(id, it, g) {
   const ma = it.moveAsk;
@@ -1058,6 +1143,10 @@ function moveActs(id, it, g) {
 function nearHtml(key, V, g) {
   if (!g) return "";
   const canTend = isMember(g) && !readOnly && g.phase !== "closed";
+  if (key === "between" && isHome(g)) {
+    const lk = parseLook(lookOf(me) || "");
+    return `<div class="what"><b>The mirror</b><span class="t">${lk ? "You, as you made yourself: " + esc(lookWords(lk)) + "." : "You have not chosen a look yet. The mirror shows a traveller in a long violet coat until you do."}</span></div><div class="row"><button type="button" data-open="look">Change how you look</button></div>`;
+  }
   if (key === "between") {
     const s = satisfaction(V.items), st = stateOf(s), stale = isStale(g);
     const nm = betweenName(V.items);
@@ -1075,8 +1164,9 @@ function nearHtml(key, V, g) {
     const i = +key.slice(5), mine = i === mySeat();
     const hue = i ? "plum" : "teal";
     if (mine) return meState.sitting
-      ? `<div class="what"><b>Your cushion</b><span class="t">${bothSitting() ? "Sitting together. Stay as long as you like." : othersHere().length ? esc(nameOf(othersHere()[0].uid, g)) + " is here. Their cushion is the other one." : "Sitting with the Between. When the other person comes in, they find you here."}</span></div><div class="row"><button class="glassbtn" type="button" data-act="stand">Stand up</button>${othersHere().length ? `<button class="glassbtn" type="button" data-act="wave">Wave</button>` : ""}</div>`
-      : `<div class="what"><b>Your cushion</b><span class="t">The ${hue} one is yours.</span></div><div class="row"><button type="button" data-act="sit">Sit here</button></div>`;
+      ? `<div class="what"><b>Your cushion</b><span class="t">${bothSitting() ? "Sitting together. Stay as long as you like." : othersHere().length ? esc(nameOf(othersHere()[0].uid, g)) + " is here. Their cushion is the other one." : "Sitting with the Between. When the other person comes in, they find you here."}</span></div><div class="row"><button type="button" data-open="spellbook">Spellbook</button><button class="glassbtn" type="button" data-act="stand">Stand up</button>${othersHere().length ? `<button class="glassbtn" type="button" data-act="wave">Wave</button>` : ""}</div>`
+      : `<div class="what"><b>Your cushion</b><span class="t">The ${hue} one is yours. Spells start from here.</span></div><div class="row"><button type="button" data-act="sit">Sit here</button><button class="glassbtn" type="button" data-open="spellbook">Spellbook</button></div>`;
+    if (isHome(g)) return `<div class="what"><b>The spare cushion</b><span class="t">Nobody else comes into your homeroom. Sit here with whoever you are bringing to mind.</span></div>`;
     const uid = members(g).find(u => seatOf(u) === i);
     const theirs = uid ? nameOf(uid, g) : (g.phase === "spark" ? g.setup.who : "the other person");
     const there = [...peers.values()].some(p => p.uid === uid && p.sitting);
@@ -1229,6 +1319,7 @@ function hearthSheet(g, V) {
       ${ch ? (canLantern ? `<label class="row" style="font-weight:400"><input type="checkbox" id="hShowEl" style="width:auto" ${hd.showEl ? "checked" : ""}> Show its element on the lantern</label>
         <p class="small muted">A lantern is an offer. It stands by the hearth until ${esc(nameOf(other(g), g))} welcomes it; it never shows what you felt or how strongly.</p>
         <div class="row"><button type="button" data-act="hLantern" data-id="${ch[0]}">Make a lantern</button></div>`
+        : isHome(g) ? `<p class="small muted">Embers you keep here go with you. In a room you share, one can become a lantern for your home together.</p>`
         : `<p class="small muted">Once ${esc(g.setup.who)} joins, an ember can become a lantern for your home together.</p>`) : ""}</div>` : ""}
     <div class="stack"><h3>Work a charge</h3>
       <label for="hCharge">What stirred you<select id="hCharge"><option value="">A feeling with no words</option>${charges.map(([k, i]) => `<option value="${k}" ${hd.charge === k ? "selected" : ""}>${esc(String(i.text || "").slice(0, 70))}</option>`).join("")}</select></label>
@@ -1270,9 +1361,21 @@ async function itemAct(id, act, payload) {
 /* ===================================================================================================
    Sheets: the writing that the room can't hold
    =================================================================================================== */
-function openSheet(name, arg) { if (name === "hearth" && sheetName !== "hearth") hd = {}; sheetName = name; sheetArg = arg; renderSheet(); }
-function closeSheet() { sheetName = null; sheetArg = null; $("#sheet").hidden = true; $("#scrim").hidden = true; }
-$("#scrim").addEventListener("click", () => { if (sheetName !== "setup") closeSheet(); });
+function openSheet(name, arg) {
+  if (name === "hearth" && sheetName !== "hearth") hd = {};
+  if (name === "look" && sheetName !== "look") lookDraft = null;
+  if (name === "checkin" && sheetName !== "checkin") checkFeel = null;
+  if (name === "invitations" || name === "rooms") refreshList();
+  sheetName = name; sheetArg = arg; renderSheet();
+}
+function closeSheet() {
+  const wasLook = sheetName === "look";
+  sheetName = null; sheetArg = null; $("#sheet").hidden = true; $("#scrim").hidden = true;
+  if (wasLook) { lookDraft = null; ensureMyBody().catch(() => {}); } // an unkept draft goes back to the kept look
+  refreshHud();
+}
+// Setup is closeable now: there is always the homeroom to stand in (br-home-is-a-room).
+$("#scrim").addEventListener("click", () => { if (sheetName !== "setup" || garden) closeSheet(); });
 function renderSheet() {
   if (!sheetName) return;
   const V = view(); const g = V.g;
@@ -1285,6 +1388,7 @@ function renderSheet() {
       <label for="sWho">Who is it?<input id="sWho" required maxlength="80" placeholder="Their name, or how you think of them"></label>
       <label for="sKind">What kind of relationship is it, or could it be?<select id="sKind">${REL_KINDS.map(k => `<option>${k}</option>`).join("")}</select></label>
       <label for="sHope">What do you hope for between you?<textarea id="sHope" maxlength="1000" placeholder="A sentence or two is enough"></textarea></label>
+      <label for="sStyle">How the room looks<select id="sStyle">${ROOM_STYLES.map(st => `<option value="${st.id}">${esc(st.name)}</option>`).join("")}</select></label>
       <p class="small muted">Only the two of you read these. Someone you invite sees who the spark is toward and what kind it is, never what you hope for.</p>
       <div class="row"><button type="submit">Plant the spark</button><button class="quiet" type="button" data-close>Look around first</button></div></form>`; break;
     case "offer": h = `<form class="stack" id="offerForm"><h2>${g.phase === "spark" ? "Tend the spark" : "Offer something"}</h2>
@@ -1321,6 +1425,14 @@ function renderSheet() {
       <p>A new Between begins for the two of you, and its history starts now. What you tended alone stays with you, out of the shared garden.</p>
       <p class="muted small">Your spark can walk beside the Between as your own spirit, or you can let it compost: what it carried is worked, and nothing of it is shown to them.</p>
       <div class="row"><button type="button" data-act="welcomeKeep">Keep it as my own spirit</button><button class="ghost" type="button" data-act="welcomeCompost">Let it compost</button>${close}</div></div>`; break; }
+    case "rooms": h = roomsSheet() + close; break;
+    case "look": h = lookSheet() + close; break;
+    case "goals": h = goalsSheet() + close; break;
+    case "checkin": h = checkinSheet() + close; break;
+    case "invitations": h = invitationsSheet() + close; break;
+    case "style": if (!g || !isMember(g) || g.phase === "closed") { closeSheet(); return; } h = styleSheet(g) + close; break;
+    case "invite": if (!g || isHome(g) || !isMember(g)) { closeSheet(); return; } h = inviteSheet(g) + close; break;
+    case "spellbook": if (!g || !isMember(g)) { closeSheet(); return; } h = spellSheet(g) + close; break;
     case "quiet": h = `<div class="stack"><h2>A silent exit</h2>
       <p>If this relationship is hurting you, you can leave now. The other person sees only that the garden has closed, the same as any closing. Nothing says who left or why.</p>
       <p>If you are in danger, call your local emergency number. In the US, the National Domestic Violence Hotline answers day and night at <b>1-800-799-7233</b>, or text <b>START</b> to <b>88788</b>. Anywhere else, <a href="https://findahelpline.com" target="_blank" rel="noopener">findahelpline.com</a> lists free, confidential lines by country.</p>
@@ -1333,6 +1445,108 @@ function renderSheet() {
   $("#sheet").hidden = false; $("#scrim").hidden = false;
   readIn(inner);
   const first = $("#sheetInner").querySelector("input, textarea, select"); if (first && !keep[first.id]) setTimeout(() => first.focus({ preventScroll: true }), 50);
+}
+/* ---------- the homeroom's sheets, and the room's Style, Invite and Spellbook (rooms, part 2) ---------- */
+const roomName = r => r.personName || r.who || "someone";
+function roomsSheet() {
+  const rooms = (list && list.gardens) || [];
+  const open = rooms.filter(r => r.phase !== "closed"), closed = rooms.filter(r => r.phase === "closed");
+  const row = r => {
+    const m = suggest({ rooms: [r] }).find(x => x.lane !== "yourself");
+    const where = r.phase === "spark" ? `A spark, waiting for ${esc(r.who || "them")} to join` : `You and ${esc(roomName(r))}`;
+    return `<div class="roomrow"><div><b>${esc(roomName(r))}</b><span class="small muted">${where} · ${esc(r.relKind || r.kind || "")} · ${esc(styleOf(r.style).name)}</span>
+      ${m ? `<span class="small">Next: ${esc(m.title)}</span>` : `<span class="small muted">Nothing waits here.</span>`}</div>
+      <button type="button" data-act="goRoom" data-id="${esc(r.id)}">Go in</button></div>`;
+  };
+  return `<div class="stack"><h2>Your rooms</h2>
+    <p class="small muted">One room for each relationship. Each starts as a spark you tend alone, and becomes your Between once they join.</p>
+    ${open.length ? open.map(row).join("") : `<p class="muted">No rooms yet. Make one for someone you want to work on things with.</p>`}
+    <div class="row"><button type="button" data-open="setup">Make a new room</button></div>
+    ${closed.length ? `<details><summary>Closed rooms</summary>${closed.map(row).join("")}</details>` : ""}</div>`;
+}
+function lookSheet() {
+  if (!lookDraft) lookDraft = parseLook(lookOf(me) || "") || { ...DEFAULT_LOOK };
+  const opt = (k, o) => `<button type="button" class="${lookDraft[k] === o.id ? "on" : ""}" aria-pressed="${lookDraft[k] === o.id}" data-act="lookPick" data-id="${k}:${o.id}">${o.swatch ? `<i class="sw" style="background:${o.swatch}"></i>` : ""}${esc(o.label)}</button>`;
+  const t = lookText(lookDraft);
+  return `<div class="stack"><h2>How you look</h2>
+    <p class="small muted">Your figure changes as you choose. The other person in each room sees you as you make yourself here. A look is choices, never a photo.</p>
+    ${BEATS.map(b => `<div class="stack"><h3>${esc(b.title)}</h3>${b.groups.map(gr => `<span class="eyebrow">${esc(gr.label)}</span><div class="dots">${optionsOf(gr.k).map(o => opt(gr.k, o)).join("")}</div>`).join("")}</div>`).join("")}
+    <div class="row"><button type="button" data-act="lookKeep">Keep this look</button><button class="ghost" type="button" data-act="lookRandom">Choose for me</button></div>
+    <p class="small muted">The same look opens Chapter 1's creator: <a href="${CHAPTER1_LOOK(t)}" target="_blank" rel="noopener">take this look to Chapter 1</a>. Hair colour shows there; this figure has no hair yet.</p></div>`;
+}
+const goalsList = () => Object.entries(myHome.goals || {}).filter(([, x]) => x && x.text).sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
+function goalsSheet() {
+  const rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed");
+  const gl = goalsList();
+  return `<form class="stack" id="goalForm"><h2>What you hope for</h2>
+    <p class="small muted">Your goals for your relationships. Only you see them, here in your homeroom.</p>
+    ${gl.length ? `<ul class="log">${gl.map(([id, x]) => { const r = rooms.find(q => q.id === x.room); return `<li>${esc(x.text)}${r ? ` <span class="muted small">· with ${esc(roomName(r))}</span>` : ""} <button class="quiet" type="button" data-act="goalDrop" data-id="${esc(id)}">Let it go</button></li>`; }).join("")}</ul>` : ""}
+    <label for="gText">A goal<textarea id="gText" maxlength="280" placeholder="What you want more of, or less of"></textarea></label>
+    <label for="gRoom">For one room, or all of them<select id="gRoom"><option value="">All my relationships</option>${rooms.map(r => `<option value="${esc(r.id)}">${esc(roomName(r))}</option>`).join("")}</select></label>
+    <div class="row"><button type="submit">Keep this goal</button></div></form>`;
+}
+const FEEL_ORDER = ["wood", "fire", "earth", "metal", "water"];
+let checkFeel = null;
+function checkinSheet() {
+  const past = Object.values(myHome.checkins || {}).filter(Boolean).sort((a, b) => b.at - a.at).slice(0, 5);
+  return `<form class="stack" id="checkForm"><h2>Check in with yourself</h2>
+    <p class="small muted">Before anyone else: how are you? Only you see this.</p>
+    <span class="eyebrow">What is here</span><div class="dots">${FEEL_ORDER.map(f => `<button type="button" class="${checkFeel === f ? "on" : ""}" aria-pressed="${checkFeel === f}" data-act="checkFeel" data-id="${f}"><i class="sw" style="background:${cssHue(elHex(f))}"></i>${FEELS[f][0].toUpperCase() + FEELS[f].slice(1)}</button>`).join("")}</div>
+    <label for="cLine">One line, if you like<input id="cLine" maxlength="280" placeholder="What it is about"></label>
+    <div class="row"><button type="submit">Check in</button></div>
+    ${past.length ? `<details><summary>Your last check-ins</summary><ul class="log">${past.map(c => `<li>${esc(c.feel ? FEELS[c.feel] : "")}${c.line ? `: <i>${esc(c.line)}</i>` : ""} <span class="muted small">· ${fmt(c.at)}</span></li>`).join("")}</ul></details>` : ""}</form>`;
+}
+function invitationsSheet() {
+  const rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed");
+  const asks = rooms.flatMap(r => (r.invitations || []).map(inv => ({ r, inv })));
+  const joins = rooms.filter(r => r.joinWaiting);
+  return `<div class="stack"><h2>Invitations</h2>
+    ${asks.length ? asks.map(({ r, inv }) => `<div class="roomrow"><div><b>${esc(roomName(r))} asks you to come and sit</b><span class="small muted">${inv.when ? "At " + fmt(inv.when) : "Whenever you can"}${inv.note ? ` · <i>${esc(inv.note)}</i>` : ""}</span></div>
+      <div class="row">${answerBtns(r.id, inv.id)}</div></div>`).join("") : `<p class="muted">No invitations wait for you.</p>`}
+    ${joins.map(r => `<div class="roomrow"><div><b>Someone asked to join your spark toward ${esc(r.who || "them")}</b><span class="small muted">Go in and welcome them at the spark.</span></div><button type="button" data-act="goRoom" data-id="${esc(r.id)}">Go in</button></div>`).join("")}
+    <p class="small muted">To invite someone, go into their room and use Invite.</p></div>`;
+}
+const answerBtns = (rid, iid) => `<button type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|yes">Yes</button><button class="ghost" type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|later">Another time</button><button class="quiet" type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|no">No</button>`;
+function styleSheet(g) {
+  return `<div class="stack"><h2>${isHome(g) ? "How your homeroom looks" : "How this room looks"}</h2>
+    <p class="small muted">${isHome(g) ? "The light and weather of your own room." : "The light and weather of the place. Either of you can change it, and the other sees it in While you were away."}</p>
+    <div class="choice">${ROOM_STYLES.map(st => `<button type="button" class="${styleOf(g.style).id === st.id ? "on" : ""}" aria-pressed="${styleOf(g.style).id === st.id}" data-act="setStyle" data-id="${st.id}"><b>${esc(st.name)}</b>${esc(st.line)}</button>`).join("")}</div></div>`;
+}
+const ANSWER_TEXT = { yes: "said yes", later: "asked for another time", no: "said no" };
+function inviteSheet(g) {
+  const two = members(g).length >= 2, o = other(g);
+  const invs = Object.entries(g.invitations || {}).filter(([, x]) => x && x.kind === "sit").sort((a, b) => (b[1].at || 0) - (a[1].at || 0)).slice(0, 8);
+  const join = g.phase === "spark" && g.startedBy === me && myInvite;
+  return `<form class="stack" id="inviteForm"><h2>${two ? "Invite " + esc(nameOf(o, g)) + " to sit" : "Invite " + esc(g.setup.who) + " into this room"}</h2>
+    ${join ? `<p class="small muted">Send this room's link. They sign in to bars-engine (or make an account), ask to join at the spark, and you welcome them in.</p>
+      <label for="jNote">A note to go with it<textarea id="jNote" maxlength="280" placeholder="Why you are asking, in your words"></textarea></label>
+      <div class="row">${navigator.share ? `<button type="button" data-act="joinShare">Send the link</button>` : ""}<button class="${navigator.share ? "ghost" : ""}" type="button" data-act="joinCopy">Copy the link</button></div>` : ""}
+    ${!two && !join ? `<p class="muted">Only the person who planted the spark sends its link.</p>` : ""}
+    ${two ? `<p class="small muted">Ask them to come and sit with you on the cushions. A yes opens the spells you cast together.</p>
+      <label for="sWhen">When<input id="sWhen" type="datetime-local"></label>
+      <label for="sNote">A note<input id="sNote" maxlength="280" placeholder="Optional"></label>
+      <div class="row"><button type="submit">Send the invitation</button></div>
+      ${invs.length ? `<h3>Invitations here</h3><ul class="log">${invs.map(([id, x]) => `<li>${x.by === me ? "You asked them" : esc(nameOf(x.by, g)) + " asked you"} to sit${x.when ? ", " + fmt(x.when) : ""}${x.note ? `: <i>${esc(x.note)}</i>` : ""}.
+        ${x.answer ? ` ${x.by === me ? esc(nameOf(o, g)) : "You"} ${ANSWER_TEXT[x.answer]}.` : x.by === me ? ` Waiting for their answer. <button class="quiet" type="button" data-act="invBack" data-id="${esc(id)}">Take it back</button>` : `<span class="row">${answerBtns(gardenId, id)}</span>`}</li>`).join("")}</ul>` : ""}` : ""}</form>`;
+}
+/* Spells (Ari, between-ari-formation-01): from the cushions; dual ones after a sit invitation said yes. An async-dual
+   spell waits in garden.spells until the other person finishes it from their cushion. */
+const sitAccepted = g => Object.values((g && g.invitations) || {}).some(x => x && x.kind === "sit" && x.answer === "yes");
+const openSpell = (g, id) => Object.entries((g && g.spells) || {}).find(([, x]) => x && x.spell === id && !x.done) || null;
+function spellAt(g, sp) {
+  const left = sp.kind === "async-dual" ? openSpell(g, sp.id) : null;
+  return { sitting: !!meState.sitting, otherSitting: othersHere().some(p => p.sitting), sitAccepted: sitAccepted(g), started: !!(left && left[1].by !== me), mineWaiting: !!(left && left[1].by === me) };
+}
+function spellSheet(g) {
+  return `<div class="stack"><h2>Spellbook</h2>
+    <p class="small muted">Spells start from your cushion. Some you cast alone; some need both of you.</p>
+    ${SPELLS.filter(sp => !(isHome(g) && sp.kind !== "solo")).map(sp => {
+      const at = spellAt(g, sp), c = castable(sp, at);
+      const btn = at.mineWaiting ? `<span class="small muted">Your light is lit. It waits for them.</span>`
+        : c.ok ? `<button type="button" data-act="cast" data-id="${sp.id}">${at.started ? "Take up their light" : "Cast it"}</button>` : `<span class="small muted">${esc(c.why)}</span>`;
+      return `<div class="roomrow"><div><b>${esc(sp.name)}</b><span class="eyebrow">${esc(SPELL_KINDS[sp.kind])}</span><span class="small">${esc(sp.line)}</span></div>${btn}</div>`;
+    }).join("")}
+    ${isHome(g) ? `<p class="small muted">Spells for two are cast in a room you share.</p>` : ""}</div>`;
 }
 function picturesSheet(g, V) {
   const pic = ls.get("between.pic." + me) || {};
@@ -1357,6 +1571,7 @@ function allActs(V) {
   for (const it of V.items.values()) for (const e of Object.values(it.history || {})) out.push(e);
   for (const sp of V.spirits.values()) for (const e of Object.values(sp.history || {})) out.push(e);
   for (const d of V.daemons.values()) for (const e of Object.values(d.history || {})) out.push(e);
+  for (const e of Object.values((V.g && V.g.history) || {})) if (e && e.at) out.push(e);
   return out.sort((a, b) => b.at - a.at);
 }
 const awayActs = (g, V) => awaySince ? allActs(V).filter(e => e.by !== me && e.at > awaySince) : [];
@@ -1371,11 +1586,11 @@ function awaySheet(g, V) {
     ${theirs.length > away.length ? `<details><summary>Everything they have tended</summary><ul class="log">${theirs.map(e => actLine(e, g)).join("")}</ul></details>` : ""}</div>`;
 }
 function menuSheet(g, V) {
-  return `<div class="stack"><h2>The Between</h2>
+  return `<div class="stack"><h2>${isHome(g) ? "Your homeroom" : "The Between"}</h2>
     ${g && g.setup ? `<p class="muted small">${esc(g.setup.kind)}${g.setup.hopes ? `. Hoped for: <i>${esc(g.setup.hopes)}</i>` : ""}</p>` : ""}
     <div class="row">
-      ${g && isMember(g) && g.phase !== "closed" ? `<button class="ghost" type="button" data-open="ending">Ending</button>` : ""}
-      ${g && isMember(g) ? `<button class="ghost" type="button" data-act="copy">Take my copy</button>` : ""}
+      ${g && isMember(g) && g.phase !== "closed" && !isHome(g) ? `<button class="ghost" type="button" data-open="ending">Ending</button>` : ""}
+      ${g && isMember(g) && !isHome(g) ? `<button class="ghost" type="button" data-act="copy">Take my copy</button>` : ""}
       <button class="quiet" type="button" data-open="quiet">Need a silent exit?</button>
       <button class="quiet" type="button" data-close>Close</button>
     </div>
@@ -1456,6 +1671,16 @@ document.addEventListener("click", async ev => {
   if (a === "move") { const it = view().items.get(id); const r = moveRight(it); if (!r) return; placing = { id, ask: r === "shared" }; selected = null; refreshHud(); toast(r === "shared" ? "Tap the floor where you would like it." : "Tap the floor where it should stand, or drag it."); return; }
   if (a.startsWith("pace:")) { setPace(a.slice(5)); if (gardenId && isMember(view().g)) { myPrivate.captions = getPace(); savePriv(); } renderSheet(); return; }
   if (a === "lanternCancel") { placing = null; refreshHud(); return; }
+  if (a === "lookPick") { const [k, v] = id.split(":"); lookDraft = { ...lookDraft, [k]: v }; renderSheet(); ensureMyBody().catch(() => {}); return; }
+  if (a === "lookRandom") { lookDraft = randomLook(); renderSheet(); ensureMyBody().catch(() => {}); return; }
+  if (a === "checkFeel") { checkFeel = checkFeel === id ? null : id; renderSheet(); return; }
+  if (a === "goHome") { goRoom(null); return; }
+  if (a === "goRoom") { goRoom(id); return; }
+  if (a === "next") {
+    if (id.startsWith("room:")) { goRoom(id.slice(5)); return; }
+    if (id === "tend") { closeSheet(); selected = "between"; meState.target = pushOut(BETWEEN_AT.clone().add(new THREE.Vector3(0, 0, 1.1))); standUp(); refreshHud(); return; }
+    openSheet(id === "invitations" && !isHome(view().g) ? "invite" : id); return;
+  }
   const V = view(); const g = V.g;
   b.disabled = true;
   try {
@@ -1540,6 +1765,29 @@ document.addEventListener("click", async ev => {
       try { await navigator.clipboard.writeText(link); toast("The invitation link is on your clipboard."); }
       catch { window.prompt("Copy the invitation link:", link); }
     }
+    else if (a === "lookKeep") { await keepLook(); lookDraft = null; closeSheet(); toast("Kept. Each of your rooms shows you this way now."); }
+    else if (a === "goalDrop") { await homeOp({ goals: { [id]: null } }); renderSheet(); }
+    else if (a === "setStyle") {
+      const st = styleOf(id);
+      await op("garden/main", "update", { style: st.id, ...(isHome(g) ? {} : { history: hist("changed how the room looks: " + st.name.toLowerCase()) }) });
+      renderSheet(); toast(isHome(g) ? st.name + "." : st.name + ". They see it when they come in.");
+    }
+    else if (a === "invAnswer") {
+      const [rid, iid, ans] = id.split("|");
+      const data = { invitations: { [iid]: { answer: ans, answeredAt: now() } } };
+      if (rid === gardenId) await op("garden/main", "update", data); else await api("/api/between/" + rid + "/doc", { path: "garden/main", op: "update", data });
+      toast(ans === "yes" ? "You said yes. Go and sit with them." : ans === "later" ? "You asked for another time." : "You said no. That is yours to say.");
+      await refreshList(); renderSheet();
+    }
+    else if (a === "invBack") { await op("garden/main", "update", { invitations: { [id]: null } }); renderSheet(); }
+    else if (a === "joinShare" || a === "joinCopy") {
+      const link = location.origin + "/ontology-game/between?g=" + encodeURIComponent(gardenId) + "&invite=" + encodeURIComponent(myInvite);
+      const note = (($("#jNote") || {}).value || "").trim();
+      const text = (note ? note + "\n\n" : "") + "Come into the Between with me: " + link;
+      if (a === "joinShare") { try { await navigator.share({ title: "The Between", text }); } catch {} }
+      else { try { await navigator.clipboard.writeText(text); toast("The link and your note are on your clipboard."); } catch { window.prompt("Copy the invitation:", text); } }
+    }
+    else if (a === "cast") await castSpell(g, id);
     else if (a === "letgo") { await op("garden/main", "update", { phase: "closed", closedAt: now() }); closeSheet(); }
     else if (a === "quietLeave") {
       ls.del("between.pic." + me);
@@ -1564,8 +1812,12 @@ document.addEventListener("submit", async ev => {
   try {
     if (f.id === "setupForm") {
       const who = $("#sWho").value.trim(); if (!who) return;
-      await op("garden/main", "set", { v: 1, startedBy: me, startedAt: now(), setup: { who, kind: $("#sKind").value, hopes: $("#sHope").value.trim() },
-        members: { [me]: { joinedAt: now() } }, joinRequest: null, phase: "spark", lastTendedAt: now(), ending: null });
+      const lk = lookOf(me);
+      const data = { v: 1, startedBy: me, startedAt: now(), setup: { who, kind: $("#sKind").value, hopes: $("#sHope").value.trim() }, style: $("#sStyle").value,
+        looks: lk ? { [me]: lk } : {}, members: { [me]: { joinedAt: now() } }, joinRequest: null, phase: "spark", lastTendedAt: now(), ending: null };
+      // From the homeroom (or another room), a new room is its own garden: plant it and go in.
+      if (gardenId) { const j = await api("/api/between", { data }); goRoom(j.id); return; }
+      await op("garden/main", "set", data);
       awaySince = now(); closeSheet();
     } else if (f.id === "offerForm") {
       const kind = $("#oKind").value, text = $("#oText").value.trim();
@@ -1586,6 +1838,21 @@ document.addEventListener("submit", async ev => {
       await op("spirits/s" + hkey(), "set", { owner: me, name, element: $("#spEl").value, form: $("#spForm").value, note: $("#spNote").value.trim(), at: now(),
         stay: { x: spot.x, z: spot.z, at: now(), until: now() + 20000 }, history: hist("brought a spirit to visit", name) });
       await touch(); closeSheet();
+    } else if (f.id === "goalForm") {
+      const text = $("#gText").value.trim(); if (!text) { toast("Write the goal first. A few words are enough."); return; }
+      const room = $("#gRoom").value || null;
+      await homeOp({ goals: { ["g" + hkey()]: { text, room, at: now() } } });
+      $("#gText").value = ""; renderSheet(); toast("Kept in your homeroom. Only you see it.");
+    } else if (f.id === "checkForm") {
+      if (!checkFeel) { toast("Choose what is here first."); return; }
+      const at = now();
+      await homeOp({ checkins: { ["c" + hkey()]: { feel: checkFeel, line: $("#cLine").value.trim() || null, at } }, lastCheckin: at });
+      checkFeel = null; closeSheet(); toast("Checked in. That one is yours.");
+    } else if (f.id === "inviteForm") {
+      const g = view().g; if (members(g).length < 2) return;
+      const w = $("#sWhen").value, when = w ? new Date(w).getTime() : null;
+      await op("garden/main", "update", { invitations: { ["s" + hkey()]: { by: me, kind: "sit", when: Number.isFinite(when) ? when : null, note: $("#sNote").value.trim(), at: now() } }, history: hist("invited you to come and sit") });
+      await touch(); renderSheet(); toast("Sent. They answer yes, another time, or no.");
     } else if (f.id === "endForm") {
       await op("garden/main", "update", { ending: { proposedBy: me, at: now(), after: $("#eAfter").value, newKind: $("#eKind").value, why: $("#eWhy").value.trim() } });
     }
@@ -1603,7 +1870,65 @@ document.addEventListener("change", ev => {
   if (ev.target.id === "hCharge") hd.charge = ev.target.value; // a choice for the sitting only: the ember never records it
   else if (ev.target.id === "hShowEl") hd.showEl = ev.target.checked;
 });
-addEventListener("keydown", e => { if (e.key === "Escape" && sheetName && sheetName !== "setup") closeSheet(); });
+addEventListener("keydown", e => { if (e.key === "Escape" && sheetName && (sheetName !== "setup" || garden)) closeSheet(); });
+
+/* ---------- the homeroom's private doc and the room list ---------- */
+const homePath = () => "data/users/" + me + "/home";
+function setHome(doc) {
+  myHome = { ...(doc || {}) };
+  if (list && list.home) Object.assign(list.home, { look: myHome.look ?? null, lastCheckin: myHome.lastCheckin ?? null, goals: goalsList().map(([id, x]) => ({ id, ...x })) });
+}
+/* Written straight to the homeroom, from wherever you stand: the server keeps the home doc only there. */
+async function homeOp(data) {
+  if (!homeId) throw fail("invalid_argument", "no homeroom");
+  const j = await api("/api/between/" + homeId + "/doc", { path: homePath(), op: "update", data });
+  setHome(j.doc); refresh();
+}
+async function fetchList() {
+  const r = await fetch("/api/between", { credentials: "same-origin", cache: "no-store" });
+  if (r.status === 401) throw fail("unauthenticated");
+  if (!r.ok) throw fail("unavailable", "the garden list answered " + r.status);
+  const j = await r.json();
+  me = me || j.me; names[j.me] = j.name;
+  homeId = j.home ? j.home.id : homeId;
+  list = j;
+  if (j.home && !Object.keys(myHome).length) myHome = { look: j.home.look, lastCheckin: j.home.lastCheckin, goals: Object.fromEntries((j.home.goals || []).map(({ id, ...x }) => [id, x])) };
+  return j;
+}
+let listing = null;
+function refreshList() {
+  if (storeDown || listing) return listing;
+  listing = fetchList().then(() => refresh(), () => {}).finally(() => { listing = null; });
+  return listing;
+}
+setInterval(() => { if (!document.hidden) refreshList(); }, 30000);
+async function keepLook() {
+  const t = lookText(lookDraft);
+  await homeOp({ look: t });
+  // and into each room, so the other person sees you as you made yourself (a member writes only their own key)
+  const rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed");
+  await Promise.all(rooms.map(r => r.id === gardenId ? op("garden/main", "update", { looks: { [me]: t } }) : api("/api/between/" + r.id + "/doc", { path: "garden/main", op: "update", data: { looks: { [me]: t } } }).catch(() => {})));
+}
+function goRoom(id) { markSeen(); location.href = ROOM_URL(id); }
+async function castSpell(g, id) {
+  const sp = SPELLS.find(x => x.id === id); if (!sp) return;
+  const at = spellAt(g, sp); if (!castable(sp, at).ok || at.mineWaiting) return;
+  const here = meState.pos.clone().setY(DAIS_Y + 0.4);
+  if (sp.kind === "solo") { burst(here, 0xbff0c0); toast("You settle. The light of the hollow slows with your breath."); return; }
+  if (sp.kind === "dual") {
+    burst(here, hueOf(me, g)); for (const p of othersHere()) burst(p.pos.clone().setY(DAIS_Y + 0.4), hueOf(p.uid, g));
+    await op("garden/main", "update", { history: hist("breathed together with you") }); await touch();
+    toast("You breathe at one pace. The light between you steadies."); return;
+  }
+  const left = openSpell(g, id);
+  if (left && left[1].by !== me) {
+    await op("garden/main", "update", { spells: { [left[0]]: { done: { by: me, at: now() } } }, history: hist("took up the light you left") }); await touch();
+    burst(here, 0xffd27a); toast("You took up their light. It is shared now.");
+  } else {
+    await op("garden/main", "update", { spells: { ["l" + hkey()]: { spell: id, by: me, at: now(), done: null } }, history: hist("left a light on the cushions") }); await touch();
+    burst(here, 0xffd27a); toast("Your light is lit. It waits until they sit and take it up.");
+  }
+}
 
 const privPath = () => "data/users/" + me + "/garden";
 function savePriv() { if (gardenId && isMember(view().g)) rawOp({ path: privPath(), op: "set", data: { ...myPrivate } }).catch(() => {}); }
@@ -1616,6 +1941,15 @@ function markSeen() {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") markSeen(); });
 addEventListener("pagehide", markSeen);
 
+/* ---------- the room's style: its light and weather (br-style-is-the-place) ---------- */
+let styleNow = null;
+function setStyle(id) {
+  const s = styleOf(id);
+  if (!hollow || s.id === styleNow) return;
+  styleNow = s.id;
+  applyStyle({ ...hollow.handles, scene }, s);
+}
+
 /* ---------- one refresh for everything the store drives ---------- */
 let refreshQueued = false;
 function refresh() {
@@ -1625,7 +1959,8 @@ function refresh() {
     const V = view(); const g = V.g;
     if (g && g.phase !== "closed") { const s = satisfaction(V.items); look = { phase: g.phase, state: stateOf(s), stale: isStale(g), sat: s }; }
     else look = { phase: "spark", state: "steadied", stale: true, sat: 2 };
-    between.visible = !!g;
+    between.visible = !!g && !isHome(g); mirror.visible = isHome(g);
+    setStyle(g && g.style);
     syncThings(); syncWalkers();
     if (me && gardenLoaded) ensureMyBody().catch(() => {});
     refreshHud();
@@ -1664,6 +1999,7 @@ function take(j) {
   Object.assign(names, j.names || {});
   myInvite = j.invite || null;
   myPouch = j.mine && j.mine.pouch && typeof j.mine.pouch === "object" ? j.mine.pouch : null;
+  if (isHome(garden) && j.mine && j.mine.home && typeof j.mine.home === "object") setHome(j.mine.home);
   gardenLoaded = true;
   refresh();
 }
@@ -1697,15 +2033,10 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   loadStep("finding your garden");
   let first = null;
   try {
-    if (!gardenId) {
-      const r = await fetch("/api/between", { credentials: "same-origin", cache: "no-store" });
-      if (r.status === 401) return toLogin();
-      if (!r.ok) throw new Error("the garden list answered " + r.status);
-      const list = await r.json();
-      me = list.me; names[me] = list.name;
-      const open = (list.gardens || []).filter(x => x.phase !== "closed").sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
-      if (open.length) gardenId = open[0].id;
-    }
+    // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
+    // No room in the link opens the homeroom, never the newest room (br-home-is-a-room).
+    try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
+    if (!gardenId) gardenId = homeId;
     if (gardenId) first = await api("/api/between/" + gardenId + "/poll", { invite });
   } catch (e) {
     if (e && e.code === "unauthenticated") return toLogin();
@@ -1716,6 +2047,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   }
   if (first) {
     take(first);
+    if (isHome(garden)) setHome((first.mine || {}).home);
     if (isMember(garden)) {
       myPrivate = { ...((first.mine || {}).garden || {}) };
       awaySince = myPrivate.lastSeen || null;
@@ -1730,6 +2062,9 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   $("#loading").hidden = true; $("#hud").hidden = false;
   if (!garden && !storeDown) openSheet("setup");
   refresh();
+  // ?sheet= opens a sheet at once, for a preview link that starts where the test starts
+  const jump = q.get("sheet");
+  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook"].includes(jump) && garden) openSheet(jump);
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);
   flush();

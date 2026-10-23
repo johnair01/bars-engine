@@ -48,6 +48,7 @@ const PAGE = `<!doctype html>
     </div>
   </div>
   <div class="bottom">
+    <div class="next" id="next" hidden></div>
     <div class="hint" id="hint"></div>
     <div class="near" id="near" hidden></div>
     <div class="tools" id="tools"></div>

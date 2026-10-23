@@ -41,6 +41,8 @@ function handles() {
     lights: { hemi: { ...light(), groundColor: col() }, dusk: light(), rim: light(), fire: light() },
     lanterns: [{ light: light() }, { light: light() }], base: { hemi: 0.55, fire: 16, lantern: 7 },
     scene: { background: col(), fog: { color: col(), near: 0, far: 0 } },
+    land: { ranges: [{ color: col() }, { color: col() }, { color: col() }, { color: col() }], valley: { color: col() }, river: { color: col() }, pines: { color: col() } },
+    rain: { visible: false },
   }
 }
 
@@ -59,6 +61,12 @@ function testStyles() {
   assert.equal(h.lanterns[1].light.color.hex, m.lantern.color); assert.equal(h.scene.fog.far, m.fog.far)
   assert.equal(h.stars.opacity, 1)
   applyStyle(h, 'spring-morning'); assert.equal(h.stars.visible, false, 'no stars in the morning')
+  const sp = styleOf('spring-morning'); assert.equal(h.land.ranges[3].color.hex, sp.land.ranges[3]); assert.equal(h.land.pines.color.hex, sp.land.pines)
+  assert.equal(h.rain.visible, false)
+  applyStyle(h, 'ember-rain'); assert.equal(h.rain.visible, true, 'rain falls past the opening')
+  applyStyle(h, 'dusk-hollow'); assert.equal(h.rain.visible, false)
+  // Dusk hollow leaves the valley as hollow.js draws it: its first range, its floor, and white over river and pines
+  assert.equal(h.land.ranges[0].color.hex, 0x9a7cb0); assert.equal(h.land.valley.color.hex, 0x1f2c40); assert.equal(h.land.river.color.hex, 0xffffff)
   applyStyle({}, 'ember-rain') // a scene with no handles is left alone
   assert.equal(styleOf('ember-rain').weather, 'rain')
 }

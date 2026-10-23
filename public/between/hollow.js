@@ -467,6 +467,7 @@ export function buildHollow(scene, opts = {}) {
 
   /* ---------- the valley outside: sky, sun, mountains, forest, river (unlit, no fog) ---------- */
   let sunM = null, starMat = null;
+  const land = { ranges: [], valley: null, river: null, pines: null }; // what a room style tints outside
   {
     const sky = new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uSun: { value: new THREE.Vector3(0.18, 0.05, -1).normalize() },
@@ -498,14 +499,14 @@ export function buildHollow(scene, opts = {}) {
         pos.push(x, -24, z, x, h, z); if (i < n) { const k = i * 2; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); }
       }
       const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
-      const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, fog: false, side: THREE.DoubleSide })); root.add(m); return m;
+      const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, fog: false, side: THREE.DoubleSide })); root.add(m); land.ranges.push(m.material); return m;
     };
     range(84, -2, 6, 0x9a7cb0, 3, [[0.32, 0.2, 12]]);
     range(70, -6, 5, 0x75609a, 7, [[-0.5, 0.3, 4]]);
     range(55, -10, 4, 0x4a4674, 11, []);
     range(40, -13, 3, 0x2e3758, 13, []);
     // the valley floor, the river catching the sunset, and pines
-    const vf = new THREE.Mesh(new THREE.CircleGeometry(80, 32, Math.PI * 1.02, Math.PI * 0.96), new THREE.MeshBasicMaterial({ color: 0x1f2c40, fog: false })); vf.rotation.x = -Math.PI / 2; vf.position.y = -14; vf.rotation.z = Math.PI; root.add(vf);
+    const vf = new THREE.Mesh(new THREE.CircleGeometry(80, 32, Math.PI * 1.02, Math.PI * 0.96), new THREE.MeshBasicMaterial({ color: 0x1f2c40, fog: false })); vf.rotation.x = -Math.PI / 2; vf.position.y = -14; vf.rotation.z = Math.PI; root.add(vf); land.valley = vf.material;
     const riv = new THREE.CatmullRomCurve3([new THREE.Vector3(10, -13.9, -66), new THREE.Vector3(-2, -13.9, -48), new THREE.Vector3(8, -13.9, -34), new THREE.Vector3(-6, -13.9, -22), new THREE.Vector3(-14, -13.9, -12)]);
     { const n = 60, pos = [], col = [], idx = [];
       for (let i = 0; i <= n; i++) { const u = i / n, p = riv.getPointAt(u), t = riv.getTangentAt(u), s = new THREE.Vector3(-t.z, 0, t.x).normalize(), w = 0.6 + u * 3.2;
@@ -513,7 +514,7 @@ export function buildHollow(scene, opts = {}) {
         const c = new THREE.Color(0xf7b07a).lerp(new THREE.Color(0x6a5aa8), u * 0.8); col.push(c.r, c.g, c.b, c.r, c.g, c.b);
         if (i < n) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); } }
       const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx);
-      root.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide }))); }
+      const rm = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide }); land.river = rm; root.add(new THREE.Mesh(g, rm)); }
     const pineGeo = new THREE.ConeGeometry(1, 3, 6); pineGeo.translate(0, 1.5, 0);
     const pn = lowPower ? 220 : 380, pines = new THREE.InstancedMesh(pineGeo, new THREE.MeshBasicMaterial({ fog: false }), pn), o = new THREE.Object3D(), pc = new THREE.Color();
     for (let i = 0; i < pn; i++) {
@@ -522,7 +523,7 @@ export function buildHollow(scene, opts = {}) {
       o.position.set(x, -14 + Math.max(0, (Math.abs(x) - 20) * 0.25), z); o.scale.set(s * 0.6, s * (1 + r() * 0.6), s * 0.6); o.updateMatrix(); pines.setMatrixAt(i, o.matrix);
       pc.set(0x14283a).lerp(new THREE.Color(0x4a4a7a), Math.min(1, d / 75)); pines.setColorAt(i, pc);
     }
-    root.add(pines);
+    root.add(pines); land.pines = pines.material;
     // a sliver of clouds and the first stars
     const stars = new THREE.BufferGeometry(), sp = [];
     for (let i = 0; i < 70; i++) { const a = -1.4 + r() * 2.8, e = 0.35 + r() * 0.5; sp.push(Math.sin(a) * Math.cos(e) * 90, Math.sin(e) * 90, -Math.cos(a) * Math.cos(e) * 90); }
@@ -530,6 +531,16 @@ export function buildHollow(scene, opts = {}) {
     starMat = new THREE.PointsMaterial({ color: 0xfff4e0, size: 2.5, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.7 });
     root.add(new THREE.Points(stars, starMat));
     anim.sky = sky;
+  }
+
+  /* ---------- rain past the opening, shown only by a style with weather: "rain" (room-styles.js) ---------- */
+  let rain = null;
+  {
+    const n = lowPower ? 500 : 900, pos = new Float32Array(n * 6), seeds = [];
+    for (let i = 0; i < n; i++) { const a = -1.2 + r() * 2.4, d = 9 + r() * 30; seeds.push({ x: Math.sin(a) * d, z: -Math.cos(a) * d - 2, ph: r(), sp: 9 + r() * 5 }); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    rain = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x9aa4b8, transparent: true, opacity: 0.45, fog: false, depthWrite: false }));
+    rain.visible = false; rain.frustumCulled = false; root.add(rain); anim.rain = { geo, seeds, pos };
   }
 
   /* ---------- fireflies ---------- */
@@ -563,6 +574,7 @@ export function buildHollow(scene, opts = {}) {
     for (const f of anim.flames) { const k = 0.8 + Math.sin(t * 9 + f.ph) * 0.18 + Math.sin(t * 21 + f.ph * 2) * 0.1; f.m.scale.set(f.base.x * (1.1 - k * 0.2), f.base.y * k * 1.15, f.base.z); f.m.position.x = f.x + Math.sin(t * 6 + f.ph) * 0.03; }
     for (const L of anim.lanterns) { L.g.rotation.z = Math.sin(t * 0.7 + L.ph) * 0.03; L.g.rotation.x = Math.sin(t * 0.5 + L.ph) * 0.025; L.light.intensity = base.lantern * scale * (0.93 + Math.sin(t * 7 + L.ph) * 0.04 + Math.sin(t * 17 + L.ph) * 0.03); }
     if (anim.water) anim.water.uniforms.uT.value = t;
+    if (rain.visible) { const { seeds, pos, geo } = anim.rain; seeds.forEach((q, i) => { const y = 9 - ((t * q.sp / 20 + q.ph) % 1) * 24; pos.set([q.x, y, q.z, q.x - 0.04, y - 0.55, q.z], i * 6); }); geo.attributes.position.needsUpdate = true; }
     if (anim.crystalLight) { anim.crystalLight.intensity = 6 * (0.85 + Math.sin(t * 1.3) * 0.15); anim.crystalMat.emissiveIntensity = 1.2 + Math.sin(t * 1.3) * 0.25; }
     hemi.intensity = base.hemi * (0.6 + 0.4 * scale);
     // vines sway
@@ -588,7 +600,7 @@ export function buildHollow(scene, opts = {}) {
   cushions.forEach(c => c.userData.keep = true);
   mergeStatic(root);
   // what a room style sets (public/calrunia/room-styles.js applyStyle); values only
-  const handles = { sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base };
+  const handles = { sky: anim.sky, sun: sunM, stars: starMat, lights: { hemi, dusk, rim, fire }, lanterns: anim.lanterns, base, land, rain };
   return { root, update, cushions, handles };
 }
 /* A standing paper lantern made at the hearth (council pass crafting-charge1): the hanging lanterns' body and paper, on a
