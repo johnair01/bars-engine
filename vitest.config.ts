@@ -88,6 +88,7 @@ export default defineConfig({
       'src/app/api/board/pull/__tests__/route.test.ts',
       'src/app/api/board/import/__tests__/route.test.ts',
       'src/app/api/board/session-writes/__tests__/route.test.ts',
+      'src/lib/studio/__tests__/deck.test.ts',
     ],
   },
   resolve: {
