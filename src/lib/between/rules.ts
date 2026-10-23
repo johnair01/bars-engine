@@ -87,9 +87,10 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if (op !== 'update' || !data) return no(400, 'The garden is planted once and then only changed.')
       if ('startedBy' in data || 'v' in data) return no(400, 'Who started the garden does not change.')
       if ('kind' in data) return no(400, 'A room stays a room and a homeroom stays a homeroom.')
-      if (home && ('members' in data || 'joinRequest' in data || 'phase' in data || 'invitations' in data))
+      if (home && ('members' in data || 'joinRequest' in data || 'phase' in data || 'invitations' in data || 'styleAsk' in data))
         return no(400, 'A homeroom is held by one person.')
       if ('style' in data && !(typeof data.style === 'string' && ID.test(data.style))) return no(400, 'Choose one of the room styles.')
+      if ('style' in data || 'styleAsk' in data) { const v = styleWrite(me, garden, data); if (!v.ok) return v }
       if ('looks' in data) { const v = looksWrite(me, data.looks); if (!v.ok) return v }
       if ('invitations' in data) { const v = invitationsWrite(me, garden, data.invitations); if (!v.ok) return v }
       if ('members' in data) {
@@ -271,6 +272,28 @@ function invitationsWrite(me: string, garden: Doc, invs: Json | undefined): Verd
   return yes
 }
 
+/**
+ * A room's style (br-style-is-the-place, with his note of 2026-10-23: both players consent to a style change). With two
+ * people in the room, a change is an ask, `styleAsk = {by, style, at}`; only the other person sets `style`, and only to
+ * the style asked for, clearing the ask as they do. Either of them clears an ask (taking it back, or not now). A spark
+ * with one member, and the homeroom, change at once.
+ */
+function styleWrite(me: string, garden: Doc, data: Doc): Verdict {
+  const ask = data.styleAsk
+  if (ask !== undefined && ask !== null) {
+    if (!isObj(ask) || !Object.keys(ask).every(k => k === 'by' || k === 'style' || k === 'at')) return no(400, 'An ask names a style, nothing more.')
+    if (ask.by !== me) return no(400, 'You can only ask in your own name.')
+    if (!(typeof ask.style === 'string' && ID.test(ask.style))) return no(400, 'Choose one of the room styles.')
+    if (!isNum(ask.at)) return no(400, 'An ask has a time.')
+    if ('style' in data) return no(400, 'Ask first; the room changes when they say yes.')
+  }
+  if (!('style' in data) || memberIds(garden).length < 2) return yes
+  const cur = isObj(garden.styleAsk) ? garden.styleAsk : null
+  if (!cur || cur.by === me || cur.style !== data.style || data.styleAsk !== null)
+    return no(403, 'The room changes how it looks when you both say yes. Ask them first.')
+  return yes
+}
+
 const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin'])
 
 /** May the homeroom's private doc stand? A look, goals (each maybe tied to a room), check-ins from the five feelings. */
@@ -309,7 +332,7 @@ export type RoomSummary = {
   id: string; kind: 'room'; phase: Json; who: Json; relKind: Json; style: Json; person: string | null
   stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' }[]
   revisit: string[]; invitations: { id: string; when: number | null; note: string }[]; lastSatTogether: number | null
-  hereNow: boolean; lastTendedAt: Json
+  hereNow: boolean; lastTendedAt: Json; styleAsk: { style: string; at: number | null } | null
 }
 
 export function roomSummary(me: string, id: string, g: Doc, items: { id: string; data: Doc }[],
@@ -337,11 +360,13 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
     if (inv.answer === 'yes' && t !== null && t <= now && (lastSatTogether === null || t > lastSatTogether)) lastSatTogether = t
   }
   const jr = isObj(g.joinRequest) ? g.joinRequest : null
+  const sa = isObj(g.styleAsk) && g.styleAsk.by !== me && typeof g.styleAsk.style === 'string' ? g.styleAsk : null
   return {
     id, kind: 'room', phase: g.phase ?? null, who, relKind: setup.kind ?? null, style: g.style ?? null, person,
     stale: g.phase !== 'closed' && isNum(g.lastTendedAt) && now - g.lastTendedAt > STALE_DAYS * 864e5,
     joinWaiting: g.startedBy === me && !!jr, waiting, revisit, invitations, lastSatTogether,
     hereNow: !!opts.hereNow, lastTendedAt: g.lastTendedAt ?? null,
+    styleAsk: sa ? { style: sa.style as string, at: isNum(sa.at) ? sa.at : null } : null,
   }
 }
 

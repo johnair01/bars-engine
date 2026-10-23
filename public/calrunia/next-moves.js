@@ -7,7 +7,7 @@
    state: {
      home: { lastCheckin, goals: [{ id, text, room }] } (from the homeroom's private doc; optional inside a room),
      rooms: [summary] (src/lib/between/rules.ts roomSummary: id, phase, who, person, stale, joinWaiting, waiting,
-             revisit, invitations, hereNow, lastSatTogether),
+             revisit, invitations, hereNow, lastSatTogether, styleAsk),
      here: a room id when the player is inside that room, else absent (the homeroom),
    }
    Each move: { lane, id, title, line, act }. act names a sheet on the page, or room:<id> to go to a room. */
@@ -46,6 +46,8 @@ function partner(rooms, here, now) {
     const inv = r.invitations[0];
     return { lane: "partner", id: "invite:" + r.id + ":" + inv.id, title: `${nameIn(r)} asked you to sit`, line: "They invited you to come and sit with them. Say yes, another time, or no.", act: go(r, "invitations") };
   }
+  for (const r of withPerson) if (r.styleAsk)
+    return { lane: "partner", id: "style:" + r.id, title: "They asked to change the room", line: `${nameIn(r)} would like the room to look different. It changes only if you say yes.`, act: go(r, "style") };
   const WAIT = { agreement: "an agreement waits for your yes", offer: "an offering waits for your yes", ask: "they asked something about an agreement" };
   for (const r of withPerson) {
     const w = r.waiting && r.waiting.find(x => x.what !== "lantern");

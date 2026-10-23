@@ -67,6 +67,11 @@ let sheetName = null, sheetArg = null, selected = null;
    private home doc (look, goals, check-ins), `lookDraft` the Look sheet's choices before they are kept. */
 let list = null, homeId = null, myHome = {}, lookDraft = null;
 const isHome = g => !!(g && g.kind === "home");
+/* Part 3 (his rulings of 2026-10-23, br-home-is-a-room overruled): everyone spawns in their homeroom. A room in the link
+   is a doorway beside the mirror, not where you land; an invitation's doorway stays shut until the orientation is read
+   and ticked. `portalTo` is { id, invite, open, name }. */
+let portalTo = null, entering = null;
+const THROUGH = "between.through";
 const ROOM_URL = id => "/ontology-game/between" + (id ? "?g=" + encodeURIComponent(id) : "");
 /* Chapter 1's creator reads the same look text (br-look-is-sprouts). Sprout has no public address yet: this is the creator
    branch's preview, behind the Vercel sign-in. */
@@ -389,6 +394,49 @@ const mirror = new THREE.Group(); mirror.position.copy(BETWEEN_AT).setY(DAIS_Y);
   glass.scale.y = 1.55; glass.position.set(0, 1.0, 0.005); mirror.add(glass);
   const back = glass.clone(); back.material = wood; back.rotation.y = Math.PI; back.position.z = -0.005; mirror.add(back);
   for (const sx of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.42, 6), wood); leg.position.set(sx * 0.16, 0.19, -0.06); leg.rotation.z = sx * 0.12; mirror.add(leg); }
+}
+
+/* The doorway to your rooms stands on the dais beside the mirror: shut it is dark wood; open it glows with the room past it. */
+const PORTAL_AT = new THREE.Vector3(1.3, 0, -1.15);
+const portal = new THREE.Group(); portal.position.copy(PORTAL_AT).setY(DAIS_Y); portal.rotation.y = -0.3; portal.visible = false; scene.add(portal);
+const portalVeil = new THREE.MeshStandardMaterial({ color: 0x1a1420, emissive: 0x000000, emissiveIntensity: 0, roughness: 0.9, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
+{
+  const wood = new THREE.MeshStandardMaterial({ color: 0x5a3e28, roughness: 0.75 });
+  for (const sx of [-1, 1]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 1.9, 8), wood); post.position.set(sx * 0.5, 0.95, 0); portal.add(post); }
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.12, 0.16), wood); lintel.position.y = 1.92; portal.add(lintel);
+  const veil = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.82), portalVeil); veil.position.y = 0.93; portal.add(veil);
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.05, 0.3), wood); sill.position.y = 0.025; portal.add(sill);
+}
+const portalOpen = () => !!(portalTo && portalTo.open);
+function portalTick(t) {
+  portal.visible = isHome(garden);
+  if (!portal.visible) return;
+  if (portalOpen()) {
+    const st = styleOf(portalTo.style), c = st.sky.low;
+    portalVeil.emissive.setRGB(c[0], c[1], c[2]); portalVeil.emissiveIntensity = 0.75 + Math.sin(t * 2.1) * 0.18 + (entering ? 0.6 : 0);
+    portalVeil.opacity = 0.85;
+  } else { portalVeil.emissive.setRGB(0.25, 0.2, 0.32); portalVeil.emissiveIntensity = portalTo ? 0.12 : 0.05 + Math.sin(t * 0.7) * 0.03; portalVeil.opacity = 0.92; }
+  if (entering && (Math.hypot(meState.pos.x - PORTAL_AT.x, meState.pos.z - PORTAL_AT.z) < 0.75 || performance.now() - entering.t0 > 3800)) {
+    const e = entering; entering = null;
+    try { sessionStorage.setItem(THROUGH, e.id); } catch {}
+    markSeen();
+    $("#loadMsg").textContent = "Through the doorway"; $("#loadStep").textContent = ""; $("#loading").hidden = false;
+    location.href = ROOM_URL(e.id) + (e.invite ? "&invite=" + encodeURIComponent(e.invite) : "");
+  }
+}
+/* Walk through the doorway to a room: from the homeroom you walk there; from anywhere else you go home first, where the
+   doorway to it stands open (players always spawn in their homeroom). */
+function walkThrough(id, inv) {
+  if (!isHome(garden)) { markSeen(); location.href = ROOM_URL(id); return; }
+  const r = ((list && list.gardens) || []).find(x => x.id === id);
+  if (!portalTo || portalTo.id !== id) portalTo = { id, invite: inv || null, open: true, name: r ? roomName(r) : null, style: r ? r.style : null };
+  if (!portalOpen()) { openSheet("orient"); return; }
+  closeSheet(); standUp(); selected = "portal";
+  const front = new THREE.Vector3(Math.sin(portal.rotation.y), 0, Math.cos(portal.rotation.y));
+  meState.target = PORTAL_AT.clone().add(front.multiplyScalar(0.15));
+  entering = { id, invite: portalTo.invite, t0: performance.now() };
+  burst(PORTAL_AT.clone(), 0xffe2a8);
+  refreshHud();
 }
 
 /* Who the creature notices: the nearest person within reach, you or the other. */
@@ -829,6 +877,7 @@ function tapAt(cx, cy) {
   const consider = (key, pos, r) => { const d = ray.ray.distanceToPoint(pos); if (d < r) { const along = ray.ray.origin.distanceTo(pos); if (along < bestD) { bestD = along; best = { key, pos }; } } };
   if (placing) { placeAt(); return; }
   consider("between", BETWEEN_AT.clone().setY(DAIS_Y + 0.5), 0.7);
+  if (portal.visible) consider("portal", PORTAL_AT.clone().setY(DAIS_Y + 0.95), 0.75);
   consider("hearth", HEARTH_AT.clone().setY(0.9), 1.0);
   SEATS.forEach((st, i) => consider("seat:" + i, seatPos(i).setY(DAIS_Y + 0.15), 0.45));
   for (const [id, t] of things) consider("item:" + id, t.pos.clone().setY(0.4), 0.5);
@@ -846,6 +895,7 @@ function tapAt(cx, cy) {
     selected = best.key;
     if (best.key === "hearth" && hearthOpen()) openSheet("hearth");
     if (best.key === "between" && isHome(view().g)) openSheet("look");
+    if (best.key === "portal") { portalTo ? walkThrough(portalTo.id, portalTo.invite) : openSheet("rooms"); return; }
     const dir = meState.pos.clone().sub(best.pos).setY(0); const d = dir.length();
     if (d > 1.3) { dir.normalize(); meState.target = pushOut(best.pos.clone().add(dir.multiplyScalar(1.1))); }
     refreshHud(); return;
@@ -960,7 +1010,7 @@ function frame() {
     w.body.pose(t, dt, false, w.rest);
   }
   // the Between and the garden
-  stepBetween(t, dt);
+  stepBetween(t, dt); portalTick(t);
   for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
     const f = fly[i], u = Math.min(1, (t - f.t0) / 1.6);
@@ -1004,6 +1054,7 @@ function nearest() {
   let best = null, bd = 2.0;
   const c = (key, pos) => { const d = Math.hypot(pos.x - meState.pos.x, pos.z - meState.pos.z); if (d < bd) { bd = d; best = key; } };
   c("between", BETWEEN_AT);
+  if (portal.visible) c("portal", PORTAL_AT);
   c("hearth", HEARTH_AT);
   SEATS.forEach((st, i) => { if (!(meState.sitting && meState.seatWant === i)) c("seat:" + i, seatPos(i)); });
   if (meState.sitting) return "seat:" + meState.seatWant;
@@ -1014,6 +1065,7 @@ function nearest() {
 }
 function posOf(key) {
   if (key === "between") return BETWEEN_AT;
+  if (key === "portal") return PORTAL_AT;
   if (key === "hearth") return HEARTH_AT;
   if (key.startsWith("seat:")) return seatPos(+key.slice(5));
   if (key.startsWith("item:")) { const t = things.get(key.slice(5)); return t && t.pos; }
@@ -1028,6 +1080,7 @@ function drawLabels(t) {
     const nm = isHome(g) ? "The mirror" : betweenName(V.items) || (g.phase === "spark" ? "The spark" : "The Between");
     placeLabel(label("between", nm, ""), BETWEEN_AT.clone().setY(DAIS_Y + (isHome(g) ? 1.95 : g.phase === "spark" ? 1.0 : 1.45)));
   }
+  if (portal.visible) placeLabel(label("portal", portalTo ? (portalOpen() ? "To " + (portalTo.name || "the room") : "Shut: read the rules first") : "The doorway to your rooms", ""), PORTAL_AT.clone().setY(DAIS_Y + 2.25));
   if (meState.body) placeLabel(label("me", "You", "you", cssHue(hueOf(me, g))), meState.pos.clone().setY(meState.sitting ? DAIS_Y + 1.35 : groundY(meState.pos.x, meState.pos.z) + 1.95));
   for (const [k, p] of peers) if (p.body) placeLabel(label("p:" + k, p.uid === me ? "You, in another window" : (names[p.uid] || (isMember(g) || (g && g.members && g.members[p.uid]) ? nameOf(p.uid, g) : "A visitor")), "you", cssHue(hueOf(p.uid, g))), p.pos.clone().setY(p.sitting ? DAIS_Y + 1.35 : groundY(p.pos.x, p.pos.z) + 1.95));
   for (const [k, w] of walkers) {
@@ -1069,7 +1122,9 @@ function refreshHud() {
   const others = [...peers.values()].filter(p => p.uid !== me);
   if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again.";
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
-  else if (isHome(g)) hintText = "Your own room. Walk up to the mirror to change how you look. Your rooms are behind Rooms.";
+  else if (isHome(g) && portalTo && !portalOpen()) hintText = `${portalTo.name ? portalTo.name + " invited you" : "You were invited"} to a room. The doorway by the mirror opens once you read the rules.`;
+  else if (isHome(g) && portalTo) hintText = `The doorway by the mirror is open to ${portalTo.name || "the room"}. Walk through when you are ready.`;
+  else if (isHome(g)) hintText = "Your own room. Walk up to the mirror to change how you look. Your rooms open through the doorway beside it.";
   else if (g.phase === "closed") hintText = "The garden is closed. Its history is yours to keep from More.";
   else if (!isMember(g)) hintText = members(g).length >= 2 ? "This garden is held by two people. You can look around." : "A spark is waiting here. Walk up to it.";
   else if (g.phase === "spark") hintText = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap the floor to walk, drag to look.`;
@@ -1130,7 +1185,10 @@ function homeState() {
 function nextMoves(g) {
   const rooms = (list && list.gardens || []).filter(r => r.phase !== "closed");
   if (isHome(g)) return suggest({ home: homeState(), rooms });
-  const here = rooms.find(r => r.id === gardenId);
+  const found = rooms.find(r => r.id === gardenId);
+  // this room's ask to change its look is read from the room itself, not the list's last fetch
+  const sa = g.styleAsk && g.styleAsk.by !== me ? { style: g.styleAsk.style, at: g.styleAsk.at || null } : null;
+  const here = found && { ...found, styleAsk: sa };
   return suggest({ home: homeState(), rooms: here ? [here] : [], here: gardenId });
 }
 function moveActs(id, it, g) {
@@ -1143,6 +1201,11 @@ function moveActs(id, it, g) {
 function nearHtml(key, V, g) {
   if (!g) return "";
   const canTend = isMember(g) && !readOnly && g.phase !== "closed";
+  if (key === "portal") {
+    if (!portalTo) return `<div class="what"><b>The doorway</b><span class="t">Every room you share opens from here. Choose one under Rooms and walk through.</span></div><div class="row"><button type="button" data-open="rooms">Rooms</button></div>`;
+    if (!portalOpen()) return `<div class="what"><b>A doorway, shut</b><span class="t">${esc(portalTo.name ? portalTo.name + " invited you" : "Someone invited you")}. It opens once you have read how the Between works.</span></div><div class="row"><button type="button" data-open="orient">Read the rules</button></div>`;
+    return `<div class="what"><b>To ${esc(portalTo.name || "the room")}</b><span class="t">The doorway is open.</span></div><div class="row"><button type="button" data-act="through">Walk through</button></div>`;
+  }
   if (key === "between" && isHome(g)) {
     const lk = parseLook(lookOf(me) || "");
     return `<div class="what"><b>The mirror</b><span class="t">${lk ? "You, as you made yourself: " + esc(lookWords(lk)) + "." : "You have not chosen a look yet. The mirror shows a traveller in a long violet coat until you do."}</span></div><div class="row"><button type="button" data-open="look">Change how you look</button></div>`;
@@ -1426,6 +1489,7 @@ function renderSheet() {
       <p class="muted small">Your spark can walk beside the Between as your own spirit, or you can let it compost: what it carried is worked, and nothing of it is shown to them.</p>
       <div class="row"><button type="button" data-act="welcomeKeep">Keep it as my own spirit</button><button class="ghost" type="button" data-act="welcomeCompost">Let it compost</button>${close}</div></div>`; break; }
     case "rooms": h = roomsSheet() + close; break;
+    case "orient": if (!portalTo) { closeSheet(); return; } h = orientSheet() + close; break;
     case "look": h = lookSheet() + close; break;
     case "goals": h = goalsSheet() + close; break;
     case "checkin": h = checkinSheet() + close; break;
@@ -1446,6 +1510,28 @@ function renderSheet() {
   readIn(inner);
   const first = $("#sheetInner").querySelector("input, textarea, select"); if (first && !keep[first.id]) setTimeout(() => first.focus({ preventScroll: true }), 50);
 }
+/* ---------- the orientation before an invitation's doorway opens (part 3, his ruling of 2026-10-23) ---------- */
+function orientSheet() {
+  return `<form class="stack" id="orientForm"><h2>Before you go in</h2>
+    <p>${esc(portalTo.name ? portalTo.name + " invited you" : "Someone invited you")} to a room you would share. In the room lives the Between: a creature made of what the two of you bring each other.</p>
+    <h3>The rules</h3>
+    <ul class="log"><li><b>Yes before anything changes.</b> What one of you brings waits for the other's yes. The room's look changes only when you both say yes.</li>
+      <li><b>You can leave at any time.</b> More, then "Need a silent exit?", closes the room. The other person sees only that it closed, never who left or why.</li>
+      <li><b>Nothing is scored.</b> No points, no counts, no comparing. What you tend is kept as it happened.</li>
+      <li><b>Your homeroom stays yours.</b> Your look, your hopes and your check-ins never leave it.</li></ul>
+    <label class="tick"><input type="checkbox" id="oRead"> I have read this</label>
+    <div class="row"><button type="submit" id="oOpen" disabled>Open the doorway</button></div></form>`;
+}
+document.addEventListener("change", ev => { if (ev.target.id === "oRead") { const b = $("#oOpen"); if (b) b.disabled = !ev.target.checked; } });
+document.addEventListener("submit", ev => {
+  if (ev.target.id !== "orientForm") return;
+  ev.preventDefault();
+  if (!$("#oRead").checked || !portalTo) return;
+  portalTo.open = true; closeSheet(); burst(PORTAL_AT.clone(), 0xffe2a8);
+  selected = "portal"; refreshHud();
+  toast("The doorway is open. Walk through when you are ready.");
+});
+
 /* ---------- the homeroom's sheets, and the room's Style, Invite and Spellbook (rooms, part 2) ---------- */
 const roomName = r => r.personName || r.who || "someone";
 function roomsSheet() {
@@ -1507,10 +1593,18 @@ function invitationsSheet() {
     <p class="small muted">To invite someone, go into their room and use Invite.</p></div>`;
 }
 const answerBtns = (rid, iid) => `<button type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|yes">Yes</button><button class="ghost" type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|later">Another time</button><button class="quiet" type="button" data-act="invAnswer" data-id="${esc(rid)}|${esc(iid)}|no">No</button>`;
+/* With two people in a room, a style change is an ask the other says yes to (his note on br-style-is-the-place,
+   2026-10-23). A spark with one person, and the homeroom, change at once. */
+const styleShared = g => !isHome(g) && members(g).length >= 2;
 function styleSheet(g) {
+  const shared = styleShared(g), ask = shared && g.styleAsk && g.styleAsk.style ? g.styleAsk : null, o = other(g);
+  const askLine = !ask ? "" : ask.by === me
+    ? `<div class="roomrow"><div><b>You asked for ${esc(styleOf(ask.style).name)}</b><span class="small muted">It changes when ${esc(nameOf(o, g))} says yes.</span></div><button class="quiet" type="button" data-act="styleBack">Take the ask back</button></div>`
+    : `<div class="roomrow"><div><b>${esc(nameOf(ask.by, g))} asks for ${esc(styleOf(ask.style).name)}</b><span class="small muted">${esc(styleOf(ask.style).line)}</span></div><span class="row"><button type="button" data-act="styleYes">Yes, change it</button><button class="quiet" type="button" data-act="styleNo">Not now</button></span></div>`;
   return `<div class="stack"><h2>${isHome(g) ? "How your homeroom looks" : "How this room looks"}</h2>
-    <p class="small muted">${isHome(g) ? "The light and weather of your own room." : "The light and weather of the place. Either of you can change it, and the other sees it in While you were away."}</p>
-    <div class="choice">${ROOM_STYLES.map(st => `<button type="button" class="${styleOf(g.style).id === st.id ? "on" : ""}" aria-pressed="${styleOf(g.style).id === st.id}" data-act="setStyle" data-id="${st.id}"><b>${esc(st.name)}</b>${esc(st.line)}</button>`).join("")}</div></div>`;
+    <p class="small muted">${isHome(g) ? "The light and weather of your own room." : shared ? "The light and weather of the place you share. It changes when you both say yes: choose one to ask " + esc(nameOf(o, g)) + "." : "The light and weather of the place. Once they join, a change waits for both of you."}</p>
+    ${askLine}
+    <div class="choice">${ROOM_STYLES.map(st => { const on = styleOf(g.style).id === st.id; return `<button type="button" class="${on ? "on" : ""}" aria-pressed="${on}" ${on && shared ? "disabled" : ""} data-act="setStyle" data-id="${st.id}"><b>${esc(st.name)}</b>${esc(shared && !on ? "Ask for this. " : "")}${esc(st.line)}</button>`; }).join("")}</div></div>`;
 }
 const ANSWER_TEXT = { yes: "said yes", later: "asked for another time", no: "said no" };
 function inviteSheet(g) {
@@ -1676,6 +1770,7 @@ document.addEventListener("click", async ev => {
   if (a === "checkFeel") { checkFeel = checkFeel === id ? null : id; renderSheet(); return; }
   if (a === "goHome") { goRoom(null); return; }
   if (a === "goRoom") { goRoom(id); return; }
+  if (a === "through") { if (portalTo) walkThrough(portalTo.id, portalTo.invite); return; }
   if (a === "next") {
     if (id.startsWith("room:")) { goRoom(id.slice(5)); return; }
     if (id === "tend") { closeSheet(); selected = "between"; meState.target = pushOut(BETWEEN_AT.clone().add(new THREE.Vector3(0, 0, 1.1))); standUp(); refreshHud(); return; }
@@ -1769,8 +1864,21 @@ document.addEventListener("click", async ev => {
     else if (a === "goalDrop") { await homeOp({ goals: { [id]: null } }); renderSheet(); }
     else if (a === "setStyle") {
       const st = styleOf(id);
-      await op("garden/main", "update", { style: st.id, ...(isHome(g) ? {} : { history: hist("changed how the room looks: " + st.name.toLowerCase()) }) });
-      renderSheet(); toast(isHome(g) ? st.name + "." : st.name + ". They see it when they come in.");
+      if (styleShared(g)) {
+        await op("garden/main", "update", { styleAsk: { by: me, style: st.id, at: now() }, history: hist("asked to change how the room looks: " + st.name.toLowerCase()) });
+        renderSheet(); toast(`Asked. It changes to ${st.name} when ${nameOf(other(g), g)} says yes.`);
+      } else {
+        await op("garden/main", "update", { style: st.id, ...(isHome(g) ? {} : { history: hist("changed how the room looks: " + st.name.toLowerCase()) }) });
+        renderSheet(); toast(isHome(g) ? st.name + "." : st.name + ". They see it when they come in.");
+      }
+    }
+    else if (a === "styleYes" || a === "styleNo" || a === "styleBack") {
+      const ask = g.styleAsk; if (!ask) return;
+      const nm = styleOf(ask.style).name.toLowerCase();
+      if (a === "styleYes") await op("garden/main", "update", { style: ask.style, styleAsk: null, history: hist("said yes to the room looking: " + nm) });
+      else await op("garden/main", "update", { styleAsk: null, ...(a === "styleNo" ? { history: hist("said not now to the room looking: " + nm) } : {}) });
+      await touch(); refreshList(); renderSheet();
+      toast(a === "styleYes" ? "Changed, with both your yeses." : a === "styleNo" ? "Not now. The room stays as it is." : "Taken back.");
     }
     else if (a === "invAnswer") {
       const [rid, iid, ans] = id.split("|");
@@ -1909,7 +2017,7 @@ async function keepLook() {
   const rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed");
   await Promise.all(rooms.map(r => r.id === gardenId ? op("garden/main", "update", { looks: { [me]: t } }) : api("/api/between/" + r.id + "/doc", { path: "garden/main", op: "update", data: { looks: { [me]: t } } }).catch(() => {})));
 }
-function goRoom(id) { markSeen(); location.href = ROOM_URL(id); }
+function goRoom(id) { if (id) { walkThrough(id); return; } markSeen(); location.href = ROOM_URL(null); }
 async function castSpell(g, id) {
   const sp = SPELLS.find(x => x.id === id); if (!sp) return;
   const at = spellAt(g, sp); if (!castable(sp, at).ok || at.mineWaiting) return;
@@ -2029,13 +2137,27 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   });
   roomP.then(() => loadStep(roomOk = "hollow built"), () => {});
   const q = new URLSearchParams(location.search);
-  gardenId = q.get("g"); invite = q.get("invite");
+  const want = q.get("g"), wantInvite = q.get("invite");
+  // one walk through the doorway lets the next load open the room; a reload lands in the homeroom again
+  let through = null; try { through = sessionStorage.getItem(THROUGH); sessionStorage.removeItem(THROUGH); } catch {}
+  // previews only: ?skipHome=1 opens the room in the link straight away, for a test link that starts in the room
+  const skipHome = q.get("skipHome") === "1" && location.hostname !== "bars-engine.vercel.app";
+  gardenId = want; invite = wantInvite;
   loadStep("finding your garden");
   let first = null;
   try {
     // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
-    // No room in the link opens the homeroom, never the newest room (br-home-is-a-room).
+    // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
+    if (want && homeId && want !== homeId && through !== want && !skipHome) {
+      const r = ((list && list.gardens) || []).find(x => x.id === want);
+      portalTo = { id: want, invite: r ? null : wantInvite, open: !!r, name: r ? roomName(r) : null, style: r ? r.style : null };
+      if (!r) {
+        // a room you are not in yet: ask it who is inviting, for the doorway's words; a refusal leaves the doorway nameless
+        try { const j = await api("/api/between/" + want + "/poll", { invite: wantInvite }); const sb = j.garden && j.garden.startedBy; portalTo.name = (sb && j.names && j.names[sb]) || null; portalTo.style = (j.garden && j.garden.style) || null; } catch {}
+      }
+      gardenId = homeId; invite = null;
+    }
     if (!gardenId) gardenId = homeId;
     if (gardenId) first = await api("/api/between/" + gardenId + "/poll", { invite });
   } catch (e) {
@@ -2064,11 +2186,12 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   refresh();
   // ?sheet= opens a sheet at once, for a preview link that starts where the test starts
   const jump = q.get("sheet");
-  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook"].includes(jump) && garden) openSheet(jump);
+  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "orient"].includes(jump) && garden) openSheet(jump);
+  else if (portalTo && !portalTo.open) openSheet("orient");
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);
   flush();
   pollTimer = setTimeout(poll, 2500);
 })();
-window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite }),
+window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
   seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; }, screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; } };

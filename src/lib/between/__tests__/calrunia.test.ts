@@ -93,6 +93,8 @@ function testNextMoves() {
   const p = (r: object) => suggest({ rooms: [{ ...base, id: 'r', ...r }] }, now).find(x => x.lane === 'partner')
   assert.equal(p({ waiting: [{ id: 'o', what: 'offer' }] })!.id, 'wait:r:o')
   assert.equal(p({ revisit: ['a'] })!.id, 'revisit:r')
+  assert.equal(p({ styleAsk: { style: 'moonlit', at: 1 }, waiting: [{ id: 'o', what: 'offer' }] })!.id, 'style:r', 'their ask to change the room comes before what waits')
+  assert.equal(suggest({ rooms: [{ ...base, id: 'r', styleAsk: { style: 'moonlit', at: 1 } }], here: 'r' }, now).find(x => x.lane === 'partner')!.act, 'style')
   assert.equal(p({ hereNow: true })!.id, 'here:r')
   assert.equal(p({ lastSatTogether: now - 8 * DAY })!.id, 'sit:r')
   assert.equal(p({}), undefined)

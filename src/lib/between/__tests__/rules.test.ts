@@ -185,10 +185,29 @@ function testRoomIsAlwaysARoom() {
   assert.equal(mayWrite(member(A), room(), G, 'update', { kind: 'home' }, room()).ok, false)
 }
 
-function testStyleIsThePlace() {
+function testStyleIsAnAskWithTwo() {
+  // his note on br-style-is-the-place (2026-10-23): both players consent to a style change
   const g = room()
-  assert.equal(mayWrite(member(B), g, G, 'update', { style: 'ember-rain' }, g).ok, true, 'either person changes the style, no yes')
+  assert.equal(mayWrite(member(B), g, G, 'update', { style: 'ember-rain' }, g).ok, false, 'with two in the room, no change without a yes')
   assert.equal(mayWrite(member(B), g, G, 'update', { style: '<b>' }, g).ok, false)
+  const ask = { by: B, style: 'ember-rain', at: 5 }
+  assert.equal(mayWrite(member(B), g, G, 'update', { styleAsk: ask }, g).ok, true, 'B asks')
+  assert.equal(mayWrite(member(B), g, G, 'update', { styleAsk: { ...ask, by: A } }, g).ok, false, 'only in your own name')
+  assert.equal(mayWrite(member(B), g, G, 'update', { styleAsk: { ...ask, note: 'x' } }, g).ok, false)
+  assert.equal(mayWrite(member(B), g, G, 'update', { styleAsk: ask, style: 'ember-rain' }, g).ok, false, 'asking does not change it')
+  const asked = room({ styleAsk: ask })
+  assert.equal(mayWrite(member(B), asked, G, 'update', { style: 'ember-rain', styleAsk: null }, asked).ok, false, 'the asker cannot answer their own ask')
+  assert.equal(mayWrite(member(A), asked, G, 'update', { style: 'ember-rain', styleAsk: null }, asked).ok, true, 'the other says yes')
+  assert.equal(mayWrite(member(A), asked, G, 'update', { style: 'moonlit', styleAsk: null }, asked).ok, false, 'yes is to the style asked for')
+  assert.equal(mayWrite(member(A), asked, G, 'update', { style: 'ember-rain' }, asked).ok, false, 'a yes clears the ask')
+  assert.equal(mayWrite(member(A), asked, G, 'update', { styleAsk: null }, asked).ok, true, 'not now')
+  assert.equal(mayWrite(member(B), asked, G, 'update', { styleAsk: null }, asked).ok, true, 'taking it back')
+  assert.equal(mayWrite(member(A), spark(), G, 'update', { style: 'moonlit' }, spark()).ok, true, 'a spark with one person changes at once')
+  const h = plantedHome(A)
+  assert.equal(mayWrite(member(A), h, G, 'update', { style: 'moonlit' }, h).ok, true, 'the homeroom changes at once')
+  assert.equal(mayWrite(member(A), h, G, 'update', { styleAsk: { by: A, style: 'moonlit', at: 1 } }, h).ok, false)
+  assert.deepEqual(roomSummary(A, 'gX', asked, []).styleAsk, { style: 'ember-rain', at: 5 }, 'the summary shows their ask to me')
+  assert.equal(roomSummary(B, 'gX', asked, []).styleAsk, null, 'not my own ask')
 }
 
 function testLooksOwnKey() {
@@ -271,7 +290,7 @@ testMakersMark()
 testLogNamesActsWithoutCounts()
 testHomeIsOnePersons()
 testRoomIsAlwaysARoom()
-testStyleIsThePlace()
+testStyleIsAnAskWithTwo()
 testLooksOwnKey()
 testInvitations()
 testHomePrivateDoc()
