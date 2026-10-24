@@ -1,28 +1,29 @@
 /* The wardrobe (Between, part 4 fix): the mirror's figure wears what the Look sheet chose. Before this the Between drew
    player.glb, a body with a short tunic painted on it, so the Clothes choice only changed colours (his note 2026-10-24:
-   "the clothes and robes aren't rendering"). Now every player figure is the creator's: Average Dusk with the mocap Walk,
-   the baked J5 robe cut to jacket, wrap dress or long coat, the sash on the dress, travel pants, and hair, the same files
-   and the same code as sprout's slice/figure.js (sprout #71, #72; six-faces-council callsheet calrunia-creator.md).
-   The garment rule (docs/3d-math.md rule 8, council #375) comes with it: the legs are not drawn where the cut covers them,
-   and the robe is pushed off thigh, shin and arm capsules (figure-robe.js, carried from sprout as it is).
-     const parts = await loadParts(loadGltf);           // once: the four .glb files under /between/m/dusk/
+   "the clothes and robes aren't rendering"). Now every player figure is the creator's: Average Dusk with the mocap Walk and
+   Idle, the J5 robe cut to jacket, wrap dress or long coat, the sash on the dress, indigo trousers, and hair (sprout's
+   slice/figure.js, sprout #71, #72; six-faces-council callsheet calrunia-creator.md).
+   The robe-slit build (his yes to the layers still, 2026-10-24; docs/3d-math.md rule 8) dresses it in layers, as games do:
+   - the inner layer: hanfu trousers grown off the body's own legs, drawn on every cut; the leg skin under them never is;
+   - the robe is lined: its inside (back faces) takes the dye's lining colour, so a slit or a turned hem shows cloth, not the room;
+   - the robe is robe.glb's skinned mesh on the body's bones, the lower panels hung from the skirt bones hemF and hemB and
+     driven by the thighs each frame (figure-robe.js), so it follows the Walk, the Idle, the sit and any later clip;
+   - the trousers are hidden only where a cut's robe covers them in every pose (robe-cover.json, tools/figure-cover.mjs).
+     const parts = await loadParts(loadGltf);           // once: the three .glb files and robe-cover.json under /between/m/dusk/
      const w = dressFigure(obj, parts);                 // obj: a SkeletonUtils clone of parts.dusk.scene
      w.set(look);                                       // a parsed look (look.js), or null for the default traveller
-     w.dress(walkTime);                                 // each frame, after the mixer and the code-made poses
-     w.dress({ walk: tWalk, idle: tIdle, w: idleShare });  // or: the robe crossfaded between the Walk and the Idle bakes
-   The standing idle (lt-idle-default): average-dusk.glb carries a CMU mocap 'Idle' beside the 'Walk'
-   (tools/mocap/retarget_idle.py), and robe-baked-idle.glb is the walk bake's mesh over it (tools/mocap/bake-idle-robe.mjs),
-   so both robes share one mesh and point order and the figure crossfades between them. */
+     w.dress(dt);                                       // each frame, after the mixer and the code-made poses */
 import * as THREE from "three";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
-import { bakedRobe, armShare, armRadii, CUT, maskBand, LEG, legRadii, legCapsules } from "./figure-robe.js";
+import { CUT, hemOf, skirtWeights, skirt, fold, FOLD, easeOf } from "./figure-robe.js";
 import { colorsOf, DEFAULT_LOOK } from "../calrunia/look.js";
 
 const DIR = "/between/m/dusk/";
 let parts = null;
-export function loadParts(loadGltf) {
-  if (!parts) parts = Promise.all(["average-dusk", "robe", "sash", "robe-baked", "robe-baked-idle"].map(n => loadGltf(DIR + n + ".glb")))
-    .then(([dusk, robe, sash, baked, bakedIdle]) => ({ dusk, robe, sash, baked, bakedIdle }));
+const getJson = u => fetch(u).then(r => r.ok ? r.json() : null).catch(() => null);
+export function loadParts(loadGltf, loadJson = getJson) {
+  if (!parts) parts = Promise.all([...["average-dusk", "robe", "sash"].map(n => loadGltf(DIR + n + ".glb")), loadJson(DIR + "robe-cover.json")])
+    .then(([dusk, robe, sash, cover]) => ({ dusk, robe, sash, cover }));
   return parts;
 }
 
@@ -32,17 +33,16 @@ const PARTS = [["cloth", 0, [0.0578, 0.0513, 0.1946]], ["shade", 2, [0.0252, 0.0
 // body shapes and builds as bone scales: [shoulder width, hip width, chest depth] and [width, depth]
 const SHAPE = { a: [1.0, 1.0, 1.0], b: [1.16, 0.93, 1.04], c: [0.92, 1.14, 1.1] };
 const BUILD = { slender: [0.88, 0.9], average: [1, 1], broad: [1.13, 1.06], round: [1.12, 1.22] };
-const ARM = [["shoulderL", "elbowL"], ["elbowL", "wristL"], ["wristL", null], ["shoulderR", "elbowR"], ["elbowR", "wristR"], ["wristR", null]];
-const HAND = 0.09, PAD = 0.006;
+// the trousers: indigo, with a darker wrap at the ankle below WRAP (rest metres)
+const TROUSER = "#3b3d63", TROUSER_WRAP = "#2a2a40", WRAP = 0.16;
 const top = (sw, si, j) => { let b = 0, w = -1; for (let k = 0; k < 4; k++) if (sw.getComponent(j, k) > w) { w = sw.getComponent(j, k); b = si.getComponent(j, k); } return b; };
 
 export function dressFigure(root, P) {
   let mesh = null; root.traverse(o => { if (o.isSkinnedMesh && !mesh) mesh = o; });
   mesh.geometry = mesh.geometry.clone();   // the clone shares geometry; this body gets its own colours and mask
   const bone = n => root.getObjectByName(n);
-  const B = Object.fromEntries(["hips", "spine", "neck", "head", "shoulderL", "shoulderR", "hipL", "hipR"].map(n => [n, bone(n)]));
+  const B = Object.fromEntries(["hips", "spine", "neck", "head", "shoulderL", "shoulderR", "hipL", "hipR", "kneeL", "kneeR", "ankleL", "ankleR", "hemF", "hemB"].map(n => [n, bone(n)]));
   const rest = new Map(); root.traverse(o => { if (o.isBone) rest.set(o, { p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() }); });
-  const clip = P.dusk.animations.find(a => a.name === "Walk") || P.dusk.animations[0];
   const idleClip = P.dusk.animations.find(a => a.name === "Idle");
 
   const col = mesh.geometry.attributes.color, part = new Uint8Array(col.count);
@@ -68,58 +68,40 @@ export function dressFigure(root, P) {
   }
   const sash = wear(P.sash, 0.4, 0.025);
 
-  // walk frame 0 for the robe's arm share, then the bones go back to rest so the page's own mixer starts clean
-  const tmp = new THREE.AnimationMixer(root); tmp.clipAction(clip).play(); tmp.setTime(0); root.updateMatrixWorld(true);
-  const wp = (n, t) => root.worldToLocal(bone(n).getWorldPosition(t));
+  // the robe: robe.glb's skinned mesh on this body's bones, its lower panels re-weighted once to the skirt bones (figure-robe.js)
   const robe = (() => {
-    let bm = null; P.baked.scene.traverse(o => { if (o.isMesh && !bm) bm = o; });
-    const g = bm.geometry, flat = a => Float32Array.from(a.array);
-    const base = flat(g.attributes.position), normal = flat(g.attributes.normal);
-    const frames = g.morphAttributes.position.map(flat), frameNormals = g.morphAttributes.normal.map(flat);
-    let ig = null; if (P.bakedIdle && idleClip) P.bakedIdle.scene.traverse(o => { if (o.isMesh && !ig) ig = o.geometry; });
-    if (ig && ig.attributes.position.count !== g.attributes.position.count) ig = null;   // the idle bake must be the walk bake's mesh
-    let sm = null; skClone(P.robe.scene).traverse(o => { if (o.isSkinnedMesh && !sm) sm = o; });
-    sm.bind(new THREE.Skeleton(sm.skeleton.bones.map(b => bone(b.name)), sm.skeleton.boneInverses), sm.bindMatrix);
-    sm.skeleton.update();
-    const SP = sm.geometry.attributes.position, J = sm.geometry.attributes.skinIndex, W = sm.geometry.attributes.skinWeight;
-    const armB = new Set(["shoulderL", "elbowL", "wristL", "shoulderR", "elbowR", "wristR"]), sp = new Float32Array(SP.count * 3), aw = new Float32Array(SP.count), v = new THREE.Vector3();
-    for (let i = 0; i < SP.count; i++) { v.fromBufferAttribute(SP, i); sm.applyBoneTransform(i, v); sp.set([v.x, v.y, v.z], i * 3);
-      for (let q = 0; q < 4; q++) if (armB.has(sm.skeleton.bones[J.getComponent(i, q)].name)) aw[i] += W.getComponent(i, q); }
-    const arm = armShare(base, sp, aw);
-    const r = bakedRobe({ base, normal, frames, frameNormals, fps: frames.length / clip.duration, arm });
-    const ri = ig ? bakedRobe({ base, normal, frames: ig.morphAttributes.position.map(flat), frameNormals: ig.morphAttributes.normal.map(flat), fps: ig.morphAttributes.position.length / idleClip.duration, arm }) : null;
-    const geo = new THREE.BufferGeometry(), Pa = new THREE.BufferAttribute(r.pos, 3), N = new THREE.BufferAttribute(r.nor, 3);
-    Pa.setUsage(THREE.DynamicDrawUsage); N.setUsage(THREE.DynamicDrawUsage); r.pose(0); geo.setAttribute("position", Pa); geo.setAttribute("normal", N);
-    const c = g.attributes.color, kind = new Uint8Array(c.count), y = new Float32Array(c.count);
-    for (let i = 0; i < c.count; i++) { kind[i] = c.array[i * c.itemSize] > 100 ? 1 : 0; y[i] = base[i * 3 + 1]; }
-    const paint = new THREE.BufferAttribute(new Float32Array(c.count * 4), 4); geo.setAttribute("color", paint);
-    geo.setIndex(Array.from(g.index.array));
-    // a cut is drawn, not made: below the cut's hem the robe is not drawn, with a band of the cut's colour above it
-    geo.setAttribute("restY", new THREE.BufferAttribute(y, 1));
-    const hem = { value: -1 }, band = { value: new THREE.Color() }, rm = mat.clone(); rm.side = THREE.DoubleSide;
+    const { m, kind, paint } = wear(P.robe, 0.4), g = m.geometry, RP = g.attributes.position, J = g.attributes.skinIndex, W = g.attributes.skinWeight;
+    // the lower skirt bones: one under each skirt bone at the fold (knee height), made here in the rest pose, so a panel can
+    // bend there; the robe's skeleton takes them with their bind matrices in the robe's own space
+    root.updateMatrixWorld(true);
+    const low = [B.hemF, B.hemB].map((h, i) => { const b = new THREE.Bone(); b.name = h.name + "2"; h.add(b);
+      b.position.copy(h.worldToLocal(root.localToWorld(new THREE.Vector3(0, FOLD, i ? -0.02 : 0.02)))); b.updateMatrixWorld(true);
+      return [b, new THREE.Matrix4().copy(m.matrixWorld).invert().multiply(b.matrixWorld).invert()]; });
+    m.bind(new THREE.Skeleton([...m.skeleton.bones, ...low.map(l => l[0])], [...m.skeleton.boneInverses, ...low.map(l => l[1])]), m.bindMatrix);
+    const sI = new Uint16Array(J.count * 4), sW = new Float32Array(J.count * 4), sb = m.skeleton.bones, NR = g.attributes.normal, arm = /shoulder|elbow|wrist/;
+    for (let i = 0; i < J.count; i++) { let aw = 0; for (let k = 0; k < 4; k++) { sI[i * 4 + k] = J.getComponent(i, k); sW[i * 4 + k] = W.getComponent(i, k); if (arm.test(sb[sI[i * 4 + k]].name)) aw += sW[i * 4 + k]; }
+      const e = aw < 0.5 ? easeOf(RP.getY(i)) : 0, h = Math.hypot(NR.getX(i), NR.getZ(i)) || 1;   // the ease, out along the level normal
+      if (e) RP.setXYZ(i, RP.getX(i) + NR.getX(i) / h * e, RP.getY(i), RP.getZ(i) + NR.getZ(i) / h * e); }
+    skirtWeights({ pos: RP.array, index: g.index.array, skinIndex: sI, skinWeight: sW, hips: sb.indexOf(B.hips), hemF: sb.indexOf(B.hemF), hemB: sb.indexOf(B.hemB), hemF2: sb.indexOf(low[0][0]), hemB2: sb.indexOf(low[1][0]), hipL: sb.indexOf(B.hipL), hipR: sb.indexOf(B.hipR) });
+    g.setAttribute("skinIndex", new THREE.BufferAttribute(sI, 4)); g.setAttribute("skinWeight", new THREE.BufferAttribute(sW, 4));
+    // a cut is drawn, not made: below the cut's hem the robe is not drawn, with a band of the cut's colour above it; the inside
+    // (back faces) is the lining
+    g.setAttribute("restY", new THREE.BufferAttribute(Float32Array.from({ length: RP.count }, (_, i) => RP.getY(i)), 1));
+    const hem = { value: -1 }, band = { value: new THREE.Color() }, lining = { value: new THREE.Color() }, rm = mat.clone(); rm.side = THREE.DoubleSide;
     const painted = THREE.MeshStandardMaterial.prototype.onBeforeCompile;   // keep the room's painterly patch (paint.js)
-    rm.onBeforeCompile = (sh, rr) => { painted.call(rm, sh, rr); Object.assign(sh.uniforms, { hem, band });
+    rm.onBeforeCompile = (sh, rr) => { painted.call(rm, sh, rr); Object.assign(sh.uniforms, { hem, band, lining });
       sh.vertexShader = "attribute float restY;\nvarying float vRestY;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nvRestY = restY;");
-      sh.fragmentShader = "uniform float hem;\nuniform vec3 band;\nvarying float vRestY;\n" + sh.fragmentShader.replace("#include <color_fragment>",
-        "#include <color_fragment>\nif (hem > 0.0) { if (vRestY < hem) discard; if (vRestY < hem + 0.045) diffuseColor.rgb = band; }"); };
+      sh.fragmentShader = "uniform float hem;\nuniform vec3 band;\nuniform vec3 lining;\nvarying float vRestY;\n" + sh.fragmentShader.replace("#include <color_fragment>",
+        "#include <color_fragment>\nif (hem > 0.0) { if (vRestY < hem) discard; if (vRestY < hem + 0.045) diffuseColor.rgb = band; }\nif (!gl_FrontFacing) diffuseColor.rgb = lining;"); };
     const key = THREE.MeshStandardMaterial.prototype.customProgramCacheKey;
-    rm.customProgramCacheKey = () => key.call(rm) + "|robehem";
-    const m = new THREE.Mesh(geo, rm); m.frustumCulled = false; root.add(m);
-    return { m, kind, paint, r, ri, P: Pa, N, hem, band };
+    rm.customProgramCacheKey = () => key.call(rm) + "|robelined";
+    m.material = rm;
+    return { m, kind, paint, hem, band, lining, sk: skirt(), low: low.map(l => l[0]) };
   })();
-  const seg = ([a, b], A = new THREE.Vector3(), Bp = new THREE.Vector3()) => { wp(a, A);
-    if (b) wp(b, Bp); else Bp.copy(A).sub(wp(bone(a).parent.name, Bp)).setLength(HAND).add(A); return [A, Bp]; };
-  const radii = (list, f) => { const d = {}, Pp = mesh.geometry.attributes.position, l = new THREE.Line3(), c = new THREE.Vector3(), w = new THREE.Vector3(), A = new THREE.Vector3(), Bq = new THREE.Vector3(), si = mesh.geometry.attributes.skinIndex, sw = mesh.geometry.attributes.skinWeight;
-    for (let j = 0; j < Pp.count; j++) { const s = list.find(q => q[0] === mesh.skeleton.bones[top(sw, si, j)].name); if (!s) continue;
-      const [a, b] = list === ARM ? seg(s, A, Bq) : [wp(s[0], A), wp(s[1], Bq)]; l.set(a, b);
-      w.fromBufferAttribute(Pp, j); mesh.applyBoneTransform(j, w); root.worldToLocal(w.applyMatrix4(mesh.matrixWorld));
-      (d[s[0]] = d[s[0]] || []).push(w.distanceTo(l.closestPointToPoint(w, true, c))); }
-    return f(d); };
-  const RAD = radii(ARM, armRadii), LRAD = radii(LEG, legRadii);
-  tmp.stopAllAction(); tmp.uncacheRoot(root);
-  for (const [o, r] of rest) { o.position.copy(r.p); o.quaternion.copy(r.q); o.scale.copy(r.s); }
+  const floorY = (() => { let y = Infinity; const Pp = mesh.geometry.attributes.position; for (let i = 0; i < Pp.count; i++) y = Math.min(y, Pp.getY(i)); return y; })();
 
-  // travel pants: a shell grown off the body's own legs, so it bends exactly with them (sprout figure.js, round 4)
+  // the trousers: a shell grown off the body's own legs, so it bends exactly with them (sprout figure.js, round 4); `src` is each
+  // trouser point's body point, which robe-cover.json names
   const pants = (() => {
     const g = mesh.geometry, Pp = g.attributes.position, N = g.attributes.normal, si = g.attributes.skinIndex, sw = g.attributes.skinWeight;
     const legs = new Set(["hips", "hipL", "kneeL", "ankleL", "hipR", "kneeR", "ankleR"].map(n => mesh.skeleton.bones.indexOf(bone(n))));
@@ -144,17 +126,18 @@ export function dressFigure(root, P) {
     const paint = new THREE.BufferAttribute(new Float32Array(n * 4), 4); pg.setAttribute("color", paint);
     pg.setIndex(keep.map(j => map.get(j))); pg.computeVertexNormals();
     const m = new THREE.SkinnedMesh(pg, mat); m.frustumCulled = false; mesh.parent.add(m); m.bind(mesh.skeleton, mesh.bindMatrix);
-    return { m, y, paint, index: pg.index.array.slice() };
+    // the leg skin the trousers are made from is never drawn: the body keeps every other triangle
+    const others = []; for (let t = 0; t < ix.length; t += 3) if (!(ok(ix[t]) && ok(ix[t + 1]) && ok(ix[t + 2]))) others.push(ix[t], ix[t + 1], ix[t + 2]);
+    g.setIndex(others);
+    return { m, y, paint, index: pg.index.array.slice(), src: Int32Array.from(map.keys()) };
   })();
-  // the mask: leg skin and pants whose rest height lies inside the cut's band are not drawn
-  const bodyLeg = (() => { const g = mesh.geometry, Pp = g.attributes.position, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, legOut = new Uint8Array(Pp.count);
-    const legBones = new Set(["hips", "hipL", "kneeL", "ankleL", "hipR", "kneeR", "ankleR"].map(n => mesh.skeleton.bones.indexOf(bone(n))));
-    for (let j = 0; j < Pp.count; j++) legOut[j] = legBones.has(top(sw, si, j)) ? 1 : 0;
-    return { index: g.index.array.slice(), y: Pp.array.filter((_, i) => i % 3 === 1), leg: legOut }; })();
-  function mask(C) {
-    const [lo, hi] = maskBand(C), hid = (y, j, leg) => (!leg || leg[j]) && y[j] >= lo && y[j] <= hi;
-    const keep = (index, y, leg) => { const o = []; for (let t = 0; t < index.length; t += 3) if (!(hid(y, index[t], leg) && hid(y, index[t + 1], leg) && hid(y, index[t + 2], leg))) o.push(index[t], index[t + 1], index[t + 2]); return o; };
-    mesh.geometry.setIndex(keep(bodyLeg.index, bodyLeg.y, bodyLeg.leg)); pants.m.geometry.setIndex(keep(pants.index, pants.y, null));
+  // the mask: a trouser triangle is not drawn under a cut when the cut's robe covers all three of its points in every pose
+  // (robe-cover.json, made by tools/figure-cover.mjs; without it every trouser triangle is drawn)
+  function mask(outfit) {
+    const list = P.cover && P.cover.cuts && P.cover.cuts[outfit], hid = new Uint8Array(pants.src.length);
+    if (list) { const cov = new Set(list); pants.src.forEach((j, k) => { hid[k] = cov.has(j) ? 1 : 0; }); }
+    const ix = pants.index, o = []; for (let t = 0; t < ix.length; t += 3) if (!(hid[ix[t]] && hid[ix[t + 1]] && hid[ix[t + 2]])) o.push(ix[t], ix[t + 1], ix[t + 2]);
+    pants.m.geometry.setIndex(o);
   }
 
   // hair from simple solids on the head bone, sized to the head (sprout figure.js)
@@ -177,15 +160,17 @@ export function dressFigure(root, P) {
     spiked: r => [sphere(r, 1.18, 0.7, 1.2, 0, r * 0.5, -r * 0.1), ...[-0.7, -0.25, 0.25, 0.7].flatMap(a => [0.15, -0.5].map(b => {
       const c = new THREE.Mesh(new THREE.ConeGeometry(r * 0.3, r * 1.05, 5), hairMat); c.position.set(Math.sin(a) * r * 0.65, r * 1.1, b * r); c.rotation.set(b * 0.6, 0, -a * 0.8); return c; }))] };
 
-  let body = { hips: [1, 1], chest: [1, 1], shift: 0 }, outfit = null, style = null;
+  let outfit = null, style = null;
   function shapeBody(shape, build) {
     for (const [o, r] of rest) { o.position.copy(r.p); o.scale.copy(r.s); }
     const [sh, hp, ch] = SHAPE[shape] ?? SHAPE.a, [bw, bd] = BUILD[build] ?? BUILD.average;
     const sx = sh * bw, hx = hp * bw, dz = ch * bd;
     B.hips.scale.set(hx, 1, bd); B.spine.scale.set(sx / hx, 1, dz / bd);
-    body = { hips: [hx, bd], chest: [sx, dz], shift: B.shoulderL.position.x * (sx - 1) };
     for (const n of ["neck", "shoulderL", "shoulderR"]) if (B[n]?.parent === B.spine) B[n].scale.set(1 / sx, 1, 1 / dz);
     for (const n of ["hipL", "hipR"]) if (B[n]?.parent === B.hips) B[n].scale.set(1 / hx, 1, 1 / bd);
+    // the skirt widens with the hips but never narrows: the legs keep their girth on a slighter body, so a narrowed skirt would
+    // cut into them (the bake did the same, figure-robe.js before the robe-slit build)
+    for (const n of ["hemF", "hemB"]) if (B[n]?.parent === B.hips) B[n].scale.set(Math.max(1, hx) / hx, 1, Math.max(1, bd) / bd);
   }
   function paint(L, colors) {
     const c = new THREE.Color(), want = { cloth: colors.cloth[0], shade: colors.cloth[2], trim: colors.cloth[3], skin: colors.skin };
@@ -195,35 +180,43 @@ export function dressFigure(root, P) {
     out.needsUpdate = true;
     const C = CUT[L.outfit] ?? CUT.coat, main = new THREE.Color(colors.cloth[0]), band = new THREE.Color(colors.cloth[C.band]);
     for (let i = 0; i < robe.kind.length; i++) { const k = robe.kind[i] ? band : main; robe.paint.setXYZW(i, k.r, k.g, k.b, 1); }
-    robe.paint.needsUpdate = true; robe.band.value.copy(band);
+    robe.paint.needsUpdate = true; robe.band.value.copy(band); robe.lining.value.set(colors.lining);
     const sTrim = new THREE.Color(colors.cloth[3]), sKnot = sTrim.clone().multiplyScalar(0.55);
     for (let i = 0; i < sash.kind.length; i++) { const k = sash.kind[i] ? sTrim : sKnot; sash.paint.setXYZW(i, k.r, k.g, k.b, 1); }
     sash.paint.needsUpdate = true;
-    const pShade = new THREE.Color(colors.cloth[2]), pWrap = pShade.clone().multiplyScalar(0.62);
-    for (let i = 0; i < pants.y.length; i++) { const k = pants.y[i] < 0.2 ? pWrap : pShade; pants.paint.setXYZW(i, k.r, k.g, k.b, 1); }
+    const pMain = new THREE.Color(TROUSER), pWrap = new THREE.Color(TROUSER_WRAP);
+    for (let i = 0; i < pants.y.length; i++) { const k = pants.y[i] < WRAP ? pWrap : pMain; pants.paint.setXYZW(i, k.r, k.g, k.b, 1); }
     pants.paint.needsUpdate = true;
     hairMat.color.set(colors.hair);
     if (style !== L.style) { hairRoot.clear(); for (const m of (HAIR[L.style] ?? HAIR.afro)(hr)) hairRoot.add(m); style = L.style; }
   }
-  const hipsAt = new THREE.Vector3(), legAt = new THREE.Vector3(), capA = ARM.map(() => [new THREE.Vector3(), new THREE.Vector3()]);
-  const legPos = n => wp(n, legAt).toArray();
+  // a leg line's forward pitch in the hips' own frame (0 hangs straight down), and how high the hips stand over the floor
+  const hq = new THREE.Quaternion(), va = new THREE.Vector3(), vb = new THREE.Vector3();
+  const pitch = (a, b) => { B.hips.getWorldQuaternion(hq).invert(); vb.copy(b.getWorldPosition(vb)).sub(a.getWorldPosition(va)).applyQuaternion(hq); return Math.atan2(vb.z, -vb.y); };
+  const rq = [B.hemF, B.hemB].map(b => rest.get(b).q), qx = new THREE.Quaternion(), X = new THREE.Vector3(1, 0, 0);
+  // a panel's turn in the hips' frame: the hips' depth scale (the build) stretches a turn, so the bone turns less to land on it
+  const turn = (b, q0, a) => { const sz = B.hips.scale.z * b.scale.z; b.quaternion.copy(qx.setFromAxisAngle(X, -Math.atan2(Math.sin(a) / sz, Math.cos(a)))).multiply(q0); };
   return {
     set(look) {
       const L = look || DEFAULT_LOOK;
       shapeBody(L.shape, L.build);
-      if (L.outfit !== outfit) { const C = CUT[L.outfit] ?? CUT.coat; robe.hem.value = C.hem || -1; sash.m.visible = C.sash; mask(C); outfit = L.outfit; }
+      if (L.outfit !== outfit) { const C = CUT[L.outfit] ?? CUT.coat; robe.hem.value = C.hem || -1; sash.m.visible = C.sash; mask(L.outfit); outfit = L.outfit; }
       paint(L, colorsOf(L));
     },
-    hasIdle: !!robe.ri,
-    /* the robe at the Walk's time t (a number), or crossfaded { walk, idle, w } (w: the Idle's share), on this body as posed now */
-    dress(t) {
-      root.updateMatrixWorld(true); wp("hips", hipsAt);
-      const caps = ARM.map((q, i) => { const [A, Bp] = seg(q, ...capA[i]); return [A.x, A.y, A.z, Bp.x, Bp.y, Bp.z, RAD[q[0]] + PAD]; }).concat(legCapsules(legPos, LRAD));
-      const o = { cx: hipsAt.x, cz: hipsAt.z, ...body, caps }, st = typeof t === "number" ? { walk: t, w: 0 } : t, w = robe.ri ? st.w || 0 : 0;
-      if (w < 0.999) robe.r.pose(st.walk || 0, o);
-      if (w > 0.001) { const a = robe.ri.pose(st.idle || 0, o), P = robe.r.pos, Nn = robe.r.nor;
-        if (w >= 0.999) { P.set(a.pos); Nn.set(a.nor); } else for (let i = 0; i < P.length; i++) { P[i] += (a.pos[i] - P[i]) * w; Nn[i] += (a.nor[i] - Nn[i]) * w; } }
-      robe.P.needsUpdate = true; robe.N.needsUpdate = true;
+    hasIdle: !!idleClip,
+    /* the skirt panels from the legs as posed now (call it after the mixer and the code poses; dt in seconds, none to snap) */
+    dress(dt) {
+      if (!B.hemF || !B.hemB) return;
+      root.updateMatrixWorld(true);
+      const high = root.worldToLocal(B.hips.getWorldPosition(va)).y - floorY;
+      const a = robe.sk.step([pitch(B.hipL, B.kneeL), pitch(B.hipR, B.kneeR), pitch(B.hipL, B.ankleL), pitch(B.hipR, B.ankleR)], [pitch(B.kneeL, B.ankleL), pitch(B.kneeR, B.ankleR)], high, dt);
+      turn(B.hemF, rq[0], a[0]); turn(B.hemB, rq[1], a[1]);
+      // below the fold: the turn from the panel above to the pitch the lower panel wants, gathered to the height the fold has
+      robe.low.forEach((b, i) => { b.parent.updateMatrixWorld(true); b.scale.y = 1; b.quaternion.setFromAxisAngle(X, -(a[i + 2] - a[i]));
+        b.updateMatrixWorld(true); b.scale.y = fold(root.worldToLocal(b.getWorldPosition(va)).y - floorY, a[i + 2]); b.updateMatrixWorld(true); });
+      return a;
     },
+    // what the robe tools read (tools/figure-cover.mjs, tools/figure-legs-probe.mjs): the meshes and the cut's hem
+    layers: { body: mesh, pants: pants.m, pantsSrc: pants.src, pantsY: pants.y, pantsIndex: pants.index, robe: robe.m, hem: () => hemOf(CUT[outfit] ?? CUT.coat) },
   };
 }

@@ -9,8 +9,8 @@ import { applyRoom, ITEMS, ITEM_ORDER, SHELLS, earnedEvents, earnedItems, satche
 import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS, BEATS as MINUTE_BEATS, CAPTIONS as MINUTE_CAPTIONS, PROMPTS as MINUTE_PROMPTS, HOPE_ASK, SKIPPABLE, LATER_AFTER_MS } from "../calrunia/first-minute.js";
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
-import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the baked J5 robe)
-import { stance, clipWeights, FADE } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
+import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the skinned J5 robe)
+import { stance, clipWeights, FADE, SIT, SIT_DROP } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -350,7 +350,7 @@ function loadModel(name) {
 
 /* A look on the player figure (part 4 fix, his note of 2026-10-24: "the clothes and robes aren't rendering"): every player
    is the creator's figure, dressed by wardrobe.js: shape and build as bone scales, the cut (jacket, wrap dress, long coat)
-   on the baked robe, the dye, skin and hair. player.glb, a body with a tunic painted on, is no longer drawn. */
+   on the skinned robe, the dye, skin and hair. player.glb, a body with a tunic painted on, is no longer drawn. */
 const bodyOpts = lk => ({ look: lk ? parseLook(lk) : null });
 /* Bodies are cloned from one template each; their colour is set per owner on a copy of the robe. */
 async function makeBody(model, height, tint, tintAmt, opts) {
@@ -384,8 +384,8 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const clip = n => t.anims.find(a => a.name === n);
   const acts = {};
   for (const n of ["Walk", "Idle"]) { const c = clip(n); if (c) acts[n] = mixer.clipAction(c); }
-  /* A dressed figure (its Walk and Idle both baked into the robe) blends the two by weight each frame toward what its stance
-     asks (stance.js); older files without an Idle keep standing at the Walk's first frame, where their robe was baked. */
+  /* A dressed figure blends its Walk and Idle by weight each frame toward what its stance asks (stance.js); the robe is skinned,
+     so it follows whatever the clips and the code poses make. Older files without an Idle keep standing at the Walk's first frame. */
   const managed = !!(wardrobe && acts.Walk && acts.Idle && wardrobe.hasIdle);
   const cw = { Walk: 0, Idle: 1 }; let cur = "idle";
   if (managed) { acts.Walk.play(); acts.Walk.setEffectiveWeight(0); acts.Idle.play(); acts.Idle.setEffectiveWeight(1); }
@@ -408,7 +408,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
     setWalking(w) {
       if (w === walking) return; walking = w;
       if (managed) return;   // pose() fades the clips toward the stance
-      // a dressed figure stands at the Walk's first frame, where the robe was baked, rather than fading to the bind pose
+      // a dressed figure with no Idle stands at the Walk's first frame rather than fading to the bind pose
       if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = !w; if (!w) acts.Walk.time = 0; return; }
       if (acts.Walk) { if (w) { acts.Walk.reset().fadeIn(0.2).play(); acts.Idle && acts.Idle.fadeOut(0.2); } else { acts.Walk.fadeOut(0.3); if (acts.Idle) acts.Idle.reset().fadeIn(0.3).play(); } }
     },
@@ -426,9 +426,8 @@ async function makeBody(model, height, tint, tintAmt, opts) {
       if (bones.hipL && sit > 0.01) {
         const w = sit;
         if (acts.Walk && wantSit && !managed) acts.Walk.weight = 0;
-        for (const [n, x, y, z] of [["hipL", -1.5, -0.35, -0.65], ["hipR", -1.5, 0.35, 0.65], ["kneeL", 2.45, 0, 0], ["kneeR", 2.45, 0, 0], ["spine", 0.12, 0, 0], ["neck", 0.18, 0, 0],
-          ["shoulderL", -0.75, 0, -0.25], ["shoulderR", -0.75, 0, 0.25], ["elbowL", -0.9, 0, 0], ["elbowR", -0.9, 0, 0]]) bend(n, x, y, z, w);
-        bones.hips.b.position.y = hipsY - 0.84 * w;
+        for (const [n, x, y, z] of SIT) bend(n, x, y, z, w);   // stance.js, so the robe tools pose the same sit
+        bones.hips.b.position.y = hipsY - SIT_DROP * w;
       } else if (bones.hips) bones.hips.b.position.y = hipsY;
       if (acts.Walk && !wantSit && acts.Walk.weight === 0 && !managed) acts.Walk.weight = 1;
       const wv = t - waveT;
@@ -441,7 +440,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
         obj.position.y = -t0box * k * (1 - rest * 0.38);
         mixer.timeScale = 1 - rest * 0.85;
       }
-      if (wardrobe) wardrobe.dress(managed ? { walk: acts.Walk.time, idle: acts.Idle.time, w: cw.Walk + cw.Idle > 0.01 ? cw.Idle / (cw.Walk + cw.Idle) : 0 } : acts.Walk ? acts.Walk.time : 0);
+      if (wardrobe) wardrobe.dress(dt);   // the robe's skirt panels from the legs as posed now (after the mixer and the sit)
     },
   };
 }

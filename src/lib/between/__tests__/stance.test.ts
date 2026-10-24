@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 // Wendell's rule lt-idle-default: any figure not moving or sitting plays a real standing idle (public/between/stance.js),
-// and the files it plays from: average-dusk.glb carries an 'Idle' beside the unchanged 'Walk', and the idle robe bake is
-// the walk bake's own mesh, so the figure crossfades between them.
+// and the files it plays from: average-dusk.glb carries an 'Idle' beside the unchanged 'Walk'. The robe is skinned, so it
+// follows either clip (public/between/figure-robe.js).
 import { clipWeights, FADE, stance, STANCES } from '../../../../public/between/stance.js'
 
 const DUSK = path.resolve(__dirname, '../../../../public/between/m/dusk')
@@ -32,7 +32,7 @@ describe('stance: a figure that is not moving or sitting stands in the idle', ()
 })
 
 describe('the idle files', () => {
-  it('average-dusk.glb has Walk first (wardrobe and the walk bake read it) and a looping Idle of a few seconds', () => {
+  it('average-dusk.glb has Walk first and a looping Idle of a few seconds', () => {
     const j = glbJson('average-dusk.glb')
     const names = j.animations.map((a: { name: string }) => a.name)
     expect(names[0]).toBe('Walk')
@@ -45,11 +45,23 @@ describe('the idle files', () => {
     const keyed = new Set(idle.channels.filter((c: { target: { path: string } }) => c.target.path === 'rotation').map((c: { target: { node: number } }) => c.target.node))
     for (const n of j.skins[0].joints) expect(keyed.has(n)).toBe(true)
   })
-  it('the idle robe bake is the walk bake\'s mesh, with an Idle weights animation', () => {
-    const walk = glbJson('robe-baked.glb'), idle = glbJson('robe-baked-idle.glb')
-    const count = (j: { meshes: { primitives: { attributes: { POSITION: number } }[] }[]; accessors: { count: number }[] }) => j.accessors[j.meshes[0].primitives[0].attributes.POSITION].count
-    expect(count(idle)).toBe(count(walk))
-    expect(idle.animations[0].name).toBe('Idle')
-    expect(idle.meshes[0].primitives[0].targets.length).toBeGreaterThan(8)
+})
+
+describe('the robe (robe-slit build): skinned, no bake', () => {
+  it('robe.glb is skinned to the skirt bones hemF and hemB, which both clips key', () => {
+    const j = glbJson('robe.glb'), dusk = glbJson('average-dusk.glb')
+    const names = j.skins[0].joints.map((n: number) => j.nodes[n].name)
+    expect(names).toContain('hemF')
+    expect(names).toContain('hemB')
+    for (const a of dusk.animations) {
+      const keyed = new Set(a.channels.map((c: { target: { node: number } }) => dusk.nodes[c.target.node].name))
+      expect(keyed.has('hemF') && keyed.has('hemB')).toBe(true)
+    }
+  })
+  it('the robe bakes are gone, and every cut has a cover', () => {
+    expect(existsSync(path.join(DUSK, 'robe-baked.glb'))).toBe(false)
+    expect(existsSync(path.join(DUSK, 'robe-baked-idle.glb'))).toBe(false)
+    const cover = JSON.parse(readFileSync(path.join(DUSK, 'robe-cover.json'), 'utf8'))
+    for (const c of ['jacket', 'dress', 'coat']) expect(cover.cuts[c].length).toBeGreaterThan(50)
   })
 })

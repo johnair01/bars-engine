@@ -7,3 +7,8 @@ export function stance({ moving = false, sitting = false } = {}) { return sittin
 export function clipWeights(s) { return s === "walk" ? { Walk: 1, Idle: 0 } : s === "idle" ? { Walk: 0, Idle: 1 } : { Walk: 0, Idle: 0 }; }
 /* Fade times (s): into the walk quickly, into the idle a little slower, so a stop settles. */
 export const FADE = { walk: 0.25, idle: 0.4, sit: 0.3 };
+/* The sit, made in code over the bind pose: cross-legged on a cushion, as Euler XYZ turns (radians at full sit) on each bone's
+   rest turn, and the hips lowered by SIT_DROP (rig metres). garden.js makeBody eases it in; the robe tools pose the same sit. */
+export const SIT = [["hipL", -1.5, -0.35, -0.65], ["hipR", -1.5, 0.35, 0.65], ["kneeL", 2.45, 0, 0], ["kneeR", 2.45, 0, 0], ["spine", 0.12, 0, 0], ["neck", 0.18, 0, 0],
+  ["shoulderL", -0.75, 0, -0.25], ["shoulderR", -0.75, 0, 0.25], ["elbowL", -0.9, 0, 0], ["elbowR", -0.9, 0, 0]];
+export const SIT_DROP = 0.84;
