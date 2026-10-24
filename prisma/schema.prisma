@@ -5361,3 +5361,28 @@ model Passport {
 
   @@map("passports")
 }
+
+
+/// The council's weekly read of the unchosen lines (six-faces-council pass unchosen1, uc-who-reads B, 2026-10-21): at
+/// most five patterns a week, each with one pitch and his lines quoted with their days, written by POST
+/// /api/tap-the-vein/unchosen. When a pattern returns, the new pitch replaces the live one for the same word and the old
+/// row turns composted with replacedById pointing at its successor, so the chain shows the pitch sharpening (his steer
+/// on uc-pattern-returns). playerId is Player.id as a plain column, the way the passport keeps it.
+model TapTheVeinUnchosenPitch {
+  id           String    @id @default(cuid())
+  playerId     String    @map("player_id")
+  weekOf       DateTime  @map("week_of") @db.Date
+  word         String
+  face         String
+  kernel       String    @db.Text
+  pitch        String    @db.Text
+  quotes       Json
+  status       String    @default("live") // live|composted
+  compostedAt  DateTime? @map("composted_at")
+  replacedById String?   @map("replaced_by_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([playerId, status])
+  @@index([playerId, weekOf])
+  @@map("ttv_unchosen_pitches")
+}

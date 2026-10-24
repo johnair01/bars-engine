@@ -5,7 +5,7 @@
 // POST /api/passport. Runs in the page (window.__calruniaPassport) and under vitest (passport-contract.test.ts).
 (function (root) {
   "use strict";
-  var SPIRITS_KEY = "oag.spirits.v1", VESSEL_KEY = "oag.vessel.v1", GUEST_KEY = "calrunia.guest.v1";
+  var SPIRITS_KEY = "oag.spirits.v1", VESSEL_KEY = "oag.vessel.v1", GUEST_KEY = "calrunia.guest.v1", HAND_KEY = "calrunia.hand.v1";
   var PLACES = ["vessel", "sprout", "cave", "root", "between", "element-lands"];
   // The ship's own rooms and lands, as places of calrunia/world.yaml (vessel.js PLACES).
   var SHIP_PLACE = { home: "vessel", hall: "cave", bigmind: "cave", wood: "element-lands", fire: "element-lands", earth: "element-lands", metal: "element-lands", water: "element-lands" };
@@ -32,9 +32,10 @@
       state: str(m.state) || "loose", at: when(m.at) || EPOCH, label: (str(m.label) || "").slice(0, 40) };
   }
 
-  // fold(spiritsRecord, vesselRecord, guestId, at) -> passport. Pure: the records are what the places stored, or null.
+  // fold(spiritsRecord, vesselRecord, guestId, at, handRecord) -> passport. Pure: the records are what the places stored, or null.
+  // The hand is the one Chapter 1 dealt, laid down by the arrival page (arrive.js) as `calrunia.hand.v1`.
   function purse(spirits) { var n = spirits && spirits.v === 1 ? Number(spirits.vibeulons) : 0; return n > 0 ? Math.floor(n) : 0; }
-  function fold(spirits, vessel, guestId, at) {
+  function fold(spirits, vessel, guestId, at, handRec) {
     var reached = {};
     var list = spirits && spirits.v === 1 && Array.isArray(spirits.spirits) ? spirits.spirits.filter(function (r) { return r && r.id; }) : [];
     var seen = {}, out = [], inLoadout = 0;
@@ -53,18 +54,29 @@
       Object.keys(places).forEach(function (id) { if (places[id] === "visited" && SHIP_PLACE[id]) reached[SHIP_PLACE[id]] = true; });
       embers = (Array.isArray(ship.embers) ? ship.embers : []).filter(function (m) { return m && m.id; }).map(foldEmber);
     }
+    var hand = foldHand(handRec);
+    hand.forEach(function (h) { reached[h.from] = true; }); // a card dealt at a place means the player was there
     return {
       v: 1,
       player: { id: null, name: null, guest_id: guestId },
       spirits: out,
-      hand: [], // Chapter 1's end writes its hand here once the demo is done (pass calrunia-world1, build brief 4)
-      qi: 0, // the ship's fuel is its own gauge, not the qi meter (cw-qi-meter-scales); no place fills qi yet
-      vibeulons: purse(spirits), // the WAVE room mints them into oag.spirits.v1 (board gw-unkept-vibeulon); the ship mints none yet
+      hand: hand,
+      qi: ship ? countNum(ship.qi) : 0, // the ship's fuel is its own gauge, not the qi meter (cw-qi-meter-scales)
+      // Chapter 1's A3 earns the first and the ship holds them (FIELD_OWNERS); the WAVE room mints them into oag.spirits.v1 (gw-unkept-vibeulon)
+      vibeulons: (ship ? count(ship.vibeulons) : 0) + purse(spirits),
       embers: embers,
       places_reached: PLACES.filter(function (p) { return reached[p]; }),
       updated_at: at || new Date().toISOString(),
     };
   }
+
+  var HAND_KINDS = ["card", "bar"];
+  function foldHand(rec) {
+    var list = rec && rec.v === 1 && Array.isArray(rec.hand) ? rec.hand : [], seen = {};
+    return list.filter(function (h) { return h && str(h.id) && !seen[h.id] && (seen[h.id] = true) && HAND_KINDS.indexOf(h.kind) >= 0 && PLACES.indexOf(h.from) >= 0; })
+      .map(function (h) { return { id: h.id, kind: h.kind, title: str(h.title) || "", from: h.from }; });
+  }
+  function countNum(x) { x = Number(x); return isFinite(x) && x > 0 ? x : 0; }
 
   function readJson(key) { try { return JSON.parse(root.localStorage.getItem(key) || "null"); } catch (e) { return null; } }
   function guestId() {
@@ -76,9 +88,9 @@
     return id;
   }
   // The guest passport as it stands in this browser now.
-  function read() { return fold(readJson(SPIRITS_KEY), readJson(VESSEL_KEY), guestId()); }
+  function read() { return fold(readJson(SPIRITS_KEY), readJson(VESSEL_KEY), guestId(), undefined, readJson(HAND_KEY)); }
 
-  var api = { KEYS: { spirits: SPIRITS_KEY, vessel: VESSEL_KEY, guest: GUEST_KEY }, PLACES: PLACES, fold: fold, read: read };
+  var api = { KEYS: { spirits: SPIRITS_KEY, vessel: VESSEL_KEY, guest: GUEST_KEY, hand: HAND_KEY }, PLACES: PLACES, fold: fold, read: read };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.__calruniaPassport = api;
 })(typeof window !== "undefined" ? window : globalThis);
