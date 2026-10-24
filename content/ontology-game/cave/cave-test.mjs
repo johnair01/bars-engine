@@ -1118,7 +1118,12 @@ ok(await page.locator('[data-oag-menu] [data-room-calm]').count() === 1 && await
   await page.locator('[data-room-pane]').click();
   await page.waitForFunction(() => window.__oagCave.room.walking().sit > 0.95, null, { timeout: 30000 });
   const sat = await C(() => window.__oagCave.room.walking());
-  ok(Math.abs(sat.pelvisLow - sat.seatTop) < 0.06, `back on the seat, the figure sits on the cushion (pelvis ${sat.pelvisLow.toFixed(2)}, cushion top ${sat.seatTop})`);
+  // Measured on the worn body, not the hidden stand-in: the stand-in's pelvis sat on the cushion top while the worn body's
+  // legs went through the cushion's front (Wendell, 24 October 2026). Cross-legged on the top, hip joints just above it, no
+  // leg vertex inside the cushion, the crossed legs within its top.
+  const st = sat.seated;
+  ok(st && st.hipY > st.top && st.hipY - st.top < 0.35 && st.lowLeg > st.top - 0.02 && st.legInside === 0 && st.reach < 1,
+    `the worn body sits cross-legged on the cushion's top (hip joints ${st && (st.hipY - st.top).toFixed(2)} above it, lowest leg ${st && (st.lowLeg - st.top).toFixed(3)}, ${st && st.legInside} leg vertices inside, reach ${st && st.reach.toFixed(2)} of its radius)`);
 }
 // round 1: it stays, and the 3-2-1 is aimed at what the player wants
 await roomIn(false);
