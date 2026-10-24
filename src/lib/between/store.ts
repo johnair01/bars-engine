@@ -174,7 +174,7 @@ export async function gardensOf(playerId: string) {
   })
   const h = homeDoc ? asDoc(homeDoc.data) : {}
   const goals = Object.entries(asDoc(h.goals as Prisma.JsonValue)).filter(([, g]) => g && typeof g === 'object').map(([id, g]) => ({ id, ...(g as Doc) }))
-  const home = homeRow && { id: homeRow.gardenId, style: asDoc(homeRow.garden.data).style ?? null, look: h.look ?? null, lastCheckin: h.lastCheckin ?? null, goals }
+  const home = homeRow && { id: homeRow.gardenId, style: asDoc(homeRow.garden.data).style ?? null, look: h.look ?? null, lastCheckin: h.lastCheckin ?? null, oriented: h.oriented ?? null, goals }
   return { home, gardens }
 }
 

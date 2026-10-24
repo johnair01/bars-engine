@@ -9,6 +9,7 @@
  */
 
 import { ALL_CANONICAL_MOVES } from '@/lib/quest-grammar/move-engine'
+import { ITEMS as ROOM_ITEMS, shellFor, shellOf } from '../../../public/calrunia/room-kit.js'
 
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json }
 export type Doc = { [k: string]: Json }
@@ -93,6 +94,7 @@ export function mayWrite(who: Who, garden: Doc, target: Target, op: Op, data: Do
       if ('style' in data || 'styleAsk' in data) { const v = styleWrite(me, garden, data); if (!v.ok) return v }
       if ('looks' in data) { const v = looksWrite(me, data.looks); if (!v.ok) return v }
       if ('invitations' in data) { const v = invitationsWrite(me, garden, data.invitations); if (!v.ok) return v }
+      if ('room' in data) { const v = roomWrite(me, garden, data.room); if (!v.ok) return v }
       if ('members' in data) {
         const add = isObj(data.members) ? Object.keys(data.members) : []
         const jr = isObj(garden.joinRequest) ? garden.joinRequest : null
@@ -294,7 +296,51 @@ function styleWrite(me: string, garden: Doc, data: Doc): Verdict {
   return yes
 }
 
-const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers'])
+/**
+ * The room kit's placements (public/calrunia/room-kit.js, rk-spots-not-grid and rk-place-is-shared), kept in garden/main as
+ * `room.placed`: spot id -> { item, owner, at }, or null for an empty spot. The shell is the garden's own (a homeroom is the
+ * nook, a room the hollow) and is never written. You set an item down only in your own name, on a free spot that takes it;
+ * either member lifts, and a lifted item goes back to its owner's satchel (nothing is deleted but the placement).
+ */
+function roomWrite(me: string, garden: Doc, room: Json): Verdict {
+  if (!isObj(room) || !Object.keys(room).every(k => k === 'placed') || !isObj(room.placed)) return no(400, 'A room keeps where its things stand, nothing more.')
+  const shell = shellOf(shellFor(garden)) as { spots: { id: string; takes: string; fixed?: boolean }[] }
+  const cur = isObj(garden.room) && isObj(garden.room.placed) ? garden.room.placed : {}
+  for (const [sid, v] of Object.entries(room.placed)) {
+    const sp = shell.spots.find(s => s.id === sid)
+    if (!sp || sp.fixed) return no(400, 'That is not a spot in this room.')
+    if (v === null) continue
+    if (!isObj(v) || !Object.keys(v).every(k => k === 'item' || k === 'owner' || k === 'at')) return no(400, 'A spot holds one thing.')
+    const it = (ROOM_ITEMS as Record<string, { takes: string }>)[v.item as string]
+    if (!it || it.takes !== sp.takes) return no(400, 'That does not fit there.')
+    if (v.owner !== me) return no(400, 'You set things down in your own name.')
+    if (!isNum(v.at)) return no(400, 'A placement has a time.')
+    const was = cur[sid]
+    if (isObj(was) && was.owner !== me) return no(409, 'Something stands there already. Lift it first.')
+  }
+  return yes
+}
+
+const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers', 'oriented', 'minute'])
+const MINUTE_KEYS = new Set(['ember', 'mirror', 'hope', 'vine', 'skip'])
+const MINUTE_SKIPS = new Set(['ember', 'mirror', 'hope'])
+
+/**
+ * The first minute's steps (public/calrunia/first-minute.js, Still C): each a time done, or null; `skip` the times a step was
+ * left for later. Times only, never words: the hope written at the mirror is kept with the goals.
+ */
+function minuteOk(m: Json | undefined): boolean {
+  if (m == null) return true
+  if (!isObj(m)) return false
+  for (const [k, v] of Object.entries(m)) {
+    if (!MINUTE_KEYS.has(k)) return false
+    if (k === 'skip') {
+      if (v == null) continue
+      if (!isObj(v) || !Object.entries(v).every(([s, t]) => MINUTE_SKIPS.has(s) && (t === null || isNum(t)))) return false
+    } else if (v !== null && !isNum(v)) return false
+  }
+  return true
+}
 const HOME_EMBER_KEYS = new Set(['feel', 'at', 'given'])
 const GIVEN_KEYS = new Set(['spirit', 'stone', 'room', 'at'])
 const isId = (v: unknown) => typeof v === 'string' && ID.test(v)
@@ -319,6 +365,8 @@ export function homeWrite(doc: Doc): Verdict {
   for (const k of Object.keys(doc)) if (!HOME_KEYS.has(k)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
   if (doc.look != null && !(typeof doc.look === 'string' && LOOK.test(doc.look))) return no(400, 'A look is the creator\'s choices.')
   if (doc.lastCheckin != null && !isNum(doc.lastCheckin)) return no(400, 'A check-in has a time.')
+  if (doc.oriented != null && !isNum(doc.oriented)) return no(400, 'Your first minute here has a time.')
+  if (!minuteOk(doc.minute)) return no(400, 'Your first minute here keeps times, nothing more.')
   for (const [field, ok] of [
     ['goals', (g: Doc) => typeof g.text === 'string' && g.text.trim().length > 0 && isNote(g.text) && (g.room == null || (typeof g.room === 'string' && ID.test(g.room))) && (g.at == null || isNum(g.at))],
     ['checkins', (c: Doc) => (c.feel == null || (ELEMENTS as readonly string[]).includes(c.feel as string)) && (c.line == null || isNote(c.line)) && isNum(c.at)
@@ -351,8 +399,13 @@ const GONE = new Set(['retired', 'composted', 'withdrawn'])
 export type RoomSummary = {
   id: string; kind: 'room'; phase: Json; who: Json; relKind: Json; style: Json; person: string | null
   stale: boolean; joinWaiting: boolean; waiting: { id: string; what: 'agreement' | 'offer' | 'ask' | 'lantern' }[]
-  revisit: string[]; invitations: { id: string; when: number | null; note: string }[]; lastSatTogether: number | null
+  revisit: string[]; invitations: { id: string; when: number | null; note: string; at: number | null }[]; lastSatTogether: number | null
   hereNow: boolean; lastTendedAt: Json; styleAsk: { style: string; at: number | null } | null
+  keptAgreement: boolean
+  /** the scrolls they sent that you answered another time or no: kept on your shelf (Still B) */
+  keepsakes: { id: string; when: number | null; note: string; answer: 'later' | 'no'; at: number | null }[]
+  /** the other person started this room, so their seal wears the first hue (teal); else plum */
+  personStarted: boolean
 }
 
 export function roomSummary(me: string, id: string, g: Doc, items: { id: string; data: Doc }[],
@@ -362,7 +415,9 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
   const person = memberIds(g).find(m => m !== me) ?? null
   const who = g.startedBy === me || !g.startedBy ? setup.who ?? null : names[g.startedBy as string] ?? null
   const waiting: RoomSummary['waiting'] = [], revisit: string[] = []
+  let keptAgreement = false // the room kit's lantern (rk-earned-only): a yes or no, never a count
   for (const { id: iid, data: it } of items) {
+    if (it.kind === 'agreement' && it.status === 'kept') keptAgreement = true
     if (GONE.has(it.status as string)) continue
     const yesMe = isObj(it.yes) ? it.yes[me] : undefined
     if (it.kind === 'lantern') { if (it.by !== me && !isNum(yesMe)) waiting.push({ id: iid, what: 'lantern' }); continue }
@@ -371,11 +426,13 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
     else if (it.kind !== 'agreement' && it.status === 'offered' && it.by !== me) waiting.push({ id: iid, what: 'offer' })
     if (it.kind === 'agreement' && it.status === 'revisit') revisit.push(iid)
   }
-  const invitations: RoomSummary['invitations'] = []
+  const invitations: RoomSummary['invitations'] = [], keepsakes: RoomSummary['keepsakes'] = []
   let lastSatTogether: number | null = null
   for (const [iid, inv] of Object.entries(isObj(g.invitations) ? g.invitations : {})) {
     if (!isObj(inv)) continue
-    if (inv.by !== me && inv.answer == null) invitations.push({ id: iid, when: isNum(inv.when) ? inv.when : null, note: typeof inv.note === 'string' ? inv.note : '' })
+    const scroll = { id: iid, when: isNum(inv.when) ? inv.when : null, note: typeof inv.note === 'string' ? inv.note : '', at: isNum(inv.at) ? inv.at : null }
+    if (inv.by !== me && inv.answer == null) invitations.push(scroll)
+    if (inv.by !== me && (inv.answer === 'later' || inv.answer === 'no')) keepsakes.push({ ...scroll, answer: inv.answer })
     const t = isNum(inv.when) ? inv.when : isNum(inv.answeredAt) ? inv.answeredAt : null
     if (inv.answer === 'yes' && t !== null && t <= now && (lastSatTogether === null || t > lastSatTogether)) lastSatTogether = t
   }
@@ -387,6 +444,7 @@ export function roomSummary(me: string, id: string, g: Doc, items: { id: string;
     joinWaiting: g.startedBy === me && !!jr, waiting, revisit, invitations, lastSatTogether,
     hereNow: !!opts.hereNow, lastTendedAt: g.lastTendedAt ?? null,
     styleAsk: sa ? { style: sa.style as string, at: isNum(sa.at) ? sa.at : null } : null,
+    keptAgreement, keepsakes, personStarted: !!person && g.startedBy === person,
   }
 }
 

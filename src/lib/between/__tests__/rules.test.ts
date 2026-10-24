@@ -289,6 +289,24 @@ function testRoomSummary() {
   assert.equal(roomSummary(A, 'gS', spark({ joinRequest: { uid: C } }), [], { now }).joinWaiting, true)
 }
 
+function testFirstMinuteAndKeepsakes() { // room kit part 2: Still C's minute in the home doc, Still B's keepsakes on the shelf
+  assert.equal(homeWrite({ minute: { ember: 1, mirror: null, skip: { hope: 2 } } }).ok, true, 'times done and skipped')
+  assert.equal(homeWrite({ minute: { vine: 3 }, oriented: 3 }).ok, true, 'the last vine falls and the minute is done')
+  for (const bad of [{ ember: 'lit' }, { words: 1 }, { skip: { vine: 1 } }, { skip: { hope: 'later' } }, { skip: 2 }, 'done'])
+    assert.equal(homeWrite({ minute: bad } as Doc).ok, false, 'minute ' + JSON.stringify(bad))
+  const g = room({ invitations: {
+    s1: { by: B, kind: 'sit', when: 5, note: 'tea?', at: 4, answer: null },
+    s2: { by: B, kind: 'sit', when: 6, note: 'walk', at: 5, answer: 'later', answeredAt: 7 },
+    s3: { by: B, kind: 'sit', when: null, note: '', at: 6, answer: 'no', answeredAt: 8 },
+    s4: { by: B, kind: 'sit', when: 9, note: '', at: 7, answer: 'yes', answeredAt: 8 },
+    s5: { by: A, kind: 'sit', when: 9, note: '', at: 7, answer: 'no', answeredAt: 8 } } })
+  const s = roomSummary(A, 'gX', g, [])
+  assert.deepEqual(s.invitations, [{ id: 's1', when: 5, note: 'tea?', at: 4 }], 'a sealed scroll waits with its note')
+  assert.deepEqual(s.keepsakes.map(k => k.id + ':' + k.answer), ['s2:later', 's3:no'], 'another time and no stay as keepsakes; a yes and my own do not')
+  assert.equal(s.personStarted, false, 'A started the room')
+  assert.equal(roomSummary(B, 'gX', g, []).personStarted, true, 'for B, the person (A) started it')
+}
+
 testPaths()
 testSealedWordsStayOnTheServer()
 testMergeMatchesThePage()
@@ -309,4 +327,5 @@ testLooksOwnKey()
 testInvitations()
 testHomePrivateDoc()
 testRoomSummary()
+testFirstMinuteAndKeepsakes()
 console.log('between rules: all passed')
