@@ -31,6 +31,11 @@ jobs:
       - name: Check (generate + verify + lint + tsc)
         run: npm run check
 
+      # The inner vessel's model (content/ontology-game/cave/vessel.js) and the living ship's world read from it
+      # (content/calrunia/arrive/ship-world.js). Plain node, no browser.
+      - name: Ship model checks
+        run: npm run test:vessel
+
       - name: Move table (one cell per move on every surface)
         run: npm run test:move-table
 

@@ -82,3 +82,66 @@ describe('passport contract', () => {
     expect(entered.ok && entered.passport.places_reached).toEqual(['vessel', 'cave', 'between'])
   })
 })
+
+// Chapter 1's arrival aboard the ship (/calrunia/arrive): the passport rides in the URL fragment as #p=<base64url JSON>
+// (public/passport/arrive.js), is checked with validatePassport, and is laid into the stores guest.js folds back.
+const arrive = createRequire(import.meta.url)(path.join(ROOT, 'public/passport/arrive.js'))
+const vessel = createRequire(import.meta.url)(path.join(ROOT, 'content/ontology-game/cave/vessel.js'))
+const fixture = (name: string) => JSON.parse(fs.readFileSync(path.join(FIX, 'valid', name), 'utf8'))
+// A URL a phone opens without trouble: well under the 2,000 characters older browsers and link previews keep.
+const PHONE_SAFE_URL = 2000
+const ARRIVE_URL = 'https://bars-engine.vercel.app/calrunia/arrive'
+
+describe('arrival from Chapter 1', () => {
+  const ch1 = fixture('chapter1-sprout.json')
+
+  it('the Chapter 1 passport round-trips through the fragment and validates', () => {
+    const frag = arrive.encode(ch1)
+    expect(frag).toMatch(/^#p=[A-Za-z0-9_-]+$/)
+    const d = arrive.decode(frag)
+    expect(d.found).toBe(true)
+    expect(d.value).toEqual(ch1)
+    ok(d.value)
+    expect((ARRIVE_URL + frag).length).toBeLessThan(PHONE_SAFE_URL)
+  })
+
+  it('refuses a corrupted fragment', () => {
+    const frag = arrive.encode(ch1)
+    expect(arrive.decode(frag.slice(0, -7)).error).toBeTruthy() // cut short in a message
+    expect(arrive.decode('#p=' + frag.slice(3, 40) + '!*' + frag.slice(40)).error).toBeTruthy() // characters base64url never uses
+    const tampered = arrive.decode(arrive.encode({ ...ch1, vibeulons: 2.5 }))
+    expect(validatePassport(tampered.value).ok).toBe(false) // parses, but the contract refuses it
+    expect(arrive.decode('').found).toBe(false)
+    expect(arrive.decode('#wave=board').found).toBe(false)
+  })
+
+  it('lays the passport into the browser stores so the guest fold gives it back, and arriving twice changes nothing', () => {
+    const empty = { spirits: null, vessel: null, hand: null, guest: null }
+    const once = arrive.merge(empty, ch1, vessel.blank, AT)
+    const p = ok(guest.fold(once.spirits, once.vessel, once.guest, AT, once.hand))
+    expect(p.spirits.map(s => [s.id, s.name, s.element, s.sittings, s.loadout])).toEqual(ch1.spirits.map((s: Passport['spirits'][0]) => [s.id, s.name, s.element, s.sittings, s.loadout]))
+    expect(p.hand).toEqual(ch1.hand)
+    expect([p.vibeulons, p.qi]).toEqual([ch1.vibeulons, ch1.qi])
+    expect(p.places_reached).toEqual(['vessel', 'sprout', 'cave'])
+    expect(p.player.guest_id).toBe(ch1.player.guest_id)
+    expect(vessel.canLaunch(once.vessel)).toBe(true) // a new browser gets the sample ship, Helm and Sail fitted
+    expect(arrive.merge(once, ch1, vessel.blank, AT)).toEqual(once)
+  })
+
+  it('joins an arrival with what the browser already holds, without minting', () => {
+    const before = { spirits: SPIRITS, vessel: { ...VESSEL, vibeulons: 5 }, hand: { v: 1, hand: [{ id: 'old', kind: 'card', title: 'Kept', from: 'sprout' }] }, guest: 'guest-here' }
+    const s = arrive.merge(before, ch1, vessel.blank, AT)
+    expect(s.spirits.spirits.map((r: { id: string }) => r.id)).toEqual(['sp-fox', 'sp-heron', 'sp-still-heron'])
+    expect(s.vessel.vibeulons).toBe(5)
+    expect(s.vessel.embers.map((e: { id: string }) => e.id)).toEqual(['ember-1'])
+    expect(s.hand.hand.map((h: { id: string }) => h.id)).toEqual(['old', 'a6', 'bar-ch1-1'])
+    expect(s.guest).toBe('guest-here')
+  })
+
+  it('keeps the signed-in passport fragment within a phone-safe URL too', () => {
+    const full = fixture('signed-in-full.json')
+    const frag = arrive.encode(full)
+    expect(arrive.decode(frag).value).toEqual(full)
+    expect((ARRIVE_URL + frag).length).toBeLessThan(PHONE_SAFE_URL)
+  })
+})
