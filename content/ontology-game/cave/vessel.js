@@ -6,8 +6,9 @@
 // (Wendell, iv-no-mirror): the ship starts with some, it is mined at the places the ship reaches, and the spirits aboard power it.
 // A daemon is never a part (iv-daemon-not-part), but one that has become an ally makes a part for the ship (his steer on the
 // same row). The 321 bonus carries over as fuel (iv-no-bonus, overruled: "I think it should").
-// Pure functions over a plain record, plus a localStorage store (`oag.vessel.v1`) and the dock panel. Runs in the cave page
-// (window.__oagVessel) and under node for vessel-test.mjs.
+// Pure functions over a plain record, plus a localStorage store (`oag.vessel.v1`). The ship itself is a place, not a panel: the
+// living ship at /calrunia/arrive (content/calrunia/arrive/living-ship.js) shows this record as world state (board sd-depth-rule;
+// the grid dock was scrapped, sd-dock-scrapped). Runs in the cave page (window.__oagVessel) and under node for vessel-test.mjs.
 (function (root) {
   "use strict";
   var KEY = "oag.vessel.v1";
@@ -176,85 +177,9 @@
     spirits: function () { var sp = aboard(); if (!sp.length) return 0; var r = spiritsPower(read(), sp); write(r.vessel); return r.gained; },
   };
 
-  // ---- the dock ---------------------------------------------------------------------------------------------------------
-  // The ship's panel, opened from the WAVE room. Plain DOM; every control carries a data-vessel-* hook for the browser checks.
-  var CSS = ".oagv{position:absolute;inset:8px;z-index:9;background:#0e0e1e;color:#ece8f4;border:1px solid rgba(255,255,255,.25);" +
-    "border-radius:12px;padding:44px 14px 14px;overflow:auto;font:15px/1.4 system-ui,sans-serif}.oagv h2{margin:0 0 6px;font-size:19px}" +
-    ".oagv p{margin:6px 0}.oagv button{font:inherit;min-height:44px;padding:8px 12px;margin:4px 4px 0 0;border-radius:8px;" +
-    "border:1px solid rgba(255,255,255,.35);background:rgba(60,50,110,.6);color:inherit}.oagv button[disabled]{opacity:.45}" +
-    ".oagv-grid{display:grid;grid-template-columns:repeat(3,64px);gap:6px;margin:8px 0}.oagv-cell{width:64px;height:64px;" +
-    "border:1px dashed rgba(255,255,255,.3);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;padding:0}" +
-    ".oagv-cell.on{border-style:solid;background:rgba(120,100,200,.45)}.oagv-gauge{height:12px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden}" +
-    ".oagv-gauge i{display:block;height:100%;background:linear-gradient(90deg,#e0a040,#f6e080)}.oagv small{opacity:.75}";
-  var ELEMENT_HEX = { wood: "#5fae6e", fire: "#e0603a", earth: "#c8a050", metal: "#c8d0dc", water: "#4a8ad8" };
-
-  function openDock(container, o) {
-    o = o || {};
-    var doc = container.ownerDocument;
-    if (!doc.getElementById("oagv-css")) { var st = doc.createElement("style"); st.id = "oagv-css"; st.textContent = CSS; doc.head.appendChild(st); }
-    var box = doc.createElement("div"); box.className = "oagv"; box.setAttribute("data-vessel-dock", ""); container.appendChild(box);
-    var picked = null, forming = null;
-    function h(tag, attrs, text) { var n = doc.createElement(tag); for (var k in attrs || {}) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; return n; }
-    function button(text, attrs, fn, off) { var b = h("button", attrs, text); if (off) b.disabled = true; b.onclick = fn; return b; }
-    function close() { box.remove(); if (o.onClose) o.onClose(); }
-    function draw() {
-      var v = read(), sp = aboard(), cap = capOf(v, sp);
-      box.innerHTML = "";
-      box.appendChild(h("h2", {}, "The ship"));
-      box.appendChild(h("p", { "data-vessel-greeting": "" }, greeting(v)));
-      var g = h("div", { class: "oagv-gauge", "data-vessel-fuel": String(v.fuel), "data-vessel-cap": String(cap), role: "meter", "aria-label": "Fuel", "aria-valuemin": "0", "aria-valuemax": String(cap), "aria-valuenow": String(v.fuel) });
-      var fill = h("i"); fill.style.width = Math.round(100 * v.fuel / cap) + "%"; g.appendChild(fill);
-      box.appendChild(h("small", {}, "Fuel " + v.fuel + " of " + cap + (sp.length ? ". The spirits aboard let the tank hold more." : ". Mine more at the places you reach.")));
-      box.appendChild(g);
-      // Embers waiting for a form.
-      var loose = v.embers.filter(function (e) { return e.state === "loose"; });
-      loose.forEach(function (e) {
-        var row = h("div", { "data-vessel-ember": e.id });
-        row.appendChild(h("p", {}, e.source === "ally" ? "An ally made this ember for the ship." : "An ember from a finished " + (e.source === "321" ? "3-2-1" : e.source === "wave" ? "W.A.V.E." : "route") + "."));
-        if (forming === e.id) KINDS.forEach(function (k) { row.appendChild(button(KIND_WORDS[k], { "data-vessel-kind": k }, function () { var r = form(read(), e.id, k); if (r.ok) { write(r.vessel); picked = r.part.id; } forming = null; draw(); })); });
-        else row.appendChild(button("Give it a form", { "data-vessel-form": e.id }, function () { forming = e.id; draw(); }));
-        box.appendChild(row);
-      });
-      // The hull: tap a part, then a cell.
-      box.appendChild(h("p", {}, picked ? "Tap a free cell to fit it." : "The hull. Tap a part to move it."));
-      var grid = h("div", { class: "oagv-grid", "data-vessel-hull": "" });
-      for (var c = 0; c < v.hull.w * v.hull.h; c++) (function (cell) {
-        var p = v.parts.filter(function (x) { return x.state === "fitted" && x.cell === cell; })[0];
-        var b = button(p ? KIND_WORDS[p.kind] : "", { class: "oagv-cell" + (p ? " on" : ""), "data-vessel-cell": String(cell) }, function () {
-          if (p) { picked = picked === p.id ? null : p.id; draw(); return; }
-          if (!picked) return;
-          var r = fit(read(), picked, cell); if (r.ok) { write(r.vessel); picked = null; } else if (r.why === "fuel") alert("Waking a part takes one fuel. Mine some at a place you reach from the ship.");
-          draw();
-        });
-        if (p && p.element) b.style.boxShadow = "inset 0 0 0 3px " + (ELEMENT_HEX[p.element] || "#fff");
-        if (p) b.style.opacity = String(0.65 + 0.35 * p.look);
-        grid.appendChild(b);
-      })(c);
-      box.appendChild(grid);
-      var spare = v.parts.filter(function (p) { return p.state === "loose" || p.state === "resting"; });
-      spare.forEach(function (p) { box.appendChild(button(KIND_WORDS[p.kind] + (p.state === "resting" ? " (resting)" : ""), { "data-vessel-part": p.id, "aria-pressed": String(picked === p.id) }, function () { picked = p.id; draw(); })); });
-      if (picked) {
-        var pk = v.parts.filter(function (p) { return p.id === picked; })[0];
-        if (pk && pk.state === "fitted") box.appendChild(button("Let it rest", { "data-vessel-rest": "" }, function () { var r = rest(read(), picked); if (r.ok) write(r.vessel); picked = null; draw(); }));
-        if (pk && pk.lineage.source !== "sample") box.appendChild(button("Compost it", { "data-vessel-compost": "" }, function () { var r = compost(read(), picked); if (r.ok) write(r.vessel); picked = null; draw(); }));
-      }
-      // Places reached from the ship.
-      box.appendChild(h("h2", {}, "Places from the ship"));
-      PLACES.forEach(function (p) {
-        var s = v.places[p.id], line = h("p", { "data-vessel-place": p.id, "data-vessel-place-state": s });
-        line.textContent = p.name + (p.id === "home" ? ": you are here." : !p.built ? ": not charted yet." : s === "visited" ? ": visited." : ": charted.");
-        box.appendChild(line);
-      });
-      if (!canLaunch(v)) box.appendChild(h("p", { "data-vessel-grounded": "" }, "The ship needs a Helm and a Sail fitted to reach anywhere."));
-      box.appendChild(button("Back to the room", { "data-vessel-close": "" }, close));
-    }
-    draw();
-    return { close: close, redraw: draw };
-  }
-
   var api = { KEY: KEY, KINDS: KINDS, SOURCES: SOURCES, FUEL: FUEL, PLACES: PLACES, HULL: HULL, blank: blank, capOf: capOf, mintEmber: mintEmber,
     allyMakes: allyMakes, form: form, fit: fit, rest: rest, compost: compost, canLaunch: canLaunch, canReach: canReach, chart: chart,
-    visited: visited, spiritsPower: spiritsPower, greeting: greeting, store: store, openDock: openDock };
+    visited: visited, spiritsPower: spiritsPower, greeting: greeting, store: store };
   root.__oagVessel = api;
   if (typeof module === "object" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

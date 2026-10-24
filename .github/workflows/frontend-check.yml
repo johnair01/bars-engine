@@ -31,7 +31,8 @@ jobs:
       - name: Check (generate + verify + lint + tsc)
         run: npm run check
 
-      # The inner vessel's model in the Cave of Lessons (content/ontology-game/cave/vessel.js). Plain node, no browser.
+      # The inner vessel's model (content/ontology-game/cave/vessel.js) and the living ship's world read from it
+      # (content/calrunia/arrive/ship-world.js). Plain node, no browser.
       - name: Ship model checks
         run: npm run test:vessel
 

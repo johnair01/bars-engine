@@ -5750,15 +5750,16 @@
       // ---- breath, calm, look ---------------------------------------------------------------------------------------------
       // The WAVE room is the ship's cabin (Six-faces-council council/callsheets/inner-vessel.md). Each charge worked through the
       // whole W.A.V.E. gives the ship one ember (a 3-2-1 in it makes it a 3-2-1 ember, its bonus when the charge dropped by more
-      // than 2), and the spirits aboard power the ship. The ship's dock opens from the button by Calm.
+      // than 2), and the spirits aboard power the ship. The button by Calm walks out to the living ship.
       function shipEmber(c) {
         var VS = window.__oagVessel && window.__oagVessel.store; if (!VS) return;
         var drop = (c.heatStart != null ? c.heatStart : 6) - c.heat;
         VS.route({ source: c.t321 ? "321" : "wave", element: c.element || null, intensity: c.heat, bonus: !!c.t321 && drop > 2 });
         VS.spirits();
       }
+      // The button walks out to the living ship (/calrunia/arrive), which reads the same stores; the grid dock is gone (sd-dock-scrapped).
       if (window.__oagVessel) stage.appendChild(el("button", { class: "oagc-calm oagr-ship", "data-room-ship": "", text: "The ship", onclick: function () {
-        stopWalking(); window.__oagVessel.openDock(wrap, {});
+        stopWalking(); location.href = "/calrunia/arrive";
       } }));
       var calmBtn = el("button", { class: "oagc-calm", "data-room-calm": "", "aria-pressed": "false", text: "Calm", onclick: function () { R.calm = !R.calm; calmBtn.setAttribute("aria-pressed", String(R.calm)); if (R.phase === "opening" || R.phase === "leaving") draw(); } });
       // The room's switch and its key, in the Menu (menu(), above); Sit down and a door's card show when they can be used.

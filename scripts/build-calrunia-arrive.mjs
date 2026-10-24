@@ -1,8 +1,9 @@
-// Builds /calrunia/arrive, Chapter 1's arrival aboard the ship (content/calrunia/arrive/ship-scene.js), into
+// Builds /calrunia/arrive, the living ship seen from inside (content/calrunia/arrive/living-ship.js), into
 // public/calrunia/arrive/index.html (gitignored, like public/ontology-game). The page carries, inline: the passport check
 // (src/lib/passport/passport.ts, compiled here so the browser runs the same validatePassport as the contract test), the
-// fragment reader (public/passport/arrive.js), the guest fold (public/passport/guest.js), the cave's spirit store and forms,
-// the ship's dock (cave/vessel.js) and the Chapter 1 fixture for ?demo=1. The models are committed in public/calrunia/ship/.
+// fragment reader (public/passport/arrive.js), the guest fold (public/passport/guest.js), the ship's record (cave/vessel.js), the
+// world read from them (ship-world.js) and the Chapter 1 fixture for ?demo=1. three.js 0.160 comes from jsDelivr, as in the
+// Between; the player's figure is the Between's /between/m/player.glb.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -19,29 +20,17 @@ const check = `(function () { var exports = {}, module = { exports: exports };\n
 const demo = JSON.stringify(JSON.parse(read('fixtures/passport/valid/chapter1-sprout.json')));
 
 const css = `
-:root{--ground:#0a0908;--body:#1a1a18;--ink:#f2ede4;--ink-soft:#c9c2b6;--primary:#6b4fbb;--primary-edge:#a28cf0;--gold:#d4a017}
+:root{--ground:#120d1c;--ink:#f2ede4;--ink-soft:#d9cfe6;--plum:#2a1e3a}
 html,body{margin:0;height:100%;background:var(--ground);color:var(--ink);overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
 html{touch-action:manipulation}
-#arrive-root{position:fixed;inset:0;font:16px/1.4 ui-rounded,Nunito,system-ui,sans-serif}
-#arrive-scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
-.arr-top{position:absolute;top:0;left:0;right:0;padding:max(12px,env(safe-area-inset-top)) 16px 0;pointer-events:none}
-.arr-top h1{margin:0;font:700 15px/1.2 Futura,"Futura PT","Century Gothic",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
-.arr-sheet{position:absolute;left:0;right:0;bottom:0;padding:14px 16px max(16px,env(safe-area-inset-bottom));background:linear-gradient(to top,rgba(10,9,8,.97) 70%,rgba(10,9,8,.0));display:flex;flex-direction:column;gap:10px}
-.arr-note{margin:0;padding:8px 10px;border:1px solid rgba(242,237,228,.3);border-radius:8px;background:var(--body);color:var(--ink-soft);font-size:14px}
-.arr-say{margin:0;padding:10px 12px;border-radius:10px;background:var(--body);border:2px solid var(--el-frame);box-shadow:0 0 4px var(--el-glow)}
-.arr-who{display:block;font-weight:700;color:var(--ink);margin-bottom:2px}
-.arr-hand{display:flex;gap:8px;overflow-x:auto;padding:2px 0}
-.arr-card{flex:0 0 auto;width:92px;min-height:118px;box-sizing:border-box;border-radius:8px;background:var(--body);border:2px solid rgba(142,154,171,.7);padding:8px;display:flex;flex-direction:column;gap:6px}
-.arr-card.is-bar{border-color:rgba(212,160,23,.7)}
-.arr-card.is-blank{background:#f3efe6;border:2px dashed var(--el-glow);color:#1a1a18}
-.arr-kind{font:700 11px/1 Futura,"Century Gothic",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
-.arr-title{font-size:14px;line-height:1.25}
-.arr-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.arr-vib{margin:0;color:var(--ink-soft)}
-.arr-vib b{font:700 22px/1 Futura,"Century Gothic",system-ui,sans-serif;font-variant-numeric:tabular-nums;color:var(--gold)}
-.arr-go{min-height:48px;padding:10px 18px;border-radius:10px;border:2px solid var(--primary-edge);background:var(--primary);color:#fff;font:700 16px/1 ui-rounded,Nunito,system-ui,sans-serif}
-.arr-go:focus-visible{outline:3px solid #fff;outline-offset:2px}
-.arr-go:active{transform:translateY(1px)}
+#arrive-root{position:fixed;inset:0;overflow:hidden;font:16px/1.4 ui-rounded,Nunito,system-ui,sans-serif}
+#arrive-scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;image-rendering:pixelated;cursor:pointer}
+.arr-bubble{position:absolute;left:0;top:0;max-width:min(78vw,340px);box-sizing:border-box;padding:10px 14px;border-radius:16px;background:rgba(246,240,230,.94);color:var(--plum);box-shadow:0 4px 18px rgba(20,10,40,.35);font-size:15px;line-height:1.4;will-change:transform}
+.arr-bubble b{display:block;font-weight:700;margin-bottom:2px}
+.arr-bubble a{display:inline-block;margin-top:8px;padding:10px 14px;min-height:44px;box-sizing:border-box;border-radius:12px;background:#6b4fbb;color:#fff;font-weight:700;text-decoration:none}
+.arr-bubble a:focus-visible{outline:3px solid var(--plum);outline-offset:2px}
+.arr-veil{position:absolute;inset:0;background:#000;pointer-events:none;transition:opacity 1.4s ease}
+.arr-veil.gone{opacity:0}
 `;
 
 const html = `<!doctype html>
@@ -50,11 +39,17 @@ const html = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Aboard your ship · Calrunia</title>
-<meta name="description" content="The end of Chapter 1: you arrive aboard your ship with your spirit, your cards and the blank card. Saved on your device only.">
+<meta name="description" content="Inside your living ship: a world bigger than the ship, grown from your inner work. Saved on your device only.">
 <style>${css}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
 </head>
 <body>
-<div id="arrive-root"><canvas id="arrive-scene" aria-label="Your ship at the dock. Drag to turn the view."></canvas></div>
+<div id="arrive-root"><canvas id="arrive-scene" aria-label="Inside your ship. Through a round door is a garden island where your spirits live. Tap where to walk; tap a spirit, the den or the glowing bud to go to it. Drag to turn the view."></canvas></div>
 <script>
 ${inline(check)}
 window.__calruniaDemoPassport = ${inline(demo)};
@@ -63,17 +58,16 @@ window.__calruniaDemoPassport = ${inline(demo)};
 ${inline(read('public/passport/guest.js'))}
 </script>
 <script>
-${inline(read('content/ontology-game/cave/spirit-forms.js'))}
-</script>
-<script>
-${inline(read('content/ontology-game/cave/spirit-store.js'))}
 ${inline(read('content/ontology-game/cave/vessel.js'))}
 </script>
 <script>
 ${inline(read('public/passport/arrive.js'))}
 </script>
 <script>
-${inline(read('content/calrunia/arrive/ship-scene.js'))}
+${inline(read('content/calrunia/arrive/ship-world.js'))}
+</script>
+<script type="module">
+${inline(read('content/calrunia/arrive/living-ship.js'))}
 </script>
 </body>
 </html>
