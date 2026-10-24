@@ -3175,7 +3175,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   const bq = new URLSearchParams(location.search), bWant = bq.get("g");
   let bThrough = null; try { bThrough = sessionStorage.getItem(THROUGH); } catch {}
   // everyone wakes in their homeroom, the nook; only a walk through the doorway (or a preview's ?skipHome=1) opens a room
-  const guessShell = bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
+  const guessShell = (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
   const roomP = Promise.resolve().then(() => buildRoom(guessShell)).catch(e => {
     $("#loadMsg").innerHTML = `The garden did not load. Check your connection and open the page again.<br><small style="opacity:.6">${esc((e && (e.message || e.type)) || e)}</small><br><button type="button" onclick="location.reload()" style="margin-top:12px">Try again</button>`;
     throw e;
@@ -3194,7 +3194,10 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
     // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
-    if (want && homeId && want !== homeId && through !== want && !skipHome) {
+    // previews only: ?room=first opens your first shared room straight away (the room id is not in a link he can type)
+    const firstRoom = PREVIEW_HOST && q.get("room") === "first" ? ((list && list.gardens) || []).find(x => x.phase !== "closed") : null;
+    if (firstRoom) { gardenId = firstRoom.id; invite = null; try { const u = new URL(location.href); u.searchParams.delete("room"); u.searchParams.set("g", gardenId); u.searchParams.set("skipHome", "1"); history.replaceState(null, "", u); } catch {} }
+    else if (want && homeId && want !== homeId && through !== want && !skipHome) {
       const r = ((list && list.gardens) || []).find(x => x.id === want);
       // his ruling on br-orient-each-invite (2026-10-24): once you have done the first minute, an invitation's doorway opens at once
       portalTo = { id: want, invite: r ? null : wantInvite, open: inviteDoorway(minuteDoc((list && list.home) || {}), !!r) === "open", name: r ? roomName(r) : null, style: r ? r.style : null };
