@@ -294,23 +294,43 @@ function styleWrite(me: string, garden: Doc, data: Doc): Verdict {
   return yes
 }
 
-const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin'])
+const HOME_KEYS = new Set(['look', 'goals', 'checkins', 'lastCheckin', 'embers'])
+const HOME_EMBER_KEYS = new Set(['feel', 'at', 'given'])
+const GIVEN_KEYS = new Set(['spirit', 'stone', 'room', 'at'])
+const isId = (v: unknown) => typeof v === 'string' && ID.test(v)
 
-/** May the homeroom's private doc stand? A look, goals (each maybe tied to a room), check-ins from the five feelings. */
+/**
+ * A check-in's ember (Between rooms part 4): a check-in is a W.A.V.E. walked through, and it leaves an ember of the
+ * feeling that was here, kept in the homeroom until it is given. `given` is null while it waits; given, it names the spirit
+ * it fed (or the stone it was left on in a room), the room it happened in (null for the homeroom), and when. No words.
+ */
+function homeEmberOk(e: Doc): boolean {
+  if (!Object.keys(e).every(k => HOME_EMBER_KEYS.has(k))) return false
+  if (!(ELEMENTS as readonly string[]).includes(e.feel as string) || !isNum(e.at)) return false
+  const g = e.given
+  if (g == null) return true
+  if (!isObj(g) || !Object.keys(g).every(k => GIVEN_KEYS.has(k))) return false
+  const to = [g.spirit, g.stone].filter(v => v != null)
+  return to.length === 1 && isId(to[0]) && (g.room == null || isId(g.room)) && isNum(g.at)
+}
+
+/** May the homeroom's private doc stand? A look, goals (each maybe tied to a room), check-ins from the five feelings, embers. */
 export function homeWrite(doc: Doc): Verdict {
   for (const k of Object.keys(doc)) if (!HOME_KEYS.has(k)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
   if (doc.look != null && !(typeof doc.look === 'string' && LOOK.test(doc.look))) return no(400, 'A look is the creator\'s choices.')
   if (doc.lastCheckin != null && !isNum(doc.lastCheckin)) return no(400, 'A check-in has a time.')
   for (const [field, ok] of [
     ['goals', (g: Doc) => typeof g.text === 'string' && g.text.trim().length > 0 && isNote(g.text) && (g.room == null || (typeof g.room === 'string' && ID.test(g.room))) && (g.at == null || isNum(g.at))],
-    ['checkins', (c: Doc) => (c.feel == null || (ELEMENTS as readonly string[]).includes(c.feel as string)) && (c.line == null || isNote(c.line)) && isNum(c.at)],
+    ['checkins', (c: Doc) => (c.feel == null || (ELEMENTS as readonly string[]).includes(c.feel as string)) && (c.line == null || isNote(c.line)) && isNum(c.at)
+      && (c.wave == null || (isNum(c.wave) && Number.isInteger(c.wave) && c.wave >= 0 && c.wave <= 7))],
+    ['embers', homeEmberOk],
   ] as const) {
     const all = doc[field]
     if (all == null) continue
     if (!isObj(all)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
     for (const [id, v] of Object.entries(all)) {
       if (!ID.test(id)) return no(400, 'Your homeroom keeps your look, hopes and check-ins.')
-      if (v !== null && !(isObj(v) && ok(v))) return no(400, field === 'goals' ? 'A hope is a short line, maybe tied to one room.' : 'A check-in is a feeling and a short line.')
+      if (v !== null && !(isObj(v) && ok(v))) return no(400, field === 'goals' ? 'A hope is a short line, maybe tied to one room.' : field === 'embers' ? 'An ember is a feeling and where it went, nothing more.' : 'A check-in is a feeling and a short line.')
     }
   }
   return yes

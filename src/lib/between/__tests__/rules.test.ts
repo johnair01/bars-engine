@@ -246,6 +246,20 @@ function testHomePrivateDoc() {
   assert.equal(homeWrite({ goals: { g1: { text: '' } } }).ok, false)
   assert.equal(homeWrite({ checkins: { c1: { feel: 'joy', at: 1 } } }).ok, false, 'one of the five feelings')
   assert.equal(mayWrite(member(A), h, path, 'update', { goals: { g1: null } }, doc).ok, true)
+  // part 4: a check-in walks the seven steps of the W.A.V.E. and leaves an ember
+  assert.equal(homeWrite({ checkins: { c2: { feel: 'fire', at: 3, wave: 7 } } }).ok, true)
+  for (const wave of [8, -1, 2.5, '7']) assert.equal(homeWrite({ checkins: { c2: { feel: 'fire', at: 3, wave } } } as Doc).ok, false, 'wave ' + wave)
+  const e = { feel: 'water', at: 4, given: null }
+  assert.equal(homeWrite({ embers: { e1: e } }).ok, true)
+  assert.equal(mayWrite(member(A), h, path, 'update', { embers: { e1: e } }, doc).ok, true)
+  assert.equal(homeWrite({ embers: { e1: { ...e, given: { spirit: 'slmn-ab12', room: 'gardenX', at: 5 } } } }).ok, true, 'given to a spirit in a room')
+  assert.equal(homeWrite({ embers: { e1: { ...e, given: { spirit: 'slmn-ab12', room: null, at: 5 } } } }).ok, true, 'or in the homeroom')
+  assert.equal(homeWrite({ embers: { e1: { ...e, given: { stone: 'ilmn-cd34', room: 'gardenX', at: 5 } } } }).ok, true, 'or left on a stone')
+  assert.equal(homeWrite({ embers: { e1: null } }).ok, true)
+  for (const bad of [{ ...e, feel: 'joy' }, { ...e, at: 'now' }, { ...e, text: 'what it was about' }, { ...e, glow: 3 },
+    { ...e, given: { room: 'gardenX', at: 5 } }, { ...e, given: { spirit: 'a b', room: null, at: 5 } }, { ...e, given: { spirit: 's1', stone: 'i1', room: null, at: 5 } },
+    { ...e, given: { spirit: 's1', room: '../x', at: 5 } }, { ...e, given: { spirit: 's1', room: null } }, { ...e, given: 's1' }])
+    assert.equal(homeWrite({ embers: { e1: bad } } as Doc).ok, false, JSON.stringify(bad))
 }
 
 function testRoomSummary() {

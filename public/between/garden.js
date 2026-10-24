@@ -14,6 +14,8 @@ import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords,
 import { STYLES as ROOM_STYLES, styleOf, applyStyle } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
+/* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
+import { WAVE_STEPS, careOf, careNow, feed, CARE_WORDS } from "../calrunia/spirit-care.js";
 installPaint();
 
 /* ===================================================================================================
@@ -236,6 +238,8 @@ const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
 let hollow = null;
 const betweenLight = new THREE.PointLight(0x9ad8cf, 5, 6, 1.5); betweenLight.position.set(BETWEEN_AT.x, DAIS_Y + 1.1, BETWEEN_AT.z + 0.3); scene.add(betweenLight);
 let lightScale = 1;
+/* The check-in's glow: a soft light at your shoulder in the feeling's element colour, breathing while you walk the steps. */
+const waveLight = new THREE.PointLight(0xffffff, 0, 4.5, 1.4); scene.add(waveLight);
 
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 66 : 50; camera.updateProjectionMatrix(); }
 addEventListener("resize", resize); resize();
@@ -272,6 +276,11 @@ function paintLook(mesh, colors) {
   }
   col.needsUpdate = true; mesh.geometry = geo;
 }
+/* Build and shape (part 4): no new meshes. Build scales the figure's width; shape moves the shoulder and hip bones out
+   from the spine (shouldered: shoulders out; curved: hips out, shoulders in). [shoulders, hips] */
+const BUILD_W = { slender: 0.9, average: 1, broad: 1.1, round: 1.16 };
+const SHAPE_K = { b: [1.1, 1], c: [0.95, 1.08] };
+const bodyOpts = lk => { const l = lk ? parseLook(lk) : null; return { colors: lk ? colorsOf(lk) : null, build: l && l.build, shape: l && l.shape }; };
 /* Bodies are cloned from one template each; their colour is set per owner on a copy of the robe. */
 async function makeBody(model, height, tint, tintAmt, opts) {
   const t = await loadModel(model);
@@ -280,6 +289,9 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const tall = model === "fox" || model === "tortoise" ? Math.max(size.x, size.z) : size.y;
   const k = height / Math.max(tall, 0.01);
   obj.scale.setScalar(k);
+  // a look's build widens or narrows the figure, the same height (part 4); its shape moves the shoulders and hips
+  const bw = opts && BUILD_W[opts.build] || 1;
+  if (bw !== 1) obj.scale.set(k * bw, k, k * (1 + (bw - 1) * 0.7));
   obj.position.y = -t.box.min.y * k;
   const t0box = t.box.min.y;
   const holder = new THREE.Group(); holder.add(obj);
@@ -309,6 +321,8 @@ async function makeBody(model, height, tint, tintAmt, opts) {
      shin, shoulder Z raises the arm to the side. */
   const bones = {}; for (const n of ["hips", "hipL", "hipR", "kneeL", "kneeR", "shoulderL", "shoulderR", "elbowL", "elbowR", "spine", "neck"]) { const b = obj.getObjectByName(n); if (b) bones[n] = { b, q: b.quaternion.clone() }; }
   const hipsY = bones.hips ? bones.hips.b.position.y : 0;
+  const sk = opts && SHAPE_K[opts.shape];
+  const restPos = {}; if (sk) for (const n of ["shoulderL", "shoulderR", "hipL", "hipR"]) if (bones[n]) restPos[n] = bones[n].b.position.clone();
   const qe = new THREE.Quaternion(), eu = new THREE.Euler();
   const bend = (n, x, y, z, w) => { const B = bones[n]; if (!B) return; qe.setFromEuler(eu.set(x * w, y * w, z * w, "XYZ")); B.b.quaternion.copy(B.q).multiply(qe); };
   let sit = 0, waveT = -9, rest = 0;
@@ -336,6 +350,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
         const w = Math.sin(Math.min(1, wv / 1.6) * Math.PI) * 1.4; const wt = Math.min(1, w);
         bend("shoulderR", 0, 0, 2.5, wt); bend("elbowR", 0, 0, Math.sin(wv * 14) * 0.6, wt);
       }
+      if (sk) for (const [n, p] of Object.entries(restPos)) bones[n].b.position.copy(p).multiplyScalar(n.startsWith("shoulder") ? sk[0] : sk[1]);
       if (!bones.hipL) { // a spirit settling down: low, still, breathing
         obj.scale.set(k * (1 + rest * 0.12), k * (1 - rest * 0.38), k * (1 + rest * 0.12));
         obj.position.y = -t0box * k * (1 - rest * 0.38);
@@ -395,6 +410,24 @@ const mirror = new THREE.Group(); mirror.position.copy(BETWEEN_AT).setY(DAIS_Y);
   const back = glass.clone(); back.material = wood; back.rotation.y = Math.PI; back.position.z = -0.005; mirror.add(back);
   for (const sx of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.42, 6), wood); leg.position.set(sx * 0.16, 0.19, -0.06); leg.rotation.z = sx * 0.12; mirror.add(leg); }
 }
+
+/* Mirror mode (part 4, his ask of 2026-10-23): the Look is the mirror itself. You step up in front of it and the screen
+   becomes the glass: the camera stands where the mirror is, looking back at you, the picture flipped as a mirror flips it.
+   Each choice re-dresses you at once; drag to turn and see your back. The choices sit in a short strip below the glass. */
+const MIRROR_STAND = new THREE.Vector3(BETWEEN_AT.x, 0, 0.55);   // between the cushions, facing the mirror
+const MIRROR_CAM_Z = MIRROR_STAND.z - 2.65;                       // far enough back that you fit the glass
+const MIRROR_PARTS = [["shape", "Shape"], ["build", "Build"], ["skin", "Skin"], ["style", "Hair"], ["colour", "Hair colour"], ["outfit", "Clothes"], ["dye", "Dye"]];
+let mirrorOn = false, mirrorK = 0, mirrorTurn = 0, mirrorPart = "shape";
+const mirrorFrame = document.createElement("div"); mirrorFrame.id = "mirrorFrame"; mirrorFrame.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorFrame);
+function setMirror(on) {
+  if (on === mirrorOn) return;
+  mirrorOn = on; mirrorTurn = 0;
+  document.body.classList.toggle("mirroring", on);
+  if (on) { standUp(); meState.target = null; meState.keys.clear(); selected = null; placing = null; }
+  else { camYaw = 0; camPitch = 0.5; } // stepping back from the glass: behind you, the mirror ahead
+  mirrorCut = true; // the picture flips at once, so the camera cuts too rather than flying through you
+}
+let mirrorCut = false;
 
 /* The doorway to your rooms stands on the dais beside the mirror: shut it is dark wood; open it glows with the room past it. */
 const PORTAL_AT = new THREE.Vector3(1.3, 0, -1.15);
@@ -694,7 +727,7 @@ const walkers = new Map(); // id -> { id, type, doc, body, holder, ready }
 async function syncWalkers() {
   const V = view(); const g = V.g;
   const want = new Map();
-  for (const [id, s] of V.spirits) want.set("s:" + id, { type: "spirit", doc: s });
+  for (const [id, s] of V.spirits) if (!(isHome(g) && s.away && s.away.room)) want.set("s:" + id, { type: "spirit", doc: s }); // one visiting a room is not home
   for (const [id, d] of V.daemons) want.set("d:" + id, { type: "daemon", doc: d });
   for (const [key, w] of walkers) if (!want.has(key)) { if (w.holder) scene.remove(w.holder); walkers.delete(key); const l = labels.get("w:" + key); if (l) { l.remove(); labels.delete("w:" + key); } if (selected === "w:" + key) selected = null; }
   for (const [key, x] of want) {
@@ -752,7 +785,7 @@ async function ensureMyBody() {
   if ((meState.body && myBodyHue === hue && myBodyLook === lk) || myBodyBusy) return;
   myBodyBusy = true;
   try {
-    const b = await makeBody("player", 1.7, null, 0, { ring: hue, colors: lk ? colorsOf(lk) : null });
+    const b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
     if (meState.body) { b.holder.position.copy(meState.body.holder.position); b.holder.rotation.copy(meState.body.holder.rotation); scene.remove(meState.body.holder); }
     meState.body = b; myBodyHue = hue; myBodyLook = lk; scene.add(b.holder);
   } finally { myBodyBusy = false; }
@@ -768,7 +801,7 @@ async function ensurePeerBody(p) {
   const hue = hueOf(p.uid, view().g), lk = lookOf(p.uid);
   if (p.body && p.hue === hue && p.look === lk) return;
   if (p.loading) return; p.loading = true;
-  const b = await makeBody("player", 1.7, null, 0, { ring: hue, colors: lk ? colorsOf(lk) : null });
+  const b = await makeBody("player", 1.7, null, 0, { ring: hue, ...bodyOpts(lk) });
   p.loading = false;
   if (!peers.has(p.peer)) return;
   if (p.body) scene.remove(p.body.holder);
@@ -833,8 +866,9 @@ renderer.domElement.addEventListener("pointerdown", e => { pointers.set(e.pointe
 renderer.domElement.addEventListener("pointermove", e => {
   const p = pointers.get(e.pointerId); if (!p) return;
   const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-  if (pointers.size === 2 && pinch0) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
+  if (pointers.size === 2 && pinch0 && !mirrorOn) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = Math.max(2, Math.min(7.5, pinch0.dist * pinch0.d / Math.max(d, 1))); dragMoved += 99; return; }
   dragMoved += Math.abs(dx) + Math.abs(dy);
+  if (mirrorOn) { if (pointers.size === 1) mirrorTurn -= dx * 0.012; return; } // the screen is flipped: drag right turns your front to the right
   if (carry) {
     const h = floorAt(e.clientX, e.clientY);
     if (h) { carry.ok = walkable(h.x, h.z, 0.3); carry.t.group.position.set(h.x, groundY(h.x, h.z), h.z); carry.at = h; }
@@ -855,7 +889,7 @@ function endPointer(e) {
 }
 renderer.domElement.addEventListener("pointerup", endPointer);
 renderer.domElement.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); pinch0 = null; if (carry) { carry.t.group.position.copy(carry.from); carry = null; } });
-renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
+renderer.domElement.addEventListener("wheel", e => { e.preventDefault(); if (mirrorOn) { mirrorTurn -= Math.sign(e.deltaY) * 0.2; return; } camDist = Math.max(2, Math.min(7.5, camDist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
 addEventListener("keydown", e => { if (sheetName || /input|textarea|select/i.test((e.target.tagName || ""))) return; const k = e.key.toLowerCase(); if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) { meState.keys.add(k); meState.target = null; standUp(); e.preventDefault(); } });
 addEventListener("keyup", e => meState.keys.delete(e.key.toLowerCase()));
 addEventListener("blur", () => meState.keys.clear());
@@ -870,6 +904,7 @@ function placeAt() {
   moveItem(placing.id, { x: +hit.x.toFixed(2), z: +hit.z.toFixed(2) });
 }
 function tapAt(cx, cy) {
+  if (mirrorOn) return; // in the mirror a tap only chooses; the floor is behind you
   const ndc = new THREE.Vector2(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   // things first: the nearest one whose sphere the ray passes through
@@ -919,7 +954,18 @@ function frame() {
   const t = performance.now() / 1000;
   const tShared = now() / 1000;
   // you
-  if (meState.body) {
+  if (meState.body && mirrorOn) {
+    // in front of the mirror: step to the spot, then face the glass, turned as far as you have dragged
+    const to = MIRROR_STAND.clone().sub(meState.pos).setY(0), d = to.length(), walking = d > 0.04;
+    if (walking) { const step = Math.min(d, 2.3 * dt); meState.pos.addScaledVector(to.normalize(), step); }
+    const want = walking && d > 0.3 ? Math.atan2(to.x, to.z) : Math.PI + mirrorTurn;
+    let dy = want - meState.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); meState.yaw += dy * Math.min(1, dt * 8);
+    meState.body.setWalking(walking);
+    meState.body.holder.position.copy(meState.pos); meState.body.holder.position.y = groundY(meState.pos.x, meState.pos.z);
+    meState.body.holder.rotation.y = meState.yaw + FACE;
+    meState.body.mixer.update(dt); meState.body.pose(t, dt, false, false);
+    meState.wasWalking = walking;
+  } else if (meState.body) {
     let move = new THREE.Vector3();
     if (meState.keys.size) {
       const f = new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)), r = new THREE.Vector3(Math.cos(camYaw), 0, -Math.sin(camYaw));
@@ -1011,6 +1057,11 @@ function frame() {
   }
   // the Between and the garden
   stepBetween(t, dt); portalTick(t);
+  { const on = sheetName === "checkin" && walk && walk.feel && walk.step >= 0;
+    if (on) waveLight.color.setHex(elHex(walk.feel));
+    const want = on ? (walk.step === 7 ? 4 : 2.4) * (0.75 + 0.25 * Math.sin(t * 1.25)) : 0;
+    waveLight.intensity += (want - waveLight.intensity) * Math.min(1, dt * 2.5);
+    waveLight.position.set(meState.pos.x, groundY(meState.pos.x, meState.pos.z) + 1.3, meState.pos.z + 0.5); }
   for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
     const f = fly[i], u = Math.min(1, (t - f.t0) / 1.6);
@@ -1037,7 +1088,26 @@ function frame() {
   const focus = meFocus.lerp(new THREE.Vector3(0, DAIS_Y + 0.6, -0.4), togetherK);
   const cp = new THREE.Vector3(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist).add(focus);
   clampCamera(cp, focus);
-  camera.position.lerp(cp, Math.min(1, dt * 4)); camera.lookAt(focus); lastFocus.copy(focus);
+  // the mirror: the camera eases to where the glass stands, level with your chest, and the view drops so you stand in the
+  // upper part of the screen, clear of the strip of choices below
+  mirrorK += ((mirrorOn ? 1 : 0) - mirrorK) * Math.min(1, dt * 3);
+  if (mirrorCut) mirrorK = mirrorOn ? 1 : 0;
+  if (mirrorK < 0.002 && !mirrorOn) mirrorK = 0;
+  const me3 = mirrorK * mirrorK * (3 - 2 * mirrorK);
+  if (me3 > 0) {
+    const fy = groundY(meState.pos.x, meState.pos.z) + 0.95;
+    cp.lerp(new THREE.Vector3(meState.pos.x, fy, MIRROR_CAM_Z), me3);
+    focus.lerp(new THREE.Vector3(meState.pos.x, fy, meState.pos.z), me3);
+  }
+  const fov0 = innerWidth < innerHeight ? 66 : 50, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
+  mirror.visible = isHome(garden) && me3 < 0.35; // the glass is where the camera looks from
+  if (me3 > 0 || (camera.view && camera.view.enabled)) {
+    camera.fov = fov;
+    if (me3 > 0) camera.setViewOffset(innerWidth, innerHeight, 0, innerHeight * 0.19 * me3, innerWidth, innerHeight); else camera.clearViewOffset();
+    camera.updateProjectionMatrix();
+  }
+  if (mirrorCut) { camera.position.copy(cp); mirrorCut = false; } else camera.position.lerp(cp, Math.min(1, dt * 4));
+  camera.lookAt(focus); lastFocus.copy(focus);
   if (debugCam) { camera.position.set(debugCam[0], debugCam[1], debugCam[2]); camera.lookAt(debugCam[3], debugCam[4], debugCam[5]); }
   renderer.render(scene, camera);
   drawLabels(t);
@@ -1148,6 +1218,7 @@ function refreshHud() {
     tools.push(`<button type="button" data-open="rooms">Rooms</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="look">Look</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="checkin">Check in</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="spirits">Spirits${embersWaiting().length ? `<span class="tembers" title="Embers waiting">${emberDots(3)}</span>` : ""}</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="goals">Goals</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="invitations">Invitations${invs ? '<span class="dot" title="Waiting for your answer"></span>' : ""}</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="style">Style</button>`);
@@ -1155,6 +1226,7 @@ function refreshHud() {
   else if (g.phase !== "closed" && isMember(g) && !readOnly) {
     tools.push(`<button type="button" data-open="offer">${g.phase === "spark" ? "Tend the spark" : "Offer something"}</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="agreement">Plant an agreement</button>`);
+    tools.push(`<button class="glassbtn" type="button" data-open="checkin">Check in</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="spirit">Bring a spirit</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="daemon">Bring a daemon</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="hearth">Hearth</button>`);
@@ -1273,11 +1345,13 @@ function nearHtml(key, V, g) {
     const w = walkers.get(key.slice(2)); if (!w) return "";
     const d = w.doc, mine = d.owner === me;
     const title = w.type === "spirit" ? `${esc(d.name)}, ${esc(d.element.toLowerCase())} spirit` : `The ${esc(DAEMONS[d.which][0])}`;
-    const sub = w.type === "spirit" ? (d.note ? esc(d.note) : "Visiting. It stays its owner's.") : `${esc(DAEMONS[d.which][1])}. ${mine ? "Yours: it came with you." : "It works for " + esc(nameOf(d.owner, g)) + "."}`;
+    const cw = w.type === "spirit" && d.care ? CARE_WORDS[careNow(d.care).word] + ". " : "";
+    const sub = w.type === "spirit" ? cw + (d.note ? esc(d.note) : isHome(g) ? "It lives here with you." : d.homeSpirit ? "Visiting from " + (mine ? "your" : "their") + " homeroom. It stays its owner's." : "Visiting. It stays its owner's.") : `${esc(DAEMONS[d.which][1])}. ${mine ? "Yours: it came with you." : "It works for " + esc(nameOf(d.owner, g)) + "."}`;
     const id = key.slice(4);
     let acts = "";
+    const feedBtn = w.type === "spirit" && mine && embersWaiting().length ? `<button type="button" data-act="emberGive" data-id="${isHome(g) ? "home" : "room"}:${esc(id)}">Give it an ember</button>` : "";
     if (canTend) acts = mine
-      ? `<button class="ghost" type="button" data-act="callOver" data-id="${key.slice(2)}">Call it to you</button><button class="quiet" type="button" data-act="sendHome" data-id="${key.slice(2)}">Send it home</button>`
+      ? `${feedBtn}<button class="ghost" type="button" data-act="callOver" data-id="${key.slice(2)}">Call it to you</button>${isHome(g) ? "" : `<button class="quiet" type="button" data-act="sendHome" data-id="${key.slice(2)}">Send it home</button>`}`
       : `<button class="ghost" type="button" data-act="greet" data-id="${key.slice(2)}">Greet it</button>`;
     return `<div class="what"><b>${title}</b> · ${esc(possessive(d.owner, g))}<span class="t">${sub}</span></div>${acts ? `<div class="row">${acts}</div>` : ""}`;
   }
@@ -1425,16 +1499,22 @@ async function itemAct(id, act, payload) {
    Sheets: the writing that the room can't hold
    =================================================================================================== */
 function openSheet(name, arg) {
+  const g = view().g;
+  // the mirror stands in the homeroom: from a room, the Look takes you home to it
+  if (name === "look" && g && !isHome(g)) { markSeen(); location.href = ROOM_URL(null) + "?sheet=look"; return; }
+  if (name === "spirits" && !isHome(g)) name = "spirit";
   if (name === "hearth" && sheetName !== "hearth") hd = {};
-  if (name === "look" && sheetName !== "look") lookDraft = null;
-  if (name === "checkin" && sheetName !== "checkin") checkFeel = null;
+  if (name === "look" && sheetName !== "look") { lookDraft = null; mirrorPart = "shape"; }
+  if (name === "checkin" && sheetName !== "checkin") walk = { feel: null, line: "", step: -1 };
   if (name === "invitations" || name === "rooms") refreshList();
-  sheetName = name; sheetArg = arg; renderSheet();
+  if (name === "spirit" || name === "checkin") fetchHome();
+  if (sheetName === "look" && name !== "look") { lookDraft = null; ensureMyBody().catch(() => {}); }
+  sheetName = name; sheetArg = arg; setMirror(name === "look"); renderSheet();
 }
 function closeSheet() {
   const wasLook = sheetName === "look";
-  sheetName = null; sheetArg = null; $("#sheet").hidden = true; $("#scrim").hidden = true;
-  if (wasLook) { lookDraft = null; ensureMyBody().catch(() => {}); } // an unkept draft goes back to the kept look
+  sheetName = null; sheetArg = null; walk = null; $("#sheet").hidden = true; $("#scrim").hidden = true; document.body.classList.remove("quiethud");
+  if (wasLook) { lookDraft = null; setMirror(false); ensureMyBody().catch(() => {}); } // an unsaved look goes back to the saved one
   refreshHud();
 }
 // Setup is closeable now: there is always the homeroom to stand in (br-home-is-a-room).
@@ -1466,13 +1546,14 @@ function renderSheet() {
     case "rewrite": { const it = V.items.get(sheetArg); if (!it) { closeSheet(); return; }
       h = `<form class="stack" id="rwForm"><h2>Rewrite the agreement</h2><label for="rwText">The words<textarea id="rwText" maxlength="2000">${esc(it.text)}</textarea></label>
       <div class="row"><button type="submit">Save the words</button>${close}</div></form>`; break; }
-    case "spirit": h = `<form class="stack" id="spiritForm"><h2>Bring one of your spirits to visit</h2>
-      <p class="muted small">A visiting spirit stays yours. The other person can meet it and greet it; only you can call it or send it home.</p>
+    case "spirit": h = (isHome(g) ? "" : bringSheet()) + `<form class="stack" id="spiritForm"><h${isHome(g) ? 2 : 3}>${isHome(g) ? "A new spirit for your homeroom" : "A new spirit for this room only"}</h${isHome(g) ? 2 : 3}>
+      <p class="muted small">${isHome(g) ? "It lives here with you. When you go into a room, you can bring it along." : "It lives in this room and stays yours. The other person can meet it and greet it; only you can call it or send it home."}</p>
       <label for="spName">Its name<input id="spName" maxlength="60" required placeholder="What you call it"></label>
       <label for="spEl">Element<select id="spEl">${Object.keys(ELEMENTS).map(e => `<option>${e}</option>`).join("")}</select></label>
       <label for="spForm">Its form<select id="spForm">${Object.entries(FORMS).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label>
       <label for="spNote">What it brings to the garden<textarea id="spNote" maxlength="600"></textarea></label>
-      <div class="row"><button type="submit">Bring it in</button>${close}</div></form>`; break;
+      <div class="row"><button type="submit">${isHome(g) ? "Welcome it home" : "Bring it in"}</button>${close}</div></form>`; break;
+    case "spirits": if (!g || !isHome(g)) { closeSheet(); return; } h = spiritsSheet() + close; break;
     case "daemon": { const mine = new Set([...V.daemons.values()].filter(d => d.owner === me).map(d => d.which));
       h = `<div class="stack"><h2>Bring a daemon</h2>
       <p class="muted small">Your daemons are yours. They walk the garden and meet what is here; the other person can greet them and cannot command them. Bring one when it is part of what you are working on.</p>
@@ -1490,9 +1571,9 @@ function renderSheet() {
       <div class="row"><button type="button" data-act="welcomeKeep">Keep it as my own spirit</button><button class="ghost" type="button" data-act="welcomeCompost">Let it compost</button>${close}</div></div>`; break; }
     case "rooms": h = roomsSheet() + close; break;
     case "orient": if (!portalTo) { closeSheet(); return; } h = orientSheet() + close; break;
-    case "look": h = lookSheet() + close; break;
+    case "look": if (!g || !isHome(g)) { closeSheet(); return; } h = lookSheet(); break;
     case "goals": h = goalsSheet() + close; break;
-    case "checkin": h = checkinSheet() + close; break;
+    case "checkin": if (!walk) walk = { feel: null, line: "", step: -1 }; h = checkinSheet(); break;
     case "invitations": h = invitationsSheet() + close; break;
     case "style": if (!g || !isMember(g) || g.phase === "closed") { closeSheet(); return; } h = styleSheet(g) + close; break;
     case "invite": if (!g || isHome(g) || !isMember(g)) { closeSheet(); return; } h = inviteSheet(g) + close; break;
@@ -1506,9 +1587,13 @@ function renderSheet() {
   if (inner._h === h && !$("#sheet").hidden) return; // nothing changed: keep the open sheet as it is
   inner._h = h; inner.innerHTML = h;
   for (const [id, v] of Object.entries(keep)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; }
-  $("#sheet").hidden = false; $("#scrim").hidden = false;
-  readIn(inner);
-  const first = $("#sheetInner").querySelector("input, textarea, select"); if (first && !keep[first.id]) setTimeout(() => first.focus({ preventScroll: true }), 50);
+  // the mirror and the check-in keep the room in view: no scrim, a darker strip, the scene showing above it
+  const sh = $("#sheet"); sh.classList.toggle("mirror", sheetName === "look"); sh.classList.toggle("walk", sheetName === "checkin");
+  sh.classList.toggle("dark", ["look", "checkin", "spirits"].includes(sheetName));
+  sh.hidden = false; $("#scrim").hidden = sheetName === "look" || sheetName === "checkin";
+  document.body.classList.toggle("quiethud", sheetName === "checkin"); // the room's own buttons step aside while you walk it
+  if (sheetName !== "look") readIn(inner); // each choice in the mirror redraws the strip; its words stay put
+  const first = $("#sheetInner").querySelector("input, textarea, select"); if (first && !keep[first.id] && sheetName !== "checkin") setTimeout(() => first.focus({ preventScroll: true }), 50);
 }
 /* ---------- the orientation before an invitation's doorway opens (part 3, his ruling of 2026-10-23) ---------- */
 function orientSheet() {
@@ -1550,15 +1635,27 @@ function roomsSheet() {
     <div class="row"><button type="button" data-open="setup">Make a new room</button></div>
     ${closed.length ? `<details><summary>Closed rooms</summary>${closed.map(row).join("")}</details>` : ""}</div>`;
 }
+/* The mirror's strip: the parts as tabs, the chosen part's choices as round swatches; every tap re-dresses you. */
+const keptLook = () => myHome.look || (list && list.home && list.home.look) || null;
+const SHAPE_SVG = { a: "M9 3h6v26H9z", b: "M4 3h16l-4 26H8z", c: "M9 3h6c0 5 5 9 5 13s-4 8-4 13H8c0-5-4-9-4-13s5-8 5-13z" };
+const BUILD_RX = { slender: 3.5, average: 5, broad: 6.5, round: 8 };
+function chipGlyph(k, id) {
+  const svg = d => `<svg viewBox="0 0 24 32" width="24" height="32" aria-hidden="true">${d}</svg>`;
+  if (k === "shape") return svg(`<path d="${SHAPE_SVG[id]}" fill="#e8dccb" opacity=".85"/>`);
+  if (k === "build") return svg(`<ellipse cx="12" cy="16" rx="${BUILD_RX[id]}" ry="13" fill="#e8dccb" opacity=".85"/>`);
+  return "";
+}
 function lookSheet() {
   if (!lookDraft) lookDraft = parseLook(lookOf(me) || "") || { ...DEFAULT_LOOK };
-  const opt = (k, o) => `<button type="button" class="${lookDraft[k] === o.id ? "on" : ""}" aria-pressed="${lookDraft[k] === o.id}" data-act="lookPick" data-id="${k}:${o.id}">${o.swatch ? `<i class="sw" style="background:${o.swatch}"></i>` : ""}${esc(o.label)}</button>`;
-  const t = lookText(lookDraft);
-  return `<div class="stack"><h2>How you look</h2>
-    <p class="small muted">Your figure changes as you choose. The other person in each room sees you as you make yourself here. A look is choices, never a photo.</p>
-    ${BEATS.map(b => `<div class="stack"><h3>${esc(b.title)}</h3>${b.groups.map(gr => `<span class="eyebrow">${esc(gr.label)}</span><div class="dots">${optionsOf(gr.k).map(o => opt(gr.k, o)).join("")}</div>`).join("")}</div>`).join("")}
-    <div class="row"><button type="button" data-act="lookKeep">Keep this look</button><button class="ghost" type="button" data-act="lookRandom">Choose for me</button></div>
-    <p class="small muted">The same look opens Chapter 1's creator: <a href="${CHAPTER1_LOOK(t)}" target="_blank" rel="noopener">take this look to Chapter 1</a>. Hair colour shows there; this figure has no hair yet.</p></div>`;
+  const k = mirrorPart, t = lookText(lookDraft), unsaved = t !== keptLook();
+  const chip = o => { const on = lookDraft[k] === o.id;
+    return `<button type="button" class="mchip${on ? " on" : ""}" aria-pressed="${on}" data-act="lookPick" data-id="${k}:${o.id}"><i${o.swatch ? ` style="background:${o.swatch}"` : ""}>${o.swatch ? "" : chipGlyph(k, o.id)}</i><span>${esc(o.label)}</span></button>`; };
+  return `<div class="mpanel" aria-label="The mirror. Choose how you look; your figure changes as you choose.">
+    <div class="mtabs" role="tablist">${MIRROR_PARTS.map(([id, l]) => `<button type="button" role="tab" aria-selected="${id === k}" class="${id === k ? "on" : ""}" data-act="lookPart" data-id="${id}">${esc(l)}</button>`).join("")}</div>
+    <div class="mchips">${optionsOf(k).map(chip).join("")}</div>
+    ${k === "style" || k === "colour" ? `<p class="mnote">Hair shows in Chapter 1, not on this figure yet: <a href="${CHAPTER1_LOOK(t)}" target="_blank" rel="noopener">take this look to Chapter 1</a>.</p>` : ""}
+    <div class="mbar"><span class="mstate">${unsaved ? "Not saved yet" : "This is how your rooms see you"}</span>
+      <button type="button" data-act="lookKeep" ${unsaved ? "" : "disabled"}>Save this look</button><button class="ghost" type="button" data-act="lookRandom">Choose for me</button><button class="quiet" type="button" data-close>Leave</button></div></div>`;
 }
 const goalsList = () => Object.entries(myHome.goals || {}).filter(([, x]) => x && x.text).sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
 function goalsSheet() {
@@ -1572,15 +1669,118 @@ function goalsSheet() {
     <div class="row"><button type="submit">Keep this goal</button></div></form>`;
 }
 const FEEL_ORDER = ["wood", "fire", "earth", "metal", "water"];
-let checkFeel = null;
+const cap = w => w ? w[0].toUpperCase() + w.slice(1) : "";
+/* The check-in walk (part 4): choose what is here, then the seven steps of the W.A.V.E., one to a screen. Breathing out at
+   the last step saves the check-in and leaves an ember, which can feed one of your spirits now or wait for later.
+   `walk.step` is -1 while choosing, 0 to 6 on the steps, 7 once the ember is made. */
+let walk = null;
 function checkinSheet() {
-  const past = Object.values(myHome.checkins || {}).filter(Boolean).sort((a, b) => b.at - a.at).slice(0, 5);
-  return `<form class="stack" id="checkForm"><h2>Check in with yourself</h2>
-    <p class="small muted">Before anyone else: how are you? Only you see this.</p>
-    <span class="eyebrow">What is here</span><div class="dots">${FEEL_ORDER.map(f => `<button type="button" class="${checkFeel === f ? "on" : ""}" aria-pressed="${checkFeel === f}" data-act="checkFeel" data-id="${f}"><i class="sw" style="background:${cssHue(elHex(f))}"></i>${FEELS[f][0].toUpperCase() + FEELS[f].slice(1)}</button>`).join("")}</div>
-    <label for="cLine">One line, if you like<input id="cLine" maxlength="280" placeholder="What it is about"></label>
-    <div class="row"><button type="submit">Check in</button></div>
-    ${past.length ? `<details><summary>Your last check-ins</summary><ul class="log">${past.map(c => `<li>${esc(c.feel ? FEELS[c.feel] : "")}${c.line ? `: <i>${esc(c.line)}</i>` : ""} <span class="muted small">· ${fmt(c.at)}</span></li>`).join("")}</ul></details>` : ""}</form>`;
+  const w = walk;
+  if (w.step < 0) {
+    const past = Object.values(myHome.checkins || {}).filter(Boolean).sort((a, b) => b.at - a.at).slice(0, 5);
+    return `<form class="stack" id="checkForm"><h2>Check in with yourself</h2>
+      <p class="small muted">Before anyone else: what is here? Only you see this.</p>
+      <div class="feels">${FEEL_ORDER.map(f => `<button type="button" class="${w.feel === f ? "on" : ""}" aria-pressed="${w.feel === f}" data-act="checkFeel" data-id="${f}"><span class="ember" style="--c:${cssHue(elHex(f))};--s:${w.feel === f ? 30 : 22}px"></span>${cap(FEELS[f])}</button>`).join("")}</div>
+      <label for="cLine">One line, if you like<input id="cLine" maxlength="280" placeholder="What it is about" value="${esc(w.line)}"></label>
+      <div class="row"><button type="submit" ${w.feel ? "" : "disabled"}>Walk through it</button><button class="quiet" type="button" data-close>Not now</button></div>
+      ${past.length ? `<details><summary>Your last check-ins</summary><ul class="log">${past.map(c => `<li>${esc(c.feel ? FEELS[c.feel] : "")}${c.line ? `: <i>${esc(c.line)}</i>` : ""} <span class="muted small">· ${fmt(c.at)}</span></li>`).join("")}</ul></details>` : ""}</form>`;
+  }
+  const c = cssHue(elHex(w.feel)), head = `<span class="eyebrow">${esc(cap(FEELS[w.feel]))}${w.line ? " · " + esc(w.line) : ""}</span>`;
+  if (w.step <= 6) {
+    const st = WAVE_STEPS[w.step];
+    return `<div class="stack wave" style="--c:${c}">${head}
+      <h2>${esc(st.name)}</h2><p class="wline">${esc(st.line)}</p>
+      <div class="wdots" role="img" aria-label="Step ${w.step + 1} of seven">${WAVE_STEPS.map((x, i) => `<i class="${i < w.step ? "on" : i === w.step ? "now" : ""}"></i>`).join("")}</div>
+      <div class="row"><button class="ghost" type="button" data-act="waveBack">Back</button><button type="button" data-act="waveNext">${w.step === 6 ? "Breathe out" : "Next"}</button><button class="quiet" type="button" data-close>Stop</button></div></div>`;
+  }
+  const sp = feedable(), g = view().g, room = g && !isHome(g) && isMember(g) && g.phase !== "closed";
+  const given = w.given;
+  return `<div class="stack wave" style="--c:${c}">${head}
+    <div class="emberbig"><span class="ember" style="--c:${c};--s:58px"></span></div>
+    <h2>${given ? esc(given) + " took your ember" : "An ember of " + esc(FEELS[w.feel])}</h2>
+    ${given ? `<p class="small muted">Your check-in is kept in your homeroom.</p><div class="row"><button type="button" data-close>Back to the room</button></div>`
+    : `<p class="small muted">What you walked through left this ember. Give it to one of your spirits, and it feeds them. An ember of a spirit's own element feeds it twice over.</p>
+    ${sp.length ? `<div class="choice">${sp.map(x => spiritBtn(x, w.feel)).join("")}</div>` : `<p class="small">None of your spirits is with you. ${isHome(g) ? "Call one up from the caves under Spirits, or keep the ember for later." : "Bring one in from your homeroom, or keep the ember for later."}</p>`}
+    <div class="row"><button class="ghost" type="button" data-act="emberKeep">Keep it for later</button>${room ? `<button class="ghost" type="button" data-act="emberStone">Leave it on a stone for them</button>` : ""}</div>`}</div>`;
+}
+/* ---------- spirits of the homeroom (part 4): they live there, walk there, and come with you into a room ---------- */
+const caveStore = () => { try { return window.__oagSpiritStore || null; } catch { return null; } };
+let homeSnap = null, homeFetching = null; // the homeroom as read from a room: its spirits and your home doc
+function fetchHome() {
+  if (!homeId || storeDown || isHome(view().g)) return Promise.resolve(null);
+  if (homeFetching) return homeFetching;
+  homeFetching = api("/api/between/" + homeId + "/poll", { presence: null }).then(j => {
+    homeSnap = j; if (j.mine && j.mine.home) setHome(j.mine.home);
+    if (["spirit", "checkin"].includes(sheetName)) renderSheet();
+    refresh(); return j;
+  }, () => null).finally(() => { homeFetching = null; });
+  return homeFetching;
+}
+/** Your homeroom's spirits, id -> doc, wherever you stand. */
+function homeSpirits() {
+  const V = view();
+  const all = isHome(V.g) ? [...V.spirits] : Object.entries((homeSnap && homeSnap.spirits) || {});
+  return new Map(all.filter(([, d]) => d && d.owner === me));
+}
+/** A write to the homeroom from wherever you stand. */
+async function homeDocOp(path, kind, data) {
+  if (isHome(view().g)) return op(path, kind, data);
+  const j = await api("/api/between/" + homeId + "/doc", { path, op: kind, data: data ?? null });
+  if (homeSnap && path.startsWith("spirits/")) { const id = path.slice(8); homeSnap.spirits = { ...(homeSnap.spirits || {}) }; if (j.doc) homeSnap.spirits[id] = j.doc; else delete homeSnap.spirits[id]; }
+}
+const embersWaiting = () => Object.entries(myHome.embers || {}).filter(([, e]) => e && !e.given && FEELS[e.feel]).sort((a, b) => a[1].at - b[1].at);
+const emberDots = n => embersWaiting().slice(0, n).map(([, e]) => `<span class="ember" style="--c:${cssHue(elHex(e.feel))};--s:9px"></span>`).join("");
+/** The spirits an ember can go to from here: the homeroom's (those not away visiting), and yours in this room. */
+function feedable() {
+  const V = view(), out = [];
+  for (const [id, d] of homeSpirits()) if (!(d.away && d.away.room)) out.push({ where: "home", id, d });
+  if (V.g && !isHome(V.g)) for (const [id, d] of V.spirits) if (d.owner === me) out.push({ where: "room", id, d });
+  return out;
+}
+const careWord = d => careNow(d.care).word;
+function spiritBtn(x, feel) {
+  const own = feel && String(x.d.element || "").toLowerCase() === feel;
+  return `<button type="button" data-act="emberGive" data-id="${x.where}:${esc(x.id)}"><b><span class="ember" style="--c:${cssHue(ELEMENTS[x.d.element] ?? 0xc9a35a)};--s:12px"></span>${esc(x.d.name)}</b>${esc(String(x.d.element || "").toLowerCase())} ${esc(FORMS[x.d.form] ? FORMS[x.d.form].toLowerCase() : "fox")} · ${esc(careWord(x.d))}${own ? " · its own element" : ""}${x.where === "home" && !isHome(view().g) ? " · at home" : ""}</button>`;
+}
+/** A cave spirit's element, as the Between names them. */
+function elementOf(e) {
+  const v = String(e || "").toLowerCase();
+  const el = FEELS[v] ? v : Object.keys(FEELS).find(k => FEELS[k] === v);
+  return el ? cap(el) : "Earth";
+}
+function spiritsSheet() {
+  const hs = [...homeSpirits()], waiting = embersWaiting(), st = caveStore();
+  const rooms = (list && list.gardens) || [];
+  let cave = []; try { cave = st ? st.all().filter(r => r && r.id && !(r.home && hs.some(([id]) => id === r.home))) : []; } catch {}
+  const row = ([id, d]) => {
+    const away = d.away && d.away.room ? rooms.find(r => r.id === d.away.room) : null;
+    return `<div class="spiritcard" style="--c:${cssHue(ELEMENTS[d.element] ?? 0xc9a35a)}"><span class="orb"></span><div><b>${esc(d.name)}</b>
+      <span class="small muted">${esc(String(d.element || "").toLowerCase())} ${esc(FORMS[d.form] ? FORMS[d.form].toLowerCase() : "fox")} · ${esc(CARE_WORDS[careWord(d)])}${d.away && d.away.room ? ` · visiting ${esc(away ? roomName(away) : "a room")}` : ""}</span></div>
+      ${d.away && d.away.room ? `<button class="quiet" type="button" data-act="spiritBack" data-id="${esc(id)}">Call it home</button>`
+        : waiting.length ? `<button type="button" data-act="emberGive" data-id="home:${esc(id)}">Give an ember</button>` : ""}</div>`;
+  };
+  return `<div class="stack"><h2>Your spirits</h2>
+    <p class="small muted">They live here in your homeroom and walk with you. Bring one along when you go into a room. A check-in leaves an ember, and an ember feeds a spirit.</p>
+    ${waiting.length ? `<p class="small">Embers waiting for a spirit ${emberDots(5)}</p>` : `<div class="row"><span class="small muted">No ember waits. Checking in leaves one.</span><button class="ghost" type="button" data-open="checkin">Check in</button></div>`}
+    ${hs.length ? hs.map(row).join("") : `<p class="muted">No spirit lives here yet.</p>`}
+    <h3>Call one from the caves</h3>
+    ${cave.length ? cave.map(r => `<div class="spiritcard" style="--c:${cssHue(ELEMENTS[elementOf(r.element)])}"><span class="orb"></span><div><b>${esc(r.name || "A spirit")}</b><span class="small muted">${esc(elementOf(r.element).toLowerCase())}${r.born && r.born.where ? " · met in " + esc(r.born.where) : ""}</span></div>
+      <button type="button" data-act="caveCall" data-id="${esc(r.id)}">Call it home</button></div>`).join("")
+      : `<p class="small muted">${st ? "Spirits you meet in the caves can come up and live here. None are waiting." : "The caves did not answer from here."} <a href="/ontology-game/cave/">Go down to the caves</a></p>`}
+    <div class="row"><button class="ghost" type="button" data-open="spirit">A new spirit</button></div></div>`;
+}
+/** In a room, Bring a spirit starts with your homeroom's spirits. */
+function bringSheet() {
+  const hs = [...homeSpirits()], V = view();
+  const here = new Set([...V.spirits.values()].filter(d => d.owner === me && d.homeSpirit).map(d => d.homeSpirit));
+  const rows = hs.map(([id, d]) => {
+    const inHere = here.has(id), away = !inHere && d.away && d.away.room;
+    return `<div class="spiritcard" style="--c:${cssHue(ELEMENTS[d.element] ?? 0xc9a35a)}"><span class="orb"></span><div><b>${esc(d.name)}</b><span class="small muted">${esc(String(d.element || "").toLowerCase())} ${esc(FORMS[d.form] ? FORMS[d.form].toLowerCase() : "fox")} · ${esc(careWord(d))}${away ? " · visiting another room" : ""}</span></div>
+      ${inHere ? `<span class="small muted">Here with you</span>` : away ? "" : `<button type="button" data-act="bringHome" data-id="${esc(id)}">Bring it in</button>`}</div>`;
+  });
+  return `<div class="stack"><h2>Bring a spirit</h2>
+    <p class="muted small">Your spirits from your homeroom. One you bring in stays yours: the other person can meet it and greet it; only you call it or send it home.</p>
+    ${homeSnap || isHome(V.g) ? (rows.length ? rows.join("") : `<p class="small muted">No spirit lives in your homeroom yet. Call one up from the caves there, under Spirits.</p>`) : `<p class="small muted">Asking your homeroom…</p>`}</div>`;
 }
 function invitationsSheet() {
   const rooms = ((list && list.gardens) || []).filter(r => r.phase !== "closed");
@@ -1767,7 +1967,11 @@ document.addEventListener("click", async ev => {
   if (a === "lanternCancel") { placing = null; refreshHud(); return; }
   if (a === "lookPick") { const [k, v] = id.split(":"); lookDraft = { ...lookDraft, [k]: v }; renderSheet(); ensureMyBody().catch(() => {}); return; }
   if (a === "lookRandom") { lookDraft = randomLook(); renderSheet(); ensureMyBody().catch(() => {}); return; }
-  if (a === "checkFeel") { checkFeel = checkFeel === id ? null : id; renderSheet(); return; }
+  if (a === "lookPart") { mirrorPart = id; renderSheet(); return; }
+  if (a === "checkFeel") { if (walk) { const l = $("#cLine"); if (l) walk.line = l.value; walk.feel = walk.feel === id ? null : id; } renderSheet(); return; }
+  if (a === "waveBack") { if (walk) { walk.step = Math.max(-1, walk.step - 1); renderSheet(); } return; }
+  if (a === "waveNext" && walk && walk.step < 6) { walk.step++; renderSheet(); return; }
+  if (a === "emberKeep") { closeSheet(); toast("Kept. It waits under Spirits, in your homeroom, until you give it."); return; }
   if (a === "goHome") { goRoom(null); return; }
   if (a === "goRoom") { goRoom(id); return; }
   if (a === "through") { if (portalTo) walkThrough(portalTo.id, portalTo.invite); return; }
@@ -1825,7 +2029,10 @@ document.addEventListener("click", async ev => {
     }
     else if (a === "sendHome") {
       const [type, did] = [id.slice(0, 1), id.slice(2)];
+      const d = type === "s" ? V.spirits.get(did) : null;
       await op((type === "s" ? "spirits/" : "daemons/") + did, "delete");
+      if (d && d.homeSpirit) await homeCameBack(d.homeSpirit);
+      if (d && d.homeSpirit) toast(`${d.name} went home to your homeroom.`);
     }
     else if (a === "greet") {
       const w = walkers.get(id);
@@ -1860,7 +2067,13 @@ document.addEventListener("click", async ev => {
       try { await navigator.clipboard.writeText(link); toast("The invitation link is on your clipboard."); }
       catch { window.prompt("Copy the invitation link:", link); }
     }
-    else if (a === "lookKeep") { await keepLook(); lookDraft = null; closeSheet(); toast("Kept. Each of your rooms shows you this way now."); }
+    else if (a === "lookKeep") { await keepLook(); lookDraft = null; closeSheet(); toast("Saved. Each of your rooms shows you this way now."); }
+    else if (a === "waveNext") await finishWave();
+    else if (a === "emberGive") await giveEmber(id);
+    else if (a === "emberStone") await emberStone();
+    else if (a === "caveCall") await callFromCave(id);
+    else if (a === "bringHome") await bringHomeSpirit(id);
+    else if (a === "spiritBack") await spiritBack(id);
     else if (a === "goalDrop") { await homeOp({ goals: { [id]: null } }); renderSheet(); }
     else if (a === "setStyle") {
       const st = styleOf(id);
@@ -1942,20 +2155,18 @@ document.addEventListener("submit", async ev => {
       ls.set("between.pic." + me, readPic()); toast("Kept in this browser only.");
     } else if (f.id === "spiritForm") {
       const name = $("#spName").value.trim(); if (!name) return;
-      const spot = spotAhead(1.2);
+      const spot = spotAhead(1.2), home = isHome(view().g);
       await op("spirits/s" + hkey(), "set", { owner: me, name, element: $("#spEl").value, form: $("#spForm").value, note: $("#spNote").value.trim(), at: now(),
-        stay: { x: spot.x, z: spot.z, at: now(), until: now() + 20000 }, history: hist("brought a spirit to visit", name) });
-      await touch(); closeSheet();
+        care: { ...careOf(null), at: now() }, stay: { x: spot.x, z: spot.z, at: now(), until: now() + 20000 }, history: hist(home ? "welcomed a spirit home" : "brought a spirit to visit", name) });
+      await touch(); closeSheet(); if (home) toast(name + " lives in your homeroom now.");
     } else if (f.id === "goalForm") {
       const text = $("#gText").value.trim(); if (!text) { toast("Write the goal first. A few words are enough."); return; }
       const room = $("#gRoom").value || null;
       await homeOp({ goals: { ["g" + hkey()]: { text, room, at: now() } } });
       $("#gText").value = ""; renderSheet(); toast("Kept in your homeroom. Only you see it.");
     } else if (f.id === "checkForm") {
-      if (!checkFeel) { toast("Choose what is here first."); return; }
-      const at = now();
-      await homeOp({ checkins: { ["c" + hkey()]: { feel: checkFeel, line: $("#cLine").value.trim() || null, at } }, lastCheckin: at });
-      checkFeel = null; closeSheet(); toast("Checked in. That one is yours.");
+      if (!walk || !walk.feel) { toast("Choose what is here first."); return; }
+      walk.line = $("#cLine").value.trim().slice(0, 280); walk.step = 0; renderSheet();
     } else if (f.id === "inviteForm") {
       const g = view().g; if (members(g).length < 2) return;
       const w = $("#sWhen").value, when = w ? new Date(w).getTime() : null;
@@ -2018,6 +2229,81 @@ async function keepLook() {
   await Promise.all(rooms.map(r => r.id === gardenId ? op("garden/main", "update", { looks: { [me]: t } }) : api("/api/between/" + r.id + "/doc", { path: "garden/main", op: "update", data: { looks: { [me]: t } } }).catch(() => {})));
 }
 function goRoom(id) { if (id) { walkThrough(id); return; } markSeen(); location.href = ROOM_URL(null); }
+/* ---------- the check-in's ember, and the spirits it feeds (part 4) ---------- */
+async function finishWave() {
+  const w = walk; if (!w || !w.feel || w.step !== 6) return;
+  const at = now(), eid = "e" + hkey();
+  await homeOp({ checkins: { ["c" + hkey()]: { feel: w.feel, line: w.line || null, at, wave: WAVE_STEPS.length } }, lastCheckin: at, embers: { [eid]: { feel: w.feel, at, given: null } } });
+  if (walk !== w) return;
+  w.step = 7; w.eid = eid;
+  burst(meState.pos.clone().setY(groundY(meState.pos.x, meState.pos.z)), elHex(w.feel));
+  renderSheet();
+}
+/** Give an ember (the walk's, or the oldest waiting) to a spirit: `ref` is "home:<id>" or "room:<id>". */
+async function giveEmber(ref) {
+  const [where, sid] = [ref.slice(0, 4), ref.slice(5)];
+  const eid = walk && walk.eid && walk.step === 7 ? walk.eid : (embersWaiting()[0] || [])[0];
+  const e = eid && (myHome.embers || {})[eid];
+  if (!e || e.given) { toast("No ember waits. Checking in leaves one."); return; }
+  const V = view(), at = now();
+  const d = where === "home" ? homeSpirits().get(sid) : V.spirits.get(sid);
+  if (!d) return;
+  const care = feed(d.care, e.feel, d.element, at);
+  if (where === "home") await homeDocOp("spirits/" + sid, "update", { care });
+  else {
+    await op("spirits/" + sid, "update", { care });
+    if (d.homeSpirit) await homeDocOp("spirits/" + d.homeSpirit, "update", { care }).catch(() => {});
+  }
+  await homeOp({ embers: { [eid]: { given: { spirit: sid, room: where === "room" ? gardenId : null, at } } } });
+  const wk = walkers.get("s:" + sid) || [...walkers.values()].find(x => x.type === "spirit" && x.doc && x.doc.homeSpirit === sid);
+  if (wk && wk.holder) { burst(wk.holder.position, elHex(e.feel)); burst(wk.holder.position.clone(), ELEMENTS[d.element] ?? 0xffe2b0); }
+  const word = careNow(care, at).word;
+  if (walk && walk.step === 7) { walk.given = d.name; renderSheet(); }
+  else { renderSheet(); }
+  toast(`${d.name} took the ember. ${CARE_WORDS[word]}.`);
+}
+/** In a room: the ember goes onto a stone for the other person, the old "came by to check in". */
+async function emberStone() {
+  const w = walk, g = view().g; if (!w || !w.eid || !g || isHome(g)) return;
+  const iid = "i" + hkey();
+  await op("items/" + iid, "set", { kind: "checkin", text: "Came by to check in.", by: me, at: now(), status: g.phase === "spark" ? "kept" : "offered", spark: g.phase === "spark", sealed: false, yes: {}, opened: {}, pending: null, pos: spotAhead(1.1), history: hist("came by to check in") });
+  await homeOp({ embers: { [w.eid]: { given: { stone: iid, room: gardenId, at: now() } } } });
+  await touch(); closeSheet();
+  toast(g.phase === "spark" ? "The spark took it in." : "Your ember waits on a stone for their yes. What you felt stays with you.");
+}
+async function callFromCave(rid) {
+  const st = caveStore(); const r = st && st.get(rid); if (!r || !isHome(view().g)) return;
+  const sid = "s" + hkey(), spot = spotAhead(1.2), name = String(r.name || "A spirit from the caves").slice(0, 60);
+  await op("spirits/" + sid, "set", { owner: me, name, element: elementOf(r.element), form: r.form === "tortoise" ? "tortoise" : "fox",
+    ...(r.family ? { family: String(r.family).slice(0, 60) } : {}), fromCave: String(r.id).slice(0, 80), note: "Came up from the caves.", at: now(),
+    care: { ...careOf(null), at: now() }, stay: { x: spot.x, z: spot.z, at: now(), until: now() + 20000 }, history: hist("called a spirit up from the caves", name) });
+  try { st.place(r.id, { home: sid, brought: null }); } catch {}
+  renderSheet(); toast(name + " came up from the caves and lives here now.");
+}
+async function bringHomeSpirit(hid) {
+  const d = homeSpirits().get(hid), g = view().g; if (!d || !g || isHome(g)) return;
+  const spot = spotAhead(1.2), at = now();
+  await op("spirits/s" + hkey(), "set", { owner: me, name: d.name, element: d.element, form: d.form || "fox", ...(d.family ? { family: d.family } : {}),
+    care: d.care || { ...careOf(null), at }, homeSpirit: hid, note: d.note || "", at, stay: { x: spot.x, z: spot.z, at, until: at + 20000 }, history: hist("brought a spirit to visit", d.name) });
+  await homeDocOp("spirits/" + hid, "update", { away: { room: gardenId, at } });
+  const st = caveStore(); if (d.fromCave && st) { try { st.place(d.fromCave, { brought: gardenId }); } catch {} }
+  await touch(); closeSheet(); toast(`${d.name} came in with you from your homeroom.`);
+}
+/** A homeroom spirit's visit is over: it is home again. */
+async function homeCameBack(hid) {
+  const d = homeSpirits().get(hid);
+  await homeDocOp("spirits/" + hid, "update", { away: null }).catch(() => {});
+  const st = caveStore(); if (d && d.fromCave && st) { try { st.place(d.fromCave, { brought: null }); } catch {} }
+}
+/** From the homeroom: call home a spirit still visiting a room (its copy there goes, if it can be found). */
+async function spiritBack(hid) {
+  const d = homeSpirits().get(hid); if (!d || !d.away || !d.away.room) return;
+  try {
+    const j = await api("/api/between/" + d.away.room + "/poll", { presence: null });
+    for (const [rid, x] of Object.entries(j.spirits || {})) if (x && x.owner === me && x.homeSpirit === hid) await api("/api/between/" + d.away.room + "/doc", { path: "spirits/" + rid, op: "delete", data: null });
+  } catch {}
+  await homeCameBack(hid); renderSheet(); toast(d.name + " is home.");
+}
 async function castSpell(g, id) {
   const sp = SPELLS.find(x => x.id === id); if (!sp) return;
   const at = spellAt(g, sp); if (!castable(sp, at).ok || at.mineWaiting) return;
@@ -2186,7 +2472,8 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   refresh();
   // ?sheet= opens a sheet at once, for a preview link that starts where the test starts
   const jump = q.get("sheet");
-  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "orient"].includes(jump) && garden) openSheet(jump);
+  if (garden && !isHome(garden)) fetchHome(); // your homeroom's spirits and embers, for Check in and Bring a spirit here
+  if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "orient", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
   else if (portalTo && !portalTo.open) openSheet("orient");
   requestAnimationFrame(frame);
   setTimeout(() => { const V = view(); if (V.g && isMember(V.g) && awayActs(V.g, V).length) toast(`${nameOf(other(V.g), V.g)} tended the garden while you were away. See "While you were away".`); }, 1500);

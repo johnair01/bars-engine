@@ -4,6 +4,7 @@ import { colorsOf, DEFAULT_LOOK, DYED, KEYS, lookText, mixHex, optionsOf, parseL
 import { applyStyle, DEFAULT_STYLE, STYLES, styleOf } from '../../../../public/calrunia/room-styles.js'
 import { LANES, suggest } from '../../../../public/calrunia/next-moves.js'
 import { castable, SPELLS } from '../../../../public/calrunia/spellbook.js'
+import { careNow, careOf, feed, WAVE_STEPS } from '../../../../public/calrunia/spirit-care.js'
 
 function testLookRoundTrips() {
   const t = 'a.average.light.afro.black.coat.violet' // sprout creator's default look text
@@ -117,9 +118,33 @@ function testSpellbook() {
   assert.equal(castable('nope', { sitting: true }).ok, false)
 }
 
+function testSpiritCare() {
+  assert.deepEqual(WAVE_STEPS.map(s => s.id), ['welcome', 'acknowledge', 'allow', 'accept', 'appreciate', 'validate', 'exhale'])
+  assert.equal(WAVE_STEPS[0].line, "Let whatever's here be here for a moment, without needing it to be different yet.")
+  const D = 864e5, t0 = 10 * D
+  assert.deepEqual(careOf(null), { sat: 7, vit: 100, at: null }, 'a new spirit starts at 7 and 100')
+  assert.deepEqual(careOf({ sat: 40, vit: -5, at: 3 }), { sat: 10, vit: 0, at: 3 }, 'kept in bounds')
+  const c = { sat: 7, vit: 100, at: t0 }
+  assert.equal(careNow(c, t0).word, 'thriving')
+  assert.deepEqual(careNow(c, t0 + 2 * D), { sat: 7, vit: 90, days: 2, word: 'thriving' }, 'vitality falls 5 a day')
+  assert.equal(careNow(c, t0 + 3 * D).sat, 6, 'a point of satisfaction every third untended day')
+  assert.equal(careNow(c, t0 + 6 * D).word, 'dimming')
+  const low = careNow(c, t0 + 12 * D)
+  assert.equal(low.sat, 3); assert.equal(low.word, 'unsettled', 'low satisfaction is unsettled, never corrupted')
+  assert.equal(careNow(c, t0 + 200 * D).sat, 1); assert.equal(careNow(c, t0 + 200 * D).vit, 0)
+  assert.equal(careNow({}, t0 + 50 * D).word, 'thriving', 'a spirit never tended has no untended days to count')
+  assert.deepEqual(feed(c, 'water', 'Fire', t0), { sat: 8, vit: 100, at: t0 }, 'care adds one, vitality caps at 100')
+  assert.deepEqual(feed(c, 'fire', 'Fire', t0), { sat: 9, vit: 100, at: t0 }, 'its own element feeds it twice over')
+  assert.deepEqual(feed({ sat: 10, vit: 30, at: t0 }, 'wood', 'Wood', t0), { sat: 10, vit: 50, at: t0 })
+  const later = feed(c, 'earth', 'Metal', t0 + 6 * D)
+  assert.deepEqual(later, { sat: 6, vit: 90, at: t0 + 6 * D }, 'feeding starts from the decayed care')
+  assert.equal(careNow(later, t0 + 6 * D).days, 0, 'and resets the untended days')
+}
+
 testLookRoundTrips()
 testLookColours()
 testStyles()
 testNextMoves()
 testSpellbook()
+testSpiritCare()
 console.log('calrunia modules: all passed')

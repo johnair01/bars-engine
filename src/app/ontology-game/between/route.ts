@@ -58,6 +58,7 @@ const PAGE = `<!doctype html>
 <section class="sheet" id="sheet" hidden role="dialog" aria-modal="true"><div class="inner" id="sheetInner"></div></section>
 <div class="toast" id="toast" hidden></div>
 <script>setTimeout(function(){var e=document.getElementById("loadStep");if(e&&e.textContent==="starting"){e.textContent="the 3D library did not load";}},20000);</script>
+<script src="/ontology-game/cave/spirit-store.js"></script>
 <script type="module" src="/between/garden.js"></script>
 </body></html>
 `
