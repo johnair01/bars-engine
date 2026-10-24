@@ -65,3 +65,24 @@ describe('the robe (robe-slit build): skinned, no bake', () => {
     for (const c of ['jacket', 'dress', 'coat']) expect(cover.cuts[c].length).toBeGreaterThan(50)
   })
 })
+
+// Wendell, 2026-10-24: "When asked to sit down the player should walk to a cushion and actually sit instead of having a card
+// modal open up." The hips rest SEAT_PAD over a seat's top (as the caves' seatAvatar, #434), and the hearth moment opens only
+// once sat: every way into the hearth sheet walks to the hearth's seat first, and the wake is a seat in the same list.
+describe('sitting on a seat', () => {
+  const garden = readFileSync(path.resolve(__dirname, '../../../../public/between/garden.js'), 'utf8')
+  it('rests the hips just over the seat top', async () => {
+    const { SEAT_PAD } = await import('../../../../public/between/stance.js')
+    expect(SEAT_PAD).toBeGreaterThan(0.05)
+    expect(SEAT_PAD).toBeLessThan(0.15)
+  })
+  it('walks to the hearth cushion before the hearth sheet opens', () => {
+    expect(garden).toContain('if (name === "hearth" && !seatedAtHearth()) { sitAtHearth(); return; }')
+    expect(garden).toContain('data-act="sitHearth">Sit at the hearth</button>')
+    expect(garden).not.toContain('data-open="hearth">Sit at the hearth')
+  })
+  it('wakes the first minute sat on a seat from the same list', () => {
+    expect(garden).toMatch(/seatsNow\(hollow\.handles\.spots\)\.concat\(wake\.on \? \[\{ id: "wake"/)
+    expect(garden).toContain('meState.seatWant = "wake"; meState.sitting = true;')
+  })
+})
