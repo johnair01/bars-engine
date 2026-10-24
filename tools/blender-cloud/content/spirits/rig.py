@@ -249,6 +249,14 @@ def skin_bones(name, bones):
     return None
 
 
+# Rigid pieces that always ride the head: the eyes. The ally's staff stands in front of its face, so before 24 October
+# 2026 the staff's reach (then 1.6 of the hand's radius, 0.36 m) also took the eyes, the heart core and the necklace's beads
+# onto the left hand, and they swung with the staff while the face turned (Wendell, spirit-rig-look-01: "The shellbacks face
+# moves but its eyes stay out and its unsettling"). The reach is now the staff's own width round the hand (0.13 m).
+EYE_PARTS = ("eyeball", "eyewhite", "iris", "pupil", "glint")
+STAFF_REACH = 0.6
+
+
 # ---- the walk and the idle ------------------------------------------------------------------------------------
 # A pose is {bone: (about X, about Y, about Z)} in radians, about the world's axes at the bone's head: X runs ahead,
 # so a turn about Y swings a leg ahead (negative) or back (positive), about X rolls, about Z turns.
@@ -502,7 +510,9 @@ def rig_scene(base, stage, scene=None):
             bone = "float"
         elif key in ("shell", "plastron"):
             bone = "chest" if kind == "quad" else "spine"
-        elif staff_at and math.hypot(c.x - staff_at[0], c.y - staff_at[1]) < 0.14 * f / 0.4 * 1.6:
+        elif key in EYE_PARTS and "head" in J:
+            bone = "head"                                               # the eyes turn with the face, whatever lies near them
+        elif staff_at and math.hypot(c.x - staff_at[0], c.y - staff_at[1]) < 0.14 * f / 0.4 * STAFF_REACH:
             bone = "wristL"                                             # the staff and what it carries, in the left hand
         else:
             best, bd = None, gap

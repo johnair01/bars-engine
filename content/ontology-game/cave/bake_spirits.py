@@ -168,6 +168,8 @@ def bake(src, out, late=False, row=None):
             for col in kcol: c += bytes(round(x * 255) for x in srgb(col)) + b"\xff"
             cv = put(bytes(c), 34962)
             accs.append({"bufferView": cv, "componentType": 5121, "normalized": True, "count": len(kcol), "type": "VEC4"}); attrs["COLOR_0"] = len(accs) - 1
+        if kskin and m.get("name", "").split(".")[0] in ("eyewhite", "iris", "pupil", "glint"):  # spirit-rig-look-01: eyes off the face
+            assert {rig["joints"][a][0] for a, _, _ in kskin} == {"head"}, (src, m.get("name"), "the eyes must ride the head")
         if kskin:  # joint a, joint b, a's weight of 255, 0 (bake_daemons.py's _SKIN, its band byte unused)
             sv = put(b"".join(struct.pack("<4B", a, b, w, 0) for a, b, w in kskin), 34962); views[sv]["byteStride"] = 4
             accs.append({"bufferView": sv, "componentType": 5121, "count": len(kskin), "type": "VEC4"}); attrs["_SKIN"] = len(accs) - 1
