@@ -65,7 +65,7 @@ const PROBE = async () => {
       res.msPerFrame = await p.evaluate(() => new Promise(done => { const ts = []; const f = t => { ts.push(t); if (t - ts[0] < 6000) requestAnimationFrame(f); else { const d = ts.slice(1).map((x, i) => x - ts[i]).sort((a, b) => a - b); done(+d[d.length >> 1].toFixed(1)); } }; requestAnimationFrame(f); }));
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     }
-    res.state = await p.evaluate(() => { const B = window.__between, m = B.meState.body.mixer; const env = []; B.meState.body.holder.traverse(o => { if (o.isMesh) for (const q of [].concat(o.material)) env.push([q.type, !!q.envMap, +(q.envMapIntensity || 0).toFixed(2), q.roughness]); }); return { anims: m._actions.filter(a => a.isRunning() && a.getEffectiveWeight() > 0.01).map(a => a.getClip().name), env }; });
+    res.state = await p.evaluate(() => { const B = window.__between, m = B.meState.body.mixer; const env = []; B.meState.body.holder.traverse(o => { if (o.isMesh) for (const q of [].concat(o.material)) env.push([q.type, !!q.envMap, +(q.envMapIntensity || 0).toFixed(2), q.roughness]); }); return { anims: m._actions.filter(a => a.isRunning() && a.getEffectiveWeight() > 0.01).map(a => a.getClip().name + ' ' + a.getEffectiveWeight().toFixed(2)), stance: B.meState.body.stance && B.meState.body.stance(), env }; });
     await p.screenshot({ path: path.join(OUT, name + '.jpg'), quality: 85 });
     out[name] = res; await ctx.close();
   }

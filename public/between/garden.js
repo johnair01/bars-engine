@@ -10,6 +10,7 @@ import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS,
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the baked J5 robe)
+import { stance, clipWeights, FADE } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
 import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
 /* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
@@ -311,8 +312,15 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const clip = n => t.anims.find(a => a.name === n);
   const acts = {};
   for (const n of ["Walk", "Idle"]) { const c = clip(n); if (c) acts[n] = mixer.clipAction(c); }
-  if (acts.Idle) acts.Idle.play();
-  if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = true; }
+  /* A dressed figure (its Walk and Idle both baked into the robe) blends the two by weight each frame toward what its stance
+     asks (stance.js); older files without an Idle keep standing at the Walk's first frame, where their robe was baked. */
+  const managed = !!(wardrobe && acts.Walk && acts.Idle && wardrobe.hasIdle);
+  const cw = { Walk: 0, Idle: 1 }; let cur = "idle";
+  if (managed) { acts.Walk.play(); acts.Walk.setEffectiveWeight(0); acts.Idle.play(); acts.Idle.setEffectiveWeight(1); }
+  else {
+    if (acts.Idle) acts.Idle.play();
+    if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = true; }
+  }
   let walking = false;
   /* Poses made in code over the clip (the player model has a walk and nothing else): sitting cross-legged on a cushion,
      and a wave of the right hand. Bone axes were read off player.glb: hip X lifts the thigh forward, knee X folds the
@@ -324,8 +332,10 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   let sit = 0, waveT = -9, rest = 0;
   return {
     holder, mixer, isPlayer: !!bones.hipL, scale: k, dressed: !!wardrobe,
+    stance: () => cur,
     setWalking(w) {
       if (w === walking) return; walking = w;
+      if (managed) return;   // pose() fades the clips toward the stance
       // a dressed figure stands at the Walk's first frame, where the robe was baked, rather than fading to the bind pose
       if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = !w; if (!w) acts.Walk.time = 0; return; }
       if (acts.Walk) { if (w) { acts.Walk.reset().fadeIn(0.2).play(); acts.Idle && acts.Idle.fadeOut(0.2); } else { acts.Walk.fadeOut(0.3); if (acts.Idle) acts.Idle.reset().fadeIn(0.3).play(); } }
@@ -335,14 +345,20 @@ async function makeBody(model, height, tint, tintAmt, opts) {
     pose(t, dt, wantSit, wantRest) {
       sit += ((wantSit ? 1 : 0) - sit) * Math.min(1, dt * 5);
       rest += ((wantRest ? 1 : 0) - rest) * Math.min(1, dt * 3);
+      if (managed) {
+        const s = stance({ moving: walking, sitting: !!wantSit });
+        if (s !== cur) { if (s === "walk" && cw.Walk < 0.05) acts.Walk.time = 0; cur = s; }
+        const want = clipWeights(cur), k = 1 - Math.exp(-3 * dt / FADE[cur]);
+        for (const n of ["Walk", "Idle"]) { cw[n] += (want[n] - cw[n]) * k; if (Math.abs(cw[n] - want[n]) < 0.002) cw[n] = want[n]; acts[n].setEffectiveWeight(cw[n]); }
+      }
       if (bones.hipL && sit > 0.01) {
         const w = sit;
-        if (acts.Walk && wantSit) acts.Walk.weight = 0;
+        if (acts.Walk && wantSit && !managed) acts.Walk.weight = 0;
         for (const [n, x, y, z] of [["hipL", -1.5, -0.35, -0.65], ["hipR", -1.5, 0.35, 0.65], ["kneeL", 2.45, 0, 0], ["kneeR", 2.45, 0, 0], ["spine", 0.12, 0, 0], ["neck", 0.18, 0, 0],
           ["shoulderL", -0.75, 0, -0.25], ["shoulderR", -0.75, 0, 0.25], ["elbowL", -0.9, 0, 0], ["elbowR", -0.9, 0, 0]]) bend(n, x, y, z, w);
         bones.hips.b.position.y = hipsY - 0.84 * w;
       } else if (bones.hips) bones.hips.b.position.y = hipsY;
-      if (acts.Walk && !wantSit && acts.Walk.weight === 0) acts.Walk.weight = 1;
+      if (acts.Walk && !wantSit && acts.Walk.weight === 0 && !managed) acts.Walk.weight = 1;
       const wv = t - waveT;
       if (bones.shoulderR && wv < 1.6) {
         const w = Math.sin(Math.min(1, wv / 1.6) * Math.PI) * 1.4; const wt = Math.min(1, w);
@@ -353,7 +369,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
         obj.position.y = -t0box * k * (1 - rest * 0.38);
         mixer.timeScale = 1 - rest * 0.85;
       }
-      if (wardrobe) wardrobe.dress(acts.Walk ? acts.Walk.time : 0);
+      if (wardrobe) wardrobe.dress(managed ? { walk: acts.Walk.time, idle: acts.Idle.time, w: cw.Walk + cw.Idle > 0.01 ? cw.Idle / (cw.Walk + cw.Idle) : 0 } : acts.Walk ? acts.Walk.time : 0);
     },
   };
 }
@@ -1153,7 +1169,9 @@ function figureLightTick(t, dt, me3) {
   for (const l of mirrorLights) {
     const a = l.userData.at; l.position.set(BETWEEN_AT.x + a.x, sy + a.y, BETWEEN_AT.z + a.z);
     l.target.position.set(MIRROR_STAND.x, sy + a.ty, MIRROR_STAND.z); l.distance = F.dist; l.intensity = F[a.k] * me3;
+    l.visible = me3 > 0.5;   // a light that is off is not drawn at all (the mirror cuts in and out, so this never blends)
   }
+  waveLight.visible = me3 <= 0.5;
 }
 function frame() {
   const dt = Math.min(0.05, clock.getDelta());

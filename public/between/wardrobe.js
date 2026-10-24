@@ -8,7 +8,11 @@
      const parts = await loadParts(loadGltf);           // once: the four .glb files under /between/m/dusk/
      const w = dressFigure(obj, parts);                 // obj: a SkeletonUtils clone of parts.dusk.scene
      w.set(look);                                       // a parsed look (look.js), or null for the default traveller
-     w.dress(walkTime);                                 // each frame, after the mixer and the code-made poses */
+     w.dress(walkTime);                                 // each frame, after the mixer and the code-made poses
+     w.dress({ walk: tWalk, idle: tIdle, w: idleShare });  // or: the robe crossfaded between the Walk and the Idle bakes
+   The standing idle (lt-idle-default): average-dusk.glb carries a CMU mocap 'Idle' beside the 'Walk'
+   (tools/mocap/retarget_idle.py), and robe-baked-idle.glb is the walk bake's mesh over it (tools/mocap/bake-idle-robe.mjs),
+   so both robes share one mesh and point order and the figure crossfades between them. */
 import * as THREE from "three";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
 import { bakedRobe, armShare, armRadii, CUT, maskBand, LEG, legRadii, legCapsules } from "./figure-robe.js";
@@ -17,8 +21,8 @@ import { colorsOf, DEFAULT_LOOK } from "../calrunia/look.js";
 const DIR = "/between/m/dusk/";
 let parts = null;
 export function loadParts(loadGltf) {
-  if (!parts) parts = Promise.all(["average-dusk", "robe", "sash", "robe-baked"].map(n => loadGltf(DIR + n + ".glb")))
-    .then(([dusk, robe, sash, baked]) => ({ dusk, robe, sash, baked }));
+  if (!parts) parts = Promise.all(["average-dusk", "robe", "sash", "robe-baked", "robe-baked-idle"].map(n => loadGltf(DIR + n + ".glb")))
+    .then(([dusk, robe, sash, baked, bakedIdle]) => ({ dusk, robe, sash, baked, bakedIdle }));
   return parts;
 }
 
@@ -38,7 +42,8 @@ export function dressFigure(root, P) {
   const bone = n => root.getObjectByName(n);
   const B = Object.fromEntries(["hips", "spine", "neck", "head", "shoulderL", "shoulderR", "hipL", "hipR"].map(n => [n, bone(n)]));
   const rest = new Map(); root.traverse(o => { if (o.isBone) rest.set(o, { p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() }); });
-  const clip = P.dusk.animations[0];
+  const clip = P.dusk.animations.find(a => a.name === "Walk") || P.dusk.animations[0];
+  const idleClip = P.dusk.animations.find(a => a.name === "Idle");
 
   const col = mesh.geometry.attributes.color, part = new Uint8Array(col.count);
   for (let i = 0; i < col.count; i++) { const c = [col.getX(i), col.getY(i), col.getZ(i)];
@@ -71,6 +76,8 @@ export function dressFigure(root, P) {
     const g = bm.geometry, flat = a => Float32Array.from(a.array);
     const base = flat(g.attributes.position), normal = flat(g.attributes.normal);
     const frames = g.morphAttributes.position.map(flat), frameNormals = g.morphAttributes.normal.map(flat);
+    let ig = null; if (P.bakedIdle && idleClip) P.bakedIdle.scene.traverse(o => { if (o.isMesh && !ig) ig = o.geometry; });
+    if (ig && ig.attributes.position.count !== g.attributes.position.count) ig = null;   // the idle bake must be the walk bake's mesh
     let sm = null; skClone(P.robe.scene).traverse(o => { if (o.isSkinnedMesh && !sm) sm = o; });
     sm.bind(new THREE.Skeleton(sm.skeleton.bones.map(b => bone(b.name)), sm.skeleton.boneInverses), sm.bindMatrix);
     sm.skeleton.update();
@@ -78,7 +85,9 @@ export function dressFigure(root, P) {
     const armB = new Set(["shoulderL", "elbowL", "wristL", "shoulderR", "elbowR", "wristR"]), sp = new Float32Array(SP.count * 3), aw = new Float32Array(SP.count), v = new THREE.Vector3();
     for (let i = 0; i < SP.count; i++) { v.fromBufferAttribute(SP, i); sm.applyBoneTransform(i, v); sp.set([v.x, v.y, v.z], i * 3);
       for (let q = 0; q < 4; q++) if (armB.has(sm.skeleton.bones[J.getComponent(i, q)].name)) aw[i] += W.getComponent(i, q); }
-    const r = bakedRobe({ base, normal, frames, frameNormals, fps: frames.length / clip.duration, arm: armShare(base, sp, aw) });
+    const arm = armShare(base, sp, aw);
+    const r = bakedRobe({ base, normal, frames, frameNormals, fps: frames.length / clip.duration, arm });
+    const ri = ig ? bakedRobe({ base, normal, frames: ig.morphAttributes.position.map(flat), frameNormals: ig.morphAttributes.normal.map(flat), fps: ig.morphAttributes.position.length / idleClip.duration, arm }) : null;
     const geo = new THREE.BufferGeometry(), Pa = new THREE.BufferAttribute(r.pos, 3), N = new THREE.BufferAttribute(r.nor, 3);
     Pa.setUsage(THREE.DynamicDrawUsage); N.setUsage(THREE.DynamicDrawUsage); r.pose(0); geo.setAttribute("position", Pa); geo.setAttribute("normal", N);
     const c = g.attributes.color, kind = new Uint8Array(c.count), y = new Float32Array(c.count);
@@ -96,7 +105,7 @@ export function dressFigure(root, P) {
     const key = THREE.MeshStandardMaterial.prototype.customProgramCacheKey;
     rm.customProgramCacheKey = () => key.call(rm) + "|robehem";
     const m = new THREE.Mesh(geo, rm); m.frustumCulled = false; root.add(m);
-    return { m, kind, paint, r, P: Pa, N, hem, band };
+    return { m, kind, paint, r, ri, P: Pa, N, hem, band };
   })();
   const seg = ([a, b], A = new THREE.Vector3(), Bp = new THREE.Vector3()) => { wp(a, A);
     if (b) wp(b, Bp); else Bp.copy(A).sub(wp(bone(a).parent.name, Bp)).setLength(HAND).add(A); return [A, Bp]; };
@@ -205,11 +214,15 @@ export function dressFigure(root, P) {
       if (L.outfit !== outfit) { const C = CUT[L.outfit] ?? CUT.coat; robe.hem.value = C.hem || -1; sash.m.visible = C.sash; mask(C); outfit = L.outfit; }
       paint(L, colorsOf(L));
     },
-    /* the robe at the Walk's time t, on this body as it is posed now */
+    hasIdle: !!robe.ri,
+    /* the robe at the Walk's time t (a number), or crossfaded { walk, idle, w } (w: the Idle's share), on this body as posed now */
     dress(t) {
       root.updateMatrixWorld(true); wp("hips", hipsAt);
       const caps = ARM.map((q, i) => { const [A, Bp] = seg(q, ...capA[i]); return [A.x, A.y, A.z, Bp.x, Bp.y, Bp.z, RAD[q[0]] + PAD]; }).concat(legCapsules(legPos, LRAD));
-      robe.r.pose(t, { cx: hipsAt.x, cz: hipsAt.z, ...body, caps });
+      const o = { cx: hipsAt.x, cz: hipsAt.z, ...body, caps }, st = typeof t === "number" ? { walk: t, w: 0 } : t, w = robe.ri ? st.w || 0 : 0;
+      if (w < 0.999) robe.r.pose(st.walk || 0, o);
+      if (w > 0.001) { const a = robe.ri.pose(st.idle || 0, o), P = robe.r.pos, Nn = robe.r.nor;
+        if (w >= 0.999) { P.set(a.pos); Nn.set(a.nor); } else for (let i = 0; i < P.length; i++) { P[i] += (a.pos[i] - P[i]) * w; Nn[i] += (a.nor[i] - Nn[i]) * w; } }
       robe.P.needsUpdate = true; robe.N.needsUpdate = true;
     },
   };
