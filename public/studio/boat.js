@@ -1,18 +1,19 @@
 /* The studio boat, Lantern deck (art direction https://claude.ai/artifact/85chXzRvLpPj7dumm6hi5z, still A).
- * A Phaser 3 side view you walk left and right across. Every house is a strand of the work, and how it looks is how
- * the strand is doing. Data arrives as window.BOAT (src/lib/studio/world.ts); nothing here is a list or a panel.
+ * A Phaser 3 side view you walk left and right across. The boat is a game design studio: each department is a hall
+ * with a painted sign, and every strand of the work is a room inside one (position ty-boat-departments). From outside
+ * a room is a window showing its state; tap a hall and its front wall opens to show the rooms, tap a room to knock. Data arrives as window.BOAT (src/lib/studio/world.ts); nothing here is a list or a panel.
  * Spirits come from the spirit generator's pixel renders (sprites/spirits.png: 18 bases across, the five elements down).
- * Params: ?skip=1 starts awake, ?intro=1 forces the wake-up, ?strand=<name> walks to that house, ?sky=dawn|day|dusk|night. */
+ * Params: ?skip=1 starts awake, ?intro=1 forces the wake-up, ?strand=<name> opens that room's hall and knocks, ?sky=dawn|day|dusk|night. */
 (function () {
   'use strict'
   const W = window.BOAT
   const Q = new URLSearchParams(location.search)
-  const FLOOR = [640, 440] // lower deck, upper gallery
+  const FLOOR = 640 // the deck; the player never leaves it
+  const ROOM_W = 118 // src/lib/studio/world.ts
   const INK = '#3b2a3f'
   const SPEED = 280
   const ELEMENTS = ['earth', 'wood', 'fire', 'water', 'metal'] // rows of sprites/spirits.png
   const BASES = 18
-  const BELLS = 3 // only the freshest waiting houses hang a bell; the rest keep a letter on the door
   const nameHash = s => { let h = 7; for (const ch of s) h = (h * 131 + ch.charCodeAt(0)) >>> 0; return h }
   /** A strand's own spirit: a stable base and element, so it is the same creature every visit. */
   const spiritOf = strand => { const n = nameHash(strand); return (n % ELEMENTS.length) * BASES + (Math.floor(n / 5) % BASES) }
@@ -78,81 +79,140 @@
   function ink(c, w = 3) { c.strokeStyle = INK; c.lineWidth = w; c.lineJoin = 'round'; c.lineCap = 'round' }
   function rr(c, x, y, w, h, r) { c.beginPath(); c.roundRect(x, y, w, h, r) }
 
-  function drawHouse(c, h, lit) {
-    const w = 150, x0 = 5, base = 228, bodyH = 118, top = base - bodyH
-    const wall = hsl(h.hue, 28, 74), wallDark = hsl(h.hue, 24, 62), roof = hsl((h.hue + 20) % 360, 42, 52)
-    const kind = h.hue % 3
-    c.save()
-    // body
-    ink(c); c.fillStyle = wall; rr(c, x0 + 6, top, w - 12, bodyH, 6); c.fill(); c.stroke()
-    c.strokeStyle = wallDark; c.lineWidth = 1.5
-    for (let y = top + 14; y < base - 4; y += 13) { c.beginPath(); c.moveTo(x0 + 9, y); c.lineTo(x0 + w - 9, y); c.stroke() }
-    // roof
-    ink(c); c.fillStyle = roof
-    if (kind === 0) { c.beginPath(); c.moveTo(x0 - 4, top + 6); c.lineTo(x0 + w / 2, top - 62); c.lineTo(x0 + w + 4, top + 6); c.closePath(); c.fill(); c.stroke() }
-    else if (kind === 1) {
-      c.beginPath(); c.moveTo(x0 + 8, top + 4); c.quadraticCurveTo(x0 + 10, top - 70, x0 + w / 2, top - 74)
-      c.quadraticCurveTo(x0 + w - 10, top - 70, x0 + w - 8, top + 4); c.closePath(); c.fill(); c.stroke()
-      c.strokeStyle = hsl((h.hue + 20) % 360, 40, 40); c.lineWidth = 1.5
-      for (let i = 1; i < 6; i++) { c.beginPath(); c.moveTo(x0 + w / 2, top - 72); c.lineTo(x0 + 8 + i * (w - 16) / 6, top + 4); c.stroke() }
-      ink(c); c.fillStyle = '#f3d48a'; c.beginPath(); c.arc(x0 + w / 2, top - 78, 5, 0, 7); c.fill(); c.stroke()
-    } else { rr(c, x0 - 2, top - 26, w + 4, 32, 6); c.fill(); c.stroke(); c.fillStyle = hsl(h.hue, 25, 45); c.fillRect(x0 + 2, top + 2, w - 4, 4) }
-    // chimney
-    if (kind !== 1) { ink(c); c.fillStyle = '#8a7a80'; c.fillRect(x0 + w - 44, top - (kind === 0 ? 48 : 52), 16, 30); c.strokeRect(x0 + w - 44, top - (kind === 0 ? 48 : 52), 16, 30) }
-    // window
-    const glow = lit ? 1 : h.look === 'vines' ? 0.15 + 0.35 * h.glow : h.look === 'scaffold' ? 0.1 : 0.35
-    const wx = x0 + 22, wy = top + 22
-    c.fillStyle = `rgba(255,214,120,${glow})`; ink(c)
-    if (kind === 1) { c.beginPath(); c.arc(wx + 22, wy + 18, 18, 0, 7); c.fillStyle = '#2b3550'; c.fill(); c.fillStyle = `rgba(255,214,120,${glow})`; c.fill(); c.stroke() }
-    else { rr(c, wx, wy, 44, 36, 4); c.fillStyle = '#2b3550'; c.fill(); c.fillStyle = `rgba(255,214,120,${glow})`; c.fill(); c.stroke() }
-    c.lineWidth = 2; c.beginPath()
-    if (kind === 1) { c.moveTo(wx + 22, wy); c.lineTo(wx + 22, wy + 36); c.moveTo(wx + 4, wy + 18); c.lineTo(wx + 40, wy + 18) }
-    else { c.moveTo(wx + 22, wy); c.lineTo(wx + 22, wy + 36); c.moveTo(wx, wy + 18); c.lineTo(wx + 44, wy + 18) }
-    c.stroke()
-    // door
-    const dx = x0 + w - 56, dy = base - 58
-    ink(c); c.fillStyle = hsl((h.hue + 200) % 360, 30, 42)
-    c.beginPath(); c.moveTo(dx, base - 2); c.lineTo(dx, dy + 14); c.arc(dx + 17, dy + 14, 17, Math.PI, 0); c.lineTo(dx + 34, base - 2); c.closePath(); c.fill(); c.stroke()
-    c.fillStyle = '#f3d48a'; c.beginPath(); c.arc(dx + 27, base - 28, 2.5, 0, 7); c.fill()
-    // mail slot, and one letter sticking out per round built past his last look
-    ink(c, 2); c.fillStyle = '#5a4a40'; c.fillRect(x0 + 24, base - 30, 30, 8); c.strokeRect(x0 + 24, base - 30, 30, 8)
-    for (let i = 0; i < Math.min(4, h.letters); i++) {
-      c.save(); c.translate(x0 + 30 + i * 6, base - 30); c.rotate(-0.25 + i * 0.12)
-      c.fillStyle = '#fbf3e0'; ink(c, 1.5); c.fillRect(-6, -14, 14, 12); c.strokeRect(-6, -14, 14, 12)
-      c.fillStyle = '#c0392b'; c.beginPath(); c.arc(1, -8, 2.5, 0, 7); c.fill(); c.restore()
+  // ---------- the department halls ----------
+  // A hall texture is the hall plus 20px of eaves each side; BASE is its floor line, placed on the deck.
+  const TH = 400, BASE = 394, S = 122, SLAB = 8, WT = BASE - 2 * S - SLAB
+  const cellTop = tier => tier ? WT : BASE - S
+  /** Where a storey's floor is on the deck, in ship coordinates. */
+  const floorY = tier => FLOOR - 2 - (tier ? S + SLAB : 0)
+  const hallHue = id => nameHash(id) % 360
+  /** Spans of the hall in texture x: the core (door and its rooms), then each wing. */
+  function spans(hall) {
+    const left = hall.x - hall.w / 2, L = x => x - left + 20
+    const core1 = hall.wings.length ? hall.wings[0].x0 : hall.x + hall.w / 2
+    const out = [{ x0: 20, x1: L(core1), hue: hallHue(hall.id), wing: null }]
+    hall.wings.forEach((w, i) => out.push({ x0: L(w.x0), x1: i === hall.wings.length - 1 ? hall.w + 20 : L(hall.wings[i + 1].x0), hue: nameHash(w.name) % 360, wing: w }))
+    return { out, L }
+  }
+
+  /** The closed front: walls, one window per room showing its state, the door. This is what fades when you open it. */
+  function drawFront(c, hall, rooms) {
+    const { out, L } = spans(hall)
+    for (const s of out) {
+      ink(c); c.fillStyle = hsl(s.hue, 30, s.wing ? 70 : 76); c.fillRect(s.x0, WT, s.x1 - s.x0, BASE - WT); c.strokeRect(s.x0, WT, s.x1 - s.x0, BASE - WT)
+      c.strokeStyle = hsl(s.hue, 24, s.wing ? 58 : 64); c.lineWidth = 1.5
+      for (let y = WT + 14; y < BASE - 4; y += 13) { c.beginPath(); c.moveTo(s.x0 + 3, y); c.lineTo(s.x1 - 3, y); c.stroke() }
+      ink(c, 3); c.fillStyle = hsl(s.hue, 26, 52); c.fillRect(s.x0, BASE - S - SLAB, s.x1 - s.x0, SLAB); c.strokeRect(s.x0, BASE - S - SLAB, s.x1 - s.x0, SLAB) // trim between storeys
     }
-    // the looks
-    if (h.look === 'bell') { // a letter pinned to the door
-      c.save(); c.translate(dx + 17, dy + 22); c.rotate(-0.08)
-      c.fillStyle = '#fff7e6'; ink(c, 2); rr(c, -14, -10, 28, 20, 2); c.fill(); c.stroke()
-      c.beginPath(); c.moveTo(-14, -10); c.lineTo(0, 2); c.lineTo(14, -10); c.stroke()
-      c.fillStyle = '#d0453a'; c.beginPath(); c.arc(0, 2, 4, 0, 7); c.fill(); c.restore()
-      if (h.belled) { ink(c, 3); c.beginPath(); c.moveTo(x0 + w - 6, top + 12); c.lineTo(x0 + w + 12, top + 12); c.stroke() } // bell bracket
-    }
-    if (h.look === 'scaffold') {
-      ink(c, 3); c.strokeStyle = '#8a5a32'
-      for (const px of [x0 - 2, x0 + w + 2]) { c.beginPath(); c.moveTo(px, base); c.lineTo(px, top - 70); c.stroke() }
-      c.lineWidth = 6; c.strokeStyle = '#a8784a'
-      for (const py of [top - 6, top - 52]) { c.beginPath(); c.moveTo(x0 - 6, py); c.lineTo(x0 + w + 6, py); c.stroke() }
-      c.lineWidth = 2; c.strokeStyle = '#8a5a32'; c.beginPath(); c.moveTo(x0 - 2, top - 6); c.lineTo(x0 + w + 2, top - 52); c.stroke()
-      c.fillStyle = '#9fc7a4'; ink(c, 2); c.fillRect(x0 + 18, top - 50, 48, 42); c.strokeRect(x0 + 18, top - 50, 48, 42) // fresh boards
-      c.fillStyle = '#c99a5e'; c.fillRect(x0 + 80, top - 30, 26, 22); c.strokeRect(x0 + 80, top - 30, 26, 22)
-      c.beginPath(); c.moveTo(x0 + 80, top - 30); c.lineTo(x0 + 106, top - 8); c.moveTo(x0 + 106, top - 30); c.lineTo(x0 + 80, top - 8); c.stroke()
-    }
-    if (h.look === 'vines') { // vines and moss thicken day by day
-      const n = Math.round(8 + 34 * h.vines)
-      c.strokeStyle = '#3f6b3a'; c.lineWidth = 3
-      c.beginPath(); c.moveTo(x0 + 2, base); c.bezierCurveTo(x0 - 8, top + 40, x0 + 30, top - 10, x0 + w / 2, top - 30); c.stroke()
-      if (h.vines > 0.5) { c.beginPath(); c.moveTo(x0 + w - 2, base); c.bezierCurveTo(x0 + w + 8, top + 50, x0 + w - 20, top, x0 + w / 2, top - 30); c.stroke() }
-      for (let i = 0; i < n; i++) {
-        const t = rand(), side = i % 2, lx = side ? x0 + w - 4 - 30 * t * rand() : x0 + 4 + 40 * t * rand()
-        const ly = base - (bodyH + 50) * t - rand() * 8
-        c.fillStyle = i % 3 ? '#5f9a4e' : '#7cb85f'; ink(c, 1.5)
-        c.beginPath(); c.ellipse(lx, ly, 8, 5, rand() * 3, 0, 7); c.fill(); c.stroke()
+    // the door at the stern end
+    const dx = 34, dh = 92
+    ink(c); c.fillStyle = hsl((hallHue(hall.id) + 200) % 360, 30, 40)
+    c.beginPath(); c.moveTo(dx, BASE - 2); c.lineTo(dx, BASE - dh + 20); c.arc(dx + 20, BASE - dh + 20, 20, Math.PI, 0); c.lineTo(dx + 40, BASE - 2); c.closePath(); c.fill(); c.stroke()
+    c.fillStyle = '#f3d48a'; c.beginPath(); c.arc(dx + 31, BASE - 42, 3, 0, 7); c.fill()
+    ink(c, 2); c.fillStyle = '#5a4a40'; c.fillRect(dx + 8, BASE - 30, 24, 6); c.strokeRect(dx + 8, BASE - 30, 24, 6)
+    for (const r of rooms) {
+      const x = L(r.x), cy = cellTop(r.tier) + S / 2 - 4, ww = 46, wh = 44
+      const lit = r.look === 'lit' || r.look === 'scaffold' ? 0.95 : r.look === 'bell' ? 0.8 : 0.12 + 0.3 * r.glow
+      ink(c, 3); c.fillStyle = '#2b3550'; rr(c, x - ww / 2, cy - wh / 2, ww, wh, 5); c.fill()
+      c.fillStyle = `rgba(255,214,120,${lit})`; c.fill(); c.stroke()
+      if (r.look === 'bell') { // a letter propped in the window, its seal glowing
+        c.fillStyle = '#fff7e6'; ink(c, 2); c.fillRect(x - 13, cy - 4, 26, 18); c.strokeRect(x - 13, cy - 4, 26, 18)
+        c.beginPath(); c.moveTo(x - 13, cy - 4); c.lineTo(x, cy + 6); c.lineTo(x + 13, cy - 4); c.stroke()
+        c.fillStyle = '#d0453a'; c.beginPath(); c.arc(x, cy + 6, 3.5, 0, 7); c.fill()
       }
-      c.fillStyle = 'rgba(70,90,70,0.25)'; c.fillRect(x0 + 6, base - 18, w - 12, 16)
+      ink(c, 2); c.beginPath(); c.moveTo(x, cy - wh / 2); c.lineTo(x, cy + wh / 2); c.moveTo(x - ww / 2, cy - 4); c.lineTo(x + ww / 2, cy - 4); c.stroke()
+      ink(c, 3); c.fillStyle = hsl(r.hue, 30, 58); c.fillRect(x - ww / 2 - 4, cy + wh / 2, ww + 8, 6); c.strokeRect(x - ww / 2 - 4, cy + wh / 2, ww + 8, 6) // sill in the room's colour
+      if (r.look === 'scaffold') { // poles and a plank across this room's window
+        ink(c, 3); c.strokeStyle = '#8a5a32'
+        for (const px of [x - 40, x + 40]) { c.beginPath(); c.moveTo(px, BASE); c.lineTo(px, cellTop(r.tier) - 8); c.stroke() }
+        c.lineWidth = 6; c.strokeStyle = '#a8784a'; c.beginPath(); c.moveTo(x - 46, cellTop(r.tier) + 6); c.lineTo(x + 46, cellTop(r.tier) + 6); c.stroke()
+        c.lineWidth = 2; c.strokeStyle = '#8a5a32'; c.beginPath(); c.moveTo(x - 40, BASE - 4); c.lineTo(x + 40, cellTop(r.tier) + 8); c.stroke()
+      }
+      if (r.look === 'vines') { // vines climb over the window, thicker by the day
+        const n = Math.round(4 + 14 * r.vines)
+        c.strokeStyle = '#3f6b3a'; c.lineWidth = 3
+        c.beginPath(); c.moveTo(x - 30, cy + 40); c.bezierCurveTo(x - 40, cy, x - 10, cy - 30, x + 20, cy - 34); c.stroke()
+        for (let i = 0; i < n; i++) {
+          const a = rand() * 6.28, d = 18 + rand() * 16
+          c.fillStyle = i % 3 ? '#5f9a4e' : '#7cb85f'; ink(c, 1.5)
+          c.beginPath(); c.ellipse(x + Math.cos(a) * d, cy + Math.sin(a) * d * 0.9, 7, 4.5, rand() * 3, 0, 7); c.fill(); c.stroke()
+        }
+      }
     }
-    c.restore()
+  }
+
+  /** The roof stays when the front fades: the hall's painted sign, a gabled roof over each wing with its own name. */
+  function drawRoof(c, hall) {
+    const { out } = spans(hall), core = out[0]
+    for (const s of out.slice(1)) { // wings: gables
+      ink(c, 3); c.fillStyle = hsl((s.hue + 20) % 360, 40, 50)
+      c.beginPath(); c.moveTo(s.x0 - 8, WT + 4); c.lineTo((s.x0 + s.x1) / 2, WT - 78); c.lineTo(s.x1 + 8, WT + 4); c.closePath(); c.fill(); c.stroke()
+      c.strokeStyle = hsl((s.hue + 20) % 360, 36, 40); c.lineWidth = 1.5
+      for (let k = 1; k < 4; k++) { c.beginPath(); c.moveTo(s.x0 - 8 + k * 6, WT + 4 - k * 18); c.lineTo(s.x1 + 8 - k * 6, WT + 4 - k * 18); c.stroke() }
+      sign(c, s.wing.name, (s.x0 + s.x1) / 2, WT - 22, 18, Math.min(150, s.x1 - s.x0 - 30))
+    }
+    ink(c, 3); c.fillStyle = hsl((core.hue + 20) % 360, 42, 50) // the core: a mansard roof the sign hangs on
+    c.beginPath(); c.moveTo(core.x0 - 16, WT + 6); c.lineTo(core.x0 + 14, WT - 60); c.lineTo(core.x1 - 14, WT - 60); c.lineTo(core.x1 + (out.length > 1 ? 0 : 16), WT + 6); c.closePath(); c.fill(); c.stroke()
+    c.fillStyle = '#8a7a80'; ink(c, 3); c.fillRect(core.x1 - 54, WT - 92, 18, 36); c.strokeRect(core.x1 - 54, WT - 92, 18, 36)
+    sign(c, hall.name, (core.x0 + core.x1) / 2, WT - 30, 28, Math.min(260, core.x1 - core.x0 - 60))
+    if (hall.bells) { ink(c, 3); c.beginPath(); c.moveTo(core.x0 + 4, WT + 18); c.lineTo(core.x0 - 14, WT + 18); c.stroke() } // the bell's bracket
+  }
+
+  function sign(c, text, x, y, size, maxW) {
+    c.font = `700 ${size}px Caveat, cursive`
+    let w = c.measureText(text).width
+    if (w > maxW) { size = Math.floor(size * maxW / w); c.font = `700 ${size}px Caveat, cursive`; w = c.measureText(text).width }
+    ink(c, 2.5); c.fillStyle = '#f4e3bf'; rr(c, x - w / 2 - 12, y - size * 0.7, w + 24, size * 1.25, 6); c.fill(); c.stroke()
+    c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, x, y - size * 0.06)
+  }
+
+  /** Inside, behind the front: each room a small cutaway in its strand's colour, with a lamp, a name plaque and the
+   * props of its state (a letter on the table, boards for a build, a desk for a lit room, vines and dust at rest). */
+  function drawBack(c, hall, rooms) {
+    const { out, L } = spans(hall)
+    for (const s of out) { ink(c, 4); c.fillStyle = hsl(s.hue, 20, 36); c.fillRect(s.x0, WT, s.x1 - s.x0, BASE - WT); c.strokeRect(s.x0, WT, s.x1 - s.x0, BASE - WT) }
+    for (const r of rooms) {
+      const x0 = L(r.x) - ROOM_W / 2, top = cellTop(r.tier), bot = top + S, x = L(r.x)
+      c.fillStyle = hsl(r.hue, 32, r.look === 'vines' ? 52 : 70); c.fillRect(x0, top, ROOM_W, S)
+      c.fillStyle = hsl(r.hue, 30, r.look === 'vines' ? 46 : 63)
+      for (let k = x0 + 8; k < x0 + ROOM_W; k += 16) c.fillRect(k, top + 8, 6, S - 22) // wallpaper stripes
+      c.fillStyle = '#9a6a42'; c.fillRect(x0, bot - 12, ROOM_W, 12); c.fillStyle = '#7a5232'; c.fillRect(x0, top, ROOM_W, 7) // floor, ceiling beam
+      ink(c, 2); c.strokeStyle = 'rgba(59,42,63,.5)'; for (let k = x0 + 20; k < x0 + ROOM_W; k += 26) { c.beginPath(); c.moveTo(k, bot - 12); c.lineTo(k, bot); c.stroke() }
+      ink(c, 3); c.strokeRect(x0, top, ROOM_W, S)
+      // the lamp, hanging from the beam
+      ink(c, 1.5); c.beginPath(); c.moveTo(x + 18, top + 7); c.lineTo(x + 18, top + 22); c.stroke()
+      ink(c, 2); c.fillStyle = r.look === 'vines' ? '#8a8070' : '#ffe6a0'; rr(c, x + 12, top + 22, 12, 15, 3); c.fill(); c.stroke()
+      // the name plaque
+      c.font = '700 14px Caveat, cursive'; const nm = r.strand.replace(/-/g, ' '), pw = Math.min(ROOM_W - 12, c.measureText(nm).width + 10)
+      ink(c, 1.5); c.fillStyle = '#f4e3bf'; c.fillRect(x - 50, top + 12, pw, 17); c.strokeRect(x - 50, top + 12, pw, 17)
+      c.fillStyle = INK; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(nm, x - 46, top + 21, pw - 8)
+      const fl = bot - 12
+      if (r.look === 'bell') { // a table by the wall with the letter on it
+        ink(c, 2.5); c.fillStyle = '#8a5a32'; c.fillRect(x + 6, fl - 30, 44, 6); c.strokeRect(x + 6, fl - 30, 44, 6)
+        c.fillRect(x + 10, fl - 24, 5, 24); c.fillRect(x + 41, fl - 24, 5, 24)
+        c.fillStyle = '#fff7e6'; ink(c, 1.5); c.fillRect(x + 16, fl - 42, 24, 13); c.strokeRect(x + 16, fl - 42, 24, 13)
+        c.fillStyle = '#d0453a'; c.beginPath(); c.arc(x + 28, fl - 35, 3, 0, 7); c.fill()
+      }
+      if (r.look === 'scaffold') { // boards against the wall and a sawhorse
+        c.fillStyle = '#c99a5e'; ink(c, 2)
+        for (const k of [0, 9, 18]) { c.save(); c.translate(x + 26 + k, fl); c.rotate(0.18); c.fillRect(-3, -76, 7, 76); c.strokeRect(-3, -76, 7, 76); c.restore() }
+        c.strokeStyle = '#6b4a32'; c.lineWidth = 4; c.beginPath(); c.moveTo(x + 2, fl - 22); c.lineTo(x + 50, fl - 22); c.moveTo(x + 6, fl); c.lineTo(x + 12, fl - 22); c.moveTo(x + 46, fl); c.lineTo(x + 40, fl - 22); c.stroke()
+      }
+      if (r.look === 'lit') { // a desk with open pages and a candle
+        ink(c, 2.5); c.fillStyle = '#7a4a32'; c.fillRect(x + 4, fl - 26, 48, 26); c.strokeRect(x + 4, fl - 26, 48, 26)
+        c.fillStyle = '#fbf1dc'; ink(c, 1.5); c.fillRect(x + 10, fl - 31, 18, 5); c.fillRect(x + 28, fl - 31, 18, 5)
+        c.fillStyle = '#fff3c0'; c.fillRect(x + 44, fl - 40, 4, 10)
+      }
+      if (r.look === 'vines') { // vines down from the beam, dust on everything
+        c.strokeStyle = '#3f6b3a'; c.lineWidth = 2.5
+        for (const k of [x0 + 10, x0 + ROOM_W - 16]) { c.beginPath(); c.moveTo(k, top + 7); c.quadraticCurveTo(k + 8, top + 40, k - 2, top + 30 + 50 * r.vines); c.stroke() }
+        for (let i = 0; i < 6 + 10 * r.vines; i++) { c.fillStyle = i % 2 ? '#5f9a4e' : '#7cb85f'; c.beginPath(); c.ellipse(x0 + 8 + rand() * (ROOM_W - 16), top + 10 + rand() * 50 * r.vines + 8, 5, 3, rand() * 3, 0, 7); c.fill() }
+        c.fillStyle = `rgba(40,50,60,${0.25 + 0.3 * (1 - r.glow)})`; c.fillRect(x0, top, ROOM_W, S)
+      }
+      for (let i = 0; i < Math.min(4, r.letters); i++) { // rounds built past his last look, stacked on the floor
+        c.fillStyle = '#fbf3e0'; ink(c, 1.5); c.fillRect(x - 54 + i * 3, fl - 6 - i * 5, 22, 6); c.strokeRect(x - 54 + i * 3, fl - 6 - i * 5, 22, 6)
+      }
+    }
   }
 
   function drawWheelhouse(c) {
@@ -242,7 +302,7 @@
     }
 
     create() {
-      this.houses = []; this.bells = []
+      this.bells = []
       this.textures.get('spirits').setFilter(Phaser.Textures.FilterMode.NEAREST)
       // sky, anchored to the camera sideways and to the world up and down
       makeTex(this, 'sky', 4, 512, (c, w, h) => {
@@ -354,6 +414,11 @@
       this.seaFar = this.add.image(-6000, 600, 'sea').setOrigin(0, 0).setDisplaySize(W.width + 12000, 1600).setDepth(-80)
       this.waves = this.add.tileSprite(-6000, 610, W.width + 12000, 900, 'wave').setOrigin(0, 0).setDepth(-79).setAlpha(0.9)
       // the ship: everything on it bobs together
+      // night: everything on board takes the hour's colour from a multiply layer; glows and words sit above it
+      const NIGHT = { dawn: 0xe6d6e0, day: 0xffffff, dusk: 0xc2b0d6, night: 0x8a86c8 }[skyNow()] ?? 0xffffff
+      if (NIGHT !== 0xffffff) this.add.rectangle(0, 0, 40000, 40000, NIGHT).setScrollFactor(0).setDepth(2.5).setBlendMode(Phaser.BlendModes.MULTIPLY)
+      this.fx = this.add.container(0, 0).setDepth(3)
+      const glow = o => { this.fx.add(o); return o }
       const ship = this.ship = this.add.container(0, 0).setDepth(0)
       const add = o => { ship.add(o); return o }
       add(this.add.image(W.mastX - 4, 646, 'sail').setOrigin(0.5, 1).setVisible(false)) // placeholder for ordering
@@ -361,29 +426,12 @@
       this.sail = add(this.add.image(W.mastX, 100, 'sail').setOrigin(0.5, 0).setScale(0.9, 1))
       this.flag = add(this.add.triangle(W.mastX + 30, 30, 0, 0, 44, 10, 0, 20, 0xe0645a).setStrokeStyle(2, 0x3b2a3f))
       add(this.add.image(-30, 634, 'hull').setOrigin(0, 0))
-      // the gallery over the houses, with posts down to the deck
-      const g0 = W.houses.length ? Math.min(...W.houses.map(h => h.x)) - 90 : W.wheelhouseX - 160
-      const g1 = W.houses.length ? Math.max(...W.houses.map(h => h.x)) + 90 : W.mastX + 80
-      this.gallery = [g0, g1]
-      const gfx = add(this.add.graphics())
-      gfx.fillStyle(0xa8784a).lineStyle(3, 0x3b2a3f).fillRect(g0, FLOOR[1], g1 - g0, 12).strokeRect(g0, FLOOR[1], g1 - g0, 12)
-      gfx.lineStyle(2, 0x6b4a32)
-      for (let x = g0 + 6; x < g1; x += 26) gfx.lineBetween(x, FLOOR[1] - 26, x, FLOOR[1])
-      gfx.lineStyle(3, 0x6b4a32).lineBetween(g0, FLOOR[1] - 26, g1, FLOOR[1] - 26)
-      gfx.lineStyle(5, 0x7a5232)
-      for (let x = g0 + 4; x < g1; x += 164) if (Math.abs(x - W.wheelhouseX) > 160 && Math.abs(x - W.mastX) > 30) gfx.lineBetween(x, FLOOR[1] + 12, x, FLOOR[0])
       // deck railing
+      const gfx = add(this.add.graphics())
       gfx.lineStyle(2, 0x6b4a32)
-      for (let x = 30; x < W.width - 100; x += 26) gfx.lineBetween(x, FLOOR[0] - 22, x, FLOOR[0])
-      gfx.lineStyle(3, 0x6b4a32).lineBetween(30, FLOOR[0] - 22, W.width - 100, FLOOR[0] - 22)
-      // ladders
-      this.ladders = [g0 + 20, ...W.ladders.filter(x => x > g0 + 60 && x < g1 - 60), g1 - 20]
-      const lg = add(this.add.graphics()).lineStyle(4, 0x6b4a32)
-      for (const x of this.ladders) {
-        lg.lineBetween(x - 14, FLOOR[0], x - 14, FLOOR[1] - 30); lg.lineBetween(x + 14, FLOOR[0], x + 14, FLOOR[1] - 30)
-        for (let y = FLOOR[0] - 18; y > FLOOR[1] - 20; y -= 24) lg.lineBetween(x - 14, y, x + 14, y)
-      }
-      // string lights from the mast top to bow and stern, and along the gallery
+      for (let x = 30; x < W.width - 100; x += 26) gfx.lineBetween(x, FLOOR - 22, x, FLOOR)
+      gfx.lineStyle(3, 0x6b4a32).lineBetween(30, FLOOR - 22, W.width - 100, FLOOR - 22)
+      // string lights from the mast top to bow and stern; the bulbs glow above the night
       const lights = add(this.add.graphics()).lineStyle(1.5, 0x2a2030, 0.8)
       const lamp = []
       const sag = (x0, y0, x1, y1, d) => {
@@ -393,17 +441,16 @@
         for (let i = 1; i < 24; i += 1) lamp.push(pts[i])
       }
       sag(W.mastX, 60, W.width - 60, 560, 120); sag(W.mastX, 60, 60, 580, 120)
-      for (let x = g0; x < g1 - 1; x += 330) sag(x, FLOOR[1] - 30, Math.min(g1, x + 330), FLOOR[1] - 30, 30)
       for (const [x, y] of lamp) {
-        const b = add(this.add.image(x, y, 'dot').setScale(0.7).setAlpha(0.5 + 0.5 * SKY.lamp).setBlendMode(Phaser.BlendModes.ADD))
+        const b = glow(this.add.image(x, y, 'dot').setScale(0.7).setAlpha(0.5 + 0.5 * SKY.lamp).setBlendMode(Phaser.BlendModes.ADD))
         this.tweens.add({ targets: b, alpha: 0.35, duration: 700 + rand() * 1800, yoyo: true, repeat: -1, delay: rand() * 1500 })
       }
       // the Everdoor at the stern, the wheelhouse midship
-      this.everdoor = add(this.add.image(W.everdoorX, FLOOR[0], 'everdoor').setOrigin(0.5, 1))
-      const halo = add(this.add.image(W.everdoorX, FLOOR[0] - 110, 'dot').setScale(9).setAlpha(0.35))
+      this.everdoor = add(this.add.image(W.everdoorX, FLOOR, 'everdoor').setOrigin(0.5, 1))
+      const halo = add(this.add.image(W.everdoorX, FLOOR - 110, 'dot').setScale(9).setAlpha(0.35))
       this.tweens.add({ targets: halo, alpha: 0.15, scale: 7.5, duration: 1800, yoyo: true, repeat: -1 })
-      this.wheelhouse = add(this.add.image(W.wheelhouseX, FLOOR[0] + 2, 'wheelhouse').setOrigin(0.5, 1))
-      add(this.add.particles(W.wheelhouseX + 79, FLOOR[0] - 210, 'puff', { lifespan: 4200, speedY: { min: -26, max: -16 }, speedX: { min: 4, max: 14 }, scale: { start: 0.5, end: 2.2 }, alpha: { start: 0.55, end: 0 }, frequency: 420 }))
+      this.wheelhouse = add(this.add.image(W.wheelhouseX, FLOOR + 2, 'wheelhouse').setOrigin(0.5, 1))
+      add(this.add.particles(W.wheelhouseX + 79, FLOOR - 210, 'puff', { lifespan: 4200, speedY: { min: -26, max: -16 }, speedX: { min: 4, max: 14 }, scale: { start: 0.5, end: 2.2 }, alpha: { start: 0.55, end: 0 }, frequency: 420 }))
       // the hammock between the wheelhouse and the mast
       const hx0 = W.wheelhouseX + 156, hx1 = W.mastX - 10
       this.hammock = add(this.add.graphics()).lineStyle(3, 0x3b2a3f).fillStyle(0xd9c3a0)
@@ -412,41 +459,52 @@
       this.hammock.strokePath()
       this.sleeper = add(this.add.image(hx0, 556, 'quilt').setOrigin(0, 0))
       this.lecternX = W.wheelhouseX - 112
-      add(this.add.image(this.lecternX, FLOOR[0] + 2, 'lectern').setOrigin(0.5, 1))
-      this.logGlow = add(this.add.image(this.lecternX, FLOOR[0] - 78, 'dot').setScale(3).setAlpha(0.5).setBlendMode(Phaser.BlendModes.ADD))
+      add(this.add.image(this.lecternX, FLOOR + 2, 'lectern').setOrigin(0.5, 1))
+      this.logGlow = glow(this.add.image(this.lecternX, FLOOR - 78, 'dot').setScale(3).setAlpha(0.5).setBlendMode(Phaser.BlendModes.ADD))
       this.tweens.add({ targets: this.logGlow, alpha: 0.2, duration: 1600, yoyo: true, repeat: -1 })
 
-      // houses
-      const belled = new Set(W.houses.filter(h => h.look === 'bell').sort((a, b) => a.days - b.days).slice(0, BELLS).map(h => h.strand))
-      for (const h0 of W.houses) {
-        const h = { ...h0, belled: belled.has(h0.strand) }
-        const key = 'h-' + h.strand, keyLit = key + '-lit'
-        makeTex(this, key, 160, 234, c => drawHouse(c, h, h.look === 'lit'))
-        if (h.look === 'bell') makeTex(this, keyLit, 160, 234, c => drawHouse(c, { ...h, look: 'lit' }, true))
-        const y = FLOOR[h.tier]
-        const img = add(this.add.image(h.x, y + 4, key).setOrigin(0.5, 1))
-        const rec = { h, img, y, keyLit }
-        if (h.look === 'lit' || h.look === 'scaffold') {
-          const lit = h.look === 'lit'
-          if (lit && h.hue % 3 !== 1) add(this.add.particles(h.x + 39, y - 166, 'puff', { lifespan: 3200, speedY: { min: -22, max: -14 }, speedX: { min: 2, max: 10 }, scale: { start: 0.3, end: 1.4 }, alpha: { start: 0.45, end: 0 }, frequency: 600 }))
-          if (lit) add(this.add.image(h.x - 31, y - 106, 'dot').setScale(5).setAlpha(0.35 * SKY.lamp + 0.15).setBlendMode(Phaser.BlendModes.ADD))
+      // the department halls: back (the rooms), spirits, front (fades when open), roof and sign
+      this.halls = W.halls.map(hall => {
+        const rooms = W.rooms.filter(r => r.hall === hall.id)
+        const tw = hall.w + 40, key = 'hall-' + hall.id
+        makeTex(this, key + '-back', tw, TH, c => drawBack(c, hall, rooms))
+        makeTex(this, key + '-front', tw, TH, c => drawFront(c, hall, rooms))
+        makeTex(this, key + '-roof', tw, TH, c => drawRoof(c, hall))
+        const y = FLOOR + 4, left = hall.x - hall.w / 2
+        const rec = { hall, rooms: [], open: false, doorX: left + 54, left, right: left + hall.w }
+        rec.back = add(this.add.image(hall.x, y, key + '-back').setOrigin(0.5, 1))
+        for (const r of rooms) {
+          const rr = { r, hall: rec, quiet: false, fy: floorY(r.tier) }
+          if (r.look === 'vines') {
+            rr.spirit = add(this.add.image(r.x - 18, rr.fy - 10, 'tortoise_side').setOrigin(0.5, 1).setScale(0.42).setAlpha(0.5 + 0.5 * r.glow))
+          } else {
+            rr.spirit = add(this.add.image(r.x - 22, rr.fy - 8, 'spirits', spiritOf(r.strand)).setOrigin(0.5, 1).setScale(1.15))
+            this.tweens.add({ targets: rr.spirit, scaleY: 1.19, duration: 1100 + (r.hue % 7) * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }) // breathing
+          }
+          // from outside: the window's glow; inside: the lamp, and the letter on the table
+          const wy = rr.fy + 2 - S / 2 - 4
+          const wa = r.look === 'bell' ? 0.55 : r.look === 'vines' ? 0.08 + 0.15 * r.glow : 0.4
+          rr.win = glow(this.add.image(r.x, wy, 'dot').setScale(r.look === 'bell' ? 2.6 : 3.4).setAlpha(wa * (0.6 + 0.4 * SKY.lamp)).setBlendMode(Phaser.BlendModes.ADD))
+          if (r.look === 'bell') this.tweens.add({ targets: rr.win, alpha: 0.12, duration: 900, yoyo: true, repeat: -1 })
+          rr.lamp = glow(this.add.image(r.x + 18, rr.fy + 2 - S + 30, 'dot').setScale(r.look === 'vines' ? 1.2 : 3).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD))
+          rr.lampA = r.look === 'vines' ? 0.1 : 0.55
+          if (r.look === 'bell') rr.note = glow(this.add.image(r.x + 28, rr.fy - 45, 'dot').setScale(1.8).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD))
+          rec.rooms.push(rr)
+          if (r.look === 'bell' && tended.has(r.strand)) this.tend(rr, true)
         }
-        if (h.look === 'bell') {
-          if (h.belled) rec.bell = add(this.add.image(h.x + 80, y - 106, 'bell').setOrigin(0.5, 0).setScale(0.8))
-          rec.glow = add(this.add.image(h.x + 29, y - 32, 'dot').setScale(2.6).setAlpha(0.6).setBlendMode(Phaser.BlendModes.ADD))
-          this.tweens.add({ targets: rec.glow, alpha: 0.15, duration: 900, yoyo: true, repeat: -1 })
-          rec.spirit = add(this.add.image(h.x - 34, y + 4, 'spirits', spiritOf(h.strand)).setOrigin(0.5, 1).setScale(1.45))
-          this.tweens.add({ targets: rec.spirit, scaleY: 1.5, duration: 1100 + (h.hue % 7) * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }) // breathing
+        rec.front = add(this.add.image(hall.x, y, key + '-front').setOrigin(0.5, 1))
+        rec.roof = add(this.add.image(hall.x, y, key + '-roof').setOrigin(0.5, 1))
+        if (rooms.some(r => r.look === 'lit' || r.look === 'scaffold')) {
+          const core1 = hall.wings.length ? hall.wings[0].x0 : left + hall.w
+          add(this.add.particles(core1 - 25, y - (TH - WT) - 92 + 6, 'puff', { lifespan: 3200, speedY: { min: -22, max: -14 }, speedX: { min: 2, max: 10 }, scale: { start: 0.3, end: 1.4 }, alpha: { start: 0.45, end: 0 }, frequency: 600 }))
+        }
+        if (hall.bells) {
+          rec.bell = add(this.add.image(left - 16, y - (TH - WT) + 14, 'bell').setOrigin(0.5, 0).setScale(0.8))
           this.bells.push(rec)
-          if (tended.has(h.strand)) this.tend(rec, true)
         }
-        if (h.look === 'vines') {
-          rec.spirit = add(this.add.image(h.x - 40, y, 'tortoise_side').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.45 + 0.55 * h.glow))
-          const z = add(this.add.image(h.x - 22, y - 60, 'zz').setAlpha(0))
-          this.tweens.add({ targets: z, alpha: { from: 0.9, to: 0 }, y: y - 90, duration: 2600, repeat: -1, delay: rand() * 2000 })
-        }
-        this.houses.push(rec)
-      }
+        return rec
+      })
+      this.rooms = this.halls.flatMap(h => h.rooms)
       // a finished strand's spirit walks through the Everdoor
       this.doneQueue = [...W.done]
       if (this.doneQueue.length) this.time.addEvent({ delay: 9000, loop: true, startAt: 6000, callback: () => this.walkThrough() })
@@ -455,10 +513,11 @@
         STRIDE.forEach(k => recolor(this, k, `coat${c}-${k}`, hue))
         this.anims.create({ key: 'walk' + c, frames: STRIDE.map(k => ({ key: `coat${c}-${k}` })), frameRate: 7, repeat: -1 })
       })
-      // crew: Opus staff wear gold; each mate has their own coat, build and stride, and walks only while moving
+      // crew: one lead per hall standing at its door (Opus staff wear gold), each with their own coat, build and
+      // stride; a mate walks only while moving, fetching crates from the mast for a hall with a build on
       this.crew = W.crew.map((m, i) => {
-        const home = this.houses.find(r => r.h.strand === m.home)
-        const x = (home ? home.h.x : W.mastX + 80) + (i % 2 ? 46 : -46)
+        const home = this.halls.find(h => h.hall.id === m.home)
+        const x = (home ? home.doorX - 40 - (i % 3) * 22 : W.mastX + 80)
         const sc = 0.38 + (i % 4) * 0.025
         const coat = i % COATS.length
         const body = this.add.sprite(0, 0, `coat${coat}-player_t0`).setOrigin(0.5, 1).setScale(sc, sc * (1 - (i % 3) * 0.04))
@@ -466,17 +525,17 @@
         const hat = this.add.image(-6, -sc * 255, m.opus ? 'hat' : 'cap').setScale(0.62)
         if (!m.opus) hat.setTint(Phaser.Display.Color.HSLToColor(((i * 47) % 360) / 360, 0.5, 0.6).color)
         const crate = this.add.image(-14, -sc * 300, 'crate').setVisible(false)
-        const ct = add(this.add.container(x, FLOOR[0], [body, crate, hat]))
-        const mate = { m, ct, crate, body, hat, i, coat, home: x, stack: W.mastX + 70 + (i % 3) * 30, speed: 0.1 + (i % 3) * 0.015 }
-        this.time.delayedCall(1500 + i * 2600 + rand() * 1500, () => this.crewTrip(mate))
+        const ct = add(this.add.container(x, FLOOR, [body, crate, hat]))
+        const building = home && home.rooms.some(rr => rr.r.look === 'scaffold')
+        const mate = { m, ct, crate, body, hat, i, coat, home: x, hall: home, building, stack: W.mastX + 70 + (i % 3) * 30, speed: 0.1 + (i % 3) * 0.015 }
+        if (building) this.time.delayedCall(1500 + i * 2600 + rand() * 1500, () => this.crewTrip(mate))
         return mate
       })
       // crates at the foot of the mast
-      for (let i = 0; i < 5; i++) add(this.add.image(W.mastX + 50 + (i % 3) * 34, FLOOR[0] - 15 - Math.floor(i / 3) * 30, 'crate'))
-      for (let i = 0; i < 6; i++) add(this.add.image(this.gallery[0] + 140 + i * 520, FLOOR[1] - 12, 'lantern'))
+      for (let i = 0; i < 5; i++) add(this.add.image(W.mastX + 50 + (i % 3) * 34, FLOOR - 15 - Math.floor(i / 3) * 30, 'crate'))
       // the player
-      this.player = add(this.add.sprite(W.mastX - 80, FLOOR[0], 'player_side').setOrigin(0.5, 1).setScale(0.44))
-      this.tier = 0; this.path = []; this.onArrive = null
+      this.player = add(this.add.sprite(W.mastX - 80, FLOOR, 'player_side').setOrigin(0.5, 1).setScale(0.44))
+      this.path = []; this.onArrive = null; this.openHall = null
       // the wake behind the stern
       const WATER = 735
       this.add.rectangle(-6000, WATER, W.width + 12000, 600, Phaser.Display.Color.HexStringToColor(SKY.seaTop).color).setOrigin(0, 0).setAlpha(0.92).setDepth(1).setSize(W.width + 12000, 4000)
@@ -492,12 +551,12 @@
       this.follow()
       // input
       this.input.on('pointerdown', p => this.tap(p))
-      this.keys = this.input.keyboard.addKeys('LEFT,RIGHT,UP,DOWN,A,D,W,S,SPACE,E')
+      this.keys = this.input.keyboard.addKeys('LEFT,RIGHT,A,D,SPACE,E')
       this.letter = document.getElementById('letter')
-      // where to start
-      const want = Q.get('strand') && this.houses.find(r => r.h.strand === Q.get('strand'))
+      // where to start: ?strand= opens that room's hall first and knocks
+      const want = Q.get('strand') && this.rooms.find(rr => rr.r.strand === Q.get('strand'))
       const seen = store.get('woke', '') === today
-      if (want) { this.wake0(true); this.walkTo(want, () => this.knock(want)) }
+      if (want) { this.wake0(true); this.enter(want.hall, () => this.knockAt(want)) }
       else if (Q.get('skip') === '1' || (seen && Q.get('intro') !== '1')) this.wake0(true)
       else this.intro()
       this.time.addEvent({ delay: 11000, loop: true, callback: () => { const r = this.bells.filter(b => !b.quiet); if (r.length) this.ring(r[Math.floor(rand() * r.length)], 0.12) } })
@@ -514,9 +573,13 @@
       this.skyTop.setSize(wide, 8000).setOrigin(0.5, 1).setPosition(w / 2, -419)
     }
 
-    follow() { this.cameras.main.startFollow(this.player, true, 0.08, 0, 0, FLOOR[0] - 400) }
+    follow() { this.cameras.main.startFollow(this.player, true, 0.08, 0, 0, FLOOR - 400) }
+
 
     // ---------- the first 60 seconds ----------
+    /** The bell hall nearest the hammock rings first; it is the one you walk to on waking. */
+    firstBell() { return this.bells.filter(b => !b.quiet).sort((a, b) => a.hall.x - b.hall.x)[0] }
+
     intro() {
       const cam = this.cameras.main, P = this.player
       P.setVisible(false).setPosition(W.wheelhouseX + 156 + 40, 560)
@@ -525,13 +588,14 @@
       this.tweens.add({ targets: this.zz, alpha: { from: 0.9, to: 0 }, y: 500, duration: 2600, repeat: -1 })
       this.asleep = true
       cam.fadeIn(3500, 0, 0, 0)
-      const bow = this.bells[0]
+      const bow = this.firstBell()
       this.time.delayedCall(4500, () => {
         if (bow) {
           this.ring(bow, 0.35)
-          cam.stopFollow(); cam.pan(bow.h.x, cam.midPoint.y, 1800, 'Sine.easeInOut')
-          this.tweens.add({ targets: bow.spirit, y: bow.y - 14, duration: 220, yoyo: true, repeat: 5 })
-          this.time.delayedCall(2600, () => { cam.pan(P.x, cam.midPoint.y, 1400, 'Sine.easeInOut'); this.time.delayedCall(1500, () => this.hint(true)) })
+          cam.stopFollow(); cam.pan(bow.hall.x, cam.midPoint.y, 1800, 'Sine.easeInOut')
+          const waiting = bow.rooms.filter(rr => rr.r.look === 'bell').map(rr => rr.win)
+          this.tweens.add({ targets: waiting, scale: 3.6, duration: 260, yoyo: true, repeat: 4 })
+          this.time.delayedCall(2600, () => { cam.pan(P.x, cam.midPoint.y, 1400, 'Sine.easeInOut'); this.time.delayedCall(1500, () => { if (this.asleep) this.hint(true) }) })
         } else this.hint(true)
       })
     }
@@ -544,45 +608,70 @@
       store.set('woke', today)
       this.sleeper.setTexture('quilt')
       if (this.zz) { this.tweens.killTweensOf(this.zz); this.zz.destroy(); this.zz = null }
-      const stand = () => { P.setVisible(true).setY(FLOOR[0]).setX(W.mastX - 80); this.follow() }
+      const stand = () => { P.setVisible(true).setY(FLOOR).setX(W.mastX - 80); this.follow() }
       if (instant) { stand(); return }
-      // out of the hammock: a hop up and down onto the deck
+      // out of the hammock: a hop up and down onto the deck, then to the hall that rang, which opens, and a knock
       P.setVisible(true).setTexture('player_side').setFlipX(true)
       this.tweens.add({ targets: P, y: 520, duration: 260, ease: 'Quad.easeOut', yoyo: false })
       this.tweens.add({ targets: P, x: W.mastX - 80, duration: 700, delay: 120, ease: 'Sine.easeInOut' })
-      this.tweens.add({ targets: P, y: FLOOR[0], duration: 440, delay: 260, ease: 'Bounce.easeOut', onComplete: () => {
+      this.tweens.add({ targets: P, y: FLOOR, duration: 440, delay: 260, ease: 'Bounce.easeOut', onComplete: () => {
         this.follow()
-        const bow = this.bells.find(b => !b.quiet)
-        if (bow) this.walkTo(bow, () => this.knock(bow))
+        const bow = this.firstBell()
+        if (bow) this.enter(bow, () => { const rr = bow.rooms.find(x => x.r.look === 'bell' && !x.quiet); if (rr) this.time.delayedCall(700, () => this.knockAt(rr)) })
       } })
     }
 
-    // ---------- moving about ----------
+    // ---------- moving about: the player stays on deck; halls open around them ----------
     tap(p) {
       audioOn()
       if (this.letterOpen) return
       if (this.asleep) { this.wake0(false); return }
       const wx = p.worldX, wy = p.worldY - this.ship.y
-      const hit = this.houses.find(r => Math.abs(wx - r.h.x) < 78 && wy < r.y + 6 && wy > r.y - 230)
-      if (hit) return this.walkTo(hit, () => this.knock(hit))
-      if (Math.abs(wx - this.lecternX) < 40 && wy > FLOOR[0] - 120 && wy < FLOOR[0] + 10) return this.goto(this.lecternX + 40, 0, () => this.shipLog())
-      if (Math.abs(wx - W.wheelhouseX) < 150 && wy > FLOOR[1] + 12 && wy < FLOOR[0]) return this.goto(W.wheelhouseX - 60, 0, () => this.chart())
-      if (Math.abs(wx - W.everdoorX) < 70 && wy > FLOOR[0] - 240) return this.goto(W.everdoorX + 70, 0, () => this.say(this.player, 'The Everdoor. Strands that finish walk through here.'))
-      const tier = wy < FLOOR[1] + 20 && wx > this.gallery[0] && wx < this.gallery[1] ? 1 : 0
-      this.goto(wx, tier)
+      const open = this.openHall
+      if (open) {
+        const hit = open.rooms.find(rr => Math.abs(wx - rr.r.x) < ROOM_W / 2 && wy < rr.fy + 4 && wy > rr.fy - S)
+        if (hit) return this.knockAt(hit)
+      }
+      const hall = this.halls.find(h => wx > h.left - 16 && wx < h.right + 16 && wy < FLOOR + 6 && wy > FLOOR - (TH - WT) - 90)
+      if (hall && hall !== open) return this.enter(hall)
+      if (Math.abs(wx - this.lecternX) < 40 && wy > FLOOR - 120 && wy < FLOOR + 10) return this.goto(this.lecternX + 40, () => this.shipLog())
+      if (Math.abs(wx - W.wheelhouseX) < 150 && wy > FLOOR - 200 && wy < FLOOR) return this.goto(W.wheelhouseX - 60, () => this.chart())
+      if (Math.abs(wx - W.everdoorX) < 70 && wy > FLOOR - 240) return this.goto(W.everdoorX + 70, () => this.say(this.player, 'The Everdoor. Strands that finish walk through here.'))
+      this.goto(wx)
     }
 
-    walkTo(rec, then) { this.goto(rec.h.x + 34, rec.h.tier, then) }
+    /** Walk to a hall's door and open it: the front wall fades and its rooms show. One hall is open at a time. */
+    enter(rec, then) {
+      this.goto(rec.doorX, () => { this.open(rec); if (then) then() })
+    }
 
-    goto(x, tier, then) {
-      const lo = tier ? this.gallery[0] + 10 : 40, hi = tier ? this.gallery[1] - 10 : W.width - 140
-      x = Phaser.Math.Clamp(x, lo, hi)
-      this.path = []
-      if (tier !== this.tier) {
-        const from = this.player.x, lad = this.ladders.reduce((a, b) => Math.abs(b - from) + Math.abs(b - x) < Math.abs(a - from) + Math.abs(a - x) ? b : a)
-        this.path.push({ x: lad }, { climb: tier })
+    open(rec) {
+      if (this.openHall === rec) return
+      if (this.openHall) this.close(this.openHall)
+      this.openHall = rec; rec.open = true; creak()
+      this.tweens.add({ targets: rec.front, alpha: 0, duration: 700, ease: 'Sine.easeInOut' })
+      for (const rr of rec.rooms) {
+        this.tweens.add({ targets: rr.win, alpha: 0, duration: 500 })
+        this.tweens.add({ targets: rr.lamp, alpha: rr.lampA * (0.5 + 0.5 * SKY.lamp), duration: 900, delay: 300 })
+        if (rr.note && !rr.quiet) { rr.note.setAlpha(0.7); this.tweens.add({ targets: rr.note, alpha: 0.2, duration: 900, yoyo: true, repeat: -1 }) }
       }
-      this.path.push({ x })
+    }
+
+    close(rec) {
+      rec.open = false; if (this.openHall === rec) this.openHall = null
+      this.tweens.add({ targets: rec.front, alpha: 1, duration: 600, ease: 'Sine.easeInOut' })
+      for (const rr of rec.rooms) {
+        this.tweens.killTweensOf(rr.win); this.tweens.killTweensOf(rr.lamp)
+        const wa = rr.r.look === 'bell' && !rr.quiet ? 0.55 : rr.r.look === 'vines' ? 0.08 + 0.15 * rr.r.glow : 0.4
+        this.tweens.add({ targets: rr.win, alpha: wa * (0.6 + 0.4 * SKY.lamp), duration: 600 })
+        if (rr.r.look === 'bell' && !rr.quiet) this.tweens.add({ targets: rr.win, alpha: 0.12, duration: 900, yoyo: true, repeat: -1, delay: 600 })
+        this.tweens.add({ targets: rr.lamp, alpha: 0, duration: 400 })
+        if (rr.note) { this.tweens.killTweensOf(rr.note); rr.note.setAlpha(0) }
+      }
+    }
+
+    goto(x, then) {
+      this.path = [{ x: Phaser.Math.Clamp(x, 40, W.width - 140) }]
       this.onArrive = then || null
       this.nextLeg()
     }
@@ -591,11 +680,6 @@
       const P = this.player, leg = this.path.shift()
       if (this.leg) this.leg.stop()
       if (!leg) { P.stop(); P.setTexture('player_side'); const f = this.onArrive; this.onArrive = null; if (f) f(); return }
-      if ('climb' in leg) {
-        P.stop(); P.setTexture('player_back'); P.setFlipX(false)
-        this.leg = this.tweens.add({ targets: P, y: FLOOR[leg.climb], duration: 900, ease: 'Sine.easeInOut', onComplete: () => { this.tier = leg.climb; this.nextLeg() } })
-        return
-      }
       const d = Math.abs(leg.x - P.x)
       if (d < 4) return this.nextLeg()
       P.setFlipX(leg.x > P.x); P.play('walk', true)
@@ -613,35 +697,34 @@
       t.setPosition(0, -22)
       const top = who.getBounds ? who.getBounds().top - this.ship.y : who.y - 120
       const b = this.bubble = this.add.container(who.x, top - 6, [g, t]).setDepth(50).setScale(0.6).setAlpha(0)
-      this.ship.add(b)
+      this.fx.add(b)
       this.tweens.add({ targets: b, scale: 1, alpha: 1, duration: 220, ease: 'Back.easeOut' })
       this.time.delayedCall(ms, () => { if (this.bubble === b) this.tweens.add({ targets: b, alpha: 0, duration: 300, onComplete: () => b.destroy() }) })
     }
 
-    knock(rec) {
-      const h = rec.h, who = rec.spirit || this.player
-      if (h.look === 'bell' && !rec.quiet) {
+    /** Knock on a room in the open hall: walk under it, and the one inside answers. */
+    knockAt(rr) { this.goto(rr.r.x + 30, () => this.knock(rr)) }
+
+    knock(rr) {
+      const r = rr.r, who = rr.spirit || this.player
+      if (r.look === 'bell' && !rr.quiet) {
         this.say(who, 'A letter came for you.', 1800)
-        this.time.delayedCall(1500, () => this.openLetter(rec))
+        this.time.delayedCall(1500, () => this.openLetter(rr))
         return
       }
-      const lead = { bell: '', scaffold: 'We\'re building. ', lit: '', vines: 'Mm... still resting. ' }[h.look] || ''
-      if (h.look === 'scaffold' || h.look === 'lit') {
-        const mate = this.crew.find(c => c.m.home === h.strand)
-        return this.say(mate ? mate.ct.list[0] && mate.ct : this.player, lead + h.line, 6000)
-      }
-      this.say(who, lead + h.line, 6000)
+      const lead = { bell: '', scaffold: 'We\'re building. ', lit: '', vines: 'Mm... still resting. ' }[r.look] || ''
+      this.say(who, lead + r.line, 6000)
     }
 
     ring(rec, vol) {
       if (!rec.bell) return
       this.tweens.add({ targets: rec.bell, angle: { from: -24, to: 24 }, duration: 260, yoyo: true, repeat: 2, ease: 'Sine.easeInOut', onComplete: () => rec.bell.setAngle(0) })
       const cam = this.cameras.main
-      if (Math.abs(rec.h.x - cam.midPoint.x) < cam.width / cam.zoom) bellSound(vol)
+      if (Math.abs(rec.hall.x - cam.midPoint.x) < cam.width / cam.zoom) bellSound(vol)
     }
 
     openLetter(rec) {
-      const el = this.letter, h = rec.h
+      const el = this.letter, h = rec.r
       el.querySelector('.who').textContent = h.strand.replace(/-/g, ' ')
       el.querySelector('.body').textContent = h.line
       const scrim = document.getElementById('scrim')
@@ -655,19 +738,22 @@
       el.querySelector('.seal.blue').onclick = e => { e.stopPropagation(); close(false); this.say(rec.spirit, 'I\'ll keep it by the door.') }
     }
 
-    /** Pressing the red seal: the bell goes quiet, the window lights, a crew member walks over with tools, the sail
-     * fills and the island ahead comes a little closer. Kept on this phone for today only; the board stays the record. */
-    tend(rec, quiet) {
-      rec.quiet = true
-      rec.img.setTexture(rec.keyLit)
-      if (rec.glow) rec.glow.setVisible(false)
-      if (rec.bell) rec.bell.setAlpha(0.6)
-      this.ship.add(this.add.image(rec.h.x - 31, rec.y - 106, 'dot').setScale(4).setAlpha(0.4))
+
+    /** Pressing the red seal: the letter's glow goes out, the lamp brightens, a crew member walks over, the sail
+     * fills and the island ahead comes a little closer. The hall's bell goes quiet once none of its rooms wait. Kept
+     * on this phone for today only; the board stays the record. */
+    tend(rr, quiet) {
+      rr.quiet = true
+      rr.lampA = 0.75
+      if (rr.note) { this.tweens.killTweensOf(rr.note); rr.note.setAlpha(0) }
+      if (!rr.hall.open) { this.tweens.killTweensOf(rr.win); rr.win.setAlpha(0.4 * (0.6 + 0.4 * SKY.lamp)) }
+      else rr.lamp.setAlpha(rr.lampA)
+      if (rr.hall.rooms.every(x => x.r.look !== 'bell' || x.quiet)) { rr.hall.quiet = true; if (rr.hall.bell) rr.hall.bell.setAlpha(0.6) }
       if (quiet) return
-      tended.add(rec.h.strand); store.set('tended.' + today, [...tended])
-      this.say(rec.spirit, 'Thank you.', 2000)
-      const mate = this.crew[Math.floor(rand() * this.crew.length)]
-      if (mate) { mate.busy = true; this.tweens.killTweensOf(mate.ct); this.walkMate(mate, rec.h.x - 30, Math.abs(mate.ct.x - rec.h.x) / 0.22, () => { mate.busy = false; this.crewTrip(mate) }) }
+      tended.add(rr.r.strand); store.set('tended.' + today, [...tended])
+      this.say(rr.spirit, 'Thank you.', 2000)
+      const mate = this.crew.find(c => c.hall === rr.hall) || this.crew[0]
+      if (mate) { mate.busy = true; this.tweens.killTweensOf(mate.ct); this.walkMate(mate, rr.r.x - 40, Math.abs(mate.ct.x - rr.r.x) / 0.22 + 300, () => { mate.busy = false; this.walkMate(mate, mate.home, Math.abs(mate.home - mate.ct.x) / 0.1 + 300, () => { if (mate.building) this.crewTrip(mate) }) }) }
       this.tweens.add({ targets: this.sail, scaleX: 1.04, duration: 900, yoyo: true, hold: 2400, ease: 'Sine.easeOut' })
       store.set('closer', store.get('closer', 0) + 1)
       if (this.here) this.tweens.add({ targets: this.here, scale: this.here.scale * 1.05, duration: 2500 })
@@ -721,45 +807,48 @@
     }
 
     work(mate) {
-      const h = this.houses.find(r => r.h.strand === mate.m.home)
-      if (h && h.h.look === 'scaffold') { // hammer: lean in and tap, three times
-        mate.body.setFlipX(h.h.x > mate.ct.x)
+      const h = mate.hall
+      if (h && mate.building) { // hammer at the hall: lean in and tap, three times
+        mate.body.setFlipX(h.hall.x > mate.ct.x)
         this.tweens.add({ targets: mate.body, angle: { from: 0, to: mate.body.flipX ? 9 : -9 }, duration: 180, yoyo: true, repeat: 5, ease: 'Quad.easeIn' })
       } else this.tweens.add({ targets: mate.body, scaleY: mate.body.scaleY * 1.04, duration: 700, yoyo: true, ease: 'Sine.easeInOut' }) // a stretch
     }
 
     walkThrough() {
       const strand = this.doneQueue[0]
-      const s = this.add.image(W.everdoorX + 160, FLOOR[0], 'spirits', spiritOf(strand)).setOrigin(0.5, 1).setScale(1.45).setFlipX(true).setTint(0xf3ecff).setAlpha(0)
+      const s = this.add.image(W.everdoorX + 160, FLOOR, 'spirits', spiritOf(strand)).setOrigin(0.5, 1).setScale(1.45).setFlipX(true).setTint(0xf3ecff).setAlpha(0)
       this.ship.add(s)
       this.tweens.add({ targets: s, alpha: 0.9, duration: 600 })
-      this.tweens.add({ targets: s, x: W.everdoorX, duration: 4200, delay: 400, onComplete: () => this.tweens.add({ targets: s, alpha: 0, scale: 0.3, y: FLOOR[0] - 40, duration: 900, onComplete: () => s.destroy() }) })
+      this.tweens.add({ targets: s, x: W.everdoorX, duration: 4200, delay: 400, onComplete: () => this.tweens.add({ targets: s, alpha: 0, scale: 0.3, y: FLOOR - 40, duration: 900, onComplete: () => s.destroy() }) })
       const cam = this.cameras.main
       if (Math.abs(W.everdoorX - cam.midPoint.x) < cam.width / cam.zoom) this.time.delayedCall(800, () => this.say(s, strand.replace(/-/g, ' ') + ' is done. Goodbye.', 2600))
       this.doneQueue.push(this.doneQueue.shift())
     }
 
+
     update(t, dt) {
-      this.ship.y = Math.sin(t / 1400) * 3
+      this.ship.y = this.fx.y = Math.sin(t / 1400) * 3
       this.waves.tilePositionX += dt * 0.02; this.wake.tilePositionX += dt * 0.12
-            for (const c of this.clouds) { c.x += dt * 0.004; if (c.x > 4000) c.x = -300 }
+      for (const c of this.clouds) { c.x += dt * 0.004; if (c.x > 4000) c.x = -300 }
       if (this.asleep || this.letterOpen) return
       const k = this.keys, P = this.player
       const left = k.LEFT.isDown || k.A.isDown, right = k.RIGHT.isDown || k.D.isDown
       if (left || right) {
         this.path = []; this.onArrive = null; if (this.leg) this.leg.stop()
-        const lo = this.tier ? this.gallery[0] + 10 : 40, hi = this.tier ? this.gallery[1] - 10 : W.width - 140
-        P.x = Phaser.Math.Clamp(P.x + (right ? 1 : -1) * SPEED * dt / 1000, lo, hi)
+        P.x = Phaser.Math.Clamp(P.x + (right ? 1 : -1) * SPEED * dt / 1000, 40, W.width - 140)
         P.setFlipX(right); P.play('walk', true)
       } else if (!this.leg || !this.leg.isPlaying()) { if (P.anims.isPlaying) { P.stop(); P.setTexture('player_side') } }
-      const lad = this.ladders.find(x => Math.abs(x - P.x) < 24)
-      if (lad != null && !(this.leg && this.leg.isPlaying())) {
-        if ((k.UP.isDown || k.W.isDown) && this.tier === 0) { this.path = [{ x: lad }, { climb: 1 }]; this.nextLeg() }
-        if ((k.DOWN.isDown || k.S.isDown) && this.tier === 1) { this.path = [{ x: lad }, { climb: 0 }]; this.nextLeg() }
-      }
+      // walk away from an open hall and it closes behind you
+      const o = this.openHall
+      if (o && (P.x < o.left - 90 || P.x > o.right + 90)) this.close(o)
       if (Phaser.Input.Keyboard.JustDown(k.SPACE) || Phaser.Input.Keyboard.JustDown(k.E)) {
-        const near = this.houses.filter(r => r.h.tier === this.tier).sort((a, b) => Math.abs(a.h.x - P.x) - Math.abs(b.h.x - P.x))[0]
-        if (near && Math.abs(near.h.x - P.x) < 110) this.knock(near)
+        if (o) {
+          const near = o.rooms.slice().sort((a, b) => Math.abs(a.r.x - P.x) - Math.abs(b.r.x - P.x) || a.r.tier - b.r.tier)[0]
+          if (near) this.knock(near)
+        } else {
+          const h = this.halls.find(h => P.x > h.left - 60 && P.x < h.right + 60)
+          if (h) this.enter(h)
+        }
       }
     }
   }
@@ -810,9 +899,11 @@
   <div id="scrim" class="scrim"></div>
   <div id="hint">tap to wake</div>`)
 
-  window.studioBoat = new Phaser.Game({
+  // the hall signs are painted with Caveat, so wait (a little) for it before drawing them
+  const fonts = document.fonts ? Promise.race([Promise.all([document.fonts.load('700 28px Caveat'), document.fonts.load('500 19px Fredoka')]), new Promise(r => setTimeout(r, 2500))]) : Promise.resolve()
+  fonts.catch(() => {}).then(() => window.studioBoat = new Phaser.Game({
     type: Phaser.AUTO, parent: 'game', backgroundColor: '#000000',
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     render: { antialias: true, roundPixels: false }, scene: Boat,
-  })
+  }))
 })()
