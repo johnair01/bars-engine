@@ -90,6 +90,7 @@ export default defineConfig({
       'src/lib/between/__tests__/room-kit.test.ts',
       'src/lib/between/__tests__/first-minute.test.ts',
       'src/lib/between/__tests__/scroll.test.ts',
+      'src/lib/between/__tests__/stance.test.ts',
     ],
   },
   resolve: {

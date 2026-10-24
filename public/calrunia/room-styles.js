@@ -41,6 +41,17 @@ export const STYLES = [
 
 export const DEFAULT_STYLE = "dusk-hollow";
 
+/* The figure's own light (round 3 build, six-faces-council relationship-creature; still-maker
+   /mnt/project-files/between/lighting/r2/still2.html, look page r3/look.html). Only the player figures take it:
+   kMirror, kWalk: the room capture on the figure, as envMapIntensity = k / the capture's own brightness;
+   wrap: how far light bends past the body's edge (0 hard, 0.5 round 2); warm, cool, rim: the mirror's two sconces and
+   the window behind you (SpotLights, penumbra 1, decay 2, out to `dist`), on only while you stand at the mirror;
+   key: the soft light that travels with you while you walk (angle `keyAngle`, out to `keyDist`);
+   edge, edgeMirror: the painted room's band edge (paint.js uEdge) walking and at the mirror.
+   Values are candidate 3b from round 3 until his pick on lt-mirror-look-03; a style overrides only what differs. */
+export const FIGURE_LIGHT = { kMirror: 0.3, kWalk: 1.0, wrap: 0.1, warm: 8, cool: 1, rim: 12, dist: 3.5, key: 32, keyAngle: 0.25, keyDist: 6, edge: 0.22, edgeMirror: 0.22 };
+export const figureLightOf = s => ({ ...FIGURE_LIGHT, ...((s && s.figure) || {}) });
+
 /** A style by id; anything unknown is the default, so an old room or a typo still opens. */
 export const styleOf = id => STYLES.find(s => s.id === id) || STYLES[0]; // STYLES[0] is the default
 

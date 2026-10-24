@@ -10,13 +10,16 @@ import { minuteState, minuteWrite, beatAt, inviteDoorway, STEPS as MINUTE_STEPS,
 import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, answerOutcome, RIBBONS, shelfScrolls, markOf } from "../calrunia/scroll.js";
 import { createCreature } from "./creature.js";
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the baked J5 robe)
+import { stance, clipWeights, FADE } from "./stance.js";   // lt-idle-default: standing still is a real idle, not a held walk frame
 import { createAmbient } from "./ambient.js";
-import { installPaint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
+import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
+/* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
+import { figureWrap, figureProbe, lightFigure } from "./figure-light.js";
 import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // round 4: caption mode
 /* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
-import { STYLES as ROOM_STYLES, styleOf } from "../calrunia/room-styles.js";
+import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
 /* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
@@ -96,6 +99,78 @@ const ls = {
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; readIn(t); clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, Math.max(3400, readMs(msg.split(/\s+/).length) + 2600)); }
+/* ---------- what broke, and a screenshot to send (Wendell, 2026-10-24) ---------- */
+// The last few errors the page caught, sent with a screenshot so a thread sees what he saw.
+const errLog = [];
+function noteError(e, where) {
+  const msg = String((e && (e.message || e.reason && e.reason.message || e.reason)) || e).slice(0, 300);
+  const stack = String((e && (e.stack || e.reason && e.reason.stack)) || "").split("\n").slice(0, 4).join(" | ").slice(0, 600);
+  const last = errLog[errLog.length - 1];
+  if (last && last.msg === msg) { last.n++; return; }
+  errLog.push({ at: new Date().toISOString(), where, msg, stack, n: 1 }); if (errLog.length > 12) errLog.shift();
+  console.error("[between]", where, e);
+  if (!noteError.told) { noteError.told = true; try { toast("Something here went wrong; the room keeps going. More, then Send a screenshot, shows it to Claude."); } catch {} }
+}
+addEventListener("error", ev => noteError(ev.error || ev.message, "window"));
+addEventListener("unhandledrejection", ev => noteError(ev.reason, "promise"));
+let shotWanted = false, shot = null; // shot: { image, from: "room" | "file", sending, sent }
+// Read the canvas right after a render, in the same frame, so the drawing buffer still holds it.
+function takeShot() {
+  shotWanted = false;
+  try {
+    const src = renderer.domElement, k = Math.min(1, 1280 / Math.max(src.width, src.height));
+    const c = document.createElement("canvas"); c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
+    c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+    shot = { image: c.toDataURL("image/jpeg", 0.82), from: "room" };
+  } catch (e) { noteError(e, "shot"); shot = { image: null, from: "room" }; }
+  openSheet("shot");
+}
+function shotFile(file) {
+  if (!file) return;
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => {
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    const n = $("#shotNote"), note = n ? n.value : ""; shot = { image: c.toDataURL("image/jpeg", 0.85), from: "file" }; renderSheet(); const n2 = $("#shotNote"); if (n2) n2.value = note;
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast("That picture would not open. Try a PNG or JPEG."); };
+  img.src = url;
+}
+function shotState() {
+  const V = view(), g = V.g;
+  return {
+    room: g ? (isHome(g) ? "homeroom" : "room") : storeDown ? "store down" : "none", gardenId, phase: g ? g.phase || null : null,
+    me: { x: +meState.pos.x.toFixed(2), z: +meState.pos.z.toFixed(2), y: +groundY(meState.pos.x, meState.pos.z).toFixed(2), sitting: !!meState.sitting, target: meState.target ? { x: +meState.target.x.toFixed(2), z: +meState.target.z.toFixed(2) } : null },
+    near: nearKey || null, selected: selected || null, items: V.items ? V.items.size : 0, peers: peers.size,
+    screen: innerWidth + "x" + innerHeight + "@" + (window.devicePixelRatio || 1), ua: navigator.userAgent.slice(0, 200),
+    errors: errLog.slice(),
+  };
+}
+function shotSheet() {
+  if (!shot) return `<div class="stack"><h2>Send a screenshot</h2><p class="muted">Taking it…</p></div>`;
+  if (shot.sent) return `<div class="stack"><h2>Sent</h2><p>Claude can read it now, with your note and where you stood. Tell the thread you sent one.</p><div class="row"><button type="button" data-close>Back to the room</button></div></div>`;
+  return `<form class="stack" id="shotForm"><h2>Send a screenshot</h2>
+    ${shot.image ? `<img src="${shot.image}" alt="The screenshot" style="width:100%;border-radius:10px">` : `<p class="muted">The room would not give a picture. Choose one of your own below.</p>`}
+    <p class="muted small">${shot.from === "file" ? "Your picture." : "The room as it was a moment ago (the buttons and names are not in it)."} Sent with it: this page's link, where you stand, and ${errLog.length ? errLog.length + " error" + (errLog.length > 1 ? "s" : "") + " the page caught" : "no errors (none were caught)"}.</p>
+    <label for="shotPick">Or choose your own screenshot<input id="shotPick" type="file" accept="image/*"></label>
+    <label for="shotNote">What happened<textarea id="shotNote" maxlength="4000" placeholder="It froze when I walked up onto the moss."></textarea></label>
+    <div class="row"><button type="submit" ${shot.image && !shot.sending ? "" : "disabled"}>${shot.sending ? "Sending…" : "Send to Claude"}</button><button class="quiet" type="button" data-close>Close</button></div></form>`;
+}
+document.addEventListener("change", ev => { if (ev.target && ev.target.id === "shotPick") shotFile(ev.target.files && ev.target.files[0]); });
+document.addEventListener("submit", async ev => {
+  if (ev.target.id !== "shotForm") return;
+  ev.preventDefault(); ev.stopImmediatePropagation();
+  if (!shot || !shot.image || shot.sending) return;
+  const note = ($("#shotNote").value || "").trim();
+  shot.sending = true; renderSheet();
+  try {
+    await api("/api/council/preview-shots", { page: location.href, note, image: shot.image, state: shotState() });
+    shot.sent = true;
+  } catch (e) {
+    toast(e.code === "unauthenticated" ? "Sign in to bars-engine first, then send it again." : "It did not send (" + (e.message || e.code) + "). Try again in a moment.");
+  } finally { if (shot) shot.sending = false; renderSheet(); }
+}, true);
 function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -243,8 +318,16 @@ const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
 let hollow = null;
 const betweenLight = new THREE.PointLight(0x9ad8cf, 5, 6, 1.5); betweenLight.position.set(BETWEEN_AT.x, DAIS_Y + 1.1, BETWEEN_AT.z + 0.3); scene.add(betweenLight);
 let lightScale = 1;
-/* The check-in's glow: a soft light at your shoulder in the feeling's element colour, breathing while you walk the steps. */
-const waveLight = new THREE.PointLight(0xffffff, 0, 4.5, 1.4); scene.add(waveLight);
+/* The light that travels with you (round 3 build): a narrow soft key from over your shoulder on the camera's side, aimed at
+   you alone so no pool shows on the floor. During a check-in it takes the feeling's element colour and breathes. */
+const waveLight = new THREE.SpotLight(0xffe2c0, 0, 6, 0.25, 1, 2); scene.add(waveLight, waveLight.target);
+const KEY_COLOR = new THREE.Color(0xffe2c0), keyEl = new THREE.Color(0xffe2c0);
+let keyCheck = 0;
+/* The mirror's own light, on only while you stand at it: a warm sconce left of the frame, a cool one right, and a wide
+   window light behind you. Offsets are from the mirror (x, z) and the floor; each aims at your chest where you stand. */
+const mirrorLights = [[0xffd6a8, "warm", 0.8, -0.45, 1.55, 0, 1.2], [0xd8d0ff, "cool", 0.8, 0.55, 1.35, 0, 1.1], [0xa8c4ff, "rim", 0.6, -1.0, 2.6, 3.55, 1.1]]
+  .map(([c, k, ang, x, y, z, ty]) => { const l = new THREE.SpotLight(c, 0, 3.5, ang, 1, 2); l.userData.at = { k, x, y, z, ty }; scene.add(l, l.target); return l; });
+let figLight = figureLightOf(null), figEnv = null, figDc = 1, probeDirty = true;
 
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 66 : 50; camera.updateProjectionMatrix(); }
 addEventListener("resize", resize); resize();
@@ -301,8 +384,15 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const clip = n => t.anims.find(a => a.name === n);
   const acts = {};
   for (const n of ["Walk", "Idle"]) { const c = clip(n); if (c) acts[n] = mixer.clipAction(c); }
-  if (acts.Idle) acts.Idle.play();
-  if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = true; }
+  /* A dressed figure (its Walk and Idle both baked into the robe) blends the two by weight each frame toward what its stance
+     asks (stance.js); older files without an Idle keep standing at the Walk's first frame, where their robe was baked. */
+  const managed = !!(wardrobe && acts.Walk && acts.Idle && wardrobe.hasIdle);
+  const cw = { Walk: 0, Idle: 1 }; let cur = "idle";
+  if (managed) { acts.Walk.play(); acts.Walk.setEffectiveWeight(0); acts.Idle.play(); acts.Idle.setEffectiveWeight(1); }
+  else {
+    if (acts.Idle) acts.Idle.play();
+    if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = true; }
+  }
   let walking = false;
   /* Poses made in code over the clip (the player model has a walk and nothing else): sitting cross-legged on a cushion,
      and a wave of the right hand. Bone axes were read off player.glb: hip X lifts the thigh forward, knee X folds the
@@ -313,9 +403,11 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const bend = (n, x, y, z, w) => { const B = bones[n]; if (!B) return; qe.setFromEuler(eu.set(x * w, y * w, z * w, "XYZ")); B.b.quaternion.copy(B.q).multiply(qe); };
   let sit = 0, waveT = -9, rest = 0;
   return {
-    holder, mixer, isPlayer: !!bones.hipL, scale: k,
+    holder, mixer, isPlayer: !!bones.hipL, scale: k, dressed: !!wardrobe,
+    stance: () => cur,
     setWalking(w) {
       if (w === walking) return; walking = w;
+      if (managed) return;   // pose() fades the clips toward the stance
       // a dressed figure stands at the Walk's first frame, where the robe was baked, rather than fading to the bind pose
       if (wardrobe && acts.Walk) { acts.Walk.play(); acts.Walk.paused = !w; if (!w) acts.Walk.time = 0; return; }
       if (acts.Walk) { if (w) { acts.Walk.reset().fadeIn(0.2).play(); acts.Idle && acts.Idle.fadeOut(0.2); } else { acts.Walk.fadeOut(0.3); if (acts.Idle) acts.Idle.reset().fadeIn(0.3).play(); } }
@@ -325,14 +417,20 @@ async function makeBody(model, height, tint, tintAmt, opts) {
     pose(t, dt, wantSit, wantRest) {
       sit += ((wantSit ? 1 : 0) - sit) * Math.min(1, dt * 5);
       rest += ((wantRest ? 1 : 0) - rest) * Math.min(1, dt * 3);
+      if (managed) {
+        const s = stance({ moving: walking, sitting: !!wantSit });
+        if (s !== cur) { if (s === "walk" && cw.Walk < 0.05) acts.Walk.time = 0; cur = s; }
+        const want = clipWeights(cur), k = 1 - Math.exp(-3 * dt / FADE[cur]);
+        for (const n of ["Walk", "Idle"]) { cw[n] += (want[n] - cw[n]) * k; if (Math.abs(cw[n] - want[n]) < 0.002) cw[n] = want[n]; acts[n].setEffectiveWeight(cw[n]); }
+      }
       if (bones.hipL && sit > 0.01) {
         const w = sit;
-        if (acts.Walk && wantSit) acts.Walk.weight = 0;
+        if (acts.Walk && wantSit && !managed) acts.Walk.weight = 0;
         for (const [n, x, y, z] of [["hipL", -1.5, -0.35, -0.65], ["hipR", -1.5, 0.35, 0.65], ["kneeL", 2.45, 0, 0], ["kneeR", 2.45, 0, 0], ["spine", 0.12, 0, 0], ["neck", 0.18, 0, 0],
           ["shoulderL", -0.75, 0, -0.25], ["shoulderR", -0.75, 0, 0.25], ["elbowL", -0.9, 0, 0], ["elbowR", -0.9, 0, 0]]) bend(n, x, y, z, w);
         bones.hips.b.position.y = hipsY - 0.84 * w;
       } else if (bones.hips) bones.hips.b.position.y = hipsY;
-      if (acts.Walk && !wantSit && acts.Walk.weight === 0) acts.Walk.weight = 1;
+      if (acts.Walk && !wantSit && acts.Walk.weight === 0 && !managed) acts.Walk.weight = 1;
       const wv = t - waveT;
       if (bones.shoulderR && wv < 1.6) {
         const w = Math.sin(Math.min(1, wv / 1.6) * Math.PI) * 1.4; const wt = Math.min(1, w);
@@ -343,7 +441,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
         obj.position.y = -t0box * k * (1 - rest * 0.38);
         mixer.timeScale = 1 - rest * 0.85;
       }
-      if (wardrobe) wardrobe.dress(acts.Walk ? acts.Walk.time : 0);
+      if (wardrobe) wardrobe.dress(managed ? { walk: acts.Walk.time, idle: acts.Idle.time, w: cw.Walk + cw.Idle > 0.01 ? cw.Idle / (cw.Walk + cw.Idle) : 0 } : acts.Walk ? acts.Walk.time : 0);
     },
   };
 }
@@ -445,6 +543,9 @@ const PREVIEW_HOST = location.hostname !== "bars-engine.vercel.app";
 const KQ = new URLSearchParams(location.search);
 const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
 const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
+const MIRROR_SKIP = PREVIEW_HOST && KQ.get("mirror") === "1";      // previews: open standing at the mirror (the Look)
+// previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
+const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
 const ROOM_VIEW = { // camera and focus for the whole nook: a phone stands further back and higher to fit the hook and the floor
   wide: [new THREE.Vector3(0.35, 2.35, 3.55), new THREE.Vector3(-0.25, 0.85, -0.9)],
@@ -477,6 +578,7 @@ function syncRoom() {
   roomSig = sig;
   const res = applyRoom({ ...hollow.handles, scene, make: makeItem }, r.style ? r : { ...r, style: undefined });
   styleNow = res.style && res.style.id;
+  figLight = figureLightOf(res.style); probeDirty = true;
   const ms = inNook() ? Object.entries(res.placed).find(([, e]) => e.item === "mirror") : null;
   mirrorSpot = ms ? ms[0] : null;
   setMirrorAt(mirrorSpot ? hollow.handles.spots[mirrorSpot].pos : null);
@@ -561,6 +663,7 @@ function setMirror(on) {
   if (on) { standUp(); meState.target = null; meState.keys.clear(); selected = null; placing = null; }
   else { camYaw = 0; camPitch = 0.5; } // stepping back from the glass: behind you, the mirror ahead
   mirrorCut = true; // the picture flips at once, so the camera cuts too rather than flying through you
+  probeDirty = true; // the capture is taken where you stand: at the glass, or back in the room
 }
 let mirrorCut = false;
 
@@ -1104,7 +1207,52 @@ const clock = new THREE.Clock();
 /* ?cam=x,y,z,lx,ly,lz pins the camera, for screenshots set beside the concept views */
 let debugCam = (() => { const v = new URLSearchParams(location.search).get("cam"); const a = v ? v.split(",").map(Number) : null; return a && a.length === 6 && a.every(Number.isFinite) ? a : null; })();
 let nearKey = null;
+/* The figure's light, each frame: the room capture when it is due (room entry, a style change, the mirror), the travelling key
+   and the mirror's lights blended by how far into the mirror the camera is, and the figures' strengths (room-styles.js). */
+const playerBodies = () => [meState.body, ...[...peers.values()].map(p => p.body)].filter(b => b && b.dressed);
+function figureLightTick(t, dt, me3) {
+  const F = FL_TRY ? { ...figLight, ...FL_TRY } : figLight, bodies = playerBodies();
+  if (probeDirty && meState.body && hollow) {
+    probeDirty = false;
+    const at = (mirrorOn ? MIRROR_STAND : meState.pos).clone(); at.y = groundY(at.x, at.z) + 1.1;
+    const lit = [waveLight, ...mirrorLights].map(l => [l, l.intensity]), shown = bodies.map(b => [b.holder, b.holder.visible]);
+    for (const [l] of lit) l.intensity = 0; for (const [h] of shown) h.visible = false;
+    scene.updateMatrixWorld(true);
+    const old = figEnv; ({ env: figEnv, dc: figDc } = figureProbe(renderer, scene, at));
+    for (const [l, i] of lit) l.intensity = i; for (const [h, v] of shown) h.visible = v;
+    if (old) old.dispose();
+  }
+  if (figEnv) { const k = (F.kWalk + (F.kMirror - F.kWalk) * me3) / figDc; for (const b of bodies) lightFigure(b.holder, figEnv.texture, k); }
+  figureWrap.value = F.wrap;
+  paint.uEdge.value = F.edge + (F.edgeMirror - F.edge) * me3;
+  // walking: the key from over your shoulder, on the camera's side
+  const on = sheetName === "checkin" && walk && walk.feel && walk.step >= 0;
+  keyCheck += ((on ? 1 : 0) - keyCheck) * (1 - Math.exp(-2.5 * dt));
+  if (on) keyEl.setHex(elHex(walk.feel));
+  waveLight.color.copy(KEY_COLOR).lerp(keyEl, 0.65 * keyCheck);
+  const gy = groundY(meState.pos.x, meState.pos.z), toCam = camera.position.clone().sub(meState.pos).setY(0);
+  if (toCam.lengthSq() < 1e-4) toCam.set(0, 0, 1); toCam.normalize();
+  waveLight.position.set(meState.pos.x + toCam.x * 2.6 + toCam.z * 0.9, gy + 2.6, meState.pos.z + toCam.z * 2.6 - toCam.x * 0.9);
+  waveLight.target.position.set(meState.pos.x, (meState.sitting ? DAIS_Y + 0.5 : gy + 1.0), meState.pos.z);
+  waveLight.distance = F.keyDist; waveLight.angle = F.keyAngle;
+  waveLight.intensity = meState.body ? F.key * (1 - me3) * (1 + keyCheck * (0.15 + 0.25 * Math.sin(t * 1.25) + (on && walk.step === 7 ? 0.4 : 0))) : 0;
+  // the mirror: its sconces and the window behind you, placed from where the mirror stands now
+  const sy = groundY(MIRROR_STAND.x, MIRROR_STAND.z);
+  for (const l of mirrorLights) {
+    const a = l.userData.at; l.position.set(BETWEEN_AT.x + a.x, sy + a.y, BETWEEN_AT.z + a.z);
+    l.target.position.set(MIRROR_STAND.x, sy + a.ty, MIRROR_STAND.z); l.distance = F.dist; l.intensity = F[a.k] * me3;
+    l.visible = me3 > 0.5;   // a light that is off is not drawn at all (the mirror cuts in and out, so this never blends)
+  }
+  waveLight.visible = me3 <= 0.5;
+}
+/* The next frame is asked for first, so one bad frame never stops the room: on 2026-10-24 Wendell stepped toward the
+   dais and the whole scene froze, because a throw in the near-card (refreshHud, called below) ended the loop before it
+   asked for the next frame. A throw now lands in errLog, shows once, and the room keeps going. */
 function frame() {
+  requestAnimationFrame(frame);
+  try { frameBody(); } catch (e) { noteError(e, "frame"); }
+}
+function frameBody() {
   const dt = Math.min(0.05, clock.getDelta());
   const t = performance.now() / 1000;
   const tShared = now() / 1000;
@@ -1212,11 +1360,6 @@ function frame() {
   }
   // the Between and the garden
   stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t);
-  { const on = sheetName === "checkin" && walk && walk.feel && walk.step >= 0;
-    if (on) waveLight.color.setHex(elHex(walk.feel));
-    const want = on ? (walk.step === 7 ? 4 : 2.4) * (0.75 + 0.25 * Math.sin(t * 1.25)) : 0;
-    waveLight.intensity += (want - waveLight.intensity) * Math.min(1, dt * 2.5);
-    waveLight.position.set(meState.pos.x, groundY(meState.pos.x, meState.pos.z) + 1.3, meState.pos.z + 0.5); }
   for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
     const f = fly[i], u = Math.min(1, (t - f.t0) / 1.6);
@@ -1281,12 +1424,13 @@ function frame() {
   if (mirrorCut) { camera.position.copy(cp); mirrorCut = false; } else camera.position.lerp(cp, Math.min(1, dt * 4));
   camera.lookAt(focus); lastFocus.copy(focus);
   if (debugCam) { camera.position.set(debugCam[0], debugCam[1], debugCam[2]); camera.lookAt(debugCam[3], debugCam[4], debugCam[5]); }
+  figureLightTick(t, dt, me3);
   renderer.render(scene, camera);
   drawLabels(t);
   // what is near you
   const nk = nearest();
   if (nk !== nearKey) { nearKey = nk; refreshHud(); }
-  requestAnimationFrame(frame);
+  if (shotWanted) takeShot();
 }
 function nearest() {
   if (selected) {
@@ -1392,7 +1536,7 @@ function refreshHud() {
   // near
   const near = $("#near");
   const key = nearKey;
-  const html = key && !minuteOn() ? nearHtml(key, V, g) : "";
+  let html = ""; try { html = key && !minuteOn() ? nearHtml(key, V, g) : ""; } catch (e) { noteError(e, "near " + key); } // a broken card shows nothing, never stops the room
   near.hidden = !html || satchelOpen; if (near._h !== html) { near.innerHTML = html; near._h = html; readIn(near); }
 
   // tools
@@ -1428,7 +1572,7 @@ function refreshHud() {
     tools.push(satchelBtn());
     if (others.length) tools.push(`<button class="glassbtn" type="button" data-act="wave">Wave</button>`);
   }
-  if (g && !isHome(g) && homeId && !storeDown) tools.push(`<button class="glassbtn" type="button" data-act="goHome">Home</button>`); else if (g.phase !== "closed" && !isMember(g) && members(g).length < 2 && !readOnly) {
+  if (g && !isHome(g) && homeId && !storeDown) tools.push(`<button class="glassbtn" type="button" data-act="goHome">Home</button>`); else if (g && g.phase !== "closed" && !isMember(g) && members(g).length < 2 && !readOnly) {
     tools.push(g.joinRequest && g.joinRequest.uid === me ? `<button class="glassbtn" type="button" data-act="unjoin">Take back my request</button>` : `<button type="button" data-act="join">Ask to join</button>`);
   }
   if (placing && !storeDown) tools.unshift(`<button type="button" data-act="lanternHere">Set it down here</button><button class="glassbtn" type="button" data-act="lanternCancel">Leave it where it was</button>`);
@@ -1761,6 +1905,7 @@ function renderSheet() {
     case "hearth": if (!g || !hearthOpen()) { closeSheet(); return; } h = hearthSheet(g, V) + close; break;
     case "away": h = awaySheet(g, V) + close; break;
     case "menu": h = menuSheet(g, V); break;
+    case "shot": h = shotSheet(); break;
     case "ending": h = endingSheet(g, V) + close; break;
     case "welcome": { const u = g && g.joinRequest && g.joinRequest.uid; if (!u || g.phase !== "spark") { closeSheet(); return; }
       h = `<div class="stack"><h2>Welcome ${esc(nameOf(u, g))} in</h2>
@@ -2076,6 +2221,7 @@ function menuSheet(g, V) {
     <div class="row">
       ${g && isMember(g) && g.phase !== "closed" && !isHome(g) ? `<button class="ghost" type="button" data-open="ending">Ending</button>` : ""}
       ${g && isMember(g) && !isHome(g) ? `<button class="ghost" type="button" data-act="copy">Take my copy</button>` : ""}
+      <button class="ghost" type="button" data-act="shot">Send a screenshot</button>
       <button class="quiet" type="button" data-open="quiet">Need a silent exit?</button>
       <button class="quiet" type="button" data-close>Close</button>
     </div>
@@ -2571,6 +2717,7 @@ document.addEventListener("click", async ev => {
   if (a === "satArm") { armed = armed === id ? null : id; refreshHud(); return; }
   if (a === "spotLift") { await spotTap(id); selected = null; refreshHud(); return; }
   if (a === "sound") { ambient.toggle(); soundLabel(); return; }
+  if (a === "shot") { shot = null; shotWanted = true; closeSheet(); return; } // the next frame reads the canvas, then opens the sheet
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
   if (a === "hGlow") { hd.glow = +id || null; renderSheet(); return; }
@@ -3028,7 +3175,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   const bq = new URLSearchParams(location.search), bWant = bq.get("g");
   let bThrough = null; try { bThrough = sessionStorage.getItem(THROUGH); } catch {}
   // everyone wakes in their homeroom, the nook; only a walk through the doorway (or a preview's ?skipHome=1) opens a room
-  const guessShell = bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
+  const guessShell = (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
   const roomP = Promise.resolve().then(() => buildRoom(guessShell)).catch(e => {
     $("#loadMsg").innerHTML = `The garden did not load. Check your connection and open the page again.<br><small style="opacity:.6">${esc((e && (e.message || e.type)) || e)}</small><br><button type="button" onclick="location.reload()" style="margin-top:12px">Try again</button>`;
     throw e;
@@ -3047,7 +3194,10 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
     // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
-    if (want && homeId && want !== homeId && through !== want && !skipHome) {
+    // previews only: ?room=first opens your first shared room straight away (the room id is not in a link he can type)
+    const firstRoom = PREVIEW_HOST && q.get("room") === "first" ? ((list && list.gardens) || []).find(x => x.phase !== "closed") : null;
+    if (firstRoom) { gardenId = firstRoom.id; invite = null; try { const u = new URL(location.href); u.searchParams.delete("room"); u.searchParams.set("g", gardenId); u.searchParams.set("skipHome", "1"); history.replaceState(null, "", u); } catch {} }
+    else if (want && homeId && want !== homeId && through !== want && !skipHome) {
       const r = ((list && list.gardens) || []).find(x => x.id === want);
       // his ruling on br-orient-each-invite (2026-10-24): once you have done the first minute, an invitation's doorway opens at once
       portalTo = { id: want, invite: r ? null : wantInvite, open: inviteDoorway(minuteDoc((list && list.home) || {}), !!r) === "open", name: r ? roomName(r) : null, style: r ? r.style : null };
@@ -3090,6 +3240,8 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   const jump = q.get("sheet");
   if (garden && !isHome(garden)) fetchHome(); // your homeroom's spirits and embers, for Check in and Bring a spirit here
   if (SATCHEL_ALL && canArrange()) setSatchel(true);
+  // ?mirror=1 (previews): open at the mirror, the Look sheet when there is a garden, the glass alone when the store is down
+  if (MIRROR_SKIP && !jump) { if (garden) openSheet("look"); else setMirror(true); }
   if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
   // the first minute (Still C): a homeroom not yet oriented wakes into it; a guest's invitation doorway opens at its end
   minuteStart();
