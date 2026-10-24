@@ -43,6 +43,9 @@ export const DYES = [{ id: "violet", label: "Violet", swatch: "#6e5a86" }, { id:
 // Each outfit's four cloth colours (main, light, shade, trim), and what each dye turns them into.
 export const CLOTH = { jacket: ["#4a3a5e", "#6e5a86", "#2a2033", "#d9a03a"], dress: ["#b07a2a", "#d9a03a", "#7a5220", "#6e5a86"], coat: ["#3a2c48", "#56446a", "#1e1826", "#d9a03a"] };
 export const DYED = { violet: { jacket: CLOTH.jacket, dress: CLOTH.jacket, coat: CLOTH.coat }, saffron: { jacket: CLOTH.dress, dress: CLOTH.dress, coat: ["#8e6224", "#b07a2a", "#5a3c18", "#6e5a86"] } };
+// The robe's lining, the dye's fifth colour (the robe-slit build, his yes to the layers still 2026-10-24: plum on ochre): the
+// inside a slit or a turned hem shows, chosen to stand off the dye. Not a part of the look's text, which stays sprout's seven.
+export const LINING = { saffron: "#6a2238", violet: "#8e6224" };
 
 const OPTS = { shape: SHAPES, build: BUILDS, skin: SKINS, style: STYLES, colour: COLOURS, outfit: OUTFITS, dye: DYES };
 export const optionsOf = k => OPTS[k];
@@ -69,7 +72,7 @@ export function parseLook(t) {
 /** "Choose for me": one choice from each row. `rnd` is any function giving 0 to 1. */
 export const randomLook = (rnd = Math.random) => Object.fromEntries(KEYS.map(k => [k, OPTS[k][Math.floor(rnd() * OPTS[k].length)].id]));
 
-/** The colours a figure is tinted with: skin, hair, and the dyed cloth (main, light, shade, trim). */
+/** The colours a figure is tinted with: skin, hair, the dyed cloth (main, light, shade, trim) and the robe's lining. */
 export function colorsOf(look) {
   const l = typeof look === "string" ? parseLook(look) : look;
   if (!l) return null;
@@ -77,6 +80,7 @@ export function colorsOf(look) {
     skin: SKINS.find(s => s.id === l.skin).swatch,
     hair: COLOURS.find(c => c.id === l.colour).swatch,
     cloth: DYED[l.dye][l.outfit].slice(),
+    lining: LINING[l.dye],
   };
 }
 
