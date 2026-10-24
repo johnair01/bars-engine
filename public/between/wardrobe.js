@@ -46,6 +46,7 @@ export function dressFigure(root, P) {
     part[i] = best; }
   const out = new THREE.BufferAttribute(new Float32Array(col.count * 4), 4); mesh.geometry.setAttribute("color", out);
   const mat = mesh.material = mesh.material.clone(); mat.vertexColors = true;
+  mat.userData.noPaint = true;   // the figure keeps its true colours: the room is painted, the figure is lit (lt-true-colours)
 
   // the J5 pieces re-bound to this body's bones (same rig, same bind pose)
   function wear(g, light, grow = 0) {
@@ -157,6 +158,7 @@ export function dressFigure(root, P) {
   hairRoot.quaternion.copy(B.head.getWorldQuaternion(new THREE.Quaternion()).invert());
   hairRoot.scale.setScalar(1 / B.head.getWorldScale(new THREE.Vector3()).x);   // world-sized solids under a scaled body
   const hairMat = new THREE.MeshStandardMaterial({ color: 0x1c2222, roughness: 0.9, flatShading: true });
+  hairMat.userData.noPaint = true;
   const sphere = (r, sx, sy, sz, x, y, z) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 7), hairMat); m.scale.set(sx, sy, sz); m.position.set(x, y, z); return m; };
   const tilt = (m, x, y, z) => { m.rotation.set(x, y, z); return m; };
   const HAIR = {

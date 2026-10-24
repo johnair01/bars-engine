@@ -11,12 +11,14 @@ import { WHEN_CHIPS, whenFor, whenWords, calendar, LINE_MAX, sealedInvitation, a
 import { createCreature } from "./creature.js";
 import { loadParts, dressFigure } from "./wardrobe.js";   // the player figure wears the Look (Average Dusk, the baked J5 robe)
 import { createAmbient } from "./ambient.js";
-import { installPaint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
+import { installPaint, paint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
+/* Mirror light and standing idle build: the figure alone takes the room capture and the wrapped light (figure-light.js). */
+import { figureWrap, figureProbe, lightFigure } from "./figure-light.js";
 import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // round 4: caption mode
 /* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
-import { STYLES as ROOM_STYLES, styleOf } from "../calrunia/room-styles.js";
+import { STYLES as ROOM_STYLES, styleOf, figureLightOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
 /* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
@@ -243,8 +245,16 @@ const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
 let hollow = null;
 const betweenLight = new THREE.PointLight(0x9ad8cf, 5, 6, 1.5); betweenLight.position.set(BETWEEN_AT.x, DAIS_Y + 1.1, BETWEEN_AT.z + 0.3); scene.add(betweenLight);
 let lightScale = 1;
-/* The check-in's glow: a soft light at your shoulder in the feeling's element colour, breathing while you walk the steps. */
-const waveLight = new THREE.PointLight(0xffffff, 0, 4.5, 1.4); scene.add(waveLight);
+/* The light that travels with you (round 3 build): a narrow soft key from over your shoulder on the camera's side, aimed at
+   you alone so no pool shows on the floor. During a check-in it takes the feeling's element colour and breathes. */
+const waveLight = new THREE.SpotLight(0xffe2c0, 0, 6, 0.25, 1, 2); scene.add(waveLight, waveLight.target);
+const KEY_COLOR = new THREE.Color(0xffe2c0), keyEl = new THREE.Color(0xffe2c0);
+let keyCheck = 0;
+/* The mirror's own light, on only while you stand at it: a warm sconce left of the frame, a cool one right, and a wide
+   window light behind you. Offsets are from the mirror (x, z) and the floor; each aims at your chest where you stand. */
+const mirrorLights = [[0xffd6a8, "warm", 0.8, -0.45, 1.55, 0, 1.2], [0xd8d0ff, "cool", 0.8, 0.55, 1.35, 0, 1.1], [0xa8c4ff, "rim", 0.6, -1.0, 2.6, 3.55, 1.1]]
+  .map(([c, k, ang, x, y, z, ty]) => { const l = new THREE.SpotLight(c, 0, 3.5, ang, 1, 2); l.userData.at = { k, x, y, z, ty }; scene.add(l, l.target); return l; });
+let figLight = figureLightOf(null), figEnv = null, figDc = 1, probeDirty = true;
 
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 66 : 50; camera.updateProjectionMatrix(); }
 addEventListener("resize", resize); resize();
@@ -313,7 +323,7 @@ async function makeBody(model, height, tint, tintAmt, opts) {
   const bend = (n, x, y, z, w) => { const B = bones[n]; if (!B) return; qe.setFromEuler(eu.set(x * w, y * w, z * w, "XYZ")); B.b.quaternion.copy(B.q).multiply(qe); };
   let sit = 0, waveT = -9, rest = 0;
   return {
-    holder, mixer, isPlayer: !!bones.hipL, scale: k,
+    holder, mixer, isPlayer: !!bones.hipL, scale: k, dressed: !!wardrobe,
     setWalking(w) {
       if (w === walking) return; walking = w;
       // a dressed figure stands at the Walk's first frame, where the robe was baked, rather than fading to the bind pose
@@ -445,6 +455,9 @@ const PREVIEW_HOST = location.hostname !== "bars-engine.vercel.app";
 const KQ = new URLSearchParams(location.search);
 const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
 const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
+const MIRROR_SKIP = PREVIEW_HOST && KQ.get("mirror") === "1";      // previews: open standing at the mirror (the Look)
+// previews: ?fl=warm:7,kMirror:0.6 tries other figure-light strengths (room-styles.js FIGURE_LIGHT names) without a deploy
+const FL_TRY = PREVIEW_HOST && KQ.get("fl") ? Object.fromEntries(KQ.get("fl").split(",").map(kv => kv.split(":")).filter(([k, v]) => k && Number.isFinite(+v)).map(([k, v]) => [k, +v])) : null;
 let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
 const ROOM_VIEW = { // camera and focus for the whole nook: a phone stands further back and higher to fit the hook and the floor
   wide: [new THREE.Vector3(0.35, 2.35, 3.55), new THREE.Vector3(-0.25, 0.85, -0.9)],
@@ -477,6 +490,7 @@ function syncRoom() {
   roomSig = sig;
   const res = applyRoom({ ...hollow.handles, scene, make: makeItem }, r.style ? r : { ...r, style: undefined });
   styleNow = res.style && res.style.id;
+  figLight = figureLightOf(res.style); probeDirty = true;
   const ms = inNook() ? Object.entries(res.placed).find(([, e]) => e.item === "mirror") : null;
   mirrorSpot = ms ? ms[0] : null;
   setMirrorAt(mirrorSpot ? hollow.handles.spots[mirrorSpot].pos : null);
@@ -561,6 +575,7 @@ function setMirror(on) {
   if (on) { standUp(); meState.target = null; meState.keys.clear(); selected = null; placing = null; }
   else { camYaw = 0; camPitch = 0.5; } // stepping back from the glass: behind you, the mirror ahead
   mirrorCut = true; // the picture flips at once, so the camera cuts too rather than flying through you
+  probeDirty = true; // the capture is taken where you stand: at the glass, or back in the room
 }
 let mirrorCut = false;
 
@@ -1104,6 +1119,42 @@ const clock = new THREE.Clock();
 /* ?cam=x,y,z,lx,ly,lz pins the camera, for screenshots set beside the concept views */
 let debugCam = (() => { const v = new URLSearchParams(location.search).get("cam"); const a = v ? v.split(",").map(Number) : null; return a && a.length === 6 && a.every(Number.isFinite) ? a : null; })();
 let nearKey = null;
+/* The figure's light, each frame: the room capture when it is due (room entry, a style change, the mirror), the travelling key
+   and the mirror's lights blended by how far into the mirror the camera is, and the figures' strengths (room-styles.js). */
+const playerBodies = () => [meState.body, ...[...peers.values()].map(p => p.body)].filter(b => b && b.dressed);
+function figureLightTick(t, dt, me3) {
+  const F = FL_TRY ? { ...figLight, ...FL_TRY } : figLight, bodies = playerBodies();
+  if (probeDirty && meState.body && hollow) {
+    probeDirty = false;
+    const at = (mirrorOn ? MIRROR_STAND : meState.pos).clone(); at.y = groundY(at.x, at.z) + 1.1;
+    const lit = [waveLight, ...mirrorLights].map(l => [l, l.intensity]), shown = bodies.map(b => [b.holder, b.holder.visible]);
+    for (const [l] of lit) l.intensity = 0; for (const [h] of shown) h.visible = false;
+    scene.updateMatrixWorld(true);
+    const old = figEnv; ({ env: figEnv, dc: figDc } = figureProbe(renderer, scene, at));
+    for (const [l, i] of lit) l.intensity = i; for (const [h, v] of shown) h.visible = v;
+    if (old) old.dispose();
+  }
+  if (figEnv) { const k = (F.kWalk + (F.kMirror - F.kWalk) * me3) / figDc; for (const b of bodies) lightFigure(b.holder, figEnv.texture, k); }
+  figureWrap.value = F.wrap;
+  paint.uEdge.value = F.edge + (F.edgeMirror - F.edge) * me3;
+  // walking: the key from over your shoulder, on the camera's side
+  const on = sheetName === "checkin" && walk && walk.feel && walk.step >= 0;
+  keyCheck += ((on ? 1 : 0) - keyCheck) * (1 - Math.exp(-2.5 * dt));
+  if (on) keyEl.setHex(elHex(walk.feel));
+  waveLight.color.copy(KEY_COLOR).lerp(keyEl, 0.65 * keyCheck);
+  const gy = groundY(meState.pos.x, meState.pos.z), toCam = camera.position.clone().sub(meState.pos).setY(0);
+  if (toCam.lengthSq() < 1e-4) toCam.set(0, 0, 1); toCam.normalize();
+  waveLight.position.set(meState.pos.x + toCam.x * 2.6 + toCam.z * 0.9, gy + 2.6, meState.pos.z + toCam.z * 2.6 - toCam.x * 0.9);
+  waveLight.target.position.set(meState.pos.x, (meState.sitting ? DAIS_Y + 0.5 : gy + 1.0), meState.pos.z);
+  waveLight.distance = F.keyDist; waveLight.angle = F.keyAngle;
+  waveLight.intensity = meState.body ? F.key * (1 - me3) * (1 + keyCheck * (0.15 + 0.25 * Math.sin(t * 1.25) + (on && walk.step === 7 ? 0.4 : 0))) : 0;
+  // the mirror: its sconces and the window behind you, placed from where the mirror stands now
+  const sy = groundY(MIRROR_STAND.x, MIRROR_STAND.z);
+  for (const l of mirrorLights) {
+    const a = l.userData.at; l.position.set(BETWEEN_AT.x + a.x, sy + a.y, BETWEEN_AT.z + a.z);
+    l.target.position.set(MIRROR_STAND.x, sy + a.ty, MIRROR_STAND.z); l.distance = F.dist; l.intensity = F[a.k] * me3;
+  }
+}
 function frame() {
   const dt = Math.min(0.05, clock.getDelta());
   const t = performance.now() / 1000;
@@ -1212,11 +1263,6 @@ function frame() {
   }
   // the Between and the garden
   stepBetween(t, dt); portalTick(t); minuteTick(t, dt); gustTick(t);
-  { const on = sheetName === "checkin" && walk && walk.feel && walk.step >= 0;
-    if (on) waveLight.color.setHex(elHex(walk.feel));
-    const want = on ? (walk.step === 7 ? 4 : 2.4) * (0.75 + 0.25 * Math.sin(t * 1.25)) : 0;
-    waveLight.intensity += (want - waveLight.intensity) * Math.min(1, dt * 2.5);
-    waveLight.position.set(meState.pos.x, groundY(meState.pos.x, meState.pos.z) + 1.3, meState.pos.z + 0.5); }
   for (const th of things.values()) th.group.children.forEach(c => { if (c.userData.bob) c.position.y = 0.62 + Math.sin(t * 2 + th.pos.x) * 0.06; if (c.userData.pulse) { if (c.userData.s0 == null) c.userData.s0 = c.scale.x; c.scale.setScalar(c.userData.s0 * (1 + Math.sin(t * 4) * 0.15)); } });
   for (let i = fly.length - 1; i >= 0; i--) {
     const f = fly[i], u = Math.min(1, (t - f.t0) / 1.6);
@@ -1281,6 +1327,7 @@ function frame() {
   if (mirrorCut) { camera.position.copy(cp); mirrorCut = false; } else camera.position.lerp(cp, Math.min(1, dt * 4));
   camera.lookAt(focus); lastFocus.copy(focus);
   if (debugCam) { camera.position.set(debugCam[0], debugCam[1], debugCam[2]); camera.lookAt(debugCam[3], debugCam[4], debugCam[5]); }
+  figureLightTick(t, dt, me3);
   renderer.render(scene, camera);
   drawLabels(t);
   // what is near you
@@ -1428,7 +1475,7 @@ function refreshHud() {
     tools.push(satchelBtn());
     if (others.length) tools.push(`<button class="glassbtn" type="button" data-act="wave">Wave</button>`);
   }
-  if (g && !isHome(g) && homeId && !storeDown) tools.push(`<button class="glassbtn" type="button" data-act="goHome">Home</button>`); else if (g.phase !== "closed" && !isMember(g) && members(g).length < 2 && !readOnly) {
+  if (g && !isHome(g) && homeId && !storeDown) tools.push(`<button class="glassbtn" type="button" data-act="goHome">Home</button>`); else if (g && g.phase !== "closed" && !isMember(g) && members(g).length < 2 && !readOnly) {
     tools.push(g.joinRequest && g.joinRequest.uid === me ? `<button class="glassbtn" type="button" data-act="unjoin">Take back my request</button>` : `<button type="button" data-act="join">Ask to join</button>`);
   }
   if (placing && !storeDown) tools.unshift(`<button type="button" data-act="lanternHere">Set it down here</button><button class="glassbtn" type="button" data-act="lanternCancel">Leave it where it was</button>`);
@@ -3090,6 +3137,8 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   const jump = q.get("sheet");
   if (garden && !isHome(garden)) fetchHome(); // your homeroom's spirits and embers, for Check in and Bring a spirit here
   if (SATCHEL_ALL && canArrange()) setSatchel(true);
+  // ?mirror=1 (previews): open at the mirror, the Look sheet when there is a garden, the glass alone when the store is down
+  if (MIRROR_SKIP && !jump) { if (garden) openSheet("look"); else setMirror(true); }
   if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
   // the first minute (Still C): a homeroom not yet oriented wakes into it; a guest's invitation doorway opens at its end
   minuteStart();

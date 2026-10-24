@@ -30,6 +30,7 @@ export const paint = {
   uStops: { value: RAMP_STOPS },
   uBrush: { value: 1 },
   uSoft: { value: 3.2 },        // mip bias on colour maps: paint has no pixel-level speckle
+  uEdge: { value: 0.3 },        // half-width of each band's wet edge (0.2 was a fixed smoothstep 0.3..0.7; 0.5 = no hard step at all); room-styles.js sets it per style
 };
 
 const VERT_DECL = `varying vec3 vPaintPos;
@@ -50,6 +51,7 @@ uniform float uPaintStrength;
 uniform float uPaintBands;
 uniform float uPaintBrush;
 uniform float uPaintSoft;
+uniform float uPaintEdge;
 uniform vec3 uPaintRamp[5];
 uniform float uPaintStops[5];
 float pHash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
@@ -81,7 +83,7 @@ if (uPaintStrength > 0.001) {
   float x = L / (1.0 + L);
   float xb = x * uPaintBands * (1.0 + (stroke - 0.5) * 0.45 * uPaintBrush);
   float fl = floor(xb);
-  float fr = smoothstep(0.30, 0.70, fract(xb));
+  float fr = smoothstep(0.5 - uPaintEdge, 0.5 + uPaintEdge, fract(xb));
   float banded = (fl + fr) / uPaintBands;
   float lit = clamp(banded, 0.0, 1.0);
   float Lb = lit / max(1.0 - lit, 0.02);          // back to linear light
@@ -117,7 +119,7 @@ export function installPaint() {
     if (prev) prev.call(this, shader, renderer);
     if (this.userData && this.userData.noPaint) return;
     const u = shader.uniforms;
-    u.uPaintStrength = paint.uStrength; u.uPaintBands = paint.uBands; u.uPaintBrush = paint.uBrush; u.uPaintSoft = paint.uSoft;
+    u.uPaintStrength = paint.uStrength; u.uPaintBands = paint.uBands; u.uPaintBrush = paint.uBrush; u.uPaintSoft = paint.uSoft; u.uPaintEdge = paint.uEdge;
     u.uPaintRamp = paint.uRamp; u.uPaintStops = paint.uStops;
     shader.vertexShader = VERT_DECL + shader.vertexShader
       .replace("#include <project_vertex>", "#include <project_vertex>\n" + VERT_BODY);
