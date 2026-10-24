@@ -49,7 +49,7 @@ export const DEFAULT_STYLE = "dusk-hollow";
    key: the soft light that travels with you while you walk (angle `keyAngle`, out to `keyDist`);
    edge, edgeMirror: the painted room's band edge (paint.js uEdge) walking and at the mirror.
    Values are candidate 3b from round 3 until his pick on lt-mirror-look-03; a style overrides only what differs. */
-export const FIGURE_LIGHT = { kMirror: 0.5, kWalk: 1.0, wrap: 0.25, warm: 6, cool: 1.5, rim: 10, dist: 3.5, key: 32, keyAngle: 0.25, keyDist: 6, edge: 0.25, edgeMirror: 0.25 };
+export const FIGURE_LIGHT = { kMirror: 0.3, kWalk: 1.0, wrap: 0.1, warm: 8, cool: 1, rim: 12, dist: 3.5, key: 32, keyAngle: 0.25, keyDist: 6, edge: 0.22, edgeMirror: 0.22 };
 export const figureLightOf = s => ({ ...FIGURE_LIGHT, ...((s && s.figure) || {}) });
 
 /** A style by id; anything unknown is the default, so an old room or a typo still opens. */

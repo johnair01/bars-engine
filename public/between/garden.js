@@ -99,6 +99,78 @@ const ls = {
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; readIn(t); clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, Math.max(3400, readMs(msg.split(/\s+/).length) + 2600)); }
+/* ---------- what broke, and a screenshot to send (Wendell, 2026-10-24) ---------- */
+// The last few errors the page caught, sent with a screenshot so a thread sees what he saw.
+const errLog = [];
+function noteError(e, where) {
+  const msg = String((e && (e.message || e.reason && e.reason.message || e.reason)) || e).slice(0, 300);
+  const stack = String((e && (e.stack || e.reason && e.reason.stack)) || "").split("\n").slice(0, 4).join(" | ").slice(0, 600);
+  const last = errLog[errLog.length - 1];
+  if (last && last.msg === msg) { last.n++; return; }
+  errLog.push({ at: new Date().toISOString(), where, msg, stack, n: 1 }); if (errLog.length > 12) errLog.shift();
+  console.error("[between]", where, e);
+  if (!noteError.told) { noteError.told = true; try { toast("Something here went wrong; the room keeps going. More, then Send a screenshot, shows it to Claude."); } catch {} }
+}
+addEventListener("error", ev => noteError(ev.error || ev.message, "window"));
+addEventListener("unhandledrejection", ev => noteError(ev.reason, "promise"));
+let shotWanted = false, shot = null; // shot: { image, from: "room" | "file", sending, sent }
+// Read the canvas right after a render, in the same frame, so the drawing buffer still holds it.
+function takeShot() {
+  shotWanted = false;
+  try {
+    const src = renderer.domElement, k = Math.min(1, 1280 / Math.max(src.width, src.height));
+    const c = document.createElement("canvas"); c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
+    c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+    shot = { image: c.toDataURL("image/jpeg", 0.82), from: "room" };
+  } catch (e) { noteError(e, "shot"); shot = { image: null, from: "room" }; }
+  openSheet("shot");
+}
+function shotFile(file) {
+  if (!file) return;
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => {
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    const n = $("#shotNote"), note = n ? n.value : ""; shot = { image: c.toDataURL("image/jpeg", 0.85), from: "file" }; renderSheet(); const n2 = $("#shotNote"); if (n2) n2.value = note;
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast("That picture would not open. Try a PNG or JPEG."); };
+  img.src = url;
+}
+function shotState() {
+  const V = view(), g = V.g;
+  return {
+    room: g ? (isHome(g) ? "homeroom" : "room") : storeDown ? "store down" : "none", gardenId, phase: g ? g.phase || null : null,
+    me: { x: +meState.pos.x.toFixed(2), z: +meState.pos.z.toFixed(2), y: +groundY(meState.pos.x, meState.pos.z).toFixed(2), sitting: !!meState.sitting, target: meState.target ? { x: +meState.target.x.toFixed(2), z: +meState.target.z.toFixed(2) } : null },
+    near: nearKey || null, selected: selected || null, items: V.items ? V.items.size : 0, peers: peers.size,
+    screen: innerWidth + "x" + innerHeight + "@" + (window.devicePixelRatio || 1), ua: navigator.userAgent.slice(0, 200),
+    errors: errLog.slice(),
+  };
+}
+function shotSheet() {
+  if (!shot) return `<div class="stack"><h2>Send a screenshot</h2><p class="muted">Taking it…</p></div>`;
+  if (shot.sent) return `<div class="stack"><h2>Sent</h2><p>Claude can read it now, with your note and where you stood. Tell the thread you sent one.</p><div class="row"><button type="button" data-close>Back to the room</button></div></div>`;
+  return `<form class="stack" id="shotForm"><h2>Send a screenshot</h2>
+    ${shot.image ? `<img src="${shot.image}" alt="The screenshot" style="width:100%;border-radius:10px">` : `<p class="muted">The room would not give a picture. Choose one of your own below.</p>`}
+    <p class="muted small">${shot.from === "file" ? "Your picture." : "The room as it was a moment ago (the buttons and names are not in it)."} Sent with it: this page's link, where you stand, and ${errLog.length ? errLog.length + " error" + (errLog.length > 1 ? "s" : "") + " the page caught" : "no errors (none were caught)"}.</p>
+    <label for="shotPick">Or choose your own screenshot<input id="shotPick" type="file" accept="image/*"></label>
+    <label for="shotNote">What happened<textarea id="shotNote" maxlength="4000" placeholder="It froze when I walked up onto the moss."></textarea></label>
+    <div class="row"><button type="submit" ${shot.image && !shot.sending ? "" : "disabled"}>${shot.sending ? "Sending…" : "Send to Claude"}</button><button class="quiet" type="button" data-close>Close</button></div></form>`;
+}
+document.addEventListener("change", ev => { if (ev.target && ev.target.id === "shotPick") shotFile(ev.target.files && ev.target.files[0]); });
+document.addEventListener("submit", async ev => {
+  if (ev.target.id !== "shotForm") return;
+  ev.preventDefault(); ev.stopImmediatePropagation();
+  if (!shot || !shot.image || shot.sending) return;
+  const note = ($("#shotNote").value || "").trim();
+  shot.sending = true; renderSheet();
+  try {
+    await api("/api/council/preview-shots", { page: location.href, note, image: shot.image, state: shotState() });
+    shot.sent = true;
+  } catch (e) {
+    toast(e.code === "unauthenticated" ? "Sign in to bars-engine first, then send it again." : "It did not send (" + (e.message || e.code) + "). Try again in a moment.");
+  } finally { if (shot) shot.sending = false; renderSheet(); }
+}, true);
 function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -1172,7 +1244,14 @@ function figureLightTick(t, dt, me3) {
   }
   waveLight.visible = me3 <= 0.5;
 }
+/* The next frame is asked for first, so one bad frame never stops the room: on 2026-10-24 Wendell stepped toward the
+   dais and the whole scene froze, because a throw in the near-card (refreshHud, called below) ended the loop before it
+   asked for the next frame. A throw now lands in errLog, shows once, and the room keeps going. */
 function frame() {
+  requestAnimationFrame(frame);
+  try { frameBody(); } catch (e) { noteError(e, "frame"); }
+}
+function frameBody() {
   const dt = Math.min(0.05, clock.getDelta());
   const t = performance.now() / 1000;
   const tShared = now() / 1000;
@@ -1350,7 +1429,7 @@ function frame() {
   // what is near you
   const nk = nearest();
   if (nk !== nearKey) { nearKey = nk; refreshHud(); }
-  requestAnimationFrame(frame);
+  if (shotWanted) takeShot();
 }
 function nearest() {
   if (selected) {
@@ -1456,7 +1535,7 @@ function refreshHud() {
   // near
   const near = $("#near");
   const key = nearKey;
-  const html = key && !minuteOn() ? nearHtml(key, V, g) : "";
+  let html = ""; try { html = key && !minuteOn() ? nearHtml(key, V, g) : ""; } catch (e) { noteError(e, "near " + key); } // a broken card shows nothing, never stops the room
   near.hidden = !html || satchelOpen; if (near._h !== html) { near.innerHTML = html; near._h = html; readIn(near); }
 
   // tools
@@ -1825,6 +1904,7 @@ function renderSheet() {
     case "hearth": if (!g || !hearthOpen()) { closeSheet(); return; } h = hearthSheet(g, V) + close; break;
     case "away": h = awaySheet(g, V) + close; break;
     case "menu": h = menuSheet(g, V); break;
+    case "shot": h = shotSheet(); break;
     case "ending": h = endingSheet(g, V) + close; break;
     case "welcome": { const u = g && g.joinRequest && g.joinRequest.uid; if (!u || g.phase !== "spark") { closeSheet(); return; }
       h = `<div class="stack"><h2>Welcome ${esc(nameOf(u, g))} in</h2>
@@ -2140,6 +2220,7 @@ function menuSheet(g, V) {
     <div class="row">
       ${g && isMember(g) && g.phase !== "closed" && !isHome(g) ? `<button class="ghost" type="button" data-open="ending">Ending</button>` : ""}
       ${g && isMember(g) && !isHome(g) ? `<button class="ghost" type="button" data-act="copy">Take my copy</button>` : ""}
+      <button class="ghost" type="button" data-act="shot">Send a screenshot</button>
       <button class="quiet" type="button" data-open="quiet">Need a silent exit?</button>
       <button class="quiet" type="button" data-close>Close</button>
     </div>
@@ -2635,6 +2716,7 @@ document.addEventListener("click", async ev => {
   if (a === "satArm") { armed = armed === id ? null : id; refreshHud(); return; }
   if (a === "spotLift") { await spotTap(id); selected = null; refreshHud(); return; }
   if (a === "sound") { ambient.toggle(); soundLabel(); return; }
+  if (a === "shot") { shot = null; shotWanted = true; closeSheet(); return; } // the next frame reads the canvas, then opens the sheet
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
   if (a === "hGlow") { hd.glow = +id || null; renderSheet(); return; }
@@ -3092,7 +3174,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   const bq = new URLSearchParams(location.search), bWant = bq.get("g");
   let bThrough = null; try { bThrough = sessionStorage.getItem(THROUGH); } catch {}
   // everyone wakes in their homeroom, the nook; only a walk through the doorway (or a preview's ?skipHome=1) opens a room
-  const guessShell = bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
+  const guessShell = (PREVIEW_HOST && bq.get("room") === "first") || bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
   const roomP = Promise.resolve().then(() => buildRoom(guessShell)).catch(e => {
     $("#loadMsg").innerHTML = `The garden did not load. Check your connection and open the page again.<br><small style="opacity:.6">${esc((e && (e.message || e.type)) || e)}</small><br><button type="button" onclick="location.reload()" style="margin-top:12px">Try again</button>`;
     throw e;
@@ -3111,7 +3193,10 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
     // The list always comes first: your homeroom, and each room's summary for the Next card and the Rooms sheet.
     // Everyone spawns in their homeroom (his ruling, 2026-10-23); a room in the link is a doorway there.
     try { await fetchList(); } catch (e) { if (e.code === "unauthenticated" || !gardenId) throw e; }
-    if (want && homeId && want !== homeId && through !== want && !skipHome) {
+    // previews only: ?room=first opens your first shared room straight away (the room id is not in a link he can type)
+    const firstRoom = PREVIEW_HOST && q.get("room") === "first" ? ((list && list.gardens) || []).find(x => x.phase !== "closed") : null;
+    if (firstRoom) { gardenId = firstRoom.id; invite = null; try { const u = new URL(location.href); u.searchParams.delete("room"); u.searchParams.set("g", gardenId); u.searchParams.set("skipHome", "1"); history.replaceState(null, "", u); } catch {} }
+    else if (want && homeId && want !== homeId && through !== want && !skipHome) {
       const r = ((list && list.gardens) || []).find(x => x.id === want);
       // his ruling on br-orient-each-invite (2026-10-24): once you have done the first minute, an invitation's doorway opens at once
       portalTo = { id: want, invite: r ? null : wantInvite, open: inviteDoorway(minuteDoc((list && list.home) || {}), !!r) === "open", name: r ? roomName(r) : null, style: r ? r.style : null };
