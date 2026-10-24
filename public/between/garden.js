@@ -3,7 +3,8 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as skClone } from "three/addons/utils/SkeletonUtils.js";
-import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, SEATS, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
+import { buildHollow, walkable, pushOut, groundY, clampCamera, mergeStatic, mergeByParent, paperLantern, makeRoomItem, SEATS, WALK_R, DAIS_Y, HEARTH } from "./hollow.js";
+import { applyRoom, ITEMS, ITEM_ORDER, earnedEvents, earnedItems, satchelOf, placeOn, liftFrom } from "../calrunia/room-kit.js";
 import { createCreature } from "./creature.js";
 import { createAmbient } from "./ambient.js";
 import { installPaint } from "./paint.js";   // round 3: the painterly shader, keyed to the concept views
@@ -11,7 +12,7 @@ import { readIn, readMs, setPace, getPace, PACES } from "./captions.js"; // roun
 /* Rooms, part 2 (six-faces-council relationship-creature, the br-* positions): the portable modules the Cave of Lessons
    and Big Mind take as they are. */
 import { BEATS, optionsOf, parseLook, lookText, randomLook, colorsOf, lookWords, DEFAULT_LOOK } from "../calrunia/look.js";
-import { STYLES as ROOM_STYLES, styleOf, applyStyle } from "../calrunia/room-styles.js";
+import { STYLES as ROOM_STYLES, styleOf } from "../calrunia/room-styles.js";
 import { suggest, LANE_NAMES } from "../calrunia/next-moves.js";
 import { SPELLS, KINDS as SPELL_KINDS, castable } from "../calrunia/spellbook.js";
 /* Part 4 (his ask of 2026-10-23): a check-in is a W.A.V.E. that leaves an ember, and embers feed spirits. */
@@ -362,10 +363,27 @@ async function makeBody(model, height, tint, tintAmt, opts) {
 const FACE = 0; // the bodies face +z in their files
 
 let roomReady = false;
-function buildRoom() {
-  hollow = buildHollow(scene, { lowPower: LOW_POWER });
+/* The room kit (public/calrunia/room-kit.js, his yes to Still A, 2026-10-24): the homeroom is the `nook` shell, a room you
+   share the `hollow` shell, today's Dusk hollow with its pieces pre-placed. A shell is built once; a page that guessed wrong
+   at boot (a room in the link that turned out to be your home, or the other way) builds again once it knows. */
+let builtShell = null;
+function buildRoom(shell = "hollow") {
+  if (hollow) scene.remove(hollow.root);
+  hollow = buildHollow(scene, { lowPower: LOW_POWER, shell });
+  builtShell = hollow.layout.shell; roomSig = ""; styleNow = null;
+  relayout();
   roomReady = true;
 }
+/* What stands where depends on the shell: the hearth, the doorway, where you wake, and the mirror's default place. */
+function relayout() {
+  const L = hollow.layout;
+  HEARTH_AT.set(HEARTH.x, 0, HEARTH.z);
+  PORTAL_AT.set(L.portal.x, 0, L.portal.z); portal.position.copy(PORTAL_AT).setY(DAIS_Y); portal.rotation.y = L.portal.yaw;
+  L.spawn.forEach(([x, z], i) => SPAWN[i].set(x, 0, z));
+  setMirrorAt(null);
+  between.position.copy(BETWEEN_AT).setY(DAIS_Y);
+}
+const inNook = () => builtShell === "nook";
 
 /* ---------- labels drawn over the room ---------- */
 const labelsEl = $("#labels");
@@ -415,7 +433,130 @@ const mirror = new THREE.Group(); mirror.position.copy(BETWEEN_AT).setY(DAIS_Y);
    becomes the glass: the camera stands where the mirror is, looking back at you, the picture flipped as a mirror flips it.
    Each choice re-dresses you at once; drag to turn and see your back. The choices sit in a short strip below the glass. */
 const MIRROR_STAND = new THREE.Vector3(BETWEEN_AT.x, 0, 0.55);   // between the cushions, facing the mirror
-const MIRROR_CAM_Z = MIRROR_STAND.z - 2.65;                       // far enough back that you fit the glass
+let MIRROR_CAM_Z = MIRROR_STAND.z - 2.65;                         // far enough back that you fit the glass
+/* In the nook the mirror is an item (rk-earned-only): it stands on whichever floor spot you set it on, facing the room, and the
+   Look happens there. Unplaced, it is in your satchel and the Look button still opens it. */
+const MIRROR_HOME = new THREE.Vector3(0, 0, -0.35);
+let mirrorSpot = null;
+function setMirrorAt(p) {
+  const at = p || MIRROR_HOME;
+  BETWEEN_AT.set(at.x, 0, at.z); MIRROR_STAND.set(at.x, 0, at.z + 0.9); MIRROR_CAM_Z = MIRROR_STAND.z - 2.65;
+  mirror.position.set(at.x, DAIS_Y, at.z);
+}
+const mirrorShown = () => inNook() ? !!mirrorSpot : isHome(garden);
+
+/* ---------- the room kit: the satchel, the spots, and what stands on them (rk-spots-not-grid, rk-place-is-shared) ----------
+   Placements live in garden/main as `room.placed` (rules.ts roomWrite), so a homeroom keeps them in its own doc and a shared
+   room's show to both of you at the next poll. With the store down (a preview before its migration) they stay on this page. */
+const PREVIEW_HOST = location.hostname !== "bars-engine.vercel.app";
+const KQ = new URLSearchParams(location.search);
+const SATCHEL_ALL = PREVIEW_HOST && KQ.get("satchel") === "all";   // previews: every item in the satchel, to test placing
+const NOOK_SKIP = PREVIEW_HOST && KQ.get("nook") === "1";          // previews: land in the nook past the first minute
+let satchelOpen = false, armed = null, localPlaced = {}, roomSig = "", roomViewK = 0;
+const ROOM_VIEW = { // camera and focus for the whole nook: a phone stands further back and higher to fit the hook and the floor
+  wide: [new THREE.Vector3(0.35, 2.35, 3.55), new THREE.Vector3(-0.25, 0.85, -0.9)],
+  phone: [new THREE.Vector3(0.2, 2.5, 3.5), new THREE.Vector3(-0.4, 0.75, -0.8)], fovPhone: 80,
+};
+function roomNow() {
+  const g = view().g;
+  return { shell: builtShell, style: (g && g.style) || null, placed: (g ? g.room && g.room.placed : localPlaced) || {} };
+}
+function myEarned() {
+  if (SATCHEL_ALL) return ITEM_ORDER.slice();
+  let spirits = []; const st = caveStore(); try { spirits = st ? st.all() : []; } catch {}
+  const home = { ...((list && list.home) || {}), ...myHome };
+  if (NOOK_SKIP && home.oriented == null) home.oriented = 1;
+  return earnedItems(earnedEvents({ home, rooms: (list && list.gardens) || [], spirits }));
+}
+const mySatchel = () => satchelOf(myEarned(), builtShell, roomNow().placed, me);
+const canArrange = () => { const g = view().g; return !readOnly && (storeDown ? inNook() : !!g && (isHome(g) || (isMember(g) && g.phase !== "closed"))); };
+/* What a spot holds, made by the room's own code: the mirror in the nook is the real mirror, moved; elsewhere a copy of it. */
+function makeItem(id) {
+  if (id === "mirror") {
+    if (inNook()) return new THREE.Group();
+    const m = mirror.clone(true); m.position.set(0, 0, 0); m.visible = true; return m;
+  }
+  return makeRoomItem(ITEMS[id] ? ITEMS[id].make : id);
+}
+function syncRoom() {
+  if (!hollow) return;
+  const r = roomNow(), sig = JSON.stringify(r);
+  if (sig === roomSig) return;
+  roomSig = sig;
+  const res = applyRoom({ ...hollow.handles, scene, make: makeItem }, r.style ? r : { ...r, style: undefined });
+  styleNow = res.style && res.style.id;
+  const ms = inNook() ? Object.entries(res.placed).find(([, e]) => e.item === "mirror") : null;
+  mirrorSpot = ms ? ms[0] : null;
+  setMirrorAt(mirrorSpot ? hollow.handles.spots[mirrorSpot].pos : null);
+}
+/* The rings: shown while the satchel is open; the ones that fit what you hold pulse, as the still's sockets do. */
+function spotRings(t) {
+  if (!hollow) return;
+  const pulse = 0.5 + 0.5 * Math.sin(t * 4.4);
+  for (const h of Object.values(hollow.handles.spots)) {
+    const fits = !!armed && ITEMS[armed].takes === h.takes;
+    const vis = satchelOpen && !mirrorOn && !h.item && (!armed || fits);
+    h.ring.visible = vis;
+    if (!vis) continue;
+    h.ringMats[0].opacity = fits ? 0.3 + 0.65 * pulse : 0.55;
+    h.ringMats[1].opacity = fits ? 0.1 + 0.2 * pulse : 0.1;
+    h.ring.scale.setScalar(fits ? 1 + pulse * 0.12 : 1);
+    if (!h.flat) h.ring.quaternion.copy(camera.quaternion);
+  }
+}
+async function writeRoom(patch, line) {
+  const g = view().g;
+  if (!g) { localPlaced = { ...localPlaced, ...patch }; refresh(); return; }
+  const shared = !isHome(g);
+  await op("garden/main", "update", { room: { placed: patch }, ...(shared ? { history: hist(line), lastTendedAt: now() } : {}) });
+}
+async function spotTap(sid) {
+  if (!hollow || !canArrange()) return;
+  const h = hollow.handles.spots[sid]; if (!h) return;
+  const r = roomNow(), g = view().g;
+  if (h.item) {
+    const res = liftFrom(builtShell, r.placed, sid, me); if (!res.ok) return;
+    const nm = ITEMS[res.back.item].name;
+    await writeRoom(res.patch, res.line);
+    toast(res.theirs ? `The ${nm.toLowerCase()} went back to ${nameOf(res.back.owner, g)}'s satchel.` : `The ${nm.toLowerCase()} is back in your satchel.`);
+    refreshHud(); return;
+  }
+  if (!armed) return;
+  const res = placeOn(builtShell, r.placed, sid, armed, me, now(), myEarned());
+  if (!res.ok) { toast(res.why === "does-not-fit" ? "That goes on another kind of spot." : res.why === "taken" ? "Something stands there already." : "That is not in your satchel."); return; }
+  const nm = ITEMS[armed].name; armed = null;
+  await writeRoom(res.patch, res.line);
+  burst(h.pos.clone().setY(h.pos.y + 0.2), 0xffcf86);
+  toast(g && !isHome(g) ? `${nm} set down. ${nameOf(other(g), g)} sees it when they come in.` : `${nm} set down.`);
+  if (!mySatchel().length) satchelOpen = false;
+  refreshHud();
+}
+function spotNear(sid, g) {
+  const h = hollow && hollow.handles.spots[sid]; if (!h || !h.item) return "";
+  const e = roomNow().placed[sid] || {}, it = ITEMS[h.item];
+  const whose = !e.owner || e.owner === me ? "Yours. " + it.line : `${esc(nameOf(e.owner, g))} set it down. Lifting it sends it back to their satchel.`;
+  return `<div class="what"><b>${esc(it.name)}</b><span class="t">${whose}</span></div>${canArrange() ? `<div class="row"><button class="ghost" type="button" data-act="spotLift" data-id="${esc(sid)}">${!e.owner || e.owner === me ? "Put it back in the satchel" : "Send it back to them"}</button></div>` : ""}`;
+}
+const satchelBtn = () => `<button class="glassbtn" type="button" data-act="satOpen">Satchel${mySatchel().length ? `<span class="dot" title="Things to set down"></span>` : ""}</button>`;
+function setSatchel(on) { satchelOpen = !!on && canArrange(); armed = null; if (satchelOpen) { selected = null; placing = null; } refreshHud(); }
+/* The satchel's small icons, the still's own drawings. */
+const SAT_ICON = {
+  lantern: '<path d="M15 3v4" stroke="#c9a070" stroke-width="2"/><rect x="8" y="7" width="14" height="18" rx="7" fill="#f0a050"/><rect x="8" y="7" width="14" height="18" rx="7" fill="none" stroke="#ffd890" stroke-width="1.4"/>',
+  "seed-pot": '<path d="M8 16h14l-2 10H10z" fill="#a8603a"/><path d="M15 16c0-6-4-8-6-9 3 0 6 2 6 6 0-5 3-7 7-7-3 2-6 4-7 10z" fill="#7fb38a"/>',
+  cushion: '<ellipse cx="15" cy="18" rx="12" ry="6" fill="#9a5a8e"/><ellipse cx="15" cy="16" rx="11" ry="4.5" fill="#b874a8"/>',
+  mirror: '<ellipse cx="15" cy="13" rx="7" ry="10" fill="#bcd8e8"/><ellipse cx="15" cy="13" rx="7" ry="10" fill="none" stroke="#c9a070" stroke-width="2"/><path d="M15 23v5" stroke="#c9a070" stroke-width="2"/>',
+  rug: '<ellipse cx="15" cy="17" rx="13" ry="6" fill="#3f9e93"/><ellipse cx="15" cy="17" rx="9" ry="3.6" fill="none" stroke="#efe2c4" stroke-width="1.2"/>',
+  scroll: '<rect x="6" y="11" width="18" height="8" rx="4" fill="#efe2c4"/><rect x="4" y="12" width="3" height="6" rx="1.5" fill="#7a5236"/><rect x="23" y="12" width="3" height="6" rx="1.5" fill="#7a5236"/><rect x="13.5" y="11" width="3" height="8" fill="#9a5a8e"/>',
+};
+function renderSatchel() {
+  let el = $("#satchel");
+  if (!el) { el = document.createElement("div"); el.id = "satchel"; el.className = "satchel"; el.setAttribute("role", "toolbar"); el.setAttribute("aria-label", "Your satchel"); $("#tools").before(el); }
+  const items = satchelOpen ? mySatchel() : [];
+  if (armed && !items.includes(armed)) armed = null;
+  const h = !satchelOpen ? "" : `<div class="satrow">${items.map(id => `<button class="satitem" type="button" data-act="satArm" data-id="${esc(id)}" aria-pressed="${armed === id}"><svg viewBox="0 0 30 30" aria-hidden="true">${SAT_ICON[id] || ""}</svg>${esc(ITEMS[id].name)}</button>`).join("")}${items.length ? "" : `<span class="satnone">Nothing to set down. What you earn here comes to your satchel.</span>`}<button class="glassbtn" type="button" data-act="satClose">Done</button></div>`;
+  el.hidden = !satchelOpen;
+  if (el._h !== h) { el.innerHTML = h; el._h = h; }
+}
 const MIRROR_PARTS = [["shape", "Shape"], ["build", "Build"], ["skin", "Skin"], ["style", "Hair"], ["colour", "Hair colour"], ["outfit", "Clothes"], ["dye", "Dye"]];
 let mirrorOn = false, mirrorK = 0, mirrorTurn = 0, mirrorPart = "shape";
 const mirrorFrame = document.createElement("div"); mirrorFrame.id = "mirrorFrame"; mirrorFrame.setAttribute("aria-hidden", "true"); document.body.appendChild(mirrorFrame);
@@ -911,7 +1052,16 @@ function tapAt(cx, cy) {
   let best = null, bestD = Infinity;
   const consider = (key, pos, r) => { const d = ray.ray.distanceToPoint(pos); if (d < r) { const along = ray.ray.origin.distanceTo(pos); if (along < bestD) { bestD = along; best = { key, pos }; } } };
   if (placing) { placeAt(); return; }
-  consider("between", BETWEEN_AT.clone().setY(DAIS_Y + 0.5), 0.7);
+  // the room kit: with the satchel open, a glowing spot that fits takes the armed item, and a placed item goes back
+  if (hollow) for (const h of Object.values(hollow.handles.spots)) {
+    // holding an item, only the free spots that fit it answer; holding nothing, the placed items do
+    if (satchelOpen && armed ? h.item || ITEMS[armed].takes !== h.takes : !h.item) continue;
+    if (h.item === "mirror" && inNook() && !satchelOpen) continue; // the mirror answers as the mirror
+    consider("spot:" + h.id, h.pos.clone().setY(h.pos.y + (h.takes === "hang" ? -0.42 : h.flat ? 0.25 : 0.15)), h.flat ? 0.6 : 0.42);
+  }
+  if (best && satchelOpen) { spotTap(best.key.slice(5)); return; }
+  if (!inNook() || mirrorSpot) consider("between", BETWEEN_AT.clone().setY(DAIS_Y + 0.5), 0.7);
+  if (inNook()) consider("window", hollow.layout.window, 1.0);
   if (portal.visible) consider("portal", PORTAL_AT.clone().setY(DAIS_Y + 0.95), 0.75);
   consider("hearth", HEARTH_AT.clone().setY(0.9), 1.0);
   SEATS.forEach((st, i) => consider("seat:" + i, seatPos(i).setY(DAIS_Y + 0.15), 0.45));
@@ -930,6 +1080,7 @@ function tapAt(cx, cy) {
     selected = best.key;
     if (best.key === "hearth" && hearthOpen()) openSheet("hearth");
     if (best.key === "between" && isHome(view().g)) openSheet("look");
+    if (best.key === "window") { if (isHome(view().g)) openSheet("style"); else toast("The light through the window changes from Style."); }
     if (best.key === "portal") { portalTo ? walkThrough(portalTo.id, portalTo.invite) : openSheet("rooms"); return; }
     const dir = meState.pos.clone().sub(best.pos).setY(0); const d = dir.length();
     if (d > 1.3) { dir.normalize(); meState.target = pushOut(best.pos.clone().add(dir.multiplyScalar(1.1))); }
@@ -1088,6 +1239,12 @@ function frame() {
   const focus = meFocus.lerp(new THREE.Vector3(0, DAIS_Y + 0.6, -0.4), togetherK);
   const cp = new THREE.Vector3(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch)).multiplyScalar(camDist).add(focus);
   clampCamera(cp, focus);
+  // the satchel open in the nook: the camera eases back to see the whole room, as Still A does, so every spot is in view
+  roomViewK += ((satchelOpen && inNook() && !mirrorOn ? 1 : 0) - roomViewK) * Math.min(1, dt * 3);
+  if (roomViewK > 0.001) {
+    const k = roomViewK * roomViewK * (3 - 2 * roomViewK), tall = innerWidth < innerHeight;
+    cp.lerp(tall ? ROOM_VIEW.phone[0] : ROOM_VIEW.wide[0], k); focus.lerp(tall ? ROOM_VIEW.phone[1] : ROOM_VIEW.wide[1], k);
+  }
   // the mirror: the camera eases to where the glass stands, level with your chest, and the view drops so you stand in the
   // upper part of the screen, clear of the strip of choices below
   mirrorK += ((mirrorOn ? 1 : 0) - mirrorK) * Math.min(1, dt * 3);
@@ -1099,9 +1256,12 @@ function frame() {
     cp.lerp(new THREE.Vector3(meState.pos.x, fy, MIRROR_CAM_Z), me3);
     focus.lerp(new THREE.Vector3(meState.pos.x, fy, meState.pos.z), me3);
   }
-  const fov0 = innerWidth < innerHeight ? 66 : 50, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
-  mirror.visible = isHome(garden) && me3 < 0.35; // the glass is where the camera looks from
-  if (me3 > 0 || (camera.view && camera.view.enabled)) {
+  const rk = roomViewK * roomViewK * (3 - 2 * roomViewK);
+  const fovR = (innerWidth < innerHeight ? 66 : 50) + (innerWidth < innerHeight ? ROOM_VIEW.fovPhone - 66 : 0) * rk;
+  const fov0 = fovR, fov = fov0 + ((innerWidth < innerHeight ? 68 : 56) - fov0) * me3;
+  mirror.visible = mirrorShown() && me3 < 0.35; // the glass is where the camera looks from
+  spotRings(t);
+  if (me3 > 0 || rk > 0.001 || camera.fov !== fov || (camera.view && camera.view.enabled)) {
     camera.fov = fov;
     if (me3 > 0) camera.setViewOffset(innerWidth, innerHeight, 0, innerHeight * 0.19 * me3, innerWidth, innerHeight); else camera.clearViewOffset();
     camera.updateProjectionMatrix();
@@ -1123,7 +1283,7 @@ function nearest() {
   }
   let best = null, bd = 2.0;
   const c = (key, pos) => { const d = Math.hypot(pos.x - meState.pos.x, pos.z - meState.pos.z); if (d < bd) { bd = d; best = key; } };
-  c("between", BETWEEN_AT);
+  if (!inNook() || mirrorSpot) c("between", BETWEEN_AT);
   if (portal.visible) c("portal", PORTAL_AT);
   c("hearth", HEARTH_AT);
   SEATS.forEach((st, i) => { if (!(meState.sitting && meState.seatWant === i)) c("seat:" + i, seatPos(i)); });
@@ -1138,6 +1298,8 @@ function posOf(key) {
   if (key === "portal") return PORTAL_AT;
   if (key === "hearth") return HEARTH_AT;
   if (key.startsWith("seat:")) return seatPos(+key.slice(5));
+  if (key === "window") return hollow && hollow.layout.window.clone().setY(0);
+  if (key.startsWith("spot:")) { const h = hollow && hollow.handles.spots[key.slice(5)]; return h && h.pos.clone().setY(0); }
   if (key.startsWith("item:")) { const t = things.get(key.slice(5)); return t && t.pos; }
   if (key.startsWith("w:")) { const w = walkers.get(key.slice(2)); return w && w.holder && w.holder.position; }
   if (key.startsWith("p:")) { const p = peers.get(key.slice(2)); return p && p.pos; }
@@ -1146,7 +1308,8 @@ function posOf(key) {
 function drawLabels(t) {
   for (const el of labels.values()) el._seen = false;
   const V = view(); const g = V.g;
-  if (g && g.phase !== "closed") {
+  if (inNook() && hollow) placeLabel(label("window", "The window", "dim"), hollow.layout.window.clone().setY(hollow.layout.window.y + 0.95));
+  if (g && g.phase !== "closed" && (!inNook() || mirrorSpot)) {
     const nm = isHome(g) ? "The mirror" : betweenName(V.items) || (g.phase === "spark" ? "The spark" : "The Between");
     placeLabel(label("between", nm, ""), BETWEEN_AT.clone().setY(DAIS_Y + (isHome(g) ? 1.95 : g.phase === "spark" ? 1.0 : 1.45)));
   }
@@ -1190,11 +1353,13 @@ function refreshHud() {
 
   const hint = $("#hint"); let hintText = "";
   const others = [...peers.values()].filter(p => p.uid !== me);
-  if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again.";
+  if (storeDown) hintText = "The garden's store did not answer, so this is the room on its own and nothing here is saved. Reload the page to try again." + (satchelOpen ? " What you set down stays only until you leave." : "");
   else if (!g) hintText = "Tap the floor to walk. Drag to look around.";
   else if (isHome(g) && portalTo && !portalOpen()) hintText = `${portalTo.name ? portalTo.name + " invited you" : "You were invited"} to a room. The doorway by the mirror opens once you read the rules.`;
   else if (isHome(g) && portalTo) hintText = `The doorway by the mirror is open to ${portalTo.name || "the room"}. Walk through when you are ready.`;
-  else if (isHome(g)) hintText = "Your own room. Walk up to the mirror to change how you look. Your rooms open through the doorway beside it.";
+  else if (isHome(g) && satchelOpen) hintText = armed ? `Tap a glowing spot that fits the ${ITEMS[armed].name.toLowerCase()}.` : "Tap an item in your satchel, then a glowing spot that fits it. Tap a placed item to put it back.";
+  else if (isHome(g) && !mirrorSpot && mySatchel().includes("mirror")) hintText = "Your own room. Your mirror is in your satchel: set it on a spot to see yourself. Tap the window to change the light.";
+  else if (isHome(g)) hintText = "Your own room. Walk up to the mirror to change how you look. Tap the window to change the light. Your rooms open through the doorway.";
   else if (g.phase === "closed") hintText = "The garden is closed. Its history is yours to keep from More.";
   else if (!isMember(g)) hintText = members(g).length >= 2 ? "This garden is held by two people. You can look around." : "A spark is waiting here. Walk up to it.";
   else if (g.phase === "spark") hintText = g.joinRequest ? `${nameOf(g.joinRequest.uid, g)} asks to join. Walk to the spark to answer.` : `You tend this spark alone until ${g.setup.who} joins. Tap the floor to walk, drag to look.`;
@@ -1207,21 +1372,22 @@ function refreshHud() {
   const near = $("#near");
   const key = nearKey;
   const html = key ? nearHtml(key, V, g) : "";
-  near.hidden = !html; if (near._h !== html) { near.innerHTML = html; near._h = html; readIn(near); }
+  near.hidden = !html || satchelOpen; if (near._h !== html) { near.innerHTML = html; near._h = html; readIn(near); }
 
   // tools
   const tools = [];
-  if (storeDown) {}
+  if (storeDown) { if (inNook()) tools.push(satchelBtn()); }
   else if (!g) tools.push(`<button type="button" data-open="setup">Plant a spark here</button>`);
   else if (isHome(g)) {
     const invs = (list && list.gardens || []).reduce((n, r) => n + (r.invitations || []).length, 0);
     tools.push(`<button type="button" data-open="rooms">Rooms</button>`);
+    tools.push(satchelBtn());
     tools.push(`<button class="glassbtn" type="button" data-open="look">Look</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="checkin">Check in</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="spirits">Spirits${embersWaiting().length ? `<span class="tembers" title="Embers waiting">${emberDots(3)}</span>` : ""}</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="goals">Goals</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="invitations">Invitations${invs ? '<span class="dot" title="Waiting for your answer"></span>' : ""}</button>`);
-    tools.push(`<button class="glassbtn" type="button" data-open="style">Style</button>`);
+    // the style is chosen at the window now (rk-earned-only: the four styles are the light through the window)
   }
   else if (g.phase !== "closed" && isMember(g) && !readOnly) {
     tools.push(`<button type="button" data-open="offer">${g.phase === "spark" ? "Tend the spark" : "Offer something"}</button>`);
@@ -1233,20 +1399,22 @@ function refreshHud() {
     tools.push(`<button class="glassbtn" type="button" data-open="pictures">Pictures</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="invite">Invite</button>`);
     tools.push(`<button class="glassbtn" type="button" data-open="style">Style</button>`);
+    tools.push(satchelBtn());
     if (others.length) tools.push(`<button class="glassbtn" type="button" data-act="wave">Wave</button>`);
   }
   if (g && !isHome(g) && homeId && !storeDown) tools.push(`<button class="glassbtn" type="button" data-act="goHome">Home</button>`); else if (g.phase !== "closed" && !isMember(g) && members(g).length < 2 && !readOnly) {
     tools.push(g.joinRequest && g.joinRequest.uid === me ? `<button class="glassbtn" type="button" data-act="unjoin">Take back my request</button>` : `<button type="button" data-act="join">Ask to join</button>`);
   }
   if (placing && !storeDown) tools.unshift(`<button type="button" data-act="lanternHere">Set it down here</button><button class="glassbtn" type="button" data-act="lanternCancel">Leave it where it was</button>`);
-  const th = tools.join("");
+  const th = satchelOpen ? "" : tools.join("");
   const te = $("#tools"); if (te._h !== th) { te.innerHTML = th; te._h = th; }
+  renderSatchel();
 
   // next: what the Between suggests now, one move per lane at most (br-next-moves-three-lanes)
   const moves = storeDown || !g || g.phase === "closed" || (!isHome(g) && !isMember(g)) ? [] : nextMoves(g);
   const nx = $("#next");
   const nh = moves.length ? `<span class="eyebrow">Next</span>${moves.map((m, i) => `<button type="button" class="${i ? "nmore" : "nfirst"}" data-act="next" data-id="${esc(m.act)}"><span class="lane">${esc(LANE_NAMES[m.lane])}</span> <b>${esc(m.title)}</b>${i ? "" : `<span class="t">${esc(m.line)}</span>`}</button>`).join("")}` : "";
-  nx.hidden = !nh || !!nearKey || !!placing; if (nx._h !== nh) { nx.innerHTML = nh; nx._h = nh; }
+  nx.hidden = !nh || !!nearKey || !!placing || satchelOpen; if (nx._h !== nh) { nx.innerHTML = nh; nx._h = nh; }
 }
 /* The moves for here: in the homeroom, across every room; inside a room, that room only. Your own lane reads your
    homeroom, so checking in with yourself is part of the loop wherever you are. */
@@ -1271,6 +1439,8 @@ function moveActs(id, it, g) {
   return r ? `<button class="ghost" type="button" data-act="move" data-id="${id}">${r === "shared" ? "Ask to move it" : "Move it"}</button>` : "";
 }
 function nearHtml(key, V, g) {
+  if (key && key.startsWith("spot:")) return spotNear(key.slice(5), g);
+  if (key === "window" && g && isHome(g)) return `<div class="what"><b>The window</b><span class="t">${esc(styleOf(g.style).name)}: ${esc(styleOf(g.style).line)}</span></div><div class="row"><button type="button" data-open="style">Change the light</button></div>`;
   if (!g) return "";
   const canTend = isMember(g) && !readOnly && g.phase !== "closed";
   if (key === "portal") {
@@ -1957,6 +2127,10 @@ document.addEventListener("click", async ev => {
   if (b.hasAttribute("data-close")) { closeSheet(); return; }
   if (b.dataset.open) { openSheet(b.dataset.open, b.dataset.id); return; }
   const a = b.dataset.act, id = b.dataset.id;
+  if (a === "satOpen") { setSatchel(true); return; }
+  if (a === "satClose") { setSatchel(false); return; }
+  if (a === "satArm") { armed = armed === id ? null : id; refreshHud(); return; }
+  if (a === "spotLift") { await spotTap(id); selected = null; refreshHud(); return; }
   if (a === "sound") { ambient.toggle(); soundLabel(); return; }
   if (a === "hFeel") { hd = { ...hd, feel: id, move: null, glow: null }; renderSheet(); return; }
   if (a === "hMove") { hd.move = id; renderSheet(); return; }
@@ -2336,13 +2510,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 addEventListener("pagehide", markSeen);
 
 /* ---------- the room's style: its light and weather (br-style-is-the-place) ---------- */
-let styleNow = null;
-function setStyle(id) {
-  const s = styleOf(id);
-  if (!hollow || s.id === styleNow) return;
-  styleNow = s.id;
-  applyStyle({ ...hollow.handles, scene }, s);
-}
+let styleNow = null; // the style the room shows now; syncRoom sets it (applyRoom applies it with the placements)
 
 /* ---------- one refresh for everything the store drives ---------- */
 let refreshQueued = false;
@@ -2353,8 +2521,9 @@ function refresh() {
     const V = view(); const g = V.g;
     if (g && g.phase !== "closed") { const s = satisfaction(V.items); look = { phase: g.phase, state: stateOf(s), stale: isStale(g), sat: s }; }
     else look = { phase: "spark", state: "steadied", stale: true, sat: 2 };
-    between.visible = !!g && !isHome(g); mirror.visible = isHome(g);
-    setStyle(g && g.style);
+    between.visible = !!g && !isHome(g);
+    syncRoom();
+    mirror.visible = mirrorShown();
     syncThings(); syncWalkers();
     if (me && gardenLoaded) ensureMyBody().catch(() => {});
     refreshHud();
@@ -2417,7 +2586,11 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
    =================================================================================================== */
 (async function boot() {
   loadStep("building the hollow");
-  const roomP = Promise.resolve().then(buildRoom).catch(e => {
+  const bq = new URLSearchParams(location.search), bWant = bq.get("g");
+  let bThrough = null; try { bThrough = sessionStorage.getItem(THROUGH); } catch {}
+  // everyone wakes in their homeroom, the nook; only a walk through the doorway (or a preview's ?skipHome=1) opens a room
+  const guessShell = bWant && (bThrough === bWant || (bq.get("skipHome") === "1" && PREVIEW_HOST)) ? "hollow" : "nook";
+  const roomP = Promise.resolve().then(() => buildRoom(guessShell)).catch(e => {
     $("#loadMsg").innerHTML = `The garden did not load. Check your connection and open the page again.<br><small style="opacity:.6">${esc((e && (e.message || e.type)) || e)}</small><br><button type="button" onclick="location.reload()" style="margin-top:12px">Try again</button>`;
     throw e;
   });
@@ -2467,12 +2640,18 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   placeMe();
   if (!roomOk) loadStep("building the hollow");
   try { await roomP; } catch { return; }
+  const wantShell = garden ? (isHome(garden) ? "nook" : "hollow") : storeDown && guessShell === "nook" ? "nook" : "hollow";
+  if (wantShell !== builtShell) { loadStep("building the room"); buildRoom(wantShell); meState.placed = false; placeMe(); }
+  // the first minute in the homeroom gives the mirror and a blank scroll (rk-earned-only). Until Still C's first minute lands,
+  // arriving home is that minute, kept once in the home doc.
+  if (isHome(garden) && myHome.oriented == null && !NOOK_SKIP) { myHome.oriented = now(); homeOp({ oriented: myHome.oriented }).catch(() => {}); }
   $("#loading").hidden = true; $("#hud").hidden = false;
   if (!garden && !storeDown) openSheet("setup");
   refresh();
   // ?sheet= opens a sheet at once, for a preview link that starts where the test starts
   const jump = q.get("sheet");
   if (garden && !isHome(garden)) fetchHome(); // your homeroom's spirits and embers, for Check in and Bring a spirit here
+  if (SATCHEL_ALL && canArrange()) setSatchel(true);
   if (jump && ["rooms", "look", "style", "invite", "checkin", "goals", "invitations", "spellbook", "orient", "spirits", "spirit"].includes(jump) && garden) openSheet(jump);
   else if (portalTo && !portalTo.open) openSheet("orient");
   requestAnimationFrame(frame);
@@ -2481,4 +2660,5 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
   pollTimer = setTimeout(poll, 2500);
 })();
 window.__between = { outbox, view, meState, peers, walkers, things, look: () => look, tapAt, camera, poll, ids: () => ({ gardenId, me, invite: myInvite, portalTo, homeId }),
-  seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; }, screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; } };
+  seatPos, mySeat, creature, renderer, scene, setCam: a => { debugCam = a; },
+  room: () => ({ shell: builtShell, ...roomNow(), satchel: mySatchel(), open: satchelOpen, armed, mirrorSpot, spots: hollow ? Object.fromEntries(Object.entries(hollow.handles.spots).map(([k, h]) => [k, { takes: h.takes, item: h.item, at: h.pos.toArray() }])) : {} }), screenOf: v => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * innerWidth, (1 - p.y) / 2 * innerHeight]; } };

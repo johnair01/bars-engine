@@ -192,3 +192,15 @@ body.quiethud .hud .bottom { display: none; }
 .spiritcard .orb { flex: none; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 38% 34%, #fff6e0 0 12%, var(--c) 55%, transparent 74%); box-shadow: 0 0 16px var(--c); }
 .tembers { display: inline-flex; gap: 2px; margin-left: 6px; vertical-align: middle; }
 .tembers .ember { margin: 0; }
+
+/* the satchel (room kit, Still A): a small tray of what you have earned. Tap one, then a glowing spot that fits it. */
+.satchel { background: var(--glass); backdrop-filter: blur(6px); border-radius: 14px; padding: 8px; max-width: 640px; }
+.satchel[hidden] { display: none; }
+.satrow { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; align-items: center; }
+.satrow::-webkit-scrollbar { display: none; }
+.hud .satitem { flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 12px 6px 8px; border-radius: 12px;
+  background: #2c1f2c; color: var(--glass-ink); border: 1px solid rgba(255,255,255,.16); font-size: .88rem; white-space: nowrap; }
+.satitem svg { width: 26px; height: 26px; flex: none; }
+.hud .satitem[aria-pressed="true"] { border-color: #ffcf86; box-shadow: 0 0 0 1px #ffcf86, 0 0 14px rgba(255,207,134,.4); }
+.satnone { color: var(--glass-muted); font-size: .84rem; padding: 0 6px; }
+.satrow .glassbtn { flex: none; margin-left: auto; }
