@@ -5381,10 +5381,12 @@
         if (st.mesh) st.mesh.children.forEach(function (m) { var L = m.userData.look || {}; m.material.opacity = (L.opacity == null ? 1 : L.opacity) * k; if (L.rgb || L.paint) m.material.transparent = k < 1; });
       }
       // Walking (Wendell, 21 October 2026: "spirit should be walking on the ground (if and when they turn into a creature) and ...
-      // we need walking animations"). The creature and ally bodies are static meshes, so the gait is drawn here: the body's lowest
+      // we need walking animations"). A body without a rig has no legs to move, so the gait is drawn here: the body's lowest
       // point is kept on the floor (measured each frame, a frame behind), and while it moves it bobs a step at GAIT_HZ, rolls side
       // to side, squashes a little and faces where it goes. The gas, core and hologram float as before.
-      var GAIT_HZ = 2, STEP_UP = 0.05, ROLL = 0.05, SQUASH = 0.04, WALKS = { creature: 1, ally: 1 }, footBox = new THREE.Box3();
+      // A rigged body (spirit-forms.js poseRig) plays its own Walk instead, at most MAX_CYCLES a second, so a short-legged
+      // tortoise hurried across the room still steps rather than blurs.
+      var GAIT_HZ = 2, STEP_UP = 0.05, ROLL = 0.05, SQUASH = 0.04, WALKS = { creature: 1, ally: 1 }, footBox = new THREE.Box3(), MAX_CYCLES = 2.2, rigWs = new THREE.Vector3();
       function walkForm(c, u, f, st, dt) {
         var p = c.fig.position, vx = 0, vz = 0;
         if (u.lastX != null && dt > 0) { vx = (p.x - u.lastX) / dt; vz = (p.z - u.lastZ) / dt; }
@@ -5399,6 +5401,14 @@
           var yaw = Math.atan2(vx, vz) - (SF.turnOf(st.drawn) + Math.PI / 2); // the root's yaw that puts the body's front along the walk
           st.faceAt = (st.faceAt || new THREE.Vector3()).set(p.x + 10 * Math.sin(yaw), p.y, p.z + 10 * Math.cos(yaw));
         } else st.faceAt = null;
+        var rig = st.mesh.userData.rig;
+        if (rig) { // rigged (rig.py's frame, bars-engine #325): the Walk clip, its phase carried by the ground covered, the Idle when it stops
+          var cyc = rig.walk.travel * st.mesh.getWorldScale(rigWs).x; // world units the body covers in one Walk cycle
+          if (u.walking) st.mesh.userData.walkPh = (st.mesh.userData.walkPh + Math.min(MAX_CYCLES * dt, Math.hypot(vx, vz) * dt / Math.max(1e-3, cyc))) % 1;
+          st.mesh.userData.walkW = w; f.scale.y = sc; f.rotation.z = 0;
+          f.position.y = rig.low == null ? FORM_Y : -sc * rig.low * st.mesh.scale.y; // the clip's lowest point now (spirit-forms.js lowsOf) on the floor
+          u.ground = p.y; return;
+        }
         var ph = u.gait || 0, sqY = sc * (1 - SQUASH * w * Math.abs(Math.cos(ph)));
         f.scale.y = sqY; f.rotation.z = ROLL * w * Math.sin(ph);
         f.position.y = u.low == null ? FORM_Y : STEP_UP * w * Math.abs(Math.sin(ph)) / sy - sqY * u.low;
